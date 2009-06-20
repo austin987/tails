@@ -1,0 +1,47 @@
+# -*- mode: sh; -*-
+
+# Configuration file for the Amnesia live system
+# 
+# You'd better never directly edit this file: rather put your custom
+# variable assignments in a new file called 'amnesia.local', in the
+# same directory as this one. The values found in the '.local' file
+# will override the ones from this one.
+# 
+# These configuration files are actually shell scripts, and are
+# sourced by various other scripts.
+
+# Supported: gnome|xfce
+# Default: gnome
+AMNESIA_BASE="gnome"
+
+# Images types to build, as a space-separated list.
+# Every element of this list must be a valid argument for "lh_config -b".
+# Only iso, usb-hdd and tar are currently supported.
+AMNESIA_IMAGES="iso"
+
+# Base for the string that will be passed to "lh_config --bootappend-live"
+AMNESIA_APPEND="quiet splash vga=791 live-media=removable live-media-timeout=15 noprompt"
+
+# Refresh the live user's $HOME directory by copying the build system's
+# /home/amnesia. See also AMNESIA_HOME_EXCLUDES.
+# Supported: yes|no
+# Default: no
+AMNESIA_REFRESH_HOME="no"
+
+# Patterns to exclude when refreshing /home/amnesia
+AMNESIA_HOME_EXCLUDES="/home/amnesia/.bash_history \
+  /home/amnesia/.dbus/session-bus/* \
+  /home/amnesia/.gconf/desktop/gnome/peripherals/keyboard/host-* \
+  /home/amnesia/.kde/cache-* \
+  /home/amnesia/.kde/socket-* \
+  /home/amnesia/.kde/tmp-* \
+  /home/amnesia/.mozilla/firefox/*/bookmarkbackups/* \
+  /home/amnesia/.mozilla/firefox/*/urlclassifier3.sqlite \
+  /home/amnesia/.nautilus/metafiles/ \
+  /home/amnesia/.nautilus/saved-session-* \
+  /home/amnesia/.xsession-errors"
+
+### You should not have to change anything bellow this line ####################
+
+# Compute the current Amnesia's version once for all
+AMNESIA_TODAY="`date '+%Y%m%d'`"

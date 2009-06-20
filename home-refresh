@@ -1,0 +1,29 @@
+#!/bin/bash
+
+. config/amnesia
+if [ -e config/amnesia.local ] ; then
+   . config/amnesia.local
+fi
+
+# How to use $TAR_OPTS:
+#    - $TAR_OPTS should be used unquoted
+#    - 'set -o noglob' has to be run before any $TAR_OPTS use
+#    - 'set +o noglob' has to be run after any $TAR_OPTS use
+TAR_OPTS=""
+set -o noglob
+for pattern in $AMNESIA_HOME_EXCLUDES; do
+    TAR_OPTS="$TAR_OPTS --exclude=$pattern"
+done
+set +o noglob
+
+echo "Deleting old home.tar.bz2"
+rm home/home.tar.bz2
+
+echo "Creating new home.tar.bz2"
+set -o noglob
+tar \
+   jcf home/home.tar.bz2 \
+   --atime-preserve --same-owner --numeric-owner --same-permissions \
+   $TAR_OPTS \
+   /home/amnesia
+set +o noglob

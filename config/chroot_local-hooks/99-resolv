@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Nota bene: if the custom /etc/resolv.conf file was in
+# chroot_local-includes, it would be installed inside the chroot
+# before our chroot_local-hooks run. Some of these scripts, needing
+# a working networking setup, would then awfully break.
+
+# Including common functions
+. "${LH_BASE:-/usr/share/live-helper}"/functions.sh
+
+# Setting static variables
+DESCRIPTION="$(Echo 'setup custom /etc/resolv.conf')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Reading configuration files
+Read_conffiles config/all config/common config/chroot
+Set_defaults
+
+Echo_message "Configuring file /etc/resolv.conf"
+echo 'nameserver 127.0.0.1' > /etc/resolv.conf
+# make sure lh_chroot_resolv will not overwrite our nice,
+# custom /etc/resolv.conf with a random .orig one
+echo 'nameserver 127.0.0.1' > /etc/resolv.conf.orig

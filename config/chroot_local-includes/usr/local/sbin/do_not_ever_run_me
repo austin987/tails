@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# This script fully disables the iptables firewall, and thus the
+# transparent forwarding thru Tor of all non-local network
+# connections... which defeats the whole purpose of this OS, hence
+# this script's name.
+
+IPT=/sbin/iptables
+
+[ -x "$IPT" ] || exit 67
+
+$IPT -P INPUT ACCEPT
+$IPT -P FORWARD ACCEPT
+$IPT -P OUTPUT ACCEPT
+
+$IPT -t nat -P PREROUTING ACCEPT
+$IPT -t nat -P POSTROUTING ACCEPT
+$IPT -t nat -P OUTPUT ACCEPT
+
+$IPT -t mangle -P PREROUTING ACCEPT
+$IPT -t mangle -P INPUT ACCEPT
+$IPT -t mangle -P FORWARD ACCEPT
+$IPT -t mangle -P OUTPUT ACCEPT
+$IPT -t mangle -P POSTROUTING ACCEPT
+    
+$IPT -F
+$IPT -t nat -F
+$IPT -t mangle -F
+
+$IPT -X
+$IPT -t nat -X
+$IPT -t mangle -X
+
+echo "You might want to unset http_proxy and HTTP_PROXY environment variables as well:"
+echo "  unset http_proxy"
+echo "  unset HTTP_PROXY"

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+for dir in chroot/{dev/pts,proc,sys} ; do
+   if mountpoint -q "$dir" ; then
+      umount "$dir"
+   fi
+done
+
+lh clean noautoconfig ${@}
+
+# rm -f build-*.log
+
+# Remove generated files
+rm -f config/binary config/bootstrap config/chroot config/common config/source
+
+# Remove empty directories in config tree
+if ls config/*/ > /dev/null 2>&1 ; then
+	rmdir --ignore-fail-on-non-empty config/*/
+fi
+
+# Remove unpacked /home/amnesia
+rm -rf config/chroot_local-includes/home/

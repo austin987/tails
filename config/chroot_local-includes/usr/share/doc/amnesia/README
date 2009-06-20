@@ -1,0 +1,37 @@
+-*- mode: markdown; -*-
+
+Building an image
+=================
+
+Customization
+-------------
+
+The settings that can be customized can be found in `config/amnesia`;
+e.g. images types to build, desktop environment.
+
+You'd better never directly edit this file: rather put your custom
+variable assignments in a new `config/amnesia.local` file. The values
+found in the `.local` file will override the ones from the
+upstream one.
+
+These configuration files are actually shell scripts, and are sourced
+by various other scripts.
+
+How to build
+------------
+
+All following commands must be run as `root`, at the root of the
+source directory: a Git checkout, an extracted tarball.
+
+Initialize the Live system's configuration with `lh_config`:
+
+	lh_config
+
+Optionally set your preferred language for the generated images; only
+"fr" is currently fully supported, but other languages are still worth
+trying:
+
+	lh_config --language fr
+
+You can then use the standard live-helper commands to build the chosen
+images (`lh build`) and to cleanup the build directory (`lh clean`).

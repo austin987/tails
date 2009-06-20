@@ -1,0 +1,68 @@
+#!/bin/sh
+
+# set -x
+
+BASEDIR="`dirname $0`/.."
+. "${BASEDIR}/config/amnesia"
+if [ -e "${BASEDIR}/config/amnesia.local" ] ; then
+   . "${BASEDIR}/config/amnesia.local"
+fi
+
+extract_home () {
+   tar \
+      jxf home/home.tar.bz2 \
+      --atime-preserve --same-permissions \
+      --directory="config/chroot_local-includes/"
+}
+
+# a clean starting point
+rm -rf cache/stages_rootfs
+
+# home
+[ "${AMNESIA_REFRESH_HOME}" = "no" ] || ./home-refresh
+
+# build all configured image types
+for BUILD_TYPE in ${AMNESIA_IMAGES} ; do
+
+   case "$BUILD_TYPE" in
+      iso)
+	 BUILD_FILENAME_EXT=iso
+	 BUILD_FILENAME=binary
+	 ;;
+      tar)
+	 BUILD_FILENAME_EXT=tar.gz
+	 BUILD_FILENAME=binary-tar
+	 ;;
+      usb-hdd)
+	 BUILD_FILENAME_EXT=img
+	 BUILD_FILENAME=binary
+	 ;;
+      *)
+	 echo "Image type ${BUILD_TYPE} is not supported." >&2
+	 exit 1
+	 ;;
+   esac
+   . config/chroot # get LH_LANGUAGE
+   BUILD_BASENAME="amnesia-${AMNESIA_BASE}-${LH_LANGUAGE}-${AMNESIA_TODAY}"
+   BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
+   BUILD_LOG="build-${BUILD_BASENAME}.log"
+
+   echo "Cleaning binary stage..."
+   lh clean noautoconfig --binary
+      
+   echo "Running lh config..."
+   lh config noautoconfig --binary-images "${BUILD_TYPE}"
+
+   echo "Extracting home.tar.bz2 to chroot ..."
+   extract_home
+
+   echo "Building $BUILD_TYPE image ${BUILD_BASENAME}..."
+   if lh build noautoconfig ${@} 2>&1 | tee "${BUILD_LOG}" ; then
+      echo "Image was successfully created, moving it to ${BUILD_DEST_FILENAME}"
+      mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
+   else
+      echo "lh build failed." >&2
+      exit 1
+   fi
+
+done

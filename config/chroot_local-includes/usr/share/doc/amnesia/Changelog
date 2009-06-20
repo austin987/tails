@@ -1,0 +1,119 @@
+2009 06 20 - dev
+
+	* hardware support:
+	- install firmware-linux from backports.org
+	- install system-config-printer
+	* APT/pinning: give backports.org priority 200, so that we track
+	upgrades of packages installed from there.
+	* build system: allow building several images at once
+
+2009 06 19 - dev
+
+	* Tor: added a "Restart Tor" launcher to the Gnome panel,
+	that runs "/etc/init.d/tor restart"
+	* APT: re-configure pinning and sources to use squeeze rather than
+	unstable to fetch newer or not-in-Lenny software
+	* hardware support: added instructions in README.eCAFE to support the
+	Hercules eCAFÉ™ EC-800 netbook
+	* release: include the Changelog and TODO in the generated images,
+	in the 	/usr/share/doc/amnesia/ directory
+	* torbutton: install newer version from Squeeze
+
+2009 06 18 - dev
+
+	* software: install gnomebaker when building Gnome-based live OS, to
+	easily clone myself when running from CD
+
+2009 06 17 - dev
+
+	* Tor vs. Network Manager: added a restart tor hook to if-up.d (used by
+	Network Manager as well), so that Tor does work immediately even if
+	the network cable was plugged late in/after the boot process
+	* build system cleanup
+	- migrated most of lh_config invocations to scripts/config
+	- append "noprompt" so that halting/rebooting work with splashy
+	- moved our own variables to config/amnesia, using the namespace
+	  $AMNESIA_*
+	* APT: configure pinning to support installing chosen packages from sid;
+	the APT source for unstable is hardcoded in chroot_sources/sid, since
+	there is no way to use $LH_CHROOT_MIRROR there: the chroot_local-hooks
+	have no access to such configuration variables :/
+	* iceweasel: install NoScript plugin from Debian sid
+
+2009 06 16 - dev
+
+	* iceweasel: delete urlclassifier3.sqlite on $HOME refresh: as we
+	  disabled "safebrowsing", this huge file is of no use
+	* build system
+	- rely on standard live-initramfs adduser to do our user setup
+	  (including sudo vs. Gnome/KDE, etc.)
+	- stop "supporting" KDE
+	* linux: removed non-686 kernel flavours when building i386 images
+	* compatibility: append "live-media=removable live-media-timeout=15", to
+	  prevent blindly booting another debian-live installed on the hard disk
+	* software: install scribus
+
+2009 XX XX - dev
+
+	* Forked Privatix 9.03.15, by Markus Mandalka:
+	http://mandalka.name/privatix/index.html.en
+	Everything has since been rewritten or so heavily changed that nothing
+	remains from the original code... apart of a bunch of Gnome settings.
+	* iceweasel
+	- default search engine is now Scroogle SSL, configured to search pages
+	  in French language; the English one is also installed
+	- never ask to save passwords or forms content
+	- configured the torbutton extension to use polipo
+	- installed the CACert root certificate
+	- installed the SSL Blacklist extension and the blacklist data
+	- installed the FireGPG extension
+	- installed the CS Lite extension
+	- installed the NoScript extension
+	- NoScript, CS Lite: replaced the default whitelists with a list of
+	  trusted, non-commercial Internet Service Providers
+	- configure extensions (add to prefs.js):
+		user_pref("extensions.torbutton.startup", true);
+		user_pref("extensions.torbutton.startup_state", 1);
+		user_pref("extensions.torbutton.tor_enabled", true);
+		user_pref("noscript.notify.hide", true);
+		user_pref("capability.policy.maonoscript.sites", "about:
+			about:blank about:certerror about:config about:credits
+			about:neterror about:plugins about:privatebrowsing
+			about:sessionrestore chrome: resource:");
+		user_pref("extensions.firegpg.no_updates", true);
+	* Tor
+	- enable the transparent proxy, the DNS resolver, and the control port
+	- save authentication cookie to /tmp/control_auth_cookie, so that the
+	  live user can use Tork and co.
+	- autostart Tork with Gnome
+	- Tork: installed, disabled most notifications and startup tips
+	* build system
+	- build i386 images when the build host is amd64
+	- added a version file: /etc/amnesia/version
+	- use snapshot live-* packages inside the images
+	- setup timezone depending on the chosen build locale
+	* $HOME
+	- added a nautilus-script to wipe files and directories
+	- bash with working completion for the live user
+	* software: added
+	- gnome-app-install
+	- iwconfig
+	- cryptkeeper: Gnome system tray applet to encrypt files with EncFS
+	- kvkbd: virtual keyboard (installed from backports.org)
+	- sshfs (and added live user to the fuse group)
+	- less, secure-delete, wipe, seahorse, sshfs, ntfs-3g
+	* polipo: install and configure this HTTP proxy to forward requests
+	through Tor
+	* DNS: install and configure pdnsd to forward any DNS request through
+	the Tor resolver
+	* firewall: force every outgoing TCP connection through the Tor
+	transparent proxy, discard any outgoing UDP connection
+	* hardware support
+	- install a bunch of non-free wifi firmwares
+	- install xsane and add the live user to the scanner group
+	- install aircrack-ng
+	- install xserver-xorg-video-geode on i386 (eCafe support)
+	- install xserver-xorg-video-all
+	* misc
+	- set syslinux timeout to 4 seconds
+	- use splashy for more user-friendly boot/halt sequences
