@@ -1,0 +1,1 @@
+({windows:[{tabs:[], selected:1, _closedTabs:[], _hosts:{}, width:"900", height:"690", screenX:"0", screenY:"25", sizemode:"maximized"}], selectedWindow:1, session:{state:"stopped"}})

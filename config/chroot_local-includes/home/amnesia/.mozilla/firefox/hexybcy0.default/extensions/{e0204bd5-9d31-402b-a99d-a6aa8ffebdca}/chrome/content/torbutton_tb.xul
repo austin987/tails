@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://torbutton/skin/torbutton.css" type="text/css"?> 
+<?xul-overlay href="chrome://torbutton/content/popup.xul"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://torbutton/locale/torbutton.dtd">
+
+<overlay id="torbutton-overlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <script type="application/x-javascript" src="chrome://torbutton/content/torbutton_util.js" />
+    <script type="application/x-javascript" src="chrome://torbutton/content/torbutton.js" />
+    <script language="JavaScript">
+        //onLoad Hander
+        try{window.addEventListener("load", torbutton_init, false);}catch(e){}
+    </script>
+
+    <stringbundleset id="torbutton-stringbundleset">
+        <stringbundle id="torbutton-bundle" src="chrome://torbutton/locale/torbutton.properties"/>
+    </stringbundleset>
+
+    <toolbarpalette id="MailToolbarPalette">
+        <toolbarbutton 
+            id="torbutton-button-tb" 
+            class="toolbarbutton-1" 
+            label="Torbutton"
+            tooltiptext="&torbutton.button.tooltip;" 
+            context="torbutton-context-menu"
+            oncommand="torbutton_toggle(false);" />
+    </toolbarpalette>
+
+    <toolbarpalette id="MsgComposeToolbarPalette">
+        <toolbarbutton 
+            id="torbutton-button-tb-msg" 
+            class="toolbarbutton-1" 
+            label="Torbutton"
+            tooltiptext="&torbutton.button.tooltip;" 
+            context="torbutton-context-menu"
+            oncommand="torbutton_toggle(false);" />
+    </toolbarpalette>
+
+    <commandset id="mainCommandSet">
+        <command id="torbutton-toggle-cmd" oncommand="torbutton_toggle(false);"/>
+    </commandset>
+
+    <keyset id="mainKeyset">
+        <key id="torbutton-toggle-key" modifiers="control shift" key="T"
+             command="torbutton-toggle-cmd"/>
+    </keyset>
+
+    <statusbar id="status-bar">
+        <statusbarpanel id="torbutton-panel"
+            insertbefore="statusbar-updates"
+                        context="torbutton-context-menu"
+            onclick="if (event.button == 0) torbutton_toggle(false)"/>
+
+        <popup id="torbutton-context-menu"/>
+   </statusbar>
+</overlay>
