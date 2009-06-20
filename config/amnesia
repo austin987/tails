@@ -22,24 +22,32 @@ AMNESIA_IMAGES="iso"
 # Base for the string that will be passed to "lh_config --bootappend-live"
 AMNESIA_APPEND="quiet splash vga=791 live-media=removable live-media-timeout=15 noprompt"
 
-# Refresh the live user's $HOME directory by copying the build system's
-# /home/amnesia. See also AMNESIA_HOME_EXCLUDES.
-# Supported: yes|no
-# Default: no
-AMNESIA_REFRESH_HOME="no"
+### Options used only by the home-refresh script ###############################
+
+# Source directory used to refresh the live user's $HOME
+# Default: /home/amnesia
+AMNESIA_REFRESH_HOME_SOURCE="/home/amnesia"
 
 # Patterns to exclude when refreshing /home/amnesia
-AMNESIA_HOME_EXCLUDES="/home/amnesia/.bash_history \
-  /home/amnesia/.dbus/session-bus/* \
-  /home/amnesia/.gconf/desktop/gnome/peripherals/keyboard/host-* \
-  /home/amnesia/.kde/cache-* \
-  /home/amnesia/.kde/socket-* \
-  /home/amnesia/.kde/tmp-* \
-  /home/amnesia/.mozilla/firefox/*/bookmarkbackups/* \
-  /home/amnesia/.mozilla/firefox/*/urlclassifier3.sqlite \
-  /home/amnesia/.nautilus/metafiles/ \
-  /home/amnesia/.nautilus/saved-session-* \
-  /home/amnesia/.xsession-errors"
+# FIXME: remove the leading /home/amnesia or /home/amnesia/
+AMNESIA_HOME_EXCLUDES="/.bash_history \
+  /.dbus/session-bus/* \
+  /.fontconfig/* \
+  /.gconf/desktop/gnome/peripherals/keyboard/host-* \
+  /.gnome/gnome-vfs/.trash_entry_cache \
+  /.gstreamer-*/registry*.bin
+  /.kde/cache-* \
+  /.kde/share/config/kdesurc \
+  /.kde/socket-* \
+  /.kde/tmp-* \
+  /.metacity/sessions/* \
+  /.mozilla/firefox/*/bookmarkbackups/* \
+  /.mozilla/firefox/*/urlclassifier3.sqlite \
+  /.nautilus/metafiles/ \
+  /.nautilus/saved-session-* \
+  /.qt/qt_plugins_3.3rc \
+  /.su-to-rootrc \
+  /.xsession-errors"
 
 ### You should not have to change anything bellow this line ####################
 
