@@ -8,13 +8,6 @@ if [ -e "${BASEDIR}/config/amnesia.local" ] ; then
    . "${BASEDIR}/config/amnesia.local"
 fi
 
-extract_home () {
-   tar \
-      jxf home/home.tar.bz2 \
-      --atime-preserve --same-permissions \
-      --directory="config/chroot_local-includes/"
-}
-
 # a clean starting point
 rm -rf cache/stages_rootfs
 
@@ -49,9 +42,6 @@ for BUILD_TYPE in ${AMNESIA_IMAGES} ; do
       
    echo "Running lh config..."
    lh config noautoconfig --binary-images "${BUILD_TYPE}"
-
-   echo "Extracting home.tar.bz2 to chroot ..."
-   extract_home
 
    echo "Building $BUILD_TYPE image ${BUILD_BASENAME}..."
    if lh build noautoconfig ${@} 2>&1 | tee "${BUILD_LOG}" ; then
