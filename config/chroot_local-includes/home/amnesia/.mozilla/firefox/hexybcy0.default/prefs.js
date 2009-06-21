@@ -18,6 +18,8 @@ user_pref("app.update.lastUpdateTime.microsummary-generator-update-timer", 12198
 user_pref("app.update.lastUpdateTime.search-engine-update-timer", 1220185019);
 user_pref("browser.bookmarks.livemark_refresh_seconds", 31536000);
 user_pref("browser.cache.disk.enable", false);
+user_pref("browser.cache.disk_cache_ssl", false);
+user_pref("browser.cache.memory.enable", true);
 user_pref("browser.download.manager.closeWhenDone", true);
 user_pref("browser.download.manager.retention", 0);
 user_pref("browser.formfill.enable", false);
