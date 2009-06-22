@@ -1,12 +1,13 @@
 #!/usr/bin/perl
 # Convert git log output to ChangeLog format.
 
-my $VERSION = '2008-12-21 12:07'; # UTC
+my $VERSION = '2009-06-22 13:27'; # UTC
 # The definition above must lie within the first 8 lines in order
 # for the Emacs time-stamp write hook (at end) to update it.
 # If you change this file with Emacs, please let the write hook
 # do its job.  Otherwise, update this string manually.
 
+# Copyright (C) 2009 amnesia@boum.org
 # Copyright (C) 2008 Free Software Foundation, Inc.
 
 # This program is free software: you can redistribute it and/or modify
@@ -148,6 +149,9 @@ sub quoted_cmd(@)
       # Remove leading and trailing blank lines.
       while ($line[0] =~ /^\s*$/) { shift @line; }
       while ($line[$#line] =~ /^\s*$/) { pop @line; }
+
+      # Prefix the first non-empty line with '* '
+      $line[0] = '* ' . $line[0];
 
       # Prefix each non-empty line with a TAB.
       @line = map { length $_ ? "\t$_" : '' } @line;
