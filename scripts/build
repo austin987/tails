@@ -10,6 +10,15 @@ fi
 # a clean starting point
 rm -rf cache/stages_rootfs
 
+# fix permissions on chroot_local-includes; they may be wrong, e.g.
+# if the tarball was extracted with a strict umask
+chmod -R go+rX config/chroot_local-includes/etc
+chmod 0755 config/chroot_local-includes/home
+chmod 0700 config/chroot_local-includes/home/amnesia
+chmod -R go+rX config/chroot_local-includes/usr
+chmod -R go+rx config/chroot_local-includes/usr/local/bin
+chmod -R go+rx config/chroot_local-includes/usr/local/sbin
+
 # build all configured image types
 for BUILD_TYPE in ${AMNESIA_IMAGES} ; do
 
