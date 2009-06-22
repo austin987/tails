@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# Usage: ./release NEW_VERSION [ dev ]
+# 
+# If "dev" is supplied as the second argument, a development snapshot
+# is done rather than a real release, i.e.:
+#    * the --snapshot option is passed to git-dch
+
+### init variables
+
+NEW_VERSION="$1"
+if [ "$2" = dev ]; then
+   SNAPSHOT=yes
+else
+   SNAPSHOT=no
+fi
+
+### helper functions
+
+fatal () {
+   echo "Fatal: $@" >&2
+   exit 2
+}
+
+xedit () {
+   if [ -n "$VISUAL" -a -x "`which $VISUAL`" ]; then
+      $VISUAL "$1"
+      return $?
+   elif [ -n "$EDITOR" -a -x "`which $EDITOR`" ]; then
+      $EDITOR "$1"
+      return $?
+   else
+      if [ -h /etc/alternatives/editor -a -x "`readlink /etc/alternatives/editor`" ]; then
+	 VISUAL="`readlink /etc/alternatives/editor`"
+      elif [ -x "`which nano`" ]; then
+	 VISUAL="`which nano`"
+      elif [ -x "`which vim`" ]; then
+	 VISUAL="`which vim`"
+      elif [ -x "`which vi`" ]; then
+	 VISUAL="`which vi`"
+      else
+	 echo 'No suitable editor found, please define $VISUAL or $EDITOR' >&2
+	 echo 'or configure /etc/alternatives/editor.' >&2
+	 return 1
+      fi
+      $VISUAL "$1"
+      return $?
+   fi
+}
+
+### sanity checks
+
+[ -n "${NEW_VERSION}" ] || fatal "the new version must be supplied on the command-line."
+
+### main
+
+export DEBFULLNAME="amnesia"
+export DEBEMAIL="amnesia@boum.org"
+
+# update the Changelog
+echo "Updating debian/changelog from Git history..."
+git-dch `if [ ${SNAPSHOT} = yes ]; then echo '--snapshot' ; fi` \
+   --new-version="${NEW_VERSION}" \
+   || fatal "git-dch failed."
+xedit debian/changelog || fatal "manual edit of debian/changelog failed."
