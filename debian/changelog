@@ -1,0 +1,99 @@
+amnesia (0.1) UNRELEASED; urgency=low
+
+  * Forked Privatix 9.03.15, by Markus Mandalka:
+  http://mandalka.name/privatix/index.html.en
+  Everything has since been rewritten or so heavily changed that nothing
+  remains from the original code... apart of a bunch of Gnome settings.
+  * hardware support:
+  - install a bunch of non-free wifi firmwares
+  - install xsane and add the live user to the scanner group
+  - install aircrack-ng
+  - install xserver-xorg-video-geode on i386 (eCafe support)
+  - install xserver-xorg-video-all
+  - install firmware-linux from backports.org
+  - install system-config-printer
+  - added instructions in README.eCAFE to support the Hercules eCAFE EC-800
+    netbook
+  * APT:
+  - configure pinning to support installing chosen packages from
+    squeeze; the APT source for testing is hardcoded in chroot_sources/,
+    since there is no way to use $LH_CHROOT_MIRROR in chroot_local-hooks
+  - give backports.org priority 200, so that we track upgrades of packages
+    installed from there
+  * release: include the Changelog and TODO in the generated images,
+  in the   /usr/share/doc/amnesia/ directory
+  * software: install gnomebaker when building Gnome-based live OS, to
+  easily clone myself when running from CD
+  * build system
+  - build i386 images when the build host is amd64
+  - added a version file: /etc/amnesia/version
+  - use snapshot live-* packages inside the images
+  - setup timezone depending on the chosen build locale
+  - rely on standard live-initramfs adduser to do our user setup
+    (including sudo vs. Gnome/KDE, etc.)
+  - stop "supporting" KDE
+  - allow building several images at once
+  - migrated most of lh_config invocations to scripts/config
+  - append "noprompt" so that halting/rebooting work with splashy
+  - moved our own variables to config/amnesia, using the namespace
+    $AMNESIA_*
+  * iceweasel
+  - default search engine is now Scroogle SSL, configured to search pages
+    in French language; the English one is also installed
+  - never ask to save passwords or forms content
+  - configured the torbutton extension to use polipo
+  - installed the CACert root certificate
+  - installed the SSL Blacklist extension and the blacklist data
+  - installed the FireGPG extension
+  - installed the CS Lite extension
+  - installed the NoScript extension
+  - NoScript, CS Lite: replaced the default whitelists with a list of
+    trusted, non-commercial Internet Service Providers
+  - configure extensions (add to prefs.js):
+    user_pref("extensions.torbutton.startup", true);
+    user_pref("extensions.torbutton.startup_state", 1);
+    user_pref("extensions.torbutton.tor_enabled", true);
+    user_pref("noscript.notify.hide", true);
+    user_pref("capability.policy.maonoscript.sites", "about:
+      about:blank about:certerror about:config about:credits
+      about:neterror about:plugins about:privatebrowsing
+      about:sessionrestore chrome: resource:");
+    user_pref("extensions.firegpg.no_updates", true);
+  - install the NoScript plugin from Debian squeeze
+  - delete urlclassifier3.sqlite on $HOME refresh: as we disabled
+    "safebrowsing", this huge file is of no use
+  - torbutton: install newer version from Squeeze
+  * linux: removed non-686 kernel flavours when building i386 images
+  * compatibility: append "live-media=removable live-media-timeout=15", to
+    prevent blindly booting another debian-live installed on the hard disk
+  * software: added
+  - gnome-app-install
+  - iwconfig
+  - cryptkeeper: Gnome system tray applet to encrypt files with EncFS
+  - kvkbd: virtual keyboard (installed from backports.org)
+  - sshfs (and added live user to the fuse group)
+  - less, secure-delete, wipe, seahorse, sshfs, ntfs-3g
+  - scribus
+  * Tor
+  - enable the transparent proxy, the DNS resolver, and the control port
+  - save authentication cookie to /tmp/control_auth_cookie, so that the
+    live user can use Tork and co.
+  - autostart Tork with Gnome
+  - Tork: installed, disabled most notifications and startup tips
+  - added a restart tor hook to if-up.d (used by Network Manager as well),
+    so that Tor does work immediately even if the network cable was
+    plugged late in/after the boot process
+  * $HOME
+  - added a nautilus-script to wipe files and directories
+  - bash with working completion for the live user
+  * polipo: install and configure this HTTP proxy to forward requests
+  through Tor
+  * DNS: install and configure pdnsd to forward any DNS request through
+  the Tor resolver
+  * firewall: force every outgoing TCP connection through the Tor
+  transparent proxy, discard any outgoing UDP connection
+  * misc
+  - set syslinux timeout to 4 seconds
+  - use splashy for more user-friendly boot/halt sequences
+
+ -- amnesia <amnesia@boum.org>  Sat, 20 Jun 2009 21:09:15 +0200
