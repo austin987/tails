@@ -1,10 +1,9 @@
 #! /bin/sh
 # automatically run by lh_config
 
-BASEDIR="`dirname $0`/.."
-. "${BASEDIR}/config/amnesia"
-if [ -e "${BASEDIR}/config/amnesia.local" ] ; then
-   . "${BASEDIR}/config/amnesia.local"
+. config/amnesia
+if [ -e config/amnesia.local ] ; then
+   . config/amnesia.local
 fi
 
 RUN_LH_CONFIG="lh config noautoconfig"
@@ -38,7 +37,7 @@ if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
 fi
 
 # locale-dependent configuration
-. "${BASEDIR}/config/chroot"
+. config/chroot
 case "${LH_LANGUAGE}" in
    de)
       AMNESIA_APPEND="${AMNESIA_APPEND} locale=de_DE.UTF-8 keyb=de timezone=Europe/Berlin"
@@ -62,4 +61,4 @@ esac
 $RUN_LH_CONFIG --packages-lists="$PACKAGES_LISTS" ${@}
 
 # version
-echo "${AMNESIA_TODAY}" > "${BASEDIR}/config/chroot_local-includes/etc/amnesia/version"
+echo "${AMNESIA_TODAY}" > config/chroot_local-includes/etc/amnesia/version
