@@ -6,6 +6,13 @@
 # is done rather than a real release, i.e.:
 #    * the --snapshot option is passed to git-dch
 
+### source the configuration files
+
+. config/amnesia
+if [ -e config/amnesia.local ] ; then
+   . config/amnesia.local
+fi
+
 ### init variables
 
 NEW_VERSION="$1"
@@ -51,11 +58,13 @@ xedit () {
 ### sanity checks
 
 [ -n "${NEW_VERSION}" ] || fatal "the new version must be supplied on the command-line."
+# FIXME: check that the needed programs are available
 
 ### main
 
-export DEBFULLNAME="amnesia"
-export DEBEMAIL="amnesia@boum.org"
+export DEBFULLNAME="${AMNESIA_DEV_FULLNAME}"
+export DEBEMAIL="${AMNESIA_DEV_EMAIL}"
+export DEBSIGN_KEYID="${AMNESIA_DEV_KEYID}"
 
 # update the Changelog
 echo "Updating debian/changelog from Git history..."
@@ -63,3 +72,11 @@ git-dch `if [ ${SNAPSHOT} = yes ]; then echo '--snapshot' ; fi` \
    --new-version="${NEW_VERSION}" \
    || fatal "git-dch failed."
 xedit debian/changelog || fatal "manual edit of debian/changelog failed."
+
+# tag the release
+# if [ "${SNAPSHOT}" = no ]; then
+#    echo "Git-tagging the release..."
+#    git tag -u "{$AMNESIA_GPG_ID}" "${NEW_VERSION}" \
+#       || fatal "git tag failed."
+# fi
+
