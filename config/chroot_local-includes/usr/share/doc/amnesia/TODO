@@ -43,21 +43,11 @@ documentation
 iceweasel
 =========
 
+- install SSL Blacklist
 - install some trusted, non-commercial SSL certificates (e.g.
   Autistici/Inventati)
 - easily build a live system with a custom JavaScript/cookies
   whitelist
-
-profile directory cleanup
--------------------------
-
-[documentation](http://kb.mozillazine.org/Profile_folder_-_Firefox#Files_and_folders_in_the_profile)
-
-* `cert8.db`: could be generated from scratch by adding our few custom
-  SSL root certificates with `certutil`
-* `secmod.db`: seems like there is only standard content here, what
-  happens if this file is deleted?
-* `key3.db`: if missing, the other `*.db` files can't be used
 
 switch to Debian-packaged extensions
 ------------------------------------
@@ -91,6 +81,14 @@ build $HOME in a programmatic way
 
 iceweasel
 ---------
+
+### NSS *.db files
+
+* `cert8.db`: could be generated from scratch by adding our few custom
+  SSL root certificates with `certutil`
+* `secmod.db`: if this file is missing, a new one is generated without
+  DSA, SHA256 and SHA512; weird.
+* `key3.db`: if missing, the other `*.db` files can't be used
 
 ### sqlite
 
