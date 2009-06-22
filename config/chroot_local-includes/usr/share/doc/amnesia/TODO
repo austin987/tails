@@ -53,9 +53,11 @@ profile directory cleanup
 
 [documentation](http://kb.mozillazine.org/Profile_folder_-_Firefox#Files_and_folders_in_the_profile)
 
-* check content of:
-  - `cert8.db`
-  - `secmod.db`
+* `cert8.db`: could be generated from scratch by adding our few custom
+  SSL root certificates with `certutil`
+* `secmod.db`: seems like there is only standard content here, what
+  happens if this file is deleted?
+* `key3.db`: if missing, the other `*.db` files can't be used
 
 switch to Debian-packaged extensions
 ------------------------------------
@@ -93,6 +95,13 @@ iceweasel
 ### sqlite
 
 Most sqlite files could be built from scratch with SQL commands.
+
+Bookmarks are the only pieces of data we want to preserve in
+`places.sqlite`; according to
+[MozillaZine](http://kb.mozillazine.org/Places.sqlite), a missing
+`places.sqlite` is rebuilt using the latest dated JSON file from the
+`bookmarkbackups` folder. We could then store our bookmarks data as
+a backup, and rm+exclude `places.sqlite`.
 
 Gnome
 -----
