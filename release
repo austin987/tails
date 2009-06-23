@@ -58,7 +58,9 @@ xedit () {
 ### sanity checks
 
 [ -n "${NEW_VERSION}" ] || fatal "the new version must be supplied on the command-line."
-# FIXME: check that the needed programs are available
+[ -x "`which git`" ] || fatal "could not find git, please apt-get install git-core."
+[ -x "`which git-dch`" ] || fatal "could not find git-dch, please apt-get install git-buildpackage."
+[ -x "`which debcommit`" ] || fatal "could not find debcommit, please apt-get install devscripts."
 
 ### main
 
