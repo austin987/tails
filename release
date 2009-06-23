@@ -1,11 +1,12 @@
 #!/bin/sh
 
-# Usage: ./release NEW_VERSION [ dev ]
+# Usage: ./release NEW_VERSION [ dev | SINCE_COMMITISH ]
 # 
 # If "dev" is supplied as the second argument, a development snapshot
 # is done rather than a real release, i.e.:
 #    * the --snapshot --auto options are passed to git-dch
 #    * no commit or tag is created
+# else, the second argument is passed to git-dch's --since option.
 
 ### source the configuration files
 
@@ -21,6 +22,7 @@ if [ "$2" = dev ]; then
    SNAPSHOT=yes
 else
    SNAPSHOT=no
+   SINCE="$2"
 fi
 
 ### helper functions
@@ -34,6 +36,8 @@ fatal () {
 
 [ -n "${NEW_VERSION}" ] \
    || fatal "the new version must be supplied on the command-line."
+[ "${SNAPSHOT}" = yes -o -n "${SINCE}" ] \
+   || fatal "the second argument must be either 'dev' or the commitish we'll start reading commit messages at."
 [ -x "`which git`" ] \
    || fatal "could not find git, please apt-get install git-core"
 [ -x "`which git-dch`" ] \
@@ -52,7 +56,8 @@ export DEBSIGN_KEYID="${AMNESIA_DEV_KEYID}"
 # update the Changelog
 echo "Updating debian/changelog from Git history..."
 git-dch \
-   `if [ ${SNAPSHOT} = yes ]; then echo '--snapshot --auto' ; else echo '--release' ; fi` \
+   `if [ ${SNAPSHOT} = yes ]; then echo '--snapshot --auto' ; fi` \
+   `if [ ${SNAPSHOT} = no ]; then echo "--release --since=${SINCE}" ; fi` \
    --new-version="${NEW_VERSION}" \
    || fatal "git-dch failed."
 
