@@ -29,38 +29,18 @@ fatal () {
    exit 2
 }
 
-xedit () {
-   if [ -n "$VISUAL" -a -x "`which $VISUAL`" ]; then
-      $VISUAL "$1"
-      return $?
-   elif [ -n "$EDITOR" -a -x "`which $EDITOR`" ]; then
-      $EDITOR "$1"
-      return $?
-   else
-      if [ -h /etc/alternatives/editor -a -x "`readlink /etc/alternatives/editor`" ]; then
-	 VISUAL="`readlink /etc/alternatives/editor`"
-      elif [ -x "`which nano`" ]; then
-	 VISUAL="`which nano`"
-      elif [ -x "`which vim`" ]; then
-	 VISUAL="`which vim`"
-      elif [ -x "`which vi`" ]; then
-	 VISUAL="`which vi`"
-      else
-	 echo 'No suitable editor found, please define $VISUAL or $EDITOR' >&2
-	 echo 'or configure /etc/alternatives/editor.' >&2
-	 return 1
-      fi
-      $VISUAL "$1"
-      return $?
-   fi
-}
-
 ### sanity checks
 
-[ -n "${NEW_VERSION}" ] || fatal "the new version must be supplied on the command-line."
-[ -x "`which git`" ] || fatal "could not find git, please apt-get install git-core."
-[ -x "`which git-dch`" ] || fatal "could not find git-dch, please apt-get install git-buildpackage."
-[ -x "`which debcommit`" ] || fatal "could not find debcommit, please apt-get install devscripts."
+[ -n "${NEW_VERSION}" ] \
+   || fatal "the new version must be supplied on the command-line."
+[ -x "`which git`" ] \
+   || fatal "could not find git, please apt-get install git-core"
+[ -x "`which git-dch`" ] \
+   || fatal "could not find git-dch, please apt-get install git-buildpackage"
+[ -x "`which debcommit`" ] \
+   || fatal "could not find debcommit, please apt-get install devscripts"
+[ -x "`which dpkg-parsechangelog`" ] \
+   || fatal "could not find dpkg-parsechangelog, please apt-get install dpkg-dev"
 
 ### main
 
@@ -70,15 +50,17 @@ export DEBSIGN_KEYID="${AMNESIA_DEV_KEYID}"
 
 # update the Changelog
 echo "Updating debian/changelog from Git history..."
-git-dch `if [ ${SNAPSHOT} = yes ]; then echo '--snapshot' ; fi` \
+git-dch `if [ ${SNAPSHOT} = yes ]; then echo '--snapshot' ; else echo '--release' ; fi` \
    --new-version="${NEW_VERSION}" \
    || fatal "git-dch failed."
-xedit debian/changelog || fatal "manual edit of debian/changelog failed."
 
-# tag the release
-# if [ "${SNAPSHOT}" = no ]; then
-#    echo "Git-tagging the release..."
-#    git tag -u "{$AMNESIA_GPG_ID}" "${NEW_VERSION}" \
-#       || fatal "git tag failed."
-# fi
+# get the Debian version git-dch created
+NEW_DEBIAN_VERSION=`dpkg-parsechangelog | sed -n 's/^Version: //p'`
+[ -n "${NEW_DEBIAN_VERSION}" ] || fatal "new Debian version could not be guessed."
 
+# commit and tag the release
+if [ "${SNAPSHOT}" = no ]; then
+   debcommit --sign-tags --release \
+      --message "releasing version ${NEW_DEBIAN_VERSION}" \
+      debian/changelog
+fi
