@@ -38,20 +38,21 @@ fatal () {
    || fatal "the new version must be supplied on the command-line."
 [ "${SNAPSHOT}" = yes -o -n "${SINCE}" ] \
    || fatal "the second argument must be either 'dev' or the commitish we'll start reading commit messages at."
+[ -n "${AMNESIA_DEV_FULLNAME}" ] \
+   || fatal "AMNESIA_DEV_FULLNAME must be set in config/amnesia"
+[ -n "${AMNESIA_DEV_EMAIL}" ] \
+   || fatal "AMNESIA_DEV_EMAIL must be set in config/amnesia"
+[ -n "${AMNESIA_DEV_KEYID}" ] \
+   || fatal "AMNESIA_DEV_KEYID must be set in config/amnesia"
 [ -x "`which git`" ] \
    || fatal "could not find git, please apt-get install git-core"
 [ -x "`which git-dch`" ] \
    || fatal "could not find git-dch, please apt-get install git-buildpackage"
-[ -x "`which debcommit`" ] \
-   || fatal "could not find debcommit, please apt-get install devscripts"
-[ -x "`which dpkg-parsechangelog`" ] \
-   || fatal "could not find dpkg-parsechangelog, please apt-get install dpkg-dev"
 
 ### main
 
 export DEBFULLNAME="${AMNESIA_DEV_FULLNAME}"
 export DEBEMAIL="${AMNESIA_DEV_EMAIL}"
-export DEBSIGN_KEYID="${AMNESIA_DEV_KEYID}"
 
 # update the Changelog
 echo "Updating debian/changelog from Git history..."
@@ -61,13 +62,13 @@ git-dch \
    --new-version="${NEW_VERSION}" \
    || fatal "git-dch failed."
 
-# get the Debian version git-dch created
-NEW_DEBIAN_VERSION=`dpkg-parsechangelog | sed -n 's/^Version: //p'`
-[ -n "${NEW_DEBIAN_VERSION}" ] || fatal "new Debian version could not be guessed."
-
 # commit and tag the release
 if [ "${SNAPSHOT}" = no ]; then
-   debcommit --sign-tags --release \
-      --message "releasing version ${NEW_DEBIAN_VERSION}" \
-      debian/changelog
+   echo "Commit'ing debian/changelog..."
+   git commit -m "releasing version ${NEW_VERSION}" debian/changelog \
+      || fatal "failed to commit debian/changelog"
+   echo "Tagging new version..."
+   git tag -u "${AMNESIA_DEV_KEYID}" -m "tagging version ${NEW_VERSION}" "${NEW_VERSION}"
 fi
+
+echo "done."
