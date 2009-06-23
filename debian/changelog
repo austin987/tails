@@ -1,3 +1,64 @@
+amnesia (0.2) unstable; urgency=low
+
+  * imported /home/amnesia, then:
+  - more user-friendly shell, umask 077
+  - updated panel, added launcher to restart Tor
+  - mv $HOME/bin/* /usr/local/bin/
+  - removed metacity sessions
+  - removed gstreamer's registry, better keep this dynamically updated
+  - rm .qt/qt_plugins_3.3rc, better keep this dynamically updated
+  - removed .gnome/gnome-vfs/.trash_entry_cache
+  - removed kconf_update log
+  - removed and excluded Epiphany configuration (not installed)
+  - cleanup .kde
+  * iceweasel
+  - enable caching in RAM
+  - explicitly disable ssl v2, and enable ssl v3 + tls
+  - removed prefs for the non-installed webdeveloper
+  - removed the SSL Blacklist extension (not so useful, licensing issues)
+  - deep profile directory cleanup
+  - extensions cleanup: prefer Debian-packaged ones, cleanly reinstalled
+    AddBlock Plus and CS Lite to allow upgrading them
+  - updated pluginreg.dat and localstore.rdf
+  - moved some settings to user.js
+  - made cookie/JavaScript whitelists more consistent
+  - force httpS on whitelisted sites
+  - NoScript: marked google and gmail as untrusted
+  - some user interface tweaks, mainly for NoScript
+  - FireGPG: disable the buggy auto-detection feature, the link to firegpg's
+    homepage in generated pgp messages and the GMail interface (which won't
+    work without JavaScript anyway)
+  - updated blocklist.xml
+  - removed and excluded a bunch of files in the profile directory
+  * icedove: clean the profile directory up just like we did for iceweasel
+  * software: install msmtp and mutt
+  * home-refresh
+  - use rsync rather than tar
+  * documentation
+  - various fixes
+  - reviewed pidgin-otr security (see TODO)
+  * build system
+  - stop calling home-refresh in lh_build
+  - include home-refresh in generated images
+  - gitignore update
+  - fix permissions on local includes at build time
+  - updated scripts/{build,clean} wrt. new $HOME handling
+  - scripts/{build,config}: stop guessing BASEDIR, we must be run from
+    the root of the source directory anyway
+  - stop storing /etc/amnesia/version in Git, delete it at clean time
+  * release
+  - converted Changelog to the Debian format and location, updated
+    build scripts accordingly
+  - added a README symlink at the root of the source directory
+  - basic debian/ directory (not working for building packages yet,
+    but at least we can now use git-dch)
+  - added debian/gbp.conf with our custom options for git-dch
+  - config/amnesia: introduce new $AMNESIA_DEV_* variables to be used
+    by developpers' scripts
+  - added ./release script: a wrapper around git-dch, git-commit and git-tag
+
+ -- amnesia <amnesia@boum.org>  Tue, 23 Jun 2009 14:42:03 +0200
+
 amnesia (0.1) UNRELEASED; urgency=low
 
   * Forked Privatix 9.03.15, by Markus Mandalka:
