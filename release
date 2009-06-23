@@ -4,7 +4,8 @@
 # 
 # If "dev" is supplied as the second argument, a development snapshot
 # is done rather than a real release, i.e.:
-#    * the --snapshot option is passed to git-dch
+#    * the --snapshot --auto options are passed to git-dch
+#    * no commit or tag is created
 
 ### source the configuration files
 
@@ -50,7 +51,8 @@ export DEBSIGN_KEYID="${AMNESIA_DEV_KEYID}"
 
 # update the Changelog
 echo "Updating debian/changelog from Git history..."
-git-dch `if [ ${SNAPSHOT} = yes ]; then echo '--snapshot --auto' ; else echo '--release' ; fi` \
+git-dch \
+   `if [ ${SNAPSHOT} = yes ]; then echo '--snapshot --auto' ; else echo '--release' ; fi` \
    --new-version="${NEW_VERSION}" \
    || fatal "git-dch failed."
 
