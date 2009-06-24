@@ -142,8 +142,16 @@ AMNESIA_HOME_EXCLUDES="/.ICEauthority \
 
 ### You should not have to change anything bellow this line ####################
 
+# sanity checks
+if [ ! -x "`which dpkg-parsechangelog`" ]; then
+   echo "could not find dpkg-parsechangelog, please apt-get install dpkg-dev" >&2
+   exit 2
+fi
+
 # Compute the current Amnesia's version once for all
 AMNESIA_TODAY="`date '+%Y%m%d'`"
+AMNESIA_VERSION="`dpkg-parsechangelog | sed -n 's/^Version: //p'`"
+AMNESIA_FULL_VERSION="${AMNESIA_VERSION} - ${AMNESIA_TODAY}"
 
 # Developpers' data used by git-dch, debcommit and friends in the release script
 AMNESIA_DEV_FULLNAME="amnesia"

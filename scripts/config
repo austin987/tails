@@ -9,16 +9,6 @@ fi
 # init variables
 RUN_LH_CONFIG="lh config noautoconfig"
 
-# helper functions
-fatal () {
-   echo "Fatal: $@" >&2
-   exit 2
-}
-
-# sanity checks
-[ -x "`which dpkg-parsechangelog`" ] \
-   || fatal "could not find dpkg-parsechangelog, please apt-get install dpkg-dev"
-
 # init config/ with defaults
 $RUN_LH_CONFIG ${@}
 
@@ -31,7 +21,7 @@ $RUN_LH_CONFIG \
    --hostname="amnesia" \
    --iso-application="Amnesia live system" \
    --iso-publisher="https://amnesia.boum.org/" \
-   --iso-volume="Amnesia ${AMNESIA_TODAY}" \
+   --iso-volume="Amnesia ${AMNESIA_FULL_VERSION}" \
    --memtest none \
    --username="amnesia" \
    --syslinux-timeout 4 \
@@ -73,8 +63,7 @@ $RUN_LH_CONFIG --packages-lists="$PACKAGES_LISTS" ${@}
 
 # version
 mkdir -p config/chroot_local-includes/etc/amnesia/
-echo "`dpkg-parsechangelog | sed -n 's/^Version: //p'` (${AMNESIA_TODAY})" \
-   > config/chroot_local-includes/etc/amnesia/version
+echo "${AMNESIA_FULL_VERSION}" > config/chroot_local-includes/etc/amnesia/version
 
 # changelog
 cp debian/changelog config/chroot_local-includes/usr/share/doc/Changelog
