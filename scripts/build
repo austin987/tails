@@ -10,8 +10,12 @@ fi
 # a clean starting point
 rm -rf cache/stages_rootfs
 
-# fix permissions on chroot_local-includes; they may be wrong, e.g.
-# if the tarball was extracted with a strict umask
+# build the doc wiki
+./build-wiki
+
+# fix permissions on {binary,chroot}_local-includes; they may be
+# wrong, e.g. if the tarball was extracted with a strict umask
+chmod -R go+rX config/binary_local-includes/
 chmod -R go+rX config/chroot_local-includes/etc
 chmod 0755 config/chroot_local-includes/home
 chmod 0700 config/chroot_local-includes/home/amnesia
