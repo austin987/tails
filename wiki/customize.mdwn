@@ -1,0 +1,39 @@
+How to [[build]] custom Live Systems based on amnesia?
+
+[[!toc levels=2]]
+
+# amnesia-specific settings
+
+The settings that can be customized can be found in `config/amnesia`;
+e.g. images types to build, desktop environment.
+
+You'd better never directly edit this file: rather put your custom
+variable assignments in a new `config/amnesia.local` file. The values
+found in the `.local` file will override the ones from the
+upstream one.
+
+These configuration files are actually shell scripts, and are sourced
+by various other scripts.
+
+# Debian Live settings
+
+amnesia is based on Debian Live. Nearly everything can thus be
+customized. To learn how to do so, refer to the Debian Live
+[manual](http://live.debian.net/manual/),
+[website](http://debian-live.alioth.debian.org/) and
+[wiki](http://wiki.debian.org/DebianLive/).
+
+# $HOME
+
+One may want to build an image including a modified version of the
+live user's `$HOME` directory. There are multiple ways to do so:
+
+1. editing and creating files in `config/chroot_local-includes/home/amnesia/`
+2. droping shell scripts in `config/chroot_local-hooks/` to modify
+   `/home/amnesia` in a program-driven way (`gconftool`, etc.)
+3. eventually, one may run the live system, do the desired
+   modifications, save the resulting `/home/amnesia` directory, then
+   use the `home-refresh` script to import the modifications into the
+   directory used to build images from, i.e.
+   `config/chroot_local-includes/home/amnesia`. Read the (scarse)
+   documentation at the top of this script.
