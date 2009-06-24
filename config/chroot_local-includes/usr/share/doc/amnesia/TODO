@@ -3,11 +3,23 @@
 release
 =======
 
-- setup Git repository
-- setup web site
+- setup the public, mirror Git repository; see
+  <http://bl.ogtastic.com/2008/8/2/mirroring-to-github>
+
+Debian
+------
+
+- check Depends:
+- finish the packaging work
 
 build system
 ============
+
+- fix apt/preferences lh bug, which will in turn fix the "kvkbd is
+  upgraded from squeeze" bug and re-allow building several images
+  types in a row
+- include version taken from debian/changelog rather than based on the
+  current time
 
 hardware support
 ================
@@ -17,12 +29,15 @@ PowerPC
 
 - http://machine-cycle.blogspot.com/2009/05/running-debian-on-qemu-powerpc.html
 - /usr/share/doc/qemu/README.Debian
-- http://mac-on-linux.svn.sourceforge.net/viewvc/mac-on-linux/trunk/mollib/drivers/
 
 install/upgrade
 ===============
 
 - install on (optionally encrypted) USB from CD
+  - Incognito: `root_overlay/usr/sbin/create-usb` seems quite nice,
+    it allows using an existing fat32 partition, but it does not
+    proposes to partition the USB device first
+  - Privatix: ???
 - install on CD from USB?
 - clone the source directory to /usr/local/src/, and allow easy
   remastering from the live system itself?
@@ -39,8 +54,8 @@ documentation
 iceweasel
 =========
 
-- install some trusted, non-commercial SSL certificates (e.g.
-  Autistici/Inventati)
+- install the SSL certificates for the servers who signed the
+  [NODR manifest](http://www.nadir.org/nadir/aktuell/2008/10/10/36282.html)
 - easily build a live system with a custom JavaScript/cookies
   whitelist
 
@@ -52,16 +67,16 @@ switch to Debian-packaged extensions
 Pidgin
 ======
 
-- translate online help pages:
-  - <http://www.cypherpunks.ca/otr/help/3.2.0/unverified.php?lang=fr>
-  - <http://www.cypherpunks.ca/otr/help/3.2.0/levels.php?lang=fr>
-  - <http://www.cypherpunks.ca/otr/help/3.2.0/authenticate.php?lang=fr>
+- base config?
+- add irc.indymedia.org + SSL certificate check
+- online help pages have been translated into French, waiting for
+  upstream to install them
 - install version of the OTR plugin with up-to-date FR translation;
   should be in 3.2.0-2+lenny0, currently waiting in
   lenny-proposed-updates:
   <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=516763>
-- base config?
-- add irc.indymedia.org + SSL certificate check
+  ... but this translation is incomplete and largely sucks.
+  An updated, complete and proof-read one has been proposed upstream.
 
 security
 --------
@@ -145,4 +160,14 @@ Misc.
   => empty pdnsd's cache when Tor is restarted (Gnome panel launcher,
   `if-up.d` hook)
 - try Vidalia, which is now in Debian
+- desktop/iceweasel themes that mimic Windows/IE?
+- set time with NTP?
+- virtualization support (kvm, qemu, VMWare, VirtualBox); see
+  Incognito tricks
+- VoIP: Incognito now includes Twinkle, that supports for SIP, ZRTP
+  and SRTP
 
+wiki
+====
+
+* move this TODO to the wiki
