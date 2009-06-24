@@ -6,7 +6,18 @@ if [ -e config/amnesia.local ] ; then
    . config/amnesia.local
 fi
 
+# init variables
 RUN_LH_CONFIG="lh config noautoconfig"
+
+# helper functions
+fatal () {
+   echo "Fatal: $@" >&2
+   exit 2
+}
+
+# sanity checks
+[ -x "`which dpkg-parsechangelog`" ] \
+   || fatal "could not find dpkg-parsechangelog, please apt-get install dpkg-dev"
 
 # init config/ with defaults
 $RUN_LH_CONFIG ${@}
@@ -62,7 +73,8 @@ $RUN_LH_CONFIG --packages-lists="$PACKAGES_LISTS" ${@}
 
 # version
 mkdir -p config/chroot_local-includes/etc/amnesia/
-echo "${AMNESIA_TODAY}" > config/chroot_local-includes/etc/amnesia/version
+echo "`dpkg-parsechangelog | sed -n 's/^Version: //p'` (${AMNESIA_TODAY})" \
+   > config/chroot_local-includes/etc/amnesia/version
 
 # changelog
 cp debian/changelog config/chroot_local-includes/usr/share/doc/Changelog
