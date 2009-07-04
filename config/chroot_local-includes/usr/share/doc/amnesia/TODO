@@ -20,9 +20,8 @@ Debian
 build system
 ============
 
-- fix apt/preferences lh bug, which will in turn fix the "kvkbd is
-  upgraded from squeeze" bug and re-allow building several images
-  types in a row
+- fix apt/preferences lh bug, which will re-allow building several
+  images types in a row
 - test Windows autorun (should display the included wiki)
 
 hardware support
@@ -33,28 +32,70 @@ hardware support
 install/upgrade
 ===============
 
+specification
+-------------
+
+- allow adding 2nd encrypted data partition, or at least leave room
+  for it
+- USB: allow non-destructively upgrading the live system only, not
+  touching the other partitions (use the iso + grub trick ? tar image
+  + cp?)
+
 from CD to USB
 --------------
 
-- Incognito's `root_overlay/usr/sbin/create-usb` seems quite nice, as
+* Incognito's `root_overlay/usr/sbin/create-usb` seems quite nice, as
   it allows using an existing fat32 partition, but it does not
-  proposes to partition the USB device first. Have a look to other
-  Live CDs' tricks.
-- sidux's `install-sidux-usb-gui` needs an input ISO, but it still
+  proposes to partition the USB device first.
+* Ubuntu's [usb-creator](FIXME)
+   - supposed to replicate exactly the CD to USB
+   - does not seem to recognize non-Ubuntu CDs (0.1.16 crashes on
+     Lenny, 0.1.10 does not display them in the GUI even if it the
+     console output proves that it takes good note of their presence )
+   - how does it handle partitions?
+   - [launchpad](https://launchpad.net/usb-creator)
+* [UNetbootin](http://unetbootin.sourceforge.net/)
+   - works on Windows and GNU/Linux
+   - has a plugin architecture in case we need new or custom features
+   - included in squeeze and sid, easily backported to Lenny
+   - works like a charm to install an ISO image to USB, but the
+     syslinux menu has the unetbootin logo instead of Debian's one
+   - non-destructive install: does not format the chosen partition
+   - **TRY ME**: from a running Live CD to USB? (seems to need to dd
+     the CD to an ISO file first, which uses a lot of memory)
+   - **TRY ME**: .img image to USB?
+* [Ubuntu LiveUSB](http://klik.atekon.de/liveusb/)
+   - (a bit too) simplistic
+   - dedicated to "create a bootable Live USB medium from a running
+     Ubuntu Live CD"
+   - depending on sources, it partitions USB stick with one single
+     800MB partition or one partition using the whole device; in any
+     case, it unconditionally overwrites the device's content
+   - able to upgrade without re-partitioning the device?
+   - [launchpad](https://launchpad.net/liveusb)
+* sidux's `install-sidux-usb-gui` needs an input ISO, but it still
   deserves being looked at more thoroughly; see the
   [manual](http://manual.sidux.com/en/hd-install-opts-en.htm#usb-hd).
-- Fedora's `livecd-iso-to-disk`: see
-  the [manual](http://fedoraproject.org/wiki/FedoraLiveCD/USBHowTo)
-- Fedora's
-  [liveusb-creator](https://fedorahosted.org/liveusb-creator/): works
-  on Windows as well
+* Fedora's `livecd-iso-to-disk`:
+   - [manual](http://fedoraproject.org/wiki/FedoraLiveCD/USBHowTo)
+* Fedora's [liveusb-creator](https://fedorahosted.org/liveusb-creator/):
+   - works on Windows and GNU/Linux
+   - "non-destructive install", which means?
+   - sidux ships a modified version:
+     which does not work on Lenny due to `dosfslabel` exiting with
+     error code 1 even when successful
+      - [.deb](http://sidux.office-vienna.at/sidux/debian/pool/main/l/liveusb-creator/),
+      - [source](http://w3you.com/liveusb-creator/liveusb-creator.htm)
+   - needs an ISO file, does not know how to read a real CD
 
-- install on CD from USB?
+from USB to CD
+--------------
+
+misc.
+-----
+
 - clone the source directory to /usr/local/src/, and allow easy
   remastering from the live system itself?
-- add 2nd encrypted data partition
-- USB: allow upgrading only the live system, not touching the other
-  partitions (use the iso + grub trick ? tar image + cp?)
 - steal Privatix's starter-cd trick for computers that do not boot on USB
 
 documentation
@@ -152,7 +193,8 @@ Gnome
 $HOME
 =====
 
-- add links on the desktop to the static and online wikis
+- add a link on the desktop to the static wiki (how to prevent Gnome
+  to ask whether the file should be executed?)
 - cleanup `.config/xfce*`
 - is `.purple/prefs.xml` different from the one that would be
   automatically generated?
@@ -160,6 +202,7 @@ $HOME
 Desktop environment
 ===================
 
+- install cups daemon to allow printing
 - replace XFCE with LXDE?
 - test XFCE images and update XFCE config
 
@@ -178,12 +221,15 @@ Misc.
    - <http://ubuntu.online02.com/node/14>
 - set time with NTP?
 - virtualization support (kvm, qemu, VMWare, VirtualBox); see
-  Incognito tricks
+  Incognito tricks, virtualbox hook bundled with debian live + patch
+  on the ML
 - VoIP: Incognito now includes Twinkle, that supports for SIP, ZRTP
   and SRTP
 
 wiki
 ====
 
+* use ikiwiki's mirror setting to add links to the online wiki from
+  the static one included in the images
 * move this TODO to the wiki
 * use the po plugin for translation
