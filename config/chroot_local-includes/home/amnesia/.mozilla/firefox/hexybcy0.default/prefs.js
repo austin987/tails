@@ -53,6 +53,7 @@ user_pref("extensions.firegpg.gmail_enabled", false);
 user_pref("extensions.firegpg.gpg_path", "/usr/bin/gpg");
 user_pref("extensions.firegpg.gpg_version", "0.7.8");
 user_pref("extensions.firegpg.gpgauth.global.trust_model", "direct");
+user_pref("extensions.firegpg.keyserver", "pool.sks-keyservers.net");
 user_pref("extensions.firegpg.lastUpdateCheck", "1250355837315");
 user_pref("extensions.firegpg.show_website", false);
 user_pref("extensions.lastAppVersion", "3.0.6");
