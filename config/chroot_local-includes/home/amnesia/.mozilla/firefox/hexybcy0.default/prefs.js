@@ -46,16 +46,10 @@ user_pref("capability.policy.maonoscript.sites", "about: about:blank about:certe
 user_pref("dom.storage.enabled", false);
 user_pref("extensions.adblockplus.currentVersion", "1.0.2");
 user_pref("extensions.enabledItems", "{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}:1.0.2,{00084897-021a-4361-8423-083407a033e0}:1.4,firegpg@firegpg.team:0.7.8,langpack-fr@firefox.mozilla.org:3.0.6,{73a6fe31-595d-460b-a920-fcc0f8843232}:1.9.2.8,{e0204bd5-9d31-402b-a99d-a6aa8ffebdca}:1.2.1,{972ce4c6-7e08-4474-a285-3208198ce6fd}:3.0.6");
-user_pref("extensions.firegpg.activate_inline", false);
-user_pref("extensions.firegpg.assisant_has_already_been_executed", true);
-user_pref("extensions.firegpg.enable_gpgapi", false);
-user_pref("extensions.firegpg.gmail_enabled", false);
 user_pref("extensions.firegpg.gpg_path", "/usr/bin/gpg");
 user_pref("extensions.firegpg.gpg_version", "0.7.8");
 user_pref("extensions.firegpg.gpgauth.global.trust_model", "direct");
-user_pref("extensions.firegpg.keyserver", "pool.sks-keyservers.net");
 user_pref("extensions.firegpg.lastUpdateCheck", "1250355837315");
-user_pref("extensions.firegpg.show_website", false);
 user_pref("extensions.lastAppVersion", "3.0.6");
 user_pref("extensions.torbutton.block_tforms", false);
 user_pref("extensions.torbutton.clear_cookies", true);
