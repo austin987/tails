@@ -64,6 +64,16 @@ case "${LH_LANGUAGE}" in
 esac
 $RUN_LH_CONFIG --packages-lists="$PACKAGES_LISTS" ${@}
 
+USERJS=config/chroot_local-includes/.mozilla/firefox/hexybcy0.default/user.js
+case "${LH_LANGUAGE}" in
+   fr)
+      echo 'user_pref("browser.search.defaultenginename", "Scroogle SSL French");' >> $USERJS
+      echo 'user_pref("browser.search.selectedEngine", "Scroogle SSL French");' >> $USERJS
+      ;;
+   *)
+      ;;
+esac
+
 # version
 mkdir -p config/chroot_local-includes/etc/amnesia/
 echo "${AMNESIA_FULL_VERSION}" > config/chroot_local-includes/etc/amnesia/version

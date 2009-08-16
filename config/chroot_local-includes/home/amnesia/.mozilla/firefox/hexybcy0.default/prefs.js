@@ -35,7 +35,6 @@ user_pref("browser.rights.3.shown", true);
 user_pref("browser.safebrowsing.enabled", false);
 user_pref("browser.safebrowsing.malware.enabled", false);
 user_pref("browser.safebrowsing.remoteLookups", false);
-user_pref("browser.search.defaultenginename", "Scroogle SSL");
 user_pref("browser.search.suggest.enabled", false);
 user_pref("browser.search.update", false);
 user_pref("browser.search.useDBForOrder", true);
