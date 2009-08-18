@@ -3,6 +3,9 @@
 release
 =======
 
+- export the resulting installed packages list to a plain-text file
+  that could be published
+
 Debian
 ------
 
@@ -13,14 +16,20 @@ BitTorrent
 
 - announce torrents through the hidden tracker:
   <http://z6gw6skubmo2pj43.onion:8080/announce>
-
+- add symlinks with persistent names to the latest available
+  `.torrent` files (Git and/or latest tagged stable release?)
+- gently ask ikiwiki to maintain a RSS feed for our torrent files
 
 build system
 ============
 
-- fix apt/preferences lh bug, which will re-allow building several
+* fix apt/preferences lh bug, which will re-allow building several
   images types in a row
-- test Windows autorun (should display the included wiki)
+* test Windows autorun (should display the included wiki)
+* setup an automated test environment:
+  - <http://git.debian.org/?p=debian-live/autotesting.git> and its
+    [example results](http://autotesting.livecd.org/autotesting/current/)
+  - <http://git.webconverger.org/?p=build;a=summary>
 
 hardware support
 ================
@@ -103,18 +112,23 @@ misc.
 documentation
 =============
 
-- copy and adapt the privatix/incognito documentation
-- write documentation for install/upgrade
+* link to and/or copy and adapt documentation from:
+  - Incognito
+  - Privatix
+* document how to install/upgrade
 
 iceweasel
 =========
 
 - install the SSL certificates for some servers amongst those who signed the
   [data retention manifest](http://www.nadir.org/nadir/aktuell/2008/10/10/36282.html)
+- add bookmarks to the above-mentioned servers?
 - easily build a live system with a custom JavaScript/cookies
   whitelist
 - install various Scroogle SSL search engines for other
   to-be-supported languages (e.g. `de`)
+- what would be the advantages to put the configuration into a default
+  profile in `/etc` rather than `$HOME`?
 
 switch to Debian-packaged extensions
 ------------------------------------
@@ -144,8 +158,12 @@ usecases
 ========
 
 switch between use cases in syslinux menu
-- Tor enforcement
-- persistence
+
+* persistence:
+  - with read-write access to update persistent files
+  - with read-only access to **only** *use* persistent files without
+    leaving any new trace
+* Tor enforcement
 
 steal some Incognito tricks
 ===========================
@@ -178,6 +196,8 @@ Bookmarks are the only pieces of data we want to preserve in
 `places.sqlite` is rebuilt using the latest dated JSON file from the
 `bookmarkbackups` folder. We could then store our bookmarks data as
 a backup, and rm+exclude `places.sqlite`.
+`/etc/iceweasel/profile/bookmarks.html` might be a good place to put
+our bookmarks, too.
 
 Gnome
 -----
@@ -202,8 +222,10 @@ Desktop environment
 l10n
 ====
 
-- add Incognito-like boot menu to choose the language, instead of
-  building per-language images
+- add Incognito-like boot menu to choose the language at runtime,
+  instead of building per-language images
+- use our in-house *amnesiabranding* iceweasel extension to localize
+  the default search engine at runtime
 
 Misc.
 =====
@@ -228,6 +250,15 @@ Misc.
   <http://www.offensive-security.com/blog/backtrack/customising-backtrack-live-cd-the-easy-way/>
 - the shutdown splash screen hides the "you can halt" prompt
 - rename torrent directories from -iso to -cd
+- install
+  [randomsound](http://www.digital-scurf.org/software/randomsound)
+  ([in Lenny](http://packages.debian.org/lenny/randomsound)) if it
+  does not bring in too many dependencies; is `alsa-utils`
+  already installed?
+- install an implementation of
+  [Shamir's Secret Sharing](http://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing),
+  such as [ssss](http://point-at-infinity.org/ssss/) or
+  [gfshare](https://launchpad.net/libgfshare)
 
 wiki
 ====
