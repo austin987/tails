@@ -24,11 +24,23 @@ Moreover:
 * Read-write access to a persistent data store must never be the
   default, and must require a voluntary user action, such as choosing
   "with read-write persistent data" non-default item in the boot menu.
+* Blacklist fixed storage devices from the search for persistent
+  volumes? Preventing the risk of using a malicious persistent volume
+  seems more important than supporting the rare "I want to store my
+  persistent volume on a fixed hard-disk" use-case.
 
 Implementation
 ==============
 
 Debian Live already supports
 [several kinds of persistence](http://live.debian.net/manual/html/persistence.html).
-The "home automounting" flavor, once extended to provide a read-only
-mode (e.g. using aufs or similar), would be quite adequate to our needs.
+The "home automounting" flavor seems like a nice starting point, but
+it needs to be extended a bit:
+
+* support a read-only mode (e.g. using aufs or similar), e.g.
+  using a "persistent-ro" boot parameter
+* support enabling `$HOME` persistence while disabling full
+  persistence
+
+Both seem easy to implement and contribute to the upstream
+`live-initramfs` (everything happens in `scripts/live`).
