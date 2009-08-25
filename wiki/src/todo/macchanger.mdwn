@@ -66,6 +66,23 @@ integrate nicely in an environement where network manager is in charge
 of the network configuration, but still that doesn't solve the user's
 choice problem.
 
+> My take on this is that this place is the one where we can ensure
+> the mac address is changed (or not) when needed; at least it works
+> when network configuration is done through `ifupdown` or Network
+> Manager (but not when using `ip` or `ifconfig` by hand; if we really
+> want to support these, I guess that only udev rules can do the job
+> properly).
+> 
+> Anyway: IMHO, using this `.d` directory or not is pretty unrelated
+> to the method used to get the user's choice. Enabling/disabling such
+> a ifupdown script is quite feasible:
+>
+> * if chosen at boot time: a `live-initramfs` hook will do the job,
+>   based on `grep /proc/cmdline`
+> * if chosen by any nice-random-desktop-UI: a suid wrapper could
+>   toggle this script on/off, restore the original mac address and
+>   restart Network Manager as needed.
+
 Network Manager
 ---------------
 
