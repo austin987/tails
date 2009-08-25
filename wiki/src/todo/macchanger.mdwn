@@ -1,1 +1,84 @@
 Integrate macchanger in some way (e.g. see how Incognito does it).
+
+Rationale
+=========
+
+Randomizing mac adresses has several cons:
+
+* may trigger attention of admins of the network.
+* may break in some network configuration were static addresses are
+  assigned by a DHCP server based on the interface mac address, and/or
+  ARP tables are fixed to avoid spoofing.
+
+According to chapter 3.4.7 of the
+[Incognito's documentation](http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/docs.html),
+Incognito does have an option in the boot menu and an initrd script,
+and the randomization is done on a small part of the mac address.
+It does not really solve both issues, it's still not working for
+static DHCP, and if mac adresses are watched, even modifying only it's
+end would probably trigger an alert (admins willing to see if mac
+addresses are changing may have installed an automated way to do it,
+like arpwatch).
+
+However, as amnesia is based on debian live and using network-manager
+for its network configuration, it introduces new questions: What if an
+usb dongle is inserted in amnesia after it has booted? Network manager
+will automatically begin to scan the network with a non-fake mac
+address. Is it a problem?
+
+Use cases
+=========
+
+We could distinguish two main use-cases:
+
+* using a public computer (e.g. in a library, Internet-cafe) => the mac
+  address should not be changed, as it may bring undesired admin
+  attention and/or simply forbid access to the Internet
+* using a personal computer (e.g. a laptop, wherever it happens) =>
+  the mac address should be changed
+
+A way to integrate this analysis UI-wise could then be to allow, in
+a boot menu, to choose between the default case (that has to be decided)
+and the other one, using simple words such as "I am using a public
+computer" instead of speaking geek-language about mac addresses
+or whatever.
+
+As a bonus, other unrelated settings could also be automatically
+changed at runtime depending on the answer to this question.
+
+Enabling the "public computer" mode could setup the needed bits so
+that every network interface has its mac address changed before
+attempting to access the network.
+
+Integration
+===========
+
+ifupdown
+--------
+
+An [ifupdown script](https://help.ubuntu.com/community/AnonymizingNetworkMACAddresses),
+put in `/etc/network/if-pre-up.d/` can do the job, but this solution is
+permanent and not easy to disable.
+
+> Why is this not easy to disable?
+
+Network Manager
+---------------
+
+Network Manager does actually support plugins, that could be a way to
+interface it with macchanger, and have the user prompted before
+configuring the network to ask if the interface have to be randomized
+or not. A button could also be added to enable/disable this feature.
+Attention have to be taken on the way it would be done at boot
+time too.
+
+An easy interface to propose to get the original mac address back, in
+case Network Manager fails to get a working networking setup, would be
+a nice bonus.
+
+What part of the mac address should be randomized?
+==================================================
+
+Still there is the discussion about randomizing the whole mac address
+(macchanger -r) or only a small part (macchanger -e). What are the
+pros and cons of each solution?
