@@ -47,6 +47,8 @@ for BUILD_TYPE in ${AMNESIA_IMAGES} ; do
    . config/chroot # get LH_LANGUAGE
    BUILD_BASENAME="amnesia-${AMNESIA_BASE}-${LH_LANGUAGE}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
    BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
+   BUILD_MANIFEST="${BUILD_BASENAME}.list"
+   BUILD_PACKAGES="${BUILD_BASENAME}.packages"
    BUILD_LOG="build-${BUILD_BASENAME}.log"
 
    echo "Cleaning binary stage..."
@@ -59,6 +61,8 @@ for BUILD_TYPE in ${AMNESIA_IMAGES} ; do
    if lh build noautoconfig ${@} 2>&1 | tee "${BUILD_LOG}" ; then
       echo "Image was successfully created, moving it to ${BUILD_DEST_FILENAME}"
       mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
+      mv -i "${BUILD_FILENAME}.list" "${BUILD_MANIFEST}"
+      mv -i "${BUILD_FILENAME}.packages" "${BUILD_PACKAGES}"
    else
       echo "lh build failed." >&2
       exit 1
