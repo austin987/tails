@@ -27,13 +27,18 @@ $RUN_LH_CONFIG \
    --syslinux-timeout 4 \
    ${@}
 
-# build i386 images on amd64 as well,
-# include only 686 kernel when building for i386
+# build i386 images on amd64 as well, include only 686 kernel
 hw_arch="`dpkg --print-architecture`"
 if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
    $RUN_LH_CONFIG \
       --architecture i386 \
       --linux-flavours 686 \
+      ${@}
+# build powerpc images on powerpc64 as well, include only powerpc kernel
+elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
+   $RUN_LH_CONFIG \
+      --architecture powerpc \
+      --linux-flavours powerpc \
       ${@}
 fi
 
