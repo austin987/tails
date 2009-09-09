@@ -41,7 +41,7 @@ user_pref("browser.search.useDBForOrder", true);
 user_pref("browser.startup.homepage", "https://check.torproject.org");
 user_pref("browser.startup.homepage_override.mstone", "rv:1.9.0.12");
 user_pref("capability.policy.maonoscript.javascript.enabled", "allAccess");
-user_pref("capability.policy.maonoscript.sites", "about: about:blank about:certerror about:config about:credits about:neterror about:plugins about:privatebrowsing about:sessionrestore chrome: file:// https://auk.riseup.net https://boum.org https://mail.riseup.net https://swift.riseup.net https://tern.riseup.net https://webmail.no-log.org resource:");
+user_pref("capability.policy.maonoscript.sites", "https://auk.riseup.net https://mail.riseup.net https://swift.riseup.net https://tern.riseup.net https://webmail.no-log.org about: about:blank about:certerror about:config about:credits about:neterror about:plugins about:privatebrowsing about:sessionrestore chrome: file:// https://webmail.boum.org resource:");
 user_pref("dom.storage.enabled", false);
 user_pref("extensions.adblockplus.currentVersion", "1.0.2");
 user_pref("extensions.enabledItems", "{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}:1.0.2,{00084897-021a-4361-8423-083407a033e0}:1.4,firegpg@firegpg.team:0.7.8,langpack-fr@firefox.mozilla.org:3.0.6,{73a6fe31-595d-460b-a920-fcc0f8843232}:1.9.2.8,{e0204bd5-9d31-402b-a99d-a6aa8ffebdca}:1.2.1,{972ce4c6-7e08-4474-a285-3208198ce6fd}:3.0.6");

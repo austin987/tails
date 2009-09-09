@@ -10,8 +10,20 @@ fi
 # a clean starting point
 rm -rf cache/stages_rootfs
 
+# get LH_LANGUAGE
+. config/chroot
+# get LH_ARCHITECTURE
+. config/bootstrap
+
 # build the doc wiki
 ./build-wiki
+if [ -r config/binary_local-includes/doc/amnesia/wiki/index.${LH_LANGUAGE}.html ]; then
+   cp config/binary_local-includes/doc/amnesia/wiki/index.${LH_LANGUAGE}.html \
+      config/binary_local-includes/doc/amnesia/wiki/index.html
+else
+   cp config/binary_local-includes/doc/amnesia/wiki/index.en.html \
+      config/binary_local-includes/doc/amnesia/wiki/index.html
+fi
 
 # fix permissions on {binary,chroot}_local-includes; they may be
 # wrong, e.g. if the tarball was extracted with a strict umask
@@ -44,12 +56,11 @@ for BUILD_TYPE in ${AMNESIA_IMAGES} ; do
 	 exit 1
 	 ;;
    esac
-   . config/chroot # get LH_LANGUAGE
-   BUILD_BASENAME="amnesia-${AMNESIA_BASE}-${LH_LANGUAGE}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
+   BUILD_BASENAME="amnesia-${LH_ARCHITECTURE}-${AMNESIA_BASE}-${LH_LANGUAGE}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
    BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
-   BUILD_MANIFEST="${BUILD_BASENAME}.list"
-   BUILD_PACKAGES="${BUILD_BASENAME}.packages"
-   BUILD_LOG="build-${BUILD_BASENAME}.log"
+   BUILD_MANIFEST="${BUILD_DEST_FILENAME}.list"
+   BUILD_PACKAGES="${BUILD_DEST_FILENAME}.packages"
+   BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
 
    echo "Cleaning binary stage..."
    lh clean noautoconfig --binary
