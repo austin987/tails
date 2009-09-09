@@ -1,0 +1,26 @@
+When amnesia is booted from a CD, there is a lot of seeks from one file to
+another during boot. This could be improved by ordering files on the CD in
+the order used during boot.
+
+Implementation
+==============
+
+An *initscript* is loaded during 'S' runlevel, just at the begining of the
+boot process. If `profile` has been specified on the kernel command line, it
+starts the `boot-profile` daemon which uses `inotify` to record file that are
+accessed during boot.
+
+Once enough of the boot sequence has been profiled, `boot-profile` must be
+manually `kill`'ed. Then, `/lib/init/rw/boot-profile` will contain a file
+that is suitable for the `-sort` argument of `mksquashfs`.
+
+Left to be done
+===============
+
+ * Figure out how to specify the `-sort` argument to `lh_binary_rootfs`.
+   The *sortlist* will need to be copied to `chroot/` before.
+ * Test with a real CD if during boot time seeks occur less.
+ * Implement an automated way to update the *sortlist*.
+
+[[boot-profile]] is a *sortlist* generated using the aformentioned
+`boot-profile` daemon.
