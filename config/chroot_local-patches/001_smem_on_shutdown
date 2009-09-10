@@ -1,0 +1,34 @@
+--- /etc/live.conf	2009-09-10 18:34:46.400062714 +0200
++++ /etc/live.conf.smem	2009-09-10 18:59:57.354439868 +0200
+@@ -5,3 +5,4 @@
+ HOSTNAME="debian"
+ 
+ export USERNAME USERFULLNAME HOSTNAME
++ERASEMEM="yes"
+--- /etc/init.d/live-initramfs	2009-09-10 19:01:00.382435891 +0200
++++ /etc/init.d/live-initramfs.smem	2009-09-10 18:58:13.766437035 +0200
+@@ -121,7 +121,7 @@
+ 		prompt=
+ 	fi
+ 
+-	for path in $(which halt) $(which reboot) /etc/rc?.d /etc/default $(which stty)
++	for path in $(which halt) $(which reboot) /etc/rc?.d /etc/default $(which stty) $(which smem)
+ 	do
+ 		cache_path "${path}"
+ 	done
+@@ -138,6 +138,15 @@
+ 	if [ -z ${QUICKREBOOT} ]
+ 	then
+ 		# TODO: i18n
++		if [ "$ERASEMEM" = "yes" ] && [ -x /usr/bin/smem ]; then
++			# TODO: test ratio/mem/oom_adj best settings 
++			echo "2" > /proc/sys/vm/overcommit_memory && echo "100" > /proc/sys/vm/overcommit_ratio
++			smem -f -l -v > /dev/console &
++			SMEMPID=$!
++			echo -17 > /proc/$SMEMPID/oom_adj
++			wait $SMEMPID
++		fi
++
+ 		BOOT_DEVICE="$(get_boot_device)"
+ 
+ 		if device_is_USB_flash_drive ${BOOT_DEVICE}
