@@ -3,6 +3,12 @@ against Cold Boot Attacks.
 
 > Done in 432781c8f2ba211300, not tagging done since:
 
+>> I always thought that smem was ridiculously slow on Incognito -- sure it fills all RAM several times with stuff, but RAM is crazy fast (ok, generating random numbers isn't, but smem was still unreasonably slow). Even if I had smem being called in its insecure mode (only one pass of zeros) it still seemed to take forever before Incognito shut down even though it should take a few seconds. So a year back or so I investigated this further. smem is a very simple program; it works by allocating a 64 KB chunk of memory, which then is cleared using the chosen method, and then smem allocates a new chunk (and so on...) *without* free()ing the previous one. It simply keeps on like that until the memory runs out (i.e. calloc() returns NULL), and then it quits.
+
+>> What I've noticed when I've run smem in verbose mode (so you can see its progress) is that the (at least approximately) last chunk seems to be the culprit (it can take an hour to complete!). My theory is that since the chunk size is so small, smem manages to eat up practically all memory, so much that some of the kernel's inner workings (or some other system critical code) that depend on being able to dynamically allocate memory stops working, putting the system to a grinding halt. 
+
+>> The problem also occurs on my main Gentoo system and the (at the time) current version of Kubuntu. Today I tried it again on Debian Lenny, which didn't crash, but the process was killed (by oom-killer) at ~the last chunk. I have a feeling that is because at that time the stack cannot grow since there is no memory, and thus any functions called by smem will cause the oom error. Even though this is pretty ugly, smem has basically done all it's work at this point (only the last few chunks aren't cleared properly) so maybe this is acceptable? In any case, my personal opinion is that smem is a bit of a hack and I think I'd prefer some other solution, if available. BTW, I've also tried smem with swap, and surprisingly "smem -ll" (i.e. only do calloc() (which zeros the memory) and *nothing more*) then seems to work. AFAIK swap usage should be completely transparent and thus not make any difference, so I'm confused.
+
 As a bonus, if running from the USB drive and it is removed, it would
 be nice to wipe memory and reboot when the USB drive is removed: if
 you're in a persecuted country and they are on to you, you can grab
