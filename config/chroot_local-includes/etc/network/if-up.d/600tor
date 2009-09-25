@@ -1,4 +1,7 @@
 #! /bin/sh
 
-/etc/init.d/tor restart
-
+if pidof tor > /dev/null; then
+    killall -s SIGHUP /usr/sbin/tor
+else
+    /etc/init.d/tor restart
+fi
