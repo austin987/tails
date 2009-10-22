@@ -7,11 +7,75 @@ Implementation
 
 We should set the system time with NTP during boot.
 
-This will require adding a rule for the user/group used by the chosen
-NTP software to bypass Tor forwarding in the firewall.
-
 The OpenBSD NTP daemon seems like a nice and trustworthy
 implementation of the NTP protocol; it is
 [packaged](http://packages.debian.org/lenny/openntpd) in Debian Lenny.
+Until it is properly integrated as described bellow, its installation
+has been disabled.
 
-[[!tag done]]
+Rules have been added for the user/group (`ntp`) used by the NTP
+software to bypass Tor forwarding in the firewall.
+
+Remaining issues
+================
+
+Torified DNS
+------------
+
+A naive NTP daemon installation does not work: it seems to hangup and
+then timeout after two minutes, unnecessarily blocking xorg from
+starting during that time. Even though ntp is allowed direct Internet
+access, DNS resolution will still be performed through the Tor
+network. Since we haven't got into xorg, networkmanager hasn't
+connected and so our tor client cannot reach the Tor network.
+
+Even if we could get Tor to bootstrap (and thus make DNS lookups
+possible) before openntp starts, we'd have a problem if the clock is
+too skewed that Tor cannot bootstrap (Tor requires a somewhat accurate
+clock for security reasons) (Windows users in particular seem to get
+incorrect clocks, perhaps since it stores the local time to the
+hardware clock and the time is then intepreted as UTC in Linux).
+That was the reason why NTP was added to Incognito in the first place.
+It was made differently though, using `ntpdate` and OpenDNS with this
+[script](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/NetworkManager/dispatcher.d/50-ntp.sh).
+
+Authentication
+--------------
+
+### Rationale
+
+Also, in general I'm worried about unauthenticated NTP. There probably
+is a whole bunch of fingerprinting attacks an attacker could mount if
+it could pose as the NTP server and mess with the user's time.
+
+### Authenticated NTP
+
+From my understanding of NTP's authentication method it's based on
+a shared secret, not public-key cryptography, which makes it useless
+for our purposes.
+
+### HTP
+
+[HTP](http://www.clevervest.com/twiki/bin/view/HTP)
+
+HTP is not really a protocol, but uses a feature from HTTP, aka web
+traffic. According the specifications of HTTP (RFC 2616) a web server
+needs to put a timestamp in a response to a web browser request. In
+web browsers you don't see the HTTP headers, but these headers
+contain a timestamp in Greenwich Mean Time (GMT), accurate in
+seconds.
+
+These timestamps, from various web servers which you may specify, can
+be used to extract a pretty good time. 
+
+So well, that's not as accurate as NTP, but maybe it could be a better
+fit for our system than NTP…
+
+- It would need to go in the clear with an exception in the firewall
+  config. Is that safe? Could this be used to fingerprint
+  amnesia/incognito users? Is that something we want to avoid?
+- What sources should be trusted? This is of course also a problem
+  with NTP.
+- Is the HTP client behaving as it should (e.g. exit with a loud
+  warning without setting the time) when there is a problem with the
+  certificate when using HTTPS?
