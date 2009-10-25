@@ -1,19 +1,42 @@
 Add a user-friendly way to send a GnuPG-encrypted bug report to the
 amnesia dev team.
 
->You might want to consider adding the possibility to add logs, debugging info etc., perhaps something like this [script](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/usr/bin/incognito-debug) I did for Incognito. Note that that script was mostly written for my own personal usage. Scrubbing of IP/MAC addresses from ifconfig output and similar sensitive information should of course be done in order to not compromise the *real* users.
-
-
-Work is in progress:
+Already done
+============
 
 * a small pyGTK application asking very simple questions and sending
   an encrypted e-mail ([[whisperback-1.1-beta.tar.gz]]) to...
 * a SMTP server behind a hidden service, only allowing to relay e-mail
   to the dev collective address
 
-As the `whisperback`'s tarball is attached to the wiki, it is present
-in generated images and can then be tested.
+To do
+=====
 
-This depends on closing [[todo/include_and_import_amnesia_gnupg_key]]
+1. copy to `config/chroot_local-includes/etc/whisperback/` the CA used
+   to sign the hidden SMTP server's SSL certificate
+2. solve and close [[todo/include_and_import_amnesia_gnupg_key]]
+3. test! (as a WhisperBack tarball is attached to the wiki, it is
+   present in generated images)
+4. properly install WhisperBack inside the system, using a Debian
+   package to avoid installing build-dependencies
 
-Stay tuned.
+Discussion
+==========
+
+(move this to the discussion page, if available on our ikiwiki setup)
+
+Include additional debugging information?
+-----------------------------------------
+
+We might add the possibility to include logs, debugging info etc.,
+perhaps something like the Incognito
+[script](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/usr/bin/incognito-debug)
+does.
+
+_Nota bene_:
+
+* that script was mostly written for the Incognito developer's own
+  personal usage
+* scrubbing of IP/MAC addresses from ifconfig output and similar
+  sensitive information should of course be done in order to not
+  compromise the *real* users.
