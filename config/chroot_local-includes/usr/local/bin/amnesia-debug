@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Creates a tarball containing some relevant information for debugging
+
+if [[ $# -ne 0 ]]; then
+	echo "Creates a tarball containing some relevant information for debugging when called"
+	echo "without any arguments."
+	exit 0
+fi
+
+DEBUG_OUT="debug.tar.gz"
+CUR_DIR=$(pwd)
+TMP_DIR="/tmp/debug"
+DEBUG_FILES="/etc/X11/xorg.conf /etc/sysconfig/* /var/log/Xorg.*.log"
+DEBUG_COMMANDS="/bin/dmesg /bin/lsmod /usr/sbin/lspci /sbin/iwconfig \
+		/sbin/ifconfig"
+
+mkdir -p ${TMP_DIR}
+rm -Rf ${TMP_DIR}/* &> /dev/null
+
+for CMD in ${DEBUG_COMMANDS}; do
+	${CMD} &> ${TMP_DIR}/$(basename ${CMD}).output
+	if [[ $? -ne 0 ]]; then
+		sudo ${CMD} &> ${TMP_DIR}/$(basename ${CMD}).output
+	fi
+done
+
+for FILE in ${DEBUG_FILES}; do
+	cp -f ${FILE} ${TMP_DIR} &> /dev/null
+done
+
+rm -f ${CUR_DIR}/${DEBUG_OUT} &> /dev/null
+cd ${TMP_DIR}
+tar cfz ${DEBUG_OUT} * && mv ${DEBUG_OUT} ${CUR_DIR}
+
+if [[ $? -eq 0 ]]; then
+	echo "Successfully wrote debugging information to ${CUR_DIR}/${DEBUG_OUT}"
+fi
+
+rm -Rf ${TMP_DIR} &> /dev/null
