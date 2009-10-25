@@ -22,8 +22,8 @@ RM=/bin/rm
 SUDO=/usr/bin/sudo
 TAR=/bin/tar
 
-$MKDIR -p ${TMP_DIR}
-$RM -Rf ${TMP_DIR}/* &> /dev/null
+$MKDIR --parents ${TMP_DIR}
+$RM --recursive --force ${TMP_DIR}/* &> /dev/null
 
 for CMD in ${DEBUG_COMMANDS}; do
 	${CMD} &> ${TMP_DIR}/$(basename ${CMD}).output
@@ -33,10 +33,10 @@ for CMD in ${DEBUG_COMMANDS}; do
 done
 
 for FILE in ${DEBUG_FILES}; do
-	$CP -f ${FILE} ${TMP_DIR} &> /dev/null
+	$CP --force ${FILE} ${TMP_DIR} &> /dev/null
 done
 
-$RM -f ${CUR_DIR}/${DEBUG_OUT} &> /dev/null
+$RM --force ${CUR_DIR}/${DEBUG_OUT} &> /dev/null
 cd ${TMP_DIR}
 $TAR cfz ${DEBUG_OUT} * && $MV ${DEBUG_OUT} ${CUR_DIR}
 
@@ -44,4 +44,4 @@ if [[ $? -eq 0 ]]; then
 	echo "Successfully wrote debugging information to ${CUR_DIR}/${DEBUG_OUT}"
 fi
 
-$RM -Rf ${TMP_DIR} &> /dev/null
+$RM --recursive --force ${TMP_DIR} &> /dev/null
