@@ -14,26 +14,34 @@ TMP_DIR="/tmp/debug"
 DEBUG_FILES="/etc/X11/xorg.conf /var/log/Xorg.*.log"
 DEBUG_COMMANDS="/bin/dmesg /bin/lsmod /usr/bin/lspci"
 
-mkdir -p ${TMP_DIR}
-rm -Rf ${TMP_DIR}/* &> /dev/null
+# workaround possibly aliased commands
+CP=/bin/cp
+MKDIR=/bin/mkdir
+MV=/bin/mv
+RM=/bin/rm
+SUDO=/usr/bin/sudo
+TAR=/bin/tar
+
+$MKDIR -p ${TMP_DIR}
+$RM -Rf ${TMP_DIR}/* &> /dev/null
 
 for CMD in ${DEBUG_COMMANDS}; do
 	${CMD} &> ${TMP_DIR}/$(basename ${CMD}).output
 	if [[ $? -ne 0 ]]; then
-		sudo ${CMD} &> ${TMP_DIR}/$(basename ${CMD}).output
+		$SUDO ${CMD} &> ${TMP_DIR}/$(basename ${CMD}).output
 	fi
 done
 
 for FILE in ${DEBUG_FILES}; do
-	cp -f ${FILE} ${TMP_DIR} &> /dev/null
+	$CP -f ${FILE} ${TMP_DIR} &> /dev/null
 done
 
-rm -f ${CUR_DIR}/${DEBUG_OUT} &> /dev/null
+$RM -f ${CUR_DIR}/${DEBUG_OUT} &> /dev/null
 cd ${TMP_DIR}
-tar cfz ${DEBUG_OUT} * && mv ${DEBUG_OUT} ${CUR_DIR}
+$TAR cfz ${DEBUG_OUT} * && $MV ${DEBUG_OUT} ${CUR_DIR}
 
 if [[ $? -eq 0 ]]; then
 	echo "Successfully wrote debugging information to ${CUR_DIR}/${DEBUG_OUT}"
 fi
 
-rm -Rf ${TMP_DIR} &> /dev/null
+$RM -Rf ${TMP_DIR} &> /dev/null
