@@ -1,8 +1,6 @@
 Rationale
 =========
 
-[[!tag todo/research]]
-
 In addition to [[ship Vidalia instead of TorK]], we need to find and
 install a great non-KDE virtual keyboard in order to stop installing
 KDE libraries.
@@ -10,8 +8,8 @@ KDE libraries.
 Previous research was unsuccessful, but things may have changed in
 the meantime.
 
-Implementation
-==============
+Initial research
+================
 
 kvkbd
 -----
@@ -28,8 +26,8 @@ kvkbd
   [bug report](https://bugs.launchpad.net/onboard/+bug/65626) ;
   in squeeze it uses the localized layout
 * there is a notification area icon
-* hard to built for Debian Lenny, as it depends on `python-gconf` that
-  itself depends on newer `python-gnome2` and `libgconf2-4` packages
+* depends on the Python gconf bindings, that are available in Squeeze
+  (package `python-gconf`) and in Lenny (package `python-gnome2`)
 
 [matchbox-keyboard](http://matchbox-project.org/?p=1)
 -----------------
@@ -38,16 +36,47 @@ kvkbd
 * misses a gnome panel applet/notification area icon, but it shouldn't be a lot to write, as there is one for matchbox panel provided
 * here is a french layout : [[keyboard-fr.xml]]
 
-
-
 gok
 ---
 
 * was not able to get it working
-
 
 xvbkd
 -----
 
 * no dynamic layout loading
 * quite ugly
+
+Implementation
+==============
+
+onBoard seems to be the nicest available solution.
+
+[[!tag todo/code]]
+
+Custom package
+--------------
+
+Have custom built packages included in amnesia:
+
+1. rebuild `python-virtkey` packages for our supported architectures
+   (no extra work needed), and drop the debs into
+   `config/chroot-localpackages`
+2. adapt the onBoard source package for Lenny
+3. build an onBoard package (arch-independent) and drop it into
+   `config/chroot-localpackages`
+4. publish the `.diff.gz` files somewhere in our Git repository
+5. add an autostart file
+6. test!
+7. stop installing kvkbd
+
+Long-term goal: inclusion in Debian
+-----------------------------------
+
+1. file RFP bugs for `python-virtkey` and `onboard`
+2. wait for these packages to reach Squeeze
+3. ask for Lenny backports
+4. remove our custom packages from `config/chroot-localpackages`, add
+   these packages names to
+   `config/chroot_local-packageslists/amnesia-common` and add suitable
+   APT pining
