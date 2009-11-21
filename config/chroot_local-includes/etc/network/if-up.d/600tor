@@ -4,8 +4,8 @@ PIDFILE=/var/run/tor/tor.pid
 
 if [ -r "${PIDFILE}" ]; then
     # Send a SIGHUP to Tor. According to its man page this should make Tor
-    # fetch a new directory which might help speed up bootstrapping, which might
-    # get stuck since the network isn't up when Tor starts.
+    # fetch a new directory, which might help speed up bootstrapping that might
+    # get stuck in case the network isn't up when Tor starts.
     kill -SIGHUP $(cat ${PIDFILE})
 else
     /etc/init.d/tor start
