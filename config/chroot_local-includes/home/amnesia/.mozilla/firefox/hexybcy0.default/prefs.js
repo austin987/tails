@@ -50,7 +50,7 @@ user_pref("extensions.firegpg.assisant_has_already_been_executed", true);
 user_pref("extensions.firegpg.enable_gpgapi", false);
 user_pref("extensions.firegpg.gmail_enabled", false);
 user_pref("extensions.firegpg.gpg_path", "/usr/bin/gpg");
-user_pref("extensions.firegpg.gpg_version", "0.7.8");
+user_pref("extensions.firegpg.gpg_version", "0.7.9");
 user_pref("extensions.firegpg.gpgauth.global.trust_model", "direct");
 user_pref("extensions.firegpg.lastUpdateCheck", "1254851225742");
 user_pref("extensions.firegpg.show_website", false);
