@@ -13,6 +13,7 @@ user_pref("browser.search.selectedEngine", "Scroogle SSL English");
 user_pref("browser.search.suggest.enabled", false);
 user_pref("browser.search.update", false);
 user_pref("browser.startup.homepage", "https://check.torproject.org");
+user_pref("browser.startup.homepage_override.mstone", "ignore");
 user_pref("capability.policy.maonoscript.javascript.enabled", "allAccess");
 user_pref("capability.policy.maonoscript.sites", "https://auk.riseup.net https://mail.riseup.net https://swift.riseup.net https://tern.riseup.net https://webmail.no-log.org about: about:blank about:certerror about:config about:credits about:neterror about:plugins about:privatebrowsing about:sessionrestore chrome: file:// https://webmail.boum.org resource:");
 user_pref("extensions.firegpg.activate_inline", false);
