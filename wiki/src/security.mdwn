@@ -1,0 +1,76 @@
+[[!toc levels=3]]
+
+# Fixed holes
+
+**WARNING**: some of these holes may only be fixed in [[Git]].
+Please carefully read the "Affected versions" sections bellow.
+
+## ineffective firewall-level Tor enforcement
+
+The `openntpd` package is not installed anymore since commit
+bf8cc787ce46e9946ab47d5383feb1174da3f22a (20091006). The `ntpd` user
+is then non-existent on built amnesia systems.
+
+This user is however mentioned in `/etc/firewall.conf`.
+`iptables-restore` being apparently picky about imperfect
+configuration files, it refuses to load it, and the firewall-level Tor
+enforcement is therefore not effective.
+
+### Impact
+
+Some applications establish direct connections through the Internet,
+not using the Tor network at all.
+
+Details:
+
+* iceweasel is not affected, thanks to the torbutton extension
+* applications that take into account the relevant environment
+  variables (namely `http_proxy`, `HTTP_PROXY`, `SOCKS_SERVER` and
+  `SOCKS5_SERVER`) are not affected
+* any other application, such as Pidgin or Thunderbird, is probably
+  affected.
+
+### Solution
+
+This problem has been fixed in [[Git]] commit 9c425e8de13e6b4f885.
+
+### Affected versions
+
+No released amnesia version is affected.
+
+Custom images built from Git snapshots equal of after
+bf8cc787ce46e9946ab47d5383feb1174da3f22a (20091006), and before
+9c425e8de13e6b4f885 (excluded), are affected.
+
+## use of cleartext swap partitions on local hard disks
+
+At least until its version 1.157.4-1, `live-initramfs` has
+a [bug](http://lists.debian.org/debian-live/2009/09/msg00125.html)
+that makes it use any cleartext swap partition found on local
+hard disks.
+
+### Impact
+
+Any kind of information about the user's activities can be stored on
+the local hard disks of the computers being used with affected
+amnesia systems.
+
+### Mitigation of passed effects
+
+It is recommended to securely erase, using a program such as `shred`,
+any cleartext Linux swap partition present on computers having been
+used with affected amnesia systems.
+
+### Solution
+
+We fixed this hole on 20091006 (commit 00c1ff633e8958d0233) by
+installing a custom fixed `live-initramfs` package into built images.
+
+The relevant patch was then
+[integrated](http://lists.debian.org/debian-live/2009/10/msg00124.html)
+in upstream's Git.
+
+### Affected versions
+
+Releases 0.2-20090815 and 0.2-20090816 are affected, as well as any
+custom image built from Git before commit 00c1ff633e8958d0233.
