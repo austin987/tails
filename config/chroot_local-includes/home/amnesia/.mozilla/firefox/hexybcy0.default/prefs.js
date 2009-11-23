@@ -12,11 +12,11 @@
 user_pref("app.update.auto", false);
 user_pref("app.update.disable_button.showUpdateHistory", false);
 user_pref("app.update.enabled", false);
-user_pref("app.update.lastUpdateTime.addon-background-update-timer", 1245619568);
-user_pref("app.update.lastUpdateTime.background-update-timer", 1245619568);
-user_pref("app.update.lastUpdateTime.blocklist-background-update-timer", 1245619568);
-user_pref("app.update.lastUpdateTime.microsummary-generator-update-timer", 1245619568);
-user_pref("app.update.lastUpdateTime.search-engine-update-timer", 1245619568);
+user_pref("app.update.lastUpdateTime.addon-background-update-timer", 1258970412);
+user_pref("app.update.lastUpdateTime.background-update-timer", 1258970412);
+user_pref("app.update.lastUpdateTime.blocklist-background-update-timer", 1258970412);
+user_pref("app.update.lastUpdateTime.microsummary-generator-update-timer", 1258970412);
+user_pref("app.update.lastUpdateTime.search-engine-update-timer", 1258970412);
 user_pref("browser.bookmarks.livemark_refresh_seconds", 31536000);
 user_pref("browser.cache.disk.enable", false);
 user_pref("browser.download.manager.closeWhenDone", true);
