@@ -8,8 +8,6 @@ user_pref("browser.history_expire_days", 0);
 user_pref("browser.safebrowsing.enabled", false);
 user_pref("browser.safebrowsing.malware.enabled", false);
 user_pref("browser.safebrowsing.remoteLookups", false);
-user_pref("browser.search.defaultenginename", "Scroogle SSL English");
-user_pref("browser.search.selectedEngine", "Scroogle SSL English");
 user_pref("browser.search.suggest.enabled", false);
 user_pref("browser.search.update", false);
 user_pref("browser.startup.homepage", "https://check.torproject.org");
