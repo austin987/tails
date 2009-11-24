@@ -41,12 +41,15 @@ It was made differently though, using `ntpdate` and OpenDNS with this
 
 ... which is really great, but using OpenDNS is easy to fingerprint.
 Using the DHCP-provided nameservers would be better. This information
-can be gathered using d-bus, and is maybe available in
-NetworkManager's environment at `dispatcher.d/` stage, making room for
-a script dropped there.
+is available for scripts dropped into
+`/etc/NetworkManager/dispatcher.d`: the environment variable
+`IP4_NAMESERVERS` contains a space-separated list of the DNS servers,
+but... it will always contain 127.0.0.1, so we use the
+`DHCP4_DOMAIN_NAME_SERVERS` environment variable, hoping it will not
+be affected by our custom `supersede domain-name-servers`
+dhclient setting.
 
-=> [[!taglink todo/research]] whether the environment-based solution
-is doable. Else, we'll need to query d-bus.
+Implemented, time to [[!taglink todo/test]].
 
 Authentication
 --------------

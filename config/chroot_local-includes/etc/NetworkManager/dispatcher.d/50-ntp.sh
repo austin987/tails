@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Rationale: Tor needs a somewhat accurate clock to work, and for that NTP is
-# ideal. However, since DNS lookups are made through the Tor network, and all
-# information about local DNS servers obtained through DHCP is discarded, we
-# have to do it some other way. OpenDNS comes to mind, but any DNS server that
-# we can expect have the same IP address for a long time will do.
+# Rationale: Tor needs a somewhat accurate clock to work, and for that
+# NTP is ideal. We then need to get the IPs of a bunch of NTP servers.
+# However, since DNS lookups are made through the Tor network, we use
+# the local DNS servers obtained through DHCP if possible, or the
+# OpenDNS ones, else.
 
-# Note that all network operations (host, ntpdate) are done with the ntp user.
-# this user has an exception in the iptables configuration granting it direct
-# access to the network, which is necessary. the ntp user doesn't have the
+# Note that all network operations (host, ntpdate) are done with the ntpdate
+# user, who has an exception in the firewall configuration granting it direct
+# access to the network, which is necessary. The ntpdate user doesn't have the
 # privilege to run adjtime()/settimeofday() so we only use ntpdate to query
 # the time difference/offset and run date as root to set the time.
 
@@ -17,17 +17,21 @@ if [[ $2 != "up" ]]; then
 	exit 0
 fi
 
-if ! which ntpdate; then
-	exit 0
-fi
-
-DNS_SERVER1="208.67.222.222"
-DNS_SERVER2="208.67.220.220"
 NTP_POOL="pool.ntp.org"
 
+if [[ -n "${DHCP4_DOMAIN_NAME_SERVERS}" ]]; then
+	NAME_SERVERS="${DHCP4_DOMAIN_NAME_SERVERS}"
+else
+	NAME_SERVERS="208.67.222.222 208.67.220.220"
+fi
+
+DNS_QUERY_CMD=`for NS in ${NAME_SERVERS}; do
+                   echo -n "|| host ${NTP_POOL} ${NS} ";
+	       done | \
+	       tail --bytes=+4`
+
 I=0
-for X in $(sudo -u ntp sh -c "host ${NTP_POOL} ${DNS_SERVER1} && \
-			      host ${NTP_POOL} ${DNS_SERVER2}" | \
+for X in $(sudo -u ntpdate sh -c "${DNS_QUERY_CMD}" | \
 	   grep "${NTP_POOL} has address" | \
 	   cut -d ' ' -f 4); do
 	NTP_ADDR[${I}]="${X}"
@@ -42,7 +46,7 @@ fi
 I=0
 NTP_OFFSET=""
 while [[ -n ${NTP_ADDR[${I}]} ]] && [[ -z ${NTP_OFFSET} ]]; do
-	NTP_ANSWER=$(sudo -u ntp ntpdate -s -u -q ${NTP_ADDR[${I}]})
+	NTP_ANSWER=$(sudo -u ntpdate ntpdate -s -u -q ${NTP_ADDR[${I}]})
 
 	# On success, grep the offset (including sign). Note that it gets
 	# truncated -- anything below whole seconds are beyond date's
