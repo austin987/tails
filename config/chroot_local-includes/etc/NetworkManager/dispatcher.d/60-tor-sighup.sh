@@ -1,5 +1,10 @@
 #! /bin/sh
 
+# Run whenever an interface gets "up", not otherwise:
+if [[ $2 != "up" ]]; then
+   exit 0
+fi
+
 PIDFILE=/var/run/tor/tor.pid
 
 if [ -r "${PIDFILE}" ]; then

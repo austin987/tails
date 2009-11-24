@@ -1,7 +1,9 @@
 #!/bin/sh
 
-# Exit if lo interface
-[ "$METHOD" = "loopback" ] && exit 0
+# Run whenever an interface gets "up", not otherwise:
+if [[ $2 != "up" ]]; then
+   exit 0
+fi
 
 IPTABLES_RULES=/etc/firewall.conf
 
