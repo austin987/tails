@@ -1,26 +1,16 @@
+Rationale
+=========
+
 On the one hand, Tor sometimes freaks out if it detects a too large
 clock skew. On the other hand, having the desktop environment display
 localized time would be a nice bonus.
 
+That’s why we want to fix the system clock, using some kind of suitable
+network protocol, when a network interface is brought up and before
+the Tor client is told it should connect to the network.
+
 Implementation
 ==============
-
-We should set the system time with NTP during boot.
-
-The OpenBSD NTP daemon seems like a nice and trustworthy
-implementation of the NTP protocol; it is
-[packaged](http://packages.debian.org/lenny/openntpd) in Debian Lenny.
-Until it is properly integrated as described bellow, its installation
-has been disabled.
-
-Rules have been added for the user/group (`ntp`) used by the NTP
-software to bypass Tor forwarding in the firewall.
-
-Remaining issues
-================
-
-Torified DNS
-------------
 
 A naive NTP daemon installation does not work: it seems to hangup and
 then timeout after two minutes, unnecessarily blocking xorg from
@@ -36,23 +26,25 @@ clock for security reasons) (Windows users in particular seem to get
 incorrect clocks, perhaps since it stores the local time to the
 hardware clock and the time is then intepreted as UTC in Linux).
 That was the reason why NTP was added to Incognito in the first place.
-It was made differently though, using `ntpdate` and OpenDNS with this
+It was made using `ntpdate` and OpenDNS with this
 [script](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/NetworkManager/dispatcher.d/50-ntp.sh).
 
-... which is really great, but using OpenDNS is easy to fingerprint.
-Using the DHCP-provided nameservers would be better. This information
-is available for scripts dropped into
-`/etc/NetworkManager/dispatcher.d`: the environment variable
-`IP4_NAMESERVERS` contains a space-separated list of the DNS servers,
-but... it will always contain 127.0.0.1, so we use the
-`DHCP4_DOMAIN_NAME_SERVERS` environment variable, hoping it will not
-be affected by our custom `supersede domain-name-servers`
-dhclient setting.
+... which works really well, but using OpenDNS to ever query
+`pool.ntp.org` is too easy to fingerprint.
 
-Implemented, time to test.
+That’s why we rather use the DHCP-provided nameservers, when possible,
+in `/etc/NetworkManager/dispatcher.d/50-ntp.sh`. Else, we still
+use OpenDNS.
 
-> It is actually affected, so `DHCP4_DOMAIN_NAME_SERVERS` has value
-> `127.0.0.1`; a workaround has to be found  :/ [[!tag todo/research]]
+However, we really need `/etc/resolv.conf` to be setup in a way that
+makes the rest of the system use the local (torified) DNS cache.
+This is achieved thanks to the − properly configured −
+`resolvconf` package.
+
+Implemented, time to [[!taglink todo/test]].
+
+Remaining issues
+================
 
 Authentication
 --------------
