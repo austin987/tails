@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Remove Debian's ntpdate hook.
+#
+# Due to the weird environment we run in, we install our own custom
+# hook (namely /etc/NetworkManager/dispatcher.d/50-ntp.sh) via
+# config/chroot_local-includes.
+
+# Including common functions
+. "${LH_BASE:-/usr/share/live-helper}"/functions.sh
+
+# Setting static variables
+DESCRIPTION="$(Echo 'removing Debian's ntpdate hook')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Reading configuration files
+Read_conffiles config/all config/common config/chroot
+Set_defaults
+
+Echo_message "removing Debian's ntpdate hook"
+
+rm --force /etc/network/if-up.d/ntpdate
