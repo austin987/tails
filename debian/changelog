@@ -1,3 +1,82 @@
+amnesia (0.3) unstable; urgency=low
+
+  * software: removed openvpn, added
+  - Audacity
+  - cups
+  - Git
+  - Gobby
+  - GParted
+  - lvm2 (with disabled initscript as it slows-down too much the boot in certain
+    circumstances)
+  - NetworkManager 0.7 (from backports.org) to support non-DHCP networking
+  - ntfsprogs
+  - randomsound to enhance the kernel's random pool
+  * Tor
+  - install the latest stable release from deb.torproject.org
+  - ifupdown script now uses SIGHUP signal rather than a whole tor
+    restart, so that in the middle of it vidalia won't start it's own
+    tor
+  - configure Gnome proxy to use Tor
+  * iceweasel
+  - adblockplus: upgraded to 1.0.2
+  - adblockplus: subscribe to US and DE EasyList extensions, updated patterns
+  - firegpg is now installed from Debian Squeeze rather than manually; current
+    version is then 0.7.10
+  - firegpg: use better keyserver ... namely pool.sks-keyservers.net
+  - added bookmark to Amnesia's own website
+  - use a custom "amnesiabranding" extension to localize the default search
+    engine and homepage depending on the current locale
+  - updated noscript whitelist
+  - disable overriden homepage redirect on iceweasel upgrade
+  * pidgin
+  - nicer default configuration with verified irc.indymedia.org's SSL cert
+  - do not parse incoming messages for formatting
+  - hide formatting toolbar
+  * hardware compatibility
+  - b43-fwcutter
+  - beginning of support for the ppc architecture
+  - load acpi-cpufreq, cpufreq_ondemand and cpufreq_powersave kernel
+    modules
+  * live-initramfs: custom, updated package based on upstream's 1.157.4-1, built
+    from commit b0a4265f9f30bad945da of amnesia's custom live-initramfs Git
+    repository
+  - securely erases RAM on shutdown using smem
+  - fixes the noprompt bug when running from USB
+  - disables local swap partitions usage, wrongly enabled by upstream
+  * fully support for running as a guest system in VirtualBox
+  - install guest utils and X11 drivers
+  - build virtualbox-ose kernel modules at image build time
+  * documentation
+  - new (translatable) wiki, using ikiwiki, with integrated bugs and todo
+    tracking system a static version of the wiki is included in generated
+    images and linked from the Desktop
+  * build system
+  - adapt for live-helper 2.0, and depend on it
+  - get amnesia version from debian/changelog
+  - include the full version in ISO volume name
+  - save .list, .packages and .buildlog
+  - scripts/clean: cleanup any created dir in binary_local-includes
+  - updated Debian Live snapshot packages repository URL and signing key
+  - remove duplicated apt/preferences file, the live-helper bug has been
+    fixed
+  * l10n: beginning of support for --language=en
+  * misc
+  - added a amnesia-version script to built images, that outputs the current
+    image's version
+  - added a amnesia-debug script that prepares a tarball with information that
+    could be useful for developpers
+  - updated Amnesia GnuPG key to a new 4096R one
+  - set time with NTP when a network interface is brought up
+  - import amnesia's GnuPG pubkey into the live session user's keyring
+  - do not ask DHCP for a specific hostname
+  - install localepurge, only keep en, fr, de and es locales, which reduces the
+    generated images' size by 100MB
+  - added a hook to replace /sbin/swapon with a script that only runs
+    /bin/true
+  - moved networking hooks responsibility from ifupdown to NetworkManager
+
+ -- amnesia <amnesia@boum.org>  Thu, 26 Nov 2009 11:17:08 +0100
+
 amnesia (0.2) unstable; urgency=low
 
   * imported /home/amnesia, then:
