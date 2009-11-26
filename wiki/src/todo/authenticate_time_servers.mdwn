@@ -1,4 +1,5 @@
-This TODO item is at the [[!taglink todo/research]] stage.
+This TODO item is at the [[!taglink todo/discuss]] and [[!taglink
+todo/research]] stage.
 
 # Rationale
 
@@ -11,6 +12,8 @@ it could pose as the NTP server and mess with the user's time.
 From my understanding of NTP's authentication method it's based on
 a shared secret, not public-key cryptography, which makes it useless
 for our purposes.
+
+> So I guess we can simply dismiss this hypothesis.
 
 # HTP
 
@@ -29,11 +32,48 @@ be used to extract a pretty good time.
 So well, that's not as accurate as NTP, but maybe it could be a better
 fit for our system than NTP…
 
-- It would need to go in the clear with an exception in the firewall
-  config. Is that safe? Could this be used to fingerprint
-  amnesia/incognito users? Is that something we want to avoid?
-- What sources should be trusted? This is of course also a problem
-  with NTP.
-- Is the HTP client behaving as it should (e.g. exit with a loud
-  warning without setting the time) when there is a problem with the
-  certificate when using HTTPS?
+## Fingerprinting?
+
+It would need to go in the clear with an exception in the firewall
+config. Is that safe? Could this be used to fingerprint
+amnesia/incognito users? Is that something we want to avoid?
+
+> It could be used to fingerprint amnesia/incognito users if a subset
+> of the queried webservers' admins share their logs. Choosing a bunch
+> (HTP author suggests 4) of unrelated servers that are unlikely to
+> share user data should be enough of a protection against
+> this threat.
+
+## Sources?
+
+What sources should be trusted? This is of course also a problem
+with NTP.
+
+> amnesia's HTP pool could be based on stable and reliable webservers,
+> including:
+>
+> * two servers whose admins are likely to take great care of their
+>   visitors' privacy: <https://www.torproject.org/> and
+>   <https://www.eff.org/>
+> * one (?) server managed by adversaries of the two "trusted" ones,
+>   in order to prevent identifying data to be shared:
+>   <https://mail.google.com> (!)
+> * one more or less "neutral" server: https://secure.wikimedia.org/
+
+## Certificate validation
+
+Is the HTP client behaving as it should (e.g. exit with a loud
+warning without setting the time) when there is a problem with the
+certificate when using HTTPS?
+
+> As the htpdate Perl client − that only queries one server − makes
+> use of the `LWP::UserAgent` Perl module, it can be configured with
+> environment variables to achieve certificate verification. See the
+> [`Crypt::SSLeay` documentation on (annotated)
+> CPAN](http://annocpan.org/~DLAND/Crypt-SSLeay-0.57/SSLeay.pm)
+> for details.
+>
+> However, I've not looked at the other available implementations (a
+> Perl daemon, C client and a C daemon). Choosing one that supports
+> querying several servers and calculating some kind of mean result
+> would probably be a more sensible decision.
