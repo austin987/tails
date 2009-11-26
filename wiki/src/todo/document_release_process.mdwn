@@ -2,8 +2,8 @@
 
 [[!toc levels=1]]
 
-Update Changelog, tag Git release
-=================================
+Update Changelog
+================
 
         ./release NEW_VERSION PREVIOUS_RELEASED_TAG
 
@@ -12,8 +12,13 @@ example:
         ./release 0.3 0.2
 
 This populates the Changelog with the Git log entries, then launches
-an editor for the needed cleanup of the result, before committing the
-Changelog and tagging the release.
+an editor for the needed cleanup of the result.
+
+SquashFS files order
+====================
+
+Build ISO images, profile them and update `squashfs.order` in the Git
+repository. See [[todo/improve_boot_time_on_cd]] for details.
 
 Testing
 =======
@@ -28,27 +33,68 @@ real-world tests done by fellow beta-testers:
 * local partitions: are any local hard-disk partitions mounted or used
   as swap?
 
-Torrents
-========
+Generate the Torrents
+=====================
 
-The resulting installed packages list is exported at build-time to
-a plain-text file that could be published along with the prebuilt
-images / torrent files, so that one can have a look at it without
-needing to {download,build} and boot amnesia.
-
-Such a list should be linked from [[features]] when a new amnesia
-release is available via bittorrent.
-
-Directory naming:
+First, create a directory with a suitable name for every built image
+to be released, such as `amnesia-i386-gnome-fr-0.3-20091126-cd`; note
+that
 
 * the ISO image's Torrent directory must end with `-cd`
 * the USB image's Torrent directory must end with `-usb`
 
-Add symlinks with persistent names to the latest available `.torrent`
-files (Git and/or latest tagged stable release?).
+Second, copy the built images to these brand new directories.
 
-These links should be published via https.
+Third, generate detached GnuPG signatures for every published image,
+in the same directory as the image; e.g.
 
-published `.torrent` files should have
-<http://z6gw6skubmo2pj43.onion:8080/announce> as an additional
-announce URL.
+    gpg --armor --default-key F93E735F \
+        --detach-sign amnesia-i386-gnome-fr-0.3-20091126.iso
+
+Fourth, create a `.torrent` file for every directory to be published:
+
+    mktorrent -a \
+      'https://www.les-renseignements-genereux.org/tracker/announce,http://z6gw6skubmo2pj43.onion:8080/announce' \
+      <DIRECTORY>
+
+Fifth, check the generated `.torrent` files metainfo, e.g.
+using `btshowmetainfo`, to make sure they don't contain
+unwanted information.
+
+Announce, seed and test the Torrents
+====================================
+
+Announce and seed the Torrents using whatever box you can.
+Requirements:
+
+* a decent, stable and permanent Internet connexion
+* a working Tor setup.
+
+Test them with a BitTorrent client running in a different place.
+
+Update the website and Git repository
+=====================================
+
+Add the `.torrent` and `.packages` files to the Git repository's
+`wiki/src/torrents/files/` directory. There, update the symlinks (with
+persistent names) to the new `.torrent` and `.packages` files (FIXME:
+dev releases and/or latest tagged stable release?).
+
+Write the announce for the release in `news/version_X.Y.mdwn`.
+
+Then add the updated `debian/changelog` and you should be ready to
+record the last commit before tagging happens:
+
+    git commit -m "releasing version ${NEW_VERSION}"
+
+Tag the release in Git
+======================
+
+    git tag -u F93E735F -m "tagging version ${NEW_VERSION}" "${NEW_VERSION}"
+
+Go wild!
+========
+
+Push the last commits and the release tag to our Git repository:
+
+    git push --tags
