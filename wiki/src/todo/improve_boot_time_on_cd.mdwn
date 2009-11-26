@@ -11,11 +11,12 @@ starts the `boot-profile` daemon which uses `inotify` to record file that are
 accessed during boot.
 
 Once enough of the boot sequence has been profiled, `boot-profile` must be
-manually `kill`'ed. Then, `/lib/init/rw/boot-profile` will contain a file
-that is suitable for the `-sort` argument of `mksquashfs`.
+manually `kill`'ed. Then, `/lib/init/rw/boot-profile` can be copied to
+`config/binary_rootfs/squashfs.sort` in the source directory after
+removing the leading slashes from every listed path.
 
-`lh_binary_rootfs` will automatically use a *sort list* provided as
-`config/binary_rootfs/squashfs.sort`.
+On next build, `lh_binary_rootfs` automatically asks `mksquashfs` to
+use the provided *sort list*.
 
 Tests
 =====
@@ -30,6 +31,8 @@ Boot time from pressing enter in BIOS boot device selection menu to TorK.
 Left to be done
 ===============
 
+ * [[!taglink todo/test]] what the effects of the now bundled
+   `squashfs.sort` are
  * [[!tag todo/research]] See if result can further be improved by loading the beginning of the squashfs in RAM.
  * [[!tag todo/code]] Implement an automated way to update the *sortlist*.
 
