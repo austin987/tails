@@ -12,7 +12,12 @@ USAGE="${PROGRAM}"
 Read_conffiles config/all config/common config/chroot
 Set_defaults
 
-MODULE=virtualbox-ose-guest
+hw_arch="`dpkg --print-architecture`"
+if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
+   exit 0
+fi
+
+   MODULE=virtualbox-ose-guest
 
 Echo_message "Building VirtualBox guest modules"
 
