@@ -1,0 +1,78 @@
+[[!tag todo/discuss todo/research]]
+
+[[!toc levels=3]]
+
+Rationale
+=========
+
+Current state
+-------------
+
+In current amnesia,
+
+* a root password is set in `config/chroot_local-hooks/01-password`,
+  but it's public and the same on all live systems;
+* full sudo access is given to the amnesia user.
+
+Problems
+--------
+
+If the user password is empty, any malware that infects user code can
+get root access. Else, any malware that can guess that password (which
+is particularly easy if it's written specifically for amnesia, which
+is a reasonable thing to have within the threat model) while running
+as the amnesia user can get root access.
+
+One could, however, argue that protecting the root user isn't very
+important given how bad a compromise of the amnesia user (which is the
+most likely user account to be attacked) is: it has access to the real
+IP address through /sbin/ifconfig, and everything Tor does (through
+its control port) so it could send all that information to the
+attacker, and we're screwed.
+
+Sure, ifconfig will only report a local address if we're using NAT,
+and a service like whatismyip.org wouldn't work due to the transparent
+proxying which forwards all traffic to Tor.
+
+A root account compromise would screw us in that case.
+
+Obviously disabling the root account (i.e. trashing its password hash
+in the shadow file) does nothing against a local root exploit.
+
+Needed functionality
+--------------------
+
+In order to find a security/privacy/usability compromise, let's
+discuss what kind of root access is needed.
+
+### Package installation
+
+In a Debian Live system, it's really easy to install new packages
+after startup (`sudo apt-get install <package>` or through the
+graphical package manager). This is a really nice and desirable
+feature, making some kind of root access quite worthwhile.
+
+OTOH, there might be an obscure Debian package whose installation
+would reset our `iptables` rules. A malware could install such
+a package, retrieve the real user IP, and send it to an attacker.
+
+Possible solutions
+==================
+
+Random password at boot
+-----------------------
+
+Maybe we could generate on boot a random password and display it on
+screen. But that is really to bothersome in practice.
+
+No root access, more restrictive sudo configuration
+---------------------------------------------------
+
+We could be more restrictive of which commands are allowed to run as
+root.
+
+
+GrSecurity/PaX/SELinux etc.
+---------------------------
+
+???
