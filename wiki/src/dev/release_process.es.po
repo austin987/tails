@@ -1,0 +1,232 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2009-11-28 12:25+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: ENCODING"
+
+#. type: Plain text
+msgid "... including:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!toc levels=1]]\n"
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Update Changelog\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "        ./release NEW_VERSION PREVIOUS_RELEASED_TAG\n"
+msgstr ""
+
+#. type: Plain text
+msgid "example:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "        ./release 0.3 0.2\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"This populates the Changelog with the Git log entries, then launches an "
+"editor for the needed cleanup of the result."
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Build images\n"
+msgstr ""
+
+#. type: Plain text
+msgid "Carefully read the build logs to make sure nothing bad happened."
+msgstr ""
+
+#. type: Title -
+#, no-wrap
+msgid "SquashFS files order\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Build ISO images, profile them and update `squashfs.order` in the Git "
+"repository. See [[todo/improve_boot_time_on_cd]] for details."
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Testing\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Until [[todo/automated_tests]] are setup, some minimal, manual testing has "
+"to be done by the person doing the release, in addition to the real-world "
+"tests done by fellow beta-testers:"
+msgstr ""
+
+#. type: Bullet: '* '
+msgid "iceweasel: is web browsing really torified?"
+msgstr ""
+
+#. type: Bullet: '* '
+msgid "pidgin: is an IRC session really torified?"
+msgstr ""
+
+#. type: Bullet: '* '
+msgid "firewall: is the Tor-enforcement effective?"
+msgstr ""
+
+#. type: Bullet: '* '
+msgid ""
+"local partitions: are any local hard-disk partitions mounted or used as "
+"swap?"
+msgstr ""
+
+#. type: Bullet: '* '
+msgid ""
+"icedove: check that the profile works, is updated, and torified "
+"(specifically the EHLO/HELO SMTP messages it sends, see [an or-talk thread "
+"about it](http://archives.seul.org/or/talk/Aug-2008/msg00261.html))."
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Generate the Torrents\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"First, create a directory with a suitable name for every built image to be "
+"released, such as `amnesia-i386-gnome-fr-0.3-20091126-cd`; note that"
+msgstr ""
+
+#. type: Bullet: '* '
+msgid "the ISO image's Torrent directory must end with `-cd`"
+msgstr ""
+
+#. type: Bullet: '* '
+msgid "the USB image's Torrent directory must end with `-usb`"
+msgstr ""
+
+#. type: Plain text
+msgid "Second, copy the built images to these brand new directories."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Third, generate detached GnuPG signatures for every published image, in the "
+"same directory as the image; e.g."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"    gpg --armor --default-key F93E735F \\\n"
+"        --detach-sign amnesia-i386-gnome-fr-0.3-20091126.iso\n"
+msgstr ""
+
+#. type: Plain text
+msgid "Fourth, create a `.torrent` file for every directory to be published:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"    mktorrent -a \\\n"
+"      "
+"'https://www.les-renseignements-genereux.org/tracker/announce,http://z6gw6skubmo2pj43.onion:8080/announce' "
+"\\\n"
+"      <DIRECTORY>\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Fifth, check the generated `.torrent` files metainfo, e.g.  using "
+"`btshowmetainfo`, to make sure they don't contain unwanted information."
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Announce, seed and test the Torrents\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Announce and seed the Torrents using whatever box you can.  A decent, stable "
+"and permanent Internet connexion is required."
+msgstr ""
+
+#. type: Plain text
+msgid "Test them with a BitTorrent client running in a different place."
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Update the website and Git repository\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Add the `.torrent` and `.packages` files to the Git repository's "
+"`wiki/src/torrents/files/` directory. There, update the symlinks (with "
+"persistent names) to the new `.torrent` and `.packages` files (FIXME: dev "
+"releases and/or latest tagged stable release?)."
+msgstr ""
+
+#. type: Plain text
+msgid "Write the announce for the release in `news/version_X.Y.mdwn`."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Then add the updated `debian/changelog` and you should be ready to record "
+"the last commit before tagging happens:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "    git commit -m \"releasing version ${NEW_VERSION}\"\n"
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Tag the release in Git\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"    git tag -u F93E735F -m \"tagging version ${NEW_VERSION}\" "
+"\"${NEW_VERSION}\"\n"
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Go wild!\n"
+msgstr ""
+
+#. type: Plain text
+msgid "Push the last commits and the release tag to our Git repository:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "    git push --tags\n"
+msgstr ""
