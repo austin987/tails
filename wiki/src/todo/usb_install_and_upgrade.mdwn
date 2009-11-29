@@ -22,6 +22,54 @@ research
 booting methods
 ---------------
 
+### syslinux hybrid image
+
+syslinux >3.72 (in Squeeze, not Lenny) supports generating images
+which can be either a CD-ROM or a hard disk (USB disk, etc.); this
+is done by postprocessing an ISO image. The resulting image can then
+be copied using any raw disk writing tool (typically "dd" or "cat")
+to a USB disk, or written to a CD-ROM using standard CD burning
+tools. See `/usr/share/doc/syslinux-common/isolinux.txt.gz` for
+more information.
+
+Test method:
+
+1. build an amnesia ISO image as usual
+2. copy recent enough `/usr/lib/syslinux/{isolinux.bin,vesamenu.c32}`
+   isolinux files (e.g. the ones from Squeeze) to `binary/isolinux/`
+3. generate an ISO image including the updated isolinux, using
+   a simplified (!) version of the command that lh runs:
+        cd binary
+        genisoimage -J -l -cache-inodes -allow-multidot  -no-emul-boot \
+          -boot-load-size 4 -boot-info-table -r -b isolinux/isolinux.bin \
+          -c isolinux/boot.cat -o ../test.iso
+4. postprocess the ISO: `isohybrid -entry 4 -type 1c test.iso`.
+
+This process could of course be automated.
+
+Successful tests:
+
+* boot the resulting `test.iso` as a normal optical drive in
+  VirtualBox
+* convert the resulting `test.iso`, posing as a HDD image, into the
+  native VirtualBox disk format, using `VBoxManage
+  convertfromraw -format VDI test.iso test.vdi`, then boot the
+  resulting `test.vdi` disk image in VirtualBox
+* `dd` the hybrid `test.iso` to a USB stick and boot it on
+  a USB-boot-enabled computer.
+
+Notes:
+
+* the partition number may need to be 4, in order to be compatible
+  with the BIOSes supporting only USB-Zip;
+  [reference](http://syslinux.zytor.com/archives/2009-May/012380.html)
+* the partition type may need to be `1c`, i.e. hidden FAT32 LBA;
+  [reference](http://syslinux.zytor.com/archives/2009-May/012384.html)
+* boot failures were experimented when testing without the `-entry
+  4 -type 1c` options.
+
+### misc
+
 * apart when using a setup able to boot an ISO image, one needs to
   copy the ISO's `live/` directory to the destination partition, and
   setup a bootloader there
