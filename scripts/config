@@ -9,15 +9,14 @@ fi
 # init variables
 RUN_LH_CONFIG="lh config noautoconfig"
 
-# init config/ with defaults
-$RUN_LH_CONFIG ${@}
+# init config/ with defaults for the target distribution
+$RUN_LH_CONFIG --distribution lenny ${@}
 
 # set Amnesia's general options
 $RUN_LH_CONFIG \
    --apt-recommends disabled \
    --cache-stages "bootstrap rootfs" \
    --archive-areas "main contrib non-free" \
-   --distribution lenny \
    --hostname="amnesia" \
    --iso-application="Amnesia live system" \
    --iso-publisher="https://amnesia.boum.org/" \
