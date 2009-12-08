@@ -81,3 +81,10 @@ cp debian/changelog config/chroot_local-includes/usr/share/doc/amnesia/Changelog
 
 # GnuPG key
 cp wiki/src/amnesia.asc config/chroot_local-includes/usr/share/doc/amnesia/
+
+# create readahead-list from squashfs.sort
+if [ -e config/binary_rootfs/squashfs.sort ]; then
+    mkdir -p config/chroot_local-includes/usr/share/amnesia
+    sort -k2 -n -r config/binary_rootfs/squashfs.sort |
+        cut -d' ' -f1 > config/chroot_local-includes/usr/share/amnesia/readahead-list
+fi
