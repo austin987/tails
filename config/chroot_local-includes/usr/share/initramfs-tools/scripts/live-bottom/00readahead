@@ -28,8 +28,8 @@ log_begin_msg "Starting reading ahead boot files"
 (cd /root
  xargs stat <"$READAHEAD_LIST" >/dev/null)
 (cd /root
- sed -n "\:$BACKGROUND_AT:q;p" "$READAHEAD_LIST" | xargs cat >/dev/null)
+ sed -n "\:$BACKGROUND_AT:q;p" "$READAHEAD_LIST" | xargs cat >/dev/null 2>&1)
 (cd /root
- sed -n "\:$BACKGROUND_AT:,\$p" "$READAHEAD_LIST" | xargs cat >/dev/null) &
+ sed -n "\:$BACKGROUND_AT:,\$p" "$READAHEAD_LIST" | xargs cat >/dev/null 2>&1) &
 
 log_end_msg
