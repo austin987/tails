@@ -7,9 +7,12 @@
 # syntax is valid.
 
 ########################################################################
+# WhisperBack - Send a feedback in an encrypted mail
 # Copyright (C) 2009 Amnesia <amnesia@boum.org>
-# 
-# This program is  free software; you can redistribute  it and/or modify
+#
+# This file is part of WhisperBack
+#
+# WhisperBack is  free software; you can redistribute  it and/or modify
 # it under the  terms of the GNU General Public  License as published by
 # the Free Software Foundation; either  version 3 of the License, or (at
 # your option) any later version.
@@ -47,6 +50,19 @@ to_fingerprint = "09F6BC8FEEC9D8EE005DBAA41D2975EDF93E735F"
 
 # The address of the sender
 from_address = "devnull@amnesia.boum.org"
+
+# SMTP
+#
+# This section defines the SMTP server parameters
+#
+# The SMTP server to use to send the mail
+smtp_host = "4mvq3pnvid3awjln.onion"
+# The port to connect to on that SMTP server
+smtp_port = 25
+# The path to a file containing the certificate to trust
+# This can be either a CA certificate used to sign the SMTP server
+# certificate or the certificate of the SMTP server itself
+smtp_tlscafile = os.path.join("/", "etc", "whisperback", "4mvq3pnvid3awjln.onion.pem")
 
 # MESSAGE
 #
@@ -86,8 +102,8 @@ def mail_prepended_info():
 # configuration files usebul for debugging.
 # 
 # It shound not take any parameter, and should return a string to be
-# appened to the email
-def mail_appened_info():
+# appended to the email
+def mail_appended_info():
     """Returns debugging informations on the running amnesia system
     
     @return XXX: document me
@@ -122,11 +138,3 @@ def mail_appened_info():
             f.close()
 
     return debugging_info
-
-# SMTP
-#
-# This section defines the SMTP server parameters
-#
-smtp_host = "4mvq3pnvid3awjln.onion"
-smtp_port = 25
-smtp_tlscafile = os.path.join("/", "etc", "whisperback", "4mvq3pnvid3awjln.onion.pem")
