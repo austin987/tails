@@ -22,6 +22,7 @@ $RUN_LH_CONFIG \
    --iso-publisher="https://amnesia.boum.org/" \
    --iso-volume="Amnesia ${AMNESIA_FULL_VERSION}" \
    --memtest none \
+   --packages-lists="standard" \
    --username="amnesia" \
    --syslinux-menu vesamenu \
    --syslinux-timeout 4 \
@@ -61,13 +62,16 @@ $RUN_LH_CONFIG --bootappend-live "${AMNESIA_APPEND}" ${@}
 
 case "${LH_LANGUAGE}" in
    de|fr|en)
-      PACKAGES_LISTS="standard amnesia-common amnesia-${AMNESIA_BASE} amnesia-${LH_LANGUAGE}"
+      ADD_PACKAGES_LISTS="amnesia-${AMNESIA_BASE} amnesia-${LH_LANGUAGE}"
       ;;
    *)
-      PACKAGES_LISTS="standard amnesia-common amnesia-${AMNESIA_BASE}"
+      ADD_PACKAGES_LISTS="amnesia-${AMNESIA_BASE}"
       ;;
 esac
-$RUN_LH_CONFIG --packages-lists="$PACKAGES_LISTS" ${@}
+for basename in ${ADD_PACKAGES_LISTS} ; do
+   cp "config/chroot_local-packageslists/${basename}" \
+      "config/chroot_local-packageslists/${basename}.list"
+done
 
 # version
 mkdir -p config/chroot_local-includes/etc/amnesia/
