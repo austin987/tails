@@ -73,6 +73,17 @@ for basename in ${ADD_PACKAGES_LISTS} ; do
       "config/chroot_local-packageslists/${basename}.list"
 done
 
+case "${LH_LANGUAGE}" in
+   fr)
+      ln -s "/usr/local/bin/nautilus-wipe.${LH_LANGUAGE}" \
+	 config/chroot_local-includes/home/amnesia/.gnome2/nautilus-scripts/Effacer_definitivement
+      ;;
+   *)
+      ln -s "/usr/local/bin/nautilus-wipe" \
+	 config/chroot_local-includes/home/amnesia/.gnome2/nautilus-scripts/Securely_erase
+      ;;
+esac
+
 # version
 mkdir -p config/chroot_local-includes/etc/amnesia/
 echo "${AMNESIA_FULL_VERSION}" > config/chroot_local-includes/etc/amnesia/version

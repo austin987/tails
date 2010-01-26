@@ -1,0 +1,11 @@
+#!/bin/bash
+if zenity --question \
+    --text "Are you sure you want to securely erase ${*}?" \
+    --title "Securely erase files"; then
+  srm -rf "$@" && \
+  zenity --info --text "${*} was successfully erased." \
+      --title "Securely erase files" ||
+  zenity --error \
+      --text "An error happened while erasing ${*}." \
+      --title "Securely erase files"
+fi
