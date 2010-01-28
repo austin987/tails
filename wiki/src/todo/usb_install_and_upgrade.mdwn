@@ -32,25 +32,16 @@ to a USB disk, or written to a CD-ROM using standard CD burning
 tools. See `/usr/share/doc/syslinux-common/isolinux.txt.gz` for
 more information.
 
-Test method:
-
-1. build an amnesia ISO image as usual
-2. copy recent enough `/usr/lib/syslinux/{isolinux.bin,vesamenu.c32}`
-   isolinux files (e.g. the ones from Squeeze) to `binary/isolinux/`
-3. generate an ISO image including the updated isolinux, using
-   a simplified (!) version of the command that lh runs:
-        cd binary
-        genisoimage -J -l -cache-inodes -allow-multidot  -no-emul-boot \
-          -boot-load-size 4 -boot-info-table -r -b isolinux/isolinux.bin \
-          -c isolinux/boot.cat -o ../test.iso
-4. postprocess the ISO: `isohybrid -entry 4 -type 1c test.iso`.
-
-This process could of course be automated, and support for such hybrid
-ISO images is being worked on upstream: [[!debbug 558688]].
+Support for such hybrid ISO images in live-helper is being worked on
+upstream:  [[!debbug 558688]].
 
 > Update: experimental support for isohybrid has been added to
 > live-helper 2.0~a3-1; no way to specify options, though, but this
 > should be done in early January.
+
+>> amnesia ISO images are now automatically turned into hybrid ones at
+>> build time, when a recent enough syslinux is installed on the
+>> build system.
 
 Successful tests:
 
@@ -75,14 +66,8 @@ Notes:
   4 -type 1c` options.
 
 Conclusion: this is a nice way to get bootable USB images for almost
-free. A recent-enough syslinux, backported for Lenny, can be installed
-from the [debian-maintainers unsupported backports
-repository](http://unsupported.debian-maintainers.org/backports-other/)
-until [their backports
-repository](http://backports.debian-maintainers.org/) is populated;
-see also [their syslinux d-m
-page](http://syslinux.debian-maintainers.org/) that may also point to
-backports at some point.
+free. Such hybrid ISO images should now be tested [[!tag todo/test]]
+on a wider variety of hardware.
 
 ### misc
 

@@ -70,7 +70,16 @@ for BUILD_TYPE in ${AMNESIA_IMAGES} ; do
 
    echo "Building $BUILD_TYPE image ${BUILD_BASENAME}..."
    if lh build noautoconfig ${@} 2>&1 | tee "${BUILD_LOG}" ; then
-      echo "Image was successfully created, moving it to ${BUILD_DEST_FILENAME}"
+      echo "Image was successfully created"
+      if [ "${BUILD_TYPE}" = iso ]; then
+	 if [ -x "`which isohybrid`" ]; then
+	    echo "Turning the ISO image into a hybrid one..."
+	    isohybrid $AMNESIA_ISOHYBRID_OPTS "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}"
+	 else
+	    echo "isohybrid was not found, the ISO image won't be a hybrid one"
+	 fi
+      fi
+      echo "Renaming generated files..."
       mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
       mv -i "${BUILD_FILENAME}.list" "${BUILD_MANIFEST}"
       mv -i "${BUILD_FILENAME}.packages" "${BUILD_PACKAGES}"
