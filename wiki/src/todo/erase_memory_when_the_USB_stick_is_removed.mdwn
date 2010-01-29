@@ -5,6 +5,12 @@ wipe memory and reboot when the USB drive is removed: if you're in
 a persecuted country and they are on to you, you can grab the USB
 and leave.
 
-> A simple udev rule should do the job.
+A simple udev rule should do the job. It should be triggered by
+`ACTION=="remove"`, and be really careful to detect whether the system
+is running from the just-removed USB stick.
 
-Depends on [[todo/erase_memory_on_shutdown]].
+The implementation difficulty arises from the fact that smem must be
+permanently kept in RAM after boot, along with what's needed to make
+the command run by the udev rule work. Possible solution: run smem on
+boot, immediately SIGSTOP it, and SIGCONT it when the USB stick
+is unplugged.
