@@ -15,6 +15,7 @@ $RUN_LH_CONFIG --distribution lenny ${@}
 # set Amnesia's general options
 $RUN_LH_CONFIG \
    --apt-recommends false \
+   --bootappend-live "${AMNESIA_APPEND}" \
    --cache-stages "bootstrap rootfs" \
    --archive-areas "main contrib non-free" \
    --hostname="amnesia" \
@@ -43,46 +44,12 @@ elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
       ${@}
 fi
 
-# locale-dependent configuration
-. config/chroot
-case "${LH_LANGUAGE}" in
-   de)
-      AMNESIA_APPEND="${AMNESIA_APPEND} locale=de_DE.UTF-8 keyb=de timezone=Europe/Berlin"
-      ;;
-   en)
-      AMNESIA_APPEND="${AMNESIA_APPEND} locale=en_US.UTF-8 keyb=us timezone=America/Detroit"
-      ;;
-   fr)
-      AMNESIA_APPEND="${AMNESIA_APPEND} locale=fr_FR.UTF-8 keyb=fr timezone=Europe/Paris"
-      ;;
-   *)
-      ;;
-esac
-$RUN_LH_CONFIG --bootappend-live "${AMNESIA_APPEND}" ${@}
-
-case "${LH_LANGUAGE}" in
-   de|fr|en)
-      ADD_PACKAGES_LISTS="amnesia-${AMNESIA_BASE} amnesia-${LH_LANGUAGE}"
-      ;;
-   *)
-      ADD_PACKAGES_LISTS="amnesia-${AMNESIA_BASE}"
-      ;;
-esac
+# packages lists
+ADD_PACKAGES_LISTS="amnesia-${AMNESIA_BASE}"
 for basename in ${ADD_PACKAGES_LISTS} ; do
    cp "config/chroot_local-packageslists/${basename}" \
       "config/chroot_local-packageslists/${basename}.list"
 done
-
-case "${LH_LANGUAGE}" in
-   fr)
-      ln -s "/usr/local/bin/nautilus-wipe.${LH_LANGUAGE}" \
-	 config/chroot_local-includes/home/amnesia/.gnome2/nautilus-scripts/Effacer_definitivement
-      ;;
-   *)
-      ln -s "/usr/local/bin/nautilus-wipe" \
-	 config/chroot_local-includes/home/amnesia/.gnome2/nautilus-scripts/Securely_erase
-      ;;
-esac
 
 # version
 mkdir -p config/chroot_local-includes/etc/amnesia/
