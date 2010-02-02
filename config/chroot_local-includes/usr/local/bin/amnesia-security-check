@@ -1,0 +1,139 @@
+#! /usr/bin/perl
+
+use strict;
+use warnings;
+
+#man{{{
+
+=head1 NAME
+
+amnesia-security-check
+
+=head1 VERSION
+
+Version X.XX
+
+=cut
+
+
+=head1 DESCRIPTION
+
+=head1 SYNOPSIS
+
+amnesia-security-check [ Atom feed URL [ Build date ] ]
+
+=head1 AUTHOR
+
+amnesia dev team <amnesia@boum.org>
+See https://amnesia.boum.org/.
+
+=cut
+
+#}}}
+
+use feature qw/say/;
+use Carp;
+use DateTime;
+use DateTime::Format::ISO8601;
+use File::Slurp;
+use LWP::UserAgent;
+use XML::Atom;
+use XML::Atom::Feed;
+
+### configuration
+
+my $version_file = '/etc/amnesia/version';
+my $default_atom_url = 'https://amnesia.boum.org/news/index.en.atom';
+
+### helper subs
+
+=head2 build_date
+
+Argument: file which the version information must be extracted from.
+
+Returns a DateTime object that represents the build time extracted
+from the version file.
+
+=cut
+sub build_date {
+    my $version_file = shift;
+
+    my @content = read_file($version_file);
+    my ($version, $date) = ( $content[0] =~ /(.*) - (\d+)$/ );
+    if (!defined $date || !$date) {
+        croak "Unparseable line in $version_file";
+    }
+    return DateTime::Format::ISO8601->parse_datetime( $date );
+}
+
+=head2 atom_str
+
+=cut
+sub atom_str {
+    my $url = shift;
+    # FIXME: support the SSL certificate file or fingerprint as an additional argument;
+    # see http://annocpan.org/~DLAND/Crypt-SSLeay-0.57/SSLeay.pm for help.
+
+    if (!defined $url) {
+        croak "atom_str was passed an undefined argument";
+    }
+    my $ua  = LWP::UserAgent->new;
+    my $req = HTTP::Request->new('GET', $url);
+    my $res = $ua->request($req);
+    if ($res->is_success) {
+        return $res->content;
+    }
+    croak "Could not retrieve $url";
+}
+
+=head2 is_newer_than
+
+Arguments: a XML::Atom::Entry, a DateTime object
+
+Returns true if, and only if, the updated field of the Atom entry is
+newer than the time represented by the DateTime object.
+
+=cut
+sub is_newer_than {
+    my $entry = shift;
+    my $ref_dt = shift;
+
+    my $entry_updated_dt = DateTime::Format::ISO8601->parse_datetime($entry->updated);
+    if (DateTime->compare( $entry_updated_dt, $ref_dt) == 1) {
+        return 1;
+    }
+    return undef;
+}
+
+### sanity checks
+
+if (! -e "$version_file") {
+    die "The amnesia version file ($version_file) does not exist."
+}
+if (! -r "$version_file") {
+    die "The amnesia version file ($version_file) is not readable."
+}
+
+### parse command line args
+
+my $atom_url = shift || $default_atom_url;
+my $opt_since = shift;
+my $since_dt;
+if (defined $opt_since) {
+    $since_dt = DateTime::Format::ISO8601->parse_datetime($opt_since);
+}
+else {
+    $since_dt = build_date($version_file);
+}
+
+### main
+
+my $feed_str = atom_str($atom_url);
+if (!defined $feed_str) {
+    croak "Empty fetched feed.";
+}
+my $feed = XML::Atom::Feed->new(\$feed_str);
+my @entries = $feed->entries();
+my @newer_entries = grep { is_newer_than($_, $since_dt) } @entries;
+
+map { say($_->title) } @newer_entries;
