@@ -35,6 +35,7 @@ use feature qw/say/;
 use Carp;
 use DateTime;
 use DateTime::Format::ISO8601;
+use Desktop::Notify;
 use File::Slurp;
 use LWP::UserAgent;
 use XML::Atom;
@@ -125,6 +126,30 @@ sub get_new_entries {
     return grep { is_newer_than($_, $since_dt) } $feed->entries();
 }
 
+=head2 notify_user
+
+Use the Desktop Notifications framework to notify the user about the
+Atom entries passed as arguments.
+
+=cut
+sub notify_user {
+    my @entries = @_;
+
+    my $notify = Desktop::Notify->new();
+
+    my $summary = 'This amnesia version has known security issues.';
+    my $body = '';
+
+    map { $body = $body . '- ' . $_->title . "\n" } @entries;
+
+    $body = $body . "\nSee the <a href='https://amnesia.boum.org/security/'>security page</a> for more information.";
+
+    my $notification = $notify->create(summary => $summary,
+                                       body => $body,
+                                       timeout => 0);
+    $notification->show();
+}
+
 ### sanity checks
 
 if (! -e "$version_file") {
@@ -150,4 +175,9 @@ else {
 
 my @newer_entries = get_new_entries($atom_url, $since_dt);
 
-map { say($_->title) } @newer_entries;
+if (! @newer_entries) {
+    exit 0;
+}
+else {
+    notify_user(@newer_entries);
+}
