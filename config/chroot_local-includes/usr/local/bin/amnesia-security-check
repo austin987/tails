@@ -105,6 +105,26 @@ sub is_newer_than {
     return undef;
 }
 
+=head2 get_new_entries
+
+Arguments: the Atom feed URL, a DateTime reference object.
+
+Returns the list of XML::Atom::Entry's, taken from the feed, that have
+been updated after the reference time.
+
+=cut
+sub get_new_entries {
+    my $atom_url = shift;
+    my $since_dt = shift;
+
+    my $feed_str = atom_str($atom_url);
+    if (!defined $feed_str) {
+        croak "Empty fetched feed.";
+    }
+    my $feed = XML::Atom::Feed->new(\$feed_str);
+    return grep { is_newer_than($_, $since_dt) } $feed->entries();
+}
+
 ### sanity checks
 
 if (! -e "$version_file") {
@@ -128,12 +148,6 @@ else {
 
 ### main
 
-my $feed_str = atom_str($atom_url);
-if (!defined $feed_str) {
-    croak "Empty fetched feed.";
-}
-my $feed = XML::Atom::Feed->new(\$feed_str);
-my @entries = $feed->entries();
-my @newer_entries = grep { is_newer_than($_, $since_dt) } @entries;
+my @newer_entries = get_new_entries($atom_url, $since_dt);
 
 map { say($_->title) } @newer_entries;
