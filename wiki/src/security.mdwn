@@ -1,61 +1,12 @@
 [[!toc levels=3]]
 
+[[!inline pages="security/* and currentlang()"
+actions=no archive=yes feedonly=yes show=0]]
+
 # Current holes
 
-## Icedove (Thunderbird) leaks the real IP address
-
-The Torbutton extension installed in amnesia being incompatible with
-Icedove (Thunderbird), the real IP address of the computer is
-disclosed to the SMTP relay that is used to send e-mail.
-
-### Impact
-
-When using Icedove to send e-mail, the computer's real IP address is
-disclosed to the SMTP relay, that usually writes it down to
-a `Received:` header inside outgoing e-mail. This private information
-is therefore disclosed to:
-
-* the SMTP relay's administrators;
-* anyone who is able to read such a sent e-mail, including: anyone the
-  e-mail is sent to, various network and e-mail
-  servers administrators.
-
-When using a NAT-ed Internet connection, the disclosed IP is a local
-network one (e.g. 192.168.1.42), which usually does not reveal too
-much. On the other hand, when connecting directly to the Internet,
-e.g. using a PPP or DSL modem and no router, the disclosed IP truly
-reveals the location of the amnesia user.
-
-### Solution
-
-None yet.
-
-### Mitigation
-
-Best is to avoid using Icedove (Thunderbird) in amnesia until
-fixed images are released. If not possible:
-
-* Use amnesia behind a NAT-ed Internet connection, inside a LAN that
-  uses widespread IP addresses.
-* Use a trustworthy, privacy-friendly SMTP relay that does not write
-  down the client's IP address anywhere, especially in e-mail headers.
-
-Note that using GnuPG does not fix this problem at all: GnuPG only
-encrypts the e-mail body, the e-mail headers being always kept
-in clear.
-
-As of 20100126, you can [[build]] your amnesia system from [[Git]]
-source, that ships with Claws Mail instead of Icedove, **and** set the
-following preferences in `~/.claws-mail/accountrc` for every account:
-
-        set_domain=1
-        domain=localhost
-
-See [[todo/applications_audit/claws_mail]] for details.
-
-### Affected versions
-
-Any amnesia release until, and including, 0.3.
+[[!inline pages="security/* and tagged(security/current) and currentlang()"
+actions=no archive=yes show=0]]
 
 # Probable holes
 
@@ -63,77 +14,14 @@ Until an [[audit|todo/applications_audit]] of the bundled network
 applications is done, information leakages at the protocol level
 should be considered as − at the very least − possible.
 
+[[!inline pages="security/* and tagged(security/probable) and currentlang()"
+actions=no archive=yes show=0]]
+
 # Fixed holes
 
 **WARNING**: some of these holes may only be fixed in [[Git]].
 Please carefully read the "Affected versions" sections bellow.
 
-## ineffective firewall-level Tor enforcement
+[[!inline pages="security/* and tagged(security/fixed) and currentlang()"
+actions=no archive=yes show=0]]
 
-The `openntpd` package is not installed anymore since commit
-bf8cc787ce46e9946ab47d5383feb1174da3f22a (20091006). The `ntpd` user
-is then non-existent on built amnesia systems.
-
-This user is however mentioned in `/etc/firewall.conf`.
-`iptables-restore` being apparently picky about imperfect
-configuration files, it refuses to load it, and the firewall-level Tor
-enforcement is therefore not effective.
-
-### Impact
-
-Some applications establish direct connections through the Internet,
-not using the Tor network at all.
-
-Details:
-
-* iceweasel is not affected, thanks to the torbutton extension
-* applications that take into account the relevant environment
-  variables (namely `http_proxy`, `HTTP_PROXY`, `SOCKS_SERVER` and
-  `SOCKS5_SERVER`) are not affected
-* any other application, such as Pidgin or Thunderbird, is probably
-  affected.
-
-### Solution
-
-This problem has been fixed in [[Git]] commit 9c425e8de13e6b4f885.
-
-### Affected versions
-
-No released amnesia version is affected.
-
-Custom images built from Git snapshots equal of after
-bf8cc787ce46e9946ab47d5383feb1174da3f22a (20091006), and before
-9c425e8de13e6b4f885 (excluded), are affected.
-
-## use of cleartext swap partitions on local hard disks
-
-At least until its version 1.157.4-1, `live-initramfs` has
-a [bug](http://lists.debian.org/debian-live/2009/09/msg00125.html)
-that makes it use any cleartext swap partition found on local
-hard disks.
-
-### Impact
-
-Any kind of information about the user's activities can be stored on
-the local hard disks of the computers being used with affected
-amnesia systems.
-
-### Mitigation of passed effects
-
-It is recommended to securely erase, using a program such as `shred`,
-any cleartext Linux swap partition present on computers having been
-used with affected amnesia systems.
-
-### Solution
-
-We fixed this hole on 20091006 (commit 00c1ff633e8958d0233) by
-installing a custom fixed `live-initramfs` package into built images.
-
-The relevant patch was then
-[integrated](http://lists.debian.org/debian-live/2009/10/msg00124.html)
-in upstream's Git.
-
-### Affected versions
-
-Releases 0.2-20090815 and 0.2-20090816 are affected, as well as any
-custom image built from Git before commit 00c1ff633e8958d0233.
