@@ -50,7 +50,7 @@ BEGIN {
         ca_file => '/etc/ssl/certs/cacert.org.pem',
     );
 }
-use LWP::Simple; # needs to be *after* IO::Socket::SSL's initialization
+use LWP::UserAgent; # needs to be *after* IO::Socket::SSL's initialization
 
 ### configuration
 
@@ -90,9 +90,11 @@ sub atom_str {
 
     $ENV{HTTPS_VERSION} = 3;
 
-    my $res = LWP::Simple::get($url);
-    if (defined $res) {
-        return $res;
+    my $ua  = LWP::UserAgent->new;
+    my $req = HTTP::Request->new('GET', $url);
+    my $res = $ua->request($req);
+    if (defined $res && $res->is_success) {
+        return $res->content;
     }
 
     croak "Could not retrieve $url";
