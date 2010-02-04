@@ -37,9 +37,20 @@ use DateTime;
 use DateTime::Format::ISO8601;
 use Desktop::Notify;
 use File::Slurp;
-use LWP::UserAgent;
 use XML::Atom;
 use XML::Atom::Feed;
+
+### SSL initialization
+
+use IO::Socket::SSL;
+use Net::SSLeay;
+BEGIN {
+    IO::Socket::SSL::set_ctx_defaults(
+        verify_mode => Net::SSLeay->VERIFY_PEER(),
+        ca_file => '/etc/ssl/certs/cacert.org.pem',
+    );
+}
+use LWP::Simple; # needs to be *after* IO::Socket::SSL's initialization
 
 ### configuration
 
@@ -72,18 +83,18 @@ sub build_date {
 =cut
 sub atom_str {
     my $url = shift;
-    # FIXME: support the SSL certificate file or fingerprint as an additional argument;
-    # see http://annocpan.org/~DLAND/Crypt-SSLeay-0.57/SSLeay.pm for help.
 
     if (!defined $url) {
         croak "atom_str was passed an undefined argument";
     }
-    my $ua  = LWP::UserAgent->new;
-    my $req = HTTP::Request->new('GET', $url);
-    my $res = $ua->request($req);
-    if ($res->is_success) {
-        return $res->content;
+
+    $ENV{HTTPS_VERSION} = 3;
+
+    my $res = LWP::Simple::get($url);
+    if (defined $res) {
+        return $res;
     }
+
     croak "Could not retrieve $url";
 }
 
