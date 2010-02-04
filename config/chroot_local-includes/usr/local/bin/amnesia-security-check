@@ -41,10 +41,12 @@ use DateTime;
 use DateTime::Format::ISO8601;
 use Desktop::Notify;
 use File::Slurp;
+use Locale::gettext;
+use POSIX;
 use XML::Atom;
 use XML::Atom::Feed;
 
-### SSL initialization
+### Initialization
 
 use IO::Socket::SSL;
 use Net::SSLeay;
@@ -55,6 +57,9 @@ BEGIN {
     );
 }
 use LWP::UserAgent; # needs to be *after* IO::Socket::SSL's initialization
+
+setlocale(LC_MESSAGES, "");
+textdomain("amnesia-security-check");
 
 ### configuration
 
@@ -77,7 +82,7 @@ sub build_date {
     my @content = read_file($version_file);
     my ($version, $date) = ( $content[0] =~ /(.*) - (\d+)$/ );
     if (!defined $date || !$date) {
-        croak "Unparseable line in $version_file";
+        croak gettext("Unparseable line in %s", $version_file);
     }
     return DateTime::Format::ISO8601->parse_datetime( $date );
 }
@@ -104,7 +109,7 @@ sub atom_str {
     my $url = shift;
 
     if (!defined $url) {
-        croak "atom_str was passed an undefined argument";
+        croak gettext("atom_str was passed an undefined argument");
     }
 
     $ENV{HTTPS_VERSION} = 3;
@@ -164,7 +169,7 @@ sub get_new_entries {
     }
 
     if (!defined $feed_str) {
-        croak "Empty fetched feed.";
+        croak gettext("Empty fetched feed.");
     }
     my $feed = XML::Atom::Feed->new(\$feed_str);
     return grep { is_newer_than($_, $since_dt) } $feed->entries();
