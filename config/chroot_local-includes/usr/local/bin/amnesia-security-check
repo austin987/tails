@@ -20,7 +20,11 @@ Version X.XX
 
 =head1 SYNOPSIS
 
-amnesia-security-check [ Atom feed URL [ Build date ] ]
+amnesia-security-check [ ATOM_FEED_BASE_URL [ BUILD_DATE ] ]
+
+  ATOM_FEED_BASE_URL will be appended /index.XX.atom,
+  for XX in (current locale's language code, 'en'),
+  until success is reported by the HTTP layer.
 
 =head1 AUTHOR
 
@@ -55,7 +59,7 @@ use LWP::UserAgent; # needs to be *after* IO::Socket::SSL's initialization
 ### configuration
 
 my $version_file = '/etc/amnesia/version';
-my $default_atom_url = 'https://amnesia.boum.org/security/index.en.atom';
+my $default_base_url = 'https://amnesia.boum.org/security/';
 
 ### helper subs
 
@@ -78,7 +82,22 @@ sub build_date {
     return DateTime::Format::ISO8601->parse_datetime( $date );
 }
 
+=head2 current_lang
+
+Returns the two-letters language code of the current session.
+
+=cut
+sub current_lang {
+    my ($code) = ($ENV{LANG} =~ m/([a-z]{2}).*/);
+
+    return $code;
+}
+
 =head2 atom_str
+
+Argument: an Atom feed URL
+
+Returns the Atom's feed content on success, undef on failure.
 
 =cut
 sub atom_str {
@@ -97,7 +116,7 @@ sub atom_str {
         return $res->content;
     }
 
-    croak "Could not retrieve $url";
+    return undef;
 }
 
 =head2 is_newer_than
@@ -126,12 +145,24 @@ Arguments: the Atom feed URL, a DateTime reference object.
 Returns the list of XML::Atom::Entry's, taken from the feed, that have
 been updated after the reference time.
 
+We use this poor man's manual Accept-Language algorithm as the website
+layout does not allow us to use content negotiation.
+
 =cut
 sub get_new_entries {
-    my $atom_url = shift;
+    my $base_url = shift;
     my $since_dt = shift;
 
-    my $feed_str = atom_str($atom_url);
+    my @try_urls = (
+        $base_url . '/index.' . current_lang() . '.atom',
+        $base_url . '/index.en.atom',
+    );
+
+    my $feed_str;
+    foreach my $url (@try_urls) {
+        last if ($feed_str = atom_str($url));
+    }
+
     if (!defined $feed_str) {
         croak "Empty fetched feed.";
     }
@@ -174,7 +205,7 @@ if (! -r "$version_file") {
 
 ### parse command line args
 
-my $atom_url = shift || $default_atom_url;
+my $base_url = shift || $default_base_url;
 my $opt_since = shift;
 my $since_dt;
 if (defined $opt_since) {
@@ -186,7 +217,7 @@ else {
 
 ### main
 
-my @newer_entries = get_new_entries($atom_url, $since_dt);
+my @newer_entries = get_new_entries($base_url, $since_dt);
 
 if (! @newer_entries) {
     exit 0;
