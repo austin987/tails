@@ -186,17 +186,22 @@ sub notify_user {
 
     my $notify = Desktop::Notify->new();
 
-    my $summary = 'This amnesia version has known security issues.';
+    my $summary = gettext('This amnesia version has known security issues:');
     my $body = '';
 
-    map { $body = $body . '- ' . $_->title . "\n" } @entries;
+    map { $body = $body
+              . '- '
+              . '<a href="'
+              . $_->id
+              . '">'
+              . $_->title
+              . '</a>'
+              . "\n";
+      } @entries;
 
-    $body = $body . "\nSee the <a href='https://amnesia.boum.org/security/'>security page</a> for more information.";
-
-    my $notification = $notify->create(summary => $summary,
-                                       body => $body,
-                                       timeout => 0);
-    $notification->show();
+    $notify->create(summary => $summary,
+                    body => $body,
+                    timeout => 0)->show();
 }
 
 ### sanity checks
