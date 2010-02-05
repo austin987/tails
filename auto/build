@@ -10,6 +10,9 @@ fi
 # a clean starting point
 rm -rf cache/stages_rootfs
 
+# get LH_BINARY_IMAGES
+. config/binary
+
 # get LH_ARCHITECTURE
 . config/bootstrap
 
@@ -29,57 +32,48 @@ chmod -R go+rX config/chroot_local-includes/usr
 chmod -R go+rx config/chroot_local-includes/usr/local/bin
 chmod -R go+rx config/chroot_local-includes/usr/local/sbin
 
-# build all configured image types
-for BUILD_TYPE in ${AMNESIA_IMAGES} ; do
+# build the image
 
-   case "$BUILD_TYPE" in
-      iso)
-	 BUILD_FILENAME_EXT=iso
-	 BUILD_FILENAME=binary
-	 ;;
-      tar)
-	 BUILD_FILENAME_EXT=tar.gz
-	 BUILD_FILENAME=binary-tar
-	 ;;
-      usb-hdd)
-	 BUILD_FILENAME_EXT=img
-	 BUILD_FILENAME=binary
-	 ;;
-      *)
-	 echo "Image type ${BUILD_TYPE} is not supported." >&2
-	 exit 1
-	 ;;
-   esac
-   BUILD_BASENAME="amnesia-${LH_ARCHITECTURE}-${AMNESIA_BASE}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
-   BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
-   BUILD_MANIFEST="${BUILD_DEST_FILENAME}.list"
-   BUILD_PACKAGES="${BUILD_DEST_FILENAME}.packages"
-   BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
-
-   echo "Cleaning binary stage..."
-   lh clean noautoconfig --binary
-      
-   echo "Running lh config..."
-   lh config noautoconfig --binary-images "${BUILD_TYPE}"
-
-   echo "Building $BUILD_TYPE image ${BUILD_BASENAME}..."
-   if lh build noautoconfig ${@} 2>&1 | tee "${BUILD_LOG}" ; then
-      echo "Image was successfully created"
-      if [ "${BUILD_TYPE}" = iso ]; then
-	 if [ -x "`which isohybrid`" ]; then
-	    echo "Turning the ISO image into a hybrid one..."
-	    isohybrid $AMNESIA_ISOHYBRID_OPTS "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}"
-	 else
-	    echo "isohybrid was not found, the ISO image won't be a hybrid one"
-	 fi
-      fi
-      echo "Renaming generated files..."
-      mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
-      mv -i "${BUILD_FILENAME}.list" "${BUILD_MANIFEST}"
-      mv -i "${BUILD_FILENAME}.packages" "${BUILD_PACKAGES}"
-   else
-      echo "lh build failed." >&2
+case "$LH_BINARY_IMAGES" in
+   iso)
+      BUILD_FILENAME_EXT=iso
+      BUILD_FILENAME=binary
+      ;;
+   tar)
+      BUILD_FILENAME_EXT=tar.gz
+      BUILD_FILENAME=binary-tar
+      ;;
+   usb-hdd)
+      BUILD_FILENAME_EXT=img
+      BUILD_FILENAME=binary
+      ;;
+   *)
+      echo "Image type ${LH_BINARY_IMAGES} is not supported." >&2
       exit 1
-   fi
+      ;;
+esac
+BUILD_BASENAME="amnesia-${LH_ARCHITECTURE}-${AMNESIA_BASE}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
+BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
+BUILD_MANIFEST="${BUILD_DEST_FILENAME}.list"
+BUILD_PACKAGES="${BUILD_DEST_FILENAME}.packages"
+BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
 
-done
+echo "Building $LH_BINARY_IMAGES image ${BUILD_BASENAME}..."
+if lh build noautoconfig ${@} 2>&1 | tee "${BUILD_LOG}" ; then
+   echo "Image was successfully created"
+   if [ "${LH_BINARY_IMAGES}" = iso ]; then
+      if [ -x "`which isohybrid`" ]; then
+	 echo "Turning the ISO image into a hybrid one..."
+	 isohybrid $AMNESIA_ISOHYBRID_OPTS "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}"
+      else
+	 echo "isohybrid was not found, the ISO image won't be a hybrid one"
+      fi
+   fi
+   echo "Renaming generated files..."
+   mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
+   mv -i "${BUILD_FILENAME}.list" "${BUILD_MANIFEST}"
+   mv -i "${BUILD_FILENAME}.packages" "${BUILD_PACKAGES}"
+else
+   echo "lh build failed." >&2
+   exit 1
+fi
