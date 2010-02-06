@@ -37,10 +37,10 @@ real-world tests done by fellow beta-testers:
 * firewall: is the Tor-enforcement effective?
 * local partitions: are any local hard-disk partitions mounted or used
   as swap?
-* icedove: check that the profile works, is updated, and torified
-  (specifically the EHLO/HELO SMTP messages it sends, see [an or-talk
-  thread about
-  it](http://archives.seul.org/or/talk/Aug-2008/msg00261.html)).
+* claws: check that the profile works and is torified
+  (specifically the EHLO/HELO SMTP messages it sends).
+* whisperback: can a bug report e-mail be sent? is it
+  correctly encrypted?
 
 Generate the Torrents
 =====================
@@ -53,8 +53,7 @@ Second, copy the built images to these brand new directories.
 Third, generate detached GnuPG signatures for every published image,
 in the same directory as the image; e.g.
 
-    gpg --armor --default-key F93E735F \
-        --detach-sign amnesia-i386-gnome-0.3-20091126.iso
+    gpg --armor --default-key F93E735F --detach-sign *.iso
 
 **FIXME**: sign the `.torrent` files rather than the images would be
 both quicker to do and quicker to verify, as a `.torrent` file
@@ -73,8 +72,14 @@ unwanted information.
 
 Sixth, generate the SHA-256 hash of every generated `.torrent` file:
 
-    sha256sum amnesia-i386-gnome-0.3-20091126.iso.torrent \
-        > amnesia-i386-gnome-0.3-20091126.iso.torrent.sha256
+    sha256sum amnesia-i386-gnome-0.3-20091126.torrent \
+        > amnesia-i386-gnome-0.3-20091126.torrent.sha256
+
+Seventh, generate detached GnuPG signatures for every published
+`.torrent` file:
+
+    gpg --armor --default-key F93E735F --detach-sign \
+        amnesia-i386-gnome-0.3-20091126.torrent
 
 Announce, seed and test the Torrents
 ====================================
@@ -86,6 +91,8 @@ Test them with a BitTorrent client running in a different place.
 
 Update the website and Git repository
 =====================================
+
+Rename the `.packages` file to remove the `.iso` part of its name.
 
 Add the `.torrent`, `.packages` and `.sha256` files to the Git repository's
 `wiki/src/torrents/files/` directory. There, update the symlinks (with
