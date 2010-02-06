@@ -1,3 +1,89 @@
+amnesia (0.4) unstable; urgency=low
+
+  * We now only build and ship "Hybrid" ISO images, which can be either
+    burnt on CD-ROM or dd'd to a USB stick or hard disk.
+
+  * l10n: we now build and ship multilingual images; initially supported
+    (or rather wanna-be-supported) languages are: ar, zh, de, en, fr, it,
+    pt, es
+  - install Iceweasel's and OpenOffice.org's l10n packages for every
+    supported language
+  - stop installing localized help for OpenOffice.org, we can't afford it
+    for enough languages
+  - when possible, Iceweasel's homepage and default search engine are localized
+  - added Iceweasel's "any language" Scroogle SSL search engine
+  - when the documentation icon is clicked, display the local wiki in
+    currently used language, if available
+  - the Nautilus wipe script is now translatable
+  - added gnome-keyboard-applet to the Gnome panel
+
+  * software
+  - replaced Icedove with claws mail, in a bit rough way; see
+    https://amnesia.boum.org/todo/replace_icedove_with_claws/ for best
+    practices and configuration advices
+  - virtual keyboard: install onBoard instead of kvkbd
+  - Tor controller: install Vidalia instead of TorK
+  - install only chosen parts of Gnome, rather than gnome-desktop-environment
+  - do not install xdialog, which is unused and not in Squeeze
+  - stop installing grub as it breaks Squeeze builds (see Debian bug #467620)
+  - install live-helper from snapshots repository into the Live image
+
+  * Iceweasel
+  - do not install the NoScript extension anymore: it is not strictly
+    necessary but bloodily annoying
+
+  * Pidgin
+  - use "guest" as realname and username as well, so as to avoid
+    advertising amnesia usage
+
+  * Provide WhisperBack 1.2 for anonymous, GnuPG-encrypted bug reporting.
+  - added dependency on python-gnutls
+  - install the SMTP hidden relay's certificate
+
+  * amnesia-security-check: new program that tells users that the amnesia
+    version they are running is affected by security flaws, and which ones
+    they are; this program is run at Gnome session startup, after sleeping
+    2 minutes to let Tor a chance to initialize.
+    Technical details:
+  - Perl
+  - uses the Desktop Notifications framework
+  - fetches the security atom feed from the wiki
+  - verifies the server certificate against its known CA
+  - tries fetching the localized feed; if it fails, fetch the default
+    (English) feed
+
+  * live-initramfs: new custom package built from our own live-initramfs
+    Git repository (commit 40e957c4b89099e06421)
+  - at shutdown time, ask the user to unplug the CD / USB stick, then run
+    smem, wait for it to finish, then attempt to immediately halt
+
+  * build system
+  - bumped dependency on live-helper to >= 2.0a6 and adapted our config
+  - generate hybrid ISO images by default, when installed syslinux is
+    recent enough
+  - stop trying to support building several images in a row, it is still
+    broken and less needed now that we ship hybrid ISO images
+  - scripts/config: specify distribution when initializing defaults
+  - updated Debian Live APT repository's signing key
+
+  * PowerPC
+  - disable virtualbox packages installing and module building on !i386
+    && !amd64, as PowerPC is not a supported guest architecture
+  - built and imported tor_0.2.1.20-1~~lenny+1_powerpc.deb
+
+  * Squeeze
+  - rough beginnings of a scratch Squeeze branch, currently unsupported
+  - install gobby-infinote
+
+  * misc
+  - updated GnuPG key with up-to-date signatures
+  - more improvements on boot time from CD
+  - enhanced the wipe in Nautilus UI (now asks for confirmation and
+    reports success or failure)
+  - removed the "restart Tor" launcher from the Gnome panel
+
+ -- amnesia <amnesia@boum.org>  Fri, 05 Feb 2010 22:28:04 +0100
+
 amnesia (0.3) unstable; urgency=low
 
   * software: removed openvpn, added
