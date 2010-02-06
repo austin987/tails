@@ -62,7 +62,7 @@ echo "Building $LH_BINARY_IMAGES image ${BUILD_BASENAME}..."
 if lh build noautoconfig ${@} 2>&1 | tee "${BUILD_LOG}" ; then
    echo "Image was successfully created"
    if [ "${LH_BINARY_IMAGES}" = iso ]; then
-      if [ -x "`which isohybrid`" ]; then
+      if [ -x "`which isohybrid`" -a "${LH_ARCHITECTURE}" = 'i386' ]; then
 	 echo "Turning the ISO image into a hybrid one..."
 	 isohybrid $AMNESIA_ISOHYBRID_OPTS "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}"
       else
