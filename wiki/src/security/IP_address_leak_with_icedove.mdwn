@@ -1,7 +1,7 @@
 [[!meta date="Mon Dec 7 11:20:24 2009"]]
 [[!meta title="Icedove (Thunderbird) leaks the real IP address"]]
 
-[[!tag security/current]]
+[[!tag security/fixed]]
 
 The Torbutton extension installed in amnesia being incompatible with
 Icedove (Thunderbird), the real IP address of the computer is
@@ -27,7 +27,14 @@ reveals the location of the amnesia user.
 
 # Solution
 
-None yet.
+Upgrade to amnesia 0.4, that ships with Claws Mail instead of Icedove,
+**and** set the following preferences in `~/.claws-mail/accountrc` for
+every account:
+
+        set_domain=1
+        domain=localhost
+
+See [[todo/applications_audit/claws_mail]] for details.
 
 # Mitigation
 
@@ -43,15 +50,7 @@ Note that using GnuPG does not fix this problem at all: GnuPG only
 encrypts the e-mail body, the e-mail headers being always kept
 in clear.
 
-As of 20100126, you can [[build]] your amnesia system from [[Git]]
-source, that ships with Claws Mail instead of Icedove, **and** set the
-following preferences in `~/.claws-mail/accountrc` for every account:
-
-        set_domain=1
-        domain=localhost
-
-See [[todo/applications_audit/claws_mail]] for details.
-
 # Affected versions
 
 Any amnesia release until, and including, 0.3.
+amnesia 0.4 is not affected.
