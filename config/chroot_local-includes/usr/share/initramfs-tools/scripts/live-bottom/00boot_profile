@@ -1,0 +1,44 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs() {
+	echo "${PREREQ}"
+}
+
+case "${1}" in
+    prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+if [ -n "${NOUSER}" ]; then
+        exit 0
+fi
+
+# Only start profiler when "profile" appears on kernel command line
+grep -qw "profile" /proc/cmdline || exit 0
+
+. /scripts/live-functions
+
+log_begin_msg "Starting boot profiler"
+
+# Schedule stop script
+cat <<EOF >/root/home/amnesia/.config/autostart/end-profile.desktop
+[Desktop Entry]
+Version=1.0
+Name=EndProfile
+GenericName=EndProfile
+Exec=/usr/local/bin/end-profile
+Terminal=false
+Type=Application
+EOF
+
+echo 32768 >/proc/sys/fs/inotify/max_user_watches
+chroot /root /usr/local/sbin/boot-profile /var/log/boot-profile
+
+# Put readahead list at the very begining
+head -n 1 /root/usr/share/amnesia/readahead-list >/dev/null || true
+
+log_end_msg

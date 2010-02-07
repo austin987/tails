@@ -1,0 +1,79 @@
+#!/bin/sh
+
+# set -x
+
+. config/amnesia
+if [ -e config/amnesia.local ] ; then
+   . config/amnesia.local
+fi
+
+# a clean starting point
+rm -rf cache/stages_rootfs
+
+# get LH_BINARY_IMAGES
+. config/binary
+
+# get LH_ARCHITECTURE
+. config/bootstrap
+
+# build the doc wiki
+./build-wiki
+
+# refresh translations of our programs
+./refresh-translations
+
+# fix permissions on {binary,chroot}_local-includes; they may be
+# wrong, e.g. if the tarball was extracted with a strict umask
+chmod -R go+rX config/binary_local-includes/
+chmod -R go+rX config/chroot_local-includes/etc
+chmod 0755 config/chroot_local-includes/home
+chmod 0700 config/chroot_local-includes/home/amnesia
+chmod -R go+rX config/chroot_local-includes/usr
+chmod -R go+rx config/chroot_local-includes/usr/local/bin
+chmod -R go+rx config/chroot_local-includes/usr/local/sbin
+
+# build the image
+
+case "$LH_BINARY_IMAGES" in
+   iso)
+      BUILD_FILENAME_EXT=iso
+      BUILD_FILENAME=binary
+      ;;
+   tar)
+      BUILD_FILENAME_EXT=tar.gz
+      BUILD_FILENAME=binary-tar
+      ;;
+   usb-hdd)
+      BUILD_FILENAME_EXT=img
+      BUILD_FILENAME=binary
+      ;;
+   *)
+      echo "Image type ${LH_BINARY_IMAGES} is not supported." >&2
+      exit 1
+      ;;
+esac
+BUILD_BASENAME="amnesia-${LH_ARCHITECTURE}-${AMNESIA_BASE}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
+BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
+BUILD_MANIFEST="${BUILD_DEST_FILENAME}.list"
+BUILD_PACKAGES="${BUILD_DEST_FILENAME}.packages"
+BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
+
+echo "Building $LH_BINARY_IMAGES image ${BUILD_BASENAME}..."
+if lh build noautoconfig ${@} 2>&1 | tee "${BUILD_LOG}" ; then
+   echo "Image was successfully created"
+   if [ "${LH_BINARY_IMAGES}" = iso ]; then
+      if [ -x "`which isohybrid`" -a "${LH_ARCHITECTURE}" = 'i386' ]; then
+	 echo "Turning the ISO image into a hybrid one..."
+	 isohybrid $AMNESIA_ISOHYBRID_OPTS "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}"
+      else
+	 echo "isohybrid was not found, the ISO image won't be a hybrid one"
+      fi
+   fi
+   echo "Renaming generated files..."
+   mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
+   mv -i "${BUILD_FILENAME}.list" "${BUILD_MANIFEST}"
+   mv -i "${BUILD_FILENAME}.packages" "${BUILD_PACKAGES}"
+else
+   echo "lh build failed." >&2
+   exit 1
+fi

@@ -1,17 +1,34 @@
-[[!tag todo/research]]
+Message-ID
+==========
 
-In amnesia's usecase, leak of private information in a MUA can happen
-including, but not only, via:
+When the following account preferences are set, no private information
+is used to generate Message-ID headers:
 
-* outgoing EHLO/HELO SMTP commands (see [this or-talk thread about
-  it](http://archives.seul.org/or/talk/Aug-2008/msg00261.html))
-* generated Message-ID
+        set_domain=1
+        domain=localhost
 
-A quick look at the source code seems to indicate that when the
-`domain` account preference is set, it is used to generate Message-IDs
-and talk to SMTP servers. Not tested/sniffed yet, though.
+Else, Message-ID's end with `@amnesia`, which is clearly suboptimal,
+but not too bad.
 
-Resources:
+EHLO/HELO
+=========
+
+Outgoing EHLO/HELO SMTP commands can also leak private information
+(see [this or-talk thread about
+it](http://archives.seul.org/or/talk/Aug-2008/msg00261.html)).
+
+With or without `domain` trick, claws-mail seems to always say `EHLO localhost`.
+
+HTML / Javascript
+=================
+
+Optional plugins (fancy, dillo, html2, etc.) can render HTML e-mail.
+Without any of them, claws-mail does basic HTML formatting (e.g.
+links) by default. The `render_html` prefs item, when set to false,
+fully disables HTML rendering.
+
+Resources
+=========
 
 * [torsocks homepage](http://code.google.com/p/torsocks/) has some
   test results about Claws Mail

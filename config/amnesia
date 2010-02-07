@@ -14,13 +14,12 @@
 # Default: gnome
 AMNESIA_BASE="gnome"
 
-# Images types to build, as a space-separated list.
-# Every element of this list must be a valid argument for "lh config -b".
-# Only iso, usb-hdd and tar are currently supported.
-AMNESIA_IMAGES="iso"
-
 # Base for the string that will be passed to "lh config --bootappend-live"
-AMNESIA_APPEND="quiet splash vga=791 live-media=removable live-media-timeout=15 noprompt"
+AMNESIA_APPEND="quiet splash vga=791 live-media=removable live-media-timeout=15"
+
+# Options passed to isohybrid
+# Default: "-entry 4 -type 1c"
+AMNESIA_ISOHYBRID_OPTS="-entry 4 -type 1c"
 
 ### Options used only by the home-refresh script ###############################
 
@@ -42,7 +41,12 @@ AMNESIA_HOME_EXCLUDES="/.DCOPserver_* \
   /.dbus/session-bus/** \
   /.dmrc \
   /.fontconfig/ \
+  /.gconf/apps/nm-applet/ \
+  /.gconf/apps/onboard/ \
   /.gconf/desktop/gnome/peripherals/keyboard/host-* \
+  /.gconf/desktop/gnome/peripherals/keyboard/preview/ \
+  /.gconf/system/http_proxy/ \
+  /.gconf/system/proxy/ \
   /.gconfd/saved_state \
   /.gnome/gnome-vfs/.trash_entry_cache \
   /.gnome2/backgrounds.xml \
@@ -91,6 +95,14 @@ AMNESIA_HOME_EXCLUDES="/.DCOPserver_* \
   /.mozilla/firefox/*/persdict.dat \
   /.mozilla/firefox/*/places.sqlite-journal \
   /.mozilla/firefox/*/pluginreg.dat \
+  /.mozilla/firefox/*/searchplugins/scroogle-ssl-ar.xml \
+  /.mozilla/firefox/*/searchplugins/scroogle-ssl-de.xml \
+  /.mozilla/firefox/*/searchplugins/scroogle-ssl-en.xml \
+  /.mozilla/firefox/*/searchplugins/scroogle-ssl-es.xml \
+  /.mozilla/firefox/*/searchplugins/scroogle-ssl-fr.xml \
+  /.mozilla/firefox/*/searchplugins/scroogle-ssl-it.xml \
+  /.mozilla/firefox/*/searchplugins/scroogle-ssl-pt.xml \
+  /.mozilla/firefox/*/searchplugins/scroogle-ssl-zh.xml \
   /.mozilla/firefox/*/sessionstore.js \
   /.mozilla/firefox/*/signons*.sqlite \
   /.mozilla/firefox/*/signons*.txt \
@@ -140,6 +152,8 @@ AMNESIA_HOME_EXCLUDES="/.DCOPserver_* \
   /.su-to-rootrc \
   /.thumbnails/ \
   /.update-notifier/ \
+  /.vidalia/geoip-cache \
+  /.vidalia/vidalia.pid \
   /.viminfo \
   /.xsession-errors \
   /lost+found/"
@@ -161,3 +175,6 @@ AMNESIA_FULL_VERSION="${AMNESIA_VERSION} - ${AMNESIA_TODAY}"
 AMNESIA_DEV_FULLNAME="amnesia"
 AMNESIA_DEV_EMAIL="amnesia@boum.org"
 AMNESIA_DEV_KEYID="F93E735F"
+
+# Supported languages (displayed in this order by the syslinux menu)
+AMNESIA_SUPPORTED_LANGUAGES="ar zh de en fr it pt es"

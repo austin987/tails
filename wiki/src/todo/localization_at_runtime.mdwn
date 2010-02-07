@@ -4,49 +4,32 @@ instead of building per-language images.
 Implementation
 ==============
 
-* [[!tag todo/code]] Install various Scroogle SSL search engines for other
-  to-be-supported languages.
 * use our custom *amnesiabranding* iceweasel extension to localize at runtime:
-    - the default search engine: done for FR, **buggy** for EN
-      (Scroogle FR is still the default search engine)
-    - the homepage: done for EN, FR
-    - set a default search engine / homepage for unknown locales
-      somewhere else than in `user.js`, as the `user.js` setting
-      overrides the one set by the extension [[!tag todo/code]]
-* [[!tag todo/research]] See how many Debian localization packages fit
-  on one CD (see `config/chroot_local-packageslists/amnesia-fr` for an
-  example).
+  - the homepage: done
+  - the default search engine: done
+* [[!taglink todo/research]] how many Debian localization packages fit
+  on one CD:
   - 500kB for each `iceweasel-l10n-*`
-  - 1MB for each `icedove-l10n-*`
-  - 30-60MB for each `kde-i18n-*`: removed if we [[switch from TorK to Vidalia|ship Vidalia instead of TorK]] and [[install a non-KDE virtual keyboard]]
   - 7MB for each `openoffice.org-l10n-*`
-  - 30MB for each `openoffice.org-help-*`: probably need to be sacrificed
   - ??MB for each `openoffice.org-hyphenation-*`: many languages are
     only in >= Squeeze
   - ??MB for each `openoffice.org-thesaurus-*`: many languages are
     only in >= Squeeze
-* [[!taglink todo/wait]] for upstream to implement a language-choosing
-  boot menu and maybe help them; seems well engaged
-* [[!taglink todo/code]] the `live-initramfs` hooks needed to localize the boot
-  depending on the user's language choice.
-
-boot menu
----------
-
-### gfxboot
-
-The Debian Live main developer has
-[uploaded](http://packages.qa.debian.org/g/gfxboot.html)
-[gfxboot](http://en.opensuse.org/Gfxboot) to Debian. Some early
-description of his work has been
-[posted](http://lists.debian.org/debian-live/2009/09/msg00032.html).
-This will allow to implement nice and possibly complex boot menus.
-
-### GRUB 2
-
-GRUB 2 also implements a
-[graphical menu system](http://grub.enbug.org/Subprojects/GraphicalMenu)...
-but Debian Live does not support GRUB 2 yet.
+* implement a language-choosing boot menu:
+  - done for i386 (ugly hack, [[!taglink todo/wait]] for live-helper
+    upstream to provide a nice gfxboot-based language choosing menu)
+  - [[!taglink todo/code]] a similar hack for yaboot on powerpc
+* [[!taglink todo/translate]] the nautilus-wipe menu entry, in
+  `chroot_local-includes/usr/local/bin/autostart-localize`
+* [[!taglink todo/translate]] the desktop launchers in
+  `config/chroot_local-includes/home/amnesia/Desktop/*.desktop`
+* [[!taglink todo/research]] how to properly support Chinese and
+  Russian languages; others? have a look to tasksel's
+  chinese-s-desktop, arabic-desktop, and so on for fonts, input
+  systems, etc.
+* enable supported languages to be [[translated|tags/todo/translate]]
+  in the wiki, once we get to reach trusted translators/reviewers; we
+  don't want to ship misleading instructions.
 
 Miscellaneous ideas
 ===================
@@ -54,4 +37,10 @@ Miscellaneous ideas
 * Additionally go on supporting building pre-localized images?
 * Remember the chosen locale when using a writable boot device?
   (needs discussion, this breaks the "no persistence unless
-  explicitly told" requirement)
+  explicitly told" requirement): [[!taglink todo/discuss]]
+
+Ressources
+==========
+
+- <http://webconverger.org/i18n/> (they don't support CJK as it takes
+  100M+)

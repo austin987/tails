@@ -5,7 +5,7 @@ How to [[build]] custom Live Systems based on amnesia?
 # amnesia-specific settings
 
 The settings that can be customized can be found in `config/amnesia`;
-e.g. images types to build, desktop environment.
+e.g. desktop environment.
 
 You'd better never directly edit this file: rather put your custom
 variable assignments in a new `config/amnesia.local` file. The values
@@ -29,11 +29,13 @@ One may want to build an image including a modified version of the
 live user's `$HOME` directory. There are multiple ways to do so:
 
 1. editing and creating files in `config/chroot_local-includes/home/amnesia/`
-2. droping shell scripts in `config/chroot_local-hooks/` to modify
-   `/home/amnesia` in a program-driven way (`gconftool`, etc.)
+2. dropping shell scripts in `config/chroot_local-hooks/` or
+   `config/chroot_local-includes/usr/share/initramfs-tools/scripts/live-bottom/`
+   to modify `/home/amnesia` in a program-driven way
+   (`gconftool`, etc.)
 3. eventually, one may run the live system, do the desired
    modifications, save the resulting `/home/amnesia` directory, then
    use the `home-refresh` script to import the modifications into the
    directory used to build images from, i.e.
    `config/chroot_local-includes/home/amnesia`. Read the (scarse)
-   documentation at the top of this script.
+   documentation at the top of this script for usage information.

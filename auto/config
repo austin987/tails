@@ -1,0 +1,71 @@
+#! /bin/sh
+# automatically run by "lh config"
+
+. config/amnesia
+if [ -e config/amnesia.local ] ; then
+   . config/amnesia.local
+fi
+
+# init variables
+RUN_LH_CONFIG="lh config noautoconfig"
+
+# init config/ with defaults for the target distribution
+$RUN_LH_CONFIG --distribution squeeze ${@}
+
+# set Amnesia's general options
+$RUN_LH_CONFIG \
+   --apt-recommends false \
+   --bootappend-live "${AMNESIA_APPEND}" \
+   --archive-areas "main contrib non-free" \
+   --hostname="amnesia" \
+   --iso-application="Amnesia live system" \
+   --iso-publisher="https://amnesia.boum.org/" \
+   --iso-volume="Amnesia ${AMNESIA_FULL_VERSION}" \
+   --memtest none \
+   --packages-lists="standard" \
+   --username="amnesia" \
+   --syslinux-menu vesamenu \
+   --syslinux-timeout 4 \
+   ${@}
+
+# build i386 images on amd64 as well, include only 686 kernel
+hw_arch="`dpkg --print-architecture`"
+if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
+   $RUN_LH_CONFIG \
+      --architecture i386 \
+      --linux-flavours 686 \
+      ${@}
+# build powerpc images on powerpc64 as well, include only powerpc kernel
+elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
+   $RUN_LH_CONFIG \
+      --architecture powerpc \
+      --linux-flavours powerpc \
+      ${@}
+fi
+
+# packages lists
+ADD_PACKAGES_LISTS="amnesia-${AMNESIA_BASE}"
+for basename in ${ADD_PACKAGES_LISTS} ; do
+   cp "config/chroot_local-packageslists/${basename}" \
+      "config/chroot_local-packageslists/${basename}.list"
+done
+
+# version
+mkdir -p config/chroot_local-includes/etc/amnesia/
+echo "${AMNESIA_FULL_VERSION}" > config/chroot_local-includes/etc/amnesia/version
+if git rev-list HEAD 2>&1 >/dev/null; then
+   git rev-list HEAD | head -n 1 >> config/chroot_local-includes/etc/amnesia/version
+fi
+
+# changelog
+cp debian/changelog config/chroot_local-includes/usr/share/doc/amnesia/Changelog
+
+# GnuPG key
+cp wiki/src/amnesia.asc config/chroot_local-includes/usr/share/doc/amnesia/
+
+# create readahead-list from squashfs.sort
+if [ -e config/binary_rootfs/squashfs.sort ]; then
+    mkdir -p config/chroot_local-includes/usr/share/amnesia
+    sort -k2 -n -r config/binary_rootfs/squashfs.sort |
+        cut -d' ' -f1 > config/chroot_local-includes/usr/share/amnesia/readahead-list
+fi

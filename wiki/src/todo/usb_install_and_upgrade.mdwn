@@ -22,20 +22,74 @@ research
 booting methods
 ---------------
 
+### syslinux hybrid image
+
+syslinux >3.72 (in Squeeze, not Lenny) supports generating images
+which can be either a CD-ROM or a hard disk (USB disk, etc.); this
+is done by postprocessing an ISO image. The resulting image can then
+be copied using any raw disk writing tool (typically "dd" or "cat")
+to a USB disk, or written to a CD-ROM using standard CD burning
+tools. See `/usr/share/doc/syslinux-common/isolinux.txt.gz` for
+more information.
+
+Support for such hybrid ISO images in live-helper is being worked on
+upstream:  [[!debbug 558688]].
+
+> Update: experimental support for isohybrid has been added to
+> live-helper 2.0~a3-1; no way to specify options, though, but this
+> should be done in early January.
+
+>> amnesia ISO images are now automatically turned into hybrid ones at
+>> build time, when a recent enough syslinux is installed on the
+>> build system.
+
+Successful tests:
+
+* boot the resulting `test.iso` as a normal optical drive in
+  VirtualBox
+* boot the resulting `test.iso` as a KVM hard disk
+* convert the resulting `test.iso`, posing as a HDD image, into the
+  native VirtualBox disk format, using `VBoxManage
+  convertfromraw -format VDI test.iso test.vdi`, then boot the
+  resulting `test.vdi` disk image in VirtualBox
+* `dd` the hybrid `test.iso` to a USB stick and boot it on
+  a USB-boot-enabled computer.
+
+Notes:
+
+* the partition number may need to be 4, in order to be compatible
+  with the BIOSes supporting only USB-Zip;
+  [reference](http://syslinux.zytor.com/archives/2009-May/012380.html)
+* the partition type may need to be `1c`, i.e. hidden FAT32 LBA;
+  [reference](http://syslinux.zytor.com/archives/2009-May/012384.html)
+* boot failures were experimented when testing without the `-entry
+  4 -type 1c` options.
+
+Conclusion: this is a nice way to get bootable USB images for almost
+free. Such hybrid ISO images should now be tested [[!tag todo/test]]
+on a wider variety of hardware.
+
+### misc
+
 * apart when using a setup able to boot an ISO image, one needs to
   copy the ISO's `live/` directory to the destination partition, and
   setup a bootloader there
 * use grml's
   [patches to live-initramfs](http://git.grml.org/?p=live-initramfs-grml.git;a=tree;f=debian/patches) 
   to support directly booting an ISO image... merged in upstream Git,
-  commit 6458a8862db68
+  commit 6458a8862db68. Another of their patches (namely
+  `07_support_findiso.dpatch`) adds support for the
+  `findiso` boot parameter, which is needed for easy usage; this one
+  has not been applied upstream yet; does it respect the
+  `live-media=removable` boot parameter?
 * Philip Hands' solution proposed on Debian's bug
   [#534887](http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=534887)
   uses extlinux chainloading the image's own bootloader
-* Grub 2 initial support has entered `live-helper` in
-  commit 566d27904afb3715. Chainload the ISO from here?
 
 ### Grub2
+
+Grub 2 initial support has entered `live-helper` in commit
+566d27904afb3715. Chainload the ISO from here?
 
 (loopback) boot an iso image:
 
@@ -91,6 +145,11 @@ frontend UI
       - [.deb](http://sidux.office-vienna.at/sidux/debian/pool/main/l/liveusb-creator/),
       - [source](http://w3you.com/liveusb-creator/liveusb-creator.htm)
    - needs an ISO file, does not know how to read a real CD
+* Moblin’s [Image
+  Writer](http://git.moblin.org/cgit.cgi/moblin-image-creator/plain/image-writer)
+* [Mandriva Seed](http://git.mandriva.com/?p=projects/mandriva-seed.git;a=summary)
+* [RIP’s mkusb](http://rip.7bf.de/current/mkusb.sh) and its
+  [README](http://rip.7bf.de/current/mkusb.txt)
 
 partitionning
 -------------
