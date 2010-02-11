@@ -59,12 +59,6 @@ a package, retrieve the real user IP, and send it to an attacker.
 Possible solutions
 ==================
 
-Random password at boot
------------------------
-
-Maybe we could generate on boot a random password and display it on
-screen. But that is really to bothersome in practice.
-
 Disabled root access by default, boot menu option to enable it
 --------------------------------------------------------------------
 
@@ -73,11 +67,28 @@ If enabled to user would be prompted to set a password during early init or init
 * If [[todo/persistence]] is available it is possible to save the root line from /etc/shadow and have it automatically restored instead of showing the password setting prompt which makes this option less intrusive.
     - Since the idea of this possibility is to reduce the number of obstackes for the user during boot it wouldn't make much sense to encrypt it as the user then would have to enter the passphrase during boot instead. However, if the user has some other encrypted persistent storage (like $HOME) it could be saved there and restored after the passphrase for that container has been entered.
 
+Mandatory password setting
+--------------------------
+
+The user is prompted for a password during init or initramfs. If an empty password is entered, the root account is disabled.
+
+* If [[todo/persistence]] is available the password can be saved and restored as in the above solution.
+
+Random password at boot
+-----------------------
+
+Maybe we could generate on boot a random password and display it on
+screen. But that is really to bothersome in practice.
+
+
 No root access, more restrictive sudo configuration
 ---------------------------------------------------
 
 We could be more restrictive of which commands are allowed to run as
 root.
+
+* Enabling some commands might have dangerous consequences which are hard to anticipate.
+* Some users might need less restrictions to work around bugs/problems they have -- in other words, it might be hard for us to know which commands the users expect to have available.
 
 
 GrSecurity/PaX/SELinux etc.
