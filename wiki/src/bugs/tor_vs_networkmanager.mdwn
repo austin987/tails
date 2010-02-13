@@ -11,4 +11,15 @@ insufficient, or NetworkManager does not invoke
 > `/bin/sh` is now `dash`.
 
 Re-opening, as the SIGHUP obviously isn't enough, resulting in Tor
-failing to connect to the network. Details coming soon.
+failing to connect to the network.
+
+The problem seems to be the that if Tor is in the process of
+retrieving the dir info (like during bootstrap) it won't abort the
+current retrieval and start a new one if it is instructed to do so,
+e.g. by a SIGHUP or an application request.
+
+This has been [reported to the Tor bug tracking
+system](https://bugs.torproject.org/flyspray/index.php?do=details&id=1247).
+
+Workarounds we could apply in amnesia until this bug is fixed are
+under discussion.
