@@ -8,7 +8,7 @@
 
 ########################################################################
 # WhisperBack - Send a feedback in an encrypted mail
-# Copyright (C) 2009 Amnesia <amnesia@boum.org>
+# Copyright (C) 2009-2010 Amnesia <amnesia@boum.org>
 #
 # This file is part of WhisperBack
 #
@@ -33,6 +33,7 @@ import os.path
 
 # Custom imports
 import subprocess
+import random
 
 # RECIPIENT
 #
@@ -70,7 +71,7 @@ smtp_tlscafile = os.path.join("/", "etc", "whisperback", "4mvq3pnvid3awjln.onion
 
 # The subject of the email to be sent
 # Please take into account that this will not be encrypted
-mail_subject = "WhisperBack"
+mail_subject = "Bug report: %x" % random.randrange(16**32)
 
 # A callback function to get information to prepend to the mail
 # (this information will be encrypted). This is useful to add
