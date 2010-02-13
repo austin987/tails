@@ -22,7 +22,7 @@ if [ -r "${PIDFILE}" ]; then
     # Lenny's Gnome.
     killall vidalia
     export DISPLAY=':0.0'
-    exec /bin/su -c /usr/local/bin/vidalia-wrapper amnesia
+    exec /bin/su -c /usr/local/bin/vidalia-wrapper amnesia &
 else
     /etc/init.d/tor start
 fi
