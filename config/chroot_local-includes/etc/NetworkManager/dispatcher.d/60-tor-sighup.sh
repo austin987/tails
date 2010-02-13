@@ -13,10 +13,16 @@ fi
 PIDFILE=/var/run/tor/tor.pid
 
 if [ -r "${PIDFILE}" ]; then
-    # Send a SIGHUP to Tor. According to its man page this should make Tor
-    # fetch a new directory, which might help speed up bootstrapping that might
-    # get stuck in case the network isn't up when Tor starts.
-    kill -HUP $(cat ${PIDFILE})
+    # A SIGHUP should be enough but there's a bug in Tor. Details:
+    # * https://bugs.torproject.org/flyspray/index.php?do=details&id=1247
+    # * https://amnesia.boum.org/bugs/tor_vs_networkmanager/
+    /etc/init.d/tor/restart
+    # Restart Vidalia because it does not automatically reconnect to the new
+    # Tor instance. Use kill+start as X-GNOME-AutoRestart does not exist in
+    # Lenny's Gnome.
+    killall vidalia
+    export DISPLAY=':0.0'
+    exec /bin/su -c /usr/local/bin/vidalia-wrapper amnesia
 else
     /etc/init.d/tor start
 fi
