@@ -16,7 +16,7 @@ if [ -r "${PIDFILE}" ]; then
     # A SIGHUP should be enough but there's a bug in Tor. Details:
     # * https://bugs.torproject.org/flyspray/index.php?do=details&id=1247
     # * https://amnesia.boum.org/bugs/tor_vs_networkmanager/
-    /etc/init.d/tor/restart
+    /etc/init.d/tor restart
     # Restart Vidalia because it does not automatically reconnect to the new
     # Tor instance. Use kill+start as X-GNOME-AutoRestart does not exist in
     # Lenny's Gnome.
