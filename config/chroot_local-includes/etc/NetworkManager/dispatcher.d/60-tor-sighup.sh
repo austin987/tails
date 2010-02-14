@@ -20,9 +20,10 @@ if [ -r "${PIDFILE}" ]; then
     # Restart Vidalia because it does not automatically reconnect to the new
     # Tor instance. Use kill+start as X-GNOME-AutoRestart does not exist in
     # Lenny's Gnome.
-    killall vidalia
-    export DISPLAY=':0.0'
-    exec /bin/su -c /usr/local/bin/vidalia-wrapper amnesia &
+    if killall vidalia ; then
+       export DISPLAY=':0.0'
+       exec /bin/su -c /usr/local/bin/vidalia-wrapper amnesia &
+    fi
 else
     /etc/init.d/tor start
 fi
