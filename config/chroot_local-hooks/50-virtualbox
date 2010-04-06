@@ -25,13 +25,14 @@ Echo_message "Building VirtualBox guest modules"
 apt-get install --yes build-essential dkms dpatch
 apt-get install --yes virtualbox-ose-guest-source
 
-# FIXME (IDEA): after installing dkms, but before installing
-# virtualbox-ose-guest-source, divert uname to a fake one that reports
-# the kernel version found in /boot rather than the build system's one
-# (and obviously revert to the real uname afterwards).
-# 
-# => The module should be automatically built by dkms without
-#    requiring us to do the following.
+# FIXME (IDEA): use virtualbox-ose-dkms rather than
+# virtualbox-ose-guest-source; but dkms uses uname to find out what
+# kernel to build modules for. So, after installing dkms, but before
+# installing virtualbox-ose-guest-dkms, divert uname to a fake one
+# that reports the kernel version found in /boot rather than the build
+# system's one (and obviously revert to the real uname afterwards). =>
+# The module should be automatically built by dkms without requiring
+# us to do the following.
 
 for KERNEL in /boot/vmlinuz-*
 do
