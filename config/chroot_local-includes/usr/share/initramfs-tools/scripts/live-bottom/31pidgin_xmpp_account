@@ -1,0 +1,37 @@
+#!/bin/sh
+
+#set -e
+
+# initramfs-tools header
+
+PREREQ=""
+
+prereqs()
+{
+	echo "${PREREQ}"
+}
+
+case "${1}" in
+	prereqs)
+		prereqs
+		exit 0
+		;;
+esac
+
+# live-initramfs header
+
+if [ -n "${NOUSER}" ]
+then
+	exit 0
+fi
+
+. /scripts/live-functions
+
+log_begin_msg "Randomizing Pidgin XMPP Resource field"
+
+# live-initramfs script
+
+RESOURCE="`chroot /root openssl rand -hex 16`"
+chroot /root sudo -H -u "${USERNAME}" sed -n -i '' -e "s,XXX_RESOURCE_XXX,${RESOURCE}," /home/amnesia/.purple/accounts.xml
+
+log_end_msg
