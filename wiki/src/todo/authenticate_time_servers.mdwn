@@ -46,6 +46,9 @@ Here are a few things to consider:
   easier for clients), and extra strain on the servers due to the
   added crypto operations needed.
 
+=> Authenticated NTP is a long term goal for us, but not usable for
+the time being. Let's (try to) use HTP in the meantime.
+
 # HTP
 
 [HTP](http://www.clevervest.com/twiki/bin/view/HTP)
@@ -69,11 +72,30 @@ It would need to go in the clear with an exception in the firewall
 config. Is that safe? Could this be used to fingerprint
 amnesia/incognito users? Is that something we want to avoid?
 
-> It could be used to fingerprint amnesia/incognito users if a subset
-> of the queried webservers' admins share their logs. Choosing a bunch
-> (HTP author suggests 4) of unrelated servers that are unlikely to
-> share user data should be enough of a protection against
-> this threat.
+> HTP probably isn't widely used, so if a connection can be identified
+> as HTP, it very likely was done by an amnesia user.
+
+### fingerprinting via the servers set being used
+
+It could be used to fingerprint amnesia/incognito users if a subset
+of the queried webservers' admins share their logs. Choosing a bunch
+(HTP author suggests 4) of unrelated servers that are unlikely to
+share user data should be enough of a protection against
+this threat.
+
+### fingerprinting via unusual http behaviour of the HTP client
+
+The HTP Perl client sets the http user-agent as `htpdate/$version`.
+
+> [[!taglink todo/code]]: hack it to use the same user-agent as
+> iceweasel/torbutton.
+
+Furthermore, its "connection pattern" is pretty suspicious:
+a web-browser loading foo.com/index.html would complete the whole
+exchange and download index.html + any referenced resources whereas
+htpdate/htpd drops the connection once it's got the first http header.
+
+> [[!taglink todo/discuss]]: hack it to to complete the http exchange?
 
 ## Sources?
 
@@ -108,3 +130,4 @@ certificate when using HTTPS?
 > Perl daemon, C client and a C daemon). Choosing one that supports
 > querying several servers and calculating some kind of mean result
 > would probably be a more sensible decision.
+
