@@ -19,6 +19,40 @@ Windows" usecase, we’ll need to test:
 * desktop integration inside Windows;
 * filesharing between an amnesia guest and a Windows host.
 
+amnesia as a VMware guest
+=========================
+
+warn users when running inside a VM
+===================================
+
+Tell users, when running inside a VM, that they are implicitly
+trusting both the VM software *and* the host OS. This is needed to
+avoid creating a false sense of security, which is often quite worse
+as no security and a clear sense of it.
+
+This warning could be implemented using the desktop notification
+system (like our existing security flaw notification), triggered by
+a script that detects the best it can if amnesia is running on real
+hardware or inside some kind of VM.
+
+Special cases:
+
+* when running inside a non-free VM, suggest that the user switches to
+  VirtualBox or some other free software VM
+* when running inside a VM within a non-free host OS, emphasize the
+  pseudo-security situation.
+
+## How to detect we're running inside a VM?
+
+* VMware: open-vm-tools has an app called vmware-checkvm that does exactly this
+* VirtualBox: something along the lines of `lspci | grep -q InnoTek`
+* KVM: [[!taglink todo/research]]
+* qemu: [[!taglink todo/research]]
+
+## How to detect when the host OS is non-free?
+
+[[!taglink todo/research]]
+
 Resources
 =========
 
