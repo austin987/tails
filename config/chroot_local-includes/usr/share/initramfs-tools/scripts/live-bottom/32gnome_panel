@@ -1,0 +1,46 @@
+#!/bin/sh
+
+#set -e
+
+# initramfs-tools header
+
+PREREQ=""
+
+prereqs()
+{
+	echo "${PREREQ}"
+}
+
+case "${1}" in
+	prereqs)
+		prereqs
+		exit 0
+		;;
+esac
+
+# live-initramfs header
+
+if [ -n "${NOUSER}" ]
+then
+	exit 0
+fi
+
+. /scripts/live-functions
+
+log_begin_msg "Setting up GNOME panel"
+
+# live-initramfs script
+
+gconf_version=$(chroot /root /usr/bin/dpkg-query -W --showformat='${Version}' gconf2 2>/dev/null) || gconf_version=""
+
+gct ()
+{
+        if [ "${gconf_version}" ]
+        then
+                chroot /root sudo -u "${USERNAME}" gconftool-2 "${@}"
+        fi
+}
+
+gct --load /usr/share/amnesia/gconf/gnome_panel.xml
+
+log_end_msg
