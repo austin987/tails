@@ -17,47 +17,53 @@ if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
    exit 0
 fi
 
-MODULE=virtualbox-ose-guest
-
 Echo_message "Building VirtualBox guest modules"
 
-# the -source package must be installed *after* dkms to be properly registered
-apt-get install --yes build-essential dkms dpatch
-apt-get install --yes virtualbox-ose-guest-source
+# Get version information for the (newest) installed kernel.
+KERNEL="`/bin/ls -1 /boot/vmlinuz-* | tail -n 1`"
+KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
+KERNEL_ARCH="$(basename ${KERNEL} | sed -e 's|.*-||')"
 
-# FIXME (IDEA): use virtualbox-ose-dkms rather than
-# virtualbox-ose-guest-source; but dkms uses uname to find out what
-# kernel to build modules for. So, after installing dkms, but before
-# installing virtualbox-ose-guest-dkms, divert uname to a fake one
-# that reports the kernel version found in /boot rather than the build
-# system's one (and obviously revert to the real uname afterwards). =>
-# The module should be automatically built by dkms without requiring
-# us to do the following.
+# the -dkms package must be installed *after* dkms to be properly registered
+apt-get install --yes build-essential dkms dpatch linux-headers-2.6-${KERNEL_ARCH}
 
-for KERNEL in /boot/vmlinuz-*
-do
-	KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
-	KERNEL_ARCH="$(basename ${KERNEL} | sed -e 's|.*-||')"
-	VBOX_VERSION=`dpkg-query -W -f='${Version}' virtualbox-ose-guest-source | awk -F "-" '{print $1}' | cut -d\: -f2`
+# dkms uses uname to find out what kernel to build modules for.
+# So, after installing dkms, but before installing
+# virtualbox-ose-guest-dkms, we divert uname to a fake one that
+# emulates 'uname -r' by reporting the kernel version found in /boot rather
+# than the build system's one.
 
-	apt-get install --yes linux-headers-2.6-${KERNEL_ARCH}
+mv /bin/uname /bin/uname.$$
+cat > /bin/uname <<EOF
+#! /bin/sh
+echo "$KERNEL_VERSION"
+EOF
+chmod 755 /bin/uname
 
-	dkms build -m virtualbox-ose-guest -v ${VBOX_VERSION} -m ${MODULE} -k ${KERNEL_VERSION}
-	dkms install -m virtualbox-ose-guest -v ${VBOX_VERSION} -m ${MODULE} -k ${KERNEL_VERSION}
-done
+Echo_message "DEBUG diverted uname content:"
+cat /bin/uname
+
+# Have the modules automagically built by dkms.
+apt-get install --yes virtualbox-ose-guest-dkms
+
+# Revert to the real uname.
+mv /bin/uname.$$ /bin/uname
 
 # clean the build directory
 rm -rf /var/lib/dkms/virtualbox-ose-guest/
 
-# virtualbox-ose-guest-source's postrm script deletes any previously
+# virtualbox-ose-guest-dkms's postrm script deletes any previously
 # built binary module; let's delete it before purging the package.
-rm -f /var/lib/dpkg/info/virtualbox-ose-guest-source.prerm
+rm -f /var/lib/dpkg/info/virtualbox-ose-guest-dkms.prerm
 
 # use aptitude to remove the dependencies, as Lenny's APT lacks the
 # autoremove action
+# FIXME: check the list below is still up-to-date, since we migrated
+# from virtualbox-ose-guest-source to virtualbox-ose-guest-dkms
 aptitude --assume-yes purge \
    build-essential dkms dpatch dpkg-dev \
    cpp-4.1 \
    gcc gcc-4.1 gcc-4.1-base gcc-4.2-base \
    g++ \
-   virtualbox-ose-guest-source
+   linux-headers-2.6-${KERNEL_ARCH} \
+   virtualbox-ose-guest-dkms
