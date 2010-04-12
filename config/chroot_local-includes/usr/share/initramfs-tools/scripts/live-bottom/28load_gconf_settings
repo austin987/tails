@@ -20,13 +20,14 @@ esac
 
 # live-initramfs header
 
-if [ -n "${NOUSER}" ]; then
+if [ -n "${NOUSER}" ]
+then
 	exit 0
 fi
 
 . /scripts/live-functions
 
-log_begin_msg "Editing onBoard settings"
+log_begin_msg "Setting up GConf settings"
 
 # live-initramfs script
 
@@ -34,8 +35,8 @@ gct() {
 	chroot /root sudo -u "${USERNAME}" gconftool-2 "${@}"
 }
 
-gct -t bool -s /apps/onboard/use_status_icon true
-gct -t bool -s /apps/onboard/start_minimized true
-gct -t list --list-type=string -s /apps/onboard/snippets '[https://amnesia.boum.org/]'
+for file in /usr/share/amnesia/gconf/*.xml ; do
+   gct --load "${file}"
+done
 
 log_end_msg
