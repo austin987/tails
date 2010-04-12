@@ -31,7 +31,7 @@ log_begin_msg "Randomizing Pidgin XMPP Resource field"
 
 # live-initramfs script
 
-RESOURCE="`chroot /root openssl rand -hex 16`"
+RESOURCE="`chroot /root openssl rand -base64 16`"
 chroot /root sudo -H -u "${USERNAME}" sed -n -i '' -e "s,XXX_RESOURCE_XXX,${RESOURCE}," /home/amnesia/.purple/accounts.xml
 
 log_end_msg
