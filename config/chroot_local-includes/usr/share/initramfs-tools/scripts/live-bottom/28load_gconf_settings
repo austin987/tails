@@ -35,7 +35,8 @@ gct() {
 	chroot /root sudo -u "${USERNAME}" gconftool-2 "${@}"
 }
 
-for file in /usr/share/amnesia/gconf/*.xml ; do
+for chroot_file in /root/usr/share/amnesia/gconf/*.xml ; do
+   file="`echo ${chroot_file} | sed -e 's,^/root,,'`"
    gct --load "${file}"
 done
 
