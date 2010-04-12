@@ -30,12 +30,8 @@ log_begin_msg "Editing onBoard settings"
 
 # live-initramfs script
 
-gconf_version=$(chroot /root /usr/bin/dpkg-query -W --showformat='${Version}' gconf2 2>/dev/null) || gconf_version=""
-
 gct() {
-	if [ "${gconf_version}" ]; then
-		chroot /root sudo -u "${USERNAME}" gconftool-2 "${@}"
-	fi
+	chroot /root sudo -u "${USERNAME}" gconftool-2 "${@}"
 }
 
 gct -t bool -s /apps/onboard/use_status_icon true

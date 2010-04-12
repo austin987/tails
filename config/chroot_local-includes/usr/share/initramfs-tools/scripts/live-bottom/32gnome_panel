@@ -31,14 +31,8 @@ log_begin_msg "Setting up GNOME panel"
 
 # live-initramfs script
 
-gconf_version=$(chroot /root /usr/bin/dpkg-query -W --showformat='${Version}' gconf2 2>/dev/null) || gconf_version=""
-
-gct ()
-{
-        if [ "${gconf_version}" ]
-        then
-                chroot /root sudo -u "${USERNAME}" gconftool-2 "${@}"
-        fi
+gct() {
+	chroot /root sudo -u "${USERNAME}" gconftool-2 "${@}"
 }
 
 gct --load /usr/share/amnesia/gconf/gnome_panel.xml
