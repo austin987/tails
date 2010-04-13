@@ -34,12 +34,40 @@ iceweasel
 
 Most sqlite files could be built from scratch with SQL commands.
 
+We currently only ship 3 sqlite files:
+
+### permissions.sqlite
+
+Contains the hosts whitelist for cookies and add-on installation.
+
+Trivial to generate at build time from flat config files with
+SQL commands.
+
+### places.sqlite
+
 Bookmarks are the only pieces of data we want to preserve in
-`places.sqlite`; according to
-[MozillaZine](http://kb.mozillazine.org/Places.sqlite), a missing
-`places.sqlite` is rebuilt using the latest dated JSON file from the
-`bookmarkbackups` folder. We could then store our bookmarks data as
-a backup, and rm+exclude `places.sqlite`.
+`places.sqlite`.
+
+* if we don't use `/etc/iceweasel/profile/`: according to
+  [MozillaZine](http://kb.mozillazine.org/Places.sqlite), a missing
+  `places.sqlite` is rebuilt using the latest dated JSON file from the
+  `bookmarkbackups` folder. We could then store our bookmarks data as
+  a backup, and rm+exclude `places.sqlite`.
+* if we use `/etc/iceweasel/profile/`, we can drop a `bookmarks.html`
+  file there and get rid of `places.sql`
+
+### search.sqlite
+
+The list of known search engines:
+
+* old custom Scroogle search plugins are registered there, but they
+  probably can be rid of as our i18n work has gone further than this
+* this is where we can toggle visibility of some of the default
+  iceweasel search engines... but deleting files from
+  `/usr/share/iceweasel/searchplugins/` would also work, if we really
+  want to hide some of these.
+
+=> get rid of `search.sqlite`
 
 ## resources
 
