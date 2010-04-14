@@ -5,53 +5,39 @@
 iceweasel
 =========
 
-## default profile in `/etc/iceweasel/` rather than in `$HOME`
+## done
+
+### default profile in `/etc/iceweasel/`
+
+We now configure the default profile in `/etc/iceweasel/` rather than
+in `$HOME`:
 
 * system-wide preferences can be set in `/etc/iceweasel/pref/iceweasel.js`
 * `/etc/iceweasel/profile/` contains a profile skeleton that is copied
   into newly created user profiles.
-
-### pros
-
-* some files seem easier to configure there, e.g.
-  `/etc/iceweasel/profile/bookmarks.html`
-* no need to resync `$HOME` every time a Debian packaged extension is
-  upgraded, in order to avoid the annoying "an extension has been
-  upgraded" dialog box
-* forces us to configure iceweasel in a fully programmatic way
+* bookmarks are configured in `/etc/iceweasel/profile/bookmarks.html`
 * extensions that aren't Debian-packaged, when put into
   `/etc/iceweasel/profile/extensions/`, are automatically enabled in
   new profiles - without any annoying message
+* no need to resync `$HOME` every time a Debian packaged extension is
+  upgraded, in order to avoid the annoying "an extension has been
+  upgraded" dialog box
 
-### cons
+### sqlite
 
-## NSS *.db files
+We now have the needed code to generate sqlite files at build time
+from plain SQL files dropped into
+`config/chroot_local-includes/usr/share/amnesia/iceweasel/sql/`.
+
+## Left to do
+
+### NSS *.db files
 
 * `cert8.db`: could be generated from scratch by adding our few custom
   SSL root certificates with `certutil`
 * `secmod.db`: if this file is missing, a new one is generated without
   DSA, SHA256 and SHA512; weird.
 * `key3.db`: if missing, the other `*.db` files can't be used
-
-## sqlite
-
-We now have the needed code to generate sqlite files at boot time from
-plain SQL files dropped into
-`config/chroot_local-includes/usr/share/amnesia/iceweasel/sql/`.
-
-### left to do
-
-We still ship one binary sqlite file, which is `places.sqlite`.
-Our custom bookmarks are the only pieces of data we want to preserve
-in there.
-
-* if we don't use `/etc/iceweasel/profile/`: according to
-  [MozillaZine](http://kb.mozillazine.org/Places.sqlite), a missing
-  `places.sqlite` is rebuilt using the latest dated JSON file from the
-  `bookmarkbackups` folder. We could then store our bookmarks data as
-  a backup, and rm+exclude `places.sqlite`.
-* if we use `/etc/iceweasel/profile/`, we can drop a `bookmarks.html`
-  file there and get rid of `places.sql`
 
 ## resources
 
