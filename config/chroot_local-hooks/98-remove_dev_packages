@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Including common functions
+. "${LH_BASE:-/usr/share/live-helper}"/live-helper.sh
+
+# Setting static variables
+DESCRIPTION="$(Echo 'removing development packages')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Reading configuration files
+Read_conffiles config/all config/common config/chroot
+Set_defaults
+
+Echo_message "Removing development packages"
+
+# use aptitude to remove the dependencies, as Lenny's APT lacks the
+# autoremove action
+aptitude --assume-yes purge \
+   build-essential dkms dpatch dpkg-dev \
+   cpp-4.1 \
+   gcc gcc-4.1 gcc-4.1-base gcc-4.2-base gcc-4.3 \
+   g++ \
+   libc6-dev linux-libc-dev \
+   linux-headers-2.6-${KERNEL_ARCH} \
+   virtualbox-ose-guest-dkms
