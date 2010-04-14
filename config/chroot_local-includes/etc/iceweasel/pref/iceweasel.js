@@ -42,6 +42,7 @@ pref("extensions.firegpg.show_website", false);
 pref("extensions.torbutton.block_tforms", false);
 pref("extensions.torbutton.clear_cookies", true);
 pref("extensions.torbutton.cookie_jars", false);
+pref("extensions.torbutton.google_redir_url", 4);
 pref("extensions.torbutton.http_port", 8118);
 pref("extensions.torbutton.http_proxy", "localhost");
 pref("extensions.torbutton.https_port", 8118);
