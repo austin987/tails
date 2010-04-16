@@ -2,16 +2,17 @@
 
 # Install modules managed by module-assistant
 
+MA="module-assistant --text-mode --non-inter"
 MODULES="broadcom-sta-source rt2570-source rt2860-source"
 
 apt-get install --yes build-essential module-assistant debhelper
-module-assistant update
+$MA update
 
 for MODULE in $MODULES ; do
    for KERNEL in /boot/vmlinuz-* ; do
       VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
-      module-assistant --non-inter --quiet auto-install ${MODULE} -l ${VERSION}
+      $MA --quiet auto-install ${MODULE} -l ${VERSION}
    done
-   module-assistant clean ${MODULE}
+   $MA clean ${MODULE}
    aptitude --assume-yes purge ${MODULE}
 done
