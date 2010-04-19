@@ -45,10 +45,41 @@ Special cases:
 
 ## How to detect we're running inside a VM?
 
+### imvirt
+
+* [homepage](http://micky.ibh.net/~liske/imvirt.html)
+* [Perl module](http://packages.debian.org/libimvirt-perl) and
+  [executable](http://packages.debian.org/imvirt) are packaged in
+  Squeeze; the Perl module should work as-is on Lenny
+
+### virt-what
+
+* [homepage](http://people.redhat.com/~rjones/virt-what/)
+* [packaged in Debian](http://packages.qa.debian.org/v/virt-what.html)
+* seems easy to backport to Lenny
+
+### Sys::Detect::Virtualization
+
+Dave O'Neill has a [compiled detection
+tricks](http://www.dmo.ca/blog/detecting-virtualization-on-linux/),
+based on which he has written the [Sys::Detect::Virtualization Perl
+module](http://search.cpan.org/~doneill/Sys-Detect-Virtualization/).
+This module is not in Debian, but should be easy enough to package
+thanks to `dh-make-perl`.
+
+### misc tricks
+
 * VMware: open-vm-tools has an app called vmware-checkvm that does exactly this
 * VirtualBox: see `in_virtual_machine` function in Debian's `virtualbox-ose-guest-utils` init script
-* KVM: [[!taglink todo/research]]
-* qemu: [[!taglink todo/research]]
+* KVM:
+ - with virtio enabled: check PCI devices whose vendor is
+   `1af4:` (i.e. Qumranet, Inc.)
+ - without virtio: [[!taglink todo/research]]; check PCI devices whose
+   subsystem vendor contains `1af4`:
+
+    lspci -vmm -n | grep '^Svendor' | awk '{print $2}' | grep 1af4
+
+* qemu: [[!taglink todo/research]]; same as KVM?
 
 ## How to detect when the host OS is non-free?
 
