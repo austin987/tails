@@ -1,4 +1,11 @@
 user_pref("extensions.adblockplus.synchronizationinterval", 8766);
+user_pref("extensions.firegpg.activate_inline", false);
+user_pref("extensions.firegpg.assisant_has_already_been_executed", true);
+user_pref("extensions.firegpg.enable_gpgapi", false);
+user_pref("extensions.firegpg.gmail_enabled", false);
+user_pref("extensions.firegpg.gmail_enabled", false);
+user_pref("extensions.firegpg.keyserver", "pool.sks-keyservers.net");
+user_pref("extensions.firegpg.show_website", false);
 user_pref("extensions.torbutton.block_tforms", false);
 user_pref("extensions.torbutton.clear_cookies", true);
 user_pref("extensions.torbutton.cookie_jars", false);
