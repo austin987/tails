@@ -31,7 +31,6 @@ pref("browser.search.update", false);
 pref("browser.startup.homepage_override.mstone", "ignore");
 pref("capability.policy.maonoscript.javascript.enabled", "allAccess");
 pref("capability.policy.maonoscript.sites", "https://auk.riseup.net https://mail.riseup.net https://swift.riseup.net https://tern.riseup.net https://webmail.no-log.org about: about:blank about:certerror about:config about:credits about:neterror about:plugins about:privatebrowsing about:sessionrestore chrome: file:// https://webmail.boum.org resource:");
-pref("extensions.adblockplus.synchronizationinterval", 8766);
 pref("extensions.adblockplus.showintoolbar", false);
 pref("extensions.firegpg.activate_inline", false);
 pref("extensions.firegpg.assisant_has_already_been_executed", true);

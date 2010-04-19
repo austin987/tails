@@ -1,3 +1,4 @@
+pref("extensions.adblockplus.synchronizationinterval", 8766);
 pref("extensions.torbutton.block_tforms", false);
 pref("extensions.torbutton.clear_cookies", true);
 pref("extensions.torbutton.cookie_jars", false);
