@@ -1,3 +1,4 @@
+user_pref("extensions.adblockplus.showintoolbar", false);
 user_pref("extensions.adblockplus.synchronizationinterval", 8766);
 user_pref("extensions.firegpg.activate_inline", false);
 user_pref("extensions.firegpg.assisant_has_already_been_executed", true);
