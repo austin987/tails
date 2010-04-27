@@ -1,0 +1,21 @@
+;;; -*- mode: lisp; -*-
+
+(defun get-window-by-class-re (re)
+  "Get a window by matching against its class"
+  (catch 'found
+    (map-windows
+     (lambda (w)
+       (if (string-match re (window-class w))
+	   (throw 'found w))))))
+
+(defun gnome-run-dialog ()
+  "Open the GNOME 'Run' dialog"
+  (interactive)
+  (let ((window (get-window-by-class-re "Gnome-panel")))
+    (if (and (windowp window)
+	     (window-id window)) ; window could be gone
+	(send-client-message window
+			     '_GNOME_PANEL_ACTION
+			     (vector (x-atom '_GNOME_PANEL_ACTION_RUN_DIALOG) 0)
+			     32)
+      (display-message (_ "No GNOME panel could be found")))))
