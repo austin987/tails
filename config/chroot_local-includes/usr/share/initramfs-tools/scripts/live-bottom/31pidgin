@@ -1,0 +1,50 @@
+#!/bin/sh
+
+#set -e
+
+# initramfs-tools header
+
+PREREQ=""
+
+prereqs()
+{
+	echo "${PREREQ}"
+}
+
+case "${1}" in
+	prereqs)
+		prereqs
+		exit 0
+		;;
+esac
+
+# live-initramfs header
+
+if [ -n "${NOUSER}" ]
+then
+	exit 0
+fi
+
+. /scripts/live-functions
+
+log_begin_msg "Randomizing Pidgin IRC nickname"
+
+# live-initramfs script
+
+# List of at least 2000 possible nicknames
+NICKS_LIST=/root/usr/share/amnesia/firstnames.txt
+
+# 1 =< $NICK_NUMBER <= 2000
+NICK_NUMBER="`chroot /root /bin/bash -c 'echo $((${RANDOM} * 2000 / 32768 + 1))'`"
+
+# 1 =< $NICK_SUFFIX <= 9
+NICK_SUFFIX="`chroot /root /bin/bash -c 'echo $((${RANDOM} * 10 / 32768 + 1))'`"
+
+# Random nick picked from $NICKS_LIST, with $NICK_SUFFIX appended
+NICK="`head -n ${NICK_NUMBER} ${NICKS_LIST} | tail -n 1 | chroot /root tr '[:upper:]' '[:lower:]'`${NICK_SUFFIX}"
+
+for file in accounts.xml blist.xml ; do
+   chroot /root sudo -H -u "${USERNAME}" sed -i'' "s,XXX_NICK_XXX,${NICK}," "/home/${USERNAME}/.purple/${file}"
+done
+
+log_end_msg
