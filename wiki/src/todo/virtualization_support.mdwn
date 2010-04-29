@@ -12,6 +12,7 @@ What works:
 * kernel modules are loaded at runtime
 * X11 auto-detects the VirtualBox video and input drivers
 * sharing folders between a GNU/Linux host and an amnesia guest
+* mouse integration
 
 Iff we [[decide|discussion]] to support the "amnesia as a guest inside
 Windows" usecase, we’ll need to test:
@@ -19,13 +20,75 @@ Windows" usecase, we’ll need to test:
 * desktop integration inside Windows;
 * filesharing between an amnesia guest and a Windows host.
 
+amnesia as a VMware guest
+=========================
+
+warn users when running inside a VM
+===================================
+
+Tell users, when running inside a VM, that they are implicitly
+trusting both the VM software *and* the host OS. This is needed to
+avoid creating a false sense of security, which is often quite worse
+as no security and a clear sense of it.
+
+This warning could be implemented using the desktop notification
+system (like our existing security flaw notification), triggered by
+a script that detects the best it can if amnesia is running on real
+hardware or inside some kind of VM.
+
+Special cases:
+
+* when running inside a non-free VM, suggest that the user switches to
+  VirtualBox or some other free software VM
+* when running inside a VM within a non-free host OS, emphasize the
+  pseudo-security situation.
+
+## How to detect we're running inside a VM?
+
+### imvirt
+
+* [homepage](http://micky.ibh.net/~liske/imvirt.html)
+* [Perl module](http://packages.debian.org/libimvirt-perl) and
+  [executable](http://packages.debian.org/imvirt) are packaged in
+  Squeeze; the Perl module should work as-is on Lenny
+
+### virt-what
+
+* [homepage](http://people.redhat.com/~rjones/virt-what/)
+* [packaged in Debian](http://packages.qa.debian.org/v/virt-what.html)
+* seems easy to backport to Lenny
+
+### Sys::Detect::Virtualization
+
+Dave O'Neill has a [compiled detection
+tricks](http://www.dmo.ca/blog/detecting-virtualization-on-linux/),
+based on which he has written the [Sys::Detect::Virtualization Perl
+module](http://search.cpan.org/~doneill/Sys-Detect-Virtualization/).
+This module is not in Debian, but should be easy enough to package
+thanks to `dh-make-perl`.
+
+### misc tricks
+
+* VMware: open-vm-tools has an app called vmware-checkvm that does exactly this
+* VirtualBox: see `in_virtual_machine` function in Debian's `virtualbox-ose-guest-utils` init script
+* KVM:
+ - with virtio enabled: check PCI devices whose vendor is
+   `1af4:` (i.e. Qumranet, Inc.)
+ - without virtio: [[!taglink todo/research]]; check PCI devices whose
+   subsystem vendor contains `1af4`:
+
+    lspci -vmm -n | grep '^Svendor' | awk '{print $2}' | grep 1af4
+
+* qemu: [[!taglink todo/research]]; same as KVM?
+
+## How to detect when the host OS is non-free?
+
+[[!taglink todo/research]]
+
 Resources
 =========
 
 * Incognito implementation
-* notes about this in Incognito's
-  [TODO](https://tor-svn.freehaven.net/svn/incognito/trunk/TODO)
-* the VirtualBox hook bundled with Debian Live + patch on the ML
 
 autorun4linuxCD
 ---------------

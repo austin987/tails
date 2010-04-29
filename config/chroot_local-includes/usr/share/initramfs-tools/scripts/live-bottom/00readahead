@@ -17,7 +17,7 @@ esac
 grep -qw "profile" /proc/cmdline && exit 0
 
 READAHEAD_LIST="/root/usr/share/amnesia/readahead-list"
-BACKGROUND_AT="^sbin/splashy$"
+BACKGROUND_AT="^usr/bin/Xorg$"
 
 test -e "$READAHEAD_LIST" || exit 0
 
@@ -25,11 +25,21 @@ test -e "$READAHEAD_LIST" || exit 0
 
 log_begin_msg "Starting reading ahead boot files"
 
+FG_FILES="$(sed -n "\:$BACKGROUND_AT:q;p" "$READAHEAD_LIST")"
+BG_FILES="$(sed -n "\:$BACKGROUND_AT:,\$p" "$READAHEAD_LIST")"
+FG_SIZE=$(
+ cd /root
+ echo "$FG_FILES" |
+ xargs du -c 2>/dev/null |
+ awk '$2 ~ /^total$/ { t = t + $1 } END { print t }')
 (cd /root
- xargs stat <"$READAHEAD_LIST" >/dev/null 2>/dev/null)
+ echo "$BG_FILES" |
+ xargs stat >/dev/null 2>/dev/null)
 (cd /root
- sed -n "\:$BACKGROUND_AT:q;p" "$READAHEAD_LIST" | xargs cat >/dev/null 2>&1)
+ echo "$FG_FILES" |
+ xargs cat 2>/dev/null |
+ pv -f -s ${FG_SIZE}k >/dev/null)
 (cd /root
- sed -n "\:$BACKGROUND_AT:,\$p" "$READAHEAD_LIST" | xargs cat >/dev/null 2>&1) &
+ echo "$BG_FILES" | xargs cat >/dev/null 2>&1) &
 
 log_end_msg

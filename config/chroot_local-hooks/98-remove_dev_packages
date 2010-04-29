@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# Including common functions
+. "${LH_BASE:-/usr/share/live-helper}"/live-helper.sh
+
+# Setting static variables
+DESCRIPTION="$(Echo 'removing development packages')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Reading configuration files
+Read_conffiles config/all config/common config/chroot
+Set_defaults
+
+Echo_message "Removing development packages"
+
+# use apt-get as aptitude doesn't know about globs
+apt-get --purge remove --yes \
+   'linux-kbuild-*' \
+   'linux-headers-*' \
+
+# use aptitude to remove the dependencies, as Lenny's APT lacks the
+# autoremove action
+aptitude --assume-yes purge \
+   build-essential debhelper dkms dpatch dpkg-dev \
+   cpp-4.1 \
+   gcc gcc-4.1 gcc-4.1-base gcc-4.2-base gcc-4.3 \
+   g++ g++-4.3 \
+   libc6-dev linux-libc-dev \
+   libgomp1 \
+   libtimedate-perl \
+   make \
+   module-assistant \
+   virtualbox-ose-guest-dkms

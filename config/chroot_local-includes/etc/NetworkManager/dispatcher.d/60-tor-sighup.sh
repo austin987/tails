@@ -21,6 +21,7 @@ if [ -r "${PIDFILE}" ]; then
     # Tor instance. Use kill+start as X-GNOME-AutoRestart does not exist in
     # Lenny's Gnome.
     if killall vidalia ; then
+       sleep 2 # give lckdo a chance to release the lockfile
        export DISPLAY=':0.0'
        exec /bin/su -c /usr/local/bin/vidalia-wrapper amnesia &
     fi

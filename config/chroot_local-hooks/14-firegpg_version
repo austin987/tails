@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Set the correct firegpg version in /etc/iceweasel/profile/user.js
+
+# Including common functions
+. "${LH_BASE:-/usr/share/live-helper}"/live-helper.sh
+
+# Setting static variables
+DESCRIPTION="$(Echo 'recording firegpg version')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Reading configuration files
+Read_conffiles config/all config/common config/chroot
+Set_defaults
+
+Echo_message "recording firegpg version"
+
+PACKAGE_NAME='xul-ext-firegpg'
+USER_PREFS_FILE=/etc/iceweasel/profile/user.js
+
+[ -f "${USER_PREFS_FILE}" ] || exit 11
+
+FIREGPG_VERSION="`dpkg-query -W -f='${Version}' ${PACKAGE_NAME} | awk -F "-" '{print $1}'`"
+
+sed -i'' "s,FIREGPG_VERSION,${FIREGPG_VERSION}," "${USER_PREFS_FILE}"

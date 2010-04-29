@@ -110,8 +110,33 @@ running amnesia, but it lacks a way to restore genuine hardware address. It's
 What part of the mac address should be randomized?
 ==================================================
 
-[[!tag todo/discuss]]
+[[!tag todo/code]]
 
 Still there is the discussion about randomizing the whole mac address
 (macchanger -r) or only a small part (macchanger -e). What are the
 pros and cons of each solution?
+
+> The -r option is a very bad choice since the probability of getting
+> a bogus vendor ID is at best (according to my calculations based on
+> the number of registered vendors listed by macchanger and the fact
+> that the vendor part of the MAC is 24 bits) 99.92%. And that doesn't
+> take into account that many of the registered vendors haven't
+> produced a card in decades, if ever. In other words, a -r will
+> definitely make it possible to link MAC addresses between different
+> amnesia sessions.
+>
+> The -a and -A options fixes the bigger of the two problems, i.e.
+> macchanger makes sure that the vendor ID is not bogus. It doesn't take
+> into account that some vendors haven't made a NIC since 1984, and that
+> some are just plain uncommon (macchanger seems to choose among from it's
+> vendor list with an uniform probability distribution).
+>
+> IMHO, -e seems to be better than -r, -a and -A, unless you happen to
+> have a really uncommon vendor for your NIC.
+>
+> Perhaps the safest approach would be to choose vendor only among the 20
+> or so most common ones, and then randomise the ending? That could be
+> scripted very easily if we just knew which 20 vendors to choose among,
+>
+> Note that there are separate vendor IDs for wireless NICs, so that would
+> have to be accounted for too.

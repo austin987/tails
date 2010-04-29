@@ -59,4 +59,26 @@ against Cold Boot Attacks.
 >>>> This patch lives in the `feature/smem` branch of our own
 >>>> `live-initramfs` [[git]] repository.
 >>>> 
->>>> Our current solution works nicely, thus tagging [[!tag todo/done]].
+>>>> Our current solution works nicely, thus tagging `done`.
+>>>>>
+>>>>> Futher testing did show that smem wasn't really nicely working (see [[bug
+>>>>> report|bugs/buggy_smem_on_shutdown]]).
+>>>>>
+>>>>> Reason was that our tricks to have smem write all free memory were also
+>>>>> permissive enough to let smem overwrite on the memory cache, were all
+>>>>> needed files for the shutdown were just put right before in the
+>>>>> live-initramfs init script. Actually there are no real way in the linux
+>>>>> kernel to have a software writing only on the free memory and keepiing the
+>>>>> cache untouched. After all, cache is also free memory.
+>>>>>
+>>>>> The recently added [[progress bar script|todo/smem_progress_report]] is
+>>>>> taking care to kill smem when it has erased all the free mem reported by
+>>>>> /proc/meminfo, thus letting the cache untouched. Some caution were also
+>>>>> added in the live-initramfs init script to free all the cache before
+>>>>> caching files needed to shutdown by using /proc/sys/vm/drop_caches.
+>>>>> Memory overcommitment tricks have been moved from the live-initramfs init
+>>>>> script to the smem progress bar wrapper, and a companion script was added
+>>>>> to cache all the needed files to wrap smem's output.
+>>>>>
+>>>>>> => tagging [[!taglink pending]].
+

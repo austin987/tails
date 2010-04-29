@@ -1,0 +1,72 @@
+#!/bin/sh
+
+#set -e
+
+# initramfs-tools header
+
+PREREQ=""
+
+prereqs()
+{
+	echo "${PREREQ}"
+}
+
+case "${1}" in
+	prereqs)
+		prereqs
+		exit 0
+		;;
+esac
+
+# live-initramfs header
+
+if [ -n "${NOUSER}" ]
+then
+	exit 0
+fi
+
+. /scripts/live-functions
+
+log_begin_msg "Localizing the Live user environment"
+
+# live-initramfs script
+
+# $LANG was set there by the 14locales live-initramfs upstream script
+. /root/etc/default/locale
+
+LANGUAGE="`echo ${LANG} | head -c 2`"
+
+### Nautilus wipe script
+
+if [ ! -d "/root/home/${USERNAME}/.gnome2/nautilus-scripts/" ] ; then
+   mkdir -p "/root/home/${USERNAME}/.gnome2/nautilus-scripts/"
+fi
+
+case "${LANGUAGE}" in
+   es)
+      NAME="Eliminar_de_forma_segura"
+      ;;
+   fr)
+      NAME="Effacer_definitivement"
+      ;;
+   *)
+      NAME="Securely_erase"
+      ;;
+esac
+
+if [ -x "/root/usr/local/bin/nautilus-wipe.${LANGUAGE}" ]; then
+   TARGET="/usr/local/bin/nautilus-wipe.${LANGUAGE}"
+else
+   TARGET="/usr/local/bin/nautilus-wipe"
+fi
+
+ln -s "${TARGET}" "/root/home/${USERNAME}/.gnome2/nautilus-scripts/${NAME}"
+
+### Scroogle
+
+if [ -r "/root/usr/share/amnesia/iceweasel/searchplugins/scroogle-ssl-${LANGUAGE}.xml" ]; then
+   cp "/root/usr/share/amnesia/iceweasel/searchplugins/scroogle-ssl-${LANGUAGE}.xml" \
+      /root/usr/share/iceweasel/searchplugins/
+fi
+
+log_end_msg

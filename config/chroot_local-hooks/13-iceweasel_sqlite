@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# Build binary sqlite iceweasel files from plain text SQL files.
+
+# Including common functions
+. "${LH_BASE:-/usr/share/live-helper}"/live-helper.sh
+
+# Setting static variables
+DESCRIPTION="$(Echo 'building iceweasel sqlite files')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Reading configuration files
+Read_conffiles config/all config/common config/chroot
+Set_defaults
+
+Echo_message "building iceweasel sqlite files"
+
+INSTALLED_PACKAGES="sqlite3"
+SQL_SRC_DIR=/usr/share/amnesia/iceweasel/sql
+ICEWEASEL_PROFILE_DIR=/etc/iceweasel/profile
+
+[ -d "${SQL_SRC_DIR}" ] || exit 11
+
+apt-get install --yes $INSTALLED_PACKAGES
+
+for sql_src_file in ${SQL_SRC_DIR}/*.sql ; do
+   db="$(basename ${sql_src_file} | sed -e 's|\.sql$||')"
+   dst_file="${ICEWEASEL_PROFILE_DIR}/${db}.sqlite"
+   sqlite3 "${dst_file}" < "${sql_src_file}"
+done
+
+rm -rf ${SQL_SRC_DIR}
+aptitude --assume-yes purge $INSTALLED_PACKAGES
