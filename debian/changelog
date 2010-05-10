@@ -1,3 +1,123 @@
+tails (0.5) unstable; urgency=low
+
+  * The project has merged efforts with Incognito.
+    It is now to be called "The (Amnesic) Incognito Live System".
+    In short: T(A)ILS.
+
+  * Community
+  - Created the amnesia-news mailing-list.
+  - Added a forum to the website.
+  - Created a chatroom on IRC: #tails on irc.oftc.net
+
+  * Fixed bugs
+  - Workaround nasty NetworkManager vs. Tor bug that often
+    prevented the system to connect to the Tor network: restart Tor and Vidalia
+    when a network interface goes up.
+  - onBoard now autodetects the keyboard layout... at least once some
+    keys have been pressed.
+  - New windows don't open in background anymore, thanks to
+    a patched Metacity.
+  - Memory wiping at shutdown is now lightning fast, and does not prevent
+    the computer to halt anymore.
+  - GNOME panel icons are right-aligned again.
+  - Fixed permissions on APT config files.
+  - Repaired mouse integration when running inside VirtualBox.
+
+  * Iceweasel
+  - Torbutton: redirect to Scroogle when presented a Google captcha.
+  - Revamped bookmarks
+      . moved T(A)ILS own website to the personal toolbar
+      . moved webmail links (that are expected to be more than 3 soon)
+        to a dedicated folder.
+  - Don't show AdBlock Plus icon in the toolbar.
+  - Adblock Plus: updated patterns, configured to only update subscriptions
+    once a year. Which means never, hopefully, as users do update their
+    Live system on a regular basis, don't they?
+
+  * Vidalia: rebased our custom package against 0.2.8.
+  
+  * Claws Mail
+  - Install Claws Mail from backports.org to use the X.509 CA
+    certificates provided by Debian.
+  - Enable PGP modules with basic configuration:
+      . Automatically check signatures.
+      . Use gpg-agent to manage passwords.
+      . Display warning on start-up if GnuPG doesn't work.
+  - Set the IO timeout to 120s (i.e. the double of the default 60s).
+  
+  * Pidgin
+  - Automatically connect to irc.oftc.net with a randomized nickname,
+    so as not to advertize the use of T(A)ILS; this nickname is made of:
+     . a random firstname picked from the 2000 most registered by the U.S.
+       social security administration in the 70s;
+     . two random digits.
+    Good old irc.indymedia.org is still configured - with same nickname -
+    but is not enabled by default anymore.
+  - Disabled MSN support, that is far too often affected by security flaws.
+
+  * Build $HOME programmatically
+  - Migrated all GConf settings, including the GNOME panel configuration,
+    to XML files that are loaded at boot time.
+  - Configure iceweasel profile skeleton in /etc/iceweasel.
+    A brand new profile is setup from this skeleton once iceweasel is
+    started after boot.
+      . build sqlite files at build time from plain SQL.
+      . FireGPG: hard-code current firegpg version at build time to prevent
+        the extension to think it was just updated.
+      . stop shipping binary NSS files. These were here only to
+        install CaCert's certificate, that is actually shipped by Debian's
+        patched libnss.
+  
+  * Build system
+  - Updated Debian Live snapshots APT repository URL.
+  - Purge all devel packages at the end of the chroot configuration.
+  - Make sure the hook that fixes permissions runs last.
+  - Remove unwanted Iceweasel search plugins at build time.
+  
+  * Misc
+  - Added a progress bar for boot time file readahead.
+  - Readahead more (~37MB) stuff in foreground at boot time.
+  - Make the APT pinning persist in the Live image.
+  - localepurge: keep locales for all supported languages,
+    don't bother when installing new packages.
+  - Removed syslinux help menu: these help pages are either buggy or
+    not understandable by non-geeks.
+  - Fixed Windows autorun.
+  - Disable a few live-initramfs scripts to improve boot time.
+  - Firewall: forbid any IPv6 communication with the outside.
+  - Virtualization support: install open-vm-tools.
+  - WhisperBack: updated to 1.2.1, add a random bug ID to the sent
+    mail subject.
+  - Prompt for CD removal on shutdown, not for USB device.
+
+  * live-initramfs: new package built from our Git (e2890a04ff) repository.
+  - Merged upstream changes up to 1.177.2-1.
+  - New noprompt=usb feature.
+  - Fix buggy memory wiping and shutdown.
+  - Really reboot when asked, rather than shutting down the system.
+
+  * onBoard
+  - Upgraded to a new custom, patched package (0.93.0-0ubuntu4~amnesia1).
+  - Added an entry in the Applications menu.
+  
+  * Software
+  - Install vim-nox with basic configuration
+  - Install pwgen
+  - Install monkeysphere and msva-perl
+  - Replaced randomsound with haveged as an additional source of entropy.
+
+  * Hardware support
+  - Build ralink rt2570 wifi modules.
+  - Build rt2860 wifi modules from Squeeze. This supports the RT2860
+    wireless adapter, found particularly in the ASUS EeePC model 901
+    and above.
+  - Build broadcom-sta-source wifi modules.
+  - Bugfix: cpufreq modules were not properly added to /etc/modules.
+  - Use 800x600 mode on boot rather than 1024x768 for compatibility
+    with smaller displays.
+
+ -- amnesia <amnesia@boum.org>  Fri, 30 Apr 2010 16:14:13 +0200
+
 amnesia (0.4.2) unstable; urgency=low
 
   New release, mainly aimed at fixing live-initramfs security issue
@@ -72,10 +192,6 @@ amnesia (0.4) unstable; urgency=low
   * Iceweasel
   - do not install the NoScript extension anymore: it is not strictly
     necessary but bloodily annoying
-
-  * Pidgin
-  - use "guest" as realname and username as well, so as to avoid
-    advertising amnesia usage
 
   * Provide WhisperBack 1.2 for anonymous, GnuPG-encrypted bug reporting.
   - added dependency on python-gnutls
