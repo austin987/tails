@@ -14,11 +14,11 @@ Patterns are stored in
 Update Changelog
 ================
 
-        ./release NEW_VERSION PREVIOUS_RELEASED_TAG
+	./release NEW_VERSION PREVIOUS_RELEASED_TAG
 
 example:
 
-        ./release 0.3 0.2
+	./release 0.3 0.2
 
 This populates the Changelog with the Git log entries, then launches
 an editor for the needed cleanup of the result.
@@ -64,13 +64,13 @@ Second, copy the built images to these brand new directories.
 Third, generate detached GnuPG signatures for every published image,
 in the same directory as the image; e.g.
 
-    gpg --armor --default-key F93E735F --detach-sign *.iso
+	gpg --armor --default-key F93E735F --detach-sign *.iso
 
 Fourth, create a `.torrent` file for every directory to be published:
 
-    mktorrent -a \
-      'https://www.les-renseignements-genereux.org/tracker/announce,http://z6gw6skubmo2pj43.onion:8080/announce,http://z6gw6skubmo2pj43.tor2web.com:8080/announce' \
-      <DIRECTORY>
+	mktorrent -a \
+	  'https://www.les-renseignements-genereux.org/tracker/announce,http://z6gw6skubmo2pj43.onion:8080/announce,http://z6gw6skubmo2pj43.tor2web.com:8080/announce' \
+	  <DIRECTORY>
 
 Fifth, check the generated `.torrent` files metainfo, e.g.
 using `btshowmetainfo`, to make sure they don't contain
@@ -78,19 +78,19 @@ unwanted information.
 
 Sixth, generate the SHA-256 hash of every generated `.torrent` file:
 
-    sha256sum amnesia-i386-gnome-0.3-20091126.torrent \
-        > amnesia-i386-gnome-0.3-20091126.torrent.sha256
+	sha256sum amnesia-i386-gnome-0.3-20091126.torrent \
+	  > amnesia-i386-gnome-0.3-20091126.torrent.sha256
 
 Seventh, generate detached GnuPG signatures for every published
 `.torrent` file:
 
-    gpg --armor --default-key F93E735F --detach-sign \
-        amnesia-i386-gnome-0.3-20091126.torrent
+	gpg --armor --default-key F93E735F --detach-sign \
+	  amnesia-i386-gnome-0.3-20091126.torrent
 
 Eight, generate the SHA-256 hash of every image to be released:
 
-    sha256sum amnesia-i386-0.5-20100501/amnesia-i386-0.5-20100501.iso \
-        > amnesia-i386-0.5-20100501.iso.sha256
+	sha256sum amnesia-i386-0.5-20100501/amnesia-i386-0.5-20100501.iso \
+	  > amnesia-i386-0.5-20100501.iso.sha256
 
 Upload images
 =============
@@ -122,16 +122,16 @@ Write the announce for the release in `news/version_X.Y.mdwn`.
 Then add the updated `debian/changelog` and you should be ready to
 record the last commit before tagging happens:
 
-    git commit -m "releasing version ${NEW_VERSION}"
+	git commit -m "releasing version ${NEW_VERSION}"
 
 Tag the release in Git
 ======================
 
-    git tag -u F93E735F -m "tagging version ${NEW_VERSION}" "${NEW_VERSION}"
+	git tag -u F93E735F -m "tagging version ${NEW_VERSION}" "${NEW_VERSION}"
 
 Go wild!
 ========
 
 Push the last commits and the release tag to our Git repository:
 
-    git push --tags
+	git push --tags
