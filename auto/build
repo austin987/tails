@@ -35,9 +35,9 @@ chmod -R go+rx config/chroot_local-includes/usr/local/sbin
 # build the image
 
 case "$LH_BINARY_IMAGES" in
-   iso)
+   iso|iso-hybrid)
       BUILD_FILENAME_EXT=iso
-      BUILD_FILENAME=binary
+      BUILD_FILENAME=binary-hybrid
       ;;
    tar)
       BUILD_FILENAME_EXT=tar.gz
@@ -61,14 +61,6 @@ BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
 echo "Building $LH_BINARY_IMAGES image ${BUILD_BASENAME}..."
 if lh build noauto ${@} 2>&1 | tee "${BUILD_LOG}" ; then
    echo "Image was successfully created"
-   if [ "${LH_BINARY_IMAGES}" = iso ]; then
-      if [ -x "`which isohybrid`" -a "${LH_ARCHITECTURE}" = 'i386' ]; then
-	 echo "Turning the ISO image into a hybrid one..."
-	 isohybrid $AMNESIA_ISOHYBRID_OPTS "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}"
-      else
-	 echo "isohybrid was not found, the ISO image won't be a hybrid one"
-      fi
-   fi
    echo "Renaming generated files..."
    mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
    mv -i "${BUILD_FILENAME}.list" "${BUILD_MANIFEST}"
