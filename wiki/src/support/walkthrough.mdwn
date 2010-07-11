@@ -1,0 +1,390 @@
+[[!toc levels=2]]
+
+## <a name="intro"></a>Introduction
+
+In this document we try to present the \_\_INCOGNITO\_\_ LiveCD in an easy to understand and reasonably thorough manner in hope to give the new user a crash course in what might be a completely new set of applications and concepts regarding anonymity and security on the Internet. It is quite long so you might want to not read it in one go but instead read the introduction and conclusion, as well as the sections on only those applications you intend to use with the possibility to return to it whenever you want to try something new or use it for reference. If you have experience with these applications and concepts from elsewhere and feel comfortable with the user interface in general, reading this document is maybe not necessary at all. A word of caution to all users is not to alter the network, proxy and firewall settings unless you know what you are doing – poking around with them too much might spoil the built-in defences of \_\_INCOGNITO\_\_.
+
+### <a name="what"></a>What is \_\_INCOGNITO\_\_?
+
+Incognito, **noun**:
+
+1. One unknown or in disguise, or under an assumed character or name.
+2. The assumption of disguise or of a feigned character; the state of being in disguise or not recognized.
+
+\_\_INCOGNITO\_\_ is an open source [LiveDistro][23] based on [Gentoo Linux][24] assisting you to securely and anonymously use the Internet almost anywhere you go, e.g. your home, work, university, favourite Internet café or local library. \_\_INCOGNITO\_\_ is designed to be used from either a CD or a [USB drive][25] and has several Internet applications (Web browser, IRC client, Mail client, Instant messenger, etc.) pre-configured with security in mind, and all Internet traffic will be anonymized. To use it, you simply insert the CD or USB-drive that you have installed \_\_INCOGNITO\_\_ on in a computer and restart it. \_\_INCOGNITO\_\_ should then start as an independent operating system instead of Microsoft Windows or whatever operating system you have installed. It is also possible to run \_\_INCOGNITO\_\_ as a guest operating system inside Microsoft Windows by simply inserting the media while Windows is running which should present you with a menu.
+
+\_\_INCOGNITO\_\_ is Free Software released under the GNU/GPL (version 2).
+
+### <a name="why"></a>Why do you need anonymity?
+
+In case you did not know, we currently find ourselves in a state of steady decline of our freedoms and privacy, with increasing levels of mass surveillance and repression all over the world (see [this report from Privacy International][26]). Without taking any precautions, your Internet service provider, the state, the police and global surveillance systems like [ECHELON][27] (which is _not_ a conspiracy theory; see [this report from the European Parliament][28]) can record what you do online: what you read, what you write and who you communicate with. This is possible since all messages sent over the Internet contain the [IP addresses][29] of both the sender and receiver, much like an ordinary mail sent through the postal system contain addresses of both sender and receiver for two-way communication. IP addresses can easily be traced back to the physical location of the computers and their owners, and from that ultimately back to you. If you do not mind this fact, then more power to you, but if you do mind, then \_\_INCOGNITO\_\_ might be just what you need.
+
+### <a name="how"></a>How does \_\_INCOGNITO\_\_ provide with anonymity?
+
+First of all, true anonymity is impossible. Given enough resources an attacker will get you. What one can do is to make the cost of doing that so high that it becomes infeasible. \_\_INCOGNITO\_\_ tries to do this by sending all your Internet traffic through the [Tor™ network][30] which makes your Internet traffic very hard to trace. If someone tries to trace you when you are using \_\_INCOGNITO\_\_, the trail will stop somewhere in Tor network with the IP addresses of some of its participants, not your. Similarly, if someone tries to see destination of your traffic, they will only reach as far as some computer in the Tor network. In fact, you will be the only one knowing exactly what is going on – not even the computers in the Tor network that you send your traffic through will know the whole picture!
+
+As at least a rudimentary understanding of Tor currently is essential for using it securely (and knowing its limits) we strongly recommend reading the [Tor overview][31] and [Understanding and Using Tor – An Introduction for the Layman][32]. At the very least you should read the following paragraphs about common misconceptions about the service offered by the Tor software:
+
+By relaying your Internet traffic through the Tor network (which \_\_INCOGNITO\_\_ does per default) your communications should _only_ be considered to be untraceable back to the computer you use, not encrypted or in any other way unreadable by others. While the traffic _is_ encrypted when it leaves your computer and when you get back your responses, it will not necessarily be so when sent between the Tor network and your destination (this is unavoidable for technical reasons). This means that an eavesdropper at some later point will be able see your traffic without Tor's encryption unless you take further precautions (described [later on][33]), but will not be able to link it back to your computer.
+
+As such, if you are sending or receiving sensitive data whose disclosure would be damaging in itself even if it is untraceable, you need to use end-to-end encryption to hide the meaning of your data to everyone except the recipient. Examples of such sensitive information that you need to protect in this way are your real identity or other personal information linkable to you, login details and passwords, bank account or financial details, anything illegal or political, and secrets in general.
+
+There are several tools bundled with \_\_INCOGNITO\_\_ offering end-to-end encryption for various applications: [GnuPG][34] provides with encryption for email, [OTR][35] is for instant messaging (MSN, ICQ, IRC etc.) among others. Also, bear in mind that while web browsing on sites for whom the addresses begin with "http://" the connections are not encrypted (see [more about this][36]). However, web sites whose addresses start with "http**s**://" (notice the additional **s**) use encrypted connections and are thus **s**ecure (many web browsers, including Firefox, also display a lock or a similar symbol in the address field or status bar indicating that the connection is secure). Notice that all web sites doesn't offer this feature, but most that in any way handle your data (webmail logins, bank account logins etc.) usually do. Keep your eyes open!
+
+Furthermore, some applications have features and services that may compromise the anonymity offered by the Tor network. All modern web browsers, such as Firefox, support [JavaScript][37], [Adobe Flash][38], [Cookies][39] and other services which have been shown to be able to defeat the anonymity provided by the Tor network. For instance, a web page using JavaScript can make your web browser send your real IP address to the web server hosting the web page which possibly can disclose it not only to the web server's owner but also eavesdroppers that happen to fetch the message when it is sent between the Tor network and the web server. Even if most web pages using JavaScript do not do this, it is important to be very cautious when determining which sites you allow to use these extra features. When running Firefox in \_\_INCOGNITO\_\_ all such features are handled by an extension called [Torbutton][40] which does all sorts of things to prevent the above type of attacks. But that comes at a price – since this will disable some functionality, certain sites might not work as intended.
+
+## <a name="howto"></a>How to use \_\_INCOGNITO\_\_
+
+In this section we will briefly present the main applications included in \_\_INCOGNITO\_\_. Users are encouraged to look for further information about them elsewhere and to experiment (while not doing anything sensitive!) for their own benefit. All the pictures are clickable to get them undistorted and in full size, but note that some of the text is smudged in order to protect identities. Let us take a look at the \_\_INCOGNITO\_\_ desktop:
+
+<center><a href="img/incognito-screenshot.png"><img border="0" height="384" src="img/incognito-screenshot.png" width="512" /></a></center>
+
+The graphical user interface used in \_\_INCOGNITO\_\_ is called KDE and share many fundamentals with that of Microsoft Windows, Mac OS X and most other modern operating systems, so if you have used any of them, getting used to KDE will take no time. As this document is not intended as a complete guide for KDE there are only a few things about it that we will mention here to spare you some time. First of all, in the lower left corner of the screen there is a blue button with a K in it, called the "K menu button". Pressing it opens the "K menu" where you will find short cuts to many different applications. Please explore the different categories of applications and try out those that seem interesting. If there are any KDE or system settings that you want to change, like the screen resultion or KDE's appearance, this can be done in the "Control Center", found at the first level of the K menu. Also notice that there is a category named \_\_INCOGNITO\_\_ which contains some things relevant for the user, like a short cut to this document. The \_\_INCOGNITO\_\_ category is also available from as a quick launch item, located right of the K menu button, among the short cuts to your home directory (where you store your files), Firefox and Thunderbird.
+
+In the lower right corner you will find something referred to as the system tray, or simply systray, that has a couple of icons in it, each which offers an interface for some running application. One of them helps you keep an eye on the battery level if you run from a laptop, one allows to instantly change the keyboard layout, and one helps you control the network settings, for instance. You are encouraged to check them out, but we will say more about some of them later on in this article. You will also see a clock showing the time in UTC (Greenwich Mean Time) which might not be appropriate for your location. To make it show your local time, right-click it and choose "Show timezone" and either choose one of the timezones available there or add a new one with the "Configure timezones..." option.
+
+Some other important things that need to be understood before proceeding are the concepts of [LiveDistro, LiveCD and LiveUSB][41]. In essence a LiveDistro is an operating system (like Windows or Mac OS X, although \_\_INCOGNITO\_\_ uses Linux) that is run from some removable media like a CD or USB drive. Most likely you are running \_\_INCOGNITO\_\_ from a CD, which makes it into a LiveCD, and this brings some limitations to its operation. Most importantly, since the CD is a read-only medium once it has been burned by your CD recording software no changes persist through reboots. So, if you download a file or make some application settings they will be gone once you shut-down. This is both good and bad – on the plus side, if you screw up anything or get a virus, the system will be restored once you have restarted it. But not being able to save stuff is of course inconvenient in some cases. If you find it frustrating you might want to run \_\_INCOGNITO\_\_ from a USB drive instead, making it into a LiveUSB. Since a USB drive is writeable medium it is possible to make it so that the changes persist through reboots. You can read more about this and its implications [later][42] [on][43] in this walkthrough.
+
+### <a name="nm"></a>Networking with NetworkManager
+
+The name is quite self-explanatory – this is what you should use manage your network, which usually only consists of establishing an Internet connection. In many cases this is done more or less automatically. For example, if you are connected with wire NetworkManager will try to obtain network access automatically. If you are using a wireless connection you are basically two clicks away. First Right-click its icon in the systray to summon this menu:
+
+<center><a href="img/nm-menu.png"><img border="0" height="194" src="img/nm-menu.png" width="240" /></a></center>
+
+All wireless networks your computer is picking up are listed there, as are all wired networks you have access to (usually one per wire), so the second click is used for choosing any one of these. If the network is protected you will be prompted for a password. There are other options too, e.g. for dial-up connections and setting up VPNs although these will require further set-up in the "Options -&gt; Configure..." section. Hopefully all your networking needs will be satisfied using this interface.
+
+### <a name="tork"></a>Controlling Tor with TorK
+
+TorK is an anonymity manager. Basically this means that it can be used to control Tor, and is used here as an alternative to [ which some of you might be familiar with (Vidalia is also included in \_\_INCOGNITO\_\_ if you prefer it to TorK). But TorK can do a few more things than just control Tor, one which is evident from the following picture of its main window:][44]
+
+<center><a href="img/tork-main.png"><img border="0" height="325" src="img/tork-main.png" width="400" /></a></center>
+
+The "Anonymous Email" entry is pretty interesting. Pressing the envelope icon will open a window which makes it possible to send anonymous email. Besides first routing the mail through the Tor network, it will also be routed through the [Mixminion][45] network, which offers even greater anonymity than the Tor network, at least in theory. In practice the Mixminion network is a bit too small for offering much anonymity, but that extra layer of indirection will probably not hurt. Also, notice that this is one-way only, so the recipient cannot answer unless you specify a response address or some other means of reaching you in your message. Of course, that could defeat the whole purpose of sending email anonymously. If you want the recipient to be able to answer you by attaching a response address you should consider encrypting the message. TorK does not offer an interface to GnuPG, so you will have to do the encryption manually, perhaps with PGP ([KPGP][46] might be suitable for this).
+
+Next we will have a look at the "Tor Network" tab:
+
+<center><a href="img/tork-network.png"><img border="0" height="325" src="img/tork-network.png" width="400" /></a></center>
+
+In here, all the Tor nodes in the Tor network are listed, as are all your circuits and connections that go through the Tor network. All this requires a bit of technical knowledge of how Tor works in order to understand and use, but it is not at all necessary. From the connection listing it should at least be relatively easy for you to see which exit node and country it appears your connections come from.
+
+One very useful thing when working with Tor is the following option, found in the TorK menu that you get by right-clicking its systray icon:
+
+<center><a href="img/tork-menu.png"><img border="0" height="98" src="img/tork-menu.png" width="182" /></a></center>
+
+The selected "Change Identity" option will tear down all you current circuits and build new ones which means that the set of computers you route your Internet traffic through will exchanged by some others. This is very useful if you experience bad performance or even time-outs accessing some Internet resource as you might have better luck with the new circuits that are built. Also, if you ever want to make sure that one thing you are doing will not be linkable to the next thing you are going to do you should use this feature.
+
+TorK also makes it easy to use some of the Tor Network's more advanced features. For example, if you switch back to the "Anonymize" tab you will find an entry for "Anonymous Websites and Web Services" which allows you to set up [hidden services][47] by clicking its icon (an English style police hat). Another feature that might be useful when you are using \_\_INCOGNITO\_\_ from a restrictive network can be found in "Settings menu -&gt; Configure TorK -&gt; Firewall/Censor evasion". This makes it possible to use [bridges][48] as entry points to the Tor network in order to circumvent censorship systems that blocks normal access to the Tor network, intentially or not.
+
+Lastly TorK will assist you setting up yourself as a Tor server, helping out the Tor Network by relaying other people's traffic. You also have the possibility to act as an exit node, which means that other Tor users' traffic will exit in the clear from your computer. You should really think through if you want to do the latter (act as an exit node) as your ISP might start sending you complaints for other people's file sharing traffic that happens to exit from you, and potentially even worse things that might attract the attention of the police. But simply relaying traffic is completely safe and will only cost you some bandwidth (how much can be configured). However, at the same time you will get more anonymity – it will be impossible for eavesdroppers to distinguish the Tor traffic you are relaying from your own traffic generated by web browsing etc. So if you have bandwidth to spare, you might want to consider doing this.
+
+In order to succeed with setting up a relay you might have to do something about your firewall or router if you have one, like enable port-forwarding for ports 9001 and 9030 – if you do not know what this is or how to do it you should either look it up on with favourite search engine or simply skip it. The next step would be to actually enable it in TorK, which only requires a few clicks. First press the button with a plus icon called "More options" which will make a few more buttons and options appear. One of them says "Run as a server" when you hover the mouse cursor above it. Simply click it and choose "Relay Tor traffic" and follow the instructions. After that you will just have to wait for half an hour or so before the connections start rushing in. Due to this delay and some technical reasons it is best if you only act as a Tor server if you [run from USB][49] as that will speed things up a little next time and also spare you of the time taken to set-up the server.
+
+### <a name="ff"></a>Browsing the web with Firefox
+
+Given Mozilla Firefox's recent surge in popularity many of you have probably used it before. Its user interface is like any other modern web browser, but there are a few things we want to mention, some that is special with this particular installation. Do you remember what we said [earlier][50] about end-to-end encryption and its importance while using Tor? Here is how it looks in Firefox when you are using a secure, end-to-end encrypted connection:
+
+<center><a href="img/ff-ssl.png"><img border="0" height="311" src="img/ff-ssl.png" width="404" /></a></center>
+
+Notice the locks in the status bar and address bar (the latter which also has turned yellowish) and that the address begins with "http**s**://" – these are the indicators that a secure connection using [SSL][51] is being used. You should try to only use services that use secure connections when you are required to send sensitive information (like passwords), otherwise its very easy for an eavesdropper to steal whatever information you are sending. In this case what we are trying to do is logging in on an email account at [lavabit][52], using their [webmail interface][53]. Let us proceed with logging in there so we can se how it is possible to send end-to-end encrypted email with any webmail service out there with the nifty [FireGPG][54] extension:
+
+<center><a href="img/ff-compose-1.png"><img border="0" height="311" src="img/ff-compose-1.png" width="404" /></a></center>
+
+Here we have written a silly email to Bob, mentioning stuff like "public" and "private" keys. If you do not know what this means but are interested in sending encrypted email, we suggest you take yourself some time and read up on [public key cryptography][55] and [PGP][56] just to get the basic concepts.
+
+What we will do next is first selecting all of the text in the message (by using the mouse or simply pressing Ctrl + A) and then right-clicking somewhere on the selected text. This will make the usual Firefox context menu appear, which has a FireGPG entry that we are interested in. Clicking it will expand the following menu:
+
+<center><a href="img/ff-firegpg.png"><img border="0" height="137" src="img/ff-firegpg.png" width="96" /></a></center>
+
+In the menu we choose "Sign and encrypt" and we get a dialogue asking us to select the public key to encrypt it with (Bob's) and the private key to sign it with (your). After doing this the message is only readable by Bob, and in addition Bob will be able to verify that the message was in fact written by you. The signed and encrypted text will look something like this:
+
+<center><a href="img/ff-compose-2.png"><img border="0" height="311" src="img/ff-compose-2.png" width="404" /></a></center>
+
+At this stage we are ready to press send. When Bob receives this email he can also use FireGPG to decrypt it in a very similar way – he will just have to select the encrypted message and then use the FireGPG menu to choose "Verify" or "Decrypt", or both. This can be done with any so called PGP block. There is one important limitation in FireGPG, though. It cannot generate new keys, so you will have to use another application for that. We recommend using the [GNU Privacy Assistant][57], found under the "Utilities" section of the K menu, or [KPGP][58], found in the "Utilities -&gt; PIM" section.
+
+Returning to web browsing again we need to do something about the problems with JavaScript, cookies and Adobe Flash that you might remember from an earlier section. To deal with these problems we use an extension called [Torbutton][59] which is specifically designed for dealing with them (and other things) for Firefox in combination with Tor. Torbutton can be either switched on or off, indicated by "Tor enabled" and "Tor disabled" in the Firefox status bar in the bottom right of its window. It should be noted that these labels are a bit misleading for \_\_INCOGNITO\_\_ users as Tor cannot be switched off. So, in our case "Tor enabled" means that Torbutton will disable a lot of stuff that could harm anonymity, and "Tor disabled" simply means that you only get Tor and no additional protection. As such, you should only disable Torbutton for sites that you trust.
+
+But why would you ever disable Torbutton? Well, while it is enabled some sites might not work as you expect them to since certain features are disabled or will behave differently. For example, the popular video service [youtube][60] will not work properly as you can see here when we are trying to watch [this clip][61]:
+
+<center><a href="img/ff-youtube-1.png"><img border="0" height="311" src="img/ff-youtube-1.png" width="404" /></a></center>
+
+In order to get the video player to show up, we will have to disable Torbutton by clicking its panel in the Firefox status bar. Normally this would disable the use of Tor completely, but as we have mentioned earlier, nothing escapes Tor while running \_\_INCOGNITO\_\_ so your connection will still be anonymized. However, you will have to trust that Google (the current owner of youtube) is not doing anything fishy with all their JavaScripts, the Flash-based video player etc. that could break your anonymity.
+
+After disabling Torbutton we can finally learn how onion routing (the technique used by the Tor network) works from the guys in the TV series Numb3rs!
+
+<center><a href="img/ff-youtube-2.png"><img border="0" height="311" src="img/ff-youtube-2.png" width="404" /></a></center>
+
+If you are reading this document as a local file in \_\_INCOGNITO\_\_ (which is the case if the address begins with file://) you might have noticed that all links that point outside of this document do not work. This is also due to Torbutton since it is possible for others to steal any file from you otherwise. In order to visit them you will need to disable Torbutton and reload the page in a new tab. Indeed there are a few more oddities related to toggling Torbutton on and off. If a web site does not work as expected after toggling Torbutton you might have to do any of the following to get it to work:
+
+* Press the "Refresh" button in the navigation bar, or imply use the F5 keyboard short cut.
+* Click the address field and press ENTER.
+* Open a new tab and re-enter (or copy and paste) the address into the address field of the new tab and then press ENTER.
+
+This is a security feature, also used for separating the different states in Firefox, which otherwise could lead to trouble (arguably a bit less so for \_\_INCOGNITO\_\_ users).
+
+As we hope you understand by know, there are reasons for all these quirks, and while they might be annoying we hope you will learn to cope with them. If not, feel free to disable Torbutton and never use it again, but in that case you should expect much less anonymity and security. There have been several demonstration of uncovering the true identities of Firefox users using Tor, but to the authors' knowledge Torbutton protects you against all of them.
+
+There is also another web browser installed, namely KDE's Konqueror which we will deal with [later][62] on in this article, although for other uses than web browsing. We encourage you not to use Konqueror for web browsing, not because it is a bad web browser, but simply because there is no Torbutton or equivalent functionality for it. When possible (which should be always) you should use Firefox and Torbutton for your web browsing unless you really know what you are doing.
+
+### <a name="tb"></a>Emailing with Thunderbird
+
+Not everyone is happy using webmail (like the authors) but want to use a _real_ email client instead of some fragile web-based interface. For that we have included Mozilla Thunderbird which looks like this:
+
+<center><a href="img/tb-main.png"><img border="0" height="305" src="img/tb-main.png" width="453" /></a></center>
+
+Composing email looks like this:
+
+<center><a href="img/tb-compose.png"><img border="0" height="257" src="img/tb-compose.png" width="324" /></a></center>
+
+Notice that there are buttons for PGP encryption in both of the above windows (labelled with "Decrypt" and "OpenPGP"). These are provided by the [Enigmail][63] extension, and pressing any of them for the first time will start a guide for setting up PGP, possibly generating new keys if you do not have any. Their web site is a great resource for learning how PGP encryption works so make sure to check it out.
+
+Setting up your email account requires a tiny amount of knowledge, like what [POP][64], [IMAP][65] and [SMTP][66] is, and indeed that your email service supports these. [This step-by-step guide][67] might be useful. However, this initial configuration requires writing down the addresses of the servers involved, downloading mail, etc. which will take some time. It is a bit annoying to have to redo everytime you start \_\_INCOGNITO\_\_, which is necessary when running from a CD, so you might want to consider using a persistent home directory by [running from USB][68] if you plan to use Thunderbird often. One more thing to consider is that Tor exit nodes usually block the plaintext SMTP port (25) in order to prevent spam. This is easily fixed by enabling end-to-end encryption with the email server through SSL, which you should do any way for all of POP, IMAP and SMTP as your password otherwise will be sent in plaintext.
+
+### <a name="konq"></a>Managing files with Konqueror
+
+Konqueror is KDE's file manager, (S)FTP client, web browser and more and it looks like this while in file managing mode:
+
+<center><a href="img/konq.png"><img border="0" height="257" src="img/konq.png" width="354" /></a></center>
+
+As we already have mentioned, we recommend that you do your web browsing in Firefox instead since there is nothing like Torbutton for Konqueror. If you _really_ want to use Konqueror you should make sure to disable all plugins, JavaScript and cookies in order to expect some anonymity, but even then Firefox and Torbutton is probably both a more secure and usable alternative. There are no problems using Konqueror for file managing or as an FTP client however. In the latter case, just enter "ftp://" followed by the address to the FTP server in order to connect, and the same applies for SFTP although you prepend "sftp://" to the address instead.
+
+### <a name="pidgin"></a>Chatting with Pidgin
+
+For instant messaging \_\_INCOGNITO\_\_ includes the Pidgin Instant Messenger. It is a multi-protocol client, so you can run MSN, ICQ, IRC, AIM, Jabber and many other protocols at the same time, even with several instances of the same protocol. See the following picture for a Pidgin user with three different protocols enabled at the same time:
+
+<center><a href="img/pidgin-main.png"><img border="0" height="196" src="img/pidgin-main.png" width="109" /></a></center>
+
+Of course the issue of end-to-end encryption arises again. As we mentioned earlier, we have [Off-the-record messaging][69] (commonly called OTR) for instant messaging, and Pidgin and many other instant messengers have support for that. There are several resources on how it works and how to use it on their web site. Basically all you need to do is choose "Start private conversation" in the OTR menu and a key will be generated automatically if you do not have one already. After that OTR will establish a private conversation if the other end's instant messenger supports it. This is will look something like this:
+
+<center><a href="img/pidgin-chat.png"><img border="0" height="218" src="img/pidgin-chat.png" width="370" /></a></center>
+
+OTR and other Pidgin plugins are enabled in the "Tools menu -&gt; Plug-ins" section. Simply check the appropriate box for enabling any plugin you want, and possibly you might also want to configure it by pressing the "Configure Plug-in" button. When this is done for the OTR plugin a window that can be used to manage your keys will be opened. The use of OTR is recommended as many instant messaging protocols normally send your messages in plaintext. Force your friends to migrate to clients with support for OTR!
+
+### <a name="misc"></a>Other applications
+
+There are several other interesting security or Internet related applications included in \_\_INCOGNITO\_\_ some which we list and present briefly here. Those that have graphical user interfaces (which most do) can be found in the K menu.
+
+* [GNU Privacy Guard][70] (GnuPG) – A Free implementation of OpenPGP used for encryption of all sorts.
+* <a name="gpa"></a>[GNU Privacy Assistant][71] – A graphical user interface for GnuPG. This application is very useful for generating and importing new keys.
+* <a name="kpgp"></a>[KGPG][72] – Another graphical user interface for GnuPG, very similar to GNU Privacy Assistant. This one has a text editor under the "File" menu which can be used to easily sign and/or encrypt any texts you write or paste into the text box. This might be useful for sending encrypted, anonymous email with TorK's Mixminion interface.
+* [Mixminion][73] – A type III anonymous remailer. [TorK][74] has a simple graphical interface for Mixminion.
+* <a name="keepassx"></a>[KeePassX][75] – A password manager and generator. For password generation, look in the "Extras" menu. The generator has a pretty cool feature, namely that it show the quality (or [information entropy][76]) of the password it will generate.
+* [Kvkbd][77] – A virtual keyboard that can be used to safely enter passwords using the mouse when you suspect that a hardware keylogger may be present. It starts automatically with \_\_INCOGNITO\_\_ and is accessed by the keyboard icon in the systray.
+* [TrueCrypt][78] – Disk encryption software. If you have access to some writeable media you can use TrueCrypt for creating an encrypted container (which in reality will take the form of an ordinary file on that media) on it that you can store files in securely.
+* <a name="vidalia"></a>[Vidalia][79] – An alternative Tor controller.
+* [KTorrent][80] – A Bittorrent client. Please use bittorrent with care as it is a real burden for the Tor network and generally frowned upon in the Tor community because of this. Just downloading a 10 MB file could be equivalent of hours of standard web browsing. Therefore you should only download small files when absolutely necessary.
+* [XChat][81] – A more traditional IRC client compared to Pidgin (some people just prefer it that way). Unfortunately there is no OTR plugin or other means for end-to-end encryption provided so use this with care.
+* [Krdc][82] – A Remote Desktop client supporting VNC and RDP.
+
+### <a name="macchanger"></a>Enabling MAC changer
+
+If you paid attention when you started up \_\_INCOGNITO\_\_ you may have noticed an odd option in the language selection menu, namely the "Enable MAC changer" entry. Some further explanation is probably required in order to understand whether this is relevant for you or not.
+
+First of all, you should know that all network cards, both wired and wireless, have a unique identifier stored in them called their MAC address. This address is actually used to address your computer on the _local_ network, but it will _never_ get out on the Internet so people can _not_ use it to trace you. However, other computers on the network could log it which then would provide proof that your computer have been connected to it. As such, this is not a concern if you are using \_\_INCOGNITO\_\_ with your home Internet connection as that can be linked to you any way, but if you are connecting your computer to an untrusted, public wireless network you might consider enabling it. It is never useful enabling this option if you are using a public computer – only use this if you are using a computer that can be linked to you on a public network.
+
+The reason why this is not always enabled is that is might cause problems on some networks, so if you experience network problems while it is enabled you might want try disabling it.
+
+### <a name="usb"></a>Running \_\_INCOGNITO\_\_ from USB
+
+Running \_\_INCOGNITO\_\_ from a CD has its virtues but it certainly also have its limitations. While CDs are portable they usually do not fit in your pocket in a comfortable manner. But a USB memory stick certainly fits any pocket or your key ring. In addition, CDs are read-only and thus no data can be saved to them, but that is, again, not the case with USB drives. However, storing sensitive data on writeable media could be dangerous if it got into the wrong hands. Similarly, if we get a virus or manages to damage the system in other ways, the system is tainted or unusable from that point and all consecutive boots, either with or without your knowledge. Clearly that is not good.
+
+It is actually possible to get the best out of these two worlds at the same time. When running \_\_INCOGNITO\_\_ from a USB drive you have the option to create an encrypted container wherein your home directory is stored so that any files stored and settings made are saved persistently. If you use a good password this deals with the dangers of storing sensitive data on it. For more information on this, see the section on using a [persistent home directory][83]. But what about virus threats and the like? Well, when running from a USB drive, the system files are still set up to not be persistently writeable. It is only your home directory which will be persistent.
+
+#### Installation instructions
+
+In order to get \_\_INCOGNITO\_\_ running from USB you currently have to get the usual LiveCD installation first. Once \_\_INCOGNITO\_\_ has started up from CD you will find a short cut to an installation guide in the "\_\_INCOGNITO\_\_" meni available from the panel and the K menu, aptly called "Install \_\_INCOGNITO\_\_ to USB". The guide will tell you about your options and is self contained, and in most cases you only need to insert a USB drive, choose the appropriate installation method and hit the OK button to get it done. Then you restart the computer without the CD in, but with the USB drive connected instead, and \_\_INCOGNITO\_\_ should start to boot just like from the CD.
+
+#### Updating \_\_INCOGNITO\_\_ USB installation
+
+If you have an existing \_\_INCOGNITO\_\_ USB installation and want to update it to a more recent release, simply use this script to overwrite the existing installtion. Note that if a persistent home directory is present you must choose option 1 ("Use an existing vfat partition on a USB drive") and select the partition containing \_\_INCOGNITO\_\_ in order to keep it.
+
+### <a name="persistent"></a>Persistent home directory
+
+At a certain point when [booting \_\_INCOGNITO\_\_ from USB][84] you will be prompted with the question if you want a persistent home directory or not. As mentioned elsewhere in this document, that will allow you to save files and keep application settings between shutdowns, which is not normally the case. Naturally, saving sensitive stuff could be dangerious if it got into the wrong hands, so the use of encryption is highly recommended.
+
+As you progress through the guided setup of the persistent home directory you will be asked as few questions and given some simple instructions, and some of these might need to be commented a bit:
+
+#### Size
+
+Early on you will be asked for the size of the "home volume", which will be a file stored on the USB drive that in turn will store you files. There are a few constraints on this size, like a minimum size necessary to fit the initial application settings and files that are part of \_\_INCOGNITO\_USER\_\_ users's home directory. There is also a maximum size, which is the lowest of the space available on the drive, and 4 GB (this is because of technical reasons – files larger than 4 GB will not work).
+
+#### Encryption
+
+It cannot be emphasized enough; use encryption! The encryption is protected with a password, so it is very important to also choose a strong password. But what is a strong password? Of course, there are many different opinions on that. What can be said is that to utilize the encryption algorithm used to its full extent you will need a password consisting of 40 randomly chosen characters of those available on the standard (western) keyboard layout, which have around 90 different characters. Such a password should remain uncrackable for the remainder of this universe's life span and the same goes for the actual encryption. Of course, such a password is almost impossible to memorize, so you will probably have to go for something shorter. 20 random characters is probably enough. It can also help to device mnemonics to help remember them but stay away from dictionary words of any language you know. Be creative! If you need help with generating the passwords you should check out [KeePassX][85]'s built-in password generator.
+
+If you use encryption (which you should) you will be prompted for the password during boot. One thing that might strike you as odd is that it is possible to enter two passwords. The reason for that will be clarified in the next section, but normally you just type in your password in one of them (which one doesn't matter) and press ENTER to continue.
+
+#### Hidden volumes
+
+In certain countries you may be legally forced to hand over encryption keys or passwords, or otherwise facing penal charges. Clearly this might defeat the whole purpose of using encryption, but luckily there is a solution based on [plausible deniability][86].
+
+The idea is to create a so called hidden volume which resides in the free space of the normal (or outer) volume, and using two different passwords to access either of them; the normal password grants access only to the normal volume and the hidden password grants access only to the hidden volume. Given the normal password there is no way to tell whether the hidden volume exists or not – the hidden password is required for that. The point of all this is that you may hand over the normal password to the authorities and keep the hidden password secret, and they will not be able to tell whether you are fooling them or not. Hence you get plausible deniability.
+
+Setting up the hidden volume using the guided setup is pretty straight forward. You will be asked how large it should be, and since it is stored within the normal volume it must be smaller, but it is important that you leave some additional in order to make room on the normal volume. You will need to use the normal volume sometomes to do innocent things so that it looks used, otherwise the authorities will not believe you. However, when you do that by just specifying the normal password you may damage the hidden volume as it resides in the free space. Luckily you can supply both passwords at the same time, which will open the normal volume but make it aware of the hidden volume so you cannot damage it. So, whenever you are using the normal volume to make it look used, enter both passwords (one in each field at the password prompt, and order doesn't matter).
+
+Naturally, you will also be asked for an additional password for the hidden volume, and as always you should choose a good, strong password. However, for the normal volume you can choose may choose a weaker password that's easier to remember – it only needs to be good enough to fool the authoroties that it is the real password. But remember to **never** give the hidden password to anyone else, or even mention to anybody that you are using a hidden volume or have two passwords.
+
+### <a name="cold"></a>Protection against cold boot attacks
+
+What happens if the police knocks on your door when you are running \_\_INCOGNITO\_\_? This is a tough one to deal with, and there is not that much that can be done actually. If you are really unlucky they have brought with them freeze spray and other equipment which can be used to mount a [cold boot attack][87]. This is done in order to get the contents of your RAM. Due to how modern computing works, basically everything that you have been doing for a good whike is stored in the RAM, so all information – including passwords, encryption keys and the secret plans you wrote in a text editor but then erased – may be stored in it in plain text. The more resent the activity, the more likely it is that it is still in the RAM.
+
+RAM is usually considered to be extremely volatile, meaning that the data itstores starts to disintegrate rapidly once power is removed. However, it has been shown that the data might be recoverable for seconds or even minutes after this happens, and apparently freeze spray can be used to increase that period significantly. Once the power is restored the RAM state will keep getting refreshed, so if the power supply is portable the removed RAM modules' contents are in the hands of the attacker. Alternatively the computer can simply be reset (i.e. switched off and back on quickly), which barely even affects the power. Then a tiny LiveCD system is loaded with the ability to dump the RAM to some writeable media. In both cases the RAM contents can be analysed in a computer forensics laboratory which might turn into a major disaster depending on what they find.
+
+So, what should you do when you hear them knocking? You should calmly make a clean shut-down of \_\_INCOGNITO\_\_ using the "Log out" option in the K menu, then selecting "Turn off computer" in the window that appears. Then you wait, possibly trying to buy valuable time by barricading your door. There are two reasons for this:
+
+1. If you are using an encrypted persistent home partition, the master encryption key will be cleared from RAM, preventing the intruders from getting it.
+2. One of the last things \_\_INCOGNITO\_\_ does before shutting down completely is filling the RAM with random junk, thus erasing everything that was stored there before. Unfortunately this might take a couple of minutes depending on the speed of your processor and the amount of RAM installed, so while this clearly is not a perfect solution it seems it might be the best thing to do.
+
+As far as the authors know cold boot attacks are not standard procedure within law enforcements and similar organisations anywhere in the world yet, but it might still be good to be prepared and stay on the safe side.
+
+### <a name="vm"></a>\_\_INCOGNITO\_\_ and Virtualization
+
+Certain users might not want to restart the computer every time they wish to use the Internet anonymously with\_\_INCOGNITO\_\_. For those, a so called [virtual machine][88] can be used to run \_\_INCOGNITO\_\_ inside the "host" operating system installed on the computer (e.g. Microsoft Windows, Mac OS X, etc.). Essentially these programs emulate real computers that you can run "guest" operating systems (in this case \_\_INCOGNITO\_\_) in so they appear in a window within the host operating system. Using one of these technologies allows for convenient access to \_\_INCOGNITO\_\_'s features in a protected environment while you at the same time have access to your normal operation system.
+
+There are a few security issues with this approach though. The main issue is if the host operating system is compromised with a software keylogger or virus, which \_\_INCOGNITO\_\_ does not provide any protection against (in fact, that is impossible). Secondly, performance is a usually a bit worse compared to running it on its own. As such, this is only recommended when the other alternative is not an option or when you are absolutely sure that your host system is clean. Additionally, some of these virtual machines are closed-source, so it is very difficult to determine if they do something that could break \_\_INCOGNITO\_\_'s security. In conclusion, use virtual machines with care.
+
+#### QEMU
+
+The open source [QEMU][89] processor emulator and virtualizer handles \_\_INCOGNITO\_\_ nicely. In fact, QEMU is included in the \_\_INCOGNITO\_\_ distribution for Microsoft Windows users (more about this [below][90]). In order to start it from the command-line, simply type something like:
+
+<pre>
+	<code>qemu -usb -soundhw sb16 -localtime -boot d -cdrom /path/to/incognito.iso</code>
+	</pre>
+
+If you have severe performance problems you should look into KQEMU which is an accelerator module for QEMU, granting a more direct access to the systems hardware for additional speed. You will most likely need administrator privileges for installing KQEMU.
+
+#### VMWare
+
+\_\_INCOGNITO\_\_ works very well in [VMWare][91] with the following [VMWare Virtual Appliance][92] ([signature][93]) devised by the \_\_INCOGNITO\_\_ developers. Simply unzip the file and follow the provided instructions in `README.txt` which is provided within the archive. The free ([as in beer][94]) [VMWare Player][95] might be useful for this. In order to get good performance you will probably need administrator privileges in the computer when you install VMWare. Note that VMWare is closed source, so it might be hard to determine if it does anything that is bad for anonymity, although it is unlikely.
+
+#### VirtualBox
+
+\_\_INCOGNITO\_\_ runs in [VirtualBox][96] without any major conifuration necessary. Depending on your system you might need to play around with the General -&gt; Advandced features to get it to boot. On an AMD64 system using more than 4 GB of RAM the developers have noted that the "Enable VT-x/AMD-V&amp;quit; (if your CPU supports it) and "Enable PAE/NX" features are necessary, but your milage may vary. VirtualBox is distributed both as a closed-source and as an open-source (the so called OSE or Open Source Edition), the latter which the \_\_INCOGNITO\_\_ developer's encourages (although it currently lacks USB support compared to the closed-source version).
+
+### <a name="windows"></a>Running \_\_INCOGNITO\_\_ from within Microsoft Windows
+
+Thanks to QEMU, [described above][97], \_\_INCOGNITO\_\_ can be run within Microsoft Windows without the need to restart the computer. QEMU ships with \_\_INCOGNITO\_\_, and is set up so you only have to insert the media when Windows is running and a menu should appear with the option to start \_\_INCOGNITO\_\_ through it. This is especially useful when you are using a computer you are not allowed to shut-down, which can be the case for public computers in certain Internet cafés, libraries or other public computers. Also, for some some general remarks on QEMU and \_\_INCOGNITO\_\_, and some security concerns about this mode of operation, see the above section on [\_\_INCOGNITO\_\_ and Virtualization][98].
+
+Since the \_\_INCOGNITO\_\_ developers do not have access to any Windows computers at the moment, any input if this actually works and how it performs etc. is welcome.
+
+### <a name="debug"></a>Debugging and trouble-shooting \_\_INCOGNITO\_\_
+
+For the sake of security, \_\_INCOGNITO\_\_ is a pretty locked down system: the root user is inaccessible, and only a handful of tools are possible to run with root privileges using the sudo command (see "sudo -l" for a complete list of these commands). Since this can make debugging very cumbersome (if not impossible) it is possible to make empty the root user's password by passing "debugmode" to the kernel command-line.
+
+## <a name="conclusion"></a>Conclusion
+
+By offering you \_\_INCOGNITO\_\_ we hope that you have the technological means to stay anonymous on the Internet. However, we want to emphasize that staying anonymous is _not_ only a technological problem – there is no tool, including \_\_INCOGNITO\_\_ and Tor, that will magically make you anonymous on the Internet. You will have to behave as well. While deep technical knowledge of the architecture of the Internet, cryptology, traffic analysis techniques and the applications you use certainly can help (mainly by knowing what _not_ to do), we believe that some good ol' fashioned common sense and caution will be enough in most cases. Among other things, that includes:
+
+* Choosing good passwords and not writing them down in unprotected places.
+* Using end-to-end encryption whenever possible.
+* Not trusting everyone and everything but being a bit suspicious in general.
+* Making an effort for properly authenticating with everyone you are communicating with.
+* Being very careful when dealing with identifying information such as name, whereabouts, the local time and so on. Any such piece of information that you leak will help a would be adversary to get closer to you.
+
+Also, please try to follow the instructions given by security tools as much to the letter as possible. There are situations where one can be creative or improvise solutions, but you should really try to learn when that is appropriate before you do it. For instance, when using PGP encryption you are often asked to verify the authenticity of any new public key that you have just got. If you do not do this it is possible that you are using a compromised key sent by an attacker performing a [man-in-the-middle attack][99]. Usually the authentication works by presenting you with the key's so called fingerprint, which is a unique identifier for that key that cannot be faked. Verification should then be done by asking you friend to send you the fingerprint through some safe channel, which could be anything from telling it by telephone or VoiP (which is hard for an attacker to manipulate on the fly) or even face-to-face (but hen you can exchange the actual keys securely instead), and then making sure that they are the same. Assuming the channel is safe the fingerprint sent by your friend and the one you get from the key should be identical, otherwise something is wrong.
+
+The above authentication methods are of course not always possible, but here is one of those places you can be creative. For example, you could send the fingerprint hidden in an innocent looking image by some means, although this is admittedly not bulletproof. You could make this method a bit safer by first sending the picture to your unknowing recipient and telling him or her how the fingerprint is hidden when you know that it has been received. Additionally, these kinds of tricky exchanges are always better to make over interactive communication channels such as IRC or with instant messaging since that will decrease the window of opportunity for any eavesdropper to interfere. Email is not very suitable as delays are long which gives the attacker ample time to act. An alternative authentication method to fingerprints, used by OTR, is to simply ask both parties of a shared secret that both should know. In this case, do not choose just anything – if someone is watching you they probably know which high school you went to, the size of your shoes and similar facts.
+
+This is probably the place where we are expected to wish you good luck, but we will not. Relying on luck simply is not good practice in these situations. Stay cool and be smart! Thanks for you time!
+
+The Tor™ trademark and the Tor Onion Logo are trademarks of [The Tor Project.][100]
+
+  [1]: walkthrough.html
+  [2]: walkthrough-fr.html
+  [3]: #intro
+  [4]: #what
+  [5]: #why
+  [6]: #how
+  [7]: #howto
+  [8]: #nm
+  [9]: #tork
+  [10]: #ff
+  [11]: #tb
+  [12]: #pidgin
+  [13]: #konq
+  [14]: #misc
+  [15]: #macchanger
+  [16]: #usb
+  [17]: #persistent
+  [18]: #cold
+  [19]: #vm
+  [20]: #windows
+  [21]: #debug
+  [22]: #conclusion
+  [23]: http://en.wikipedia.org/wiki/Livedistro
+  [24]: http://www.gentoo.org/
+  [25]: #usb
+  [26]: http://www.privacyinternational.org/article.shtml?cmd%5B347%5D=x-347-559597
+  [27]: http://en.wikipedia.org/wiki/ECHELON
+  [28]: http://www.fas.org/irp/program/process/rapport_echelon_en.pdf
+  [29]: http://en.wikipedia.org/wiki/Ip_address
+  [30]: https://www.torproject.org/
+  [31]: https://www.torproject.org/overview.html
+  [32]: https://wiki.torproject.org/noreply/TheOnionRouter/TorALaymansGuide
+  [33]: #ff
+  [34]: http://www.gnupg.org/
+  [35]: http://www.cypherpunks.ca/otr
+  [36]: #ff
+  [37]: http://en.wikipedia.org/wiki/Javascript
+  [38]: http://en.wikipedia.org/wiki/Adobe_flash
+  [39]: http://en.wikipedia.org/wiki/HTTP_cookie
+  [40]: https://www.torproject.org/torbutton/
+  [41]: http://en.wikipedia.org/wiki/Livedistro
+  [42]: #usb
+  [43]: #persistent
+  [44]: #vidalia
+  [45]: http://en.wikipedia.org/wiki/Mixminion
+  [46]: #kpgp
+  [47]: http://www.torproject.org/hidden-services.html
+  [48]: https://www.torproject.org/bridges.html
+  [49]: #usb
+  [50]: #how
+  [51]: http://en.wikipedia.org/wiki/Secure_Sockets_Layer
+  [52]: http://lavabit.com/
+  [53]: https://lavabit.com/apps/webmail/src/login.php
+  [54]: http://getfiregpg.org/
+  [55]: http://en.wikipedia.org/wiki/Public_key_cryptography
+  [56]: http://en.wikipedia.org/wiki/Pretty_Good_Privacy
+  [57]: #gpa
+  [58]: #kpgp
+  [59]: https://www.torproject.org/torbutton/
+  [60]: http://www.youtube.com/
+  [61]: http://www.youtube.com/watch?v=XIDxDMwwlsw
+  [62]: #konq
+  [63]: http://http://enigmail.mozdev.org/
+  [64]: http://en.wikipedia.org/wiki/Post_Office_Protocol
+  [65]: http://en.wikipedia.org/wiki/IMAP
+  [66]: http://en.wikipedia.org/wiki/SMTP
+  [67]: http://opensourcearticles.com/articles/thunderbird_15/english/part_01
+  [68]: #usb
+  [69]: http://www.cypherpunks.ca/otr
+  [70]: http://www.gnupg.org/
+  [71]: http://www.gnupg.org/gpa.html
+  [72]: http://developer.kde.org/~kgpg/
+  [73]: http://mixminion.net/
+  [74]: #tork
+  [75]: http://keepassx.sourceforge.net/
+  [76]: http://en.wikipedia.org/wiki/Information_entropy
+  [77]: http://www.kde-apps.org/content/show.php/Kvkbd?content=56019
+  [78]: http://www.truecrypt.org/
+  [79]: http://www.vidalia-project.net/
+  [80]: http://ktorrent.org/
+  [81]: http://www.xchat.org/
+  [82]: http://www.kde.org/
+  [83]: #persistent
+  [84]: #usb
+  [85]: #keepassx
+  [86]: http://en.wikipedia.org/wiki/Plausible_deniability
+  [87]: http://en.wikipedia.org/wiki/Cold_boot_attack
+  [88]: http://en.wikipedia.org/wiki/Virtual_machine
+  [89]: http://bellard.org/qemu/
+  [90]: #windows
+  [91]: http://www.vmware.com/
+  [92]: http://files1.cjb.net/incognito/incognito-vmware-1.0.zip
+  [93]: http://files1.cjb.net/incognito/incognito-vmware-1.0.zip.asc
+  [94]: http://en.wikipedia.org/wiki/Gratis_versus_Libre
+  [95]: http://www.vmware.com/products/player/
+  [96]: http://virtualbox.org
+  [97]: #vm
+  [98]: #vm
+  [99]: http://en.wikipedia.org/wiki/Man_in_the_middle_attack
+  [100]: https://www.torproject.org
