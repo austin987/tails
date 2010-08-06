@@ -30,6 +30,7 @@ use Carp;
 use Cwd;
 use DateTime;
 use DateTime::Format::DateParse;
+use English qw( -no_match_vars );
 use Fatal qw( open close );
 use File::Temp qw/tempdir/;
 use Getopt::Std;
@@ -104,7 +105,7 @@ sub newestDateHeader {
     my $origdir = getcwd;
     chdir $dir;
 
-    my @files = glob('.* *');
+    my @files = grep { ! ( $_ =~ m/^\.{1,2}$/ ) } glob('.* *');
     @files or croak "No downloaded files can be found";
 
     my $newestdt;
@@ -158,7 +159,11 @@ sub getRemoteDateDiff {
     # images, stylesheets, scripts, etc.
     WIFEXITED(system(@cmdline)) or croak "Failed to fetch content from $url: $!";
     my $localdt = DateTime->now;
-    my $newestdt = newestDateHeader($tmpdir);
+    my $newestdt;
+    eval { $newestdt = newestDateHeader($tmpdir) };
+    if ($EVAL_ERROR =~ m/No downloaded files can be found/) {
+        croak "No file could be downloaded from $url.";
+    }
 
     defined $newestdt or croak "Could not get any Date header";
 
@@ -215,10 +220,16 @@ sub adjustDate {
 my @urls = parseCommandLine();
 my @diffdts;
 foreach my $url (@urls) {
-    # TODO: use try/catch, return a zero diff on failure
-    my $diffdt = getRemoteDateDiff($url, $fullrequest);
-    push @diffdts, $diffdt;
+    my $diffdt;
+    eval { $diffdt = getRemoteDateDiff($url, $fullrequest) };
+    if ($EVAL_ERROR) {
+        print STDERR "$EVAL_ERROR\n";
+    }
+    else {
+        push @diffdts, $diffdt;
+    }
 }
+@diffdts or croak "No Date header could be received.";
 my @sorted_diffdts = sort {
     $a->in_units('seconds') <=> $b->in_units('seconds')
 } @diffdts;
