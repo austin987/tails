@@ -82,17 +82,24 @@ this threat.
 
 The HTP Perl client sets the http user-agent as `htpdate/$version`.
 
-> [[!taglink todo/code]]: hack it to use the same user-agent as
-> iceweasel/torbutton; the [[attached Perl
-> program|authenticate_time_servers/getTorbuttonUserAgent.pl]]
-> provides a way to get this information.
+> We then need to hack it to use the same user-agent as
+> iceweasel/torbutton.
+
+>> The [[attached Perl
+>> program|authenticate_time_servers/getTorbuttonUserAgent.pl]]
+>> provides a way to get this information, and the
+>> [[attached, hacked htpdate|authenticate_time_servers/htpdate]]
+>> adds a `-a` option that allows setting a custom user agent.
 
 Furthermore, its "connection pattern" is pretty suspicious:
 a web-browser loading foo.com/index.html would complete the whole
 exchange and download index.html + any referenced resources whereas
 htpdate/htpd drops the connection once it's got the first http header.
 
-> [[!taglink todo/code]]: hack it to to complete the http exchange
+> We then need to hack it to to complete the http exchange
+
+>> The [[attached, hacked htpdate|authenticate_time_servers/htpdate]]
+>> does this when run with the `-f` option.
 
 ## Sources?
 
@@ -129,4 +136,9 @@ certificate when using HTTPS?
 > Perl daemon, C client and a C daemon). Choosing one that supports
 > querying several servers and calculating some kind of mean result
 > would probably be a more sensible decision.
+
+>> The [[attached, hacked htpdate|authenticate_time_servers/htpdate]]
+>> uses wget's own certificate verification. It has no error message
+>> dedicated to this situation, but at least does not set the time if
+>> certificates cannot be verified.
 
