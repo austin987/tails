@@ -146,3 +146,22 @@ certificate when using HTTPS?
 >> dedicated to this situation, but at least does not set the time if
 >> certificates cannot be verified.
 
+## Left to do
+
+[[!tag todo/code]]
+
+The main thing left to do is to integrate our hacked htpdate script
+into the boot process
+
+The manual DNS resolution tweaks we are using for NTP are still
+relevant, but they will need to be adapted: to limit fingerprinting
+possibilities, we do not want to send HTTP requests aimed at an
+IP-based virtualhost (`htpdate https://IP/`), but rather to the usual
+hostname (`htpdate https://www.eff.org/`) as any "normal" user would
+do.
+
+So we must hack something so that the system's resolver knows our HTP
+target hosts' IPs when wget (run by htpdate) will ask for them: at
+boot time, we could do the very same manual hostname resolution we
+already do, write the results to `/etc/hosts`, run htpdate, and
+eventually remove(?) these entries from `/etc/hosts`.
