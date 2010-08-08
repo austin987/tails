@@ -41,6 +41,7 @@ my $datecommand = '/bin/date';  # "date" command to set time
 my $dateparam   = '-s';         # "date" parameter to set time
 my $debug       = 0;
 my $fullrequest = 0;
+my $log         = '';
 my $maxadjust   = 1800;         # maximum time step in seconds
 my $minadjust   = 1;            # minimum time step in seconds
 my $password    = '';           # password for proxy server
@@ -50,11 +51,35 @@ my $ssl_protocol = 'TLSv1';     # will be passed to wget's --secure-protocol
 my $useragent   = "htpdate/$VERSION";
 my $userid      = '';           # userid for proxy servers
 
-our ($opt_d, $opt_h, $opt_q, $opt_x, $opt_u, $opt_a, $opt_f);
+our ($opt_d, $opt_h, $opt_q, $opt_x, $opt_u, $opt_a, $opt_f, $opt_l);
+
+sub message {
+    my @msg = @_;
+
+    if ($log) {
+        open my $h, '>>', $log;
+        print $h "@msg\n";
+        close $h;
+    }
+    else {
+        print "@msg\n" unless $quiet;
+    }
+}
+
+sub debug {
+    message(@_) if $debug;
+}
+
+sub error (@_) {
+    my @msg = @_;
+
+    debug(@msg);
+    croak @msg;
+}
 
 sub parseCommandLine () {
     # specify valid switches
-    getopts('dhqxfu:a:') || usage();
+    getopts('dhqxfu:a:l:') || usage();
 
     usage() if $opt_h;
     usage() unless $ARGV[0];
@@ -63,6 +88,7 @@ sub parseCommandLine () {
     $useragent = $opt_a     if $opt_a;
     $debug = 1              if $opt_d;
     $fullrequest = 1        if $opt_f;
+    $log = $opt_l           if $opt_l;
     $quiet = 1              if $opt_q;
     $set_date = 0           if $opt_x;
 
@@ -91,6 +117,7 @@ Usage: $0 [-dhqxf] [-u userid] [-a useragent] <URL> [<URL> ...]
         -x      do not set the time (only show)
         -a      http user agent to use
         -f      request the full page and referenced resources rather than only its header
+        -l      log to this file rather than to STDOUT
 
         e.g. $0 -x http://www.microsoft.com/ https://check.torproject.org/
 
@@ -106,7 +133,7 @@ sub newestDateHeader {
     chdir $dir;
 
     my @files = grep { ! ( $_ =~ m/^\.{1,2}$/ ) } glob('.* *');
-    @files or croak "No downloaded files can be found";
+    @files or error "No downloaded files can be found";
 
     my $newestdt;
 
@@ -137,7 +164,7 @@ sub newestDateHeader {
 sub getRemoteDateDiff {
     my ($url, $fullrequest) = @_;
 
-    defined $url or croak "getRemoteDateDiff must be passed an URL";
+    defined $url or error "getRemoteDateDiff must be passed an URL";
     $fullrequest = defined $fullrequest ? $fullrequest : 0;
 
     my $origdir = getcwd;
@@ -157,19 +184,19 @@ sub getRemoteDateDiff {
 
     # fetch (the page and) referenced resources:
     # images, stylesheets, scripts, etc.
-    WIFEXITED(system(@cmdline)) or croak "Failed to fetch content from $url: $!";
+    WIFEXITED(system(@cmdline)) or error "Failed to fetch content from $url: $!";
     my $localdt = DateTime->now;
     my $newestdt;
     eval { $newestdt = newestDateHeader($tmpdir) };
     if ($EVAL_ERROR =~ m/No downloaded files can be found/) {
-        croak "No file could be downloaded from $url.";
+        error "No file could be downloaded from $url.";
     }
 
-    defined $newestdt or croak "Could not get any Date header";
+    defined $newestdt or error "Could not get any Date header";
 
     my $diffdt = $newestdt - $localdt;
     my $diff   = $diffdt->in_units('seconds');
-    print "$url => $diff second(s)\n" if $debug;
+    debug("$url => $diff second(s)");
 
     chdir $origdir;
     return $diffdt;
@@ -178,38 +205,36 @@ sub getRemoteDateDiff {
 sub adjustDate {
     my ($diffdt) = @_;
 
-    defined $diffdt or croak "adjustDate was passed an undefined diff";
+    defined $diffdt or error "adjustDate was passed an undefined diff";
 
     my $localdt = DateTime->now;
     my $absdiffdt = $diffdt->is_positive() ? $diffdt : $diffdt->inverse();
     my $diff      = $diffdt->in_units('seconds');
 
-    print "Median diff: $diff second(s)\n" if $debug;
+    debug("Median diff: $diff second(s)");
 
     if ( DateTime::Duration->compare( $absdiffdt,
                                       DateTime::Duration->new(seconds => $maxadjust),
                                       $localdt )
           > 0 ) {
-        print STDERR "Not setting clock as diff ($diff seconds) is too large.\n" unless $quiet;
+        message("Not setting clock as diff ($diff seconds) is too large.");
     }
     elsif ( DateTime::Duration->compare($absdiffdt,
                                         DateTime::Duration->new(seconds => $minadjust),
                                         $localdt, )
           <= 0 ) {
-        print STDERR "Not setting clock as diff ($diff seconds) is too small.\n" unless $quiet;
+        message("Not setting clock as diff ($diff seconds) is too small.");
     }
     else {
         my $newtimedt = DateTime->now + $diffdt;
         my $newtime = scalar localtime($newtimedt->epoch);
-        print "Setting time to $newtime...\n" unless $quiet;
+        message("Setting time to $newtime...");
         if ($set_date) {
             $> = 0 if $opt_u;
             open(my $fd, "-|", $datecommand, $dateparam, $newtime);
             if ( $? != 0 ) {
-                print STDERR "An error occured setting the time\n";
-                while (<$fd>) {
-                    print STDERR $_;
-                }
+                my @output = <$fd>;
+                error "An error occured setting the time\n@output";
             }
             close($fd);
             $> = getpwnam($opt_u) if $opt_u;
@@ -229,7 +254,7 @@ foreach my $url (@urls) {
         push @diffdts, $diffdt;
     }
 }
-@diffdts or croak "No Date header could be received.";
+@diffdts or error "No Date header could be received.";
 my @sorted_diffdts = sort {
     $a->in_units('seconds') <=> $b->in_units('seconds')
 } @diffdts;
