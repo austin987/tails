@@ -81,6 +81,10 @@ done
 
 echo "${END_MAGIC}" >> /etc/hosts
 
+touch "${HTPDATE_LOG}"
+chown htp:nobody "${HTPDATE_LOG}"
+chmod 600 "${HTPDATE_LOG}"
+
 /usr/local/sbin/htpdate \
 	-d \
 	-l "${HTPDATE_LOG}" \
