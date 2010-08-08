@@ -40,7 +40,7 @@ use Carp;
 use DateTime;
 use DateTime::Format::ISO8601;
 use Desktop::Notify;
-use File::Slurp;
+use Fatal qw( open close );
 use Locale::gettext;
 use POSIX;
 use XML::Atom;
@@ -79,8 +79,9 @@ from the version file.
 sub build_date {
     my $version_file = shift;
 
-    my @content = read_file($version_file);
-    my ($version, $date) = ( $content[0] =~ /(.*) - (\d+)$/ );
+    open my $version_h, '<', $version_file;
+    my ($version, $date) = ( <$version_h> =~ /(.*) - (\d+)(?:\n)?$/ );
+    close $version_h;
     if (!defined $date || !$date) {
         croak gettext("Unparseable line in %s", $version_file);
     }
