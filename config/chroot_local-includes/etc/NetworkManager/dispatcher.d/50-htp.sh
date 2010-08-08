@@ -54,8 +54,26 @@ fi
 echo "Will use these nameservers: ${NAME_SERVERS}" >>$LOG
 
 cleanup_etc_hosts() {
-	echo "FIXME: cleanup /etc/hosts" >>$LOG
-	true
+	echo "Cleaning /etc/hosts" >>$LOG
+	local tempfile
+	tempfile=`mktemp --tmpdir=/tmp nm-htp.XXXXXXXX`
+	echo "tempfile: ${tempfile}" >>$LOG
+	where=outside
+	cat /etc/hosts | while read line ; do
+		if [ "$where" = inside ]; then
+			if [ "$line" = "$END_MAGIC" ]; then
+				where=outside
+			fi
+		else
+			if [ "$line" = "$BEGIN_MAGIC" ]; then
+				where=inside
+			else
+				echo "$line" >> $tempfile
+			fi
+		fi
+	done
+	chmod 644 "$tempfile"
+	mv "$tempfile" /etc/hosts
 }
 
 echo "${BEGIN_MAGIC}" >> /etc/hosts
