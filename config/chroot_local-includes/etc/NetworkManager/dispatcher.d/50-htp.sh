@@ -107,6 +107,7 @@ chmod 600 "${HTPDATE_LOG}"
 	-l "${HTPDATE_LOG}" \
 	-a "`/usr/local/bin/getTorbuttonUserAgent`" \
 	-f \
+	-p \
 	-u htp \
 	${HTP_POOL[*]}
 

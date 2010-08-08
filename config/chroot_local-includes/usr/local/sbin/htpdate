@@ -45,6 +45,7 @@ my $fullrequest = 0;
 my $log         = '';
 my $maxadjust   = 1800;         # maximum time step in seconds
 my $minadjust   = 1;            # minimum time step in seconds
+my $paranoid    = 0;
 my $password    = '';           # password for proxy server
 my $quiet       = 0;
 my $set_date    = 1;
@@ -52,7 +53,7 @@ my $ssl_protocol = 'TLSv1';     # will be passed to wget's --secure-protocol
 my $useragent   = "htpdate/$VERSION";
 my $userid      = '';           # userid for proxy servers
 
-our ($opt_d, $opt_h, $opt_q, $opt_x, $opt_u, $opt_a, $opt_f, $opt_l);
+our ($opt_d, $opt_h, $opt_q, $opt_x, $opt_u, $opt_a, $opt_f, $opt_l, $opt_p);
 
 sub message {
     my @msg = @_;
@@ -80,7 +81,7 @@ sub error (@_) {
 
 sub parseCommandLine () {
     # specify valid switches
-    getopts('dhqxfu:a:l:') || usage();
+    getopts('dhqxfpu:a:l:') || usage();
 
     usage() if $opt_h;
     usage() unless $ARGV[0];
@@ -90,6 +91,7 @@ sub parseCommandLine () {
     $debug = 1              if $opt_d;
     $fullrequest = 1        if $opt_f;
     $log = $opt_l           if $opt_l;
+    $paranoid = 1           if $opt_p;
     $quiet = 1              if $opt_q;
     $set_date = 0           if $opt_x;
 
@@ -119,6 +121,7 @@ Usage: $0 [-dhqxf] [-u userid] [-a useragent] <URL> [<URL> ...]
         -a      http user agent to use
         -f      request the full page and referenced resources rather than only its header
         -l      log to this file rather than to STDOUT
+        -p      paranoid mode: don't set time unless all servers could be reached
 
         e.g. $0 -x http://www.microsoft.com/ https://check.torproject.org/
 
@@ -130,10 +133,7 @@ USAGE
 sub newestDateHeader {
     my ($dir) = @_;
 
-    my $origdir = getcwd;
-    chdir $dir;
-
-    my @files = grep { ! ( $_ =~ m/^\.{1,2}$/ ) } glob('.* *');
+    my @files = grep { ! ( $_ =~ m|/?\.{1,2}$| ) } glob("$dir/.* $dir/*");
     @files or error "No downloaded files can be found";
 
     my $newestdt;
@@ -158,7 +158,6 @@ sub newestDateHeader {
         }
     }
 
-    chdir $origdir;
     return $newestdt;
 }
 
@@ -168,20 +167,19 @@ sub getRemoteDateDiff {
     defined $url or error "getRemoteDateDiff must be passed an URL";
     $fullrequest = defined $fullrequest ? $fullrequest : 0;
 
-    my $origdir = getcwd;
+    my $tmpdir = tempdir("XXXXXXXXXX", TMPDIR => 1);
 
     my @wget_options = ( '-U', $useragent, '--quiet', '--no-cache',
                          '-e', 'robots=off', '--save-headers',
                          '--no-directories',
                          '--secure-protocol', $ssl_protocol,
                      );
+    push @wget_options, ('--directory-prefix', $tmpdir);
     if ($fullrequest) {
         push @wget_options, ('--page-requisites', '--span-hosts');
     }
-    my @cmdline = ('wget', @wget_options, $url);
 
-    my $tmpdir = tempdir("XXXXXXXXXX", TMPDIR => 1);
-    chdir $tmpdir;
+    my @cmdline = ('wget', @wget_options, $url);
 
     # fetch (the page and) referenced resources:
     # images, stylesheets, scripts, etc.
@@ -200,9 +198,9 @@ sub getRemoteDateDiff {
     my $diff   = $diffdt->in_units('seconds');
     my $tookdt = $localdt - $beforedt;
     my $took   = $tookdt->in_units('seconds');
+
     debug("$url (took ${took}s) => diff = $diff second(s)");
 
-    chdir $origdir;
     return $diffdt;
 }
 
@@ -247,10 +245,22 @@ sub adjustDate {
 }
 
 my @urls = parseCommandLine();
-my @diffdts = grep { defined $_
-                 } map { $_->join()
-                     } map { threads->create(\&getRemoteDateDiff, $_, $fullrequest)
-                         } @urls
+my @diffdts = grep {
+    defined $_
+} map {
+    my $diffdt = $_->{thread}->join();
+    if ($paranoid && ! defined $diffdt) {
+        error('Paranoid mode: aborting as one server (',
+              $_->{url},
+              ') could not be reached');
+    }
+    $diffdt;
+} map {
+    {
+        url    => $_,
+        thread => threads->create(\&getRemoteDateDiff, $_, $fullrequest),
+    }
+} @urls
     or error "No Date header could be received.";
 my @sorted_diffdts = sort {
     $a->in_units('seconds') <=> $b->in_units('seconds')

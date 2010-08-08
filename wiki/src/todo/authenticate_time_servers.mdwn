@@ -128,13 +128,10 @@ warning without setting the time) when there is a problem with the
 certificate when using HTTPS?
 
 Our hacked `/usr/local/sbin/htpdate` uses wget's own certificate
-verification. It has no error message dedicated to the case when a
-certificate cannot be verified, but at least it ignores the "faulty"
-server in such a situation.
-
-> When a given certificate cannot be verified, the servers pool
-> consistency should be considered to be not secure enough, and the
-> HTP client should exit => [[!taglink todo/code]].
+verification, and implements a "paranoid mode": when one server cannot
+be reached, e.g. because of a failed certificate checking, this custom
+version of htpdate considers the servers pool consistency to not be
+secure enough and exits.
 
 ## Left to do
 
