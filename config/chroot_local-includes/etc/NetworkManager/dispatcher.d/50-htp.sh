@@ -33,10 +33,10 @@ fi
 
 declare -a HTP_POOL
 HTP_POOL=(
-	'https://www.torproject.org/'
-	'https://www.eff.org/'
-	'https://mail.google.com/mail/'
-	'https://secure.wikimedia.org/'
+	'www.torproject.org'
+	'www.eff.org'
+	'mail.google.com'
+	'secure.wikimedia.org'
 )
 
 BEGIN_MAGIC='### END HTP HOSTS'
