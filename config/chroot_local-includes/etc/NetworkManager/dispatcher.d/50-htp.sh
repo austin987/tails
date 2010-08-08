@@ -37,8 +37,8 @@ HTPDATE_LOG=/var/log/htpdate.log
 declare -a HTP_POOL
 HTP_POOL=(
 	'www.torproject.org'
-	'www.eff.org'
-	'mail.google.com'
+	'mail.riseup.net'
+	'www.google.com'
 	'secure.wikimedia.org'
 )
 
@@ -56,7 +56,7 @@ echo "Will use these nameservers: ${NAME_SERVERS}" >>$LOG
 cleanup_etc_hosts() {
 	echo "Cleaning /etc/hosts" >>$LOG
 	local tempfile
-	tempfile=`mktemp --tmpdir=/tmp nm-htp.XXXXXXXX`
+	tempfile=`mktemp -t nm-htp.XXXXXXXX`
 	echo "tempfile: ${tempfile}" >>$LOG
 	where=outside
 	cat /etc/hosts | while read line ; do
