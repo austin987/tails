@@ -81,6 +81,7 @@ done
 echo "${END_MAGIC}" >> /etc/hosts
 
 /usr/local/sbin/htpdate \
+	-d \
 	-a "`/usr/local/bin/getTorbuttonUserAgent`" \
 	-f \
 	-u htp \
