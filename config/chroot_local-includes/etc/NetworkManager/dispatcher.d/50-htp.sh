@@ -57,7 +57,6 @@ cleanup_etc_hosts() {
 	echo "Cleaning /etc/hosts" >>$LOG
 	local tempfile
 	tempfile=`mktemp -t nm-htp.XXXXXXXX`
-	echo "tempfile: ${tempfile}" >>$LOG
 	where=outside
 	cat /etc/hosts | while read line ; do
 		if [ "$where" = inside ]; then
