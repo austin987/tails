@@ -94,7 +94,7 @@ chmod 600 "${HTPDATE_LOG}"
 	${HTP_POOL[*]}
 
 HTPDATE_RET=$?
-echo "htpdate returned with exist code ${HTPDATE_RET}" >>$LOG
+echo "htpdate exited with return code ${HTPDATE_RET}" >>$LOG
 
 cleanup_etc_hosts
 
