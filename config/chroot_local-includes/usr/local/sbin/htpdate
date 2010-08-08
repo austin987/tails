@@ -36,6 +36,7 @@ use File::Temp qw/tempdir/;
 use Getopt::Std;
 use open qw{:utf8 :std};
 use POSIX qw( WIFEXITED );
+use threads;
 
 my $datecommand = '/bin/date';  # "date" command to set time
 my $dateparam   = '-s';         # "date" parameter to set time
@@ -184,6 +185,7 @@ sub getRemoteDateDiff {
 
     # fetch (the page and) referenced resources:
     # images, stylesheets, scripts, etc.
+    my $beforedt = DateTime->now;
     WIFEXITED(system(@cmdline)) or error "Failed to fetch content from $url: $!";
     my $localdt = DateTime->now;
     my $newestdt;
@@ -196,7 +198,9 @@ sub getRemoteDateDiff {
 
     my $diffdt = $newestdt - $localdt;
     my $diff   = $diffdt->in_units('seconds');
-    debug("$url => $diff second(s)");
+    my $tookdt = $localdt - $beforedt;
+    my $took   = $tookdt->in_units('seconds');
+    debug("$url (took ${took}s) => diff = $diff second(s)");
 
     chdir $origdir;
     return $diffdt;
@@ -243,18 +247,11 @@ sub adjustDate {
 }
 
 my @urls = parseCommandLine();
-my @diffdts;
-foreach my $url (@urls) {
-    my $diffdt;
-    eval { $diffdt = getRemoteDateDiff($url, $fullrequest) };
-    if ($EVAL_ERROR) {
-        print STDERR "$EVAL_ERROR\n";
-    }
-    else {
-        push @diffdts, $diffdt;
-    }
-}
-@diffdts or error "No Date header could be received.";
+my @diffdts = grep { defined $_
+                 } map { $_->join()
+                     } map { threads->create(\&getRemoteDateDiff, $_, $fullrequest)
+                         } @urls
+    or error "No Date header could be received.";
 my @sorted_diffdts = sort {
     $a->in_units('seconds') <=> $b->in_units('seconds')
 } @diffdts;
