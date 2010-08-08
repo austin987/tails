@@ -31,6 +31,8 @@ if [[ $2 != "up" ]]; then
 	exit 0
 fi
 
+LOG=/var/log/nm-htp.log
+
 declare -a HTP_POOL
 HTP_POOL=(
 	'www.torproject.org'
@@ -48,8 +50,10 @@ else
 	NAME_SERVERS="208.67.222.222 208.67.220.220"
 fi
 
+echo "${NAME_SERVERS}" >>$LOG
+
 cleanup_etc_hosts() {
-	echo "FIXME: cleanup /etc/hosts" >&2
+	echo "FIXME: cleanup /etc/hosts" >>$LOG
 	true
 }
 
@@ -65,7 +69,7 @@ for HTP_HOST in ${HTP_POOL[*]} ; do
 	       head -n 1 | \
 	       cut -d ' ' -f 4)
 	if [[ -z ${IP} ]]; then
-		echo "Failed to resolve ${HTP_HOST}" >&2
+		echo "Failed to resolve ${HTP_HOST}" >>$LOG
 		echo "${END_MAGIC}" >> /etc/hosts
 		cleanup_etc_hosts
 		exit 17
@@ -83,6 +87,7 @@ echo "${END_MAGIC}" >> /etc/hosts
 	${HTP_POOL[*]}
 
 HTPDATE_RET=$?
+echo "htpdate returned with exist code ${HTPDATE_RET}" >>$LOG
 
 cleanup_etc_hosts
 
