@@ -42,7 +42,7 @@ HTP_POOL=(
 	'secure.wikimedia.org'
 )
 
-BEGIN_MAGIC='### END HTP HOSTS'
+BEGIN_MAGIC='### BEGIN HTP HOSTS'
 END_MAGIC='### END HTP HOSTS'
 
 if [[ -n "${DHCP4_DOMAIN_NAME_SERVERS}" ]]; then
