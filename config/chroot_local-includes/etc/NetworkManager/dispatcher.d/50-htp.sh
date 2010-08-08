@@ -61,7 +61,7 @@ for HTP_HOST in ${HTP_POOL[*]} ; do
 	               done | \
 	               tail --bytes=+4`
 	IP=$(sudo -u htp sh -c "${DNS_QUERY_CMD}" | \
-	       grep "${HTP_HOST} has address" | \
+	       grep "has address" | \
 	       head -n 1 | \
 	       cut -d ' ' -f 4)
 	if [[ -z ${IP} ]]; then
