@@ -43,7 +43,7 @@ my $dateparam   = '-s';         # "date" parameter to set time
 my $debug       = 0;
 my $fullrequest = 0;
 my $log         = '';
-my $maxadjust   = 1800;         # maximum time step in seconds
+my $maxadjust   = 0;            # maximum time step in seconds (0 means no max.)
 my $minadjust   = 1;            # minimum time step in seconds
 my $paranoid    = 0;
 my $password    = '';           # password for proxy server
@@ -215,7 +215,7 @@ sub adjustDate {
 
     debug("Median diff: $diff second(s)");
 
-    if ( DateTime::Duration->compare( $absdiffdt,
+    if ( $maxadjust && DateTime::Duration->compare( $absdiffdt,
                                       DateTime::Duration->new(seconds => $maxadjust),
                                       $localdt )
           > 0 ) {
