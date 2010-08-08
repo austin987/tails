@@ -51,7 +51,7 @@ else
 	NAME_SERVERS="208.67.222.222 208.67.220.220"
 fi
 
-echo "${NAME_SERVERS}" >>$LOG
+echo "Will use these nameservers: ${NAME_SERVERS}" >>$LOG
 
 cleanup_etc_hosts() {
 	echo "FIXME: cleanup /etc/hosts" >>$LOG
