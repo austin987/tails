@@ -32,6 +32,7 @@ if [[ $2 != "up" ]]; then
 fi
 
 LOG=/var/log/nm-htp.log
+HTPDATE_LOG=/var/log/htpdate.log
 
 declare -a HTP_POOL
 HTP_POOL=(
@@ -82,6 +83,7 @@ echo "${END_MAGIC}" >> /etc/hosts
 
 /usr/local/sbin/htpdate \
 	-d \
+	-l "${HTPDATE_LOG}" \
 	-a "`/usr/local/bin/getTorbuttonUserAgent`" \
 	-f \
 	-u htp \
