@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# Compile and install a custom udev-watchdog program
+
+# Including common functions
+. "${LH_BASE:-/usr/share/live-helper}"/scripts/build.sh
+
+# Setting static variables
+DESCRIPTION="$(Echo 'compile and install a custom udev-watchdog program')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Get LH_DISTRIBUTION from config/bootstrap
+Read_conffiles config/all config/common config/chroot config/bootstrap
+Set_defaults
+
+Echo_message "compiling a custom udev-watchdog program"
+
+apt-get install --yes gcc binutils libudev-dev
+
+SRC="/usr/src/udev-watchdog.c"
+DST="/usr/local/sbin/udev-watchdog"
+
+gcc -o "$DST" "$SRC" -static -Wall -ludev 
+strip --strip-all "$DST"
+
+aptitude --assume-yes purge libudev-dev
