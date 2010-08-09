@@ -1,0 +1,268 @@
+#!/usr/bin/perl
+#
+# htpdate time poller version 0.9.3
+# Copyright (C) 2005 Eddy Vervest
+# Copyright (C) 2010 T(A)ILS dev team <amnesia@boum.org>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# http://www.gnu.org/copyleft/gpl.html
+
+# Proxy setting are read from environment 
+# e.g. in bash for setting environment variables:
+#
+# export HTTP_PROXY='http://wwwproxy.xs4all.nl:8080'
+#
+# or set the proxy value here
+#
+# $ENV{HTTP_PROXY} = 'http://wwwproxy.xs4all.nl:8080';
+#
+# If proxy authentication is required, specify your userid and password below.
+
+use strict;
+use warnings;
+
+use version; our $VERSION = qv('0.9.3');
+
+use Carp;
+use Cwd;
+use DateTime;
+use DateTime::Format::DateParse;
+use English qw( -no_match_vars );
+use Fatal qw( open close );
+use File::Temp qw/tempdir/;
+use Getopt::Std;
+use open qw{:utf8 :std};
+use POSIX qw( WIFEXITED );
+use threads;
+
+my $datecommand = '/bin/date';  # "date" command to set time
+my $dateparam   = '-s';         # "date" parameter to set time
+my $debug       = 0;
+my $fullrequest = 0;
+my $log         = '';
+my $maxadjust   = 0;            # maximum time step in seconds (0 means no max.)
+my $minadjust   = 1;            # minimum time step in seconds
+my $paranoid    = 0;
+my $password    = '';           # password for proxy server
+my $quiet       = 0;
+my $set_date    = 1;
+my $ssl_protocol = 'TLSv1';     # will be passed to wget's --secure-protocol
+my $useragent   = "htpdate/$VERSION";
+my $userid      = '';           # userid for proxy servers
+
+our ($opt_d, $opt_h, $opt_q, $opt_x, $opt_u, $opt_a, $opt_f, $opt_l, $opt_p);
+
+sub message {
+    my @msg = @_;
+
+    if ($log) {
+        open my $h, '>>', $log;
+        print $h "@msg\n";
+        close $h;
+    }
+    else {
+        print "@msg\n" unless $quiet;
+    }
+}
+
+sub debug {
+    message(@_) if $debug;
+}
+
+sub error (@_) {
+    my @msg = @_;
+
+    debug(@msg);
+    croak @msg;
+}
+
+sub parseCommandLine () {
+    # specify valid switches
+    getopts('dhqxfpu:a:l:') || usage();
+
+    usage() if $opt_h;
+    usage() unless $ARGV[0];
+
+    $> = getpwnam($opt_u)   if $opt_u;
+    $useragent = $opt_a     if $opt_a;
+    $debug = 1              if $opt_d;
+    $fullrequest = 1        if $opt_f;
+    $log = $opt_l           if $opt_l;
+    $paranoid = 1           if $opt_p;
+    $quiet = 1              if $opt_q;
+    $set_date = 0           if $opt_x;
+
+    my @urls;
+    foreach my $url (@ARGV) {
+        unless ( $url =~ /^http/i ) {
+            $url = 'https://'.$url;
+        }
+        push @urls, $url;
+    }
+
+    return @urls;
+}
+
+sub usage () {
+
+    print STDERR <<USAGE;
+
+htpdate version $VERSION
+Usage: $0 [-dhqxf] [-u userid] [-a useragent] <URL> [<URL> ...]
+
+        -d      debug
+        -h      show this help
+        -q      quiet
+        -u      userid to run as
+        -x      do not set the time (only show)
+        -a      http user agent to use
+        -f      request the full page and referenced resources rather than only its header
+        -l      log to this file rather than to STDOUT
+        -p      paranoid mode: don't set time unless all servers could be reached
+
+        e.g. $0 -x http://www.microsoft.com/ https://check.torproject.org/
+
+USAGE
+
+    exit;
+}
+
+sub newestDateHeader {
+    my ($dir) = @_;
+
+    my @files = grep { ! ( $_ =~ m|/?\.{1,2}$| ) } glob("$dir/.* $dir/*");
+    @files or error "No downloaded files can be found";
+
+    my $newestdt;
+
+    foreach my $file (@files) {
+        next if -l $file || -d _;
+        my $date;
+        open(my $file_h, '<', $file);
+        while (my $line = <$file_h>) {
+            chomp $line;
+            # empty line == we leave the headers to go into the content
+            last if $line eq '';
+            last if ($date) = ($line =~ m/^Date:\s+(.*)$/m);
+        }
+        close $file_h;
+        if (defined $date) {
+            # RFC 2616 (3.3.1) says Date headers MUST be represented in GMT
+            my $dt = DateTime::Format::DateParse->parse_datetime( $date, 'GMT' );
+            if (! defined $newestdt || DateTime->compare($dt, $newestdt) > 0) {
+                $newestdt = $dt;
+            }
+        }
+    }
+
+    return $newestdt;
+}
+
+sub getRemoteDateDiff {
+    my ($url, $fullrequest) = @_;
+
+    defined $url or error "getRemoteDateDiff must be passed an URL";
+    $fullrequest = defined $fullrequest ? $fullrequest : 0;
+
+    my $tmpdir = tempdir("XXXXXXXXXX", TMPDIR => 1);
+
+    my @wget_options = ( '-U', $useragent, '--quiet', '--no-cache',
+                         '-e', 'robots=off', '--save-headers',
+                         '--no-directories',
+                         '--secure-protocol', $ssl_protocol,
+                     );
+    push @wget_options, ('--directory-prefix', $tmpdir);
+    if ($fullrequest) {
+        push @wget_options, ('--page-requisites', '--span-hosts');
+    }
+
+    my @cmdline = ('wget', @wget_options, $url);
+
+    # fetch (the page and) referenced resources:
+    # images, stylesheets, scripts, etc.
+    my $beforedt = DateTime->now;
+    WIFEXITED(system(@cmdline)) or error "Failed to fetch content from $url: $!";
+    my $localdt = DateTime->now;
+    my $newestdt;
+    eval { $newestdt = newestDateHeader($tmpdir) };
+    if ($EVAL_ERROR =~ m/No downloaded files can be found/) {
+        error "No file could be downloaded from $url.";
+    }
+
+    defined $newestdt or error "Could not get any Date header";
+
+    my $diffdt = $newestdt - $localdt;
+    my $diff   = $diffdt->in_units('seconds');
+    my $tookdt = $localdt - $beforedt;
+    my $took   = $tookdt->in_units('seconds');
+
+    debug("$url (took ${took}s) => diff = $diff second(s)");
+
+    return $diffdt;
+}
+
+sub adjustDate {
+    my ($diffdt) = @_;
+
+    defined $diffdt or error "adjustDate was passed an undefined diff";
+
+    my $localdt = DateTime->now;
+    my $absdiffdt = $diffdt->is_positive() ? $diffdt : $diffdt->inverse();
+    my $diff      = $diffdt->in_units('seconds');
+
+    debug("Median diff: $diff second(s)");
+
+    if ( $maxadjust && DateTime::Duration->compare( $absdiffdt,
+                                      DateTime::Duration->new(seconds => $maxadjust),
+                                      $localdt )
+          > 0 ) {
+        message("Not setting clock as diff ($diff seconds) is too large.");
+    }
+    elsif ( DateTime::Duration->compare($absdiffdt,
+                                        DateTime::Duration->new(seconds => $minadjust),
+                                        $localdt, )
+          <= 0 ) {
+        message("Not setting clock as diff ($diff seconds) is too small.");
+    }
+    else {
+        my $newtimedt = DateTime->now + $diffdt;
+        my $newtime = scalar localtime($newtimedt->epoch);
+        message("Setting time to $newtime...");
+        if ($set_date) {
+            $> = 0 if $opt_u;
+            open(my $fd, "-|", $datecommand, $dateparam, $newtime);
+            if ( $? != 0 ) {
+                my @output = <$fd>;
+                error "An error occured setting the time\n@output";
+            }
+            close($fd);
+            $> = getpwnam($opt_u) if $opt_u;
+        }
+    }
+}
+
+my @urls = parseCommandLine();
+my @diffdts = grep {
+    defined $_
+} map {
+    my $diffdt = $_->{thread}->join();
+    if ($paranoid && ! defined $diffdt) {
+        error('Paranoid mode: aborting as one server (',
+              $_->{url},
+              ') could not be reached');
+    }
+    $diffdt;
+} map {
+    {
+        url    => $_,
+        thread => threads->create(\&getRemoteDateDiff, $_, $fullrequest),
+    }
+} @urls
+    or error "No Date header could be received.";
+my @sorted_diffdts = sort {
+    $a->in_units('seconds') <=> $b->in_units('seconds')
+} @diffdts;
+adjustDate($sorted_diffdts[int(@sorted_diffdts / 2)]);

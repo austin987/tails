@@ -1,0 +1,1116 @@
+[[!meta title="Walkthrough"]]
+
+[[!toc levels=2]]
+
+**WARNING**: this documentation, originally written for Incognito, has
+not been fully adapted for T(A)ILS yet. It is thus incomplete, plainly
+lies on some points, and lacks screenshots.
+
+TODO:
+
+- adapt instructions from Konqueror to Nautilus
+- adapt instructions from Thunderbird to Claws Mail
+- instruct how to really "change identity"
+- GnuPG + Seahorse
+- FireGPG
+
+# <a name="intro"></a>Introduction
+
+In this document we try to present The (Amnesic) Incognito Live
+System in an easy to understand and reasonably thorough manner in hope
+to give the new user a crash course in what might be a completely new
+set of applications and concepts regarding anonymity and security on
+the Internet.
+
+It is quite long so you might want to not read it in one go but
+instead read the introduction and conclusion, as well as the sections
+on only those applications you intend to use with the possibility to
+return to it whenever you want to try something new or use it for
+reference.
+
+If you have experience with these applications and concepts from
+elsewhere and feel comfortable with the user interface in general,
+reading this document is maybe not necessary at all. A word of caution
+to all users is not to alter the network, proxy and firewall settings
+unless you know what you are doing – poking around with them too much
+might spoil the built-in defences of T(A)ILS.
+
+## <a name="what"></a>What is T(A)ILS?
+
+Amnesia, **noun**: Forgetfulness; loss of long-term memory.
+
+Incognito, **noun**:
+
+1. One unknown or in disguise, or under an assumed character or name.
+2. The assumption of disguise or of a feigned character; the state of
+   being in disguise or not recognized.
+
+T(A)ILS is a [Free
+Software](http://www.gnu.org/philosophy/free-sw.html)
+[LiveDistro](http://en.wikipedia.org/wiki/Livedistro) based on [Debian
+GNU/Linux](http://www.debian.org/) assisting you to securely and
+anonymously use the Internet almost anywhere you go, e.g. your home,
+work, university, favourite Internet café or local library.
+
+T(A)ILS is designed to be used from either a CD or a [USB
+drive](#usb).
+
+T(A)ILS has several applications (Web browser, IRC client, Mail
+client, Instant messenger, office suite, image and sound manipulation,
+etc.) pre-configured with security in mind; all outgoing connections
+to the Internet are forced to go through [the Tor
+network](https://www.torproject.org/), whose purpose is to protect
+them against traffic analysis. Moreover, T(A)ILS is designed to leave
+no trace on local storage devices unless explicitely asked.
+
+To use it, you simply insert the CD or USB-drive that you have
+installed T(A)ILS on in a computer and restart it. T(A)ILS should
+then start as an independent operating system instead of Microsoft
+Windows or whatever operating system you have installed. You might
+need to select the inserted boot device in the BIOS, or using some
+kind of boot menu (try F12).
+
+## <a name="why"></a>Why do you need anonymity?
+
+In case you did not know, we currently find ourselves in a state of
+steady decline of our freedoms and privacy, with increasing levels of
+mass surveillance and repression all over the world (see [this report
+from Privacy
+International](http://www.privacyinternational.org/article.shtml?cmd%5B347%5D=x-347-559597)).
+
+Without taking any precautions, your Internet service provider, the
+state, the police and global surveillance systems like
+[ECHELON](http://en.wikipedia.org/wiki/ECHELON) (which is _not_ a
+conspiracy theory; see [this report from the European
+Parliament](http://www.fas.org/irp/program/process/rapport_echelon_en.pdf))
+can record what you do online: what you read, what you write and who
+you communicate with.
+
+This is possible since all messages sent over
+the Internet contain the [IP
+addresses](http://en.wikipedia.org/wiki/Ip_address) of both the sender
+and receiver, much like an ordinary mail sent through the postal
+system contain addresses of both sender and receiver for two-way
+communication. IP addresses can easily be traced back to the physical
+location of the computers and their owners, and from that ultimately
+back to you.
+
+If you do not mind this fact, then more power to you, but if you do
+mind, then T(A)ILS might be just what you need.
+
+Moreover, just like with a postcard, any information traveling on the
+Internet can be read by many computers that relay them.
+
+## <a name="why_notrace"></a>Why do you need to prevent traces to be kept?
+
+A lot of traces of your activities are left on your computer's hard
+disk. Such traces can easily be gathered by anyone with a bit of
+computer knowledge when no special measure is taken to prevent this
+(the only serious one being full disk encryption).
+
+Again, if you do mind this fact, T(A)ILS might be just what you need.
+
+## <a name="how"></a>How does T(A)ILS provide with anonymity?
+
+First of all, true anonymity is impossible. Given enough resources an
+attacker will get you. What one can do is to make the cost of doing
+that so high that it becomes infeasible.
+
+T(A)ILS tries to do this by sending all your Internet traffic through
+the [Tor™ network](https://www.torproject.org/) which makes your
+Internet traffic very hard to trace. If someone tries to trace you
+when you are using T(A)ILS, the trail will stop somewhere in Tor
+network with the IP addresses of some of its participants, not your.
+Similarly, if someone tries to see destination of your traffic, they
+will only reach as far as some computer in the Tor network. In fact,
+you will be the only one knowing exactly what is going on – not even
+the computers in the Tor network that you send your traffic through
+will know the whole picture!
+
+As at least a rudimentary understanding of Tor currently is essential
+for using it securely (and knowing its limits) we strongly recommend
+reading the [Tor overview](https://www.torproject.org/overview.html)
+and [Understanding and Using Tor – An Introduction for the
+Layman](https://wiki.torproject.org/noreply/TheOnionRouter/TorALaymansGuide).
+At the very least you should read the following paragraphs about
+common misconceptions about the service offered by the Tor software.
+
+By relaying your Internet traffic through the Tor network (which
+T(A)ILS does per default) your communications should _only_ be
+considered to be untraceable back to the computer you use, not
+encrypted or in any other way unreadable by others. While the traffic
+_is_ encrypted when it leaves your computer and when you get back your
+responses, it will not necessarily be so when sent between the Tor
+network and your destination (this is unavoidable for technical
+reasons). This means that an eavesdropper at some later point will be
+able see your traffic without Tor's encryption unless you take further
+precautions (described [later on](#ff)), but will not be able to link
+it back to your computer.
+
+As such, if you are sending or receiving sensitive data whose
+disclosure would be damaging in itself even if it is untraceable, you
+need to use end-to-end encryption to hide the meaning of your data to
+everyone except the recipient. Examples of such sensitive information
+that you need to protect in this way are your real identity or other
+personal information linkable to you, login details and passwords,
+bank account or financial details, anything illegal or political, and
+secrets in general.
+
+There are several tools bundled with T(A)ILS offering end-to-end
+encryption for various applications: [GnuPG](http://www.gnupg.org/)
+provides with encryption for email,
+[OTR](http://www.cypherpunks.ca/otr) is for instant messaging (MSN,
+ICQ, IRC, etc.) among others.
+
+Also, bear in mind that while web browsing on sites for whom the
+addresses begin with `http://` the connections are not encrypted (see
+[more about this](#ff)). However, web sites whose addresses start with
+`https://` (notice the additional "**s**") use encrypted connections
+and are thus **s**ecure. FIXME: tell a bit about certificates and
+X.509 limits. Many web browsers, including Firefox, also display a
+lock or a similar symbol in the address field or status bar indicating
+that the connection is secure.
+
+Notice that not all web sites offer this feature, but most that in any
+way handle your data (webmail logins, bank account logins etc.)
+usually do. Keep your eyes open!
+
+Furthermore, most software bundled with T(A)ILS will warn you when
+your previously encrypted connection switches to unencrypted mode: be
+careful!
+
+At last, some applications have features and services that may
+compromise the anonymity offered by the Tor network. All modern web
+browsers, such as Firefox, support
+[JavaScript](http://en.wikipedia.org/wiki/Javascript), [Adobe
+Flash](http://en.wikipedia.org/wiki/Adobe_flash),
+[Cookies](http://en.wikipedia.org/wiki/HTTP_cookie) and other services
+which have been shown to be able to defeat the anonymity provided by
+the Tor network.
+
+For instance, a web page using JavaScript can make your web browser
+send your real IP address to the web server hosting the web page which
+possibly can disclose it not only to the web server's owner but also
+eavesdroppers that happen to fetch the message when it is sent between
+the Tor network and the web server. Even if most web pages using
+JavaScript do not do this, it is important to be very cautious when
+determining which sites you allow to use these extra features. FIXME:
+T(A)ILS currently hasn't NoScript.
+
+When running Iceweasel (Firefox) in T(A)ILS all such features are
+handled by an extension called
+[Torbutton](https://www.torproject.org/torbutton/) which does all
+sorts of things to prevent the above type of attacks. But that comes
+at a price – since this will disable some functionality, certain sites
+might not work as intended.
+
+## <a name="how_amnesia"></a>How does T(A)ILS provide with amnesia?
+
+FIXME: translate from French.
+
+# <a name="howto"></a>How to use T(A)ILS
+
+FIXME: merge the paragraph bellow with the French, expanded and
+adapted version "Quelques précisions au sujet de l'utilisation de
+T(A)ILS".
+
+Some other important things that need to be understood before
+proceeding are the concepts of [LiveDistro, LiveCD and
+LiveUSB](http://en.wikipedia.org/wiki/Livedistro). In essence a
+LiveDistro is an operating system (like Windows or Mac OS X, although
+T(A)ILS uses Linux) that is run from some removable media like a CD or
+USB drive. Most likely you are running T(A)ILS from a CD, which makes
+it into a LiveCD, and this brings some limitations to its operation.
+Most importantly, since the CD is a read-only medium once it has been
+burned by your CD recording software no changes persist through
+reboots. So, if you download a file or make some application settings
+they will be gone once you shut-down. This is both good and bad – on
+the plus side, if you screw up anything or get a virus, the system
+will be restored once you have restarted it. But not being able to
+save stuff is of course inconvenient in some cases. If you find it
+frustrating you might want to run T(A)ILS from a USB drive instead,
+making it into a LiveUSB. Since a USB drive is writeable medium it is
+possible to make it so that the changes persist through reboots. You
+can read more about this and its implications [later](#usb)
+[on](#persistent) in this walkthrough.
+
+In this section we will now briefly present the main applications
+included in T(A)ILS. Users are encouraged to look for further
+information about them elsewhere and to experiment (while not doing
+anything sensitive!) for their own benefit. All the pictures are
+clickable to get them undistorted and in full size, but note that some
+of the text is smudged in order to protect identities. Let us take a
+look at the T(A)ILS desktop:
+
+FIXME: screenshot
+
+<center><a href="img/incognito-screenshot.png"><img border="0"
+height="384" src="img/incognito-screenshot.png" width="512"
+/></a></center>
+
+The graphical user interface used in T(A)ILS is called GNOME and
+shares many fundamentals with that of Microsoft Windows, Mac OS X and
+most other modern operating systems, so if you have used any of them,
+getting used to GNOME will take no time. As this document is not
+intended as a complete guide for GNOME there are only a few things about
+it that we will mention here to spare you some time.
+
+First of all, in the upper left corner of the screen there is a button
+with a logo in it, followed by three menus: *Applications*,
+*Shortcuts* and *System*.
+
+FIXME: check the English names.
+
+The *Applications* menu is where you will find short cuts to the
+installed applications. Please explore the different categories of
+applications and try out those that seem interesting.
+
+The *Shortcuts* menu is here to make it easy to access storage media.
+
+The *System* menu allows to:
+
+* customize some aspects of the GNOME desktop (*Preferences*);
+* change some important aspects of the system and hardware behavior
+(*Administration*);
+* shutdown the computer.
+
+On the right of these three menu entries, a few shortcuts allow to
+launch the most frequently used applications. Passing the mouse cursor
+over one of these shortcut will display the application name and its
+function.
+
+In the upper right corner you will find a couple of icons, each which
+offers an interface for some running application : the onion icon is
+made to control Tor, the two computer screens are for the network
+settings. Other icons help you keep an eye on the battery level if you
+run from a laptop, one allows to instantly change the keyboard layout,
+another controls the sound level. Note that the clock icon allows to
+change the current timezone to make it show the local time.
+
+You are encouraged to check these icons out with the left and right
+mouse buttons, but we will say more about some of them later on in
+this article.
+
+FIXME: check the English names
+
+At the center of the screen is a vast area called the Desktop. A
+*Computer* icon provides access to storage media; the *Personal
+folder* is a shortcut to the default folder where most applications
+save the files; then comes the shortcut to this documentation, and
+another allows to report a bug in T(A)ILS to its developers; to end
+with, the Trash is the place where "deleted" files are moved.
+
+When media storage is connected to the computer, additional icons
+appear on the Desktop.
+
+On the bottom of the screen is another panel: on its left, an icon
+allows to minimize all open windows to show the Desktop; then come the
+buttons for open windows; on the right, a set of four similar
+rectangle icons gives access to four different workspaces.
+
+## <a name="nm"></a>Networking with NetworkManager
+
+The name is quite self-explanatory – this is what you should use
+manage your network, which usually only consists of establishing an
+Internet connection. In many cases this is done more or less
+automatically. For example, if you are connected with wire
+NetworkManager will try to obtain network access automatically. If you
+want to connect via wireless with a supported wireless adapter, you
+are basically two clicks away.
+
+First click its icon in the systray to summon the list of available
+connections:
+
+FIXME: screenshot
+
+<center><a href="img/nm-menu.png"><img border="0" height="194"
+src="img/nm-menu.png" width="240" /></a></center>
+
+All wireless networks your computer is picking up are listed there, as
+are all wired networks you have access to (usually one per wire), so
+the second click is used for choosing any one of these. If the network
+is protected you will be prompted for a password. There are other
+options too, e.g. for dial-up connections and setting up VPNs although
+these will require further set-up in the "Options -> Configure..."
+section.
+
+## <a name="vidalia"></a>Controlling Tor with Vidalia
+
+Vidalia is an anonymity manager. Basically this means that it can be used
+to control Tor, and is automatically launched on startup.
+
+As soon as the Tor client managed to establish a route to the Tor
+network, Vidalia hides as an onion icon on the upper right corner of
+the screen. Right-clicking this icon displays a configuration menu.
+
+FIXME: screenshot
+
+<center><a href="img/tork-main.png"><img border="0" height="325"
+src="img/tork-main.png" width="400" /></a></center>
+
+FIXME: translate the French paragraph here.
+
+Let's describe the two most important features of the Vidalia
+configuration menu:
+
+FIXME: check the English names
+
+* Tor network map: the list of currently used routes and their status.
+* New identity: clicking this button will make Tor use a different
+  route for **future** connections, so that they will appear to come
+  from a different address.
+
+FIXME: translate this from French, and move it where it seems more
+appropriate.
+
+  Mais **ATTENTION** : ceci ne fonctionne que si aucune connexion
+  n'est restée ouverte lors du renouvellement de la route. Pour être
+  tout à fait assuré à cet égard, il peut être bon de *fermer le
+  navigateur, ou tout logiciel utilisant le réseau*, puis de *changer
+  d'identité*, et d'*attendre que l'icône informant du changement
+  d'identité ait disparu*, avant de rouvrir le logiciel.
+
+
+Next we will have a look at the Tor network map:
+
+FIXME: screenshot
+
+<center><a href="img/tork-network.png"><img border="0" height="325"
+src="img/tork-network.png" width="400" /></a></center>
+
+In here, all the Tor nodes in the Tor network are listed, as are all
+your circuits and connections that go through the Tor network. All
+this requires a bit of technical knowledge of how Tor works in order
+to understand and use, but it is not at all necessary. From the
+connection listing it should at least be relatively easy for you to
+see which exit node and country it appears your connections come from.
+
+One very useful thing when working with Tor is the following option,
+found in the TorK menu that you get by right-clicking its systray
+icon:
+
+<center><a href="img/tork-menu.png"><img border="0" height="98"
+src="img/tork-menu.png" width="182" /></a></center>
+
+The selected "Change Identity" option will tear down all you current
+circuits and build new ones which means that the set of computers you
+route your Internet traffic through will exchanged by some others.
+This is very useful if you experience bad performance or even
+time-outs accessing some Internet resource as you might have better
+luck with the new circuits that are built. Also, if you ever want to
+make sure that one thing you are doing will not be linkable to the
+next thing you are going to do you should use this feature.
+
+TorK also makes it easy to use some of the Tor Network's more advanced
+features. For example, if you switch back to the "Anonymize" tab you
+will find an entry for "Anonymous Websites and Web Services" which
+allows you to set up [hidden
+services](http://www.torproject.org/hidden-services.html) by clicking
+its icon (an English style police hat). Another feature that might be
+useful when you are using T(A)ILS from a restrictive network can be
+found in "Settings menu -&gt; Configure TorK -&gt; Firewall/Censor
+evasion". This makes it possible to use
+[bridges](https://www.torproject.org/bridges.html) as entry points to
+the Tor network in order to circumvent censorship systems that blocks
+normal access to the Tor network, intentially or not.
+
+Lastly TorK will assist you setting up yourself as a Tor server,
+helping out the Tor Network by relaying other people's traffic. You
+also have the possibility to act as an exit node, which means that
+other Tor users' traffic will exit in the clear from your computer.
+You should really think through if you want to do the latter (act as
+an exit node) as your ISP might start sending you complaints for other
+people's file sharing traffic that happens to exit from you, and
+potentially even worse things that might attract the attention of the
+police. But simply relaying traffic is completely safe and will only
+cost you some bandwidth (how much can be configured). However, at the
+same time you will get more anonymity – it will be impossible for
+eavesdroppers to distinguish the Tor traffic you are relaying from
+your own traffic generated by web browsing etc. So if you have
+bandwidth to spare, you might want to consider doing this.
+
+In order to succeed with setting up a relay you might have to do
+something about your firewall or router if you have one, like enable
+port-forwarding for ports 9001 and 9030 – if you do not know what this
+is or how to do it you should either look it up on with favourite
+search engine or simply skip it. The next step would be to actually
+enable it in TorK, which only requires a few clicks. First press the
+button with a plus icon called "More options" which will make a few
+more buttons and options appear. One of them says "Run as a server"
+when you hover the mouse cursor above it. Simply click it and choose
+"Relay Tor traffic" and follow the instructions. After that you will
+just have to wait for half an hour or so before the connections start
+rushing in. Due to this delay and some technical reasons it is best if
+you only act as a Tor server if you [run from USB](#usb) as that will
+speed things up a little next time and also spare you of the time
+taken to set-up the server.
+
+## <a name="ff"></a>Browsing the web with Firefox
+
+Given Mozilla Firefox's recent surge in popularity many of you have
+probably used it before. Its user interface is like any other modern
+web browser, but there are a few things we want to mention, some that
+is special with this particular installation. Do you remember what we
+said [earlier](#how) about end-to-end encryption and its importance
+while using Tor? Here is how it looks in Firefox when you are using a
+secure, end-to-end encrypted connection:
+
+<center><a href="img/ff-ssl.png"><img border="0" height="311"
+src="img/ff-ssl.png" width="404" /></a></center>
+
+Notice the locks in the status bar and address bar (the latter which
+also has turned yellowish) and that the address begins with
+"http**s**://" – these are the indicators that a secure connection
+using [SSL](http://en.wikipedia.org/wiki/Secure_Sockets_Layer) is
+being used. You should try to only use services that use secure
+connections when you are required to send sensitive information (like
+passwords), otherwise its very easy for an eavesdropper to steal
+whatever information you are sending. In this case what we are trying
+to do is logging in on an email account at
+[lavabit](http://lavabit.com/), using their [webmail
+interface](https://lavabit.com/apps/webmail/src/login.php). Let us
+proceed with logging in there so we can se how it is possible to send
+end-to-end encrypted email with any webmail service out there with the
+nifty [FireGPG](http://getfiregpg.org/) extension:
+
+<center><a href="img/ff-compose-1.png"><img border="0" height="311"
+src="img/ff-compose-1.png" width="404" /></a></center>
+
+Here we have written a silly email to Bob, mentioning stuff like
+"public" and "private" keys. If you do not know what this means but
+are interested in sending encrypted email, we suggest you take
+yourself some time and read up on [public key
+cryptography](http://en.wikipedia.org/wiki/Public_key_cryptography)
+and [PGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) just to
+get the basic concepts.
+
+What we will do next is first selecting all of the text in the message
+(by using the mouse or simply pressing Ctrl + A) and then
+right-clicking somewhere on the selected text. This will make the
+usual Firefox context menu appear, which has a FireGPG entry that we
+are interested in. Clicking it will expand the following menu:
+
+<center><a href="img/ff-firegpg.png"><img border="0" height="137"
+src="img/ff-firegpg.png" width="96" /></a></center>
+
+In the menu we choose "Sign and encrypt" and we get a dialogue asking
+us to select the public key to encrypt it with (Bob's) and the private
+key to sign it with (your). After doing this the message is only
+readable by Bob, and in addition Bob will be able to verify that the
+message was in fact written by you. The signed and encrypted text will
+look something like this:
+
+<center><a href="img/ff-compose-2.png"><img border="0" height="311"
+src="img/ff-compose-2.png" width="404" /></a></center>
+
+At this stage we are ready to press send. When Bob receives this email
+he can also use FireGPG to decrypt it in a very similar way – he will
+just have to select the encrypted message and then use the FireGPG
+menu to choose "Verify" or "Decrypt", or both. This can be done with
+any so called PGP block. There is one important limitation in FireGPG,
+though. It cannot generate new keys, so you will have to use another
+application for that. We recommend using the [GNU Privacy
+Assistant](#gpa), found under the "Utilities" section of the K menu,
+or [KPGP](#kpgp), found in the "Utilities -&gt; PIM" section.
+
+Returning to web browsing again we need to do something about the
+problems with JavaScript, cookies and Adobe Flash that you might
+remember from an earlier section. To deal with these problems we use
+an extension called [Torbutton](https://www.torproject.org/torbutton/)
+which is specifically designed for dealing with them (and other
+things) for Firefox in combination with Tor. Torbutton can be either
+switched on or off, indicated by "Tor enabled" and "Tor disabled" in
+the Firefox status bar in the bottom right of its window. It should be
+noted that these labels are a bit misleading for T(A)ILS users as Tor
+cannot be switched off. So, in our case "Tor enabled" means that
+Torbutton will disable a lot of stuff that could harm anonymity, and
+"Tor disabled" simply means that you only get Tor and no additional
+protection. As such, you should only disable Torbutton for sites that
+you trust.
+
+But why would you ever disable Torbutton? Well, while it is enabled
+some sites might not work as you expect them to since certain features
+are disabled or will behave differently. For example, the popular
+video service [youtube](http://www.youtube.com/) will not work
+properly as you can see here when we are trying to watch [this
+clip](http://www.youtube.com/watch?v=XIDxDMwwlsw):
+
+<center><a href="img/ff-youtube-1.png"><img border="0" height="311"
+src="img/ff-youtube-1.png" width="404" /></a></center>
+
+In order to get the video player to show up, we will have to disable
+Torbutton by clicking its panel in the Firefox status bar. Normally
+this would disable the use of Tor completely, but as we have mentioned
+earlier, nothing escapes Tor while running T(A)ILS so your connection
+will still be anonymized. However, you will have to trust that Google
+(the current owner of youtube) is not doing anything fishy with all
+their JavaScripts, the Flash-based video player etc. that could break
+your anonymity.
+
+After disabling Torbutton we can finally learn how onion routing (the
+technique used by the Tor network) works from the guys in the TV
+series Numb3rs!
+
+<center><a href="img/ff-youtube-2.png"><img border="0" height="311"
+src="img/ff-youtube-2.png" width="404" /></a></center>
+
+If you are reading this document as a local file in T(A)ILS (which is
+the case if the address begins with file://) you might have noticed
+that all links that point outside of this document do not work. This
+is also due to Torbutton since it is possible for others to steal any
+file from you otherwise. In order to visit them you will need to
+disable Torbutton and reload the page in a new tab. Indeed there are a
+few more oddities related to toggling Torbutton on and off. If a web
+site does not work as expected after toggling Torbutton you might have
+to do any of the following to get it to work:
+
+* Press the "Refresh" button in the navigation bar, or imply use the
+  F5 keyboard short cut.
+* Click the address field and press ENTER.
+* Open a new tab and re-enter (or copy and paste) the address into the
+  address field of the new tab and then press ENTER.
+
+This is a security feature, also used for separating the different
+states in Firefox, which otherwise could lead to trouble (arguably a
+bit less so for T(A)ILS users).
+
+As we hope you understand by know, there are reasons for all these
+quirks, and while they might be annoying we hope you will learn to
+cope with them. If not, feel free to disable Torbutton and never use
+it again, but in that case you should expect much less anonymity and
+security. There have been several demonstration of uncovering the true
+identities of Firefox users using Tor, but to the authors' knowledge
+Torbutton protects you against all of them.
+
+There is also another web browser installed, namely KDE's Konqueror
+which we will deal with [later](#konq) on in this article, although
+for other uses than web browsing. We encourage you not to use
+Konqueror for web browsing, not because it is a bad web browser, but
+simply because there is no Torbutton or equivalent functionality for
+it. When possible (which should be always) you should use Firefox and
+Torbutton for your web browsing unless you really know what you are
+doing.
+
+## <a name="tb"></a>Emailing with Thunderbird
+
+Not everyone is happy using webmail (like the authors) but want to use
+a _real_ email client instead of some fragile web-based interface. For
+that we have included Mozilla Thunderbird which looks like this:
+
+<center><a href="img/tb-main.png"><img border="0" height="305"
+src="img/tb-main.png" width="453" /></a></center>
+
+Composing email looks like this:
+
+<center><a href="img/tb-compose.png"><img border="0" height="257"
+src="img/tb-compose.png" width="324" /></a></center>
+
+Notice that there are buttons for PGP encryption in both of the above
+windows (labelled with "Decrypt" and "OpenPGP"). These are provided by
+the [Enigmail](http://http://enigmail.mozdev.org/) extension, and
+pressing any of them for the first time will start a guide for setting
+up PGP, possibly generating new keys if you do not have any. Their web
+site is a great resource for learning how PGP encryption works so make
+sure to check it out.
+
+Setting up your email account requires a tiny amount of knowledge,
+like what [POP](http://en.wikipedia.org/wiki/Post_Office_Protocol),
+[IMAP](http://en.wikipedia.org/wiki/IMAP) and
+[SMTP](http://en.wikipedia.org/wiki/SMTP) is, and indeed that your
+email service supports these. [This step-by-step
+guide](http://opensourcearticles.com/articles/thunderbird_15/english/part_01)
+might be useful. However, this initial configuration requires writing
+down the addresses of the servers involved, downloading mail, etc.
+which will take some time. It is a bit annoying to have to redo
+everytime you start T(A)ILS, which is necessary when running from a
+CD, so you might want to consider using a persistent home directory by
+[running from USB](#usb) if you plan to use Thunderbird often. One
+more thing to consider is that Tor exit nodes usually block the
+plaintext SMTP port (25) in order to prevent spam. This is easily
+fixed by enabling end-to-end encryption with the email server through
+SSL, which you should do any way for all of POP, IMAP and SMTP as your
+password otherwise will be sent in plaintext.
+
+## <a name="konq"></a>Managing files with Konqueror
+
+Konqueror is KDE's file manager, (S)FTP client, web browser and more
+and it looks like this while in file managing mode:
+
+<center><a href="img/konq.png"><img border="0" height="257"
+src="img/konq.png" width="354" /></a></center>
+
+As we already have mentioned, we recommend that you do your web
+browsing in Firefox instead since there is nothing like Torbutton for
+Konqueror. If you _really_ want to use Konqueror you should make sure
+to disable all plugins, JavaScript and cookies in order to expect some
+anonymity, but even then Firefox and Torbutton is probably both a more
+secure and usable alternative. There are no problems using Konqueror
+for file managing or as an FTP client however. In the latter case,
+just enter "ftp://" followed by the address to the FTP server in order
+to connect, and the same applies for SFTP although you prepend
+"sftp://" to the address instead.
+
+## <a name="pidgin"></a>Chatting with Pidgin
+
+For instant messaging T(A)ILS includes the Pidgin Instant Messenger.
+It is a multi-protocol client, so you can run MSN, ICQ, IRC, AIM,
+Jabber and many other protocols at the same time, even with several
+instances of the same protocol. See the following picture for a Pidgin
+user with three different protocols enabled at the same time:
+
+<center><a href="img/pidgin-main.png"><img border="0" height="196"
+src="img/pidgin-main.png" width="109" /></a></center>
+
+Of course the issue of end-to-end encryption arises again. As we
+mentioned earlier, we have [Off-the-record
+messaging](http://www.cypherpunks.ca/otr) (commonly called OTR) for
+instant messaging, and Pidgin and many other instant messengers have
+support for that. There are several resources on how it works and how
+to use it on their web site. Basically all you need to do is choose
+"Start private conversation" in the OTR menu and a key will be
+generated automatically if you do not have one already. After that OTR
+will establish a private conversation if the other end's instant
+messenger supports it. This is will look something like this:
+
+<center><a href="img/pidgin-chat.png"><img border="0" height="218"
+src="img/pidgin-chat.png" width="370" /></a></center>
+
+OTR and other Pidgin plugins are enabled in the "Tools menu -&gt;
+Plug-ins" section. Simply check the appropriate box for enabling any
+plugin you want, and possibly you might also want to configure it by
+pressing the "Configure Plug-in" button. When this is done for the OTR
+plugin a window that can be used to manage your keys will be opened.
+The use of OTR is recommended as many instant messaging protocols
+normally send your messages in plaintext. Force your friends to
+migrate to clients with support for OTR!
+
+## <a name="misc"></a>Other applications
+
+There are several other interesting security or Internet related
+applications included in T(A)ILS some which we list and present
+briefly here. Those that have graphical user interfaces (which most
+do) can be found in the K menu.
+
+* [GNU Privacy Guard](http://www.gnupg.org/) (GnuPG) – A Free
+  implementation of OpenPGP used for encryption of all sorts.
+* <a name="gpa"></a>[GNU Privacy
+  Assistant](http://www.gnupg.org/gpa.html) – A graphical user
+  interface for GnuPG. This application is very useful for generating
+  and importing new keys.
+* <a name="kpgp"></a>[KGPG](http://developer.kde.org/~kgpg/) – Another
+  graphical user interface for GnuPG, very similar to GNU Privacy
+  Assistant. This one has a text editor under the "File" menu which
+  can be used to easily sign and/or encrypt any texts you write or
+  paste into the text box. This might be useful for sending encrypted,
+  anonymous email with TorK's Mixminion interface.
+* <a name="keepassx"></a>[KeePassX](http://keepassx.sourceforge.net/)
+  – A password manager and generator. For password generation, look in
+  the "Extras" menu. The generator has a pretty cool feature, namely
+  that it show the quality (or [information
+  entropy](http://en.wikipedia.org/wiki/Information_entropy)) of the
+  password it will generate.
+*
+  [Kvkbd](http://www.kde-apps.org/content/show.php/Kvkbd?content=56019)
+  – A virtual keyboard that can be used to safely enter passwords
+  using the mouse when you suspect that a hardware keylogger may be
+  present. It starts automatically with T(A)ILS and is accessed by the
+  keyboard icon in the systray.
+* [TrueCrypt](http://www.truecrypt.org/) – Disk encryption software.
+  If you have access to some writeable media you can use TrueCrypt for
+  creating an encrypted container (which in reality will take the form
+  of an ordinary file on that media) on it that you can store files in
+  securely.
+* <a name="vidalia"></a>[Vidalia](http://www.vidalia-project.net/) –
+  An alternative Tor controller.
+* [KTorrent](http://ktorrent.org/) – A Bittorrent client. Please use
+  bittorrent with care as it is a real burden for the Tor network and
+  generally frowned upon in the Tor community because of this. Just
+  downloading a 10 MB file could be equivalent of hours of standard
+  web browsing. Therefore you should only download small files when
+  absolutely necessary.
+* [XChat](http://www.xchat.org/) – A more traditional IRC client
+  compared to Pidgin (some people just prefer it that way).
+  Unfortunately there is no OTR plugin or other means for end-to-end
+  encryption provided so use this with care.
+* [Krdc](http://www.kde.org/) – A Remote Desktop client supporting VNC
+  and RDP.
+
+## <a name="macchanger"></a>Enabling MAC changer
+
+If you paid attention when you started up T(A)ILS you may have noticed
+an odd option in the language selection menu, namely the "Enable MAC
+changer" entry. Some further explanation is probably required in order
+to understand whether this is relevant for you or not.
+
+First of all, you should know that all network cards, both wired and
+wireless, have a unique identifier stored in them called their MAC
+address. This address is actually used to address your computer on the
+_local_ network, but it will _never_ get out on the Internet so people
+can _not_ use it to trace you. However, other computers on the network
+could log it which then would provide proof that your computer have
+been connected to it. As such, this is not a concern if you are using
+T(A)ILS with your home Internet connection as that can be linked to
+you any way, but if you are connecting your computer to an untrusted,
+public wireless network you might consider enabling it. It is never
+useful enabling this option if you are using a public computer – only
+use this if you are using a computer that can be linked to you on a
+public network.
+
+The reason why this is not always enabled is that is might cause
+problems on some networks, so if you experience network problems while
+it is enabled you might want try disabling it.
+
+## <a name="usb"></a>Running T(A)ILS from USB
+
+Running T(A)ILS from a CD has its virtues but it certainly also have
+its limitations. While CDs are portable they usually do not fit in
+your pocket in a comfortable manner. But a USB memory stick certainly
+fits any pocket or your key ring. In addition, CDs are read-only and
+thus no data can be saved to them, but that is, again, not the case
+with USB drives. However, storing sensitive data on writeable media
+could be dangerous if it got into the wrong hands. Similarly, if we
+get a virus or manages to damage the system in other ways, the system
+is tainted or unusable from that point and all consecutive boots,
+either with or without your knowledge. Clearly that is not good.
+
+It is actually possible to get the best out of these two worlds at the
+same time. When running T(A)ILS from a USB drive you have the option
+to create an encrypted container wherein your home directory is stored
+so that any files stored and settings made are saved persistently. If
+you use a good password this deals with the dangers of storing
+sensitive data on it. For more information on this, see the section on
+using a [persistent home directory](#persistent). But what about virus
+threats and the like? Well, when running from a USB drive, the system
+files are still set up to not be persistently writeable. It is only
+your home directory which will be persistent.
+
+### Installation instructions
+
+In order to get T(A)ILS running from USB you currently have to get the
+usual LiveCD installation first. Once T(A)ILS has started up from CD
+you will find a short cut to an installation guide in the "T(A)ILS"
+meni available from the panel and the K menu, aptly called "Install
+T(A)ILS to USB". The guide will tell you about your options and is
+self contained, and in most cases you only need to insert a USB drive,
+choose the appropriate installation method and hit the OK button to
+get it done. Then you restart the computer without the CD in, but with
+the USB drive connected instead, and T(A)ILS should start to boot just
+like from the CD.
+
+### Updating T(A)ILS USB installation
+
+If you have an existing T(A)ILS USB installation and want to update it
+to a more recent release, simply use this script to overwrite the
+existing installtion. Note that if a persistent home directory is
+present you must choose option 1 ("Use an existing vfat partition on a
+USB drive") and select the partition containing T(A)ILS in order to
+keep it.
+
+## <a name="persistent"></a>Persistent home directory
+
+At a certain point when [booting T(A)ILS from USB](#usb) you will be
+prompted with the question if you want a persistent home directory or
+not. As mentioned elsewhere in this document, that will allow you to
+save files and keep application settings between shutdowns, which is
+not normally the case. Naturally, saving sensitive stuff could be
+dangerious if it got into the wrong hands, so the use of encryption is
+highly recommended.
+
+As you progress through the guided setup of the persistent home
+directory you will be asked as few questions and given some simple
+instructions, and some of these might need to be commented a bit:
+
+### Size
+
+Early on you will be asked for the size of the "home volume", which
+will be a file stored on the USB drive that in turn will store you
+files. There are a few constraints on this size, like a minimum size
+necessary to fit the initial application settings and files that are
+part of \_\_INCOGNITO\_USER\_\_ users's home directory. There is also
+a maximum size, which is the lowest of the space available on the
+drive, and 4 GB (this is because of technical reasons – files larger
+than 4 GB will not work).
+
+### Encryption
+
+It cannot be emphasized enough; use encryption! The encryption is
+protected with a password, so it is very important to also choose a
+strong password. But what is a strong password? Of course, there are
+many different opinions on that. What can be said is that to utilize
+the encryption algorithm used to its full extent you will need a
+password consisting of 40 randomly chosen characters of those
+available on the standard (western) keyboard layout, which have around
+90 different characters. Such a password should remain uncrackable for
+the remainder of this universe's life span and the same goes for the
+actual encryption. Of course, such a password is almost impossible to
+memorize, so you will probably have to go for something shorter. 20
+random characters is probably enough. It can also help to device
+mnemonics to help remember them but stay away from dictionary words of
+any language you know. Be creative! If you need help with generating
+the passwords you should check out [KeePassX](#keepassx)'s built-in
+password generator.
+
+If you use encryption (which you should) you will be prompted for the
+password during boot. One thing that might strike you as odd is that
+it is possible to enter two passwords. The reason for that will be
+clarified in the next section, but normally you just type in your
+password in one of them (which one doesn't matter) and press ENTER to
+continue.
+
+### Hidden volumes
+
+In certain countries you may be legally forced to hand over encryption
+keys or passwords, or otherwise facing penal charges. Clearly this
+might defeat the whole purpose of using encryption, but luckily there
+is a solution based on [plausible
+deniability](http://en.wikipedia.org/wiki/Plausible_deniability).
+
+The idea is to create a so called hidden volume which resides in the
+free space of the normal (or outer) volume, and using two different
+passwords to access either of them; the normal password grants access
+only to the normal volume and the hidden password grants access only
+to the hidden volume. Given the normal password there is no way to
+tell whether the hidden volume exists or not – the hidden password is
+required for that. The point of all this is that you may hand over the
+normal password to the authorities and keep the hidden password
+secret, and they will not be able to tell whether you are fooling them
+or not. Hence you get plausible deniability.
+
+Setting up the hidden volume using the guided setup is pretty straight
+forward. You will be asked how large it should be, and since it is
+stored within the normal volume it must be smaller, but it is
+important that you leave some additional in order to make room on the
+normal volume. You will need to use the normal volume sometomes to do
+innocent things so that it looks used, otherwise the authorities will
+not believe you. However, when you do that by just specifying the
+normal password you may damage the hidden volume as it resides in the
+free space. Luckily you can supply both passwords at the same time,
+which will open the normal volume but make it aware of the hidden
+volume so you cannot damage it. So, whenever you are using the normal
+volume to make it look used, enter both passwords (one in each field
+at the password prompt, and order doesn't matter).
+
+Naturally, you will also be asked for an additional password for the
+hidden volume, and as always you should choose a good, strong
+password. However, for the normal volume you can choose may choose a
+weaker password that's easier to remember – it only needs to be good
+enough to fool the authoroties that it is the real password. But
+remember to **never** give the hidden password to anyone else, or even
+mention to anybody that you are using a hidden volume or have two
+passwords.
+
+## <a name="cold"></a>Protection against cold boot attacks
+
+What happens if the police knocks on your door when you are running
+T(A)ILS? This is a tough one to deal with, and there is not that much
+that can be done actually. If you are really unlucky they have brought
+with them freeze spray and other equipment which can be used to mount
+a [cold boot attack](http://en.wikipedia.org/wiki/Cold_boot_attack).
+This is done in order to get the contents of your RAM. Due to how
+modern computing works, basically everything that you have been doing
+for a good whike is stored in the RAM, so all information – including
+passwords, encryption keys and the secret plans you wrote in a text
+editor but then erased – may be stored in it in plain text. The more
+resent the activity, the more likely it is that it is still in the
+RAM.
+
+RAM is usually considered to be extremely volatile, meaning that the
+data itstores starts to disintegrate rapidly once power is removed.
+However, it has been shown that the data might be recoverable for
+seconds or even minutes after this happens, and apparently freeze
+spray can be used to increase that period significantly. Once the
+power is restored the RAM state will keep getting refreshed, so if the
+power supply is portable the removed RAM modules' contents are in the
+hands of the attacker. Alternatively the computer can simply be reset
+(i.e. switched off and back on quickly), which barely even affects the
+power. Then a tiny LiveCD system is loaded with the ability to dump
+the RAM to some writeable media. In both cases the RAM contents can be
+analysed in a computer forensics laboratory which might turn into a
+major disaster depending on what they find.
+
+So, what should you do when you hear them knocking? You should calmly
+make a clean shut-down of T(A)ILS using the "Log out" option in the K
+menu, then selecting "Turn off computer" in the window that appears.
+Then you wait, possibly trying to buy valuable time by barricading
+your door. There are two reasons for this:
+
+1. If you are using an encrypted persistent home partition, the master
+   encryption key will be cleared from RAM, preventing the intruders
+   from getting it.
+2. One of the last things T(A)ILS does before shutting down completely
+   is filling the RAM with random junk, thus erasing everything that
+   was stored there before. Unfortunately this might take a couple of
+   minutes depending on the speed of your processor and the amount of
+   RAM installed, so while this clearly is not a perfect solution it
+   seems it might be the best thing to do.
+
+As far as the authors know cold boot attacks are not standard
+procedure within law enforcements and similar organisations anywhere
+in the world yet, but it might still be good to be prepared and stay
+on the safe side.
+
+## <a name="vm"></a>T(A)ILS and Virtualization
+
+Certain users might not want to restart the computer every time they
+wish to use the Internet anonymously withT(A)ILS. For those, a so
+called [virtual machine](http://en.wikipedia.org/wiki/Virtual_machine)
+can be used to run T(A)ILS inside the "host" operating system
+installed on the computer (e.g. Microsoft Windows, Mac OS X, etc.).
+Essentially these programs emulate real computers that you can run
+"guest" operating systems (in this case T(A)ILS) in so they appear in
+a window within the host operating system. Using one of these
+technologies allows for convenient access to T(A)ILS's features in a
+protected environment while you at the same time have access to your
+normal operation system.
+
+There are a few security issues with this approach though. The main
+issue is if the host operating system is compromised with a software
+keylogger or virus, which T(A)ILS does not provide any protection
+against (in fact, that is impossible). Secondly, performance is a
+usually a bit worse compared to running it on its own. As such, this
+is only recommended when the other alternative is not an option or
+when you are absolutely sure that your host system is clean.
+Additionally, some of these virtual machines are closed-source, so it
+is very difficult to determine if they do something that could break
+T(A)ILS's security. In conclusion, use virtual machines with care.
+
+### QEMU
+
+The open source [QEMU](http://bellard.org/qemu/) processor emulator
+and virtualizer handles T(A)ILS nicely. In fact, QEMU is included in
+the T(A)ILS distribution for Microsoft Windows users (more about this
+[below](#windows)). In order to start it from the command-line, simply
+type something like:
+
+<pre>
+	<code>qemu -usb -soundhw sb16 -localtime -boot d -cdrom
+	/path/to/incognito.iso</code> </pre>
+
+If you have severe performance problems you should look into KQEMU
+which is an accelerator module for QEMU, granting a more direct access
+to the systems hardware for additional speed. You will most likely
+need administrator privileges for installing KQEMU.
+
+### VMWare
+
+T(A)ILS works very well in [VMWare](http://www.vmware.com/) with the
+following [VMWare Virtual
+Appliance](http://files1.cjb.net/incognito/incognito-vmware-1.0.zip)
+([signature](http://files1.cjb.net/incognito/incognito-vmware-1.0.zip.asc))
+devised by the T(A)ILS developers. Simply unzip the file and follow
+the provided instructions in `README.txt` which is provided within the
+archive. The free ([as in
+beer](http://en.wikipedia.org/wiki/Gratis_versus_Libre)) [VMWare
+Player](http://www.vmware.com/products/player/) might be useful for
+this. In order to get good performance you will probably need
+administrator privileges in the computer when you install VMWare. Note
+that VMWare is closed source, so it might be hard to determine if it
+does anything that is bad for anonymity, although it is unlikely.
+
+### VirtualBox
+
+T(A)ILS runs in [VirtualBox](http://virtualbox.org) without any major
+conifuration necessary. Depending on your system you might need to
+play around with the General -&gt; Advandced features to get it to
+boot. On an AMD64 system using more than 4 GB of RAM the developers
+have noted that the "Enable VT-x/AMD-V&amp;quit; (if your CPU supports
+it) and "Enable PAE/NX" features are necessary, but your milage may
+vary. VirtualBox is distributed both as a closed-source and as an
+open-source (the so called OSE or Open Source Edition), the latter
+which the T(A)ILS developer's encourages (although it currently lacks
+USB support compared to the closed-source version).
+
+## <a name="windows"></a>Running T(A)ILS from within Microsoft Windows
+
+Thanks to QEMU, [described above](#vm), T(A)ILS can be run within
+Microsoft Windows without the need to restart the computer. QEMU ships
+with T(A)ILS, and is set up so you only have to insert the media when
+Windows is running and a menu should appear with the option to start
+T(A)ILS through it. This is especially useful when you are using a
+computer you are not allowed to shut-down, which can be the case for
+public computers in certain Internet cafés, libraries or other public
+computers. Also, for some some general remarks on QEMU and T(A)ILS,
+and some security concerns about this mode of operation, see the above
+section on [T(A)ILS and Virtualization](#vm).
+
+Since the T(A)ILS developers do not have access to any Windows
+computers at the moment, any input if this actually works and how it
+performs etc. is welcome.
+
+## <a name="debug"></a>Debugging and trouble-shooting T(A)ILS
+
+For the sake of security, T(A)ILS is a pretty locked down system: the
+root user is inaccessible, and only a handful of tools are possible to
+run with root privileges using the sudo command (see "sudo -l" for a
+complete list of these commands). Since this can make debugging very
+cumbersome (if not impossible) it is possible to make empty the root
+user's password by passing "debugmode" to the kernel command-line.
+
+# <a name="conclusion"></a>Conclusion
+
+By offering you T(A)ILS we hope that you have the technological means
+to stay anonymous on the Internet. However, we want to emphasize that
+staying anonymous is _not_ only a technological problem – there is no
+tool, including T(A)ILS and Tor, that will magically make you
+anonymous on the Internet. You will have to behave as well. While deep
+technical knowledge of the architecture of the Internet, cryptology,
+traffic analysis techniques and the applications you use certainly can
+help (mainly by knowing what _not_ to do), we believe that some good
+ol' fashioned common sense and caution will be enough in most cases.
+Among other things, that includes:
+
+* Choosing good passwords and not writing them down in unprotected
+  places.
+* Using end-to-end encryption whenever possible.
+* Not trusting everyone and everything but being a bit suspicious in
+  general.
+* Making an effort for properly authenticating with everyone you are
+  communicating with.
+* Being very careful when dealing with identifying information such as
+  name, whereabouts, the local time and so on. Any such piece of
+  information that you leak will help a would be adversary to get
+  closer to you.
+
+Also, please try to follow the instructions given by security tools as
+much to the letter as possible. There are situations where one can be
+creative or improvise solutions, but you should really try to learn
+when that is appropriate before you do it. For instance, when using
+PGP encryption you are often asked to verify the authenticity of any
+new public key that you have just got. If you do not do this it is
+possible that you are using a compromised key sent by an attacker
+performing a [man-in-the-middle
+attack](http://en.wikipedia.org/wiki/Man_in_the_middle_attack).
+Usually the authentication works by presenting you with the key's so
+called fingerprint, which is a unique identifier for that key that
+cannot be faked. Verification should then be done by asking you friend
+to send you the fingerprint through some safe channel, which could be
+anything from telling it by telephone or VoiP (which is hard for an
+attacker to manipulate on the fly) or even face-to-face (but hen you
+can exchange the actual keys securely instead), and then making sure
+that they are the same. Assuming the channel is safe the fingerprint
+sent by your friend and the one you get from the key should be
+identical, otherwise something is wrong.
+
+The above authentication methods are of course not always possible,
+but here is one of those places you can be creative. For example, you
+could send the fingerprint hidden in an innocent looking image by some
+means, although this is admittedly not bulletproof. You could make
+this method a bit safer by first sending the picture to your unknowing
+recipient and telling him or her how the fingerprint is hidden when
+you know that it has been received. Additionally, these kinds of
+tricky exchanges are always better to make over interactive
+communication channels such as IRC or with instant messaging since
+that will decrease the window of opportunity for any eavesdropper to
+interfere. Email is not very suitable as delays are long which gives
+the attacker ample time to act. An alternative authentication method
+to fingerprints, used by OTR, is to simply ask both parties of a
+shared secret that both should know. In this case, do not choose just
+anything – if someone is watching you they probably know which high
+school you went to, the size of your shoes and similar facts.
+
+This is probably the place where we are expected to wish you good
+luck, but we will not. Relying on luck simply is not good practice in
+these situations. Stay cool and be smart! Thanks for you time!
+
+The Tor™ trademark and the Tor Onion Logo are trademarks of [The Tor
+Project.](https://www.torproject.org)
