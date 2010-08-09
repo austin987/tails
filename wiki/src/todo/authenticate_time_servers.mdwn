@@ -2,9 +2,12 @@
 
 # Rationale
 
-Also, in general I'm worried about unauthenticated NTP. There probably
+In general I'm worried about unauthenticated NTP. There probably
 is a whole bunch of fingerprinting attacks an attacker could mount if
 it could pose as the NTP server and mess with the user's time.
+
+Also see T(A)ILS design documents about [[contribute/design/NTP]] and
+[[contribute/design/HTP]].
 
 # Authenticated NTP
 
@@ -48,111 +51,7 @@ the time being. Let's (try to) use HTP in the meantime.
 
 # HTP
 
-[HTP](http://www.clevervest.com/twiki/bin/view/HTP) is not really a
-protocol, but uses a feature from HTTP, aka web traffic. According the
-specifications of HTTP (RFC 2616) a web server needs to put a
-timestamp in a response to a web browser request. In web browsers you
-don't see the HTTP headers, but these headers contain a timestamp in
-Greenwich Mean Time (GMT), accurate in seconds.
+Our [[design document|contribute/design/HTP]] describes the
+implemented solution.
 
-These timestamps, from various web servers which you may specify, can
-be used to extract a pretty good time. 
-
-So well, that's not as accurate as NTP, but maybe it could be a better
-fit for our system than NTP…
-
-We installed a hacked version of the Perl HTP client into
-`/usr/local/sbin/htpdate`. Our development repository is at:
-
-    git://gaffer.ptitcanardnoir.org/htp.git
-
-## Fingerprinting?
-
-It would need to go in the clear with an exception in the firewall
-config. Is that safe? Could this be used to fingerprint
-amnesia/incognito users? Is that something we want to avoid?
-
-> HTP probably isn't widely used, so if a connection can be identified
-> as HTP, it very likely was done by an amnesia user.
-
-### fingerprinting via the servers set being used
-
-It could be used to fingerprint amnesia/incognito users if a subset
-of the queried webservers' admins share their logs. Choosing a bunch
-(HTP author suggests 4) of unrelated servers that are unlikely to
-share user data should be enough of a protection against
-this threat.
-
-Anyone who monitors a given Internet connection that is used to run
-T(A)ILS would probably infer T(A)ILS usage from this connection
-pattern.
-
-### fingerprinting via unusual http behaviour of the HTP client
-
-Our hacked HTP client allows its user to choose the user agent it
-exposes. We use the same user-agent as iceweasel/torbutton, 
-thanks to `/usr/local/bin/getTorbuttonUserAgent`.
-
-It was remarked that upstream HTP client's "connection pattern" is
-pretty suspicious:  a web-browser loading foo.com/index.html would
-complete the whole exchange and download index.html + any referenced
-resources whereas htpdate/htpd drops the connection once it's got the
-first http header. That's why our hacked HTP client has a "full
-request" mode, that we use; when run this way, the http exchange is
-completed, and any needed resources that are normally needed to
-display a page are loaded as well.
-
-## Sources?
-
-What sources should be trusted? This is of course also a problem
-with NTP.
-
-amnesia's HTP pool could be based on stable and reliable webservers,
-including:
-
-* two servers whose admins are likely to take great care of their
-  visitors' privacy: <https://www.torproject.org/> and
-  <https://mail.riseup.net/>
-* one (?) server managed by adversaries of the two "trusted" ones,
-  in order to prevent identifying data to be shared:
-  <https://www.google.com/> (!)
-* one more or less "neutral" server: https://secure.wikimedia.org/
-
-Such a pool should be made of lightweight web pages: images, CSS and
-scripts will be downloaded; the above-mentioned sites quite fit.
-
-## Certificate validation
-
-Is the HTP client behaving as it should (e.g. exit with a loud
-warning without setting the time) when there is a problem with the
-certificate when using HTTPS?
-
-Our hacked `/usr/local/sbin/htpdate` uses wget's own certificate
-verification, and implements a "paranoid mode": when one server cannot
-be reached, e.g. because of a failed certificate checking, this custom
-version of htpdate considers the servers pool consistency to not be
-secure enough and exits.
-
-## Left to do
-
-The main thing left to do is to integrate our hacked htpdate script
-into the boot process
-
-The manual DNS resolution tweaks we are using for NTP are still
-relevant, but they will need to be adapted: to limit fingerprinting
-possibilities, we do not want to send HTTP requests aimed at an
-IP-based virtualhost (`htpdate https://IP/`), but rather to the usual
-hostname (`htpdate https://www.eff.org/`) as any "normal" user would
-do.
-
-So we must hack something so that the system's resolver knows our HTP
-target hosts' IPs when wget (run by htpdate) will ask for them: at
-boot time, we could do the very same manual hostname resolution we
-already do, write the results to `/etc/hosts`, run htpdate, and
-eventually remove(?) these entries from `/etc/hosts`.
-
-> This has been implemented, here's what is left:
->
-> * the [[design documentation|contribute/design/NTP]] should be
->   updated [[!taglink todo/documentation]]
-> * [[!taglink todo/test]]!
+This item is now [[!taglink todo/pending]].
