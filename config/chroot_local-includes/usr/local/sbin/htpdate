@@ -32,6 +32,7 @@ use DateTime;
 use DateTime::Format::DateParse;
 use English qw( -no_match_vars );
 use Fatal qw( open close );
+use File::Path qw(rmtree);
 use File::Temp qw/tempdir/;
 use Getopt::Std;
 use open qw{:utf8 :std};
@@ -189,8 +190,11 @@ sub getRemoteDateDiff {
     my $newestdt;
     eval { $newestdt = newestDateHeader($tmpdir) };
     if ($EVAL_ERROR =~ m/No downloaded files can be found/) {
+        rmtree($tmpdir);
         error "No file could be downloaded from $url.";
     }
+
+    rmtree($tmpdir);
 
     defined $newestdt or error "Could not get any Date header";
 
