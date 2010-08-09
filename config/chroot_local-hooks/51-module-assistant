@@ -10,22 +10,11 @@ DESCRIPTION="$(Echo 'installing modules managed by module-assistant')"
 HELP=""
 USAGE="${PROGRAM}"
 
-# Get LH_DISTRIBUTION
-Read_conffiles config/bootstrap
 Set_defaults
 
 Echo_message "installing modules managed by module-assistant"
 
-case "${LH_DISTRIBUTION}" in
-   lenny)
-      MODULES="broadcom-sta-source rt2570-source rt2860-source"
-      ;;
-   *)
-      # rt2860 is in Squeeze's kernel
-      MODULES="broadcom-sta-source rt2570-source"
-      ;;
-esac
-
+MODULES="broadcom-sta-source"
 MA="module-assistant --text-mode --non-inter"
 
 apt-get install --yes build-essential module-assistant debhelper
