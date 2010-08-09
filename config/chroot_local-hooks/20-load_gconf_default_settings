@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# Load GConf settings.
+
+# Including common functions
+. "${LH_BASE:-/usr/share/live-helper}"/scripts/build.sh
+
+# Setting static variables
+DESCRIPTION="$(Echo 'load GConf settings')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Reading configuration files
+Read_conffiles config/all config/common config/chroot
+Set_defaults
+
+Echo_message "Loading GConf settings"
+
+gct() {
+	gconftool-2 \
+	   --direct \
+	   --config-source xml:readwrite:/etc/gconf/gconf.xml.defaults \
+	   "${@}"
+}
+
+for file in /usr/share/amnesia/gconf/*.xml ; do
+	gct --load "${file}"
+done
