@@ -7,9 +7,16 @@ Readahead ()
 {
 
 	# Do not readahead when "profile" appears on kernel command line
-	grep -qw "profile" /proc/cmdline && return 0
+	if grep -qw "profile" /proc/cmdline
+	then
+		return 0
+	fi
 
-	test -e "$READAHEAD_LIST" || return
+	if ! test -e "$READAHEAD_LIST"
+	then
+		echo "the readahead list (${READAHEAD}) does not exist."
+		return
+	fi
 
 	echo " readahead"
 	Start_readahead
@@ -26,13 +33,13 @@ Start_readahead ()
 	 awk '$2 ~ /^total$/ { t = t + $1 } END { print t }')
 	(cd /
 	 echo "$BG_FILES" |
-	 xargs stat >/dev/null 2>/dev/null)
+	 xargs stat >/dev/null 2>/dev/null || :)
 	(cd /
 	 echo "$FG_FILES" |
 	 xargs cat 2>/dev/null |
-	 pv -f -s ${FG_SIZE}k >/dev/null)
+	 pv -f -s ${FG_SIZE}k >/dev/null || :)
 	(cd /
-	 echo "$BG_FILES" | xargs cat >/dev/null 2>&1) &
+	 echo "$BG_FILES" | xargs cat >/dev/null 2>&1 || :) &
 
 	# Creating state file
 	touch /var/lib/live/config/readahead
