@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# List of at least 2000 possible nicknames
+NICKS_LIST=/usr/share/amnesia/firstnames.txt
+
+Configure_pidgin ()
+{
+
+	echo -n " pidgin"
+
+	# 1 =< $NICK_NUMBER <= 2000
+	NICK_NUMBER="`/bin/bash -c 'echo $((${RANDOM} * 2000 / 32768 + 1))'`"
+
+	# 1 =< $NICK_SUFFIX <= 100
+	NICK_SUFFIX="`/bin/bash -c 'echo $((${RANDOM} * 100 / 32768 + 1))'`"
+
+	# Random nick picked from $NICKS_LIST, with $NICK_SUFFIX appended
+	NICK="`head -n ${NICK_NUMBER} ${NICKS_LIST} | tail -n 1 | tr '[:upper:]' '[:lower:]'`${NICK_SUFFIX}"
+
+	for file in accounts.xml blist.xml ; do
+	   sudo -H -u "${LIVE_USERNAME}" sed -i'' "s,XXX_NICK_XXX,${NICK}," "/home/${LIVE_USERNAME}/.purple/${file}"
+	done
+
+	# Creating state file
+	touch /var/lib/live/config/pidgin
+}
+
+Configure_pidgin
