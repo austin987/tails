@@ -44,11 +44,17 @@ Implementation
 We should now provide a second iceweasel profile with all root CAs
 disabled.
 
-One way to do it would be to `dpkg-divert libnssckbi.so` by
-default, extract all the CAs from the original libnssckbi.so and stuff
-them into the "normal X.509 usage" profile's DB.
+One way to do it would be to `dpkg-divert libnssckbi.so` by default,
+extract all the CAs from the original `libnssckbi.so` and stuff them
+into the "normal X.509 usage" profile's DB.
 
-Another would be to disable this module for the no-CAs profile
-using `modutil`... if it works.
+See also the `mozilla/security/nss/lib/ckfw/builtins/README` file in
+the `nss` package source tree to learn how to build a `libnssckbi.so`
+with a custom list of builtin CAs.
+
+What does not work is to disable this module for the no-CAs profile
+using:
+
+    modutil -dbdir PROFILE_DIR -disable "NSS Internal PKCS #11 Module"
 
 [[!tag todo/discuss todo/research]]
