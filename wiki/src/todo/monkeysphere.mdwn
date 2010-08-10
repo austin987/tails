@@ -5,15 +5,15 @@ for validating HTTPS certificates using the GnuPG web-of-trust.
 We now install `monkeysphere`, `msva-perl` and `xul-ext-monkeysphere`
 into the system.
 
-We should now provide a second iceweasel profile with all root CAs
-disabled.
+Use cases
+=========
 
-But the key problem is... the key: monkeysphere trusts a server's key
-if and only if it is signed by a fully trusted key. I think there are
-two usecases out there:
+The key problem is... the key: monkeysphere trusts a server's key if
+and only if it is signed by a fully trusted key. I think there are two
+usecases out there:
 
 GnuPG users
-===========
+-----------
 
 The people who use (asymmetric) GnuPG in T(A)ILS already deal with
 their keyring and its [[todo/persistence]]. They would have to sign
@@ -21,7 +21,7 @@ the keys for the servers they want to authenticate, persist their
 keyring somehow, and be done with it.
 
 GnuPG non-users
-===============
+---------------
 
 Quite harder. These ones won't bother signing keys and so on. They
 still might be interested in Monkeysphere but they will need to rely
@@ -37,5 +37,13 @@ Monkeysphere support for https will be quite poor. This can be seen as
 a problem; on the other hand it demonstrates how weak the servers
 authentication process really is unless you take care of it yourself
 and reclaim your trust-paths!
+
+Implementation
+==============
+
+We should now provide a second iceweasel profile with all root CAs
+disabled. One way to do it would be to `dpkg-divert libnssckbi.so` by
+default, extract all the CAs from the original libnssckbi.so and stuff
+them into the "normal X.509 usage" profile's DB.
 
 [[!tag todo/code]]
