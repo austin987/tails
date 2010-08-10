@@ -1,0 +1,48 @@
+#!/bin/sh
+
+Localize ()
+{
+   echo -n " localize"
+   # $LANG was set there by the FIXME live-config upstream script
+   . /etc/default/locale
+
+   LANGUAGE="`echo ${LANG} | head -c 2`"
+
+   ### Nautilus wipe script
+
+   if [ ! -d "/home/${LIVE_USERNAME}/.gnome2/nautilus-scripts/" ] ; then
+      mkdir -p "/home/${LIVE_USERNAME}/.gnome2/nautilus-scripts/"
+   fi
+
+   case "${LANGUAGE}" in
+      es)
+	 NAME="Eliminar_de_forma_segura"
+	 ;;
+      fr)
+	 NAME="Effacer_definitivement"
+	 ;;
+      *)
+	 NAME="Securely_erase"
+	 ;;
+   esac
+
+   if [ -x "/usr/local/bin/nautilus-wipe.${LANGUAGE}" ]; then
+      TARGET="/usr/local/bin/nautilus-wipe.${LANGUAGE}"
+   else
+      TARGET="/usr/local/bin/nautilus-wipe"
+   fi
+
+   ln -s "${TARGET}" "/home/${LIVE_USERNAME}/.gnome2/nautilus-scripts/${NAME}"
+
+   ### Scroogle
+
+   if [ -r "/usr/share/amnesia/iceweasel/searchplugins/scroogle-ssl-${LANGUAGE}.xml" ]; then
+      cp "/usr/share/amnesia/iceweasel/searchplugins/scroogle-ssl-${LANGUAGE}.xml" \
+	 /usr/share/iceweasel/searchplugins/
+   fi
+
+	# Creating state file
+	touch /var/lib/live/config/localize
+}
+
+Localize
