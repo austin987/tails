@@ -88,15 +88,18 @@ Moreover:
   persistent volume on a fixed hard-disk" use-case.
   - grml's patch against `live-initramfs` to optionally set all
     harddisk devices to read-only mode was applied upstream as
-    `97846cf1b1a`
+    `97846cf1b1a`; this option should probably be forcibly enabled
+    when the users chooses to activate some kind of persistency from
+    the boot menu.
 
 Implementation
 ==============
 
 Debian Live already supports
 [several kinds of persistence](http://live.debian.net/manual/html/persistence.html).
-The "home automounting" flavor seems like a nice starting point, but
-it needs to be extended a bit:
+
+The "home automounting" flavor seems like a nice starting point to
+implement full /home persistency but it needs to be extended a bit:
 
 * support a read-only mode (e.g. using aufs or similar), e.g.
   using a "persistent-ro" boot parameter
@@ -104,13 +107,25 @@ it needs to be extended a bit:
   persistence
 
 Both seem easy to implement and contribute to the upstream
-`live-initramfs` (everything happens in `scripts/live`).
+`live-boot` (everything happens in `scripts/live`).
 
 cryptsetup-encryption of the persistent volumes has been supported
 since
 [commit 5d38c26a3480357730c4913d298a1a6318a7b08c](http://lists.alioth.debian.org/pipermail/debian-live-changes/2008-February/002320.html)
 to `live-initramfs`.
 
-Persistence features are supposed to be rewritten in `live-initramfs` 2.x,
-see the "RFC: live-initramfs 2.x features" thread on the [debian-live
+Persistence features are supposed to be rewritten in `live-initramfs`
+2.x (i.e `live-boot`), see the "RFC: live-initramfs 2.x features"
+thread on the [debian-live
 mailing-list](http://lists.debian.org/debian-live/).
+
+Neither home automounting nor `live-snapshot` currently fit the
+application-specific configuration persistence use case. Both because
+they are not finely grained enough and persist too much. The best path
+to a usable implementation seems to improve `live-snapshot`:
+
+- add support for file deletion (e.g. by replacing cpio with rsync)
+- add support for explicit include list (there is an exclude list but
+  no include list)
+- add a read-only mode
+- is encryption supported? if not, implement it.
