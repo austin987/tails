@@ -122,10 +122,18 @@ mailing-list](http://lists.debian.org/debian-live/).
 Neither home automounting nor `live-snapshot` currently fit the
 application-specific configuration persistence use case. Both because
 they are not finely grained enough and persist too much. The best path
-to a usable implementation seems to improve `live-snapshot`:
+to a usable implementation seems to improve `live-snapshot`; it seems
+like a better starting point because it has an include list feature
+(`/etc/live-snapshot.list`) and is kinder to USB sticks (think of
+write wearing); what needs to be done:
 
 - add support for file deletion (e.g. by replacing cpio with rsync)
-- add support for explicit include list (there is an exclude list but
-  no include list)
 - add a read-only mode
 - is encryption supported? if not, implement it.
+- is there a way to enable only this kind of persistence while
+  disabling full /home and full system persistence? if not, implement
+  it.
+- `live-snapshot` needs to be run as root; make it able to run with
+  slightly less permissions (e.g. use sudo only when needed, or simply
+  manage to run as a non-priviledged user for such kind of partial
+  `$HOME` persistency.
