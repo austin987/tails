@@ -24,24 +24,12 @@ booting methods
 
 ### syslinux hybrid image
 
-syslinux >3.72 (in Squeeze, not Lenny) supports generating images
-which can be either a CD-ROM or a hard disk (USB disk, etc.); this
-is done by postprocessing an ISO image. The resulting image can then
-be copied using any raw disk writing tool (typically "dd" or "cat")
-to a USB disk, or written to a CD-ROM using standard CD burning
-tools. See `/usr/share/doc/syslinux-common/isolinux.txt.gz` for
-more information.
+Since 0.5 every T(A)ILS ISO image we ship now is a persistent one:
 
-Support for such hybrid ISO images in live-helper is being worked on
-upstream:  [[!debbug 558688]].
-
-> Update: experimental support for isohybrid has been added to
-> live-helper 2.0~a3-1; no way to specify options, though, but this
-> should be done in early January.
-
->> amnesia ISO images are now automatically turned into hybrid ones at
->> build time, when a recent enough syslinux is installed on the
->> build system.
+- it can be burnt to a CD;
+- it also contains a full disk image (including partition table) and
+  can thus be copied (using `dd`) to a USB stick; the USB stick's
+  content is lost in the operation.
 
 Successful tests:
 
@@ -66,8 +54,7 @@ Notes:
   4 -type 1c` options.
 
 Conclusion: this is a nice way to get bootable USB images for almost
-free. Such hybrid ISO images should now be tested [[!tag todo/test]]
-on a wider variety of hardware.
+free.
 
 ### misc
 
@@ -82,8 +69,7 @@ on a wider variety of hardware.
   `findiso` boot parameter, which is needed for easy usage; this one
   has not been applied upstream yet; does it respect the
   `live-media=removable` boot parameter?
-* Philip Hands' solution proposed on Debian's bug
-  [#534887](http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=534887)
+* Philip Hands' solution proposed on [[!debbug 534887]]
   uses extlinux chainloading the image's own bootloader
 
 ### Grub2
@@ -99,12 +85,35 @@ frontend UI
 -----------
 
 * `live-installer` udeb and its `live-installer-launcher` desktop
-  companion
+  companion allows to run the Debian Installer from the bootloader;
+  paraphrasing the manual: the "Live" Debian Installer flavour will
+  proceed in an identical fashion to the normal installation but at
+  the actual package installation stage, instead of using
+  `debootstrap` to fetch and install packages, the "live" filesystem
+  image is copied to the target. After this stage, the Debian
+  Installer continues as normal, installing and configuring items such
+  as bootloaders and local users, etc. This must be tested.
+  [[!tag todo/test]]
+* `live-boot`'s `todisk=DEVICE` boot parameter could be used to copy
+  the entire read-only media to the specified device; the process
+  could then be:
+  1. boot from CD
+  2. use some documentation or GUI to partition the USB stick and take
+     note of its device name
+  3. reboot; at syslinux prompt add the `todisk=DEVICE` parameter
+     using the previously noted device name; then let the system boot
+     once from the USB stick, and use some documentation or GUI to
+     install a bootloader on the USB stick. This step might be
+     automated in live-boot.
+  4. reboot and eject the CD: the system should now boot from USB.
 * Incognito's `root_overlay/usr/sbin/create-usb` seems quite nice, as
   it allows using an existing fat32 partition, but it does not
   proposes to partition the USB device first. Their own
   [TODO](https://tor-svn.freehaven.net/svn/incognito/trunk/TODO)
   contains some nice ideas about the current topic.
+* Liberté Linux' `burn-usb` creates a FAT32 partition for data and
+  an ext2 partition where it copies the system to. It installs Grub on
+  the USB stick.
 * Ubuntu's [usb-creator](FIXME)
    - supposed to replicate exactly the CD to USB
    - does not seem to recognize non-Ubuntu CDs (0.1.16 crashes on
