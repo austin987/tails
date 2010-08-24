@@ -137,6 +137,14 @@ pros and cons of each solution?
 > Perhaps the safest approach would be to choose vendor only among the 20
 > or so most common ones, and then randomise the ending? That could be
 > scripted very easily if we just knew which 20 vendors to choose among,
+
+	IF=? # the interface we want to change MAC address of
+	VENDORS=(00:00:01 00:00:02 ...) # array of 20 "good" vendor IDs
+	X=$[$RANDOM%20] # random integer; 0 <= X <= 19
+	RND_VENDOR="${VENDORS[$X]}:00:00:00"
+	macchanger --mac=${RND_VENDOR} ${IF}
+	macchanger -e ${IF}
+
 >
 > Note that there are separate vendor IDs for wireless NICs, so that would
 > have to be accounted for too.
