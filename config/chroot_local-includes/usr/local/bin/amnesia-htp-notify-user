@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+#man{{{
+
+=head1 NAME
+
+amnesia-htp-notify-user
+
+=head1 VERSION
+
+Version X.XX
+
+=head1 AUTHOR
+
+T(A)ILS dev team <amnesia@boum.org>
+See https://amnesia.boum.org/.
+
+=cut
+
+#}}}
+
+use Desktop::Notify;
+use Locale::gettext;
+use POSIX;
+
+### initialization
+setlocale(LC_MESSAGES, "");
+textdomain("amnesia-htp-notify-user");
+my $htp_done_file='/var/lib/live/htp-done';
+
+### main
+
+my $notify = Desktop::Notify->new();
+
+my $summary = gettext("Synchronizing the system's clock");
+my $body    = gettext("Tor needs an accurate clock to work properly. Please wait...");
+
+my $notification = $notify->create(summary => $summary,
+                                   body => $body,
+                                   timeout => 0);
+
+exit 0 if -e $htp_done_file;
+$notification->show();
+until (-e $htp_done_file) {
+    sleep 1;
+}
+$notification->close();
