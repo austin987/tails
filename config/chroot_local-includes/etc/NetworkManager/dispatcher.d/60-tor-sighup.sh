@@ -12,6 +12,9 @@ fi
 
 PIDFILE=/var/run/tor/tor.pid
 
+# Get LIVE_USERNAME
+. /etc/live/config.d/username
+
 # We don't start Tor automatically anymore so *this* is the time when
 # it is supposed to start.
 if [ -r "${PIDFILE}" ]; then
@@ -31,4 +34,4 @@ fi
 killall vidalia
 sleep 2 # give lckdo a chance to release the lockfile
 export DISPLAY=':0.0'
-exec /bin/su -c /usr/local/bin/vidalia-wrapper amnesia &
+exec /bin/su -c /usr/local/bin/vidalia-wrapper "${LIVE_USERNAME}" &
