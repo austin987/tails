@@ -17,13 +17,17 @@ PIDFILE=/var/run/tor/tor.pid
 
 # We don't start Tor automatically anymore so *this* is the time when
 # it is supposed to start.
+# Note: as we disabled the initscript automatic startup, we cannot use
+# invoke-rc.d: it would silently ignore our request. That's why we use
+# the good old direct initscript invocation rather than any fancy
+# frontend.
 if [ -r "${PIDFILE}" ]; then
     # A SIGHUP should be enough but there's a bug in Tor. Details:
     # * https://bugs.torproject.org/flyspray/index.php?do=details&id=1247
     # * https://amnesia.boum.org/bugs/tor_vs_networkmanager/
-    invoke-rc.d tor restart
+    /etc/init.d/tor restart
 else
-    invoke-rc.d tor start
+    /etc/init.d/tor start
 fi
 
 # Restart Vidalia because it does not automatically reconnect to the new
