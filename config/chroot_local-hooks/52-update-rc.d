@@ -32,5 +32,8 @@ disable_service () {
    esac
 }
 
+# enable custom initscripts
+update-rc.d tails-wifi defaults
+
 # we run Tor ourselves after HTP via NetworkManager hooks
 disable_service tor
