@@ -1,0 +1,105 @@
+T(A)ILS short description states that all outgoing connections to the
+Internet are forced to go through the Tor
+network(https://www.torproject.org/).
+
+This is almost true. Let's clarify this a bit.
+
+[[!toc levels=2]]
+
+Exceptions
+==========
+
+*Almost* true, yeah.
+
+But there are exceptions. Some programs are allowed to connect to the
+Internet *directly* i.e. bypassing Tor.
+
+HTP
+---
+
+T(A)ILS HTP setup is described on a [[dedicated design page|design/HTP]].
+
+Every HTP-related communication is established by the `htp` user, who
+is allowed to connect *directly* to services listening on the `https`
+TCP port or on the `domain` UDP/TCP ports.
+
+The rationale for this exception is that we have kind of a
+chicken'n'egg problem here. We want the clock to be pretty accurate in
+order for Tor to work properly so HTP time synchronization has to be
+done before Tor starts... hence *directly*. This means DNS queries to
+resolve the HTP hosts IPs, and HTTPS traffic to fetch the pages and
+associated resources.
+
+What about the LAN?
+===================
+
+T(A)ILS description talks of *outgoing connections to the Internet*.
+Indeed: traffic to the local LAN is wide open, as well as the loopback
+traffic obviously.
+
+We want to [[forbid LAN DNS queries|todo/forbid_lan_dns_queries]] at
+some point to protect against some attacks; this is not implemented
+yet.
+
+What about IPv6?
+================
+
+Tor does not support IPv6 yet so IPv6 communication is allowed only on
+the loopback interface.
+
+What about UDP?
+===============
+
+Non-TCP traffic is dropped. Tor only supports TCP.
+
+How it is done
+==============
+
+Firewall
+--------
+
+Iptables/netfilter firewall rules implement the above described
+specifications; see these files in the source tree for details:
+
+- `config/chroot_local-includes/etc/firewall.conf` for IPv4
+- `config/chroot_local-includes/etc/firewall6.conf` for IPv6
+- `config/chroot_local-includes/etc/NetworkManager/dispatcher.d/00-firewall.sh`
+
+The default case is to redirect traffic to the Tor transparent proxy.
+
+The following IPv4 address ranges are whitelisted:
+
+- 192.168.0.0/255.255.0.0: private networks
+- 10.0.0.0/255.0.0.0: private networks
+- 172.16.0.0/255.240.0.0: private networks
+- 127.0.0.0/255.128.0.0 and 127.128.0.0/255.192.0.0: loopback traffic,
+  excluding the VirtualAddrNetwork (127.192.0.0/10) used for .onion:s
+
+The following Unix users have Tor-evasion priviledges:
+
+- `debian-tor`: well, Tor itself has to connect to the Internet
+  without going through the Tor network, isn't it?
+- `htp`: read above for the detailed 
+
+Proxy settings
+--------------
+
+In case the firewall is buggy or not properly started, other settings
+are used as a defence in depth strategy:
+
+- the GNOME proxy settings point to Polipo or to the Tor SOCKS proxy,
+  depending on the application type:
+  `config/chroot_local-includes/usr/share/amnesia/gconf/gnome_proxy.xml`
+- the standard `http_proxy` and `HTTP_PROXY` environment variables are
+  globally set in `/etc/environment` to point to Polipo.
+
+DNS
+---
+
+Tor does not support UDP so we cannot simply redirect DNS queries to
+the Tor transparent proxy.
+
+The system resolver is setup to query a local caching DNS proxy
+(namely: pdnsd) that forwards DNS queries to the Tor DNS resolver.
+
+The caching DNS proxy is here for performance reasons only.
