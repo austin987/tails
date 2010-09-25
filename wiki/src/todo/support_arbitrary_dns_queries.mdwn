@@ -1,0 +1,30 @@
+[[!toc levels=2]]
+
+Rationale
+=========
+
+The Tor DNS resolver T(A)ILS is currently using lacks support for most
+types of DNS queries except "A". A better user experience would be
+provided if T(A)ILS was able to resolve any kind of DNS queries out of
+the box.
+
+Implementation
+==============
+
+Inserting ttdnsd into the DNS resolver loop is the obvious solution.
+ttdnsd listens for UDP DNS requests and forwards these via the Tor
+SOCKS proxy to an open recursive DNS resolver on the Internet.
+
+But we cannot just replace pdnsd with ttdnsd as the latter, unlike the
+former, does no caching at all. The DNS resolution process could then
+be:
+
+    resolv.conf -> DNS forwarding+caching proxy -> ttdnsd -> Tor
+
+Forwarding+caching DNS proxy candidates:
+
+- dnsmasq
+- pdnsd: already installed on T(A)ILS
+- unbound
+
+[[!tag todo/code]]
