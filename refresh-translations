@@ -1,13 +1,30 @@
 #! /bin/sh
 
-xgettext --language=Perl \
-   -o config/chroot_local-includes/usr/share/amnesia-security-check/messages.pot \
-   config/chroot_local-includes/usr/local/bin/amnesia-security-check
+# get AMNESIA_SUPPORTED_LANGUAGES
+. config/amnesia
+if [ -e config/amnesia.local ] ; then
+   . config/amnesia.local
+fi
 
-msgmerge -U \
-   config/chroot_local-includes/usr/share/amnesia-security-check/messages.pot \
-   config/chroot_local-includes/usr/share/locale/fr/LC_MESSAGES/amnesia-security-check.po
+for prog in amnesia-security-check amnesia-htp-notify-user ; do
 
-msgfmt \
-   -o config/chroot_local-includes/usr/share/locale/fr/LC_MESSAGES/amnesia-security-check.mo \
-   config/chroot_local-includes/usr/share/locale/fr/LC_MESSAGES/amnesia-security-check.po
+   sharedir="config/chroot_local-includes/usr/share/${prog}"
+   locale_basedir="config/chroot_local-includes/usr/share/locale"
+   pot="${sharedir}/messages.pot"
+
+   mkdir -p "${sharedir}"
+
+   xgettext --language=Perl \
+      -o "${pot}" \
+      config/chroot_local-includes/usr/local/bin/${prog}
+
+   for locale in $AMNESIA_SUPPORTED_LANGUAGES ; do
+      po="${locale_basedir}/${locale}/LC_MESSAGES/${prog}.po"
+      mo="${locale_basedir}/${locale}/LC_MESSAGES/${prog}.mo"
+      mkdir -p "${locale_basedir}/${locale}/LC_MESSAGES"
+      [ -e "${po}" ] || cp "${pot}" "${po}"
+      msgmerge --update "${pot}" "${po}"
+      msgfmt -o "${mo}" "${po}"
+   done
+
+done
