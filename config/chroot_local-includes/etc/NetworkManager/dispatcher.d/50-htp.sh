@@ -33,6 +33,17 @@ fi
 
 LOG=/var/log/nm-htp.log
 HTPDATE_LOG=/var/log/htpdate.log
+DONE_FILE=/var/lib/live/htp-done
+
+if [ -e "${DONE_FILE}" ]; then
+   exit 0
+fi
+
+# Get LIVE_USERNAME
+. /etc/live/config.d/username
+
+export DISPLAY=':0.0'
+exec /bin/su -c /usr/local/bin/amnesia-htp-notify-user "${LIVE_USERNAME}" &
 
 declare -a HTP_POOL
 HTP_POOL=(
@@ -115,5 +126,7 @@ HTPDATE_RET=$?
 echo "htpdate exited with return code ${HTPDATE_RET}" >>$LOG
 
 cleanup_etc_hosts
+
+touch "${DONE_FILE}"
 
 exit ${HTPDATE_RET}

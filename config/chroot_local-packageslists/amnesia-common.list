@@ -1,24 +1,3 @@
-### Self-installer
-bash
-cryptsetup
-dialog
-dosfstools
-e2fsprogs
-grep
-# breaks lh because of desktop-base.postinst (see Debian bug #467620)
-#if ARCHITECTURE i386 amd64
-# grub
-#endif
-initramfs-tools
-live-build
-mkisofs
-parted
-pv
-util-linux
-# not in squeeze
-# xdialog
-xterm
-
 ### Self-bla
 # profiling => squashfs optimization
 python-pyinotify
@@ -39,14 +18,21 @@ libxml-atom-perl
 # needed by smem at shutdown time
 expect
 # needed by the upcoming virtualization environment warning
-libimvirt-perl
+virt-what
 # needed by htpdate
 libdatetime-perl
 libdatetime-format-dateparse-perl
+# needed by readahead
+pv
 
 ### Software
+
+#include <gnome-core>
+
 audacity
 cups
+cryptkeeper
+cryptsetup
 mc
 rsync
 aircrack-ng
@@ -58,24 +44,42 @@ claws-mail-pgpinline
 claws-mail-pgpmime
 dmz-cursor-theme
 dnsutils
+dosfstools
 evince
 exiv2
 file-roller
 gcalctool
 gimp
 git-core
+#if DISTRIBUTION squeeze
+gnome-disk-utility
+#endif
+gnome-media
+#if DISTRIBUTION lenny
+gnome-mount
+#endif
+gnome-power-manager
+gnome-utils
+gnome-volume-manager
 gnupg-curl
 gobby
 #if DISTRIBUTION squeeze
 gobby-infinote
 #endif
 gparted
+## breaks lh because of desktop-base.postinst (see Debian bug #467620)
+#if ARCHITECTURE i386 amd64
+# grub
+#endif
 gstreamer0.10-ffmpeg
 gstreamer0.10-plugins-base
 gstreamer0.10-plugins-good
 gstreamer0.10-plugins-ugly
 haveged
 iceweasel
+#if DISTRIBUTION lenny
+iceweasel-gnome-support
+#endif
 iceweasel-l10n-ar
 iceweasel-l10n-de
 iceweasel-l10n-es-es
@@ -86,6 +90,7 @@ iceweasel-l10n-zh-cn
 inkscape
 iptables
 less
+libgfshare-bin
 localepurge
 lvm2
 macchanger
@@ -108,6 +113,7 @@ ntfs-3g
 ntfsprogs
 openoffice.org-calc
 openoffice.org-draw
+openoffice.org-gnome
 openoffice.org-impress
 openoffice.org-math
 openoffice.org-writer
@@ -119,9 +125,11 @@ openoffice.org-l10n-it
 openoffice.org-l10n-pt
 openoffice.org-l10n-zh-cn
 openssh-client
+parted
 pidgin
 pidgin-otr
 pmount
+poedit
 polipo
 pppoeconf
 pwgen
@@ -136,10 +144,14 @@ splashy
 sshfs
 system-config-printer
 synaptic
+totem-plugins
 ttf-dejavu
 ttf-liberation
 tor
+tor-geoipdb
 pdnsd
+sound-juicer
+ssss
 totem-gstreamer
 vidalia
 vim-nox
@@ -190,3 +202,12 @@ xfonts-intl-chinese
 ttf-arphic-ukai
 ttf-arphic-uming
 xfonts-wqy
+
+### CD burning
+#if DISTRIBUTION lenny
+gnomebaker
+nautilus-cd-burner
+#endif
+#if DISTRIBUTION squeeze
+brasero
+#endif

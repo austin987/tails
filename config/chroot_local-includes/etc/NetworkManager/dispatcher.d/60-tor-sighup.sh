@@ -12,19 +12,30 @@ fi
 
 PIDFILE=/var/run/tor/tor.pid
 
+# Get LIVE_USERNAME
+. /etc/live/config.d/username
+
+# We don't start Tor automatically anymore so *this* is the time when
+# it is supposed to start.
+# Note: as we disabled the initscript automatic startup, we cannot use
+# invoke-rc.d: it would silently ignore our request. That's why we use
+# the good old direct initscript invocation rather than any fancy
+# frontend.
 if [ -r "${PIDFILE}" ]; then
     # A SIGHUP should be enough but there's a bug in Tor. Details:
     # * https://bugs.torproject.org/flyspray/index.php?do=details&id=1247
     # * https://amnesia.boum.org/bugs/tor_vs_networkmanager/
-    invoke-rc.d tor restart
-    # Restart Vidalia because it does not automatically reconnect to the new
-    # Tor instance. Use kill+start as X-GNOME-AutoRestart does not exist in
-    # Lenny's Gnome.
-    if killall vidalia ; then
-       sleep 2 # give lckdo a chance to release the lockfile
-       export DISPLAY=':0.0'
-       exec /bin/su -c /usr/local/bin/vidalia-wrapper amnesia &
-    fi
+    /etc/init.d/tor restart
 else
-    invoke-rc.d tor start
+    /etc/init.d/tor start
 fi
+
+# Restart Vidalia because it does not automatically reconnect to the new
+# Tor instance. Use kill+start as:
+# - X-GNOME-AutoRestart does not exist in Lenny's Gnome
+# - we do not start Vidalia automatically anymore and *this* is the time
+#   when it is supposed to start.
+killall vidalia
+sleep 2 # give lckdo a chance to release the lockfile
+export DISPLAY=':0.0'
+exec /bin/su -c /usr/local/bin/vidalia-wrapper "${LIVE_USERNAME}" &
