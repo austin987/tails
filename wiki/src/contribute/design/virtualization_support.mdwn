@@ -1,0 +1,53 @@
+[[!toc levels=2]]
+
+Warn users when running inside a VM
+===================================
+
+We tell users, when running inside a VM, that they are implicitly
+trusting both the VM software *and* the host OS. This is needed to
+avoid creating a false sense of security, which is often quite worse
+as no security and a clear sense of it.
+
+This warning is implemented using the desktop notification
+system (like our existing security flaw notification).
+
+The detection is delegated to
+[virt-what](http://packages.qa.debian.org/v/virt-what.html).
+
+A bit more work is [[left to do|todo/virtualization_support]].
+
+Implementation notes
+--------------------
+
+How to detect we're running inside a VM?
+
+### imvirt
+
+* [homepage](http://micky.ibh.net/~liske/imvirt.html)
+* [Perl module](http://packages.debian.org/libimvirt-perl) and
+  [executable](http://packages.debian.org/imvirt) are packaged in
+  Squeeze
+
+Test results:
+
+- executable: the Squeeze one, installed as-is on Lenny, fails to
+  detect it is running inside VirtualBox
+- Perl module: untested yet => [[!taglink todo/test]]
+
+### virt-what
+
+* [homepage](http://people.redhat.com/~rjones/virt-what/)
+* [packaged in Debian](http://packages.qa.debian.org/v/virt-what.html)
+* installable as-is on Lenny; only test run was successful: it detects
+  VirtualBox
+
+### Sys::Detect::Virtualization
+
+Dave O'Neill has [compiled detection
+tricks](http://www.dmo.ca/blog/detecting-virtualization-on-linux/),
+based on which he has written the [Sys::Detect::Virtualization Perl
+module](http://search.cpan.org/~doneill/Sys-Detect-Virtualization/).
+This module is not in Debian, but should be easy enough to package
+thanks to `dh-make-perl`.
+
+As of 0.105 it does not support VirtualBox.

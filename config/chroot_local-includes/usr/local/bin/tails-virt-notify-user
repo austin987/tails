@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+#man{{{
+
+=head1 NAME
+
+tails-virt-notify-user
+
+=head1 VERSION
+
+Version X.XX
+
+=head1 AUTHOR
+
+T(A)ILS dev team <amnesia@boum.org>
+See https://amnesia.boum.org/.
+
+=cut
+
+#}}}
+
+use Carp;
+use Desktop::Notify;
+use Fatal qw( open close );
+use Locale::gettext;
+use POSIX;
+
+### initialization
+setlocale(LC_MESSAGES, "");
+textdomain("tails-virt-notify-user");
+my $detected_virt_file='/var/lib/live/detected-virtual-machine';
+
+### main
+
+exit 0 unless -e $detected_virt_file;
+
+my @detected_virt;
+
+open my $detected_virt_file_h, '<', $detected_virt_file;
+while (my $detected_virt = <$detected_virt_file_h>) {
+    chomp $detected_virt;
+    push @detected_virt, $detected_virt;
+}
+close $detected_virt_file_h;
+
+exit 0 unless @detected_virt;
+
+my $notify = Desktop::Notify->new();
+
+my $summary = gettext("Warning! Your anonymity and privacy depend on non-T(A)ILS software");
+my $body    =
+    gettext("It seems T(A)ILS is running inside a virtual machine: ")
+    . join(gettext(" or "), @detected_virt) . ".\n"
+    . gettext("This means both the host operating system and the virtualization software being used are able to monitor what you are doing in T(A)ILS.") . "\n"
+    . gettext("If you are not aware to be using a virtual machine: there could be a <a href='https://amnesia.boum.org/found_a_problem/'>bug</a> in the virtualization detection software T(A)ILS uses... or something really weird is happening.")
+    ;
+
+$notify->create(summary => $summary,
+                body => $body,
+                timeout => 0)->show();
