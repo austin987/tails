@@ -43,7 +43,7 @@ fi
 . /etc/live/config.d/username
 
 export DISPLAY=':0.0'
-exec /bin/su -c /usr/local/bin/amnesia-htp-notify-user "${LIVE_USERNAME}" &
+exec /bin/su -c /usr/local/bin/tails-htp-notify-user "${LIVE_USERNAME}" &
 
 declare -a HTP_POOL
 HTP_POOL=(

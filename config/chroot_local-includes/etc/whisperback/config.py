@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 #
-# Amnesia configuration file for Whisperback
+# T(A)ILS configuration file for Whisperback
 # ==========================================
 #
 # This is a python script that will be read at startup. Any python
@@ -82,21 +82,21 @@ mail_subject = "Bug report: %x" % random.randrange(16**32)
 def mail_prepended_info():
     """Returns the version of the running amnesia system
     
-    @return The output of amnesia-version, if any, or an english string 
+    @return The output of tails-version, if any, or an english string 
             explaining the error
     """
   
     try:
-      amnesia_version_process = subprocess.Popen ("amnesia-version", 
+      amnesia_version_process = subprocess.Popen ("tails-version", 
                                                  stdout=subprocess.PIPE)
       amnesia_version_process.wait()
       amnesia_version = amnesia_version_process.stdout.read()
     except OSError:
-      amnesia_version = "amnesia-version command not found"
+      amnesia_version = "tails-version command not found"
     except subprocess.CalledProcessError:
-      amnesia_version = "amnesia-version returned an error"
+      amnesia_version = "tails-version returned an error"
     
-    return "Amnesia-Version: %s\n" % amnesia_version
+    return "T(A)ILS-Version: %s\n" % amnesia_version
 
 # A callback function to get information to append to the email
 # (this information will be encrypted). This is useful to add
