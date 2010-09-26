@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # set -x
 
@@ -57,6 +57,7 @@ BUILD_PACKAGES="${BUILD_DEST_FILENAME}.packages"
 BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
 
 echo "Building $LH_BINARY_IMAGES image ${BUILD_BASENAME}..."
+set -o pipefail
 if lh build noauto ${@} 2>&1 | tee "${BUILD_LOG}" ; then
    echo "Image was successfully created"
    echo "Renaming generated files..."
