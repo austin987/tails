@@ -24,13 +24,18 @@ rm -rf cache/stages_rootfs
 # refresh translations of our programs
 ./refresh-translations
 
-# fix permissions on {binary,chroot}_local-includes; they may be
-# wrong, e.g. if the tarball was extracted with a strict umask
+# fix permissions on some source files that will be copied as is to the chroot.
+# they may be wrong, e.g. if the Git repository was cloned with a strict umask.
 chmod -R go+rX config/binary_local-includes/
 chmod -R go+rX config/chroot_local-includes/etc
+chmod    go+rX config/chroot_local-includes/lib
+chmod    go+rX config/chroot_local-includes/lib/live
+chmod -R go+rx config/chroot_local-includes/lib/live/config
 chmod -R go+rX config/chroot_local-includes/usr
 chmod -R go+rx config/chroot_local-includes/usr/local/bin
 chmod -R go+rx config/chroot_local-includes/usr/local/sbin
+chmod -R go+rX config/chroot_apt
+chmod -R go+rX config/chroot_sources
 
 # build the image
 
