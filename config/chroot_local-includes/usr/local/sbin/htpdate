@@ -31,7 +31,7 @@ use Cwd;
 use DateTime;
 use DateTime::Format::DateParse;
 use English qw( -no_match_vars );
-use Fatal qw( open close );
+# use Fatal qw(close);
 use File::Path qw(rmtree);
 use File::Temp qw/tempdir/;
 use Getopt::Std;
@@ -60,7 +60,7 @@ sub message {
     my @msg = @_;
 
     if ($log) {
-        open my $h, '>>', $log;
+        open my $h, '>>', $log or die "Cannot open log file $log: $!";
         print $h "@msg\n";
         close $h;
     }
@@ -142,7 +142,7 @@ sub newestDateHeader {
     foreach my $file (@files) {
         next if -l $file || -d _;
         my $date;
-        open(my $file_h, '<', $file);
+        open(my $file_h, '<', $file) or die "Can not read file $file: $!";
         while (my $line = <$file_h>) {
             chomp $line;
             # empty line == we leave the headers to go into the content
@@ -232,12 +232,13 @@ sub adjustDate {
         message("Not setting clock as diff ($diff seconds) is too small.");
     }
     else {
-        my $newtimedt = DateTime->now + $diffdt;
-        my $newtime = scalar localtime($newtimedt->epoch);
+        # add_duration seems buggy... can't add $diffdt to DateTime->now
+        my $newtime = DateTime->now->epoch + $diff;
         message("Setting time to $newtime...");
         if ($set_date) {
             $> = 0 if $opt_u;
-            open(my $fd, "-|", $datecommand, $dateparam, $newtime);
+            open(my $fd, "-|", $datecommand, $dateparam, '@' . $newtime)
+                or die "Cannot set run command $datecommand: $!";
             if ( $? != 0 ) {
                 my @output = <$fd>;
                 error "An error occured setting the time\n@output";
