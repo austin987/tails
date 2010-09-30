@@ -1,24 +1,91 @@
 [[!toc levels=1]]
 
-* iceweasel: is web browsing really torified?
-* iceweasel: does the exposed User-Agent match the generic Torbutton's
-  one?
+# Iceweasel
+
+* is web browsing really torified?
+ - https://check.torproject.org/
+ - http://monip.org/
+* does the exposed User-Agent match the generic Torbutton's one?
+  (connect to a website you can check the access logs for)
+* firegpg: test symmetric encryption/decryption, same for asymmetric
+
+# Pidgin
+
 * pidgin: is an IRC session really torified?
+ - if you are running an IRC server: check there
+ - else: see if the connection to the IRC server appears in Vidalia
+   connections list
+* Check OTR is working.
+* Check at least IRC and XMPP are working.
+
+# Tor enforcement
+
 * firewall: is the Tor-enforcement effective?
+ - check output of `iptables -L -n`
+ - check output of `iptables -t nat -L -n`
+ - try connecting to the Internet using a piece of software that
+   obeys neither `$http_proxy`, `$HTTP_PROXY` nor the GNOME proxy
+   settings, *and* is not explicitely torified in T(A)ILS: **FIXME**
+   which one?
 * firewall: is IPv6 traffic blocked?
-* local partitions: are any local hard-disk partitions mounted or used
-  as swap?
-* local partitions: is a Live system found on a local hard-disk
-  partition used?
-* claws: check that the profile works and is torified
-  (specifically the EHLO/HELO SMTP messages it sends).
-* whisperback: can a bug report e-mail be sent? is it
-  correctly encrypted?
-* GnuPG key search/receive: torified? going to the configured hkps://
+ - check output of `ip6tables -L -n`
+ - at a place with working IPv6: try connecting to a known-working
+   IPv6-enabled server on its IPv6 address over TCP and icmp6.
+* is `resolv.conf` OK both before/after DHCP has been setup? it should
+  *always* read `nameserver 127.0.0.1`
+
+# Use of untrusted partitions
+
+* are any local hard-disk partitions mounted or used as swap?
+  boot on a (possibly virtual) machine that has a cleartext swap
+  partition not managed by LVM. This swap partition must not be used
+  by T(A)ILS.
+* is a Live system found on a local hard-disk partition used? boot the
+  CD/USB stick you are testing on a (possibly virtual) machine that
+  has a T(A)ILS system copied on a cleartext partition not managed by
+  LVM. The CD/USB ramdisk must use the T(A)ILS system found on the
+  CD/USB, and not the one found on the hard disk.
+
+# Claws
+
+* Check mail over IMAP.
+* Send an email.
+* Check that the profile works and is torified (specifically the
+  EHLO/HELO SMTP messages it sends). Send an email using Claws and a
+  non-anonymizing SMTP relay. Then check that email's headers once
+  received, especially the `Received:` and `Message-ID:` ones.
+
+# Whisperback
+
+* can a bug report e-mail be sent?
+* is it correctly encrypted?
+
+# GnuPG
+
+* key search/receive: torified? going to the configured hkps://
   server?
+ - `gpg --search` tells what server it is connecting to
+ - the IP of the configured keyserver must appear in Vidalia's list
+   of connections
+ - if you run a keyserver, have a look there.
+
+# Monkeysphere
+
 * Monkeysphere validation agent key search/receive: torified?
-* is resolv.conf OK both before/after DHCP has been setup?
-* htp: disconnect the network cable, set the time to an obviously
+  (the MSVA is simply not working currently, ignore this.)
+
+# HTP
+
+* disconnect the network cable, set the time to an obviously
   wrong one, connect the network cable => the date should be corrected
   and Tor/Vidalia should start correctly.
-* firegpg: test symmetric encryption/decryption, same for asymmetric
+
+# Misc
+
+* Check that all seems well during init (mostly that all services
+  start without errors), and that dmesg seems ok.
+* Boot without network connection, and then plug it in after
+  some arbitrary time; Tor and Vidalia must be autostarted and end up
+  in working state.
+* Doing an apt-get update and installing random packages.
+* Boot on bare-metal on USB and CD.
