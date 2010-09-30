@@ -1,5 +1,5 @@
 #! /bin/sh
-# automatically run by "lh config"
+# automatically run by "lb config"
 
 . config/amnesia
 if [ -e config/amnesia.local ] ; then
@@ -7,13 +7,13 @@ if [ -e config/amnesia.local ] ; then
 fi
 
 # init variables
-RUN_LH_CONFIG="lh config noauto"
+RUN_LB_CONFIG="lb config noauto"
 
 # init config/ with defaults for the target distribution
-$RUN_LH_CONFIG --distribution lenny ${@}
+$RUN_LB_CONFIG --distribution lenny ${@}
 
 # set Amnesia's general options
-$RUN_LH_CONFIG \
+$RUN_LB_CONFIG \
    --apt-recommends false \
    --binary-images iso-hybrid \
    --isohybrid-options "$AMNESIA_ISOHYBRID_OPTS" \
@@ -32,13 +32,13 @@ $RUN_LH_CONFIG \
 # build i386 images on amd64 as well, include only 686 kernel
 hw_arch="`dpkg --print-architecture`"
 if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
-   $RUN_LH_CONFIG \
+   $RUN_LB_CONFIG \
       --architecture i386 \
       --linux-flavours 686 \
       ${@}
 # build powerpc images on powerpc64 as well, include only powerpc kernel
 elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
-   $RUN_LH_CONFIG \
+   $RUN_LB_CONFIG \
       --architecture powerpc \
       --linux-flavours powerpc \
       ${@}

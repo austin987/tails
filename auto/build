@@ -12,10 +12,10 @@ fi
 # a clean starting point
 rm -rf cache/stages_rootfs
 
-# get LH_BINARY_IMAGES
+# get LB_BINARY_IMAGES
 . config/binary
 
-# get LH_ARCHITECTURE
+# get LB_ARCHITECTURE
 . config/bootstrap
 
 # build the doc wiki
@@ -39,7 +39,7 @@ chmod -R go+rX config/chroot_sources
 
 # build the image
 
-case "$LH_BINARY_IMAGES" in
+case "$LB_BINARY_IMAGES" in
    iso|iso-hybrid)
       BUILD_FILENAME_EXT=iso
       BUILD_FILENAME=binary-hybrid
@@ -53,25 +53,25 @@ case "$LH_BINARY_IMAGES" in
       BUILD_FILENAME=binary
       ;;
    *)
-      echo "Image type ${LH_BINARY_IMAGES} is not supported." >&2
+      echo "Image type ${LB_BINARY_IMAGES} is not supported." >&2
       exit 1
       ;;
 esac
-BUILD_BASENAME="tails-${LH_ARCHITECTURE}-${LH_DISTRIBUTION}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
+BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${LB_DISTRIBUTION}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
 BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
 BUILD_MANIFEST="${BUILD_DEST_FILENAME}.list"
 BUILD_PACKAGES="${BUILD_DEST_FILENAME}.packages"
 BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
 
-echo "Building $LH_BINARY_IMAGES image ${BUILD_BASENAME}..."
+echo "Building $LB_BINARY_IMAGES image ${BUILD_BASENAME}..."
 set -o pipefail
-if time lh build noauto ${@} 2>&1 | tee "${BUILD_LOG}" ; then
+if time lb build noauto ${@} 2>&1 | tee "${BUILD_LOG}" ; then
    echo "Image was successfully created"
    echo "Renaming generated files..."
    mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
    mv -i binary.list "${BUILD_MANIFEST}"
    mv -i binary.packages "${BUILD_PACKAGES}"
 else
-   echo "lh build failed." >&2
+   echo "lb build failed." >&2
    exit 1
 fi

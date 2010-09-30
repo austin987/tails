@@ -3,9 +3,9 @@
 # Manage initscripts
 
 # Including common functions
-. "${LH_BASE:-/usr/share/live-helper}"/scripts/build.sh
+. "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
 
-# Get LH_DISTRIBUTION
+# Get LB_DISTRIBUTION
 Read_conffiles config/bootstrap
 
 # Setting static variables
@@ -19,7 +19,7 @@ Echo_message "managing initscripts"
 
 disable_service () {
    local INITSCRIPT="$1"
-   case "${LH_DISTRIBUTION}" in
+   case "${LB_DISTRIBUTION}" in
       squeeze|sid)
 	 update-rc.d ${INITSCRIPT} disable
 	 ;;
