@@ -15,7 +15,7 @@ rm -rf cache/stages_rootfs
 # get LB_BINARY_IMAGES
 . config/binary
 
-# get LB_ARCHITECTURE
+# get LB_ARCHITECTURE and LB_DISTRIBUTION
 . config/bootstrap
 
 # build the doc wiki
@@ -23,6 +23,9 @@ rm -rf cache/stages_rootfs
 
 # refresh translations of our programs
 ./refresh-translations
+
+# save variables that are needed by chroot_local-hooks
+echo "LB_DISTRIBUTION=${LB_DISTRIBUTION}" >> config/chroot_local-includes/usr/share/amnesia/build/variables
 
 # fix permissions on some source files that will be copied as is to the chroot.
 # they may be wrong, e.g. if the Git repository was cloned with a strict umask.

@@ -1,21 +1,8 @@
 #!/bin/sh
 
-# Manage initscripts
+echo "managing initscripts"
 
-# Including common functions
-. "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
-
-# Get LB_DISTRIBUTION
-Read_conffiles config/bootstrap
-
-# Setting static variables
-DESCRIPTION="$(Echo 'managing initscripts')"
-HELP=""
-USAGE="${PROGRAM}"
-
-Set_defaults
-
-Echo_message "managing initscripts"
+. /usr/share/amnesia/build/variables
 
 disable_service () {
    local INITSCRIPT="$1"

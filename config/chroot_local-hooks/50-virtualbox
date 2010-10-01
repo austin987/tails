@@ -1,23 +1,11 @@
 #!/bin/sh
 
-# Including common functions
-. "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
-
-# Setting static variables
-DESCRIPTION="$(Echo 'building VirtualBox guest modules')"
-HELP=""
-USAGE="${PROGRAM}"
-
-# Reading configuration files
-Read_conffiles config/all config/common config/chroot
-Set_defaults
+echo "Building VirtualBox guest modules"
 
 hw_arch="`dpkg --print-architecture`"
 if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
    exit 0
 fi
-
-Echo_message "Building VirtualBox guest modules"
 
 # Get version information for the (newest) installed kernel.
 KERNEL="`/bin/ls -1 /boot/vmlinuz-* | tail -n 1`"

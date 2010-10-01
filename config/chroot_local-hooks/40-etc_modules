@@ -1,18 +1,7 @@
 #!/bin/sh
 
-# Including common functions
-. "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
+echo "Adding cpufreq modules to /etc/modules"
 
-# Setting static variables
-DESCRIPTION="$(Echo 'add modules to /etc/modules')"
-HELP=""
-USAGE="${PROGRAM}"
-
-# Reading configuration files
-Read_conffiles config/all config/common config/chroot
-Set_defaults
-
-Echo_message "Adding cpufreq modules to /etc/modules"
 for module in acpi-cpufreq cpufreq_powersave cpufreq_ondemand ; do
    echo "${module}" >> /etc/modules
 done
