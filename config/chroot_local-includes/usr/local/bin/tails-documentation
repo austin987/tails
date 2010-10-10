@@ -1,9 +1,20 @@
 #! /bin/sh
 
-LANGUAGE="`echo ${LANG} | head -c 2`"
-
-if [ -r "/live/image/doc/amnesia/wiki/index.${LANGUAGE}.html" ]; then
-   exec iceweasel "file:///live/image/doc/amnesia/wiki/index.${LANGUAGE}.html"
+if [ $# -ge 1 ]; then
+   PAGE="$1"
 else
-   exec iceweasel "file:///live/image/doc/amnesia/wiki/index.en.html"
+   PAGE='index'
 fi
+
+WIKI_ROOT='/live/image/doc/amnesia/wiki'
+LANG_CODE="`echo ${LANG} | head -c 2`"
+
+if [ -r "${WIKI_ROOT}/${PAGE}.${LANG_CODE}.html" ]; then
+   FILE="${PAGE}.${LANG_CODE}.html"
+elif  [ -r "${WIKI_ROOT}/${PAGE}.en.html" ]; then
+   FILE="${PAGE}.en.html"
+else
+   FILE="${PAGE}.html"
+fi
+
+exec iceweasel "file://${WIKI_ROOT}/${FILE}"
