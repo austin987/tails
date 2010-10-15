@@ -1,18 +1,6 @@
 #!/bin/sh
 
-# Including common functions
-. "${LH_BASE:-/usr/share/live-helper}"/scripts/build.sh
-
-# Setting static variables
-DESCRIPTION="$(Echo 'removing development packages')"
-HELP=""
-USAGE="${PROGRAM}"
-
-# Reading configuration files
-Read_conffiles config/all config/common config/chroot
-Set_defaults
-
-Echo_message "Removing development packages"
+echo "Removing development packages"
 
 # use apt-get as aptitude doesn't know about globs
 apt-get --purge remove --yes \
@@ -26,7 +14,7 @@ aptitude --assume-yes purge \
    cpp-4.1 \
    gcc gcc-4.1 gcc-4.1-base gcc-4.2-base gcc-4.3 \
    g++ g++-4.3 \
-   libc6-dev linux-libc-dev \
+   libc6-dev libstdc++6-4.3-dev linux-libc-dev \
    make \
    module-assistant \
    virtualbox-ose-guest-dkms

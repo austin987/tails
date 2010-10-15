@@ -31,7 +31,6 @@ use Cwd;
 use DateTime;
 use DateTime::Format::DateParse;
 use English qw( -no_match_vars );
-use Fatal qw( open close );
 use File::Path qw(rmtree);
 use File::Temp qw/tempdir/;
 use Getopt::Std;
@@ -60,7 +59,7 @@ sub message {
     my @msg = @_;
 
     if ($log) {
-        open my $h, '>>', $log;
+        open my $h, '>>', $log or die "Cannot open log file $log: $!";
         print $h "@msg\n";
         close $h;
     }
@@ -142,7 +141,7 @@ sub newestDateHeader {
     foreach my $file (@files) {
         next if -l $file || -d _;
         my $date;
-        open(my $file_h, '<', $file);
+        open(my $file_h, '<', $file) or die "Can not read file $file: $!";
         while (my $line = <$file_h>) {
             chomp $line;
             # empty line == we leave the headers to go into the content
@@ -184,9 +183,9 @@ sub getRemoteDateDiff {
 
     # fetch (the page and) referenced resources:
     # images, stylesheets, scripts, etc.
-    my $beforedt = DateTime->now;
+    my $before = DateTime->now->epoch();
     WIFEXITED(system(@cmdline)) or error "Failed to fetch content from $url: $!";
-    my $localdt = DateTime->now;
+    my $local = DateTime->now->epoch();
     my $newestdt;
     eval { $newestdt = newestDateHeader($tmpdir) };
     if ($EVAL_ERROR =~ m/No downloaded files can be found/) {
@@ -197,47 +196,39 @@ sub getRemoteDateDiff {
     rmtree($tmpdir);
 
     defined $newestdt or error "Could not get any Date header";
+    my $newest_epoch = $newestdt->epoch();
 
-    my $diffdt = $newestdt - $localdt;
-    my $diff   = $diffdt->in_units('seconds');
-    my $tookdt = $localdt - $beforedt;
-    my $took   = $tookdt->in_units('seconds');
+    my $diff = $newest_epoch - $local;
+    my $took = $local - $before;
 
     debug("$url (took ${took}s) => diff = $diff second(s)");
 
-    return $diffdt;
+    return $diff;
 }
 
 sub adjustDate {
-    my ($diffdt) = @_;
+    my ($diff) = @_;
 
-    defined $diffdt or error "adjustDate was passed an undefined diff";
+    defined $diff or error "adjustDate was passed an undefined diff";
 
-    my $localdt = DateTime->now;
-    my $absdiffdt = $diffdt->is_positive() ? $diffdt : $diffdt->inverse();
-    my $diff      = $diffdt->in_units('seconds');
+    my $local = DateTime->now->epoch();
+    my $absdiff = abs($diff);
 
     debug("Median diff: $diff second(s)");
 
-    if ( $maxadjust && DateTime::Duration->compare( $absdiffdt,
-                                      DateTime::Duration->new(seconds => $maxadjust),
-                                      $localdt )
-          > 0 ) {
+    if ( $maxadjust && $absdiff gt $maxadjust ) {
         message("Not setting clock as diff ($diff seconds) is too large.");
     }
-    elsif ( DateTime::Duration->compare($absdiffdt,
-                                        DateTime::Duration->new(seconds => $minadjust),
-                                        $localdt, )
-          <= 0 ) {
+    elsif ( $absdiff lt $minadjust) {
         message("Not setting clock as diff ($diff seconds) is too small.");
     }
     else {
-        my $newtimedt = DateTime->now + $diffdt;
-        my $newtime = scalar localtime($newtimedt->epoch);
+        my $newtime = DateTime->now->epoch + $diff;
         message("Setting time to $newtime...");
         if ($set_date) {
             $> = 0 if $opt_u;
-            open(my $fd, "-|", $datecommand, $dateparam, $newtime);
+            open(my $fd, "-|", $datecommand, $dateparam, '@' . $newtime)
+                or die "Cannot set run command $datecommand: $!";
             if ( $? != 0 ) {
                 my @output = <$fd>;
                 error "An error occured setting the time\n@output";
@@ -249,16 +240,16 @@ sub adjustDate {
 }
 
 my @urls = parseCommandLine();
-my @diffdts = grep {
+my @diffs = grep {
     defined $_
 } map {
-    my $diffdt = $_->{thread}->join();
-    if ($paranoid && ! defined $diffdt) {
+    my $diff = $_->{thread}->join();
+    if ($paranoid && ! defined $diff) {
         error('Paranoid mode: aborting as one server (',
               $_->{url},
               ') could not be reached');
     }
-    $diffdt;
+    $diff;
 } map {
     {
         url    => $_,
@@ -266,7 +257,5 @@ my @diffdts = grep {
     }
 } @urls
     or error "No Date header could be received.";
-my @sorted_diffdts = sort {
-    $a->in_units('seconds') <=> $b->in_units('seconds')
-} @diffdts;
-adjustDate($sorted_diffdts[int(@sorted_diffdts / 2)]);
+my @sorted_diffs = sort @diffs;
+adjustDate($sorted_diffs[int(@sorted_diffs / 2)]);

@@ -50,6 +50,7 @@ pref("network.proxy.ssl_port", 8118);
 pref("network.proxy.type", 1);
 pref("network.security.ports.banned", "8118,8123,9050,9051");
 pref("layout.spellcheckDefault", 0);
+pref("network.dns.disableIPv6", true);
 pref("noscript.httpsForced", "boum.org\nmail.google.com\nmail.riseup.net\nwebmail.no-log.org\nwebmail.boum.org");
 pref("noscript.httpsForcedExceptions", "");
 pref("noscript.notify.hide", true);

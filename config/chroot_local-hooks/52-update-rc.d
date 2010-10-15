@@ -1,25 +1,12 @@
 #!/bin/sh
 
-# Manage initscripts
+echo "managing initscripts"
 
-# Including common functions
-. "${LH_BASE:-/usr/share/live-helper}"/scripts/build.sh
-
-# Get LH_DISTRIBUTION
-Read_conffiles config/bootstrap
-
-# Setting static variables
-DESCRIPTION="$(Echo 'managing initscripts')"
-HELP=""
-USAGE="${PROGRAM}"
-
-Set_defaults
-
-Echo_message "managing initscripts"
+. /usr/share/amnesia/build/variables
 
 disable_service () {
    local INITSCRIPT="$1"
-   case "${LH_DISTRIBUTION}" in
+   case "${LB_DISTRIBUTION}" in
       squeeze|sid)
 	 update-rc.d ${INITSCRIPT} disable
 	 ;;

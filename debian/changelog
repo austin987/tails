@@ -1,3 +1,145 @@
+tails (0.6~rc3) UNRELEASED; urgency=low
+
+  ** SNAPSHOT build @a3ebb6c775d83d1a1448bc917a9f0995df93e44d **
+
+  * Iceweasel
+  - Autostart Iceweasel with the GNOME session. This workarounds the
+    "Iceweasel first page is not loaded" bug.
+  
+  * HTP
+  - Upgrade htpdate script (taken from Git 7797fe9).
+
+  * Misc
+  - Disable ssh-agent auto-starting with X session: gnome-keyring is
+    more user-friendly.
+  - Fix virtualization warning display.
+  - Boot profile hook: write desktop file to /etc/skel.
+
+  * Build system
+  - Convert build system to live-build 2.0.1.
+  - APT: fetch live-build and live-helper from Debian Live snapshots.
+  - Remove dependency on live-build functions in chroot_local-hooks.
+    This makes the build environment more robust and less dependent on
+    live-build internals.
+  - Remove hand-made rcS.d/S41tails-wifi: a hook now does this.
+  - Measure time used by the lh build command.
+  - Fix boot profile hook.
+  - Boot profiling: wait a bit more: the current list does not include
+    /usr/sbin/tor.
+
+ -- T(A)ILS developers <amnesia@boum.org>  Sat, 02 Oct 2010 23:06:46 +0200
+
+tails (0.6~rc2) UNRELEASED; urgency=low
+
+  ** SNAPSHOT build @c0ca0760ff577a1e797cdddf0e95c5d62a986ec8 **
+
+  * Iceweasel
+  - Refreshed AdBlock patterns (20100926).
+  - Set network.dns.disableIPv6 to true (untested yet)
+  - Torbutton: install patched 1.2.5-1+tails1 to fix the User-Agent bug,
+    disable extensions.torbutton.spoof_english again.
+
+  * Software
+  - WhisperBack: upgrade to 1.3~beta3 (main change:  let the user provide
+    optional email address and OpenPGP key).
+  - Remove mc.
+  - Update haveged backport to 0.9-3~amnesia+lenny1.
+  - Update live-boot custom packages (2.0.6-1+tails1.6797e8): fixes bugs
+    in persistency and smem-on-shutdown.
+  - Update custom htpdate script. Taken from commit d778a6094cb3 in our
+    custom Git repository:  fixes setting of date/time.
+
+  * Build system
+  - Bugfix: failed builds are now (hopefully) detected.
+  - Fix permissions on files in /etc/apt/ that are preserved in the image.
+  - Install version 2.0~a21-1 of live-build and live-helper in the image.
+    We are too late in the release process to upgrade to current Squeeze
+    version (2.0~a29-1).
+
+  * Misc
+  - Pidgin/OTR: disable the automatic OTR initiation and OTR requirement.
+
+ -- T(A)ILS developers <amnesia@boum.org>  Wed, 29 Sep 2010 19:23:17 +0200
+
+tails (0.6~1.gbpef2878) UNRELEASED; urgency=low
+
+  ** SNAPSHOT build @ef28782a0bf58004397b5fd303f938cc7d11ddaa **
+
+  * Hardware support
+  - Use a 2.6.32 kernel: linux-image-2.6.32-bpo.5-686 (2.6.32-23~bpo50+1)
+    from backports.org. This should support far more hardware and
+    especially a lot of wireless adapters.
+  - Add firmware for RTL8192 wireless adapters.
+  - Enable power management on all wireless interfaces on boot.
+
+  * Software
+  - Install inkscape.
+  - Install poedit.
+  - Install gfshare and ssss: two complementary implementations
+    of Shamir's Secret Sharing.
+  - Install tor-geoipdb.
+  - Remove dialog, mc and xterm.
+
+  * Iceweasel
+  - Set extensions.torbutton.spoof_english to its default true value
+    in order to workaround a security issue:
+    https://amnesia.boum.org/security/Iceweasel_exposes_a_rare_User-Agent/
+
+  * Monkeysphere
+  - Install the Iceweasel extension.
+  - Use a hkps:// keyserver.
+
+  * GnuPG
+  - Install gnupg from backports.org so that hkps:// is supported.
+  - Use a hkps:// keyserver.
+  - Proxy traffic via polipo.
+  - Prefer up-to-date digests and ciphers.
+
+  * Vidalia: rebased our custom package against 0.2.10.
+
+  * Build system
+  - Built images are now named like this:
+    tails-i386-lenny-0.5-20100925.iso
+  - Use live-helper support for isohybrid options instead of doing the
+    conversion ourselves. The default binary image type we build is now
+    iso-hybrid.
+  - Remove .deb built by m-a after they have been installed.
+  - Setup custom GConf settings at build time rather than at boot time.
+  - Move $HOME files to /etc/skel and let adduser deal with permissions.
+  - Convert to live-boot / live-config / live-build 2.x branches.
+  - Replaced our custom live-initramfs with a custom live-boot package;
+    included version is 2.0.5-1+tails2.6797e8 from our Git repository:
+    git clone git://git.immerda.ch/tails_live-boot.git
+  - Install live-config* from the live-snapshots Lenny repository.
+    Rationale: live-config binary packages differ depending on the target
+    distribution, so that using Squeeze's live-config does not produce
+    fully-working Lenny images.
+  - Rename custom scripts, packages lists and syslinux menu entries from
+    the amnesia-* namespace to the tails-* one.
+
+  * HTP
+  - Use (authenticated) HTP instead of NTP.
+  - The htpdate script that is used comes from commit 43f5f83c0 in our
+    custom repository:  git://git.immerda.ch/tails_htp.git
+  - Start Tor and Vidalia only once HTP is done.
+
+  * Misc
+  - Fix IPv6 firewall restore file. It was previously not used at all.
+  - Use ftp.us.debian.org instead of the buggy GeoIP-powered
+    cdn.debian.net.
+  - Gedit: don't autocreate backup copies.
+  - Build images with syslinux>=4.01 that has better isohybrid support.
+  - amnesia-security-check: got rid of the dependency on File::Slurp.
+  - Take into account the migration of backports.org to backports.debian.org.
+  - Make GnuPG key import errors fatal on boot.
+  - Warn the user when T(A)ILS is running inside a virtual machine.
+  - DNS cache: forget automapped .onion:s on Tor restart.
+
+  * Documentation: imported Incognito's walkthrough, converted to
+    Markdown, started the needed adaptation work.
+
+ -- T(A)ILS developers <amnesia@boum.org>  Sun, 26 Sep 2010 11:06:50 +0200
+
 tails (0.5) unstable; urgency=low
 
   * The project has merged efforts with Incognito.

@@ -30,7 +30,7 @@ user_pref("extensions.torbutton.saved.type", 5);
 user_pref("extensions.torbutton.saved.share_proxy_settings", false);
 user_pref("extensions.torbutton.socks_host", "127.0.0.1");
 user_pref("extensions.torbutton.socks_port", 9050);
-user_pref("extensions.torbutton.spoof_english", true);
+user_pref("extensions.torbutton.spoof_english", false);
 user_pref("extensions.torbutton.startup", true);
 user_pref("extensions.torbutton.startup_state", 1);
 user_pref("extensions.torbutton.tor_enabled", true);

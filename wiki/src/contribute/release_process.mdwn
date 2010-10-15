@@ -20,13 +20,29 @@ example:
 
 	./release 0.3 0.2
 
-This populates the Changelog with the Git log entries, then launches
-an editor for the needed cleanup of the result.
+This populates the Changelog with the Git log entries.
+
+Now cleanup some parts of it (semi-)automatically:
+
+	perl -pi'' -e 's/\A  \[ IkiWiki::Plugin::po::change \]\n//' debian/changelog
+	perl -pi'' -e 's/\A  \* updated PO files\n//' debian/changelog
+	perl -pi'' -e 's/\A  \[ 127\.0\.0\.1 \]\n//' debian/changelog
+	perl -pi'' -e 's/\A  \[ amnesia \]\n//' debian/changelog
+	perl -pi'' -e 's/\A  \[ anonym \]\n//' debian/changelog
+	perl -pi'' -e 's/\A  \* Added a comment\n//' debian/changelog
+	perl -pi'' -e 's/\A  \* Added a comment:.*\n//' debian/changelog
+	perl -pi'' -e 's/\A  \* todo\+\+\n//i' debian/changelog
+	perl -pi'' -e 's/\A  \* todo--\n//i' debian/changelog
+
+
+... then launch an editor for the needed cleanup of the result.
+
 
 Build images
 ============
 
-Carefully read the build logs to make sure nothing bad happened.
+[[Build images|build]] and carefully read the build logs to make sure
+nothing bad happened.
 
 SquashFS files order
 --------------------
@@ -39,24 +55,10 @@ Testing
 
 Until [[todo/automated_builds_and_tests]] are setup, some minimal, manual testing
 has to be done by the person doing the release, in addition to the
-real-world tests done by fellow beta-testers:
+real-world tests done by fellow beta-testers.
 
-* iceweasel: is web browsing really torified?
-* iceweasel: does the exposed User-Agent match the generic Torbutton's
-  one?
-* pidgin: is an IRC session really torified?
-* firewall: is the Tor-enforcement effective?
-* firewall: is IPv6 traffic blocked?
-* local partitions: are any local hard-disk partitions mounted or used
-  as swap?
-* local partitions: is a Live system found on a local hard-disk
-  partition used?
-* claws: check that the profile works and is torified
-  (specifically the EHLO/HELO SMTP messages it sends).
-* whisperback: can a bug report e-mail be sent? is it
-  correctly encrypted?
-* GnuPG key search/receive: torified?
-* Monkeysphere validation agent key search/receive: torified?
+The manual testing process [[is documented on a dedicated
+page|release_process/test]] in order not to clutter this one too much.
 
 Generate the Torrents
 =====================
@@ -69,7 +71,7 @@ Second, copy the built images to these brand new directories.
 Third, generate detached GnuPG signatures for every published image,
 in the same directory as the image; e.g.
 
-	gpg --armor --default-key F93E735F --detach-sign *.iso
+	gpg --armor --default-key BE2CD9C1 --detach-sign *.iso
 
 Fourth, create a `.torrent` file for every directory to be published:
 
@@ -89,7 +91,7 @@ Sixth, generate the SHA-256 hash of every generated `.torrent` file:
 Seventh, generate detached GnuPG signatures for every published
 `.torrent` file:
 
-	gpg --armor --default-key F93E735F --detach-sign \
+	gpg --armor --default-key BE2CD9C1 --detach-sign \
 	  amnesia-i386-gnome-0.3-20091126.torrent
 
 Eight, generate the SHA-256 hash of every image to be released:
@@ -136,7 +138,7 @@ record the last commit before tagging happens:
 Tag the release in Git
 ======================
 
-	git tag -u F93E735F -m "tagging version ${NEW_VERSION}" "${NEW_VERSION}"
+	git tag -u BE2CD9C1 -m "tagging version ${NEW_VERSION}" "${NEW_VERSION}"
 
 Go wild!
 ========

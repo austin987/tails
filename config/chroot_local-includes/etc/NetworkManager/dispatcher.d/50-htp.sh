@@ -50,7 +50,7 @@ HTP_POOL=(
 	'www.torproject.org'
 	'mail.riseup.net'
 	'www.google.com'
-	'lists.debian.org'
+	'ssl.scroogle.org'
 )
 
 BEGIN_MAGIC='### BEGIN HTP HOSTS'
