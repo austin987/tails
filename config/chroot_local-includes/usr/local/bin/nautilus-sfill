@@ -1,8 +1,14 @@
 #!/bin/sh
 
 test -z "$PWD" && exit 1
-mkdir -p "$PWD/ECRASEMENT"
-trap "rm -rf $PWD/ECRASEMENT" EXIT
+mkdir -p "$PWD/SFILL"
+trap "rm -rf $PWD/SFILL" EXIT
+
+. gettext.sh
+TEXTDOMAIN=nautilus-sfill
+export TEXTDOMAIN
+
+title="`gettext \"Securely erase free space\"`"
 
 { (echo 0
 MAX=4000000
@@ -10,25 +16,25 @@ FREE="$(df -P "$PWD" | awk '/\// { print $4 }')"
 if [ "$FREE" -gt "$MAX" ]; then
 	for n in $(seq 0 $((90 / ($FREE / $MAX))) 90); do
 		echo "$n"
-		FILE="$PWD/ECRASEMENT/$FREE.$n.$$"
-		echo "# Écrasement de $FILE"
+		FILE="$PWD/SFILL/$FREE.$n.$$"
+		echo "# `eval_gettext \"Erasing \\\$FILE\"`"
 		dd if=/dev/zero of="$FILE" seek="$MAX" bs=1k count=1
 		shred -n 3 "$FILE"
 	done
 	echo 90
 fi
-echo "# Écrasement de l'espace libre restant"
+echo "# `eval_gettext \"Erasing left free space\"`"
 RESULT=$(gksu --description "sfill" "sh -c '
-sfill -l -l \"$PWD/ECRASEMENT\" &&
-sfill -l -l \"$PWD/ECRASEMENT\" &&
-sfill -l -l \"$PWD/ECRASEMENT\" || echo ERROR")
+sfill -l -l \"$PWD/SFILL\" &&
+sfill -l -l \"$PWD/SFILL\" &&
+sfill -l -l \"$PWD/SFILL\" || echo ERROR")
 test "$RESULT" = "ERROR" && exit 1
-rm -rf "$PWD/ECRASEMENT"
+rm -rf "$PWD/SFILL"
 echo 100
-echo "# Écrasement de l'espace libre terminé avec succès"
+echo "# `eval_gettext \"Free space was successfully erased.\"`"
 ) || {
-echo "# Une erreur est survenue."
+echo "# `eval_gettext \"An error happened.\"`"
 zenity --error \
-  --text "Une erreur est survenue pendant l'écrasement de l'espace libre." \
-  --title "Écrasement de l'espace libre"
-} ; } | zenity --progress --title "Écrasement de l'espace libre"
+  --text "`gettext \"An error happened while erasing free space.\"`" \
+  --title "$title"
+} ; } | zenity --progress --title "$title"
