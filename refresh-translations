@@ -6,7 +6,9 @@ if [ -e config/amnesia.local ] ; then
    . config/amnesia.local
 fi
 
-for prog in tails-security-check tails-htp-notify-user tails-virt-notify-user ; do
+refresh_translations () {
+   prog=$1
+   proglang=$2
 
    sharedir="config/chroot_local-includes/usr/share/${prog}"
    locale_basedir="config/chroot_local-includes/usr/share/locale"
@@ -14,7 +16,7 @@ for prog in tails-security-check tails-htp-notify-user tails-virt-notify-user ; 
 
    mkdir -p "${sharedir}"
 
-   xgettext --language=Perl --from-code=UTF-8 \
+   xgettext --language="${proglang}" --from-code=UTF-8 \
       -o "${pot}" \
       "config/chroot_local-includes/usr/local/bin/${prog}"
 
@@ -26,5 +28,12 @@ for prog in tails-security-check tails-htp-notify-user tails-virt-notify-user ; 
       msgmerge --update "${po}" "${pot}"
       msgfmt -o "${mo}" "${po}"
    done
+}
 
+for prog in tails-security-check tails-htp-notify-user tails-virt-notify-user ; do
+   refresh_translations $prog Perl
+done
+
+for prog in nautilus-wipe ; do
+   refresh_translations $prog Shell
 done

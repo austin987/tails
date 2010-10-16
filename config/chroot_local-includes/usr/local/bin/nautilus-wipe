@@ -1,11 +1,21 @@
 #!/bin/bash
+
+. gettext.sh
+TEXTDOMAIN=nautilus-wipe
+export TEXTDOMAIN
+
+files="${*}"
+title="`gettext \"Securely erase files\"`"
+
 if zenity --question \
-    --text "Are you sure you want to securely erase ${*}?" \
-    --title "Securely erase files"; then
+    --text "`eval_ngettext \"Are you sure you want to securely erase \\\${files}?\" \\\
+                           \"Are you sure you want to securely erase \\\${files}?\" \\\
+           `" \
+    --title "$title"; then
   srm -rf "$@" && \
-  zenity --info --text "${*} was successfully erased." \
-      --title "Securely erase files" ||
+  zenity --info --text "`eval_ngettext \"\\\${files} was successfully erased.\" \"\\\${files} were successfully erased.\" $#`" \
+      --title "$title" ||
   zenity --error \
-      --text "An error happened while erasing ${*}." \
-      --title "Securely erase files"
+      --text "`eval_gettext \"An error happened while erasing \\\${files}.\"`" \
+      --title "$title"
 fi
