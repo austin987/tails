@@ -1,0 +1,34 @@
+#!/bin/sh
+
+test -z "$PWD" && exit 1
+mkdir -p "$PWD/ECRASEMENT"
+trap "rm -rf $PWD/ECRASEMENT" EXIT
+
+{ (echo 0
+MAX=4000000
+FREE="$(df -P "$PWD" | awk '/\// { print $4 }')"
+if [ "$FREE" -gt "$MAX" ]; then
+	for n in $(seq 0 $((90 / ($FREE / $MAX))) 90); do
+		echo "$n"
+		FILE="$PWD/ECRASEMENT/$FREE.$n.$$"
+		echo "# Écrasement de $FILE"
+		dd if=/dev/zero of="$FILE" seek="$MAX" bs=1k count=1
+		shred -n 3 "$FILE"
+	done
+	echo 90
+fi
+echo "# Écrasement de l'espace libre restant"
+RESULT=$(gksu --description "sfill" "sh -c '
+sfill -l -l \"$PWD/ECRASEMENT\" &&
+sfill -l -l \"$PWD/ECRASEMENT\" &&
+sfill -l -l \"$PWD/ECRASEMENT\" || echo ERROR")
+test "$RESULT" = "ERROR" && exit 1
+rm -rf "$PWD/ECRASEMENT"
+echo 100
+echo "# Écrasement de l'espace libre terminé avec succès"
+) || {
+echo "# Une erreur est survenue."
+zenity --error \
+  --text "Une erreur est survenue pendant l'écrasement de l'espace libre." \
+  --title "Écrasement de l'espace libre"
+} ; } | zenity --progress --title "Écrasement de l'espace libre"
