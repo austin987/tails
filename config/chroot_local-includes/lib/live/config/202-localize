@@ -8,12 +8,11 @@ Localize ()
 
    LANGUAGE="`echo ${LANG} | head -c 2`"
 
-   ### Nautilus wipe script
-
    if [ ! -d "/home/${LIVE_USERNAME}/.gnome2/nautilus-scripts/" ] ; then
       mkdir -p "/home/${LIVE_USERNAME}/.gnome2/nautilus-scripts/"
    fi
 
+   ### Nautilus wipe script
    case "${LANGUAGE}" in
       es)
 	 NAME="Eliminar_de_forma_segura"
@@ -25,8 +24,18 @@ Localize ()
 	 NAME="Securely_erase"
 	 ;;
    esac
-
    ln -s "/usr/local/bin/nautilus-wipe" "/home/${LIVE_USERNAME}/.gnome2/nautilus-scripts/${NAME}"
+
+   ### Nautilus sfill script
+   case "${LANGUAGE}" in
+      fr)
+	 NAME="Ecraser_l_espace_libre_de_cette_partition"
+	 ;;
+      *)
+	 NAME="Securely_erase_free_space_on_this_partition"
+	 ;;
+   esac
+   ln -s "/usr/local/bin/nautilus-sfill" "/home/${LIVE_USERNAME}/.gnome2/nautilus-scripts/${NAME}"
 
    ### Scroogle
 
