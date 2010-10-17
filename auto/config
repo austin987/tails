@@ -52,6 +52,8 @@ echo "${AMNESIA_FULL_VERSION}" > config/chroot_local-includes/etc/amnesia/versio
 if git rev-list HEAD 2>&1 >/dev/null; then
    git rev-list HEAD | head -n 1 >> config/chroot_local-includes/etc/amnesia/version
 fi
+echo "live-build: `dpkg-query -W -f='${Version}\n' live-build`" \
+   >> config/chroot_local-includes/etc/amnesia/version
 
 # changelog
 cp debian/changelog config/chroot_local-includes/usr/share/doc/amnesia/Changelog
