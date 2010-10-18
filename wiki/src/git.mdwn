@@ -1,28 +1,118 @@
 The (Amnesic) Incognito Live System and this documentation wiki are
 developed in a bunch of Git repositories.
 
+[[!toc levels=2]]
+
+Main repository
+===============
+
+This repository contains the T(A)ILS source code and the wiki source.
+
 Anyone can check it out like this:
 
 	git clone git://git.immerda.ch/amnesia.git
-	git clone git://git.immerda.ch/tails_live-boot.git
-	git clone git://git.immerda.ch/tails_live-config.git
-
-We have Gitweb's available for [the main
-repository](http://git.immerda.ch/?p=amnesia.git), [our custom
-live-boot](http:n//git.immerda.ch/?p=tails_live-boot.git) and for [our
-custom live-config](http://git.immerda.ch/?p=tails_live-boot.git).
 
 Developers with write access to the repositories should instead:
 
 	git clone 'ssh://boum_org_amnesia@webmasters.boum.org/~/wiki.git'
+
+We have a Gitweb available for [the main
+repository](http://git.immerda.ch/?p=amnesia.git).
+
+Branches
+--------
+
+T(A)ILS development uses several branches modeled a bit like the
+Debian development process. Here they are.
+
+### master
+
+The `master` branch is used by the online wiki.
+
+**FIXME**: document what should go in there, when other branches are
+merged into it, etc.
+
+### stable
+
+The `stable` branch is intended to contain:
+
+- the state of the code tagged for the last stable release
+- fixes for security or important bugs.
+
+Its purpose is to prepare minor releases.
+
+### testing
+
+The `testing` branch is used to prepare an imminent release: at some
+point of the development process, the `devel` branch code is merged
+into `testing`, freezed, and endures careful testing and bug-fixing
+until this branch is considered good enough to become a stable
+release. The `testing` branch is then merged into the `stable` and
+`master` ones, images built and shipped and we go back to code shiny
+new stuff in the `devel` branch.
+
+Please note that the `testing` branch generally has not been granted
+the same testing and attention as code that has made it into a
+stable release: please use it for testing purposes but do not rely
+on it for anything. No guarantee, blablabla.
+
+### devel
+
+Most of the development work that is done in T(A)ILS, is done in the
+`devel` branch. This branch will never get released; instead, code
+from it will be merged into testing and then into a real release.
+
+Please note that the `devel` branch can be broken, have awful security
+problems and so on. No guarantee, blablabla.
+
+The `master` branch is merged into `devel` from time to time.
+
+### squeeze
+
+The `squeeze` branch is aimed at building test images based on Debian
+Squeeze whereas all other branches are based on Debian Lenny for the
+time being. Code from the `devel` branch is merged into the `squeeze`
+one from time to time.
+
+Please note that the `squeeze` branch can be broken, have awful
+security problems and so on. No guarantee, blablabla.
+
+live-boot
+=========
+
+Anyone can check it out like this:
+
+	git clone git://git.immerda.ch/tails_live-boot.git
+
+Developers with write access to the repositories should instead:
+
 	git clone 'ssh://git@git.immerda.ch/tails_live-boot.git'
+
+We have a Gitweb available for [our custom
+live-boot](http:n//git.immerda.ch/?p=tails_live-boot.git).
+
+live-config
+===========
+
+Anyone can check it out like this:
+
+	git clone git://git.immerda.ch/tails_live-config.git
+
+Developers with write access to the repositories should instead:
+
 	git clone 'ssh://git@git.immerda.ch/tails_live-config.git'
+
+We have a Gitweb available or [our custom
+live-config](http://git.immerda.ch/?p=tails_live-config.git).
+
+Caution!
+========
 
 If you want to commit patches that may be published later, you might
 want to anonymize them a bit; to do so, run the following commands
 in every of your local clones' directories:
 
-	git config user.name amnesia
+	git config user.name 'T(A)ILS developers'
 	git config user.email amnesia@boum.org
 
 If you might need to prepare T(A)ILS releases, you'll also need to

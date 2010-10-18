@@ -6,7 +6,7 @@ Some real-life usecases however require to setup some kind of
 data persistence, which should then be carefully introduced
 and supported.
 
-[[!toc levels=2]]
+[[!toc levels=3]]
 
 Usecases
 ========
@@ -17,85 +17,109 @@ What could be made persistent?
 ------------------------------
 
 It remains to determine which usecases are of interest for our users
-and thus should be support. Some possible ones are:
+and thus should be support. Here are some possible ones.
 
-* All of /home is persistent. This is very convenient for users who
-  have complex configurations for certain applications, like IMs,
-  MUAs, gpg an the like.
-  - Clueless users could do really bad configurations that would
-    persist and thus expose them even after a reboot.
-  - amnesia upgrades to configurations in $HOME would be pretty
-    difficult to apply without breaking the users own configuration.
-  - Great care should be given to the potential leaks of web browser
-    cache and history, IM logs and similar applications and their
-    data, so that even if the /home is compromised, it should be
-    difficult for the attacker to tell what exact internet resources
-    and services have been used. Unless the user has explicitly
-    chosen to store such information (bookmarking a site, adding
-    someone to their contact list or address book, activated IM chat
-    logs etc.).
-* System wide persistence. This would give users fine-grained control
-  of the system and possibility to set it up exactly after their own
-  expectations.
-  - All the problems of a persistent /home applies but are amplified
-    to a system-wide scale, for instance
-      - users can also fuck up the firewall configuration
-      - sensitive information may leak outside of /home, like to
-        /tmp, /var/log etc.
-      - get a persistent virus or other malware
-  - amnesia upgrades would be near-impossible without breaking
-    stuff.
-* A persistent non-home data store for whatever random files the user
-  wants to have persistent.
-* Persistent application installations. If a user need some program
-  not present in amnesia per default it can be quite annoying to fetch
-  the apt information (which takes a lot of time over tor) and
-  download it (also slow), it could be nice to have a persistent
-  directory (or similar) where all .deb-files are installed during
-  init.
-* Persistent application specific configurations.
-  - This might be relevant for the following applications:
-      - gpg/ssh/vpn/OTR keys/configurations
-      - certificates
-      - IM and MUA configurations (since these can take a several
-        steps to setup which is annoying to redo for every amnesia
-        session)
-  - Perhaps it would be possible to make a tool so that the user can
-    choose exactly what files/directories that should be persistent,
-    and when to update them? Whith such a general solution the above
-    things would not have to be implemented individually and could
-    be present as default suggestions in the tool.
+### User data
+
+#### Persistent application-specific configurations
+
+This might be relevant for the following applications:
+
+- gpg/ssh/vpn/OTR keys/configurations
+- certificates
+- IM and MUA configurations (since these can take a several
+  steps to setup which is annoying to redo for every amnesia
+  session)
+- I2P data/cache/log directory (/var/lib/i2p)
+
+Perhaps it would be possible to make a tool so that the user can
+choose exactly what files/directories that should be persistent,
+and when to update them? Whith such a general solution the above
+things would not have to be implemented individually and could
+be present as default suggestions in the tool.
+
+#### Persistent user data store
+
+A persistent non-home data store for whatever random files the user
+wants to have persistent.
+
+#### Full /home persistence
+
+All of /home is persistent. This is very convenient for users who
+have complex configurations for certain applications, like IMs,
+MUAs, gpg an the like.
+
+On the other hand clueless users could do really bad configurations that would
+persist and thus expose them even after a reboot.
+
+Also T(A)ILS upgrades to configurations in $HOME would be pretty
+difficult to apply without breaking the users own configuration.
+
+Great care should be given to the potential leaks of web browser
+cache and history, IM logs and similar applications and their
+data, so that even if the /home is compromised, it should be
+difficult for the attacker to tell what exact internet resources
+and services have been used. Unless the user has explicitly
+chosen to store such information (bookmarking a site, adding
+someone to their contact list or address book, activated IM chat
+logs etc.).
+
+### System
+
+#### Persistent application installations
+
+If a user need some program
+not present in amnesia per default it can be quite annoying to fetch
+the apt information (which takes a lot of time over tor) and
+download it (also slow), it could be nice to have a persistent
+directory (or similar) where all .deb-files are installed during
+init.
+
+#### System wide persistence
+
+This would give users fine-grained control of the system and
+possibility to set it up exactly after their own expectations.
+
+All the problems of a persistent /home applies but are amplified
+to a system-wide scale, for instance
+
+- users can also fuck up the firewall configuration
+- sensitive information may leak outside of /home, like to
+  /tmp, /var/log etc.
+- get a persistent virus or other malware
+- T(A)ILS upgrades would be near-impossible without breaking stuff.
 
 Persistence storage location
 ----------------------------
 
+* Encrypted partition on a removable storage device.
+* Encrypted archive file on a removable storage device.
 * Use persistence without a persistence media: an encrypted persistent
   archive could be remotely stored on existing storage services e.g.
   via IMAP or sftp. When the persistence feature is enabled **and** no
   persistence media is found locally, the user would be asked for a
   server address + login + password + encryption passphrase.
 
-Specification bits
-==================
+Specifications
+==============
 
 Once a persistent volume is enabled, two operation modes should be
 supported:
 
-* with read-write access in order to be allowed to update persistent
-  files
-* with read-only access to **only** be able to *use* persistent files
-  (e.g. a GnuPG keyring) without leaving any new trace; the
-  (read-only) persistency store must be merged with a "diff" branch on
-  ramdisk using aufs, so that the mountpoint is seen as writable by
-  applications
+* read-write access: changes to persistent files are saved
+* read-only access to **only** be able to *use* persistent files
+  (e.g. a GnuPG keyring) without leaving any new trace.
 
 Moreover:
 
+* T(A)ILS should default to use a persistent store it can detect on
+  removable media *in read-only mode*.
+* Read-write access to a persistent data store must not be the
+  default: it must require a voluntary user action such as choosing
+  enabling a "with read-write persistent data" option in the boot
+  menu.
 * The persistent data must be stored using strong, well-known, Free
   Software, peer-reviewed encryption tools.
-* Read-write access to a persistent data store must never be the
-  default, and must require a voluntary user action, such as choosing
-  "with read-write persistent data" non-default item in the boot menu.
 * Blacklist fixed storage devices from the search for persistent
   volumes? Preventing the risk of using a malicious persistent volume
   seems more important than supporting the rare "I want to store my
@@ -106,32 +130,26 @@ Moreover:
     when the users chooses to activate some kind of persistency from
     the boot menu.
 
+Roadmap
+=======
+
+The first use cases that will be supported are:
+
+* persistent application-specific configurations;
+* persistent user data store.
+
 Implementation
 ==============
 
-Debian Live already supports
-[several kinds of persistence](http://live.debian.net/manual/html/persistence.html).
+Debian Live already supports several kinds of persistence, including
+snapshots of selected files and persistence store automounting, both
+at the `$HOME` and system-wide levels.
 
-The "home automounting" flavor seems like a nice starting point to
-implement full /home persistency but it needs to be extended a bit:
+Encryption of the persistent volumes is supported using cryptsetup or
+loop-aes.
 
-* support a read-only mode (e.g. using aufs or similar), e.g.
-  using a "persistent-ro" boot parameter
-* support enabling `$HOME` persistence while disabling full
-  persistence
-
-Both seem easy to implement and contribute to the upstream
-`live-boot` (everything happens in `scripts/live`).
-
-cryptsetup-encryption of the persistent volumes has been supported
-since
-[commit 5d38c26a3480357730c4913d298a1a6318a7b08c](http://lists.alioth.debian.org/pipermail/debian-live-changes/2008-February/002320.html)
-to `live-initramfs`.
-
-Persistence features are supposed to be rewritten in `live-initramfs`
-2.x (i.e `live-boot`), see the "RFC: live-initramfs 2.x features"
-thread on the [debian-live
-mailing-list](http://lists.debian.org/debian-live/).
+Persistent application-specific configurations
+----------------------------------------------
 
 Neither home automounting nor `live-snapshot` currently fit the
 application-specific configuration persistence use case. Both because
@@ -142,6 +160,9 @@ like a better starting point because it has an include list feature
 write wearing); what needs to be done (checked in live-boot 2.0~a16-1
 due to working offline with an outdated Git working copy):
 
+- When booting from USB, `/dev/sda` is mounted instead of `/dev/sda1`.
+  This prevents creating a second partition (even when the second
+  partition is created outside of T(A)ILS?).
 - Add support for file deletion (e.g. by replacing cpio with rsync).
 - Add a read-only mode.
 - There is no way to enable the home-sn kind of persistence while
@@ -177,6 +198,20 @@ due to working offline with an outdated Git working copy):
 - The `do_snap_copy` sub-procedure calculates free memory but does not
   seem to check there is actually enough.
 
+Full /home persistence
+----------------------
+
+The "home automounting" flavor seems like a nice starting point to
+implement full /home persistency but it needs to be extended a bit:
+
+* support a read-only mode (e.g. using aufs or similar), e.g.
+  using a "persistent-ro" boot parameter
+* support enabling `$HOME` persistence while disabling full
+  persistence
+
+Both seem easy to implement and contribute to the upstream
+`live-boot` (everything happens in `scripts/live`).
+
 Remote persistence storage
 --------------------------
 
@@ -191,3 +226,14 @@ Remote persistence storage
 
 - Encryption: symmetric GnuPG, encfs, ecryptfs, file-backed Luks or
   dm-crypt?
+
+Read-only mode
+--------------
+
+There are two main ways to support using a persistent store in
+read-only mode:
+
+* copy the persistent content at boot time to a filesystem location (aufs)
+* merge the persistent volume with a "diff" branch on ramdisk using
+  aufs, and mount the resultant device, so that the mountpoint is seen
+  as writable by applications but no actual change is made on disk.

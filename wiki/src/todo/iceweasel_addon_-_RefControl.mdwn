@@ -1,0 +1,25 @@
+[[!tag todo/research]]
+
+This is what's said about
+[RefControl](https://addons.mozilla.org/firefox/addon/953) in the
+[Torbutton FAQ](https://www.torproject.org/torbutton/torbutton-faq.html.en#recommendedextensions):
+
+> [...] this extension allows more fine-grained referrer spoofing than
+  Torbutton currently provides. It should break less sites than
+  Torbutton's referrer spoofing option.
+
+As the http referer (sic!) can be used to track users to some extent,
+we should try to do something about it. And, indeed, RefControl
+manages this with its 3rd party spoofing without breaking many sites
+(examples of broken sites?).
+
+Configuration
+=============
+
+Torbutton should be configured to not use its referrer
+spoof. RefControl should be configured to use "Forge (3rd Party)" per
+default. This will make RefControl spoof the http referer only when
+following links across domains (i.e. to a 3rd party domain) but leave
+it unchanged when following links within the same domain. When
+spoofed, the referer is set to the base domain of the link
+(i.e. a.com/b becomes a.com).
