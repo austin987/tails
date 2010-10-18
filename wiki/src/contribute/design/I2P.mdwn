@@ -1,0 +1,135 @@
+Versions
+========
+
+Some release after 0.6 (most likely 0.7) will ship with
+[I2P](http://www.i2pproject.net/) and have it nicely integrated with
+iceweasel so that eepsites (.i2p tld) can be reached through I2P, and
+the rest through Tor.
+
+Design
+======
+
+Unfortunately, I2P seems to not be very widely yet, so it can be
+assumed that not all of our users want to use (or even know about)
+I2P. Some potential drawbacks for such users by having I2P start
+automatically in each T(A)ILS session are:
+
+1. increased network traffic due to relaying others' traffic (every
+   I2P peer is a relay)
+
+2. increased usage of the system CPU (lots of computationally heavy
+   crypto is needed for relaying traffic) and RAM (Java based)
+
+3. the possible raised suspicion from adverseries by being associated
+   with yet another anonymity network (especially severe if one uses
+   Tor bridges)
+
+4. some level of system compromise through 0-day exploits in the I2P
+   client
+
+Hence, running I2P should be opt-in, i.e. it should not start per
+default. The user must start I2P manually, either by some easily
+accessible icon on the desktop/in the applications menu, or by
+specifying so during boot (once we make that possible).
+
+In addition to providing the I2P client, iceweasel should be able to
+handle eepsites (.i2p tld) seamlessly without interfering with any
+concurrent browsing through Tor.
+
+The [standard I2P client](http://www.i2pproject.net/download.html) is
+by default set up to perform automatic installs. Whether or not we
+want this can be debated, but for the time being the most reasonable
+option is to have it turned off. 
+
+Implementation
+==============
+
+The [German Privacy Foundation](https://www.awxcnx.de/) has an [apt
+repository](https://www.awxcnx.de/wabbel.htm) containing a prepackaged
+binary of i2p. It installs the actual program into /usr/lib/i2p while
+the so-called data directory is set up to /var/lib/i2p. This
+separation is essential and was not possible some years
+ago. Furthermore, installs an init script and sets up a user called
+i2p-daemon which the init script starts the I2P client under, which is
+good security-wise. 
+
+The above package should be installed, but its init script should not
+start during boot. An I2P shortcut has been added to the applications
+menu which the user can use to start the I2P init script manually. A
+side-effect of installing the actual I2P program into /usr is that
+automatic updates are disabled by the program since the installation
+directory is not writable by the i2p-daemon user.
+
+For better performance an exception has been made in the [[firewall
+configuration|Tor_enforcement]] that grants direct access to the
+network for the I2P user running the client so it can reach the I2P
+network directly, both through TCP and UDP. As per the standard I2P
+configuration, UPnP will try to set up port-forwarding with any
+present firewall so that full performance can be achieved.
+
+[[FoxyProxy|todo/iceweasel_addon_-_FoxyProxy]] has been installed
+system-wide, and the default iceweasel profile provides with a
+configuration handling the I2P integration. FoxyProxy's whitelist
+filter is used to make sure that the corresponding urls will be
+proxied appropriately.
+
+Below are the patterns that each url handeled by iceweasel will be
+matched against. They patterns will be tried in order, from top to
+bottom, until the first match is found:
+
+1. The I2P router console: urls matching
+   "^http://(127.0.0.1)|(localhost):7657(/.*)?" will get a direct
+   connection to the local host so the I2P router console can be
+   reached.
+
+2. I2P eepsites: urls matching
+   "^https?://[^/]+\.i2p(:[0-9]{1,5})?(/.*)?" will be proxied through
+   the local eepsite http proxy run by the I2P client.
+
+3. Tor HTTP(s): urls matching "^https?://.*" will be proxied through
+   polipo (and then its parent proxy, Tor).
+
+4. The rest: all remaining urls will be SOCKS5-proxied through Tor.
+
+Also, do note that T(A)ILS' [[netfilter-based transparent
+proxying|Tor_enforcement]] ensures that no Internet traffic can
+escape Tor even if something is wrong in the above filters (or a
+future revision).
+
+Things to meditate upon
+=======================
+
+* Pattern 4 will catch ftp://.* and redirect them to Tor through
+  SOCKS5. This effectively breaks ftp completely, so there's room for
+  adding a pattern above number 4 which matches ftp connections
+  (i.e. "^ftp://.*") and proxies them through some ftp proxy using Tor
+  as its parent proxy (or let the [[netfilter-based transparent
+  proxying|Tor_enforcement]] handle it?). See
+  [[bugs/FTP_does_not_work_in_iceweasel]]. As an addition, at the
+  moment (versions <=0.8) ftp does not work in I2P for technical
+  reasons, so no pattern for that is needed.
+
+* Do we want to enable the "Hidden mode" which completely disables
+  participating traffic?
+
+ - Pros:
+
+  - the IP address will not be published in I2P's distributed NetDB so
+    any adversary trying to enumerate all I2P users can only find the
+    user if it happens to use the adversary as an entry to the I2P
+    network. Hence the reason not to enable I2P per default due to
+    increase suspicion (3) is some what alleviated.
+
+  - there will be no additional network traffic used for relaying
+    other I2P peers traffic, so the network traffic reason (1) for not
+    starting I2P per default is essentially completely eliminated, and
+    the CPU/RAM reason (2) is made considerably less severe.
+
+ - Cons:
+
+  - there's no "cover-traffic", which may decrease the anonymity
+    somewhat.
+   
+* Are the patterns used above correct for their intended purposes?
+  Does the FoxyProxy setup in any way open up for attacks? See
+  [[todo/iceweasel_addon_-_FoxyProxy]].
