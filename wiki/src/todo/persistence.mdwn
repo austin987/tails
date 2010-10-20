@@ -138,6 +138,22 @@ The first use cases that will be supported are:
 * persistent application-specific configurations;
 * persistent user data store.
 
+Implementing one of these brings support for the other one more or
+less freely.
+
+This work can be split into two parts:
+
+1. Backend: improve `live-boot` so that it is able to implement our
+   specifications. This shall be done hand in hand with upstream so
+   that we don't end up maintaining a forked `live-boot` indefinitely.
+   Along the way our `devel` [[git branch|git]] can be used both as a
+   playground to test our changes, and as a show-room displaying
+   progress on this front.
+2. User interface:
+ - make it easy to use such persistence features (i.e. without adding
+   arguments to the kernel command line by hand);
+ - make it easy to specify which bits are persistent.
+
 Implementation
 ==============
 
@@ -237,3 +253,16 @@ read-only mode:
 * merge the persistent volume with a "diff" branch on ramdisk using
   aufs, and mount the resultant device, so that the mountpoint is seen
   as writable by applications but no actual change is made on disk.
+
+User interface
+--------------
+
+### at boot time
+
+Choosing between various persistence modes calls for a more complex
+(implementation-wise) boot menu. See the thread on tails-dev about a
+graphical boot menu for details.
+
+### during runtime
+
+XXX
