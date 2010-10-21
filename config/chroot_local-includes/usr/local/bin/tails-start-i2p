@@ -1,0 +1,96 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+#man{{{
+
+=head1 NAME
+
+tails-htp-notify-user
+
+=head1 VERSION
+
+Version X.XX
+
+=head1 AUTHOR
+
+T(A)ILS dev team <amnesia@boum.org>
+See https://amnesia.boum.org/.
+
+=cut
+
+#}}}
+
+use Desktop::Notify;
+use Locale::gettext;
+use POSIX;
+
+### initialization
+setlocale(LC_MESSAGES, "");
+textdomain("tails-i2p-notify-user");
+
+### helper subs
+
+# TODO: get router port (default 7657) from /etc/i2p/clients.config
+sub get_router_port {
+    return 7657;
+}
+
+# TODO: more perlish way to do below?
+# TODO: use netstat -p, check that a child of i2psvc runs the router console
+sub router_status {
+    return !system("netstat -nl -A inet,inet6 | grep -q -e \"\\(\\(127\\.0\\.0\\.1\\)\\|\\(::1\\)\\):" . get_router_port() . "\"");
+}
+
+sub open_router_console {
+    system("/usr/bin/iceweasel http://127.0.0.1:" . get_router_port());
+}
+
+sub start_i2psvc {
+    system("/usr/bin/gksu /etc/init.d/i2p start");
+}
+
+sub stop_i2psvc {
+    system("/usr/bin/gksu /etc/init.d/i2p start");
+}  
+
+### main
+
+my $notify = Desktop::Notify->new();
+
+my $summary = gettext("Starting I2P...");
+my $body    = gettext("The I2P router console will be opened on start.");
+
+my $notification = $notify->create(summary => $summary,
+                                   body => $body,
+                                   timeout => 0);
+
+start_i2psvc();
+
+$notification->show();
+
+my $t = 0;
+my $timeout = 60;
+while ($t < $timeout && !router_status()) {
+    $t++;
+    sleep 1;
+}
+
+$notification->close();
+
+if (router_status()) {
+    open_router_console();
+    exit 0;
+} else {
+    stop_i2psvc();
+
+    $summary = gettext("I2P failed to start");
+    $body    = gettext("Something went wrong when I2P was starting. Look in the following file for more information:") . "\n\t/tmp/wrapper.log" . "\n\t/var/lib/i2p/.i2p/logs/log-router-*.txt";
+
+    $notification = $notify->create(summary => $summary,
+                                    body => $body,
+                                    timeout => 60000);
+    $notification->show();
+    exit 1;
+}
