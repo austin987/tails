@@ -36,8 +36,6 @@ fatal () {
 
 [ -n "${NEW_VERSION}" ] \
    || fatal "the new version must be supplied on the command-line."
-[ "${SNAPSHOT}" = yes -o -n "${SINCE}" ] \
-   || fatal "the second argument must be either 'dev' or the commitish we'll start reading commit messages at."
 [ -n "${AMNESIA_DEV_FULLNAME}" ] \
    || fatal "AMNESIA_DEV_FULLNAME must be set in config/amnesia"
 [ -n "${AMNESIA_DEV_EMAIL}" ] \
@@ -58,7 +56,8 @@ export DEBEMAIL="${AMNESIA_DEV_EMAIL}"
 echo "Updating debian/changelog from Git history..."
 git-dch \
    `if [ ${SNAPSHOT} = yes ]; then echo '--snapshot --auto' ; fi` \
-   `if [ ${SNAPSHOT} = no ]; then echo "--release --since=${SINCE}" ; fi` \
+   `if [ ${SNAPSHOT} = no -a -n ${SINCE} ]; then echo "--release --since=${SINCE}" ; fi` \
+   `if [ ${SNAPSHOT} = no -a -z ${SINCE} ]; then echo "--release --auto" ; fi` \
    --new-version="${NEW_VERSION}" \
    --ignore-branch \
    || fatal "git-dch failed."
