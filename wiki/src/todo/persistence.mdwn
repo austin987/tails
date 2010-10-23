@@ -178,16 +178,21 @@ due to working offline with an outdated Git working copy):
 
 - When booting from USB, `/dev/sda` is mounted instead of `/dev/sda1`.
   This prevents creating a second partition (even when the second
-  partition is created outside of T(A)ILS?).
+  partition is created outside of T(A)ILS?). Our
+  `feature/try_partitions_before_whole_device` live-boot branch
+  inverts this behaviour. Pull request done on 20101023.
 - Add support for file deletion (e.g. by replacing cpio with rsync).
 - Add a read-only mode.
+- Add a option to ignore non-removable devices when looking for a
+  persistent volume. Implementation: support a
+  `persistent-media={removable,usb-removable}` option similar to
+  `live-media=`. Being worked on in our `feature/persistent-removable`
+  branch.
 - There is no way to enable the home-sn kind of persistence while
   disabling others. We could either implement a simple whitelist-only
   `persistent-types=TYPE1,TYPE2,...` boot parameter or a full-featured
   whitelist+blacklist boot parameters set such as the one used in
   live-config (`live-config=`, `live-noconfig=`).
-- Add a way to ignore internal hard disks when looking for persistence
-  data.
 - `live-snapshot` needs to be run as root; make it able to run with
   slightly less permissions (e.g. use sudo only when needed, or simply
   manage to run as a non-priviledged user for such kind of partial
