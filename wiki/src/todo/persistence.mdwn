@@ -182,7 +182,11 @@ due to working offline with an outdated Git working copy):
   `feature/try_partitions_before_whole_device` live-boot branch
   inverts this behaviour. Pull request done on 20101023.
 - Add support for file deletion (e.g. by replacing cpio with rsync).
-- Add a read-only mode.
+- Add a read-only mode. Easy for `live-snapshot`, tricky but doable
+  for `-rw` kind of persistence... that are not something we want to
+  support yet. Is it acceptable to add such a feature *only* for
+  `live-snapshot`? Agreement with upstream must be reached on this
+  before implementing.
 - Add a option to ignore non-removable devices when looking for a
   persistent volume. Implementation: support a
   `persistent-media={removable,usb-removable}` option similar to
@@ -206,14 +210,17 @@ due to working offline with an outdated Git working copy):
 - The persistence data search order is not well documented enough:
   live-sn and home-sn files are searched before accordingly labelled
   partitions.
-- The `persistent=cryptsetup` boot parameter is undocumented. Moreover
-  it is incompatible with `persistent=nofiles` which involves snapshot
-  files are first searched on non-encrypted devices, then on encrypted
-  ones. It probably should be made into a first-class independent
-  parameter such as `persistent-encryption=cryptsetup`.
+- The `persistent=cryptsetup` boot parameter is undocumented. (Fixed
+  in our `bug/undocumented_cryptsetup_persistence` branch, pull
+  requested on 20101023.) Moreover it is incompatible with
+  `persistent=nofiles` which involves snapshot files are first
+  searched on non-encrypted devices, then on encrypted ones. It
+  probably should be made into a first-class independent parameter
+  such as `persistent-encryption=cryptsetup`.
   `persistent-encryption=luks` would btw. be more correct and would
   allow adding support for plain dm-crypt mappings that are also setup
-  with cryptsetup.
+  with cryptsetup. Also, `persistent=cryptsetup` does not makes
+  persistence volume encryption compulsory. Do we need this?
 - The cryptsetup support is not able to deal with file-backed Luks
   snapshots. Do we need this? On the long run we would probably prefer
   supporting plain dm-crypt mappings hidden in files: something
