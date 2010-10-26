@@ -180,7 +180,9 @@ due to working offline with an outdated Git working copy):
   This prevents creating a second partition (even when the second
   partition is created outside of T(A)ILS?). Our
   `feature/try_partitions_before_whole_device` live-boot branch
-  inverts this behaviour. Pull request done on 20101023.
+  inverts this behaviour. It needs to be rebased against the 3.x dev
+  branch before another pull request is done (see debian-live ML
+  around 20101023).
 - Add support for file deletion (e.g. by replacing cpio with rsync).
 - Add a read-only mode. Easy for `live-snapshot`, tricky but doable
   for `-rw` kind of persistence... that are not something we want to
@@ -210,9 +212,7 @@ due to working offline with an outdated Git working copy):
 - The persistence data search order is not well documented enough:
   live-sn and home-sn files are searched before accordingly labelled
   partitions.
-- The `persistent=cryptsetup` boot parameter is undocumented. (Fixed
-  in our `bug/undocumented_cryptsetup_persistence` branch, pull
-  requested on 20101023.) Moreover it is incompatible with
+- The `persistent=cryptsetup` boot parameter is incompatible with
   `persistent=nofiles` which involves snapshot files are first
   searched on non-encrypted devices, then on encrypted ones. It
   probably should be made into a first-class independent parameter
