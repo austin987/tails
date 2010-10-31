@@ -38,5 +38,5 @@ fi
 killall vidalia
 sleep 2 # give lckdo a chance to release the lockfile
 export DISPLAY=':0.0'
-export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}/database`"
+export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
 exec /bin/su -c /usr/local/bin/vidalia-wrapper "${LIVE_USERNAME}" &
