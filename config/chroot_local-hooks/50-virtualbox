@@ -1,0 +1,42 @@
+#!/bin/sh
+
+echo "Building VirtualBox guest modules"
+
+hw_arch="`dpkg --print-architecture`"
+if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
+   exit 0
+fi
+
+# Get version information for the (newest) installed kernel.
+KERNEL="`/bin/ls -1 /boot/vmlinuz-* | tail -n 1`"
+KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
+KERNEL_ARCH="$(basename ${KERNEL} | sed -e 's|.*-||')"
+
+# the -dkms package must be installed *after* dkms to be properly registered
+apt-get install --yes build-essential dkms dpatch linux-headers-2.6-${KERNEL_ARCH}
+
+# dkms uses uname to find out what kernel to build modules for.
+# So, after installing dkms, but before installing
+# virtualbox-ose-guest-dkms, we divert uname to a fake one that
+# emulates 'uname -r' by reporting the kernel version found in /boot rather
+# than the build system's one.
+
+mv /bin/uname /bin/uname.$$
+cat > /bin/uname <<EOF
+#! /bin/sh
+echo "$KERNEL_VERSION"
+EOF
+chmod 755 /bin/uname
+
+# Have the modules automagically built by dkms.
+apt-get install --yes virtualbox-ose-guest-dkms
+
+# Revert to the real uname.
+mv /bin/uname.$$ /bin/uname
+
+# clean the build directory
+rm -rf /var/lib/dkms/virtualbox-ose-guest/
+
+# virtualbox-ose-guest-dkms's postrm script deletes any previously
+# built binary module; let's delete it before purging the package.
+rm -f /var/lib/dpkg/info/virtualbox-ose-guest-dkms.prerm
