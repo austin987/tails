@@ -1,0 +1,39 @@
+While adding optional functions to T(A)ILS, we will need a way to ask the user
+for them at startup. This is for example required for
+[[localization_at_runtime]], [[persistence]], [[macchanger]].
+
+The options choosen by the user must be available to live-boot scripts, so they
+must be asked very early. This could happen either in the boot menu or by
+hooking a menu that would probably run from inside the initramfs as one of the
+first live-boot scripts.
+
+# Using boot menus
+
+In 0.6, the localisation at runtime is done in the syslinux menu for PCs, see
+[[localization_at_runtime]], but it's very hard to add more than one set of
+option to that kind of menu.
+
+The only boot menu that will stay supported upstream seems to be gfxboot (to be
+verified). It configuration seems however quite hard to write.
+
+# Using a menu in the initramfs
+
+It's probably easyer to write a nice user interface once linux is running.
+However, it should be done in the initramfs as the parameters wil be used at
+this stage.
+
+## curses
+
+It seems to be the easyer way to implement it.
+
+## graphical UI on top of the framebuffer
+
+This seemes to be well supported by Qt:
+<http://qt.nokia.com/products/platform/qt-for-embedded-linux>.
+
+## launching X11 very early
+
+An other option would be to start X11 very early and to run a menu under X11.
+Then plynouth-x11 could be used to display a splash screen. The issue is that
+it seemes quite hard to start GDM in an already running X11 instance.
+

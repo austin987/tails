@@ -22,9 +22,12 @@ kvkbd
 -------
 
 * shipped by Ubuntu
-* keyboard layout dynamic learning : 
-  [bug report](https://bugs.launchpad.net/onboard/+bug/65626) ;
-  in squeeze it uses the localized layout
+* keyboard layout dynamic learning bug reports:
+  [65626](https://bugs.launchpad.net/onboard/+bug/65626),
+  [391997](https://bugs.launchpad.net/onboard/+bug/391997)
+  These bugs are supposed to be solved in squeeze, but
+  there's another bug, probably somewhere in Xorg prevents
+  them to work (see below)
 * there is a notification area icon
 * depends on the Python gconf bindings, that are available in Squeeze
   (package `python-gconf`) and in Lenny (package `python-gnome2`)
@@ -46,6 +49,16 @@ xvbkd
 
 * no dynamic layout loading
 * quite ugly
+
+Florence
+--------
+
+* [homepage](http://florence.sourceforge.net/english.html)
+
+Caribou
+-------
+
+* [homepage](http://live.gnome.org/Caribou)
 
 Implementation
 ==============
@@ -88,3 +101,24 @@ Long-term goal: inclusion in Debian
    these packages names to
    `config/chroot_local-packageslists/tails-common.list` and add suitable
    APT pining
+
+Bug in squeeze
+==================
+
+Onboard doesn't work at startup in squeeze : when trying to use it in azerty, it passes in qwerty
+when the window is clicked.
+
+If one sets the X11 keyboard layout, e.g. using `gnome-keyboard-properties` or `setxkbmap`,
+it works.
+
+Florence is affected by exactly the same bug, so it seems that it's a bug outside of the
+virtual keyboard, but rather somewhere in X libs.
+
+It appears that `python-virtkey` function `virtkey_get_current_group_name` in `/src/python-virtkey.c`
+returns `USA` instead of `France` when the bug appears. The wrong value is obtained from the
+ following code (with a lot af more security checks):
+
+    XkbGetState(display, XkbUseCoreKbd, &state
+    state.locked_group
+    Atom atom = cvirt->kbd->names->groups[group];
+    char * group_name = XGetAtomName(display, atom);

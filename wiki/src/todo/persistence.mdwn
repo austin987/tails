@@ -176,18 +176,28 @@ like a better starting point because it has an include list feature
 write wearing); what needs to be done (checked in live-boot 2.0~a16-1
 due to working offline with an outdated Git working copy):
 
-- When booting from USB, `/dev/sda` is mounted instead of `/dev/sda1`.
-  This prevents creating a second partition (even when the second
-  partition is created outside of T(A)ILS?).
 - Add support for file deletion (e.g. by replacing cpio with rsync).
-- Add a read-only mode.
+- Add a read-only mode. Easy for `live-snapshot`, tricky but doable
+  for `-rw` kind of persistence... that are not something we want to
+  support yet. Is it acceptable to add such a feature *only* for
+  `live-snapshot`? Agreement with upstream must be reached on this
+  before implementing.
+- Add a option to ignore non-removable devices when looking for a
+  persistent volume. Implementation: support a
+  `persistent-media={removable,usb-removable}` option similar to
+  `live-media=`. Being worked on in our `feature/persistent-removable`
+  branch.
 - There is no way to enable the home-sn kind of persistence while
   disabling others. We could either implement a simple whitelist-only
   `persistent-types=TYPE1,TYPE2,...` boot parameter or a full-featured
   whitelist+blacklist boot parameters set such as the one used in
-  live-config (`live-config=`, `live-noconfig=`).
-- Add a way to ignore internal hard disks when looking for persistence
-  data.
+  live-config (e.g. `persistent=home-sn` would be equivalent to
+  `nopersistent=live-rw,live-sn,home-rw`); backward compatibility with
+  the current `persistent=nofiles` option must be though of.
+  Another way would be to add options similar to `nofiles`, e.g.
+  `persistent=nosystem,nocow` would only enable `home-sn`, and
+  `persistent=nosystem` would only enable `home-sn` and `home-rw`.
+  Agreement with upstream must be reached before implementing this.
 - `live-snapshot` needs to be run as root; make it able to run with
   slightly less permissions (e.g. use sudo only when needed, or simply
   manage to run as a non-priviledged user for such kind of partial
@@ -195,22 +205,25 @@ due to working offline with an outdated Git working copy):
 - The persistence data search order is not well documented enough:
   live-sn and home-sn files are searched before accordingly labelled
   partitions.
-- The `persistent=cryptsetup` boot parameter is undocumented. Moreover
-  it is incompatible with `persistent=nofiles` which involves snapshot
-  files are first searched on non-encrypted devices, then on encrypted
-  ones. It probably should be made into a first-class independent
-  parameter such as `persistent-encryption=cryptsetup`.
+- The `persistent=cryptsetup` boot parameter is incompatible with
+  `persistent=nofiles` which involves snapshot files are first
+  searched on non-encrypted devices, then on encrypted ones. It
+  probably should be made into a first-class independent parameter
+  such as `persistent-encryption=cryptsetup`.
   `persistent-encryption=luks` would btw. be more correct and would
   allow adding support for plain dm-crypt mappings that are also setup
-  with cryptsetup.
+  with cryptsetup. Also, `persistent=cryptsetup` does not makes
+  persistence volume encryption compulsory. Do we need this?
 - The cryptsetup support is not able to deal with file-backed Luks
   snapshots. Do we need this? On the long run we would probably prefer
   supporting plain dm-crypt mappings hidden in files: something
   similar to the `live-media-offset` would be perfect; the UI side of
-  it will be tricky if we want to ask the offset to the user; this
+  it will be tricky if we want to ask the offset to the user;  this
   could happen either in the boot menu or by hooking a menu
   that would probably run from inside the initramfs, before
-  `scripts/live` attempts to copy snapshots data.
+  `scripts/live` attempts to copy snapshots data. See
+  [[todo/boot_menu]].
+
 - The `do_snap_copy` sub-procedure calculates free memory but does not
   seem to check there is actually enough.
 
