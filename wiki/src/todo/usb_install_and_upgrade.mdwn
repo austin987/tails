@@ -74,12 +74,55 @@ free.
 
 ### Grub2
 
-Grub 2 initial support has entered `live-helper` in commit
-566d27904afb3715. Chainload the ISO from here?
+Debian Live now supports Grub2 and `fromiso=`. The grub.cfg that is
+generated inside the binary image could be copied, adapted and used to
+(loopback) boot an ISO dropped on a USB stick.
 
-(loopback) boot an iso image:
+Here is how to test this.
 
-* http://www.linuxpedia.fr/doku.php/expert/boot_ubuntu_iso_grub2
+0. Build a Debian Live ISO (FIXME: iso binary image type works, does
+   iso-hybrid work as well?) with a working `live-boot` installed in
+   it (e.g. T(A)ILS 0.6 has a buggy one; FIXME: tell when commit
+   eebe13d1f is merged upstream).
+1. Create a ext2 filesystem on a USB stick partition.
+2. Copy a T(A)ILS ISO file **at the root** of the USB stick partition.
+3. Run `ln -s . boot` at the root of the (mounted) USB stick partition.
+4. Install Grub2 on the USB stick MBR, using the USB stick partition
+   as `--root-directory`.
+5. Create a `grub.cfg` file in there and try a menu entry like this:
+
+    menuentry 'test' --class debian --class gnu-linux --class gnu --class os {
+        insmod part_msdos
+        insmod ext2
+        insmod loopback
+        insmod iso9660
+        set root='(hd0,msdos1)'
+        search --no-floppy --fs-uuid --set b51975cd-c5ef-4b32-996a-2c8206516917
+        loopback loop /binary.iso
+        linux   (loop)/live/vmlinuz1 boot=live fromiso=/dev/sda1/binary.iso config
+        initrd  (loop)/live/initrd1.img
+    }
+
+Details:
+
+* `insmod ext2` is because the partition that hosts Grub2 and the ISO
+  is a ext2 one
+* `(hd0,msdos1)` and the search UUID match this partition as well,
+  from Grub2 point-of-view
+* `/dev/sda1` is a path to this partition block device from inside the
+  Live initrd
+* `/binary.iso` is the path to the ISO file, relative to the root of
+  the partition
+* `/live/vmlinuz1` and `/live/initrd1.img` are respectively the path
+  to the kernel and ramdisk relative to the root of the ISO filesystem
+* `boot=live` enables `live-boot` and thus `fromiso=`
+* `config` enables `live-config`
+
+This might fails at kernel load time with following error:
+
+    error: invalid magic number
+
+In that case, see [[!debbug 543924]].
 
 frontend UI
 -----------
