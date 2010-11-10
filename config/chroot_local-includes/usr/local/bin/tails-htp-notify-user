@@ -47,4 +47,30 @@ $notification->show();
 until (-e $htp_done_file) {
     sleep 1;
 }
-$notification->close();
+
+# read the return code from /var/lib/live/htp-done
+open(my $htp_done, "< $htp_done_file") or die "Can not read file: $!";
+(my $htp_done_code) = (<$htp_done> =~ /^(\d+)/);
+# in case htpdate went fine, close the 'Please wait...' notification
+if ($htp_done_code == 0) {
+    $notification->close();
+}
+# in case htpdate failed, notify the user with the corresponding logs
+else {
+    open(my $htp_log, "< /var/log/htpdate.log") or die "Can not read file: $!";
+    my $last_log;
+    while (<$htp_log>) {
+        if ($_ =~ /Running htpdate./) {
+            $last_log = ''; 
+            next;            
+        }
+        $last_log .= $_;
+    }
+    my $failure_summary      = gettext("Failed to synchronize the clock!");
+    my $failure_body         = $last_log;
+    my $failure_notification = $notify->create(summary => $failure_summary,
+                                               body    => $failure_body,
+                                               timeout => 0);
+    $failure_notification->show();
+}
+

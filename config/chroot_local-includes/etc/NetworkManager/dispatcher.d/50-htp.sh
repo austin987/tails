@@ -7,8 +7,8 @@
 
 # However, since all DNS lookups are normally made through the Tor
 # network, which we are not connected to at this point, we use the
-# local DNS servers obtained through DHCP if possible, or the OpenDNS
-# ones, else.
+# local DNS servers obtained through DHCP, if possible, or the OpenDNS
+# ones otherwise.
 
 # To limit fingerprinting possibilities, we do not want to send HTTP
 # requests aimed at an IP-based virtualhost such as https://IP/, but
@@ -116,7 +116,7 @@ echo "${END_MAGIC}" >> /etc/hosts
 
 touch "${HTPDATE_LOG}"
 chown htp:nogroup "${HTPDATE_LOG}"
-chmod 600 "${HTPDATE_LOG}"
+chmod 644 "${HTPDATE_LOG}"
 
 /usr/local/sbin/htpdate \
 	-d \
@@ -132,6 +132,7 @@ echo "htpdate exited with return code ${HTPDATE_RET}" >>$LOG
 
 cleanup_etc_hosts
 
+echo "${HTPDATE_RET}" > "${DONE_FILE}"
 touch "${DONE_FILE}"
 
 exit ${HTPDATE_RET}
