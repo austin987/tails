@@ -8,10 +8,9 @@ This is almost true. Let's clarify this a bit.
 Exceptions
 ==========
 
-*Almost* true, yeah.
-
-But there are exceptions. Some programs are allowed to connect to the
-Internet *directly* i.e. bypassing Tor.
+We said this is *almost* true since there are exceptions. Some
+programs are allowed to connect to the Internet *directly* i.e.
+bypassing Tor.
 
 HTP
 ---
@@ -29,29 +28,37 @@ done before Tor starts... hence *directly*. This means DNS queries to
 resolve the HTP hosts IPs, and HTTPS traffic to fetch the pages and
 associated resources.
 
-What about the LAN?
-===================
+I2P
+---
 
-T(A)ILS description talks of *outgoing connections to the Internet*.
-Indeed: traffic to the local LAN is wide open, as well as the loopback
-traffic obviously.
+See [[I2P]].
+
+Local Area Network (LAN)
+------------------------
+
+T(A)ILS short description talks of *outgoing connections to the
+Internet*. Indeed: traffic to the local LAN is wide open as well as
+the loopback traffic obviously.
 
 We want to [[forbid LAN DNS queries|todo/forbid_lan_dns_queries]] at
 some point to protect against some attacks; this is not implemented
 yet.
 
+Special cases
+=============
+
 What about IPv6?
-================
+----------------
 
 Tor does not support IPv6 yet so IPv6 communication is allowed only on
 the loopback interface.
 
-What about UDP?
-===============
+UDP, ICMP and other non-TCP protocols
+-------------------------------------
 
-Non-TCP traffic is dropped. Tor only supports TCP.
+Non-TCP traffic to the Internet is dropped. Tor only supports TCP.
 
-How it is done
+Implementation
 ==============
 
 Firewall
@@ -68,24 +75,23 @@ The default case is to redirect traffic to the Tor transparent proxy.
 
 The following IPv4 address ranges are whitelisted:
 
-- 192.168.0.0/255.255.0.0: private networks
-- 10.0.0.0/255.0.0.0: private networks
-- 172.16.0.0/255.240.0.0: private networks
+- 192.168.0.0/255.255.0.0: private RFC1918 networks
+- 10.0.0.0/255.0.0.0: private RFC1918 networks
+- 172.16.0.0/255.240.0.0: private RFC1918 networks
 - 127.0.0.0/255.128.0.0 and 127.128.0.0/255.192.0.0: loopback traffic,
   excluding the VirtualAddrNetwork (127.192.0.0/10) used for .onion:s
 
 The following Unix users have Tor-evasion priviledges:
 
-- `debian-tor`: well, Tor itself has to connect to the Internet
-  without going through the Tor network, isn't it?
-- `htp`: read above for the detailed 
-- `i2p-daemon`: for [[I2P]].
+- `debian-tor`: Tor itself obviously has to connect to the Internet
+  without going through the Tor network
+- `htp` and `i2p-daemon`: see above.
 
 Proxy settings
 --------------
 
 In case the firewall is buggy or not properly started, other settings
-are used as a defence in depth strategy:
+are used as part of a defence in depth strategy:
 
 - the GNOME proxy settings point to Polipo or to the Tor SOCKS proxy,
   depending on the application type:
