@@ -2,22 +2,36 @@
 
 **WARNING!**
 
-**This is a preliminary draft, don't believe what it says.**
+**This is a preliminary work-in-progress draft, don't believe anything of it (yet).**
 
 ---------------------------------------------------------------------
 
-(Based on Incognito 2008.1-r1 Documentation.)
-
 [[!toc levels=2]]
 
-## 1 Introduction
+**FIXME**
+
+- find a way to integrate existing documentation:
+  [[contribute/design]], [[features]] etc.
+- missing:
+ * iceweasel locale spoofing or not: balance between ease of use for
+   non-English-speaking users and browser fingerprinting
+ * add notes about browser fingerprinting
+
+# 1 Introduction
 
 In this document we present a specification of a Privacy Enhancing
-LiveDistro as well as an actual implementation of it called Incognito.
+LiveDistro as well as an actual implementation of it called The
+(Amnesic) Incognito Live System (in short: *T(A)ILS*).
 
-## 2 Anonymity LiveDistro Specification
+This document is heavily based on preliminary work that was done as
+part of [Incognito 2008.1-r1
+Documentation](http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/docs.html).
 
-### 2\.1 Intent
+# 2 Anonymity LiveDistro Specification
+
+## 2.1 Intent
+
+### 2.1.1 Privacy on the Internet
 
 The Privacy Enhancing LiveDistro (or PELD for short) aims at providing
 a software solution presenting the user with the technological means
@@ -28,14 +42,28 @@ specification will assume the usage of [The Tor™
 Project](https://www.torproject.org/)'s state-of-the-art anonymizing
 overlay network Tor.
 
+### 2.1.2 Working on sensitive documents
+
+The PELD also aims at providing a "safe" environment to work on
+sensitive documents:
+
+- No trace must be left on local storage devices unless the user
+  explicitly asks for it.
+- The usage of encrypted removable storage devices (such as USB
+  sticks) should be encouraged.
+
+### 2.1.3 Portability
+
 The PELD is supposed to be self-contained and portable (literally, not
 necessarily with respect to code portability), and thus possible to
 run in as many computing environments as possible fot the same single
 distribution. In addition, while the PELD's main objective indeed is
-to act as a traditional LiveDistro (i.e. a LiveCD or LiveUSB) it
-should also be compatible with popular virtual machine technologies
-for users that simply want a sandboxed environment within their normal
-operating system.
+to act as a traditional LiveDistro (i.e. a [[!wikipedia Live_CD]] or
+[[!wikipedia Live_USB]]) it should also be compatible with popular
+virtual machine technologies for users that simply want a sandboxed
+environment within their normal operating system.
+
+### 2.1.4 Target user
 
 The PELD's target user is the average user in terms of computer
 literacy, and who is using a computer of which he or she not
@@ -49,17 +77,20 @@ with no need of advanced configuration whatsoever. It should be made
 as difficult as possible for the user to unknowingly compromise
 anonymity.
 
-In short, the PELD aims at providing privacy on the Internet for anyone anywhere.
+### 2.1.5 Summary
 
-### 2\.2 Threat model
+In short, the PELD aims at providing privacy on computers and on the
+Internet for anyone anywhere.
+
+## 2.2 Threat model
 
 The goal of staying anonymous and keeping sensitive information
-protected stands in direct conflict with the gols of several entities
+protected stands in direct conflict with the goals of several entities
 "present" on the Internet. The following threat model is meant to
 describe the intentions and capabilities of such hypothetical
-attackers:
+attackers.
 
-#### 2\.2.1 The goal of the attacker
+### 2.2.1 The goal of the attacker
 
 - **Identify the user's activities on the Internet**: Information such
   as user-agent, locale and (especially) IP address can all be used in
@@ -67,44 +98,63 @@ attackers:
 - **Eavesdrop on sensitive data**: Sensitive data sent through the Tor
   network will only be untraceable (with respect to Tor's threat
   model) and thus will be at least as likely to be eavesdropped.
+- **Post-mortem user activity and sensitive data recovery**:
+  "Normal" operating systems keep a lot of traces about their users'
+  Internet activities (notably browser cache and cookies) on local
+  storage media; similarly, working on a sensitive document with a
+  "normal" operating system is likely to leave traces of this
+  document. The adversary may want to recover such information by
+  analyzing the equipment that has been used.
 
-#### 2\.2.2 Capabilities, methods and other means of the attacker
+### 2.2.2 Capabilities, methods and other means of the attacker
 
-- **Eavesdropping**: It is assumed that the attacker can observe any
-  traffic that exits the Tor network.
+- **Eavesdropping**: It is assumed that the adversary is non-global
+  and has full control over the network traffic of some fractions of
+  the Internet (e.g. some exit nodes or the Internet connection the
+  user is sitting behind).
 - **Bypass attacks**: It is conceivable for attackers to mount attacks
   which bypass the proxy and DNS setup in the applications which could
   then be used to identify the user, either by injecting data or
   social engineering.
-- **Explot software vulnerabilities**: The attacker might be able to
+- **Exploit software vulnerabilities**: The attacker might be able to
   run arbitrary code by exploiting unpatched vulnerabilities present
   in any of the software packages installed.
 - **Application level attacks**: The attacker can utilize certain
   applications' services and features to get identifying information.
   Examples are JavaScript and Java applets in web browsers, CTCP
   queries in IRC clients, etc.
+- **Post-mortem equipment analysis**: The adversary might raid the
+  user at any moment and then confiscate and analyse the equipment,
+  storage media and memory in particular.
+- **Live physical monitoring**: the adversary might be physically
+  monitoring the computer while the PELD is running on it.
 
-### 2\.3 Distribution
+## 2.3 Distribution
 
 The PELD should be distributed in a common format that can easily be
 used to install the PELD on the selected medium. For instance, if
 distributed as an ISO 9660 compatible image file it can be burned to a
 CD with almost any CD recording software available.
 
-### 2\.4 Operational requirements
+Also, it is recommended to make it possible for end-users to verify
+the downloaded PELD support integrity using public key cryptography.
+
+## 2.4 Operational requirements
 
 This section handles mostly the criteria that the PELD should be
 portable and able to run in as many environments as possible. It also
 deals with issues such as virus infections and leaving traces.
 
-#### 2\.4.1 Platform
+### 2.4.1 Platform
 
 The binaries should all be executable on the most common computer
-hardware architecture(s). As of 2008, the x86 computer architecture
+hardware architecture(s). As of 2011, the x86 computer architecture
 seems to be the obvious choice as the vast majority of personal
-computers in use is compatible with it.
+computers in use is compatible with it. Supporting the PowerPC
+architecture is a welcome bonus in order to support pre-Intel Apple
+computers.
 
-#### 2\.4.2 Media
+### 2.4.2 Media
 
 The PELD should be able to boot and run from either CD or a USB drive.
 While running the PELD in that mode it should be completely
@@ -130,7 +180,7 @@ persistent. If this is considered, this feature should be optional and
 offer the possibility to use string encryption for the persistent
 storage.
 
-#### 2\.4.3 Virtual machines
+### 2.4.3 Virtual machines
 
 As an alternative to running the PELD natively from a CD or USB, it
 should also be possible to run from virtual machines. This is useful
@@ -139,21 +189,21 @@ PELD natively, which often can be the case with public computers.
 Additionally, many users seem to prefer this mode of operation, and
 that alone is a reason for making sure it works.
 
-### 2\.5 Kernel requirements
+## 2.5 Kernel requirements
 
 The role of the kernel is mainly to provide support for the features
 required elsewhere in this specification. This includes:
 
 - **Good hardware support**: "Good" is a sketchy word in a
   specification. The general idea is to include as much drivers for
-  relevant hardware as possible, in particular for network cards (wire
-  and wireless), video card and other things necessary for basic
+  relevant hardware as possible, in particular for network cards
+  (wired and wireless), video card and anything necessary for basic
   operation.
 - **Support for a stateful firewall with packet filtering
-  capabilities**: It must be able to separate between traffic some how
+  capabilities**: It must somehow be able to separate between traffic
   for the functionality of the transparent proxying mentioned in the
-  [network section](#net) to work. Similarly, it must be able to
-  identify and drop non TCP traffic destined to the Internet.
+  network section to work. Similarly, it must be able to identify and
+  drop non-TCP traffic destined to the Internet.
 - **Security features**: With the dangers of exploitable
   vulnerabilities in any code running, attempts to mitigate these on
   the kernel level is a good idea. Executable space protection with
@@ -162,7 +212,7 @@ required elsewhere in this specification. This includes:
   the form of Mandatory Access Control, Role-Based Access control and
   so on should also be considered.
 
-### 2\.6 Network requirements
+## 2.6 Network requirements
 
 In order to prevent accidental leaks of information, proxy bypass
 attacks on Tor and similar, the access to the Internet should be
@@ -174,42 +224,55 @@ heavily restricted by a firewall:
   the transparent proxy (i.e. to the TransPort as set in torrc).
 - All DNS lookups should be made through the Tor network (i.e.
   redirected to DNSPort as set in torrc).
+- All IPv6 traffic must be forbidden as it is not supported by the Tor
+  network.
 
 Note that the above is not necessary (or desirable) for local network
-addresses.
+addresses; it is recommended to special-case DNS queries though as
+some home routers and captive wifi portals reply the public IP
+provided by the ISP when a reverse-lookup of their local host name is
+attempted (source: [The State of the DNS and Tor Union (also: a DNS UDP
+- TCP shim)"](http://archives.seul.org/or/talk/Jul-2010/msg00007.html)
+thread on the or-talk mailing-list).
 
-### 2\.7 User interface and applications
+Any exception to these rules must be thoroughly thought of and
+properly documented.
 
-#### 2\.7.1 General user interface
+## 2.7 User interface and applications
+
+### 2.7.1 General user interface
 
 The user should be able to do all relevant things with easy to use
 graphical interfaces. As such it should be presented a solid,
-user-friendly desktop environment with all the expected features (file
-managing, change system settings, support applications etc.) after
-booting.
+user-friendly desktop environment with all the expected features after
+booting: file management, system settings configuration, support
+applications etc..
 
-#### 2\.7.2 Internet applications
+### 2.7.2 Internet applications
 
 At minimum, clients for the following Internet activities must be
 supported:
 
-- **Web browsing**: In the case of web browsing we really encourage the
-  use of Mozilla Firefox as the Tor Project itself has an extension,
+- **Web browsing**: In the case of web browsing we really encourage
+  the use of Firefox as the Tor Project itself has an extension,
   Torbutton, specifically designed for mitigating the risks with
   non-HTTP features, such as JavaScript.
 - **Emailing**: Support for PGP or S/MIME is highly recommended. Also,
   beware that the EHLO/HELO sent to the SMTP-server will contain the
-  host's IP address in many email clients
+  host's IP address in many email clients. The `Message-ID` headers and
+  HTML/JavaScript email support are other usual leaking spots that
+  should be taken care of.
 - **IRC and Instant messaging**
+- **SSH**
 
-Other recommended client for Internet activities includes:
+Other recommended clients for Internet activities include:
 
 - **Bittorrent and/or other type(s) of P2P file-sharing**: Note,
   however, that large scale file-sharing activity in general is
   frowned upon in the Tor community as it consumes extreme amounts of
   bandwidth compared to other kinds of services.
+- **Collaborative text editor** such as [Gobby](http://gobby.0x539.de).
 - **Remote desktop**
-- **SSH**
 
 Given that these applications will be the user's interface to the
 Internet, these should be chosen with care and security in mind, and
@@ -217,7 +280,14 @@ also configured in such a way. In general, as little information as
 possible should leak about the user, the applications used and the
 system settings.
 
-#### 2\.7.3 Tor
+### 2.7.3 Document production applications
+
+**FIXME**: the PELD intents to allow "Working on sensitive documents"
+=> software for non-Internet activities: word processor, bitmap and
+vector graphics, DTP, PO editor, sound recording and editing,
+printer and scanner support.
+
+### 2.7.4 Tor
 
 Tor should be setup to use its DNS server (DNSPort) and transparent
 proxy (TransPort, TransListen) so the functionality specified in the
@@ -232,7 +302,12 @@ and thus some means of authentication will be required
 (CookieAuthentication preferably) to hinder attacks on the Tor
 software.
 
-#### 2\.7.4 Hardened tool chain and compiling
+### 2.7.5 Hardened tool chain and compiling
+
+**FIXME**: change the "compile all software" recommendation into
+something like "carefully balance the added security provided by
+compiling all software with hardening options vs. cost in developers
+time, ease of maintenance and new contributors involvement".
 
 As an addition to the security against exploitable vulnerabilities
 provided by the kernel, compiling software with stack smashing
@@ -242,45 +317,81 @@ compiler level stuff is necessary for utilizing the kernel security
 features. Because of this it is recommended to compile essentially all
 software from sources to take benefit from these security features.
 
-#### 2\.7.5 Cryptographic tools
+### 2.7.6 Cryptographic tools
 
 Tools for securely signing, verifying, encrypting and decrypting files
 and messages should be available. In particular some implementation of
 OpenPGP should be included as it in practice is the de-facto standard
 when it comes to these things. GUIs for managing keys and performing
-the relevant cryptographic tasks should be available. Tools for
-creating encrypted storage containers are also recommended.
+the relevant cryptographic tasks should be available. The OpenPGP
+implementation should be pre-configured to use an encrypted tunnel
+when connecting to a keyserver (read: `hkps://`). Also, it should by
+default use up-to-date digests, ciphers and key sizes with respect to
+the current commonly agreed best practices.
 
-### 2\.8 Usability
+Tools for creating encrypted storage containers are also recommended.
+
+### 2.7.7 "Virtual" input system
+
+**FIXME**: should provide a virtual keyboard (used with the mouse) to
+protect against hardware
+[keyloggers](http://en.wikipedia.org/wiki/Keylogger).
+
+### 2.7.8 Entropy
+
+Some crucial applications of the PELD, such as the Tor client, make
+heavy use of cryptographic techniques and therefore rely on a high
+quality proper pseudo-random number generator (PRNG). Initializing
+(seeding) a PRNG is tricky in a Live system context as the system
+state after boot, if not fully deterministic, is parametrized by far
+less variables than in the case of a non-Live system.
+
+Using an auxiliary entropy source such as
+[haveged](http://www.irisa.fr/caps/projects/hipsor/) should thus be
+considered.
+
+## 2.8 Usability
 
 Security is usually hard to get. Therefore steps need to be taken in
 order to make the user more comfortable with the PELD, and also to
 educate the user about the specific risks and quirks with respect to
 anonymity on the Internet.
 
-#### 2\.8.1 Internationalization
+### 2.8.1 Internationalization
 
 The user should be able to easily select his of her language of
 preference. User applications should be localized to fit this
 preference, as should system settings such as keyboard layout.
 
-#### 2\.8.2 Education and user help
+**FIXME**: documentation should be translatable, software written
+specifically for the PELD should be i18n/l10n-aware.
+
+### 2.8.2 Education and user help
 
 The PELD should include an easily read document explaining how to use
 it and its software securely. The user should be assumed to only have
-the knowledge of you average computer user, so there will be required
+the knowledge of an average computer user, so there will be required
 some explaining of general security concepts.
 
-### 2\.9 Other considerations
+Real-world experience demonstrates the average user quite rarely
+thinks to upgrade his or her PELD copy, and is often pretty happy
+running an obsolete version affected by numerous well-known security
+issues. A PELD running copy should therefore notice it is affected by
+known security issues and notify the user if a newer release fixes
+some.
 
-#### 2\.9.1 Maintainability
+## 2.9 Other considerations
+
+### 2.9.1 Maintainability
 
 The procedure to update the PELD should not be prohibitive to provide
 timely software updates to address issues related to security or
 anonymity. A scripted, automatic build procedure is greatly preferred
 to manually setting up things.
 
-#### 2\.9.2 Open-source transparency
+**FIXME**: sustainability: development team i.e. not a one-person work
+
+### 2.9.2 Open-source transparency
 
 For the sake of transparency the use of open-source software is
 encouraged. Binary blobs should only be used when no good alternatives
@@ -290,185 +401,114 @@ firmwares.
 Similarly, it is recommended that the PELD itself is open-source, and
 that it is well documented to help security analysis by third-parties.
 
-## 3 Implementation
+### 2.9.3 Easy feedback
 
-The Incognito LiveDistro is an implementation the [PELD
-specification](#spec) above. It is licensed under the GNU GPL version
-2.
+**FIXME**: easy for end-users to provide feedback to the developers
+(email, web forum, bug tracker... anything but possible anonymously
+or at least pseudonymously).
+
+# 3 Implementation
+
+T(A)ILS is an implementation the PELD specification above. It is
+licensed under the GNU GPL version 3 or (at your option) any later
+version.
+
+Critical parts of the config (firewall, polipo and Tor config) are
+based on the well known, trusted Incognito's ones.
 
 **NOTICE**: This distribution is provided as-is with no warranty of
 fitness for a particular purpose, including total anonymity. Anonymity
 depends not only on the software but also on the user understanding
 the risks involved and how to overcome those risks.
 
-### 3\.1 Download
+## 3.1 Download
 
-See the [download
-section](http://www.browseanonymouslyanywhere.com/incognito/index.php?option=com_content&task=view&id=26&Itemid=39)
-on [Incognito's main
-site](http://www.browseanonymouslyanywhere.com/incognito) for download
-information. Various development files (portage snapshot and stage3
-tarball) as well as the current version of Incognito can be found at
-<http://files1.cjb.net/incognito/>.
+See the [[download section|download]] on [[T(A)ILS's main site|/index]] for download information.
 
-The sources are stored in a
-[Subversion](http://subversion.tigris.org/) repository. It can be
-viewed or checked out at
-<https://tor-svn.freehaven.net/svn/incognito/>.
+The sources are stored in a bunch of [Git](http://git-scm.com/)
+repositories. See the [[git page|git]] on the T(A)ILS wiki for
+details.
+
+**FIXME**: decide canonical location of this document.
 
 The latest version of this document for the current release can be
-found
-[here](http://www.anonymityanywhere.com/incognito/index.php?option=com_content&task=view&id=26&Itemid=39).
-The development version of this document can be found at Incognito's
-subversion repository
-[here](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/usr/share/incognito/docs.html),
-although it should be noted that some information which is added
-dynamically at build will not be present.
+found here. The development version of this document can be found at
+T(A)ILS Git repository [here](FIXME).
 
-### 3\.2 Software
+## 3.2 Software
 
-The following software is used in Incognito. This list is not
-complete, but only contains packages deemed as important for whatever
-reason. The complete list of the packages is included in the
-distribution at /usr/share/packages.txt but note that this package
-list currently will contain a few false positives of packages that get
-uninstalled in order to conserve space.
+The following software is used in T(A)ILS. This list is not complete,
+but only contains packages deemed as important for whatever reason.
+The full packages list can be found in the [BitTorrent files download
+directory](/torrents/files/) (look for files with the `.packages`
+extension).
 
-#### 3\.2.1 Incognito core
-
+### 3.2.1 Core software
  
-- [Gentoo Linux](http://www.gentoo.org/) (using [hardened-sources]()
-  as the system kernel): The base operating system, provides hardware
-  detection, infrastructure. Please note that the Gentoo Foundation
-  does not provide or endorse this software distribution.
-- [Tor](http://www.torproject.org/) 0.2.0.30: Anonymizing overlay
-  network for TCP. Our intention is to always use the latest stable
-  version.
-- [polipo](http://www.pps.jussieu.fr/%7Ejch/software/polipo/) 1.0.3A:
-  caching web proxy
-- [macchanger](http://www.alobbs.com/macchanger) 1.5.0-r1: Utility for
-  viewing/manipulating the MAC address of network interfaces
-- [lighthttpd](http://www.lighttpd.net/) 1.4.19-r2 (for hidden
-  services): Lightweight high-performance web server
-- [3proxy](http://www.security.nnov.ru/soft/3proxy/) 0.5.3: really
-  tiny cross-platform proxy servers set
-- [Mixminion](http://mixminion.net/) 0.0.8A: Type III Anonymous
-  Remailer
-- [pdnsd](http://www.phys.uu.nl/%7Erombouts/pdnsd.html) 1.2.6: Proxy
-  DNS server with permanent caching. Configured to do lookups through
-  Tor.
-- [TrueCrypt](http://www.truecrypt.org/) 6.0: Free open-source disk
-  encryption software. This is what is used for encrypting the
-  [persistent home partition while running on USB](#usb). It also has
-  a GUI for general usage.
+- [Debian GNU/Linux](http://www.debian.org/): The base operating
+  system, provides hardware detection, infrastructure. Please note
+  that the Debian distribution does not provide or endorse this
+  software distribution.
+- [Debian Live](http://live.debian.net/): Toolkit to build Live
+  systems based on Debian.
+- [Tor](http://www.torproject.org/): Anonymizing overlay network for
+  TCP. Our intention is to always use the latest stable version.
+- [polipo](http://www.pps.jussieu.fr/%7Ejch/software/polipo/):
+  Caching web proxy.
+- [macchanger](http://www.alobbs.com/macchanger): Utility for
+  viewing/manipulating the MAC address of network interfaces.
+- [pdnsd](http://www.phys.uu.nl/%7Erombouts/pdnsd.html): Caching DNS
+  proxy. Configured to forward lookups through Tor.
 
-#### 3\.2.2 Internet applications
+**FIXME**: explain why we don't recompile everything with hardened
+tool chain. Be accurate about the present/missing kernel security
+features.
 
-- [Firefox]() 2.0.0.16: Firefox Web Browser. In addition, the following
-  extensions are installed for security and usability reasons:
-  - [Torbutton](https://www.torproject.org/torbutton/) 1.2.0: Firefox
-    plugin to control Tor. It also provides protections against
-    several attacks possible due to Firefox's non-HTTP features.
-  - [FireGPG](http://noscript.net/) 0.5.1: Firefox plugin to disable
-    javascript
-  - [refcontrol](http://www.stardrifter.org/refcontrol/) 0.8.11:
-    Firefox extension to control what gets sent as the HTTP Referer on
-    a per-site basis.
-  - [Adblock Plus](http://adblockplus.org/) 0.7.5.5: Advertisement
-    blocker for Firefox
-  - [Firefox Quick Locale
-    Switcher](http://www.captaincaveman.nl/content/firefox_extensions/quick_locale_switcher/)
-    1.6.3.7: Firefox plugin to quickly switch the locale
-- [Thunderbird](http://www.mozilla.com/thunderbird) 2.0.0.14:
-  Thunderbird Mail Client. In addition, the following extensions are
-  installed for security and usability reasons:
-  - [Thunderbird OpenPGP (enigmail)](http://enigmail.mozdev.org/)
-    0.95.6: GnuPG encryption binary plugin for thunderbird
-  - [Thunder
-    Plunger](http://addons.mozilla.org/en-US/thunderbird/addon/4390)
-    1.0: Mozilla Thunderbird extension to clean up files
-- [XChat](http://www.xchat.org/) 2.8.4-r3: Graphical IRC client
-- [ssh](http://www.openssh.org/) 4.7: Port of OpenBSD's free SSH release
-- [links](http://links.twibright.com/) 2.1: links is a fast
-  lightweight text and graphic web-browser
-- [OpenVPN](http://openvpn.net/) 2.0.7-r2: OpenVPN is a robust and
-  highly flexible tunneling application compatible with many OSes..
-  Can operate over TCP or UDP. Due to limitations of the Tor software
-  only TCP is anonymized. UDP is currently blocked.
+### 3.2.2 Virtual keyboard
 
-#### 3\.2.3 Other GUI applications
+- [onBoard](https://launchpad.net/onboard) virtual keyboard as a
+  countermeasure against hardware keyloggers.
 
-- [Vidalia](http://www.vidalia-project.net/) 0.1.6: Qt 4 front-end for
-  Tor
-- [GPA](http://gpa.wald.intevation.org/) 0.7.6: Standard GUI for GnuPG
-- [KeePassX](http://keepassx.sourceforge.net/%3C) 0.3.1: Qt password
-  manager compatible with its Win32 and Pocket PC versions.
-- [KDE 3.5](http://www.kde.org/): K Desktop Environment, a reduced
-  install with parts that could be useful on an anonymity CD.
-- [KDE - Konqueror ](http://www.kde.org/) 3.5.9: KDE Web browser, file manager, ...
-- [TorK](http://tork.sourceforge.net/) 0.29.2: A Tor controller for the
-  KDE desktop
-- [KDE - Kontact](http://www.kde.org/) 3.5.9: KDE personal information manager
-- [KDE - KSnapShot](http://www.kde.org/) 3.5.9: KDE Screenshot Utility
-- [KDE - Akregator](http://www.kde.org/) 3.5.9-r1: KDE news feed aggregator.
-- [KDE - krfb](http://www.kde.org/) 3.5.9: VNC-compatible server to share KDE desktops
-- [KDE - KTorrent](http://ktorrent.org/) 2.2.4: A BitTorrent program for KDE.
-- [KDE - KPGP](http://www.kde.org/) 3.5.9: KDE gpg keyring manager
-- [KDE - kvpnc]()
+### 3.2.3 Other applications
 
-#### 3\.2.4 Miscellaneous software
+**FIXME**: insert an excerpt here (mainly software that is required or
+recommended by the above specification)
 
-- [GnuPG](http://www.gnupg.org/%3C) 2.0.9: The GNU Privacy Guard, a
-  GPL pgp replacement
-- [thcrut](http://www.thc.org/thc-rut/) 1.2.5: Network discovery and
-  fingerprinting tool
-- [nmap](http://nmap.org/) 4.62: A utility for network exploration or
-  security auditing
-- [airsnort](http://airsnort.shmoo.com/) 0.2.7: 802\.11b Wireless
-  Packet Sniffer/WEP Cracker
-- [screen](http://www.gnu.org/software/screen/) 4.0.3: Screen is a
-  full-screen window manager that multiplexes a physical terminal
-  between several processes
-- [telnet](ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/)
-  0.17-r8: Standard Linux telnet client and server
-- [socat](http://www.dest-unreach.org/socat/) 2.0.0: Multipurpose
-  relay (SOcket CAT)
+See [[features]] for a partial list of bundled software.
 
-### 3\.3 Internationalization
+## 3.3 Internationalization
 
 The following locales are installed. If you'd like to see another
 locale, please let us know.
- 
-- ar\_EG (Egyptian Arabic) 
-- de\_DE (German) 
-- el\_GR (Greek) 
-- en\_GB (British English) 
-- en\_US (American English) 
-- es\_ES (Spanish) 
-- fa\_IR (Persian) 
-- fr\_FR (French) 
-- he\_IL (Hebrew) 
-- it\_IT (Italian) 
-- ja\_JP (Japanese) 
-- pt\_PT (Portugese) 
-- ru\_RU (Russian) 
-- sv\_SE (Swedish) 
-- zh\_CN (Chinese)
 
-See
-[/etc/locale.gen](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/locale.gen)
-for the selected languages. See
-[fsscript.sh](https://tor-svn.freehaven.net/svn/incognito/trunk/fsscript.sh)
-for how this configuration is applied.
+- ar (Arabic)
+- ar_EG.UTF-8 (Egyptian Arabic)
+- de, de_DE.UTF-8 (German)
+- es, es_ES.UTF-8 (Castellano)
+- en_US, en_US.UTF-8 (American English)
+- fr, fr_FR.UTF-8 (French)
+- it, it_IT.UTF-8 (Italian)
+- pt, pt_PT.UTF-8 (Portuguese)
+- ru, ru_RU.UTF-8 (Russian)
+- zh, zh_CN.UTF-8 (Chinese)
 
-### 3\.4 Configuration
+The chosen locale's files are compiled at boot time.
+
+See `config/amnesia` for the selected languages. See
+`config/chroot_local-preseed/localepurge` and grep the source for
+`AMNESIA_SUPPORTED_LANGUAGES` for how this configuration is applied.
+
+## 3.4 Configuration
 
 In this section we briefly present the setup of several key software
-packages and system settings of Incognito with respect to security and
+packages and system settings of T(A)ILS with respect to security and
 anonymity. There are of course other minor tweaks here and there, but
 those are mainly for usability issues and similar.
 
-#### 3\.4.1 The Tor™ software
+**FIXME**: integrate [[design/Tor_enforcement]] notes in here,
+especially the firewall exceptions.
+
+### 3.4.1 The Tor™ software
 
 The Tor software is currently configured as a client only. The client
 listens on SOCKS port 9050 with a control port 9051 (using cookie
@@ -477,18 +517,10 @@ server on port 8853. Only connections from localhost are accepted. It
 can be argued that running a server would increase your anonymity for
 a number for reasons but we still feel that most users probably would
 not want this due to the added consumption of bandwidth.
-
  
-- [/etc/tor/torrc](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/tor/torrc)
+- [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]
 
-#### 3\.4.2 Mixminion
-
-Mixminion cannot be configured as a server as these servers need to be
-very reliable. As a client the default configuration seems to be
-acceptable. Note that TorK has built-in support for Mixminion with an
-easy to use interface (lacking PGP support, unfortunately).
-
-#### 3\.4.3 DNS
+### 3.4.3 DNS
 
 DNS leaks are controlled by using a local caching DNS server, pdnsd,
 that in turn performs its DNS lookups through the Tor network. pdnsd
@@ -499,33 +531,35 @@ therefore UDP packets are blocked in order to prevent leaks. Another
 solution may be to use the Linux network filter to forward UDP lookups
 to the local DNS server.
 
-- [/etc/resolv.conf](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/resolv.conf)
-- [/etc/conf.d/pdnsd](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/conf.d/pdnsd)
-- [/etc/tor/torrc](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/tor/torrc)
-- [/etc/conf.d/net](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/conf.d/net)
-- [/var/lib/iptables/rules-save](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/var/lib/iptables/rules-save) (loaded by the standard Gentoo /etc/init.d/iptables service)
+[resolvconf](http://alioth.debian.org/projects/resolvconf/) is used to
+setup `/etc/resolv.conf` and prevent NetworkManager and dhcp-client to
+change it.
 
-#### 3\.4.4 HTTP Proxy
+- [[!tails_gitweb config/chroot_local-includes/etc/resolvconf/resolv.conf.d/base]]
+- [[!tails_gitweb config/chroot_local-includes/etc/pdnsd.conf]]
+- [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
+- [[!tails_gitweb config/chroot_local-includes/etc/firewall.conf]]
+
+### 3.4.4 HTTP Proxy
 
 Polipo provides with caching HTTP proxy functionality. It contacts the
 Tor software via SOCKS5 to make the real connections.
 
-- [/etc/polipo/config](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/polipo/config)
-- [/etc/env.d/99proxy](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/env.d/99proxy)
-- [/var/lib/kdesession/kioslaverc](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/var/lib/kdesession/kioslaverc) (copied to /home/incognito/.kde/... during build)
+- [[!tails_gitweb config/chroot_local-includes/etc/polipo/config]]
+- [[!tails_gitweb config/chroot_local-includes/etc/environment]]
+- [[!tails_gitweb config/chroot_local-includes/usr/share/amnesia/gconf/gnome_proxy.xml]]
+  (imported into GConf during build)
 
-#### 3\.4.5 SOCKS libraries
+### 3.4.5 SOCKS libraries
 
-tsocks (patched for Tor usage as per the ebuild's tordns USE flag) and
-dante are installed. Note that it is unnecessary with the Linux
-network filter (see below) and the local DNS server to socksify or
-torify applications. This is done at a lower level. These libraries
-are here due to dependencies and configured for completeness.
+tsocks and torify are installed. Note that it is unnecessary with the
+Linux network filter (see below) and the local DNS server to torify
+applications. This is done at a lower level. These tools are solely
+here due to dependencies and configured for completeness.
 
-- [/etc/socks/](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/socks/)
-- [/etc/env.d/99proxy](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/env.d/99proxy)
+- [[!tails_gitweb config/chroot_local-includes/etc/tor/tor-tsocks.conf]]
 
-#### 3\.4.6 Network Filter
+### 3.4.6 Network Filter
 
 One serious security issue is that we don't know what software will
 attempt to contact the network and whether their proxy settings are
@@ -534,14 +568,16 @@ This is solved by forwarding all direct TCP connections through Tor's
 transparent proxy. Linux has a kernel level network filter that
 accomplishes this.
 
-- [/var/lib/iptables/rules-save](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/var/lib/iptables/rules-save) (loaded by the standard Gentoo /etc/init.d/iptables service)
-- [/etc/tor/torrc](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/tor/torrc)
+- [[!tails_gitweb config/chroot_local-includes/etc/firewall.conf]] for IPv4
+- [[!tails_gitweb config/chroot_local-includes/etc/firewall6.conf]] for IPv6
+- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/00-firewall.sh]]
 
-#### 3\.4.7 Random MAC Address
+### 3.4.7 Random MAC Address
+
+**FIXME: this is not implemented yet.**
 
 The macchanger program can be used to change the network card MAC
-addresses to a random value. Gentoo has direct support for macchanger
-so all we need to do is configure it. The configuration is set to
+addresses to a random value. The configuration is set to
 "random-ending" which is equivalent to "macchanger -e", meaning the
 vendor and media type are not changed. This is done to not draw
 attention to the changed MAC address in case someone is watching.
@@ -555,65 +591,66 @@ language is chosen and the system starts booting.
 
 - [/etc/init.d/macchanger](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/init.d/macchanger)
 
-#### 3\.4.8 Mozilla Firefox
+### 3.4.8 Iceweasel
 
-Firefox uses Torbutton in order to prevent attacks using JavaScript,
+(Note: Iceweasel is the name of the web browser, based on Mozilla
+Firefox, that is shipped by Debian and thus by T(A)ILS.)
+
+**FIXME**: document extensions and other Iceweasel T(A)ILS configuration.
+
+Iceweasel uses Torbutton in order to prevent attacks using JavaScript,
 plugins and other non-HTTP features. It is configured to always be
-enabled on Firefox start and uses polipo as HTTP(s) proxy and Tor as
+enabled on Iceweasel start and uses polipo as HTTP(s) proxy and Tor as
 SOCKS proxy. SOCKS is configured to perform name resolution through
-the proxy. Firefox is also configured to not cache (mainly to reduce
-memory usage for CD users as disk writes will be stored there),
-history (just in case) and many other things. The Firefox config is
-pretty heavily commented, so any other relevant settings may be
-investigated by looking in it.
+the proxy. Iceweasel is also configured to not cache to disk (mainly
+to reduce memory usage for CD users as disk writes will be stored
+there), history (just in case) and many other things. The Iceweasel
+config is pretty heavily commented, so any other relevant settings may
+be investigated by looking in it.
 
-- [/var/lib/firefox-config/](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/var/lib/firefox-config/) (copied to /home/incognito/.mozilla during build)
-- [Firefox config](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/var/lib/firefox-config/firefox/o2e6y2eh.default/prefs.js)
+- [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/]]
 
-#### 3\.4.9 Mozilla Thunderbird
+### 3.4.9 Claws Mail
 
-Thunderbird's proxy settings are set up to use Tor. An old version of
-Torbutton (1.0.4.01, when it still supported Thunderbird) is installed
-solely for the purpose of scrubbing the _real_ IP address and hostname
+**FIXME: adapt and rewrite, using [[the audit draft|todo/applications_audit/claws_mail]]**
+
+Claws Mail's proxy settings are set up to use Tor.
+
+ for the purpose of scrubbing the _real_ IP address and hostname
 from the EHLO/HELO messages which otherwise would be sent in the clear
-to the SMTP server. Furthermore, the first ten or so accounts that a
-user will create are pre-configured to not use HTML as that otherwise
-may break PGP usage. See the comments in the Thunderbird config for
-more settings.
+to the SMTP server.
 
-- [/var/lib/thunderbird-config/](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/var/lib/thunderbird-config/) (copied to /home/incognito/.thunderbird during build)
-- [Thunderbird config](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/var/lib/thunderbird-config/rhy4kriw.default/prefs.js)
+Furthermore, the accounts that a user will create are pre-configured
+to not use HTML as that otherwise may break PGP usage.
 
-#### 3\.4.10 Bookmarks
+- [[!tails_gitweb config/chroot_local-includes/etc/skel/.claws-mail/]] is copied to
+  the user's `$HOME` at boot time
 
-Firefox have preset bookmarks related to anonymity.
+### 3.4.11 Pidgin
 
-- Firefox: [bookmarks.html](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/var/lib/firefox-config/firefox/m7m1jk79.Default%20User/bookmarks.html)
+**FIXME: this section needs heavy adaptation work**
 
-#### 3\.4.11 XChat
+**FIXME: mention the IM "random" user name**
 
-XChat is configured to use the Tor software as a SOCKS5 proxy. It will
-pass the hostname through SOCKS5 so that the exit node does the DNS
-resolution. In addition all ctcp responses except PING are disabled as
-they otherwise could disclose useragent, system time and other
-information.
+Pidgin is configured to not log anything and to use the Tor software
+as a SOCKS5 proxy. It will pass the hostname through SOCKS5 so that
+the exit node does the DNS resolution.
 
-- [/var/lib/xchat-config](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/var/lib/xchat-config)
-- [/var/lib/ctcpreply.conf](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/var/lib/ctcpreply.conf)
-- [fsscript.sh](https://tor-svn.freehaven.net/svn/incognito/trunk/fsscript.sh)
-
-#### 3\.4.12 Pidgin
+In addition all ctcp responses except PING are disabled as they
+otherwise could disclose useragent, system time and other information.
 
 Pidgin is configured to not log anything and to use the Tor SOCKS
-proxy. Additionally the Off-the-record Messaging plug-in and two IRC
-enhancing plugins are loaded automatically. The IRC More plug-in is
-patched to not report useragent and to use empty part/quit messages to
-prevent fingerprinting.
+proxy. Additionally the Off-the-record Messaging plug-in and 
 
-- [/var/lib/pidgin-config/prefs.xml](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/var/lib/pidgin-config/prefs.xml)
-- a href="https://tor-svn.freehaven.net/svn/incognito/trunk/portage.overlay/x11-plugins/purple-plugin\_pack/files/hide-stuff.patch"&gt;hide-stuff.patch
+**FIXME**: two IRC enhancing plugins ?
 
-#### 3\.4.13 Host system RAM
+are loaded automatically. The IRC More plug-in is patched to not
+report useragent and to use empty part/quit messages to prevent
+fingerprinting.
+
+### 3.4.13 Host system RAM
+
+**FIXME:  mention this is currently sometimes buggy and not to be relied on (yet)**
 
 When shutting down the system RAM is securely wiped. RAM can actually
 be read after the machine shuts off with the right equipment. The
@@ -624,188 +661,78 @@ booting from a USB drive you can remove the drive once prompted. In
 either case you can leave the computer and let it finish on its own,
 or simply turn it off if you are not worried about this attack.
 
-- [/var/patches/secure\_halt.patch](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/var/patches/secure_halt.patch) (applied during build)
-- [fsscript.sh](https://tor-svn.freehaven.net/svn/incognito/trunk/fsscript.sh)
+- [[!tails_live-boot_gitweb debian/live-boot.init]]
 
-#### 3\.4.14 Passwords
+### 3.4.14 Passwords
 
-There are two users that are intended to be used for logins,
-'incognito' and 'root'. Since this is a CD/USB the passwords are
-empty. This should not be a security concern because the user will
-remove the CD/USB when done and there should be no services allowing
-logins from the network. Suggestions for better solutions are welcome,
-though.
+There are two users that are intended to be used for logins, `amnesia`
+and `root`. Both have `amnesia` set as a password, and the `amnesia`
+user is allowed to gain super user privileges, without providing a
+password, using `sudo`. The user will remove the CD/USB when done and
+there should be no services allowing logins from the network, but
+still: we are aware of the security risks involved by password-less
+sudo and are [[working on it|todo/better_root_access_control]].
 
-- [fsscript.sh](https://tor-svn.freehaven.net/svn/incognito/trunk/fsscript.sh)
+## 3.5 Running T(A)ILS in virtual machines
 
-### 3\.5 Running Incognito in virtual machines
-
-Incognito may of course be run in virtual machines. Due to the
+T(A)ILS may of course be run in virtual machines. Due to the
 popularity of [VMWare](http://www.vmware.com/) we include
 [open-vm-tools](http://open-vm-tools.sourceforge.net/) (an open-source
-alternative to VMware tools) as well as special video and input divers
+alternative to VMware tools) as well as special video drivers
 for an improved user experience in that environment. Due to the
 closed-source nature of VMWare we try to encourage users of open VMs,
 like [VirtualBox](http://virtualbox.org/) and
-[QEMU](http://fabrice.bellard.free.fr/qemu/), by making sure that
+[QEMU](http://www.qemu.org/), by making sure that
 these also work. In the case of VirtualBox both video and input
-drivers are included.
+drivers are included, as well as the guest utilities.
 
 Security concerns for all VMs are a keyloggers, viruses and other
-malware in the host OS which a guest OS like Incognito cannot defend
-against.
+malware in the host OS which a guest OS like T(A)ILS cannot defend
+against. T(A)ILS therefore tries to detect whether it is run inside a
+VM and warns the user if it is.
 
-### 3\.6 Running Incognito inside a Windows session
+## 3.6 Running T(A)ILS inside a Windows session
 
-[QEMU](http://fabrice.bellard.free.fr/qemu/) for Microsoft Window
-ships with Incognito and is used to run the CD/USB in a virtual
-machine whenever native boot is impossible or not desirable. Note that
-this will work for Windows 2000/XP or greater only.
+**FIXME: not implemented yet.**
 
-### 3\.7 Persistent User Settings for a USB drive
+[QEMU](http://www.qemu.org/) for Microsoft Window ships with T(A)ILS
+and is used to run the CD/USB in a virtual machine whenever native
+boot is impossible or not desirable. Note that this will work for
+Windows 2000/XP or greater only.
 
-The CD may be copied to a USB drive. Why do that? USB drives are
-easier to carry, harder to break, offer file storage and persistent
-user settings between sessions. There is a script provided that will
-copy the CD to a USB drive and make the drive bootable. Note the
-script depends on the Gentoo LiveCD structure, it probably won't work
-when run on another LiveCD setup.
+## 3.7 Build process and maintenance
 
-The persistent home volume can be stored as a
-[TrueCrypt](http://www.truecrypt.org/) volume or unencrypted. For the
-Un\*x savvy, the unencrypted volume is stored as an ext3 file on the
-USB drive. The file home.tc (TrueCrypt) or home.ext3.img (unencrypted)
-on the USB drive and can be removed to reset to the CD defaults or
-copied elsewhere for a backup. You will need to do a clean shut-down
-to make sure your settings are saved. When booting from a writeable
-medium and there is no home volume you will be prompted to create one,
-you may choose not to do so and to disable the feature altogether with
-the possibility to enable it again from within the GUI.
+The Debian Live release build tool is used to build T(A)ILS. This tool
+is designed automate the build process of the target distribution,
+which also make them easy to maintain.
 
-- [/etc/init.d/external-config-setup](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/init.d/external-config-setup)
-- [/usr/sbin/create-usb](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/usr/sbin/create-usb)
-- [/usr/sbin/create-homevol](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/usr/sbin/create-homevol)
-- [/usr/sbin/enable-persistent](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/usr/sbin/enable-persistent)
-
-#### Configuration copied from USB drive
-
-Certain configurations are copied from the USB drive on boot if no
-persistent drive is mounted. Note that this feature is pretty secret
-at the moment. A more elaborate and general filesystem overlaying
-thing is in the works as a replacement.
-
-The following table lists the configuration, where it should exist on
-the USB drive and where it is copied into.
-
-<table border="1">
-  <tbody>
-    <tr>
-      <th align="left">Software</th>
-      <th align="left">USB drive location</th>
-      <th align="left">Destination</th>
-    </tr>
-    <tr>
-      <td>OpenVPN</td>
-      <td>/keys/openvpn</td>
-      <td>/etc/openvpn</td>
-    </tr>
-    <tr>
-      <td>SSH</td>
-      <td>/keys/ssh</td>
-      <td>/home/incognito/.ssh</td>
-    </tr>
-  </tbody>
-</table>
-
-- [/etc/init.d/external-config-setup](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/init.d/external-config-setup)
-
-### 3\.8 Hidden Services
-
-Hidden HTML content may be served if running from an USB drive.
-Content is limited to static HTML pages. The content is stored in the
-home directory and so takes advantage of TrueCrypt encryption. The
-directory structure follows.
-
-- /home/hidden/[name]Base directory for hidden content where [name]
-  can be anything (sane) that you'd like.
-- /home/hidden/[name]/confConfiguration directory mostly used for Tor
-  hidden service information. It will include the hostname and private
-  key, keep it safe, i.e. don't copy it over to your buddy's USB
-  drive.
-- /home/hidden/[name]/conf/portOptional port for the hidden service.
-  This is what you'd give out to others. If you will have multiple
-  services it is best to specify the port. The default is 80,
-  increasing from there for each additional service.
-- /home/hidden/[name]/conf/torrcOptional config to append to
-  /etc/tor/torrc after the hidden service description. An example
-  would be a HiddenServiceNodes directive, etc.
-- /home/hidden/[name]/wwwThe HTML content. Use index.html for your
-  default page.
-
-The [lighttpd](http://www.lighttpd.net/) server is used to serve the
-content. Configuration of the server is done at boot time in the
-[/etc/init.d/hidden-service](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/init.d/hidden-service)
-init script.
-
-The host name to use for the hidden service can be found in the
-/home/hidden/[name]/conf/hostname file for that service. This file is
-created by the Tor software when configuring the hidden service. The
-host name will be the same across sessions and machines as it and the
-private key are stored in the /home/hidden/[name]/conf directory.
-
-Changes to /home/hidden (service addition/removal,
-/home/hidden/[name]/conf change) can be applied using the following
-command from a terminal. To get a terminal on full, type "Alt-F2",
-"konsole". On tiny right-click on the desktop and choose "xterm". ` su
--c /etc/init.d/hidden-service restart ` Note that content changes in
-/home/hidden/[name]/www should take effect immediately without running
-the above command.
-
-- [/etc/init.d/hidden-service](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/init.d/hidden-service)
-
-### 3\.9 Build process and maintenance
-
-The Gentoo Catalyst release build tool is used to build Incognito.
-This tool is designed automate the build process of the target
-distribution, which also make them easy to maintain. Since essentially
-everything is compiled from sources, building Incognito from scratch
-takes several hours or even a few days to complete. But this is seldom
-done or needed and catalyst makes it possible to cache already built
-packages so they need not be compiled again. Adding or removing
-software to/from the distribution is also generally trivial but might
-require altering the ebuild or writing new ones.
-
-For detailed instructions on how to build and modify Incognito, see
-`building.html` and `hacking.html` in the source root.
+For detailed instructions on how to build and modify T(A)ILS, see
+[[build]] and [[contribute]] on the wiki.
 
 The following applications are kept up to date as soon as possible.
-Others may be updated sooner if a major security problem occurs
-(Firefox, Thunderbird etc.)
 
- 
 - Tor (stable releases only) 
-- TorK 
 - Vidalia 
-- Polipo 
-- Mixminion
 
-Remaining applications, including the base system, will be updated to
-whatever Portage deems is stable in each new release. It takes a long
-time to compile everything from scratch and sometimes there are
-problems that need to be addressed. Most of the packages are marked
-stable by Gentoo so there are not many problems.
+Remaining applications, including the base system, will be updated
+using Debian standard upgrade process, and generally based on the
+latest Debian stable release so there are not many problems.
 
-### 3\.10 Caveats
+## 3.8 Hardware support
+
+T(A)ILS ships with the latest kernel from [Debian
+Backports](http://backports.debian.org) as a compromise between
+stability and recent hardware support.
+
+The x86 hardware architecture is the main supported one but work is
+ongoing to additionally support the PowerPC architecture.
+
+## 3.9 Caveats
 
 UDP is a problem. The Tor network does not support UDP yet, only TCP.
 Outgoing UDP packets are dropped altogether by netfilter for this
 reason.
 
-When using a USB drive your user settings are stored on the drive
-unsecured. If any personal information is stored by the applications
-you use then you must keep your drive secure from potential threats,
-for example by using the optional encryption and a strong passphrase.
-
-## 4 Security
+# 4 Security
 
 (It would be great to have links to peer reviews here.)
