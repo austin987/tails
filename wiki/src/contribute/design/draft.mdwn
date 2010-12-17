@@ -521,7 +521,17 @@ See `config/amnesia` for the selected languages. See
 `config/chroot_local-preseed/localepurge` and grep the source for
 `AMNESIA_SUPPORTED_LANGUAGES` for how this configuration is applied.
 
-## 3.4 Configuration
+## 3.4 Notification of security issues and new T(A)ILS release
+
+Shipped in T(A)ILS is a script that checked at each desktop start if
+security issues or new T(A)ILS released are published on the website. If
+some are found, a notification is printed on the desktop. This
+application is internationalized.
+
+See [[!tails_gitweb
+chroot_local-includes/usr/local/bin/tails-security-check]]
+
+## 3.5 Configuration
 
 In this section we briefly present the setup of several key software
 packages and system settings of T(A)ILS with respect to security and
@@ -531,7 +541,7 @@ those are mainly for usability issues and similar.
 **FIXME**: integrate [[design/Tor_enforcement]] notes in here,
 especially the firewall exceptions.
 
-### 3.4.1 The Tor™ software
+### 3.5.1 The Tor™ software
 
 The Tor software is currently configured as a client only. The client
 listens on SOCKS port 9050 with a control port 9051 (using cookie
@@ -543,7 +553,7 @@ not want this due to the added consumption of bandwidth.
  
 - [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]
 
-### 3.4.3 DNS
+### 3.5.3 DNS
 
 DNS leaks are controlled by using a local caching DNS server, pdnsd,
 that in turn performs its DNS lookups through the Tor network. pdnsd
@@ -563,7 +573,7 @@ change it.
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
 - [[!tails_gitweb config/chroot_local-includes/etc/firewall.conf]]
 
-### 3.4.4 HTTP Proxy
+### 3.5.4 HTTP Proxy
 
 Polipo provides with caching HTTP proxy functionality. It contacts the
 Tor software via SOCKS5 to make the real connections.
@@ -573,7 +583,7 @@ Tor software via SOCKS5 to make the real connections.
 - [[!tails_gitweb config/chroot_local-includes/usr/share/amnesia/gconf/gnome_proxy.xml]]
   (imported into GConf during build)
 
-### 3.4.5 SOCKS libraries
+### 3.5.5 SOCKS libraries
 
 tsocks and torify are installed. Note that it is unnecessary with the
 Linux network filter (see below) and the local DNS server to torify
@@ -582,7 +592,7 @@ here due to dependencies and configured for completeness.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/tor-tsocks.conf]]
 
-### 3.4.6 Network Filter
+### 3.5.6 Network Filter
 
 One serious security issue is that we don't know what software will
 attempt to contact the network and whether their proxy settings are
@@ -595,7 +605,7 @@ accomplishes this.
 - [[!tails_gitweb config/chroot_local-includes/etc/firewall6.conf]] for IPv6
 - [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/00-firewall.sh]]
 
-### 3.4.7 Random MAC Address
+### 3.5.7 Random MAC Address
 
 **FIXME: this is not implemented yet.**
 
@@ -614,7 +624,7 @@ language is chosen and the system starts booting.
 
 - [/etc/init.d/macchanger](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/init.d/macchanger)
 
-### 3.4.8 Iceweasel
+### 3.5.8 Iceweasel
 
 (Note: Iceweasel is the name of the web browser, based on Mozilla
 Firefox, that is shipped by Debian and thus by T(A)ILS.)
@@ -659,7 +669,7 @@ settings may be investigated by looking in it.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/]]
 
-### 3.4.9 Claws Mail
+### 3.5.9 Claws Mail
 
 **FIXME: adapt and rewrite, using [[the audit draft|todo/applications_audit/claws_mail]]**
 
@@ -675,7 +685,7 @@ to not use HTML as that otherwise may break PGP usage.
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.claws-mail/]] is copied to
   the user's `$HOME` at boot time
 
-### 3.4.11 Pidgin
+### 3.5.11 Pidgin
 
 Pidgin is configured to not log anything as well as not to reveal too
 much of user activity by disabling online/away reporting. MSN protocol
@@ -685,7 +695,7 @@ conversations being as private and unrecordable as possible. A script
 generates at each boot a random nick to be used on the preconfigured IRC
 servers.
 
-### 3.4.13 Host system RAM
+### 3.5.13 Host system RAM
 
 **FIXME:  mention this is currently sometimes buggy and not to be relied on (yet)**
 
@@ -700,7 +710,7 @@ or simply turn it off if you are not worried about this attack.
 
 - [[!tails_live-boot_gitweb debian/live-boot.init]]
 
-### 3.4.14 Passwords
+### 3.5.14 Passwords
 
 There are two users that are intended to be used for logins, `amnesia`
 and `root`. Both have `amnesia` set as a password, and the `amnesia`
@@ -710,7 +720,7 @@ there should be no services allowing logins from the network, but
 still: we are aware of the security risks involved by password-less
 sudo and are [[working on it|todo/better_root_access_control]].
 
-## 3.5 Running T(A)ILS in virtual machines
+## 3.6 Running T(A)ILS in virtual machines
 
 T(A)ILS may of course be run in virtual machines. Due to the
 popularity of [VMWare](http://www.vmware.com/) we include
@@ -728,7 +738,7 @@ malware in the host OS which a guest OS like T(A)ILS cannot defend
 against. T(A)ILS therefore tries to detect whether it is run inside a
 VM and warns the user if it is.
 
-## 3.6 Running T(A)ILS inside a Windows session
+## 3.7 Running T(A)ILS inside a Windows session
 
 **FIXME: not implemented yet.**
 
@@ -737,7 +747,7 @@ and is used to run the CD/USB in a virtual machine whenever native
 boot is impossible or not desirable. Note that this will work for
 Windows 2000/XP or greater only.
 
-## 3.7 Build process and maintenance
+## 3.8 Build process and maintenance
 
 The Debian Live release build tool is used to build T(A)ILS. This tool
 is designed automate the build process of the target distribution,
@@ -755,7 +765,7 @@ Remaining applications, including the base system, will be updated
 using Debian standard upgrade process, and generally based on the
 latest Debian stable release so there are not many problems.
 
-## 3.8 Hardware support
+## 3.9 Hardware support
 
 T(A)ILS ships with the latest kernel from [Debian
 Backports](http://backports.debian.org) as a compromise between
@@ -764,7 +774,7 @@ stability and recent hardware support.
 The x86 hardware architecture is the main supported one but work is
 ongoing to additionally support the PowerPC architecture.
 
-## 3.9 Caveats
+## 3.10 Caveats
 
 UDP is a problem. The Tor network does not support UDP yet, only TCP.
 Outgoing UDP packets are dropped altogether by netfilter for this
