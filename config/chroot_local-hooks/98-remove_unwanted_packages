@@ -1,0 +1,48 @@
+#!/bin/sh
+
+echo "Removing unwanted packages"
+
+### Deinstall dev packages.
+
+# We use apt-get as aptitude doesn't know about globs.
+# There are packages we could be tempted to remove but we can't:
+#   - gcc-4.4-base (libstdc++6 depends on it)
+apt-get --purge remove --yes \
+   'linux-kbuild-*' \
+   'linux-headers-*' \
+   build-essential debhelper dkms dpatch dpkg-dev \
+   cpp 'cpp-*' \
+   gcc gcc-4.3 gcc-4.3-base gcc-4.4 \
+   g++ 'g++-*' \
+   intltool-debian \
+   libgcc1 \
+   libc6-dev libgl1-mesa-dev libgudev-1.0-0 libstdc++6-4.4-dev linux-libc-dev \
+   make \
+   module-assistant \
+   po-debconf \
+   virtualbox-ose-guest-dkms
+
+### Deinstall some other unwanted packages.
+apt-get --purge remove --yes \
+   tasksel tasksel-data
+
+### Deinstall dependencies of the just removed packages.
+apt-get --purge autoremove --yes
+
+### Force purging some new dependencies of gnome-core.
+
+# We'll do this last as we now forcibly break APT state using
+# low-level dpkg commands.
+
+# - evolution and its dependencies
+dpkg --purge --force-depends \
+   evolution evolution-common libevolution \
+   libgtkhtml-editor-common libgtkhtml-editor0 libgtkhtml3.14-19
+
+# - gvfs-backends and its dependencies
+dpkg --purge --force-depends \
+   gvfs-backends libcdio-cdda0 libcdio-paranoia0 libsmbclient libwbclient0
+
+# - others
+dpkg --purge --force-depends \
+   gnome-screensaver gnome-keyring gnome-user-guide
