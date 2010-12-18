@@ -10,8 +10,8 @@
 
 **FIXME**
 
-- find a way to integrate existing documentation:
-  [[contribute/design]], [[features]] etc.
+- find a way to integrate existing documentation; still to do:
+  [[contribute/design/virtualization_support]], [[features]].
 - missing:
  * iceweasel locale spoofing or not: balance between ease of use for
    non-English-speaking users and browser fingerprinting
@@ -538,9 +538,6 @@ packages and system settings of T(A)ILS with respect to security and
 anonymity. There are of course other minor tweaks here and there, but
 those are mainly for usability issues and similar.
 
-**FIXME**: integrate [[design/Tor_enforcement]] notes in here,
-especially the firewall exceptions.
-
 ### 3.5.1 The Tor™ software
 
 The Tor software is currently configured as a client only. The client
@@ -555,33 +552,11 @@ not want this due to the added consumption of bandwidth.
 
 ### 3.5.3 DNS
 
-DNS leaks are controlled by using a local caching DNS server, pdnsd,
-that in turn performs its DNS lookups through the Tor network. pdnsd
-is the server configured in /etc/resolv.conf, listening on localhost.
-There is a security concern that some application could attempt to do
-its own DNS resolution without consulting /etc/resolv.conf, and
-therefore UDP packets are blocked in order to prevent leaks. Another
-solution may be to use the Linux network filter to forward UDP lookups
-to the local DNS server.
-
-[resolvconf](http://alioth.debian.org/projects/resolvconf/) is used to
-setup `/etc/resolv.conf` and prevent NetworkManager and dhcp-client to
-change it.
-
-- [[!tails_gitweb config/chroot_local-includes/etc/resolvconf/resolv.conf.d/base]]
-- [[!tails_gitweb config/chroot_local-includes/etc/pdnsd.conf]]
-- [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
-- [[!tails_gitweb config/chroot_local-includes/etc/firewall.conf]]
+[[!inline pages="contribute/design/Tor_enforcement/DNS" raw=yes]]
 
 ### 3.5.4 HTTP Proxy
 
-Polipo provides with caching HTTP proxy functionality. It contacts the
-Tor software via SOCKS5 to make the real connections.
-
-- [[!tails_gitweb config/chroot_local-includes/etc/polipo/config]]
-- [[!tails_gitweb config/chroot_local-includes/etc/environment]]
-- [[!tails_gitweb config/chroot_local-includes/usr/share/amnesia/gconf/gnome_proxy.xml]]
-  (imported into GConf during build)
+[[!inline pages="contribute/design/Tor_enforcement/Proxy" raw=yes]]
 
 ### 3.5.5 SOCKS libraries
 
@@ -594,16 +569,7 @@ here due to dependencies and configured for completeness.
 
 ### 3.5.6 Network Filter
 
-One serious security issue is that we don't know what software will
-attempt to contact the network and whether their proxy settings are
-setup to use the Tor SOCKS proxy or polipo HTTP(s) proxy correctly.
-This is solved by forwarding all direct TCP connections through Tor's
-transparent proxy. Linux has a kernel level network filter that
-accomplishes this.
-
-- [[!tails_gitweb config/chroot_local-includes/etc/firewall.conf]] for IPv4
-- [[!tails_gitweb config/chroot_local-includes/etc/firewall6.conf]] for IPv6
-- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/00-firewall.sh]]
+[[!inline pages="contribute/design/Tor_enforcement/Network_filter" raw=yes]]
 
 ### 3.5.7 Random MAC Address
 
