@@ -1,0 +1,47 @@
+[[!meta title="MAC address anonymization"]]
+
+---------------------------------------------------------------------
+
+**WARNING!**
+
+**This is a not implemented yet.**
+
+---------------------------------------------------------------------
+
+Using a random MAC address may improve anonymity with respect to the
+LAN and prevent mapping the user to a specific physical location.
+
+The macchanger program can be used to change the network card MAC
+addresses to a partially random value. Effort should be made to avoid
+drawing attention to the changed MAC address in case someone is
+watching.
+
+This functionality should not be enabled by default as some DHCP
+servers may be configured with specific MAC addresses. An early boot
+menu should allow enabling this feature.
+
+#### Partially random MAC address generation
+
+macchanger provides the `-r` option that uses a fully random MAC
+address. This would be a very bad choice since the probability of
+getting a non-existing vendor ID is at best (according to my
+calculations based on the number of registered vendors listed by
+macchanger and the fact that the vendor part of the MAC is 24 bits)
+99.92%. Moreover that doesn't take into account that many of the
+registered vendors haven't produced a card in decades, if ever. In
+other words, setting a fully randomized MAC address would most of the
+time loudly advertize the use of macchanger, if not the use of
+T(A)ILS.
+
+The `-a` and `-A` options fixes the bigger of the two problems, i.e.
+macchanger makes sure that the vendor ID is not bogus. It doesn't take
+into account that some vendors haven't made a NIC since 1984, and that
+some are just plain uncommon (macchanger seems to choose among from
+it's vendor list with an uniform probability distribution).
+
+T(A)ILS should then randomly choose a vendor only among the 20
+or so most common ones, and then randomise the ending of the MAC
+address with the `-e` option.
+
+Note that there are separate vendor IDs for wireless NICs, so that
+would have to be accounted for too.

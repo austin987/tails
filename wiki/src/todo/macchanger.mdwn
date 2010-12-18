@@ -12,9 +12,10 @@ Randomizing mac adresses has several cons:
   assigned by a DHCP server based on the interface mac address, and/or
   ARP tables are fixed to avoid spoofing.
 
-According to chapter 3.4.7 of the
-[Incognito's documentation](http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/docs.html),
-Incognito does have an option in the boot menu and an initrd script,
+According to chapter 3.4.7 of the [Incognito's
+documentation](http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/docs.html),
+Incognito does have an option in the boot menu and an [initrd
+script](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/init.d/macchanger),
 and the randomization is done on a small part of the mac address.
 It does not really solve both issues, it's still not working for
 static DHCP, and if mac adresses are watched, even modifying only it's
@@ -110,44 +111,27 @@ usable as the button to let people use macchanger on a running
 T(A)ILS, but it lacks a way to restore genuine hardware address. It's
 packaged in Debian ([[!debpkg macchanger-gtk]]).
 
-What part of the mac address should be randomized?
-==================================================
 
-[[!tag todo/code]]
+Partially random MAC address
+============================
 
-Still there is the discussion about randomizing the whole mac address
-(macchanger -r) or only a small part (macchanger -e). What are the
-pros and cons of each solution?
+Our [[MAC address design document|contribute/design/MAC_address]]
+explains our chosen way to generate partially random MAC addresses.
 
-> The -r option is a very bad choice since the probability of getting
-> a bogus vendor ID is at best (according to my calculations based on
-> the number of registered vendors listed by macchanger and the fact
-> that the vendor part of the MAC is 24 bits) 99.92%. And that doesn't
-> take into account that many of the registered vendors haven't
-> produced a card in decades, if ever. In other words, a -r will
-> definitely make it possible to link MAC addresses between different
-> T(A)ILS sessions.
->
-> The -a and -A options fixes the bigger of the two problems, i.e.
-> macchanger makes sure that the vendor ID is not bogus. It doesn't take
-> into account that some vendors haven't made a NIC since 1984, and that
-> some are just plain uncommon (macchanger seems to choose among from it's
-> vendor list with an uniform probability distribution).
->
-> IMHO, -e seems to be better than -r, -a and -A, unless you happen to
-> have a really uncommon vendor for your NIC.
->
-> Perhaps the safest approach would be to choose vendor only among the 20
-> or so most common ones, and then randomise the ending? That could be
-> scripted very easily if we just knew which 20 vendors to choose among,
+What now needs to be done is:
+
+- [[!taglink todo/research]] the list of 20 or so most common network
+  interface vendors ([[!taglink todo/easy]])
+- [[!taglink todo/research]] how to take into account the media type:
+  there are separate vendor IDs for wireless NICs ([[!taglink
+  todo/easy]])
+
+Once this is done a script to generate a MAC address shall be written
+along those lines:
 
 	IF=? # the interface we want to change MAC address of
-	VENDORS=(00:00:01 00:00:02 ...) # array of 20 "good" vendor IDs
+	VENDORS=(00:00:01 00:00:02 ...) # array of 20 most common vendor IDs
 	X=$[$RANDOM%20] # random integer; 0 <= X <= 19
 	RND_VENDOR="${VENDORS[$X]}:00:00:00"
 	macchanger --mac=${RND_VENDOR} ${IF}
 	macchanger -e ${IF}
-
->
-> Note that there are separate vendor IDs for wireless NICs, so that would
-> have to be accounted for too.
