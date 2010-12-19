@@ -6,7 +6,7 @@ user_pref("extensions.firegpg.enable_gpgapi", false);
 user_pref("extensions.firegpg.gmail_enabled", false);
 user_pref("extensions.firegpg.gmail_enabled", false);
 user_pref("extensions.firegpg.gpg_version", "FIREGPG_VERSION");
-user_pref("extensions.firegpg.keyserver", "pool.sks-keyservers.net");
+user_pref("extensions.firegpg.keyserver", "keys.indymedia.org");
 user_pref("extensions.firegpg.show_website", false);
 user_pref("extensions.torbutton.block_tforms", false);
 user_pref("extensions.torbutton.clear_cookies", true);
