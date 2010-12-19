@@ -7,16 +7,17 @@ echo "Removing unwanted packages"
 # We use apt-get as aptitude doesn't know about globs.
 # There are packages we could be tempted to remove but we can't:
 #   - gcc-4.4-base (libstdc++6 depends on it)
+#   - libgcc1 (vidalia depends on it)
+#   - cpp, cpp-4.4 (big parts of GNOME depend on it)
 apt-get --yes purge  \
    '^linux-kbuild-*' \
    '^linux-headers-*' \
    build-essential debhelper dkms dpatch dpkg-dev \
-   cpp '^cpp-*' \
+   cpp-4.3 \
    gcc gcc-4.3 gcc-4.3-base gcc-4.4 \
    g++ '^g\+\+-*' \
    intltool-debian \
-   libgcc1 \
-   libc6-dev libgl1-mesa-dev libgudev-1.0-0 libstdc++6-4.4-dev linux-libc-dev \
+   libc6-dev libgl1-mesa-dev libstdc++6-4.4-dev linux-libc-dev \
    make \
    module-assistant \
    po-debconf \
@@ -44,7 +45,8 @@ apt-get --yes purge \
 
 # - gvfs-backends and its dependencies
 apt-get --yes purge \
-   gvfs-backends libcdio-cdda0 libcdio-paranoia0 libsmbclient libwbclient0
+   gvfs-backends libcdio-cdda0 libcdio-paranoia0 libsmbclient libwbclient0 \
+   libtalloc2
 
 # - others
 apt-get --yes purge \
