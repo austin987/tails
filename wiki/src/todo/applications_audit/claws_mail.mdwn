@@ -1,19 +1,14 @@
 Message-ID
 ==========
 
-When the following account preferences are set, no private information
-is used to generate Message-ID headers:
+T(A)ILS currently sets `domain=localhost` in `accountrc.tmpl`.
 
-        set_domain=1
-        domain=localhost
+An account created from this template on T(A)ILS devel branch (Debian
+Squeeze, Claws Mail 3.7.6-4) ends up with `set_domain=0` and
+`domain=`, and the `Message-ID` is generated using the hostname part
+of the sender's email address.
 
-Else, Message-ID's end with `@amnesia`, which is clearly suboptimal,
-but not too bad.
-
-> On a (non-T(A)ILS) Debian Squeeze (Claws Mail 3.7.6-4), the
-> `Message-ID` is generated using the hostname part of the sender's
-> email address when `set_domain=0` and `domain=`. We need to
-> [[!taglink todo/test]] this again using T(A)ILS devel branch.
+T(A)ILS 0.6 uses the same Claws Mail version (from Debian backports).
 
 EHLO/HELO
 =========
@@ -22,7 +17,8 @@ Outgoing EHLO/HELO SMTP commands can also leak private information
 (see [this or-talk thread about
 it](http://archives.seul.org/or/talk/Aug-2008/msg00261.html)).
 
-With or without `domain` trick, claws-mail seems to always say `EHLO localhost`.
+According to our tests claws-mail always says `EHLO localhost`,
+whatever value the `domain` is set to.
 
 HTML / Javascript
 =================
@@ -32,11 +28,11 @@ Without any of them, claws-mail does basic HTML formatting (e.g.
 links) by default. The `render_html` prefs item, when set to false,
 fully disables HTML rendering.
 
-> T(A)ILS currently uses the following HTML-related settings:
->
-> 	render_html=0
-> 	invoke_plugin_on_html=0
-> 	promote_html_part=0
+T(A)ILS currently uses the following HTML-related settings:
+
+	render_html=0
+	invoke_plugin_on_html=0
+	promote_html_part=0
 
 Resources
 =========
