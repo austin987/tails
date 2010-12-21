@@ -35,6 +35,17 @@ Other design documents:
    review process quicker
  * the *Reproducibility* section is probably worth merging in the
    specification
+- be more explicit about the post-mortem forensics issue. There might
+  not be much to say but I think that it should at least be mentioned
+  in the requirements, part 2:
+  * What is required for a PELD to prevent from post-mortem analysis?
+  * How do we think this should be provided?
+- More generally this whole post-mortem analysis thingie is the real
+  difference to put forward while talking to the Tor people; bringing
+  their privacy concerns further than just the Internet connection.
+  You can be a Tor freak and get the same Tor configuration as T(A)ILS
+  on your own system but you won't get the same post-mortem analysis
+  protection.
 
 # 1 Introduction
 
@@ -128,7 +139,7 @@ attackers.
 - **Eavesdrop on sensitive data**: The Tor network only prevents the
   data from being traced (according to Tor's threat model) but does not
   protect it from eavesdropping.
-- **Post-mortem user activity and sensitive data recovery**:
+- **Post-mortem user activity and sensitive data recovery (forensics)**:
   "Normal" operating systems keep a lot of traces about their users'
   Internet activities (notably browser cache and cookies) on local
   storage media; similarly, working on a sensitive document with a
@@ -673,9 +684,18 @@ conversations being as private and unrecordable as possible. A script
 generates at each boot a random nick to be used on the preconfigured IRC
 servers.
 
+### 3.5.12 Host system swap
+
+**FIXME**: explain T(A)ILS does its best not to use any swap partition
+that could be found at runtime:
+
+- not using live-boot's swapon option
+- config/chroot_local-hooks/03-noswap
+- config/chroot_local-hooks/05-disable_swapon
+
 ### 3.5.13 Host system RAM
 
-**FIXME:  mention this is currently sometimes buggy and not to be relied on (yet)**
+**FIXME: mention this is currently sometimes buggy and not to be relied on (yet)**
 
 When shutting down the system RAM is securely wiped. RAM can actually
 be read after the machine shuts off with the right equipment. The
@@ -688,7 +708,20 @@ or simply turn it off if you are not worried about this attack.
 
 - [[!tails_live-boot_gitweb debian/live-boot.init]]
 
-### 3.5.14 Passwords
+### 3.5.14 Host system disks and partitions
+
+**FIXME**: some LiveDistros read the disks and possibly mount the
+available partitions automatically. T(A)ILS does not do so for fixed
+disks.
+
+Hints to the one who will write this part:
+
+- grep nopersistent config/amnesia
+- probably a few GConf settings in
+  config/chroot_local-includes/usr/share/amnesia/gconf/
+- udev / GNOME / udisks: removable vs. fixed
+
+### 3.5.15 Passwords
 
 There are two users that are intended to be used for logins, `amnesia`
 and `root`. Both have `amnesia` set as a password, and the `amnesia`
