@@ -22,6 +22,14 @@ internal or removable, and we probably don't want to spin down
 removable disks, especially the one we booted from.
 
 Another possibility to list internal hard disks is to use higher level
-tools, such as udev, HAL (more or less deprecated in Squeeze) or
-udisks (not in Lenny yet).
+tools, such as udev or udisks.
 
+udisks can be accessed through d-bus on the `org.freedesktop.UDisks`
+service on the system message bus. Every device (partition, disk, dm
+volume) has an entry in `/org/freedesktop/UDisks/devices/NAME` that
+has a `DeviceIsRemovable` property.
+
+Implementation hints:
+
+- `apt-cache show d-feet`
+- modern Unix-ish programing languages have d-bus bindings.
