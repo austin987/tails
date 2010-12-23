@@ -54,7 +54,7 @@ declare -a HTP_POOL
 HTP_POOL=(
 	'www.torproject.org'
 	'mail.riseup.net'
-	'www.google.com'
+	'encrypted.google.com'
 	'ssl.scroogle.org'
 )
 
