@@ -702,10 +702,13 @@ number between 0 and 100.
 
 ### 3.5.12 Host system swap
 
-**FIXME**: explain T(A)ILS does its best not to use any swap partition
-that could be found at runtime:
+By various hooks in the build process, T(A)ILS try to take care not to
+use any swap filesystem that might exist on the host machine hard drive.
+The /sbin/swapon binary is replaced by a fake script and the init script
+responsible of mounting swap at boot included in the upstream debian
+live-boot sources is removed. The swapon option at boot time is also
+desactivated.
 
-- not using live-boot's swapon option
 - [[!tails_gitweb config/chroot_local-hooks/03-noswap]]
 - [[!tails_gitweb config/chroot_local-hooks/05-disable_swapon]]
 
