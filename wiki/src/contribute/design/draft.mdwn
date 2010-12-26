@@ -353,8 +353,8 @@ compiler level stuff is necessary for utilizing the kernel security
 features. Thus the implementation of this feature might depend on the
 vendor distribution used to build the PELD upon. If it hasn't been
 widely deployed at this level, their implementation might require a lot
-of time for the PELD developers and impact its ease of maintenance,
-which would make it harder for new contributors to involve in the
+of time from the PELD developers and impact its ease of maintenance,
+which would make it harder for new contributors to get involved in the
 project. For this reasons, implementation of this feature should be
 carefully balanced between its costs and the extra security it brings.
 
@@ -696,18 +696,17 @@ support is disabled, to avoid the usage of such a privacy flawed and
 buggy plugin. The Off-the-record plugin is enabled to help one to one
 conversations being as private and unrecordable as possible. A script
 generates at each boot a random nick to be used on the preconfigured IRC
-servers, by picking up a firstname from the 2000 most registered by the
+servers, by randomly picking up a firstname from the 2000 most registered by the
 U.S. social security administration in the 70s and appending it a random
 number between 0 and 100.
 
 ### 3.5.12 Host system swap
 
-By various hooks in the build process, T(A)ILS try to take care not to
-use any swap filesystem that might exist on the host machine hard drive.
-The /sbin/swapon binary is replaced by a fake script and the init script
-responsible of mounting swap at boot included in the upstream debian
-live-boot sources is removed. The swapon option at boot time is also
-desactivated.
+T(A)ILS takes care not to use any swap filesystem that might exist on
+the host machine hard drive. Most of this is done at build time: not
+only the `/sbin/swapon` binary is replaced by a fake no-op script, but
+the init script responsible for mounting swap at boot (provided by
+live-boot) is removed. Also, live-boot's `swapon` option is not set.
 
 - [[!tails_gitweb config/chroot_local-hooks/03-noswap]]
 - [[!tails_gitweb config/chroot_local-hooks/05-disable_swapon]]
