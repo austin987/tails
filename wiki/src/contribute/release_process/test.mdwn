@@ -1,5 +1,34 @@
 [[!toc levels=1]]
 
+# Changes
+
+Keeping an eye on the changes between released versions is one of the
+many safeguards against releasing crap.
+
+## Source
+
+Thanks to Git tags one can easily compare the to-be-released source
+code with previous version's one e.g.:
+
+	git diff 0.6.1..stable
+
+## Result
+
+`wdiff -l` makes it easy to compare the list of bundled packages and
+versions with the one shipped last time e.g.:
+
+	wdiff -l wiki/src/torrents/files/tails-i386-lenny-0.6.1.packages \
+	  tails-i386-lenny-0.7.packages | less
+
+Check the output for:
+
+- new packages that may cause harm or make the images unnecessarily
+  big
+- packages that could be erroneously removed
+- new versions of software we might not have audited yet (including:
+  does the combination of our configuration with software X version
+  Y+1 achieve the same wished results as with software X version Y?)
+
 # Iceweasel
 
 * is web browsing really torified?
