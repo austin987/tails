@@ -8,6 +8,11 @@ user_pref("extensions.firegpg.gmail_enabled", false);
 user_pref("extensions.firegpg.gpg_version", "FIREGPG_VERSION");
 user_pref("extensions.firegpg.keyserver", "keys.indymedia.org");
 user_pref("extensions.firegpg.show_website", false);
+
+// Block read and write access to the history in non-Tor mode
+user_pref("extensions.torbutton.block_nthread", true);
+user_pref("extensions.torbutton.block_nthwrite", true);
+
 user_pref("extensions.torbutton.block_tforms", false);
 user_pref("extensions.torbutton.clear_cookies", true);
 user_pref("extensions.torbutton.cookie_jars", false);
