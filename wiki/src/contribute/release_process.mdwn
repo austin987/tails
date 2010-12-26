@@ -67,38 +67,44 @@ Generate the Torrents
 First, create a directory with a suitable name for every image to be
 released, such as `tails-i386-squeeze-0.7`.
 
-Second, copy the built images to these brand new directories.
+Second, copy the built images to these brand new directories and
+rename it to fit our `tails-ARCH-DEBIAN_CODENAME-VERSION.iso` naming
+convention e.g.:
+
+	mv tails-i386-squeeze-0.7-20110303.iso \
+	  tails-i386-squeeze-0.7.iso
 
 Third, generate detached GnuPG signatures for every published image,
 in the same directory as the image; e.g.
 
 	gpg --armor --default-key BE2CD9C1 --detach-sign *.iso
 
-Fourth, create a `.torrent` file for every directory to be published:
+Fourth, generate the SHA-256 hash of every image to be released,
+in the same directory as the image; e.g.
+
+	sha256sum tails-i386-squeeze-0.7.iso \
+	  > tails-i386-squeeze-0.7.iso.sha256
+
+Fifth, create a `.torrent` file for every directory to be published:
 
 	mktorrent -a \
 	  'https://www.les-renseignements-genereux.org/tracker/announce,http://z6gw6skubmo2pj43.onion:8080/announce,http://z6gw6skubmo2pj43.tor2web.com:8080/announce' \
 	  <DIRECTORY>
 
-Fifth, check the generated `.torrent` files metainfo, e.g.
+Sixth, check the generated `.torrent` files metainfo, e.g.
 using `btshowmetainfo`, to make sure they don't contain
 unwanted information.
 
-Sixth, generate the SHA-256 hash of every generated `.torrent` file:
+Seventh, generate the SHA-256 hash of every generated `.torrent` file:
 
 	sha256sum tails-i386-squeeze-0.7.torrent \
 	  > tails-i386-squeeze-0.7.torrent.sha256
 
-Seventh, generate detached GnuPG signatures for every published
+Eighth, generate detached GnuPG signatures for every published
 `.torrent` file:
 
 	gpg --armor --default-key BE2CD9C1 --detach-sign \
 	  tails-i386-squeeze-0.7.torrent
-
-Eight, generate the SHA-256 hash of every image to be released:
-
-	sha256sum tails-i386-squeeze-0.7/tails-i386-squeeze-0.7.iso \
-	  > tails-i386-squeeze-0.7.iso.sha256
 
 Upload images
 =============
