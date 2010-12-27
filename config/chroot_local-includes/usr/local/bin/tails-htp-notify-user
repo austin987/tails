@@ -35,17 +35,19 @@ my $htp_log_file  = '/var/log/htpdate.log';
 
 ### main
 
-my $notify = Desktop::Notify->new();
+my $notify = Desktop::Notify->new()
+    or die "Failed creating Desktop::Notify object.";
 
 my $summary = gettext("Synchronizing the system's clock");
 my $body    = gettext("Tor needs an accurate clock to work properly. Please wait...");
 
 my $notification = $notify->create(summary => $summary,
                                    body => $body,
-                                   timeout => 0);
+                                   timeout => 0)
+    or die "Failed to create notification object";
 
 exit 0 if -e $htp_done_file;
-$notification->show();
+$notification->show() or warn "Failed showing notification.";
 until (-e $htp_done_file) {
     sleep 1;
 }
