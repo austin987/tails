@@ -629,25 +629,6 @@ document|design/MAC_address]] and [[todo item|todo/macchanger]].
 (Note: Iceweasel is the name of the web browser, based on Mozilla
 Firefox, that is shipped by Debian and thus by T(A)ILS.)
 
-**FIXME**: the only history-related setting I can find in our
-Iceweasel config is:
-
-    pref/iceweasel.js:pref("browser.history_expire_days", 0);
-
-> Does this really mean history disabled? If it does, I wonder if we
-> really need/want this. Torbutton also has history-related settings,
-> let's check if the defaults are sane for our usecase.
->> Line 1764 of the [source code](http://bonsai.mozilla.org/cvsview2.cgi?diff_mode=context&whitespace_mode=show&file=nsGlobalHistory.cpp&branch=&root=/cvsroot&subdir=mozilla/xpfe/components/history/src&command=DIFF_FRAMESET&rev1=1.59&rev2=1.60)
->> seems to indicate that this setting *is* disabling history (if I
->> understand this code, but I'm no C++ guru). Torbutton has an option
->> to desactivate history in non-tor browsing mode, which seems to be
->> set to false by default.
->>>
->>> The devel branch of T(A)ILS now blocks read and write access to
->>> the history in non-Tor mode:  `extensions.torbutton.block_nthread`
->>> and `extensions.torbutton.block_nthwrite` are set to true in
->>> [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/profile/user.js]].
-
 Iceweasel uses Torbutton in order to prevent attacks using JavaScript,
 plugins and other non-HTTP features like web bugs. It is configured to
 always be enabled on Iceweasel start and uses polipo as HTTP(s) proxy
