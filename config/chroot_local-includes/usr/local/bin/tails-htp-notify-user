@@ -23,13 +23,15 @@ See https://amnesia.boum.org/.
 #}}}
 
 use Desktop::Notify;
+use English '-no_match_vars';
 use Locale::gettext;
 use POSIX;
 
 ### initialization
 setlocale(LC_MESSAGES, "");
 textdomain("tails-htp-notify-user");
-my $htp_done_file='/var/lib/live/htp-done';
+my $htp_done_file = '/var/lib/live/htp-done';
+my $htp_log_file  = '/var/log/htpdate.log';
 
 ### main
 
@@ -49,7 +51,8 @@ until (-e $htp_done_file) {
 }
 
 # read the return code from /var/lib/live/htp-done
-open(my $htp_done, "< $htp_done_file") or die "Can not read file: $!";
+open(my $htp_done, '<', $htp_done_file)
+    or die "Can not open file '$htp_done_file': $OS_ERROR";
 (my $htp_done_code) = (<$htp_done> =~ /^(\d+)/);
 # in case htpdate went fine, close the 'Please wait...' notification
 if ($htp_done_code == 0) {
@@ -57,7 +60,8 @@ if ($htp_done_code == 0) {
 }
 # in case htpdate failed, notify the user with the corresponding logs
 else {
-    open(my $htp_log, "< /var/log/htpdate.log") or die "Can not read file: $!";
+    open(my $htp_log, '<', $htp_log_file)
+        or die "Can not open file '$htp_log_file': $OS_ERROR";
     my $last_log;
     while (<$htp_log>) {
         if ($_ =~ /Running htpdate./) {
