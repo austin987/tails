@@ -1,0 +1,23 @@
+Onboard doesn't work at startup in squeeze : when trying to use it in azerty, it passes in qwerty
+when the window is clicked.
+
+If one sets the X11 keyboard layout, e.g. using `gnome-keyboard-properties` or `setxkbmap`,
+it works.
+
+Florence is affected by exactly the same bug, so it seems that it's a bug outside of the
+virtual keyboard, but rather somewhere in X libs.
+
+It appears that `python-virtkey` function `virtkey_get_current_group_name` in `/src/python-virtkey.c`
+returns `USA` instead of `France` when the bug appears. The wrong value is obtained from the
+ following code (with a lot af more security checks):
+
+    XkbGetState(display, XkbUseCoreKbd, &state
+    state.locked_group
+    Atom atom = cvirt->kbd->names->groups[group];
+    char * group_name = XGetAtomName(display, atom);
+
+> This might have been fixed in the meantime. Let's check if
+> `python-virtkey` or the X libs have been updated since the original
+> bug report (Nov 1st 2010), re-test this, and maybe report bugs
+> upstream. For the record: alternative virtual keyboards are listed
+> and compared on [[another todo item|todo/virtual_keyboard_in_Debian]].

@@ -11,54 +11,7 @@ the meantime.
 Initial research
 ================
 
-kvkbd
------
-
-* automagically guesses the (localized) keyboard layout from the
-  current X config
-* needs KDE libs
-
-[onBoard](http://launchpad.net/onboard)
--------
-
-* shipped by Ubuntu
-* keyboard layout dynamic learning bug reports:
-  [65626](https://bugs.launchpad.net/onboard/+bug/65626),
-  [391997](https://bugs.launchpad.net/onboard/+bug/391997)
-  These bugs are supposed to be solved in squeeze, but
-  there's another bug, probably somewhere in Xorg prevents
-  them to work (see below)
-* there is a notification area icon
-* depends on the Python gconf bindings, that are available in Squeeze
-  (package `python-gconf`) and in Lenny (package `python-gnome2`)
-
-[matchbox-keyboard](http://matchbox-project.org/?p=1)
------------------
-
-* packaged for lenny
-* misses a gnome panel applet/notification area icon, but it shouldn't be a lot to write, as there is one for matchbox panel provided
-* here is a french layout : [[keyboard-fr.xml]]
-
-gok
----
-
-* was not able to get it working
-
-xvbkd
------
-
-* no dynamic layout loading
-* quite ugly
-
-Florence
---------
-
-* [homepage](http://florence.sourceforge.net/english.html)
-
-Caribou
--------
-
-* [homepage](http://live.gnome.org/Caribou)
+This was moved to [[todo/virtual_keyboard_in_Debian]].
 
 Implementation
 ==============
@@ -92,33 +45,4 @@ Have custom built packages included in amnesia:
 Long-term goal: inclusion in Debian
 -----------------------------------
 
-[[!tag todo/code]]
-
-1. file RFP bugs for `python-virtkey` and `onboard`
-2. wait for these packages to reach Squeeze
-3. ask for Lenny backports
-4. remove our custom packages from `config/chroot-localpackages`, add
-   these packages names to
-   `config/chroot_local-packageslists/tails-common.list` and add suitable
-   APT pining
-
-Bug in squeeze
-==============
-
-Onboard doesn't work at startup in squeeze : when trying to use it in azerty, it passes in qwerty
-when the window is clicked.
-
-If one sets the X11 keyboard layout, e.g. using `gnome-keyboard-properties` or `setxkbmap`,
-it works.
-
-Florence is affected by exactly the same bug, so it seems that it's a bug outside of the
-virtual keyboard, but rather somewhere in X libs.
-
-It appears that `python-virtkey` function `virtkey_get_current_group_name` in `/src/python-virtkey.c`
-returns `USA` instead of `France` when the bug appears. The wrong value is obtained from the
- following code (with a lot af more security checks):
-
-    XkbGetState(display, XkbUseCoreKbd, &state
-    state.locked_group
-    Atom atom = cvirt->kbd->names->groups[group];
-    char * group_name = XGetAtomName(display, atom);
+See [[todo/virtual_keyboard_in_Debian]].
