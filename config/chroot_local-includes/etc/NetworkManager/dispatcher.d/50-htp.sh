@@ -28,7 +28,7 @@
 
 # Run only when the interface is not "lo":
 if [[ $1 = "lo" ]]; then
-   exit 0
+	exit 0
 fi
 
 # Run whenever an interface gets "up", not otherwise:
@@ -41,7 +41,7 @@ HTPDATE_LOG=/var/log/htpdate.log
 DONE_FILE=/var/lib/live/htp-done
 
 if [ -e "${DONE_FILE}" ]; then
-   exit 0
+	exit 0
 fi
 
 # Get LIVE_USERNAME
