@@ -32,8 +32,9 @@ use POSIX;
 ### initialization
 setlocale(LC_MESSAGES, "");
 textdomain("tails-htp-notify-user");
-my $htp_done_file = '/var/lib/live/htp-done';
-my $htp_log_file  = '/var/log/htpdate.log';
+my $htp_done_file    = '/var/lib/live/htp-done';
+my $htp_success_file = '/var/lib/live/htp-success';
+my $htp_log_file     = '/var/log/htpdate.log';
 my $debug;
 
 ### Enabling debug mode until the Squeeze regression is sorted out.
@@ -44,6 +45,8 @@ $debug = 1;
 sub debug { say STDERR $_[0] unless $debug; }
 
 ### main
+
+exit 0 if -e $htp_success_file;
 
 my $notify = Desktop::Notify->new()
     or die "Failed creating Desktop::Notify object.";
@@ -58,18 +61,13 @@ my $notification = $notify->create(summary => $summary,
     or die "Failed to create notification object";
 debug('$notification:' . "\n" . Dumper($notification));
 
-exit 0 if -e $htp_done_file;
 $notification->show() or warn "Failed showing notification.";
 until (-e $htp_done_file) {
     sleep 1;
 }
 
-# read the return code from /var/lib/live/htp-done
-open(my $htp_done, '<', $htp_done_file)
-    or die "Can not open file '$htp_done_file': $OS_ERROR";
-(my $htp_done_code) = (<$htp_done> =~ /^(\d+)/);
 # in case htpdate went fine, close the 'Please wait...' notification
-if ($htp_done_code == 0) {
+if (-e $htp_success_file) {
     $notification->close();
 }
 # in case htpdate failed, notify the user with the corresponding logs
@@ -78,7 +76,7 @@ else {
         or die "Can not open file '$htp_log_file': $OS_ERROR";
     my $last_log;
     while (<$htp_log>) {
-        if ($_ =~ /Running htpdate./) {
+        if ($_ =~ /^HTP NetworkManager hook: here we go/) {
             $last_log = '';
             next;
         }
@@ -91,4 +89,3 @@ else {
                                                timeout => 0);
     $failure_notification->show();
 }
-

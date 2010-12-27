@@ -26,29 +26,12 @@
 # as the htp user all operations but the actual setting of time, which
 # has to be done as root.
 
-# Run only when the interface is not "lo":
-if [[ $1 = "lo" ]]; then
-	exit 0
-fi
 
-# Run whenever an interface gets "up", not otherwise:
-if [[ $2 != "up" ]]; then
-	exit 0
-fi
+### Init variables
 
-LOG=/var/log/nm-htp.log
-HTPDATE_LOG=/var/log/htpdate.log
+LOG=/var/log/htpdate.log
 DONE_FILE=/var/lib/live/htp-done
-
-if [ -e "${DONE_FILE}" ]; then
-	exit 0
-fi
-
-# Get LIVE_USERNAME
-. /etc/live/config.d/username
-
-export DISPLAY=':0.0'
-exec /bin/su -c /usr/local/bin/tails-htp-notify-user "${LIVE_USERNAME}" &
+SUCCESS_FILE=/var/lib/live/htp-success
 
 declare -a HTP_POOL
 HTP_POOL=(
@@ -67,10 +50,69 @@ else
 	NAME_SERVERS="208.67.222.222 208.67.220.220"
 fi
 
-echo "Will use these nameservers: ${NAME_SERVERS}" >>$LOG
+
+### Exit conditions
+
+# Run only when the interface is not "lo":
+if [[ $1 = "lo" ]]; then
+	exit 0
+fi
+
+# Run whenever an interface gets "up", not otherwise:
+if [[ $2 != "up" ]]; then
+	exit 0
+fi
+
+# Do not run if we already successed:
+if [ -e "${SUCCESS_FILE}" ]; then
+	exit 0
+fi
+
+
+### Delete previous state file
+rm -f "${DONE_FILE}"
+
+
+### Create log file
+
+# The htp user needs to write to this file.
+# The $LIVE_USERNAME user needs to read this file.
+touch "${LOG}"
+chown htp:nogroup "${LOG}"
+chmod 644 "${LOG}"
+
+
+### Run tails-htp-notify-user (the sooner, the better)
+
+# Get LIVE_USERNAME
+. /etc/live/config.d/username
+
+export DISPLAY=':0.0'
+exec /bin/su -c /usr/local/bin/tails-htp-notify-user "${LIVE_USERNAME}" &
+
+
+### Functions
+
+log () {
+	echo "$@" >> "${LOG}"
+}
+
+quit () {
+	exit_code="$1"
+	shift
+	message="$@"
+
+	cleanup_etc_hosts
+	echo "$exit_code" >> "${DONE_FILE}"
+	if [ $exit_code -eq 0 ]; then
+		touch "${SUCCESS_FILE}"
+	fi
+	log "${message}"
+	exit $exit_code
+}
 
 cleanup_etc_hosts() {
-	echo "Cleaning /etc/hosts" >>$LOG
+	log "Cleaning /etc/hosts"
 	local tempfile
 	tempfile=`mktemp -t nm-htp.XXXXXXXX`
 	where=outside
@@ -91,6 +133,13 @@ cleanup_etc_hosts() {
 	mv "$tempfile" /etc/hosts
 }
 
+
+### Main
+
+# Beware: this string is used and parsed in tails-htp-notify-user
+log "HTP NetworkManager hook: here we go"
+log "Will use these nameservers: ${NAME_SERVERS}"
+
 echo "${BEGIN_MAGIC}" >> /etc/hosts
 
 for HTP_HOST in ${HTP_POOL[*]} ; do
@@ -103,10 +152,8 @@ for HTP_HOST in ${HTP_POOL[*]} ; do
 	       head -n 1 | \
 	       cut -d ' ' -f 4)
 	if [[ -z ${IP} ]]; then
-		echo "Failed to resolve ${HTP_HOST}" >>$LOG
 		echo "${END_MAGIC}" >> /etc/hosts
-		cleanup_etc_hosts
-		exit 17
+		quit 17 "Failed to resolve ${HTP_HOST}"
 	else
 		echo "${IP}	${HTP_HOST}" >> /etc/hosts
 	fi
@@ -114,25 +161,14 @@ done
 
 echo "${END_MAGIC}" >> /etc/hosts
 
-touch "${HTPDATE_LOG}"
-chown htp:nogroup "${HTPDATE_LOG}"
-chmod 644 "${HTPDATE_LOG}"
-
 /usr/local/sbin/htpdate \
 	-d \
-	-l "${HTPDATE_LOG}" \
+	-l "${LOG}" \
 	-a "`/usr/local/bin/getTorbuttonUserAgent`" \
 	-f \
 	-p \
 	-u htp \
 	${HTP_POOL[*]}
-
 HTPDATE_RET=$?
-echo "htpdate exited with return code ${HTPDATE_RET}" >>$LOG
 
-cleanup_etc_hosts
-
-echo "${HTPDATE_RET}" > "${DONE_FILE}"
-touch "${DONE_FILE}"
-
-exit ${HTPDATE_RET}
+quit ${HTPDATE_RET} "htpdate exited with return code ${HTPDATE_RET}"
