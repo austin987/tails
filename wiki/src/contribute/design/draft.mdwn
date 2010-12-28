@@ -52,9 +52,9 @@ In this document we present a specification of a Privacy Enhancing
 LiveDistro (PELD) as well as an actual implementation of it called The
 (Amnesic) Incognito Live System (in short: *T(A)ILS*).
 
-By writing this document we intent to help third-parties to do
+By writing this document we intend to help third-parties do
 security analyses of any given PELD and specifically of T(A)ILS.
-Another of our wishes is to contribute establishing best practices in
+Another of our wishes is to help establish best practices in
 the field of PELD design and implementation, and thus raise the
 baseline for all similar projects out there.
 
@@ -111,7 +111,7 @@ cleanup metadata -such as EXIF data- in files should be available.
 
 The PELD is supposed to be self-contained and portable (literally, not
 necessarily with respect to code portability), and thus possible to
-run in as many computing environments as possible fot the same single
+run in as many computing environments as possible from the same single
 distribution. In addition, while the PELD's main objective indeed is
 to act as a traditional LiveDistro (i.e. a [[!wikipedia Live_CD]] or
 [[!wikipedia Live_USB]]) it should also be compatible with popular
@@ -121,8 +121,8 @@ environment within their normal operating system.
 ### 2.1.5 Target user
 
 The PELD's target user is the average user in terms of computer
-literacy, and who is using a computer of which he or she not
-necessarily have full control of. Examples would be a public computer
+literacy, and who is using a computer which he or she does not
+necessarily control fully. Examples would be a public computer
 in a library, coffee shop, university or a residence. The target user
 is assumed to not want to do any of the configurations (at least with
 respect to security and anonymity) of the various applications and
@@ -164,7 +164,7 @@ attackers.
 ### 2.2.2 Capabilities, methods and other means of the attacker
 
 - **Eavesdropping**: It is assumed that the adversary is non-global
-  and has full control over the network traffic of some fractions of
+  and has full control over the network traffic of some portion of
   the Internet (e.g. some exit nodes or the Internet connection the
   user is sitting behind).
 - **Bypass attacks**: It is conceivable for attackers to mount attacks
@@ -192,7 +192,7 @@ distributed as an ISO 9660 compatible image file it can be burned to a
 CD with almost any CD recording software available.
 
 Also, it is recommended to make it possible for end-users to verify
-the downloaded PELD support integrity using public key cryptography.
+the downloaded PELD image's integrity using public key cryptography.
 
 ## 2.4 Operational requirements
 
@@ -229,7 +229,7 @@ similar files that most likely need to be modifiable during operation
 should only be saved temporarily in memory (e.g. by use of something
 like tmpfs or unionfs).
 
-It is tempting to utilize the possibility to write back data when
+It is tempting to use the possibility to write back data when
 running from USB as that could be used to allow user settings to be
 persistent. If this is considered, this feature should be optional and
 offer the possibility to use string encryption for the persistent
@@ -256,8 +256,8 @@ required elsewhere in this specification. This includes:
   operation.
 - **Support for a stateful firewall with packet filtering
   capabilities**: It must somehow be able to separate between traffic
-  for the functionality of the transparent proxying mentioned in the
-  network section to work. Similarly, it must be able to identify and
+  for transparent proxying (mentioned in the
+  network section) to work. Similarly, it must be able to identify and
   drop non-TCP traffic destined to the Internet.
 - **Security features**: With the dangers of exploitable
   vulnerabilities in any code running, attempts to mitigate these on
@@ -290,7 +290,7 @@ attempted (source: [The State of the DNS and Tor Union (also: a DNS UDP
 - TCP shim)](http://archives.seul.org/or/talk/Jul-2010/msg00007.html)
 thread on the or-talk mailing-list).
 
-Any exception to these rules must be thoroughly thought of and
+Any exception to these rules must be thoroughly thought through and
 properly documented.
 
 ## 2.7 User interface and applications
@@ -298,7 +298,7 @@ properly documented.
 ### 2.7.1 General user interface
 
 The user should be able to do all relevant things with easy to use
-graphical interfaces. As such it should be presented a solid,
+graphical interfaces. The PELD should present a solid,
 user-friendly desktop environment with all the expected features after
 booting: file management, system settings configuration, support
 applications etc.
@@ -313,7 +313,7 @@ supported:
   Torbutton, specifically designed for mitigating the risks with non-HTTP
   features, such as JavaScript. Efforts should also be made to avoid browser
   fingerprint, so that it won't reveal the use of a PELD.
-- **Emailing**: Support for PGP or S/MIME is highly recommended. Also,
+- **E-mail**: Support for PGP or S/MIME is highly recommended. Also,
   beware that the EHLO/HELO sent to the SMTP-server will contain the
   host's IP address in many email clients. The `Message-ID` headers and
   HTML/JavaScript email support are other usual leaking spots that
@@ -327,12 +327,12 @@ Other recommended clients for Internet activities include:
   however, that large scale file-sharing activity in general is
   frowned upon in the Tor community as it consumes extreme amounts of
   bandwidth compared to other kinds of services.
-- **Collaborative text editor** such as [Gobby](http://gobby.0x539.de).
-- **Remote desktop**
+- **Collaborative text editing** such as [Gobby](http://gobby.0x539.de).
+- **Remote desktop** such as VNC or RDP.
 
 Given that these applications will be the user's interface to the
-Internet, these should be chosen with care and security in mind, and
-also configured in such a way. In general, as little information as
+Internet, they should be chosen and configured cautiously, and with
+security in mind. In general, as little information as
 possible should leak about the user, the applications used and the
 system settings.
 
@@ -361,7 +361,7 @@ proxy (`TransPort`, `TransListen`) so the functionality specified in the
 network section is covered. Since Tor really is at the core of the
 PELD only stable releases should be considered. Also, while there are
 many other interesting configurations to consider in the Tor manual,
-none of them that impairs anonymity or security should be set.
+none of those that impair anonymity or security should be enabled.
 
 A GUI Tor controller application such as Vidalia or TorK is highly
 recommended. However, this requires opening the control port in Tor,
@@ -375,21 +375,22 @@ As an addition to the security against exploitable vulnerabilities
 provided by the kernel, compiling software with stack smashing
 protection, address space layout randomization and similar compiler
 security enhancements is recommended. Note that in some circumstances
-compiler level stuff is necessary for utilizing the kernel security
+compiler-level options are necessary to take advantage of in-kernel security
 features. Thus the implementation of this feature might depend on the
 vendor distribution used to build the PELD upon. If it hasn't been
-widely deployed at this level, their implementation might require a lot
+widely deployed at this level, the distro's implementation might require a lot
 of time from the PELD developers and impact its ease of maintenance,
 which would make it harder for new contributors to get involved in the
-project. For this reasons, implementation of this feature should be
-carefully balanced between its costs and the extra security it brings.
+project. For this reason, compile-time hardening features should be
+carefully selected to balance the costs they impose against the extra
+security they bring.
 
 ### 2.7.6 Cryptographic tools
 
 Tools for securely signing, verifying, encrypting and decrypting files
-and messages should be available. In particular some implementation of
-OpenPGP should be included as it in practice is the de-facto standard
-when it comes to these things. GUIs for managing keys and performing
+and messages should be available. In particular, some implementation of
+OpenPGP should be included as it is the de-facto standard
+for these tasks. GUIs for managing keys and performing
 the relevant cryptographic tasks should be available. The OpenPGP
 implementation should be pre-configured to use an encrypted tunnel
 when connecting to a keyserver (read: `hkps://`). Also, it should by
@@ -400,9 +401,9 @@ Tools for creating encrypted storage containers are also recommended.
 
 ### 2.7.7 "Virtual" input system
 
-As one of the PELD intent is to permit usage of untrusty computers while
+Since one goal of the PELD is to permit usage of untrusted computers while
 preserving anonymity, measures should be taken against hardware that
-might prevent it, such as hardware 
+might de-anonymize or facilitate recording of a user, such as hardware 
 [keyloggers](http://en.wikipedia.org/wiki/Keylogger). Thus a virtual
 keyboard (usable with the mouse) should be available.
 
@@ -412,8 +413,8 @@ Some crucial applications of the PELD, such as the Tor client, make
 heavy use of cryptographic techniques and therefore rely on a high
 quality proper pseudo-random number generator (PRNG). Initializing
 (seeding) a PRNG is tricky in a Live system context as the system
-state after boot, if not fully deterministic, is parametrized by far
-less variables than in the case of a non-Live system.
+state after boot, if not fully deterministic, is parameterized by far
+fewer variables than in the case of a non-Live system.
 
 Using an auxiliary entropy source such as
 [haveged](http://www.irisa.fr/caps/projects/hipsor/) should thus be
@@ -422,13 +423,13 @@ considered.
 ## 2.8 Usability
 
 Security is usually hard to get. Therefore steps need to be taken in
-order to make the user more comfortable with the PELD, and also to
-educate the user about the specific risks and quirks with respect to
-anonymity on the Internet.
+order to make users more comfortable with the PELD, and also to
+educate users about specific risks and non-intuitive situations that
+may affect their anonymity on the Internet.
 
 ### 2.8.1 Internationalization
 
-The user should be able to easily select his of her language of
+The user should be able to easily select his or her language of
 preference. User applications should be localized to fit this
 preference, as should system settings such as keyboard layout.
 
@@ -438,7 +439,7 @@ be developed with i18n/l10n-awareness in mind.
 
 ### 2.8.2 Education and user help
 
-The PELD should include an easily read document explaining how to use
+The PELD should include an easy-to-read document explaining how to use
 it and its software securely. The user should be assumed to only have
 the knowledge of an average computer user, so it will be required to
 explain some general security concepts.
@@ -462,8 +463,8 @@ to manually setting up things.
 ### 2.9.2 Sustainability
 
 PELD development should be a team work rather than a one person work,
-and the deep knowledge of this work should be shared between the team
-members. Thus the development infrastructure should be thought and
+and the deep knowledge of this work should be shared among the team
+members. Thus the development infrastructure should be conceived and
 deployed in order to share this knowledge.
 
 ### 2.9.3 Open-source transparency, easing peer review
@@ -477,10 +478,10 @@ Having third-parties analyze the PELD security is necessary to ensure
 it is working as intended. It is thus recommended for the PELD itself
 to be open-source. Moreover decisions with non-trivial implications
 should be clearly and publicly documented: such information about what
-a PELD implementation intents to achieve and how it does so should be
+a PELD implementation intends to achieve and how it does so should be
 made available to reviewers.
 
-Third-parties should also be enabled to reproduce a PELD
+Third-parties should be able to reproduce a PELD
 implementation by building it from the released source code and
 publicly available information. The process should yield consistent
 results.
@@ -505,7 +506,7 @@ based on the ones from the well known and trusted Incognito.
 **NOTICE**: This distribution is provided as-is with no warranty of
 fitness for a particular purpose, including total anonymity. Anonymity
 depends not only on the software but also on the user understanding
-the risks involved and how to overcome those risks.
+the risks involved and how to manage those risks.
 
 ## 3.1 Download
 
@@ -640,7 +641,7 @@ The Tor software is currently configured as a client only. The client
 listens on SOCKS port 9050 with a control port 9051 (using cookie
 authentication), as a transparent proxy on port 9040 and as a DNS
 server on port 8853. Only connections from localhost are accepted. It
-can be argued that running a server would increase your anonymity for
+can be argued that running a Tor server would increase your anonymity for
 a number for reasons but we still feel that most users probably would
 not want this due to the added consumption of bandwidth.
  
@@ -704,7 +705,7 @@ extension that brings FTP support back into Iceweasel
 (workarounds [[bugs/FTP_does_not_work_in_iceweasel]]) and allows
 visiting eepsites via [[I2P|design/I2P]] (not Tor!).
 
-The Iceweasel config is quite badly commented but the Git history
+The Iceweasel config is poorly commented but the Git history
 explains it all; any other relevant settings may thus be investigated
 by looking in there.
 
