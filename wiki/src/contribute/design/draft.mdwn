@@ -236,15 +236,18 @@ storage.
 
 ### 2.4.3 Virtual machines
 
-**FIXME**: mention here that there are security concerns about VMs, as
-stated in 3.6.
-
 As an alternative to running the PELD natively from a CD or USB, it
 should also be possible to run from virtual machines. This is useful
 in situations where the user might not have the possibility to run the
 PELD natively, which often can be the case with public computers.
 Additionally, many users seem to prefer this mode of operation, and
-that alone is a reason for making sure it works.
+that alone is a reason for making sure it works despite the weakened
+security it offers due to the dependency on the host OS: when the PELD
+runs as a guest OS it cannot defend against keyloggers, viruses and
+other malware that could be present in the host OS; also, the PELD run
+as a guest OS can not guarantee anything with respect to writing to
+local storage as the host OS does its own memory management and can
+write to swap any part of the PELD memory without the user being told.
 
 ## 2.5 Other considerations
 
@@ -835,10 +838,9 @@ drivers are included, as well as the guest utilities.
 
 ### 3.6.2 Security concerns
 
-Security concerns for all VMs are keyloggers, viruses and other
-malware in the host OS which a guest OS like T(A)ILS cannot defend
-against. T(A)ILS therefore tries to detect whether it is run inside a
-VM and [[warns the user|design/virtualization_support]] if it is.
+Security concerns for all VMs are numerous. T(A)ILS therefore tries to
+detect whether it is run inside a VM and [[warns the
+user|design/virtualization_support]] if it is.
 
 ### 3.6.3 Running T(A)ILS inside a Windows session
 
