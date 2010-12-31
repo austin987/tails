@@ -14,10 +14,6 @@ Other design documents:
 
 **FIXME**
 
-- reorganize document hierarchy:
- * move 2.5 to 2.8 to 2.5.1, 2.5.2 subsections of a "Implementation
-   requirements" section
- * move "Other considerations" before "Implementation requirements"
 - general fingerprinting spec.: efforts should be made to make it
   harder to fingerprint PELD users
 - browser fingerprinting spec.: make the PELD users appear uniformly
@@ -250,7 +246,52 @@ PELD natively, which often can be the case with public computers.
 Additionally, many users seem to prefer this mode of operation, and
 that alone is a reason for making sure it works.
 
-## 2.5 Kernel requirements
+## 2.5 Other considerations
+
+### 2.5.1 Maintainability
+
+The procedure to update the PELD should not be prohibitive to provide
+timely software updates to address issues related to security or
+anonymity. A scripted, automatic build procedure is greatly preferred
+to manually setting up things.
+
+### 2.5.2 Sustainability
+
+PELD development should be a team work rather than a one person work,
+and the deep knowledge of this work should be shared among the team
+members. Thus the development infrastructure should be conceived and
+deployed in order to share this knowledge.
+
+### 2.5.3 Open-source transparency, easing peer review
+
+For the sake of transparency the use of open-source software is
+encouraged. Binary blobs should only be used when no good alternatives
+exist, which could be the case with certain hardware drivers or driver
+firmwares.
+
+Having third-parties analyze the PELD security is necessary to ensure
+it is working as intended. It is thus recommended for the PELD itself
+to be open-source. Moreover decisions with non-trivial implications
+should be clearly and publicly documented: such information about what
+a PELD implementation intends to achieve and how it does so should be
+made available to reviewers.
+
+Third-parties should be able to reproduce a PELD
+implementation by building it from the released source code and
+publicly available information. The process should yield consistent
+results.
+
+### 2.5.4 Easy feedback
+
+In order to collect bug reports, wanted features and so on, the PELD
+project should offer easy ways for end-users to provide feedback to the
+developers (email, web forum, bug tracker, shipped-within application,
+...). Efforts should be made to offer the most anonymous (or at least
+pseudonymous) possible way to send this feedback.
+
+## 2.6 Implementation requirements
+
+### 2.6.1 Kernel requirements
 
 The role of the kernel is mainly to provide support for the features
 required elsewhere in this specification. This includes:
@@ -273,7 +314,7 @@ required elsewhere in this specification. This includes:
   the form of Mandatory Access Control, Role-Based Access control and
   so on should also be considered.
 
-## 2.6 Network requirements
+### 2.6.2 Network requirements
 
 In order to prevent accidental leaks of information, proxy bypass
 attacks on Tor and similar, the access to the Internet should be
@@ -300,9 +341,9 @@ thread on the or-talk mailing-list).
 Any exception to these rules must be thoroughly thought through and
 properly documented.
 
-## 2.7 User interface and applications
+### 2.6.3 User interface and applications
 
-### 2.7.1 General user interface
+#### 2.6.3.1 General user interface
 
 The user should be able to do all relevant things with easy to use
 graphical interfaces. The PELD should present a solid,
@@ -310,7 +351,7 @@ user-friendly desktop environment with all the expected features after
 booting: file management, system settings configuration, support
 applications etc.
 
-### 2.7.2 Internet applications
+#### 2.6.3.2 Internet applications
 
 At minimum, clients for the following Internet activities must be
 supported:
@@ -349,7 +390,7 @@ security in mind. In general, as little information as
 possible should leak about the user, the applications used and the
 system settings.
 
-### 2.7.3 Document production applications
+#### 2.6.3.3 Document production applications
 
 At least the following media and text production tasks should be
 possible using software shipped by the PELD:
@@ -370,7 +411,7 @@ Other recommended tools include:
 These applications should be compatible with widely spread file formats in
 their domain.
 
-### 2.7.4 Cryptographic tools
+#### 2.6.3.4 Cryptographic tools
 
 Tools for securely signing, verifying, encrypting and decrypting files
 and messages should be available. In particular, some implementation of
@@ -384,7 +425,7 @@ the current commonly agreed best practices.
 
 Tools for creating encrypted storage containers are also recommended.
 
-### 2.7.5 Tor
+#### 2.6.3.5 Tor
 
 Tor should be setup to enable its DNS server (`DNSPort`) and transparent
 proxy (`TransPort`, `TransListen`) so the functionality specified in the
@@ -399,7 +440,7 @@ and thus some means of authentication will be required
 (`CookieAuthentication` preferably) to hinder attacks on the Tor
 software.
 
-### 2.7.6 Hardened tool chain and compiling
+#### 2.6.3.6 Hardened tool chain and compiling
 
 As an addition to the security against exploitable vulnerabilities
 provided by the kernel, compiling software with stack smashing
@@ -415,7 +456,7 @@ project. For this reason, compile-time hardening features should be
 carefully selected to balance the costs they impose against the extra
 security they bring.
 
-### 2.7.7 "Virtual" input system
+#### 2.6.3.7 "Virtual" input system
 
 Since one goal of the PELD is to permit usage of untrusted computers while
 preserving anonymity, measures should be taken against hardware that
@@ -423,7 +464,7 @@ might de-anonymize or facilitate recording of a user, such as hardware
 [keyloggers](http://en.wikipedia.org/wiki/Keylogger). Thus a virtual
 keyboard (usable with the mouse) should be available.
 
-### 2.7.8 Entropy
+#### 2.6.3.8 Entropy
 
 Some crucial applications of the PELD, such as the Tor client, make
 heavy use of cryptographic techniques and therefore rely on a high
@@ -436,14 +477,14 @@ Using an auxiliary entropy source such as
 [haveged](http://www.irisa.fr/caps/projects/hipsor/) should thus be
 considered.
 
-## 2.8 Usability
+### 2.6.4 Usability
 
 Security is usually hard to get. Therefore steps need to be taken in
 order to make users more comfortable with the PELD, and also to
 educate users about specific risks and non-intuitive situations that
 may affect their anonymity on the Internet.
 
-### 2.8.1 Internationalization
+#### 2.6.4.1 Internationalization
 
 The user should be able to easily select his or her language of
 preference. User applications should be localized to fit this
@@ -453,7 +494,7 @@ The PELD documentation, either online or shipped within, should be
 easily translatable. Software written specifically for the PELD should
 be developed with i18n/l10n-awareness in mind.
 
-### 2.8.2 Education and user help
+#### 2.6.4.2 Education and user help
 
 The PELD should include an easy-to-read document explaining how to use
 it and its software securely. The user should be assumed to only have
@@ -466,49 +507,6 @@ running an obsolete version affected by numerous well-known security
 issues. A PELD running copy should therefore notice it is affected by
 known security issues and notify the user if a newer release fixes
 some.
-
-## 2.9 Other considerations
-
-### 2.9.1 Maintainability
-
-The procedure to update the PELD should not be prohibitive to provide
-timely software updates to address issues related to security or
-anonymity. A scripted, automatic build procedure is greatly preferred
-to manually setting up things.
-
-### 2.9.2 Sustainability
-
-PELD development should be a team work rather than a one person work,
-and the deep knowledge of this work should be shared among the team
-members. Thus the development infrastructure should be conceived and
-deployed in order to share this knowledge.
-
-### 2.9.3 Open-source transparency, easing peer review
-
-For the sake of transparency the use of open-source software is
-encouraged. Binary blobs should only be used when no good alternatives
-exist, which could be the case with certain hardware drivers or driver
-firmwares.
-
-Having third-parties analyze the PELD security is necessary to ensure
-it is working as intended. It is thus recommended for the PELD itself
-to be open-source. Moreover decisions with non-trivial implications
-should be clearly and publicly documented: such information about what
-a PELD implementation intends to achieve and how it does so should be
-made available to reviewers.
-
-Third-parties should be able to reproduce a PELD
-implementation by building it from the released source code and
-publicly available information. The process should yield consistent
-results.
-
-### 2.9.4 Easy feedback
-
-In order to collect bug reports, wanted features and so on, the PELD
-project should offer easy ways for end-users to provide feedback to the
-developers (email, web forum, bug tracker, shipped-within application,
-...). Efforts should be made to offer the most anonymous (or at least
-pseudonymous) possible way to send this feedback.
 
 # 3 Implementation
 
