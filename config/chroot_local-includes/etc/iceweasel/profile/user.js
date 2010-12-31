@@ -25,6 +25,7 @@ user_pref("extensions.torbutton.https_proxy", "127.0.0.1");
 user_pref("extensions.torbutton.locked_mode", true);
 user_pref("extensions.torbutton.no_updates", true);
 user_pref("extensions.torbutton.noncrashed", true);
+user_pref("extensions.torbutton.normal_exit", true);
 user_pref("extensions.torbutton.nonontor_sessionstore", true);
 user_pref("extensions.torbutton.nontor_memory_jar", true);
 user_pref("extensions.torbutton.saved.download_retention", 0);
