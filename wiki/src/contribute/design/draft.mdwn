@@ -267,7 +267,7 @@ to manually setting up things.
 
 PELD development should be a team work rather than a one person work,
 and the deep knowledge of this work should be shared among the team
-members. Thus the development infrastructure should be conceived and
+members. Thus the development infrastructure should be designed and
 deployed in order to share this knowledge.
 
 ### 2.5.3 Open-source transparency, easing peer review
@@ -291,7 +291,7 @@ results.
 
 ### 2.5.4 Easy feedback
 
-In order to collect bug reports, wanted features and so on, the PELD
+In order to collect bug reports and wanted features, the PELD
 project should offer easy ways for end-users to provide feedback to the
 developers (email, web forum, bug tracker, shipped-within application,
 ...). Efforts should be made to offer the most anonymous (or at least
@@ -312,7 +312,7 @@ required elsewhere in this specification. This includes:
 - **Support for a stateful firewall with packet filtering
   capabilities**: it must somehow be able to sort traffic out
   for transparent proxying (mentioned in the
-  network section) to work. Similarly, it must be able to identify and
+  next section) to work. Similarly, it must be able to identify and
   drop traffic destined to the Internet that is not supported by the
   Tor network, such as transport layer protocols other than TCP.
 - **Security features**: with the dangers of exploitable
@@ -374,11 +374,13 @@ applications etc.
 At least clients for the following Internet activities must be
 supported:
 
-- **Web browsing**: since the web browser is arguably the most vital
-  end-user Internet application, the Tor Project has spent significant
+- **Web browsing**: since the web browser is arguably the most used
+  end-user Internet application as well as the one that offers the
+  largest attack surface, the Tor Project has spent significant
   resources on analyzing and mitigating the many pitfalls of modern
-  web browsers introduced by JavaScript, cookies, media
-  plugins, browser-specific bugs, etc. Benefiting
+  web browsers with respect to anonymity: media plugins,
+  browser-specific bugs, web technologies such as JavaScript, CSS and
+  cookies, etc. Benefiting
   from this work is essential for maintaining anonymity, so it is
   required to include only web browsers that are endorsed by the Tor
   Project, accompanied with any configurations, extensions/plug-ins,
@@ -402,7 +404,8 @@ Other recommended clients for Internet activities include:
   network resources compared to other kinds of services.
 - **Collaborative text editing** such as [Gobby](http://gobby.0x539.de).
 - **Remote desktop** such as VNC or RDP.
-- **Feed aggregator** e.g. for RSS/RDF and Atom feeds.
+- **Feed aggregator** for RSS/RDF, Atom and other widely spread feed
+  formats.
 
 Given that these applications will be the user's interface to the
 Internet, they should be chosen and configured cautiously, and with
@@ -467,9 +470,10 @@ provided by the kernel, compiling software with stack smashing
 protection, address space layout randomization and similar compiler
 security enhancements is recommended. Note that in some circumstances
 compiler-level options are necessary to take advantage of in-kernel security
-features. Thus the implementation of this feature might depend on the
-vendor distribution used to build the PELD upon. If it hasn't been
-widely deployed at this level, using such features in the PELD might require a lot
+features. Thus the use of a hardened tool chain might depend on the
+vendor distribution used to build the PELD upon. If such techniques are
+not widely deployed at this level, using them to build the PELD
+can require a lot
 of time from its developers and impact its ease of maintenance,
 which would make it harder for new contributors to get involved in the
 project. For this reason, compile-time hardening features should be
