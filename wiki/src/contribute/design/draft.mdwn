@@ -16,7 +16,6 @@ Other design documents:
 
 - use RFC 2129's key words (e.g. MUST, SHOULD, MAY): waiting for a
   decision
-- easy feedback: mention Whisperback
 - diff specification -> implementation, and mention missing bits in
   the caveats section
 - make sure all main sections have a few introductory words to
@@ -648,14 +647,38 @@ application is internationalized.
 
 - [[!tails_gitweb chroot_local-includes/usr/local/bin/tails-security-check]]
 
-## 3.5 Configuration
+## 3.5 Feedbacks
+
+Feedbacks to T(A)ILS developpers can be sent in several ways. A [bug
+tracker](https://amnesia.boum.org/bugs) and a
+[forum](https://amnesia.boum.org/forum) are available on the website.
+Users can also send an email to T(A)ILS [developpers mailing
+list](https://boum.org/mailman/listinfo/tails-dev). A
+dedicated application called *Whiperback* is also available in every
+running T(A)ILS copy.  Whisperback helps users willing to post anonymous
+feedbacks. It is configured in T(A)ILS to send openpgp encrypted mails
+using a Tor hidden service as smtp server. Whiperback carefully takes
+care to verify the remote smtp SSL certificate, and only send the mail
+over a STARTTLS session. Some informations can be gathered for the
+report, yet only some that won't break anonymity of T(A)ILS users. They
+can also add an email for futher discussions about the report.
+Whisperback's graphical interface fully supports l10n, and is ready to
+be translated.
+
+(Note: Whisperback sources aren't yet publicly available, but it is
+written in python.)
+
+- [[!tails_gitweb chroot_local-packages/]]
+- [[!tails_gitweb chroot_local-includes/etc/whisperback/]]
+
+## 3.6 Configuration
 
 In this section we briefly present the setup of several key software
 packages and system settings of T(A)ILS with respect to security and
 anonymity. There are of course other minor tweaks here and there, but
 those are mainly for usability issues and similar.
 
-### 3.5.1 The Tor™ software
+### 3.6.1 The Tor™ software
 
 The Tor software is currently configured as a client only. The client
 listens on SOCKS port 9050 with a control port 9051 (using cookie
@@ -667,15 +690,15 @@ not want this due to the added consumption of bandwidth.
  
 - [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]
 
-### 3.5.3 DNS
+### 3.6.3 DNS
 
 [[!inline pages="contribute/design/Tor_enforcement/DNS" raw=yes]]
 
-### 3.5.4 HTTP Proxy
+### 3.6.4 HTTP Proxy
 
 [[!inline pages="contribute/design/Tor_enforcement/Proxy" raw=yes]]
 
-### 3.5.5 SOCKS libraries
+### 3.6.5 SOCKS libraries
 
 tsocks and torify are installed. Note that it is unnecessary with the
 Linux network filter (see below) and the local DNS server to torify
@@ -684,17 +707,17 @@ here due to dependencies and configured for completeness.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/tor-tsocks.conf]]
 
-### 3.5.6 Network Filter
+### 3.6.6 Network Filter
 
 [[!inline pages="contribute/design/Tor_enforcement/Network_filter" raw=yes]]
 
-### 3.5.7 Random MAC Address
+### 3.6.7 Random MAC Address
 
 It is planned to anonymize the network interfaces MAC address in a
 later T(A)ILS version. See the related [[design
 document|design/MAC_address]] and [[todo item|todo/macchanger]].
 
-### 3.5.8 Iceweasel
+### 3.6.8 Iceweasel
 
 (Note: Iceweasel is the name of the web browser, based on Mozilla
 Firefox, that is shipped by Debian and thus by T(A)ILS.)
@@ -742,7 +765,7 @@ by looking in there.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/]]
 
-### 3.5.9 Claws Mail
+### 3.6.9 Claws Mail
 
 Claws Mail generates `Message-ID` headers using the hostname part of
 the sender's email address, which does not leak usage of the PELD nor
@@ -757,7 +780,7 @@ to not use HTML to get rid of a whole class of privacy concerns.
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.claws-mail/]] is copied to
   the user's `$HOME` at boot time
 
-### 3.5.11 Pidgin
+### 3.6.10 Pidgin
 
 **FIXME**: CTCP?
 
@@ -772,7 +795,7 @@ servers, by randomly picking up a firstname from the 2000 most registered by the
 U.S. social security administration in the 70s and appending it a random
 number between 0 and 100.
 
-### 3.5.12 Host system swap
+### 3.6.11 Host system swap
 
 T(A)ILS takes care not to use any swap filesystem that might exist on
 the host machine hard drive. Most of this is done at build time: not
@@ -783,7 +806,7 @@ live-boot) is removed. Also, live-boot's `swapon` option is not set.
 - [[!tails_gitweb config/chroot_local-hooks/03-noswap]]
 - [[!tails_gitweb config/chroot_local-hooks/05-disable_swapon]]
 
-### 3.5.13 Host system RAM
+### 3.6.12 Host system RAM
 
 **Beware!** This feature is currently known to be sometimes
 [[buggy|bugs/buggy_smem_on_shutdown]] when running from CD.
@@ -799,7 +822,7 @@ worried about this attack.
 
 - [[!tails_live-boot_gitweb debian/live-boot.init]]
 
-### 3.5.14 Host system disks and partitions
+### 3.6.13 Host system disks and partitions
 
 T(A)ILS takes care not to use any filesystem that might exist on
 the host machine hard drive, unless explicitly told to do so by the
@@ -811,7 +834,7 @@ user. The Debian Live persistence feature is disabled by passing
 *Nota bene*: removable drives are automatically mounted until T(A)ILS
 0.6.1. This behavior is disabled in the development branch.
 
-### 3.5.15 Secure erasure of files and free disk space
+### 3.6.14 Secure erasure of files and free disk space
 
 Securely erasing files and free disk space is made easy integrating
 [secure-delete](http://www.thc.org) tools into the Nautilus file
@@ -821,7 +844,7 @@ manager.
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/nautilus-wipe]]
 - [[!tails_gitweb config/chroot_local-includes/lib/live/config/202-localize]]
 
-### 3.5.16 Passwords
+### 3.6.15 Passwords
 
 Two users are intended to be used for logins: `amnesia`
 and `root`. Both have `amnesia` set as a password, and the `amnesia`
@@ -839,9 +862,9 @@ two minutes after boot: this leaves the user 2 minutes to set a root
 password. Unless this is done before this delay has expired, the root
 console will be disabled, and no root access will be possible afterwards.
 
-## 3.6 Running T(A)ILS in virtual machines
+## 3.7 Running T(A)ILS in virtual machines
 
-### 3.6.1 Current support
+### 3.7.1 Current support
 
 T(A)ILS may of course be run in virtual machines. Due to the
 popularity of [VMWare](http://www.vmware.com/) we include
@@ -854,13 +877,13 @@ like [VirtualBox](http://virtualbox.org/) and
 these also work. In the case of VirtualBox both video and input
 drivers are included, as well as the guest utilities.
 
-### 3.6.2 Security concerns
+### 3.7.2 Security concerns
 
 Security concerns for all VMs are numerous. T(A)ILS therefore tries to
 detect whether it is run inside a VM and [[warns the
 user|design/virtualization_support]] if it is.
 
-### 3.6.3 Running T(A)ILS inside a Windows session
+### 3.7.3 Running T(A)ILS inside a Windows session
 
 [[Ongoing work|todo/virtualization_support]] will make it easier to
 run the CD/USB in a virtual machine inside a Windows session whenever
@@ -868,7 +891,7 @@ native boot is impossible or not desirable. This probably will be
 implemented by shipping a [QEMU](http://www.qemu.org/) or
 [VirtualBox](http://www.virtualbox.org/) binary for Microsoft Windows.
 
-## 3.7 Build process and maintenance
+## 3.8 Build process and maintenance
 
 The Debian Live toolkit is used to build T(A)ILS. Debian Live
 is designed to automate the build process of the target distribution,
@@ -886,7 +909,7 @@ Remaining applications, including the base system, will be updated
 using Debian standard upgrade process, and generally based on the
 latest Debian stable release so there are not many problems.
 
-## 3.8 Hardware support
+## 3.9 Hardware support
 
 T(A)ILS ships the latest kernel from [Debian
 Backports](http://backports.debian.org) as a compromise between
@@ -895,7 +918,7 @@ stability and recent hardware support.
 The x86 hardware architecture is the main supported one but work is
 ongoing to additionally support the PowerPC architecture.
 
-## 3.9 Caveats
+## 3.10 Caveats
 
 T(A)ILS currently offers almost no protection against Live physical
 monitoring, except for hardware keyloggers.
