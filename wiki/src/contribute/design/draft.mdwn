@@ -90,8 +90,8 @@ run in as many computing environments as possible from the same single
 distribution. In addition, while the PELD's main objective indeed is
 to act as a traditional LiveDistro (i.e. a [[!wikipedia Live_CD]] or
 [[!wikipedia Live_USB]]) it should also be compatible with popular
-virtual machine technologies for users that simply want a sandboxed
-environment within their normal operating system.
+virtual machine technologies for users who simply want a sandboxed
+environment within their usual operating system.
 
 ### 2.1.5 Target user
 
@@ -123,7 +123,7 @@ attackers.
 ### 2.2.1 The goal of the attacker
 
 - **Identify or locate the user, track his or her activities on the Internet**: Information such
-  as user-agent, locale and (especially) IP address can all be used in
+  as user-agent, locale and especially IP address can all be used in
   various degrees to identify or locate the user, and to track his or
   her activities on the Internet.
 - **Eavesdrop on sensitive data**: The Tor network only prevents the
@@ -151,7 +151,7 @@ attackers.
   then be used to identify the user, either by injecting data or
   social engineering.
 - **Exploit software vulnerabilities**: The attacker might be able to
-  run arbitrary code by exploiting unpatched vulnerabilities present
+  run arbitrary code by exploiting vulnerabilities present
   in any of the software packages installed.
 - **Application level attacks**: The attacker can utilize certain
   applications' services and features to get identifying information.
@@ -159,7 +159,8 @@ attackers.
   queries in IRC clients, etc.
 - **Physical access, live monitoring, post-mortem equipment
   analysis**: Some users face adversaries with intermittent or
-  constant physical access. Users in Internet cafes, for example, face
+  constant physical access to the equipment they use.
+  Users in Internet cafes, for example, face
   such a threat. This means the adversary might be physically
   monitoring the computer while the PELD is running on it. Moreover
   the adversary might raid the user at any moment and then confiscate
@@ -192,7 +193,7 @@ computers.
 
 ### 2.4.2 Media
 
-The PELD should be able to boot and run from either CD or a USB drive.
+The PELD should be able to boot and run from either a CD or a USB drive.
 While running the PELD in that mode it should be completely
 independent from the host operating system and all other storage media
 on the host computer unless the user explicitly tries to access any of
@@ -219,7 +220,7 @@ storage.
 ### 2.4.3 Virtual machines
 
 As an alternative to running the PELD natively from a CD or USB, it
-should also be possible to run from virtual machines. This is useful
+should also be possible to run it inside virtual machines. This is useful
 in situations where the user might not have the possibility to run the
 PELD natively, which often can be the case with public computers.
 Additionally, many users seem to prefer this mode of operation, and
@@ -290,7 +291,8 @@ required elsewhere in this specification. This includes:
   capabilities**: It must somehow be able to separate between traffic
   for transparent proxying (mentioned in the
   network section) to work. Similarly, it must be able to identify and
-  drop non-TCP traffic destined to the Internet.
+  drop traffic destined to the Internet that is not supported by the
+  Tor network, such as transport layer protocols other than TCP.
 - **Security features**: With the dangers of exploitable
   vulnerabilities in any code running, attempts to mitigate these on
   the kernel level is a good idea. Executable space protection with
@@ -307,8 +309,8 @@ In order to prevent accidental leaks of information, proxy bypass
 attacks on Tor and similar, the access to the Internet should be
 heavily restricted by a firewall:
 
-- All non-TCP protocols should be dropped as they are not supported by
-  the Tor network.
+- All non-TCP transport layer protocols should be dropped as they are
+  not supported by the Tor network.
 - All TCP traffic not explicitly targeting Tor should be redirected to
   the transparent proxy (i.e. to the `TransPort` as set in `torrc`).
 - All DNS lookups should be made through the Tor network (i.e.
@@ -353,8 +355,8 @@ supported:
 - **Web browsing**: Since the web browser is arguably the most vital
   end-user Internet application, the Tor Project has spent significant
   resources on analyzing and mitigating the many pitfalls of modern
-  web browsers introduced by such things as JavaScript, cookies, media
-  plugins, browser-specific bugs and other quirks, etc. Benefiting
+  web browsers introduced by JavaScript, cookies, media
+  plugins, browser-specific bugs, etc. Benefiting
   from this work is essential for maintaining anonymity, so it is
   required to include only web browsers that are endorsed by the Tor
   Project, accompanied with any configurations, extensions/plug-ins,
@@ -368,14 +370,14 @@ supported:
   HTML/JavaScript email support are other usual leaking spots that
   should be taken care of.
 - **Instant messaging**, including IRC and XMPP.
-- **SSH**
+- **Secure Shell** client such as [OpenSSH](http://www.openssh.org/).
 
 Other recommended clients for Internet activities include:
 
-- **Bittorrent and/or other type(s) of P2P file-sharing**: Note,
+- **P2P file-sharing** such as BitTorrent: Note,
   however, that large scale file-sharing activity in general is
   frowned upon in the Tor community as it consumes extreme amounts of
-  bandwidth compared to other kinds of services.
+  network resources compared to other kinds of services.
 - **Collaborative text editing** such as [Gobby](http://gobby.0x539.de).
 - **Remote desktop** such as VNC or RDP.
 
@@ -398,7 +400,7 @@ possible using software shipped by the PELD:
 
 Other recommended tools include:
 
-- **Video edition**
+- **Video editor**
 - **Spreadsheet**
 - **Presentation software**
 - **Gettext catalogs (.po files) editor**
@@ -418,7 +420,7 @@ when connecting to a keyserver (read: `hkps://`). Also, it should by
 default use up-to-date digests, ciphers and key sizes with respect to
 the current commonly agreed best practices.
 
-Tools for creating encrypted storage containers are also recommended.
+Tools for creating and using encrypted storage containers are also recommended.
 
 #### 2.6.3.5 Tor
 
@@ -463,7 +465,7 @@ keyboard (usable with the mouse) should be available.
 
 Some crucial applications of the PELD, such as the Tor client, make
 heavy use of cryptographic techniques and therefore rely on a high
-quality proper pseudo-random number generator (PRNG). Initializing
+quality pseudo-random number generator (PRNG). Initializing
 (seeding) a PRNG is tricky in a Live system context as the system
 state after boot, if not fully deterministic, is parameterized by far
 fewer variables than in the case of a non-Live system.
@@ -509,8 +511,11 @@ T(A)ILS is an implementation of the PELD specification above. It is
 licensed under the GNU GPL version 3 or (at your option) any later
 version.
 
+**FIXME**: add link to Incognito's and Tor Browser Bundle's homepages.
+
 Critical parts of the config (firewall, polipo and Tor config) are
-based on the ones from the well known and trusted Incognito.
+based on the ones from well known and trusted sources, namely
+Incognito and the Tor Browser Bundle.
 
 **NOTICE**: This distribution is provided as-is with no warranty of
 fitness for a particular purpose, including total anonymity. Anonymity
@@ -519,11 +524,12 @@ the risks involved and how to manage those risks.
 
 ## 3.1 Download
 
-See the [[download section|download]] on [[T(A)ILS's main site|/index]] for download information.
+See the [[download section|download]] on [[T(A)ILS's website|/index]]
+for download information.
 
 The sources are stored in a bunch of [Git](http://git-scm.com/)
-repositories. See the [[git page|git]] on the T(A)ILS wiki for
-details.
+repositories. The [[git page|git]] on the T(A)ILS website provides all
+needed information to access these repositories.
 
 The latest version of this document can be found on the T(A)ILS
 website: [[!tails_website contribute/design]].
@@ -748,7 +754,8 @@ to not use HTML as that otherwise may break PGP usage.
 ### 3.5.11 Pidgin
 
 Pidgin is configured to not log anything as well as not to reveal too
-much of user activity by disabling online/away reporting. MSN protocol
+much of user activity by disabling reporting of online/away/typing
+status. MSN protocol
 support is disabled, to avoid the usage of such a privacy flawed and
 buggy plugin. The Off-the-record plugin is enabled to help one to one
 conversations being as private and unrecordable as possible. A script
