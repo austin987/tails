@@ -33,7 +33,7 @@ LiveDistro* (PELD) as well as an actual implementation of it called
 
 By writing this document we intend to help third-parties do
 security analyses of any given PELD and specifically of T(A)ILS.
-Another of our wishes is to help establish best practices in
+We also wish to help establish best practices in
 the field of PELD design and implementation, and thus raise the
 baseline for all similar projects out there.
 
@@ -49,7 +49,7 @@ The *Bibliography* section has pointers to other inspiration and reference sourc
 ### 2.1.1 Privacy on the Internet
 
 The Privacy Enhancing LiveDistro (or PELD for short) aims at providing
-a software solution presenting the user with the technological means
+a software solution providing the user with the technological means
 for using popular Internet technologies while maintaining the privacy
 of the user, in particular with respect to anonymity. While there are
 different techniques and services providing that functionality, this
@@ -96,10 +96,10 @@ environment within their usual operating system.
 ### 2.1.5 Target user
 
 The PELD's target user is the average user in terms of computer
-literacy, and who is using a computer which he or she does not
-necessarily control fully. Examples would be a public computer
-in a library, coffee shop, university or a residence. The target user
-is assumed to not want to do any of the configurations (at least with
+literacy; he or she does not necessarily control fully the computer
+being used. Examples would be a public computer
+in a library, coffee shop, university or a residence. We assume that
+the target user does not want to do any of the configurations (at least with
 respect to security and anonymity) of the various applications and
 tools used themselves, either because of insufficient knowledge, lack
 of interest or other reasons. The PELD should provide strong anonymity
@@ -133,7 +133,7 @@ attackers.
   "Normal" operating systems keep a lot of traces about their users'
   Internet activities (notably browser cache, cookies and history) on local
   storage media; similary, working on a sensitive document with a
-  "normal" operating system is likely to leave traces of this
+  "normal" operating system is very likely to leave traces of this
   document. The adversary may want to recover such information by
   analyzing the equipment that has been used.
 
@@ -212,7 +212,7 @@ should only be saved temporarily in memory (e.g. by use of something
 like tmpfs or unionfs).
 
 It is tempting to use the possibility to write back data when
-running from USB as that could be used to allow user settings to be
+running from USB in order to allow user settings to be
 persistent. If this is considered, this feature should be optional and
 offer the possibility to use strong encryption for the persistent
 storage.
@@ -237,7 +237,7 @@ write to swap any part of the PELD memory without the user being told.
 ### 2.5.1 Maintainability
 
 The procedure to update the PELD should not be prohibitive to provide
-timely software updates to address issues related to security or
+timely software updates that address issues related to security or
 anonymity. A scripted, automatic build procedure is greatly preferred
 to manually setting up things.
 
@@ -251,8 +251,8 @@ deployed in order to share this knowledge.
 ### 2.5.3 Open-source transparency, easing peer review
 
 For the sake of transparency the use of open-source software is
-encouraged. Binary blobs should only be used when no good alternatives
-exist, which could be the case with certain hardware drivers or driver
+encouraged. Binary blobs should only be used when no good alternative
+exists, which could be the case with certain hardware drivers or driver
 firmwares.
 
 Having third-parties analyze the PELD security is necessary to ensure
@@ -285,10 +285,10 @@ required elsewhere in this specification. This includes:
 - **Good hardware support**: "Good" is a sketchy word in a
   specification. The general idea is to include as much drivers for
   relevant hardware as possible, in particular for network cards
-  (wired and wireless), video card and anything necessary for basic
+  (wired and wireless), video adapters and anything necessary for basic
   operation.
 - **Support for a stateful firewall with packet filtering
-  capabilities**: It must somehow be able to separate between traffic
+  capabilities**: It must somehow be able to sort traffic out
   for transparent proxying (mentioned in the
   network section) to work. Similarly, it must be able to identify and
   drop traffic destined to the Internet that is not supported by the
@@ -341,7 +341,7 @@ reasonable.
 
 #### 2.6.3.1 General user interface
 
-The user should be able to do all relevant things with easy to use
+The user should be able to do all relevant things with easy-to-use
 graphical interfaces. The PELD should present a solid,
 user-friendly desktop environment with all the expected features after
 booting: file management, system settings configuration, support
@@ -349,7 +349,7 @@ applications etc.
 
 #### 2.6.3.2 Internet applications
 
-At minimum, clients for the following Internet activities must be
+At least clients for the following Internet activities must be
 supported:
 
 - **Web browsing**: Since the web browser is arguably the most vital
@@ -380,6 +380,7 @@ Other recommended clients for Internet activities include:
   network resources compared to other kinds of services.
 - **Collaborative text editing** such as [Gobby](http://gobby.0x539.de).
 - **Remote desktop** such as VNC or RDP.
+- **Feed aggregator** e.g. for RSS/RDF and Atom feeds.
 
 Given that these applications will be the user's interface to the
 Internet, they should be chosen and configured cautiously, and with
@@ -428,7 +429,7 @@ Tor should be setup to enable its DNS server (`DNSPort`) and transparent
 proxy (`TransPort`, `TransListen`) so the functionality specified in the
 network section is covered. Since Tor really is at the core of the
 PELD only stable releases should be considered. Also, while there are
-many other interesting configurations to consider in the Tor manual,
+many other interesting configuration possibilities in the Tor manual,
 none of those that impair anonymity or security should be enabled.
 
 A GUI Tor controller application such as Vidalia or TorK is highly
@@ -446,8 +447,8 @@ security enhancements is recommended. Note that in some circumstances
 compiler-level options are necessary to take advantage of in-kernel security
 features. Thus the implementation of this feature might depend on the
 vendor distribution used to build the PELD upon. If it hasn't been
-widely deployed at this level, the distro's implementation might require a lot
-of time from the PELD developers and impact its ease of maintenance,
+widely deployed at this level, using such features in the PELD might require a lot
+of time from its developers and impact its ease of maintenance,
 which would make it harder for new contributors to get involved in the
 project. For this reason, compile-time hardening features should be
 carefully selected to balance the costs they impose against the extra
@@ -493,9 +494,9 @@ be developed with i18n/l10n-awareness in mind.
 
 #### 2.6.4.2 Education and user help
 
-The PELD should include an easy-to-read document explaining how to use
-it and its software securely. The user should be assumed to only have
-the knowledge of an average computer user, so it will be required to
+The PELD should include an easy-to-read document explaining how to
+securely use it and the bundled software. As the user is assumed to only have
+the knowledge of an average computer user, it will be required to
 explain some general security concepts.
 
 Real-world experience demonstrates that the average user quite rarely
@@ -513,8 +514,8 @@ version.
 
 **FIXME**: add link to Incognito's and Tor Browser Bundle's homepages.
 
-Critical parts of the config (firewall, polipo and Tor config) are
-based on the ones from well known and trusted sources, namely
+Critical parts of the configuration (firewall, polipo and Tor config) are
+based on the ones from well-known and trusted sources, namely
 Incognito and the Tor Browser Bundle.
 
 **NOTICE**: This distribution is provided as-is with no warranty of
@@ -546,8 +547,7 @@ extension), and the [[features]] page has yet another list.
  
 - [Debian GNU/Linux](http://www.debian.org/): The base operating
   system, provides hardware detection, infrastructure. Please note
-  that the Debian distribution does not provide or endorse this
-  software distribution.
+  that the Debian distribution does not provide or endorse T(A)ILS.
 - [Debian Live](http://live.debian.net/): Toolkit to build Live
   systems based on Debian.
 - [Tor](http://www.torproject.org/): Anonymizing overlay network for
@@ -598,8 +598,8 @@ feature than the stock Debian kernel.
   OpenPGP standard.
 - [haveged](http://freshmeat.net/projects/haveged) feeds /dev/random
   using HArdware Volatile Entropy Gathering and Expansion algorithm.
-- [macchanger](http://www.alobbs.com/macchanger): Utility for
-  viewing/manipulating the MAC address of network interfaces.
+- [macchanger](http://www.alobbs.com/macchanger) allows
+  manipulating the MAC address of network interfaces.
 - [secure-delete](http://www.thc.org): Tool to securely wipe data from files,
   swap or memory.
 - [OpenOffice.org](http://www.openoffice.org/),
@@ -616,8 +616,7 @@ feature than the stock Debian kernel.
 The following locales are installed. Their number is limited by size
 constraints but more could be added on user's request.
 
-- ar (Arabic)
-- ar_EG.UTF-8 (Egyptian Arabic)
+- ar, ar_EG.UTF-8 (Arabic, Egyptian Arabic)
 - de, de_DE.UTF-8 (German)
 - es, es_ES.UTF-8 (Castellano)
 - en_US, en_US.UTF-8 (American English)
@@ -629,19 +628,18 @@ constraints but more could be added on user's request.
 
 The chosen locale's files are compiled at boot time.
 
-See `config/amnesia` for the selected languages. See
-`config/chroot_local-preseed/localepurge` and grep the source for
-`AMNESIA_SUPPORTED_LANGUAGES` for how this configuration is applied.
+See [[!tails_gitweb config/amnesia]] for the available languages. See
+[[!tails_gitweb config/chroot_local-preseed/localepurge]] and grep the source for
+`AMNESIA_SUPPORTED_LANGUAGES` to see how this configuration is applied.
 
 ## 3.4 Notification of security issues and new T(A)ILS release
 
-Shipped in T(A)ILS is a script that checked at each desktop start if
-security issues or new T(A)ILS released are published on the website. If
+Shipped in T(A)ILS is a script that checks at each desktop start if
+security issues or new T(A)ILS releases are published on the website. If
 some are found, a notification is printed on the desktop. This
 application is internationalized.
 
-See [[!tails_gitweb
-chroot_local-includes/usr/local/bin/tails-security-check]]
+- [[!tails_gitweb chroot_local-includes/usr/local/bin/tails-security-check]]
 
 ## 3.5 Configuration
 
@@ -711,8 +709,8 @@ extension treats all cookies as session cookies by default, and
 provides more fine-grained cookie control for users who need it. This
 prevents the known leak of browsing informations cookies can lead to.
 The [Adblock plus](https://addons.mozilla.org/fr/firefox/addon/1865/)
-extension prevent users from leaving traces of their web browsing by
-removing all ads. The [firegpg](http://getfiregpg.org/) plugin allows
+extension protects against many tracking possibilities by
+removing most ads. The [firegpg](http://getfiregpg.org/) plugin allows
 users to use GnuPG inside websites like webmails. The development branch
 additionally ships the
 [foxyproxy](https://addons.mozilla.org/fr/firefox/addon/2464/)
@@ -739,14 +737,15 @@ by looking in there.
 
 ### 3.5.9 Claws Mail
 
-Claws Mail generates `Message-ID` headers using the hostname part
-of the sender's email address, which is ok.
+Claws Mail generates `Message-ID` headers using the hostname part of
+the sender's email address, which does not leak usage of the PELD nor
+any user location information.
 
 It also always says `EHLO localhost` to the SMTP server instead of
 disclosing the real IP address and hostname.
 
 Furthermore, the accounts that a user will create are pre-configured
-to not use HTML as that otherwise may break PGP usage.
+to not use HTML to get rid of a whole class of privacy concerns.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.claws-mail/]] is copied to
   the user's `$HOME` at boot time
@@ -759,7 +758,7 @@ Pidgin is configured to not log anything as well as not to reveal too
 much of user activity by disabling reporting of online/away/typing
 status. MSN protocol
 support is disabled, to avoid the usage of such a privacy flawed and
-buggy plugin. The Off-the-record plugin is enabled to help one to one
+buggy plugin. The Off-the-record plugin is enabled to help one-to-one
 conversations being as private and unrecordable as possible. A script
 generates at each boot a random nick to be used on the preconfigured IRC
 servers, by randomly picking up a firstname from the 2000 most registered by the
@@ -782,14 +781,14 @@ live-boot) is removed. Also, live-boot's `swapon` option is not set.
 **Beware!** This feature is currently known to be sometimes
 [[buggy|bugs/buggy_smem_on_shutdown]] when running from CD.
 
-When shutting down the system RAM is securely wiped. RAM can actually
-be read after the machine shuts off with the right equipment. The
-software doing this is smem, part of the
-[secure-delete](http://www.thc.org/) package. This process can take a
-while. If T(A)ILS was booted from a CD it should eject, and if it was
-booted from a USB drive it can be removed once prompted. In
-either case the user can leave the computer and let it finish on its own,
-or simply turn it off if he or she is not worried about this attack.
+In order to protect against memory forensics, the system RAM is
+securely wiped when T(A)ILS is being shutdown. The software doing this
+is smem, part of the [secure-delete](http://www.thc.org/) package.
+This process can take a while. If T(A)ILS was booted from a CD it
+should eject, and if it was booted from a USB drive it can be removed
+once prompted. In either case the user can leave the computer and let
+it finish on its own, or simply turn it off if he or she is not
+worried about this attack.
 
 - [[!tails_live-boot_gitweb debian/live-boot.init]]
 
@@ -817,7 +816,7 @@ manager.
 
 ### 3.5.16 Passwords
 
-Two users are intended to be used for logins, `amnesia`
+Two users are intended to be used for logins: `amnesia`
 and `root`. Both have `amnesia` set as a password, and the `amnesia`
 user is allowed to gain super user privileges, without providing a
 password, using `sudo`.
@@ -831,7 +830,7 @@ As a first step the next major T(A)ILS release will stop grant `sudo`
 privileges to the `amnesia` user; a root console will be available for
 two minutes after boot: this leaves the user 2 minutes to set a root
 password. Unless this is done before this delay has expired, the root
-console will be disabled, and no root access will be possible anymore.
+console will be disabled, and no root access will be possible afterwards.
 
 ## 3.6 Running T(A)ILS in virtual machines
 
@@ -871,10 +870,10 @@ which also makes it easy to maintain.
 For detailed instructions on how to build and modify T(A)ILS, see
 [[build]] and [[contribute]] on the wiki.
 
-The following applications are kept up to date as soon as possible.
+Keeping the following applications up to date is a priority:
 
-- Tor (stable releases only) 
-- Vidalia 
+- Tor (stable releases only);
+- Vidalia.
 
 Remaining applications, including the base system, will be updated
 using Debian standard upgrade process, and generally based on the
@@ -882,7 +881,7 @@ latest Debian stable release so there are not many problems.
 
 ## 3.8 Hardware support
 
-T(A)ILS ships with the latest kernel from [Debian
+T(A)ILS ships the latest kernel from [Debian
 Backports](http://backports.debian.org) as a compromise between
 stability and recent hardware support.
 
@@ -906,7 +905,7 @@ Some optional bits of [[todo/persistence]] would be welcome and help
 spreading strong public key cryptography and authentication amongst
 T(A)ILS users (OpenPGP, [[todo/Monkeysphere]]).
 
-Providing an easy to use tool to inspect and cleanup meta-data in
+Providing an easy-to-use tool to inspect and cleanup meta-data in
 files (e.g. before they are published on the Web) would help any PELD
 implementation to achieve its mission. Such software is being designed
 and should be implemented at some point.
