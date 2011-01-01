@@ -41,4 +41,5 @@ user_pref("extensions.torbutton.startup", true);
 user_pref("extensions.torbutton.startup_state", 1);
 user_pref("extensions.torbutton.tor_enabled", true);
 user_pref("extensions.torbutton.tor_memory_jar", true);
+user_pref("extensions.torbutton.tz_string", "UTC+00:00");
 user_pref("extensions.torbutton.warned_ff3", true);
