@@ -1,26 +1,49 @@
 [[!tag todo/research]]
 
-Given the increasing practice of blocking Tor usage in more authoritarian countries, censorship resistance is getting more important. To merely try use Tor might even be dangerous in these countries as the government can log it an take action against the user. Hence we should provide an easy to use facility for our users to
+Given the increasing practice of blocking Tor usage in more
+authoritarian countries, censorship resistance is getting more
+important. To merely try use Tor might even be dangerous in these
+countries as the government can log it an take action against the
+user. Hence we should provide an easy to use facility for our users to
 
 * make sure that they always can reach the Tor network, and
 * prevent others from knowing that they are using Tor.
 
-In Tor there is the concept of [bridges](http://www.torproject.org/bridges) which is used to hide the fact that you are communicating with the Tor network by relaying your Tor traffic through a so called bridge node which is not listed in Tor's directory. This is exactly what we want.
+In Tor there is the concept of
+[bridges](http://www.torproject.org/bridges) which is used to hide the
+fact that you are communicating with the Tor network by relaying your
+Tor traffic through a so called bridge node which is not listed in
+Tor's directory. This is exactly what we want.
 
 Bridges in amnesia
 ==================
 
-While Vidalia makes it straight-forward to use bridges there are some special considerations that needs to be accounted for in the context of amnesia. Since all Tor is started at boot, it is immediately disclosed that Tor is used. We need to make it possible for our users to prevent this, for instance by toggling some option in the boot menu. However, since all internet traffic is routed through Tor, if a user don't know of any bridges we have a catch-22 situation since the user's best possibility to get a bridge is by getting it ovver the internet, for instance from [the Tor project's website](https://bridges.torproject.org/), IRC or IM buddies and similar.
+While Vidalia makes it straight-forward to use bridges there are some
+special considerations that needs to be accounted for in the context
+of amnesia. Since all Tor is started at boot, it is immediately
+disclosed that Tor is used. We need to make it possible for our users
+to prevent this, for instance by toggling some option in the boot
+menu. However, since all internet traffic is routed through Tor, if a
+user don't know of any bridges we have a catch-22 situation since the
+user's best possibility to get a bridge is by getting it ovver the
+internet, for instance from [the Tor project's
+website](https://bridges.torproject.org/), IRC or IM buddies and
+similar.
 
 
 Specification
 =============
 
-The use of bridges should be optional, and if desired it must be chosen before Tor starts. The best place for such an option is probably in the boot menu. When activated the following things should happen:
+The use of bridges should be optional, and if desired it must be
+chosen before Tor starts. The best place for such an option is
+probably in the boot menu. When activated the following things should
+happen:
 
 * Tor doesn't try to connect to the Tor network.
-* The user is somehow helped to setup a bridge, and possibly instructed how to get one.
-* Once a bridge has been chosen, Tor should immediately start to use it.
+* The user is somehow helped to setup a bridge, and possibly
+  instructed how to get one.
+* Once a bridge has been chosen, Tor should immediately start to use
+  it.
 
 Implementation
 ==============
@@ -29,28 +52,37 @@ There are numerous ways to design and implement this. Here are some
 things to analyse and discuss:
 
 * We have to decide whether we want to use vidalia's existing settings
-for it or a more homebrew scripted version. 
-    - A scripted version is of course more powerful as it would let us do anything.
-    - The vidalia approach is easier to implement but leaves the burden of finding the Vidalia settings and typing shit to the user.
+  for it or a more homebrew scripted version.
+ - A scripted version is of course more powerful as it would let us do anything.
+ - The vidalia approach is easier to implement but leaves the burden
+   of finding the Vidalia settings and typing shit to the user.
 
 * Vidalia has a "Find bridges now" button which won't work for us
-since it can't reach bridges.torproject.org. To get it to work we would
-need some kind of exception in the firewall rules.
+  since it can't reach bridges.torproject.org. To get it to work we
+  would need some kind of exception in the firewall rules.
 
 * The following command is an easy way to download a list of bridges
-(requires an exception in the firewall table -- perhaps we can just run
-the command as the debian-tor user which has direct internet access?): wget -q -O - https://bridges.torproject.org/ | grep -e "^bridge .*"
-    - It should be noted that just connecting to bridges.torproject.org can be dangerous if the regime is hostile towards Tor, and/or it could simply be censored. This must be explained to the user, and manual input of bridges must be available as an alternative.
+  (requires an exception in the firewall table -- perhaps we can just
+  run the command as the debian-tor user which has direct internet
+  access?):
+  `wget -q -O - https://bridges.torproject.org/ | grep -e "^bridge .*"`
+ - It should be noted that just connecting to bridges.torproject.org
+   can be dangerous if the regime is hostile towards Tor, and/or it
+   could simply be censored. This must be explained to the user, and
+   manual input of bridges must be available as an alternative.
 
 * To get Tor to not connect to the Tor network, one can just add
-"ReachableAddresses reject *:*" to torrc. When the user has selected
-bridges, we then add them and "UseBridges 1" to torrc, and remove the
-"Reach... *:*", and sends a SIGHUP to the tor client and it will get going again.
+  "ReachableAddresses reject *:*" to torrc. When the user has selected
+  bridges, we then add them and "UseBridges 1" to torrc, and remove
+  the "Reach... *:*", and sends a SIGHUP to the tor client and it will
+  get going again.
 
 * Alternatively one could add the bridges through Tor's control port
-(the way I assume vidalia and TorK does it).
-    - Since these settings disappear if Tor restarts, this is potentially dangerous.
+  (the way I assume vidalia and TorK does it).
+ - Since these settings disappear if Tor restarts, this is potentially
+   dangerous.
 
-* Yet another alternative is of course to either delay the start of the
-tor init script until the bridges has been set up, or that the script
-runs during init, before tor, but then it would have to be text-mode.
+* Yet another alternative is of course to either delay the start of
+  the tor init script until the bridges has been set up, or that the
+  script runs during init, before tor, but then it would have to be
+  text-mode.
