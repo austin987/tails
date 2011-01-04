@@ -28,7 +28,6 @@ Other design documents:
    applied. This will ensure that new circuits, such as requested via
    NEWNYM, will service subsequent HTTP requests."
 - bluetooth?
-- move 3.6.11-3.6.15 between MAC address stuff and Iceweasel config
 - CSS: have the headings automatically numbered
 
 # 1 Introduction
@@ -772,7 +771,76 @@ It is planned to anonymize the network interfaces MAC address in a
 later T(A)ILS version. See the related [[design
 document|design/MAC_address]] and [[todo item|todo/macchanger]].
 
-### 3.6.8 Iceweasel
+### 3.6.8 Host system swap
+
+T(A)ILS takes care not to use any swap filesystem that might exist on
+the host machine hard drive. Most of this is done at build time: not
+only the `/sbin/swapon` binary is replaced by a fake no-op script, but
+the init script responsible for mounting swap at boot (provided by
+live-boot) is removed. Also, live-boot's `swapon` option is not set.
+
+- [[!tails_gitweb config/chroot_local-hooks/03-noswap]]
+- [[!tails_gitweb config/chroot_local-hooks/05-disable_swapon]]
+
+### 3.6.9 Host system RAM
+
+**Beware!** This feature is currently known to be sometimes
+[[buggy|bugs/buggy_smem_on_shutdown]] when running from CD.
+
+In order to protect against memory forensics such as cold boot attack,
+the system RAM is
+securely wiped when T(A)ILS is being shutdown. The software doing this
+is smem, part of the [secure-delete](http://www.thc.org/) package.
+Since this process can take a while the user can leave the computer
+and let it finish on its own after removing the boot medium, or simply
+turn it off if he or she is not worried about this attack: if T(A)ILS
+was booted from a CD it is ejected before the memory wiping is
+started, and if it was booted from a USB drive it can be removed as
+soon as the memory wiping has been started.
+
+- [[!tails_live-boot_gitweb debian/live-boot.init]]
+
+### 3.6.10 Host system disks and partitions
+
+T(A)ILS takes care not to use any filesystem that might exist on
+the host machine hard drive, unless explicitly told to do so by the
+user. The Debian Live persistence feature is disabled by passing
+`nopersistent` over the kernel command line to live-boot.
+
+- [[!tails_gitweb config/amnesia]]
+
+*Nota bene*: removable drives are automatically mounted until T(A)ILS
+0.6.1. This behavior is disabled in the development branch.
+
+### 3.6.11 Secure erasure of files and free disk space
+
+Securely erasing files and free disk space is made easy by integrating
+[secure-delete](http://www.thc.org) tools into the Nautilus file
+manager.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/nautilus-sfill]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/nautilus-wipe]]
+- [[!tails_gitweb config/chroot_local-includes/lib/live/config/202-localize]]
+
+### 3.6.12 Passwords
+
+Two users are intended to be used for logins: `amnesia` and `root`.
+Both have `amnesia` set as a password, and the `amnesia` user is
+allowed to gain super user privileges, without providing a password,
+using `sudo`.
+
+The user will remove the CD/USB when done and there should be no
+services allowing logins from the network, but still: we are aware of
+the security risks involved by password-less sudo and are [[working on
+it|todo/better_root_access_control]].
+
+As a first step the next major T(A)ILS release will stop grant `sudo`
+privileges to the `amnesia` user; a root console will be available for
+two minutes after boot: this leaves the user 2 minutes to set a root
+password. Unless this is done before this delay has expired, the root
+console will be disabled, and no root access will be possible afterwards.
+
+### 3.6.13 Iceweasel
 
 (Note: Iceweasel is the name of the web browser, based on Mozilla
 Firefox, that is shipped by Debian and thus by T(A)ILS.)
@@ -825,7 +893,7 @@ looking in there.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/]]
 
-### 3.6.9 Claws Mail
+### 3.6.14 Claws Mail
 
 Claws Mail generates `Message-ID` headers using the hostname part of
 the sender's email address, which does not leak usage of the PELD nor
@@ -842,7 +910,7 @@ OpenPGP support is provided by the PGP/inline and PGP/MIME plugins.
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.claws-mail/]] is copied to
   the user's `$HOME` at boot time
 
-### 3.6.10 Pidgin
+### 3.6.15 Pidgin
 
 **FIXME**: CTCP?
 
@@ -855,75 +923,6 @@ possible. A script generates at each boot a random nick to be used on
 the preconfigured IRC servers, by randomly picking up a firstname from
 the 2000 most registered by the U.S. social security administration in
 the 70s and appending it a random number between 0 and 100.
-
-### 3.6.11 Host system swap
-
-T(A)ILS takes care not to use any swap filesystem that might exist on
-the host machine hard drive. Most of this is done at build time: not
-only the `/sbin/swapon` binary is replaced by a fake no-op script, but
-the init script responsible for mounting swap at boot (provided by
-live-boot) is removed. Also, live-boot's `swapon` option is not set.
-
-- [[!tails_gitweb config/chroot_local-hooks/03-noswap]]
-- [[!tails_gitweb config/chroot_local-hooks/05-disable_swapon]]
-
-### 3.6.12 Host system RAM
-
-**Beware!** This feature is currently known to be sometimes
-[[buggy|bugs/buggy_smem_on_shutdown]] when running from CD.
-
-In order to protect against memory forensics such as cold boot attack,
-the system RAM is
-securely wiped when T(A)ILS is being shutdown. The software doing this
-is smem, part of the [secure-delete](http://www.thc.org/) package.
-Since this process can take a while the user can leave the computer
-and let it finish on its own after removing the boot medium, or simply
-turn it off if he or she is not worried about this attack: if T(A)ILS
-was booted from a CD it is ejected before the memory wiping is
-started, and if it was booted from a USB drive it can be removed as
-soon as the memory wiping has been started.
-
-- [[!tails_live-boot_gitweb debian/live-boot.init]]
-
-### 3.6.13 Host system disks and partitions
-
-T(A)ILS takes care not to use any filesystem that might exist on
-the host machine hard drive, unless explicitly told to do so by the
-user. The Debian Live persistence feature is disabled by passing
-`nopersistent` over the kernel command line to live-boot.
-
-- [[!tails_gitweb config/amnesia]]
-
-*Nota bene*: removable drives are automatically mounted until T(A)ILS
-0.6.1. This behavior is disabled in the development branch.
-
-### 3.6.14 Secure erasure of files and free disk space
-
-Securely erasing files and free disk space is made easy by integrating
-[secure-delete](http://www.thc.org) tools into the Nautilus file
-manager.
-
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/nautilus-sfill]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/nautilus-wipe]]
-- [[!tails_gitweb config/chroot_local-includes/lib/live/config/202-localize]]
-
-### 3.6.15 Passwords
-
-Two users are intended to be used for logins: `amnesia` and `root`.
-Both have `amnesia` set as a password, and the `amnesia` user is
-allowed to gain super user privileges, without providing a password,
-using `sudo`.
-
-The user will remove the CD/USB when done and there should be no
-services allowing logins from the network, but still: we are aware of
-the security risks involved by password-less sudo and are [[working on
-it|todo/better_root_access_control]].
-
-As a first step the next major T(A)ILS release will stop grant `sudo`
-privileges to the `amnesia` user; a root console will be available for
-two minutes after boot: this leaves the user 2 minutes to set a root
-password. Unless this is done before this delay has expired, the root
-console will be disabled, and no root access will be possible afterwards.
 
 ## 3.7 Running T(A)ILS in virtual machines
 
