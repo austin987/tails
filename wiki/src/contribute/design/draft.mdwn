@@ -27,6 +27,8 @@ Other design documents:
    over existing circuits the following network settings should be
    applied. This will ensure that new circuits, such as requested via
    NEWNYM, will service subsequent HTTP requests."
+- bluetooth?
+- move 3.6.11-3.6.15 between MAC address stuff and Iceweasel config
 - CSS: have the headings automatically numbered
 
 # 1 Introduction
@@ -209,7 +211,8 @@ hardware architecture(s). As of 2011, the x86 computer architecture
 seems to be the obvious choice as the vast majority of personal
 computers in use is compatible with it. Supporting the PowerPC
 architecture is a welcome bonus in order to support pre-Intel Apple
-computers.
+computers. Supporting widespread hardware architectures used in mobile
+computers, such as phones, is also welcome.
 
 ### 2.4.2 Media
 
@@ -360,7 +363,7 @@ properly documented.
 
 #### 2.6.2.2 Fingerprinting
 
-Efforts should be made to make it harder to fingerprint PELD users *as
+Efforts should be made so that it is harder to fingerprint PELD users *as
 being using the PELD*. Considering this goal can conflict with others,
 trying to reach perfection in this domain is not necessarily
 reasonable.
@@ -388,7 +391,7 @@ supported:
   cookies, etc. Benefiting from this work is essential for maintaining
   anonymity, so it is required to include only web browsers that are
   endorsed by the Tor Project, accompanied with any configurations,
-  extensions/plug-ins, etc. that they recommend (for instance, Firefox
+  extensions/plugins, etc. that they recommend (for instance, Firefox
   with the Torbutton extension). The T(A)ILS browser fingerprint must
   make the PELD users appear uniformly among Tor users with generally
   recommended configuration, such as Torbutton users.
@@ -445,21 +448,23 @@ of OpenPGP should be included as it is the de-facto standard for these
 tasks in the Free Software world. GUIs for managing keys and
 performing the relevant cryptographic tasks should be available. The
 OpenPGP implementation should be pre-configured to use an encrypted
-tunnel when connecting to a keyserver (read: `hkps://`). Also, it
-should by default use up-to-date digests, ciphers and key sizes with
-respect to the current commonly agreed best practices.
+tunnel when connecting to a keyserver (read: `hkps://`).
 
 Tools for creating and using encrypted storage containers are also recommended.
+
+Any cryptographic tool shipped in the PELD should by default use
+up-to-date parameters with respect to the current commonly agreed best
+practices: digests, ciphers and key sizes.
 
 #### 2.6.3.5 Tor
 
 Tor should be setup to enable its DNS server (`DNSPort`) and
 transparent proxy (`TransPort`, `TransListen`) so the functionality
-specified in the network section is covered. Since Tor really is at
-the core of the PELD only stable releases should be considered. Also,
+specified in the network section is covered. Only stable releases
+should be considered since Tor really is at the core of the PELD. Also,
 while there are many other interesting configuration possibilities in
-the Tor manual, none of those that impair anonymity or security should
-be enabled.
+the Tor manual, care must be taken to avoid those that may impair
+anonymity or security.
 
 A GUI Tor controller application such as Vidalia or TorK is highly
 recommended. However, this requires opening the control port in Tor,
@@ -472,8 +477,8 @@ software.
 As an addition to the security against exploitable vulnerabilities
 provided by the kernel, compiling software with stack smashing
 protection, address space layout randomization and similar compiler
-security enhancements is recommended. Note that in some circumstances
-compiler-level options are necessary to take advantage of in-kernel
+security enhancements is recommended. Note that some
+compiler-level options may be necessary to take advantage of in-kernel
 security features. Thus the use of a hardened tool chain might depend
 on the vendor distribution used to build the PELD upon. If such
 techniques are not widely deployed at this level, using them to build
@@ -579,7 +584,7 @@ T(A)ILS ships the following software. This list is not complete, but
 only contains packages deemed as important for whatever reason. The
 full packages list can be found in the [BitTorrent files download
 directory](/torrents/files/) (look for files with the `.packages`
-extension), and the [[features]] page has yet another list.
+extension).
 
 ### 3.2.1 Core software
  
@@ -608,12 +613,7 @@ kernel security feature than the stock Debian kernel.
 As an alternative, efforts have been started to push usage of such
 hardening features in Debian.
 
-### 3.2.2 Virtual keyboard
-
-T(A)ILS ships with the [onBoard](https://launchpad.net/onboard)
-virtual keyboard as a countermeasure against hardware keyloggers.
-
-### 3.2.3 Other applications
+### 3.2.2 Other applications
 
 **FIXME**: mention Seahorse after GnuPG.
 
@@ -621,8 +621,9 @@ virtual keyboard as a countermeasure against hardware keyloggers.
   browser
   [rebranded](https://secure.wikimedia.org/wikipedia/en/wiki/Iceweasel)
   by Debian for trademark reasons.
-- [Torbutton](https://www.torproject.org/torbutton/) offers all kind of
-  protection against non-HTML anonymity attacks.
+- [Torbutton](https://www.torproject.org/torbutton/): Iceweasel
+  extension that offers all kind of protection against non-HTML
+  anonymity attacks.
 * [Claws Mail](http://www.claws-mail.org/): email client with
   user-friendly GnuPG support.
 * [Pidgin](http://www.pidgin.im/): instant messaging software
@@ -644,10 +645,12 @@ virtual keyboard as a countermeasure against hardware keyloggers.
   releases until now.)
 - [GnuPG](http://gnupg.org): complete and free implementation of the
   OpenPGP standard.
+- [onBoard](https://launchpad.net/onboard): virtual keyboard as a
+  countermeasure against hardware keyloggers.
 - [haveged](http://freshmeat.net/projects/haveged) feeds /dev/random
   using HArdware Volatile Entropy Gathering and Expansion algorithm.
-- [macchanger](http://www.alobbs.com/macchanger) allows manipulating
-  the MAC address of network interfaces.
+- [macchanger](http://www.alobbs.com/macchanger): command-line
+  interface to manipulate the MAC address of network interfaces.
 - [secure-delete](http://www.thc.org): tool to securely wipe data from
   files, swap or memory.
 - [OpenOffice.org](http://www.openoffice.org/),
@@ -661,8 +664,10 @@ virtual keyboard as a countermeasure against hardware keyloggers.
 
 ## 3.3 Internationalization
 
-The following locales are installed. Their number is limited by size
-constraints but more could be added on user's request.
+The following locales are installed. Their number is currently limited
+by the boot menu and size constraints. [[Work is being done|boot
+menu]] to fix this; until this is done, a few more locales could be
+added on user's request.
 
 - ar, ar_EG.UTF-8 (Arabic, Egyptian Arabic)
 - de, de_DE.UTF-8 (German)
@@ -685,7 +690,7 @@ The chosen locale's files are compiled at boot time.
 
 Shipped in T(A)ILS is a script that checks at each desktop start if
 security issues or new T(A)ILS releases are published on the website. If
-some are found, a notification is printed on the desktop. This
+some are found, a graphical notification is displayed. This
 application is internationalized.
 
 - [[!tails_gitweb chroot_local-includes/usr/local/bin/tails-security-check]]
@@ -734,7 +739,9 @@ as a DNS server on port 8853. Only connections from localhost are
 accepted. It can be argued that running a Tor server (onion router)
 would increase one's anonymity for a number for reasons but we still
 feel that most users probably would not want this due to the added
-consumption of bandwidth.
+consumption of bandwidth. The user can nevertheless easily choose to
+turn his or her Tor client into a relay, thanks to the Vidalia
+graphical user interface.
  
 - [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]
 
@@ -748,10 +755,10 @@ consumption of bandwidth.
 
 ### 3.6.5 SOCKS libraries
 
-tsocks and torify are installed. Note that it is unnecessary with the
-Linux network filter (see below) and the local DNS server to torify
-applications. This is done at a lower level. These tools are solely
-here due to dependencies and configured for completeness.
+tsocks and torify are installed. Since Tor-ification is done at a
+lower level (in-kernel network filter, Tor-ified DNS), these tools are
+actually unnecessary. They are solely included due to dependencies and
+configured for completeness.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/tor-tsocks.conf]]
 
@@ -770,17 +777,18 @@ document|design/MAC_address]] and [[todo item|todo/macchanger]].
 (Note: Iceweasel is the name of the web browser, based on Mozilla
 Firefox, that is shipped by Debian and thus by T(A)ILS.)
 
-Iceweasel uses Torbutton in order to prevent attacks using JavaScript,
+Iceweasel uses the Torbutton extension in order to prevent attacks
+using JavaScript,
 plugins and other non-HTTP features like web bugs. It is configured to
 always be enabled on Iceweasel start and uses polipo as HTTP(s) proxy
 and Tor as SOCKS proxy. SOCKS is configured to perform name resolution
-through the proxy. Iceweasel is also configured to not cache to disk
+through this proxy. Iceweasel is also configured to not cache to disk
 (mainly to reduce memory usage for CD users as disk writes will be
 stored there), history is disabled (just in case) and many other
 things. It is also setup not to automatically check for updates of its
 installed extensions. Java support is disabled.
 
-Iceweasel is shipped with some extensions to help users into managing
+Iceweasel is shipped with some extensions to help users manage
 their browsing experience. The
 [CS Lite](https://addons.mozilla.org/fr/firefox/addon/5207/)
 extension treats all cookies as session cookies by default, and
@@ -789,12 +797,15 @@ prevents the known leak of browsing informations cookies can lead to.
 The [Adblock plus](https://addons.mozilla.org/fr/firefox/addon/1865/)
 extension protects against many tracking possibilities by
 removing most ads. The [firegpg](http://getfiregpg.org/) plugin allows
-users to use GnuPG inside websites like webmails. The development branch
+users to use GnuPG inside websites such as webmails. The development branch
 additionally ships the
 [foxyproxy](https://addons.mozilla.org/fr/firefox/addon/2464/)
 extension that brings FTP support back into Iceweasel
 (workarounds [[bugs/FTP_does_not_work_in_iceweasel]]) and allows
 visiting eepsites via [[I2P|design/I2P]] (not Tor!).
+
+**FIXME**: talking of eepsites without knowing what they are is a bit
+upsetting here.
 
 Thanks to Torbutton, Iceweasel is configured so that T(A)ILS browser
 fingerprint appears uniformly among Torbutton users. Until T(A)ILS
@@ -807,7 +818,8 @@ way as the Tor Browser Bundle does, i.e. to `UTC+00:00`. Note that
 this is a development branch novelty as T(A)ILS relies on Torbutton's
 protection against location leakage until 0.6.1.
 
-The Iceweasel config is poorly commented but the Git history explains
+The Iceweasel config is poorly commented but the commit messages in
+Git history explains
 it all; any other relevant settings may thus be investigated by
 looking in there.
 
@@ -822,8 +834,10 @@ any user location information.
 It also always says `EHLO localhost` to the SMTP server instead of
 disclosing the real IP address and hostname.
 
-Furthermore, the accounts that a user will create are pre-configured
-to not use HTML to get rid of a whole class of privacy concerns.
+Furthermore, any account a user creates is pre-configured to not use
+HTML in order to get rid of a whole class of privacy concerns.
+
+OpenPGP support is provided by the PGP/inline and PGP/MIME plugins.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.claws-mail/]] is copied to
   the user's `$HOME` at boot time
@@ -832,7 +846,7 @@ to not use HTML to get rid of a whole class of privacy concerns.
 
 **FIXME**: CTCP?
 
-Pidgin is configured to not log anything as well as not to reveal too
+Pidgin is configured in T(A)ILS to not log anything as well as not to reveal too
 much of user activity by disabling reporting of online/away/typing
 status. MSN protocol support is disabled, to avoid the usage of such a
 privacy flawed and buggy plugin. The Off-the-record plugin is enabled
@@ -858,14 +872,16 @@ live-boot) is removed. Also, live-boot's `swapon` option is not set.
 **Beware!** This feature is currently known to be sometimes
 [[buggy|bugs/buggy_smem_on_shutdown]] when running from CD.
 
-In order to protect against memory forensics, the system RAM is
+In order to protect against memory forensics such as cold boot attack,
+the system RAM is
 securely wiped when T(A)ILS is being shutdown. The software doing this
 is smem, part of the [secure-delete](http://www.thc.org/) package.
-This process can take a while. If T(A)ILS was booted from a CD it
-should eject, and if it was booted from a USB drive it can be removed
-once prompted. In either case the user can leave the computer and let
-it finish on its own, or simply turn it off if he or she is not
-worried about this attack.
+Since this process can take a while the user can leave the computer
+and let it finish on its own after removing the boot medium, or simply
+turn it off if he or she is not worried about this attack: if T(A)ILS
+was booted from a CD it is ejected before the memory wiping is
+started, and if it was booted from a USB drive it can be removed as
+soon as the memory wiping has been started.
 
 - [[!tails_live-boot_gitweb debian/live-boot.init]]
 
@@ -883,7 +899,7 @@ user. The Debian Live persistence feature is disabled by passing
 
 ### 3.6.14 Secure erasure of files and free disk space
 
-Securely erasing files and free disk space is made easy integrating
+Securely erasing files and free disk space is made easy by integrating
 [secure-delete](http://www.thc.org) tools into the Nautilus file
 manager.
 
@@ -965,7 +981,7 @@ timely manner when security issues affect T(A)ILS. Such releases are
 based on the stable Git branch in T(A)ILS repository and can thus also
 bring fixes for important, although not security-related, bugs.
 
-Keeping the following applications up to date is a priority:
+Keeping the following applications up-to-date is a priority:
 
 - Tor (stable releases only);
 - Vidalia.
@@ -985,7 +1001,7 @@ ongoing to additionally support the PowerPC architecture.
 
 ## 3.10 Caveats
 
-T(A)ILS currently offers almost no protection against Live physical
+T(A)ILS currently offers almost no protection against live physical
 monitoring, except for hardware keyloggers.
 
 UDP and IPv6 are a problem. The Tor network does not support any of
@@ -1005,10 +1021,20 @@ Some optional bits of [[todo/persistence]] would be welcome and help
 spreading strong public key cryptography and authentication amongst
 T(A)ILS users (OpenPGP, [[todo/Monkeysphere]]).
 
+Some tools currently available to command-line users lack the
+integration into T(A)ILS and/or graphical user interface that would be
+needed to make them useful to anyone. See the [[macchanger TODO
+page|todo/macchanger]] as an example.
+
 Providing an easy-to-use tool to inspect and cleanup meta-data in
 files (e.g. before they are published on the Web) would help any PELD
 implementation to achieve its mission. Such software is being designed
 and should be implemented at some point.
+
+Despite any software and documentation piece developed specifically
+for T(A)ILS being ready to be translated, actual translation work is
+not done for many languages: we lack trusted translators teams.
+Sharing the Tor translation infrastructure may help.
 
 See the development [[contribute/roadmap]] for more information about
 where T(A)ILS is heading to.
