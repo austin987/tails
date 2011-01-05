@@ -1,27 +1,25 @@
-[Liberté Linux](http://dee.su/liberte) sets the hard disks standby
-timeout to 5min on boot in order to save power. They also set acoustic
-management to quiet.
+[Liberté Linux](http://dee.su/liberte) 
+
+- sets the hard disks standby timeout to quite low values in order to
+  save power
+- enables hard disks power management features
+
+This seems useful both for laptop users who get a better use of their
+battery and for desktop users who get a more silent environment.
 
 [[!tag todo/code todo/easy]]
 
 Implementation notes
 ====================
 
-See the `etc/conf.d/hdparm` file in Liberté Linux source tree.
+Beware: we don't want to spin down removable disks, especially the one
+we booted from.
 
-List internal hard disks
-------------------------
+Liberte Linux now uses laptop-mode-tools instead of home-grown hdparm
+commands. laptop-mode-tools does not act on USB disks so this seems
+like the way to go.
 
-Contrary to the Gentoo ones, the Debian hdparm scripts provide no
-facility to set the same options to all PATA and/or SATA drives.
+See the `src/etc/laptop-mode/laptop-mode.conf` file in Liberté Linux
+source tree.
 
-The relevant code could be stolen from the [Gentoo init
-script](http://sources.gentoo.org/cgi-bin/viewvc.cgi/gentoo-x86/sys-apps/hdparm/files/hdparm-init-8?view=markup).
-**Beware**: it seems their code does not check whether a given disk is
-internal or removable, and we probably don't want to spin down
-removable disks, especially the one we booted from.
-
-Another possibility to list internal hard disks is to use higher level
-tools, such as udev, HAL (more or less deprecated in Squeeze) or
-udisks (not in Lenny yet).
-
+> laptop-mode-tools is now installed in the devel branch.

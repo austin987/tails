@@ -1,0 +1,88 @@
+[[!tag todo/discuss]]
+
+We are now using in-the-clear HTP requests to set the system time
+before starting Tor:
+
+- [[design document|contribute/design/HTP]]
+- [[closed TODO|todo/authenticate_time_servers]]
+
+An alternative implementation could allow us to avoid doing such DNS
+and HTTPS requests in the clear.
+
+Liberte Linux uses Tor's consensus file to initially roughly set the
+time thanks to their `tor-date` script. The consensus file contains
+such information:
+
+	valid-after 2010-12-27 16:00:00
+	valid-until 2010-12-27 19:00:00
+
+A consensus is valid for three hours. If the system time is in the
+[valid-after, valid-after + 2.5 hours] range, `tor-date` exits.
+Else, it sets the system time to the middle of the [valid-after,
+valid-until] range and restarts Tor.
+
+The system time is then ensured to be correct enough to enable Tor to
+successfully open a circuit, and HTP can then be used to more
+accurately set time *via Tor*. The whole idea is that while Tor does
+not manage to open a circuit if the system time is too much wrong, it
+is supposed to always be able to retrieve its consensus file as soon
+as Internet connectivity is available.
+
+See the `liberte/src/root/bin/tor-date` file in Liberte Linux SVN
+repository for details.
+
+Pros
+====
+
+If we switch to such an operation mode we can:
+
+1. Remove the htp user exceptions in the firewall (for the record, it
+   is now allowed to do DNS and HTTPS requests in the clear). This
+   would make T(A)ILS much closer from the advertised *all outgoing
+   connections to the Internet are forced to go through the Tor
+   network*. This also would make it harder to fingerprint T(A)ILS
+   users for anyone sniffing the Internet connection in use; from the
+   ExitNode and webservers used by HTP point-of-view, fingerprinting
+   is still possible though.
+2. Simplify our NetworkManager HTP hook script: no need to mess with
+   `/etc/hosts` anymore, no need to do manual DNS resolution either.
+
+Cons
+====
+
+The HTP full-page (stylesheets, images, etc.) requests would be far
+slower if going through Tor. If HTP is used in blocking mode (i.e.
+the user waits for HTP to finish and Vidalia to start before using
+the network) this would increase the boot time until the system is
+really usable (again). OTOH if HTP is used in non-blocking mode boot
+time would decrease so this actually might be a bonus point rather
+than a cons.
+
+Integration
+===========
+
+This mainly is a NetworkManager hooks ordering issue.
+
+HTP is blocking
+---------------
+
+1. Start Tor.
+2. Use `tor-date` to roughly set the system time if needed and maybe
+   restart Tor.
+3. Notify the user the HTP time setting process has been started.
+4. Use HTP to more accurately set the system time.
+5. Start Vidalia.
+
+HTP is not blocking
+-------------------
+
+1. Start Tor.
+2. Use `tor-date` to roughly set the system time if needed and maybe
+   restart Tor.
+3. Start Vidalia.
+4. In the background, use HTP to more accurately set the system time.
+
+Do we need to notify the user in case the system time is changed by
+HTP? We would, if we need to restart Tor and Vidalia, but it seems we
+don't need to do that since Tor allows small time changes and we know
+we already have a not-so-bad system time.
