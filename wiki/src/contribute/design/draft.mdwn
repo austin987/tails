@@ -81,11 +81,13 @@ and Dominik's *Contemporary Profiling of Web Users* [conference at
 27C3](http://events.ccc.de/congress/2010/Fahrplan/events/4140.en.html)
 for details.
 
-### 2.1.2 Protection from post-mortem forensics
+### 2.1.2 Protection from data recovery after shutdown
 
 The PELD aims at protecting the user from post-mortem analysis
-(forensics) of the equipment (notably storage media and memory) he or
-she runs the PELD on:
+of the equipment (notably storage media and memory) he or
+she runs the PELD on. It is impossible for such a system to determine
+which information is sensitive and which is not. Thus, the PELD should
+be amnesic by default:
 
 - No trace must be left on local storage devices unless the user
   explicitly asks for it: the PELD must take care not to use any
@@ -94,7 +96,7 @@ she runs the PELD on:
 - The usage of encrypted removable storage devices (such as USB
   sticks) should be encouraged.
 - Volatile memory should be erased on shutdown to prevent memory
-  forensics such as [[!wikipedia cold boot attack]].
+  recovery such as [[!wikipedia cold boot attack]].
 - Secure erasure of files and free disk space should be made easy.
 
 ### 2.1.3 Working on sensitive documents
@@ -155,7 +157,7 @@ safely download and open files using external applications, as
 mentioned by the Torbutton warning popup when a user attempts such an
 operation outside the PELD.
 
-About protection from post-mortem forensics, thanks to its
+About protection from post-shutdown data recovery, thanks to its
 amnesic-by-default behavior, the PELD can aim at providing a level of
 protection only a fine-tuned Live operating system can offer. On the
 contrary Tor distributions that rely on an untrusted underlying
@@ -208,13 +210,16 @@ The adversary may have one or more goals among the following ones.
 - **Eavesdrop on sensitive data**: the Tor network only prevents the
   data from being traced (according to Tor's threat model) but does not
   protect it from eavesdropping.
-- **Post-mortem user activity and sensitive data recovery
-  (forensics)**:  "normal" operating systems keep a lot of traces
-  about their users' Internet activities (notably browser cache,
-  cookies and history) on local storage media; similary, working on a
-  sensitive document with a "normal" operating system is very likely
-  to leave traces of this document. The adversary may want to recover
-  such information by analyzing the equipment that has been used.
+- **Data recovery after system shutdown**:  "normal" operating systems
+  keep a lot of traces about their users' Internet activities (notably
+  browser cache, cookies and history) on local storage media;
+  similary, working on a sensitive document with a "normal" operating
+  system is very likely to leave traces of this document. User's data
+  can remain on the equipment even after the machine is shut down; be
+  it stored in the filesystem or in the memories, both RAM and swap,
+  which might as well retain data (for example encryption keys or
+  passwords). The adversary may want to recover such information by
+  analyzing the equipment that has been used.
 
 ### 2.2.2 Capabilities, methods and other means of the attacker
 
@@ -843,7 +848,7 @@ live-boot) is removed. Also, live-boot's `swapon` option is not set.
 **Beware!** This feature is currently known to be sometimes
 [[buggy|bugs/buggy_smem_on_shutdown]] when running from CD.
 
-In order to protect against memory forensics such as cold boot attack,
+In order to protect against memory recovery such as cold boot attack,
 the system RAM is
 securely wiped when T(A)ILS is being shutdown. The software doing this
 is smem, part of the [secure-delete](http://www.thc.org/) package.
