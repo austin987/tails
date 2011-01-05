@@ -29,6 +29,7 @@ Other design documents:
   `libgnome-bluetooth7`; the rest of the BlueZ software stack is not
   shipped. Note that this actually happens by chance, as packages
   dependencies could easily pull any kind of Bluetooth software.
+- HTTPS everywhere is installed in the devel branch
 - CSS: have the headings automatically numbered
 
 # 1 Introduction
@@ -541,7 +542,7 @@ software.
 
 As an addition to the security against exploitable vulnerabilities
 provided by the kernel, compiling software with stack smashing
-protection, address space layout randomization and similar compiler
+protection, Position Independant Executable (PIE) and similar compiler
 security enhancements is recommended. Note that some
 compiler-level options may be necessary to take advantage of in-kernel
 security features. Thus the use of a hardened tool chain might depend
@@ -1004,10 +1005,10 @@ GPG itself is configured to connect to this keyserver over a TLS
 encrypted tunnel (`hkps://`), currently verifying the server's
 certificate is signed by the CaCert X.509 certification authority
 until [[todo/Monkeysphere]] (`hkpms://`) support is ready to be used.
-On the other hand Seahorse and FireGPG [[do
-not|bugs/seahorse_does_not_support_hkps]]
-[[support|bugs/firegpg_does_not_support_hkps]] `hkps://` so they are
-using cleartext `hkp://` instead.
+On the other hand Seahorse [[does not support
+hkps|bugs/seahorse_does_not_support_hkps]] so it is using cleartext
+`hkp://` instead. FireGPG is using plaintext `hkp://` until T(A)ILS
+0.6.1, and the development branch has switched to `hkps://`.
 
 GnuPG is configured to prefer non-outdated digest algorithms such as
 SHA256.
