@@ -725,12 +725,6 @@ internationalization and is ready to be translated.
 
 ## 3.6 Configuration
 
-**FIXME**: add GnuPG keyservers configuration: hkps:// for gnupg
-itself and FireGPG, hkp:// for Seahorse
-([[bugs/seahorse_does_not_support_hkps]]). All use keys.indymedia.org.
-git grep hkp on stable and devel branch for pointers to the
-implementation.
-
 In this section we briefly present the setup of several key software
 packages and system settings of T(A)ILS with respect to security and
 anonymity. There are of course other minor tweaks here and there, but
@@ -931,6 +925,37 @@ possible. A script generates at each boot a random nick to be used on
 the preconfigured IRC servers, by randomly picking up a firstname from
 the 2000 most registered by the U.S. social security administration in
 the 70s and appending it a random number between 0 and 100.
+
+### 3.6.16 GnuPG
+
+All GnuPG tools (namely: GPG itself, Seahorse and FireGPG) are
+configured to use the keys.indymedia.org keyserver since:
+
+- it is run by privacy-friendly people who go as far as providing a
+  Tor hidden service;
+- it is well-synchronized with the HKP keyservers pool.
+
+**FIXME**: add pointers to `hkpms://` preliminary implementation and
+documentation.
+
+GPG itself is configured to connect to this keyserver over a TLS
+encrypted tunnel (`hkps://`), currently verifying the server's
+certificate is signed by the CaCert X.509 certification authority
+until [[todo/Monkeysphere]] (`hkpms://`) support is ready to be used.
+On the other hand Seahorse [[does not support
+TLS|bugs/seahorse_does_not_support_hkps]] so it is using cleartext
+`hkp://` instead.
+
+**FIXME**: seems like FireGPG is not configured to use `hkps://`.
+Couldn't we just leave the keyserver preference empty and let it use
+GPG defaults?
+
+GnuPG is configured to prefer non-outdated digest algorithms such as
+SHA256.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/gpg.conf]]
+- [[!tails_gitweb config/chroot_local-includes/usr/share/amnesia/gconf/apps_seahorse.xml]]
+- [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/profile/user.js]]
 
 ## 3.7 Running T(A)ILS in virtual machines
 
