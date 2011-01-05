@@ -15,14 +15,16 @@
 
 # proxyAddress = "::0"        # both IPv4 and IPv6
 # proxyAddress = "0.0.0.0"    # IPv4 only
-proxyAddress = "127.0.0.1"    # IPv4 only
+
+proxyAddress = "127.0.0.1"
 proxyPort = 8118
 
 # If you are enabling 'proxyAddress' above, then you want to enable the
 # 'allowedClients' variable to the address of your network, e.g.
 # allowedClients = 127.0.0.1, 192.168.42.0/24
                                             
-# allowedClients = 127.0.0.1              
+allowedClients = 127.0.0.1
+allowedPorts = 1-65535
 
 # Uncomment this if you want your Polipo to identify itself by
 # something else than the host name:
@@ -39,7 +41,7 @@ cacheIsShared = false
 
 # Uncomment this if you want to use a parent SOCKS proxy:
 
-socksParentProxy = "localhost:9050"
+socksParentProxy = "127.0.0.1:9050"
 socksProxyType = socks5
 
 
@@ -57,6 +59,7 @@ socksProxyType = socks5
 # chunkHighMark = 50331648
 # objectHighMark = 16384
 
+chunkHighMark = 67108864
 
 ### On-disk data
 ### ************
@@ -72,7 +75,7 @@ diskCacheRoot = ""
 
 # Uncomment this if you want to disable the local web server:
 
-# localDocumentRoot = ""
+localDocumentRoot = ""
 
 # Uncomment this if you want to enable the pages under /polipo/index?
 # and /polipo/servers?.  This is a serious privacy leak if your proxy
@@ -82,25 +85,26 @@ diskCacheRoot = ""
 # disableServersList = false
 
 disableLocalInterface = true
+disableConfiguration = true
 
 ### Domain Name System
 ### ******************
 
 # Uncomment this if you want to contact IPv4 hosts only (and make DNS
 # queries somewhat faster):
-
+#
 # dnsQueryIPv6 = no
 
 # Uncomment this if you want Polipo to prefer IPv4 to IPv6 for
 # double-stack hosts:
-
+#
 # dnsQueryIPv6 = reluctantly
 
 # Uncomment this to disable Polipo's DNS resolver and use the system's
 # default resolver instead.  If you do that, Polipo will freeze during
 # every DNS query:
 
-# dnsUseGethostbyname = yes
+dnsUseGethostbyname = yes
 
 
 ### HTTP
@@ -115,7 +119,7 @@ disableVia = true
 # Uncomment this if you want to slightly reduce the amount of
 # information that you leak about yourself:
 
-censoredHeaders = from, accept-language, x-pad
+censoredHeaders = from,accept-language,x-pad,link
 censorReferer = maybe
 
 # Uncomment this if you're paranoid.  This will break a lot of sites,
@@ -153,12 +157,9 @@ censorReferer = maybe
 
 # mindlesslyCacheVary = true
 
-### Tor-specific configuration
-### **************************
-
-serverSlots = 2
-serverMaxSlots = 8
-allowedPorts = 1-65535
-tunnelAllowedPorts = 1-65535
+# Suggestions from Incognito configuration
 maxConnectionAge = 5m
 maxConnectionRequests = 120
+serverMaxSlots = 8
+serverSlots = 2
+tunnelAllowedPorts = 1-65535

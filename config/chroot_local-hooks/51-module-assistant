@@ -3,20 +3,35 @@
 # Install modules managed by module-assistant
 
 echo "installing modules managed by module-assistant"
-
 MODULES=""
 MA="module-assistant --text-mode --non-inter"
 
-apt-get install --yes build-essential module-assistant debhelper
-$MA update
+ma_install_tools ()
+{
+   apt-get install --yes build-essential module-assistant debhelper
+   $MA update
+}
 
-for MODULE in $MODULES ; do
-   for KERNEL in /boot/vmlinuz-* ; do
-      VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
-      $MA --quiet auto-install ${MODULE} -l ${VERSION}
+ma_install_modules ()
+{
+   for MODULE in $@ ; do
+      for KERNEL in /boot/vmlinuz-* ; do
+	 VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
+	 $MA --quiet auto-install ${MODULE} -l ${VERSION}
+      done
+      $MA clean ${MODULE}
+      apt-get --yes purge ${MODULE}
    done
-   $MA clean ${MODULE}
-   aptitude --assume-yes purge ${MODULE}
-done
+}
 
-rm -f /usr/src/*.deb
+ma_cleanup ()
+{
+   rm -f /usr/src/*.deb
+}
+
+if [ -n "${MODULES}" ] ; then
+   ma_install_tools
+   ma_install_modules
+   ma_cleanup
+fi
+
