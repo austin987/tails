@@ -749,131 +749,43 @@ get a virus or manages to damage the system in other ways, the system
 is tainted or unusable from that point and all consecutive boots,
 either with or without your knowledge. Clearly that is not good.
 
-It is actually possible to get the best out of these two worlds at the
-same time. When running T(A)ILS from a USB drive you have the option
-to create an encrypted container wherein your home directory is stored
-so that any files stored and settings made are saved persistently. If
-you use a good password this deals with the dangers of storing
-sensitive data on it. For more information on this, see the section on
-using a [persistent home directory](#persistent). But what about virus
-threats and the like? Well, when running from a USB drive, the system
-files are still set up to not be persistently writeable. It is only
-your home directory which will be persistent.
-
 ### Installation instructions
 
-In order to get T(A)ILS running from USB you currently have to get the
-usual LiveCD installation first. Once T(A)ILS has started up from CD
-you will find a short cut to an installation guide in the "T(A)ILS"
-meni available from the panel and the K menu, aptly called "Install
-T(A)ILS to USB". The guide will tell you about your options and is
-self contained, and in most cases you only need to insert a USB drive,
-choose the appropriate installation method and hit the OK button to
-get it done. Then you restart the computer without the CD in, but with
-the USB drive connected instead, and T(A)ILS should start to boot just
-like from the CD.
+In order to get T(A)ILS running from USB, the easiest way is to get
+the usual LiveCD installation first (or run T(A)ILS from a virtual
+machine supports writing directly to a real-world USB drive).
 
-### Updating T(A)ILS USB installation
+Note that the method of installing T(A)ILS to USB is pretty crude
+at the moment (a more intuituve way is planned). If you do not know
+precisely what the things mentioned below mean it is recommended to
+stop now as you otherwise might risk overwriting any present hard
+drives. Proceed at your own discretion!
 
-If you have an existing T(A)ILS USB installation and want to update it
-to a more recent release, simply use this script to overwrite the
-existing installtion. Note that if a persistent home directory is
-present you must choose option 1 ("Use an existing vfat partition on a
-USB drive") and select the partition containing T(A)ILS in order to
-keep it.
+Once T(A)ILS has started up from CD (or a virtual machine), start a
+terminal and type:
 
-## <a name="persistent"></a>Persistent home directory
+>`sudo su`
+>`cat /dev/cdrom > /dev/sdX`
 
-At a certain point when [booting T(A)ILS from USB](#usb) you will be
-prompted with the question if you want a persistent home directory or
-not. As mentioned elsewhere in this document, that will allow you to
-save files and keep application settings between shutdowns, which is
-not normally the case. Naturally, saving sensitive stuff could be
-dangerious if it got into the wrong hands, so the use of encryption is
-highly recommended.
+where "`/dev/cdrom`" is the CD-ROM device running the T(A)ILS CD,
+and "`/dev/sdX`" is the target USB device. Note that The "`X`" in
+"`/dev/sdX`" needs to be changed appropriately (usually the command
+"`dmesg`" can be of great help if run just after pluggin in the USB
+device).
 
-As you progress through the guided setup of the persistent home
-directory you will be asked as few questions and given some simple
-instructions, and some of these might need to be commented a bit:
+As an alternative, if you have a non-T(A)ILS Linux system and access
+to the T(A)ILS ISO image, you can install it to USB by issuing the
+following commands to a terminal:
 
-### Size
+>`sudo su    # or other way to get root privileges`
+>`cat /path/to/tails/image.iso > /dev/sdX`
 
-Early on you will be asked for the size of the "home volume", which
-will be a file stored on the USB drive that in turn will store you
-files. There are a few constraints on this size, like a minimum size
-necessary to fit the initial application settings and files that are
-part of \_\_INCOGNITO\_USER\_\_ users's home directory. There is also
-a maximum size, which is the lowest of the space available on the
-drive, and 4 GB (this is because of technical reasons – files larger
-than 4 GB will not work).
+where "`/dev/sdX`" is the target USB device (change "`X`" as above).
 
-### Encryption
+## <a name="persistent"></a>Persistent storage on USB drive
 
-It cannot be emphasized enough; use encryption! The encryption is
-protected with a password, so it is very important to also choose a
-strong password. But what is a strong password? Of course, there are
-many different opinions on that. What can be said is that to utilize
-the encryption algorithm used to its full extent you will need a
-password consisting of 40 randomly chosen characters of those
-available on the standard (western) keyboard layout, which have around
-90 different characters. Such a password should remain uncrackable for
-the remainder of this universe's life span and the same goes for the
-actual encryption. Of course, such a password is almost impossible to
-memorize, so you will probably have to go for something shorter. 20
-random characters is probably enough. It can also help to device
-mnemonics to help remember them but stay away from dictionary words of
-any language you know. Be creative! If you need help with generating
-the passwords you should check out [KeePassX](#keepassx)'s built-in
-password generator.
-
-If you use encryption (which you should) you will be prompted for the
-password during boot. One thing that might strike you as odd is that
-it is possible to enter two passwords. The reason for that will be
-clarified in the next section, but normally you just type in your
-password in one of them (which one doesn't matter) and press ENTER to
-continue.
-
-### Hidden volumes
-
-In certain countries you may be legally forced to hand over encryption
-keys or passwords, or otherwise facing penal charges. Clearly this
-might defeat the whole purpose of using encryption, but luckily there
-is a solution based on [plausible
-deniability](http://en.wikipedia.org/wiki/Plausible_deniability).
-
-The idea is to create a so called hidden volume which resides in the
-free space of the normal (or outer) volume, and using two different
-passwords to access either of them; the normal password grants access
-only to the normal volume and the hidden password grants access only
-to the hidden volume. Given the normal password there is no way to
-tell whether the hidden volume exists or not – the hidden password is
-required for that. The point of all this is that you may hand over the
-normal password to the authorities and keep the hidden password
-secret, and they will not be able to tell whether you are fooling them
-or not. Hence you get plausible deniability.
-
-Setting up the hidden volume using the guided setup is pretty straight
-forward. You will be asked how large it should be, and since it is
-stored within the normal volume it must be smaller, but it is
-important that you leave some additional in order to make room on the
-normal volume. You will need to use the normal volume sometomes to do
-innocent things so that it looks used, otherwise the authorities will
-not believe you. However, when you do that by just specifying the
-normal password you may damage the hidden volume as it resides in the
-free space. Luckily you can supply both passwords at the same time,
-which will open the normal volume but make it aware of the hidden
-volume so you cannot damage it. So, whenever you are using the normal
-volume to make it look used, enter both passwords (one in each field
-at the password prompt, and order doesn't matter).
-
-Naturally, you will also be asked for an additional password for the
-hidden volume, and as always you should choose a good, strong
-password. However, for the normal volume you can choose may choose a
-weaker password that's easier to remember – it only needs to be good
-enough to fool the authoroties that it is the real password. But
-remember to **never** give the hidden password to anyone else, or even
-mention to anybody that you are using a hidden volume or have two
-passwords.
+This is not supported at the moment, but is planned for a future
+T(A)ILS release.
 
 ## <a name="cold"></a>Protection against cold boot attacks
 
