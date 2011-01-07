@@ -88,6 +88,7 @@ chmod 644 "${LOG}"
 . /etc/live/config.d/username
 
 export DISPLAY=':0.0'
+export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
 exec /bin/su -c /usr/local/bin/tails-htp-notify-user "${LIVE_USERNAME}" &
 
 
