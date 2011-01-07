@@ -49,9 +49,6 @@
 </span>
 <span class="title">
 <TMPL_VAR TITLE>
-<TMPL_IF ISTRANSLATION>
-&nbsp;(<TMPL_VAR PERCENTTRANSLATED>%)
-</TMPL_IF>
 </span>
 </span>
 <TMPL_IF SEARCHFORM>
@@ -63,7 +60,11 @@
 <TMPL_IF HTML5><nav class="actions"><TMPL_ELSE><div class="actions"></TMPL_IF>
 <ul>
 <TMPL_IF EDITURL>
-<li><a href="<TMPL_VAR EDITURL>" rel="nofollow">Edit</a></li>
+  <TMPL_IF NAME="ISTRANSLATION">
+    <li><a href="<TMPL_VAR EDITURL>" rel="nofollow">Improve translation</a> (<TMPL_VAR NAME="PERCENTTRANSLATED">&nbsp;%)</a></li>
+  <TMPL_ELSE>
+    <li><a href="<TMPL_VAR EDITURL>" rel="nofollow">Edit</a></li>
+  </TMPL_IF>
 </TMPL_IF>
 <TMPL_IF RECENTCHANGESURL>
 <li><a href="<TMPL_VAR RECENTCHANGESURL>">RecentChanges</a></li>
