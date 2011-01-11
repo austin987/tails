@@ -48,6 +48,8 @@ pref("dom.storage.enabled", false);
 pref("extensions.foxyproxy.last-version", "2.19.1");
 pref("extensions.update.enabled", false);
 pref("extensions.update.notifyUser", false);
+pref("geo.enabled", false);
+pref("geo.wifi.uri", "");
 pref("layout.css.report_errors", false);
 pref("network.cookie.lifetimePolicy", 2);
 pref("network.cookie.prefsMigrated", true);
