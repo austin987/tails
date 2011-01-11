@@ -22,6 +22,7 @@ pref("app.update.enabled", false);
 pref("browser.bookmarks.livemark_refresh_seconds", 31536000);
 pref("browser.cache.disk.capacity", 0);
 pref("browser.cache.disk.enable", false);
+pref("browser.cache.offline.enable", false);
 pref("browser.chrome.favicons", false);
 pref("browser.chrome.site_icons", false);
 pref("browser.chrome.image_icons.max_size", 0);
