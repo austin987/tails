@@ -1,0 +1,75 @@
+Rationale
+=========
+
+Using some kind of [[!wikipedia Mandatory Access Control]], such as
+GrSecurity, AppArmor or SELinux, would make exploitation of security
+issues in bundled software harder.
+
+Possible solutions
+==================
+
+AppArmor
+--------
+
+Used in Ubuntu, now in upstream Linux kernel (>= 2.6.36, that probably
+will be in squeeze-backports once Squeeze is released). Seems really
+easy to write and maintain policies, many already exist.
+
+Ongoing work to add support for AppArmor in Debian:
+
+- ITP for userspace tools: [[!debbug 440680]]
+- asking to enable AppArmor in the kernel: [[!debbug 598408]]
+
+grsecurity
+----------
+
+[homepage](http://grsecurity.net/)
+
+grsecurity, along with more kernel hardening features, provides
+Role-Based Access Control.
+
+Users:
+
+- Hardened Gentoo offers a grsec-enabled kernel. RBAC policy?
+- Although Liberte Linux uses PaX (Address space modification protection)
+  features it does not seem to have any RBAC policy (that I was able
+  to find).
+
+- Debian Wheezy is likely to have a grsec kernel flavour available:
+  [[!debbug 605090]]
+- Ubuntu developers [are
+  working](https://wiki.ubuntu.com/SecurityTeam/Roadmap/KernelHardening)
+  to upstream grsec features mainline
+
+SELinux
+-------
+
+Seems pretty hard to write and maintain policies.
+Poor support in Debian, does not look like it's going to improve that
+much.
+
+- http://etbe.coker.com.au/2010/07/25/se-linux-status-squeeze/
+- selinux policies likely won't be part of Squeeze
+- GNOME, policykit, etc. are currently not supported by
+  Debian-packaged policies
+
+Smack
+-----
+
+The Smack MAC LSM is part of the Linux kernel
+([homepage](http://schaufler-ca.com/), [[!wikipedia
+Simplified_Mandatory_Access_Control_Kernel]]). It does not seem to be
+used by any GNU/Linux distribution out there.
+
+TOMOYO Linux
+------------
+
+Some of the TOMOYO Linux LSM
+([homepage](http://tomoyo.sourceforge.jp/)) was mainlined in 2.6.30.
+It does not seem to be used by any GNU/Linux distribution out there.
+
+Resources
+=========
+
+- https://wiki.ubuntu.com/SecurityTeam/Roadmap/KernelHardening
+- https://wiki.ubuntu.com/SecurityTeam/Roadmap
