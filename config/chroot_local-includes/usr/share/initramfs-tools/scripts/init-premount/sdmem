@@ -1,0 +1,33 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs() {
+   echo "${PREREQ}"
+}
+
+case ${1} in
+   prereqs)
+      prereqs
+      exit 0
+      ;;
+esac
+
+case "$sdmem" in
+   halt|reboot)
+      /usr/bin/sdmem -vllf
+      ;;
+   *)
+      ;;
+esac
+
+case "${sdmem}" in
+   halt)
+      /sbin/halt -fndp
+      ;;
+   reboot)
+      /sbin/reboot -fnd
+      ;;
+   *)
+      ;;
+esac
