@@ -13,8 +13,12 @@ case ${1} in
       ;;
 esac
 
-if [ "${sdmem}" ] ; then
-   /usr/bin/sdmem -vllf
+if [ -n "${sdmem}" ] ; then
+   if [ -n "${sdmemopts}" ] ; then
+      /usr/bin/sdmem "-${sdmemopts}"
+   else
+      /usr/bin/sdmem -v
+   fi
 fi
 
 case "${sdmem}" in
