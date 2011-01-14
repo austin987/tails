@@ -297,10 +297,6 @@ independent from the host operating system and all other storage media
 on the host computer unless the user explicitly tries to access any of
 them.
 
-**FIXME**: T(A)ILS does not respect the following read-only
-recommendation and rather makes it possible to install additional
-software in RAM. This fact must be mentioned somewhere.
-
 In all circumstances, binaries, dynamic libraries and other executable
 code susceptible to virus infections and similar MUST always be
 completely write-protected, even when running from a writeable USB
@@ -911,12 +907,27 @@ Both have `amnesia` set as a password, and the `amnesia` user is
 allowed to gain super user privileges, without providing a password,
 using `sudo`.
 
-The user will remove the CD/USB when done and there should be no
-services allowing logins from the network, but still: we are aware of
-the security risks involved by password-less sudo and are [[working on
-it|todo/better_root_access_control]].
+The PELD specification recommends to prevent executable code to be
+modifiable, even temporarily; T(A)ILS does not implement this
+recommendation. Instead, thanks to the super user privileges being
+available to the end-user, T(A)ILS makes it possible to modify or add
+executable code by:
 
-As a first step the next major T(A)ILS release will stop grant `sudo`
+- upgrading bundled software: this allows (technical) users to protect
+  themselves from serious security issues until an updated T(A)ILS is
+  released
+- installing additional software: this helps achieving the PELD
+  "Working on sensitive documents" goal by enabling users to perform
+  tasks that need software not shipped in T(A)ILS.
+
+Such modifications happen only in RAM, the user will remove the CD/USB
+when done and there are no services allowing logins from the network,
+but still: we are aware of the security risks involved by
+password-less sudo and are [[working on better
+solutions|todo/better_root_access_control]] to enhance security
+without decreasing the user freedom.
+
+As a first step the next major T(A)ILS release will stop granting `sudo`
 privileges to the `amnesia` user; a root console will be available for
 two minutes after boot: this leaves the user 2 minutes to set a root
 password. Unless this is done before this delay has expired, the root
