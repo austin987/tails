@@ -1033,20 +1033,17 @@ configured to use the keys.indymedia.org keyserver since:
   Tor hidden service;
 - it is well-synchronized with the HKP keyservers pool.
 
-**FIXME**: add pointers to `hkpms://` preliminary implementation and
-documentation:
-https://lists.riseup.net/www/arc/monkeysphere/2010-12/msg00001.html,
-https://labs.riseup.net/code/issues/2016,
-http://packages.debian.org/source/experimental/msva-perl.
-
 GPG itself is configured to connect to this keyserver over a TLS
-encrypted tunnel (`hkps://`), currently verifying the server's
-certificate is signed by the CaCert X.509 certification authority
-until [[todo/Monkeysphere]] (`hkpms://`) support is ready to be used.
-On the other hand Seahorse [[does not support
-hkps|bugs/seahorse_does_not_support_hkps]] so it is using cleartext
-`hkp://` instead. FireGPG is using plaintext `hkp://` until T(A)ILS
-0.6.1, whereas the development branch has switched to `hkps://`.
+encrypted tunnel (`hkps://`). On the other hand Seahorse [[does not
+support hkps|bugs/seahorse_does_not_support_hkps]] so it is using
+cleartext `hkp://` instead. FireGPG is using plaintext `hkp://` until
+T(A)ILS 0.6.1, whereas the development branch has switched to
+`hkps://`.
+
+When a hkps-capable front end is used, the keyserver is currently
+authenticated thanks to the CaCert X.509 certification authority.
+[[todo/Monkeysphere]]'s `hkpms://` support will be used as soon as
+possible in place of the hierarchical X.509 certification model.
 
 GnuPG is configured to prefer non-outdated digest algorithms such as
 SHA256.
@@ -1054,6 +1051,9 @@ SHA256.
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/gpg.conf]]
 - [[!tails_gitweb config/chroot_local-includes/usr/share/amnesia/gconf/apps_seahorse.xml]]
 - [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/profile/user.js]]
+- hkpms [announce](https://lists.riseup.net/www/arc/monkeysphere/2010-12/msg00001.html)
+- [hkpms in the Monkeysphere issue tracker](https://labs.riseup.net/code/issues/2016)
+- hkpms is [available in Debian experimental](http://packages.debian.org/source/experimental/msva-perl)
 
 ## 3.7 Running T(A)ILS in virtual machines
 
