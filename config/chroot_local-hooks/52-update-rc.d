@@ -19,4 +19,5 @@ update-rc.d -f reboot remove
 update-rc.d -f kexec  remove
 
 # we use kexec on halt too => enable kexec-load initscript on runlevel 0 as well
+update-rc.d -f kexec-load remove
 update-rc.d kexec-load stop 18 0 6 .
