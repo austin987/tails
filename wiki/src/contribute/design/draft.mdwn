@@ -17,26 +17,6 @@ Other design documents:
 
 **FIXME**
 
-- HTTP keepalive:
- * being discussed on tails-dev mailing-list
- * the [Live CD Best
-   Practices](https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/LiveCDBestPractices)
-   document on the Tor wiki says:
-   "OPTIONAL? To prevent the browser from keeping HTTP sessions open
-   over existing circuits the following network settings should be
-   applied. This will ensure that new circuits, such as requested via
-   NEWNYM, will service subsequent HTTP requests."
-- Bluetooth? an image built from the devel branch currently ships only
-  two bluetooth-related packages: `libbluetooth3` and
-  `libgnome-bluetooth7`; the rest of the BlueZ software stack is not
-  shipped. Note that this actually happens by chance, as packages
-  dependencies could easily pull any kind of Bluetooth software. The
-  number of Debian packages aimed at providing any kind of Bluetooth
-  support is far too high for us to blacklist them. On the other hand,
-  if we decide this is the right thing to do, we can easily construct
-  a list of Bluetooth-related kernel modules (`kernel/net/bluetooth`,
-  `kernel/drivers/bluetooth`) at build time and add it to the modprobe
-  blacklist.
 - CSS: have the headings automatically numbered
 
 # 1 Introduction
@@ -623,6 +603,34 @@ unknowingly running an obsolete version affected by numerous
 well-known security issues. A PELD running copy SHOULD therefore
 notice it is affected by known security issues and notify the user if
 a newer release fixes some.
+
+## 2.7 The future
+
+A few more or less well known issues shall be thought through so that
+this specification can provide reasonable guidance about them.
+
+### HTTP keepalive
+
+Quoting the [Live CD Best
+Practices](https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/LiveCDBestPractices)
+document on the Tor wiki:
+
+> OPTIONAL? To prevent the browser from keeping HTTP sessions open
+> over existing circuits the following network settings should be
+> applied. This will ensure that new circuits, such as requested via
+> NEWNYM, will service subsequent HTTP requests.
+
+**FIXME**: add link to the mail archive.
+
+The impact of HTTP keepalive is being discussed on the tails-dev
+mailing-list.
+
+### Miscellaneous
+
+- FireWire is known to allow read access to the system memory, at
+  least when such devices are allowed to use DMA (Linux: `options
+  ohci1394 phys_dma=0` helps mitigating that).
+- Bluetooth, IrDA and other network links might allow attacks.
 
 # 3 Implementation
 
