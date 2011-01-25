@@ -1,4 +1,132 @@
-[[!taglink todo/research]] if VoIP can be usable in amnesia's context.
+[[!tag todo/easy]]
 
-Incognito now includes Twinkle, that supports for SIP, ZRTP
-and SRTP. This should be tested.
+[[!taglink todo/research]] if VoIP can be usable in the context of T(A)ILS.
+
+Preliminary testing showed
+[OnionCat](http://www.cypherpunk.at/onioncat/) +
+[Mumble](http://mumble.sourceforge.net/) to be a working and
+relatively easy to setup Tor-enabled VoIP solution; the 1/2s - 1s
+delay is only slightly annoying.
+
+As it was pointed out in the ["Adding voip to torchat"
+thread](http://archives.seul.org/or/talk/Dec-2010/msg00143.html) on
+or-talk, OnionCat provides no bidirectional authentication: the caller
+has (limited) certainty to be talking to the call receiver, but the
+reverse is not true. So this shall be used in combination with zRTP or
+similar.
+
+Technologies
+============
+
+Encryption and authentication
+-----------------------------
+
+**Note**: these are relatively old notes that should be updated and
+further researched.
+
+On the UI side, something similar to Pidgin's OTR would be perfect.
+
+### DTLS + SRTP
+
+- IETF chose DTLS+SRTP over zRTP
+- a PKI is needed to authenticate peers :/
+
+### OTR
+
+http://google-opensource.blogspot.com/2009/09/sip-communicators-summer-of-code.html
+
+### SRTP2 (SIPv4)
+
+http://tools.ietf.org/id/draft-kaplan-sip-four-oh-00.txt
+
+### zRTP
+
+User-friendly peer authentication with a voice-based "short
+authentication string". How strong is this?
+
+Conferencing
+------------
+
+### RFC 4353
+
+[[!rfc 4353]]: three-peers SIP conferencing, using one of them as a
+central mixer.
+
+### RFC 4575
+
+[[!rfc 4575]]: N-peers SIP conference rooms, using one of the peers as
+a central mixer. One can see who is saying what.
+
+### Mixer-to-client Audio Level Indication
+
+- [Latest IETF draft](http://tools.ietf.org/html/draft-ivov-avt-slic-03)
+as of 20110111.
+
+A mechanism for RTP-level mixers in audio conferences to deliver
+information about the audio level of the individual participants
+=> helps detecting where bad noise comes from.
+
+VoIP software
+=============
+
+**Note**: these are relatively old notes that should be updated and
+further researched.
+
+Ekiga
+-----
+
+- in Debian Squeeze
+- supposed to support zRTP... some day:
+ * [their TODO item](https://bugzilla.gnome.org/show_bug.cgi?id=335594)
+ * [last
+   update](http://mail.gnome.org/archives/ekiga-devel-list/2009-April/msg00036.html)
+   as of 200904
+
+Linphone
+--------
+
+- in Debian Squeeze
+- supports IPv6
+- zRTP support [was asked
+  for](http://www.archivum.info/linphone-developers@nongnu.org/2009-01/00013/(Linphone-developers)-Integrating-zRTP-protocol-into-LINphone.html)
+
+Mumble
+------
+
+- [homepage](http://mumble.sourceforge.net/), wikipedia: [[!wikipedia
+  Mumble_(software)]]
+- in Debian Squeeze
+- primary engineering effort targeted at low-latency
+- successfully tested in combination with OnionCat
+- TLS and OCB-AES128; seems to depend on a PKI for peer authentication
+
+SFLphone
+--------
+
+- [homepage](http://www.sflphone.org/) wikipedia: [[!wikipedia
+  SFLphone]]
+- in Debian Squeeze
+- SIP
+- Multiple audio conferencing
+- TLS and zRTP
+
+SIP Communicator
+----------------
+
+- [homepage](http://www.sip-communicator.org/),  wikipedia:
+  [[!wikipedia SIP_Communicator]]
+- LGPL, written in Java
+- not in Debian Squeeze
+- supports IPv6, SIP, XMPP
+- supports zRTP for key negotiation, SRTP for voice encryption, and
+  TLS for signaling encryption
+
+Twinkle
+-------
+
+- [homepage](http://www.twinklephone.com/)
+- in Debian Squeeze
+- was included in Incognito
+- supports SIP, zRTP et SRTP
+- [[!taglink todo/research]]: IPv6 support?
+- Qt application, but does not depend on KDE libs
