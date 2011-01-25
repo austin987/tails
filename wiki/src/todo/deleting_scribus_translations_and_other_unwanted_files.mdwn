@@ -1,0 +1,25 @@
+While trying to keep the ISO image as small as possible we spotted some
+unwanted file we could get rid of :
+
+  - /usr/share/inkscape/examples
+  - /usr/share/inkscape/tutorials
+  - changelog.gz and changelog.Debian.gz in /usr/share/doc
+
+For the moment there's a script doing that in
+config/chroot_local-hooks/98-remove_unwanted_files.
+
+We want to add the selective deletion of scribus translation files
+rather do the whole deletion using dpkg's --path-include and
+--path-exclude options, as described in :
+
+http://raphaelhertzog.com/2010/11/15/save-disk-space-by-excluding-useless-files-with-dpkg/
+
+Dealing with the scribus files would imply generating a
+/etc/dpkg/dpkg.cfg.d/excludes file from the AMNESIA_SUPPORTED_LANGUAGES
+during the build process.
+
+Maybe this should be done through the 'amnesia' config script itself?
+
+See also: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=610215
+
+[[!tag todo/code]]
