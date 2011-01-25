@@ -1,0 +1,33 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs() {
+   echo "${PREREQ}"
+}
+
+case ${1} in
+   prereqs)
+      prereqs
+      exit 0
+      ;;
+esac
+
+if [ -n "${sdmem}" ] ; then
+   if [ -n "${sdmemopts}" ] ; then
+      /usr/bin/sdmem "-${sdmemopts}"
+   else
+      /usr/bin/sdmem -v
+   fi
+fi
+
+case "${sdmem}" in
+   halt)
+      /sbin/halt -fndp
+      ;;
+   reboot)
+      /sbin/reboot -fnd
+      ;;
+   *)
+      ;;
+esac

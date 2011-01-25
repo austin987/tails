@@ -1,0 +1,20 @@
+# Defaults for kexec initscript
+# sourced by /etc/init.d/kexec and /etc/init.d/kexec-load
+
+# Load a kexec kernel (true/false)
+LOAD_KEXEC=true
+
+# Kernel and initrd image
+KERNEL_IMAGE="/vmlinuz"
+INITRD="/initrd.img"
+
+# If empty, use current /proc/cmdline
+APPEND="quiet"
+case "$RUNLEVEL" in
+   6)
+      APPEND="${APPEND} sdmem=reboot sdmemopts=vllf"
+      ;;
+   *)
+      APPEND="${APPEND} sdmem=halt sdmemopts=vllf"
+      ;;
+esac
