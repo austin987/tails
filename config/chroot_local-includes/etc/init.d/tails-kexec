@@ -1,0 +1,47 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:		tails-kexec
+# Required-Start:	
+# Required-Stop:	
+# Should-Stop:		halt reboot
+# X-Stop-After:		umountroot live-boot tails-kexec-cache
+# Default-Start:
+# Default-Stop:		0 6
+# X-Interactive:	true
+# Short-Description: Execute the kexec -e command to reboot system
+# Description:
+### END INIT INFO
+
+PATH=/sbin:/bin
+
+do_stop () {
+   test "x`/bin/cat /sys/kernel/kexec_loaded`y" = "x1y" || exit 0
+
+   /bin/stty sane < /dev/console
+   echo "\n" > /dev/console
+   echo "----------------------------------------------------------" > /dev/console
+   echo "      You can now remove the boot CD or USB stick." > /dev/console
+   echo "The system memory is going to be wiped in a few seconds..." > /dev/console
+   echo "----------------------------------------------------------" > /dev/console
+   echo "\n" > /dev/console
+   /bin/sleep 5
+   /sbin/kexec -e
+}
+
+case "$1" in
+  start)
+	# No-op
+	;;
+  restart|reload|force-reload)
+	echo "Error: argument '$1' not supported" >&2
+	exit 3
+	;;
+  stop)
+	do_stop
+	;;
+  *)
+	echo "Usage: $0 start|stop" >&2
+	exit 3
+	;;
+esac
+exit 0

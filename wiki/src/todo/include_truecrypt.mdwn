@@ -8,43 +8,37 @@ System is Incognito's spiritual successor, we really have to make
 a decision about this.
 
 If we don't want to include TrueCrypt forever, we at least need to
-provide a migration path from TrueCrypt to XXX:
+provide a migration path from TrueCrypt to something else.
 
-- include TrueCrypt for a few months/releases so that Incognito users
-  can get their TrueCrypt-encrypted data back; this means building
-  Debian packages of TrueCrypt and some frontend software, unless this
-  has already been done somewhere. [[!tag todo/code]]
-- [[!taglink todo/research]], implement and possibly document
-  replacement solutions.
+Let's include TrueCrypt for a few months/releases so that Incognito users can
+get their TrueCrypt-encrypted data back.
 
-# Rants and standard reply
+# Implementation
 
-> I used Incognito because it was the only Live distro with Truecrypt,
-> Tor and OpenOffice. I do believe that TrueCrypt is free enough to be
-> included in privacy-focused system. For me - if source is available,
-> program is safe. More encryption available - more fun. Truecrypt is
-> just a must-have feature.
+[[!tag todo/pending]]
 
->> when will truecrypt finally be included? I'm desperately waiting for
->> that!
+TrueCrypt installation tarball must now be shipped with T(A)ILS in
+`/usr/share/amnesia`.
 
->>> I too want TrueCrypt to be included. I'm not good at reading
->>> through licenses. What in the license is preventing truecrypt from
->>> being included ?
+When `truecrypt` is specified on the kernel command-line, a `live-config`
+script `203-install-truecrypt` will unpack, execute and control TrueCrypt
+installer while the system boots.
 
->>>> vote++ :)
+# Updating TrueCrypt
 
-## Standard reply to rants
+TrueCrypt does not really provide a friendly way to download and verify their
+installer in automatic manner.
 
-Note to everyone adding her/his two cents to urge us to include
-TrueCrypt: as clearly stated above, we want to do this. The
-process that leads to this being done is described above. The only
-thing that could speed up this process is to **help**.
+To update the installer to a newer version:
 
-About the licensing issues: being offline I can't gather the link
-for you but searching the Internet for the following words should
-suffice: lawyer truecrypt license redhat or fedora or gentoo.
-You'll find mailing list archives explaining why Red Hat or Fedora
-or Gentoo (I fail to remember) lawyers advised them not to ship
-TrueCrypt. I also remember TrueCrypt license prevents anyone to
-ship modified versions but I may be wrong. --intrigeri
+- the tarball can be downloaded on <http://www.truecrypt.org/downloads>,
+  along its PGP signature (signed by `F0D6B1E0`),
+- once the signature has been verified, the tarball should be copied
+  in `config/chroot_local-includes/usr/share/amnesia`.
+
+# Future work
+
+- Make TrueCrypt installation an option in [[boot_menu|boot menu]], once
+  available.
+- [[provide_a_migration_path_from_truecrypt|Provide a migration path from
+  TrueCrypt]]
