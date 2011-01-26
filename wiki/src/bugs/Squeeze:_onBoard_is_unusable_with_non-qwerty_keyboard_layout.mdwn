@@ -1,15 +1,18 @@
-Onboard doesn't work at startup in squeeze : when trying to use it in azerty, it passes in qwerty
-when the window is clicked.
+Onboard doesn't work at startup in squeeze : when trying to use it in azerty,
+it passes in qwerty when the window is clicked.
 
-If one sets the X11 keyboard layout, e.g. using `gnome-keyboard-properties` or `setxkbmap`,
-it works.
+This bug also affects florence if `gnome-at-spi` is not launched.
 
-Florence is affected by exactly the same bug, so it seems that it's a bug outside of the
-virtual keyboard, but rather somewhere in X libs.
+If one sets the X11 keyboard layout, e.g. using `gnome-keyboard-properties` or
+`setxkbmap`, it works.
 
-It appears that `python-virtkey` function `virtkey_get_current_group_name` in `/src/python-virtkey.c`
-returns `USA` instead of `France` when the bug appears. The wrong value is obtained from the
- following code (with a lot af more security checks):
+Florence is affected by exactly the same bug, so it seems that it's a bug
+outside of the virtual keyboard, but rather somewhere in X libs.
+
+It appears that `python-virtkey` function `virtkey_get_current_group_name` in
+`/src/python-virtkey.c` returns `USA` instead of `France` when the bug appears.
+The wrong value is obtained from the following code (with a lot af more
+security checks):
 
     XkbGetState(display, XkbUseCoreKbd, &state
     state.locked_group
@@ -21,3 +24,7 @@ returns `USA` instead of `France` when the bug appears. The wrong value is obtai
 > bug report (Nov 1st 2010), re-test this, and maybe report bugs
 > upstream. For the record: alternative virtual keyboards are listed
 > and compared on [[another todo item|todo/virtual_keyboard_in_Debian]].
+>>
+>> As of january 2011, it is **not** fixed
+>>
+>> However it seems to work when gnome-at-spi is launched.
