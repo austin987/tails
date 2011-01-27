@@ -8,3 +8,13 @@ rm -rf \
 
 find /usr/share/doc -type f -name changelog.gz -exec rm "{}" \;
 find /usr/share/doc -type f -name changelog.Debian.gz -exec rm "{}" \;
+
+. config/amnesia
+if [ -e config/amnesia.local ] ; then
+   . config/amnesia.local
+fi
+
+locales=$(echo "$AMNESIA_SUPPORTED_LANGUAGES" | sed 's/ /|/g')
+find /usr/share/scribus/translations/* \
+   -regextype 'posix-egrep' -not -regex ".*scribus\.(${locales}).*" \
+   -exec rm "{}" \;
