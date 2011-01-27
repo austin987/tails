@@ -12,19 +12,60 @@
 # Description:
 ### END INIT INFO
 
+# FIXME: this script should be translatable in a better way than the
+# ugly case..esac thing. Note that using gettext at this point -i.e.
+# after the CD has been ejected- is probably too brittle. A possible
+# solution would be to turn this script into a .in file, with
+# placeholders for translatable string. Translatable strings and their
+# translations could be managed by ikiwiki+po, and the placeholders
+# could be replaced at boot time -depending on the chosen locale- by
+# the appropriate strings. Unfortunately po4a does not support shell
+# scripts.
+
 PATH=/sbin:/bin
+
+print_text () {
+   echo "$1" > /dev/console
+}
+
+print_empty_line () {
+   print_text ''
+}
 
 do_stop () {
    test "x`/bin/cat /sys/kernel/kexec_loaded`y" = "x1y" || exit 0
 
    /bin/stty sane < /dev/console
-   echo "\n" > /dev/console
-   echo "----------------------------------------------------------" > /dev/console
-   echo "      You can now remove the boot CD or USB stick." > /dev/console
-   echo "The system memory is going to be wiped in a few seconds..." > /dev/console
-   echo "   Display might be corrupted during this operation." > /dev/console
-   echo "----------------------------------------------------------" > /dev/console
-   echo "\n" > /dev/console
+
+   print_empty_line
+   print_empty_line
+   print_text "--------------------------------------------------------------------------------"
+
+   # $LANG was set there by the FIXME live-config upstream script
+   . /etc/default/locale
+
+   # Note to translators: any text line must fit on a 80 characters wide screen
+   case "${LANG}" in
+      fr_FR.UTF-8)
+	 print_text "            Vous pouvez maintenant retirer le CD / clé USB de boot."
+	 print_empty_line
+	 print_text "           La mémoire vive va être effacée dans quelques secondes..."
+	 print_empty_line
+	 print_text "   Il est possible que l'affichage soit corrompu au cours de cette opération."
+	 ;;
+      *)
+	 print_text "               You can now remove the boot CD or USB stick."
+	 print_empty_line
+	 print_text "         The system memory is going to be wiped in a few seconds..."
+	 print_empty_line
+	 print_text "             Display might be corrupted during this operation."
+	 ;;
+   esac
+
+   print_text "--------------------------------------------------------------------------------"
+   print_empty_line
+   print_empty_line
+
    /bin/sleep 5
    /sbin/kexec -e
 }
