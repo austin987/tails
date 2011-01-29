@@ -42,3 +42,36 @@ it seems quite hard to start GDM in an already running X11 instance.
 
 > Recent gdm3 (2.30.5-5) changes seem to fix issues wrt. static
 > displays that might fix the earlier encountered problems.
+
+# Providing a configuration menu just before start desktop session
+
+On a "classic" Debian installation, users can choose their language and
+keyboard at the same time they enter their login and password in GDM.
+
+T(A)ILS currently uses *autologin*, so these options do no usually
+shows up. Hence the selection of language and keyboard very early in the
+*boot* process.
+
+But it looks like every configuration options that T(A)ILS would need do
+not really require to be applied before the desktop session actually
+starts.
+
+So instead of hacking a "boot" menu, we could benefit from the flexible
+architecture of GDM 3:
+
+- Replace `gdm-simple-greeter` (the default user/login password prompt)
+  by a new GTK+ application hereby named `tails-greeter`. To do so, it
+  should be mostly about hacking `autostart` files.
+- `tails-greeter` would display widgets and help on changing the MAC
+  address, persistence, and other configuration options.
+- When the *Start T(A)ILS* button is clicked, `tails-greeter` would send
+  the needed D-Bus message to trigger an automatic login.
+- The selected configuration will be applied within one or more scripts
+  in `/etc/gdm3/PostLogin`.
+
+Nice thing is that `tails-greeter` can probably be implemented in
+Python/GTK+.
+
+With this approach, the initial boot menu (*syslinux*) can be kept
+pretty minimal and mostly offer *failsafe* boot options (e.g. overcoming
+issues preventing the graphical environment to start).
