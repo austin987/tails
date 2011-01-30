@@ -130,12 +130,13 @@ def mail_appended_info():
 
     for debug_file in debug_files:
         debugging_info += "===== content of %s =====\n" % debug_file
+        f = None
         try:
             f = open(debug_file)
             debugging_info += f.read()
         except IOError:
             debugging_info += "%s not found\n" % debug_file
         finally:
-            f.close()
+            if f is not None: f.close()
 
     return debugging_info
