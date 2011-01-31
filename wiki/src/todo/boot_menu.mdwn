@@ -45,6 +45,18 @@ it seems quite hard to start GDM in an already running X11 instance.
 
 # Providing a configuration menu just before start desktop session
 
+## Current syslinux menu
+
+This one could in this case be only a minimalistic menu like the default debian
+live one, providing the ability for the user to choose between 
+
+Still the user might have to choose at this stage some options we might be unable
+to run in the later xsession menu, like for thr truecrypt or persistent option.
+In this case, we could either tell the user to hit tab and type the needed
+option, or add an item to the syslinux menu.
+
+## Via GDM 3
+
 On a "classic" Debian installation, users can choose their language and
 keyboard at the same time they enter their login and password in GDM.
 
@@ -75,3 +87,10 @@ Python/GTK+.
 With this approach, the initial boot menu (*syslinux*) can be kept
 pretty minimal and mostly offer *failsafe* boot options (e.g. overcoming
 issues preventing the graphical environment to start).
+
+## Getting rid of GDM 3
+
+Another approach might be to get rid of GDM 3, and launch a (possibly GTK+)
+application with the /etc/X11/Xsessions.d/ mechanism. This might be easier to
+maintain that a having to hack GDM 3, and maybe might free some more space in
+the squashfs.
