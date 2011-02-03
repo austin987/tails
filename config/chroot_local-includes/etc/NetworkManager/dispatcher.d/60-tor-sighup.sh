@@ -15,6 +15,11 @@ PIDFILE=/var/run/tor/tor.pid
 # Get LIVE_USERNAME
 . /etc/live/config.d/username
 
+# Workaround https://trac.torproject.org/projects/tor/ticket/2355
+if grep -qw bridge /proc/cmdline; then
+    rm -f /var/lib/tor/*
+fi
+
 # We don't start Tor automatically anymore so *this* is the time when
 # it is supposed to start.
 # Note: as we disabled the initscript automatic startup, we cannot use

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+TORRC=/etc/tor/torrc
+
+append_to_torrc () {
+	echo "$1" >> "$TORRC"
+}
+
+AddBuggyBridgeSettings ()
+{
+	grep -qw bridge /proc/cmdline || return 0
+
+	append_to_torrc ''
+	append_to_torrc '# Buggy bridge settings to prevent direct connections to the Tor network'
+	append_to_torrc 'ReachableAddresses reject *:*'
+	append_to_torrc 'Bridge 127.0.0.1:7777'
+}
+
+AddBuggyBridgeSettings
+
