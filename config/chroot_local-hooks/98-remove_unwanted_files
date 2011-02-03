@@ -2,17 +2,15 @@
 
 echo "Removing unwanted files"
 
+# Get AMNESIA_SUPPORTED_LANGUAGES
+. /usr/share/amnesia/build/variables
+
 rm -rf \
    /usr/share/inkscape/examples \
    /usr/share/inkscape/tutorials
 
 find /usr/share/doc -type f -name changelog.gz -exec rm "{}" \;
 find /usr/share/doc -type f -name changelog.Debian.gz -exec rm "{}" \;
-
-. config/amnesia
-if [ -e config/amnesia.local ] ; then
-   . config/amnesia.local
-fi
 
 locales=$(echo "$AMNESIA_SUPPORTED_LANGUAGES" | sed 's/ /|/g')
 find /usr/share/scribus/translations \
