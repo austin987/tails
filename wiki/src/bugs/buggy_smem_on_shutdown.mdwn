@@ -41,7 +41,18 @@ would be most welcome.
 >>>>> enough to fix this bug.
 
 >>>>>> Fixed by the new kexec-based sdmem system implemented in the
->>>>>> devel branch => [[!taglink pending]].
+>>>>>> devel branch.
 
 >>>>>> This was tested using [[contribute/release_process/test/erase_memory_on_shutdown]] and
 >>>>>> seems to work as expected.
+
+>>>>>>> Removed the pending tag, the new implementation still has a bug : the
+>>>>>>> machine isn't rebooted or shutdown after memory wiping. The system
+>>>>>>> hangs on the line "Starting new kernel" without any way for the user to
+>>>>>>> be sure the memory wiping went fine.
+>>>>>>> This might due to the /sbin/halt binary being wiped in memory (as long
+>>>>>>> as all the initramfs).
+>>>>>>> This script should at least be able to shutdown the machine or output to
+>>>>>>> the user that he/she can power it off when the sdmem process has
+>>>>>>> finished, otherwise the user might be lost in front of this freezed
+>>>>>>> screen.
