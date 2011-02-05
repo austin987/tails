@@ -1,3 +1,8 @@
 #! /bin/sh
 
-lckdo /var/lock/vidalia.amnesia /usr/bin/vidalia
+ARGS=
+if grep -qw bridge /proc/cmdline; then
+   ARGS='-bridgeconf'
+fi
+
+lckdo /var/lock/vidalia.amnesia /usr/bin/vidalia $ARGS
