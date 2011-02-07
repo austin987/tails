@@ -86,16 +86,25 @@ int main(int argc, char *argv[])
 
 	const char *filter_subsys    = "block";
 	/* const char *filter_devtype   = "partition"; */
-    const char *filter_action    = "remove";
-    const char *filter_devsuffix;
+	const char *filter_devsuffix;
+	const char *filter_devtype;
+	const char *filter_action;
 
 	udev = udev_new();
 	if (udev == NULL)
 		goto out2;
 
-	if (argc != 2)
+	if (argc != 3)
 		goto out2;
+
 	filter_devsuffix = argv[1];
+	filter_devtype = argv[2];
+
+	if (strcmp(filter_devtype, "cd") == 0) {
+		filter_action = "change";
+	} else if (strcmp(filter_devtype, "disk") == 0) {
+		filter_action = "remove";
+	}
 
 	/* set signal handlers */
 	memset(&act, 0x00, sizeof(struct sigaction));
