@@ -7,6 +7,7 @@ update-rc.d tails-detect-virtualization start 17 S .
 update-rc.d tails-kexec                    stop 85 0 6 .
 update-rc.d tails-kexec-cache              stop 85 0 6 .
 update-rc.d tails-wifi start 17 S .
+update-rc.d tails-sdmem-on-media-removal start 17 S . stop 01 0 6
 
 # we run Tor ourselves after HTP via NetworkManager hooks
 update-rc.d tor disable
