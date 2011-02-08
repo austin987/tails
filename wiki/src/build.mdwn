@@ -22,20 +22,49 @@ Dependencies
 * `syslinux` >= 4.01, so that the built ISO images are
   converted to hybrid ones: they can be either a CD-ROM or a hard disk
   (USB disk, etc.).
-* `eatmydata` (e.g. from Debian sid)
+* `eatmydata` (e.g. from Debian sid), `time` and `whois` (for /usr/bin/mkpasswd) packages.
 * A patched ikiwiki is needed so that the static version of the wiki
   included in the image has correct links to the online wiki; see this
   [wishlist item](http://ikiwiki.info/todo/mirrorlist_with_per-mirror_usedirs_settings/)
   to get the custom ikiwiki branch that has the needed code. It is
   not critical to do so.
+* You also might want to install `po4a` so that ikiwiki will build smoothly in
+  all languages.
 
 Build process
 =============
 
-Initialize the Live system's configuration with `lb config`.
-Most `lb config` options are supported, have a look to the `lb_config`
-manpage for details.
+## (Optional) customize the build process
+
+If you need to set custom build settings that are specific to your
+local environment, such as a custom Debian mirror or APT proxy, you
+can configure settings in live-build's configuration file
+(`/etc/live/build.conf`). Example content:
+
+	LB_APT_HTTP_PROXY="http://127.0.0.1:8000/"
+
+	LB_MIRROR_BOOTSTRAP="http://ftp.us.debian.org/debian/"
+	LB_MIRROR_BOOTSTRAP_SECURITY="http://security.debian.org/"
+
+	LB_MIRROR_CHROOT="http://ftp.us.debian.org/debian/"
+	LB_MIRROR_CHROOT_SECURITY="http://security.debian.org/"
+
+	LB_MIRROR_BINARY="http://ftp.us.debian.org/debian/"
+	LB_MIRROR_BINARY_SECURITY="http://security.debian.org/"
+
+## Initialize the Live system's configuration
+
+Initialize the Live system's configuration with `lb config` in a
+**clean** build tree. Most `lb config` options are supported, have a
+look to the `lb_config(1)` manpage for details.
+
+## Build the system
 
 You can then use the standard live-build commands as root to build
 the image (`lb build`) and to cleanup the build directory (`lb
 clean`).
+
+## More information
+
+More documentation about the build process can be found in the [Debian
+Live Manual](http://live.debian.net/manual/en/).

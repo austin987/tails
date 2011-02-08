@@ -1,0 +1,66 @@
+**FIXME** this process is quite complicated and should be automated using VMs
+
+# 0 prepare the systems
+
+## prepare a TAILS USB stick
+
+Install the TAILS version to test on a 1st USB stick.
+
+## prepare a minimal lenny live system 
+
+We will use this system to do a coldboot attack. It is useful that it is a
+minimal system so that it doesn't fill the RAM to boot.
+
+To be able to grep /dev/mem, it must have a kernel with CONFIG_STRICT_DEVMEM
+disabled. It is enabled in debian since 2.6.28-1, so we use lenny:
+
+    lb config  --architecture i386 --linux-flavours 686 --apt-recommends false --distribution lenny --binary-images usb-hdd --binary-indices false  --memtest none --packages-lists="minimal" --syslinux-menu vesamenu --initramfs=live-initramfs
+
+Then install this image on a 2nd USB stick
+
+# 1 fill the RAM with a known pattern
+
+* boot on T(A)ILS
+* add `fillram.py` which contains:
+
+    string=""
+    while True:
+        string = string + "wipe_didnt_work/"
+
+* launch it:
+
+    $ python fillram.py
+
+# 2 test that you can get the pattern
+
+* plug the USB stick containing the minimal lenny live system
+* reboot from T(A)ILS using SysRq + B
+* under syslinux, append `init=/bin/bash` to the kernel commandline in order to
+  run the test in the initramfs
+* actually do the test:
+
+    grep wipe_didnt_work /dev/mem
+
+  - you should get `binary file /dev/mem matches` if the pattern was found in
+    RAM, which is the expected result ;
+  - you should get `grep: /dev/mem: Cannot allocate memory` otherwise. In that
+    case, it is **not** useful to process to the next step, there is something
+    wrong in the way you tested.
+
+# 3 test that sfill hides the pattren
+
+* redo step 1
+* reboot from T(A)ILS the recommanded way : system > reboot
+* plug the USB stick containing the minimal lenny live system
+* when TAILS displays that you can remove the USB stick, remove TAILS and 
+  plug the USB stick containing the minimal lenny live system
+* under syslinux, append `init=/bin/bash` to the kernel commandline in order to
+  run the test in the initramfs
+* actually do the test:
+
+    grep wipe_didnt_work /dev/mem
+
+  - you should get `grep: /dev/mem: Cannot allocate memory` if the pattern was
+    not found in RAM, which is the expected result;
+  - you should get `binary file /dev/mem matches` if the pattern was found in
+    RAM, which means that smem failed.
