@@ -8,8 +8,9 @@ Allow easily installing T(A)ILS to a USB storage device
 specification
 =============
 
-* allow adding a second encrypted data partition, or at least leave
-  room for it
+* allow creating an encrypted persistence storage space (e.g. a second
+  encrypted partition, or a file-backed encrypted FS) or *at least*
+  leave room for it
 * allow non-destructively upgrading the live system only, not touching
   the other partitions (use the iso + grub trick ? tar image
   + cp?)
@@ -158,6 +159,9 @@ frontend UI
 
 (Testing all these is probably [[!taglink todo/easy]].)
 
+Wikipedia has a [[!wikipedia List of tools to create Live USB systems]]
+we should look at.
+
 * `live-installer` udeb and its `live-installer-launcher` desktop
   companion allows to run the Debian Installer from the bootloader;
   paraphrasing the manual: the "Live" Debian Installer flavour will
@@ -204,7 +208,8 @@ frontend UI
    - [launchpad](https://launchpad.net/usb-creator)
 * [UNetbootin](http://unetbootin.sourceforge.net/)
    - works on Windows and GNU/Linux
-   - has a plugin architecture in case we need new or custom features
+   - has a plugin architecture that only allows rebranding and
+     pre-selection of the available distributions list
    - included in squeeze and sid, easily backported to Lenny
    - works like a charm to install an ISO image to USB, but the
      syslinux menu has the unetbootin logo instead of Debian's one
@@ -220,27 +225,61 @@ frontend UI
      case, it unconditionally overwrites the device's content
    - able to upgrade without re-partitioning the device?
    - [launchpad](https://launchpad.net/liveusb)
-* sidux's `install-sidux-usb-gui` needs an input ISO, but it still
-  deserves being looked at more thoroughly; see the
-  [manual](http://manual.sidux.com/en/hd-install-opts-en.htm#usb-hd).
+* aptosid's `aptosid-on-a-stick` needs an input ISO (check again), and
+  lacks partitioning capabilities, but it still deserves being looked
+  at more thoroughly; see the
+  [manual](http://manual.aptosid.com/en/hd-install-opts-en.htm#usb-hd).
 * Fedora's `livecd-iso-to-disk`:
    - [manual](http://fedoraproject.org/wiki/FedoraLiveCD/USBHowTo)
+   - [Gitweb](http://git.fedorahosted.org/git/?p=livecd)
+   - cleanly and defensively written in Bash
+   - supports creating a file-backed filesystem for `$HOME`,
+     LUKS-encrypted by default, in the same partition where the Live
+     system is installed
 * Fedora's [liveusb-creator](https://fedorahosted.org/liveusb-creator/):
    - works on Windows and GNU/Linux
    - "non-destructive install", which means?
+   - supports FAT and EXT filesystems
+   - persistent storage creation: file-backed filesystem, lacks
+     partitioning capabilities
+   - actively developed (as of early 2011)
+   - written in Python
+   - input: ISO file or real CD
    - sidux ships a modified version:
      which does not work on Lenny due to `dosfslabel` exiting with
      error code 1 even when successful
       - [.deb](http://sidux.office-vienna.at/sidux/debian/pool/main/l/liveusb-creator/),
       - [source](http://w3you.com/liveusb-creator/liveusb-creator.htm)
-   - needs an ISO file, does not know how to read a real CD
-* Moblin’s [Image
+* Moblin's [Image
   Writer](http://git.moblin.org/cgit.cgi/moblin-image-creator/plain/image-writer)
+   - written in Python
+   - simple dd wrapper with proper sanity checks
 * [Mandriva Seed](http://git.mandriva.com/?p=projects/mandriva-seed.git;a=summary)
+   - supports Windows and GNU/Linux
 * [RIP’s mkusb](http://rip.7bf.de/current/mkusb.sh) and its
   [README](http://rip.7bf.de/current/mkusb.txt)
-* (SUSE kiwi's?) `usb-imagewriter`, available as a [PPA](https://launchpad.net/~ogra/+archive/ppa)
-* <http://wubi-installer.org/>
+* [usb-imagewriter](https://launchpad.net/usb-imagewriter)
+   - seems like a clone of the good old rawwrite with no more feature
+     at all
+* SUSE Studio Image Writer([[!wikipedia SUSE Studio ImageWriter]],
+  [KIWI homepage](http://kiwi.berlios.de/), [source
+  code](http://git.berlios.de/cgi-bin/gitweb.cgi?p=kiwi;a=tree;f=tools/burner))
+   - supports Windows and GNU/Linux
+   - persistent storage creation, that is?
+* <http://wubi-installer.org/>: Windows installer for Ubuntu. Really relevant?
+* [makebootfat](http://advancemame.sourceforge.net/boot-readme.html):
+  command line utility able to create bootable USB disks
+  using the FAT filesystem and syslinux
+   - available in Debian
+   - able to autodetect/partition/format/populate the USB disk in a
+     single step without any user interaction
+   - able to create disk images which are compatible with all the
+     three standards USB-FDD, USB-HDD and USB-ZIP at the same time
+   - could be used to do most of the low-level work
+* [FUSBi](http://aligunduz.org/FUSBi/)
+   - modified from UNetbootin
+   - supports Windows and GNU/Linux
+   - no release in 2009 nor 2010
 
 partitionning
 -------------
