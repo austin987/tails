@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ID=/dev/block/`/bin/mountpoint -d /live/image`
 DEVICE=`/sbin/udevadm info -q path -p  "${ID}"`
@@ -13,7 +13,7 @@ do_stop() {
 }
 
 # Let's be sure the CDRom can be ejected by pressing the button
-if [ $DEV_TYPE == "cd" ]; then
+if [ $DEV_TYPE = "cd" ]; then
 	/usr/bin/eject -i off "${ID}" 2>&1 >/dev/null
 fi
 
