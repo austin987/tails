@@ -39,23 +39,46 @@ chosen before Tor starts. The best place for such an option is
 probably in the boot menu. When activated the following things should
 happen:
 
-* Tor doesn't try to connect to the Tor network.
+* Tor doesn't try to connect directly to the Tor network.
 * The user is somehow helped to setup a bridge, and possibly
   instructed how to get one.
 * Once a bridge has been chosen, Tor should immediately start to use
   it.
 
-Implementation
-==============
+Current work
+============
 
-There are numerous ways to design and implement this. Here are some
-things to analyse and discuss:
+We are going to use Vidalia's bridges configuration UI.
 
-* We have to decide whether we want to use vidalia's existing settings
-  for it or a more homebrew scripted version.
- - A scripted version is of course more powerful as it would let us do anything.
- - The vidalia approach is easier to implement but leaves the burden
-   of finding the Vidalia settings and typing shit to the user.
+When bridges are enabled (by adding `bridge` to the kernel
+command-line):
+
+* [[!tails_gitweb
+  config/chroot_local-includes/lib/live/config/204-bridge]] adds a
+  buggy bridge (127.0.0.1:7777) to `/etc/tor/torrc` and enables
+  `UseBridges` so that Tor does not even try to connect directly to
+  the network, even when restarted.
+* Vidalia is started with the `-bridgeconf` option brought by our
+  custom patch (XXX):
+  - network settings are displayed on startup
+  - `UseBridges` is enabled
+  - a T(A)ILS-specifig pop-up is shown.
+* As a workaround to [[!tor_bug 2355]], [[!tails_gitweb
+  config/chroot_local-includes/etc/NetworkManager/dispatcher.d/60-tor-sighup.sh]]
+  cleans up the Tor data directory when a network interface goes up.
+  A real fix for this bug is being worked on, see the bug page for
+  details and status updates.
+* When a network interface goes up, Tor and Vidalia are restarted. Tor
+  cannot reach its network until the real (working) bridges
+  configuration is applied by Vidalia, either saved from previous
+  input or newly entered by the user.
+
+Left to do
+==========
+
+Here are some things to analyse, and discuss and code:
+
+* Finish pushing a fix for [[!tor_bug 2355]].
 
 * Vidalia has a "Find bridges now" button which won't work for us
   since it can't reach bridges.torproject.org. To get it to work we
@@ -70,12 +93,6 @@ things to analyse and discuss:
    can be dangerous if the regime is hostile towards Tor, and/or it
    could simply be censored. This must be explained to the user, and
    manual input of bridges must be available as an alternative.
-
-* To get Tor to not connect to the Tor network, one can just add
-  "ReachableAddresses reject *:*" to torrc. When the user has selected
-  bridges, we then add them and "UseBridges 1" to torrc, and remove
-  the "Reach... *:*", and sends a SIGHUP to the tor client and it will
-  get going again.
 
 * Alternatively one could add the bridges through Tor's control port
   (the way I assume vidalia and TorK does it).
