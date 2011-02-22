@@ -112,4 +112,142 @@ The two key questions that remain to answer is:
 
 Read more at their [homepage](http://qubes-os.org/) and [wiki](http://www.qubes-os.org/trac/wiki).
 
+# Comment from jbash 2010-02-22
+
+I was asked to comment on the Qubes proposal above, and specifically on
+the two questions about NAT and "adapting to Debian". This has gotten
+too long for a comments page
+
+## On Qubes
+
+On Qubes in general: it looks like a cool system and a useful
+approach. I think you could easily put a "T(A)ILS VM" (more
+properly a "Tor VM") into it in place of the "Net VM". Since
+you're going to be hacking all over that VM anyhow, no problem to add
+NAT to it.
+
+... but there's a caveat: I'd be very careful about becoming dependent
+on a small project with limited adoption. You could end up having to
+take on all of the maintenance and development of Qubes itself. The
+alternative would be having to port off of Qubes, which argues for not
+becoming dependent on it. Also, you may have trouble finding people who
+are willing to learn Qubes before they can start working. I suspect that
+you might be better advised to come up with something that could run
+with a variety of VM providers.
+
+As for whether you could adapt the application VMs to run Debian,
+I guess I'd ask "why do you want to adapt to Debian, particularly?".
+You'd be undoing a lot of Qubes' work to put a big unconfined
+Debian system in there.
+
+Since I wrote the initial suggestion, I've actually been thinking, off
+an on, about a two-VM alternative with a structure vaguely similar to the
+Qubes idea, and I think one of the good things about that idea equally
+applies to using Qubes. That good thing is that is that you don't
+have to really care about "adapting to Debian" any more. At all.
+
+## Getting off the distro treadmill
+
+The insights are that:
+
+1. If the application VM doesn't have to handle the user's "real" identity, and doesn't necessarily have to handle any data that persist between sessions, then there's much less pressure to do anything special in the application VM to protect anonymity.
+2. It's possible to set up Tor as a transparent Internet gateway, so that clients don't have to even be configured to use a SOCKS proxy. [Here's a HOWTO.](https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/TransparentProxy)
+
+That means you can get out of the business of patching up a whole
+distribution to get everything to use Tor properly. You need to
+stay current on general security updates, but that's about it,
+especially if you don't enable the applications to write to any
+storage. In fact, you don't even have to configure anything to
+use Tor.
+
+Instead, you provide two very minimal, targeted environments: a VM
+to run Tor (this would replace the "NetVM" in Qubes), and a host environment
+to run the hypervisor (this would be Qubes', and Xen's, "dom0")
+
+Here's a slightly tweaked version of my block diagram, which is
+obviously very similar to Qubes'.:
+
+<img src="virtails.svg" alt="Block diagram">
+
+### The host
+
+The way I've drawn it, the host:
+1. Runs the hypervisor (and is therefore responsible for network,
+    device, and memory isolation).
+2. Handles storage crypto (so that the application VM doesn't have
+    to know any keys that might be useful beyond the current session).
+3. Handles the user's choices about whether any writable storage
+    is available to the application VM (if you allow the user that
+    choice)
+4. Keeeps the time of day accurate for everybody.
+5. Presumably handles other houskeeping functions, like cleaning
+   memory.
+
+If the user wanted to, she could even use her own "regular" system
+as the host, and boot the Tor and application VMs within that.
+She'd better look to her swap encryption, and she'd better know
+what's going on generally, but she can do it.
+
+Veering back in the direction of better security, it looks like
+the Qubes people have been careful to have the host do a good job
+of isolating the VMs, for example not permitting the very large
+security hole of direct 3D graphic access from the VMs. Even if you
+didn't use Qubes, it sounds like they'd be a good project to learn
+from.
+
+### The Tor VM
+
+The Tor VM handles all communication between the application VM
+and the outside world.
+
+When the application VM boots, the Tor VM gives it an address using
+DHCP. The application VM uses the Tor VM as its default gateway and
+DNS server.
+
+Internally, the Tor VM diverts DNS requests and all TCP connections
+originating on the application side to Tor, which transparently
+anonymizes them. IP filtering prevents the application VM from sending
+anything else (and can be used to filter out "bad" traffic, as well, if
+need be). Probably the filter should also stop any unexpected traffic
+generated from within the Tor VM from being sent on the application
+side, as well.
+
+Kernel IP forwarding is totally disabled. Filtering on the Internet
+side prevents any process other than Tor from sending any packets
+whatsoever to the Internet. Much ICMP should probably also be filtered,
+just in case. Traffic *from* the Internet is limited to return
+traffic on TCP connections opened by Tor (maybe later it could be extended
+to act as a relay, too).
+
+You could clamp this down still further using SELinux.
+
+Since it has access to Tor and all its secrets, Vidalia runs in the Tor VM.
+That means the user has to do a console switch to see it. I don't see
+that as a big problem; YMMV. You definitely could NOT run it in the
+application VM.
+
+### The application VM
+
+With this sort of approach, the application VM *only* runs
+applications. It has no idea of the real IP address, or even of
+any machine's real MAC address. It doesn't know anything that identifies
+the user unless the user types it in.
+
+As a result, the application VM can be anything at all.
+Windows, if you really wanted to use it. What I'd actually use would be a stock
+Ubuntu LiveCD, for the following reasons:
+
+1. It's widespread, and it, or close variants of it, are probably what people are booting behind various homebrew Tor proxies right now. So you may get a larger anonymity set.
+2. It's very actively maintained... which means you're going to get upstream security patches.
+
+I could see a very good case for staying with Debian, though, to avoid
+Ubuntu's feature creep.
+
+But I suggest that it can nonetheless be *stock* Debian,
+absolutely unmodified from the latest upstream release.
+
+1. That would conserve important resources for T(A)ILS-specific development
+2. I suspect it would also speed up the process of propagating upstream fixes... which is probably the single best thing you can do for the security of the application VM.
+3. It would also discipline you to being client-agnostic, which would mean that others could grab your images (especially the Tor VM image) and reuse them for other things.
+
 [[wishlist]]
