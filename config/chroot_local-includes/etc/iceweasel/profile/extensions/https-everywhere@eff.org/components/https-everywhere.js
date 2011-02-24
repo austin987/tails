@@ -222,7 +222,7 @@ HTTPSEverywhere.prototype = {
         this.log(DBUG, "Avoiding blacklisted " + channel.URI.spec);
         return;
       }
-      HTTPS.forceChannel(channel);
+      HTTPS.replaceChannel(channel);
     } else if (topic == "http-on-examine-response") {
       this.log(DBUG, "Got http-on-examine-response ");
       HTTPS.handleSecureCookies(channel);
@@ -246,7 +246,19 @@ HTTPSEverywhere.prototype = {
         .getService(CI.nsIWebProgress);
       dls.addProgressListener(this, CI.nsIWebProgress.NOTIFY_STATE_REQUEST);
       this.log(INFO,"ChannelReplacement.supported = "+ChannelReplacement.supported);
-      HTTPSRules.init();
+      try {
+        // Firefox >= 4
+        Components.utils.import("resource://gre/modules/AddonManager.jsm");
+        AddonManager.getAddonByID("https-everywhere@eff.org",
+          function(addon) {
+            RuleWriter.addonDir = addon.
+              getResourceURI("").QueryInterface(CI.nsIFileURL).file;
+            HTTPSRules.init();
+          });
+      } catch(e) {
+        // Firefox < 4
+        HTTPSRules.init();
+      }
       Thread.hostRunning = true;
       var catman = Components.classes["@mozilla.org/categorymanager;1"]
            .getService(Components.interfaces.nsICategoryManager);
@@ -268,18 +280,6 @@ HTTPSEverywhere.prototype = {
 
     HTTPS.replaceChannel(newChannel);
 
-//    if (HTTPS.forceURI(uri.clone())) {
-//      if (!HTTPS.replaceChannel(newChannel)) {
-//        // Failed, try to put things back...
-//        this.log(DBUG, "reverting URI, " + oldChannel.URI.spec);
-//        try {
-//          oldChannel.URI.scheme = "http";
-//          newChannel.URI.scheme = "http";
-//        } catch (e) {
-//          this.log(WARN, "uri windback error " + e);
-//        }
-//      }
-//    }
   },
 
   asyncOnChannelRedirect: function(oldChannel, newChannel, flags, callback) {
