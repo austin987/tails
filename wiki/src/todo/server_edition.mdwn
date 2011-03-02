@@ -15,7 +15,7 @@ Possible solutions follow.
 
 ### 1. Centrally hosted Etherpad
 
-T(A)ILS can be used to access a centrally hosted Etherpad.
+Tails can be used to access a centrally hosted Etherpad.
 
 Their physical location and identities should be properly concealed
 but the document itself can be intercepted by the server operators.
@@ -25,48 +25,48 @@ secrecy.
 
 ### 2. OpenPGP-encrypted messages in a shared mailbox or a drop.io space
 
-T(A)ILS can be used to pass GnuPG-encrypted messages through a shared
+Tails can be used to pass GnuPG-encrypted messages through a shared
 mailbox or a drop.io space.
 
 This sounds like a pretty good answer but they are under a lot of
 pressure and are likely to make mistakes. Leaking a clear-text version
 to the service provider would be fairly easy under stress.
 
-### 3. Gobby and SFTP servers behind a T(A)ILS-powered Tor hidden service
+### 3. Gobby and SFTP servers behind a Tails-powered Tor hidden service
 
-Anyone amongst John, Jane and Miranda could use T(A)ILS to host Gobby
+Anyone amongst John, Jane and Miranda could use Tails to host Gobby
 and SFTP servers behind a Tor hidden service. Others would also use
-T(A)ILS to reach them.
+Tails to reach them.
 
 Keeping such servers at hand, on a live system, behind an hidden
 service is likely to prevent erroneous disclosure.
 
-The T(A)ILS *server edition* vision
+The Tails *server edition* vision
 ===================================
 
 This vision aims at making it easy for end-users to implement
 solutions described above and based on Tor hidden services hosted on a
-T(A)ILS system.
+Tails system.
 
-T(A)ILS server should content itself with hardware that is a bit old
+Tails server should content itself with hardware that is a bit old
 (such as a PIII-450 laptop with 256MB of RAM) and broken (e.g. no
 screen).
 
-T(A)ILS server should be able to run common services like a web
+Tails server should be able to run common services like a web
 server, a Jabber daemon, wiki, file repository, etc.
 
 Data and configuration for services would be stored on an encrypted
-flash media. Targetted hardware to run "T(A)ILS server" would be an
+flash media. Targetted hardware to run "Tails server" would be an
 old laptop with broken hard-disk, battery, screen or keyboard;
 something quite common these days.
 
 Setting up a new server would be done by:
 
-1. plugging a flash media into a running desktop T(A)ILS system,
+1. plugging a flash media into a running desktop Tails system,
 2. configuring the services through a pretty simple GUI,
 3. removing the flash media, now encrypted and containing the
    services configuration,
-4. putting a "T(A)ILS server" CD or USB stick in the old laptop and
+4. putting a "Tails server" CD or USB stick in the old laptop and
    plugging the flash media,
 5. once booted, the flash media encryption passphrase can be entered
    directly using the keyboard or through a web interface in the
@@ -92,7 +92,7 @@ server configuration and decrypt it.
 When starting a server we *must* have the server configuration present
 on a USB drive during boot, so we can simply check for its presence
 with a hook in early init. If present, then we enter server mode and
-don't start X, network manager, etc., otherwise we just boot T(A)ILS
+don't start X, network manager, etc., otherwise we just boot Tails
 in the normal fashion.
 
 Elaborating on my suggestion above, what I describe below will have the
@@ -106,7 +106,7 @@ As I said, we introduce two new init scripts:
    soon as the filesystem is up and we can mount USB drives)
 2. `server-mode`, which is run once the network is up
 
-`server-check` will loop through all USB drives (even the one T(A)ILS
+`server-check` will loop through all USB drives (even the one Tails
 is running from if running from USB) and for each `$X` of them, in
 turn:
 
@@ -153,8 +153,8 @@ Persistence
 This server mode feature heavily depends on the [[todo/persistence]]
 todo item.
 
-Persistence shall always be opt-in in T(A)ILS. On the other hand a USB
-stick dedicated to running a T(A)ILS server should be ideally be
+Persistence shall always be opt-in in Tails. On the other hand a USB
+stick dedicated to running a Tails server should be ideally be
 bootable without a screen / keyboard which brings new issues:
 
 - how to toggle persistence on in that case? shall we patch the
