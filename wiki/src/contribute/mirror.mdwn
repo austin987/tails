@@ -1,0 +1,105 @@
+[[!meta title="Setup a Tails mirror"]]
+
+Setting up a Tails mirror can help Tails users downloading it faster
+and more reliably.
+
+[[!toc levels=2]]
+
+BitTorrent
+==========
+
+It's really easy to help Tails users downloading it over BitTorrent...
+especially if you are already a BitTorrent user.
+
+1. Get the latest BitTorrent files
+----------------------------------
+
+Here are the latest available BitTorrent files:
+
+[[!map pages="torrents/files/*.torrent"]]
+
+2. Share Tails images
+---------------------
+
+Feed your preferred BitTorrent client with the `.torrent` files
+downloaded at the previous step. Make sure you open and/or forward the
+needed ports in your router and/or firewall configuration so that you
+are a real seed.
+
+3. Stay tuned!
+--------------
+
+As a contributor to Tails availability over BitTorrent, it is very
+important you share the very latest published version, and only this
+one: users need to be able to quickly download it and upgrade when we
+release security fixes, and there is no need to help propagate
+outdated versions with security flaws.
+
+[[!inline pages="stay_tuned" raw="yes"]]
+
+HTTP
+====
+
+To efficiently help Tails users downloading it over HTTP, one needs to
+have sufficiently privileged access to a web server with decent
+bandwidth: a domestic DSL connection won't help, as won't a shared web
+hosting setup that provides FTP access only.
+
+This being said, if you satisfy these practical requirements, please
+read on, you are most welcome aboard!
+
+Before starting doing any real work on this topic, you should probably
+get in touch (<amnesia@boum.org>) and send us your OpenPGP public key
+so that any further communication between us can be properly encrypted.
+
+1. The big picture
+------------------
+
+We have a DNS Round Robin setup for the `dl.amnesia.boum.org` host.
+
+Every HTTP mirror makes our files available under a fixed URL
+(`http://dl.amnesia.boum.org/tails/`) that contains per-version
+sub-directories (such as
+`http://dl.amnesia.boum.org/tails/stable/tails-i386-lenny-0.6.2/`).
+
+2. Setup your web server
+------------------------
+
+You need to setup a VirtualHost with dl.amnesia.boum.org as the
+ServerName and indexing enabled. Here is an example Apache
+configuration:
+
+	<VirtualHost YOUR_WEBSERVER_IP:80>
+	   ServerName dl.amnesia.boum.org
+	   ServerAdmin YOUR_EMAIL
+	
+	   DocumentRoot /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
+	   <Directory /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/>
+	      Options Indexes
+	      AllowOverride None
+	      IndexIgnore README.html
+	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
+	      IndexOrderDefault Descending Date
+	   </Directory>
+	</VirtualHost>
+
+3. Download the files
+---------------------
+
+Download a snapshot of the current Tails files:
+
+	rsync -r archive.torproject.org::amnesia-archive \
+	         /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
+
+4. Schedule the pulling of Tails files
+--------------------------------------
+
+Secondary mirrors (like yours) should at least sync at 01:00 UTC.
+This process shall obviously be scheduled using cron or equivalent.
+
+5. Go wild
+----------
+
+As soon as your web server is ready, please e-mail us its IP address
+so that we can ask the DNS server admins to add it to the Round Robin
+pool.

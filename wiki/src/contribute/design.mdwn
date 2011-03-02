@@ -4,10 +4,10 @@
 
 In this document we present a specification of a *Privacy Enhancing
 Live Distribution* (PELD) as well as an actual implementation of it called
-*The (Amnesic) Incognito Live System* (in short: *T(A)ILS*).
+*The Amnesic Incognito Live System* (in short: *Tails*).
 
 By writing this document we intend to help third-parties do
-security analyses of any given PELD and specifically of T(A)ILS.
+security analyses of any given PELD and specifically of Tails.
 We also wish to help establish best practices in
 the field of PELD design and implementation, and thus raise the
 baseline for all similar projects out there.
@@ -603,7 +603,7 @@ unionfs/aufs ramdisk branch.
 This was
 [discussed](http://archives.seul.org/or/talk/Jan-2011/msg00137.html)
 on the or-talk mailing-list, and a new system that mitigates such
-attacks has been implemented to T(A)ILS development branch.
+attacks has been implemented to Tails development branch.
 
 This specification must warn about such matters.
 
@@ -631,12 +631,12 @@ on the tails-dev mailing-list.
 
 # 3 Implementation
 
-T(A)ILS is an implementation of the PELD specification above. It is
+Tails is an implementation of the PELD specification above. It is
 licensed under the GNU GPL version 3 or (at your option) any later
 version.
 
 Critical parts of the configuration are based on the ones from
-well-known and trusted sources, namely T(A)ILS ancestor
+well-known and trusted sources, namely Tails ancestor
 [Incognito](http://www.browseanonymouslyanywhere.com/incognito/)
 and the [Tor BrowserBundle](https://www.torproject.org/projects/torbrowser.html.en).
 This is for example the case for the firewall, polipo and Tor configurations.
@@ -646,27 +646,27 @@ fitness for a particular purpose, including total anonymity. Anonymity
 depends not only on the software but also on the user understanding
 the risks involved and how to manage those risks.
 
-Other T(A)ILS design documents:
+Other Tails design documents:
 
 [[!map pages="contribute/design/*"]]
 
 ## 3.1 Download
 
-See the [[download section|download]] on [[T(A)ILS's website|/index]]
-for download information. Published T(A)ILS images integrity can be
+See the [[download section|download]] on [[Tails's website|/index]]
+for download information. Published Tails images integrity can be
 checked using OpenPGP detached signatures made with a key that is well
 linked to the web-of-trust.
 
 The sources are stored in a bunch of [Git](http://git-scm.com/)
-repositories. The [[git page|git]] on the T(A)ILS website provides all
+repositories. The [[git page|git]] on the Tails website provides all
 needed information to access these repositories.
 
-The latest version of this document can be found on the T(A)ILS
+The latest version of this document can be found on the Tails
 website: [[!tails_website contribute/design]].
 
 ## 3.2 Software
 
-T(A)ILS ships the following software. This list is not complete, but
+Tails ships the following software. This list is not complete, but
 only contains packages deemed as important for whatever reason. The
 full packages list can be found in the [BitTorrent files download
 directory](/torrents/files/) (look for files with the `.packages`
@@ -676,7 +676,7 @@ extension).
  
 - [Debian GNU/Linux](http://www.debian.org/): the base operating
   system, provides hardware detection, infrastructure. Please note
-  that the Debian distribution does not provide or endorse T(A)ILS.
+  that the Debian distribution does not provide or endorse Tails.
 - [Tor](http://www.torproject.org/): anonymizing overlay network for
   TCP. Our intention is to always use the latest stable version.
 - [polipo](http://www.pps.jussieu.fr/%7Ejch/software/polipo/):
@@ -686,14 +686,14 @@ extension).
 - [Vidalia](https://www.torproject.org/projects/vidalia) is used
   to control Tor's behavior.
 
-Being based in Debian, T(A)ILS benefits from its great package
+Being based in Debian, Tails benefits from its great package
 management tools, facilitating its build and the inclusion of new
-software. Sadly compile time options that would enhance T(A)ILS
+software. Sadly compile time options that would enhance Tails
 security (`-fPIE`, `-fPIC`, `-fstack-protector` etc.) are not widely
-used in Debian yet. Thus having them included in T(A)ILS would require
+used in Debian yet. Thus having them included in Tails would require
 to recompile every package with the right compile-time options. This
 would badly impact the development and build efforts required to
-release T(A)ILS. As an alternative, efforts [have been
+release Tails. As an alternative, efforts [have been
 started](http://bugs.debian.org/cgi-bin/pkgreport.cgi?tag=hardening;users=debian-security@lists.debian.org)
 to push usage of such hardening features in Debian.
 
@@ -701,7 +701,7 @@ A lot of security features have been implemented upstream at the
 kernel level (ASLR, removal of `/dev/kmem`, `/dev/mem` protections,
 various stack and heap hardening features, `/proc` or `/sys` not leaking
 sensitive informations, etc.), most of them being slowly integrated
-into Debian. This is the reason why the T(A)ILS kernel has no more special
+into Debian. This is the reason why the Tails kernel has no more special
 kernel security feature than the stock Debian kernel.
 
 ### 3.2.2 Other applications
@@ -729,8 +729,8 @@ kernel security feature than the stock Debian kernel.
   gnome-disk-utility project allows, among other disk management
   features, to create LUKS-encrypted devices in a user-friendly
   interface. (Note: palimpsest is currently shipped in the development
-  branch of T(A)ILS only, since it is not compatible with Debian Lenny
-  — the base operating system for every published T(A)ILS stable
+  branch of Tails only, since it is not compatible with Debian Lenny
+  — the base operating system for every published Tails stable
   releases until now.)
 - [GnuPG](http://gnupg.org): complete and free implementation of the
   OpenPGP standard.
@@ -778,10 +778,10 @@ The chosen locale's files are compiled at boot time.
 - grep the source for `AMNESIA_SUPPORTED_LANGUAGES` to see how this
   configuration is applied.
 
-## 3.4 Notification of security issues and new T(A)ILS release
+## 3.4 Notification of security issues and new Tails release
 
-Shipped in T(A)ILS is a script that checks at each desktop start if
-security issues or new T(A)ILS releases are published on the website. If
+Shipped in Tails is a script that checks at each desktop start if
+security issues or new Tails releases are published on the website. If
 some are found, a graphical notification is displayed. This
 application is internationalized.
 
@@ -789,14 +789,14 @@ application is internationalized.
 
 ## 3.5 Feedback
 
-Users can send feedback in several ways to T(A)ILS developers. A [[bug
+Users can send feedback in several ways to Tails developers. A [[bug
 tracker|/bugs]] and a [[forum|/forum]] are available on the website.
 Users can also send email to the private [developers mailing
 list](amnesia@boum.org). A dedicated application called *WhisperBack*
-is also available in every running T(A)ILS copy. WhisperBack allows
+is also available in every running Tails copy. WhisperBack allows
 users to send anonymous or pseudonymous feedback via OpenPGP-encrypted
-email. It is configured in T(A)ILS to use a Tor hidden service run by
-T(A)ILS developers as the outgoing SMTP server. WhiperBack only sends
+email. It is configured in Tails to use a Tor hidden service run by
+Tails developers as the outgoing SMTP server. WhiperBack only sends
 email over a STARTTLS session after carefully verifying the remote
 SMTP SSL certificate. Some minimal information about the system is
 gathered and sent along with the report; the reporting user can
@@ -812,7 +812,7 @@ internationalization and is ready to be translated.
 ## 3.6 Configuration
 
 In this section we briefly present the setup of several key software
-packages and system settings of T(A)ILS with respect to security and
+packages and system settings of Tails with respect to security and
 anonymity. There are of course other minor tweaks here and there, but
 those are mainly for usability issues and similar.
 
@@ -855,12 +855,12 @@ configured for completeness.
 ### 3.6.7 Random MAC Address
 
 It is planned to anonymize the network interfaces MAC address in a
-later T(A)ILS version. See the related [[design
+later Tails version. See the related [[design
 document|design/MAC_address]] and [[todo item|todo/macchanger]].
 
 ### 3.6.8 Host system swap
 
-T(A)ILS takes care not to use any swap filesystem that might exist on
+Tails takes care not to use any swap filesystem that might exist on
 the host machine hard drive. Most of this is done at build time: not
 only the `/sbin/swapon` binary is replaced by a fake no-op script, but
 the init script responsible for mounting swap at boot (provided by
@@ -876,11 +876,11 @@ live-boot) is removed. Also, live-boot's `swapon` option is not set.
 
 In order to protect against memory recovery such as cold boot attack,
 the system RAM is
-securely wiped when T(A)ILS is being shutdown. The software doing this
+securely wiped when Tails is being shutdown. The software doing this
 is smem, part of the [secure-delete](http://www.thc.org/) package.
 Since this process can take a while the user can leave the computer
 and let it finish on its own after removing the boot medium, or simply
-turn it off if he or she is not worried about this attack: if T(A)ILS
+turn it off if he or she is not worried about this attack: if Tails
 was booted from a CD it is ejected before the memory wiping is
 started, and if it was booted from a USB drive it can be removed as
 soon as the memory wiping has been started.
@@ -889,14 +889,14 @@ soon as the memory wiping has been started.
 
 ### 3.6.10 Host system disks and partitions
 
-T(A)ILS takes care not to use any filesystem that might exist on
+Tails takes care not to use any filesystem that might exist on
 the host machine hard drive, unless explicitly told to do so by the
 user. The Debian Live persistence feature is disabled by passing
 `nopersistent` over the kernel command line to live-boot.
 
 - [[!tails_gitweb config/amnesia]]
 
-*Nota bene*: removable drives are automatically mounted until T(A)ILS
+*Nota bene*: removable drives are automatically mounted until Tails
 0.6.1. This behavior is disabled in the development branch.
 
 ### 3.6.11 Secure erasure of files and free disk space
@@ -917,17 +917,17 @@ allowed to gain super user privileges, without providing a password,
 using `sudo`.
 
 The PELD specification recommends to prevent executable code to be
-modifiable, even temporarily; T(A)ILS does not implement this
+modifiable, even temporarily; Tails does not implement this
 recommendation. Instead, thanks to the super user privileges being
-available to the end-user, T(A)ILS makes it possible to modify or add
+available to the end-user, Tails makes it possible to modify or add
 executable code by:
 
 - upgrading bundled software: this allows (technical) users to protect
-  themselves from serious security issues until an updated T(A)ILS is
+  themselves from serious security issues until an updated Tails is
   released
 - installing additional software: this helps achieving the PELD
   "Working on sensitive documents" goal by enabling users to perform
-  tasks that need software not shipped in T(A)ILS.
+  tasks that need software not shipped in Tails.
 
 Such modifications happen only in RAM, the user will remove the CD/USB
 when done and there are no services allowing logins from the network,
@@ -936,7 +936,7 @@ password-less sudo and are [[working on better
 solutions|todo/better_root_access_control]] to enhance security
 without decreasing the user freedom.
 
-As a first step the next major T(A)ILS release will stop granting `sudo`
+As a first step the next major Tails release will stop granting `sudo`
 privileges to the `amnesia` user; a root console will be available for
 two minutes after boot: this leaves the user 2 minutes to set a root
 password. Unless this is done before this delay has expired, the root
@@ -945,7 +945,7 @@ console will be disabled, and no root access will be possible afterwards.
 ### 3.6.13 Iceweasel
 
 (Note: Iceweasel is the name of the web browser, based on Mozilla
-Firefox, that is shipped by Debian and thus by T(A)ILS.)
+Firefox, that is shipped by Debian and thus by Tails.)
 
 Iceweasel uses the Torbutton extension in order to prevent attacks
 using JavaScript,
@@ -969,7 +969,7 @@ extension protects against many tracking possibilities by
 removing most ads. The [FireGPG](http://getfiregpg.org/) plugin allows
 users to use GnuPG inside websites such as webmails.
 
-T(A)ILS development branch additionally has the [HTTPS
+Tails development branch additionally has the [HTTPS
 Everywhere](https://www.eff.org/https-everywhere) extension that
 forces HTTPS usage for requests to a number of major websites.
 
@@ -978,19 +978,19 @@ The development branch also ships the
 extension that:
 
 - allows using I2P instead of Tor to visit eepsites (I2P's own hidden
-  services look-alike); see [[the design document dedicated to T(A)ILS
+  services look-alike); see [[the design document dedicated to Tails
   use of I2P|I2P]] for details;
 - could help [[fixing Iceweasel's FTP support|todo/FTP_in_Iceweasel]].
 
-Thanks to Torbutton, Iceweasel is configured so that T(A)ILS browser
-fingerprint appears uniformly among Torbutton users. Until T(A)ILS
-0.6.1, EN-US locale spoofing was disabled, which partitioned T(A)ILS
+Thanks to Torbutton, Iceweasel is configured so that Tails browser
+fingerprint appears uniformly among Torbutton users. Until Tails
+0.6.1, EN-US locale spoofing was disabled, which partitioned Tails
 users into eight sets; this behavior has been reversed in the
 development branch.
 
 Torbutton is also configured to spoof the timezone settings the same
 way as the Tor Browser Bundle does, i.e. to `UTC+00:00`. Note that
-this is a development branch novelty as T(A)ILS relies on Torbutton's
+this is a development branch novelty as Tails relies on Torbutton's
 protection against location leakage until 0.6.1.
 
 The Iceweasel config is poorly commented but the commit messages in
@@ -1019,7 +1019,7 @@ OpenPGP support is provided by the PGP/inline and PGP/MIME plugins.
 
 ### 3.6.15 Pidgin
 
-Pidgin is configured in T(A)ILS to not log anything as well as not to reveal too
+Pidgin is configured in Tails to not log anything as well as not to reveal too
 much of user activity by disabling reporting of online/away/typing
 status. MSN protocol support is disabled, to avoid the usage of such a
 privacy flawed and buggy plugin. The Off-the-record plugin is enabled
@@ -1046,7 +1046,7 @@ GPG itself is configured to connect to this keyserver over a TLS
 encrypted tunnel (`hkps://`). On the other hand Seahorse [[does not
 support hkps|bugs/seahorse_does_not_support_hkps]] so it is using
 cleartext `hkp://` instead. FireGPG is using plaintext `hkp://` until
-T(A)ILS 0.6.1, whereas the development branch has switched to
+Tails 0.6.1, whereas the development branch has switched to
 `hkps://`.
 
 When a hkps-capable front end is used, the keyserver is currently
@@ -1064,11 +1064,11 @@ SHA256.
 - [hkpms in the Monkeysphere issue tracker](https://labs.riseup.net/code/issues/2016)
 - hkpms is [available in Debian experimental](http://packages.debian.org/source/experimental/msva-perl)
 
-## 3.7 Running T(A)ILS in virtual machines
+## 3.7 Running Tails in virtual machines
 
 ### 3.7.1 Current support
 
-T(A)ILS may of course be run in virtual machines. Due to the
+Tails may of course be run in virtual machines. Due to the
 popularity of [VMWare](http://www.vmware.com/) we include
 [open-vm-tools](http://open-vm-tools.sourceforge.net/) (an open-source
 alternative to VMware tools) as well as special video drivers
@@ -1081,11 +1081,11 @@ drivers are included, as well as the guest utilities.
 
 ### 3.7.2 Security concerns
 
-Security concerns for all VMs are numerous. T(A)ILS therefore tries to
+Security concerns for all VMs are numerous. Tails therefore tries to
 detect whether it is run inside a VM and [[warns the
 user|design/virtualization_support]] if it is.
 
-### 3.7.3 Running T(A)ILS inside a Windows session
+### 3.7.3 Running Tails inside a Windows session
 
 [[Ongoing work|todo/virtualization_support]] will make it easier to
 run the CD/USB in a virtual machine inside a Windows session whenever
@@ -1098,25 +1098,25 @@ implemented by shipping a [QEMU](http://www.qemu.org/) or
 ### 3.8.1 Build tools
 
 The [Debian Live](http://live.debian.net/) is a toolkit to build Live
-systems based on Debian, such as T(A)ILS. Debian Live is designed to
+systems based on Debian, such as Tails. Debian Live is designed to
 automate the build process of the target distribution, which eases
-T(A)ILS development and maintenance. As an added bonus, Debian Live
+Tails development and maintenance. As an added bonus, Debian Live
 makes it possible for other people to build custom systems based on
-T(A)ILS, e.g. to include additional software.
+Tails, e.g. to include additional software.
 
-For detailed instructions on how to build and modify T(A)ILS, see
+For detailed instructions on how to build and modify Tails, see
 the [[build]] page and the [[contribute]] section on the wiki.
 
 ### 3.8.2 Testing process
 
 An automated build and test environment would be useful to avoid
-regressions in T(A)ILS, especially anonymity and security related
-ones. It would also make it easier to work on T(A)ILS for developers
+regressions in Tails, especially anonymity and security related
+ones. It would also make it easier to work on Tails for developers
 who do not own modern powerful hardware.
 
 Research and practical work to setup such an environment [[has slowly
 started|todo/automated_builds_and_tests]]. In the meantime, a [[manual
-test suite|contribute/release_process/test]] is "run" against T(A)ILS
+test suite|contribute/release_process/test]] is "run" against Tails
 release candidates images before they are officially published.
 
 ### 3.8.3 Upgrades
@@ -1132,13 +1132,13 @@ latest Debian stable release so there are not many problems.
 
 We intend to build and publish point releases (e.g.
 [[0.6.1|news/version_0.6.1]]) in a timely manner when security issues
-affect T(A)ILS. Such releases are based on the [[stable Git
+affect Tails. Such releases are based on the [[stable Git
 branch|/git]] and can thus also fix important — although not
 security-related — bugs.
 
 ## 3.9 Hardware support
 
-T(A)ILS ships the latest kernel from [Debian
+Tails ships the latest kernel from [Debian
 Backports](http://backports.debian.org) as a compromise between
 stability and recent hardware support.
 
@@ -1147,7 +1147,7 @@ ongoing to additionally support the PowerPC architecture.
 
 ## 3.10 Caveats
 
-T(A)ILS currently offers almost no protection against live physical
+Tails currently offers almost no protection against live physical
 monitoring, except for hardware keyloggers.
 
 UDP and IPv6 are a problem. The Tor network does not support any of
@@ -1160,15 +1160,15 @@ planned|todo/support_arbitrary_dns_queries]].
 Bridge support is [[missing but planned|todo/bridge_support]].
 
 Also, an easy (read: not command-line based) way to [[install and
-upgrade T(A)ILS on USB sticks|todo/usb_install_and_upgrade]] is
+upgrade Tails on USB sticks|todo/usb_install_and_upgrade]] is
 needed.
 
 Some optional bits of [[todo/persistence]] would be welcome and help
 spreading strong public key cryptography and authentication amongst
-T(A)ILS users (OpenPGP, [[todo/Monkeysphere]]).
+Tails users (OpenPGP, [[todo/Monkeysphere]]).
 
 Some tools currently available to command-line users lack the
-integration into T(A)ILS and/or graphical user interface that would be
+integration into Tails and/or graphical user interface that would be
 needed to make them useful to anyone. See the [[macchanger TODO
 page|todo/macchanger]] as an example.
 
@@ -1178,12 +1178,12 @@ implementation to achieve its mission. Such software is being designed
 and should be implemented at some point.
 
 Despite any software and documentation piece developed specifically
-for T(A)ILS being ready to be translated, actual translation work is
+for Tails being ready to be translated, actual translation work is
 not done for many languages: we lack trusted translators teams.
 Sharing the Tor translation infrastructure may help.
 
 See the development [[contribute/roadmap]] for more information about
-where T(A)ILS is heading to.
+where Tails is heading to.
 
 # 4 Security analysis
 
