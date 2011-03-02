@@ -1,9 +1,9 @@
 Versions
 ========
 
-T(A)ILS 0.5 used NTP in a way that is described in our [[dedicated
+Tails 0.5 used NTP in a way that is described in our [[dedicated
 design document|NTP]]. This document describes the solution
-implemented in T(A)ILS 0.6 and newer.
+implemented in Tails 0.6 and newer.
 
 Rationale
 =========
@@ -46,7 +46,7 @@ being.
 ## Why use a custom program?
 
 As what follows clearly shows, the upstream HTP has quite a few
-drawbacks that make it unfit for our needs. That's why T(A)ILS uses a
+drawbacks that make it unfit for our needs. That's why Tails uses a
 custom version of the Perl HTP client into `/usr/local/sbin/htpdate`.
 The repository we copied this script from can be found there:
 
@@ -77,7 +77,7 @@ through the Tor network... chicken and egg.
 
 We could of course ask htpdate to perform IP-based HTTP requests
 (`https://IP/`) but this is pretty uncommon a thing to do and would
-thus offer too big possibilities of fingerprinting T(A)ILS users for
+thus offer too big possibilities of fingerprinting Tails users for
 our taste. We really want wget to perform name-based HTTP requests:
 `https://xxx.domain.tld/`. It is then needed to feed the system
 resolver with the needed (hostname, IP) pairs *before* running
@@ -88,40 +88,40 @@ server, when possible. Else, we ask OpenDNS. The (hostname, IP) pairs
 are written to `/etc/hosts`, then htpdate is run, and we eventually
 remove the added entries from this file.
 
-## Fingerprinting of T(A)ILS users
+## Fingerprinting of Tails users
 
 HTP probably isn't widely used, so if a connection can be identified
-as HTP, it very likely was done by an T(A)ILS user.
+as HTP, it very likely was done by an Tails user.
 
 Some preliminary effort was done to make it harder to identify
 connections as HTP. This is only preliminary work and must **NOT** be
 considered as a guarantee. See the "Limits" section below.
 
-T(A)ILS developers still need to think thoroughly of these questions:
+Tails developers still need to think thoroughly of these questions:
 are such fingerprinting possibilities a serious problem? What kind of
 efforts and compromise should be made to prevent these?
 
 Fingerprinting of HTP connections can be tried at two locations:
 
 * the servers we send HTTP requests to;
-* the Internet connection being used by a T(A)ILS user.
+* the Internet connection being used by a Tails user.
 
 ### Fingerprinting via the servers set being used
 
 If a subset of the queried webservers' admins share their logs, they
-could do quite simple correlation search to fingerprint T(A)ILS users.
+could do quite simple correlation search to fingerprint Tails users.
 The pool of servers is then chosen in a way that makes it unlikely for
 them to share user data. This should be enough of a protection against
 this side of the threat.
 
 On the other hand anyone who monitors a given Internet connection that
-is used to run T(A)ILS would probably infer T(A)ILS usage from the
+is used to run Tails would probably infer Tails usage from the
 connection pattern (DNS then HTTP) on which our HTP implementation
 currently relies on.
 
 ### Fingerprinting via unusual http behaviour of the HTP client
 
-The custom HTP client T(A)ILS use is configured so that it pretends to
+The custom HTP client Tails use is configured so that it pretends to
 be the same user agent as iceweasel+torbutton, thanks to
 `/usr/local/bin/getTorbuttonUserAgent`.
 
@@ -151,7 +151,7 @@ support.
 What sources should be trusted? This is of course also a problem
 with NTP.
 
-The HTP pool used by T(A)ILS is be based on stable and reliable
+The HTP pool used by Tails is be based on stable and reliable
 webservers that get great amounts of traffic, including:
 
 * two servers whose admins are likely to take great care of their
@@ -175,7 +175,7 @@ the resources the page depends on: images, CSS and scripts...
 
 The custom `/usr/local/sbin/htpdate` we use delegates certificate
 verification to wget. It implements a "paranoid mode" that is enabled
-in T(A)ILS: when one server cannot be reached, e.g. because of a
+in Tails: when one server cannot be reached, e.g. because of a
 failed certificate checking, this custom version of htpdate considers
 the servers pool consistency to not be secure enough and exits.
 
