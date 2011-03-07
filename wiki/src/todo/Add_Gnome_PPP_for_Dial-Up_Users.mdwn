@@ -54,6 +54,44 @@ virtualization.
 
 Repeat the last two steps if the connection is broken at some point.
 
+# PPPoE emulation
+
+To ensure that PPPoE (broadband DSL) support is not broken by tweaks
+to PPP configuration files, here is a test procedure. This needs
+a standard Debian system (the *gateway*), and either a spare wired network card
+or using virtualization.
+
+This reciepe uses `kvm`, but could be easily adapted to other setups:
+
+1. On the *gateway*, install the `pppoe` package.
+2. On the *gateway*, create `/etc/ppp/pppoe-server-options`:
+
+        debug
+        noauth
+        lcp-echo-interval 10
+        lcp-echo-failure 2
+        ms-dns 8.8.8.8
+        defaultroute
+        noipdefault
+
+3. Start KVM, adding those arguments: `-net nic,model=virtio -net tap,ifname=tails`.
+4. On the *gateway*, *up* this interface:
+
+        # ip link set tails up
+
+5. On the *gateway*, start the PPPoE server:
+
+        # sudo pppoe-server -I tails -F -S test -m 1412
+
+6. On Tails, you can now right-click the NetworkManager icon, and select
+   *Edit connections…*. In the *DSL* tab, click *Add*. *Service name*
+   should be set to `test`. Other settings should not matter.
+
+7. On Tails, left-click the NetworkManager icon and selection the newly
+   created connection.
+
+To debug, use `tcpdump`, and look at `/var/log/syslog`.
+
 # Implementation
 
 As WvDial (and thus GNOME PPP) is not integrated with NetworkManager in any
