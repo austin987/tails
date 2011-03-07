@@ -1,6 +1,71 @@
-In order to make Tails usable for those stuck with dial-up Internet access, I would like to see the Gnome PPP GUI front-end to WvDial added.
+# Rationale
 
-See this thread:
-https://amnesia.boum.org/forum/GNOME_PPP_for_Dial-Up__63__/
+Tails should be usable by those stuck with dial-up Internet access. Recent
+events have shown that in some cases, dial-up might be the last option to
+reach the Internet when broadband operators have been shut down.
 
-Sorry that I lack the expertise to help with this.
+# Research
+
+NetworkManager (and ModemManager) have full support for **mobile** modems. But
+nothing for old school dial-up modems at the moment: see [b.g.o #348330 -
+Tracker: Integrated PPP support](https://bugzilla.gnome.org/show_bug.cgi?id=348330)
+
+Fallback option: provide GNOME PPP, a GUI front-end to old but trusty WvDial.
+
+# Dial-up emulation
+
+Here is a method to test dial-up PPP connections without resorting to a real modem
+and a real Internet provider available on the Plain Old Telephony System. It needs
+a system running Tails and another one (the *gateway*) running standard Debian.
+So this requires either two computers in the same LAN or runing Tails using
+virtualization.
+
+1. Prepare the networking stack on the *gateway* :
+
+        # iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+        # sysctl -w net.ipv4.ip_forward=1
+
+2. In Tails, create `.wvdial.conf`:
+
+        [Dialer Defaults]
+        Baud = 115200
+        Init = ATZ
+        Init2 = AT%R1
+        Phone = 192.168.1.2:6789
+        Username = test
+        Password = test
+        Carrier Check = off
+
+   Replace the IP address in `Phone` with the IP address of the other system.
+
+3. In Tails, install the `modemu` package.
+
+4. In Tails, remove the default route to let room for the one provided by PPP:
+
+        # ip route del default
+
+5. On the *gateway* run:
+
+        # pppd noauth local lock nodefaultroute persist debug nodetach 10.1.2.3:10.4.5.6 pty "nc -l 6789"
+
+6. And fairly quickly (before `pppd` times out), run on Tails:
+
+        $ sudo modemu -c 'ln -nsf %s /dev/modem ; wvdial -c .wvdial.conf'
+
+Repeat the last two steps if the connection is broken at some point.
+
+# Implementation
+
+As WvDial (and thus GNOME PPP) is not integrated with NetworkManager in any
+way, the hooks in `/etc/NetworkManager/dispatcher.d` are not normally run upon
+connection.
+
+They will be after adding the following script as
+`/etc/ppp/ip-up.d/010call-nm-hooks`:
+
+    #!/bin/sh
+
+    run-parts --regex='^[a-z0-9-]+(\.sh)?$' /etc/NetworkManager/dispatcher.d --arg="$1" --arg="up"
+
+But this will probably have the undesired effect of calling NetworkManager
+hooks twice when using PPPoE. Is that a problem? [[!taglink todo/research]]
