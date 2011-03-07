@@ -50,7 +50,7 @@ virtualization.
 
 6. And fairly quickly (before `pppd` times out), run on Tails:
 
-        $ sudo modemu -c 'ln -nsf %s /dev/modem ; wvdial -c .wvdial.conf'
+        $ sudo modemu -c 'ln -nsf %s /dev/modem ; wvdial -C .wvdial.conf'
 
 Repeat the last two steps if the connection is broken at some point.
 
@@ -105,5 +105,21 @@ They will be after adding the following script as
 
     run-parts --regex='^[a-z0-9-]+(\.sh)?$' /etc/NetworkManager/dispatcher.d --arg="$1" --arg="up"
 
-But this will probably have the undesired effect of calling NetworkManager
-hooks twice when using PPPoE. Is that a problem? [[!taglink todo/research]]
+But this will probably has the undesired effect of calling NetworkManager
+hooks twice when using PPPoE. This does not look like a real issue, but Tor
+is still restarted twice which is not nice.
+
+Answer to this problem is fairly simple: when using WvDial with a good ol'
+modem, a `SPEED` environment variable is defined when `01call-nm-hooks`
+runs. Let's simply use this to determine if we should run NetworkManager hooks
+manually.
+
+Remaining issue: `gnome-ppp` conflicts with `resolvconf`, see [Debian
+#258064](http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=258064).
+
+Possible solutions:
+
+ * [[!taglink todo/code]] and fix #258064, but GNOME PPP looks dead upstream, so
+   it might be an option to create a custom package handling resolvconf the way
+   we want.
+ * [[!taglink todo/research]] alternative ways to use WvDial or PPP.
