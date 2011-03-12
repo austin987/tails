@@ -50,7 +50,7 @@ to_fingerprint = "09F6BC8FEEC9D8EE005DBAA41D2975EDF93E735F"
 # This section defines the sender parameters
 
 # The address of the sender
-from_address = "devnull@amnesia.boum.org"
+from_address = "devnull@tails.boum.org"
 
 # SMTP
 #
