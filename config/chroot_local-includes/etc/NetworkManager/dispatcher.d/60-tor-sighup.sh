@@ -29,7 +29,7 @@ fi
 if [ -r "${PIDFILE}" ]; then
     # A SIGHUP should be enough but there's a bug in Tor. Details:
     # * https://bugs.torproject.org/flyspray/index.php?do=details&id=1247
-    # * https://amnesia.boum.org/bugs/tor_vs_networkmanager/
+    # * https://tails.boum.org/bugs/tor_vs_networkmanager/
     /etc/init.d/tor restart
 else
     /etc/init.d/tor start
