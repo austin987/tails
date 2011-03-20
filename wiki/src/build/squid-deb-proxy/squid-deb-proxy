@@ -1,0 +1,174 @@
+#! /bin/sh
+#
+# squid		Startup script for the SQUID Deb proxy-cache.
+#
+# Version:	@(#)squid.rc  2.20  01-Oct-2001  miquels@cistron.nl
+#
+### BEGIN INIT INFO
+# Provides:          squid-deb-proxy
+# Required-Start:    $local_fs $network $avahi
+# Required-Stop:     $local_fs $network $avahi
+# Should-Start:      $named
+# Should-Stop:       $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Squid Deb Proxy
+### END INIT INFO
+
+NAME=squid-deb-proxy
+DESC="Squid Debian Proxy"
+DAEMON=/usr/sbin/squid3
+PIDBASE=/var/run/squid-deb-proxy
+PIDFILE=$PIDBASE/$NAME.pid
+CONFIG=/etc/squid-deb-proxy/squid-deb-proxy.conf
+SQUID_ARGS="-YC -f $CONFIG"
+
+# [ ! -f /etc/default/squid ] || . /etc/default/squid
+
+. /lib/lsb/init-functions
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+[ -x $DAEMON ] || exit 0
+
+ulimit -n 65535
+
+find_cache_dir () {
+        w="     " # space tab
+        res=`sed -ne '
+                s/^'$1'['"$w"']\+[^'"$w"']\+['"$w"']\+\([^'"$w"']\+\).*$/\1/p;
+                t end;
+                d;
+                :end q' < $CONFIG`
+        [ -n "$res" ] || res=$2
+        echo "$res"
+}
+
+find_cache_type () {
+	w=" 	" # space tab
+	res=`sed -ne '
+		s/^'$1'['"$w"']\+\([^'"$w"']\+\).*$/\1/p;
+		t end;
+		d;
+		:end q' < $CONFIG`
+	[ -n "$res" ] || res=$2
+	echo "$res"
+}
+
+start () {
+	cache_dir=`find_cache_dir cache_dir /var/cache/$NAME`
+	cache_type=`find_cache_type cache_dir ufs`
+
+	#
+	# Create $PIDBASE if it doesn't exist.
+	#
+	if [ ! -d "$PIDBASE" ]; then
+		mkdir --mode=00755 $PIDBASE
+		chown proxy:proxy $PIDBASE
+	fi
+
+	#
+	# Create spool dirs if they don't exist.
+	#
+	if [ "$cache_type" = "coss" -a -d "$cache_dir" -a ! -f "$cache_dir/stripe" ] || [ "$cache_type" != "coss" -a -d "$cache_dir" -a ! -d "$cache_dir/00" ]
+	then
+		log_warning_msg "Creating $DESC cache structure"
+		$DAEMON $SQUID_ARGS -z
+	fi
+
+	umask 027
+	ulimit -n 65535
+	cd $cache_dir
+	start-stop-daemon --quiet --start \
+		--chuid proxy \
+		--pidfile $PIDFILE \
+		--exec $DAEMON -- $SQUID_ARGS < /dev/null
+	res=$?
+
+	if [ -x /usr/bin/avahi-publish-service ]; then
+		http_port=$(grep --max-count=1 '^http_port' "$CONFIG"|cut -d' ' -f2)
+		if [ -n "$http_port" ]; then
+		   if echo "$http_port" | grep -qs ':'; then
+		      PORT=$(echo "$http_port" | cut -d':' -f2)
+		   else
+		      PORT="$http_port"
+		   fi
+		   echo "Publishing Avahi service on port $PORT"
+		   avahi-publish-service "Squid deb proxy" _apt_proxy._tcp $PORT &
+		fi
+	fi
+
+	return $res
+}
+
+stop () {
+	PID=`cat $PIDFILE 2>/dev/null`
+	start-stop-daemon --stop --quiet --pidfile $PIDFILE --exec $DAEMON
+	#
+	#	Now we have to wait until squid has _really_ stopped.
+	#
+	sleep 2
+	if test -n "$PID" && kill -0 $PID 2>/dev/null
+	then
+		log_action_begin_msg " Waiting"
+		cnt=0
+		while kill -0 $PID 2>/dev/null
+		do
+			cnt=`expr $cnt + 1`
+			if [ $cnt -gt 24 ]
+			then
+				log_action_end_msg 1
+				return 1
+			fi
+			sleep 5
+			log_action_cont_msg ""
+		done
+		log_action_end_msg 0
+		return 0
+	else
+		return 0
+	fi
+}
+
+case "$1" in
+    start)
+	log_daemon_msg "Starting $DESC" "$NAME"
+	if start ; then
+		log_end_msg $?
+	else
+		log_end_msg $?
+	fi
+	;;
+    stop)
+	log_daemon_msg "Stopping $DESC" "$NAME"
+	if stop ; then
+		log_end_msg $?
+	else
+		log_end_msg $?
+	fi
+	;;
+    reload|force-reload)
+	log_action_msg "Reloading $DESC configuration files"
+	$DAEMON $SQUID_ARGS -k reconfigure
+	log_action_end_msg 0
+	;;
+    restart)
+	log_daemon_msg "Restarting $DESC" "$NAME"
+	stop
+	if start ; then
+		log_end_msg $?
+	else
+		log_end_msg $?
+	fi
+	;;
+    status)
+	status_of_proc -p "$PIDFILE" "$DAEMON" squid && exit 0 || exit $?
+	;;
+    *)
+	echo "Usage: /etc/init.d/$NAME {start|stop|reload|force-reload|restart}"
+	exit 3
+	;;
+esac
+
+exit 0
+
