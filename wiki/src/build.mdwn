@@ -1,17 +1,18 @@
+[[!meta title="Building a Tails image"]]
+
 [[!toc levels=2]]
 
 One may want to [[customize]] her image before building.
 
 Every following command must be run as `root`, at the root of the
-source directory one has [[downloaded|download]].
+source directory one has [[downloaded|Git]].
 
 For the impatient ones:
 
 	$ git clone git://git.immerda.ch/amnesia.git
 	$ cd amnesia
 	$ sudo su
-	# lb config
-	# lb build
+	# lb config && lb build
 
 Dependencies
 ============
@@ -23,34 +24,32 @@ Dependencies
   converted to hybrid ones: they can be either a CD-ROM or a hard disk
   (USB disk, etc.).
 * `eatmydata` (e.g. from Debian sid), `time` and `whois` (for /usr/bin/mkpasswd) packages.
-* A patched ikiwiki is needed so that the static version of the wiki
-  included in the image has correct links to the online wiki; see this
-  [wishlist item](http://ikiwiki.info/todo/mirrorlist_with_per-mirror_usedirs_settings/)
-  to get the custom ikiwiki branch that has the needed code. It is
-  not critical to do so.
+* Released images are built using a patched ikiwiki is needed so that
+  the static version of the wiki included in the image has correct
+  links to the online wiki; see this [wishlist
+  item](http://ikiwiki.info/todo/mirrorlist_with_per-mirror_usedirs_settings/)
+  to get the custom ikiwiki branch. It is not critical to do use it
+  but at release time.
 * You also want to install `po4a` and `perlmagick` so that ikiwiki
   will build smoothly in all languages, and include the needed images.
 
 Build process
 =============
 
-## (Optional) customize the build process
+## Customize the build process if needed
 
 If you need to set custom build settings that are specific to your
 local environment, such as a custom Debian mirror or APT proxy, you
-can configure settings in live-build's configuration file
-(`/etc/live/build.conf`). Example content:
+probably want to configure live-build a bit.
 
-	LB_APT_HTTP_PROXY="http://127.0.0.1:8000/"
+The most common customizations are documented on this wiki:
 
-	LB_MIRROR_BOOTSTRAP="http://ftp.us.debian.org/debian/"
-	LB_MIRROR_BOOTSTRAP_SECURITY="http://security.debian.org/"
+* [[using a custom Debian mirror to build Tails
+  images|build/custom_mirror]];
+* [[using squid-deb-proxy to build Tails images|build/squid-deb-proxy]].
 
-	LB_MIRROR_CHROOT="http://ftp.us.debian.org/debian/"
-	LB_MIRROR_CHROOT_SECURITY="http://security.debian.org/"
-
-	LB_MIRROR_BINARY="http://ftp.us.debian.org/debian/"
-	LB_MIRROR_BINARY_SECURITY="http://security.debian.org/"
+More documentation about this can be found in the [Debian Live
+Manual](http://live.debian.net/manual/en/).
 
 ## Initialize the Live system's configuration
 
