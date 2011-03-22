@@ -1,77 +1,50 @@
-Allow easily installing Tails to a USB storage device
+[[!meta title="USB install and upgrade"]]
 
-* from a running (CD or USB) amnesia system
-* from another OS, using a downloaded ISO image
+[[!toc levels=3]]
 
-[[!toc levels=2]]
-
-specification
+Specification
 =============
 
-* allow creating an encrypted persistence storage space (e.g. a second
-  encrypted partition, or a file-backed encrypted FS) or *at least*
-  leave room for it
-* allow non-destructively upgrading the live system only, not touching
-  the other partitions (use the iso + grub trick ? tar image
-  + cp?)
+One should be able to easily install Tails to a USB storage device:
 
-research
+* by cloning an existing Tails system that is running from CD or USB;
+* from another operating system, using a downloaded ISO image.
+
+Moreover, at installation time, one should be allowed to setup an
+encrypted storage space that can be used by the [[upcoming persistence
+feature|todo/persistence]]; earliest versions of the installation
+program must at least leave room for it so that a later version can be
+make use of it. Whether this storage space should better be a second
+encrypted partition or a file-backed encrypted FS shall be researched.
+
+One should also be able to easily and non-destructively upgrade a
+given Tails system installed on a USB storage device.
+Non-destructively means not touching any partition or file other than
+the ones managed by the Tails installation system.
+
+Research
 ========
 
 [[!tag todo/research]]
 
-booting methods
+Booting methods
 ---------------
 
-### syslinux hybrid image
+Tails [[ships hybrid ISO images|contribute/design/hybrid_ISO]]. dd'ing
+such a file to a USB stick produces a bootable Tails system but it
+overwrites any previously existing partition table. This method is
+therefore not suitable for us since it does not satisfy the
+"non-destructive upgrade process" requirement.
 
-Since 0.5 every Tails ISO image we ship now is a persistent one:
+Two alternatives booting methods have been investigated:
 
-- it can be burnt to a CD;
-- it also contains a full disk image (including partition table) and
-  can thus be copied (using `dd`) to a USB stick; the USB stick's
-  content is lost in the operation.
-
-Successful tests:
-
-* boot the resulting `test.iso` as a normal optical drive in
-  VirtualBox
-* boot the resulting `test.iso` as a KVM hard disk
-* convert the resulting `test.iso`, posing as a HDD image, into the
-  native VirtualBox disk format, using `VBoxManage
-  convertfromraw -format VDI test.iso test.vdi`, then boot the
-  resulting `test.vdi` disk image in VirtualBox
-* `dd` the hybrid `test.iso` to a USB stick and boot it on
-  a USB-boot-enabled computer.
-
-Notes:
-
-* the partition number may need to be 4, in order to be compatible
-  with the BIOSes supporting only USB-Zip;
-  [reference](http://syslinux.zytor.com/archives/2009-May/012380.html)
-* the partition type may need to be `1c`, i.e. hidden FAT32 LBA;
-  [reference](http://syslinux.zytor.com/archives/2009-May/012384.html)
-* boot failures were experimented when testing without the `-entry
-  4 -type 1c` options.
-
-Conclusion: this is a nice way to get bootable USB images for almost
-free.
-
-### misc
-
-* apart when using a setup able to boot an ISO image, one needs to
-  copy the ISO's `live/` directory to the destination partition, and
-  setup a bootloader there
-* use grml's
-  [patches to live-initramfs](http://git.grml.org/?p=live-initramfs-grml.git;a=tree;f=debian/patches) 
-  to support directly booting an ISO image... merged in upstream Git,
-  commit 6458a8862db68. Another of their patches (namely
-  `07_support_findiso.dpatch`) adds support for the
-  `findiso` boot parameter, which is needed for easy usage; this one
-  has not been applied upstream yet; does it respect the
-  `live-media=removable` boot parameter?
-* Philip Hands' solution proposed on [[!debbug 534887]]
-  uses extlinux chainloading the image's own bootloader
+1. **Boot ISO file**: Setup a bootloader on the USB stick that is able
+   to boot an ISO image dropped into the right directory of it.
+2. **Copy ISO's content**: Copy needed files (mainly the `live/`
+   directory) from the ISO filesystem to the destination partition,
+   and setup a bootloader that uses files in that directory. The end
+   result is more or less equivalent to dd'ing the ISO image to the
+   USB stick, but the process can be made in a non-destructive way.
 
 ### Grub2
 
@@ -154,8 +127,23 @@ Resources:
   with a snippet for `grub.d` to automate booting ISO images from
   Grub2, using syslinux' memdisk
 
-frontend UI
+### Other resources and ideas
+
+* use grml's
+  [patches to live-initramfs](http://git.grml.org/?p=live-initramfs-grml.git;a=tree;f=debian/patches) 
+  to support directly booting an ISO image... merged in upstream Git,
+  commit 6458a8862db68. Another of their patches (namely
+  `07_support_findiso.dpatch`) adds support for the
+  `findiso` boot parameter, which is needed for easy usage; this one
+  has not been applied upstream yet; does it respect the
+  `live-media=removable` boot parameter?
+* Philip Hands' solution proposed on [[!debbug 534887]]
+  uses extlinux chainloading the image's own bootloader
+
+Frontend UI
 -----------
+
+[[!tag todo/test]]
 
 (Testing all these is probably [[!taglink todo/easy]].)
 
@@ -287,7 +275,7 @@ we should look at.
    - supports Windows and GNU/Linux
    - no release in 2009 nor 2010
 
-partitionning
+Partitionning
 -------------
 
 * Benjamin FOURTICQ's
