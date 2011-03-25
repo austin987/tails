@@ -173,8 +173,17 @@ they are not finely grained enough and persist too much. The best path
 to a usable implementation seems to improve `live-snapshot`; it seems
 like a better starting point because it has an include list feature
 (`/etc/live-snapshot.list`) and is kinder to USB sticks (think of
-write wearing); what needs to be done (checked in live-boot 2.0~a16-1
-due to working offline with an outdated Git working copy):
+write wearing).
+
+Tails will probably move most boot-time communication with the user to
+a graphical boot menu (replacing the GDM3 as a whole or only its
+greeter), see [[todo/boot_menu]] for details. This implies our work on
+persistence support shall at the end of the day allow live-snapshot to
+run this late in the boot process, instead of run from live-boot as is
+currently done.
+
+What needs to be done (checked in live-boot 2.0~a16-1 due to working
+offline with an outdated Git working copy):
 
 - Add support for file deletion (e.g. by replacing cpio with rsync).
 - Add a read-only mode. Easy for `live-snapshot`, tricky but doable
@@ -214,6 +223,9 @@ due to working offline with an outdated Git working copy):
   allow adding support for plain dm-crypt mappings that are also setup
   with cryptsetup. Also, `persistent=cryptsetup` does not makes
   persistence volume encryption compulsory. Do we need this?
+  To end with Daniel Baumann wrote on the debian-live list (20110314)
+  this setting is "highly experimental and i don't consider it to be
+  working correctly yet anyway".
 - The cryptsetup support is not able to deal with file-backed Luks
   snapshots. Do we need this? On the long run we would probably prefer
   supporting plain dm-crypt mappings hidden in files: something
