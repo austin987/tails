@@ -1,0 +1,31 @@
+Since 0.5 every published Tails i386 ISO image is a hybrid one:
+
+- it can be burnt to a CD;
+- it also contains a full disk image (including partition table) and
+  can thus be copied (using `dd`) to a USB stick; the USB stick's
+  content is lost in the operation.
+
+Successful tests:
+
+* boot the resulting `test.iso` as a normal optical drive in
+  VirtualBox
+* boot the resulting `test.iso` as a KVM hard disk
+* convert the resulting `test.iso`, posing as a HDD image, into the
+  native VirtualBox disk format, using `VBoxManage
+  convertfromraw -format VDI test.iso test.vdi`, then boot the
+  resulting `test.vdi` disk image in VirtualBox
+* `dd` the hybrid `test.iso` to a USB stick and boot it on
+  a USB-boot-enabled computer.
+
+Notes:
+
+* the partition number may need to be 4, in order to be compatible
+  with the BIOSes supporting only USB-Zip;
+  [reference](http://syslinux.zytor.com/archives/2009-May/012380.html)
+* the partition type may need to be `1c`, i.e. hidden FAT32 LBA;
+  [reference](http://syslinux.zytor.com/archives/2009-May/012384.html)
+* boot failures were experimented when testing without the `-entry
+  4 -type 1c` options.
+
+Conclusion: this is a nice way to get bootable USB images for almost
+free.
