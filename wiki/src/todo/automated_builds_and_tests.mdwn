@@ -22,37 +22,34 @@ What we have
 
 ## Automated builds
 
-There is actually a buildbot instance that is automatically building the
-`devel`, `testing` and `stable` branch.
-No build results are actually kept, as there isn't a way for developpers
-to start and test them remotely.
+A buildbot instance automatically builds the `devel`, `testing` and
+`stable` branches. No build result is currently kept as there is no
+way for developpers to start and test them remotely yet.
 
 ## Setup
 
-Our buildbot's instance is running inside a KVM.
+Our buildbot's instance runs inside a KVM.
 
-The host system is using libvirt to manage the different VMs it's
-hosting.
+The host system uses libvirt to manage the hosted virtual machines.
 
-We are actually using custom buildbot package, as the one from Debian
-are outdated. Work is done with others to have a better Debian
-packaging, reporting bug [[!debbug 587313]], working on the package and
-pushing uptream changes that would make buildot sit better in a Debian
-environnement (init script/upstart, log rotation,...)
+We use a custom buildbot package as it is outdated in Debian. Work is
+done with others to have a better Debian packaging, reporting
+[[!debbug 587313]], working on the package and pushing to upstream
+some changes that would make buildot sit better in a Debian
+environment: init script/upstart, log rotation, etc.
 
 ## Left to do
 
-1. Custom notifications when a build fails, the one actually send miss
-   some usefull informations.
-2. Ask a mailing list to have buildbot sending it's build error reports
-   there.
-3. See if we want buildbot being able to send build report to specified
-   email address when someone hit the "Build" button on its webpage,
-   rather to bug everyone on the list.
-2. allow developers to have their personal branch(es?) autobuilt as
+1. Custom notifications when a build fails: the one currently sent
+   lacks some useful information.
+2. Ask a mailing list to have buildbot sending it's build error
+   reports there.
+3. [[!taglink todo/discuss]] whether we want buildbot to send the
+   build report to the specified email address when someone hits the
+   "Build" button on its webpage, rather to bug everyone on the list.
+2. Allow developers to have their personal branch(es?) autobuilt as
    well => help developers test their code *before* pushing it to the
    `devel` branch.
-
 
 What we need
 ============
@@ -68,10 +65,11 @@ would be to have the slave talking to the libvirt daemon running on the
 host system, asking to start the last build iso, then run tests on it.
 This has some requirements to work though :
 
-* Tests have to be in the tails sources, so that the slave is able to
-  run them.
+* Tests have to be in the Tails sources, so that the slave is able to
+  run them. The tools used for testing may be installed inside the
+  Live system being tested at runtime.
 * There might be some cases where the tests have to be started
-  from inside the tested tails system. In this case, the easiest way
+  from inside the tested Tails system. In this case, the easiest way
   might be to have this tests included in the tails release. That might
   be an interesting idea for other moments, like for bug reporting or to
   provide users a way to test a functionnality themselves. But then,
@@ -86,24 +84,26 @@ One of the feature we want is the ability for developpers to have an
 easy process to start the last build done from their commit so that they
 can test their changes.
 
-As the machine used to run the buildbot instance doesn't have a lot of
-bandwidth, the most convenient way to go would be to start the build iso
-in a kvm instance, and have the developpers connect via VNC to this VM,
-rather to have to download the build iso image and test it on their
-own machine.
+The machine used to run the buildbot instance doesn't have a lot of
+bandwidth; some Tails developers also have poor connection to the
+Internet. The most convenient way to go would therefore be to start
+the built ISO in a KVM instance and have the developpers connect via
+VNC to this VM, rather than requiring them to download the built ISO
+image to test it on their own machine.
 
 A tricky feature is that the developper might need to connect to the KVM
 at early boot stage, e.g if they need to test some changes in the boot
 options.
 
 Libvirt supports [remote connections](http://libvirt.org/remote.html),
-using TLS or ssh transport. Sasl, ssl certificates or ssh can be used
+using TLS or ssh transport. SASL, SSL certificates or SSH can be used
 for authentication depending on the choosen transport.
 
-For ssh to be supported, users have to be able to login as root on the
-machine running libvirtd, so that might be problematic. TLS transport
-and ssl certificates might be the way to connect, but that would require
-some tests.
+For SSH to be supported, users have to be able to login as a
+privileged user (more or less equivalent to `root`) on the machine
+running libvirtd, which might be problematic. TLS transport and SSL
+certificates might be the way to connect, but that would require some
+tests. The libvirt read-only mode shall be investigated.
 
 `kvm(1)` and `qemu-kvm(1)` support a `reverse` option to their VNC
 display, which tells them to what client IP:port the VNC server will
@@ -112,7 +112,7 @@ libvirtd, tell it to start X iso image and send the VNC display to the
 client he/she started on his/her local machine. Cons of this method is
 that the developper has to have a public IP address or setup port
 forwarding if behind a NAT, so that the remote VNC server can connect to
-his/her client. A VPN connection might be helpfull to circumvent this NAT
+his/her client. A VPN connection might be helpful to circumvent this NAT
 problem.
 
 
