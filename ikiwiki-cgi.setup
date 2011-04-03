@@ -22,7 +22,7 @@ use IkiWiki::Setup::Standard {
         diffurl => 'http://git.immerda.ch/?p=amnesia.git;a=blobdiff;f=wiki/src/[[file]];h=[[sha1_to]];hp=[[sha1_from]];hb=[[sha1_commit]];hpb=[[sha1_parent]]',
 	rss => 1,
 	atom => 1,
-	cgiurl => "http://localhost/wiki/tails",
+	cgiurl => "http://localhost/wiki/tails/ikiwiki.cgi",
 	url => "http://localhost/wiki/tails",
 	allow_symlinks_before_srcdir => 1,
 	tagbase => 'tags',
@@ -42,4 +42,11 @@ use IkiWiki::Setup::Standard {
 
 	umask => 18,
 	sslcookie => 0,
+	wrappers => [
+		{
+			cgi => 1,
+			wrapper => "/var/www.apache/wiki/tails/ikiwiki.cgi",
+			wrappermode => "06755",
+		},
+	],
 }
