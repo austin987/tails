@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 #
-# T(A)ILS configuration file for Whisperback
+# Tails configuration file for Whisperback
 # ==========================================
 #
 # This is a python script that will be read at startup. Any python
@@ -50,7 +50,7 @@ to_fingerprint = "09F6BC8FEEC9D8EE005DBAA41D2975EDF93E735F"
 # This section defines the sender parameters
 
 # The address of the sender
-from_address = "devnull@amnesia.boum.org"
+from_address = "devnull@tails.boum.org"
 
 # SMTP
 #
@@ -96,7 +96,7 @@ def mail_prepended_info():
     except subprocess.CalledProcessError:
       amnesia_version = "tails-version returned an error"
     
-    return "T(A)ILS-Version: %s\n" % amnesia_version
+    return "Tails-Version: %s\n" % amnesia_version
 
 # A callback function to get information to append to the email
 # (this information will be encrypted). This is useful to add
