@@ -85,7 +85,7 @@ RuleSet.prototype = {
     https_everywhereLog(level, msg);
   },
 
-  rewrittenURI: function(uri) {
+ transformURI: function(uri) {
     // If no rule applies, return null; otherwise, return a fresh uri instance
     // for the target
     var newurl = this._apply(uri.spec);
@@ -98,29 +98,11 @@ RuleSet.prototype = {
     newuri = newuri.QueryInterface(CI.nsIURI);
     return newuri;
   },
-
-  replaceURI: function(uri) {
-    // Strategy 1: replace the parts of the old uri piecewise.  Often this
-    // works.  In some cases it doesn't.
-    var newuri = this.rewrittenURI(uri);
-    if (!newuri) return false;
-    this.log(NOTE,"Rewriting " + uri.spec + " -> " + newuri.spec + "\n");
-    HTTPSEverywhere.instance.notifyObservers(uri, newuri.spec);
-
-    uri.scheme = newuri.scheme;
-    uri.userPass = newuri.userPass;
-    uri.username = newuri.username;
-    if (newuri.password)
-      uri.password = newuri.password;
-    uri.host = newuri.host;
-    uri.port = newuri.port;
-    uri.path = newuri.path;
-    return true;
-  },
-
 };
 
 const RuleWriter = {
+  addonDir: false,
+
   getCustomRuleDir: function() {
     var loc = "ProfD";  // profile directory
     var file =
@@ -140,21 +122,20 @@ const RuleWriter = {
   },
 
   getRuleDir: function() {
-    var loc = "ProfD";  // profile directory
-    var file =
-      CC["@mozilla.org/file/directory_service;1"]
-      .getService(CI.nsIProperties)
-      .get(loc, CI.nsILocalFile)
-      .clone();
-    file.append("extensions");
-    file.append("https-everywhere@eff.org");
+    if (!this.addonDir)
+      try {
+        // Firefox < 4
+        this.addonDir = CC["@mozilla.org/extensions/manager;1"].
+          getService(CI.nsIExtensionManager).
+          getInstallLocation("https-everywhere@eff.org").
+          getItemFile("https-everywhere@eff.org", "");
+      } catch(e) {
+        // Firefox >= 4 (this should not be reached)
+      }
+    var file = this.addonDir.clone();
     file.append("chrome");
     file.append("content");
     file.append("rules");
-    // Check for existence, if not, create.
-    if (!file.exists()) {
-      file.create(CI.nsIFile.DIRECTORY_TYPE, 0700);
-    }
     if (!file.isDirectory()) {
       // XXX: Arg, death!
     }
@@ -309,27 +290,18 @@ const HTTPSRules = {
     }
   },
 
-  replaceURI: function(uri) {
-    var i = 0;
-    for(i = 0; i < this.rulesets.length; ++i) {
-      if(this.rulesets[i].replaceURI(uri))
-        return true;
-    }
-    return false;
-  },
-
   rewrittenURI: function(uri) {
     var i = 0;
     var newuri = null
-    var rs = this.applicable_rulesets(uri.host);
+    var rs = this.applicableRulesets(uri.host);
     for(i = 0; i < rs.length; ++i) {
-      if ((newuri = rs[i].rewrittenURI(uri)))
+      if ((newuri = rs[i].transformURI(uri)))
         return newuri;
     }
     return null;
   },
 
-  applicable_rulesets: function(host) {
+  applicableRulesets: function(host) {
     // Return a list of rulesets that apply to this host
     var i, tmp, t;
     var results = this.global_rulesets;
@@ -358,7 +330,7 @@ const HTTPSRules = {
     return results;
   },
   
-  should_secure_cookie: function(c) {
+  shouldSecureCookie: function(c) {
     // Check to see if the Cookie object c meets any of our cookierule citeria 
     // for being marked as secure
     //this.log(DBUG, "Testing cookie:");
@@ -367,7 +339,7 @@ const HTTPSRules = {
     //this.log(DBUG, "  domain: " + c.domain);
     //this.log(DBUG, "  rawhost: " + c.rawHost);
     var i,j;
-    var rs = this.applicable_rulesets(c.host);
+    var rs = this.applicableRulesets(c.host);
     for (i = 0; i < rs.length; ++i) {
       var ruleset = rs[i];
       if (ruleset.active) 
