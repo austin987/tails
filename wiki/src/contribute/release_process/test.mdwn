@@ -48,7 +48,7 @@ Check the output for:
 * Check at least IRC and XMPP are working.
 * Check if pidgin doesn't leak to many informations on replying to different
   CTCP requests:
-  * Start T(A)ILS and launch pidgin once done. Connect to an IRC server where you're already on
+  * Start Tails and launch pidgin once done. Connect to an IRC server where you're already on
   * try to /ctcp <T(A)ILS_account_nick> COMMAND
   (for a list of commands, see [this page](http://www.wikkedwire.com/irccommands)).
 
@@ -59,7 +59,7 @@ Check the output for:
  - check output of `iptables -t nat -L -n`
  - try connecting to the Internet after unsetting `$http_proxy` and
    `$HTTP_PROXY` using a piece of software that does not obey the
-   GNOME proxy settings, *and* is not explicitely torified in T(A)ILS:
+   GNOME proxy settings, *and* is not explicitely torified in Tails:
    `unset http_proxy ; unset HTTP_PROXY ; wget http://monip.org`
 * firewall: is IPv6 traffic blocked?
  - check output of `ip6tables -L -n`
@@ -73,11 +73,11 @@ Check the output for:
 * are any local hard-disk partitions mounted or used as swap?
   boot on a (possibly virtual) machine that has a cleartext swap
   partition not managed by LVM. This swap partition must not be used
-  by T(A)ILS.
+  by Tails.
 * is a Live system found on a local hard-disk partition used? boot the
   CD/USB stick you are testing on a (possibly virtual) machine that
-  has a T(A)ILS system copied on a cleartext partition not managed by
-  LVM. The CD/USB ramdisk must use the T(A)ILS system found on the
+  has a Tails system copied on a cleartext partition not managed by
+  LVM. The CD/USB ramdisk must use the Tails system found on the
   CD/USB, and not the one found on the hard disk.
 
 # Claws
@@ -114,12 +114,21 @@ Seahorse GUI and FireGPG:
 # HTP
 
 * disconnect the network cable, set the time to an obviously wrong one
-  (`date --set=12/31/99 23:13:48`), connect the network cable => the
+  (`date --set="Mon, 01 Mar 2000 15:45:34 - 0800"`), connect the network cable => the
   date should be corrected and Tor/Vidalia should start correctly.
   (Note: this currently does not work in the stable branch as HTP is
   not re-done once it has been attempted once.)
 
-# [[smem on shutdown]]
+# smem on shutdown
+
+- check that memlockd and udev-watchdog are running, and that the good
+  device is being watched by the later.
+- FIXME: find a way to check that the needed files are really maped in memory,
+  like by filling it.
+- remove tails' media (usb and cdrom) and check that memory erasement is
+  started.
+
+See [[dedicated page|test/erase_memory_on_shutdown]]
 
 # Misc
 
@@ -130,3 +139,5 @@ Seahorse GUI and FireGPG:
   in working state.
 * Doing an apt-get update and installing random packages.
 * Boot on bare-metal on USB and CD.
+* Try to start with the `truecrypt` option on boot, see if it can be found in
+  the Application -> Accessories menu and that it runs correctly

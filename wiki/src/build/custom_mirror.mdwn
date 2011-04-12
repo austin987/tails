@@ -1,0 +1,31 @@
+[[!meta title="Using a custom Debian mirror to build Tails images"]]
+
+[[!toc levels=2]]
+
+# What?
+
+You may want to use a Debian mirror different from the one
+`live-build` uses by default.
+
+# Why?
+
+1. You want to use a mirror that is faster for you, e.g. one that is
+   in the country you live in, or a local Debian mirror.
+2. You have [[configured squid-deb-proxy|build/squid-deb-proxy]] to
+   only allow access to a given set of domains.
+
+# How?
+
+You need to set options in live-build's configuration file
+(`/etc/live/build.conf`), e.g.:
+
+	LB_MIRROR_BOOTSTRAP="http://ftp.us.debian.org/debian/"
+	LB_MIRROR_BOOTSTRAP_SECURITY="http://security.debian.org/"
+
+	LB_MIRROR_CHROOT="http://ftp.us.debian.org/debian/"
+	LB_MIRROR_CHROOT_SECURITY="http://security.debian.org/"
+
+	LB_MIRROR_BINARY="http://ftp.us.debian.org/debian/"
+	LB_MIRROR_BINARY_SECURITY="http://security.debian.org/"
+
+See the `lb_config(1)` manpage for details.
