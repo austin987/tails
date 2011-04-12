@@ -1,22 +1,134 @@
 [[!meta title="Warning"]]
 
-**FIXME:**
+Even thought we're doing our best to offer you good tools to protect your
+privacy while using a computer, **there is no magic or perfect solution to such
+a complex problem**. Understanding well the limits of such tools is a crucial
+step in, first, deciding whether Tails is the right tool for you, and second,
+helping you making a good use of it.
 
-The most important would be to be clear about what Tails doesn't
-protect you against :
+[[!toc levels=2]]
 
-- Doesn't protect you from a targeted attack against a specific person
-  for example in the case of confirmation attacks, if the two ends of
-  a connection are analysed, if your connection is being monitored or
-  analysed.
-- Doesn't protect you against MitM with fake certificates or if you
-  don't pay enough attention.
-- It makes it clear that you are using Tor and probably Tails. It
-  doesn't make you look like any random Internet user.
-- Doesn't clear the metadata of your images for you (eg. the serial
-  number of your digital camera).
-- Doesn't makes your crappy passwords stronger.
-- Doesn't magically separte your different virtual identities if used
-  in parallel in the same session.
-- Doesn't protect you from a global adversary.
+## Tor exit nodes can eavesdrop on communications
 
+While using Tor, instead of taking a direct route from source to destination,
+data packets on the Tor network take a random pathway through several relays
+that cover your tracks so no observer at any single point can tell where the
+data came from or where it's going.
+
+![A Tor connection usually goes through 3 relays with the last one establishing
+the actual connection to the final
+destination](htw2-tails.png)
+
+The last relay on this circuit, called the exit node, is the one that
+establishes the actual connection to the destination server. As Tor does not,
+and by design cannot, encrypt the traffic between an exit node and the
+destination server, **any exit node is in a position to capture any traffic
+passing through it**. See, [Tor FAQ: Can exit nodes eavesdrop on
+communications?](https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/TorFAQ#CanexitnodeseavesdroponcommunicationsIsntthatbad)
+
+For example, in 2007, a security researcher intercepted thousands of private
+e-mail messages sent by foreign embassies and human rights groups around the
+world by spying on the connections coming out of an exit node he was running.
+See [Wired: Rogue Nodes Turn Tor Anonymizer Into Eavesdropper's
+Paradise.](http://www.wired.com/politics/security/news/2007/09/embassy_hacks).
+
+**To protect yourself from such attacks you should use end-to-end encryption**
+such as TLS, for example by choosing to use HTTPS whenever it's possible.
+Fortunately, Tails includes HTTPS Everywhere, a Firefox extension that switches
+automatically to HTTPS all your communications to a number of major websites.
+See, [EFF: HTTPS Everywhere](https://www.eff.org/https-everywhere).
+
+## It makes it clear that you are using Tor and probably Tails
+
+**Your IPS or your local network administrator** can easily check that you're
+connecting to a Tor relay, and not a normal web server for example.
+
+**The destination server your are contacting through Tor** can know whether your
+communication comes out from a Tor exit node by consulting the publicly
+available list of exit nodes that might contact it. For example using the [Tor
+Bulk Exit List tool](https://check.torproject.org/cgi-bin/TorBulkExitList.py) of
+the Tor Project.
+
+**So using Tails doesn't make your look like any random Internet user.**
+The anonymity provided by Tor and Tails works by trying to make all of their
+users look the same so it's not possible to identify who is who amongst them.
+
+## Man-in-the-middle attacks
+
+A man-in-the-middle attack (MITM) is a form of active eavesdropping in which the
+attacker makes independent connections with the victims and relays messages
+between them, making them believe that they are talking directly to each other
+over a private connection, when in fact the entire conversation is controlled by
+the attacker.
+
+Quoted from [Wikipedia: Man-in-the-middle
+attack](https://secure.wikimedia.org/wikipedia/en/wiki/Man-in-the-middle_attack)
+
+![Illustration of a man-in-the-middle attack](man_in_the_middle.jpg)
+
+While using Tor, man-in-the-middle attacks can still happen between the exit
+node and the destination server. The exit node itself can also act as a
+man-in-the-middle, for an example of this see [MW-Blog: TOR exit-node doing MITM
+attacks](http://www.teamfurry.com/wordpress/2007/11/20/tor-exit-node-doing-mitm-attacks).
+
+**Again, to protect yourself from such attacks you should use end-to-end
+encryption** and while doing so taking extra care at verifying the server
+authenticity.
+
+Usually, this is automatically done throught SSL certificates checked by your
+browser against a given set of recognized certificate authorities. If you get a
+security exception message such as this one you might be victim of a
+man-in-the-middle attack and should not bypass it unless you have another
+trusted way of checking the certificate's fingerprint with the people running
+the service.
+
+![This Connection is Untrusted](ssl_warning.png)
+
+But on top of that the certificate authorities model of trust on Internet is
+susceptible to various methods of compromise. For example, in March 15, 2011,
+Comodo, one of the major SSL certificates company, reported that a user account
+with an affiliate registration authority had been compromised which was used to
+create a new user account that issued nine certificate signing requests. Nine
+certificates for seven domains were issued: mail.google.com, login.live.com,
+www.google.com, login.yahoo.com (three certificates), login.skype.com,
+addons.mozilla.org, and global trustee. See [Comodo: The Recent RA
+Compromise](http://blogs.comodo.com/it-security/data-security/the-recent-ra-compromise/).
+
+This still leaves open the possibility of a man-in-the-middle attack even when
+your browser is trusting an HTTPS connection but this won't affect Tor or Tails
+users more that anybody else on the Internet. Actually, by providing anonymity,
+Tor makes it more difficult to perform a man-in-the-middle attack targeted on a
+specific user with the blessing of a rogue SSL certificate.
+
+Partially quoted from [Wikipedia: Comodo
+Group](https://secure.wikimedia.org/wikipedia/en/wiki/Comodo_Group) and [Tor
+Project: Detecting Certificate Authority compromises and web browser
+collusion](https://blog.torproject.org/blog/detecting-certificate-authority-compromises-and-web-browser-collusion). 
+
+## Confirmation attacks
+
+The Tor design doesn't try to protect against an attacker who can see or measure
+both traffic going into the Tor network and also traffic coming out of the Tor
+network. That's because if you can see both flows, some simple statistics let
+you decide whether they match up.
+
+The way we generally explain it is that Tor tries to protect against traffic
+analysis, where an attacker tries to learn whom to investigate, but Tor can't
+protect against traffic confirmation (also known as end-to-end correlation),
+where an attacker tries to confirm a hypothesis by monitoring the right
+locations in the network and then doing the math.
+
+Quoted from [Tor Project: "One cell is enough to break Tor's
+anonymity"](https://blog.torproject.org/blog/one-cell-enough).
+
+## Doesn't magically separte your different virtual identities
+
+eg. if used in parallel in the same session.
+
+## Doesn't clear the metadata of your images for you
+
+eg. the serial number of your digital camera.
+
+## Doesn't makes your crappy passwords stronger
+
+## Doesn't protect you from a global adversary
