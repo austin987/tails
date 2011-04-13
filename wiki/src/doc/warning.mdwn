@@ -121,14 +121,71 @@ locations in the network and then doing the math.
 Quoted from [Tor Project: "One cell is enough to break Tor's
 anonymity"](https://blog.torproject.org/blog/one-cell-enough).
 
-## Doesn't magically separte your different virtual identities
+## It doesn't clear the metadata of your documents for you
 
-eg. if used in parallel in the same session.
+Numerous files format store hidden data or metadata inside of the files. Text
+processors or PDF files could store the name of the author, the date and time of
+creation of the file, and sometimes even parts of the editing history of the
+file… Those hidden data depend on the file format and the software used.
 
-## Doesn't clear the metadata of your images for you
+Images file formats, like TIFF of JPEG, probably take the prize in this field.
+Those files, created by digital cameras or mobile phones, contain a metadata
+format called EXIF which can include the date, time and sometimes the GPS
+coordinates of the picture, the brand and serial number of the device which took
+it as well as a thumbnail of the original image. Image processing software tend
+to keep those data intact.  Internet is full of cropped or blurred images for
+which the EXIF thumbnail still contains the full original picture.
 
-eg. the serial number of your digital camera.
+**Tails doesn't clear the metadata of your files for you**. Yet. Still it's in
+Tails' design goal to help you do that. For example, Tails already comes with
+[Exiv2](http://exiv2.org/), an image metadata manipulation tool.
 
-## Doesn't makes your crappy passwords stronger
+## Tor doesn't protect you from a global adversary
 
-## Doesn't protect you from a global adversary
+A global passive adversary would be a person or an entity able to monitor at the
+same time the traffic between all the computers in a network. By studying, for
+example, the timing and volume patterns of the different communications across
+the network, it would be statistically possible to identify Tor circuits and
+thus matching Tor users and destination servers.
+
+It is part of Tor's initial thread-off not to address such a threat in order to
+create a low-latency communication service usable for web browsing, Internet
+chat or SSH connections.
+
+For more expert information see [Tor Project: The Second-Generation Onion
+Router](https://svn.torproject.org/svn/projects/design-paper/tor-design.pdf),
+part 3. Design goals and assumptions.
+
+## Tails doesn't magically separate your different virtual identities
+
+It is usually not advisable to use the same Tails session to perform two tasks
+or endorse two virtual identities that you really want to keep separate on from
+another. For example hiding your location to check your email and publishing
+anonymously a document.
+
+First, because Tor tend to reuse the same circuits, for example amongst a same
+browsing session. Since the exit node of a circuit sees knows both the
+destination server (and possibly the content of the communication if not
+encrypted) and the address of the previous relay he received the communication
+from, it makes it easier to correlates the several browsing request as part of a
+same circuit and possibly made by a same user.
+
+Second, in case of a security hole or a misuse in using Tails or one of its
+application, information about your session could be leaked. That could reveal
+that the same person what behind the various actions made during the session.
+
+**The solution to both threats is to shutdown and restart Tails** if you really
+want to isolate better your different virtual identities. Vidalia's "New
+Identity" button forces Tor to use new circuits, thus addressing the first
+threat, but not the second one.
+
+## It doesn't make your crappy passwords stronger
+
+Tor allows you to be anonymous online and Tails to leave no trace on the
+computer your using. But again, **neither of both are magic spells for computer
+security**.
+
+If your use weak passwords they can be guessed by brute-force attacks with or
+without Tails in the same way. To know if your passwords are weak and learn good
+practices to create better password, you can read [Wikipedia: Weak
+Passwords](https://secure.wikimedia.org/wikipedia/en/wiki/Weak_password#Examples_of_weak_passwords).
