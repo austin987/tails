@@ -10,14 +10,13 @@ helping you making a good use of it.
 
 ## Tor exit nodes can eavesdrop on communications
 
-While using Tor, instead of taking a direct route from source to destination,
-data packets on the Tor network take a random pathway through several relays
-that cover your tracks so no observer at any single point can tell where the
-data came from or where it's going.
+Instead of taking a direct route from source to destination, communications
+using the Tor network take a random pathway through several Tor relays that
+cover your tracks. So no observer at any single point can tell where the data
+came from or where it's going.
 
 ![A Tor connection usually goes through 3 relays with the last one establishing
-the actual connection to the final
-destination](htw2-tails.png)
+the actual connection to the final destination](htw2-tails.png)
 
 The last relay on this circuit, called the exit node, is the one that
 establishes the actual connection to the destination server. As Tor does not,
@@ -33,10 +32,11 @@ See [Wired: Rogue Nodes Turn Tor Anonymizer Into Eavesdropper's
 Paradise.](http://www.wired.com/politics/security/news/2007/09/embassy_hacks).
 
 **To protect yourself from such attacks you should use end-to-end encryption**
-such as TLS, for example by choosing to use HTTPS whenever it's possible.
-Fortunately, Tails includes HTTPS Everywhere, a Firefox extension that switches
-automatically to HTTPS all your communications to a number of major websites.
-See, [EFF: HTTPS Everywhere](https://www.eff.org/https-everywhere).
+between you and the website/service, such as TLS, for example by choosing to
+use HTTPS whenever it's possible.  Fortunately, Tails includes HTTPS
+Everywhere, a Firefox extension that switches automatically to HTTPS all your
+communications to a number of major websites.  See, [EFF: HTTPS
+Everywhere](https://www.eff.org/https-everywhere).
 
 ## It makes it clear that you are using Tor and probably Tails
 
@@ -76,9 +76,10 @@ encryption** and while doing so taking extra care at verifying the server
 authenticity.
 
 Usually, this is automatically done throught SSL certificates checked by your
-browser against a given set of recognized certificate authorities. If you get a
-security exception message such as this one you might be victim of a
-man-in-the-middle attack and should not bypass it unless you have another
+browser against a given set of recognized [certificate
+authorities](https://secure.wikimedia.org/wikipedia/en/wiki/Certificate_authority).
+If you get a security exception message such as this one you might be victim of
+a man-in-the-middle attack and should not bypass it unless you have another
 trusted way of checking the certificate's fingerprint with the people running
 the service.
 
@@ -87,16 +88,16 @@ the service.
 But on top of that the certificate authorities model of trust on Internet is
 susceptible to various methods of compromise. For example, in March 15, 2011,
 Comodo, one of the major SSL certificates company, reported that a user account
-with an affiliate registration authority had been compromised which was used to
-create a new user account that issued nine certificate signing requests. Nine
-certificates for seven domains were issued: mail.google.com, login.live.com,
-www.google.com, login.yahoo.com (three certificates), login.skype.com,
-addons.mozilla.org, and global trustee. See [Comodo: The Recent RA
+with an affiliate registration authority had been compromised. It was then used
+to create a new user account that issued nine certificate signing requests for
+seven domains: mail.google.com, login.live.com, www.google.com, login.yahoo.com
+(three certificates), login.skype.com, addons.mozilla.org, and global trustee.
+See [Comodo: The Recent RA
 Compromise](http://blogs.comodo.com/it-security/data-security/the-recent-ra-compromise/).
 
 This still leaves open the possibility of a man-in-the-middle attack even when
 your browser is trusting an HTTPS connection but this won't affect Tor or Tails
-users more that anybody else on the Internet. Actually, by providing anonymity,
+users more than anybody else on the Internet. Actually, by providing anonymity,
 Tor makes it more difficult to perform a man-in-the-middle attack targeted on a
 specific user with the blessing of a rogue SSL certificate.
 
@@ -148,7 +149,7 @@ example, the timing and volume patterns of the different communications across
 the network, it would be statistically possible to identify Tor circuits and
 thus matching Tor users and destination servers.
 
-It is part of Tor's initial thread-off not to address such a threat in order to
+It is part of Tor's initial trade-off not to address such a threat in order to
 create a low-latency communication service usable for web browsing, Internet
 chat or SSH connections.
 
@@ -164,20 +165,21 @@ another. For example hiding your location to check your email and publishing
 anonymously a document.
 
 First, because Tor tend to reuse the same circuits, for example amongst a same
-browsing session. Since the exit node of a circuit sees knows both the
-destination server (and possibly the content of the communication if not
-encrypted) and the address of the previous relay he received the communication
-from, it makes it easier to correlates the several browsing request as part of a
-same circuit and possibly made by a same user.
+browsing session. Since the exit node of a circuit knows both the destination
+server (and possibly the content of the communication if not encrypted) and the
+address of the previous relay he received the communication from, it makes it
+easier to correlates the several browsing request as part of a same circuit and
+possibly made by a same user. If your facing a global adversary as described
+above, it might then also be in position to do this correlation.
 
 Second, in case of a security hole or a misuse in using Tails or one of its
 application, information about your session could be leaked. That could reveal
-that the same person what behind the various actions made during the session.
+that the same person was behind the various actions made during the session.
 
-**The solution to both threats is to shutdown and restart Tails** if you really
-want to isolate better your different virtual identities. Vidalia's "New
-Identity" button forces Tor to use new circuits, thus addressing the first
-threat, but not the second one.
+**The solution to both threats is to shutdown and restart Tails** every time
+you're using a new identity, if you really want to isolate them better.
+Vidalia's "New Identity" button forces Tor to use new circuits, thus addressing
+the first threat, but not the second one.
 
 ## It doesn't make your crappy passwords stronger
 
