@@ -159,9 +159,12 @@ sub get_new_entries {
     my $base_url = shift;
     my $since_dt = shift;
 
+    my $separator = '';
+    $separator = '/' unless $base_url =~ m{/\z}xms;
+
     my @try_urls = (
-        $base_url . '/index.' . current_lang() . '.atom',
-        $base_url . '/index.en.atom',
+        $base_url . $separator . 'index.' . current_lang() . '.atom',
+        $base_url . $separator . 'index.en.atom',
     );
 
     my $feed_str;
