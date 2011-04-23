@@ -2,6 +2,8 @@
 
 <div id="page-download">
 
+[[!toc levels=1]]
+
 <div id="first_time_user">
 
 	<h1>0. First time user?</h1>
@@ -85,11 +87,28 @@
 
 <div id="verify">
 
-	<h1>2. Verify the downloaded image integrity</h1>
+	<h1>2. Verify the ISO image</h1>
 
-	<p>It is important to check the integrity of the ISO image you
-	downloaded to make sure that it is genuine and that the download went
-	well.</p>
+	<p>It is important to check the [[!wikipedia Data_integrity
+	desc="integrity"]] of the ISO image you downloaded to make sure that the
+	download went well.</p>
+
+	<p><strong>Warning: the following techniques doesn't provide you with a
+	strong way of checking the ISO image [[!wikipedia Authentication
+	desc="authenticity"]] and making 100% sure you downloaded a genuine
+	Tails.</strong></p>
+
+	<p>Those techniques rely on standard HTTPS and [[!wikipedia
+	Certificate_authority desc="certificate authorities"]] to make you trust
+	the content of this website. But, [[as explained on our warning
+	page|doc/warning#index3h2]], you could still be victim of a
+	man-in-the-middle attack while using HTTPS. On this website as much as
+	on any other.</p>
+
+	<p>It is anyway a good thing to check the ISO image integrity first. We
+	will propose you after that a more advanced technique to <a
+	href="#authenticity-check">check the authenticity of the ISO
+	image</a>.</p>
 
 	<h2>Using the command line (Linux and Mac)</h2>
 
@@ -111,7 +130,7 @@
 
 	<pre>tails-i386-0.7.iso: OK</pre>
 
-	<h2>Using Firefox (all operating system)</h2>
+	<h2>Using Firefox (all operating systems)</h2>
 
 	<p>Install the CheckIt extension for Firefox available <a
 	href="https://addons.mozilla.org/en-US/firefox/addon/checkit/">here</a>
@@ -154,6 +173,73 @@ where the <code>.iso</code> and <code>.asc</code> files are:
 <pre>
 gpg --verify tails*.iso.asc
 </pre>
+
+	<h2><a name="authenticity-check"></a>So how can I check better the ISO
+	image authenticity?</h2>
+
+	<p>If you want to be extra cautious and authenticate a Tails ISO image
+	in a stronger way than what standard HTTPS offers you, you will need to
+	use the OpenPGP Web of Trust.</p>
+
+	<p>One of the inherent problems of standard HTTPS is that the trust we
+	usually put on a website is defined by certificate authorities: a
+	hierarchical and closed set of companies and governmental institutions
+	approved by web vendors. This model of trust has long been critized and
+	proved several times to be vulnerable to attacks [[as explained on our
+	warning page|doc/warning#index3h2]].</p>
+
+	<p>We believe instead that users should be given the final say when
+	trusting a website, and that designation of trust should be done on the
+	basis of human interaction.</p>
+
+	<p>The OpenPGP [[!wikipedia Web_of_Trust desc="Web of Trust"]] is a
+	decentralized trust model based on OpenPGP keys. OpenPGP is a standard
+	for data encryption and decryption that provides cryptographic privacy
+	and authentication through the use of key owned by its users.</p>
+
+	<p>All Tails ISO image are signed by our OpenPGP key and finding a way
+	of trusting Tails' key could allow you to authenticate better the ISO
+	image you downloaded by verifying this signature. Let's see that with an
+	example.</p>
+
+	<p><em>You're a friend of Alice and really trust her way of managing
+	OpenPGP keys. You're trusting Alice's key.</em></p>
+
+	<p><em>Furthermore, Alice met Bob, a Tails developper, in a conference,
+	and signed Bob's key. Alice is trusting Bob's key.</em></p>
+
+	<p><em>Bob is a Tails developper who directly owns the Tails' key. Bob
+	fully trusts Tails' key.</em></p>
+
+	<p>This scenario creates a trust path from you to Tails' key that could
+	allow you to trust Tails' key without having to depend on certicate
+	authorities.</p>
+
+	<p>This trust model is not perfect either and requires both caution and
+	intelligent supervision by users. The technical details of creating,
+	managing and trusting OpenPGP keys is outside of the scope of this
+	document.</p>
+
+	<p><strong>If you never used OpenPGP before</strong> and since the Web
+	of Trust is actually based on human relationships and real-life
+	interactions you will need to start establishing contacts with people
+	knowledgeable about OpenPGP and start building trust relationships in
+	order to find a trust path to Tails' key. You could start by contacting
+	a local [[!wikipedia Linux_User_Group desc="%s"]] or other Tails
+	enthousiasts near you.</p>
+
+	<p>For further technical reading you can check:</p>
+	<ul>
+	  <li>[[!wikipedia GnuPG desc="Wikipedia: %s"]], a free OpenPGP
+	  software</li>
+	  <li><a href="http://www.apache.org/dev/openpgp.html">Apache: How To
+	  OpenPGP</a></li>
+	  <li><a href="http://www.debian.org/events/keysigning">Debian:
+	  Keysigning</a>, a tutorial on sign keys of other people</li>
+	  <li><a href="http://www.rubin.ch/pgp/weboftrust.en.html">rubin.ch:
+	  Explanation of the web of trust of PGP</a></li>
+	</ul>
+
 </p>
 
 	<h2>FIXME: What to do if the image is bad?</h2>
