@@ -114,12 +114,19 @@ Seahorse GUI and FireGPG:
 # HTP
 
 * disconnect the network cable, set the time to an obviously wrong one
-  (`date --set=12/31/99 23:13:48`), connect the network cable => the
+  (`date --set="Mon, 01 Mar 2000 15:45:34 - 0800"`), connect the network cable => the
   date should be corrected and Tor/Vidalia should start correctly.
   (Note: this currently does not work in the stable branch as HTP is
   not re-done once it has been attempted once.)
 
 # smem on shutdown
+
+- check that memlockd and udev-watchdog are running, and that the good
+  device is being watched by the later.
+- FIXME: find a way to check that the needed files are really maped in memory,
+  like by filling it.
+- remove tails' media (usb and cdrom) and check that memory erasement is
+  started.
 
 See [[dedicated page|test/erase_memory_on_shutdown]]
 
@@ -132,3 +139,5 @@ See [[dedicated page|test/erase_memory_on_shutdown]]
   in working state.
 * Doing an apt-get update and installing random packages.
 * Boot on bare-metal on USB and CD.
+* Try to start with the `truecrypt` option on boot, see if it can be found in
+  the Application -> Accessories menu and that it runs correctly

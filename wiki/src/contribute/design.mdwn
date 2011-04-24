@@ -603,7 +603,7 @@ unionfs/aufs ramdisk branch.
 This was
 [discussed](http://archives.seul.org/or/talk/Jan-2011/msg00137.html)
 on the or-talk mailing-list, and a new system that mitigates such
-attacks has been implemented to Tails development branch.
+attacks is part of Tails 0.7 and newer.
 
 This specification must warn about such matters.
 
@@ -622,7 +622,15 @@ The impact of HTTP keepalive and possible solutions are [being
 discussed](http://thread.gmane.org/gmane.linux.distributions.tails.devel/52)
 on the tails-dev mailing-list.
 
-### 2.7.3 Miscellaneous
+### 2.7.3 Mounting of filesystems stored on removable devices
+
+Some attacks recently put under the spotlights exploit vulnerabilities
+in the desktop software stack that triggers automatic mounting,
+display and files preview of filesystems stored on removable devices.
+
+This specification must warn about such matters.
+
+### 2.7.4 Miscellaneous
 
 - FireWire is known to allow read access to the system memory, at
   least when such devices are allowed to use DMA (Linux: `options
@@ -728,10 +736,7 @@ kernel security feature than the stock Debian kernel.
 - [palimpsest](http://git.gnome.org/cgit/gnome-disk-utility/) from the
   gnome-disk-utility project allows, among other disk management
   features, to create LUKS-encrypted devices in a user-friendly
-  interface. (Note: palimpsest is currently shipped in the development
-  branch of Tails only, since it is not compatible with Debian Lenny
-  — the base operating system for every published Tails stable
-  releases until now.)
+  interface.
 - [GnuPG](http://gnupg.org): complete and free implementation of the
   OpenPGP standard.
 - [Seahorse](http://www.gnome.org/projects/seahorse): GNOME front end
@@ -749,7 +754,7 @@ kernel security feature than the stock Debian kernel.
   [Gimp](http://www.gimp.org/), [Inkscape](http://www.inkscape.org/),
   [Scribus](http://www.scribus.net),
   [Audacity](http://audacity.sourceforge.net/),
-  [XSane](http://www.xsane.org/) and
+  [Simple Scan](https://launchpad.net/simple-scan) and
   [SANE](http://www.sane-project.org/): media and text production
   software.
 - [Exiv2](http://www.exiv2.org): EXIF/IPTC metadata manipulation tool.
@@ -871,21 +876,7 @@ live-boot) is removed. Also, live-boot's `swapon` option is not set.
 
 ### 3.6.9 Host system RAM
 
-**Beware!** This feature is currently known to be sometimes
-[[buggy|bugs/buggy_smem_on_shutdown]] when running from CD.
-
-In order to protect against memory recovery such as cold boot attack,
-the system RAM is
-securely wiped when Tails is being shutdown. The software doing this
-is smem, part of the [secure-delete](http://www.thc.org/) package.
-Since this process can take a while the user can leave the computer
-and let it finish on its own after removing the boot medium, or simply
-turn it off if he or she is not worried about this attack: if Tails
-was booted from a CD it is ejected before the memory wiping is
-started, and if it was booted from a USB drive it can be removed as
-soon as the memory wiping has been started.
-
-- [[!tails_live-boot_gitweb debian/live-boot.init]]
+[[!inline pages="contribute/design/memory_erasure" raw=yes]]
 
 ### 3.6.10 Host system disks and partitions
 
@@ -896,8 +887,11 @@ user. The Debian Live persistence feature is disabled by passing
 
 - [[!tails_gitweb config/amnesia]]
 
-*Nota bene*: removable drives are automatically mounted until Tails
-0.6.1. This behavior is disabled in the development branch.
+### 3.6.11 Filesystems stored on removable devices
+
+Removable drives auto-mounting is disabled in Tails 0.7 and newer.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/share/amnesia/gconf/apps_nautilus.xml]]
 
 ### 3.6.11 Secure erasure of files and free disk space
 
@@ -936,11 +930,12 @@ password-less sudo and are [[working on better
 solutions|todo/better_root_access_control]] to enhance security
 without decreasing the user freedom.
 
-As a first step the next major Tails release will stop granting `sudo`
-privileges to the `amnesia` user; a root console will be available for
-two minutes after boot: this leaves the user 2 minutes to set a root
-password. Unless this is done before this delay has expired, the root
-console will be disabled, and no root access will be possible afterwards.
+As a first step one of the next major Tails releases will stop
+granting `sudo` privileges to the `amnesia` user; a root console will
+be available for two minutes after boot: this leaves the user 2
+minutes to set a root password. Unless this is done before this delay
+has expired, the root console will be disabled, and no root access
+will be possible afterwards.
 
 ### 3.6.13 Iceweasel
 
@@ -969,11 +964,11 @@ extension protects against many tracking possibilities by
 removing most ads. The [FireGPG](http://getfiregpg.org/) plugin allows
 users to use GnuPG inside websites such as webmails.
 
-Tails development branch additionally has the [HTTPS
+Tails ships the [HTTPS
 Everywhere](https://www.eff.org/https-everywhere) extension that
 forces HTTPS usage for requests to a number of major websites.
 
-The development branch also ships the
+Tails also ships the
 [FoxyProxy](https://addons.mozilla.org/fr/firefox/addon/2464/)
 extension that:
 
@@ -983,15 +978,12 @@ extension that:
 - could help [[fixing Iceweasel's FTP support|todo/FTP_in_Iceweasel]].
 
 Thanks to Torbutton, Iceweasel is configured so that Tails browser
-fingerprint appears uniformly among Torbutton users. Until Tails
-0.6.1, EN-US locale spoofing was disabled, which partitioned Tails
-users into eight sets; this behavior has been reversed in the
-development branch.
+fingerprint appears uniformly among Torbutton users. Tails enables
+Torbutton's EN-US locale spoofing to avoid partitioning Tails
+users into per-language anonymity sets.
 
 Torbutton is also configured to spoof the timezone settings the same
-way as the Tor Browser Bundle does, i.e. to `UTC+00:00`. Note that
-this is a development branch novelty as Tails relies on Torbutton's
-protection against location leakage until 0.6.1.
+way as the Tor Browser Bundle does, i.e. to `UTC+00:00`.
 
 The Iceweasel config is poorly commented but the commit messages in
 Git history explains
@@ -1042,12 +1034,10 @@ configured to use the keys.indymedia.org keyserver since:
   Tor hidden service;
 - it is well-synchronized with the HKP keyservers pool.
 
-GPG itself is configured to connect to this keyserver over a TLS
-encrypted tunnel (`hkps://`). On the other hand Seahorse [[does not
-support hkps|bugs/seahorse_does_not_support_hkps]] so it is using
-cleartext `hkp://` instead. FireGPG is using plaintext `hkp://` until
-Tails 0.6.1, whereas the development branch has switched to
-`hkps://`.
+GPG itself and FireGPG are configured to connect to this keyserver
+over a TLS encrypted tunnel (`hkps://`). On the other hand Seahorse
+[[does not support hkps|bugs/seahorse_does_not_support_hkps]] so it is
+using cleartext `hkp://` instead.
 
 When a hkps-capable front end is used, the keyserver is currently
 authenticated thanks to the CaCert X.509 certification authority.
