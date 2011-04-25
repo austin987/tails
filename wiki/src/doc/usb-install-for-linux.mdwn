@@ -1,21 +1,68 @@
 [[!meta title="Installing onto a USB stick, for Linux"]]
 
-[[!toc levels=2]]
+[[!toc levels=1]]
 
-Note that the method of installing Tails onto a USB stick is pretty crude at
-the moment (a more intuituve way is planned). If you do not know precisely what
-the things mentioned below mean it is recommended to stop now as you otherwise
-might risk overwriting any present hard drives. Proceed at your own discretion!
+**Warning!** If at some point you are not sure about a device name it is
+recommended to stop proceeding otherwise **you might risk overwriting any hard
+drive on the system**. Proceed at your own discretion! We admit that this method
+is pretty crude at the moment and we are working on a more intuitive one.
 
-1st method: from another running Tails Live CD or USB
+1st method: from an ISO image
+=============================
+
+If you [[downloaded|download]] an ISO image (the source), use this method to
+create a bootable USB stick (the destination) from it.
+
+### Step 1: Find out the name of the destination USB stick
+
+The device name should be something like `/dev/sdb`, `/dev/sdc`, etc.
+
+If you're not sure about it's precise name, open the log file viewer from
+*Applications* → *System Tools* → *Log File Viewer* and click on the `messages`
+file in the left column.
+
+Unplug and plug back the destination USB stick: some new lines should appear in
+bold at the end of the file. Search in those lines for the first occurrence of a
+`removable disk` named `sd`<em>something</em>.
+
+In the example on this screenshot the destination USB stick was named `sdc`
+and so the device name would be `/dev/sdc`. Yours could de different.
+
+![Logs containing [sdc]: "Attached SCSI removable
+disk"](usb-install-for-linux/destination-usb.png)
+
+### Step 2: Do the copy from the terminal.
+
+Open a terminal by going in *Applications* → *Accessories* → *Terminal* and
+issue the following command, replacing `[tails.iso]` by the path to your Tails
+image and `[destination]` by the name found in step 1.
+
+	cat [tails.iso] > /dev/[destination] && sync
+
+If you are not sure about the path to your ISO image or get a "No such file or
+directory" error you can insert the correct path in the command by first typing
+*cat * and then dragging and dropping the icon of the ISO image on the terminal
+before typing the rest of the command.
+
+You could get something like this:
+
+    cat '/home/amnesia/Desktop/tails-0.6.2.iso' > /dev/sdc && sync
+
+### Step 3: Press enter and wait.
+
+If you don't see any error message, Tails is being copied onto the key. The
+whole process might take a while, from a few minutes to more than an hour. Be
+patient…
+
+2nd method: from another running Tails Live CD or USB
 =====================================================
 
-If you are already able to run Tails from a CD or a USB stick (the source),
-use this method to clone it onto another USB stick (the destination).
+If you are already able to run Tails from a CD or a USB stick (the source), use
+this method to clone it onto another USB stick (the destination).
 
-### Boot Tails from the source CD or USB stick.
+### Step 1: Boot Tails from the source CD or USB stick.
 
-### Find out the device name of the source Tails.
+### Step 2: Find out the device name of the source Tails.
 
 <!--
 FIXME: All these steps (both in 3 and 4) would be a lot easier using *Disk
@@ -30,118 +77,63 @@ If you're running Tails from a CD the device name should be `/dev/cdrom`.
 If you're running Tails from a USB stick, the device name should be something
 like `/dev/sdb`, `/dev/sdc`, etc.
 
-If you're not sure about it's precise name:
+If you're not sure about it's precise name, open the log file viewer from
+*Applications* → *System Tools* → *Log File Viewer* and click on the `messages`
+file in the left column.
 
-Open the log file viewer from *Applications* → *System Tools* → *Log File
-Viewer*.
-
-In the `messages` file, search for the first occurrence of a `removable disk`
-named `sd`<em>something</em>. If you only have your Tails key plugged it
+Search for the first occurrence of a `removable disk` named
+`sd`<em>something</em>. If you only have your Tails USB stick plugged in it
 should be the right one.
 
 In the example on this screenshot the source USB stick was named `sdb` and so
 the device name would be `/dev/sdb`. Yours could be different.
 
-![Logs containing "[sdb]: Attached SCSI removable disk"](usb-install-for-linux/source-usb.png)
+![Logs containing "[sdb]: Attached SCSI removable
+disk"](usb-install-for-linux/source-usb.png)
 
-### Find out the device name of the destination USB stick.
+### Step 3: Find out the device name of the destination USB stick.
 
-Open the `messages` file from the log file viewer again in *Applications* →
-*System Tools* → *Log File Viewer*.
+The device name should be something like `/dev/sdb`, `/dev/sdc`, etc.
 
-Unplug and plug back the destination USB stick: some new lines should appear in
-bold at the end of the file. They correspond to you plugging it. Find how was
-the USB stick named and deduce the device name from it.
+If you're not sure about it's precise name, follow the step 1 of the 1st method.
 
-In the example on this screenshot the destination USB stick was named `sdc` and
-so the device name would be `/dev/sdc`. Yours could de different.
-
-![Logs containing [sdc]: "Attached SCSI removable disk"](usb-install-for-linux/destination-usb.png)
-
-### Copy the source Tails onto the destination USB stick.
+### Step 4: Copy the source Tails onto the destination USB stick.
 
 Open a terminal by going in *Applications* → *Accessories* → *Terminal* and
-issue the two following commands, replacing `[source]` by the name found in step
-2 and `[destination]` by the name found in step 3.
+issue the following command, replacing `[source]` by the name found in step 2
+and `[destination]` by the name found in step 3.
 
-    cat /dev/[source] > /dev/[destination]
-    sync
+    cat /dev/[source] > /dev/[destination] && sync
 
-In the example on the screenshots the commands would be:
+In the example from the screenshots the command would be:
 
-    cat /dev/sdb > /dev/sdc
-    sync
+    cat /dev/sdb > /dev/sdc && sync
 
-### Press enter and wait.
+### Step 5: Press enter and wait.
 
 If you don't see any error message, Tails is being copied onto the key. The
 whole process might take a while, from a few minutes to more than a hour. Be
 patient…
 
-### Troubleshooting.
+Troubleshooting
+===============
 
-If you get this error message:
+### cat: /dev/sdx: No such file or directory
 
-    cat: /dev/sdx: No such file or directory
+Then you surely have committed a mistake in the device names.
 
-Then you surely have committed a mistake either in step 2 or 3 and thus used a
-wrong device name in step 4.
+### cat: /dev/sdc: Permission denied
 
-If you get this error message:
+You might also have committed a mistake in the device names, so please
+double-check them. If you're sure about the device names, this could be a
+permission problem and you could need to gain root privileges before running the
+command in the terminal. That could be:
 
-    cat: /dev/sdc: Permission denied
+    sudo su -
+    cat [tails.iso] > /dev/[destination] && sync
 
-You might also have committed a mistake either in step 2 or 3, so please
-double-check. If you're sure about your device names this could be a permission
-problem and you would need to gain root privileges before running step 4. That
-could be :
-
-    cat /dev/[source] > /dev/[destination]
-    sync
-
-2nd method: from an ISO image
-=============================
-
-If you [[downloaded|download]] an ISO image (the source), use this method to
-create a bootable USB stick from it (the destination). This method implies using
-Linux and possibly the Gnome Desktop environment.
-
-### Find out the name of the destination USB stick
-
-Follow step 3 of the 1st method.
-
-### Do the copy from the terminal.
-
-Open a terminal by going in *Applications* → *Accessories* → *Terminal* and
-issue the two following command, replacing [tails.iso] by the path to your
-Tails image and *destination* by the name found in step 1.
-
-	cat [tails.iso] > /dev/[destination]
-	sync
-
-If you are not sure about the path to your ISO image or get a "No such file or
-directory" error you can insert the correct path in the command by first typing
-*cat * and then dragging and dropping the icon of the ISO image on the terminal
-before typing the rest of the command.
-
-You could get something like this :
-
-    cat '/home/amnesia/Desktop/tails-0.6.2.iso' > /dev/sdc && sync
-
-### Press enter and wait.
-
-If you don't see any error message, Tails is being copied onto the key. The
-whole process might take a while, from a few minutes to more than a hour. Be
-patient…
-
-### Troubleshooting.
-
-See also the troubleshooting from the 1st method.
-
-If you get this error message:
-
-    cat: tails.iso: No such file or directory
+### cat: tails.iso: No such file or directory
 
 Then you surely have committed a mistake on the path to your ISO image in step
-3.
+2 of the 2nd method.
 
