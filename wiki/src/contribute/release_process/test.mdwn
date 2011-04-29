@@ -113,22 +113,31 @@ Seahorse GUI and FireGPG:
 
 # HTP
 
-* disconnect the network cable, set the time to an obviously wrong one
-  (`date --set="Mon, 01 Mar 2000 15:45:34 - 0800"`), connect the network cable => the
-  date should be corrected and Tor/Vidalia should start correctly.
-  (Note: this currently does not work in the stable branch as HTP is
-  not re-done once it has been attempted once.)
+1. `sudo rm /var/lib/live/htp*`
+2. disconnect the network cable
+3. set the time to an obviously wrong one :
 
-# smem on shutdown
+           date --set="Mon, 01 Mar 2000 15:45:34 - 0800"
 
-- check that memlockd and udev-watchdog are running, and that the good
+4. connect the network cable
+
+=> the date should be corrected and Tor/Vidalia should start
+correctly. Except it does not work currently as the queried servers'
+SSL certificates are invalid if the date is too much wrong
+
+=> also test with a slightly less wrong date, which is supposed to
+work already.
+
+# erase memory on shutdown
+
+- check that `memlockd` and `udev-watchdog` are running, and that the right
   device is being watched by the later.
-- FIXME: find a way to check that the needed files are really maped in memory,
-  like by filling it.
-- remove tails' media (usb and cdrom) and check that memory erasement is
-  started.
+- remove Tails' media (USB and cdrom) and check that the memory
+  erasure process is started (`Loading new kernel`, at least).
 
-See [[dedicated page|test/erase_memory_on_shutdown]]
+Testing that the needed files are really mapped in memory, and the
+erasing process actually works, involves slightly more complicated
+steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # Misc
 
@@ -139,5 +148,6 @@ See [[dedicated page|test/erase_memory_on_shutdown]]
   in working state.
 * Doing an apt-get update and installing random packages.
 * Boot on bare-metal on USB and CD.
+* Boot and check basic functionality is working for every supported language.
 * Try to start with the `truecrypt` option on boot, see if it can be found in
   the Application -> Accessories menu and that it runs correctly
