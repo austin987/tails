@@ -48,8 +48,15 @@ elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
       ${@}
 fi
 
+install -d config/chroot_local-includes/etc/amnesia/
+
+# environment
+TAILS_WIKI_SUPPORTED_LANGUAGES="$(ikiwiki-supported-languages ikiwiki.setup)"
+[ -n "$TAILS_WIKI_SUPPORTED_LANGUAGES" ] || exit 16
+echo "TAILS_WIKI_SUPPORTED_LANGUAGES='${TAILS_WIKI_SUPPORTED_LANGUAGES}'" \
+   >> config/chroot_local-includes/etc/amnesia/environment
+
 # version
-mkdir -p config/chroot_local-includes/etc/amnesia/
 echo "${AMNESIA_FULL_VERSION}" > config/chroot_local-includes/etc/amnesia/version
 if git rev-list HEAD 2>&1 >/dev/null; then
    git rev-list HEAD | head -n 1 >> config/chroot_local-includes/etc/amnesia/version
