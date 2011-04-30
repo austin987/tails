@@ -37,9 +37,59 @@ can stop supporting them.
 > are shipping it. Not sure what to decide here. First solution seems the best
 > but requires some more work... --bertagaz
 
-=> [[!taglink todo/discuss]] what we want to do.
+>> Update: Debian will stop shipping the -686 flavour as of 2.6.39
+>> (reference: [Ben's
+>> blog](http://womble.decadent.org.uk/blog/upcoming-changes-in-debian-linux-packages-for-i386.html)).
+>> When we start shipping such kernels, either we'll ship -486 until
+>> non-PAE systems die, or we'll ship both -686-pae and -486 *and*
+>> we'll have the bootloader autodetect the most appropriate one
+>> depending on what the kernel supports. See bellow for the current
+>> state of our research.
 
 # Resources
 
 - http://lists.debian.org/debian-devel/2010/11/msg00216.html
 - [[!debbug 589579]]
+
+## Selecting the kernel depending on hardware capabilities
+
+The HDT (hardware detection tool) syslinux module
+([homepage](http://www.hdt-project.org/), [page on syslinux
+wiki](http://syslinux.zytor.com/wiki/index.php/Hdt_(Hardware_Detection_Tool)))
+has code that might help supporting this; it's been shipped in
+mainline syslinux for a while. On the other hand does *not* offer any
+kind of feature that can be used to parameterized the boot menu.
+
+Debian multi-arch installer's syslinux menu autodetects
+amd64-compatible hardware and pre-selects the right default kernel.
+Seems like it uses the `default64` menu keyword (see debian-installer
+Git repository). This does not allow to select a kernel depending on
+PAE support.
+
+Other COM32 modules shipped with syslinux might be better suited for
+our specific needs. See especially `ifcpu.c32`; according to its
+source code, it can "run one command if system match some CPU
+features, another if it doesn't" and is supposed to be used
+e.g. like this:
+
+	label ifcpu
+	    com32 ifcpu.c32
+	    append pae -- boot_entry_1 -- boot_entry_2
+
+	label boot_entry_1
+	    kernel vmlinuz_entry1
+	    append ...
+
+	label boot_entry_2
+	    kernel vmlinuz_entry2
+	    append ...
+
+... which apparently would suit our needs.
+
+The `ifcpu64.c32`
+[module](http://syslinux.zytor.com/wiki/index.php/Ifcpu64.c32) seems
+to provide the best of both worlds, allowing to do different things
+for 64-bit hardware, 32-bit hardware with PAE support and 32-bit
+hardware without PAE.
+
+We should now [[!taglink todo/test]] this.

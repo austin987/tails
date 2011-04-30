@@ -11,7 +11,7 @@ body{font-size:13px;line-height:1.5}h1,h2,h3,h4,h5,h6{position:relative}h1,h2{li
 /* table */
 table{border-collapse:collapse;border:solid 1px #AAAAAA;position:relative;margin-top:18px}th,td{line-height:18px;padding:9px 18px 8px 0}thead th,thead td{padding-top:7px}tfoot th,tfoot td{padding-bottom:8px}tbody th,tbody td,tfoot th,tfoot td{border-top:solid 1px #AAAAAA} th:first-child,td:first-child{padding-left:0}th:last-child,td:last-child{padding-right:0}tr:nth-child(even) td{}tbody tr:nth-child(odd) th,tbody tr:nth-child(odd) td{background:rgba(0, 0, 0, 0.035)}caption{top:5px;margin-bottom:18px}
 /* form */
-form{overflow:auto}legend{padding-bottom:18px}label{width:100%;position:relative;top:5px;margin-bottom:18px;line-height:18px;display:block}input[type="text"],input[type="password"],input[type="select"],input[type="search"]{width:100%;margin-bottom:-1px;display:block}input[type="radio"]{top:-1px;margin:0 4px 3px 1px}input[type="checkbox"]{top:-2px;margin:0 4px 3px 1px}input[type="file"]{margin:0px 6px 3px 6px}input[type="submit"],input[type="reset"],input[type="button"]{position:relative;top:5px;margin-bottom:18px}select{display:block;margin:0px}textarea{width:99%;line-height:18px;margin-bottom:-2px;display:block;clear:left;overflow:auto}
+form{overflow:auto}legend{padding-bottom:18px}label{width:100%;position:relative;top:5px;margin-bottom:18px;line-height:18px;display:block}input[type="text"],input[type="password"],input[type="select"],input[type="search"]{width:98%;margin-bottom:-1px;display:block}input[type="radio"]{top:-1px;margin:0 4px 3px 1px}input[type="checkbox"]{top:-2px;margin:0 4px 3px 1px}input[type="file"]{margin:0px 6px 3px 6px}input[type="submit"],input[type="reset"],input[type="button"]{position:relative;top:5px;margin-bottom:18px}select{display:block;margin:0px}textarea{width:99%;line-height:18px;margin-bottom:-2px;display:block;clear:left;overflow:auto}
 
 /*
 -------------------  T(A)ILS-specific styles ---------------------------------------------
@@ -40,14 +40,15 @@ See: http://www.alistapart.com/articles/howtosizetextincss/
 	border-bottom-right-radius: 10px;
 }
 
-.actions ul {
+.pageheader .actions ul {
 	padding: 0;
 	/* reduce the extra vertical space between title and body */
 	margin-bottom: 1.385em; /* 13×1.385=18px */
 	margin-top: -1.538em; /* 13×1.538=20px */
+	border-bottom: none;
 }
 
-.actions li {
+.pageheader .actions li {
     display: inline;
 	display: inline;
 	padding: 0.1em;
@@ -59,10 +60,11 @@ See: http://www.alistapart.com/articles/howtosizetextincss/
 	background:white;
 }
 
-.pageheader .actions ul {
-	border-bottom: none;
+.pageheader .actions {
+        position: absolute;
+        top: 3.5em;
+        right: 2em;
 }
-
 .header {
 	font-size: 1em; /* override style.css */
 }
@@ -113,7 +115,7 @@ span.title {
 	background-color:none;
 	color: #451E6F;
 	text-shadow: *1px 1px 5px #CFCFCF ;
-	border-left: 10px solid black;
+	border-left: 10px solid #444444;
 	padding-left: 30px;
 	margin-left:-26px;
 }
@@ -169,7 +171,6 @@ span.title {
 
 #homepage #news, #homepage #security,
 #page-support #doc, #page-support #found_a_problem,
-#page-about #warning, #page-about #license,
 #page-found_a_problem #bugs, #page-found_a_problem #wishlist,
 #page-contribute #source, #page-contribute #build, #page-contribute #tools,
 #page-contribute #design, #page-contribute #other,
@@ -182,7 +183,6 @@ span.title {
 
 #homepage #news,
 #page-support #doc,
-#page-about #warning,
 #page-found_a_problem #bugs,
 #page-contribute #source, #page-contribute #tools,
 #page-contribute #design,
@@ -273,9 +273,7 @@ color:none;
 
 .sidebar .links li a:hover {
 	background: #f5f5f5;
-	border-left:2px solid green;
-
-	
+	border-left: 2px solid green;
 }
 
 .sidebar .links li:first-child a {
@@ -285,15 +283,15 @@ color:none;
 
 
 .sidebar .links li:first-child a:hover {
-        border-left:2px solid green;
+        border-left: 2px solid green;
 
 }
 
 .sidebar .links li:first-child .selflink {
-border-left:2px solid black;
-border-top:none;
-border-bottom:none;
-border-rigth:none;
+	border-left: 2px solid black;
+	border-top: none;
+	border-bottom: none;
+	border-rigth: none;
 }
 
 .sidebar {
@@ -310,13 +308,13 @@ div.sidebar {
 }
 
 a {
-	color:dimgray;
-	text-decoration:none;
+	color: dimgray;
+	text-decoration: none;
 }
 
 a:hover {
-	color:black;
-	text-decoration:underline;
+	color: black;
+	text-decoration: underline;
 }
 
 p+p {
@@ -356,6 +354,15 @@ pre {
 	padding-left:10px;
 	border-left:5px solid #CCCCCC;
 
+}
+
+div.inlinepage {
+	margin-bottom: 18px;
+}
+
+.inlinepage .inlineheader .header {
+	font-size:36px;
+	top:5px
 }
 
 .inlinepage h1 {
@@ -431,12 +438,20 @@ div#backlinks {
 	padding-right: 5px;
 }
 
-#blogform {
+.blogform {
 	margin-bottom: 18px;
 	margin-top: 18px;
 }
 
-#blogform > input[type="submit"] {
+#pagebody .blogform > a.feedbutton {
+	border-bottom: none;
+}
+
+.blogform > input[name="title"] {
+	padding-top: 0;
+}
+
+.blogform > input[type="submit"] {
 	position: static;
 	top: auto;
 	margin-bottom: 0;
@@ -477,40 +492,40 @@ input#searchbox:hover {
 input#searchbox:focus {
 }
 
-#entete .formulaire_recherche form input.text:focus
-
 #content { padding:20px;
 	background:none;
 }
 
 .toc {
-border:thin solid black;
-float:none;
-margin:1em;
-max-width:40%;
-padding:0.5em; }
+	border-top:thin solid dimgray;
+	border-left:thin solid dimgray;
+	border-bottom:thin dotted darkgrey;
+	border-right:thin dotted darkgrey;
+	float:none;
+	margin:1em;
+	max-width:40%;
+	padding:0 1em 0 1em;
+}
 
 /* TESTING */
 
-a[href*="/recentchanges/"]
+/* a[href*="/recentchanges/"]
 {	overflow: visible;
 	position: absolute;
 	top:-120px;
 	left: 200px;
 }
+*/
 
-#pagebody a 
-{
-border-bottom: 1px dotted green;
-
- }
-#pagebody a:hover 
-{
-background-color:lightgreen;
-border-bottom: 1px solid green;
-text-decoration:none
-
- }
+#pagebody a {
+	border-bottom: 1px dotted green;
+}
+#pagebody a:hover,
+#comments .comment .comment-subject a:hover {
+	background-color:lightgreen;
+	border-bottom: 1px solid green;
+	text-decoration:none
+}
 
 /* no a class on img - no way to use a parent form */
 
@@ -518,25 +533,31 @@ text-decoration:none
 
 /* test inside and outside links */
 
+#pagebody a[href^="http"],
+#pagebody a[href^="http"]:hover {
+	padding-right:14px;
+	border-bottom:1px solid dimgray;
+}
 
 #pagebody a[href^="http"] {
 	background: transparent url(lib/link_out.gif) no-repeat scroll right center;
-	padding-right:14px;
-	border-bottom:1px solid black;
-
 }
 
 #pagebody a[href^="http"]:hover {
-        background: yellow url(lib/link_out.gif) no-repeat scroll right center;
-        padding-right:14px;
-        border-bottom:1px solid black;
-
+    background: yellow url(lib/link_out.gif) no-repeat scroll right center;
 }
 
-
-#pagebody a, #pagebody a[href^="http://localhost"], #pagebody a[href^="http://tails.boum.org"], #pagebody a[href^="https://tails.boum.org"]
-{
+#pagebody a,
+#pagebody a[href^="http://localhost"],
+#pagebody a[href^="http://tails.boum.org"],
+#pagebody a[href^="https://tails.boum.org"],
+#comments .comment .comment-subject a {
 	border-bottom: 1px dotted green;
+}
+
+#comments .comment .comment-subject a {
+	background: none;
+	padding-right: 0;
 }
 
 .acronym {
@@ -545,4 +566,22 @@ text-decoration:none
 
 
  .slogan  {
+}
+
+.feedlink {
+	margin-top: 1.585em;
+}
+
+#comments {
+	clear: none;
+	overflow: auto;
+	width: auto;
+}
+
+#comments .actions {
+	margin-bottom: 1em;
+}
+
+#comments .actions > ul {
+	padding-left: 0;
 }

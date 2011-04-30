@@ -1,0 +1,110 @@
+In order to protect against memory recovery such as cold boot attack,
+the system RAM is overwritten when Tails is being shutdown or when the
+boot medium is physically removed.
+
+#### The big picture
+
+The previous implementation of the Tails memory erasure feature
+suffered from flaws that were demonstrated by [[external
+audit|security/audits/Blackhat_De-Anonymizing_Live_CDs]]. In short, it
+only erased free memory and let data in the aufs read-write branch in
+recoverable state.
+
+In order to erase the biggest possible part of the system memory, the
+hereby described new implementation, shipped in Tails 0.7, runs in a
+fresh environment provided by a newly started Linux kernel. This way,
+a given part of the memory either is *used* by the memory erasure
+process itself or it is considered as free and thus *erased* by this
+process; in any case, it is at least overwritten once.
+
+#### initramfs tweaks
+
+The Linux kernel and initramfs used to erase the memory are the same
+as the ones normally used by a Tails system... that actually includes
+some bits of code dedicated to this mission.
+
+An initramfs-tools hook includes the necessary files in the initramfs
+at build time. A runtime init-premount script either does nothing, or
+erases memory before shutting down or rebooting the system; its
+behaviour depends on the `sdmem` kernel command line parameter value.
+Additionally, the `sdmemopts` kernel command line parameter allows
+fine tuning the options passed to the `sdmem` program.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/share/initramfs-tools/hooks/sdmem]]
+- [[!tails_gitweb config/chroot_local-includes/usr/share/initramfs-tools/scripts/init-premount/sdmem]]
+
+These `sdmem` and `sdmemopts` are appended to the fresh kernel command
+line parameters, when memory erasure is triggered, by the
+`tails-kexec` initscript that is itself parameterized by the usual,
+slightly customized, kexec-tools configuration file.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/default/kexec]]
+- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-kexec]]
+
+#### Actual memory erasure process
+
+The software that performs the actual memory erasure is sdmem, which
+is part of the [secure-delete](http://www.thc.org/) package. sdmem is
+called using the `-v` (verbose mode) option to give feedback to the
+user, as well as the `-llf` options: memory is only overwritten once
+with zeros; this is the fastest available mode, and is enough to
+protect against every memory forensics attack we know of.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/default/kexec]]
+
+#### Triggers
+
+Different kinds of events trigger the memory erasure process. All lead
+to run the `tails-kexec` initscript.
+
+**First, the memory erasure process is triggered at the end of a normal
+shutdown/reboot sequence.** This is implemented by slightly modifying
+the System V initscripts shipped by the `kexec-tools` Debian package:
+the `kexec-load` initscript, that normally only runs at reboot time,
+is enabled to run at shutdown time as well. A custom `tails-kexec`
+initscript replaces the `kexec` one in order to support the case when
+the boot medium is not available anymore at the time this script runs;
+it also provides an improved user interface more suitable for Tails
+target users needs. Finally, the standard Debian `halt` and `reboot`
+initscripts are disabled as 
+
+- [[!tails_gitweb config/chroot_local-patches/run_kexec-load_on_halt.diff]]
+- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-kexec]]
+- [[!tails_gitweb config/chroot_local-hooks/52-update-rc.d]]
+
+**Second, the memory erasure process is triggered when the boot medium
+is physically removed during runtime (USB boot medium is unplugged or
+boot CD is ejected).** This is implemented by a custom `udev-watchdog`
+program monitors the boot medium; it's run by a wrapper, started at
+boot time, that brutally invokes the memory erasure process, bypassing
+other system shutdown scripts, when this medium happens to be
+physically removed.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/udev-watchdog-wrapper]]
+- [[!tails_gitweb config/chroot_local-includes/usr/src/udev-watchdog.c]]
+- [[!tails_gitweb config/chroot_local-hooks/52-udev-watchdog]]
+- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-sdmem-on-media-removal]]
+- [[!tails_gitweb config/chroot_local-hooks/52-update-rc.d]]
+
+#### Making sure needed files are available
+
+The memlockd daemon, appropriately configured, ensures every file
+needed by the memory erasure process is locked into memory from boot
+to memory erasure time.
+
+- [[!debpts memlockd]]
+- [[!tails_gitweb config/chroot_local-includes/etc/memlockd.cfg]]
+
+#### User interface
+
+Since this process can take a while the user can leave the computer
+and let it finish on its own after removing the boot medium, or simply
+turn it off if he or she is not worried about this attack: if Tails
+was booted from a CD it is ejected before the memory wiping is
+started, and if it was booted from a USB drive it can be removed as
+soon as the memory wiping has been started.
+
+A short but visible message, displayed for a few seconds, explains the
+user what is going to happen.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-kexec]]

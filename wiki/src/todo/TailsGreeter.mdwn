@@ -1,0 +1,42 @@
+Implementation of custom [[todo/boot_menu]] for GDM3 as part of GSoC2011 project.
+
+This page will contain current plans, overall design description, project status updates, documentation and random pieces of information.
+
+Developers are encouraged to provide input for various options to be asked via boot-menu using following template:
+
+---
+Template for description of settings which are needed to be requested via tails-greeter before logon:
+
+1. name - just something we will use to point to during discussions
+2. default value(s) - if any
+3. effects - what exactly this option will trigger (e. g. write to some file(s), exec some processes, fire d-bus signals etc)
+4. ui-hint - short description to be displayed for user in order to help him to figure out how to properly set this option
+5. responsible dev - contact details 
+6. dev's notes - overall description from dev's point of view (why do we need this option? what are the dependencies? how do we handle it now? how do we test implementation? any other comments?)
+
+---
+
+1. name: Language
+2. default value: English
+3. effects: 
+   - setup locale for the TailsGreeter so that the user can understand the other
+     choices;
+   - generate the choosen locale;
+   - setup locale for the session to be started.
+4. ui hint: Choose the language of your Tails session.
+5. responsible dev:
+6. dev's notes: This item should be really visible, probably on top of the
+   TailsGreeter screen. More information can be found in
+   [[todo/localization_at_runtime]].
+
+---
+
+1. name: Administrator password
+2. default value: none
+3. effects: render user to be logged sudoer and administrator in PolicyKit point
+   of view. The precise implementation should still be investigated
+4. ui hint: (draft) enter here a password that will be asked to grant administrator
+   rights. Leave this field blank to disable administrator rights.
+5. responsible dev:
+6. dev's notes: this description is draft only. There is a related TODO item:
+   [[todo/better_root_access_control]]
