@@ -1,6 +1,11 @@
 [[!tag todo/research]]
 [[!tag todo/code]]
 
+[[!toc levels=2]]
+
+Rationale
+=========
+
 Many ISPs now have a large number of "free" WiFi access points based
 on the modem/router boxes they install at their customers home.
 Examples: FreeWifi, NeufWifi, Fon, probably others worldwide.
@@ -12,6 +17,12 @@ Such hotspots are pretty useful but currently unusable in Tails due
 to DNS torification and Tor enforcement.
 
 We should implement a way to fix this.
+
+Implementation ideas
+====================
+
+Using WWW::Mechanize::Shell
+---------------------------
 
 For each kind of hotspot:
 
@@ -38,19 +49,26 @@ monitored through DBUS to kill the loop if connection is lost. If loop
 fails try once more through default script before displaying a
 notification.
 
-> Looks like there is at least two Python apps doing this already:
->
->  * [autowifi](http://www.manatlan.com/page/autowifi)
->  * [autologin-applet](http://antoine.mairesse.free.fr/autologin-applet/)
+Using existing applications
+---------------------------
 
->> Another implementation possibility: Liberte Linux provides a
->> non-Torified browser running under a specially designated user. "It
->> is intended to be used in cases where a web setup is necessary in
->> order to initiate an Internet connection (such as Wi-Fi Hotspots
->> registration)."
->> Details are in their source code:
->>
->> * `liberte/src/home/anon/bin/unsafe-browser`
->> * `liberte/src/usr/local/sbin/unsafe-browser`
->> * `liberte/src/usr/local/sbin/fw-reload`
->> * git grep unsafe-browser
+Looks like there is at least two Python apps doing this already:
+
+* [autowifi](http://www.manatlan.com/page/autowifi)
+* [autologin-applet](http://antoine.mairesse.free.fr/autologin-applet/)
+
+Using a non-Torified web browser
+--------------------------------
+
+Another implementation possibility: Liberte Linux provides a
+non-Torified browser running under a specially designated user. "It
+is intended to be used in cases where a web setup is necessary in
+order to initiate an Internet connection (such as Wi-Fi Hotspots
+registration)."
+
+Details are in their source code:
+
+* `liberte/src/home/anon/bin/unsafe-browser`
+* `liberte/src/usr/local/sbin/unsafe-browser`
+* `liberte/src/usr/local/sbin/fw-reload`
+* git grep unsafe-browser
