@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 ### Helper functions
 
 # For whatever reason, the initscript that calls us sets a pretty scarse $PATH
@@ -24,9 +26,9 @@ loop_backing_file() {
 
 # First clean the screen, then brutally shutdown the machine.
 do_stop() {
-	/etc/init.d/gdm3 stop 2>&1 >/dev/null
-	/etc/init.d/kexec-load stop 2>&1 >/dev/null
-	/etc/init.d/tails-kexec stop 2>&1 >/dev/null
+	/etc/init.d/gdm3 stop 2>&1 >/dev/null || true
+	/etc/init.d/kexec-load stop 2>&1 >/dev/null || true
+	/etc/init.d/tails-kexec stop 2>&1 >/dev/null || true
 }
 
 
