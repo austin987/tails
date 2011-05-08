@@ -1,8 +1,8 @@
 #!/bin/sh
 
 ID=/dev/block/`/bin/mountpoint -d /live/image`
-DEVICE=`/sbin/udevadm info -q path -p  "${ID}"`
-DEV_TYPE=`/sbin/udevadm info -q property -p "${ID}" | /bin/grep ID_TYPE | /usr/bin/awk -F "=" '{ print $2 }'`
+DEVICE=`/sbin/udevadm info --query path --path  "${ID}"`
+DEV_TYPE=`/sbin/udevadm info --query property --path "${ID}" | /bin/grep ID_TYPE | /usr/bin/awk -F "=" '{ print $2 }'`
 
 
 # First clean the screen, then brutally shutdown the machine.
