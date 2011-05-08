@@ -1,9 +1,23 @@
 #!/bin/sh
 
-ID=/dev/block/`/bin/mountpoint -d /live/image`
-DEVICE=`/sbin/udevadm info --query path --path  "${ID}"`
-DEV_TYPE=`/sbin/udevadm info --query property --path "${ID}" | /bin/grep ID_TYPE | /usr/bin/awk -F "=" '{ print $2 }'`
+### Helper functions
 
+# Arg: a 'major:minor' device number.
+# Returns success (0) iff this device is a loop device,
+# even if not actually bound to a file.
+is_loop_device() {
+	local DEV_MAJOR
+	DEV_MAJOR="${1%:*}"
+	[ "$DEV_MAJOR" = '7' ]
+}
+
+# Arg: a 'major:minor' loop device number (e.g. 7:0).
+# Prints the path to the file backing the loop device on stdout.
+loop_backing_file() {
+	local DEV_MINOR
+	DEV_MINOR="${1##*:}"
+	cat "/sys/devices/virtual/block/loop${DEV_MINOR}/loop/backing_file"
+}
 
 # First clean the screen, then brutally shutdown the machine.
 do_stop() {
@@ -11,6 +25,26 @@ do_stop() {
 	/etc/init.d/kexec-load stop 2>&1 >/dev/null
 	/etc/init.d/tails-kexec stop 2>&1 >/dev/null
 }
+
+
+### Main
+
+MOUNTED_IMG_DEV_NUMBER="$(mountpoint -d /live/image)"
+
+if is_loop_device "$MOUNTED_IMG_DEV_NUMBER" ; then
+	# Notes:
+	#   1. The "loop-backed /live/image" shall only happen when booting with
+	#      fromiso=, but we try not to depend on this assumption.
+	#   2. Only one level of loop-indirection is supported.
+	LOOP_BACKING_FILE=$(loop_backing_file "$MOUNTED_IMG_DEV_NUMBER")
+	PHYS_DEV_NUMBER=$(udevadm info --device-id-of-file="$LOOP_BACKING_FILE")
+else
+	PHYS_DEV_NUMBER="$MOUNTED_IMG_DEV_NUMBER"
+fi
+
+ID="/dev/block/${PHYS_DEV_NUMBER}"
+DEVICE=`/sbin/udevadm info --query path --path  "${ID}"`
+DEV_TYPE=`/sbin/udevadm info --query property --path "${ID}" | /bin/grep ID_TYPE | /usr/bin/awk -F "=" '{ print $2 }'`
 
 # Let's be sure the CDRom can be ejected by pressing the button
 if [ "$DEV_TYPE" = "cd" ]; then
