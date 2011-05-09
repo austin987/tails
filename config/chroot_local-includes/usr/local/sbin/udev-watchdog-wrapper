@@ -7,21 +7,39 @@ set -e
 # For whatever reason, the initscript that calls us sets a pretty scarse $PATH
 PATH="/usr/bin:${PATH}"
 
-# Arg: a 'major:minor' device number.
-# Returns success (0) iff this device is a loop device,
-# even if not actually bound to a file.
-is_loop_device() {
-	local DEV_MAJOR
-	DEV_MAJOR="${1%:*}"
-	[ "$DEV_MAJOR" = '7' ]
+### Helper functions
+
+using_fromiso() {
+	grep -qs -w -E '(fromiso|isofrom)=' /proc/cmdline
 }
 
-# Arg: a 'major:minor' loop device number (e.g. 7:0).
-# Prints the path to the file backing the loop device on stdout.
-loop_backing_file() {
-	local DEV_MINOR
-	DEV_MINOR="${1##*:}"
-	cat "/sys/devices/virtual/block/loop${DEV_MINOR}/loop/backing_file"
+# Returns the boot device's path in a form that can be passed to the
+# eject command, e.g. /dev/scd0 or /dev/block/NN:MM.
+boot_device() {
+	if using_fromiso ; then
+	# When booting with e.g. fromiso=/dev/sdx3/tails-XXX.iso, a loop device
+	# is mounted onto /live/image => we cannot get the boot device from there.
+	# This loop device's backing file is seen by the system as
+	# /isofrom/XXX.iso, which is not available presumably because pivotroot
+	# was run => we cannot get the boot device from there either.
+	# Instead, we parse fromiso='s argument the same way live-boot does
+	# in order to extract the device path (/dev/sdx3)
+		for ARGUMENT in $(cat /proc/cmdline) ; do
+			case "${ARGUMENT}" in
+				isofrom=*|fromiso=*)
+					FROMISO="${ARGUMENT#*=}"
+					;;
+			esac
+		done
+		echo $(dirname "$FROMISO")
+	else
+	# Refactorer, beware: the rest of this script depends on the fact that
+	# the path returned in this case is suitable to be passed as an argument
+	# to --path in "udevadm info --query" commands... which is not the case
+	# of paths in the /dev/sdxN form.
+		DEV_NUMBER="$(udevadm info --device-id-of-file=/live/image)"
+		echo "/dev/block/$DEV_NUMBER"
+	fi
 }
 
 # First clean the screen, then brutally shutdown the machine.
@@ -34,22 +52,20 @@ do_stop() {
 
 ### Main
 
-MOUNTED_IMG_DEV_NUMBER="$(udevadm info --device-id-of-file=/live/image)"
+BOOT_DEVICE=$(boot_device)
 
-if is_loop_device "$MOUNTED_IMG_DEV_NUMBER" ; then
-	# Notes:
-	#   1. The "loop-backed /live/image" shall only happen when booting with
-	#      fromiso=, but we try not to depend on this assumption.
-	#   2. Only one level of loop-indirection is supported.
-	LOOP_BACKING_FILE=$(loop_backing_file "$MOUNTED_IMG_DEV_NUMBER")
-	PHYS_DEV_NUMBER=$(udevadm info --device-id-of-file="$LOOP_BACKING_FILE")
+# Assign to QUERY_SELECTOR an option that can be passed as a query selector
+# to udevadm info --query commands.
+if using_fromiso ; then
+	DEV_NAME=$(basename "$BOOT_DEVICE")
+	QUERY_SELECTOR="--name $DEV_NAME"
 else
-	PHYS_DEV_NUMBER="$MOUNTED_IMG_DEV_NUMBER"
+	QUERY_SELECTOR="--path $BOOT_DEVICE"
 fi
 
-DEV_PATH="/dev/block/${PHYS_DEV_NUMBER}"
-DEVICE=$(udevadm info --query path --path  "${DEV_PATH}")
-DEV_TYPE=$(udevadm info --query property --path "${DEV_PATH}" | grep -w '^ID_TYPE' | awk -F "=" '{ print $2 }')
+DEV_UDEV_PATH=$(udevadm info --query path     $QUERY_SELECTOR)
+DEV_TYPE_LINE=$(udevadm info --query property $QUERY_SELECTOR | grep -w '^ID_TYPE')
+DEV_TYPE="${DEV_TYPE_LINE#*=}"
 
 # Let's be sure the CDRom can be ejected by pressing the button
 if [ "$DEV_TYPE" = "cd" ]; then
@@ -57,4 +73,4 @@ if [ "$DEV_TYPE" = "cd" ]; then
 fi
 
 # Start udev-watchdog and stop on clean exit.
-/usr/local/sbin/udev-watchdog "$DEVICE" "$DEV_TYPE" && do_stop
+/usr/local/sbin/udev-watchdog "$DEV_UDEV_PATH" "$DEV_TYPE" && do_stop
