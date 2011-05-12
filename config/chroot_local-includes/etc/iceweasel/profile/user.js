@@ -22,6 +22,7 @@ user_pref("extensions.torbutton.http_port", 8118);
 user_pref("extensions.torbutton.http_proxy", "127.0.0.1");
 user_pref("extensions.torbutton.https_port", 8118);
 user_pref("extensions.torbutton.https_proxy", "127.0.0.1");
+user_pref("extensions.torbutton.launch_warning", false);
 user_pref("extensions.torbutton.locked_mode", true);
 user_pref("extensions.torbutton.no_updates", true);
 user_pref("extensions.torbutton.normal_exit", true);
