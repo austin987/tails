@@ -1,0 +1,41 @@
+[[!meta title="tails-greeter design"]]
+
+Following subtasks outlined initially
+===========================
+
+#### 1)  UI design with usability in mind.
+
+I'm no specialist in UI I'll try to keep it to bare minimum and make UI design change as easy as possible by separating related parts from the rest of the code.
+
+#### 2) Debian packaging
+
+.deb packages will be created once there is at least some visible code made and will be updated regularly as project develops. dpkg-divert will be used to gracefully overwrite existing greeter program supplied by gdm.deb
+
+#### 3) i18n/l10n
+
+This is ongoing task - all the string in project should be handled with localization in mind. Note: runtime localization itself is a separate task described in [[todo/localization_at_runtime]].
+
+#### 4) test automation
+
+This is optional task (if time permits). However some (unit) tests will be developed alongside with actual code to make sure that stable enough builds could be created early in the project.
+
+## Some design decisions:
+
+- configuration storage: gconf (with potential migration in future (after gsoc) to gsettings-over-dconf).
+[reasoning: need to be compatible with current debian-based builds]
+
+- display manager: gdm (with potential migration in future (after gsoc) to LightDM)
+[reasoning: need to be compatible with current debian-based builds]
+
+- programming language (C if gdm-simple-greeter is forked\extended or vala if tails-greeter is made from scratch)
+[reasoning: use language-of-choice by gnome developers, (possibly) easier integration into build process and future maintenance]
+
+- tails-greeter as part of dm preferred over custom dm
+[reasoning: smaller amount of code, easier maintenance, easier extensibility in future (after gsoc)]
+ 
+###  Additional notes:
+1) choice of language justification: vala vs perl/python
++ more fun to work with
++ no additional runtime requirements
++ gnome's project
+- less familiar
