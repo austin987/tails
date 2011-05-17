@@ -206,7 +206,62 @@ gpg --verify tails*.iso.asc
 	<h2><a name="authenticity-check"></a>So how can I check better the ISO
 	image authenticity?</h2>
 
-	<p>If you want to be extra cautious and authenticate a Tails ISO image
+	<p>All Tails ISO image are cryptographically signed by our OpenPGP key.
+	OpenPGP is a standard for data encryption and decryption that provides
+	cryptographic privacy and authentication through the use of keys owned
+	by its users.</p>
+
+	<p>But the Tails' key that you downloaded from this website could be a
+	fake one if you were victim of a [[man-in-the-middle
+	attack|doc/warning#index3h1]].
+
+	<p>Finding a way of trusting better Tails' key would allow you to
+	authenticate better the ISO image you downloaded. The following section
+	will give you hints on how to increase the trust you can put in the
+	Tails' key you downloaded.</p>
+
+	<p>We will present you three techniques from the easiest to the safest.
+	Again, none of them is a perfect and magic solution. Feel free to
+	explore them according to your possibilities and technical skills.</p>
+
+	<p>Note that since all Tails' releases are signed with the same key,
+	you will not have to verify the key every time and the trust you might
+	progressively build in it will be built once and for all. Still, you
+	will have to check the ISO image every time you download a new one!</p>
+
+	<h3>Correlates several download of Tails' key</h3>
+
+	<p>A simple technique to increase the trust you can put in Tails' key
+	would be to download it several times, from several locations, several
+	computers, possibly several countries, etc.</p>
+
+	<p>For example you could save them every time with a different name in
+	the same directory on a USB stick. Then run the following command from
+	a terminal to check whether all the keys are identical:</p>
+
+<pre>
+cd [your download directory]
+sha256sum amnesia*.asc
+</pre>
+
+	<p>This command would output something like this:</p>
+
+<pre>
+f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  amnesia-desktop.asc
+f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  amnesia-laptop.asc
+f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  amnesia-library.asc
+f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  amnesia-seattle.asc
+</pre>
+
+	<p>You would then need to visually check that all the checksums of the
+	first column are the same, meaning that the keys are identical.</p>
+
+	<p>You could also use this technique to compare keys downloaded by your
+	friends or other people you trust.</p>
+
+	<h3>Using the OpenPGP Web of Trust</h3>
+
+	<p>If you want to be extra cautious and really authenticate Tails' key
 	in a stronger way than what standard HTTPS offers you, you will need to
 	use the OpenPGP Web of Trust.</p>
 
@@ -222,13 +277,7 @@ gpg --verify tails*.iso.asc
 	basis of human interaction.</p>
 
 	<p>The OpenPGP [[!wikipedia Web_of_Trust desc="Web of Trust"]] is a
-	decentralized trust model based on OpenPGP keys. OpenPGP is a standard
-	for data encryption and decryption that provides cryptographic privacy
-	and authentication through the use of key owned by its users.</p>
-
-	<p>All Tails ISO image are signed by our OpenPGP key and finding a way
-	of trusting Tails' key could allow you to authenticate better the ISO
-	image you downloaded by verifying this signature. Let's see that with an
+	decentralized trust model based on OpenPGP keys. Let's see that with an
 	example.</p>
 
 	<p><em>You're a friend of Alice and really trust her way of managing
@@ -249,15 +298,105 @@ gpg --verify tails*.iso.asc
 	managing and trusting OpenPGP keys is outside of the scope of this
 	document.</p>
 
-	<p><strong>If you never used OpenPGP before</strong> and since the Web
-	of Trust is actually based on human relationships and real-life
-	interactions you will need to start establishing contacts with people
-	knowledgeable about OpenPGP and start building trust relationships in
-	order to find a trust path to Tails' key. You could start by contacting
-	a local [[!wikipedia Linux_User_Group desc="%s"]] or other Tails
-	enthousiasts near you.</p>
+	<p>We also acknowledge that not everybody might be able to create good
+	trust path to Tails' key since it based on a network of direct human
+	relationships and the knowledge of quite complex tools such as
+	OpenPGP.</p>
 
-	<p>For further technical reading you can check:</p>
+	<h3>Check Tails' key against the Debian keyring</h3>
+
+	<p>Following the previous scenario, when Alice met Bob, a Tails
+	developer, she could sign Tails' key with her own key to certify this
+	trust relationship and make it public. Tails' key would now come along
+	with a signature made by Alice.</p>
+
+	<p>Tails' key is actually already signed by the keys of several
+	official developers of Debian, the operating system on which Tails is
+	based. Debian makes an extensive use of OpenPGP and you can download
+	the keys of all Debian developers by installing the
+	<code>debian-keyring</code> package. You can then verify the signatures
+	those developers made with their own key on Tails' key.</p>
+
+	<p>To download the Debian keyring you can do:</p>
+
+	<pre>sudo apt-get install debian-keyring</pre>
+
+	<p>To get a list of the signatures made by other people on Tails' key
+	you can do:</p>
+
+	<pre>gpg --keyid-format long --list-sigs 1202821CBE2CD9C1</pre>
+
+	<p>You will get something like this:</p>
+
+<pre>
+pub   4096R/1202821CBE2CD9C1 2010-10-07 [expires: 2012-10-06]
+uid                          T(A)ILS developers (signing key) <amnesia@boum.org>
+sig 3        1202821CBE2CD9C1 2010-10-07  T(A)ILS developers (signing key) <amnesia@boum.org>
+sig          BACE15D2A57498FF 2010-10-07  [User ID not found]
+sig          8CBF9A322861A790 2010-12-24  [User ID not found]
+sig          7EF27D76B2177E1F 2010-12-27  [User ID not found]
+sig          CCD2ED94D21739E9 2010-12-29  [User ID not found]
+</pre>
+
+	<p>The lines ending with '[User ID not found]' are signatures made by
+	keys you still don't have in your keyring. You could try to search for
+	them in the Debian keyring by their key ID: the 16 digit code between
+	the 'sig' tag and the date. You could for example do:</p>
+
+	<pre>gpg --keyid-format long --keyring=/usr/share/keyrings/debian-keyring.gpg --list-key CCD2ED94D21739E9</pre>
+
+	<p>If this signature corresponds to a key in the Debian keyring you
+	will get something like this:</p>
+
+<pre>
+pub   4096R/CCD2ED94D21739E9 2007-06-02 [expires: 2012-05-31]
+uid                          Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+uid                          Daniel Kahn Gillmor <dkg@openflows.com>
+uid                          [jpeg image of size 3515]
+uid                          Daniel Kahn Gillmor <dkg@debian.org>
+sub   4096R/C61BD3EC21484CFF 2007-06-02 [expires: 2012-05-31]
+sub   2048R/125868EA4BFA08E4 2008-06-19 [expires: 2011-05-31]
+</pre>
+
+	<p>You can then import it in your own keyring by doing:</p>
+
+	<pre>gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --export CCD2ED94D21739E9 | gpg --import</pre>
+
+	<p>Now you can try to verify the signature made by this new key on Tails' key by doing:</p>
+
+	<pre>gpg --keyid-format long --check-sigs 1202821CBE2CD9C1</pre>
+
+	<p>On the output, The status of the verification is indicated by a flag
+	directly following the "sig" tag. A "!" indicates that the signature
+	has been successfully verified, a  "-" denotes a bad signature and a
+	"%" is used if an error occurred while checking the signature (e.g. a
+	non supported algorithm). For example, in the following output the
+	signature of Daniel Kahn Gillmor on Tails' key has been successfully
+	verified:</p>
+
+<pre>
+pub   4096R/1202821CBE2CD9C1 2010-10-07 [expires: 2012-10-06]
+uid                          T(A)ILS developers (signing key) <amnesia@boum.org>
+sig!3        1202821CBE2CD9C1 2010-10-07  T(A)ILS developers (signing key) <amnesia@boum.org>
+sig!         CCD2ED94D21739E9 2010-12-29  Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+
+3 signatures not checked due to missing keys
+</pre>
+
+	<h3>Get into the Web of Trust!</h3>
+
+	<p>Since the Web of Trust is actually based on human relationships and
+	real-life interactions the best would be to start establishing contacts
+	with people knowledgeable about OpenPGP, start using it yourself and
+	build trust relationships in order to find your own trust path to
+	Tails' key.</p>
+
+	<p>You could start by contacting a local [[!wikipedia Linux_User_Group
+	desc="%s"]] or other Tails enthusiasts near you and exchange about
+	their OpenPGP practices.</p>
+
+	<h3>Further reading on OpenPGP</h3>
+
 	<ul>
 	  <li>[[!wikipedia GnuPG desc="Wikipedia: %s"]], a free OpenPGP
 	  software</li>
