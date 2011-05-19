@@ -115,6 +115,8 @@ download it, use it and share it without restriction.</strong>
 
 	<p>Do you want to check the ISO image integrity:</p>
 	<ul id="verify-the-iso-options">
+	  <li id="verify-the-iso-option-gnome"><a href="#verify-the-iso-with-gnome">
+	  Using Linux with Gnome: Ubuntu, Debian, Tails, Fedora, etc.</a></li>
 	  <li id="verify-the-iso-option-terminal"><a href="#verify-the-iso-with-terminal">
 	  Using the command line (faster, Linux and Mac)
 	  </a></li>
@@ -125,6 +127,61 @@ download it, use it and share it without restriction.</strong>
 	  Using our OpenPGP key (advanced, Linux)
 	  </a></li>
 	</ul>
+
+	<div id="verify-the-iso-with-gnome">
+	<h2><a name="verify-the-iso-with-gnome"></a>Using Linux with Gnome: Ubuntu, Debian, Tails, Fedora, etc.</h2>
+
+	<p>All Tails ISO image are cryptographically signed by our OpenPGP key.
+	OpenPGP is a standard for data encryption that provides cryptographic
+	privacy and authentication through the use of keys owned by its
+	users.</p>
+
+	<p>You need to have the <code>seahorse-plugins</code> installed. If
+	you're not sure or want to install it, under Debian, Ubuntu or Tails
+	you can issue the following commands:</p>
+
+<pre>
+sudo apt-get update
+sudo apt-get install seahorse-plugins
+</pre>
+
+	<p>First, download [[!tails_website tails.key desc="Tails' key"]].</p>
+
+	<p>Your browser should propose you to open it with "Import Key". Choose
+	this action: it will adds Tails' key to your keyring, the collection of
+	OpenPGP keys you already imported.</p>
+
+	<p><img src="download/import_key.png" alt="What should Iceweasel
+	do with this file? Open with: Import Key (default)"/></p>
+
+	<p>You will get notified will the following message:</p>
+
+	<p><img src="download/keys_imported.png" alt="Keys Imported. Imported
+	keys for T <amnesia@boum.org> (A) Amnesia <amnesia@boum.org>"/></p>
+
+	<p>Now, download the cryptographic signature corresponding to the ISO
+	image you want to verify:</p>
+
+	<ul>
+	  <li><a href=[[!inline pages="inc/stable_i386_sig_url" raw="yes"]]>tails-i386-0.7.1.iso.pgp</a></li>
+	</ul>
+
+	<p>Your browser should propose you to open it with "Verify Signature".
+	Choose this action to start the cryptographic verification.</p>
+
+	<p><img src="download/verify_signature.png" alt="What should Iceweasel
+	do with this file? Open with: Verify Signature (default)"/></p>
+
+	<p>Browse your files to select the Tails ISO image you want to verify.
+	Then, the verification will start. It can take several minutes.</p>
+
+	<p><img src="download/verifying.png" alt="Verifying"/></p>
+
+	<p>If the image is correct you will get a notification saying:</p>
+
+	<p><img src="download/good_signature.png" alt="Goog Signature"]]/></p>
+
+	</div>
 
 	<div id="verify-the-iso-with-terminal">
 	<h2><a name="verify-the-iso-with-terminal"></a>Using the command line (faster, Linux and Mac)</h2>
@@ -205,11 +262,6 @@ gpg --verify tails*.iso.asc
 
 	<h2><a name="authenticity-check"></a>So how can I check better the ISO
 	image authenticity?</h2>
-
-	<p>All Tails ISO image are cryptographically signed by our OpenPGP key.
-	OpenPGP is a standard for data encryption and decryption that provides
-	cryptographic privacy and authentication through the use of keys owned
-	by its users.</p>
 
 	<p>But the Tails' key that you downloaded from this website could be a
 	fake one if you were victim of a [[man-in-the-middle
