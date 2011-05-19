@@ -126,8 +126,8 @@ download it, use it and share it without restriction.</strong>
 	  <li id="verify-the-iso-option-terminal"><a href="#verify-the-iso-with-terminal">
 	  Using Linux with the command line
 	  </a></li>
-	  <li id="verify-the-iso-option-firefox"><a href="#verify-the-iso-with-firefox">
-	  Using Firefox (easier, all operating systems)
+	  <li id="verify-the-iso-option-others"><a href="#verify-the-iso-with-others">
+	  Using other operating systems
 	  </a></li>
 	</ul>
 
@@ -264,34 +264,84 @@ gpg: BAD signature from "T(A)ILS developers (signing key) <amnesia@boum.org>"
 
 	</div>
 
-	<div id="verify-the-iso-with-firefox">
-	<h2><a name="verify-the-iso-with-firefox"></a>Using Firefox (easier, all operating systems)</h2>
+	<div id="verify-the-iso-with-others">
+	<h2><a name="verify-the-iso-with-others"></a>Using other operating
+	systems</h2>
+
+	<h3>Using Firefox</h3>
+
+	<p>This technique is not using the cryptographic signature as the others
+	do. We propose it because it's especially easy for Windows users.</p>
 
 	<p>Install the CheckIt extension for Firefox available <a
 	href="https://addons.mozilla.org/en-US/firefox/addon/checkit/">here</a>
 	and restart Firefox.</p>
 
-	<p>Select with your cursor the following checksum (also called
-	hash):</p>
+	<p>Here is the checksum (a kind of digital fingerprint) of the ISO
+	image. Select it with your cursor:</p>
 
 	<pre>[[!inline pages="inc/stable_i386_hash" raw="yes"]]</pre>
 
-	<p>Right-click on it and choose "Selected hash (256)" from the
+	<p>Right-click on it and choose "Selected hash (SHA256)" from the
 	contextual menu:</p>
 
-	<p><img src="download/checkit-selected-hash.png" /></p>
+	<p><img src="download/selected_hash.png"/></p>
 
-	<p>From the dialog box that shows up, open the ISO image:</p>
+	<p>From the dialog box that shows up, open the ISO image. Then wait for
+	the checksum to compute. This will take several seconds during which
+	your browser will be unresponsive.</p>
 
-	<p><img src="download/checkit-select-a-file.png" /></p>
+	<p><strong>If the ISO image is correct</strong> you will get a
+	notification saying that the checksums match:</p>
 
-	<p>Wait for the checksum to compute. This should take several seconds
-	during which your browser will be unresponsive.</p>
+	<p><img src="download/checksums_match.png"/></p>
 
-	<p>If the ISO is correct you should a message should appear saying
-	"SHA256 checksums match!":</p>
+	<p><strong>If the ISO image is not correct</strong> you will get a
+	notification telling you that the checksums do not match:</p>
 
-	<p><img src="download/checkit-checksums-match.png" /></p>
+	<p><img src="download/checksums_do_not_match.png"/></p>
+
+	<h3>Using the cryptographic signature</h3>
+
+	<p>GnuPG, a common free software implementation of OpenPGP has versions
+	and graphical frontends for both Windows and Mac OS X. This also make it
+	possible to check the cryptographic signature with those operating
+	systems:</p>
+
+	<ul>
+	  <li>[[Gpg4win|http://www.gpg4win.org/]], for Windows</li>
+	  <li>[[GPGTools|http://www.gpgtools.org/]], for Mac OS X</li>
+	</ul>
+
+	<p>You will find on either of those websites detailed documentation on
+	how to install and use them.</p>
+
+	<h3>For Windows using Gpg4win</h3>
+
+	<p>After installing Gpg4win, download [[!tails_website tails.key
+	desc="Tails' key"]].</p>
+
+	<p>[[Consult the Gpg4win documentation to import
+	it|http://www.gpg4win.org/doc/en/gpg4win-compendium_15.html]]</p>
+
+	<p>Then, download the cryptographic signature corresponding to the ISO
+	image you want to verify:</p>
+
+	<ul>
+	  <li><a href=[[!inline pages="inc/stable_i386_sig_url" raw="yes"]]>
+	  [[!inline pages="inc/stable_i386_sig_filename" raw="yes"]]</a></li>
+	</ul>
+
+	<p>[[Consult the Gpg4win documentation to check the
+	signature|http://www.gpg4win.org/doc/en/gpg4win-compendium_24.html#id4]]</p>
+
+	<h3>For Mac OS X using GPGTools</h3>
+
+	<p>After installing GPGTools, you should be able to follow the
+	instruction <a href="#verify-the-iso-with-terminal">using Linux with the
+	command line</a>. To open the command line, navigate to your
+	Applications folder, open Utilities, and double click on Terminal.</p>
+
 	</div>
 
 	<h2><a name="authenticity-check"></a>So how can I check better the ISO
