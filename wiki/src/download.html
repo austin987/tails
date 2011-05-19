@@ -118,13 +118,10 @@ download it, use it and share it without restriction.</strong>
 	  <li id="verify-the-iso-option-gnome"><a href="#verify-the-iso-with-gnome">
 	  Using Linux with Gnome: Ubuntu, Debian, Tails, Fedora, etc.</a></li>
 	  <li id="verify-the-iso-option-terminal"><a href="#verify-the-iso-with-terminal">
-	  Using the command line (faster, Linux and Mac)
+	  Using Linux with the command line
 	  </a></li>
 	  <li id="verify-the-iso-option-firefox"><a href="#verify-the-iso-with-firefox">
 	  Using Firefox (easier, all operating systems)
-	  </a></li>
-	  <li id="verify-the-iso-option-openpgp"><a href="#verify-the-iso-with-openpgp">
-	  Using our OpenPGP key (advanced, Linux)
 	  </a></li>
 	</ul>
 
@@ -193,27 +190,82 @@ sudo apt-get install seahorse-plugins
 	</div>
 
 	<div id="verify-the-iso-with-terminal">
-	<h2><a name="verify-the-iso-with-terminal"></a>Using the command line (faster, Linux and Mac)</h2>
+	<h2><a name="verify-the-iso-with-terminal"></a>Using Linux with the
+	command line</h2>
 
-	<p>Download the file
-	<a href=[[!inline pages="inc/stable_i386_hash_url" raw="yes"]]>
-	  [[!inline pages="inc/stable_i386_hash_filename" raw="yes"]]
-	</a>
-	containing the SHA-256 checksum in the same directory as the ISO image
-	you downloaded.</p>
+	<p>All Tails ISO image are cryptographically signed by our OpenPGP key.
+	OpenPGP is a standard for data encryption that provides cryptographic
+	privacy and authentication through the use of keys owned by its
+	users.</p>
 
-	<p>Open a terminal and go to the directory of as the ISO image:</p>
+	<p>You need to have GnuPG</code> installed. GnuPG is the common OpenPGP
+	implementation for Linux: it is installed by default under Debian,
+	Ubuntu, Tails and many other distributions.</p>
 
-	<pre>cd [your iso image directory]</pre>
+	<p>First, download [[!tails_website tails.key desc="Tails' key"]].</p>
 
-	<p>Then run the following command to check the integrity of the ISO
-	image against the .sha256 file:</p>
+	<p>Open a terminal and import Tails' key with the following
+	commands:</p>
 
-	<pre>sha256sum -c tails*.iso.sha256</pre>
+<pre>
+cd [the directory in which you downloaded the key]
+cat tails.key | gpg --impot
+</pre>
 
-	<p>If your ISO image is correct you will get:</p>
+	<p>The output should tell you that the key was imported:</p>
 
-	<pre>[[!inline pages="inc/stable_i386_iso_filename" raw="yes"]]: OK</pre>
+<pre>
+gpg: key F93E735F: public key "Amnesia <amnesia@boum.org>" imported
+gpg: key BE2CD9C1: public key "T(A)ILS developers (signing key) <amnesia@boum.org>" imported
+gpg: Total number processed: 2
+gpg:               imported: 2  (RSA: 2)
+</pre>
+
+	<p>If you had already imported Tails' key in the past, the output should
+	tell you that the key was not changed:</p>
+
+<pre>
+gpg: key F93E735F: "Amnesia <amnesia@boum.org>" not changed
+gpg: key BE2CD9C1: "T(A)ILS developers (signing key) <amnesia@boum.org>" not changed
+gpg: Total number processed: 2
+gpg:              unchanged: 2
+</pre>
+
+	<p>Now, download the cryptographic signature corresponding to the ISO
+	image you want to verify and save it in the same folder as the ISO
+	image:</p>
+
+	<ul>
+	  <li><a href=[[!inline pages="inc/stable_i386_sig_url" raw="yes"]]>
+	  [[!inline pages="inc/stable_i386_sig_filename" raw="yes"]]</a></li>
+	</ul>
+
+	<p>Then start the cryptographic verification, it can take several
+	minutes:</p>
+
+<pre>
+cd [the ISO image directory]
+gpg --verify tails-i386-0.7.1.iso.pgp tails-i386-0.7.1.iso
+</pre>
+
+	<p>If the ISO image is correct the output will tell you that the
+	signature is good:</p>
+
+<pre>
+gpg: Signature made Sat 30 Apr 2011 10:53:23 AM CEST
+gpg:                using RSA key 1202821CBE2CD9C1
+gpg: Good signature from "T(A)ILS developers (signing key) <amnesia@boum.org>"
+</pre>
+
+	<p>If the ISO image is <strong>not correct</strong> the output will tell
+	you that the signature is bad:</p>
+
+<pre>
+gpg: Signature made Sat 30 Apr 2011 10:53:23 AM CEST
+gpg:                using RSA key 1202821CBE2CD9C1
+gpg: BAD signature from "T(A)ILS developers (signing key) <amnesia@boum.org>"
+</pre>
+
 	</div>
 
 	<div id="verify-the-iso-with-firefox">
@@ -244,29 +296,6 @@ sudo apt-get install seahorse-plugins
 	"SHA256 checksums match!":</p>
 
 	<p><img src="download/checkit-checksums-match.png" /></p>
-	</div>
-
-	<div id="verify-the-iso-with-openpgp">
-	<h2><a name="verify-the-iso-with-openpgp"></a>Using our OpenPGP key (advanced, Linux)</h2>
-
-<p>The released images are signed with our [[GnuPG key]]; you
-can, and should, verify their integrity before using them.</p>
-
-<p>Users of a recent enough GNOME should make sure they have the
-<code>seahorse-plugins</code> package installed, then right-click on
-the <code>.asc</code> OpenPGP signature file, and open it with the
-<emph>Verify signature</emph> tool.</p>
-
-<!-- TODO: explain where the .asc file can be found, i.e. in
-     torrents/files/ ; master branch probably still has an inline
-     directive to find it -->
-
-<p>Others rather need to do this on the command-line, in the directory
-where the <code>.iso</code> and <code>.asc</code> files are:</p>
-
-<pre>
-gpg --verify tails*.iso.asc
-</pre>
 	</div>
 
 	<h2><a name="authenticity-check"></a>So how can I check better the ISO
