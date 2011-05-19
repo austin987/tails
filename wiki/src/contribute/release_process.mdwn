@@ -78,32 +78,22 @@ convention e.g.:
 	  tails-i386-squeeze-0.7.iso
 
 Third, generate detached GnuPG signatures for every published image,
-in the same directory as the image; e.g.
+in the same directory as the image and with a .pgp extension; e.g.
 
 	gpg --armor --default-key BE2CD9C1 --detach-sign *.iso
+	ls -1 *.asc | while read asc ; do mv $asc ${asc%%.asc}.pgp ; done
 
-Fourth, generate the SHA-256 hash of every image to be released,
-in the same directory as the image; e.g.
-
-	sha256sum tails-i386-squeeze-0.7.iso \
-	  > tails-i386-squeeze-0.7.iso.sha256
-
-Fifth, create a `.torrent` file for every directory to be published:
+Fourth, create a `.torrent` file for every directory to be published:
 
 	mktorrent -a \
 	  'https://www.les-renseignements-genereux.org/tracker/announce,http://z6gw6skubmo2pj43.onion:8080/announce' \
 	  <DIRECTORY>
 
-Sixth, check the generated `.torrent` files metainfo, e.g.
+Fifth, check the generated `.torrent` files metainfo, e.g.
 using `btshowmetainfo`, to make sure they don't contain
 unwanted information.
 
-Seventh, generate the SHA-256 hash of every generated `.torrent` file:
-
-	sha256sum tails-i386-squeeze-0.7.torrent \
-	  > tails-i386-squeeze-0.7.torrent.sha256
-
-Eighth, generate detached GnuPG signatures for every published
+Sixth, generate detached GnuPG signatures for every published
 `.torrent` file:
 
 	gpg --armor --default-key BE2CD9C1 --detach-sign \
@@ -141,6 +131,11 @@ Write an announce listing the security bugs affecting the previous version in
 upgrade.
 
 Update the latest version and related information in `inc/*`.
+
+Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
+
+	sha256sum tails-i386-0.7.1.iso | cut -f 1 -d ' ' | tr -d '\n'
+	  > stable_i386_hash.html
 
 Replace tags todo/pending and bugs/pending with todo/done and done
 tags.
