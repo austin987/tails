@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # List of at least 2000 possible nicknames
 NICKS_LIST=/usr/share/amnesia/firstnames.txt
@@ -6,6 +6,8 @@ NICKS_LIST=/usr/share/amnesia/firstnames.txt
 # returns true with probability $1
 prob()
 {
+	# sh doesn't have $RANDOM, so we borrow it from bash
+	RANDOM="$(/bin/bash -c 'echo ${RANDOM}')"
 	# we compare with > instead of <= due to mismatch between bash and bc
 	# on what values true and false have.
 	return $(echo "scale = 10; ${RANDOM}/32767 > ${1}" | bc)
@@ -36,8 +38,8 @@ generate_nick()
 	if prob 0.05; then
 		NICK="$(leet_nick ${NICK})"
 	fi
-	
-	echo ${NICK}	
+
+	echo ${NICK}
 }
 
 Configure_pidgin ()
