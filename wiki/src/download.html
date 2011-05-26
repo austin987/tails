@@ -144,11 +144,12 @@ sudo apt-get update
 sudo apt-get install seahorse-plugins
 </pre>
 
-	<p>First, download [[!tails_website tails.key desc="Tails' key"]].</p>
+	<p>First, download [[!tails_website tails-signing.key desc="Tails
+	signing key"]].</p>
 
 	<p>Your browser should propose you to open it with "Import Key". Choose
-	this action. It will add Tails' key to your keyring, the collection of
-	OpenPGP keys you already imported:</p>
+	this action. It will add Tails signing key to your keyring, the
+	collection of OpenPGP keys you already imported:</p>
 
 	<p><img src="download/import_key.png" alt="What should Iceweasel do
 	with this file? Open with: Import Key (default)"/></p>
@@ -198,14 +199,15 @@ sudo apt-get install seahorse-plugins
 	implementation for Linux: it is installed by default under Debian,
 	Ubuntu, Tails and many other distributions.</p>
 
-	<p>First, download [[!tails_website tails.key desc="Tails' key"]].</p>
+	<p>First, download [[!tails_website tails-signing.key desc="Tails
+	signing key"]].</p>
 
-	<p>Open a terminal and import Tails' key with the following
+	<p>Open a terminal and import Tails signing key with the following
 	commands:</p>
 
 <pre>
 cd [the directory in which you downloaded the key]
-cat tails.key | gpg --impot
+cat tails-signing.key | gpg --import
 </pre>
 
 	<p>The output should tell you that the key was imported:</p>
@@ -217,8 +219,8 @@ gpg: Total number processed: 2
 gpg:               imported: 2  (RSA: 2)
 </pre>
 
-	<p>If you had already imported Tails' key in the past, the output should
-	tell you that the key was not changed:</p>
+	<p>If you had already imported Tails signing key in the past, the output
+	should tell you that the key was not changed:</p>
 
 <pre>
 gpg: key F93E735F: "Amnesia <amnesia@boum.org>" not changed
@@ -318,8 +320,8 @@ gpg: BAD signature from "T(A)ILS developers (signing key) <amnesia@boum.org>"
 
 	<h3>For Windows using Gpg4win</h3>
 
-	<p>After installing Gpg4win, download [[!tails_website tails.key
-	desc="Tails' key"]].</p>
+	<p>After installing Gpg4win, download [[!tails_website tails-signing.key
+	desc="Tails signing key"]].</p>
 
 	<p>[[Consult the Gpg4win documentation to import
 	it|http://www.gpg4win.org/doc/en/gpg4win-compendium_15.html]]</p>
@@ -347,29 +349,29 @@ gpg: BAD signature from "T(A)ILS developers (signing key) <amnesia@boum.org>"
 	<h2><a name="authenticity-check"></a>So how can I check better the ISO
 	image authenticity?</h2>
 
-	<p>But the Tails' key that you downloaded from this website could be a
-	fake one if you were victim of a [[man-in-the-middle
+	<p>But the Tails signing key that you downloaded from this website could
+	be a fake one if you were victim of a [[man-in-the-middle
 	attack|doc/warning#index3h1]].
 
-	<p>Finding a way of trusting better Tails' key would allow you to
+	<p>Finding a way of trusting better Tails signing key would allow you to
 	authenticate better the ISO image you downloaded. The following section
 	will give you hints on how to increase the trust you can put in the
-	Tails' key you downloaded.</p>
+	Tails signing key you downloaded.</p>
 
 	<p>We will present you three techniques from the easiest to the safest.
 	Again, none of them is a perfect and magic solution. Feel free to
 	explore them according to your possibilities and technical skills.</p>
 
-	<p>Note that since all Tails' releases are signed with the same key,
-	you will not have to verify the key every time and the trust you might
+	<p>Note that since all Tails releases are signed with the same key, you
+	will not have to verify the key every time and the trust you might
 	progressively build in it will be built once and for all. Still, you
 	will have to check the ISO image every time you download a new one!</p>
 
-	<h3>Correlates several download of Tails' key</h3>
+	<h3>Correlates several download of Tails signing key</h3>
 
-	<p>A simple technique to increase the trust you can put in Tails' key
-	would be to download it several times, from several locations, several
-	computers, possibly several countries, etc.</p>
+	<p>A simple technique to increase the trust you can put in Tails signing
+	key would be to download it several times, from several locations,
+	several computers, possibly several countries, etc.</p>
 
 	<p>For example you could save them every time with a different name in
 	the same directory on a USB stick. Then run the following command from
@@ -377,16 +379,16 @@ gpg: BAD signature from "T(A)ILS developers (signing key) <amnesia@boum.org>"
 
 <pre>
 cd [your download directory]
-sha256sum amnesia*.asc
+sha256sum tails-signing*.key
 </pre>
 
 	<p>This command would output something like this:</p>
 
 <pre>
-f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  amnesia-desktop.asc
-f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  amnesia-laptop.asc
-f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  amnesia-library.asc
-f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  amnesia-seattle.asc
+f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  tails-signing-desktop.key
+f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  tails-signing-laptop.key
+f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  tails-signing-library.key
+f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  tails-signing-seattle.key
 </pre>
 
 	<p>You would then need to visually check that all the checksums of the
@@ -397,9 +399,9 @@ f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  amnesia-seattl
 
 	<h3>Using the OpenPGP Web of Trust</h3>
 
-	<p>If you want to be extra cautious and really authenticate Tails' key
-	in a stronger way than what standard HTTPS offers you, you will need to
-	use the OpenPGP Web of Trust.</p>
+	<p>If you want to be extra cautious and really authenticate Tails
+	signing key in a stronger way than what standard HTTPS offers you, you
+	will need to use the OpenPGP Web of Trust.</p>
 
 	<p>One of the inherent problems of standard HTTPS is that the trust we
 	usually put on a website is defined by certificate authorities: a
@@ -422,12 +424,12 @@ f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  amnesia-seattl
 	<p><em>Furthermore, Alice met Bob, a Tails developer, in a conference,
 	and signed Bob's key. Alice is trusting Bob's key.</em></p>
 
-	<p><em>Bob is a Tails developer who directly owns the Tails' key. Bob
-	fully trusts Tails' key.</em></p>
+	<p><em>Bob is a Tails developer who directly owns the Tails signing key.
+	Bob fully trusts Tails signing key.</em></p>
 
-	<p>This scenario creates a trust path from you to Tails' key that could
-	allow you to trust Tails' key without having to depend on certificate
-	authorities.</p>
+	<p>This scenario creates a trust path from you to Tails signing key
+	that could allow you to trust it without having to depend on
+	certificate authorities.</p>
 
 	<p>This trust model is not perfect either and requires both caution and
 	intelligent supervision by users. The technical details of creating,
@@ -435,30 +437,30 @@ f11c8e27f86e173bc14be342d7d97042d5e4ee6fa0ddfd55b2ec3fabe4e55e43  amnesia-seattl
 	document.</p>
 
 	<p>We also acknowledge that not everybody might be able to create good
-	trust path to Tails' key since it based on a network of direct human
-	relationships and the knowledge of quite complex tools such as
+	trust path to Tails signing key since it based on a network of direct
+	human relationships and the knowledge of quite complex tools such as
 	OpenPGP.</p>
 
-	<h3>Check Tails' key against the Debian keyring</h3>
+	<h3>Check Tails signing key against the Debian keyring</h3>
 
 	<p>Following the previous scenario, when Alice met Bob, a Tails
-	developer, she could sign Tails' key with her own key to certify this
-	trust relationship and make it public. Tails' key would now come along
-	with a signature made by Alice.</p>
+	developer, she could make a new signature on Tails signing key with her
+	own key to certify this trust relationship and make it public. Tails
+	signing key would now come along with a signature made by Alice.</p>
 
-	<p>Tails' key is actually already signed by the keys of several
+	<p>Tails signing key is actually already signed by the keys of several
 	official developers of Debian, the operating system on which Tails is
-	based. Debian makes an extensive use of OpenPGP and you can download
-	the keys of all Debian developers by installing the
+	based. Debian makes an extensive use of OpenPGP and you can download the
+	keys of all Debian developers by installing the
 	<code>debian-keyring</code> package. You can then verify the signatures
-	those developers made with their own key on Tails' key.</p>
+	those developers made with their own key on Tails signing key.</p>
 
 	<p>To download the Debian keyring you can do:</p>
 
 	<pre>sudo apt-get install debian-keyring</pre>
 
-	<p>To get a list of the signatures made by other people on Tails' key
-	you can do:</p>
+	<p>To get a list of the signatures made by other people on Tails signing
+	key you can do:</p>
 
 	<pre>gpg --keyid-format long --list-sigs 1202821CBE2CD9C1</pre>
 
@@ -498,16 +500,17 @@ sub   2048R/125868EA4BFA08E4 2008-06-19 [expires: 2011-05-31]
 
 	<pre>gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --export CCD2ED94D21739E9 | gpg --import</pre>
 
-	<p>Now you can try to verify the signature made by this new key on Tails' key by doing:</p>
+	<p>Now you can try to verify the signature made by this new key on Tails
+	signing key by doing:</p>
 
 	<pre>gpg --keyid-format long --check-sigs 1202821CBE2CD9C1</pre>
 
 	<p>On the output, The status of the verification is indicated by a flag
-	directly following the "sig" tag. A "!" indicates that the signature
-	has been successfully verified, a  "-" denotes a bad signature and a
-	"%" is used if an error occurred while checking the signature (e.g. a
-	non supported algorithm). For example, in the following output the
-	signature of Daniel Kahn Gillmor on Tails' key has been successfully
+	directly following the "sig" tag. A "!" indicates that the signature has
+	been successfully verified, a  "-" denotes a bad signature and a "%" is
+	used if an error occurred while checking the signature (e.g. a non
+	supported algorithm). For example, in the following output the signature
+	of Daniel Kahn Gillmor on Tails signing key has been successfully
 	verified:</p>
 
 <pre>
@@ -524,8 +527,8 @@ sig!         CCD2ED94D21739E9 2010-12-29  Daniel Kahn Gillmor <dkg@fifthhorseman
 	<p>Since the Web of Trust is actually based on human relationships and
 	real-life interactions the best would be to start establishing contacts
 	with people knowledgeable about OpenPGP, start using it yourself and
-	build trust relationships in order to find your own trust path to
-	Tails' key.</p>
+	build trust relationships in order to find your own trust path to Tails
+	signing key.</p>
 
 	<p>You could start by contacting a local [[!wikipedia Linux_User_Group
 	desc="%s"]] or other Tails enthusiasts near you and exchange about
