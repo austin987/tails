@@ -57,8 +57,8 @@ protect against every memory forensics attack we know of.
 Different kinds of events trigger the memory erasure process. All lead
 to run the `tails-kexec` initscript.
 
-First, the memory erasure process is triggered at the end of a normal
-shutdown/reboot sequence. This is implemented by slightly modifying
+**First, the memory erasure process is triggered at the end of a normal
+shutdown/reboot sequence.** This is implemented by slightly modifying
 the System V initscripts shipped by the `kexec-tools` Debian package:
 the `kexec-load` initscript, that normally only runs at reboot time,
 is enabled to run at shutdown time as well. A custom `tails-kexec`
@@ -72,9 +72,9 @@ initscripts are disabled as
 - [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-kexec]]
 - [[!tails_gitweb config/chroot_local-hooks/52-update-rc.d]]
 
-Second, the memory erasure process is triggered when the boot medium
+**Second, the memory erasure process is triggered when the boot medium
 is physically removed during runtime (USB boot medium is unplugged or
-boot CD is ejected). This is implemented by a custom `udev-watchdog`
+boot CD is ejected).** This is implemented by a custom `udev-watchdog`
 program monitors the boot medium; it's run by a wrapper, started at
 boot time, that brutally invokes the memory erasure process, bypassing
 other system shutdown scripts, when this medium happens to be
