@@ -1,0 +1,39 @@
+A bunch of anonymity, privacy and security issues in Polipo were fixed
+in Christopher Davis' branch (git://repo.or.cz/polipo.git) and never
+merged upstream.
+
+We should check if these issues affect Tails.
+
+[[!toc levels=2]]
+
+# dontIdentifyToClients
+
+Christopher added the `dontIdentifyToClients` option (commits:
+80b45940, be116b5, c78beb81) to fix [[!tor_bug 1082]]. When set to
+true, "Polipo tries to avoid transmitting local host name, port, and
+time zone".
+
+1. *hostname* and *port*: Tails sets `proxyName = "localhost"` and
+   `proxyPort = 8118` just like the Tor Browser Bundle does => nothing
+   critical could be leaked - at worse, leaking this information
+   restricts the practical anonymity set to the best one Tails can try
+   putting its users into => **non-issue**.
+
+2. Leaking *timezone* information to the outside world would be much
+   more annoying: Tails' web browser has been trying to spoof a EN-US
+   browser since 0.7 for a reason. However, as far as I understand the
+   code and patches, that information can only be transmitted to a
+   HTTP *client* connected to Polipo (... and the option name tends to
+   confirm my guess); practically speaking, such a client can be any
+   non-SOCKS-aware applications shipped in Tails and has other means
+   to gather that information anyway, so why would it be problem if
+   Polipo leaks it? => someone else than me should double-check all
+   this since I can very possibly be misunderstanding something along
+   the way => **[[!taglink todo/research]]**.
+
+# others?
+
+Security issues that were not privacy-related have supposedly already
+been applied to the 1.0.4.1-1.1 polipo package shipped in Debian
+Squeeze. This should be double-checked, though
+=> **[[!taglink todo/research]]**.
