@@ -32,6 +32,7 @@
 LOG=/var/log/htpdate.log
 DONE_FILE=/var/lib/live/htp-done
 SUCCESS_FILE=/var/lib/live/htp-success
+VERSION_FILE=/etc/amnesia/version
 
 HTP_POOL="
 	www.torproject.org
@@ -157,6 +158,26 @@ run_htpdate() {
 		$HTP_POOL
 }
 
+release_date() {
+	# outputs something like 20111013
+	sed -n -e '1s/^.* - \([0-9]\+\)$/\1/p;q' "$VERSION_FILE"
+}
+
+is_clock_way_off() {
+	local release_date_secs="$(date -d "$(release_date)" '+%s')"
+	local current_date_secs="$(date '+%s')"
+
+	if [ "$current_date_secs" -lt "$release_date_secs" ]; then
+		log "Clock is before the release date"
+		return 0
+	fi
+	if [ "$(($release_date_secs + 259200))" -lt "$current_date_secs" ]; then
+		log "Clock is approx. 6 months after the release date"
+		return 0
+	fi
+	return 1
+}
+
 ### Main
 
 HTTP_USER_AGENT="$(/usr/local/bin/getTorbuttonUserAgent)"
@@ -173,5 +194,14 @@ add_nameservers_to_etc_hosts
 
 run_htpdate
 HTPDATE_RET=$?
+
+# If the clock is already too badly off, htpdate might have fail because
+# SSL certificates will not be verifiable. In that case let's set the clock to
+# the release date and try again.
+if [ "$HTPDATE_RET" -ne 0 ] && is_clock_way_off; then
+	date --set="$(release_date)" > /dev/null
+	run_htpdate
+	HTPDATE_RET=$?
+fi
 
 quit $HTPDATE_RET "htpdate exited with return code $HTPDATE_RET"
