@@ -147,6 +147,8 @@ dns_query_cmd() {
 
 ### Main
 
+HTTP_USER_AGENT="$(/usr/local/bin/getTorbuttonUserAgent)"
+
 # Beware: this string is used and parsed in tails-htp-notify-user
 log "HTP NetworkManager hook: here we go"
 log "Will use these nameservers: $NAME_SERVERS"
@@ -168,7 +170,7 @@ echo "$END_MAGIC" >> /etc/hosts
 /usr/local/sbin/htpdate \
 	-d \
 	-l "$LOG" \
-	-a "`/usr/local/bin/getTorbuttonUserAgent`" \
+	-a "$HTTP_USER_AGENT" \
 	-f \
 	-p \
 	-u htp \
