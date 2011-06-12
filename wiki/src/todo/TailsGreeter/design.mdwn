@@ -1,4 +1,4 @@
-[[!meta title="tails-greeter design and timeline"]]
+[[!meta title="tails-greeter design"]]
 
 [[!toc levels=2]]
 
@@ -21,7 +21,8 @@ This is ongoing task - all the string in project should be handled with localiza
 
 This is optional task (if time permits). However some (unit) tests will be developed alongside with actual code to make sure that stable enough builds could be created early in the project.
 
-## Some design decisions:
+Design decisions:
+=====================
 
 - configuration storage: gconf (with potential migration in future (after gsoc) to gsettings-over-dconf).
 [reasoning: need to be compatible with current debian-based builds]
@@ -29,21 +30,35 @@ This is optional task (if time permits). However some (unit) tests will be devel
 - display manager: gdm (with potential migration in future (after gsoc) to LightDM)
 [reasoning: need to be compatible with current debian-based builds]
 
-- programming language (C if gdm-simple-greeter is forked\extended or vala if tails-greeter is made from scratch)
-[reasoning: use language-of-choice by gnome developers, (possibly) easier integration into build process and future maintenance]
+- programming language: python
+[reasoning: existing implementation gdm-community-greeter]
+
+- project is based on [[https://code.launchpad.net/gdm-commmunity-greeter/]]
+(reasoning: use of TranslatableWindow as a basis for implementation of [[todo/localization_at_runtime]])
 
 - tails-greeter as part of dm preferred over custom dm
 [reasoning: smaller amount of code, easier maintenance, easier extensibility in future (after gsoc)]
+
+- repository layout: 'upstream' branch contains periodic snapshots of gdm-community-greeter, 'master' branch contains actual project code.
+(reasoning: initially tails-greeter will stay rather close to gdm-community-greeter, later it might diverge pretty significantly)
  
+### Localization notes:
+
+- since locale generation and setup might be time consuming it's performed by program which runs in the background
+- logon is allowed only after program completion
+- window translation should be handled separately (via TranslatableWindow) to avoid blocking "in-between" two screens
+- language change is irreversible e. g. done "once and for all" to avoid complexity of managing several locale generations running in parallel or start\stop of locale generator
+
 ##  Additional notes:
 
-### choice of language justification: vala vs perl/python
+### choice of language justification:
 
-+ more fun to work with (+)
-+ no additional runtime requirements (+)
-+ gnome's project (+)
-+ less familiar (-)
+Python is selected as main language for the project because existing greeter made with python was found. This code will be used as a basis for the project.
 
 ### GDM's dbus interface is "private"
 
 which in this case means "unstable" so additional subtask would be to automate (to some extent at least) extraction of this undocumented interface from source code of particular GDM release in order to assist with porting to new version.
+
+### package requirements
+- build and install with debian-squeeze (as long as current tails is based on it)
+- build and install with debian-sid (2nd priority - just to make portability and maintenance easier)
