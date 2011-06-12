@@ -146,6 +146,17 @@ add_nameservers_to_etc_hosts() {
 	echo "$END_MAGIC" >> /etc/hosts
 }
 
+run_htpdate() {
+	/usr/local/sbin/htpdate \
+		-d \
+		-l "$LOG" \
+		-a "$HTTP_USER_AGENT" \
+		-f \
+		-p \
+		-u htp \
+		$HTP_POOL
+}
+
 ### Main
 
 HTTP_USER_AGENT="$(/usr/local/bin/getTorbuttonUserAgent)"
@@ -160,14 +171,7 @@ log "Will use these nameservers: $NAME_SERVERS"
 
 add_nameservers_to_etc_hosts
 
-/usr/local/sbin/htpdate \
-	-d \
-	-l "$LOG" \
-	-a "$HTTP_USER_AGENT" \
-	-f \
-	-p \
-	-u htp \
-	$HTP_POOL
+run_htpdate
 HTPDATE_RET=$?
 
 quit $HTPDATE_RET "htpdate exited with return code $HTPDATE_RET"
