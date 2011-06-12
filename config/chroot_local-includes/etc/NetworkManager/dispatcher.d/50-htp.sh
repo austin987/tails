@@ -149,6 +149,10 @@ dns_query_cmd() {
 
 HTTP_USER_AGENT="$(/usr/local/bin/getTorbuttonUserAgent)"
 
+if [ -z "$HTTP_USER_AGENT" ]; then
+	quit 1 "getTorbuttonUserAgent failed."
+fi
+
 # Beware: this string is used and parsed in tails-htp-notify-user
 log "HTP NetworkManager hook: here we go"
 log "Will use these nameservers: $NAME_SERVERS"
