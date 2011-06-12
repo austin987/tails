@@ -113,24 +113,9 @@ quit() {
 
 cleanup_etc_hosts() {
 	log "Cleaning /etc/hosts"
-	local tempfile
-	tempfile=$(mktemp -t nm-htp.XXXXXXXX)
-	where=outside
-	while read line; do
-		if [ "$where" = inside ]; then
-			if [ "$line" = "$END_MAGIC" ]; then
-				where=outside
-			fi
-		else
-			if [ "$line" = "$BEGIN_MAGIC" ]; then
-				where=inside
-			else
-				echo "$line" >> $tempfile
-			fi
-		fi
-	done < /etc/hosts
-	chmod 644 "$tempfile"
-	mv "$tempfile" /etc/hosts
+
+	# remove all lines between markers
+	sed -e "/$BEGIN_MAGIC/,/$END_MAGIC/d" -i /etc/hosts
 }
 
 dns_query_cmd() {
