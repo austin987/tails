@@ -129,6 +129,21 @@ dns_query_cmd() {
 	echo "$cmd"
 }
 
+add_nameservers_to_etc_hosts() {
+	echo "$BEGIN_MAGIC" >> /etc/hosts
+
+	for HTP_HOST in $HTP_POOL; do
+		IP=$(sudo -u htp sh -c "$(dns_query_cmd "$HTP_HOST")" |
+		     awk '/ has address / { print $4 ; quit }')
+		if [ -z "$IP" ]; then
+			echo "$END_MAGIC" >> /etc/hosts
+			quit 17 "Failed to resolve $HTP_HOST"
+		fi
+		echo "$IP	$HTP_HOST" >> /etc/hosts
+	done
+
+	echo "$END_MAGIC" >> /etc/hosts
+}
 
 ### Main
 
@@ -142,19 +157,7 @@ fi
 log "HTP NetworkManager hook: here we go"
 log "Will use these nameservers: $NAME_SERVERS"
 
-echo "$BEGIN_MAGIC" >> /etc/hosts
-
-for HTP_HOST in $HTP_POOL; do
-	IP=$(sudo -u htp sh -c "$(dns_query_cmd "$HTP_HOST")" |
-	     awk '/ has address / { print $4 ; quit }')
-	if [ -z "$IP" ]; then
-		echo "$END_MAGIC" >> /etc/hosts
-		quit 17 "Failed to resolve $HTP_HOST"
-	fi
-	echo "$IP	$HTP_HOST" >> /etc/hosts
-done
-
-echo "$END_MAGIC" >> /etc/hosts
+add_nameservers_to_etc_hosts
 
 /usr/local/sbin/htpdate \
 	-d \
