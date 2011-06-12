@@ -51,6 +51,11 @@ Build images
 [[Build images|build]] and carefully read the build logs to make sure
 nothing bad happened.
 
+image size
+----------
+
+Check the image size has not changed much since the last release.
+
 SquashFS files order
 --------------------
 
@@ -58,6 +63,11 @@ Build ISO images, profile them and update `squashfs.order` in the Git
 repository. Then rebuild images.
 
 See [[todo/improve_boot_time_on_cd]] for details.
+
+Tag the release in Git
+======================
+
+	git tag -u BE2CD9C1 -m "tagging version ${NEW_VERSION}" "${NEW_VERSION}"
 
 Testing
 =======
@@ -73,14 +83,14 @@ Generate the Torrents
 =====================
 
 First, create a directory with a suitable name for every image to be
-released, such as `tails-i386-squeeze-0.7`.
+released, such as `tails-i386-0.7`.
 
 Second, copy the built images to these brand new directories and
 rename it to fit our `tails-ARCH-DEBIAN_CODENAME-VERSION.iso` naming
 convention e.g.:
 
 	mv tails-i386-squeeze-0.7-20110303.iso \
-	  tails-i386-squeeze-0.7.iso
+	  tails-i386-0.7.iso
 
 Third, generate detached GnuPG signatures for every published image,
 in the same directory as the image; e.g.
@@ -90,8 +100,8 @@ in the same directory as the image; e.g.
 Fourth, generate the SHA-256 hash of every image to be released,
 in the same directory as the image; e.g.
 
-	sha256sum tails-i386-squeeze-0.7.iso \
-	  > tails-i386-squeeze-0.7.iso.sha256
+	sha256sum tails-i386-0.7.iso \
+	  > tails-i386-0.7.iso.sha256
 
 Fifth, create a `.torrent` file for every directory to be published:
 
@@ -105,14 +115,14 @@ unwanted information.
 
 Seventh, generate the SHA-256 hash of every generated `.torrent` file:
 
-	sha256sum tails-i386-squeeze-0.7.torrent \
-	  > tails-i386-squeeze-0.7.torrent.sha256
+	sha256sum tails-i386-0.7.torrent \
+	  > tails-i386-0.7.torrent.sha256
 
 Eighth, generate detached GnuPG signatures for every published
 `.torrent` file:
 
 	gpg --armor --default-key BE2CD9C1 --detach-sign \
-	  tails-i386-squeeze-0.7.torrent
+	  tails-i386-0.7.torrent
 
 Upload images
 =============
@@ -156,11 +166,6 @@ Then add the updated `debian/changelog` and you should be ready to
 record the last commit before tagging happens:
 
 	git commit -m "releasing version ${NEW_VERSION}"
-
-Tag the release in Git
-======================
-
-	git tag -u BE2CD9C1 -m "tagging version ${NEW_VERSION}" "${NEW_VERSION}"
 
 Go wild!
 ========
