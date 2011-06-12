@@ -102,7 +102,6 @@ quit() {
 	shift
 	local message="$@"
 
-	cleanup_etc_hosts
 	echo "$exit_code" >> "$DONE_FILE"
 	if [ "$exit_code" -eq 0 ]; then
 		touch "$SUCCESS_FILE"
@@ -130,6 +129,8 @@ dns_query_cmd() {
 }
 
 add_nameservers_to_etc_hosts() {
+	trap "cleanup_etc_hosts" EXIT
+
 	echo "$BEGIN_MAGIC" >> /etc/hosts
 
 	for HTP_HOST in $HTP_POOL; do
