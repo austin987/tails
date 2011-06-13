@@ -101,7 +101,7 @@ Third, generate detached GnuPG signatures for every published image,
 in the same directory as the image and with a .pgp extension; e.g.
 
 	gpg --armor --default-key BE2CD9C1 --detach-sign *.iso
-	ls -1 *.asc | while read asc ; do mv $asc ${asc%%.asc}.pgp ; done
+	ls --color=never -1 *.asc | while read asc ; do mv $asc ${asc%%.asc}.pgp ; done
 
 Fourth, create a `.torrent` file for every directory to be published:
 
@@ -118,6 +118,9 @@ Sixth, generate detached GnuPG signatures for every published
 
 	gpg --armor --default-key BE2CD9C1 --detach-sign \
 	  tails-i386-0.7.torrent
+
+FIXME: mv the .torrent detached signature to have the .pgp extension
+as well.
 
 Upload images
 =============
@@ -141,26 +144,31 @@ Update the website and Git repository
 
 Rename the `.packages` file to remove the `.iso` part of its name.
 
-Add the `.iso.sha256`, `.iso.asc`, `.packages`, `.torrent` and `.torrent.asc`
+Copy the `.iso.pgp`, `.packages`, `.torrent` and `.torrent.pgp`
 files to the Git repository's `wiki/src/torrents/files/` directory.
 
-Write the announce for the release in `news/version_X.Y.mdwn`.
-
-Write an announce listing the security bugs affecting the previous version in
-`security/` in order to let the users of the old versions know that they have to
-upgrade.
+Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
 
 Update the latest version and related information in `inc/*`.
 
 Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
 
-	sha256sum tails-i386-0.7.1.iso | cut -f 1 -d ' ' | tr -d '\n'
+	sha256sum tails-i386-0.7.1.iso | cut -f 1 -d ' ' | tr -d '\n' \
 	  > stable_i386_hash.html
 
-Replace tags todo/pending and bugs/pending with todo/done and done
-tags.
+Update todo and bugs tags:
+
+ - in `todo/*`: replace `pending` tags with `todo/done` tags
+ - in `bugs/*`: replace links to `pending` with links to `done` (`[[done]]`)
 
 Update the [[features]] page.
+
+Write the announce for the release in `news/version_X.Y.mdwn`.
+
+Write an announce listing the security bugs affecting the previous
+version in `security/` in order to let the users of the old versions
+know that they have to upgrade. This announce page shall be dated back
+to a few days before the one to be released was *built*.
 
 Then add the updated `debian/changelog` and you should be ready to
 record the last commit before tagging happens:
