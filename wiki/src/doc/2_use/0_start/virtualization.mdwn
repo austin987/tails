@@ -2,42 +2,7 @@
 
 [[!toc levels=2]]
 
-FIXME: shouldn't the paragraph "Tails and Virtualization" from [[walkthrough]]
-come here?
-
-Security issues
-===============
-
-When running Tails inside a virtual machine, both the host operating system
-and the virtualization software are able to monitor what you are doing in
-Tails. Moreover traces are likely to be left on the local hard disk.
-
-That's why Tails warns you when you are running it inside a virtual
-machine. Do not expect Tails to protect you if you run it in a virtual
-machine if you do not trust the host computer, Tails is not magical!
-
-If you read this warning while you are not aware to be using a virtual
-machine:  there could be a [[bug|found_a_problem]] in the
-virtualization detection software Tails uses... or something really
-weird is happening.
-
-If you are unsure, and if you can afford it, just run Tails from a CD
-or USB stick.
-
-Tips and tricks
-===============
-
-Some [[support/virtualization/tips]] can help making the host
-operating system and virtualization software a tiny bit more secure.
-
-# Extract from the old documentation
-
-**FIXME**: following this is an extract from the old walkthrough. To be merged
-with the rest of the document.
-
-## <a name="vm"></a>Tails and Virtualization
-
-**FIXME**: merge with stuff in Introduction, with [[virtualization]]
+**FIXME**: merge with stuff in Introduction
 
 Certain users might not want to restart the computer every time they
 wish to use the Internet anonymously with Tails. For those, a so
@@ -51,81 +16,40 @@ technologies allows for convenient access to Tails's features in a
 protected environment while you at the same time have access to your
 normal operation system.
 
-There are a few security issues with this approach though. The main
-issue is if the host operating system is compromised with a software
-keylogger or virus, which Tails does not provide any protection
-against (in fact, that is impossible). Secondly, performance is a
-usually a bit worse compared to running it on its own. As such, this
-is only recommended when the other alternative is not an option or
-when you are absolutely sure that your host system is clean.
-Additionally, some of these virtual machines are closed-source, so it
-is very difficult to determine if they do something that could break
-Tails's security. In conclusion, use virtual machines with care.
+Security issues
+===============
 
-### QEMU
+There are a few security issues with this approach though. 
 
-**FIXME**: This section have not been adapted now so please do not take it into
-account. Tails doesn't currently include QEMU (0.7.2).
+When running Tails inside a virtual machine, both the host operating system
+and the virtualization software are able to monitor what you are doing in
+Tails.
 
-The open source [QEMU](http://bellard.org/qemu/) processor emulator
-and virtualizer handles Tails nicely. In fact, QEMU is included in
-the Tails distribution for Microsoft Windows users (more about this
-[below](#windows)). In order to start it from the command-line, simply
-type something like:
+The main issue is if the host operating system is compromised with a software
+keylogger or other malware, which Tails does not provide any protection against
+– in fact, that is impossible.
 
-<pre>
-	<code>qemu -usb -soundhw sb16 -localtime -boot d -cdrom
-	/path/to/incognito.iso</code> </pre>
+Moreover traces are likely to be left on the local hard disk.
 
-If you have severe performance problems you should look into KQEMU
-which is an accelerator module for QEMU, granting a more direct access
-to the systems hardware for additional speed. You will most likely
-need administrator privileges for installing KQEMU.
+As such, this is only recommended when the other alternative is not an option
+or when you are absolutely sure that your host system is clean.
 
-### VMWare
+That's why Tails warns you when you are running it inside a virtual
+machine. Do not expect Tails to protect you if you run it in a virtual
+machine if you do not trust the host computer, Tails is not magical!
 
-**FIXME**: This section have not been adapted now so please do not take it into
-account.
+If you read this warning while you are not aware to be using a virtual
+machine: there could be a [[bug|found_a_problem]] in the
+virtualization detection software Tails uses... or something really
+weird is happening.
 
-Tails works very well in [VMWare](http://www.vmware.com/) with the
-following [VMWare Virtual
-Appliance](http://files1.cjb.net/incognito/incognito-vmware-1.0.zip)
-([signature](http://files1.cjb.net/incognito/incognito-vmware-1.0.zip.asc))
-devised by the Tails developers. Simply unzip the file and follow
-the provided instructions in `README.txt` which is provided within the
-archive. The free ([as in
-beer](http://en.wikipedia.org/wiki/Gratis_versus_Libre)) [VMWare
-Player](http://www.vmware.com/products/player/) might be useful for
-this. In order to get good performance you will probably need
-administrator privileges in the computer when you install VMWare. Note
-that VMWare is closed source, so it might be hard to determine if it
-does anything that is bad for anonymity, although it is unlikely.
+If you are unsure, and if you can afford it, just run Tails from a CD
+or USB stick.
 
-### VirtualBox
+Tips and tricks
+===============
 
-Tails runs in [VirtualBox](http://virtualbox.org) without any major conifuration
-necessary. VirtualBox is distributed both as a closed-source and as an
-open-source (the so called OSE or Open Source Edition), the latter which the
-Tails developer's encourages (although it currently lacks USB support compared
-to the closed-source version).
+Some [[tips]] can help making the host
+operating system and virtualization software a tiny bit more secure.
 
-## <a name="windows"></a>Running Tails from within Microsoft Windows
-
-**FIXME**: This section have not been adapted now so please do not take it into
-account. It is currently not integretad to start under Windows with QEMU.
-
-Thanks to QEMU, [described above](#vm), Tails can be run within
-Microsoft Windows without the need to restart the computer. QEMU ships
-with Tails, and is set up so you only have to insert the media when
-Windows is running and a menu should appear with the option to start
-Tails through it. This is especially useful when you are using a
-computer you are not allowed to shut-down, which can be the case for
-public computers in certain Internet cafés, libraries or other public
-computers. Also, for some some general remarks on QEMU and Tails,
-and some security concerns about this mode of operation, see the above
-section on [Tails and Virtualization](#vm).
-
-Since the Tails developers do not have access to any Windows
-computers at the moment, any input if this actually works and how it
-performs etc. is welcome.
-
+In the future, it will be possible to easily start [[Tails within Windows]].
