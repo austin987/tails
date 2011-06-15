@@ -1,5 +1,3 @@
-[[!tag todo/code todo/documentation]]
-
 [[!toc levels=3]]
 
 Rationale
@@ -8,11 +6,11 @@ Rationale
 Current state
 -------------
 
-In current amnesia,
+In current Tails,
 
 * a root password is set in `config/chroot_local-hooks/01-password`,
   but it's public and the same on all live systems;
-* full sudo access is given to the amnesia user.
+* full sudo access is granted to the `amnesia` user.
 
 Problems
 --------
@@ -56,20 +54,24 @@ OTOH, there might be an obscure Debian package whose installation
 would reset our `iptables` rules. A malware could install such
 a package, retrieve the real user IP, and send it to an attacker.
 
-Possible solutions
-==================
+Our plans
+=========
 
-We agreed upon a menu in the boot process (be it a bootloader menu, a
-X menu in initramfs or whatever) proposes - probably amongst other
-options - to type a sudo/root password in a text input box. If none is
-entered, there's no root access at all. If a password is entered, it
-is set for the default user + sudo enabled.
+We agreed upon using the upcoming [[todo/TailsGreeter]] [[todo/boot
+menu]] to allow the user to type a sudo/root password in a text input
+box. If none is entered, there's no root access at all. If a password
+is entered, it is set for the default user + sudo enabled.
 
-The following solutions are kept for historical reasons and understanding the
-choice.
+Time to [[!taglink todo/code]]!
+
+Archives
+========
+
+The following solutions are kept only for historical reasons and
+understanding the decision that was made.
 
 Disabled root access by default, boot menu option to enable it
---------------------------------------------------------------------
+--------------------------------------------------------------
 
 If enabled to user would be prompted to set a password during early init or initramfs.
 
