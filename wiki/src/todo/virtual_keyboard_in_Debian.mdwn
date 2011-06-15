@@ -2,23 +2,21 @@ We [[now ship onBoard|todo/install_a_non-KDE_virtual_keyboard]]
 and have a hard time maintaining our custom packages adapted from
 Ubuntu's ones.
 
-In order to preserve Tails developers sanity we need to get a decent
-virtual keyboard included into Debian. Let's [[!taglink
-todo/research]] which software would be the best suited one.
+In order to preserve Tails developers sanity we need to use a decent
+virtual keyboard that is shipped by Debian. We've researched which
+software would be the best suited one and have decided to move to
+Florence.
 
-# Inclusion process for onBoard
+# Moving to Florence
 
-**WARNING** there is a bug that makes [[onBoard unusable with non-qwerty
-keyboard
-layout|bugs/Squeeze:_onBoard_is_unusable_with_non-qwerty_keyboard_layout]]
+We've been convinced by Florence (available in squeeze-backports) and
+work is ongoing in our `feature/florence` Git branch to replace
+onBoard with it.
 
-1. file RFP bugs for `python-virtkey` and `onboard`
-2. wait for these packages to reach Wheezy
-3. ask for an upload to squeeze-backports
-3. remove our custom packages from `config/chroot-localpackages`, add
-   these packages names to
-   `config/chroot_local-packageslists/tails-common.list` and add suitable
-   APT pining
+Only thing missing: it needs an option to start hidden ([upstream
+bug](http://sourceforge.net/tracker/?func=detail&aid=3101251&group_id=217749&atid=1041134),
+[[!debbug 628124]])
+=> need to [[!taglink todo/code]] or [[!taglink todo/wait]].
 
 # Alternatives
 
@@ -41,8 +39,11 @@ Florence
 
 * [homepage](http://florence.sourceforge.net/english.html)
 * more beautiful than onBoard
-* launch with `--no-gnome` to disable the message about `gnome-at-spi` at startup
+* One can launch it with `--no-gnome` to disable the message about
+  `gnome-at-spi` at startup. Instead, we enable accessibility features
+  at build time, since we also want to enable those.
 * find a [[conf file attached|florence.gconf.xml]]
+* available in squeeze-backports
 
 Caribou
 -------

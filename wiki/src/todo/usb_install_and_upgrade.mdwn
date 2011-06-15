@@ -323,6 +323,14 @@ This might fails at kernel load time with following error:
 In that case you probably need a newer Grub2 (see [[!debbug 543924]]
 for details).
 
+**Warning!**
+
+1. This breaks the [[emergency shutdown|contribute/design/memory_erasure]]
+   on media removal.
+2. This is by no means a supported installation method *yet*. E.g. the
+   kernel parameters shall be manually updated when replacing the ISO
+   with a newer one.
+
 #### Security matters
 
 In the above example, the Grub2 configuration file must contain
@@ -396,3 +404,98 @@ D-Bus interface that makes it easy to programmatically partition a
 storage device and create filesystems in there without messing with
 low-level details; its LUKS encryption support probably is the killer
 feature that makes it the perfect library for the job.
+
+Upgrade
+-------
+
+The upgrade issue is actually twofold: network burden and writing the upgraded
+live system on the USB stick.
+
+### Full CD image
+
+Can a memory stick be upgraded using the full CD image distributed for the new
+Tails version?
+
+A full CD image (700 MiB) is a lot of data to download. If done over Tor this
+is a pretty heavy load for the network and takes a fair amount of time.
+
+To support upgrade in a running system:
+
+ * 700 MiB of RAM would need to be available to store the downloaded image.
+ * The USB stick must be able to store two different images (either `squashfs`
+   or full ISO, depending on the chosen boot method). Otherwise the system
+   is likely to crash if the currently running *squashfs* disappears.
+
+### Partial download
+
+To reduce the previous requirements, Tails would need to provide only what
+has changed between two releases (deltas) and have a way to apply those changes
+to the previous version.
+
+#### Alreday existing tools
+
+Plain `diff` does not work on binary files.
+
+Binary diffs ([rsync], [xdelta], [bsdiff], [VCDIFF]) gives poor
+result on live system images because `squashfs` images vary
+strongly as a whole, even for tiny changes of the files inside.
+That situation is unlikely to change ([[!debbug 602965]]) and is even worse
+with `squashfs-lzma`. Quoting `xz` manpage:
+
+     Compressed output may vary
+       The exact compressed output produced from the same uncompressed input
+       file may vary between XZ Utils  versions  even if  compression  options
+       are identical.  This is because the encoder can be improved (faster or
+       better compression) without affecting the file format.  The output can
+       vary even between different builds of the same XZ Utils  version, if
+       different build options are used.
+
+       The  above means that implementing --rsyncable to create rsyncable .xz
+       files is not going to happen without freezing a part of the encoder
+       implementation, which can then be used with --rsyncable.
+
+[xdelta]: http://xdelta.org/
+[bsdiff]: http://www.daemonology.net/bsdiff/
+[VCDIFF]: http://www.ietf.org/rfc/rfc3284.txt
+
+#### Appending to `squashfs` image
+
+`mksquashfs` can actually append new files to an existing `squashfs` image.
+
+Initial images are created with files in a specific order to
+[[improve boot time on cd]], but on a USB stick random access in a non-issue.
+
+[[!taglink todo/test]] if `mksquashfs` can append an image that is currently
+used without weakening a running system.
+
+[[!taglink todo/research]] if it possible to "remove" files with appended
+images.
+
+Upgrading the system would result in a series of files to be appended to the
+current `squashfs` image.
+
+#### Stacking `squashfs` images
+
+Tails filesystem is already using `aufs` to provide a read-write filesystem on
+top of the read-only `squashfs` image.
+
+This system could probably be extended to support mounting multiple `squashfs`
+filesystems on top of each others. Upgrades would be `squashfs` images with
+only the files that have been modified since the previous releases.
+
+Yet again, there is need to [[!taglink todo/research]] how to handle deletions.
+
+Shipping upgrades could be as simple as shipping those extra `squashfs` images.
+
+#### Deltas
+
+A possible way to encode deltas for the two previous methods could be:
+
+ * For each file that has been modified: a binary delta and a new set of
+   metadata if they have changed.
+ * A list of deleted files.
+
+And `mksquashfs` would be used in the running live system after applying the
+delta to create a `squashfs` image with the upgrade.
+
+But there is probably things that have been left out of such an early draft.
