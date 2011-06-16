@@ -35,4 +35,8 @@ pref("mail.html_compose", False);
 pref("mail.identity.default.compose_html", False);
 pref("mail.default_html_action", 1);
 
-// FIXME: Set general.useragent.override equal to that of the most recent Thunderbird from the time of the firefox version specified in current Torbutton. We probably want to script this...
+// Set general.useragent.override equal to that of the most recent Thunderbird from the time of the firefox version specified in current Torbutton.
+// FIXME: Can we script this? Can getTorbuttonUserAgent help some how?
+// Below, useragent of windows user with Thunderbird version released the day before Firefox 3.6.3. Data gathered from: http://www.useragentstring.com
+// FIXME: Should we specify LANG
+pref("general.useragent.override", "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.9) Gecko/20100317 Thunderbird/3.0.4");
