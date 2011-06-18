@@ -11,10 +11,28 @@ body {
 	font-family: "Verdana", sans-serif;
 	color: black;
 	background: url(lib/strip.png);
-	font-size: 13px;
-	line-height: 1.5;
 	margin: 0;
 	padding: 0;
+}
+
+/* Basic Typography */
+/* This section implements the ideas of typographic scale and rythm as
+ * explained on http://lamb.cc/typograph/. */
+
+/* Set the main font-size to 14px.
+ * Set the main line-height, λ to 21px.
+ * All this section is calculated so that each element measures in height a
+ * multiple of λ. This allows, for exemple, to keep parallel threads of text
+ * in a same vertical rythm. */
+body {
+	font-size: 87.5%; /* 16×87.5%=14px */
+	line-height: 1.5; /* 14×1.5=21px=λ */
+}
+
+/* The bottom margin of all elements is fixed to a multiple of λ so that they
+ * don't brake the rythm when they overlap. We set all top margin to 0. */
+p {
+	margin: 0 0 1.5em 0; /* 14×1.5=21px=λ */
 }
 
 /* use a geometric font for the main titles and the sidebar */
@@ -23,24 +41,34 @@ h1, h2, span.title, div.banner, .sidebar {
 	font-weight: normal;
 }
 
-/* headers */
+/* The size h1, h2 and h3 follows a traditional scale of 1, 1.5 and 2.
+   Their line-height are adjusted to a multiple of λ. */
+
 h1 {
-	font-size: 2em; /* 13×2=26px */
-	margin: 1em 0;
+	font-size: 2em; /* 14×2=28px */
+	line-height: 1.5; /* 28×1.5=42px=2λ */
+	margin: 0 0 0.75em 0; /* 28×0.75=21px=λ */
 }
+
+/* Instead of 1.5 we use 1.429em because at 20px the Avant Garde font look
+ * thiner than at 21px and thus more distinct in style than h1. */
 h2 {
-	font-size: 1.538em; /* 13×1.538=20px */
+	font-size: 1.429em; /* 14×1.429=20px */
+	line-height: 2.1; /* 20×2.1=21px=λ */
+	margin: 0 0 1.05em 0; /* 20×1.05=21px=λ */
 }
+
 h3 {
-	font-size: 1em;
+	font-size: 1em; /* 14px */
 	text-transform: uppercase;
 	font-weight: bold;
 	letter-spacing: 1px;
+	margin: 0 0 1.5em 0; /* 14×1.5=21px=λ */
 }
 
 /* avoid super-long lines */
 p, ul, ol, h1, h2, h3, h4, h5, h6, blockquote {
-	max-width: 50em;
+	max-width: 45em;
 }
 
 code, kbd, samp, pre, tt, var {
@@ -171,17 +199,15 @@ text-shadow:1px 1px 5px #CFCFCF;
 }
 
 span.title {
-	font-size: 2.769em; /* 13×2.769=36px */
-	line-height: 1em;
+	font-size: 2.5em; /* 14×2.5=35px */
+	line-height: 1.2; /* 35×1.2=42px=2λ */
 	font-weight: normal;
 	display: block;
-	margin: 1.5em 0 0.833em 0; /* 36x0.833=30px */
-	background-color:none;
+	margin: 1.5em 0 0.6em 0; /* 35x0.6=21px=λ */
 	color: #6e2daf;
-	text-shadow: *1px 1px 5px #CFCFCF ;
 	border-left: 10px solid #444444;
-	padding-left: 30px;
-	margin-left:-26px;
+	padding-left: 35px;
+	margin-left: -28px;
 }
 
 .parentlinks {
@@ -226,7 +252,7 @@ span.title {
 #page-contribute #talk,
 #page-download #bittorrent, #page-download #http {
 	display: inline-block;
-	width: 35%;
+	width: 34%;
 	vertical-align: top;
 }
 
@@ -378,10 +404,6 @@ p+p {
 	border-radius: 0.2em;
 }
 
-
-h1, h2, h3, h4, h5, h6 {
-	word-spacing: 0;
-}
 
 code {
 	line-height:18px;
