@@ -1,19 +1,11 @@
 [[!meta title="Walkthrough"]]
 
-[[!toc levels=2]]
+**WARNING**: this documentation is still a work in progress. It is thus
+incomplete, plenty of it lies on some points, and lacks screenshots. Originally
+written for Incognito, it has not been fully adapted for Tails yet. Outdated
+section are marked with **FIXME**. Please do **not** take them as true.
 
-**WARNING**: this documentation, originally written for Incognito, has
-not been fully adapted for Tails yet. It is thus incomplete, plainly
-lies on some points, and lacks screenshots.
-
-TODO:
-
-- adapt instructions from Thunderbird to Claws Mail
-- instruct how to really "change identity"
-- GnuPG + Seahorse
-- FireGPG
-- Screenshots
-- Add instructions to setup a hidden service with Vidalia.
+[[!toc levels=3]]
 
 # <a name="intro"></a>Introduction
 
@@ -37,6 +29,10 @@ unless you know what you are doing – poking around with them too much
 might spoil the built-in defences of Tails.
 
 ## <a name="what"></a>What is Tails?
+
+**FIXME**: start of duplicated section: this and the [[about]] page are
+duplicated information. Merge or inline the [[about]] page (whithout what's
+next) here?
 
 Amnesia, **noun**: Forgetfulness; loss of long-term memory.
 
@@ -63,6 +59,8 @@ to the Internet are forced to go through [the Tor
 network](https://www.torproject.org/), whose purpose is to protect
 them against traffic analysis. Moreover, Tails is designed to leave
 no trace on local storage devices unless explicitely asked.
+
+**FIXME**: end of duplicated section
 
 To use it, you simply insert the CD or USB-drive that you have
 installed Tails on in a computer and restart it. Tails should
@@ -112,6 +110,10 @@ computer knowledge when no special measure is taken to prevent this
 Again, if you do mind this fact, Tails might be just what you need.
 
 ## <a name="how"></a>How does Tails provide with anonymity?
+
+**FIXME**: semi-duplicated section: this and the [[about]] page are
+duplicated information. Merge or inline the [[about]] page (whithout what's
+next) here?
 
 First of all, true anonymity is impossible. Given enough resources an
 attacker will get you. What one can do is to make the cost of doing
@@ -204,33 +206,92 @@ might not work as intended.
 
 ## <a name="how_amnesia"></a>How does Tails provide with amnesia?
 
-FIXME: translate from French.
+**FIXME**: duplicated section pasted from [[doc/about]] (Use anywhere but leave
+no trace): this and the [[about]] page are duplicated information. Merge or
+inline the [[about]] page (whithout what's next) here?
+
+Using Tails on a computer doesn't alter or depend on the operating system
+installed on it. So you can use it in the same way on yours, the computer of a
+friend or one at your local library. After removing your Tails CD or USB stick
+the computer can start again on its usual operating system.
+
+Tails is configured with a special care to not use the computer's hard-disks,
+even if there is some swap space on it. The only storage space used by Tails is
+the RAM memory, which is automatically erased when the computer shuts down. So
+you won't leave any trace neither of the Tails system nor of what you did on
+the computer. That's why we call it "amnesic".
+
+This allows you to work on sensitive documents on any computer and protect you
+from data recovery after shutdown. Of course, you can still explicitly save
+some documents to another USB or external hard-disk and take them aways for
+future use.
+
+**FIXME**: end of pasted part
+
+**FIXME**: start of translation from French.
+
+However, there are some limitations:
+
+- if the computer you are using is powered off brutally (e.g. power supply cut,
+  power cable or battery unplugged, poweroff by pressing power button, …) RAM
+  won't be cleared immediatly on shutdown. It will be possible to achieve a cold
+  boot attack (**FIXME**: add a link) for several minutes to several hours
+  (depending on the RAM model and the temperature) which would enable an
+  attacker to recover everything that have been achieved during the session,
+  from typed texts to saved files, including password and encryption keys.
+- information saved on external devices are *not* protected by default: if they
+  are sensitive, they should be encrypted using specific tools (e.g. GnuPG) or
+  saved on encrypted device (e.g. using LUKS through palimpsest). These tools
+  are included in Tails, it's then up to you to learn using them. It is also
+  likely that the files you may create using Tails will keep tracks that they
+  were created using this operating system.
+- if you need to access your local hard drive(s) form Tails, please stay careful
+  about the exchanges to render possible.
+- to end with you might be tempted to use Tails as an host inside a
+  virtualisation software (e.g. VirtualBox or QEMU). Be warned that both the
+  host operating system and the virtualization software will be able to monitor
+  what you are doing in Tails. Moreover traces are likely to be left on the
+  local hard disk. Please see [[support/virtualization]] for more information.
+
+**FIXME**: end of translation from French.
 
 # <a name="howto"></a>How to use Tails
 
-FIXME: merge the paragraph bellow with the French, expanded and
-adapted version "Quelques précisions au sujet de l'utilisation de
-Tails".
+## <a name="live"></a>Understand the consequences of using a live system
 
 Some other important things that need to be understood before
 proceeding are the concepts of [LiveDistro, LiveCD and
 LiveUSB](http://en.wikipedia.org/wiki/Livedistro). In essence a
-LiveDistro is an operating system (like Windows or Mac OS X, although
+LiveDistro is an operating system (like Windows or Mac OS X, although
 Tails uses Linux) that is run from some removable media like a CD or
-USB drive. Most likely you are running Tails from a CD, which makes
-it into a LiveCD, and this brings some limitations to its operation.
-Most importantly, since the CD is a read-only medium once it has been
-burned by your CD recording software no changes persist through
-reboots. So, if you download a file or make some application settings
-they will be gone once you shut-down. This is both good and bad – on
-the plus side, if you screw up anything or get a virus, the system
-will be restored once you have restarted it. But not being able to
-save stuff is of course inconvenient in some cases. If you find it
-frustrating you might want to run Tails from a USB drive instead,
-making it into a LiveUSB. Since a USB drive is writeable medium it is
-possible to make it so that the changes persist through reboots. You
-can read more about this and its implications [later](#usb)
-[on](#persistent) in this walkthrough.
+USB drive.
+
+Starting a computer on a media containing Tails doesn't change anything on the
+operating system actually installed on your hard drive: as a live system, Tails
+doesn't use your hard drive during the whole session. Be your hard drive absent
+or damaged, it wouldn't prevent your computer to start Tails. Consequently,
+removing the CD or USB stick containing Tails is enough to retrieve your usual
+operating system.
+
+**FIXME**: Not true because of time change
+
+A consequence of this amnesia is that you can't save anything on the device
+containing Tails be it files you create or download or any configuration you
+might do. You should save anything you want to keep for later access into a
+separate device (other USB stck, other CD or any device you would choose).
+Future versions of Tails will propose a feature to save some files or
+configuration, but it is still being developped.
+
+**FIXME**: find an appropriate place for this paragraph
+
+To end with, Tails is based on alpha software and is always being developped,
+which means it might contain programming errors or obsolete protections. It is
+crucial to stay tuned through Tails website (https://tails.boum.org/) and not to
+rely on it for strong anonymity.
+
+**FIXME**: end of unordered paragraph
+
+## <a name="applications"></a>Walkthrough applications included in Tails
 
 In this section we will now briefly present the main applications
 included in Tails. Users are encouraged to look for further
@@ -240,10 +301,14 @@ clickable to get them undistorted and in full size, but note that some
 of the text is smudged in order to protect identities. Let us take a
 look at the Tails desktop:
 
+## Use the GNOME desktop
+
 [[!img support/walkthrough/Desktop_en.jpg title="Tails Desktop as of 0.6.1" align="center"]]
 
+**FIXME**: Upgrade the screenshot
+
 The graphical user interface used in Tails is called GNOME and
-shares many fundamentals with that of Microsoft Windows, Mac OS X and
+shares many fundamentals with that of Microsoft Windows, Mac OS X and
 most other modern operating systems, so if you have used any of them,
 getting used to GNOME will take no time. As this document is not
 intended as a complete guide for GNOME there are only a few things about
@@ -253,7 +318,7 @@ First of all, in the upper left corner of the screen there is a button
 with a logo in it, followed by three menus: *Applications*,
 *Shortcuts* and *System*.
 
-FIXME: check the English names.
+**FIXME**: check the English names.
 
 The *Applications* menu is where you will find short cuts to the
 installed applications. Please explore the different categories of
@@ -265,7 +330,7 @@ The *System* menu allows to:
 
 * customize some aspects of the GNOME desktop (*Preferences*);
 * change some important aspects of the system and hardware behavior
-(*Administration*);
+  (*Administration*);
 * shutdown the computer.
 
 On the right of these three menu entries, a few shortcuts allow to
@@ -285,7 +350,7 @@ You are encouraged to check these icons out with the left and right
 mouse buttons, but we will say more about some of them later on in
 this article.
 
-FIXME: check the English names
+**FIXME**: check the English names
 
 At the center of the screen is a vast area called the Desktop. A
 *Computer* icon provides access to storage media; the *Personal
@@ -312,10 +377,10 @@ NetworkManager will try to obtain network access automatically. If you
 want to connect via wireless with a supported wireless adapter, you
 are basically two clicks away.
 
-First click its icon in the systray to summon the list of available
+Click on its icon on the left of the top panel to find the list of available
 connections:
 
-FIXME: screenshot
+**FIXME**: screenshot
 
 <center><a href="img/nm-menu.jpg"><img border="0" height="194"
 src="img/nm-menu.jpg" width="240" /></a></center>
@@ -331,7 +396,7 @@ section.
 ## <a name="vidalia"></a>Controlling Tor with Vidalia
 
 Vidalia is an anonymity manager. Basically this means that it can be used
-to control Tor, and is automatically launched on startup.
+to control Tor, and is automatically launched on network connection.
 
 As soon as the Tor client managed to establish a route to the Tor
 network, Vidalia hides as an onion icon on the upper right corner of
@@ -340,19 +405,19 @@ the screen. Right-clicking this icon displays a configuration menu.
 
 [[!img support/walkthrough/Vidalia_menu_en.jpg title="Vidalia menu" align="center"]]
 
-FIXME: translate the French paragraph here.
+Vidalia menu proposes essentialy two features:
 
-Let's describe the two most important features of the Vidalia
-configuration menu:
-
-* Network map: the list of currently used routes and their status.
-* New identity: clicking this button will make Tor use a different
+* a *Network map* which displays a window showing a map of the Tor network, a list
+  of Tor relays and a the list of currently used routes and their status.
+* a *New identity* entry, which will make Tor use a different
   route for **future** connections, so that they will appear to come
   from a different address. But **be carefull** that some software might
   still continue to use the old route, depending on how it behaves with
   network connections. If you want to be sure a software is using a new
   route, you may want to close it, hit the *New identity* button, and
   then start the software again once the popup window disappears.
+
+### The network map
 
 Next we will have a look at the Tor network map:
 
@@ -366,6 +431,10 @@ connection listing it should at least be relatively easy for you to
 see which exit node and country it appears your connections come from.
 Right-clicking on any establisehd circuits enable you to close it in
 case this one is too slow.
+
+### The *New identity* feature
+
+**FIXME**: instruct how to really "change identity"
 
 One very useful thing when working with Tor is the following option,
 found in the Vidalia menu that you get by right-clicking its systray
@@ -383,6 +452,11 @@ luck with the new circuits that are built. Also, if you ever want to
 make sure that one thing you are doing will not be linkable to the
 next thing you are going to do you should use this feature.
 
+### Connect through a bridge
+
+**FIXME**: This section have not been adapted now so please do not take it into
+account.
+
 Vidalia also makes it easy to use some of the Tor Network's more
 advanced features. For example, you can  click on the *Settings* option,
 then on the *Network* tab of the newly opened window, and select the *My
@@ -391,6 +465,10 @@ form where you can add Tor
 [bridges](https://www.torproject.org/bridges.html) as entry points to
 the Tor network. This is a way to circumvent censorship systems that
 blocks normal access to the Tor network, intentially or not.
+
+### Setting up a Tor relay
+
+**FIXME**: discuss if we really want to document that
 
 Lastly Vidalia will assist you setting up yourself as a Tor server,
 helping out the Tor Network by relaying other people's traffic. You
@@ -421,15 +499,22 @@ appeared form. Other tabs of this form helps you to choose if you want
 to limit bandwith usage and the kind of trafic your relay will be used
 to.
 
-## <a name="ff"></a>Browsing the web with Firefox
+### Setup a hidden service
 
-Given Mozilla Firefox's recent surge in popularity many of you have
+**FIXME**: add instructions to setup a hidden service with Vidalia.
+
+## <a name="ff"></a>Browsing the web with IceWeasel
+
+IceWeasel is an unbranded version of Mozilla Firefox webbrowser.
+Given Mozilla Firefox's popularity many of you have
 probably used it before. Its user interface is like any other modern
 web browser, but there are a few things we want to mention, some that
 is special with this particular installation. Do you remember what we
 said [earlier](#how) about end-to-end encryption and its importance
 while using Tor? Here is how it looks in Firefox when you are using a
 secure, end-to-end encrypted connection:
+
+### SSL/TLS Encryption
 
 <center><a href="img/ff-ssl.jpg"><img border="0" height="311"
 src="img/ff-ssl.jpg" width="404" /></a></center>
@@ -447,7 +532,11 @@ to do is logging in on an email account at
 interface](https://lavabit.com/apps/webmail/src/login.php). Let us
 proceed with logging in there so we can se how it is possible to send
 end-to-end encrypted email with any webmail service out there with the
-nifty [FireGPG](http://getfiregpg.org/) extension:
+nifty [FireGPG](http://getfiregpg.org/) extension.
+
+### Email encryption using FireGPG
+
+**FIXME**: move this item to OpenGPG encryption paragraph?
 
 <center><a href="img/ff-compose-1.jpg"><img border="0" height="311"
 src="img/ff-compose-1.jpg" width="404" /></a></center>
@@ -488,6 +577,8 @@ though. It cannot generate new keys, so you will have to use another
 application for that. We recommend using the [GNU Privacy
 Assistant](#gpa), found under the "Utilities" section of the K menu,
 or [KPGP](#kpgp), found in the "Utilities -&gt; PIM" section.
+
+### Torbutton
 
 Returning to web browsing again we need to do something about the
 problems with JavaScript, cookies and Adobe Flash that you might
@@ -560,6 +651,9 @@ Torbutton protects you against all of them.
 
 ## <a name="tb"></a>Emailing with Thunderbird
 
+**FIXME**: This section have not been adapted now so please do not take it into
+account. Tails uses Claws Mail instead of Thunderbird.
+
 Not everyone is happy using webmail (like the authors) but want to use
 a _real_ email client instead of some fragile web-based interface. For
 that we have included Mozilla Thunderbird which looks like this:
@@ -600,6 +694,8 @@ password otherwise will be sent in plaintext.
 
 ## <a name="nautilus"></a>Managing files with Nautilus
 
+**FIXME**: merge with the GNOME desktop section?
+
 Nautilus is GNOME's file manager, (S)FTP client and more and it looks like this
 while in file managing mode:
 
@@ -622,6 +718,8 @@ user with three different protocols enabled at the same time:
 
 <center><a href="img/pidgin-main.jpg"><img border="0" height="196"
 src="img/pidgin-main.jpg" width="109" /></a></center>
+
+### OTR encryption
 
 Of course the issue of end-to-end encryption arises again. As we
 mentioned earlier, we have [Off-the-record
@@ -649,57 +747,51 @@ migrate to clients with support for OTR!
 **FIXME**: mention `/me` is **not** encrypted when used in a OTR
 private conversation.
 
+## Use OpenPGP encryption
+
+Tails includes [GNU Privacy Guard](http://www.gnupg.org/) (GnuPG) – A Free
+implementation of OpenPGP used for encryption of all sorts.
+
+### Manage keys with Seahorse
+
+Tails include Seahorse, a graphical program to manage OpenPGP keys. You can
+start it from the top panel clicking *System* → *Preferences* → *Password and
+Encryption keys*
+
+### Encrypt and decrypt webmail with FireGPG
+
+**FIXME**: move stuff from webbrowsing?
+
+## Use encrypted storage devices
+
+Tails includes *Disk Utility*, a storage device management which has the
+ability to easily create encrypted partitions. Even if its usage isn't
+encouraged, TrueCrypt is also available to provide backward compatibility to
+Incognito users. See [[truecrypt]].
+
+**FIXME**: explain how to create and use an encrypted USB stick?
+
+## Type password securely on a public computer
+
+[OnBoard](https://launchpad.net/onboard)* starts automatically with Tails and
+is accessible by the keyboard icon in the systray on the top left of the screen.
+This virtual keyboard that can be used to safely enter passwords using the mouse
+when you suspect that a hardware keylogger may be present.
+
 ## <a name="misc"></a>Other applications
+
+**FIXME**: There is currently no password manager in Tails
 
 There are several other interesting security or Internet related
 applications included in Tails some which we list and present
 briefly here. Those that have graphical user interfaces (which most
-do) can be found in the K menu.
-
-* [GNU Privacy Guard](http://www.gnupg.org/) (GnuPG) – A Free
-  implementation of OpenPGP used for encryption of all sorts.
-* <a name="gpa"></a>[GNU Privacy
-  Assistant](http://www.gnupg.org/gpa.html) – A graphical user
-  interface for GnuPG. This application is very useful for generating
-  and importing new keys.
-* <a name="kpgp"></a>[KGPG](http://developer.kde.org/~kgpg/) – Another
-  graphical user interface for GnuPG, very similar to GNU Privacy
-  Assistant. This one has a text editor under the "File" menu which
-  can be used to easily sign and/or encrypt any texts you write or
-  paste into the text box.
-* <a name="keepassx"></a>[KeePassX](http://keepassx.sourceforge.net/)
-  – A password manager and generator. For password generation, look in
-  the "Extras" menu. The generator has a pretty cool feature, namely
-  that it show the quality (or [information
-  entropy](http://en.wikipedia.org/wiki/Information_entropy)) of the
-  password it will generate.
-*
-  [Kvkbd](http://www.kde-apps.org/content/show.php/Kvkbd?content=56019)
-  – A virtual keyboard that can be used to safely enter passwords
-  using the mouse when you suspect that a hardware keylogger may be
-  present. It starts automatically with Tails and is accessed by the
-  keyboard icon in the systray.
-* [TrueCrypt](http://www.truecrypt.org/) – Disk encryption software.
-  If you have access to some writeable media you can use TrueCrypt for
-  creating an encrypted container (which in reality will take the form
-  of an ordinary file on that media) on it that you can store files in
-  securely.
-* <a name="vidalia"></a>[Vidalia](http://www.vidalia-project.net/) –
-  An alternative Tor controller.
-* [KTorrent](http://ktorrent.org/) – A Bittorrent client. Please use
-  bittorrent with care as it is a real burden for the Tor network and
-  generally frowned upon in the Tor community because of this. Just
-  downloading a 10 MB file could be equivalent of hours of standard
-  web browsing. Therefore you should only download small files when
-  absolutely necessary.
-* [XChat](http://www.xchat.org/) – A more traditional IRC client
-  compared to Pidgin (some people just prefer it that way).
-  Unfortunately there is no OTR plugin or other means for end-to-end
-  encryption provided so use this with care.
-* [Krdc](http://www.kde.org/) – A Remote Desktop client supporting VNC
-  and RDP.
+do) can be found in the *Applications* menu. A list is available on [[features]]
+page.
 
 ## <a name="macchanger"></a>Enabling MAC changer
+
+**FIXME**: This section have not been adapted now. Macchanger is not easily
+usable in Tails now (0.7.2)
 
 If you paid attention when you started up Tails you may have noticed
 an odd option in the language selection menu, namely the "Enable MAC
@@ -725,6 +817,8 @@ problems on some networks, so if you experience network problems while
 it is enabled you might want try disabling it.
 
 ## <a name="cold"></a>Protection against cold boot attacks
+
+**FIXME**: merge with stuff in Introduction
 
 What happens if the police knocks on your door when you are running
 Tails? This is a tough one to deal with, and there is not that much
@@ -776,11 +870,13 @@ on the safe side.
 
 ## <a name="vm"></a>Tails and Virtualization
 
+**FIXME**: merge with stuff in Introduction, with [[virtualization]]
+
 Certain users might not want to restart the computer every time they
 wish to use the Internet anonymously with Tails. For those, a so
 called [virtual machine](http://en.wikipedia.org/wiki/Virtual_machine)
 can be used to run Tails inside the "host" operating system
-installed on the computer (e.g. Microsoft Windows, Mac OS X, etc.).
+installed on the computer (e.g. Microsoft Windows, Mac OS X, etc.).
 Essentially these programs emulate real computers that you can run
 "guest" operating systems (in this case Tails) in so they appear in
 a window within the host operating system. Using one of these
@@ -801,6 +897,9 @@ Tails's security. In conclusion, use virtual machines with care.
 
 ### QEMU
 
+**FIXME**: This section have not been adapted now so please do not take it into
+account. Tails doesn't currently include QEMU (0.7.2).
+
 The open source [QEMU](http://bellard.org/qemu/) processor emulator
 and virtualizer handles Tails nicely. In fact, QEMU is included in
 the Tails distribution for Microsoft Windows users (more about this
@@ -818,6 +917,9 @@ need administrator privileges for installing KQEMU.
 
 ### VMWare
 
+**FIXME**: This section have not been adapted now so please do not take it into
+account.
+
 Tails works very well in [VMWare](http://www.vmware.com/) with the
 following [VMWare Virtual
 Appliance](http://files1.cjb.net/incognito/incognito-vmware-1.0.zip)
@@ -834,18 +936,16 @@ does anything that is bad for anonymity, although it is unlikely.
 
 ### VirtualBox
 
-Tails runs in [VirtualBox](http://virtualbox.org) without any major
-conifuration necessary. Depending on your system you might need to
-play around with the General -&gt; Advandced features to get it to
-boot. On an AMD64 system using more than 4 GB of RAM the developers
-have noted that the "Enable VT-x/AMD-V&amp;quit; (if your CPU supports
-it) and "Enable PAE/NX" features are necessary, but your milage may
-vary. VirtualBox is distributed both as a closed-source and as an
-open-source (the so called OSE or Open Source Edition), the latter
-which the Tails developer's encourages (although it currently lacks
-USB support compared to the closed-source version).
+Tails runs in [VirtualBox](http://virtualbox.org) without needing any major
+configuration. VirtualBox is distributed both as a closed-source and as an
+open-source (the so called OSE or Open Source Edition), the latter which the
+Tails developer's encourages (although it currently lacks USB support compared
+to the closed-source version).
 
 ## <a name="windows"></a>Running Tails from within Microsoft Windows
+
+**FIXME**: This section have not been adapted now so please do not take it into
+account. It is currently not integretad to start under Windows with QEMU.
 
 Thanks to QEMU, [described above](#vm), Tails can be run within
 Microsoft Windows without the need to restart the computer. QEMU ships
@@ -864,12 +964,7 @@ performs etc. is welcome.
 
 ## <a name="debug"></a>Debugging and trouble-shooting Tails
 
-For the sake of security, Tails is a pretty locked down system: the
-root user is inaccessible, and only a handful of tools are possible to
-run with root privileges using the sudo command (see "sudo -l" for a
-complete list of these commands). Since this can make debugging very
-cumbersome (if not impossible) it is possible to make empty the root
-user's password by passing "debugmode" to the kernel command-line.
+**FIXME**: write this section and how to bugreport using WhisperBack
 
 # <a name="conclusion"></a>Conclusion
 
