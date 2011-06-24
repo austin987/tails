@@ -42,12 +42,23 @@ Design decisions:
 - repository layout: 'upstream' branch contains periodic snapshots of gdm-community-greeter, 'master' branch contains actual project code.
 (reasoning: initially tails-greeter will stay rather close to gdm-community-greeter, later it might diverge pretty significantly)
  
-### Localization notes:
+## Localization notes:
+
+### Design sketch:
 
 - since locale generation and setup might be time consuming it's performed by program which runs in the background
 - logon is allowed only after program completion
 - window translation should be handled separately (via TranslatableWindow) to avoid blocking "in-between" two screens
 - language change is irreversible e. g. done "once and for all" to avoid complexity of managing several locale generations running in parallel or start\stop of locale generator
+
+### Design clarification:
+
+When talking about language support in greeter it is important to distinguish between:
+
+0. language support in tails: the locales available to use once user successfully logged-in
+0. languge support in greeter: the icons and translations which can be utilized by greeter itself before user logged in
+
+Current implementation uses hardcoded list for both. In future it should be expanded by clearly separating language choice for greeter (hardcoded list plus 'default') and tails (dynamically generated or obtained from conf file with some default value as well). Selecting greeter language should change tails language's default value to the same choice if possible. And vice versa, although exact behavior should be determined after testing with real users.
 
 ##  Additional notes:
 
