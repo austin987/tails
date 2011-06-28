@@ -17,7 +17,7 @@ apt-get install --yes build-essential dkms dpatch linux-headers-2.6-${KERNEL_ARC
 
 # dkms uses uname to find out what kernel to build modules for.
 # So, after installing dkms, but before installing
-# virtualbox-ose-guest-dkms, we divert uname to a fake one that
+# virtualbox-guest-dkms, we divert uname to a fake one that
 # emulates 'uname -r' by reporting the kernel version found in /boot rather
 # than the build system's one.
 
@@ -29,14 +29,14 @@ EOF
 chmod 755 /bin/uname
 
 # Have the modules automagically built by dkms.
-apt-get install --yes virtualbox-ose-guest-dkms
+apt-get install --yes virtualbox-guest-dkms
 
 # Revert to the real uname.
 mv /bin/uname.$$ /bin/uname
 
 # clean the build directory
-rm -rf /var/lib/dkms/virtualbox-ose-guest/
+rm -rf /var/lib/dkms/virtualbox-guest/
 
-# virtualbox-ose-guest-dkms's postrm script deletes any previously
+# virtualbox-guest-dkms's postrm script deletes any previously
 # built binary module; let's delete it before purging the package.
-rm -f /var/lib/dpkg/info/virtualbox-ose-guest-dkms.prerm
+rm -f /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
