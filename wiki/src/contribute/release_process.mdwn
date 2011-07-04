@@ -10,6 +10,10 @@ Website
 
 Merge the `master` branch into the one used to build the release.
 
+In the branch used to build the release, update the `inc/*` files to match the
+version number of the new release. Don't update `/inc/stable_i386_hash.html`
+since the hash can't be computed yet.
+
 AdBlock patterns
 ----------------
 
@@ -147,8 +151,6 @@ Rename the `.packages` file to remove the `.iso` part of its name.
 Copy the `.iso.pgp`, `.packages`, `.torrent` and `.torrent.pgp`
 files to the Git repository's `wiki/src/torrents/files/` directory.
 
-Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
-
 Update the latest version and related information in `inc/*`.
 
 Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
@@ -163,7 +165,10 @@ Update todo and bugs tags:
 
 Update the [[features]] page.
 
-Write the announce for the release in `news/version_X.Y.mdwn`.
+Write the announce for the release in `news/version_X.Y.mdwn`. Use the
+meta directive to set the post title to "Tails X.Y was released" so
+that aggregators (such as Planet Debian Derivatives) display a more
+catchy title.
 
 Write an announce listing the security bugs affecting the previous
 version in `security/` in order to let the users of the old versions

@@ -9,13 +9,31 @@ updates|TailsGreeter/blog]], [[installation instructions|TailsGreeter/install]] 
 
 [[!toc levels=2]]
 
+Overall state
+==============
+
+How it should work
+------------------
+
+0. After GDM is started user is presented with language-chooser-widget. 
+0. After language is chosen and 'next' pressed you see admin-password-widget in chosen locale.
+0. After typing password and selecting 'next' logon performed and desktop shown as usual.
+
+How it works now
+------------------
+
+0. language-chooser-widget and admin-password-widget drawn at the same time.
+0. language-chooser-widget fails to draw.
+0. admin-password-widget have wrong UI and locale.
+0. login impossible.
+
 Needed options
 ==============
 
 Developers are encouraged to provide input for various options to be asked via boot-menu using following template:
 
-Template
---------
+Templates
+---------
 
 Template for description of settings which are needed to be requested
 via tails-greeter before logon:
@@ -36,7 +54,15 @@ Language
    - setup locale for the TailsGreeter so that the user can understand the other
      choices;
    - generate the choosen locale;
-   - setup locale for the session to be started.
+   - setup locale for the session to be started;
+   - maybe more: have a look at
+     `config/binary_local-hooks/20-syslinux_i18n` in Tails main Git
+     repository to see what parameters it passes to live-config
+     (locales, keyboard-layouts) then grep the relevant variable names
+     (`KEYBOARD_LAYOUT`, `LIVE_LOCALES`, `LIVE_TIMEZONE`) in
+     live-config source to see what is currently done depending on the
+     chosen language, and might thus need to be triggered by
+     tails-greeter as well.
 4. ui hint: Choose the language of your Tails session.
 5. responsible dev:
 6. dev's notes: This item should be really visible, probably on top of the
@@ -48,10 +74,11 @@ Administrator password
 
 1. name: Administrator password
 2. default value: none
-3. effects: render user to be logged sudoer and administrator in PolicyKit point
-   of view. The precise implementation should still be investigated
+3. effects: execute `/usr/local/sbin/set-user-password` in an environnement
+   containing `$TAILS_USER_PASSWORD` and then pay attention to unset this variable
+   if the environnement persists. See [[todo/better_root_access_control]] to
+   find tha git branch.
 4. ui hint: (draft) enter here a password that will be asked to grant administrator
    rights. Leave this field blank to disable administrator rights.
 5. responsible dev:
-6. dev's notes: this description is draft only. There is a related TODO item:
-   [[todo/better_root_access_control]]
+6. Related TODO item: [[todo/better_root_access_control]]
