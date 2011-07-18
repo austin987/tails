@@ -38,10 +38,12 @@ Design decisions:
 When talking about language support in greeter it is important to distinguish between:
 
 0. language support in tails: the locales available to use once user successfully logged-in
-0. languge support in greeter: the icons and translations which can be utilized by greeter itself before user logged in
+0. language support in greeter: the icons and translations which can be utilized by greeter itself before user logged in
 
-The available locales dynamically populated into list. Once language is chosen corresponding translation is applied to the widget (if available) but actual locale generation is handled by external script which spawned into the background once button is clicked.
+The available locales dynamically populated into list. Once language is chosen corresponding translation is applied to the widget (if available) but actual locale generation is handled by external script (tails-lang-helper) which spawned into the background once button is clicked. 
 
+The first argument for tails-lang-helper is the locale name (en_US for example) which is similar to 'localedef' command responsible for locale generation.
+N. B: this interface is subject to change - better look into comments in tails-lang-helper directly.
 If locale generation fails for some reason - display warning and proceed anyway.
 
 ##  Additional notes:
@@ -50,13 +52,14 @@ If locale generation fails for some reason - display warning and proceed anyway.
 
 Since greeter is shown with every login so there got to be a way to skip all the greeter screens and quickly login with the default settings with 1-click button.
 
-### choice of language justification:
+### choice of programming language justification:
 
 Python is selected as main language for the project because existing greeter made with python was found. This code will be used as a basis for the project.
 
 ### GDM notes
 
 -GDM read autostart folder in unpredictable manner so dpkg-divert is required to properly disable existing greeter unless it's in separate .deb which could be removed
+
 -GDM's dbus interface is "private":
 which in this case means "unstable" so additional subtask would be to automate (to some extent at least) extraction of this undocumented interface from source code of particular GDM release in order to assist with porting to new version.
 
@@ -64,7 +67,7 @@ which in this case means "unstable" so additional subtask would be to automate (
 
 #### diversion
 
-post- and pre- install scripts are invoked on every upgrade to "be on a safe side": we apply diversion to gdm file which will effectively break logon procedure in the absence of tails-greeter. Hence - dumb but failsafe approach.
+post- and pre- install scripts are invoked on every upgrade to "be on a safe side": we apply diversion to gdm file which will effectively break logon procedure in the absence of tails-greeter. Hence - dumb but failsafe approach which makes lintian unhappy (override used to hide lintian error).
 
 #### requirements
 
