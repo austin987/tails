@@ -18,3 +18,17 @@ removes compiled Python `.pyc` files.
 
 We probably want to [[!taglink todo/wait]] for Ubuntu to actually ship
 Live CDs built using live-build 3.x, before switching to it.
+
+duplicated Linux kernel
+=======================
+
+[[!tag todo/code]]
+
+The Linux kernel + initramfs are present twice in a Tails ISO: once in
+the iso9660 filesystem, once inside the SquashFS. The former is
+needed, but the latter is not.
+
+live-build 3.x adds an option (commit 651c8aebd) to only copy over
+kernel and initrd if `LB_LINUX_PACKAGES` doesn't equal `none`.
+We could set `LB_LINUX_PACKAGES` to `none` and install the kernel
+package ourselves with an early chroot local hook.
