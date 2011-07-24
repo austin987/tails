@@ -38,4 +38,17 @@ needed, but the latter is not.
 live-build 3.x adds an option (commit 651c8aebd) to only copy over
 kernel and initrd if `LB_LINUX_PACKAGES` doesn't equal `none`.
 We could set `LB_LINUX_PACKAGES` to `none` and install the kernel
-package ourselves with an early chroot local hook.
+package ourselves with an early chroot local hook. It would be better
+if live-build supported our usecase out of the box, though.
+
+files only needed at build time
+===============================
+
+We're currently using `chroot_local-includes` as a way to pass files
+from the build host to the build chroot. As a result, released images
+contain many files (mostly in `/usr/`) that are needed at build time
+but useless at runtime.
+
+live-build 3.x bind mounts (read-only) the build configuration
+directory (`config`) inside the chroot (onto `/root/config`) while the
+chroot hooks are running.
