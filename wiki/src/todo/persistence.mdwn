@@ -102,15 +102,7 @@ Persistence storage location
 * Encrypted partition on a removable storage device.
 * Encrypted archive file on a removable storage device.
 * Use persistence without a persistence media: an encrypted persistent
-  archive could be remotely stored on existing storage services. When
-  the persistence feature is enabled **and** no persistence media is
-  found locally, the user would be asked for a server address + login
-  + password + encryption passphrase. Possible remote storage include:
- - IMAP
- - sftp
- - [Syncany](http://www.syncany.org/) (similar to Dropbox, but data is
-   encrypted locally) supports many storage types, including IMAP
- - tahoe-lafs?
+  archive could be remotely stored on existing storage services.
 
 Specifications
 ==============
@@ -209,25 +201,30 @@ offline with an outdated Git working copy):
   `live-media=`. Being worked on in our `3.x/feature/persistent-removable`
   branch.
 - There is no way to enable the home-sn kind of persistence while
-  disabling others. We could either implement a simple whitelist-only
-  `persistent-types=TYPE1,TYPE2,...` boot parameter or a full-featured
-  whitelist+blacklist boot parameters set such as the one used in
-  live-config (e.g. `persistent=home-sn` would be equivalent to
-  `nopersistent=live-rw,live-sn,home-rw`); backward compatibility with
-  the current `persistent=nofiles` option must be though of.
-  Another way would be to add options similar to `nofiles`, e.g.
-  `persistent=nosystem,nocow` would only enable `home-sn`, and
-  `persistent=nosystem` would only enable `home-sn` and `home-rw`.
-  Agreement with upstream must be reached before implementing this.
+  disabling others. Interface would be:
+
+  * `persistent=(directories|system)`
+  * `persistent-storage=(file|filesystem)`
+  * `persistent-method=(snapshot|overlay)`
+
+  Notes:
+  * file+overlay not supported.
+  * current `persistent=nofiles` is the same as
+    `persistent-storage=filesystem`
+  * As long as every possible value for every persistence sub-option
+    is unique, we could support `persistent=directories,file,snapshot`,
+    at least to avoid too long kernel command-line.
+
+- Compression? `persistent-compression=...`
+
 - Add a read-only mode. Easy for `live-snapshot`, tricky but doable
-  for `-rw` kind of persistence... that are not something we want to
-  support yet. Is it acceptable to add such a feature *only* for
-  `live-snapshot`? Agreement with upstream must be reached on this
-  before implementing. On the implementation / UI side of things, how
-  about adding a `persistent-rw=(true|false)` parameter?
+  for `-rw` kind of persistence. Let's start with the snapshot method.
+  Let's add a `persistent-rw=(true|false)` parameter.
+
 - The persistence data search order is not well documented enough:
   live-sn and home-sn files are searched before accordingly labelled
   partitions. This is not critical but we should fix it along the way.
+
 - The `persistent=cryptsetup` boot parameter is incompatible with
   `persistent=nofiles` which involves snapshot files are first
   searched on non-encrypted devices, then on encrypted ones. It
@@ -238,12 +235,9 @@ offline with an outdated Git working copy):
   with cryptsetup. Also, `persistent=cryptsetup` only makes
   persistence volume encryption best-effort, but not compulsory,
   contrary to what could be more intuitive and suited for our needs.
-  If the current operation mode must be kept available for backward
-  compatibility, then we need to add an option along the lines of
-  `persistent-encryption-compulsory=(true|false)`.
-  To end with Daniel Baumann wrote on the debian-live list (20110314)
-  this setting is "highly experimental and i don't consider it to be
-  working correctly yet anyway".
+  => add `persistent-encryption=(none|luks|...)` option, forget the
+  current `persistent=cryptsetup` useless mode of operation.
+
 - The cryptsetup support is not able to deal with file-backed Luks
   snapshots. Do we need this? On the long run we would probably prefer
   supporting plain dm-crypt mappings hidden in files: something
@@ -276,6 +270,17 @@ Both seem easy to implement and contribute to the upstream
 
 Remote persistence storage
 --------------------------
+
+When the persistence feature is enabled **and** no persistence media
+is found locally, the user would be asked for a server address +
+login, password + encryption passphrase. Possible remote storage
+include:
+
+ - IMAP
+ - sftp
+ - [Syncany](http://www.syncany.org/) (similar to Dropbox, but data is
+   encrypted locally) supports many storage types, including IMAP
+ - tahoe-lafs?
 
 - Is there a Fuse IMAP filesystem? Other ways to fetch a given email?
 
