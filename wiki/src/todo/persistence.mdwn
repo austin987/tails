@@ -79,8 +79,8 @@ If a user need some program
 not present in amnesia per default it can be quite annoying to fetch
 the apt information (which takes a lot of time over tor) and
 download it (also slow), it could be nice to have a persistent
-directory (or similar) where all .deb-files are installed during
-init.
+directory (or similar) where all .deb-files are installed at
+boot time.
 
 #### System wide persistence
 
@@ -91,7 +91,7 @@ All the problems of a persistent /home applies but are amplified
 to a system-wide scale, for instance
 
 - users can also break the firewall-based Tor enforcement
-- sensitive information may leak outside of /home, like to
+- sensitive information will leak outside of /home, like to
   /tmp, /var/log etc.
 - get a persistent virus or other malware
 - Tails upgrades would be near-impossible without breaking stuff.
@@ -133,7 +133,7 @@ Moreover:
 * The persistent data must be stored using strong, well-known, Free
   Software, peer-reviewed encryption tools.
 * Blacklist fixed storage devices from the search for persistent
-  volumes? Preventing the risk of using a malicious persistent volume
+  volumes. Rationale: preventing the risk of using a malicious persistent volume
   seems more important than supporting the rare "I want to store my
   persistent volume on a fixed hard-disk" use-case.
   - grml's patch against `live-initramfs` to optionally set all
@@ -151,16 +151,21 @@ The first use cases that will be supported are:
 * persistent user data store.
 
 Implementing one of these brings support for the other one more or
-less freely.
+less for free.
 
 This work can be split into two parts:
 
-1. Backend: improve `live-boot` so that it is able to implement our
+1. Backend: improve Debian Live tools so they are able to implement our
    specifications. This shall be done hand in hand with upstream so
    that we don't end up maintaining a forked `live-boot` indefinitely.
-   Along the way our `devel` [[git branch|git]] can be used both as a
-   playground to test our changes, and as a show-room displaying
-   progress on this front.
+   Since the UI (persistence toggling, etc.) will take place in the
+   [[tails-greeter|todo/TailsGreeter]] [[todo/boot_menu]], extracting
+   bits out of `live-boot` and making these support being run at a
+   later time of the boot process is crucial.
+   Along the way our development [[git branches|git]] can be used both as a
+   testbed for our changes, and as a show-room displaying progress on
+   this front.
+
 2. User interface:
  - make it easy to use such persistence features (i.e. without adding
    arguments to the kernel command line by hand);
@@ -297,8 +302,8 @@ User interface
 ### at boot time
 
 Choosing between various persistence modes calls for a more complex
-(implementation-wise) boot menu. See the thread on tails-dev about a
-graphical boot menu for details.
+(implementation-wise) boot menu. See [[todo/boot_menu]] and
+[[todo/TailsGreeter]] for details.
 
 ### during runtime
 
