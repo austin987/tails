@@ -203,11 +203,6 @@ What needs to be done (checked in live-boot 2.0~a16-1 due to working
 offline with an outdated Git working copy):
 
 - Add support for file deletion (e.g. by replacing cpio with rsync).
-- Add a read-only mode. Easy for `live-snapshot`, tricky but doable
-  for `-rw` kind of persistence... that are not something we want to
-  support yet. Is it acceptable to add such a feature *only* for
-  `live-snapshot`? Agreement with upstream must be reached on this
-  before implementing.
 - Add a option to ignore non-removable devices when looking for a
   persistent volume. Implementation: support a
   `persistent-media={removable,usb-removable}` option similar to
@@ -224,13 +219,15 @@ offline with an outdated Git working copy):
   `persistent=nosystem,nocow` would only enable `home-sn`, and
   `persistent=nosystem` would only enable `home-sn` and `home-rw`.
   Agreement with upstream must be reached before implementing this.
-- `live-snapshot` needs to be run as root; make it able to run with
-  slightly less permissions (e.g. use sudo only when needed, or simply
-  manage to run as a non-priviledged user for such kind of partial
-  `$HOME` persistency.
+- Add a read-only mode. Easy for `live-snapshot`, tricky but doable
+  for `-rw` kind of persistence... that are not something we want to
+  support yet. Is it acceptable to add such a feature *only* for
+  `live-snapshot`? Agreement with upstream must be reached on this
+  before implementing. On the implementation / UI side of things, how
+  about adding a `persistent-rw=(true|false)` parameter?
 - The persistence data search order is not well documented enough:
   live-sn and home-sn files are searched before accordingly labelled
-  partitions.
+  partitions. This is not critical but we should fix it along the way.
 - The `persistent=cryptsetup` boot parameter is incompatible with
   `persistent=nofiles` which involves snapshot files are first
   searched on non-encrypted devices, then on encrypted ones. It
@@ -238,8 +235,12 @@ offline with an outdated Git working copy):
   such as `persistent-encryption=cryptsetup`.
   `persistent-encryption=luks` would btw. be more correct and would
   allow adding support for plain dm-crypt mappings that are also setup
-  with cryptsetup. Also, `persistent=cryptsetup` does not makes
-  persistence volume encryption compulsory. Do we need this?
+  with cryptsetup. Also, `persistent=cryptsetup` only makes
+  persistence volume encryption best-effort, but not compulsory,
+  contrary to what could be more intuitive and suited for our needs.
+  If the current operation mode must be kept available for backward
+  compatibility, then we need to add an option along the lines of
+  `persistent-encryption-compulsory=(true|false)`.
   To end with Daniel Baumann wrote on the debian-live list (20110314)
   this setting is "highly experimental and i don't consider it to be
   working correctly yet anyway".
