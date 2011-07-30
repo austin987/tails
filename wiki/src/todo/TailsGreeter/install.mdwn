@@ -1,24 +1,43 @@
-This page will contain installation instruction.
+This page contains installation and testing instructions and hints.
 
-### Status
+[[!toc levels=2]]
 
-This instructions for reference only - anything might be broken at any time.
+## Status
 
-### Build package from git
+The very login process is broken at the moment. Even when it'll be fixed - it might be broken again at any time - you've been warned.
 
-git-clone git://git.immerda.ch/max/tails-greeter.git
+## Build package from git
 
-cd tails-greeter && git-buildpackage 
+0. git clone git://git.immerda.ch/max/tails-greeter.git
+0. cd tails-greeter 
+0. git-buildpackage 
 
 ### Pre-requisites
 
 Following packages require installation or update in squeeze:
 
-- python-gtkme (new)
-- python-xsdvalidate (new)
-- python-gobject (backport from wheezy)
+- python-pybabel
+- python-gobject
 
-### Install it
+## Install
 
 sudo dpkg -i tails-greeter.deb
+
+## Test
+
+### .deb test
+
+0. create kvm (or other VM) installation with debian squeeze
+0. run "lsh -G -z -x  --sloppy-host-authentication --capture-to ~/.lsh/host-acls -l root squeeze.test" or your favorite ssh client with x-forwarding support
+0. install tails-greeter
+0. service gdm3 restart
+0. enjoy if you can :)
+
+### .iso test
+
+0. not ready yet
+
+## Helpful tools
+
+d-feet is great dbus troubleshooting helper
 

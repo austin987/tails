@@ -1,121 +1,408 @@
-[[!meta title="Download Tails"]]
+[[!meta title="Download, verify and install"]]
+
+<strong>Tails is [[!wikipedia Free_software desc="free software"]], you can
+download it, use it and share it without restriction.</strong>
 
 <div id="page-download">
 
-<div id="intro">
-
-<p>
-Every ISO image we ship is a hybrid one:
-<ul>
-  <li>it can be burnt to a CD;</li>
-  <li>it also contains a full disk image (including partition table) and can
-  thus be [[installed onto a USB stick|support/Installing onto a USB stick]];
-  the USB stick's content is lost in the operation.</li>
-</ul>
-</p>
-
-<p>
-  Any help to spread Tails is more than welcome,
-  [[using BitTorrent or by setting up a web mirror|contribute/how/mirror]].
-</p>
-
-<p>
-  If you are interested in the source code, have a look to our [[dev zone|contribute]].
-</p>
-
 [[!toc levels=2]]
 
-</div> <!-- #intro -->
+<div id="first_time_user">
+
+	<h1 class="bullet-number-one">First time user?</h1>
+
+	<ul>
+	<li>If you don't know what a metadata or a man-in-the-middle attack
+	is.</li>
+	<li>If you think no-one can eavesdrop on your communications
+	because you are using Tor.</li>
+	<li>If you have no notion on how Tails works.</li>
+	</ul>
+
+	<p><strong>Then, check first the [[about]] and
+	[[warning|doc/warning]] pages to make sure that Tails is the right tool
+	for you and that you understand well its limitations.</strong></p>
+
+</div>
 
 <div id="download_the_image" class="container">
 
-	<h1>1. Download the image</h1>
-
-	<p>ISO images can be downloaded using BitTorrent or over HTTP.</p>
-
-	<div id="bittorrent">
-
-		<h2>BitTorrent</h2>
-
-		<h3>Torrent files</h3>
-		Here are the latest available BitTorrent files (<code>.torrent</code>):
-
-[[!map pages="torrents/files/*.torrent"]]
-
-		<h3>Cryptographic signatures and checksums</h3>
-
-		Here are the OpenPGP signatures (<code>.asc</code>)
-		for the BitTorrent files listed above:
-
-[[!map pages="torrents/files/*.torrent.asc"]]
-
-	</div> <!-- #bittorrent -->
+	<h1 class="bullet-number-two">Download the ISO image</h1>
 
 <div id="http">
 
-	<h2>Direct download (HTTP)</h2>
+	<h2>Direct download</h2>
 
 	<h3>Latest release</h3>
 
 	<p>
-	It can be found there:
+	<a class='download-file' href=[[!inline pages="inc/stable_i386_iso_url" raw="yes"]]>
+	Tails [[!inline pages="inc/stable_i386_version" raw="yes"]] ISO image</a>
 	</p>
 
-	<p>
-		<a id='http-pool' href='http://dl.amnesia.boum.org/tails/stable/'>
-			http://dl.amnesia.boum.org/tails/stable/
-		</a>
-	</p>
+	<h3>Cryptographic signature</h3>
 
-	<h3>Release candidates</h3>
+	[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
 
-	<p>
-	  <strong>Warning!</strong> Please try release candidates for
-	  testing purposes but do <strong>not</strong> rely on these
-	  for anything. No guarantee, blablabla. Anyway, here they
-	  are:
-	  <a href='http://dl.amnesia.boum.org/tails/testing/'>
-	    http://dl.amnesia.boum.org/tails/testing/
-	  </a>
-	</p>
+	<p>If you're not sure what the cryptographic signature is, please go on
+	and read the part on [[verifying the ISO image|download#index3h1]].</p>
+
+	<h3>Set up a web mirror</h3>
+
+	<p>If you're running a web server, you're most welcome to help us spread
+	Tails by [[setting up a web mirror|contribute/how/mirror]].</p>
 
 </div> <!-- #http -->
+
+<div id="bittorrent">
+
+	<h2>BitTorrent download</h2>
+
+	<h3>Latest release</h3>
+
+	<p>
+	<a class='download-file' href=[[!inline pages="inc/stable_i386_torrent_url" raw="yes"]]>
+	Tails [[!inline pages="inc/stable_i386_version" raw="yes"]] torrent</a>
+	</p>
+
+	<h3>Cryptographic signature</h3>
+
+	<p>
+	<a class='download-signature' href=[[!inline pages="inc/stable_i386_torrent_sig_url" raw="yes"]]>
+	Tails [[!inline pages="inc/stable_i386_version" raw="yes"]] torrent signature</a>
+	</p>
+
+	<h3>Seed back!</h3>
+
+	<p>Seeding back the image once you downloaded it is also a nice
+	and easy way of helping spread Tails.</p>
+
+</div> <!-- #bittorrent -->
 
 </div> <!-- #download_the_image .container -->
 
 <div id="verify">
 
-	<h1>2. Verify the downloaded image integrity</h1>
+	<h1 class="bullet-number-three">Verify the ISO image</h1>
 
-<p>The released images are signed with our [[GnuPG key]]; you
-can, and should, verify their integrity before using them.</p>
+	<p>It is important to check the [[!wikipedia Data_integrity
+	desc="integrity"]] of the ISO image you downloaded to make sure that the
+	download went well.</p>
 
-<p>Users of a recent enough GNOME should make sure they have the
-<code>seahorse-plugins</code> package installed, then right-click on
-the <code>.asc</code> OpenPGP signature file, and open it with the
-<emph>Verify signature</emph> tool.</p>
+	<p><strong>Warning: the following techniques don't provide you with a
+	strong way of checking the ISO image [[!wikipedia Authentication
+	desc="authenticity"]] and making sure you downloaded a genuine
+	Tails.</strong></p>
 
-<p>Others rather need to do this on the command-line, in the directory
-where the <code>.iso</code> and <code>.asc</code> files are:
+	<p>Those techniques rely on standard HTTPS and [[!wikipedia
+	Certificate_authority desc="certificate authorities"]] to make you
+	trust the content of this website. But, [[as explained on our warning
+	page|doc/warning#index3h1]], you could still be victim of a
+	man-in-the-middle attack while using HTTPS. On this website as much as
+	on any other of the Internet.</p>
+
+	<p>It is anyway a good thing to check the ISO image integrity first. We
+	will propose you after that some more advanced techniques to <a
+	href="#authenticity-check">check the authenticity of the ISO
+	image</a>.</p>
+
+	<p>All Tails ISO image are cryptographically signed by our OpenPGP key.
+	OpenPGP is a standard for data encryption that provides cryptographic
+	privacy and authentication through the use of keys owned by its users.
+	Checking this signature is the recommended way of checking the ISO image
+	integrity.</p>
+
+	<p>Do you want to check the ISO image integrity:</p>
+	<ul>
+	  <li>
+	  [[!toggle id="verify_the_iso_image_using_gnome"
+	  text="Using Linux with Gnome: Ubuntu, Debian, Tails, Fedora, etc."]]
+	  </li>
+	  <li>
+	  [[!toggle id="verify_the_iso_image_using_the_command_line"
+	  text="Using Linux with the command line"]]
+	  </li>
+	  <li>
+	  [[!toggle id="verify_the_iso_image_using_other_operating_systems"
+	  text="Using other operating systems"]]
+	  </li>
+	</ul>
+
+	[[!toggleable id="verify_the_iso_image_using_gnome" text="""
+	<span class="hide">[[!toggle id="verify_the_iso_image_using_gnome"
+	text="Hide"]]</span>
+
+	<h2>Using Linux with Gnome: Ubuntu, Debian, Tails, Fedora, etc.</h2>
+
+	<p>You need to have the <code>seahorse-plugins</code> package
+	installed. If you're not sure or want to install it, under Debian,
+	Ubuntu or Tails you can issue the following commands:</p>
 
 <pre>
-gpg --verify tails*.iso.asc
+sudo apt-get update
+sudo apt-get install seahorse-plugins
 </pre>
-</p>
+
+	<p>First, download Tails signing key:</p>
+
+	[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
+
+	<p>Your browser should propose you to open it with "Import Key". Choose
+	this action. It will add Tails signing key to your keyring, the
+	collection of OpenPGP keys you already imported:</p>
+
+	<p>[[!img download/import_key.png alt="What should Iceweasel do with
+	this file? Open with: Import Key (default)" link="no"]]</p>
+
+	<p>You will get notified will the following message:</p>
+
+	<p>[[!img download/key_imported.png alt="Key Imported. Imported a key
+	for Tails developers (signing key) &lt;tails@boum.org&gt;"
+	link="no"]]</p>
+
+	<p>Now, download the cryptographic signature corresponding to the ISO
+	image you want to verify:</p>
+
+	[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
+
+	<p>Your browser should propose you to open it with "Verify Signature".
+	Choose this action to start the cryptographic verification:</p>
+
+	<p>[[!img download/verify_signature.png alt="What should Iceweasel do
+	with this file? Open with: Verify Signature (default)" link="no"]]</p>
+
+	<p>Browse your files to select the Tails ISO image you want to verify.
+	Then, the verification will start. It can take several minutes:</p>
+
+	<p>[[!img download/verifying.png alt="Verifying" link="no"]]</p>
+
+	<p><strong>If the ISO image is correct</strong> you will get a
+	notification telling you that the signature is good:</p>
+
+	<p>[[!img download/good_signature.png alt="Goog Signature"
+	link="no"]]</p>
+
+	<p><strong>If the ISO image is not correct</strong> you will get a
+	notification telling you that the signature is bad:</p>
+
+	<p>[[!img download/bad_signature.png alt="Bad Signature: Bad or forged
+	signature." link="no"]]</p>
+	"""]]
+
+	[[!toggleable id="verify_the_iso_image_using_the_command_line" text="""
+	<span class="hide">[[!toggle id="verify_the_iso_image_using_the_command_line"
+	text="Hide"]]</span>
+
+	<h2>Using Linux with the command line</h2>
+
+	<p>You need to have GnuPG installed. GnuPG is the common OpenPGP
+	implementation for Linux: it is installed by default under Debian,
+	Ubuntu, Tails and many other distributions.</p>
+
+	<p>First, download Tails signing key:</p>
+
+	[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
+
+	<p>Open a terminal and import Tails signing key with the following
+	commands:</p>
+
+<pre>
+cd [the directory in which you downloaded the key]
+cat tails-signing.key | gpg --import
+</pre>
+
+	<p>The output should tell you that the key was imported:</p>
+
+<pre>
+gpg: key BE2CD9C1: public key "Tails developers (signing key) &lt;tails@boum.org&gt;" imported
+gpg: Total number processed: 2
+gpg:               imported: 2  (RSA: 2)
+</pre>
+
+	<p>If you had already imported Tails signing key in the past, the output
+	should tell you that the key was not changed:</p>
+
+<pre>
+gpg: key BE2CD9C1: "Tails developers (signing key) &lt;tails@boum.org&gt;" not changed
+gpg: Total number processed: 2
+gpg:              unchanged: 2
+</pre>
+
+	<p>Now, download the cryptographic signature corresponding to the ISO
+	image you want to verify and save it in the same folder as the ISO
+	image:</p>
+
+	[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
+
+	<p>Then start the cryptographic verification, it can take several
+	minutes:</p>
+
+<pre>
+cd [the ISO image directory]
+gpg --verify tails-i386-0.7.1.iso.pgp tails-i386-0.7.1.iso
+</pre>
+
+	<p><strong>If the ISO image is correct</strong> the output will tell you
+	that the signature is good:</p>
+
+<pre>
+gpg: Signature made Sat 30 Apr 2011 10:53:23 AM CEST
+gpg:                using RSA key 1202821CBE2CD9C1
+gpg: Good signature from "Tails developers (signing key) &lt;tails@boum.org&gt;"
+</pre>
+
+	<p><strong>If the ISO image is not correct</strong> the output will tell
+	you that the signature is bad:</p>
+
+<pre>
+gpg: Signature made Sat 30 Apr 2011 10:53:23 AM CEST
+gpg:                using RSA key 1202821CBE2CD9C1
+gpg: BAD signature from "Tails developers (signing key) &lt;tails@boum.org&gt;"
+</pre>
+	"""]]
+
+	[[!toggleable id="verify_the_iso_image_using_other_operating_systems" text="""
+	<span class="hide">[[!toggle id="verify_the_iso_image_using_other_operating_systems"
+	text="Hide"]]</span>
+
+	<h2>Using other operating systems</h2>
+
+	<h3>Using Firefox</h3>
+
+	<p>This technique is not using the cryptographic signature as the others
+	do. We propose it because it's especially easy for Windows users.</p>
+
+	<p>Install the CheckIt extension for Firefox available <a
+	href="https://addons.mozilla.org/en-US/firefox/addon/checkit/">here</a>
+	and restart Firefox.</p>
+
+	<p>Here is the checksum (a kind of digital fingerprint) of the ISO
+	image. Select it with your cursor:</p>
+
+	<pre>[[!inline pages="inc/stable_i386_hash" raw="yes"]]</pre>
+
+	<p>Right-click on it and choose "Selected hash (SHA256)" from the
+	contextual menu:</p>
+
+	<p>[[!img download/selected_hash.png alt="Selected hash (SHA256)"
+	link="no"]]</p>
+
+	<p>From the dialog box that shows up, open the ISO image. Then wait for
+	the checksum to compute. This will take several seconds during which
+	your browser will be unresponsive.</p>
+
+	<p><strong>If the ISO image is correct</strong> you will get a
+	notification saying that the checksums match:</p>
+
+	<p>[[!img download/checksums_match.png alt="CheckIt: SHA256 checksums
+	match!" link="no"]]</p>
+
+	<p><strong>If the ISO image is not correct</strong> you will get a
+	notification telling you that the checksums do not match:</p>
+
+	<p>[[!img download/checksums_do_not_match.png alt="SHA256 checksums do
+	not match!" link="no"]]</p>
+
+	<h3>Using the cryptographic signature</h3>
+
+	<p>GnuPG, a common free software implementation of OpenPGP has versions
+	and graphical frontends for both Windows and Mac OS X. This also make it
+	possible to check the cryptographic signature with those operating
+	systems:</p>
+
+	<ul>
+	  <li>[[Gpg4win|http://www.gpg4win.org/]], for Windows</li>
+	  <li>[[GPGTools|http://www.gpgtools.org/]], for Mac OS X</li>
+	</ul>
+
+	<p>You will find on either of those websites detailed documentation on
+	how to install and use them.</p>
+
+	<h3>For Windows using Gpg4win</h3>
+
+	<p>After installing Gpg4win, download Tails signing key:</p>
+
+	[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
+
+	<p>[[Consult the Gpg4win documentation to import
+	it|http://www.gpg4win.org/doc/en/gpg4win-compendium_15.html]]</p>
+
+	<p>Then, download the cryptographic signature corresponding to the ISO
+	image you want to verify:</p>
+
+	[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
+
+	<p>[[Consult the Gpg4win documentation to check the
+	signature|http://www.gpg4win.org/doc/en/gpg4win-compendium_24.html#id4]]</p>
+
+	<h3>For Mac OS X using GPGTools</h3>
+
+	<p>After installing GPGTools, you should be able to follow the
+	instruction <a href="#verify-the-iso-with-terminal">using Linux with the
+	command line</a>. To open the command line, navigate to your
+	Applications folder, open Utilities, and double click on Terminal.</p>
+	"""]]
+
+	<h2><a name="authenticity-check"></a>So how can I check better the ISO
+	image authenticity?</h2>
+
+	<p>But the Tails signing key that you downloaded from this website could
+	be a fake one if you were victim of a [[man-in-the-middle
+	attack|doc/warning#index3h1]].</p>
+
+	<p>Finding a way of trusting better Tails signing key would allow you to
+	authenticate better the ISO image you downloaded. The following page
+	will give you hints on how to increase the trust you can put in the
+	Tails signing key you downloaded:</p>
+
+	<ul>
+	  <li>[[Trusting Tails signing key|doc/trusting_tails_signing_key]]</li>
+	</ul>
+
+	<!-- <h2>FIXME: What to do if the image is bad?</h2> -->
 
 </div> <!-- #verify -->
 
 <div id="support">
 
-	<h1>3. Install the system</h1>
+	<h1 class="bullet-number-four">Burn a CD or install onto a USB stick</h1>
 
-	<p>You now may:</p>
+	<p>Every ISO image we ship can be either burn on a CD or installed onto a USB stick.</p>
+
+	<h2>Burning a CD</h2>
+	<ul>
+	  <li>CDs are read-only so your Tails can't be altered by a virus or an
+	  attacker.</li>
+	  <li>CDs are cheap but you will need to burn a new CD each time you
+	  will update your Tails version (hint: CD-RW).</li>
+	</ul>
+
+	<p>For detailed instructions on how to burn an ISO image under Linux,
+	Windows or Mac OS X you can consult <a
+	href="https://help.ubuntu.com/community/BurningIsoHowto">the
+	corresponding Ubuntu documentation</a>: just replace the Ubuntu ISO
+	image by the Tails ISO image you downloaded and ignore the part on
+	verifying the data integrity since you've already done that.</p>
+
+	<h2>Installing onto a USB stick</h2>
+
+	<p><strong>The content of the USB stick will be lost in the
+	operation.</strong></p>
 
 	<ul>
-	  <li>burn the ISO image to a CD;</li>
-	  <li>or install the ISO image onto a USB stick: just follow
-	  [[our dedicated how-to|support/Installing onto a USB
-	  stick]].</li>
+	  <li>An attacker with physical access to your USB stick or through a
+	  virus could alter your Tails.</li>
+	  <li>USB sticks can be reused across Tails versions.</li>
+	  <li>USB sticks are smaller to fit in your pocket.</li>
+	  <li>Older computers might not be able to start from a USB stick.</li>
+	  <li>This technique also works for [[!wikipedia SD_card desc="SD
+	  cards"]]. Some SD cards have a read-only switch that can prevent your
+	  Tails from being altered.</li>
+	</ul>
+
+	<ul>
+	  <li>[[Instructions for Linux|doc/installing_onto_a_usb_stick/linux]]</li>
+	  <li>[[Instructions for Windows|doc/installing_onto_a_usb_stick/windows]]</li>
 	</ul>
 
 	<p><strong>FIXME:</strong> mention Intel-based Mac users
@@ -126,12 +413,91 @@ gpg --verify tails*.iso.asc
 
 <div id="stay_tuned">
 
-	<h1>4. Stay tuned!</h1>
+	<h1 class="bullet-number-five">Stay tuned</h1>
 
-	<strong>FIXME</strong>: explain why it is important to use the latest version
+	<p>
+	<strong>It's very important to keep your Tails version up-to-date, otherwise
+	your system will be vulnerable to numerous security holes.</strong> The
+	development team is doing its best to release new versions fixing known
+	security holes on a regular basis.
+	</p>
 
-	[[!inline pages="stay_tuned" raw="yes"]]
+	<p>New versions are announced on:</p>
+
+	<ul>
+	<li>our <a href='https://boum.org/mailman/listinfo/amnesia-news'>news
+	mailing-list</a></li>
+	<li>our <a href='torrents/rss/index.rss'>RSS</a> and <a
+	href='/torrents/rss/index.atom'>Atom</a> feeds that announces new
+	available BitTorrent files.</li>
+	</ul>
+
+	<p>Refer to our [[security announcements|/security]] feed for more
+	detailed information about the security holes affecting Tails.
+	Furthermore you will be automatically notified of the security holes
+	affecting the version you are using at the startup of a new Tails
+	session.</p>
+
+	<p>Since Tails is based on Debian, it takes advantages of the all of the
+	work done by the Debian security team. As quoted from <a
+	href="http://security.debian.org/">(http://security.debian.org/)</a>:</p>
+
+	<blockquote>Debian takes security very seriously. We handle all
+	security problems brought to our attention and ensure that they are
+	corrected within a reasonable timeframe. Many advisories are coordinated
+	with other free software vendors and are published the same day a
+	vulnerability is made public and we also have a Security Audit team that
+	reviews the archive looking for new or unfixed security bugs.
+	</blockquote>
+
+	<blockquote>Experience has shown that "security through obscurity" does
+	not work. Public disclosure allows for more rapid and better solutions
+	to security problems. In that vein, this page addresses Debian's status
+	with respect to various known security holes, which could potentially
+	affect Debian.</blockquote>
 
 </div> <!-- #stay_tuned-->
 
+<div id="boot">
+
+	<h1 class="bullet-number-six">Start Tails!</h1>
+
+	<p>Now that you have a Tails CD or USB stick you can shutdown your
+	computer and start using Tails without altering your existing operating
+	system.</p>
+
+	<p><strong>If you're using a CD:</strong> Put the Tails CD into the
+	CD/DVD-drive and restart the computer. You should see a welcome screen
+	prompting you to choose your language.</p>
+
+	<p>If you don't get this menu, you can consult the Ubuntu documentation
+	about <a href="https://help.ubuntu.com/community/BootFromCD">booting
+	from the CD</a> for more information, especially the part on the <a
+	href="https://help.ubuntu.com/community/BootFromCD#BIOS%20is%20not%20set%20to%20boot%20from%20CD%20or%20DVD%20drive">
+	BIOS settings</a>.</p>
+
+	<p><strong>If you're using a USB stick:</strong> Shutdown the computer,
+	plug in your USB stick and start the computer. You should see a welcome
+	screen prompting you to choose your language.</p>
+
+	<p>If your computer does not automatically do so, you might need to edit
+	the BIOS settings. Restart your computer, and watch for a message
+	telling you which key to press to enter the BIOS setup. It will usually
+	be one of F1, F2, DEL, ESC or F10. Press this key while your computer is
+	booting to edit your BIOS settings. You need to edit the Boot Order.
+	Depending on your computer you should see an entry for 'removable drive'
+	or 'USB media'. Move this to the top of the list to force the computer
+	to attempt to boot from USB before booting from the hard disk. Save your
+	changes and continue.</p>
+
+	<p>For more detailed instruction on how to boot from USB you can read <a
+	href="http://pcsupport.about.com/od/tipstricks/ht/bootusbflash.htm">About.com:
+	How To Boot your Computer from a Bootable USB Device</a></p>
+
+	<p>If you have problems accessing the BIOS, try to read <a
+	href="http://www.pendrivelinux.com/how-to-access-bios/">pendrivelinux.com:
+	How to Access BIOS</a></p>
+
+</div><!-- #boot" -->
 </div> <!-- #download -->
+

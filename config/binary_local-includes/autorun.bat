@@ -1,3 +1,0 @@
-@echo Load "doc\amnesia\wiki\index.html"...
-@start doc\amnesia\wiki\index.en.html
-@exit

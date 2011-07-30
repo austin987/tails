@@ -1,14 +1,24 @@
-The [[security/IP_address_leak_with_icedove]] can be fixed by setting mail.smtpserver.default.hello_argument to "localhost". See [this Tor wiki entry](https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/TorifyHOWTO/EMail#ExperimentalSuggestionsforpossiblymakingthunderbirdandorclawsstopleakinginfoExperimental) for other goodies. By applying those configurations I think both claws and icedove comes to an equal level security-wise.
+The [[security/IP_address_leak_with_icedove]] can be fixed by setting
+mail.smtpserver.default.hello_argument to "localhost". See [this Tor
+wiki
+entry](https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/TorifyHOWTO/EMail#ExperimentalSuggestionsforpossiblymakingthunderbirdandorclawsstopleakinginfoExperimental)
+for other goodies. By applying those configurations I think both claws
+and icedove comes to an equal level security-wise.
 
-The question is, though, why we would want to migrate back to Icedove from claws.
+The question is, though, why we would want to migrate back to Icedove
+from claws.
 
-####Pros:
+[[!toc levels=2]]
+
+Pros
+====
 
 * Icedove has a *much* easier guide for setting up an email account -- just enter a name, email address and password, and Icedove will check if the domain of it has IMAP (preferred) or POP, and SMPT, and set up an account correctly and automatically, beginning with trying SSL/STARTTLS so no login credentials are unnecessarily leaked. claws is pretty much impossible to setup for normal people, but seeding the config could make that easier, but will it be as easy?
 * Enigmail has a *much* easier guide for generating a key and setting up GnuPG. The guide starts pretty much automatically and is very informative.
 * Icedove is more widely used, so it's less fingerprintable and perhaps familiar to more users. This (and its larger development team) also likely results in earlier bug fixes.
 
-####Cons:
+Cons
+====
 
 * It will be somewhat harder to implement the [[todo/easy_MUA_configuration]] with Icedove compared to claws. That would allow us some flexibility for our use case, e.g. specific recommendations w.r.t. anonymity.
 * Icedove's automatic account creation process will fallback to plaintext POP/IMAP/SMTP if SSL/STARTTLS fails. That could result in leaks of login/password in many circumstances, like if the user types the wrong domain in the email address. I can't seem to find any options to disallow plaintext, although mail.smtp.ssl=2 (must use SSL) seems interesting (haven't found anything for POP/IMAP though).
@@ -17,8 +27,28 @@ The question is, though, why we would want to migrate back to Icedove from claws
 
 I think implementing the [[todo/easy_MUA_configuration]] is pretty far from trivial, at least if we want it to be as easy as Icedove's account creation guide, which brings that whole idea into question. Maybe a better approach would be to write an addon for Icedove that alters the account creation process (if that is possible -- I have no insight in how much addons can do)? It'd give the user some use case specific information, e.g. to not use a non-anonymous email account, and also implement the other ideas from [[todo/easy_MUA_configuration]]. And it would disallow plaintext plaintext POP/IMAP/SMTP.
 
-> I'm not against moving back to Icedove and using the existing
-> Icedove 3.x account creation guide as a basis to implement
-> [[todo/easy_MUA_configuration]]. --intrigeri
+Things to implement
+===================
 
-[[!tag todo/discuss todo/research]]
+[[!tag todo/code]]
+
+Spoof User-Agent
+----------------
+
+1. pretend to be Thunderbird
+2. pretend to be running on the same OS as Firefox Torbutton does
+3. pretend to be the Thunderbird version that was current when the
+   Firefox version advertised by Torbutton itself was
+
+Things to be checked / researched
+=================================
+
+[[!tag todo/research]]
+
+* how much size does Icedove + Enigmail + l10n packages add to the
+  SquashFS compared to Claws Mail?
+* how well are Enigmail, Icedove and l10n packages maintained in
+  Debian?
+* if how Icedove's "autoconfiguration file" is fetched (authenticated
+  SSL? any information leak?)
+

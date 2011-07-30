@@ -46,7 +46,7 @@ pref("capability.policy.maonoscript.javascript.enabled", "allAccess");
 pref("capability.policy.maonoscript.sites", "https://auk.riseup.net https://mail.riseup.net https://swift.riseup.net https://tern.riseup.net https://webmail.no-log.org about: about:blank about:certerror about:config about:credits about:neterror about:plugins about:privatebrowsing about:sessionrestore chrome: file:// https://webmail.boum.org resource:");
 pref("dom.event.contextmenu.enabled", false);
 pref("dom.storage.enabled", false);
-pref("extensions.foxyproxy.last-version", "2.21");
+pref("extensions.foxyproxy.last-version", "99999.99");
 pref("extensions.update.enabled", false);
 pref("extensions.update.notifyUser", false);
 pref("geo.enabled", false);

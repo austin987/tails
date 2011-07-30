@@ -1,21 +1,26 @@
 Non-commercial, ethical ISPs, such as the one who signed the
 [data retention manifest](http://www.nadir.org/nadir/aktuell/2008/10/10/36282.html),
-need to be better supported by amnesia:
+need to be better supported by Tails.
 
-* install the SSL certificates/CA for such servers
-* get them to use [[Monkeysphere]]
-* add bookmarks to the above-mentioned servers, in particular for
-  quick'n'easy webmail access
-* easily build a live system with a custom JavaScript/cookies
-  whitelist; until this is done, add a few of the more trustworthy
-  servers to the whitelist (for cookies, this is configured in
-  `chroot_local-includes/usr/share/amnesia/iceweasel/sql/permissions.sql`)
+[[!toc levels=2]]
+
+Our plans
+=========
+
+[[!tag todo/code]]
+
+1. Install the SSL certificates/CA for such servers (on the long run,
+   we want them to use [[todo/Monkeysphere]] but we're not there yet).
+2. Add bookmarks to the above-mentioned servers, in particular for
+   quick'n'easy webmail access.
+
+Implementation
+==============
 
 SSL certificates
-================
+----------------
 
-iceweasel
----------
+### Iceweasel
 
 The necessary NSS `*.db` files are:
 
@@ -24,5 +29,3 @@ The necessary NSS `*.db` files are:
 * `secmod.db`: if this file is missing, a new one is generated without
   DSA, SHA256 and SHA512; weird.
 * `key3.db`: if missing, the other `*.db` files can't be used.
-
-[[!tag todo/discuss]]

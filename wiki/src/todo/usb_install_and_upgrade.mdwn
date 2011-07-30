@@ -24,8 +24,8 @@ The current state of things implies two distasteful facts:
 Such user unfriendliness conflicts with Tails [[specified
 goals|contribute/design]] and must be fixed.
 
-Specification
-=============
+Installing specification
+========================
 
 One should be able to easily install Tails to a USB storage device:
 
@@ -46,13 +46,6 @@ encrypted partition or a file-backed encrypted FS shall be researched
 and decided upon. If the partition way is chosen, the installer
 software must have partitioning capabilities.
 
-One should also be able to easily and non-destructively upgrade a
-given Tails system installed on a USB storage device.
-Non-destructively means not touching any partition or file other than
-the ones managed by the Tails installation system. Proceeding this way
-is needed to make it possible using a single USB stick for the Tails
-system *and* some persistent storage space.
-
 Research
 ========
 
@@ -64,14 +57,14 @@ Frontend UI
 ### Overview
 
 Unfortunately, no single existing piece of software satisfies the
-above specification. It seems like everyone writes her own USB
+above specification. It seems like everyone writes their own USB
 installer; after the following round-up has been made, this is no
 surprise at all: since such tools are designed to be dead easy for the
 non-technical end-user, every author selects the few features that are
-the most important ones for her intended audience, and generally
+the most important ones for their intended audience, and generally
 writes a very ad-hoc piece of software. Therefore, every Live system
 project whose needs are slightly different from the others needs to
-write her own USB installer, possibly reinventing more or less wheels
+write its own USB installer, possibly reinventing more or less wheels
 along the road.
 
 We need to see if we can turn one of those tools into something that
@@ -406,33 +399,146 @@ low-level details; its LUKS encryption support probably is the killer
 feature that makes it the perfect library for the job.
 
 Upgrade
--------
+=======
 
+One should also be able to easily and non-destructively upgrade a
+given Tails system installed on a USB storage device.
+Non-destructively means not touching any partition or file other than
+the ones managed by the Tails installation system. Proceeding this way
+is needed to make it possible using a single USB stick for the Tails
+system *and* some persistent storage space.
 The upgrade issue is actually twofold: network burden and writing the upgraded
 live system on the USB stick.
 
-### Full CD image
+Full upgrade
+------------
 
-Can a memory stick be upgraded using the full CD image distributed for the new
-Tails version?
+Full upgrades happen between major releases, eg. 0.7 and 0.8.
 
-A full CD image (700 MiB) is a lot of data to download. If done over Tor this
-is a pretty heavy load for the network and takes a fair amount of time.
+Full upgrades should look as much as possible as a new installs. So it should be
+possible to do it from any platform supported by the USB installer.
 
-To support upgrade in a running system:
+As for installing, people should be able to provide the ISO to the installer or
+ask the installer to download it.
 
- * 700 MiB of RAM would need to be available to store the downloaded image.
- * The USB stick must be able to store two different images (either `squashfs`
-   or full ISO, depending on the chosen boot method). Otherwise the system
-   is likely to crash if the currently running *squashfs* disappears.
+From inside Tails it should also provide an opt-in option to download the full
+ISO outside Tor.
 
-### Partial download
+Once the upgrade is finished the old ISO is removed automatically from the USB
+stick.
 
-To reduce the previous requirements, Tails would need to provide only what
-has changed between two releases (deltas) and have a way to apply those changes
-to the previous version.
+Partial upgrade
+---------------
 
-#### Alreday existing tools
+Partial upgrades only happen between minor releases, eg. 0.7 and 0.7.1.
+
+Partial upgrades should provide only what has changed between two releases
+(deltas) and have a way to apply those changes to the previous version.
+
+At boot-time the security warning telling that a new Tails version is available
+should provide an automated way of doing the upgrade.
+
+### Stacking `squashfs` images
+
+Tails filesystem is already using `aufs` to provide a read-write filesystem on
+top of the read-only `squashfs` image.
+
+This system could probably be extended to support mounting multiple `squashfs`
+filesystems on top of each others. Upgrades would be `squashfs` images with only
+the files that have been modified since the previous releases. This handles file
+deletions.
+
+Shipping upgrades could be as simple as shipping those extra `squashfs` images.
+
+Actually there seems to be such an option in Debian live already, see in `man
+live-boot` the part on /live/filesystem.module. There is need to do [[!taglink
+todo/research]] on this.
+
+Stacking squashfs images like this would still lack a way of upgrading the
+kernel and the syslinux. This should also be handled by the automated upgrade
+process.
+
+### A test
+
+Here is a test. First the procedure to create the *delta* squashfs image, to be
+done as `root`:
+
+    mkdir /mnt/tails-0.7.1
+    mkdir /mnt/tails-0.7.2
+    mount -o loop tails-i386-0.7.1.iso /mnt/tails-0.7.1
+    mount -o loop tails-i386-0.7.2.iso /mnt/tails-0.7.2
+    mkdir /mnt/tails-0.7.1-root
+    mkdir /mnt/tails-0.7.2-root
+    mount -o loop /mnt/tails-0.7.1/live/filesystem.squashfs /mnt/tails-0.7.1-root
+    mount -o loop /mnt/tails-0.7.2/live/filesystem.squashfs /mnt/tails-0.7.2-root
+
+    mkdir /mnt/upgrade-0.7.1-to-0.7.2
+    mount -t tmpfs tmpfs /mnt/upgrade-0.7.1-to-0.7.2
+
+    mkdir /mnt/union
+    mount -t aufs -o br=/mnt/upgrade-0.7.1-to-0.7.2=rw:/mnt/tails-0.7.1-root=ro none /mnt/union
+    rsync -avP --delete-after /mnt/tails-0.7.2-root/ /mnt/union/
+
+    mksquashfs /mnt/upgrade-0.7.1-to-0.7.2 upgrade-0.7.1-to-0.7.2.squashfs
+
+Compressed size (using default gzip compression) is 82 MB.
+
+Not bad, and the new kernel is included, which can probably be avoided.
+
+Now, let's upgrade an USB stick:
+
+    mkdir /media/disk/live
+    cp   /mnt/tails-0.7.1/live/filesystem.squashfs \
+         upgrade-0.7.1-to-0.7.2.squashfs \
+         /mnt/tails/0.7.2/live/vmlinuz \
+         /mnt/tails/0.7.2/live/initrd.img \
+       /media/disk/live
+
+Then fiddle with GRUB or EXTLINUX.
+
+On boot, the new squashfs gets properly integrated. But *whiteouts* are not
+working. It looks like the `live-boot` mount options miss the `wh` attribute.
+But wait, booting with `break=top` and modifying `/scripts/live` to replace
+`roopt=rr` by `roopt=rr+wh` is enough to do the trick!
+
+Initial test is pretty conclusive!
+
+Off topic: files that we might want to remove from the squashfs image:
+
+    /boot/initrd.img-*
+    /boot/vmlinuz-*
+    /usr/share/icons/gnome/icon-theme.cache
+    /tmp/*
+
+### Appending to `squashfs` image (discarded option)
+
+`mksquashfs` can actually append new files to an existing `squashfs` image.
+
+Initial images are created with files in a specific order to
+[[improve boot time on cd]], but on a USB stick random access in a non-issue.
+
+[[!taglink todo/test]] if `mksquashfs` can append an image that is currently
+used without weakening a running system.
+
+Upgrading the system would result in a series of files to be appended to the
+current `squashfs` image.
+
+This option had been discared because it is not possible to remove files.
+
+### Deltas (discarded option)
+
+A possible way to encode deltas for the two previous methods could be:
+
+ * For each file that has been modified: a binary delta and a new set of
+   metadata if they have changed.
+ * A list of deleted files.
+
+And `mksquashfs` would be used in the running live system after applying the
+delta to create a `squashfs` image with the upgrade.
+
+But there is probably things that have been left out of such an early draft.
+
+### Binary diff (discarded option)
 
 Plain `diff` does not work on binary files.
 
@@ -457,45 +563,3 @@ with `squashfs-lzma`. Quoting `xz` manpage:
 [xdelta]: http://xdelta.org/
 [bsdiff]: http://www.daemonology.net/bsdiff/
 [VCDIFF]: http://www.ietf.org/rfc/rfc3284.txt
-
-#### Appending to `squashfs` image
-
-`mksquashfs` can actually append new files to an existing `squashfs` image.
-
-Initial images are created with files in a specific order to
-[[improve boot time on cd]], but on a USB stick random access in a non-issue.
-
-[[!taglink todo/test]] if `mksquashfs` can append an image that is currently
-used without weakening a running system.
-
-[[!taglink todo/research]] if it possible to "remove" files with appended
-images.
-
-Upgrading the system would result in a series of files to be appended to the
-current `squashfs` image.
-
-#### Stacking `squashfs` images
-
-Tails filesystem is already using `aufs` to provide a read-write filesystem on
-top of the read-only `squashfs` image.
-
-This system could probably be extended to support mounting multiple `squashfs`
-filesystems on top of each others. Upgrades would be `squashfs` images with
-only the files that have been modified since the previous releases.
-
-Yet again, there is need to [[!taglink todo/research]] how to handle deletions.
-
-Shipping upgrades could be as simple as shipping those extra `squashfs` images.
-
-#### Deltas
-
-A possible way to encode deltas for the two previous methods could be:
-
- * For each file that has been modified: a binary delta and a new set of
-   metadata if they have changed.
- * A list of deleted files.
-
-And `mksquashfs` would be used in the running live system after applying the
-delta to create a `squashfs` image with the upgrade.
-
-But there is probably things that have been left out of such an early draft.
