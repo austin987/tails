@@ -1,8 +1,34 @@
-[[!tag todo/wait]]
+The Debian X strike force maintains Xorg backports for Squeeze:
+<http://x.debian.net/reference/squeeze-backports.html>.
 
-The Debian X strike force will maintain Xorg backports for Squeeze and
-has started uploaded a set of packages already.
+We probably want to ship them in Tails for better recent hardware
+support.
 
-As soon as they are complete, we probably want to test and use these.
-(Probably with an updated matching kernel, which will anyway be needed
-for [[better SquashFS compression|todo/use_lzma_compression]].)
+This is mostly implemented in our `feature/backported_xorg` Git
+branch.
+
+Left to do
+==========
+
+virtualbox-guest-x11
+--------------------
+
+virtualbox-guest-x11 in squeeze-backports is obviously built against
+Squeeze's Xorg ABI. We need to rebuilt it in a Squeeze chroot that
+prefers using the backported Xorg development packages when needed.
+
+[[!tag todo/code]]
+
+needs updated kernel
+--------------------
+
+At least the `nouveau` video driver needs a newer kernel. Since the
+`nv` driver has been removed, complying with this requirement is
+critical.
+
+This change is already implemented (and maintained) in the
+`feature/lzma` branch (see [[better SquashFS
+compression|todo/use_lzma_compression]]), that's why I did not
+duplicate this work in `feature/backported_xorg`.
+
+[[!taglink todo/wait]] for the `feature/lzma` branch to be merged.
