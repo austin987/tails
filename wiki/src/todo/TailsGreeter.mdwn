@@ -49,7 +49,7 @@ Language
 3. effects: 
    - setup locale for the TailsGreeter so that the user can understand the other
      choices;
-   - generate the chosen locale (see [[design|TailsGreeter/design]] for details of locale-gen interface);
+   - generate the chosen locale;
    - setup locale for the session to be started;
    - maybe more: have a look at
      `config/binary_local-hooks/20-syslinux_i18n` in Tails main Git
@@ -63,14 +63,8 @@ Language
      runtime, but it increases the ISO size by 130MB+, which seems
      overkill since compiling one given locale takes roughly 3s on
      a quite old laptop.
-    * locale generation: we can just set a few environment variables,
-      delete `/var/lib/live/config/locales`, and run the `004-locales`
-      live-config script.
-    * keyboard: live-config `015-keyboard-configuration`,
-      `117-xserver-xorg` and `014-console-setup` scripts seem usable;
-      need some envvars set.
-      But... which not-started-yet software will take into account the
-      config done by these scripts? Maybe they are simply not needed.
+    * locale generation: done with localedef (see [[design|TailsGreeter/design]] for details of the interface)
+    * keyboard: layout is applied with the help of corresponding GDM d-bus signals.
     * timezone: pending a discussion + decision among ourselves; we don't
       know yet if we'll gonna set everybody to GMT, or set localized
       timezones.
@@ -87,10 +81,7 @@ Administrator password
 
 1. name: Administrator password
 2. default value: none
-3. effects: execute `/usr/local/sbin/set-user-password` in an environnement
-   containing `$TAILS_USER_PASSWORD` and then pay attention to unset this variable
-   if the environnement persists. See [[todo/better_root_access_control]] to
-   find tha git branch.
+3. effects: execute `/usr/local/sbin/set-user-password-and-locale` with `$TAILS_USER_PASSWORD` saved into temporary file. See [[design|TailsGreeter/design]] for details.
 4. ui hint: (draft) enter here a password that will be asked to grant administrator
    rights. Leave this field blank to disable administrator rights.
 5. responsible dev:
