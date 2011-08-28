@@ -17,6 +17,7 @@ ma_install_modules ()
    for MODULE in $@ ; do
       for KERNEL in /boot/vmlinuz-* ; do
 	 VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
+	 echo "module-assistant: installing module ${MODULE} for kernel ${VERSION}"
 	 $MA --quiet auto-install ${MODULE} -l ${VERSION}
       done
       $MA clean ${MODULE}
@@ -31,7 +32,7 @@ ma_cleanup ()
 
 if [ -n "${MODULES}" ] ; then
    ma_install_tools
-   ma_install_modules
+   ma_install_modules ${MODULES}
    ma_cleanup
 fi
 

@@ -35,6 +35,9 @@ else
     /etc/init.d/tor start
 fi
 
+# Restart ttdnsd
+service ttdnsd restart
+
 # Restart Vidalia because it does not automatically reconnect to the new
 # Tor instance. Use kill+start as:
 # - X-GNOME-AutoRestart does not exist in Lenny's Gnome
