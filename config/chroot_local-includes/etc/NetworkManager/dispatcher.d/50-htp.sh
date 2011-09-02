@@ -157,6 +157,7 @@ run_htpdate() {
 		-f \
 		-p \
 		-u htp \
+		-t 1 \
 		$HTP_POOL
 }
 
