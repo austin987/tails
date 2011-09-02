@@ -37,7 +37,7 @@ VERSION_FILE=/etc/amnesia/version
 HTP_POOL="
 	www.torproject.org
 	mail.riseup.net
-	encrypted.google.com
+	www.duckduckgo.com
 	ssl.scroogle.org
 "
 
