@@ -135,6 +135,8 @@ add_nameservers_to_etc_hosts() {
 	echo "$BEGIN_MAGIC" >> /etc/hosts
 
 	for HTP_HOST in $HTP_POOL; do
+		# ensure we only get the domain if given a true url
+		HTP_HOST=${HTP_HOST%%/*}
 		IP=$(sudo -u htp sh -c "$(dns_query_cmd "$HTP_HOST")" |
 		     awk '/ has address / { print $4 ; quit }')
 		if [ -z "$IP" ]; then
