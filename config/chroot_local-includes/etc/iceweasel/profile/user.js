@@ -6,7 +6,7 @@ user_pref("extensions.firegpg.enable_gpgapi", false);
 user_pref("extensions.firegpg.gmail_enabled", false);
 user_pref("extensions.firegpg.gmail_enabled", false);
 user_pref("extensions.firegpg.gpg_version", "FIREGPG_VERSION");
-user_pref("extensions.firegpg.keyserver", "hkps://keys.indymedia.org");
+user_pref("extensions.firegpg.keyserver", "hkp://2eghzlv2wwcq7u7y.onion");
 user_pref("extensions.firegpg.show_website", false);
 
 // Block read and write access to the history in non-Tor mode
