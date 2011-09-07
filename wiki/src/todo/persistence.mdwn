@@ -30,13 +30,17 @@ This might be relevant for the following applications:
 - IM and MUA configurations (since these can take a several
   steps to setup which is annoying to redo for every amnesia
   session)
+- Tor's data/cache for faster bootstrap with slow connections and
+  better protections through more stable entry guards (/var/lib/tor)
 - I2P data/cache/log directory (/var/lib/i2p)
 
-Perhaps it would be possible to make a tool so that the user can
-choose exactly what files/directories that should be persistent,
+Perhaps it would be possible to make a tool/list so that the user can
+choose exactly what files/directories that should be persistent, and
 and when to update them? Whith such a general solution the above
 things would not have to be implemented individually and could
-be present as default suggestions in the tool.
+be present as default suggestions in the tool, and advanced users
+with uncommon requirements can do whatever they want so we won't hear
+them nagging all the time.
 
 Stuff we don't want to actively support making persistent:
 
@@ -197,15 +201,14 @@ will pre-configure some of these in `/etc/live/` and/or
 `/proc/cmdline`, and only a tiny subset of options will be made
 available to users by the Tails [[todo/boot_menu]]).
 
+We want to use `persistent-media=removable` or
+`persistent-media=removable-usb` (in `live-boot` 3.x).
+
 What needs to be done (checked in live-boot 2.0~a16-1 due to working
 offline with an outdated Git working copy):
 
 - Add support for file deletion (e.g. by replacing cpio with rsync).
-- Add a option to ignore non-removable devices when looking for a
-  persistent volume. Implementation: support a
-  `persistent-media={removable,usb-removable}` option similar to
-  `live-media=`. Being worked on in our `3.x/feature/persistent-removable`
-  branch.
+
 - There is no way to enable the home-sn kind of persistence while
   disabling others. Interface would be:
 
@@ -244,7 +247,7 @@ offline with an outdated Git working copy):
   => add `persistent-encryption=(none|luks|...)` option, forget the
   current `persistent=cryptsetup` useless mode of operation.
 
-- The cryptsetup support is not able to deal with file-backed Luks
+- The cryptsetup support is not able to deal with file-backed LUKS
   snapshots. Do we need this? On the long run we would probably prefer
   supporting plain dm-crypt mappings hidden in files: something
   similar to the `live-media-offset` would be perfect; the UI side of
@@ -297,7 +300,7 @@ include:
 > how to connect to IMAP server with SSL or StartTLS, but not how
 > to verify X.509 certificates.
 
-- Encryption: symmetric GnuPG, encfs, ecryptfs, file-backed Luks or
+- Encryption: symmetric GnuPG, encfs, ecryptfs, file-backed LUKS or
   dm-crypt?
 
 Read-only mode
