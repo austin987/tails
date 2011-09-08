@@ -1,0 +1,55 @@
+[[!toc levels=2]]
+
+misc unneeded files
+===================
+
+Current Tails devel branch cleans up `/tmp` at the end of the
+chroot_local-hooks stage; before this was done, the SquashFS contained
+files such as `/tmp/tmp.DO6gwUAXQz/broadcom-wl-4.150.10.5.tar.bz2`.
+See released Tails 0.7.2 image for details.
+
+We should report this as a wishlist bug against live-build itself and
+possibly implement a proper fix in there (e.g. by doing this cleanup
+stage before the chroot is deemed ready to be compressed, or by
+mounting a tmpfs on the chroot's `/tmp` for the duration of the
+build).
+
+> Done in live-build 3.x Git. Once we use it, we can remove our custom
+> hook. Let's [[!taglink todo/wait]] then. --intrigeri
+
+live-build hooks
+================
+
+live-build 3.x ships a few interesting space-saving hooks in
+`share/hooks`, such as one that removes GNOME icon cache and one that
+removes compiled Python `.pyc` files.
+
+We probably want to [[!taglink todo/wait]] for Ubuntu to actually ship
+Live CDs built using live-build 3.x, before switching to it.
+
+duplicated Linux kernel
+=======================
+
+[[!tag todo/code]]
+
+The Linux kernel + initramfs are present twice in a Tails ISO: once in
+the iso9660 filesystem, once inside the SquashFS. The former is
+needed, but the latter is not.
+
+live-build 3.x adds an option (commit 651c8aebd) to only copy over
+kernel and initrd if `LB_LINUX_PACKAGES` doesn't equal `none`.
+We could set `LB_LINUX_PACKAGES` to `none` and install the kernel
+package ourselves with an early chroot local hook. It would be better
+if live-build supported our usecase out of the box, though.
+
+files only needed at build time
+===============================
+
+We're currently using `chroot_local-includes` as a way to pass files
+from the build host to the build chroot. As a result, released images
+contain many files (mostly in `/usr/`) that are needed at build time
+but useless at runtime.
+
+live-build 3.x bind mounts (read-only) the build configuration
+directory (`config`) inside the chroot (onto `/root/config`) while the
+chroot hooks are running.

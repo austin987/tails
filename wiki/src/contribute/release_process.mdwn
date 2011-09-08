@@ -2,6 +2,11 @@
 
 [[!toc levels=1]]
 
+Coordinate with Debian security updates
+=======================================
+
+See [[release_process/Debian_security_updates]].
+
 Update included files
 =====================
 
@@ -9,6 +14,18 @@ Website
 -------
 
 Merge the `master` branch into the one used to build the release.
+
+### version number
+
+In the branch used to build the release, update the `inc/*` files to match the
+version number of the new release. Don't update `/inc/stable_i386_hash.html`
+since the hash can't be computed yet.
+
+### design documentation
+
+	git grep PENDING wiki/src/contribute/design*
+
+... and remove the `PENDING-FOR-N.M` warnings.
 
 AdBlock patterns
 ----------------
@@ -146,8 +163,6 @@ Rename the `.packages` file to remove the `.iso` part of its name.
 
 Copy the `.iso.pgp`, `.packages`, `.torrent` and `.torrent.pgp`
 files to the Git repository's `wiki/src/torrents/files/` directory.
-
-Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
 
 Update the latest version and related information in `inc/*`.
 
