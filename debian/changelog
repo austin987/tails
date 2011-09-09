@@ -1,3 +1,98 @@
+tails (0.8) unstable; urgency=low
+
+  * Rebase on the Debian Squeeze 6.0.2.1 point-release.
+
+  * Tor
+    - Update to 0.2.2.32.
+    - Disabled ControlPort in favour of ControlSocket.
+    - Add port 6523 (Gobby) to Tor's LongLivedPorts list.
+
+  * I2P
+    - Update to 0.8.8.
+    - Start script now depends on HTP since I2P breaks if the clock jumps or is
+      too skewed during bootstrap.
+
+  * Iceweasel
+    - Update to 3.5.16-9 (fixes CVE-2011-2374, CVE-2011-2376, CVE-2011-2365,
+      CVE-2011-2373, CVE-2011-2371, CVE-2011-0083, CVE-2011-2363, CVE-2011-0085,
+      CVE-2011-2362, CVE-2011-2982, CVE-2011-2981, CVE-2011-2378, CVE-2011-2984,
+      CVE-2011-2983)
+    - Enable HTTP pipelining (like TBB).
+    - Update HTTPS Everywhere extension to 0.9.4.
+    - Suppress FoxyProxy update prompts.
+    - Prevent FoxyProxy from "phoning home" after a detected upgrade.
+    - Fixed a bunch of buggy regular expressions in FoxyProxy's configuration.
+      See [[bugs/exploitable_typo_in_url_regex?]] for details. Note that none of
+      these issues are critical due to the transparent proxy.
+    - Add DuckDuckGo SSL search engine.
+
+  * Torbutton
+    - Update to torbutton 1.4 from Debian unstable.
+    - Don't show Torbutton status in the status bar as it's now displayed in the
+      toolbar instead.
+
+  * Pidgin
+    - More random looking nicks in pidgin.
+    - Add IRC account on chat.wikileaks.de:9999.
+
+  * HTP
+    - Upgrade htpdate script (taken from Git 7797fe9) that allows setting wget's
+      --dns-timeout option.
+
+  * Software
+    - Update to Linux 3.0.0. -606 is now deprecated in favour of -486 and
+      -686-pae; the world is not ready for -pae yet, so we now ship -486.
+    - Update to 0.2.14-1+tails1 custom package.
+    - Install accessibility tools:
+      - gnome-mag: screen magnifier
+      - gnome-orca: text-to-speech
+    - Replace the onBoard virtual keyboard with Florence.
+    - Install scribus-ng instead of scribus.
+    - Install the PiTIVi non-linear audio/video editor.
+    - Install ttdnsd.
+    - Install tor-arm.
+    - Install lzma.
+
+  * Arbitrary DNS queries
+    - Tor can not handle all types of DNS queries, so if the Tor resolver fails
+      we fallback to ttdnsd. This is now possible with Tor 0.2.2.x, since we
+      fixed Tor bug #3369.
+
+  * Hardware support
+    - Install Atheros and Broadcom wireless firmwares.
+    - Install usb-modeswitch to support 3G USB dongles (Thanks to Marco A.
+      Calamari for the suggestion).
+    - Install modemmanager: support mobile broadband devices such as 3G, GSM...
+    - Install mobile-broadband-provider-info for better 3G support.
+    - Install ipheth-utils for iPhone tethering.
+    - Install xserver-xorg-input-vmmouse (for mouse integration with the host OS
+      in VMWare and KVM).
+    - Install virtualbox-ose 4.x guest packages from Debian backports.
+
+  * Miscellaneous
+    - Switch gpg to use keys.indymedia.org's hidden service, without SSL.
+      The keys.indymedia.org SSL certificate is now self-signed. The hidden
+      service gives a good enough way to authenticate the server and encrypts
+      the connection, and just removes the certificates management issue.
+    - The squashfs is now compressed using XZ which reduces the image size quite
+      drastically.
+    - Remove Windows autorun.bat and autorun.inf. These files did open a static
+      copy of our website, which is not accessible any longer.
+
+  * Build system
+    - Use the Git branch instead of the Debian version into the built image's
+      filename.
+    - Unless otherwise specified, Tails will be built with XZ compression.
+    - Build and install documentation into the chroot (-> filesystem.squashfs).
+      Rationale: our static website cannot be copied to a FAT32 filesystem due
+      to filenames being too long. This means the documentation cannot be
+      browsed offline from outside Tails. However, our installer creates GPT
+      hidden partitions, so the doc would not be browseable from outside Tails
+      anyway. The only usecase we really break by doing so is browsing the
+      documentation while running a non-Tails system, from a Tails CD.
+
+ -- Tails developers <amnesia@boum.org>  Thu, 09 Sep 2011 11:31:18 +0200
+
 tails (0.7.2) unstable; urgency=high
 
   * Iceweasel
