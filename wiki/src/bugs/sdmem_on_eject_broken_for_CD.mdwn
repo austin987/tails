@@ -28,8 +28,9 @@ issue with some other package (we also have i386 vs amd64, of course).
 Updating to unstable's udev (172-1) in hope of it playing better with
 linux 3.0.0-1 from unstable did not solve the issue either, however.
 
-> Indeed, linux 2.6.38-rc1 [reworked disk event handling|http://lwn.net/Articles/423619/]
-> so now we need to set block.events_dfl_poll_msecs (to 1000, for
-> instance) until the drivers are updated accordingly.
-
-Fixed in commit f4d6f6870167313cc19514fa95b9b69de47bac8f => [[done]]
+> Indeed, linux 2.6.38-rc1 [[reworked disk event handling|http://lwn.net/Articles/423619/]]
+> and adds block.events_dfl_poll_msecs that can be used to set the
+> interval for polling block devices for events. This does not seem
+> to work properly though: settings it to 1000 makes it work in
+> VirtualBox with its virtual CD-ROM drive, but no value seems to work
+> on the one real machine I have available with a CD-ROM drive.
