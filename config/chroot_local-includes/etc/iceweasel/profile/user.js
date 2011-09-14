@@ -29,6 +29,7 @@ user_pref("extensions.torbutton.no_updates", true);
 user_pref("extensions.torbutton.normal_exit", true);
 user_pref("extensions.torbutton.nonontor_sessionstore", true);
 user_pref("extensions.torbutton.nontor_memory_jar", true);
+user_pref("extensions.torbutton.prompted_language", true);
 user_pref("extensions.torbutton.restore_tor", true);
 user_pref("extensions.torbutton.saved.download_retention", 0);
 user_pref("extensions.torbutton.saved.search_suggest", false);
