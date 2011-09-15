@@ -4,6 +4,12 @@
 
 umask 022
 
+# we require building from git
+if ! git rev-parse --is-inside-work-tree &> /dev/null; then
+    echo "${PWD} is not a git tree."
+    exit 1
+fi
+
 . config/amnesia
 if [ -e config/amnesia.local ] ; then
    . config/amnesia.local
