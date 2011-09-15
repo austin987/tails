@@ -24,10 +24,6 @@ rm -rf cache/stages_rootfs
 # get LB_ARCHITECTURE and LB_DISTRIBUTION
 . config/bootstrap
 
-# get GIT_BRANCH
-GIT_BRANCH="$(git branch --color=never | grep '^* ' | awk '{print $2}')"
-CLEAN_GIT_BRANCH="$(echo $GIT_BRANCH | sed 's,/,_,g')"
-
 # build the doc wiki
 ./build-wiki
 
@@ -57,6 +53,24 @@ chmod -R go+rX config/chroot_sources
 : ${MKSQUASHFS_OPTIONS:='-comp xz'}
 export MKSQUASHFS_OPTIONS
 
+# get git branch or tag so we can set the basename appropriately, i.e.:
+# * if we build from a tag:    tails-$ARCH-$TAG.iso
+# * if we build from a branch: tails-$ARCH-$BRANCH-$VERSION-$DATE.iso
+if GIT_REF="$(/usr/lib/git-core/git-symbolic-ref HEAD &> /dev/null)"; then
+    GIT_BRANCH="${GIT_REF#refs/heads/}"
+    BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
+else
+    GIT_CURRENT_COMMIT="$(git rev-parse HEAD)"
+    if GIT_TAG="$(git describe --tags --exact-match ${GIT_CURRENT_COMMIT})"; then
+	BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${GIT_TAG}"
+    else
+	# this shouldn't reasonably happen (e.g. only if you checkout a
+        # tag, remove the tag and then build)
+	echo "Neither a git branch nor a tag, exiting."
+	exit 1
+    fi
+fi
+
 case "$LB_BINARY_IMAGES" in
    iso)
       BUILD_FILENAME_EXT=iso
@@ -79,7 +93,6 @@ case "$LB_BINARY_IMAGES" in
       exit 1
       ;;
 esac
-BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
 BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
 BUILD_MANIFEST="${BUILD_DEST_FILENAME}.list"
 BUILD_PACKAGES="${BUILD_DEST_FILENAME}.packages"
