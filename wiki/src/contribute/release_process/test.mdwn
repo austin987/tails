@@ -93,6 +93,13 @@ Check the output for:
   EHLO/HELO SMTP messages it sends). Send an email using Claws and a
   non-anonymizing SMTP relay. Then check that email's headers once
   received, especially the `Received:` and `Message-ID:` ones.
+* Also check that the EHLO/HELO SMTP message is not leaking anything
+  with a packet sniffer: Disable SSL/TLS for SMTP in Claws (so take
+  recations for not leaking you password in plaintext by either
+  chaning it temporarily or using a disposable account). Then run
+  "sudo tcpdump -i lo -w dump" so we capture the packet before Tor
+  encrypts it, and check the dump for the HELO/EHLO message and
+  verify that it only contains "localhost".
 
 # Whisperback
 
