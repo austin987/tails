@@ -40,3 +40,8 @@ pref("mail.default_html_action", 1);
 // Below, useragent of windows user with Thunderbird version released the day before Firefox 3.6.3. Data gathered from: http://www.useragentstring.com
 // FIXME: Should we specify LANG
 pref("general.useragent.override", "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.9) Gecko/20100317 Thunderbird/3.0.4");
+
+// Avoid leaking Enigmail usage and version in X-Enigmail-Version header
+pref("extensions.enigmail.addHeaders", False);
+// Avoid leaking Enigmail usage and version in message
+pref("extensions.enigmail.useDefaultComment", True);
