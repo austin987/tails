@@ -79,7 +79,7 @@ DEV_TYPE="${DEV_TYPE_LINE#*=}"
 # event. See [[bugs/sdmem_on_eject_broken_for_CD]].
 # FIXME: we might be able to do the more sane "-i off" with future kernel/udev
 if [ "$DEV_TYPE" = "cd" ]; then
-	eject -i on "${BOOT_DEVICE}"
+	eject -i on "${BOOT_DEVICE}" 2>&1 >/dev/null
 fi
 
 # Start udev-watchdog and stop on clean exit.
