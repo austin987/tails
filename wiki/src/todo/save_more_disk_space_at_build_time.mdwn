@@ -36,11 +36,14 @@ The Linux kernel + initramfs are present twice in a Tails ISO: once in
 the iso9660 filesystem, once inside the SquashFS. The former is
 needed, but the latter is not.
 
-live-build 3.x adds an option (commit 651c8aebd) to only copy over
-kernel and initrd if `LB_LINUX_PACKAGES` doesn't equal `none`.
-We could set `LB_LINUX_PACKAGES` to `none` and install the kernel
-package ourselves with an early chroot local hook. It would be better
-if live-build supported our usecase out of the box, though.
+* `config/binary_rootfs/excludes` does not work, because the excluded
+  files are deleted before being copied to the binary fs.
+* Something along the lines of
+  (`MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -wildcards -e
+  'boot/*'"`) does not work, due to [[!debbug 594968]].
+
+=> we need to add an option to live-build that would allow us to
+opt-in for "I don't want to ship the kernels and the rootfs".
 
 files only needed at build time
 ===============================
