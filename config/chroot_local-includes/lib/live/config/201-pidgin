@@ -3,19 +3,51 @@
 # List of at least 2000 possible nicknames
 NICKS_LIST=/usr/share/amnesia/firstnames.txt
 
+# returns true with probability $1
+prob()
+{
+	# sh doesn't have $RANDOM, so we borrow it from bash
+	RANDOM="$(/bin/bash -c 'echo ${RANDOM}')"
+	# we compare with > instead of <= due to mismatch between bash and bc
+	# on what values true and false have.
+	return $(echo "scale = 10; ${RANDOM}/32767 > ${1}" | bc)
+}
+
+leet_nick()
+{
+	# we leave the first letter due to restrictions on nicks in IRC
+	echo "${1:0:1}$(echo ${1:1} | tr 'e' '3' | tr 'i' '1' | tr 'o' '0')"
+}
+
+generate_nick()
+{
+	NICK="$(/usr/local/bin/lc.py -g 1 --min 4 --max 10 ${NICKS_LIST})"
+
+	if prob 0.90; then
+		NICK="$(echo ${NICK} | tr '[:upper:]' '[:lower:]')"
+	fi
+
+	if prob 0.05; then
+		if prob 0.50; then
+			NICK="${NICK}_"
+		else
+			NICK="${NICK}^"
+		fi
+	fi
+
+	if prob 0.05; then
+		NICK="$(leet_nick ${NICK})"
+	fi
+
+	echo ${NICK}
+}
+
 Configure_pidgin ()
 {
 
 	echo "- configuring Pidgin"
 
-	# 1 =< $NICK_NUMBER <= 2000
-	NICK_NUMBER="`/bin/bash -c 'echo $((${RANDOM} * 2000 / 32768 + 1))'`"
-
-	# 1 =< $NICK_SUFFIX <= 100
-	NICK_SUFFIX="`/bin/bash -c 'echo $((${RANDOM} * 100 / 32768 + 1))'`"
-
-	# Random nick picked from $NICKS_LIST, with $NICK_SUFFIX appended
-	NICK="`head -n ${NICK_NUMBER} ${NICKS_LIST} | tail -n 1 | tr '[:upper:]' '[:lower:]'`${NICK_SUFFIX}"
+	NICK=$(generate_nick)
 
 	for file in accounts.xml blist.xml ; do
 	   sudo -H -u "${LIVE_USERNAME}" sed -i'' "s,XXX_NICK_XXX,${NICK}," "/home/${LIVE_USERNAME}/.purple/${file}"
