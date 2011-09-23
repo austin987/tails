@@ -57,6 +57,11 @@ if [ -z "${ORIG_APPEND}" ]; then
    exit 16
 fi
 
+# Make sure all languages are visible in the menu
+NUM_LANGUAGES="$(echo ${AMNESIA_SUPPORTED_LANGUAGES} | wc -w)"
+echo "menu vshift $[24-${NUM_LANGUAGES}]" >> "${SYSLINUX_LIVE_CFG}"
+echo "menu rows ${NUM_LANGUAGES}" >> "${SYSLINUX_LIVE_CFG}"
+
 # Add menu entries
 for LANG_CODE in ${AMNESIA_SUPPORTED_LANGUAGES}; do
 
