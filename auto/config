@@ -18,10 +18,12 @@ $RUN_LB_CONFIG \
    --backports true \
    --binary-images iso-hybrid \
    --binary-indices false \
+   --checksums none \
    --isohybrid-options "$AMNESIA_ISOHYBRID_OPTS" \
    --bootappend-live "${AMNESIA_APPEND}" \
    --bootstrap "cdebootstrap" \
    --archive-areas "main contrib non-free" \
+   --includes none \
    --iso-application="The Amnesic Incognito Live System" \
    --iso-publisher="https://tails.boum.org/" \
    --iso-volume="TAILS ${AMNESIA_FULL_VERSION}" \
@@ -38,7 +40,7 @@ hw_arch="`dpkg --print-architecture`"
 if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
    $RUN_LB_CONFIG \
       --architecture i386 \
-      --linux-flavours 686 \
+      --linux-flavours 486 \
       ${@}
 # build powerpc images on powerpc64 as well, include only powerpc kernel
 elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
