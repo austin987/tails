@@ -1,0 +1,10 @@
+After following the steps for "[[contribute/release_process/test/erase_memory_on_shutdown]]"
+it turns out some patterns may survive the wipe which indicates that
+not all memory was wiped. One theory for this is that the new kernel
+loaded by kexec may allocate some buffer, which then is filled with
+the pattern and won't get cleared, since sdmem only wipes unallocated
+memory.
+
+This was supposedly not a problem for some testers prior to Tails 0.8
+but I can reliably reproduce this problem on a machine (with 4 GB or
+RAM if that matters) with both Tails 0.8 and 0.7.2.
