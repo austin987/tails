@@ -27,9 +27,11 @@ Then install this image on a 2nd USB stick
     while True:
         string = string + "wipe_didnt_work\n"
 
-* launch it:
+* launch it a few times in parallel (on a 32-bit architecture the
+  address space of a given process is usually limited at 3 GiB - or
+  less, depends on the kernel configuration)
 
-    $ python fillram.py
+    $ for i in $(seq 0 31) ; do python fillram.py & ; done
 
 # 2. test that you can get the pattern
 
