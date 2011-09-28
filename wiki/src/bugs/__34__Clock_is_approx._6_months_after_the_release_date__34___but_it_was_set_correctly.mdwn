@@ -1,0 +1,31 @@
+Here's a patch for /etc/NetworkManager/dispatcher.d/50-htp.sh
+
+    39d38
+    < 	mail.riseup.net
+    177c176
+    < 	if [ "$(($release_date_secs + 259200))" -lt "$current_date_secs" ]; then
+    ---
+    > 	if [ "$(($release_date_secs + 15552000))" -lt "$current_date_secs" ]; then
+
+For the last two days, mail.riseup.net is frequently failing, triggering htpdate's paranoid mode. Thus /usr/local/sbin/htpdate returns an error to 50-htp.sh, which checks is_clock_way_off and finds the clock is more than 3 days (rather than the intended 180 days) later than Tails 0.8 release date. 
+
+So, Tails boots up with the hardware clock set correctly, sets the software clock back to September 16, and then can't connect to Tor.
+
+Output at /var/log/htpdate.log looks something like this:
+
+    Running htpdate.
+    https://ssl.scroogle.org (took 1s) => diff = 1 second(s)
+    https://www.torproject.org (took 1s) => diff = 1 second(s)
+    No downloaded files can be found
+    No file could be downloaded from https://mail.riseup.net.
+    Paranoid mode: aborting as one server ( https://mail.riseup.net ) could not be reached
+    Clock is approx. 6 months after the release date
+    Running htpdate.
+    https://ssl.scroogle.org (took 1s) => diff = 1000000 second(s)
+    https://www.torproject.org (took 1s) => diff = 1000000 second(s)
+    No downloaded files can be found
+    No file could be downloaded from https://mail.riseup.net.
+    Paranoid mode: aborting as one server ( https://mail.riseup.net ) could not be reached
+    htpdate exited with return code 25
+
+If you're going to use paranoid mode, then you should stick to the most reliable servers. Apparently mail.riseup.net cannot always handle the traffic.
