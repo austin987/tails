@@ -29,3 +29,30 @@ Output at /var/log/htpdate.log looks something like this:
     htpdate exited with return code 25
 
 If you're going to use paranoid mode, then you should stick to the most reliable servers. Apparently mail.riseup.net cannot always handle the traffic.
+
+> The problem is fixed now, but It was not mail.riseup.net being
+> unable to handle the traffic. Between 2011-09-28 and 2011-09-29
+> mail.riseup.net resolved to {204.13.164.27, 204.13.164.32,
+> 204.13.164.33, 198.252.153.55, 198.252.153.56} (now it only resolves
+> to the two last ones). The problem was that 204.13.164.x did a HTTP
+> 302 redirect to fulvetta.riseup.net or fruiteater.riseup.net. These
+> we're not in /etc/hosts and thus had to be resolved with pdnsd which
+> uses Tor, which wasn't started yet so it failed (there's also an
+> iframe from user.riseup.net which doesn't resolve and thus doesn't
+> download -- it doesn't make wget fail, but it's very
+> fingerprintable).
+
+> Also, we made htpdate pass "--dns-timeout 1" to wget to workaround a
+> weird issue with we had with some other time sources (see commit
+> e291af5), so even if we would have a real, working DNS server
+> available for the htp user when it runs wget, this would fail if the
+> time required to query the DNS server is longer than one second.
+
+> I think the /etc/hosts approach needs to be reconsidered -- the
+> current solution is too hackish and far from robust (and also
+> fingerprintable). The best would be, I suppose, per-process DNS
+> settings. I'm not aware of any tool with such capabilities so I
+> assume we'd have to write a libresolv wrapper which shouldn't be
+> _too_ difficult, but the question is if we want to maintain
+> something like that. Another solution would be to temporarily set
+> the DNS server got through DHCP in /etc/resolv.conf (dangerous!?).
