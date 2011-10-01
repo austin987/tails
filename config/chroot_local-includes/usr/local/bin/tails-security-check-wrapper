@@ -1,8 +1,15 @@
 #!/bin/sh
 
+HTP_DIR=/var/run/htpdate
+HTP_SUCCESS_FILE="${HTP_DIR}/success"
+INOTIFY_TIMEOUT=60
+
 # wait for HTP to finish
-until [ -e /var/lib/live/htp-done ]; do
-   sleep 1
+while :; do
+   if [ -e "$HTP_SUCCESS_FILE" ]; then
+      break
+   fi
+   inotifywait -q -t "$INOTIFY_TIMEOUT" -e create --format %w%f "$HTP_DIR"
 done
 
 sleep 120
