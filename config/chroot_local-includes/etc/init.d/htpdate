@@ -1,0 +1,86 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          htpdate
+# Default-Start:
+# Default-Stop:
+# Required-Start:    mountkernfs $local_fs
+# Required-Stop:
+# Short-Description: Set time using HTP
+# Description:       Set time using HTP
+### END INIT INFO
+
+DESC="Setting time using HTP"
+NAME=htpdate
+SCRIPTNAME=/etc/init.d/$NAME
+HTP_DIR=/var/run/$NAME
+PIDFILE=$HTP_DIR/pid
+HTP_SUCCESS_FILE=$HTP_DIR/success
+LOG=/var/log/$NAME.log
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.2-14) to ensure that this file is present
+# and status_of_proc is working.
+. /lib/lsb/init-functions
+
+# Create status directory
+install -o root -g root -m 0755 -d ${HTP_DIR}
+
+# Source configuration
+. /etc/default/$NAME
+
+# Sanity checks
+if [ -z "$HTTP_USER_AGENT" ]; then
+	log "HTTP_USER_AGENT is not set."
+	exit 2
+fi
+if [ -z "$HTP_POOL" ]; then
+	log "HTP_POOL is not set"
+	exit 3
+fi
+
+log() {
+	echo "$@" >> "${LOG}"
+}
+
+do_start() {
+	start-stop-daemon -S -q -p ${PIDFILE} -bm -x /usr/local/sbin/htpdate -- \
+		-d \
+		-l "$LOG" \
+		-a "$HTTP_USER_AGENT" \
+		-f \
+		-p \
+		-u htp \
+		-T "$HTP_SUCCESS_FILE" \
+		$HTP_POOL
+}
+
+do_stop() {
+	start-stop-daemon -K -q -p ${PIDFILE}
+}
+
+case "$1" in
+  start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "$DESC" "$NAME"
+	do_start
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  stop)
+	do_stop
+	;;
+  restart)
+	do_stop
+	do_start
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME (start|stop|restart)" >&2
+	exit 3
+	;;
+esac
+
+:
