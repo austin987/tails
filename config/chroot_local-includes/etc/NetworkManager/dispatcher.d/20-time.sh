@@ -18,6 +18,7 @@ TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
 INOTIFY_TIMEOUT=60
 DATE_RE='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
 
+
 ### Exit conditions
 
 # Run only when the interface is not "lo":
@@ -111,6 +112,7 @@ maybe_set_time_from_tor_consensus() {
 		service tor restart
 	fi
 }
+
 
 ### Main
 
