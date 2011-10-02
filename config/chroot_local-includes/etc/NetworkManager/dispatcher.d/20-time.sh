@@ -11,8 +11,8 @@
 ### Init variables
 
 LOG=/var/log/htpdate.log
-HTP_DIR=/var/run/htpdate
-SUCCESS_FILE=${HTP_DIR}/success
+TORDATE_DIR=/var/run/tordate
+TORDATE_DONE_FILE=${TORDATE_DIR}/done
 TOR_DIR=/var/lib/tor
 TOR_CONSENSUS=${TOR_DIR}/cached-consensus
 TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
@@ -31,14 +31,14 @@ if [ "$2" != "up" ]; then
 	exit 0
 fi
 
-# Do not run if we already successed:
-if [ -e "$SUCCESS_FILE" ]; then
+# Do not run twice
+if [ -e "$TORDATE_DONE_FILE" ]; then
 	exit 0
 fi
 
 
-### Create status dir
-install -o root -g root -m 0755 -d ${HTP_DIR}
+### Create status directory
+install -o root -g root -m 0755 -d ${TORDATE_DIR}
 
 ### Create log file
 
@@ -130,6 +130,8 @@ else
 	wait_for_tor_consensus
 	maybe_set_time_from_tor_consensus
 fi
+
+touch $TORDATE_DONE_FILE
 
 log "Restarting htpdate"
 service htpdate restart
