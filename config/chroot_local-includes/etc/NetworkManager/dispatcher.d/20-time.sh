@@ -65,7 +65,7 @@ date_points_are_sane() {
 	local vstart="$1"
 	local vend="$2"
 
-	vendchk=`date -ud "${vstart} -0300" +'%F %T'`
+	vendchk=$(date -ud "${vstart} -0300" +'%F %T')
 	[ "${vend}" = "${vendchk}" ]
 }
 
@@ -73,20 +73,20 @@ time_is_in_valid_tor_range() {
 	local curdate="$1"
 	local vstart="$2"
 
-	vendcons=`date -ud "${vstart} -0230" +'%F %T'`
+	vendcons=$(date -ud "${vstart} -0230" +'%F %T')
 	order="${vstart}
 ${curdate}
 ${vendcons}"
-	ordersrt=`echo "${order}" | sort`
+	ordersrt=$(echo "${order}" | sort)
 
 	[ "${order}" = "${ordersrt}" ]
 }
 
 maybe_set_time_from_tor_consensus() {
 	# Get various date points in Tor's format, and do some sanity checks
-	vstart=`sed -n "/^valid-after \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${TOR_CONSENSUS}`
-	vend=`sed -n "/^valid-until \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${TOR_CONSENSUS}`
-	vmid=`date -ud "${vstart} -0130" +'%F %T'`
+	vstart=$(sed -n "/^valid-after \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${TOR_CONSENSUS})
+	vend=$(sed -n "/^valid-until \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${TOR_CONSENSUS})
+	vmid=$(date -ud "${vstart} -0130" +'%F %T')
 	log "Tor: valid-after=${vstart} | valid-until=${vend}"
 
 	if ! date_points_are_sane "${vstart}" "${vend}"; then
@@ -94,7 +94,7 @@ maybe_set_time_from_tor_consensus() {
 		return
 	fi
 
-	curdate=`date -u +'%F %T'`
+	curdate=$(date -u +'%F %T')
 	log "Current time is ${curdate}"
 
 	if time_is_in_valid_tor_range "${curdate}" "${vstart}"; then
