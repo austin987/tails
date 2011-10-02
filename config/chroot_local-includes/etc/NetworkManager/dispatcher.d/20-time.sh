@@ -10,7 +10,6 @@
 
 ### Init variables
 
-LOG=/var/log/htpdate.log
 TORDATE_DIR=/var/run/tordate
 TORDATE_DONE_FILE=${TORDATE_DIR}/done
 TOR_DIR=/var/lib/tor
@@ -40,19 +39,11 @@ fi
 ### Create status directory
 install -o root -g root -m 0755 -d ${TORDATE_DIR}
 
-### Create log file
-
-# The htp user needs to write to this file.
-# The $LIVE_USERNAME user may need to read this file.
-touch "$LOG"
-chown htp:nogroup "$LOG"
-chmod 644 "$LOG"
-
 
 ### Functions
 
 log() {
-	echo "$@" >> "${LOG}"
+	logger -t time "$@"
 }
 
 tor_is_working() {
