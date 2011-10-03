@@ -62,6 +62,17 @@ wait_for_tor_consensus() {
 	done
 }
 
+wait_for_working_tor() {
+	log "Waiting for Tor to be working (i.e. cached descriptors exist)"
+	while :; do
+		if tor_is_working; then
+			break;
+		fi
+
+		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
+	done
+}
+
 date_points_are_sane() {
 	local vstart="$1"
 	local vend="$2"
@@ -123,6 +134,8 @@ else
 	wait_for_tor_consensus
 	maybe_set_time_from_tor_consensus
 fi
+
+wait_for_working_tor
 
 touch $TORDATE_DONE_FILE
 
