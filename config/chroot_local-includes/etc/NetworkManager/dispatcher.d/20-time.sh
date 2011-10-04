@@ -95,6 +95,13 @@ ${vendcons}"
 	[ "${order}" = "${ordersrt}" ]
 }
 
+restart_tor() {
+	if service tor status >/dev/null; then
+		log "Restarting Tor service"
+		service tor restart
+	fi
+}
+
 maybe_set_time_from_tor_consensus() {
 	# Get various date points in Tor's format, and do some sanity checks
 	vstart=$(sed -n "/^valid-after \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${TOR_CONSENSUS})
@@ -119,10 +126,7 @@ maybe_set_time_from_tor_consensus() {
 	date -us "${vmid}" 1>/dev/null
 
 	# Tor is unreliable with picking a circuit after time change
-	if service tor status >/dev/null; then
-		log "Restarting Tor service"
-		service tor restart
-	fi
+	restart_tor
 }
 
 release_date() {
@@ -165,10 +169,7 @@ wait_for_working_tor
 if ! tor_is_working && is_clock_way_off; then
 	log "Clock is badly off. Setting it to the release date, and retrying."
 	date --set="$(release_date)" > /dev/null
-	if service tor status >/dev/null; then
-		log "Restarting Tor service"
-		service tor restart
-	fi
+	restart_tor
 	wait_for_tor_consensus
 	maybe_set_time_from_tor_consensus
 fi
