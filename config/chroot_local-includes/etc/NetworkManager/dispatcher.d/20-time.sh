@@ -14,6 +14,7 @@ TORDATE_DIR=/var/run/tordate
 TORDATE_DONE_FILE=${TORDATE_DIR}/done
 TOR_DIR=/var/lib/tor
 TOR_CONSENSUS=${TOR_DIR}/cached-consensus
+TOR_UNVERIFIED_CONSENSUS=${TOR_DIR}/unverified-consensus
 TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
 INOTIFY_TIMEOUT=60
 DATE_RE='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
@@ -52,10 +53,19 @@ tor_is_working() {
 	[ -e $TOR_DESCRIPTORS ]
 }
 
+has_consensus() {
+	grep -qs "^valid-until ${DATE_RE}"'$' ${TOR_CONSENSUS} \
+					      ${TOR_UNVERIFIED_CONSENSUS}
+}
+
+has_only_unverified_consensus() {
+	has_consensus && [ ! -e ${TOR_CONSENSUS} ]
+}
+
 wait_for_tor_consensus() {
 	log "Waiting for the Tor consensus file to contain a valid time interval"
 	while :; do
-		if grep -qs "^valid-until ${DATE_RE}"'$' ${TOR_CONSENSUS}; then
+		if has_consensus; then
 			break;
 		fi
 
@@ -157,22 +167,21 @@ if tor_is_working; then
 	log "Tor has already opened a circuit"
 else
 	wait_for_tor_consensus
+	# If Tor cannot verify the consensus this is probably because all
+	# authority certificates are "expired" due to a clock far off into
+	# the future.seen as invalid. In that case let's set the clock to 
+	# the release date.
+	if is_clock_way_off && has_only_unverified_consensus; then
+		log "It seems the clock is so badly off that Tor couldn't verify the consensus. Setting system time to the release date, restarting Tor and retrying the consensus..."
+		date --set="$(release_date)" > /dev/null
+		service tor stop
+		mv -f "${TOR_UNVERIFIED_CONSENSUS}" "${TOR_CONSENSUS}"
+		service tor start
+	fi
 	maybe_set_time_from_tor_consensus
 fi
 
 wait_for_working_tor
-
-# If Tor is not working and the clock is badly off,
-# this is probably because all authority certificates are seen as invalid,
-# so there's no valid consensus.
-# In that case let's set the clock to the release date.
-if ! tor_is_working && is_clock_way_off; then
-	log "Clock is badly off. Setting it to the release date, and retrying."
-	date --set="$(release_date)" > /dev/null
-	restart_tor
-	wait_for_tor_consensus
-	maybe_set_time_from_tor_consensus
-fi
 
 touch $TORDATE_DONE_FILE
 
