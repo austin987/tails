@@ -17,6 +17,7 @@ TOR_CONSENSUS=${TOR_DIR}/cached-consensus
 TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
 INOTIFY_TIMEOUT=60
 DATE_RE='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
+VERSION_FILE=/etc/amnesia/version
 
 
 ### Exit conditions
@@ -124,6 +125,26 @@ maybe_set_time_from_tor_consensus() {
 	fi
 }
 
+release_date() {
+	# outputs something like 20111013
+	sed -n -e '1s/^.* - \([0-9]\+\)$/\1/p;q' "$VERSION_FILE"
+}
+
+is_clock_way_off() {
+	local release_date_secs="$(date -d "$(release_date)" '+%s')"
+	local current_date_secs="$(date '+%s')"
+
+	if [ "$current_date_secs" -lt "$release_date_secs" ]; then
+	        log "Clock is before the release date"
+	        return 0
+	fi
+	if [ "$(($release_date_secs + 259200))" -lt "$current_date_secs" ]; then
+	        log "Clock is more than 6 months after the release date"
+	        return 0
+	fi
+	return 1
+}
+
 
 ### Main
 
@@ -136,6 +157,21 @@ else
 fi
 
 wait_for_working_tor
+
+# If Tor is not working and the clock is badly off,
+# this is probably because all authority certificates are seen as invalid,
+# so there's no valid consensus.
+# In that case let's set the clock to the release date.
+if ! tor_is_working && is_clock_way_off; then
+	log "Clock is badly off. Setting it to the release date, and retrying."
+	date --set="$(release_date)" > /dev/null
+	if service tor status >/dev/null; then
+		log "Restarting Tor service"
+		service tor restart
+	fi
+	wait_for_tor_consensus
+	maybe_set_time_from_tor_consensus
+fi
 
 touch $TORDATE_DONE_FILE
 
