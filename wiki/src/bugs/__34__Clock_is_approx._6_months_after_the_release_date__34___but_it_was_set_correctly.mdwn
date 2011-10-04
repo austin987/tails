@@ -61,4 +61,13 @@ If you're going to use paranoid mode, then you should stick to the most reliable
 >> there|todo/remove_the_htp_user_firewall_exception]]. Closing this
 >> bug as a duplicate of what we already know we have to do.
 
-[[done]]
+I'm reopening this because the closer showed no acknowledgment of the 3-day problem in /etc/NetworkManager/dispatcher.d/50-htp.sh
+
+DNS resolution aside, you still need to apply this patch:
+
+    177c176
+    < 	if [ "$(($release_date_secs + 259200))" -lt "$current_date_secs" ]; then
+    ---
+    > 	if [ "$(($release_date_secs + 15552000))" -lt "$current_date_secs" ]; then
+
+[[patch]]
