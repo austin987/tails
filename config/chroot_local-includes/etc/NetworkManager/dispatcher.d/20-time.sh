@@ -152,7 +152,7 @@ is_clock_way_off() {
 	        log "Clock is before the release date"
 	        return 0
 	fi
-	if [ "$(($release_date_secs + 259200))" -lt "$current_date_secs" ]; then
+	if [ "$(($release_date_secs + 15552000))" -lt "$current_date_secs" ]; then
 	        log "Clock is more than 6 months after the release date"
 	        return 0
 	fi
