@@ -53,7 +53,7 @@ Implementation
 
 * [[what is left to do|usb_install_and_upgrade/todo]]
 * [[what we've done so far|usb_install_and_upgrade/done]]
-* [[notes about GPT|usb_install_and_upgrade/gpt]].
+* [[notes about GPT|usb_install_and_upgrade/gpt]]
 * [[usb_install_and_upgrade/future_spec]] for later plans
 
 Our work on liveusb-creator is in a Git repository:
@@ -94,8 +94,6 @@ run.
 
 [[!tag todo/test]]
 
-(Testing all these is probably [[!taglink todo/easy]].)
-
 Wikipedia has a [[!wikipedia List of tools to create Live USB systems]]
 we should look at.
 
@@ -132,19 +130,8 @@ we should look at.
 
   This only works for the "clone existing system" usecase, though.
 
-* Incognito's `root_overlay/usr/sbin/create-usb` seems quite nice, as
-  it allows using an existing fat32 partition.
-   - no partition capabilities
-
-* Liberté Linux' `burn-usb` creates a FAT32 partition for data and
-  an ext2 partition where it copies the system to. It installs Grub on
-  the USB stick.
-
 * Ubuntu's [usb-creator](https://launchpad.net/usb-creator)
    - supposed to replicate exactly the CD to USB
-   - does not seem to recognize non-Ubuntu CDs (0.1.16 crashes on
-     Lenny, 0.1.10 does not display them in the GUI even if it the
-     console output proves that it takes good note of their presence )
    - how does it handle partitions?
 
 * [UNetbootin](http://unetbootin.sourceforge.net/)
@@ -204,10 +191,6 @@ we should look at.
       - [.deb](http://sidux.office-vienna.at/sidux/debian/pool/main/l/liveusb-creator/),
       - [source](http://w3you.com/liveusb-creator/liveusb-creator.htm)
 
-* [Mandriva Seed](http://git.mandriva.com/?p=projects/mandriva-seed.git;a=summary)
-   - supports Windows and GNU/Linux
-   - fork of Fedora's liveusb-creator; what are its enhancements?
-
 * [RIP’s mkusb](http://rip.7bf.de/current/mkusb.sh) and its
   [README](http://rip.7bf.de/current/mkusb.txt)
 
@@ -217,22 +200,24 @@ we should look at.
    - supports Windows and GNU/Linux
    - persistent storage creation - that is?
 
-* [makebootfat](http://advancemame.sourceforge.net/boot-readme.html):
-  command line utility able to create bootable USB disks
-  using the FAT filesystem and syslinux
-   - available in Debian
-   - able to autodetect/partition/format/populate the USB disk in a
-     single step without any user interaction
-   - able to create disk images which are compatible with all the
-     three standards USB-FDD, USB-HDD and USB-ZIP at the same time
-   - could be used to do most of the low-level work
+#### Dismissed
 
 * [FUSBi](http://aligunduz.org/FUSBi/)
    - modified from UNetbootin; what are its enhancements?
    - supports Windows and GNU/Linux
    - no release in 2009 nor 2010
 
-#### Dismissed
+* Incognito's `root_overlay/usr/sbin/create-usb` seems quite nice, as
+  it allows using an existing fat32 partition.
+   - no partition capabilities
+
+* Liberté Linux' `burn-usb` creates a FAT32 partition for data and
+  an ext2 partition where it copies the system to. It installs Grub on
+  the USB stick.
+
+* [Mandriva Seed](http://git.mandriva.com/?p=projects/mandriva-seed.git;a=summary)
+   - supports Windows and GNU/Linux
+   - fork of Fedora's liveusb-creator; what are its enhancements?
 
 * Moblin's [Image
   Writer](http://git.moblin.org/cgit.cgi/moblin-image-creator/plain/image-writer)
@@ -244,6 +229,17 @@ we should look at.
      at all
 
 * <http://wubi-installer.org/>: Windows installer for Ubuntu.
+
+* [makebootfat](http://advancemame.sourceforge.net/boot-readme.html):
+  command line utility able to create bootable USB disks
+  using the FAT filesystem and syslinux
+   - available in Debian
+   - able to autodetect/format/populate the USB disk in a
+     single step without any user interaction
+   - able to create disk images which are compatible with all the
+     three standards USB-FDD, USB-HDD and USB-ZIP at the same time
+   - if it supported partitioning as well, and supported Windows, it
+     could be used to do most of the low-level work
 
 Booting methods
 ---------------
@@ -331,9 +327,9 @@ for details).
 
 **Warning!**
 
-1. This breaks the [[emergency shutdown|contribute/design/memory_erasure]]
-   on media removal.
-2. This is by no means a supported installation method *yet*. E.g. the
+1. On some versions of Tails, this breaks the [[emergency
+   shutdown|contribute/design/memory_erasure]] on media removal.
+2. This is by no means a supported installation method. E.g. the
    kernel parameters shall be manually updated when replacing the ISO
    with a newer one.
 
@@ -462,7 +458,7 @@ deletions.
 Shipping upgrades could be as simple as shipping those extra `squashfs` images.
 
 Actually there seems to be such an option in Debian live already, see in `man
-live-boot` the part on /live/filesystem.module. There is need to do [[!taglink
+live-boot` the part about `/live/filesystem.module`. There is need to do [[!taglink
 todo/research]] on this.
 
 Stacking squashfs images like this would still lack a way of upgrading the
@@ -519,7 +515,7 @@ Initial test is pretty conclusive!
 `mksquashfs` can actually append new files to an existing `squashfs` image.
 
 Initial images are created with files in a specific order to
-[[improve boot time on cd]], but on a USB stick random access in a non-issue.
+[[improve boot time on cd]], but on a USB stick random access is a non-issue.
 
 [[!taglink todo/test]] if `mksquashfs` can append an image that is currently
 used without weakening a running system.
