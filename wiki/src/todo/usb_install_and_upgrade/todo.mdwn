@@ -1,0 +1,95 @@
+[[!toc levels=2]]
+
+Bug reports
+===========
+
+bug #1
+------
+
+When the --partition option is not passed, liveusb-creator must take
+into account the existing Live OS will be deleted, once the user
+agreed to do so:
+
+    If you continue, this will be overwritten.
+    Press 'Create Live USB' again if you wish to continue.
+    Verifying filesystem...
+    Not enough free space on device.
+    677MB ISO + 0MB overlay > 300MB free space
+
+Partitions
+==========
+
+- Don't ask to confirm before resetting the MBR when --partition
+- if stick size <1.5GB, error out in a user-friendly way;
+  bonus for later: in that case, support installing
+  but don't show the persistence checkbox
+- bonus: allow setting the system/overlay partitions size via
+  command-line option(s)
+
+Branding
+========
+
+- default / minimal system partition size = 1.5GB
+  Put this into the config file (like branding.system_size)?
+* Add Tails to the downloadable images list.
+* Allow vendors to set
+  - default release to download
+  - list of downloadable files
+
+GPG signature verification
+==========================
+
+- verify GPG signatures delivered with iso images
+  (see verify_iso_sha1 called in gui.py)
+
+ * Debian also provide gpgv-win32 that can be used on Windows
+
+Misc.
+=====
+
+- UI: make it more clear when the user must confirm
+  Rename the "Create" button to "Forward" or "Go on"?
+  Add the "go forward" icon to the button?
+- command-line option --local-hard-disks that would enable
+  installation on local hard disks (= not external USB);
+  seems to be implemented by --force, see special casing in the
+  detect_removable_devices method.
+- write a simple GUI that resets a USB stick that previously contained
+  a isohybrid Tails to a sane state
+  OR document with nice screenshots how to do so on GNOME / Windows
+
+
+Input
+=====
+
+Test both cloning and installing from ISO while running a Tails system.
+
+clone
+-----
+
+- GUI: hide "browse ISO file"
+
+cloning from USB
+----------------
+
+Test on bare metal.
+
+cloning from CD
+---------------
+
+Test on bare metal.
+
+Distribution
+============
+
+- Debian packaging
+- Windows tests
+
+Try http://www.pyinstaller.org/ to create a single binary file
+for Windows and for OS X. Include those binaries on Tails images?
+
+Documentation
+=============
+
+- update [[todo/usb_install_and_upgrade]] with current decisions and
+  plans
