@@ -113,6 +113,11 @@ restart_tor() {
 }
 
 maybe_set_time_from_tor_consensus() {
+	if [ ! -e ${TOR_CONSENSUS} ]; then
+		log "We do not have a Tor consensus so we cannot set the system time according to it."
+		return
+	fi
+
 	# Get various date points in Tor's format, and do some sanity checks
 	vstart=$(sed -n "/^valid-after \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${TOR_CONSENSUS})
 	vend=$(sed -n "/^valid-until \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${TOR_CONSENSUS})
@@ -172,11 +177,12 @@ else
 	# the future.seen as invalid. In that case let's set the clock to 
 	# the release date.
 	if is_clock_way_off && has_only_unverified_consensus; then
-		log "It seems the clock is so badly off that Tor couldn't verify the consensus. Setting system time to the release date, restarting Tor and retrying the consensus..."
+		log "It seems the clock is so badly off that Tor couldn't verify the consensus. Setting system time to the release date, restarting Tor and fetching a new consensus..."
 		date --set="$(release_date)" > /dev/null
 		service tor stop
-		mv -f "${TOR_UNVERIFIED_CONSENSUS}" "${TOR_CONSENSUS}"
+		rm -f "${TOR_UNVERIFIED_CONSENSUS}"
 		service tor start
+		wait_for_tor_consensus
 	fi
 	maybe_set_time_from_tor_consensus
 fi
