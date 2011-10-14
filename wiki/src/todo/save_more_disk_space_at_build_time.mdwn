@@ -3,19 +3,9 @@
 misc unneeded files
 ===================
 
-Current Tails devel branch cleans up `/tmp` at the end of the
-chroot_local-hooks stage; before this was done, the SquashFS contained
-files such as `/tmp/tmp.DO6gwUAXQz/broadcom-wl-4.150.10.5.tar.bz2`.
-See released Tails 0.7.2 image for details.
-
-We should report this as a wishlist bug against live-build itself and
-possibly implement a proper fix in there (e.g. by doing this cleanup
-stage before the chroot is deemed ready to be compressed, or by
-mounting a tmpfs on the chroot's `/tmp` for the duration of the
-build).
-
-> Done in live-build 3.x Git. Once we use it, we can remove our custom
-> hook. Let's [[!taglink todo/wait]] then. --intrigeri
+Once we use live-build 3.x, we can remove our custom hook that removes
+`/tmp/*` at the end of the `chroot_local-hooks` stage. Let's
+[[!taglink todo/wait]] then.
 
 live-build hooks
 ================
@@ -48,6 +38,8 @@ opt-in for "I don't want to ship the kernels and the rootfs".
 files only needed at build time
 ===============================
 
+[[!tag todo/code]]
+
 We're currently using `chroot_local-includes` as a way to pass files
 from the build host to the build chroot. As a result, released images
 contain many files (mostly in `/usr/`) that are needed at build time
@@ -56,3 +48,13 @@ but useless at runtime.
 live-build 3.x bind mounts (read-only) the build configuration
 directory (`config`) inside the chroot (onto `/root/config`) while the
 chroot hooks are running.
+
+GNOME icon cache
+================
+
+[[!taglink todo/test]]
+
+`/usr/share/icons/gnome/icon-theme.cache` is huge (48 MB in Tails 0.8).
+
+We should try removing it and see what the consequences are, in terms
+of space savings, boot time, runtime performance and memory usage.

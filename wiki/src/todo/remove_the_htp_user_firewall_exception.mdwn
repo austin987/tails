@@ -3,7 +3,8 @@
 Next things to do
 =================
 
-- implement what's described bellow [[!tag todo/code]]
+- what's described bellow is implemented in `feature/tordate` Git
+  branch; time to [[!taglink todo/test]]!
 - accordingly update the design doc [[!tag todo/documentation]]
 
 Introduction
@@ -76,14 +77,14 @@ Time from Tor consensus
 =======================
 
 Liberte Linux uses Tor's consensus file to initially roughly set the
-time thanks to their `tor-date` script. The consensus file contains
+time thanks to their `tordate` script. The consensus file contains
 such information:
 
 	valid-after 2010-12-27 16:00:00
 	valid-until 2010-12-27 19:00:00
 
 A consensus is valid for three hours. If the system time is in the
-[valid-after, valid-after + 2.5 hours] range, `tor-date` exits.
+[valid-after, valid-after + 2.5 hours] range, `tordate` exits.
 Else, it sets the system time to the middle of the [valid-after,
 valid-until] range and restarts Tor.
 
@@ -94,7 +95,7 @@ not manage to open a circuit if the system time is too much wrong, it
 is supposed to always be able to retrieve its consensus file as soon
 as Internet connectivity is available.
 
-See the `liberte/src/root/bin/tor-date` file in Liberte Linux SVN
+See the `liberte/src/usr/local/sbin/tordate` file in Liberte Linux SVN
 repository for details.
 
 Security discussion
