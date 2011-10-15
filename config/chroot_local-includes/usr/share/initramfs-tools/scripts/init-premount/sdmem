@@ -27,9 +27,9 @@ esac
 if [ -n "${sdmem}" ] ; then
    tweak_sysctl
    if [ -n "${sdmemopts}" ] ; then
-      /usr/bin/sdmem "-${sdmemopts}"
+      for i in $(seq 0 31) ; do /usr/bin/sdmem "-${sdmemopts}" & done
    else
-      /usr/bin/sdmem -v
+      for i in $(seq 0 31) ; do /usr/bin/sdmem -v & done
    fi
 fi
 
