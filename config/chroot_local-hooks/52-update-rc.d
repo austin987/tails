@@ -28,3 +28,6 @@ update-rc.d kexec-load stop 18 0 6 .
 # the i2p script manually.
 
 update-rc.d -f i2p remove
+
+# we only want hdparm so that laptop-mode-tools can use it
+update-rc.d hdparm disable
