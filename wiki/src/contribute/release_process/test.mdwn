@@ -95,11 +95,11 @@ Check the output for:
   received, especially the `Received:` and `Message-ID:` ones.
 * Also check that the EHLO/HELO SMTP message is not leaking anything
   with a packet sniffer: Disable SSL/TLS for SMTP in Claws (so take
-  recations for not leaking you password in plaintext by either
-  chaning it temporarily or using a disposable account). Then run
-  "sudo tcpdump -i lo -w dump" so we capture the packet before Tor
+  precautions for not leaking your password in plaintext by either
+  changing it temporarily or using a disposable account). Then run
+  `sudo tcpdump -i lo -w dump` to capture the packets before Tor
   encrypts it, and check the dump for the HELO/EHLO message and
-  verify that it only contains "localhost".
+  verify that it only contains `localhost`.
 
 # Whisperback
 
@@ -122,9 +122,14 @@ Seahorse GUI and FireGPG:
 * Monkeysphere validation agent key search/receive: torified? uses
   configured keyserver?
 
-# HTP
+# Time
+
+
 
 1. `sudo rm /var/lib/live/htp*`
+   (FIXME-FOR-0.9: update for new tordate+htpdate setup: instead
+   `rm /var/run/htpdate/success /var/run/tordate/done /var/lib/tor/cached-descriptors`
+   )
 2. disconnect the network cable
 3. set the time to an obviously wrong one :
 
@@ -163,8 +168,8 @@ steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
   in working state.
 * Doing an apt-get update and installing random packages.
 * Boot on bare-metal on USB and CD.
-* Boot and check basic functionality is working for every supported language.
+* Boot and check basic functionality is working for every supported
+  language. The virtual keyboard must work and be auto-configured to
+  use the same keyboard layout as the X session.
 * Try to start with the `truecrypt` option on boot, see if it can be found in
   the Application -> Accessories menu and that it runs correctly
-* Virtual keyboard must work and be auto-configured to use the same
-  keyboard layout as the X session.
