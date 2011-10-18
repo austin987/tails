@@ -1,18 +1,15 @@
 [[!toc levels=2]]
 
-misc unneeded files
-===================
-
-Once we use live-build 3.x, we can remove our custom hook that removes
-`/tmp/*` at the end of the `chroot_local-hooks` stage. Let's
-[[!taglink todo/wait]] then.
-
-live-build hooks
-================
+switch to live-build hooks
+==========================
 
 live-build 3.x ships a few interesting space-saving hooks in
-`share/hooks`, such as one that removes GNOME icon cache and one that
-removes compiled Python `.pyc` files.
+`share/hooks`, such as one that removes GNOME icon cache, another one
+that removes compiled Python `.pyc` files, and one that removes
+`/tmp/*` at the end of the `chroot_local-hooks` stage.
+
+Once we use this version of live-build, we can remove our own
+implementation of this from `config/chroot_local-hooks/98-remove_unwanted_files`.
 
 We probably want to [[!taglink todo/wait]] for Ubuntu to actually ship
 Live CDs built using live-build 3.x, before switching to it.
@@ -48,13 +45,3 @@ but useless at runtime.
 live-build 3.x bind mounts (read-only) the build configuration
 directory (`config`) inside the chroot (onto `/root/config`) while the
 chroot hooks are running.
-
-GNOME icon cache
-================
-
-[[!taglink todo/test]]
-
-`/usr/share/icons/gnome/icon-theme.cache` is huge (48 MB in Tails 0.8).
-
-We should try removing it and see what the consequences are, in terms
-of space savings, boot time, runtime performance and memory usage.
