@@ -14,27 +14,6 @@ implementation of this from `config/chroot_local-hooks/98-remove_unwanted_files`
 We probably want to [[!taglink todo/wait]] for Ubuntu to actually ship
 Live CDs built using live-build 3.x, before switching to it.
 
-duplicated Linux kernel
-=======================
-
-[[!tag todo/code]]
-
-The Linux kernel + initramfs are present twice in a Tails ISO: once in
-the iso9660 filesystem, once inside the SquashFS. The former is
-needed, but the latter is not.
-
-* `config/binary_rootfs/excludes` does not work, because the excluded
-  files are deleted before being copied to the binary fs.
-* Something along the lines of
-  (`MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -wildcards -e
-  'boot/*'"`) does not work, due to [[!debbug 594968]].
-
-=> we need to add an option to live-build that would allow us to
-opt-in for "I don't want to ship the kernels in the rootfs".
-
-Also, the location kexec gets its kernel from must be updated, or some
-other acceptable hack (symlink?) put in place.
-
 files only needed at build time
 ===============================
 
