@@ -104,3 +104,12 @@ The `ifcpu64.c32`
 to provide the best of both worlds, allowing to do different things
 for 64-bit hardware, 32-bit hardware with PAE support and 32-bit
 hardware without PAE.
+
+A script to generate a test.iso (pasted by Frank Lin PIAT
+<fpiat@klabs.be> on [[!debbug 505494]]):
+
+	D="$(mktemp -d)" ;
+	echo -e 'say type "go" or press Enter.\ndefault run-default32\ndefault64 run-default64\nprompt 1\ntimeout 0\nlabel go\n\tkernel ifcpu64.c32\n\tappend a64 -- i32' > $D/isolinux.cfg
+	cp /usr/lib/syslinux/{isolinux.bin,ifcpu64.c32} $D/ 
+	genisofs -R -J -joliet-long -cache-inodes -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o /tmp/test.iso $D
+	[ "$D" ] && rm -rf "$D"
