@@ -7,13 +7,8 @@ if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
    exit 0
 fi
 
-# Get version information for the (newest) installed kernel.
-KERNEL="`/bin/ls -1 /boot/vmlinuz-* | tail -n 1`"
-KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
-KERNEL_ARCH="$(basename ${KERNEL} | sed -e 's|.*-||')"
-
 # the -dkms package must be installed *after* dkms to be properly registered
-apt-get install --yes build-essential dkms dpatch linux-headers-2.6-${KERNEL_ARCH}
+apt-get install --yes build-essential dkms dpatch
 
 # temporary workaround: pretend gcc-4.6 is available, so that
 # the modules can build.
@@ -22,27 +17,35 @@ apt-get install --yes build-essential dkms dpatch linux-headers-2.6-${KERNEL_ARC
 apt-get install --yes gcc-4.4
 ln -s /usr/bin/gcc-4.4 /usr/bin/gcc-4.6
 
-# dkms uses uname to find out what kernel to build modules for.
-# So, after installing dkms, but before installing
-# virtualbox-guest-dkms, we divert uname to a fake one that
-# emulates 'uname -r' by reporting the kernel version found in /boot rather
-# than the build system's one.
+# Have the modules built for every installed kernel
+for KERNEL in /boot/vmlinuz-* ; do
+   KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
+   KERNEL_ARCH="$(basename ${KERNEL} | sed -e 's|.*-||')"
 
-mv /bin/uname /bin/uname.$$
-cat > /bin/uname <<EOF
+   apt-get install --yes linux-headers-2.6-${KERNEL_ARCH}
+
+   # dkms uses uname to find out what kernel to build modules for.
+   # So, after installing dkms, but before installing
+   # virtualbox-guest-dkms, we divert uname to a fake one that
+   # emulates 'uname -r' by reporting the kernel version found in /boot rather
+   # than the build system's one.
+
+   mv /bin/uname /bin/uname.$$
+   cat > /bin/uname <<EOF
 #! /bin/sh
 echo "$KERNEL_VERSION"
 EOF
-chmod 755 /bin/uname
+   chmod 755 /bin/uname
 
-# Have the modules automagically built by dkms.
-# Also, at this time of the build, we've got a recent enough X.Org installed,
-# so we can install the X11 tools eventually.
-dpkg --install /usr/share/amnesia/packages/virtualbox*.deb
-apt-get -f install --yes
+   # Have the modules automagically built by dkms for all kernels.
+   # Also, at this time of the build, we've got a recent enough X.Org installed,
+   # so we can install the X11 tools eventually.
+   dpkg --install /usr/share/amnesia/packages/virtualbox*.deb
+   apt-get -f install --yes
 
-# Revert to the real uname.
-mv /bin/uname.$$ /bin/uname
+   # Revert to the real uname.
+   mv /bin/uname.$$ /bin/uname
+done
 
 # clean the build directory
 rm -rf /var/lib/dkms/virtualbox-guest/
