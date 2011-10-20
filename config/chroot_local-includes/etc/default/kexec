@@ -5,19 +5,8 @@
 LOAD_KEXEC=true
 
 # Kernel and initrd image
-LIVE_IMAGE_MOUNTPOINT=/live/image
-for arg in $(cat /proc/cmdline) ; do
-   case "$arg" in
-      BOOT_IMAGE=*)
-         kernel="${arg#BOOT_IMAGE=}"
-	 ;;
-      initrd=*)
-         initrd="${arg#initrd=}"
-	 ;;
-   esac
-done
-KERNEL_IMAGE="${LIVE_IMAGE_MOUNTPOINT}${kernel}"
-INITRD="${LIVE_IMAGE_MOUNTPOINT}${initrd}"
+KERNEL_IMAGE=$(/usr/local/bin/tails-get-bootinfo kernel)
+INITRD=$(/usr/local/bin/tails-get-bootinfo initrd)
 
 # If empty, use current /proc/cmdline
 APPEND="quiet"
