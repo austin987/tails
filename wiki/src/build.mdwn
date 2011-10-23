@@ -12,14 +12,12 @@ For the impatient ones:
 	$ git clone git://git.immerda.ch/amnesia.git
 	$ cd amnesia
 	$ sudo su
-	# lb config && lb build
+	# lb clean --all && lb config && lb build
 
 Dependencies
 ============
 
-* `live-build` 2.0.3; Tails code is usually tested against Squeeze's
-  live-build, but a sid or a snapshot from the Debian Live repository
-  can sometimes be needed during a development cycle.
+* `live-build` from Debian Squeeze.
 * `syslinux` >= 4.01, so that the built ISO images are
   converted to hybrid ones: they can be either a CD-ROM or a hard disk
   (USB disk, etc.).
@@ -46,6 +44,9 @@ probably want to configure live-build a bit.
 
 The most common customizations are documented on this wiki:
 
+* to avoid compressing the SquashFS using XZ (efficient, but very
+  slow), `export MKSQUASHFS_OPTIONS='-comp gzip'` in your
+  build environment;
 * [[using a custom Debian mirror to build Tails
   images|build/custom_mirror]];
 * [[using squid-deb-proxy to build Tails images|build/squid-deb-proxy]].

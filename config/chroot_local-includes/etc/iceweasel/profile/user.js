@@ -8,6 +8,8 @@ user_pref("extensions.firegpg.gmail_enabled", false);
 user_pref("extensions.firegpg.gpg_version", "FIREGPG_VERSION");
 user_pref("extensions.firegpg.keyserver", "hkp://2eghzlv2wwcq7u7y.onion");
 user_pref("extensions.firegpg.show_website", false);
+// Prevents potential plaintext leak through javascript when decrypting
+user_pref("extensions.firegpg.result_always_in_new_window", true);
 
 // Block read and write access to the history in non-Tor mode
 user_pref("extensions.torbutton.block_nthread", true);
@@ -29,6 +31,7 @@ user_pref("extensions.torbutton.no_updates", true);
 user_pref("extensions.torbutton.normal_exit", true);
 user_pref("extensions.torbutton.nonontor_sessionstore", true);
 user_pref("extensions.torbutton.nontor_memory_jar", true);
+user_pref("extensions.torbutton.prompted_language", true);
 user_pref("extensions.torbutton.restore_tor", true);
 user_pref("extensions.torbutton.saved.download_retention", 0);
 user_pref("extensions.torbutton.saved.search_suggest", false);

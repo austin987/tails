@@ -1,0 +1,31 @@
+#!/bin/sh
+
+LIVE_IMAGE_MOUNTPOINT=/live/image
+for arg in $(cat /proc/cmdline) ; do
+   case "$arg" in
+      BOOT_IMAGE=*)
+         kernel="${arg#BOOT_IMAGE=}"
+	 ;;
+      initrd=*)
+         initrd="${arg#initrd=}"
+	 ;;
+   esac
+done
+
+# Sanity checks
+[ -n "$kernel" ] || exit 4
+[ -n "$initrd" ] || exit 5
+
+case "$1" in
+   kernel)
+      echo "${LIVE_IMAGE_MOUNTPOINT}${kernel}"
+      ;;
+   initrd)
+      echo "${LIVE_IMAGE_MOUNTPOINT}${initrd}"
+      ;;
+   *)
+      usage "$0 kernel|initrd"
+      exit 3
+esac
+
+exit 0

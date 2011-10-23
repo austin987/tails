@@ -4,11 +4,22 @@ This page contains installation and testing instructions and hints.
 
 ## Status
 
-The very login process is broken at the moment. Even when it'll be fixed - it might be broken again at any time - you've been warned.
+The login with given language (locale) and setting password for amnesia should work. Note that original greeter is disabled upon installation so you'll not be able to login via gdm if something is broken in tails-greeter - you've been warned.
+
+## Git repositories
+
+Core Tails developers repo:
+
+	git://git.immerda.ch/max/tails-greeter.git
+	ssh://git@git.immerda.ch/tails/tails-greeter.git
+
+Max' repo:
+
+	git://git.immerda.ch/max/tails-greeter.git
 
 ## Build package from git
 
-0. git clone git://git.immerda.ch/max/tails-greeter.git
+0. git clone git://git.immerda.ch/tails/tails-greeter.git
 0. cd tails-greeter 
 0. git-buildpackage 
 
@@ -16,7 +27,7 @@ The very login process is broken at the moment. Even when it'll be fixed - it mi
 
 Following packages require installation or update in squeeze:
 
-- python-pybabel
+- python-xklavier
 - python-gobject
 
 ## Install
@@ -24,6 +35,12 @@ Following packages require installation or update in squeeze:
 sudo dpkg -i tails-greeter.deb
 
 ## Test
+
+If it's Debian test machine (not TAILS) than create user amnesia with the same password and add /etc/live/config.d/username: LIVE_USERNAME=amnesia
+
+N. B> REBOOT after first login attempt if you use your Debian as a test platform to make sure that PolKit will be in test-ready state.
+
+Check for /var/log/gdm3/:0-greeter.log to see if there're any errors.
 
 ### .deb test
 
@@ -35,9 +52,21 @@ sudo dpkg -i tails-greeter.deb
 
 ### .iso test
 
-0. not ready yet
+0. git clone git://git.immerda.ch/max/tails.git 
 
 ## Helpful tools
 
-d-feet is great dbus troubleshooting helper
+0. d-feet is great dbus troubleshooting helper
+0. Following script might help to automate installation:
 
+echo "amnesia:amnesia" | chpasswd
+
+rm -f tails-greeter.deb
+
+aptitude -y purge tails-greeter
+
+wget http://build.machine/tails-greeter.deb
+
+dpkg -i tails-greeter.deb
+
+service gdm3 restart 
