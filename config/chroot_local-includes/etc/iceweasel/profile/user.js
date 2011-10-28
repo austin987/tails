@@ -8,8 +8,6 @@ user_pref("extensions.firegpg.gmail_enabled", false);
 user_pref("extensions.firegpg.gpg_version", "FIREGPG_VERSION");
 user_pref("extensions.firegpg.keyserver", "hkp://2eghzlv2wwcq7u7y.onion");
 user_pref("extensions.firegpg.show_website", false);
-// Prevents potential plaintext leak through javascript when decrypting
-user_pref("extensions.firegpg.result_always_in_new_window", true);
 
 // Block read and write access to the history in non-Tor mode
 user_pref("extensions.torbutton.block_nthread", true);
