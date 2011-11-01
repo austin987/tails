@@ -1,3 +1,60 @@
+tails (0.9~rc1) unstable; urgency=low
+
+  ** SNAPSHOT build @bbb1224071060e8d60bbd867bff8c8e2b68098df **
+
+  * Iceweasel
+  - Upgrade FireGPG to 0.8-1+tails2: notify users that the FireGPG Text
+    Editor is the only safe place for performing cryptographic operations,
+    and make it impossible to do otherwise. Other ways open up several
+    severe attacks through JavaScript (e.g. leaking plaintext when
+    decrypting, signing messages written by the attacker).
+  - Install Cookie Monster extension instead of CS Lite.
+  - Always ask where to save files.
+  - Support Torbutton "New identity" feature.
+
+  * Software
+  - Install MAT, the metadata anonymisation toolkit.
+  - Upgrade TrueCrypt to 7.1.
+  - Upgrade WhisperBack to 1.5~rc1 (leads the user by the hand if an error
+    occurs while sending the bugreport, proposes to save it after 2 faild
+    attempts, numerous bugfixes).
+
+  * Miscellaneous
+  - Fully rework date and time setting system.
+  - Remove the htp user firewall exception.
+  - Saner keyboard layouts for Arabic and Russian.
+  - Use Plymouth text-only splash screen at boot time.
+  - Color the init scripts output.
+  - Suppress Tor's warning about applications doing their own DNS lookups.
+    This is totally safe due to our Tor enforcement.
+  - Disable hdparm boot-time service.
+    We only want hdparm so that laptop-mode-tools can use it.
+  - Run Claws Mail using torify.
+    It's not as good as if Claws Mail supported SOCKS proxies itself,
+    but still better than relying on the transparent netfilter torification.
+  - Install HPLIP and hpcups for better printing support.
+
+  * Erase memory at shutdown
+  - Run many sdmem instances at once.
+    In hope of erasing more memory until we come up with a proper fix for
+    [[bugs/sdmem_does_not_clear_all_memory]].
+  - Kill gdm3 instead of using its initscript on brutal shutdown.
+  - Use absolute path to eject for more robust memory wipe on boot medium removal.
+
+  * Space savings
+  - Exclude kernel and initramfs from being put into the SquashFS.
+    Those files are already shipped where they are needed, that is in the ISO
+    filesystem. Adapt kexec and memlockd bits.
+  - Do not ship the GNOME icon theme cache.
+  - Do not ship .pyc files.
+  - Do not ship NEWS.Debian.gz files.
+
+  * Build system
+  - Re-implement hook that modifies syslinux config to make future
+    development easier.
+
+ -- Tails developers <amnesia@boum.org>  Tue, 01 Nov 2011 13:26:38 +0100
+
 tails (0.8.1) unstable; urgency=low
 
   * Iceweasel
