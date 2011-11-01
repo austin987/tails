@@ -32,3 +32,40 @@ todo/research]] suitable themes.
  * mouse-on-dropbox => invisible text
  * marked item that looses focus => invisible text
  * probably more
+
+### Debian package
+
+There is a Debian package [available](http://thinetic.com/debian/) but
+it is in a terrible state: it uses an Xsession.d script for activating
+the theme, and it's only acivated if /etc/default/xpgnome has
+XPGNOME_START set. The problem is that X has to be started with this
+*twice* for the theme to actually be set. And once it's done, some
+things are localized to Spanish (e.g. "My computer" -> "Mi
+PC"). Furthermore the packaging is really bad: the files in the debian
+directory are not set up properly, and all source files are included
+in it, not in a separate archive.
+
+### XpGnome contents
+
+XpGnome uses three packages from GnomeLoop.org:
+
+* [XPLuna](http://gnome-look.org/content/show.php/XPLuna?content=83797)
+  for a Windows XP look for windows, panel, backgroup etc.
+* [GnomeXP](http://gnome-look.org/content/show.php/GnomeXP?content=69587)
+  for Windows XP icons.
+* [Cursor XP](http://gnome-look.org/content/show.php/Cursor+XP?content=77833)
+  for a Windows cursor.
+
+Except installing these XpGnome's installation script also uses gconf
+to fix some further issues (desktop icons, panel etc.).
+
+### Plan for integration
+
+1. We do some (trivial) packaging ourselves, one for each of the
+   GnomeLoop.org packages listed as XpGnome's contents above.
+2. We cut out the parts of the XpGnome installation script which sets
+   up the theme and put that in a script of our own and just make it a
+   local-include.
+3. This script will be run as the amnesia user if whatever condition
+   we chose is true before X starts, e.g. "winxp" on cmdline for now,
+   later some setting in tails-greeter.
