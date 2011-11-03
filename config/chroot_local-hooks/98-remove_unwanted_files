@@ -11,6 +11,7 @@ rm -rf \
 
 find /usr/share/doc -type f -name changelog.gz -exec rm "{}" \;
 find /usr/share/doc -type f -name changelog.Debian.gz -exec rm "{}" \;
+find /usr/share/doc -type f -name NEWS.Debian.gz -exec rm "{}" \;
 
 locales=$(echo "$AMNESIA_SUPPORTED_LANGUAGES" | sed 's/ /|/g')
 find /usr/share/scribus-ng/translations \
@@ -18,12 +19,9 @@ find /usr/share/scribus-ng/translations \
    -regextype 'posix-egrep' -not -regex ".*scribus\.(${locales}).*" \
    -exec rm "{}" \;
 
-# Remove links to unsuitable GNOME preferences tools.
-rm -f \
-   /usr/share/applications/gnome-about-me.desktop \
-   /usr/share/applications/gnome-network-properties.desktop
+rm -rf /tmp/*
 
-# Remove links to unsuitable GDM tools.
-rm -f \
-   /usr/share/gdm/applications/gdmflexiserver*.desktop \
-   /usr/share/gdm/applications/gdmsetup.desktop
+# truncate logs
+for file in $(find /var/log/ -type f); do
+	: > "${file}"
+done

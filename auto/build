@@ -18,6 +18,10 @@ rm -rf cache/stages_rootfs
 # get LB_ARCHITECTURE and LB_DISTRIBUTION
 . config/bootstrap
 
+# get GIT_BRANCH
+GIT_BRANCH="$(git branch --color=never | grep '^* ' | awk '{print $2}')"
+CLEAN_GIT_BRANCH="$(echo $GIT_BRANCH | sed 's,/,_,g')"
+
 # build the doc wiki
 ./build-wiki
 
@@ -38,10 +42,14 @@ chmod -R go+rx config/chroot_local-includes/lib/live/config
 chmod -R go+rX config/chroot_local-includes/usr
 chmod -R go+rx config/chroot_local-includes/usr/local/bin
 chmod -R go+rx config/chroot_local-includes/usr/local/sbin
+chmod -R go+rX config/chroot_local-includes/usr/share/doc/tails
 chmod -R go+rX config/chroot_apt
 chmod -R go+rX config/chroot_sources
 
 # build the image
+
+: ${MKSQUASHFS_OPTIONS:='-comp xz'}
+export MKSQUASHFS_OPTIONS
 
 case "$LB_BINARY_IMAGES" in
    iso)
@@ -65,7 +73,7 @@ case "$LB_BINARY_IMAGES" in
       exit 1
       ;;
 esac
-BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${LB_DISTRIBUTION}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
+BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
 BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
 BUILD_MANIFEST="${BUILD_DEST_FILENAME}.list"
 BUILD_PACKAGES="${BUILD_DEST_FILENAME}.packages"
@@ -77,7 +85,6 @@ if time eatmydata lb build noauto ${@} 2>&1 | tee "${BUILD_LOG}" ; then
    echo "Image was successfully created"
    echo "Renaming generated files..."
    mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
-   mv -i binary.list "${BUILD_MANIFEST}"
    mv -i binary.packages "${BUILD_PACKAGES}"
 else
    echo "lb build failed." >&2

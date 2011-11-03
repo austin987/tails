@@ -88,17 +88,21 @@ Below are the patterns that each url handeled by iceweasel will be
 matched against. These patterns will be tried in order, from top to
 bottom, until the first match is found:
 
-1. The I2P router console: urls matching
-   `^http://(127.0.0.1)|(localhost):7657(/.*)?` will get a direct
-   connection to the local host so the I2P router console can be
-   reached.
+1. The I2P router console: urls matching one of the
+   `http://127.0.0.1:7657/*` and `http://localhost:7657/*` wildcard
+   patterns will get a direct connection to the local host so the I2P
+   router console can be reached.
 
-2. I2P eepsites: urls matching
-   `^https?://[^/]+\.i2p(:[0-9]{1,5})?(/.*)?` will be proxied through
-   the local eepsite HTTP proxy run by the I2P client.
+2. I2P eepsites: urls matching the
+   `^https?://[-a-zA-Z0-9.]+\.i2p(:[0-9]{1,5})?(/.*)?$` regexp will be
+   proxied through the local eepsite HTTP proxy run by the I2P client.
+   Implementation note: FoxyProxy encloses the regexps between `^` and
+   `$` itself since `isMultiLine="false"`, that's why the regexp in
+   `foxyproxy.xml` lacks these chars.
 
-3. Tor HTTP(s): urls matching `^https?://.*` will be proxied through
-   polipo (and then its parent proxy, Tor).
+3. Tor HTTP(s): urls matching one of the `https://*` and `http://*`
+   wildcard patterns will be proxied through polipo (and then its
+   parent proxy, Tor).
 
 4. The rest: all remaining urls will be SOCKS5-proxied through Tor.
 
