@@ -1,0 +1,263 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+gpgSymEncApplet - GNOME applet for symmetric text encryption with GnuPG
+
+=head1 DESCRIPTION
+
+gpgSymEncApplet allows encrypting the content of the clipboard with
+a symmetric cipher using a passphrase. This is a graphical frontend on
+top of GnuPG.
+
+=head1 PREREQUISITES
+
+gpgSymEncApplet does not handle passphrase input. Since it also does not
+offer terminal interaction unless explicitly run from there, it relies
+in practice on some kind of GnuPG agent such as pinentry, Seahorse 2.x
+or GNOME keyring 3.x to manage passphrase input.
+
+=cut
+
+use strict;
+use warnings;
+use 5.10.0;
+
+# VERSION
+
+use Glib qw{TRUE FALSE};
+use Gtk2 qw{-init};
+use Gtk2::Gdk::Keysyms;
+
+use Encode qw{decode encode find_encoding};
+use English;
+use GnuPG::Interface;
+use IO::Handle;
+use I18N::Langinfo qw{langinfo CODESET};
+
+use Locale::gettext;
+use POSIX;
+setlocale(LC_MESSAGES, "");
+textdomain("gpgSymEncApplet");
+
+
+=head1 GLOBALS
+
+=cut
+
+my $codeset       = langinfo(CODESET());
+my $encoding      = find_encoding($codeset);
+my $main_window   = Gtk2::Window->new();
+my %gnupg_options = (armor => 1);
+
+
+=head1 MAIN
+
+=cut
+
+my $statusicon = build_statusicon();
+$statusicon->set_visible(TRUE);
+Gtk2->main;
+
+
+=head1 FUNCTIONS
+
+=cut
+
+sub build_statusicon {
+    my $icon = Gtk2::StatusIcon->new;
+    $icon->set_visible(FALSE);
+    $icon->set_from_icon_name('seahorse');
+    $icon->set_tooltip($encoding->decode(gettext('Symmetrically encrypt the contents of the clipboard')));
+
+    my $menu   = Gtk2::Menu->new;
+    my $mexit  = Gtk2::MenuItem->new($encoding->decode(gettext('Exit')));
+    $mexit->signal_connect('activate' => sub { Gtk2->main_quit; });
+    my $mabout = Gtk2::MenuItem->new($encoding->decode(gettext('About')));
+    $mabout->signal_connect('activate' => sub { Gtk2->show_about_dialog(
+        $main_window,
+        'program-name' => 'gpgSymEncApplet',
+        'license'      => q{This program is free software; you can redistribute it and/or modify it under the terms of either:
+
+a) the GNU General Public License as published by the Free Software Foundation; either version 1, or (at your option) any later version, or
+
+b) the "Artistic License" which comes with Perl.
+},
+        'wrap-license' => 1,
+        'website'      => 'https://gaffer.ptitcanardnoir.org/intrigeri/code/gpgSymEncApplet/',
+    )});
+    $menu->append($mexit);
+    $menu->append(Gtk2::SeparatorMenuItem->new);
+    $menu->append($mabout);
+
+    $icon->signal_connect('popup-menu', sub {
+        my $ticon = shift;
+        my $event = shift;
+        my $time = shift;
+        my ($x, $y, $push) = Gtk2::StatusIcon::position_menu($menu, $ticon);
+        $menu->show_all;
+        $menu->popup(undef, undef, sub {($x, $y,$push)}, undef, $event, $time);
+    });
+
+    $icon->signal_connect('button-press-event' => sub {
+        my $ticon = shift;
+        my $event = shift;
+        return unless $event->button == 1;
+        encrypt_clipboard();
+    });
+
+    return $icon;
+}
+
+sub get_clipboard_text {
+    my $clipboard = Gtk2::Clipboard->get(Gtk2::Gdk->SELECTION_CLIPBOARD);
+    my $primary   = Gtk2::Clipboard->get(Gtk2::Gdk->SELECTION_PRIMARY);
+    foreach ($clipboard, $primary) {
+        my $content = $_->wait_for_text;
+        if (defined $content) {
+            # Note: according to the GTK documentation, the wait_for_text method
+            # is supposed to always returns UTF-8. But it seems like the Perl
+            # bindings decode it and we get a string of chars instead of bytes.
+            return $content;
+        }
+    }
+    return;
+}
+
+# FIXME: the primary clipboard text is not set.
+sub set_clipboards_text {
+    my $text = shift;
+
+    # Note: according to the GTK documentation, the set_text method
+    # is supposed to need input encoded in UTF-8. But it seems like the Perl
+    # bindings encode it, and we need to pass a string of chars instead of bytes.
+    foreach (Gtk2::Gdk->SELECTION_CLIPBOARD, Gtk2::Gdk->SELECTION_PRIMARY) {
+        Gtk2::Clipboard->get($_)->set_text($encoding->encode($text));
+    }
+}
+
+sub encrypt_clipboard {
+    my $cleartext = get_clipboard_text();
+
+    unless (defined $cleartext) {
+        display_error(
+            $encoding->decode(gettext("Empty clipboard")),
+            $encoding->decode(gettext("The clipboard is empty. Therefore, it cannot be encrypted."))
+        );
+        return;
+    }
+
+    my $gnupg = GnuPG::Interface->new();
+    $gnupg->options->hash_init(%gnupg_options);
+    my $in_h    = IO::Handle->new();
+    my $err_h   = IO::Handle->new();
+    my $out_h   = IO::Handle->new();
+    my $handles = GnuPG::Handles->new(
+        stdin => $in_h,
+        stderr => $err_h,
+        stdout => $out_h
+    );
+
+    my $pid = $gnupg->encrypt_symmetrically(handles => $handles);
+
+    # We assume the recipient uses the same charset as us :/
+    # PGP/MIME was invented for a reason.
+    print $in_h $encoding->encode($cleartext);
+    close $in_h;
+
+    # Read stdout and stderr at the same time, one line at a time, to
+    # avoid dead-locking due to one of the buffers being full.
+    my @raw_stderr;
+    my @raw_stdout;
+    while (1) {
+        my $err_l = <$err_h>;
+        my $out_l = <$out_h>;
+        push @raw_stderr, $err_l if defined $err_l;
+        push @raw_stdout, $out_l if defined $out_l;
+        last unless ($err_l || $out_l);
+    }
+    close $err_h;
+    close $out_h;
+
+    waitpid $pid, 0; # Clean up the finished GnuPG process.
+
+    my $std_err = $encoding->decode(join('', @raw_stderr));
+    my $std_out = $encoding->decode(join('', @raw_stdout));
+
+    if ($CHILD_ERROR == 0) {
+        set_clipboards_text($std_out);
+        display_output($std_out, $std_err);
+    }
+    else {
+        display_error(
+            $encoding->decode(gettext("GnuPG encryption error")),
+            $std_out . "\n\n" . $std_err
+        );
+        return;
+    }
+
+    return;
+}
+
+sub display_error {
+    my $title = shift;
+    my $msg   = shift;
+
+    my $dialog = Gtk2::MessageDialog->new(
+        $main_window, 'destroy-with-parent', 'error', 'ok',
+        $title
+    );
+    $dialog->format_secondary_text($msg);
+    $dialog->signal_connect(response => sub { my $self = shift; $self->destroy; });
+    $dialog->set_position('center');
+    $dialog->show_all;
+
+    return 1;
+}
+
+sub display_output {
+    my $std_out = shift;
+    my $std_err = shift;
+
+    my $dialog = Gtk2::MessageDialog->new(
+        $main_window, 'destroy-with-parent', 'info', 'ok',
+        $encoding->decode(gettext("GnuPG encryption results"))
+    );
+    # TRANSLATORS: GnuPG stdout (encrypted message)
+    $dialog->format_secondary_text(sprintf($encoding->decode(gettext(
+        "Here is the encrypted message that was copied into the clipboard:"
+    ))));
+
+    my $msg_area = $dialog->get_content_area;
+
+    my $outbuf = Gtk2::TextBuffer->new();
+    $outbuf->set_text($encoding->encode($std_out));
+    my $text_desc = Pango::FontDescription->new;
+    $text_desc->set_family('Monospace');
+    my $textview_out = Gtk2::TextView->new_with_buffer($outbuf);
+    $textview_out->set_editable(FALSE);
+    $textview_out->set_cursor_visible(FALSE);
+    $textview_out->set_wrap_mode('word');
+    $textview_out->modify_font($text_desc);
+    my $scrolled_win_out = Gtk2::ScrolledWindow->new;
+    $scrolled_win_out->set_policy('automatic', 'automatic');
+    $scrolled_win_out->add($textview_out);
+    $msg_area->add($scrolled_win_out);
+
+    if (defined $std_err && length($std_err)) {
+        $msg_area->add(Gtk2::Label->new(
+            # TRANSLATORS: GnuPG stderr (other informational messages)
+            sprintf($encoding->decode(gettext(
+                "While it were at it, GnuPG also mentionned in passing:\n%s"
+            )), $std_err)
+        ));
+    }
+
+    $dialog->signal_connect(response => sub { my $self = shift; $self->destroy; });
+    $dialog->set_default_size(800, 400);
+    $dialog->set_size_request(800, 400);
+    $dialog->set_position('center');
+    $dialog->show_all;
+
+    return 1;
+}
