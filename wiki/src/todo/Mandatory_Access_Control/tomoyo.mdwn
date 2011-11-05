@@ -1,0 +1,106 @@
+[[!meta title="Testing tomoyo"]]
+
+[[!toc levels=2]]
+
+This page intend to sum up the current tests done about using tomoyo in Tails.
+
+A dedicated feature/tomoyo branch has been created in Tails' git.
+
+
+# Configuration
+
+It has been configured to start in learning mode. It means that it won't block
+anything, but in place will log what happens, and the tomoyo-* tools can be used
+to dump and create the different files needed for the policy to be configured.
+
+For this to work, the only modification to the Tails configuration has been to
+add *security=tomoyo* to the kernel command line, add *tomoyo-tools* to the
+installed packagelist, and provide a basic configuration which enable the
+learning mode together with logging in syslog of tomoyo's activity (the default
+configuration of the learning mode in the tomoyo-tools package don't have
+logging enabled).
+
+Tomoyo has different config files it is worth understanding, a good resource
+about that can be find in the [policy specification
+page](http://tomoyo.sourceforge.jp/2.2/policy-reference.html.en) of tomoyo's
+documentation.
+
+Once something like a working policy will have been written, it will be possible
+to change the *use_profile 1* flags in domain_policy.conf to *use_profile 3*,
+which will enforce the policy and help in testing it.
+
+
+# Worflow
+
+In order to work on this feature, one have to build Tails from the
+feature/tomoyo branch.
+
+Once done, obviously the build iso has to be started. :)
+
+Beware that all the activity that will happen on the system will end in the
+policy. A first test trying almost every applications in Tails output a 70000+
+lines policy file...
+
+You can use the command *tomoyo-savepolicy* to dump the in-kernel learned policy
+in /etc/tomoyo/ at any time. I will then create new policy files whose names contain the
+date of their creation, and symlink the defaults policy files to them.
+
+A proper way to have a trace of what have been tested on the system to build the
+policy could be to:
+
+ * After the boot has finished : issue *tomoyo-savepolicy* in order to save
+   what happened.
+ * Test every application/feature that the users are supposed to be able to do
+   in Tails, then issue a *tomoyo-savepolicy* between each tests.
+ * In a separate file, note what test have been made, and what policy files date
+   extension is refering to this test.
+
+You can then diff between the different saved policy to see what was modified
+and tune it. *tomoyo-loadpolicy* can be used to update the in-kernel policy from
+the config files.
+
+An interesting side effect of working on this feature is that it forces to think
+about User Experience in Tails, what users should be able to do, what they
+should not. That's why it's important to note down what tests have been done.
+
+Once most tests have been done, only part of the job is really finished. The
+policy have to be carefully read and simplified. See the [Tuning policy
+page](http://tomoyo.sourceforge.jp/2.2/tuning.html.en) of the documentation for
+more insights. Special commands issued for the tests and that the user is not
+supposed to do are to be removed from the policy.
+
+
+# Issues
+
+ * It will probably be required to define clearly the tests process and policy
+   generation procedure: which applications should be tested and how. This will
+   have to be included in the test phase of the release process, as for example
+   some policies will contain old paths (e.g. `/usr/lib/perl/5.10.1/`).
+ * The most tricky part of writing down a working policy that will be enforced
+   later in the release will probably be the memory wipe on shutdown/media
+   removal feature. It will be hard to be able to save the corresponding policy
+   files. We'll probably have to hook the initramfs sdmem option to copyt the
+   policy content somewhere before shutdown, if the kexec doesn't erase the in
+   kernel policy.
+ * For the sake of the policy simplicity, shall we make more general rules than
+   the one dumped directly from the kernel, i.e, shall we permit to a python
+   application to access every libs in /usr/lib/python{,2.X}, or keep the more
+   strict rule.
+ * In tomoyo, every command not listed in exceptions_policy.conf with the
+   initialize_domain flag is defined by the so called *domain transition*. It
+   means that different rulesets are generated and applied depending on how the
+   program is called, i.e if iceweasel is launched by clicking on it's icon, a
+   different policy is applied than if it is started from the cli. It might be
+   interesting to simplify the policy to define a number of commands that have the
+   initialize_domain flag. For example, in Tails there are at least four different
+   ways to use GnuPG, shall we create only one for this command? What would the
+   drawbacks of such configuration be?
+ * Should the tomoyo logs be enabled when Tails is released. It might help
+   a lot to understand if tomoyo is responsible for the reported bugs (as its
+   logs in syslog are included by default by WhisperBack), but it might also leak
+   information.
+
+
+# Resources
+
+ * [Tomoyo 2.2 documentation](http://tomoyo.sourceforge.jp/2.2/index.html.en)

@@ -48,6 +48,10 @@ chmod -R go+rX config/chroot_sources
 
 # build the image
 
+: ${MKSQUASHFS_OPTIONS:='-comp xz'}
+MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -wildcards -ef chroot/usr/share/amnesia/build/mksquashfs-excludes"
+export MKSQUASHFS_OPTIONS
+
 case "$LB_BINARY_IMAGES" in
    iso)
       BUILD_FILENAME_EXT=iso

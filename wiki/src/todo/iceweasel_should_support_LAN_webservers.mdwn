@@ -1,0 +1,25 @@
+(As long as they are pointed to by IP rather than by hostname),
+Iceweasel should allow connecting to webservers in the LAN.
+
+# A bit of context
+
+A workaround was available before Torbutton 1.4, that is before Tails
+0.8, in the name of toggling "off" the status of Torbutton. This does
+not work anymore, due to a change in the meaning of
+`torbutton.locked_mode`. This change is actually welcome: with an
+interface that said "Tor disabled", users were sometimes thinking Tor
+was disabled, which was not really the case in Tails.
+
+# Implementation
+
+FoxyProxy gives us the means of a short-term solution for the "normal"
+Iceweasel profile; granting direct (no-proxy) access to RFC-1918 IPs
+should be pretty easy to implement using FoxyProxy:
+`config/chroot_local-includes/etc/iceweasel/profile/foxyproxy.xml`.
+
+Rationale: accessing ressources on the LAN is a usecase that can
+benefit from the protections offered by Torbutton aside of proxy
+settings. These ressources and/or the link to them may not be
+fully trusted.
+
+[[!tag todo/code todo/easy]]
