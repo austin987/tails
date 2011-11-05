@@ -1,13 +1,5 @@
 user_pref("extensions.adblockplus.showintoolbar", false);
 user_pref("extensions.adblockplus.synchronizationinterval", 8766);
-user_pref("extensions.firegpg.activate_inline", false);
-user_pref("extensions.firegpg.assisant_has_already_been_executed", true);
-user_pref("extensions.firegpg.enable_gpgapi", false);
-user_pref("extensions.firegpg.gmail_enabled", false);
-user_pref("extensions.firegpg.gmail_enabled", false);
-user_pref("extensions.firegpg.gpg_version", "FIREGPG_VERSION");
-user_pref("extensions.firegpg.keyserver", "hkp://2eghzlv2wwcq7u7y.onion");
-user_pref("extensions.firegpg.show_website", false);
 
 // Block read and write access to the history in non-Tor mode
 user_pref("extensions.torbutton.block_nthread", true);
