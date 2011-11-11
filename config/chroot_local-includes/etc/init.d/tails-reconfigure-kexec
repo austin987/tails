@@ -15,6 +15,9 @@ case "$1" in
   start)
 	echo "KERNEL_IMAGE=\"$(/usr/local/bin/tails-get-bootinfo kernel)\"" >> "$KEXEC_CONF"
 	echo "INITRD=\"$(/usr/local/bin/tails-get-bootinfo initrd)\"" >> "$KEXEC_CONF"
+	if grep -qw debug=wipemem /proc/cmdline; then
+	   echo 'APPEND="${APPEND} sdmemdebug=1"' >> "$KEXEC_CONF"
+	fi
 	;;
   *)
 	echo "Usage: $0 start" >&2
