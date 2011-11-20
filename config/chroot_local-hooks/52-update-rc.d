@@ -8,6 +8,8 @@ update-rc.d tails-kexec                    stop 85 0 6 .
 update-rc.d tails-wifi start 17 S .
 update-rc.d memlockd start 22 2 3 4 5 .
 update-rc.d tails-sdmem-on-media-removal start 23 2 3 4 5 . stop 01 0 6
+update-rc.d tails-reconfigure-kexec defaults
+update-rc.d tails-reconfigure-memlockd defaults
 
 # we run Tor ourselves after HTP via NetworkManager hooks
 update-rc.d tor disable
@@ -28,3 +30,11 @@ update-rc.d kexec-load stop 18 0 6 .
 # the i2p script manually.
 
 update-rc.d -f i2p remove
+
+# we only want hdparm so that laptop-mode-tools can use it
+update-rc.d hdparm disable
+
+# don't use plymouth at shutdown/reboot
+# (plymouth.postinst creates links using update-rc.d,
+# so we cannot disable the links it creates by using LSB headers)
+rm -f /etc/rc[06].d/*plymouth

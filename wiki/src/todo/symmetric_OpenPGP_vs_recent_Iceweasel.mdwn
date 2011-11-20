@@ -17,11 +17,27 @@ FF4+](http://blog.getfiregpg.org/2011/04/01/firegpg-and-firefox-4/)
 We need to find a way to support symmetric OpenPGP encryption in
 Tails.
 
-Implementation ideas
-====================
+Work in progress
+================
+
+The Seahorse applet already knows how to *decrypt* symmetrically
+encrypted text.
+
+We're writing a simplistic GUI to symmetrically encrypt text,
+see `bugfix/remove_firegpg` branch. Time to [[!taglink todo/test]].
+
+On the long run, we hope Seahorse gets support for symmetric
+encryption, and seahorse-plugins to be relived upstream.
+See details below.
+
+Archive: implementation ideas
+=============================
 
 Port FireGPG to recent Firefox/Iceweasel releases
 -------------------------------------------------
+
+**Dismissed**: the webbrowser is too much of a scary place to run
+GnuPG operations in.
 
 As of June 2011, the most active FireGPG fork is [darkpixel's
 one](https://github.com/firegpg/firegpg). It recently merged
@@ -42,7 +58,7 @@ We therefore need to build the IPC extension against the Iceweasel 5
 source code and test the result. Note that a "simple" clone of the
 Mercurial mozilla-release repository seems not enough as it lacks the
 `obj-ff-release` directory. Is this directory generated when compiling
-Firefox itself? [[!tag todo/test]]
+Firefox itself?
 
 The [Html Validator compilation
 instructions](http://www.htmlpedia.org/wiki/FirefoxCompilation) have
@@ -53,12 +69,18 @@ Find another user-interface that provides the missing feature
 -------------------------------------------------------------
 
 This could be a nice middle-term workaround.
-We need to [[!taglink todo/research]] this.
 
 ### Local GUI
 
 Writing a simplistic GUI able to symmetrically encrypt/decrypt text
 should be quite quick.
+
+Hints:
+
+* May be needed to show *all* of GPG's output to the user: one can be
+  burnt by GPG-wrapper GUIs misleading about what GPG thinks.
+* A message may be signed and encrypted using
+  `gpg --symmetric --sign`
 
 ### Local webapp
 
@@ -69,8 +91,11 @@ should be quite quick.
  - [homepage](http://qooxdoo.org/contrib/project/crypto)
  - only supports encryption
 
-Add symmetric encryption / decryption support to GNOME
-------------------------------------------------------
+Add symmetric encryption support to GNOME
+-----------------------------------------
+
+The Seahorse applet already knows how to *decrypt* symmetrically
+encrypted text. So the missing bit is symmetric *encryption*.
 
 This would be the perfect long-term solution, but we probably lack the
 time and energy needed to implement it.
