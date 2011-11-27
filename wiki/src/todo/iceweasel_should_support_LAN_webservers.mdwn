@@ -1,6 +1,16 @@
 (As long as they are pointed to by IP rather than by hostname),
 Iceweasel should allow connecting to webservers in the LAN.
 
+This is a usecase we really want to support and we want to find a solution that
+would not make that optional.
+
+We couldn't think about an attack which would be made possible by allowing this:
+- if an attacker in control of both local and online resources tries to
+  deanonymized a local user accessing online resources, this user could be
+  anonymized anyways by other means;
+- if an attacker tries to force the access to local resources from online
+  resources, the Tor client will discard them anyways.
+
 # A bit of context
 
 A workaround was available before Torbutton 1.4, that is before Tails
@@ -17,9 +27,15 @@ Iceweasel profile; granting direct (no-proxy) access to RFC-1918 IPs
 should be pretty easy to implement using FoxyProxy:
 `config/chroot_local-includes/etc/iceweasel/profile/foxyproxy.xml`.
 
-Rationale: accessing ressources on the LAN is a usecase that can
+Rationale: accessing resources on the LAN is a usecase that can
 benefit from the protections offered by Torbutton aside of proxy
-settings. These ressources and/or the link to them may not be
+settings. These resources and/or the link to them may not be
 fully trusted.
 
-[[!tag todo/code todo/easy]]
+If only doing this still allows an adversary to de-anonymize users (while they
+could not do in another way) it might also be necessary to modify Torbutton to
+treat RFC-1918 IPs as 'local' and not 'online', just as it does for local URLs
+such as 'file:///'. We will mail tor-talk to share our plan and ask about how
+risky that would be.
+
+[[!tag todo/code todo/easy todo/research]]
