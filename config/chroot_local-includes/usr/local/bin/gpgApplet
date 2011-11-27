@@ -2,17 +2,17 @@
 
 =head1 NAME
 
-gpgSymEncApplet - GNOME applet for symmetric text encryption with GnuPG
+gpgApplet - GNOME applet for OpenGPG text encryption
 
 =head1 DESCRIPTION
 
-gpgSymEncApplet allows encrypting the content of the clipboard with
-a symmetric cipher using a passphrase. This is a graphical frontend on
-top of GnuPG.
+gpgApplet allows encrypting and decrypting the content of the
+clipboard with a symmetric cipher using a passphrase. This is
+a graphical frontend on top of GnuPG.
 
 =head1 PREREQUISITES
 
-gpgSymEncApplet does not handle passphrase input. Since it also does not
+gpgApplet does not handle passphrase input. Since it also does not
 offer terminal interaction unless explicitly run from there, it relies
 in practice on some kind of GnuPG agent such as pinentry, Seahorse 2.x
 or GNOME keyring 3.x to manage passphrase input.
@@ -39,9 +39,7 @@ use List::MoreUtils qw{none};
 use Locale::gettext;
 use POSIX;
 setlocale(LC_MESSAGES, "");
-textdomain("gpgSymEncApplet");
-
-# FIXME: application name is obsolete.
+textdomain("gpgApplet");
 
 
 =head1 GLOBALS
@@ -104,7 +102,7 @@ sub build_statusicon {
     my $mabout = Gtk2::MenuItem->new($encoding->decode(gettext('About')));
     $mabout->signal_connect('activate' => sub { Gtk2->show_about_dialog(
         $main_window,
-        'program-name' => 'gpgSymEncApplet',
+        'program-name' => 'gpgApplet',
         'license'      => q{This program is free software; you can redistribute it and/or modify it under the terms of either:
 
 a) the GNU General Public License as published by the Free Software Foundation; either version 1, or (at your option) any later version, or
@@ -491,7 +489,7 @@ sub read_err_out {
 sub update_icon {
     my $text_type = shift;
 
-    $statusicon->set_from_stock("gpgSymEncApplet-${text_type}");
+    $statusicon->set_from_stock("gpgApplet-${text_type}");
 }
 
 sub detect_received {
@@ -516,7 +514,7 @@ sub make_icon_source {
     my $ext  = shift;
     my $size = shift;
 
-    my $filename = "/usr/share/pixmaps/gpgSymEncApplet/$base/$icon.$ext";
+    my $filename = "/usr/share/pixmaps/gpgApplet/$base/$icon.$ext";
     my $source = Gtk2::IconSource->new();
     $source->set_filename($filename);
     $source->set_direction_wildcarded(1);
@@ -535,7 +533,7 @@ sub init_icons_stock {
     my $factory = shift;
 
     $factory->add_default;
-    my @stock_ids = map { "gpgSymEncApplet-$_" } qw{ message none signed text };
+    my @stock_ids = map { "gpgApplet-$_" } qw{ message none signed text };
 
     foreach my $stock_id (@stock_ids) {
         my $iconset = Gtk2::IconSet->new();
