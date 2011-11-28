@@ -1,9 +1,15 @@
 #!/bin/sh
 
-# wait for HTP to finish
-until [ -e /var/lib/live/htp-done ]; do
-   sleep 1
+TORDATE_DIR=/var/run/tordate
+TORDATE_DONE_FILE="${TORDATE_DIR}/done"
+INOTIFY_TIMEOUT=60
+
+# wait for a guarantee that time is in Tor valid range
+while :; do
+   if [ -e "$TORDATE_DONE_FILE" ]; then
+      break
+   fi
+   inotifywait -q -t "$INOTIFY_TIMEOUT" -e create --format %w%f "$TORDATE_DIR"
 done
 
-sleep 120
 exec /usr/local/bin/tails-security-check

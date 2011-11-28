@@ -28,6 +28,7 @@ pref("browser.chrome.site_icons", false);
 pref("browser.chrome.image_icons.max_size", 0);
 pref("browser.download.manager.closeWhenDone", true);
 pref("browser.download.manager.retention", 0);
+pref("browser.download.useDownloadDir", false);
 pref("browser.formfill.enable", false);
 pref("browser.history_expire_days", 0);
 pref("browser.history_expire_days.mirror", 0);
