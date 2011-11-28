@@ -10,9 +10,10 @@ usecase on the long run.
 Also, we've been wanting to ship [[todo/Iceweasel_5.x]] as soon as
 possible, but FireGPG [is discontinued
 upstream](http://blog.getfiregpg.org/2010/06/07/firegpg-discontinued/)
-and is known [not to work with
+is known [not to work with
 FF4+](http://blog.getfiregpg.org/2011/04/01/firegpg-and-firefox-4/)
-"because of the missing IPC library".
+"because of the missing IPC library", and generally is
+[[a security mess|bugs/FireGPG_may_be_unsafe]].
 
 We need to find a way to support symmetric OpenPGP encryption in
 Tails.
@@ -21,10 +22,28 @@ Work in progress
 ================
 
 The Seahorse applet already knows how to *decrypt* symmetrically
-encrypted text.
+encrypted text. But it does not support symmetric encryption, seems
+dead upstream, was never released for GNOME3 and therefore is not part
+of Debian testing.
 
-We're writing a simplistic GUI to symmetrically encrypt text,
-see `bugfix/remove_firegpg` branch. Time to [[!taglink todo/test]].
+Therefore, we have written another OpenPGP panel applet; the
+`bugfix/remove_firegpg` branch does not run the Seahorse applet
+anymore. It does not install FireGPG either. Our own panel applet
+features:
+
+- symmetrically *encrypt* clipboard content
+- *decrypt* clipboard content (regardless of the kind of OpenPGP
+  encryption)
+- status icon and action menu change depending on the content of the
+  clipboard(s), the same way as the Seahorse applet does
+
+Missing features wrt. the Seahorse + FireGPG combo:
+
+- asymmetric (i.e. public key) encryption
+- signature verification
+- import key (covered by other parts of the Seahorse UI, though)
+
+Let's [[!taglink todo/discuss]] if this is good enough.
 
 On the long run, we hope Seahorse gets support for symmetric
 encryption, and seahorse-plugins to be relived upstream.
