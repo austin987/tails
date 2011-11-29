@@ -59,11 +59,13 @@ export MKSQUASHFS_OPTIONS
 # * if we build from a branch: tails-$ARCH-$BRANCH-$VERSION-$DATE.iso
 if GIT_REF="$(git symbolic-ref HEAD)"; then
     GIT_BRANCH="${GIT_REF#refs/heads/}"
-    BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
+    CLEAN_GIT_BRANCH=$(echo "$GIT_BRANCH" | sed 's,/,_,g')
+    BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
 else
     GIT_CURRENT_COMMIT="$(git rev-parse HEAD)"
     if GIT_TAG="$(git describe --tags --exact-match ${GIT_CURRENT_COMMIT})"; then
-	BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${GIT_TAG}"
+        CLEAN_GIT_TAG=$(echo "$GIT_TAG" | sed 's,/,_,g')
+	BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_TAG}"
     else
 	# this shouldn't reasonably happen (e.g. only if you checkout a
         # tag, remove the tag and then build)
