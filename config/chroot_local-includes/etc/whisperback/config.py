@@ -40,7 +40,7 @@ import random
 # This section defines the recepient parameters
 
 # The address of the recipient
-to_address = "amnesia@boum.org"
+to_address = "tails@boum.org"
 
 # The fingerprint of the recipient's GPG key 
 to_fingerprint = "09F6BC8FEEC9D8EE005DBAA41D2975EDF93E735F"

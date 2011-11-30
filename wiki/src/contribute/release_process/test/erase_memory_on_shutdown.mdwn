@@ -14,34 +14,29 @@ minimal system so that it doesn't fill the RAM to boot.
 To be able to grep /dev/mem, it must have a kernel with CONFIG_STRICT_DEVMEM
 disabled. It is enabled in debian since 2.6.28-1, so we use lenny:
 
-    lb config  --architecture i386 --linux-flavours 686 --apt-recommends false --distribution lenny --binary-images usb-hdd --binary-indices false  --memtest none --packages-lists="minimal" --syslinux-menu vesamenu --initramfs=live-initramfs
+    lb config  --architecture i386 --linux-flavours 686 --apt-recommends false --distribution lenny --binary-images usb-hdd --binary-indices false  --memtest none --packages-lists="minimal" --syslinux-menu vesamenu --initramfs=live-initramfs --bootappend-live "init=/bin/bash"
 
 Then install this image on a 2nd USB stick
 
 # 1. fill the RAM with a known pattern
 
 * boot on Tails
-* add `fillram.py` which contains:
+* launch fillram a few times in parallel (on a 32-bit architecture the
+  address space of a given process is usually limited at 3 GiB - or
+  less, depends on the kernel configuration)
 
-    string=""
-    while True:
-        string = string + "wipe_didnt_work/"
-
-* launch it:
-
-    $ python fillram.py
+  	# for i in $(seq 0 31) ; do fillram & done ; watch free -m
 
 # 2. test that you can get the pattern
 
-* plug the USB stick containing the minimal lenny live system
+* plug the USB stick containing the minimal Lenny Live system
 * reboot from Tails using SysRq + B
-* under syslinux, append `init=/bin/bash` to the kernel commandline in order to
-  run the test in the initramfs
-* actually do the test:
+* boot on the minimal Lenny Live system
+* actually run the test:
 
-    grep wipe_didnt_work /dev/mem
+  	grep -c wipe_didnt_work /dev/mem
 
-  - you should get `binary file /dev/mem matches` if the pattern was found in
+  - you should get some integer larger than zero if the pattern was found in
     RAM, which is the expected result ;
   - you should get `grep: /dev/mem: Cannot allocate memory` otherwise. In that
     case, it is **not** useful to process to the next step, there is something
@@ -51,16 +46,23 @@ Then install this image on a 2nd USB stick
 
 * redo step 1
 * reboot from Tails the recommanded way : system > reboot
-* plug the USB stick containing the minimal lenny live system
-* when Tails displays that you can remove the USB stick, remove Tails and 
-  plug the USB stick containing the minimal lenny live system
-* under syslinux, append `init=/bin/bash` to the kernel commandline in order to
-  run the test in the initramfs
-* actually do the test:
+* plug the USB stick containing the minimal Lenny Live system
+* when Tails displays that you can remove the USB stick, unplug the
+  Tails stick and plug the USB stick containing the minimal Lenny Live
+  system in
+* boot on the minimal Lenny Live system
+* actually run the test:
 
-    grep wipe_didnt_work /dev/mem
+  	grep -c wipe_didnt_work /dev/mem
 
-  - you should get `grep: /dev/mem: Cannot allocate memory` if the pattern was
-    not found in RAM, which is the expected result;
-  - you should get `binary file /dev/mem matches` if the pattern was found in
-    RAM, which means that smem failed.
+  - you should get zero if the pattern was not found in RAM, which is the
+    optimal (and expected) result;
+  - you should get an integer larger than zero if the pattern was found in
+    RAM, which means that smem failed. However, there seems to be certain
+    legit conditions which can make this happen any way. For instance, the new
+    kernel loaded with kexec may allocate some buffer in the memory space
+    that was filled with the pattern, and thus that space will not be wiped
+    by smem. Hence a "reasonably small" number of occurances is still
+    acceptible as it currently is unavoidable. For now, let us arbitrarily
+    choose that up to 500 000 occurences (or around 8 MB since each pattern is
+    16 bytes) are acceptable.

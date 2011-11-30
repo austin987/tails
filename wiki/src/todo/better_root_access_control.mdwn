@@ -54,6 +54,9 @@ OTOH, there might be an obscure Debian package whose installation
 would reset our `iptables` rules. A malware could install such
 a package, retrieve the real user IP, and send it to an attacker.
 
+* A targeted piece of malware could do this with out the need of installing said software
+
+
 Our plans
 =========
 
@@ -64,13 +67,13 @@ is entered, it is set for the default user + sudo enabled.
 
 Implementation:
 
-- there should be no root nor user password by default;
-- the TailsGreeter should trigger a script that would run in an environnement
+1. there should be no root nor user password by default;
+2. the TailsGreeter should trigger a script that would run in an environnement
   containing a $TAILS_USER_PASSWORD variable
   **OR**
   the TailsGreeter should setup that env variable an the script is always run?
-- the script would set the user password, if any was given;
-- if the environnement TailsGreeter run the script in does't terminate with it,
+3. the script would set the user password, if any was given;
+4. if the environnement TailsGreeter run the script in does't terminate with it,
   TailsGreeter should then unset the env variable.
 
 The steps that are not part of the TailsGreeter (1st and 3rd) are implemented in

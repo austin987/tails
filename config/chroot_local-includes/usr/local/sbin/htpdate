@@ -2,7 +2,7 @@
 #
 # htpdate time poller version 0.9.3
 # Copyright (C) 2005 Eddy Vervest
-# Copyright (C) 2010 Tails dev team <amnesia@boum.org>
+# Copyright (C) 2010-2011 Tails developers <tails@boum.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -52,8 +52,10 @@ my $set_date    = 1;
 my $ssl_protocol = 'TLSv1';     # will be passed to wget's --secure-protocol
 my $useragent   = "htpdate/$VERSION";
 my $userid      = '';           # userid for proxy servers
+my $dns_timeout;
+my $res_file;
 
-our ($opt_d, $opt_h, $opt_q, $opt_x, $opt_u, $opt_a, $opt_f, $opt_l, $opt_p);
+our ($opt_d, $opt_h, $opt_q, $opt_x, $opt_u, $opt_a, $opt_f, $opt_l, $opt_p, $opt_t, $opt_T);
 
 sub message {
     my @msg = @_;
@@ -81,7 +83,7 @@ sub error (@_) {
 
 sub parseCommandLine () {
     # specify valid switches
-    getopts('dhqxfpu:a:l:') || usage();
+    getopts('dhqxfpu:a:l:t:T:') || usage();
 
     usage() if $opt_h;
     usage() unless $ARGV[0];
@@ -94,6 +96,8 @@ sub parseCommandLine () {
     $paranoid = 1           if $opt_p;
     $quiet = 1              if $opt_q;
     $set_date = 0           if $opt_x;
+    $dns_timeout = $opt_t   if $opt_t;
+    $res_file = $opt_T      if $opt_T;
 
     my @urls;
     foreach my $url (@ARGV) {
@@ -111,7 +115,7 @@ sub usage () {
     print STDERR <<USAGE;
 
 htpdate version $VERSION
-Usage: $0 [-dhqxf] [-u userid] [-a useragent] <URL> [<URL> ...]
+Usage: $0 [-dhqxf] [-u userid] [-a useragent] [-t dns_timeout] [-T success_file] <URL> [<URL> ...]
 
         -d      debug
         -h      show this help
@@ -122,6 +126,8 @@ Usage: $0 [-dhqxf] [-u userid] [-a useragent] <URL> [<URL> ...]
         -f      request the full page and referenced resources rather than only its header
         -l      log to this file rather than to STDOUT
         -p      paranoid mode: don't set time unless all servers could be reached
+        -t      DNS timeout for wget
+        -T      create this file after setting time successfully
 
         e.g. $0 -x http://www.microsoft.com/ https://check.torproject.org/
 
@@ -174,6 +180,7 @@ sub getRemoteDateDiff {
                          '--no-directories',
                          '--secure-protocol', $ssl_protocol,
                      );
+    push @wget_options, ('--dns-timeout', $dns_timeout) if defined $dns_timeout;
     push @wget_options, ('--directory-prefix', $tmpdir);
     if ($fullrequest) {
         push @wget_options, ('--page-requisites', '--span-hosts');
@@ -234,6 +241,9 @@ sub adjustDate {
                 error "An error occured setting the time\n@output";
             }
             close($fd);
+            open my $res_h, '>>', $res_file or die "Cannot open res file $res_file: $!";
+            print $res_h "$diff\n";
+            close $res_h;
             $> = getpwnam($opt_u) if $opt_u;
         }
     }
