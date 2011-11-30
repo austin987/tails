@@ -53,6 +53,7 @@ pref("extensions.update.notifyUser", false);
 pref("geo.enabled", false);
 pref("geo.wifi.uri", "");
 pref("layout.css.report_errors", false);
+pref("network.cookie.cookieBehavior", 1);
 pref("network.cookie.lifetimePolicy", 2);
 pref("network.cookie.prefsMigrated", true);
 pref("network.http.pipelining", true);
