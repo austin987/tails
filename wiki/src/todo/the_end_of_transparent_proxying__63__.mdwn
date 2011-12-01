@@ -13,4 +13,15 @@ Proposed course of action:
     tails-security-check, htp
 3. see what breaks, and repair
 
+Problems:
+
+* Since we configured apt to use polipo on port 8118 (commit dd04ca0
+  in branch `feature/no_transparent_proxy`), apt will also use that
+  proxy *inside* live-build after stage chroot_local-includes. This
+  breaks building if the build system doesn't have a http proxy
+  running on port 8118, which is quite bad. Even if one has such a
+  proxy on the build system this bypasses [[build/squid-deb-proxy]],
+  which is annoying and prevents offline building (unless one
+  configures squid-deb-proxy to run on port 8118, of course).
+
 [[!tag todo/qa]]
