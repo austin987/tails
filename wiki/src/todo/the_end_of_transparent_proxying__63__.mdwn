@@ -7,10 +7,34 @@ Proposed course of action:
 1. actually do this change in `firewall.conf`: **done** in the
    `feature/no_transparent_proxy` Git branch
 2. test every application we want to access the network
-  * tested ok: SSH client, wget, iceweasel HTTP, Claws Mail, Liferea,
-    Pidgin, iceweasel FTP, APT, Synaptic, WhisperBack
-  * left to test: Gobby 0.4, Gobby 0.5, i2p, GNOME VFS SSH and FTP,
-    tails-security-check, htp
+  * tested ok: SSH client, wget HTTP, iceweasel HTTP, Claws Mail,
+    Liferea, Pidgin, APT, Synaptic, WhisperBack, i2p, GNOME VFS SSH,
+    tails-security-check, seahorse, command-line gnupg, Gobby 0.4,
+    Gobby 0.5, htp
+  * left to test:
+  * failed: Gnome VFS FTP, wget FTP, iceweasel FTP
 3. see what breaks, and repair
+
+Notes/problems:
+
+* Who marked "iceweasel FTP" as working? Can't reproduce, in fact it's
+  not even working in Tails 0.9. It *was* my understanding that the
+  only way to make torified FTP work reliaby is to use a real FTP
+  proxy that uses Tor as a parent proxy. However, Gnome VFS FTP works
+  in Tails 0.9 and seems to be using the Gnome proxy settings which
+  specifies an ftp proxy on port 9050, altough that's a SOCKS
+  proxy. This is all very confusing.
+* Since we configured apt to use polipo on port 8118 (commit dd04ca0
+  in branch `feature/no_transparent_proxy`), apt will also use that
+  proxy *inside* live-build after stage chroot_local-includes. This
+  breaks building if the build system doesn't have a http proxy
+  running on port 8118, which is quite bad. Even if one has such a
+  proxy on the build system this bypasses [[build/squid-deb-proxy]],
+  which is annoying and prevents offline building (unless one
+  configures squid-deb-proxy to run on port 8118, of course).
+* Key retrieval and searches on keyservers with seahorse and gnupg
+  couldn't be tested with the default hidden indymedia keyserver as it
+  seems to be down (as of 2011-12-02). Tests were successfull with
+  `hkp://keys.gnupg.net`, though.
 
 [[!tag todo/qa]]
