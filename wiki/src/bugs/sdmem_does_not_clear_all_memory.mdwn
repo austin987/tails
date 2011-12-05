@@ -39,17 +39,11 @@ with no efficiency improvement. Needs to be tested.
 
 Better would be to imitate Liberté Linux, that recently switched to
 using the Linux kernel's `memtest=2` feature, which is simpler, more
-robust, and allows wiping more RAM. This option is unfortunately not
-enabled in the Debian kernel, and its enabling was refused in
-[[!debbug 556365]] for good reasons (i.e. this feature is actually
-pretty bad at testing memory) that have nothing to do with our
-usecase. We are trying to have this changed in [[!debbug 646361]].
-If this is refused, we'll have to build our own kernels; do we really
-want to go this way? If we do, [grml's kernel building
-infrastructure](http://git.grml.org/?p=grml-kernel.git) is great, and
-workarounds the numerous bugs that make kernel-package currently
-unusable ([[!debbug 629245]], [[!debbug 639251]], [[!debbug
-638012]])... by not using it at all.
+robust, and allows wiping more RAM. This option will be
+enabled in the next (> 3.1.4-1) Debian kernel.
+
+=> registered as a [[TODO page|todo/move_from_sdmem_to_memtest]] with
+actual action plans.
 
 On the long run, if the Linux kernel does not wipe whatever memory
 pages it allocates to use for its own data structures, the kexec'd
@@ -57,3 +51,4 @@ program should be a custom, dedicated to memory erasure one, instead
 of a regular Linux kernel + ramdisk + userspace memory erasure
 program. This is probably the only way to overwrite **all** memory
 that was used in Tails.
+
