@@ -161,10 +161,9 @@ sub build_action_menu {
         $action_menu->append($mencrypt);
     }
     if ($text_type eq 'message' or $text_type eq 'signed') {
-        # FIXME: handle decrypt/verify
-        my $mdecrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('_Decrypt Clipboard')));
-        $mdecrypt->signal_connect('activate' => sub { decrypt_clipboard(); });
-        $action_menu->append($mdecrypt);
+        my $mdecryptver = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('_Decrypt/Verify Clipboard')));
+        $mdecryptver->signal_connect('activate' => sub { decrypt_verify_clipboard(); });
+        $action_menu->append($mdecryptver);
     }
 
     return $action_menu;
@@ -316,7 +315,7 @@ sub encrypt {
     return;
 }
 
-sub decrypt {
+sub decrypt_verify {
     my $args    = shift;
     my $gnupg   = $args->{gnupg};
     my $handles = $args->{handles};
@@ -325,7 +324,11 @@ sub decrypt {
     my $err_h   = $args->{err_h};
     my $out_h   = $args->{out_h};
 
-    my $pid = $gnupg->decrypt(handles => $handles);
+    my $text_type = detect_text_type($input);
+    my $pid =
+        $text_type eq 'message'
+      ? $gnupg->decrypt(handles => $handles)
+      : $gnupg->verify(handles => $handles);
 
     # We assume the sender uses the same charset as us :/
     # PGP/MIME was invented for a reason.
@@ -346,7 +349,7 @@ sub decrypt {
     }
     else {
         display_error(
-            $encoding->decode(gettext("GnuPG decryption error")),
+            $encoding->decode(gettext("GnuPG decryption/verification error")),
             $std_out . "\n\n" . $std_err
         );
         return;
@@ -371,7 +374,7 @@ sub encrypt_clipboard {
     gpg_operate_on_text(\&encrypt, $text);
 }
 
-sub decrypt_clipboard {
+sub decrypt_verify_clipboard {
     my ($text, $clip_error) = get_validated_clipboard_text(
         { valid_types => ['message'] }
     );
@@ -384,7 +387,7 @@ sub decrypt_clipboard {
         return;
     }
 
-    gpg_operate_on_text(\&decrypt, $text);
+    gpg_operate_on_text(\&decrypt_verify, $text);
 }
 
 sub display_error {
