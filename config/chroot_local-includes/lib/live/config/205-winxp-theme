@@ -2,12 +2,19 @@
 
 # This script sets up the amnesia user's Gnome theme to something that
 # resembles Microsoft Windows XP.
-#
-# The script is based on the XpGnome installation script, written by
-# PhrankDaChicken, available from http://ubunut.online02.com/xpgnome
 
 # only run if "winxp" is on the kernel command line
 grep -qw winxp /proc/cmdline || return 0
+
+# Set IE icon in iceweasel
+ie_icon="/usr/share/icons/GnomeXP/48x48/apps/iceweasel.png"
+for x in /usr/share/iceweasel/chrome/icons/default/*; do
+	rm ${x}
+	ln -s ${ie_icon} ${x}
+done
+
+# The part below is based on the XpGnome installation script, written
+# by PhrankDaChicken, available from http://ubunut.online02.com/xpgnome
 
 gconf_set() {
 	sudo -H -u "${LIVE_USERNAME}" gconftool-2 --set "$@"
