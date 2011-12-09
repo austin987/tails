@@ -104,6 +104,65 @@ gconf_set "/apps/panel/objects/xp_start_menu/toplevel_id" --type string "xp_bott
 gconf_set "/apps/panel/objects/xp_start_menu/use_custom_icon" --type bool TRUE
 gconf_set "/apps/panel/objects/xp_start_menu/use_menu_path" --type bool FALSE
 
+# Launchers
+
+# Make .desktop:s with small icons used for launchers
+launcher_dir="/home/${LIVE_USERNAME}/.gnome2/panel2.d/default/launchers/"
+mkdir -p ${launcher_dir}
+sed 's/\(^Icon[^=]*=\).*$/\1ie_launcher/' /usr/share/applications/iceweasel.desktop > ${launcher_dir}/iceweasel.desktop
+sed 's/\(^Icon[^=]*=\).*$/\1outlook_launcher/' /usr/share/applications/claws-mail.desktop > ${launcher_dir}/claws-mail.desktop
+sed 's/\(^Icon[^=]*=\).*$/\1msn_launcher/' /usr/share/applications/pidgin.desktop > ${launcher_dir}/pidgin.desktop
+chown -R ${LIVE_USERNAME}:${LIVE_USERNAME} "/home/${LIVE_USERNAME}/.gnome2"
+
+# Browser launcher
+gconf_set "/apps/panel/objects/browser_launcher/action_type" --type string "lock"
+gconf_set "/apps/panel/objects/browser_launcher/attached_toplevel_id" --type string ""
+gconf_set "/apps/panel/objects/browser_launcher/bonobo_iid" --type string ""
+
+gconf_set "/apps/panel/objects/browser_launcher/custom_icon" --type string ""
+gconf_set "/apps/panel/objects/browser_launcher/launcher_location" --type string "iceweasel.desktop"
+gconf_set "/apps/panel/objects/browser_launcher/locked" --type bool TRUE
+gconf_set "/apps/panel/objects/browser_launcher/menu_path" --type string "applications:/"
+gconf_set "/apps/panel/objects/browser_launcher/object_type" --type string "launcher-object"
+gconf_set "/apps/panel/objects/browser_launcher/panel_right_stick" --type bool FALSE
+gconf_set "/apps/panel/objects/browser_launcher/position" --type int 1
+gconf_set "/apps/panel/objects/browser_launcher/tooltip" --type string ""
+gconf_set "/apps/panel/objects/browser_launcher/toplevel_id" --type string "xp_bottom_panel"
+gconf_set "/apps/panel/objects/browser_launcher/use_custom_icon" --type bool TRUE
+gconf_set "/apps/panel/objects/browser_launcher/use_menu_path" --type bool FALSE
+
+# Email launcher
+gconf_set "/apps/panel/objects/email_launcher/action_type" --type string "lock"
+gconf_set "/apps/panel/objects/email_launcher/attached_toplevel_id" --type string ""
+gconf_set "/apps/panel/objects/email_launcher/bonobo_iid" --type string ""
+gconf_set "/apps/panel/objects/email_launcher/custom_icon" --type string ""
+gconf_set "/apps/panel/objects/email_launcher/launcher_location" --type string "claws-mail.desktop"
+gconf_set "/apps/panel/objects/email_launcher/locked" --type bool TRUE
+gconf_set "/apps/panel/objects/email_launcher/menu_path" --type string "applications:/"
+gconf_set "/apps/panel/objects/email_launcher/object_type" --type string "launcher-object"
+gconf_set "/apps/panel/objects/email_launcher/panel_right_stick" --type bool FALSE
+gconf_set "/apps/panel/objects/email_launcher/position" --type int 2
+gconf_set "/apps/panel/objects/email_launcher/tooltip" --type string ""
+gconf_set "/apps/panel/objects/email_launcher/toplevel_id" --type string "xp_bottom_panel"
+gconf_set "/apps/panel/objects/email_launcher/use_custom_icon" --type bool FALSE
+gconf_set "/apps/panel/objects/email_launcher/use_menu_path" --type bool FALSE
+
+# IM launcher
+gconf_set "/apps/panel/objects/im_launcher/action_type" --type string "lock"
+gconf_set "/apps/panel/objects/im_launcher/attached_toplevel_id" --type string ""
+gconf_set "/apps/panel/objects/im_launcher/bonobo_iid" --type string ""
+gconf_set "/apps/panel/objects/im_launcher/custom_icon" --type string ""
+gconf_set "/apps/panel/objects/im_launcher/launcher_location" --type string "pidgin.desktop"
+gconf_set "/apps/panel/objects/im_launcher/locked" --type bool TRUE
+gconf_set "/apps/panel/objects/im_launcher/menu_path" --type string "applications:/"
+gconf_set "/apps/panel/objects/im_launcher/object_type" --type string "launcher-object"
+gconf_set "/apps/panel/objects/im_launcher/panel_right_stick" --type bool FALSE
+gconf_set "/apps/panel/objects/im_launcher/position" --type int 3
+gconf_set "/apps/panel/objects/im_launcher/tooltip" --type string ""
+gconf_set "/apps/panel/objects/im_launcher/toplevel_id" --type string "xp_bottom_panel"
+gconf_set "/apps/panel/objects/im_launcher/use_custom_icon" --type bool FALSE
+gconf_set "/apps/panel/objects/im_launcher/use_menu_path" --type bool FALSE
+
 # Window Switcher
 gconf_set "/apps/panel/applets/xp_taskbar/action_type" --type string "lock"
 gconf_set "/apps/panel/applets/xp_taskbar/attached_toplevel_id" --type string ""
@@ -114,7 +173,7 @@ gconf_set "/apps/panel/applets/xp_taskbar/locked" --type bool TRUE
 gconf_set "/apps/panel/applets/xp_taskbar/menu_path" --type string "applications:/"
 gconf_set "/apps/panel/applets/xp_taskbar/object_type" --type string "bonobo-applet"
 gconf_set "/apps/panel/applets/xp_taskbar/panel_right_stick" --type bool FALSE
-gconf_set "/apps/panel/applets/xp_taskbar/position" --type int 2
+gconf_set "/apps/panel/applets/xp_taskbar/position" --type int 4
 gconf_set "/apps/panel/applets/xp_taskbar/tooltip" --type string ""
 gconf_set "/apps/panel/applets/xp_taskbar/toplevel_id" --type string "xp_bottom_panel"
 gconf_set "/apps/panel/applets/xp_taskbar/use_custom_icon" --type bool FALSE
@@ -194,5 +253,5 @@ gconf_set "/apps/panel/applets/xp_clock/prefs/timezones/tz_id_list" --type list 
 
 # Add Panels Items
 gconf_set "/apps/panel/general/applet_id_list" --type list --list-type string "[xp_taskbar,xp_systray,xp_volume,xp_clock]"
-gconf_set "/apps/panel/general/object_id_list" --type list --list-type string "[xp_start_menu]"
+gconf_set "/apps/panel/general/object_id_list" --type list --list-type string "[xp_start_menu,browser_launcher,email_launcher,im_launcher]"
 gconf_set "/apps/panel/general/toplevel_id_list" --type list --list-type string "[xp_bottom_panel]"
