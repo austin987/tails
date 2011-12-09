@@ -29,7 +29,27 @@ RAM if that matters) with both Tails 0.8 and 0.7.2.
 >> documentation|contribute/release_process/test/erase_memory_on_shutdown]]
 >> accordingly. Thanks for pointing this out. --intrigeri
 
->>> Possible fix (180f058) waiting to be tested in devel branch.
+Possible fix (180f058) waiting to be tested in devel branch. This
+change is likely to work "most of the time", but it is not reliable as
+is: sdmem kills itself as soon as it's refused to allocate memory, so
+there's no guarantee several instances of it will be allocating enough
+memory at the same time to ensure all memory is erased. In the worst
+case, this change can make the memory erasure process 32 times longer,
+with no efficiency improvement. Needs to be tested.
+
+Better would be to imitate Liberté Linux, that recently switched to
+using the Linux kernel's `memtest=2` feature, which is simpler, more
+robust, and allows wiping more RAM. This option is unfortunately not
+enabled in the Debian kernel, and its enabling was refused in
+[[!debbug 556365]] for good reasons (i.e. this feature is actually
+pretty bad at testing memory) that have nothing to do with our
+usecase. We are trying to have this changed in [[!debbug 646361]].
+If this is refused, we'll have to build our own kernels; do we really
+want to go this way? If we do, [grml's kernel building
+infrastructure](http://git.grml.org/?p=grml-kernel.git) is great, and
+workarounds the numerous bugs that make kernel-package currently
+unusable ([[!debbug 629245]], [[!debbug 639251]], [[!debbug
+638012]])... by not using it at all.
 
 On the long run, if the Linux kernel does not wipe whatever memory
 pages it allocates to use for its own data structures, the kexec'd

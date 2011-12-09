@@ -6,8 +6,8 @@ NICKS_LIST=/usr/share/amnesia/firstnames.txt
 # returns true with probability $1
 prob()
 {
-	# sh doesn't have $RANDOM, so we borrow it from bash
-	RANDOM="$(/bin/bash -c 'echo ${RANDOM}')"
+	# sh doesn't have bash's $RANDOM, so we implement it
+	RANDOM="$(expr $(od -Anv -N4 -tu4 /dev/urandom) % 32768)"
 	# we compare with > instead of <= due to mismatch between bash and bc
 	# on what values true and false have.
 	return $(echo "scale = 10; ${RANDOM}/32767 > ${1}" | bc)
@@ -16,7 +16,9 @@ prob()
 leet_nick()
 {
 	# we leave the first letter due to restrictions on nicks in IRC
-	echo "${1:0:1}$(echo ${1:1} | tr 'e' '3' | tr 'i' '1' | tr 'o' '0')"
+	first=$(expr substr ${1} 1 1)
+	rest=${1#?}
+	echo "${first}$(echo ${rest} | tr 'e' '3' | tr 'i' '1' | tr 'o' '0')"
 }
 
 generate_nick()
