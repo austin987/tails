@@ -440,7 +440,7 @@ sub display_output {
     my $scrolled_win_out = Gtk2::ScrolledWindow->new;
     $scrolled_win_out->set_policy('automatic', 'automatic');
     $scrolled_win_out->add($textview_out);
-    $msg_area->add($scrolled_win_out);
+    $msg_area->pack_start($scrolled_win_out, TRUE, TRUE, 0);
 
     if (defined $std_err && length($std_err)) {
         my $std_err_title = Gtk2::Label->new(
@@ -450,12 +450,12 @@ sub display_output {
             )));
         $std_err_title->set_alignment(0, 0);
         $std_err_title->set_padding(10, 0);
-        $msg_area->add($std_err_title);
+        $msg_area->pack_start($std_err_title, FALSE, FALSE, 0);
         my $std_err_text = Gtk2::Label->new($std_err);
         $std_err_text->modify_font($text_desc);
         $std_err_text->set_alignment(0, 0);
         $std_err_text->set_padding(10, 0);
-        $msg_area->add($std_err_text);
+        $msg_area->pack_start($std_err_text, FALSE, FALSE, 0);
     }
 
     $dialog->signal_connect(
