@@ -419,6 +419,8 @@ sub display_output {
         $main_window, 'destroy-with-parent', 'info', 'ok',
         $encoding->decode(gettext("GnuPG results"))
     );
+    my $my_width_request = 800;
+    my $my_height_request = 600;
     # TRANSLATORS: GnuPG stdout (encrypted or decrypted message)
     $dialog->format_secondary_text(sprintf($encoding->decode(gettext(
         "Here is the GnuPG output:"
@@ -461,7 +463,13 @@ sub display_output {
     $dialog->signal_connect(
         response => sub { my $self = shift; $self->destroy; }
     );
-    $dialog->set_size_request(800, 400);
+    my $screen_width = $dialog->get_screen()->get_width();
+    my $screen_height = $dialog->get_screen()->get_height();
+    if ($screen_width > $my_width_request || $screen_height > $my_height_request) {
+        $dialog->set_size_request($my_width_request, $my_height_request);
+    } else {
+        $dialog->maximize();
+    }
     $dialog->set_resizable(TRUE);
     $dialog->set_position('center');
     $dialog->show_all;
