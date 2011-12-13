@@ -74,8 +74,9 @@ my @pgp_headers   = (
 
 my $statusicon = build_statusicon();
 $statusicon->set_visible(TRUE);
+init_freshest_clipboard();
 init_icons_stock($icon_factory);
-detect_received(Gtk2::Clipboard->get(Gtk2::Gdk->SELECTION_CLIPBOARD));
+detect_received(freshest_clipboard());
 Gtk2->main;
 
 
@@ -90,6 +91,22 @@ sub all_clipboards {
         Gtk2::Gdk->SELECTION_CLIPBOARD,
         Gtk2::Gdk->SELECTION_PRIMARY
     );
+}
+
+{
+    my $freshest_clipboard;
+
+    sub init_freshest_clipboard {
+        $freshest_clipboard = Gtk2::Clipboard->get(Gtk2::Gdk->SELECTION_CLIPBOARD);
+    }
+
+    sub freshest_clipboard {
+        return $freshest_clipboard;
+    }
+
+    sub set_freshest_clipboard {
+        $freshest_clipboard = shift;
+    }
 }
 
 sub build_statusicon {
@@ -151,11 +168,7 @@ b) the "Artistic License" which comes with Perl.
 sub build_action_menu {
     my $action_menu = Gtk2::Menu->new;
 
-    my $text_type = detect_text_type(
-        get_validated_clipboard_text({
-            clipboards => [ Gtk2::Clipboard->get(Gtk2::Gdk->SELECTION_CLIPBOARD) ]
-        })
-    );
+    my $text_type = detect_text_type(get_validated_clipboard_text());
 
     if ($text_type eq 'text' or $text_type eq 'none') {
         my $mencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('En_crypt Clipboard')));
@@ -209,7 +222,6 @@ sub text_is_of_type {
 sub get_validated_clipboard_text {
     my $args = shift;
     my @valid_types;
-    my @clipboards;
 
     if (exists $args->{valid_types} && defined $args->{valid_types}) {
         @valid_types = @{ $args->{valid_types} };
@@ -218,22 +230,13 @@ sub get_validated_clipboard_text {
         @valid_types = all_text_types();
     }
 
-    if (exists $args->{clipboards} && defined $args->{clipboards}) {
-        @clipboards  = @{ $args->{clipboards} };
-    }
-    else {
-        @clipboards  = all_clipboards();
-    }
-
+    my $clipboard = freshest_clipboard();
     # Note: according to the GTK documentation, the wait_for_text method
     # is supposed to always returns UTF-8. But it seems like the Perl
     # bindings decode it and we get a string of chars instead of bytes.
-    my ($is_valid, $reason);
-    foreach (@clipboards) {
-        my $content = $_->wait_for_text;
-        ($is_valid, $reason) = text_is_of_type($content, @valid_types);
-        return ($content) if $is_valid;
-    }
+    my $content = $clipboard->wait_for_text;
+    my ($is_valid, $reason) = text_is_of_type($content, @valid_types);
+    return ($content) if $is_valid;
     return (0, $reason);
 }
 
@@ -508,16 +511,13 @@ sub update_icon {
 sub detect_received {
     my $clipboard = shift;
 
-    update_icon(
-        detect_text_type(
-            get_validated_clipboard_text({clipboards => [ $clipboard ]})
-        )
-    );
+    update_icon(detect_text_type(get_validated_clipboard_text()));
 }
 
 sub handle_clipboard_owner_change {
     my $clipboard = shift;
 
+    set_freshest_clipboard($clipboard);
     detect_received($clipboard);
 }
 
