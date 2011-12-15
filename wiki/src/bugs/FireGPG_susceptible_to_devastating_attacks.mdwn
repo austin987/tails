@@ -1,14 +1,16 @@
-[[!meta title="FireGPG"]]
+[[!meta title="FireGPG susceptible to devastating attacks"]]
 
 **FireGPG is no more shipped in Tails.**
 
 You should instead use:
 
-- Our custom GPG applet to [[encrypt text with a passphrase|encryption_and_privacy/openpgp_passphrase_encryption]]
-- Gedit to [[encrypt text with a public key|encryption_and_privacy/openpgp_with_gedit]]
+- our custom GPG applet to [[encrypt text with a passphrase|doc/encryption_and_privacy/openpgp_passphrase_encryption]]
+- the gedit text editor to [[encrypt text with a public key|doc/encryption_and_privacy/openpgp_with_gedit]]
 
-FireGPG susceptible to devastating JavaScript attacks
-=====================================================
+[[!toc levels=2]]
+
+Advisory
+========
 
 [FireGPG](http://getfirefox.com) is a Firefox addon that allows users to easily perform
 cryptographic actions on the contents of HTML pages, e.g. to verify
@@ -96,3 +98,57 @@ and "Verify" is made safe by change 4.  It may still be a good idea to
 remove these actions as well to further promote the use of the FireGPG
 Text editor for all cryptographic actions. If they are removed, points
 3 and 4 above become irrelevant and may be ignored.
+Per a discussion on #tor-dev and later #tails with rransom and katmagic it came
+to light that FireGPG may have a few serious security and anonymity issues
+(katmagic even claimed with "85%" certainty that these issues were among the
+main reasons FireGPG was discontinued):
+
+Sample attack
+=============
+
+    <html>
+    	<head>
+    		<script type="text/javascript">
+    			function decrypt() {
+    				var elem = document.getElementById("pgp_msg");
+    
+    				if (elem.innerHTML != elem.value) {
+    					elem.innerHTML = elem.value;
+    					alert(elem.value);
+    				}
+    			}
+    			window.setInterval(decrypt, 1000);
+    		</script>
+    	</head>
+    
+    	<body>
+    <textarea id="pgp_msg" style="height: 600px; width: 600px">
+    -----BEGIN PGP MESSAGE-----
+    <snip>
+    -----END PGP MESSAGE-----
+    </textarea>
+    	</body>
+    </html>
+
+A similar approach should also work for stealing a plaintext written in a text
+box before it's encrypted.
+
+Other ressources
+================
+
+- [[tor-talk] Tor Browser Bundle: PGP encryption
+  built-in?](http://www.mail-archive.com/tor-talk@lists.torproject.org/msg02105.html)
+  A thread on the [tor-talk] mailing list adressing the issues of including GPG
+  support inside a browser.
+
+- [Spoofing OpenPGP signatures against
+  FireGPG](http://lair.fifthhorseman.net/~dkg/firegpg-audit/spoof/)
+  Another possible attack on FireGPG.
+
+Other possible issues
+=====================
+
+If it is possible to use JavaScript to check signatures, an attacker could
+potentially learn the user's whole key chain by replaying messages and their
+signatures made by those key holders. This would give the attacker an awful lot
+of identifying bits of the user.
