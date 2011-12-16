@@ -274,10 +274,10 @@ sub choose_keys {
     my @keys      = @_;
 
     my $list = Gtk2::SimpleList->new (
-        gettext("Name")    => 'text',
-        gettext("Key ID")  => 'text',
-        gettext("Created") => 'text',
-        gettext("Expires") => 'text'
+        $encoding->decode(gettext("Name"))    => 'text',
+        $encoding->decode(gettext("Key ID"))  => 'text',
+        $encoding->decode(gettext("Created")) => 'text',
+        $encoding->decode(gettext("Expires")) => 'text'
         );
     $list->get_selection->set_mode('multiple') if $multi_sel;
     $list->get_selection->unselect_all;
@@ -285,12 +285,14 @@ sub choose_keys {
     foreach my $key (@keys) {
         # FIXME: show more than the first user id for keys, probably by using
         # Gtk2::TreeView instead of Gtk2::SimpleList
-        my $userid  = $key->user_ids->[0]->as_string;
-        my $keyid   = $key->short_hex_id;
-        my $created = $key->creation_date_string;
+        my $userid  = $encoding->decode($key->user_ids->[0]->as_string);
+        my $keyid   = $encoding->decode($key->short_hex_id);
+        my $created = $encoding->decode($key->creation_date_string);
         my $expiry  = $key->expiration_date_string;
-        if (!defined $expiry) {
-            $expiry = gettext("Never");
+        if (defined $expiry) {
+	    $expiry = $encoding->decode($expiry);
+	} else {
+            $expiry = $encoding->decode(gettext("Never"));
         }
         push @{$list->{data}}, [$userid, $keyid, $created, $expiry];
     }
@@ -306,10 +308,12 @@ sub choose_keys {
     $dialog->destroy;
     if ('ok' eq $ans) {
         if (@selection) {
-            return map { $list->{data}[$_][1] } @selection;
+            return map { $encoding->encode($list->{data}[$_][1]) } @selection;
         } else {
-            display_error(gettext("No keys selected"),
-                          gettext("You must select at least one key."));
+            display_error($encoding->decode(gettext("No keys selected")),
+                          $encoding->decode(gettext(
+                              "You must select at least one key."
+                                           )));
             return choose_keys($title, $multi_sel, @keys);
         }
     } else {
@@ -322,13 +326,16 @@ sub set_recipients {
 
     my @keys = $gnupg->get_public_keys();
     if (@keys == 0) {
-        display_error(gettext("No public keys available"),
-                      gettext("You need public keys to be able to encrypt " .
-			      "messages."));
+        display_error($encoding->decode(gettext("No public keys available")),
+                      $encoding->decode(gettext(
+                          "You need public keys to be able to encrypt messages."
+                                       )));
         return 0;
     }
 
-    my @recipients = choose_keys(gettext("Choose recipient keys"), TRUE, @keys);
+    my @recipients = choose_keys($encoding->decode(gettext(
+                                     "Choose recipient keys"
+                                                  )), TRUE, @keys);
 
     if (!@recipients) {
         return 0;
@@ -346,16 +353,17 @@ sub set_signer {
     my @signer;
 
     if (@keys == 0) {
-        display_error(gettext("No private key available"),
-                      gettext("You need a private key to be able to sign " .
-                              "messages."));
+        display_error($encoding->decode(gettext("No private key available")),
+                      $encoding->decode(gettext(
+                          "You need a private key to be able to sign messages."
+                                       )));
         return 0;
     } elsif (@keys == 1) {
         @signer = $keys[0]->short_hex_id;
     }
     else {
-        @signer = choose_keys(gettext("Choose signing key"), FALSE,
-                              @keys);
+        @signer = choose_keys($encoding->decode(gettext("Choose signing key")),
+                              FALSE, @keys);
         if (!@signer) {
             return 0;
         }
