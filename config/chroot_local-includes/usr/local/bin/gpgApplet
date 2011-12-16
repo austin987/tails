@@ -312,7 +312,7 @@ sub choose_keys {
     $dialog->destroy;
     if ('ok' eq $ans) {
         if (@selection) {
-            return map { $encoding->encode($fingerprints[$_]) } @selection;
+            return map { $fingerprints[$_] } @selection;
         } else {
             display_error($encoding->decode(gettext("No keys selected")),
                           $encoding->decode(gettext(
@@ -341,9 +341,7 @@ sub set_recipients {
                                      "Choose recipient keys"
                                                   )), TRUE, @keys);
 
-    if (!@recipients) {
-        return 0;
-    }
+    return 0 unless @recipients;
 
     $gnupg->options->clear_recipients();
     $gnupg->options->push_recipients(@recipients);
@@ -368,8 +366,7 @@ sub set_signer {
     else {
         @signer = choose_keys($encoding->decode(gettext("Choose signing key")),
                               FALSE, @keys);
-        if (!@signer) {
-            return 0;
+        return 0 unless @signer;
         }
     }
 
@@ -382,9 +379,7 @@ sub encrypt {
     my $gnupg   = $args->{gnupg};
     my $handles = $args->{handles};
 
-    if (!set_recipients($gnupg)) {
-        return 0;
-    }
+    return 0 unless set_recipients($gnupg);
 
     return $gnupg->encrypt(handles => $handles);
 }
@@ -394,9 +389,7 @@ sub sign {
     my $gnupg   = $args->{gnupg};
     my $handles = $args->{handles};
 
-    if (!set_signer($gnupg)) {
-        return 0;
-    }
+    return 0 unless set_signer($gnupg);
 
     return $gnupg->clearsign(handles => $handles);
 }
@@ -406,9 +399,7 @@ sub sign_and_encrypt {
     my $gnupg   = $args->{gnupg};
     my $handles = $args->{handles};
 
-    if (!set_signer($gnupg) || !set_recipients($gnupg)) {
-        return 0;
-    }
+    return 0 unless (set_signer($gnupg) && set_recipients($gnupg));
 
     return $gnupg->sign_and_encrypt(handles => $handles);
 }
@@ -458,10 +449,7 @@ sub gpg_operate_on_text {
         out_h   => $out_h,
     };
 
-    my $pid = $operation->($args);
-    if (!$pid) {
-        return;
-    }
+    my $pid = $operation->($args) or return;
 
     # We assume the sender/recipient uses the same charset as us :/
     # PGP/MIME was invented for a reason.
