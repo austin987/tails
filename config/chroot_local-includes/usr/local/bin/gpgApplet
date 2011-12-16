@@ -174,16 +174,16 @@ sub build_action_menu {
     my $text_type = detect_text_type(get_validated_clipboard_text());
 
     if ($text_type eq 'text' or $text_type eq 'none') {
-        my $msymencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('S_ymmetrically Encrypt Clipboard')));
+        my $msymencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('Encrypt Clipboard with _Passphrase')));
         $msymencrypt->signal_connect('activate' => sub { operate_on_clipboard(\&symmetric_encrypt, ['text']); });
         $action_menu->append($msymencrypt);
-        my $mencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('_Encrypt Clipboard')));
+        my $mencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('_Encrypt Clipboard with Public Key')));
         $mencrypt->signal_connect('activate' => sub { operate_on_clipboard(\&encrypt, ['text']); });
         $action_menu->append($mencrypt);
-        my $msign    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('_Sign Clipboard')));
+        my $msign    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('_Sign Clipboard with Public Key')));
         $msign->signal_connect('activate' => sub { operate_on_clipboard(\&sign, ['text']); });
         $action_menu->append($msign);
-        my $msignencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('Sign _and Encrypt Clipboard')));
+        my $msignencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('Sign _and Encrypt Clipboard with Public Key')));
         $msignencrypt->signal_connect('activate' => sub { operate_on_clipboard(\&sign_and_encrypt, ['text']); });
         $action_menu->append($msignencrypt);
     }
