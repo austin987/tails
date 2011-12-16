@@ -281,20 +281,24 @@ sub choose_keys {
         );
     $list->get_selection->set_mode('multiple') if $multi_sel;
     $list->get_selection->unselect_all;
+    my @fingerprints;
 
-    foreach my $key (@keys) {
+    for (my $i = 0; $i < @keys; $i++) {
+        my $key         = $keys[$i];
         # FIXME: show more than the first user id for keys, probably by using
         # Gtk2::TreeView instead of Gtk2::SimpleList
-        my $userid  = $encoding->decode($key->user_ids->[0]->as_string);
-        my $keyid   = $encoding->decode($key->short_hex_id);
-        my $created = $encoding->decode($key->creation_date_string);
-        my $expiry  = $key->expiration_date_string;
+        my $userid      = $encoding->decode($key->user_ids->[0]->as_string);
+        my $keyid       = $encoding->decode($key->short_hex_id);
+        my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
+        my $created     = $encoding->decode($key->creation_date_string);
+        my $expiry      = $key->expiration_date_string;
         if (defined $expiry) {
-	    $expiry = $encoding->decode($expiry);
-	} else {
+            $expiry = $encoding->decode($expiry);
+        } else {
             $expiry = $encoding->decode(gettext("Never"));
         }
-        push @{$list->{data}}, [$userid, $keyid, $created, $expiry];
+        $list->{data}[$i] = [$userid, $fingerprint, $created, $expiry];
+        $fingerprints[$i] = $fingerprint;
     }
 
     my $dialog = Gtk2::Dialog->new($title, $main_window, 'destroy-with-parent',
@@ -308,7 +312,7 @@ sub choose_keys {
     $dialog->destroy;
     if ('ok' eq $ans) {
         if (@selection) {
-            return map { $encoding->encode($list->{data}[$_][1]) } @selection;
+            return map { $encoding->encode($fingerprints[$_]) } @selection;
         } else {
             display_error($encoding->decode(gettext("No keys selected")),
                           $encoding->decode(gettext(
