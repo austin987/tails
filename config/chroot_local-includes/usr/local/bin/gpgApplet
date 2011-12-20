@@ -297,7 +297,10 @@ sub choose_keys {
         } else {
             $expiry = $encoding->decode(gettext("Never"));
         }
-        $list->{data}[$i] = [$userid, $keyid, $created, $expiry];
+        $list->{data}[$i] = [$encoding->encode($userid),
+                             $encoding->encode($keyid),
+                             $encoding->encode($created),
+                             $encoding->encode($expiry)];
         $fingerprints[$i] = $fingerprint;
     }
 
