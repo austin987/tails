@@ -1,0 +1,14 @@
+Tor 0.2.2.35 fixes a critical heap-overflow security issue in Tor's buffers code. Absolutely everybody should upgrade.
+
+The bug relied on an incorrect calculation when making data continuous in one of our IO buffers, if the first chunk of the buffer was misaligned by just the wrong amount. The miscalculation would allow an attacker to overflow a piece of heap-allocated memory. To mount this attack, the attacker would need to either open a SOCKS connection to Tor's SocksPort (usually restricted to localhost), or target a Tor instance configured to make its connections through a SOCKS proxy (which Tor does not do by default).
+
+Good security practice requires that all heap-overflow bugs should be presumed to be exploitable until proven otherwise, so we are treating this as a potential code execution attack. Please upgrade immediately!
+This bug does not affect bufferevents-based builds of Tor. 
+
+Special thanks to "Vektor" for reporting this issue to us!
+
+https://blog.torproject.org/
+
+> Tails is *not* affected by that bug.
+
+[[done]]
