@@ -7,14 +7,14 @@ update-rc.d tails-detect-virtualization start 17 S .
 update-rc.d tails-kexec                    stop 85 0 6 .
 update-rc.d tails-wifi start 17 S .
 update-rc.d memlockd start 22 2 3 4 5 .
-update-rc.d tails-sdmem-on-media-removal start 23 2 3 4 5 . stop 01 0 6
+update-rc.d tails-wipe-memory-on-media-removal start 23 2 3 4 5 . stop 01 0 6
 update-rc.d tails-reconfigure-kexec defaults
 update-rc.d tails-reconfigure-memlockd defaults
 
 # we run Tor ourselves after HTP via NetworkManager hooks
 update-rc.d tor disable
 
-# we reboot/halt using kexec->sdmem
+# we reboot/halt using kexec
 update-rc.d -f halt   remove
 update-rc.d -f reboot remove
 
