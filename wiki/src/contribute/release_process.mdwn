@@ -119,7 +119,7 @@ Third, generate detached GnuPG signatures for every published image,
 in the same directory as the image and with a `.pgp` extension; e.g.
 
 	gpg --armor --default-key BE2CD9C1 --detach-sign *.iso
-	ls --color=never -1 *.asc | while read asc ; do mv $asc ${asc%%.asc}.pgp ; done
+	rename 's,\.asc$,.pgp,' *.asc
 
 Fourth, create a `.torrent` file for every directory to be published:
 
@@ -136,7 +136,7 @@ Sixth, generate detached GnuPG signatures for every published
 
 	gpg --armor --default-key BE2CD9C1 --detach-sign \
 	  tails-i386-0.7.torrent
-	ls --color=never -1 *.asc | while read asc ; do mv $asc ${asc%%.asc}.pgp ; done
+	rename 's,\.asc$,.pgp,' *.asc
 
 Upload images
 =============
