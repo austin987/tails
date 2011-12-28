@@ -9,12 +9,15 @@
 # Description:          Reconfigure memlockd depending on running kernel
 ### END INIT INFO
 
+PATH="/usr/local/bin:${PATH}"
 MEMLOCKD_CONF=/etc/memlockd.cfg
 
 case "$1" in
   start)
-	/usr/local/bin/tails-get-bootinfo kernel >> "$MEMLOCKD_CONF"
-	/usr/local/bin/tails-get-bootinfo initrd >> "$MEMLOCKD_CONF"
+	tails-boot-to-kexec kernel $(tails-get-bootinfo kernel) \
+		>> "$MEMLOCKD_CONF"
+	tails-boot-to-kexec initrd $(tails-get-bootinfo initrd) \
+		>> "$MEMLOCKD_CONF"
 	service memlockd restart
 	;;
   *)
