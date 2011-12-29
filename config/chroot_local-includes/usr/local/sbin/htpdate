@@ -241,12 +241,14 @@ sub adjustDate {
                 error "An error occured setting the time\n@output";
             }
             close($fd);
-            open my $res_h, '>>', $res_file or die "Cannot open res file $res_file: $!";
-            print $res_h "$diff\n";
-            close $res_h;
             $> = getpwnam($opt_u) if $opt_u;
         }
     }
+    $> = 0 if $opt_u;
+    open my $res_h, '>>', $res_file or die "Cannot open res file $res_file: $!";
+    print $res_h "$diff\n";
+    close $res_h;
+    $> = getpwnam($opt_u) if $opt_u;
 }
 
 my @urls = parseCommandLine();
