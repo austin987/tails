@@ -27,7 +27,7 @@ LOG=/var/log/$NAME.log
 
 # Create status directory and log file
 install -o root -g root -m 0755 -d ${HTP_DIR}
-install -o htp -g nogroup -m 0644 /dev/null ${LOG}
+install -o root -g nogroup -m 0644 /dev/null ${LOG}
 
 # Source configuration
 . /etc/default/$NAME
@@ -52,7 +52,6 @@ do_start() {
 		-l "$LOG" \
 		-a "$HTTP_USER_AGENT" \
 		-p \
-		-u htp \
 		-T "$HTP_SUCCESS_FILE" \
 		$HTP_POOL
 }
