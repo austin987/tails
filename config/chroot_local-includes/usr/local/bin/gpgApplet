@@ -38,6 +38,7 @@ use GnuPG::Interface;
 use IO::Handle;
 use I18N::Langinfo qw{langinfo CODESET};
 use List::MoreUtils qw{none};
+use Switch;
 
 use Locale::gettext;
 use POSIX;
@@ -268,6 +269,27 @@ sub set_clipboards_text {
     close $xclip or die "Error closing pipe to xclip";
 }
 
+sub explain_validity {
+    my $code = shift;
+    my $ret;
+    say $code;
+    # Below taken from doc/DETAILS in GnuPG's sources
+    switch ($code) {
+        case "o" { $ret = gettext("Unknown Trust"); }
+        case "-" { $ret = gettext("Unknown Trust"); }
+        case "q" { $ret = gettext("Unknown Trust"); }
+        case "i" { $ret = gettext("Invalid Key"); }
+        case "r" { $ret = gettext("Revoked Key"); }
+        case "e" { $ret = gettext("Expired Key"); }
+        case "n" { $ret = gettext("Do not Trust"); }
+        case "m" { $ret = gettext("Marginal Trust"); }
+        case "f" { $ret = gettext("Full Trust"); }
+        case "u" { $ret = gettext("Ultimate Trust"); }
+        else     { $ret = $code; }
+    }
+    return $encoding->decode($ret);
+}
+
 sub choose_keys {
     my $title     = shift;
     my $multi_sel = shift;
@@ -276,6 +298,7 @@ sub choose_keys {
     my $list = Gtk2::SimpleList->new (
         $encoding->decode(gettext("Name"))    => 'text',
         $encoding->decode(gettext("Key ID"))  => 'text',
+        $encoding->decode(gettext("Status"))  => 'text',
         $encoding->decode(gettext("Created")) => 'text',
         $encoding->decode(gettext("Expires")) => 'text'
         );
@@ -289,6 +312,7 @@ sub choose_keys {
         # Gtk2::TreeView instead of Gtk2::SimpleList
         my $userid      = $encoding->decode($key->user_ids->[0]->as_string);
         my $keyid       = $encoding->decode($key->short_hex_id);
+        my $status      = explain_validity($key->user_ids->[0]->validity);
         my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
         my $created     = $encoding->decode($key->creation_date_string);
         my $expiry      = $key->expiration_date_string;
@@ -299,6 +323,7 @@ sub choose_keys {
         }
         $list->{data}[$i] = [$encoding->encode($userid),
                              $encoding->encode($keyid),
+                             $encoding->encode($status),
                              $encoding->encode($created),
                              $encoding->encode($expiry)];
         $fingerprints[$i] = $fingerprint;
