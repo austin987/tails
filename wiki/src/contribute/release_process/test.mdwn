@@ -69,6 +69,37 @@ Check the output for:
    IPv6-enabled server on its IPv6 address over TCP and icmp6.
 * is `/etc/resolv.conf` OK both before/after DHCP has been setup? it should
   *always* read `nameserver 127.0.0.1`
+* verify that all destinations reached from an intensive Tails session
+  are tor routers or authorities: Boot Tails without the network
+  in. Start dumping your whole session's network activity with `sudo
+  tcpdump -i any -w dump` (or better, do the dump on another machine,
+  or on the host OS if Tails is running in a VM). Next, plug the
+  network and do *a lot* of network stuff (why not run do this while
+  doing all the other tests?). Then check that all destinations,
+  e.g. by using tshark and the script below:
+
+(ignore this line, ikiwiki is buggy...)
+
+    DESCRIPTORS=/var/lib/tor/cached-descriptors
+    # Note that these default directory authorities may change! To be
+    # sure, check in Tor's source, src/or/config.c:~900
+    DIR_AUTHS="
+    128.31.0.39 86.59.21.38 194.109.206.212 82.94.251.203 216.224.124.114
+    212.112.245.170 193.23.244.244 208.83.223.34 213.115.239.118"
+    tshark -r dump -T fields -e ip.dst | sort | uniq | \
+    while read x; do
+        ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
+        if echo ${DIR_AUTHS} | grep -qe ${ip_expr}; then
+            continue
+        fi
+        if ! grep -qe "^router [^ ]\+ ${ip_expr}" ${DESCRIPTORS}; then
+            echo "${x} is bad"
+        fi
+    done
+
+  Note that this script will produce some false positives, like your
+  gateway, broadcasts, etc. Also note that running I2P during these
+  test will list every I2P peer as "bad", so that is not recommended.
 
 # Use of untrusted partitions
 
