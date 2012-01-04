@@ -382,7 +382,9 @@ heavily restricted by a firewall:
 - All non-TCP transport layer protocols SHOULD be dropped as they are
   not supported by the Tor network.
 - All TCP traffic not explicitly targeting Tor SHOULD be redirected to
-  the transparent proxy (i.e. to the `TransPort` as set in `torrc`).
+  the transparent proxy (i.e. to the `TransPort` as set in `torrc`);
+  alternatively this traffic SHOULD be dropped (then only applications
+  explicitly configured to use Tor will reach the Internet).
 - All DNS lookups SHOULD be made through the Tor network (i.e.
   redirected to `DNSPort` as set in `torrc`).
 - All IPv6 traffic SHOULD be forbidden as it is not supported by the Tor
@@ -501,13 +503,22 @@ practices: digests, ciphers and key sizes.
 
 #### 2.6.3.5 Tor
 
-Tor SHOULD be setup to enable its DNS server (`DNSPort`) and
-transparent proxy (`TransPort`, `TransListen`) so the functionality
-specified in the network section is covered. Only stable releases
-SHOULD be considered since Tor really is at the core of the PELD. Also,
-while there are many other interesting configuration possibilities in
-the Tor manual, care MUST be taken to avoid those that may impair
-anonymity or security.
+Only stable releases SHOULD be considered since Tor really is at the
+core of the PELD.
+
+Tor SHOULD be setup to enable its DNS server (`DNSPort`) to allow DNS
+lookups through the Tor network; alternatively a local DNS server can
+be configured to use Tor.
+
+If transparent proxying (as opposed to dropping non-Tor traffic) was
+chosen in the network section, then Tor MUST be setup to enable its
+transparent proxy (`TransPort`, `TransListen`); alternatively any
+transparent proxy configured to use Tor as the parent proxy can be
+used.
+
+While there are many other interesting configuration possibilities
+decrobed in the Tor manual, care MUST be taken to avoid those that may
+impair anonymity or security.
 
 A GUI Tor controller application such as Vidalia or TorK is highly
 RECOMMENDED. However, this requires opening the control port in Tor,
@@ -831,14 +842,15 @@ those are mainly for usability issues and similar.
 
 The Tor software is currently configured as a client only (onion
 proxy). The client listens on SOCKS port 9050 with a control port 9051
-(using cookie authentication), as a transparent proxy on port 9040 and
-as a DNS server on port 8853. Only connections from localhost are
-accepted. It can be argued that running a Tor server (onion router)
-would increase one's anonymity for a number for reasons but we still
-feel that most users probably would not want this due to the added
-consumption of bandwidth. The user can nevertheless easily choose to
-turn his or her Tor client into a relay, thanks to the Vidalia
-graphical user interface.
+(using cookie authentication), as a transparent proxy on port 9040
+(only used for remapped hidden services) and as a DNS server on port
+8853. Only connections from localhost are accepted. It can be argued
+that running a Tor server (onion router) would increase one's
+anonymity for a number for reasons but we still feel that most users
+probably would not want this due to the added consumption of
+bandwidth. The user can nevertheless easily choose to turn his or her
+Tor client into a relay, thanks to the Vidalia graphical user
+interface.
  
 - [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]
 
@@ -903,11 +915,8 @@ Removable drives auto-mounting is disabled in Tails 0.7 and newer.
 
 Securely erasing files and free disk space is made easy by integrating
 [secure-delete](http://www.thc.org) tools into the Nautilus file
-manager.
-
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/nautilus-sfill]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/nautilus-wipe]]
-- [[!tails_gitweb config/chroot_local-includes/lib/live/config/202-localize]]
+manager, thanks to [Nautilus
+Wipe](http://wipetools.tuxfamily.org/nautilus-wipe.html).
 
 ### 3.6.12 Passwords
 
@@ -949,15 +958,14 @@ will be possible afterwards.
 Firefox, that is shipped by Debian and thus by Tails.)
 
 Iceweasel uses the Torbutton extension in order to prevent attacks
-using JavaScript,
-plugins and other non-HTTP features like web bugs. It is configured to
-always be enabled on Iceweasel start and uses polipo as HTTP(s) proxy
-and Tor as SOCKS proxy. SOCKS is configured to perform name resolution
-through this proxy. Iceweasel is also configured to not cache to disk
-(mainly to reduce memory usage for CD users as disk writes will be
-stored there), history is disabled (just in case) and many other
-things. It is also setup not to automatically check for updates of its
-installed extensions. Java support is disabled.
+using JavaScript, plugins and other non-HTTP features like web
+bugs. It is configured to always be enabled on Iceweasel start and
+uses Tor as SOCKS5 proxy. SOCKS is configured to perform name
+resolution through this proxy. Iceweasel is also configured to not
+cache to disk (mainly to reduce memory usage for CD users as disk
+writes will be stored there), history is disabled (just in case) and
+many other things. It is also setup not to automatically check for
+updates of its installed extensions. Java support is disabled.
 
 Iceweasel is shipped with some extensions to help users manage their
 browsing experience. The Torbutton settings treat all cookies as
@@ -967,9 +975,7 @@ extension provides more
 fine-grained cookie control for users who need it. This prevents the
 known leak of browsing informations cookies can lead to. The [Adblock
 plus](https://addons.mozilla.org/fr/firefox/addon/1865/) extension
-protects against many tracking possibilities by removing most ads. The
-[FireGPG](http://getfiregpg.org/) plugin allows users to use GnuPG
-inside websites such as webmails.
+protects against many tracking possibilities by removing most ads.
 
 Tails ships the [HTTPS
 Everywhere](https://www.eff.org/https-everywhere) extension that
@@ -1036,14 +1042,14 @@ name when answering to CTCP requests.
 
 ### 3.6.16 GnuPG
 
-All GnuPG tools (namely: GPG itself, Seahorse and FireGPG) are
+All GnuPG tools (namely: GPG itself and Seahorse) are
 configured to use the keys.indymedia.org hidden-service keyserver (`hkp://2eghzlv2wwcq7u7y.onion`) since:
 
 - it is run by privacy-friendly people who go as far as providing a
   Tor hidden service;
 - it is well-synchronized with the HKP keyservers pool.
 
-GPG itself and FireGPG are configured to connect to this keyserver
+GPG is configured to connect to this keyserver
 over a TLS encrypted tunnel (`hkps://`). On the other hand Seahorse
 [[does not support hkps|bugs/seahorse_does_not_support_hkps]] so it is
 using cleartext `hkp://` instead.

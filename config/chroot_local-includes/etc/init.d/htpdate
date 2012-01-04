@@ -47,15 +47,36 @@ log() {
 }
 
 do_start() {
+	if [ -e "$PIDFILE" ]; then
+		rm -f "$PIDFILE"
+	fi
+
+	if [ -e "$HTP_SUCCESS_FILE" ]; then
+		rm -f "$HTP_SUCCESS_FILE"
+	fi
+
 	start-stop-daemon -S -q -p ${PIDFILE} -bm -x /usr/local/sbin/htpdate -- \
 		-d \
 		-l "$LOG" \
 		-a "$HTTP_USER_AGENT" \
-		-f \
 		-p \
 		-u htp \
 		-T "$HTP_SUCCESS_FILE" \
 		$HTP_POOL
+	ret=$?
+
+	# Get LIVE_USERNAME
+	. /etc/live/config.d/username
+
+	# Show notification
+	export DISPLAY=':0.0'
+	export XAUTHORITY="$(echo /var/run/gdm3/auth-for-$LIVE_USERNAME-*/database)"
+	exec /bin/su -c /usr/local/bin/tails-htp-notify-user "$LIVE_USERNAME" &
+
+	sleep 3
+	chmod a+r ${PIDFILE}
+
+	return ${ret}
 }
 
 do_stop() {
