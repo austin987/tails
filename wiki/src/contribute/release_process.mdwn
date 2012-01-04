@@ -10,23 +10,6 @@ See [[release_process/Debian_security_updates]].
 Update included files
 =====================
 
-Website
--------
-
-Merge the `master` branch into the one used to build the release.
-
-### version number
-
-In the branch used to build the release, update the `inc/*` files to
-match the *version number* and *date* of the new release. Don't update
-`/inc/stable_i386_hash.html` since the hash can't be computed yet.
-
-### design documentation
-
-	git grep PENDING wiki/src/contribute/design*
-
-... and remove the `PENDING-FOR-N.M` warnings.
-
 AdBlock patterns
 ----------------
 
@@ -38,8 +21,8 @@ upgrade i2p
 
 See [[todo/upgrade i2p]].
 
-Update Changelog
-================
+Changelog
+---------
 
 	./release NEW_VERSION PREVIOUS_RELEASED_TAG
 
@@ -67,6 +50,27 @@ Now cleanup some parts of it (semi-)automatically:
 
 ... then launch an editor for the needed cleanup of the result.
 
+included website
+----------------
+
+Merge the `master` branch into the one used to build the release.
+
+### version number
+
+In the branch used to build the release, update the `inc/*` files to
+match the *version number* and *date* of the new release. Don't update
+`/inc/stable_i386_hash.html` since the hash can't be computed yet.
+
+### features and design documentation
+
+Read the Changelog carefully, and update the [[contribute/design]] and
+[[doc/about/features]] pages accordingly.
+
+Also:
+
+	git grep PENDING wiki/src/contribute/design*
+
+... and remove the `PENDING-FOR-N.M` warnings.
 
 Build images
 ============
@@ -119,7 +123,7 @@ Third, generate detached GnuPG signatures for every published image,
 in the same directory as the image and with a `.pgp` extension; e.g.
 
 	gpg --armor --default-key BE2CD9C1 --detach-sign *.iso
-	ls --color=never -1 *.asc | while read asc ; do mv $asc ${asc%%.asc}.pgp ; done
+	rename 's,\.asc$,.pgp,' *.asc
 
 Fourth, create a `.torrent` file for every directory to be published:
 
@@ -136,7 +140,7 @@ Sixth, generate detached GnuPG signatures for every published
 
 	gpg --armor --default-key BE2CD9C1 --detach-sign \
 	  tails-i386-0.7.torrent
-	ls --color=never -1 *.asc | while read asc ; do mv $asc ${asc%%.asc}.pgp ; done
+	rename 's,\.asc$,.pgp,' *.asc
 
 Upload images
 =============
