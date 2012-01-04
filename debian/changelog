@@ -1,9 +1,10 @@
-tails (0.10~rc1) unstable; urgency=low
+tails (0.10) unstable; urgency=low
 
   * Tor: upgrade to 0.2.2.35-1.
 
   * Iceweasel
   - Install Iceweasel 9.0 from the Debian Mozilla team's APT repository.
+  - Update Torbutton to 1.4.5.1-1.
   - Support viewing any YouTube video that is available in HTML5 format:
     install xul-ext-greasemonkey and the "Permanently Enable HTML5 on
     YouTube" GreaseMonkey script.
@@ -21,9 +22,10 @@ tails (0.10~rc1) unstable; urgency=low
   - Disable third-party cookies.
     They can be used to track users, which is bad. Besides, this is what
     TBB has been doing for years.
+  - FoxyProxy: allow direct connections to RFC1918 IPs.
 
   * Do not transparent proxy outgoing Internet connections through Tor.
-  - Torify the SSH client using connect-proxy.
+  - Torify the SSH client using connect-proxy to all IPs but RFC1918 ones.
   - Torify APT using Polipo HTTP.
   - Torify wget in wgetrc.
   - Torify gobby clients using torsocks. It does not support proxies yet.
@@ -34,7 +36,7 @@ tails (0.10~rc1) unstable; urgency=low
   - Upgrade Vidalia to 0.2.15-1+tails1.
     · New upstream release.
     · Do not warn about Tor version.
-  - Upgrade MAT to 0.2-1.
+  - Upgrade MAT to 0.2.2-1~bpo60+1.
   - Upgrade VirtualBox guest software to 4.1.6-dfsg-2~bpo60+1,
     built against the ABI of X.Org backports.
   - Upgrade I2P to 0.8.11 using KillYourTV's Squeeze packages;
@@ -89,11 +91,17 @@ tails (0.10~rc1) unstable; urgency=low
   - Make vidalia NM hook sleep only if Vidalia is already running.
   - Reintroduce the htpdate notification, telling users when it's safe
     to use Tor Hidden Services.
+  - htpdate: omit -f argument to not download full pages.
+  - htpdate: write success file even when not within {min,max}adjust.
+    Otherwise htpdate will not "succeed" when the time diff is 0 (i.e.
+    the clock was already correct) so the success file cannot be used
+    as an indicator that the system time now is correct, which arguably
+    is its most important purpose.
 
   * Build system
   - Name built images according to git tag.
 
- -- intrigeri <intrigeri+debian@boum.org>  Mon, 26 Dec 2011 11:41:28 +0100
+ -- Tails developers <tails@boum.org>  Wed, 04 Jan 2012 09:56:38 +0100
 
 tails (0.9) unstable; urgency=low
 
