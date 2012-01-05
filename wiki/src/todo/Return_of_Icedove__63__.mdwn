@@ -27,6 +27,20 @@ Cons
 
 I think implementing the [[todo/easy_MUA_configuration]] is pretty far from trivial, at least if we want it to be as easy as Icedove's account creation guide, which brings that whole idea into question. Maybe a better approach would be to write an addon for Icedove that alters the account creation process (if that is possible -- I have no insight in how much addons can do)? It'd give the user some use case specific information, e.g. to not use a non-anonymous email account, and also implement the other ideas from [[todo/easy_MUA_configuration]]. And it would disallow plaintext plaintext POP/IMAP/SMTP.
 
+Design decisions
+================
+
+* Trying to hide we use Icedove seem unrealistic and/or impractical
+  a goal, at least to start with. Therefore, we'll ignore tagnaq's
+  suggestions whose single aim is that one. E.g. we won't encourage
+  people to use PGP-inline.
+
+* Our Iceweasel says it prefers English. It does not try to pretend it
+  has no locale. Our Icedove shall do the same. So we will keep
+  `mailnews.reply_header_authorwrote` default value (that is, `%s
+  wrote` and will ignore tagnaq's suggestion on this; details: [doc on
+    reply_header_](http://kb.mozillazine.org/Reply_header_settings)
+
 Things to implement
 ===================
 
@@ -49,11 +63,7 @@ Things to be checked / researched
   SSL? any information leak?) -> it's ugly:
   https://bugzilla.mozilla.org/show_bug.cgi?id=664633
 * general privacy/anonymity issues: [tagnaq's
-  paper](http://bit.ly/qDZm7C); some of its recommendations need to be
-  discussed: [[!tag todo/discuss]]
-  - do we really want to encourage people to use PGP-inline?
-  - `mailnews.reply_header_authorwrote = %s` is uncommon, see [the doc on
-    reply_header_](http://kb.mozillazine.org/Reply_header_settings)
+  paper](http://bit.ly/qDZm7C)
 
 found answers
 -------------
