@@ -14,6 +14,7 @@ NAME=htpdate
 SCRIPTNAME=/etc/init.d/$NAME
 HTP_DIR=/var/run/$NAME
 PIDFILE=$HTP_DIR/pid
+HTP_DONE_FILE=$HTP_DIR/done
 HTP_SUCCESS_FILE=$HTP_DIR/success
 LOG=/var/log/$NAME.log
 
@@ -47,15 +48,33 @@ log() {
 }
 
 do_start() {
+	if [ -e "$HTP_DONE_FILE" ]; then
+		rm -f "$HTP_DONE_FILE"
+	fi
+
+	if [ -e "$HTP_SUCCESS_FILE" ]; then
+		rm -f "$HTP_SUCCESS_FILE"
+	fi
+
 	start-stop-daemon -S -q -p ${PIDFILE} -bm -x /usr/local/sbin/htpdate -- \
 		-d \
 		-l "$LOG" \
 		-a "$HTTP_USER_AGENT" \
-		-f \
 		-p \
 		-u htp \
+		-D "$HTP_DONE_FILE" \
 		-T "$HTP_SUCCESS_FILE" \
 		$HTP_POOL
+	ret=$?
+
+	# Get LIVE_USERNAME
+	. /etc/live/config.d/username
+
+	# Show notification
+	export DISPLAY=':0.0'
+	export XAUTHORITY="$(echo /var/run/gdm3/auth-for-$LIVE_USERNAME-*/database)"
+	exec /bin/su -c /usr/local/bin/tails-htp-notify-user "$LIVE_USERNAME" &
+	return ${ret}
 }
 
 do_stop() {
