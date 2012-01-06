@@ -6,7 +6,7 @@ Tor (and I2P) sometimes freaks out if they detect too large clock
 skews. It is therefore important for us to ensure that Tails some how
 automatically syncs the system time at start in a safe manner.
 
-We are worried about unauthenticated NTP. There probably is a
+We are worried about unauthenticated [[NTP]]. There probably is a
 whole bunch of fingerprinting attacks an attacker could mount if it
 could pose as the NTP server and mess with the user's time. We
 therefore want to be able to *authenticate* the servers that provide
@@ -23,16 +23,15 @@ using Tor so we can make Tor usable.
 
 In short this is how time syncing is performed when Tails starts:
 
-0. Run tordate, which does the following:
-  0. Start Tor in order to fetch a consensus.
-  0. If Tor cannot verify the consensus we assume it is because the
-     time is so badly off that the authority certificate are not valid
-     any more so we set the system time to the Tails release date,
-     which will guarantee that the certificates are valid. Then we
-     restart Tor and hope we get a verifiable consensus this time.
-  0. Set the system time to an initial "guess" based on the Tor
-     consensus validity period.
-  0. Restart Tor, which now should be working.
+0. Start Tor in order to fetch a consensus.
+0. If Tor cannot verify the consensus we assume it is because the time
+   is so badly off that the authority certificate are not valid any
+   more so we set the system time to the Tails release date, which
+   will guarantee that the certificates are valid. Then we restart Tor
+   and hope we get a verifiable consensus this time.
+0. Set the system time to an initial "guess" based on the Tor
+   consensus validity period.
+0. Restart Tor, which now should be working.
 0. Run HTP (see below) through Tor to get a more correct system time.
 
 A notification is shown while HTP is running informing the user that
@@ -40,11 +39,11 @@ Tor may not function properly before it has finished (e.g. hidden
 services running Tor prior to version 0.2.3.7-alpha requires clients
 to have a time that is no more than 30 minutes incorrect).
 
-# tordate
+# Guessing time based on Tor consensus
 
-tordate originates from Liberte Linux and uses Tor's consensus file to
-initially roughly set the time. The consensus file contains such
-information:
+This idea originates from Liberte Linux' `tordate` script which uses
+Tor's consensus file to initially roughly set the time. The consensus
+file contains such information:
 
 	valid-after 2010-12-27 16:00:00
 	valid-until 2010-12-27 19:00:00
@@ -111,7 +110,7 @@ being.
 
 As what follows clearly shows, the upstream HTP has quite a few
 drawbacks that make it unfit for our needs. That's why Tails uses a
-custom version of the Perl HTP client into [[!tails_gitweb /usr/local/sbin/htpdate]].
+custom version of the Perl HTP client into `/usr/local/sbin/htpdate`.
 The repository we copied this script from can be found there:
 
     git://git.immerda.ch/tails_htp.git
@@ -162,10 +161,11 @@ the HTTP header, so fingerprinting based on the known traffic pattern
 when fetching the full page of any of the memers in Tails' HTP source
 pool is not possible.
 
-tordate is probably easier to fingerprint, though: A fresh Tor is
-started, (and possibly restarted again after a minute if the consensus
-couldn't be verified) and then restarted again right after the
-consensus has been downloaded.
+Our initial time guess based on the Tor consensus is probably easier
+to fingerprint, though: A fresh Tor is started, (and possibly
+restarted again after a minute if the consensus couldn't be verified)
+and then restarted again right after the consensus has been
+downloaded.
 
 Tails developers still need to think thoroughly of these questions:
 are such fingerprinting possibilities a serious problem? What kind of
@@ -174,4 +174,4 @@ efforts and compromise should be made to prevent these?
 # Implementation
 
 A Network Manager hook runs the whole thing:
-[[!tails_gitweb /etc/NetworkManager/dispatcher.d/20-time.sh]].
+`/etc/NetworkManager/dispatcher.d/20-time.sh`.
