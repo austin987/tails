@@ -1,0 +1,76 @@
+[[!meta title="Verify the ISO image using other operating systems"]]
+
+<h3>Using Firefox</h3>
+
+<p>This technique is not using the cryptographic signature as the others
+do. We propose it because it's especially easy for Windows users.</p>
+
+<p>Install the CheckIt extension for Firefox available <a
+href="https://addons.mozilla.org/en-US/firefox/addon/checkit/">here</a>
+and restart Firefox.</p>
+
+<p>Here is the checksum (a kind of digital fingerprint) of the ISO
+image. Select it with your cursor:</p>
+
+<pre>[[!inline pages="inc/stable_i386_hash" raw="yes"]]</pre>
+
+<p>Right-click on it and choose "Selected hash (SHA256)" from the
+contextual menu:</p>
+
+<p>[[!img download/selected_hash.png alt="Selected hash (SHA256)"
+link="no"]]</p>
+
+<p>From the dialog box that shows up, open the ISO image. Then wait for
+the checksum to compute. This will take several seconds during which
+your browser will be unresponsive.</p>
+
+<p><strong>If the ISO image is correct</strong> you will get a
+notification saying that the checksums match:</p>
+
+<p>[[!img download/checksums_match.png alt="CheckIt: SHA256 checksums
+match!" link="no"]]</p>
+
+<p><strong>If the ISO image is not correct</strong> you will get a
+notification telling you that the checksums do not match:</p>
+
+<p>[[!img download/checksums_do_not_match.png alt="SHA256 checksums do
+not match!" link="no"]]</p>
+
+<h3>Using the cryptographic signature</h3>
+
+<p>GnuPG, a common free software implementation of OpenPGP has versions
+and graphical frontends for both Windows and Mac OS X. This also make it
+possible to check the cryptographic signature with those operating
+systems:</p>
+
+<ul>
+  <li>[[Gpg4win|http://www.gpg4win.org/]], for Windows</li>
+  <li>[[GPGTools|http://www.gpgtools.org/]], for Mac OS X</li>
+</ul>
+
+<p>You will find on either of those websites detailed documentation on
+how to install and use them.</p>
+
+<h3>For Windows using Gpg4win</h3>
+
+<p>After installing Gpg4win, download Tails signing key:</p>
+
+[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
+
+<p>[[Consult the Gpg4win documentation to import
+it|http://www.gpg4win.org/doc/en/gpg4win-compendium_15.html]]</p>
+
+<p>Then, download the cryptographic signature corresponding to the ISO
+image you want to verify:</p>
+
+[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
+
+<p>[[Consult the Gpg4win documentation to check the
+signature|http://www.gpg4win.org/doc/en/gpg4win-compendium_24.html#id4]]</p>
+
+<h3>For Mac OS X using GPGTools</h3>
+
+<p>After installing GPGTools, you should be able to follow the
+instruction for Linux with the command line. To open the command line,
+navigate to your Applications folder, open Utilities, and double click
+on Terminal.</p>
