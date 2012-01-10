@@ -4,6 +4,11 @@ TORDATE_DIR=/var/run/tordate
 TORDATE_DONE_FILE="${TORDATE_DIR}/done"
 INOTIFY_TIMEOUT=60
 
+# wait for the $TORDATE_DIR directory to appear
+while [ ! -d "$TORDATE_DIR" ]; do
+      sleep 10
+done
+
 # wait for a guarantee that time is in Tor valid range
 while :; do
    if [ -e "$TORDATE_DONE_FILE" ]; then
