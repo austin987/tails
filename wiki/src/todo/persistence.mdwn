@@ -11,17 +11,13 @@ and supported.
 Usecases
 ========
 
-[[!tag todo/research]]
+What can be made persistent?
+----------------------------
 
-What could be made persistent?
-------------------------------
+Here are the usecases that are of interest for our users and we want
+to support.
 
-It remains to determine which usecases are of interest for our users
-and thus should be support. Here are some possible ones.
-
-### User data
-
-#### Persistent application-specific configurations
+### Application-specific configurations
 
 This might be relevant for the following applications:
 
@@ -49,35 +45,12 @@ Stuff we don't want to actively support making persistent:
   support it, since it partitions the Tails users anonymity set, thus
   having bad consequences both on people who do it *and* on others)
 
-#### Persistent user data store
+### User data store
 
 A persistent non-home data store for whatever random files the user
 wants to have persistent.
 
-#### Full /home persistence
-
-All of /home is persistent. This is very convenient for users who
-have complex configurations for certain applications, like IMs,
-MUAs, gpg an the like.
-
-On the other hand clueless users could do really bad configurations that would
-persist and thus expose them even after a reboot.
-
-Also Tails upgrades to configurations in $HOME would be pretty
-difficult to apply without breaking the users own configuration.
-
-Great care should be given to the potential leaks of web browser
-cache and history, IM logs and similar applications and their
-data, so that even if the /home is compromised, it should be
-difficult for the attacker to tell what exact internet resources
-and services have been used. Unless the user has explicitly
-chosen to store such information (bookmarking a site, adding
-someone to their contact list or address book, activated IM chat
-logs etc.).
-
-### System
-
-#### Persistent application installations
+### Additional applications installation
 
 If a user need some program
 not present in amnesia per default it can be quite annoying to fetch
@@ -86,27 +59,22 @@ download it (also slow), it could be nice to have a persistent
 directory (or similar) where all .deb-files are installed at
 boot time.
 
-#### System wide persistence
+### Postponed
 
-This would give users fine-grained control of the system and
-possibility to set it up exactly after their own expectations.
-
-All the problems of a persistent /home applies but are amplified
-to a system-wide scale, for instance
-
-- users can also break the firewall-based Tor enforcement
-- sensitive information will leak outside of /home, like to
-  /tmp, /var/log etc.
-- get a persistent virus or other malware
-- Tails upgrades would be near-impossible without breaking stuff.
+* [[todo/system_wide_persistence]]
+* [[todo/full_home_persistence]]
 
 Persistence storage location
 ----------------------------
 
-* Encrypted partition on a removable storage device.
-* Encrypted archive file on a removable storage device.
+* Encrypted partition and/or encrypted archive file on a removable
+  storage device.
+
+### Postponed
+
 * Use persistence without a persistence media: an encrypted persistent
-  archive could be remotely stored on existing storage services.
+  archive could be [[remotely stored|todo/remote_persistent_storage]]
+  on existing storage services.
 
 Specifications
 ==============
@@ -141,6 +109,8 @@ Moreover:
 Roadmap
 =======
 
+[[!tag todo/code]]
+
 The first use cases that will be supported are:
 
 * persistent application-specific configurations;
@@ -149,20 +119,29 @@ The first use cases that will be supported are:
 Implementing one of these brings support for the other one more or
 less for free.
 
-This work can be split into two parts:
+This work can be split this way:
 
-1. Backend: improve Debian Live tools so they are able to implement our
-   specifications. This shall be done hand in hand with upstream so
-   that we don't end up maintaining a forked `live-boot` indefinitely.
-   Since the UI (persistence toggling, etc.) will take place in the
-   [[tails-greeter|todo/TailsGreeter]] [[todo/boot_menu]], factoring
-   bits out of `live-boot` and making these support being run at a
-   later time of the boot process is crucial.
+1. Backend:
+   - improve Debian Live tools so they are able to implement our
+     specifications. This shall be done hand in hand with upstream so
+     that we don't end up maintaining a forked `live-boot` indefinitely
+     * wait for upstream to comment on our generalized overlays proposal
+     * decide between snapshots and generalized overlays
+     * implement generalized overlays or missing features in snapshots
+   - factor bits out of `live-boot` to make them support being run at
+     a later time of the boot process: the UI (persistence toggling,
+     etc.) will take place in the [[tails-greeter|todo/TailsGreeter]]
+     [[todo/boot_menu]]
 
 2. User interface:
+   - make it easy to bootstrap / enable such persistence features;
+     this must be integrated into the post-installation process: at
+     some point the encrypted persistent container must be created.
+   - make it easy to specify which bits are persistent
    - make it easy to use such persistence features (i.e. without adding
-     arguments to the kernel command line by hand);
-   - make it easy to specify which bits are persistent.
+     arguments to the kernel command line by hand)
+
+3. Documentation
 
 Implementation
 ==============
@@ -174,8 +153,8 @@ at the `$HOME` and system-wide levels.
 Encryption of the persistent volumes is supported using cryptsetup or
 loop-aes.
 
-Persistent application-specific configurations
-----------------------------------------------
+Application-specific configurations
+-----------------------------------
 
 Neither home automounting nor `live-snapshot` currently fit the
 application-specific configuration persistence use case. Both because
@@ -233,45 +212,6 @@ If we want to base our persistence on overlays:
 
 - Implement something like this:
   ["Design for custom mounts system"](http://live.debian.net/devel/rfc/persistence/).
-
-Full /home persistence
-----------------------
-
-**Beware!** We're not even sure we want to support this usecase at all
-ever.
-
-The "home automounting" flavor seems like a nice starting point to
-implement full /home persistency but it needs to be extended so that
-`$HOME` persistence can be enabled while full persistence is disabled.
-This is easy to implement and contribute to the upstream `live-boot`
-(everything happens in `scripts/live`).
-
-Remote persistence storage
---------------------------
-
-When the persistence feature is enabled **and** no persistence media
-is found locally, the user would be asked for a server address +
-login, password + encryption passphrase. Possible remote storage
-include:
-
- - IMAP
- - sftp
- - [Syncany](http://www.syncany.org/) (similar to Dropbox, but data is
-   encrypted locally) supports many storage types, including IMAP
- - tahoe-lafs?
- - [wuala](https://www.wuala.com/)
-
-- Is there a Fuse IMAP filesystem? Other ways to fetch a given email?
-
-> duplicity, an encrypted backup solution has an IMAP backend since
-> version 5.0.7 (6.x is available in lenny-backports and squeeze). It is
-> able to backup and restore from a folder available in an email
-> account. One downside: it uses Python's imaplib which does know
-> how to connect to IMAP server with SSL or StartTLS, but not how
-> to verify X.509 certificates.
-
-- Encryption: symmetric GnuPG, encfs, ecryptfs, file-backed LUKS or
-  dm-crypt?
 
 Read-only mode
 --------------
