@@ -272,22 +272,23 @@ sub set_clipboards_text {
 
 sub explain_validity {
     my $code = shift;
+    my $bad = FALSE;
     my $ret;
     # Below taken from doc/DETAILS in GnuPG's sources
     switch ($code) {
         case "o" { $ret = gettext("Unknown Trust"); }
         case "-" { $ret = gettext("Unknown Trust"); }
         case "q" { $ret = gettext("Unknown Trust"); }
-        case "i" { $ret = gettext("Invalid Key"); }
-        case "r" { $ret = gettext("Revoked Key"); }
-        case "e" { $ret = gettext("Expired Key"); }
-        case "n" { $ret = gettext("Do not Trust"); }
+        case "i" { $ret = gettext("Invalid Key"); $bad = TRUE; }
+        case "r" { $ret = gettext("Revoked Key"); $bad = TRUE; }
+        case "e" { $ret = gettext("Expired Key"); $bad = TRUE; }
+        case "n" { $ret = gettext("Do not Trust"); $bad = TRUE; }
         case "m" { $ret = gettext("Marginal Trust"); }
         case "f" { $ret = gettext("Full Trust"); }
         case "u" { $ret = gettext("Ultimate Trust"); }
         else     { $ret = $code; }
     }
-    return $encoding->decode($ret);
+    return ($bad, $encoding->decode($ret));
 }
 
 sub choose_keys {
@@ -300,28 +301,37 @@ sub choose_keys {
         $encoding->decode(gettext("Key ID"))  => 'text',
         $encoding->decode(gettext("Status"))  => 'text',
         $encoding->decode(gettext("Created")) => 'text',
-        $encoding->decode(gettext("Expires")) => 'text'
+        $encoding->decode(gettext("Expires")) => 'text',
+        "strikethrough?"                      => 'bool'
         );
+    $list->get_column(5)->set_visible(FALSE);
+    my $first_col = $list->get_column(0);
+    foreach my $cell ($first_col->get_cell_renderers()) {
+        $first_col->add_attribute ($cell, strikethrough => 5);
+    }
     $list->get_selection->set_mode('multiple') unless $secret;
     $list->get_selection->unselect_all;
     my @fingerprints;
 
     for (my $i = 0; $i < @keys; $i++) {
         my $key         = $keys[$i];
+        my $bad         = FALSE;
         # FIXME: show more than the first user id for keys, probably by using
         # Gtk2::TreeView instead of Gtk2::SimpleList
         my $userid      = $encoding->decode($key->user_ids->[0]->as_string);
         my $keyid       = $encoding->decode($key->short_hex_id);
         my $status;
         if ($secret) {
+            # FIXME: handle revoked secret keys
             my $expiry = $key->expiration_date;
             if (defined $expiry && DateTime->now->epoch > $expiry) {
                 $status = $encoding->decode(gettext("Expired Key"));
+                $bad = TRUE;
             } else {
                 $status = $encoding->decode(gettext("Valid Key"));
             }
         } else {
-            $status = explain_validity($key->user_ids->[0]->validity);
+            ($bad, $status) = explain_validity($key->user_ids->[0]->validity);
         }
         my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
         my $created     = $encoding->decode($key->creation_date_string);
@@ -335,7 +345,8 @@ sub choose_keys {
                              $encoding->encode($keyid),
                              $encoding->encode($status),
                              $encoding->encode($created),
-                             $encoding->encode($expiry_str)];
+                             $encoding->encode($expiry_str),
+                             $bad];
         $fingerprints[$i] = $fingerprint;
     }
 
