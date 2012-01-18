@@ -39,6 +39,7 @@ use IO::Handle;
 use I18N::Langinfo qw{langinfo CODESET};
 use List::MoreUtils qw{none};
 use Switch;
+use DateTime;
 
 use Locale::gettext;
 use POSIX;
@@ -272,7 +273,6 @@ sub set_clipboards_text {
 sub explain_validity {
     my $code = shift;
     my $ret;
-    say $code;
     # Below taken from doc/DETAILS in GnuPG's sources
     switch ($code) {
         case "o" { $ret = gettext("Unknown Trust"); }
@@ -291,9 +291,9 @@ sub explain_validity {
 }
 
 sub choose_keys {
-    my $title     = shift;
-    my $multi_sel = shift;
-    my @keys      = @_;
+    my $title  = shift;
+    my $secret = shift;
+    my @keys   = @_;
 
     my $list = Gtk2::SimpleList->new (
         $encoding->decode(gettext("Name"))    => 'text',
@@ -302,7 +302,7 @@ sub choose_keys {
         $encoding->decode(gettext("Created")) => 'text',
         $encoding->decode(gettext("Expires")) => 'text'
         );
-    $list->get_selection->set_mode('multiple') if $multi_sel;
+    $list->get_selection->set_mode('multiple') unless $secret;
     $list->get_selection->unselect_all;
     my @fingerprints;
 
@@ -312,20 +312,30 @@ sub choose_keys {
         # Gtk2::TreeView instead of Gtk2::SimpleList
         my $userid      = $encoding->decode($key->user_ids->[0]->as_string);
         my $keyid       = $encoding->decode($key->short_hex_id);
-        my $status      = explain_validity($key->user_ids->[0]->validity);
+        my $status;
+        if ($secret) {
+            my $expiry = $key->expiration_date;
+            if (defined $expiry && DateTime->now->epoch > $expiry) {
+                $status = $encoding->decode(gettext("Expired Key"));
+            } else {
+                $status = $encoding->decode(gettext("Valid Key"));
+            }
+        } else {
+            $status = explain_validity($key->user_ids->[0]->validity);
+        }
         my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
         my $created     = $encoding->decode($key->creation_date_string);
-        my $expiry      = $key->expiration_date_string;
-        if (defined $expiry) {
-            $expiry = $encoding->decode($expiry);
+        my $expiry_str  = $key->expiration_date_string;
+        if (defined $expiry_str) {
+            $expiry_str = $encoding->decode($expiry_str);
         } else {
-            $expiry = $encoding->decode(gettext("Never"));
+            $expiry_str = $encoding->decode(gettext("Never"));
         }
         $list->{data}[$i] = [$encoding->encode($userid),
                              $encoding->encode($keyid),
                              $encoding->encode($status),
                              $encoding->encode($created),
-                             $encoding->encode($expiry)];
+                             $encoding->encode($expiry_str)];
         $fingerprints[$i] = $fingerprint;
     }
 
@@ -346,7 +356,7 @@ sub choose_keys {
                           $encoding->decode(gettext(
                               "You must select at least one key."
                                            )));
-            return choose_keys($title, $multi_sel, @keys);
+            return choose_keys($title, $secret, @keys);
         }
     } else {
         return ();
@@ -367,7 +377,7 @@ sub set_recipients {
 
     my @recipients = choose_keys($encoding->decode(gettext(
                                      "Choose recipient keys"
-                                                  )), TRUE, @keys);
+                                                  )), FALSE, @keys);
 
     return 0 unless @recipients;
 
@@ -393,7 +403,7 @@ sub set_signer {
     }
     else {
         @signer = choose_keys($encoding->decode(gettext("Choose signing key")),
-                              FALSE, @keys);
+                              TRUE, @keys);
         return 0 unless @signer;
     }
 
