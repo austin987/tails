@@ -296,25 +296,29 @@ sub choose_keys {
     my $secret = shift;
     my @keys   = @_;
 
+    use constant C_NAME          => 0;
+    use constant C_STRIKETHROUHG => 5;
+    use constant C_FINGERPRINT   => 6;
+
     my $list = Gtk2::SimpleList->new (
         $encoding->decode(gettext("Name"))    => 'text',
         $encoding->decode(gettext("Key ID"))  => 'text',
         $encoding->decode(gettext("Status"))  => 'text',
         $encoding->decode(gettext("Created")) => 'text',
         $encoding->decode(gettext("Expires")) => 'text',
-        "strikethrough?"                      => 'bool'
+        "strikethrough?"                      => 'bool',
+        "fingerprint"                         => 'text'
         );
-    $list->get_column(5)->set_visible(FALSE);
-    my $first_col = $list->get_column(0);
-    foreach my $cell ($first_col->get_cell_renderers()) {
-        $first_col->add_attribute ($cell, strikethrough => 5);
+    $list->get_column(C_STRIKETHROUHG)->set_visible(FALSE);
+    $list->get_column(C_FINGERPRINT)->set_visible(FALSE);
+    my $name_col = $list->get_column(C_NAME);
+    foreach my $cell ($name_col->get_cell_renderers()) {
+        $name_col->add_attribute ($cell, strikethrough => C_STRIKETHROUHG);
     }
     $list->get_selection->set_mode('multiple') unless $secret;
     $list->get_selection->unselect_all;
-    my @fingerprints;
 
-    for (my $i = 0; $i < @keys; $i++) {
-        my $key         = $keys[$i];
+    foreach my $key (@keys) {
         my $bad         = FALSE;
         # FIXME: show more than the first user id for keys, probably by using
         # Gtk2::TreeView instead of Gtk2::SimpleList
@@ -341,13 +345,13 @@ sub choose_keys {
         } else {
             $expiry_str = $encoding->decode(gettext("Never"));
         }
-        $list->{data}[$i] = [$encoding->encode($userid),
-                             $encoding->encode($keyid),
-                             $encoding->encode($status),
-                             $encoding->encode($created),
-                             $encoding->encode($expiry_str),
-                             $bad];
-        $fingerprints[$i] = $fingerprint;
+        push(@{$list->{data}}, [$encoding->encode($userid),
+                                $encoding->encode($keyid),
+                                $encoding->encode($status),
+                                $encoding->encode($created),
+                                $encoding->encode($expiry_str),
+                                $bad,
+                                $fingerprint]);
     }
 
     my $dialog = Gtk2::Dialog->new($title, $main_window, 'destroy-with-parent',
@@ -361,7 +365,7 @@ sub choose_keys {
     $dialog->destroy;
     if ('ok' eq $ans) {
         if (@selection) {
-            return map { $fingerprints[$_] } @selection;
+            return map { $list->{data}[$_][C_FINGERPRINT] } @selection;
         } else {
             display_error($encoding->decode(gettext("No keys selected")),
                           $encoding->decode(gettext(
