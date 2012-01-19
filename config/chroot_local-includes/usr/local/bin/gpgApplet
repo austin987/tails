@@ -297,6 +297,7 @@ sub choose_keys {
     my @keys   = @_;
 
     use constant C_NAME          => 0;
+    use constant C_EXPIRY        => 4;
     use constant C_STRIKETHROUHG => 5;
     use constant C_FINGERPRINT   => 6;
 
@@ -314,6 +315,11 @@ sub choose_keys {
     my $name_col = $list->get_column(C_NAME);
     foreach my $cell ($name_col->get_cell_renderers()) {
         $name_col->add_attribute ($cell, strikethrough => C_STRIKETHROUHG);
+    }
+    for (my $i = C_NAME; $i <= C_EXPIRY; $i++) {
+        my $col = $list->get_column($i);
+        $col->set_max_width(300);
+        $col->set_resizable(TRUE);
     }
     $list->get_selection->set_mode('multiple') unless $secret;
     $list->get_selection->unselect_all;
@@ -354,12 +360,18 @@ sub choose_keys {
                                 $fingerprint]);
     }
 
+    my $scroll = Gtk2::ScrolledWindow->new;
+    $scroll->set_policy('automatic', 'automatic');
+    $scroll->add($list);
+
     my $dialog = Gtk2::Dialog->new($title, $main_window, 'destroy-with-parent',
                                    'gtk-cancel' => 'cancel', 'gtk-ok' => 'ok' );
+    $dialog->set_default_size(700,500);
     $dialog->set_default_response('ok');
-    $dialog->vbox->add($list);
+    $dialog->vbox->add($scroll);
     my @selection;
     $dialog->signal_connect(response => sub {@selection = $list->get_selected_indices;});
+    $scroll->show;
     $list->show;
     my $ans = $dialog->run;
     $dialog->destroy;
