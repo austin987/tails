@@ -64,22 +64,14 @@ has_only_unverified_consensus() {
 
 wait_for_tor_consensus() {
 	log "Waiting for the Tor consensus file to contain a valid time interval"
-	while :; do
-		if has_consensus; then
-			break;
-		fi
-
+	while ! has_consensus; do
 		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
 	done
 }
 
 wait_for_working_tor() {
 	log "Waiting for Tor to be working (i.e. cached descriptors exist)"
-	while :; do
-		if tor_is_working; then
-			break;
-		fi
-
+	while ! tor_is_working; do
 		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
 	done
 }
