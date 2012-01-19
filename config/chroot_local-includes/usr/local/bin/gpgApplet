@@ -390,6 +390,12 @@ sub choose_keys {
     $dialog->vbox->add($scroll);
     my @selection;
     $dialog->signal_connect(response => sub {@selection = $list->get_selected_indices;});
+    $list->signal_connect('key-press-event' => sub {
+        my $event = $_[1];
+        return unless $event->keyval == $Gtk2::Gdk::Keysyms{Return};
+        $dialog->response('ok');
+        return 1;
+    });
     $scroll->show;
     $list->show;
     my $ans = $dialog->run;
