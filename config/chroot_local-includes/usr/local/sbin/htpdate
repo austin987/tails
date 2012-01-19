@@ -28,43 +28,39 @@ use version; our $VERSION = qv('0.9.3');
 
 use Carp;
 use Cwd;
+use Data::Dumper;
 use DateTime;
 use DateTime::Format::DateParse;
 use English qw( -no_match_vars );
 use File::Path qw(rmtree);
 use File::Temp qw/tempdir/;
-use Getopt::Std;
+use Getopt::Long::Descriptive;
+use List::Util qw( shuffle );
 use open qw{:utf8 :std};
 use POSIX qw( WIFEXITED );
 use threads;
+use Try::Tiny;
 
 my $datecommand = '/bin/date';  # "date" command to set time
 my $dateparam   = '-s';         # "date" parameter to set time
-my $debug       = 0;
-my $fullrequest = 0;
-my $log         = '';
 my $maxadjust   = 0;            # maximum time step in seconds (0 means no max.)
 my $minadjust   = 1;            # minimum time step in seconds
-my $paranoid    = 0;
-my $password    = '';           # password for proxy server
-my $quiet       = 0;
-my $set_date    = 1;
 my $ssl_protocol = 'TLSv1';     # will be passed to wget's --secure-protocol
-my $useragent   = "htpdate/$VERSION";
 my $userid      = '';           # userid for proxy servers
-my $dns_timeout;
-my $done_file;
-my $res_file;
-
-our ($opt_d, $opt_h, $opt_q, $opt_x, $opt_u, $opt_a, $opt_f, $opt_l, $opt_p, $opt_t, $opt_D, $opt_T);
+my $password    = '';           # password for proxy server
+my (
+    $debug, $useragent, $fullrequest, $log, $quiet, $set_date,
+    $dns_timeout, $done_file, $res_file, $usage, $opt, $runas,
+    $allowed_per_pool_failure_ratio, @pools,
+);
 
 sub done {
     if (defined $done_file) {
-	$> = 0 if $opt_u;
+	$> = 0 if $runas;
 	open my $f, '>', $done_file or
 	    print STDERR "Couldn't write done file: $done_file\n";
 	close $f;
-	$> = getpwnam($opt_u) if $opt_u;
+	$> = getpwnam($runas) if $runas;
     }
 }
 
@@ -90,67 +86,60 @@ sub debug {
     message(@_) if $debug;
 }
 
-sub error (@_) {
-    my @msg = @_;
-
-    debug(@msg);
-    croak @msg;
+sub error {
+    debug(@_);
+    croak @_;
 }
 
 sub parseCommandLine () {
     # specify valid switches
-    getopts('dhqxfpu:a:l:t:D:T:') || usage();
+    ($opt, $usage) = describe_options(
+        'htpdate %o',
+        [ 'debug|d', "debug", { default => 0 } ],
+        [ 'help', "print usage message and exit" ],
+        [ 'quiet|q', "quiet", { default => 0 } ],
+        [ 'user|u:s', "userid to run as" ],
+        [ 'dont_set_date|x', "do not set the time (only show)", { default => 0 } ],
+        [ 'user_agent|a:s', "http user agent to use", { default => "htpdate/$VERSION" } ],
+        [ 'fullrequest|f', "request the full page and referenced resources rather than only its header", { default => 0 } ],
+        [ 'log_file|l:s', "log to this file rather than to STDOUT" ],
+        [ 'dns_timeout|t:i', "DNS timeout for wget" ],
+        [ 'done_file|D:s', "create this file after quitting in any way" ],
+        [ 'success_file|T:s', "create this file after setting time successfully" ],
+        [ 'pal_pool=s@', "distrusted hostnames" ],
+        [ 'neutral_pool=s@', "neutral hostnames" ],
+        [ 'foe_pool=s@', "distrusted hostnames" ],
+        [ 'allowed_per_pool_failure_ratio:f', "ratio (0.0-1.0) of allowed per-pool failure", { default => 1.0 } ],
+    );
 
-    usage() if $opt_h;
-    usage() unless $ARGV[0];
+    usage() if $opt->help;
+    usage() unless $opt->pal_pool && $opt->neutral_pool && $opt->foe_pool;
 
-    $> = getpwnam($opt_u)   if $opt_u;
-    $useragent = $opt_a     if $opt_a;
-    $debug = 1              if $opt_d;
-    $fullrequest = 1        if $opt_f;
-    $log = $opt_l           if $opt_l;
-    $paranoid = 1           if $opt_p;
-    $quiet = 1              if $opt_q;
-    $set_date = 0           if $opt_x;
-    $dns_timeout = $opt_t   if $opt_t;
-    $done_file = $opt_D     if $opt_D;
-    $res_file = $opt_T      if $opt_T;
+    $runas       = $opt->user if $opt->user;
+    $>           = getpwnam($runas) if $runas;
+    $useragent   = $opt->user_agent;
+    $debug       = $opt->debug;
+    $fullrequest = $opt->fullrequest;
+    $log         = $opt->log_file if $opt->log_file;
+    $quiet       = $opt->quiet;
+    $set_date    = ! $opt->dont_set_date;
+    $dns_timeout = $opt->dns_timeout;
+    $done_file   = $opt->done_file if $opt->done_file;
+    $res_file    = $opt->success_file if $opt->success_file;
+    $allowed_per_pool_failure_ratio = $opt->allowed_per_pool_failure_ratio;
+    @pools = map {
+        [
+            map {
+                $_ = 'https://'.$_ unless $_ =~ /^http/i;
+            } split(/,/, join(',', @{$_}))
+        ]
+    } ($opt->pal_pool, $opt->neutral_pool, $opt->foe_pool);
 
-    my @urls;
-    foreach my $url (@ARGV) {
-        unless ( $url =~ /^http/i ) {
-            $url = 'https://'.$url;
-        }
-        push @urls, $url;
-    }
-
-    return @urls;
+    debug("Pools:\n", Dumper(\@pools));
 }
 
 sub usage () {
-
-    print STDERR <<USAGE;
-
-htpdate version $VERSION
-Usage: $0 [-dhqxf] [-u userid] [-a useragent] [-t dns_timeout] [-T success_file] <URL> [<URL> ...]
-
-        -d      debug
-        -h      show this help
-        -q      quiet
-        -u      userid to run as
-        -x      do not set the time (only show)
-        -a      http user agent to use
-        -f      request the full page and referenced resources rather than only its header
-        -l      log to this file rather than to STDOUT
-        -p      paranoid mode: don't set time unless all servers could be reached
-        -t      DNS timeout for wget
-        -D      create this file after quitting in any way
-        -T      create this file after setting time successfully
-
-        e.g. $0 -x http://www.microsoft.com/ https://check.torproject.org/
-
-USAGE
-
+    print STDERR $usage->text;
     exit;
 }
 
@@ -185,11 +174,62 @@ sub newestDateHeader {
     return $newestdt;
 }
 
-sub getRemoteDateDiff {
-    my ($url, $fullrequest) = @_;
+=head2 random_first_with_allowed_failure_ratio
 
-    defined $url or error "getRemoteDateDiff must be passed an URL";
-    $fullrequest = defined $fullrequest ? $fullrequest : 0;
+Returns the result of the first successful application of
+$args->{code} on a random element of $args->{list}.
+
+$args->{allowed_failure_ratio} caps the maximum failure ratio before
+giving up.
+
+$args->{code} is called with two arguments: the currently (randomly
+picked) considered element, and $args->{args}.
+
+Any exceptions thrown by $args->{code} is catched.
+
+=cut
+sub random_first_with_allowed_failure_ratio {
+    my $args = shift;
+
+    my %tried;
+    $tried{$_} = 0 for (@{$args->{list}});
+    my $failures = 0;
+    my $total = keys %tried;
+
+    while ( $failures / $total <= $args->{allowed_failure_ratio} ) {
+        my @randomized_left = shuffle grep { ! $tried{$_} } keys(%tried);
+        my $picked = $randomized_left[0];
+        $tried{$picked}++;
+        my $res;
+        try {
+            $res = $args->{code}->($picked, $args->{args})
+        };
+        return $res if $res;
+        $failures++;
+    }
+
+    return;
+}
+
+sub getPoolDateDiff {
+    my $args = shift;
+    my $fullrequest = defined $args->{fullrequest} ? $args->{fullrequest} : 0;
+
+    random_first_with_allowed_failure_ratio({
+        list => $args->{urls},
+        code => \&getUrlDateDiff,
+        args => { fullrequest => $fullrequest },
+        allowed_failure_ratio => $allowed_per_pool_failure_ratio,
+    });
+}
+
+sub getUrlDateDiff {
+    my $url = shift;
+    my $args = shift;
+    my $fullrequest = $args->{fullrequest};
+
+    defined $url or error "getUrlDateDiff must be passed an URL";
+    debug("getUrlDateDiff: $url");
 
     my $tmpdir = tempdir("XXXXXXXXXX", TMPDIR => 1);
 
@@ -251,7 +291,7 @@ sub adjustDate {
         my $newtime = DateTime->now->epoch + $diff;
         message("Setting time to $newtime...");
         if ($set_date) {
-            $> = 0 if $opt_u;
+            $> = 0 if $runas;
             open(my $fd, "-|", $datecommand, $dateparam, '@' . $newtime)
                 or die "Cannot set run command $datecommand: $!";
             if ( $? != 0 ) {
@@ -259,34 +299,35 @@ sub adjustDate {
                 error "An error occured setting the time\n@output";
             }
             close($fd);
-            $> = getpwnam($opt_u) if $opt_u;
+            $> = getpwnam($runas) if $runas;
         }
     }
-    $> = 0 if $opt_u;
+    $> = 0 if $runas;
     open my $res_h, '>>', $res_file or die "Cannot open res file $res_file: $!";
     print $res_h "$diff\n";
     close $res_h;
-    $> = getpwnam($opt_u) if $opt_u;
+    $> = getpwnam($runas) if $runas;
 }
 
-my @urls = parseCommandLine();
+parseCommandLine();
 message("Running htpdate.");
 my @diffs = grep {
     defined $_
 } map {
     my $diff = $_->{thread}->join();
-    if ($paranoid && ! defined $diff) {
-        error('Paranoid mode: aborting as one server (',
-              $_->{url},
-              ') could not be reached');
+    if (! defined $diff) {
+        error('Aborting as one pool could not be reached');
     }
     $diff;
 } map {
     {
         url    => $_,
-        thread => threads->create(\&getRemoteDateDiff, $_, $fullrequest),
+        thread => threads->create(\&getPoolDateDiff, {
+            urls => $_,
+            fullrequest => $fullrequest,
+        })
     }
-} @urls
+} @pools
     or error "No Date header could be received.";
 my @sorted_diffs = sort @diffs;
 adjustDate($sorted_diffs[int(@sorted_diffs / 2)]);
