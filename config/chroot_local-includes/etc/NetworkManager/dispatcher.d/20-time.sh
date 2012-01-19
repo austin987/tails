@@ -166,8 +166,7 @@ else
 	wait_for_tor_consensus
 	# If Tor cannot verify the consensus this is probably because all
 	# authority certificates are "expired" due to a clock far off into
-	# the future.seen as invalid. In that case let's set the clock to 
-	# the release date.
+	# the future. In that case let's set the clock to the release date.
 	if is_clock_way_off && has_only_unverified_consensus; then
 		log "It seems the clock is so badly off that Tor couldn't verify the consensus. Setting system time to the release date, restarting Tor and fetching a new consensus..."
 		date --set="$(release_date)" > /dev/null
