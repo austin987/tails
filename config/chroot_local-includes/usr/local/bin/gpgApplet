@@ -303,6 +303,11 @@ sub choose_keys {
     use constant C_EXPIRY        => 4;
     use constant C_STRIKETHROUHG => 5;
     use constant C_FINGERPRINT   => 6;
+    use constant C_USERIDS       => 7;
+
+    use constant VISIBLE_COLS => (C_NAME, C_KEYID, C_STATUS, C_CREATED,
+                                  C_EXPIRY);
+    use constant HIDDEN_COLS => (C_STRIKETHROUHG, C_FINGERPRINT, C_USERIDS);
 
     my $list = Gtk2::SimpleList->new (
         $encoding->decode(gettext("Name"))    => 'text',
@@ -311,19 +316,21 @@ sub choose_keys {
         $encoding->decode(gettext("Created")) => 'text',
         $encoding->decode(gettext("Expires")) => 'text',
         "strikethrough?"                      => 'bool',
-        "fingerprint"                         => 'text'
+        "fingerprint"                         => 'text',
+        "userids"                             => 'text'
         );
-    $list->get_column(C_STRIKETHROUHG)->set_visible(FALSE);
-    $list->get_column(C_FINGERPRINT)->set_visible(FALSE);
-    my $name_col = $list->get_column(C_NAME);
-    foreach my $cell ($name_col->get_cell_renderers()) {
-        $name_col->add_attribute ($cell, strikethrough => C_STRIKETHROUHG);
-    }
-    for (my $i = C_NAME; $i <= C_EXPIRY; $i++) {
+    foreach my $i (VISIBLE_COLS) {
         my $col = $list->get_column($i);
         $col->set_max_width(300);
         $col->set_resizable(TRUE);
         $col->set_sort_column_id($i);
+    }
+    foreach my $i (HIDDEN_COLS) {
+        $list->get_column($i)->set_visible(FALSE);
+    }
+    my $name_col = $list->get_column(C_NAME);
+    foreach my $cell ($name_col->get_cell_renderers()) {
+        $name_col->add_attribute ($cell, strikethrough => C_STRIKETHROUHG);
     }
     $list->get_selection->set_mode('multiple') unless $secret;
     $list->get_selection->unselect_all;
@@ -334,21 +341,26 @@ sub choose_keys {
         my $path = $list->get_path_at_pos($x, $y);
         return FALSE unless defined $path;
         my $row = ($path->get_indices)[0];
-        my $text = "Name: ${$list->{data}}[$row][C_NAME]\n" .
-                   "Key ID: ${$list->{data}}[$row][C_KEYID]\n" .
-                   "Status: ${$list->{data}}[$row][C_STATUS]\n" .
-                   "Created: ${$list->{data}}[$row][C_CREATED]\n" .
-                   "Expires: ${$list->{data}}[$row][C_EXPIRY]";
+        my $fingerprint =
+            join(" ", (${$list->{data}}[$row][C_FINGERPRINT] =~ m/..../g));
+        my $text = gettext("User ID(s)") . ":\n" .
+                   "${$list->{data}}[$row][C_USERIDS]\n" .
+                   gettext("Fingerprint") . ":\n" .
+                   "$fingerprint";
         $tooltip->set_text("$text");
         return TRUE;
     });
 
     foreach my $key (@keys) {
         my $bad         = FALSE;
-        # FIXME: show more than the first user id for keys, probably by using
-        # Gtk2::TreeView instead of Gtk2::SimpleList
-        my $userid      = $encoding->decode($key->user_ids->[0]->as_string);
-        my $keyid       = $encoding->decode($key->short_hex_id);
+        # If we used Gtk2::TreeView instead of Gtk2::SimpleList we could
+        # show all user ids directly in the list, but we make it simple
+        # for us and instead show them in the tooltip.
+        my $name      = $encoding->decode($key->user_ids->[0]->as_string);
+        my $userids   = join("\n", map { "- " .
+                                             $encoding->decode($_->as_string) }
+                                       $key->user_ids);
+        my $keyid     = $encoding->decode($key->short_hex_id);
         my $status;
         if ($secret) {
             # FIXME: handle revoked secret keys
@@ -370,13 +382,14 @@ sub choose_keys {
         } else {
             $expiry_str = $encoding->decode(gettext("Never"));
         }
-        push(@{$list->{data}}, [$encoding->encode($userid),
+        push(@{$list->{data}}, [$encoding->encode($name),
                                 $encoding->encode($keyid),
                                 $encoding->encode($status),
                                 $encoding->encode($created),
                                 $encoding->encode($expiry_str),
                                 $bad,
-                                $fingerprint]);
+                                $encoding->encode($fingerprint),
+                                $encoding->encode($userids)]);
     }
 
     my $scroll = Gtk2::ScrolledWindow->new;
