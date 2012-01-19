@@ -69,22 +69,25 @@ has_only_unverified_consensus() {
 wait_for_tor_consensus() {
 	log "Waiting for a Tor consensus file to contain a valid time interval"
 	while ! has_consensus; do
-		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
+		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || log "timeout"
 	done
+	log "A Tor consensus file now contains a valid time interval."
 
 	if [ -e ${TOR_CONSENSUS} ]; then
-		log "Waiting for the Tor verified consensus file to contain a valid time interval"
+		log "Waiting for the Tor verified consensus file to contain a valid time interval..."
 		while ! has_verified_consensus; do
-			inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
+			inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || log "timeout"
 		done
+		log "The Tor verified consensus now contains a valid time interval."
 	fi
 }
 
 wait_for_working_tor() {
-	log "Waiting for Tor to be working (i.e. cached descriptors exist)"
+	log "Waiting for Tor to be working (i.e. cached descriptors exist)..."
 	while ! tor_is_working; do
-		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
+		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || log "timeout"
 	done
+	log "Tor is now working."
 }
 
 date_points_are_sane() {
