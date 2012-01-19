@@ -59,19 +59,18 @@ my $icon_factory  = Gtk2::IconFactory->new();
 # trust hasn't been set.
 my %gnupg_options = (armor => 1, always_trust => 1, meta_interactive => 0);
 
-my @pgp_headers   = (
-    {
-        type   => 'message',
-        header => '-----BEGIN PGP MESSAGE-----',
-        footer => '-----END PGP MESSAGE-----',
-    },
-    {
-        type   => 'signed',
-        header => '-----BEGIN PGP SIGNED MESSAGE-----',
-        footer => '-----END PGP SIGNATURE-----',
-    },
-);
-
+my $pgp_encrypted_msg = {
+    type   => 'message',
+    header => '-----BEGIN PGP MESSAGE-----',
+    footer => '-----END PGP MESSAGE-----'
+};
+my $pgp_signed_msg = {
+    type   => 'signed',
+    header => '-----BEGIN PGP SIGNED MESSAGE-----',
+    middle => '-----BEGIN PGP SIGNATURE-----',
+    footer => '-----END PGP SIGNATURE-----'
+};
+my @pgp_headers = ($pgp_encrypted_msg, $pgp_signed_msg);
 
 =head1 MAIN
 
@@ -572,9 +571,15 @@ sub gpg_operate_on_text {
 
     if ($CHILD_ERROR == 0) {
         if ($operation eq \&decrypt_verify) {
-            # FIXME: $std_out is empty for non-encrypted, signed messages. it
-            # should contain the signed message.
-            display_output($std_out, $std_err);
+            my $msg;
+            if ($text =~ m/$pgp_signed_msg->{header}/) {
+                $msg = $text;
+                $msg =~ s/^.*$pgp_signed_msg->{header}\nHash: [^\n]*\n\n//m;
+                $msg =~ s/^$pgp_signed_msg->{middle}.*//ms;
+            } else {
+                $msg = $std_out;
+            }
+            display_output($msg, $std_err);
         } else {
             set_clipboards_text($std_out);
         }
