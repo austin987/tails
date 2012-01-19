@@ -58,6 +58,10 @@ has_consensus() {
 					      ${TOR_UNVERIFIED_CONSENSUS}
 }
 
+has_verified_consensus() {
+	grep -qs "^valid-until ${DATE_RE}"'$' ${TOR_CONSENSUS}
+}
+
 has_only_unverified_consensus() {
 	has_consensus && [ ! -e ${TOR_CONSENSUS} ]
 }
@@ -67,6 +71,13 @@ wait_for_tor_consensus() {
 	while ! has_consensus; do
 		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
 	done
+
+	if [ -e ${TOR_CONSENSUS} ]; then
+		log "Waiting for the Tor verified consensus file to contain a valid time interval"
+		while ! has_verified_consensus; do
+			inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
+		done
+	fi
 }
 
 wait_for_working_tor() {
