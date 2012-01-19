@@ -63,7 +63,7 @@ has_only_unverified_consensus() {
 }
 
 wait_for_tor_consensus() {
-	log "Waiting for the Tor consensus file to contain a valid time interval"
+	log "Waiting for a Tor consensus file to contain a valid time interval"
 	while ! has_consensus; do
 		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
 	done
