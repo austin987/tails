@@ -285,6 +285,10 @@ sub explain_validity {
         case "m" { $ret = gettext("Marginal Trust"); }
         case "f" { $ret = gettext("Full Trust"); }
         case "u" { $ret = gettext("Ultimate Trust"); }
+        # Below are some custom flags
+        case "F" { $ret = gettext("Fully Valid"); }
+        case "E" { $ret = gettext("Cannot Encrypt"); $bad = TRUE; }
+        case "S" { $ret = gettext("Cannot Sign"); $bad = TRUE; }
         else     { $ret = $code; }
     }
     return ($bad, $encoding->decode($ret));
@@ -351,27 +355,38 @@ sub choose_keys {
     });
 
     foreach my $key (@keys) {
-        my $bad         = FALSE;
         # If we used Gtk2::TreeView instead of Gtk2::SimpleList we could
         # show all user ids directly in the list, but we make it simple
         # for us and instead show them in the tooltip.
-        my $name      = $encoding->decode($key->user_ids->[0]->as_string);
-        my $userids   = join("\n", map { "- " .
-                                             $encoding->decode($_->as_string) }
-                                       $key->user_ids);
-        my $keyid     = $encoding->decode($key->short_hex_id);
+        my $name    = $encoding->decode($key->user_ids->[0]->as_string);
+        my $userids = join("\n", map { "- " . $encoding->decode($_->as_string) }
+                                     $key->user_ids);
+        my $keyid   = $encoding->decode($key->short_hex_id);
+        my $bad; # bad keys are listed with strikethrough
         my $status;
         if ($secret) {
-            # FIXME: handle revoked secret keys
+            my $code;
             my $expiry = $key->expiration_date;
-            if (defined $expiry && DateTime->now->epoch > $expiry) {
-                $status = $encoding->decode(gettext("Expired Key"));
-                $bad = TRUE;
+            if (FALSE) {
+                # FIXME: how to detect revoked private keys?
+                $code='r';
+            } elsif (defined $expiry && DateTime->now->epoch > $expiry) {
+                $code='e';
+            } elsif (FALSE) {
+                # FIXME: how to detect private key without signing capabability?
+                $code='S';
             } else {
-                $status = $encoding->decode(gettext("Valid Key"));
+                $code='F';
             }
+            ($bad, $status) = explain_validity($code);
         } else {
-            ($bad, $status) = explain_validity($key->user_ids->[0]->validity);
+            my $validity = $key->user_ids->[0]->validity;
+            ($bad, $status) = explain_validity($validity);
+            # If the validity doesn't make the key bad the key could still
+            # be bad due to lack of encryption capability
+            if (!$bad && $key->usage_flags !~ m/E/) {
+                ($bad, $status) = explain_validity('E');
+            }
         }
         my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
         my $created     = $encoding->decode($key->creation_date_string);
