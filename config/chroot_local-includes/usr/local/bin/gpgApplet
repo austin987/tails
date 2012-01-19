@@ -297,6 +297,9 @@ sub choose_keys {
     my @keys   = @_;
 
     use constant C_NAME          => 0;
+    use constant C_KEYID         => 1;
+    use constant C_STATUS        => 2;
+    use constant C_CREATED       => 3;
     use constant C_EXPIRY        => 4;
     use constant C_STRIKETHROUHG => 5;
     use constant C_FINGERPRINT   => 6;
@@ -324,6 +327,21 @@ sub choose_keys {
     }
     $list->get_selection->set_mode('multiple') unless $secret;
     $list->get_selection->unselect_all;
+    $list->set_has_tooltip(TRUE);
+    $list->signal_connect('query-tooltip' => sub {
+        my ($wx, $wy, $tooltip) = ($_[1], $_[2], $_[4]);
+        my ($x, $y) = $list->convert_widget_to_bin_window_coords($wx, $wy);
+        my $path = $list->get_path_at_pos($x, $y);
+        return FALSE unless defined $path;
+        my $row = ($path->get_indices)[0];
+        my $text = "Name: ${$list->{data}}[$row][C_NAME]\n" .
+                   "Key ID: ${$list->{data}}[$row][C_KEYID]\n" .
+                   "Status: ${$list->{data}}[$row][C_STATUS]\n" .
+                   "Created: ${$list->{data}}[$row][C_CREATED]\n" .
+                   "Expires: ${$list->{data}}[$row][C_EXPIRY]";
+        $tooltip->set_text("$text");
+        return TRUE;
+    });
 
     foreach my $key (@keys) {
         my $bad         = FALSE;
