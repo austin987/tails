@@ -269,29 +269,94 @@ sub set_clipboards_text {
     close $xclip or die "Error closing pipe to xclip";
 }
 
-sub explain_validity {
+sub get_status {
     my $code = shift;
     my $bad = FALSE;
-    my $ret;
+    my $status;
     # Below taken from doc/DETAILS in GnuPG's sources
     switch ($code) {
-        case "o" { $ret = gettext("Unknown Trust"); }
-        case "-" { $ret = gettext("Unknown Trust"); }
-        case "q" { $ret = gettext("Unknown Trust"); }
-        case "i" { $ret = gettext("Invalid Key"); $bad = TRUE; }
-        case "r" { $ret = gettext("Revoked Key"); $bad = TRUE; }
-        case "e" { $ret = gettext("Expired Key"); $bad = TRUE; }
-        case "n" { $ret = gettext("Do not Trust"); $bad = TRUE; }
-        case "m" { $ret = gettext("Marginal Trust"); }
-        case "f" { $ret = gettext("Full Trust"); }
-        case "u" { $ret = gettext("Ultimate Trust"); }
+        case "o" { $status = gettext("Unknown Trust"); }
+        case "-" { $status = gettext("Unknown Trust"); }
+        case "q" { $status = gettext("Unknown Trust"); }
+        case "i" { $status = gettext("Invalid Key"); $bad = TRUE; }
+        case "r" { $status = gettext("Revoked Key"); $bad = TRUE; }
+        case "e" { $status = gettext("Expired Key"); $bad = TRUE; }
+        case "n" { $status = gettext("Do not Trust"); $bad = TRUE; }
+        case "m" { $status = gettext("Marginal Trust"); }
+        case "f" { $status = gettext("Full Trust"); }
+        case "u" { $status = gettext("Ultimate Trust"); }
         # Below are some custom flags
-        case "F" { $ret = gettext("Fully Valid"); }
-        case "E" { $ret = gettext("Cannot Encrypt"); $bad = TRUE; }
-        case "S" { $ret = gettext("Cannot Sign"); $bad = TRUE; }
-        else     { $ret = $code; }
+        case "F" { $status = gettext("Fully Valid"); }
+        case "E" { $status = gettext("Cannot Encrypt"); $bad = TRUE; }
+        case "S" { $status = gettext("Cannot Sign"); $bad = TRUE; }
+        else     { $status = $code; }
     }
-    return ($bad, $encoding->decode($ret));
+    return ($bad, $encoding->decode($status));
+}
+
+sub get_private_key_status {
+    my $key = shift;
+    my $code;
+    my $expiry = $key->expiration_date;
+    if (FALSE) {
+        # FIXME: how to detect revoked private keys?
+        $code='r';
+    } elsif (defined $expiry && DateTime->now->epoch > $expiry) {
+        $code='e';
+    } elsif (FALSE) {
+        # FIXME: how to detect private key without signing capabability?
+        $code='S';
+    } else {
+        $code='F';
+    }
+    return get_status($code);
+}
+
+sub get_public_key_status {
+    my $key = shift;
+    my ($bad, $status);
+    my $validity = $key->user_ids->[0]->validity;
+    ($bad, $status) = get_status($validity);
+    # If the validity doesn't make the key bad the key could still
+    # be bad due to lack of encryption capability
+    if (!$bad && $key->usage_flags !~ m/E/) {
+        ($bad, $status) = get_status('E');
+    }
+    return ($bad, $status);
+}
+
+sub create_key_row {
+    my $key = shift;
+    my $secret = shift;
+    # If we used Gtk2::TreeView instead of Gtk2::SimpleList we could
+    # show all user ids directly in the list, but we make it simple
+    # for us and instead show them in the tooltip.
+    my $name    = $encoding->decode($key->user_ids->[0]->as_string);
+    my $userids = join("\n", map { "- " . $encoding->decode($_->as_string) }
+                                 $key->user_ids);
+    my $keyid   = $encoding->decode($key->short_hex_id);
+    my ($bad, $status); # bad keys are shown with strikethrough
+    if ($secret) {
+	($bad, $status) = get_private_key_status($key);
+    } else {
+	($bad, $status) = get_public_key_status($key);
+    }
+    my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
+    my $created     = $encoding->decode($key->creation_date_string);
+    my $expiry_str  = $key->expiration_date_string;
+    if (defined $expiry_str) {
+        $expiry_str = $encoding->decode($expiry_str);
+    } else {
+        $expiry_str = $encoding->decode(gettext("Never"));
+    }
+    return [$encoding->encode($name),
+            $encoding->encode($keyid),
+            $encoding->encode($status),
+            $encoding->encode($created),
+            $encoding->encode($expiry_str),
+            $bad,
+            $encoding->encode($fingerprint),
+            $encoding->encode($userids)];
 }
 
 sub choose_keys {
@@ -355,55 +420,7 @@ sub choose_keys {
     });
 
     foreach my $key (@keys) {
-        # If we used Gtk2::TreeView instead of Gtk2::SimpleList we could
-        # show all user ids directly in the list, but we make it simple
-        # for us and instead show them in the tooltip.
-        my $name    = $encoding->decode($key->user_ids->[0]->as_string);
-        my $userids = join("\n", map { "- " . $encoding->decode($_->as_string) }
-                                     $key->user_ids);
-        my $keyid   = $encoding->decode($key->short_hex_id);
-        my $bad; # bad keys are listed with strikethrough
-        my $status;
-        if ($secret) {
-            my $code;
-            my $expiry = $key->expiration_date;
-            if (FALSE) {
-                # FIXME: how to detect revoked private keys?
-                $code='r';
-            } elsif (defined $expiry && DateTime->now->epoch > $expiry) {
-                $code='e';
-            } elsif (FALSE) {
-                # FIXME: how to detect private key without signing capabability?
-                $code='S';
-            } else {
-                $code='F';
-            }
-            ($bad, $status) = explain_validity($code);
-        } else {
-            my $validity = $key->user_ids->[0]->validity;
-            ($bad, $status) = explain_validity($validity);
-            # If the validity doesn't make the key bad the key could still
-            # be bad due to lack of encryption capability
-            if (!$bad && $key->usage_flags !~ m/E/) {
-                ($bad, $status) = explain_validity('E');
-            }
-        }
-        my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
-        my $created     = $encoding->decode($key->creation_date_string);
-        my $expiry_str  = $key->expiration_date_string;
-        if (defined $expiry_str) {
-            $expiry_str = $encoding->decode($expiry_str);
-        } else {
-            $expiry_str = $encoding->decode(gettext("Never"));
-        }
-        push(@{$list->{data}}, [$encoding->encode($name),
-                                $encoding->encode($keyid),
-                                $encoding->encode($status),
-                                $encoding->encode($created),
-                                $encoding->encode($expiry_str),
-                                $bad,
-                                $encoding->encode($fingerprint),
-                                $encoding->encode($userids)]);
+        push(@{$list->{data}}, create_key_row($key, $secret));
     }
 
     my $scroll = Gtk2::ScrolledWindow->new;
