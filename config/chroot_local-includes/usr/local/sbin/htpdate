@@ -33,6 +33,7 @@ use DateTime;
 use DateTime::Format::DateParse;
 use English qw( -no_match_vars );
 use File::Path qw(rmtree);
+use File::Spec::Functions;
 use File::Temp qw/tempdir/;
 use Getopt::Long::Descriptive;
 use List::Util qw( shuffle );
@@ -233,15 +234,24 @@ sub getUrlDateDiff {
 
     my $tmpdir = tempdir("XXXXXXXXXX", TMPDIR => 1);
 
-    my @wget_options = ( '-U', $useragent, '--quiet', '--no-cache',
-                         '-e', 'robots=off', '--save-headers',
-                         '--no-directories',
-                         '--secure-protocol', $ssl_protocol,
-                     );
+    my @wget_options = (
+        '-U', $useragent, '--quiet', '--no-cache',
+        '-e', 'robots=off',
+        '--secure-protocol', $ssl_protocol,
+        '--directory-prefix', $tmpdir,
+    );
     push @wget_options, ('--dns-timeout', $dns_timeout) if defined $dns_timeout;
-    push @wget_options, ('--directory-prefix', $tmpdir);
     if ($fullrequest) {
-        push @wget_options, ('--page-requisites', '--span-hosts');
+        push @wget_options, (
+            '--no-directories', '--page-requisites', '--span-hosts',
+            '--save-headers',
+        );
+    }
+    else {
+        push @wget_options, (
+            '--spider', '--server-response',
+            '--output-file', catfile($tmpdir, 'headers'),
+        );
     }
 
     my @cmdline = ('wget', @wget_options, $url);
