@@ -179,6 +179,8 @@ sub newestDateHeader {
 
 Returns the result of the first successful application of
 $args->{code} on a random element of $args->{list}.
+Success is tested using the $args->{is_success} predicate,
+called on the value returned by $args->{code}.
 
 $args->{allowed_failure_ratio} caps the maximum failure ratio before
 giving up.
@@ -205,7 +207,7 @@ sub random_first_with_allowed_failure_ratio {
         try {
             $res = $args->{code}->($picked, $args->{args})
         };
-        return $res if $res;
+        return $res if $args->{is_success}->($res);
         $failures++;
     }
 
@@ -219,6 +221,7 @@ sub getPoolDateDiff {
     random_first_with_allowed_failure_ratio({
         list => $args->{urls},
         code => \&getUrlDateDiff,
+        is_success => sub { defined shift },
         args => { fullrequest => $fullrequest },
         allowed_failure_ratio => $allowed_per_pool_failure_ratio,
     });
