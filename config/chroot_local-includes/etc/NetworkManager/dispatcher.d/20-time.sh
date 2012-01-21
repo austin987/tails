@@ -63,7 +63,7 @@ has_consensus() {
 }
 
 has_only_unverified_consensus() {
-	has_consensus && [ ! -e ${TOR_CONSENSUS} ]
+	[ ! -e ${TOR_CONSENSUS} ] && has_consensus ${TOR_UNVERIFIED_CONSENSUS}
 }
 
 wait_for_tor_consensus() {
