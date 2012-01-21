@@ -6,7 +6,7 @@ Some real-life usecases however require to setup some kind of
 data persistence, which should then be carefully introduced
 and supported.
 
-[[!toc levels=3]]
+[[!toc levels=4]]
 
 Usecases
 ========
@@ -21,14 +21,17 @@ to support.
 
 This might be relevant for the following applications:
 
-- gpg/ssh/vpn/OTR keys/configurations
-- certificates
-- IM and MUA configurations (since these can take a several
-  steps to setup which is annoying to redo for every amnesia
-  session)
+- GnuPG, SSH and OTR key pairs
+- GnuPG configuration
+- SSH client configuration
+- iceweasel certificate trust
+- Pidgin configuration
+- MUA configuration
 - Tor's data/cache for faster bootstrap with slow connections and
-  better protections through more stable entry guards (/var/lib/tor)
-- I2P data/cache/log directory (/var/lib/i2p)
+  better protections through more stable entry guards
+  (`/var/lib/tor/`); beware, this will break tordate
+  [[contribute/design/Time_syncing]]
+- I2P data/cache/log directory (`/var/lib/i2p/`)
 - NoScript global behaviour (whitelist / blacklist) and exceptions
 
 Perhaps it would be possible to make a tool/list so that the user can
@@ -53,34 +56,16 @@ wants to have persistent.
 
 ### Additional applications installation
 
-If a user need some program
-not present in amnesia per default it can be quite annoying to fetch
-the apt information (which takes a lot of time over tor) and
-download it (also slow), it could be nice to have a persistent
-directory (or similar) where all .deb-files are installed at
-boot time.
-
-### Postponed
-
-* [[todo/system_wide_persistence]]
-* [[todo/full_home_persistence]]
+If a user need some program not present in Tails per default it can be
+quite annoying to fetch the APT information and download it (slow over
+Tor), it could be nice to have a persistent directory (or similar)
+where all .deb-files are installed at boot time.
 
 Persistence storage location
 ----------------------------
 
 * Encrypted partition and/or encrypted archive file on a removable
   storage device.
-
-### Postponed
-
-* Use persistence without a persistence media: an encrypted persistent
-  archive could be [[remotely stored|todo/remote_persistent_storage]]
-  on existing storage services.
-
-Profiles
---------
-
-Postponed: [[todo/per-profile_persistence]].
 
 Specifications
 ==============
@@ -94,15 +79,15 @@ supported:
 
 Moreover:
 
-* Tails should default to use a persistent store it can detect on
-  removable media *in read-only mode*.
+* Tails should default to use *in read-only mode* a persistent store
+  it can detect on removable media.
 * Read-write access to a persistent data store must not be the
   default: it must require a voluntary user action such as choosing
   enabling a "with read-write persistent data" option in the boot
   menu.
 * The persistent data must be stored using strong, well-known, Free
   Software, peer-reviewed encryption tools.
-* Blacklist fixed storage devices from the search for persistent
+* Fixed storage devices must be blacklisted by default from the search for persistent
   volumes. Rationale: preventing the risk of using a malicious persistent volume
   seems more important than supporting the rare "I want to store my
   persistent volume on a fixed hard-disk" use-case.
@@ -117,40 +102,68 @@ Roadmap
 
 [[!tag todo/code]]
 
-The first use cases that will be supported are:
+This roadmap is about the set of persistence features we are going to
+implement initially; see also:
 
-* persistent application-specific configurations;
-* persistent user data store.
+* the [[list of what has been done already|todo/persistence/done]];
+* [[many ideas|todo/persistence/later]] for further improvements.
 
-Implementing one of these brings support for the other one more or
-less for free.
+First, we will support **persistent application-specific
+configurations** and **persistent user data store**; implementing one
+of these brings support for the other one more or less for free.
 
 This work can be split this way:
 
-1. Backend:
-   - improve Debian Live tools so they are able to implement our
-     specifications. This shall be done hand in hand with upstream so
-     that we don't end up maintaining a forked `live-boot` indefinitely
-     * wait for upstream to comment on our generalized overlays proposal
-     * decide between snapshots and generalized overlays
-     * implement generalized overlays or missing features in snapshots
-   - factor bits out of `live-boot` to make them support being run at
-     a later time of the boot process: the UI (persistence toggling,
-     etc.) will take place in the [[tails-greeter|todo/TailsGreeter]]
-     [[todo/boot_menu]]
+## 1. Backend
 
-2. User interface:
-   - make it easy to bootstrap / enable such persistence features;
-     this must be integrated into the post-installation process: at
-     some point the encrypted persistent container must be created.
-   - make it easy to specify which bits are persistent
-   - make it easy to use such persistence features (i.e. without adding
-     arguments to the kernel command line by hand)
+- **improve Debian Live tools** so they are able to implement our
+  specifications. This shall be done hand in hand with upstream so
+  that we don't end up maintaining a forked `live-boot` indefinitely:
+  * *nag upstream* until they comment on our generalized overlays proposal
+  * *decide* between snapshots and generalized overlays
+  * *implement* generalized overlays or missing features in snapshots
+  * get aforementioned changes *merged upstream*
+  * update Debian Live *documentation* to match aforementioned changes
+- **factor bits out of live-boot** to make them support being run at
+  a later time of the boot process; rationale: the UI (persistence
+  toggling, etc.) will take place in the
+  [[tails-greeter|todo/TailsGreeter]] [[todo/boot_menu]]
+  * *implement* these changes
+  * get these changes *merged upstream*
+- **move to live-boot and live-config 3.x**: Tails currently ships the
+  stable (2.x) branches, whereas all changes we need are being done in
+  the 3.x branches
 
-3. Documentation
+## 2. User interface
+
+- walk the last steps towards a working [[USB
+  installer|todo/usb_install_and_upgrade]]: see [[what is left to
+  do|todo/usb_install_and_upgrade/todo]]
+- make it easy to **bootstrap persistent storage**
+- make it easy to **configure which bits are persistent**
+- make it easy to **enable persistence at boot time**
+
+## 3. Documentation
+
+### For users
+
+Users must be explained:
+
+- **how to use** Tails persistence features
+- the **shortcomings** that come with using persistence in the context
+  of Tails
+
+### For developers
+
+- update **[[design documentation|contribute/design]]**
+- document what and how to **test** when [[preparing a Tails
+  release|contribute/release_process/test]]
 
 Implementation
 ==============
+
+Backend
+-------
 
 Debian Live already supports several kinds of persistence, including
 snapshots of selected files and persistence store automounting, both
@@ -159,9 +172,6 @@ at the `$HOME` and system-wide levels.
 Encryption of the persistent volumes is supported using cryptsetup or
 loop-aes.
 
-Application-specific configurations
------------------------------------
-
 Neither home automounting nor `live-snapshot` currently fit the
 application-specific configuration persistence use case. Both because
 they are not finely grained enough and persist too much. Two possible
@@ -169,15 +179,8 @@ paths to a usable implementation are:
 
 * Improve `live-snapshot`. This seems like an easy starting point
   because it has an include list feature (`/etc/live-snapshot.list`).
-* Generalize overlays (*-rw) to handle arbitrary directories, not just
-  / and /home.
-
-Tails will move most boot-time communication with the user to a
-graphical [[todo/boot_menu]], [[replacing the GDM
-greeter|todo/TailsGreeter]]. This implies our work on persistence
-support shall at the end of the day allow live-snapshot to run this
-late in the boot process, instead of run from live-boot as is
-currently done.
+* Generalize overlays (`*-rw`) to handle arbitrary directories, not
+  just `/` and `/home`.
 
 **Note**: the following is the set of options that Debian Live needs
 to support both their current functionality and our usecase(s). Tails
@@ -185,10 +188,7 @@ will pre-configure some of these in `/etc/live/` and/or
 `/proc/cmdline`, and only a tiny subset of options will be made
 available to users by the Tails [[todo/boot_menu]]).
 
-We want to use `persistent-media=removable` or
-`persistent-media=removable-usb` (in `live-boot` 3.x).
-
-What needs to be done:
+### Left to do
 
 - In the long run we may want to support plain dm-crypt mappings
   hidden in files: something similar to the `live-media-offset` would
@@ -198,29 +198,25 @@ What needs to be done:
   before `scripts/live` attempts to copy snapshots data. See
   [[todo/boot_menu]].
 
-If we want to base our persistence on snapshots:
+##### If we decide to base our persistence on snapshots:
 
 - Add support for file deletion (e.g. by replacing cpio with rsync).
-
 - The `do_snap_copy` sub-procedure calculates free memory but does not
   seem to check there if is actually enough.
-
 - Generalize compression support? Only live-snapshot's cpio kind
   supports compression. If we want to support compression for other
   modes of operation, the user interface would be
   persistent-compression=....
-
 - Generalize live-snapshot.list? Only live-snapshot's cpio kind
   supports this currently, so we would otherwise be unable to use
   other types if we come up with reasons for doing so.
 
-If we want to base our persistence on overlays:
+##### If we decide to base our persistence on overlays:
 
 - Implement something like this:
   ["Design for custom mounts system"](http://live.debian.net/devel/rfc/persistence/).
 
-Read-only mode
---------------
+### Read-only mode
 
 There are two main ways to support using a persistent store in
 read-only mode:
@@ -230,15 +226,54 @@ read-only mode:
   aufs, and mount the resultant device, so that the mountpoint is seen
   as writable by applications but no actual change is made on disk.
 
+How this is implemented greatly depends on the snapshots vs.
+overlays decision.
+
 User interface
 --------------
 
-### at boot time
+### bootstrap persistent storage
 
-Choosing between various persistence modes calls for a more complex
-(implementation-wise) boot menu. See [[todo/boot_menu]] and
-[[todo/TailsGreeter]] for details.
+This must be integrated at post-installation time: when a newly
+installed Tails USB stick is first booted, and no persistent storage
+is enabled (a second stick with persistent storage might be ready to
+be used already), the user shall be prompted if s/he wants to setup
+a persistent storage container in the free space left on the USB stick
+by our USB installer.
 
-### during runtime
+#### Left to do
 
-XXX
+* specify features: draft, request for comments, discussion, consensus
+* wait for USB installer to be ready
+* implementation
+* documentation
+
+### configure which bits are persistent
+
+This should automatically be run right after the persistent storage
+bootstrap step.
+
+The user should also be enabled to change the configuration later;
+let's make the scope of this more complex case smaller to start with:
+
+* let's only support *adding* to the list of persistent items
+* how would doing such changes play with already enabled persistence?
+  let's only support the easiest to implement, which is probably
+  "persistence settings changes are taken into account at next boot"
+
+#### Left to do
+
+* specify features: draft, request for comments, discussion, consensus
+* implementation
+* documentation
+
+### enable persistence at boot time
+
+Choosing between various persistence modes is one of the reasons why
+we've need a graphical [[todo/boot_menu]]: [[todo/TailsGreeter]].
+
+#### Left to do
+
+* specify features: draft, request for comments, discussion, consensus
+* implementation
+* documentation
