@@ -15,6 +15,7 @@ TORDATE_DONE_FILE=${TORDATE_DIR}/done
 TOR_DIR=/var/lib/tor
 TOR_CONSENSUS=${TOR_DIR}/cached-consensus
 TOR_UNVERIFIED_CONSENSUS=${TOR_DIR}/unverified-consensus
+TOR_UNVERIFIED_CONSENSUS_HARDLINK=${TOR_UNVERIFIED_CONSENSUS}.bak
 TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
 INOTIFY_TIMEOUT=60
 DATE_RE='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
@@ -72,14 +73,6 @@ wait_for_tor_consensus() {
 		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to ${TOR_DIR} || log "timeout"
 	done
 	log "A Tor consensus file now contains a valid time interval."
-
-	if [ -e ${TOR_CONSENSUS} ]; then
-		log "Waiting for the Tor verified consensus file to contain a valid time interval..."
-		while ! has_verified_consensus; do
-			inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to ${TOR_DIR} || log "timeout"
-		done
-		log "The Tor verified consensus now contains a valid time interval."
-	fi
 }
 
 wait_for_working_tor() {
@@ -119,14 +112,24 @@ restart_tor() {
 }
 
 maybe_set_time_from_tor_consensus() {
-	if [ ! -e ${TOR_CONSENSUS} ]; then
-		log "We do not have a Tor consensus so we cannot set the system time according to it."
-		return
+	local consensus=${TOR_CONSENSUS}
+
+	if has_only_unverified_consensus \
+	   && ln -f ${TOR_UNVERIFIED_CONSENSUS} ${TOR_UNVERIFIED_CONSENSUS_HARDLINK}; then
+		consensus=${TOR_UNVERIFIED_CONSENSUS_HARDLINK}
+		log "We do not have a Tor verified consensus, let's use the unverified one."
 	fi
 
+	log "Waiting for the chosen Tor consensus file to contain a valid time interval..."
+	while ! has_consensus ${consensus}; do
+		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to ${TOR_DIR} || log "timeout"
+	done
+	log "The chosen Tor consensus now contains a valid time interval, let's use it."
+
+
 	# Get various date points in Tor's format, and do some sanity checks
-	vstart=$(sed -n "/^valid-after \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${TOR_CONSENSUS})
-	vend=$(sed -n "/^valid-until \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${TOR_CONSENSUS})
+	vstart=$(sed -n "/^valid-after \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${consensus})
+	vend=$(sed -n "/^valid-until \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${consensus})
 	vmid=$(date -ud "${vstart} -0130" +'%F %T')
 	log "Tor: valid-after=${vstart} | valid-until=${vend}"
 
