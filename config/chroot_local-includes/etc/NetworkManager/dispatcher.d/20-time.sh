@@ -54,12 +54,12 @@ tor_is_working() {
 }
 
 has_consensus() {
-	grep -qs "^valid-until ${DATE_RE}"'$' ${TOR_CONSENSUS} \
-					      ${TOR_UNVERIFIED_CONSENSUS}
-}
+	local files="${TOR_CONSENSUS} ${TOR_UNVERIFIED_CONSENSUS}"
 
-has_verified_consensus() {
-	grep -qs "^valid-until ${DATE_RE}"'$' ${TOR_CONSENSUS}
+	if [ $# -ge 1 ]; then
+		files="$@"
+	fi
+	grep -qs "^valid-until ${DATE_RE}"'$' ${files}
 }
 
 has_only_unverified_consensus() {
