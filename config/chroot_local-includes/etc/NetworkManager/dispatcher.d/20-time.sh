@@ -58,30 +58,36 @@ has_consensus() {
 					      ${TOR_UNVERIFIED_CONSENSUS}
 }
 
+has_verified_consensus() {
+	grep -qs "^valid-until ${DATE_RE}"'$' ${TOR_CONSENSUS}
+}
+
 has_only_unverified_consensus() {
 	has_consensus && [ ! -e ${TOR_CONSENSUS} ]
 }
 
 wait_for_tor_consensus() {
-	log "Waiting for the Tor consensus file to contain a valid time interval"
-	while :; do
-		if has_consensus; then
-			break;
-		fi
-
-		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
+	log "Waiting for a Tor consensus file to contain a valid time interval"
+	while ! has_consensus; do
+		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to ${TOR_DIR} || log "timeout"
 	done
+	log "A Tor consensus file now contains a valid time interval."
+
+	if [ -e ${TOR_CONSENSUS} ]; then
+		log "Waiting for the Tor verified consensus file to contain a valid time interval..."
+		while ! has_verified_consensus; do
+			inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to ${TOR_DIR} || log "timeout"
+		done
+		log "The Tor verified consensus now contains a valid time interval."
+	fi
 }
 
 wait_for_working_tor() {
-	log "Waiting for Tor to be working (i.e. cached descriptors exist)"
-	while :; do
-		if tor_is_working; then
-			break;
-		fi
-
-		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
+	log "Waiting for Tor to be working (i.e. cached descriptors exist)..."
+	while ! tor_is_working; do
+		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to ${TOR_DIR} || log "timeout"
 	done
+	log "Tor is now working."
 }
 
 date_points_are_sane() {
@@ -174,8 +180,7 @@ else
 	wait_for_tor_consensus
 	# If Tor cannot verify the consensus this is probably because all
 	# authority certificates are "expired" due to a clock far off into
-	# the future.seen as invalid. In that case let's set the clock to 
-	# the release date.
+	# the future. In that case let's set the clock to the release date.
 	if is_clock_way_off && has_only_unverified_consensus; then
 		log "It seems the clock is so badly off that Tor couldn't verify the consensus. Setting system time to the release date, restarting Tor and fetching a new consensus..."
 		date --set="$(release_date)" > /dev/null
