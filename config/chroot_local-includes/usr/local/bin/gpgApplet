@@ -51,6 +51,7 @@ textdomain("gpgApplet");
 
 =cut
 
+my $gnupg         = GnuPG::Interface->new();
 my $codeset       = langinfo(CODESET());
 my $encoding      = find_encoding($codeset);
 my $main_window   = Gtk2::Window->new();
@@ -296,27 +297,23 @@ sub get_status {
 
 sub get_private_key_status {
     my $key = shift;
-    my $code;
-    my $expiry = $key->expiration_date;
-    if (FALSE) {
-        # FIXME: how to detect revoked private keys?
-        $code='r';
-    } elsif (defined $expiry && DateTime->now->epoch > $expiry) {
-        $code='e';
-    } elsif (FALSE) {
-        # FIXME: how to detect private key without signing capabability?
-        $code='S';
-    } else {
-        $code='F';
+    my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
+    my $pubkey = ($gnupg->get_public_keys($fingerprint))[0]; # ignore collisions
+    my $validity = $pubkey->user_ids->[0]->validity;
+    my ($bad, $status) = get_status($validity);
+    # If the validity doesn't make the key bad the key could still be
+    # bad due to lack of signing capability (but are such keys even
+    # possible to create?)
+    if (!$bad && $pubkey->usage_flags !~ m/S/) {
+        ($bad, $status) = get_status('S');
     }
-    return get_status($code);
+    return ($bad, $status);
 }
 
 sub get_public_key_status {
     my $key = shift;
-    my ($bad, $status);
     my $validity = $key->user_ids->[0]->validity;
-    ($bad, $status) = get_status($validity);
+    my ($bad, $status) = get_status($validity);
     # If the validity doesn't make the key bad the key could still
     # be bad due to lack of encryption capability
     if (!$bad && $key->usage_flags !~ m/E/) {
@@ -463,8 +460,6 @@ sub choose_keys {
 }
 
 sub set_recipients {
-    my $gnupg = shift;
-
     my @keys = $gnupg->get_public_keys();
     if (@keys == 0) {
         display_error($encoding->decode(gettext("No public keys available")),
@@ -486,8 +481,6 @@ sub set_recipients {
 }
 
 sub set_signer {
-    my $gnupg = shift;
-
     my @keys = $gnupg->get_secret_keys();
     my @signer;
 
@@ -512,37 +505,33 @@ sub set_signer {
 
 sub encrypt {
     my $args    = shift;
-    my $gnupg   = $args->{gnupg};
     my $handles = $args->{handles};
 
-    return 0 unless set_recipients($gnupg);
+    return 0 unless set_recipients();
 
     return $gnupg->encrypt(handles => $handles);
 }
 
 sub sign {
     my $args    = shift;
-    my $gnupg   = $args->{gnupg};
     my $handles = $args->{handles};
 
-    return 0 unless set_signer($gnupg);
+    return 0 unless set_signer();
 
     return $gnupg->clearsign(handles => $handles);
 }
 
 sub sign_and_encrypt {
     my $args    = shift;
-    my $gnupg   = $args->{gnupg};
     my $handles = $args->{handles};
 
-    return 0 unless (set_signer($gnupg) && set_recipients($gnupg));
+    return 0 unless (set_signer() && set_recipients());
 
     return $gnupg->sign_and_encrypt(handles => $handles);
 }
 
 sub symmetric_encrypt {
     my $args    = shift;
-    my $gnupg   = $args->{gnupg};
     my $handles = $args->{handles};
 
     return $gnupg->encrypt_symmetrically(handles => $handles);
@@ -550,7 +539,6 @@ sub symmetric_encrypt {
 
 sub decrypt_verify {
     my $args    = shift;
-    my $gnupg   = $args->{gnupg};
     my $handles = $args->{handles};
     my $input   = $args->{input};
 
@@ -565,7 +553,6 @@ sub gpg_operate_on_text {
     my $operation = shift;
     my $text      = shift;
 
-    my $gnupg = GnuPG::Interface->new();
     $gnupg->options->hash_init(%gnupg_options);
     my $in_h    = IO::Handle->new();
     my $err_h   = IO::Handle->new();
@@ -577,7 +564,6 @@ sub gpg_operate_on_text {
     );
 
     my $args = {
-        gnupg   => $gnupg,
         handles => $handles,
         input   => $text,
         in_h    => $in_h,
