@@ -330,18 +330,9 @@ sub create_key_row {
     # no status implies expired, revoked, etc. keys, which we don't want to list
     return if !defined $status;
     my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
-    my $created     = $encoding->decode($key->creation_date_string);
-    my $expiry_str  = $key->expiration_date_string;
-    if (defined $expiry_str) {
-        $expiry_str = $encoding->decode($expiry_str);
-    } else {
-        $expiry_str = $encoding->decode(gettext("Never"));
-    }
     return [$encoding->encode($name),
             $encoding->encode($keyid),
             $encoding->encode($status),
-            $encoding->encode($created),
-            $encoding->encode($expiry_str),
             $encoding->encode($fingerprint),
             $encoding->encode($userids)];
 }
@@ -354,27 +345,22 @@ sub choose_keys {
     use constant C_NAME          => 0;
     use constant C_KEYID         => 1;
     use constant C_STATUS        => 2;
-    use constant C_CREATED       => 3;
-    use constant C_EXPIRY        => 4;
-    use constant C_FINGERPRINT   => 5;
-    use constant C_USERIDS       => 6;
+    use constant C_FINGERPRINT   => 3;
+    use constant C_USERIDS       => 4;
 
-    use constant VISIBLE_COLS => (C_NAME, C_KEYID, C_STATUS, C_CREATED,
-                                  C_EXPIRY);
+    use constant VISIBLE_COLS => (C_NAME, C_KEYID, C_STATUS);
     use constant HIDDEN_COLS => (C_FINGERPRINT, C_USERIDS);
 
     my $list = Gtk2::SimpleList->new (
         $encoding->decode(gettext("Name"))    => 'text',
         $encoding->decode(gettext("Key ID"))  => 'text',
         $encoding->decode(gettext("Status"))  => 'text',
-        $encoding->decode(gettext("Created")) => 'text',
-        $encoding->decode(gettext("Expires")) => 'text',
         "fingerprint"                         => 'text',
         "userids"                             => 'text'
         );
     foreach my $i (VISIBLE_COLS) {
         my $col = $list->get_column($i);
-        $col->set_max_width(300);
+        $col->set_max_width(400);
         $col->set_resizable(TRUE);
         $col->set_sort_column_id($i);
     }
@@ -411,7 +397,7 @@ sub choose_keys {
 
     my $dialog = Gtk2::Dialog->new($title, $main_window, 'destroy-with-parent',
                                    'gtk-cancel' => 'cancel', 'gtk-ok' => 'ok' );
-    $dialog->set_default_size(700,500);
+    $dialog->set_default_size(650,500);
     $dialog->set_default_response('ok');
     $dialog->vbox->add($scroll);
     my @selection;
