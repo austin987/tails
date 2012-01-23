@@ -272,27 +272,18 @@ sub set_clipboards_text {
 
 sub get_status {
     my $code = shift;
-    my $bad = FALSE;
     my $status;
     # Below taken from doc/DETAILS in GnuPG's sources
     switch ($code) {
         case "o" { $status = gettext("Unknown Trust"); }
         case "-" { $status = gettext("Unknown Trust"); }
         case "q" { $status = gettext("Unknown Trust"); }
-        case "i" { $status = gettext("Invalid Key"); $bad = TRUE; }
-        case "r" { $status = gettext("Revoked Key"); $bad = TRUE; }
-        case "e" { $status = gettext("Expired Key"); $bad = TRUE; }
-        case "n" { $status = gettext("Do not Trust"); $bad = TRUE; }
         case "m" { $status = gettext("Marginal Trust"); }
         case "f" { $status = gettext("Full Trust"); }
         case "u" { $status = gettext("Ultimate Trust"); }
-        # Below are some custom flags
-        case "F" { $status = gettext("Fully Valid"); }
-        case "E" { $status = gettext("Cannot Encrypt"); $bad = TRUE; }
-        case "S" { $status = gettext("Cannot Sign"); $bad = TRUE; }
-        else     { $status = $code; }
+        else     { return; }
     }
-    return ($bad, $encoding->decode($status));
+    return $encoding->decode($status);
 }
 
 sub get_private_key_status {
@@ -300,26 +291,24 @@ sub get_private_key_status {
     my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
     my $pubkey = ($gnupg->get_public_keys($fingerprint))[0]; # ignore collisions
     my $validity = $pubkey->user_ids->[0]->validity;
-    my ($bad, $status) = get_status($validity);
-    # If the validity doesn't make the key bad the key could still be
-    # bad due to lack of signing capability (but are such keys even
-    # possible to create?)
-    if (!$bad && $pubkey->usage_flags !~ m/S/) {
-        ($bad, $status) = get_status('S');
+    my $status = get_status($validity);
+    # a valid key may lack signing capabilities (but are such keys
+    # even possible to create?)
+    if ($status && $pubkey->usage_flags !~ m/S/) {
+        return;
     }
-    return ($bad, $status);
+    return $status;
 }
 
 sub get_public_key_status {
     my $key = shift;
     my $validity = $key->user_ids->[0]->validity;
-    my ($bad, $status) = get_status($validity);
-    # If the validity doesn't make the key bad the key could still
-    # be bad due to lack of encryption capability
-    if (!$bad && $key->usage_flags !~ m/E/) {
-        ($bad, $status) = get_status('E');
+    my $status = get_status($validity);
+    # a valid key may lack encryption capabilities
+    if ($status && $key->usage_flags !~ m/E/) {
+        return;
     }
-    return ($bad, $status);
+    return $status;
 }
 
 sub create_key_row {
@@ -332,12 +321,14 @@ sub create_key_row {
     my $userids = join("\n", map { "- " . $encoding->decode($_->as_string) }
                                  $key->user_ids);
     my $keyid   = $encoding->decode($key->short_hex_id);
-    my ($bad, $status); # bad keys are shown with strikethrough
+    my $status;
     if ($secret) {
-	($bad, $status) = get_private_key_status($key);
+        $status = get_private_key_status($key);
     } else {
-	($bad, $status) = get_public_key_status($key);
+        $status = get_public_key_status($key);
     }
+    # no status implies expired, revoked, etc. keys, which we don't want to list
+    return if !defined $status;
     my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
     my $created     = $encoding->decode($key->creation_date_string);
     my $expiry_str  = $key->expiration_date_string;
@@ -351,7 +342,6 @@ sub create_key_row {
             $encoding->encode($status),
             $encoding->encode($created),
             $encoding->encode($expiry_str),
-            $bad,
             $encoding->encode($fingerprint),
             $encoding->encode($userids)];
 }
@@ -366,13 +356,12 @@ sub choose_keys {
     use constant C_STATUS        => 2;
     use constant C_CREATED       => 3;
     use constant C_EXPIRY        => 4;
-    use constant C_STRIKETHROUHG => 5;
-    use constant C_FINGERPRINT   => 6;
-    use constant C_USERIDS       => 7;
+    use constant C_FINGERPRINT   => 5;
+    use constant C_USERIDS       => 6;
 
     use constant VISIBLE_COLS => (C_NAME, C_KEYID, C_STATUS, C_CREATED,
                                   C_EXPIRY);
-    use constant HIDDEN_COLS => (C_STRIKETHROUHG, C_FINGERPRINT, C_USERIDS);
+    use constant HIDDEN_COLS => (C_FINGERPRINT, C_USERIDS);
 
     my $list = Gtk2::SimpleList->new (
         $encoding->decode(gettext("Name"))    => 'text',
@@ -380,7 +369,6 @@ sub choose_keys {
         $encoding->decode(gettext("Status"))  => 'text',
         $encoding->decode(gettext("Created")) => 'text',
         $encoding->decode(gettext("Expires")) => 'text',
-        "strikethrough?"                      => 'bool',
         "fingerprint"                         => 'text',
         "userids"                             => 'text'
         );
@@ -392,10 +380,6 @@ sub choose_keys {
     }
     foreach my $i (HIDDEN_COLS) {
         $list->get_column($i)->set_visible(FALSE);
-    }
-    my $name_col = $list->get_column(C_NAME);
-    foreach my $cell ($name_col->get_cell_renderers()) {
-        $name_col->add_attribute ($cell, strikethrough => C_STRIKETHROUHG);
     }
     $list->get_selection->set_mode('multiple') unless $secret;
     $list->get_selection->unselect_all;
@@ -417,7 +401,8 @@ sub choose_keys {
     });
 
     foreach my $key (@keys) {
-        push(@{$list->{data}}, create_key_row($key, $secret));
+        my $row = create_key_row($key, $secret);
+        push(@{$list->{data}}, $row) if $row;
     }
 
     my $scroll = Gtk2::ScrolledWindow->new;
