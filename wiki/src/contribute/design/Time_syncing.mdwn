@@ -28,9 +28,10 @@ In short this is how time syncing is performed when Tails starts:
    is so badly off that the authority certificate are not valid any
    more so we set the system time to the Tails release date, which
    will guarantee that the certificates are valid. Then we restart Tor
-   and hope we get a verifiable consensus this time.
+   to get a new consensus, verifiable or not.
 0. Set the system time to an initial "guess" based on the Tor
-   consensus validity period.
+   consensus validity period, no matter if the consensus was verifiable
+   or not.
 0. Restart Tor, which now should be working.
 0. Run HTP (see below) through Tor to get a more correct system time.
 
@@ -73,7 +74,16 @@ consensus to you could anyway do this, unrelated to time, so the issue
 at hand boils down to *replaying a consensus not older than one week
 or so*.
 
-Second, things are different depending on if you're using a bridge or
+Second, the same type of attacker as above could also try to forge a
+completely new consensus, which would be unverifiable since the
+attacker doesn't have access to the authorities' keys. We would still
+set Tails' system time according to the unverifiable consensus, but
+Tor would refuse to use the forged consensus, resulting in complete
+denial-of-service. An attacker in that position could do
+denial-of-service attacks in many other ways, so this doesn't make
+the situation any worse.
+
+Third, things are different depending on if you're using a bridge or
 not.
 
 If not using a bridge: Tails starts without a cached consensus, so its
