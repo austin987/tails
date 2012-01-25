@@ -66,7 +66,10 @@ sub done {
 }
 
 $SIG{__DIE__} = sub {
-    done;
+    # Avoid the "done" file to be created by an catched exception.
+    # When a eval block is being run, e.g. for exception catching, $^S is true.
+    # It is false otherwise.
+    done unless $^S;
     die(@_);
 };
 
@@ -135,8 +138,6 @@ sub parseCommandLine () {
             } split(/,/, join(',', @{$_}))
         ]
     } ($opt->pal_pool, $opt->neutral_pool, $opt->foe_pool);
-
-    debug("Pools:\n", Dumper(\@pools));
 }
 
 sub usage () {
@@ -327,19 +328,16 @@ message("Running htpdate.");
 my @diffs = grep {
     defined $_
 } map {
-    my $diff = $_->{thread}->join();
+    my $diff = $_->join();
     if (! defined $diff) {
         error('Aborting as one pool could not be reached');
     }
     $diff;
 } map {
-    {
-        url    => $_,
-        thread => threads->create(\&getPoolDateDiff, {
-            urls => $_,
-            fullrequest => $fullrequest,
-        })
-    }
+    threads->create(\&getPoolDateDiff, {
+        urls => $_,
+        fullrequest => $fullrequest,
+    })
 } @pools
     or error "No Date header could be received.";
 my @sorted_diffs = sort @diffs;
