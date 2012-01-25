@@ -65,12 +65,10 @@ until ( -e $htp_done_file ) {
     sleep 1;
 }
 
-# in case htpdate went fine, close the 'Please wait...' notification
-if (-e $htp_success_file) {
-    $notification->close();
-}
+$notification->close();
+
 # in case htpdate failed, notify the user with the corresponding logs
-else {
+unless (-e $htp_success_file) {
     open(my $htp_log, '<', $htp_log_file)
         or die "Can not open file '$htp_log_file': $OS_ERROR";
     my $last_log;
