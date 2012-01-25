@@ -187,9 +187,7 @@ else
 	if is_clock_way_off; then
 		log "The clock looks very badly off. Setting system time to the release date, restarting Tor and fetching a new consensus..."
 		date --set="$(release_date)" > /dev/null
-		service tor stop
-		rm -f "${TOR_UNVERIFIED_CONSENSUS}"
-		service tor start
+		service tor reload
 		wait_for_tor_consensus
 	fi
 	maybe_set_time_from_tor_consensus
