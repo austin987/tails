@@ -275,15 +275,15 @@ sub get_status {
     my $status;
     # Below taken from doc/DETAILS in GnuPG's sources
     switch ($code) {
-        case "o" { $status = gettext("Unknown Trust"); }
-        case "-" { $status = gettext("Unknown Trust"); }
-        case "q" { $status = gettext("Unknown Trust"); }
-        case "m" { $status = gettext("Marginal Trust"); }
-        case "f" { $status = gettext("Full Trust"); }
-        case "u" { $status = gettext("Ultimate Trust"); }
+        case "o" { $status = $encoding->decode(gettext("Unknown Trust")); }
+        case "-" { $status = $encoding->decode(gettext("Unknown Trust")); }
+        case "q" { $status = $encoding->decode(gettext("Unknown Trust")); }
+        case "m" { $status = $encoding->decode(gettext("Marginal Trust")); }
+        case "f" { $status = $encoding->decode(gettext("Full Trust")); }
+        case "u" { $status = $encoding->decode(gettext("Ultimate Trust")); }
         else     { return; }
     }
-    return $encoding->decode($status);
+    return $status;
 }
 
 sub get_private_key_status {
