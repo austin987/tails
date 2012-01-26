@@ -76,16 +76,8 @@ do_start() {
 		--neutral_pool "$HTP_POOL_NEUTRAL" \
 		--foe_pool     "$HTP_POOL_FOE" \
 		$HTP_POOL
-	ret=$?
 
-	# Get LIVE_USERNAME
-	. /etc/live/config.d/username
-
-	# Show notification
-	export DISPLAY=':0.0'
-	export XAUTHORITY="$(echo /var/run/gdm3/auth-for-$LIVE_USERNAME-*/database)"
-	exec /bin/su -c /usr/local/bin/tails-htp-notify-user "$LIVE_USERNAME" &
-	return ${ret}
+	return $?
 }
 
 do_stop() {
