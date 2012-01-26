@@ -21,6 +21,8 @@ INOTIFY_TIMEOUT=60
 DATE_RE='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
 VERSION_FILE=/etc/amnesia/version
 
+# Get LIVE_USERNAME
+. /etc/live/config.d/username
 
 ### Exit conditions
 
@@ -50,6 +52,18 @@ log() {
 	logger -t time "$@"
 }
 
+notify_user() {
+	local summary="$1"
+	local body="$2"
+
+	if [ -n "$3" ]; then
+		timeout_args='--expire-time=$3'
+	fi
+	export DISPLAY=':0.0'
+	export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
+	exec /bin/su -c "notify-send ${timeout_args} \"${summary}\" \"${body}\"" "${LIVE_USERNAME}" &
+}
+
 tor_is_working() {
 	[ -e $TOR_DESCRIPTORS ]
 }
@@ -67,12 +81,35 @@ has_only_unverified_consensus() {
 	[ ! -e ${TOR_CONSENSUS} ] && has_consensus ${TOR_UNVERIFIED_CONSENSUS}
 }
 
+wait_for_tor_consensus_helper() {
+	tries=0
+	while ! has_consensus && [ $tries -lt 5 ]; do
+		inotifywait -q -t 30 -e close_write -e moved_to ${TOR_DIR} || log "timeout"
+		tries=$(expr $tries + 1)
+	done
+
+	# return some kind of success measurement
+	has_consensus
+}
+
 wait_for_tor_consensus() {
 	log "Waiting for a Tor consensus file to contain a valid time interval"
-	while ! has_consensus; do
-		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to ${TOR_DIR} || log "timeout"
-	done
-	log "A Tor consensus file now contains a valid time interval."
+	if ! has_consensus && ! wait_for_tor_consensus_helper; then
+		log "Unsuccessfully waited for Tor consensus, restarting Tor and retrying."
+		service tor restart
+	fi
+	if ! has_consensus && ! wait_for_tor_consensus_helper; then
+		log "Unsuccessfully retried waiting for Tor consensus, aborting."
+	fi
+	if has_consensus; then
+		log "A Tor consensus file now contains a valid time interval."
+	else
+		log "Waited for too long, let's stop waiting for Tor consensus."
+		# FIXME: gettext-ize
+		notify_user "Synchronizing the system's clock" \
+			"Could not fetch Tor consensus."
+		exit 2
+	fi
 }
 
 wait_for_working_tor() {
