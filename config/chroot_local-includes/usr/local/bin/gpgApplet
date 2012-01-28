@@ -292,8 +292,7 @@ sub get_private_key_status {
     my $pubkey = ($gnupg->get_public_keys($fingerprint))[0]; # ignore collisions
     my $validity = $pubkey->user_ids->[0]->validity;
     my $status = get_status($validity);
-    # a valid key may lack signing capabilities (but are such keys
-    # even possible to create?)
+    # a valid key may lack signing capabilities
     if ($status && $pubkey->usage_flags !~ m/S/) {
         return;
     }
