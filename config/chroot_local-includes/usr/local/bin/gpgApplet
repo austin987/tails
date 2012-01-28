@@ -329,11 +329,8 @@ sub create_key_row {
                                  $key->user_ids);
     my $keyid   = $encoding->decode($key->short_hex_id);
     my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
-    return [$encoding->encode($name),
-            $encoding->encode($keyid),
-            $encoding->encode($status),
-            $encoding->encode($fingerprint),
-            $encoding->encode($userids)];
+    # Gtk2::SimpleList encodes these strings itself.
+    return [$name, $keyid, $status, $fingerprint, $userids];
 }
 
 sub choose_keys {
