@@ -385,10 +385,8 @@ sub choose_keys {
         return TRUE;
     });
 
-    foreach my $key (@keys) {
-        my $row = create_key_row($key, $secret);
-        push(@{$list->{data}}, $row) if $row;
-    }
+    push @{$list->{data}},
+        grep { $_ } map { create_key_row($_, $secret) } @keys;
 
     my $scroll = Gtk2::ScrolledWindow->new;
     $scroll->set_policy('automatic', 'automatic');
