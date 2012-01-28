@@ -288,25 +288,26 @@ sub get_status {
 
 sub get_private_key_status {
     my $key = shift;
+
     my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
     my $pubkey = ($gnupg->get_public_keys($fingerprint))[0]; # ignore collisions
+
+    # a valid key may lack signing capabilities
+    return unless $pubkey->usage_flags =~ m/S/;
+
     my $validity = $pubkey->user_ids->[0]->validity;
     my $status = get_status($validity);
-    # a valid key may lack signing capabilities
-    if ($status && $pubkey->usage_flags !~ m/S/) {
-        return;
-    }
     return $status;
 }
 
 sub get_public_key_status {
     my $key = shift;
+
+    # a valid key may lack encryption capabilities
+    return unless $key->usage_flags =~ m/E/;
+
     my $validity = $key->user_ids->[0]->validity;
     my $status = get_status($validity);
-    # a valid key may lack encryption capabilities
-    if ($status && $key->usage_flags !~ m/E/) {
-        return;
-    }
     return $status;
 }
 
