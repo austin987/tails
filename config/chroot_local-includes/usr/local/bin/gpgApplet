@@ -314,13 +314,7 @@ sub get_public_key_status {
 sub create_key_row {
     my $key = shift;
     my $secret = shift;
-    # If we used Gtk2::TreeView instead of Gtk2::SimpleList we could
-    # show all user ids directly in the list, but we make it simple
-    # for us and instead show them in the tooltip.
-    my $name    = $encoding->decode($key->user_ids->[0]->as_string);
-    my $userids = join("\n", map { "- " . $encoding->decode($_->as_string) }
-                                 $key->user_ids);
-    my $keyid   = $encoding->decode($key->short_hex_id);
+
     my $status;
     if ($secret) {
         $status = get_private_key_status($key);
@@ -329,6 +323,14 @@ sub create_key_row {
     }
     # no status implies expired, revoked, etc. keys, which we don't want to list
     return if !defined $status;
+
+    # If we used Gtk2::TreeView instead of Gtk2::SimpleList we could
+    # show all user ids directly in the list, but we make it simple
+    # for us and instead show them in the tooltip.
+    my $name    = $encoding->decode($key->user_ids->[0]->as_string);
+    my $userids = join("\n", map { "- " . $encoding->decode($_->as_string) }
+                                 $key->user_ids);
+    my $keyid   = $encoding->decode($key->short_hex_id);
     my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
     return [$encoding->encode($name),
             $encoding->encode($keyid),
