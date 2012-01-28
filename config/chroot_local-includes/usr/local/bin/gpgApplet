@@ -34,7 +34,7 @@ use Gtk2::SimpleList;
 
 use Encode qw{decode encode find_encoding};
 use English;
-use GnuPG::Interface;
+use gpgApplet::GnuPG::Interface;
 use IO::Handle;
 use I18N::Langinfo qw{langinfo CODESET};
 use List::MoreUtils qw{none};
@@ -51,7 +51,7 @@ textdomain("gpgApplet");
 
 =cut
 
-my $gnupg         = GnuPG::Interface->new();
+my $gnupg         = gpgApplet::GnuPG::Interface->new();
 my $codeset       = langinfo(CODESET());
 my $encoding      = find_encoding($codeset);
 my $main_window   = Gtk2::Window->new();
@@ -290,7 +290,7 @@ sub get_private_key_status {
     my $key = shift;
 
     my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
-    my $pubkey = ($gnupg->get_public_keys($fingerprint))[0]; # ignore collisions
+    my $pubkey = ($gnupg->get_public_keys_light($fingerprint))[0]; # ignore collisions
 
     # a valid key may lack signing capabilities
     return unless $pubkey->usage_flags =~ m/S/;
@@ -428,7 +428,7 @@ sub choose_keys {
 }
 
 sub set_recipients {
-    my @keys = $gnupg->get_public_keys();
+    my @keys = $gnupg->get_public_keys_light();
     if (@keys == 0) {
         display_error($encoding->decode(gettext("No public keys available")),
                       $encoding->decode(gettext(
@@ -449,7 +449,7 @@ sub set_recipients {
 }
 
 sub set_signer {
-    my @keys = $gnupg->get_secret_keys();
+    my @keys = $gnupg->get_secret_keys_light();
     my @signer;
 
     if (@keys == 0) {
