@@ -315,12 +315,9 @@ sub create_key_row {
     my $key = shift;
     my $secret = shift;
 
-    my $status;
-    if ($secret) {
-        $status = get_private_key_status($key);
-    } else {
-        $status = get_public_key_status($key);
-    }
+    my $status = $secret ?
+        get_private_key_status($key)
+      : get_public_key_status($key);
     # no status implies expired, revoked, etc. keys, which we don't want to list
     return if !defined $status;
 
