@@ -167,7 +167,7 @@ maybe_set_time_from_tor_consensus() {
 	# Get various date points in Tor's format, and do some sanity checks
 	vstart=$(sed -n "/^valid-after \(${DATE_RE}\)"'$/s//\1/p; t q; b; :q q' ${consensus})
 	vend=$(sed -n "/^valid-until \(${DATE_RE}\)"'$/s//\1/p; t q; b; :q q' ${consensus})
-	vmid=$(date -ud "${vstart} -0030" +'%F %T')
+	vmid=$(date -ud "${vstart} -0130" +'%F %T')
 	log "Tor: valid-after=${vstart} | valid-until=${vend}"
 
 	if ! date_points_are_sane "${vstart}" "${vend}"; then
@@ -183,7 +183,7 @@ maybe_set_time_from_tor_consensus() {
 		return
 	fi
 
-	log "Current time is not in valid Tor range, setting to: [${vmid}]"
+	log "Current time is not in valid Tor range, setting to middle of this range: [${vmid}]"
 	date -us "${vmid}" 1>/dev/null
 
 	# Tor is unreliable with picking a circuit after time change
