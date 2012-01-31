@@ -2,10 +2,15 @@ This page lists the tails-greeter known issues.
 
 [[!toc levels=2]]
 
-# Regressions from before tails-greeter
+# Regressions
 
-## Should set console keyboard layout
+## Set console keyboard layout
 
+If user choose locale, than console should be localized as well.
+
+> The console is localized once the login/password was entered.
+> That means the user must know how to type the login/password in
+> QWERTY, which is a regression.
 
 # Bugs
 
@@ -91,7 +96,7 @@ of sudo / suid vs. the user experience benefits.
 
 See [[todo/windows_theme]].
 
-# Untested features
+# Fixed, testing required
 
 ## Admin credentials
 
@@ -108,3 +113,24 @@ add pool.ntp.org to the list of servers).
 
 TailsGreeter uses hardcoded login and
 password values. That's why on logout the password is reset back to default value to allow 2nd login even if user password was set during 1st one.
+
+# Not a bug / unimportant
+
+## Layout-testing in text box is broken
+
+Was working in 0.1.0 but in 0.1.1~2.gbpad6da2, selecting French
+keyboard layout => still QWERTY layout in layout-testing text box.
+
+git bisect shows this was broken by commit 85ddb5c9. However, let's
+spending any time on that would be futile: the layout-testing box was
+a debugging-only tool, and won't be displayed to end users.
+
+## Localization preserved on logout
+
+If user chosen fr_FR locale, logged in, logged out, chosen ru_RU
+locale then upon login all 3 locales (en_US, fr_FR, ru_RU) will be
+available instead of expected 2.
+
+> I'm not sure we really want to seriously support logout / login,
+> mostly because it does not any kind of serious protection, so
+> let's say this is not that much of a bug.

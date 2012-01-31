@@ -1,44 +1,21 @@
 [[!toc levels=2]]
 
-misc unneeded files
-===================
+The following can only be implemented once we [[switch to live-build
+3.x|todo/live-build_3.x]]. So let's [[!tag todo/wait]].
 
-Once we use live-build 3.x, we can remove our custom hook that removes
-`/tmp/*` at the end of the `chroot_local-hooks` stage. Let's
-[[!taglink todo/wait]] then.
-
-live-build hooks
-================
+switch to live-build hooks
+==========================
 
 live-build 3.x ships a few interesting space-saving hooks in
-`share/hooks`, such as one that removes GNOME icon cache and one that
-removes compiled Python `.pyc` files.
+`share/hooks`, such as one that removes GNOME icon cache, another one
+that removes compiled Python `.pyc` files, and one that removes
+`/tmp/*` at the end of the `chroot_local-hooks` stage.
 
-We probably want to [[!taglink todo/wait]] for Ubuntu to actually ship
-Live CDs built using live-build 3.x, before switching to it.
-
-duplicated Linux kernel
-=======================
-
-[[!tag todo/code]]
-
-The Linux kernel + initramfs are present twice in a Tails ISO: once in
-the iso9660 filesystem, once inside the SquashFS. The former is
-needed, but the latter is not.
-
-* `config/binary_rootfs/excludes` does not work, because the excluded
-  files are deleted before being copied to the binary fs.
-* Something along the lines of
-  (`MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -wildcards -e
-  'boot/*'"`) does not work, due to [[!debbug 594968]].
-
-=> we need to add an option to live-build that would allow us to
-opt-in for "I don't want to ship the kernels and the rootfs".
+Once we use this version of live-build, we can remove our own
+implementation of this from `config/chroot_local-hooks/98-remove_unwanted_files`.
 
 files only needed at build time
 ===============================
-
-[[!tag todo/code]]
 
 We're currently using `chroot_local-includes` as a way to pass files
 from the build host to the build chroot. As a result, released images
@@ -48,13 +25,3 @@ but useless at runtime.
 live-build 3.x bind mounts (read-only) the build configuration
 directory (`config`) inside the chroot (onto `/root/config`) while the
 chroot hooks are running.
-
-GNOME icon cache
-================
-
-[[!taglink todo/test]]
-
-`/usr/share/icons/gnome/icon-theme.cache` is huge (48 MB in Tails 0.8).
-
-We should try removing it and see what the consequences are, in terms
-of space savings, boot time, runtime performance and memory usage.

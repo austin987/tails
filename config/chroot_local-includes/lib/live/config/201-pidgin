@@ -6,8 +6,8 @@ NICKS_LIST=/usr/share/amnesia/firstnames.txt
 # returns true with probability $1
 prob()
 {
-	# sh doesn't have $RANDOM, so we borrow it from bash
-	RANDOM="$(/bin/bash -c 'echo ${RANDOM}')"
+	# sh doesn't have bash's $RANDOM, so we implement it
+	RANDOM=$(expr $(od -Anv -N4 -tu4 /dev/urandom) % 32768)
 	# we compare with > instead of <= due to mismatch between bash and bc
 	# on what values true and false have.
 	return $(echo "scale = 10; ${RANDOM}/32767 > ${1}" | bc)
@@ -16,15 +16,18 @@ prob()
 leet_nick()
 {
 	# we leave the first letter due to restrictions on nicks in IRC
-	echo "${1:0:1}$(echo ${1:1} | tr 'e' '3' | tr 'i' '1' | tr 'o' '0')"
+	first=$(expr substr ${1} 1 1)
+	rest=${1#?}
+	rest=$(echo "${rest}" | tr 'e' '3' | tr 'i' '1' | tr 'o' '0')
+	echo "${first}${rest}"
 }
 
 generate_nick()
 {
-	NICK="$(/usr/local/bin/lc.py -g 1 --min 4 --max 10 ${NICKS_LIST})"
+	NICK=$(/usr/local/bin/lc.py -g 1 --min 4 --max 10 "${NICKS_LIST}")
 
 	if prob 0.90; then
-		NICK="$(echo ${NICK} | tr '[:upper:]' '[:lower:]')"
+		NICK=$(echo "${NICK}" | tr '[:upper:]' '[:lower:]')
 	fi
 
 	if prob 0.05; then
@@ -36,7 +39,7 @@ generate_nick()
 	fi
 
 	if prob 0.05; then
-		NICK="$(leet_nick ${NICK})"
+		NICK=$(leet_nick "${NICK}")
 	fi
 
 	echo ${NICK}

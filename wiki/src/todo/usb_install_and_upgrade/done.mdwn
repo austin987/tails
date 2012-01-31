@@ -89,6 +89,8 @@ Misc
 - fix string.encode('utf-8', 'replace')
 - decode/encode popen commands output like creator's popen wrapper
 - virer le QPixmap proxies dans pyuicc4_custom
+- .desktop file uses `Icon=fedorausb.png` => use a more generic icon
+  [intrigeri]
 
 User interface
 ==============
@@ -99,6 +101,32 @@ User interface
        gui.py:LiveUSBDialog.begin()
 - keep or change the current way to warn and ask confirmation?
   ===> Keep
+- UI: make it more clear when the user must confirm
+  Rename the "Create" button to "Forward" or "Go on"?
+  Add the "go forward" icon to the button? [intrigeri]
+
+Launchers
+---------
+
+We need to pass the `-u` and `-n` switches in any case; specific modes
+of operation need other switches:
+
+   * Initial installation needs `-P` and `-m`, upgrade does not.
+   * Cloning needs `--clone`, installing from ISO does not.
+
+We have `.desktop` files for the following usecases:
+
+ * Clone the currently running Tails onto a shiny new USB stick:
+   `--clone -P -m`
+ * Upgrade a (non-running) Tails system using a ISO file: no
+   additional switch required.
+ * Upgrade a (non-running) Tails system using a ISO file: no
+   additional switch required.
+
+Note for later: having *Clone the currently running Tails system* as
+an option in the UI would allow us separate usecases based on the
+action to be done (install vs. upgrade) rather than based on the
+source of the installation / upgrade.
 
 Partitions
 ==========
@@ -124,3 +152,6 @@ In feature/ignore_source_device branch, based on the feature/partitioning one:
     (left to do: update pot/po files)
 - allow hiding any persistence (overlay slider, persistence checkbox)
   => Done in branch feature/persistence_checkbox
+- Don't ask to confirm before resetting the MBR when using
+  `--partition`: done in 5028cb0.
+- if stick size <1.5GB, error out in a user-friendly way [intrigeri]

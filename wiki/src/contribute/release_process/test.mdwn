@@ -36,12 +36,10 @@ Check the output for:
  - <http://monip.org/>
 * does the exposed User-Agent match the generic Torbutton's one?
   (connect to a website you can check the access logs for)
-* firegpg: test symmetric encryption/decryption, same for asymmetric
-* `about:plugins` should say no plugin is installed in every one of
-  the following cases:
- 1. Torbutton add-on enabled in *Tor enabled* status
- 2. Torbutton add-on enabled in *Tor Disabled* status
- 3. Torbutton add-on disabled
+* Browsing (by IP) a HTTP/HTTPS server on the LAN should be possible.
+* Browsing (by IP) a FTP server on the LAN should be possible.
+* Entering `about:plugins` in the location bar should say no plugin is
+  installed.
 
 # Pidgin
 
@@ -60,18 +58,50 @@ Check the output for:
 # Tor enforcement
 
 * firewall: is the Tor-enforcement effective?
- - check output of `iptables -L -n`
- - check output of `iptables -t nat -L -n`
+ - check output of `iptables -L -n -v`
+ - check output of `iptables -t nat -L -n -v`
  - try connecting to the Internet after unsetting `$http_proxy` and
    `$HTTP_PROXY` using a piece of software that does not obey the
    GNOME proxy settings, *and* is not explicitely torified in Tails:
-   `unset http_proxy ; unset HTTP_PROXY ; wget http://monip.org`
+   `unset http_proxy ; unset HTTP_PROXY ; wget --no-proxy
+   http://monip.org` (should result in a "`Connection refused`".
 * firewall: is IPv6 traffic blocked?
  - check output of `ip6tables -L -n`
  - at a place with working IPv6: try connecting to a known-working
    IPv6-enabled server on its IPv6 address over TCP and icmp6.
-* is `resolv.conf` OK both before/after DHCP has been setup? it should
+* is `/etc/resolv.conf` OK both before/after DHCP has been setup? it should
   *always* read `nameserver 127.0.0.1`
+* verify that all destinations reached from an intensive Tails session
+  are tor routers or authorities: Boot Tails without the network
+  in. Start dumping your whole session's network activity with `sudo
+  tcpdump -i any -w dump` (or better, do the dump on another machine,
+  or on the host OS if Tails is running in a VM). Next, plug the
+  network and do *a lot* of network stuff (why not run do this while
+  doing all the other tests?). Then check that all destinations,
+  e.g. by using tshark and the script below:
+
+(ignore this line, ikiwiki is buggy...)
+
+    DESCRIPTORS=/var/lib/tor/cached-descriptors
+    # Note that these default directory authorities may change! To be
+    # sure, check in Tor's source, src/or/config.c:~900
+    DIR_AUTHS="
+    128.31.0.39 86.59.21.38 194.109.206.212 82.94.251.203 216.224.124.114
+    212.112.245.170 193.23.244.244 208.83.223.34 213.115.239.118"
+    tshark -r dump -T fields -e ip.dst | sort | uniq | \
+    while read x; do
+        ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
+        if echo ${DIR_AUTHS} | grep -qe ${ip_expr}; then
+            continue
+        fi
+        if ! grep -qe "^router [^ ]\+ ${ip_expr}" ${DESCRIPTORS}; then
+            echo "${x} is bad"
+        fi
+    done
+
+  Note that this script will produce some false positives, like your
+  gateway, broadcasts, etc. Also note that running I2P during these
+  test will list every I2P peer as "bad", so that is not recommended.
 
 # Use of untrusted partitions
 
@@ -83,7 +113,8 @@ Check the output for:
   CD/USB stick you are testing on a (possibly virtual) machine that
   has a Tails system copied on a cleartext partition not managed by
   LVM. The CD/USB ramdisk must use the Tails system found on the
-  CD/USB, and not the one found on the hard disk.
+  CD/USB, and not the one found on the hard disk. (Also check that
+  without Tails, that other Live system boots.)
 
 # Claws
 
@@ -94,12 +125,15 @@ Check the output for:
   non-anonymizing SMTP relay. Then check that email's headers once
   received, especially the `Received:` and `Message-ID:` ones.
 * Also check that the EHLO/HELO SMTP message is not leaking anything
-  with a packet sniffer: Disable SSL/TLS for SMTP in Claws (so take
-  precautions for not leaking your password in plaintext by either
-  changing it temporarily or using a disposable account). Then run
-  `sudo tcpdump -i lo -w dump` to capture the packets before Tor
-  encrypts it, and check the dump for the HELO/EHLO message and
-  verify that it only contains `localhost`.
+  with a packet sniffer: start Claws using the panel icon (which runs
+  `torify claws-mail`) to
+  avoid using the transparent proxy (which will confuse tcpdump).
+  Disable SSL/TLS for SMTP in Claws (so take precautions for not
+  leaking your password in plaintext by either changing it temporarily
+  or using a disposable account). Then run `sudo tcpdump -i lo -w
+  dump` to capture the packets before Tor encrypts it, and check the
+  dump for the HELO/EHLO message and verify that it only contains
+  `localhost`.
 
 # Whisperback
 
@@ -108,8 +142,8 @@ Check the output for:
 
 # GnuPG
 
-Those tests shall be run using GnuPG on the command-line, the
-Seahorse GUI and FireGPG:
+Those tests shall be run using GnuPG from the command-line and through
+the Seahorse GUI:
 
 * key search/receive: torified? going to the configured keyserver?
  - `gpg --search` tells what server it is connecting to
@@ -126,10 +160,7 @@ Seahorse GUI and FireGPG:
 
 
 
-1. `sudo rm /var/lib/live/htp*`
-   (FIXME-FOR-0.9: update for new tordate+htpdate setup: instead
-   `rm /var/run/htpdate/success /var/run/tordate/done /var/lib/tor/cached-descriptors`
-   )
+1. `sudo rm /var/run/htpdate/success /var/run/tordate/done /var/lib/tor/cached-descriptors`
 2. disconnect the network cable
 3. set the time to an obviously wrong one :
 
@@ -167,6 +198,29 @@ steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
 * `modinfo vboxguest` should work
 * test in VirtualBox
 
+# I2P
+
+* Make sure that I2P is up-to-date, at least if the
+  [changelogs](http://www.i2p2.de/announcements.html) mention that
+  security critical bugs were fixed.
+* Check that "Applications -> Internet -> I2P" works:
+  - You get the "Starting I2P..." pop-up.
+  - The router console opens in Iceweasel upon success.
+  - You get the "I2P failed to start" pop-up on failure (e.g. no
+    network so tordate failed).
+* Check that I2P connects to the network:
+  - The numbers in the "Peers" section of the router console should be
+    non-zero.
+  - You should get "Network: Firewalled" in the "General" section
+    (implying that the I2P network is reachable but UDP is blocked).
+* Check that you can reach some eepsites within Iceweasel, like
+  <http://www.i2p2.i2p> and <http://forum.i2p>.
+
+# Git
+
+* clone a repository over dumb transport (`git://`)
+* clone a repository over SSH
+
 # Misc
 
 * Check that links to the online website (`Mirror:`) at the bottom of
@@ -183,4 +237,8 @@ steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
   language. The virtual keyboard must work and be auto-configured to
   use the same keyboard layout as the X session.
 * Try to start with the `truecrypt` option on boot, see if it can be found in
-  the Application -> Accessories menu and that it runs correctly
+  the *Applications* → *Accessories* menu and that it runs correctly.
+* Connecting over SSH to a server on the Internet should work (and
+  appear in Vidalia's connections list).
+* Connecting (by IP) over SSH to a server on the LAN should work.
+

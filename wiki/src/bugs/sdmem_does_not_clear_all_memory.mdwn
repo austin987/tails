@@ -29,7 +29,21 @@ RAM if that matters) with both Tails 0.8 and 0.7.2.
 >> documentation|contribute/release_process/test/erase_memory_on_shutdown]]
 >> accordingly. Thanks for pointing this out. --intrigeri
 
->>> Possible fix (180f058) waiting to be tested in devel branch.
+Possible fix (180f058) waiting to be tested in devel branch. This
+change is likely to work "most of the time", but it is not reliable as
+is: sdmem kills itself as soon as it's refused to allocate memory, so
+there's no guarantee several instances of it will be allocating enough
+memory at the same time to ensure all memory is erased. In the worst
+case, this change can make the memory erasure process 32 times longer,
+with no efficiency improvement. Needs to be tested.
+
+Better would be to imitate Liberté Linux, that recently switched to
+using the Linux kernel's `memtest=2` feature, which is simpler, more
+robust, and allows wiping more RAM. This option will be
+enabled in the next (> 3.1.4-1) Debian kernel.
+
+=> registered as a [[TODO page|todo/move_from_sdmem_to_memtest]] with
+actual action plans.
 
 On the long run, if the Linux kernel does not wipe whatever memory
 pages it allocates to use for its own data structures, the kexec'd
@@ -37,3 +51,4 @@ program should be a custom, dedicated to memory erasure one, instead
 of a regular Linux kernel + ramdisk + userspace memory erasure
 program. This is probably the only way to overwrite **all** memory
 that was used in Tails.
+
