@@ -38,3 +38,6 @@ update-rc.d hdparm disable
 # (plymouth.postinst creates links using update-rc.d,
 # so we cannot disable the links it creates by using LSB headers)
 rm -f /etc/rc[06].d/*plymouth
+
+# gdomap is not used between processes running as the same user on the same host
+update-rc.d gdomap disable
