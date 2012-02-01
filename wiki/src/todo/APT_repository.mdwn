@@ -1,10 +1,84 @@
-[[!tag todo/research]]
-
 Instead of cluttering our main Git repository with Debian source and
 binary packages, we'd better setup an APT repository for our custom
 packages.
 
-How/where to setup and manage it shall be investigated.
+General overview
+================
 
-A solution that does not require us to have shell access to the server
-that hosts the APT repository gets bonus points.
+One single APT repository hosting multiple suites. The suite(s) to use
+as sources for APT are determined at Tails build time. We keep a suite
+for every past release. We need a suite for each feature or
+bugfix branch.
+
+Private side
+============
+
+Manage an APT repository using reprepro. Allow importing packages,
+creating new suites, merging, freezing, etc.
+
+Left to do
+----------
+
+[[!tag todo/code todo/sysadmin]]
+
+* see what are legal APT suite names
+* reprepro initial setup
+* scan the Tails Git repository on a regular basis, detect new bugfix
+  or feature branches, and accordingly create new suites in the APT
+  repository
+* make the APT repository generated at the  available over rsync for
+  the public APT mirror
+
+Public APT mirror
+=================
+
+This is the http:// public APT mirror that will be used at Tails
+build time.
+
+Left to do
+----------
+
+[[!tag todo/wait]]
+
+* ask for this APT repository's public mirror and sync' from the
+  private one
+
+Build system
+============
+
+The build system must add the relevant APT sources:
+
+* if the version in `debian/changelog` was released already (i.e.
+  a matching tag exists), then add the suite corresponding to this
+  release (e.g. `0.10` or `0.10.1`);
+* else, if building from the `testing` branch, add the `testing` suite
+* else, add the `devel` suite.
+
+In any case, if we're building from a bugfix or feature branch, add
+its own suite.
+
+Left to do
+----------
+
+[[!tag todo/code]]
+
+Implement what's described above.
+
+Documentation
+=============
+
+[[!tag todo/documentation]]
+
+Design and document the actions needed when...
+
+* importing a new package into a given suite
+* merging a feature or bugfix branch into stable, testing or devel
+* freezing devel into testing: merge `devel` branch into `testing` in
+  Git, and hard reset `testing` suite to the current state of the
+  `devel` suite
+* releasing a point-release from the stable branch: tag in Git, fork
+  `stable` APT suite into `$NEW_VERSION`
+* releasing a major release from the testing branch: tag in Git, fork
+  `testing` APT suite into `$NEW_VERSION`
+* post-release: after merging stable or testing into devel, e.g.
+  increment the version number in devel's `debian/changelog`
