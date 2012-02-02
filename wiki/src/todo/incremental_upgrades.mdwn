@@ -1,0 +1,174 @@
+[[!toc levels=2]]
+
+# Rationale
+
+Partial upgrades should provide only what has changed between two
+releases (deltas) and have a way to apply those changes to the
+previous version. We call the file that contains this an Incremental
+Upgrade Kit (IUK).
+
+At boot-time the security warning telling that a new Tails version is available
+should provide an automated way of doing the upgrade.
+
+# Roadmap
+
+[[!tag todo/code]]
+
+## 1. Prerequisites
+
+* **move to live-boot and live-config 3.x**: Tails currently ships the
+  stable (2.x) branches, whereas live-boot 3.x is needed to get
+  whiteouts support. This will be done as part of our work on
+  [[todo/persistence]].
+
+## 2. Infrastructure
+
+* make it easy to **generate an Incremental Upgrade Kit** for a point release
+* update **mirrors infrastructure** to support hosting Incremental Upgrade Kits
+
+## 3. User interface
+
+* make it easy to **install an Incremental Upgrade Kit**
+* make it easy to **download an Incremental Upgrade Kit**
+* update the **security warning program**, telling that a new Tails
+  version is available, to run (or point at) the upgrade program if
+  the new version is a point-release, and else point at full
+  upgrade documentation.
+
+## 4. Documentation
+
+### For users
+
+Users must be explained how to download and install an incremental
+upgrade kit.
+
+### For developers
+
+* update **[[design documentation|contribute/design]]**
+* update **[[release process|contribute/release_process]]**
+* document what and how to **test** when [[preparing a Tails
+  point-release|contribute/release_process/test]]
+
+# Implementation
+
+## Infrastructure
+
+### generate an IUK
+
+* think the IUK format through
+
+Program that takes two Tails ISO images, and:
+
+* builds the "diff" SquashFS
+* gets the new kernel(s), initrd(s), bootloader configuration
+* brings all this together into some kind of structured archive
+
+## User interface
+
+### install an IUK
+
+Write an installer for IUKs. Some of the USB installer's code can
+probably be factored out and reused.
+
+This should not happen at the same time as normal Tails operation,
+because we need to remount the boot medium read-write.
+
+At boot time, detect if a IUK is available on the boot medium
+(where?); it this is the case:
+
+* Tell the user we're going to run the upgrade.
+* Remount the boot-medium read-write.
+* Extract the IUK archive.
+* Move kernels and initrd's in place.
+* Move bootloader configuration in place.
+* Install bootloader on MBR.
+* Remount the boot-medium read-only.
+* Tell the user the upgrade process is finished.
+* Reboot.
+
+### security warning program
+
+* Detects if the new version is a point-release (checking if an IUK is
+  available is probably the simplest, most robust and future-proof way
+  to do so)
+* Points at the downloader.
+
+### download an IUK
+
+Write a downloader for Incremental Upgrade Kits.
+
+* Takes two versions as arguments, downloads the IUK.
+* Saves the IUK at some place where the IUK installer will find it (where?)
+* Bonus points if there's an opt-in way to have the download happen in
+  the clear, that is without going through the Tor network.
+
+# Research
+
+## Stacking squashfs images
+
+Tails filesystem is already using `aufs` to provide a read-write filesystem on
+top of the read-only `squashfs` image.
+
+This system could probably be extended to support mounting multiple `squashfs`
+filesystems on top of each others. Upgrades would be `squashfs` images with only
+the files that have been modified since the previous releases. This handles file
+deletions.
+
+Shipping upgrades could be as simple as shipping those extra `squashfs` images.
+
+Debian live supports such stacking already: see in `live-boot(7)` the
+part about `/live/filesystem.module`.
+
+Stacking squashfs images like this would still lack a way of upgrading the
+kernel and the syslinux. This should also be handled by the automated upgrade
+process.
+
+### Initial test
+
+Here is a test. First the procedure to create the *delta* squashfs image, to be
+done as `root`:
+
+    mkdir /mnt/tails-0.7.1
+    mkdir /mnt/tails-0.7.2
+    mount -o loop tails-i386-0.7.1.iso /mnt/tails-0.7.1
+    mount -o loop tails-i386-0.7.2.iso /mnt/tails-0.7.2
+    mkdir /mnt/tails-0.7.1-root
+    mkdir /mnt/tails-0.7.2-root
+    mount -o loop /mnt/tails-0.7.1/live/filesystem.squashfs /mnt/tails-0.7.1-root
+    mount -o loop /mnt/tails-0.7.2/live/filesystem.squashfs /mnt/tails-0.7.2-root
+
+    mkdir /mnt/upgrade-0.7.1-to-0.7.2
+    mount -t tmpfs tmpfs /mnt/upgrade-0.7.1-to-0.7.2
+
+    mkdir /mnt/union
+    mount -t aufs -o br=/mnt/upgrade-0.7.1-to-0.7.2=rw:/mnt/tails-0.7.1-root=ro none /mnt/union
+    rsync -avP --delete-after /mnt/tails-0.7.2-root/ /mnt/union/
+
+    mksquashfs /mnt/upgrade-0.7.1-to-0.7.2 upgrade-0.7.1-to-0.7.2.squashfs
+
+Compressed size (using default gzip compression) is 82 MB.
+
+Not bad, and the new kernel is included, which can probably be avoided.
+
+Now, let's upgrade an USB stick:
+
+    mkdir /media/disk/live
+    cp   /mnt/tails-0.7.1/live/filesystem.squashfs \
+         upgrade-0.7.1-to-0.7.2.squashfs \
+         /mnt/tails/0.7.2/live/vmlinuz \
+         /mnt/tails/0.7.2/live/initrd.img \
+       /media/disk/live
+
+Then fiddle with GRUB or EXTLINUX.
+
+On boot, the new squashfs gets properly integrated. *Whiteouts* are not
+working. It looks like the `live-boot` 2.x mount options miss the `wh` attribute.
+But wait, booting with `break=top` and modifying `/scripts/live` to replace
+`roopt=rr` by `roopt=rr+wh` is enough to do the trick! Therefore,
+we've added the `wh` attribute to `live-boot` 3.x.
+
+Initial test is pretty conclusive!
+
+## Discarded options
+
+See the [[page about discarded options|todo/incremental_upgrades/archive]].
