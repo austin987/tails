@@ -21,12 +21,11 @@ Left to do
 
 [[!tag todo/code todo/sysadmin]]
 
-* see what are legal APT suite names
 * reprepro initial setup
 * scan the Tails Git repository on a regular basis, detect new bugfix
   or feature branches, and accordingly create new suites in the APT
   repository
-* make the APT repository generated at the  available over rsync for
+* make the APT repository available over rsync for
   the public APT mirror
 
 Public APT mirror
@@ -52,17 +51,18 @@ The build system must add the relevant APT sources:
   a matching tag exists), then add the suite corresponding to this
   release (e.g. `0.10` or `0.10.1`);
 * else, if building from the `testing` branch, add the `testing` suite
-* else, add the `devel` suite.
+* else, if building from the `devel` branch, add its own suite
 
-In any case, if we're building from a bugfix or feature branch, add
-its own suite.
+Also, if we're building from a bugfix or feature branch, add its
+own suite.
 
 Left to do
 ----------
 
 [[!tag todo/code]]
 
-Implement what's described above.
+Integrate into our build system the script that implements what's
+described above.
 
 Documentation
 =============
@@ -82,3 +82,8 @@ Design and document the actions needed when...
   `testing` APT suite into `$NEW_VERSION`
 * post-release: after merging stable or testing into devel, e.g.
   increment the version number in devel's `debian/changelog`
+* non-core developer without access to the "private" APT
+  infrastructure:  they would add the .deb they want to their Git
+  branch as we have been doing until now, push the result on
+  repo.or.cz or whatever... and at merge time, we would rewrite their
+  history to remove the .deb, and import it into our APT repo.
