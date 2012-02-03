@@ -119,9 +119,11 @@ This work can be split this way:
 - **improve Debian Live tools** so they are able to implement our
   specifications. This shall be done hand in hand with upstream so
   that we don't end up maintaining a forked `live-boot` indefinitely:
-  * *nag upstream* until they comment on our generalized overlays proposal
-  * *decide* between snapshots and generalized overlays
-  * *implement* generalized overlays or missing features in snapshots
+  * update generalized overlays proposal with dircombine option and
+    changes it requires
+  * *implement* generalized overlays and dircombine option
+  * *nag upstream* until they comment on our generalized overlays
+    proposal
   * get aforementioned changes *merged upstream*
   * update Debian Live *documentation* to match aforementioned changes
 - **factor bits out of live-boot** to make them support being run at
@@ -174,15 +176,34 @@ loop-aes.
 
 Neither home automounting nor `live-snapshot` currently fit the
 application-specific configuration persistence use case. Both because
-they are not finely grained enough and persist too much. Two possible
-paths to a usable implementation are:
+they are not finely grained enough and persist too much.
 
-* Improve `live-snapshot`. This seems like an easy starting point
-  because it has an include list feature (`/etc/live-snapshot.list`).
-* Generalize overlays (`*-rw`) to handle arbitrary directories, not
-  just `/` and `/home`.
+We have decided to:
 
-**Note**: the following is the set of options that Debian Live needs
+* [generalize overlays](http://live.debian.net/devel/rfc/persistence/)
+  (`*-rw`) to handle arbitrary directories, not just `/` and `/home`,
+* add a "dircombine" (inspired by [Joey Hess'
+  dircombine](http://git.kitenet.net/?p=joey/home.git;a=blob;f=bin/dircombine))
+  option to create symlinks from the root of a non-persistent
+  directory (e.g. `$HOME`) to regular files stored in
+  a persistent location (e.g. `.gitconfig`, `.vimrc`, etc.)
+
+### Example
+
+Example `live.persist` configuration file:
+
+	# source     destination       options
+	/apt         /var/cache/apt
+	/dotfiles    /home/amnesia     dircombine
+
+This will result in:
+
+* `$MEDIA/apt` is bind-mounted onto `/var/cache/apt`
+* `/home/amnesia/` contains symlinks to every file in `$MEDIA/dotfiles`
+
+### Nota bene
+
+The following is the set of options that Debian Live needs
 to support both their current functionality and our usecase(s). Tails
 will pre-configure some of these in `/etc/live/` and/or
 `/proc/cmdline`, and only a tiny subset of options will be made
@@ -190,7 +211,27 @@ available to users by the Tails [[todo/boot_menu]]).
 
 ### Left to do
 
-- In the long run we may want to support plain dm-crypt mappings
+* Implement something like this:
+  ["Design for custom mounts
+  system"](http://live.debian.net/devel/rfc/persistence/).
+* make sure that one cannot make `/live` or its contents persistent
+  (i.e. such lines will be ignored in live-persist files)
+* Add "dircombine" symlinks support; merge dircombine semantics with
+  what follows:
+  - If both $src and $dest exist, we rm $dest and symlink $src
+    on $dest.
+  - If $src exist but $dest doesn't, $src is symlinked on $dest.
+  - If $dest exist but $src doesn't, $dest is *moved* to $src (to
+    initialize it) and then $src is symlinked on $dest. If $dest exist
+    but $src doesn't, $dest is *moved* to $src (to initialize it) and
+    then $src is symlinked on $dest.
+  - If neither $src and $dest exist, we do nothing for now.
+* migrate the backing-directories for the custom mount points to
+  a non-hidden location somewhere in `/live/`, so that the symlinks
+  can work (currently, the backing-directories (i.e. where all stuff
+  is mounted) are one level behind "/" in the final fs exposed to the
+  user)
+* In the long run we may want to support plain dm-crypt mappings
   hidden in files: something similar to the `live-media-offset` would
   be perfect; the UI side of it will be tricky if we want to ask the
   offset to the user; this could happen either in the boot menu or by
@@ -198,36 +239,18 @@ available to users by the Tails [[todo/boot_menu]]).
   before `scripts/live` attempts to copy snapshots data. See
   [[todo/boot_menu]].
 
-##### If we decide to base our persistence on snapshots:
-
-- Add support for file deletion (e.g. by replacing cpio with rsync).
-- The `do_snap_copy` sub-procedure calculates free memory but does not
-  seem to check there if is actually enough.
-- Generalize compression support? Only live-snapshot's cpio kind
-  supports compression. If we want to support compression for other
-  modes of operation, the user interface would be
-  persistent-compression=....
-- Generalize live-snapshot.list? Only live-snapshot's cpio kind
-  supports this currently, so we would otherwise be unable to use
-  other types if we come up with reasons for doing so.
-
-##### If we decide to base our persistence on overlays:
-
-- Implement something like this:
-  ["Design for custom mounts system"](http://live.debian.net/devel/rfc/persistence/).
-
 ### Read-only mode
 
-There are two main ways to support using a persistent store in
-read-only mode:
+Our read-only mode will be implemented by merging the persistent
+volume with a "diff" branch on ramdisk using aufs, and mount the
+resultant device, so that the mountpoint is seen as writable by
+applications but no actual change is made on disk.
 
-* copy the persistent content at boot time to a filesystem location (aufs)
-* merge the persistent volume with a "diff" branch on ramdisk using
-  aufs, and mount the resultant device, so that the mountpoint is seen
-  as writable by applications but no actual change is made on disk.
-
-How this is implemented greatly depends on the snapshots vs.
-overlays decision.
+We need to migrate to `mount -bind $union_src_mountpoint $dst` in
+read-only  mode, where $union_src_mountpoint is a unionfs built from
+the real,  persistent, $src (as the read-only branch) and a tmpfs (as
+the  read-write branch), so that dircombine's symlinks work as
+expected in read-only mode.
 
 User interface
 --------------
@@ -267,6 +290,14 @@ let's make the scope of this more complex case smaller to start with:
 * implementation
 * documentation
 
+#### draft
+
+* by default setup, setup a dircombine-enabled persistent
+  `${HOME}/dotfiles`, preconfigured to be dircombine'd into `$HOME`?
+* apart of this, let's consider non-directories persistence an
+  advanced feature: to start with, and possibly forever, this could
+  only be configured by manually editing live-persist file
+
 ### enable persistence at boot time
 
 Choosing between various persistence modes is one of the reasons why
@@ -281,7 +312,71 @@ we've need a graphical [[todo/boot_menu]]: [[todo/TailsGreeter]].
 #### draft
 
 * add a second (options) screen to tails-greeter
-* detect persistent storage
+* ask whether to enable persistence at all; if yes, read-only or
+  read-write
+* communicate with `live-persist`
 * deal with LUKS passphrase
+* for a given persistent container, it's all or nothing: all bits of
+  persistence configured in its `live.persist` are to be setup
 * run backend (Debian Live) functions to setup persistent data where
   it belong
+
+backend / tails-greeter interface
+---------------------------------
+
+### Long story short
+
+0. The user chooses to toggle persistence on in `tails-greeter`.
+0. Still in `tails-greeter`, the user chooses if s/he wants read-only
+   or read-write persistence.
+0. `tails-greeter` asks `live-boot` the list of possibly valid
+   persistent containers.
+0. For each such volume, `tails-greeter` asks the user to enter the
+   passphrase or to skip it, and tries to unlock. `tails-greeter`
+   deals with error catching, retrying, etc. as appropriate.
+0. `tails-greeter` asks `live-boot` to setup persistence (at least
+   custom mounts and dircombine), passing it the list of volumes that
+   were successfully unlocked.
+
+### Interfacing
+
+A `live-persist` script shall be written, implementing each kind of
+`tails-greeter` to `live-boot` communication as a sub-command, such
+as:
+
+	live-persist list-plausible-containers
+	live-persist setup-persistence [--read-only] VOL1 [VOL2 ...]
+
+`live-persist` will report success and failure as any other
+well-behaved synchronously-called shell script, that is: with
+appropriate exit codes and `STDERR`.
+
+### Possibly valid persistent containers
+
+In our case, that is quite simple: it means removable LUKS encrypted
+filesystem, stored on GPT partitions labeled `Tails-persistence` (or
+similar, must be decided upon taking into account technical
+restrictions such as what GPT supports).
+
+This means we need to:
+
+* make sure we can pass this desired label to `live-boot`, probably on
+  the kernel command-line along with other parameters
+* add GPT labels support to `live-boot` persistence containers
+  discovery code
+
+In other (non-GPT) usecases, generally, it would be filesystems
+labeled with `live-rw` or `home-rw`, but if they're on encrypted
+device, then `live-boot` has to unlock the parent device them to see
+the label; also, in non-Tails usecases, any encrypted filesystem may
+contain a `*-rw` file, and must be unlocked to know too; so any
+encrypted device may be a valid persistent container that is worth
+passing to `tails-greeter`; . `live-persist` will support non-Tails
+usecases on a best-effort basis, leaving room for improvement in case
+other developers want to add support for their preferred usecases.
+
+### Asking live-persist to setup persistence
+
+To start with, we'll factor out only the custom mounts part from the
+main `live-boot` script; it depends on factoring out other kinds of
+persistence (e.g. all types of unionfs-style filesystems) first.
