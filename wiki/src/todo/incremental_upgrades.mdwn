@@ -69,18 +69,16 @@ Once a user has downloaded an IUK, they must have it installed.
 Write an installer for IUKs. Some of the USB installer's code can
 probably be factored out and reused.
 
-This should not happen at the same time as normal Tails operation,
-because we need to remount the boot medium read-write.
-
-At boot time, detect if a IUK is available on the boot medium
-(where?); it this is the case:
+This should happen at the same time as normal Tails operation,
+but very carefully, because we need to remount the boot medium
+read-write.
 
 * Tell the user we're going to run the upgrade.
 * Remount the boot-medium read-write.
 * Extract the IUK archive.
 * Move kernels and initrd's in place.
 * Move bootloader configuration in place.
-* Install bootloader on MBR.
+* Install bootloader on MBR (probably not needed).
 * Remount the boot-medium read-only.
 * Tell the user the upgrade process is finished.
 * Reboot.
@@ -101,7 +99,8 @@ a point-release, and else point at full upgrade documentation.
 Write a downloader for Incremental Upgrade Kits.
 
 * Takes two versions as arguments, downloads the IUK.
-* Saves the IUK at some place where the IUK installer will find it (where?)
+* Start the installer.
+* Allow the user to save the IUK where they want.
 * Bonus points if there's an opt-in way to have the download happen in
   the clear, that is without going through the Tor network.
 
