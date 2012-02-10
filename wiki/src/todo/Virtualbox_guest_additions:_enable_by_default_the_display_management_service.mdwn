@@ -4,3 +4,18 @@ Thus the "auto-resize guest display" option in Virtualbox doesn't work. It can b
 sudo VBoxClient --display
 
 This could be made default if there is no security risk involved.
+
+> `/etc/X11/Xsession.d/98vboxadd-xclient` already tries to start this
+> service, but fails: `Failed to connect to the VirtualBox kernel
+> service` in `~/.xsession-errors`. Giving the default user read/write
+> access to `/dev/vboxuser` allows her to run `VBoxClient --display`
+> without being root.
+>
+> The `virtualbox-guest-dkms` Debian package ships the udev rules
+> that should fix these permissions, *but* we intentionally remove
+> this package at build time after having built the modules.
+>
+> One should change `config/chroot_local-hooks/50-virtualbox` to
+> duplicate the udev rules file installed by `virtualbox-guest-dkms`.
+
+[[!tag todo/code]]
