@@ -2,6 +2,9 @@ This page lists the tails-greeter known issues.
 
 [[!toc levels=2]]
 
+This is related to tails-greeter as found in the master branch of
+git://git.immerda.ch/tails/tails-greeter.git
+
 # Regressions
 
 ## Set console keyboard layout
@@ -14,25 +17,27 @@ If user choose locale, than console should be localized as well.
 
 # Bugs
 
-## Wrong initial widget size
-
-E.g. when I select "Français" as a language, presumably because of long
-keyboard layout variants names, the combo boxes column grows a lot.
-The size of the widgets should be adjusted to the max. possible width
-before initial display.
-
-## Text gets hidden when language is selected
-
-Language & layout panel is not autoresized correctly so some of the
-widgets (most notably - entry field to test keyboard layout) are
-beyond window borders.
-
 ## Insane widgets used for long lists
 
 Comboboxes with long lists are hard to use - should be done the same
 way as GDM3 in Debian Squeeze: combobox contains default value and
 "other..." option, clicking latter will bring up pop-up window with
 long scrollable list of options and standard "ok", "cancel" buttons.
+
+> Implemented for language, to be done for locale and keyboard
+
+## Wrong icon used as langpanel's language label
+
+langpanel: the icon used for the languages is "applications-internet" which
+displays a globe in default icon theme, but could display something really
+irrelevant in an other icon theme;
+
+## Scroll effect in language selection menu
+
+langpanel: the languages menu has an horrible scroll effect at opening.
+That's GTK magic that I don't know how to workaround: when poping up a
+ComboBox, GTK places the selected entry under the cursor, thus not displaying
+the whole menu where I want it to be;
 
 # Missing features
 
@@ -111,8 +116,9 @@ add pool.ntp.org to the list of servers).
 
 ## Second login after user password was set
 
-TailsGreeter uses hardcoded login and
-password values. That's why on logout the password is reset back to default value to allow 2nd login even if user password was set during 1st one.
+TailsGreeter uses hardcoded login and password values. That's why on logout the
+password is reset back to default value to allow 2nd login even if user
+password was set during 1st one.
 
 # Not a bug / unimportant
 
@@ -134,3 +140,19 @@ available instead of expected 2.
 > I'm not sure we really want to seriously support logout / login,
 > mostly because it does not any kind of serious protection, so
 > let's say this is not that much of a bug.
+
+# Fixed
+
+## Wrong initial widget size
+
+E.g. when I select "Français" as a language, presumably because of long
+keyboard layout variants names, the combo boxes column grows a lot.
+The size of the widgets should be adjusted to the max. possible width
+before initial display.
+
+## Text gets hidden when language is selected
+
+Language & layout panel is not autoresized correctly so some of the
+widgets (most notably - entry field to test keyboard layout) are
+beyond window borders.
+
