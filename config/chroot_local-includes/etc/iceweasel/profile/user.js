@@ -1,6 +1,7 @@
 user_pref("capability.policy.maonoscript.javascript.enabled", "allAccess");
 user_pref("capability.policy.maonoscript.sites", " https://auk.riseup.net https://mail.riseup.net https://swift.riseup.net https://tern.riseup.net https://webmail.no-log.org addons.mozilla.org about: about:addons about:blank about:certerror about:config about:crashes about:credits about:home about:neterror about:plugins about:privatebrowsing about:sessionrestore chrome: file:// https://webmail.boum.org resource:");
 user_pref("extensions.adblockplus.currentVersion", "2.0.3");
+user_pref("extensions.adblockplus.savestats", false);
 user_pref("extensions.adblockplus.showinaddonbar", false);
 user_pref("extensions.adblockplus.showintoolbar", false);
 user_pref("extensions.adblockplus.subscriptions_autoupdate", false);
