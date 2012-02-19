@@ -257,15 +257,20 @@ User interface
 
 ### bootstrap persistent storage
 
-This must be integrated at post-installation time: when a newly
-installed Tails USB stick is first booted, and no persistent storage
-is enabled (a second stick with persistent storage might be ready to
-be used already), the user shall be prompted if s/he wants to setup
-a persistent storage container in the free space left on the USB stick
-by our USB installer.
+A *Create Tails persistent volume* menu entry should be available,
+well documented, and be the entry point to the *bootstrap persistent
+storage* UI. This UI shall allow the user to setup a persistent
+storage container in the free space left on the USB stick by our
+USB installer.
+
+Choosing persistence should be something *activelly* opt-in, i.e.
+"I want this, I read the documentation for related information, then
+run the setup tool", rather than something we throw to the face of
+every user who did not think of it herself.
 
 #### Left to do
 
+* specify features: request for comments, discussion, consensus
 * implementation
   - `.desktop` file
   - manpage
@@ -275,6 +280,60 @@ by our USB installer.
   - install `.desktop` file
   - install manpage
 * documentation
+
+#### Design
+
+Let's call this UI `tails-persistence-bootstrap`.
+
+Setting up a Tails persistent volume means:
+
+* detect the device Tails is running from
+* error out if not running from USB
+* error out unless Tails was installed using the USB installer (i.e.
+  unless it's running from a GPT partition labeled `Tails`)
+* error out if the device Tails is running from already has
+  a persistent volume
+* ask the user an encryption passphrase (welcome bonus: pointing to
+  the relevant documentation about choosing a *strong* passphrase)
+* create a LUKS-encrypted partition on the Tails USB stick
+  - uses all the free space left by the USB installer
+  - labeled `TailsData`
+  - create a filesystem in the encrypted container
+  - give ownership on the filesystem to the default Tails user
+* explain the user how/when/why to run the *configure which bits are
+  persistent* UI (might need a reboot in-between)
+
+* **How/when to run?** On first boot? To detect if a given Tails
+  system is booting for the first time or not, every first boot must
+  change something on the Tails system partition. I don't think we
+  want to do this, hence the menu entry.
+
+* **Storage location**: To keep the GUI and documentation simple, we
+  only support *setting up* a persistent volume on the USB stick Tails
+  is running from. The underlying tools (live-boot backend,
+  tails-greeter) will support storage on whatever relevant device,
+  though, so advanced users can prepare their separate persistence
+  storage devices themselves if they wish: it's merely a matter of GPT
+  partitioning, labeling, LUKS and mkfs.
+
+* **Filesystem** to create on the encrypted storage container: `ext3`
+  looks like the safe bet. The default `ext3` journalling mode only
+  journals metadata, not data, so the impact of journalling on Flash
+  drives should be pretty minor.  Also, we could not find
+  a [[!wikipedia Flash file system]] with mature enough support for
+  block devices: they are rather targeted at raw access to
+  MTD devices.
+
+#### Remaining design questions
+
+* What **programming language**? Using Python might allow re-using
+  bits from the USB installer, but not that much actually, so I think
+  I'll use a language I am more comfortable with, i.e. Perl.
+* Create partition using `udisks` or `sgdisk`?
+  See [[bug|todo/usb_install_and_upgrade/todo]].
+* Set special GPT flags on the persistent partition?
+  - 62 (hidden)?
+  - 63 (do not automount)?
 
 ### configure which bits are persistent
 
@@ -319,8 +378,9 @@ we've need a graphical [[todo/boot_menu]]: [[todo/TailsGreeter]].
 * add a second (options) screen to tails-greeter
 * ask whether to enable persistence at all; if yes, read-only or
   read-write
-* communicate with `live-persist`
-* deal with LUKS passphrase
+* find a way to run `live-persist` as root
+* ask list of possibly valid persistent containers to `live-persist`
+* ask LUKS passphrases
 * for a given persistent container, it's all or nothing: all bits of
   persistence configured in its `live.persist` are to be setup
 * run backend (Debian Live) functions to setup persistent data where
