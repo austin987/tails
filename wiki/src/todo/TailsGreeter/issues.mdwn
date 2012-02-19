@@ -7,6 +7,12 @@ git://git.immerda.ch/tails/tails-greeter.git
 
 # Regressions
 
+## Breaks emergency shutdown button
+
+... when logged without setting an admin password. Uses sudo?
+
+> Release blocker.
+
 ## Set console keyboard layout
 
 If user choose locale, than console should be localized as well.
@@ -17,10 +23,21 @@ If user choose locale, than console should be localized as well.
 
 # Bugs
 
-## tails-greeter localization does not work
+## Keyboard layout widget not l10n'd with the selected language
 
-Choosing a language that has translated strings in the `.po` does not
-trigger any change in the tails-greeter UI.
+Seems like all the UI's l10n is correctly updated on language change,
+but the keyboard layout widget seems to be constantly displayed using
+the default system language.
+
+> Release blocker.
+
+## Admin password description widget must wrap
+
+Long text that describes the admin password feature should be wrapped
+to fit on several short lines, rather than one huge one that may not
+fit on the screen.
+
+> Release blocker.
 
 ## Insane widgets used for long lists
 
@@ -29,13 +46,18 @@ way as GDM3 in Debian Squeeze: combobox contains default value and
 "other..." option, clicking latter will bring up pop-up window with
 long scrollable list of options and standard "ok", "cancel" buttons.
 
-> Implemented for language, to be done for locale and keyboard
+> Implemented for language, to be done for locale and keyboard. Minor,
+> can be postponed: those lists are much shorter than the language
+> one, so this is much less of a problem.
 
 ## Wrong icon used as langpanel's language label
 
 langpanel: the icon used for the languages is "applications-internet" which
 displays a globe in default icon theme, but could display something really
 irrelevant in an other icon theme;
+
+> Minor, postponed: we don't change the icon theme Tails uses every
+> now and then.
 
 ## Scroll effect in language selection menu
 
@@ -44,15 +66,14 @@ That's GTK magic that I don't know how to workaround: when poping up a
 ComboBox, GTK places the selected entry under the cursor, thus not displaying
 the whole menu where I want it to be;
 
+> Minor, postponed: it's not perfect to they eye, sure, but it's
+> perfectly usable.
+
 ## Restarting gdm3 does not work
 
 When developing, restarting gdm3 is a nice way to try different
 options combinations without rebooting. Currently, `sudo service gdm3
 restart` brings a black screen up.
-
-## Breaks emergency shutdown button
-
-... when logged without setting an admin password. Uses sudo?
 
 # Missing features
 
