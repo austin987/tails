@@ -1,3 +1,332 @@
+tails (0.10.1) unstable; urgency=low
+
+  * Iceweasel
+  - Make Startpage the default web search engine. Scroogle does not look
+    reliable enough these days.
+
+  * Software
+  - Upgrade WhisperBack to 1.5.1 (update link to bug reporting documentation).
+  - Update MAT to 0.2.2-2~bpo60+1 (fixes a critical bug in the GUI).
+
+  * Hardware support
+  - Upgrade Linux kernel to 3.2.1-2
+
+  * Time synchronization
+    Serious rework that should fix most, if not all, of the infamous
+    time-sync' related bugs some Tails users have experienced recently.
+    - Make htpdate more resilient by using three server pools, and
+      allowing some failure ratio.
+    - Set time from Tor's unverified-consensus if needed.
+    - Set time to middle of [valid-after, fresh-until] from consensus.
+    - Many robustness, performance and fingerprinting-resistance improvements.
+    - Display time-sync' notification much earlier.
+
+  * Miscellaneous
+  - Fix access to "dumb" git:// protocol by using a connect-socks wrapper
+    as GIT_PROXY_COMMAND.
+  - SSH client: fix access to SSH servers on the Internet by correcting
+    Host / ProxyCommand usage.
+  - Pidgin: use OFTC hidden service to workaround Tor blocking.
+  - Claws Mail: disable draft autosaving.
+    When composing PGP encrypted email, drafts are saved back to
+    the server in plaintext. This includes both autosaved and manually
+    saved drafts.
+  - tails-security-check-wrapper: avoid eating all memory when offline.
+
+ -- Tails developers <amnesia@boum.org>  Sat, 28 Jan 2012 10:00:31 +0100
+
+tails (0.10) unstable; urgency=low
+
+  * Tor: upgrade to 0.2.2.35-1.
+
+  * Iceweasel
+  - Install Iceweasel 9.0 from the Debian Mozilla team's APT repository.
+  - Update Torbutton to 1.4.5.1-1.
+  - Support viewing any YouTube video that is available in HTML5 format:
+    install xul-ext-greasemonkey and the "Permanently Enable HTML5 on
+    YouTube" GreaseMonkey script.
+  - Stop using Polipo in Iceweasel. Its SOCKS support was fixed.
+  - Install from Debian sid the iceweasel extensions we ship,
+    for compatibility with FF9.
+  - Use Scroogle (any languages) instead of Scroogle (English only) when
+    booted in English. Many users choose English because their own
+    language is not supported yet; let's not hide them search results in
+    their own language.
+  - Install Iceweasel language packs from Debian unstable:
+    unfortunately they are not shipped on the mozilla.debian.net repository.
+  - Install the NoScript Firefox extension; configure it the same way as
+    the TBB does.
+  - Disable third-party cookies.
+    They can be used to track users, which is bad. Besides, this is what
+    TBB has been doing for years.
+  - FoxyProxy: allow direct connections to RFC1918 IPs.
+
+  * Do not transparent proxy outgoing Internet connections through Tor.
+  - Torify the SSH client using connect-proxy to all IPs but RFC1918 ones.
+  - Torify APT using Polipo HTTP.
+  - Torify wget in wgetrc.
+  - Torify gobby clients using torsocks. It does not support proxies yet.
+  - Torify tails-security-check using LWP::UserAgent's SOCKS proxy support.
+  - Fix enabling of GNOME's HTTP proxy.
+
+  * Software
+  - Upgrade Vidalia to 0.2.15-1+tails1.
+    · New upstream release.
+    · Do not warn about Tor version.
+  - Upgrade MAT to 0.2.2-1~bpo60+1.
+  - Upgrade VirtualBox guest software to 4.1.6-dfsg-2~bpo60+1,
+    built against the ABI of X.Org backports.
+  - Upgrade I2P to 0.8.11 using KillYourTV's Squeeze packages;
+    additionally, fix its start script that was broken by the tordate merge.
+  - Install unar (The Unarchiver) instead of the non-free unrar.
+  - Install Nautilus Wipe instead of custom Nautilus scripts.
+
+  * Hardware support
+  - Upgrade Linux kernel to 3.1.6-1.
+  - Upgrade to X.Org from squeeze-backports.
+  - Install more, and more recent b43 firmwares.
+  - Upgrade barry to 0.15-1.2~bpo60+1.
+
+  * Internationalization
+  - Add basic language support for Russian, Farsi and Vietnamese.
+  - Install some Indic fonts.
+  - Install some Russian fonts.
+  - Add Alt+Shift shortcut to switch keyboard layout.
+
+  * Miscellaneous
+  - Support booting in "Windows XP -like camouflage mode":
+    · Install homebrewn local .debs for a Windows XP look-alike Gnome theme.
+    · Add the "Windows XP Bliss" desktop wallpaper.
+    · Added a script that's sets up Gnome to look like Microsoft Windows XP.
+    · Add Windows XP "camouflage" icons for some programs.
+    · Make Iceweasel use the IE icon when Windows XP camouflage is enabled.
+    · Add special launcher icons for the Windows XP theme so that they're
+      not too big.
+  - Decrease Florence focus zoom to 1.2.
+  - Do not fetch APT translation files. Running apt-get update is heavy enough.
+  - Add MSN support thanks to msn-pecan.
+  - Add custom SSH client configuration:
+    · Prefer strong ciphers and MACs.
+    · Enable maximum compression level.
+     · Explicitly disable X11 forwarding.
+    · Connect as root by default, to prevent fingerprinting when username
+      was not specified.
+  - Replace flawed FireGPG with a home-made GnuPG encryption applet;
+    install a feature-stripped FireGPG that redirects users to
+    the documentation, and don't run Seahorse applet anymore.
+  - Enable Seahorse's GnuPG agent.
+  - Blank screen when lid is closed, rather than shutting down the system.
+    The shutdown "feature" has caused data losses for too many people, it seems.
+    There are many other ways a Tails system can be shut down in a hurry
+    these days.
+  - Import Tails signing key into the keyring.
+  - Fix bug in the Pidgin nick generation that resulted in the nick
+    "XXX_NICK_XXX" once out of twenty.
+  - Pre-configure the #tor IRC discussion channel in Pidgin.
+  - Fix "technology preview" of bridge support: it was broken by tordate merge.
+  - Install dependencies of our USB installer to ease its development.
+  - Make vidalia NM hook sleep only if Vidalia is already running.
+  - Reintroduce the htpdate notification, telling users when it's safe
+    to use Tor Hidden Services.
+  - htpdate: omit -f argument to not download full pages.
+  - htpdate: write success file even when not within {min,max}adjust.
+    Otherwise htpdate will not "succeed" when the time diff is 0 (i.e.
+    the clock was already correct) so the success file cannot be used
+    as an indicator that the system time now is correct, which arguably
+    is its most important purpose.
+
+  * Build system
+  - Name built images according to git tag.
+
+ -- Tails developers <tails@boum.org>  Wed, 04 Jan 2012 09:56:38 +0100
+
+tails (0.9) unstable; urgency=low
+
+  * Tor
+  - Upgrade to 0.2.2.34 (fixes CVE-2011-2768, CVE-2011-2769).
+
+  * Iceweasel
+  - Upgrade to 3.5.16-11 (fixes CVE-2011-3647, CVE-2011-3648, CVE-2011-3650).
+  - Upgrade FireGPG to 0.8-1+tails2: notify users that the FireGPG Text
+    Editor is the only safe place for performing cryptographic operations,
+    and make it impossible to do otherwise. Other ways open up several
+    severe attacks through JavaScript (e.g. leaking plaintext when
+    decrypting, signing messages written by the attacker).
+  - Install Cookie Monster extension instead of CS Lite.
+  - Always ask where to save files.
+  - Upgrade Torbutton to 1.4.4.1-1, which includes support for the in-browser
+    "New identity" feature.
+
+  * Software
+  - Install MAT, the metadata anonymisation toolkit.
+  - Upgrade TrueCrypt to 7.1.
+  - Upgrade WhisperBack to 1.5~rc1 (leads the user by the hand if an error
+    occurs while sending the bugreport, proposes to save it after 2 faild
+    attempts, numerous bugfixes).
+  - Linux: upgrade to linux-image-3.0.0-2-486 (version 3.0.0-6); fixes
+    a great number of bugs and security issues.
+
+  * Miscellaneous
+  - Fully rework date and time setting system.
+  - Remove the htp user firewall exception.
+  - Saner keyboard layouts for Arabic and Russian.
+  - Use Plymouth text-only splash screen at boot time.
+  - Color the init scripts output.
+  - Suppress Tor's warning about applications doing their own DNS lookups.
+    This is totally safe due to our Tor enforcement.
+  - Disable hdparm boot-time service.
+    We only want hdparm so that laptop-mode-tools can use it.
+  - Run Claws Mail using torify.
+    It's not as good as if Claws Mail supported SOCKS proxies itself,
+    but still better than relying on the transparent netfilter torification.
+  - Install HPLIP and hpcups for better printing support.
+
+  * Erase memory at shutdown
+  - Run many sdmem instances at once.
+    In hope of erasing more memory until we come up with a proper fix for
+    [[bugs/sdmem_does_not_clear_all_memory]].
+  - Kill gdm3 instead of using its initscript on brutal shutdown.
+  - Use absolute path to eject for more robust memory wipe on boot medium removal.
+
+  * Space savings
+  - Exclude kernel and initramfs from being put into the SquashFS.
+    Those files are already shipped where they are needed, that is in the ISO
+    filesystem. Adapt kexec and memlockd bits.
+  - Do not ship the GNOME icon theme cache.
+  - Do not ship .pyc files.
+  - Do not ship NEWS.Debian.gz files.
+
+  * Build system
+  - Re-implement hook that modifies syslinux config to make future
+    development easier.
+
+ -- Tails developers <amnesia@boum.org>  Tue, 01 Nov 2011 13:26:38 +0100
+
+tails (0.8.1) unstable; urgency=low
+
+  * Iceweasel
+    - Update to 3.5.16-10 (fixes DSA-2313-1).
+    - FireGPG: force crypto action results to appear in a new window, otherwise
+      JavaScript can steal decrypted plaintext. Advice: always use FireGPG's
+      text editor when writing text you want to encrypt. If you write it in a
+      textbox the plaintext can be stolen through JavaScript before it is
+      encrypted in the same way.
+    - Update HTTPS Everywhere extension to 1.0.3-1.
+    - Stop using the small version of the Tor check page. The small version
+      incorrectly tells Tails users to upgrade their Torbrowser, which has
+      confused some users.
+
+  * Software
+    - Update Linux to 3.0.0-2 (fixes DSA-2310-1, CVE-2011-2905, CVE-2011-2909,
+      CVE-2011-2723, CVE-2011-2699, CVE-2011-1162, CVE-2011-1161).
+    - Update usb-modeswitch to 1.1.9-2~bpo60+1 and usb-modeswitch-data to
+      20110805-1~bpo60+1 from Debian backports. This adds support for a few
+      devices such as Pantech UMW190 CDMA modem.
+    - Install libregexp-common-perl 2011041701-3 from Debian unstable. This
+      fixes the bug: [[bugs/msva_does_not_use_configured_keyserver]].
+    - Install hdparm so the hard drives can be spinned down in order to save
+      battery power.
+    - Install barry-util for better BlackBerry integration.
+    - Debian security upgrades: OpenOffice.org (DSA-2315-1), openjdk-6
+      (DSA-2311-1), policykit-1 (DSA-2319-1)
+
+   * Protecting against memory recovery
+    - Set more appropriate Linux VM config before wiping memory. These
+      parameters should make the wipe process more robust and efficient.
+
+ -- Tails developers <amnesia@boum.org>  Sun, 16 Oct 2011 11:31:18 +0200
+
+tails (0.8) unstable; urgency=low
+
+  * Rebase on the Debian Squeeze 6.0.2.1 point-release.
+
+  * Tor
+    - Update to 0.2.2.33-1.
+    - Disabled ControlPort in favour of ControlSocket.
+    - Add port 6523 (Gobby) to Tor's LongLivedPorts list.
+
+  * I2P
+    - Update to 0.8.8.
+    - Start script now depends on HTP since I2P breaks if the clock jumps or is
+      too skewed during bootstrap.
+
+  * Iceweasel
+    - Update to 3.5.16-9 (fixes CVE-2011-2374, CVE-2011-2376, CVE-2011-2365,
+      CVE-2011-2373, CVE-2011-2371, CVE-2011-0083, CVE-2011-2363, CVE-2011-0085,
+      CVE-2011-2362, CVE-2011-2982, CVE-2011-2981, CVE-2011-2378, CVE-2011-2984,
+      CVE-2011-2983).
+    - Enable HTTP pipelining (like TBB).
+    - Update HTTPS Everywhere extension to 1.0.1-1 from Debian unstable.
+    - Suppress FoxyProxy update prompts.
+    - Prevent FoxyProxy from "phoning home" after a detected upgrade.
+    - Fixed a bunch of buggy regular expressions in FoxyProxy's configuration.
+      See [[bugs/exploitable_typo_in_url_regex?]] for details. Note that none of
+      these issues are critical due to the transparent proxy.
+    - Add DuckDuckGo SSL search engine.
+
+  * Torbutton
+    - Update to torbutton 1.4.3-1 from Debian unstable.
+    - Don't show Torbutton status in the status bar as it's now displayed in the
+      toolbar instead.
+
+  * Pidgin
+    - More random looking nicks in pidgin.
+    - Add IRC account on chat.wikileaks.de:9999.
+
+  * HTP
+    - Upgrade htpdate script (taken from Git 7797fe9) that allows setting wget's
+      --dns-timeout option.
+
+  * Software
+    - Update Linux to 3.0.0-1. -686 is now deprecated in favour of -486 and
+      -686-pae; the world is not ready for -pae yet, so we now ship -486.
+    - Update OpenSSL to 0.9.8o-4squeeze2 (fixes CVE-2011-1945 (revoke
+      compromised DigiNotar certificates), CVE-2011-1945).
+    - Update Vidalia to 0.2.14-1+tails1 custom package.
+    - Install accessibility tools:
+      - gnome-mag: screen magnifier
+      - gnome-orca: text-to-speech
+    - Replace the onBoard virtual keyboard with Florence.
+    - Install the PiTIVi non-linear audio/video editor.
+    - Install ttdnsd.
+    - Install tor-arm.
+    - Install lzma.
+
+  * Arbitrary DNS queries
+    - Tor can not handle all types of DNS queries, so if the Tor resolver fails
+      we fallback to ttdnsd. This is now possible with Tor 0.2.2.x, since we
+      fixed Tor bug #3369.
+
+  * Hardware support
+    - Install ipheth-utils for iPhone tethering.
+    - Install xserver-xorg-input-vmmouse (for mouse integration with the host OS
+      in VMWare and KVM).
+    - Install virtualbox-ose 4.x guest packages from Debian backports.
+
+  * Miscellaneous
+    - Switch gpg to use keys.indymedia.org's hidden service, without SSL.
+      The keys.indymedia.org SSL certificate is now self-signed. The hidden
+      service gives a good enough way to authenticate the server and encrypts
+      the connection, and just removes the certificates management issue.
+    - The squashfs is now compressed using XZ which reduces the image size quite
+      drastically.
+    - Remove Windows autorun.bat and autorun.inf. These files did open a static
+      copy of our website, which is not accessible any longer.
+
+  * Build system
+    - Use the Git branch instead of the Debian version into the built image's
+      filename.
+    - Allow replacing efficient XZ compression with quicker gzip.
+    - Build and install documentation into the chroot (-> filesystem.squashfs).
+      Rationale: our static website cannot be copied to a FAT32 filesystem due
+      to filenames being too long. This means the documentation cannot be
+      browsed offline from outside Tails. However, our installer creates GPT
+      hidden partitions, so the doc would not be browseable from outside Tails
+      anyway. The only usecase we really break by doing so is browsing the
+      documentation while running a non-Tails system, from a Tails CD.
+
+ -- Tails developers <amnesia@boum.org>  Thu, 09 Sep 2011 11:31:18 +0200
+
 tails (0.7.2) unstable; urgency=high
 
   * Iceweasel

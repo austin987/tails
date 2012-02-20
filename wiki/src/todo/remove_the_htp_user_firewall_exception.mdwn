@@ -1,4 +1,15 @@
-[[!tag todo/discuss]]
+[[!toc levels=2]]
+
+What's described bellow was implemented in `feature/tordate` Git
+branch, merged into devel, released in Tails 0.9.
+
+Left to do
+==========
+
+Accordingly update the design doc. [[!tag todo/documentation]]
+
+Introduction
+============
 
 We are now using in-the-clear HTP requests to set the system time
 before starting Tor:
@@ -39,7 +50,7 @@ time would decrease so this actually might be a bonus point rather
 than a cons.
 
 Integration
------------
+===========
 
 This mainly is a NetworkManager hooks ordering issue.
 
@@ -63,21 +74,18 @@ HTP? We would, if we need to restart Tor and Vidalia, but it seems we
 don't need to do that since Tor allows small time changes and we know
 we already have a not-so-bad system time.
 
-Approaches
-==========
-
-valid-after/until from Tor consensus
-------------------------------------
+Time from Tor consensus
+=======================
 
 Liberte Linux uses Tor's consensus file to initially roughly set the
-time thanks to their `tor-date` script. The consensus file contains
+time thanks to their `tordate` script. The consensus file contains
 such information:
 
 	valid-after 2010-12-27 16:00:00
 	valid-until 2010-12-27 19:00:00
 
 A consensus is valid for three hours. If the system time is in the
-[valid-after, valid-after + 2.5 hours] range, `tor-date` exits.
+[valid-after, valid-after + 2.5 hours] range, `tordate` exits.
 Else, it sets the system time to the middle of the [valid-after,
 valid-until] range and restarts Tor.
 
@@ -88,16 +96,45 @@ not manage to open a circuit if the system time is too much wrong, it
 is supposed to always be able to retrieve its consensus file as soon
 as Internet connectivity is available.
 
-See the `liberte/src/root/bin/tor-date` file in Liberte Linux SVN
+See the `liberte/src/usr/local/sbin/tordate` file in Liberte Linux SVN
 repository for details.
 
-
-### Security issues
+Security discussion
+===================
 
 This approach essentially removes the time skew check, which is used
-to prevent replay of consensus data. Hence a defeated sybil attack
-can be reintroduced by a compromised directory mirror to any client
-requesting consensus from it.
+to prevent replay of consensus data. Let's discuss this class of
+attacks.
+
+First, replaying a consensus older than one week or so results in
+preventing access to the Tor network, and that's all, because onion
+keys will be wrong. An attacker who is in a position to replay a
+consensus to you could anyway do this, unrelated to time, so the issue
+at hand boils down to *replaying a consensus not older than one week
+or so*.
+
+Second, things are different depending on if you're using a bridge or
+not.
+
+If not using a bridge: Tails starts without a cached consensus, so its
+Tor client starts by connecting directly to a directory authority (and
+not to a directory mirror / entry guard), so feeding you an old
+consensus requires the attacker either to break SSL, or to control the
+directory authority your Tor client connects to. Not good, but
+probably a compromise we can make.
+
+If using a bridge: your bridge can replay an old (one week old max.)
+consensus, which is used until HTP has fixed the time; not good, but
+probably a compromise we can make. If your bridge also can setup a SSL
+MitM attack against the HTP connections (e.g. the attacker also
+controls a SSL CA shipped by Debian), it can trick you into using this
+old consensus for max. one week, which is much worse.
+
+As a conclusion, it seems this is would be a satisfying approach.
+Let's do it!
+
+Archive
+=======
 
 NETINFO cell's timestamp
 ------------------------

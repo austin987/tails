@@ -15,6 +15,13 @@ KERNEL_ARCH="$(basename ${KERNEL} | sed -e 's|.*-||')"
 # the -dkms package must be installed *after* dkms to be properly registered
 apt-get install --yes build-essential dkms dpatch linux-headers-2.6-${KERNEL_ARCH}
 
+# temporary workaround: pretend gcc-4.6 is available, so that
+# the modules can build.
+# /usr/src/linux-headers-3.*-common/scripts/gcc-version.sh
+# is the one who says they should be run using 4.6.
+apt-get install --yes gcc-4.4
+ln -s /usr/bin/gcc-4.4 /usr/bin/gcc-4.6
+
 # dkms uses uname to find out what kernel to build modules for.
 # So, after installing dkms, but before installing
 # virtualbox-guest-dkms, we divert uname to a fake one that
@@ -29,7 +36,10 @@ EOF
 chmod 755 /bin/uname
 
 # Have the modules automagically built by dkms.
-apt-get install --yes virtualbox-guest-dkms
+# Also, at this time of the build, we've got a recent enough X.Org installed,
+# so we can install the X11 tools eventually.
+dpkg --install /usr/share/amnesia/packages/virtualbox*.deb
+apt-get -f install --yes
 
 # Revert to the real uname.
 mv /bin/uname.$$ /bin/uname
@@ -40,3 +50,6 @@ rm -rf /var/lib/dkms/virtualbox-guest/
 # virtualbox-guest-dkms's postrm script deletes any previously
 # built binary module; let's delete it before purging the package.
 rm -f /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
+
+# remove temporary workaround
+rm -f /usr/bin/gcc-4.5

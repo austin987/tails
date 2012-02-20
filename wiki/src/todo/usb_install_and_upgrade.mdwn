@@ -7,7 +7,7 @@ Current state of things
 
 Tails [[ships hybrid ISO images|contribute/design/hybrid_ISO]]. dd'ing
 such a file to a USB stick produces a bootable Tails system and is
-[[well documented|support/installing_onto_a_usb_stick]], but it
+[[well documented|doc/installing_onto_a_usb_stick/linux]], but it
 requires unfriendly command-line usage and overwrites any previously
 existing partition table.
 
@@ -46,10 +46,34 @@ encrypted partition or a file-backed encrypted FS shall be researched
 and decided upon. If the partition way is chosen, the installer
 software must have partitioning capabilities.
 
+Implementation
+==============
+
+[[!tag todo/code]]
+
+* [[what is left to do|usb_install_and_upgrade/todo]]
+* [[what we've done so far|usb_install_and_upgrade/done]]
+* [[notes about GPT|usb_install_and_upgrade/gpt]]
+
+
+Our plan is to:
+
+1. release something useful based on the work we've already done on
+   the basis of Fedora liveusb-creator
+2. probably start (again...) from Ubuntu's
+   [usb-creator](https://launchpad.net/usb-creator), that has a
+   much saner codebase; [[usb_install_and_upgrade/future_spec]]
+
+Our work on liveusb-creator is in a Git repository:
+
+- anonymous, read-only: `git://webmasters.boum.org/liveusb-creator`
+- developers read-write: `ssh://gitolite@webmasters.boum.org/liveusb-creator.git`
+
+Integration work is made in the `feature/usb_installer` branch in the
+main Tails Git repository.
+
 Research
 ========
-
-[[!tag todo/research]]
 
 Frontend UI
 -----------
@@ -80,8 +104,6 @@ run.
 ### Existing tools
 
 [[!tag todo/test]]
-
-(Testing all these is probably [[!taglink todo/easy]].)
 
 Wikipedia has a [[!wikipedia List of tools to create Live USB systems]]
 we should look at.
@@ -119,19 +141,8 @@ we should look at.
 
   This only works for the "clone existing system" usecase, though.
 
-* Incognito's `root_overlay/usr/sbin/create-usb` seems quite nice, as
-  it allows using an existing fat32 partition.
-   - no partition capabilities
-
-* Liberté Linux' `burn-usb` creates a FAT32 partition for data and
-  an ext2 partition where it copies the system to. It installs Grub on
-  the USB stick.
-
 * Ubuntu's [usb-creator](https://launchpad.net/usb-creator)
    - supposed to replicate exactly the CD to USB
-   - does not seem to recognize non-Ubuntu CDs (0.1.16 crashes on
-     Lenny, 0.1.10 does not display them in the GUI even if it the
-     console output proves that it takes good note of their presence )
    - how does it handle partitions?
 
 * [UNetbootin](http://unetbootin.sourceforge.net/)
@@ -191,10 +202,6 @@ we should look at.
       - [.deb](http://sidux.office-vienna.at/sidux/debian/pool/main/l/liveusb-creator/),
       - [source](http://w3you.com/liveusb-creator/liveusb-creator.htm)
 
-* [Mandriva Seed](http://git.mandriva.com/?p=projects/mandriva-seed.git;a=summary)
-   - supports Windows and GNU/Linux
-   - fork of Fedora's liveusb-creator; what are its enhancements?
-
 * [RIP’s mkusb](http://rip.7bf.de/current/mkusb.sh) and its
   [README](http://rip.7bf.de/current/mkusb.txt)
 
@@ -204,22 +211,24 @@ we should look at.
    - supports Windows and GNU/Linux
    - persistent storage creation - that is?
 
-* [makebootfat](http://advancemame.sourceforge.net/boot-readme.html):
-  command line utility able to create bootable USB disks
-  using the FAT filesystem and syslinux
-   - available in Debian
-   - able to autodetect/partition/format/populate the USB disk in a
-     single step without any user interaction
-   - able to create disk images which are compatible with all the
-     three standards USB-FDD, USB-HDD and USB-ZIP at the same time
-   - could be used to do most of the low-level work
+#### Dismissed
 
 * [FUSBi](http://aligunduz.org/FUSBi/)
    - modified from UNetbootin; what are its enhancements?
    - supports Windows and GNU/Linux
    - no release in 2009 nor 2010
 
-#### Dismissed
+* Incognito's `root_overlay/usr/sbin/create-usb` seems quite nice, as
+  it allows using an existing fat32 partition.
+   - no partition capabilities
+
+* Liberté Linux' `burn-usb` (old — 2010.0) creates a FAT32 partition for data and
+  an ext2 partition where it copies the system to. It installs Grub on
+  the USB stick.
+
+* [Mandriva Seed](http://git.mandriva.com/?p=projects/mandriva-seed.git;a=summary)
+   - supports Windows and GNU/Linux
+   - fork of Fedora's liveusb-creator; what are its enhancements?
 
 * Moblin's [Image
   Writer](http://git.moblin.org/cgit.cgi/moblin-image-creator/plain/image-writer)
@@ -231,6 +240,17 @@ we should look at.
      at all
 
 * <http://wubi-installer.org/>: Windows installer for Ubuntu.
+
+* [makebootfat](http://advancemame.sourceforge.net/boot-readme.html):
+  command line utility able to create bootable USB disks
+  using the FAT filesystem and syslinux
+   - available in Debian
+   - able to autodetect/format/populate the USB disk in a
+     single step without any user interaction
+   - able to create disk images which are compatible with all the
+     three standards USB-FDD, USB-HDD and USB-ZIP at the same time
+   - if it supported partitioning as well, and supported Windows, it
+     could be used to do most of the low-level work
 
 Booting methods
 ---------------
@@ -288,7 +308,7 @@ Here is how to test this.
                 insmod loopback
                 insmod iso9660
                 set root='(hd0,msdos1)'
-                search --no-floppy --fs-uuid --set b51975cd-c5ef-4b32-996a-2c8206516917
+                search --no-floppy --fs-uuid --set=root b51975cd-c5ef-4b32-996a-2c8206516917
                 loopback loop /binary.iso
                 linux   (loop)/live/vmlinuz boot=live fromiso=/dev/sda1/binary.iso config
                 initrd  (loop)/live/initrd.img
@@ -318,9 +338,9 @@ for details).
 
 **Warning!**
 
-1. This breaks the [[emergency shutdown|contribute/design/memory_erasure]]
-   on media removal.
-2. This is by no means a supported installation method *yet*. E.g. the
+1. On some versions of Tails, this breaks the [[emergency
+   shutdown|contribute/design/memory_erasure]] on media removal.
+2. This is by no means a supported installation method. E.g. the
    kernel parameters shall be manually updated when replacing the ISO
    with a newer one.
 
@@ -351,8 +371,6 @@ that add the `findiso=` boot parameter (by the way, does it respect
   upstream](http://lists.gnu.org/archive/html/grub-devel/2010-09/msg00080.html).
 
 #### Grub2 combined with syslinux' memdisk
-
-[[!tag todo/research]]
 
 This is used by some in combination with Grub2, in place of its
 loopback support. The [memdisk
@@ -451,7 +469,7 @@ deletions.
 Shipping upgrades could be as simple as shipping those extra `squashfs` images.
 
 Actually there seems to be such an option in Debian live already, see in `man
-live-boot` the part on /live/filesystem.module. There is need to do [[!taglink
+live-boot` the part about `/live/filesystem.module`. There is need to do [[!taglink
 todo/research]] on this.
 
 Stacking squashfs images like this would still lack a way of upgrading the
@@ -497,25 +515,19 @@ Now, let's upgrade an USB stick:
 Then fiddle with GRUB or EXTLINUX.
 
 On boot, the new squashfs gets properly integrated. But *whiteouts* are not
-working. It looks like the `live-boot` mount options miss the `wh` attribute.
+working. It looks like the `live-boot` 2.x mount options miss the `wh` attribute.
 But wait, booting with `break=top` and modifying `/scripts/live` to replace
-`roopt=rr` by `roopt=rr+wh` is enough to do the trick!
+`roopt=rr` by `roopt=rr+wh` is enough to do the trick! Therefore,
+we've added the `wh` attribute to `live-boot` 3.x.
 
 Initial test is pretty conclusive!
-
-Off topic: files that we might want to remove from the squashfs image:
-
-    /boot/initrd.img-*
-    /boot/vmlinuz-*
-    /usr/share/icons/gnome/icon-theme.cache
-    /tmp/*
 
 ### Appending to `squashfs` image (discarded option)
 
 `mksquashfs` can actually append new files to an existing `squashfs` image.
 
 Initial images are created with files in a specific order to
-[[improve boot time on cd]], but on a USB stick random access in a non-issue.
+[[improve boot time on cd]], but on a USB stick random access is a non-issue.
 
 [[!taglink todo/test]] if `mksquashfs` can append an image that is currently
 used without weakening a running system.

@@ -5,12 +5,17 @@ echo "Removing unwanted files"
 # Get AMNESIA_SUPPORTED_LANGUAGES
 . /usr/share/amnesia/build/variables
 
+rm -f /usr/share/icons/gnome/icon-theme.cache
+
 rm -rf \
    /usr/share/inkscape/examples \
    /usr/share/inkscape/tutorials
 
+rm -rf /usr/share/amnesia/packages
+
 find /usr/share/doc -type f -name changelog.gz -exec rm "{}" \;
 find /usr/share/doc -type f -name changelog.Debian.gz -exec rm "{}" \;
+find /usr/share/doc -type f -name NEWS.Debian.gz -exec rm "{}" \;
 
 locales=$(echo "$AMNESIA_SUPPORTED_LANGUAGES" | sed 's/ /|/g')
 find /usr/share/scribus-ng/translations \
@@ -19,3 +24,9 @@ find /usr/share/scribus-ng/translations \
    -exec rm "{}" \;
 
 rm -rf /tmp/*
+find /usr -name "*.pyc" -print0 | xargs -0r rm -f
+
+# truncate logs
+for file in $(find /var/log/ -type f); do
+	: > "${file}"
+done

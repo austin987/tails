@@ -1,6 +1,12 @@
 #! /bin/sh
 # automatically run by "lb config"
 
+# we require building from git
+if ! git rev-parse --is-inside-work-tree; then
+    echo "${PWD} is not a Git tree. Exiting."
+    exit 1
+fi
+
 . config/amnesia
 if [ -e config/amnesia.local ] ; then
    . config/amnesia.local
@@ -40,7 +46,7 @@ hw_arch="`dpkg --print-architecture`"
 if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
    $RUN_LB_CONFIG \
       --architecture i386 \
-      --linux-flavours 686 \
+      --linux-flavours 486 \
       ${@}
 # build powerpc images on powerpc64 as well, include only powerpc kernel
 elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
@@ -68,9 +74,6 @@ echo "live-build: `dpkg-query -W -f='${Version}\n' live-build`" \
 
 # changelog
 cp debian/changelog config/chroot_local-includes/usr/share/doc/amnesia/Changelog
-
-# GnuPG key
-cp wiki/src/amnesia.asc config/chroot_local-includes/usr/share/doc/amnesia/
 
 # create readahead-list from squashfs.sort
 if [ -e config/binary_rootfs/squashfs.sort ]; then

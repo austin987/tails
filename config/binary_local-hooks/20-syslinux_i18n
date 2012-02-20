@@ -57,13 +57,18 @@ if [ -z "${ORIG_APPEND}" ]; then
    exit 16
 fi
 
+# Make sure all languages are visible in the menu
+NUM_LANGUAGES="$(echo ${AMNESIA_SUPPORTED_LANGUAGES} | wc -w)"
+echo "menu vshift $[24-${NUM_LANGUAGES}]" >> "${SYSLINUX_LIVE_CFG}"
+echo "menu rows ${NUM_LANGUAGES}" >> "${SYSLINUX_LIVE_CFG}"
+
 # Add menu entries
 for LANG_CODE in ${AMNESIA_SUPPORTED_LANGUAGES}; do
 
    case "${LANG_CODE}" in
       ar)
 	 LANG_NAME='^Arabic'
-	 LANG_APPEND='locales=ar_EG.UTF-8'
+	 LANG_APPEND='locales=ar_EG.UTF-8 keyboard-layouts=us,ara'
 	 ;;
       de)
 	 LANG_NAME='^German'
@@ -77,6 +82,10 @@ for LANG_CODE in ${AMNESIA_SUPPORTED_LANGUAGES}; do
 	 LANG_NAME='^Spanish'
 	 LANG_APPEND='locales=es keyboard-layouts=es'
 	 ;;
+      fa)
+         LANG_NAME='Fa^rsi'
+	 LANG_APPEND='locales=fa_IR.UTF-8 keyboard-layouts=us,ir'
+         ;;
       fr)
 	 LANG_NAME='^French'
 	 LANG_APPEND='locales=fr_FR.UTF-8 keyboard-layouts=fr'
@@ -90,9 +99,13 @@ for LANG_CODE in ${AMNESIA_SUPPORTED_LANGUAGES}; do
 	 LANG_APPEND='locales=pt keyboard-layouts=pt'
 	 ;;
       ru)
-	 LANG_NAME='^Russian'
-	 LANG_APPEND='locales=ru'
+	 LANG_NAME='R^ussian'
+	 LANG_APPEND='locales=ru keyboard-layouts=us,ru'
 	 ;;
+      vi)
+         LANG_NAME='^Vietnamese'
+	 LANG_APPEND='locales=vi_VN.UTF-8 keyboard-layouts=vn'
+         ;;
       zh)
 	 LANG_NAME='^Chinese'
 	 LANG_APPEND='locales=zh_CN.UTF-8'

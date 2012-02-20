@@ -72,7 +72,7 @@ information about the audio level of the individual participants
 VoIP software
 =============
 
-**Last updated**: 20110429
+**Last updated**: 20110905
 
 Ekiga
 -----
@@ -83,7 +83,9 @@ Ekiga
  * [last
    update](http://mail.gnome.org/archives/ekiga-devel-list/2009-April/msg00036.html)
    as of 200904
-- supports IPv6 for H.323 but not for SIP it seems
+- supports IPv6 in 3.3.x (Debian experimental only, as of 20110905)
+  but not before ([[!debbug 375056]], [upstream
+  bug](https://bugzilla.gnome.org/show_bug.cgi?id=331041))
 
 Linphone
 --------
@@ -96,6 +98,8 @@ Linphone
   but, as of 02 Dec 2010, they have [no plans to implement
   it](http://www.mail-archive.com/linphone-users@nongnu.org/msg02640.html)
   without "customer funding"
+* test results: 5-10s lag but one of us was using a really bad
+  Internet connection
 
 Mumble
 ------
@@ -117,14 +121,16 @@ SFLphone
 - SIP
 - Multiple audio conferencing
 - TLS and zRTP
-- supports IPv6? [[!tag todo/research]]
+- doesn't seem to support IPv6:
+  * [task #2863](https://projects.savoirfairelinux.com/issues/2863)
+  * [task #1696](https://projects.savoirfairelinux.com/issues/1696)
 
 Jitsi (SIP Communicator)
 ------------------------
 
 - [homepage](http://jitsi.org/),  [[!wikipedia Jitsi desc="wikipedia page"]]
 - LGPL, written in Java
-- not in Debian; they ship binary Debian packages. The binary
+- not in Debian (RFP: [[!debbug 627362]]); they ship binary Debian packages. The binary
   packages bundle more than 100 JAR files which probably makes
   packaging it for Debian a nightmare. [Packaging
   source](http://java.net/projects/jitsi/sources/svn/show/trunk/resources/install/debian)
@@ -143,7 +149,41 @@ Twinkle
 - in Debian Squeeze
 - was included in Incognito
 - supports SIP, zRTP et SRTP
-- supports IPv6
+- IPv6 is on the roadmap
 - Qt application, but does not depend on KDE libs
 - no release between 20090225 and 20110429 => asked on 20110510 for
-  their plans
+  their plans; no answer so far
+- it's the [client advised by GNU Telephony](http://www.gnutelephony.org/index.php/Secure_Call)
+
+Jingle
+------
+
+- [[!wikipedia Jingle (protocol) desc="wikipedia page"]]
+- Google Talk's XMPP extension
+
+Empathy
+-------
+
+- [homepage](http://live.gnome.org/Empathy)
+- SIP account => insists to connect to SIP server => impossible to
+  setup a p2p voice call between onioncat IPv6 addresses, at least
+  without registering SIP accounts.
+- cannot connect to a XMPP server running behind a hidden service (2.30.3-3)
+- Link-local XMPP connection manager ([[!debpkg telepathy-salut]]
+  0.5.0-3) does not support voice calls
+
+Zfone
+-----
+
+- [homepage](http://zfone.com/)
+- allows to use zRTP on other VoIP software
+- supposed to work with Ekiga
+- some packages in Debian: libzrtpcpp-1.6-0, is that enough?
+- last release was a public beta, out in March 2009
+- license seems inadequate: according to [[!wikipedia Zfone]],
+  "only the libZRTP SDK libraries are provided under the AGPL. The
+  parts of Zfone that are not part of the libZRTP SDK libraries are
+  not licensed under the AGPL or any other open source license.
+  Although the source code of those components is published for peer
+  review, they remain proprietary. The Zfone proprietary license also
+  contains a time bomb provision."

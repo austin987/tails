@@ -16,7 +16,7 @@ Version X.XX
 
 =head1 AUTHOR
 
-Tails dev team <amnesia@boum.org>
+Tails dev team <tails@boum.org>
 See https://tails.boum.org/.
 
 =cut
@@ -32,17 +32,14 @@ use POSIX;
 ### initialization
 setlocale(LC_MESSAGES, "");
 textdomain("tails-htp-notify-user");
-my $htp_done_file    = '/var/lib/live/htp-done';
-my $htp_success_file = '/var/lib/live/htp-success';
+my $htp_done_file    = '/var/run/htpdate/done';
+my $htp_success_file = '/var/run/htpdate/success';
 my $htp_log_file     = '/var/log/htpdate.log';
 my $debug;
 
-### Enabling debug mode until the Squeeze regression is sorted out.
-$debug = 1;
-
 ### subroutines
 
-sub debug { say STDERR $_[0] unless $debug; }
+sub debug { say STDERR $_[0] if $debug; }
 
 ### main
 
@@ -53,7 +50,7 @@ my $notify = Desktop::Notify->new()
 debug('$notify:' . "\n" . Dumper($notify));
 
 my $summary = gettext("Synchronizing the system's clock");
-my $body    = gettext("Tor needs an accurate clock to work properly. Please wait...");
+my $body    = gettext("Tor needs an accurate clock to work properly, especially for Hidden Services. Please wait...");
 
 my $notification = $notify->create(summary => $summary,
                                    body => $body,
@@ -62,21 +59,21 @@ my $notification = $notify->create(summary => $summary,
 debug('$notification:' . "\n" . Dumper($notification));
 
 $notification->show() or warn "Failed showing notification.";
-until (-e $htp_done_file) {
+
+# Wait until htpdate is done
+until ( -e $htp_done_file ) {
     sleep 1;
 }
 
-# in case htpdate went fine, close the 'Please wait...' notification
-if (-e $htp_success_file) {
-    $notification->close();
-}
+$notification->close();
+
 # in case htpdate failed, notify the user with the corresponding logs
-else {
+unless (-e $htp_success_file) {
     open(my $htp_log, '<', $htp_log_file)
         or die "Can not open file '$htp_log_file': $OS_ERROR";
     my $last_log;
     while (<$htp_log>) {
-        if ($_ =~ /^HTP NetworkManager hook: here we go/) {
+        if ($_ =~ /^Running htpdate\./) {
             $last_log = '';
             next;
         }

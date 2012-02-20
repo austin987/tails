@@ -1,5 +1,4 @@
-Add an Incognito-like boot menu to choose the language at runtime,
-instead of building per-language images.
+[[!toc levels=2]]
 
 Implementation
 ==============
@@ -9,13 +8,14 @@ Implementation
   - the default search engine: done
 * information about how many Debian localization packages fit
   on one CD:
-  - 500kB for each `iceweasel-l10n-*`
-  - 7MB for each `openoffice.org-l10n-*`
-  - ??MB for each `openoffice.org-hyphenation-*`: many languages are
-    only in >= Squeeze
-  - ??MB for each `openoffice.org-thesaurus-*`: many languages are
-    only in >= Squeeze
-* implement a language-choosing [[todo/boot menu]]: [[todo/TailsGreeter]]
+  - `iceweasel-l10n-*`: 11MB compressed .deb (Squeeze amd64)
+  - `openoffice.org-l10n-*`: 210MB compressed .deb (Squeeze amd64)
+  - `openoffice.org-hyphenation-*` and dependencies: 4.5MB compressed
+    .deb (Squeeze i386); in Wheezy, the packages are called `hyphen-*`
+    and more languages are supported
+  - `openoffice.org-thesaurus-*`: 23MB compressed .deb (Squeeze i386);
+    in Wheezy, the packages are called `mythes-*`
+* implement a graphical language-choosing [[todo/boot menu]]: [[todo/TailsGreeter]]
 * [[!taglink todo/translate]] the Nautilus script menu entries in
   `config/chroot_local-includes/lib/live/config/202-localize`
 * [[!taglink todo/translate]] the desktop launchers in
@@ -32,32 +32,37 @@ Resources
 
 - debian-i18n mailing list
 - have a look to tasksel's chinese-s-desktop, arabic-desktop, and so
-  on for fonts, input systems, etc.
+  on for fonts, input systems, etc.; in Wheezy, there are the
+  `task-*-desktop` packages
 - <http://webconverger.org/i18n/> (they don't support CJK as it takes
   100M+)
 - Debian Live's `live-config-staging` repository has a
   [904-locales-extra](http://live.debian.net/gitweb?p=live-config-staging.git;a=blob;f=scripts/config/904-locales-extra)
   hook that installs a locale-dependent packages set at boot-time in
   order to better support the `ja_JP`, `ko_KR` and `zh_CN` locales.
-- a set of font packages that might be relevant:
+
+## Fonts
+
+### Indic
+
+Fonts for all languages used in India: [[!debpkg ttf-indic-fonts]]
+metapackage (done in `feature/more_languages` branch).
+
+### Misc
+
+Other font packages that might be relevant:
+
  * ttf-unifont - TrueType version of the GNU Unifont (it has most
    possible glyphs but is ugly => nice fallback font)
  * ttf-wqy-zenhei - "WenQuanYi Zen Hei" A Hei-Ti Style (sans-serif) Chinese font
  * ttf-unfonts - Un series Korean TrueType fonts
- * ttf-sazanami-mincho - Sazanami Mincho Japanese TrueType font
- * ttf-sazanami-gothic - Sazanami Gothic Japanese TrueType font
- * ttf-arphic-ukai - AR PL UKai" Chinese Unicode TrueType font collection Kaiti style
- * ttf-arphic-uming - "AR PL UMing" Chinese Unicode TrueType font collection Mingti style
- * ttf-kochi-gothic - Kochi Subst Gothic Japanese TrueType font without naga10
- * ttf-kochi-mincho - Kochi Subst Mincho Japanese TrueType font without naga10
+ * fonts-ipafont-gothic - Japanese OpenType font set, IPA Gothic font 
+ * fonts-ipafont-mincho - Japanese OpenType font set, IPA Mincho font
+ * fonts-vlgothic - Japanese TrueType font from Vine Linux
  * ttf-khmeros - KhmerOS Unicode fonts for the Khmer language of Cambodia
- * ttf-oriya-fonts - Free TrueType fonts for the Oriya language
  * ttf-sil-padauk - smart Unicode font for languages in Myanmar
  * ttf-tmuni - font for Tibetan, Dzongkha and Ladakhi (OpenType Unicode)
- * ttf-sinhala-lklug - Unicode Sinhala font by Lanka Linux User Grou
- * ttf-telugu-fonts - Free TrueType fonts for the Telugu language
+ * ttf-sinhala-lklug - Unicode Sinhala font by Lanka Linux User Group
  * ttf-kannada-fonts - Free TrueType fonts for the Kannada language
  * ttf-sil-scheherazade - smart Unicode font for Arabic
  * ttf-ancient-fonts - Unicode Fonts for Ancient Scripts
- * ttf-farsiweb - FarsiWeb free TrueType Farsi fonts (only font
-   installed by `task-persian-desktop`)

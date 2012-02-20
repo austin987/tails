@@ -29,11 +29,6 @@ case "${LB_BINARY_IMAGES}" in
 		;;
 esac
 
-# Remove help menu entry from menu.cfg
+# Remove help menu entry from menu.cfg (and every line after)
 CFG_FILE="${SYSLINUX_PATH}/menu.cfg"
-ORIG_CFG_FILE="${CFG_FILE}.orig"
-mv "${CFG_FILE}" "${ORIG_CFG_FILE}"
-HELP_START="`grep --color=never --line-number --max-count=1 '^label help$' "${ORIG_CFG_FILE}" | awk -F':' '{print $1}'`"
-KEEP_LINES="$(($HELP_START - 1))"
-head -n "$KEEP_LINES" "${ORIG_CFG_FILE}" > "${CFG_FILE}"
-rm -f "${ORIG_CFG_FILE}"
+perl -pni -E 'exit if m{^label[[:blank:]]+help$}' "${CFG_FILE}"
