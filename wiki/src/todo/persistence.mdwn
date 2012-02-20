@@ -182,7 +182,7 @@ We have decided to:
 
 * [generalize overlays](http://live.debian.net/devel/rfc/persistence/)
   (`*-rw`) to handle arbitrary directories, not just `/` and `/home`,
-* add a "dircombine" (inspired by [Joey Hess'
+* add a "linkfiles" (inspired by [Joey Hess'
   dircombine](http://git.kitenet.net/?p=joey/home.git;a=blob;f=bin/dircombine))
   option to create symlinks from the root of a non-persistent
   directory (e.g. `$HOME`) to regular files stored in
@@ -194,7 +194,7 @@ Example `live.persist` configuration file:
 
 	# source     destination       options
 	/apt         /var/cache/apt
-	/dotfiles    /home/amnesia     dircombine
+	/dotfiles    /home/amnesia     linkfiles
 
 This will result in:
 
@@ -214,23 +214,6 @@ available to users by the Tails [[todo/boot_menu]]).
 * Implement something like this:
   ["Design for custom mounts
   system"](http://live.debian.net/devel/rfc/persistence/).
-* make sure that one cannot make `/live` or its contents persistent
-  (i.e. such lines will be ignored in live-persist files)
-* Add "dircombine" symlinks support; merge dircombine semantics with
-  what follows:
-  - If both $src and $dest exist, we rm $dest and symlink $src
-    on $dest.
-  - If $src exist but $dest doesn't, $src is symlinked on $dest.
-  - If $dest exist but $src doesn't, $dest is *moved* to $src (to
-    initialize it) and then $src is symlinked on $dest. If $dest exist
-    but $src doesn't, $dest is *moved* to $src (to initialize it) and
-    then $src is symlinked on $dest.
-  - If neither $src and $dest exist, we do nothing for now.
-* migrate the backing-directories for the custom mount points to
-  a non-hidden location somewhere in `/live/`, so that the symlinks
-  can work (currently, the backing-directories (i.e. where all stuff
-  is mounted) are one level behind "/" in the final fs exposed to the
-  user)
 * In the long run we may want to support plain dm-crypt mappings
   hidden in files: something similar to the `live-media-offset` would
   be perfect; the UI side of it will be tricky if we want to ask the
@@ -245,12 +228,6 @@ Our read-only mode will be implemented by merging the persistent
 volume with a "diff" branch on ramdisk using aufs, and mount the
 resultant device, so that the mountpoint is seen as writable by
 applications but no actual change is made on disk.
-
-We need to migrate to `mount -bind $union_src_mountpoint $dst` in
-read-only  mode, where $union_src_mountpoint is a unionfs built from
-the real,  persistent, $src (as the read-only branch) and a tmpfs (as
-the  read-write branch), so that dircombine's symlinks work as
-expected in read-only mode.
 
 User interface
 --------------
@@ -292,8 +269,9 @@ let's make the scope of this more complex case smaller to start with:
 
 #### draft
 
-* by default setup, setup a dircombine-enabled persistent
-  `${HOME}/dotfiles`, preconfigured to be dircombine'd into `$HOME`?
+* by default setup, setup a linkfiles-enabled persistent
+  `${HOME}/dotfiles`, preconfigured to have its contents symlinked
+  into `$HOME`.
 * apart of this, let's consider non-directories persistence an
   advanced feature: to start with, and possibly forever, this could
   only be configured by manually editing live-persist file
@@ -335,7 +313,7 @@ backend / tails-greeter interface
    passphrase or to skip it, and tries to unlock. `tails-greeter`
    deals with error catching, retrying, etc. as appropriate.
 0. `tails-greeter` asks `live-boot` to setup persistence (at least
-   custom mounts and dircombine), passing it the list of volumes that
+   custom mounts and linkfiles), passing it the list of volumes that
    were successfully unlocked.
 
 ### Interfacing
@@ -344,8 +322,8 @@ A `live-persist` script shall be written, implementing each kind of
 `tails-greeter` to `live-boot` communication as a sub-command, such
 as:
 
-	live-persist list-plausible-containers
-	live-persist setup-persistence [--read-only] VOL1 [VOL2 ...]
+	live-persist [OPTIONS] list [LABEL]...
+	live-persist [OPTIONS] activate VOLUME...
 
 `live-persist` will report success and failure as any other
 well-behaved synchronously-called shell script, that is: with
