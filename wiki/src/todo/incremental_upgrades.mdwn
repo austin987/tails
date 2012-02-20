@@ -53,12 +53,28 @@ upgrade kit.
 ### generate an IUK
 
 * think the IUK format through
+  - [Mozilla ARchive format (MAR)](https://wiki.mozilla.org/Software_Update:MAR)
 
 Program that takes two Tails ISO images, and:
 
 * builds the "diff" SquashFS
 * gets the new kernel(s), initrd(s), bootloader configuration
 * brings all this together into some kind of structured archive
+
+### mirrors infrastructure
+
+* Using something like [Mozilla's
+  channels](https://wiki.mozilla.org/Software_Update:Channels)
+  (*release*, *beta*, *nightly*) would e.g. allow us to push beta
+  updates earlier to a brave subset of users. Subscribing to a channel
+  other than *release* is something that would be worth
+  [[persisting|todo/persistence]]. We are not likely to implement
+  a channels system in phase one, but the infrastructure we setup
+  should leave room for such future extension.
+* A careful read of [Mozilla's Checking For
+  Updates](https://wiki.mozilla.org/Software_Update:Checking_For_Updates)
+  technical documentation is a must to avoid forgetting stuff useful
+  on the long run, such as necessary identifiers in URLs.
 
 ## User interface
 
@@ -82,6 +98,15 @@ read-write.
 * Remount the boot-medium read-only.
 * Tell the user the upgrade process is finished.
 * Reboot.
+* Something must delete the IUK archive at some point.
+
+Resources:
+
+* [Mozilla's updates
+  processing](https://wiki.mozilla.org/Software_Update:Processing_Updates):
+  building up some mechanism (such as their pending / applying /
+  succeeded / failed status) to avoid retrying the same buggy update
+  in a loop seems worth being considered.
 
 ### security warning program
 
@@ -103,6 +128,7 @@ Write a downloader for Incremental Upgrade Kits.
 * Allow the user to save the IUK where they want.
 * Bonus points if there's an opt-in way to have the download happen in
   the clear, that is without going through the Tor network.
+* Allow overriding the URL for dev / testing purpose.
 
 # Research
 
