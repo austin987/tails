@@ -4,5 +4,7 @@ if [ -n "$PS1" ] && [ -n "$BASH_VERSION" ]; then
    read answer
    # The user should have chosen their preferred keyboard layout
    # in tails-greeter by now.
+   . /etc/default/locale
+   . /etc/default/keyboard
    sudo setupcon
 fi
