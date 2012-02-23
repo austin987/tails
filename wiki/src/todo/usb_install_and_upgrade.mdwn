@@ -7,7 +7,7 @@ Current state of things
 
 Tails [[ships hybrid ISO images|contribute/design/hybrid_ISO]]. dd'ing
 such a file to a USB stick produces a bootable Tails system and is
-[[well documented|support/installing_onto_a_usb_stick]], but it
+[[well documented|doc/installing_onto_a_usb_stick/linux]], but it
 requires unfriendly command-line usage and overwrites any previously
 existing partition table.
 
@@ -60,13 +60,17 @@ Our plan is to:
 
 1. release something useful based on the work we've already done on
    the basis of Fedora liveusb-creator
-2. probably start (again...) from Ubuntu's usb-creator, that has a
+2. probably start (again...) from Ubuntu's
+   [usb-creator](https://launchpad.net/usb-creator), that has a
    much saner codebase; [[usb_install_and_upgrade/future_spec]]
 
 Our work on liveusb-creator is in a Git repository:
 
 - anonymous, read-only: `git://webmasters.boum.org/liveusb-creator`
 - developers read-write: `ssh://gitolite@webmasters.boum.org/liveusb-creator.git`
+
+Integration work is made in the `feature/usb_installer` branch in the
+main Tails Git repository.
 
 Research
 ========
@@ -218,7 +222,7 @@ we should look at.
   it allows using an existing fat32 partition.
    - no partition capabilities
 
-* Liberté Linux' `burn-usb` creates a FAT32 partition for data and
+* Liberté Linux' `burn-usb` (old — 2010.0) creates a FAT32 partition for data and
   an ext2 partition where it copies the system to. It installs Grub on
   the USB stick.
 
@@ -304,7 +308,7 @@ Here is how to test this.
                 insmod loopback
                 insmod iso9660
                 set root='(hd0,msdos1)'
-                search --no-floppy --fs-uuid --set b51975cd-c5ef-4b32-996a-2c8206516917
+                search --no-floppy --fs-uuid --set=root b51975cd-c5ef-4b32-996a-2c8206516917
                 loopback loop /binary.iso
                 linux   (loop)/live/vmlinuz boot=live fromiso=/dev/sda1/binary.iso config
                 initrd  (loop)/live/initrd.img

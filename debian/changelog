@@ -1,3 +1,145 @@
+tails (0.10.1) unstable; urgency=low
+
+  * Iceweasel
+  - Make Startpage the default web search engine. Scroogle does not look
+    reliable enough these days.
+
+  * Software
+  - Upgrade WhisperBack to 1.5.1 (update link to bug reporting documentation).
+  - Update MAT to 0.2.2-2~bpo60+1 (fixes a critical bug in the GUI).
+
+  * Hardware support
+  - Upgrade Linux kernel to 3.2.1-2
+
+  * Time synchronization
+    Serious rework that should fix most, if not all, of the infamous
+    time-sync' related bugs some Tails users have experienced recently.
+    - Make htpdate more resilient by using three server pools, and
+      allowing some failure ratio.
+    - Set time from Tor's unverified-consensus if needed.
+    - Set time to middle of [valid-after, fresh-until] from consensus.
+    - Many robustness, performance and fingerprinting-resistance improvements.
+    - Display time-sync' notification much earlier.
+
+  * Miscellaneous
+  - Fix access to "dumb" git:// protocol by using a connect-socks wrapper
+    as GIT_PROXY_COMMAND.
+  - SSH client: fix access to SSH servers on the Internet by correcting
+    Host / ProxyCommand usage.
+  - Pidgin: use OFTC hidden service to workaround Tor blocking.
+  - Claws Mail: disable draft autosaving.
+    When composing PGP encrypted email, drafts are saved back to
+    the server in plaintext. This includes both autosaved and manually
+    saved drafts.
+  - tails-security-check-wrapper: avoid eating all memory when offline.
+
+ -- Tails developers <amnesia@boum.org>  Sat, 28 Jan 2012 10:00:31 +0100
+
+tails (0.10) unstable; urgency=low
+
+  * Tor: upgrade to 0.2.2.35-1.
+
+  * Iceweasel
+  - Install Iceweasel 9.0 from the Debian Mozilla team's APT repository.
+  - Update Torbutton to 1.4.5.1-1.
+  - Support viewing any YouTube video that is available in HTML5 format:
+    install xul-ext-greasemonkey and the "Permanently Enable HTML5 on
+    YouTube" GreaseMonkey script.
+  - Stop using Polipo in Iceweasel. Its SOCKS support was fixed.
+  - Install from Debian sid the iceweasel extensions we ship,
+    for compatibility with FF9.
+  - Use Scroogle (any languages) instead of Scroogle (English only) when
+    booted in English. Many users choose English because their own
+    language is not supported yet; let's not hide them search results in
+    their own language.
+  - Install Iceweasel language packs from Debian unstable:
+    unfortunately they are not shipped on the mozilla.debian.net repository.
+  - Install the NoScript Firefox extension; configure it the same way as
+    the TBB does.
+  - Disable third-party cookies.
+    They can be used to track users, which is bad. Besides, this is what
+    TBB has been doing for years.
+  - FoxyProxy: allow direct connections to RFC1918 IPs.
+
+  * Do not transparent proxy outgoing Internet connections through Tor.
+  - Torify the SSH client using connect-proxy to all IPs but RFC1918 ones.
+  - Torify APT using Polipo HTTP.
+  - Torify wget in wgetrc.
+  - Torify gobby clients using torsocks. It does not support proxies yet.
+  - Torify tails-security-check using LWP::UserAgent's SOCKS proxy support.
+  - Fix enabling of GNOME's HTTP proxy.
+
+  * Software
+  - Upgrade Vidalia to 0.2.15-1+tails1.
+    · New upstream release.
+    · Do not warn about Tor version.
+  - Upgrade MAT to 0.2.2-1~bpo60+1.
+  - Upgrade VirtualBox guest software to 4.1.6-dfsg-2~bpo60+1,
+    built against the ABI of X.Org backports.
+  - Upgrade I2P to 0.8.11 using KillYourTV's Squeeze packages;
+    additionally, fix its start script that was broken by the tordate merge.
+  - Install unar (The Unarchiver) instead of the non-free unrar.
+  - Install Nautilus Wipe instead of custom Nautilus scripts.
+
+  * Hardware support
+  - Upgrade Linux kernel to 3.1.6-1.
+  - Upgrade to X.Org from squeeze-backports.
+  - Install more, and more recent b43 firmwares.
+  - Upgrade barry to 0.15-1.2~bpo60+1.
+
+  * Internationalization
+  - Add basic language support for Russian, Farsi and Vietnamese.
+  - Install some Indic fonts.
+  - Install some Russian fonts.
+  - Add Alt+Shift shortcut to switch keyboard layout.
+
+  * Miscellaneous
+  - Support booting in "Windows XP -like camouflage mode":
+    · Install homebrewn local .debs for a Windows XP look-alike Gnome theme.
+    · Add the "Windows XP Bliss" desktop wallpaper.
+    · Added a script that's sets up Gnome to look like Microsoft Windows XP.
+    · Add Windows XP "camouflage" icons for some programs.
+    · Make Iceweasel use the IE icon when Windows XP camouflage is enabled.
+    · Add special launcher icons for the Windows XP theme so that they're
+      not too big.
+  - Decrease Florence focus zoom to 1.2.
+  - Do not fetch APT translation files. Running apt-get update is heavy enough.
+  - Add MSN support thanks to msn-pecan.
+  - Add custom SSH client configuration:
+    · Prefer strong ciphers and MACs.
+    · Enable maximum compression level.
+     · Explicitly disable X11 forwarding.
+    · Connect as root by default, to prevent fingerprinting when username
+      was not specified.
+  - Replace flawed FireGPG with a home-made GnuPG encryption applet;
+    install a feature-stripped FireGPG that redirects users to
+    the documentation, and don't run Seahorse applet anymore.
+  - Enable Seahorse's GnuPG agent.
+  - Blank screen when lid is closed, rather than shutting down the system.
+    The shutdown "feature" has caused data losses for too many people, it seems.
+    There are many other ways a Tails system can be shut down in a hurry
+    these days.
+  - Import Tails signing key into the keyring.
+  - Fix bug in the Pidgin nick generation that resulted in the nick
+    "XXX_NICK_XXX" once out of twenty.
+  - Pre-configure the #tor IRC discussion channel in Pidgin.
+  - Fix "technology preview" of bridge support: it was broken by tordate merge.
+  - Install dependencies of our USB installer to ease its development.
+  - Make vidalia NM hook sleep only if Vidalia is already running.
+  - Reintroduce the htpdate notification, telling users when it's safe
+    to use Tor Hidden Services.
+  - htpdate: omit -f argument to not download full pages.
+  - htpdate: write success file even when not within {min,max}adjust.
+    Otherwise htpdate will not "succeed" when the time diff is 0 (i.e.
+    the clock was already correct) so the success file cannot be used
+    as an indicator that the system time now is correct, which arguably
+    is its most important purpose.
+
+  * Build system
+  - Name built images according to git tag.
+
+ -- Tails developers <tails@boum.org>  Wed, 04 Jan 2012 09:56:38 +0100
+
 tails (0.9) unstable; urgency=low
 
   * Tor

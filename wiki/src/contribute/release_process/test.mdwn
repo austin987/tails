@@ -29,6 +29,10 @@ Check the output for:
   does the combination of our configuration with software X version
   Y+1 achieve the same wished results as with software X version Y?)
 
+## Image size
+
+Check the image size has not changed much since the last release.
+
 # Iceweasel
 
 * is web browsing really torified?
@@ -36,11 +40,10 @@ Check the output for:
  - <http://monip.org/>
 * does the exposed User-Agent match the generic Torbutton's one?
   (connect to a website you can check the access logs for)
-* firegpg: test symmetric encryption/decryption, same for asymmetric
+* Browsing (by IP) a HTTP/HTTPS server on the LAN should be possible.
+* Browsing (by IP) a FTP server on the LAN should be possible.
 * Entering `about:plugins` in the location bar should say no plugin is
-  installed in every one of the following cases:
- 1. Torbutton add-on enabled in *Tor enabled* status
- 2. Torbutton add-on disabled
+  installed.
 
 # Pidgin
 
@@ -64,13 +67,45 @@ Check the output for:
  - try connecting to the Internet after unsetting `$http_proxy` and
    `$HTTP_PROXY` using a piece of software that does not obey the
    GNOME proxy settings, *and* is not explicitely torified in Tails:
-   `unset http_proxy ; unset HTTP_PROXY ; wget http://monip.org`
+   `unset http_proxy ; unset HTTP_PROXY ; wget --no-proxy
+   http://monip.org` (should result in a "`Connection refused`".
 * firewall: is IPv6 traffic blocked?
  - check output of `ip6tables -L -n`
  - at a place with working IPv6: try connecting to a known-working
    IPv6-enabled server on its IPv6 address over TCP and icmp6.
 * is `/etc/resolv.conf` OK both before/after DHCP has been setup? it should
   *always* read `nameserver 127.0.0.1`
+* verify that all destinations reached from an intensive Tails session
+  are tor routers or authorities: Boot Tails without the network
+  in. Start dumping your whole session's network activity with `sudo
+  tcpdump -i any -w dump` (or better, do the dump on another machine,
+  or on the host OS if Tails is running in a VM). Next, plug the
+  network and do *a lot* of network stuff (why not run do this while
+  doing all the other tests?). Then check that all destinations,
+  e.g. by using tshark and the script below:
+
+(ignore this line, ikiwiki is buggy...)
+
+    DESCRIPTORS=/var/lib/tor/cached-descriptors
+    # Note that these default directory authorities may change! To be
+    # sure, check in Tor's source, src/or/config.c:~900
+    DIR_AUTHS="
+    128.31.0.39 86.59.21.38 194.109.206.212 82.94.251.203 216.224.124.114
+    212.112.245.170 193.23.244.244 208.83.223.34 213.115.239.118"
+    tshark -r dump -T fields -e ip.dst | sort | uniq | \
+    while read x; do
+        ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
+        if echo ${DIR_AUTHS} | grep -qe ${ip_expr}; then
+            continue
+        fi
+        if ! grep -qe "^router [^ ]\+ ${ip_expr}" ${DESCRIPTORS}; then
+            echo "${x} is bad"
+        fi
+    done
+
+  Note that this script will produce some false positives, like your
+  gateway, broadcasts, etc. Also note that running I2P during these
+  test will list every I2P peer as "bad", so that is not recommended.
 
 # Use of untrusted partitions
 
@@ -111,8 +146,8 @@ Check the output for:
 
 # GnuPG
 
-Those tests shall be run using GnuPG on the command-line, the
-Seahorse GUI and FireGPG:
+Those tests shall be run using GnuPG from the command-line and through
+the Seahorse GUI:
 
 * key search/receive: torified? going to the configured keyserver?
  - `gpg --search` tells what server it is connecting to
@@ -156,6 +191,29 @@ steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
 * `modinfo vboxguest` should work
 * test in VirtualBox
 
+# I2P
+
+* Make sure that I2P is up-to-date, at least if the
+  [changelogs](http://www.i2p2.de/announcements.html) mention that
+  security critical bugs were fixed.
+* Check that "Applications -> Internet -> I2P" works:
+  - You get the "Starting I2P..." pop-up.
+  - The router console opens in Iceweasel upon success.
+  - You get the "I2P failed to start" pop-up on failure (e.g. no
+    network so tordate failed).
+* Check that I2P connects to the network:
+  - The numbers in the "Peers" section of the router console should be
+    non-zero.
+  - You should get "Network: Firewalled" in the "General" section
+    (implying that the I2P network is reachable but UDP is blocked).
+* Check that you can reach some eepsites within Iceweasel, like
+  <http://www.i2p2.i2p> and <http://forum.i2p>.
+
+# Git
+
+* clone a repository over dumb transport (`git://`)
+* clone a repository over SSH
+
 # Misc
 
 * Check that links to the online website (`Mirror:`) at the bottom of
@@ -173,3 +231,7 @@ steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
   use the same keyboard layout as the X session.
 * Try to start with the `truecrypt` option on boot, see if it can be found in
   the *Applications* → *Accessories* menu and that it runs correctly.
+* Connecting over SSH to a server on the Internet should work (and
+  appear in Vidalia's connections list).
+* Connecting (by IP) over SSH to a server on the LAN should work.
+

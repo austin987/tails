@@ -5,7 +5,6 @@ echo "managing initscripts"
 # enable custom initscripts
 update-rc.d tails-detect-virtualization start 17 S .
 update-rc.d tails-kexec                    stop 85 0 6 .
-update-rc.d tails-wifi start 17 S .
 update-rc.d memlockd start 22 2 3 4 5 .
 update-rc.d tails-sdmem-on-media-removal start 23 2 3 4 5 . stop 01 0 6
 update-rc.d tails-reconfigure-kexec defaults
@@ -38,3 +37,6 @@ update-rc.d hdparm disable
 # (plymouth.postinst creates links using update-rc.d,
 # so we cannot disable the links it creates by using LSB headers)
 rm -f /etc/rc[06].d/*plymouth
+
+# gdomap is not used between processes running as the same user on the same host
+update-rc.d gdomap disable
