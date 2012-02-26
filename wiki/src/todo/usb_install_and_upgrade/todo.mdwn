@@ -1,43 +1,84 @@
 [[!toc levels=2]]
 
-Misc.
-=====
+Bugs
+====
 
-- write a simple GUI that resets a USB stick that previously contained
-  a isohybrid Tails to a sane state
-  OR document with nice screenshots how to do so on GNOME / Windows [bertagaz]
+Should be more explicit when no target device is available
+----------------------------------------------------------
 
-Upgrade
-=======
+Empty list, no message, is not that easy to understand.
 
-Until we support incremental updates (see
-[[todo/usb_install_and_upgrade]] for details), our installer must
-allow upgrading a (non-running) Tails that is installed on a removable
-device. The existing code should already support this, but we need to
-double-check this and possibly wrap that feature, UI-wise, in a way
-that properly support this usecase. Putting ourselves in the situation
-of documenting how to use our installer to perform an upgrade may be a
-good way to detect remaining problems.
+Missing OS
+----------
 
-Input
-=====
+Creating or deleting a second partition using udisks resets the first partition's attributes.
 
-[bertagaz]
+Normal output is:
 
-- test installing from ISO file while running a Tails system
-- test cloning from USB on bare metal
-- test cloning from CD on bare metal
+	$ sgdisk /dev/sdb --attributes=1:show
+	1:2:1 (legacy BIOS bootable)
+	1:60:1 (read-only)
+	1:62:1 (hidden)
+	1:63:1 (do not automount)
+
+After creating a second partition, the output is empty.
+
+As documented on the [syslinux
+wiki](http://www.syslinux.org/wiki/index.php/Common_Problems#Missing_OS_.28gptmbr.bin.29),
+trying to boot such a broken stick results in the `Missing OS` message
+and no boot.
+
+`tails-persistence-setup`, that creates the persistence partition,
+workarounds this, but we must report this bug upstream.
 
 Documentation
 =============
 
-- update [[todo/usb_install_and_upgrade]] with current decisions and
-  plans [bertagaz]
-- update [[download and installation|download]] documentation [bertagaz]
+download and installation
+-------------------------
+
+Update [[download and installation|download]] documentation.
+
+To be treated carefully:
+
+* The bootstrap steps (when one has no Tails system yet):  it implies
+  burning a CD, booting from CD, and cloning. Or do we want to make
+  a liveusb-creator `.deb` available on our website?
+* Installing over an old-fashioned Tails (hybrid ISO installed by
+  `cat` or similar) (seems to? sometimes? always?) requires to reset
+  the partition table **first**, see the "resetting a Tails USB stick"
+  section bellow (details:  `sgdisk --print` returns non-zero exit
+  code when run on such a disk, and the installer carefully refuses to
+  overwrite a partition table it does not understand). **Update:** it
+  *seems* like this only happens when a hybrid ISO was cat'd, then an
+  ISO was installed with the USB installer, then a hybrid ISO was
+  cat'd again (erasing the main GPT but possibly not the backup one),
+  and the USB installer is run. If this is so, let's ignore such weird
+  cases that only happen to hard-core Tails developers.
+
+resetting a Tails USB stick
+---------------------------
+
+The `feature/usb_installer` branch has documentation in
+`doc/resetting_usb_stick` that explains how to reset a USB stick that
+previously contained a isohybrid or GPT Tails to a "normal" state
+(i.e. MBR partition table, and optionally FAT32 partition).
+
+Left to do:
+
+* test Windows instructions
+* link to these pages somewhere (where?)
+
+Localization
+============
+
+Hand out `.po` files to translators.
 
 Later
 =====
 
+* Set cursor to waiting (hourglass) state while working.
+* *Target Device* list: display more information, such as the stick brand and model.
 * If stick is <1.5GB case, support installing but don't show the
   persistence checkbox
 * Allow setting the system/overlay partitions size via command-line
@@ -55,6 +96,12 @@ Later
   installation on local hard disks (= not external USB);
   seems to be implemented by --force, see special casing in the
   detect_removable_devices method.
+* currently lists all partitions on the same USB stick. What should it
+  do instead?
+  - if one of those partitions is labelled `Tails`, and we're
+    upgrading, it probably makes sense hiding other partitions on the
+    same physical device
+
 
 Windows support?
 ----------------

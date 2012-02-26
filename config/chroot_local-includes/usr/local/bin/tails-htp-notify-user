@@ -32,7 +32,7 @@ use POSIX;
 ### initialization
 setlocale(LC_MESSAGES, "");
 textdomain("tails-htp-notify-user");
-my $htp_pid_file    = '/var/run/htpdate/pid';
+my $htp_done_file    = '/var/run/htpdate/done';
 my $htp_success_file = '/var/run/htpdate/success';
 my $htp_log_file     = '/var/log/htpdate.log';
 my $debug;
@@ -60,38 +60,20 @@ debug('$notification:' . "\n" . Dumper($notification));
 
 $notification->show() or warn "Failed showing notification.";
 
-# Wait until htpdate's pid file exists and is readable, then get the pid
-until (-r $htp_pid_file) {
-    sleep 1;
-}
-open(my $fh, "<", $htp_pid_file) or die "Failed to open pid file";
-chomp(my $htp_pid = <$fh>);
-close($fh);
-
-# FIXME: we can't use kill since we don't own the process, but there must
-# be a more beautiful way than what we do below, no?
-
-# Wait until the htpdate process is running
-until ( -d "/proc/$htp_pid" ) {
+# Wait until htpdate is done
+until ( -e $htp_done_file ) {
     sleep 1;
 }
 
-# Wait until the htpdate process finishes
-while  ( -d "/proc/$htp_pid" ) {
-    sleep 1;
-}
+$notification->close();
 
-# in case htpdate went fine, close the 'Please wait...' notification
-if (-e $htp_success_file) {
-    $notification->close();
-}
 # in case htpdate failed, notify the user with the corresponding logs
-else {
+unless (-e $htp_success_file) {
     open(my $htp_log, '<', $htp_log_file)
         or die "Can not open file '$htp_log_file': $OS_ERROR";
     my $last_log;
     while (<$htp_log>) {
-        if ($_ =~ /^HTP NetworkManager hook: here we go/) {
+        if ($_ =~ /^Running htpdate\./) {
             $last_log = '';
             next;
         }

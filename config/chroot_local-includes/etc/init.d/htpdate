@@ -14,6 +14,7 @@ NAME=htpdate
 SCRIPTNAME=/etc/init.d/$NAME
 HTP_DIR=/var/run/$NAME
 PIDFILE=$HTP_DIR/pid
+HTP_DONE_FILE=$HTP_DIR/done
 HTP_SUCCESS_FILE=$HTP_DIR/success
 LOG=/var/log/$NAME.log
 
@@ -37,8 +38,16 @@ if [ -z "$HTTP_USER_AGENT" ]; then
 	log "HTTP_USER_AGENT is not set."
 	exit 2
 fi
-if [ -z "$HTP_POOL" ]; then
-	log "HTP_POOL is not set"
+if [ -z "$HTP_POOL_PAL" ]; then
+	log "HTP_POOL_PAL is not set"
+	exit 3
+fi
+if [ -z "$HTP_POOL_NEUTRAL" ]; then
+	log "HTP_POOL_NEUTRAL is not set"
+	exit 3
+fi
+if [ -z "$HTP_POOL_FOE" ]; then
+	log "HTP_POOL_FOE is not set"
 	exit 3
 fi
 
@@ -47,8 +56,8 @@ log() {
 }
 
 do_start() {
-	if [ -e "$PIDFILE" ]; then
-		rm -f "$PIDFILE"
+	if [ -e "$HTP_DONE_FILE" ]; then
+		rm -f "$HTP_DONE_FILE"
 	fi
 
 	if [ -e "$HTP_SUCCESS_FILE" ]; then
@@ -56,27 +65,19 @@ do_start() {
 	fi
 
 	start-stop-daemon -S -q -p ${PIDFILE} -bm -x /usr/local/sbin/htpdate -- \
-		-d \
-		-l "$LOG" \
-		-a "$HTTP_USER_AGENT" \
-		-p \
-		-u htp \
-		-T "$HTP_SUCCESS_FILE" \
+		--debug \
+		--log_file "$LOG" \
+		--user_agent "$HTTP_USER_AGENT" \
+		--allowed_per_pool_failure_ratio 0.34 \
+		--user htp \
+		--done_file    "$HTP_DONE_FILE" \
+		--success_file "$HTP_SUCCESS_FILE" \
+		--pal_pool     "$HTP_POOL_PAL" \
+		--neutral_pool "$HTP_POOL_NEUTRAL" \
+		--foe_pool     "$HTP_POOL_FOE" \
 		$HTP_POOL
-	ret=$?
 
-	# Get LIVE_USERNAME
-	. /etc/live/config.d/username
-
-	# Show notification
-	export DISPLAY=':0.0'
-	export XAUTHORITY="$(echo /var/run/gdm3/auth-for-$LIVE_USERNAME-*/database)"
-	exec /bin/su -c /usr/local/bin/tails-htp-notify-user "$LIVE_USERNAME" &
-
-	sleep 3
-	chmod a+r ${PIDFILE}
-
-	return ${ret}
+	return $?
 }
 
 do_stop() {

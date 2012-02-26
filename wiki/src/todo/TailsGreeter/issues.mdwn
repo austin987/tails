@@ -2,30 +2,25 @@ This page lists the tails-greeter known issues.
 
 [[!toc levels=2]]
 
-# Regressions
-
-## Set console keyboard layout
-
-If user choose locale, than console should be localized as well.
-
-> The console is localized once the login/password was entered.
-> That means the user must know how to type the login/password in
-> QWERTY, which is a regression.
+This is related to tails-greeter as found in the master branch of
+`git://git.immerda.ch/tails/tails-greeter.git`.
 
 # Bugs
 
-## Wrong initial widget size
+## Keyboard layout widget not l10n'd with the selected language
 
-E.g. when I select "Français" as a language, presumably because of long
-keyboard layout variants names, the combo boxes column grows a lot.
-The size of the widgets should be adjusted to the max. possible width
-before initial display.
+Seems like all the UI's l10n is correctly updated on language change,
+but the keyboard layout widget is constantly displayed using the
+locale the window was loaded with.
 
-## Text gets hidden when language is selected
+> **Important, but no release blocker**.
 
-Language & layout panel is not autoresized correctly so some of the
-widgets (most notably - entry field to test keyboard layout) are
-beyond window borders.
+* in ubiquity, the `d-i/make-keyboard-names` script uses
+  `/usr/share/locale/*/LC_MESSAGES/xkeyboard-config.mo` to translate
+  the keyboard layout names, from list of keyboard layouts gathered
+  using the d-i's console-setup `Keyboard/KeyboardNames.pl` script
+* `kbd-chooser.c` in `git://git.debian.org/d-i/kbd-chooser.git` uses
+  `/usr/share/console/lists/`
 
 ## Insane widgets used for long lists
 
@@ -34,7 +29,44 @@ way as GDM3 in Debian Squeeze: combobox contains default value and
 "other..." option, clicking latter will bring up pop-up window with
 long scrollable list of options and standard "ok", "cancel" buttons.
 
+> Implemented for language, to be done for locale and keyboard.
+
+> **Minor, postponed**: those lists are much shorter than the language
+> one, so this is much less of a problem.
+
+## Wrong icon used as langpanel's language label
+
+langpanel: the icon used for the languages is "applications-internet" which
+displays a globe in default icon theme, but could display something really
+irrelevant in an other icon theme;
+
+> **Minor, postponed**: we don't change the icon theme Tails uses every
+> now and then.
+
+## Scroll effect in language selection menu
+
+langpanel: the languages menu has an horrible scroll effect at opening.
+That's GTK magic that I don't know how to workaround: when poping up a
+ComboBox, GTK places the selected entry under the cursor, thus not displaying
+the whole menu where I want it to be;
+
+> **Minor, postponed**: it's not perfect to they eye, sure, but it's
+> perfectly usable.
+
 # Missing features
+
+## Communicate to other parts that persistence was enabled
+
+Other programs, such as `tails-persistence-setup`, need to know
+whether persistence was successfully enabled.
+
+> **Release blocker**
+
+## GUI improvements
+
+* separator between languages list and "Other..."
+
+> **Minor, postponed**
 
 ## Choose keyboard layout independently from the language
 
@@ -44,6 +76,8 @@ because he happens to speak that language much better than English AND
 faces an azerty keyboard (e.g. because he's traveling), also he does
 not know touch-typing so the keyboard physical and logical layout have
 to match.
+
+> **Minor, postponed**
 
 ## Locales should be generated in the background
 
@@ -56,81 +90,8 @@ It's not that simple to implement: t-g is executed as 'Debian-gdm' -
 it can't run localedef to generate locale; we have to weight the risk
 of sudo / suid vs. the user experience benefits.
 
-> Minority report: waiting some time for locale generation to finish
-> every time it's selected might be less preferred for some users than
-> waiting for locale generation on login. Example use-case: user X
-> selects fr_CA locale instead of fr_BE by mistake. In proposed
-> scenario he have to wait for generation of useless locale, than
-> select proper locale and wit for its generation too.
-
->> No. In proposed scenario, *login* would be blocked until the 1st
->> erroneous locales are generated, but nothing tells *correcting the
->> mistake by selecting the right locale* should be blocked. Obviously
->> it should not.
->>
->> In some cases, yes, login will be blocked twice as long in the
->> described failure case (unless the app, when another locale is
->> selected, is clever enough to kill the wrongly selected locale's
->> generation process before running the new one), and so? I think we
->> should optimize for the general case, not the "I clicked the wrong
->> locale" one. --intrigeri
-
-> All that instead of waiting only once if user's choice is applied
-> during PostLogin.
-
-> If TailsGreeter have more than one screen,
-
->> As some point, it will.
-
-> than locale generation can be started during transition between
-> those screens (if this transition is reversible than additional
-> complexity of tracking multiple subprocesses will be needed).
-
->> I don't see the point in arguing between which screens this should
->> run. My point is: to reduce waiting time, let's run *as soon as
->> possible* and *in the background* the blocking, long,
->> non-interactive process. The more you wait to run it, the more the
->> user chances to wait at some point grow. Makes sense, uh? --i.
+> **Minor, postponed**
 
 ## Appearance
 
 See [[todo/windows_theme]].
-
-# Fixed, testing required
-
-## Admin credentials
-
-If user have entered password than it should be asked to grant root
-access, otherwise root access should be completely disabled. Testing:
-"sudo ls" in terminal window should asks for the password and show the
-content of the current directory. If user hasn't entered the password
-in TailsGreeter than "sudo ls" should report error that user is not in
-'sudoers' file. Similarly running "time-admin" utility and pressing
-unlock button should allow user to alter time settings (for example -
-add pool.ntp.org to the list of servers).
-
-## Second login after user password was set
-
-TailsGreeter uses hardcoded login and
-password values. That's why on logout the password is reset back to default value to allow 2nd login even if user password was set during 1st one.
-
-# Not a bug / unimportant
-
-## Layout-testing in text box is broken
-
-Was working in 0.1.0 but in 0.1.1~2.gbpad6da2, selecting French
-keyboard layout => still QWERTY layout in layout-testing text box.
-
-git bisect shows this was broken by commit 85ddb5c9. However, let's
-spending any time on that would be futile: the layout-testing box was
-a debugging-only tool, and won't be displayed to end users.
-
-## Localization preserved on logout
-
-If user chosen fr_FR locale, logged in, logged out, chosen ru_RU
-locale then upon login all 3 locales (en_US, fr_FR, ru_RU) will be
-available instead of expected 2.
-
-> I'm not sure we really want to seriously support logout / login,
-> mostly because it does not any kind of serious protection, so
-> let's say this is not that much of a bug.

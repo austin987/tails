@@ -3,12 +3,12 @@
 # Introduction
 
 Tor (and I2P) sometimes freaks out if they detect too large clock
-skews. It is therefore important for us to ensure that Tails some how
-automatically syncs the system time at start in a safe manner.
+skews. It is therefore important for us to ensure that Tails somehow
+automatically synchronizes the system time at start in a safe manner.
 
-We are worried about unauthenticated [[NTP]]. There probably is a
+There probably is a
 whole bunch of fingerprinting attacks an attacker could mount if it
-could pose as the NTP server and mess with the user's time. We
+could pose as the time server and mess with the user's time. We
 therefore want to be able to *authenticate* the servers that provide
 us with supposedly accurate time information. Home-made research
 [[demonstrated|todo/authenticate_time_servers]] that NTPv4's server
@@ -23,18 +23,21 @@ using Tor so we can make Tor usable.
 
 In short this is how time syncing is performed when Tails starts:
 
-0. Start Tor in order to fetch a consensus.
-0. If Tor cannot verify the consensus we assume it is because the time
-   is so badly off that the authority certificate are not valid any
-   more so we set the system time to the Tails release date, which
-   will guarantee that the certificates are valid. Then we restart Tor
-   and hope we get a verifiable consensus this time.
+0. Start Tor. If Tor is already working, skip to HTP step.
+0. Let Tor fetch a consensus (wait 150 seconds twice, restarting Tor
+   in between).
+0. If the time is too badly off, the authority certificate may not be
+   valid any more, so we set the system time to the Tails release date, which
+   will guarantee that the certificates are valid. Then we SIGHUP Tor
+   and wait for a new consensus again.
 0. Set the system time to an initial "guess" based on the Tor
-   consensus validity period.
+   consensus validity period, no matter if the consensus was verifiable
+   or not.
 0. Restart Tor, which now should be working.
 0. Run HTP (see below) through Tor to get a more correct system time.
 
-A notification is shown while HTP is running informing the user that
+A notification is shown while the whole process is running,
+informing the user that
 Tor may not function properly before it has finished (e.g. hidden
 services running Tor prior to version 0.2.3.7-alpha requires clients
 to have a time that is no more than 30 minutes incorrect).
@@ -46,12 +49,13 @@ Tor's consensus file to initially roughly set the time. The consensus
 file contains such information:
 
 	valid-after 2010-12-27 16:00:00
+	fresh-until 2010-12-27 17:00:00
 	valid-until 2010-12-27 19:00:00
 
 A consensus is valid for three hours. If the system time is in the
 [valid-after, valid-after + 2.5 hours] range, `tordate` exits.
 Else, it sets the system time to the middle of the [valid-after,
-valid-until] range and restarts Tor.
+fresh-until] range and restarts Tor.
 
 The system time is then ensured to be correct enough to enable Tor to
 successfully open a circuit, and HTP can then be used to more
@@ -73,7 +77,16 @@ consensus to you could anyway do this, unrelated to time, so the issue
 at hand boils down to *replaying a consensus not older than one week
 or so*.
 
-Second, things are different depending on if you're using a bridge or
+Second, the same type of attacker as above could also try to forge a
+completely new consensus, which would be unverifiable since the
+attacker doesn't have access to the authorities' keys. We would still
+set Tails' system time according to the unverifiable consensus, but
+Tor would refuse to use the forged consensus, resulting in complete
+denial-of-service. An attacker in that position could do
+denial-of-service attacks in many other ways, so this doesn't make
+the situation any worse.
+
+Third, things are different depending on if you're using a bridge or
 not.
 
 If not using a bridge: Tails starts without a cached consensus, so its
@@ -121,50 +134,44 @@ of its HTTP operations.
 ## Authentication of servers
 
 The custom `/usr/local/sbin/htpdate` we use delegates certificate
-verification to wget. It implements a "paranoid mode" that is enabled
-in Tails: when one server cannot be reached, e.g. because of a
-failed certificate checking, this custom version of htpdate considers
-the servers pool consistency to not be secure enough and exits.
+verification to wget. It also uses several different pools of time
+sources, and if there are too many that fail for any given pool,
+e.g. because of failed certificate checking or being unreachable, the
+pool is considered to be potentially compomised and htpdate aborts.
 
 wget is also directed to only use TLSv1 as a "secure" protocol.
 
-## HTP source pool
+## HTP source pools
 
 What sources should be trusted? This is of course also a problem
 with NTP.
 
-The HTP pool used by Tails is be based on stable and reliable
-webservers that get great amounts of traffic, including:
+The HTP pools used by Tails are based on stable and reliable
+webservers that get great amounts of traffic. They are categorized
+into three different pools according to their members' relationship to
+the members in the other pools; any member in a one pool should be
+unlikely to share logs or other identifying data with a member from
+the the other pools. The pools are as follows:
 
-* two servers whose admins are likely to take great care of their
-  visitors' privacy: <https://www.torproject.org/> and
-  <https://mail.riseup.net/>
-    * One problem with both of the above servers is that both may
-    raise more suspicion than your average website.
-    * If people intend to connect through bridges, connecting to
-    torproject.org in the open might attract the suspicion they
-    wanted to avoid in the first place to some degree.
-* one server managed by adversaries of the two "trusted" ones,
-  in order to prevent identifying data to be shared:
-  <https://encrypted.google.com/> (!)
-* one more or less "neutral" server: <https://ssl.scroogle.org/>
+* The "pal" pool are run by groups that are likely to take great care
+  of their visitors' privacy.
+* The "foe" pool are managed by adversaries of the "pal" pool.
+* The "neutral" pool members have a neutral raltionship to both the
+  "pal" and "foe" pool.
 
-The web pages in the pool have been selected (quite quickly, this can
-be improved for sure) using an additional criteria: weight, including
-the resources the page depends on: images, CSS and scripts...
+The pools are listed in `/etc/default/htpdate`.
 
 # Fingerprinting Tails users
 
-Tails will run HTP through Tor, so the fingerprintability should be
+Tails runs HTP through Tor, so the fingerprintability should be
 limited to traffic flow only. It should be noted that HTP only fetches
 the HTTP header, so fingerprinting based on the known traffic pattern
-when fetching the full page of any of the memers in Tails' HTP source
-pool is not possible.
+when fetching the full page of any of the members of Tails' HTP source
+pools is not possible.
 
 Our initial time guess based on the Tor consensus is probably easier
-to fingerprint, though: A fresh Tor is started, (and possibly
-restarted again after a minute if the consensus couldn't be verified)
-and then restarted again right after the consensus has been
+to fingerprint, though: a fresh Tor is started,
+and restarted again right after the consensus has been
 downloaded.
 
 Tails developers still need to think thoroughly of these questions:
