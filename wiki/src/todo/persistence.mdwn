@@ -248,10 +248,7 @@ every user who did not think of it herself.
 * implementation
   - move go_button somewhere else?
   - maximize window?
-  - icon for `.desktop` file
-* Debian packaging
-  - once our backports are accepted into squeeze-backports, remove
-    them from our Git tree; left: `libgtk2-perl`, `libunix-mknod-perl`
+  - lock LUKS device after bootstrap if no configuration step is to be run
 * documentation
 * future (low priority) improvements:
   - when already persistent volume: tell on what vendor / model
@@ -259,10 +256,40 @@ every user who did not think of it herself.
   - delete step: display paths such as `/dev/sdb3` instead of
     `/org/freedesktop/.../sdb3`
 
-#### Design
+#### Testing
 
-This UI is called `tails-persistence-setup` and its code lives in
-[[contribute/Git]].
+This UI is called `tails-persistence-setup` and its code lives in its
+own [[contribute/Git]] (gbp-style) repository.
+
+One can test `tails-persistence-setup` from a Tails image built from
+the `experimental` branch, and installed onto a USB stick using our
+[[USB installer|todo/usb_install_and_upgrade]].
+
+But not everyone can build Tails ISO's, so here is how to test
+`tails-persistence-setup` on a regular Debian system.
+
+First, get the latest `tails-persistence-setup_*.deb` binary package
+you can grab from the `config/chroot_local-packages/` directory in the
+`feature/persistence` branch of the main Tails
+[[contribute/Git]] repository.
+
+Second, install this package on your Debian system. All dependencies
+can be found in Debian Squeeze and `squeeze-backports`.
+
+Third, plug in a USB stick that had Tails installed on it using our
+[[USB installer|todo/usb_install_and_upgrade]], and mount the system
+partition (labeled `Tails`) e.g. on `/media/Tails/`.
+
+Eventually, run `tails-persistence-setup` like this:
+
+	tails-persistence-setup --liveos-mountpoint /media/Tails/
+
+(Note that if run inside of Tails, this last step would rather be "run
+*Configure persistent storage* from the Applications -> Tails menu".)
+
+Then, follow the white rabbit and report back.
+
+#### Design
 
 Setting up a Tails persistent volume means:
 
@@ -282,14 +309,16 @@ Setting up a Tails persistent volume means:
 * explain the user how/when/why to run the *configure which bits are
   persistent* UI (might need a reboot in-between)
 
-* **How/when to run?** On first boot? To detect if a given Tails
+* **How/when to run?** Initially, we wanted to do so on first boot.
+  However, to detect if a given Tails
   system is booting for the first time or not, every first boot must
-  change something on the Tails system partition. I don't think we
-  want to do this, hence the menu entry.
+  change something on the Tails system partition. We don't
+  want to do this, hence the `tails-persistence-setup` will be run
+  from the Applications menu by users who decide they want persistence.
 
 * **Storage location**: To keep the GUI and documentation simple, we
   only support setting up a persistent volume *on the USB stick Tails
-  is running from*. The underlying tools (live-boot backend,
+  is running from*. **Note**: the underlying tools (live-boot backend,
   tails-greeter) will support storage on whatever relevant device,
   though; moreover, `tails-persistence-setup` actually knows how to
   set up persistence on arbitrary devices, thanks to command-line
@@ -311,6 +340,12 @@ Setting up a Tails persistent volume means:
   storage* and *configure which bits are persistent* user interfaces
   in a wizard-like way. The current code provides the foundations to
   do so, and the menu entry is called *Configure persistent storage*.
+  One may call it using multiple `--step` options, and the UI will
+  present every step sequentially; currently, the only implemented
+  step are `bootstrap` and `delete` (the later is only meant as
+  a developers-only option); the idea is to add `configure` and
+  `reboot` steps when we'll implement the *configure which bits are
+  persistent* UI.
 
 * **Programming language**: written in Perl, i.e. the language the one
   of us who wrote it is the most efficient at.
@@ -364,20 +399,22 @@ we've need a graphical [[todo/boot_menu]]: [[todo/TailsGreeter]].
 
 * specify features: draft, request for comments, discussion, consensus
 * implementation
+  - after having entered passphrase, typing Enter does not click the "Login" button
+  - login/next button does not get the configured images
 * documentation
 
 #### draft
 
-* add a second (options) screen to tails-greeter
 * ask whether to enable persistence at all; if yes, read-only or
   read-write
-* find a way to run `live-persist` as root
 * ask list of possibly valid persistent containers to `live-persist`
-* ask LUKS passphrases
+* initial implementation (MVC -speak): the model (`live-persist` and
+  tails-greeter code that runs it) supports enabling multiple
+  persistence containers, but the view (tails-greeter GUI) does not
+* ask LUKS passphrase, deal with errors
 * for a given persistent container, it's all or nothing: all bits of
   persistence configured in its `live.persist` are to be setup
-* run backend (Debian Live) functions to setup persistent data where
-  it belong
+* run `live-persist` to setup persistent data where it belong
 
 backend / tails-greeter interface
 ---------------------------------
