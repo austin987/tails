@@ -1,5 +1,5 @@
 user_pref("capability.policy.maonoscript.javascript.enabled", "allAccess");
-user_pref("capability.policy.maonoscript.sites", " https://auk.riseup.net https://mail.riseup.net https://swift.riseup.net https://tern.riseup.net https://webmail.no-log.org addons.mozilla.org about: about:addons about:blank about:certerror about:config about:crashes about:credits about:home about:neterror about:plugins about:privatebrowsing about:sessionrestore chrome: file:// https://webmail.boum.org resource:");
+user_pref("capability.policy.maonoscript.sites", " https://auk.riseup.net https://mail.riseup.net https://swift.riseup.net https://tern.riseup.net https://webmail.no-log.org addons.mozilla.org about: about:addons about:blank about:certerror about:config about:crashes about:credits about:home about:neterror about:plugins about:privatebrowsing about:sessionrestore chrome: https://webmail.boum.org resource:");
 user_pref("extensions.adblockplus.currentVersion", "2.0.3");
 user_pref("extensions.adblockplus.showinaddonbar", false);
 user_pref("extensions.adblockplus.showintoolbar", false);
@@ -73,4 +73,4 @@ user_pref("noscript.showUntrusted", false);
 user_pref("noscript.STS.enabled", false);
 user_pref("noscript.subscription.lastCheck", -142148139);
 user_pref("noscript.temp", "");
-user_pref("noscript.untrusted", "google-analytics.com file://");
+user_pref("noscript.untrusted", "google-analytics.com");
