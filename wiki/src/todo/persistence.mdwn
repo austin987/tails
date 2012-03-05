@@ -235,9 +235,9 @@ every user who did not think of it herself.
 
 * show proof of concept, request more comments
 * implementation
+  - lock LUKS device after bootstrap if no configuration step is to be run
   - move go_button somewhere else?
   - maximize window?
-  - lock LUKS device after bootstrap if no configuration step is to be run
   - make sure SD/SDHC cards are as well supported as USB
 * documentation
 * future (low priority) improvements:
@@ -373,12 +373,28 @@ let's make the scope of this more complex case smaller to start with:
 
 #### draft
 
+* either persistence is currently enabled in read-write mode, and thus
+  the persistence partition is already mounted; or the user is
+  directly coming from bootstrap, and then we must mount the partition
+  ourselves
 * by default setup, setup a linkfiles-enabled persistent
   `${HOME}/dotfiles`, preconfigured to have its contents symlinked
   into `$HOME`.
 * apart of this, let's consider non-directories persistence an
   advanced feature: to start with, and possibly forever, this could
   only be configured by manually editing live-persist file
+* a few **presets** are made available (e.g. `~/.gnupg/`); the GUI
+  displays every available preset, along with its current
+  (enabled/disabled) status, and optionally a short description and
+  icon; therefore, tails-persistence-setup needs to have means to
+  merge the presets list with the configuration read from the input
+  configuration file; to this end, it needs to know if a given preset
+  is enabled in the input configuration file;
+
+* by default, the current configuration is displayed as a list of
+  items (= config lines); listed items may be toggled on/off; an *Add
+  custom* button allows to enter custom source, destination (and
+  comma-separated list of options?)
 
 ### enable persistence at boot time
 
@@ -389,6 +405,9 @@ we've need a graphical [[todo/boot_menu]]: [[todo/TailsGreeter]].
 
 * specify features: show prototype, request for comments, discussion, consensus
 * implementation
+  - pass the read-only/read-write information to the user session
+  - expose live-persist failure in some useful way
+    (currently, a GdmGreeter.errors.LivePersistError is thrown)
   - login/next button does not display the configured images
   - live-persist luksClose's the unlocked device and returns failure
     if live.persist does not exist: **wait** for fixed live-boot
