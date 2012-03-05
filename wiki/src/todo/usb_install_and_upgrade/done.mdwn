@@ -1,6 +1,6 @@
-[[!toc levels=2]]
-
 Here's what we've done so far, based on Fedora's liveusb-creator codebase.
+
+[[!toc levels=2]]
 
 Decide
 ======
@@ -91,6 +91,7 @@ Misc
 - virer le QPixmap proxies dans pyuicc4_custom
 - .desktop file uses `Icon=fedorausb.png` => use a more generic icon
   [intrigeri]
+- write minimal manpage
 
 User interface
 ==============
@@ -120,8 +121,8 @@ We have `.desktop` files for the following usecases:
    `--clone -P -m`
  * Upgrade a (non-running) Tails system using a ISO file: no
    additional switch required.
- * Upgrade a (non-running) Tails system using a ISO file: no
-   additional switch required.
+ * Upgrade a (non-running) Tails system using another, fresher,
+   running Tails: no additional switch required.
 
 Note for later: having *Clone the currently running Tails system* as
 an option in the UI would allow us separate usecases based on the
@@ -155,3 +156,57 @@ In feature/ignore_source_device branch, based on the feature/partitioning one:
 - Don't ask to confirm before resetting the MBR when using
   `--partition`: done in 5028cb0.
 - if stick size <1.5GB, error out in a user-friendly way [intrigeri]
+
+Testing
+=======
+
+3.11.4-2~4.gbp9e95fa
+--------------------
+
+* cloning onto a USB stick that already has a FAT32 partition.
+* installing onto a USB stick that has a MBR partition table, and no
+  partition at all.
+* installing onto a USB stick that already has a old-fashioned cat'd
+  Tails on it, using the *Upgrade from running* function: warns this
+  action is not supported, correctly directs the user to the
+  *Clone* launcher.
+* installing onto a USB stick that already has a old-fashioned cat'd
+  Tails on it using the *Clone Tails* function.
+* test cloning from USB on bare metal
+* booting from a Tails installed by this installer
+* upgrading from ISO file while running a Tails system
+* upgrading from CD on bare metal
+* cloning from CD on bare metal
+* boot from a Tails upgraded by this installer
+* test "emergency shutdown on boot medium removal" feature, on Tails
+  system installed by this installer
+
+### From Tails installed by this installer
+
+* test cloning a running Tails that was itself installed using this
+  installer, onto a USB stick that already has a old-fashioned cat'd
+  Tails on it
+
+3.11.4-6
+--------
+
+Most of this was run from a Tails system installed by this installer:
+
+* cloning onto a USB stick
+* cloning onto a USB stick that has a MBR partition table, and no
+  partition at all.
+* upgrading from running system
+* upgrading from CD on bare metal
+* cloning from CD on bare metal
+* cloning onto a USB stick
+* installing onto a USB stick that already has a old-fashioned cat'd
+  Tails on it, using the *Upgrade from running* function: warns this
+  action is not supported, correctly directs the user to the
+  *Clone* launcher.
+* cloning a running Tails onto a USB stick that already has
+  a old-fashioned cat'd Tails on it
+* upgrading from ISO file while running a Tails system
+* test "emergency shutdown on boot medium removal" feature, on Tails
+  system installed by this installer
+* booting from a Tails installed by this installer
+* boot from a Tails upgraded by this installer

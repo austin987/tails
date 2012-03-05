@@ -42,6 +42,18 @@ The `feature/multikernel` branch:
 
 ### Next steps
 
+- stuff added to the command-line in the syslinux menu is ignored;
+  seems like the ifcpu64 module does not pass parameters to the other
+  (hidden, auto-detected) menu entry it runs; inserting `--` between
+  `append live-amd64 -- live-686-pae -- live` and the additional
+  parameters was tried, and failed too; so,
+  * on the short run, we can forget the ifcpu64 part, and ship
+    a multikernel image with a "one line per kernel" (486, 686-pae,
+    amd64) menu - will be better than nothing; [[!tag todo/code]]
+  * on the long run, we probably have to e.g.
+    add another level of redirection, and -if possible- have ifcpu64
+    "boot" a submenu that displays the autodetected kernel, and provides
+    ways to edit it. [[!tag todo/code]]
 - check that our build system does not do stuff say, for *the one and
   only* kernel
 - [[!taglink todo/wait]] for a graphical [[todo/boot_menu]] to take
