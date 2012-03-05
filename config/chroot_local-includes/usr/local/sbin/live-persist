@@ -6,10 +6,13 @@
 
 # This will import the following functions and variables used below:
 #   Arguments()
-#   get_custom_mounts()
 #   do_custom_mounts()
-#   storage_devices()
+#   get_custom_mounts()
+#   open_luks_device()
 #   probe_for_gpt_name()
+#   removable_dev()
+#   removable_usb_dev()
+#   storage_devices()
 #   $custom_overlay_label
 
 usage ()
@@ -119,10 +122,10 @@ list_gpt_volumes ()
 	local gpt_overlays=""
 	for dev in $(storage_devices "" "${white_listed_devices}")
 	do
-		if ( /sbin/cryptsetup isLuks ${dev} >/dev/null 2>&1 && \
+		if ( is_luks_partition ${dev} >/dev/null 2>&1 && \
 		     echo ${PERSISTENT_ENCRYPTION} | grep -qve "\<luks\>" ) || \
 
-		   ( ! /sbin/cryptsetup isLuks ${dev} >/dev/null 2>&1 && \
+		   ( ! is_luks_partition ${dev} >/dev/null 2>&1 && \
 		     echo ${PERSISTENT_ENCRYPTION} | grep -qve "\<none\>" )
 		then
 			continue
@@ -180,19 +183,17 @@ activate_volumes ()
 	done
 
 	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
-	get_custom_mounts ${open_volumes} ${custom_mounts}
+	get_custom_mounts ${custom_mounts} ${open_volumes}
 	if [ -s "${custom_mounts}" ]
 	then
-		do_custom_mounts ${custom_mounts}
+		succecces=$(activate_custom_mounts ${custom_mounts})
 	fi
 	rm -f ${custom_mounts} 2> /dev/null
 
 	for vol in ${open_volumes}
 	do
-		if grep -qe "^${vol}\>" /proc/mounts
+		if echo ${successes} | grep -qve "^\(.* \)\?${vol}\( .*)\?$"
 		then
-			successes="${successes} ${vol}"
-		else
 			failures="${failures} ${vol}"
 			ret=1
 		fi
