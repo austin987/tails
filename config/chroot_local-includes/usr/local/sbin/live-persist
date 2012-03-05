@@ -13,6 +13,7 @@
 #   removable_dev()
 #   removable_usb_dev()
 #   storage_devices()
+#   where_is_mounted()
 #   $custom_overlay_label
 
 usage ()
@@ -219,6 +220,26 @@ activate_volumes ()
 	exit ${ret}
 }
 
+close_volumes ()
+{
+	local volumes=${@}
+	local custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
+	get_custom_mounts ${custom_mounts} ${volumes}
+	while read device source dest options # < ${custom_mounts}
+	do
+		if [ "${options}" != linkfiles ]
+		then
+			umount ${dest} 2> /dev/null
+		fi
+	done < ${custom_mounts}
+	rm -f ${custom_mounts} 2> /dev/null
+	for vol in ${volumes}
+	do
+		local backing=$(where_is_mounted ${vol})
+		umount ${backing}
+	done
+}
+
 main ()
 {
 	# tracing get's activated by Arguments() if "debug" is in /proc/cmdline
@@ -286,12 +307,12 @@ main ()
 			fi
 			list_gpt_volumes ${labels}
 			;;
-		activate)
+		activate|close)
 			if ! echo ${@} | grep -qe "[^[:space:]]"
 			then
 				error "you must specify at least one volume"
 			fi
-			activate_volumes "${@}"
+			${action}_volumes "${@}"
 			;;
 		"")
 			error "no action specified"
