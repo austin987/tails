@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2012-02-27 22:44+0100\n"
+"POT-Creation-Date: 2012-03-05 16:41+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,35 +22,203 @@ msgid "[[!meta title=\"Installing onto a USB stick, for Mac\"]]\n"
 msgstr ""
 
 #. type: Plain text
+#, no-wrap
 msgid ""
-"Some users reported to successfully boot from a USB stick using an Intel Mac "
-"after following those steps:"
+"**Warning!** If at some point you are not sure about a device name it is\n"
+"recommended to stop proceeding otherwise **you might risk overwriting any hard\n"
+"drive on the system**. Proceed at your own discretion! We admit that this method\n"
+"is pretty crude at the moment and we are working on a more intuitive one.\n"
 msgstr ""
 
-#. type: Bullet: '- '
-msgid ""
-"First, partition the USB drive in \"Apple Partition Map\" format from the "
-"'Disk Utility' in Tails."
-msgstr ""
-
-#. type: Bullet: '- '
-msgid ""
-"Then I followed the instruction on [[installing onto a USB stick for "
-"Linux|linux]]."
-msgstr ""
-
-#. type: Bullet: '- '
-msgid "You will need to have rEFIt installed on the Mac."
-msgstr ""
-
-#. type: Bullet: '- '
-msgid ""
-"Hold the 'command/apple' key while booting up and select the USB drive to "
-"boot from."
+#. type: Title ###
+#, no-wrap
+msgid "Step 0: Setup rEFIt."
 msgstr ""
 
 #. type: Plain text
 msgid ""
-"Note that Tails developers are in general not very knowledgeable about "
-"Mac. Any additional information is welcome."
+"You need to have [rEFIt](http://refit.sourceforge.net/) installed and "
+"working on the mac."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"If you need help with rEFIt, look at [their installation documentation]"
+"(http://refit.sourceforge.net/doc/c1s1_install.html)."
+msgstr ""
+
+#. type: Title ###
+#, no-wrap
+msgid "Step 1: Find out the device name of the destination USB stick."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"The device name should be something like `/dev/disk1`, `/dev/disk2`, etc."
+msgstr ""
+
+#. type: Plain text
+msgid "If you're not sure about the precise device name, do the following."
+msgstr ""
+
+#. type: Plain text
+msgid "Unplug the destination USB stick."
+msgstr ""
+
+#. type: Plain text
+msgid "Open Terminal from *Applications* → *Utilities* → *Terminal.app*:"
+msgstr ""
+
+#. type: Plain text
+msgid "Type the following command:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "     diskUtil list\n"
+msgstr ""
+
+#. type: Plain text
+msgid "This will list all the current storage devices:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!img mac/diskUtil_list_empty_small.png link=no alt=\"Empty list\"]]\n"
+msgstr ""
+
+#. type: Plain text
+msgid "Plug back the destination USB stick and run the same command as before:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "\t diskUtil list\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"A new device should appear in the list of storage devices.  Check that the "
+"size of the device corresponds to your destination USB drive.  In my case "
+"the USB drive is 4.0 GB and the location is /dev/disk1:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!img mac/diskUtil_list_USB_shows_small.png link=no alt=\"A new storage device appeared at the end of the list\"]]\n"
+msgstr ""
+
+#. type: Title ###
+#, no-wrap
+msgid "Step 2: Partition the USB drive."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"In the terminal window you have open issue the following command, replacing "
+"the destination with the device name found in step 1."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "    diskUtil partitionDisk [destination] 1 APMFormat JournaledHFS+ Tails 100%\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!img mac/diskUtil_partitionDisk_small.png link=no alt=\"Partitioning the USB drive\"]]\n"
+msgstr ""
+
+#. type: Title ###
+#, no-wrap
+msgid "Step 3: Unmount the USB drive."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"In the terminal window issue the following command, again replacing the "
+"destination with the device name found in step 1."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "     diskUtil unmountDisk [destination]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!img mac/diskUtil_unmountDisk_small.png link=no alt=\"Unmounting the USB drive\"]]\n"
+msgstr ""
+
+#. type: Title ###
+#, no-wrap
+msgid "Step 4: Do the copy from the terminal."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"In the terminal window issue the following command, replacing `[tails.iso]` "
+"by the path to the ISO image that you want to copy and `[destination]` by "
+"the device name found in step 1."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "\tcat [tails.iso] > [destination] && sync\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"If you are not sure about the path to the ISO image or if you get a \"No "
+"such file or directory\" error, you can first type `cat`, followed by a "
+"space, and then drag and drop the icon of the ISO image from a file browser "
+"onto the terminal. This should insert the correct path to the ISO image in "
+"the terminal.  Then type the rest of the command."
+msgstr ""
+
+#. type: Plain text
+msgid "You should get something like this:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "    cat /Users/tailsuser/Downloads/tails-i386-0.10.1.iso > /dev/disk1 && sync\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!img mac/cat_copy_to_USB_small.png link=0 alt=\"Copying the tails.iso to the USB drive\"]]\n"
+msgstr ""
+
+#. type: Title ###
+#, no-wrap
+msgid "Step 5: Press enter and wait."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"If you don't see any error message, Tails is being copied onto the key. The "
+"whole process might take a while, generally a few minutes. Be patient…"
+msgstr ""
+
+#. type: Title ###
+#, no-wrap
+msgid "Step 6:"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Reboot your Mac while holding the *command* / *apple* key and select the USB "
+"drive to boot from the rEFIt menu."
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Notes\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Note that Tails developers are in general not very knowledgeable about Mac. "
+"Any additional information is welcome."
 msgstr ""
