@@ -1,3 +1,43 @@
+tails (0.10.2) unstable; urgency=low
+
+  * Iceweasel
+  - Update to 10.0.2-1.
+  - Disable HTTPS-Everywhere's SSL Observatory (plus first-run pop-up).
+  - Revert "FoxyProxy: don't enclose regexps between ^ and $."
+    Currently "http://www.i2p2.de" (and everything similar) is captured by
+    the I2P filter, which is incorrect. It seems isMultiLine="false" does
+    *not* make RE into ^RE$ any longer.
+  - Remove file:// from NoScript's exception lists.
+    This will fix the JavaScript toggles in the local copy of the documentation.
+  - Update AdBlock patterns.
+
+  * Software
+  - Upgrade I2P to 0.8.13.
+  - Install libvpx0 from sid.
+  - Fetch klibc-utils and libklibc from sid.
+    The last initramfs-tools depends on these.
+
+  * Hardware support
+  - Upgrade Linux kernel to 3.2.7-1.
+  - Install firmware-libertas.
+    This adds support for wireless network cards with Marvell Libertas
+    8xxx chips supported by the libertas_cs, libertas_sdio, libertas_spi,
+    libertas_tf_usb, mwl8k and usb8xxx drivers.
+
+  * Miscellaneous
+  - Revert "Set time to middle of [valid-after, fresh-until] from consensus."
+    This reverts commit 18d23a500b9412b4b0fbe4e38a9398eb1a3eadef.
+    With this vmid clocks that are E minutes back in time may cause issues
+    (temporary Tor outages) after consensus updates that happen at the
+    (60-E):th minute or later during any hour. Full analysis:
+    https://mailman.boum.org/pipermail/tails-dev/2012-January/000873.html
+  - Add the default user to the vboxsf group.
+    This will allow the user to get full access to automounted VirtualBox
+    shared folders as they are mounted with guid vboxsf and rwx group
+    permissions.
+
+ -- Tails developers <amnesia@boum.org>  Thu, 01 Mar 2012 20:26:21 +0100
+
 tails (0.10.1) unstable; urgency=low
 
   * Iceweasel
