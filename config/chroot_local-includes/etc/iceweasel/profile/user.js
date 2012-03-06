@@ -6,6 +6,9 @@ user_pref("extensions.adblockplus.showinaddonbar", false);
 user_pref("extensions.adblockplus.showintoolbar", false);
 user_pref("extensions.adblockplus.subscriptions_autoupdate", false);
 
+user_pref("extensions.https_everywhere._observatory.enabled", false);
+user_pref("extensions.https_everywhere._observatory.popup_shown", true);
+
 // Block read and write access to the history in non-Tor mode
 user_pref("extensions.torbutton.block_nthread", true);
 user_pref("extensions.torbutton.block_nthwrite", true);
