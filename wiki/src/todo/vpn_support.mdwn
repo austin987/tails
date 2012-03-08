@@ -1,0 +1,57 @@
+[[!tag todo/discuss]]
+
+First of all there's the question of how the VPN should be setup
+w.r.t. Tor, i.e. before or after. We can probably only support one of
+these easily.
+
+# VPNs are accesses through Tor
+
+This situation is a bit tricky since all our applications are
+explicitly configured to use our local proxies to reach Tor. Hence
+we'll get in the situation where our traffic flows like this:
+
+    Application => Tor => VPN => Proxy on localhost
+
+where the last step is very problematic -- we want it removed. Trying
+to make something that Just Works for our users is a very difficult
+problem and a guaranteed headache. Essentially what that requires is
+something like a network manager hook that disables proxying in *all*
+application configurations, on a case-by-case basis. 
+
+This would not be an issue for web resources if we ship
+[[an insecure browser|todo/add_support_for_free_wifi_hotspots/#index3h2]],
+or any LAN resource if we allow unproxied LAN connections (e.g. a
+generalization of: [[todo/iceweasel_should_support_LAN_webservers]]).
+
+## Use cases
+
+* Access services that blocks Tor.
+* Reach a local resource on a VPN that is not accessible in any other
+  way.
+* Reach a VPN non-anonymously (e.g. your account is tied to you IRL)
+  while only hiding your geo-location, which may be the only thing
+  you need in some situations. (Maybe invalid since this is not part
+  of the PELD spec (yet?) AFAIK.)
+
+# Tor is accessed through a VPN
+
+Unlike the other VPN setup yhis would be trivial to implement.
+
+## Use cases
+ 
+* Access Tor on networks where it's blocked. Using a bridge is
+  preferable when possible, and should always be possible once
+  [[todo/todo/obsfproxy]] is mature and in wide use. Until then this
+  may be an acceptible workaround.
+* Some ISPs require their customers to connect to them through VPNs,
+  especially PPTP. Tails is currently unusable for them out of the
+  box.
+
+# What we don't want
+
+Some users have requested support for VPNs in Tails to "improve" Tor's
+anonymity. You know, more hops must be better, right?. That's just
+incorrect -- if anything VPNs make the situation worse since they
+basically introduce either a permanent entry guard (if the VPN is set
+up before Tor) or a permanent exit node (if the VPN is accessed
+through Tor).

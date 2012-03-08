@@ -1,6 +1,6 @@
 [[!meta title="Download, verify and install"]]
 
-<strong>Tails is [[Free Software|license]], you can download it, use it and
+<strong>Tails is [[Free Software|doc/about/license]], you can download it, use it and
 share it without restriction.</strong>
 
 <div id="page-download">
@@ -20,7 +20,7 @@ share it without restriction.</strong>
 	</ul>
 
 	<p><strong>Then, check first the [[about]] and
-	[[warning|doc/warning]] pages to make sure that Tails is the right tool
+	[[warning|doc/about/warning]] pages to make sure that Tails is the right tool
 	for you and that you understand well its limitations.</strong></p>
 
 </div>
@@ -28,6 +28,11 @@ share it without restriction.</strong>
 <div id="download_the_image" class="container">
 
 	<h1 class="bullet-number-two">Download the ISO image</h1>
+
+	<p>You will download Tails in the form of an <span
+	class="definition">[[!wikipedia ISO_image desc="ISO image"]]</span>: a
+	single file that you will later burn on a CD or installed onto a USB
+	stick.</p>
 
 <div id="http">
 
@@ -93,31 +98,34 @@ share it without restriction.</strong>
 	strong way of checking the ISO image <span
 	class="definition">[[!wikipedia Authentication
 	desc="authenticity"]]</span> and making sure you downloaded a genuine
-	Tails.</strong></p>
+	Tails.</strong> We will propose you after that some more advanced
+	techniques to <a href="#authenticity-check">check the authenticity of
+	the ISO image</a>.</p>
 
 	<p>Those techniques rely on standard HTTPS and <span
 	class="definition">[[!wikipedia Certificate_authority desc="certificate
 	authorities"]]</span> to make you trust the content of this website.
-	But, [[as explained on our warning page|doc/warning#index3h1]], you
+	But, [[as explained on our warning page|doc/about/warning#index3h1]], you
 	could still be victim of a man-in-the-middle attack while using HTTPS.
 	On this website as much as on any other of the Internet.</p>
 
-	<p>It is anyway a good thing to check the ISO image integrity first. We
-	will propose you after that some more advanced techniques to <a
-	href="#authenticity-check">check the authenticity of the ISO
-	image</a>.</p>
-
-	<p>All Tails ISO image are cryptographically signed by our OpenPGP key.
+	<p><strong>All Tails ISO image are cryptographically signed by our
+	OpenPGP key.</strong>
 	OpenPGP is a standard for data encryption that provides cryptographic
 	privacy and authentication through the use of keys owned by its users.
 	Checking this signature is the recommended way of checking the ISO image
 	integrity.</p>
 
-	<p>Do you want to check the ISO image integrity:</p>
+	<p>If you already know how to use an OpenPGP key you can download it
+	straight away:</p>
+
+	[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
+
+	<p>Otherwise, read our instructions to check the ISO image integrity:</p>
 	<ul>
 	  <li>
 	  [[!toggle id="verify_the_iso_image_using_gnome"
-	  text="Using Linux with Gnome: Ubuntu, Debian, Tails, Fedora, etc."]]
+	  text="Using Linux with Gnome: Ubuntu, Debian, Tails, etc."]]
 	  </li>
 	  <li>
 	  [[!toggle id="verify_the_iso_image_using_the_command_line"
@@ -130,240 +138,38 @@ share it without restriction.</strong>
 	</ul>
 
 	[[!toggleable id="verify_the_iso_image_using_gnome" text="""
-	<span class="hide">[[!toggle id="verify_the_iso_image_using_gnome"
-	text="Hide"]]</span>
+	<span class="hide">[[!toggle id="verify_the_iso_image_using_gnome" text=""]]</span>
 
 	<h2>Using Linux with Gnome: Ubuntu, Debian, Tails, Fedora, etc.</h2>
 
-	<p>You need to have the <code>seahorse-plugins</code> package
-	installed. If you're not sure or want to install it, under Debian,
-	Ubuntu or Tails you can issue the following commands:</p>
+	[[!inline pages="doc/get/verify_the_iso_image_using_gnome" raw="yes"]]
 
-<pre>
-sudo apt-get update
-sudo apt-get install seahorse-plugins
-</pre>
-
-	<p>First, download Tails signing key:</p>
-
-	[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
-
-	<p>Your browser should propose you to open it with "Import Key". Choose
-	this action. It will add Tails signing key to your keyring, the
-	collection of OpenPGP keys you already imported:</p>
-
-	<p>[[!img download/import_key.png alt="What should Iceweasel do with
-	this file? Open with: Import Key (default)" link="no"]]</p>
-
-	<p>You will get notified will the following message:</p>
-
-	<p>[[!img download/key_imported.png alt="Key Imported. Imported a key
-	for Tails developers (signing key) &lt;tails@boum.org&gt;"
-	link="no"]]</p>
-
-	<p>Now, download the cryptographic signature corresponding to the ISO
-	image you want to verify:</p>
-
-	[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
-
-	<p>Your browser should propose you to open it with "Verify Signature".
-	Choose this action to start the cryptographic verification:</p>
-
-	<p>[[!img download/verify_signature.png alt="What should Iceweasel do
-	with this file? Open with: Verify Signature (default)" link="no"]]</p>
-
-	<p>Browse your files to select the Tails ISO image you want to verify.
-	Then, the verification will start. It can take several minutes:</p>
-
-	<p>[[!img download/verifying.png alt="Verifying" link="no"]]</p>
-
-	<p><strong>If the ISO image is correct</strong> you will get a
-	notification telling you that the signature is good:</p>
-
-	<p>[[!img download/good_signature.png alt="Goog Signature"
-	link="no"]]</p>
-
-	<p><strong>If the ISO image is not correct</strong> you will get a
-	notification telling you that the signature is bad:</p>
-
-	<p>[[!img download/bad_signature.png alt="Bad Signature: Bad or forged
-	signature." link="no"]]</p>
 	"""]]
 
 	[[!toggleable id="verify_the_iso_image_using_the_command_line" text="""
-	<span class="hide">[[!toggle id="verify_the_iso_image_using_the_command_line"
-	text="Hide"]]</span>
+	<span class="hide">[[!toggle id="verify_the_iso_image_using_the_command_line" text=""]]</span>
 
 	<h2>Using Linux with the command line</h2>
 
-	<p>You need to have GnuPG installed. GnuPG is the common OpenPGP
-	implementation for Linux: it is installed by default under Debian,
-	Ubuntu, Tails and many other distributions.</p>
+	[[!inline pages="doc/get/verify_the_iso_image_using_gnome" raw="yes"]]
 
-	<p>First, download Tails signing key:</p>
-
-	[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
-
-	<p>Open a terminal and import Tails signing key with the following
-	commands:</p>
-
-<pre>
-cd [the directory in which you downloaded the key]
-cat tails-signing.key | gpg --import
-</pre>
-
-	<p>The output should tell you that the key was imported:</p>
-
-<pre>
-gpg: key BE2CD9C1: public key "Tails developers (signing key) &lt;tails@boum.org&gt;" imported
-gpg: Total number processed: 2
-gpg:               imported: 2  (RSA: 2)
-</pre>
-
-	<p>If you had already imported Tails signing key in the past, the output
-	should tell you that the key was not changed:</p>
-
-<pre>
-gpg: key BE2CD9C1: "Tails developers (signing key) &lt;tails@boum.org&gt;" not changed
-gpg: Total number processed: 2
-gpg:              unchanged: 2
-</pre>
-
-	<p>Now, download the cryptographic signature corresponding to the ISO
-	image you want to verify and save it in the same folder as the ISO
-	image:</p>
-
-	[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
-
-	<p>Then start the cryptographic verification, it can take several
-	minutes:</p>
-
-<pre>
-cd [the ISO image directory]
-gpg --verify tails-i386-0.8.1.iso.pgp tails-i386-0.8.1.iso
-</pre>
-
-	<p><strong>If the ISO image is correct</strong> the output will tell you
-	that the signature is good:</p>
-
-<pre>
-gpg: Signature made Sat 30 Apr 2011 10:53:23 AM CEST
-gpg:                using RSA key 1202821CBE2CD9C1
-gpg: Good signature from "Tails developers (signing key) &lt;tails@boum.org&gt;"
-</pre>
-
-	<p>This might be followed by a warning saying:</p>
-
-<pre>
-gpg: WARNING: This key is not certified with a trusted signature!
-gpg:          There is no indication that the signature belongs to the owner.
-Primary key fingerprint: 0D24 B36A A9A2 A651 7878  7645 1202 821C BE2C D9C1
-</pre>
-
-	<p>This doesn't alter the validity of the signature according to the key
-	you downloaded. This warning rather has to do with the trust that you
-	put in Tails signing key. See, [[Trusting Tails signing
-	key|doc/trusting_tails_signing_key]]. To remove this warning you would
-	have to personnally <span class="definition">[[!wikipedia Keysigning
-	desc="sign"]]</span> Tails signing key with your own key.</p>
-
-	<p><strong>If the ISO image is not correct</strong> the output will tell
-	you that the signature is bad:</p>
-
-<pre>
-gpg: Signature made Sat 30 Apr 2011 10:53:23 AM CEST
-gpg:                using RSA key 1202821CBE2CD9C1
-gpg: BAD signature from "Tails developers (signing key) &lt;tails@boum.org&gt;"
-</pre>
 	"""]]
 
 	[[!toggleable id="verify_the_iso_image_using_other_operating_systems" text="""
-	<span class="hide">[[!toggle id="verify_the_iso_image_using_other_operating_systems"
-	text="Hide"]]</span>
+	<span class="hide">[[!toggle id="verify_the_iso_image_using_other_operating_systems" text=""]]</span>
 
 	<h2>Using other operating systems</h2>
 
-	<h3>Using Firefox</h3>
+	[[!inline pages="doc/get/verify_the_iso_image_using_other_operating_systems" raw="yes"]]
 
-	<p>This technique is not using the cryptographic signature as the others
-	do. We propose it because it's especially easy for Windows users.</p>
-
-	<p>Install the CheckIt extension for Firefox available <a
-	href="https://addons.mozilla.org/en-US/firefox/addon/checkit/">here</a>
-	and restart Firefox.</p>
-
-	<p>Here is the checksum (a kind of digital fingerprint) of the ISO
-	image. Select it with your cursor:</p>
-
-	<pre>[[!inline pages="inc/stable_i386_hash" raw="yes"]]</pre>
-
-	<p>Right-click on it and choose "Selected hash (SHA256)" from the
-	contextual menu:</p>
-
-	<p>[[!img download/selected_hash.png alt="Selected hash (SHA256)"
-	link="no"]]</p>
-
-	<p>From the dialog box that shows up, open the ISO image. Then wait for
-	the checksum to compute. This will take several seconds during which
-	your browser will be unresponsive.</p>
-
-	<p><strong>If the ISO image is correct</strong> you will get a
-	notification saying that the checksums match:</p>
-
-	<p>[[!img download/checksums_match.png alt="CheckIt: SHA256 checksums
-	match!" link="no"]]</p>
-
-	<p><strong>If the ISO image is not correct</strong> you will get a
-	notification telling you that the checksums do not match:</p>
-
-	<p>[[!img download/checksums_do_not_match.png alt="SHA256 checksums do
-	not match!" link="no"]]</p>
-
-	<h3>Using the cryptographic signature</h3>
-
-	<p>GnuPG, a common free software implementation of OpenPGP has versions
-	and graphical frontends for both Windows and Mac OS X. This also make it
-	possible to check the cryptographic signature with those operating
-	systems:</p>
-
-	<ul>
-	  <li>[[Gpg4win|http://www.gpg4win.org/]], for Windows</li>
-	  <li>[[GPGTools|http://www.gpgtools.org/]], for Mac OS X</li>
-	</ul>
-
-	<p>You will find on either of those websites detailed documentation on
-	how to install and use them.</p>
-
-	<h3>For Windows using Gpg4win</h3>
-
-	<p>After installing Gpg4win, download Tails signing key:</p>
-
-	[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
-
-	<p>[[Consult the Gpg4win documentation to import
-	it|http://www.gpg4win.org/doc/en/gpg4win-compendium_15.html]]</p>
-
-	<p>Then, download the cryptographic signature corresponding to the ISO
-	image you want to verify:</p>
-
-	[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
-
-	<p>[[Consult the Gpg4win documentation to check the
-	signature|http://www.gpg4win.org/doc/en/gpg4win-compendium_24.html#id4]]</p>
-
-	<h3>For Mac OS X using GPGTools</h3>
-
-	<p>After installing GPGTools, you should be able to follow the
-	instruction for Linux with the command line. To open the command line,
-	navigate to your Applications folder, open Utilities, and double click
-	on Terminal.</p> """]]
+	"""]]
 
 	<h2><a name="authenticity-check"></a>So how can I check better the ISO
 	image authenticity?</h2>
 
 	<p>But the Tails signing key that you downloaded from this website could
 	be a fake one if you were victim of a [[man-in-the-middle
-	attack|doc/warning#index3h1]].</p>
+	attack|doc/about/warning#index3h1]].</p>
 
 	<p>Finding a way of trusting better Tails signing key would allow you to
 	authenticate better the ISO image you downloaded. The following page
@@ -419,6 +225,7 @@ gpg: BAD signature from "Tails developers (signing key) &lt;tails@boum.org&gt;"
 	<ul>
 	  <li>[[Instructions for Linux|doc/installing_onto_a_usb_stick/linux]]</li>
 	  <li>[[Instructions for Windows|doc/installing_onto_a_usb_stick/windows]]</li>
+	  <li>[[Instructions for Mac|doc/installing_onto_a_usb_stick/mac]]</li>
 	</ul>
 
 	<p><strong>FIXME:</strong> mention Intel-based Mac users

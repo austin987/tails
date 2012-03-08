@@ -1,0 +1,26 @@
+It would be very nice to have (cpu) power saving enabled by default (with the ondemand governor). To enable power saving for all CPUs on multi-core machines it would also be neccessary to enable SMP support in the kernel (and also to make use of the other CPUs). Right now the power consumption with tails is way to high to be usable from a laptop computer and also unneccessarily high for a desktop computer. SMP support does not do any harm for non-SMP machines, so enabling it in the kernel config should not cause problems.
+
+> As far as I can tell, SMP is supported in Tails kernel. What makes
+> you think it's not?
+
+>> Checking /proc/cpuinfo shows only one CPU which is a good indicator there is no SMP support. Also uname -a does not say anything about SMP support, which it should if the kernel supported it.
+
+>>> Oops, you're right, the `-486` kernel we ship does not support
+>>> SMP. Sorry for the confusion. This will be fixed once we ship
+>>> several kernels, and the best supported one will be auto-detected;
+>>> this feature is tracked on [[todo/nx_bit]], which is implemented,
+>>> and only blocked by the lack of a working [[todo/TailsGreeter]].
+>>> So, all this is likely to land into Tails 0.11 (scheduled to be
+>>> released late in April or early in May).
+
+[[!tag todo/wait]]
+
+> Also, in Tails 0.10.1, I see the `ondemand` governor in use on my
+> laptop. If it's not the case on your hardware, please report a bug.
+
+>> It really is not the case on my hardware (AMD Phenom II x6 1100T), and even if I do enable it manually it works only partly because of the missing SMP support. The first CPU then goes into power-saving mode, while all other CPUs don't. With properly working CPU powersaving in Linux that desktop machine idles at around 55 W, while with Tails it needs more than 120 W when idle (with the CPU fan running at full speed).
+
+Ok. I pasted such information in a [[shiny new dedicated bug
+report|bugs/ondemand_governor_not_enabled_on_some_processors]], as
+mixing several unrelated issues in the same ticket makes bug tracking
+a pain.
