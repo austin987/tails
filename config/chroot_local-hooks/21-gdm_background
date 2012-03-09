@@ -1,0 +1,16 @@
+#!/bin/sh
+
+echo "Setting GDM background"
+
+gct() {
+	sudo -u Debian-gdm /usr/bin/gconftool-2 \
+	   --direct \
+	   --config-source xml:readwrite:/etc/gconf/gconf.xml.defaults \
+	   "${@}"
+}
+
+gct --type string --set /desktop/gnome/background/primary_color '#00006406baba'
+gct --type string --set /desktop/gnome/background/secondary_color '#6666baba0000'
+gct --type string --set /desktop/gnome/background/picture_filename ''
+gct --type string --set /desktop/gnome/background/color_shading_type 'solid'
+gct --type string --set /desktop/gnome/background/picture_options 'none'
