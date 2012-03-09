@@ -111,7 +111,7 @@ def mail_appended_info():
     """
 
     debug_files = ["/etc/X11/xorg.conf", "/var/log/Xorg.0.log",
-                   "/var/log/live-persist"]
+                   "/var/log/live-persist", "/var/lib/gdm3/tails.persistence"]
     debug_commands = ["/bin/dmesg", "/bin/lsmod", "/usr/bin/lspci"]
 
     debugging_info = ""
