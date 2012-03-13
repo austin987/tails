@@ -58,6 +58,11 @@ my $notification = $notify->create(summary => $summary,
     or die "Failed to create notification object";
 debug('$notification:' . "\n" . Dumper($notification));
 
+# Make sure Gnome has started so the notification can be shown
+until (system("pidof", "gnome-panel") == 0) {
+    sleep 1
+}
+
 $notification->show() or warn "Failed showing notification.";
 
 # Wait until htpdate is done
