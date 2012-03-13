@@ -234,13 +234,18 @@ every user who did not think of it herself.
 #### Left to do
 
 * show proof of concept, request more comments
+* test
+  - at configure step, check that persistence is enabled in read-write
+    mode
+  - at delete step, check that persistence is disabled
+  - set TailsData label on the persistent *filesystem* too
 * implementation
-  - lock LUKS device after bootstrap if no configuration step is to be run
+  - implement reboot step
   - move go_button somewhere else?
   - maximize window?
-  - make sure SD/SDHC cards are as well supported as USB
 * documentation
 * future (low priority) improvements:
+  - make sure SD/SDHC cards are as well supported as USB
   - when already persistent volume: tell on what vendor / model
   - delete step: add warning icon / background
   - delete step: display paths such as `/dev/sdb3` instead of
@@ -370,6 +375,7 @@ let's make the scope of this more complex case smaller to start with:
 * specify features: draft, request for comments, discussion, consensus
 * implementation
   - add nice small green "checked" icon to each enabled item
+  - hide/show "checked" icon when button is toggled off/on
   - allow removing custom items
   - sort items by category: personal data, app configuration,
     advanced; custom lines would go to advanced; advanced would be
@@ -412,19 +418,6 @@ we've need a graphical [[todo/boot_menu]]: [[todo/TailsGreeter]].
 
 #### Left to do
 
-* specify features: show prototype, request for comments, discussion, consensus
-* implementation
-  - pass the read-only/read-write information to the user session
-  - expose live-persist failure in some useful way
-    (currently, a GdmGreeter.errors.LivePersistError is thrown)
-  - login/next button does not display the configured images
-  - live-persist luksClose's the unlocked device and returns failure
-    if live.persist does not exist: **wait** for fixed live-boot
-  - if boot is very fast, USB device and its partitions are not
-    detected soon enough; realistically possible in the context of
-    Tails, or only in my lightweight test VM? (maybe make gdm3 startup
-    block on at least the boot medium partitions being properly
-    exported to userspace)
 * documentation
 
 #### Testing
@@ -451,6 +444,9 @@ a Tails:
 * for a given persistent container, it's all or nothing: all bits of
   persistence configured in its `live.persist` are to be setup
 * runs `live-persist` to setup persistent data where it belong
+* pass information to the user session (at least
+  `tails-persistence-setup` needs information) through shell variables
+  set in `/var/lib/gdm3/tails.persistence`
 
 backend / tails-greeter interface
 ---------------------------------
