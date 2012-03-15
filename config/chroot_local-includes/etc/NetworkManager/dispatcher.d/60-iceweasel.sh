@@ -11,7 +11,7 @@ if [ $2 != "up" ]; then
 fi
 
 # There's nothing to do if Iceweasel is already running
-if pidof firefox-bin 1>/dev/null 2>&1; then
+if pgrep -u "${LIVE_USERNAME}" firefox-bin 1>/dev/null 2>&1; then
    exit 0
 fi
 
@@ -19,4 +19,4 @@ fi
 . /etc/live/config.d/username
 export DISPLAY=':0.0'
 export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
-exec /bin/su -c iceweasel &
+exec /bin/su -c iceweasel "${LIVE_USERNAME}" &
