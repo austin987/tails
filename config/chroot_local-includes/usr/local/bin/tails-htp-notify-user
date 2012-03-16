@@ -58,8 +58,8 @@ my $notification = $notify->create(summary => $summary,
     or die "Failed to create notification object";
 debug('$notification:' . "\n" . Dumper($notification));
 
-# Make sure Gnome has started so the notification can be shown
-until (system("pidof", "gnome-panel") == 0) {
+# Wait until notifications can be shown
+until (system("pidof", "notification-daemon") == 0) {
     sleep 1
 }
 
