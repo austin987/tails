@@ -1,0 +1,120 @@
+#!/bin/bash
+
+SQUASH=/live/image/live/filesystem.squashfs
+ROFS=/live/rofs
+COW=/live/cow-unsafe
+CHROOT=/live/unsafe-chroot
+CLEARNET_USER=clearnet
+OFFENDING_ADDONS="xul-ext-foxyproxy-standard xul-ext-torbutton"
+TOR_DIR=/var/lib/tor
+TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
+TOR_WORKING=""
+
+cleanup () {
+    # Break down the chroot
+    while pgrep -u ${CLEARNET_USER} &>/dev/null; do
+        pkill -u ${CLEARNET_USER} &>/dev/null
+        sleep 1
+    done
+    for mnt in ${CHROOT}{/dev,/proc,} ${COW} ${ROFS}; do
+        while mountpoint ${mnt} &>/dev/null; do
+            umount ${mnt} &>/dev/null
+            sleep 1
+        done
+    done
+    rmdir ${ROFS} ${COW} ${CHROOT} &>/dev/null
+}
+
+error () {
+    CLI_TEXT="${0}: error: ${@}"
+    DIALOG_TEXT= "${@}
+
+Unsafe Browser will exit now."
+    echo "${CLI_TEXT}" >&2
+    zenity --error --title "${DIALOG_TEXT}" --text
+    cleanup
+    exit 1
+}
+
+warning () {
+    TEXT="${@}"
+    echo "${0}: warning: ${TEXT}" >&2
+    zenity --warning --title "" --text "${TEXT}"
+}
+
+# First make sure the user really wants this
+DIALOG_TEXT="<b>Do you really want to launch the Unsafe Browser?</b>
+
+Any activity within the Unsafe Browser will <i>not</i> be anonymous. This may be necessary if you have to login or register in order to activate your Internet connection."
+if ! zenity --question --title "" --text "${DIALOG_TEXT}"; then
+    exit 0
+fi
+
+# Set $TOR_WORKING to non-emtpy iff Tor is working right now. We need to
+# know whether we must restart Tor later (a captive portal may have
+# prevented Tor from bootstrapping, and a restart is the fastest way to
+# get wheels turning)
+# FIXME: how to determine this reliably? this approach doesn't work
+# if $TOR_DIR is persistent
+# FIXME: the approach is stolen from is_tor_working() in the 20-time
+# NM hook -- we should move things like this to a shell script library
+if [ -e "${TOR_DESCRIPTORS}" ]; then
+    TOR_WORKING="yes"
+fi
+
+# Get the DNS servers that was obtained through DHCP from NetworkManager,
+# if any...
+NM_ENV=/var/lib/NetworkManager/env
+if [ -r "${NM_ENV}" ]; then
+    . ${NM_ENV}
+fi
+# ... otherwise fail.
+# FIXME: Or would it make sense to fallback to Google's DNS or OpenDNS?
+# Some stupid captive portals may allow DNS to any host, but chances are
+# that only the portal's DNS would forward to the login page.
+if [ -z "${DHCP4_DOMAIN_NAME_SERVERS}" ]; then
+    error "No DNS server was obtained through DHCP."
+fi
+
+trap cleanup SIGINT
+
+# Setup a chroot on an aufs "fork" of the filesystem.
+# FIXME: When LXC matures to the point where it becomes a viable option
+# for creating isolated jails, the chroot can be used as its rootfs.
+mkdir -p ${ROFS} ${COW} ${CHROOT} && \
+mount -t squashfs -o loop ${SQUASH} ${ROFS} && \
+mount -t tmpfs tmpfs ${COW} && \
+mount -t aufs -o noatime,noxino,dirs=${COW}=rw:${ROFS}=rr+wh aufs ${CHROOT} && \
+mount -t proc proc ${CHROOT}/proc && \
+mount --bind /dev ${CHROOT}/dev || error "Failed to setup chroot"
+
+# Set the chroot's DNS servers to those obtained through DHCP
+rm -f ${CHROOT}/etc/resolv.conf
+for NS in ${DHCP4_DOMAIN_NAME_SERVERS}; do
+    echo "nameserver ${NS}" >> ${CHROOT}/etc/resolv.conf
+done
+chmod a+r ${CHROOT}/etc/resolv.conf
+
+# Disable problematic Iceweasel addons and proxying in the chroot
+chroot ${CHROOT} apt-get remove --yes ${OFFENDING_ADDONS} &>/dev/null
+sed -i '/^pref("network.proxy.type",/d' \
+    ${CHROOT}/etc/iceweasel/pref/iceweasel.js
+echo 'pref("network.proxy.type", 0);' >> \
+    ${CHROOT}/etc/iceweasel/pref/iceweasel.js
+
+# Start Iceweasel in the chroot
+sudo -u ${SUDO_USER} xhost +SI:localuser:${CLEARNET_USER} &>/dev/null
+chroot ${CHROOT} sudo -u ${CLEARNET_USER} iceweasel -DISPLAY=:0.0
+sudo -u ${SUDO_USER} xhost -SI:localuser:${CLEARNET_USER} &>/dev/null
+
+cleanup
+
+# Restart Tor if it wasn't working when the Unsafe Browser was started
+if [ -z "${TOR_WORKING}" ] ; then
+    service tor restart &>/dev/null
+    until nc -z localhost 9051 &>/dev/null; do sleep 1; done
+    /etc/NetworkManager/dispatcher.d/60-vidalia.sh clearnet up &>/dev/null
+fi
+
+exit 0
+
