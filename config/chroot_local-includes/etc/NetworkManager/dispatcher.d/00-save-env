@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# We don't start Tor automatically so *this* is the time
+# when it is supposed to start.
+
+# Run only when the interface is not "lo":
+if [ $1 = "lo" ]; then
+   exit 0
+fi
+
+# Run whenever an interface gets "up", not otherwise:
+if [ $2 != "up" ]; then
+   exit 0
+fi
+
+export > /var/lib/NetworkManager/env
