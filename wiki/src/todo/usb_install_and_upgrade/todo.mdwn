@@ -3,6 +3,48 @@
 Bugs
 ====
 
+breaks emergency shutdown
+-------------------------
+
+sajolida reports:
+
+- it seems to happen after using the liveusb-creator
+- it happened on both Tails 0.10.1 and Tails experimental
+- sometimes it happens while doing:
+  - boot Tails experimental on a isohybrid
+  - "Clone Tails" onto another stick
+  - unplug the running Tails
+- sometimes the screen turns black with a cursor on the top-left
+  corner and nothing else
+- sometimes the screen stays the same, the system is still somehow
+  responsive but doesn't shutdown
+- once I couldn't even shutdown with the red button or by doing `sudo
+  halt` in a terminal once I reached this weird state
+- once I checked and udev-watchdog was still running on the right
+  device but the emergency shutdown still didn't work
+
+intrigeri confirms: On VT1, when unplugging my boot USB stick, I see
+various lines about sdb3, sdb2 and sdb1 being removed, followed by
+"Bus error". Nothing more happens, and the udev watchdog process is
+not there anymore.
+
+lists devices multiple times
+----------------------------
+
+- listing an unplugged device twice or three times:
+  - boot Tails experimental from a manually installed Tails
+  - open "Clone Tails"
+  - plug in a GTP Tails → sdc listed twice
+  - unplug sdc → sdc listed three times!
+- listing persistence storage:
+  - boot Tails experimental from a manually installed Tails
+  - open "Upgrade a non-running Tails from ISO"
+  - plug in a GTP Tails → both sdc1 and sdc2 are listed twice
+
+> **release blocker**
+
+> 3.11.4-9 will carry a bugfix. Needs to be tested.
+
 Report the udisks vs. partition attributes bug
 ----------------------------------------------
 
