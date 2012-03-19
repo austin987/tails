@@ -5,4 +5,11 @@ if grep -qw bridge /proc/cmdline; then
    ARGS='-bridgeconf'
 fi
 
+# Get LIVE_USERNAME
+. /etc/live/config.d/username
+
+until pgrep -u "${LIVE_USERNAME}" gnome-panel >/dev/null ; do
+   sleep 5
+done
+
 lckdo /var/lock/vidalia.amnesia /usr/bin/vidalia $ARGS
