@@ -74,7 +74,7 @@ setup_chroot () {
 configure_chroot () {
     # Set the chroot's DNS servers to those obtained through DHCP
     rm -f ${CHROOT}/etc/resolv.conf
-    for NS in ${DHCP4_DOMAIN_NAME_SERVERS}; do
+    for NS in ${IP4_NAMESERVERS}; do
         echo "nameserver ${NS}" >> ${CHROOT}/etc/resolv.conf
     done
     chmod a+r ${CHROOT}/etc/resolv.conf
@@ -113,8 +113,7 @@ maybe_restart_tor () {
     fi
 }
 
-# Get the DNS servers that was obtained through DHCP from NetworkManager,
-# if any...
+# Get the DNS servers that was obtained from NetworkManager, if any...
 NM_ENV=/var/lib/NetworkManager/env
 if [ -r "${NM_ENV}" ]; then
     . ${NM_ENV}
@@ -123,8 +122,8 @@ fi
 # FIXME: Or would it make sense to fallback to Google's DNS or OpenDNS?
 # Some stupid captive portals may allow DNS to any host, but chances are
 # that only the portal's DNS would forward to the login page.
-if [ -z "${DHCP4_DOMAIN_NAME_SERVERS}" ]; then
-    error "No DNS server was obtained through DHCP."
+if [ -z "${IP4_NAMESERVERS}" ]; then
+    error "No DNS server was obtained through DHCP or manually configured in NetworkManager."
 fi
 
 verify_start
