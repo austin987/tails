@@ -11,15 +11,22 @@ TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
 TOR_WORKING=""
 
 cleanup () {
-    # Break down the chroot
-    while pgrep -u ${CLEARNET_USER} &>/dev/null; do
+    # Break down the chroot and kill all of its processes
+    local counter=0
+    local ret=0
+    while [ "${counter}" -le 10 ] && pgrep -u ${CLEARNET_USER} &>/dev/null; do
         pkill -u ${CLEARNET_USER} &>/dev/null
+        ret=${?}
         sleep 1
+        counter=$[${counter}+1]
     done
+    [ ${ret} -eq 0 ] || pkill -9 -u ${CLEARNET_USER} &>/dev/null
     for mnt in ${CHROOT}{/dev,/proc,} ${COW} ${ROFS}; do
-        while mountpoint ${mnt} &>/dev/null; do
+        counter=0
+        while [ "${counter}" -le 10 ] && mountpoint ${mnt} &>/dev/null; do
             umount ${mnt} &>/dev/null
             sleep 1
+            counter=$[${counter}+1]
         done
     done
     rmdir ${ROFS} ${COW} ${CHROOT} &>/dev/null
