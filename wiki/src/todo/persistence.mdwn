@@ -237,7 +237,17 @@ every user who did not think of it herself.
 * test
   - at configure step, check that persistence is enabled in read-write
     mode
+    * test with persistence enabled
+    * test with persistence disabled
   - at delete step, check that persistence is disabled
+    * test with persistence enabled
+    * test with persistence disabled
+  - test that automatic step choice is correct:
+    with a persistence container + disabled persistence,
+    should run configure and abort because disabled persistence
+  - after initial bootstrap, check
+    "persistence is not enabled" should not be made:
+    should be fixed in 0.8.2-1
 * implementation
   - implement reboot step
   - move go_button somewhere else?
@@ -371,17 +381,19 @@ let's make the scope of this more complex case smaller to start with:
 #### Left to do
 
 * specify features: draft, request for comments, discussion, consensus
-* test
-  - behaviour on Squeeze
-  - "unknown" icon on Squeeze
 * implementation
-  - add a specific icon for each preset
+  - default window width is a tiny bit too small (maybe 10px)
+  - umount/lock persistent volume before exiting
 * later
+  - don't allow user to specify the "source" path for custom mappings;
+    instead, automatically generate non-clashing source directory name
+  - every preset that's currently enabled in live.persist should be
+    displayed as a preset (with fancy icon, title and description)
+    rather than as a custom item.
   - sort items by category: personal data, app configuration,
     advanced; custom lines would go to advanced; advanced would be
     displayed if, and only if, at least one custom line is already in
     live.persist; else, an arrow icon allows to unroll/display it
-  - item icons should be as high as the two lines of text
 * documentation
 
 #### draft
