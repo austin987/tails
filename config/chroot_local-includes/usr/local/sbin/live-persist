@@ -187,14 +187,16 @@ activate_volumes ()
 	get_custom_mounts ${custom_mounts} ${open_volumes}
 	if [ -s "${custom_mounts}" ]
 	then
-		successes=$(activate_custom_mounts ${custom_mounts})
+		activate_custom_mounts ${custom_mounts} &> /dev/null
 	fi
 	rm -f ${custom_mounts} 2> /dev/null
 
 	for vol in ${open_volumes}
 	do
-		if echo ${successes} | grep -qve "^\(.* \)\?${vol}\( .*\)\?$"
+		if grep -qe "^${vol}\>" /proc/mounts
 		then
+			successes="${successes} ${vol}"
+		else
 			failures="${failures} ${vol}"
 			ret=1
 		fi
