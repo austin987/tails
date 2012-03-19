@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 SQUASH=/live/image/live/filesystem.squashfs
 ROFS=/live/rofs
@@ -15,22 +15,23 @@ cleanup () {
     # Break down the chroot and kill all of its processes
     local counter=0
     local ret=0
-    while [ "${counter}" -le 10 ] && pgrep -u ${CLEARNET_USER} &>/dev/null; do
-        pkill -u ${CLEARNET_USER} &>/dev/null
+    while [ "${counter}" -le 10 ] && \
+          pgrep -u ${CLEARNET_USER} 1>/dev/null 2>&1; do
+        pkill -u ${CLEARNET_USER} 1>/dev/null 2>&1
         ret=${?}
         sleep 1
-        counter=$[${counter}+1]
+        counter=$((${counter}+1))
     done
-    [ ${ret} -eq 0 ] || pkill -9 -u ${CLEARNET_USER} &>/dev/null
-    for mnt in ${CHROOT}{/dev,/proc,} ${COW} ${ROFS}; do
+    [ ${ret} -eq 0 ] || pkill -9 -u ${CLEARNET_USER} 1>/dev/null 2>&1
+    for mnt in ${CHROOT}/dev ${CHROOT}/proc ${CHROOT} ${COW} ${ROFS}; do
         counter=0
-        while [ "${counter}" -le 10 ] && mountpoint ${mnt} &>/dev/null; do
-            umount ${mnt} &>/dev/null
+        while [ "${counter}" -le 10 ] && mountpoint -q ${mnt} 2>/dev/null; do
+            umount ${mnt} 2>/dev/null
             sleep 1
-            counter=$[${counter}+1]
+            counter=$((${counter}+1))
         done
     done
-    rmdir ${ROFS} ${COW} ${CHROOT} &>/dev/null
+    rmdir ${ROFS} ${COW} ${CHROOT} 2>/dev/null
 }
 
 error () {
@@ -81,7 +82,7 @@ configure_chroot () {
     chmod a+r ${CHROOT}/etc/resolv.conf
 
     # Disable problematic Iceweasel addons and proxying in the chroot
-    chroot ${CHROOT} apt-get remove --yes ${OFFENDING_ADDONS} &>/dev/null
+    chroot ${CHROOT} apt-get remove --yes ${OFFENDING_ADDONS} 1>/dev/null 2>&1
     sed -i '/^pref("network.proxy.type",/d' \
         ${CHROOT}/etc/iceweasel/pref/iceweasel.js
     echo 'pref("network.proxy.type", 0);' >> \
@@ -90,9 +91,9 @@ configure_chroot () {
 
 start_browser_in_chroot () {
     # Start Iceweasel in the chroot
-    sudo -u ${SUDO_USER} xhost +SI:localuser:${CLEARNET_USER} &>/dev/null
+    sudo -u ${SUDO_USER} xhost +SI:localuser:${CLEARNET_USER} 2>/dev/null
     chroot ${CHROOT} sudo -u ${CLEARNET_USER} iceweasel -DISPLAY=:0.0
-    sudo -u ${SUDO_USER} xhost -SI:localuser:${CLEARNET_USER} &>/dev/null
+    sudo -u ${SUDO_USER} xhost -SI:localuser:${CLEARNET_USER} 2>/dev/null
 }
 
 tor_is_working() {
@@ -108,9 +109,9 @@ maybe_restart_tor () {
     # Tor from bootstrapping, and a restart is the fastest way to get
     # wheels turning)
     if ! tor_is_working; then
-        service tor restart &>/dev/null
-        until nc -z localhost 9051 &>/dev/null; do sleep 1; done
-        /etc/NetworkManager/dispatcher.d/60-vidalia.sh clearnet up &>/dev/null
+        service tor restart 2>/dev/null
+        until nc -z localhost 9051 2>/dev/null; do sleep 1; done
+        /etc/NetworkManager/dispatcher.d/60-vidalia.sh clearnet up 2>/dev/null
     fi
 }
 
@@ -128,7 +129,7 @@ if [ -z "${IP4_NAMESERVERS}" ]; then
 fi
 
 verify_start
-trap cleanup SIGINT
+trap cleanup INT
 setup_chroot
 configure_chroot
 start_browser_in_chroot
