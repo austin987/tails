@@ -242,13 +242,19 @@ every user who did not think of it herself.
   - at delete step, check that persistence is disabled
     * test with persistence enabled
     * test with persistence disabled
-  - test that automatic step choice is correct:
-    with a persistence container + disabled persistence,
-    should run configure and abort because disabled persistence
   - after initial bootstrap, check
     "persistence is not enabled" should not be made:
     should be fixed in 0.8.2-1
 * implementation
+  - automatic step choice is suboptimal:
+    * with a persistence container + disabled (but mounted)
+      persistence (e.g. when re-running configuration after
+      bootstrap), should run configure and not abort because of
+      disabled persistence; currently the GUI says "Error: Device
+      /org/freedesktop/UDisk/devices/sdb already has a persistent
+      volume." (which is true but shouldn't prevent me from changing
+      its configuration), while `tails-persistence-setup --step
+      configure` says "Error: Persistence is not enabled."
   - implement reboot step
   - move go_button somewhere else?
 * documentation
@@ -380,20 +386,20 @@ let's make the scope of this more complex case smaller to start with:
 
 #### Left to do
 
-* specify features: draft, request for comments, discussion, consensus
 * bugs
   - merging presets and live.persist is buggy: duplicates
 * implementation
   - make it very clear to the user, after configure step, that the
     updated configuration will only be taken into account after reboot
-  - default window width is a tiny bit too small (maybe 10px)
-  - umount/lock persistent volume before exiting
-* later
-  - don't allow user to specify the "source" path for custom mappings;
-    instead, automatically generate non-clashing source directory name
   - every preset that's currently enabled in live.persist should be
     displayed as a preset (with fancy icon, title and description)
     rather than as a custom item.
+* later
+  - umount/lock persistent volume before exiting? however, doing so
+    would make it harder to run the (bootstrap and configure,
+    configure again) sequence
+  - default window width is a tiny bit too small (maybe 10px)
+  - maximize window vertically
   - sort items by category: personal data, app configuration,
     advanced; custom lines would go to advanced; advanced would be
     displayed if, and only if, at least one custom line is already in
@@ -461,6 +467,24 @@ a Tails:
 * pass information to the user session (at least
   `tails-persistence-setup` needs information) through shell variables
   set in `/var/lib/gdm3/tails.persistence`
+
+### use persistence
+
+#### Left to do
+
+* The volume TailsData shows up in the Places menu but when clicking
+  on it I get "Unable to mount TailsData /dev/dm-0 is mounted". I guess
+  that's no big surprise but then it should either be removed from the
+  Places menu or open the folder where it is mounted
+ (/live/persistent/sdb2_unlocked) if we think that makes sense.
+* symlink the dotfiles directory in `$HOME` or *Places*, or document
+  where it is to be found: low-priority, would be nice for 0.11
+* It would be nice to have a shortcut to the /persistent folder in
+  Places → Persistent: low-priority, would be nice for 0.11 though.
+* in `delete_persistence_partition`, guard against the dreaded
+  udisks bug (org.freedesktop.UDisks.Error.Failed: Error locking
+  luks device: timeout (10s) waiting for cleartext device to be
+  removed): low-priority
 
 backend / tails-greeter interface
 ---------------------------------
