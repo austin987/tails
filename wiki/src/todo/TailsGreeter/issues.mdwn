@@ -5,24 +5,19 @@ This page lists the tails-greeter known issues.
 This is related to tails-greeter as found in the master branch of
 `git://git.immerda.ch/tails/tails-greeter.git`.
 
-# Bugs
-
-## some keyboard layout choices not applied to the GNOME session
-
-e.g. when choosing French or Italian, the GNOME session gets USA
-keyboard layout.
-
-## "waiting" mouse pointer not always displayed
+Release blockers
+================
 
 ## no layout for certain languages
 
 e.g. Deutsch, Farsi, Chinese => no keyboard layout is listed.
 
-> **release blocker** ; wait for Alan's keyboard layout rework to be
-> merged before attacking it.
+> the bug is in `language.py:390` (`get_default_layouts`)
 
-> in `features/refactor_languages`, the bug is in `language.py:390`
-> (`get_default_layouts`)
+## some keyboard layout choices not applied to the GNOME session
+
+e.g. when choosing French or Italian, the GNOME session gets USA
+keyboard layout.
 
 ## somewhat unclear pairs of toggle buttons
 
@@ -31,7 +26,10 @@ using a lighter text color on the other one, as is done in t-p-s,
 would make things much more easy to understand. Maybe also set the
 disabled button insensitive?
 
-> **release blocker**
+Other bugs
+==========
+
+## "waiting" mouse pointer not always displayed
 
 ## Keyboard layout widget not l10n'd with the selected language
 
@@ -53,17 +51,11 @@ locale the window was loaded with.
 The persistence and "more options" yes/no buttons are not translated
 after choosing a non-English language.
 
-> **Important, but no release blocker**
-
 ## should probably inhibit udisks while working
-
-> **Important, but no release blocker**
 
 ## expose live-persist failure in some useful way
 
 Currently, a GdmGreeter.errors.LivePersistError is thrown.
-
-> **minor, postponed**
 
 ## Wrong icon used as langpanel's language label
 
@@ -71,7 +63,7 @@ langpanel: the icon used for the languages is "applications-internet" which
 displays a globe in default icon theme, but could display something really
 irrelevant in an other icon theme;
 
-> **Minor, postponed**: we don't change the icon theme Tails uses every
+> **minor**: we don't change the icon theme Tails uses every
 > now and then.
 
 ## Scroll effect in language selection menu
@@ -84,13 +76,12 @@ the whole menu where I want it to be;
 > **Minor, postponed**: it's not perfect to they eye, sure, but it's
 > perfectly usable.
 
-# Missing features
+Missing features
+================
 
 ## GUI improvements
 
 * separator between languages list and "Other..."
-
-> **Minor, postponed**
 
 ## Locales should be generated in the background
 
@@ -103,14 +94,10 @@ It's not that simple to implement: t-g is executed as 'Debian-gdm' -
 it can't run localedef to generate locale; we have to weight the risk
 of sudo / suid vs. the user experience benefits.
 
-> **Minor, postponed**
-
 ## Admin password UI could be even better
 
 Possibly hook `tails-persistence-setup`'s `update_passphrase_ui`
 dynamic warning system in.
-
-> **Minor, postponed**
 
 ## Appearance
 
