@@ -233,37 +233,22 @@ every user who did not think of it herself.
 
 #### Left to do
 
-* show proof of concept, request more comments
 * test
-  - at configure step, check that persistence is enabled in read-write
-    mode
-    * test with persistence enabled
-    * test with persistence disabled
+  - automatic steps selection and sanity checks:
+    * no existing container
+    * existing locked container
+    * existing unlocked but unmounted container
+    * existing unlocked and mounted container
   - at delete step, check that persistence is disabled
     * test with persistence enabled
     * test with persistence disabled
-  - after initial bootstrap, check
-    "persistence is not enabled" should not be made:
-    should be fixed in 0.8.2-1
-* implementation
-  - automatic step choice is suboptimal:
-    * with a persistence container + disabled (but mounted)
-      persistence (e.g. when re-running configuration after
-      bootstrap), should run configure and not abort because of
-      disabled persistence; currently the GUI says "Error: Device
-      /org/freedesktop/UDisk/devices/sdb already has a persistent
-      volume." (which is true but shouldn't prevent me from changing
-      its configuration), while `tails-persistence-setup --step
-      configure` says "Error: Persistence is not enabled."
-  - implement reboot step
-  - move go_button somewhere else?
 * documentation
 * future (low priority) improvements:
   - make sure SD/SDHC cards are as well supported as USB
-  - when already persistent volume: tell on what vendor / model
   - delete step: add warning icon / background
-  - delete step: display paths such as `/dev/sdb3` instead of
-    `/org/freedesktop/.../sdb3`
+  - display paths as `/dev/sdb3` instead of
+    `/org/freedesktop/.../sdb3` everywhere, and especially at delete
+    time
 
 #### Testing
 
@@ -316,7 +301,7 @@ Setting up a Tails persistent volume means:
   - create a filesystem in the encrypted container
   - give ownership on the filesystem to the default Tails user
 * explain the user how/when/why to run the *configure which bits are
-  persistent* UI (might need a reboot in-between)
+  persistent* UI
 
 * **How/when to run?** Initially, we wanted to do so on first boot.
   However, to detect if a given Tails
@@ -351,10 +336,8 @@ Setting up a Tails persistent volume means:
   do so, and the menu entry is called *Configure persistent storage*.
   One may call it using multiple `--step` options, and the UI will
   present every step sequentially; currently, the only implemented
-  step are `bootstrap` and `delete` (the later is only meant as
-  a developers-only option); the idea is to add `configure` and
-  `reboot` steps when we'll implement the *configure which bits are
-  persistent* UI.
+  steps are `bootstrap`, `configure` (that implements the *configure
+  which bits are persistent* UI) and `delete`.
 
 * **Programming language**: written in Perl, i.e. the language the one
   of us who wrote it is the most efficient at.
@@ -386,14 +369,6 @@ let's make the scope of this more complex case smaller to start with:
 
 #### Left to do
 
-* bugs
-  - merging presets and live.persist is buggy: duplicates
-* implementation
-  - make it very clear to the user, after configure step, that the
-    updated configuration will only be taken into account after reboot
-  - every preset that's currently enabled in live.persist should be
-    displayed as a preset (with fancy icon, title and description)
-    rather than as a custom item.
 * later
   - umount/lock persistent volume before exiting? however, doing so
     would make it harder to run the (bootstrap and configure,
@@ -481,10 +456,6 @@ a Tails:
   where it is to be found: low-priority, would be nice for 0.11
 * It would be nice to have a shortcut to the /persistent folder in
   Places → Persistent: low-priority, would be nice for 0.11 though.
-* in `delete_persistence_partition`, guard against the dreaded
-  udisks bug (org.freedesktop.UDisks.Error.Failed: Error locking
-  luks device: timeout (10s) waiting for cleartext device to be
-  removed): low-priority
 
 backend / tails-greeter interface
 ---------------------------------
