@@ -213,7 +213,11 @@ This will result in:
 
 ### Left to do
 
-Have our code merged upstream!
+* Have our code merged upstream!
+* Create source directories for `linkfiles` pseudo-mountpoints.
+* When enabled in read-only mode, avoid displaying one device icon on
+  the GNOME desktop for every single persistent directory.
+* Fix empty persistent files in read-only mode.
 
 User interface
 --------------
@@ -233,18 +237,22 @@ every user who did not think of it herself.
 
 #### Left to do
 
-* show proof of concept, request more comments
-* implementation
-  - lock LUKS device after bootstrap if no configuration step is to be run
-  - move go_button somewhere else?
-  - maximize window?
-  - make sure SD/SDHC cards are as well supported as USB
+* test
+  - automatic steps selection and sanity checks:
+    * no existing container
+    * existing locked container
+    * existing unlocked but unmounted container
+    * existing unlocked and mounted container
+  - at delete step, check that persistence is disabled
+    * test with persistence enabled
+    * test with persistence disabled
 * documentation
 * future (low priority) improvements:
-  - when already persistent volume: tell on what vendor / model
+  - make sure SD/SDHC cards are as well supported as USB
   - delete step: add warning icon / background
-  - delete step: display paths such as `/dev/sdb3` instead of
-    `/org/freedesktop/.../sdb3`
+  - display paths as `/dev/sdb3` instead of
+    `/org/freedesktop/.../sdb3` everywhere, and especially at delete
+    time
 
 #### Testing
 
@@ -297,7 +305,7 @@ Setting up a Tails persistent volume means:
   - create a filesystem in the encrypted container
   - give ownership on the filesystem to the default Tails user
 * explain the user how/when/why to run the *configure which bits are
-  persistent* UI (might need a reboot in-between)
+  persistent* UI
 
 * **How/when to run?** Initially, we wanted to do so on first boot.
   However, to detect if a given Tails
@@ -332,10 +340,8 @@ Setting up a Tails persistent volume means:
   do so, and the menu entry is called *Configure persistent storage*.
   One may call it using multiple `--step` options, and the UI will
   present every step sequentially; currently, the only implemented
-  step are `bootstrap` and `delete` (the later is only meant as
-  a developers-only option); the idea is to add `configure` and
-  `reboot` steps when we'll implement the *configure which bits are
-  persistent* UI.
+  steps are `bootstrap`, `configure` (that implements the *configure
+  which bits are persistent* UI) and `delete`.
 
 * **Programming language**: written in Perl, i.e. the language the one
   of us who wrote it is the most efficient at.
@@ -367,8 +373,18 @@ let's make the scope of this more complex case smaller to start with:
 
 #### Left to do
 
-* specify features: draft, request for comments, discussion, consensus
-* implementation
+* later
+  - umount/lock persistent volume before exiting? however, doing so
+    would make it harder to run the (bootstrap and configure,
+    configure again) sequence
+  - default window width is a tiny bit too small (maybe 10px)
+  - maximize window vertically
+  - make "Make custom directory persistent" run a file chooser dialog,
+    instead of being a plain text entry widget
+  - sort items by category: personal data, app configuration,
+    advanced; custom lines would go to advanced; advanced would be
+    displayed if, and only if, at least one custom line is already in
+    live.persist; else, an arrow icon allows to unroll/display it
 * documentation
 
 #### draft
@@ -403,19 +419,6 @@ we've need a graphical [[todo/boot_menu]]: [[todo/TailsGreeter]].
 
 #### Left to do
 
-* specify features: show prototype, request for comments, discussion, consensus
-* implementation
-  - pass the read-only/read-write information to the user session
-  - expose live-persist failure in some useful way
-    (currently, a GdmGreeter.errors.LivePersistError is thrown)
-  - login/next button does not display the configured images
-  - live-persist luksClose's the unlocked device and returns failure
-    if live.persist does not exist: **wait** for fixed live-boot
-  - if boot is very fast, USB device and its partitions are not
-    detected soon enough; realistically possible in the context of
-    Tails, or only in my lightweight test VM? (maybe make gdm3 startup
-    block on at least the boot medium partitions being properly
-    exported to userspace)
 * documentation
 
 #### Testing
@@ -442,6 +445,25 @@ a Tails:
 * for a given persistent container, it's all or nothing: all bits of
   persistence configured in its `live.persist` are to be setup
 * runs `live-persist` to setup persistent data where it belong
+* pass information to the user session (at least
+  `tails-persistence-setup` needs information) through shell variables
+  set in `/var/lib/gdm3/tails.persistence`
+
+### use persistence
+
+#### Left to do
+
+* it's confusing to have an drive icon labeled ".gnupg" on the
+  desktop. I also have a drive icon labeled "Persistent".
+* The volume TailsData shows up in the Places menu but when clicking
+  on it I get "Unable to mount TailsData /dev/dm-0 is mounted". I guess
+  that's no big surprise but then it should either be removed from the
+  Places menu or open the folder where it is mounted
+ (/live/persistent/sdb2_unlocked) if we think that makes sense.
+* symlink the dotfiles directory in `$HOME` or *Places*, or document
+  where it is to be found: low-priority, would be nice for 0.11
+* It would be nice to have a shortcut to the /persistent folder in
+  Places → Persistent: low-priority, would be nice for 0.11 though.
 
 backend / tails-greeter interface
 ---------------------------------

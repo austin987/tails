@@ -3,18 +3,92 @@
 Bugs
 ====
 
-Should be more explicit when no target device is available
-----------------------------------------------------------
+missing correct link to documentation
+-------------------------------------
 
-Empty list, no message, is not that easy to understand.
+The unified launched has a link to `file:///FIXME` since we don't know
+the path to the installer documentation yet.
 
-SD Card support
----------------
+crashes with amd64 / 686-pae kernels
+------------------------------------
 
-Maybe does not support SD / SDHC Cards as well as USB?
+Logs for various crashes experienced when cloning, on amd64 kernel,
+follow. At least one similar bug was triggered on 686-pae kernel
+(64bit CPU) too. Launching the program with various linux32's options
+does not help.
 
-Missing OS
-----------
+	[creator:1160] extlinux not found! Only FAT filesystems will be supported
+	*** glibc detected *** /usr/bin/python: malloc(): memory corruption: 0x0951d720 ***
+	======= Backtrace: =========
+	/lib/libc.so.6(+0x6b19a)[0xf746219a]
+	/lib/libc.so.6(+0x6dfb7)[0xf7464fb7]
+	/lib/libc.so.6(__libc_malloc+0x5c)[0xf7466bfc]
+	vie/usr/bin/python(PyString_FromStringAndSize+0x9c)[0x809da2c]
+
+	*** glibc detected *** /usr/bin/python2.6: malloc(): memory corruption: 0x09f5f9f0 ***
+	======= Backtrace: =========
+	/lib/libc.so.6(+0x6b19a)[0xf74eb19a]
+	/lib/libc.so.6(+0x6dfb7)[0xf74edfb7]
+	/lib/libc.so.6(+0x706ec)[0xf74f06ec]
+	/lib/libc.so.6(realloc+0xd7)[0xf74f0c17]
+	/usr/lib/libQtCore.so.4(_Z8qReallocPvj+0x24)[0xf6cbb514]
+	/usr/lib/libQtCore.so.4(_ZN9QListData7reallocEi+0x35)[0xf6ce0a35]
+	
+	[creator:799] Calling /org/freedesktop/UDisks/devices/sdc1.FilesystemMount(vfat, [], ...)
+	python2.6: malloc.c:3097: sYSMALLOc: Assertion `(old_top == (((mbinptr) (((char *) &((av)->bins[((1) - 1) * 2])) - __builtin_offsetof (struct malloc_chunk, fd)))) && old_size == 0) || ((unsigned long) (old_size) >= (unsigned long)((((__builtin_offsetof (struct malloc_chunk, fd_nextsize))+((2 * (sizeof(size_t))) - 1)) & ~((2 * (sizeof(size_t))) - 1))) && ((old_top)->size & 0x1) && ((unsigned long)old_end & pagemask) == 0)' failed.
+	
+	[creator:354] ['/sbin/mkfs.vfat', '-n', 'Tails', '-F', '32', '/dev/sdc1']
+	[creator:798] Calling /org/freedesktop/UDisks/devices/sdc1.FilesystemMount(vfat, [], ...)
+	*** glibc detected *** /usr/bin/python2.6: malloc(): smallbin double linked list corrupted: 0x0a075a50 ***
+	======= Backtrace: =========
+	Segmentation fault
+	
+	*** glibc detected *** /usr/bin/python2.6: free(): corrupted unsorted chunks: 0x099d1e20 ***
+	======= Backtrace: =========
+	/lib/libc.so.6(+0x6b19a)[0xf748b19a]
+	/lib/libc.so.6(+0x6c9e8)[0xf748c9e8]
+	/lib/libc.so.6(cfree+0x6d)[0xf748fb2d]
+	/usr/bin/python2.6[0x80903ba]
+	/usr/bin/python2.6[0x806c74b]
+	/usr/bin/python2.6[0x80903a4]
+	Segmentation fault
+	
+	[creator:354] ['/sbin/sgdisk', '--info', '1', '/dev/sdc']
+	*** glibc detected *** /usr/bin/python2.6: malloc(): memory corruption: 0x09d2c988 ***
+	======= Backtrace: =========
+	/lib/libc.so.6(+0x6b19a)[0xf74c219a]
+	/lib/libc.so.6(+0x6dfb7)[0xf74c4fb7]
+	/lib/libc.so.6(__libc_malloc+0x5c)[0xf74c6bfc]
+	/usr/lib/libstdc++.so.6(_Znwj+0x27)[0xf6bf0ba7]
+	Segmentation fault
+
+breaks emergency shutdown
+-------------------------
+
+sajolida reports:
+
+- it seems to happen after using the liveusb-creator
+- it happened on both Tails 0.10.1 and Tails experimental
+- sometimes it happens while doing:
+  - boot Tails experimental on a isohybrid
+  - "Clone Tails" onto another stick
+  - unplug the running Tails
+- sometimes the screen turns black with a cursor on the top-left
+  corner and nothing else
+- sometimes the screen stays the same, the system is still somehow
+  responsive but doesn't shutdown
+- once I couldn't even shutdown with the red button or by doing `sudo
+  halt` in a terminal once I reached this weird state
+- once I checked and udev-watchdog was still running on the right
+  device but the emergency shutdown still didn't work
+
+intrigeri confirms: On VT1, when unplugging my boot USB stick, I see
+various lines about sdb3, sdb2 and sdb1 being removed, followed by
+"Bus error". Nothing more happens, and the udev watchdog process is
+not there anymore.
+
+Report the udisks vs. partition attributes bug
+----------------------------------------------
 
 Creating or deleting a second partition using udisks resets the first partition's attributes.
 
@@ -36,6 +110,20 @@ and no boot.
 `tails-persistence-setup`, that creates the persistence partition,
 workarounds this, but we must report this bug upstream.
 
+Would-be-nice
+=============
+
+SD Card support
+---------------
+
+Maybe does not support SD / SDHC Cards as well as USB?
+
+Unified launcher
+----------------
+
+- find 3 images for the buttons
+- ship and use these images
+
 Documentation
 =============
 
@@ -49,17 +137,6 @@ To be treated carefully:
 * The bootstrap steps (when one has no Tails system yet):  it implies
   burning a CD, booting from CD, and cloning. Or do we want to make
   a liveusb-creator `.deb` available on our website?
-* Installing over an old-fashioned Tails (hybrid ISO installed by
-  `cat` or similar) (seems to? sometimes? always?) requires to reset
-  the partition table **first**, see the "resetting a Tails USB stick"
-  section bellow (details:  `sgdisk --print` returns non-zero exit
-  code when run on such a disk, and the installer carefully refuses to
-  overwrite a partition table it does not understand). **Update:** it
-  *seems* like this only happens when a hybrid ISO was cat'd, then an
-  ISO was installed with the USB installer, then a hybrid ISO was
-  cat'd again (erasing the main GPT but possibly not the backup one),
-  and the USB installer is run. If this is so, let's ignore such weird
-  cases that only happen to hard-core Tails developers.
 
 resetting a Tails USB stick
 ---------------------------
@@ -72,7 +149,7 @@ previously contained a isohybrid or GPT Tails to a "normal" state
 Left to do:
 
 * test Windows instructions
-* link to these pages somewhere (where?)
+* link to these pages from the USB installer documentation
 
 Localization
 ============
@@ -82,8 +159,12 @@ Hand out `.po` files to translators.
 Later
 =====
 
+* Remove devices from the list when unplugged.
 * Set cursor to waiting (hourglass) state while working.
-* *Target Device* list: display more information, such as the stick brand and model.
+* *Target Device* list: display more information, such as the stick
+  brand and model.
+* When upgrading, if Tails system partition seen on potential target
+  device, select it, and hide TailsData persistence partition
 * If stick is <1.5GB case, support installing but don't show the
   persistence checkbox
 * Allow setting the system/overlay partitions size via command-line
@@ -99,7 +180,7 @@ Later
   - Debian provides gpgv-win32 that can be used on Windows
 - command-line option --local-hard-disks that would enable
   installation on local hard disks (= not external USB);
-  seems to be implemented by --force, see special casing in the
+  is half-implemented by `--force`, see special casing in the
   detect_removable_devices method.
 * currently lists all partitions on the same USB stick. What should it
   do instead?
@@ -124,3 +205,8 @@ Proper Windows support would be welcome, though.
 
 Try http://www.pyinstaller.org/ to create a single binary file for
 Windows and for OS X. Include those binaries on Tails images?
+
+Should be more explicit when no target device is available
+----------------------------------------------------------
+
+Empty list, no message, is not that easy to understand.

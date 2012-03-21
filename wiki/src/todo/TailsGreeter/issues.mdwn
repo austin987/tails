@@ -5,18 +5,27 @@ This page lists the tails-greeter known issues.
 This is related to tails-greeter as found in the master branch of
 `git://git.immerda.ch/tails/tails-greeter.git`.
 
-# Bugs
+Release blockers
+================
 
-## Background image should be less flashy
+None that we know of in tails-greeter 0.6.
 
-> **release blocker**
+Other bugs
+==========
 
-## Replace syslinux menu
+## "waiting" mouse pointer not always displayed
 
-The syslinux language menu must disappear. See [[ideas on how to make
-use of the syslinux menu|todo/nx_bit]].
+## Insane widgets used for long lists
 
-> **release blocker**
+> Fixed for locale and keyboard in `feature/refactor_languages` branch
+> (that introduces the "chosen keyboard layout not applied to the
+> GNOME session" bug, so not merge-able as is).
+
+## Choose keyboard layout independently from the language
+
+> Implemented in in `feature/refactor_languages` branch (that
+> introduces the "chosen keyboard layout not applied to the GNOME
+> session" bug, so not merge-able as is).
 
 ## Keyboard layout widget not l10n'd with the selected language
 
@@ -33,17 +42,16 @@ locale the window was loaded with.
 * `kbd-chooser.c` in `git://git.debian.org/d-i/kbd-chooser.git` uses
   `/usr/share/console/lists/`
 
-## Insane widgets used for long lists
+## yes/no toggle buttons not translated after choosing language
 
-Comboboxes with long lists are hard to use - should be done the same
-way as GDM3 in Debian Squeeze: combobox contains default value and
-"other..." option, clicking latter will bring up pop-up window with
-long scrollable list of options and standard "ok", "cancel" buttons.
+The persistence and "more options" yes/no buttons are not translated
+after choosing a non-English language.
 
-> * Implemented for language
-> * to be done for locale and keyboard: **minor, postponed**, as those
->   lists are much shorter than the language one, so this is much less
->   of a problem.
+## should probably inhibit udisks while working
+
+## expose live-persist failure in some useful way
+
+Currently, a GdmGreeter.errors.LivePersistError is thrown.
 
 ## Wrong icon used as langpanel's language label
 
@@ -51,7 +59,7 @@ langpanel: the icon used for the languages is "applications-internet" which
 displays a globe in default icon theme, but could display something really
 irrelevant in an other icon theme;
 
-> **Minor, postponed**: we don't change the icon theme Tails uses every
+> **minor**: we don't change the icon theme Tails uses every
 > now and then.
 
 ## Scroll effect in language selection menu
@@ -64,24 +72,12 @@ the whole menu where I want it to be;
 > **Minor, postponed**: it's not perfect to they eye, sure, but it's
 > perfectly usable.
 
-# Missing features
+Missing features
+================
 
 ## GUI improvements
 
 * separator between languages list and "Other..."
-
-> **Minor, postponed**
-
-## Choose keyboard layout independently from the language
-
-It's impossible to choose keyboard layout independently from the
-language. Example use-case: X needs to get his GNOME UI in Italian,
-because he happens to speak that language much better than English AND
-faces an azerty keyboard (e.g. because he's traveling), also he does
-not know touch-typing so the keyboard physical and logical layout have
-to match.
-
-> **Minor, postponed**
 
 ## Locales should be generated in the background
 
@@ -94,14 +90,10 @@ It's not that simple to implement: t-g is executed as 'Debian-gdm' -
 it can't run localedef to generate locale; we have to weight the risk
 of sudo / suid vs. the user experience benefits.
 
-> **Minor, postponed**
-
 ## Admin password UI could be even better
 
 Possibly hook `tails-persistence-setup`'s `update_passphrase_ui`
 dynamic warning system in.
-
-> **Minor, postponed**
 
 ## Appearance
 

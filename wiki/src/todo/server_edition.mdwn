@@ -1,4 +1,4 @@
-[[!tag todo/research]]
+[[!meta title="Tails server: Self-hosted services behind Tails-powered Tor hidden services"]]
 
 [[!toc levels=2]]
 
@@ -41,16 +41,40 @@ Tails to reach them.
 Keeping such servers at hand, on a live system, behind an hidden
 service is likely to prevent erroneous disclosure.
 
-The Tails *server edition* vision
-===================================
+The vision
+==========
+
+Let's talk about group collaboration, communication and data sharing
+infrastructure, such as chat servers, wikis, or file repositories.
+
+Hosting such data and infrastructure *in the cloud* generally implies
+to trust the service providers not to disclose content, usage or users
+location information to third-parties. Hence, there are many threat
+models in which cloud hosting is not suitable.
+
+Tor partly answers the *users location* part; this is great, but
+*content* is left unprotected.
+
+There are two main ways to protect such content: either to encrypt it
+client-side (*security by design*), or to avoid putting it into
+untrusted hands in the first place.
+
+Cloud solutions that offer security by design are rare and generally
+not mature yet. The *Tails server* project is about exploring the
+other side of the alternative: avoiding to put private data into
+untrusted hands in the first place.
+
+This is made possible thanks to Tor hidden services, that allow users
+to offer location-hidden services, and make self-hosting possible in
+many threat models. Self-hosting has its own lot of problems, however,
+particularly in contexts where the physical security of the hosting
+place is not assured. Combining Tor hidden services with Tails'
+amnesia property and limited support for persistent encrypted data
+allows to protect content, to a great degree, even in such contexts.
 
 This vision aims at making it easy for end-users to implement
 solutions described above and based on Tor hidden services hosted on a
 Tails system.
-
-Tails server should content itself with hardware that is a bit old
-(such as a PIII-450 laptop with 256MB of RAM) and broken (e.g. no
-screen).
 
 Tails server should be able to run common services like a web
 server, a Jabber daemon, wiki, file repository, etc.
@@ -60,19 +84,52 @@ flash media. Targeted hardware to run "Tails server" would be an
 old laptop with broken hard-disk, battery, screen or keyboard;
 something quite common these days.
 
-Setting up a new server would be done by:
+In short, setting up a new Tails server would be done by:
 
-1. plugging a flash media into a running desktop Tails system,
-2. configuring the services through a pretty simple GUI,
-3. removing the flash media, now encrypted and containing the
-   services configuration,
-4. putting a "Tails server" CD or USB stick in the old laptop and
-   plugging the flash media,
-5. once booted, the flash media encryption passphrase can be entered
-   directly using the keyboard or through a web interface in the
-   local network,
-6. service is ready to be used by any Tor user once they got
-   a hold on the hidden service address.
+1. Alice plugs a USB stick into a running desktop Tails system.
+2. Alice uses a GUI to easily configure the needed services.
+3. Alice unplugs the USB stick, that now contains encrypted services
+   configuration and data storage space.
+4. Alice plugs that USB stick (and possibly a Tails Live CD) into the
+   old laptop that was dedicated to run Tails server.
+5. Once booted, Alice enters the encryption passphrase either directly
+   using the keyboard or through a web interface listening on the
+   local network.
+6. Then, Bob can use the configured services once he gets a hold on
+   the hidden service address. (The *petname system for Tor hidden
+   services* project would be very complementary to this one, by
+   the way.)
+
+Tails server should content itself with hardware that is a bit old
+(such as a PIII-450 laptop with 256MB of RAM) and/or half broken (e.g.
+non-functional hard-disk, screen or keyboard).
+
+Roadmap
+=======
+
+[[!tag todo/research]]
+
+This project [is
+proposed](https://www.torproject.org/getinvolved/volunteer.html.en#tailsServer)
+for GSoC 2012.
+
+The challenges behind this project are:
+
+  * Design and write the services configuration GUI [keywords: edit
+    configuration files, upgrade between major Debian versions,
+    debconf, Config::Model, augeas].
+  * How to create the hidden service key? [keywords: Vidalia, control
+    protocol].
+  * Adapt the Tails boot process to allow switching to "server mode"
+    when appropriate.
+  * Add support, to the Tails persistence setup process, for asking an
+    encryption passphrase without X, and possibly with a broken
+    keyboard and/or screen [keywords: local network, SSL/TLS?,
+    certificate?].
+
+This project can easily grow quite large, so the first task would
+probably be to clarify what it would need to get an initial (minimal
+but working) implementation ready to be shipped to users.
 
 Implementation
 ==============
@@ -112,7 +169,7 @@ turn:
 
 1. mount `$X`
 2. check if `$X` contains an encrypted server configuration, e.g.
-   something like `[[ -f /mounted/usb/encrypted-server-conf ]]`
+   something like `test -f /mounted/usb/encrypted-server-conf`
 3. if the check failed: unmount `$X`, then continue to loop
 4. if the check succeeds: keep `$X` mounted, exit the loop, and:
  4a. remove Xorg, network manager, etc. from the boot sequence
@@ -167,8 +224,10 @@ Resources
 
 ### Vidalia's hidden services support
 
-Works mostly well but we need to [[!taglink todo/wait]] for [[!tor_bug
-2579]] to be fixed.
+In 0.3.x: was removed, "should" become a plugin someday.
+
+In 0.2.x: works mostly well but we need to [[!taglink todo/wait]] for
+[[!tor_bug 2579]] to be fixed.
 
 ### The Incognito implementation
 
@@ -179,3 +238,7 @@ be worth looking at:
 
 - http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/docs.html#hidden
 - https://svn.torproject.org/svn/incognito/trunk/root_overlay/etc/init.d/hidden-service
+
+### Anonymous Web Application Framework
+
+https://piratenpad.de/p/AnonymousWebApplicationFramework
