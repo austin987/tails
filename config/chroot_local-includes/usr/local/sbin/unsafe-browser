@@ -118,8 +118,14 @@ maybe_restart_tor () {
     # Tor from bootstrapping, and a restart is the fastest way to get
     # wheels turning)
     if ! tor_is_working; then
-        service tor restart 2>/dev/null
-        until nc -z localhost 9051 2>/dev/null; do sleep 1; done
+        if ! service tor restart 2>/dev/null; then
+            error "`gettext \"Failed to restart Tor.\"`"
+        fi
+        local counter=0
+        until [ "${counter}" -ge 10 ] || nc -z localhost 9051 2>/dev/null; do
+            sleep 1
+	    counter=$((${counter}+1))
+        done
         /etc/NetworkManager/dispatcher.d/60-vidalia.sh clearnet up 2>/dev/null
     fi
 }
