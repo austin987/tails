@@ -3,17 +3,29 @@
 Bugs
 ====
 
-French translated button text does not fit
-------------------------------------------
-
-One of the unified launcher buttons' text does not fit because it's
-missing cariage returns.
-
 missing correct link to documentation
 -------------------------------------
 
 The unified launched has a link to `file:///FIXME` since we don't know
 the path to the installer documentation yet.
+
+crashes with amd64 kernel
+-------------------------
+
+Boot with amd64 kernel, clone:
+
+	[creator:1160] extlinux not found! Only FAT filesystems will be supported
+	*** glibc detected *** /usr/bin/python: malloc(): memory corruption: 0x0951d720 ***
+	======= Backtrace: =========
+	/lib/libc.so.6(+0x6b19a)[0xf746219a]
+	/lib/libc.so.6(+0x6dfb7)[0xf7464fb7]
+	/lib/libc.so.6(__libc_malloc+0x5c)[0xf7466bfc]
+	vie/usr/bin/python(PyString_FromStringAndSize+0x9c)[0x809da2c]
+
+Reproducible?
+
+See wiki history for more backtraces reported on testing/sid,
+that were initially thought to be testing/sid specific.
 
 breaks emergency shutdown
 -------------------------
