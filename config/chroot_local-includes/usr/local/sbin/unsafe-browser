@@ -1,5 +1,11 @@
 #!/bin/sh
 
+CMD=$(basename ${0})
+
+. gettext.sh
+TEXTDOMAIN=${CMD}
+export TEXTDOMAIN
+
 SQUASH=/live/image/live/filesystem.squashfs
 ROFS=/live/rofs
 CONF_DIR=/var/lib/unsafe-browser
@@ -35,10 +41,10 @@ cleanup () {
 }
 
 error () {
-    local cli_text="${0}: error: ${@}"
+    local cli_text="${CMD}: `gettext \"error\"`: ${@}"
     local dialog_text="${@}
 
-Unsafe Browser will exit now."
+`gettext \"Unsafe Browser will exit now.\"`"
     echo "${cli_text}" >&2
     zenity --error --title "" --text "${dialog_text}"
     exit 1
@@ -46,15 +52,15 @@ Unsafe Browser will exit now."
 
 warning () {
     local text="${@}"
-    echo "${0}: warning: ${text}" >&2
+    echo "${CMD}: `gettext \"warning\"`: ${text}" >&2
     zenity --warning --title "" --text "${text}"
 }
 
 verify_start () {
     # Make sure the user really wants to start the browser
-    local dialog_msg="<b>Do you really want to launch the Unsafe Browser?</b>
+    local dialog_msg="<b>`gettext \"Do you really want to launch the Unsafe Browser?\"`</b>
 
-All activity within the Unsafe Browser will <b>not</b> be anonymous. Only use the the Unsafe Browser if necessary, for example if you have to login or register in order to activate your Internet connection."
+`gettext \"All activity within the Unsafe Browser will <b>not</b> be anonymous. Only use the the Unsafe Browser if necessary, for example if you have to login or register in order to activate your Internet connection.\"`"
     if ! zenity --question --title "" --text "${dialog_msg}"; then
         exit 0
     fi
@@ -72,7 +78,8 @@ setup_chroot () {
     mount -t tmpfs tmpfs ${COW} && \
     mount -t aufs -o noatime,noxino,dirs=${COW}=rw:${ROFS}=rr+wh aufs ${CHROOT} && \
     mount -t proc proc ${CHROOT}/proc && \
-    mount --bind /dev ${CHROOT}/dev || error "Failed to setup chroot"
+    mount --bind /dev ${CHROOT}/dev || \
+    error "`gettext \"Failed to setup chroot.\"`"
 }
 
 configure_chroot () {
@@ -127,7 +134,7 @@ fi
 # Some stupid captive portals may allow DNS to any host, but chances are
 # that only the portal's DNS would forward to the login page.
 if [ -z "${IP4_NAMESERVERS}" ]; then
-    error "No DNS server was obtained through DHCP or manually configured in NetworkManager."
+    error "`gettext \"No DNS server was obtained through DHCP or manually configured in NetworkManager.\"`"
 fi
 
 verify_start

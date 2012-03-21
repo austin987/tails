@@ -16,9 +16,13 @@ refresh_translations () {
 
    mkdir -p "${sharedir}"
 
-   xgettext --language="${proglang}" --from-code=UTF-8 \
-      -o "${pot}" \
-      "config/chroot_local-includes/usr/local/bin/${prog}"
+   for dir in bin sbin ; do
+      progpath="config/chroot_local-includes/usr/local/${dir}/${prog}"
+      if [ -e "${progpath}" ]; then
+         xgettext --language="${proglang}" --from-code=UTF-8 \
+           -o "${pot}" "${progpath}"
+      fi
+   done
 
    for locale in $AMNESIA_SUPPORTED_LANGUAGES ; do
       po="${locale_basedir}/${locale}/LC_MESSAGES/${prog}.po"
@@ -32,4 +36,8 @@ refresh_translations () {
 
 for prog in gpgApplet tails-security-check tails-htp-notify-user tails-virt-notify-user ; do
    refresh_translations $prog Perl
+done
+
+for prog in unsafe-browser ; do
+   refresh_translations $prog Shell
 done
