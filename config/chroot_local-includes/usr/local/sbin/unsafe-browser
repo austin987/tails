@@ -41,7 +41,6 @@ error () {
 Unsafe Browser will exit now."
     echo "${cli_text}" >&2
     zenity --error --title "" --text "${dialog_text}"
-    cleanup
     exit 1
 }
 
@@ -65,6 +64,9 @@ setup_chroot () {
     # Setup a chroot on an aufs "fork" of the filesystem.
     # FIXME: When LXC matures to the point where it becomes a viable option
     # for creating isolated jails, the chroot can be used as its rootfs.
+    trap cleanup INT
+    trap cleanup EXIT
+
     mkdir -p ${ROFS} ${COW} ${CHROOT} && \
     mount -t squashfs -o loop ${SQUASH} ${ROFS} && \
     mount -t tmpfs tmpfs ${COW} && \
@@ -129,11 +131,9 @@ if [ -z "${IP4_NAMESERVERS}" ]; then
 fi
 
 verify_start
-trap cleanup INT
 setup_chroot
 configure_chroot
 start_browser_in_chroot
-cleanup
 maybe_restart_tor
 
 exit 0
