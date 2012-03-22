@@ -210,8 +210,16 @@ is_clock_way_off() {
 	return 1
 }
 
+start_notification_helper() {
+	export DISPLAY=':0.0'
+	export XAUTHORITY="$(echo /var/run/gdm3/auth-for-$LIVE_USERNAME-*/database)"
+	exec /bin/su -c /usr/local/bin/tails-htp-notify-user "$LIVE_USERNAME" &
+}
+
 
 ### Main
+
+start_notification_helper
 
 # Delegate time setting to other daemons if Tor connections work
 if tor_is_working; then
