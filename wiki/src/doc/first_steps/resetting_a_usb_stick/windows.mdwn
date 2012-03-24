@@ -2,52 +2,68 @@
 
 [[!inline pages="doc/first_steps/resetting_a_usb_stick.intro" raw="yes"]]
 
-[[!toc levels=1]]
+<div class="note">
+The following instructions do not work on Windows XP.
+</div>
 
-<h2 class="bullet-number-one">Run DiskPart</h2>
+Using <span class="application">Diskpart</span>
+===============================================
 
-<!--
-FIXME: How do you get to the command prompt.
--->
+<div class="caution">
+<strong>You might overwrite any hard drive on the computer.</strong> If at some
+point you are not sure about the disk number, stop proceeding.
+</div>
 
-Run the `diskpart` command in a command prompt.
+1.  Make sure that the USB stick that you want to reset is unplugged.
 
-<h2 class="bullet-number-two">Find out the disk number of the USB stick</h2>
+1.  Click on the <span class="button">Start</span> button, and choose <span
+    class="menuchoice">All Programs&nbsp;▸ Accessories&nbsp;▸ Command
+    Prompt</span>, to open the <span class="application">[[!wikipedia Command
+    Prompt]]</span>,
 
-Unplug the USB stick.
+    [[More help on how to start the <span class="application">Command
+    Prompt</span>|http://www.computerhope.com/issues/chdos.htm]]
 
-Type the following command to list disks known to DiskPart:
+2.  Execute the <span class="command">diskpart</span> command, to start
+<span class="application">Diskpart</span>.
 
-    list disk
+3.  Execute the <span class="command">list disk</span> command to obtain
+    information about each disk in the computer.
 
-DiskPart should display a list of disks and information about them.
+    For example:
 
-Plug back the destination USB stick.
+        Diskpart> list disk
 
-Run the `list disk` command again.
+          Disk ###  Status      Size     Free     Dyn  Gpt
+          --------  ----------  -------  -------  ---  ---
+          Disk 0    Online        80 GB      0 B
 
-A new disk should have appeared in the list.
+4. Plug the USB stick that you want to reset. Run the <span
+   class="command">list disk</span> command again.
 
-Double-check that its properties, such as its size, match the
-expectations you have of the USB stick you want to reset, and take
-good note of the *number* assigned by DiskPart to this disk.
+   A new disk, which corresponds to the USB stick, appears in the list.
 
-<h2 class="bullet-number-three">Select the USB stick</h2>
+   For example:
 
-Tell DiskPart you want to operate on the USB stick; this is done using
-the select command as follows, replacing `NUMBER` with the disk number
-you have taken note of previously:
+        Diskpart> list disk
 
-    select disk=NUMBER
+          Disk ###  Status      Size     Free     Dyn  Gpt
+          --------  ----------  -------  -------  ---  ---
+          Disk 0    Online        80 GB      0 B
+          Disk 1    Online         4 GB      0 B
 
-<h2 class="bullet-number-four">Do the actual reset</h2>
+   Make sure that its size corresponds to the size of the USB that you want to
+   reset. Note down the disk number assigned by <span
+   class="application">Diskpart</span> to the USB stick.
 
-Ask DiskPart to remove all partitions from the selected disk:
+5. To select the USB stick, execute the following command: <span
+   class="command">select disk=<span class="replaceable">number</span></span>.
+   Replace <span class="replaceable">number</span> by the disk number of the
+   USB stick that you want to reset.
 
-    clean
+6. Execute the <span class="command">clean</span> command to remove all partitions on the USB stick.
 
 Troubleshooting
 ===============
 
-Refer to the [DiskPart
-documentation](https://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/diskpart.mspx).
+See the [[Diskpart documentation from Microsoft Support|http://support.microsoft.com/kb/300415]].
