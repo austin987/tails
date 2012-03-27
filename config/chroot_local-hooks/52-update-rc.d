@@ -40,3 +40,6 @@ rm -f /etc/rc[06].d/*plymouth
 
 # gdomap is not used between processes running as the same user on the same host
 update-rc.d gdomap disable
+
+# we start NetworkManager ourselves, via tails-greeter, at PostLogin time
+update-rc.d network-manager disable

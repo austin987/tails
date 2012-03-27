@@ -22,10 +22,9 @@ $RUN_LB_CONFIG --distribution squeeze ${@}
 $RUN_LB_CONFIG \
    --apt-recommends false \
    --backports true \
-   --binary-images iso-hybrid \
+   --binary-images iso \
    --binary-indices false \
    --checksums none \
-   --isohybrid-options "$AMNESIA_ISOHYBRID_OPTS" \
    --bootappend-live "${AMNESIA_APPEND}" \
    --bootstrap "cdebootstrap" \
    --archive-areas "main contrib non-free" \
@@ -41,12 +40,12 @@ $RUN_LB_CONFIG \
    --initramfs=live-boot \
    ${@}
 
-# build i386 images on amd64 as well, include only 686 kernel
+# build i386 images on amd64 as well, include a bunch of kernels
 hw_arch="`dpkg --print-architecture`"
 if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
    $RUN_LB_CONFIG \
       --architecture i386 \
-      --linux-flavours 486 \
+      --linux-flavours "486 686-pae amd64" \
       ${@}
 # build powerpc images on powerpc64 as well, include only powerpc kernel
 elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
