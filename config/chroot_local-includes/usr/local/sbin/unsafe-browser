@@ -1,6 +1,9 @@
 #!/bin/sh
 
+set -e
+
 CMD=$(basename ${0})
+LOCK=/var/lock/${CMD}
 
 . gettext.sh
 TEXTDOMAIN=${CMD}
@@ -145,6 +148,12 @@ maybe_restart_tor () {
         /etc/NetworkManager/dispatcher.d/60-vidalia.sh clearnet up 2>/dev/null
     fi
 }
+
+# Prevent multiple instances of the script.
+exec 9>${LOCK}
+if ! flock -x -n 9; then
+    error "`gettext \"Another Unsafe Browser is currently running, or being cleaned up. Please retry in a while.\"`"
+fi
 
 # Get the DNS servers that was obtained from NetworkManager, if any...
 NM_ENV=/var/lib/NetworkManager/env
