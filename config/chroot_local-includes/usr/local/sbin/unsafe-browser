@@ -70,6 +70,8 @@ setup_chroot () {
     # Setup a chroot on an aufs "fork" of the filesystem.
     # FIXME: When LXC matures to the point where it becomes a viable option
     # for creating isolated jails, the chroot can be used as its rootfs.
+    echo "* Setting up chroot"
+
     trap cleanup INT
     trap cleanup EXIT
 
@@ -83,6 +85,8 @@ setup_chroot () {
 }
 
 configure_chroot () {
+    echo "* Configuring chroot"
+
     # Set the chroot's DNS servers to those obtained through DHCP
     rm -f ${CHROOT}/etc/resolv.conf
     for NS in ${IP4_NAMESERVERS}; do
@@ -91,7 +95,7 @@ configure_chroot () {
     chmod a+r ${CHROOT}/etc/resolv.conf
 
     # Disable problematic Iceweasel addons and proxying in the chroot
-    chroot ${CHROOT} apt-get remove --yes ${OFFENDING_ADDONS} 1>/dev/null 2>&1
+    chroot ${CHROOT} apt-get remove --yes ${OFFENDING_ADDONS}
     sed -i '/^pref("network.proxy.type",/d' \
         ${CHROOT}/etc/iceweasel/pref/iceweasel.js
     echo 'pref("network.proxy.type", 0);' >> \
@@ -109,6 +113,8 @@ user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Brow
 
 start_browser_in_chroot () {
     # Start Iceweasel in the chroot
+    echo "* Starting Unsafe Browser"
+
     sudo -u ${SUDO_USER} xhost +SI:localuser:${CLEARNET_USER} 2>/dev/null
     chroot ${CHROOT} sudo -u ${CLEARNET_USER} iceweasel -DISPLAY=:0.0
     sudo -u ${SUDO_USER} xhost -SI:localuser:${CLEARNET_USER} 2>/dev/null
@@ -127,7 +133,8 @@ maybe_restart_tor () {
     # Tor from bootstrapping, and a restart is the fastest way to get
     # wheels turning)
     if ! tor_is_working; then
-        if ! service tor restart 2>/dev/null; then
+        echo "* Restarting Tor"
+        if ! service tor restart; then
             error "`gettext \"Failed to restart Tor.\"`"
         fi
         local counter=0
