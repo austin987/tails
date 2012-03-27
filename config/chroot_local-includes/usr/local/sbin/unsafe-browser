@@ -49,14 +49,14 @@ error () {
 
 `gettext \"Unsafe Browser will exit now.\"`"
     echo "${cli_text}" >&2
-    zenity --error --title "" --text "${dialog_text}"
+    sudo -u ${SUDO_USER} zenity --error --title "" --text "${dialog_text}"
     exit 1
 }
 
 warning () {
     local text="${@}"
     echo "${CMD}: `gettext \"warning\"`: ${text}" >&2
-    zenity --warning --title "" --text "${text}"
+    sudo -u ${SUDO_USER} zenity --warning --title "" --text "${text}"
 }
 
 verify_start () {
@@ -64,7 +64,8 @@ verify_start () {
     local dialog_msg="<b>`gettext \"Do you really want to launch the Unsafe Browser?\"`</b>
 
 `gettext \"All activity within the Unsafe Browser will <b>not</b> be anonymous. Only use the the Unsafe Browser if necessary, for example if you have to login or register in order to activate your Internet connection.\"`"
-    if ! zenity --question --title "" --text "${dialog_msg}"; then
+    if ! sudo -u ${SUDO_USER} zenity --question --title "" \
+         --text "${dialog_msg}"; then
         exit 0
     fi
 }
