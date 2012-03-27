@@ -96,6 +96,15 @@ configure_chroot () {
         ${CHROOT}/etc/iceweasel/pref/iceweasel.js
     echo 'pref("network.proxy.type", 0);' >> \
         ${CHROOT}/etc/iceweasel/pref/iceweasel.js
+
+    # Set a scary theme (except if we're using Windows camouflage
+    if grep -qwv winxp /proc/cmdline; then
+        echo '
+user_pref("lightweightThemes.isThemeSelected", true);
+user_pref("lightweightThemes.persisted.footerURL", false);
+user_pref("lightweightThemes.persisted.headerURL", false);
+user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFF00\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");' >> ${CHROOT}/etc/iceweasel/profile/user.js
+    fi
 }
 
 start_browser_in_chroot () {
@@ -124,7 +133,7 @@ maybe_restart_tor () {
         local counter=0
         until [ "${counter}" -ge 10 ] || nc -z localhost 9051 2>/dev/null; do
             sleep 1
-	    counter=$((${counter}+1))
+            counter=$((${counter}+1))
         done
         /etc/NetworkManager/dispatcher.d/60-vidalia.sh clearnet up 2>/dev/null
     fi
