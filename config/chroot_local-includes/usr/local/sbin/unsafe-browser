@@ -64,8 +64,12 @@ verify_start () {
     local dialog_msg="<b>`gettext \"Do you really want to launch the Unsafe Browser?\"`</b>
 
 `gettext \"Network activity within the Unsafe Browser is <b>not anonymous</b>. Only use the the Unsafe Browser if necessary, for example if you have to login or register to activate your Internet connection.\"`"
-    if ! sudo -u ${SUDO_USER} zenity --question --title "" \
-         --text "${dialog_msg}"; then
+    local launch="`gettext \"_Launch\"`"
+    local exit="`gettext \"_Exit\"`"
+    # Since zenity can't set the default button to cancel, we switch the
+    # labels and interpret the return value as its negation.
+    if sudo -u ${SUDO_USER} zenity --question --title "" --ok-label "${exit}" \
+       --cancel-label "${launch}" --text "${dialog_msg}"; then
         exit 0
     fi
 }
