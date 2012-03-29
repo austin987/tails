@@ -46,8 +46,6 @@ user_pref("extensions.torbutton.tor_memory_jar", true);
 user_pref("extensions.torbutton.tz_string", "UTC+00:00");
 user_pref("extensions.torbutton.use_privoxy", false);
 user_pref("extensions.torbutton.warned_ff3", true);
-user_pref("greasemonkey.enableUpdateChecking", false);
-user_pref("greasemonkey.version", "9999.99");
 user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
 user_pref("noscript.ABE.wanIpAsLocal", false);
