@@ -1,0 +1,202 @@
+[[!meta title="Configure the Persistent Storage"]]
+
+[[!inline pages="doc/first_steps/persistence.caution" raw="yes"]]
+
+Start the persistent storage assistant
+======================================
+
+To start the persistent storage assistant, choose
+<span class="menuchoice">
+  <span class="guimenu">Applications</span>&nbsp;▸
+  <span class="guisubmenu">Tails</span>&nbsp;▸
+  <span class="guimenuitem">Configure persistent storage</span></span>.
+
+<!--
+FIXME-0.11: Error, Persistence partition is not unlocked.
+-->
+
+Creating the persistent storage
+===============================
+
+When run for the first time, or after [[deleting the persistent
+storage|delete]], the assistant proposes to create a new persistent storage on
+the USB stick from which Tails is running.
+
+1. The persistent storage is an encrypted volume protected by a passphrase.
+Specify a passphrase of your choice in both the
+<span class="guilabel">Passphrase</span> and <span class="guilabel">Verify
+Passphrase</span> text boxes.
+
+2. Click on the <span class="guilabel">Create</span> button.
+
+3. Wait for the creation to finish.
+
+<div class="bug">
+
+<strong>If the creation is interrupted before it finishes</strong>, you may not
+be able to start Tails from the USB stick any more. This can happen if you
+close the window of the wizard or unplug the USB stick during the creation of
+the persistent storage. [[Erase|first_steps/resetting_a_usb_stick]] and
+[[reinstall|first_steps/usb_installer]] Tails to fix this issue.
+
+<!--
+FIXME-0.11:
+  for i in 2 60 62 63 ; do
+     sgdisk /dev/YOUR_STICK --attributes=1:set:$i
+  done
+-->
+
+</div>
+
+Configure the persistent storage
+================================
+
+When run from a USB stick that already has a persistent storage, the assistant
+shows a list of the possible persistent features. Each feature corresponds to a
+set a files to be stored in the persistent storage.
+
+<div class="note">
+<strong>Restart Tails to apply the changes</strong> after selecting or
+unselecting one or several features.
+</div>
+
+<div class="bug">
+Currently, if you unselect a feature that has been activated, it will be
+deactivated after restarting Tails but the corresponding files will not be
+deleted from the persistent storage.
+</div>
+
+<div class="icon">
+<div class="image"><img src="../stock_folder.png"/></div>
+<div class="text"><strong>Personal Data</strong></div>
+</div>
+
+When this feature is activated, you can save your personal files and working
+documents in the <span class="filename">Persistent</span> folder.
+
+To open the <span class="filename">Persistent</span> folder, choose
+<span class="menuchoice">
+  <span class="guimenu">Places</span>&nbsp;▸
+  <span class="guimenuitem">Home Folder</span></span>, and open the <span
+  class="guilabel">Permanent</span> folder.
+
+<div class="icon">
+<div class="image"><img src="../seahorse-key.png"/></div>
+<div class="text"><strong>GnuPG</strong></div>
+</div>
+
+When this feature is activated, the OpenPGP keys that you create or import are
+saved to the persistent storage.
+
+<div class="caution">
+If you manually edit or overwrite the configuration file
+<span class="filename">~/.gnupg/gpg.conf</span> you may lessen your anonymity,
+weaken the encryption defaults or render GnuPG unusable.
+</div>
+
+<div class="icon">
+<div class="image"><img src="../seahorse-key-ssh.png"/></div>
+<div class="text"><strong>SSH Client</strong></div>
+</div>
+    
+When this feature is activated, all the files related to the secure-shell client
+are saved to the permanent storage:
+
+  - The SSH keys that you create or import
+  - The public keys of the hosts you connect to
+  - The SSH configuration file in <span class="filename">~/.ssh/config</span> 
+
+<div class="caution">
+If you manually edit the configuration file
+<span class="filename">~/.ssh/config</span>, make sure not to overwrite the
+default configuration from the file
+<span class="filename">/etc/ssh/ssh_config</span>. Otherwise, you may weaken the
+encryption defaults or render SSH unusable.
+</div>
+
+<div class="icon">
+<div class="image"><img src="../pidgin.png"/></div>
+<div class="text"><strong>Pidgin</strong></div>
+</div>
+
+When this feature is activated, all the configuration files of the
+<span class="application">Pidgin</span> Internet messenger are saved to the
+permanent storage:
+
+  - The configuration of your accounts, buddies and chats.
+  - Your OTR encryption keys and keyring.
+  - The content of the discussions are not saved unless you configure
+    <span class="application">Pidgin</span> to do so.
+
+All the configuration options are available from the graphical interface. There
+is no need to manually edit or overwrite the configuration files.
+
+<div class="icon">
+<div class="image"><img src="../claws-mail.png"/></div>
+<div class="text"><strong>Claws Mail</strong></div>
+</div>
+
+When this feature is activated, the configuration and emails stored locally by
+the <span class="application">Claws Mail</span> email client are saved to the
+permanent storage.
+
+All the configuration options are available from the graphical interface. There
+is no need to manually edit or overwrite the configuration files.
+
+<div class="icon">
+<div class="image"><img src="../seahorse-key-personal.png"/></div>
+<div class="text"><strong>GNOME Keyring</strong></div>
+</div>
+
+When this feature is activated, the secrets of
+<span class="application">GNOME Keyring</span> are saved to the persistent
+storage.
+
+GNOME Keyring is a collection of components in GNOME that store secrets,
+passwords, keys, certificates and make them available to applications.
+For more information about <span class="application">GNOME Keyring</span> see
+the [official documentation](http://live.gnome.org/GnomeKeyring).
+
+<div class="icon">
+<div class="image"><img src="../synaptic.png"/></div>
+<div class="text"><strong>APT Packages</strong></div>
+</div>
+
+When this feature is activated, the packages that you install using the
+<span class="application">Synaptic</span> package manager or the
+<span class="command">apt-get</span> command are saved to the permanent storage.
+
+Note that those packages are not automatically reinstalled when starting a new
+Tails working session.
+
+If you activate this feature, it is recommended to activate the
+<span class="guilabel">APT Lists</span> feature as well.
+
+<div class="icon">
+<div class="image"><img src="../synaptic.png"/></div>
+<div class="text"><strong>APT Lists</strong></div>
+</div>
+
+When this feature is activated, the lists of all the software packages available
+for installation are saved to the permanent storage.
+
+Those so called <span class="emphasis">APT lists</span> correspond to the files
+downloaded while doing
+<span class="guilabel">Reload</span> from the
+<span class="application">Synaptic</span> package manager or issuing the
+<span class="command">apt-get update</span> command.
+
+<div class="icon">
+<div class="image"><img src="../preferences-desktop.png"/></div>
+<div class="text"><strong>Dotfiles</strong></div>
+</div>
+
+When this feature is activated, all the files in the
+<span class="filename">Dotfiles</span> folder are linked in the <span
+class="filename">Home Folder</span>. This allows you to save to the permanent
+storage the configuration files of other programs than the ones proposed by the
+existing features.
+
+<!--
+FIXME-0.11: Custom directory
+-->
