@@ -20,7 +20,8 @@ ln -s /usr/bin/gcc-4.4 /usr/bin/gcc-4.6
 # Have the modules built for every installed kernel
 for KERNEL in /boot/vmlinuz-* ; do
    KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
-   KERNEL_ARCH="$(basename ${KERNEL} | sed -e 's|.*-||')"
+   VERSION_SCHEME="[[:digit:]]\+\(\.[[:digit:]]\+\)*-[[:digit:]]\+"
+   KERNEL_ARCH="$(echo ${KERNEL_VERSION} | sed -e "s|${VERSION_SCHEME}-||")"
 
    apt-get install --yes linux-headers-2.6-${KERNEL_ARCH}
 
