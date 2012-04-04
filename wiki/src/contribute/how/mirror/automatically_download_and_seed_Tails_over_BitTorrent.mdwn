@@ -1,0 +1,102 @@
+[[!meta title="How to automatically download and seed Tails over BitTorrent"]]
+
+<div id="intro">
+
+Once you participate in spreading Tails by seeding it over BitTorrent,
+it is important to make sure you share the latest and greatest version
+as soon as it's out, so that other users can obtain these updates as
+quickly as possible.
+
+If you run GNU/Linux, then it is fairly easy to automate the process
+of retrieving and seeding new Tails releases as they are released.
+
+The tools involved are <a
+href='https://code.google.com/p/rssdler/'>rssdler</a> and <a
+href='http://libtorrent.rakshasa.no/'>rTorrent</a>; at least the
+latter is available in most distributions package repositories.
+
+[[!toc levels=2]]
+
+</div>
+
+rTorrent
+========
+
+1. Running at startup
+---------------------
+
+After installing rTorrent, you will want to have it run at boot time.
+
+It greatly depends on the init system your distributions uses.
+
+One way to do this is to install an initscript, such as [that
+one](http://pastebin.com/raw.php?i=QWcEY2F5), by placing it into
+`/etc/init.d/`, editing it to replace `USERNAME` with your username,
+and then setting it to run at boot (`chkconfig` on Red Hat -like
+systems, `rcconf` or `update-rc.d` on Debian-like systems).
+
+This will make it so that rTorrent loads at boot time, creating
+a screen named 'rtorrent', which you can access giving the following
+command:
+
+    screen -r rtorrent
+
+Alternatively, you can create a desktop launcher with a command similar to:
+
+    gnome-terminal --title rtorrent -e 'screen -r rtorrent' 
+
+2. Configuring automation
+-------------------------
+
+rTorrent stores it's configuration in a file called `.rtorrent.rc` in
+your home directory.
+
+You can modify the [official
+rtorrent.rc](http://libtorrent.rakshasa.no/browser/trunk/rtorrent/doc/rtorrent.rc#latest)
+or start from [this modified
+rtorrent.rc](http://pastebin.com/raw.php?i=qv7vChA7). The modified
+version comes pre-configured for randomization of ports, disabled DHT,
+and forced encryption.
+
+The changes you have to do yourself are:
+
+1. Modify your directory variable (working dir for rTorrent).
+1. Modify your session variable (session lock dir).
+1. Modify your schedule variable.
+1. Tell it where it will find the `.torrent` files.
+1. Tell it where to save the data it downloads.
+
+rssdler
+=======
+
+1. Configuration
+----------------
+
+rssdler check an [[rss feed|/torrents/rss]] periodically and downloads
+any `.torrent` file listed in there to wherever place you wish.
+Its configuration file is in `~/rssdler/config`. It should contain
+something like:
+
+    [tails]
+    link = https://tails.boum.org/torrents/rss/index.rss
+    maxSize = 2048
+    minSize = 10
+    directory = /home/path/to/torrentfiles/
+
+Now rssdler should know to put `.rtorrent` files in the directory in
+which rTorrent is scanning. The final step is getting rssdler to run
+when you need it.
+
+2. Running at startup
+---------------------
+
+rssdler can be set up to run as a daemon (`rssdler -d`), or to run
+only once (`rssdler -o`). This means you can add rssdler to your
+session startup, or create a cron job for it.
+
+    crontab -e
+    */10 * * * * /usr/local/bin/rssdler -o
+
+Adding this to the end of your crontab file will run the task every
+ten minutes. Alternatively, add `rssdler -d` to your
+distribution-specific startup tasks.

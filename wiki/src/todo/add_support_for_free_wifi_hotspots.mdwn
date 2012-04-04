@@ -18,8 +18,58 @@ to DNS torification and Tor enforcement.
 
 We should implement a way to fix this.
 
-Implementation ideas
-====================
+Implementaion
+=============
+
+Using a non-Torified web browser
+--------------------------------
+
+### Interface
+
+Let's call it "Unsafe web browser". When executed we:
+
+0. Show a dialog asking the user for verification, while also briefly
+   explaining that the unsafe browser won't be anonymous.
+0. If yhes, we start a separate Iceweasel instance .
+0  The Iceweasel profile should use a theme with scary colors, but it
+   should be deactivated when Windows camouflage is activated.
+0. Add a small visual cue to "amnesia branding" addon (which will be
+   the only cue for Windows camouflage users),
+0. Load an appropriate start page which explains all the issues.
+
+### Implementation
+
+For convenience, not imagined security, we implement this in a
+chroot. Before starting the unsafe browser we create and aufs union
+"branch" of the filesystem root which we adapt to suite our needs:
+
+0. We set the default DNS servers to those obtained through DHCP.
+0. We uninstall any offending Iceweasel addons (Torbutton, FoxyProxy).
+0. We configure Iceweasel to not use any proxies.
+0. We set the Icewesel theme to one with "scary colors" (but not if
+   the Windows camouflage is activated).
+0. We set some pref which will activate the visual cue in the "amnesia
+   branding" addon.
+0. We set the start page to "an appropriate start page which explains
+   all the issues".
+
+Then we just run a chroot:ed instance of Iceweasel, shown on the
+amnesia users `$DISPLAY`, running under a user which has been exempt of
+all restriction in our firewall and forward. When Iceweasel exits we
+tear down the chroot. We also restart Tor (and Vidalia) if Tor isn't
+working so it quickly can bootstrap if the user used the unsafe
+browser to login to a hotspot/captive portal.
+
+### Future plans
+
+* When LXC becomes a viable, secure solution for creating isolated
+  jails the above chroot approach will be easily adaptable to that.
+
+Complementary ideas
+===================
+
+The following things could try to automate the login to the hotspot
+so that the unsafe browser only is necessary as a fall back.
 
 Using WWW::Mechanize::Shell
 ---------------------------
@@ -57,38 +107,12 @@ Looks like there is at least two Python apps doing this already:
 * [autowifi](http://www.manatlan.com/page/autowifi)
 * [autologin-applet](http://antoine.mairesse.free.fr/autologin-applet/)
 
-Using a non-Torified web browser
---------------------------------
-
-Another implementation possibility: Liberte Linux provides a
-non-Torified browser running under a specially designated user. "It
-is intended to be used in cases where a web setup is necessary in
-order to initiate an Internet connection (such as Wi-Fi Hotspots
-registration)."
-
-Details are in their source code:
-
-* `liberte/src/home/anon/bin/unsafe-browser`
-* `liberte/src/usr/local/sbin/unsafe-browser`
-* `liberte/src/usr/local/sbin/fw-reload`
-* git grep unsafe-browser
-
-However, using `ssh -X` or sudo combined with xhosts permissions
-brings issues such as shared clipboard, access to the whole screen and
-more. Running a new X session using `gdmflexiserver --xnest` sounds
-much safer; having this other session isolated, e.g. using LXC, would
-offer more protection against untrusted content read by the unsafe
-browser.
-
-It should be noted that such a "unsafe browser" needs non-Torified
-DNS resolution.
-
 Captive portal detection
 ------------------------
 
-### Ask ioerror
-
-Seems like he is working on captive portal detection.
+hellais and friends are working on
+[ooni-probe](https://gitweb.torproject.org/ooni-probe.git) which may be
+interesting, depeding on how stealthy the probe is.
 
 Beta testers
 ============
