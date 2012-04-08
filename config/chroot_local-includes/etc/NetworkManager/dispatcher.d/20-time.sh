@@ -22,7 +22,7 @@ DATE_RE='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][
 VERSION_FILE=/etc/amnesia/version
 
 # Get LIVE_USERNAME
-. /etc/live/config.d/username
+. /etc/live/config.d/username.conf
 
 ### Exit conditions
 

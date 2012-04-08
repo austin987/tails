@@ -9,7 +9,7 @@
 MAX_WAIT=120
 
 # Get LIVE_USERNAME
-. /etc/live/config.d/username
+. /etc/live/config.d/username.conf
 
 for i in $(seq 1 ${MAX_WAIT}) ; do
    if pgrep -u "${LIVE_USERNAME}" nm-applet >/dev/null 2>&1 ; then
