@@ -92,6 +92,7 @@ pref("security.enable_java", false);
 pref("security.enable_ssl2", false);
 pref("security.enable_ssl3", true);
 pref("security.enable_tls", true);
+pref("security.ssl.enable_false_start", true);
 pref("security.xpconnect.plugin.unrestricted", false);
 pref("security.warn_leaving_secure", true);
 pref("security.warn_submit_insecure", true);

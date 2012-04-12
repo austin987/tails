@@ -1,0 +1,57 @@
+[[!toc levels=2]]
+
+# Discarded options
+
+## Appending to squashfs image
+
+`mksquashfs` can actually append new files to an existing `squashfs` image.
+
+Initial images are created with files in a specific order to
+[[improve boot time on cd]], but on a USB stick random access is a non-issue.
+
+[[!taglink todo/test]] if `mksquashfs` can append an image that is currently
+used without weakening a running system.
+
+Upgrading the system would result in a series of files to be appended to the
+current `squashfs` image.
+
+This option had been discared because it is not possible to remove files.
+
+## Deltas
+
+A possible way to encode deltas for the two previous methods could be:
+
+ * For each file that has been modified: a binary delta and a new set of
+   metadata if they have changed.
+ * A list of deleted files.
+
+And `mksquashfs` would be used in the running live system after applying the
+delta to create a `squashfs` image with the upgrade.
+
+But there is probably things that have been left out of such an early draft.
+
+## Binary diff
+
+Plain `diff` does not work on binary files.
+
+Binary diffs ([rsync], [xdelta], [bsdiff], [VCDIFF]) gives poor
+result on live system images because `squashfs` images vary
+strongly as a whole, even for tiny changes of the files inside.
+That situation is unlikely to change ([[!debbug 602965]]) and is even worse
+with `squashfs-lzma`. Quoting `xz` manpage:
+
+     Compressed output may vary
+       The exact compressed output produced from the same uncompressed input
+       file may vary between XZ Utils  versions  even if  compression  options
+       are identical.  This is because the encoder can be improved (faster or
+       better compression) without affecting the file format.  The output can
+       vary even between different builds of the same XZ Utils  version, if
+       different build options are used.
+
+       The  above means that implementing --rsyncable to create rsyncable .xz
+       files is not going to happen without freezing a part of the encoder
+       implementation, which can then be used with --rsyncable.
+
+[xdelta]: http://xdelta.org/
+[bsdiff]: http://www.daemonology.net/bsdiff/
+[VCDIFF]: http://www.ietf.org/rfc/rfc3284.txt

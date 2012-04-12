@@ -29,6 +29,10 @@ Check the output for:
   does the combination of our configuration with software X version
   Y+1 achieve the same wished results as with software X version Y?)
 
+## Image size
+
+Check the image size has not changed much since the last release.
+
 # Iceweasel
 
 * is web browsing really torified?
@@ -36,8 +40,12 @@ Check the output for:
  - <http://monip.org/>
 * does the exposed User-Agent match the generic Torbutton's one?
   (connect to a website you can check the access logs for)
+* Browsing (by IP) a HTTP/HTTPS server on the LAN should be possible.
+* Browsing (by IP) a FTP server on the LAN should be possible.
 * Entering `about:plugins` in the location bar should say no plugin is
   installed.
+* Does playing HTML5 videos work? In particular, (due to its popularity)
+  do [youtube](http://www.youtube.com) videos work?
 
 # Pidgin
 
@@ -180,6 +188,17 @@ Testing that the needed files are really mapped in memory, and the
 erasing process actually works, involves slightly more complicated
 steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
+# Root access control
+
+* Check you can't login as root;
+* Boot Tails without setting a password and check you can't sudo nor get
+  PolicyKit administrative privileges;
+* Boot Tails with a password and check you can sudo and get PolicyKit
+  administrative privileges.
+* Check that the $TAILS_USER_PASSWORD variable, if still existing in the system
+  environment after the boot has finished, does not contain the clear text
+  password.
+
 # Virtualization support
 
 * `modinfo vboxguest` should work
@@ -202,9 +221,18 @@ steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
     (implying that the I2P network is reachable but UDP is blocked).
 * Check that you can reach some eepsites within Iceweasel, like
   <http://www.i2p2.i2p> and <http://forum.i2p>.
+* Check that you can connect to the I2P IRC server through Pidgin.
+
+# Git
+
+* clone a repository over dumb transport (`git://`)
+* clone a repository over SSH
 
 # Misc
 
+* Check that there are no weird applications listening to external
+  connections with `sudo netstat -ltupn` (everything should be
+  `127.0.0.1` (IPv4) or `::1` (IPv6)).
 * Check that links to the online website (`Mirror:`) at the bottom of
   bundled static web pages are working. Else, it probably means the
   wiki was not built with the needed patched ikiwiki version.
@@ -220,3 +248,7 @@ steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
   use the same keyboard layout as the X session.
 * Try to start with the `truecrypt` option on boot, see if it can be found in
   the *Applications* → *Accessories* menu and that it runs correctly.
+* Connecting over SSH to a server on the Internet should work (and
+  appear in Vidalia's connections list).
+* Connecting (by IP) over SSH to a server on the LAN should work.
+
