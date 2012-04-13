@@ -1,0 +1,40 @@
+Our filewall could use a more whitelist and principle of least
+privilege oriented approach. Not only may it block potential leaks and
+deanonymization attacks by compromised processes, but it will also
+force us to be really conscious about new loopback services and users
+that are added, which is good in itself.
+
+The general idea is:
+
+* We reject all loopback connections by default.
+* For each service on loopback we create a group whose membership mean
+  that access is granted to the service through a firewall rule:
+  - fw-tor-socks    => tcp 127.0.0.1:9050
+  - fw-tor-ctrl     => tcp 127.0.0.1:9051
+  - fw-tor-dns      => tcp 127.0.0.1:8853
+  - fw-dns          => tcp/udp 127.0.0.1:53
+  - fw-ttdnsd       => tcp/udp 127.0.0.2:53
+  - fw-proxy        => tcp 127.0.0.1:8118
+  - fw-i2p          => tcp 127.0.0.1:{4444,4445,6668,7657,7659,7660}
+  - fw-cups         => tcp 127.0.0.1:631
+  - fw-monkeysphere => tcp 127.0.0.1:XXX (MSVA_PORT=XXX in environment)
+  - others?
+* We add the following users to the following groups:
+  - amnesia: fw-tor-socks, fw-tor-ctrl, fw-dns, fw-proxy, fw-i2p,
+    fw-cups, fw-monkeysphere
+  - proxy (i.e. polipo): fw-tor-socks, fw-dns
+  - root (for APT): fw-dns, fw-proxy
+  - pdnsd: fw-ttdnsd, fw-tor-dns
+  - htp: fw-dns, fw-proxy
+  - nobody (see below): fw-tor-socks
+  - others?
+
+ttdnsd is hardcoded to chuid to nobody but since nobody might be used
+for other processes with other requirements (e.g. jake's other project
+which we may consider using at some point, tlsdate, which has the same
+hardcoded privelege drop) it'd be great if we could send a patch/request
+to upstream ttdnsd for adding a "--chuid <username>" option. I don't
+think any other process in Tails runs as the nobody user right now, so
+there's no hurry.
+
+[[!tag todo/code]]
