@@ -39,6 +39,8 @@ Let's call it "Unsafe web browser". When executed we:
 
 ### Implementation
 
+The following is implemented in feature/unsafe-browser.
+
 For convenience, not imagined security, we implement this in a
 chroot. Before starting the unsafe browser we create and aufs union
 "branch" of the filesystem root which we adapt to suite our needs:
@@ -48,22 +50,35 @@ chroot. Before starting the unsafe browser we create and aufs union
 0. We configure Iceweasel to not use any proxies.
 0. We set the Icewesel theme to one with "scary colors" (but not if
    the Windows camouflage is activated).
-0. We set some pref which will activate the visual cue in the "amnesia
-   branding" addon.
-0. We set the start page to "an appropriate start page which explains
-   all the issues".
 
 Then we just run a chroot:ed instance of Iceweasel, shown on the
 amnesia users `$DISPLAY`, running under a user which has been exempt of
-all restriction in our firewall and forward. When Iceweasel exits we
-tear down the chroot. We also restart Tor (and Vidalia) if Tor isn't
-working so it quickly can bootstrap if the user used the unsafe
-browser to login to a hotspot/captive portal.
+all restriction in our firewall and forward. The firewall exception
+should not allow loopback connection as access to Tor, Polipo, pdnsd and
+ttdnsd it may open some classes of new deanonymization attacks against
+Tails users.
+
+When Iceweasel exits we tear down the chroot. We also restart Tor (and
+Vidalia) if Tor isn't working so it quickly can bootstrap if the user
+used the unsafe browser to login to a hotspot/captive portal.
+
+### TODO
+
+* Set the start page to an appropriate start page that is locally
+  stored which explains all the issues.
+
+* We set some pref in the chroot which will activate a small visual
+  cue in the "amnesia branding" addon. This will be useful when
+  the windows camouflage is activated, since it disables other
 
 ### Future plans
 
 * When LXC becomes a viable, secure solution for creating isolated
   jails the above chroot approach will be easily adaptable to that.
+
+* Notify the user when wait_for_tor_consensus() fails during time
+  syncing, telling them that *maybe* they're behind a captive portal
+  and should use the Unsafe Browser to register/login.
 
 Complementary ideas
 ===================
