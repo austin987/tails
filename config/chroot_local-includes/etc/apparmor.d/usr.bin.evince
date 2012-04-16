@@ -1,0 +1,147 @@
+# vim:syntax=apparmor
+# Author: Kees Cook <kees@canonical.com>
+#         Jamie Strandboge <jamie@canonical.com>
+
+#include <tunables/global>
+
+/usr/bin/evince {
+  #include <abstractions/audio>
+  #include <abstractions/bash>
+  #include <abstractions/cups-client>
+  #include <abstractions/dbus-session>
+  #include <abstractions/evince>
+  #include <abstractions/ibus>
+  #include <abstractions/nameservice>
+  #include <abstractions/launchpad-integration>
+
+  #include <abstractions/ubuntu-browsers>
+  #include <abstractions/ubuntu-console-browsers>
+  #include <abstractions/ubuntu-email>
+  #include <abstractions/ubuntu-console-email>
+  #include <abstractions/ubuntu-media-players>
+
+  # Terminals for using console applications. These abstractions should ideally
+  # have 'ix' to restrict access to what only evince is allowed to do
+  #include <abstractions/ubuntu-gnome-terminal>
+
+  # By default, we won't support launching a terminal program in Xterm or
+  # KDE's konsole. It opens up too many unnecessary files for most users.
+  # People who need this functionality can uncomment the following:
+  ##include <abstractions/ubuntu-xterm>
+  ##include <abstractions/ubuntu-konsole>
+
+  /usr/bin/evince rmPx,
+  /usr/bin/evince-previewer Px,
+  /usr/bin/yelp Cx -> sanitized_helper,
+  /usr/bin/bug-buddy px,
+  /usr/bin/nautilus Cx -> sanitized_helper,
+
+  # For text attachments
+  /usr/bin/gedit ixr,
+
+  # For Send to
+  /usr/bin/nautilus-sendto Cx -> sanitized_helper,
+
+  # allow directory listings (ie 'r' on directories) so browsing via the file
+  # dialog works
+  / r,
+  /**/ r,
+
+  @{HOME}/ r,
+
+  # This is need for saving files in your home directory without an extension.
+  # Changing this to '@{HOME}/** r' makes it require an extension and more
+  # secure (but with 'rw', we still have abstractions/private-files-strict in
+  # effect).
+  @{HOME}/** rw,
+  @{HOME}/.local/share/gvfs-metadata/** l,
+
+  @{HOME}/.gnome2/evince/*       rwl,
+  @{HOME}/.gnome2/accels/        rw,
+  @{HOME}/.gnome2/accelsevince   rw,
+  @{HOME}/.gnome2/accels/evince  rw,
+
+  # from http://live.gnome.org/Evince/SupportedDocumentFormats. Allow
+  # read and write for all supported file formats
+  /**.[bB][mM][pP]     rw,
+  /**.[dD][jJ][vV][uU] rw,
+  /**.[dD][vV][iI]     rw,
+  /**.[gG][iI][fF]     rw,
+  /**.[jJ][pP][gG]     rw,
+  /**.[jJ][pP][eE][gG] rw,
+  /**.[oO][dD][pP]     rw,
+  /**.[fFpP][dD][fF]   rw,
+  /**.[pP][nN][mM]     rw,
+  /**.[pP][nN][gG]     rw,
+  /**.[pP][sS]         rw,
+  /**.[eE][pP][sS]     rw,
+  /**.[tT][iI][fF]     rw,
+  /**.[tT][iI][fF][fF] rw,
+  /**.[xX][pP][mM]     rw,
+  /**.[gG][zZ]         rw,
+  /**.[bB][zZ]2        rw,
+  /**.[cC][bB][rRzZ7]  rw,
+
+  # evince creates a temporary stream file like '.goutputstream-XXXXXX' in the
+  # directory a file is saved. This allows that behavior.
+  owner /**/.goutputstream-* w,
+}
+
+/usr/bin/evince-previewer {
+  #include <abstractions/audio>
+  #include <abstractions/bash>
+  #include <abstractions/cups-client>
+  #include <abstractions/dbus-session>
+  #include <abstractions/evince>
+  #include <abstractions/ibus>
+  #include <abstractions/nameservice>
+  #include <abstractions/launchpad-integration>
+
+  #include <abstractions/ubuntu-browsers>
+  #include <abstractions/ubuntu-console-browsers>
+  #include <abstractions/ubuntu-email>
+  #include <abstractions/ubuntu-console-email>
+  #include <abstractions/ubuntu-media-players>
+
+  # Terminals for using console applications. These abstractions should ideally
+  # have 'ix' to restrict access to what only evince is allowed to do
+  #include <abstractions/ubuntu-gnome-terminal>
+
+  # By default, we won't support launching a terminal program in Xterm or
+  # KDE's konsole. It opens up too many unnecessary files for most users.
+  # People who need this functionality can uncomment the following:
+  ##include <abstractions/ubuntu-xterm>
+
+  /usr/bin/evince-previewer mr,
+  /usr/bin/yelp Cx -> sanitized_helper,
+  /usr/bin/bug-buddy px,
+
+  # Lenient, but remember we still have abstractions/private-files-strict in
+  # effect).
+  @{HOME}/ r,
+  @{HOME}/** r,
+}
+
+/usr/bin/evince-thumbnailer {
+  #include <abstractions/evince>
+
+  # The thumbnailer doesn't need access to everything in the nameservice
+  # abstraction. Allow reading of /etc/passwd and /etc/group, but suppress
+  # logging denial of nsswitch.conf.
+  /etc/passwd r,
+  /etc/group r,
+  deny /etc/nsswitch.conf r,
+
+  # TCP/UDP network access for NFS
+  network inet  stream,
+  network inet6 stream,
+  network inet  dgram,
+  network inet6 dgram,
+
+  /usr/bin/evince-thumbnailer mr,
+
+  # Lenient, but remember we still have abstractions/private-files-strict in
+  # effect).
+  @{HOME}/ r,
+  @{HOME}/** rw,
+}
