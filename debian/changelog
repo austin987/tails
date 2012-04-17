@@ -1,3 +1,130 @@
+tails (0.11) unstable; urgency=low
+
+  * Major new features
+  - Do not grant the desktop user root credentials by default.
+  - A graphical boot menu (tails-greeter 0.6.3) allows choosing among
+    many languages, and setting an optional sudoer password.
+  - Support opt-in targeted persistence
+    · tails-persistence-setup 0.14-1
+    · live-boot 3.0~a25-1+tails1~5.gbp48d06c
+    · live-config 3.0~a35-1
+  - USB installer: liveusb-creator 3.11.6-1
+
+  * iceweasel
+  - Install iceweasel 10.0.3esr-3 (Extended Support Release).
+    Let's stop tracking a too fast moving target.
+    Debian Wheezy will ship ESR versions.
+  - Install needed dependencies from squeeze-backports.
+  - Search plugins:
+    · Remove bing.
+      bing appeared due to our upgrading iceweasel.
+      Removing it makes things consistent with the way they have been
+      until now, that is: let's keep only the general search engines
+      we've been asked to add, plus Google, and a few specialized ones.
+    · Replace Debian-provided DuckDuckGo search plugin with the "HTML SSL"
+      one, version 20110219. This is the non-JavaScript, SSL, POST flavour.
+    · Add ixquick.com.
+    · Install localized search engines in the correct place.
+      No need to copy them around at boot time anymore.
+    · Remove Scroogle. RIP.
+  - Enable TLS false start, like the TBB does since December.
+  - Adblock Plus: don't count and save filter hits, supress first run dialog.
+  - Install neither the GreaseMonkey add-on, nor any GreaseMonkey script.
+    YouTube's HTML5 opt-in program is over.
+    HTML5 video support is now autodetected and used.
+
+  * Vidalia
+  - Upgrade to 0.2.17-1+tails1: drop Do-not-warn-about-Tor-version.patch,
+    applied upstream.
+  - Set SkipVersionCheck=true.
+    Thanks to chiiph for implementing this upstream (needs Vidalia 0.2.16+).
+
+  * Internationalization
+  - Install all available iceweasel l10n packages.
+  - Remove syslinux language choosing menu.
+    tails-greeter allows choosing a non-English language.
+  - Add fonts for Hebrew, Thai, Khmer, Lao and Korean languages.
+  - Add bidi support.
+  - Setup text console at profile time.
+    Context: Tails runs with text console autologin on.
+    These consoles now wait, using a "Press enter to activate this console"
+    message, for the user. When they press enter in there, they should have chosen
+    their preferred keyboard layout in tails-greeter by now. Then, we run setupcon.
+    As a result, the resulting shell is properly localized, and setupcon
+    sets the correct keyboard layout, both according to the preferences expressed by
+    the user in tails-greeter.
+  - Don't use localepurge, don't remove any Scribus translations anymore,
+    don't localize environment at live-config time:
+    tails-greeter allows us to support many, many more languages.
+
+  * Hardware support
+  - Linux 3.2.15-1 (linux-image-3.2.0-2-amd64).
+  - Fix low sound level on MacBook5,2.
+  - Disable laptop-mode-tools automatic modules. This modules set often
+    needs some amount of hardware-specific tweaking to work properly.
+    This makes them rather not well suited for a Live system.
+
+  * Software
+  - Install GNOME keyring.
+    This is needed so that NetworkManager remembers the WEP/WPA secrets
+    for the time of a Tails session. Initialize GNOME keyring at user
+    creation time.
+  - Install usbutils to have the lsusb command.
+  - Install the Traverso multitrack audio recorder and editor.
+
+  * Miscellaneous
+  - GNOME Terminal: keep 8192 scrollback lines instead of the smallish
+    default.
+  - Replaced tails-wifi initscript with laptop-mode-tools matching feature.
+  - Disable gdomap service.
+  - Fetch klibc-utils and libklibc from sid.
+    The last initramfs-tools depends on these.
+  - Set root password to "root" if debug=root is passed on the
+    kernel cmdline. Allow setting root password on kernel cmdline via
+    rootpw=. Looks like we implemented this feature twice.
+  - Append a space on the kernel command line. This eases manually adding
+    more options.
+  - Rename sudoers.d snippets to match naming scheme.
+    Sudo credentials that shall be unconditionally granted to the Tails
+    default user are named zzz_*, to make sure they are applied.
+  - WhisperBack: also include /var/log/live-persist and
+    /var/lib/gdm3/tails.persistence.
+  - Add a wrapper to torify whois.
+  - Rework the VirtualBox guest modules building hook to support
+    multiple kernels.
+  - Consistently wait for nm-applet when waiting for user session to come up.
+    Waiting for gnome-panel or notification-daemon worked worse.
+  - Don't start the NetworkManager system service via init.
+    Some Tails NM hooks need the user to be logged in to run properly.
+    That's why tails-greeter starts NetworkManager at PostLogin time.
+  - Also lock /bin/echo into memory. For some reason, kexec-load needs it.
+  - Pidgin: don't use the OFTC hidden service anymore.
+    It proved to be quite unreliable, being sometimes down for days.
+  - Do not display storage volumes on Desktop, by disabling
+    /apps/nautilus/desktop/volumes_visible GConf entry. Enabling that
+    GConf setting avoids displaying the bind-mounted persistent
+    directories on the Desktop, and reduces user confusion. It also is
+    a first step towards a bigger UI change: GNOME3 does not manage the
+    Desktop anymore, so volume icons and other Desktop icons are meant to
+    disappear anyway. It implies we'll have to move all Desktop icons
+    elsewhere. Let's start this move now: this will smooth the UI change
+    Wheezy will carry for our users, by applying some of it progressively.
+
+  * Build system
+  - Don't build hybrid ISO images anymore. They boot less reliably on
+    a variety of hardware, and are made less useful by us shipping
+    a USB installer from now on.
+  - Append .conf to live-config configuration filenames:
+    live-config >3.0~a36-1 only takes into account files named *.conf
+    in there. Accordingly update scripts that source these files.
+  - Remove long-obsolete home-refresh script and its configuration.
+
+  * Virtualization support
+  - Support Spice and QXL: install the Spice agent from Debian sid,
+    install xserver-xorg-video-qxl from squeeze-backports.
+
+ -- Tails developers <amnesia@boum.org>  Tue, 17 Apr 2012 14:54:00 +0200
+
 tails (0.10.2) unstable; urgency=low
 
   * Iceweasel
