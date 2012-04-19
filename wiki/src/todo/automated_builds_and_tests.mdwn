@@ -14,53 +14,40 @@ ensure a few facts:
 - new build tools (`live-build`) and included software
   (`live-config`, `live-boot`) don't break anything
 - the quality of our releases is good enough
-- power users get to test early images built from feature branches
+- power users get to test early images built from feature branches,
+  or from `experimental`
 - we can ask bug reporters to test an image built from a bugfix
   branch, and see if it fixes their problem
-- every developer can comfortably test his/her code without owning
-  modern high-end hardware (8GB RAM is needed in order to build
-  a Tails image in tmpfs).
-
 
 What we have
 ============
 
 ## Automated builds
 
-A buildbot instance automatically builds the `devel`, `testing` and
-`stable` branches. No build result is currently kept as there is no
-way for developpers to start and test them remotely yet.
+A buildbot instance automatically builds the `experimental`, `devel`,
+`testing` and `stable` branches. No build result is currently
+published due to bandwidth constrains, to there is no way for
+developers or users to download the results yet.
 
 ## Setup
 
-Our buildbot's instance runs inside a KVM.
-
-The host system uses libvirt to manage the hosted virtual machines.
-
-We use a custom buildbot package as it is outdated in Debian. Work is
-done with others to have a better Debian packaging, reporting
-[[!debbug 587313]], working on the package and pushing to upstream
-some changes that would make buildot sit better in a Debian
-environment: init script/upstart, log rotation, etc.
+Our buildbot's instance runs inside a KVM guest managed by libvirt.
 
 ## Left to do
 
+0. Have the build failure notification sent to someone who wants to
+   work on this.
 1. Custom notifications when a build fails: the one currently sent
    lacks some useful information.
-2. Ask a mailing list to have buildbot sending it's build error
-   reports there.
-3. Make it so that the buildbot sends the build report to the
-   specified email address when someone hits the "Build" button on its
-   webpage, rather to bug everyone on the list. If too painful, just
-   give up :)
-2. Allow developers to have their personal branch(es?) autobuilt as
-   well => help developers test their code *before* pushing it to the
-   `devel` branch.
+2. Request a mailing-list where buildbot would send its build
+   failure reports.
+3. Move to a "build in a throw-away VM" approach, so that a given
+   build cannot taint future ones.
+4. Build *all* `feature/*` and `bugfix/*` branches.
+5. Reconsider using buildbot vs. Jenkins.
 
 What we need
 ============
-
-## Automated tests
 
 Having test automation for every build, implementing programatically the
 [[release tests|contribute/release_process/test]] actually done
@@ -68,59 +55,20 @@ by hands on every release, and maybe more.
 
 Buildbot should also be able to drive the automated test phase. One way
 would be to have the slave talking to the libvirt daemon running on the
-host system, asking to start the last build iso, then run tests on it.
-This has some requirements to work though :
+host system, asking to start the last built iso, then run tests on it.
+This has some requirements to work though:
 
 * Tests have to be in the Tails sources, so that the slave is able to
   run them. The tools used for testing may be installed inside the
   Live system being tested at runtime.
 * There might be some cases where the tests have to be started
   from inside the tested Tails system. In this case, the easiest way
-  might be to have this tests included in the tails release. That might
+  might be to have this tests included in the Tails release. That might
   be an interesting idea for other moments, like for bug reporting or to
   provide users a way to test a functionnality themselves. But then,
   ways have to be defined for the slave to start the tests inside the
   remote VM and get their return codes (maybe sikuli might be of some
   help here?) so that it can reports which one failed.
-
-
-## Manual tests
-
-One of the feature we want is the ability for developpers to have an
-easy process to start the last build done from their commit so that they
-can test their changes.
-
-The machine used to run the buildbot instance doesn't have a lot of
-bandwidth; some Tails developers also have poor connection to the
-Internet. The most convenient way to go would therefore be to start
-the built ISO in a KVM instance and have the developpers connect via
-VNC to this VM, rather than requiring them to download the built ISO
-image to test it on their own machine.
-
-A tricky feature is that the developper might need to connect to the KVM
-at early boot stage, e.g if they need to test some changes in the boot
-options.
-
-Libvirt supports [remote connections](http://libvirt.org/remote.html),
-using TLS or ssh transport. SASL, SSL certificates or SSH can be used
-for authentication depending on the choosen transport.
-
-For SSH to be supported, users have to be able to login as a
-privileged user (more or less equivalent to `root`) on the machine
-running libvirtd, which might be problematic. TLS transport and SSL
-certificates might be the way to connect, but that would require some
-tests. The libvirt read-only mode shall be investigated.
-
-`kvm(1)` and `qemu-kvm(1)` support a `reverse` option to their VNC
-display, which tells them to what client IP:port the VNC server will
-have to connect to. With this option, a developper could connect to
-libvirtd, tell it to start X iso image and send the VNC display to the
-client he/she started on his/her local machine. Cons of this method is
-that the developper has to have a public IP address or setup port
-forwarding if behind a NAT, so that the remote VNC server can connect to
-his/her client. A VPN connection might be helpful to circumvent this NAT
-problem.
-
 
 Resources
 =========
@@ -140,7 +88,7 @@ play with buildbot and understand its logic :
   which is the one driving their [builbot instance](http://build.chromium.org/)
 * [Buildbot's documentation](http://buildbot.net/buildbot/docs/latest/)
 
-## Testing tools
+## Testing tools and examples
 
 - <http://live.debian.net/gitweb/?p=live-autobuild.git> is currently
   used to build "official" daily Debian Live images
