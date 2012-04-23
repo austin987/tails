@@ -49,6 +49,16 @@ Our buildbot's instance runs inside a KVM guest managed by libvirt.
 What we need
 ============
 
+Builds
+------
+
+[Vagrant](http://www.vagrantup.com/) is labeled as a tool to "create and configure lightweight, reproducible, and portable development environments". Providing potentiel contributors with a ready-made build environment would be a good thing.
+
+This ready-made build environment can also be used to automate builds (point 3 of the above todo list).
+
+Tests
+-----
+
 Having test automation for every build, implementing programatically the
 [[release tests|contribute/release_process/test]] actually done
 by hands on every release, and maybe more.
@@ -69,6 +79,31 @@ This has some requirements to work though:
   ways have to be defined for the slave to start the tests inside the
   remote VM and get their return codes (maybe sikuli might be of some
   help here?) so that it can reports which one failed.
+
+In order to properly test features like USB installer, support the
+virtualization environment must support USB 2.0. That pretty much
+limit the choice to recent QEMU or KVM versions.
+
+Infrastructure
+--------------
+
+Ideally, every automatically built ISO should be scrutinized by automated
+tests. Putting both process on the same physical machine (while using
+virtualization to separate concerns) will reduce the hosting and bandwidth cost.
+Fresh image can be tested without having to be transfered.
+
+In order to be able to build Tails in memory (which greatly speeds up builds)
+and to properly test HIGHMEM memory wipes, the test server should have at
+least 32 GB. Using Vagrant (hence VirtualBox) or libvirt/KVM inside a KVM
+virtual machine is supported by the "nested KVM" feature available since
+Linux 3.1.
+
+We could set a threshold of tests that have to be successful before publishing
+one daily build image. This would prevent too-broken images to spread out and
+potentially harm users.
+
+The setup of the automated build and test server should be moved or continued
+using open Puppet modules.
 
 Resources
 =========
