@@ -194,8 +194,15 @@ sub build_action_menu {
         $mdecryptver->signal_connect('activate' => sub { operate_on_clipboard(\&decrypt_verify, ['message', 'signed']); });
         $action_menu->append($mdecryptver);
     }
+    my $mmanage = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('_Manage keys')));
+    $mmanage->signal_connect('activate' => sub { manage_keys(); });
+    $action_menu->append($mmanage);
 
     return $action_menu;
+}
+
+sub manage_keys {
+    system("seahorse &");
 }
 
 sub all_text_types {
