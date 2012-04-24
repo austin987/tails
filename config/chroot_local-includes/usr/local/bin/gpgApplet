@@ -280,31 +280,37 @@ sub set_clipboards_text {
 sub get_status {
     my $code = shift;
     my $status;
+    my $trusted;
     # Below taken from doc/DETAILS in GnuPG's sources
     switch ($code) {
-        case "o" { $status = $encoding->decode(gettext("Unknown Trust")); }
-        case "-" { $status = $encoding->decode(gettext("Unknown Trust")); }
-        case "q" { $status = $encoding->decode(gettext("Unknown Trust")); }
-        case "m" { $status = $encoding->decode(gettext("Marginal Trust")); }
-        case "f" { $status = $encoding->decode(gettext("Full Trust")); }
-        case "u" { $status = $encoding->decode(gettext("Ultimate Trust")); }
+        case "o" { $trusted = FALSE;
+                   $status = $encoding->decode(gettext("Unknown Trust")); }
+        case "-" { $trusted = FALSE;
+                    $status = $encoding->decode(gettext("Unknown Trust")); }
+        case "q" { $trusted = FALSE;
+                    $status = $encoding->decode(gettext("Unknown Trust")); }
+        case "m" { $trusted = FALSE;
+                    $status = $encoding->decode(gettext("Marginal Trust")); }
+        case "f" { $trusted = TRUE;
+                    $status = $encoding->decode(gettext("Full Trust")); }
+        case "u" { $trusted = TRUE;
+                    $status = $encoding->decode(gettext("Ultimate Trust")); }
         else     { return; }
     }
-    return $status;
+    return ($status, $trusted);
 }
 
 sub get_private_key_status {
     my $key = shift;
 
     my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
-    my $pubkey = ($gnupg->get_public_keys_light($fingerprint))[0]; # ignore collisions
+    my $pubkey = ($gnupg->get_public_keys($fingerprint))[0]; # ignore collisions
 
     # a valid key may lack signing capabilities
     return unless $pubkey->usage_flags =~ m/S/;
 
     my $validity = $pubkey->user_ids->[0]->validity;
-    my $status = get_status($validity);
-    return $status;
+    return get_status($validity);
 }
 
 sub get_public_key_status {
@@ -314,15 +320,14 @@ sub get_public_key_status {
     return unless $key->usage_flags =~ m/E/;
 
     my $validity = $key->user_ids->[0]->validity;
-    my $status = get_status($validity);
-    return $status;
+    return get_status($validity);
 }
 
 sub create_key_row {
     my $key = shift;
     my $secret = shift;
 
-    my $status = $secret ?
+    my ($status, $trusted) = $secret ?
         get_private_key_status($key)
       : get_public_key_status($key);
     # no status implies expired, revoked, etc. keys, which we don't want to list
@@ -335,9 +340,10 @@ sub create_key_row {
     my $userids = join("\n", map { "- " . $encoding->decode($_->as_string) }
                                  $key->user_ids);
     my $keyid   = $encoding->decode($key->short_hex_id);
+
     my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
     # Gtk2::SimpleList encodes these strings itself.
-    return [$name, $keyid, $status, $fingerprint, $userids];
+    return [$name, $keyid, $status, $fingerprint, $userids, $trusted];
 }
 
 sub choose_keys {
@@ -350,16 +356,18 @@ sub choose_keys {
     use constant C_STATUS        => 2;
     use constant C_FINGERPRINT   => 3;
     use constant C_USERIDS       => 4;
+    use constant C_TRUSTED       => 5;
 
     use constant VISIBLE_COLS => (C_NAME, C_KEYID, C_STATUS);
-    use constant HIDDEN_COLS => (C_FINGERPRINT, C_USERIDS);
+    use constant HIDDEN_COLS => (C_FINGERPRINT, C_USERIDS, C_TRUSTED);
 
     my $list = Gtk2::SimpleList->new (
         $encoding->decode(gettext("Name"))    => 'text',
         $encoding->decode(gettext("Key ID"))  => 'text',
         $encoding->decode(gettext("Status"))  => 'text',
         "fingerprint"                         => 'text',
-        "userids"                             => 'text'
+        "userids"                             => 'text',
+        "trusted"                             => 'bool'
         );
     foreach my $i (VISIBLE_COLS) {
         my $col = $list->get_column($i);
@@ -414,21 +422,35 @@ sub choose_keys {
     $list->show;
     $list->select(0);
     $list->grab_focus;
-    my $ans = $dialog->run;
-    $dialog->destroy;
-    if ('ok' eq $ans) {
+    while ($dialog->run eq 'ok') {
         if (@selection) {
-            return map { $list->{data}[$_][C_FINGERPRINT] } @selection;
+            my @chosen = map { $list->{data}[$_] } @selection;
+            my @unauth = grep { ! $_->[C_TRUSTED] } @chosen;
+            if (@unauth) {
+                my $title = gettext("Do you trust these keys?");
+                my $msg = gettext(
+                    "The following selected keys are not fully trusted"
+                                  ) . ":\n";
+                foreach my $key (@unauth) {
+                    $msg .= "- $key->[C_NAME] ($key->[C_KEYID])\n";
+                }
+                $msg .= gettext(
+                    "Do you trust these keys enough to use them anyway?"
+                                );
+                next unless (display_question($encoding->decode($title),
+                                              $encoding->decode($msg)));
+            }
+            $dialog->destroy;
+            return map { $_->[C_FINGERPRINT] } @chosen;
         } else {
             display_error($encoding->decode(gettext("No keys selected")),
                           $encoding->decode(gettext(
-                              "You must select at least one key."
-                                           )));
-            return choose_keys($title, $secret, @keys);
+                                        "You must select at least one key."
+                                            )));
         }
-    } else {
-        return ();
     }
+    $dialog->destroy;
+    return ();
 }
 
 sub set_recipients {
@@ -622,6 +644,19 @@ sub display_error {
     $dialog->destroy;
 
     return 1;
+}
+
+sub display_question {
+    my $title = shift;
+    my $msg   = shift;
+
+    my $dialog = Gtk2::MessageDialog->new(
+        $main_window, 'destroy-with-parent', 'question', 'yes-no', $title);
+    $dialog->format_secondary_text($msg);
+    $dialog->set_position('center');
+    my $answer = $dialog->run;
+    $dialog->destroy;
+    return $answer eq 'yes' ? TRUE : FALSE;
 }
 
 # FIXME: let window grow depending on output text size
