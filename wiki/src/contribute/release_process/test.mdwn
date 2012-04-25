@@ -217,8 +217,33 @@ steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
 * clone a repository over dumb transport (`git://`)
 * clone a repository over SSH
 
+# USB Installer/Upgrader
+
+* Test "Clone & Install":
+  - from DVD.
+  - from USB.
+* Test "Clone & Upgrade" (onto a USB install containing an older
+  Tails):
+  - from DVD.
+  - from USB.
+  - make sure to test that TailsData partitions survive upgrades.
+* Test "Upgrade from ISO".
+
+# Persistence
+
+* Activate persistence on a Tails USB install with all presets
+  on. Verify via `mount` that each preset has a mount that seem
+  correct (e.g. "Pidgin preset => `/home/amnesia/.purple` has
+  something mounted on it").
+* Try read-only mode. Make sure that persistent files are writeable,
+  but that no changes survive reboot.
+* Test adding a few custom directories.
+* Turn off some persistence presets, reboot, and make sure they are
+  not activated.
+
 # Misc
 
+* Set a sudo password in Tails Greeter and verify that it works.
 * Check that there are no weird applications listening to external
   connections with `sudo netstat -ltupn` (everything should be
   `127.0.0.1` (IPv4) or `::1` (IPv6)).
@@ -231,7 +256,7 @@ steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
   some arbitrary time; Tor and Vidalia must be autostarted and end up
   in working state.
 * Doing an apt-get update and installing random packages.
-* Boot on bare-metal on USB and CD.
+* Boot on bare-metal on USB and DVD.
 * Boot and check basic functionality is working for every supported
   language. The virtual keyboard must work and be auto-configured to
   use the same keyboard layout as the X session.
