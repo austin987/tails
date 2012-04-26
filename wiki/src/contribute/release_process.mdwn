@@ -21,6 +21,18 @@ upgrade i2p
 
 See [[todo/upgrade i2p]].
 
+upgrade bundled binary Debian packages
+--------------------------------------
+
+Make sure the bundles binary Debian packages are up-to-date,
+particularly wrt. included localization files:
+
+* liveusb-creator
+* tails-greeter
+* tails-persistence-setup
+* whisperback (see `whisperback_completed` branch
+  in `git://git.torproject.org/translation.git`)
+
 Changelog
 ---------
 
@@ -81,6 +93,9 @@ nothing bad happened.
 SquashFS files order
 --------------------
 
+**Beware**: skip this step, or double check (as in, benchmark) the
+results until [[bugs/weird_squashfs.sort_entries]] is fixed.
+
 Build an ISO image, profile it **on bare metal** and update
 `squashfs.order` in the Git repository. Then rebuild images.
 
@@ -123,7 +138,7 @@ in the same directory as the image and with a `.pgp` extension; e.g.
 Fourth, create a `.torrent` file for every directory to be published:
 
 	mktorrent -a \
-	  'https://www.les-renseignements-genereux.org/tracker/announce,http://z6gw6skubmo2pj43.onion:8080/announce' \
+	  'https://www.les-renseignements-genereux.org/tracker/announce' \
 	  <DIRECTORY>
 
 Fifth, check the generated `.torrent` files metainfo, e.g.
