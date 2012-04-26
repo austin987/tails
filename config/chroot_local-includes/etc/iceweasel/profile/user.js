@@ -1,6 +1,7 @@
 user_pref("capability.policy.maonoscript.javascript.enabled", "allAccess");
 user_pref("capability.policy.maonoscript.sites", " https://auk.riseup.net https://mail.riseup.net https://swift.riseup.net https://tern.riseup.net https://webmail.no-log.org addons.mozilla.org about: about:addons about:blank about:certerror about:config about:crashes about:credits about:home about:neterror about:plugins about:privatebrowsing about:sessionrestore chrome: https://webmail.boum.org resource:");
 user_pref("extensions.adblockplus.currentVersion", "2.0.3");
+user_pref("extensions.adblockplus.savestats", false);
 user_pref("extensions.adblockplus.showinaddonbar", false);
 user_pref("extensions.adblockplus.showintoolbar", false);
 user_pref("extensions.adblockplus.subscriptions_autoupdate", false);
@@ -45,8 +46,6 @@ user_pref("extensions.torbutton.tor_memory_jar", true);
 user_pref("extensions.torbutton.tz_string", "UTC+00:00");
 user_pref("extensions.torbutton.use_privoxy", false);
 user_pref("extensions.torbutton.warned_ff3", true);
-user_pref("greasemonkey.enableUpdateChecking", false);
-user_pref("greasemonkey.version", "9999.99");
 user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
 user_pref("noscript.ABE.wanIpAsLocal", false);

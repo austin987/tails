@@ -16,7 +16,7 @@ if pgrep -u "${LIVE_USERNAME}" firefox-bin 1>/dev/null 2>&1; then
 fi
 
 # Get LIVE_USERNAME
-. /etc/live/config.d/username
+. /etc/live/config.d/username.conf
 export DISPLAY=':0.0'
 export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
 exec /bin/su -c iceweasel "${LIVE_USERNAME}" &
