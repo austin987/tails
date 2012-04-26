@@ -51,6 +51,16 @@ textdomain("gpgApplet");
 
 =cut
 
+use constant C_SELECT      => 0;
+use constant C_NAME        => 1;
+use constant C_KEYID       => 2;
+use constant C_STATUS      => 3;
+use constant C_FINGERPRINT => 4;
+use constant C_USERIDS     => 5;
+use constant C_TRUSTED     => 6;
+use constant VISIBLE_COLS  => (C_NAME, C_KEYID, C_STATUS);
+use constant HIDDEN_COLS   => (C_FINGERPRINT, C_USERIDS, C_TRUSTED);
+
 my $gnupg         = gpgApplet::GnuPG::Interface->new();
 my $codeset       = langinfo(CODESET());
 my $encoding      = find_encoding($codeset);
@@ -179,14 +189,8 @@ sub build_action_menu {
         my $msymencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('Encrypt Clipboard with _Passphrase')));
         $msymencrypt->signal_connect('activate' => sub { operate_on_clipboard(\&symmetric_encrypt, ['text']); });
         $action_menu->append($msymencrypt);
-        my $mencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('_Encrypt Clipboard with Public Key')));
-        $mencrypt->signal_connect('activate' => sub { operate_on_clipboard(\&encrypt, ['text']); });
-        $action_menu->append($mencrypt);
-        my $msign    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('_Sign Clipboard with Private Key')));
-        $msign->signal_connect('activate' => sub { operate_on_clipboard(\&sign, ['text']); });
-        $action_menu->append($msign);
-        my $msignencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('Sign _and Encrypt Clipboard with Public Key')));
-        $msignencrypt->signal_connect('activate' => sub { operate_on_clipboard(\&sign_and_encrypt, ['text']); });
+        my $msignencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('Sign/Encrypt Clipboard with Public _Keys')));
+        $msignencrypt->signal_connect('activate' => sub { operate_on_clipboard(\&public_crypto, ['text']); });
         $action_menu->append($msignencrypt);
     }
     if ($text_type eq 'message' or $text_type eq 'signed') {
@@ -325,17 +329,13 @@ sub get_public_key_status {
 
 sub create_key_row {
     my $key = shift;
-    my $secret = shift;
 
-    my ($status, $trusted) = $secret ?
+    my ($status, $trusted) = (ref($key) eq "GnuPG::SecretKey") ?
         get_private_key_status($key)
       : get_public_key_status($key);
     # no status implies expired, revoked, etc. keys, which we don't want to list
     return if !defined $status;
 
-    # If we used Gtk2::TreeView instead of Gtk2::SimpleList we could
-    # show all user ids directly in the list, but we make it simple
-    # for us and instead show them in the tooltip.
     my $name    = $encoding->decode($key->user_ids->[0]->as_string);
     my $userids = join("\n", map { "- " . $encoding->decode($_->as_string) }
                                  $key->user_ids);
@@ -343,31 +343,20 @@ sub create_key_row {
 
     my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
     # Gtk2::SimpleList encodes these strings itself.
-    return [$name, $keyid, $status, $fingerprint, $userids, $trusted];
+    return [FALSE, $name, $keyid, $status, $fingerprint, $userids, $trusted];
 }
 
-sub choose_keys {
-    my $title  = shift;
-    my $secret = shift;
-    my @keys   = @_;
-
-    use constant C_NAME          => 0;
-    use constant C_KEYID         => 1;
-    use constant C_STATUS        => 2;
-    use constant C_FINGERPRINT   => 3;
-    use constant C_USERIDS       => 4;
-    use constant C_TRUSTED       => 5;
-
-    use constant VISIBLE_COLS => (C_NAME, C_KEYID, C_STATUS);
-    use constant HIDDEN_COLS => (C_FINGERPRINT, C_USERIDS, C_TRUSTED);
+sub make_pub_key_list {
+    my $pub_keys_ref = shift;
 
     my $list = Gtk2::SimpleList->new (
-        $encoding->decode(gettext("Name"))    => 'text',
-        $encoding->decode(gettext("Key ID"))  => 'text',
-        $encoding->decode(gettext("Status"))  => 'text',
-        "fingerprint"                         => 'text',
-        "userids"                             => 'text',
-        "trusted"                             => 'bool'
+        ""                                    => 'bool', # C_SELECT
+        $encoding->decode(gettext("Name"))    => 'text', # C_NAME
+        $encoding->decode(gettext("Key ID"))  => 'text', # C_KEYID
+        $encoding->decode(gettext("Status"))  => 'text', # C_STATUS
+        ""                                    => 'text', # C_FINGERPRINT
+        ""                                    => 'text', # C_USERIDS
+        ""                                    => 'bool'  # C_TRUSTED
         );
     foreach my $i (VISIBLE_COLS) {
         my $col = $list->get_column($i);
@@ -378,8 +367,13 @@ sub choose_keys {
     foreach my $i (HIDDEN_COLS) {
         $list->get_column($i)->set_visible(FALSE);
     }
-    $list->get_selection->set_mode('multiple') unless $secret;
+    $list->set_search_column(C_NAME);
+    $list->get_selection->set_mode('single');
     $list->get_selection->unselect_all;
+
+    # If we used Gtk2::TreeView instead of Gtk2::SimpleList we could
+    # show all user ids directly in the list, but we make it simple
+    # for us and instead show them in the tooltip.
     $list->set_has_tooltip(TRUE);
     $list->signal_connect('query-tooltip' => sub {
         my ($wx, $wy, $tooltip) = ($_[1], $_[2], $_[4]);
@@ -389,43 +383,106 @@ sub choose_keys {
         my $row = ($path->get_indices)[0];
         my $fingerprint =
             join(" ", (${$list->{data}}[$row][C_FINGERPRINT] =~ m/..../g));
-        my $text = gettext("User ID(s)") . ":\n" .
+        my $text = $encoding->decode(gettext("User ID(s)")) . ":\n" .
                    "${$list->{data}}[$row][C_USERIDS]\n" .
-                   gettext("Fingerprint") . ":\n" .
+                   $encoding->decode(gettext("Fingerprint")) . ":\n" .
                    "$fingerprint";
         $tooltip->set_text("$text");
         return TRUE;
     });
 
+    $list->signal_connect('row-activated' => sub {
+        # Since we use 'single' selection mode, there can only be one
+        my $index = ($list->get_selected_indices)[0];
+        my $old_val = $list->{data}->[$index]->[C_SELECT];
+        $list->{data}->[$index]->[C_SELECT] = !$old_val;
+    });
+
     push @{$list->{data}},
-        grep { $_ } map { create_key_row($_, $secret) } @keys;
+        grep { $_ } map { create_key_row($_) } @{$pub_keys_ref};
 
-    my $scroll = Gtk2::ScrolledWindow->new;
-    $scroll->set_policy('automatic', 'automatic');
-    $scroll->add($list);
+    $list->select(0);
 
-    my $dialog = Gtk2::Dialog->new($title, $main_window, 'destroy-with-parent',
+    return $list;
+}
+
+sub make_priv_key_combo {
+    my $priv_keys_ref = shift;
+
+    my $list_store = Gtk2::ListStore->new(qw/Glib::String Glib::String/);
+    my $iter = $list_store->append;
+    $list_store->set ($iter,
+                      0, $encoding->decode(gettext("None (Don't sign)")),
+                      1, "");
+    foreach my $key (@{$priv_keys_ref}) {
+        my $row = create_key_row($key);
+        $iter = $list_store->append;
+        $list_store->set ($iter,
+                          0, "$row->[C_NAME] ($row->[C_KEYID])",
+                          1, $row->[C_FINGERPRINT]);
+    }
+
+    my $combo = Gtk2::ComboBox->new_with_model($list_store);
+    my $renderer = Gtk2::CellRendererText->new();
+    $combo->pack_start($renderer, TRUE);
+    $combo->add_attribute($renderer, 'text', 0);
+    $combo->set_active(0);
+
+    return $combo;
+}
+
+sub choose_keys {
+    my $priv_keys_ref = shift;
+    my $pub_keys_ref = shift;
+
+    my $pub_key_label = Gtk2::Label->new(
+        $encoding->decode(gettext("Select recipient(s):")));
+
+    my $pub_key_list = make_pub_key_list($pub_keys_ref);
+    my $pub_key_list_scroll = Gtk2::ScrolledWindow->new;
+    $pub_key_list_scroll->set_policy('automatic', 'always');
+    $pub_key_list_scroll->add($pub_key_list);
+
+    my $priv_key_label = Gtk2::Label->new(
+        $encoding->decode(gettext("Sign message as:")));
+
+    my $priv_key_combo = make_priv_key_combo($priv_keys_ref);
+
+    my $dialog = Gtk2::Dialog->new($encoding->decode(gettext("Choose key(s)")),
+                                   $main_window, 'destroy-with-parent',
                                    'gtk-cancel' => 'cancel', 'gtk-ok' => 'ok' );
     $dialog->set_default_size(650,500);
     $dialog->set_default_response('ok');
-    $dialog->vbox->add($scroll);
-    my @selection;
-    $dialog->signal_connect(response => sub {@selection = $list->get_selected_indices;});
-    $list->signal_connect('key-press-event' => sub {
+    my $vbox = $dialog->get_content_area;
+    $vbox->pack_start($pub_key_label, FALSE, FALSE, 5);
+    $vbox->pack_start($pub_key_list_scroll, TRUE, TRUE, 0);
+    my $hbox = Gtk2::HBox->new;
+    $hbox->pack_start($priv_key_label, FALSE, FALSE, 0);
+    $hbox->pack_start($priv_key_combo, TRUE, TRUE, 0);
+    $vbox->pack_start($hbox, FALSE, FALSE, 5);
+
+    $pub_key_list->grab_focus;
+    $dialog->show_all;
+
+    $dialog->signal_connect('key-press-event' => sub {
         my $event = $_[1];
         return unless $event->keyval == $Gtk2::Gdk::Keysyms{Return};
         $dialog->response('ok');
         return 1;
     });
-    $list->signal_connect('row-activated' => sub { $dialog->response('ok'); });
-    $scroll->show;
-    $list->show;
-    $list->select(0);
-    $list->grab_focus;
+
     while ($dialog->run eq 'ok') {
-        if (@selection) {
-            my @chosen = map { $list->{data}[$_] } @selection;
-            my @unauth = grep { ! $_->[C_TRUSTED] } @chosen;
+        my @recipients;
+        my $signer;
+
+        # Get signing key, if any
+        my $priv_key_combo_model = $priv_key_combo->get_model;
+        $signer = $priv_key_combo_model->get($priv_key_combo->get_active_iter);
+
+        # Get public keys, if any
+        my @list_selection = grep { $_->[C_SELECT] } @{$pub_key_list->{data}};
+        if (@list_selection) {
+            my @unauth = grep { ! $_->[C_TRUSTED] } @list_selection;
             if (@unauth) {
                 my $title = gettext("Do you trust these keys?");
                 my $msg = gettext(
@@ -440,88 +497,63 @@ sub choose_keys {
                 next unless (display_question($encoding->decode($title),
                                               $encoding->decode($msg)));
             }
-            $dialog->destroy;
-            return map { $_->[C_FINGERPRINT] } @chosen;
-        } else {
+            @recipients = map { $_->[C_FINGERPRINT] } @list_selection;
+        }
+
+        if (!@recipients && !$signer) {
             display_error($encoding->decode(gettext("No keys selected")),
                           $encoding->decode(gettext(
-                                        "You must select at least one key."
+                              "You must select a private key to sign the " .
+                              "message, or some public keys to encrypt the " .
+                              "message, or both."
                                             )));
+            next;
         }
+
+        $dialog->destroy;
+        return ($signer, @recipients);
     }
     $dialog->destroy;
     return ();
 }
 
-sub set_recipients {
-    my @keys = $gnupg->get_public_keys_light();
-    if (@keys == 0) {
-        display_error($encoding->decode(gettext("No public keys available")),
+sub public_crypto {
+    my $args    = shift;
+    my $handles = $args->{handles};
+
+    my @priv_keys = $gnupg->get_secret_keys_light();
+    my @pub_keys = $gnupg->get_public_keys_light();
+
+    if (@priv_keys == 0 && @pub_keys == 0) {
+        display_error($encoding->decode(gettext("No keys available")),
                       $encoding->decode(gettext(
-                          "You need public keys to be able to encrypt messages."
+                          "You need a private key to sign messages or a " .
+                          "public key to encrypt messages."
                                        )));
         return 0;
     }
 
-    my @recipients = choose_keys($encoding->decode(gettext(
-                                     "Choose recipient keys"
-                                                  )), FALSE, @keys);
+    my ($signer, @recipients) = choose_keys(\@priv_keys, \@pub_keys);
 
-    return 0 unless @recipients;
-
-    $gnupg->options->clear_recipients();
-    $gnupg->options->push_recipients(@recipients);
-    return 1;
-}
-
-sub set_signer {
-    my @keys = $gnupg->get_secret_keys_light();
-    my @signer;
-
-    if (@keys == 0) {
-        display_error($encoding->decode(gettext("No private key available")),
-                      $encoding->decode(gettext(
-                          "You need a private key to be able to sign messages."
-                                       )));
-        return 0;
-    } elsif (@keys == 1) {
-        @signer = ($keys[0]->fingerprint->as_hex_string());
-    }
-    else {
-        @signer = choose_keys($encoding->decode(gettext("Choose signing key")),
-                              TRUE, @keys);
-        return 0 unless @signer;
+    if ($signer && !@recipients) {
+        $gnupg->options->meta_signing_key_id($signer);
+        return $gnupg->clearsign(handles => $handles);
     }
 
-    $gnupg->options->meta_signing_key_id(@signer);
-    return 1;
-}
+    if (@recipients && !$signer) {
+        $gnupg->options->clear_recipients();
+        $gnupg->options->push_recipients(@recipients);
+        return $gnupg->encrypt(handles => $handles);
+    }
 
-sub encrypt {
-    my $args    = shift;
-    my $handles = $args->{handles};
+    if ($signer && @recipients) {
+        $gnupg->options->meta_signing_key_id($signer);
+        $gnupg->options->clear_recipients();
+        $gnupg->options->push_recipients(@recipients);
+        return $gnupg->sign_and_encrypt(handles => $handles);
+    }
 
-    return 0 unless set_recipients();
-
-    return $gnupg->encrypt(handles => $handles);
-}
-
-sub sign {
-    my $args    = shift;
-    my $handles = $args->{handles};
-
-    return 0 unless set_signer();
-
-    return $gnupg->clearsign(handles => $handles);
-}
-
-sub sign_and_encrypt {
-    my $args    = shift;
-    my $handles = $args->{handles};
-
-    return 0 unless (set_signer() && set_recipients());
-
-    return $gnupg->sign_and_encrypt(handles => $handles);
+    return 0;
 }
 
 sub symmetric_encrypt {
