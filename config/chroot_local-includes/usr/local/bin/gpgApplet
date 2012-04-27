@@ -68,7 +68,7 @@ my $main_window   = Gtk2::Window->new();
 my $icon_factory  = Gtk2::IconFactory->new();
 # Set always_trust since GnuPG otherwise will fail if the key's
 # trust hasn't been set.
-my %gnupg_options = (armor => 1, always_trust => 1, meta_interactive => 0);
+my %gnupg_options = (armor => 1, always_trust => 0, meta_interactive => 0);
 
 my $pgp_encrypted_msg = {
     type   => 'message',
@@ -474,6 +474,7 @@ sub choose_keys {
     while ($dialog->run eq 'ok') {
         my @recipients;
         my $signer;
+        my $always_trust = 0;
 
         # Get signing key, if any
         my $priv_key_combo_model = $priv_key_combo->get_model;
@@ -496,6 +497,7 @@ sub choose_keys {
                                 );
                 next unless (display_question($encoding->decode($title),
                                               $encoding->decode($msg)));
+                $always_trust = 1;
             }
             @recipients = map { $_->[C_FINGERPRINT] } @list_selection;
         }
@@ -511,7 +513,11 @@ sub choose_keys {
         }
 
         $dialog->destroy;
-        return ($signer, @recipients);
+        return {
+            always_trust => $always_trust,
+            signer => $signer,
+            recipients => \@recipients,
+        };
     }
     $dialog->destroy;
     return ();
@@ -533,7 +539,12 @@ sub public_crypto {
         return 0;
     }
 
-    my ($signer, @recipients) = choose_keys(\@priv_keys, \@pub_keys);
+    my $chosen = choose_keys(\@priv_keys, \@pub_keys);
+    my $signer = $chosen->{signer};
+    my @recipients = @{$chosen->{recipients}};
+    my $always_trust = $chosen->{always_trust};
+
+    $gnupg->options->always_trust($always_trust);
 
     if ($signer && !@recipients) {
         $gnupg->options->meta_signing_key_id($signer);
@@ -552,6 +563,8 @@ sub public_crypto {
         $gnupg->options->push_recipients(@recipients);
         return $gnupg->sign_and_encrypt(handles => $handles);
     }
+
+    $gnupg->options->always_trust(0);
 
     return 0;
 }
