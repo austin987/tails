@@ -1,0 +1,14 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant::Config.run do |config|
+  config.vm.box = 'tails'
+
+  # The url from where the 'config.vm.box' box will be fetched if it
+  # doesn't already exist on the user's system.
+  # config.vm.box_url = "http://domain.com/path/to/above.box"
+
+  config.vm.provision :shell, :path => 'provision/setup-tails-builder'
+
+  config.vm.share_folder 'amnesia', '/amnesia.git', '../../../../.git'
+end

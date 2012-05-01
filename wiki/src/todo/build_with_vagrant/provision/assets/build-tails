@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+REV="${1:-$(git --git-dir=/amnesia.git name-rev --name-only HEAD)}"
+COMMIT="$(git --git-dir=/amnesia.git rev-parse --verify "$REV")"
+
+cd /home/vagrant
+
+test -d amnesia || git clone /amnesia.git amnesia
+
+cd amnesia
+
+git fetch origin
+sudo git checkout --force "$REV"
+sudo git reset --hard "$COMMIT"
+sudo lb clean || true
+sudo lb config
+sudo lb build
