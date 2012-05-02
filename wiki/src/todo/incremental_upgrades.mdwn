@@ -14,12 +14,10 @@ should provide an automated way of doing the upgrade.
 
 [[!tag todo/code]]
 
-## 1. Prerequisites
+## 1. Design
 
-* **move to live-boot and live-config 3.x**: Tails currently ships the
-  stable (2.x) branches, whereas live-boot 3.x is needed to get
-  whiteouts support. This will be done as part of our work on
-  [[todo/persistence]].
+* Think the current design a bit deeper, discuss with other Tails
+  developers, reach an agreement.
 
 ## 2. Infrastructure
 
@@ -63,20 +61,97 @@ Program that takes two Tails ISO images, and:
 
 ### mirrors infrastructure
 
+Notes:
+
 * Using something like [Mozilla's
   channels](https://wiki.mozilla.org/Software_Update:Channels)
   (*release*, *beta*, *nightly*) would e.g. allow us to push beta
   updates earlier to a brave subset of users. Subscribing to a channel
   other than *release* is something that would be worth
-  [[persisting|todo/persistence]]. We are not likely to implement
+  [[persisting|doc/first_steps/persistence]]. We are not likely to implement
   a channels system in phase one, but the infrastructure we setup
   should leave room for such future extension.
-* A careful read of Mozilla's [Checking For
-  Updates](https://wiki.mozilla.org/Software_Update:Checking_For_Updates)
-  and [updates.xml
-  Format](https://wiki.mozilla.org/Software_Update:updates.xml_Format)
-  technical documentation is a must to avoid forgetting stuff useful
-  on the long run, such as necessary identifiers in URLs.
+
+### Updates files
+
+We want the client to get an answer to questions such as "I run
+version N of product P on architecture A, what stable release update
+is available?". To allow us changing the way the answer is computed in
+the future, the amount of work done on the client's side should be
+kept to a minimum. So, let's insert a level of indirection, and
+pre-compute server-side the answer to the queries we want to support.
+
+The answers are distributed on our HTTP servers in the form of a set
+of `updates.yml` files.
+
+All the client has to do is:
+
+* build the URI to its `updates.yml` file (could even be done at build
+  time, actually, and hard-coded into the image)
+* fetch the `updates.yml` file at this URI
+* verify the cryptographic signature of this file
+* extract from `updates.yml` information about available updates
+* display this information
+
+#### updates.yml URL
+
+(Heavily inspired by Mozilla's [Checking For
+Updates](https://wiki.mozilla.org/Software_Update:Checking_For_Updates).)
+
+* `/update`
+* URL schema version (so we can change it in the future) 
+* product name (e.g. *Tails*, but some day we might have *TailsServer*,
+  *TailsHandheld* or whatever)
+* product version -- the currently running version to upgrade from,
+  e.g. *0.11* or *0.11.1*
+* buildtarget (e.g. *i386*)
+* channel (e.g. *release* or *beta*)
+* `update.yml`
+
+e.g. `/update/1/Tails/0.11/i386/beta/updates.yml`
+
+Such a file shall be shipped along with its OpenPGP detached signature
+(`updates.yml.pgp`).
+
+#### updates.yml format
+
+(Heavily inspired by Mozilla's [updates.xml
+Format](https://wiki.mozilla.org/Software_Update:updates.xml_Format).)
+
+Sequence of update elements; each describing an update to an
+individual product version, with the following attributes:
+
+* type -- *major* or *minor* (in phase one, all IUK will be about
+  point-releases, and the type will therefore always be *minor*, but
+  let's make room in case we want to announce major releases this way
+  too at some point)
+* version -- the version of this update, that is the version of the
+  running product after the update is completed (e.g. *0.11.1*)
+* detailsURL -- a URL to a web page with more information about the
+  specified update (e.g.
+  <https://tails.boum.org/news/version_0.11.1/>)
+
+Within an update element there must be at least one and no more than
+two patch elements. The patch element describes a patch file that
+lives on a remote server that must be downloaded and applied to the
+product to update it to that version. The attributes for patch are as
+follows:
+
+* type -- *full* or *incremental* (IUK are about incremental upgrades,
+  but let's make room to announce full ISO images this way too at some
+  point)
+* URL -- A URL to the remote patch file.
+* size -- The size of the update, in bytes.
+
+Remaining question: do we want to include IUK hashes in `updates.yml`,
+or ship detached PGP signatures for IUK files? If hashes, we need
+additional attributes for patch:
+
+* hashFunction -- The name of the hash function to execute to verify
+  the integrity of the patch.
+* hashValue -- The server-generated hash generated for the file.
+  If the client generated value does not match this, the integrity
+  check fails after download.
 
 ## User interface
 
@@ -131,6 +206,24 @@ Write a downloader for Incremental Upgrade Kits.
 * Bonus points if there's an opt-in way to have the download happen in
   the clear, that is without going through the Tor network.
 * Allow overriding the URL for dev / testing purpose.
+
+# Code
+
+* Integration work is being done in the `feature/incremental-upgrades`
+  branch of the main Tails [[contribute/Git]] repository.
+
+# Security
+
+* All communication to HTTP servers that provide `updates.yml` and IUK
+  files is likely to be made in cleartext (`http://`). No security is
+  to be expected from transport-level security here.
+* All files (IUK, update files) are signed by the Tails OpenPGP
+  signing key, so integrity and authenticity are well-covered.
+* How much do we care about replay attacks? (e.g. an exit node replays
+  an obsolete `updates.yml` file and hides the existence of a security
+  update)
+* How much do we care about DoS attacks? (e.g. an exit node that
+  blocks access to our HTTP servers)
 
 # Research
 
