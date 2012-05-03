@@ -485,18 +485,19 @@ sub choose_keys {
         if (@list_selection) {
             my @unauth = grep { ! $_->[C_TRUSTED] } @list_selection;
             if (@unauth) {
-                my $title = gettext("Do you trust these keys?");
-                my $msg = gettext(
+                my $title = $encoding->decode(gettext(
+                    "Do you trust these keys?"
+                                              ));
+                my $msg = $encoding->decode(gettext(
                     "The following selected keys are not fully trusted"
-                                  ) . ":\n";
+                                            ) . ":\n");
                 foreach my $key (@unauth) {
                     $msg .= "- $key->[C_NAME] ($key->[C_KEYID])\n";
                 }
-                $msg .= gettext(
+                $msg .= $encoding->decode(gettext(
                     "Do you trust these keys enough to use them anyway?"
-                                );
-                next unless (display_question($encoding->decode($title),
-                                              $encoding->decode($msg)));
+                                          ));
+                next unless display_question($title, $msg);
                 $always_trust = 1;
             }
             @recipients = map { $_->[C_FINGERPRINT] } @list_selection;
