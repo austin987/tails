@@ -541,7 +541,8 @@ sub public_crypto {
 
     my $chosen = choose_keys(\@priv_keys, \@pub_keys);
     my $signer = $chosen->{signer};
-    my @recipients = @{$chosen->{recipients}};
+    my $recipients_ref = $chosen->{recipients};
+    my @recipients = @{$recipients_ref} if defined $recipients_ref;
     my $always_trust = $chosen->{always_trust};
 
     $gnupg->options->always_trust($always_trust);
