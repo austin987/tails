@@ -308,7 +308,7 @@ sub get_private_key_status {
     my $key = shift;
 
     my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
-    my $pubkey = ($gnupg->get_public_keys($fingerprint))[0]; # ignore collisions
+    my $pubkey = ($gnupg->get_public_keys_light($fingerprint))[0]; # ignore collisions
 
     # a valid key may lack signing capabilities
     return unless $pubkey->usage_flags =~ m/S/;
