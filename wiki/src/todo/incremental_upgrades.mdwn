@@ -188,17 +188,14 @@ Such a file shall be shipped along with its OpenPGP detached signature
 (Heavily inspired by Mozilla's [updates.xml
 Format](https://wiki.mozilla.org/Software_Update:updates.xml_Format).)
 
-An update-description file contains an associative array with two
-top-level keys:
+An update-description file contains an associative array with the
+following top-level keys:
 
-* the `header` top-level key is associated to an associative array
-  with keys (values being the same as found in the URL to this file):
-  - `product-name`
-  - `product-version`
-  - `build-target`
-  - `channel`
-* the `updates` top-level key is associated to a list of
-  update elements.
+* `product-name`
+* `product-version`
+* `build-target`
+* `channel`
+* `updates`: a list of update elements.
 
 Each update element is itself an associative array describing an
 update to an individual product version, with the following keys:
@@ -210,50 +207,56 @@ update to an individual product version, with the following keys:
 * `version` -- the version of this update, that is the version of the
   running product after the update is completed and the system
   restarted (e.g. *0.11.1*)
-* `detailsURL` -- a URL to a web page with more information about the
+* `details-url` -- a URL to a web page with more information about the
   specified update (e.g.
   <https://tails.boum.org/news/version_0.11.1/>)
-* `patches` -- a list of at least one and no more than two patch
-  elements. The patch element describes a patch file that lives on
-  a remote server that must be downloaded and applied to the product
-  to update it to that version.
+* `update-paths` -- a list of at least one and no more than two
+  update path elements.
 
-The keys for a patch element are as follows:
+An update path element describes a set of target files that lives on
+a remote server that must all be downloaded and applied to the product
+to update it to that version. The keys for an update path element are
+as follows:
 
 * `type` -- *full* or *incremental* (IUK are about incremental
   upgrades, but let's make room to announce full images this way too
   at some point)
-* `url` -- A URL to the remote patch file.
+* `target-files`: a list of target files for this upgrade path.
+
+Every target file element has the following keys:
+
+* `url` -- A URL to the target file.
 * `size` -- The size of the update, in bytes.
-* `hashFunction` -- The name of the hash function to execute to verify
+* `hash-function` -- The name of the hash function to execute to verify
   the integrity of the patch.
-* `hashValue` -- The hash of the patch file. If the client generated
+* `hash-value` -- The hash of the patch file. If the client generated
   value does not match this, the integrity check fails after download.
 
 Example that would be found at
 <https://tails.boum.org/update/v1/Tails/0.11.1/i386/release/updates.yml>:
 
-	header:
-	  product-name: Tails
-	  product-version: 0.11.1
-	  channel: release
-	  build-target: i386
+	product-name: Tails
+	product-version: 0.11.1
+	channel: release
+	build-target: i386
 	
 	updates:
 	  - type: minor
 	    version: 0.11.2
-	    detailsURL: https://tails.boum.org/news/version_0.11.2/
-	    patches:
+	    details-url: https://tails.boum.org/news/version_0.11.2/
+	    upgrade-paths:
 	      - type: incremental
-	        url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.11.1_to_0.11.2/tails-i386-0.11.1_to_0.11.2.iuk
-	        size: 37345648
-	        hashFunction: sha256
-	        hashValue: 5c5c47f6155e7807c971251fdad28d5f72ff78db446e43a41e4b900f29229a7d
+	        target-files:
+	          - url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.11.1_to_0.11.2/tails-i386-0.11.1_to_0.11.2.iuk
+	            size: 37345648
+	            hash-function: sha256
+	            hash-value: 5c5c47f6155e7807c971251fdad28d5f72ff78db446e43a41e4b900f29229a7d
 	      - type: full
-	        url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.11.2/tails-i386-0.11.2.iso
-	        size: 762123456
-	        hashFunction: sha256
-	        hashValue: 1015e37e14c6daaecd528b4a841ef6ac2156a5790346d0fd036f9566ce5f641b
+	        target-files:
+	          - url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.11.2/tails-i386-0.11.2.iso
+	            size: 762123456
+	            hash-function: sha256
+	            hash-value: 1015e37e14c6daaecd528b4a841ef6ac2156a5790346d0fd036f9566ce5f641b
 
 ## Client and user interface
 
