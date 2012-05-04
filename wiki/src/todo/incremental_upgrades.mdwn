@@ -227,10 +227,11 @@ Every target file element has the following keys:
 
 * `url` -- A URL to the target file.
 * `size` -- The size of the update, in bytes.
-* `hash-function` -- The name of the hash function to execute to verify
-  the integrity of the patch.
-* `hash-value` -- The hash of the patch file. If the client generated
-  value does not match this, the integrity check fails after download.
+* `sha256` -- The SHA-256 hash of the patch file. If the client
+  generated value does not match this, the integrity check fails after
+  download. (Other kind of hashes may be added in a future revision of
+  the update-description file format -- which of these multiple hashes
+  the client must verify will need to be specified when this happens.)
 
 Example that would be found at
 <https://tails.boum.org/update/v1/Tails/0.11.1/i386/release/updates.yml>:
@@ -249,14 +250,12 @@ Example that would be found at
 	        target-files:
 	          - url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.11.1_to_0.11.2/tails-i386-0.11.1_to_0.11.2.iuk
 	            size: 37345648
-	            hash-function: sha256
-	            hash-value: 5c5c47f6155e7807c971251fdad28d5f72ff78db446e43a41e4b900f29229a7d
+	            sha256: 5c5c47f6155e7807c971251fdad28d5f72ff78db446e43a41e4b900f29229a7d
 	      - type: full
 	        target-files:
 	          - url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.11.2/tails-i386-0.11.2.iso
 	            size: 762123456
-	            hash-function: sha256
-	            hash-value: 1015e37e14c6daaecd528b4a841ef6ac2156a5790346d0fd036f9566ce5f641b
+	            sha256: 1015e37e14c6daaecd528b4a841ef6ac2156a5790346d0fd036f9566ce5f641b
 
 ## Client and user interface
 
