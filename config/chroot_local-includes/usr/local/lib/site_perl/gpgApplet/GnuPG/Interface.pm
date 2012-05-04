@@ -228,6 +228,7 @@ sub get_keys_light {
         if $current_primary_key;
 
     $self->options($saved_options);
+    $self->options->clear_extra_args;
 
     return @returned_keys;
 }
