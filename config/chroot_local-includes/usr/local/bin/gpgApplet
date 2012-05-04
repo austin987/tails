@@ -383,10 +383,12 @@ sub make_pub_key_list {
         my $row = ($path->get_indices)[0];
         my $fingerprint =
             join(" ", (${$list->{data}}[$row][C_FINGERPRINT] =~ m/..../g));
-        my $text = $encoding->decode(gettext("User ID(s)")) . ":\n" .
-                   "${$list->{data}}[$row][C_USERIDS]\n" .
-                   $encoding->decode(gettext("Fingerprint")) . ":\n" .
-                   "$fingerprint";
+        my $fingerprint_label = $encoding->decode(gettext("Fingerprint:"));
+        my $uids = "${$list->{data}}[$row][C_USERIDS]";
+        my $uids_label = $encoding->decode(
+            ngettext("User ID:", "User IDs:", ($uids =~ tr/\n//) + 1));
+        my $text = sprintf("%s\n%s\n%s\n%s", $uids_label, $uids,
+                           $fingerprint_label, $fingerprint);
         $tooltip->set_text("$text");
         return TRUE;
     });
@@ -436,7 +438,7 @@ sub choose_keys {
     my $pub_keys_ref = shift;
 
     my $pub_key_label = Gtk2::Label->new(
-        $encoding->decode(gettext("Select recipient(s):")));
+        $encoding->decode(gettext("Select recipients:")));
 
     my $pub_key_list = make_pub_key_list($pub_keys_ref);
     my $pub_key_list_scroll = Gtk2::ScrolledWindow->new;
@@ -448,7 +450,7 @@ sub choose_keys {
 
     my $priv_key_combo = make_priv_key_combo($priv_keys_ref);
 
-    my $dialog = Gtk2::Dialog->new($encoding->decode(gettext("Choose key(s)")),
+    my $dialog = Gtk2::Dialog->new($encoding->decode(gettext("Choose keys")),
                                    $main_window, 'destroy-with-parent',
                                    'gtk-cancel' => 'cancel', 'gtk-ok' => 'ok' );
     $dialog->set_default_size(650,500);
@@ -488,15 +490,22 @@ sub choose_keys {
                 my $title = $encoding->decode(gettext(
                     "Do you trust these keys?"
                                               ));
-                my $msg = $encoding->decode(gettext(
-                    "The following selected keys are not fully trusted"
-                                            ) . ":\n");
+                my $warning = $encoding->decode(ngettext(
+                    "The following selected key is not fully trusted:",
+                    "The following selected keys are not fully trusted:",
+                    scalar @unauth
+                                                ));
+                my $msg = sprintf("%s\n", $warning);
                 foreach my $key (@unauth) {
-                    $msg .= "- $key->[C_NAME] ($key->[C_KEYID])\n";
+                    my $key_name = "- $key->[C_NAME] ($key->[C_KEYID])";
+                    $msg = sprintf("%s%s\n", $msg, $key_name);
                 }
-                $msg .= $encoding->decode(gettext(
-                    "Do you trust these keys enough to use them anyway?"
-                                          ));
+                my $question = $encoding->decode(ngettext(
+                    "Do you trust this key enough to use it anyway?",
+                    "Do you trust these keys enough to use them anyway?",
+                    scalar @unauth
+                                                 ));
+                $msg = sprintf("%s%s", $msg, $question);
                 next unless display_question($title, $msg);
                 $always_trust = 1;
             }
