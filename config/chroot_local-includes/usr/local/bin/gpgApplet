@@ -445,6 +445,15 @@ sub choose_keys {
     $pub_key_list_scroll->set_policy('automatic', 'always');
     $pub_key_list_scroll->add($pub_key_list);
 
+    my $hide_recipients_checkbox = Gtk2::CheckButton->new(
+        $encoding->decode(gettext("Hide recipients")));
+    $hide_recipients_checkbox->set_has_tooltip(TRUE);
+    $hide_recipients_checkbox->set_tooltip_text(
+        $encoding->decode(gettext("Hide the user IDs of all recipients of " .
+                                  "an encrypted message. Otherwise anyone " .
+                                  "that sees the encrypted message can see " .
+                                  "who the recipients are.")));
+
     my $priv_key_label = Gtk2::Label->new(
         $encoding->decode(gettext("Sign message as:")));
 
@@ -462,6 +471,7 @@ sub choose_keys {
     $hbox->pack_start($priv_key_label, FALSE, FALSE, 0);
     $hbox->pack_start($priv_key_combo, TRUE, TRUE, 0);
     $vbox->pack_start($hbox, FALSE, FALSE, 5);
+    $vbox->pack_start($hide_recipients_checkbox, FALSE, FALSE, 0);
 
     $pub_key_list->grab_focus;
     $dialog->show_all;
@@ -525,6 +535,7 @@ sub choose_keys {
         $dialog->destroy;
         return {
             always_trust => $always_trust,
+            hide_recipients => $hide_recipients_checkbox->get_active,
             signer => $signer,
             recipients => \@recipients,
         };
@@ -554,30 +565,46 @@ sub public_crypto {
     my $recipients_ref = $chosen->{recipients};
     my @recipients = @{$recipients_ref} if defined $recipients_ref;
     my $always_trust = $chosen->{always_trust};
+    my $hide_recipients = $chosen->{hide_recipients};
 
     $gnupg->options->always_trust($always_trust);
+    $gnupg->options->clear_extra_args;
+    $gnupg->options->clear_meta_signing_key_id;
+    $gnupg->options->clear_recipients();
+
+    if ($signer) {
+        $gnupg->options->meta_signing_key_id($signer);
+    }
+
+    if (@recipients) {
+        if ($hide_recipients) {
+            # Since gpg's --no-throw-keyids seems to be broken (it doesn't
+            # work via the CLI either) we can't just push it to extra_args :/.
+            foreach my $recipient (@recipients) {
+                $gnupg->options->push_extra_args('--hidden-recipient',
+                                                 $recipient);
+            }
+        } else {
+            $gnupg->options->push_recipients(@recipients);
+        }
+    }
+
+    my $result = 0;
 
     if ($signer && !@recipients) {
-        $gnupg->options->meta_signing_key_id($signer);
-        return $gnupg->clearsign(handles => $handles);
-    }
-
-    if (@recipients && !$signer) {
-        $gnupg->options->clear_recipients();
-        $gnupg->options->push_recipients(@recipients);
-        return $gnupg->encrypt(handles => $handles);
-    }
-
-    if ($signer && @recipients) {
-        $gnupg->options->meta_signing_key_id($signer);
-        $gnupg->options->clear_recipients();
-        $gnupg->options->push_recipients(@recipients);
-        return $gnupg->sign_and_encrypt(handles => $handles);
+        $result = $gnupg->clearsign(handles => $handles);
+    } elsif (@recipients && !$signer) {
+        $result = $gnupg->encrypt(handles => $handles);
+    } elsif ($signer && @recipients) {
+        $result = $gnupg->sign_and_encrypt(handles => $handles);
     }
 
     $gnupg->options->always_trust(0);
+    $gnupg->options->clear_extra_args;
+    $gnupg->options->clear_meta_signing_key_id;
+    $gnupg->options->clear_recipients();
 
-    return 0;
+    return $result;
 }
 
 sub symmetric_encrypt {
