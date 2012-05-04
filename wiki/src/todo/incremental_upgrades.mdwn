@@ -59,6 +59,9 @@ Program that takes two Tails ISO images, and:
 * gets the new kernel(s), initrd(s), bootloader configuration
 * brings all this together into some kind of structured archive
 
+All IUK must be named in a may that live-boot sets newer ones up on
+top of older ones.
+
 ### mirrors infrastructure
 
 Notes:
@@ -169,6 +172,7 @@ read-write.
 * Tell the user we're going to run the upgrade.
 * Remount the boot-medium read-write.
 * Extract the IUK archive.
+* Move stacked squashfs in place.
 * Move kernels and initrd's in place.
 * Move bootloader configuration in place.
 * Install bootloader on MBR (probably not needed).
@@ -225,7 +229,42 @@ Write a downloader for Incremental Upgrade Kits.
 * How much do we care about DoS attacks? (e.g. an exit node that
   blocks access to our HTTP servers)
 
+## Amnesia vs. old metadata attacks
+
+[TUF security
+documentation](https://www.updateframework.com/wiki/Docs/Security)
+defines two attacks that have specific implications in the context of
+an amnesic system:
+
+> **Rollback attacks**. An attacker presents a software update system
+> with older files than those the client has already seen, causing the
+> client to use files older than those the client knows about.
+> 
+> **Indefinite freeze attacks**. An attacker continues to present
+> a software update system with the same files the client has already
+> seen. The result is that the client does not know that new files
+> are available.
+
+TUF offers two ways to protect clients against such attacks:
+
+1. The client *remembers* what metadata it has seen already.
+2. Signatures on metadata *expire*.
+
+In the context of an amnesic system such as Tails, the first
+protection cannot be available by default. It may be offered, opt-in,
+to the user who enables [[doc/first_steps/persistence]], but users who
+do not to opt-in for making this information persistent cannot
+possibly be protected against rollback attacks: signature expiry only
+*limits* the extent to which a rollback attack can be conducted.
+
+Therefore, signatures on metadata shall expire quickly.
+
 # Research
+
+## Secure update
+
+* [TUF: The Update Framework](https://www.updateframework.com/)
+* Thandy: specs/thandy-spec.txt
 
 ## Stacking squashfs images
 
