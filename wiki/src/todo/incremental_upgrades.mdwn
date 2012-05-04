@@ -75,17 +75,56 @@ upgrade system now proposes upgrading to 0.11.2.
 
 ### generate an IUK
 
-* think the IUK format through
-  - [Mozilla ARchive format (MAR)](https://wiki.mozilla.org/Software_Update:MAR)
-
 Program that takes two Tails full images, and:
 
 * builds the "diff" SquashFS
 * gets the new kernel(s), initrd(s), bootloader configuration
 * brings all this together into some kind of structured archive
 
-All IUK must be named in a may that live-boot sets newer ones up on
-top of older ones.
+### Incremental Update Kit
+
+#### IUK format
+
+An IUK is a tar archive, compatible with GNU tar, that contains the
+following files:
+
+* `FORMAT`: contains the version of the IUK format (that is *1*), as
+  a positive integer encoded in ASCII.
+* `control.yml`: YAML associative array with the following keys:
+  - `delete_files`: a list of files to delete from the
+    system partition.
+* `*.tar[.xz]`: tar archives, compatible with GNU tar, optionally
+  compressed with XZ, that contain the set of files to add to, or
+  update in the system partition: kernel(s), initrd(s), bootloader
+  configuration, `*.squashfs` (the SquashFS "diff" that must be
+  stacked on top of the older SquashFS filesystem(s)), etc.
+
+File paths, in `*.tar[.xz]` and in the `delete_files` list, are
+relative to the Tails system partition root, and must be compatible
+with a FAT32 filesystem.
+
+Tarballs contained in the IUK are extracted, one after the other,
+sorted by ASCII order.
+
+#### IUK file name
+
+Constraints:
+
+* Make it easy for tar to determine the compression program.
+
+**FIXME**: specify-me.
+
+#### Initial implementation details
+
+The initial IUK generator will ship those files in every IUK:
+
+* `system.tar` contains files that are already compressed
+  (e.g. kernel, initrd, `*.squashfs`)
+* `boot.tar.xz` contains files that are not compressed already
+  (e.g. syslinux configuration)
+
+These are implementation details that shall not be taken into account
+by the IUK installer software.
 
 ### mirrors infrastructure
 
@@ -231,11 +270,13 @@ read-write.
 
 * Tell the user we're going to run the upgrade.
 * Remount the boot-medium read-write.
+* Verify the IUK is in a supported format.
 * Extract the IUK archive.
 * Move stacked squashfs in place.
-* Move kernels and initrd's in place.
-* Move bootloader configuration in place.
-* Install bootloader on MBR (probably not needed).
+* Add/update files (kernels, initrd's, etc.)
+* Delete files that are listed in the `delete_files` control field.
+* Append the new SquashFS diff filename to the `live/Tails.module`
+  file, in the Tails system partition.
 * Remount the boot-medium read-only.
 * Tell the user the upgrade process is finished.
 * Reboot.
