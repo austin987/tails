@@ -1,0 +1,27 @@
+USB Flash Kingston DataTraveller 32GB
+
+When trying to create persistens volume.
+It starts and after some time (about a minute) error comes.
+
+    Persistence wizard - Persistence volume creation
+    
+    Failed
+    
+    org.freedesktop.DBus.Error.NoReply: Did not receive a reply. Possible
+    causes include: the remote application did not send a reply, the message
+    bus security policy blocked the reply, the reply timeout expired, or the
+    network connection was broken
+
+After that flash becomes unbootable.
+
+On a 2GB flash drive it's ok. Works fine. Tried different USB ports, stays the
+same.
+
+> Looks like udisks (or some other involved entity) has a timeout
+> that's too short for our needs here, when huge USB sticks
+> are involved.
+>
+> > It looks like the code already suport asynchronous DBus operations.
+> > So either one operation is made synchronous and it should not be, or
+> > the timeout for asynchronous operations (240 seconds?) is still
+> > too low. [[!taglink todo/code]]
