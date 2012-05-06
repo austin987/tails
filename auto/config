@@ -22,10 +22,9 @@ $RUN_LB_CONFIG --distribution squeeze ${@}
 $RUN_LB_CONFIG \
    --apt-recommends false \
    --backports true \
-   --binary-images iso-hybrid \
+   --binary-images iso \
    --binary-indices false \
    --checksums none \
-   --isohybrid-options "$AMNESIA_ISOHYBRID_OPTS" \
    --bootappend-live "${AMNESIA_APPEND}" \
    --bootstrap "cdebootstrap" \
    --archive-areas "main contrib non-free" \
@@ -74,9 +73,6 @@ echo "live-build: `dpkg-query -W -f='${Version}\n' live-build`" \
 
 # changelog
 cp debian/changelog config/chroot_local-includes/usr/share/doc/amnesia/Changelog
-
-# GnuPG key
-cp wiki/src/amnesia.asc config/chroot_local-includes/usr/share/doc/amnesia/
 
 # create readahead-list from squashfs.sort
 if [ -e config/binary_rootfs/squashfs.sort ]; then

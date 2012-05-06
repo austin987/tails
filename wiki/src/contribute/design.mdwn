@@ -382,7 +382,9 @@ heavily restricted by a firewall:
 - All non-TCP transport layer protocols SHOULD be dropped as they are
   not supported by the Tor network.
 - All TCP traffic not explicitly targeting Tor SHOULD be redirected to
-  the transparent proxy (i.e. to the `TransPort` as set in `torrc`).
+  the transparent proxy (i.e. to the `TransPort` as set in `torrc`);
+  alternatively this traffic SHOULD be dropped (then only applications
+  explicitly configured to use Tor will reach the Internet).
 - All DNS lookups SHOULD be made through the Tor network (i.e.
   redirected to `DNSPort` as set in `torrc`).
 - All IPv6 traffic SHOULD be forbidden as it is not supported by the Tor
@@ -501,13 +503,22 @@ practices: digests, ciphers and key sizes.
 
 #### 2.6.3.5 Tor
 
-Tor SHOULD be setup to enable its DNS server (`DNSPort`) and
-transparent proxy (`TransPort`, `TransListen`) so the functionality
-specified in the network section is covered. Only stable releases
-SHOULD be considered since Tor really is at the core of the PELD. Also,
-while there are many other interesting configuration possibilities in
-the Tor manual, care MUST be taken to avoid those that may impair
-anonymity or security.
+Only stable releases SHOULD be considered since Tor really is at the
+core of the PELD.
+
+Tor SHOULD be setup to enable its DNS server (`DNSPort`) to allow DNS
+lookups through the Tor network; alternatively a local DNS server can
+be configured to use Tor.
+
+If transparent proxying (as opposed to dropping non-Tor traffic) was
+chosen in the network section, then Tor MUST be setup to enable its
+transparent proxy (`TransPort`, `TransListen`); alternatively any
+transparent proxy configured to use Tor as the parent proxy can be
+used.
+
+While there are many other interesting configuration possibilities
+described in the Tor manual, care MUST be taken to avoid those that may
+impair anonymity or security.
 
 A GUI Tor controller application such as Vidalia or TorK is highly
 RECOMMENDED. However, this requires opening the control port in Tor,
@@ -767,27 +778,9 @@ kernel security feature than the stock Debian kernel.
 
 ## 3.3 Internationalization
 
-The following locales are installed. Their number is currently limited
-by the boot menu and size constraints. [[Work is being done|boot
-menu]] to fix this; until this is done, a few more locales could be
-added on user's request.
-
-- ar, ar_EG.UTF-8 (Arabic, Egyptian Arabic)
-- de, de_DE.UTF-8 (German)
-- es, es_ES.UTF-8 (Castellano)
-- en_US, en_US.UTF-8 (American English)
-- fr, fr_FR.UTF-8 (French)
-- it, it_IT.UTF-8 (Italian)
-- pt, pt_PT.UTF-8 (Portuguese)
-- ru, ru_RU.UTF-8 (Russian)
-- zh, zh_CN.UTF-8 (Chinese)
-
-The chosen locale's files are compiled at boot time.
-
-- [[!tails_gitweb config/amnesia]]
-- [[!tails_gitweb config/chroot_local-preseed/localepurge]]
-- grep the source for `AMNESIA_SUPPORTED_LANGUAGES` to see how this
-  configuration is applied.
+Tails ships, as is, localization files provided by the installed
+Debian packages. All available iceweasel localization packages
+are installed.
 
 ## 3.4 Notification of security issues and new Tails release
 
@@ -831,14 +824,15 @@ those are mainly for usability issues and similar.
 
 The Tor software is currently configured as a client only (onion
 proxy). The client listens on SOCKS port 9050 with a control port 9051
-(using cookie authentication), as a transparent proxy on port 9040 and
-as a DNS server on port 8853. Only connections from localhost are
-accepted. It can be argued that running a Tor server (onion router)
-would increase one's anonymity for a number for reasons but we still
-feel that most users probably would not want this due to the added
-consumption of bandwidth. The user can nevertheless easily choose to
-turn his or her Tor client into a relay, thanks to the Vidalia
-graphical user interface.
+(using cookie authentication), as a transparent proxy on port 9040
+(only used for remapped hidden services) and as a DNS server on port
+8853. Only connections from localhost are accepted. It can be argued
+that running a Tor server (onion router) would increase one's
+anonymity for a number for reasons but we still feel that most users
+probably would not want this due to the added consumption of
+bandwidth. The user can nevertheless easily choose to turn his or her
+Tor client into a relay, thanks to the Vidalia graphical user
+interface.
  
 - [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]
 
@@ -872,12 +866,10 @@ document|design/MAC_address]] and [[todo item|todo/macchanger]].
 ### 3.6.8 Host system swap
 
 Tails takes care not to use any swap filesystem that might exist on
-the host machine hard drive. Most of this is done at build time: not
-only the `/sbin/swapon` binary is replaced by a fake no-op script, but
-the init script responsible for mounting swap at boot (provided by
-live-boot) is removed. Also, live-boot's `swapon` option is not set.
+the host machine hard drive. Most of this is done at build time:
+the `/sbin/swapon` binary is replaced by a fake no-op script, and
+live-boot's `swapon` option is not set.
 
-- [[!tails_gitweb config/chroot_local-hooks/03-noswap]]
 - [[!tails_gitweb config/chroot_local-hooks/05-disable_swapon]]
 
 ### 3.6.9 Host system RAM
@@ -889,7 +881,7 @@ live-boot) is removed. Also, live-boot's `swapon` option is not set.
 Tails takes care not to use any filesystem that might exist on
 the host machine hard drive, unless explicitly told to do so by the
 user. The Debian Live persistence feature is disabled by passing
-`nopersistent` over the kernel command line to live-boot.
+`nopersistence` over the kernel command line to live-boot.
 
 - [[!tails_gitweb config/amnesia]]
 
@@ -903,11 +895,8 @@ Removable drives auto-mounting is disabled in Tails 0.7 and newer.
 
 Securely erasing files and free disk space is made easy by integrating
 [secure-delete](http://www.thc.org) tools into the Nautilus file
-manager.
-
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/nautilus-sfill]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/nautilus-wipe]]
-- [[!tails_gitweb config/chroot_local-includes/lib/live/config/202-localize]]
+manager, thanks to [Nautilus
+Wipe](http://wipetools.tuxfamily.org/nautilus-wipe.html).
 
 ### 3.6.12 Passwords
 
@@ -949,15 +938,14 @@ will be possible afterwards.
 Firefox, that is shipped by Debian and thus by Tails.)
 
 Iceweasel uses the Torbutton extension in order to prevent attacks
-using JavaScript,
-plugins and other non-HTTP features like web bugs. It is configured to
-always be enabled on Iceweasel start and uses polipo as HTTP(s) proxy
-and Tor as SOCKS proxy. SOCKS is configured to perform name resolution
-through this proxy. Iceweasel is also configured to not cache to disk
-(mainly to reduce memory usage for CD users as disk writes will be
-stored there), history is disabled (just in case) and many other
-things. It is also setup not to automatically check for updates of its
-installed extensions. Java support is disabled.
+using JavaScript, plugins and other non-HTTP features like web
+bugs. It is configured to always be enabled on Iceweasel start and
+uses Tor as SOCKS5 proxy. SOCKS is configured to perform name
+resolution through this proxy. Iceweasel is also configured to not
+cache to disk (mainly to reduce memory usage for CD users as disk
+writes will be stored there), history is disabled (just in case) and
+many other things. It is also setup not to automatically check for
+updates of its installed extensions. Java support is disabled.
 
 Iceweasel is shipped with some extensions to help users manage their
 browsing experience. The Torbutton settings treat all cookies as
@@ -1061,6 +1049,11 @@ SHA256.
 - [hkpms in the Monkeysphere issue tracker](https://labs.riseup.net/code/issues/2016)
 - hkpms is [available in Debian experimental](http://packages.debian.org/source/experimental/msva-perl)
 
+### 3.6.17 Persistence feature
+
+An opt-in data persistence feature is available in Tails 0.11 and
+newer. See [[contribute/design/persistence]] for details.
+
 ## 3.7 Running Tails in virtual machines
 
 ### 3.7.1 Current support
@@ -1159,10 +1152,6 @@ Bridge support is [[missing but planned|todo/bridge_support]].
 Also, an easy (read: not command-line based) way to [[install and
 upgrade Tails on USB sticks|todo/usb_install_and_upgrade]] is
 needed.
-
-Some optional bits of [[todo/persistence]] would be welcome and help
-spreading strong public key cryptography and authentication amongst
-Tails users (OpenPGP, [[todo/Monkeysphere]]).
 
 Some tools currently available to command-line users lack the
 integration into Tails and/or graphical user interface that would be
