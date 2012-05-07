@@ -418,6 +418,7 @@ sub make_priv_key_combo {
                       1, "");
     foreach my $key (@{$priv_keys_ref}) {
         my $row = create_key_row($key);
+        next unless $row; # skip keys without signing capability
         $iter = $list_store->append;
         $list_store->set ($iter,
                           0, "$row->[C_NAME] ($row->[C_KEYID])",
