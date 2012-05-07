@@ -444,7 +444,28 @@ sub make_priv_key_combo {
                           COMBO_ROLE, "");
     }
 
-    my $combo = Gtk2::ComboBox->new_with_model($list_store);
+    my $sorted_list = Gtk2::TreeModelSort->new_with_model($list_store);
+    $sorted_list->set_default_sort_func(sub {
+        my ($model, $iter1, $iter2, $data) = @_;
+        my $name1 = $model->get($iter1, COMBO_NAME);
+        my $name2 = $model->get($iter2, COMBO_NAME);
+        my $role1 = $model->get($iter1, COMBO_ROLE);
+        my $role2 = $model->get($iter2, COMBO_ROLE);
+
+        if ($role1 eq "none") {
+            return -1;
+        } elsif ($role2 eq "none") {
+            return 1;
+        } elsif ($role1 eq "separator") {
+            return -1;
+        } elsif ($role2 eq "separator") {
+            return 1;
+        } else {
+            return (lc $name1 cmp lc $name2);
+        }
+                                });
+
+    my $combo = Gtk2::ComboBox->new_with_model($sorted_list);
     my $renderer = Gtk2::CellRendererText->new();
     $combo->pack_start($renderer, FALSE);
     $combo->add_attribute($renderer, 'text', COMBO_NAME);
