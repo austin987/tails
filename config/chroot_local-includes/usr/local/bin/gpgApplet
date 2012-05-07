@@ -61,6 +61,10 @@ use constant C_TRUSTED     => 6;
 use constant VISIBLE_COLS  => (C_NAME, C_KEYID, C_STATUS);
 use constant HIDDEN_COLS   => (C_FINGERPRINT, C_USERIDS, C_TRUSTED);
 
+use constant COMBO_NAME        => 0;
+use constant COMBO_KEYID       => 1;
+use constant COMBO_FINGERPRINT => 2;
+
 my $gnupg         = gpgApplet::GnuPG::Interface->new();
 my $codeset       = langinfo(CODESET());
 my $encoding      = find_encoding($codeset);
@@ -413,24 +417,31 @@ sub make_pub_key_list {
 sub make_priv_key_combo {
     my $priv_keys_ref = shift;
 
-    my $list_store = Gtk2::ListStore->new(qw/Glib::String Glib::String/);
+    my $list_store = Gtk2::ListStore->new(
+        qw/Glib::String Glib::String Glib::String/);
     my $iter = $list_store->append;
     $list_store->set ($iter,
-                      0, $encoding->decode(gettext("None (Don't sign)")),
-                      1, "");
+                      COMBO_NAME, $encoding->decode(gettext(
+                                      "None (Don't sign)")),
+                      COMBO_KEYID, "",
+                      COMBO_FINGERPRINT, "");
     foreach my $key (@{$priv_keys_ref}) {
         my $row = create_key_row($key);
         next unless $row; # skip keys without signing capability
         $iter = $list_store->append;
         $list_store->set ($iter,
-                          0, "$row->[C_NAME] ($row->[C_KEYID])",
-                          1, $row->[C_FINGERPRINT]);
+                          COMBO_NAME, "$row->[C_NAME]",
+                          COMBO_KEYID, "($row->[C_KEYID])",
+                          COMBO_FINGERPRINT, "$row->[C_FINGERPRINT]");
     }
 
     my $combo = Gtk2::ComboBox->new_with_model($list_store);
     my $renderer = Gtk2::CellRendererText->new();
-    $combo->pack_start($renderer, TRUE);
-    $combo->add_attribute($renderer, 'text', 0);
+    $combo->pack_start($renderer, FALSE);
+    $combo->add_attribute($renderer, 'text', COMBO_NAME);
+    $renderer = Gtk2::CellRendererText->new();
+    $combo->pack_start($renderer, FALSE);
+    $combo->add_attribute($renderer, 'text', COMBO_KEYID);
     $combo->set_active(0);
 
     return $combo;
@@ -493,7 +504,8 @@ sub choose_keys {
 
         # Get signing key, if any
         my $priv_key_combo_model = $priv_key_combo->get_model;
-        $signer = $priv_key_combo_model->get($priv_key_combo->get_active_iter);
+        my $priv_key_iter = $priv_key_combo->get_active_iter;
+        $signer = $priv_key_combo_model->get($priv_key_iter, COMBO_FINGERPRINT);
 
         # Get public keys, if any
         my @list_selection = grep { $_->[C_SELECT] } @{$pub_key_list->{data}};
