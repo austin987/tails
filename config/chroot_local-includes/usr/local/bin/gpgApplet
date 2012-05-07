@@ -370,6 +370,8 @@ sub make_pub_key_list {
     $list->set_search_column(C_NAME);
     $list->get_selection->set_mode('single');
     $list->get_selection->unselect_all;
+    # Initially sort by name (couldn't find a cleaner way)
+    $list->get_column(C_NAME)->signal_emit('clicked');
 
     # If we used Gtk2::TreeView instead of Gtk2::SimpleList we could
     # show all user ids directly in the list, but we make it simple
