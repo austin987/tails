@@ -16,3 +16,41 @@ Also:
 * say "Boot Tails" instead of "Boot menu"
 * replace the "Debian $VERSION" from the blue progress bar by "Tails
   $VERSION"
+
+Implementation
+--------------
+
+### To have a very simple black background
+
+In syslinux's stdmenu.cfg
+
+    - menu background /syslinux/splash.png
+    + menu background     *   #00000000   *   *
+
+### Instead of the black background, a splash with less contrastish tails logo
+
+[[!img splash.png]]
+
+I didn't found a way to add a title as text instead of as an image.
+
+Better colors to go with that in stdmenu.cfg:
+
+    menu color sel      *   #ffffffff   #55555555   *
+    menu color hotsel   1;7;37;40 #ffffffff #22222222   *
+
+### To say "Boot Tails" instead of "Boot menu"
+
+In syslinux's menu.cfg:
+
+    - menu title Boot menu
+    + menu title Boot Tails
+
+### To replace "Debian $VERSION" by "Tails $VERSION" in plymouth text
+
+It seems that :
+
+- "Debian" a string contained in /lib/libply-splash-core.so.2.0.0
+- $VERSION is read from /etc/debian_version as stated in
+  /lib/libply-splash-core.so.2.0.0
+
+So unless we find an option to set these, changing them means recompiling plymouth.
