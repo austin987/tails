@@ -2,30 +2,34 @@
 
 [[!toc levels=3]]
 
-Current state of things
-=======================
+Roadmap
+=======
 
-Tails [[ships hybrid ISO images|contribute/design/hybrid_ISO]]. dd'ing
-such a file to a USB stick produces a bootable Tails system and is
-[[well documented|doc/installing_onto_a_usb_stick/linux]], but it
-requires unfriendly command-line usage and overwrites any previously
-existing partition table.
+[[!tag todo/code]]
 
-The current state of things implies two distasteful facts:
+Our plan is to:
 
-1. A given USB stick currently must be dedicated to Tails only;
-   considering the ever-growing size of such devices, the amount of
-   wasted bytes is not a minor one.
-2. A given USB stick cannot be used to host both a Tails system *and*
-   a persistent storage volume, which makes it hard to provide
-   friendly integration of [[upcoming persistence
-   features|todo/persistence]] for end-user.
+1. release something useful based on the work we've already done on
+   the basis of Fedora liveusb-creator: **done** in Tails 0.11
+2. probably start (again...) from Ubuntu's
+   [usb-creator](https://launchpad.net/usb-creator), that has a
+   much saner codebase; [[usb_install_and_upgrade/future_spec]]
+3. take care of Windows support, partial upgrades, and postponed stuff
+   (see the *Later* section on the [[usb_install_and_upgrade/todo]]
+   page)
 
-Such user unfriendliness conflicts with Tails [[specified
-goals|contribute/design]] and must be fixed.
+Other useful pages:
 
-Installing specification
-========================
+* [[what is left to do|usb_install_and_upgrade/todo]]
+* [[what we've done so far|usb_install_and_upgrade/done]]
+* [[notes about GPT|usb_install_and_upgrade/gpt]]
+
+Our work on liveusb-creator is in a [[dedicated Git
+repository|contribute/git]]. Integration work is made in the
+`feature/usb_installer` branch in the main Tails Git repository.
+
+Specification
+=============
 
 One should be able to easily install Tails to a USB storage device:
 
@@ -45,35 +49,6 @@ make use of it. Whether this storage space should better be a second
 encrypted partition or a file-backed encrypted FS shall be researched
 and decided upon. If the partition way is chosen, the installer
 software must have partitioning capabilities.
-
-Roadmap
-=======
-
-[[!tag todo/code todo/documentation]]
-
-* [[what is left to do|usb_install_and_upgrade/todo]]
-* [[what we've done so far|usb_install_and_upgrade/done]]
-* [[notes about GPT|usb_install_and_upgrade/gpt]]
-
-
-Our plan is to:
-
-1. release something useful based on the work we've already done on
-   the basis of Fedora liveusb-creator
-2. probably start (again...) from Ubuntu's
-   [usb-creator](https://launchpad.net/usb-creator), that has a
-   much saner codebase; [[usb_install_and_upgrade/future_spec]]
-3. take care of Windows support, partial upgrades, and postponed stuff
-   (see the *Later* section on the [[usb_install_and_upgrade/todo]]
-   page)
-
-Our work on liveusb-creator is in a Git repository:
-
-- anonymous, read-only: `git://git.immerda.ch/tails/liveusb-creator.git`
-- developers read-write: `ssh://git@git.immerda.ch/tails/liveusb-creator.git`
-
-Integration work is made in the `feature/usb_installer` branch in the
-main Tails Git repository.
 
 Research
 ========

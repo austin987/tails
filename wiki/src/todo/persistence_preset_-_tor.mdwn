@@ -1,0 +1,20 @@
+[[!tag todo/code]]
+
+There are two good reasons for making Tor's data dir persistent:
+
+1. Faster and less wasteful (in terms of bandwidth) bootstrap.
+2. Stronger resistence to certain attacks via persistent Entry Guards.
+
+Making `/var/lib/tor` persistent is enough for this, so we should make
+a preset for it, and it should be enabled by default.
+
+### Issues
+
+Some of our scripts depend on that certain files in `/var/lib/tor` are
+not persistent, which has to be resolved before adding the preset:
+
+* Our time syncing script uses the existence of `cached-descriptors`
+  as a test for wheter Tor is working, and a similar assumption is
+  made for the `*-consensus` files.
+* The Unsafe Browser uses `cached-descriptors` in the same way as the
+  time syncing script.
