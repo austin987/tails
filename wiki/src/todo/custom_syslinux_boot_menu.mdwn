@@ -47,10 +47,41 @@ In syslinux's menu.cfg:
 
 ### To replace "Debian $VERSION" by "Tails $VERSION" in plymouth text
 
-It seems that :
+These are set in the debian pachage sources:
 
-- "Debian" a string contained in /lib/libply-splash-core.so.2.0.0
-- $VERSION is read from /etc/debian_version as stated in
-  /lib/libply-splash-core.so.2.0.0
+in 'debian/rules':
 
-So unless we find an option to set these, changing them means recompiling plymouth.
+    dh_auto_configure -- --prefix=/usr --localstatedir=/var --enable-pango \
+        --enable-tracing --disable-tests --disable-gdm-transition \
+        --with-system-root-install --without-rhgb-compat-link \
+        --with-gdm-autostart-file \
+        --with-release-file=/etc/debian_version \
+        --with-logo=/usr/share/plymouth/debian-logo.png \
+        --with-background-color=0x005a8a
+
+and in 'debian/patches/01-parse-etc-debian_version.patch':
+
+    diff -Naurp plymouth.orig/src/libply-splash-core/ply-text-progress-bar.c plymouth/src/libply-splash-core/ply-text-progress-bar.c
+    --- plymouth.orig/src/libply-splash-core/ply-text-progress-bar.c	2010-01-02 11:22:54.000000000 +0100
+    +++ plymouth/src/libply-splash-core/ply-text-progress-bar.c	2010-03-14 16:57:16.000000000 +0100
+    @@ -109,15 +109,7 @@ get_os_string (void)
+        read(fd, buf, sbuf.st_size);
+        close(fd);
+        
+    -   pos = strstr(buf, " release ");
+    -   if (!pos) goto out;
+    -   pos2 = strstr(pos, " (");
+    -   if (!pos2) goto out;
+    -   *pos = '\0';
+    -   pos+= 9;
+    -   *pos2 = '\0';
+    -   asprintf(&os_string," %s %s", buf, pos);
+    -out:
+    +   asprintf(&os_string," Debian %s", buf);
+        free(buf);
+     }
+
+So to change it we have to build a custom package, using
+'--with-release-file=/etc/amnesia/version' in 'debian/rules' and something to
+get the 1st field of the 1st line of 'buf' in the patch.
+
