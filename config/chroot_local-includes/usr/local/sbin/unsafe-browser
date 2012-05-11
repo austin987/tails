@@ -20,6 +20,14 @@ TOR_DIR=/var/lib/tor
 TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
 TOR_WORKING=""
 
+WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
+LANG_CODE="$(echo ${LANG} | head -c 2)"
+if [ -r "${WARNING_PAGE}.${LANG_CODE}.html" ]; then
+   START_PAGE="${WARNING_PAGE}.${LANG_CODE}.html"
+else
+   START_PAGE="${WARNING_PAGE}.en.html"
+fi
+
 cleanup () {
     # Break down the chroot and kill all of its processes
     local counter=0
@@ -116,6 +124,10 @@ user_pref("lightweightThemes.isThemeSelected", true);
 user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFF00\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");
 EOF
     fi
+
+    # Set start page to something that explains what's going on
+    echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
+        ${CHROOT}/etc/iceweasel/profile/user.js
 }
 
 start_browser_in_chroot () {
