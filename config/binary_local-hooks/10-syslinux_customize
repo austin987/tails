@@ -17,8 +17,6 @@ then
 	exit 0
 fi
 
-Echo_message "removing buggy syslinux help"
-
 # Setting boot method specific variables
 case "${LB_BINARY_IMAGES}" in
 	iso|iso-hybrid)
@@ -29,6 +27,27 @@ case "${LB_BINARY_IMAGES}" in
 		;;
 esac
 
+Echo_message "customize buggy syslinux help"
+
 # Remove help menu entry from menu.cfg (and every line after)
 CFG_FILE="${SYSLINUX_PATH}/menu.cfg"
 perl -pni -E 'exit if m{^label[[:blank:]]+help$}' "${CFG_FILE}"
+
+Echo_message "customize syslinux menu"
+
+sed -i -e "s/Boot menu/Boot Tails/" "${CFG_FILE}"
+
+cat > "${SYSLINUX_PATH}/tails.cfg" << EOF
+menu color sel      *           #ffffffff   #55555555   *
+menu color hotsel   1;7;37;40   #ffffffff   #22222222   *
+
+menu vshift 12
+menu rows 7
+menu helpmsgrow 15
+menu cmdlinerow 13
+menu timeoutrow 16
+menu tabmsgrow 18
+EOF
+
+sed -i -e '/^include stdmenu\.cfg/a include tails.cfg' "${CFG_FILE}"
+
