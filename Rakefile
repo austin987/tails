@@ -20,6 +20,9 @@
 require 'rubygems'
 require 'vagrant'
 
+# Add Vagrant (monkey-)patch
+require 'vagrant/lib/vagrant_verified_download'
+
 # Path to the directory which holds our Vagrantfile
 VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 
