@@ -1,6 +1,6 @@
 Veewee::Session.declare({
   :cpu_count => '1',
-  :memory_size=> '2048',
+  :memory_size=> '1024',
   :disk_size => '10000', :disk_format => 'VDI', :hostiocache => 'off',
   :os_type_id => 'Debian_64',
   :iso_file => "mini.iso",
