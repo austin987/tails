@@ -17,7 +17,7 @@ should provide an automated way of doing the upgrade.
 * **Incremental Upgrade Kit (IUK)**: a file that contains everything
   needed to update from.
 * **full image**: a file that is sufficient to install and run Tails
-  (currently, that means an ISO image)
+  (currently, that means an ISO image).
 * **target files**: the whole set of files included by reference into
   an update; e.g. this may be an IUK or a full image.
 
@@ -71,15 +71,18 @@ their Tails 0.11, the upgrade system proposes upgrading to 0.11.1; say
 the user accepts, the upgrade is performed, the user reboots, and the
 upgrade system now proposes upgrading to 0.11.2.
 
+Allowing to run these two steps in a row, without rebooting, is
+mainly as GUI problem, and is postponed.
+
 ## Infrastructure
 
 ### generate an IUK
 
-Program that takes two Tails full images, and:
+We need a program that takes two Tails full images as input, and:
 
 * builds the "diff" SquashFS
 * gets the new kernel(s), initrd(s), bootloader configuration
-* brings all this together into some kind of structured archive
+* brings all this together into a single file, in the IUK format
 
 ### Incremental Update Kit
 
@@ -99,7 +102,7 @@ following files:
   configuration, `*.squashfs` (the SquashFS "diff" that must be
   stacked on top of the older SquashFS filesystem(s)), etc.
 
-File paths, in `*.tar[.xz]` and in the `delete_files` list, are
+File paths, both in `*.tar[.xz]` and in the `delete_files` list, are
 relative to the Tails system partition root, and must be compatible
 with a FAT32 filesystem.
 
@@ -108,11 +111,19 @@ sorted by ASCII order.
 
 #### IUK file name
 
-Constraints:
+An IUK's name is built from these underscore-separated elements,
+followed by the `.iuk` suffix:
 
-* Make it easy for tar to determine the compression program.
+* product name (e.g. *Tails*)
+* build-target (e.g. *i386*)
+* product version -- the currently running version to upgrade from,
+  e.g. *0.11* or *0.11.1*
+* `to`
+* the version of this update, that is the version of the running
+  product after the update is completed and the system restarted (e.g.
+  *0.11.2*)
 
-**FIXME**: specify-me.
+Example: `Tails_i386_0.11.1_to_0.11.2.iuk`
 
 #### Initial implementation details
 
@@ -121,10 +132,10 @@ The initial IUK generator will ship those files in every IUK:
 * `system.tar` contains files that are already compressed
   (e.g. kernel, initrd, `*.squashfs`)
 * `boot.tar.xz` contains files that are not compressed already
-  (e.g. syslinux configuration)
+  (that is the syslinux configuration)
 
-These are implementation details that shall not be taken into account
-by the IUK installer software.
+These are implementation details the IUK installer software must not
+rely upon.
 
 ### mirrors infrastructure
 
@@ -154,8 +165,8 @@ of update-description file files.
 All the client has to do is:
 
 * build the URI to its update-description file (could even be done at
-  build time, actually, and hard-coded into the image) and to its
-  cryptographic signature
+  build time and hard-coded into the image) and to its cryptographic
+  signature
 * fetch the update-description file and its signature at these URIs
 * verify the cryptographic signature of the update-description file
 * extract information about available updates from the
@@ -167,7 +178,7 @@ All the client has to do is:
 * `https://tails.boum.org/update`
 * URL schema version (so we can change it in the future), that is `v1`
   to start with.
-* product name (e.g. *Tails*, but some day we might have *TailsServer*,
+* product name (e.g. *Tails*, but some day we may have *TailsServer*,
   *TailsHandheld* or whatever)
 * product version -- the currently running version to upgrade from,
   e.g. *0.11* or *0.11.1*
@@ -194,13 +205,13 @@ following top-level keys:
 Each update element is itself an associative array describing an
 update to an individual product version, with the following keys:
 
+* `version` -- the version of this update, that is the version of the
+  running product after the update is completed and the system
+  restarted (e.g. *0.11.1*)
 * `type` -- *major* or *minor* (in phase one, all IUK will be about
   point-releases, and the type will therefore always be *minor*, but
   let's make room in case we want to announce major releases this way
   too at some point)
-* `version` -- the version of this update, that is the version of the
-  running product after the update is completed and the system
-  restarted (e.g. *0.11.1*)
 * `details-url` -- a URL to a web page with more information about the
   specified update (e.g.
   <https://tails.boum.org/news/version_0.11.1/>)
@@ -236,8 +247,8 @@ Example that would be found at
 	build-target: i386
 	
 	updates:
-	  - type: minor
-	    version: 0.11.2
+	  - version: 0.11.2
+	    type: minor
 	    details-url: https://tails.boum.org/news/version_0.11.2/
 	    upgrade-paths:
 	      - type: incremental
@@ -268,8 +279,9 @@ read-write.
 * Remount the boot-medium read-write.
 * Verify the IUK is in a supported format.
 * Extract the IUK archive.
-* Move stacked squashfs in place.
-* Add/update files (kernels, initrd's, etc.)
+* Move stacked squashfs found in the IUK in place.
+* Extract tarballs (`*.tar[.xz]`) contained in the IUK, one after the
+  other, sorted by ASCII order.
 * Delete files that are listed in the `delete_files` control field.
 * Append the new SquashFS diff filename to the `live/Tails.module`
   file, in the Tails system partition.
@@ -293,10 +305,10 @@ signature verification would be made using `GnuPG::Interface`'s
 `verify` method.
 
 The verify method is run on a `GnuPG::Interface` object built with
-`--homedir` pointed to a dedicated keyring directory, created at
-Tails boot or ISO build time, that contains only the Tails signing
-public OpenPGP key, which is assigned the minimum level of trust so
-that GnuPG trusts signatures made by the corresponding private key.
+`--homedir` pointed to a dedicated keyring directory, created at Tails
+boot or ISO build time, that contains only the Tails signing public
+OpenPGP key, which is assigned the minimum level of trust so that
+GnuPG trusts the signatures made with the corresponding private key.
 
 The `verify` method return value is `waitpid`'d for, and the GnuPG
 child process exit status examined (zero means verification succeeded,
@@ -311,7 +323,7 @@ a point-release, and else point at full upgrade documentation.
 * Detects if the new version is a point-release.
 * Points at the downloader.
 
-**FIXME**: tasks separation and interface between security warning
+**FIXME**: this separation of tasks and interface between security warning
 program and downloader is wrong and must be thought through.
 
 ### download target files
@@ -338,8 +350,8 @@ Write a downloader for Incremental Upgrade Kits.
 We want to use tools such as TUF or Thandy once they are ready for
 production use.
 
-Until then, we'll content ourselves with a much simpler system that is
-clearly less secure than TUF or Thandy against certain types of
+Until then, we will content ourselves with a much simpler system that
+is clearly less secure than TUF or Thandy against certain types of
 attacks, but is at least as secure as the way users are currently able
 to manually check if a new Tails version is available.
 
