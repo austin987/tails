@@ -31,6 +31,12 @@ task :validate_http_proxy do
   if ENV['http_proxy']
     proxy_host = URI.parse(ENV['http_proxy']).host
 
+    if proxy_host.nil?
+      ENV['http_proxy'] = nil
+      $stderr.puts "Ignoring invalid HTTP proxy."
+      return
+    end
+
     if ['localhost', '[::1]'].include?(proxy_host) || proxy_host.start_with?('127.0.0.')
       abort 'Using an HTTP proxy listening on the loopback is doomed to fail. Aborting.'
     end
