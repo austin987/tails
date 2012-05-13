@@ -41,6 +41,9 @@ apt-get clean
 # Remove HTTP proxy configuration
 sed -e '/http::Proxy/d' -i /etc/apt/apt.conf
 
+# Remove installation logs
+rm -rf /var/log/installer
+
 # Zero out the free space to save space in the final image:
 dd if=/dev/zero of=/EMPTY bs=1M
 rm -f /EMPTY
