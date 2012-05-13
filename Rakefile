@@ -24,6 +24,9 @@ require 'uri'
 # Path to the directory which holds our Vagrantfile
 VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 
+# Environment variables that will be exported to the build script
+EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS']
+
 task :validate_http_proxy do
   if ENV['http_proxy']
     proxy_host = URI.parse(ENV['http_proxy']).host
@@ -36,6 +39,19 @@ task :validate_http_proxy do
   else
     $stderr.puts "No HTTP proxy set."
   end
+end
+
+desc 'Build Tails'
+task :build => ['validate_http_proxy', 'vm:up'] do
+  exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
+                  collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
+
+  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH)
+  status = env.primary_vm.channel.execute("#{exported_env} build-tails",
+                                          :error_check => false) do |fd, data|
+    (fd == :stdout ? $stdout : $stderr).write data
+  end
+  exit status
 end
 
 namespace :vm do
