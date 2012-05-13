@@ -20,9 +20,6 @@
 require 'rubygems'
 require 'vagrant'
 
-# Add Vagrant (monkey-)patch
-require 'vagrant/lib/vagrant_verified_download'
-
 # Path to the directory which holds our Vagrantfile
 VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 
@@ -77,5 +74,60 @@ namespace :vm do
     env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
     result = env.cli('destroy', '--force')
     abort "'vagrant destroy' failed" unless result
+  end
+end
+
+namespace :basebox do
+  task :create_preseed_cfg do
+    require 'erb'
+    require 'uri'
+
+    if ENV['http_proxy']
+      proxy_host = URI.parse(ENV['http_proxy']).host
+
+      if ['localhost', '[::1]'].include?(proxy_host) || proxy_host.start_with?('127.0.0.')
+        abort 'Using an HTTP proxy listening on the loopback is doomed to fail.'
+      end
+
+      $stderr.puts "Building basebox using HTTP proxy: #{ENV['http_proxy']}"
+    else
+      $stderr.puts "No HTTP proxy set to build basebox"
+    end
+
+    preseed_cfg_path = File.expand_path('../vagrant/definitions/squeeze/preseed.cfg', __FILE__)
+    template = ERB.new(File.read("#{preseed_cfg_path}.erb"))
+    File.open(preseed_cfg_path, 'w') do |f|
+      f.write template.result
+    end
+  end
+
+  desc 'Create virtual machine template (a.k.a. basebox)'
+  task :create_basebox => [:create_preseed_cfg] do
+    # veewee is pretty stupid regarding path handling
+    Dir.chdir(VAGRANT_PATH) do
+      require 'veewee'
+
+      # Veewee assumes a separate process for each task. So we mimic that.
+
+      env = Vagrant::Environment.new(:ui_class => Vagrant::UI::Basic)
+
+      Process.fork do
+        env.cli('basebox', 'build', 'squeeze')
+      end
+      Process.wait
+      abort "Building the basebox failed (exit code: #{$?.exitstatus})." if $?.exitstatus != 0
+
+      Process.fork do
+        env.cli('basebox', 'validate', 'squeeze')
+      end
+      Process.wait
+      abort "Validating the basebox failed (exit code: #{$?.exitstatus})." if $?.exitstatus != 0
+
+      Process.fork do
+        env.cli('basebox', 'export', 'squeeze')
+      end
+      Process.wait
+      abort "Exporting the basebox failed (exit code: #{$?.exitstatus})." if $?.exitstatus != 0
+    end
   end
 end

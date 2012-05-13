@@ -38,6 +38,9 @@ echo "pre-up sleep 5" >> /etc/network/interfaces
 # Clean downloaded APT packages
 apt-get clean
 
+# Remove HTTP proxy configuration
+sed -e '/http::Proxy/d' -i /etc/apt/apt.conf
+
 # Zero out the free space to save space in the final image:
 dd if=/dev/zero of=/EMPTY bs=1M
 rm -f /EMPTY

@@ -17,15 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# As we need a monkey-patched Vagrant, we need to disable direct usage
-if $PROGRAM_NAME.end_with? 'vagrant'
-  STDERR.puts <<-END_OF_MESSAGE.gsub(/^    /, '')
-    This Vagrantfile is not meant to be used directly with `vagrant`, but
-    through `rake`, using the Rakefile that is present in the root of Tails
-    repository.
-  END_OF_MESSAGE
-  exit 1
-end
+# Monkey-patched Vagrant!
+$:.unshift File.expand_path('../lib', __FILE__)
+require 'vagrant_verified_download'
 
 Vagrant::Config.run do |config|
   config.vm.box = 'tails'
