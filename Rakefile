@@ -19,9 +19,24 @@
 
 require 'rubygems'
 require 'vagrant'
+require 'uri'
 
 # Path to the directory which holds our Vagrantfile
 VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
+
+task :validate_http_proxy do
+  if ENV['http_proxy']
+    proxy_host = URI.parse(ENV['http_proxy']).host
+
+    if ['localhost', '[::1]'].include?(proxy_host) || proxy_host.start_with?('127.0.0.')
+      abort 'Using an HTTP proxy listening on the loopback is doomed to fail. Aborting.'
+    end
+
+    $stderr.puts "Using HTTP proxy: #{ENV['http_proxy']}"
+  else
+    $stderr.puts "No HTTP proxy set."
+  end
+end
 
 namespace :vm do
   desc 'Start the build virtual machine'
@@ -78,21 +93,8 @@ namespace :vm do
 end
 
 namespace :basebox do
-  task :create_preseed_cfg do
+  task :create_preseed_cfg => 'validate_http_proxy' do
     require 'erb'
-    require 'uri'
-
-    if ENV['http_proxy']
-      proxy_host = URI.parse(ENV['http_proxy']).host
-
-      if ['localhost', '[::1]'].include?(proxy_host) || proxy_host.start_with?('127.0.0.')
-        abort 'Using an HTTP proxy listening on the loopback is doomed to fail.'
-      end
-
-      $stderr.puts "Building basebox using HTTP proxy: #{ENV['http_proxy']}"
-    else
-      $stderr.puts "No HTTP proxy set to build basebox"
-    end
 
     preseed_cfg_path = File.expand_path('../vagrant/definitions/squeeze/preseed.cfg', __FILE__)
     template = ERB.new(File.read("#{preseed_cfg_path}.erb"))
