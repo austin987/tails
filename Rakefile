@@ -34,7 +34,12 @@ EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 VIRTUAL_MACHINE_HOSTNAME = 'squeeze.vagrantup.com'
 
 task :parse_build_options do
-  options = ENV['TAILS_BUILD_OPTIONS'] || ''
+  options = ''
+
+  # Use in-VM proxy unless an external proxy is set
+  options += 'vmproxy ' unless EXTERNAL_HTTP_PROXY
+
+  options += ENV['TAILS_BUILD_OPTIONS'] if ENV['TAILS_BUILD_OPTIONS']
   options.split(' ').each do |opt|
     case opt
     # HTTP proxy settings
