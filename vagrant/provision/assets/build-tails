@@ -4,11 +4,11 @@ set -e
 
 as_root_do() {
 	sudo \
-		RSYNC_PROXY="$RSYNC_PROXY" \
-		http_proxy="$http_proxy" \
-		https_proxy="$https_proxy" \
-		ftp_proxy="$ftp_proxy" \
-		no_proxy="$no_proxy" \
+		${RSYNC_PROXY:+RSYNC_PROXY="$RSYNC_PROXY"} \
+		${http_proxy:+http_proxy="$http_proxy"} \
+		${https_proxy:+https_proxy="$https_proxy"} \
+		${ftp_proxy:+ftp_proxy="$ftp_proxy"} \
+		${no_proxy:+no_proxy="$no_proxy"} \
 		"$@"
 }
 
