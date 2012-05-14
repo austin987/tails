@@ -27,6 +27,19 @@ VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 # Environment variables that will be exported to the build script
 EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS']
 
+task :parse_build_options do
+  options = ENV['TAILS_BUILD_OPTIONS'] || ''
+  options.split(' ').each do |opt|
+    case opt
+    # SquashFS compression settings
+    when 'gzipcomp'
+      ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip'
+    when 'defaultcomp'
+      ENV['MKSQUASHFS_OPTIONS'] = nil
+    end
+  end
+end
+
 task :validate_http_proxy do
   if ENV['http_proxy']
     proxy_host = URI.parse(ENV['http_proxy']).host
@@ -48,7 +61,7 @@ task :validate_http_proxy do
 end
 
 desc 'Build Tails'
-task :build => ['validate_http_proxy', 'vm:up'] do
+task :build => ['parse_build_options', 'validate_http_proxy', 'vm:up'] do
   exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                   collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
 
