@@ -20,6 +20,13 @@
 # Monkey-patched Vagrant!
 $:.unshift File.expand_path('../lib', __FILE__)
 require 'vagrant_verified_download'
+require 'tails_build_settings'
+
+if ENV['TAILS_RAM_BUILD']
+  mem_size = VM_MEMORY_FOR_RAM_BUILDS
+else
+  mem_size = VM_MEMORY_FOR_DISK_BUILDS
+end
 
 Vagrant::Config.run do |config|
   config.vm.box = 'tails'
@@ -30,4 +37,6 @@ Vagrant::Config.run do |config|
   config.vm.provision :shell, :inline => "http_proxy='#{ENV['http_proxy']}' /vagrant/provision/setup-tails-builder"
 
   config.vm.share_folder 'amnesia', '/amnesia.git', '../.git'
+
+  config.vm.customize ['modifyvm', :id, '--memory', mem_size]
 end

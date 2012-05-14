@@ -2,6 +2,8 @@
 
 set -e
 
+TMPFS_SIZE=6 # GB
+
 as_root_do() {
 	sudo \
 		${RSYNC_PROXY:+RSYNC_PROXY="$RSYNC_PROXY"} \
@@ -12,6 +14,17 @@ as_root_do() {
 		${MKSQUASHFS_OPTIONS:+MKSQUASHFS_OPTIONS="$MKSQUASHFS_OPTIONS"} \
 		"$@"
 }
+
+usable_memory() {
+	free | awk '/cache:/ { print $4 }'
+}
+
+if [ "$TAILS_RAM_BUILD" ]; then
+	if [ "$(usable_memory)" -lt $(($TMPFS_SIZE * 1024 * 1024)) ]; then
+		echo "Not enough memory available for an in-memory build. Aborting." >&2
+		exit 1
+	fi
+fi
 
 REV="${1:-$(git --git-dir=/amnesia.git name-rev --name-only HEAD)}"
 COMMIT="$(git --git-dir=/amnesia.git rev-parse --verify "$REV")"
@@ -24,6 +37,17 @@ git fetch origin
 as_root_do git checkout --force "$REV"
 as_root_do git reset --hard "$COMMIT"
 as_root_do lb clean || true
+
+if [ "$TAILS_RAM_BUILD" ]; then
+	BUILD_DIR=$(mktemp -d /home/vagrant/tails-build.XXXXXXXX)
+	trap "cd / ; sudo umount '$BUILD_DIR' ; sudo rmdir '$BUILD_DIR'" EXIT
+	as_root_do mount -t tmpfs -o "noatime,size=${TMPFS_SIZE}G,mode=0770,uid=root,gid=vagrant" tmpfs "$BUILD_DIR"
+
+	as_root_do rsync -a /home/vagrant/amnesia/ "$BUILD_DIR"/
+
+	cd "$BUILD_DIR"
+fi
+
 as_root_do lb config
 as_root_do lb build
 

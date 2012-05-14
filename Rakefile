@@ -28,11 +28,17 @@ require 'tails_build_settings'
 VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 
 # Environment variables that will be exported to the build script
-EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS']
+EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD']
 
 # Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 
+def current_vm_memory
+  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
+  uuid = env.primary_vm.uuid
+  info = env.primary_vm.driver.execute 'showvminfo', uuid, '--machinereadable'
+  $1.to_i if info =~ /^memory=(\d+)/
+end
 
 task :parse_build_options do
   options = ''
@@ -43,6 +49,11 @@ task :parse_build_options do
   options += ENV['TAILS_BUILD_OPTIONS'] if ENV['TAILS_BUILD_OPTIONS']
   options.split(' ').each do |opt|
     case opt
+    # Memory build settings
+    when 'ram'
+      ENV['TAILS_RAM_BUILD'] = '1'
+    when 'noram'
+      ENV['TAILS_RAM_BUILD'] = nil
     # HTTP proxy settings
     when 'extproxy'
       abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
@@ -120,6 +131,18 @@ namespace :vm do
             $ rake vm:halt
 
       END_OF_MESSAGE
+    when :running
+      if ENV['TAILS_RAM_BUILD'] && current_vm_memory < VM_MEMORY_FOR_RAM_BUILDS
+        $stderr.puts <<-END_OF_MESSAGE.gsub(/^          /, '')
+
+          The virtual machine is not currently set with enough memory to
+          perform an in-memory build. Either remove the `ram` option from
+          the TAILS_BUILD_OPTIONS environment variable, or shut the
+          virtual machine down using `rake vm:halt` before trying again.
+
+        END_OF_MESSAGE
+        abort 'Not enough memory for the virtual machine to run an in-memory build. Aborting.'
+      end
     end
     result = env.cli('up')
     abort "'vagrant up' failed" unless result
