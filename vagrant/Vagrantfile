@@ -27,7 +27,7 @@ Vagrant::Config.run do |config|
   config.vm.box_url = 'http://dl.amnesia.boum.org/tails/project/vagrant/squeeze.box'
   config.vm.box_checksum = 'ffb3f68f55a3458e007b9abed3eac057f71c518713fcdf982b78f8b59e28318e'
 
-  config.vm.provision :shell, :path => 'provision/setup-tails-builder'
+  config.vm.provision :shell, :inline => "http_proxy='#{ENV['http_proxy']}' /vagrant/provision/setup-tails-builder"
 
   config.vm.share_folder 'amnesia', '/amnesia.git', '../.git'
 end

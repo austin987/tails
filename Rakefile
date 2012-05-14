@@ -62,7 +62,7 @@ end
 
 namespace :vm do
   desc 'Start the build virtual machine'
-  task :up do
+  task :up => 'validate_http_proxy' do
     env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
     case env.primary_vm.state
     when :not_created
@@ -100,7 +100,7 @@ namespace :vm do
   end
 
   desc 'Re-run virtual machine setup'
-  task :provision do
+  task :provision => 'validate_http_proxy' do
     env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
     result = env.cli('provision')
     abort "'vagrant provision' failed" unless result
