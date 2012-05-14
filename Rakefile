@@ -27,10 +27,24 @@ VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 # Environment variables that will be exported to the build script
 EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS']
 
+# Let's save the http_proxy set before playing with it
+EXTERNAL_HTTP_PROXY = ENV['http_proxy']
+
+# Hostname of the virtual machine (must be in /etc/hosts)
+VIRTUAL_MACHINE_HOSTNAME = 'squeeze.vagrantup.com'
+
 task :parse_build_options do
   options = ENV['TAILS_BUILD_OPTIONS'] || ''
   options.split(' ').each do |opt|
     case opt
+    # HTTP proxy settings
+    when 'extproxy'
+      abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
+      ENV['http_proxy'] = EXTERNAL_HTTP_PROXY
+    when 'vmproxy'
+      ENV['http_proxy'] = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
+    when 'noproxy'
+      ENV['http_proxy'] = nil
     # SquashFS compression settings
     when 'gzipcomp'
       ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip'
@@ -75,7 +89,7 @@ end
 
 namespace :vm do
   desc 'Start the build virtual machine'
-  task :up => 'validate_http_proxy' do
+  task :up => ['parse_build_options', 'validate_http_proxy'] do
     env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
     case env.primary_vm.state
     when :not_created
@@ -113,7 +127,7 @@ namespace :vm do
   end
 
   desc 'Re-run virtual machine setup'
-  task :provision => 'validate_http_proxy' do
+  task :provision => ['parse_build_options', 'validate_http_proxy'] do
     env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
     result = env.cli('provision')
     abort "'vagrant provision' failed" unless result

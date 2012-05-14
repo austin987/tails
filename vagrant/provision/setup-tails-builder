@@ -2,8 +2,24 @@
 
 set -e
 
-# Refresh packages lists
+# Do not use virtual machine proxy before apt-cacher-ng is installed
+if [ "$http_proxy" = "http://$(hostname -f):3142" ] &&
+   ! [ -f /etc/apt-cacher-ng/acng.conf ]; then
+	LOCAL_HTTP_PROXY="$http_proxy"
+	http_proxy=''
+fi
+
 apt-get update
+apt-get -y install apt-cacher-ng
+
+# Install custom configuration for apt-cacher-ng and restart
+sudo cp /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
+service apt-cacher-ng restart
+
+# Restore local HTTP proxy if needed
+if [ "$LOCAL_HTTP_PROXY" ]; then
+	http_proxy="$LOCAL_HTTP_PROXY"
+fi
 
 # Upgrade if needed
 apt-get -y dist-upgrade
