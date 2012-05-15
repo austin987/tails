@@ -15,11 +15,9 @@ as_root_do() {
 REV="${1:-$(git --git-dir=/amnesia.git name-rev --name-only HEAD)}"
 COMMIT="$(git --git-dir=/amnesia.git rev-parse --verify "$REV")"
 
-cd /home/vagrant
+test -d /home/vagrant/amnesia || git clone /amnesia.git /home/vagrant/amnesia
 
-test -d amnesia || git clone /amnesia.git amnesia
-
-cd amnesia
+cd /home/vagrant/amnesia
 
 git fetch origin
 as_root_do git checkout --force "$REV"
