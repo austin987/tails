@@ -28,7 +28,7 @@ require 'tails_build_settings'
 VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 
 # Environment variables that will be exported to the build script
-EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD']
+EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD']
 
 # Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
@@ -67,6 +67,9 @@ task :parse_build_options do
       ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip'
     when 'defaultcomp'
       ENV['MKSQUASHFS_OPTIONS'] = nil
+    # Clean-up settings
+    when 'cleanall'
+      ENV['TAILS_CLEAN_BUILD'] = '1'
     end
   end
 end

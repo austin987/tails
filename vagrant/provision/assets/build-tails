@@ -37,6 +37,9 @@ git fetch origin
 as_root_do git checkout --force "$REV"
 as_root_do git reset --hard "$COMMIT"
 
+if [ "$TAILS_CLEAN_BUILD" ]; then
+	as_root_do lb clean --all
+fi
 as_root_do ./build-wiki
 
 BUILD_DIR=$(mktemp -d /home/vagrant/tails-build.XXXXXXXX)
