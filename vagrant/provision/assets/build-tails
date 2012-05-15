@@ -37,6 +37,8 @@ git fetch origin
 as_root_do git checkout --force "$REV"
 as_root_do git reset --hard "$COMMIT"
 
+as_root_do ./build-wiki
+
 BUILD_DIR=$(mktemp -d /home/vagrant/tails-build.XXXXXXXX)
 if [ "$TAILS_RAM_BUILD" ]; then
 	trap "cd / ; sudo umount '$BUILD_DIR' ; sudo rmdir '$BUILD_DIR'" EXIT
