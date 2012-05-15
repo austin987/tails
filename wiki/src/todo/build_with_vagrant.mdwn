@@ -6,186 +6,28 @@ In order to enable more people to contribute to Tails, and to get started more
 quickly, we should support building Tails in a pre-configured virtual machine
 using [Vagrant](http://www.vagrantup.com/).
 
-To support such things, Tails mostly needs to add to its repository a
-`Vagrantfile` and provisioning recipes, and to add a *base box* to its mirrors.
-
-Attached files
-==============
-
- * [[Vagrantfile]]: configuration file for Vagrant,
- * [[provision/setup-tails-builder]]: idempotent provisioning script than is
-   run inside the virtual machine upon boot,
- * [[provision/assets/build-tails]]: build script to be run inside the
-   virtual machine,
- * to build the Squeeze *base box*:
-   - [[definitions/squeeze/definition.rb]]: Veewee configuration,
-   - [[definitions/squeeze/preseed.cfg]]: preseed file used by the debian-installer,
-   - [[definitions/squeeze/postinstall.sh]]: script run on first boot of the
-     *base box*.
-
-Using Vagrant
-=============
-
-Here is the few steps that needs to be done when building Tails with Vagrant:
-
-Install Vagrant
----------------
-
-Install Vagrant on a Debian Wheezy system is a simple as:
-
-    # sudo apt-get install vagrant
-
-On another system, one can install [VirtualBox](http://www.virtualbox.org/),
-[RubyGems](http://rubygems.org/) and run:
-
-    # gem install --no-ri --no-rdoc vagrant
-
-Build Tails with Vagrant
-------------------------
-
-The first thing is to start the virtual machine:
-
-    $ vagrant up
-
-This will initialize a new virtual machine, and provision it using our
-shell script.
-
-*Note:* until Tails ship a *base box* on its mirrors, this will give you an
-error if you do not [add a `tails` box
-manually](http://vagrantup.com/docs/boxes.html).
-
-Then, launching our build process can be done through the following:
-
-    $ vagrant ssh -c 'build-tails'
-
-To build another branch (or tag) than the one currently active:
-
-    $ vagrant ssh -c 'build-tails feature/startpage_as_default'
-
-Or, to use quickest gzip compression:
-
-    $ vagrant ssh -c "export MKSQUASHFS_OPTIONS='-comp gzip' && build-tails"
-
-*Note: the resulting ISO images are not automatically copied to the host system
-yet.*
-
-We can always SSH to this virtual machine using:
-
-    $ vagrant ssh
-
-Creating the *base box*
-=======================
-
-The creation of the *base box* can fortunately be automatised using a tool
-called [Veewee](https://github.com/jedi4ever/veewee).
-
-Installing the requirements
----------------------------
-
-To build the *base box* from scratch using Veewee, you will need to get both
-Veewee and Vargant from Rubygems:
-
-    # gem install --no-ri --no-rdoc vagrant
-    # gem install --no-ri --no-rdoc veewee
-
-*Note:* Unfortunately, using `gem --user` does not work. The `basebox`
-subcommands that is made available by Veewee never shows up in Vagrant.
-That needs to sorted out upstream.
-
-*Note:* Installing the Veewee gem will install the Vagrant gem, even
-if the Debian package is installed.
-
-Doing an unattented installation
---------------------------------
-
-To create the *basebox* from the `squeeze` template (in `definitions`
-directory) using Veewee, the command is the following:
-
-    $ vagrant basebox build squeeze
-
-*Note:* It looks like the current version of the `virtualbox` gem is not
-compatible with VirtualBox 4.0.x that is in `squeeze-backports`. Using
-a hand made backport of virtualbox 4.1.12-dfsg-2 worked fine.
-
-*Note:* Before running the `build` command, you might want to edit
-`definitions/squeeze/preseed.cfg` and preseed `mirror/http/proxy` with the
-address of your local HTTP proxy.
-
-After issuing that command, Veewee will download the boot ISO image,
-pilote the debian-installer and run `postinstall.sh` that will take care
-of seting up the environment expected by Vagrant.
-
-Once the initial setup is done, it is worthwhile to see if the *basebox*
-fits Vagrant requirements. Veewee ships with an automated test suite:
-
-    $ vagrant basebox validate squeeze
-
-If everything goes well, then, great, we have our *basebox*. Let's export
-it to a `.box` file that Vagrant can use:
-
-    $ vagrant basebox export squeeze
-
-Bootstrapping Vagrant
-=====================
-
-First, the *base box* needs to be added to boxes known by Vagrant:
-
-    $ vagrant box add tails squeeze.box
-
-Then we can start a new Vagrant project:
-
-    $ vagrant init
-
-This will create a `Vagrantfile` than we modify to create our build
-environment. The two things we need to add:
-
- * We choose to use the [Shell
-   provisioner](http://vagrantup.com/docs/provisioners/shell.html), as long as
-   we make this script reentrant it will lower the learning curve for
-   contributors not familiar with Puppet or Chef. The script is located in
-   `provision/tails-builder`:
-
-         config.vm.provision :shell, :path => 'provision/setup-tails-builder'
-
- * We share the content of the local clone of the `amnesia.git` repository:
-
-         config.vm.share_folder 'amnesia', '/amnesia.git', '../../../../.git'
-
-   With the previous line, the clone should be located in the parent directory
-   of the `Vagrantfile`.
-
-We actually need to share the `.git` directory to overcome limitations
-of VirtualBox shared folders (namely *symlink support*). The build script
-will clone (and fetch further changes) from that repository.
+The on-going work is done in the `feature/vagrant` branch. **Warning**, it *will* be
+rebased. To know more about its features, please have a look at the new build
+documentation in there.
 
 Left to be done
 ===============
 
 [[!tag todo/code]]
 
-Copy build products to host
----------------------------
+Finish the build system
+-----------------------
 
-The products of the build currently have to be retrieved manually from
-the build virtual machine. It would be better to copy them back to
-the host at the end of the process.
+What's left:
 
-It is not currently done because the code that currently generates
-the filenames is in `auto/build` and it would be a shame to duplicate it.
-It needs to be factored out in a common (sourced) shell snippet.
-
-APT proxy support
------------------
-
-Times to do recurrent builds can be drastically reduced when there is
-a proxy for Debian packages. Thus, it would be nice to offer two options:
-
- * Use an already existing HTTP proxy on the network.
- * Setup `apt-cacher-ng` or `squid-deb-proxy` in the virtual machine and use
-   it. This might be worth switching the provisioning system to Puppet.
-
-Please note that `LB_APT_HTTP_PROXY` is not used at `debootstrap` stage.
-*What a shame.*
+ * Ensure we handle all VM states properly in build target.
+ * Add an option to change the number of CPUs in the VM. Autodetect available
+   CPUs on Linux.
+ * Fail when `rake build` is run with uncommited changes. Transform that into
+   a warning with then proper option.
+ * Move build products in `.` instead of leaving them in the `vagrant`
+   directory.
+ * Call for a review on tails-dev.
 
 Upstream Veewee
 ---------------
