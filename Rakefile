@@ -21,6 +21,9 @@ require 'rubygems'
 require 'vagrant'
 require 'uri'
 
+$:.unshift File.expand_path('../vagrant/lib', __FILE__)
+require 'tails_build_settings'
+
 # Path to the directory which holds our Vagrantfile
 VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 
@@ -30,8 +33,6 @@ EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS']
 # Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 
-# Hostname of the virtual machine (must be in /etc/hosts)
-VIRTUAL_MACHINE_HOSTNAME = 'squeeze.vagrantup.com'
 
 task :parse_build_options do
   options = ''
