@@ -59,6 +59,16 @@ def enough_free_memory?
   end
 end
 
+def system_cpus
+  return nil unless RbConfig::CONFIG['host_os'] =~ /linux/i
+
+  begin
+    File.read('/proc/cpuinfo').scan(/^processor\s+:/).count
+  rescue
+    nil
+  end
+end
+
 task :parse_build_options do
   options = ''
 
@@ -67,6 +77,10 @@ task :parse_build_options do
 
   # Use in-VM proxy unless an external proxy is set
   options += 'vmproxy ' unless EXTERNAL_HTTP_PROXY
+
+  # Default to the number of system CPUs when we can figure it out
+  cpus = system_cpus
+  options += "cpus=#{cpus} " if cpus
 
   options += ENV['TAILS_BUILD_OPTIONS'] if ENV['TAILS_BUILD_OPTIONS']
   options.split(' ').each do |opt|
