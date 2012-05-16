@@ -144,6 +144,11 @@ task :build => ['parse_build_options', 'validate_http_proxy', 'vm:up'] do
                                           :error_check => false) do |fd, data|
     (fd == :stdout ? $stdout : $stderr).write data
   end
+
+  # Move build products to the current directory
+  FileUtils.mv Dir.glob("#{VAGRANT_PATH}/tails-*"),
+               File.expand_path('..', __FILE__), :force => true
+
   exit status
 end
 
