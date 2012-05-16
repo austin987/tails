@@ -66,6 +66,7 @@ task :parse_build_options do
     case opt
     # Memory build settings
     when 'ram'
+      abort "Not enough free memory to do an in-memory build. Aborting." unless enough_free_memory?
       ENV['TAILS_RAM_BUILD'] = '1'
     when 'noram'
       ENV['TAILS_RAM_BUILD'] = nil
