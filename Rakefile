@@ -110,6 +110,34 @@ task :parse_build_options do
     # Virtual CPUs settings
     when /cpus=(\d+)/
       ENV['TAILS_BUILD_CPUS'] = $1
+    # Git settings
+    when 'ignorechanges'
+      ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
+    end
+  end
+end
+
+task :ensure_clean_repository do
+  unless `git status --porcelain`.empty?
+    if ENV['TAILS_BUILD_IGNORE_CHANGES']
+      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
+
+        You have uncommited changes in the Git repository. They will
+        be ignored for the upcoming build.
+
+      END_OF_MESSAGE
+    else
+      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
+
+        You have uncommited changes in the Git repository. Due to limitations
+        of the build system, you need to commit them before building Tails.
+
+        If you don't care about those changes and want to build Tails nonetheless,
+        please add `ignorechanges` to the TAILS_BUILD_OPTIONS environment
+        variable.
+
+      END_OF_MESSAGE
+      abort 'Uncommited changes. Aborting.'
     end
   end
 end
@@ -135,7 +163,7 @@ task :validate_http_proxy do
 end
 
 desc 'Build Tails'
-task :build => ['parse_build_options', 'validate_http_proxy', 'vm:up'] do
+task :build => ['parse_build_options', 'ensure_clean_repository', 'validate_http_proxy', 'vm:up'] do
   exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                   collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
 
