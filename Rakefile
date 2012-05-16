@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+require 'rbconfig'
 require 'rubygems'
 require 'vagrant'
 require 'uri'
@@ -40,8 +41,22 @@ def current_vm_memory
   $1.to_i if info =~ /^memory=(\d+)/
 end
 
+def enough_free_memory?
+  return false unless RbConfig::CONFIG['host_os'] =~ /linux/i
+
+  begin
+    usable_free_mem = `free`.split[16].to_i
+    usable_free_mem > VM_MEMORY_FOR_RAM_BUILDS * 1024
+  rescue
+    false
+  end
+end
+
 task :parse_build_options do
   options = ''
+
+  # Default to in-memory builds if there is enough RAM available
+  options += 'ram ' if enough_free_memory?
 
   # Use in-VM proxy unless an external proxy is set
   options += 'vmproxy ' unless EXTERNAL_HTTP_PROXY
