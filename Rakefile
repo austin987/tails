@@ -28,6 +28,9 @@ require 'tails_build_settings'
 # Path to the directory which holds our Vagrantfile
 VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 
+# Branches that are considered 'stable' (used to select SquashFS compression)
+STABLE_BRANCH_NAMES = ['stable', 'testing']
+
 # Environment variables that will be exported to the build script
 EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD']
 
@@ -59,6 +62,11 @@ def enough_free_memory?
   end
 end
 
+def stable_branch?
+  branch_name = `git name-rev --name-only HEAD`
+  STABLE_BRANCH_NAMES.include? branch_name
+end
+
 def system_cpus
   return nil unless RbConfig::CONFIG['host_os'] =~ /linux/i
 
@@ -77,6 +85,9 @@ task :parse_build_options do
 
   # Use in-VM proxy unless an external proxy is set
   options += 'vmproxy ' unless EXTERNAL_HTTP_PROXY
+
+  # Default to fast compression on development branches
+  options += 'gzipcomp ' unless stable_branch?
 
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
