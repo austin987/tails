@@ -41,6 +41,13 @@ def current_vm_memory
   $1.to_i if info =~ /^memory=(\d+)/
 end
 
+def current_vm_cpus
+  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
+  uuid = env.primary_vm.uuid
+  info = env.primary_vm.driver.execute 'showvminfo', uuid, '--machinereadable'
+  $1.to_i if info =~ /^cpus=(\d+)/
+end
+
 def enough_free_memory?
   return false unless RbConfig::CONFIG['host_os'] =~ /linux/i
 
@@ -86,6 +93,9 @@ task :parse_build_options do
     # Clean-up settings
     when 'cleanall'
       ENV['TAILS_CLEAN_BUILD'] = '1'
+    # Virtual CPUs settings
+    when /cpus=(\d+)/
+      ENV['TAILS_BUILD_CPUS'] = $1
     end
   end
 end
@@ -161,6 +171,17 @@ namespace :vm do
 
         END_OF_MESSAGE
         abort 'Not enough memory for the virtual machine to run an in-memory build. Aborting.'
+      end
+      if ENV['TAILS_BUILD_CPUS'] && current_vm_cpus != ENV['TAILS_BUILD_CPUS'].to_i
+        $stderr.puts <<-END_OF_MESSAGE.gsub(/^          /, '')
+
+          The virtual machine is currently running with #{current_vm_cpus}
+          virtual CPU(s). In order to change that number, you need to
+          stop the VM first, using `rake vm:halt`. Otherwise, please
+          adjust the `cpus` options accordingly.
+
+        END_OF_MESSAGE
+        abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
       end
     end
     result = env.cli('up')

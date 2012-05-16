@@ -28,6 +28,8 @@ else
   mem_size = VM_MEMORY_FOR_DISK_BUILDS
 end
 
+cpus = ENV['TAILS_BUILD_CPUS']
+
 Vagrant::Config.run do |config|
   config.vm.box = 'tails'
 
@@ -39,4 +41,5 @@ Vagrant::Config.run do |config|
   config.vm.share_folder 'amnesia', '/amnesia.git', '../.git'
 
   config.vm.customize ['modifyvm', :id, '--memory', mem_size]
+  config.vm.customize ['modifyvm', :id, '--cpus', cpus] unless cpus.nil?
 end
