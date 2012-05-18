@@ -1,25 +1,34 @@
-[[!toc levels=2]]
+[[!toc levels=4]]
 
 # Rationale
 
 Partial upgrades should provide only what has changed between two
 releases (deltas) and have a way to apply those changes to the
-previous version. We call the file that contains this an Incremental
-Upgrade Kit (IUK).
+previous version. 
 
 At boot-time the security warning telling that a new Tails version is available
 should provide an automated way of doing the upgrade.
+
+# Definitions
+
+* **update-description file**: a file that describes the update from
+  a given version, to another, newer given version of a software
+  product.
+* **Incremental Upgrade Kit (IUK)**: a file that contains everything
+  needed to update from.
+* **full image**: a file that is sufficient to install and run Tails
+  (currently, that means an ISO image).
+* **target files**: the whole set of files included by reference into
+  an update; e.g. this may be an IUK or a full image.
 
 # Roadmap
 
 [[!tag todo/code]]
 
-## 1. Prerequisites
+## 1. Design
 
-* **move to live-boot and live-config 3.x**: Tails currently ships the
-  stable (2.x) branches, whereas live-boot 3.x is needed to get
-  whiteouts support. This will be done as part of our work on
-  [[todo/persistence]].
+* Think the current design a bit deeper, discuss with other Tails
+  developers, reach an agreement.
 
 ## 2. Infrastructure
 
@@ -48,37 +57,212 @@ upgrade kit.
 
 # Implementation
 
+## Upgrade paths
+
+To ease implementation, only next-closest-step upgrade paths
+are supported.
+
+E.g. say one has installed Tails 0.11 a while ago, and forgets
+about it. We then release Tails 0.11.1, and publish a `0.11_to_0.11.1`
+IUK, advertised by the update-description file for 0.11 users. We then
+release Tails 0.11.2, and publish a `0.11.1_to_0.11.2` IUK, advertised
+by the update-description file for 0.11.1 users. If the user starts
+their Tails 0.11, the upgrade system proposes upgrading to 0.11.1; say
+the user accepts, the upgrade is performed, the user reboots, and the
+upgrade system now proposes upgrading to 0.11.2.
+
+Allowing to run these two steps in a row, without rebooting, is
+mainly as GUI problem, and is postponed.
+
 ## Infrastructure
 
 ### generate an IUK
 
-* think the IUK format through
-  - [Mozilla ARchive format (MAR)](https://wiki.mozilla.org/Software_Update:MAR)
-
-Program that takes two Tails ISO images, and:
+We need a program that takes two Tails full images as input, and:
 
 * builds the "diff" SquashFS
 * gets the new kernel(s), initrd(s), bootloader configuration
-* brings all this together into some kind of structured archive
+* brings all this together into a single file, in the IUK format
+
+### Incremental Update Kit
+
+#### IUK format
+
+An IUK is a tar archive, compatible with GNU tar, that contains the
+following files:
+
+* `FORMAT`: contains the version of the IUK format (that is *1*), as
+  a positive integer encoded in ASCII.
+* `control.yml`: YAML associative array with the following keys:
+  - `delete_files`: a list of files to delete from the
+    system partition.
+* zero, one or more `*.tar[.xz]`: tar archives, compatible with GNU tar, optionally
+  compressed with XZ, that contain the set of files to add to, or
+  update in the system partition: kernel(s), initrd(s), bootloader
+  configuration, `*.squashfs` (the SquashFS "diff" that must be
+  stacked on top of the older SquashFS filesystem(s)), etc.
+
+File paths, both in `*.tar[.xz]` and in the `delete_files` list, are
+relative to the Tails system partition root, and must be compatible
+with a FAT32 filesystem.
+
+Tarballs contained in the IUK are extracted, one after the other,
+sorted by ASCII order.
+
+#### IUK file name
+
+An IUK's name is built from these underscore-separated elements,
+followed by the `.iuk` suffix:
+
+* product name (e.g. *Tails*)
+* build-target (e.g. *i386*)
+* product version -- the currently running version to upgrade from,
+  e.g. *0.11* or *0.11.1*
+* `to`
+* the version of this update, that is the version of the running
+  product after the update is completed and the system restarted (e.g.
+  *0.11.2*)
+
+Example: `Tails_i386_0.11.1_to_0.11.2.iuk`
+
+#### Initial implementation details
+
+The initial IUK generator will ship those files in every IUK:
+
+* `system.tar` contains files that are already compressed
+  (e.g. kernel, initrd, `*.squashfs`)
+* `boot.tar.xz` contains files that are not compressed already
+  (that is the syslinux configuration)
+
+These are implementation details the IUK installer software must not
+rely upon.
 
 ### mirrors infrastructure
+
+Notes:
 
 * Using something like [Mozilla's
   channels](https://wiki.mozilla.org/Software_Update:Channels)
   (*release*, *beta*, *nightly*) would e.g. allow us to push beta
   updates earlier to a brave subset of users. Subscribing to a channel
   other than *release* is something that would be worth
-  [[persisting|todo/persistence]]. We are not likely to implement
+  [[persisting|doc/first_steps/persistence]]. We are not likely to implement
   a channels system in phase one, but the infrastructure we setup
   should leave room for such future extension.
-* A careful read of Mozilla's [Checking For
-  Updates](https://wiki.mozilla.org/Software_Update:Checking_For_Updates)
-  and [updates.xml
-  Format](https://wiki.mozilla.org/Software_Update:updates.xml_Format)
-  technical documentation is a must to avoid forgetting stuff useful
-  on the long run, such as necessary identifiers in URLs.
 
-## User interface
+### Update-description files
+
+We want the client to get an answer to questions such as "I run
+version N of product P on architecture A, what stable release update
+is available?". To allow us changing the way the answer is computed in
+the future, the amount of work done on the client's side should be
+kept to a minimum. So, let's insert a level of indirection, and
+pre-compute server-side the answer to the queries we want to support.
+
+The answers are distributed on our HTTP servers in the form of a set
+of update-description file files.
+
+All the client has to do is:
+
+* build the URI to its update-description file (could even be done at
+  build time and hard-coded into the image) and to its cryptographic
+  signature
+* fetch the update-description file and its signature at these URIs
+* verify the cryptographic signature of the update-description file
+* extract information about available updates from the
+  update-description file
+* do something simple and not-that-clever with this information
+
+#### update-description file URL
+
+* `https://tails.boum.org/update`
+* URL schema version (so we can change it in the future), that is `v1`
+  to start with.
+* product name (e.g. *Tails*, but some day we may have *TailsServer*,
+  *TailsHandheld* or whatever)
+* product version -- the currently running version to upgrade from,
+  e.g. *0.11* or *0.11.1*
+* build-target (e.g. *i386*)
+* channel (e.g. *release* or *beta*)
+* `update.yml`
+
+e.g. <https://tails.boum.org/update/v1/Tails/0.11/i386/beta/updates.yml>
+
+Such a file shall be shipped along with its OpenPGP detached signature
+(`updates.yml.pgp`).
+
+#### update-description file format
+
+An update-description file contains an associative array with the
+following top-level keys:
+
+* `product-name`
+* `product-version`
+* `build-target`
+* `channel`
+* `updates`: a list of update elements.
+
+Each update element is itself an associative array describing an
+update to an individual product version, with the following keys:
+
+* `version` -- the version of this update, that is the version of the
+  running product after the update is completed and the system
+  restarted (e.g. *0.11.1*)
+* `type` -- *major* or *minor* (in phase one, all IUK will be about
+  point-releases, and the type will therefore always be *minor*, but
+  let's make room in case we want to announce major releases this way
+  too at some point)
+* `details-url` -- a URL to a web page with more information about the
+  specified update (e.g.
+  <https://tails.boum.org/news/version_0.11.1/>)
+* `update-paths` -- a list of at least one and no more than two
+  update path elements.
+
+An update path element describes a set of target files that lives on
+a remote server that must all be downloaded and applied to the product
+to update it to that version. The keys for an update path element are
+as follows:
+
+* `type` -- *full* or *incremental* (IUK are about incremental
+  upgrades, but let's make room to announce full images this way too
+  at some point)
+* `target-files`: a list of target files for this upgrade path.
+
+Every target file element has the following keys:
+
+* `url` -- A URL to the target file.
+* `size` -- The size of the update, in bytes.
+* `sha256` -- The SHA-256 hash of the patch file. If the client
+  generated value does not match this, the integrity check fails after
+  download. (Other kind of hashes may be added in a future revision of
+  the update-description file format -- which of these multiple hashes
+  the client must verify will need to be specified when this happens.)
+
+Example that would be found at
+<https://tails.boum.org/update/v1/Tails/0.11.1/i386/release/updates.yml>:
+
+	product-name: Tails
+	product-version: 0.11.1
+	channel: release
+	build-target: i386
+	
+	updates:
+	  - version: 0.11.2
+	    type: minor
+	    details-url: https://tails.boum.org/news/version_0.11.2/
+	    upgrade-paths:
+	      - type: incremental
+	        target-files:
+	          - url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.11.1_to_0.11.2/tails-i386-0.11.1_to_0.11.2.iuk
+	            size: 37345648
+	            sha256: 5c5c47f6155e7807c971251fdad28d5f72ff78db446e43a41e4b900f29229a7d
+	      - type: full
+	        target-files:
+	          - url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.11.2/tails-i386-0.11.2.iso
+	            size: 762123456
+	            sha256: 1015e37e14c6daaecd528b4a841ef6ac2156a5790346d0fd036f9566ce5f641b
+
+## Client and user interface
 
 ### install an IUK
 
@@ -93,10 +277,14 @@ read-write.
 
 * Tell the user we're going to run the upgrade.
 * Remount the boot-medium read-write.
+* Verify the IUK is in a supported format.
 * Extract the IUK archive.
-* Move kernels and initrd's in place.
-* Move bootloader configuration in place.
-* Install bootloader on MBR (probably not needed).
+* Move stacked squashfs found in the IUK in place.
+* Extract tarballs (`*.tar[.xz]`) contained in the IUK, one after the
+  other, sorted by ASCII order.
+* Delete files that are listed in the `delete_files` control field.
+* Append the new SquashFS diff filename to the `live/Tails.module`
+  file, in the Tails system partition.
 * Remount the boot-medium read-only.
 * Tell the user the upgrade process is finished.
 * Reboot.
@@ -110,29 +298,130 @@ Resources:
   succeeded / failed status) to avoid retrying the same buggy update
   in a loop seems worth being considered.
 
+### signature verification
+
+If update-description file polling and parsing is implemented in Perl,
+signature verification would be made using `GnuPG::Interface`'s
+`verify` method.
+
+The verify method is run on a `GnuPG::Interface` object built with
+`--homedir` pointed to a dedicated keyring directory, created at Tails
+boot or ISO build time, that contains only the Tails signing public
+OpenPGP key, which is assigned the minimum level of trust so that
+GnuPG trusts the signatures made with the corresponding private key.
+
+The `verify` method return value is `waitpid`'d for, and the GnuPG
+child process exit status examined (zero means verification succeeded,
+non-zero means verification failure).
+
 ### security warning program
 
 The program currently telling that a new Tails version is available
 should run (or point at) the downloader program if the new version is
 a point-release, and else point at full upgrade documentation.
 
-* Detects if the new version is a point-release (checking if an IUK is
-  available is probably the simplest, most robust and future-proof way
-  to do so)
+* Detects if the new version is a point-release.
 * Points at the downloader.
 
-### download an IUK
+**FIXME**: this separation of tasks and interface between security warning
+program and downloader is wrong and must be thought through.
+
+### download target files
+
+**FIXME**: tasks separation and interface between security warning
+program and downloader is wrong and must be thought through.
 
 Write a downloader for Incremental Upgrade Kits.
 
-* Takes two versions as arguments, downloads the IUK.
+* Takes two versions as arguments, downloads the target files.
 * Start the installer.
-* Allow the user to save the IUK where they want.
+* Allow the user to save the target files where they want.
 * Bonus points if there's an opt-in way to have the download happen in
   the clear, that is without going through the Tor network.
 * Allow overriding the URL for dev / testing purpose.
 
+# Code
+
+* Integration work is being done in the `feature/incremental-upgrades`
+  branch of the main Tails [[contribute/Git]] repository.
+
+# Security
+
+We want to use tools such as TUF or Thandy once they are ready for
+production use.
+
+Until then, we will content ourselves with a much simpler system that
+is clearly less secure than TUF or Thandy against certain types of
+attacks, but is at least as secure as the way users are currently able
+to manually check if a new Tails version is available.
+
+## Update-description files
+
+* update-description files are published on <https://tails.boum.org/>.
+* The upgrade client checks the SSL certificate presented by the
+  server is valid (in phase one, using simple CA-based validation;
+  instead using Monkeysphere would be a great future improvement).
+* All update-description files are signed by the Tails OpenPGP
+  signing key.
+
+## Target files
+
+* Communication to HTTP servers that provide target files is likely to
+  be made in cleartext (`http://`). No security is to be expected from
+  transport-level security here. Mirrors are not trusted anyway.
+* Hashes for target files are published in update-description files,
+  that are themselves signed by the Tails OpenPGP signing key.
+
+## Discussion
+
+We believe this upgrade system has the same security properties as the
+way users are currently able to manually check if a new Tails version
+is available.
+
+More precisely:
+
+* Mounting *Rollback* and *Indefinite freeze* attacks requires either
+  to take control of the Tails website or to break the SSL/TLS
+  connection between the client and the server.
+* **FIXME**: discuss other attacks listed in the TUF
+  security documentation.
+
+## Amnesia vs. old metadata attacks
+
+[TUF security
+documentation](https://www.updateframework.com/wiki/Docs/Security)
+defines two attacks that have specific implications in the context of
+an amnesic system:
+
+> **Rollback attacks**. An attacker presents a software update system
+> with older files than those the client has already seen, causing the
+> client to use files older than those the client knows about.
+> 
+> **Indefinite freeze attacks**. An attacker continues to present
+> a software update system with the same files the client has already
+> seen. The result is that the client does not know that new files
+> are available.
+
+TUF offers two ways to protect clients against such attacks:
+
+1. The client *remembers* what metadata it has seen already.
+2. Signatures on metadata *expire*.
+
+In the context of an amnesic system such as Tails, the first
+protection cannot be available by default. It may be offered, opt-in,
+to the user who enables [[doc/first_steps/persistence]], but users who
+do not to opt-in for making this information persistent cannot
+possibly be protected against rollback attacks: signature expiry only
+*limits* the extent to which a rollback attack can be conducted.
+
+Therefore, signatures on metadata shall expire quickly.
+
 # Research
+
+## Secure update
+
+* [TUF: The Update Framework](https://www.updateframework.com/)
+* [Thandy specification](https://gitweb.torproject.org/thandy.git/blob_plain/HEAD:/specs/thandy-spec.txt)
 
 ## Stacking squashfs images
 
@@ -202,3 +491,14 @@ Initial test is pretty conclusive!
 ## Discarded options
 
 See the [[page about discarded options|todo/incremental_upgrades/archive]].
+
+# Future improvements
+
+## Multi-step incremental upgrade
+
+E.g. 0.11 boots after 0.11.1 and 0.11.2 are out. Tails fetches
+https://tails.boum.org/update/v1/Tails/0.11/i386/release/updates.yml,
+that shall contain an incremental upgrade path with two target files:
+the 0.11 to 0.11.1 IUK, and the 0.11.1 to 0.11.2 IUK. The updater
+would download these two files and install the two IUKs in the
+correct order.

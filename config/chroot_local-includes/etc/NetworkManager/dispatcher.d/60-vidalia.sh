@@ -11,7 +11,7 @@ if [ $2 != "up" ]; then
 fi
 
 # Get LIVE_USERNAME
-. /etc/live/config.d/username
+. /etc/live/config.d/username.conf
 
 # Restart Vidalia because it does not automatically reconnect to the new
 # Tor instance. Use kill+start as:
