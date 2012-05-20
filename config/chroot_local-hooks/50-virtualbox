@@ -10,13 +10,6 @@ fi
 # the -dkms package must be installed *after* dkms to be properly registered
 apt-get install --yes build-essential dkms dpatch
 
-# temporary workaround: pretend gcc-4.6 is available, so that
-# the modules can build.
-# /usr/src/linux-headers-3.*-common/scripts/gcc-version.sh
-# is the one who says they should be run using 4.6.
-apt-get install --yes gcc-4.4
-ln -s /usr/bin/gcc-4.4 /usr/bin/gcc-4.6
-
 # Have the modules built for every installed kernel
 for KERNEL in /boot/vmlinuz-* ; do
    KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
@@ -57,6 +50,3 @@ rm -rf /var/lib/dkms/virtualbox-guest/
 # virtualbox-guest-dkms's postrm script deletes any previously
 # built binary module; let's delete it before purging the package.
 rm -f /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
-
-# remove temporary workaround
-rm -f /usr/bin/gcc-4.5
