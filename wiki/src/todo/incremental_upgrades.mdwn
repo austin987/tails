@@ -57,32 +57,97 @@ Upgrade Kit.
 
 # Scenarios
 
-FIXME
-
 ## As a Tails user
 
-### When I boot an obsolete Tails
+### When I boot Tails
 
-I must be guided through the process of updating it by the best available way.
+#### Given Tails knows that no update is available
 
-#### Given no update is available
+I should be not told anything about updates.
 
-#### Given an incremental update is available
+#### Given Tails cannot determine whether an update is available
 
-#### Given no incremental update is available, but a full update is
+I should be pointed to documentation about what to do in this case.
 
-### When I boot an up-to-date Tails
+#### Given Tails knows that an incremental update is available
+
+I should be guided through the process of updating Tails.
+
+* I should be proposed to perform this incremental update:
+  - I should be told what version I would get as a result.
+  - I should be told how large are the files that must be downloaded
+    to perform this update.
+  - I may be pointed to an URL that contains more detailed information
+    about this update.
+  - I may be proposed to see the target files downloaded in the clear,
+    that is without going through the Tor network.
+* When the target files are being downloaded, I should be told what is
+  happening, and asked to wait.
+* If the target files cannot be downloaded, I should be pointed to
+  documentation about what to do in this case.
+* If the downloaded target files cannot be verified, I should be
+  pointed to documentation about what to do in this case.
+* If the downloaded target files are successfully verified, the update
+  process should go on and I should be told the incremental update is
+  being applied.
+* If the incremental update fails to be applied, I should be pointed
+  to documentation about what to do in this case. My Tails may be left
+  in a broken state, as long as I am told what broke, and pointed to
+  documentation that explains me how to repair it (possibly by
+  re-installing from scratch, or by performing a full update).
+* Once the incremental update has been applied, I may be proposed to
+  save a copy of the target files to a location of my choosing.
+* Once the incremental update has been applied, I should be asked to
+  reboot my Tails so that the update is effective.
+
+#### Given Tails knows that no incremental update is available, but that a full update is
+
+I should be guided through the process of updating Tails: in phase
+one, I should be pointed to the web page that announces the new
+release, just like in Tails 0.11 and older.
+
+When I perform the full update using the Tails USB installer,
+I should get a working and updated Tails as a result.
 
 ## As a Tails developer
 
-### Generate IUK
+### When I prepare a point-release
 
-Scenarios are described in Cucumber-style, using [[!cpan
-Test-BDD-Cucumber]]. Use the `pherkin` command to run them.
-The scenarios source is available in the `features` directory of the
-`tails-iuk` [[contribute/Git]] repository.
+#### I should prepare an IUK
 
-### Release
+* When I run `tails-gen-iuk old.iso new.iso`, then I should get an
+  IUK. More scenarios about this are described in Cucumber-style,
+  using [[!cpan Test-BDD-Cucumber]], in the `features` directory of
+  the `tails-iuk` [[contribute/Git]] repository (FIXME: not publicly
+  available yet). Use the `pherkin` command to run them.
+
+#### I should test the IUK
+
+FIXME
+
+#### I should prepare an update-description file
+
+FIXME
+
+#### I should publish the IUK
+
+FIXME
+
+#### I should publish the update-description file
+
+FIXME
+
+### When I prepare a major release
+
+FIXME
+
+#### I should prepare an update-description file
+
+FIXME
+
+#### I should publish the update-description file
+
+FIXME
 
 # Implementation
 
@@ -352,6 +417,12 @@ Resources:
   succeeded / failed status) to avoid retrying the same buggy update
   in a loop seems worth being considered.
 
+### full update
+
+The Tails USB installer is still in charge of performing full updates.
+It must delete any `live/*.squashfs` file other than the one shipped
+in the new ISO.
+
 ### signature verification
 
 update-description file polling and parsing will be implemented in
@@ -393,7 +464,6 @@ Write a downloader for Incremental Upgrade Kits.
 
 * Takes two versions as arguments, downloads the target files.
 * Start the installer.
-* Allow the user to save the target files where they want.
 * Bonus points if there's an opt-in way to have the download happen in
   the clear, that is without going through the Tor network.
 * Allow overriding the URL for dev / testing purpose.
