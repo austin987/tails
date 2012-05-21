@@ -250,20 +250,6 @@ pre-compute server-side the answer to the queries we want to support.
 The answers are distributed on our HTTP servers in the form of a set
 of update-description file files.
 
-All the client has to do is:
-
-* build the URI to its update-description file (could even be done at
-  build time and hard-coded into the image) and to its cryptographic
-  signature
-* fetch the update-description file and its signature at these URIs
-* verify the cryptographic signature of the update-description file
-* check that content of the update-description file matches the
-  currently running system (in terms of product name, product
-  version, build-target and channel)
-* extract information about available updates from the
-  update-description file
-* do something simple and not-that-clever with this information
-
 #### update-description file URL
 
 * `https://tails.boum.org/update`
@@ -391,6 +377,57 @@ Example: <http://dl.amnesia.boum.org/tails/iuk/Tails_i386_0.11.1_to_0.11.2.iuk>
 
 ## Client and user interface
 
+**FIXME**: the separation of tasks and interface between the following
+programs is being reworked from scratch.
+
+The program currently telling that a new Tails version is available
+must be adapted to use update-description files instead of the current
+Atom feed.
+
+### update-description downloader and verifier
+
+A program has the responsibility to download and verify an
+update-description file.
+
+* Build the URI to its update-description file (might even be done at
+  build time and hard-coded into the image) and to its
+  cryptographic signature.
+* Fetch the update-description file and its signature at these URIs.
+* Verify the cryptographic signature of the update-description file.
+* Check that content of the update-description file matches the
+  currently running system (in terms of product name, product
+  version, build-target and channel).
+* Once all these steps have been successfully performed, the content
+  of the update-description file is trusted to be legit.
+
+Failure, at any of the above steps, must be reported to the caller.
+
+### update frontend
+
+* Get a verified update-description file from the update-description
+  downloader and verifier.
+* Extract information about available updates from the
+  update-description file.
+* Present such information to the user, let them decide if they want
+  to perform the update.
+* If the new version is a minor release, run the IUK downloader and
+  verifier; else, point at full upgrade documentation.
+* Perform the update using the files provided by the "target files
+  downloader and verifier".
+* Tell the user the upgrade process is finished, propose them
+  to reboot.
+
+### target files downloader and verifier
+
+This program has the responsibility to download and verify target
+files, and make available to the caller either the verified target
+files, or some error message.
+
+* Takes as arguments: a set of (URI, size, hash type, hash
+  value) tuples, and possibly options.
+* Bonus points if there's an opt-in way to have the download happen in
+  the clear, that is without going through the Tor network.
+
 ### install an IUK
 
 Once a user has downloaded an IUK, they must have it installed.
@@ -401,7 +438,6 @@ This should happen at the same time as normal Tails operation,
 but very carefully, because we need to remount the boot medium
 read-write.
 
-* Tell the user we're going to run the upgrade.
 * Remount the boot-medium read-write.
 * Verify the IUK is in a supported format.
 * Extract the IUK archive.
@@ -412,9 +448,6 @@ read-write.
 * Append the new SquashFS diff file name to the `live/Tails.module`
   file, in the Tails system partition.
 * Remount the boot-medium read-only.
-* Tell the user the upgrade process is finished.
-* Reboot.
-* Something must delete the IUK archive at some point.
 
 As much as possible, any error condition must trigger remounting the
 boot-medium read-only.
@@ -435,9 +468,9 @@ in the new ISO.
 
 ### signature verification
 
-update-description file polling and parsing will be implemented in
-Perl. Signature verification will be made using `GnuPG::Interface`'s
-`verify` method.
+update-description file polling, parsing and verification will be
+implemented in Perl. Signature verification will be made using
+`GnuPG::Interface`'s `verify` method.
 
 The verify method is run on a `GnuPG::Interface` object built with
 `--homedir` pointed to a dedicated keyring directory, created at Tails
@@ -448,35 +481,6 @@ GnuPG trusts the signatures made with the corresponding private key.
 The `verify` method return value is `waitpid`'d for, and the GnuPG
 child process exit status examined (zero means verification succeeded,
 non-zero means verification failure).
-
-### security warning program
-
-The program currently telling that a new Tails version is available
-should be adapted. Instead of the current Atom feed, it should
-download, verify and use the appropriate update-description file.
-
-run (or point at) the
-downloader program if the new version is a point-release, and else
-point at full upgrade documentation.
-
-* Detects if the new version is a point-release.
-* Points at the downloader.
-
-**FIXME**: this separation of tasks and interface between security warning
-program and downloader is wrong and must be thought through.
-
-### download target files
-
-**FIXME**: tasks separation and interface between security warning
-program and downloader is wrong and must be thought through.
-
-Write a downloader for Incremental Upgrade Kits.
-
-* Takes two versions as arguments, downloads the target files.
-* Start the installer.
-* Bonus points if there's an opt-in way to have the download happen in
-  the clear, that is without going through the Tor network.
-* Allow overriding the URL for dev / testing purpose.
 
 # Code
 
