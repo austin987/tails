@@ -200,6 +200,12 @@ namespace :vm do
     env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
     case env.primary_vm.state
     when :not_created
+      # Do not use non-existant in-VM proxy to download the basebox
+      if ENV['http_proxy'] == INTERNEL_HTTP_PROXY
+        ENV['http_proxy'] = nil
+        restore_internal_proxy = true
+      end
+
       $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
 
         This is the first time that the Tails builder virtual machine is
@@ -247,6 +253,8 @@ namespace :vm do
     end
     result = env.cli('up')
     abort "'vagrant up' failed" unless result
+
+    ENV['http_proxy'] = INTERNEL_HTTP_PROXY if restore_internal_proxy
   end
 
   desc 'Stop the build virtual machine'
