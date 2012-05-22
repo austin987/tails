@@ -2,26 +2,158 @@
 
 [[!toc levels=2]]
 
-One may want to [[contribute/customize]] her image before building.
+Using Vagrant
+=============
 
-Every following command must be run as `root`, at the root of the
-source directory one has [[downloaded|Git]].
+Tails can be built easily in a virtual machine using [Rake], [Vagrant] and
+[VirtualBox]. The process requires a minimum of 1 GB of free memory and a
+maximum of 10 GB of free storage.
 
-For the impatient ones:
+Installing the needed tools on Debian Wheezy is a matter of:
 
-	$ git clone git://git.immerda.ch/amnesia.git
-	$ cd amnesia
-	$ sudo su
-	# lb clean --all && lb config && lb build
+    $ sudo apt-get install virtualbox vagrant rake
+
+[Rake]: http://rake.rubyforge.org/
+[Vagrant]: http://vagrantup.com/
+[VirtualBox]: http://www.virtualbox.org/
+
+Then, please issue:
+
+    $ git clone git://git.immerda.ch/amnesia.git
+    $ cd amnesia
+    $ git checkout devel
+    $ rake build
+
+The first time, this can take a little while to download the base virtual
+machine from Tails mirror (around 300 MB). It will then boot the machine,
+set it up and start the build process. When done, several `tails-*` files
+should appear in the current directory.
+
+After you are done working on Tails, do not forget to shut the virtual
+machine down:
+
+    $ rake vm:halt
+
+One may also want to [[contribute/customize]] their image before building.
+
+To know all available Rake tasks, please run `rake -T`.
+
+Local HTTP proxy
+----------------
+
+If you have a local HTTP proxy, the build system will use it as long as
+you properly set the `http_proxy` environment variable. The easiest way to
+do so is to issue:
+
+    $ export http_proxy=http://proxy.lan:3142
+
+This needs to be done before any other operations.
+
+Build options
+-------------
+
+Options regarding the build process can be set using the
+`TAILS_BUILD_OPTIONS` environment variable. Muliple options must be
+separated by whitespaces.
+
+The following options are available:
+
+### Memory build settings
+
+Tails build way faster when everything is done in memory. If your computer
+run Linux and happens to have more than 6.5 GB of free memory before you
+start the virtual machine, it will automatically switch to 'build in RAM'
+mode.
+
+To force a specific behaviour please set:
+
+ * **ram**: start the virtual machine with 6.5GB of memory, build Tails
+   inside a `tmpfs`. Build fails if the system is not in a proper state to
+   do so.
+ * **noram**: start the virtual machine with 1GB of memory if not already
+   done, build Tails using the virtual machine hard disk.
+
+### HTTP proxy settings
+
+Building Tails requires to download a little bit more than 1 GB of Debian
+packages. To preserve bandwidth and developer sanity, using a HTTP proxy is
+nearly a must. Tails virtual machine contains a fully configured local HTTP
+proxy that will be used if no other local proxy is defined.
+
+The following flags can be used to force a specific behaviour:
+
+ * **extproxy**: use the proxy configured through the `http_proxy`
+   environment variable. Fail if it is not set.
+ * **vmproxy**: use the local proxy configured in the virtual machine even
+   if a local HTTP proxy is set.
+ * **noproxy**: do not use any HTTP proxy.
+
+### SquashFS compression settings
+
+One of the most expensive operations when building Tails is the creation
+of the final SquashFS. It also depends on the compression algorithm used.
+When working on the `stable` or `testing` branch, the image will be made
+using the slow but efficient default. Any other setup will switch to the
+faster *gzip*.
+
+Forcing a specific behaviour can be done using:
+
+ * **gzipcomp**: always use *gzip* to create the SquashFS.
+ * **defaultcomp**: always use the default compression algorithm.
+
+### Clean-up settings
+
+Some operations (currently building the documentation) is preserved accross
+builds. In case needed, the following option is available:
+
+ * **cleanall**: force a clean up before starting the build.
+
+### Virtual CPUs settings
+
+The number of virtual CPUs that are allocated in the virtual machine can be set
+through:
+
+ * **cpus=_n_**: allocate _n_ CPUs to the virtual machine.
+
+Obviously you should not allocate more virtual CPUs than the number of cores
+available to the host system. When using Linux, the number of CPUs allocated
+will default to be the same as the host system.
+
+### Git settings
+
+The build system can only work on files that have been *commited* to the Git
+repository. By default, it will refuse to start a build in presence of
+uncommited changes. This behaviour can be controlled by:
+
+ * **ignorechanges**: allow to make a build that will ignore changes in the Git
+   repository.
+
+### Example
+
+The fastest build you could pretend to get can be done by setting:
+
+    export TAILS_BUILD_OPTIONS="ram extproxy gzipcomp"
+
+This will force the build to happen in RAM, using an HTTP proxy external
+to the virtual machine and SquashFS compression will be done using *gzip*.
+
+Building manually
+=================
+
+In order to build Tails manually, you need a running [Debian
+Squeeze](http://www.debian.org/releases/squeeze/) system
+and some [backports](http://backports.debian.org/).
 
 Dependencies
-============
+------------
 
-* `live-build` from Debian Squeeze.
+The following Debian packages need to be installed:
+
+* `live-build`
 * `syslinux` >= 4.01, so that the built ISO images are
   converted to hybrid ones: they can be either a CD-ROM or a hard disk
   (USB disk, etc.).
-* `eatmydata` (e.g. from Debian sid), `time` and `whois` (for
+* `eatmydata` (from `squeeze-backports`), `time` and `whois` (for
   /usr/bin/mkpasswd) packages.
 * `ikiwiki` 3.20110431 or newer; released images are built using a
   patched ikiwiki is needed so that
@@ -35,9 +167,16 @@ Dependencies
 * `dpkg-dev`
 
 Build process
-=============
+-------------
 
-## Customize the build process if needed
+Every build commands must be run as `root`, at the root of a clone of the
+[`amnesia.git` repository|git]].
+
+In short, a build could be done using:
+
+    # lb clean --all && lb config && lb build
+
+### Customize the build process if needed
 
 If you need to set custom build settings that are specific to your
 local environment, such as a custom Debian mirror or APT proxy, you
@@ -55,13 +194,13 @@ The most common customizations are documented on this wiki:
 More documentation about this can be found in the [Debian Live
 Manual](http://live.debian.net/manual/en/).
 
-## Initialize the Live system's configuration
+### Initialize the Live system's configuration
 
 Initialize the Live system's configuration with `lb config` in a
 **clean** build tree. Most `lb config` options are supported, have a
 look to the `lb_config(1)` manpage for details.
 
-## Build the system
+### Build the system
 
 You can then use the standard live-build commands as root to build
 the image (`lb build`) and to cleanup the build directory (`lb

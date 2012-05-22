@@ -1,0 +1,59 @@
+#!/bin/sh
+
+set -e
+
+# Do not use virtual machine proxy before apt-cacher-ng is installed
+if [ "$http_proxy" = "http://$(hostname -f):3142" ] &&
+   ! [ -f /etc/apt-cacher-ng/acng.conf ]; then
+	LOCAL_HTTP_PROXY="$http_proxy"
+	http_proxy=''
+fi
+
+apt-get update
+apt-get -y install apt-cacher-ng
+
+# Install custom configuration for apt-cacher-ng and restart
+install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
+service apt-cacher-ng restart
+
+# Restore local HTTP proxy if needed
+if [ "$LOCAL_HTTP_PROXY" ]; then
+	http_proxy="$LOCAL_HTTP_PROXY"
+fi
+
+# Upgrade if needed
+apt-get -y dist-upgrade
+
+# Those are needed to build Tails
+apt-get -y install \
+	live-build \
+	eatmydata/squeeze-backports \
+	time whois \
+	dpkg-dev \
+	git
+
+# Let's build a custom Ikiwiki
+apt-get -y --no-install-recommends install \
+	libyaml-perl libyaml-libyaml-perl po4a perlmagick libyaml-syck-perl \
+	libfile-chdir-perl liburi-perl libhtml-parser-perl wdg-html-validator \
+	libhtml-scrubber-perl libhtml-template-perl libtimedate-perl \
+	libxml-simple-perl libtext-multimarkdown-perl
+
+su - vagrant -c '
+set -e
+cd /home/vagrant
+test -d ikiwiki || git clone git://git.ikiwiki.info/ ikiwiki
+cd ikiwiki
+git fetch origin
+git remote add gaffer git://gaffer.ptitcanardnoir.org/ikiwiki.git || true
+git fetch gaffer
+git checkout mirrorlist || true
+git reset --hard gaffer/mirrorlist
+./Makefile.PL
+make
+'
+
+(cd /home/vagrant/ikiwiki && make install)
+
+# Add build script
+install -o root -g root -m 755 /vagrant/provision/assets/build-tails /usr/local/bin
