@@ -37,9 +37,9 @@ should provide an automated way of doing the upgrade.
 
 ## 3. User interface
 
-* make it easy to **install an Incremental Upgrade Kit**
 * update the **security warning program**
 * make it easy to **download an Incremental Upgrade Kit**
+* make it easy to **install an Incremental Upgrade Kit**
 
 ## 4. Documentation
 
@@ -375,9 +375,6 @@ Example: <http://dl.amnesia.boum.org/tails/iuk/Tails_i386_0.11.1_to_0.11.2.iuk>
 
 ## Client and user interface
 
-**FIXME**: the separation of tasks and interface between the following
-programs is being reworked from scratch.
-
 The program currently telling that a new Tails version is available
 must be adapted to use update-description files instead of the current
 Atom feed.
@@ -493,14 +490,15 @@ production use.
 Until then, we will content ourselves with a much simpler system that
 is clearly less secure than TUF or Thandy against certain types of
 attacks, but is at least as secure as the way users are currently able
-to manually check if a new Tails version is available.
+to manually check if a new Tails version is available, to download and
+to verify it.
 
 ## Update-description files
 
 * update-description files are published on <https://tails.boum.org/>.
 * The upgrade client checks the SSL certificate presented by the
   server is valid (in phase one, using simple CA-based validation;
-  instead using Monkeysphere would be a great future improvement).
+  using Monkeysphere instead would be a great future improvement).
 * All update-description files are signed by the Tails OpenPGP
   signing key.
 
@@ -514,6 +512,10 @@ to manually check if a new Tails version is available.
 
 ## Discussion
 
+Note: the attacks discussed here are named according to the
+definitions of the [TUF security
+documentation](https://www.updateframework.com/wiki/Docs/Security).
+
 We believe this upgrade system has the same security properties as the
 way users are currently able to manually check if a new Tails version
 is available.
@@ -523,6 +525,14 @@ More precisely:
 * Mounting *Rollback* and *Indefinite freeze* attacks requires either
   to take control of the Tails website or to break the SSL/TLS
   connection between the client and the server.
+* *Arbitrary software installation*: FIXME
+* *Endless data attacks*: FIXME
+* *Slow retrieval attacks*: FIXME
+* *Extraneous dependencies attacks*: FIXME
+* *Mix-and-match attacks*: FIXME
+* *Wrong software installation*: FIXME
+* *Malicious mirrors preventing updates*: FIXME
+* *Vulnerability to key compromises*: FIXME
 * **FIXME**: discuss other attacks listed in the TUF
   security documentation.
 
