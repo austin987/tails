@@ -37,6 +37,9 @@ EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TA
 # Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 
+# In-VM proxy URL
+INTERNEL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
+
 def current_vm_memory
   env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
   uuid = env.primary_vm.uuid
@@ -107,7 +110,7 @@ task :parse_build_options do
       abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
       ENV['http_proxy'] = EXTERNAL_HTTP_PROXY
     when 'vmproxy'
-      ENV['http_proxy'] = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
+      ENV['http_proxy'] = INTERNEL_HTTP_PROXY
     when 'noproxy'
       ENV['http_proxy'] = nil
     # SquashFS compression settings
