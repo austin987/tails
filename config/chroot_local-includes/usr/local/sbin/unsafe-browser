@@ -81,6 +81,12 @@ verify_start () {
     fi
 }
 
+show_start_notification () {
+    local title="`gettext \"Starting the Unsafe Browser...\"`"
+    local body="`gettext \"This may take a while, so please be patient.\"`"
+    notify-send -t 10000 "${title}" "${body}"
+}
+
 setup_chroot () {
     # Setup a chroot on an aufs "fork" of the filesystem.
     # FIXME: When LXC matures to the point where it becomes a viable option
@@ -131,13 +137,19 @@ EOF
     rm -f ${CHROOT}/etc/iceweasel/profile/bookmarks.html
 }
 
-start_browser_in_chroot () {
+run_browser_in_chroot () {
     # Start Iceweasel in the chroot
     echo "* Starting Unsafe Browser"
 
     sudo -u ${SUDO_USER} xhost +SI:localuser:${CLEARNET_USER} 2>/dev/null
     chroot ${CHROOT} sudo -u ${CLEARNET_USER} iceweasel -DISPLAY=:0.0
     sudo -u ${SUDO_USER} xhost -SI:localuser:${CLEARNET_USER} 2>/dev/null
+}
+
+show_shutdown_notification () {
+    local title="`gettext \"Shutting down the Unsafe Browser...\"`"
+    local body="`gettext \"This may take a while, and you may not restart the Unsafe Browser until it is properly shut down.\"`"
+    notify-send -t 10000 "${title}" "${body}"
 }
 
 tor_is_working() {
@@ -186,9 +198,11 @@ if [ -z "${IP4_NAMESERVERS}" ]; then
 fi
 
 verify_start
+show_start_notification
 setup_chroot
 configure_chroot
-start_browser_in_chroot
+run_browser_in_chroot
+show_shutdown_notification
 maybe_restart_tor
 
 exit 0
