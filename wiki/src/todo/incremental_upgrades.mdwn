@@ -411,10 +411,14 @@ Failure, at any of the above steps, must be reported to the caller.
   to perform the update.
 * If the new version is a minor release, run the IUK downloader and
   verifier; else, point at full upgrade documentation.
+* Shutdown the network.
+* Remount the system partition read-write.
 * Perform the update using the files provided by the "target files
   downloader and verifier".
-* Tell the user the upgrade process is finished, propose them
-  to reboot.
+* Tell the user the upgrade process is finished, and they *MUST*
+  immediately reboot (due to system partition being left mounted
+  read-write, 'cause we cannot remount it read-only once it's been
+  mounted read-write).
 
 ### target files downloader and verifier
 
@@ -449,7 +453,6 @@ medium read-write.
 * Delete files that are listed in the `delete_files` control field.
 * Append the new SquashFS diff file name to the `live/Tails.module`
   file, in the Tails system partition.
-* Remount the boot-medium read-only.
 
 As much as possible, any error condition must trigger remounting the
 boot-medium read-only.
@@ -693,6 +696,19 @@ Both the old and new Tails update systems are vulnerable to this class
 of attacks, due to the reliance on the Tails OpenPGP signing key.
 The future move to a secure update system such as TUF or Thandy will
 fix this.
+
+## Privilege separation
+
+The default Live user (`amnesia`) runs the update frontend and:
+
+* is allowed to run a `/usr/local/sbin/network-shutdown` script, using
+  passwordless sudo, as root.
+* is allowed to run the `tails-install-iuk` program, with any
+  arguments, using passwordless sudo, as the `tails-install-iuk` user.
+
+The `tails-install-iuk` user is allowed to run, using passwordless
+sudo, every command required by its task (currently: `mount`, `cp`,
+`rm` and `tar`).
 
 # Research
 
