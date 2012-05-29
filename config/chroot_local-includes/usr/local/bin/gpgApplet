@@ -342,7 +342,7 @@ sub create_key_row {
     return if !defined $status;
 
     my $name    = $encoding->decode($key->user_ids->[0]->as_string);
-    my $userids = join("\n", map { "- " . $encoding->decode($_->as_string) }
+    my $userids = join("\n", map { my $a = $_->as_string; my $b = $encoding->decode(gettext("$a")); my $c ="x" . "$b" }
                                  $key->user_ids);
     my $keyid   = $encoding->decode($key->short_hex_id);
 
@@ -556,7 +556,7 @@ sub choose_keys {
                                                 ));
                 my $msg = sprintf("%s\n", $warning);
                 foreach my $key (@unauth) {
-                    my $key_name = "- $key->[C_NAME] ($key->[C_KEYID])";
+                    my $key_name = $encoding->decode(gettext("$key->[C_NAME] ($key->[C_KEYID])"));
                     $msg = sprintf("%s%s\n", $msg, $key_name);
                 }
                 my $question = $encoding->decode(ngettext(
