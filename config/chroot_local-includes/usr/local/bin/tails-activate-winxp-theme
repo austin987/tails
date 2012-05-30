@@ -1,10 +1,9 @@
 #!/bin/sh
 
-# This script sets up the amnesia user's Gnome theme to something that
+# This script sets up the live user's Gnome theme to something that
 # resembles Microsoft Windows XP.
 
-# only run if "winxp" is on the kernel command line
-grep -qw winxp /proc/cmdline || return 0
+. /etc/live/config.d/username.conf
 
 # Set IE icon in iceweasel
 ie_icon="/usr/share/icons/GnomeXP/48x48/apps/iceweasel.png"
@@ -72,12 +71,12 @@ gconf_set "/apps/panel/toplevels/xp_bottom_panel/name" --type string "xp_bottom_
 gconf_set "/apps/panel/toplevels/xp_bottom_panel/orientation" --type string "bottom"
 gconf_set "/apps/panel/toplevels/xp_bottom_panel/screen" --type int 0
 gconf_set "/apps/panel/toplevels/xp_bottom_panel/size" --type int 32
-gconf_set "/apps/panel/toplevels/xp_bottom_panel/unhide_delay" --type int 500 
+gconf_set "/apps/panel/toplevels/xp_bottom_panel/unhide_delay" --type int 500
 gconf_set "/apps/panel/toplevels/xp_bottom_panel/x" --type int 0
 gconf_set "/apps/panel/toplevels/xp_bottom_panel/x_centered" --type bool FALSE
 gconf_set "/apps/panel/toplevels/xp_bottom_panel/x_right" --type int 0
 gconf_set "/apps/panel/toplevels/xp_bottom_panel/y" --type int 0
-gconf_set "/apps/panel/toplevels/xp_bottom_panel/y_bottom" --type  int 0 
+gconf_set "/apps/panel/toplevels/xp_bottom_panel/y_bottom" --type  int 0
 gconf_set "/apps/panel/toplevels/xp_bottom_panel/y_centered" --type bool FALSE
 
 gconf_set "/apps/panel/toplevels/xp_bottom_panel/background/color" --type string "#ffffff"
@@ -118,7 +117,6 @@ chown -R ${LIVE_USERNAME}:${LIVE_USERNAME} "/home/${LIVE_USERNAME}/.gnome2"
 gconf_set "/apps/panel/objects/browser_launcher/action_type" --type string "lock"
 gconf_set "/apps/panel/objects/browser_launcher/attached_toplevel_id" --type string ""
 gconf_set "/apps/panel/objects/browser_launcher/bonobo_iid" --type string ""
-
 gconf_set "/apps/panel/objects/browser_launcher/custom_icon" --type string ""
 gconf_set "/apps/panel/objects/browser_launcher/launcher_location" --type string "iceweasel.desktop"
 gconf_set "/apps/panel/objects/browser_launcher/locked" --type bool TRUE
@@ -178,7 +176,6 @@ gconf_set "/apps/panel/applets/xp_taskbar/tooltip" --type string ""
 gconf_set "/apps/panel/applets/xp_taskbar/toplevel_id" --type string "xp_bottom_panel"
 gconf_set "/apps/panel/applets/xp_taskbar/use_custom_icon" --type bool FALSE
 gconf_set "/apps/panel/applets/xp_taskbar/use_menu_path" --type bool FALSE
-
 gconf_set "/apps/panel/applets/xp_taskbar/prefs/display_all_workspaces" --type bool FALSE
 gconf_set "/apps/panel/applets/xp_taskbar/prefs/group_windows" --type string "never"
 gconf_set "/apps/panel/applets/xp_taskbar/prefs/maximum_size" --type int 4096
