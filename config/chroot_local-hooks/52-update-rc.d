@@ -9,16 +9,26 @@ tails-sdmem-on-media-removal
 "
 
 PATCHED_INITSCRIPTS="
+alsa-utils
 gdomap
+haveged
 hdparm
 i2p
+ifupdown
 kexec
 kexec-load
+laptop-mode
 memlockd
 network-manager
+pdnsd
 plymouth
+polipo
+resolvconf
+saned
+spice-vdagent
 tor
 ttdnsd
+urandom
 "
 
 # Ensure that we are using dependency based boot
