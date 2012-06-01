@@ -37,8 +37,7 @@ update-rc.d kexec-load stop 18 0 6 .
 # i2p should not start per default. At some point we want some script to start
 # i2p during init if so selected in tails-greeter, but ATM users have to start
 # the i2p script manually.
-
-update-rc.d -f i2p remove
+update-rc.d i2p disable
 
 # we only want hdparm so that laptop-mode-tools can use it
 update-rc.d hdparm disable
