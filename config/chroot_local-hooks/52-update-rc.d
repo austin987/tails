@@ -21,10 +21,6 @@ update-rc.d memlockd start 22 2 3 4 5 .
 # we run Tor ourselves after HTP via NetworkManager hooks
 update-rc.d tor disable
 
-# we reboot/halt using kexec->sdmem
-update-rc.d -f halt   remove
-update-rc.d -f reboot remove
-
 # we provide our own tails-kexec initscript (more friendly to ejected CD/USB)
 update-rc.d -f kexec  remove
 
