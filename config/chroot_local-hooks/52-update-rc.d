@@ -5,10 +5,18 @@ echo "managing initscripts"
 # enable custom initscripts
 update-rc.d tails-detect-virtualization start 17 S .
 update-rc.d tails-kexec                    stop 85 0 6 .
+update-rc.d tails-reconfigure-kexec start 23 2 3 4 5 .
+update-rc.d tails-reconfigure-memlockd start 23 2 3 4 5 .
+update-rc.d tails-sdmem-on-media-removal start 24 2 3 4 5 . stop 01 0 6
+
+# Start memlockd before media removal watchdog and skip stop on shutdown to
+# keep files needed by tails-kexec properly in memory.
+update-rc.d -f memlockd remove
+sed -e '/^### BEGIN INIT INFO$/,/^### END INIT INFO$/ {
+          s/^\(# Required-Stop:\).*$/\1/
+          s/^\(# Default-Stop:\).*$/\1/
+        }' -i /etc/init.d/memlockd
 update-rc.d memlockd start 22 2 3 4 5 .
-update-rc.d tails-sdmem-on-media-removal start 23 2 3 4 5 . stop 01 0 6
-update-rc.d tails-reconfigure-kexec defaults
-update-rc.d tails-reconfigure-memlockd defaults
 
 # we run Tor ourselves after HTP via NetworkManager hooks
 update-rc.d tor disable
