@@ -28,6 +28,10 @@ else
    START_PAGE="${WARNING_PAGE}.en.html"
 fi
 
+if [ -e /var/lib/gdm3/tails.camouflage ]; then
+    CAMOUFLAGE=yes
+fi
+
 cleanup () {
     # Break down the chroot and kill all of its processes
     local counter=0
@@ -124,7 +128,7 @@ configure_chroot () {
     rm -rf ${CHROOT}/etc/iceweasel/profile/extensions
 
     # Set a scary theme (except if we're using Windows camouflage)
-    if grep -qwv winxp /proc/cmdline; then
+    if [ -z "${CAMOUFLAGE}" ]; then
         cat >> ${CHROOT}/etc/iceweasel/profile/user.js <<EOF
 user_pref("lightweightThemes.isThemeSelected", true);
 user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFF00\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");
