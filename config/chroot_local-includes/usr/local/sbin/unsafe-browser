@@ -56,24 +56,27 @@ cleanup () {
 }
 
 error () {
-    local cli_text="${CMD}: `gettext \"error\"`: ${@}"
-    local dialog_text="${@}
+    local cli_text="${CMD}: `gettext \"error:\"` ${@}"
+    local dialog_text="<b><big>`gettext \"Error\"`</big></b>
 
-`gettext \"Unsafe Browser will exit now.\"`"
+${@}"
     echo "${cli_text}" >&2
     sudo -u ${SUDO_USER} zenity --error --title "" --text "${dialog_text}"
     exit 1
 }
 
 warning () {
-    local text="${@}"
-    echo "${CMD}: `gettext \"warning\"`: ${text}" >&2
-    sudo -u ${SUDO_USER} zenity --warning --title "" --text "${text}"
+    local cli_text="${CMD}: `gettext \"warning:\"` ${text}"
+    local dialog_text="<b><big>`gettext \"Warning\"`</big></b>
+
+${@}"
+    echo "${cli_text}" >&2
+    sudo -u ${SUDO_USER} zenity --warning --title "" --text "${dialob_text}"
 }
 
 verify_start () {
     # Make sure the user really wants to start the browser
-    local dialog_msg="<b>`gettext \"Do you really want to launch the Unsafe Browser?\"`</b>
+    local dialog_msg="<b><big>`gettext \"Do you really want to launch the Unsafe Browser?\"`</big></b>
 
 `gettext \"Network activity within the Unsafe Browser is <b>not anonymous</b>. Only use the Unsafe Browser if necessary, for example if you have to login or register to activate your Internet connection.\"`"
     local launch="`gettext \"_Launch\"`"
