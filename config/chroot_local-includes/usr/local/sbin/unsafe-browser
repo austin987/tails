@@ -14,7 +14,8 @@ CONF_DIR=/var/lib/unsafe-browser
 COW=${CONF_DIR}/cow
 CHROOT=${CONF_DIR}/chroot
 CLEARNET_USER=clearnet
-OFFENDING_ADDONS="xul-ext-foxyproxy-standard xul-ext-torbutton"
+OFFENDING_ADDONS="xul-ext-foxyproxy-standard xul-ext-torbutton xul-ext-firegpg
+xul-ext-cookie-monster xul-ext-noscript xul-ext-monkeysphere"
 TOR_DIR=/var/lib/tor
 TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
 TOR_WORKING=""
@@ -120,6 +121,7 @@ configure_chroot () {
         ${CHROOT}/etc/iceweasel/pref/iceweasel.js
     echo 'pref("network.proxy.type", 0);' >> \
         ${CHROOT}/etc/iceweasel/pref/iceweasel.js
+    rm -rf ${CHROOT}/etc/iceweasel/profile/extensions
 
     # Set a scary theme (except if we're using Windows camouflage)
     if grep -qwv winxp /proc/cmdline; then
