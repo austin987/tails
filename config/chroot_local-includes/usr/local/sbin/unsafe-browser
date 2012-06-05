@@ -14,7 +14,8 @@ CONF_DIR=/var/lib/unsafe-browser
 COW=${CONF_DIR}/cow
 CHROOT=${CONF_DIR}/chroot
 CLEARNET_USER=clearnet
-OFFENDING_ADDONS="xul-ext-foxyproxy-standard xul-ext-torbutton"
+OFFENDING_ADDONS="xul-ext-foxyproxy-standard xul-ext-torbutton xul-ext-firegpg
+xul-ext-cookie-monster xul-ext-noscript xul-ext-monkeysphere"
 TOR_DIR=/var/lib/tor
 TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
 TOR_WORKING=""
@@ -25,6 +26,10 @@ if [ -r "${WARNING_PAGE}.${LANG_CODE}.html" ]; then
    START_PAGE="${WARNING_PAGE}.${LANG_CODE}.html"
 else
    START_PAGE="${WARNING_PAGE}.en.html"
+fi
+
+if [ -e /var/lib/gdm3/tails.camouflage ]; then
+    CAMOUFLAGE=yes
 fi
 
 cleanup () {
@@ -51,24 +56,27 @@ cleanup () {
 }
 
 error () {
-    local cli_text="${CMD}: `gettext \"error\"`: ${@}"
-    local dialog_text="${@}
+    local cli_text="${CMD}: `gettext \"error:\"` ${@}"
+    local dialog_text="<b><big>`gettext \"Error\"`</big></b>
 
-`gettext \"Unsafe Browser will exit now.\"`"
+${@}"
     echo "${cli_text}" >&2
     sudo -u ${SUDO_USER} zenity --error --title "" --text "${dialog_text}"
     exit 1
 }
 
 warning () {
-    local text="${@}"
-    echo "${CMD}: `gettext \"warning\"`: ${text}" >&2
-    sudo -u ${SUDO_USER} zenity --warning --title "" --text "${text}"
+    local cli_text="${CMD}: `gettext \"warning:\"` ${text}"
+    local dialog_text="<b><big>`gettext \"Warning\"`</big></b>
+
+${@}"
+    echo "${cli_text}" >&2
+    sudo -u ${SUDO_USER} zenity --warning --title "" --text "${dialob_text}"
 }
 
 verify_start () {
     # Make sure the user really wants to start the browser
-    local dialog_msg="<b>`gettext \"Do you really want to launch the Unsafe Browser?\"`</b>
+    local dialog_msg="<b><big>`gettext \"Do you really want to launch the Unsafe Browser?\"`</big></b>
 
 `gettext \"Network activity within the Unsafe Browser is <b>not anonymous</b>. Only use the Unsafe Browser if necessary, for example if you have to login or register to activate your Internet connection.\"`"
     local launch="`gettext \"_Launch\"`"
@@ -120,13 +128,18 @@ configure_chroot () {
         ${CHROOT}/etc/iceweasel/pref/iceweasel.js
     echo 'pref("network.proxy.type", 0);' >> \
         ${CHROOT}/etc/iceweasel/pref/iceweasel.js
+    rm -rf ${CHROOT}/etc/iceweasel/profile/extensions
 
     # Set a scary theme (except if we're using Windows camouflage)
-    if grep -qwv winxp /proc/cmdline; then
+    if [ -z "${CAMOUFLAGE}" ]; then
         cat >> ${CHROOT}/etc/iceweasel/profile/user.js <<EOF
 user_pref("lightweightThemes.isThemeSelected", true);
-user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFF00\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");
+user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");
 EOF
+    else
+        echo "LIVE_USERNAME=${CLEARNET_USER}" > \
+            ${CHROOT}//etc/live/config.d/username.conf
+        chroot ${CHROOT} tails-activate-winxp-theme
     fi
 
     # Set start page to something that explains what's going on
