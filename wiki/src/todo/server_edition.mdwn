@@ -113,15 +113,42 @@ This project [is accepted](https://www.torproject.org/getinvolved/volunteer.html
 for GSoC 2012. You can check the proposal [here](https://dustri.org/pub/tails_server.pdf)
 
 The challenges behind this project are:
-
   * Design and write the services configuration GUI [keywords: edit configuration files, upgrade between major Debian versions, debconf, Config::Model, augeas].
   * How to create the hidden service key? [keywords: Vidalia, control protocol].
   * Adapt the Tails boot process to allow switching to "server mode" when appropriate.
   * Add support, to the Tails persistence setup process, for asking an encryption passphrase without X, and possibly with a broken keyboard and/or screen [keywords: local network, SSL/TLS?, certificate?].
 
-This project can easily grow quite large, so the first task would
-probably be to clarify what it would need to get an initial (minimal
-but working) implementation ready to be shipped to users.
+Timeline
+========
+
+Turn an USB stick into an USB Tails server stick
+------------------------------------------------
+The user should be able to create a Tails server USB stick, which should boot in Tails server mode by default, and no more to Tails. During this milestone, there are no or only small differences between Tails and Tails server except that the system is aware that he is booting into Tails server.
+
+Unlocking persistence without a GUI
+---------------------------------------
+The end user should be able to unlock and boot a Tails server USB stick without any GUI.
+
+Remote administration
+---------------------
+The user should be able to have a secure shell (SSH) on the machine, to do administration tasks without a physical access to the Tails server, or a GUI. Please note that this shell is not a Tor hidden service for now.
+
+Remove unnecessary/irrelevant things from boot process
+------------------------------------------------------
+Tails server should not spawn a full-featured desktop anymore: the goal of this iteration is to remove as much irrelevant services as possible (e.g GNOME, Xorg, ...) in order to reduce boot-time and system resources. The only way the user have to do administration’s related tasks is to use SSH.
+
+Setup Tor hidden services
+-------------------------
+This part is a little bit unclear for now.
+
+Setup and start a gobby service
+-------------------------------
+This is the first Tor hidden service implementation and it will allow the user to run a Gobby service from the Tails server. This step does not involve any configuration of the service, only the setup; no user interactions are involved during this milestone, since there is no configuration involved.
+
+Basic configuration management
+------------------------------
+The user should be able to edit the configuration of the Gobby service during the creation of the Tails server USB stick; like using a password, changing the service’s name,
+
 
 Requirement/Deliverable
 =======================
