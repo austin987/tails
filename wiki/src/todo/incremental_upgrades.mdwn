@@ -117,9 +117,8 @@ I should get a working and updated Tails as a result.
 
 * When I run `tails-gen-iuk old.iso new.iso`, then I should get an
   IUK. More scenarios about this are described in Cucumber-style,
-  using [[!cpan Test-BDD-Cucumber]], in the `features` directory of
-  the `tails-iuk` [[contribute/Git]] repository (FIXME: not publicly
-  available yet). Use the `pherkin features/create` command to
+  using [[!cpan Test-BDD-Cucumber]], in the `features/create` directory of
+  the `tails-iuk` [[contribute/Git]] repository. Use the `pherkin features/create` command to
   run them.
 
 #### I should test the IUK
@@ -311,7 +310,8 @@ Every target file element has the following keys:
 
 * `url` -- A URL to the target file.
 * `size` -- The size of the update, in bytes.
-* `sha256` -- The SHA-256 hash of the patch file. If the client
+* `sha256` -- The SHA-256 hash of the patch file, encoded as an
+  hexadecimal string. If the client
   generated value does not match this, the integrity check fails after
   download. (Other kind of hashes may be added in a future revision of
   the update-description file format -- which of these multiple hashes
@@ -385,7 +385,7 @@ Atom feed.
 
 ### update-description downloader and verifier
 
-A program has the responsibility to download and verify an
+This program has the responsibility to download and verify an
 update-description file.
 
 * Build the URI to its update-description file (might even be done at
@@ -397,7 +397,8 @@ update-description file.
   currently running system (in terms of product name, product
   version, build-target and channel).
 * Once all these steps have been successfully performed, the content
-  of the update-description file is trusted to be legit.
+  of the update-description file is trusted to be legit, and is
+  returned to the caller as such.
 
 Failure, at any of the above steps, must be reported to the caller.
 
@@ -409,23 +410,39 @@ Failure, at any of the above steps, must be reported to the caller.
   update-description file.
 * Present such information to the user, let them decide if they want
   to perform the update.
-* If the new version is a minor release, run the IUK downloader and
-  verifier; else, point at full upgrade documentation.
+* If the new version is a minor release:
+  - securely create a tempdir
+  - chgrp `tails-iuk-get-target-file` and chmod 0770 the tempdir
+  - run the IUK downloader and verifier, asking it to drop the
+    verified target file into the tempdir (either the default umask
+    will do, or steps shall be taken to make sure the Live user may
+    read the resulting files)
+* Else, point at full upgrade documentation.
+* Shutdown the network.
+* Remount the system partition read-write.
 * Perform the update using the files provided by the "target files
   downloader and verifier".
-* Tell the user the upgrade process is finished, propose them
-  to reboot.
+* Tell the user the upgrade process is finished, and they *MUST*
+  immediately reboot (due to system partition being left mounted
+  read-write, 'cause we cannot remount it read-only once it's been
+  mounted read-write).
 
-### target files downloader and verifier
+### target file downloader and verifier
 
-This program has the responsibility to download and verify target
-files, and make available to the caller either the verified target
-files, or some error message.
+This program has the responsibility to download and verify a target
+file, and make available to the caller either the verified target
+file, or some error message.
 
-* Takes as arguments: a set of (URI, size, hash type, hash
-  value) tuples, and possibly options.
-* Bonus points if there's an opt-in way to have the download happen in
-  the clear, that is without going through the Tor network.
+* Takes as arguments: URI, size, hash type, hash value, destination
+  path where the verified target file should be left, and
+  possibly options.
+
+Detailed executable scenarios describe and test the behaviour of this
+piece of software in Cucumber-style, using [[!cpan
+Test-BDD-Cucumber]]. They may be found in the
+`features/download_target_file` directory of the `tails-iuk`
+[[contribute/Git]] repository, and run using the `pherkin
+features/download_target_file` command.
 
 ### install an IUK
 
@@ -449,10 +466,12 @@ medium read-write.
 * Delete files that are listed in the `delete_files` control field.
 * Append the new SquashFS diff file name to the `live/Tails.module`
   file, in the Tails system partition.
-* Remount the boot-medium read-only.
 
-As much as possible, any error condition must trigger remounting the
-boot-medium read-only.
+Detailed executable scenarios describe and test the behaviour of this
+piece of software in Cucumber-style, using [[!cpan
+Test-BDD-Cucumber]]. They may be found in the `features/install`
+directory of the `tails-iuk` [[contribute/Git]] repository, and run
+using the `pherkin features/install` command.
 
 Resources:
 
@@ -486,6 +505,8 @@ non-zero means verification failure).
 
 # Code
 
+* The bulk of the code needed to implement this design lives in the
+  `tails-iuk` [[contribute/Git]] repository.
 * Integration work is being done in the `feature/incremental-upgrades`
   branch of the main Tails [[contribute/Git]] repository.
 
@@ -694,6 +715,22 @@ of attacks, due to the reliance on the Tails OpenPGP signing key.
 The future move to a secure update system such as TUF or Thandy will
 fix this.
 
+## Privilege separation
+
+The default Live user (`amnesia`) runs the update frontend and:
+
+* is allowed to run a `/usr/local/sbin/network-shutdown` script, using
+  passwordless sudo, as root.
+* is allowed to run the `tails-install-iuk` program, with any
+  arguments, using passwordless sudo, as the `tails-install-iuk` user.
+* is allowed to run the `tails-iuk-get-target-file` program, with any
+  argument, using passwordless sudo, as the
+  `tails-iuk-get-target-file` user.
+
+The `tails-install-iuk` user is allowed to run, using passwordless
+sudo, every command required by its task (currently: `mount`, `cp`,
+`rm` and `tar`).
+
 # Research
 
 ## Secure update
@@ -785,3 +822,15 @@ correct order.
 
 Once the incremental update has been applied, I may be proposed to
 save a copy of the target files to a location of my choosing.
+
+## allow one to download target files in the clear
+
+The downloader program could provide an opt-in way to have the
+download happen in the clear, that is without going through the Tor
+network. It looks doable given it's a separate process: we may run it
+as a dedicated user, and reuse the `clearnet` infrastructure
+implemented for the Unsafe Browser.
+
+## display download progress status
+
+The downloader program should report download progress to its caller.
