@@ -268,6 +268,48 @@ after each of the following tests.
 * Turn off some persistence presets, reboot, and make sure they are
   not activated.
 
+# Windows Camouflage
+
+Enable Windows XP camouflage via the Tails Greeter checkbox and verify
+that the theme resembles Windows XP, including:
+
+* Windows XP desktop layout:
+  - Only one desktop panel, located at the bottom of the screen.
+  - All panel menus are merged into one, using the Start icon.
+  - Panel layout (left-to-right): Start button, application launchers,
+    window list, notification area, clock.
+* Windows XP "Luna" theme (blue + orange) for windows decorations.
+* [Bliss](http://en.wikipedia.org/wiki/Bliss_(image)) desktop
+  background picture.
+* Windows equivalents for application launcher icons:
+  - Pidgin -> MSN Messenger
+  - Iceweasel -> Internet Explorer
+  - Claws Mail -> Outlook
+
+# Unsafe Web Browser
+
+* On start, check that:
+  - it requires launch verification.
+  - a start notification is shown.
+  - there's an error if no DNS server was configured in NetworkManager
+    (e.g. if there's no network connection).
+* Once started, check that:
+  - it has a scary red theme (except when Windows Camouflage is
+    activated).
+  - the start page makes it clear that this is the Unsafe Web Browser.
+  - the iceweasel instance is run as the `clearnet` user.
+  - it has no proxy configured and gets a direct Internet connection.
+  - configuring Tor or polipo as a proxy results doesn't work (shuld
+    result in "The proxy server is refusing connections")
+  - AdBlock Plus and HTTPS-Everywhere are the only installed
+    extensions.
+  - there are no bookmarks.
+  - the default search engine is Wikipedia.
+* On exit, check that:
+  - a shutdown notification is shown.
+  - make sure that its chroot gets properly teared down on exit (there
+    should be nothing mounted inside `/var/lib/unsafe-browser`).
+
 # Misc
 
 * Set a sudo password in Tails Greeter and verify that it works.
