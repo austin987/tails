@@ -10,7 +10,10 @@ class VM
   end
 
   def get_last_iso
-    Dir.glob("*.iso").sort_by {|f| File.mtime(f)}.last
+    build_root_path = Pathname.new(ENV['PWD']).parent.parent
+    Dir.chdir(build_root_path)
+    iso_name = Dir.glob("*.iso").sort_by {|f| File.mtime(f)}.last
+    build_root_path.to_s + "/" + iso_name
   end
 
   def add_iso_to_domain
