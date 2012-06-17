@@ -7,12 +7,12 @@ This little glue provides for now a way to test Tails' images (or others)
 against features written in cucumber. This tests use sikuli to simulate user
 interactions with the UI and are written in ruby. Each features are tested
 against Tails images started in fresh virtual machines thanks to libvirt/Kvm.
-.
+
 Being run in a guest VM, this means it is possible to listen to the network
 traffic on the host where the tests also run and test features against what
 happens on the network level. It is also possible to add and remove different
 types of storages, and thus test persistence or filesystem modifications.
-.
+
 It can be used to automate the release testing process with a Continuous
 Integration server, or for developers to implement features the "Agile Way".
 
@@ -67,11 +67,9 @@ Rvm
 If you choose the rvm path, you first need to get and start the installer in the
 $HOME of the user building and testing Tails:
 
-  wget -O rvm.install http://get.rvm.io
-
-  chmod 755 rvm.install
-
-  ./rvm.install
+    $ wget -O rvm.install http://get.rvm.io
+    $ chmod 755 rvm.install
+    $ ./rvm.install
 
 To be available at user login, rvm needs a little integration in the
 environnment. You need to adapt your terminal or screenrc settings. See the
@@ -81,14 +79,14 @@ session.
 
 You can then use rvm to install jruby:
 
-  rvm install jruby
+    $ rvm install jruby
 
-  rvm use --default jruby
+    $ rvm use --default jruby
 
 Every ruby/gem related command will now use he jruby installed in $HOME/.rvm.
 To get the necessary gems from github, add it to the remote sources:
 
-  gem sources -a http://gems.github.com
+    $ gem sources -a http://gems.github.com
 
 And install the gems mentionned in the requirements.
 
@@ -105,11 +103,11 @@ Use it
 
 Set the DISPLAY env to something relevant:
 
-  export DISPLAY=":8"
+    $ export DISPLAY=":8"
 
 Start a Xvfb virtual X display on it (once for all):
 
-  Xvfb $DISPLAY >/dev/null 2>&1
+    $ Xvfb $DISPLAY >/dev/null 2>&1
 
 You can also use another more reliable way to start and monitor Xvfb, like runit
 or daemontools so that you won't have to stop it yourself after executing the
@@ -126,11 +124,11 @@ env variable to the iso relative path to the iso.
 
 So to run the tests:
 
-  VM="VM_NAME" cucumber
+    $ VM="VM_NAME" cucumber
 
 Or to test another tails iso:
 
-  ISO="../../tails.iso" VM="VM_NAME" cucumber
+    $ ISO="../../tails.iso" VM="VM_NAME" cucumber
 
 and see the testing process goes on :)
 
@@ -138,7 +136,7 @@ and see the testing process goes on :)
 Resources
 =========
 
- * ruby-libvirt api: http://libvirt.org/ruby/api/index.html
- * sikuli gem api: http://rubydoc.info/gems/sikuli/0.3.0/frames
- * rvm: http://rvm.io
- * nfqueue gem api: http://rubydoc.info/gems/nfqueue/1.0.1/frames
+ * [[ruby-libvirt api|http://libvirt.org/ruby/api/index.html]]
+ * [[sikuli gem api|http://rubydoc.info/gems/sikuli/0.3.0/frames]]
+ * [[rvm|http://rvm.io]]
+ * [[nfqueue gem api|http://rubydoc.info/gems/nfqueue/1.0.1/frames]]
