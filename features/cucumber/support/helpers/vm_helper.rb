@@ -10,7 +10,7 @@ class VM
   end
 
   def get_last_iso
-    build_root_path = Pathname.new(ENV['PWD']).parent.parent
+    build_root_path = Pathname.new(ENV['PWD']).parent
     Dir.chdir(build_root_path)
     iso_name = Dir.glob("*.iso").sort_by {|f| File.mtime(f)}.last
     build_root_path.to_s + "/" + iso_name
@@ -19,7 +19,7 @@ class VM
   def add_iso_to_domain
     xml = <<EOF
     <disk>
-      <source file="#{ENV['PWD']}/#{@iso}"/>
+      <source file="#{@iso}"/>
       <target dev='hdc' bus='ide'/>
     </disk>
 EOF
