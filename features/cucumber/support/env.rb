@@ -1,6 +1,6 @@
 require 'java'
 require 'rubygems'
-Dir[File.dirname(__FILE__) + "/features/support/helpers/*.rb"].each do |file|
+Dir[Dir.pwd + "/cucumber/support/helpers/*.rb"].each do |file|
   require file
 end
 
