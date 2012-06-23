@@ -6,8 +6,8 @@ end
 
 
 Before do
-  @vm = VM.new(ENV['VM'])
-  @display = Display.new(ENV['VM'])
+  @vm = VM.new
+  @display = Display.new(@vm.domain.name)
   @screen = Sikuli::Screen.new
 end
 

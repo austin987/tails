@@ -21,18 +21,16 @@ class Sniffer
 
   attr_reader :name, :pcap_file, :pid
 
-  # TODO: some parameters here should rather be variables from the VM class
-  # (iface, ip)
-  def initialize(name, br_iface, ip)
+  def initialize(name, bridge_name, ip)
     @name = name
-    @br_iface = br_iface
+    @bridge_name = bridge_name
     @ip = ip
     @pcap_file = "#{ENV['PWD']}/#{name}.pcap"
   end
 
   def capture(filter="tcp and src host #{@ip}")
     # TODO: Eventually find a more quiet on exit app than tcpdump.
-    job = IO.popen("tcpdump -i #{@br_iface} -w #{@pcap_file} -U #{filter}")
+    job = IO.popen("tcpdump -i #{@bridge_name} -w #{@pcap_file} -U #{filter}")
     @pid = job.pid
   end
 
