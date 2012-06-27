@@ -12,7 +12,9 @@ sub getTorbuttonUserAgent {
     open (my $in, "<", $file);
     while (my $line = <$in>) {
         chomp $line;
-        if (($ua) = ($line =~ m/^pref\("extensions\.torbutton\.useragent_override", "(.*)"\);$/)) {
+        if ($line =~ m/^pref\("extensions\.torbutton\.useragent_override",$/) {
+            <$in> =~ m/^ *"(.*)"\);$/;
+            $ua = $1;
             last;
         }
     }
@@ -20,4 +22,5 @@ sub getTorbuttonUserAgent {
     return $ua;
 }
 
-say getTorbuttonUserAgent('/usr/share/xul-ext/torbutton/defaults/preferences/preferences.js');
+my $ua = getTorbuttonUserAgent('/usr/share/xul-ext/torbutton/defaults/preferences/preferences.js');
+say $ua if $ua;
