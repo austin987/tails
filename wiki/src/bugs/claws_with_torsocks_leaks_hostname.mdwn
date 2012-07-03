@@ -1,0 +1,9 @@
+In Tails 0.12 we introduced `torsocks` as a replacement for `tsocks`
+used by the `torify` script. The switch to `torsocks` made Claws Mail,
+which is started using `torify`, leak the hostname in the HELO/EHLO
+message, resulting in a hostname leak in the `Message ID` and
+`Received` email headers. This is currently being worked around by
+switching back to `tsocks` for Claws Mail only (in branch
+`bugfix/claws_vs_torsocks`) but the fact that `torsocks` behaves worse
+than `tsocks` in this respect is worrying and should be investigated
+further. Perhaps other applications using `torify` are also affected?
