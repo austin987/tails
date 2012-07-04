@@ -8,113 +8,71 @@ against features written in cucumber. This tests use sikuli to simulate user
 interactions with the UI and are written in ruby. Each features are tested
 against Tails images started in fresh virtual machines thanks to libvirt/Kvm.
 
-Being run in a guest VM, this means it is possible to listen to the network
-traffic on the host where the tests also run and test features against what
-happens on the network level. It is also possible to add and remove different
-types of storages, and thus test persistence or filesystem modifications.
-
 It can be used to automate the release testing process with a Continuous
 Integration server, or for developers to implement features the "Agile Way".
 
 
-Definitions
-===========
+Features
+========
 
-In this document, the keyword "HOST" will refer to the system where the Tails
-builds and tests are run. It can either be a physical bare-metal machine, or a
-nested-kvm VM. The keyword "GUEST" will refer to the VM used to start Tails for
-testing purpose. This VM is ran by HOST's libvirtd.
+With this tool, it is possible to:
+
+  * Create, modify and destroy kvm virtual machines meant to run Tails iso though
+    libvirt.
+  * Simulate user interaction with the Tails virtual machine desktop, or test
+    its content.
+  * Take screenshots, from the earlier Tails virtual machine boot process to
+    its final shutdown, either when some event occurs or at regular intervals.
+  * Read and parse the Tails virtual machine network traffic and run tests
+    against it.
+  * Add or remove different kind of storages (ide, usb,...) to the Tails virtual
+    machine, in either a cold or hot plug way and the test the way Tails
+    behaves.
 
 
-Requirements
+Installation
 ============
 
-For this to run, install on HOST
-
- * build-essential
- * curl
- * git
- * xvfb
- * libvirt-bin
- * libvirt-dev
- * virt-viewer
- * libsikuli-script-java
- * libxslt1-dev
- * libxml2-dev
-
-You also need a Jruby >= 1.6 environnement, which sadly isn't possible using
-debian packages yet. You can use the "Ruby Versions-Gem-Mess" workaround, Rvm
-(see later), or any other method, but anyway you need this gems to be installed:
-
- * cucumber
- * sikuli
- * ruby-libvirt
+See the [[dedicated page|cucumber/install]].
 
 
-Setup
-=====
-
-As for installation, everything happens on HOST.
-
-The user doing the builds/tests must have access to libvirt so that he/she can
-run virt-viewer on qemu+ssh://localhost/system without using a passphrase.
-
-In libvirt, setup a basic VM to start Tails (no disk, network, display and
-boot on the CDrom drive which should be hdc). This is GUEST.
-
-If HOST is itself a kvm VM, it need to be run by a nested-kvm enabled Kvm, so
-that it can itself starts VMs with it's own libvirtd.
-
-Set SIKULI_HOME="/usr/share/java" in the user shell environment (or in rvm, see
-below).
-
-
-Rvm
-===
-
-If you choose the rvm path, you first need to get and start the installer in the
-$HOME of the user doing the builds and tests on HOST.
-
-    $ wget -O rvm.install http://get.rvm.io
-    $ chmod 755 rvm.install
-    $ ./rvm.install
-
-To be available at user login, rvm needs a little integration in the
-environnment. You need to adapt your terminal or screenrc settings. See the
-"Integration" and "Workflow" part of [[Rvm's homepage|http://rvm.io/]].
-Starting by hand the rvm command often output a link to some help to have it
-nicely installed in the session.
-
-You can then use rvm to install jruby:
-
-    $ rvm install jruby
-    $ rvm use --default jruby
-
-Every ruby/gem related command will now use he jruby installed in $HOME/.rvm.
-To get the necessary gems from github, add it to the remote sources:
-
-    $ gem sources -a http://gems.github.com
-
-And install the gems mentionned in the requirements.
-
-Rvm heavily uses env variables, you can use its mechanism and modify
-~/.rvm/environments/jruby-1.6.7.2 to add the one you need (like $SIKULI_HOME) to
-have them automatically exported too.
-
-A .rvmrc configuration is included in the sources, which automatically configure
-the use of rvm's jruby by default when you cd into the features/ directory.
-
-
-Use it
+Usage
 ======
 
-All you need to do is setup HOST correctly:
+For now there are some steps to follow to ensure that everything is setup
+correctly. In the future, we might want to automate this steps too.
+
+
+## Non root $HOME installation
+
+If you have chosen not to install rvm in the root user $HOME, you have to load
+the rvm environnment variables in the root shell you are using to start this
+tool.
+
+Assuming $USER is the user whose $HOME has been choosen to install rvm and run
+the tests:
+
+    $ cd /home/$USER
+    $ source .rvm/environnment/jrubry-$VERSION
+    $ cd TAILS_SOURCE/features
+    $ source .rvmrc
+
+You should be prompted on the screen that you are now using jruby. Now go on with
+the rest of the usual process to start this tool.
+
+
+## General use
+
+As a starter, ensure you're in the features/ directory of Tails sources. It
+should have mentionned that you are using jruby when you have cd in there.
 
 Set the DISPLAY env to something relevant (a non-used one)
 
     $ export DISPLAY=":8"
+    $ export SIKULI_HOME="/usr/share/java"
 
-Start a Xvfb virtual X display on it (once for all):
+Start a Xvfb virtual X display on it (once for all, no need to be root for
+that):
 
     $ Xvfb $DISPLAY >/dev/null 2>&1
 
@@ -126,23 +84,31 @@ This tests expect to find iso files in the top directory of the Tails sources,
 as it happens after a succesfull build. It will use the newer iso file it can
 find in this directory.
 
-This behavior can be changed if you want to use an iso stored somewhere else
-and use this tests without the tails sources. For this you have to set an ISO
-env variable to the iso absolute path.
+This behavior can be changed if you want to use an iso stored somewhere else.
+For this you have to set an ISO environment variable to the iso absolute path.
 
-You need to pass the GUEST VM domain name as a "VM" env variable, so that the
-script knows wich domain to start and connect virt-viewer to.
+You need to pass the VM domain name used to start the system under test as a
+"VM" env variable, so that the script knows wich domain to start and connect
+virt-viewer to.
 
 So to run the tests:
 
-    $ cd features/
     $ VM="VM_NAME" cucumber cucumber/
 
-Or to test /home/tails/src/tails.iso:
+Or to test /home/$USER/src/tails.iso:
 
-    $ ISO="/home/tails/src/tails.iso" VM="VM_NAME" cucumber cucumber/
+    $ ISO="/home/$USER/src/tails.iso" VM="VM_NAME" cucumber cucumber/
 
 and see the testing process goes on :)
+
+
+TODO
+====
+
+  * Full automation : integrate the management of Xvfb instances, and
+    environment variable settings.
+  * Sudo support.
+  * ...
 
 
 Resources
