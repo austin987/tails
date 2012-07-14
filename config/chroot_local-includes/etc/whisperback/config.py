@@ -34,6 +34,65 @@ import os.path
 # Custom imports
 import subprocess
 import random
+import locale
+import gettext
+
+# DOCUMENTATION
+
+def __get_localised_doc_link():
+    """Return the link to the localised documentation
+
+    @returns  the link to the localised documentation if available, or to the
+            english version
+    """
+
+    # Try to get the list of supported languages codes supported by the
+    # documentation according to the $TAILS_WIKI_SUPPORTED_LANGUAGES
+    # environnement variable. If unset, fallback to `en`
+    try:
+        wiki_supported_languages = os.environ["TAILS_WIKI_SUPPORTED_LANGUAGES"].split(' ')
+    except KeyError:
+        wiki_supported_languages = ['en']
+
+    # locale.getlocale returns a tuple (language code, encoding)
+    # the language is the two first character of the RFC 1766 "language code"
+    system_language = locale.getdefaultlocale()[0][0:2]
+
+    # Get the language code of the localised documentation if available, or
+    # fallback to `en`
+    if system_language in wiki_supported_languages:
+        localised_doc_language = system_language
+    else:
+        localised_doc_language = 'en'
+
+    return ("file:///usr/share/doc/tails/website/doc/first_steps/bug_reporting." +
+        localised_doc_language +
+        ".html")
+
+def _(string):
+    try:
+        string = gettext.translation("amnesia", "/usr/share/locale").lgettext(string)
+    except IOError:
+        pass
+    finally:
+        return string
+
+# The right panel help (HTML string)
+html_help = _(
+"""<h1>Help us fix your bug!</h1>
+<p>Read <a href="%s">our bug reporting instructions</a>.</p>
+<p><strong>Do not include more personal information than
+needed!</strong></p>
+<h2>About giving us an email address</h2>
+<p>If you don't mind disclosing some bits of your identity
+to Tails developers, you can provide an email address to
+let us ask more details about the bug. Additionally entering
+a public PGP key enables us to encrypt such future
+communication.</p>
+<p>Anyone who can see this reply will probably infer you are
+a Tails user. Time to wonder how much you trust your
+Internet and mailbox providers?</p>
+""") % __get_localised_doc_link()
 
 # RECIPIENT
 #
@@ -77,7 +136,7 @@ mail_subject = "Bug report: %x" % random.randrange(16**32)
 # (this information will be encrypted). This is useful to add
 # software version.
 # 
-# It shound not take any parameter, and should return a string to be
+# It should not take any parameter, and should return a string to be
 # preprended to the email
 def mail_prepended_info():
     """Returns the version of the running amnesia system
@@ -102,7 +161,7 @@ def mail_prepended_info():
 # (this information will be encrypted). This is useful to add
 # configuration files usebul for debugging.
 # 
-# It shound not take any parameter, and should return a string to be
+# It should not take any parameter, and should return a string to be
 # appended to the email
 def mail_appended_info():
     """Returns debugging informations on the running amnesia system
