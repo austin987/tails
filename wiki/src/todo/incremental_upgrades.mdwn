@@ -28,18 +28,31 @@ should provide an automated way of doing the upgrade.
 ## 1. Design
 
 * Think the current design a bit deeper, discuss with other Tails
-  developers, reach an agreement.
+  developers, reach an agreement: **done**
 
 ## 2. Infrastructure
 
-* make it easy to **generate an Incremental Upgrade Kit** for a point release
-* update **mirrors infrastructure** to support hosting Incremental Upgrade Kits
+* make it easy to **generate an Incremental Upgrade Kit** for a point
+  release: **done**
+* update **mirrors infrastructure** to support hosting Incremental
+  Upgrade Kits: **done**
+* make it easy to **generate update-description files** for a point
+  release: phase two
 
 ## 3. User interface
 
 * update the **security warning program**
+  - update-description downloader and verifier
+    (`tails-iuk-get-update-description-file`): **done**
+  - integrate with the update frontend
 * make it easy to **download an Incremental Upgrade Kit**
-* make it easy to **install an Incremental Upgrade Kit**
+  - target file downloader and verifier (`tails-iuk-get-target-file`):
+    **done**
+  - integrate with the update frontend
+* make it easy to **install an Incremental Upgrade Kit**:
+  - IUK installer (`tails-install-iuk`): **done**
+  - integrate with the update frontend
+* GUI frontend
 
 ## 4. Documentation
 
@@ -183,7 +196,7 @@ mainly a GUI problem, and is postponed.
 
 ### generate an IUK
 
-We need a program that takes two Tails full images as input, and:
+We have a `tails-create-iuk` program that takes two Tails full images as input, and:
 
 * builds the "diff" SquashFS
 * gets the new kernel(s), initrd(s), bootloader configuration
@@ -728,8 +741,8 @@ The default Live user (`amnesia`) runs the update frontend and:
   `tails-iuk-get-target-file` user.
 
 The `tails-install-iuk` user is allowed to run, using passwordless
-sudo, every command required by its task (currently: `mount`, `cp`,
-`rm` and `tar`).
+sudo, every command required by its task (currently: `chmod`, `cp`,
+`mkdir`, `mktemp`, `mount`, `rm` and `tar`).
 
 # Research
 
