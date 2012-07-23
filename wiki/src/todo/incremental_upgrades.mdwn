@@ -42,8 +42,18 @@ should provide an automated way of doing the upgrade.
 ## 3. User interface
 
 * update the **security warning program**
+  - update-description downloader and verifier
+    (`tails-iuk-get-update-description-file`): **done**
+  - integrate with the update frontend: **done**
+  - disable the old security warning program: **TBD**
 * make it easy to **download an Incremental Upgrade Kit**
-* make it easy to **install an Incremental Upgrade Kit**
+  - target file downloader and verifier (`tails-iuk-get-target-file`):
+    **done**
+  - integrate with the update frontend: **done**
+* make it easy to **install an Incremental Upgrade Kit**:
+  - IUK installer (`tails-install-iuk`): **done**
+  - integrate with the update frontend: **done**
+* GUI frontend: **TBD** (mostly done, needs to be tested in real conditions)
 
 ## 4. Documentation
 
@@ -51,6 +61,12 @@ should provide an automated way of doing the upgrade.
 
 Users must be explained how to download and install an Incremental
 Upgrade Kit.
+
+Missing pages:
+
+* [[doc/upgrade/error/get_update_description]]: the user is pointed to
+  this page when the update-description file cannot be downloaded or
+  verified
 
 ### For developers
 
@@ -414,13 +430,14 @@ Failure, at any of the above steps, must be reported to the caller.
   update-description file.
 * Present such information to the user, let them decide if they want
   to perform the update.
-* If the new version is a minor release:
-  - securely create a tempdir
-  - chgrp `tails-iuk-get-target-file` and chmod 0770 the tempdir
+* If an incremental update path to the new version is available:
+  - securely create a tempdir in `tmpfs`, owned by
+    `tails-iuk-get-target-file:tails-iuk-get-target-file`,
+    with mode 0750
   - run the IUK downloader and verifier, asking it to drop the
     verified target file into the tempdir (either the default umask
-    will do, or steps shall be taken to make sure the Live user may
-    read the resulting files)
+    will do, or steps shall be taken to make sure the
+    `tails-install-iuk` user may read the resulting files)
 * Else, point at full upgrade documentation.
 * Shutdown the network.
 * Remount the system partition read-write.
@@ -730,10 +747,14 @@ The default Live user (`amnesia`) runs the update frontend and:
 * is allowed to run the `tails-iuk-get-target-file` program, with any
   argument, using passwordless sudo, as the
   `tails-iuk-get-target-file` user.
+* is allowed to run `tails-iuk-mktemp-get-target-file`, using
+  passwordless sudo, as the `tails-iuk-get-target-file` user.
 
 The `tails-install-iuk` user is allowed to run, using passwordless
 sudo, every command required by its task (currently: `chmod`, `cp`,
-`mkdir`, `mktemp`, `mount`, `rm` and `tar`).
+`mkdir`, `mktemp`, `mount`, `rm` and `tar`). It is a member of the
+`tails-iuk-get-target-file` group, which allows it to read the files
+downloaded by the `tails-iuk-get-target-file` program.
 
 # Research
 
@@ -813,6 +834,14 @@ See the [[page about discarded options|todo/incremental_upgrades/archive]].
 
 # Future improvements
 
+## gettext-ize the various IUK programs
+
+... and encode/decode as needed on I/O barriers.
+
+## Check available memory
+
+... before attempting to download target files.
+
 ## Multi-step incremental upgrade
 
 E.g. 0.11 boots after 0.11.1 and 0.11.2 are out. Tails fetches
@@ -838,3 +867,9 @@ implemented for the Unsafe Browser.
 ## display download progress status
 
 The downloader program should report download progress to its caller.
+
+## Better packaging
+
+Move `/etc/sudoers.d/zzz_update` and IUK-related user creation from
+the Tails main Git repository to the `tails-iuk` Debian package, so
+that it's more self-contained and easier to test.
