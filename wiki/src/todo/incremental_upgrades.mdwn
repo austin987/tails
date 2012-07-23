@@ -64,9 +64,17 @@ Upgrade Kit.
 
 Missing pages:
 
-* [[doc/upgrade/error/get_update_description]]: the user is pointed to
+* `doc/upgrade/error/get_update_description`: the user is pointed to
   this page when the update-description file cannot be downloaded or
   verified
+* `doc/upgrade/error/get_target_file`: the user is pointed to this
+  page when a target file file cannot be downloaded or verified
+* `doc/upgrade/error/install_iuk`: the user is pointed to this page
+  when the installation of a downloaded IUK failed This page should be
+  about what to do in this case. My Tails may be left in a broken
+  state, as long as I am told what broke, and explained how to repair
+  it (possibly by re-installing from scratch, or by performing a full
+  update).
 
 ### For developers
 
@@ -81,53 +89,10 @@ Missing pages:
 
 ### When I boot Tails
 
-#### Given Tails knows that no update is available
-
-I should not be told anything about updates.
-
-#### Given Tails cannot determine whether an update is available
-
-I should be pointed to documentation about what to do in this case.
-
-#### Given Tails knows that an incremental update is available
-
-I should be guided through the process of updating Tails.
-
-* I should be proposed to perform this incremental update:
-  - I should be told what version I would get as a result.
-  - I should be told how large are the files that must be downloaded
-    to perform this update.
-  - I may be pointed to an URL that contains more detailed information
-    about this update.
-  - I may be proposed to see the target files downloaded in the clear,
-    that is without going through the Tor network.
-* When the target files are being downloaded, I should be told what is
-  happening, and asked to wait.
-* If the target files cannot be downloaded, I should be pointed to
-  documentation about what to do in this case. Beforehand, I may be
-  proposed to retry.
-* If the downloaded target files cannot be verified, I should be
-  pointed to documentation about what to do in this case. Beforehand,
-  I may be proposed to download the target files again.
-* If the downloaded target files are successfully verified, the update
-  process should go on and I should be told the incremental update is
-  being applied.
-* If the incremental update fails to be applied, I should be pointed
-  to documentation about what to do in this case. My Tails may be left
-  in a broken state, as long as I am told what broke, and pointed to
-  documentation that explains me how to repair it (possibly by
-  re-installing from scratch, or by performing a full update).
-* Once the incremental update has been applied, I should be asked to
-  reboot my Tails so that the update is effective.
-
-#### Given Tails knows that no incremental update is available, but that a full update is
-
-I should be guided through the process of updating Tails: in phase
-one, I should be pointed to the web page that announces the new
-release, just like in Tails 0.11 and older.
-
-When I perform the full update using the Tails USB installer,
-I should get a working and updated Tails as a result.
+The scenarios are described in Cucumber-style, using [[!cpan
+Test-BDD-Cucumber]], in the `features/frontend` directory of the
+`tails-iuk` [[contribute/Git]] repository. Use the `pherkin
+features/frontend` command to run them.
 
 ## As a Tails developer
 
