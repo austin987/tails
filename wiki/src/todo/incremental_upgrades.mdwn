@@ -101,16 +101,15 @@ features/frontend` command to run them.
 
 #### I should prepare an IUK
 
-* When I run `tails-gen-iuk old.iso new.iso`, then I should get an
-  IUK. More scenarios about this are described in Cucumber-style,
-  using [[!cpan Test-BDD-Cucumber]], in the `features/create` directory of
-  the `tails-iuk` [[contribute/Git]] repository. Use the `pherkin features/create` command to
-  run them.
+The scenarios about this are described in Cucumber-style, using
+[[!cpan Test-BDD-Cucumber]], in the `features/create` directory of the
+`tails-iuk` [[contribute/Git]] repository. Use the `pherkin
+features/create` command to run them.
 
 #### I should test the IUK
 
 Until we have [[automated tests|todo/automated_builds_and_tests]],
-I should manually try to install the IUK on top of the intended old
+I should manually try to install the IUK as intended on top of the old
 version of Tails, and I should check that the resulting system behaves
 as it should.
 
@@ -821,10 +820,19 @@ should be available in RAM.
 
 ## Normal
 
+### Integration with "old" security warning program should be re-thought
+
+In the current state of things, they are rather complementary, but
+should probably be merged to make the overall user experience a bit
+more consistent.
+
 ### Should not leave zenity dialogs around after closing
 
 A dialog displayed by the `in_progress` is left on screen after the
 application has quit due to a fatal error in the in progress process.
+
+> Can this be reproduced after this commit?
+> [764d6e5] Don't require the "in progress" dialog boxes to be clicked to continue.
 
 ### Progress bar for download and installation
 
@@ -832,17 +840,13 @@ E.g. run `tails-iuk-get-target-file` in the background using
 `IPC::Run`'s `start`, and use `pump` and `timer` to regularly check if
 the process has finished and if not, update a zenity progress bar.
 
-### Packaging should be more self-contained
+## Minor
+
+### Packaging could be more self-contained
 
 Move `/etc/sudoers.d/zzz_update` and IUK-related user creation from
 the Tails main Git repository to the `tails-iuk` Debian package, so
 that it's more self-contained and easier to test.
-
-### Integration with "old" security warning program should be re-thought
-
-In the current state of things, they are rather complementary, but
-should probably be merged to make the overall user experience a bit
-more consistent.
 
 ## Wishlist
 
