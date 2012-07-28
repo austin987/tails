@@ -56,7 +56,11 @@ def __get_localised_doc_link():
 
     # locale.getlocale returns a tuple (language code, encoding)
     # the language is the two first character of the RFC 1766 "language code"
-    system_language = locale.getdefaultlocale()[0][0:2]
+    system_language_code = locale.getdefaultlocale()[0]
+    if system_language_code:
+        system_language = system_language_code[0:2]
+    else:
+        system_language = None
 
     # Get the language code of the localised documentation if available, or
     # fallback to `en`
