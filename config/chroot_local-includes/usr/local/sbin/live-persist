@@ -108,7 +108,7 @@ list_gpt_volumes ()
 	local labels=${@}
 
 	local whitelistdev=""
-	case "${PERSISTENT_MEDIA}" in
+	case "${PERSISTENCE_MEDIA}" in
 		removable)
 			whitelistdev="$(removable_dev)"
 			;;
@@ -124,10 +124,10 @@ list_gpt_volumes ()
 	for dev in $(storage_devices "" "${white_listed_devices}")
 	do
 		if ( is_luks_partition ${dev} >/dev/null 2>&1 && \
-		     echo ${PERSISTENT_ENCRYPTION} | grep -qve "\<luks\>" ) || \
+		     echo ${PERSISTENCE_ENCRYPTION} | grep -qve "\<luks\>" ) || \
 
 		   ( ! is_luks_partition ${dev} >/dev/null 2>&1 && \
-		     echo ${PERSISTENT_ENCRYPTION} | grep -qve "\<none\>" )
+		     echo ${PERSISTENCE_ENCRYPTION} | grep -qve "\<none\>" )
 		then
 			continue
 		fi
@@ -256,8 +256,8 @@ main ()
 	# $BASH_XTRACEFD stuff above to avoid tracing until this point.
 	set +x
 
-	export PERSISTENT="yes"
-	export NOPERSISTENT=""
+	export PERSISTENCE="yes"
+	export NOPERSISTENCE=""
 
 	# Should be set empty since live-boot already changed root for us
 	export rootmnt=""
@@ -266,7 +266,7 @@ main ()
 	do
 		case "${1}" in
 			--encryption=*)
-				export PERSISTENT_ENCRYPTION="${1#*=}"
+				export PERSISTENCE_ENCRYPTION="${1#*=}"
 				;;
 			--help)
 				usage
@@ -279,13 +279,13 @@ main ()
 				set -x
 				;;
 			--media=*)
-				export PERSISTENT_MEDIA="${ARGUMENT#*=}"
+				export PERSISTENCE_MEDIA="${ARGUMENT#*=}"
 				;;
 			--read-only)
-				export PERSISTENT_READONLY="Yes"
+				export PERSISTENCE_READONLY="Yes"
 				;;
 			--read-write)
-				export PERSISTENT_READONLY=""
+				export PERSISTENCE_READONLY=""
 				;;
 			--union=*)
 				export UNIONTYPE="${1#*=}"
