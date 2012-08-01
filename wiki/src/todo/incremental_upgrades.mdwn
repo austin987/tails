@@ -25,6 +25,8 @@ should provide an automated way of doing the upgrade.
 
 [[!tag todo/code]]
 
+**Note**: also see the *Bugs and Future Improvements* section on this page.
+
 ## 1. Design
 
 * Think the current design a bit deeper, discuss with other Tails
@@ -45,7 +47,6 @@ should provide an automated way of doing the upgrade.
   - update-description downloader and verifier
     (`tails-iuk-get-update-description-file`): **done**
   - integrate with the update frontend: **done**
-  - disable the old security warning program: **TBD**
 * make it easy to **download an Incremental Upgrade Kit**
   - target file downloader and verifier (`tails-iuk-get-target-file`):
     **done**
@@ -53,7 +54,7 @@ should provide an automated way of doing the upgrade.
 * make it easy to **install an Incremental Upgrade Kit**:
   - IUK installer (`tails-install-iuk`): **done**
   - integrate with the update frontend: **done**
-* GUI frontend: **TBD** (mostly done, needs to be tested in real conditions)
+* GUI frontend: **done**
 
 ## 4. Documentation
 
@@ -64,9 +65,17 @@ Upgrade Kit.
 
 Missing pages:
 
-* [[doc/upgrade/error/get_update_description]]: the user is pointed to
+* `doc/upgrade/error/get_update_description`: the user is pointed to
   this page when the update-description file cannot be downloaded or
   verified
+* `doc/upgrade/error/get_target_file`: the user is pointed to this
+  page when a target file file cannot be downloaded or verified
+* `doc/upgrade/error/install_iuk`: the user is pointed to this page
+  when the installation of a downloaded IUK failed This page should be
+  about what to do in this case. My Tails may be left in a broken
+  state, as long as I am told what broke, and explained how to repair
+  it (possibly by re-installing from scratch, or by performing a full
+  update).
 
 ### For developers
 
@@ -81,53 +90,10 @@ Missing pages:
 
 ### When I boot Tails
 
-#### Given Tails knows that no update is available
-
-I should not be told anything about updates.
-
-#### Given Tails cannot determine whether an update is available
-
-I should be pointed to documentation about what to do in this case.
-
-#### Given Tails knows that an incremental update is available
-
-I should be guided through the process of updating Tails.
-
-* I should be proposed to perform this incremental update:
-  - I should be told what version I would get as a result.
-  - I should be told how large are the files that must be downloaded
-    to perform this update.
-  - I may be pointed to an URL that contains more detailed information
-    about this update.
-  - I may be proposed to see the target files downloaded in the clear,
-    that is without going through the Tor network.
-* When the target files are being downloaded, I should be told what is
-  happening, and asked to wait.
-* If the target files cannot be downloaded, I should be pointed to
-  documentation about what to do in this case. Beforehand, I may be
-  proposed to retry.
-* If the downloaded target files cannot be verified, I should be
-  pointed to documentation about what to do in this case. Beforehand,
-  I may be proposed to download the target files again.
-* If the downloaded target files are successfully verified, the update
-  process should go on and I should be told the incremental update is
-  being applied.
-* If the incremental update fails to be applied, I should be pointed
-  to documentation about what to do in this case. My Tails may be left
-  in a broken state, as long as I am told what broke, and pointed to
-  documentation that explains me how to repair it (possibly by
-  re-installing from scratch, or by performing a full update).
-* Once the incremental update has been applied, I should be asked to
-  reboot my Tails so that the update is effective.
-
-#### Given Tails knows that no incremental update is available, but that a full update is
-
-I should be guided through the process of updating Tails: in phase
-one, I should be pointed to the web page that announces the new
-release, just like in Tails 0.11 and older.
-
-When I perform the full update using the Tails USB installer,
-I should get a working and updated Tails as a result.
+The scenarios are described in Cucumber-style, using [[!cpan
+Test-BDD-Cucumber]], in the `features/frontend` directory of the
+`tails-iuk` [[contribute/Git]] repository. Use the `pherkin
+features/frontend` command to run them.
 
 ## As a Tails developer
 
@@ -135,16 +101,15 @@ I should get a working and updated Tails as a result.
 
 #### I should prepare an IUK
 
-* When I run `tails-gen-iuk old.iso new.iso`, then I should get an
-  IUK. More scenarios about this are described in Cucumber-style,
-  using [[!cpan Test-BDD-Cucumber]], in the `features/create` directory of
-  the `tails-iuk` [[contribute/Git]] repository. Use the `pherkin features/create` command to
-  run them.
+The scenarios about this are described in Cucumber-style, using
+[[!cpan Test-BDD-Cucumber]], in the `features/create` directory of the
+`tails-iuk` [[contribute/Git]] repository. Use the `pherkin
+features/create` command to run them.
 
 #### I should test the IUK
 
 Until we have [[automated tests|todo/automated_builds_and_tests]],
-I should manually try to install the IUK on top of the intended old
+I should manually try to install the IUK as intended on top of the old
 version of Tails, and I should check that the resulting system behaves
 as it should.
 
@@ -832,17 +797,68 @@ Initial test is pretty conclusive!
 
 See the [[page about discarded options|todo/incremental_upgrades/archive]].
 
-# Future improvements
+# Bugs and Future Improvements
 
-## gettext-ize the various IUK programs
+## Grave
 
-... and encode/decode as needed on I/O barriers.
+### Should not try to update a Tails booted from DVD
 
-## Check available memory
+`Tails::Persistence::Setup` has code to check if the system was booted
+from a optical / USB device. It should not be too hard to reuse it.
 
-... before attempting to download target files.
+## Serious
 
-## Multi-step incremental upgrade
+### i18n and l10n
+
+* gettext-ize the various IUK programs
+* encode/decode as needed on I/O barriers
+* point to localized pages on the local wiki, when possible
+
+## Important
+
+### Should be tested with *two* IUK
+
+IIRC I tested this a while ago, but this should be confirmed to work
+in real conditions with the latest code and `live-boot`.
+
+### Should check available memory before downloading target files
+
+Target files are downloaded to tmpfs, so at the very least, their size
+should be available in RAM.
+
+## Normal
+
+### Integration with "old" security warning program should be re-thought
+
+In the current state of things, they are rather complementary, but
+should probably be merged to make the overall user experience a bit
+more consistent.
+
+### Should not leave zenity dialogs around after closing
+
+A dialog displayed by the `in_progress` is left on screen after the
+application has quit due to a fatal error in the in progress process.
+
+> Can this be reproduced after this commit?
+> [764d6e5] Don't require the "in progress" dialog boxes to be clicked to continue.
+
+### Progress bar for download and installation
+
+E.g. run `tails-iuk-get-target-file` in the background using
+`IPC::Run`'s `start`, and use `pump` and `timer` to regularly check if
+the process has finished and if not, update a zenity progress bar.
+
+## Minor
+
+### Packaging could be more self-contained
+
+Move `/etc/sudoers.d/zzz_update` and IUK-related user creation from
+the Tails main Git repository to the `tails-iuk` Debian package, so
+that it's more self-contained and easier to test.
+
+## Wishlist
+
+### Multi-step incremental upgrade
 
 E.g. 0.11 boots after 0.11.1 and 0.11.2 are out. Tails fetches
 https://tails.boum.org/update/v1/Tails/0.11/i386/stable/updates.yml,
@@ -851,25 +867,15 @@ the 0.11 to 0.11.1 IUK, and the 0.11.1 to 0.11.2 IUK. The updater
 would download these two files and install the two IUKs in the
 correct order.
 
-## sharing update material
+### sharing update material
 
 Once the incremental update has been applied, I may be proposed to
 save a copy of the target files to a location of my choosing.
 
-## allow one to download target files in the clear
+### allow one to download target files in the clear
 
 The downloader program could provide an opt-in way to have the
 download happen in the clear, that is without going through the Tor
 network. It looks doable given it's a separate process: we may run it
 as a dedicated user, and reuse the `clearnet` infrastructure
 implemented for the Unsafe Browser.
-
-## display download progress status
-
-The downloader program should report download progress to its caller.
-
-## Better packaging
-
-Move `/etc/sudoers.d/zzz_update` and IUK-related user creation from
-the Tails main Git repository to the `tails-iuk` Debian package, so
-that it's more self-contained and easier to test.
