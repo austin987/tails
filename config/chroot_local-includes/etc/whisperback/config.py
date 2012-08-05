@@ -118,8 +118,7 @@ def mail_appended_info():
             debugging_info += line
         process.wait()
     except OSError:
-        debugging_info += "sudo command not found\n" % debug_command
+        debugging_info += "sudo command not found\n"
     except subprocess.CalledProcessError:
-        debugging_info += "debugging command returned an error\n" % debug_command
-
+        debugging_info += "debugging command returned an error\n"
     return debugging_info
