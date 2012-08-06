@@ -3,132 +3,132 @@
 Rationale
 =========
 
-Many ISPs now have a large number of "free" WiFi access points based
-on the modem/router boxes they install at their customers home.
-Examples: FreeWifi, NeufWifi, Fon, probably others worldwide.
+Muchos proveedores de Internet tienen ahora un gran número de "libre" acceso WiFi puntos base
+en las cajas de módem / router que instale en su casa de los clientes.
+Ejemplos: FreeWiFi y NeufWifi, FON, y probablemente otros en todo el mundo.
 
-A lot of these run a captive web portal (often using a
-catch-all-DNS-requests system) where potential user can authenticate.
+Muchos de estos ejecución de un portal web cautivo (a menudo usando una
+catch-all-DNS-peticiones del sistema) donde el usuario potencial puede autenticar.
 
-Such hotspots are pretty useful but currently unusable in Tails due
-to DNS torification and Tor enforcement.
+Estos puntos de acceso son bastante útiles, pero en la actualidad inutilizable en las colas debido
+a DNS torification y la ejecución de Tor.
 
-We should implement a way to fix this.
+Debemos poner en práctica una forma de solucionar este problema.
 
-Implementation
+Ejecución
 ==============
 
-Using a non-Torified web browser
+El uso de un navegador web no Torified
 --------------------------------
 
-### User interface
+# # # Interfaz de usuario
 
-Let's call it "Unsafe web browser". When executed we:
+Vamos a llamarlo "navegador web no seguros". Cuando ejecutamos:
 
-0. Show a dialog asking the user for verification, while also briefly
-   explaining that the unsafe browser won't be anonymous.
-0. If yes, we start a separate Iceweasel instance.
-0. The Iceweasel profile should use a theme with scary colors, but it
-   should be deactivated when Windows camouflage is activated.
-0. Add a small visual cue to "amnesia branding" addon (which will be
-   the only cue for Windows camouflage users),
-0. Load an appropriate start page which explains all the issues.
+0. Mostrar un cuadro de diálogo preguntando al usuario para la verificación, mientras que también brevemente
+   explicando que el navegador inseguro no será anónimo.
+0. En caso afirmativo, se inicia una instancia de Iceweasel separado.
+0. El perfil de Iceweasel debe utilizar un tema con colores que dan miedo, pero
+   debe desactivarse cuando el camuflaje de Windows está activado.
+0. Añadir una señal visual pequeño "marca la amnesia" addon (que será
+   la señal sólo para los usuarios de Windows de camuflaje),
+0. Cargar una página de inicio apropiado que explica todos los temas.
 
-### Implementation details
+# # # De detalles de implementación
 
-The following is implemented in `feature/unsafe-browser`.
+A continuación se aplica en función de `/` seguro de los navegadores.
 
-For convenience, not imagined security, we implement this in a
-chroot. Before starting the unsafe browser we create and aufs union
-"branch" of the filesystem root which we adapt to suite our needs:
+Para mayor comodidad, no imaginaba la seguridad, la aplicación del presente en un
+chroot. Antes de iniciar el navegador seguro que creamos y el sindicato aufs
+"Rama" de la raíz del sistema de ficheros que nos adaptamos a la suite de nuestras necesidades:
 
-0. We set the default DNS servers to those obtained through DHCP.
-0. We uninstall any offending Iceweasel addons (Torbutton, FoxyProxy).
-0. We configure Iceweasel to not use any proxies.
-0. We set the Icewesel theme to one with "scary colors" (but not if
-   the Windows camouflage is activated).
+0. Hemos establecido los servidores DNS por defecto para los que se obtienen a través de DHCP.
+0. Nos desinstalar cualquier addons Iceweasel ofensivos (Torbutton, FoxyProxy).
+0. Configuramos Iceweasel no usar ningún proxy.
+0. Nos propusimos el tema Icewesel a uno con los colores "da miedo" (pero no si
+   el camuflaje de Windows está activado).
 
-Then we just run a chroot:ed instance of Iceweasel, shown on the
-amnesia users `$DISPLAY`, running under a user which has been exempt of
-all restriction in our firewall and forward. The firewall exception
-should not allow loopback connection as access to Tor, Polipo, pdnsd and
-ttdnsd it may open some classes of new deanonymization attacks against
-Tails users.
+Entonces, basta con ejecutar un chroot: ejemplo ed de Iceweasel, que se muestra en la
+`Mostrar usuarios amnesia $`, se ejecuta en un usuario que ha estado exento de
+toda restricción en nuestro servidor de seguridad y hacia adelante. La excepción de firewall
+no debe permitir la conexión de bucle invertido como el acceso a Tor, Privoxy, y pdnsd
+ttdnsd puede abrir algunos tipos de ataques contra las nuevas deanonymization
+Colas de usuarios.
 
-When Iceweasel exits we tear down the chroot. We also restart Tor (and
-Vidalia) if Tor isn't working so it quickly can bootstrap if the user
-used the unsafe browser to login to a hotspot/captive portal.
+Cuando sale de Iceweasel que derribar la jaula. También reiniciar Tor (y
+Vidalia) en caso de que Tor no está trabajando tan rápidamente se puede arrancar si el usuario
+utiliza el navegador seguro para acceder a un portal de punto de acceso / en cautividad.
 
-### TODO
+# # # TODO
 
-* Split out remaining tasks and future plans into dedicated tickets,
-  and close this one.
+* Dividir las tareas restantes y los planes futuros en billetes dedicados,
+  y cerca de éste.
 
-* Set some pref in the chroot which will activate a small visual
-  cue in the "amnesia branding" addon. This will be useful when
-  the windows camouflage is activated, since it disables the theme
-  which otherwise clearly marks the browser different.
+* Establecer un pref en el chroot que se activará un pequeño visuales
+  de referencia en la "marca la amnesia" addon. Esto será útil cuando
+  el camuflaje de Windows está activado, ya que desactiva el tema
+  que de otra marca claramente el navegador.
 
-### Future plans
+# # # Planes futuros
 
-* When LXC becomes a viable, secure solution for creating isolated
-  jails the above chroot approach will be easily adaptable to that.
+* Cuando LXC se convierte en una solución viable y segura para la creación de aislado
+  el enfoque de las cárceles chroot anterior será fácilmente adaptable a eso.
 
-* Notify the user when `wait_for_tor_consensus()` fails during time
-  syncing, telling them that *maybe* they're behind a captive portal
-  and should use the Unsafe Browser to register/login.
+* Notificar al usuario cuando `wait_for_tor_consensus ()` falla durante el tiempo
+  sincronización, diciéndoles que * tal vez * que están detrás de un portal cautivo
+  y deben utilizar el navegador inseguro para registrarse / iniciar sesión.
 
-Complementary ideas
+Ideas complementarias
 ===================
 
-The following things could try to automate the login to the hotspot
-so that the unsafe browser only is necessary as a fall back.
+Los siguientes factores podrían tratar de automatizar el acceso a la zona interactiva
+para que el navegador seguro sólo es necesario como una copia de la caída.
 
-Using WWW::Mechanize::Shell
+Uso de WWW :: Mecanizar :: Shell
 ---------------------------
 
-For each kind of hotspot:
+Para cada tipo de punto de acceso:
 
-* list of possible ESSID
-* optional: allocated IP address classes
-* optional: network test script?
-* optional: SSL certificate fingerprint?
-* a WWW::Mechanize::Shell script
+* Lista de posibles ESSID
+* Opcional: clases de direcciones IP asignadas
+* Opcional: secuencia de comandos de prueba de la red?
+* Opcional: huellas dactilares certificado SSL?
+* Un guión WWW :: Mecanizar :: Shell
 
-Main script in in /etc/NetworkManager/dispatcher.d.
+En el script principal en / etc / NetworkManager / dispatcher.d.
 
-Test current connection against known hotspots.
+Prueba de la conexión actual con respecto a puntos conocidos.
 
-When connected to a known hotspot, starts WWW::Mechanize::Shell
-script. Values are entered through a callback than will uses
-Gtk2::Notify and some custom widgets. Known login/passwords should be
-put in gnome-keyring with a browser like completion system (enter
-first letters, pick login, password is prefilled). Maybe we could use
-the same login/password database as Epiphany.
+Cuando se conecta a un punto conocido, empieza WWW :: Mecanizar :: Shell
+guión. Los valores se introducen a través de una devolución de llamada que la voluntad utiliza
+Gtk2 :: Notify y algunos widgets personalizados. De inicio de sesión conocido / contraseñas deben ser
+puesto en gnome-keyring con un navegador como sistema de terminación (entre
+primeras letras, elegir inicio de sesión, la contraseña se rellena automáticamente). Tal vez podríamos usar
+el mismo nombre de usuario / contraseña de la base de datos como la Epifanía.
 
-For hotspots that requires a periodic refresh, we can run another
-WWW::Mechanize::Shell script in a loop. NetworkManager is meanwhile
-monitored through DBUS to kill the loop if connection is lost. If loop
-fails try once more through default script before displaying a
-notification.
+Para puntos de acceso que requieren una actualización periódica, se puede ejecutar otro
+WWW :: Mecanizar :: script de shell en un bucle. NetworkManager es parte
+supervisa a través de DBUS para matar el bucle si se pierde la conexión. Si el bucle
+no intentar una vez más a través de secuencias de comandos predeterminado antes de mostrar una
+notificación.
 
-Existing hotspot connection applications
+Las aplicaciones existentes de conexión de hotspot
 ----------------------------------------
 
-Looks like there is at least two Python apps doing this already:
+Parece que hay al menos dos aplicaciones de Python hacen esto ya:
 
-* [autowifi](http://www.manatlan.com/page/autowifi)
-* [autologin-applet](http://antoine.mairesse.free.fr/autologin-applet/)
+* [Autowifi] (http://www.manatlan.com/page/autowifi)
+* [Autologin-applet] (http://antoine.mairesse.free.fr/autologin-applet/)
 
-Captive portal detection
+Detección de portal cautivo
 ------------------------
 
-hellais and friends are working on
-[ooni-probe](https://gitweb.torproject.org/ooni-probe.git) which may be
-interesting, depeding on how stealthy the probe is.
+hellais y amigos están trabajando en
+[Ooni-sonda] (https://gitweb.torproject.org/ooni-probe.git) que puede ser
+interesante, éstas, en función de cómo la sonda es sigiloso.
 
-Beta testers
+Los beta testers
 ============
 
-* San Bergmans <info@sbprojects.com>: FON network, KPN hotspots in the
-  Netherlands
+* San Bergman <info@sbprojects.com>: FON red, puntos de acceso de KPN en el
+  Países Bajos
