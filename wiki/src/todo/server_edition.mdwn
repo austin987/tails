@@ -341,6 +341,27 @@ The purpose of this GUI would
 be to properly setup a persistence USB key for tail-server, with services
 configuration, authentication means, ...
 
+Time synchronization
+--------------------
+
+As contributed by adrelanos on tails-dev
+(<50293C63.2040807@riseup.net>), servers are supposed to run over
+longer periods without rebooting, days or weeks so Tails's current
+implementation with tails_htp is not sufficient for Tails Server.
+
+adrelanos suggests:
+
+> My recommendation is to run htpdate periodically, perhaps every
+> hour. Time exact minute should be randomized to avoid creating
+> a network fingerprint.
+> 
+> Given what you already implemented with `tails_htp`, running
+> `tails_htp` frequently probable won't be hard. As I need it for aos,
+> I am planing to add a script to /etc/cron.daily, it will run another
+> script in background to avoid blocking anachron during the sleep
+> delay. The other script will simply pick a number between 0 and 3600
+> from /dev/random, sleep for the delay and then restart the
+> htpdate service.
 
 Resources
 ---------
