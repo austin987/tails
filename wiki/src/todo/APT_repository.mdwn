@@ -41,17 +41,14 @@ Left to do
 
 * Allow importing packages, creating new suites, merging, freezing,
   etc.; see the *Documentation* section bellow.
-* make the APT repository available over rsync for
-  the public APT mirror
 * test basic operations to check suite and pull names are in the
   supported set, and multiple pulls in the `Pull:` field are supported
 * import binary and source packages from our Git repository:
   - currently used branches
   - past releases... at least the most recent ones, depending on how
     much pain it takes to do it.
-* ask the `incoming.deb.tails.boum.org` hostname to be setup and
-  pointing to the incoming, private side
 * tell reprepro to email what `processincoming` does: <file:///usr/share/doc/reprepro/manual.html#hooks>
+* publish our Puppet module
 
 Done
 ----
@@ -64,17 +61,18 @@ Done
   - generate `conf/pulls`
   - create new suites in the APT repository
 
-Public APT mirror
-=================
+HTTP access
+===========
 
-This is the http:// public APT mirror that will be used at Tails
+This is the http:// public APT repository that will be used at Tails
 build time.
 
 Left to do
 ----------
 
-* ask for this APT repository's public mirror and sync' from the
-  private one
+[[!tag todo/sysadmin]]
+
+* setup HTTP access to this APT repository
 
 Build system
 ============
@@ -132,6 +130,10 @@ Upload the files to the incoming queue:
 reprepro will automatically notice the new files and import them into
 the suite specified in your `.changes` file.
 
+Check the result:
+
+	$ reprepro list $SUITE $PACKAGENAME
+
 Merging a topic branch
 ----------------------
 
@@ -154,6 +156,16 @@ Example:
 	$ ssh incoming.deb.tails.boum.org \
 	     sudo -u reprepro reprepro pull devel feature-icedove
 	$ git push
+
+Note: if pull reveals itself to be impractical, the [grml
+way](https://github.com/grml/grml-infrastructure/blob/master/repo-cookbook)
+can be a valid alternative: they don't use reprepro pull feature, but
+instead copy all packages from one suite to another with a small hack:
+
+	$ reprepro dumptracks grml-testing  | \
+	  awk '/ pool\/.*\/.*\.deb/ {print $1}' | \
+	  xargs -n 1 basename | cut -d _ -f 1 | \
+	  sort -u | xargs reprepro copy grml-test grml-testing
 
 Freezing devel into testing
 ---------------------------
