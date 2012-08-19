@@ -25,9 +25,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ########################################################################
-
 # IMPORTS
-
 # Do not change this - required to parse path
 import os.path
 
@@ -97,6 +95,14 @@ communication.</p>
 a Tails user. Time to wonder how much you trust your
 Internet and mailbox providers?</p>
 """) % __get_localised_doc_link()
+
+# ENCRYPTION
+#
+# This section defines encryption parameters
+
+# The path to the OpenPGP keyring to use. If None, use OpenPGP default
+# keyring.
+gnupg_keyring = "/usr/share/keyrings/tails-keyring.gpg"
 
 # RECIPIENT
 #
