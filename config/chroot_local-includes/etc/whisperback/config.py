@@ -156,37 +156,18 @@ def mail_prepended_info():
 def mail_appended_info():
     """Returns debugging informations on the running amnesia system
     
-    @return XXX: document me
+    @return a long string containing debugging informations
     """
-
-    debug_files = ["/etc/X11/xorg.conf", "/var/log/Xorg.0.log",
-                   "/var/log/live-persist", "/var/lib/gdm3/tails.persistence"]
-    debug_commands = ["/bin/dmesg", "/bin/lsmod", "/usr/bin/lspci"]
-
     debugging_info = ""
 
-    for debug_command in debug_commands:
-        debugging_info += "\n===== output of command %s =====\n" % debug_command
-        try:
-            process = subprocess.Popen (debug_command, 
-                                        stdout=subprocess.PIPE)
-            for line in process.stdout:
-                debugging_info += line
-            process.wait()
-        except OSError:
-            debugging_info += "%s command not found\n" % debug_command
-        except subprocess.CalledProcessError:
-            debugging_info += "%s returned an error\n" % debug_command
-
-    for debug_file in debug_files:
-        debugging_info += "===== content of %s =====\n" % debug_file
-        f = None
-        try:
-            f = open(debug_file)
-            debugging_info += f.read()
-        except IOError:
-            debugging_info += "%s not found\n" % debug_file
-        finally:
-            if f is not None: f.close()
-
+    try:
+        process = subprocess.Popen (["sudo", "/usr/local/sbin/tails-debugging-info"], 
+                                    stdout=subprocess.PIPE)
+        for line in process.stdout:
+            debugging_info += line
+        process.wait()
+    except OSError:
+        debugging_info += "sudo command not found\n"
+    except subprocess.CalledProcessError:
+        debugging_info += "debugging command returned an error\n"
     return debugging_info
