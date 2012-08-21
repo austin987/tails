@@ -565,14 +565,15 @@ sub choose_keys {
                     scalar @unauth
                                                  ));
                 $msg = sprintf("%s%s", $msg, $question);
-                next unless display_question($title, $msg);
+                next unless display_question($dialog, $title, $msg);
                 $always_trust = 1;
             }
             @recipients = map { $_->[C_FINGERPRINT] } @list_selection;
         }
 
         if (!@recipients && !$signer) {
-            display_error($encoding->decode(gettext("No keys selected")),
+            display_error($dialog,
+                          $encoding->decode(gettext("No keys selected")),
                           $encoding->decode(gettext(
                               "You must select a private key to sign the " .
                               "message, or some public keys to encrypt the " .
@@ -601,7 +602,8 @@ sub public_crypto {
     my @pub_keys = $gnupg->get_public_keys_light();
 
     if (@priv_keys == 0 && @pub_keys == 0) {
-        display_error($encoding->decode(gettext("No keys available")),
+        display_error($main_window,
+                      $encoding->decode(gettext("No keys available")),
                       $encoding->decode(gettext(
                           "You need a private key to sign messages or a " .
                           "public key to encrypt messages."
@@ -730,6 +732,7 @@ sub gpg_operate_on_text {
     }
     else {
         display_error(
+            $main_window,
             $encoding->decode(gettext("GnuPG error")),
             $std_out . "\n\n" . $std_err
         );
@@ -749,6 +752,7 @@ sub operate_on_clipboard {
 
     if (defined $clip_error) {
         display_error(
+            $main_window,
             $clip_error, # already translated and decoded
             $encoding->decode(gettext("Therefore the operation cannot be " .
                                       "performed."))
@@ -760,11 +764,12 @@ sub operate_on_clipboard {
 }
 
 sub display_error {
+    my $parent = shift;
     my $title = shift;
     my $msg   = shift;
 
     my $dialog = Gtk2::MessageDialog->new(
-        $main_window, 'destroy-with-parent', 'error', 'ok',
+        $parent, 'destroy-with-parent', 'error', 'ok',
         $title
     );
     $dialog->format_secondary_text($msg);
@@ -779,11 +784,12 @@ sub display_error {
 }
 
 sub display_question {
+    my $parent = shift;
     my $title = shift;
     my $msg   = shift;
 
     my $dialog = Gtk2::MessageDialog->new(
-        $main_window, 'destroy-with-parent', 'question', 'yes-no', $title);
+        $parent, 'destroy-with-parent', 'question', 'yes-no', $title);
     $dialog->format_secondary_text($msg);
     $dialog->set_position('center');
     my $answer = $dialog->run;
