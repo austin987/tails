@@ -556,7 +556,12 @@ sub choose_keys {
                                                 ));
                 my $msg = sprintf("%s\n", $warning);
                 foreach my $key (@unauth) {
-                    my $key_name = $encoding->decode("$key->[C_NAME] ($key->[C_KEYID])");
+                    # Each key will be listed RTL *or* LTR depending on the
+                    # direction of the first character of the name. This
+                    # unfortunately causes mixing of LTR and RTL in the
+                    # same list. A potential FIXME would be to display this
+                    # with a custom windows using SimpleList for the keys.
+                    my $key_name = "$key->[C_NAME] ($key->[C_KEYID])";
                     $msg = sprintf("%s%s\n", $msg, $key_name);
                 }
                 my $question = $encoding->decode(ngettext(
