@@ -28,6 +28,9 @@ the resulting system, are determined at Tails build time
 We manage our APT repository with
 [reprepro](http://mirrorer.alioth.debian.org/).
 
+The Puppet modules used to manage this part of our infrastructure are
+listed on our [[contribute/Git]] page.
+
 Private side
 ============
 
@@ -48,7 +51,8 @@ Left to do
   - past releases... at least the most recent ones, depending on how
     much pain it takes to do it.
 * tell reprepro to email what `processincoming` does: <file:///usr/share/doc/reprepro/manual.html#hooks>
-* publish our Puppet module
+* [[!taglink todo/wait]] for lizard, and then host our
+  `tails_secrets_apt` Puppet module's Git repository there
 
 Done
 ----
@@ -170,8 +174,11 @@ instead copy all packages from one suite to another with a small hack:
 Freezing devel into testing
 ---------------------------
 
-Merge `devel` branch into `testing` in Git, and hard reset `testing`
-suite to the current state of the `devel` suite.
+1. Merge `devel` branch into `testing` in Git
+2. Hard reset `testing` suite to the current state of the `devel`
+   suite (**FIXME**: how? delete with `removematched codename glob`
+   and then copy? -- beware:  do the `*matched` commands act on source
+   + binary?)
 
 Releasing a point-release
 -------------------------
@@ -201,3 +208,6 @@ they would add the .deb they want to their Git branch as we have been
 doing until now, push the result on repo.or.cz or whatever... and at
 merge time, we would rewrite their history to remove the .deb, and
 import it into our APT repo.
+
+
+[[!tag broken_window]]

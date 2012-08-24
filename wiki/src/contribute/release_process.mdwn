@@ -2,6 +2,14 @@
 
 [[!toc levels=1]]
 
+Select the right branch
+=======================
+
+For a major release, the `devel` branch should be merged in the `testing`
+branch and changes should be made from there.
+
+From minor releases, work should happen in `stable`.
+
 Coordinate with Debian security updates
 =======================================
 
@@ -16,22 +24,35 @@ AdBlock patterns
 Patterns are stored in
 `config/chroot_local-includes/etc/iceweasel/profile/adblockplus/`.
 
+1. Boot Tails
+2. Open *Tools* → *Addons*
+3. Select *Adblock Plus* in extensions
+4. Open *Filter preferences…*
+5. For each filters, click *Actions* and *Update filters*
+6. Close Iceweasel
+7. Copy `.mozilla/firefox/*.default/adblockplus/patterns.ini` to
+   Tails checkout inside
+   `config/chroot_local-includes/etc/iceweasel/profile/adblockplus`
+
 upgrade i2p
 -----------
 
-See [[todo/upgrade i2p]].
+See [[contribute/design/I2P]].
 
 upgrade bundled binary Debian packages
 --------------------------------------
 
 Make sure the bundles binary Debian packages are up-to-date,
-particularly wrt. included localization files:
+particularly wrt. included localization files. See the relevant
+release processes:
 
-* liveusb-creator
-* tails-greeter
-* tails-persistence-setup
-* whisperback (see `whisperback_completed` branch
-  in `git://git.torproject.org/translation.git`)
+* [[liveusb-creator]]
+* [[tails-greeter]]
+* [[persistence-setup]]
+* whisperback: 
+  * see release process on <http://git.immerda.ch/?p=whisperback.git;a=blob;f=HACKING;h=d92464f810235e972e8ae348de95514b78255004;hb=HEAD>
+  * build a debian package
+  * copy it to tails git
 
 Changelog
 ---------
@@ -93,7 +114,7 @@ nothing bad happened.
 SquashFS files order
 --------------------
 
-Build an ISO image, profile it **on bare metal** and update
+Build an ISO image, burn a DVD and profile it **on bare metal** and update
 `squashfs.order` in the Git repository. Then rebuild images.
 
 See [[todo/improve_boot_time_on_cd]] for details.
@@ -170,6 +191,10 @@ Test them with a BitTorrent client running in a different place.
 Update the website and Git repository
 =====================================
 
+In order to get any new documentation into the website, merge either
+`stable` or `testing` (depending on which release you just did) into
+`master`.
+
 Rename the `.packages` file to remove the `.iso` part of its name.
 
 Copy the `.iso.pgp`, `.packages`, `.torrent` and `.torrent.pgp`
@@ -191,6 +216,8 @@ Update todo and bugs tags:
  - in `bugs/*`: replace links to `pending` with links to `done` (`[[todo/done]]`)
 
 Update the [[doc/about/features]] page.
+
+Update the [[support/known_issues]] page.
 
 Write the announcement for the release in `news/version_X.Y.mdwn`. Use the
 meta directive to set the post title to "Tails X.Y is out" so
@@ -236,3 +263,8 @@ We announce *major* releases on the Tor blog:
 - turn `<h1>` into `<strong>`
 - direct users to [[our communication channels|support/talk]] for comments and feedback,
 - disable comments
+
+Twitter
+-------
+
+Announce the release by tweeting a link to the "news" page.
