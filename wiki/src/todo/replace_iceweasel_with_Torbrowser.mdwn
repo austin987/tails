@@ -1,12 +1,79 @@
-[[!tag todo/discuss]]
-
-[[!toc levels=2]]
+[[!toc levels=3]]
 
 Note: this page is about perhaps running the *Torbrowser* in Tails,
 not the full blown TBB.
 
 Current position
 ================
+
+We want to ship Torbrowser in Tails.
+
+Roadmap
+=======
+
+First thing to do is to update this page to reflect our current
+position and reasons thereof on this page:
+[[todo/publish_Tails_positions_about_fingerprinting]].
+
+Then, we have to decide upon the preferred implementation path.
+[[!tag todo/discuss]]
+
+Implementation
+==============
+
+Possible Paths
+--------------
+
+### A - Get TorBrowser in Debian
+
+This is [[!tor_bug 3994]] -- Get TorBrowser in Debian ([[!taglink todo/upstream]])
+
+Torbrowser packaging in Debian is sloooowly going on.
+
+* Apparently, it's *hard* to make iceweasel co-installable with
+  a torbrowser Debian package. Without Mike Hommey's help, this
+  won't happen.
+* Different XUL app with dedicated UUID? If so, every extension must
+  be patched to be marked as compatible with torbrowser too.
+* How to make the Torbrowser profile updatable? Static profile?
+  And what about bookmarks?
+
+### B - Custom iceweasel or Firefox package with TorBrowser patches
+
+This is related to [[!tor_bug 5236]] (Make a deb of the Torbrowser and
+add to repository).
+
+* What about the unsafe browser?
+  - Ship Epiphany?
+  - Don't care about it? (That is, let is use TorBrowser and have
+    a uncommon fingerprint.)
+* How would the two Mikes' patches live together?
+  - Starting from iceweasel should be tried.
+  - Otherwise, take Ubuntu's Firefox package and apply the patches on
+    top of it.
+    * Do they use ESR? [[!tag todo/research todo/test]]
+
+### C - Ship and run the TBB's torbrowser executable
+
+The work done on [[!tor_bug 5611]] (*Enhance "Transparent Torification
+(Requires custom transproxy or Tor router)" in Tor Button*) may help.
+
+Integration issues:
+
+* The TBB's homepage is set to the `small=1` version of check.t.o,
+  which is not suitable for Tails: it asks users to update their TBB.
+  **Update**: "the next TBB release that includes Torbutton 1.4.6" (as
+  of 2012-05-25) does not use this special homepage anymore, so this
+  will soon be a non-issue.
+* Extensions provided at the Debian system level are ignored, although
+  `extensions.enabledScopes` is set to 1. Perhaps Debian installs
+  extensions in non-standard places?
+* The TBB ships l10n'd packages, while Tails needs to support as many
+  languages as possible.
+* How do we modify the Firefox profile shipped by the TBB?
+
+Previous position
+=================
 
 As we [once
 wrote](https://mailman.boum.org/pipermail/tails-dev/2012-January/000795.html),
@@ -67,38 +134,20 @@ A middle ground that might make sense would be to try to look like the
 TBB to the eyes of "$RANDOM web server admin", and feel free to
 diverge in the eyes of more powerful, or better placed, adversaries.
 
-Integration that would be needed
---------------------------------
+Pending questions
+=================
 
-* The TBB's homepage is set to the `small=1` version of check.t.o,
-  which is not suitable for Tails: it asks users to update their TBB.
-  **Update**: "the next TBB release that includes Torbutton 1.4.6" (as
-  of 2012-05-25) does not use this special homepage anymore, so this
-  will soon be a non-issue.
-* Extensions provided at the Debian system level are ignored, although
-  `extensions.enabledScopes` is set to 1. Perhaps Debian installs
-  extensions in non-standard places?
-* The TBB ships l10n'd packages, while Tails needs to support as many
-  languages as possible.
-* How do we modify the Firefox profile shipped by the TBB?
+* How will the Torbrowser release cycle influence our own release
+  cycle? Their source is generally up-to-date, their binary builds
+  might be lagging behind occasionally, worst case is that we
+  exceptionally have to build our own. It also happens that a patch is
+  not applying cleanly, and then we have to wait or contribute a fix.
+* What about I2P? That could be done in another browser, user, profile.
 
-What may be changing
-====================
+And then?
+=========
 
-We are going to discuss Tails relationship with the Torbrowser,
-especially on the browser fingerprinting, anonymity set and ad
-blocking topics, during the northern hemisphere's summer 2012.
-
-Some work recently happpened to allow starting Torbrowser, from the
-TBB, without their Vidalia and Tor; see the related tickets for
-details:
-
-* [[!tor_bug 5611]] -- Enhance "Transparent Torification (Requires
-  custom transproxy or Tor router)" in Tor Button
-* [[!tor_bug 5236]] -- Make a deb of the Torbrowser and add to repository
-* [[!tor_bug 3994]] -- Get TorBrowser in Debian ([[!taglink todo/upstream]])
-
-This may solve one of the biggest integration problems.
+Once Tails ships TorBrowser, we want to [[todo/evaluate_web_fingerprint]].
 
 Resources
 =========
