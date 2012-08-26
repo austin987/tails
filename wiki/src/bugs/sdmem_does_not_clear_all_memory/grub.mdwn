@@ -1,0 +1,37 @@
+[[!meta title="Erase memory: the GRUB way"]]
+
+GRUB is a really small and featureful kernel. Among other thing, it knows
+perfectly how to shut down x86 hardware. So how about adding a command that
+would erase memory? A simple `grub.cfg` script could then be used perform the
+wipe and shutdown (or reboot) the system.
+
+Patches
+-------
+
+ * [[version 0|grub-wipe-memory-v0.patch]]
+
+Known issues:
+
+ * The `grub_wipe_with_malloc` function is fragile, it sometimes overwrite too
+   much of GRUB internal structures. Maybe it should use another algorithm.
+ * There's debugging output everywhere. This should be cleaned up.
+ * The code related to high order wipe is not portable to other architectures
+   than `i386` so it should be labeled clearly as such.
+
+How to test
+-----------
+
+1. Apply the patch.
+2. Launch `./autogen.sh`
+3. `make`
+4. Create a `test-wipe.cfg` script:
+
+       insmod wipe_memory
+       wipe_memory
+
+5. Use `grub-shell` to start GRUB in qemu:
+
+       grub-shell --boot=hd --qemu-opts="-enable-kvm -m 5120" test-wipe.cfg
+
+   Adjust amount of memory to suite your need (and capacity). You will need
+   KVM support in order to test more than 4G of memory.
