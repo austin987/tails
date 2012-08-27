@@ -5,13 +5,26 @@ perfectly how to shut down x86 hardware. So how about adding a command that
 would erase memory? A simple `grub.cfg` script could then be used perform the
 wipe and shutdown (or reboot) the system.
 
-Patches
--------
+Status:
 
- * [[version 1|grub-wipe-memory-v1.patch]]
+ * `wipe_memory` command is basically complete.
+ * The minimal set of GRUB modules to use is known.
+ * There is GRUB configuration using `gfxterm` to get a nice display.
+ * **TODO**: Make a standalone image that we can give to `kexec`. Call for help
+   [sent on grub-devel
+   mailing-list](https://lists.gnu.org/archive/html/grub-devel/2012-08/msg00016.html).
+
+Patches
+=======
+
+ * [[version 2|grub-wipe-memory-v2.patch]]
 
 Version history:
 
+ * Changes since v1:
+   - Adjust line width to fit ascii font in gfxterm 640x480.
+   - Do not always include all modules in grub-mkstandalone. This makes
+     testing easier.
  * Changes since v0:
    - Really fill memory with zeros.
    - Change strategy for `grub_wipe_with_malloc`. Use dichotomy and recursion
@@ -25,89 +38,68 @@ Known issues:
    than `i386` so it should be labeled clearly as such.
 
 How to test
------------
+===========
 
-1. Apply the patch.
-2. Launch `./autogen.sh`
-3. `make`
-4. Create a `test-wipe.cfg` script:
+Using a qemu image
+------------------
 
-       insmod wipe_memory
-       wipe_memory
+1. Uncompress GRUB 2.00 sources:
 
-5. Use `grub-shell` to start GRUB in qemu:
+       tar -zxf grub-2.00.tar.gz
 
-       grub-shell --boot=hd --qemu-opts="-enable-kvm -m 5120" test-wipe.cfg
+2. Apply the patch and copy the boot configuration files:
 
-   Adjust amount of memory to suite your need (and capacity). You will need
-   KVM support in order to test more than 4G of memory.
+       cd grub-2.00
+       patch -p1 < /path/to/amnesia/wiki/src/bugs/sdmem_does_not_clear_all_memory/grub/grub-wipe-memory-v2.patch
+       cp -r /path/to/amnesia/wiki/src/bugs/sdmem_does_not_clear_all_memory/grub/boot .
 
-Sample output
--------------
+3. Build:
 
-    wipe_high_order
-    regions[0] 0000000020000000, 0000000010000000
-    regions[1] 0000000000000000, 0000000000000000
-    regions[2] 0000000000000000, 0000000000000000
-    regions[3] 0000000000000000, 0000000000000000
-    regions[4] 0000000000000000, 0000000000000000
-    regions[5] 0000000000000000, 0000000000000000
-    regions[6] 0000000000000000, 0000000000000000
-    regions[7] 0000000000000000, 0000000000000000
-    regions[8] 0000000000000000, 0000000000000000
-    regions[9] 0000000000000000, 0000000000000000
-    regions[10] 0000000000000000, 0000000000000000
-    regions[11] 0000000000000000, 0000000000000000
-    regions[12] 0000000000000000, 0000000000000000
-    regions[13] 0000000000000000, 0000000000000000
-    regions[14] 0000000000000000, 0000000000000000
-    regions[15] 0000000000000000, 0000000000000000
-    Switching to PAE.
-    Paging enabled.
-    zero'ing addr = 0x20000000, length = 0x10000000
-    page_dir_cleanup[0]: 20000087
-    page_dir_cleanup[1]: 20200087
-    page_dir_cleanup[2]: 20400087
-    page_dir_cleanup[3]: 20600087
-    page_dir_cleanup[4]: 20800087
-    page_dir_cleanup[5]: 20a00087
-    page_dir_cleanup[6]: 20c00087
-    page_dir_cleanup[7]: 20e00087
-    page_dir_cleanup[8]: 21000087
-    page_dir_cleanup[9]: 21200087
-    page_dir_cleanup[10]: 21400087
-    page_dir_cleanup[11]: 21600087
-    page_dir_cleanup[12]: 21800087
-    page_dir_cleanup[13]: 21a00087
-    page_dir_cleanup[14]: 21c00087
-    page_dir_cleanup[15]: 21e00087
-    wipe 0x0000000020000000; left to wipe: 0x10000000
-    wipe 0x0000000022000000; left to wipe: 0x0e000000
-    wipe 0x0000000024000000; left to wipe: 0x0c000000
-    wipe 0x0000000026000000; left to wipe: 0x0a000000
-    wipe 0x0000000028000000; left to wipe: 0x08000000
-    wipe 0x000000002a000000; left to wipe: 0x06000000
-    wipe 0x000000002c000000; left to wipe: 0x04000000
-    wipe 0x000000002e000000; left to wipe: 0x02000000
-    page_dir_cleanup[0]: 80000087
-    page_dir_cleanup[1]: 80200087
-    page_dir_cleanup[2]: 80400087
-    page_dir_cleanup[3]: 80600087
-    page_dir_cleanup[4]: 80800087
-    page_dir_cleanup[5]: 80a00087
-    page_dir_cleanup[6]: 80c00087
-    page_dir_cleanup[7]: 80e00087
-    page_dir_cleanup[8]: 81000087
-    page_dir_cleanup[9]: 81200087
-    page_dir_cleanup[10]: 81400087
-    page_dir_cleanup[11]: 81600087
-    page_dir_cleanup[12]: 81800087
-    page_dir_cleanup[13]: 81a00087
-    page_dir_cleanup[14]: 81c00087
-    page_dir_cleanup[15]: 81e00087
-    High order wipe done. Disabling paging.
-    Paging disabled.
-    Low memory wipe: 1069899870 bytes.
-    [++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++] 100%
+       ./autogen.sh
+       test -f Makefile && make distclean
+       ./configure --with-platform=qemu --target=i386
+       mkdir -p /tmp/tftp
+       make -j4 &&
+           pkgdatadir='.' ./grub-mkstandalone -C xz -o /tmp/qemu.bin \
+               -d ./grub-core -O i386-qemu --grub-mkimage='./grub-mkimage' \
+               --modules="all_video echo gfxterm halt normal png reboot serial test wipe_memory" \
+               boot/grub/grub.cfg boot/grub/ascii.pf2 boot/grub/splash.png
 
-There is a progress bar along the way.
+4. Start qemu:
+
+       qemu -hda /dev/zero -bios /tmp/qemu.bin \
+           -vga std -enable-kvm -m 5120
+
+
+Using a multiboot image
+-----------------------
+
+As kexec support the multiboot protocol, it should be the easiest way to get
+GRUB kexec'able.
+
+1. Uncompress GRUB 2.00 sources.
+2. Apply the patch and copy the boot configuration files.
+3. Build:
+
+       test -f Makefile && make distclean
+       ./configure --with-platform=multiboot --target=i386
+       make -j4 &&
+           pkgdatadir='.' ./grub-mkstandalone -C xz -o /tmp/multiboot.img \
+               -d ./grub-core -O i386-multiboot --grub-mkimage='./grub-mkimage' \
+               --modules="all_video echo gfxterm halt normal pci png reboot serial test wipe_memory" \
+               boot/grub/grub.cfg boot/grub/ascii.pf2 boot/grub/splash.png
+
+4. Start qemu:
+
+       qemu -hda /dev/zero -kernel /tmp/multiboot.img \
+            -vga std -m 256
+
+But it fails with:
+
+    Missing Multiboot memory information
+    Aborted.
+
+Screenshot
+==========
+
+[[!img grub_wipe_memory.png]]

@@ -13,8 +13,8 @@
    common = commands/lspci.c;
  
 --- grub-2.00.orig/grub-core/commands/wipe_memory.c	1970-01-01 01:00:00.000000000 +0100
-+++ grub-2.00/grub-core/commands/wipe_memory.c	2012-08-26 19:34:44.032133500 +0200
-@@ -0,0 +1,384 @@
++++ grub-2.00/grub-core/commands/wipe_memory.c	2012-08-26 21:40:22.232087198 +0200
+@@ -0,0 +1,390 @@
 +/*
 + *  GRUB  --  GRand Unified Bootloader
 + *  Copyright (C) 2008  Free Software Foundation, Inc.
@@ -40,17 +40,22 @@
 +#include <grub/memory.h>
 +#include <grub/i386/memory.h>
 +#include <grub/mm.h>
++#include <grub/term.h>
 +
 +GRUB_MOD_LICENSE ("GPLv3+");
++
++#define LINE_SIZE 74
++#define PROGRESS_SIZE (LINE_SIZE - 7)
 +
 +#if 1
 +# define DEBUG_WIPE(...)
 +#else
 +# define DEBUG_WIPE(...) \
 +        { \
-+          char __debug_wipe_s[80]; \
-+          grub_snprintf (__debug_wipe_s, 80, __VA_ARGS__); \
-+          grub_printf ("%-78s\n", __debug_wipe_s); \
++          char __debug_wipe_s[LINE_SIZE + 2]; \
++          grub_snprintf (__debug_wipe_s, LINE_SIZE + 2, __VA_ARGS__); \
++          grub_printf ("%-" LINE_SIZE "s\n", __debug_wipe_s); \
++          grub_refresh (); \
 +        }
 +#endif
 +
@@ -66,11 +71,12 @@
 +  unsigned short i;
 +
 +  grub_printf ("[");
-+  for (i = 0; i < grub_divmod64(60 * total_mem_wiped, total_mem_size, NULL); i++)
++  for (i = 0; i < grub_divmod64(PROGRESS_SIZE * total_mem_wiped, total_mem_size, NULL); i++)
 +    grub_printf ("+");
-+  for (; i < 60; i++)
++  for (; i < PROGRESS_SIZE; i++)
 +    grub_printf (" ");
 +  grub_printf ("] %3" PRIuGRUB_UINT64_T "%s\r", grub_divmod64(100 * total_mem_wiped, total_mem_size, NULL), "%");
++  grub_refresh ();
 +}
 +
 +static grub_size_t
@@ -399,3 +405,14 @@
 +{
 +  grub_unregister_command (cmd);
 +}
+--- grub-2.00.orig/util/grub-mkstandalone.in	2012-04-05 19:54:27.000000000 +0200
++++ grub-2.00/util/grub-mkstandalone.in	2012-08-26 19:46:47.536685078 +0200
+@@ -171,7 +171,7 @@
+ memdisk_dir="`mktemp -d "${TMPDIR:-/tmp}/tmp.XXXXXXXXXX"`" || exit 1
+ mkdir -p "${memdisk_dir}"/boot/grub/"${grub_modinfo_target_cpu}-${grub_modinfo_platform}"
+ 
+-for file in "${source_directory}/"*.mod "${source_directory}/"efiemu32.o "${source_directory}/"efiemu64.o; do
++for file in "${source_directory}/"efiemu32.o "${source_directory}/"efiemu64.o; do
+     if test -f "$file"; then
+         cp -f "$file" "${memdisk_dir}"/boot/grub/"${grub_modinfo_target_cpu}-${grub_modinfo_platform}"
+     fi
