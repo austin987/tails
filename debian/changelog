@@ -1,131 +1,63 @@
 tails (0.13~rc1) unstable; urgency=low
 
-  * Use white-list/principle of least privelege approach for local
-    services. Only users that need a certain local (i.e. hosted on
-    loopback) service (according to our use cases) are granted access to
-    it by our firewall; all other users are denied access.
-  * Log packets REJECT:ed by the firewall.
-  * REJECT and log everything IPv6 in the firewall.
-  * Disable UPnP and automatic IP detection in Pidgin. We really don't
-    want any of that functionality, and while they've always been
-    blocked by the firewall, they currently clobber the firewall REJECT
-    log.
-  * Use static port for the Monkeysphere validation agent. Using the
-    default dynamic port is troublesome for the firewall.
-  * Make cupsd listen using IPv4 only.
-  * Make I2P prefer using the IPv4 stack. This way we don't have to keep
-    duplicate service access white-list rules in our firewall.
-  * Tor's ControlPort listens on TCP not UDP.
-  * Enable four workspaces in the Windows XP camouflage. This allows
+  * Major new features
+  - Use white-list/principle of least privelege approach for local services.
+    Only users that need a certain local (i.e. hosted on loopback) service
+    (according to our use cases) are granted access to it by our firewall;
+    all other users are denied access.
+  - Ship a first version of the incremental update system. Updates are not
+    currently triggered automatically, but this will allow tests to be done
+    on larger scales.
+
+  * Minor improvements
+  - Enable four workspaces in the Windows XP camouflage. This allows
     users to quickly switch to a more innocent looking workspace in case
     they are working on sensitive data and attract unwanted attention.
     The workspace switcher applet isn't there, though, since there's no
     such thing in Windows XP, so switching is only possible via keyboard
     shortcuts.
-  * Make Claws Mail save local/POP emails in its dot-directory. The
-    default is to save them at ~/Mail, which isn't included in our
-    current Claws Mail persistence preset.
-  * Drop custom live-boot packages. Use the one from Debian unstable
-    instead.
-  * Adapt live-persist to live-boot 3.0~a35-1.
-  * Ship the locales-all package to get precompiled locales.
-  * Drop the "locales" package, given we now ship locales-all.
-  * Import tails-greeter 0.7.2:
-    - Use correct test operators.
-    - Generate language codes of available locales at package build time.
-    - Read list of language codes from where we have saved it at package build
-      time.
-    - Drop tails-lang-helper, not used anymore.
-    - Do not compile locales at login time anymore. Tails now ships
-      locales-all.
-  * Install crda and wireless-regdb from squeeze-backports, to get
-    wireless regulation working. Alternate title: 'for those who care
-    about channels 12-13'. Details:
-    http://womble.decadent.org.uk/blog/wireless-regulation-in-squeeze.html
-  * Use color for Git output, not intended for machine consumption,
+  - Ship with precompiled locales instead of generating them upon login.
+  - Add support for wireless regulation.
+  - Use color for Git output, not intended for machine consumption,
     written to the terminal.
-  * Fix format of debian/changelog.
-  * Import live-boot 3.0~a35-1. This fixes boot broken since 3.0~a36-1
-    reached unstable
-  * Tell live-boot to setup filesystems listed in live/Tails.module if
-    it exists. This is achieved by appending module=Tails to the kernel
-    command-line.
-  * Ship a first version of the incremental update system. Updates
-    are not currently triggered automatically, but this will allow
-    tests to be done on larger scales.
-  * Add a proper backport of plymouth. We used to get it from 'testing',
-    but the version in Wheezy is multiarch enabled now. So let's carry
-    on another (trivial) backport.
-  * vagrant: Install Ikiwiki from Debian unstable. The 'mirrorlist'
-    patches have finally been merged in upstream Ikiwiki. So instead of
-    building Ikiwiki by hand, we can now install the package directly
-    from Debian unstable.
-  * Install gnome-system-monitor. This fix the System Monitor applet,
-    offers a nice graphical interface to control memory usage and should
-    weight around 2 MB after compression.
-  * Drop custom backports that have made their way to the official
-    backports repository.
-  * Remove empty and useless variable in htpdate. Thanks to adrelanos
-    <adrelanos@riseup.net> for the suggestion.
-  * Remove residual DHCP DNS settings from resolvconf.
-  * Remove ttdnsd from the default DNS resolution loop.
-  * Do not build the ikiwiki forum on the bundled static website copy.
-  * Remove dangling symlink to long removed obsolete script.
-  * Hide TailsData partition. Set the UDisks UDISKS_PRESENTATION_HIDE
-    which is "a hint to presentation level software that the device
-    should not be shown to the user".
-  * Ship unrar-free again, so that the GNOME archive manager knows about
-    it.
-  * Have ttdnsd use OpenDNS. Using Google's DNS servers was very
+  - Have ttdnsd use OpenDNS. Using Google's DNS servers was very
     glitchy, and rarely succeeded when it should. It can probably be
     attributed to Google's DNS, which is known to take issue with Tor
     exits.
-  * Allow amnesia user to resolve with ttdnsd.
-  * Do not allow pdnsd to talk to ttdnsd: it is not supposed to do it
-    anymore.
-  * Empty noscript whitelist.
-  * Disable FoxyProxy's advertisement on proxy error page.
-  * Upgrade bundled WhisperBack package to 1.6:
-    - Allow to use arbitrary gnupg homdir.
-    - Load help from the config file instead of hardcoding it.
-    - Sanitize debugging info.
-    - UI: reword optional PGP key field label.
-    - UI: add a tool tip to the PGP key button.
-    - UI: upgrade file for GTK+ 2.20 (squeeze version).
-    - UI: add a button to display help index.
-    - Hide website sidebar and title in embedded viewer.
-    - I18n: import translations for Arabic, Spanish, Euskara, French, Dutch,
-      Polish, Portuguese, Czech and Russian.
-    - Doc: include basic release documentation and script.
-    - UI: make tails-version window scrollable.
-    - UI: add a frame for help.
-    - UI: space widgets according to GNOME HIG Bugfixes.
-    - UI: add a notebook to make technical details readable on small screen.
-    - Update copyright year.
-    - I18n: include POT file.
-    - Encryption: use GnuPGInterface instead of pyme.
-    - Use an external keyring instead of a dedicated gnupg homedir.
-  * Upgrade bundled TailsGreeter package to 0.7.3:
-    - Import pt_BR translation.
-    - Let langpanel usable during option selection stage.
-    - Print less debugging messages by default.
-  * Add translateable help to whisperback config.
-  * Import existing whisperback help translations.
-  * Whisperback help: fix language detection if LANG=C.
-  * Create a dedicated Tails keyring.
-  * Obtain whisperback debugging info through an helper script as root.
-  * Whisperback: include gdm3 slave and greeter logs.
-  * Whisperback: include some system information reported by dmidecode.
-    This was asked some time ago and waiting for an infrastructure
-    enabling its implementation.
-  * Explain the nobody user in the firewall rules.
-  * Document local services whitelist.
-  * GnuPG: bump cert-digest-algo to SHA512.
-  * Fix typos.
-  * Update AdBlock patterns
-  * Explicitly torify WhisperBack using torsocks. The new locked-down
-    firewall currently blocks automapped hidden service addresses.
-  * Update i2p to version 0.9.1.
+  - Upgrade WhisperBack to 1.6, with many UI improvements and new translations.
+  - Include GDM logs and dmidecode informations in the reports.
+  - Allow to modify language and layout in the "Advanced options" screen
+    of the greeter.
+  - GnuPG: bump cert-digest-algo to SHA512.
+
+  * Bugfixes
+  - Make Claws Mail save local/POP emails in its dot-directory. The
+    default is to save them at ~/Mail, which isn't included in our
+    current Claws Mail persistence preset.
+  - Fix the System Monitor applet.
+  - Remove broken ttdnsd from the default DNS resolution loop.
+  - Hide the 'TailsData' partition in desktop applications.
+  - Ship unrar-free again, so that the GNOME archive manager knows about
+    it.
+  - Ship with an empty whitelist for Noscript.
+  - Disable FoxyProxy's advertisement on proxy error page.
+
+  * Iceweasel
+  - Upgrade iceweasel to 10.0.6esr-1 (Extended Support Release) and install it
+    and its dependencies from squeeze-backports.
+
+  * Hardware support
+  - Upgrade Linux to 3.2.23-1.
+
+  * Software
+  - Update i2p to version 0.9.1.
+
+  * Build system
+  - vagrant: Install Ikiwiki from Debian unstable. The 'mirrorlist'
+    patches have finally been merged in upstream Ikiwiki. So instead of
+    building Ikiwiki by hand, we can now install the package directly
+    from Debian unstable.
+  - Do not build the ikiwiki forum on the bundled static website copy.
 
  -- Tails developers <amnesia@boum.org>  Fri, 24 Aug 2012 02:03:28 +0200
 
