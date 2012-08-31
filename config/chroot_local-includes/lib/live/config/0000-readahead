@@ -40,7 +40,8 @@ Start_readahead ()
 	 pv -f -s ${FG_SIZE}k >/dev/null || :)
 	(cd /
 	 start-stop-daemon \
-		--start --background --pid /var/run/background-readahead.pid --startas /bin/sh -- \
+		--start --background --make-pidfile --startas /bin/sh \
+		--pidfile /var/run/background-readahead.pid -- \
 		-c "$BG_FILES | xargs cat >/dev/null 2>&1")
 
 	# Creating state file
