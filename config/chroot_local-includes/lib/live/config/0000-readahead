@@ -29,7 +29,7 @@ Start_readahead ()
 	FG_SIZE=$(
 	 cd /
 	 $FG_FILES |
-	 xargs du -c 2>/dev/null |
+	 xargs du -bc 2>/dev/null |
 	 awk '$2 ~ /^total$/ { t = t + $1 } END { print t }')
 	(cd /
 	 $BG_FILES |
@@ -37,7 +37,7 @@ Start_readahead ()
 	(cd /
 	 $FG_FILES |
 	 xargs cat 2>/dev/null |
-	 pv -f -s ${FG_SIZE}k >/dev/null || :)
+	 pv -f -s ${FG_SIZE} >/dev/null || :)
 	(cd /
 	 start-stop-daemon \
 		--start --background --make-pidfile --startas /bin/sh \
