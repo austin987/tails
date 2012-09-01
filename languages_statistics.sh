@@ -13,6 +13,7 @@ count_msgids () {
 for lang in $LANGUAGES ; do
     PO_FILES="$(mktemp -t XXXXXX.$lang)"
     find -iname "*.$lang.po" > $PO_FILES
+    find -path "*/locale/$lang/LC_MESSAGES/*.po" >> $PO_FILES
     PO_MESSAGES="$(mktemp -t XXXXXX.$lang.po)"
     msgcat --files-from=$PO_FILES --output=$PO_MESSAGES
     TOTAL=$(msgattrib --no-obsolete $PO_MESSAGES | count_msgids)
