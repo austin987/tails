@@ -98,7 +98,7 @@ sub parseCommandLine () {
         [ 'neutral_pool=s@', "neutral hostnames" ],
         [ 'foe_pool=s@', "distrusted hostnames" ],
         [ 'allowed_per_pool_failure_ratio:f', "ratio (0.0-1.0) of allowed per-pool failure", { default => 1.0 } ],
-        [ 'proxy|p:s', "what to pass to curl's --proxy" ],
+        [ 'proxy|p:s', "what to pass to curl's --socks5-hostname" ],
     );
 
     usage() if $opt->help;
@@ -224,7 +224,7 @@ sub getUrlDateDiff {
         '--proto', '=https', '--tlsv1',
         '--head', '--output', catfile($tmpdir, 'headers'),
     );
-    push @curl_options, ('--proxy', $proxy) if defined $proxy;
+    push @curl_options, ('--socks5-hostname', $proxy) if defined $proxy;
 
     my @cmdline = ('curl', @curl_options, $url);
 
