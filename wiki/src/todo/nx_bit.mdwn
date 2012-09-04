@@ -34,31 +34,25 @@ Done
 The `feature/multikernel` branch:
 
 - installs two kernels (`-486`, `-686-pae`)
+- patches the syslinux menu configuration to autoselect best kernel
+  wrt. hardware support, and automatically jump to an arch-specific
+  appropriate sub-menu
 
 Next steps
 ----------
 
-- Fix `20-syslinux_detect_cpu` to autoselect best kernel wrt.
-  hardware support, and jump to the appropriate sub-menu [[!tag
-  todo/code]]
-- Fix `20-syslinux_detect_cpu` to only include the arch-specific lines
-  into the arch-specific `live_$ARCH.cfg`
-- Make sure the USB installer and IUK generator support the new
-  config files. [[!tag todo/code]]
-- get commit af9eee3b back (was reverted in 5f352e2)
-- check that our build system does not do stuff say, for *the one and
-  only* kernel
-- check what good reasons could exist (or not) to ship an `-amd64`
-  kernel in addition to the `-686-pae` one [[!tag todo/research]]
-- ensure the Tails USB Installer works with a `-686-pae` kernel (and
-  possibly with an `-amd64` one, if we decide to ship it too):
-  [[bugs/liveusb-creator_crashes_on_amd64_kernel]]
-- fix building VirtualBox guest modules for multiple kernels
-  [[!tag todo/code]]
-- adapt
-  `config/chroot_local-includes/usr/local/bin/tails-boot-to-kexec`
-  to kexec on a `-686-pae` kernel, and see if it fixes
+- ensure the Tails USB Installer works with a `-686-pae` kernel:
+  [[bugs/liveusb-creator_crashes_on_amd64_kernel]] [[!tag todo/test]]
+- see if kexec'in a `-686-pae` kernel fixes
   [[bugs/sdmem_does_not_clear_all_memory]] [[!tag todo/test]]
+
+Possibly later
+--------------
+
+- check what good reasons could exist (or not) to ship an `-amd64`
+  kernel in addition to the `-686-pae` one [[!tag todo/research]]; if
+  there are, do it, and have the Tails USB Installer work with an
+  `amd64` kernel
 
 Resources
 =========
