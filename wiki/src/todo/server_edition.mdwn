@@ -109,8 +109,9 @@ Roadmap
 
 [[!tag todo/research]]
 
-This project [is accepted](https://www.torproject.org/getinvolved/volunteer.html.en#tailsServer)
-for GSoC 2012. You can check the proposal [here](https://dustri.org/pub/tails_server.pdf)
+This project [was accepted](https://www.torproject.org/getinvolved/volunteer.html.en#tailsServer)
+for GSoC 2012, and worked a bit before the student dropped the ball.
+You can check the proposal [here](https://dustri.org/pub/tails_server.pdf)
 
 The challenges behind this project are:
   * Design and write the services configuration GUI [keywords: edit configuration files, upgrade between major Debian versions, debconf, Config::Model, augeas].
@@ -340,13 +341,37 @@ The purpose of this GUI would
 be to properly setup a persistence USB key for tail-server, with services
 configuration, authentication means, ...
 
+Time synchronization
+--------------------
+
+As contributed by adrelanos on tails-dev
+(<50293C63.2040807@riseup.net>), servers are supposed to run over
+longer periods without rebooting, days or weeks so Tails's current
+implementation with tails_htp is not sufficient for Tails Server.
+
+adrelanos suggests:
+
+> My recommendation is to run htpdate periodically, perhaps every
+> hour. Time exact minute should be randomized to avoid creating
+> a network fingerprint.
+> 
+> Given what you already implemented with `tails_htp`, running
+> `tails_htp` frequently probable won't be hard. As I need it for aos,
+> I am planing to add a script to /etc/cron.daily, it will run another
+> script in background to avoid blocking anachron during the sleep
+> delay. The other script will simply pick a number between 0 and 3600
+> from /dev/random, sleep for the delay and then restart the
+> htpdate service.
 
 Resources
 ---------
 
 ### Vidalia's hidden services support
 
-In 0.3.x: was removed, "should" become a plugin someday.
+In 0.3.x: was removed, should become a plugin someday: it's a [GSoC
+project](https://github.com/feroze/vidalia-plugins/tree/hiddenservice)
+by Feroze Naina <ferozenaina@gmail.com>; early in August 2012, is
+"awaiting being merged into the vidalia-plugins repo".
 
 In 0.2.x: works mostly well but we need to [[!taglink todo/wait]] for
 [[!tor_bug 2579]] to be fixed.

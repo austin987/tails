@@ -1,0 +1,11 @@
+Cmnd_Alias INSTALL_IUK = /bin/chmod, /bin/cp, /bin/mkdir, /bin/mktemp, /bin/mount, /bin/rm, /bin/tar
+Cmnd_Alias IUK_GET_TARGET_FILE = /usr/bin/tails-iuk-get-target-file
+
+Defaults!IUK_GET_TARGET_FILE env_keep+="HARNESS_ACTIVE DISABLE_PROXY"
+
+amnesia           ALL =                             NOPASSWD: /usr/bin/tails-shutdown-network
+amnesia           ALL = (tails-install-iuk)         NOPASSWD: /usr/bin/tails-install-iuk
+amnesia           ALL = (tails-iuk-get-target-file) NOPASSWD: IUK_GET_TARGET_FILE
+amnesia           ALL = (tails-iuk-get-target-file) NOPASSWD: /usr/bin/tails-iuk-mktemp-get-target-file
+
+tails-install-iuk ALL =                             NOPASSWD: INSTALL_IUK
