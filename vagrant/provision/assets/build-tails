@@ -2,7 +2,8 @@
 
 set -e
 
-TMPFS_SIZE=6 # GB
+TMPFS_SIZE_GB=6.0
+TMPFS_SIZE_BYTES=$(echo "($TMPFS_SIZE_GB * 1024^3)/1" | bc) # rounded down
 
 as_root_do() {
 	sudo \
@@ -16,11 +17,11 @@ as_root_do() {
 }
 
 usable_memory() {
-	free | awk '/cache:/ { print $4 }'
+	free -b | awk '/cache:/ { print $4 }'
 }
 
 if [ "$TAILS_RAM_BUILD" ]; then
-	if [ "$(usable_memory)" -lt $(($TMPFS_SIZE * 1024 * 1024)) ]; then
+	if [ "$(usable_memory)" -lt "$TMPFS_SIZE_BYTES" ]; then
 		echo "Not enough memory available for an in-memory build. Aborting." >&2
 		exit 1
 	fi
@@ -45,7 +46,7 @@ as_root_do ./build-wiki
 BUILD_DIR=$(mktemp -d /home/vagrant/tails-build.XXXXXXXX)
 if [ "$TAILS_RAM_BUILD" ]; then
 	trap "cd / ; sudo umount '$BUILD_DIR' ; sudo rmdir '$BUILD_DIR'" EXIT
-	as_root_do mount -t tmpfs -o "noatime,size=${TMPFS_SIZE}G,mode=0770,uid=root,gid=vagrant" tmpfs "$BUILD_DIR"
+	as_root_do mount -t tmpfs -o "noatime,size=${TMPFS_SIZE_BYTES},mode=0770,uid=root,gid=vagrant" tmpfs "$BUILD_DIR"
 else
 	trap "cd / ; sudo rm -rf '$BUILD_DIR'" EXIT
 fi
