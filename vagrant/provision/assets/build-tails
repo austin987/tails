@@ -20,6 +20,17 @@ usable_memory() {
 	free -b | awk '/cache:/ { print $4 }'
 }
 
+cleanup() {
+	cd /
+	mounts=$(mount | grep -E "^[^[:space:]]+ on $BUILD_DIR" | \
+		awk '{print $3}' | sort -r)
+	[ -n "$mounts" ] && sudo umount $mounts
+	[ -d "$TMPFS_DIR" ] && ( sudo umount $TMPFS_DIR ; rmdir $TMPFS_DIR )
+	[ -d "$BUILD_DIR" ] && sudo rm -rf $BUILD_DIR
+}
+
+trap cleanup EXIT
+
 if [ "$TAILS_RAM_BUILD" ]; then
 	if [ "$(usable_memory)" -lt "$TMPFS_SIZE_BYTES" ]; then
 		echo "Not enough memory available for an in-memory build. Aborting." >&2
@@ -46,11 +57,9 @@ as_root_do ./build-wiki
 BUILD_DIR=$(mktemp -d /home/vagrant/tails-build.XXXXXXXX)
 if [ "$TAILS_RAM_BUILD" ]; then
 	TMPFS_DIR=$(mktemp -d /home/vagrant/tmpfs.XXXXXXXX)
-	trap "cd / ; sudo umount '$BUILD_DIR' '$TMPFS_DIR' ; sudo rmdir '$BUILD_DIR' '$TMPFS_DIR'" EXIT
 	as_root_do mount -t tmpfs -o "noatime,size=${TMPFS_SIZE_BYTES},mode=0770,uid=root,gid=vagrant" tmpfs "$TMPFS_DIR"
 	as_root_do mount -t aufs -o "noatime,noxino,dirs=$TMPFS_DIR=rw:/home/vagrant/amnesia/=rr+wh" aufs "$BUILD_DIR"
 else
-	trap "cd / ; sudo rm -rf '$BUILD_DIR'" EXIT
 	as_root_do rsync -a /home/vagrant/amnesia/ "$BUILD_DIR"/
 fi
 
