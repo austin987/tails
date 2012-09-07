@@ -2,151 +2,184 @@
 
 <div id="intro">
 
-<p>So you want to make it easier to use Tails in your own language.
-Welcome aboard! Please read-on.</p>
+<p>You want to make it easier to use Tails in your own language.
+Welcome aboard!</p>
 
 [[!toc levels=3]]
 
 </div>
 
-# Things to translate
-
-## Custom programs
-
-Tails ships with several custom programs that need to be translated.
-
-One can find the (gettext) PO files:
-
-* in [[!tails_devel_gitweb_dir config/chroot_local-includes/usr/share/locale]]
-* [liveusb-creator
-  gitweb](http://git.immerda.ch/?p=tails/liveusb-creator.git;a=tree;f=po;hb=HEAD)
-* [tails-greeter
-  gitweb](http://git.immerda.ch/?p=tails/tails-greeter.git;a=tree;f=po;hb=HEAD)
-* [tails-persistence-setup
-  gitweb](http://git.immerda.ch/?p=tails/persistence-setup.git;a=tree;f=po;hb=HEAD)
-
-## Website and documentation
-
-The [[end-user documentation|doc]] is being reorganized and rewritten. You can
-have a look at the [[todo/documentation_translation]] page to know which pages
-are ready to be translated.
-
-## Other text to be translated
-
-See the *Translate* section of the [[/TODO]] list.
-
-# For English native speakers
+For English native speakers
+===========================
 
 Most of Tails' developers are not native English speakers so you're also more than
 welcome to edit, rephrase, correct or improve our English. Since you won't be
 able to use translation tools for that but rather edit the original code or wiki
-pages your best option will be using Git to submit patches.
+pages your best option will be using the web interface to the wiki or
+Git to submit patches.
 
-# Translation tools
+Translating Tails
+=================
 
-## Web interface
+If you are a native speaker of one of the languages available on this website,
+you can work on correcting, improving or completing the translations that are
+already available in Tails.
 
-One can translate pages on this website using the web interface: there
-is an *Improve translation* button on the top right of every page that
-is a translation. It is nice for quick tasks such as un-fuzzying
-a recently changed string or fixing a typo; on the other hand, most
-translators find it painful and error-prone for more serious
-translation work.
+The following things need to be translated:
 
-Moreover, parts of Tails (most notably our custom programs) cannot be
-translated using the web interface. We therefore recommend anyone
-willing to seriously get involved into Tails translation work to use
-more appropriate tools, such as a real PO file editor; see below for
-details.
+  - Our [[custom programs|contribute/git]]: Tails Greeter, Tails
+    Persistence Setup, Tails USB Installer, Whisperback, etc.
+  - Our website.
+  - The other texts that might be listed in the *Translate* section of
+    the [[/todo#translate]] list.
 
-## Locked pages
+The internationalization system used by both the custom programs and the
+website is called <span class="application">[[!wikipedia
+gettext]]</span>. When using <span class="application">gettext</span>,
+the translations for each bits of text are written in PO files.
 
-Some pages on this website are 'locked' and cannot be edited through the web
-interface. Those are pages we considered too sensitive for open editing: the
-Download page, the page about our GnuPG key, etc. For those pages you will need
-to use Git to send us your work.
+To edit PO files we recommend you to use <span
+class="application">[Poedit]</span> a cross-platform editor for PO
+files. <span class="application">Poedit</span> is installed in Tails.
 
-## PO editor
+<a id="tails-l10n"></a>
 
-The [Poedit](http://poedit.sourceforge.net/) editor is installed in
-Tails.
+The tails-l10n Mailing List
+===========================
 
-Many different workflows can be used to translate Tails strings
-using a PO editor. Let's describe a few recommended ones, from the
-smallest to the biggest initial setup time... the last ones actually
-being the most comfortable to work with in the long run.
+Regular translators and translating teams coordinate themselves on the
+tails-l10n mailing list. Please <a
+href='https://mailman.boum.org/listinfo/tails-l10n/'>subscribe</a> to
+the list if you want to become a regular translator.
 
-### Piggy-back the web interface
+Any message sent to this list is stored in a public archive, so beware
+of what your email content and headers reveal about yourself: location,
+IP address, etc.
 
-1. In the web interface, click the *Improve translation* button on the
-   page you wish to translate.
-2. In the text edition web page, copy the whole text.
-3. Paste it into a new, empty raw text document.
-4. Save this text document as a file whose name ends with the `.po`
-   extension.
-5. Open the `.po` file in your preferred PO file editor.
-6. Translate whatever you can.
-7. Paste back the whole resulting text into your web browser.
-8. Preview your changes.
-9. Click *Save* when satisfied with the results.
+How to work with PO files
+=========================
 
-### Using Git
+Many different workflows can be used to translate Tails using PO files.
+This section describes some options, from the fastest to start working
+to the more comfortable to work with in the long run.
 
-You can either send us Git patches or ask us to pull from your Git
-branch.
+Download the PO files directly
+------------------------------
+
+For each custom program, you can download the PO files, via gitweb.
+
+  - Tails Greeter:
+    [PO files](http://git.immerda.ch/?p=tails/tails-greeter.git;a=tree;f=po;hb=HEAD),
+    [README.translators](http://git.immerda.ch/?p=tails/tails-greeter.git;a=blob_plain;f=README.translators;hb=HEAD)
+  - Tails Persistence Setup:
+    [PO files](http://git.immerda.ch/?p=tails/persistence-setup.git;a=tree;f=po;hb=HEAD)
+  - Tails USB Installer:
+    [PO files](http://git.immerda.ch/?p=tails/liveusb-creator.git;a=tree;f=po;hb=HEAD)
+  - Whisperback:
+    [PO files](http://git.immerda.ch/?p=whisperback.git;a=tree;f=po;hb=HEAD),
+    [README.translators](http://git.immerda.ch/?p=whisperback.git;a=blob_plain;f=README.translators;hb=HEAD)
+  - Some smaller programs written for Tails: [PO files](!tails_devel_gitweb_dir
+    config/chroot_local-includes/usr/share/locale)
+  - [The launchers on the desktop](!tails_devel_gitweb_dir
+    config/chroot_local-includes/etc/skel/Desktop), those are not PO
+    files, and includes the translations directly
+
+For the website, you can browse the tree of its source code via gitweb
+as well. Each page which is translated has separate PO files.
+
+  - [Source code of the
+    website](http://git.immerda.ch/?p=amnesia.git;a=tree;f=wiki/src)
+
+Once your translation work is done, you can send it by email to the
+[[tails-l10n mailing list|/contribute/how/translate#tails-l10n]].
+
+Using Git
+---------
+
+In the long run, many people find it more convenient to get updated
+versions of the source code, and its PO files, using
+[[Git|contribute/git]].
+
+You can also take advantage of Git to send us you work; either by
+sending us Git patches or by asking us to pull from your Git branch.
 
 Note that the website shall be translated in the `master` branch,
 while custom Tails programs live in the `devel` branch.
 
-#### Send us Git patches
+### Send us Git patches
 
 1. Clone Tails [[Git repository|contribute/git]] onto your local system.
 2. Translate whatever you can in your preferred PO file editor. 
 3. Commit the changes you made to `.po` files.
-   You could encounter numerous false positive when committing modified .po 
+   You could encounter numerous false positive when committing modified `.po`
    files. It's due to the fact that Poedit [doesn't handle the wordwrapping 
    correctly](http://www.poedit.net/trac/ticket/25). In order to avoid this, 
    you should run the following command :
      `msgcat --width=80 -o your_output_file.po your_input_file.po`
 4. Use the `git format-patch` command to prepare patches.
-5. [[Send us|contribute/talk]] your patches.
+5. Send your patches on the [[tails-l10n mailing list|/contribute/how/translate#tails-l10n]].
 6. Frequently merge changes from our main repository into yours.
 
-#### Ask us to pull from your Git branch
+### Ask us to pull from your Git branch
 
 1. Setup your personal [[Git repository|contribute/git]]: if you already know
    where to host it in a public place, this is great; or else [fork us
    on repo.or.cz](http://repo.or.cz/w/tails.git).
 2. Translate whatever you can in your preferred PO file editor. 
 3. Commit the changes you made to `.po` files.
-   You could encounter numerous false positive when committing modified .po 
+   You could encounter numerous false positive when committing modified `.po`
    files. It's due to the fact that Poedit [doesn't handle the wordwrapping 
    correctly](http://www.poedit.net/trac/ticket/25). In order to avoid this, 
    you should run the following command :
      `msgcat --width=80 -o your_output_file.po your_input_file.po`
 4. Push your changes to your online Git repository.
-5. [[Ask us|contribute/talk]] to pull from the branch you worked on.
+5. Ask on the [[tails-l10n mailing list|/contribute/how/translate#tails-l10n]]
+   to pull from the branch you worked on.
 6. Frequently merge changes from our main repository into yours.
 
-# Supported languages
+# Add support for a new language
 
-Currently, only a few languages are somewhat supported in Tails,
-namely:  Arabic, Chinese, English, Farsi, French, Italian, German,
-Portuguese, Russian, Spanish (Castellano) and Vietnamese.
+For Tails to be available in a new language, both the website and the custom
+programs need to be translated. Please keep in mind that this represents quite a
+lot of work.
 
-Support for only a subset of these languages is enabled on this
-website.
+Therefore, here are a few things that would be required in order to start
+translating Tails to a new language:
 
-Adding support for your preferred language is possible, but beware:
+1. It is really required to be a team of translators and not a single person.
+That also allows for peer reviews between the team, more flexibility when
+important deadlines arrives, etc.
 
-* our website text evolves relatively quickly;
-* useful translations are no one-shot job and need to be maintained on
-  the long run, which may take roughly two hours a month.
+2. At least part of the team should subscribe to the [[tails-l10n mailing
+list|translate#tails-l10n]]
 
-In conclusion, forming a team of translators dedicated to your
-language's support in Tails might be useful to make the maintenance
-work happier and more sustainable.
+3. Since the content of the website is sensitive in terms of privacy
+protection, Tails developers need to establish contacts with trusted people
+to review the work from time to time.
 
-# Talk to us
+4. Keep in mind that useful translations need to be maintained in the long run.
+This maybe takes a few hours a month.
 
-[[!inline pages="contribute/talk" raw="yes"]]
+Once those conditions are fulfilled, the new team can start working on a first
+batch of translations.
+
+  - Some of our custom programs:
+    - Tails Greeter
+    - Tails Persistence Setup
+    - Tails USB Installer
+    - Whisperback
+
+  - Important parts of our website:
+
+    - [[/index]]
+    - [[/about]] page
+    - [[/getting_started]] page
+    - [[/support]] page
+    - [[/download]] page
+    - [[/doc/about]] section
+    - [[/doc/first_steps]] section
+
+Do not hesitate to report the progress of your work on the [[tails-l10n
+mailing list|/contribute/how/translate#tails-l10n]].
+
+[Poedit]: http://poedit.sourceforge.net/

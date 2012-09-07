@@ -31,6 +31,12 @@ Like the `debian-tor` user, the `i2p` user is allowed to connect
 *directly* to the Internet. See [[the design document dedicated to
 Tails use of I2P|I2P]] for details.
 
+#### Unsafe Browser and the `clearnet` user
+
+The `clearnet` user used to run the
+[[contribute/design/Unsafe_Browser]] is granted full network access
+(but no loopback access) in order to deal with captive portals.
+
 #### Local Area Network (LAN)
 
 Tails short description talks of sending through Tor *outgoing
@@ -42,10 +48,17 @@ It is planned to [[forbid LAN DNS
 queries|todo/forbid_lan_dns_queries]] at some point to protect against
 some attacks; this is not implemented yet.
 
+#### Local services whitelist
+
+The Tails firewall uses a whitelist which only grants access to each
+local service to the users that actually need it. This blocks
+potential leaks due to misconfigurations or bugs, and deanonymization
+attacks by compromised processes. For specifics, see the firewall
+configuration where this is well commented.
+
 #### IPv6
 
-Tor does not support IPv6 yet so IPv6 communication is allowed only on
-the loopback interface.
+Tor does not support IPv6 yet so IPv6 communication is blocked.
 
 #### UDP, ICMP and other non-TCP protocols
 
