@@ -20,6 +20,15 @@ usable_memory() {
 	free -b | awk '/cache:/ { print $4 }'
 }
 
+bootstrap_stage_is_ok() {
+	[ -d "$1" ] || return 1
+	[ "$(sudo du -sm $1 | cut -f1)" -ge 100 ] || return 1
+	for dir in bin dev etc lib proc root sbin sys usr var; do
+		[ -d "$1/$dir" ] || return 1
+	done
+	return 0
+}
+
 cleanup() {
 	cd /
 	mounts=$(mount | grep -E "^[^[:space:]]+ on $BUILD_DIR" | \
@@ -51,6 +60,9 @@ as_root_do git reset --hard "$COMMIT"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
+	for dir in /var/cache/stages_bootstrap /var/cache/packages_bootstrap; do
+		[ -d "$dir" ] && sudo rm -rf $dir
+	done
 fi
 as_root_do ./build-wiki
 
@@ -65,6 +77,31 @@ fi
 
 cd "$BUILD_DIR"
 as_root_do lb config
+
+if [ "$TAILS_BOOTSTRAP_CACHE" ]; then
+	sudo mkdir -p "$BUILD_DIR"/cache/packages_bootstrap
+	sudo mkdir -p /var/cache/packages_bootstrap
+	sudo mount --bind /var/cache/packages_bootstrap \
+		"$BUILD_DIR"/cache/packages_bootstrap
+
+	if bootstrap_stage_is_ok /var/cache/stages_bootstrap; then
+		# restore bootstrap stage and make live-build use it
+		sudo mkdir -p "$BUILD_DIR"/cache/stages_bootstrap
+		sudo mount --bind /var/cache/stages_bootstrap \
+			"$BUILD_DIR"/cache/stages_bootstrap
+		sudo touch "$BUILD_DIR"/.stage/bootstrap
+		sudo touch "$BUILD_DIR"/.stage/bootstrap_cache.save
+	fi
+fi
+
 as_root_do lb build
 
 mv -f tails-* /vagrant
+
+if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
+    ! sudo umount "$BUILD_DIR"/cache/stages_bootstrap 2>/dev/null; then
+	# the cached bootstrap stage wasn't used (maybe it hadn't been
+	# cached yet?) so we we save the good one from the current build.
+	sudo rsync -a --delete "$BUILD_DIR"/cache/stages_bootstrap/ \
+		/var/cache/stages_bootstrap
+fi
