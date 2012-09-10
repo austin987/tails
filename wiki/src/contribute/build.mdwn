@@ -88,6 +88,23 @@ The following flags can be used to force a specific behaviour:
    if a local HTTP proxy is set.
  * **noproxy**: do not use any HTTP proxy.
 
+### Bootstrap cache settings
+
+A Tails build starts with `debootstrap`:ing a minimal Debian system
+which then is modified into a full Tails system. This is a rather time
+consuming step that usually do not have to be done; the packages used
+in it rarely get updated and hence the result is exactly the same most
+of the time.
+
+The following flags can be used to force a specific behaviour:
+
+ * **cache**: re-use a cached bootstrap stage (if available), and save
+   the bootstrap stage to disk on successful build. Also store the
+   bootstrap package chache on disk. This will also reduce the amount
+   of memory required for in-memory builds by around 200 MiB (see the
+   **ram** option above).
+  * **nocache**: do the bootstrap stage from scratch.
+
 ### SquashFS compression settings
 
 One of the most expensive operations when building Tails is the creation
@@ -103,8 +120,13 @@ Forcing a specific behaviour can be done using:
 
 ### Clean-up settings
 
-Some operations (currently building the documentation) is preserved accross
-builds. In case needed, the following option is available:
+Some operations are preserved accross builds. Currently they are:
+
+* The wiki (for documentation).
+* The bootstrap stage cache and packages (see the **cache** option
+  above).
+
+In case you want to delete all these, the following option is available:
 
  * **cleanall**: force a clean up before starting the build.
 
@@ -132,10 +154,12 @@ uncommited changes. This behaviour can be controlled by:
 
 The fastest build you could pretend to get can be done by setting:
 
-    export TAILS_BUILD_OPTIONS="ram extproxy gzipcomp"
+    export TAILS_BUILD_OPTIONS="ram cache extproxy gzipcomp"
 
-This will force the build to happen in RAM, using an HTTP proxy external
-to the virtual machine and SquashFS compression will be done using *gzip*.
+This will force the build to happen in RAM and allow skipping the
+boostrap stage if one is cached, and will use use an HTTP proxy
+external to the virtual machine, and SquashFS compression will be done
+using *gzip*.
 
 Building manually
 =================
