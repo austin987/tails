@@ -97,6 +97,9 @@ task :parse_build_options do
   # Default to fast compression on development branches
   options += 'gzipcomp ' unless is_release?
 
+  # Make sure release builds are clean
+  options += 'cleanall ' if is_release?
+
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
   options += "cpus=#{cpus} " if cpus
