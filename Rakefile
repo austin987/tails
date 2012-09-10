@@ -91,9 +91,6 @@ task :parse_build_options do
   # Use in-VM proxy unless an external proxy is set
   options += 'vmproxy ' unless EXTERNAL_HTTP_PROXY
 
-  # Use bootstrap cache by default
-  options += 'cache '
-
   # Default to fast compression on development branches
   options += 'gzipcomp ' unless is_release?
 
