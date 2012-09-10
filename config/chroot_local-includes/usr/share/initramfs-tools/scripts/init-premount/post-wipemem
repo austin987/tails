@@ -1,0 +1,30 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs() {
+   echo "${PREREQ}"
+}
+
+case ${1} in
+   prereqs)
+      prereqs
+      exit 0
+      ;;
+esac
+
+if [ "${wipememdebug}" = 1 ] ; then
+   echo "Going to sleep 10 minutes. Happy dumping!"
+   sleep 600
+fi
+
+case "${wipemem}" in
+   halt)
+      /sbin/halt -fndp
+      ;;
+   reboot)
+      /sbin/reboot -fnd
+      ;;
+   *)
+      ;;
+esac
