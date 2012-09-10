@@ -60,9 +60,7 @@ as_root_do git reset --hard "$COMMIT"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
-	for dir in /var/cache/stages_bootstrap /var/cache/packages_bootstrap; do
-		[ -d "$dir" ] && sudo rm -rf $dir
-	done
+	[ -d "$dir" ] && sudo rm -rf /var/cache/stages_bootstrap
 fi
 as_root_do ./build-wiki
 
@@ -76,22 +74,16 @@ else
 fi
 
 cd "$BUILD_DIR"
-as_root_do lb config
+as_root_do lb config --cache-packages false
 
-if [ "$TAILS_BOOTSTRAP_CACHE" ]; then
-	sudo mkdir -p "$BUILD_DIR"/cache/packages_bootstrap
-	sudo mkdir -p /var/cache/packages_bootstrap
-	sudo mount --bind /var/cache/packages_bootstrap \
-		"$BUILD_DIR"/cache/packages_bootstrap
-
-	if bootstrap_stage_is_ok /var/cache/stages_bootstrap; then
-		# restore bootstrap stage and make live-build use it
-		sudo mkdir -p "$BUILD_DIR"/cache/stages_bootstrap
-		sudo mount --bind /var/cache/stages_bootstrap \
-			"$BUILD_DIR"/cache/stages_bootstrap
-		sudo touch "$BUILD_DIR"/.stage/bootstrap
-		sudo touch "$BUILD_DIR"/.stage/bootstrap_cache.save
-	fi
+if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
+    bootstrap_stage_is_ok /var/cache/stages_bootstrap; then
+	# restore bootstrap stage and make live-build use it
+	sudo mkdir -p "$BUILD_DIR"/cache/stages_bootstrap
+	sudo mount --bind /var/cache/stages_bootstrap \
+		"$BUILD_DIR"/cache/stages_bootstrap
+	sudo touch "$BUILD_DIR"/.stage/bootstrap
+	sudo touch "$BUILD_DIR"/.stage/bootstrap_cache.save
 fi
 
 as_root_do lb build
