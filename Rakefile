@@ -66,9 +66,10 @@ def enough_free_memory?
   end
 end
 
-def stable_branch?
+def is_release?
   branch_name = `git name-rev --name-only HEAD`
-  STABLE_BRANCH_NAMES.include? branch_name
+  tag_name = `git describe --exact-match HEAD 2> /dev/null`
+  STABLE_BRANCH_NAMES.include? branch_name.chomp or tag_name.chomp.length > 0
 end
 
 def system_cpus
@@ -94,7 +95,7 @@ task :parse_build_options do
   options += 'cache '
 
   # Default to fast compression on development branches
-  options += 'gzipcomp ' unless stable_branch?
+  options += 'gzipcomp ' unless is_release?
 
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
