@@ -1,3 +1,162 @@
+tails (0.13~rc1) unstable; urgency=low
+
+  * Major new features
+  - Use white-list/principle of least privelege approach for local services.
+    Only users that need a certain local (i.e. hosted on loopback) service
+    (according to our use cases) are granted access to it by our firewall;
+    all other users are denied access.
+  - Ship a first version of the incremental update system. Updates are not
+    currently triggered automatically, but this will allow tests to be done
+    on larger scales.
+
+  * Minor improvements
+  - Enable four workspaces in the Windows XP camouflage. This allows
+    users to quickly switch to a more innocent looking workspace in case
+    they are working on sensitive data and attract unwanted attention.
+    The workspace switcher applet isn't there, though, since there's no
+    such thing in Windows XP, so switching is only possible via keyboard
+    shortcuts.
+  - Ship with precompiled locales instead of generating them upon login.
+  - Add support for wireless regulation.
+  - Use color for Git output, not intended for machine consumption,
+    written to the terminal.
+  - Have ttdnsd use OpenDNS. Using Google's DNS servers was very
+    glitchy, and rarely succeeded when it should. It can probably be
+    attributed to Google's DNS, which is known to take issue with Tor
+    exits.
+  - Upgrade WhisperBack to 1.6, with many UI improvements and new translations.
+  - Include GDM logs and dmidecode informations in the reports.
+  - Allow to modify language and layout in the "Advanced options" screen
+    of the greeter.
+  - GnuPG: bump cert-digest-algo to SHA512.
+
+  * Bugfixes
+  - Make Claws Mail save local/POP emails in its dot-directory. The
+    default is to save them at ~/Mail, which isn't included in our
+    current Claws Mail persistence preset.
+  - Fix the System Monitor applet.
+  - Remove broken ttdnsd from the default DNS resolution loop.
+  - Hide the 'TailsData' partition in desktop applications.
+  - Ship unrar-free again, so that the GNOME archive manager knows about
+    it.
+  - Ship with an empty whitelist for Noscript.
+  - Disable FoxyProxy's advertisement on proxy error page.
+
+  * Iceweasel
+  - Upgrade iceweasel to 10.0.6esr-1 (Extended Support Release) and install it
+    and its dependencies from squeeze-backports.
+
+  * Hardware support
+  - Upgrade Linux to 3.2.23-1.
+
+  * Software
+  - Update i2p to version 0.9.1.
+
+  * Build system
+  - vagrant: Install Ikiwiki from Debian unstable. The 'mirrorlist'
+    patches have finally been merged in upstream Ikiwiki. So instead of
+    building Ikiwiki by hand, we can now install the package directly
+    from Debian unstable.
+  - Do not build the ikiwiki forum on the bundled static website copy.
+
+ -- Tails developers <amnesia@boum.org>  Fri, 24 Aug 2012 02:03:28 +0200
+
+tails (0.12.1) unstable; urgency=low
+
+  This is a brown paper bag release to fix two major problems introduced in
+  Tails 0.12.
+
+  * Iceweasel
+  - Upgrade Torbutton to 1.4.6.
+  - Upgrade AdBlock Plus to 2.1.
+  - Update AdBlock Plus patterns.
+
+  * Hardware support
+  - Upgrade Linux to 3.2.21-3 (linux-image-3.2.0-3-486).
+
+  * Software
+  - Install MAT from Debian backports, drop custom package.
+  - Install python-pdfrw to re-add PDF support to the MAT.
+  - Upgrade tails-greeter to 0.7.1, which fixes the race condition that
+    broke administration password and locale settings on some systems.
+
+  * Boot
+  - Remove the Tails specific plymouth theme. The theme interfers heavily with
+    the boot process on some hardware.
+
+ -- Tails developers <amnesia@boum.org>  Thu, 28 Jun 2012 13:37:00 +0200
+
+tails (0.12) unstable; urgency=low
+
+  * Major new features
+  - Add the Unsafe Web Browser, which has direct access to the Internet and
+    can be used to login to captive portals.
+  - The (previously experimental, now deemed stable) Windows camouflage can now
+    be enabled via a check box in Tails greeter.
+
+  * Tor
+  - Upgrade to 0.2.2.37-1~~squeeze+1.
+
+  * Iceweasel
+  - Upgrade iceweasel to 10.0.5esr-1 (Extended Support Release) and install it
+    and its dependencies from squeeze-backports.
+  - Add a bookmark for the offline Tails documentation.
+  - Update AdBlock patterns.
+
+  * Persistence
+  - Allow using larger USB drives by increasing the mkfs timeout to 10 minutes.
+  - Tell the user what's going on when the Tails boot device cannot be found.
+
+  * Hardware support
+  - Upgrade Linux to 3.2.20-1 (linux-image-3.2.0-2-amd64).
+
+  * Software
+  - Install rfkill.
+  - Install torsocks. Note that this makes `torify' use `torsocks' instead of
+    `tsocks'. The `tsocks' binary is dropped to avoid problems, but remaining
+    files (the library) are kept since ttdnsd depends on them.
+  - Fetch live-config-sysvinit from sid so that it matches live-config version.
+  - Update virtualbox backports to 4.1.10-dfsg-1~bpo60+1.
+  - Install pciutils (needed by virtualbox-guest-utils).
+  - Install mousetweaks. This is needed to use the mouse accessibility settings
+    in System -> Preferences -> Mouse -> Accessibility.
+  - Install the "hardlink" files deduplicator.
+  - Do not install cryptkeeper anymore. See todo/remove_cryptkeeper for reason.
+    Users of cryptkeeper are encouraged to install cryptkeeper via `apt-get
+    update; apt-get install --yes cryptkeeper`, open their volume and move
+    their to Tails' built-in persistence instead, as a one-time migration.
+  - Upgrade I2P to version 0.9.
+  - Don't install GParted. GNOME Disk Utility has been on par with GParted
+    since Squeeze was released.
+  - Upgrade live-boot to 3.0~a27-1+tails2~1.gbp319fe6.
+  - Upgrade live-config to 3.0~a39-1 and install it from Debian experimental.
+  - Upgrade tails-greeter to 0.7.
+  - Upgrade tails-persistence-setup to 0.17-1.
+  - Install libyaml-libyaml-perl.
+  - Upgrade MAT, the metadata anonymisation toolkit, 0.3.2-1~bpo60+1.
+  - Fetch python-pdfrw from backports, drop custom package.
+
+  * Internationalization
+  - The Tails website and documentation now has a (partial) Portuguese
+    translation.
+
+  * Build system
+  - Tails can now be built without using a HTTP proxy.
+  - Tails can now easily be built by using Vagrant. See the updated
+    contribute/build page for instructions.
+
+  * Boot
+  - Remove obsolete noswap boot parameter. live-boot now handles swap on an
+    opt-in basis.
+  - The squashfs.sort files generated with boot-profile should now be ok which
+    makes the generate images boot noticeably faster on optical media. See
+    bugs/weird_squashfs.sort_entries for more information.
+  - Set Tails specific syslinux and plymouth themes.
+  - Add NVidia KMS video drivers to the initrd in order to show our shiny new
+    plymouth theme on more systems.
+
+ -- Tails developers <amnesia@boum.org>  Mon, 11 Jun 2012 13:37:00 +0200
+
 tails (0.11) unstable; urgency=low
 
   * Major new features

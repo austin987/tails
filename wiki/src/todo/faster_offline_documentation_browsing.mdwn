@@ -1,0 +1,38 @@
+Tails's offline documentation via Yelp is slow.
+This should be fixed. How?
+
+Commit 200bf88a reads:
+
+> Open local documentation with Yelp.
+>     
+> This fixes this bug:
+>     
+> Clicking on the "Documentation" desktop icon while iceweasel is
+> closed, opens check.torproject.org, not the documentation.
+>     
+> ... and is overall nicer.
+
+>> Is check.torproject.org as a startpage realy required? Perhaps we can ship an offline page pointing to the documentation, adding eventually a link to Torcheck.
+
+> As a temporary half-solution, [Tails 0.12](git.immerda.ch/?p=amnesia.git;a=blob_plain;f=debian/changelog;hb=refs/tags/0.12) includes an iceweasel's bookmark poiting to the offline documentation
+
+Research
+========
+
+Yelp seems to scan and index stuff at 1st startup: <https://bugzilla.gnome.org/show_bug.cgi?id=388263>. This is solved by yelp 2.31.1, which is not in squeeze.
+
+Opening the offline documenation page as a homepage in iceweasel conflicts with the
+decision to have the Tails "News" page as a homepage.
+
+Possible solutions:
+
+ - fix iceweasel bug [[bugs/iceweasel_1st_page_not_loaded]]
+ - backport the patch that fixes this issue to squeeze Yelp... But I can't find this
+   patch. And is it possible to include it in debian?
+ - use a dedicated help browser before we use wheezy? There is one in WhisperBack, it's 
+   few lines of Python code with WebKit (and easy to launch a true webbrowser for
+   non-local files)
+
+[[!tag todo/research]]
+
+[[!tag release/1.0]]

@@ -12,12 +12,24 @@ sub getTorbuttonUserAgent {
     open (my $in, "<", $file);
     while (my $line = <$in>) {
         chomp $line;
-        if (($ua) = ($line =~ m/^pref\("extensions\.torbutton\.useragent_override", "(.*)"\);$/)) {
-            last;
+        if ($line =~ m/^pref\("extensions\.torbutton\.useragent_override",$/) {
+            my $next_line = <$in>;
+            if (($ua) = ($next_line =~ m/^ *"(.*)"\);$/)) {
+                last;
+            }
+            else {
+                die "Unparseable file.";
+            }
         }
     }
     close $in;
     return $ua;
 }
 
-say getTorbuttonUserAgent('/usr/share/xul-ext/torbutton/defaults/preferences/preferences.js');
+my $ua = getTorbuttonUserAgent('/usr/share/xul-ext/torbutton/defaults/preferences/preferences.js');
+if (defined $ua && $ua) {
+    say $ua;
+}
+else {
+    die "Unparseable file."
+}

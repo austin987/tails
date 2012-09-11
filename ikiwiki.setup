@@ -47,6 +47,7 @@ add_plugins:
   - img
   - lockedit
   - toggle
+  - trail
 # plugins to disable
 disable_plugins:
   - openid
@@ -102,7 +103,7 @@ ENV: {}
 # regexp of normally excluded files to include
 include: '^\.htaccess$'
 # regexp of files that should be skipped
-exclude: (?-xism:/discussion)
+exclude: '(forum\/.*|\/discussion\..*|\/Discussion\..*)'
 # specifies the characters that are allowed in source filenames
 wiki_file_chars: '-[:alnum:]+/.:_'
 # allow symlinks in the path leading to the srcdir (potentially insecure)
@@ -155,7 +156,7 @@ pingurl: []
 
 # lockedit plugin
 # PageSpec controlling which pages are locked
-locked_pages: '.htaccess or inc/* or download or doc/about/openpgp_keys or sidebar or support or torrents/rss* or index or recentchanges or index/Discussion or shortcuts or shortcuts.* or contribute/release_process or misc/unsafe_browser_warning  or misc/unsafe_browser_warning/*'
+locked_pages: '.htaccess or inc/* or download or doc/about/financials or doc/about/openpgp_keys or sidebar or support or torrents/rss* or index or recentchanges or index/Discussion or shortcuts or shortcuts.* or contribute/release_process or misc/unsafe_browser_warning or misc/unsafe_browser_warning/* or (security and !security.*) or (about and !about.*) or (doc and !doc.*) or (doc/about/warning and !doc/about/warning.*) or (getting_started and !getting_started.*) or (contribute and !contribute.*)'
 
 # moderatedcomments plugin
 # PageSpec matching users or comment locations to moderate
@@ -198,6 +199,7 @@ po_slave_languages:
   - de|Deutsch
   - es|Español
   - fr|Français
+  - pt|Português
 # PageSpec controlling which pages are translatable
 po_translatable_pages: '!security/audits and !security/audits/* and (about or chat or contribute or doc or doc/* or download or getting_started or inc/stable_i386_date or index or news or security or security/* or sidebar or support or support/* or torrents or wishlist or misc or misc/*)'
 # internal linking behavior (default/current/negotiated)

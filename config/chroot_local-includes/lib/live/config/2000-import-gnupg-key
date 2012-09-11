@@ -1,0 +1,18 @@
+#!/bin/sh
+
+Import_GnuPG_key ()
+{
+	echo "- importing GnuPG key"
+	sudo -H -u "${LIVE_USERNAME}" gpg --batch --import /usr/share/doc/tails/website/*.key
+
+	echo "- importing GnuPG signing key into tails-iuk's trusted keyring"
+	mkdir -p /usr/share/tails-iuk/trusted_gnupg_homedir
+	gpg --batch --homedir /usr/share/tails-iuk/trusted_gnupg_homedir \
+	    --import /usr/share/doc/tails/website/tails-signing.key
+	chmod -R go+rX /usr/share/tails-iuk/trusted_gnupg_homedir/*
+
+	# Creating state file
+	touch /var/lib/live/config/import-gnupg-key	
+}
+
+Import_GnuPG_key
