@@ -122,8 +122,12 @@ configure_chroot () {
     done
     chmod a+r ${CHROOT}/etc/resolv.conf
 
-    # Disable problematic Iceweasel addons and proxying in the chroot
-    chroot ${CHROOT} apt-get remove --yes ${OFFENDING_ADDONS}
+    # Remove all Iceweasel addons: some adds proxying, which we don't
+    # want; some may change the fingerprint compared to a standard
+    # Iceweasel install.
+    chroot ${CHROOT} apt-get remove --yes xul-ext-*
+
+    # Disable proxying in the chroot
     sed -i '/^pref("network.proxy.type",/d' \
         ${CHROOT}/etc/iceweasel/pref/iceweasel.js
     echo 'pref("network.proxy.type", 0);' >> \
