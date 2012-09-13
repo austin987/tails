@@ -12,8 +12,8 @@ When /^I log in a new session$/ do
   @screen.click('Logln.png')
 end
 
-Then /^I should see YourbrowserT\.png$/ do
-  @screen.wait('YourbrowserT.png', 300)
+Then /^I see "([^"]*)" after at most (\d+) seconds$/ do |image, time|
+  @screen.wait(image, time.to_i)
 end
 
 Then /^the network traffic should flow only through Tor$/ do
