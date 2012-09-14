@@ -2,7 +2,8 @@
 
 set -e
 
-TMPFS_SIZE=6 # GB
+TMPFS_SIZE_MB=6144 # 6 GB
+TMPFS_SIZE_BYTES=$(($TMPFS_SIZE_MB * 1024 * 1024))
 
 as_root_do() {
 	sudo \
@@ -16,11 +17,31 @@ as_root_do() {
 }
 
 usable_memory() {
-	free | awk '/cache:/ { print $4 }'
+	free -b | awk '/cache:/ { print $4 }'
 }
 
+bootstrap_stage_is_ok() {
+	[ -d "$1" ] || return 1
+	[ "$(sudo du -sm $1 | cut -f1)" -ge 100 ] || return 1
+	for dir in bin dev etc lib proc root sbin sys usr var; do
+		[ -d "$1/$dir" ] || return 1
+	done
+	return 0
+}
+
+cleanup() {
+	cd /
+	mounts=$(mount | grep -E "^[^[:space:]]+ on $BUILD_DIR" | \
+		awk '{print $3}' | sort -r)
+	[ -n "$mounts" ] && sudo umount $mounts
+	[ -d "$TMPFS_DIR" ] && ( sudo umount $TMPFS_DIR ; rmdir $TMPFS_DIR )
+	[ -d "$BUILD_DIR" ] && sudo rm -rf $BUILD_DIR
+}
+
+trap cleanup EXIT
+
 if [ "$TAILS_RAM_BUILD" ]; then
-	if [ "$(usable_memory)" -lt $(($TMPFS_SIZE * 1024 * 1024)) ]; then
+	if [ "$(usable_memory)" -lt "$TMPFS_SIZE_BYTES" ]; then
 		echo "Not enough memory available for an in-memory build. Aborting." >&2
 		exit 1
 	fi
@@ -39,21 +60,40 @@ as_root_do git reset --hard "$COMMIT"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
+	[ -d "$dir" ] && sudo rm -rf /var/cache/stages_bootstrap
 fi
 as_root_do ./build-wiki
 
 BUILD_DIR=$(mktemp -d /home/vagrant/tails-build.XXXXXXXX)
 if [ "$TAILS_RAM_BUILD" ]; then
-	trap "cd / ; sudo umount '$BUILD_DIR' ; sudo rmdir '$BUILD_DIR'" EXIT
-	as_root_do mount -t tmpfs -o "noatime,size=${TMPFS_SIZE}G,mode=0770,uid=root,gid=vagrant" tmpfs "$BUILD_DIR"
+	TMPFS_DIR=$(mktemp -d /home/vagrant/tmpfs.XXXXXXXX)
+	as_root_do mount -t tmpfs -o "noatime,size=${TMPFS_SIZE_BYTES},mode=0770,uid=root,gid=vagrant" tmpfs "$TMPFS_DIR"
+	as_root_do mount -t aufs -o "noatime,noxino,dirs=$TMPFS_DIR=rw:/home/vagrant/amnesia/=rr+wh" aufs "$BUILD_DIR"
 else
-	trap "cd / ; sudo rm -rf '$BUILD_DIR'" EXIT
+	as_root_do rsync -a /home/vagrant/amnesia/ "$BUILD_DIR"/
 fi
 
-as_root_do rsync -a /home/vagrant/amnesia/ "$BUILD_DIR"/
-
 cd "$BUILD_DIR"
-as_root_do lb config
+as_root_do lb config --cache-packages false
+
+if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
+    bootstrap_stage_is_ok /var/cache/stages_bootstrap; then
+	# restore bootstrap stage and make live-build use it
+	sudo mkdir -p "$BUILD_DIR"/cache/stages_bootstrap
+	sudo mount --bind /var/cache/stages_bootstrap \
+		"$BUILD_DIR"/cache/stages_bootstrap
+	sudo touch "$BUILD_DIR"/.stage/bootstrap
+	sudo touch "$BUILD_DIR"/.stage/bootstrap_cache.save
+fi
+
 as_root_do lb build
 
 mv -f tails-* /vagrant
+
+if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
+    ! sudo umount "$BUILD_DIR"/cache/stages_bootstrap 2>/dev/null; then
+	# the cached bootstrap stage wasn't used (maybe it hadn't been
+	# cached yet?) so we save the good one from the current build.
+	sudo rsync -a --delete "$BUILD_DIR"/cache/stages_bootstrap/ \
+		/var/cache/stages_bootstrap
+fi
