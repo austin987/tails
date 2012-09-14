@@ -55,6 +55,11 @@ def current_vm_cpus
   $1.to_i if info =~ /^cpus=(\d+)/
 end
 
+def vm_running?
+  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
+  env.primary_vm.state == :running
+end
+
 def enough_free_memory?
   return false unless RbConfig::CONFIG['host_os'] =~ /linux/i
 
@@ -106,7 +111,9 @@ task :parse_build_options do
     case opt
     # Memory build settings
     when 'ram'
-      abort "Not enough free memory to do an in-memory build. Aborting." unless enough_free_memory?
+      unless vm_running? || enough_free_memory?
+        abort "Not enough free memory to do an in-memory build. Aborting."
+      end
       ENV['TAILS_RAM_BUILD'] = '1'
     when 'noram'
       ENV['TAILS_RAM_BUILD'] = nil
