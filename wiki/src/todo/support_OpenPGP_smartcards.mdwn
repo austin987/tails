@@ -1,17 +1,45 @@
 * [[!wikipedia OpenPGP_card]]
 * [[!debwiki Smartcards/OpenPGP]]
 
+Test 0
+======
+
+I tested an OpenPGP smart card reader and card (which I will add the
+brandt/model soon). It turned out that it worked for me on Tails 0.13~rc1
+without any additional package installed *but* only when executing gnupg as
+root. It seems there is a permission issue, as discussed on tails-dev (see
+below).
+
+> See commit f29ce64272 in Liberté Linux' Git.
+
+Tester: <alan@boum.org>
+
+Test 1
+======
+
 What kind of additional software is needed?
 
-Testing with Tails 12.1 I've found it was necessary to install the following set of packages from Debian Wheezy.
+Testing with Tails 0.12.1 I've found it was necessary to install the following set of packages from Debian Wheezy.
 
-* libc-bin_2.13-35_i386.deb 
-* libc6_2.13-35_i386.deb 
-* multiarch-support_2.13-35_i386.deb 
-* libpcsclite1_1.8.4-1_i386.deb 
-* libccid_1.4.7-1_i386.deb 
-* pcscd_1.8.4-1_i386.deb 
+* libc-bin (2.13-35)
+* libc6 (2.13-35)
+* multiarch-support
+* libpcsclite1 (1.8.4-1)
+* libccid (1.4.7-1)
+* pcscd (1.8.4-1)
 
-If Tails begins building on Wheezy, including the libccid and pcscd package should be enough for card support.
+If Tails begins building on Wheezy, including the libccid and pcscd
+package should be enough for Gemalto USB shell Token (A USB smart card
+reader) that is popularly used with OpenPGP cards.
 
-[[wishlist]]
+> It looks like all the additional packages were pulled as
+> dependencies of pcscd and libccid. [[!taglink todo/research]] how
+> hard backports of libccid and pcscd are to do.
+
+>> This, as well as user credentials issues, is discussed on
+>> tails-dev:
+>> <CALSDXiB1VWcEQ-BxJzXF95_mPg_UyHL6b83wXCGQz-a2hMvAYA@mail.gmail.com>
+
+Testers: Patrick Bx <patrickbx@gmail.com>
+
+
