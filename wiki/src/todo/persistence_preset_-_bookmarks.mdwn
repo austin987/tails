@@ -8,6 +8,17 @@ iceweasel profile persistent will prevent users from getting important
 configuration changes in new Tails releases. The `link` persistence
 option seems like a proper fit for this.
 
+> [Iceweasel uses `places.sqlite` instead of `bookmarks.html` to store its
+> bookmarks since
+> Firefox 3](http://kb.mozillazine.org/Lost_bookmarks#Finding_your_bookmarks).
+> It can be made to automatically export the *old style* `bookmarks.html` file
+> by setting
+> [browser.bookmarks.autoExportHTML](http://kb.mozillazine.org/Browser.bookmarks.autoExportHTML)
+> to `true`. When no `places.sqlite` exists in a profile, Iceweasel will
+> automatically import the bookmarks from that file. The downside is that this
+> file is only written when Iceweasel is closed: a sub-optimal behaviour w.r.t.
+> *emergency media removal*.
+
 Currently the iceweasel profile are generated on post-build, when it's
 started for the first time, and `$PROFILE` is random
 (`XXXXXXXX.default`). Randomness in paths doesn't go well with how our
