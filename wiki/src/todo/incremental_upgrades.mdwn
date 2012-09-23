@@ -27,36 +27,38 @@ should provide an automated way of doing the upgrade.
 
 **Note**: also see the *Bugs and Future Improvements* section on this page.
 
-## 1. Design
+## General plan
 
-* Think the current design a bit deeper, discuss with other Tails
-  developers, reach an agreement: **done**
+1. Tails 0.13 will have the harmless part of the
+   `feature/incremental-upgrades` branch merged (users creation with
+   sudo credentials, dependencies installation), leaving aside the
+   part about running the update frontend automatically at startup.
+   => Tails 0.13 should be able to incrementally upgrade to 0.13.x,
+   when running the update frontend by hand.
 
-## 2. Infrastructure
+2. When 0.13.x point-releases are out:
 
-* make it easy to **generate an Incremental Upgrade Kit** for a point
-  release: **done**
-* update **mirrors infrastructure** to support hosting Incremental
-  Upgrade Kits: **done**
-* make it easy to **generate update-description files** for a point
-  release: phase two
+   * write developers documentation and tools
+   * prepare IUK
+   * update update-description files
+   * ask beta testers to try the incremental upgrade process
+   * Catch and fix most remaining bugs.
+   * Write user documentation and hand it to translators.
 
-## 3. User interface
+3. Once we're happy with the whole thing, ship it, enabled by
+   default, in the next Tails major release (that is, presumably
+   0.14, unless 1.0 is due already -- who knows :)
+   This requires to think how to integrate with / replace the
+   **security warning program** (see 5d039b3a).
 
-* update the **security warning program**
-  - update-description downloader and verifier
-    (`tails-iuk-get-update-description-file`): **done**
-  - integrate with the update frontend: **done**
-* make it easy to **download an Incremental Upgrade Kit**
-  - target file downloader and verifier (`tails-iuk-get-target-file`):
-    **done**
-  - integrate with the update frontend: **done**
-* make it easy to **install an Incremental Upgrade Kit**:
-  - IUK installer (`tails-install-iuk`): **done**
-  - integrate with the update frontend: **done**
-* GUI frontend: **done**
+4. Later
 
-## 4. Documentation
+  * make it easy to **generate update-description files** for a point
+    release: phase two
+
+## Documentation
+
+[[!tag todo/documentation]]
 
 ### For users
 
