@@ -230,7 +230,7 @@ namespace :vm do
         so the process might take some time.
 
         Please remember to shut the virtual machine down once your work on
-        Tails in done:
+        Tails is done:
 
             $ rake vm:halt
 
@@ -239,7 +239,7 @@ namespace :vm do
       $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
 
         Starting Tails builder virtual machine. This might take a short while.
-        Please remember to shut it down once your work on Tails in done:
+        Please remember to shut it down once your work on Tails is done:
 
             $ rake vm:halt
 
