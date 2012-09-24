@@ -23,8 +23,6 @@ for KERNEL in /boot/vmlinuz-* ; do
    VERSION_SCHEME="[[:digit:]]\+\(\.[[:digit:]]\+\)*-[[:digit:]]\+"
    KERNEL_ARCH="$(echo ${KERNEL_VERSION} | sed -e "s|${VERSION_SCHEME}-||")"
 
-   apt-get install --yes linux-headers-2.6-${KERNEL_ARCH}
-
    # dkms uses uname to find out what kernel to build modules for.
    # So, after installing dkms, but before installing
    # virtualbox-guest-dkms, we divert uname to a fake one that
@@ -37,6 +35,9 @@ for KERNEL in /boot/vmlinuz-* ; do
 echo "$KERNEL_VERSION"
 EOF
    chmod 755 /bin/uname
+
+   # Install the headers for the kernel we are build modules for
+   apt-get install --yes linux-headers-$(uname -r)
 
    # Have the modules automagically built by dkms for all kernels.
    # Also, at this time of the build, we've got a recent enough X.Org installed,
