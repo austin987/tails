@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 echo "managing initscripts"
 
 # enable custom initscripts

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 echo "Building VirtualBox guest modules"
 
 hw_arch="`dpkg --print-architecture`"
@@ -47,18 +49,14 @@ EOF
 
    # Revert to the real uname.
    mv /bin/uname.$$ /bin/uname
-
-   # Workaround /usr/lib/dkms/common.postinst which would remove the modules
-   # during the next iteration
-   rm -rf /var/lib/dkms/virtualbox-guest
 done
 
 # clean the build directory
-rm -rf /var/lib/dkms/virtualbox-guest/
+rm -r /var/lib/dkms/virtualbox-guest/
 
 # virtualbox-guest-dkms's postrm script deletes any previously
 # built binary module; let's delete it before purging the package.
-rm -f /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
+rm /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
 
 # remove temporary workaround
-rm -f /usr/bin/gcc-4.5
+rm /usr/bin/gcc-4.6
