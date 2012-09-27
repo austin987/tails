@@ -112,6 +112,26 @@ Check the image size has not changed much since the last release.
   gateway, broadcasts, etc. Also note that running I2P during these
   test will list every I2P peer as "bad", so that is not recommended.
 
+## Stream isolation
+
+See our [[stream isolation design
+page|contribute/design/stream_isolation]] for details such as port
+numbers, that are not duplicated here to avoid desynchronization.
+
+Assumptions for the following tests: first, Tor stream isolation
+features properly do their work; second, our `torrc` sets the right
+`SocksPort` options to implement what we want.
+
+* Make sure Claws Mail use its dedicated `SocksPort` when connecting
+  to IMAP / POP3 / SMTP servers.
+* Make sure htpdate, tails-security-check and incremental updates use
+  the `SocksPort` dedicated for Tails-specific applications.
+* Make sure iceweasel uses its dedicated `SocksPort`.
+* Make sure other applications (Polipo, Gobby 0.4 and 0.5, SSH, whois)
+  use the default system-wide `SocksPort`.
+* Make sure a random application run using `torify` and `torsocks`
+  (e.g. `curl`) uses the default system-wide `SocksPort`.
+
 # Use of untrusted partitions
 
 * are any local hard-disk partitions mounted or used as swap?
