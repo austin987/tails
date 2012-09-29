@@ -41,11 +41,26 @@ esac
 SYSLINUX_LIVE_CFG="${SYSLINUX_PATH}/live.cfg"
 SYSLINUX_MENU_CFG="${SYSLINUX_PATH}/menu.cfg"
 
+# Checking depends
+Check_package chroot/usr/bin/syslinux syslinux
+
+# Restoring cache
+Restore_cache cache/packages_binary
+
+# Installing depends
+Install_package
+
 # Copy necessary syslinux modules
 for module in ifcpu64.c32
 do
-	cp "/usr/lib/syslinux/${module}" "${SYSLINUX_PATH}/"
+	cp "chroot/usr/lib/syslinux/${module}" "${SYSLINUX_PATH}/"
 done
+
+# Saving cache
+Save_cache cache/packages_binary
+
+# Removing depends
+Remove_package
 
 # Replace syslinux.cfg with autodetection "code"
 cat > "${SYSLINUX_CFG}" <<EOF
