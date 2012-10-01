@@ -15,7 +15,24 @@ Required features
 OSQA
 ----
 
-We decided to go for [OSQA](http://osqa.net/):
+In the end OSQA might not be the good solution.
+
+  - They did [some releases](http://www.osqa.net/blog/) quite quickly
+    between 2010 and March 2011, but nothing since then.
+  - The [developers mailing
+    list](http://lists.osqa.net/pipermail/lists.osqa.net/dev/) has been
+    almost dead since the last release.
+  - There are [some](https://github.com/BinaryRage/OSQA/commits/master)
+    [people](https://github.com/cdman/OSQA/commits/master) still
+    developing it somehow on github though not on a regular basis.
+  - People working on OSQA started their own business with
+    [Answerhub](http://answerhub.com/). And it seems like they are not
+    really working on OSQA anymore.
+  - Officially they are still supporting OSQA, and there indeed are some
+    recent commits in the subversion but way less than before: 510
+    (2011), 60 (2012).
+
+At first, we selected OSQA for the following reasons:
 
   - Django application.
   - Shows the ‘Search’ button first by default and the ‘Ask a question’
@@ -28,19 +45,107 @@ We decided to go for [OSQA](http://osqa.net/):
     <http://wiki.osqa.net/display/docs/Ubuntu+with+Apache+and+MySQL>
   - We will host it under http://tails.boum.org/ask/.
 
-Here is a list of other candidates, and the reason they were discarded:
+Askbot
+------
 
-  - [Askbot](http://askbot.org/), another Django webapp, but a pain to
-    install, many dependencies outside of Debian, many issues on
-    database support and migration during installation.
-  - None of them allowed anonymous posting.
+  - <http://askbot.org/>
+  - Another Django webapp, forked from OSQA.
+  - <https://github.com/ASKBOT/askbot-devel>
+  - Has [many dependencies](https://github.com/ASKBOT/askbot-devel/blob/master/askbot_requirements.txt) outside of Debian:
+    - akismet
+    - coffin
+    - django-keyedcache
+    - django-robots
+    - django-kombu
+    - django-followit
+    - django-recaptcha-works
+    - markdown2
+    - pystache
+    - pytz
+    - longusername
+  - The test installation did not succeeded because of many issues on
+    database support, and migration during installation.
+  - Most of the development is [done by 2
+    people](https://github.com/ASKBOT/askbot-devel/graphs/contributors),
+    they are also selling it as a service.
+  - The commit count looks promising: 393 (2009), 594 (2010), 1249
+    (2011), 1106 (2012)
+  - Bug tracker: <http://bugs.askbot.org/projects/askbot/>, but are they
+    really using it?
+
+### Features
+
+  - Anonymous posting: like for OSQA, filling up the email field is
+    required but the validity of the email is not checked.
+  - Email notifications:
+    - *Asked by me*
+    - *Answered by me*
+    - *Individually selected*
+    - *Entire forum (tag filtered)*
+    - *Comments and posts mentioning me*
+  - Shows the ‘Search’ button first by default and the ‘Ask your
+    question’ button on the side.
+  - The software is
+    [translated](https://www.transifex.com/projects/p/askbot/) but there
+    is no multilingual support from the web interface.
+  - No group feature.
+
+Shapado
+-------
+
+  - <http://shapado.com>
+  - Written in Ruby
+  - <https://gitorious.org/shapado>
+  - Seems to be a pain to install, and maintain, or get hosted, see
+    [[!debbug 633407]]
+  - Developers tools: IRC channel, bug tracking through questions on
+    Shapado.com.
+  - Pivotal Tracker, but not used anymore?
+    <https://www.pivotaltracker.com/projects/74584#>
+  - Most of the development is done by 3 people, probably the people
+    behind <http://ricodigo.com/>, the company running shapado.com.
+  - Last release in September 2011, and no official release since then.
+    The commit count dropped, but there is still recent activity: 730
+    (2009), 2276 (2010), 1832 (2011), 344 (2012)
+
+### Features
+
+  - Anonymous posting:
+    - Like for OSQA, filling up the email field is required but the
+      validity of the email is not checked.
+    - Setting `Enable Anonymous` for a group, but that only allows
+      people logged in to answer a question without showing their
+      username.
+  - Email notifications:
+    - *Get email notifications for new answers*
+    - *Receive email notifications about questions in your field of
+      expertise*
+    - *Receive email notifications about system activities such as
+      earned badges, new followers, etc*
+    - *Receive a report with latest group activity (only for group
+      admins)*
+  - Shows the ‘Ask a question’ first and the ‘Search’ form in the top
+    bar.
+  - Group feature:
+    - User can join different groups with a single login.
+    - I don't think it is possible to move questions to another group
+  - Multilingual support with user settings such as:
+    - *Language used for the interface of the site*, that works.
+    - *You want to read questions in the following languages*, works but
+      is buggy: the default language for the group (English) doesn't
+      show up in the list of languages when asking a question, nor in
+      the filter when listing questions.
+  - Weird limitation on password size: `Password is too long (maximum is
+    20 characters)`.
+  - Browser compatibility: I faced some issues while signing up, login
+    in, or joining a group. But all that seems to work fine from Tails.
+
+Others
+------
+
   - [Q2A](http://www.question2answer.org/), PHP + MySQL without
     dependencies, but with fewer features, and the ‘Ask a question’ was
     advertised before the ‘Search’ functionality.
-  - [Shapado](http://shapado.com), written in Ruby, seems to be a pain
-    to install, and maintain, or get hosted, see [[!debbug 633407]],
-    shows the ‘Ask a question’ first and the ‘Search’ form in the top
-    bar.
   - [Reddit](https://github.com/reddit/reddit), not really Q&A.
 
 Things left to be done
