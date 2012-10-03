@@ -122,13 +122,13 @@ fix_gconf_dirs ()
 		then
 			continue
 		fi
-		local ownership=$(stat -c "%u:%g" ${home})
-		find ${home}/.gconf -type d | while IFS="" read -r dir
+		local ownership=$(stat -c "%u:%g" "${home}")
+		find "${home}/.gconf" -type d | while IFS="" read -r dir
 		do
-			local conf=${dir}/%gconf.xml
+			local conf="${dir}/%gconf.xml"
 			if [ ! -e "${conf}" ]; then
-				touch ${conf}
-				chown ${ownership} ${conf}
+				touch "${conf}"
+				chown ${ownership} "${conf}"
 			fi
 		done
 	done
