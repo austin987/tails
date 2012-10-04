@@ -10,9 +10,7 @@ Status:
  * `wipe_memory` command is basically complete.
  * The minimal set of GRUB modules to use is known.
  * There is GRUB configuration using `gfxterm` to get a nice display.
- * **TODO**: Make a standalone image that we can give to `kexec`. Call for help
-   [sent on grub-devel
-   mailing-list](https://lists.gnu.org/archive/html/grub-devel/2012-08/msg00016.html).
+ * Figure out why using `kexec` fails on real hardware.
 
 Patches
 =======
@@ -71,33 +69,38 @@ Using a qemu image
            -vga std -enable-kvm -m 5120
 
 
-Using a multiboot image
------------------------
+Using a `lnxboot`
+-----------------
 
-As kexec support the multiboot protocol, it should be the easiest way to get
-GRUB kexec'able.
+GRUB can actually be loaded using an image compatible with *bzImage* in
+`lnxboot.img`. It will actually load and execute a GRUB image given as a
+ramdisk.
 
 1. Uncompress GRUB 2.00 sources.
 2. Apply the patch and copy the boot configuration files.
 3. Build:
 
        test -f Makefile && make distclean
-       ./configure --with-platform=multiboot --target=i386
+       ./configure --with-platform=pc --target=i386
        make -j4 &&
-           pkgdatadir='.' ./grub-mkstandalone -C xz -o /tmp/multiboot.img \
-               -d ./grub-core -O i386-multiboot --grub-mkimage='./grub-mkimage' \
+           pkgdatadir='.' ./grub-mkstandalone -C xz -o /tmp/core.img \
+               -d ./grub-core -O i386-pc --grub-mkimage='./grub-mkimage' \
                --modules="all_video echo gfxterm halt normal pci png reboot serial test wipe_memory" \
                boot/grub/grub.cfg boot/grub/ascii.pf2 boot/grub/splash.png
 
 4. Start qemu:
 
-       qemu -hda /dev/zero -kernel /tmp/multiboot.img \
+       qemu -hda /dev/zero -kernel grub-core/lnxboot.img -initrd /tmp/core.img \
             -vga std -m 256
 
-But it fails with:
+The image can be also be started with kexec given `lnxboot.img` is extended
+(e.g. filled with zeros) to be at least 32kB in size. Then, the following
+should work:
 
-    Missing Multiboot memory information
-    Aborted.
+    kexec --load --real-mode --initrd=/tmp/core.img grub-core/lnxboot.img
+    kexec --exec
+
+Tests done with the former worked on qemu, VirtualBox but not on bare metal.
 
 Screenshot
 ==========
