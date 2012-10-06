@@ -7,7 +7,7 @@ tails-detect-virtualization
 tails-kexec
 tails-reconfigure-kexec
 tails-reconfigure-memlockd
-tails-wipe-memory-on-media-removal
+tails-sdmem-on-media-removal
 "
 
 PATCHED_INITSCRIPTS="
