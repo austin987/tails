@@ -1,92 +1,74 @@
 [[!meta title="OpenPGP passphrase encryption"]]
 
-Tails proposes you a custom applet to **encrypt text with a passphrase** using
+Tails includes a custom applet to **encrypt text with a passphrase** using
 OpenPGP passphrase encryption.
 
-**It is unsafe to write confidential text in a web browser** since Javascript
-attacks can access it from inside the browser. You should rather write your
-text in a separate application, encrypt it with gpgApplet and then paste the
-encrypted text in your browser, before sending it by email for example.
+<div class="caution">
 
-This technique requires you to share a secret passphrase with the people that
-will need to decrypt the message. OpenPGP also allows you to use public-key
-cryptography to send confidential messages without having a shared passphrase.
-[[See the corresponding documentation.|openpgp_public_key_encryption]]
+<strong>It is unsafe to write confidential text in a web browser</strong> since
+Javascript attacks can access it from inside the browser. You should rather
+write your text in a separate application, encrypt it using <span
+class="application">Tails gpgApplet</span>, and paste the encrypted text in your
+browser, before sending it by email for example.
 
-[[!toc levels=2]]
+</div>
 
-Encrypt text with a passphrase
-==============================
+<div class="note">
 
-<h2 class="bullet-number-one">Write your message in the text editor</h2>
+<strong>This technique requires you to share a secret passphrase with the people
+who will decrypt the text.</strong> OpenPGP also allows you to use public-key
+encryption to send confidential messages without having a shared passphrase.
+[[See the corresponding documentation.|openpgp_public-key_encryption]]
 
-Open gedit from the menu **Applications** → **Accessories** → **gedit Text
-Editor**.
+</div>
 
-[[!img gedit.png link=no alt="gedit Text Editor"]]
+1. Write your text in a text editor. **Do not write it in the web browser!**
 
-Write your text.
+   For example, open <span class="application">gedit</span> from the menu
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Accessories</span>&nbsp;▸
+     <span class="guimenuitem">gedit Text Editor</span></span>.
 
-[[!img gedit_confidential_message.png link=no alt="Confidential message in gedit"]]
+2. Select with the mouse the text that you want to encrypt. To copy it into the
+clipboard, right-click on the selected text, and choose <span
+class="guimenuitem">Copy</span> from the menu.
 
-<h2 class="bullet-number-two">Encrypt it with a passphrase using gpgApplet</h2>
+   The icon of <span class="application">Tails gpgApplet</span> now represents
+   lines of text, meaning that the clipboard contains non-encrypted text.
 
-**Select it** with the mouse. Copy it into the clipboard by doing
-**right-click** → **Copy**.
+   [[!img gpgapplet_with_text.png link=no alt="Tails gpgApplet with lines of
+   text"]]
 
-[[!img copy.png link=no alt="Right-click → Copy"]]
+3. Click on <span class="application">Tails gpgApplet</span>, and select <span
+class="guimenuitem">Encrypt Clipboard with Passphrase</span> from the menu.
 
-**The logo of the gpgApplet should represent lines of text**, meaning that the
-clipboard contains non-encrypted text:
+   If you receive the error message “<span class="guilabel">The clipboard does
+   not contain valid input data</span>”, try to select your text again, starting
+   from step 2.
 
-[[!img gpgapplet_with_text.png link=no alt="gpgApplet without a lock"]]
+4. In the <span class="guilabel">Passphrase</span> dialog box, enter a
+passphrase of your choice. Repeat the same passphrase in the second dialog box.
 
-Click on the applet and select **Encrypt Clipboard** from the menu.
+5. The icon of <span class="application">Tails gpgApplet</span> now shows a
+padlock, meaning that the clipboard contains encrypted text.
 
-[[!img encrypt_clipboard.png link=no alt="Encrypt Clipboard"]]
+   [[!img gpgapplet_with_padlock.png link=no alt="Tails gpgApplet with a
+   padlock"]]
 
-The applet will prompt you with a passphrase twice.
+6. To paste the encrypted text in another application, right-click in the
+application where you want to paste it, and choose <span
+class="guimenuitem">Paste</span> from the menu.
 
-[[!img enter_passphrase.png link=no alt="Enter passphrase"]]
+   For example, you can paste it in the web browser to send it by email.
 
-**The logo of the gpgApplet should now show a lock**, meaning that the
-clipboard contains encrypted text:
+   [[!img browser_paste.png link=no alt="Encrypted text starting with
+   -----BEGIN PGP MESSAGE-----"]]
 
-[[!img gpgapplet_with_lock.png link=no alt="gpgApplet with a lock"]]
+<div class="next">
 
-<h2 class="bullet-number-three">Paste your encrypted text</h2>
+You can also [[decrypt a text that is encrypted with a
+passphrase|decrypt_verify]] using <span class="application">Tails
+gpgApplet</span>.
 
-Now paste this encrypted text in another application by doing **right-click**
-→ **Paste**. For example, paste it in the web browser in order to send it by
-email.
-
-[[!img browser_paste.png link=no alt="Right-click → Paste"]]
-
-[[!img browser_encrypted_text.png link=no alt="Right-click → Paste"]]
-
-Decrypt encrypted text
-======================
-
-To decrypt an encrypted text you can do the reverse operation.
-
-<h2 class="bullet-number-two">Copy the encrypted text into the clipboard</h2>
-
-**Select the encrypted text that you want to decrypt** with the mouse. Copy it
-into the clipboard by doing **right-click** → **Copy**.
-
-[[!img browser_received_email.png link=no alt="Selected BEGIN PGP MESSAGE"]]
-
-**The logo of the gpgApplet should show a lock**, meaning that the clipboard
-contains encrypted text:
-
-[[!img gpgapplet_with_lock.png link=no alt="gpgApplet with a lock"]]
-
-<h2 class="bullet-number-two">Decrypt it using gpgApplet</h2>
-
-Click on the gpgApplet and select **Decrypt/Verify** from the menu.
-
-[[!img decrypt_verify.png link=no alt="Decrypt/Verify"]]
-
-The applet should prompt you with a decrypted version of the text.
-
-[[!img gpgapplet_decrypted_text.png link=no alt="Decrypted text in a popup window"]]
+</div>
