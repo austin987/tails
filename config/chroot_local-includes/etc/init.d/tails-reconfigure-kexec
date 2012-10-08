@@ -20,6 +20,8 @@ case "$1" in
 	echo "INITRD=\"${INITRD}\""               >> "$KEXEC_CONF"
 	if grep -qw debug=wipemem /proc/cmdline; then
 	   echo 'APPEND="${APPEND} sdmemdebug=1"' >> "$KEXEC_CONF"
+	else
+	   echo 'APPEND="${APPEND} quiet"'        >> "$KEXEC_CONF"
 	fi
 	;;
   *)
