@@ -5,24 +5,14 @@ For [[!taglink release/1.0]], we decided we want basic Tor stream isolation.
 Roadmap
 =======
 
-We can start implementing and testing while we [[!taglink todo/wait]]
+We can start implementing and testing while we wait
 for [[todo/Tor 0.2.3]] to go into devel.
 
 Hopefully we get the whole thing in Tails 0.14 or 0.15.
 
-Implementation started in `feature/separate_Tor_streams`, left to do:
+Implementation started in `feature/separate_Tor_streams`.
 
-[[!tag todo/code]]
-
-* have the Tails-specific applications use the SocksPort dedicated for
-  Tails-specific applications (127.0.1.0:9062)
-  - Tails IUK update check (in `lib/Tails/IUK/TargetFile/Download.pm`
-    and `lib/Tails/IUK/UpdateDescriptionFile/Download.pm`)
-  - WhisperBack (currently uses torsocks, so would need uwt or
-    similar, but given no other application than WB, hopefully, will
-    be talking to the hidden service used to relay WB's email, we
-    don't care that much isolating that one.)
-  - more?
+> Merged into devel, [[!taglink pending]] for Tails 0.14.
 
 Design
 ======
@@ -42,13 +32,7 @@ traffic with Tails:
 Web Browser
 -----------
 
-Mike Perry's plans for torbrowser: per-tab SOCKS username, or
-increment the username when the New Identity button is clicked, or
-similar. But FF has a SOCKS username / password handling bug that
-prevents us from having per-tab stream isolation, so this is likely to
-happen as a Torbrowser patch FF: [[!tor_bug 3455]].
-So on this front, we must first [[todo/replace_iceweasel_with_Torbrowser]].
-[[!tag todo/wait]]
+See [[todo/separate_Tor_streams_in_the_web_browser]].
 
 Destination address/port -based circuit isolation
 -------------------------------------------------

@@ -27,6 +27,13 @@ option seems like a proper fit for this.
 > rebuilt using the latest backup. Being a folder, this might be an easiest
 > candidate for the current persistence framework than `bookmarks.html`.
 
+>> Both of these seems glitchy, as the files in `bookmarkbackups` are only
+>> updated once for any given day. An alternative would be to simply make
+>> `places.sqlite` persistent. This can be done by replacing the regular file
+>> in the profile directory with a symlink to a a file in a persistent
+>> directory. When the symlink points to a non-existent file, Iceweasel
+>> will happily recreate it from the default set of bookmarks.
+
 Currently the iceweasel profile are generated on post-build, when it's
 started for the first time, and `$PROFILE` is random
 (`XXXXXXXX.default`). Randomness in paths doesn't go well with how our
