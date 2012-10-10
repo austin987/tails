@@ -93,22 +93,33 @@ Check the image size has not changed much since the last release.
 
 (ignore this line, ikiwiki is buggy...)
 
-    DESCRIPTORS=/var/lib/tor/cached-descriptors
+    # set DUMP to the output of tcpdump above
+    DUMP=dump
+    # set CONSENSUS to Tor's consensus from the Tails session
+    CONSENSUS=cached-consensus
+    NODES=$(mktemp)
+    # FIXME: In practice the "CSV List of All Current Tor Server IP Addresses"
+    # from e.g. https://torstatus.blutmagie.de works better (less false
+    # positives) as NODES but we need to download it with authentication.
+    # wget https://torstatus.blutmagie.de/ip_list_all.php/Tor_ip_list_ALL.csv \
+    # -O ${NODES}
+    awk '/^r / { print $7 }' ${CONSENSUS} > ${NODES}
     # Note that these default directory authorities may change! To be
     # sure, check in Tor's source, src/or/config.c:~900
     DIR_AUTHS="
     128.31.0.39 86.59.21.38 194.109.206.212 82.94.251.203 216.224.124.114
     212.112.245.170 193.23.244.244 208.83.223.34 213.115.239.118"
-    tshark -r dump -T fields -e ip.dst | sort | uniq | \
+    tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
     while read x; do
         ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
-        if echo ${DIR_AUTHS} | grep -qe ${ip_expr}; then
+        if echo ${DIR_AUTHS} | grep -qe "${ip_expr}"; then
             continue
         fi
-        if ! grep -qe "^router [^ ]\+ ${ip_expr}" ${DESCRIPTORS}; then
+        if ! grep -qe "^${ip_expr}$" ${NODES}; then
             echo "${x} is bad"
         fi
     done
+    rm ${NODES}
 
   Note that this script will produce some false positives, like your
   gateway, broadcasts, etc. Also note that running I2P during these
