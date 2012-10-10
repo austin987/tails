@@ -1,0 +1,24 @@
+Tails ships a relatively old live-boot. We need to resync' with upstream.
+
+Pros (aside from the obvious):
+
+* some persistence bugfixes that may improve data resilience
+* once done, we might benefit from the new "Reading configuration file
+  from filesystem and live-media at runtime too" feature to make our
+  kernel command-line shorter
+
+Beware:
+
+* everything moved from `/live` to `/lib/live`, and might move again
+  to `/lib/live/mount` (e.g. we rely on `/live/image`):
+  ship a compatibility symlink, be done with it on the short term,
+  and then adapt our scripts and programs one after the other?
+  
+* since 3.0~b4-1, `live-persistence.conf` was renamed to
+  `persistence.conf`, and upstream did not reply to
+  [our request for clarification and backward compat'](https://lists.debian.org/debian-live/2012/09/msg00163.html),
+  so we have to handle the transition ourselves, somehow:
+  1. Have tails-persistence-setup use the new filename.
+  1. Handle the migration (file move) at persistence activation time.
+
+[[!tag todo/code]]
