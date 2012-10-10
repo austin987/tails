@@ -246,6 +246,19 @@ steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
 * clone a repository over dumb transport (`git://`)
 * clone a repository over SSH
 
+# SSH
+
+* Connecting over SSH to a server on the Internet should work (and
+  appear in Vidalia's connections list).
+* Connecting (by IP) over SSH to a server on the LAN should work.
+* Connecting to a sftp server on the Internet using GNOME's "Connect
+  to a server" should work.
+
+# APT
+
+* Make sure APT is configured to point to ftp.us.debian.org.
+* Doing an apt-get update and installing random packages.
+
 # USB Installer/Upgrader
 
 The installed or upgraded Tails medium shall be successfully booted
@@ -328,49 +341,53 @@ that the theme resembles Windows XP, including:
   - make sure that its chroot gets properly teared down on exit (there
     should be nothing mounted inside `/var/lib/unsafe-browser`).
 
-# Misc
+# Real (non-VM) hardware
 
-* Set a sudo password in Tails Greeter and verify that it works.
-* Check that there are no weird applications listening to external
-  connections with `sudo netstat -ltupn` (everything should be
-  `127.0.0.1` (IPv4) or `::1` (IPv6)).
-* Browse a bit the documentation shipped in the image. Internal links
-  should be fine.
+* Boot on bare-metal on USB and DVD.
+* Measure boot time on some reference bare metal hardware, and compare
+  with previous version. The new one should not be significantly
+  slower to start.
+
+# Documentation
+
 * Check that links to the online website (`Mirror:`) at the bottom of
   bundled static web pages are working. Else, it probably means the
   wiki was not built with the needed patched ikiwiki version.
+* Browse around in the documentation shipped in the image. Internal
+  links should be fine.
+
+# Internationalization
+
+Boot and check basic functionality is working for every supported
+language.
+
+* The chosen keyboard layout must be applied.
+* The virtual keyboard must work and be auto-configured to
+  use the same keyboard layout as the X session.
+* The iceweasel search engine must be localized (for languages we
+  ship a localized searchplugin for).
+
+# Misc
+
+* Check that there are no weird applications listening to external
+  connections with `sudo netstat -ltupn` (everything should be
+  `127.0.0.1` (IPv4) or `::1` (IPv6)). Ignore:
+  - `cupsd`, which listens on `0.0.0.0:631` to detect network printers.
+  - `dhclient`, which listens on `0.0.0.0:68`.
 * Check that all seems well during init (mostly that all services
   start without errors), and that dmesg seems ok.
 * Boot without network connection, and then plug it in after
   some arbitrary time; Tor and Vidalia must be autostarted and end up
   in working state.
-* Doing an apt-get update and installing random packages.
-* Boot on bare-metal on USB and DVD.
-* Boot and check basic functionality is working for every supported
-  language.
-  - The chosen keyboard layout must be applied.
-  - The virtual keyboard must work and be auto-configured to
-    use the same keyboard layout as the X session.
-  - The iceweasel search engine must be localized (for languages we
-    ship a localized searchplugin for).
 * Try to start with the `truecrypt` option on boot, see if it can be found in
   the *Applications* → *Accessories* menu and that it runs correctly.
-* Connecting over SSH to a server on the Internet should work (and
-  appear in Vidalia's connections list).
-* Connecting (by IP) over SSH to a server on the LAN should work.
-* Connecting to a sftp server on the Internet using GNOME's "Connect
-  to a server" should work.
 * The `amnesia` user must be part of the following groups:
   `audio cdrom dialout floppy video plugdev netdev fuse debian-tor scanner lp lpadmin vboxsf`
-* Measure boot time on some reference bare metal hardware, and compare
-  with previous version. The new one should not be significantly
-  slower to start.
 * MAT should be able to clean a PDF file.
 * Running `getTorbuttonUserAgent` should produce the useragent set by the
   Torbutton version installed and used in Iceweasel.
 * Browsing (by hostname) a FTP server on the Internet should be
   possible using GNOME's *Connect to server* feature
   (once [[todo/fix Internet FTP support]] is fixed)
-* Make sure APT is configured to point to ftp.us.debian.org.
 * Make sure that Tails signing key in `/usr/share/keyrings/tails-keyring.gpg`
   is up-to-date.
