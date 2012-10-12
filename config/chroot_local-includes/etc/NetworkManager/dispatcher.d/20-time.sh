@@ -13,10 +13,11 @@
 TORDATE_DIR=/var/run/tordate
 TORDATE_DONE_FILE=${TORDATE_DIR}/done
 TOR_DIR=/var/lib/tor
-TOR_CONSENSUS=${TOR_DIR}/cached-consensus
-TOR_UNVERIFIED_CONSENSUS=${TOR_DIR}/unverified-consensus
+TOR_CONSENSUS=${TOR_DIR}/cached-microdesc-consensus
+TOR_UNVERIFIED_CONSENSUS=${TOR_DIR}/unverified-microdesc-consensus
 TOR_UNVERIFIED_CONSENSUS_HARDLINK=${TOR_UNVERIFIED_CONSENSUS}.bak
-TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
+TOR_DESCRIPTORS=${TOR_DIR}/cached-microdescs
+NEW_TOR_DESCRIPTORS=${TOR_DESCRIPTORS}.new
 INOTIFY_TIMEOUT=60
 DATE_RE='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
 VERSION_FILE=/etc/amnesia/version
@@ -65,7 +66,7 @@ notify_user() {
 }
 
 tor_is_working() {
-	[ -e $TOR_DESCRIPTORS ]
+	[ -e $TOR_DESCRIPTORS ] || [ -e $NEW_TOR_DESCRIPTORS ]
 }
 
 has_consensus() {

@@ -19,4 +19,5 @@ fi
 . /etc/live/config.d/username.conf
 export DISPLAY=':0.0'
 export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
+export XDG_DATA_DIRS=/usr/share/gnome:/usr/share/gdm/:/usr/local/share/:/usr/share/
 exec /bin/su -c iceweasel "${LIVE_USERNAME}" &
