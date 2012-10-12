@@ -39,22 +39,25 @@ The `feature/multikernel` branch (merged into `experimental`):
   appropriate sub-menu
 - tested on CPUs: 486, amd64, 686 without PAE
 - successfully run the Tails USB Installer with a `-686-pae` kernel
+- given up shipping an amd64 kernel, due to the VirtualBox bugs about
+  guest additions vs. 32-bit userspace + 64-bit kernel :(
+  * <https://www.virtualbox.org/ticket/11037>
+  * <https://www.virtualbox.org/ticket/8336>
+- memtest with 686-pae on 4GB RAM and more was tried: worse results
+  than with sdmem (2.5GB of the known pattern found after "wiping"
+  with memtest, vs. 1.5GB when using sdmem), so we're back to sdmem
+  (54c81c1 reverted)
 
 Next steps
 ----------
 
-0. heavily [[!taglink todo/test]] on bare metal, especially to see if
-   [[bugs/liveusb-creator_crashes_on_amd64_kernel]] affects systems
-   running the 686-pae kernel
-0. hopefully merge in time for Tails 0.14
+[[!taglink pending]] for Tails 0.14
 
 Possibly later
 --------------
 
-- check what good reasons could exist (or not) to ship an `-amd64`
-  kernel in addition to the `-686-pae` one [[!tag todo/research]]; if
-  there are, do it, and have the Tails USB Installer work with an
-  `amd64` kernel
+- [[todo/drop_486_kernel]]
+- [[todo/amd64_kernel]]
 
 Resources
 =========
