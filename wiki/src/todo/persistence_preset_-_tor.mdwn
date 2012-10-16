@@ -1,5 +1,9 @@
 [[!tag todo/code]]
 
+[[!toc levels=2]]
+
+# Big picture
+
 There are a few good reasons for making Tor's data dir persistent:
 
 1. Faster and less wasteful (in terms of bandwidth) bootstrap.
@@ -7,10 +11,17 @@ There are a few good reasons for making Tor's data dir persistent:
    persistent Entry Guards.
 3. Using Entry Guards makes it harder to detect that you're using Tails.
 
-Making `/var/lib/tor` persistent is enough for this, so we should make
-a preset for it, and it should be enabled by default.
+Making `/var/lib/tor` persistent is enough for this. We should
+probably make a preset for it. Should it be enabled by default?
 
-### Issues
+# Issues
+
+## Persistent entry guards vs. mobile users
+
+ using persistent Entry Guards may be problem for mobile users:
+<https://lists.torproject.org/pipermail/tor-talk/2012-October/025975.html>
+
+## Custom scripts relying on non-persistence
 
 Some of our scripts depend on that certain files in `/var/lib/tor` are
 not persistent, which has to be resolved before adding the preset:
