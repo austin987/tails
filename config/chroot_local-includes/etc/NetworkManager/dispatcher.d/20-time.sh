@@ -65,6 +65,16 @@ notify_user() {
 	exec /bin/su -c "notify-send ${timeout_args} \"${summary}\" \"${body}\"" "${LIVE_USERNAME}" &
 }
 
+# Only handles GETINFO keys with single-line answers
+tor_control_getinfo() {
+	COOKIE=/var/run/tor/control.authcookie
+	HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
+	echo "AUTHENTICATE ${HEXCOOKIE}\nGETINFO ${1}\nQUIT" | \
+	    sudo -u amnesia nc 127.0.0.1 9051 | grep -m 1 "^250-${1}=" | \
+	    # Note: we have to remove trailing CL+RF to not confuse the shell
+	    sed "s|^250-${1}=\(.*\)[[:space:]]\+$|\1|"
+}
+
 tor_is_working() {
 	[ -e $TOR_DESCRIPTORS ] || [ -e $NEW_TOR_DESCRIPTORS ]
 }
@@ -191,23 +201,36 @@ maybe_set_time_from_tor_consensus() {
 	restart_tor
 }
 
-release_date() {
-	# outputs something like 20111013
-	sed -n -e '1s/^.* - \([0-9]\+\)$/\1/p;q' "$VERSION_FILE"
+tor_cert_valid_after() {
+	grep -m 1 "certificate lifetime runs from" /var/log/tor/log | \
+	    sed 's/^.*certificate lifetime runs from \(.*\) through.*$/\1/'
 }
 
-is_clock_way_off() {
-	local release_date_secs="$(date -d "$(release_date)" '+%s')"
-	local current_date_secs="$(date '+%s')"
+tor_bootstrap_progress() {
+	tor_control_getinfo status/bootstrap-phase | \
+	    sed 's/^.* BOOTSTRAP PROGRESS=\([[:digit:]]\+\) .*$/\1/'
+}
 
-	if [ "$current_date_secs" -lt "$release_date_secs" ]; then
-	        log "Clock is before the release date"
-	        return 0
-	fi
-	if [ "$(($release_date_secs + 15552000))" -lt "$current_date_secs" ]; then
-	        log "Clock is more than 6 months after the release date"
-	        return 0
-	fi
+tor_cert_lifetime_invalid() {
+	grep -q "\[warn\] Certificate \(not yet valid\|already expired\)." \
+	    /var/log/tor/log
+}
+
+# This check is blocking until Tor reaches either of two states:
+# 1. Tor completes a handshake with an authority.
+# 2. Tor fails the handshake with all authorities.
+# Since 2 essentially is the negation of 1, one of them will happen,
+# so it won't block forever. Hence we shouldn't need a timeout.
+# FIXME: An exception would be if Tor has DisableNetwork=1, which we
+# will use once we fully support bridge mode, so we will have to
+# revisit this then.
+is_clock_way_off() {
+	until [ "$(tor_bootstrap_progress)" -gt 10 ]; do
+		if tor_cert_lifetime_invalid; then
+			return 0
+		fi
+		sleep 1
+	done
 	return 1
 }
 
@@ -226,16 +249,16 @@ start_notification_helper
 if tor_is_working; then
 	log "Tor has already opened a circuit"
 else
-	wait_for_tor_consensus
-	# It may be that all authority certificates look "expired" due to
-	# a clock far off into the future. In that case let's set the clock
-	# to the release date.
+	# Since Tor 0.2.3.x Tor doesn't download a consensus for
+	# clocks that are more than 30 days in the past or 2 days in
+	# the future.  For such clock skews we set the time to the
+	# authority's cert's valid-after date.
 	if is_clock_way_off; then
-		log "The clock looks very badly off. Setting system time to the release date, restarting Tor and fetching a new consensus..."
-		date --set="$(release_date)" > /dev/null
+		log "The clock is so badly off that Tor cannot download a consensus. Setting system time to the authority's cert's valid-after date and trying to fetch a consensus again..."
+		date --set="$(tor_cert_valid_after)" > /dev/null
 		service tor reload
-		wait_for_tor_consensus
 	fi
+	wait_for_tor_consensus
 	maybe_set_time_from_tor_consensus
 fi
 
