@@ -12,6 +12,7 @@
 
 TORDATE_DIR=/var/run/tordate
 TORDATE_DONE_FILE=${TORDATE_DIR}/done
+TOR_LOG=/var/log/tor/log
 TOR_DIR=/var/lib/tor
 TOR_CONSENSUS=${TOR_DIR}/cached-microdesc-consensus
 TOR_UNVERIFIED_CONSENSUS=${TOR_DIR}/unverified-microdesc-consensus
@@ -65,6 +66,7 @@ notify_user() {
 	exec /bin/su -c "notify-send ${timeout_args} \"${summary}\" \"${body}\"" "${LIVE_USERNAME}" &
 }
 
+# This function may be dangerous to use. See "Potential Tor bug" below.
 # Only handles GETINFO keys with single-line answers
 tor_control_getinfo() {
 	COOKIE=/var/run/tor/control.authcookie
@@ -202,18 +204,26 @@ maybe_set_time_from_tor_consensus() {
 }
 
 tor_cert_valid_after() {
-	grep -m 1 "certificate lifetime runs from" /var/log/tor/log | \
+	grep -m 1 "certificate lifetime runs from" ${TOR_LOG} | \
 	    sed 's/^.*certificate lifetime runs from \(.*\) through.*$/\1/'
 }
 
+# Potential Tor bug: it seems like using this version makes Tor get
+# stuck at "Bootstrapped 5%" quite often. Is Tor sensitive to opening
+# control ports and/or issuing "getinfo status/bootstrap-phase" during
+# early bootstrap? Because of this we fallback to greping the log.
+#tor_bootstrap_progress() {
+#	tor_control_getinfo status/bootstrap-phase | \
+#	    sed 's/^.* BOOTSTRAP PROGRESS=\([[:digit:]]\+\) .*$/\1/'
+#}
 tor_bootstrap_progress() {
-	tor_control_getinfo status/bootstrap-phase | \
-	    sed 's/^.* BOOTSTRAP PROGRESS=\([[:digit:]]\+\) .*$/\1/'
+	grep -o "\[notice\] Bootstrapped [[:digit:]]\+%:" ${TOR_LOG} | \
+	    tail -n1 | sed "s|\[notice\] Bootstrapped \([[:digit:]]\+\)%:|\1|"
 }
 
 tor_cert_lifetime_invalid() {
 	grep -q "\[warn\] Certificate \(not yet valid\|already expired\)." \
-	    /var/log/tor/log
+	    ${TOR_LOG}
 }
 
 # This check is blocking until Tor reaches either of two states:
