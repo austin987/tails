@@ -11,11 +11,32 @@ without any additional package installed *but* only when executing gnupg as
 root. It seems there is a permission issue, as discussed on tails-dev (see
 below).
 
-> See commit f29ce64272 in Liberté Linux' Git.
+This is despite the fact that the `amnesia` user actually has proper access
+(through an ACL) to the USB device:
+
+    $ lsusb | grep SCM
+    Bus 002 Device 004: ID 04e6:5115 SCM Microsystems, Inc. SCR335 SmartCard Reader
+    $ getfacl -a /dev/bus/usb/002/004
+    # file: dev/bus/usb/002/004
+    # owner: root
+    # group: root
+    user::rw-
+    user:amnesia:rw-
+
+It looks like the problem is related to Seahorse: commenting `use-agent` in
+`~/gnupg/gpg.conf` will enable GnuPG to use the card without extra permissions.
+One can also call the following:
+
+    GPG_AGENT_INFO= gpg --card-status
+
+This is tracked as <https://bugzilla.gnome.org/show_bug.cgi?id=530439>, no
+progress since 2008.
 
 Tester: <alan@boum.org>
 
 Hardware: USB 04e6:5115 SCM Microsystems, Inc. SCR335 SmartCard Reader
+
+> See commit f29ce64272 in Liberté Linux' Git.
 
 ## Test 1
 
