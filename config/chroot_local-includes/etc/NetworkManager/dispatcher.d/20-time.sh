@@ -225,6 +225,10 @@ tor_bootstrap_progress() {
 }
 
 tor_cert_lifetime_invalid() {
+	# Since we only check for existence of such a line, we may
+	# find a match here when it's not relevant. A fix would be
+	# to clear the Tor log each time it starts in order to
+	# ensure that everything in the log are currently relevant.
 	grep -q "\[warn\] Certificate \(not yet valid\|already expired\)." \
 	    ${TOR_LOG}
 }
