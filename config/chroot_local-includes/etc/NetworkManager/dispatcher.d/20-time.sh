@@ -206,8 +206,9 @@ maybe_set_time_from_tor_consensus() {
 }
 
 tor_cert_valid_after() {
-	grep -m 1 "certificate lifetime runs from" ${TOR_LOG} | \
-	    sed 's/^.*certificate lifetime runs from \(.*\) through.*$/\1/'
+	# Only print the last = freshest match
+	sed -n 's/^.*certificate lifetime runs from \(.*\) through.*$/\1/p' \
+	    ${TOR_LOG} | tail -n 1
 }
 
 # Potential Tor bug: it seems like using this version makes Tor get
