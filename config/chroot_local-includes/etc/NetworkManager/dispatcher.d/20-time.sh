@@ -68,6 +68,8 @@ notify_user() {
 
 # This function may be dangerous to use. See "Potential Tor bug" below.
 # Only handles GETINFO keys with single-line answers
+# FIXME: If we end up using this, let's give root access to Tor's control
+# port instead of relying on sudo.
 tor_control_getinfo() {
 	COOKIE=/var/run/tor/control.authcookie
 	HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
