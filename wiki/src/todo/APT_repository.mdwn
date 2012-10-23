@@ -51,15 +51,17 @@ Left to do
     meantime, we upload to `reprepro@incoming.t.b.o`, but it would
     be a bit nicer to deal with that in a better way, some day.
 * test basic operations to check that suite are in the supported set:
-  - copy all sid -> devel -- **TODO**
-  - copy all sid -> doc-donate -- **TODO**
-  - copy all sid -> bugfix-boot-profile-vs-live-rofs -- **TODO**
-  - copy all sid -> 0.11 -- **TODO** (should ignore the pull request,
-    as 0.11 was already released)
+  - tails-merge-suite sid -> 0.11 -- **??** (`tails-merge-suite`
+    should maybe prevent us from doing that, as 0.11 was released
+    already; however, we do need to do this copy to build the 0.11
+    ISO, so a --force switch would have to be provided)
+  - tails-merge-suite branch with long/complicated name -> devel **OK**
+  - tails-merge-suite sid -> devel -- **OK**
+  - tails-merge-suite sid -> doc-donate -- **OK**
+  - tails-merge-suite sid -> bugfix-boot-profile-vs-live-rofs -- **OK**
   - list suite with long/complicated name **OK**
   - manually import a package into branch with long/complicated name **OK**
   - let inotincoming import a package into branch with long/complicated name **OK**
-  - copy all branch with long/complicated name -> devel **TODO**
 * import binary and source packages from our Git repository:
   - currently used branches
   - past releases... at least the most recent ones, depending on how
@@ -180,22 +182,18 @@ Example:
 	$ git checkout devel
 	$ git merge feature/icedove
 	$ ssh incoming.deb.tails.boum.org \
-	     sudo -u reprepro reprepro XXX
+	     sudo -u reprepro reprepro tails-merge-suite feature/icedove devel
 	$ git push
 
-Given *pull* does not work for us, we should [[!taglink todo/test]]
-the [grml
-way](https://github.com/grml/grml-infrastructure/blob/master/repo-cookbook)
-to copy all packages from one suite to another:
+**FIXME**: I think I had to `retrack` after importing a package, who
+knows why, so that `reprepro dumptracks` (called by
+`tails-merge-suite`) outputs anything and the suite merge process
+works. Should be retried and fixed. [[!tag todo/sysadmin]]
 
-	$ reprepro dumptracks grml-testing  | \
-	  awk '/ pool\/.*\/.*\.deb/ {print $1}' | \
-	  xargs -n 1 basename | cut -d _ -f 1 | \
-	  sort -u | xargs reprepro copy grml-test grml-testing
-
-Note: unfortunately, the reprepro operation called *pull* is not what
-we want: it pulls from *all* other suites into the ones specified on
-the command-line.
+Note that unfortunately, contrary to what whoever with a Git
+background would guess, the reprepro operation called *pull* is not
+what we want: it pulls from *all* other suites into the ones specified
+on the command-line.
 
 Freezing devel into testing
 ---------------------------
