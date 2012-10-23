@@ -112,6 +112,34 @@ setup_chroot () {
     error "`gettext \"Failed to setup chroot.\"`"
 }
 
+set_chroot_browser_name () {
+    NAME="${1}"
+    SHORT=$(echo ${LANG} | cut -b1-2)
+    LONG=$(echo ${LANG} | cut -b1-5 | tr _ -)
+    EXT_DIR=${CHROOT}/usr/lib/iceweasel/extensions
+    BRANDING=branding/brand.dtd
+    if [ -e "${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi" ]; then
+        PACK="${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi"
+        TOP=chrome
+        REST=${SHORT}/locale
+    elif [ -e "${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi" ]; then
+        PACK="${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi"
+        TOP=chrome
+        REST=${LONG}/locale
+    else
+        PACK=${CHROOT}/usr/share/iceweasel/chrome/en-US.jar
+        TOP=locale
+        REST=
+    fi
+
+    TMP=$(mktemp -d)
+    7z x "${PACK}" -o"${TMP}"
+    sed -i "s/Iceweasel/${NAME}/" "${TMP}"/"${TOP}"/"${REST}"/"${BRANDING}"
+    7z u -tzip "${PACK}" "${TMP}"/"${TOP}"
+    chmod a+r "${PACK}"
+    rm -Rf "${TMP}"
+}
+
 configure_chroot () {
     echo "* Configuring chroot"
 
@@ -141,6 +169,9 @@ EOF
             ${CHROOT}//etc/live/config.d/username.conf
         chroot ${CHROOT} tails-activate-winxp-theme
     fi
+
+    # Set the name (e.g. window title) of the browser
+    set_chroot_browser_name "`gettext \"Unsafe Browser\"`"
 
     # Set start page to something that explains what's going on
     echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
