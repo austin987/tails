@@ -115,6 +115,20 @@ when...
 Importing a new package
 -----------------------
 
+### Building a package
+
+Make sure the `Distribution:` field in your `.changes` file matches
+the suite you want the package to land in (e.g.
+pass `--changes-option=-DDistribution=feature-torbrowser` to
+pdebuild's `--debbuildopts`).
+
+Make sure to have the `.changes` file include the original source
+archive (`.orig.tar.{gz,bz2,xz}`) if it is not already in our APT
+repository; this can be done by passing `-sa` to pdebuild's
+`--debbuildopts`.
+
+### Configuring dupload
+
 Add this configuration snippet to your `dupload` configuration:
 
 	$config::cfg{'tails'} = {
@@ -126,13 +140,13 @@ Add this configuration snippet to your `dupload` configuration:
 
 (`dput` lovers, please contribute your own snippet.)
 
+### Uploading and importing process
+
 Carefully prepare and build your package. Usual precautions, (Lintian
 etc.) apply.
 
-Make sure the `Distribution:` field in your `.changes` file matches
-the suite you want the package to land in (e.g.
-pass `--changes-option=-DDistribution=feature-torbrowser` to
-pdebuild's `--debbuildopts`).
+Carefully check the `.changes` file (especially the `Distribution`
+control field, and the included files list).
 
 Sign the `.changes` file with a key that is in the uploaders list:
 
