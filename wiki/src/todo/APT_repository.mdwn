@@ -44,6 +44,12 @@ Left to do
 
 * Allow importing packages, creating new suites, merging, freezing,
   etc.; see the *Documentation* section bellow.
+  - reprepro's incoming directory: whatever ACL and umask I set,
+    dupload with scp backend, connecting to a non-reprepro user on the
+    APT repo box, puts files in there that are not writable by the
+    reprepro user, so `reprepro processincoming` fails. In the
+    meantime, we upload to `reprepro@incoming.t.b.o`, but it would
+    be a bit nicer to deal with that in a better way, some day.
 * test basic operations to check that suite and pull names are in the
   supported set:
   - pull sid -> devel -- imports **OK**
@@ -134,6 +140,7 @@ Add this configuration snippet to your `dupload` configuration:
 	$config::cfg{'tails'} = {
 	        fqdn => "incoming.deb.tails.boum.org",
 	        method => "scp",
+	        login => "reprepro",
 	        incoming => "/srv/reprepro/incoming/",
 	        dinstall_runs => 1,
 	};
