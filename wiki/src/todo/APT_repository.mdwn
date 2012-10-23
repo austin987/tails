@@ -50,17 +50,16 @@ Left to do
     reprepro user, so `reprepro processincoming` fails. In the
     meantime, we upload to `reprepro@incoming.t.b.o`, but it would
     be a bit nicer to deal with that in a better way, some day.
-* test basic operations to check that suite and pull names are in the
-  supported set:
-  - pull sid -> devel -- imports **OK**
-  - pull sid -> doc-donate -- imports **OK**
-  - pull sid -> bugfix-boot-profile-vs-live-rofs -- imports **OK**
-  - pull sid -> 0.11 -- ignores **OK** (ignores the pull request, as 0.11
-    was already released)
+* test basic operations to check that suite are in the supported set:
+  - copy all sid -> devel -- **TODO**
+  - copy all sid -> doc-donate -- **TODO**
+  - copy all sid -> bugfix-boot-profile-vs-live-rofs -- **TODO**
+  - copy all sid -> 0.11 -- **TODO** (should ignore the pull request,
+    as 0.11 was already released)
   - list suite with long/complicated name **OK**
   - manually import a package into branch with long/complicated name **OK**
   - let inotincoming import a package into branch with long/complicated name **OK**
-  - pull branch with long/complicated name -> devel **OK**
+  - copy all branch with long/complicated name -> devel **TODO**
 * import binary and source packages from our Git repository:
   - currently used branches
   - past releases... at least the most recent ones, depending on how
@@ -174,34 +173,29 @@ Merging a topic branch
 ----------------------
 
 When a Git *topic* branch is merged into a *main* branch, the
-corresponding similar operation must be done on the APT suites; in
-reprepro terminology, this operation is called a *pull*.
-
-Check the pull would do what you want:
-
-	$ reprepro checkpull $DEST_SUITE $SRC_SUITE
-
-Do the actual pull:
-
-	$ reprepro pull $DEST_SUITE $SRC_SUITE
+corresponding similar operation must be done on the APT suites.
 
 Example:
 
 	$ git checkout devel
 	$ git merge feature/icedove
 	$ ssh incoming.deb.tails.boum.org \
-	     sudo -u reprepro reprepro pull devel feature-icedove
+	     sudo -u reprepro reprepro XXX
 	$ git push
 
-Note: if pull reveals itself to be impractical, the [grml
+Given *pull* does not work for us, we should [[!taglink todo/test]]
+the [grml
 way](https://github.com/grml/grml-infrastructure/blob/master/repo-cookbook)
-can be a valid alternative: they don't use reprepro pull feature, but
-instead copy all packages from one suite to another with a small hack:
+to copy all packages from one suite to another:
 
 	$ reprepro dumptracks grml-testing  | \
 	  awk '/ pool\/.*\/.*\.deb/ {print $1}' | \
 	  xargs -n 1 basename | cut -d _ -f 1 | \
 	  sort -u | xargs reprepro copy grml-test grml-testing
+
+Note: unfortunately, the reprepro operation called *pull* is not what
+we want: it pulls from *all* other suites into the ones specified on
+the command-line.
 
 Freezing devel into testing
 ---------------------------
