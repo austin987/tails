@@ -1,11 +1,11 @@
-... including:
-
 [[!toc levels=1]]
+
+See the [[release_schedule]].
 
 Select the right branch
 =======================
 
-For a major release, the `devel` branch should be merged in the `testing`
+For a major release, the `devel` branch should be merged into the `testing`
 branch and changes should be made from there.
 
 From minor releases, work should happen in `stable`.
@@ -42,9 +42,14 @@ See [[contribute/design/I2P]].
 upgrade bundled binary Debian packages
 --------------------------------------
 
-Make sure the bundles binary Debian packages are up-to-date,
-particularly wrt. included localization files. See the relevant
-release processes:
+That is: make sure the bundles binary Debian packages contain
+up-to-date localization files.
+
+For each bundled Debian package, get updated PO files from the
+Transifex branches of `git://git.torproject.org/translation.git` (e.g.
+`whisperback_completed`). Verify and commit.
+
+Then see the relevant release processes:
 
 * [[liveusb-creator]]
 * [[tails-greeter]]
@@ -94,7 +99,8 @@ Merge the `master` branch into the one used to build the release.
 In the branch used to build the release, update the `inc/*` files to
 match the *version number* and *date* of the new release. *Set the date
 at least 24 hours in the future! Between tests and mirror synchronisation,
-the build will not be released on the same day.*
+the build will not be released on the same day.* Try to make sure it
+matches the date of the future signature.
 
 ### features and design documentation
 
@@ -134,7 +140,7 @@ page|release_process/test]].
 Tag the release in Git
 ======================
 
-	git tag -u BE2CD9C1 -m "tagging version ${NEW_VERSION}" "${NEW_VERSION}"
+	git tag -u 1202821CBE2CD9C1 -m "tagging version ${NEW_VERSION}" "${NEW_VERSION}"
 
 Generate the Torrents
 =====================
@@ -152,7 +158,7 @@ convention e.g.:
 Third, generate detached GnuPG signatures for every published image,
 in the same directory as the image and with a `.pgp` extension; e.g.
 
-	gpg --armor --default-key BE2CD9C1 --detach-sign *.iso
+	gpg --armor --default-key 1202821CBE2CD9C1 --detach-sign *.iso
 	rename 's,\.asc$,.pgp,' *.asc
 
 Fourth, create a `.torrent` file for every directory to be published:
@@ -168,7 +174,7 @@ unwanted information.
 Sixth, generate detached GnuPG signatures for every published
 `.torrent` file:
 
-	gpg --armor --default-key BE2CD9C1 --detach-sign \
+	gpg --armor --default-key 1202821CBE2CD9C1 --detach-sign \
 	  tails-i386-0.7.torrent
 	rename 's,\.asc$,.pgp,' *.asc
 

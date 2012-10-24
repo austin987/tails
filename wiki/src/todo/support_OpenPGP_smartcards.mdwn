@@ -11,11 +11,46 @@ without any additional package installed *but* only when executing gnupg as
 root. It seems there is a permission issue, as discussed on tails-dev (see
 below).
 
-> See commit f29ce64272 in Liberté Linux' Git.
+This is despite the fact that the `amnesia` user actually has proper access
+(through an ACL) to the USB device:
+
+    $ lsusb | grep SCM
+    Bus 002 Device 004: ID 04e6:5115 SCM Microsystems, Inc. SCR335 SmartCard Reader
+    $ getfacl -a /dev/bus/usb/002/004
+    # file: dev/bus/usb/002/004
+    # owner: root
+    # group: root
+    user::rw-
+    user:amnesia:rw-
+
+It looks like the problem is related to Seahorse: commenting `use-agent` in
+`~/gnupg/gpg.conf` will enable GnuPG to use the card without extra permissions.
+One can also call the following:
+
+    GPG_AGENT_INFO= gpg --card-status
+
+This is tracked as <https://bugzilla.gnome.org/show_bug.cgi?id=530439>, no
+progress since 2008.
 
 Tester: <alan@boum.org>
 
+Hardware: USB 04e6:5115 SCM Microsystems, Inc. SCR335 SmartCard Reader
+
+> See commit f29ce64272 in Liberté Linux' Git.
+
 ## Test 1
+
+gemalto USB shell token v2:
+<http://shop.kernelconcepts.de/product_info.php?products_id=119>
+
+	lsusb:
+	  Bus 001 Device 005: ID 08e6:3438 Gemplus GemPC Key SmartCard Reader
+
+	gpg --card-status:
+	  gpg: detected reader `Gemalto GemPC Key 00 00'
+	  Application ID ...: D2760001240102000005000014DA0000
+	  Version ..........: 2.0
+	  Manufacturer .....: ZeitControl
 
 What kind of additional software is needed?
 
@@ -40,6 +75,33 @@ reader) that is popularly used with OpenPGP cards.
 
 >> The user credentials issues are discussed on tails-dev:
 >> <CALSDXiB1VWcEQ-BxJzXF95_mPg_UyHL6b83wXCGQz-a2hMvAYA@mail.gmail.com>
+
+Testers: Patrick Bx <patrickbx@gmail.com>
+
+## Test 2
+
+gemalto USB shell token v2 (see details in test #1)
+
+### with pcscd installed
+
+* can't use the card as a non-root user
+* can use the card as a non-root user who is a member of the `pcscd` group
+* can use the card as root
+
+### without pcscd, without gnupg-pkcs11-scd
+
+* can't use the card as a non-root user
+* can't use the card as a non-root user who is a member of the
+  `pcscd` group
+* can't use the card as root
+
+### without pcscd, with gnupg-pkcs11-scd
+
+adding a line containing:
+
+`scdaemon-program /usr/bin/gnupg-pkcs11-scd`  to `~/.gnupg/gpg-agent.conf`
+
+=> does not help, but perhaps it was not setup correctly.
 
 Testers: Patrick Bx <patrickbx@gmail.com>
 
