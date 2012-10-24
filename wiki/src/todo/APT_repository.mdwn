@@ -44,8 +44,24 @@ Left to do
 
 * Allow importing packages, creating new suites, merging, freezing,
   etc.; see the *Documentation* section bellow.
-* test basic operations to check suite and pull names are in the
-  supported set, and multiple pulls in the `Pull:` field are supported
+  - reprepro's incoming directory: whatever ACL and umask I set,
+    dupload with scp backend, connecting to a non-reprepro user on the
+    APT repo box, puts files in there that are not writable by the
+    reprepro user, so `reprepro processincoming` fails. In the
+    meantime, we upload to `reprepro@incoming.t.b.o`, but it would
+    be a bit nicer to deal with that in a better way, some day.
+* test basic operations to check that suite are in the supported set:
+  - tails-merge-suite sid -> 0.11 -- **??** (`tails-merge-suite`
+    should maybe prevent us from doing that, as 0.11 was released
+    already; however, we do need to do this copy to build the 0.11
+    ISO, so a --force switch would have to be provided)
+  - tails-merge-suite branch with long/complicated name -> devel **OK**
+  - tails-merge-suite sid -> devel -- **OK**
+  - tails-merge-suite sid -> doc-donate -- **OK**
+  - tails-merge-suite sid -> bugfix-boot-profile-vs-live-rofs -- **OK**
+  - list suite with long/complicated name **OK**
+  - manually import a package into branch with long/complicated name **OK**
+  - let inotincoming import a package into branch with long/complicated name **OK**
 * import binary and source packages from our Git repository:
   - currently used branches
   - past releases... at least the most recent ones, depending on how
@@ -106,22 +122,39 @@ when...
 Importing a new package
 -----------------------
 
+### Building a package
+
+Make sure the `Distribution:` field in your `.changes` file matches
+the suite you want the package to land in (e.g.
+pass `--changes-option=-DDistribution=feature-torbrowser` to
+pdebuild's `--debbuildopts`).
+
+Make sure to have the `.changes` file include the original source
+archive (`.orig.tar.{gz,bz2,xz}`) if it is not already in our APT
+repository; this can be done by passing `-sa` to pdebuild's
+`--debbuildopts`.
+
+### Configuring dupload
+
 Add this configuration snippet to your `dupload` configuration:
 
 	$config::cfg{'tails'} = {
 	        fqdn => "incoming.deb.tails.boum.org",
 	        method => "scp",
+	        login => "reprepro",
 	        incoming => "/srv/reprepro/incoming/",
 	        dinstall_runs => 1,
 	};
 
 (`dput` lovers, please contribute your own snippet.)
 
+### Uploading and importing process
+
 Carefully prepare and build your package. Usual precautions, (Lintian
 etc.) apply.
 
-Make sure the `Distribution:` field in your `.changes` file matches
-the suite you want the package to land in.
+Carefully check the `.changes` file (especially the `Distribution`
+control field, and the included files list).
 
 Sign the `.changes` file with a key that is in the uploaders list:
 
@@ -142,43 +175,35 @@ Merging a topic branch
 ----------------------
 
 When a Git *topic* branch is merged into a *main* branch, the
-corresponding similar operation must be done on the APT suites; in
-reprepro terminology, this operation is called a *pull*.
-
-Check the pull would do what you want:
-
-	$ reprepro checkpull $DEST_SUITE $SRC_SUITE
-
-Do the actual pull:
-
-	$ reprepro pull $DEST_SUITE $SRC_SUITE
+corresponding similar operation must be done on the APT suites.
 
 Example:
 
 	$ git checkout devel
 	$ git merge feature/icedove
 	$ ssh incoming.deb.tails.boum.org \
-	     sudo -u reprepro reprepro pull devel feature-icedove
+	     sudo -u reprepro reprepro tails-merge-suite feature/icedove devel
 	$ git push
 
-Note: if pull reveals itself to be impractical, the [grml
-way](https://github.com/grml/grml-infrastructure/blob/master/repo-cookbook)
-can be a valid alternative: they don't use reprepro pull feature, but
-instead copy all packages from one suite to another with a small hack:
+**FIXME**: I think I had to `retrack` after importing a package, who
+knows why, so that `reprepro dumptracks` (called by
+`tails-merge-suite`) outputs anything and the suite merge process
+works. Should be retried and fixed. [[!tag todo/sysadmin]]
 
-	$ reprepro dumptracks grml-testing  | \
-	  awk '/ pool\/.*\/.*\.deb/ {print $1}' | \
-	  xargs -n 1 basename | cut -d _ -f 1 | \
-	  sort -u | xargs reprepro copy grml-test grml-testing
+Note that unfortunately, contrary to what whoever with a Git
+background would guess, the reprepro operation called *pull* is not
+what we want: it pulls from *all* other suites into the ones specified
+on the command-line.
 
 Freezing devel into testing
 ---------------------------
 
 1. Merge `devel` branch into `testing` in Git
-2. Hard reset `testing` suite to the current state of the `devel`
-   suite (**FIXME**: how? delete with `removematched codename glob`
-   and then copy? -- beware:  do the `*matched` commands act on source
-   + binary?)
+2. Either merge the `devel` APT suite into the `testing` one, **or**
+   hard reset `testing` suite to the current state of the `devel`
+   suite? (If the latter: how? delete with `removematched codename
+   glob` and then copy? -- beware:  do the `*matched` commands act on
+   source + binary?)
 
 Releasing a point-release
 -------------------------
@@ -199,6 +224,17 @@ Post-release
 
 After merging stable or testing into devel, e.g. increment the version
 number in devel's `debian/changelog`.
+
+Giving access to a core developer
+---------------------------------
+
+1. Give SSH access to the `reprepro` user on the system that hosts
+   reprepro (using the `ssh_authorized_key` Puppet resource).
+2. Import the developer's public GnuPG key into the `reprepro` user's
+   GnuPG keyring -- should be doable using Puppet, some day
+   [[!tag todo/sysadmin]]
+3. Add the developer's OpenPGP key ID to `$reprepro_uploaders` in our
+   `tails::reprepro` Puppet module. Deploy.
 
 Contributing without privileged access
 --------------------------------------

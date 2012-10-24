@@ -53,7 +53,9 @@ Check the image size has not changed much since the last release.
 * Entering `about:plugins` in the location bar should say no plugin is
   installed.
 * Does playing HTML5 videos work? In particular, (due to its popularity)
-  do [youtube](http://www.youtube.com) videos work?
+  do [youtube](http://www.youtube.com) videos work (once
+  [[todo/easier YouTube]] is fixed -- currently object unblocking in
+  NoScript is required)?
 
 # Pidgin
 
@@ -89,7 +91,7 @@ Check the image size has not changed much since the last release.
 * verify that all destinations reached from an intensive Tails session
   are tor routers or authorities: Boot Tails without the network
   in. Start dumping your whole session's network activity with `sudo
-  tcpdump -i any -w dump` (or better, do the dump on another machine,
+  tcpdump -n -i any -w dump` (or better, do the dump on another machine,
   or on the host OS if Tails is running in a VM). Next, plug the
   network and do *a lot* of network stuff (why not run do this while
   doing all the other tests?). Then check that all destinations,
@@ -97,22 +99,33 @@ Check the image size has not changed much since the last release.
 
 (ignore this line, ikiwiki is buggy...)
 
-    DESCRIPTORS=/var/lib/tor/cached-descriptors
+    # set DUMP to the output of tcpdump above
+    DUMP=dump
+    # set CONSENSUS to Tor's consensus from the Tails session
+    CONSENSUS=cached-consensus
+    NODES=$(mktemp)
+    # FIXME: In practice the "CSV List of All Current Tor Server IP Addresses"
+    # from e.g. https://torstatus.blutmagie.de works better (less false
+    # positives) as NODES but we need to download it with authentication.
+    # wget https://torstatus.blutmagie.de/ip_list_all.php/Tor_ip_list_ALL.csv \
+    # -O ${NODES}
+    awk '/^r / { print $7 }' ${CONSENSUS} > ${NODES}
     # Note that these default directory authorities may change! To be
     # sure, check in Tor's source, src/or/config.c:~900
     DIR_AUTHS="
     128.31.0.39 86.59.21.38 194.109.206.212 82.94.251.203 216.224.124.114
     212.112.245.170 193.23.244.244 208.83.223.34 213.115.239.118"
-    tshark -r dump -T fields -e ip.dst | sort | uniq | \
+    tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
     while read x; do
         ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
-        if echo ${DIR_AUTHS} | grep -qe ${ip_expr}; then
+        if echo ${DIR_AUTHS} | grep -qe "${ip_expr}"; then
             continue
         fi
-        if ! grep -qe "^router [^ ]\+ ${ip_expr}" ${DESCRIPTORS}; then
+        if ! grep -qe "^${ip_expr}$" ${NODES}; then
             echo "${x} is bad"
         fi
     done
+    rm ${NODES}
 
   Note that this script will produce some false positives, like your
   gateway, broadcasts, etc. Also note that running I2P during these
@@ -153,8 +166,13 @@ features properly do their work; second, our `torrc` sets the right
 
 # Claws
 
-* Check mail over IMAP.
-* Send an email.
+* Check mail over IMAP using:
+  - a "clearnet" IMAP server.
+  - a hidden service IMAP server (e.g. TorMail, jhiwjjlqpyawmpjx.onion, or
+    RiseUp, xyvp43vrggckj427.onion).
+* Send an email using:
+  - a "clearnet" SMTP server.
+  - a hidden service SMTP server (see above).
 * Check that the profile works and is torified (specifically the
   EHLO/HELO SMTP messages it sends). Send an email using Claws and a
   non-anonymizing SMTP relay. Then check that email's headers once
@@ -165,7 +183,7 @@ features properly do their work; second, our `torrc` sets the right
   avoid using the transparent proxy (which will confuse tcpdump).
   Disable SSL/TLS for SMTP in Claws (so take precautions for not
   leaking your password in plaintext by either changing it temporarily
-  or using a disposable account). Then run `sudo tcpdump -i lo -w
+  or using a disposable account). Then run `sudo tcpdump -n -i lo -w
   dump` to capture the packets before Tor encrypts it, and check the
   dump for the HELO/EHLO message and verify that it only contains
   `localhost`.
@@ -193,15 +211,12 @@ the Seahorse GUI:
 
 # Time
 
-
-
-1. `sudo rm /var/run/htpdate/success /var/run/tordate/done /var/lib/tor/cached-descriptors`
-2. disconnect the network cable
-3. set the time to an obviously wrong one :
+1. Boot Tails without a network cable connected (i.e. no network on boot).
+2. set the time to an obviously wrong one:
 
            date --set="Mon, 01 Mar 2000 15:45:34 - 0800"
 
-4. connect the network cable
+3. connect the network cable
 
 => the date should be corrected and Tor/Vidalia should start
 correctly.
@@ -256,6 +271,19 @@ steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 * clone a repository over dumb transport (`git://`)
 * clone a repository over SSH
+
+# SSH
+
+* Connecting over SSH to a server on the Internet should work (and
+  appear in Vidalia's connections list).
+* Connecting (by IP) over SSH to a server on the LAN should work.
+* Connecting to a sftp server on the Internet using GNOME's "Connect
+  to a server" should work.
+
+# APT
+
+* Make sure APT is configured to point to ftp.us.debian.org.
+* Doing an apt-get update and installing random packages.
 
 # USB Installer/Upgrader
 
@@ -328,10 +356,10 @@ that the theme resembles Windows XP, including:
   - the start page makes it clear that this is the Unsafe Web Browser.
   - the iceweasel instance is run as the `clearnet` user.
   - it has no proxy configured and gets a direct Internet connection.
-  - configuring Tor or polipo as a proxy results doesn't work (shuld
-    result in "The proxy server is refusing connections")
-  - AdBlock Plus and HTTPS-Everywhere are the only installed
-    extensions.
+  - configuring any of Tor's SocksPorts or polipo as a proxy
+    shouldn't work (should result in "The proxy server is refusing
+    connections")
+  - no extensions are installed.
   - there are no bookmarks.
   - the default search engine is Wikipedia.
 * On exit, check that:
@@ -339,49 +367,53 @@ that the theme resembles Windows XP, including:
   - make sure that its chroot gets properly teared down on exit (there
     should be nothing mounted inside `/var/lib/unsafe-browser`).
 
-# Misc
+# Real (non-VM) hardware
 
-* Set a sudo password in Tails Greeter and verify that it works.
-* Check that there are no weird applications listening to external
-  connections with `sudo netstat -ltupn` (everything should be
-  `127.0.0.1` (IPv4) or `::1` (IPv6)).
-* Browse a bit the documentation shipped in the image. Internal links
-  should be fine.
+* Boot on bare-metal on USB and DVD.
+* Measure boot time on some reference bare metal hardware, and compare
+  with previous version. The new one should not be significantly
+  slower to start.
+
+# Documentation
+
 * Check that links to the online website (`Mirror:`) at the bottom of
   bundled static web pages are working. Else, it probably means the
   wiki was not built with the needed patched ikiwiki version.
+* Browse around in the documentation shipped in the image. Internal
+  links should be fine.
+
+# Internationalization
+
+Boot and check basic functionality is working for every supported
+language.
+
+* The chosen keyboard layout must be applied.
+* The virtual keyboard must work and be auto-configured to
+  use the same keyboard layout as the X session.
+* The iceweasel search engine must be localized (for languages we
+  ship a localized searchplugin for).
+
+# Misc
+
+* Check that there are no weird applications listening to external
+  connections with `sudo netstat -ltupn` (everything should be
+  `127.0.0.1` (IPv4) or `::1` (IPv6)). Ignore:
+  - `cupsd`, which listens on `0.0.0.0:631` to detect network printers.
+  - `dhclient`, which listens on `0.0.0.0:68`.
 * Check that all seems well during init (mostly that all services
   start without errors), and that dmesg seems ok.
 * Boot without network connection, and then plug it in after
   some arbitrary time; Tor and Vidalia must be autostarted and end up
   in working state.
-* Doing an apt-get update and installing random packages.
-* Boot on bare-metal on USB and DVD.
-* Boot and check basic functionality is working for every supported
-  language.
-  - The chosen keyboard layout must be applied.
-  - The virtual keyboard must work and be auto-configured to
-    use the same keyboard layout as the X session.
-  - The iceweasel search engine must be localized (for languages we
-    ship a localized searchplugin for).
 * Try to start with the `truecrypt` option on boot, see if it can be found in
   the *Applications* → *Accessories* menu and that it runs correctly.
-* Connecting over SSH to a server on the Internet should work (and
-  appear in Vidalia's connections list).
-* Connecting (by IP) over SSH to a server on the LAN should work.
-* Connecting to a sftp server on the Internet using GNOME's "Connect
-  to a server" should work.
 * The `amnesia` user must be part of the following groups:
   `audio cdrom dialout floppy video plugdev netdev fuse debian-tor scanner lp lpadmin vboxsf`
-* Measure boot time on some reference bare metal hardware, and compare
-  with previous version. The new one should not be significantly
-  slower to start.
 * MAT should be able to clean a PDF file.
 * Running `getTorbuttonUserAgent` should produce the useragent set by the
   Torbutton version installed and used in Iceweasel.
 * Browsing (by hostname) a FTP server on the Internet should be
   possible using GNOME's *Connect to server* feature
   (once [[todo/fix Internet FTP support]] is fixed)
-* Make sure APT is configured to point to ftp.us.debian.org.
 * Make sure that Tails signing key in `/usr/share/keyrings/tails-keyring.gpg`
   is up-to-date.
