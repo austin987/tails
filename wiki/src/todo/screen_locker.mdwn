@@ -1,0 +1,33 @@
+[[!tag todo/code]]
+
+Now that it's possible to set a custom user password,
+it probably makes sense to get GNOME Screensaver back
+and allow users to lock their screen.
+
+> See the corresponding [[forum thread|forum/Lock_screen_password/]]
+
+>> We decided we want to do that if it turns out to be easy,
+>> and discuss it again else.
+>>
+>> On the implementation side of things, care must be taken so that
+>> a user cannot mistakenly click a "Lock the screen" button while
+>> they have not chosen a password.
+
+>>> Two main ways to implement it:
+>>>
+>>> 1. make the `amnesia` account password-less by default, and have
+>>>    the "Lock screen" feature do something non-dumb in this
+>>>    situation; perhaps it already works out of the box; we should
+>>>    [[!taglink todo/test]] this. If it does not work, this is
+>>>    likely a PAM configuration mistake:
+>>>    
+>>>    - [[!gnomebug 620555]]
+>>>    - [Ubuntu bug about that](https://bugs.launchpad.net/ubuntu/+source/gnome-screensaver/+bug/589299)
+>>>
+>>> 1. only show the "Lock Screen" button when a password is set by
+>>>    the user (with some `.xbel` thingie, e.g.
+>>>    <http://superuser.com/questions/62124/how-to-remove-lock-screen-and-logout-from-the-gnome-main-menu-in-sled11>),
+>>>    and disable gnome-screensaver's automatic post-timeout screen
+>>>    locking (some trivial GConf setting)
+
+[[!tag release/2.0]]

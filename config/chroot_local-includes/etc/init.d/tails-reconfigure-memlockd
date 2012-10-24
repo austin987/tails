@@ -9,13 +9,23 @@
 # Description:          Reconfigure memlockd depending on running kernel
 ### END INIT INFO
 
+PATH="/usr/local/bin:${PATH}"
 MEMLOCKD_CONF=/etc/memlockd.cfg
 
 case "$1" in
   start)
-	/usr/local/bin/tails-get-bootinfo kernel >> "$MEMLOCKD_CONF"
-	/usr/local/bin/tails-get-bootinfo initrd >> "$MEMLOCKD_CONF"
+	tails-boot-to-kexec kernel $(tails-get-bootinfo kernel) \
+		>> "$MEMLOCKD_CONF"
+	tails-boot-to-kexec initrd $(tails-get-bootinfo initrd) \
+		>> "$MEMLOCKD_CONF"
 	service memlockd restart
+
+	# Tell sendsigs to forget about memlockd. Together with
+	# not calling 'memlockd stop' on shutdown, we have a
+	# strong chance that what tails-kexec needs will be available.
+	mkdir -p /lib/init/rw/sendsigs.omit.d
+	rm -f /lib/init/rw/sendsigs.omit.d/memlockd
+	ln -s /var/run/memlockd.pid /lib/init/rw/sendsigs.omit.d/memlockd
 	;;
   *)
 	echo "Usage: $0 start" >&2

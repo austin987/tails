@@ -169,7 +169,7 @@ Use of liveusb-creator to install an ISO on `/dev/sdb2`.
 GPT + protective MBR, two partitions
 ====================================
 
-$ /sbin/sgdisk                      \
+	$ /sbin/sgdisk                      \
 	--clear                     \   # create a new partition table
 	--new=1:0:+1500M            \   # new partition 1, starts at begining, 1500 MiB size
 	--typecode=1:8301           \   # part 1, set type 8301 (Linux reserved)
@@ -188,24 +188,24 @@ $ /sbin/sgdisk                      \
 
 Make the partition accessible to Windows, for the time of the installation:
 
-<<EOF sed -e 's/^\([^#]*\) \+# .*$/\1/' | /sbin/gdisk /dev/sdb
-r    # recovery and transformation options
-h    # make hybrid MBR
-1    # add first partition
-N    # no EFI GPT (0xEE) partition
-0c   # partition type (Win95 FAT32 LBA)
-N    # don't set the bootable flag
-N    # no protective partition
-w    # write table to disk and exit
-Y    # proceed, possibly destroying data
-EOF
+	<<EOF sed -e 's/^\([^#]*\) \+# .*$/\1/' | /sbin/gdisk /dev/sdb
+	r    # recovery and transformation options
+	h    # make hybrid MBR
+	1    # add first partition
+	N    # no EFI GPT (0xEE) partition
+	0c   # partition type (Win95 FAT32 LBA)
+	N    # don't set the bootable flag
+	N    # no protective partition
+	w    # write table to disk and exit
+	Y    # proceed, possibly destroying data
+	EOF
 
 
 Once the install has been done, lock things up:
 
-<<EOF sed -e 's/^\([^#]*\) \+# .*$/\1/' | /sbin/gdisk /dev/sdb
-x    # extra functionality
-n    # create a new protective MBR
-w    # write table to disk and exit
-Y    # proceed, possibly destroying data
-EOF
+	<<EOF sed -e 's/^\([^#]*\) \+# .*$/\1/' | /sbin/gdisk /dev/sdb
+	x    # extra functionality
+	n    # create a new protective MBR
+	w    # write table to disk and exit
+	Y    # proceed, possibly destroying data
+	EOF

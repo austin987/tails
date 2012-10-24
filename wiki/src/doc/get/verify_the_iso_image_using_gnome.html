@@ -1,0 +1,59 @@
+[[!meta title="Verify the ISO image using Linux with Gnome"]]
+
+<p>You need to have the <code>seahorse-plugins</code> package
+installed. If you're not sure or want to install it, under Debian,
+Ubuntu or Tails you can issue the following commands:</p>
+
+<pre>
+sudo apt-get update
+sudo apt-get install seahorse-plugins
+</pre>
+
+<p><strong>The development of seahorse-plugins [[!debbug 644656 desc="has
+stopped"]]</strong>. It hasn't been ported to Gnome 3. It is no more available
+on Debian starting from Wheezy and Ubuntu starting from version 11.10, Oneiric
+Ocelot. If you can't install it please try [[verifying the ISO using the command
+line|verify_the_iso_image_using_the_command_line]].</p>
+
+<p>First, download Tails signing key:</p>
+
+[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
+
+<p>Your browser should propose you to open it with "Import Key". Choose
+this action. It will add Tails signing key to your keyring, the
+collection of OpenPGP keys you already imported:</p>
+
+<p>[[!img import_key.png alt="What should Iceweasel do with this file? Open
+with: Import Key (default)" link="no"]]</p>
+
+<p>You will get notified will the following message:</p>
+
+<p>[[!img key_imported.png alt="Key Imported. Imported a key for Tails
+developers (signing key) &lt;tails@boum.org&gt;" link="no"]]</p>
+
+<p>Now, download the cryptographic signature corresponding to the ISO
+image you want to verify:</p>
+
+[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
+
+<p>Your browser should propose you to open it with "Verify Signature".
+Choose this action to start the cryptographic verification:</p>
+
+<p>[[!img verify_signature.png alt="What should Iceweasel do with this file?
+Open with: Verify Signature (default)" link="no"]]</p>
+
+<p>Browse your files to select the Tails ISO image you want to verify.
+Then, the verification will start. It can take several minutes:</p>
+
+<p>[[!img verifying.png alt="Verifying" link="no"]]</p>
+
+<p><strong>If the ISO image is correct</strong> you will get a
+notification telling you that the signature is good:</p>
+
+<p>[[!img good_signature.png alt="Goog Signature" link="no"]]</p>
+
+<p><strong>If the ISO image is not correct</strong> you will get a
+notification telling you that the signature is bad:</p>
+
+<p>[[!img bad_signature.png alt="Bad Signature: Bad or forged signature."
+link="no"]]</p>

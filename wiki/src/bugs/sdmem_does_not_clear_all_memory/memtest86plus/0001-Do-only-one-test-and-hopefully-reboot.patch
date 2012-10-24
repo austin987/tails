@@ -1,0 +1,73 @@
+From 28741d5f5233b333337149d07e506721b449f843 Mon Sep 17 00:00:00 2001
+From: Tails developers <tails@boum.org>
+Date: Thu, 16 Aug 2012 01:13:30 +0200
+Subject: [PATCH 1/7] Do only one test and (hopefully) reboot
+
+---
+ main.c |   41 +++++++++++++++++++----------------------
+ 1 file changed, 19 insertions(+), 22 deletions(-)
+
+diff --git a/main.c b/main.c
+index ea96f2d..6be644b 100644
+--- a/main.c
++++ b/main.c
+@@ -307,7 +307,7 @@ void do_test(void)
+ 	nticks = 0;
+ 	v->tptr = 0;
+ 	cprint(1, COL_MID+8, "                                         ");
+-	switch(tseq[v->test].pat) {
++	switch(6) { /* Select pattern 10 to execute only test #1 */
+ 
+ 	/* Now do the testing according to the selected pattern */
+ 	case 0:	/* Moving inversions, all ones and zeros (test #2) */
+@@ -484,29 +484,26 @@ void do_test(void)
+ 		check_input();
+ 		window = 0;
+ 		cprint(LINE_PAT, COL_PAT-3, "   ");
+-		/* If this was the last test then we finished a pass */
+-		if (v->test >= 9 || v->testsel >= 0) {
+-			v->pass++;
+-			dprint(LINE_INFO, COL_PASS, v->pass, 5, 0);
+-			v->test = 0;
+-			v->total_ticks = 0;
+-			v->pptr = 0;
+-			cprint(0, COL_MID+8,
+-				"                                         ");
+-			if (v->ecount == 0 && v->testsel < 0) {
+-			    cprint(LINE_MSG+5, 0,
+-				"              *****Pass complete, no errors, press Esc to exit*****            ");
+-				if(BEEP_END_NO_ERROR) {
+-					beep(1000);
+-					beep(2000);
+-					beep(1000);
+-					beep(2000);
+-				}
++		/* Do the finish stuff at the 1st pass*/
++		v->pass++;
++		dprint(LINE_INFO, COL_PASS, v->pass, 5, 0);
++		v->test = 0;
++		v->total_ticks = 0;
++		v->pptr = 0;
++		cprint(0, COL_MID+8,
++			"                                         ");
++		if (v->ecount == 0 && v->testsel < 0) {
++			cprint(LINE_MSG+5, 0,
++			"              *****Pass complete, no errors, press Esc to exit*****            ");
++			if(BEEP_END_NO_ERROR) {
++				beep(1000);
++				beep(2000);
++				beep(1000);
++				beep(2000);
+ 			}
+ 		}
+-		
+-		/* We always start a pass with the low copy */
+-		run_at(LOW_TEST_ADR);
++		sleep(5, 0);
++		reboot();
+ 	}
+ }
+ 
+-- 
+1.7.10.4
+

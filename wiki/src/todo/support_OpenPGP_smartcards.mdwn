@@ -1,6 +1,59 @@
-* [[!wikipedia OpenPGP_card]]
-* [[!debwiki Smartcards/OpenPGP]]
+[[!toc levels=2]]
+
+Tests
+=====
+
+## Test 0
+
+I tested an OpenPGP smart card reader and card (which I will add the
+brandt/model soon). It turned out that it worked for me on Tails 0.13~rc1
+without any additional package installed *but* only when executing gnupg as
+root. It seems there is a permission issue, as discussed on tails-dev (see
+below).
+
+> See commit f29ce64272 in Liberté Linux' Git.
+
+Tester: <alan@boum.org>
+
+## Test 1
 
 What kind of additional software is needed?
 
-[[wishlist]]
+Testing with Tails 0.12.1 I've found it was necessary to install the following set of packages from Debian Wheezy.
+
+* libc-bin (2.13-35)
+* libc6 (2.13-35)
+* multiarch-support
+* libpcsclite1 (1.8.4-1)
+* libccid (1.4.7-1)
+* pcscd (1.8.4-1)
+
+If Tails begins building on Wheezy, including the libccid and pcscd
+package should be enough for Gemalto USB shell Token (A USB smart card
+reader) that is popularly used with OpenPGP cards.
+
+> It looks like all the additional packages were pulled as
+> dependencies of pcscd and libccid.
+
+>> Backports were built and tested, and should now be uploaded.
+>> [[!tag todo/code]]
+
+>> The user credentials issues are discussed on tails-dev:
+>> <CALSDXiB1VWcEQ-BxJzXF95_mPg_UyHL6b83wXCGQz-a2hMvAYA@mail.gmail.com>
+
+Testers: Patrick Bx <patrickbx@gmail.com>
+
+Resources
+=========
+
+* [[!wikipedia OpenPGP_card]]
+* [[!debwiki Smartcards/OpenPGP]]
+* Liberté Linux' implementation: ccid, pcsc-lite, GnuPG built without
+  libusb support, and `gnupg-pkcs11-scd` used as a `scdaemon-program`
+  (available, commented-out in the default `gpg-agent.conf`)
+* [pcscd auto
+  start](http://ludovicrousseau.blogspot.com/2010/09/pcscd-auto-start.html)
+  on Ludovic Rousseau blog
+* [Installation of Card
+  Reader](http://gnupg.org/howtos/card-howto/en/ch02s03.html)
+  in GnuPG's documentation
