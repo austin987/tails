@@ -28,6 +28,7 @@ END_OF_CHANGELOG
   fatal_system "git branch -M stable"
   fatal_system "git branch testing stable"
   fatal_system "git branch devel stable"
+  fatal_system "git branch experimental devel"
 end
 
 RSpec::Matchers.define :have_suite do |suite|

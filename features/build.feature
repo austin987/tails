@@ -39,6 +39,11 @@ Feature: custom APT sources to build branches
     When I run tails-custom-apt-sources
     Then I should see the 'devel' suite
 
+  Scenario: build from the experimental branch
+    Given I am working on the experimental branch
+    When I run tails-custom-apt-sources
+    Then I should see the 'experimental' suite
+
   Scenario: build from a feature branch based on devel
     Given I am working on the feature/icedove branch based on devel
     When I run tails-custom-apt-sources
