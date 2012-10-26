@@ -40,35 +40,31 @@ creating new suites, merging, freezing, etc.
 Left to do
 ----------
 
-[[!tag todo/code todo/sysadmin]]
+### Now
 
-* Allow importing packages, creating new suites, merging, freezing,
-  etc.; see the *Documentation* section bellow.
-  - reprepro's incoming directory: whatever ACL and umask I set,
-    dupload with scp backend, connecting to a non-reprepro user on the
-    APT repo box, puts files in there that are not writable by the
-    reprepro user, so `reprepro processincoming` fails. In the
-    meantime, we upload to `reprepro@incoming.t.b.o`, but it would
-    be a bit nicer to deal with that in a better way, some day.
-* test basic operations to check that suite are in the supported set:
-  - tails-merge-suite sid -> 0.11 -- **??** (`tails-merge-suite`
-    should maybe prevent us from doing that, as 0.11 was released
-    already; however, we do need to do this copy to build the 0.11
-    ISO, so a --force switch would have to be provided)
-  - tails-merge-suite branch with long/complicated name -> devel **OK**
-  - tails-merge-suite sid -> devel -- **OK**
-  - tails-merge-suite sid -> doc-donate -- **OK**
-  - tails-merge-suite sid -> bugfix-boot-profile-vs-live-rofs -- **OK**
-  - list suite with long/complicated name **OK**
-  - manually import a package into branch with long/complicated name **OK**
-  - let inotincoming import a package into branch with long/complicated name **OK**
+* Document the workflow, writing scripts as needed; see the current
+  draft in the *Documentation* section bellow. Then move the
+  documentation to a nice place in [[contribute]]
+  [[!tag todo/documentation]]
+
+* Tell reprepro to email what `processincoming` does:
+  <file:///usr/share/doc/reprepro/manual.html#hooks>
+  [[!tag todo/code]]
+
+### Later
+
+* Host our `tails_secrets_apt` Puppet module's Git repository on
+  lizard [[!tag todo/sysadmin]]
 * import binary and source packages from our Git repository:
   - currently used branches
   - past releases... at least the most recent ones, depending on how
     much pain it takes to do it.
-* tell reprepro to email what `processincoming` does: <file:///usr/share/doc/reprepro/manual.html#hooks>
-* host our `tails_secrets_apt` Puppet module's Git repository on
-  lizard
+* Allow uploading packages using scp to one's own user at
+  incoming.d.t.b.o, instead of as reprepro@. It was tried, but
+  whatever ACL and umask I set, dupload with scp backend, connecting
+  to a non-reprepro user on the APT repo box, puts files in there that
+  are not writable by the reprepro user, so `reprepro
+  processincoming` fails.
 
 Done
 ----
@@ -80,19 +76,15 @@ Done
   - generate `conf/incoming`
   - generate `conf/pulls`
   - create new suites in the APT repository
+* basic operations tested, including importing a big source package
+  (iceweasel) in there, merged into another branch
 
 HTTP access
 ===========
 
 This is the http:// public APT repository that will be used at Tails
-build time.
-
-Left to do
-----------
-
-[[!tag todo/sysadmin]]
-
-* setup HTTP access to this APT repository
+build time. The `tails::reprepro` Puppet class sets nginx up to
+serve that.
 
 Build system
 ============
