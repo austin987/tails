@@ -2,189 +2,69 @@
 
 [[!toc levels=3]]
 
-Current state of things
-=======================
-
-Tails [[ships hybrid ISO images|contribute/design/hybrid_ISO]]. dd'ing
-such a file to a USB stick produces a bootable Tails system and is
-[[well documented|doc/installing_onto_a_usb_stick/linux]], but it
-requires unfriendly command-line usage and overwrites any previously
-existing partition table.
-
-The current state of things implies two distasteful facts:
-
-1. A given USB stick currently must be dedicated to Tails only;
-   considering the ever-growing size of such devices, the amount of
-   wasted bytes is not a minor one.
-2. A given USB stick cannot be used to host both a Tails system *and*
-   a persistent storage volume, which makes it hard to provide
-   friendly integration of [[upcoming persistence
-   features|todo/persistence]] for end-user.
-
-Such user unfriendliness conflicts with Tails [[specified
-goals|contribute/design]] and must be fixed.
-
-Installing specification
-========================
-
-One should be able to easily install Tails to a USB storage device:
-
-* by cloning an existing Tails system that is running from CD or USB;
-* running a non-Tails operating system, from a downloaded ISO image.
-
-When upgrading, the installation target may be an existing partition whose content
-must be left untouched. The choice between possible destination
-devices or partitions must be graphically proposed amongst the
-available removable storage devices.
-
-Moreover, at installation time, one should be allowed to setup an
-encrypted storage space that can be used by the [[upcoming persistence
-features|todo/persistence]]; earliest versions of the installation
-program must at least leave room for it so that a later version can be
-make use of it. Whether this storage space should better be a second
-encrypted partition or a file-backed encrypted FS shall be researched
-and decided upon. If the partition way is chosen, the installer
-software must have partitioning capabilities.
-
 Roadmap
 =======
 
-[[!tag todo/code todo/documentation]]
+[[!tag todo/code]]
 
-* [[what is left to do|usb_install_and_upgrade/todo]]
-* [[what we've done so far|usb_install_and_upgrade/done]]
+We have released something useful in Tails 0.11, based on the work we've already done on
+the basis of Fedora liveusb-creator.
+
+Next steps are:
+
+Bugfixes and minor improvements of liveusb-creator
+--------------------------------------------------
+
+* Remove devices from the list when unplugged.
+* Set cursor to waiting (hourglass) state while working.
+* *Target Device* list: display more information, such as the stick
+  brand and model.
+* Allow setting the system/overlay partitions size via command-line
+  option(s).
+* command-line option --local-hard-disks that would enable
+  installation on local hard disks (= not external USB);
+  is half-implemented by `--force`, see special casing in the
+  detect_removable_devices method.
+* Should be more explicit when no target device is available:
+  currently displays an empty list, no message, is not that easy to understand.
+
+### Other tasks
+
+[[!inline pages="todo/liveusb-creator*
+and !tagged(todo/done) and !todo/done and !todo/pending
+and !tagged(pending) and !link(todo/pending) and !todo/*/*"
+actions=no archive=yes show=0 feeds=no]]
+
+### Other bugs
+
+[[!inline pages="bugs/liveusb-creator*
+and !link(patch)
+and !link(bugs/done)
+and !link(bugs/pending) and !tagged(pending)
+and !bugs/*/*"
+actions=no archive=yes show=0 feeds=no]]
+
+Incremental upgrades
+--------------------
+
+See the dedicated page about [[todo/incremental_upgrades]].
+
+Choose again
+------------
+
+Implement our [[specifications|future_spec]] in (probably) Ubuntu's
+[usb-creator](https://launchpad.net/usb-creator), that has a much
+saner codebase.
+
+This should also open the possibility to take care of, at least, verified
+downloads and Windows support.
+
+Resources
+=========
+
 * [[notes about GPT|usb_install_and_upgrade/gpt]]
-
-
-Our plan is to:
-
-1. release something useful based on the work we've already done on
-   the basis of Fedora liveusb-creator
-2. probably start (again...) from Ubuntu's
-   [usb-creator](https://launchpad.net/usb-creator), that has a
-   much saner codebase; [[usb_install_and_upgrade/future_spec]]
-3. take care of Windows support, partial upgrades, and postponed stuff
-   (see the *Later* section on the [[usb_install_and_upgrade/todo]]
-   page)
-
-Our work on liveusb-creator is in a Git repository:
-
-- anonymous, read-only: `git://git.immerda.ch/tails/liveusb-creator.git`
-- developers read-write: `ssh://git@git.immerda.ch/tails/liveusb-creator.git`
-
-Integration work is made in the `feature/usb_installer` branch in the
-main Tails Git repository.
-
-Research
-========
-
-Frontend UI
------------
-
-See roundup of existing tools at [[todo/usb_install_and_upgrade/archive]].
-
-Unfortunately, no single existing piece of software satisfies the
-above specification. It seems like everyone writes their own USB
-installer; after the following round-up has been made, this is no
-surprise at all: since such tools are designed to be dead easy for the
-non-technical end-user, every author selects the few features that are
-the most important ones for their intended audience, and generally
-writes a very ad-hoc piece of software. Therefore, every Live system
-project whose needs are slightly different from the others needs to
-write its own USB installer, possibly reinventing more or less wheels
-along the road.
-
-We need to see if we can turn one of those tools into something that
-satisfies our specification; sadly, proceeding this way *without
-forking the existing tool* would probably need more initial
-development time than writing a new installer from scratch; we are not
-even sure any upstream author of such a software (good enough to be a
-possible viable basis) would want to make it more generic and maintain
-it this way; on the other hand, if we avoid forking or writing from
-scratch, we also avoid maintaining a Tails-specific tool on the long
-run.
-
-Booting methods
----------------
-
-Tails [[ships hybrid ISO images|contribute/design/hybrid_ISO]]. dd'ing
-such a file to a USB stick produces a bootable Tails system but it
-overwrites any previously existing partition table. This method is
-therefore not suitable for us since it does not satisfy the
-"non-destructive upgrade process" requirement.
-
-Two alternatives booting methods have been investigated:
-
-1. **Boot ISO file**: Setup a bootloader on the USB stick that is able
-   to boot an ISO image dropped into the right directory of it. Even
-   early boot files (kernel, initramfs) are loaded from *inside* the
-   ISO file. The bootloader installed on the USB stick can either
-   directly boot the kernel from inside the ISO file or chainload the
-   ISO image's bootloader. In the first case, until the
-   [[todo/boot_menu]] task is completed, the installed boot loader
-   must present a boot menu that at least allows the user to choose
-   her preferred language.
-
-2. **Copy ISO's content**: Copy needed files (mainly the kernel,
-   initramfs and SquashFS image that live in the `live/` directory)
-   from the ISO filesystem to the destination partition, then setup a
-   bootloader that uses files in that directory. The end result is
-   more or less equivalent to dd'ing the ISO image to the USB stick,
-   but achieved with a non-destructive process.
-
-We have settled on the *copy ISO's content* way.
-
-See roundup of such techniques, including GRUB2 integration, at
-[[todo/usb_install_and_upgrade/archive]].
-
-Partitioning
-------------
-
-[udisks](http://www.freedesktop.org/wiki/Software/udisks) provides a
-D-Bus interface that makes it easy to programmatically partition a
-storage device and create filesystems in there without messing with
-low-level details; its LUKS encryption support probably is the killer
-feature that makes it the perfect library for the job.
-
-We have settled on creating GPT partition tables, that allow us to
-reliably hide the Tails system partition from Windows' eyes, without
-seeing it asking the user to *format an uninitialised volume*.
-
-See [[details and research notes|todo/usb_install_and_upgrade/GPT]]
-about it.
-
-Upgrade
-=======
-
-One should also be able to easily and non-destructively upgrade a
-given Tails system installed on a USB storage device.
-Non-destructively means not touching any partition or file other than
-the ones managed by the Tails installation system. Proceeding this way
-is needed to make it possible using a single USB stick for the Tails
-system *and* some persistent storage space.
-The upgrade issue is actually twofold: network burden and writing the upgraded
-live system on the USB stick.
-
-Full upgrade
-------------
-
-Full upgrades happen between major releases, eg. 0.7 and 0.8.
-
-Full upgrades should look as much as possible as a new installs. So it should be
-possible to do it from any platform supported by the USB installer.
-
-As for installing, people should be able to provide the ISO to the installer or
-ask the installer to download it.
-
-From inside Tails it should also provide an opt-in option to download the full
-ISO outside Tor.
-
-Once the upgrade is finished the old ISO is removed automatically from the USB
-stick.
-
-Partial upgrade
----------------
-
-Partial upgrades only happen between minor releases, eg. 0.7 and 0.7.1.
-
-See [[todo/incremental_upgrades]].
+* the **code**: our work on liveusb-creator is in a [[dedicated Git
+  repository|contribute/git]]. Integration work is made in the
+  `feature/usb_installer` branch in the main Tails Git repository.
+* USB installation [[specification and design|contribute/design/usb_installation]]
+* archived [[roundup of existing tools|todo/usb_install_and_upgrade/archive]]

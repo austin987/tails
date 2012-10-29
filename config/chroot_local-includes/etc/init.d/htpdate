@@ -33,6 +33,10 @@ install -o htp -g nogroup -m 0644 /dev/null ${LOG}
 # Source configuration
 . /etc/default/$NAME
 
+log() {
+	echo "$@" >> "${LOG}"
+}
+
 # Sanity checks
 if [ -z "$HTTP_USER_AGENT" ]; then
 	log "HTTP_USER_AGENT is not set."
@@ -50,10 +54,6 @@ if [ -z "$HTP_POOL_FOE" ]; then
 	log "HTP_POOL_FOE is not set"
 	exit 3
 fi
-
-log() {
-	echo "$@" >> "${LOG}"
-}
 
 do_start() {
 	if [ -e "$HTP_DONE_FILE" ]; then
@@ -75,7 +75,7 @@ do_start() {
 		--pal_pool     "$HTP_POOL_PAL" \
 		--neutral_pool "$HTP_POOL_NEUTRAL" \
 		--foe_pool     "$HTP_POOL_FOE" \
-		$HTP_POOL
+	        --proxy        127.0.0.1:9062
 
 	return $?
 }

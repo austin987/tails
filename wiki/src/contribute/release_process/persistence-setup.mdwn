@@ -1,0 +1,73 @@
+[[!meta title="How to release persistence-setup"]]
+
+[[!toc levels=1]]
+
+Make an upstream release
+========================
+
+Required dependencies on Debian:
+
+    libdist-zilla-perl libdist-zilla-plugins-cjm-perl
+    libdist-zilla-plugin-git-perl
+    liblocale-msgfmt-perl libmoosex-has-sugar-perl
+    dh-make-perl
+
+Install the dependencies:
+
+    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::InstallGuide
+    DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::OurPkgVersion
+    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::CriticTests
+    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::NoTabsTests
+    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::CheckChangeLog
+    DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::LocaleMsgfmt
+
+Update version number in `bin/tails-persistence-setup`.
+
+Update `Changes`.
+
+Build an upstream tarball:
+
+    dzil build
+
+Tag the release:
+
+    git tag -s $VERSION
+
+Move the tarball out of the build repository:
+
+    mv Tails-Persistence-$VERSION.tar.gz ..
+
+Delete the build directory:
+
+    rm -r Tails-Perstistence-$VERSION
+
+Update the Debian package
+=========================
+
+Checkout the branch with Debian package specifics:
+
+    git checkout debian
+
+Import the new upstream tarball:
+
+    git-import-orig ../persistence-setup-$VERSION.tar.gz
+
+Update `debian/changelog`:
+
+    git-dch
+
+Build a Debian package:
+
+    git-buildpackage
+
+If everything is fine, add a signed tag to the repository and push the
+changes:
+
+    git-buildpackage --git-tag-only
+    git push --tags
+
+Add the Debian package to Tails
+===============================
+
+Replace older packages with the new ones in `config/chroot_local-packages`.
+Paste the last entry of `debian/changelog` in the commit message.

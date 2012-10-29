@@ -1,13 +1,9 @@
 Data persistence is a somewhat tricky topic in a Live system context,
-especially one explicitely designed to avoid leaving any trace of
+especially one explicitly designed to avoid leaving any trace of
 its use.
 
 Some real-life usecases however require to setup some kind of data
 persistence, which were then carefully introduced and supported.
-
-* the [[list of what has been done already|todo/persistence/done]];
-* [[many ideas|todo/persistence/later]] for further improvements.
-
 
 [[!toc levels=4]]
 
@@ -22,7 +18,7 @@ to support.
 
 ### Application-specific configurations
 
-This might be relevant for the following applications:
+This is relevant for the following applications:
 
 - GnuPG, SSH and OTR key pairs
 - GnuPG configuration
@@ -32,7 +28,7 @@ This might be relevant for the following applications:
 - MUA configuration
 - Tor's data/cache for faster bootstrap with slow connections and
   better protections through more stable entry guards
-  (`/var/lib/tor/`); beware, this will break tordate
+  (`/var/lib/tor/`); beware, this breaks tordate
   [[contribute/design/Time_syncing]]
 - I2P data/cache/log directory (`/var/lib/i2p/`)
 - NoScript global behaviour (whitelist / blacklist) and exceptions
@@ -95,7 +91,7 @@ Moreover:
 Current state of things
 =======================
 
-Tails 0.11 supports the **persistent application-specific
+Tails 0.11 and greater supports the **persistent application-specific
 configurations** and **persistent user data store** usecases.
 
 Implementation
@@ -154,7 +150,7 @@ User interface
 A *Configure persistent storage* menu entry is the entry point to the
 *bootstrap persistent storage* UI. This UI allows the user to setup
 a persistent storage container in the free space left on the USB stick
-by our USB installer.
+by [[our USB installer|usb_installation]].
 
 Choosing persistence is something *activelly* opt-in, i.e. "I want
 this, I read the documentation for related information, then run the
@@ -228,13 +224,13 @@ Setting up a Tails persistent volume means:
   partition attributes|todo/usb_install_and_upgrade/todo]]
   is workaround'ed.
 
-### configure which bits are persistent
+### Configure which bits are persistent
 
 This is automatically run right after the persistent storage bootstrap
 step. The user is enabled to change the configuration later.
 Persistence settings changes are taken into account at next boot.
 
-#### design
+#### Design
 
 * either persistence is currently enabled in read-write mode, and thus
   the persistence partition is already mounted; or the user is
@@ -246,19 +242,24 @@ Persistence settings changes are taken into account at next boot.
 * apart of this, let's consider non-directories persistence an
   advanced feature: to start with, and possibly forever, this could
   only be configured by manually editing live-persist file
-* a few **presets** are made available (e.g. `~/.gnupg/`); the GUI
+* a few **presets** are made available (e.g. `~/.gnupg/`);
+  technically, each of these has a name, optionally a short
+  description and icon, and the needed information to make a simple
+  directory persistent (e.g. make `/home/amnesia/.gnupg` persist,
+  as the "gnupg" sub-directory of the persistent volume).
+  The GUI
   displays every available preset, along with its current
-  (enabled/disabled) status, and optionally a short description and
-  icon; therefore, tails-persistence-setup needs to have means to
-  merge the presets list with the configuration read from the input
-  configuration file; to this end, it needs to know if a given preset
+  (enabled/disabled) status and available details (description, icon).
+  tails-persistence-setup has means to
+  merge its presets list with the configuration read from the input
+  configuration file; to this end, it knows if a given preset
   is enabled in the input configuration file;
 * by default, the current configuration is displayed as a list of
   items (= config lines); listed items may be toggled on/off; an *Add
   custom* button allows to enter custom source, destination (and
   comma-separated list of options?)
 
-### enable persistence at boot time
+### Enable persistence at boot time
 
 Choosing between various persistence modes is one of the reasons why
 we've written a graphical [[todo/boot_menu]]: [[todo/TailsGreeter]].

@@ -1,0 +1,116 @@
+* "The computer start to shutdown but doesn't poweroff after removing
+  SD card"
+* Broken in 0.10.2 and 0.11.
+* Tails installed with our liveusb-creator from a wheezy system.
+
+[[!tag todo/code]]
+
+Resources
+=========
+
+report 1
+--------
+
+We're also told:
+
+The only dmesg line I see when I remove an SD card from one USB reader is:
+
+	<6>[1104952.342286] sdg: detected capacity change from 16009658368 to 0
+
+### udevadm monitor output on insert
+
+	KERNEL[1107514.808226] change   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde (block)
+	KERNEL[1107514.809899] change   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde (block)
+	KERNEL[1107514.811658] change   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde (block)
+	KERNEL[1107514.812511] change   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde (block)
+	KERNEL[1107514.817864] change   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde (block)
+	KERNEL[1107514.818040] add      /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde/sde1 (block)
+	UDEV  [1107515.007591] change   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde (block)
+	UDEV  [1107515.169052] change   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde (block)
+	UDEV  [1107515.329968] change   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde (block)
+	UDEV  [1107515.491462] change   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde (block)
+	UDEV  [1107515.651668] change   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde (block)
+	UDEV  [1107515.799094] add      /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde/sde1 (block)
+
+### udevadm monitor output on remove
+
+	KERNEL[1107520.190068] change   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde (block)
+	KERNEL[1107520.212796] remove   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde/sde1 (block)
+	UDEV  [1107520.305246] change   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde (block)
+	UDEV  [1107520.305941] remove   /devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1:1.0/host12/target12:0:0/12:0:0:2/block/sde/sde1 (block)
+
+Report 2
+--------
+
+IBM ThinkPad X200 with internal SD card reader recognised as an USB device when
+an SD card is in:
+
+	Bus 002 Device 023: ID 05ca:1880 Ricoh Co., Ltd
+	  idVendor           0x05ca Ricoh Co., Ltd
+	  idProduct          0x1880 
+	  bcdDevice            0.01
+	  iManufacturer           1 RICOH             
+	  iProduct                2 USB2.0-FLASH Media    
+	  iSerial                 3 R5U880-00003
+
+When I remove the SD card, I get the following syslog:
+
+	kernel: [XXX534.381703] usb 2-6: USB disconnect, device number 16
+
+### udevadm monitor output on insert
+
+	KERNEL[XXX842.406931] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6 (usb)
+	KERNEL[XXX842.407318] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0 (usb)
+	KERNEL[XXX842.407947] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25 (scsi)
+	KERNEL[XXX842.407993] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/scsi_host/host25 (scsi_host)
+	UDEV  [XXX842.415549] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6 (usb)
+	UDEV  [XXX842.421861] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0 (usb)
+	UDEV  [XXX842.423328] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25 (scsi)
+	UDEV  [XXX842.426495] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/scsi_host/host25 (scsi_host)
+	KERNEL[XXX843.405708] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0 (scsi)
+	KERNEL[XXX843.405734] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0 (scsi)
+	KERNEL[XXX843.405757] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/scsi_disk/25:0:0:0 (scsi_disk)
+	KERNEL[XXX843.405816] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/scsi_device/25:0:0:0 (scsi_device)
+	KERNEL[XXX843.405885] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/bsg/25:0:0:0 (bsg)
+	UDEV  [XXX843.406208] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0 (scsi)
+	UDEV  [XXX843.407925] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0 (scsi)
+	UDEV  [XXX843.409487] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/scsi_disk/25:0:0:0 (scsi_disk)
+	UDEV  [XXX843.409932] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/scsi_device/25:0:0:0 (scsi_device)
+	UDEV  [XXX843.411561] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/bsg/25:0:0:0 (bsg)
+	KERNEL[XXX843.656626] add      /devices/virtual/bdi/8:16 (bdi)
+	UDEV  [XXX843.657498] add      /devices/virtual/bdi/8:16 (bdi)
+	KERNEL[XXX843.690787] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/block/sdb (block)
+	KERNEL[XXX843.690857] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/block/sdb/sdb1 (block)
+	UDEV  [XXX843.958413] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/block/sdb (block)
+	UDEV  [XXX844.242384] add      /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/block/sdb/sdb1 (block)
+	KERNEL[XXX844.315832] change   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/block/sdb (block)
+	UDEV  [XXX844.575239] change   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/block/sdb (block)
+
+### udevadm output on remove
+
+	KERNEL[XXX854.989996] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/bsg/25:0:0:0 (bsg)
+	UDEV  [XXX854.990061] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/scsi_device/25:0:0:0 (scsi_device)
+	KERNEL[XXX854.990099] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/scsi_device/25:0:0:0 (scsi_device)
+	KERNEL[XXX854.990133] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/scsi_disk/25:0:0:0 (scsi_disk)
+	KERNEL[XXX854.990174] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/block/sdb/sdb1 (block)
+	UDEV  [XXX854.990582] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/bsg/25:0:0:0 (bsg)
+	UDEV  [XXX854.990942] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/block/sdb/sdb1 (block)
+	KERNEL[XXX855.003208] remove   /devices/virtual/bdi/8:16 (bdi)
+	KERNEL[XXX855.003424] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/block/sdb (block)
+	KERNEL[XXX855.003441] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0 (scsi)
+	KERNEL[XXX855.003453] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0 (scsi)
+	KERNEL[XXX855.003464] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/scsi_host/host25 (scsi_host)
+	KERNEL[XXX855.003475] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25 (scsi)
+	KERNEL[XXX855.004044] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0 (usb)
+	KERNEL[XXX855.004066] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6 (usb)
+	UDEV  [XXX855.006193] remove   /devices/virtual/bdi/8:16 (bdi)
+	UDEV  [XXX855.006983] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/block/sdb (block)
+	UDEV  [XXX855.013267] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0/scsi_disk/25:0:0:0 (scsi_disk)
+	UDEV  [XXX855.013773] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0/25:0:0:0 (scsi)
+	UDEV  [XXX855.013847] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/target25:0:0 (scsi)
+	UDEV  [XXX855.014183] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25/scsi_host/host25 (scsi_host)
+	UDEV  [XXX855.014469] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0/host25 (scsi)
+	UDEV  [XXX855.014790] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6/2-6:1.0 (usb)
+	UDEV  [XXX855.015019] remove   /devices/pci0000:00/0000:00:1d.7/usb2/2-6 (usb)
+
+
