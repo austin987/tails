@@ -1,4 +1,4 @@
-tails (0.14~rc1) unstable; urgency=low
+tails (0.14~rc2) unstable; urgency=low
 
   * Major new features
   - gpgApplet can now handle public-key cryptography.
@@ -47,8 +47,6 @@ tails (0.14~rc1) unstable; urgency=low
     that use the old path.
   - Do not run unecessary scripts during shutdown sequence, to make
     shutdown faster.
-  - Fix Iceweasel's file associations. No more should you be suggested
-    to open a PDF in the GIMP.
   - Make live-persist deal with persistent ~/.gconf subdirs so that
     any options saved therein actually get persistent.
   - Prevent memlockd unload on shutdown, to make sure that all
@@ -58,6 +56,10 @@ tails (0.14~rc1) unstable; urgency=low
     now let insserv figure out the correct ordering for the services
     during startup and shutdown, i.e. use dependency-based boot
     sequencing.
+  - Remove the last absolute path in our isolinux config, which makes
+    it easier to migrate from isolinux to syslinux (just rename the
+    directory), and hence might make it easier for 3rd party USB
+    installers (like the Universal USB Installer) to support Tails.
 
   * Bugfixes
   - Include `seq` in the ramdisk environment: it is used to wipe more
@@ -78,6 +80,12 @@ tails (0.14~rc1) unstable; urgency=low
   - Factorize GCC wanted / available version numbers in VirtualBox
     modules building hook. This, incidentally, fixes a bug caused by
     duplication and not updating all instances.
+  - Fix tordate vs. Tor 0.2.3.x. Since 0.2.3.x Tor doesn't download a
+    consensus for clocks that are more than 30 days in the past or 2
+    days in the future (see commits f4c1fa2 and 87622e4 in Tor's git
+    repo). For such clock skews we set the time to the Tor authority's
+    cert's valid-after date to ensure that a consensus can be
+    downloaded.
 
   * Tor
   - Update to version 0.2.3.22-rc-1~~squeeze+1, a new major
@@ -85,6 +93,13 @@ tails (0.14~rc1) unstable; urgency=low
     the Tor developers that this is the right move.
   - Stop setting custom value for the Tor LongLivedPorts
     setting. Gobby's port was upstreamed in Tor 0.2.3.x.
+
+  * Iceweasel
+  - Update to 10.0.9esr-1+tails1, which has all the privacy enhancing
+    patches from the Tor Browser Bundle applied to it.
+  - Install iceweasel from our own repo, http://deb.tails.boum.org.
+  - Fix Iceweasel's file associations. No more should you be suggested
+    to open a PDF in the GIMP.
 
   * htpdate
   - Use curl instead of wget, and add a --proxy option passed through
@@ -106,7 +121,7 @@ tails (0.14~rc1) unstable; urgency=low
     * Fix error output when calling send a 2nd time
   - Update liveusb-creator to 3.11.6-3.
   - Update i2p to 0.9.2.
-  - Update tails-persistence-setup to 0.18-1.
+  - Update tails-persistence-setup to 0.20-1.
   - Install console-setup and keyboard-configuration from unstable
     (required by new initramfs-tools).
   - Update tails-greeter to 0.7.3:
