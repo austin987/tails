@@ -1,30 +1,42 @@
 [[!tag todo/research]]
+[[!tag todo/discuss]]
 
-Since bridges are easily detected and blocked in some areas (in
-particular China, but also places where wholesale SSL blocking is
-used), we need to support
-[obfsproxy](https://www.torproject.org/projects/obfsproxy-instructions.html.en).
-
-Also, in situations where both reliability *and* obfuscation are required
-despite an adversary having control of the user's local network
-*traffic obfuscation* must also be employed. This traffic obfuscation
-is **imperative** where the user's welfare or liberty my be
-jeopardised by her use of Tor.
 The [Obfsproxy](https://tails.boum.org/todo/obfsproxy/) project exists
 to achieve the benefits of Tor's bridges together with traffic
 obfuscation.
 
-There was a Vidalia [plugin](http://gitorious.org/obfs_gui/) project
-which could have made the configuration easier for the end user, and
-more easily integrated into our current [[bridge
-mode|todo/bridge_support]]; however, we're told it is stillborn.
+# Use cases
 
-A complete TBB+Obfsproxy bundle is available from the 
-project's page. The default configuration file is set 
-to connect via a selection of preconfigured obfs2 
-bridges. It all just works<sup>tm</sup>
+## Censorship circumvention
 
-obfsproxy is now part of Debian.
+Since bridges are easily detected and blocked in some areas (in
+particular China, but also places where wholesale SSL blocking is
+used), something like obfsproxy is needed in Tails.
 
+## Hiding Tor usage
+
+In situations where both reliability *and* obfuscation are required
+despite an adversary having control of the user's local network
+*traffic obfuscation* must also be employed. This traffic obfuscation
+is **imperative** where the user's welfare or liberty my be
+jeopardised by her use of Tor.
+
+# Implementation
+
+The branch `feature/obfsproxy` currently adds rudimentary support for
+obfsproxy. It's possible to just add a bridge like `obfs2 $IP:$PORT`
+through Vidalia's settings and it works (also works with
+[[bridge-mode|todo/bridge_support]]).
+
+# Future
+
+A complete TBB+Obfsproxy bundle is available from the project's
+page. The default configuration file is set to connect via a selection
+of preconfigured obfs2 bridges. It all just works<sup>tm</sup>. Is
+shipping such a static list of bridges something we want to consider
+for Tails? It completely contradicts the "Hiding Tor usage"
+requirement, but such users could opt-out of using the static list and
+instead have to input bridges manually, as is currently the case when
+using [[bridge-mode|todo/bridge_support]].
 
 [[!tag release/2.0]]
