@@ -1,0 +1,56 @@
+#!/bin/bash
+# Note that we must use bash since we are gonna source files
+# that have bashisms in them.
+
+set -e
+
+TARGET_DISPLAY=:8
+
+start_xvfb() {
+    Xvfb $TARGET_DISPLAY -screen 0 1024x768x16 >/dev/null 2>&1 &
+    XVFB_PID=$!
+    trap "kill -9 ${XVFB_PID}" EXIT
+}
+
+start_vnc_server() {
+    VNC_SERVER_PORT="$(x11vnc -listen localhost -display ${TARGET_DISPLAY} \
+                              -bg -nopw 2>&1 | \
+	                          grep -m 1 "^PORT=[0-9]\+" | sed 's/^PORT=//')"
+    echo "VNC server running on: localhost:${VNC_SERVER_PORT}"
+}
+
+start_vnc_viewer() {
+    DISPLAY=":0" xtightvncviewer -viewonly localhost:${VNC_SERVER_PORT} 1>/dev/null 2>&1 &
+}
+
+# These domains can be left from a previous test suite run if there was
+# an error. Initializing the VM class in vm_helper will fail since it
+# wants to define them, so we make sure they're not defined.
+# FIXME: move this into vm_helper.rb
+remove_TailsToaster_domains() {
+    for cmd in "shutdown TailsToaster" "destroy TailsToaster" \
+               "undefine TailsToaster" "net-destroy TailsToasterNet" \
+               "net-undefine TailsToasterNet"; do
+	virsh -c qemu:///system $cmd >/dev/null 2>&1 || true
+    done
+}
+
+
+# main script
+
+start_xvfb
+
+# FIXME: make this optional
+if true; then
+    start_vnc_server
+    start_vnc_viewer
+fi
+
+remove_TailsToaster_domains
+
+export SIKULI_HOME="/usr/share/java"
+export DISPLAY=${TARGET_DISPLAY}
+export ISO="$(readlink -f $1)"
+cd features
+. ./.rvmrc
+cucumber cucumber/
