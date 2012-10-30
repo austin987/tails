@@ -65,4 +65,8 @@ EOF
     @net.undefine
     @display.stop
   end
+
+  def take_screenshot(description)
+    @display.take_screenshot(description)
+  end
 end

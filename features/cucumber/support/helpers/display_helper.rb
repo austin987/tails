@@ -18,10 +18,18 @@ class Display
     start_virtviewer(@domain)
   end
 
-  # Self-explainatory TODO item. Xvfb can be told to put screen raw X images
-  # in a directory. These files are .wxd that can prob. be converted. see Xvfb(1)
-  def take_screenshot
-
+  # We could use libvirt functionality to take a screenshot (e.g.
+  # `virsh -c qemu:///system screenshot TailsToaster`) but with
+  # this approach we see the same exact same display as sikuli,
+  # which could help debug future DISPLAY problems.
+  def take_screenshot(description)
+    IO.popen(["xwd", "-display",
+                     ENV['DISPLAY'],
+                     "-root",
+                     "-out", description + ".xwd"].join(' '))
+    IO.popen("convert " + description + ".xwd " + description + ".png")
+    IO.popen("rm " + description + ".xwd")
+    puts("Took screenshot \"" + description + ".png\"")
   end
 
   def start_virtviewer(domain)
