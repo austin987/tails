@@ -2,11 +2,20 @@
 class Display
 
   def initialize(domain)
-    start_virtviewer(domain)
+    @domain = domain
+  end
+
+  def start
+    start_virtviewer(@domain)
   end
 
   def stop
     stop_virtviewer
+  end
+
+  def restart
+    stop_virtviewer
+    start_virtviewer(@domain)
   end
 
   # Self-explainatory TODO item. Xvfb can be told to put screen raw X images

@@ -3,7 +3,7 @@ require 'rexml/document'
 
 class VM
 
-  attr_reader :domain, :ip, :net
+  attr_reader :domain, :display, :ip, :net
 
   def initialize
     domain_xml = ENV['DOM_XML'] || Dir.pwd + "/cucumber/domains/default.xml"
@@ -54,6 +54,8 @@ EOF
   def start
     @domain.destroy if @domain.active?
     @domain.create
+    @display = Display.new(@domain.name)
+    @display.start
   end
 
   def stop
@@ -61,5 +63,6 @@ EOF
     @domain.undefine
     @net.destroy if @net.active?
     @net.undefine
+    @display.stop
   end
 end

@@ -7,12 +7,10 @@ end
 
 Before do
   @vm = VM.new
-  @display = Display.new(@vm.domain.name)
   @screen = Sikuli::Screen.new
 end
 
 
 After do
-  @display.stop
   @vm.stop
 end
