@@ -113,6 +113,24 @@ Also:
 
 ... and remove the `PENDING-FOR-N.M` warnings.
 
+Tag the release in Git
+======================
+
+	git tag -u 1202821CBE2CD9C1 -m "tagging version ${NEW_VERSION}" "${NEW_VERSION}"
+	git push --tags
+
+(Pushing the tag is needed so that the APT repository is updated, and
+the Tails APT configuration works at build and boot time. It might be
+premature, as testing might reveal critical issues, but this is
+a signed tag, so it can be overridden later. Yes, there is room for
+improvement here.)
+
+Prepare the versioned APT suite
+===============================
+
+Follow the [[post-tag|contribute/APT_repository#workflow-post-tag]] APT
+repository documentation.
+
 Build images
 ============
 
@@ -123,9 +141,12 @@ SquashFS files order
 --------------------
 
 Build an ISO image, burn a DVD and profile it **on bare metal** and update
-`squashfs.order` in the Git repository. Then rebuild images.
+`squashfs.order` in the Git repository.
 
 See [[todo/improve_boot_time_on_cd]] for details.
+
+Then, all included files should be up-to-date, and the versioned APT
+suite should be ready, so it is time to build the final image.
 
 Testing
 =======
@@ -136,11 +157,6 @@ real-world tests done by fellow beta-testers.
 
 The manual testing process [[is documented on a dedicated
 page|release_process/test]].
-
-Tag the release in Git
-======================
-
-	git tag -u 1202821CBE2CD9C1 -m "tagging version ${NEW_VERSION}" "${NEW_VERSION}"
 
 Generate the Torrents
 =====================
@@ -248,9 +264,9 @@ Go wild!
 Push
 ----
 
-Push the last commits and the release tag to our Git repository:
+Push the last commits to our Git repository:
 
-	git push --tags
+	git push
 
 IRC
 ---
@@ -276,3 +292,10 @@ Twitter
 -------
 
 Announce the release by tweeting a link to the "news" page.
+
+Prepare for the next release
+============================
+
+Follow the
+[[post-release|contribute/APT_repository#workflow-post-release]] APT
+repository documentation.
