@@ -3,7 +3,7 @@ require 'rexml/document'
 
 class VM
 
-  attr_reader :domain, :display, :ip, :net
+  attr_reader :domain, :display, :ip, :net, :remote_shell_port
 
   def initialize
     domain_xml = ENV['DOM_XML'] || Dir.pwd + "/cucumber/domains/default.xml"
@@ -11,6 +11,7 @@ class VM
     @iso = ENV['ISO'] || get_last_iso
     @virt = Libvirt::open("qemu:///system")
     setup_temp_domain(domain_xml, net_xml)
+    @remote_shell_port = 1337
   end
 
   def setup_temp_domain(domain_xml, net_xml)
@@ -46,9 +47,8 @@ EOF
     @domain.active?
   end
 
-  def execute
-    # TODO: could allow to run commands on the tails VM
-    # Might deserve a whole helper though.
+  def execute(cmd, user = "amnesia")
+    return VMCommand.new(self, cmd, user)
   end
 
   def start
@@ -69,4 +69,5 @@ EOF
   def take_screenshot(description)
     @display.take_screenshot(description)
   end
+
 end

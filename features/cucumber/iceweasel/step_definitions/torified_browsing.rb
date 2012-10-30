@@ -1,5 +1,8 @@
 Given /^a freshly started Tails$/ do
   @vm.start
+  @screen.wait('TailsBootSplash.png', 30)
+  @screen.type("\t autotest_never_use_this_option" +
+               Sikuli::KEY_RETURN)
   @screen.wait('WelcometoTai-1.png', 500)
 end
 
