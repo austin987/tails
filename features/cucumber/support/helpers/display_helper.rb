@@ -19,7 +19,7 @@ class Display
     IO.popen(["virt-viewer", "-d",
                              "-f",
                              "-r",
-                             "-c", "qemu+ssh://localhost/system",
+                             "-c", "qemu:///system",
                              ["--display=", ENV['DISPLAY']].join(''),
                              domain,
                              "&"].join(' '))
