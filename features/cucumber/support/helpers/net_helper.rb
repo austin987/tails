@@ -15,8 +15,6 @@
 
 # Should put all that in a Module.
 
-require 'packetfu'
-
 class Sniffer
 
   attr_reader :name, :pcap_file, :pid
@@ -28,7 +26,12 @@ class Sniffer
     @pcap_file = "#{ENV['PWD']}/#{name}.pcap"
   end
 
-  def capture(filter="tcp and src host #{@ip}")
+  # FIXME: What about IPv6? we need filter="... or src host #{@ip6}"
+  # below, and while we don't, FirewallLeakCheck won't detect IPv6
+  # leaks.
+  # FIXME: Do we also want to keep "dst host #{@ip}"? We should if we
+  # want to test the firewall's INPUT dropping.
+  def capture(filter="src host #{@ip}")
     job = IO.popen("/usr/sbin/tcpdump -n -i #{@bridge_name} -w #{@pcap_file} -U #{filter} >/dev/null 2>&1")
     @pid = job.pid
   end
@@ -36,13 +39,4 @@ class Sniffer
   def stop
     Process.kill("TERM", @pid)
   end
-
-  # Return an array of PacketFu packets from @pcap_file ready to be parsed.
-  def packets
-    p = PacketFu::PcapFile.new.file_to_array(:filename => @pcap_file)
-    pkts = []
-    p.each {|packet| pkts << PacketFu::Packet.parse(packet)}
-    pkts
-  end
-
 end
