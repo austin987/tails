@@ -29,8 +29,7 @@ class Sniffer
   end
 
   def capture(filter="tcp and src host #{@ip}")
-    # TODO: Eventually find a more quiet on exit app than tcpdump.
-    job = IO.popen("/usr/sbin/tcpdump -n -i #{@bridge_name} -w #{@pcap_file} -U #{filter}")
+    job = IO.popen("/usr/sbin/tcpdump -n -i #{@bridge_name} -w #{@pcap_file} -U #{filter} >/dev/null 2>&1")
     @pid = job.pid
   end
 
