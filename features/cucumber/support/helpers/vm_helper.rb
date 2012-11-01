@@ -8,22 +8,46 @@ class VM
   def initialize
     domain_xml = ENV['DOM_XML'] || Dir.pwd + "/cucumber/domains/default.xml"
     net_xml = ENV['NET_XML'] || Dir.pwd + "/cucumber/domains/default_net.xml"
+    @read_domain_xml = File.read(domain_xml)
+    @read_net_xml = File.read(net_xml)
+    @parsed_domain_xml = REXML::Document.new(@read_domain_xml)
+    @parsed_net_xml = REXML::Document.new(@read_net_xml)
     @iso = ENV['ISO'] || get_last_iso
     @virt = Libvirt::open("qemu:///system")
-    setup_temp_domain(domain_xml, net_xml)
+    setup_temp_domain
     @remote_shell_port = 1337
   end
 
-  def setup_temp_domain(domain_xml, net_xml)
-    setup_network(net_xml)
-    @domain = @virt.define_domain_xml(File.read(domain_xml))
+  def clean_up_old
+    domain_name = @parsed_domain_xml.elements['domain/name'].text
+    begin
+      old_domain = @virt.lookup_domain_by_name(domain_name)
+    rescue Libvirt::RetrieveError
+    else
+      old_domain.destroy if old_domain.active?
+      old_domain.undefine
+    end
+    net_name = @parsed_net_xml.elements['network/name'].text
+    begin
+      old_net = @virt.lookup_network_by_name(net_name)
+    rescue Libvirt::RetrieveError
+    else
+      old_net.destroy if old_net.active?
+      old_net.undefine
+    end
+  end
+
+  def setup_temp_domain
+    clean_up_old
+    setup_network
+    @domain = @virt.define_domain_xml(@read_domain_xml)
     add_iso_to_domain
   end
 
-  def setup_network(net_xml)
-    @net = @virt.define_network_xml(File.read(net_xml))
+  def setup_network
+    @net = @virt.define_network_xml(@read_net_xml)
     @net.create
-    @ip = REXML::Document.new(@net.xml_desc).elements['network/ip/dhcp/host/'].attributes['ip']
+    @ip = @parsed_net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
   end
 
   def get_last_iso
