@@ -7,18 +7,39 @@ Pros (aside from the obvious):
   from filesystem and live-media at runtime too" feature to make our
   kernel command-line shorter
 
+This is being worked on in the `feature/live-boot-3-beta` branch.
+
 Beware:
 
 * everything moved from `/live` to `/lib/live`, and might move again
-  to `/lib/live/mount` (e.g. we rely on `/live/image`):
-  ship a compatibility symlink, be done with it on the short term,
-  and then adapt our scripts and programs one after the other?
+  to `/lib/live/mount` (e.g. we rely on `/live/image`): ship
+  a compatibility symlink (**done**) first, be done with it on the
+  short term, and then adapt our scripts and programs one after
+  the other?
   
 * since 3.0~b4-1, `live-persistence.conf` was renamed to
   `persistence.conf`, and upstream did not reply to
   [our request for clarification and backward compat'](https://lists.debian.org/debian-live/2012/09/msg00163.html),
   so we have to handle the transition ourselves, somehow:
-  1. Have tails-persistence-setup use the new filename.
   1. Handle the migration (file move) at persistence activation time.
+     This was tried, and reveals itself to be harder than expected:
+     if the user enables read-only persistence, we cannot do the
+     migration immediately. Two alternatives, then:
+
+     * Go on exporting `persistence_list="live-persistence.conf"` in
+       our custom `live-persist` script: right now, this is the only
+       place where the live-boot persistence helper functions we run
+       get the configuration file name from, so this should work.
+       If we decide to go this way, a release time check must be
+       added, to ensure this remains true in whatever version of
+       live-boot we happen to ship.
+     * Explain, in the release notes, that one must enable persistence
+       read-write at least once with the new Tails, before being able
+       to use it read-only again + panic at runtime when we detect
+       migration is needed but read-only was chosen.
+
+  1. If we migrate to the new configuration file name, we must have
+     tails-persistence-setup use the new filename.
+
 
 [[!tag todo/code]]
