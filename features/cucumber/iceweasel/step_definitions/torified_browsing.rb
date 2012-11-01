@@ -12,7 +12,7 @@ Given /^a freshly started Tails$/ do
 end
 
 Given /^the network traffic is sniffed$/ do
-  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name, @vm.ip)
+  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name, @vm.ip, @vm.ip6)
   @sniffer.capture
 end
 

@@ -3,7 +3,7 @@ require 'rexml/document'
 
 class VM
 
-  attr_reader :domain, :display, :ip, :net, :remote_shell_port
+  attr_reader :domain, :display, :ip, :ip6, :net, :remote_shell_port
 
   def initialize
     domain_xml = ENV['DOM_XML'] || Dir.pwd + "/cucumber/domains/default.xml"
@@ -48,6 +48,11 @@ class VM
     @net = @virt.define_network_xml(@read_net_xml)
     @net.create
     @ip = @parsed_net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
+    @parsed_net_xml.elements.each('network/ip') do |e|
+      if e.attribute('family').to_s == "ipv6"
+        @ip6 = e.attribute('address').to_s
+      end
+    end
   end
 
   def get_last_iso
