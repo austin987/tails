@@ -27,9 +27,20 @@ start_vnc_viewer() {
 
 start_xvfb
 
-# FIXME: make this optional
-if true; then
+if [ "${1}" = "--view" ]; then
+    VNC_VIEWER=yes
+    VNC_SERVER=yes
+    shift
+elif [ "${1}" = "--vnc-server-only" ]; then
+    VNC_VIEWER=
+    VNC_SERVER="yes"
+    shift
+fi
+
+if [ -n "${VNC_SERVER}" ]; then
     start_vnc_server
+fi
+if [ -n "${VNC_VIEWER}" ]; then
     start_vnc_viewer
 fi
 
