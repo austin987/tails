@@ -36,8 +36,6 @@ Tester: <alan@boum.org>
 
 Hardware: USB 04e6:5115 SCM Microsystems, Inc. SCR335 SmartCard Reader
 
-> See commit f29ce64272 in Liberté Linux' Git.
-
 ## Test 1
 
 [gemalto USB shell token v2](http://shop.kernelconcepts.de/product_info.php?products_id=119)
@@ -69,8 +67,7 @@ reader) that is popularly used with OpenPGP cards.
 > It looks like all the additional packages were pulled as
 > dependencies of pcscd and libccid.
 
->> Backports were built and tested, and should now be uploaded.
->> [[!tag todo/code]]
+>> Backports were built, tested and uploaded.
 
 >> The user credentials issues are discussed on tails-dev:
 >> <CALSDXiB1VWcEQ-BxJzXF95_mPg_UyHL6b83wXCGQz-a2hMvAYA@mail.gmail.com>
@@ -104,6 +101,14 @@ adding a line containing:
 
 Testers: Patrick Bx <patrickbx@gmail.com>
 
+## Test 3
+
+[[!taglink todo/wait]] for results from Patrick Bx:
+
+  * with gnupg2, pcscd and scdaemon (as per Corsac's howto)
+  * his `GPG_AGENT_INFO`
+  * the `getfacl` output on the USB device
+
 Resources
 =========
 
@@ -116,10 +121,16 @@ Resources
   on Debian, with gnupg2, pcscd and scdaemon
 * Liberté Linux' implementation: ccid, pcsc-lite, GnuPG built without
   libusb support, and `gnupg-pkcs11-scd` used as a `scdaemon-program`
-  (available, commented-out in the default `gpg-agent.conf`)
+  (available, commented-out in the default `gpg-agent.conf`); see
+  commit f29ce64272 in their Git. Their reason for disabling CCID over
+  libusb ("supporting direct CCID interface via libusb makes no sense,
+  since the devices are accessible only to "pcscd" daemon") may not
+  apply in the Debian and Tails case, since the packages take care to
+  give access to devices to the `amnesia` user, using an ACL.
 * [pcscd auto
   start](http://ludovicrousseau.blogspot.com/2010/09/pcscd-auto-start.html)
   on Ludovic Rousseau blog
 * [Installation of Card
   Reader](http://gnupg.org/howtos/card-howto/en/ch02s03.html)
   in GnuPG's documentation
+
