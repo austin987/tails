@@ -33,6 +33,8 @@ class Display
   end
 
   def start_virtviewer(domain)
+    # virt-viewer forks, so we cannot (easily) get the child pid
+    # and use it in active? and stop_virtviewer below...
     IO.popen(["virt-viewer", "-d",
                              "-f",
                              "-r",
@@ -40,6 +42,10 @@ class Display
                              ["--display=", ENV['DISPLAY']].join(''),
                              domain,
                              "&"].join(' '))
+  end
+
+  def active?
+    system("pkill -0 virt-viewer")
   end
 
   def stop_virtviewer

@@ -12,6 +12,12 @@ class VM
     @read_net_xml = File.read(net_xml)
     @parsed_domain_xml = REXML::Document.new(@read_domain_xml)
     @parsed_net_xml = REXML::Document.new(@read_net_xml)
+    @ip = @parsed_net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
+    @parsed_net_xml.elements.each('network/ip') do |e|
+      if e.attribute('family').to_s == "ipv6"
+        @ip6 = e.attribute('address').to_s
+      end
+    end
     @iso = ENV['ISO'] || get_last_iso
     @virt = Libvirt::open("qemu:///system")
     setup_temp_domain
@@ -22,18 +28,16 @@ class VM
     domain_name = @parsed_domain_xml.elements['domain/name'].text
     begin
       old_domain = @virt.lookup_domain_by_name(domain_name)
-    rescue Libvirt::RetrieveError
-    else
       old_domain.destroy if old_domain.active?
       old_domain.undefine
+    rescue
     end
     net_name = @parsed_net_xml.elements['network/name'].text
     begin
       old_net = @virt.lookup_network_by_name(net_name)
-    rescue Libvirt::RetrieveError
-    else
       old_net.destroy if old_net.active?
       old_net.undefine
+    rescue
     end
   end
 
@@ -47,12 +51,6 @@ class VM
   def setup_network
     @net = @virt.define_network_xml(@read_net_xml)
     @net.create
-    @ip = @parsed_net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
-    @parsed_net_xml.elements.each('network/ip') do |e|
-      if e.attribute('family').to_s == "ipv6"
-        @ip6 = e.attribute('address').to_s
-      end
-    end
   end
 
   def get_last_iso
@@ -80,6 +78,35 @@ EOF
     return VMCommand.new(self, cmd, user)
   end
 
+  def host_to_guest_time_sync
+    host_time= DateTime.now.strftime("%s").to_s
+    execute("date -s '@#{host_time}'", "root").success?
+  end
+
+  def save_snapshot(path)
+    @domain.save(path)
+    @display.stop
+  end
+
+  def restore_snapshot(path)
+    # Undefine current domain so it can be restored
+    @domain.destroy if @domain.active?
+    begin
+      @domain.undefine
+    rescue
+      # FIXME: why exception sometimes?
+    end
+
+    # FIXME: is restore broken?
+    # @domain.restore(path)
+    # workaround based on virsh
+    system("virsh -c qemu:///system restore --file #{path}")
+    @domain = @virt.lookup_domain_by_name("TailsToaster")
+    # /workaraound
+    @display = Display.new(@domain.name)
+    @display.start
+  end
+
   def start
     @domain.destroy if @domain.active?
     @domain.create
@@ -89,7 +116,12 @@ EOF
 
   def stop
     @domain.destroy if @domain.active?
-    @domain.undefine
+    begin
+      @domain.undefine
+    rescue
+      # FIXME: why does this happen after snapshot restore?
+      puts "Domain couldn't be undefined"
+    end
     @net.destroy if @net.active?
     @net.undefine
     @display.stop

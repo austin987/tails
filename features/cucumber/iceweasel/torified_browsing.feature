@@ -2,12 +2,15 @@ Feature: Iceweasel must be anonymous.
   In order to be anonymous, the iceweasel web browser must connect through Tor.
 
   Background:
-    Given a freshly started Tails
+    Given I restore the background snapshot if it exists
+    And a freshly started Tails
     And the network traffic is sniffed
     And I log in to a new session
     And I have a network connection
     And Tor has bootstrapped
-    And I see "IceweaselRunning.png" after at most 120 seconds
+    And Iceweasel has autostarted and is not loading a web page
+    And the time has synced
+    And I save the background snapshot if it does not exist
 
   Scenario: Opening check.torproject.org in Iceweasel will show the green onion and the congratualtions message.
     When I open the address "https://check.torproject.org" in Iceweasel

@@ -9,7 +9,12 @@ class IPAddr
     IPAddr.new("192.168.0.0/16")
   ]
 
-  PrivateIPv6Range = IPAddr.new("fc00::/7")
+  # Tails' firewall apparently leaks multicast ff02::1 == "all
+  # (link-local) nodes address"
+  PrivateIPv6Ranges = [
+    IPAddr.new("fc00::/7"),   # private
+    IPAddr.new("ff02::1/64")  # link-local multicast
+  ]
 
   def private?
     if self.ipv4?
@@ -18,7 +23,10 @@ class IPAddr
       end
       return false
     else
-      return PrivateIPv6Range.include?(self)
+      PrivateIPv6Ranges.each do |ipr|
+        return true if ipr.include?(self)
+      end
+      return false
     end
   end
 
