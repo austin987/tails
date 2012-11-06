@@ -7,18 +7,26 @@ Pros (aside from the obvious):
   from filesystem and live-media at runtime too" feature to make our
   kernel command-line shorter
 
-Beware:
+This is being worked on in the `feature/live-boot-3.x` branch.
+
+Next things to do
+=================
+  
+* live-boot 3.0~b4-1 to 3.0~b6-1 only support `persistence.conf`,
+  while deployed Tails systems have `live-persistence.conf`. We have
+  added compatibility code, so live-boot 3.0~b7 should support both.
+  [[!taglink todo/wait]] for live-boot 3.0~b7 to be out.
+
+* Once we have live-boot 3.0~b7, our `live-persist` script should be
+  updated to export `old_persistence_list=live-persistence.conf` and
+  `persistence_list=persistence.conf`, so that Tails does too.
+  [[!tag todo/code]]
+
+Done
+====
 
 * everything moved from `/live` to `/lib/live`, and might move again
-  to `/lib/live/mount` (e.g. we rely on `/live/image`):
-  ship a compatibility symlink, be done with it on the short term,
-  and then adapt our scripts and programs one after the other?
-  
-* since 3.0~b4-1, `live-persistence.conf` was renamed to
-  `persistence.conf`, and upstream did not reply to
-  [our request for clarification and backward compat'](https://lists.debian.org/debian-live/2012/09/msg00163.html),
-  so we have to handle the transition ourselves, somehow:
-  1. Have tails-persistence-setup use the new filename.
-  1. Handle the migration (file move) at persistence activation time.
-
-[[!tag todo/code]]
+  to `/lib/live/mount` (e.g. we rely on `/live/image`): so we ship
+  a compatibility symlink first, be done with it on the
+  short term, and we will then adapt our scripts and programs one
+  after the other.
