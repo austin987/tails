@@ -14,13 +14,24 @@ Next things to do
   
 * live-boot 3.0~b4-1 to 3.0~b6-1 only support `persistence.conf`,
   while deployed Tails systems have `live-persistence.conf`. We have
-  added compatibility code, so live-boot 3.0~b7 should support both.
-  [[!taglink todo/wait]] for live-boot 3.0~b7 to be out.
+  added compatibility code and live-boot 3.0~b7 now supports both
+  => install live-boot 3.0~b7 and live-config >=3.0.9-1 [[!tag todo/code]]
 
 * Once we have live-boot 3.0~b7, our `live-persist` script should be
   updated to export `old_persistence_list=live-persistence.conf` and
   `persistence_list=persistence.conf`, so that Tails does too.
   [[!tag todo/code]]
+
+* live-boot mounts now live in `/lib/live/mount`, and `/live/image`
+  now lives in `/lib/live/mount/medium`; should be updated
+  accordingly: [[!tag todo/code]]
+  - liveusb-creator: `liveusb/config.py`
+  - tails-iuk: `lib/Tails/IUK/Install.pm`
+  - tails-persistence-setup: `lib/Tails/Persistence/Setup.pm`
+  - `config/chroot_local-includes/lib/live/config/9980-permissions`
+  - `config/chroot_local-includes/usr/local/bin/tails-get-bootinfo`
+  - `config/chroot_local-includes/usr/local/sbin/udev-watchdog-wrapper`
+  - `git grep -w live/image -- config` to make sure there are no others
 
 Done
 ====
