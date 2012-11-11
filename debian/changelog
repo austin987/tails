@@ -1,6 +1,14 @@
-tails (0.14~rc1) unstable; urgency=low
+tails (0.14) unstable; urgency=low
 
   * Major new features
+  - Enable Tor stream isolation; several new SocksPorts with
+    appropriate Isolate* options have been added for different use
+    cases (i.e. applications). All application's have been
+    reconfigured to use these new SocksPorts, which should increase
+    anonymity by making it more difficulte to correlate traffic from
+    different applications or "online identities".
+  - The web browser now has the anonymity enhancing patches from the
+    TorBrowser applied.
   - gpgApplet can now handle public-key cryptography.
   - Install an additional, PAE-enabled kernel with NX-bit
     support. This kernel is auto-selected when the hardware supports
@@ -11,19 +19,13 @@ tails (0.14~rc1) unstable; urgency=low
     * make all processors/cores available, including their
       power-saving functionality.
   - Add a persistence preset for NetworkManager connections.
-  - Enable Tor stream isolation; several new SocksPorts with
-    appropriate Isolate* options have been added for different use
-    cases (i.e. applications). All application's have been
-    reconfigured to use these new SocksPorts, which should increase
-    anonymity by making it more difficulte to correlate traffic from
-    different applications or "online identities".
 
   * Minor improvements
   - On kexec reboot, make the boot quiet only if debug=wipemem was not
     enabled.
   - Update torproject.org's APT repo key.
   - Update the embedded Tails signing key.
-  - Use symlinks instead of dupliqcating localized searchplugins.
+  - Use symlinks instead of duplicating localized searchplugins.
   - Rewrite Tails firewall using ferm. Tails firewall was written in
     very unsophisticated iptables-save/restore format. As more feature
     creeped in, it started to be quite unreadable.
@@ -47,8 +49,6 @@ tails (0.14~rc1) unstable; urgency=low
     that use the old path.
   - Do not run unecessary scripts during shutdown sequence, to make
     shutdown faster.
-  - Fix Iceweasel's file associations. No more should you be suggested
-    to open a PDF in the GIMP.
   - Make live-persist deal with persistent ~/.gconf subdirs so that
     any options saved therein actually get persistent.
   - Prevent memlockd unload on shutdown, to make sure that all
@@ -58,6 +58,10 @@ tails (0.14~rc1) unstable; urgency=low
     now let insserv figure out the correct ordering for the services
     during startup and shutdown, i.e. use dependency-based boot
     sequencing.
+  - Remove the last absolute path in our isolinux config, which makes
+    it easier to migrate from isolinux to syslinux (just rename the
+    directory), and hence might make it easier for 3rd party USB
+    installers (like the Universal USB Installer) to support Tails.
 
   * Bugfixes
   - Include `seq` in the ramdisk environment: it is used to wipe more
@@ -78,13 +82,26 @@ tails (0.14~rc1) unstable; urgency=low
   - Factorize GCC wanted / available version numbers in VirtualBox
     modules building hook. This, incidentally, fixes a bug caused by
     duplication and not updating all instances.
+  - Fix tordate vs. Tor 0.2.3.x. Since 0.2.3.x Tor doesn't download a
+    consensus for clocks that are more than 30 days in the past or 2
+    days in the future (see commits f4c1fa2 and 87622e4 in Tor's git
+    repo). For such clock skews we set the time to the Tor authority's
+    cert's valid-after date to ensure that a consensus can be
+    downloaded.
 
   * Tor
-  - Update to version 0.2.3.22-rc-1~~squeeze+1, a new major
+  - Update to version 0.2.3.24-rc-1~~squeeze+1, a new major
     version. It's not a stable release, but we have been assured by
     the Tor developers that this is the right move.
   - Stop setting custom value for the Tor LongLivedPorts
     setting. Gobby's port was upstreamed in Tor 0.2.3.x.
+
+  * Iceweasel
+  - Update to 10.0.10esr-1+tails1, which has all the anonymity enhancing
+    patches from the TorBrowser applied.
+  - Install iceweasel from our own repo, http://deb.tails.boum.org.
+  - Fix Iceweasel's file associations. No more should you be suggested
+    to open a PDF in the GIMP.
 
   * htpdate
   - Use curl instead of wget, and add a --proxy option passed through
@@ -96,17 +113,18 @@ tails (0.14~rc1) unstable; urgency=low
   - Compute the median of the diffs more correctly.
 
   * Hardware support
-  - Update Linux to 3.2.30-1.
+  - Update Linux to 3.2.32-1.
 
   * Software
   - Update vidalia to 0.2.20-1+tails1.
-  - Update bundled WhisperBack package to 1.6.1:
+  - Update bundled WhisperBack package to 1.6.2:
     * Raise the socket library timeout to 120 seconds
     * Use smtplib's timeout parameter
     * Fix error output when calling send a 2nd time
   - Update liveusb-creator to 3.11.6-3.
   - Update i2p to 0.9.2.
-  - Update tails-persistence-setup to 0.18-1.
+  - Update tails-persistence-setup to 0.20-1, which should make it
+    possible to install Tails on large (>= 32 GiB) USB drives.
   - Install console-setup and keyboard-configuration from unstable
     (required by new initramfs-tools).
   - Update tails-greeter to 0.7.3:
@@ -122,10 +140,19 @@ tails (0.14~rc1) unstable; urgency=low
     * Drop tails-lang-helper, not used anymore.
     * Do not compile locales at login time anymore. Tails now ships
       locales-all.
+  - Import live-config{,-sysvinit} 3.0.8-1. live-config >= 3.0.9-1
+    has basically nothing useful for us, and it migrates to new paths
+    brought by live-boot 3.0~b7, which we're not ready for yet (see:
+    todo/newer_live-boot).
 
-  * Internationalization
+  * Localization
   - Fix Tails specific Iceweasel localization for pt-BR
   - Add Japanese input system: scim-anthy.
+  - whisperback is now also translated into German, Hebrew, Hungarian,
+    Italian and Korean.
+  - tails-persistence-setup is now also translated into Arabic.
+  - tails-greeter is now also translated into Arabic, Hebrew, Basque,
+    Hungarian, Italian and Chinese.
 
   * Build system
   - Catch more errors in during build time:
@@ -150,7 +177,7 @@ tails (0.14~rc1) unstable; urgency=low
   - vagrant: Allow in-memory builds when a VM with enough memory is
     already started.
 
- -- Tails developers <amnesia@boum.org>  Tue, 09 Oct 2012 17:59:51 +0000
+ -- Tails developers <amnesia@boum.org>  Sat, 10 Nov 2012 12:34:56 +0000
 
 tails (0.13) unstable; urgency=low
 
