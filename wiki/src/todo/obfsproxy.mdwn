@@ -1,8 +1,8 @@
 [[!tag todo/research]]
 
-The [Obfsproxy](https://tails.boum.org/todo/obfsproxy/) project exists
-to achieve the benefits of Tor's bridges together with traffic
-obfuscation.
+The [Obfsproxy](https://www.torproject.org/projects/obfsproxy.html.en) 
+project exists to achieve the benefits of Tor's 
+bridges together with traffic obfuscation.
 
 # Use cases
 
@@ -27,8 +27,25 @@ obfsproxy. It's possible to just add a bridge like `obfs2 $IP:$PORT`
 through Vidalia's settings and it works (also works with
 [[bridge-mode|todo/bridge_support]]).
 
+[[!tag todo/qa]]
+
 > Does this mean a user has to boot Tails, let Tor start (and then
 > start talking on the network), and then switch to "stealth" mode?
+
+>> Not necessarily. As was mentioned above, it "also works with
+>> bridge-mode", which even in its current implementation (which
+>> doesn't use `DisableNetwork`) prevents Tor from talking to the
+>> network, and which will make Vidalia prompt the user for bridges,
+>> `obfs2` or not.
+
+> Also, what's the next thing to do?
+
+>> User documentation for the two different usecases mentioned above,
+>> but that's IMHO only relevant once todo/bridge_support is made
+>> non-experimental (and get an option in Tails Greeter). Also a
+>> design update which incorporatesthe "hiding Tor usage" in Tails'
+>> threat model. Adding something about censorship circumvention would
+>> be good too I think.
 
 # Future
 
@@ -41,7 +58,15 @@ requirement, but such users could opt-out of using the static list and
 instead have to input bridges manually, as is currently the case when
 using [[bridge-mode|todo/bridge_support]].
 
->Would supplying the Obfsproxy project's default obfs2 bridge list in our torrc but with <span class="command">UseBridges 0</span> offer the best solution in all cases?
+> Would supplying the Obfsproxy project's default obfs2 bridge list in our torrc but with <span class="command">UseBridges 0</span> offer the best solution in all cases?
+
+>> That's a good question. IMHO that list can not be considered
+>> secret, so it doesn't help with the "hiding Tor usage" use case. In
+>> fact, providing a static list may help users that have such a
+>> threat model to screw themselves by mistake. I think TBB+Obfsproxy
+>> doesn't have that use case (it's all about censorship
+>> circumvention) so shipping a static list may be a bad idea.
+>>> +1 defining your own obfsproxy bridges
 
 [[!tag todo/discuss]]
 
