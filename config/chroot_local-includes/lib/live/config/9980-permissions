@@ -7,7 +7,7 @@ Fix_debian_bug_645466 ()
 	# ownership to 'floppy' making it writable by the live user. To
 	# prevent this we set it to 'disk'.
 
-	boot_dev_id=$(udevadm info --device-id-of-file=/live/image)
+	boot_dev_id=$(udevadm info --device-id-of-file=/lib/live/mount/medium)
 	boot_dev=$(readlink -f /dev/block/"${boot_dev_id}")
 	boot_dev_type=$(udevadm info --query=property --name="${boot_dev}" | \
 	                awk -F'=' '/ID_BUS/ { print $2 }')
