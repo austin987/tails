@@ -49,3 +49,9 @@ Feature: custom APT sources to build branches
     When I run tails-custom-apt-sources
     Then I should see the 'devel' suite
     And I should see the 'feature-icedove' suite
+
+  Scenario: build from a feature branch based on devel with dots in its name
+    Given I am working on the feature/live-boot-3.x branch based on devel
+    When I run tails-custom-apt-sources
+    Then I should see the 'devel' suite
+    And I should see the 'feature-live-boot-3.x' suite
