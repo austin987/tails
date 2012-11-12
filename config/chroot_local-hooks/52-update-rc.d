@@ -22,7 +22,6 @@ kexec-load
 laptop-mode
 memlockd
 network-manager
-pdnsd
 plymouth
 polipo
 resolvconf
