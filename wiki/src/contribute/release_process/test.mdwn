@@ -44,9 +44,9 @@ Check the image size has not changed much since the last release.
 * is web browsing really torified?
  - <https://check.torproject.org/>
  - <http://monip.org/>
-* does the exposed User-Agent match the generic Torbutton's one?
+* does the exposed User-Agent match the TBB's one?
   (connect to a website you can check the access logs for)
-* Browsing (by IP) a HTTP/HTTPS server on the LAN should be possible.
+* Browsing (by IP) a HTTP or HTTPS server on the LAN should be possible.
 * Browsing (by IP) a FTP server on the LAN should be possible.
 * Browsing (by hostname) a FTP server on the Internet should be possible
   (once [[todo/fix Internet FTP support]] is fixed)
@@ -68,7 +68,7 @@ Check the image size has not changed much since the last release.
 * Check if pidgin doesn't leak too many informations on replying to different
   CTCP requests:
   * Start Tails and launch pidgin once done. Connect to an IRC server where you're already on
-  * try to /ctcp <T(A)ILS_account_nick> COMMAND
+  * try to /ctcp <Tails_account_nick> COMMAND
   (for a list of commands, see [this page](http://www.wikkedwire.com/irccommands)).
 
 # Tor
@@ -114,8 +114,17 @@ Check the image size has not changed much since the last release.
     # Note that these default directory authorities may change! To be
     # sure, check in Tor's source, src/or/config.c:~900
     DIR_AUTHS="
-    128.31.0.39 86.59.21.38 194.109.206.212 82.94.251.203 216.224.124.114
-    212.112.245.170 193.23.244.244 208.83.223.34 213.115.239.118"
+    128.31.0.39
+    86.59.21.38
+    194.109.206.212
+    82.94.251.203
+    76.73.17.194
+    212.112.245.170
+    193.23.244.244
+    208.83.223.34
+    171.25.193.9
+    154.35.32.5
+    "
     tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
     while read x; do
         ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
@@ -224,20 +233,27 @@ correctly.
 
 # erase memory on shutdown
 
-- check that `memlockd` and `udev-watchdog` are running, and that the right
-  device is being watched by the later.
-- remove Tails' media (USB and cdrom) and check that the memory
-  erasure process is started (`Loading new kernel`, at least).
+- check that `memlockd` is running
+- check that `udev-watchdog` is running and monitors the right
+  device:
+  * on USB
+  * on DVD
+- remove Tails boot medium and check that the memory
+  erasure process is started (`Loading new kernel`, at least):
+  * on USB
+  * on DVD
 
 Testing that the needed files are really mapped in memory, and the
-erasing process actually works, involves slightly more complicated
-steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
+erasing process actually works, involves a more complicated
+process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # Root access control
 
-* Check you can't login as root;
+* Check you can login as root neither with the `amnesia` password nor
+  with the `live` one.
 * Boot Tails without setting a password and check you can't sudo nor get
-  PolicyKit administrative privileges;
+  PolicyKit administrative privileges, neither with the `amnesia` password nor
+  with the `live` one.
 * Boot Tails with a password and check you can sudo and get PolicyKit
   administrative privileges.
 * Check that the $TAILS_USER_PASSWORD variable, if still existing in the system
@@ -318,7 +334,7 @@ after each of the following tests.
 # Persistence
 
 * Activate persistence on a Tails USB install with all presets
-  on.
+  on, and a few custom directories.
 * Reboot, enable persistence. Verify via `mount` that each preset has
   a mount that seem correct (e.g. "Pidgin preset =>
   `/home/amnesia/.purple` has something mounted on it").
@@ -326,7 +342,6 @@ after each of the following tests.
   and that changes do survive reboot.
 * Try read-only mode. Make sure that persistent files are writeable,
   but that no changes survive reboot.
-* Test adding a few custom directories.
 * Turn off some persistence presets, reboot, and make sure they are
   not activated.
 
@@ -400,7 +415,7 @@ language.
 
 # Misc
 
-* Check that there are no weird applications listening to external
+* Check that there are no unexpected applications listening to external
   connections with `sudo netstat -ltupn` (everything should be
   `127.0.0.1` (IPv4) or `::1` (IPv6)). Ignore:
   - `cupsd`, which listens on `0.0.0.0:631` to detect network printers.
