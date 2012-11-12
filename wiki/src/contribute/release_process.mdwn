@@ -158,6 +158,24 @@ suite should be ready, so it is time to:
 * `git push --tags`
 *  build the final image!
 
+Build the Incremental Update Kit
+--------------------------------
+
+Example:
+
+    $ sudo tails-create-iuk --squashfs-diff-name 0.14.squashfs \
+        --old-iso tails-i386-0.14\~rc2.iso \
+        --new-iso tails-i386-0.14.iso      \
+        --outfile Tails_i386_0.14-rc2_to_0.14.iuk
+
+Prepare update-description files
+--------------------------------
+
+1. Prepare update-description files: see [[todo/incremental_upgrades]]
+   for details.
+1. Detach-sign the update-description files.
+1. Rename the detached signatures from `.asc` to `.pgp`.
+
 Testing
 =======
 
@@ -261,8 +279,11 @@ version in `security/` in order to let the users of the old versions
 know that they have to upgrade. This announcement page shall be dated back
 to a few days before the one to be released was *built*.
 
-Then add the updated `debian/changelog` and you should be ready to
-record the last commit before putting the release out for real:
+Import the update description files and their detached OpenPGP
+signature into the `updates/` tree. See [[todo/incremental_upgrades]]
+for the file naming conventions.
+
+Then, record the last commit before putting the release out for real:
 
 	git commit -m "releasing version ${NEW_VERSION}"
 
@@ -271,6 +292,8 @@ Go wild!
 
 Push
 ----
+
+### Git
 
 Push the last commits to our Git repository:
 
