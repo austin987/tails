@@ -158,6 +158,24 @@ suite should be ready, so it is time to:
 * `git push --tags`
 *  build the final image!
 
+Build the Incremental Update Kit
+--------------------------------
+
+Example:
+
+    $ sudo tails-create-iuk --squashfs-diff-name 0.14.squashfs \
+        --old-iso tails-i386-0.14\~rc2.iso \
+        --new-iso tails-i386-0.14.iso      \
+        --outfile Tails_i386_0.14-rc2_to_0.14.iuk
+
+Prepare update-description files
+--------------------------------
+
+1. Prepare update-description files: see [[todo/incremental_upgrades]]
+   for details.
+1. Detach-sign the update-description files.
+1. Rename the detached signatures from `.asc` to `.pgp`.
+
 Testing
 =======
 
@@ -272,9 +290,17 @@ Go wild!
 Push
 ----
 
+### Git
+
 Push the last commits to our Git repository:
 
 	git push
+
+### Publish update-description files
+
+Upload the update description files and their detached OpenPGP
+signature to the primary rsync mirror.
+See [[todo/incremental_upgrades]] for details.
 
 IRC
 ---
