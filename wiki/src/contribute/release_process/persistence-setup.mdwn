@@ -59,6 +59,9 @@ Update `debian/changelog`:
 
     git-dch
 
+(Do not forget to set the appropriate release. It should be `devel` by
+default.)
+
 Build a Debian package:
 
     git-buildpackage
@@ -72,5 +75,10 @@ changes:
 Add the Debian package to Tails
 ===============================
 
-Replace older packages with the new ones in `config/chroot_local-packages`.
-Paste the last entry of `debian/changelog` in the commit message.
+Sign the package:
+
+    debsign $CHANGES_FILE
+
+Upload:
+
+    dupload --to tails $CHANGES_FILE
