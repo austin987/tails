@@ -4,6 +4,7 @@
 
 set -e
 
+NAME="$0"
 TARGET_DISPLAY=:8
 
 start_xvfb() {
@@ -15,7 +16,7 @@ start_xvfb() {
 start_vnc_server() {
     VNC_SERVER_PORT="$(x11vnc -listen localhost -display ${TARGET_DISPLAY} \
                               -bg -nopw 2>&1 | \
-	                          grep -m 1 "^PORT=[0-9]\+" | sed 's/^PORT=//')"
+                                  grep -m 1 "^PORT=[0-9]\+" | sed 's/^PORT=//')"
     echo "VNC server running on: localhost:${VNC_SERVER_PORT}"
 }
 
@@ -25,18 +26,48 @@ start_vnc_viewer() {
 
 # main script
 
-start_xvfb
+unset CAPTURE_FILE VNC_VIEWER VNC_SERVER
+SHORTOPTS="a:c"
+LONGOPTS="view,vnc-server-only,capture:"
+OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
+eval set -- "$OPTS"
+while [ $# -gt 0 ]; do
+    case $1 in
+        --view)
+            VNC_VIEWER=yes
+            VNC_SERVER=yes
+            ;;
+        --vnc-server-only)
+            VNC_VIEWER=
+            VNC_SERVER=yes
+            ;;
+        --capture)
+            shift
+            CAPTURE_FILE="$1"
+            ;;
+        --)
+            shift
+            if [ -n "$1" ]; then
+                ISO="$(readlink -f $1)"
+            fi
+            break
+            ;;
+    esac
+    shift
+done
 
-if [ "${1}" = "--view" ]; then
-    VNC_VIEWER=yes
-    VNC_SERVER=yes
-    shift
-elif [ "${1}" = "--vnc-server-only" ]; then
-    VNC_VIEWER=
-    VNC_SERVER="yes"
-    shift
+if [ -z "${ISO}" ]; then
+    echo "No ISO provided. Aborting..." >&2
+    exit 1
 fi
 
+start_xvfb
+
+if [ -n "${CAPTURE_FILE}" ]; then
+    echo "Capturing guest display into ${CAPTURE_FILE}"
+    ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
+        -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
+fi
 if [ -n "${VNC_SERVER}" ]; then
     start_vnc_server
 fi
@@ -46,7 +77,7 @@ fi
 
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
-export ISO="$(readlink -f $1)"
+export ISO="${ISO}"
 cd features
 . ./.rvmrc
 cucumber cucumber/
