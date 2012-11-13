@@ -103,14 +103,9 @@ Check the image size has not changed much since the last release.
     # set DUMP to the output of tcpdump above
     DUMP=dump
     # set CONSENSUS to Tor's consensus from the Tails session
-    CONSENSUS=cached-consensus
+    CONSENSUS=cached-microdesc-consensus
     NODES=$(mktemp)
-    # FIXME: In practice the "CSV List of All Current Tor Server IP Addresses"
-    # from e.g. https://torstatus.blutmagie.de works better (less false
-    # positives) as NODES but we need to download it with authentication.
-    # wget https://torstatus.blutmagie.de/ip_list_all.php/Tor_ip_list_ALL.csv \
-    # -O ${NODES}
-    awk '/^r / { print $7 }' ${CONSENSUS} > ${NODES}
+    awk '/^r / { print $6 }' ${CONSENSUS} > ${NODES}
     # Note that these default directory authorities may change! To be
     # sure, check in Tor's source, src/or/config.c:~900
     DIR_AUTHS="
