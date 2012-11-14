@@ -103,14 +103,9 @@ Check the image size has not changed much since the last release.
     # set DUMP to the output of tcpdump above
     DUMP=dump
     # set CONSENSUS to Tor's consensus from the Tails session
-    CONSENSUS=cached-consensus
+    CONSENSUS=cached-microdesc-consensus
     NODES=$(mktemp)
-    # FIXME: In practice the "CSV List of All Current Tor Server IP Addresses"
-    # from e.g. https://torstatus.blutmagie.de works better (less false
-    # positives) as NODES but we need to download it with authentication.
-    # wget https://torstatus.blutmagie.de/ip_list_all.php/Tor_ip_list_ALL.csv \
-    # -O ${NODES}
-    awk '/^r / { print $7 }' ${CONSENSUS} > ${NODES}
+    awk '/^r / { print $6 }' ${CONSENSUS} > ${NODES}
     # Note that these default directory authorities may change! To be
     # sure, check in Tor's source, src/or/config.c:~900
     DIR_AUTHS="
@@ -330,6 +325,30 @@ after each of the following tests.
   - make sure to test that TailsData partitions survive upgrades.
 * Test "emergency shutdown on boot medium removal" feature, on Tails
   system installed by this installer.
+
+# Incremental updates
+
+Try every update path supported by the generated update-description
+files:
+
+* for every incremental update paths: make sure the resulting updated
+  system "works fine" (what does that mean? do we want to run the full
+  test suite on these? **FIXME**)
+* for updates that only propose a non-incremental paths: make sure the
+  user is guided just fine (that is? **FIXME**)
+
+Given these are not published yet, a local test setup is needed:
+
+* a web server
+* a replacement for the Tails website's `/update/` tree with
+  update-description files in there, e.g.
+  `/var/www/tails/update/v1/Tails/0.14~rc2/i386/stable/updates.yml`
+* a replacement for the Tails HTTP mirrors' `iuk` directories,
+  e.g. `/var/www/tails/stable/iuk/Tails_i386_0.14-rc2_to_0.14.iuk`
+
+Also, the updater must be called, from inside the system to update,
+with every needed option to use that rather than the online published
+stuff: **FIXME**.
 
 # Persistence
 
