@@ -1,6 +1,50 @@
-tails (0.15) UNRELEASED; urgency=low
+tails (0.15~rc1) unstable; urgency=low
 
- -- Tails developers <amnesia@boum.org>  Sat, 10 Nov 2012 12:34:56 +0000
+  * Major new features
+  - Persistence for browser bookmarks.
+  - Support for obfsproxy bridges.
+
+  * Minor improvements
+  - Add the Hangul Input Method Engine for SCIM.
+  - Add vendor-specific dpkg origin information. This makes dpkg-vendor
+    return correct information.
+  - Install pcscd and libccid from squeeze-backports. This is needed to
+    support, to some extent, some OpenPGP SmartCard readers.
+  - Install HPIJS PPD files. Note that this depends on IJS driver
+    (hpijs), and adds support for some printers, such as Xerox
+    DocumentCenter400.
+  - Use LCD-optimized fonts.
+  - Update TrueCrypt to version 7.1a.
+
+  * Bugfixes
+  - Do not use pdnsd anymore. It has been orphaned in Debian, has quite
+    some bugs in there, and apparently Tor's DNSPort's own caching is
+    be good enough.
+  - Remove useless iceweasel cookies exceptions. They are useless as
+    per-session cookies are allowed.
+  - Do not run setupcon on X. This call is only needed on the Linux
+    console, no need to annoy the user with a weird "Press enter to
+    activate this console" when the open a root shell in a GNOME
+    Terminal.
+  - Allow the tails-iuk-get-target-file user to connect to the SOCKSPort
+    dedicated for Tails-specific software.
+
+  * Iceweasel
+  - User profile is now generated at build time in order to support persistent
+    bookmarks.
+  - Update HTTPS Everywhere to version 3.0.4.
+  - Update NoScript to version 2.6.
+  - Fix bookmark to I2P router console.
+  - Re-enable Monkeysphere extension to connect to the validation agent.
+
+  * Build system
+  - Custom packages are now retrieved from Tails APT repository instead
+    of bloating the Git repository.
+  - Allow '~' in wiki filenames. This makes it possible to ship
+    update-description files for release candidates.
+  - Document how to create incremental update kit.
+
+ -- Tails developers <amnesia@boum.org>  Thu, 15 Nov 2012 00:26:17 +0100
 
 tails (0.14) unstable; urgency=low
 
