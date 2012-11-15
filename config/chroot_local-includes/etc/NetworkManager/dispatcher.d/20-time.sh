@@ -111,7 +111,7 @@ wait_for_tor_consensus() {
 	log "Waiting for a Tor consensus file to contain a valid time interval"
 	if ! has_consensus && ! wait_for_tor_consensus_helper; then
 		log "Unsuccessfully waited for Tor consensus, restarting Tor and retrying."
-		service tor restart
+		restart-tor
 	fi
 	if ! has_consensus && ! wait_for_tor_consensus_helper; then
 		log "Unsuccessfully retried waiting for Tor consensus, aborting."
@@ -156,13 +156,6 @@ ${vendcons}"
 	[ "${order}" = "${ordersrt}" ]
 }
 
-restart_tor() {
-	if service tor status >/dev/null; then
-		log "Restarting Tor service"
-		service tor restart
-	fi
-}
-
 maybe_set_time_from_tor_consensus() {
 	local consensus=${TOR_CONSENSUS}
 
@@ -202,7 +195,7 @@ maybe_set_time_from_tor_consensus() {
 	date -us "${vmid}" 1>/dev/null
 
 	# Tor is unreliable with picking a circuit after time change
-	restart_tor
+	restart-tor
 }
 
 tor_cert_valid_after() {
