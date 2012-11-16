@@ -8,25 +8,25 @@ not clear the result will be good enough.
 
 On the Redmine side, we should:
 
-* [[!taglink todo/test]] offline usage with Redmine [Ague];
+* [[!taglink todo/qa]] offline usage with Redmine;
   actions some of us need to be able to perform offline:
   - create a new ticket and set its metadata:
-    * subject (= title)
-    * description
-    * tracker (e.g. feature, bug)
-    * priority (e.g. low, normal, high)
-    * status (e.g. new, confirmed, etc.)
-    * category (e.g. incremental updates, persistence, hardware support, etc.)
-    * kind of the next thing to be done (e.g. code, documentation, research, etc.)
-    * parent task
-    * assignee
-    * target version
-    * QA check
-    * Related issues
-  - add information to an existing ticket
-  - change the metadata of an existing ticket (see metadata list above)
-  - delete a ticket (spam...)
-  - subscribe to a ticket over email or RSS/Atom
+    * subject (= title) **OK**
+    * description **OK**
+    * tracker (e.g. feature, bug) **OK**
+    * priority (e.g. low, normal, high) **OK**
+    * status (e.g. new, confirmed, etc.) **OK**
+    * category (e.g. incremental updates, persistence, hardware support, etc.) **OK**
+    * kind of the next thing to be done (e.g. code, documentation, research, etc.) **ALMOST OK** → Can be encoded through a custom field of list type with mutiple values. It can be set by email, but only one value is supported in 1.4.4.
+    * parent task → Unsupported.
+    * assignee **OK**
+    * target version **OK**
+    * QA check → I don't understand what this is. Can't it be encoded in status?
+    * Related issues → Unsupported.
+  - add information to an existing ticket **OK**
+  - change the metadata of an existing ticket (see metadata list above) **OK: with the same limitations**
+  - delete a ticket (spam...) → Unsupported.
+  - subscribe to a ticket over email or RSS/Atom **OK**
 * [[!taglink todo/test]] the plugins we're interested in [Ague]
 
 On the Bugs Everywhere side, we should think how hard the missing B.E.
@@ -151,6 +151,28 @@ developers).
     notifications (at will) when updating issues.
   - [Whining](http://www.redmine.org/plugins/redmine_whining): email alerts
     when an issue had not been updated since X days.
+
+Offline usage:
+
+ * Sending an email can create an issue with:
+   - subject: mail subject
+   - description: mail body
+   - tracker: keyword in mail body
+   - priority: keyword in mail body
+   - status: keyword in mail body
+   - category: keyword in mail body
+   - assignee: keyword in mail body
+   - kind of next thing to be done: keyword in mail body
+   - target version: keyword in mail body
+ * Sending an email with '[Project - Bug #2]' in the subject will add
+   information to the ticket. Same keywords as before can be used to change
+   metadata.
+ * Email address in From, To, or Cc are added to watchers (if they match
+   a Redmine user).
+ * Clicking on *Watch* enable one to receive emails when the ticket changes.
+ * Every ticket as an Atom feed. It contains all changes made to a ticket.
+ * There is an atom feed with all open tickets, together with status and
+   description.
 
 ## Bugs everywhere
 
