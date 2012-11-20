@@ -2,6 +2,17 @@
 import gtk
 import gnomeapplet
 import subprocess
+from gettext import gettext as _
+from gettext import bindtextdomain, textdomain
+from os import sep
+from locale import setlocale, LC_ALL
+
+LOCALE_PREFIX = "%susr" % (sep)
+LOCALE_DIR = "%s%sshare%slocale" % ( LOCALE_PREFIX, sep, sep )
+PACKAGE = "shutdown_helper_applet"
+setlocale(LC_ALL, "")
+bindtextdomain(PACKAGE, LOCALE_DIR)
+textdomain(PACKAGE)
 
 def applet_factory(applet, iid):
    image = gtk.Image()
@@ -17,9 +28,9 @@ def show_action_menu(applet, event):
       return
 
    menu = gtk.Menu()
-   menu_entries = [["Lock Screen",          'gnome-lockscreen', lock_screen],
-                   ["Shutdown Immediately", 'gnome-shutdown',   shutdown],
-                   ["Reboot Immediately",   'gtk-refresh',      reboot]]
+   menu_entries = [[_("Lock Screen"),          'gnome-lockscreen', lock_screen],
+                   [_("Shutdown Immediately"), 'gnome-shutdown',   shutdown],
+                   [_("Reboot Immediately"),   'gtk-refresh',      reboot]]
    for [label, icon_name, action] in menu_entries:
       item = gtk.ImageMenuItem(label, True)
       icon = gtk.Image()
@@ -42,5 +53,5 @@ def reboot(widget):
 if __name__ == '__main__':
    gnomeapplet.bonobo_factory('OAFIID:ShutdownHelper_Factory',
                               gnomeapplet.Applet.__gtype__,
-                              'Shutdown Helper', '0.1',
+                              _("Shutdown Helper"), '0.1',
                               applet_factory)
