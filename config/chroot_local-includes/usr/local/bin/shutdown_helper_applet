@@ -50,6 +50,19 @@ def shutdown(widget):
 def reboot(widget):
    subprocess.call(["sudo", "-n", "reboot"])
 
+import sys
+# run it in a gtk window
+if len(sys.argv) > 1 and sys.argv[1] == "test":
+    main_window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+    main_window.set_title("Shutdown Helper")
+    main_window.connect("destroy", gtk.mainquit) 
+    app = gnomeapplet.Applet()
+    applet_factory(app, None)
+    app.reparent(main_window)
+    main_window.show_all()
+    gtk.main()
+    sys.exit()
+
 if __name__ == '__main__':
    gnomeapplet.bonobo_factory('OAFIID:ShutdownHelper_Factory',
                               gnomeapplet.Applet.__gtype__,
