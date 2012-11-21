@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 #
@@ -32,7 +33,7 @@ VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 # Environment variables that will be exported to the build script
-EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD']
+EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD', 'TAILS_BOOTSTRAP_CACHE']
 
 # Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
@@ -54,6 +55,11 @@ def current_vm_cpus
   $1.to_i if info =~ /^cpus=(\d+)/
 end
 
+def vm_running?
+  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
+  env.primary_vm.state == :running
+end
+
 def enough_free_memory?
   return false unless RbConfig::CONFIG['host_os'] =~ /linux/i
 
@@ -65,9 +71,10 @@ def enough_free_memory?
   end
 end
 
-def stable_branch?
+def is_release?
   branch_name = `git name-rev --name-only HEAD`
-  STABLE_BRANCH_NAMES.include? branch_name
+  tag_name = `git describe --exact-match HEAD 2> /dev/null`
+  STABLE_BRANCH_NAMES.include? branch_name.chomp or tag_name.chomp.length > 0
 end
 
 def system_cpus
@@ -90,7 +97,10 @@ task :parse_build_options do
   options += 'vmproxy ' unless EXTERNAL_HTTP_PROXY
 
   # Default to fast compression on development branches
-  options += 'gzipcomp ' unless stable_branch?
+  options += 'gzipcomp ' unless is_release?
+
+  # Make sure release builds are clean
+  options += 'cleanall ' if is_release?
 
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
@@ -101,10 +111,17 @@ task :parse_build_options do
     case opt
     # Memory build settings
     when 'ram'
-      abort "Not enough free memory to do an in-memory build. Aborting." unless enough_free_memory?
+      unless vm_running? || enough_free_memory?
+        abort "Not enough free memory to do an in-memory build. Aborting."
+      end
       ENV['TAILS_RAM_BUILD'] = '1'
     when 'noram'
       ENV['TAILS_RAM_BUILD'] = nil
+    # Bootstrap cache settings
+    when 'cache'
+      ENV['TAILS_BOOTSTRAP_CACHE'] = '1'
+    when 'nocache'
+      ENV['TAILS_BOOTSTRAP_CACHE'] = nil
     # HTTP proxy settings
     when 'extproxy'
       abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
@@ -213,7 +230,7 @@ namespace :vm do
         so the process might take some time.
 
         Please remember to shut the virtual machine down once your work on
-        Tails in done:
+        Tails is done:
 
             $ rake vm:halt
 
@@ -222,7 +239,7 @@ namespace :vm do
       $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
 
         Starting Tails builder virtual machine. This might take a short while.
-        Please remember to shut it down once your work on Tails in done:
+        Please remember to shut it down once your work on Tails is done:
 
             $ rake vm:halt
 

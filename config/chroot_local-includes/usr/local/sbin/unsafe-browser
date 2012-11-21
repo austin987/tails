@@ -150,8 +150,12 @@ configure_chroot () {
     done
     chmod a+r ${CHROOT}/etc/resolv.conf
 
-    # Disable problematic Iceweasel addons and proxying in the chroot
-    chroot ${CHROOT} apt-get remove --yes ${OFFENDING_ADDONS}
+    # Remove all Iceweasel addons: some adds proxying, which we don't
+    # want; some may change the fingerprint compared to a standard
+    # Iceweasel install.
+    chroot ${CHROOT} apt-get remove --yes xul-ext-*
+
+    # Disable proxying in the chroot
     sed -i '/^pref("network.proxy.type",/d' \
         ${CHROOT}/etc/iceweasel/pref/iceweasel.js
     echo 'pref("network.proxy.type", 0);' >> \
@@ -230,15 +234,10 @@ maybe_restart_tor () {
     # wheels turning)
     if ! tor_is_working; then
         echo "* Restarting Tor"
-        if ! service tor restart; then
+        restart-tor
+        if ! service tor status >/dev/null; then
             error "`gettext \"Failed to restart Tor.\"`"
         fi
-        local counter=0
-        until [ "${counter}" -ge 10 ] || nc -z localhost 9051 2>/dev/null; do
-            sleep 1
-            counter=$((${counter}+1))
-        done
-        /etc/NetworkManager/dispatcher.d/60-vidalia.sh clearnet up 2>/dev/null
     fi
 }
 

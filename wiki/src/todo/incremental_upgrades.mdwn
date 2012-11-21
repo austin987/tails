@@ -29,25 +29,35 @@ should provide an automated way of doing the upgrade.
 
 ## General plan
 
-1. Tails 0.13 will have the harmless part of the
+1. (**past**) Tails 0.13 has the harmless part of the
    `feature/incremental-upgrades` branch merged (users creation with
    sudo credentials, dependencies installation), leaving aside the
    part about running the update frontend automatically at startup.
-   => Tails 0.13 should be able to incrementally upgrade to 0.13.x,
-   when running the update frontend by hand.
+   => Tails 0.13 should have been able to incrementally upgrade to
+   something newer, when running the update frontend by hand,
+   but the included Tails OpenPGP signing key expired too quickly for
+   this to happen.
 
-2. When 0.13.x point-releases are out:
+2. Now that 0.14 is out:
 
-   * write developers documentation and tools
-   * prepare IUK
-   * update update-description files
-   * ask beta testers to try the incremental upgrade process
+   * Prepare IUK: **done**
+   * Update update-description files: **done**
+   * Ask beta testers to try the incremental upgrade process: **done**
    * Catch and fix most remaining bugs.
    * Write user documentation and hand it to translators.
 
-3. Once we're happy with the whole thing, ship it, enabled by
+3. When 0.15 is out:
+
+   * Write developers documentation and tools
+   * Prepare IUK
+   * Update update-description files
+   * Ask beta testers to try the incremental upgrade process
+   * Catch and fix most remaining bugs.
+   * Review user documentation and translations.
+
+4. Once we're happy with the whole thing, ship it, enabled by
    default, in the next Tails major release (that is, presumably
-   0.14, unless 1.0 is due already -- who knows :)
+   0.16, unless 1.0 is due already -- who knows :)
    This requires to think how to integrate with / replace the
    **security warning program** (see 5d039b3a).
 
@@ -821,6 +831,11 @@ in real conditions with the latest code and `live-boot`.
 
 Target files are downloaded to tmpfs, so at the very least, their size
 should be available in RAM.
+
+### Should be more robust on flaky Internet connections
+
+E.g. when a target file download times out, it should be retried
+a few times.
 
 ## Normal
 
