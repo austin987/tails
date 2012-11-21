@@ -118,14 +118,14 @@ set_chroot_browser_name () {
     SHORT=${LONG%%_*}
     EXT_DIR=${CHROOT}/usr/lib/iceweasel/extensions
     BRANDING=branding/brand.dtd
-    if [ -e "${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi" ]; then
-        PACK="${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi"
-        TOP=chrome
-        REST=${SHORT}/locale
-    elif [ -e "${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi" ]; then
+    if [ -e "${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi" ]; then
         PACK="${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi"
         TOP=chrome
         REST=${LONG}/locale
+    elif [ -e "${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi" ]; then
+        PACK="${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi"
+        TOP=chrome
+        REST=${SHORT}/locale
     else
         PACK=${CHROOT}/usr/share/iceweasel/chrome/en-US.jar
         TOP=locale
