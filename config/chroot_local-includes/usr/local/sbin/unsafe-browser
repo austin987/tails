@@ -114,8 +114,8 @@ setup_chroot () {
 
 set_chroot_browser_name () {
     NAME="${1}"
-    SHORT=$(echo ${LANG} | cut -b1-2)
-    LONG=$(echo ${LANG} | cut -b1-5 | tr _ -)
+    LONG=$(echo ${LANG} | grep -o "^[a-zA-Z_]*"
+    SHORT=${LONG%%_*}
     EXT_DIR=${CHROOT}/usr/lib/iceweasel/extensions
     BRANDING=branding/brand.dtd
     if [ -e "${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi" ]; then
