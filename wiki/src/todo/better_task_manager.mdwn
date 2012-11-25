@@ -8,10 +8,25 @@ not clear the result will be good enough.
 
 On the Redmine side, we should:
 
-* [[!taglink todo/test]] offline usage
-  - intrigeri lists actions some of us need to be able to perform
-    offline
-  - then Ague sees if they can be done with Redmine or not
+* [[!taglink todo/qa]] offline usage with Redmine;
+  actions some of us need to be able to perform offline:
+  - create a new ticket and set its metadata:
+    * subject (= title) **OK**
+    * description **OK**
+    * tracker (e.g. feature, bug) **OK**
+    * priority (e.g. low, normal, high) **OK**
+    * status (e.g. new, confirmed, etc.) **OK**
+    * category (e.g. incremental updates, persistence, hardware support, etc.) **OK**
+    * kind of the next thing to be done (e.g. code, documentation, research, etc.) **ALMOST OK** → Can be encoded through a custom field of list type with mutiple values. It can be set by email, but only one value is supported in 1.4.4.
+    * parent task → **Unsupported**.
+    * assignee **OK**
+    * target version **OK**
+    * QA check (*this is a custom field*) **OK**
+    * Related issues → **Unsupported**.
+  - add information to an existing ticket **OK**
+  - change the metadata of an existing ticket (see metadata list above) **OK: with the same limitations**
+  - delete a ticket (spam...) → **Unsupported**.
+  - subscribe to a ticket over email or RSS/Atom **OK**
 * [[!taglink todo/test]] the plugins we're interested in [Ague]
 
 On the Bugs Everywhere side, we should think how hard the missing B.E.
@@ -116,21 +131,53 @@ developers).
 * [[!debpkg redmine-plugin-markdown]]
 * Plugins of interest:
   - [Carousel](http://www.redmine.org/plugins/redmine_carousel): can be used
-    forperiodic actions that occur during project development process. It
+    for periodic actions that occur during project development process. It
     automatically generates issue assigned to the next user in the carousel
-    queue every specified time period.
+    queue every specified time period. Marked compatible with 1.4.x.
   - [Digest](http://www.redmine.org/plugins/digest): send a summary of a
-    project's activity over a period of time by email.
+    project's activity over a period of time by email. Marked as
+    compatible with 1.4.x and 2.0.x.
   - [Importer](http://www.redmine.org/plugins/importer): import issues in bulk
-    from .csv files.
+    from .csv files. Not marked as compatible with 1.4.x.
   - [Issue checklist](http://www.redmine.org/plugins/issue_checklist):
-    add checklist functionality to issues.
+    add checklist functionality to issues. Marked as compatible with
+    2.0.x -- what about 1.4.x?
   - [Git branch hook](https://github.com/mikoto20000/redmine_git_branch_hook):
-    add issue related revision by branch name.
+    add issue related revision by branch name. Can close tickets
+    on merge. One apparently may configure the branch that, when
+    merged into, triggers this behavior, thanks to the
+    `merge_branch` setting. Apparently impossible to use it for
+    the two-steps pending + fixed workflow we've been using,
+    but we may want to change this when switching tools anyway.
   - [Silencer](http://www.redmine.org/plugins/silencer): suppress email
-    notifications (at will) when updating issues.
+    notifications (at will) when updating issues. Not marked as
+    compatible with 1.4.x.
   - [Whining](http://www.redmine.org/plugins/redmine_whining): email alerts
-    when an issue had not been updated since X days.
+    when an issue had not been updated since X days. Not marked as
+    compatible with 1.4.x.
+
+Offline usage:
+
+ * Sending an email can create an issue with:
+   - subject: mail subject
+   - description: mail body
+   - tracker: keyword in mail body
+   - priority: keyword in mail body
+   - status: keyword in mail body
+   - category: keyword in mail body
+   - assignee: keyword in mail body
+   - kind of next thing to be done: keyword in mail body
+   - target version: keyword in mail body
+   - QA check (or any other custom field): keyword in mail body
+ * Sending an email with '[Project - Bug #2]' in the subject will add
+   information to the ticket. Same keywords as before can be used to change
+   metadata.
+ * Email address in From, To, or Cc are added to watchers (if they match
+   a Redmine user).
+ * Clicking on *Watch* enable one to receive emails when the ticket changes.
+ * Every ticket as an Atom feed. It contains all changes made to a ticket.
+ * There is an atom feed with all open tickets, together with status and
+   description.
 
 ## Bugs everywhere
 
