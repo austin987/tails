@@ -1,0 +1,49 @@
+Issue: Boot with bridge mode enabled and the system clock totally
+off. Notice that Tor fails to connect to the Tor network. It get's
+stuck in `is_clock_way_off()`'s `sleep 1` loop, at bootstrap progress
+10%, which means `tor_cert_lifetime_invalid()` is returning false: the
+SSL handshake just fails, without the grep'ed string being written to
+the log.
+
+That works well when bootstrapping directly against the directory
+authorities, and the issue seems to be due to an inconsistency w.r.t
+log severity. When using a bridge the strings we grep for in the log
+have the (higher) "info" severity which we don't log by default,
+compared to "notice" when no bridge is involved.
+
+Solutions:
+
+1. A very easy and very sub-optimal solution would be to have Tor log
+   at the "info" level by default.
+
+2. Like 1, but we only set "info" level debugging if in bridge mode,
+   and revert it to "notice" when tordate finishes. It turns the
+   latter is more difficult than one can expect:
+
+   Since we're in bridge mode, Vidalia will start before tordate so
+   bridges can be added. When Vidalia connects to Tor, it unsets the
+   (hidden) Tor option `__ReloadTorrcOnSIGHUP`, so we either have to:
+
+   a. restart Tor (and Vidalia) yet again to have Tor re-read the new
+      torrc (now without "info" level logging), or
+
+   b. manually re-set `__ReloadTorrcOnSIGHUP`, send a `HUP` so Tor
+      re-reads torrc and then possibly unset `__ReloadTorrcOnSIGHUP`
+      again (or restart Vidalia)
+
+   I don't like either, mostly because this was meant to be a simple,
+   unobtrusive fix. I guess option a is best so Vidalia doesn't get
+   out-of-sync with Tor's options, if that's possible. But it's yet
+   another Tor restart...
+   
+3. Another idea would be to (in `time-20.sh`) open a separate Tor log
+   at the info level via the control port. Great care would have to be
+   taken to make sure that the log is set up quickly after Tor starts,
+   before there's *any* chance that Tor already has tried connecting
+   to the bridge, so the string we grep for isn't "lost".
+   
+4. What about patching Tor to eliminate the log severity
+   inconsistency? But perhaps they have good reasons for this being
+   the way it is so it wouldn't get upstreamed?
+
+[[!tag todo/code]]

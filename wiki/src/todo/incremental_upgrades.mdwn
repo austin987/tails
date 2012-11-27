@@ -818,7 +818,19 @@ See the [[page about discarded options|todo/incremental_upgrades/archive]].
 `Tails::Persistence::Setup` has code to check if the system was booted
 from a optical / USB device. It should not be too hard to reuse it.
 
+### Should not try to update a Tails that was not created using Tails USB installer
+
+`Tails::Persistence::Setup` has code to check if the system was
+created using the Tails UBS installer (`device_has_tails`). It should
+not be too hard to reuse it.
+
 ## Serious
+
+### Progress bar for download and installation
+
+E.g. run `tails-iuk-get-target-file` in the background using
+`IPC::Run`'s `start`, and use `pump` and `timer` to regularly check if
+the process has finished and if not, update a zenity progress bar.
 
 ## Important
 
@@ -837,6 +849,8 @@ should be available in RAM.
 E.g. when a target file download times out, it should be retried
 a few times.
 
+Alternatively, there could be a button for resuming an interrupted download.
+
 ## Normal
 
 ### Integration with "old" security warning program should be re-thought
@@ -853,12 +867,6 @@ application has quit due to a fatal error in the in progress process.
 > Can this be reproduced after this commit?
 > [764d6e5] Don't require the "in progress" dialog boxes to be clicked to continue.
 
-### Progress bar for download and installation
-
-E.g. run `tails-iuk-get-target-file` in the background using
-`IPC::Run`'s `start`, and use `pump` and `timer` to regularly check if
-the process has finished and if not, update a zenity progress bar.
-
 ## Minor
 
 ### Packaging could be more self-contained
@@ -866,6 +874,10 @@ the process has finished and if not, update a zenity progress bar.
 Move `/etc/sudoers.d/zzz_update` and IUK-related user creation from
 the Tails main Git repository to the `tails-iuk` Debian package, so
 that it's more self-contained and easier to test.
+
+### Button for aborting upgrade cleanly
+
+### Compute and display ETA
 
 ## Wishlist
 
@@ -891,5 +903,17 @@ network. It looks doable given it's a separate process: we may run it
 as a dedicated user, and reuse the `clearnet` infrastructure
 implemented for the Unsafe Browser.
 
+## Perhaps
+
+(Needs thought and maybe discussion.)
+
+### "Retry with new circuit" button
+
+Circuit throughput varies wildly, and since this is a large download,
+it'll quickly wear out users' patience if a bad circuit is picked.
+Or maybe this can happen behind the scenes, e.g.:  Automatically
+switch circuit every X minutes or Y% progress? That could even make
+fingerprinting the download on the Tor client <-> Entry Node side of
+the pipe a bit more difficult, for whatever that's worth.
 
 [[!tag release/2.0]]
