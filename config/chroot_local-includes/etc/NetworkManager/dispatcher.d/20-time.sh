@@ -210,6 +210,7 @@ tor_cert_lifetime_invalid() {
 # will use once we fully support bridge mode, so we will have to
 # revisit this then.
 is_clock_way_off() {
+	log "Checking if system clock is way off"
 	until [ "$(tor_bootstrap_progress)" -gt 10 ]; do
 		if tor_cert_lifetime_invalid; then
 			return 0
