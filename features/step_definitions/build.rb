@@ -18,11 +18,15 @@ END_OF_CHANGELOG
   fatal_system "git tag '#{version}'"
 end
 
+Given /^Tails ([[:alnum:].-]+) has been tagged$/ do |version|
+  fatal_system "git tag '#{version}'"
+end
+
 Given /^Tails ([[:alnum:].]+) has not been released yet$/ do |version|
   !File.exists? ".git/refs/tags/#{version}"
 end
 
-Given /^last released version mentioned in debian\/changelog is ([[:alnum:].]+)$/ do |version|
+Given /^last released version mentioned in debian\/changelog is ([[:alnum:]~.]+)$/ do |version|
   last = `dpkg-parsechangelog | awk '/^Version: / { print $2 }'`.strip
   raise StandardError.new('dpkg-parsechangelog failed.') if $? != 0
 

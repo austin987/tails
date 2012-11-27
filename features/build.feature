@@ -34,6 +34,15 @@ Feature: custom APT sources to build branches
     Then I should see the '0.11' suite
     And I should not see 'testing' suite
 
+  Scenario: build a release candidate from a tagged testing branch
+    Given I am working on the testing branch
+    And Tails 0.11 has been released
+    And last released version mentioned in debian/changelog is 0.12~rc1
+    And Tails 0.12-rc1 has been tagged
+    When I run tails-custom-apt-sources
+    Then I should see the '0.12-rc1' suite
+    And I should not see 'testing' suite
+
   Scenario: build from the devel branch
     Given I am working on the devel branch
     When I run tails-custom-apt-sources
@@ -49,3 +58,9 @@ Feature: custom APT sources to build branches
     When I run tails-custom-apt-sources
     Then I should see the 'devel' suite
     And I should see the 'feature-icedove' suite
+
+  Scenario: build from a feature branch based on devel with dots in its name
+    Given I am working on the feature/live-boot-3.x branch based on devel
+    When I run tails-custom-apt-sources
+    Then I should see the 'devel' suite
+    And I should see the 'feature-live-boot-3.x' suite

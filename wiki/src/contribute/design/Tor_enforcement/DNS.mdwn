@@ -1,12 +1,9 @@
 Tor does not support UDP so we cannot simply redirect DNS queries to
 the Tor transparent proxy.
 
-Most DNS leaks are avoided by having the system resolver query a local
-caching DNS server (namely: pdnsd) that in turn performs its DNS
-lookups through the Tor network using the `DNSPort` configured in
-`torrc`. pdnsd is configured to listen on the loopback interface only;
-the single reason for its presence is the improvement of performance
-brought by its caching feature.
+Most DNS leaks are avoided by having the system resolver query
+the Tor network using the `DNSPort` configured in
+`torrc`.
 
 There is a concern that any application could attempt to do its own
 DNS resolution without using the system resolver; UDP datagrams are
@@ -39,10 +36,8 @@ third-party, that is to the organization or people that runs the
 recursive DNS resolver ttdnsd is configured to use.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/resolvconf/resolv.conf.d/base]]
-- [[!tails_gitweb config/chroot_local-includes/etc/pdnsd.conf]]
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
 - [[!tails_gitweb config/chroot_local-includes/etc/firewall.conf]]
 - [[!tails_gitweb config/chroot_local-includes/lib/live/config/000-resolv-conf]]
-- [[!tails_gitweb config/chroot_local-hooks/08-remove_pdnsd_resolvconf_hook]]
 - [[!tails_gitweb config/chroot_local-hooks/99-zzz_resolvconf]]
 - [[!tails_gitweb config/chroot_local-includes/etc/default/ttdnsd]]
