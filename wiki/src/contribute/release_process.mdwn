@@ -30,7 +30,7 @@ Patterns are stored in
 4. Open *Filter preferences…*
 5. For each filters, click *Actions* and *Update filters*
 6. Close Iceweasel
-7. Copy `.mozilla/firefox/*.default/adblockplus/patterns.ini` to
+7. Copy `.mozilla/firefox/default/adblockplus/patterns.ini` to
    Tails checkout inside
    `config/chroot_local-includes/etc/iceweasel/profile/adblockplus`
 
@@ -97,13 +97,6 @@ included website
 
 Merge the `master` branch into the one used to build the release.
 
-### PO files
-
-Refresh the PO files with `./build-wiki`, and add / commit the ones
-corresponding to pages that were added or changed accordingly to
-changes coming with the new release. This e.g. ensures that the RC
-call for translation points translators to up-to-date PO files.
-
 ### version number
 
 In the branch used to build the release, update the `inc/*` files to
@@ -122,6 +115,13 @@ Also:
 	git grep PENDING wiki/src/contribute/design*
 
 ... and remove the `PENDING-FOR-N.M` warnings.
+
+### PO files
+
+Refresh the PO files with `./build-wiki`, and add / commit the ones
+corresponding to pages that were added or changed accordingly to
+changes coming with the new release. This e.g. ensures that the RC
+call for translation points translators to up-to-date PO files.
 
 Tag the release in Git
 ======================
@@ -156,7 +156,15 @@ SquashFS files order
 Build an ISO image, burn a DVD and profile it **on bare metal** and update
 `squashfs.order` in the Git repository.
 
-See [[todo/improve_boot_time_on_cd]] for details.
+In order to refresh the sort file, `profile` must be added to the kernel
+command-line. Then, 30 seconds after `iceweasel` has been loaded, the sort
+file can be retrieved from `/var/log/boot-profile`.
+
+It must then be copied to `config/binary_rootfs/squashfs.sort`. This file is
+automatically used by `lb_binary_rootfs` to tell `mksquashfs` to use the
+provided *sort list*.
+
+(See [[todo/improve_boot_time_on_cd]] for details.)
 
 Build the final image
 ---------------------
