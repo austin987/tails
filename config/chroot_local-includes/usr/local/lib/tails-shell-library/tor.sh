@@ -5,13 +5,11 @@ TOR_DIR=/var/lib/tor
 TOR_DESCRIPTORS=${TOR_DIR}/cached-microdescs
 NEW_TOR_DESCRIPTORS=${TOR_DESCRIPTORS}.new
 
-# FIXME: If we end up using this, let's give root access to Tor's control
-# port instead of relying on sudo.
 tor_control_send() {
 	COOKIE=/var/run/tor/control.authcookie
 	HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
 	/bin/echo -ne "AUTHENTICATE ${HEXCOOKIE}\r\n${1}\r\nQUIT\r\n" | \
-	    sudo -u amnesia nc 127.0.0.1 9051
+	    nc 127.0.0.1 9051
 }
 
 # This function may be dangerous to use. See "Potential Tor bug" below.
