@@ -1,15 +1,21 @@
 #!/bin/sh
 
+TOR_RC=/etc/tor/torrc
 TOR_LOG=/var/log/tor/log
 TOR_DIR=/var/lib/tor
+TOR_CONTROL_PORT=$()
 TOR_DESCRIPTORS=${TOR_DIR}/cached-microdescs
 NEW_TOR_DESCRIPTORS=${TOR_DESCRIPTORS}.new
+
+get_tor_control_port() {
+	sed -n 's/^ControlPort[[:space:]]\+\([[:digit:]]\+\)/\1/p' "${TOR_RC}"
+}
 
 tor_control_send() {
 	COOKIE=/var/run/tor/control.authcookie
 	HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
 	/bin/echo -ne "AUTHENTICATE ${HEXCOOKIE}\r\n${1}\r\nQUIT\r\n" | \
-	    nc 127.0.0.1 9051
+	    nc 127.0.0.1 $(get_tor_control_port)
 }
 
 # This function may be dangerous to use. See "Potential Tor bug" below.
