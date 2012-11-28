@@ -7,7 +7,8 @@ error ()
 }
 
 # import Cmdline_old()
-. /lib/live/boot/9990-cmdline-old
+. /lib/live/boot/9990-cmdline-old \
+	|| error 'Could not source /lib/live/boot/9990-cmdline-old'
 
 # Set variable names needed by get_custom_mounts(),
 # and now initialized by live-boot in a file that we certainly
@@ -25,7 +26,8 @@ export old_persistence_list="live-persistence.conf"
 #   storage_devices()
 #   where_is_mounted()
 #   $custom_overlay_label
-. /lib/live/boot/9990-misc-helpers.sh
+. /lib/live/boot/9990-misc-helpers.sh \
+	|| error 'Could not source /lib/live/boot/9990-misc-helpers.sh'
 
 usage ()
 {
