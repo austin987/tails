@@ -29,22 +29,24 @@ should provide an automated way of doing the upgrade.
 
 ## General plan
 
-1. Tails 0.13 has the harmless part of the
+1. (**past**) Tails 0.13 has the harmless part of the
    `feature/incremental-upgrades` branch merged (users creation with
    sudo credentials, dependencies installation), leaving aside the
    part about running the update frontend automatically at startup.
-   => Tails 0.13 should be able to incrementally upgrade to 0.13.x,
-   when running the update frontend by hand.
+   => Tails 0.13 should have been able to incrementally upgrade to
+   something newer, when running the update frontend by hand,
+   but the included Tails OpenPGP signing key expired too quickly for
+   this to happen.
 
-2. When 0.14 is out:
+2. Now that 0.14 is out:
 
-   * Prepare IUK
-   * Update update-description files
-   * Ask beta testers to try the incremental upgrade process
+   * Prepare IUK: **done**
+   * Update update-description files: **done**
+   * Ask beta testers to try the incremental upgrade process: **done**
    * Catch and fix most remaining bugs.
    * Write user documentation and hand it to translators.
 
-3. When 0.14.1 is out:
+3. When 0.15 is out:
 
    * Write developers documentation and tools
    * Prepare IUK
@@ -55,7 +57,7 @@ should provide an automated way of doing the upgrade.
 
 4. Once we're happy with the whole thing, ship it, enabled by
    default, in the next Tails major release (that is, presumably
-   0.15, unless 1.0 is due already -- who knows :)
+   0.16, unless 1.0 is due already -- who knows :)
    This requires to think how to integrate with / replace the
    **security warning program** (see 5d039b3a).
 
@@ -816,7 +818,19 @@ See the [[page about discarded options|todo/incremental_upgrades/archive]].
 `Tails::Persistence::Setup` has code to check if the system was booted
 from a optical / USB device. It should not be too hard to reuse it.
 
+### Should not try to update a Tails that was not created using Tails USB installer
+
+`Tails::Persistence::Setup` has code to check if the system was
+created using the Tails UBS installer (`device_has_tails`). It should
+not be too hard to reuse it.
+
 ## Serious
+
+### Progress bar for download and installation
+
+E.g. run `tails-iuk-get-target-file` in the background using
+`IPC::Run`'s `start`, and use `pump` and `timer` to regularly check if
+the process has finished and if not, update a zenity progress bar.
 
 ## Important
 
@@ -829,6 +843,13 @@ in real conditions with the latest code and `live-boot`.
 
 Target files are downloaded to tmpfs, so at the very least, their size
 should be available in RAM.
+
+### Should be more robust on flaky Internet connections
+
+E.g. when a target file download times out, it should be retried
+a few times.
+
+Alternatively, there could be a button for resuming an interrupted download.
 
 ## Normal
 
@@ -846,12 +867,6 @@ application has quit due to a fatal error in the in progress process.
 > Can this be reproduced after this commit?
 > [764d6e5] Don't require the "in progress" dialog boxes to be clicked to continue.
 
-### Progress bar for download and installation
-
-E.g. run `tails-iuk-get-target-file` in the background using
-`IPC::Run`'s `start`, and use `pump` and `timer` to regularly check if
-the process has finished and if not, update a zenity progress bar.
-
 ## Minor
 
 ### Packaging could be more self-contained
@@ -859,6 +874,10 @@ the process has finished and if not, update a zenity progress bar.
 Move `/etc/sudoers.d/zzz_update` and IUK-related user creation from
 the Tails main Git repository to the `tails-iuk` Debian package, so
 that it's more self-contained and easier to test.
+
+### Button for aborting upgrade cleanly
+
+### Compute and display ETA
 
 ## Wishlist
 
@@ -884,5 +903,17 @@ network. It looks doable given it's a separate process: we may run it
 as a dedicated user, and reuse the `clearnet` infrastructure
 implemented for the Unsafe Browser.
 
+## Perhaps
+
+(Needs thought and maybe discussion.)
+
+### "Retry with new circuit" button
+
+Circuit throughput varies wildly, and since this is a large download,
+it'll quickly wear out users' patience if a bad circuit is picked.
+Or maybe this can happen behind the scenes, e.g.:  Automatically
+switch circuit every X minutes or Y% progress? That could even make
+fingerprinting the download on the Tor client <-> Entry Node side of
+the pipe a bit more difficult, for whatever that's worth.
 
 [[!tag release/2.0]]
