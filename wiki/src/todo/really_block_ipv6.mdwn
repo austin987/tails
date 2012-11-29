@@ -1,10 +1,9 @@
 For whatever reason our firewall seems to not block all IPv6 packets,
 like it should. For instance, Tails leaks link-local multicast
-(ff02::1/64). We should [[!taglink todo/research]] if there are other
-culprits.
+(ff02::1/64).
 
 For now a simple solution to block this leak would be to disable
-IPv6 altoghether, i.e. by putting:
+IPv6 altoghether, i.e. by putting: [[!tag todo/code]]
 
     net.ipv6.conf.all.disable_ipv6 = 1
     net.ipv6.conf.default.disable_ipv6 = 1
@@ -12,5 +11,12 @@ IPv6 altoghether, i.e. by putting:
 
 in `/etc/sysctl.conf`.
 
-[[!tag todo/code]]
-[[!tag todo/easy]]
+> This was done in the `bugfix/disable-IPv6` branch,
+> but the `.lo.` line that looks useless.
+> Time for [[!taglink todo/qa]].
+
+But on the long run, we want IPv6 to work to some extent (e.g.
+for [[OnionCat|todo/install_OnionCat]]), so the root cause should be
+found. To start with, we should [[!taglink todo/test]] with IPv6
+enabled to see if there are other culprits,
+and [[!taglink todo/research]] the root cause of the issue.
