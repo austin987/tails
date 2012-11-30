@@ -21,6 +21,10 @@ if grep -qw bridge /proc/cmdline; then
    rm -f /var/lib/tor/*
 fi
 
+# We depend on grepping stuff from the Tor log (especially for
+# tordate/20-time.sh), so deleting it seems like a Good Thing(TM).
+rm -f "${TOR_LOG}"
+
 # A SIGHUP should be enough but there's a bug in Tor. Details:
 # * https://trac.torproject.org/projects/tor/ticket/1247
 # * https://tails.boum.org/bugs/tor_vs_networkmanager/

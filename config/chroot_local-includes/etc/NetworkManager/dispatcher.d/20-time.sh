@@ -191,10 +191,9 @@ tor_bootstrap_progress() {
 }
 
 tor_cert_lifetime_invalid() {
-	# Since we only check for existence of such a line, we may
-	# find a match here when it's not relevant. A fix would be
-	# to clear the Tor log each time it starts in order to
-	# ensure that everything in the log are currently relevant.
+	# To be sure that we only grep relevant information, we
+	# should delete the log when Tor is started, which we do
+	# in 10-tor.sh.
 	# The log severity will be "warn" if bootstrapping with
 	# authorities and "info" with bridges.
 	grep -q "\[\(warn\|info\)\] Certificate \(not yet valid\|already expired\)\." \
