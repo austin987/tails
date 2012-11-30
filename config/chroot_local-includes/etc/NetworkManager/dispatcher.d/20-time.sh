@@ -195,13 +195,15 @@ tor_cert_lifetime_invalid() {
 	# find a match here when it's not relevant. A fix would be
 	# to clear the Tor log each time it starts in order to
 	# ensure that everything in the log are currently relevant.
-	grep -q "\[warn\] Certificate \(not yet valid\|already expired\)." \
+	# The log severity will be "warn" if bootstrapping with
+	# authorities and "info" with bridges.
+	grep -q "\[\(warn\|info\)\] Certificate \(not yet valid\|already expired\)\." \
 	    ${TOR_LOG}
 }
 
 # This check is blocking until Tor reaches either of two states:
-# 1. Tor completes a handshake with an authority.
-# 2. Tor fails the handshake with all authorities.
+# 1. Tor completes a handshake with an authority (or bridge).
+# 2. Tor fails the handshake with all authorities (or bridges).
 # Since 2 essentially is the negation of 1, one of them will happen,
 # so it won't block forever. Hence we shouldn't need a timeout.
 # FIXME: An exception would be if Tor has DisableNetwork=1, which we
@@ -246,6 +248,11 @@ else
 fi
 
 wait_for_working_tor
+
+# Disable "info" logging workaround from 10-tor.sh
+if grep -qw bridge /proc/cmdline; then
+	tor_control_setconf "Log=\"notice file ${TOR_LOG}\""
+fi
 
 touch $TORDATE_DONE_FILE
 

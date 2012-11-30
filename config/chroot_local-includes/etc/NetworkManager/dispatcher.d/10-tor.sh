@@ -13,6 +13,9 @@ if [ $2 != "up" ]; then
    exit 0
 fi
 
+# Import tor_control_*(), TOR_LOG
+. /usr/local/lib/tails-shell-library/tor.sh
+
 # Workaround https://trac.torproject.org/projects/tor/ticket/2355
 if grep -qw bridge /proc/cmdline; then
    rm -f /var/lib/tor/*
@@ -23,9 +26,16 @@ fi
 # * https://tails.boum.org/bugs/tor_vs_networkmanager/
 restart-tor
 
-# In bridge mode Vidalia needs to start before tordate (20-time.sh)
-# since we need bridges to be configured before any consensus or
-# descriptors can be downloaded, which tordate depends on.
 if grep -qw bridge /proc/cmdline; then
+   # When using a bridge Tor reports TLS cert lifetime errors
+   # (e.g. when the system clock is way off) with severity "info", but
+   # when no bridge is used the severity is "warn". tordate/20-time.sh
+   # depends on grepping these error messages, so we temporarily
+   # increase Tor's logging severity.
+   tor_control_setconf "Log=\"info file ${TOR_LOG}\""
+
+   # In bridge mode Vidalia needs to start before tordate (20-time.sh)
+   # since we need bridges to be configured before any consensus or
+   # descriptors can be downloaded, which tordate depends on.
    restart-vidalia
 fi
