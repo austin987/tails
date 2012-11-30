@@ -16,6 +16,10 @@ fi
 # Import tor_control_*(), TOR_LOG
 . /usr/local/lib/tails-shell-library/tor.sh
 
+# It's safest that Tor is not running when messing with its log and
+# data dir.
+service tor stop
+
 # Workaround https://trac.torproject.org/projects/tor/ticket/2355
 if grep -qw bridge /proc/cmdline; then
    rm -f /var/lib/tor/*
