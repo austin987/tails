@@ -7,24 +7,22 @@
 # In any case, we use HTP to ask more accurate time information to
 # a few authenticated HTTPS servers.
 
+# Get LIVE_USERNAME
+. /etc/live/config.d/username.conf
+
+# Import tor_control_*(), tor_is_working(), TOR_LOG, TOR_DIR
+. /usr/local/lib/tails-shell-library/tor.sh
 
 ### Init variables
 
 TORDATE_DIR=/var/run/tordate
 TORDATE_DONE_FILE=${TORDATE_DIR}/done
-TOR_LOG=/var/log/tor/log
-TOR_DIR=/var/lib/tor
 TOR_CONSENSUS=${TOR_DIR}/cached-microdesc-consensus
 TOR_UNVERIFIED_CONSENSUS=${TOR_DIR}/unverified-microdesc-consensus
 TOR_UNVERIFIED_CONSENSUS_HARDLINK=${TOR_UNVERIFIED_CONSENSUS}.bak
-TOR_DESCRIPTORS=${TOR_DIR}/cached-microdescs
-NEW_TOR_DESCRIPTORS=${TOR_DESCRIPTORS}.new
 INOTIFY_TIMEOUT=60
 DATE_RE='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
 VERSION_FILE=/etc/amnesia/version
-
-# Get LIVE_USERNAME
-. /etc/live/config.d/username.conf
 
 ### Exit conditions
 
@@ -64,23 +62,6 @@ notify_user() {
 	export DISPLAY=':0.0'
 	export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
 	exec /bin/su -c "notify-send ${timeout_args} \"${summary}\" \"${body}\"" "${LIVE_USERNAME}" &
-}
-
-# This function may be dangerous to use. See "Potential Tor bug" below.
-# Only handles GETINFO keys with single-line answers
-# FIXME: If we end up using this, let's give root access to Tor's control
-# port instead of relying on sudo.
-tor_control_getinfo() {
-	COOKIE=/var/run/tor/control.authcookie
-	HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
-	/bin/echo -ne "AUTHENTICATE ${HEXCOOKIE}\r\nGETINFO ${1}\r\nQUIT\r\n" | \
-	    sudo -u amnesia nc 127.0.0.1 9051 | grep -m 1 "^250-${1}=" | \
-	    # Note: we have to remove trailing CL+RF to not confuse the shell
-	    sed "s|^250-${1}=\(.*\)[[:space:]]\+$|\1|"
-}
-
-tor_is_working() {
-	[ -e $TOR_DESCRIPTORS ] || [ -e $NEW_TOR_DESCRIPTORS ]
 }
 
 has_consensus() {
@@ -204,14 +185,6 @@ tor_cert_valid_after() {
 	    ${TOR_LOG} | tail -n 1
 }
 
-# Potential Tor bug: it seems like using this version makes Tor get
-# stuck at "Bootstrapped 5%" quite often. Is Tor sensitive to opening
-# control ports and/or issuing "getinfo status/bootstrap-phase" during
-# early bootstrap? Because of this we fallback to greping the log.
-#tor_bootstrap_progress() {
-#	tor_control_getinfo status/bootstrap-phase | \
-#	    sed 's/^.* BOOTSTRAP PROGRESS=\([[:digit:]]\+\) .*$/\1/'
-#}
 tor_bootstrap_progress() {
 	grep -o "\[notice\] Bootstrapped [[:digit:]]\+%:" ${TOR_LOG} | \
 	    tail -n1 | sed "s|\[notice\] Bootstrapped \([[:digit:]]\+\)%:|\1|"
