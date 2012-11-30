@@ -101,6 +101,11 @@ Other ideas
 -----------
 
 * in 686-pae kernel, mount a `tmpfs` and fill it (that can cover more
-  memory than a single sdmem process in 32-bit environment)
+  memory than a single sdmem process in 32-bit environment); beware
+  how the kernel currently handles out-of-memory with when using
+  tmpfs: instead of erroring write(2) with ENOSPC, it simply kills the
+  process. This makes it harder to implement a nice progress bar...
+  But yeah, combination of dd, pv and a tmpfs should also be able to
+  do a faire amount of wiping.
 
 [[!tag broken_window]]
