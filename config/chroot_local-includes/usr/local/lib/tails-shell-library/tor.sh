@@ -3,7 +3,6 @@
 TOR_RC=/etc/tor/torrc
 TOR_LOG=/var/log/tor/log
 TOR_DIR=/var/lib/tor
-TOR_CONTROL_PORT=$()
 TOR_DESCRIPTORS=${TOR_DIR}/cached-microdescs
 NEW_TOR_DESCRIPTORS=${TOR_DESCRIPTORS}.new
 
