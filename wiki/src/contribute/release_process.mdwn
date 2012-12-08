@@ -216,11 +216,8 @@ First, create a directory with a suitable name for every image to be
 released, such as `tails-i386-0.7`.
 
 Second, copy the built images to these brand new directories and
-rename it to fit our `tails-ARCH-VERSION.iso` naming
-convention e.g.:
-
-	mv tails-i386-squeeze-0.7-20110303.iso \
-	  tails-i386-0.7.iso
+rename it to fit our `tails-ARCH-VERSION.iso`. naming
+convention e.g. `tails-i386-0.7.iso`.
 
 Third, generate detached GnuPG signatures for every published image,
 in the same directory as the image and with a `.pgp` extension; e.g.
@@ -276,8 +273,6 @@ Rename the `.packages` file to remove the `.iso` part of its name.
 
 Copy the `.iso.pgp`, `.packages`, `.torrent` and `.torrent.pgp`
 files to the Git repository's `wiki/src/torrents/files/` directory.
-
-Update the latest version and related information in `inc/*`.
 
 Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
 
@@ -364,3 +359,9 @@ Prepare for the next release
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
    repository documentation.
 1. Push the resulting `devel` branch.
+1. Reset experimental:
+   - take note of branches merged into `experimental`, but not into
+     `devel` (`git log --merges devel..experimental` may help)
+   - `git checkout experimental && git reset --hard devel`
+   - merge additional branches into experimental
+   - `git push --force origin experimental`

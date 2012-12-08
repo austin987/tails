@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#generate iceweasel profile at build time, so that it has a fixed name
+
+set -e
+apt-get --yes install xvfb
+xvfb-run iceweasel -CreateProfile default
+mv ~/.mozilla/firefox/*.default ~/.mozilla/firefox/default
+sed -i "s@Path=.*\.default@Path=default@" ~/.mozilla/firefox/profiles.ini
+mv ~/.mozilla /etc/skel
+apt-get --yes purge xvfb
