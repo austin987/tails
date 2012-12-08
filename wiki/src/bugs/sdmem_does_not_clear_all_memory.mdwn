@@ -9,8 +9,18 @@ This was supposedly not a problem for some testers prior to Tails 0.8
 but I can reliably reproduce this problem on a machine (with 4 GB or
 RAM if that matters) with both Tails 0.8 and 0.7.2.
 
+[[!toc levels=2]]
+
+Roadmap
+=======
+
+[[todo/hugetlb_mem_wipe]] should be fine tuned and finished.
+
+Implementation ideas
+====================
+
 initramfs + sdmem
-=================
+-----------------
 
 > Hi, not sure how to comment so I will just add it here. The test is
 > incorrect, since on a 32-bit architecture the address space of a
@@ -42,13 +52,13 @@ the memory erasure process 32 times longer, with no efficiency improvement.
 Needs to be tested.
 
 initramfs + custom program
-==========================
+--------------------------
 
-Using a custom memory wiping program from initramfs is waiting
-for review and tests on the `feature/hugetlb_mem_wipe` branch.
+Using a custom memory wiping program from initramfs is mostly
+implemented in the `feature/hugetlb_mem_wipe` branch.
 
 Linux memtest
-=============
+-------------
 
 Better would be to imitate Liberté Linux, that recently switched to
 using the Linux kernel's `memtest=2` feature, which is simpler, more
@@ -73,7 +83,7 @@ Testing results:
   - 2675MB found after wiping with memtest (686-pae kernel)
 
 Dedicated operating systems
-===========================
+---------------------------
 
 On the long run, if the Linux kernel does not wipe whatever memory
 pages it allocates to use for its own data structures, the kexec'd
@@ -88,9 +98,14 @@ to do this job.
 Another experiment with [[GRUB|grub]] is in progress.
 
 Other ideas
-===========
+-----------
 
 * in 686-pae kernel, mount a `tmpfs` and fill it (that can cover more
-  memory than a single sdmem process in 32-bit environment)
+  memory than a single sdmem process in 32-bit environment); beware
+  how the kernel currently handles out-of-memory with when using
+  tmpfs: instead of erroring write(2) with ENOSPC, it simply kills the
+  process. This makes it harder to implement a nice progress bar...
+  But yeah, combination of dd, pv and a tmpfs should also be able to
+  do a faire amount of wiping.
 
 [[!tag broken_window]]
