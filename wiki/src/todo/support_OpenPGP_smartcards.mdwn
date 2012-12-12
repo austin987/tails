@@ -131,7 +131,7 @@ Testers: Patrick Bx <patrickbx@gmail.com>
 
 ## Test 3
 
-On Debian Wheezy, using `systemd`, same hardware as Patrick Bx's:
+On Debian Wheezy, using `systemd`, same hardware as Patrick Bx's
 (Gemalto USB shell token v2).
 
 Works:
@@ -142,6 +142,23 @@ Works:
 `pcscd` is [automatically started thanks to socket-based
 activation](http://ludovicrousseau.blogspot.com/2011/11/pcscd-auto-start-using-systemd.html),
 and exits after a bit of idle time.
+
+## Test 4
+
+On Tails 0.15, same hardware as Patrick Bx's
+(Gemalto USB shell token v2).
+
+Works:
+
+	$ GPG_AGENT_INFO= gpg --card-status
+
+Does not work:
+
+	$ gpg --card-status
+	gpg: selecting openpgp failed: unknown command
+	gpg: OpenPGP card not available: general error
+
+So, apparently the only blocking issue is the Seahorse bug.
 
 Resources
 =========
