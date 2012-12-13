@@ -1,5 +1,3 @@
-[[!tag todo/qa]]
-
 This is what's said about [FoxyProxy](http://getfoxyproxy.org/) in the
 [Torbutton FAQ](https://www.torproject.org/torbutton/torbutton-faq.html.en#extensionconflicts):
 
@@ -37,34 +35,6 @@ seamless for the user, i.e. that:
 
 * the rest is proxied through Tor.
 
-However, security issues should not be ruled out. It remains to
-investigate whether the current (devel branch as of 2010-10-12) setup
-allows any attacks. Some possible attack vectors and other things to
-meditate upon are:
+See [[todo/audit_FoxyProxy_configuration]].
 
-* how does the "exclude localhost,127.0.0.1 from proxying" part of
-  Torbutton work together with FoxyProxy?
-
- - Seems to work, at least the filter for reaching the I2P router
-   console on localhost:7657 is working.
-
-* are there any *good* corellation/fingerprinting/$other attacks that
-  rely on html pages that refer to elements that will be fetched both
-  through Tor and I2P?
-
- - One possible attack of this kind depends on that there's some sort
-   of nefarious bug/"feature" in I2P which makes the I2P client
-   connect to some arbitrary host on the Internet. An attacker
-   controlling the target webserver (or running the Tor exit used in
-   the case of a non-authenticated connection) could exploit that bug
-   to make the I2P client connect *directly* to some host under the
-   attacker's control. Of course, this is a bug of apocalyptic
-   proportions in I2P, but the point is that bugs in I2P might very
-   well open up for attacks on Torified connections with this
-   FoxyProxy setup.
-
-* are the regexps for the whitelist filters correct? can some urls
-  escape their intended whitelist filter and be catched by another
-  one, possibly making it unreachable?
-
-* do non-ascii urls pose any problems for the regexps?
+[[!tag todo/done]]

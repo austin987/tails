@@ -17,24 +17,14 @@ Solutions:
    at the "info" level by default.
 
 2. Like 1, but we only set "info" level debugging if in bridge mode,
-   and revert it to "notice" when tordate finishes. It turns the
-   latter is more difficult than one can expect:
+   and revert it to "notice" when tordate finishes, via Tor's
+   `ControlPort`.
 
-   Since we're in bridge mode, Vidalia will start before tordate so
-   bridges can be added. When Vidalia connects to Tor, it unsets the
-   (hidden) Tor option `__ReloadTorrcOnSIGHUP`, so we either have to:
+   This has been implemented in the branch
+   `bugfix/tordate_vs_bridge_mode`, candidate for the first post-0.15
+   Tails release.
 
-   a. restart Tor (and Vidalia) yet again to have Tor re-read the new
-      torrc (now without "info" level logging), or
-
-   b. manually re-set `__ReloadTorrcOnSIGHUP`, send a `HUP` so Tor
-      re-reads torrc and then possibly unset `__ReloadTorrcOnSIGHUP`
-      again (or restart Vidalia)
-
-   I don't like either, mostly because this was meant to be a simple,
-   unobtrusive fix. I guess option a is best so Vidalia doesn't get
-   out-of-sync with Tor's options, if that's possible. But it's yet
-   another Tor restart...
+> [[!taglink pending]] for 0.16
    
 3. Another idea would be to (in `time-20.sh`) open a separate Tor log
    at the info level via the control port. Great care would have to be
@@ -45,5 +35,3 @@ Solutions:
 4. What about patching Tor to eliminate the log severity
    inconsistency? But perhaps they have good reasons for this being
    the way it is so it wouldn't get upstreamed?
-
-[[!tag todo/code]]
