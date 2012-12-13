@@ -155,21 +155,28 @@ Freezing devel into testing
 ---------------------------
 
 1. Merge `devel` branch into `testing` in Git
-2. Either merge the `devel` APT suite into the `testing` one, **or**
-   hard reset `testing` suite to the current state of the `devel`
-   suite? (If the latter: how? delete with `removematched codename
-   glob` and then copy? -- beware:  do the `*matched` commands act on
-   source + binary?)
+2. (Manually) hard reset `testing` suite to the current state of the
+   `devel` one:
 
+   a. First, merge `devel` into `testing`
+
+   	$ ssh reprepro@incoming.deb.tails.boum.org \
+   	     tails-merge-suite devel testing
+
+   b. Then, compare the resulting list of (package, version) in
+      `testing` with the ones in `devel`, remove from `testing`
+      packages that were removed from `devel` as needed, and generally
+      make it so the lists are the same in the end.
+   
 <a id="workflow-post-tag"></a>
 
 Tagging a new Tails release
 ---------------------------
 
 Once the new release's Git tag is pushed, a cronjob should create
-a new APT suite on the APT repository's side. This new APT suite is
-called the same as the new release version. One may check it has
-appeared in `~reprepro/conf/distributions`.
+a new APT suite on the APT repository's side within a few minutes.
+This new APT suite is called the same as the new release version.
+One may check it has appeared in `~reprepro/conf/distributions`.
 
 Then, the APT suite corresponding to the branch that was used to
 prepare the release (namely:  `stable` if this is a point-release,

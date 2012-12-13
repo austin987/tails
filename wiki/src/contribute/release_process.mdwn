@@ -60,8 +60,20 @@ Then see the relevant release processes:
   * build a debian package
   * upload it to [[APT repository]]
 
+Freeze
+------
+
+If we are at freeze time (e.g. preparing RC1):
+
+* Merge the `devel` Git branch into `testing`.
+* Merge `devel` APT suite into the `testing` one, as documented on
+  [[contribute/APT_repository#workflow-freeze]].
+
 Changelog
 ---------
+
+Remove the placeholder entry for next release in `debian/changelog`,
+and then:
 
 	./release NEW_VERSION PREVIOUS_RELEASED_TAG
 
@@ -99,10 +111,12 @@ Merge the `master` branch into the one used to build the release.
 
 ### version number
 
+If preparing a RC, skip this part.
+
 In the branch used to build the release, update the `inc/*` files to
-match the *version number* and *date* of the new release. *Set the date
+match the *version number* and *date* of the new release. Set the date
 at least 24 hours in the future! Between tests and mirror synchronisation,
-the build will not be released on the same day.* Try to make sure it
+the build will not be released on the same day. Try to make sure it
 matches the date of the future signature.
 
 ### features and design documentation
@@ -118,7 +132,10 @@ Also:
 
 ### PO files
 
-Refresh the PO files with `./build-wiki`, and add / commit the ones
+Refresh the code PO files with `./refresh-translations`, commit
+the result.
+
+Refresh the website PO files with `./build-wiki`, and add / commit the ones
 corresponding to pages that were added or changed accordingly to
 changes coming with the new release. This e.g. ensures that the RC
 call for translation points translators to up-to-date PO files.
