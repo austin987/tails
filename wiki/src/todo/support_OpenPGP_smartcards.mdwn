@@ -3,13 +3,25 @@
 Plans
 =====
 
+Next things to do
+-----------------
+
+1. [[!taglink todo/research]] how to support hardware despite the
+   Seahorse bug ([[!gnomebug 530439]]):
+   - is it an option to only document the
+     `GPG_AGENT_INFO=` workaround?
+   - is it an option to replace Seahorse, for the GnuPG agent role,
+     with good ol' `gpg-agent` and either [[!debpts pinentry-gtk2]]
+     or [[!debpts pinentry-qt4]]? What would we lose, exactly?
+
+Done
+----
+
 1. Get recent ccid / pcscd into Tails (it helps supporting some
    devices, see bellow) -- this is feature/OpenPGP-SmartCard:
    **done** (merged into devel, pending for Tails 0.15)
-1. Publish a test ISO -- this should be 0.15~rc1
-1. [[!taglink todo/test]] with supposedly-fixed hardware
-1. [[!taglink todo/research]] how to support hardware despite the
-   Seahorse bug
+1. Publish a test ISO -- this should be 0.15~rc1 **done**
+1. test with supposedly-fixed hardware
 
 Tests
 =====
@@ -131,7 +143,7 @@ Testers: Patrick Bx <patrickbx@gmail.com>
 
 ## Test 3
 
-On Debian Wheezy, using `systemd`, same hardware as Patrick Bx's:
+On Debian Wheezy, using `systemd`, same hardware as Patrick Bx's
 (Gemalto USB shell token v2).
 
 Works:
@@ -142,6 +154,23 @@ Works:
 `pcscd` is [automatically started thanks to socket-based
 activation](http://ludovicrousseau.blogspot.com/2011/11/pcscd-auto-start-using-systemd.html),
 and exits after a bit of idle time.
+
+## Test 4
+
+On Tails 0.15, same hardware as Patrick Bx's
+(Gemalto USB shell token v2).
+
+Works:
+
+	$ GPG_AGENT_INFO= gpg --card-status
+
+Does not work:
+
+	$ gpg --card-status
+	gpg: selecting openpgp failed: unknown command
+	gpg: OpenPGP card not available: general error
+
+So, apparently the only blocking issue is the Seahorse bug.
 
 Resources
 =========
