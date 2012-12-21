@@ -48,6 +48,7 @@ pref("dom.storage.enabled", false);
 pref("extensions.autoDisableScopes", 0);
 pref("extensions.foxyproxy.last-version", "99999.99");
 pref("extensions.shownSelectionUI", true);
+pref("extensions.update.autoUpdateDefault", false);
 pref("extensions.update.enabled", false);
 pref("extensions.update.notifyUser", false);
 pref("geo.enabled", false);
