@@ -149,7 +149,15 @@ list_gpt_volumes ()
 			[ -z "${whitelistdev}" ] && return
 			;;
 		*)
-			whitelistdev=""
+			if grep -qs -w -E '(live-media|bootfrom)=removable-usb' /proc/cmdline ; then
+				whitelistdev="$(removable_usb_dev)"
+				[ -z "${whitelistdev}" ] && return
+			elif grep -qs -w -E '(live-media|bootfrom)=removable' /proc/cmdline ; then
+				whitelistdev="$(removable_dev)"
+				[ -z "${whitelistdev}" ] && return
+			else
+				whitelistdev=""
+			fi
 			;;
 	esac
 
