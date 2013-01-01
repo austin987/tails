@@ -44,12 +44,16 @@ initramfs + sdmem
 
 Possible fixes (180f058 + 0f1f476d) now waiting to be tested in devel branch.
 
-This change is likely to work "most of the time", but it is not reliable as is:
-sdmem kills itself as soon as it's refused to allocate memory, so there's no
-guarantee several instances of it will be allocating enough memory at the same
-time to ensure all memory is erased. In the worst case, this change can make
-the memory erasure process 32 times longer, with no efficiency improvement.
-Needs to be tested.
+This change is shipped in Tails 0.14 and later, and works already
+quite well in practice (almost always perfect wiping on PAE systems
+according to our tests, a bit worse on non-PAE).
+
+In theory, it's supposed to work "most of the time", but it is not
+reliable as is:  sdmem kills itself as soon as it's refused to
+allocate memory, so there's no guarantee several instances of it will
+be allocating enough memory at the same time to ensure all memory is
+erased. In the worst case, this change can make the memory erasure
+process 32 times longer, with no efficiency improvement.
 
 initramfs + custom program
 --------------------------
