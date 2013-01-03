@@ -16,3 +16,36 @@ Calculate statistics on the translations
 ========================================
 
 Run the [[language statistics.sh]] script.
+
+Build the wiki offline
+========================================
+
+To check your translations before to send them, you may want to browse the
+wiki offline.
+
+First, install the dependencies:
+
+    apt-get install libyaml-perl libyaml-libyaml-perl po4a perlmagick
+    libyaml-syck-perl -t squeeze-backports ikiwiki
+
+Then run the following command, at the root of the Git folder:
+
+    sh build-wiki
+
+You can now browse the files in
+
+    config/chroot_local-includes/usr/share/doc/tails/website/
+
+Search for fuzzy strings with Vim
+========================================
+
+Run inside Vim, the following command will search recursively for *fuzzy*
+inside *.fr.po* files
+
+    :vimgrep /fuzzy/ **/*.fr.po |:copen
+
+To switch easily between the file list and the editor, using Alt + Arrow
+up/down, you can add those lines in .vimrc:
+
+    nmap <silent> <A-Up> :wincmd k<CR>
+    nmap <silent> <A-Down> :wincmd j<CR>
