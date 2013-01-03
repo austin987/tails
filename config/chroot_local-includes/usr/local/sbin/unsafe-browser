@@ -16,9 +16,9 @@ CHROOT=${CONF_DIR}/chroot
 CLEARNET_USER=clearnet
 OFFENDING_ADDONS="xul-ext-foxyproxy-standard xul-ext-torbutton xul-ext-firegpg
 xul-ext-cookie-monster xul-ext-noscript xul-ext-monkeysphere"
-TOR_DIR=/var/lib/tor
-TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
-TOR_WORKING=""
+
+# Import tor_is_working()
+. /usr/local/lib/tails-shell-library/tor.sh
 
 WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
 LANG_CODE="$(echo ${LANG} | head -c 2)"
@@ -218,14 +218,6 @@ show_shutdown_notification () {
     local title="`gettext \"Shutting down the Unsafe Browser...\"`"
     local body="`gettext \"This may take a while, and you may not restart the Unsafe Browser until it is properly shut down.\"`"
     notify-send -t 10000 "${title}" "${body}"
-}
-
-tor_is_working() {
-    # FIXME: the approach is stolen from is_tor_working() in the 20-time
-    # NM hook -- we should move things like this to a shell script library
-    # FIXME: how to determine this reliably? this approach doesn't work
-    # if $TOR_DIR is persistent.
-    [ -e $TOR_DESCRIPTORS ]
 }
 
 maybe_restart_tor () {
