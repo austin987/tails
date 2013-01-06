@@ -16,9 +16,9 @@ CHROOT=${CONF_DIR}/chroot
 CLEARNET_USER=clearnet
 OFFENDING_ADDONS="xul-ext-foxyproxy-standard xul-ext-torbutton xul-ext-firegpg
 xul-ext-cookie-monster xul-ext-noscript xul-ext-monkeysphere"
-TOR_DIR=/var/lib/tor
-TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
-TOR_WORKING=""
+
+# Import tor_is_working()
+. /usr/local/lib/tails-shell-library/tor.sh
 
 WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
 LANG_CODE="$(echo ${LANG} | head -c 2)"
@@ -112,6 +112,34 @@ setup_chroot () {
     error "`gettext \"Failed to setup chroot.\"`"
 }
 
+set_chroot_browser_name () {
+    NAME="${1}"
+    LONG=$(echo ${LANG} | grep -o "^[a-zA-Z_]*")
+    SHORT=${LONG%%_*}
+    EXT_DIR=${CHROOT}/usr/lib/iceweasel/extensions
+    BRANDING=branding/brand.dtd
+    if [ -e "${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi" ]; then
+        PACK="${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi"
+        TOP=chrome
+        REST=${LONG}/locale
+    elif [ -e "${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi" ]; then
+        PACK="${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi"
+        TOP=chrome
+        REST=${SHORT}/locale
+    else
+        PACK=${CHROOT}/usr/share/iceweasel/chrome/en-US.jar
+        TOP=locale
+        REST=
+    fi
+
+    TMP=$(mktemp -d)
+    7z x "${PACK}" -o"${TMP}"
+    sed -i "s/Iceweasel/${NAME}/" "${TMP}"/"${TOP}"/"${REST}"/"${BRANDING}"
+    7z u -tzip "${PACK}" "${TMP}"/"${TOP}"
+    chmod a+r "${PACK}"
+    rm -Rf "${TMP}"
+}
+
 configure_chroot () {
     echo "* Configuring chroot"
 
@@ -122,8 +150,12 @@ configure_chroot () {
     done
     chmod a+r ${CHROOT}/etc/resolv.conf
 
-    # Disable problematic Iceweasel addons and proxying in the chroot
-    chroot ${CHROOT} apt-get remove --yes ${OFFENDING_ADDONS}
+    # Remove all Iceweasel addons: some adds proxying, which we don't
+    # want; some may change the fingerprint compared to a standard
+    # Iceweasel install.
+    chroot ${CHROOT} apt-get remove --yes xul-ext-*
+
+    # Disable proxying in the chroot
     sed -i '/^pref("network.proxy.type",/d' \
         ${CHROOT}/etc/iceweasel/pref/iceweasel.js
     echo 'pref("network.proxy.type", 0);' >> \
@@ -141,6 +173,9 @@ EOF
             ${CHROOT}//etc/live/config.d/username.conf
         chroot ${CHROOT} tails-activate-winxp-theme
     fi
+
+    # Set the name (e.g. window title) of the browser
+    set_chroot_browser_name "`gettext \"Unsafe Browser\"`"
 
     # Set start page to something that explains what's going on
     echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
@@ -185,29 +220,16 @@ show_shutdown_notification () {
     notify-send -t 10000 "${title}" "${body}"
 }
 
-tor_is_working() {
-    # FIXME: the approach is stolen from is_tor_working() in the 20-time
-    # NM hook -- we should move things like this to a shell script library
-    # FIXME: how to determine this reliably? this approach doesn't work
-    # if $TOR_DIR is persistent.
-    [ -e $TOR_DESCRIPTORS ]
-}
-
 maybe_restart_tor () {
     # Restart Tor if it's not working (a captive portal may have prevented
     # Tor from bootstrapping, and a restart is the fastest way to get
     # wheels turning)
     if ! tor_is_working; then
         echo "* Restarting Tor"
-        if ! service tor restart; then
+        restart-tor
+        if ! service tor status >/dev/null; then
             error "`gettext \"Failed to restart Tor.\"`"
         fi
-        local counter=0
-        until [ "${counter}" -ge 10 ] || nc -z localhost 9051 2>/dev/null; do
-            sleep 1
-            counter=$((${counter}+1))
-        done
-        /etc/NetworkManager/dispatcher.d/60-vidalia.sh clearnet up 2>/dev/null
     fi
 }
 

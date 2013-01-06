@@ -1,12 +1,15 @@
 #!/bin/bash
 
-# FIXME
-. /usr/share/initramfs-tools/scripts/live-helpers
-#. "${PWD}/live-helpers"
+# import Cmdline()
+. /lib/live/boot/cmdline.sh
+
+# Set variable name that's needed by get_custom_mounts(),
+# and now initialized by live-boot in a file that we certainly
+# don't want to source.
+export persistence_list="live-persistence.conf"
 
 # This will import the following functions and variables used below:
-#   Arguments()
-#   do_custom_mounts()
+#   activate_custom_mounts()
 #   get_custom_mounts()
 #   open_luks_device()
 #   probe_for_gpt_name()
@@ -15,6 +18,7 @@
 #   storage_devices()
 #   where_is_mounted()
 #   $custom_overlay_label
+. /lib/live/boot/misc-helpers.sh
 
 usage ()
 {
@@ -103,6 +107,33 @@ panic ()
 	error ${@}
 }
 
+# Fix persistent ~/.gconf sub-dirs; activate_custom_mounts() creates
+# empty dirs up to its mountpoint, but the file %gconf.xml has to be
+# present in each of ~/.gconf's subdirs to make them valid. Hence we
+# have a problem with a persistent ~/.gconf/X/Y if ~/.gconf/X was
+# created by activate_custom_mounts() since it would lack its
+# %gconf.xml file, making ~/.gconf/X/Y invalid. This functions makes
+# sure that all subdirs of ~/.gconf contain %gconf.xml.
+fix_gconf_dirs ()
+{
+	for home in /home/*
+	do
+		if [ ! -e "${home}/.gconf" ]
+		then
+			continue
+		fi
+		local ownership=$(stat -c "%u:%g" "${home}")
+		find "${home}/.gconf" -type d | while IFS="" read -r dir
+		do
+			local conf="${dir}/%gconf.xml"
+			if [ ! -e "${conf}" ]; then
+				touch "${conf}"
+				chown ${ownership} "${conf}"
+			fi
+		done
+	done
+}
+
 list_gpt_volumes ()
 {
 	local labels=${@}
@@ -111,17 +142,26 @@ list_gpt_volumes ()
 	case "${PERSISTENCE_MEDIA}" in
 		removable)
 			whitelistdev="$(removable_dev)"
+			[ -z "${whitelistdev}" ] && return
 			;;
 		removable-usb)
 			whitelistdev="$(removable_usb_dev)"
+			[ -z "${whitelistdev}" ] && return
 			;;
 		*)
-			whitelistdev=""
+			if grep -qs -w -E '(live-media|bootfrom)=removable-usb' /proc/cmdline ; then
+				whitelistdev="$(removable_usb_dev)"
+				[ -z "${whitelistdev}" ] && return
+			elif grep -qs -w -E '(live-media|bootfrom)=removable' /proc/cmdline ; then
+				whitelistdev="$(removable_dev)"
+				[ -z "${whitelistdev}" ] && return
+			else
+				whitelistdev=""
+			fi
 			;;
 	esac
 
-	local gpt_overlays=""
-	for dev in $(storage_devices "" "${white_listed_devices}")
+	for dev in $(storage_devices "" "${whitelistdev}")
 	do
 		if ( is_luks_partition ${dev} >/dev/null 2>&1 && \
 		     echo ${PERSISTENCE_ENCRYPTION} | grep -qve "\<luks\>" ) || \
@@ -131,8 +171,7 @@ list_gpt_volumes ()
 		then
 			continue
 		fi
-
-		local result="$(probe_for_gpt_name "${labels}" "" ${dev})"
+		local result="$(probe_for_gpt_name "${labels}" ${dev})"
 		if [ -n "${result}" ]
 		then
 			echo ${result#*=}
@@ -188,6 +227,7 @@ activate_volumes ()
 	if [ -s "${custom_mounts}" ]
 	then
 		activate_custom_mounts ${custom_mounts} &> /dev/null
+		fix_gconf_dirs
 	fi
 	rm -f ${custom_mounts} 2> /dev/null
 
@@ -250,13 +290,13 @@ main ()
 	BASH_XTRACEFD="3"
 
 	# parse the kernel cmdline for live-boot's configuration as defaults
-	Arguments
+	Cmdline
 
 	# note that this is not enough for disabling tracing. we need to do the
 	# $BASH_XTRACEFD stuff above to avoid tracing until this point.
 	set +x
 
-	export PERSISTENCE="yes"
+	export PERSISTENCE="true"
 	export NOPERSISTENCE=""
 
 	# Should be set empty since live-boot already changed root for us
@@ -279,10 +319,10 @@ main ()
 				set -x
 				;;
 			--media=*)
-				export PERSISTENCE_MEDIA="${ARGUMENT#*=}"
+				export PERSISTENCE_MEDIA="${1#*=}"
 				;;
 			--read-only)
-				export PERSISTENCE_READONLY="Yes"
+				export PERSISTENCE_READONLY="true"
 				;;
 			--read-write)
 				export PERSISTENCE_READONLY=""

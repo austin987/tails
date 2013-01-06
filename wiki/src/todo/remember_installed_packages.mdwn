@@ -1,0 +1,46 @@
+When user have enabled persistence, it could be nice to remember which
+extra packages they have installed.
+
+> ACK
+
+Either in the greeter or upon login, an
+interface could appear offering the user to select which packages should be
+reinstalled (all unselected by default).
+
+Having this choice in the greeter could allow users to install their preferred
+software without having an administrative password set.
+
+> This interface would quickly become messy, as soon as a desired
+> additional package pulls dozens (if not hundreds) of dependencies.
+>
+> Alternative idea: in tails-persistence-setup, allow selecting
+> packages (among the ones additionally installed during the current
+> session, and/or offer a "All installed additional packages"
+> option) to be automatically re-installed next time. Then, at boot
+> time, when persistence is enabled, our live-persistence script (or
+> something else started from tails-greeter) would (unconditionally?)
+> read this packages list from the persistent volume and install them.
+
+The security implications of this whole idea needs to be researched before
+diving in the code.
+
+Also, we must think through if we want to re-install these packages
+from cache only, or prefer fetching more up-to-date versions from
+online mirrors if available.
+
+[[!tag todo/research]]
+
+Possible implementation tricks
+==============================
+
+A configuration snippet can be add in `/etc/apt/apt.conf.d` with a
+`Dpkg::Post-Invoke` option. This allows to trigger a script each time
+APT is run.
+
+This script should query APT database and record all packages that are
+not in `autoinstall` state.
+
+On boot time, that list should be filtered with packages that are already
+shipped with Tails.
+
+[[!tag release/2.0]]

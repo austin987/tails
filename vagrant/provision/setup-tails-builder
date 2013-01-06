@@ -52,7 +52,30 @@ apt-get -y install \
 	time whois \
 	dpkg-dev \
 	git \
+	aufs-tools \
 	ikiwiki
+
+# Be sure to get all the modules we need for our Ikiwiki
+apt-get -y --no-install-recommends install \
+       libyaml-perl libyaml-libyaml-perl po4a perlmagick libyaml-syck-perl \
+       libfile-chdir-perl liburi-perl libhtml-parser-perl wdg-html-validator \
+       libhtml-scrubber-perl libhtml-template-perl libtimedate-perl \
+       libxml-simple-perl libtext-multimarkdown-perl
 
 # Add build script
 install -o root -g root -m 755 /vagrant/provision/assets/build-tails /usr/local/bin
+
+update_live_build_conf()
+{
+	local var="$1"
+	local value="$2"
+
+	mkdir -p /etc/live
+	touch /etc/live/build.conf
+	sed -e "/^[[:space:]]*$var=/d" -i /etc/live/build.conf
+	echo "$var='$value'" >> /etc/live/build.conf
+}
+
+# Force APT repositories to a fixed mirror
+update_live_build_conf LB_MIRROR_BINARY "http://ftp.us.debian.org/debian/"
+update_live_build_conf LB_PARENT_MIRROR_BINARY "http://ftp.us.debian.org/debian/"

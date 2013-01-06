@@ -109,8 +109,9 @@ Roadmap
 
 [[!tag todo/research]]
 
-This project [is accepted](https://www.torproject.org/getinvolved/volunteer.html.en#tailsServer)
-for GSoC 2012. You can check the proposal [here](https://dustri.org/pub/tails_server.pdf)
+This project [was accepted](https://www.torproject.org/getinvolved/volunteer.html.en#tailsServer)
+for GSoC 2012, and worked a bit before the student dropped the ball.
+You can check the proposal [here](https://dustri.org/pub/tails_server.pdf)
 
 The challenges behind this project are:
   * Design and write the services configuration GUI [keywords: edit configuration files, upgrade between major Debian versions, debconf, Config::Model, augeas].
@@ -340,13 +341,41 @@ The purpose of this GUI would
 be to properly setup a persistence USB key for tail-server, with services
 configuration, authentication means, ...
 
+Time synchronization
+--------------------
+
+As contributed by adrelanos on tails-dev
+(<50293C63.2040807@riseup.net>), servers are supposed to run over
+longer periods without rebooting, days or weeks so Tails's current
+implementation with tails_htp is not sufficient for Tails Server.
+
+adrelanos suggests:
+
+> My recommendation is to run htpdate periodically, perhaps every
+> hour. Time exact minute should be randomized to avoid creating
+> a network fingerprint.
+> 
+> Given what you already implemented with `tails_htp`, running
+> `tails_htp` frequently probable won't be hard. As I need it for aos,
+> I am planing to add a script to /etc/cron.daily, it will run another
+> script in background to avoid blocking anachron during the sleep
+> delay. The other script will simply pick a number between 0 and 3600
+> from /dev/random, sleep for the delay and then restart the
+> htpdate service.
 
 Resources
 ---------
 
+### pairing
+
+* [git-annex' pairing design](http://git-annex.branchable.com/design/assistant/pairing/)
+
 ### Vidalia's hidden services support
 
-In 0.3.x: was removed, "should" become a plugin someday.
+In 0.3.x: was removed, should become a plugin someday: it's a [GSoC
+project](https://github.com/feroze/vidalia-plugins/tree/hiddenservice)
+by Feroze Naina <ferozenaina@gmail.com>; early in August 2012, is
+"awaiting being merged into the vidalia-plugins repo".
 
 In 0.2.x: works mostly well but we need to [[!taglink todo/wait]] for
 [[!tor_bug 2579]] to be fixed.
@@ -364,3 +393,23 @@ be worth looking at:
 ### Anonymous Web Application Framework
 
 https://piratenpad.de/p/AnonymousWebApplicationFramework
+
+
+Simplified edition of this project
+=========
+
+### Would it be easier to implement a simpler version of this project?
+
+Would a simplified version of this project be easier to implement, and could it act as a precursor to the full blown implementation?
+
+* No remote administration. Less remote access is usually more secure. Many users will not want to use their desktop machines SSH client for administration because it is not amnesic
+* No zeroconf, zeroconf is insecure and advertises too many details on the local LAN
+* The basics of this project is to tell the tor configuraiton file there is a hidden service listening on a certain local port (e.g. apache) and to run that server software inside tails. Vidalia has a GUI for this too. This is a simpler version of the project, and would work to provide a hidden service from within a tails livecd
+* Would it be preferred to have the screenlock software installed as well so the server can run with a locked screen. Would need to have the ALT+F1,F2 etc gettys disabled or password protected.
+* A simpler version that does provide a hidden service, but only the bare minimum other features, would not prevent all the other useful features specified in this document from being implemented at a later date, and may get more people interested in using it
+* Some of the features in this document make more work to get them running, but would actually decrease security and anonymity (advertising on LAN, administering from a LAN PC)
+
+
+
+
+

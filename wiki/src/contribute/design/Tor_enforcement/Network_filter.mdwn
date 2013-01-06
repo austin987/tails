@@ -5,9 +5,9 @@ This is solved by blocking all outbound Internet traffic except Tor
 and I2P, and explicitly configure all applications to use either of
 these.
 
-- [[!tails_gitweb config/chroot_local-includes/etc/firewall.conf]] for IPv4
-- [[!tails_gitweb config/chroot_local-includes/etc/firewall6.conf]] for IPv6
-- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/00-firewall.sh]]
+- [[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]]
+  (uses [ferm](http://ferm.foo-projects.org/) to build an `iptables`
+  ruleset)
 
 The default case is to block all outbound network traffic; let us now
 document all exceptions and some clarifications to this rule.
@@ -44,14 +44,20 @@ connections to the Internet*. Indeed: traffic to the local LAN
 (RFC1918 addresses) is wide open as well as the loopback traffic
 obviously.
 
-It is planned to [[forbid LAN DNS
-queries|todo/forbid_lan_dns_queries]] at some point to protect against
-some attacks; this is not implemented yet.
+LAN DNS queries are forbidden to protect against some attacks.
+
+#### Local services whitelist
+
+The Tails firewall uses a whitelist which only grants access to each
+local service to the users that actually need it. This blocks
+potential leaks due to misconfigurations or bugs, and deanonymization
+attacks by compromised processes. For specifics, see the firewall
+configuration where this is well commented:
+[[!tails_gitweb config/chroot_local-includes/etc/ferm.conf]]
 
 #### IPv6
 
-Tor does not support IPv6 yet so IPv6 communication is allowed only on
-the loopback interface.
+Tor does not support IPv6 yet so IPv6 communication is blocked.
 
 #### UDP, ICMP and other non-TCP protocols
 

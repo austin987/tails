@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 echo "Removing unwanted packages"
 
 ### Deinstall dev packages.
@@ -22,13 +24,6 @@ apt-get --yes purge  \
    module-assistant \
    po-debconf \
    virtualbox-guest-dkms
-
-### Deinstall a few unwanted packages that were pulled by tasksel
-### since they have Priority: standard.
-apt-get --yes purge  \
-   apt-listchanges at bsd-mailx dc debian-faq doc-debian doc-linux-text \
-   '^exim4*' ftp m4 mlocate ncurses-term nfs-common portmap procmail python-apt \
-   python-reportbug reportbug telnet texinfo time w3m wamerican
 
 ### Deinstall some other unwanted packages.
 apt-get --yes purge  \

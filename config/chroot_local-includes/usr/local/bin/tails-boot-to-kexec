@@ -1,25 +1,25 @@
 #!/bin/sh
 
-running_on_amd64_hardware() {
-   egrep '^flags[[:space:]]+:' /proc/cpuinfo | uniq | grep -qw lm
+running_pae_kernel() {
+   uname -r | grep -qs '686-pae$'
 }
 
 case "$1" in
    kernel)
       boot_kernel="$2"
-      # if running_on_amd64_hardware ; then
-      # 	 echo "$boot_kernel" | sed -e 's,/vmlinuz$,/vmlinuz3,'
-      # else
-	 echo "$boot_kernel"
-      # fi
+      if running_pae_kernel ; then
+         echo "$boot_kernel" | sed -e 's,/vmlinuz$,/vmlinuz2,'
+      else
+         echo "$boot_kernel"
+      fi
       ;;
    initrd)
       boot_initrd="$2"
-      # if running_on_amd64_hardware ; then
-      # 	 echo "$boot_initrd" | sed -e 's,/initrd\.img$,/initrd3.img,'
-      # else
-	 echo "$boot_initrd"
-      # fi
+      if running_pae_kernel ; then
+         echo "$boot_initrd" | sed -e 's,/initrd\.img$,/initrd2.img,'
+      else
+         echo "$boot_initrd"
+      fi
       ;;
    *)
       usage "$0 kernel|initrd"

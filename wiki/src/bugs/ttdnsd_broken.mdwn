@@ -2,6 +2,10 @@ This may involve several different issues with `ttdnsd`, `pdnsd`
 and/or their configurations in Tails. This bug can be splitted once
 we're sure what's really going on.
 
+[[!toc levels=2]]
+
+# the bugs
+
 ### `ttdnsd` can't resolve
 
 Running:
@@ -63,3 +67,11 @@ behaviour:
     host -t AAAA boum.org 127.0.0.1 &
 
 i.e. Tor's resolver handles At and `ttdnsd` handles AAAA.
+
+# solution
+
+We decided (<85zk731slu.fsf@boum.org>) to pull ttdnsd out of the
+"normal" DNS resolution loop, but leave it installed, configured
+and running. Implementation in progress (intrigeri).
+
+> Merged in devel, [[fixed|done]] in 0.13.

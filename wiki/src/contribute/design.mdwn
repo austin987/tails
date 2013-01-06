@@ -46,7 +46,8 @@ overlay network Tor.
 Due to its deep dependency on Tor, the PELD defers the same possible
 goals as Tor:
 
-- The PELD does not try to conceal it is connected to the Tor network.
+- The PELD does not try to conceal it is connected to the Tor network
+  unless Tor bridge relays are used.
 - The PELD is not secure against end-to-end attacks, such as
   end-to-end timing or intersection attacks.
 
@@ -143,7 +144,8 @@ leave *less* traces on local storage:
   generally default to write all kinds of traces to local storage; Tor
   distributions that depend on such systems are therefore forced to
   adopt a blacklist approach to lessen the amount of traces left
-  behind. Such an approach is known to be prone to human error.
+  behind. Such an approach is known to be prone to human error,
+  such as [[!tor_bug 7449]].
 - widespread operating systems typically offer very few control knobs
   to userspace applications over their not-amnesic-by-default
   behavior, especially when run without any kind of administrator
@@ -235,7 +237,7 @@ distributed as an ISO 9660 compatible image file it can be burned to a
 CD with almost any CD recording software available.
 
 Also, it is RECOMMENDED to make it possible for end-users to verify
-the downloaded PELD image's integrity using public key cryptography.
+the downloaded PELD image's integrity using public-key cryptography.
 
 ## 2.4 Operational requirements
 
@@ -708,8 +710,6 @@ extension).
   TCP. Our intention is to always use the latest stable version.
 - [polipo](http://www.pps.jussieu.fr/%7Ejch/software/polipo/):
   Caching web proxy.
-- [pdnsd](http://www.phys.uu.nl/%7Erombouts/pdnsd.html): caching DNS
-  proxy. Configured to forward lookups through Tor.
 - [Vidalia](https://www.torproject.org/projects/vidalia) is used
   to control Tor's behavior.
 
@@ -825,10 +825,16 @@ those are mainly for usability issues and similar.
 ### 3.6.1 The Tor™ software
 
 The Tor software is currently configured as a client only (onion
-proxy). The client listens on SOCKS port 9050 with a control port 9051
+proxy). The client listens on a control port 9051
 (using cookie authentication), as a transparent proxy on port 9040
 (only used for remapped hidden services) and as a DNS server on port
-8853. Only connections from localhost are accepted. It can be argued
+8853.
+
+The client listens on a few SOCKS ports (the rationale being detailed
+on the [[Tor stream isolation design
+page|contribute/design/stream_isolation]]): 9050, 9061, 9062 and 9063.
+
+Only connections from localhost are accepted. It can be argued
 that running a Tor server (onion router) would increase one's
 anonymity for a number for reasons but we still feel that most users
 probably would not want this due to the added consumption of
@@ -1150,7 +1156,8 @@ monitoring, except for hardware keyloggers.
 
 UDP and IPv6 are a problem. The Tor network does not support any of
 those yet. Outgoing UDP and IPv6 packets are dropped altogether by
-netfilter for this reason.
+netfilter for this reason. Additionally, IPv6 is disabled
+using sysctl ([[!tails_gitweb chroot_local-includes/etc/sysctl.d/ipv6.conf]]).
 
 Support of arbitrary DNS queries is currently [[missing but
 planned|todo/support_arbitrary_dns_queries]].

@@ -1,4 +1,155 @@
-[[!tag todo/research]]
+[[!toc levels=2]]
+
+Rationale
+=========
+
+ * tails-greeter exists and works (quite) fine
+ * its code in not that bad anymore: now feasible to add features
+ * its UI is difficult to use
+
+We have to find a way to have an ergonomic UI.
+
+Proposals
+=========
+
+Stop discouraging work on tails-greeter, bring positive input first
+-------------------------------------------------------------------
+
+People who have strong opinions on how t-g should work or should not,
+please write this ASAP on the dedicated [thread on
+tails-dev](https://mailman.boum.org/pipermail/tails-dev/2012-October/001781.html).
+
+Random ideas
+------------
+
+Some options should be probably setup differently. Typically like the language
+one which already has a todo item.
+[[todo/allow_choosing_language_at_installation_time]]
+
+Clarify our specs and revisit past decisions
+--------------------------------------------
+
+e.g.
+
+ * do we still want the first screen to look like a Windows (NT4) login screen?
+ * do we still want a second screen for options? Or another way to show it?
+
+Make an usability study?
+------------------------
+
+ * Draft several User eXperience (and layout) options
+ * Make them testable
+ * Make an usability study:
+   - catch testers (Tails users and/or newbies)
+   - make them test, see what they do and ask them what they think
+
+We may want to ask input from UX experts, and/or pay one to run the usability
+study.
+
+Try something easier
+--------------------
+
+Drafting a new possible version first could be useful, and then we can decide
+wether we want to ship it right away, or create other options and benchmark
+them through a full-blown usability study
+
+It's still possible to make a branch on the TailsGreeter repo and begin to
+implement a proposal:
+
+ * ask for ideas on tails-dev ML
+ * propose 1 or 2 implementations
+ * make "them" test and see what happens
+   (other people may be able and willing to have such prototypes tested
+   by first-time users, and might have himself interesting feedbacks).
+
+The ones who draft new t-g UI may want to
+have a look at gnome's studies on the subject (pages on <http://live.gnome.org>).
+
+Pending questions
+-----------------
+
+* Do we want the look to depend on wether the Windows theme was opted-in?
+* How much do we want to optimize for first-time users?
+
+Roadmap
+=======
+
+0. Do the "try something easier" way (Note: a developper commited to
+   lots of thinks in that plan, but not to any deadline (not
+   priority)!)
+   0. ask for ideas: **done**
+   0. propose one or several prototypes: **done**
+   0. **Next thing to do**: make some testing happen [[!tag todo/test]]
+   0. extract something useful from the result
+   0. implements the choosen proposal
+0. If we get funding that for and it's still necessary, do the usability study
+
+Prototypes
+==========
+
+Some proposals to test!
+
+## Goals
+
+My goals for the interface was:
+
+- read in "natural" order: top to bottom
+- no hidden windows/options
+- easy to adapt to right-to-left languages RTL
+- inspired/similar to GNOME3 "system preferences"
+
+## Screenshots
+
+Please test the script below, which lets you try the user experience!
+
+The greeter started from DVD:
+
+[[!img greeter.png align="right" size="" alt=""]]
+
+The greeter started from USB with persistence:
+
+[[!img greeter+persistence.png align="right" size="" alt=""]]
+
+The greeter started from USB with persistence once language selected:
+
+[[!img greeter+persistence+kbd.png align="right" size="" alt=""]]
+
+The greeter once the administration password option clicked:
+
+[[!img greeter-opt-adm.png align="right" size="" alt=""]]
+
+The greeter once the keyboard option clicked:
+
+[[!img greeter-opt-locale.png align="right" size="" alt=""]]
+
+The greeter once the windows camouflage option clicked:
+
+[[!img greeter-opt-persistence.png align="right" size="" alt=""]]
+
+## How to test
+
+Download everything in [[tails-greeter: revamp UI/mockups]], or better clone the git, go to the
+directory and:
+
+    $ ./mockup.py [-v <variant>] [-p]
+
+Dependencies: gtk3, python gobject introspection (basically debian wheezy)
+
+## Questions
+
+I'd like to hear about:
+
+- your overall impression?
+- should keyboard selectable independently from locale in one click?
+- your navigation experience?
+- where should the locales box be?
+
+(Note that some answers were sent on tails-dev already.)
+
+## Remarks (add yours!)
+
+- add a symbol if option was visited/activated
+- activation of presets in persistence: when?
 
 Existing work
 =============
@@ -10,9 +161,9 @@ Discussions
 
 This was discussed on tails-dev:
 
-* https://mailman.boum.org/pipermail/tails-dev/2012-March/000936.html
-* https://mailman.boum.org/pipermail/tails-dev/2012-March/000972.html
-* https://mailman.boum.org/pipermail/tails-dev/2012-March/000977.html
+* <https://mailman.boum.org/pipermail/tails-dev/2012-March/000936.html>
+* <https://mailman.boum.org/pipermail/tails-dev/2012-March/000972.html>
+* <https://mailman.boum.org/pipermail/tails-dev/2012-March/000977.html>
 
 Reports
 =======
@@ -32,3 +183,35 @@ having a "More options" button at the bottom, near the "Login" button?
 Ideally, this would require a "Back" button on the "Administration
 password" scren, but even without it, I think the result will be easier
 to understand/use.
+
+>How about using checkmark boxes or Yes/No radial dials, or not use them at all? Entering a password into a box means it's enabled, and leaving it empty implies you don't wish to use the feature. The text in my example here is a bit big though:
+><img src="https://tails.boum.org/todo/tails-greeter:_revamp_UI/menu.png">
+
+Report #2
+---------
+
+A few impressions after the publication of the screenshots. Great job by the way!
+
+The buttons ON/OFF are sometime confusing, as it's hard to know if it reflects the actual configuration, or the ability to modify this configuration, i.e. if the option is *actually* activated or if clicking on this button will toggle this option ON. I hope I'm clear enough :)
+
+Please also keep in mind that some use small screens, and can get blocked if the cannot see the validation button.
+
+Last point, as I will have to use Tails-greeter *at each boot*, I would like to be able to handle it easily with the keyboard, to save a lot of time.
+
+That said, thanks a lot for the great job!
+
+Report #3
+---------
+
+Indeed, this is a great polishing of the user interface, at least in terms of appearance. I failed to download anything from the mockups page though so be aware that this opinion is based on the screenshots only
+
+I do have some corrections and suggestions though, from the screenshot it is apparent that it allows to choose "Portugués" as a region/locale, which is not! It is a river and neighborhood in Porto Rico. "Português" is the correct word for Portuguese in Portuguese.
+
+Now as for if "Should keyboard selectable independently from locale in one click?", I would say yes as I use it in the current greeter. I do this for two reason: First in case my tails session gets owned the attacker will perhaps not know from which country I am though I am aware in that situation I probably have far worse problems as far as de-anonimization goes. And second, I am fluent in English, and I prefer to see the menus and the documentation in English (as are more complete). Having to scroll down to get the Portugal keyboard in the current greeter is quite annoying though and I often wonder why are the other languages more obscure keyboards (like without dead keys and etc) before the more default options. Perhaps ordering alphabetically by languages and after all the defaults keyboards then again the lesser keyboards in this new greeter? (btw why is Portuguese absent from the locales screenshots?)
+
+A last, but most important imho suggestion: no matter how ergonomic you can make the greeter it will always have some usability problems, but there is a way to minimize this! There is already a todo ticket for choosing language at installation time ( see: https://tails.boum.org/todo/allow_choosing_language_at_installation_time/ ) but then if someone got hold of your tails she/he could see from where you are and what language you speak. Now, if a new feature in the greeter was implemented - "Greeter Password" (pass-phrase would be overkill in this case as usability is preferred) - language, locale, but also camouflage, read only options for persistence, keyboards and other options to come in the greeter, could be defined at installation time and accessed at boot time with a few keystrokes from universal keys in keyboards. Or perhaps you have two greeter configurations and could setup two passwords.. If you think this feature could be useful perhaps you could revamp the greeter with this in mind for a future version? ;)
+
+Okay that's its :) the overall opinion of the greeter from the screenshots is that you made an amazing job :-) congratulations and thanks :-)
+
+[[!tag release/2.0]]
+
