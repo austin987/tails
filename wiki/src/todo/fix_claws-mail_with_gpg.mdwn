@@ -6,7 +6,20 @@ to:
 * disable Claws Mail's usage of `gpg-agent`
 * enable Claws Mail's own passphrase caching
 
-Alternatively, we could try to backport Wheezy's Claws Mail and see if
+This can be implemented this way:
+
+	[GPG]
+	use_gpg_agent=0
+	store_passphrase=1
+	store_passphrase_timeout=10
+	passphrase_grab=1
+
+Another way to fix the problem is to replace Seahorse's GnuPG agent
+with the regular `gpg-agent`.
+See the dedicated [[ticket|todo/regular_GnuPG_agent]].
+
+A last method could be to backport Wheezy's Claws Mail and see if
 it fixes the problem.
 
-[[!tag todo/code]]
+**Next thing to do**: [[!taglink todo/wait]] for a decision regarding
+Seahorse vs. regular GnuPG agent.
