@@ -1,4 +1,4 @@
-tails (0.16~rc1) unstable; urgency=low
+tails (0.16) unstable; urgency=low
 
   * Minor improvements
   - Replace the too-easy-to-misclick shutdown button with a better
@@ -14,6 +14,9 @@ tails (0.16~rc1) unstable; urgency=low
   - Hide the persistence setup launchers in kiosk mode.
   - Add a shell library for Tor functions.
     These are shared among multiple of our scripts.
+  - Install dictionaries for supported languages.
+    Install hunspell dictionaries when possible,
+    fall back on myspell ones else.
 
   * Bugfixes
   - Disable IPv6 on all network interfaces.
@@ -45,6 +48,20 @@ tails (0.16~rc1) unstable; urgency=low
       We depend on grepping stuff from the Tor log (especially for
       tordate/20-time.sh), so deleting it seems like a Good Thing(TM).
     · Stop Tor before messing with its log or data dir.
+  - live-persist: limit searched devices the same way as live-boot.
+    If no --media argument is specified, use live-boot's
+    "(live-media|bootfrom)=removable(|-usb)" argument to limit devices
+    searched for a persistent volume.
+  - tails-greeter: do not pass media=removable to live-persist.
+    Now that we have autodetection with kernel command-line,
+    it should not be needed anymore.
+  - Start memlockd after configuring it,
+    instead of starting it before and restarting it after.
+    This avoids running memlockd twice, and prevents other possibly
+    surprising race-conditions.
+    As a consequence, also have tails-sdmem-on-media-removal start after the
+    memlockd service *and* tails-reconfigure-memlockd: to start the watchdog,
+    we need memlockd to be properly configured *and* running.
 
   * iceweasel
   - Set iceweasel homepage to the news section on the Tails website.
@@ -85,7 +102,7 @@ tails (0.16~rc1) unstable; urgency=low
     debug situations.
   - Make it clearer what can and cannot be done in terms of local packages.
 
- -- Tails developers <amnesia@boum.org>  Thu, 13 Dec 2012 11:21:49 +0100
+ -- Tails developers <amnesia@boum.org>  Thu, 10 Jan 2013 12:47:42 +0100
 
 tails (0.15) unstable; urgency=low
 
