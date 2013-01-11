@@ -10,7 +10,7 @@ many safeguards against releasing crap.
 Thanks to Git tags one can easily compare the to-be-released source
 code with previous version's one e.g.:
 
-	git diff 0.6.1..stable
+	git diff 0.15..0.16
 
 ## Result
 
@@ -88,53 +88,62 @@ Check the image size has not changed much since the last release.
    IPv6-enabled server on its IPv6 address over TCP and icmp6.
 * is `/etc/resolv.conf` OK both before/after DHCP has been setup? it should
   *always* read `nameserver 127.0.0.1`
-* [[doc/first_steps/startup_options/bridge_mode]] should work
-* verify that all destinations reached from an intensive Tails session
-  are tor routers or authorities: Boot Tails without the network
-  in. Start dumping your whole session's network activity with `sudo
-  tcpdump -n -i any -w dump` (or better, do the dump on another machine,
-  or on the host OS if Tails is running in a VM). Next, plug the
-  network and do *a lot* of network stuff (why not run do this while
-  doing all the other tests?). Then check that all destinations,
-  e.g. by using tshark and the script below:
+* [[doc/first_steps/startup_options/bridge_mode]] should work:
+  1. Boot with the `bridge` option.
+  1. Setup an administrator password.
+  1. Enter a bridge or a few.
+  1. Use the Internet.
+  1. Check from time to time with `netstat` that the only outgoing
+     direct network connections go to the configured bridge(s).
+* Verify that all destinations reached from an intensive Tails session
+  are tor routers or authorities:
+  1. Boot Tails without the network in.
+  1. Start dumping your whole session's network activity with `sudo
+     tcpdump -n -i any -w dump` (or better, do the dump on another machine,
+     or on the host OS if Tails is running in a VM).
+  1. Plug the network.
+  1. Wait for Tor to be functional.
+  1. Save the `cached-microdesc-consensus` out of the VM (it's needed
+     to analyze the network dump later on).
+  1. Do *a lot* of network stuff (why not run do this while doing all
+     the other tests?).
+  1. Then check all destinations, e.g. by using tshark and the script below:
 
-(ignore this line, ikiwiki is buggy...)
+     	# set DUMP to the output of tcpdump above
+     	DUMP=dump
+     	# set CONSENSUS to Tor's consensus from the Tails session
+     	CONSENSUS=cached-microdesc-consensus
+     	NODES=$(mktemp)
+     	awk '/^r / { print $6 }' ${CONSENSUS} > ${NODES}
+     	# Note that these default directory authorities may change! To be
+     	# sure, check in Tor's source, src/or/config.c:~900
+     	DIR_AUTHS="
+     	128.31.0.39
+     	86.59.21.38
+     	194.109.206.212
+     	82.94.251.203
+     	76.73.17.194
+     	212.112.245.170
+     	193.23.244.244
+     	208.83.223.34
+     	171.25.193.9
+     	154.35.32.5
+     	"
+     	tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
+     	while read x; do
+     	    ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
+     	    if echo ${DIR_AUTHS} | grep -qe "${ip_expr}"; then
+     	        continue
+     	    fi
+     	    if ! grep -qe "^${ip_expr}$" ${NODES}; then
+     	        echo "${x} is bad"
+     	    fi
+     	done
+     	rm ${NODES}
 
-    # set DUMP to the output of tcpdump above
-    DUMP=dump
-    # set CONSENSUS to Tor's consensus from the Tails session
-    CONSENSUS=cached-microdesc-consensus
-    NODES=$(mktemp)
-    awk '/^r / { print $6 }' ${CONSENSUS} > ${NODES}
-    # Note that these default directory authorities may change! To be
-    # sure, check in Tor's source, src/or/config.c:~900
-    DIR_AUTHS="
-    128.31.0.39
-    86.59.21.38
-    194.109.206.212
-    82.94.251.203
-    76.73.17.194
-    212.112.245.170
-    193.23.244.244
-    208.83.223.34
-    171.25.193.9
-    154.35.32.5
-    "
-    tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
-    while read x; do
-        ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
-        if echo ${DIR_AUTHS} | grep -qe "${ip_expr}"; then
-            continue
-        fi
-        if ! grep -qe "^${ip_expr}$" ${NODES}; then
-            echo "${x} is bad"
-        fi
-    done
-    rm ${NODES}
-
-  Note that this script will produce some false positives, like your
-  gateway, broadcasts, etc. Also note that running I2P during these
-  test will list every I2P peer as "bad", so that is not recommended.
+     Note that this script will produce some false positives, like your
+     gateway, broadcasts, etc. Also note that running I2P during these
+     test will list every I2P peer as "bad", so that is not recommended.
 
 ## Stream isolation
 
@@ -182,19 +191,19 @@ features properly do their work; second, our `torrc` sets the right
   - a "clearnet" SMTP server.
   - a hidden service SMTP server (see above).
 * Check that the profile works and is torified (specifically the
-  EHLO/HELO SMTP messages it sends). Send an email using Claws and a
-  non-anonymizing SMTP relay. Then check that email's headers once
-  received, especially the `Received:` and `Message-ID:` ones.
+  EHLO/HELO SMTP messages it sends):
+  1. Send an email using Claws and a non-anonymizing SMTP relay.
+  1. Then check that email's headers once received, especially the
+     `Received:` and `Message-ID:` ones.
 * Also check that the EHLO/HELO SMTP message is not leaking anything
-  with a packet sniffer: start Claws using the panel icon (which runs
-  `torify claws-mail`) to
-  avoid using the transparent proxy (which will confuse tcpdump).
-  Disable SSL/TLS for SMTP in Claws (so take precautions for not
-  leaking your password in plaintext by either changing it temporarily
-  or using a disposable account). Then run `sudo tcpdump -n -i lo -w
-  dump` to capture the packets before Tor encrypts it, and check the
-  dump for the HELO/EHLO message and verify that it only contains
-  `localhost`.
+  with a packet sniffer:
+  1. start Claws using the panel icon.
+  1. Disable SSL/TLS for SMTP in Claws (so take precautions for not
+     leaking your password in plaintext by either changing it
+     temporarily or using a disposable account).
+  2. Run `sudo tcpdump -n -i lo -w dump` to capture the packets before
+     Tor encrypts it, and check the dump for the HELO/EHLO message and
+     verify that it only contains `localhost`.
 
 # Whisperback
 
@@ -250,7 +259,8 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 * Check you can login as root neither with the `amnesia` password nor
   with the `live` one.
 * Boot Tails without setting a password and check you can't sudo nor get
-  PolicyKit administrative privileges, neither with the `amnesia` password nor
+  PolicyKit administrative privileges (e.g. change internal hard
+  disks in the Disk Utility), neither with the `amnesia` password nor
   with the `live` one.
 * Boot Tails with a password and check you can sudo and get PolicyKit
   administrative privileges.
@@ -260,8 +270,9 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # Virtualization support
 
-* `modinfo vboxguest` should work
+* `modinfo vboxguest` should work when booted on the 686-pae kernel
 * test in VirtualBox
+* test in qemu/kvm
 
 # I2P
 
@@ -381,9 +392,9 @@ that the theme resembles Windows XP, including:
 * [Bliss](http://en.wikipedia.org/wiki/Bliss_(image)) desktop
   background picture.
 * Windows equivalents for application launcher icons:
-  - Pidgin -> MSN Messenger
   - Iceweasel -> Internet Explorer
   - Claws Mail -> Outlook
+  - Pidgin -> MSN Messenger
 * gpgApplet's context menu should look readable
 
 # Unsafe Web Browser
@@ -397,7 +408,7 @@ that the theme resembles Windows XP, including:
   - it has a scary red theme (except when Windows Camouflage is
     activated).
   - the start page makes it clear that this is the Unsafe Web Browser.
-  - the iceweasel instance is run as the `clearnet` user.
+  - the iceweasel instance runs as the `clearnet` user.
   - it has no proxy configured and gets a direct Internet connection.
   - configuring any of Tor's SocksPorts or polipo as a proxy
     shouldn't work (should result in "The proxy server is refusing
@@ -459,5 +470,5 @@ language.
 * Browsing (by hostname) a FTP server on the Internet should be
   possible using GNOME's *Connect to server* feature
   (once [[todo/fix Internet FTP support]] is fixed)
-* Make sure that Tails signing key in `/usr/share/keyrings/tails-keyring.gpg`
-  is up-to-date.
+* The Tails signing key in `/usr/share/keyrings/tails-keyring.gpg`
+  should be up-to-date.

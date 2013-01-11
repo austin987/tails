@@ -1,8 +1,8 @@
-We need to start testing Tails built against Wheezy.
+We need to start porting Tails to Wheezy, and test it.
 
-Work is done our the `wheezy` Git branch.
+Work is done in the `feature/wheezy` Git branch.
 
-**Current state**: builds, but mostly unusable.
+**Current state**: does not build.
 
 [[!toc levels=2]]
 
@@ -11,18 +11,43 @@ Problems to fix
 
 [[!tag todo/code]]
 
+* Fix the build: `config/chroot_local-hooks/50-virtualbox` fails.
 * `amnesia` users sudoers credentials to localize console at profile
   time don't work
-* `tails-greeter` is not installed
 * `/usr/local/sbin/udev-watchdog` not found
-* I2P packages are not removed (uninstallable on Wheezy)
-* scim-pinyin and scim-uim must be replaced by the Wheezy equivalent
+* `scim-pinyin`, `scim-uim` and `scim-hangul` must be replaced by the Wheezy equivalent
 * Persistence for NM connections is broken. See [corresponding issue in
   Liberté](https://github.com/mkdesu/liberte/issues/4)
+* Use GNOME fallback mode (but ship GNOME shell too if it's not too
+  big -- that will be unsupported, but advanced users might want to
+  find their own ways to use it)
+* Find and install I2P packages compatible with Wheezy, then revert 1b9ae07
 
 Tests to do
 ===========
 
+[[!tag todo/test]]
+
 * is [[bugs/plymouth_stops_too_early]] fixed on Wheezy?
 * is [[bugs/desktop_crashes_with_claws-mail_and_gpg-agent]]
   fixed on Wheezy?
+* does `liveusb-creator` work fine with both shipped kernels on
+  Wheezy? does it work fine *without* our patched `dbus-python`
+  package too?
+
+Research to do
+==============
+
+[[!tag todo/research]]
+
+How to implement the Windows Camouflage mode in GNOME3 "Classic" (aka.
+fallback) mode?
+
+* Ubuntu's GNOME Classic is not that far from a good old GNOME2 DE:
+  https://help.ubuntu.com/community/PreciseGnomeClassicTweaks
+* The default theme (`/usr/share/themes/Adwaita/gtk-3.0/`) can be
+  forked and customized.
+* GTK3 Windows-like themes seem to be
+  [in the works](http://blogs.gnome.org/alexl/2012/03/27/moar-windows-themes/),
+  and <http://gnome-look.org/> has a few ones.
+* some [customization tips](http://askubuntu.com/questions/69576/how-to-customize-the-gnome-classic-panel)
