@@ -1,8 +1,8 @@
-We need to start testing Tails built against Wheezy.
+We need to start porting Tails to Wheezy, and test it.
 
-Work is done our the `wheezy` Git branch.
+Work is done in the `feature/wheezy` Git branch.
 
-**Current state**: builds, but mostly unusable.
+**Current state**: does not build.
 
 [[!toc levels=2]]
 
@@ -11,14 +11,18 @@ Problems to fix
 
 [[!tag todo/code]]
 
+* Prepare and upload Wheezy versions of our `iceweasel` custom
+  packages: the lack thereof currently breaks the build.
 * `amnesia` users sudoers credentials to localize console at profile
   time don't work
-* `tails-greeter` is not installed
 * `/usr/local/sbin/udev-watchdog` not found
-* I2P packages are not removed (uninstallable on Wheezy)
-* scim-pinyin and scim-uim must be replaced by the Wheezy equivalent
+* `scim-pinyin`, `scim-uim` and `scim-hangul` must be replaced by the Wheezy equivalent
 * Persistence for NM connections is broken. See [corresponding issue in
   Liberté](https://github.com/mkdesu/liberte/issues/4)
+* Use GNOME fallback mode (but ship GNOME shell too if it's not too
+  big -- that will be unsupported, but advanced users might want to
+  find their own ways to use it)
+* Find and install I2P packages compatible with Wheezy
 
 Tests to do
 ===========
@@ -26,3 +30,6 @@ Tests to do
 * is [[bugs/plymouth_stops_too_early]] fixed on Wheezy?
 * is [[bugs/desktop_crashes_with_claws-mail_and_gpg-agent]]
   fixed on Wheezy?
+* does `liveusb-creator` work fine with both shipped kernels on
+  Wheezy? does it work fine *without* our patched `dbus-python`
+  package too?
