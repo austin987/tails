@@ -12,13 +12,21 @@ error() {
     exit 1
 }
 
+check_dependency() {
+    if ! which "${1}" >/dev/null && ! dpkg -s "${1}" >/dev/null 2>&1; then
+        error "'${1}' is missing, please install it and run again. Aborting..."
+    fi
+}
+
 start_xvfb() {
+    check_dependency Xvfb
     Xvfb $TARGET_DISPLAY -screen 0 1024x768x24+32 >/dev/null 2>&1 &
     XVFB_PID=$!
     trap "kill -9 ${XVFB_PID}" EXIT
 }
 
 start_vnc_server() {
+    check_dependency x11vnc
     VNC_SERVER_PORT="$(x11vnc -listen localhost -display ${TARGET_DISPLAY} \
                               -bg -nopw 2>&1 | \
                                   grep -m 1 "^PORT=[0-9]\+" | sed 's/^PORT=//')"
@@ -31,6 +39,8 @@ start_vnc_viewer() {
 }
 
 capture_session() {
+    check_dependency ffmpeg
+    check_dependency libvpx0
     echo "Capturing guest display into ${CAPTURE_FILE}"
     ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
@@ -89,4 +99,5 @@ export DISPLAY=${TARGET_DISPLAY}
 export ISO="${ISO}"
 cd features
 . ./.rvmrc
+check_dependency cucumber
 cucumber cucumber/
