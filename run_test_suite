@@ -4,8 +4,13 @@
 
 set -e
 
-NAME="$0"
+NAME=$(basename ${0})
 TARGET_DISPLAY=:8
+
+error() {
+    echo "${NAME}: error: ${*}" >&2
+    exit 1
+}
 
 start_xvfb() {
     Xvfb $TARGET_DISPLAY -screen 0 1024x768x24+32 >/dev/null 2>&1 &
@@ -57,8 +62,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "${ISO}" ]; then
-    echo "No ISO provided. Aborting..." >&2
-    exit 1
+    error "No ISO provided. Aborting..."
 fi
 
 start_xvfb
