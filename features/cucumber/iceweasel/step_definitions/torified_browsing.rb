@@ -1,8 +1,7 @@
 require 'fileutils'
 
 def restore_background
-  snapshot = Dir.pwd + "/tmpfs/IceweaselBackgroundDone.state"
-  @vm.restore_snapshot(snapshot)
+  @vm.restore_snapshot(@background_snapshot)
   # Wait for virt-viewer to be available to sikuli. Otherwise we could
   # lose sikuli actions (e.g. key presses) if they come really early
   # after the restore
@@ -19,8 +18,7 @@ def restore_background
 end
 
 Given /^I restore the background snapshot if it exists$/ do
-  snapshot = Dir.pwd + "/tmpfs/IceweaselBackgroundDone.state"
-  if File.exists?(snapshot)
+  if File.exists?(@background_snapshot)
     restore_background
     @background_restored = true
   end
@@ -73,8 +71,7 @@ end
 
 Given /^I save the background snapshot if it does not exist$/ do
   if !@background_restored
-    snapshot = Dir.pwd + "/tmpfs/IceweaselBackgroundDone.state"
-    @vm.save_snapshot(snapshot)
+    @vm.save_snapshot(@background_snapshot)
     restore_background
   end
 end
