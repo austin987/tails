@@ -26,7 +26,14 @@ start_vnc_server() {
 }
 
 start_vnc_viewer() {
+    check_dependency xtightvncviewer
     DISPLAY=":0" xtightvncviewer -viewonly localhost:${VNC_SERVER_PORT} 1>/dev/null 2>&1 &
+}
+
+capture_session() {
+    echo "Capturing guest display into ${CAPTURE_FILE}"
+    ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
+        -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
 }
 
 # main script
@@ -68,9 +75,7 @@ fi
 start_xvfb
 
 if [ -n "${CAPTURE_FILE}" ]; then
-    echo "Capturing guest display into ${CAPTURE_FILE}"
-    ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
-        -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
+    capture_session
 fi
 if [ -n "${VNC_SERVER}" ]; then
     start_vnc_server
