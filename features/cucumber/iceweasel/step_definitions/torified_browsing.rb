@@ -84,12 +84,9 @@ Given /^I have a network connection$/ do
   wait_until_remote_shell_is_up
 end
 
-Given /^Tor has bootstrapped$/ do
+Given /^Tor has built a circuit$/ do
   next if @background_restored
-  # FIXME: A better approach would be to check this via the control
-  # port with: GETINFO status/circuit-established
-  cmd = 'grep -q "Bootstrapped 100%" /var/log/tor/log'
-  try_for(120, lambda{ @vm.execute(cmd, "root").success? })
+  wait_until_tor_is_working
 end
 
 Given /^Iceweasel has autostarted and is not loading a web page$/ do

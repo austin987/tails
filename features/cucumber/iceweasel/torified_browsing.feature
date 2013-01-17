@@ -1,5 +1,7 @@
-Feature: Iceweasel must be anonymous.
-  In order to be anonymous, the iceweasel web browser must connect through Tor.
+Feature: Browsing the web using Iceweasel
+  As a Tails user
+  when I browse the web using Iceweasel
+  all network traffic should flow only through Tor
 
   Background:
     Given I restore the background snapshot if it exists
@@ -7,7 +9,7 @@ Feature: Iceweasel must be anonymous.
     And the network traffic is sniffed
     And I log in to a new session
     And I have a network connection
-    And Tor has bootstrapped
+    And Tor has built a circuit
     And Iceweasel has autostarted and is not loading a web page
     And the time has synced
     And I save the background snapshot if it does not exist
