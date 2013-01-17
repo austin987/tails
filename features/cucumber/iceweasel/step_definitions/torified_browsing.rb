@@ -3,14 +3,14 @@ require 'date'
 require 'system_timer'
 
 def wait_until_remote_shell_is_up
-  try_for(120, lambda{ @vm.execute('true').success? })
+  try_for(120) { @vm.execute('true').success? }
 end
 
 def wait_until_tor_is_working
-  try_for(120, lambda{ @vm.execute(
+  try_for(120) { @vm.execute(
     '. /usr/local/lib/tails-shell-library/tor.sh; ' +
     'tor_control_getinfo status/circuit-established',
-                                   'root').stdout  == "1\n" })
+                                   'root').stdout  == "1\n" }
 end
 
 def restore_background
@@ -61,14 +61,14 @@ Given /^I log in to a new session$/ do
   @screen.click('TailsGreeterLoginButton.png')
 end
 
-# Call `f` (ignoring any exceptions it may throw) repeatedly with one
+# Call block (ignoring any exceptions it may throw) repeatedly with one
 # second breaks until it returns true, or until `t` seconds have
 # passed when we throw Timeout:Error.
-def try_for(t, f)
+def try_for(t)
   SystemTimer.timeout(t) do
     loop do
       begin
-        return if f.call
+        return if yield
       rescue Exception
         # noop
       end
@@ -103,7 +103,7 @@ end
 Given /^the time has synced$/ do
   next if @background_restored
   ["/var/run/tordate/done", "/var/run/htpdate/success"].each do |file|
-    try_for(300, lambda{ @vm.execute("test -e #{file}").success? })
+    try_for(300) { @vm.execute("test -e #{file}").success? }
   end
 end
 
