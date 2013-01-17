@@ -6,7 +6,6 @@ Feature: Browsing the web using Iceweasel
   Background:
     Given I restore the background snapshot if it exists
     And a freshly started Tails
-    And the network traffic is sniffed
     And I log in to a new session
     And I have a network connection
     And Tor has built a circuit

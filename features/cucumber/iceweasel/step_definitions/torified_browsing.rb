@@ -49,13 +49,6 @@ Given /^a freshly started Tails$/ do
   @screen.wait('TailsGreeter.png', 120)
 end
 
-Given /^the network traffic is sniffed$/ do
-  # The sniffer is external to the restored VM's state, so we can't skip
-  # it when restoring the background from a snapshot.
-  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name, @vm.ip, @vm.ip6)
-  @sniffer.capture
-end
-
 Given /^I log in to a new session$/ do
   next if @background_restored
   @screen.click('TailsGreeterLoginButton.png')
@@ -129,7 +122,6 @@ When /^I open the address "([^"]*)" in Iceweasel$/ do |address|
 end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
-  @sniffer.stop
   # This command will grab all router IP addresses from the Tor
   # consensus in the VM.
   cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
