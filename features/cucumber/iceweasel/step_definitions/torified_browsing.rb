@@ -1,17 +1,4 @@
 require 'fileutils'
-require 'date'
-require 'system_timer'
-
-def wait_until_remote_shell_is_up
-  try_for(120) { @vm.execute('true').success? }
-end
-
-def wait_until_tor_is_working
-  try_for(120) { @vm.execute(
-    '. /usr/local/lib/tails-shell-library/tor.sh; ' +
-    'tor_control_getinfo status/circuit-established',
-                                   'root').stdout  == "1\n" }
-end
 
 def restore_background
   snapshot = Dir.pwd + "/tmpfs/IceweaselBackgroundDone.state"
@@ -52,22 +39,6 @@ end
 Given /^I log in to a new session$/ do
   next if @background_restored
   @screen.click('TailsGreeterLoginButton.png')
-end
-
-# Call block (ignoring any exceptions it may throw) repeatedly with one
-# second breaks until it returns true, or until `t` seconds have
-# passed when we throw Timeout:Error.
-def try_for(t)
-  SystemTimer.timeout(t) do
-    loop do
-      begin
-        return if yield
-      rescue Exception
-        # noop
-      end
-      sleep 1
-    end
-  end
 end
 
 Given /^I have a network connection$/ do
