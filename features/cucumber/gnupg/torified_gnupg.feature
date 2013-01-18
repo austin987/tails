@@ -1,12 +1,12 @@
-Feature: GnuPG must be anonymous.
-  In order to be anonymous, the various GnuPG tools must connect
-  through Tor when dealing with keyservers.
+Feature: Keyserver interaction with GnuPG
+  As a Tails user
+  when I interact with keyservers using various GnuPG tools
+  all network traffic should flow only through Tor.
 
   Background:
     Given I restore the background snapshot if it exists
     And a freshly started Tails
     And I log in to a new session
-    And GNOME has started
     And I have a network connection
     And Tor has built a circuit
     And Iceweasel has autostarted and is not loading a web page
@@ -20,6 +20,5 @@ Feature: GnuPG must be anonymous.
 
   Scenario: Fetching PGP keys using seahorse should be done over Tor.
     When I run "seahorse"
-    And I see "SeahorseWindow.png" after at most 30 seconds
     And I successfully fetch a GnuPG key using seahorse
     Then all Internet traffic has only flowed through Tor
