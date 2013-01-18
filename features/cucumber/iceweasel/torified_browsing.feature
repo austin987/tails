@@ -11,6 +11,7 @@ Feature: Browsing the web using Iceweasel
     And Tor has built a circuit
     And Iceweasel has autostarted and is not loading a web page
     And the time has synced
+    And I have closed all annoying notifications
     And I save the background snapshot if it does not exist
 
   Scenario: Opening check.torproject.org in Iceweasel will show the green onion and the congratualtions message.

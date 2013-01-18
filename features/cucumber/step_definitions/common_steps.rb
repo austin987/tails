@@ -53,6 +53,20 @@ Given /^Iceweasel has autostarted and is not loading a web page$/ do
   @screen.type("about:blank" + Sikuli::KEY_RETURN)
 end
 
+Given /^I have closed all annoying notifications$/ do
+  next if @background_restored
+  begin
+    # note that we cannot use find_all as the resulting matches will
+    # have the positions from before we start closing notificatios,
+    # but closing them will change the positions.
+    while match = @screen.find("GnomeNotificationX.png")
+      @screen.click(match.x + match.width/2, match.y + match.height/2)
+    end
+  rescue Sikuli::ImageNotFound
+    # noop
+  end
+end
+
 Given /^I save the background snapshot if it does not exist$/ do
   if !@background_restored
     @vm.save_snapshot(@background_snapshot)
