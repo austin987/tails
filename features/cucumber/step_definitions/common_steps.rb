@@ -106,3 +106,15 @@ Then /^all Internet traffic has only flowed through Tor$/ do
     raise "There were network leaks!"
   end
 end
+
+When /^I open the GNOME run dialog$/ do
+  # This magic constant corresponds to the F2 key. The sikuli gem lacks
+  # that, and many other, definitions, sadly...
+  @screen.type("\356\200\222", Sikuli::KEY_ALT)
+  @screen.wait('GnomeRunDialog.png', 10)
+end
+
+When /^I run "([^"]*)"$/ do |program|
+  step "I open the GNOME run dialog"
+  @screen.type(program + Sikuli::KEY_RETURN)
+end
