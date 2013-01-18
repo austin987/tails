@@ -26,6 +26,8 @@ pref("browser.cache.offline.enable", false);
 pref("browser.chrome.favicons", false);
 pref("browser.chrome.site_icons", false);
 pref("browser.chrome.image_icons.max_size", 0);
+pref("browser.display.max_font_attempts", 10);
+pref("browser.display.max_font_count", 5);
 pref("browser.download.manager.closeWhenDone", true);
 pref("browser.download.manager.retention", 0);
 pref("browser.download.useDownloadDir", false);
