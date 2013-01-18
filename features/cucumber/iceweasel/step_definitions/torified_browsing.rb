@@ -12,6 +12,7 @@ def restore_background
   # Time jumps and incorrect clocks also confuses Tor in many ways.
   wait_until_remote_shell_is_up
   @vm.execute("service tor stop", "root")
+  @vm.execute("killall vidalia")
   @vm.host_to_guest_time_sync
   @vm.execute("service tor start", "root")
   wait_until_tor_is_working
