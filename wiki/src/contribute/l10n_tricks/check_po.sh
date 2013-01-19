@@ -5,7 +5,7 @@
 if ! [ -x "`which i18nspector`" ] ; then
     echo "i18nspector: command not found"
     echo "You need to install i18nspector first. See /contribute/l10n_tricks."
-    exit
+    exit 2
 fi
 
 PATTERNS_FILE="$(mktemp -t XXXXXX.patterns)"
