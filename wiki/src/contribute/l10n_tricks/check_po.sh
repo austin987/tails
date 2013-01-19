@@ -3,9 +3,9 @@
 # vim: set filetype=sh sw=4 sts=4 expandtab autoindent:
 
 if ! [ -x "`which i18nspector`" ] ; then
-  echo "i18nspector: command not found"
-  echo "You need to install i18nspector first. See /contribute/l10n_tricks."
-  exit
+    echo "i18nspector: command not found"
+    echo "You need to install i18nspector first. See /contribute/l10n_tricks."
+    exit
 fi
 
 PATTERNS_FILE="$(mktemp -t XXXXXX.patterns)"
