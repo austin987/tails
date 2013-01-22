@@ -12,6 +12,7 @@ Before do |scenario|
   @sniffer.capture
   @feature = File.basename(scenario.feature.file, ".feature")
   @background_snapshot = Dir.pwd + "/tmpfs/" + @feature + "_background.state"
+  @skip_steps_while_restoring_background = false
 end
 
 

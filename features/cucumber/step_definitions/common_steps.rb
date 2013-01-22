@@ -24,12 +24,14 @@ end
 Given /^I restore the background snapshot if it exists$/ do
   if File.exists?(@background_snapshot)
     restore_background
-    @background_restored = true
+    # From now on all steps will be skipped (and pass) until we reach
+    # the step which saved the snapshot.
+    @skip_steps_while_restoring_background = true
   end
 end
 
 Given /^a freshly started Tails$/ do
-  next if @background_restored
+  next if @skip_steps_while_restoring_background
   @vm.start
   @screen.wait('TailsBootSplash.png', 30)
   # Start the VM remote shell
@@ -39,31 +41,31 @@ Given /^a freshly started Tails$/ do
 end
 
 Given /^I log in to a new session$/ do
-  next if @background_restored
+  next if @skip_steps_while_restoring_background
   @screen.click('TailsGreeterLoginButton.png')
 end
 
 Given /^I have a network connection$/ do
-  next if @background_restored
+  next if @skip_steps_while_restoring_background
   # Wait until the VM's remote shell is available, which implies
   # that the network is up.
   wait_until_remote_shell_is_up
 end
 
 Given /^Tor has built a circuit$/ do
-  next if @background_restored
+  next if @skip_steps_while_restoring_background
   wait_until_tor_is_working
 end
 
 Given /^the time has synced$/ do
-  next if @background_restored
+  next if @skip_steps_while_restoring_background
   ["/var/run/tordate/done", "/var/run/htpdate/success"].each do |file|
     try_for(300) { @vm.execute("test -e #{file}").success? }
   end
 end
 
 Given /^Iceweasel has autostarted and is not loading a web page$/ do
-  next if @background_restored
+  next if @skip_steps_while_restoring_background
 #  @screen.wait("IceweaselRunning.png", 120)
   step 'I see "IceweaselRunning.png" after at most 120 seconds'
 
@@ -75,7 +77,7 @@ Given /^Iceweasel has autostarted and is not loading a web page$/ do
 end
 
 Given /^I have closed all annoying notifications$/ do
-  next if @background_restored
+  next if @skip_steps_while_restoring_background
   begin
     # note that we cannot use find_all as the resulting matches will
     # have the positions from before we start closing notificatios,
@@ -89,17 +91,21 @@ Given /^I have closed all annoying notifications$/ do
 end
 
 Given /^I save the background snapshot if it does not exist$/ do
-  if !@background_restored
+  if !@skip_steps_while_restoring_background
     @vm.save_snapshot(@background_snapshot)
     restore_background
   end
+  # Now we stop skipping steps from the snapshot restore.
+  @skip_steps_while_restoring_background = false
 end
 
 Then /^I see "([^"]*)" after at most (\d+) seconds$/ do |image, time|
+  next if @skip_steps_while_restoring_background
   @screen.wait(image, time.to_i)
 end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
+  next if @skip_steps_while_restoring_background
   # This command will grab all router IP addresses from the Tor
   # consensus in the VM.
   cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
@@ -129,6 +135,7 @@ Then /^all Internet traffic has only flowed through Tor$/ do
 end
 
 When /^I open the GNOME run dialog$/ do
+  next if @skip_steps_while_restoring_background
   # This magic constant corresponds to the F2 key. The sikuli gem lacks
   # that, and many other, definitions, sadly...
   @screen.type("\356\200\222", Sikuli::KEY_ALT)
@@ -136,6 +143,7 @@ When /^I open the GNOME run dialog$/ do
 end
 
 When /^I run "([^"]*)"$/ do |program|
+  next if @skip_steps_while_restoring_background
   step "I open the GNOME run dialog"
   @screen.type(program + Sikuli::KEY_RETURN)
 end
