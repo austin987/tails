@@ -49,7 +49,7 @@ Given /^I have a network connection$/ do
   next if @skip_steps_while_restoring_background
   # Wait until the VM's remote shell is available, which implies
   # that the network is up.
-  wait_until_remote_shell_is_up
+  try_for(120) { guest_has_network? }
 end
 
 Given /^Tor has built a circuit$/ do

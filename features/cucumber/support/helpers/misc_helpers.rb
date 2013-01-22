@@ -18,6 +18,11 @@ def try_for(t)
   return false
 end
 
+def guest_has_network?
+  # FIXME: or "ping -ncq1 #{bridge_ip}"?
+  @vm.execute("/sbin/ifconfig eth0 | grep -q 'inet addr'").success?
+end
+
 def wait_until_remote_shell_is_up
   try_for(120) { @vm.execute('true').success? }
 end
