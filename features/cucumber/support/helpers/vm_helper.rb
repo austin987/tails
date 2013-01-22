@@ -3,7 +3,7 @@ require 'rexml/document'
 
 class VM
 
-  attr_reader :domain, :display, :ip, :ip6, :net, :remote_shell_port
+  attr_reader :domain, :display, :ip, :ip6, :net
 
   def initialize
     domain_xml = ENV['DOM_XML'] || Dir.pwd + "/cucumber/domains/default.xml"
@@ -21,7 +21,6 @@ class VM
     @iso = ENV['ISO'] || get_last_iso
     @virt = Libvirt::open("qemu:///system")
     setup_temp_domain
-    @remote_shell_port = 1337
   end
 
   def clean_up_old
@@ -129,6 +128,14 @@ EOF
 
   def take_screenshot(description)
     @display.take_screenshot(description)
+  end
+
+  def get_remote_shell_device
+    REXML::Document.new(@domain.xml_desc).elements.each('domain/devices/console') do |e|
+      if e.attribute('type').to_s == "pty"
+        return e.attribute('tty').to_s
+      end
+    end
   end
 
 end

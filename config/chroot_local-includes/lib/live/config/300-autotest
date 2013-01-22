@@ -3,17 +3,8 @@
 SCRIPT=/usr/local/sbin/autotest_remote_shell.py
 
 if grep -qw "autotest_never_use_this_option" /proc/cmdline; then
-    # FIXME: more beautifully solution
-    sed -i '17 i\
-proto tcp dport 1337 ACCEPT;' /etc/ferm/ferm.conf
-
-    # FIXME: more beautifully solution
+    # FIXME: more beautiful solution
     sed -i 's/^exit.*$//' /etc/rc.local
-    echo "python ${SCRIPT} 1337 &" >> /etc/rc.local
+    echo "python ${SCRIPT} /dev/ttyS0 &" >> /etc/rc.local
     echo "exit 0" >> /etc/rc.local
-
-    # Yet another step to prevent accidental execution
-    chmod a-x ${SCRIPT}
-else
-    rm -f ${SCRIPT}
 fi
