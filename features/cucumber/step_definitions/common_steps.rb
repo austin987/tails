@@ -42,9 +42,33 @@ Given /^a freshly started Tails$/ do
   @screen.wait('TailsGreeter.png', 120)
 end
 
+Given /^a freshly started Tails with boot options "([^"]+)"$/ do |options|
+  next if @skip_steps_while_restoring_background
+  @vm.start
+  @screen.wait('TailsBootSplash.png', 30)
+  # Start the VM remote shell
+  @screen.type("\t autotest_never_use_this_option " + options +
+               Sikuli::KEY_RETURN)
+  @screen.wait('TailsGreeter.png', 120)
+end
+
 Given /^I log in to a new session$/ do
   next if @skip_steps_while_restoring_background
   @screen.click('TailsGreeterLoginButton.png')
+end
+
+Given /^I log in to a new session with sudo password "([^"]*)"$/ do |password|
+  @password = password
+  next if @skip_steps_while_restoring_background
+  @screen.type(" " + Sikuli::KEY_RETURN)
+  @screen.wait("TailsGreeterAdminPassword.png", 30)
+  @screen.type(password + "\t" + @password)
+  @screen.click('TailsGreeterLoginButton.png')
+end
+
+Given /^GNOME has started$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait('GnomeStarted.png', 60)
 end
 
 Given /^I have a network connection$/ do
@@ -148,4 +172,28 @@ When /^I run "([^"]*)"$/ do |program|
   next if @skip_steps_while_restoring_background
   step "I open the GNOME run dialog"
   @screen.type(program + Sikuli::KEY_RETURN)
+end
+
+Given /^I enter the sudo password in the PolicyKit prompt$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait('PolicyKitAuthPrompt.png', 60)
+  sleep 1 # wait for weird fade-in to unblock the "Ok" button
+  @screen.type(@password)
+  @screen.type(Sikuli::KEY_RETURN)
+  waitVanish('PolicyKitAuthPrompt.png', 10)
+end
+
+Given /^process "([^"]+)" is running$/ do |process|
+  next if @skip_steps_while_restoring_background
+  assert guest_has_process?(process)
+end
+
+Given /^I shutdown Tails$/ do
+  next if @skip_steps_while_restoring_background
+  assert @vm.execute("halt", "root").success?
+end
+
+Given /^package "([^"]+)" is installed$/ do |package|
+  next if @skip_steps_while_restoring_background
+  assert @vm.execute("dpkg -s #{package}").success?
 end

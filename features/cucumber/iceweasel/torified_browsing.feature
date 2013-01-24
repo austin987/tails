@@ -7,6 +7,7 @@ Feature: Browsing the web using Iceweasel
     Given I restore the background snapshot if it exists
     And a freshly started Tails
     And I log in to a new session
+    And GNOME has started
     And I have a network connection
     And Tor has built a circuit
     And Iceweasel has autostarted and is not loading a web page

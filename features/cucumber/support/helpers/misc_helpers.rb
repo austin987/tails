@@ -37,3 +37,20 @@ def wait_until_tor_is_working
     'tor_control_getinfo status/circuit-established',
                                    'root').stdout  == "1\n" }
 end
+
+# Ruby's sikuli bindings doesn't implement this...
+def waitVanish(image, time = 2)
+  SystemTimer.timeout(time) do
+    loop do
+      begin
+        @screen.find(image)
+      rescue
+        return
+      end
+    end
+  end
+end
+
+def guest_has_process?(process)
+  return @vm.execute("pidof " + process).success?
+end
