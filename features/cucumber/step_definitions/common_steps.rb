@@ -12,12 +12,14 @@ def restore_background
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
   wait_until_remote_shell_is_up
-  if @vm.execute("service tor status", "root").success?
-    @vm.execute("service tor stop", "root")
-    @vm.execute("killall vidalia")
-    @vm.host_to_guest_time_sync
-    @vm.execute("service tor start", "root")
-    wait_until_tor_is_working
+  if guest_has_network?
+    if @vm.execute("service tor status", "root").success?
+      @vm.execute("service tor stop", "root")
+      @vm.execute("killall vidalia")
+      @vm.host_to_guest_time_sync
+      @vm.execute("service tor start", "root")
+      wait_until_tor_is_working
+    end
   end
 end
 
