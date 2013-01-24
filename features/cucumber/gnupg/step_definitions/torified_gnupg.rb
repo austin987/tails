@@ -1,6 +1,6 @@
 When /^I successfully fetch a GnuPG key using the CLI$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute("gpg --recv-key 52B69F10A3B0785AD05AFB471D84CCF010CC5BC7").success?
+  assert @vm.execute("gpg --recv-key 52B69F10A3B0785AD05AFB471D84CCF010CC5BC7").success?
 end
 
 When /^I successfully fetch a GnuPG key using seahorse$/ do

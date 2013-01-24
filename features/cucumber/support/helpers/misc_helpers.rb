@@ -1,6 +1,10 @@
 require 'date'
 require 'system_timer'
 
+def assert(b)
+  raise RuntimeError, "Assertion failed!", caller if ! b
+end
+
 # Call block (ignoring any exceptions it may throw) repeatedly with one
 # second breaks until it returns true, or until `t` seconds have
 # passed when we throw Timeout:Error.
