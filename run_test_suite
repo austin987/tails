@@ -7,8 +7,24 @@ set -e
 NAME=$(basename ${0})
 TARGET_DISPLAY=:8
 
+
+usage() {
+    echo "Usage: $NAME [OPTION]... ISO [FEATURE]...
+Tests the FEATUREs (all by default) of ISO. Note that this command must be run
+from the Tails source directory.
+
+Options:
+  --capture=FILE     Captures the test session into FILE using VP8 encoding.
+                     Requires ffmpeg and libvpx0.
+  --view             Shows the test session in a windows. Requires x11vnc
+                     and xtightvncviewer.
+  --vnc-server-only  Starts a VNC server for the test session. Requires x11vnc.
+"
+}
+
 error() {
     echo "${NAME}: error: ${*}" >&2
+    usage
     exit 1
 }
 
@@ -50,7 +66,7 @@ capture_session() {
 
 unset CAPTURE_FILE VNC_VIEWER VNC_SERVER
 SHORTOPTS="a:c"
-LONGOPTS="view,vnc-server-only,capture:"
+LONGOPTS="view,vnc-server-only,capture:,help"
 OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -66,6 +82,10 @@ while [ $# -gt 0 ]; do
         --capture)
             shift
             CAPTURE_FILE="$1"
+            ;;
+        --help)
+	    usage
+            exit 0
             ;;
         --)
             shift
