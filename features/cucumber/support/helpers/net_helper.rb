@@ -24,7 +24,7 @@ class Sniffer
     @bridge_name = bridge_name
     @ip = ip
     @ip6 = ip6
-    @pcap_file = "#{ENV['PWD']}/#{name}.pcap"
+    @pcap_file = "#{Dir.pwd}/features/#{name}.pcap"
   end
 
   # FIXME: Do we also want to keep "dst host #{@ip}"? We should if we

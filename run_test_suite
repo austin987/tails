@@ -72,6 +72,7 @@ while [ $# -gt 0 ]; do
             if [ -n "$1" ]; then
                 ISO="$(readlink -f $1)"
             fi
+            shift
             break
             ;;
     esac
@@ -97,7 +98,10 @@ fi
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
 export ISO="${ISO}"
-cd features
-. ./.rvmrc
+. features/.rvmrc
 check_dependency cucumber
-cucumber cucumber/
+if [ -z "${*}" ]; then
+    cucumber features/cucumber/
+else
+    cucumber features/cucumber/step_definitions features/cucumber/support ${*}
+fi

@@ -6,8 +6,8 @@ class VM
   attr_reader :domain, :display, :ip, :ip6, :net
 
   def initialize
-    domain_xml = ENV['DOM_XML'] || Dir.pwd + "/cucumber/domains/default.xml"
-    net_xml = ENV['NET_XML'] || Dir.pwd + "/cucumber/domains/default_net.xml"
+    domain_xml = ENV['DOM_XML'] || "#{Dir.pwd}/features/cucumber/domains/default.xml"
+    net_xml = ENV['NET_XML'] || "#{Dir.pwd}/features/cucumber/domains/default_net.xml"
     @read_domain_xml = File.read(domain_xml)
     @read_net_xml = File.read(net_xml)
     @parsed_domain_xml = REXML::Document.new(@read_domain_xml)
@@ -53,8 +53,6 @@ class VM
   end
 
   def get_last_iso
-    build_root_path = Pathname.new(Dir.pwd).parent
-    Dir.chdir(build_root_path)
     iso_name = Dir.glob("*.iso").sort_by {|f| File.mtime(f)}.last
     build_root_path.to_s + "/" + iso_name
   end
