@@ -180,7 +180,7 @@ Given /^I enter the sudo password in the PolicyKit prompt$/ do
   sleep 1 # wait for weird fade-in to unblock the "Ok" button
   @screen.type(@password)
   @screen.type(Sikuli::KEY_RETURN)
-  waitVanish('PolicyKitAuthPrompt.png', 10)
+  @screen.waitVanish('PolicyKitAuthPrompt.png', 10)
 end
 
 Given /^process "([^"]+)" is running$/ do |process|

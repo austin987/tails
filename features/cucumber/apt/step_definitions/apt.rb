@@ -34,7 +34,7 @@ When /^I update APT using synaptic$/ do
   # package list
   try_for(20) { @screen.click('SynapticReload.png') }
   @screen.wait('SynapticReloadPrompt.png', 20)
-  waitVanish('SynapticReloadPrompt.png', 600)
+  @screen.waitVanish('SynapticReloadPrompt.png', 600)
 end
 
 Then /^I should be able to install a package using synaptic$/ do
