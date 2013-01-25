@@ -2,12 +2,6 @@ require 'fileutils'
 
 def restore_background
   @vm.restore_snapshot(@background_snapshot)
-  # Wait for virt-viewer to be available to sikuli. Otherwise we could
-  # lose sikuli actions (e.g. key presses) if they come really early
-  # after the restore
-  # FIXME: how to do this reliably in all cases?
-  sleep 3
-
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
