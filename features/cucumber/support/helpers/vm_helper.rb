@@ -86,20 +86,12 @@ EOF
   end
 
   def restore_snapshot(path)
+    name = @domain.name
     # Undefine current domain so it can be restored
     @domain.destroy if @domain.active?
-    begin
-      @domain.undefine
-    rescue
-      # FIXME: why exception sometimes?
-    end
-
-    # FIXME: is restore broken?
-    # @domain.restore(path)
-    # workaround based on virsh
-    system("virsh -c qemu:///system restore --file #{path}")
-    @domain = @virt.lookup_domain_by_name("TailsToaster")
-    # /workaraound
+    @domain.undefine
+    Libvirt::Domain::restore(@virt, path)
+    @domain = @virt.lookup_domain_by_name(name)
     @display = Display.new(@domain.name)
     @display.start
   end
