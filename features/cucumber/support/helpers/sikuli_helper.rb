@@ -1,5 +1,10 @@
 require 'sikuli'
 
+# Add missing stuff
+module Sikuli
+  KEY_F2 = "\356\200\222"
+end
+
 # Configure sikuli
 Sikuli::Config.run do |config|
   config.image_path = "#{Dir.pwd}/features/cucumber/images/"

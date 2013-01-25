@@ -162,9 +162,7 @@ end
 
 When /^I open the GNOME run dialog$/ do
   next if @skip_steps_while_restoring_background
-  # This magic constant corresponds to the F2 key. The sikuli gem lacks
-  # that, and many other, definitions, sadly...
-  @screen.type("\356\200\222", Sikuli::KEY_ALT)
+  @screen.type(Sikuli::KEY_F2, Sikuli::KEY_ALT)
   @screen.wait('GnomeRunDialog.png', 10)
 end
 
