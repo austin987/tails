@@ -145,17 +145,26 @@ list_gpt_volumes ()
 	case "${PERSISTENCE_MEDIA}" in
 		removable)
 			whitelistdev="$(removable_dev)"
+			[ -z "${whitelistdev}" ] && return
 			;;
 		removable-usb)
 			whitelistdev="$(removable_usb_dev)"
+			[ -z "${whitelistdev}" ] && return
 			;;
 		*)
-			whitelistdev=""
+			if grep -qs -w -E '(live-media|bootfrom)=removable-usb' /proc/cmdline ; then
+				whitelistdev="$(removable_usb_dev)"
+				[ -z "${whitelistdev}" ] && return
+			elif grep -qs -w -E '(live-media|bootfrom)=removable' /proc/cmdline ; then
+				whitelistdev="$(removable_dev)"
+				[ -z "${whitelistdev}" ] && return
+			else
+				whitelistdev=""
+			fi
 			;;
 	esac
 
-	local gpt_overlays=""
-	for dev in $(storage_devices "" "${white_listed_devices}")
+	for dev in $(storage_devices "" "${whitelistdev}")
 	do
 		if ( is_luks_partition ${dev} >/dev/null 2>&1 && \
 		     echo ${PERSISTENCE_ENCRYPTION} | grep -qve "\<luks\>" ) || \

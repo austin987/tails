@@ -1,10 +1,11 @@
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:		tails-reconfigure-memlockd
-# Required-Start:	$local_fs memlockd
+# Required-Start:	$local_fs
 # Required-Stop:	
 # Default-Start:        2 3 4 5
 # Default-Stop:		
+# X-Start-Before:       memlockd
 # Short-Description:    Reconfigure memlockd depending on running kernel
 # Description:          Reconfigure memlockd depending on running kernel
 ### END INIT INFO
@@ -18,7 +19,6 @@ case "$1" in
 		>> "$MEMLOCKD_CONF"
 	tails-boot-to-kexec initrd $(tails-get-bootinfo initrd) \
 		>> "$MEMLOCKD_CONF"
-	service memlockd restart
 
 	# Tell sendsigs to forget about memlockd. Together with
 	# not calling 'memlockd stop' on shutdown, we have a

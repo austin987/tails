@@ -1,8 +1,114 @@
-tails (0.16) UNRELEASED; urgency=low
+tails (0.17) UNRELEASED; urgency=low
 
-  * Upcoming new major release.
+  * Upcoming release
 
- -- Tails developers <amnesia@boum.org>  Thu, 16 Nov 2012 12:50:00 +0000
+ -- Tails developers <amnesia@boum.org>  Thu, 10 Jan 2013 12:47:42 +0100
+
+tails (0.16) unstable; urgency=low
+
+  * Minor improvements
+  - Replace the too-easy-to-misclick shutdown button with a better
+    "Shutdown Helper" Gnome applet.
+  - Display ~/Persistent in GNOME Places and GtkFileChooser if it is mounted.
+  - Set Unsafe Browser's window title to "Unsafe Browser".
+  - Install ekeyd to support the EntropyKey.
+  - Install font for Sinhala.
+  - Update Poedit to 1.5.4.
+  - Kill Vidalia when restarting Tor.
+    Doing this as early as possible exposes Vidalia's "broken onion" icon
+    to users less.
+  - Hide the persistence setup launchers in kiosk mode.
+  - Add a shell library for Tor functions.
+    These are shared among multiple of our scripts.
+  - Install dictionaries for supported languages.
+    Install hunspell dictionaries when possible,
+    fall back on myspell ones else.
+
+  * Bugfixes
+  - Disable IPv6 on all network interfaces.
+    This is a workaround for the IPv6 link-local multicast leak that was recently
+    discovered. Tails has no local service that listens on IPv6, so there should be
+    no regression, hopefully, unless one wants to play with OnionCat and VoIP,
+    but those of us should know how to workaround this anyway.
+  - live-persist: Fix variable mismatch, fixing probe white-list.
+    Tails may previously have been able to list GPT partitions labelled
+    "TailsData" on hard drives (!) as valid persistence volumes...
+  - live-persist: Fix --media option when no devices are attached.
+    Earlier, if it was set to e.g. 'removable-usb' and no USB storage was
+    connected, $whitelistdev would be empty, which is interpreted like
+    all devices are ok by the rest of the code.
+  - Fix SCIM in the autostarted web browser: save IM environment variables
+    to a file during Desktop session startup, and export them into the
+    autostarted browser's environment.
+  - Talk of DVD, not of CD, in the shutdown messages.
+  - Make tordate work in bridge mode with an incorrect clock.
+    When using a bridge Tor reports TLS cert lifetime errors (e.g. when
+    the system clock is way off) with severity "info", but when no bridge
+    is used the severity is "warn". tordate/20-time.sh depends on grepping
+    these error messages, so we termporarily increase Tor's logging
+    severity when using bridge mode. If we don't do this tordate will
+    sleep forever, leaving Tor in a non-working state.
+    · White-list root to use Tor's ControlPort.
+    · Add logging for is_clock_way_off().
+    · Remove Tor's log before time syncing.
+      We depend on grepping stuff from the Tor log (especially for
+      tordate/20-time.sh), so deleting it seems like a Good Thing(TM).
+    · Stop Tor before messing with its log or data dir.
+  - live-persist: limit searched devices the same way as live-boot.
+    If no --media argument is specified, use live-boot's
+    "(live-media|bootfrom)=removable(|-usb)" argument to limit devices
+    searched for a persistent volume.
+  - tails-greeter: do not pass media=removable to live-persist.
+    Now that we have autodetection with kernel command-line,
+    it should not be needed anymore.
+  - Start memlockd after configuring it,
+    instead of starting it before and restarting it after.
+    This avoids running memlockd twice, and prevents other possibly
+    surprising race-conditions.
+    As a consequence, also have tails-sdmem-on-media-removal start after the
+    memlockd service *and* tails-reconfigure-memlockd: to start the watchdog,
+    we need memlockd to be properly configured *and* running.
+
+  * iceweasel
+  - Set iceweasel homepage to the news section on the Tails website.
+    ... using the localized one when possible.
+  - Hide the iceweasel add-on bar by default.
+    Now that we don't want to ship the Monkeysphere addon anymore,
+    that was the only one displayed in there, we can as well hide the whole bar.
+  - Don't hide the AdBlock-Plus button in the add-on bar anymore. Now that
+    we hide the whole addon bar, we can get rid of this old
+    UX improvement.
+  - Do not install a placeholder (fake) FireGPG iceweasel extension anymore.
+    It was shipped from 0.10 (early 2012) to 0.15 (late November),
+    so the migration period should be over now.
+  - Don't install xul-ext-monkeysphere anymore.
+    The implication of the current keyserver policy are not well
+    understood, Monkeysphere is little used in Tails, and we're not sure
+    anymore it would be our first bet for the web browser profile with no
+    CA. Let's keep the various configuration bits (e.g. FoxyProxy,
+    patching MSVA), though, so that advanced users who are used to have
+    Monkeysphere in Tails just have to install the package.
+
+  * Build system
+  - Install the "standard" task with tasksel for better consistency in the
+    Tails ISO images built in various environments.
+  - Install p7zip-full. It's a dep by file-roller, but we explicily use it
+    elsewhere, and it's better to be safe than sorry.
+  - Remove pinning of libvpx0 to sid.
+    This package is part of Squeeze, and not from testing/sid.
+    We have been shipping the version from Squeeze for a while.
+  - Remove config/chroot_local-packages/ from .gitignore.
+    The documented way for "external" contributors to add custom packages
+    is to put them in chroot_local-packages, and once we pull we import
+    any such package into our APT repo and rewrite the
+    history appropriately.
+    Also, the ability to add packages in there and not see them in "git
+    status" makes it very easy to build tainted ISO images with
+    non-standard packages, which makes some of us fear can lead to hard to
+    debug situations.
+  - Make it clearer what can and cannot be done in terms of local packages.
+
+ -- Tails developers <amnesia@boum.org>  Thu, 10 Jan 2013 12:47:42 +0100
 
 tails (0.15) unstable; urgency=low
 
