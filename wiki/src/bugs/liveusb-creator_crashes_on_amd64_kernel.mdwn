@@ -1,0 +1,66 @@
+Current state
+=============
+
+`feature/multikernel` has patched python-dbus bindings that fix this
+bug (tested on various 32-bit single core and 64-bit multi-core
+hardware and VM).
+
+[[done]] in Tails 0.14.
+
+Archive
+=======
+
+Logs for various crashes experienced when cloning, on amd64 kernel,
+follow. At least one similar bug was triggered on 686-pae kernel
+(64bit CPU) too. Launching the program with various linux32's options
+does not help.
+
+Other kinds of crashes were seen on a Wheezy amd64 kernel + amd64 userspace.
+
+See [discussion about DBUS and multithreading](http://comments.gmane.org/gmane.comp.freedesktop.dbus/14859).
+
+	[creator:1160] extlinux not found! Only FAT filesystems will be supported
+	*** glibc detected *** /usr/bin/python: malloc(): memory corruption: 0x0951d720 ***
+	======= Backtrace: =========
+	/lib/libc.so.6(+0x6b19a)[0xf746219a]
+	/lib/libc.so.6(+0x6dfb7)[0xf7464fb7]
+	/lib/libc.so.6(__libc_malloc+0x5c)[0xf7466bfc]
+	vie/usr/bin/python(PyString_FromStringAndSize+0x9c)[0x809da2c]
+
+	*** glibc detected *** /usr/bin/python2.6: malloc(): memory corruption: 0x09f5f9f0 ***
+	======= Backtrace: =========
+	/lib/libc.so.6(+0x6b19a)[0xf74eb19a]
+	/lib/libc.so.6(+0x6dfb7)[0xf74edfb7]
+	/lib/libc.so.6(+0x706ec)[0xf74f06ec]
+	/lib/libc.so.6(realloc+0xd7)[0xf74f0c17]
+	/usr/lib/libQtCore.so.4(_Z8qReallocPvj+0x24)[0xf6cbb514]
+	/usr/lib/libQtCore.so.4(_ZN9QListData7reallocEi+0x35)[0xf6ce0a35]
+	
+	[creator:799] Calling /org/freedesktop/UDisks/devices/sdc1.FilesystemMount(vfat, [], ...)
+	python2.6: malloc.c:3097: sYSMALLOc: Assertion `(old_top == (((mbinptr) (((char *) &((av)->bins[((1) - 1) * 2])) - __builtin_offsetof (struct malloc_chunk, fd)))) && old_size == 0) || ((unsigned long) (old_size) >= (unsigned long)((((__builtin_offsetof (struct malloc_chunk, fd_nextsize))+((2 * (sizeof(size_t))) - 1)) & ~((2 * (sizeof(size_t))) - 1))) && ((old_top)->size & 0x1) && ((unsigned long)old_end & pagemask) == 0)' failed.
+	
+	[creator:354] ['/sbin/mkfs.vfat', '-n', 'Tails', '-F', '32', '/dev/sdc1']
+	[creator:798] Calling /org/freedesktop/UDisks/devices/sdc1.FilesystemMount(vfat, [], ...)
+	*** glibc detected *** /usr/bin/python2.6: malloc(): smallbin double linked list corrupted: 0x0a075a50 ***
+	======= Backtrace: =========
+	Segmentation fault
+	
+	*** glibc detected *** /usr/bin/python2.6: free(): corrupted unsorted chunks: 0x099d1e20 ***
+	======= Backtrace: =========
+	/lib/libc.so.6(+0x6b19a)[0xf748b19a]
+	/lib/libc.so.6(+0x6c9e8)[0xf748c9e8]
+	/lib/libc.so.6(cfree+0x6d)[0xf748fb2d]
+	/usr/bin/python2.6[0x80903ba]
+	/usr/bin/python2.6[0x806c74b]
+	/usr/bin/python2.6[0x80903a4]
+	Segmentation fault
+	
+	[creator:354] ['/sbin/sgdisk', '--info', '1', '/dev/sdc']
+	*** glibc detected *** /usr/bin/python2.6: malloc(): memory corruption: 0x09d2c988 ***
+	======= Backtrace: =========
+	/lib/libc.so.6(+0x6b19a)[0xf74c219a]
+	/lib/libc.so.6(+0x6dfb7)[0xf74c4fb7]
+	/lib/libc.so.6(__libc_malloc+0x5c)[0xf74c6bfc]
+	/usr/lib/libstdc++.so.6(_Znwj+0x27)[0xf6bf0ba7]
+	Segmentation fault
+

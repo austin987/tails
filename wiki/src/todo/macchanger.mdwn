@@ -2,8 +2,32 @@ We should integrate macchanger in some way.
 
 [[!toc levels=2]]
 
-Rationale
+Use cases
 =========
+
+We could distinguish two main use-cases:
+
+* using a public computer (e.g. in a library, Internet-cafe) => the mac
+  address should not be changed, as it may bring undesired admin
+  attention and/or simply forbid access to the Internet
+* using a personal computer (e.g. a laptop, wherever it happens) =>
+  the mac address should be changed
+
+A way to integrate this analysis UI-wise could then be to allow, in a
+[[todo/boot_menu]], to choose between the default case (that
+has to be decided) and the other one, using simple words such as "I am using a
+public computer" instead of speaking geek-language about mac addresses or
+whatever.
+
+As a bonus, other unrelated settings could also be automatically
+changed at runtime depending on the answer to this question.
+
+Enabling the "public computer" mode could setup the needed bits so
+that every network interface has its mac address changed before
+attempting to access the network.
+
+Caveats
+=======
 
 Randomizing mac adresses has several cons:
 
@@ -29,32 +53,8 @@ USB wireless dongle is inserted in Tails after it has booted?
 Network manager will automatically begin to scan the network with a
 non-fake mac address. Is it a problem?
 
-Use cases
-=========
-
-We could distinguish two main use-cases:
-
-* using a public computer (e.g. in a library, Internet-cafe) => the mac
-  address should not be changed, as it may bring undesired admin
-  attention and/or simply forbid access to the Internet
-* using a personal computer (e.g. a laptop, wherever it happens) =>
-  the mac address should be changed
-
-A way to integrate this analysis UI-wise could then be to allow, in a
-[[todo/boot_menu]], to choose between the default case (that
-has to be decided) and the other one, using simple words such as "I am using a
-public computer" instead of speaking geek-language about mac addresses or
-whatever.
-
-As a bonus, other unrelated settings could also be automatically
-changed at runtime depending on the answer to this question.
-
-Enabling the "public computer" mode could setup the needed bits so
-that every network interface has its mac address changed before
-attempting to access the network.
-
-Integration
-===========
+Implementation
+==============
 
 [[!tag todo/research todo/code]]
 
@@ -168,8 +168,8 @@ and has already started patching it to better suit our needs:
 * Git repository: `git://labs.riseup.net/backupninja.git`
 * Debian packages: the maintainer of the macchanger package in
   Debian has already integrated some of these patches (uploaded to
-  sid: 1.5.0-8) and is likely to go on this way. Tails `devel` branch
-  uses this improved version.
+  sid: 1.5.0-8) and is likely to go on this way. Tails has been
+  using this improved version for a while.
 
 Inspiration sources
 ===================
@@ -188,3 +188,12 @@ Liberte Linux randomizes wireless MAC addresses at boot time and
 allows changing wired interfaces' MAC addresses after boot, see their
 `src/usr/local/sbin/mac-randomize` that uses `ifconfig IFACE hw ether`
 rather than macchanger.
+
+Documentation
+=============
+
+Investigate and possibly document the kind of information that could
+still be seen on the LAN about the system. Such as the manufacturer (ex:
+Sony), model number, BIOS and version, etc.?
+
+[[!tag release/1.0]]

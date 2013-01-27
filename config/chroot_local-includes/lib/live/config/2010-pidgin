@@ -1,0 +1,63 @@
+#!/bin/sh
+
+# List of at least 2000 possible nicknames
+NICKS_LIST=/usr/share/amnesia/firstnames.txt
+
+# returns true with probability $1
+prob()
+{
+	# sh doesn't have bash's $RANDOM, so we implement it
+	RANDOM=$(expr $(od -Anv -N4 -tu4 /dev/urandom) % 32768)
+	# we compare with > instead of <= due to mismatch between bash and bc
+	# on what values true and false have.
+	return $(echo "scale = 10; ${RANDOM}/32767 > ${1}" | bc)
+}
+
+leet_nick()
+{
+	# we leave the first letter due to restrictions on nicks in IRC
+	first=$(expr substr ${1} 1 1)
+	rest=${1#?}
+	rest=$(echo "${rest}" | tr 'e' '3' | tr 'i' '1' | tr 'o' '0')
+	echo "${first}${rest}"
+}
+
+generate_nick()
+{
+	NICK=$(/usr/local/bin/lc.py -g 1 --min 4 --max 10 "${NICKS_LIST}")
+
+	if prob 0.90; then
+		NICK=$(echo "${NICK}" | tr '[:upper:]' '[:lower:]')
+	fi
+
+	if prob 0.05; then
+		if prob 0.50; then
+			NICK="${NICK}_"
+		else
+			NICK="${NICK}^"
+		fi
+	fi
+
+	if prob 0.05; then
+		NICK=$(leet_nick "${NICK}")
+	fi
+
+	echo ${NICK}
+}
+
+Configure_pidgin ()
+{
+
+	echo "- configuring Pidgin"
+
+	NICK=$(generate_nick)
+
+	for file in accounts.xml blist.xml ; do
+	   sudo -H -u "${LIVE_USERNAME}" sed -i'' "s,XXX_NICK_XXX,${NICK}," "/home/${LIVE_USERNAME}/.purple/${file}"
+	done
+
+	# Creating state file
+	touch /var/lib/live/config/pidgin
+}
+
+Configure_pidgin

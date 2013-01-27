@@ -1,0 +1,34 @@
+[[!meta date="Fri Jul 8 02:02:02 2011"]]
+
+## Current progress
+
+0. [Mon.] change widget exec order (parallel->sequential) to comply with "localization notes" part of [[todo/TailsGreeter/design]] - DONE.
+0. [Mon.] setup squid-deb-proxy - DONE.
+0. [Mon.] make .iso build - DONE.
+0. [Tue.] change widget to fit many more languages: from flag icons to scrollable list - DONE.
+0. [Wed.] (re)generate .po with (dummy) translations (to show that language change is actually working) - DONE.
+0. [Wed.] populate the list of supported languages in the widget from gnome-desktop-data package languages or dpkg-reconfigure locales (see gdm_get_all_language_names function for example) - DONE (with external helper script).
+0. [Thu.] 'subprocess': run external (locale-gen) program with adequate parameters on language change and wait for its completion before allowing logon  - in progress.
+0. update tails-greeter.deb package - in progress.
+0. propose rough plans / estimates for all the remaining weeks - postponed.
+
+## Problems
+
+0. Current implementation uses gtk's ComboBox for the list of languages. Switching to scrollable list (similar to debian-installer) might require to scale better to bigger number of languages but it will take a bit more efforts to integrate it with gtkme wrapper.
+0. Pygtk functions for window.show() and window.hide() do not work as expected - sometimes window which supposed to be hidden remain visible despite successful gtk property change. Right now the workaround is to call window.destroy() however this might not scale that well if we will have multiple windows with complex interactions in between in future. To summarize: worth investigating but not top priority at the moment.
+0. Right now language list is presented to user based on the locales available in the system (e. g. those chosen via 'dpkg-reconfigure locales' for example). Those might be unsupported by available tails-greeter translations. And vice-versa: there might be tails-greeter translation which doesn't correspond to any system locale. Those situations got to be carefully tested and handled gracefully.
+0. Current implementation uses subprocess' calls to run locale generation from autologin widget - it should be moved to upper layer - to the greeter itself: it will be easier to incorporate other widgets this way.
+0. There are several ways to obtain list of supported locales in gdm/gui/simple-greeter/gdm-languages.c (including locale.alias file, gdm's locale-archive and system-wide locale-archive). Similar logic should be incorporated into tails-greeter. It's worth investigating if it's feasible to engage gdm code using ctypes for example.
+
+## Near-future plans
+
+0. Complete .iso build and tests, push new tails-greeter.deb if the tests are successful.
+0. Investigate things listed in 'problems' section above
+0. Implement plans for next week #7
+
+## Additional notes
+
+0. Right now language choice is applied only after user have pressed 'forward' button - it would look nicer if it's done immediately upon selection. 
+0. Language list should contain language's own name (e. g. 'Русский' for 'Russian') instead of current 2-letter code.
+
+Those should be included into plans for some of the upcoming weeks.

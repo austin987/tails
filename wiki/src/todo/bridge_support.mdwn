@@ -2,21 +2,27 @@
 
 Given the increasing practice of blocking Tor usage in more
 authoritarian countries, censorship resistance is getting more
-important. To merely try use Tor might even be dangerous in these
-countries as the government can log it an take action against the
-user. Hence we should provide an easy to use facility for our users to
+important. To merely try to use Tor might even be dangerous in these
+countries as the government can log it and take action against the
+user. Hence we should provide an easy to use facility for our users to achieve:
 
-* make sure that they always can reach the Tor network, and
-* prevent others from knowing that they are using Tor.
+* Reliability: make sure that they always can reach the Tor network, and
+* Obfuscation: prevent others from knowing that our user may be using the Tor network.
 
 In Tor there is the concept of
-[bridges](http://www.torproject.org/bridges) which is used to hide the
-fact that you are communicating with the Tor network by relaying your
-Tor traffic through a so called bridge node which is not listed in
-Tor's directory. This is exactly what we want.
+[bridges](http://www.torproject.org/bridges). By relaying the user's
+Tor traffic through a so called *bridge node* which is not listed in
+Tor's directory the user may be able to achieve a reliable connection
+and hide the fact that the user is connecting to a Tor server.
+Tor's bridging makes no attempt to mask the (Tor) nature of the
+traffic between the Tails user's client and the bridge node.
+Therefore the users access to the Tor network can still be determined
+by simple traffic analysis.
+See [[obfsproxy (work-in-progress)|todo/obfsproxy]] for a much better
+solution to the obfuscation problem.
 
 Bridges in Tails
-==================
+================
 
 While Vidalia makes it straight-forward to use bridges there are some
 special considerations that needs to be accounted for in the context
@@ -24,7 +30,7 @@ of Tails. Since all Tor is started at boot, it is immediately
 disclosed that Tor is used. We need to make it possible for our users
 to prevent this, for instance by toggling some option in the boot
 menu. However, since all internet traffic is routed through Tor, if a
-user don't know of any bridges we have a catch-22 situation since the
+user doesn't know of any bridges we have a Catch-22 situation since the
 user's best possibility to get a bridge is by getting it over the
 Internet, for instance from [the Tor project's
 website](https://bridges.torproject.org/), IRC or IM buddies and
@@ -36,7 +42,7 @@ Specification
 
 The use of bridges should be optional, and if desired it must be
 chosen before Tor starts. The best place for such an option is
-probably in the boot menu. When activated the following things should
+probably in tails-greeter. When activated the following things should
 happen:
 
 * Tor doesn't try to connect directly to the Tor network.
@@ -78,17 +84,28 @@ Left to do
 
 Here are some things to analyse, and discuss and code.
 
-Miscellaneous
--------------
+General
+-------
 
-* Finish pushing a fix for [[!tor_bug 2355]].
-* Make our Vidalia patch more generic and upstream it (being
-  discussed on [[!tor_bug 2355]]).
-* Write end-user documentation.
-* Migrate this page's content to the [[contribute/design]] section of
-  the website.
-* Let the user easily opt-in for connecting to Tor through bridges in
-  the [[todo/boot menu]].
+0. Help implement the long-awaited solution, published as an
+   attachment to [[!tor_bug 2905]]. Tor and Vidalia needed patching:
+   - *update*: Tor 0.2.3.9-alpha brings the `DisableNetwork` config
+     option
+   - *update*: Vidalia 0.3.2 implements this plan,
+     time to [[!taglink todo/test]]
+   - [[!tor_bug 4290]]: Vidalia should not let users check "Use
+     Bridges" without entering any
+   - [[!tor_bug 3644]]: Config option to tell Tor whether it can use
+     the network
+   - [[!tor_bug 3420]]: Add some way for starting-up controllers to
+     disable non-controller networking until Tor is running.
+   - [[!tor_bug 3354]]: closed, but discussion contains much thought
+     and great proposals
+0. Write end-user documentation.
+0. Migrate this page's content to the [[contribute/design]] section of
+   the website.
+0. Let the user easily opt-in for connecting to Tor through bridges in
+   tails-greeter
 
 Find bridges button
 -------------------
@@ -103,6 +120,10 @@ run the command as the debian-tor user which has direct internet
 access?):
 
     wget -q -O - https://bridges.torproject.org/ | grep -e "^bridge .*"
+For Obfsproxy Brdges:
+
+    wget -q -O - https://bridges.torproject.org/?transport=obfs2 | grep -e "^bridge .*"
+
 
 It should be noted that just connecting to bridges.torproject.org
 can be dangerous if the regime is hostile towards Tor, and/or it
@@ -113,3 +134,6 @@ manual input of bridges must be available as an alternative.
 
 Until a solution is found for this issue, we should probably hide this
 button.
+
+
+[[!tag release/1.0]]

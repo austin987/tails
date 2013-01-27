@@ -1,0 +1,53 @@
+Please ship Tails with the Linux Standard Base (lsb) so that certain printer drivers can be installed.
+
+> Tails 0.11 already ships all dependencies of the LSB 3.2 Printing
+> Package, so I'm unsure what you mean. Please clarify. (For the
+> record, I've added the `lsb-printing` package to the Tails packages
+> list so that this remains true.)
+
+>> In Tails 0.11, dpkg states that lsb is not installed which leads to installation failure.
+
+Otherwise, there is no chance to get those printer drivers started.
+
+> Perhaps you should be more specific about what printer?
+> In may experience, Tails supports out-of-the-box most printers I've thrown at it.
+
+>> Tails does not support certain all-in-one printers out-of-the-box. But this is not the problem because the required driver could be added manually if the lsb package were included in Tails.
+
+>>> Sorry, it's unclear to me whether you are guessing or reporting
+>>> actual facts. Have you experienced the following with a given
+>>> printer:
+>>>
+>>> - the printer does not work out-of-the-box on Tails 0.11
+>>> - pristine Tails 0.11 does not allow installing the required driver
+>>> - Tails 0.11, once the `lsb` Debian package is installed, allows
+>>>   installing the required driver
+>>>
+>>> ?
+>>>
+>>> If you did, then we have to investigate what exact package Tails
+>>> lacks. In Debian, `lsb` is a meta-package (ships nothing, only
+>>> dependencies), and it depends on stuff we certainly don't want to
+>>> install in Tails. On Tails 0.11, `apt-get install lsb` wants to
+>>> install:
+>>>
+>>> 	alien at cups-bsd debhelper dpkg-dev ed exim4 exim4-base
+>>> 	exim4-config exim4-daemon-light heirloom-mailx html2text
+>>> 	intltool-debian libc-dev-bin libc6-dev libdpkg-perl libelf1
+>>> 	libqt3-mt libqt4-gui libqt4-opengl libqt4-sql-sqlite librpm1
+>>> 	librpmbuild1 librpmio1 linux-libc-dev lsb lsb-core lsb-cxx
+>>> 	lsb-desktop lsb-graphics lsb-release m4 make ncurses-term pax
+>>> 	po-debconf rpm rpm-common rpm2cpio time
+>>>
+>>> ... and it's not obvious to me which one of these packages would
+>>> make a difference in the Tails ability to install printer drivers.
+>>> The RPM and archive tools, maybe?
+>>>
+>>> If the above scenario is facts, may you please try to install
+>>> these packages one after the other, to see which one makes
+>>> a difference regarding the ability to install the required driver
+>>> for this printer?
+
+>>>> I will test it and tell you about my experiences.
+
+>>>>> No report so far, closing. Feel free to reopen. [[done]]

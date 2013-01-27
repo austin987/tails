@@ -1,0 +1,254 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2012-10-24 20:35+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!meta title=\"FireGPG susceptible to devastating attacks\"]]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "**FireGPG is no more shipped in Tails.**\n"
+msgstr ""
+
+#. type: Plain text
+msgid "You should instead use our custom GPG applet to:"
+msgstr ""
+
+#. type: Bullet: '  - '
+msgid ""
+"[[Encrypt text with a passphrase|encryption_and_privacy/gpgapplet/"
+"passphrase_encryption]]"
+msgstr ""
+
+#. type: Bullet: '  - '
+msgid ""
+"[[Encrypt and sign text using public-key cryptography|encryption_and_privacy/"
+"gpgapplet/public-key_cryptography]]"
+msgstr ""
+
+#. type: Bullet: '  - '
+msgid ""
+"[[Decrypt and verify text|encryption_and_privacy/gpgapplet/decrypt_verify]]"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!toc levels=2]]\n"
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Advisory\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"[FireGPG](http://getfiregpg.org/) is a Firefox addon that allows users to "
+"easily perform cryptographic actions on the contents of HTML pages, e.g. to "
+"verify signatures appearing as HTML text, or encrypt texts written inside "
+"HTML text boxes (i.e. &lt;textarea&gt;). Webmail interfaces commonly use "
+"text boxes for email composition, so FireGPG is a natural fit for this use "
+"case: the user writes his or her email plaintext in the text box, selects "
+"the plaintext and uses one of the \"Encrypt\" or \"Sign and encrypt\" "
+"actions available from the FireGPG menu to transform the selection to its "
+"encrypted counterpart."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"The FireGPG design incorrectly assumes that this is safe, but it is not, "
+"since JavaScript running on the page can still control and observe much of "
+"what is happening on the page. For instance, a simple script can set up a "
+"timer that silently submits the contents of the text box back to the server "
+"every second, thereby leaking the plaintext as it is written, effectively "
+"bypassing any subsequent encryption. In fact, many non-malicious webmail "
+"services do just that at longer intervals, to save a draft of a message in "
+"case the user's browser crashes. The only way that a user can block this "
+"type of attack is by completely disabling JavaScript, which is often not "
+"desirable. In any case, FireGPG currently does nothing to make users aware "
+"of this issue. To the contrary, by making encryption commands easily "
+"accessible in the FireGPG context menu, it actively promotes this insecure "
+"usage."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"The situation is exactly the same if a user decrypts an OpenPGP block inside "
+"a text box: the OpenPGP block is replaced with the plaintext within the text "
+"box, so the same script can leak the plaintext when the timer fires less "
+"than a second later. Luckily, webmail systems rarely present messages in "
+"text boxes (although 'pastebins' often do). It is more common for received "
+"email to be displayed as HTML text, and when the user decrypts it, FireGPG "
+"will display the plaintext in a separate window that is safely out of reach "
+"of JavaScript. FireGPG has an option, `extensions.firegpg."
+"result_always_in_new_window`, called \"Always display encryption and "
+"signature results in a separate window\" in the FireGPG options window, that "
+"forces this behaviour when decrypting OpenPGP blocks in text boxes as well, "
+"but it is disabled by default. This option, however, does not in any way "
+"prevent leaking of plaintext while the user is writing it as described in "
+"the previous paragraph."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"FireGPG also has three commands to sign (but not encrypt) messages: \"Sign"
+"\", \"Wrapped sign\" and \"Clearsign\". Simple JavaScript can replace the "
+"contents of the text box when the user selects it, so if the user does not "
+"re-read the text after selecting one of the 'sign' commands, the attacker "
+"will be able to obtain the user's signature on an arbitrary message. "
+"Enabling the `result_always_in_new_window` option does not prevent this "
+"attack; only user acuity *may* be able to detect and block it."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"It should be clear that the current FireGPG design of performing "
+"cryptographic actions on the contents of text boxes is fundamentally flawed "
+"and unsecurable. FireGPG's current design and interface is training users to "
+"act as if the contents of text boxes are private until they are explicitly "
+"submitted by the user (e.g. by pressing a \"Submit\"/\"Send\" button). Hence:"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid ""
+"It is critical that all actions related to encryption and signing be removed "
+"from the FireGPG menu. The only way to perform these actions should be "
+"through the FireGPG Text editor, which is located in a separate window and "
+"thus safely out of the reach of content JavaScript. The FireGPG Text editor "
+"is already available through the FireGPG menu and makes all actions easily "
+"accessible."
+msgstr ""
+
+#. type: Bullet: '2. '
+msgid ""
+"FireGPG should explicitly state that the FireGPG Text editor is the only "
+"safe place to write plaintext that are to be encrypted and/or signed, or to "
+"decrypt messages unless the `result_always_in_new_window` option is enabled. "
+"Hopefully this will save users that have been misled by FireGPG for years "
+"from risking their data again, and make them understand why this new, less "
+"convenient, mode of operation is necessary. Otherwise, they may continue "
+"writing their plaintext in JavaScript-accessible text boxes, and then copy-"
+"and-paste it into the FireGPG Text editor just to encrypt it, instead of "
+"writing it there from the start."
+msgstr ""
+
+#. type: Bullet: '3. '
+msgid ""
+"The `result_always_in_new_window` option should be removed -- its behaviour "
+"should be forcibly enabled instead."
+msgstr ""
+
+#. type: Bullet: '4. '
+msgid ""
+"The \"Verify\" command should display the contents of the signed message in "
+"the FireGPG Text editor.  Otherwise, it may be possible to present to the "
+"user a different message from that seen by FireGPG."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"After these changes, the only remaining actions in the FireGPG menu will be "
+"\"Decrypt\" and \"Verify\". \"Decrypt\" is made safe by change 3, and "
+"\"Verify\" is made safe by change 4.  It may still be a good idea to remove "
+"these actions as well to further promote the use of the FireGPG Text editor "
+"for all cryptographic actions. If they are removed, points 3 and 4 above "
+"become irrelevant and may be ignored.  Per a discussion on #tor-dev and "
+"later #tails with rransom and katmagic it came to light that FireGPG may "
+"have a few serious security and anonymity issues (katmagic even claimed with "
+"\"85%\" certainty that these issues were among the main reasons FireGPG was "
+"discontinued):"
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Sample attack\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"    <html>\n"
+"    \t<head>\n"
+"    \t\t<script type=\"text/javascript\">\n"
+"    \t\t\tfunction decrypt() {\n"
+"    \t\t\t\tvar elem = document.getElementById(\"pgp_msg\");\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"    \t\t\t\tif (elem.innerHTML != elem.value) {\n"
+"    \t\t\t\t\telem.innerHTML = elem.value;\n"
+"    \t\t\t\t\talert(elem.value);\n"
+"    \t\t\t\t}\n"
+"    \t\t\t}\n"
+"    \t\t\twindow.setInterval(decrypt, 1000);\n"
+"    \t\t</script>\n"
+"    \t</head>\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"    \t<body>\n"
+"    <textarea id=\"pgp_msg\" style=\"height: 600px; width: 600px\">\n"
+"    -----BEGIN PGP MESSAGE-----\n"
+"    <snip>\n"
+"    -----END PGP MESSAGE-----\n"
+"    </textarea>\n"
+"    \t</body>\n"
+"    </html>\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"A similar approach should also work for stealing a plaintext written in a "
+"text box before it's encrypted."
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Other ressources\n"
+msgstr ""
+
+#. type: Bullet: '- '
+msgid ""
+"[[tor-talk] Tor Browser Bundle: PGP encryption built-in?](http://www.mail-"
+"archive.com/tor-talk@lists.torproject.org/msg02105.html)<br/> A thread on "
+"the [tor-talk] list adressing the issues of supporting GPG inside a browser."
+msgstr ""
+
+#. type: Bullet: '- '
+msgid ""
+"[Spoofing OpenPGP signatures against FireGPG](http://lair.fifthhorseman.net/"
+"~dkg/firegpg-audit/spoof/)<br/> Another possible attack on FireGPG."
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Other possible issues\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"If it is possible to use JavaScript to check signatures, an attacker could "
+"potentially learn the user's whole key chain by replaying messages and their "
+"signatures made by those key holders. This would give the attacker an awful "
+"lot of identifying bits of the user."
+msgstr ""

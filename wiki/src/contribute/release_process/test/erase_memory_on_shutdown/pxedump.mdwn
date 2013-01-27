@@ -1,0 +1,65 @@
+[[!toc levels=2]]
+
+# Prepare the needed tools
+
+## Memory scrapping software
+
+Sources are available there:
+
+* <http://citp.princeton.edu/memory-content/src/bios_memimage-1.2.tar.gz>
+* <http://citp.princeton.edu/memory-content/src/bios_memimage-1.2.tar.gz.asc>
+
+0. Check the tarball signature, unpack.
+0. On an amd64 system run:
+
+           $ make -f Makefile.64
+
+## DHCP/TFTP server
+
+If you already have a DHCP/TFTP server ready (e.g. thanks to libvirt),
+all you need to do is to make your tftp root point to
+`bios_memimage/pxe`, and set `scraper.bin` in the place of the
+boot loader.
+
+Else, dnsmasq will happily provide both a DHCP and a TFTP server,
+using the following command line:
+
+	$ sudo dnsmasq --conf-file=/dev/null \
+		       --interface=tap0 \
+		       --dhcp-range=172.32.1.2,172.32.1.2,1h \
+		       --enable-tftp \
+		       --tftp-root=/tmp/bios_memimage/pxe \
+		       --dhcp-boot=scraper.bin \
+		       --no-daemon
+
+(Adjust `tftp-root` and `interface` according to your setup.)
+
+Don't forget to punch enough holes in your firewall so that DHCP, TFTP
+and port udp/31337 will go through.
+
+# Run Tails in qemu/kvm
+
+* Start kvm (using a tap interface, in order to 
+  be on layer 2 between host and VM, otherwise DHCP won't work.)
+  
+  	$ kvm -boot nd -net nic,macaddr=0:0:e8:1:2:3,model=rtl8139 -net tap -m 1024 -cdrom tails.iso
+  
+* Setup an IP address on your interface:
+  
+  	sudo ip addr add 172.32.1.1/24 dev tap0
+  	sudo ip link set tap0 up
+* Press 'Q' to disable PXE for the initial boot. Let the Tails CD boot.
+
+# Dump the RAM
+
+* At boot time, press 'N' to enable PXE boot. You should soon see
+  `Waiting for handshake...`
+* Start the dumping process:
+  
+  	pxedump 172.32.1.2 | pv > tails.dump
+
+# Final note
+
+By replacing `tap0` with `eth0` in the previous examples, it should be
+fairly easy to reproduce this for bare metal hardware, provided its
+network adapter and BIOS are PXE-ready.

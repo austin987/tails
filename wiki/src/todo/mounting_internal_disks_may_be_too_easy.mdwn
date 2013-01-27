@@ -16,24 +16,12 @@ are:
   `/usr/share/polkit-1/actions/org.freedesktop.udisks.policy` and
   could be overridden in `/etc/polkit-1/`
 * generic / long-term solution: implement [[todo/better_root_access_control]].
+  That was [[!taglink todo/done]] in Tails 0.11. Mounting internal hard drive
+  now ask for an administrative password, on behalf of
+  `org.freedesktop.udisks.filesystem-mount-system-internal`.
 
-Actually:
+What is left is to [[document_how_to_access_internal_disks]]. Long
+term goal is to implement an [[opt-out read-only lock of internal hard
+disks|better_internal_disks_lock]].
 
-* we don't want a Tails user to be able to access read-write her local hard
-  drive as easyly as an external storage device;
-* but we do want Tails to be able to access local hard drive e.g. to wipe file.
-
-To be implemented:
-
-* internal drive are locked read-only at the kernel block device level by
-  default;
-* there is an opt-in to make these device writeable.
-
-About implementation: live-boot's `readonly` option does the read-only
-part, but it does that for every device, including removable ones,
-which is painful when using [[todo/persistence]] stored on the USB
-stick Tails is running from => we need to add a `readonly=fixed`
-option to live-boot that would do that only for fixed (internal)
-disks.
-
-[[!tag todo/code]]
+[[!tag todo/done]]

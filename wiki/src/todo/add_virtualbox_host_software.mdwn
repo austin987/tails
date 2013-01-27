@@ -1,9 +1,34 @@
 Rationale: running a proprietary OS in a virtual machine *inside*
 Tails would be useful by folks who cannot afford doing without their
-prefered Windows-only piece of software but still want to work in a
+preferred Windows-only piece of software but still want to work in a
 relatively secure environment.
 
-The compressed .deb files (4.0.x) take 20MB.
+# Next steps
 
-We'll [[!taglink todo/wait]] for Tails SquashFS to be [[compressed
-using LZMA/XZ compression|todo/use_lzma_compression]].
+1. Upload `virtualbox-dkms`, `virtualbox-qt` and `virtualbox`
+   backports to the `feature-virtualbox-host` APT suite. (Beware:  in
+   case it matters, we're shipping quite special guest packages --
+   custom backport of the guest tools and drivers, built against the
+   xorg from squeeze-backports). [[!tag todo/code]]
+1. Rewrite history of `feature/virtualbox-host` to not include these binary packages.
+1. Test the result.
+1. [[!taglink todo/research]] how to disable VirtualBox network modes
+   that bypass the Tails firewall: see discussion on tails-dev
+   (2012Q4).
+
+# Resources
+
+* [How To Set Up A TOR Middlebox Routing All VirtualBox Virtual Machine Traffic Over The TOR Network](http://www.howtoforge.com/how-to-set-up-a-tor-middlebox-routing-all-virtualbox-virtual-machine-traffic-over-the-tor-network)
+  (Using an adaptation of this we could instruct users to set up each
+  guest with Bridged Adapter on `vnet0` and then it should magically
+  rout all traffic from the VM through Tor. Identity correlation 
+  could be dealt with by using a dedicated TransPort with the
+  IsolateDestAddr option set.)
+
+* Whonix (back in times where it still was called TorBOX) implemented
+  something very similar: https://sourceforge.net/p/whonix/wiki/OneVM/
+
+  - Tor was running on the host = Tails in this case.
+  - Some operating system was running inside the Virtual Machine.
+  - iptables / bridging was used to route all VM traffic through Tor.
+  - It was probable affected by identity correlation through circuit sharing.

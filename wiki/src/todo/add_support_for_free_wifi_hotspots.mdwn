@@ -1,25 +1,7 @@
-[[!tag todo/research]]
-[[!tag todo/code]]
+[[!toc levels=3]]
 
-[[!toc levels=2]]
-
-Rationale
-=========
-
-Many ISPs now have a large number of "free" WiFi access points based
-on the modem/router boxes they install at their customers home.
-Examples: FreeWifi, NeufWifi, Fon, probably others worldwide.
-
-A lot of these run a captive web portal (often using a
-catch-all-DNS-requests system) where potential user can authenticate.
-
-Such hotspots are pretty useful but currently unusable in Tails due
-to DNS torification and Tor enforcement.
-
-We should implement a way to fix this.
-
-Implementation ideas
-====================
+The following things could try to automate the login to the hotspot
+so that the unsafe browser only is necessary as a fall back.
 
 Using WWW::Mechanize::Shell
 ---------------------------
@@ -49,39 +31,25 @@ monitored through DBUS to kill the loop if connection is lost. If loop
 fails try once more through default script before displaying a
 notification.
 
-Using existing applications
----------------------------
+Existing hotspot connection applications
+----------------------------------------
 
 Looks like there is at least two Python apps doing this already:
 
 * [autowifi](http://www.manatlan.com/page/autowifi)
 * [autologin-applet](http://antoine.mairesse.free.fr/autologin-applet/)
 
-Using a non-Torified web browser
---------------------------------
+Captive portal detection
+------------------------
 
-Another implementation possibility: Liberte Linux provides a
-non-Torified browser running under a specially designated user. "It
-is intended to be used in cases where a web setup is necessary in
-order to initiate an Internet connection (such as Wi-Fi Hotspots
-registration)."
-
-Details are in their source code:
-
-* `liberte/src/home/anon/bin/unsafe-browser`
-* `liberte/src/usr/local/sbin/unsafe-browser`
-* `liberte/src/usr/local/sbin/fw-reload`
-* git grep unsafe-browser
-
-However, using `ssh -X` or sudo combined with xhosts permissions
-brings issues such as shared clipboard, access to the whole screen and
-more. Running a new X session using `gdmflexiserver --xnest` sounds
-much safer; having this other session isolated, e.g. using LXC, would
-offer more protection against untrusted content read by the unsafe
-browser.
+hellais and friends are working on
+[ooni-probe](https://gitweb.torproject.org/ooni-probe.git) which may be
+interesting, depeding on how stealthy the probe is.
 
 Beta testers
 ============
 
 * San Bergmans <info@sbprojects.com>: FON network, KPN hotspots in the
   Netherlands
+
+[[!tag todo/research]]

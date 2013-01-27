@@ -1,0 +1,23 @@
+1. Boot up a Tails 0.14 system
+2. Use the language choser to select 日本語 (Japanese) and login
+3. Wait for IceWeasel to launch automatically
+4. Try activating SCIM/Anthy in IceWeasel by pressing CTRL+SPACE
+
+=> SCIM/Anthy does not activate.
+
+OTOH, this works fine with IceWeasel run from the menu or quick
+launch icon.
+
+Quick tests indicate that exporting the desktop session's `XMODIFIERS`
+environment variable before running iceweasel as root fixes this bug,
+so we would have to add a xdm autostart script to save the content of
+this variable, and add logics to
+`config/chroot_local-includes/etc/NetworkManager/dispatcher.d/60-iceweasel.sh`
+so that it reads and re-exports the saved information.
+
+While we're at it, exporting `GTK_IM_MODULE` and `QT_IM_MODULE` too
+might help fix similar, not discovered yet, issues.
+
+> Implemented in `bugfix/scim-in-autostarted-iceweasel`,
+> merged into devel, [[!taglink todo/done]] in Tails 0.16.
+

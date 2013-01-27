@@ -1,0 +1,14 @@
+Currently, initrd://scripts/live assumes that fromiso= is in the format $DEV/$PATH_WITHIN_DEV. This is not how pretty much every other liveCD implements loopback booting, and is not very reliable unless you get GRUB to fill in $DEV automatically, which is at least very complex, if not impossible.
+
+What fromiso= typically is, is simply $PATH_WITHIN_DEV, and the correct device is scanned-for, automatically, by initrd scripts. This should not result in an increase in complexity, because you need to do this *anyway* in order to find the live media itself. Then, instead of simply doing the normal sanity check (which from the looks of it, is is_live_path), you check for the existence of $FROM_ISO.
+
+for more context, see https://github.com/infinity0/uberimg
+
+> fromiso is a feature from Debian Live's live-boot, and is not
+> actively supported in Tails, so if there's a bug, it should be
+> reported to Debian Live upstream. Closing, then.
+>
+> P.S.: look at the `findiso` option that was recently merged, after
+> some effort from Tails developers, into live-boot.
+
+[[done]]
