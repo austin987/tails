@@ -11,7 +11,7 @@ When /^I successfully fetch a GnuPG key using seahorse$/ do
   @screen.wait("SeahorseFindKeysWindow.png", 10)
   # Seahorse doesn't seem to support searching for fingerprints
   @screen.type("10CC5BC7" + Sikuli::KEY_RETURN)
-  @screen.wait("SeahorseFoundKeyResult.png", 120)
+  @screen.wait("SeahorseFoundKeyResult.png", 5*60)
   @screen.type(Sikuli::DOWN_ARROW)   # Select first item in result menu
   @screen.type("f", Sikuli::KEY_ALT) # Menu: "File" ->
   @screen.type("i")                  # "Import"
