@@ -5,6 +5,7 @@ end
 
 When /^I successfully fetch a GnuPG key using seahorse$/ do
   next if @skip_steps_while_restoring_background
+  @screen.wait("SeahorseWindow.png", 10)
   @screen.type("r", Sikuli::KEY_ALT) # Menu: "Remote" ->
   @screen.type("f")                  # "Find Remote Keys...".
   @screen.wait("SeahorseFindKeysWindow.png", 10)
