@@ -120,10 +120,10 @@ EOF
     @display.take_screenshot(description)
   end
 
-  def get_remote_shell_device
-    REXML::Document.new(@domain.xml_desc).elements.each('domain/devices/console') do |e|
-      if e.attribute('type').to_s == "pty"
-        return e.attribute('tty').to_s
+  def get_remote_shell_port
+    @parsed_domain_xml.elements.each('domain/devices/serial') do |e|
+      if e.attribute('type').to_s == "tcp"
+        return e.elements['source'].attribute('service').to_s.to_i
       end
     end
   end
