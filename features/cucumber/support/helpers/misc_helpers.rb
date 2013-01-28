@@ -8,7 +8,7 @@ end
 # Call block (ignoring any exceptions it may throw) repeatedly with one
 # second breaks until it returns true, or until `t` seconds have
 # passed when we throw Timeout:Error.
-def try_for(t)
+def try_for(t, delay = 1)
   SystemTimer.timeout(t) do
     loop do
       begin
@@ -16,7 +16,7 @@ def try_for(t)
       rescue Exception
         # noop
       end
-      sleep 1
+      sleep delay
     end
   end
   return false
