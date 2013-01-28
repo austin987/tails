@@ -28,22 +28,17 @@ end
 
 Given /^a freshly started Tails$/ do
   next if @skip_steps_while_restoring_background
-  @vm.start
-  @screen.wait('TailsBootSplash.png', 30)
-  @screen.wait('TailsBootSplashTabMsg.png', 10)
-  # Start the VM remote shell
-  @screen.type("\t autotest_never_use_this_option" +
-               Sikuli::KEY_RETURN)
-  @screen.wait('TailsGreeter.png', 120)
+  step "a freshly started Tails with boot options \"\""
 end
 
-Given /^a freshly started Tails with boot options "([^"]+)"$/ do |options|
+Given /^a freshly started Tails with boot options "([^"]*)"$/ do |options|
   next if @skip_steps_while_restoring_background
   @vm.start
   @screen.wait('TailsBootSplash.png', 30)
   @screen.wait('TailsBootSplashTabMsg.png', 10)
+  @screen.type("\t")
   # Start the VM remote shell
-  @screen.type("\t autotest_never_use_this_option " + options +
+  @screen.type(" autotest_never_use_this_option " + options +
                Sikuli::KEY_RETURN)
   @screen.wait('TailsGreeter.png', 120)
 end
