@@ -28,7 +28,15 @@ def guest_has_network?
 end
 
 def wait_until_remote_shell_is_up
-  try_for(120) { @vm.execute('true').success? }
+  try_for(120) {
+    begin
+      SystemTimer.timeout(3) do
+        return @vm.execute('true').success?
+      end
+    rescue
+      # noop
+    end
+  }
 end
 
 def wait_until_tor_is_working
