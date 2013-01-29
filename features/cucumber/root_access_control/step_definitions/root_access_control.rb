@@ -1,3 +1,11 @@
+Given /^Tails Greeter has dealt with the sudo password$/ do
+  f1 = "/etc/sudoers.d/tails-greeter"
+  f2 = "#{f1}-no-password-lecture"
+  try_for(20) {
+    @vm.execute("test -e '#{f1}' -o -e '#{f2}'").success?
+  }
+end
+
 Then /^I should be able to run administration commands as amnesia$/ do
   stdout = @vm.execute("echo #{@password} | sudo -S whoami", "amnesia").stdout
   assert stdout.sub(/^\[sudo\] password for amnesia: /, "") == "root\n"
