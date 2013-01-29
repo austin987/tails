@@ -16,7 +16,7 @@ class VMCommand
   # commands using ";" instead.
   def execute(vm, cmd, user)
     socket = TCPSocket.new("127.0.0.1", vm.get_remote_shell_port)
-    socket.puts("sudo -n -H -u " + user + " -s /bin/sh " + "-c \'" + cmd + "\'")
+    socket.puts("sudo -n -H -u #{user} -s /bin/sh -c '#{cmd}'")
     s = ""
     while (c = socket.read(1)) != "\0" do
       s += c
