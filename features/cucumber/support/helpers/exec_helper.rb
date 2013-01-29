@@ -5,7 +5,7 @@ class VMCommand
 
   attr_reader :returncode, :stdout, :stderr
 
-  def initialize(vm, cmd, user = "amnesia")
+  def initialize(vm, cmd, user = "root")
     ret = execute(vm, cmd, user)
     @returncode = ret[0]
     @stdout = ret[1]

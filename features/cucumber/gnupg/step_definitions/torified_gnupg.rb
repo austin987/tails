@@ -1,6 +1,7 @@
 When /^I successfully fetch a GnuPG key using the CLI$/ do
   next if @skip_steps_while_restoring_background
-  assert @vm.execute("gpg --recv-key 52B69F10A3B0785AD05AFB471D84CCF010CC5BC7").success?
+  assert @vm.execute("gpg --recv-key 52B69F10A3B0785AD05AFB471D84CCF010CC5BC7",
+                     "amnesia").success?
 end
 
 When /^I successfully fetch a GnuPG key using seahorse$/ do
@@ -15,5 +16,5 @@ When /^I successfully fetch a GnuPG key using seahorse$/ do
   @screen.type(Sikuli::DOWN_ARROW)   # Select first item in result menu
   @screen.type("f", Sikuli::KEY_ALT) # Menu: "File" ->
   @screen.type("i")                  # "Import"
-  try_for(120) { @vm.execute("gpg --list-key 10CC5BC7").success? }
+  try_for(120) { @vm.execute("gpg --list-key 10CC5BC7", "amnesia").success? }
 end

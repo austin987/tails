@@ -34,8 +34,7 @@ end
 def wait_until_tor_is_working
   try_for(120) { @vm.execute(
     '. /usr/local/lib/tails-shell-library/tor.sh; ' +
-    'tor_control_getinfo status/circuit-established',
-                                   'root').stdout  == "1\n" }
+    'tor_control_getinfo status/circuit-established').stdout  == "1\n" }
 end
 
 def guest_has_process?(process)

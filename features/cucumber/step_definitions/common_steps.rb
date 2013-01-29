@@ -7,11 +7,11 @@ def restore_background
   # Time jumps and incorrect clocks also confuses Tor in many ways.
   wait_until_remote_shell_is_up
   if guest_has_network?
-    if @vm.execute("service tor status", "root").success?
-      @vm.execute("service tor stop", "root")
+    if @vm.execute("service tor status").success?
+      @vm.execute("service tor stop")
       @vm.execute("killall vidalia")
       @vm.host_to_guest_time_sync
-      @vm.execute("service tor start", "root")
+      @vm.execute("service tor start")
       wait_until_tor_is_working
     end
   end
@@ -126,7 +126,7 @@ Then /^all Internet traffic has only flowed through Tor$/ do
   # This command will grab all router IP addresses from the Tor
   # consensus in the VM.
   cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
-  tor_relays = @vm.execute(cmd, "root").stdout.split("\n")
+  tor_relays = @vm.execute(cmd).stdout.split("\n")
   leaks = FirewallLeakCheck.new(@sniffer.pcap_file, tor_relays)
   if !leaks.empty?
     if !leaks.ipv4_tcp_leaks.empty?
@@ -179,7 +179,7 @@ end
 
 Given /^I shutdown Tails$/ do
   next if @skip_steps_while_restoring_background
-  assert @vm.execute("halt", "root").success?
+  assert @vm.execute("halt").success?
 end
 
 Given /^package "([^"]+)" is installed$/ do |package|
