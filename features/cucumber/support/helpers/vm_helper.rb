@@ -52,6 +52,18 @@ class VM
     @net.create
   end
 
+  def plug_network
+    xml = @parsed_domain_xml.elements['domain/devices/interface']
+    xml.elements['link'].attributes['state'] = 'up'
+    @domain.update_device(xml.to_s)
+  end
+
+  def unplug_network
+    xml = @parsed_domain_xml.elements['domain/devices/interface']
+    xml.elements['link'].attributes['state'] = 'down'
+    @domain.update_device(xml.to_s)
+  end
+
   def get_last_iso
     iso_name = Dir.glob("*.iso").sort_by {|f| File.mtime(f)}.last
     build_root_path.to_s + "/" + iso_name

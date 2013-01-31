@@ -43,6 +43,16 @@ Given /^a freshly started Tails with boot options "([^"]*)"$/ do |options|
   @screen.wait('TailsGreeter.png', 120)
 end
 
+Given /^the network is plugged$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.plug_network
+end
+
+Given /^the network is unplugged$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.unplug_network
+end
+
 Given /^I log in to a new session$/ do
   next if @skip_steps_while_restoring_background
   @screen.click('TailsGreeterLoginButton.png')

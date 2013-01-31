@@ -5,6 +5,7 @@ Feature: System memory erasure on shutdown
 
   Background:
     Given a freshly started Tails with boot options "debug=wipemem"
+    And the network is unplugged
     And I log in to a new session
     And GNOME has started
     And process "memlockd" is running

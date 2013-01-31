@@ -8,6 +8,7 @@ Feature: Root access control enforcement
   Background:
     Given I restore the background snapshot if it exists
     And a freshly started Tails
+    And the network is unplugged
     And I save the background snapshot if it does not exist
 
   Scenario: If an administrative password is set in Tails Greeter the amnesia user should be able to run arbitrary commands with administrative privileges.
