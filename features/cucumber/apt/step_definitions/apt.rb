@@ -15,7 +15,7 @@ Given /^APT's sources are only \{ftp.us,security,back-ports\}\.debian\.org$/ do
 end
 
 When /^I update APT using apt-get$/ do
-  SystemTimer.timeout(15*60) do
+  SystemTimer.timeout(30*60) do
     assert @vm.execute("echo #{@password} | sudo -S apt-get update", "amnesia").success?
   end
 end
@@ -34,7 +34,7 @@ When /^I update APT using synaptic$/ do
   # package list
   try_for(20) { @screen.click('SynapticReload.png') }
   @screen.wait('SynapticReloadPrompt.png', 20)
-  @screen.waitVanish('SynapticReloadPrompt.png', 15*60)
+  @screen.waitVanish('SynapticReloadPrompt.png', 30*60)
 end
 
 Then /^I should be able to install a package using synaptic$/ do
