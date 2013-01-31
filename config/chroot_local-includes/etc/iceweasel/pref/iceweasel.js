@@ -46,6 +46,7 @@ pref("browser.sessionstore.enabled", false);
 pref("browser.sessionstore.privacy_level", 2);
 pref("browser.startup.homepage_override.mstone", "ignore");
 pref("browser.zoom.siteSpecific", false);
+pref("dom.enable_performance", false);
 pref("dom.event.contextmenu.enabled", false);
 pref("dom.storage.enabled", false);
 pref("extensions.autoDisableScopes", 0);
