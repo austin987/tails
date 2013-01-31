@@ -64,6 +64,7 @@ pref("network.http.pipelining", true);
 pref("network.http.pipelining.maxrequests", 8);
 pref("network.http.pipelining.ssl", true);
 pref("network.http.proxy.pipelining", true);
+pref("network.http.spdy.enabled", false);
 pref("network.protocol-handler.external-default", false);
 pref("network.protocol-handler.external.mailto", false);
 pref("network.protocol-handler.external.news", false);
