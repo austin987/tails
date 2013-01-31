@@ -51,6 +51,7 @@ user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
 user_pref("noscript.ABE.wanIpAsLocal", false);
 user_pref("noscript.autoReload", false);
+user_pref("noscript.confirmUnblock", false);
 user_pref("noscript.contentBlocker", true);
 user_pref("noscript.default", "about:blank about:credits addons.mozilla.org flashgot.net google.com gstatic.com googlesyndication.com informaction.com yahoo.com yimg.com maone.net noscript.net hotmail.com msn.com passport.com passport.net passportimages.com live.com");
 user_pref("noscript.firstRunRedirection", false);
