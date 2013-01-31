@@ -70,13 +70,9 @@ class VM
   end
 
   def add_iso_to_domain
-    xml = <<EOF
-    <disk>
-      <source file="#{@iso}"/>
-      <target dev='hdc' bus='ide'/>
-    </disk>
-EOF
-    @domain.update_device(xml)
+    xml = @parsed_domain_xml.elements['domain/devices/disk']
+    xml.elements['source'].attributes['file'] = @iso
+    @domain.update_device(xml.to_s)
   end
 
   def is_running?
