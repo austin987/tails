@@ -87,6 +87,7 @@ pref("layout.spellcheckDefault", 0);
 pref("network.dns.disableIPv6", true);
 pref("network.http.keep-alive.timeout", 20);
 pref("permissions.memory_only", true);
+pref("plugin.expose_full_path", false);
 pref("pref.privacy.disable_button.cookie_exceptions", false);
 pref("pref.privacy.disable_button.view_cookies", false);
 pref("pref.privacy.disable_button.view_passwords", false);
