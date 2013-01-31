@@ -60,6 +60,7 @@ pref("layout.css.report_errors", false);
 pref("network.cookie.cookieBehavior", 1);
 pref("network.cookie.lifetimePolicy", 2);
 pref("network.cookie.prefsMigrated", true);
+pref("network.dns.disablePrefetch", true);
 pref("network.http.connection-retry-timeout", 0);
 pref("network.http.pipelining", true);
 pref("network.http.pipelining.aggressive", true);
