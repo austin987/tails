@@ -20,20 +20,20 @@ class VM
     end
     @iso = ENV['ISO'] || get_last_iso
     @virt = Libvirt::open("qemu:///system")
+    @domain_name = @parsed_domain_xml.elements['domain/name'].text
+    @net_name = @parsed_net_xml.elements['network/name'].text
     setup_temp_domain
   end
 
   def clean_up_old
-    domain_name = @parsed_domain_xml.elements['domain/name'].text
     begin
-      old_domain = @virt.lookup_domain_by_name(domain_name)
+      old_domain = @virt.lookup_domain_by_name(@domain_name)
       old_domain.destroy if old_domain.active?
       old_domain.undefine
     rescue
     end
-    net_name = @parsed_net_xml.elements['network/name'].text
     begin
-      old_net = @virt.lookup_network_by_name(net_name)
+      old_net = @virt.lookup_network_by_name(@net_name)
       old_net.destroy if old_net.active?
       old_net.undefine
     rescue
@@ -98,20 +98,19 @@ EOF
   end
 
   def restore_snapshot(path)
-    name = @domain.name
     # Undefine current domain so it can be restored
     @domain.destroy if @domain.active?
     @domain.undefine
     Libvirt::Domain::restore(@virt, path)
-    @domain = @virt.lookup_domain_by_name(name)
-    @display = Display.new(@domain.name)
+    @domain = @virt.lookup_domain_by_name(@domain_name)
+    @display = Display.new(@domain_name)
     @display.start
   end
 
   def start
     @domain.destroy if @domain.active?
     @domain.create
-    @display = Display.new(@domain.name)
+    @display = Display.new(@domain_name)
     @display.start
   end
 
