@@ -4,6 +4,14 @@ Firefox 10.x ESR will be end-of-lifed mid-February. Tails 0.17 is
 scheduled for late February, so it will have to ship the next ESR
 series: Firefox 17.
 
+Roadmap
+=======
+
+1. Upload alpha ISO.
+1. Test, test, test (see **Test** section below).
+1. Fix whatever needs fixing (see **Code** section below).
+1. Have it merged in time for RC1.
+
 Code
 ====
 
@@ -12,9 +20,24 @@ Code
 Being worked on in the `feature/torbrowser` branch of our main Git
 repository, and in our iceweasel Git repository.
 
-1. Upload alpha ISO.
-1. Test, test, test (see below).
-1. Have it merged in time for RC1.
+Fix bookmarks
+-------------
+
+Only the bookmarks at the root (*Tails* and *Tails documentation
+(offline)*) are shown. The sub-folders (*Webmail*, *Tor*, *I2P*) are
+not displayed.
+
+We have to fix the default bookmarks file to fix that, and then test
+lots of things (move to **Test** section when it's time to):
+
+1. Backward compatibility:
+   - Make sure persistent bookmarks saved in Tails 0.16 are displayed.
+   - Make sure one can modify persistent bookmarks coming from an
+     older version, and see them persist on next boot.
+1. Make sure one can setup persistence for bookmarks from the new ISO,
+   and make sure it works (setup persistence, reboot, enable
+   persistence, add bookmarks, reboot, enable persistence, bookmarks
+   should still be here).
 
 Infrastructure
 ==============
@@ -39,7 +62,6 @@ Test
   - HTTPS Everywhere
   - NoScript
   - Torbutton new identity
-* Check that toolbar looks the way it should look.
 * Check <https://panopticlick.eff.org/> for regressions.
 * Check <http://ip-check.info/> for regressions.
 * [[fingerprint section|support/known_issues#fingerprint]]
