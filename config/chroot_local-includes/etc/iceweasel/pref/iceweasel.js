@@ -54,6 +54,7 @@ pref("extensions.foxyproxy.last-version", "99999.99");
 pref("extensions.shownSelectionUI", true);
 pref("extensions.update.enabled", false);
 pref("extensions.update.notifyUser", false);
+pref("general.useragent.override", "Mozilla/5.0 (Windows NT 6.1; rv:17.0) Gecko/20100101 Firefox/17.0");
 pref("geo.enabled", false);
 pref("geo.wifi.uri", "");
 pref("layout.css.report_errors", false);
