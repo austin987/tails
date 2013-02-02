@@ -112,7 +112,5 @@ pref("security.warn_submit_insecure", true);
 pref("signon.autofillForms", false);
 pref("signon.prefillForms", false);
 pref("signon.rememberSignons", false);
-pref("webgl.disable-extensions", true);
-pref("webgl.min_capability_mode", true);
 pref("xpinstall.whitelist.add", "");
 pref("xpinstall.whitelist.add.103", "");
