@@ -15,7 +15,6 @@ alsa-utils
 gdomap
 haveged
 hdparm
-ifupdown
 kexec
 kexec-load
 laptop-mode
