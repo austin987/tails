@@ -15,7 +15,6 @@ alsa-utils
 gdomap
 haveged
 hdparm
-i2p
 ifupdown
 kexec
 kexec-load
