@@ -27,7 +27,6 @@ saned
 spice-vdagent
 tor
 ttdnsd
-urandom
 "
 
 # Ensure that we are using dependency based boot
