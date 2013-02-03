@@ -2,7 +2,8 @@ We need to start porting Tails to Wheezy, and test it.
 
 Work is done in the `feature/wheezy` Git branch.
 
-**Current state**: does not build.
+**Current state**: builds; booting this ISO gives no usable
+tails-greeter, though.
 
 [[!toc levels=2]]
 
@@ -11,7 +12,13 @@ Problems to fix
 
 [[!tag todo/code]]
 
-* Have the thing build.
+* Fix tails-greeter:
+  - support for setting the keyboard layout was removed from GDM
+  - Once the call to `GdmGreeterService.SelectLayout` in
+    `community-greeter.py` is replaced by `pass`, the greeter GNOME
+    session starts, but no window is displayed in there.
+  - Rewrite as a lightdm greeter (like unity-greeter)?
+* Fix `/etc/init.d/tails-kexec`: `/etc/default/locale` does not exist.
 * `amnesia` users sudoers credentials to localize console at profile
   time don't work
 * `/usr/local/sbin/udev-watchdog` not found
@@ -32,6 +39,16 @@ Problems to fix
   find their own ways to use it)
 * Find and install I2P packages compatible with Wheezy, then revert
   1b9ae07 and 16d9aef.
+* Fix the build for real (workaround'd in 4218f2e4): at `lb source`
+  time, when `lb chroot_sources install` wants to run `apt-get
+  upgrade`, it fails the build with `The value 'wheezy' is invalid for
+  APT::Default-Release as such a release is not available in the
+  sources` (due to the APT proxy not being configured at this time,
+  the last `apt-get update` failed and the package indices are empty).
+  If one simply removes `APT::Default-Release`, then the pinning is
+  broken when indices are not available. Actually, if `lb source` just
+  exited early unless `LB_SOURCE` is enabled, we would not have
+  this problem.
 
 Tests to do
 ===========
