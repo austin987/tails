@@ -45,3 +45,6 @@ pref("general.useragent.override", "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-
 pref("extensions.enigmail.addHeaders", False);
 // Avoid leaking Enigmail usage and version in message
 pref("extensions.enigmail.useDefaultComment", True);
+
+// Tell TorBirdy we're running Tails so that it adapts its behaviour.
+pref("vendor.name", "Tails");
