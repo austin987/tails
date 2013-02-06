@@ -100,5 +100,6 @@ pref("security.warn_leaving_secure", true);
 pref("security.warn_submit_insecure", true);
 pref("signon.prefillForms", false);
 pref("signon.rememberSignons", false);
+pref("spellchecker.dictionary", "en_US");
 pref("xpinstall.whitelist.add", "");
 pref("xpinstall.whitelist.add.103", "");
