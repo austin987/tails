@@ -69,7 +69,13 @@ end
 
 Given /^GNOME has started$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait('GnomeStarted.png', 60)
+  case @theme
+  when "winxp"
+    desktop_started_picture = 'WinXPStartButton.png'
+  else
+    desktop_started_picture = 'GnomeStarted.png'
+  end
+  @screen.wait(desktop_started_picture, 60)
 end
 
 Given /^I have a network connection$/ do
@@ -94,7 +100,13 @@ end
 Given /^Iceweasel has autostarted and is not loading a web page$/ do
   next if @skip_steps_while_restoring_background
 #  @screen.wait("IceweaselRunning.png", 120)
-  step 'I see "IceweaselRunning.png" after at most 120 seconds'
+  case @theme
+  when "winxp"
+    iceweasel_picture = "WinXPIceweaselWindow.png"
+  else
+    iceweasel_picture = "IceweaselRunning.png"
+  end
+  step "I see \"#{iceweasel_picture}\" after at most 120 seconds"
 
   # Stop iceweasel to load its home page. We do this to prevent Tor
   # from gerring confused in case we save and restore a snapshot in
@@ -105,11 +117,25 @@ end
 
 Given /^I have closed all annoying notifications$/ do
   next if @skip_steps_while_restoring_background
+  case @theme
+  when "winxp"
+    notification_picture = "WinXPNotificationX.png"
+  else
+    notification_picture = "GnomeNotificationX.png"
+  end
+
+  # First we wait a short while to give notifications a chance to show
+  begin
+    @screen.wait(notification_picture, 10)
+  rescue
+    # noop
+  end
+
   begin
     # note that we cannot use find_all as the resulting matches will
     # have the positions from before we start closing notificatios,
     # but closing them will change the positions.
-    while match = @screen.find("GnomeNotificationX.png")
+    while match = @screen.find(notification_picture)
       @screen.click(match.x + match.width/2, match.y + match.height/2)
     end
   rescue Sikuli::ImageNotFound
@@ -164,7 +190,13 @@ end
 When /^I open the GNOME run dialog$/ do
   next if @skip_steps_while_restoring_background
   @screen.type(Sikuli::KEY_F2, Sikuli::KEY_ALT)
-  @screen.wait('GnomeRunDialog.png', 10)
+  case @theme
+  when "winxp"
+    run_dialog_picture = 'WinXPRunDialog.png'
+  else
+    run_dialog_picture = 'GnomeRunDialog.png'
+  end
+  @screen.wait(run_dialog_picture, 10)
 end
 
 When /^I run "([^"]*)"$/ do |program|
