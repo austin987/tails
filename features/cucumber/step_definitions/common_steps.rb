@@ -187,6 +187,11 @@ Given /^process "([^"]+)" is running$/ do |process|
   assert guest_has_process?(process)
 end
 
+Given /^I have killed the process "([^"]+)"$/ do |process|
+  next if @skip_steps_while_restoring_background
+  assert @vm.execute("killall #{process}").success?
+end
+
 Given /^I shutdown Tails$/ do
   next if @skip_steps_while_restoring_background
   assert @vm.execute("halt").success?
