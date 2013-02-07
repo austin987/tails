@@ -18,8 +18,8 @@ not clear the result will be good enough.
 * update developers documentation
 * migrate!
   - import existing tickets
-  - generate rewrite rules from the ikiwiki tickets URL to the new ones
-  - remove tickets from ikiwiki
+  - setup rewrite rules from the ikiwiki tickets URL to the new ones
+  - remove tickets that are not blueprints from ikiwiki
 * If needed, have additional plugins packaged and installed to fine
   tune our processes.
 
@@ -197,5 +197,42 @@ developers).
  * There is an Atom feed with all open tickets, together with status and
    description.
  * Missing: set parent task, set related issues, delete ticket.
+
+## Convert and import
+
+**Note**: this is an initial rough draft, that probably misses tons of
+things to do, but should be enough to run some initial tests to
+confirm the general idea is workable.
+
+1. Tag `todo/*` pages that should be kept as blueprints.
+1. Split tickets that have several `todo/*` tags, and save the
+   parent/child relationship. In the end, each ticket should only have
+   one `todo/*` tag.
+1. Add a `External Id` custom field.
+1. Add a `Kind of next thing to do` custom field whose possible values
+   are the same as our current `todo/*` tags.
+1. Write a custom ikiwiki plugin to:
+   - save original ikiwiki ticket name as `External Id` column
+   - save parent/child relationship
+   - turn Markdown into Textile
+   - wrap the whole ticket information into a CSV line
+   - filter out `toc`
+   - save `todo/*` tags into the "Kind of next thing to do" column
+   - XXX: what to do with blueprints? create a parent ticket matching
+     the blueprint and linking to it?
+1. Run ikiwiki with this special plugin, then merge all these CSV
+   lines to produce a first CSV file that can be imported with the
+   Importer plugin.
+1. Import the first CSV file, using `External Id` as `Unique Column`.
+1. Build a (External Id, Redmine Id) mapping.
+1. With a modified version of the ikiwiki plugin, plus this mapping
+   information, produce a second CSV files with tickets description
+   modified so that links to other tickets are updated to use Redmine
+   ticket linking syntax.
+1. Import the second CSV file, using `External Id` as `Unique Column`
+   again, and enabling the *Update Existing Issues* option.
+   Links between tickets should now be good.
+1. Generate the Apache rewrite rules from the (External Id, Redmine
+   Id) mapping. Skip blueprints while doing so.
 
 [[!tag broken_window]]
