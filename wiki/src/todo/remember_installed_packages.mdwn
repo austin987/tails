@@ -71,6 +71,23 @@ not in `autoinstall` state.
 On boot time, that list should be filtered with packages that are already
 shipped with Tails.
 
+> Here's an example script which filters shipped packages on runtime instead:
+> 
+    comm -23 <(list-manually-installed-packages) <default-packages.txt >session-packages.txt
+    comm -23 <(cat session-packages.txt|sort) <(cat saved-packages.txt|sort) >> saved-packages.txt
+> 
+> It mantains a list of packages manually installed by the user in saved-packages.txt. This file should be placed in its own directory so it can be made persistent.
+>
+> list-manually-installed-packages is another script which does what its name says. In squeeze it can be done with:
+>
+    comm -3 <(dpkg -l | grep '^ii' | cut -d\  -f 3|sort) <(apt-mark showauto|sort)
+>
+> When we move to wheezy it may simply become 'apt-mark showmanual', if it proves to be equivalent.
+>
+> default-packages.txt is the list of packages shipped with Tails, generated at ISO creation time with list-manually-installed-packages
+>
+> session-packages.txt is a temporary file, can be placed in /tmp
+
 1st step implementation proposal
 ================================
 
