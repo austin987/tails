@@ -256,6 +256,7 @@ end
 Given /^I shutdown Tails$/ do
   next if @skip_steps_while_restoring_background
   assert @vm.execute("halt").success?
+  try_for(120) { ! @vm.is_running? }
 end
 
 Given /^package "([^"]+)" is installed$/ do |package|

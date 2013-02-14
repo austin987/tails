@@ -21,3 +21,9 @@ Then /^I find at most (\d+) patterns in the dump "([^"]+)"$/ do |max, dump|
   puts "Patterns found: #{hits}"
   assert hits.to_i <= max.to_i
 end
+
+When /^I shutdown Tails and let it wipe the memory$/ do
+  next if @skip_steps_while_restoring_background
+  assert @vm.execute("halt").success?
+  @screen.wait('MemoryWipeCompleted.png', 120)
+end
