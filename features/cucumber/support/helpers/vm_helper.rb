@@ -1,5 +1,6 @@
 require 'libvirt'
 require 'rexml/document'
+require 'etc'
 
 class VM
 
@@ -15,6 +16,7 @@ class VM
     update_net(read_net_xml)
     iso = ENV['ISO'] || get_last_iso
     plug_network
+    setup_storage_pool
   end
 
   def update_domain(xml)
@@ -54,6 +56,33 @@ class VM
       net.undefine
     rescue
     end
+  end
+
+  def setup_storage_pool
+    pool_xml = REXML::Document.new(File.read("#{Dir.pwd}/features/cucumber/domains/storage_pool.xml"))
+    pool_name = pool_xml.elements['pool/name'].text
+    # unlike the domain and net the storage pool should survive VM
+    # teardown (so a new instance can use e.g. a previously created
+    # USB drive), so we only create a new one if there is none.
+    begin
+      @pool = @virt.lookup_storage_pool_by_name(pool_name)
+    rescue Libvirt::RetrieveError
+      pool_xml.elements['pool/target/path'].text =
+        "#{Dir.pwd}/features/tmpfs/storage/#{pool_name}"
+      @pool = @virt.define_storage_pool_xml(pool_xml.to_s)
+      @pool.build
+      @pool.create
+    end
+    @pool.refresh
+  end
+
+  def clear_storage_pool
+    return if !@pool
+    @pool.list_volumes.each do |vol|
+      vol.delete
+    end
+    @pool.destory if @pool.active?
+    @pool.undefine
   end
 
   def set_network_link_state(state)
@@ -123,6 +152,76 @@ class VM
 
   def remove_cdrom
     set_cdrom_image('')
+  end
+
+  def create_new_usb_drive(name, size = 2)
+    begin
+      old_vol = @pool.lookup_volume_by_name(name)
+    rescue Libvirt::RetrieveError
+      # noop
+    else
+      old_vol.delete
+    end
+    uid = Etc::getpwnam("libvirt-qemu").uid
+    gid = Etc::getgrnam("kvm").gid
+    pool_path = REXML::Document.new(@pool.xml_desc).elements['pool/target/path'].text
+    vol_xml = REXML::Document.new(File.read("#{Dir.pwd}/features/cucumber/domains/usb_volume.xml"))
+    vol_xml.elements['volume/name'].text = name
+    vol_xml.elements['volume/capacity'].text = size.to_s
+    vol_xml.elements['volume/target/path'].text = "#{pool_path}/#{name}"
+    vol_xml.elements['volume/target/permissions/owner'].text = uid.to_s
+    vol_xml.elements['volume/target/permissions/group'].text = gid.to_s
+    vol = @pool.create_volume_xml(vol_xml.to_s)
+    @pool.refresh
+  end
+
+  def usb_drive_path(name)
+    @pool.lookup_volume_by_name(name).path
+  end
+
+  def usb_drive_dev(name)
+    xml = REXML::Document.new(usb_drive_xml_desc(name))
+    return "/dev/" + xml.elements['disk/target'].attribute('dev').to_s
+  end
+
+  def usb_drive_xml_desc(name)
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements.each('domain/devices/disk') do |e|
+      begin
+        if e.elements['source'].attribute('file').to_s == usb_drive_path(name)
+          return e.to_s
+        end
+      rescue
+        next
+      end
+    end
+    return nil
+  end
+
+  def plug_usb_drive(name)
+    # Get the next free /dev/sdX on guest
+    used_devs = []
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements.each('domain/devices/disk/target') do |e|
+      used_devs <<= e.attribute('dev').to_s
+    end
+    letter = 'a'
+    dev = "sd" + letter
+    while used_devs.include? dev
+      letter = (letter[0].ord + 1).chr
+      dev = "sd" + letter
+    end
+    assert letter <= 'z'
+
+    xml = REXML::Document.new(File.read("#{Dir.pwd}/features/cucumber/domains/usb_disk.xml"))
+    xml.elements['disk/source'].attributes['file'] = usb_drive_path(name)
+    xml.elements['disk/target'].attributes['dev'] = dev
+    @domain.attach_device(xml.to_s)
+  end
+
+  def unplug_usb_drive(name)
+    xml = usb_drive_xml_desc(name)
+    @domain.detach_device(xml)
   end
 
   def is_running?
