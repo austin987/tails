@@ -1,7 +1,16 @@
 require 'fileutils'
 
+def post_vm_start_hook
+  # Sometimes the first click is lost (presumably it's used to give
+  # focus to virt-viewer or similar) so we do that now rather than
+  # having an important click lost. The point we click should be
+  # somewhere where no clickable elements generally reside.
+  @screen.click(@screen.width, @screen.height/2)
+end
+
 def restore_background
   @vm.restore_snapshot(@background_snapshot)
+  post_vm_start_hook
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
@@ -34,6 +43,7 @@ end
 Given /^a freshly started Tails with boot options "([^"]*)"$/ do |options|
   next if @skip_steps_while_restoring_background
   @vm.start
+  post_vm_start_hook
   @screen.wait('TailsBootSplash.png', 30)
   @screen.wait('TailsBootSplashTabMsg.png', 10)
   @screen.type("\t")
