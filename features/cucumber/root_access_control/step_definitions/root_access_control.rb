@@ -1,5 +1,5 @@
 Then /^I should be able to run administration commands as amnesia$/ do
-  stdout = @vm.execute("echo #{@password} | sudo -S whoami", "amnesia").stdout
+  stdout = @vm.execute("echo #{@sudo_password} | sudo -S whoami", "amnesia").stdout
   assert stdout.sub(/^\[sudo\] password for amnesia: /, "") == "root\n"
 end
 
@@ -17,7 +17,7 @@ end
 Then /^I should not be able to run synaptic$/ do
   for p in ["", "live", "amnesia"]
     step "I run \"gksu synaptic\""
-    @password = p
+    @sudo_password = p
     step "I enter the sudo password in the PolicyKit prompt"
   end
   assert !guest_has_process?("synaptic")

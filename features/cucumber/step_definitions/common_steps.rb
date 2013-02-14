@@ -239,7 +239,7 @@ Given /^I enter the sudo password in the PolicyKit prompt$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('PolicyKitAuthPrompt.png', 60)
   sleep 1 # wait for weird fade-in to unblock the "Ok" button
-  @screen.type(@password)
+  @screen.type(@sudo_password)
   @screen.type(Sikuli::KEY_RETURN)
   @screen.waitVanish('PolicyKitAuthPrompt.png', 10)
 end
