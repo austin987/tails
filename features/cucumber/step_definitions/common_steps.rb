@@ -255,7 +255,11 @@ end
 
 Given /^I shutdown Tails$/ do
   next if @skip_steps_while_restoring_background
-  assert @vm.execute("halt").success?
+  @screen.hide_cursor
+  @screen.click('TailsEmergencyShutdownButton.png')
+  @screen.hide_cursor
+  @screen.click('TailsEmergencyShutdownHalt.png')
+  @screen.hide_cursor
   try_for(120) { ! @vm.is_running? }
 end
 
