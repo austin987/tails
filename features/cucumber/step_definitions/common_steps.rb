@@ -41,6 +41,7 @@ Given /^a freshly started Tails with boot options "([^"]*)"$/ do |options|
   @screen.type(" autotest_never_use_this_option " + options +
                Sikuli::KEY_RETURN)
   @screen.wait('TailsGreeter.png', 120)
+  wait_until_remote_shell_is_up
 end
 
 Given /^the network is plugged$/ do
