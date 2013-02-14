@@ -115,6 +115,20 @@ if [ -n "${VNC_VIEWER}" ]; then
     start_vnc_viewer
 fi
 
+# Workaround: when dumping the guest's memory via core_dump(), libvirt
+# will create files that only root can read. We therefore pre-create
+# them with more permissible permissions, which libvirt will preserve
+# (although it will change ownership). so that the user running the
+# script can grep the dumps for the fillram pattern.
+for file in features/tmpfs/after_wipe.dump features/tmpfs/before_wipe.dump; do
+    if [ ! -e "${file}" ]; then
+        touch "${file}"
+    fi
+    if [ -O "${file}" ]; then
+        chmod a+r "${file}"
+    fi
+done
+
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
 export ISO="${ISO}"
