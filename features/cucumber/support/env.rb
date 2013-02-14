@@ -1,9 +1,5 @@
 require 'java'
 require 'rubygems'
-Dir["#{Dir.pwd}/features/cucumber/support/helpers/*.rb"].each do |file|
-  require file
-end
-
 
 Before do |scenario|
   @vm = VM.new
