@@ -15,6 +15,7 @@ class VM
     read_net_xml = File.read(net_xml)
     update_net(read_net_xml)
     iso = ENV['ISO'] || get_last_iso
+    set_cdrom_boot(iso)
     plug_network
     setup_storage_pool
   end
@@ -130,6 +131,15 @@ class VM
     set_cdrom_tray_state('closed')
   end
 
+  def set_boot_device(dev)
+    if is_running?
+      raise "boot settings can only be set for inactive vms"
+    end
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements['domain/os/boot'].attributes['dev'] = dev
+    update_domain(domain_xml.to_s)
+  end
+
   def set_cdrom_image(image)
     if is_running?
       raise "boot settings can only be set for inactice vms"
@@ -152,6 +162,12 @@ class VM
 
   def remove_cdrom
     set_cdrom_image('')
+  end
+
+  def set_cdrom_boot(image)
+    set_boot_device('cdrom')
+    set_cdrom_image(image)
+    close_cdrom
   end
 
   def create_new_usb_drive(name, size = 2)
@@ -222,6 +238,41 @@ class VM
   def unplug_usb_drive(name)
     xml = usb_drive_xml_desc(name)
     @domain.detach_device(xml)
+  end
+
+  def set_usb_boot(name)
+    if is_running?
+      raise "boot settings can only be set for inactive vms"
+    end
+    # Unfortunately libvirt doesn't allow setting the removable property,
+    # which Tails requires of its boot/persistence media. We work around
+    # this by appending the device via raw QEMU command line options.
+    image = usb_drive_path(name)
+    xml = <<EOF
+  <qemu:commandline xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+    <qemu:arg value='-drive'/>
+    <qemu:arg value='file=#{image},if=none,id=drive-usb-boot-disk,format=qcow2'/>
+    <qemu:arg value='-device'/>
+    <qemu:arg value='usb-storage,drive=drive-usb-boot-disk,id=usb-boot-disk,removable=on'/>
+  </qemu:commandline>
+EOF
+    # Of course libvirt won't set the ownership of the disk image
+    # correctly when using raw qemu cmdline passthrough, so we also plug
+    # the stick via libvirt's normal channels (attach_device() in this
+    # case) to deal with ownership. Note that we have to make sure that
+    # the drive/disk ids are different to avoid collisions. libvirt
+    # sets them to 'drive-usb-diskX' and 'usb-diskX' respectively, so
+    # that's why we set them to something different ('drive-usb-boot-disk'
+    # and 'usb-boot-disk') in the XML above.
+    plug_usb_drive(name)
+
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements['domain'].add_element(REXML::Document.new(xml))
+    update_domain(domain_xml.to_s)
+    set_boot_device('hd')
+    # FIXME: For some reason setting the boot device doesn't prevent
+    # cdrom boot unless it's empty
+    remove_cdrom
   end
 
   def is_running?
