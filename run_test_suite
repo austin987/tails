@@ -5,8 +5,6 @@
 set -e
 
 NAME=$(basename ${0})
-TARGET_DISPLAY=:8
-
 
 usage() {
     echo "Usage: $NAME [OPTION]... ISO [FEATURE]...
@@ -34,11 +32,28 @@ check_dependency() {
     fi
 }
 
+display_in_use() {
+    xdpyinfo -display $1 >/dev/null 2>&1
+}
+
+next_free_display() {
+    display_nr=0
+    while display_in_use ":${display_nr}"; do
+	display_nr=$((display_nr+1))
+    done
+    echo ":${display_nr}"
+}
+
 start_xvfb() {
     check_dependency Xvfb
     Xvfb $TARGET_DISPLAY -screen 0 1024x768x24+32 >/dev/null 2>&1 &
     XVFB_PID=$!
     trap "kill -9 ${XVFB_PID}" EXIT
+    # Wait for Xvfb to run on TARGET_DISPLAY
+    until display_in_use $TARGET_DISPLAY; do
+	sleep 1
+    done
+    echo "Virtual X framebuffer started on display ${TARGET_DISPLAY}"
 }
 
 start_vnc_server() {
@@ -102,6 +117,8 @@ done
 if [ -z "${ISO}" ]; then
     error "No ISO provided. Aborting..."
 fi
+
+TARGET_DISPLAY=$(next_free_display)
 
 start_xvfb
 
