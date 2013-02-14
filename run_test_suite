@@ -148,6 +148,13 @@ for file in features/tmpfs/after_wipe.dump features/tmpfs/before_wipe.dump; do
     fi
 done
 
+# Workaround: similarly to above, when libvirt takes ownership of the
+# ISO image it may become unreadable for the amnesia user inside guest
+# in the host-to-guest share used for some tests.
+if [ -O "${ISO}" ]; then
+    chmod a+r "${ISO}"
+fi
+
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
 export ISO="${ISO}"
