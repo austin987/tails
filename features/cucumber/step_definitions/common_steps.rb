@@ -82,7 +82,6 @@ Given /^I enable more Tails Greeter options$/ do
   @screen.click(pos_x, pos_y)
   @screen.wait('TailsGreeterForward.png', 10)
   @screen.click('TailsGreeterForward.png')
-  @screen.hide_cursor
   @screen.wait('TailsGreeterLoginButton.png', 20)
 end
 
@@ -266,11 +265,8 @@ end
 
 Given /^I shutdown Tails$/ do
   next if @skip_steps_while_restoring_background
-  @screen.hide_cursor
   @screen.click('TailsEmergencyShutdownButton.png')
-  @screen.hide_cursor
   @screen.click('TailsEmergencyShutdownHalt.png')
-  @screen.hide_cursor
   try_for(120) { ! @vm.is_running? }
 end
 

@@ -54,6 +54,8 @@ start_xvfb() {
 	sleep 1
     done
     echo "Virtual X framebuffer started on display ${TARGET_DISPLAY}"
+    # Hide the mouse cursor so it won't mess up Sikuli's screen scanning
+    unclutter -display $TARGET_DISPLAY -root -idle 0 >/dev/null 2>&1 &
 }
 
 start_vnc_server() {

@@ -6,7 +6,6 @@ end
 Then /^I see and close the Unsafe Browser start notification$/ do
   @screen.wait("UnsafeBrowserStartNotification.png", 10)
   @screen.click("UnsafeBrowserStartNotification.png")
-  @screen.hide_cursor
 end
 
 Then /^the Unsafe Browser has started$/ do
