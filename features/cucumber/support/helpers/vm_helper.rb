@@ -191,6 +191,22 @@ class VM
     @pool.refresh
   end
 
+  def clone_usb_drive(from, to)
+    begin
+      old_to_vol = @pool.lookup_volume_by_name(to)
+    rescue Libvirt::RetrieveError
+      # noop
+    else
+      old_to_vol.delete
+    end
+    from_vol = @pool.lookup_volume_by_name(from)
+    xml = REXML::Document.new(from_vol.xml_desc)
+    pool_path = REXML::Document.new(@pool.xml_desc).elements['pool/target/path'].text
+    xml.elements['volume/name'].text = to
+    xml.elements['volume/target/path'].text = "#{pool_path}/#{to}"
+    @pool.create_volume_xml_from(xml.to_s, from_vol)
+  end
+
   def usb_drive_path(name)
     @pool.lookup_volume_by_name(name).path
   end
