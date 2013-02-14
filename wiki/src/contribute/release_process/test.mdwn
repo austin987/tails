@@ -14,11 +14,13 @@ code with previous version's one e.g.:
 
 ## Result
 
-`wdiff -l` makes it easy to compare the list of bundled packages and
+Compare the list of bundled packages and
 versions with the one shipped last time e.g.:
 
-	wdiff -l wiki/src/torrents/files/tails-i386-lenny-0.6.1.packages \
-	  tails-i386-lenny-0.7.packages | less
+	/usr/bin/diff -u \
+	    wiki/src/torrents/files/tails-i386-0.16.packages \
+	    tails-i386-0.17.packages \
+	    | wdiff --diff-input  --terminal
 
 Check the output for:
 
@@ -48,8 +50,9 @@ Check the image size has not changed much since the last release.
   (connect to a website you can check the access logs for)
 * Browsing (by IP) a HTTP or HTTPS server on the LAN should be possible.
 * Browsing (by IP) a FTP server on the LAN should be possible.
-* Browsing (by hostname) a FTP server on the Internet should be possible
-  (once [[todo/fix Internet FTP support]] is fixed)
+* Browsing (by hostname) a FTP server on the Internet should be possible, and
+  downloading a file should be possible (once [[todo/fix Internet FTP support]]
+  is fixed)
 * Entering `about:plugins` in the location bar should say no plugin is
   installed.
 * Does playing HTML5 videos work? In particular, (due to its popularity)
@@ -425,8 +428,9 @@ that the theme resembles Windows XP, including:
 
 * Boot on bare-metal on USB.
 * Boot on bare-metal on DVD.
-* Measure boot time on some reference bare metal hardware, and compare
-  with previous version. The new one should not be significantly
+* Measure boot time (from syslinux menu the GNOME dektop ready - quickly press
+  enter in the greeter), then on some reference bare metal hardware, and
+  compare with previous version. The new one should not be significantly
   slower to start.
 
 # Documentation
@@ -447,6 +451,8 @@ language.
   use the same keyboard layout as the X session.
 * The iceweasel search engine must be localized (for languages we
   ship a localized searchplugin for).
+* The iceweasel spelling dictionary must be localized (for languages
+  that are supported by our branding extension).
 
 # Misc
 
