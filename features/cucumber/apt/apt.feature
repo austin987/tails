@@ -7,7 +7,9 @@ Feature: Installing packages through APT
   Background:
     Given I restore the background snapshot if it exists
     And a freshly started Tails
-    And I log in to a new session with sudo password "asdf"
+    And I enable more Tails Greeter options
+    And I set sudo password "asdf"
+    And I log in to a new session
     And GNOME has started
     And I have a network connection
     And Tor has built a circuit

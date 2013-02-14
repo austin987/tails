@@ -56,15 +56,44 @@ end
 Given /^I log in to a new session$/ do
   next if @skip_steps_while_restoring_background
   @screen.click('TailsGreeterLoginButton.png')
+  # FIXME: Here we should do something which waits for all Tails
+  # Greeter post-hooks to finish so we can rid ourselves of steps like
+  # "Tails Greeter has dealt with the sudo password"
 end
 
-Given /^I log in to a new session with sudo password "([^"]*)"$/ do |password|
-  @password = password
+Given /^I enable more Tails Greeter options$/ do
   next if @skip_steps_while_restoring_background
-  @screen.type(" " + Sikuli::KEY_RETURN)
-  @screen.wait("TailsGreeterAdminPassword.png", 30)
-  @screen.type(password + "\t" + @password)
-  @screen.click('TailsGreeterLoginButton.png')
+  match = @screen.find('TailsGreeterMoreOptions.png')
+  pos_x = match.x + match.width/2
+  # height*2 may seem odd, but we want to click the button below the
+  # match. This may even work accross different screen resolutions.
+  pos_y = match.y + match.height*2
+  @screen.click(pos_x, pos_y)
+  @screen.wait('TailsGreeterForward.png', 10)
+  @screen.click('TailsGreeterForward.png')
+  @screen.hide_cursor
+  @screen.wait('TailsGreeterLoginButton.png', 20)
+end
+
+Given /^I set sudo password "([^"]*)"$/ do |password|
+  @sudo_password = password
+  next if @skip_steps_while_restoring_background
+  @screen.wait("TailsGreeterAdminPassword.png", 20)
+  match = @screen.find('TailsGreeterPassword.png')
+  # width*3 may seem odd, but we want to click the field right of the
+  # match. This may even work accross different screen resolutions.
+  pos_x = match.x + match.width*3
+  pos_y = match.y + match.height/2
+  @screen.click(pos_x, pos_y)
+  @screen.type(@sudo_password + "\t" + @sudo_password)
+end
+
+Given /^Tails Greeter has dealt with the sudo password$/ do
+  f1 = "/etc/sudoers.d/tails-greeter"
+  f2 = "#{f1}-no-password-lecture"
+  try_for(20) {
+    @vm.execute("test -e '#{f1}' -o -e '#{f2}'").success?
+  }
 end
 
 Given /^GNOME has started$/ do

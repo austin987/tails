@@ -7,7 +7,9 @@ Feature: Microsoft Windows XP Camouflage
     Given I restore the background snapshot if it exists
     And a freshly started Tails
     And the network is unplugged
-    And I log in to a new session with Microsoft Windows XP camouflage
+    And I enable more Tails Greeter options
+    And I enable Microsoft Windows XP camouflage
+    And I log in to a new session
     And GNOME has started
     And I have closed all annoying notifications
     And I save the background snapshot if it does not exist
