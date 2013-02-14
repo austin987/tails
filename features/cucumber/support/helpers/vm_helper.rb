@@ -291,6 +291,18 @@ EOF
     remove_cdrom
   end
 
+  def add_share(source, tag)
+    if is_running?
+      raise "shares can only be added to inactice vms"
+    end
+    xml = REXML::Document.new(File.read("#{Dir.pwd}/features/cucumber/domains/fs_share.xml"))
+    xml.elements['filesystem/source'].attributes['dir'] = source
+    xml.elements['filesystem/target'].attributes['dir'] = tag
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements['domain/devices'].add_element(xml)
+    update_domain(domain_xml.to_s)
+  end
+
   def is_running?
     begin
       return @domain.active?
