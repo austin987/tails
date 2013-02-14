@@ -2,7 +2,7 @@ require 'java'
 require 'rubygems'
 
 Before do |scenario|
-  @vm = VM.new
+  new_tails_instance
   @screen = Sikuli::Screen.new
   @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name, @vm.ip, @vm.ip6)
   @sniffer.capture

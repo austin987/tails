@@ -22,6 +22,11 @@ def try_for(t, delay = 1)
   return false
 end
 
+def new_tails_instance
+  @vm.stop if @vm
+  @vm = VM.new
+end
+
 def guest_has_network?
   # FIXME: or "ping -ncq1 #{bridge_ip}"?
   @vm.execute("/sbin/ifconfig eth0 | grep -q 'inet addr'").success?
