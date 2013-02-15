@@ -45,3 +45,7 @@ Feature: Browsing the web using the Unsafe Browser
     When I start the Unsafe Browser
     And I open the address "https://check.torproject.org" in the Unsafe Browser
     Then I see "UnsafeBrowserTorCheckFail.png" after at most 30 seconds
+
+  Scenario: The Unsafe Browser cannot be configured to use Tor and other local proxies.
+    When I start the Unsafe Browser
+    Then I cannot configure the Unsafe Browser to use any local proxies

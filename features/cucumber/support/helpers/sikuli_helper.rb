@@ -14,6 +14,7 @@ module Sikuli
   KEY_F10 = "\356\200\230"
   KEY_F11 = "\356\200\231"
   KEY_F12 = "\356\200\232"
+  KEY_ESC = Key::ESC
 end
 
 module Sikuli::Clickable
