@@ -145,8 +145,9 @@ Check the image size has not changed much since the last release.
      	rm ${NODES}
 
      Note that this script will produce some false positives, like your
-     gateway, broadcasts, etc. Also note that running I2P during these
-     test will list every I2P peer as "bad", so that is not recommended.
+     gateway, broadcasts, etc. Also note that running I2P or the
+     unsafe browser during these
+     test will show many false positives, so that is not recommended.
 
 ## Stream isolation
 
@@ -248,10 +249,9 @@ correctly.
   device:
   * on USB
   * on DVD
-- remove Tails boot medium and check that the memory
-  erasure process is started (`Loading new kernel`, at least):
-  * on USB
-  * on DVD
+- After booting from DVD, remove Tails boot medium and check that the
+  memory erasure process is started (`Loading new kernel`, at least).
+  The USB tests are bellow, in the USB installer section.
 
 Testing that the needed files are really mapped in memory, and the
 erasing process actually works, involves a more complicated
@@ -319,8 +319,16 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # USB Installer/Upgrader
 
-The installed or upgraded Tails medium shall be successfully booted
-after each of the following tests.
+After each of the following tests:
+
+* The installed or upgraded Tails medium shall be successfully booted.
+* The installed or upgraded Tails medium shall have the "emergency
+  shutdown on boot medium removal" feature working: remove Tails boot
+  medium and check that the memory erasure process is started
+  (`Loading new kernel`, at least).
+* The TailsData partition must survive upgrades.
+
+Tests to run:
 
 * Test "Clone & Install":
   - from DVD.
@@ -333,14 +341,10 @@ after each of the following tests.
   Tails):
   - from DVD.
   - from USB.
-  - make sure to test that TailsData partitions survive upgrades.
   - onto a USB stick that already has a old-fashioned cat'd hybrid
     Tails on it: should warn this action is not supported, and direct
     the user to the "Clone & Install" operation mode.
 * Test "Upgrade from ISO".
-  - make sure to test that TailsData partitions survive upgrades.
-* Test "emergency shutdown on boot medium removal" feature, on Tails
-  system installed by this installer.
 
 # Incremental updates
 
