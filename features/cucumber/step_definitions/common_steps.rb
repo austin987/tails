@@ -9,12 +9,29 @@ def post_vm_start_hook
 end
 
 def restore_background
+#  @vm.restore_snapshot(@background_snapshot)
+#  wait_until_remote_shell_is_up
+  # FIXME: Uncomment above and remove workaround below once the
+  # remote shell reliably runs all the time.
+  # Start of workaround:
   @vm.restore_snapshot(@background_snapshot)
+  while true
+    begin
+      wait_until_remote_shell_is_up(3, 1)
+    rescue
+      STDERR.puts "*********************************************"
+      STDERR.puts "Restored Tails but no remote shell. Retrying."
+      STDERR.puts "*********************************************"
+      @vm.restore_snapshot(@background_snapshot)
+    else
+      break
+    end
+  end
+  # End of workaround.
   post_vm_start_hook
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
-  wait_until_remote_shell_is_up
   if guest_has_network?
     if @vm.execute("service tor status").success?
       @vm.execute("service tor stop")
@@ -51,7 +68,22 @@ Given /^a freshly started Tails with boot options "([^"]*)"$/ do |options|
   @screen.type(" autotest_never_use_this_option " + options +
                Sikuli::KEY_RETURN)
   @screen.wait('TailsGreeter.png', 120)
-  wait_until_remote_shell_is_up
+#  wait_until_remote_shell_is_up
+  # FIXME: Uncomment above and remove workaround below once the
+  # remote shell reliably runs all the time.
+  # Start of workaround:
+  begin
+    wait_until_remote_shell_is_up
+  rescue
+    STDERR.puts "*************************************************"
+    STDERR.puts "Fresh Tails boot but no remote shell. Restarting."
+    STDERR.puts "*************************************************"
+    @vm.domain.destroy
+    @vm.display.stop
+    @vm.start
+    step "a freshly started Tails with boot options \"#{options}\""
+  end
+  # End of workaround.
 end
 
 Given /^the network is plugged$/ do

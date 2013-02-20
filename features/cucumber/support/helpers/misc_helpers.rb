@@ -40,16 +40,21 @@ def guest_has_network?
   @vm.execute("/sbin/ifconfig eth0 | grep -q 'inet addr'").success?
 end
 
-def wait_until_remote_shell_is_up
-  try_for(120) {
+def wait_until_remote_shell_is_up(total_time = 30, timeout = 3)
+  (total_time.to_f/timeout.to_f).ceil.times do
     begin
-      SystemTimer.timeout(3) do
-        return @vm.execute('true').success?
+      SystemTimer.timeout(timeout) do
+        @vm.execute('true').success?
       end
-    rescue
+    rescue Timeout::Error
       # noop
+    rescue JSON::ParserError
+      # noop
+    else
+      return
     end
-  }
+  end
+  raise "Remote shell seems to be down"
 end
 
 def wait_until_tor_is_working
