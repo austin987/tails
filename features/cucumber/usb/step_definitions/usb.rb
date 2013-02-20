@@ -142,7 +142,33 @@ end
 Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   step "a freshly started Tails"
-  dev = @vm.usb_drive_dev(name)
+
+  # FIXME: Instead of checking this from inside Tails we could kill
+  # the guest and inspect the qcow2 image by creating a block device
+  # for it on the host (require root so we'd need stuff in sudoers):
+  #     sudo modprobe nbd max_part=8
+  #     sudo qemu-nbd --connect /dev/nbd0 path/to/image
+  # Unfortunately udisks seems unable to handle /dev/nbd0,
+  # but we can yse blkid, e.g. (no root required):
+  #     /sbin/blkid -s TYPE -o value /dev/nbd0p2  ==>  crypto_LUKS
+  # but this requires root (or membership in disk group) for more info:
+  #     sudo /sbin/blkid -p -s USAGE -o value /dev/nbd0p2  ==>  crypto
+  #     sudo /sbin/blkid -p -s PART_ENTRY_SCHEME -o value /dev/nbd0p2  ==>  gpt
+  #     sudo /sbin/blkid -p -s PART_ENTRY_NAME -o value /dev/nbd0p2  ==>  TailsDate
+  # We could also mount it and check that (live-)persistence.conf is ok.
+  # Then we close the block device:
+  #     sudo qemu-nbd -disconnect /dev/nbd0
+
+  # BUG: We add the same device twice to the VM to workaround the "not
+  # removable USB disk" libvirt limitation. because of this dev below
+  # will not point to the correct device. usually dev=/dev/sda, but
+  # the boot device (and hence persistence device too) added through
+  # qemu passthrough is /dev/sdb.
+
+  # UGLY WORKAROUND
+#  dev = @vm.usb_drive_dev(name)
+  dev = "/dev/sdb"
+
   data_partition_dev = dev + "2"
   info = @vm.execute("udisks --show-info #{data_partition_dev}").stdout
   info_split = info.split("\n  partition:\n")
