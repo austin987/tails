@@ -35,6 +35,10 @@ class Sniffer
   end
 
   def stop
-    Process.kill("TERM", @pid)
+    begin
+      Process.kill("TERM", @pid)
+    rescue
+      # noop
+    end
   end
 end
