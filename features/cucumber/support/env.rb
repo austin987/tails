@@ -13,7 +13,10 @@ Before do |scenario|
 end
 
 
-After do
+After do |scenario|
+  if (scenario.status != :passed)
+    @vm.take_screenshot("#{@feature}-#{DateTime.now}")
+  end
   @sniffer.stop
   @vm.stop
 end
