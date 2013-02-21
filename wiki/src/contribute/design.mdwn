@@ -501,6 +501,11 @@ tunnel when connecting to a keyserver (read: `hkps://`).
 
 Tools for creating and using encrypted storage containers are also RECOMMENDED.
 
+A password manager SHOULD be included and allow one to store many
+passwords in an encrypted database which is protected by a single key.
+This is meant to encourage users to use strong passwords, and to
+discourage password reuse.
+
 Any cryptographic tool shipped in the PELD SHOULD by default use
 up-to-date parameters with respect to the current commonly agreed best
 practices: digests, ciphers and key sizes.
@@ -811,8 +816,7 @@ OpenPGP public key in case further discussion is needed to address the
 reported issue. WhisperBack's graphical interface fully supports
 internationalization and is ready to be translated.
 
-- [[!tails_gitweb config/chroot_local-packages/]]
-- [[!tails_gitweb config/chroot_local-includes/etc/whisperback/]]
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/whisperback]]
 - [WhisperBack source code](http://git.immerda.ch/?p=whisperback.git)
 
 ## 3.6 Configuration
@@ -991,7 +995,7 @@ Git history explains
 it all; any other relevant settings may thus be investigated by
 looking in there.
 
-- [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/]]
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/iceweasel]]
 
 ### 3.6.14 Claws Mail
 
@@ -1007,7 +1011,7 @@ HTML in order to get rid of a whole class of privacy concerns.
 
 OpenPGP support is provided by the PGP/inline and PGP/MIME plugins.
 
-- [[!tails_gitweb config/chroot_local-includes/etc/skel/.claws-mail/]] is copied to
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.claws-mail]] is copied to
   the user's `$HOME` at boot time
 
 ### 3.6.15 Pidgin
@@ -1026,7 +1030,7 @@ with probability 0.05. Pidgin does not leak any informations appart from the
 name when answering to CTCP requests.
 
 - [[!tails_gitweb config/chroot_local-includes/lib/live/config/201-pidgin]]
-- [[!tails_gitweb config/chroot_local-includes/etc/skel/.purple]]
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.purple]]
 
 ### 3.6.16 GnuPG
 
@@ -1037,13 +1041,6 @@ configured to use the keys.indymedia.org hidden-service keyserver (`hkp://2eghzl
   Tor hidden service;
 - it is well-synchronized with the HKP keyservers pool.
 
-GPG is configured to connect to this keyserver
-over a TLS encrypted tunnel (`hkps://`). On the other hand Seahorse
-[[does not support hkps|bugs/seahorse_does_not_support_hkps]] so it is
-using cleartext `hkp://` instead.
-
-When a hkps-capable front end is used, the keyserver is currently
-authenticated thanks to the CaCert X.509 certification authority.
 [[todo/Monkeysphere]]'s `hkpms://` support will be used as soon as
 possible in place of the hierarchical X.509 certification model.
 
@@ -1053,9 +1050,7 @@ SHA256.
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/gpg.conf]]
 - [[!tails_gitweb config/chroot_local-includes/usr/share/amnesia/gconf/apps_seahorse.xml]]
 - [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/profile/user.js]]
-- hkpms [announcement](https://lists.riseup.net/www/arc/monkeysphere/2010-12/msg00001.html)
-- [hkpms in the Monkeysphere issue tracker](https://labs.riseup.net/code/issues/2016)
-- hkpms is [available in Debian experimental](http://packages.debian.org/source/experimental/msva-perl)
+- hkpms is available in Debian: [[!debpkg msva-perl]]
 
 ### 3.6.17 Persistence feature
 
@@ -1181,6 +1176,29 @@ Sharing the Tor translation infrastructure may help.
 
 See the development [[contribute/roadmap]] for more information about
 where Tails is heading to.
+
+# 3.11 Fingerprint
+
+Tails tries to make it as difficult as possible to distinguish Tails
+users from other Tor users.
+
+Iceweasel is configured to match the fingerprint of the Tor Browser
+Bundle and the known differences, if any, are listed in the [[known
+issues|support/known_issues]] page.
+
+However the fact that different extensions are installed in Tails and in
+the TBB surely allows more sophisticated attacks that usual fingerprint
+as returned by tools such as <https://panopticlick.eff.org/> and
+<http://ip-check.info/>. For example, the fact that Adblock is removing
+ads could be analysed.
+
+From the point of view of the local network administrator, Tails is
+almost exclusively generating Tor activity and that is probably quite
+different from other TBB users. We believe this would be hard to avoid.
+Other possible fingerprint issues on the LAN or ISP exist but we believe
+they would be harder to detect. See the discussion on fingerprinting in
+the [[Time sync|contribute/design/Time_syncing]] design document and the
+[[fingerprint|doc/about/fingerprint]] documentation.
 
 # 4 Security analysis
 

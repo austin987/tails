@@ -1,4 +1,4 @@
-[[!toc levels=1]]
+[[!toc levels=2]]
 
 See the [[release_schedule]].
 
@@ -21,6 +21,12 @@ upgrade our Debian package to the latest release if needed.
 
 Going through the usual [[review and merge
 process|contribute/merge_policy]] is welcome.
+
+Sync' iceweasel preferences with TBB
+------------------------------------
+
+* `general.useragent.override` is not kept up-to-date anymore in
+  Torbutton, so we have to keep in sync manually with TBB's `prefs.js`
 
 Coordinate with Debian security updates
 ---------------------------------------
@@ -63,6 +69,10 @@ up-to-date localization files.
 For each bundled Debian package, get updated PO files from the
 Transifex branches of `git://git.torproject.org/translation.git` (e.g.
 `whisperback_completed`). Verify and commit.
+
+Then check the PO files [[using i18nspector|contribute/l10n_tricks]].
+Correct all the errors that are not in the ignored list of
+[[`check_po.sh`|contribute/l10n_tricks]]. Commit the changes if any.
 
 Then see the relevant release processes:
 
@@ -154,6 +164,10 @@ Refresh the website PO files with `./build-wiki`, and add / commit the ones
 corresponding to pages that were added or changed accordingly to
 changes coming with the new release. This e.g. ensures that the RC
 call for translation points translators to up-to-date PO files.
+
+Check the PO files of the website [[using
+`check_po.sh`|contribute/l10n_tricks]]. Correct all the errors and
+commit the changes if any.
 
 Tag the release in Git
 ======================
@@ -317,6 +331,11 @@ Update todo and bugs tags:
  - in `bugs/*`: replace links to `pending` with links to `done` (`[[todo/done]]`)
 
 Update the [[support/known_issues]] page.
+
+Compare the fingerprint of Tails and the latest TBB using at least
+<https://panopticlick.eff.org/> and <http://ip-check.info/>, and update the
+[[fingerprint section|support/known_issues#fingerprint]] of the known issues
+page.
 
 Write the announcement for the release in `news/version_X.Y.mdwn`. Use the
 meta directive to set the post title to "Tails X.Y is out" so

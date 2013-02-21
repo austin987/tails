@@ -1,0 +1,62 @@
+[[!toc levels=2]]
+
+# Roadmap
+
+1. [[!taglink todo/discuss]] if we want to ship Torbutton
+   1.5.0~pre-alpha-1 in Tails 0.17, or do the work to ship
+   a newer one.
+
+# Problem description
+
+Not-released-yet Torbutton 1.5 code has been merged in their master
+branch. Preliminary snasphots can be downloaded from
+https://people.torproject.org/~mikeperry/>.
+
+Our current `devel` and `testing` branches install a month old
+snapshot of Torbutton (1.5.0~pre-alpha-1).
+
+In the meanwhile, Torbutton and TBB have changed quite a lot they way
+they handle Firefox preferences. When we want to install a newer
+1.5~pre Torbutton, then we have to update quite a lot of how we
+configure Iceweasel in Tails:
+
+* We have to disable the Browser-based update notification
+  ([[!tor_bug 7495]] and [[!tor_bug 6156]])
+* We have to migrate to the new Torbutton simplified prefs
+  ([[!tor_bug 3100]])
+* We perhaps have to fight with Torbutton about the homepage.
+* We perhaps have to migrate the way we configure Iceweasel to
+  TBB's new shiny way (`#tor.js` and `extension-overrides.js`).
+
+On the other hand, it does not look like any of the changes after
+1.5.0pre (19fb6d91c..dbe7b143e) actually fix or improve any protection
+offered by Torbutton to Tails users, so it does not look critical to
+upgrade in a hurry this late in the 0.17 release cycle.
+
+Quoting Mike Perry:
+
+* [about our branding extension] so I am not sure how you want to
+  handle updating the default browser prefs. we also went with an ugly
+  hack there of shoving a #tor.js pref file next to firefox.js
+* I wonder if that same thing can be done from your branding
+  extension.. I'm sort of surprised you're able to overwrite browser
+  default prefs from there. I didn't think that was normally possible
+  from extensions
+  - here's our pref file for Tor Browser:
+    <https://gitweb.torproject.org/erinn/torbrowser.git/blob/bug3944-erinn:/build-scripts/config/pound_tor.js>
+  - and here's our new extensions-overrides file:
+    <https://gitweb.torproject.org/erinn/torbrowser.git/blob/bug3944-erinn:/build-scripts/config/extension-overrides.js>
+  - here's the makefile hacks to shove the browser prefs into place:
+    <https://gitweb.torproject.org/erinn/torbrowser.git/blob/bug3944-erinn:/build-scripts/linux-alpha.mk#l468>
+  - and likewise for the extension overrides:
+    <https://gitweb.torproject.org/erinn/torbrowser.git/blob/bug3944-erinn:/build-scripts/linux-alpha.mk#l323>
+  - those two changes make it so our default pref values are now
+    actually defaults in about:config
+* I also cleaned up and reduced number of prefs we set
+* oh, we also moved away from auto socksport.. we chose 9150 for
+  socks, and 9151 for control port.. you may need to tweak that.
+* and you want to build FF with --disable-webrtc
+  > Apparently this is to disable WebRTC's potential UDP proxy bypass
+  > ([[!tor_bug 8178]]). This probably can't happen in Tails, so
+  > probably we don't care. This has to be verified, though.
+
