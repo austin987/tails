@@ -27,7 +27,6 @@ def try_for(t, delay = 1, msg = nil)
       raise e
     end
   end
-  return false
 end
 
 def new_tails_instance

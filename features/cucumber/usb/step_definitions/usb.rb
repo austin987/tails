@@ -194,9 +194,6 @@ end
 
 Given /^persistence has been enabled$/ do
   next if @skip_steps_while_restoring_background
-#  try_for(60) {
-#    @vm.execute("mount").stdout.include? "_unlocked on "
-#  }
   try_for(60) {
   mount = @vm.execute("mount").stdout
   persistent_dirs.each do |dir|
