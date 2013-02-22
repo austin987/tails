@@ -2,7 +2,89 @@ tails (0.17) UNRELEASED; urgency=low
 
   * Upcoming release
 
- -- Tails developers <amnesia@boum.org>  Thu, 10 Jan 2013 12:47:42 +0100
+ -- Tails developers <tails@boum.org>  Fri, 22 Feb 2013 12:25:17 +0100
+
+tails (0.17~rc1) unstable; urgency=low
+
+  * New features
+  - Install the KeePassX password manager, with a configuration and
+    documentation that makes it easy to persist the password database.
+
+  * Iceweasel
+  - Ugrade to Iceweasel 17.0.2esr-1+tails2~bpo60+1.
+  - Install xul-ext-adblock-plus from squeeze-backports.
+  - Do not allow listing all available fonts.
+    Set browser.display.max_font_attempts and browser.display.max_font_count
+    to enable the Torbrowser Limit-the-number-of-fonts-per-document patch.
+  - Set default spellchecker dictionary to English (USA),
+    and localize it according to locale with our custom branding extension.
+  - Disable the add-ons automatic update feature.
+  - Make the generated profile world-readable.
+  - Remove NoScript click-to-play confirmation.
+  - Sync some prefs set by Torbutton, to be ready when it stops setting these.
+  - Disable navigation timing.
+  - Disable SPDY. It stores state and may have keepalive issues.
+  - More aggressive iceweasel HTTP pipelining settings.
+  - Enable WebGL (as click-to-play only).
+  - Disable network.http.connection-retry-timeout.
+  - Disable full path information for plugins.
+  - Remove NoScript blocks of WebFonts.
+  - Disable DOM storage in Torbutton.
+    Since we don't apply the 0026-Isolate-DOM-storage-to-first-party-URI.patch
+    Torbrowser patch yet, and still disable DOM storage, we need to tell
+    Torbutton not to use it.
+  - Synchronize iceweasel's general.useragent.override with TBB based on FF17.
+    The User-Agent settings are not kept up-to-date anymore in Torbutton, so
+    we have to keep in sync manually with TBB's settings.
+  - Remove obsolete APT pining for Torbutton.
+    It's not maintained in Debian anymore, so we now fetch it from our own
+    APT repository.
+  - Fetch FoxyProxy from Debian experimental and libnspr4-0d from
+    squeeze-backports, for compatibility with Iceweasel 17.
+  - Rebase bookmarks file on top of the default iceweasel 17 one.
+  - Explicitly disable AdBlock Plus "correct typos" feature.
+    This feature connects to http://urlfixer.org/.
+    It is disabled by default in 2.2-1, but let's be careful.
+
+  * Minor improvements
+  - Upgrade to live-boot 3.0~b11-1 and live-config 3.0.12-1.
+    Accordingly update the 9980-permissions hook, live-persist,
+    unsafe-browser and boot-profile.
+    Add compatibility symlinks from /live to /lib/live, and from /live/image
+    to /lib/live/mount/medium, to ease the transition.
+  - Check for errors when sourcing live-boot files, e.g. to detect when
+    they have been renamed upstream.
+  - Don't add "quiet" to the kernel command-line ourselves.
+    Else, it appears twice as live-build's lb_binary_syslinux adds it too.
+    Historically, we've been adding it ourselves on top of that because
+    lb_binary_yaboot does not add it, but since we gave up the PowerPC support
+    attempt, we're now only interested in syslinux, so let's make it easier
+    for the general case, e.g. when one wants to remove the "quiet" parameter
+    as suggested by our "Tails does not start" debugging documentation.
+
+  * Bugfixes
+  - Use the regular GnuPG agent + pinentry-gtk2 instead of Seahorse
+    as a GnuPG agent. This fixes usage of OpenPGP in Claws Mail,
+    and brings support for OpenPGP smartcards.
+  - Enable I2P hidden mode.
+    Else, killing I2P ungracefully is bad for the I2P network.
+  - live-persist: move error() function before the first potential usecase.
+  - Add missing executable bit on restart-tor and restart-vidalia.
+
+  * Hardware support
+  - Install recent Intel and AMD microcode from squeeze-backports,
+    explicitly excluding the iucode-tool package that's not a good idea
+    for Live systems.
+  - Install firmware loader for Qualcomm Gobi USB chipsets.
+    This is needed to have various mobile broadband chipsets work.
+  - Upgrade barry to 0.18.3-5~bpo60+1.
+    This much improved new version supports more hardware & ISP,
+    and does not display dozens of spurious error messages at boot time.
+
+  * Build system
+  - Remove APT local cache (/Var/cache/apt/{,src}pkgcache.bin).
+
+ -- Tails developers <amnesia@boum.org>  Fri, 15 Feb 2013 18:28:49 +0100
 
 tails (0.16) unstable; urgency=low
 
