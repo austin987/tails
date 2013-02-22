@@ -324,6 +324,10 @@ EOF
     return VMCommand.new(self, cmd, user)
   end
 
+  def wait_until_remote_shell_is_up(timeout = 30)
+    VMCommand.wait_until_remote_shell_is_up(self, timeout)
+  end
+
   def host_to_guest_time_sync
     host_time= DateTime.now.strftime("%s").to_s
     execute("date -s '@#{host_time}'").success?

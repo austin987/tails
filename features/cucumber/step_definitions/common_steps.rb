@@ -9,25 +9,8 @@ def post_vm_start_hook
 end
 
 def restore_background
-#  @vm.restore_snapshot(@background_snapshot)
-#  wait_until_remote_shell_is_up
-  # FIXME: Uncomment above and remove workaround below once the
-  # remote shell reliably runs all the time.
-  # Start of workaround:
   @vm.restore_snapshot(@background_snapshot)
-  while true
-    begin
-      wait_until_remote_shell_is_up(3, 1)
-    rescue
-      STDERR.puts "*********************************************"
-      STDERR.puts "Restored Tails but no remote shell. Retrying."
-      STDERR.puts "*********************************************"
-      @vm.restore_snapshot(@background_snapshot)
-    else
-      break
-    end
-  end
-  # End of workaround.
+  @vm.wait_until_remote_shell_is_up
   post_vm_start_hook
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
@@ -120,20 +103,7 @@ Given /^the computer boots Tails$/ do
   @screen.type(" autotest_never_use_this_option #{@boot_options}" +
                Sikuli::KEY_RETURN)
   @screen.wait('TailsGreeter.png', 120)
-#  wait_until_remote_shell_is_up
-  # FIXME: Uncomment above and remove workaround below once the
-  # remote shell reliably runs all the time.
-  # Start of workaround:
-  begin
-    wait_until_remote_shell_is_up
-  rescue
-    STDERR.puts "*************************************************"
-    STDERR.puts "Fresh Tails boot but no remote shell. Restarting."
-    STDERR.puts "*************************************************"
-    step "I cold reboot the computer"
-    step "the computer boots Tails"
-  end
-  # End of workaround.
+  @vm.wait_until_remote_shell_is_up
   @vm.list_shares.each do |share|
     @vm.execute("mkdir -p #{share}")
     @vm.execute("mount -t 9p -o trans=virtio #{share} #{share}")

@@ -12,16 +12,30 @@ class VMCommand
     @stderr = ret[2]
   end
 
+  def self.wait_until_remote_shell_is_up(vm, timeout = 30)
+    socket = TCPSocket.new("127.0.0.1", vm.get_remote_shell_port)
+    begin
+      SystemTimer.timeout(timeout) do
+        socket.puts('true')
+        socket.readline(sep = "\0")
+      end
+    rescue Timeout::Error
+      raise "Remote shell seems to be down"
+    ensure
+      socket.close
+    end
+  end
+
   # The parameter `cmd` cannot contain newlines. Separate multiple
   # commands using ";" instead.
   def execute(vm, cmd, user)
     socket = TCPSocket.new("127.0.0.1", vm.get_remote_shell_port)
-    socket.puts("sudo -n -H -u #{user} -s /bin/sh -c '#{cmd}'")
-    s = ""
-    while (c = socket.read(1)) != "\0" do
-      s += c
+    begin
+      socket.puts("sudo -n -H -u #{user} -s /bin/sh -c '#{cmd}'")
+      s = socket.readline(sep = "\0").chomp("\0")
+    ensure
+      socket.close
     end
-    socket.close
     return JSON.load(s)
   end
 
