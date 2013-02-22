@@ -33,7 +33,7 @@ class Display
                      "-out", description + ".xwd"].join(' '))
     IO.popen("convert " + description + ".xwd " + description + ".png")
     IO.popen("rm " + description + ".xwd")
-    puts("Took screenshot \"" + description + ".png\"")
+    STDERR.puts("Took screenshot \"" + description + ".png\"")
   end
 
   def start_virtviewer(domain)
