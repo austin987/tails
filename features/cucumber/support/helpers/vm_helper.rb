@@ -6,8 +6,8 @@ class VM
 
   attr_reader :domain, :display, :ip, :ip6, :net
 
-  def initialize
-    @virt = Libvirt::open("qemu:///system")
+  def initialize(virt)
+    @virt = virt
     domain_xml = ENV['DOM_XML'] || "#{Dir.pwd}/features/cucumber/domains/default.xml"
     net_xml = ENV['NET_XML'] || "#{Dir.pwd}/features/cucumber/domains/default_net.xml"
     read_domain_xml = File.read(domain_xml)

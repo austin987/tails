@@ -38,7 +38,7 @@ end
 Given /^a computer$/ do
   next if @skip_steps_while_restoring_background
   @vm.destroy if @vm
-  @vm = VM.new
+  @vm = VM.new($virt)
 end
 
 Given /^the computer is set to boot from the Tails DVD$/ do
