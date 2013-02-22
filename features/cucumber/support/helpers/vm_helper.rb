@@ -303,6 +303,15 @@ EOF
     update_domain(domain_xml.to_s)
   end
 
+  def list_shares
+    list = []
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements.each('domain/devices/filesystem') do |e|
+      list << e.elements['target'].attribute('dir').to_s
+    end
+    return list
+  end
+
   def is_running?
     begin
       return @domain.active?
@@ -341,11 +350,15 @@ EOF
     @display.start
   end
 
-  def stop
-    clean_up_domain
-    clean_up_net
+  def power_off
     @domain.destroy if is_running?
     @display.stop
+  end
+
+  def destroy
+    clean_up_domain
+    clean_up_net
+    power_off
   end
 
   def take_screenshot(description)

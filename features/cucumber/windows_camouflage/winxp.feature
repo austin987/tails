@@ -4,9 +4,11 @@ Feature: Microsoft Windows XP Camouflage
   I should be presented with a Microsoft Windows XP like environment
 
   Background:
-    Given I restore the background snapshot if it exists
-    And a freshly started Tails
+    Given a computer
+    And I restore the background snapshot if it exists
     And the network is unplugged
+    And I start the computer
+    And the computer boots Tails
     And I enable more Tails Greeter options
     And I enable Microsoft Windows XP camouflage
     And I log in to a new session

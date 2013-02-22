@@ -76,6 +76,16 @@ When /^I "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   usb_install_helper(name)
 end
 
+def shared_iso_dir_on_guest
+  "/tmp/shared_dir"
+end
+
+Given /^I setup a filesystem share containing the Tails ISO$/ do
+  next if @skip_steps_while_restoring_background
+  iso = ENV['ISO'] || @vm.get_last_iso
+  @vm.add_share(File.dirname(iso), shared_iso_dir_on_guest)
+end
+
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   step "I run \"liveusb-creator-launcher\""
@@ -88,26 +98,9 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   @screen.click(pos_x, pos_y)
   @screen.wait('USBSelectISO.png', 10)
   @screen.click('GnomeFileDiagTypeFilename.png')
-  iso = "#{shared_dir_target}/#{File.basename(ENV['ISO'])}"
+  iso = "#{shared_iso_dir_on_guest}/#{File.basename(ENV['ISO'])}"
   @screen.type(iso + Sikuli::KEY_RETURN)
   usb_install_helper(name)
-end
-
-def shared_dir_target
-  "/tmp/shared_dir"
-end
-
-Given /^I boot Tails from DVD with a Tails ISO image available$/ do
-  next if @skip_steps_while_restoring_background
-#  @vm.stop if @vm
-#  @vm = VM.new
-  new_tails_instance
-  shared_dir_source = File.dirname(ENV['ISO'])
-  tag = "iso_dir"
-  @vm.add_share(shared_dir_source, tag)
-  step "a freshly started Tails"
-  @vm.execute("mkdir -p #{shared_dir_target}")
-  @vm.execute("mount -t 9p -o trans=virtio #{tag} #{shared_dir_target}")
 end
 
 Given /^I enable all persistence presets$/ do
@@ -141,7 +134,12 @@ end
 
 Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "a freshly started Tails"
+  step "a computer"
+  step "the computer is set to boot from the Tails DVD"
+  step "the network is unplugged"
+  step "I start the computer"
+  step "the computer boots Tails"
+  step "I plug USB drive \"#{name}\""
 
   # FIXME: Instead of checking this from inside Tails we could kill
   # the guest and inspect the qcow2 image by creating a block device
@@ -159,16 +157,7 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   # Then we close the block device:
   #     sudo qemu-nbd -disconnect /dev/nbd0
 
-  # BUG: We add the same device twice to the VM to workaround the "not
-  # removable USB disk" libvirt limitation. because of this dev below
-  # will not point to the correct device. usually dev=/dev/sda, but
-  # the boot device (and hence persistence device too) added through
-  # qemu passthrough is /dev/sdb.
-
-  # UGLY WORKAROUND
-#  dev = @vm.usb_drive_dev(name)
-  dev = "/dev/sdb"
-
+  dev = @vm.usb_drive_dev(name)
   data_partition_dev = dev + "2"
   info = @vm.execute("udisks --show-info #{data_partition_dev}").stdout
   info_split = info.split("\n  partition:\n")
@@ -218,13 +207,9 @@ Given /^persistence has been enabled$/ do
   }
 end
 
-When /^I boot Tails from USB drive "([^"]+)"$/ do |name|
+Given /^the computer is setup up to boot from USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-#  @vm.stop if @vm
-#  @vm = VM.new
-  new_tails_instance
   @vm.set_usb_boot(name)
-  step "a freshly started Tails"
 end
 
 Then /^Tails seems to have booted normally$/ do
@@ -269,8 +254,11 @@ end
 
 Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I boot Tails from USB drive \"#{name}\""
+  step "a computer"
+  step "the computer is setup up to boot from USB drive \"#{name}\""
   step "the network is unplugged"
+  step "I start the computer"
+  step "the computer boots Tails"
   step "I enable persistence with password \"asdf\""
   step "I log in to a new session"
   step "persistence has been enabled"

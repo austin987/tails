@@ -52,20 +52,72 @@ Given /^I restore the background snapshot if it exists$/ do
   end
 end
 
-Given /^a freshly started Tails$/ do
+Given /^a computer$/ do
   next if @skip_steps_while_restoring_background
-  step "a freshly started Tails with boot options \"\""
+  @vm.destroy if @vm
+  @vm = VM.new
 end
 
-Given /^a freshly started Tails with boot options "([^"]*)"$/ do |options|
+Given /^the computer is set to boot from the Tails DVD$/ do
   next if @skip_steps_while_restoring_background
+  iso = ENV['ISO'] || @vm.get_last_iso
+  @vm.set_cdrom_boot(iso)
+end
+
+Given /^the network is plugged$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.plug_network
+end
+
+Given /^the network is unplugged$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.unplug_network
+end
+
+Given /^I capture all network traffic$/ do
+  # Note: We don't want skip this particular stpe if
+  # @skip_steps_while_restoring_background is set since it starts
+  # something external to the VM state.
+  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name, @vm.ip, @vm.ip6)
+  @sniffer.capture
+end
+
+Given /^I set Tails to boot with options "([^"]*)"$/ do |options|
+  next if @skip_steps_while_restoring_background
+  @boot_options = options
+end
+
+When /^I start the computer$/ do
+  next if @skip_steps_while_restoring_background
+  assert ! @vm.is_running?
   @vm.start
   post_vm_start_hook
+end
+
+When /^I power off the computer$/ do
+  next if @skip_steps_while_restoring_background
+  assert @vm.is_running?
+  @vm.power_off
+end
+
+When /^I cold reboot the computer$/ do
+  next if @skip_steps_while_restoring_background
+  step "I power off the computer"
+  step "I start the computer"
+end
+
+When /^I destroy the computer$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.destroy
+end
+
+Given /^the computer boots Tails$/ do
+  next if @skip_steps_while_restoring_background
   @screen.wait('TailsBootSplash.png', 30)
   @screen.wait('TailsBootSplashTabMsg.png', 10)
   @screen.type("\t")
-  # Start the VM remote shell
-  @screen.type(" autotest_never_use_this_option " + options +
+  @screen.waitVanish('TailsBootSplashTabMsg.png', 1)
+  @screen.type(" autotest_never_use_this_option #{@boot_options}" +
                Sikuli::KEY_RETURN)
   @screen.wait('TailsGreeter.png', 120)
 #  wait_until_remote_shell_is_up
@@ -78,22 +130,14 @@ Given /^a freshly started Tails with boot options "([^"]*)"$/ do |options|
     STDERR.puts "*************************************************"
     STDERR.puts "Fresh Tails boot but no remote shell. Restarting."
     STDERR.puts "*************************************************"
-    @vm.domain.destroy
-    @vm.display.stop
-    @vm.start
-    step "a freshly started Tails with boot options \"#{options}\""
+    step "I cold reboot the computer"
+    step "the computer boots Tails"
   end
   # End of workaround.
-end
-
-Given /^the network is plugged$/ do
-  next if @skip_steps_while_restoring_background
-  @vm.plug_network
-end
-
-Given /^the network is unplugged$/ do
-  next if @skip_steps_while_restoring_background
-  @vm.unplug_network
+  @vm.list_shares.each do |share|
+    @vm.execute("mkdir -p #{share}")
+    @vm.execute("mount -t 9p -o trans=virtio #{share} #{share}")
+  end
 end
 
 Given /^I log in to a new session$/ do

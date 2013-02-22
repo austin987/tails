@@ -4,8 +4,11 @@ Feature: System memory erasure on shutdown
   I want the system memory to be free from sensitive data.
 
   Background:
-    Given a freshly started Tails with boot options "debug=wipemem"
+    Given a computer
+    And I set Tails to boot with options "debug=wipemem"
     And the network is unplugged
+    And I start the computer
+    And the computer boots Tails
     And I log in to a new session
     And GNOME has started
     And process "memlockd" is running

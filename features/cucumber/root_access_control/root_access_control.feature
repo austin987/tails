@@ -6,9 +6,11 @@ Feature: Root access control enforcement
   I should not be able to attain administration privileges at all.
 
   Background:
-    Given I restore the background snapshot if it exists
-    And a freshly started Tails
+    Given a computer
+    And I restore the background snapshot if it exists
     And the network is unplugged
+    And I start the computer
+    And the computer boots Tails
     And I save the background snapshot if it does not exist
 
   Scenario: If an administrative password is set in Tails Greeter the amnesia user should be able to run arbitrary commands with administrative privileges.

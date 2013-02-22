@@ -4,8 +4,10 @@ Feature: Browsing the web using the Unsafe Browser
   I should have direct access to the web
 
   Background:
-    Given I restore the background snapshot if it exists
-    And a freshly started Tails
+    Given a computer
+    And I restore the background snapshot if it exists
+    And I start the computer
+    And the computer boots Tails
     And I log in to a new session
     And GNOME has started
     And I have a network connection

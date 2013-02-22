@@ -4,8 +4,11 @@ Feature: Keyserver interaction with GnuPG
   all network traffic should flow only through Tor.
 
   Background:
-    Given I restore the background snapshot if it exists
-    And a freshly started Tails
+    Given a computer
+    And I restore the background snapshot if it exists
+    And I capture all network traffic
+    And I start the computer
+    And the computer boots Tails
     And I log in to a new session
     And GNOME has started
     And I have a network connection
