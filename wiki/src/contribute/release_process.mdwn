@@ -53,17 +53,19 @@ Patterns are stored in
 1. Boot Tails
 2. Open *Tools* → *Addons*
 3. Select *Adblock Plus* in extensions
-4. Open *Filter preferences…*
-5. For each filters, click *Actions* and *Update filters*
+4. Open *Preferences* → *Filter preferences…*
+5. For each filters, click *Actions* → *Update filters*
 6. Close Iceweasel
-7. Copy `.mozilla/firefox/default/adblockplus/patterns.ini` to
-   Tails checkout inside
+7. Copy the `.mozilla/firefox/default/adblockplus/patterns.ini` from
+   this Iceweasel instance to the
    `config/chroot_local-includes/etc/iceweasel/profile/adblockplus`
+   directory in the Tails Git checkout.
+8. `git commit -m 'Update AdBlock Plus patterns.' config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini`
 
 upgrade bundled binary Debian packages
 --------------------------------------
 
-That is: make sure the bundles binary Debian packages contain
+That is: make sure the bundled binary Debian packages contain
 up-to-date localization files.
 
 For each bundled Debian package, get updated PO files from the
@@ -91,8 +93,8 @@ Freeze
 If we are at freeze time (e.g. preparing RC1):
 
 * Merge the `devel` Git branch into `testing`.
-* Merge `devel` APT suite into the `testing` one, as documented on
-  [[contribute/APT_repository#workflow-freeze]].
+* Reset the `testing` APT suite to the state of the `devel` one, as
+  documented on [[contribute/APT_repository#workflow-freeze]].
 
 Changelog
 ---------
@@ -108,24 +110,7 @@ example:
 
 This populates the Changelog with the Git log entries.
 
-Now cleanup some parts of it (semi-)automatically:
-
-	perl -pi'' -e 's/\A  \[ IkiWiki::Plugin::po::change \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* updated PO files\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* \n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ 127\.0\.0\.1 \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ amnesia \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ anonym \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ T\(A\)ILS developers \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ Tails developers \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ Tails \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* Added a comment\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* Added a comment:.*\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* todo\+\+\n//i' debian/changelog
-	perl -pi'' -e 's/\A  \* todo--\n//i' debian/changelog
-
-
-... then launch an editor for the needed cleanup of the result.
+Then, launch an editor for the needed cleanup of the result.
 
 included website
 ----------------
@@ -155,7 +140,8 @@ Also:
 
 ... and remove the `PENDING-FOR-N.M` warnings.
 
-### PO files
+PO files
+--------
 
 Refresh the code PO files with `./refresh-translations`, commit
 the result.
