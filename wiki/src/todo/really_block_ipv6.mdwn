@@ -1,0 +1,16 @@
+For whatever reason our firewall seems to not block all IPv6 packets,
+like it should. For instance, Tails leaks link-local multicast
+(ff02::1/64).
+
+For now a simple solution to block this leak would be to disable
+IPv6 altoghether, i.e. by putting:
+
+    net.ipv6.conf.all.disable_ipv6 = 1
+    net.ipv6.conf.default.disable_ipv6 = 1
+
+in `/etc/sysctl.conf`.
+
+> This was done in the `bugfix/disable-IPv6` branch,
+> merged into devel, [[!taglink todo/done]] in Tails 0.16.
+
+See [[todo/enable_IPv6]] for the long-term plans.

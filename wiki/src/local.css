@@ -21,6 +21,7 @@ Table of Content:
   - Language Toolbar
   - Icons
   - Documentation Styling
+  - Trail
   - Special Cases
 */
 
@@ -66,7 +67,7 @@ h1, h2, span.title, div.banner, .sidebar {
 h1 {
 	font-size: 2em; /* 14×2=28px */
 	line-height: 1.5; /* 28×1.5=42px=2λ */
-	margin: 0 0 0.75em 0; /* 28×0.75=21px=λ */
+	margin: 0.4em 0 0.35em 0; /* 28×0.75=21px=λ */
 }
 
 /* Instead of 1.5 we use 1.429em because at 20px the Avant Garde font look
@@ -74,7 +75,7 @@ h1 {
 h2 {
 	font-size: 1.429em; /* 14×1.429=20px */
 	line-height: 2.1; /* 20×2.1=21px=λ */
-	margin: 0 0 1.05em 0; /* 20×1.05=21px=λ */
+	margin: 0.55em 0 0.5em 0; /* 20×1.05=21px=λ */
 }
 
 h3 {
@@ -82,7 +83,7 @@ h3 {
 	text-transform: uppercase;
 	font-weight: bold;
 	letter-spacing: 1px;
-	margin: 0 0 1.5em 0; /* 14×1.5=21px=λ */
+	margin: 0.75em 0 0.75em 0; /* 14×1.5=21px=λ */
 }
 
 /* avoid super-long lines */
@@ -95,7 +96,7 @@ li>p {
 	margin-bottom: 0.5em;
 }
 
-code, kbd, samp, pre, tt, var {
+code, kbd, samp, pre, tt, var, p.pre {
 	font-family: "Courier", monospace;
 	font-size: 15px;
 }
@@ -414,11 +415,11 @@ code {
 	white-space:pre;
 }
 
-pre {
+pre, p.pre {
 	background-color: #eee;
 	border: thin solid #ccc;
 	color: #444;
-	margin: 1.5em;
+	margin: 1.5em 1em 1.5em 1.5em;
 	padding: 0.25em 0.5em;
 }
 
@@ -743,7 +744,7 @@ span.revert {
 
 .pageheader .actions {
         position: absolute;
-        top: 40px;
+        top: 35px;
         right: 0em;
 	height:28px;
 	background:url(lib/tools-20.jpg) right no-repeat;
@@ -885,7 +886,7 @@ background:#EEEEEE;
 
 .pageheader #otherlanguages {
         position: absolute;
-        top: 70px;
+        top: 66px;
         right: 0em;
 	height:25px;
 	width: 70%;
@@ -908,11 +909,10 @@ background:#EEEEEE;
 
 .pageheader #otherlanguages li {
         display:inline;
-        margin-top:1em;
-        padding:4px;
+        padding:4px 8px;
         margin-right: 0.0em;
         position:relative;
-        top:0.2em;
+        float: left;
         }
 
 .pageheader #otherlanguages li a {
@@ -982,6 +982,12 @@ text-transform: none !important;
 	display:inline;
 	}
 
+#bugspage    .archivepagedate,
+#roadmappage .archivepagedate,
+#todopage    .archivepagedate {
+	display: none;
+}
+
 /* Icons */
 
 div.icon {
@@ -989,7 +995,7 @@ div.icon {
 	position: relative;
 }
 
-div.icon div.image {
+div.icon img {
 	display: inline-block;
 }
 
@@ -1030,7 +1036,7 @@ span.guimenuitem { font-weight: bold; }
 span.keycap { font-weight: bold; }
 span.menuchoice { font-weight: bold; }
 span.replaceable { font-style: italic; }
-div.bug, div.caution, div.note, div.tip {
+div.bug, div.caution, div.next, div.note, div.tip {
   background-color: #FFFFF0;
   border: 1px solid #E0E0DF;
   padding: 0.5em 6px;
@@ -1041,17 +1047,69 @@ div.bug, div.caution, div.note, div.tip {
   margin: 0 0 1.5em 0;
   max-width: 38em;
 }
+div.bug p:only-child, div.caution p:only-child, div.next p:only-child, div.note p:only-child, div.tip p:only-child {
+  display: table-cell;
+  height: 2.5em;
+  vertical-align: bottom;
+}
+div.bug p:last-child, div.caution p:last-child, div.next p:last-child, div.note p:last-child, div.tip p:last-child {
+  margin-bottom: 0;
+}
 div.bug {
   background-image: url(lib/admon-bug.png);
 }
 div.caution {
   background-image: url(lib/admon-caution.png);
 }
+div.next {
+  background-image: url(lib/go-next.png);
+}
 div.note {
   background-image: url(lib/admon-note.png);
 }
 div.tip {
   background-image: url(lib/admon-tip.png);
+}
+
+/* Trail */
+
+div.trail {
+  height: 2em;
+  border: solid 1px #bbb;
+  margin-bottom: 1.5em;
+}
+
+div.pageheader div.trail {
+  margin-left: 20px;
+}
+
+div.trail span.trailup {
+  display: none;
+}
+
+div.trail span.trailarrow {
+  position: absolute;
+}
+
+div.trail span.trailprev, div.trail span.trailnext {
+  width: 45%;
+  margin-top: 0.25em;
+}
+
+div.trail span.trailprev {
+  left: 0.5em;
+}
+
+div.trail span.trailprev a {
+  margin-left: 1.5em;
+}
+
+div.trail span.trailnext {
+  right: 1.5em;
+}
+
+div.trail span.trailnext a {
+  margin-right: 0.5em;
 }
 
 /* Special Cases */

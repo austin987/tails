@@ -1,7 +1,23 @@
 Maybe does not support SD / SDHC Cards as well as USB yet?
 
-(Tried on one internal SD card reader, and the SD card was recognized
+Tried on one internal SD card reader, and the SD card was recognized
 just like a removable USB stick -- the card reader probably was wired
-as USB internally -- but this may not be always the case.)
+as USB internally.
 
-[[!tag todo/test]]
+But this is not always the case: e.g. some other SD cards are handled
+by the `mmc_block` (Multimedia Card (MMC) block device driver) module,
+e.g. when plugged into:
+
+	15:00.2 SD Host controller: Ricoh Co Ltd R5C822 SD/SDIO/MMC/MS/MSPro Host Adapter (rev 21)
+
+Roadmap
+=======
+
+[[!taglink todo/research]] what udisks "DriveConnectionInterface" is
+exposed by such SD card readers, and change `liveusb/creator.py`
+accordingly around these lines:
+
+	iface = str(dev.Get(device, 'DriveConnectionInterface'))
+	if iface != 'usb' and self.opts.force != data['device']:
+
+[[!tag release/2.0]]

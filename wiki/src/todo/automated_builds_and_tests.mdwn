@@ -52,9 +52,7 @@ What we need
 Builds
 ------
 
-[Vagrant](http://www.vagrantup.com/) is labeled as a tool to "create and configure lightweight, reproducible, and portable development environments". Providing potential contributors with a ready-made [[contribute/build]] environment would be a good thing.
-
-This ready-made build environment can also be used to automate builds
+Our [[Vagrant build environment|contribute/build]] can be used to automate builds
 (point "build in a throw-away VM" of the above todo list).
 
 Tests
@@ -85,6 +83,10 @@ This has some requirements to work though:
 In order to properly test features like USB installer, the
 virtualization environment must support USB 2.0. That pretty much
 limits the choice to recent QEMU or KVM versions.
+
+A first POC has been created in the `feature/automated_tests/cucumber` git
+branch. Read [[the dedicated documentation|automated_builds_and_tests/cucumber]]
+for more informations.
 
 Infrastructure
 --------------
@@ -143,7 +145,16 @@ play with buildbot and understand its logic :
   * [unittests](https://github.com/grml/grml-unittests)
   * [Jenkins plugin](https://github.com/mika/grml-live-jenkins-plugin)
   * [debian-glue Jenkins plugin](https://github.com/mika/jenkins-debian-glue)
-  * [kantan](https://github.com/mika/kantan): simple test suite for autotesting using Grml and KVM
+  * [kantan](https://github.com/mika/kantan): simple test suite for
+    autotesting using Grml and KVM
+  * [jenkins-yaml](https://github.com/varnish/jenkins-yaml) and
+    [jenkinstool](http://git.gitano.org.uk/?p=personal/liw/jenkinstool.git;a=summary)
+    are meant to make Jenkins configuration easier
+  * the [jenkins](http://jujucharms.com/charms/precise/jenkins) and
+    [jenkins-slave](http://jujucharms.com/charms/precise/jenkins-slave)
+    JuJu charms may be good sources of inspiration for deployment
+- grml's survey of existing tools: "8.2. Checkout" section on the
+  [kantan homepage](http://grml.org/kantan/)
 - Liberté's test script (`src/usr/local/sbin/test-liberte` in their Git)
 - openSUSE's [openQA](http://openqa.opensuse.org/) is said to be able
   to "run tests on every level of the OS, from core functionality like
@@ -157,6 +168,7 @@ play with buildbot and understand its logic :
   Perl, can move mouse, send key presses, wait for images to appear,
   verify checksums of screenshots. See [example of
   results](http://openqa.opensuse.org/results/).
+  Debian ITP: [[!debbug 690244]]
 - Mozilla's [Automation QA team](http://quality.mozilla.org/teams/automation/)
 - [Sikuli](https://launchpad.net/sikuli), visual technology to automate
   graphical user interfaces (GUI) using images (screenshots), used by Ubuntu,
@@ -171,8 +183,23 @@ play with buildbot and understand its logic :
   Tapper](http://developer.amd.com/zones/opensource/amdtapper/pages/default.aspx)
 - Tor project's [buildbot configuration](https://gitweb.torproject.org/admin/buildbot-conf.git)
 - [Ubuntu QA Jenkins instance](https://jenkins.qa.ubuntu.com/)
+- Martin Pitt
+  [announces](http://www.piware.de/2013/02/umockdev-record-and-mock-hardware-for-debugging-and-testing/)
+  umockdev ([source code](https://github.com/martinpitt/umockdev)),
+  a set of tools to record and mock hardware for debugging and testing
 
 ## libvirt
 
 - [Remote management using TLS](http://publib.boulder.ibm.com/infocenter/lnxinfo/v3r0m0/topic/liaai/kvmsec/kvmsecsrmtls.htm)
 - [Remote support](http://libvirt.org/remote.html)
+
+## emulated boot from USB
+
+See [[the page that's dedicated to that|automated_builds_and_tests/USB]].
+
+## Tor specifics
+
+- [chutney](https://gitweb.torproject.org/nickm/chutney.git): automatic setup of a testing Tor network
+
+
+[[!tag broken_window]]

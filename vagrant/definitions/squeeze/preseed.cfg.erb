@@ -1,0 +1,71 @@
+# US locale and keyboard
+d-i debian-installer/locale string en_US
+d-i console-keymaps-at/keymap select us
+
+# Network is configured through DHCP
+d-i netcfg/choose_interface select auto
+d-i netcfg/get_domain string vagrantup.com
+
+# Use cdn.debian.net to select closest mirror
+d-i mirror/country string manual
+d-i mirror/http/hostname string cdn.debian.net
+d-i mirror/http/directory string /debian
+d-i mirror/http/proxy string <%= ENV['http_proxy'] %>
+
+# Set clock to UTC
+d-i clock-setup/utc boolean true
+d-i time/zone string UTC
+d-i clock-setup/ntp boolean true
+
+# Use LVM and all available disk space
+d-i partman-auto/disk string /dev/sda
+d-i partman-auto/method string lvm
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-md/device_remove_md boolean true
+d-i partman-lvm/confirm boolean true
+d-i partman-lvm/confirm_nooverwrite boolean true
+d-i partman/choose_partition select finish
+d-i partman-auto-lvm/guided_size string max
+d-i partman-auto/choose_recipe select atomic
+d-i partman/default_filesystem string ext4
+d-i partman/confirm_write_new_label boolean true
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+# Create a sudoer 'vagrant' account
+d-i passwd/root-login boolean false
+d-i passwd/user-fullname string Vagrant User
+d-i passwd/username string vagrant
+d-i passwd/user-password password vagrant
+d-i passwd/user-password-again password vagrant
+d-i user-setup/encrypt-home boolean false
+d-i user-setup/allow-password-weak boolean true
+
+# Add backports repository (for at least rubygems, puppet and virtualbox)
+d-i apt-setup/local0/repository string \
+        http://backports.debian.org/debian-backports squeeze-backports main
+d-i apt-setup/local0/source boolean false
+
+# Do not select any tasks
+tasksel tasksel/first multiselect
+
+# Individual additional packages to install
+d-i pkgsel/include string \
+        openssh-server \
+        curl \
+        rubygems/squeeze-backports \
+        puppet/squeeze-backports puppet-common/squeeze-backports \
+        virtualbox-guest-utils/squeeze-backports
+
+# No need for an extra upgrade: it is a full net install
+d-i pkgsel/upgrade select none
+
+# No need to participate in popcon
+popularity-contest popularity-contest/participate boolean false
+
+# Install bootloader
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/with_other_os boolean true
+
+# Avoid that last message about the install being complete.
+d-i finish-install/reboot_in_progress note

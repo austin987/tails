@@ -1,0 +1,55 @@
+[[!meta title="Releasing Torbutton"]]
+
+[[!toc levels=1]]
+
+Update the Debian package
+=========================
+
+Add a remote with upstream repository if not already done:
+
+    $ git remote add upstream-remote https://git.torproject.org/torbutton.git
+
+Verify the new upstream tag:
+
+    git tag -v <version>
+
+Merge the new upstream tag:
+
+    git checkout upstream
+    git merge <version>
+    git tag upstream/<version>
+
+Merge `upstream` branch to `master` branch:
+
+    git checkout master
+    git merge upstream/<version>
+
+Update `debian/changelog`:
+
+    git-dch -v <version>-1
+
+(Do not forget to set the appropriate release.)
+
+Commit the changelog:
+
+    git commit debian/changelog
+
+Build a new Debian package:
+
+    git-buildpackage
+
+If everything is fine, tag the release and push the changes:
+
+    git-buildpackage --git-tag-only --git-sign-tags
+    git push && git push --tags
+
+Add the Debian package to Tails
+===============================
+
+Sign the package:
+
+    debsign $CHANGES_FILE
+
+Upload:
+
+    dupload --to tails $CHANGES_FILE

@@ -38,10 +38,6 @@ One may also want to [[contribute/customize]] their image before building.
 
 To know all available Rake tasks, please run `rake -T`.
 
-**Note**: these instructions currently only applies to the `devel` and
-`experimental` branches. If the branch you are working on does not yet have a
-`Rakefile`, you can try to merge `feature/vagrant` to get the new build system.
-
 Local HTTP proxy
 ----------------
 
@@ -92,6 +88,26 @@ The following flags can be used to force a specific behaviour:
    if a local HTTP proxy is set.
  * **noproxy**: do not use any HTTP proxy.
 
+### Bootstrap cache settings
+
+A Tails build starts with `debootstrap`:ing a minimal Debian system
+which then is modified into a full Tails system. This is a rather time
+consuming step that usually do not have to be done; the packages used
+in it rarely get updated and hence the result is exactly the same most
+of the time.
+
+The following flags can be used to force a specific behaviour:
+
+ * **cache**: re-use a cached bootstrap stage (if available), and save
+   the bootstrap stage to disk on successful build. This will also
+   reduce the amount of memory required for in-memory builds by around
+   150 MiB (see the **ram** option above). **Warning:** this option may
+   create subtle differences between builds from the exact same Tails
+   source which are hard to track to track and understand. Use this
+   option only if you know what you are doing, and if you are not
+   building an actual release.
+ * **nocache**: do the bootstrap stage from scratch (default).
+
 ### SquashFS compression settings
 
 One of the most expensive operations when building Tails is the creation
@@ -107,8 +123,12 @@ Forcing a specific behaviour can be done using:
 
 ### Clean-up settings
 
-Some operations (currently building the documentation) is preserved accross
-builds. In case needed, the following option is available:
+Some operations are preserved accross builds. Currently they are:
+
+* The wiki (for documentation).
+* The bootstrap stage cache (see the **cache** option above).
+
+In case you want to delete all these, the following option is available:
 
  * **cleanall**: force a clean up before starting the build.
 
@@ -136,10 +156,12 @@ uncommited changes. This behaviour can be controlled by:
 
 The fastest build you could pretend to get can be done by setting:
 
-    export TAILS_BUILD_OPTIONS="ram extproxy gzipcomp"
+    export TAILS_BUILD_OPTIONS="ram cache extproxy gzipcomp"
 
-This will force the build to happen in RAM, using an HTTP proxy external
-to the virtual machine and SquashFS compression will be done using *gzip*.
+This will force the build to happen in RAM and allow skipping the
+boostrap stage if one is cached, and will use use an HTTP proxy
+external to the virtual machine, and SquashFS compression will be done
+using *gzip*.
 
 Building manually
 =================
@@ -159,22 +181,24 @@ The following Debian packages need to be installed:
   (USB disk, etc.).
 * `eatmydata` (from `squeeze-backports`), `time` and `whois` (for
   /usr/bin/mkpasswd) packages.
-* `ikiwiki` 3.20110431 or newer; released images are built using a
-  patched ikiwiki is needed so that
-  the static version of the wiki included in the image has correct
-  links to the online wiki; see this [wishlist
-  item](http://ikiwiki.info/todo/mirrorlist_with_per-mirror_usedirs_settings/)
-  to get the custom ikiwiki branch. It is not critical to use it
-  unless you prepare real releases.
+* `ikiwiki` 3.20120725 or newer.
 * `apt-get install libyaml-perl libyaml-libyaml-perl po4a perlmagick
   libyaml-syck-perl` so that the wiki builds smoothly.
 * `dpkg-dev`
+
+Configure live-build
+--------------------
+
+Add these lines to `/etc/live/build.conf`:
+
+	LB_PARENT_MIRROR_BINARY="http://ftp.us.debian.org/debian/""
+	LB_MIRROR_BINARY="http://ftp.us.debian.org/debian/"
 
 Build process
 -------------
 
 Every build commands must be run as `root`, at the root of a clone of the
-[`amnesia.git` repository|git]].
+[[`amnesia.git` repository|git]].
 
 In short, a build could be done using:
 
@@ -196,7 +220,7 @@ The most common customizations are documented on this wiki:
 * [[using squid-deb-proxy to build Tails images|build/squid-deb-proxy]].
 
 More documentation about this can be found in the [Debian Live
-Manual](http://live.debian.net/manual/en/).
+Manual](http://live.debian.net/manual-2.x/html/live-manual.en.html).
 
 ### Initialize the Live system's configuration
 

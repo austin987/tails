@@ -1,0 +1,112 @@
+[[!meta title="Vagrant"]]
+
+Tails can be [[built|contribute/build]] in a virtual machine that is managed
+using [Vagrant]. Here lies more details on how Tails uses Vagrant, its
+configuration, and how to create and upload the template virtual machine.
+
+[Vagrant]: http://vagrantup.com/
+
+Configuration
+=============
+
+Vagrant support files are located in the `vagrant` directory at the root of the
+[[amnesia.git|contribute/git]] repository.
+
+This directory contains:
+
+ * `Vagrantfile`: [configuration file for Vagrant](http://vagrantup.com/docs/vagrantfile.html],
+ * `provision/setup-tails-builder`: idempotent provisioning script that is
+   run inside the virtual machine upon boot,
+ * `provision/assets/build-tails`: build script to be run inside the
+   virtual machine,
+ * to build the Squeeze *base box*:
+   - `definitions/squeeze/definition.rb`: Veewee configuration,
+   - `definitions/squeeze/preseed.cfg`: preseed file used by the debian-installer,
+   - `definitions/squeeze/postinstall.sh`: script run on first boot of the
+     *base box*.
+
+We choose to use the [Shell
+provisioner](http://vagrantup.com/docs/provisioners/shell.html), as long as we
+make this script reentrant it will lower the learning curve for contributors
+not familiar with Puppet or Chef.
+
+The Vagrantfile will share the `.git` directory of the local clone of the
+repository. This is done to overcome limitations of VirtualBox shared folders
+(namely *symlink support*). The build script will clone (and fetch further
+changes) that "bare" repository.
+
+Creating the *base box*
+=======================
+
+The creation of the *base box* is fully automated using a tool
+called [Veewee].
+
+[Veewee]: https://github.com/jedi4ever/veewee
+
+Installing the requirements
+---------------------------
+
+To build the *base box* from scratch using Veewee, you will need to get both
+Veewee and Vargant from Rubygems:
+
+    # gem install --no-ri --no-rdoc vagrant
+    # gem install --no-ri --no-rdoc veewee
+
+*Note:* Unfortunately, using `gem --user` does not work. The `basebox`
+subcommands that is made available by Veewee never shows up in Vagrant.
+That needs to sorted out upstream.
+
+*Note:* Installing the Veewee gem will install the Vagrant gem, even
+if the Debian package is installed.
+
+Running Veewee
+--------------
+
+Running Veewee has been automated using Rake. So creating the *base box* is
+just a matter of running:
+
+    $ http_proxy="http://proxy.lan:3142" rake basebox:create
+
+Obivously, you can drop the `http_proxy` part if you don't have one.
+
+The rest should be fully automatic, and leave you with a `squeeze.box` file in
+the `vagrant` directory.
+
+Update the distributed *base box*
+---------------------------------
+
+The *base box* on Tails mirrors is expected to lie at
+`project/vagrant/squeeze.box`.
+
+Do not forget to update the corresponding SHA256 sum in `vagrant/Vagrantfile`.
+
+In details
+----------
+
+To create the *basebox* from the `squeeze` template (in `definitions`
+directory), the command is the following:
+
+    $ vagrant basebox build squeeze
+
+> *Note:* It looks like the current version of the `virtualbox` gem is not
+> compatible with VirtualBox 4.0.x that is in `squeeze-backports`. Using
+> a hand made backport of virtualbox 4.1.12-dfsg-2 worked fine.
+
+After issuing that command, Veewee will download the boot ISO image,
+drive the debian-installer using [preeseding] and run `postinstall.sh` that
+will take care of seting up the environment expected by Vagrant.
+
+[preseeding]: http://www.debian.org/releases/stable/i386/apbs02.html
+
+In order to support local HTTP proxy, the `preseed.cfg` is generated from an
+ERB template during the Rake task `create_preseed_cfg`.
+
+Once the initial setup is done, it is worthwhile to see if the *basebox*
+fits Vagrant requirements. Veewee ships with an automated test suite:
+
+    $ vagrant basebox validate squeeze
+
+If everything goes well, then, great, we have our *basebox*. Let's export
+it to a `.box` file that Vagrant can use:
+
+    $ vagrant basebox export squeeze
