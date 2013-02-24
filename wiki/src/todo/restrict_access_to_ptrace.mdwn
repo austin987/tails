@@ -1,0 +1,20 @@
+The Yama LSM "collects a number of system-wide DAC security
+protections that are not handled by the core kernel itself", including
+ptrace scope restrictions on which user/process can examine the memory
+and running state of other processes.
+
+Yama is part of the mainline Linux kernel since 3.4 (and its link
+restrictions features merged into the core kernel, outside of the LSM,
+in 3.6).
+
+Since Linux 3.7, the Yama LSM can be automatically stacked regardless
+of which security module is the "primary" module, so it's compatible
+with [[using AppArmor some day|todo/Mandatory_Access_Control]].
+
+1. Decide if we want "1 - restricted ptrace" or "2 - admin-only
+   attach" mode: [[!taglink todo/test]] the most restrictive one (mode
+   2), and see if it breaks something we care about.
+1. [[!taglink todo/test]] compatibility with AppArmor
+1. [[!taglink todo/wait]] for Tails to ship Linux 3.4 or later (once
+   the Debian kernel team starts maintaining a recent kernel in sid,
+   that is probably after Wheezy is out)
