@@ -27,7 +27,9 @@ Given /^I plug USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   @vm.plug_usb_drive(name)
   dev = @vm.usb_drive_dev(name)
-  try_for(20) { @vm.execute("test -b #{dev}").success? }
+  try_for(20, msg = "The USB drive was not detected by Tails") {
+    @vm.execute("test -b #{dev}").success?
+  }
 end
 
 Given /^I unplug USB drive "([^"]+)"$/ do |name|
@@ -163,10 +165,14 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   info_split = info.split("\n  partition:\n")
   dev_info = info_split[0]
   part_info = info_split[1]
-  assert dev_info.match("^  usage: +crypto$")
-  assert dev_info.match("^  type: +crypto_LUKS$")
-  assert part_info.match("^    scheme: +gpt$")
-  assert part_info.match("^    label: +TailsData$")
+  assert(dev_info.match("^  usage: +crypto$"),
+         "Unexpected device field 'usage' on USB drive \"#{name}\"")
+  assert(dev_info.match("^  type: +crypto_LUKS$"),
+         "Unexpected device field 'type' on USB drive \"#{name}\"")
+  assert(part_info.match("^    scheme: +gpt$"),
+         "Unexpected partition scheme on USB drive \"#{name}\"")
+  assert(part_info.match("^    label: +TailsData$"),
+         "Unexpected partition label on USB drive \"#{name}\"")
 end
 
 Given /^I enable persistence with password "([^"]+)"$/ do |pwd|
@@ -194,13 +200,13 @@ end
 
 Given /^persistence has been enabled$/ do
   next if @skip_steps_while_restoring_background
-  try_for(60) {
-  mount = @vm.execute("mount").stdout
-  persistent_dirs.each do |dir|
-    if ! mount.include? "on #{dir} "
-      raise "persistent dir #{dir} missing"
+  try_for(60, msg = "Some persistent dir was not mounted") {
+    mount = @vm.execute("mount").stdout
+    persistent_dirs.each do |dir|
+      if ! mount.include? "on #{dir} "
+        raise "persistent dir #{dir} missing"
+      end
     end
-  end
   }
 end
 
@@ -223,21 +229,24 @@ Then /^Tails is running from a USB drive$/ do
   boot_dev = @vm.execute("readlink -f /dev/block/'#{boot_dev_id}'").stdout
   boot_dev_info = @vm.execute("udevadm info --query=property --name='#{boot_dev}'").stdout
   boot_dev_type = (boot_dev_info.split("\n").select { |x| x.start_with? "ID_BUS=" })[0].split("=")[1]
-  assert boot_dev_type == "usb"
+  assert(boot_dev_type == "usb",
+         "Got device type '#{boot_dev_type}' while expecting 'usb'")
 end
 
 When /^I write some files expected to persist$/ do
   next if @skip_steps_while_restoring_background
   persistent_dirs.each do |dir|
     owner = @vm.execute("stat -c %U #{dir}").stdout.strip
-    assert @vm.execute("touch #{dir}/XXX_persist", user=owner).success?
+    assert(@vm.execute("touch #{dir}/XXX_persist", user=owner).success?,
+           "Could not create file in persistent directory #{dir}")
   end
 end
 
 When /^I remove some files expected to persist$/ do
   next if @skip_steps_while_restoring_background
   persistent_dirs.each do |dir|
-    assert @vm.execute("rm #{dir}/XXX_persist").success?
+    assert(@vm.execute("rm #{dir}/XXX_persist").success?,
+           "Could not remove file in persistent directory #{dir}")
   end
 end
 
@@ -245,7 +254,8 @@ When /^I write some files not expected to persist$/ do
   next if @skip_steps_while_restoring_background
   persistent_dirs.each do |dir|
     owner = @vm.execute("stat -c %U #{dir}").stdout.strip
-    assert @vm.execute("touch #{dir}/XXX_gone", user=owner).success?
+    assert(@vm.execute("touch #{dir}/XXX_gone", user=owner).success?,
+           "Could not create file in persistent directory #{dir}")
   end
 end
 
@@ -260,7 +270,9 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "I log in to a new session"
   step "persistence has been enabled"
   persistent_dirs.each do |dir|
-    assert @vm.execute("test -e #{dir}/XXX_persist").success?
-    assert ! @vm.execute("test -e #{dir}/XXX_gone").success?
+    assert(@vm.execute("test -e #{dir}/XXX_persist").success?,
+           "Could not find expected file in persistent directory #{dir}")
+    assert(!@vm.execute("test -e #{dir}/XXX_gone").success?,
+           "Found file that should not have persisted in persistent directory #{dir}")
   end
 end

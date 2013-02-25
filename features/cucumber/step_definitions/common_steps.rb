@@ -72,14 +72,16 @@ end
 
 When /^I start the computer$/ do
   next if @skip_steps_while_restoring_background
-  assert ! @vm.is_running?
+  assert(!@vm.is_running?,
+         "Trying to start a VM that is already running")
   @vm.start
   post_vm_start_hook
 end
 
 When /^I power off the computer$/ do
   next if @skip_steps_while_restoring_background
-  assert @vm.is_running?
+  assert(@vm.is_running?,
+         "Trying to power off an already powered off VM")
   @vm.power_off
 end
 
@@ -302,12 +304,16 @@ end
 
 Given /^process "([^"]+)" is running$/ do |process|
   next if @skip_steps_while_restoring_background
-  assert @vm.has_process?(process)
+  assert(@vm.has_process?(process),
+         "Process '#{process}' is not running")
 end
 
 Given /^I have killed the process "([^"]+)"$/ do |process|
   next if @skip_steps_while_restoring_background
-  assert @vm.execute("killall #{process}").success?
+  @vm.execute("killall #{process}")
+  try_for(10, msg = "Process '#{process}' could not be killed") {
+    !@vm.has_process?(process)
+  }
 end
 
 Given /^I shutdown Tails$/ do
@@ -316,10 +322,11 @@ Given /^I shutdown Tails$/ do
   @screen.click('TailsEmergencyShutdownButton.png')
   @screen.hide_cursor
   @screen.click('TailsEmergencyShutdownHalt.png')
-  try_for(120) { ! @vm.is_running? }
+  try_for(120, msg = "VM is still running") { ! @vm.is_running? }
 end
 
 Given /^package "([^"]+)" is installed$/ do |package|
   next if @skip_steps_while_restoring_background
-  assert @vm.execute("dpkg -s #{package}").success?
+  assert(@vm.execute("dpkg -s #{package}").success?,
+         "Package '#{package}' is not installed")
 end

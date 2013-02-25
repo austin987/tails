@@ -16,15 +16,22 @@ end
 
 When /^I update APT using apt-get$/ do
   SystemTimer.timeout(30*60) do
-    assert @vm.execute("echo #{@sudo_password} | sudo -S apt-get update", "amnesia").success?
+    cmd = @vm.execute("echo #{@sudo_password} | " +
+                      "sudo -S apt-get update", "amnesia")
+    if !cmd.success?
+      STDERR.puts cmd.stderr
+    end
   end
 end
 
 Then /^I should be able to install a package using apt-get$/ do
   package = "cowsay"
   SystemTimer.timeout(120) do
-    @vm.execute("echo #{@sudo_password} | " +
-                "sudo -S apt-get install #{package}", "amnesia")
+    cmd = @vm.execute("echo #{@sudo_password} | " +
+                      "sudo -S apt-get install #{package}", "amnesia")
+    if !cmd.success?
+      STDERR.puts cmd.stderr
+    end
   end
   step "package \"#{package}\" is installed"
 end
@@ -32,7 +39,9 @@ end
 When /^I update APT using synaptic$/ do
   # Upon start the interface will be frozen while synaptic loads the
   # package list
-  try_for(20) { @screen.click('SynapticReload.png') }
+  try_for(20, msg = "Failed to click the Synaptic 'Reload' button") {
+    @screen.click('SynapticReload.png')
+  }
   @screen.wait('SynapticReloadPrompt.png', 20)
   @screen.waitVanish('SynapticReloadPrompt.png', 30*60)
 end
@@ -41,7 +50,7 @@ Then /^I should be able to install a package using synaptic$/ do
   package = "cowsay"
   # We do this after a Reload, so the interface will be frozen until
   # the package list has been loaded
-  try_for(20) {
+  try_for(20, msg = "Failed to open the Synaptic 'Find' window") {
     @screen.type("f", Sikuli::KEY_CTRL)  # Find key
     @screen.find('SynapticSearch.png')
   }
