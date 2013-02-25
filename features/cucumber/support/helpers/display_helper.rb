@@ -7,7 +7,7 @@ class Display
 
   def start
     start_virtviewer(@domain)
-    # We we wait for the display to be active to not lose actions
+    # We wait for the display to be active to not lose actions
     # (e.g. key presses via sikuli) that come immediately after
     # starting (or restoring) a vm
     try_for(20, delay = 0.1) { active? }

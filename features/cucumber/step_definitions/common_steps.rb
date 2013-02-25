@@ -195,7 +195,7 @@ Given /^Iceweasel has autostarted and is not loading a web page$/ do
   step "I see \"#{iceweasel_picture}\" after at most 120 seconds"
 
   # Stop iceweasel to load its home page. We do this to prevent Tor
-  # from gerring confused in case we save and restore a snapshot in
+  # from getting confused in case we save and restore a snapshot in
   # the middle of loading a page.
   @screen.click(iceweasel_picture)
   @screen.type("l", Sikuli::KEY_CTRL)

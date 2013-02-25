@@ -5,7 +5,7 @@ require 'libvirt'
 
 Before do |scenario|
   if ! $already_run
-    # This code runs *exactly once*, before the *furst* feature
+    # This code runs *exactly once*, before the *first* feature
     $time_at_start = Time.now
     $virt = Libvirt::open("qemu:///system")
     $already_run = true
@@ -17,7 +17,7 @@ Before do |scenario|
   @theme = "gnome"
   if $prev_feature != @feature
     # This code runs before the *first* scenario's background for *each* feature
-    # FIXME: We can't use this yet, due to permission issues.
+    # FIXME: We can't use this yet due to permission issues.
 #    if File.exist? @background_snapshot
 #      File.delete @background_snapshot
 #    end
