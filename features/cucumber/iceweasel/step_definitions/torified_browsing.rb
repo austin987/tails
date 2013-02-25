@@ -7,6 +7,7 @@ end
 
 When /^I open the address "([^"]*)" in Iceweasel$/ do |address|
   next if @skip_steps_while_restoring_background
+  step "I open a new tab in Iceweasel"
   @screen.type("l", Sikuli::KEY_CTRL)
   @screen.type(address + Sikuli::KEY_RETURN)
 end
