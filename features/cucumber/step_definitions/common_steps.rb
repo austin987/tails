@@ -186,7 +186,6 @@ end
 
 Given /^Iceweasel has autostarted and is not loading a web page$/ do
   next if @skip_steps_while_restoring_background
-#  @screen.wait("IceweaselRunning.png", 120)
   case @theme
   when "winxp"
     iceweasel_picture = "WinXPIceweaselWindow.png"
