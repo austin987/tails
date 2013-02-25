@@ -4,19 +4,19 @@ Given /^I fill the guest's memory with a known pattern$/ do
 end
 
 When /^I dump the guest's memory into file "([^"]+)"$/ do |dump|
-  dump_path = "#{Dir.pwd}/features/tmpfs/#{dump}"
+  dump_path = "#{$tmp_dir}/#{dump}"
   @vm.domain.core_dump(dump_path)
 end
 
 Then /^I find at least (\d+) patterns in the dump "([^"]+)"$/ do |min, dump|
-  dump_path = "#{Dir.pwd}/features/tmpfs/#{dump}"
+  dump_path = "#{$tmp_dir}/#{dump}"
   hits = IO.popen("grep -c 'wipe_didnt_work' #{dump_path}").gets
   puts "Patterns found: #{hits}"
   assert(hits.to_i >= min.to_i, "Too few patterns found")
 end
 
 Then /^I find at most (\d+) patterns in the dump "([^"]+)"$/ do |max, dump|
-  dump_path = "#{Dir.pwd}/features/tmpfs/#{dump}"
+  dump_path = "#{$tmp_dir}/#{dump}"
   hits = IO.popen("grep -c 'wipe_didnt_work' #{dump_path}").gets
   puts "Patterns found: #{hits}"
   assert(hits.to_i <= max.to_i, "Too many patterns found")

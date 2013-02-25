@@ -267,7 +267,7 @@ Then /^all Internet traffic has only flowed through Tor$/ do
       puts leaks.ipv6_leaks.join("\n")
       puts
     end
-    pcap_copy = "#{Dir.pwd}/features/pcap_with_leaks-#{DateTime.now}"
+    pcap_copy = "#{$tmp_dir}/pcap_with_leaks-#{DateTime.now}"
     FileUtils.cp(@sniffer.pcap_file, pcap_copy)
     puts "Full network capture available at: #{pcap_copy}"
     raise "There were network leaks!"

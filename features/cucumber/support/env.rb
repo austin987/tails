@@ -4,6 +4,7 @@ require 'time'
 require 'libvirt'
 
 Before do |scenario|
+  $tmp_dir = ENV['TEMP_DIR']
   if ! $already_run
     # This code runs *exactly once*, before the *first* feature
     $time_at_start = Time.now
@@ -12,7 +13,7 @@ Before do |scenario|
   end
   @screen = Sikuli::Screen.new
   @feature = File.basename(scenario.feature.file, ".feature").to_s
-  @background_snapshot = "#{Dir.pwd}/features/tmpfs/#{@feature}_background.state"
+  @background_snapshot = "#{$tmp_dir}/#{@feature}_background.state"
   @skip_steps_while_restoring_background = false
   @theme = "gnome"
   if $prev_feature != @feature

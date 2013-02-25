@@ -68,8 +68,7 @@ class VM
     begin
       @pool = @virt.lookup_storage_pool_by_name(pool_name)
     rescue Libvirt::RetrieveError
-      pool_xml.elements['pool/target/path'].text =
-        "#{Dir.pwd}/features/tmpfs/storage/#{pool_name}"
+      pool_xml.elements['pool/target/path'].text = "#{$tmp_dir}/#{pool_name}"
       @pool = @virt.define_storage_pool_xml(pool_xml.to_s)
       @pool.build
       @pool.create

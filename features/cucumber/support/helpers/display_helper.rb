@@ -27,13 +27,14 @@ class Display
   # this approach we see the same exact same display as sikuli,
   # which could help debug future DISPLAY problems.
   def take_screenshot(description)
+    out = "#{$tmp_dir}/#{description}"
     IO.popen(["xwd", "-display",
                      ENV['DISPLAY'],
                      "-root",
-                     "-out", description + ".xwd"].join(' '))
-    IO.popen("convert " + description + ".xwd " + description + ".png")
-    IO.popen("rm " + description + ".xwd")
-    STDERR.puts("Took screenshot \"" + description + ".png\"")
+                     "-out", out + ".xwd"].join(' '))
+    IO.popen("convert " + out + ".xwd " + out + ".png")
+    IO.popen("rm " + out + ".xwd")
+    STDERR.puts("Took screenshot \"" + out + ".png\"")
   end
 
   def start_virtviewer(domain)
