@@ -29,11 +29,6 @@ def try_for(t, delay = 1, msg = nil)
   end
 end
 
-def new_tails_instance
-  @vm.stop if @vm
-  @vm = VM.new
-end
-
 def wait_until_tor_is_working
   try_for(120) { @vm.execute(
     '. /usr/local/lib/tails-shell-library/tor.sh; ' +
