@@ -8,7 +8,8 @@ end
 # Call block (ignoring any exceptions it may throw) repeatedly with one
 # second breaks until it returns true, or until `t` seconds have
 # passed when we throw Timeout:Error.
-def try_for(t, delay = 1, msg = nil)
+def try_for(t, options = {})
+  options[:delay] ||= 1
   begin
     SystemTimer.timeout(t) do
       loop do
@@ -17,12 +18,12 @@ def try_for(t, delay = 1, msg = nil)
         rescue Exception
           # noop
         end
-        sleep delay
+        sleep options[:delay]
       end
     end
   rescue Timeout::Error => e
-    if msg
-      raise RuntimeError, msg, caller
+    if options[:msg]
+      raise RuntimeError, options[:msg], caller
     else
       raise e
     end

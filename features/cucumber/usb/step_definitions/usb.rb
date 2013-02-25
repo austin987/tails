@@ -27,7 +27,7 @@ Given /^I plug USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   @vm.plug_usb_drive(name)
   dev = @vm.usb_drive_dev(name)
-  try_for(20, msg = "The USB drive was not detected by Tails") {
+  try_for(20, :msg => "The USB drive was not detected by Tails") {
     @vm.execute("test -b #{dev}").success?
   }
 end
@@ -200,7 +200,7 @@ end
 
 Given /^persistence has been enabled$/ do
   next if @skip_steps_while_restoring_background
-  try_for(60, msg = "Some persistent dir was not mounted") {
+  try_for(60, :msg => "Some persistent dir was not mounted") {
     mount = @vm.execute("mount").stdout
     persistent_dirs.each do |dir|
       if ! mount.include? "on #{dir} "

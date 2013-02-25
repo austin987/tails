@@ -39,7 +39,7 @@ end
 When /^I update APT using synaptic$/ do
   # Upon start the interface will be frozen while synaptic loads the
   # package list
-  try_for(20, msg = "Failed to click the Synaptic 'Reload' button") {
+  try_for(20, :msg => "Failed to click the Synaptic 'Reload' button") {
     @screen.click('SynapticReload.png')
   }
   @screen.wait('SynapticReloadPrompt.png', 20)
@@ -50,7 +50,7 @@ Then /^I should be able to install a package using synaptic$/ do
   package = "cowsay"
   # We do this after a Reload, so the interface will be frozen until
   # the package list has been loaded
-  try_for(20, msg = "Failed to open the Synaptic 'Find' window") {
+  try_for(20, :msg => "Failed to open the Synaptic 'Find' window") {
     @screen.type("f", Sikuli::KEY_CTRL)  # Find key
     @screen.find('SynapticSearch.png')
   }

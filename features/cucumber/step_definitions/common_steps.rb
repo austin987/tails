@@ -310,7 +310,7 @@ end
 Given /^I have killed the process "([^"]+)"$/ do |process|
   next if @skip_steps_while_restoring_background
   @vm.execute("killall #{process}")
-  try_for(10, msg = "Process '#{process}' could not be killed") {
+  try_for(10, :msg => "Process '#{process}' could not be killed") {
     !@vm.has_process?(process)
   }
 end
@@ -321,7 +321,7 @@ Given /^I shutdown Tails$/ do
   @screen.click('TailsEmergencyShutdownButton.png')
   @screen.hide_cursor
   @screen.click('TailsEmergencyShutdownHalt.png')
-  try_for(120, msg = "VM is still running") { ! @vm.is_running? }
+  try_for(120, :msg => "VM is still running") { ! @vm.is_running? }
 end
 
 Given /^package "([^"]+)" is installed$/ do |package|

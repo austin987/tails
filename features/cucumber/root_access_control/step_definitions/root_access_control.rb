@@ -13,7 +13,7 @@ end
 Then /^I should be able to run synaptic$/ do
   step "I run \"gksu synaptic\""
   step "I enter the sudo password in the PolicyKit prompt"
-  try_for(10, msg = "Unable to start synaptic using PolicyKit") {
+  try_for(10, :msg => "Unable to start synaptic using PolicyKit") {
     @vm.has_process?("synaptic")
   }
 end

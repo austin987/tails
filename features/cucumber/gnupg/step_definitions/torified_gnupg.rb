@@ -17,7 +17,7 @@ When /^I successfully fetch a GnuPG key using seahorse$/ do
   @screen.type(Sikuli::DOWN_ARROW)   # Select first item in result menu
   @screen.type("f", Sikuli::KEY_ALT) # Menu: "File" ->
   @screen.type("i")                  # "Import"
-  try_for(120, msg = "Failed to fetch key using seahorse") {
+  try_for(120, :msg => "Failed to fetch key using seahorse") {
     @vm.execute("gpg --list-key 10CC5BC7", "amnesia").success?
   }
 end
