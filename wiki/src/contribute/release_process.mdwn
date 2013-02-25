@@ -1,6 +1,37 @@
-[[!toc levels=1]]
+[[!toc levels=2]]
 
 See the [[release_schedule]].
+
+Pre-freeze
+==========
+
+upgrade i2p
+-----------
+
+See [[contribute/design/I2P]].
+
+Going through the usual [[review and merge
+process|contribute/merge_policy]] is welcome.
+
+Upgrade Torbutton
+-----------------
+
+Since Torbutton is not maintained in Debian anymore,
+upgrade our Debian package to the latest release if needed.
+
+Going through the usual [[review and merge
+process|contribute/merge_policy]] is welcome.
+
+Sync' iceweasel preferences with TBB
+------------------------------------
+
+* `general.useragent.override` is not kept up-to-date anymore in
+  Torbutton, so we have to keep in sync manually with TBB's `prefs.js`
+
+Coordinate with Debian security updates
+---------------------------------------
+
+See [[release_process/Debian_security_updates]].
 
 Select the right branch
 =======================
@@ -9,11 +40,6 @@ For a major release, the `devel` branch should be merged into the `testing`
 branch and changes should be made from there.
 
 From minor releases, work should happen in `stable`.
-
-Coordinate with Debian security updates
-=======================================
-
-See [[release_process/Debian_security_updates]].
 
 Update included files
 =====================
@@ -27,27 +53,28 @@ Patterns are stored in
 1. Boot Tails
 2. Open *Tools* → *Addons*
 3. Select *Adblock Plus* in extensions
-4. Open *Filter preferences…*
-5. For each filters, click *Actions* and *Update filters*
+4. Open *Preferences* → *Filter preferences…*
+5. For each filters, click *Actions* → *Update filters*
 6. Close Iceweasel
-7. Copy `.mozilla/firefox/default/adblockplus/patterns.ini` to
-   Tails checkout inside
+7. Copy the `.mozilla/firefox/default/adblockplus/patterns.ini` from
+   this Iceweasel instance to the
    `config/chroot_local-includes/etc/iceweasel/profile/adblockplus`
-
-upgrade i2p
------------
-
-See [[contribute/design/I2P]].
+   directory in the Tails Git checkout.
+8. `git commit -m 'Update AdBlock Plus patterns.' config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini`
 
 upgrade bundled binary Debian packages
 --------------------------------------
 
-That is: make sure the bundles binary Debian packages contain
+That is: make sure the bundled binary Debian packages contain
 up-to-date localization files.
 
 For each bundled Debian package, get updated PO files from the
 Transifex branches of `git://git.torproject.org/translation.git` (e.g.
 `whisperback_completed`). Verify and commit.
+
+Then check the PO files [[using i18nspector|contribute/l10n_tricks]].
+Correct all the errors that are not in the ignored list of
+[[`check_po.sh`|contribute/l10n_tricks]]. Commit the changes if any.
 
 Then see the relevant release processes:
 
@@ -60,8 +87,20 @@ Then see the relevant release processes:
   * build a debian package
   * upload it to [[APT repository]]
 
+Freeze
+------
+
+If we are at freeze time (e.g. preparing RC1):
+
+* Merge the `devel` Git branch into `testing`.
+* Reset the `testing` APT suite to the state of the `devel` one, as
+  documented on [[contribute/APT_repository#workflow-freeze]].
+
 Changelog
 ---------
+
+Remove the placeholder entry for next release in `debian/changelog`,
+and then:
 
 	./release NEW_VERSION PREVIOUS_RELEASED_TAG
 
@@ -71,24 +110,7 @@ example:
 
 This populates the Changelog with the Git log entries.
 
-Now cleanup some parts of it (semi-)automatically:
-
-	perl -pi'' -e 's/\A  \[ IkiWiki::Plugin::po::change \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* updated PO files\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* \n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ 127\.0\.0\.1 \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ amnesia \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ anonym \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ T\(A\)ILS developers \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ Tails developers \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ Tails \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* Added a comment\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* Added a comment:.*\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* todo\+\+\n//i' debian/changelog
-	perl -pi'' -e 's/\A  \* todo--\n//i' debian/changelog
-
-
-... then launch an editor for the needed cleanup of the result.
+Then, launch an editor for the needed cleanup of the result.
 
 included website
 ----------------
@@ -99,10 +121,12 @@ Merge the `master` branch into the one used to build the release.
 
 ### version number
 
+If preparing a RC, skip this part.
+
 In the branch used to build the release, update the `inc/*` files to
-match the *version number* and *date* of the new release. *Set the date
+match the *version number* and *date* of the new release. Set the date
 at least 24 hours in the future! Between tests and mirror synchronisation,
-the build will not be released on the same day.* Try to make sure it
+the build will not be released on the same day. Try to make sure it
 matches the date of the future signature.
 
 ### features and design documentation
@@ -116,12 +140,20 @@ Also:
 
 ... and remove the `PENDING-FOR-N.M` warnings.
 
-### PO files
+PO files
+--------
 
-Refresh the PO files with `./build-wiki`, and add / commit the ones
+Refresh the code PO files with `./refresh-translations`, commit
+the result.
+
+Refresh the website PO files with `./build-wiki`, and add / commit the ones
 corresponding to pages that were added or changed accordingly to
 changes coming with the new release. This e.g. ensures that the RC
 call for translation points translators to up-to-date PO files.
+
+Check the PO files of the website [[using
+`check_po.sh`|contribute/l10n_tricks]]. Correct all the errors and
+commit the changes if any.
 
 Tag the release in Git
 ======================
@@ -286,6 +318,11 @@ Update todo and bugs tags:
 
 Update the [[support/known_issues]] page.
 
+Compare the fingerprint of Tails and the latest TBB using at least
+<https://panopticlick.eff.org/> and <http://ip-check.info/>, and update the
+[[fingerprint section|support/known_issues#fingerprint]] of the known issues
+page.
+
 Write the announcement for the release in `news/version_X.Y.mdwn`. Use the
 meta directive to set the post title to "Tails X.Y is out" so
 that aggregators (such as Planet Debian Derivatives) display a more
@@ -334,6 +371,9 @@ Tor blog
 We announce *major* releases on the Tor blog:
 
 - [login to their Drupal](https://blog.torproject.org/user)
+- *Add a New Blog Post*
+- add the same tags as the previous release announce had
+- choose *Filtered HTML* as the *Input format*
 - paste the HTML generated by ikiwiki from the announce in `news/`
   into the textarea in the blog post editor
 - cleanup a bit to make it shorter
