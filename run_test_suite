@@ -45,7 +45,6 @@ next_free_display() {
 }
 
 start_xvfb() {
-    check_dependency Xvfb
     Xvfb $TARGET_DISPLAY -screen 0 1024x768x24+32 >/dev/null 2>&1 &
     XVFB_PID=$!
     trap "kill -9 ${XVFB_PID}" EXIT
@@ -119,6 +118,11 @@ done
 if [ -z "${ISO}" ]; then
     error "No ISO provided. Aborting..."
 fi
+
+for dep in git libvirt-bin libvirt-dev virt-viewer libsikuli-script-java \
+            libxslt1-dev libxml2-dev tcpdump xvfb; do
+    check_dependency "${dep}"
+done
 
 TARGET_DISPLAY=$(next_free_display)
 
