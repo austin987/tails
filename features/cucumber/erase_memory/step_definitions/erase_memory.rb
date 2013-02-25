@@ -24,6 +24,6 @@ end
 
 When /^I shutdown Tails and let it wipe the memory$/ do
   next if @skip_steps_while_restoring_background
-  assert @vm.execute("halt").success?
+  @vm.execute("halt")
   @screen.wait('MemoryWipeCompleted.png', 120)
 end
