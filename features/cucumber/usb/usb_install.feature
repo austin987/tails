@@ -4,6 +4,13 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   and upgrade it to new Tails versions
   and use persistence
 
+  # An issue with this feature is that scenarios depend on each other.
+  # For instance, "Tails boot from USB drive without persistent
+  # partition" depends on "Install Tails to a USB drive". This feels
+  # strange, but the alternative would be gigantic scenarios that
+  # test what to me deels like logically different features, e.g.
+  # the two named above would be concatenated.
+
   Scenario: Install Tails to a USB drive
     Given a computer
     And the computer is set to boot from the Tails DVD
