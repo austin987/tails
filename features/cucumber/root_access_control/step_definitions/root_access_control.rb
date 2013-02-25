@@ -11,7 +11,7 @@ end
 Then /^I should be able to run synaptic$/ do
   step "I run \"gksu synaptic\""
   step "I enter the sudo password in the PolicyKit prompt"
-  try_for(10) { guest_has_process?("synaptic") }
+  try_for(10) { @vm.has_process?("synaptic") }
 end
 
 Then /^I should not be able to run synaptic$/ do
@@ -20,5 +20,5 @@ Then /^I should not be able to run synaptic$/ do
     @sudo_password = p
     step "I enter the sudo password in the PolicyKit prompt"
   end
-  assert !guest_has_process?("synaptic")
+  assert !@vm.has_process?("synaptic")
 end

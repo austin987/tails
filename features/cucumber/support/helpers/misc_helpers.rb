@@ -34,17 +34,8 @@ def new_tails_instance
   @vm = VM.new
 end
 
-def guest_has_network?
-  # FIXME: or "ping -ncq1 #{bridge_ip}"?
-  @vm.execute("/sbin/ifconfig eth0 | grep -q 'inet addr'").success?
-end
-
 def wait_until_tor_is_working
   try_for(120) { @vm.execute(
     '. /usr/local/lib/tails-shell-library/tor.sh; ' +
     'tor_control_getinfo status/circuit-established').stdout  == "1\n" }
-end
-
-def guest_has_process?(process)
-  return @vm.execute("pidof " + process).success?
 end

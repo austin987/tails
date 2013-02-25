@@ -15,7 +15,7 @@ def restore_background
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
-  if guest_has_network?
+  if @vm.has_network?
     if @vm.execute("service tor status").success?
       @vm.execute("service tor stop")
       @vm.execute("killall vidalia")
@@ -167,7 +167,7 @@ Given /^I have a network connection$/ do
   next if @skip_steps_while_restoring_background
   # Wait until the VM's remote shell is available, which implies
   # that the network is up.
-  try_for(120) { guest_has_network? }
+  try_for(120) { @vm.has_network? }
 end
 
 Given /^Tor has built a circuit$/ do
@@ -302,7 +302,7 @@ end
 
 Given /^process "([^"]+)" is running$/ do |process|
   next if @skip_steps_while_restoring_background
-  assert guest_has_process?(process)
+  assert @vm.has_process?(process)
 end
 
 Given /^I have killed the process "([^"]+)"$/ do |process|

@@ -333,6 +333,14 @@ EOF
     execute("date -s '@#{host_time}'").success?
   end
 
+  def has_network?
+    return execute("/sbin/ifconfig eth0 | grep -q 'inet addr'").success?
+  end
+
+  def has_process?(process)
+    return execute("pidof " + process).success?
+  end
+
   def save_snapshot(path)
     @domain.save(path)
     @display.stop
