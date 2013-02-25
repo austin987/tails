@@ -196,6 +196,7 @@ Given /^Iceweasel has autostarted and is not loading a web page$/ do
   # Stop iceweasel to load its home page. We do this to prevent Tor
   # from gerring confused in case we save and restore a snapshot in
   # the middle of loading a page.
+  @screen.click(iceweasel_picture)
   @screen.type("l", Sikuli::KEY_CTRL)
   @screen.type("about:blank" + Sikuli::KEY_RETURN)
 end

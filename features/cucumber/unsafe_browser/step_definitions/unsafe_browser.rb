@@ -64,6 +64,7 @@ end
 
 
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
+  @screen.click("UnsafeBrowserWindow.png")
   # First we open the proxy settings page to prepare it with the
   # correct open tabs for the loop below.
   @screen.type("e", Sikuli::KEY_ALT)
