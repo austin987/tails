@@ -136,6 +136,9 @@ end
 
 Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
+  # Workaround: It may seem odd that we reboot Tails from DVD here,
+  # but it's because USB drive "name" was added with the workaround
+  # in @vm.set_usb_boot(), which messes up @vm.usb_drive_dev().
   step "a computer"
   step "the computer is set to boot from the Tails DVD"
   step "the network is unplugged"
