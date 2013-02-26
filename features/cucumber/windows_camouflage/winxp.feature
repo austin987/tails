@@ -18,7 +18,9 @@ Feature: Microsoft Windows XP Camouflage
 
   Scenario: I should be presented with a Microsoft Windows XP like desktop
     Then I see "WinXPDesktop.png" after at most 10 seconds
-    And I see "WinXPPanel.png" after at most 10 seconds
+    And I see "WinXPStartButton.png" after at most 10 seconds
+    And I see "WinXPLaunchers.png" after at most 10 seconds
+    And I see "WinXPSysTray.png" after at most 10 seconds
 
   Scenario: Windows should appear like those in Microsoft Windows XP
     When I run "iceweasel"
