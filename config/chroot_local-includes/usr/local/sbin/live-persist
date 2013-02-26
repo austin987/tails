@@ -1,12 +1,20 @@
 #!/bin/bash
 
-# import Cmdline()
-. /lib/live/boot/cmdline.sh
+error ()
+{
+	echo "error: ${@}" >&2
+	exit 1
+}
 
-# Set variable name that's needed by get_custom_mounts(),
+# import Cmdline_old()
+. /lib/live/boot/9990-cmdline-old \
+	|| error 'Could not source /lib/live/boot/9990-cmdline-old'
+
+# Set variable names needed by get_custom_mounts(),
 # and now initialized by live-boot in a file that we certainly
 # don't want to source.
-export persistence_list="live-persistence.conf"
+export persistence_list="persistence.conf"
+export old_persistence_list="live-persistence.conf"
 
 # This will import the following functions and variables used below:
 #   activate_custom_mounts()
@@ -18,7 +26,8 @@ export persistence_list="live-persistence.conf"
 #   storage_devices()
 #   where_is_mounted()
 #   $custom_overlay_label
-. /lib/live/boot/misc-helpers.sh
+. /lib/live/boot/9990-misc-helpers.sh \
+	|| error 'Could not source /lib/live/boot/9990-misc-helpers.sh'
 
 usage ()
 {
@@ -58,12 +67,6 @@ Options affecting the 'activate' action:
 warning ()
 {
 	echo "warning: ${@}" >&2
-}
-
-error ()
-{
-	echo "error: ${@}" >&2
-	exit 1
 }
 
 dbus_udisks_get_attribute ()
@@ -290,7 +293,7 @@ main ()
 	BASH_XTRACEFD="3"
 
 	# parse the kernel cmdline for live-boot's configuration as defaults
-	Cmdline
+	Cmdline_old
 
 	# note that this is not enough for disabling tracing. we need to do the
 	# $BASH_XTRACEFD stuff above to avoid tracing until this point.
