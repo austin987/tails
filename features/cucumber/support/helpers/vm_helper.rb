@@ -320,7 +320,11 @@ EOF
   end
 
   def execute(cmd, user = "root")
-    return VMCommand.new(self, cmd, user)
+    return VMCommand.new(self, cmd, { :user => user, :spawn => false })
+  end
+
+  def spawn(cmd, user = "root")
+    return VMCommand.new(self, cmd, { :user => user, :spawn => true })
   end
 
   def wait_until_remote_shell_is_up(timeout = 30)

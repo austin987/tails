@@ -6,7 +6,8 @@
 
 from subprocess import Popen, PIPE
 from sys import argv
-from json import dumps
+from json import dumps, loads
+from getpass import getuser
 import serial
 
 def main():
@@ -14,10 +15,15 @@ def main():
   port = serial.Serial(port = dev, baudrate = 4000000)
   port.open()
   while True:
-    cmd = port.readline()
+    cmd_type, user, cmd = loads(port.readline())
+    if user != getuser():
+      cmd = "sudo -n -H -u " + user + " -s /bin/sh -c '" + cmd + "'"
     p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
-    stdout, stderr = p.communicate()
-    returncode = p.returncode
+    if cmd_type == "spawn":
+      returncode, stdout, stderr = 0, "", ""
+    else:
+      stdout, stderr = p.communicate()
+      returncode = p.returncode
     port.write(dumps([returncode, stdout, stderr]) + "\0")
 
 if __name__ == "__main__":
