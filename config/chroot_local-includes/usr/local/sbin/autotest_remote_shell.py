@@ -15,7 +15,22 @@ def main():
   port = serial.Serial(port = dev, baudrate = 4000000)
   port.open()
   while True:
-    cmd_type, user, cmd = loads(port.readline())
+    try:
+      line = port.readline()
+    except Exception as e:
+      # port must be opened wrong, so we restart everything and pray
+      # that it works.
+      print str(e)
+      port.close()
+      return main()
+    try:
+      cmd_type, user, cmd = loads(line)
+    except Exception as e:
+      # We had a parse/pack error, so we just send a \0 as an ACK,
+      # releasing the client from blocking.
+      print str(e)
+      port.write("\0")
+      continue
     if user != getuser():
       cmd = "sudo -n -H -u " + user + " -s /bin/sh -c '" + cmd + "'"
     p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
