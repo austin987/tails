@@ -161,7 +161,7 @@ Given /^GNOME has started$/ do
   when "winxp"
     desktop_started_picture = 'WinXPStartButton.png'
   else
-    desktop_started_picture = 'GnomeStarted.png'
+    desktop_started_picture = 'GnomeApplicationsMenu.png'
   end
   @screen.wait(desktop_started_picture, 60)
 end
