@@ -168,8 +168,6 @@ end
 
 Given /^I have a network connection$/ do
   next if @skip_steps_while_restoring_background
-  # Wait until the VM's remote shell is available, which implies
-  # that the network is up.
   try_for(120) { @vm.has_network? }
 end
 
