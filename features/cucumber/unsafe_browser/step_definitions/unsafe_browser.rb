@@ -4,8 +4,7 @@ When /^I see and accept the Unsafe Browser start verification$/ do
 end
 
 Then /^I see and close the Unsafe Browser start notification$/ do
-  @screen.wait("UnsafeBrowserStartNotification.png", 10)
-  @screen.click("UnsafeBrowserStartNotification.png")
+  @screen.wait_and_click("UnsafeBrowserStartNotification.png", 10)
 end
 
 Then /^the Unsafe Browser has started$/ do
@@ -50,8 +49,7 @@ end
 
 When /^I open a new tab in the Unsafe Browser$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("UnsafeBrowserWindow.png", 10)
-  @screen.click("UnsafeBrowserWindow.png")
+  @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
   @screen.type("t", Sikuli::KEY_CTRL)
 end
 
@@ -64,17 +62,15 @@ end
 
 
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
-  @screen.click("UnsafeBrowserWindow.png")
+  @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
   sleep 0.5
   # First we open the proxy settings page to prepare it with the
   # correct open tabs for the loop below.
   @screen.type("e", Sikuli::KEY_ALT)
   @screen.type("n")
   @screen.wait('UnsafeBrowserPreferences.png', 10)
-  @screen.wait('UnsafeBrowserAdvancedSettings.png', 10)
-  @screen.click('UnsafeBrowserAdvancedSettings.png')
-  @screen.wait('UnsafeBrowserNetworkTab.png', 10)
-  @screen.click('UnsafeBrowserNetworkTab.png')
+  @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
+  @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
   sleep 0.5
   @screen.type(Sikuli::KEY_ESC)
 #  @screen.waitVanish('UnsafeBrowserPreferences.png', 10)

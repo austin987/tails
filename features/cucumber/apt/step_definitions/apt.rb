@@ -40,6 +40,7 @@ When /^I update APT using synaptic$/ do
   # Upon start the interface will be frozen while synaptic loads the
   # package list
   try_for(20, :msg => "Failed to click the Synaptic 'Reload' button") {
+    # Note: here we want to spam clicks, so we don't use wait_and_click()
     @screen.click('SynapticReload.png')
   }
   @screen.wait('SynapticReloadPrompt.png', 20)
@@ -55,8 +56,7 @@ Then /^I should be able to install a package using synaptic$/ do
     @screen.find('SynapticSearch.png')
   }
   @screen.type(package + Sikuli::KEY_RETURN)
-  @screen.wait('SynapticCowsaySearchResult.png', 20)
-  @screen.click('SynapticCowsaySearchResult.png')
+  @screen.wait_and_click('SynapticCowsaySearchResult.png', 20)
   sleep 1
   @screen.type("i", Sikuli::KEY_CTRL)    # Mark for installation
   sleep 1

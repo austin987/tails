@@ -1,7 +1,6 @@
 When /^I open a new tab in Iceweasel$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("IceweaselRunning.png", 10)
-  @screen.click("IceweaselRunning.png")
+  @screen.wait_and_click("IceweaselRunning.png", 10)
   @screen.type("t", Sikuli::KEY_CTRL)
 end
 

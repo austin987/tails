@@ -23,6 +23,18 @@ module Sikuli::Clickable
   end
 end
 
+class Sikuli::Region
+  def wait_and_click(pic, time)
+    # It's undocumented, but wait() returns the matched region, so we
+    # compute the middle of it and click() there instead of letting
+    # click() scan for the picture again.
+    r = self.wait(pic, time)
+    x = r.x + r.width/2
+    y = r.y + r.height/2
+    self.click(x, y)
+  end
+end
+
 class Sikuli::Screen
   def hide_cursor()
     hover(self.width, self.height)

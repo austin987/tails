@@ -52,10 +52,9 @@ def usb_install_helper(name)
 #  # Unfortunately this results in almost garbage, like "|]dev/sdm"
 #  # when it should be /dev/sda1
 
-  @screen.click('USBCreateLiveUSB.png')
+  @screen.wait_and_click('USBCreateLiveUSB.png', 10)
 #  @screen.hide_cursor
-  @screen.wait('USBCreateLiveUSBNext.png', 10)
-  @screen.click('USBCreateLiveUSBNext.png')
+  @screen.wait_and_click('USBCreateLiveUSBNext.png', 10)
 #  @screen.hide_cursor
   @screen.wait('USBInstallationComplete.png', 60*60)
   @screen.type(Sikuli::KEY_RETURN)
@@ -65,16 +64,14 @@ end
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   step "I run \"liveusb-creator-launcher\""
-  @screen.wait('USBCloneAndInstall.png', 10)
-  @screen.click('USBCloneAndInstall.png')
+  @screen.wait_and_click('USBCloneAndInstall.png', 10)
   usb_install_helper(name)
 end
 
 When /^I "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   step "I run \"liveusb-creator-launcher\""
-  @screen.wait('USBCloneAndUpgrade.png', 10)
-  @screen.click('USBCloneAndUpgrade.png')
+  @screen.wait_and_click('USBCloneAndUpgrade.png', 10)
   usb_install_helper(name)
 end
 
@@ -91,15 +88,14 @@ end
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   step "I run \"liveusb-creator-launcher\""
-  @screen.wait('USBUpgradeFromISO.png', 10)
-  @screen.click('USBUpgradeFromISO.png')
+  @screen.wait_and_click('USBUpgradeFromISO.png', 10)
   @screen.wait('USBUseLiveSystemISO.png', 10)
   match = @screen.find('USBUseLiveSystemISO.png')
   pos_x = match.x + match.width/2
   pos_y = match.y + match.height*2
   @screen.click(pos_x, pos_y)
   @screen.wait('USBSelectISO.png', 10)
-  @screen.click('GnomeFileDiagTypeFilename.png')
+  @screen.wait_and_click('GnomeFileDiagTypeFilename.png', 10)
   iso = "#{shared_iso_dir_on_guest}/#{File.basename(ENV['ISO'])}"
   @screen.type(iso + Sikuli::KEY_RETURN)
   usb_install_helper(name)
@@ -119,7 +115,7 @@ Given /^I enable all persistence presets$/ do
   @screen.type('a', Sikuli::KEY_ALT)
   @screen.type('/etc/ssh')
   @screen.type('a', Sikuli::KEY_ALT)
-  @screen.click('PersistenceWizardSave.png')
+  @screen.wait_and_click('PersistenceWizardSave.png', 10)
   @screen.wait('PersistenceWizardDone.png', 20)
   @screen.type(Sikuli::KEY_F4, Sikuli::KEY_ALT)
 end
@@ -197,8 +193,7 @@ end
 Given /^I enable read-only persistence with password "([^"]+)"$/ do |pwd|
   step "I enable persistence with password \"#{pwd}\""
   next if @skip_steps_while_restoring_background
-  @screen.wait('TailsGreeterPersistenceReadOnly.png', 10)
-  @screen.click('TailsGreeterPersistenceReadOnly.png')
+  @screen.wait_and_click('TailsGreeterPersistenceReadOnly.png', 10)
 end
 
 Given /^persistence has been enabled$/ do

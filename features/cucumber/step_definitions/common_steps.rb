@@ -115,7 +115,7 @@ end
 
 Given /^I log in to a new session$/ do
   next if @skip_steps_while_restoring_background
-  @screen.click('TailsGreeterLoginButton.png')
+  @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
   # FIXME: Here we should do something which waits for all Tails
   # Greeter post-hooks to finish so we can rid ourselves of steps like
   # "Tails Greeter has dealt with the sudo password"
@@ -129,8 +129,7 @@ Given /^I enable more Tails Greeter options$/ do
   # match. This may even work accross different screen resolutions.
   pos_y = match.y + match.height*2
   @screen.click(pos_x, pos_y)
-  @screen.wait('TailsGreeterForward.png', 10)
-  @screen.click('TailsGreeterForward.png')
+  @screen.wait_and_click('TailsGreeterForward.png', 10)
   @screen.wait('TailsGreeterLoginButton.png', 20)
 end
 
@@ -191,12 +190,11 @@ Given /^Iceweasel has autostarted and is not loading a web page$/ do
   else
     iceweasel_picture = "IceweaselRunning.png"
   end
-  step "I see \"#{iceweasel_picture}\" after at most 120 seconds"
 
   # Stop iceweasel to load its home page. We do this to prevent Tor
   # from getting confused in case we save and restore a snapshot in
   # the middle of loading a page.
-  @screen.click(iceweasel_picture)
+  @screen.wait_and_click(iceweasel_picture, 120)
   @screen.type("l", Sikuli::KEY_CTRL)
   @screen.type("about:blank" + Sikuli::KEY_RETURN)
 end
@@ -317,9 +315,9 @@ end
 Given /^I shutdown Tails$/ do
   next if @skip_steps_while_restoring_background
   @screen.hide_cursor
-  @screen.click('TailsEmergencyShutdownButton.png')
+  @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
   @screen.hide_cursor
-  @screen.click('TailsEmergencyShutdownHalt.png')
+  @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
   try_for(120, :msg => "VM is still running") { ! @vm.is_running? }
 end
 
