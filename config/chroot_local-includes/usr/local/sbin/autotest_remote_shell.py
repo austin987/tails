@@ -7,8 +7,36 @@
 from subprocess import Popen, PIPE
 from sys import argv
 from json import dumps, loads
-from getpass import getuser
+from pwd import getpwnam
+from os import setgid, setuid, environ
+from glob import glob
 import serial
+
+def mk_switch_user_fn(uid, gid):
+    def switch_user():
+        setgid(gid)
+        setuid(uid)
+    return switch_user
+
+def run_cmd_as_user(cmd, user):
+  env = environ.copy()
+  pwd_user = getpwnam(user)
+  switch_user_fn = mk_switch_user_fn(pwd_user.pw_uid,
+                                     pwd_user.pw_gid)
+  env['USER'] = user
+  env['LOGNAME'] = user
+  env['USERNAME'] = user
+  env['HOME'] = pwd_user.pw_dir
+  env['MAIL'] = "/var/mail/" + user
+  env['PWD'] = env['HOME']
+  env['DISPLAY'] = ':0.0'
+  try:
+    env['XAUTHORITY'] = glob("/var/run/gdm3/auth-for-amnesia-*/database")[0]
+  except IndexError:
+    pass
+  cwd = env['HOME']
+  return Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, env=env, cwd=cwd,
+               preexec_fn=switch_user_fn)
 
 def main():
   dev = argv[1]
@@ -31,9 +59,7 @@ def main():
       print str(e)
       port.write("\0")
       continue
-    if user != getuser():
-      cmd = "sudo -n -H -u " + user + " -s /bin/sh -c '" + cmd + "'"
-    p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
+    p = run_cmd_as_user(cmd, user)
     if cmd_type == "spawn":
       returncode, stdout, stderr = 0, "", ""
     else:
