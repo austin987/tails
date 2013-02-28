@@ -246,7 +246,7 @@ Then /^all Internet traffic has only flowed through Tor$/ do
   # This command will grab all router IP addresses from the Tor
   # consensus in the VM.
   cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
-  tor_relays = @vm.execute(cmd).stdout.split("\n")
+  tor_relays = @vm.execute(cmd).stdout.chomp.split("\n")
   leaks = FirewallLeakCheck.new(@sniffer.pcap_file, tor_relays)
   if !leaks.empty?
     if !leaks.ipv4_tcp_leaks.empty?

@@ -199,7 +199,7 @@ end
 Given /^persistence has been enabled$/ do
   next if @skip_steps_while_restoring_background
   try_for(60, :msg => "Some persistent dir was not mounted") {
-    mount = @vm.execute("mount").stdout
+    mount = @vm.execute("mount").stdout.chomp
     persistent_dirs.each do |dir|
       if ! mount.include? "on #{dir} "
         raise "persistent dir #{dir} missing"
@@ -223,9 +223,9 @@ Then /^Tails is running from a USB drive$/ do
   next if @skip_steps_while_restoring_background
   # Approach borrowed from
   # config/chroot_local_includes/lib/live/config/998-permissions
-  boot_dev_id = @vm.execute("udevadm info --device-id-of-file=/live/image").stdout
-  boot_dev = @vm.execute("readlink -f /dev/block/'#{boot_dev_id}'").stdout
-  boot_dev_info = @vm.execute("udevadm info --query=property --name='#{boot_dev}'").stdout
+  boot_dev_id = @vm.execute("udevadm info --device-id-of-file=/live/image").stdout.chomp
+  boot_dev = @vm.execute("readlink -f /dev/block/'#{boot_dev_id}'").stdout.chomp
+  boot_dev_info = @vm.execute("udevadm info --query=property --name='#{boot_dev}'").stdout.chomp
   boot_dev_type = (boot_dev_info.split("\n").select { |x| x.start_with? "ID_BUS=" })[0].split("=")[1]
   assert(boot_dev_type == "usb",
          "Got device type '#{boot_dev_type}' while expecting 'usb'")
@@ -234,7 +234,7 @@ end
 When /^I write some files expected to persist$/ do
   next if @skip_steps_while_restoring_background
   persistent_dirs.each do |dir|
-    owner = @vm.execute("stat -c %U #{dir}").stdout.strip
+    owner = @vm.execute("stat -c %U #{dir}").stdout.chomp
     assert(@vm.execute("touch #{dir}/XXX_persist", user=owner).success?,
            "Could not create file in persistent directory #{dir}")
   end
@@ -251,7 +251,7 @@ end
 When /^I write some files not expected to persist$/ do
   next if @skip_steps_while_restoring_background
   persistent_dirs.each do |dir|
-    owner = @vm.execute("stat -c %U #{dir}").stdout.strip
+    owner = @vm.execute("stat -c %U #{dir}").stdout.chomp
     assert(@vm.execute("touch #{dir}/XXX_gone", user=owner).success?,
            "Could not create file in persistent directory #{dir}")
   end
