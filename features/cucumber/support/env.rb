@@ -35,5 +35,5 @@ After do |scenario|
     @vm.take_screenshot("#{@feature}-#{DateTime.now}") if @vm
   end
   @sniffer.stop if @sniffer
-  @vm.destroy
+  @vm.destroy if @vm
 end
