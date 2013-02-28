@@ -12,11 +12,11 @@ class VM
 
   def initialize
     @@virt = Libvirt::open("qemu:///system") if !@@virt
-    domain_xml = ENV['DOM_XML'] || "#{Dir.pwd}/features/cucumber/domains/default.xml"
-    net_xml = ENV['NET_XML'] || "#{Dir.pwd}/features/cucumber/domains/default_net.xml"
-    read_domain_xml = File.read(domain_xml)
+    default_domain_xml = ENV['DOM_XML'] || "#{Dir.pwd}/features/cucumber/domains/default.xml"
+    default_net_xml = ENV['NET_XML'] || "#{Dir.pwd}/features/cucumber/domains/default_net.xml"
+    read_domain_xml = File.read(default_domain_xml)
     update_domain(read_domain_xml)
-    read_net_xml = File.read(net_xml)
+    read_net_xml = File.read(default_net_xml)
     update_net(read_net_xml)
     iso = ENV['ISO'] || get_last_iso
     set_cdrom_boot(iso)
