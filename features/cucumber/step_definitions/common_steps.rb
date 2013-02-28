@@ -44,6 +44,11 @@ Given /^a computer$/ do
   @vm = VM.new
 end
 
+Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
+  next if @skip_steps_while_restoring_background
+  @vm.set_ram_size(size, unit)
+end
+
 Given /^the computer is set to boot from the Tails DVD$/ do
   next if @skip_steps_while_restoring_background
   iso = ENV['ISO'] || @vm.get_last_iso

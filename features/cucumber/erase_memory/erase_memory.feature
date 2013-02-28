@@ -5,6 +5,7 @@ Feature: System memory erasure on shutdown
 
   Background:
     Given a computer
+    And the computer has 8 GiB of RAM
     And I set Tails to boot with options "debug=wipemem"
     And the network is unplugged
     And I start the computer

@@ -323,6 +323,23 @@ EOF
     return list
   end
 
+  def set_ram_size(size, unit = "KiB")
+    raise "System memory can only be added to inactice vms" if is_running?
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements['domain/memory'].text = size
+    domain_xml.elements['domain/memory'].attributes['unit'] = unit
+    domain_xml.elements['domain/currentMemory'].text = size
+    domain_xml.elements['domain/currentMemory'].attributes['unit'] = unit
+    update_domain(domain_xml.to_s)
+  end
+
+  def get_ram_size_in_bytes
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    unit = domain_xml.elements['domain/memory'].attribute('unit').to_s
+    size = domain_xml.elements['domain/memory'].text.to_i
+    return convert_to_bytes(size, unit)
+  end
+
   def is_running?
     begin
       return @domain.active?

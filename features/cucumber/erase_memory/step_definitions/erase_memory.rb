@@ -1,6 +1,20 @@
 Given /^I fill the guest's memory with a known pattern$/ do
-  #@vm.execute("for i in $(seq 1 16); do /usr/local/sbin/fillram & done")
-  @vm.execute("/usr/local/sbin/fillram")
+  next if @skip_steps_while_restoring_background
+  # To be sure that we fill all memory we run one fillram instance
+  # for each GiB of memory, rounded up. We also kill all instances
+  # after the first one has finished, i.e. when the memory is full,
+  # since the others otherwise may continue re-filling the same memory
+  # unnecessarily.
+  instances = (@vm.get_ram_size_in_bytes.to_f/(2**30)).ceil
+  instances.times { @vm.spawn('/usr/local/sbin/fillram; killall fillram') }
+  # We make sure that the filling has started...
+  try_for(10, { :msg => "fillram didn't start" }) {
+    @vm.execute("pgrep fillram").success?
+  }
+  # ... and that it finishes
+  try_for(instances*60, { :msg => "fillram didn't complete, probably the VM crashed" }) {
+    ! @vm.execute("pgrep fillram").success?
+  }
 end
 
 When /^I dump the guest's memory into file "([^"]+)"$/ do |dump|
