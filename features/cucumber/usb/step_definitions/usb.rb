@@ -81,8 +81,7 @@ end
 
 Given /^I setup a filesystem share containing the Tails ISO$/ do
   next if @skip_steps_while_restoring_background
-  iso = ENV['ISO'] || @vm.get_last_iso
-  @vm.add_share(File.dirname(iso), shared_iso_dir_on_guest)
+  @vm.add_share(File.dirname($tails_iso), shared_iso_dir_on_guest)
 end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
@@ -96,7 +95,7 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   @screen.click(pos_x, pos_y)
   @screen.wait('USBSelectISO.png', 10)
   @screen.wait_and_click('GnomeFileDiagTypeFilename.png', 10)
-  iso = "#{shared_iso_dir_on_guest}/#{File.basename(ENV['ISO'])}"
+  iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"
   @screen.type(iso + Sikuli::KEY_RETURN)
   usb_install_helper(name)
 end

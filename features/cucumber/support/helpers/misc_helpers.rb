@@ -52,3 +52,7 @@ def convert_to_bytes(size, unit)
   end
   return size*mod
 end
+
+def get_last_iso
+  return Dir.glob("#{Dir.pwd}/*.iso").sort_by {|f| File.mtime(f)}.last
+end

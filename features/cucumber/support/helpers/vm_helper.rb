@@ -10,21 +10,20 @@ class VM
 
   attr_reader :domain, :display, :ip, :ip6, :net
 
-  def initialize
-    @@virt = Libvirt::open("qemu:///system") if !@@virt
-    default_domain_xml = ENV['DOM_XML'] || "#{Dir.pwd}/features/cucumber/domains/default.xml"
-    default_net_xml = ENV['NET_XML'] || "#{Dir.pwd}/features/cucumber/domains/default_net.xml"
-    read_domain_xml = File.read(default_domain_xml)
-    update_domain(read_domain_xml)
-    read_net_xml = File.read(default_net_xml)
-    update_net(read_net_xml)
-    iso = ENV['ISO'] || get_last_iso
-    set_cdrom_boot(iso)
+  def initialize(xml_path, x_display)
+    @@virt ||= Libvirt::open("qemu:///system")
+    @xml_path = xml_path
+    default_domain_xml = File.read("#{@xml_path}/default.xml")
+    update_domain(default_domain_xml)
+    default_net_xml = File.read("#{@xml_path}/default_net.xml")
+    update_net(default_net_xml)
+    @display = Display.new(@domain_name, x_display)
+    set_cdrom_boot($tails_iso)
     plug_network
     # unlike the domain and net the storage pool should survive VM
     # teardown (so a new instance can use e.g. a previously created
     # USB drive), so we only create a new one if there is none.
-    @@pool = VM.new_storage_pool if !@@pool
+    @@pool ||= VM.new_storage_pool(xml_path)
   end
 
   def update_domain(xml)
@@ -66,8 +65,8 @@ class VM
     end
   end
 
-  def VM.new_storage_pool
-    pool_xml = REXML::Document.new(File.read("#{Dir.pwd}/features/cucumber/domains/storage_pool.xml"))
+  def VM.new_storage_pool(xml_path)
+    pool_xml = REXML::Document.new(File.read("#{xml_path}/storage_pool.xml"))
     pool_name = pool_xml.elements['pool/name'].text
     begin
       pool = @@virt.lookup_storage_pool_by_name(pool_name)
@@ -110,11 +109,6 @@ class VM
 
   def unplug_network
     set_network_link_state('down')
-  end
-
-  def get_last_iso
-    iso_name = Dir.glob("*.iso").sort_by {|f| File.mtime(f)}.last
-    build_root_path.to_s + "/" + iso_name
   end
 
   def set_cdrom_tray_state(state)
@@ -190,7 +184,7 @@ class VM
     uid = Etc::getpwnam("libvirt-qemu").uid
     gid = Etc::getgrnam("kvm").gid
     pool_path = REXML::Document.new(@@pool.xml_desc).elements['pool/target/path'].text
-    vol_xml = REXML::Document.new(File.read("#{Dir.pwd}/features/cucumber/domains/usb_volume.xml"))
+    vol_xml = REXML::Document.new(File.read("#{@xml_path}/usb_volume.xml"))
     vol_xml.elements['volume/name'].text = name
     vol_xml.elements['volume/capacity'].text = size.to_s
     vol_xml.elements['volume/target/path'].text = "#{pool_path}/#{name}"
@@ -256,7 +250,7 @@ class VM
     end
     assert letter <= 'z'
 
-    xml = REXML::Document.new(File.read("#{Dir.pwd}/features/cucumber/domains/usb_disk.xml"))
+    xml = REXML::Document.new(File.read("#{@xml_path}/usb_disk.xml"))
     xml.elements['disk/source'].attributes['file'] = VM.usb_drive_path(name)
     xml.elements['disk/target'].attributes['dev'] = dev
     @domain.attach_device(xml.to_s)
@@ -306,7 +300,7 @@ EOF
     if is_running?
       raise "shares can only be added to inactice vms"
     end
-    xml = REXML::Document.new(File.read("#{Dir.pwd}/features/cucumber/domains/fs_share.xml"))
+    xml = REXML::Document.new(File.read("#{@xml_path}/fs_share.xml"))
     xml.elements['filesystem/source'].attributes['dir'] = source
     xml.elements['filesystem/target'].attributes['dir'] = tag
     domain_xml = REXML::Document.new(@domain.xml_desc)
@@ -419,14 +413,12 @@ EOF
     clean_up_domain
     Libvirt::Domain::restore(@@virt, path)
     @domain = @@virt.lookup_domain_by_name(@domain_name)
-    @display = Display.new(@domain_name)
     @display.start
   end
 
   def start
     return if is_running?
     @domain.create
-    @display = Display.new(@domain_name)
     @display.start
   end
 

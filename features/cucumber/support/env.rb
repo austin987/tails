@@ -2,13 +2,13 @@ require 'java'
 require 'rubygems'
 require 'time'
 
+$time_at_start = Time.now
+$tmp_dir = ENV['TEMP_DIR']
+$vm_xml_path = ENV['VM_XML_PATH'] || "#{Dir.pwd}/features/cucumber/domains"
+$tails_iso = ENV['ISO'] || get_last_iso
+$x_display = ENV['DISPLAY']
+
 Before do |scenario|
-  $tmp_dir = ENV['TEMP_DIR']
-  if ! $already_run
-    # This code runs *exactly once*, before the *first* feature
-    $time_at_start = Time.now
-    $already_run = true
-  end
   @screen = Sikuli::Screen.new
   @feature = File.basename(scenario.feature.file, ".feature").to_s
   @background_snapshot = "#{$tmp_dir}/#{@feature}_background.state"

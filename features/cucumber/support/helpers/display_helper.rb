@@ -1,8 +1,9 @@
 
 class Display
 
-  def initialize(domain)
+  def initialize(domain, x_display)
     @domain = domain
+    @x_display = x_display
   end
 
   def start
@@ -29,7 +30,7 @@ class Display
   def take_screenshot(description)
     out = "#{$tmp_dir}/#{description}"
     IO.popen(["xwd", "-display",
-                     ENV['DISPLAY'],
+                     @x_display,
                      "-root",
                      "-out", out + ".xwd"].join(' '))
     IO.popen("convert " + out + ".xwd " + out + ".png")
@@ -44,13 +45,13 @@ class Display
                              "-f",
                              "-r",
                              "-c", "qemu:///system",
-                             ["--display=", ENV['DISPLAY']].join(''),
+                             ["--display=", @x_display].join(''),
                              domain,
                              "&"].join(' '))
   end
 
   def active?
-    p = IO.popen("xprop -display #{ENV['DISPLAY']} " +
+    p = IO.popen("xprop -display #{@x_display} " +
                  "-name '#{@domain} (1) - Virt Viewer' 2>/dev/null")
     Process.wait(p.pid)
     p.close
