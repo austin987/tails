@@ -12,14 +12,16 @@ Then /^I find at least (\d+) patterns in the dump "([^"]+)"$/ do |min, dump|
   dump_path = "#{$tmp_dir}/#{dump}"
   hits = IO.popen("grep -c 'wipe_didnt_work' #{dump_path}").gets
   puts "Patterns found: #{hits}"
-  assert(hits.to_i >= min.to_i, "Too few patterns found")
+  File.delete dump_path
+  assert(hits.to_i >= min.to_i, "Too few patterns found, see #{dump_path}")
 end
 
 Then /^I find at most (\d+) patterns in the dump "([^"]+)"$/ do |max, dump|
   dump_path = "#{$tmp_dir}/#{dump}"
   hits = IO.popen("grep -c 'wipe_didnt_work' #{dump_path}").gets
   puts "Patterns found: #{hits}"
-  assert(hits.to_i <= max.to_i, "Too many patterns found")
+  File.delete dump_path
+  assert(hits.to_i <= max.to_i, "Too many patterns found, see #{dump_path}")
 end
 
 When /^I shutdown Tails and let it wipe the memory$/ do
