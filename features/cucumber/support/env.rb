@@ -16,10 +16,16 @@ Before do |scenario|
   @theme = "gnome"
   if $prev_feature != @feature
     # This code runs before the *first* scenario's background for *each* feature
-    # FIXME: We can't use this yet due to permission issues.
-#    if File.exist? @background_snapshot
-#      File.delete @background_snapshot
-#    end
+
+    # Remove existing leftover background snapshot so we run the
+    # feature from scratch
+    if File.exist?(@background_snapshot)
+      File.delete(@background_snapshot)
+    end
+    # Workaround for libvirt permission issues. See the run_test_suite
+    # script for more information about a similar libvirt premission issue.
+    FileUtils.touch(@background_snapshot)
+    FileUtils.chmod(0666, @background_snapshot)
   end
   $prev_feature = @feature
 end

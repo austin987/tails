@@ -28,7 +28,9 @@ def restore_background
 end
 
 Given /^I restore the background snapshot if it exists$/ do
-  if File.exists?(@background_snapshot)
+  # We use size?() instead of the more intuitive exist?() here due
+  # to the libvirt permission workaround in env.rb.
+  if File.size?(@background_snapshot)
     restore_background
     # From now on all steps will be skipped (and pass) until we reach
     # the step which saved the snapshot.
