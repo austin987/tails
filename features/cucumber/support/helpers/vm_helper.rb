@@ -4,10 +4,14 @@ require 'etc'
 
 class VM
 
+  # These will be lazily initialized during the first instantiation
+  @@virt = nil
+  @@pool = nil
+
   attr_reader :domain, :display, :ip, :ip6, :net
 
-  def initialize(virt)
-    @virt = virt
+  def initialize
+    @@virt = Libvirt::open("qemu:///system") if !@@virt
     domain_xml = ENV['DOM_XML'] || "#{Dir.pwd}/features/cucumber/domains/default.xml"
     net_xml = ENV['NET_XML'] || "#{Dir.pwd}/features/cucumber/domains/default_net.xml"
     read_domain_xml = File.read(domain_xml)
@@ -17,14 +21,17 @@ class VM
     iso = ENV['ISO'] || get_last_iso
     set_cdrom_boot(iso)
     plug_network
-    setup_storage_pool
+    # unlike the domain and net the storage pool should survive VM
+    # teardown (so a new instance can use e.g. a previously created
+    # USB drive), so we only create a new one if there is none.
+    @@pool = VM.new_storage_pool if !@@pool
   end
 
   def update_domain(xml)
     domain_xml = REXML::Document.new(xml)
     @domain_name = domain_xml.elements['domain/name'].text
     clean_up_domain
-    @domain = @virt.define_domain_xml(xml)
+    @domain = @@virt.define_domain_xml(xml)
   end
 
   def update_net(xml)
@@ -37,13 +44,13 @@ class VM
       end
     end
     clean_up_net
-    @net = @virt.define_network_xml(xml)
+    @net = @@virt.define_network_xml(xml)
     @net.create
   end
 
   def clean_up_domain
     begin
-      domain = @virt.lookup_domain_by_name(@domain_name)
+      domain = @@virt.lookup_domain_by_name(@domain_name)
       domain.destroy if domain.active?
       domain.undefine
     rescue
@@ -52,37 +59,39 @@ class VM
 
   def clean_up_net
     begin
-      net = @virt.lookup_network_by_name(@net_name)
+      net = @@virt.lookup_network_by_name(@net_name)
       net.destroy if net.active?
       net.undefine
     rescue
     end
   end
 
-  def setup_storage_pool
+  def VM.new_storage_pool
     pool_xml = REXML::Document.new(File.read("#{Dir.pwd}/features/cucumber/domains/storage_pool.xml"))
     pool_name = pool_xml.elements['pool/name'].text
-    # unlike the domain and net the storage pool should survive VM
-    # teardown (so a new instance can use e.g. a previously created
-    # USB drive), so we only create a new one if there is none.
     begin
-      @pool = @virt.lookup_storage_pool_by_name(pool_name)
+      pool = @@virt.lookup_storage_pool_by_name(pool_name)
     rescue Libvirt::RetrieveError
-      pool_xml.elements['pool/target/path'].text = "#{$tmp_dir}/#{pool_name}"
-      @pool = @virt.define_storage_pool_xml(pool_xml.to_s)
-      @pool.build
-      @pool.create
+      # There's no pool with that name, so we don't have to clear it
+    else
+      VM.clear_storage_pool(pool)
     end
-    @pool.refresh
+    pool_xml.elements['pool/target/path'].text = "#{$tmp_dir}/#{pool_name}"
+    pool = @@virt.define_storage_pool_xml(pool_xml.to_s)
+    pool.build
+    pool.create
+    pool.refresh
+    return pool
   end
 
-  def clear_storage_pool
-    return if !@pool
-    @pool.list_volumes.each do |vol|
+  def VM.clear_storage_pool(pool)
+    pool.create if !pool.active?
+    pool.list_volumes.each do |vol_name|
+      vol = pool.lookup_volume_by_name(vol_name)
       vol.delete
     end
-    @pool.destory if @pool.active?
-    @pool.undefine
+    pool.destroy if pool.active?
+    pool.undefine
   end
 
   def set_network_link_state(state)
@@ -169,9 +178,10 @@ class VM
     close_cdrom
   end
 
-  def create_new_usb_drive(name, size = 2)
+  def VM.create_new_usb_drive(name, size = 2)
+    raise "storage pool has not been created" if !@@pool
     begin
-      old_vol = @pool.lookup_volume_by_name(name)
+      old_vol = @@pool.lookup_volume_by_name(name)
     rescue Libvirt::RetrieveError
       # noop
     else
@@ -179,35 +189,37 @@ class VM
     end
     uid = Etc::getpwnam("libvirt-qemu").uid
     gid = Etc::getgrnam("kvm").gid
-    pool_path = REXML::Document.new(@pool.xml_desc).elements['pool/target/path'].text
+    pool_path = REXML::Document.new(@@pool.xml_desc).elements['pool/target/path'].text
     vol_xml = REXML::Document.new(File.read("#{Dir.pwd}/features/cucumber/domains/usb_volume.xml"))
     vol_xml.elements['volume/name'].text = name
     vol_xml.elements['volume/capacity'].text = size.to_s
     vol_xml.elements['volume/target/path'].text = "#{pool_path}/#{name}"
     vol_xml.elements['volume/target/permissions/owner'].text = uid.to_s
     vol_xml.elements['volume/target/permissions/group'].text = gid.to_s
-    vol = @pool.create_volume_xml(vol_xml.to_s)
-    @pool.refresh
+    vol = @@pool.create_volume_xml(vol_xml.to_s)
+    @@pool.refresh
   end
 
-  def clone_usb_drive(from, to)
+  def VM.clone_to_new_usb_drive(from, to)
+    raise "storage pool has not been created" if !@@pool
     begin
-      old_to_vol = @pool.lookup_volume_by_name(to)
+      old_to_vol = @@pool.lookup_volume_by_name(to)
     rescue Libvirt::RetrieveError
       # noop
     else
       old_to_vol.delete
     end
-    from_vol = @pool.lookup_volume_by_name(from)
+    from_vol = @@pool.lookup_volume_by_name(from)
     xml = REXML::Document.new(from_vol.xml_desc)
-    pool_path = REXML::Document.new(@pool.xml_desc).elements['pool/target/path'].text
+    pool_path = REXML::Document.new(@@pool.xml_desc).elements['pool/target/path'].text
     xml.elements['volume/name'].text = to
     xml.elements['volume/target/path'].text = "#{pool_path}/#{to}"
-    @pool.create_volume_xml_from(xml.to_s, from_vol)
+    @@pool.create_volume_xml_from(xml.to_s, from_vol)
   end
 
-  def usb_drive_path(name)
-    @pool.lookup_volume_by_name(name).path
+  def VM.usb_drive_path(name)
+    raise "storage pool has not been created" if !@@pool
+    @@pool.lookup_volume_by_name(name).path
   end
 
   def usb_drive_dev(name)
@@ -219,7 +231,7 @@ class VM
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       begin
-        if e.elements['source'].attribute('file').to_s == usb_drive_path(name)
+        if e.elements['source'].attribute('file').to_s == VM.usb_drive_path(name)
           return e.to_s
         end
       rescue
@@ -245,7 +257,7 @@ class VM
     assert letter <= 'z'
 
     xml = REXML::Document.new(File.read("#{Dir.pwd}/features/cucumber/domains/usb_disk.xml"))
-    xml.elements['disk/source'].attributes['file'] = usb_drive_path(name)
+    xml.elements['disk/source'].attributes['file'] = VM.usb_drive_path(name)
     xml.elements['disk/target'].attributes['dev'] = dev
     @domain.attach_device(xml.to_s)
   end
@@ -262,7 +274,7 @@ class VM
     # Unfortunately libvirt doesn't allow setting the removable property,
     # which Tails requires of its boot/persistence media. We work around
     # this by appending the device via raw QEMU command line options.
-    image = usb_drive_path(name)
+    image = VM.usb_drive_path(name)
     xml = <<EOF
   <qemu:commandline xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
     <qemu:arg value='-drive'/>
@@ -352,8 +364,8 @@ EOF
   def restore_snapshot(path)
     # Clean up current domain so its snapshot can be restored
     clean_up_domain
-    Libvirt::Domain::restore(@virt, path)
-    @domain = @virt.lookup_domain_by_name(@domain_name)
+    Libvirt::Domain::restore(@@virt, path)
+    @domain = @@virt.lookup_domain_by_name(@domain_name)
     @display = Display.new(@domain_name)
     @display.start
   end

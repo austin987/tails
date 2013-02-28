@@ -1,14 +1,12 @@
 require 'java'
 require 'rubygems'
 require 'time'
-require 'libvirt'
 
 Before do |scenario|
   $tmp_dir = ENV['TEMP_DIR']
   if ! $already_run
     # This code runs *exactly once*, before the *first* feature
     $time_at_start = Time.now
-    $virt = Libvirt::open("qemu:///system")
     $already_run = true
   end
   @screen = Sikuli::Screen.new
