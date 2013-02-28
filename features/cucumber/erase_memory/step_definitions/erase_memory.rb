@@ -47,6 +47,28 @@ Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
   assert(detected_b + gap >= min_ram_b, "Didn't detect enough RAM")
 end
 
+def pattern_coverage_in_guest_ram
+  dump = "#{$tmp_dir}/memdump"
+  # Workaround: when dumping the guest's memory via core_dump(), libvirt
+  # will create files that only root can read. We therefore pre-create
+  # them with more permissible permissions, which libvirt will preserve
+  # (although it will change ownership) so that the user running the
+  # script can grep the dump for the fillram pattern, and delete it.
+  if File.exist?(dump)
+    File.delete(dump)
+  end
+  FileUtils.touch(dump)
+  FileUtils.chmod(0666, dump)
+  @vm.domain.core_dump(dump)
+  patterns = IO.popen("grep -c 'wipe_didnt_work' #{dump}").gets.to_i
+  File.delete dump
+  # Pattern is 16 bytes long
+  patterns_b = patterns*16
+  coverage = patterns_b.to_f/@vm.get_ram_size_in_bytes.to_f
+  puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_b} bytes)"
+  return coverage
+end
+
 Given /^I fill the guest's memory with a known pattern$/ do
   next if @skip_steps_while_restoring_background
   # To be sure that we fill all memory we run one fillram instance
@@ -54,7 +76,8 @@ Given /^I fill the guest's memory with a known pattern$/ do
   # after the first one has finished, i.e. when the memory is full,
   # since the others otherwise may continue re-filling the same memory
   # unnecessarily.
-  instances = (detected_ram_in_bytes(@vm).to_f/(2**30)).ceil
+  detected_ram_b = detected_ram_in_bytes(@vm)
+  instances = (detected_ram_b.to_f/(2**30)).ceil
   instances.times { @vm.spawn('/usr/local/sbin/fillram; killall fillram') }
   # We make sure that the filling has started...
   try_for(10, { :msg => "fillram didn't start" }) {
@@ -64,27 +87,20 @@ Given /^I fill the guest's memory with a known pattern$/ do
   try_for(instances*60, { :msg => "fillram didn't complete, probably the VM crashed" }) {
     ! @vm.execute("pgrep fillram").success?
   }
+  coverage = pattern_coverage_in_guest_ram()
+  available_ram = 1 - detected_ram_b.to_f/@vm.get_ram_size_in_bytes.to_f
+  min_coverage = 0.5*available_ram
+  assert(coverage > min_coverage,
+         "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
+         "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
 end
 
-When /^I dump the guest's memory into file "([^"]+)"$/ do |dump|
-  dump_path = "#{$tmp_dir}/#{dump}"
-  @vm.domain.core_dump(dump_path)
-end
-
-Then /^I find at least (\d+) patterns in the dump "([^"]+)"$/ do |min, dump|
-  dump_path = "#{$tmp_dir}/#{dump}"
-  hits = IO.popen("grep -c 'wipe_didnt_work' #{dump_path}").gets
-  puts "Patterns found: #{hits}"
-  File.delete dump_path
-  assert(hits.to_i >= min.to_i, "Too few patterns found, see #{dump_path}")
-end
-
-Then /^I find at most (\d+) patterns in the dump "([^"]+)"$/ do |max, dump|
-  dump_path = "#{$tmp_dir}/#{dump}"
-  hits = IO.popen("grep -c 'wipe_didnt_work' #{dump_path}").gets
-  puts "Patterns found: #{hits}"
-  File.delete dump_path
-  assert(hits.to_i <= max.to_i, "Too many patterns found, see #{dump_path}")
+Then /^I find very few patterns in the guest's memory$/ do
+  coverage = pattern_coverage_in_guest_ram()
+  max_coverage = 0.001
+  assert(coverage < max_coverage,
+         "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
+         "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
 end
 
 When /^I shutdown Tails and let it wipe the memory$/ do

@@ -16,11 +16,8 @@ Feature: System memory erasure on shutdown
     And process "memlockd" is running
     And process "udev-watchdog" is running
     When I fill the guest's memory with a known pattern
-    And I dump the guest's memory into file "before_wipe.dump"
     And I shutdown Tails and let it wipe the memory
-    And I dump the guest's memory into file "after_wipe.dump"
-    Then I find at least 10000000 patterns in the dump "before_wipe.dump"
-    And I find at most 1000 patterns in the dump "after_wipe.dump"
+    Then I find very few patterns in the guest's memory
 
   Scenario: An old computer
     Given a computer
@@ -35,8 +32,5 @@ Feature: System memory erasure on shutdown
     And process "memlockd" is running
     And process "udev-watchdog" is running
     When I fill the guest's memory with a known pattern
-    And I dump the guest's memory into file "before_wipe.dump"
     And I shutdown Tails and let it wipe the memory
-    And I dump the guest's memory into file "after_wipe.dump"
-    Then I find at least 10000000 patterns in the dump "before_wipe.dump"
-    And I find at most 1000 patterns in the dump "after_wipe.dump"
+    Then I find very few patterns in the guest's memory
