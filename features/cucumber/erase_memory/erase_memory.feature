@@ -10,8 +10,6 @@ Feature: System memory erasure on shutdown
     And the network is unplugged
     And I start the computer
     And the computer boots Tails
-    And I log in to a new session
-    And GNOME has started
     And process "memlockd" is running
     And process "udev-watchdog" is running
 
