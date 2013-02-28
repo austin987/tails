@@ -340,6 +340,42 @@ EOF
     return convert_to_bytes(size, unit)
   end
 
+  def set_arch(arch)
+    raise "System architecture can only be set to inactice vms" if is_running?
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements['domain/os/type'].attributes['arch'] = arch
+    update_domain(domain_xml.to_s)
+  end
+
+  def add_hypervisor_feature(feature)
+    raise "Hypervisor features can only be added to inactice vms" if is_running?
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements['domain/features'].add_element(feature)
+    update_domain(domain_xml.to_s)
+  end
+
+  def drop_hypervisor_feature(feature)
+    raise "Hypervisor features can only be fropped from inactice vms" if is_running?
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements['domain/features'].delete_element(feature)
+    update_domain(domain_xml.to_s)
+  end
+
+  def disable_pae_workaround
+    # add_hypervisor_feature("nonpae") results in a libvirt error, and
+    # drop_hypervisor_feature("pae") alone won't disable pae. Hence we
+    # use this workaround.
+    xml = <<EOF
+  <qemu:commandline xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+    <qemu:arg value='-cpu'/>
+    <qemu:arg value='pentium,-pae'/>
+  </qemu:commandline>
+EOF
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements['domain'].add_element(REXML::Document.new(xml))
+    update_domain(domain_xml.to_s)
+  end
+
   def is_running?
     begin
       return @domain.active?

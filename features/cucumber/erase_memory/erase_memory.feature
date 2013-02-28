@@ -3,17 +3,37 @@ Feature: System memory erasure on shutdown
   when I shutdown Tails
   I want the system memory to be free from sensitive data.
 
-  Background:
+  Scenario: A modern computer
     Given a computer
+    And the computer is a modern 64-bit system
     And the computer has 8 GiB of RAM
     And I set Tails to boot with options "debug=wipemem"
     And the network is unplugged
     And I start the computer
     And the computer boots Tails
+    And the PAE kernel is running
+    And at least 8 GiB of RAM was detected
     And process "memlockd" is running
     And process "udev-watchdog" is running
+    When I fill the guest's memory with a known pattern
+    And I dump the guest's memory into file "before_wipe.dump"
+    And I shutdown Tails and let it wipe the memory
+    And I dump the guest's memory into file "after_wipe.dump"
+    Then I find at least 10000000 patterns in the dump "before_wipe.dump"
+    And I find at most 1000 patterns in the dump "after_wipe.dump"
 
-  Scenario: Memory must be erased on shutdown.
+  Scenario: An old computer
+    Given a computer
+    And the computer is an old pentium without the PAE extension
+    And the computer has 8 GiB of RAM
+    And I set Tails to boot with options "debug=wipemem"
+    And the network is unplugged
+    And I start the computer
+    And the computer boots Tails
+    And the non-PAE kernel is running
+    And at least 3500 MiB of RAM was detected
+    And process "memlockd" is running
+    And process "udev-watchdog" is running
     When I fill the guest's memory with a known pattern
     And I dump the guest's memory into file "before_wipe.dump"
     And I shutdown Tails and let it wipe the memory
