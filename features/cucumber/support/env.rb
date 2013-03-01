@@ -46,3 +46,7 @@ After do |scenario|
   @sniffer.stop if @sniffer
   @vm.destroy if @vm
 end
+
+at_exit do
+  VM.storage.clear_pool
+end
