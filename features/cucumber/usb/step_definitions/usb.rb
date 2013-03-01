@@ -263,7 +263,7 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "the network is unplugged"
   step "I start the computer"
   step "the computer boots Tails"
-  step "I enable persistence with password \"asdf\""
+  step "I enable read-only persistence with password \"asdf\""
   step "I log in to a new session"
   step "persistence has been enabled"
   persistent_dirs.each do |dir|
@@ -272,4 +272,5 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
     assert(!@vm.execute("test -e #{dir}/XXX_gone").success?,
            "Found file that should not have persisted in persistent directory #{dir}")
   end
+  step "I shutdown Tails"
 end
