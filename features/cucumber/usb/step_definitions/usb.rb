@@ -15,12 +15,12 @@ end
 
 Given /^I create a new (\d+) GiB USB drive named "([^"]+)"$/ do |size, name|
   next if @skip_steps_while_restoring_background
-  VM.create_new_usb_drive(name, size)
+  @vm.storage.create_new_usb_drive(name, size)
 end
 
 Given /^I clone USB drive "([^"]+)" to a new USB drive "([^"]+)"$/ do |from, to|
   next if @skip_steps_while_restoring_background
-  VM.clone_to_new_usb_drive(from, to)
+  @vm.storage.clone_to_new_usb_drive(from, to)
 end
 
 Given /^I plug USB drive "([^"]+)"$/ do |name|

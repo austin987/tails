@@ -1,12 +1,20 @@
 require 'libvirt'
 require 'rexml/document'
-require 'etc'
 
 class VM
 
-  # These will be lazily initialized during the first instantiation
+  # These class attributes will be lazily initialized during the first
+  # instantiation:
+  # This is the libvirt connection, of which we only want one and
+  # which can persist for different VM instances (even in parallel)
   @@virt = nil
-  @@pool = nil
+  # This is a storage helper that deals with volume manipulation. The
+  # storage it deals with persist across VMs, by necessity.
+  @@storage = nil
+
+  def storage
+    return @@storage
+  end
 
   attr_reader :domain, :display, :ip, :ip6, :net
 
@@ -23,7 +31,7 @@ class VM
     # unlike the domain and net the storage pool should survive VM
     # teardown (so a new instance can use e.g. a previously created
     # USB drive), so we only create a new one if there is none.
-    @@pool ||= VM.new_storage_pool(xml_path)
+    @@storage ||= VMStorage.new(@@virt, xml_path)
   end
 
   def update_domain(xml)
@@ -63,34 +71,6 @@ class VM
       net.undefine
     rescue
     end
-  end
-
-  def VM.new_storage_pool(xml_path)
-    pool_xml = REXML::Document.new(File.read("#{xml_path}/storage_pool.xml"))
-    pool_name = pool_xml.elements['pool/name'].text
-    begin
-      pool = @@virt.lookup_storage_pool_by_name(pool_name)
-    rescue Libvirt::RetrieveError
-      # There's no pool with that name, so we don't have to clear it
-    else
-      VM.clear_storage_pool(pool)
-    end
-    pool_xml.elements['pool/target/path'].text = "#{$tmp_dir}/#{pool_name}"
-    pool = @@virt.define_storage_pool_xml(pool_xml.to_s)
-    pool.build
-    pool.create
-    pool.refresh
-    return pool
-  end
-
-  def VM.clear_storage_pool(pool)
-    pool.create if !pool.active?
-    pool.list_volumes.each do |vol_name|
-      vol = pool.lookup_volume_by_name(vol_name)
-      vol.delete
-    end
-    pool.destroy if pool.active?
-    pool.undefine
   end
 
   def set_network_link_state(state)
@@ -172,69 +152,6 @@ class VM
     close_cdrom
   end
 
-  def VM.create_new_usb_drive(name, size = 2)
-    raise "storage pool has not been created" if !@@pool
-    begin
-      old_vol = @@pool.lookup_volume_by_name(name)
-    rescue Libvirt::RetrieveError
-      # noop
-    else
-      old_vol.delete
-    end
-    uid = Etc::getpwnam("libvirt-qemu").uid
-    gid = Etc::getgrnam("kvm").gid
-    pool_path = REXML::Document.new(@@pool.xml_desc).elements['pool/target/path'].text
-    vol_xml = REXML::Document.new(File.read("#{@xml_path}/usb_volume.xml"))
-    vol_xml.elements['volume/name'].text = name
-    vol_xml.elements['volume/capacity'].text = size.to_s
-    vol_xml.elements['volume/target/path'].text = "#{pool_path}/#{name}"
-    vol_xml.elements['volume/target/permissions/owner'].text = uid.to_s
-    vol_xml.elements['volume/target/permissions/group'].text = gid.to_s
-    vol = @@pool.create_volume_xml(vol_xml.to_s)
-    @@pool.refresh
-  end
-
-  def VM.clone_to_new_usb_drive(from, to)
-    raise "storage pool has not been created" if !@@pool
-    begin
-      old_to_vol = @@pool.lookup_volume_by_name(to)
-    rescue Libvirt::RetrieveError
-      # noop
-    else
-      old_to_vol.delete
-    end
-    from_vol = @@pool.lookup_volume_by_name(from)
-    xml = REXML::Document.new(from_vol.xml_desc)
-    pool_path = REXML::Document.new(@@pool.xml_desc).elements['pool/target/path'].text
-    xml.elements['volume/name'].text = to
-    xml.elements['volume/target/path'].text = "#{pool_path}/#{to}"
-    @@pool.create_volume_xml_from(xml.to_s, from_vol)
-  end
-
-  def VM.usb_drive_path(name)
-    raise "storage pool has not been created" if !@@pool
-    @@pool.lookup_volume_by_name(name).path
-  end
-
-  def usb_drive_dev(name)
-    xml = REXML::Document.new(usb_drive_xml_desc(name))
-    return "/dev/" + xml.elements['disk/target'].attribute('dev').to_s
-  end
-
-  def usb_drive_xml_desc(name)
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements.each('domain/devices/disk') do |e|
-      begin
-        if e.elements['source'].attribute('file').to_s == VM.usb_drive_path(name)
-          return e.to_s
-        end
-      rescue
-        next
-      end
-    end
-    return nil
-  end
-
   def plug_usb_drive(name)
     # Get the next free /dev/sdX on guest
     used_devs = []
@@ -251,14 +168,33 @@ class VM
     assert letter <= 'z'
 
     xml = REXML::Document.new(File.read("#{@xml_path}/usb_disk.xml"))
-    xml.elements['disk/source'].attributes['file'] = VM.usb_drive_path(name)
+    xml.elements['disk/source'].attributes['file'] = @@storage.usb_drive_path(name)
     xml.elements['disk/target'].attributes['dev'] = dev
     @domain.attach_device(xml.to_s)
+  end
+
+  def usb_drive_xml_desc(name)
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements.each('domain/devices/disk') do |e|
+      begin
+        if e.elements['source'].attribute('file').to_s == @@storage.usb_drive_path(name)
+          return e.to_s
+        end
+      rescue
+        next
+      end
+    end
+    return nil
   end
 
   def unplug_usb_drive(name)
     xml = usb_drive_xml_desc(name)
     @domain.detach_device(xml)
+  end
+
+  def usb_drive_dev(name)
+    xml = REXML::Document.new(usb_drive_xml_desc(name))
+    return "/dev/" + xml.elements['disk/target'].attribute('dev').to_s
   end
 
   def set_usb_boot(name)
@@ -268,7 +204,7 @@ class VM
     # Unfortunately libvirt doesn't allow setting the removable property,
     # which Tails requires of its boot/persistence media. We work around
     # this by appending the device via raw QEMU command line options.
-    image = VM.usb_drive_path(name)
+    image = @@storage.usb_drive_path(name)
     xml = <<EOF
   <qemu:commandline xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
     <qemu:arg value='-drive'/>
