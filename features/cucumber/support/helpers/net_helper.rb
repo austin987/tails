@@ -41,4 +41,10 @@ class Sniffer
       # noop
     end
   end
+
+  def clear
+    if File.exist?(@pcap_file)
+      File.delete(@pcap_file)
+    end
+  end
 end

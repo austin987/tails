@@ -43,7 +43,10 @@ After do |scenario|
     base = File.basename(scenario.feature.file, ".feature").to_s
     @vm.take_screenshot("#{base}-#{DateTime.now}") if @vm
   end
-  @sniffer.stop if @sniffer
+  if @sniffer
+    @sniffer.stop
+    @sniffer.clear
+  end
   @vm.destroy if @vm
 end
 
