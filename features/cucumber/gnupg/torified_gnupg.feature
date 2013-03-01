@@ -5,7 +5,6 @@ Feature: Keyserver interaction with GnuPG
 
   Background:
     Given a computer
-    And I restore the background snapshot if it exists
     And I capture all network traffic
     And I start the computer
     And the computer boots Tails
@@ -16,7 +15,7 @@ Feature: Keyserver interaction with GnuPG
     And Iceweasel has autostarted and is not loading a web page
     And the time has synced
     And I have closed all annoying notifications
-    And I save the background snapshot if it does not exist
+    And I save the state so the background can be restored next scenario
 
   Scenario: Fetching PGP keys using the CLI should be done over Tor.
     When I successfully fetch a GnuPG key using the CLI

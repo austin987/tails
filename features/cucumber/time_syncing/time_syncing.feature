@@ -5,13 +5,12 @@ Feature: Time syncing
 
   Background:
     Given a computer
-    And I restore the background snapshot if it exists
     And the network is unplugged
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I save the background snapshot if it does not exist
+    And I save the state so the background can be restored next scenario
 
   Scenario: Clock with host's time
     When the network is plugged

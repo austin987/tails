@@ -27,17 +27,6 @@ def restore_background
   end
 end
 
-Given /^I restore the background snapshot if it exists$/ do
-  # We use size?() instead of the more intuitive exist?() here due
-  # to the libvirt permission workaround in env.rb.
-  if File.size?($background_snapshot)
-    restore_background
-    # From now on all steps will be skipped (and pass) until we reach
-    # the step which saved the snapshot.
-    @skip_steps_while_restoring_background = true
-  end
-end
-
 Given /^a computer$/ do
   @vm.destroy if @vm
   @vm = VM.new($vm_xml_path, $x_display)
@@ -232,11 +221,23 @@ Given /^I have closed all annoying notifications$/ do
   end
 end
 
-Given /^I save the background snapshot if it does not exist$/ do
-  if !@skip_steps_while_restoring_background
+Given /^I save the state so the background can be restored next scenario$/ do
+  if @skip_steps_while_restoring_background
+    assert(File.size?($background_snapshot),
+           "We have been skipping steps but there is no snapshot to restore")
+  else
+    # To be sure we run the feature from scratch we remove any
+    # leftover snapshot that wasn't removed.
+    if File.exist?($background_snapshot)
+      File.delete($background_snapshot)
+    end
+    # Workaround for libvirt permission issues. See the run_test_suite
+    # script for more information about a similar libvirt premission issue.
+    FileUtils.touch($background_snapshot)
+    FileUtils.chmod(0666, $background_snapshot)
     @vm.save_snapshot($background_snapshot)
-    restore_background
   end
+  restore_background
   # Now we stop skipping steps from the snapshot restore.
   @skip_steps_while_restoring_background = false
 end

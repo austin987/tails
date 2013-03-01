@@ -23,7 +23,11 @@ end
 # BeforeScenario
 Before do
   @screen = Sikuli::Screen.new
-  @skip_steps_while_restoring_background = false
+  if File.size?($background_snapshot)
+    @skip_steps_while_restoring_background = true
+  else
+    @skip_steps_while_restoring_background = false
+  end
   @theme = "gnome"
 end
 

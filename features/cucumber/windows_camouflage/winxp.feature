@@ -5,7 +5,6 @@ Feature: Microsoft Windows XP Camouflage
 
   Background:
     Given a computer
-    And I restore the background snapshot if it exists
     And the network is unplugged
     And I start the computer
     And the computer boots Tails
@@ -14,7 +13,7 @@ Feature: Microsoft Windows XP Camouflage
     And I log in to a new session
     And GNOME has started
     And I have closed all annoying notifications
-    And I save the background snapshot if it does not exist
+    And I save the state so the background can be restored next scenario
 
   Scenario: I should be presented with a Microsoft Windows XP like desktop
     Then I see "WinXPDesktop.png" after at most 10 seconds

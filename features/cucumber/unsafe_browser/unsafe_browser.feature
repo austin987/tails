@@ -5,7 +5,6 @@ Feature: Browsing the web using the Unsafe Browser
 
   Background:
     Given a computer
-    And I restore the background snapshot if it exists
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
@@ -16,7 +15,7 @@ Feature: Browsing the web using the Unsafe Browser
     And I have killed the process "iceweasel"
     And the time has synced
     And I have closed all annoying notifications
-    And I save the background snapshot if it does not exist
+    And I save the state so the background can be restored next scenario
 
   Scenario: Closing the Unsafe Browser shows a stop notification.
     When I start the Unsafe Browser

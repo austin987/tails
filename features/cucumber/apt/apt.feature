@@ -6,7 +6,6 @@ Feature: Installing packages through APT
 
   Background:
     Given a computer
-    And I restore the background snapshot if it exists
     And I capture all network traffic
     And I start the computer
     And the computer boots Tails
@@ -20,7 +19,7 @@ Feature: Installing packages through APT
     And the time has synced
     And I have closed all annoying notifications
     And APT's sources are only {ftp.us,security,back-ports}.debian.org
-    And I save the background snapshot if it does not exist
+    And I save the state so the background can be restored next scenario
 
   Scenario: Install packages using apt-get
     When I update APT using apt-get
