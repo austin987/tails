@@ -12,6 +12,10 @@ class VM
   # storage it deals with persist across VMs, by necessity.
   @@storage = nil
 
+  def VM.storage
+    return @@storage
+  end
+
   def storage
     return @@storage
   end

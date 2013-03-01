@@ -34,18 +34,26 @@ class VMStorage
     @pool.refresh
   end
 
-  def VMStorage.clear_storage_pool(pool)
+  def VMStorage.clear_storage_pool_volumes(pool)
     pool.create if !pool.active?
     pool.list_volumes.each do |vol_name|
       vol = pool.lookup_volume_by_name(vol_name)
       vol.delete
     end
+  end
+
+  def VMStorage.clear_storage_pool(pool)
+    VMStorage.clear_storage_pool_volumes(pool)
     pool.destroy if pool.active?
     pool.undefine
   end
 
-  def clear
-    VMStorage.clear_storage_pool(self)
+  def clear_pool
+    VMStorage.clear_storage_pool(@pool)
+  end
+
+  def clear_volumes
+    VMStorage.clear_storage_pool_volumes(@pool)
   end
 
   def create_new_usb_drive(name, size = 2)

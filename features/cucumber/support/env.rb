@@ -18,6 +18,7 @@ AfterFeature do |feature|
   if File.exist?($background_snapshot)
     File.delete($background_snapshot)
   end
+  VM.storage.clear_volumes
 end
 
 # BeforeScenario
