@@ -141,21 +141,6 @@ for dep in git libvirt-bin libvirt-dev virt-viewer libsikuli-script-java \
     check_dependency "${dep}"
 done
 
-if [ -z "${TEMP_DIR}" ]; then
-    TEMP_DIR=/tmp/TailsToaster
-fi
-if [ ! -e "${TEMP_DIR}" ]; then
-    mkdir -p "${TEMP_DIR}"
-fi
-if [ ! -d "${TEMP_DIR}" ]; then
-    error "${TEMP_DIR} is not a directory"
-fi
-for t in r w x; do
-    if [ ! -${t} "${TEMP_DIR}" ]; then
-	error "Insufficient permissions for ${TEMP_DIR}"
-    fi
-done
-
 TARGET_DISPLAY=$(next_free_display)
 
 start_xvfb
@@ -168,13 +153,6 @@ if [ -n "${VNC_SERVER}" ]; then
 fi
 if [ -n "${VNC_VIEWER}" ]; then
     start_vnc_viewer
-fi
-
-# Workaround: similarly to above, when libvirt takes ownership of the
-# ISO image it may become unreadable for the amnesia user inside guest
-# in the host-to-guest share used for some tests.
-if [ -O "${ISO}" ]; then
-    chmod a+r "${ISO}"
 fi
 
 export SIKULI_HOME="/usr/share/java"
