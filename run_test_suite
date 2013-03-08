@@ -21,6 +21,8 @@ Options:
   --view             Shows the test session in a windows. Requires x11vnc
                      and xtightvncviewer.
   --vnc-server-only  Starts a VNC server for the test session. Requires x11vnc.
+  --newest-iso       Omits the ISO argument; instead we use the ISO image
+                     with most recent mtime in the current directory
 "
 }
 
@@ -87,7 +89,7 @@ capture_session() {
 
 unset CAPTURE_FILE VNC_VIEWER VNC_SERVER
 SHORTOPTS="a:c"
-LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:"
+LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,newest-iso"
 OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -108,24 +110,30 @@ while [ $# -gt 0 ]; do
             shift
             TEMP_DIR="$(readlink -f $1)"
             ;;
+        --newest-iso)
+	    NEWEST_ISO=yes
+	    unset ISO
+            ;;
         --help)
 	    usage
             exit 0
             ;;
         --)
             shift
-            if [ -n "$1" ]; then
-                ISO="$(readlink -f $1)"
+            if [ -z "${NEWEST_ISO}" ]; then
+                if [ -n "$1" ]; then
+                    export ISO="$(readlink -f $1)"
+                    shift
+                fi
             fi
-            shift
             break
             ;;
     esac
     shift
 done
 
-if [ -z "${ISO}" ]; then
-    error "No ISO provided. Aborting..."
+if [ -z "${NEWEST_ISO}" ] && [ -z "${ISO}" ]; then
+    error "No ISO provided and --newest-iso not given. Aborting..."
 fi
 
 for dep in git libvirt-bin libvirt-dev virt-viewer libsikuli-script-java \
@@ -171,7 +179,6 @@ fi
 
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
-export ISO="${ISO}"
 export TEMP_DIR="${TEMP_DIR}"
 . features/.rvmrc
 check_dependency cucumber
