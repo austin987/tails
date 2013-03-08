@@ -178,7 +178,14 @@ class VM
     xml = REXML::Document.new(File.read("#{@xml_path}/usb_disk.xml"))
     xml.elements['disk/source'].attributes['file'] = @@storage.usb_drive_path(name)
     xml.elements['disk/target'].attributes['dev'] = dev
-    @domain.attach_device(xml.to_s)
+
+    if is_running?
+      @domain.attach_device(xml.to_s)
+    else
+      domain_xml = REXML::Document.new(@domain.xml_desc)
+      domain_xml.elements['domain/devices'].add_element(xml)
+      update_domain(domain_xml.to_s)
+    end
   end
 
   def usb_drive_xml_desc(name)
