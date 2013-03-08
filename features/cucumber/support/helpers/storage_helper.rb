@@ -35,10 +35,16 @@ class VMStorage
   end
 
   def VMStorage.clear_storage_pool_volumes(pool)
-    pool.create if !pool.active?
+    was_not_active = !pool.active?
+    if was_not_active
+      pool.create
+    end
     pool.list_volumes.each do |vol_name|
       vol = pool.lookup_volume_by_name(vol_name)
       vol.delete
+    end
+    if was_not_active
+      pool.destroy
     end
   end
 
