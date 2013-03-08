@@ -231,8 +231,9 @@ Given /^I save the state so the background can be restored next scenario$/ do
     if File.exist?($background_snapshot)
       File.delete($background_snapshot)
     end
-    # Workaround for libvirt permission issues. See the run_test_suite
-    # script for more information about a similar libvirt premission issue.
+    # Workaround: when libvirt takes ownership of the snapshot it may
+    # become unwritable for the user running this script so it cannot
+    # be removed during clean up.
     FileUtils.touch($background_snapshot)
     FileUtils.chmod(0666, $background_snapshot)
     @vm.save_snapshot($background_snapshot)
