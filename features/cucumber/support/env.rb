@@ -4,6 +4,36 @@ require 'time'
 require 'fileutils'
 require "#{Dir.pwd}/features/cucumber/support/extra_hooks.rb"
 
+def delete_snapshot(snapshot)
+  if snapshot and File.exist?(snapshot)
+    File.delete(snapshot)
+  end
+rescue Errno::EACCES => e
+  STDERR.puts "Couldn't delete background snapshot: #{e.to_s}"
+end
+
+def scenario_clean_up
+  if @sniffer
+    @sniffer.stop
+    @sniffer.clear
+  end
+  @vm.destroy if @vm
+end
+
+def feature_clean_up
+  delete_snapshot($background_snapshot)
+  VM.storage.clear_volumes if VM.storage
+end
+
+def exit_clean_up
+  scenario_clean_up
+  feature_clean_up
+  Dir.glob("#{$tmp_dir}/*.state").each do |snapshot|
+    delete_snapshot(snapshot)
+  end
+  VM.storage.clear_pool if VM.storage
+end
+
 $time_at_start = Time.now
 $tmp_dir = ENV['TEMP_DIR'] || "/tmp/TailsToaster"
 if File.exist?($tmp_dir)
@@ -50,16 +80,15 @@ else
 end
 $x_display = ENV['DISPLAY']
 
+at_exit { exit_clean_up }
+
 BeforeFeature do |feature|
   base = File.basename(feature.file, ".feature").to_s
   $background_snapshot = "#{$tmp_dir}/#{base}_background.state"
 end
 
-AfterFeature do |feature|
-  if File.exist?($background_snapshot)
-    File.delete($background_snapshot)
-  end
-  VM.storage.clear_volumes
+AfterFeature do
+  feature_clean_up
 end
 
 # BeforeScenario
@@ -84,13 +113,5 @@ After do |scenario|
     base = File.basename(scenario.feature.file, ".feature").to_s
     @vm.take_screenshot("#{base}-#{DateTime.now}") if @vm
   end
-  if @sniffer
-    @sniffer.stop
-    @sniffer.clear
-  end
-  @vm.destroy if @vm
-end
-
-at_exit do
-  VM.storage.clear_pool
+  scenario_clean_up
 end
