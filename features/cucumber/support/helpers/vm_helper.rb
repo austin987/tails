@@ -36,6 +36,10 @@ class VM
     # teardown (so a new instance can use e.g. a previously created
     # USB drive), so we only create a new one if there is none.
     @@storage ||= VMStorage.new(@@virt, xml_path)
+  rescue Exception => e
+    clean_up_net
+    clean_up_domain
+    raise e
   end
 
   def update_domain(xml)
