@@ -216,31 +216,7 @@ class VM
     if is_running?
       raise "boot settings can only be set for inactive vms"
     end
-    # Unfortunately libvirt doesn't allow setting the removable property,
-    # which Tails requires of its boot/persistence media. We work around
-    # this by appending the device via raw QEMU command line options.
-    image = @@storage.usb_drive_path(name)
-    xml = <<EOF
-  <qemu:commandline xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
-    <qemu:arg value='-drive'/>
-    <qemu:arg value='file=#{image},if=none,id=drive-usb-boot-disk,format=qcow2'/>
-    <qemu:arg value='-device'/>
-    <qemu:arg value='usb-storage,drive=drive-usb-boot-disk,id=usb-boot-disk,removable=on'/>
-  </qemu:commandline>
-EOF
-    # Of course libvirt won't set the ownership of the disk image
-    # correctly when using raw qemu cmdline passthrough, so we also plug
-    # the stick via libvirt's normal channels (attach_device() in this
-    # case) to deal with ownership. Note that we have to make sure that
-    # the drive/disk ids are different to avoid collisions. libvirt
-    # sets them to 'drive-usb-diskX' and 'usb-diskX' respectively, so
-    # that's why we set them to something different ('drive-usb-boot-disk'
-    # and 'usb-boot-disk') in the XML above.
     plug_usb_drive(name)
-
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain'].add_element(REXML::Document.new(xml))
-    update_domain(domain_xml.to_s)
     set_boot_device('hd')
     # FIXME: For some reason setting the boot device doesn't prevent
     # cdrom boot unless it's empty

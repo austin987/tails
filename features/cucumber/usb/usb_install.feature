@@ -46,8 +46,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And GNOME has started
     And I have closed all annoying notifications
     And I create a persistent partition with password "asdf"
-    And I shutdown Tails
     Then a Tails persistence partition exists on USB drive "A"
+    And I shutdown Tails
 
   Scenario: Writing files to read/write-enabled persistent partition
     Given a computer

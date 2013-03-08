@@ -131,32 +131,6 @@ end
 
 Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  # Workaround: It may seem odd that we reboot Tails from DVD here,
-  # but it's because USB drive "name" was added with the workaround
-  # in @vm.set_usb_boot(), which messes up @vm.usb_drive_dev().
-  step "a computer"
-  step "the computer is set to boot from the Tails DVD"
-  step "the network is unplugged"
-  step "I start the computer"
-  step "the computer boots Tails"
-  step "I plug USB drive \"#{name}\""
-
-  # FIXME: Instead of checking this from inside Tails we could kill
-  # the guest and inspect the qcow2 image by creating a block device
-  # for it on the host (require root so we'd need stuff in sudoers):
-  #     sudo modprobe nbd max_part=8
-  #     sudo qemu-nbd --connect /dev/nbd0 path/to/image
-  # Unfortunately udisks seems unable to handle /dev/nbd0,
-  # but we can yse blkid, e.g. (no root required):
-  #     /sbin/blkid -s TYPE -o value /dev/nbd0p2  ==>  crypto_LUKS
-  # but this requires root (or membership in disk group) for more info:
-  #     sudo /sbin/blkid -p -s USAGE -o value /dev/nbd0p2  ==>  crypto
-  #     sudo /sbin/blkid -p -s PART_ENTRY_SCHEME -o value /dev/nbd0p2  ==>  gpt
-  #     sudo /sbin/blkid -p -s PART_ENTRY_NAME -o value /dev/nbd0p2  ==>  TailsDate
-  # We could also mount it and check that (live-)persistence.conf is ok.
-  # Then we close the block device:
-  #     sudo qemu-nbd -disconnect /dev/nbd0
-
   dev = @vm.usb_drive_dev(name)
   data_partition_dev = dev + "2"
   info = @vm.execute("udisks --show-info #{data_partition_dev}").stdout
