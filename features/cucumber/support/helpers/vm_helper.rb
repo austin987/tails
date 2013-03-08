@@ -160,7 +160,7 @@ class VM
     close_cdrom
   end
 
-  def plug_usb_drive(name)
+  def plug_drive(name, type)
     # Get the next free /dev/sdX on guest
     used_devs = []
     domain_xml = REXML::Document.new(@domain.xml_desc)
@@ -175,9 +175,14 @@ class VM
     end
     assert letter <= 'z'
 
-    xml = REXML::Document.new(File.read("#{@xml_path}/usb_disk.xml"))
-    xml.elements['disk/source'].attributes['file'] = @@storage.usb_drive_path(name)
+    xml = REXML::Document.new(File.read("#{@xml_path}/disk.xml"))
+    xml.elements['disk/source'].attributes['file'] = @@storage.disk_path(name)
+    xml.elements['disk/driver'].attributes['type'] = @@storage.disk_format(name)
     xml.elements['disk/target'].attributes['dev'] = dev
+    xml.elements['disk/target'].attributes['bus'] = type
+    if type == "usb"
+      xml.elements['disk/target'].attributes['removable'] = 'on'
+    end
 
     if is_running?
       @domain.attach_device(xml.to_s)
@@ -188,11 +193,11 @@ class VM
     end
   end
 
-  def usb_drive_xml_desc(name)
+  def disk_xml_desc(name)
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       begin
-        if e.elements['source'].attribute('file').to_s == @@storage.usb_drive_path(name)
+        if e.elements['source'].attribute('file').to_s == @@storage.disk_path(name)
           return e.to_s
         end
       rescue
@@ -202,21 +207,25 @@ class VM
     return nil
   end
 
-  def unplug_usb_drive(name)
-    xml = usb_drive_xml_desc(name)
+  def unplug_drive(name)
+    xml = disk_xml_desc(name)
     @domain.detach_device(xml)
   end
 
-  def usb_drive_dev(name)
-    xml = REXML::Document.new(usb_drive_xml_desc(name))
+  def disk_dev(name)
+    xml = REXML::Document.new(disk_xml_desc(name))
     return "/dev/" + xml.elements['disk/target'].attribute('dev').to_s
+  end
+
+  def disk_detected?(name)
+    return execute("test -b #{disk_dev(name)}").success?
   end
 
   def set_usb_boot(name)
     if is_running?
       raise "boot settings can only be set for inactive vms"
     end
-    plug_usb_drive(name)
+    plug_drive(name, 'usb')
     set_boot_device('hd')
     # FIXME: For some reason setting the boot device doesn't prevent
     # cdrom boot unless it's empty

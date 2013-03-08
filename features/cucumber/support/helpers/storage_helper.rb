@@ -26,8 +26,8 @@ class VMStorage
     else
       VMStorage.clear_storage_pool(@pool)
     end
-    @path = "#{$tmp_dir}/#{pool_name}"
-    pool_xml.elements['pool/target/path'].text = @path
+    @pool_path = "#{$tmp_dir}/#{pool_name}"
+    pool_xml.elements['pool/target/path'].text = @pool_path
     @pool = @@virt.define_storage_pool_xml(pool_xml.to_s)
     @pool.build
     @pool.create
@@ -65,7 +65,10 @@ class VMStorage
     VMStorage.clear_storage_pool_volumes(@pool)
   end
 
-  def create_new_usb_drive(name, size = 2)
+  def create_new_disk(name, options = {})
+    options[:size] ||= 2
+    options[:unit] ||= "GiB"
+    options[:type] ||= "qcow2"
     begin
       old_vol = @pool.lookup_volume_by_name(name)
     rescue Libvirt::RetrieveError
@@ -75,17 +78,19 @@ class VMStorage
     end
     uid = Etc::getpwnam("libvirt-qemu").uid
     gid = Etc::getgrnam("kvm").gid
-    vol_xml = REXML::Document.new(File.read("#{@xml_path}/usb_volume.xml"))
+    vol_xml = REXML::Document.new(File.read("#{@xml_path}/volume.xml"))
     vol_xml.elements['volume/name'].text = name
-    vol_xml.elements['volume/capacity'].text = size.to_s
-    vol_xml.elements['volume/target/path'].text = "#{@pool}/#{name}"
+    size_b = convert_to_bytes(options[:size].to_f, options[:unit])
+    vol_xml.elements['volume/capacity'].text = size_b.to_s
+    vol_xml.elements['volume/target/format'].attributes["type"] = options[:type]
+    vol_xml.elements['volume/target/path'].text = "#{@pool_path}/#{name}"
     vol_xml.elements['volume/target/permissions/owner'].text = uid.to_s
     vol_xml.elements['volume/target/permissions/group'].text = gid.to_s
     vol = @pool.create_volume_xml(vol_xml.to_s)
     @pool.refresh
   end
 
-  def clone_to_new_usb_drive(from, to)
+  def clone_to_new_disk(from, to)
     begin
       old_to_vol = @pool.lookup_volume_by_name(to)
     rescue Libvirt::RetrieveError
@@ -101,7 +106,13 @@ class VMStorage
     @pool.create_volume_xml_from(xml.to_s, from_vol)
   end
 
-  def usb_drive_path(name)
+  def disk_format(name)
+    vol = @pool.lookup_volume_by_name(name)
+    vol_xml = REXML::Document.new(vol.xml_desc)
+    return vol_xml.elements['volume/target/format'].attributes["type"]
+  end
+
+  def disk_path(name)
     @pool.lookup_volume_by_name(name).path
   end
 

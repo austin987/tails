@@ -42,6 +42,25 @@ Given /^the computer is set to boot from the Tails DVD$/ do
   @vm.set_cdrom_boot($tails_iso)
 end
 
+Given /^I plug ([[:alpha:]]+) drive "([^"]+)"$/ do |bus, name|
+  next if @skip_steps_while_restoring_background
+  @vm.plug_drive(name, bus.downcase)
+  if @vm.is_running?
+    step "drive \"#{name}\" is detected by Tails"
+  end
+end
+
+Then /^drive "([^"]+)" is detected by Tails$/ do |name|
+  if @vm.is_running?
+    try_for(10, :msg => "Drive '#{name}' is not detected by Tails") {
+      @vm.disk_detected?(name)
+    }
+  else
+    STDERR.puts "Cannot tell if drive '#{name}' is detected by Tails: " +
+                "Tails is not running"
+  end
+end
+
 Given /^the network is plugged$/ do
   next if @skip_steps_while_restoring_background
   @vm.plug_network

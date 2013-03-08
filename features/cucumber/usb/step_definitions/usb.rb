@@ -13,28 +13,19 @@ def persistent_dirs
    '/var/lib/apt/lists']
 end
 
-Given /^I create a new (\d+) GiB USB drive named "([^"]+)"$/ do |size, name|
+Given /^I create a new (\d+) ([[:alpha:]]+) USB drive named "([^"]+)"$/ do |size, unit, name|
   next if @skip_steps_while_restoring_background
-  @vm.storage.create_new_usb_drive(name, size)
+  @vm.storage.create_new_disk(name, {:size => size, :unit => unit})
 end
 
 Given /^I clone USB drive "([^"]+)" to a new USB drive "([^"]+)"$/ do |from, to|
   next if @skip_steps_while_restoring_background
-  @vm.storage.clone_to_new_usb_drive(from, to)
-end
-
-Given /^I plug USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
-  @vm.plug_usb_drive(name)
-  dev = @vm.usb_drive_dev(name)
-  try_for(20, :msg => "The USB drive was not detected by Tails") {
-    @vm.execute("test -b #{dev}").success?
-  }
+  @vm.storage.clone_to_new_disk(from, to)
 end
 
 Given /^I unplug USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  @vm.unplug_usb_drive(name)
+  @vm.unplug_drive(name)
 end
 
 def usb_install_helper(name)
@@ -131,7 +122,7 @@ end
 
 Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  dev = @vm.usb_drive_dev(name)
+  dev = @vm.disk_dev(name)
   data_partition_dev = dev + "2"
   info = @vm.execute("udisks --show-info #{data_partition_dev}").stdout
   info_split = info.split("\n  partition:\n")
