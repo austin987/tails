@@ -108,7 +108,7 @@ while [ $# -gt 0 ]; do
             ;;
         --temp-dir)
             shift
-            TEMP_DIR="$(readlink -f $1)"
+            export TEMP_DIR="$(readlink -f $1)"
             ;;
         --newest-iso)
 	    NEWEST_ISO=yes
@@ -157,7 +157,6 @@ fi
 
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
-export TEMP_DIR="${TEMP_DIR}"
 . features/.rvmrc
 check_dependency cucumber
 if [ -z "${*}" ]; then
