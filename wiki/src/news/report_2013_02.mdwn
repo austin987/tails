@@ -1,0 +1,167 @@
+[[!meta date="Thu Mar 7 11:12:49 2013"]]
+[[!meta title="Tails report for February, 2013"]]
+
+[[!toc levels=1]]
+
+Releases
+========
+
+Tails 0.17 was released on February 25th. See the [[release
+notes|/news/version_0.17]].
+
+Metrics
+=======
+
+  - 99 275 connections of Tails to the Tor network. This makes a boot
+    every 24 seconds on average (this number is an approximation from
+    the requests made to the security announcements feed. The later is
+    retrieved by Tails after being connected to Tor to eventually
+    encourage users to update.)
+
+  - 63 reports were received through WhisperBack.
+
+  - 924 comments were posted on the forum, with 161 signed by Tails.
+
+Code
+====
+
+  - Some progress has been done on a persistence feature to 
+    packages installed with APT.
+
+    Git branch: [[!tails_gitweb_branch feature/remember_installed_packages]]
+
+  - A workaround has been proposed to temper a bug on APM handling of
+    some hard disks that could damage them. See [[!debbug 684241]].
+
+    Git branch: [[!tails_gitweb_branch bugfix/less-aggressive-hard-disk-APM-on-AC]]
+
+  - Two features that are known to be flawed in Pidin, MXit and
+    Sametime, have been disabled. See CVE-2013-0273, CVE-2013-0272 and
+    CVE-2013-0271.
+
+    Git branch: [[!tails_gitweb_branch bugfix/disable-flawed-Pidgin-features]]
+
+  - Shutdown and reboot launchers have been added to the menu to fix the
+    lack of a shutdown helper applet in camouflage mode.
+
+    Git branch: [[!tails_gitweb_branch bugfix/shutdown_with_camouflage]]
+
+  - Some progress was made on Tails based on Wheezy.
+
+    Git branch: [[!tails_gitweb_branch feature/wheezy]]
+
+  - The firmware loader for Qualcomm Gobi USB chipsets was added to
+    Tails 0.17.
+
+    Git branch: [[!tails_gitweb_branch feature/gobi-loader]]
+
+  - Some work has been done on getting the Tails web browser (now
+    based on Iceweasel 17 ESR + Torbrowser patches) ready for Tails 0.17.
+
+    Git branch: [[!tails_gitweb_branch feature/torbrowser]]
+
+  - I2P was updated to 0.9.4.
+
+    Git branch: [[!tails_gitweb_branch feature/i2p-0.9.4]]
+
+  - We have tested [[Yama and AppArmor LSB
+    stacking|todo/restrict_access_to_ptrace]] on Linux 3.7.8, and now
+    plan to have Yama enabled by default in the Debian kernel.
+
+Documentation and Website
+=========================
+
+  - The documentation on administration password was improved to be more
+    clear about opening a root terminal.
+
+    Git branch: [[!tails_gitweb_branch doc/administration_password]]
+
+  - A branch was started to clean up the content of the forum.
+
+    Git branch: [[!tails_gitweb_branch doc/sort_the_forum]]
+
+  - The /bugs and /todo sections of the website will no longer be
+    shipped in the ISO images.
+
+    Git commit: [[!tails_gitweb_commit 4332f98d370dfa2ca9e9e312823a56009e2ab0ca]]
+
+  - A link to check.torproject.org was added to the [[new default
+    browser homepage|/news]], to reassure users landing on it.
+
+  - The documentation on MAC Changer has been corrected to mention the
+    fact that MAC addresses are sometimes sent over the Internet.
+
+    Git commit: [[!tails_gitweb_commit 0d9718dad2f9ef577015b26194e81053402a459e]]
+
+  - Some more browser fingerprinting issues where documented.
+
+    Git commit: [[!tails_gitweb_commit 3e13999b6923ebfb3b25d7329ce0ce3d495ae63b]]
+
+  - Our [[income statement for 2012|doc/about/finances#index3h1]] was
+    published.
+
+  - The browser [[homepage|news]] was lightened a bit.
+
+  - The design documentation for [[todo/set_wireless_devices_state]]
+    was written.
+
+    Git branch: [[!tails_gitweb_branch feature/set-wireless-devices-state]]
+
+
+On-going discussions
+====================
+
+  - We have been debating on a keyboard shortcut overlap between
+    ALT+SHIFT+TAB that should change the window backward and ALT+SHIFT which
+    is the usual shortcut for switching between keyboard layouts. That's
+    particularly important for people switching between Latin and
+    non-Latin keyboards.
+
+    <https://mailman.boum.org/pipermail/tails-dev/2013-February/002610.html>
+
+  - There is now a dedicated mailing list for the development of the
+    Metadata Anonymization Toolkit (MAT).
+
+    <https://mailman.boum.org/listinfo/mat-dev>
+
+  - Runa's report on "Training Journalists in Istanbul" resulted in a
+    few discussion threads regarding, among others:
+
+    - [Autostarting
+      Iceweasel](https://mailman.boum.org/pipermail/tails-dev/2013-February/002652.html)
+    - [The browser
+      homepage](https://mailman.boum.org/pipermail/tails-dev/2013-February/002651.html)
+    - [Having an applet that informs about the version number of Tails
+      and hiding the download button on the News
+      page](https://mailman.boum.org/pipermail/tails-dev/2013-February/002653.html)
+    - [Disabling all Pidgin accounts by
+      default](https://mailman.boum.org/pipermail/tails-dev/2013-February/002654.html)
+
+Infrastructure
+==============
+
+Quite some work was done on a new dedicated server of ours, called
+lizard:
+
+- Various stuff that's customary for a virtualization host, like
+  a local APT proxy and a Puppet master, was setup.
+- Our APT repository was [[migrated to
+  lizard|todo/migrate_APT_repository_to_lizard]]. Our primary
+  (private) rsync server,
+  [[too|todo/migrate_primary_rsync_server_to_lizard]].
+- We now [[todo/run_a_BitTorrent_seed_on_lizard]].
+- We now [[todo/run_another_WhisperBack_relay_on_lizard]].
+- We now run [[!debpkg bitcoind]] on lizard.
+- Our Puppet modules are now hosted on lizard. Some are [[already
+  publicly available|contribute/git]], but there's a bit of boring
+  work left to [[publish the others|todo/publish_our_Puppet_modules]].
+  We're happy to [share with nice
+  people](https://labs.riseup.net/code/projects/sharedpuppetmodules)
+  the development and maintenance of most of the modules we use.
+- A VM was setup to run Jenkins, that should some day be an important
+  part of [[todo/automated_builds_and_tests]].
+
+Funding
+=======
+
+We have been working on starting our bounties program.
