@@ -56,3 +56,12 @@ end
 def get_last_iso
   return Dir.glob("#{Dir.pwd}/*.iso").sort_by {|f| File.mtime(f)}.last
 end
+
+def cmd_helper(cmd)
+  IO.popen(cmd + " 2>&1") do |p|
+    p.readlines
+    p.close
+    ret = $?
+    assert(ret == 0, "Command failed (returned #{ret}): #{cmd}")
+  end
+end

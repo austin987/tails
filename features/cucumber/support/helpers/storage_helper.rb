@@ -116,4 +116,28 @@ class VMStorage
     @pool.lookup_volume_by_name(name).path
   end
 
+  # We use parted for the disk_mk* functions since it can format
+  # partitions "inside" the super block device; mkfs.* need a
+  # partition device (think /dev/sdaX), so we'd have to use something
+  # like losetup or kpartx, which would require administrative
+  # privileges. These functions only work for raw disk images.
+
+  # TODO: We should switch to guestfish/libguestfs (which has
+  # ruby-bindings) so we could use qcow2 instead of raw, and more
+  # easily use LVM volumes.
+
+  # For type, see label-type for mklabel in parted(8)
+  def disk_mklabel(name, type)
+    assert disk_format(name) == "raw"
+    path = disk_path(name)
+    cmd_helper("/sbin/parted -s '#{path}' mklabel #{type}")
+  end
+
+  # For fstype, see fs-type for mkfs in parted(8)
+  def disk_mkpartfs(name, fstype)
+    assert disk_format(name) == "raw"
+    path = disk_path(name)
+    cmd_helper("/sbin/parted -s '#{path}' mkpartfs primary ext2 0% 100%")
+  end
+
 end
