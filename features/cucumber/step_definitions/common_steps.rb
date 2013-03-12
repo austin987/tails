@@ -8,10 +8,43 @@ def post_vm_start_hook
   @screen.click(@screen.width, @screen.height/2)
 end
 
+def activate_filesystem_shares
+  # XXX-9p: First of all, filesystem shares cannot be mounted while we
+  # do a snapshot save+restore, so unmounting+remounting them seems
+  # like a good idea. However, the 9p modules get into a broken state
+  # during the save+restore, so we also would like to unload+reload
+  # them, but loading of 9pnet_virtio fails after a restore with
+  # "probe of virtio2 failed with error -2" (in dmesg) which makes the
+  # shares unavailable. Hence we leave this code commented for now.
+  #for mod in ["9pnet_virtio", "9p"] do
+  #  @vm.execute("modprobe #{mod}")
+  #end
+
+  @vm.list_shares.each do |share|
+    @vm.execute("mkdir -p #{share}")
+    @vm.execute("mount -t 9p -o trans=virtio #{share} #{share}")
+  end
+end
+
+def deactivate_filesystem_shares
+  @vm.list_shares.each do |share|
+    @vm.execute("umount #{share}")
+  end
+
+  # XXX-9p: See XXX-9p above
+  #for mod in ["9p", "9pnet_virtio"] do
+  #  @vm.execute("modprobe -r #{mod}")
+  #end
+end
+
 def restore_background
   @vm.restore_snapshot($background_snapshot)
   @vm.wait_until_remote_shell_is_up
   post_vm_start_hook
+
+  # XXX-9p: See XXX-9p above
+  #activate_filesystem_shares
+
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
@@ -120,10 +153,7 @@ Given /^the computer boots Tails$/ do
                Sikuli::KEY_RETURN)
   @screen.wait('TailsGreeter.png', 120)
   @vm.wait_until_remote_shell_is_up
-  @vm.list_shares.each do |share|
-    @vm.execute("mkdir -p #{share}")
-    @vm.execute("mount -t 9p -o trans=virtio #{share} #{share}")
-  end
+  activate_filesystem_shares
 end
 
 Given /^I log in to a new session$/ do
@@ -255,6 +285,11 @@ Given /^I save the state so the background can be restored next scenario$/ do
     # be removed during clean up.
     FileUtils.touch($background_snapshot)
     FileUtils.chmod(0666, $background_snapshot)
+
+    # Snapshots cannot be saved while filesystem shares are mounted
+    # XXX-9p: See XXX-9p above.
+    #deactivate_filesystem_shares
+
     @vm.save_snapshot($background_snapshot)
   end
   restore_background

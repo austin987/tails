@@ -232,6 +232,8 @@ class VM
     remove_cdrom
   end
 
+  # XXX-9p: Shares don't work together with snapshot save+restore. See
+  # XXX-9p in common_steps.rb for more information.
   def add_share(source, tag)
     if is_running?
       raise "shares can only be added to inactice vms"
