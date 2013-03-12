@@ -1,5 +1,19 @@
-Hi peeps,
+pinentry-gtk does not support pasting into the passphrase text entry.
 
-I came across a problem in the new release 0.17
+From a user experience perspective, this is a regression from Tails
+0.16 and older, where the Seahorse's agent dialog did allow pasting.
+This was e.g. [[reported on our forum|forum/Tails PGP Applet cannot paste password from Keepassx to pgpapplet password entry box?!?]].
 
-When i want to decrypt a pgp message and my password is asked for decrypting, I can not copy/paste my password from clipboard to the entry box. So it's only possible to enter my password manually. 
+However, this is [considered as a feature by
+upstream](http://bugs.g10code.com/gnupg/issue1374), on the grounds
+that the whole point of software such as pinentry is to ensure that
+secrets are not stored in insecure places like the X clipboard.
+
+A workaround that was reported to work in non-Tails settings is to use
+the KeePassX Auto-Type function.
+
+Resolution path:
+
+1. [[!taglink todo/test]] KeePassX Auto-Type feature with pinentry
+1. Assuming the above work, document this workaround (and why the
+   whole thing is actually a feature).
