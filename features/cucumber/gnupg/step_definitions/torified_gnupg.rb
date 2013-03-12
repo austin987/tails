@@ -1,7 +1,7 @@
 When /^I successfully fetch a GnuPG key using the CLI$/ do
   next if @skip_steps_while_restoring_background
   res = @vm.execute("gpg --recv-key 52B69F10A3B0785AD05AFB471D84CCF010CC5BC7",
-                    "amnesia")
+                    $live_user)
   assert(res.success?, "gpg keyserver fetch failed:\n#{res.stderr}")
 end
 
@@ -18,6 +18,6 @@ When /^I successfully fetch a GnuPG key using seahorse$/ do
   @screen.type("f", Sikuli::KEY_ALT) # Menu: "File" ->
   @screen.type("i")                  # "Import"
   try_for(120, :msg => "Failed to fetch key using seahorse") {
-    @vm.execute("gpg --list-key 10CC5BC7", "amnesia").success?
+    @vm.execute("gpg --list-key 10CC5BC7", $live_user).success?
   }
 end

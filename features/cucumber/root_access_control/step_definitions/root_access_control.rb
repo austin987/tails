@@ -1,11 +1,11 @@
-Then /^I should be able to run administration commands as amnesia$/ do
-  stdout = @vm.execute("echo #{@sudo_password} | sudo -S whoami", "amnesia").stdout
-  assert(stdout.sub(/^\[sudo\] password for amnesia: /, "") == "root\n",
+Then /^I should be able to run administration commands as the live user$/ do
+  stdout = @vm.execute("echo #{@sudo_password} | sudo -S whoami", $live_user).stdout
+  assert(stdout.sub(/^\[sudo\] password for #{$live_user}: /, "") == "root\n",
          "Could not use sudo")
 end
 
-Then /^I should not be able to run administration commands as amnesia$/ do
-  stderr = @vm.execute("echo | sudo -S whoami", "amnesia").stderr
+Then /^I should not be able to run administration commands as the live user$/ do
+  stderr = @vm.execute("echo | sudo -S whoami", $live_user).stderr
   assert(stderr.include?("The administration password is disabled"),
          "The administration password is not disabled")
 end
@@ -19,7 +19,7 @@ Then /^I should be able to run synaptic$/ do
 end
 
 Then /^I should not be able to run synaptic$/ do
-  for p in ["", "live", "amnesia"]
+  for p in ["", "live", $live_user]
     step "I run \"gksu synaptic\""
     @sudo_password = p
     step "I enter the sudo password in the PolicyKit prompt"

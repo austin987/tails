@@ -67,7 +67,7 @@ if $tails_iso.nil?
 end
 if File.exist?($tails_iso)
   # Workaround: when libvirt takes ownership of the ISO image it may
-  # become unreadable for the amnesia user inside the guest in the
+  # become unreadable for the live user inside the guest in the
   # host-to-guest share used for some tests.
 
   # jruby 1.5.6 doesn't have world_readable? in File or File::Stat so we
@@ -85,6 +85,7 @@ else
   raise "The specified Tails ISO image '#{$tails_iso}' does not exist"
 end
 $x_display = ENV['DISPLAY']
+$live_user = "amnesia"
 
 at_exit { exit_clean_up }
 

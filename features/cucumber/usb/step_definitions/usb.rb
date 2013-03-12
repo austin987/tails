@@ -1,16 +1,16 @@
 def persistent_dirs
-  ['/etc/ssh',
-   '/home/amnesia/.claws-mail',
-   '/home/amnesia/.gconf/system/networking/connections',
-   '/home/amnesia/.gnome2/keyrings',
-   '/home/amnesia/.gnupg',
-   '/home/amnesia/.mozilla/firefox/bookmarks',
-   '/home/amnesia/.purple',
-   '/home/amnesia/.ssh',
-   '/home/amnesia/Persistent',
-   '/home/amnesia/custom_persistence',
-   '/var/cache/apt/archives',
-   '/var/lib/apt/lists']
+  ["/etc/ssh",
+   "/home/#{$live_user}/.claws-mail",
+   "/home/#{$live_user}/.gconf/system/networking/connections",
+   "/home/#{$live_user}/.gnome2/keyrings",
+   "/home/#{$live_user}/.gnupg",
+   "/home/#{$live_user}/.mozilla/firefox/bookmarks",
+   "/home/#{$live_user}/.purple",
+   "/home/#{$live_user}/.ssh",
+   "/home/#{$live_user}/Persistent",
+   "/home/#{$live_user}/custom_persistence",
+   "/var/cache/apt/archives",
+   "/var/lib/apt/lists"]
 end
 
 Given /^I create a new (\d+) ([[:alpha:]]+) USB drive named "([^"]+)"$/ do |size, unit, name|
@@ -101,7 +101,7 @@ Given /^I enable all persistence presets$/ do
     @screen.type(" \t")
   end
   # Now we'll have the custom persistence field selected
-  @screen.type('/home/amnesia/custom_persistence')
+  @screen.type("/home/#{$live_user}/custom_persistence")
   @screen.type('a', Sikuli::KEY_ALT)
   @screen.type('/etc/ssh')
   @screen.type('a', Sikuli::KEY_ALT)

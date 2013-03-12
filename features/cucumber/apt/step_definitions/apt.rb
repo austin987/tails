@@ -17,7 +17,7 @@ end
 When /^I update APT using apt-get$/ do
   SystemTimer.timeout(30*60) do
     cmd = @vm.execute("echo #{@sudo_password} | " +
-                      "sudo -S apt-get update", "amnesia")
+                      "sudo -S apt-get update", $live_user)
     if !cmd.success?
       STDERR.puts cmd.stderr
     end
@@ -28,7 +28,7 @@ Then /^I should be able to install a package using apt-get$/ do
   package = "cowsay"
   SystemTimer.timeout(120) do
     cmd = @vm.execute("echo #{@sudo_password} | " +
-                      "sudo -S apt-get install #{package}", "amnesia")
+                      "sudo -S apt-get install #{package}", $live_user)
     if !cmd.success?
       STDERR.puts cmd.stderr
     end
