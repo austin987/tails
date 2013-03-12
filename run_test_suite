@@ -14,6 +14,8 @@ from the Tails source directory.
 Options:
   --capture=FILE     Captures the test session into FILE using VP8 encoding.
                      Requires ffmpeg and libvpx0.
+  --keep-snapshots   Don't ever delete the background snapshots. This can a big
+                     time saver when debugging new features.
   --temp-dir         Directory where various temporary files are written
                      during a test, e.g. VM snapshots and memory dumps,
                      failure screenshots, pcap files and disk images
@@ -89,7 +91,7 @@ capture_session() {
 
 unset CAPTURE_FILE VNC_VIEWER VNC_SERVER
 SHORTOPTS="a:c"
-LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,newest-iso"
+LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,newest-iso:,keep-snapshots"
 OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -105,6 +107,9 @@ while [ $# -gt 0 ]; do
         --capture)
             shift
             CAPTURE_FILE="$1"
+            ;;
+        --keep-snapshots)
+            export KEEP_SNAPSHOTS="yes"
             ;;
         --temp-dir)
             shift

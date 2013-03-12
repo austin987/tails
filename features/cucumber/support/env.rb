@@ -21,16 +21,20 @@ def scenario_clean_up
 end
 
 def feature_clean_up
-  delete_snapshot($background_snapshot)
+  delete_snapshot($background_snapshot) if !$keep_snapshots
   VM.storage.clear_volumes if VM.storage
+end
+
+def delete_all_snapshots
+  Dir.glob("#{$tmp_dir}/*.state").each do |snapshot|
+    delete_snapshot(snapshot)
+  end
 end
 
 def exit_clean_up
   scenario_clean_up
   feature_clean_up
-  Dir.glob("#{$tmp_dir}/*.state").each do |snapshot|
-    delete_snapshot(snapshot)
-  end
+  delete_all_snapshots if !$keep_snapshots
   VM.storage.clear_pool if VM.storage
 end
 
@@ -54,6 +58,8 @@ else
   end
 end
 $vm_xml_path = ENV['VM_XML_PATH'] || "#{Dir.pwd}/features/cucumber/domains"
+$keep_snapshots = !ENV['KEEP_SNAPSHOTS'].nil?
+delete_all_snapshots if !$keep_snapshots
 $tails_iso = ENV['ISO'] || get_last_iso
 if $tails_iso.nil?
   raise "No Tails ISO image specified, and none could be found in the " +
