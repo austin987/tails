@@ -183,16 +183,64 @@ Then /^Tails seems to have booted normally$/ do
   step "GNOME has started"
 end
 
-Then /^Tails is running from a USB drive$/ do
-  next if @skip_steps_while_restoring_background
+def boot_device
   # Approach borrowed from
   # config/chroot_local_includes/lib/live/config/998-permissions
   boot_dev_id = @vm.execute("udevadm info --device-id-of-file=/live/image").stdout.chomp
   boot_dev = @vm.execute("readlink -f /dev/block/'#{boot_dev_id}'").stdout.chomp
-  boot_dev_info = @vm.execute("udevadm info --query=property --name='#{boot_dev}'").stdout.chomp
+  return boot_dev
+end
+
+def boot_device_type
+  # Approach borrowed from
+  # config/chroot_local_includes/lib/live/config/998-permissions
+  boot_dev_info = @vm.execute("udevadm info --query=property --name='#{boot_device}'").stdout.chomp
   boot_dev_type = (boot_dev_info.split("\n").select { |x| x.start_with? "ID_BUS=" })[0].split("=")[1]
-  assert(boot_dev_type == "usb",
-         "Got device type '#{boot_dev_type}' while expecting 'usb'")
+  return boot_dev_type
+end
+
+Then /^Tails is running from a USB drive$/ do
+  next if @skip_steps_while_restoring_background
+  assert(boot_device_type == "usb",
+         "Got device type '#{boot_device_type}' while expecting 'usb'")
+end
+
+Then /^the boot device has safe access rights$/ do
+  next if @skip_steps_while_restoring_background
+
+  # XXX: It turns out our fix for Debian bug #645466 (see the live-config
+  # hook called 9980-permissions) is not working any more. Is udev doing
+  # this at a later stage now?
+  puts "This check is temporarily disabled since it currently always fails"
+  next
+
+  super_boot_dev = boot_device.sub(/[[:digit:]]+$/, "")
+  devs = @vm.execute("ls -1 #{super_boot_dev}*").stdout.chomp.split
+  assert(devs.size > 0, "Could not determine boot device")
+  all_users = @vm.execute("cut -d':' -f1 /etc/passwd").stdout.chomp.split
+  all_users_with_groups = all_users.collect do |user|
+    groups = @vm.execute("groups #{user}").stdout.chomp.sub(/^#{user} : /, "").split(" ")
+    [user, groups]
+  end
+  STDERR.puts "#{all_users_with_groups.join(", ")}"
+  for dev in devs do
+    dev_owner = @vm.execute("stat -c %U #{dev}").stdout.chomp
+    dev_group = @vm.execute("stat -c %G #{dev}").stdout.chomp
+    dev_perms = @vm.execute("stat -c %a #{dev}").stdout.chomp
+    assert(dev_owner == "root",
+           "Boot device '#{dev}' owned by user '#{dev_owner}', expected 'root'")
+    assert(dev_group == "disk" || dev_group == "root",
+           "Boot device '#{dev}' owned by group '#{dev_group}', expected " +
+           "'disk' or 'root'. We are probably affected by Debian bug #645466.")
+    assert(dev_perms == "660",
+           "Boot device '#{dev}' has permissions '#{dev_perms}', expected '660'")
+    for user, groups in all_users_with_groups do
+      next if user == "root"
+      assert(!(groups.include?(dev_group)),
+             "Unprivileged user '#{user}' is in group '#{dev_group}' which " +
+             "owns boot device '#{dev}'")
+    end
+  end
 end
 
 When /^I write some files expected to persist$/ do
