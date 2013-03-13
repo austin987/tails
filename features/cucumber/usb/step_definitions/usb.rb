@@ -120,22 +120,90 @@ Given /^I create a persistent partition with password "([^"]+)"$/ do |pwd|
   step "I enable all persistence presets"
 end
 
-Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
-  dev = @vm.disk_dev(name)
-  data_partition_dev = dev + "2"
-  info = @vm.execute("udisks --show-info #{data_partition_dev}").stdout
+def check_part_integrity(name, dev, usage, type, scheme, label)
+  info = @vm.execute("udisks --show-info #{dev}").stdout
   info_split = info.split("\n  partition:\n")
   dev_info = info_split[0]
   part_info = info_split[1]
-  assert(dev_info.match("^  usage: +crypto$"),
-         "Unexpected device field 'usage' on USB drive \"#{name}\"")
-  assert(dev_info.match("^  type: +crypto_LUKS$"),
-         "Unexpected device field 'type' on USB drive \"#{name}\"")
-  assert(part_info.match("^    scheme: +gpt$"),
-         "Unexpected partition scheme on USB drive \"#{name}\"")
-  assert(part_info.match("^    label: +TailsData$"),
-         "Unexpected partition label on USB drive \"#{name}\"")
+  assert(dev_info.match("^  usage: +#{usage}$"),
+         "Unexpected device field 'usage' on USB drive '#{name}', '#{dev}'")
+  assert(dev_info.match("^  type: +#{type}$"),
+         "Unexpected device field 'type' on USB drive '#{name}', '#{dev}'")
+  assert(part_info.match("^    scheme: +#{scheme}$"),
+         "Unexpected partition scheme on USB drive '#{name}', '#{dev}'")
+  assert(part_info.match("^    label: +#{label}$"),
+         "Unexpected partition label on USB drive '#{name}', '#{dev}'")
+end
+
+Then /^Tails is installed on USB drive "([^"]+)"$/ do |name|
+  next if @skip_steps_while_restoring_background
+  dev = @vm.disk_dev(name) + "1"
+  check_part_integrity(name, dev, "filesystem", "vfat", "gpt", "Tails")
+
+  old_root = "/lib/live/mount/medium"
+  new_root = "/mnt/new"
+  @vm.execute("mkdir -p #{new_root}")
+  @vm.execute("mount #{dev} #{new_root}")
+
+  c = @vm.execute("diff -qr '#{old_root}/live' '#{new_root}/live'")
+  assert(c.success?,
+         "USB drive '#{name}' has differences in /live:\n#{c.stdout}")
+
+  loader = boot_device_type == "usb" ? "syslinux" : "isolinux"
+  syslinux_files = @vm.execute("ls -1 #{new_root}/syslinux").stdout.chomp.split
+  # We deal with these files separately
+  ignores = ["syslinux.cfg", "exithelp.cfg", "ldlinux.sys"]
+  for f in syslinux_files - ignores do
+    c = @vm.execute("diff -q '#{old_root}/#{loader}/#{f}' " +
+                    "'#{new_root}/syslinux/#{f}'")
+    assert(c.success?, "USB drive '#{name}' has differences in " +
+           "'/syslinux/#{f}'")
+  end
+
+  # The main .cfg is named differently vs isolinux
+  c = @vm.execute("diff -q '#{old_root}/#{loader}/#{loader}.cfg' " +
+                  "'#{new_root}/syslinux/syslinux.cfg'")
+  assert(c.success?, "USB drive '#{name}' has differences in " +
+         "'/syslinux/syslinux.cfg'")
+
+  # We have to account for the different path vs isolinux
+  old_exithelp = @vm.execute("cat '#{old_root}/#{loader}/exithelp.cfg'").stdout
+  new_exithelp = @vm.execute("cat '#{new_root}/syslinux/exithelp.cfg'").stdout
+  new_exithelp_undiffed = new_exithelp.sub("kernel /syslinux/vesamenu.c32",
+                                           "kernel /#{loader}/vesamenu.c32")
+  assert(new_exithelp_undiffed == old_exithelp,
+         "USB drive '#{name}' has unexpected differences in " +
+         "'/syslinux/exithelp.cfg'")
+
+  @vm.execute("umount #{new_root}")
+  @vm.execute("sync")
+end
+
+Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive "([^"]+)"$/ do |pwd, name|
+  next if @skip_steps_while_restoring_background
+  dev = @vm.disk_dev(name) + "2"
+  check_part_integrity(name, dev, "crypto", "crypto_LUKS", "gpt", "TailsData")
+
+  c = @vm.execute("echo #{pwd} | cryptsetup luksOpen #{dev} #{name}")
+  assert(c.success?, "Couldn't open LUKS device '#{dev}' on  drive '#{name}'")
+  luks_dev = "/dev/mapper/#{name}"
+
+  # Adapting check_part_integrity() seems like a bad idea so here goes
+  info = @vm.execute("udisks --show-info #{luks_dev}").stdout
+  assert info.match("^  cleartext luks device:$")
+  assert info.match("^  usage: +filesystem$")
+  assert info.match("^  type: +ext3$")
+  assert info.match("^  label: +TailsData$")
+
+  mount_dir = "/mnt/#{name}"
+  @vm.execute("mkdir -p #{mount_dir}")
+  c = @vm.execute("mount #{luks_dev} #{mount_dir}")
+  assert(c.success?,
+         "Couldn't mount opened LUKS device '#{dev}' on  drive '#{name}'")
+
+  @vm.execute("umount #{mount_dir}")
+  @vm.execute("sync")
+  @vm.execute("cryptsetup luksClose #{name}")
 end
 
 Given /^I enable persistence with password "([^"]+)"$/ do |pwd|

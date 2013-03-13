@@ -23,8 +23,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I create a new 4 GiB USB drive named "A"
     And I plug USB drive "A"
     And I "Clone & Install" Tails to USB drive "A"
+    Then Tails is installed on USB drive "A"
     And I unplug USB drive "A"
-    # Should be some kind of check here
 
   Scenario: Tails boot from USB drive without persistent partition
     Given a computer
@@ -49,7 +49,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And GNOME has started
     And I have closed all annoying notifications
     And I create a persistent partition with password "asdf"
-    Then a Tails persistence partition exists on USB drive "A"
+    Then a Tails persistence partition with password "asdf" exists on USB drive "A"
     And I shutdown Tails
 
   Scenario: Writing files to read/write-enabled persistent partition
@@ -94,8 +94,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I have closed all annoying notifications
     And I plug USB drive "A"
     And I "Clone & Upgrade" Tails to USB drive "A"
+    Then Tails is installed on USB drive "A"
     And I unplug USB drive "A"
-    # Should be some kind of check here
 
   # If above scenario failed before it upgraded the Tails on USB drive A
   # this scenario will test the pre-upgrade Tails. While not completely
@@ -127,9 +127,9 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I have closed all annoying notifications
     And I plug USB drive "B"
     And I "Clone & Upgrade" Tails to USB drive "B"
+    Then Tails is installed on USB drive "B"
     And I unplug USB drive "B"
     And I unplug USB drive "A"
-    # Should be some kind of check here
 
   # Same issue as with scenario "Boot from USB drive upgraded from DVD"
   Scenario: Boot from USB drive upgraded from USB with persistence enabled
@@ -157,8 +157,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I have closed all annoying notifications
     And I plug USB drive "A"
     And I do a "Upgrade from ISO" on USB drive "A"
+    Then Tails is installed on USB drive "A"
     And I unplug USB drive "A"
-    # Should be some kind of check here
 
   # Same issue as with scenario "Boot from USB drive upgraded from DVD"
   Scenario: Boot from USB drive upgraded from ISO with persistence enabled
