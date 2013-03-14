@@ -139,7 +139,7 @@ class VM
         end
         e.elements['source'].attributes['file'] = image
         if is_running?
-          @domain.update_device(e.to_s)
+          @domain.update_device(e.to_s, Libvirt::Domain::DEVICE_MODIFY_FORCE)
         else
           update_domain(domain_xml.to_s)
         end
