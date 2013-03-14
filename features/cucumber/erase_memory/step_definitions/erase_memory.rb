@@ -35,6 +35,10 @@ Given /^the non-PAE kernel is running$/ do
          "Kernel #{kernel} is running, expected 'vmlinuz' (non-PAE)")
 end
 
+def used_ram_in_bytes
+  return @vm.execute("free -b | awk '/^-\\/\\+ buffers\\/cache:/ { print $3 }'").stdout.chomp.to_i
+end
+
 def detected_ram_in_bytes
   return @vm.execute("free -b | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
 end
@@ -109,10 +113,17 @@ Given /^I fill the guest's memory with a known pattern$/ do
   try_for(10, { :msg => "fillram didn't start" }) {
     @vm.execute("pgrep fillram").success?
   }
+  STDERR.print "Memory fill progress: "
+  ram_usage = ""
   # ... and that it finishes
-  try_for(instances*60, { :msg => "fillram didn't complete, probably the VM crashed" }) {
+  try_for(instances*60, { :msg => "fillram didn't complete, probably the VM crashed" }) do
+    used_ram = used_ram_in_bytes
+    remove_chars = ram_usage.size
+    ram_usage = "%3d%% " % ((used_ram.to_f/@detected_ram_b)*100)
+    STDERR.print "\b"*remove_chars + ram_usage
     ! @vm.execute("pgrep fillram").success?
-  }
+  end
+  STDERR.print "\b"*ram_usage.size + "100%\n"
   coverage = pattern_coverage_in_guest_ram()
   min_coverage = 0.9
   assert(coverage > min_coverage,
