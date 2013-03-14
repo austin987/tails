@@ -58,6 +58,7 @@ else
   end
 end
 $vm_xml_path = ENV['VM_XML_PATH'] || "#{Dir.pwd}/features/cucumber/domains"
+$misc_files_dir = "#{Dir.pwd}/features/cucumber/misc_files"
 $keep_snapshots = !ENV['KEEP_SNAPSHOTS'].nil?
 delete_all_snapshots if !$keep_snapshots
 $tails_iso = ENV['ISO'] || get_last_iso
