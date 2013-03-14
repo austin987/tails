@@ -102,6 +102,8 @@ Given /^I fill the guest's memory with a known pattern$/ do
   pid = (pids1 & pids2)[0]
   @vm.execute("echo -17 > /proc/#{pid}/oom_adj")
 
+  used_mem_before_fill = used_ram_in_bytes
+
   # To be sure that we fill all memory we run one fillram instance
   # for each GiB of detected memory, rounded up. We also kill all instances
   # after the first one has finished, i.e. when the memory is full,
@@ -125,7 +127,11 @@ Given /^I fill the guest's memory with a known pattern$/ do
   end
   STDERR.print "\b"*ram_usage.size + "100%\n"
   coverage = pattern_coverage_in_guest_ram()
-  min_coverage = 0.9
+  # Let's aim for having the pattern cover at least 80% of the free RAM.
+  # More would be good, but it seems like OOM kill strikes around 90%,
+  # and we don't want this test to fail all the time.
+  min_coverage = ((@detected_ram_b - used_mem_before_fill).to_f /
+                  @detected_ram_b.to_f)*0.8
   assert(coverage > min_coverage,
          "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
          "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
