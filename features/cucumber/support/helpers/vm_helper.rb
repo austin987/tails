@@ -131,9 +131,6 @@ class VM
   end
 
   def set_cdrom_image(image)
-    if is_running?
-      raise "boot settings can only be set for inactice vms"
-    end
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       if e.attribute('device').to_s == "cdrom"
@@ -155,6 +152,9 @@ class VM
   end
 
   def set_cdrom_boot(image)
+    if is_running?
+      raise "boot settings can only be set for inactice vms"
+    end
     set_boot_device('cdrom')
     set_cdrom_image(image)
     close_cdrom
