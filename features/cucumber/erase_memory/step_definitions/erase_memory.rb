@@ -33,18 +33,18 @@ Given /^the non-PAE kernel is running$/ do
   kernel_check("vmlinuz")
 end
 
-def detected_ram_in_bytes(vm)
-  return vm.execute("free -b | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
+def detected_ram_in_bytes
+  return @vm.execute("free -b | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
 end
 
 Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
+  @detected_ram_b = detected_ram_in_bytes
   next if @skip_steps_while_restoring_background
-  detected_b = detected_ram_in_bytes(@vm)
-  puts "Detected #{detected_b} bytes of RAM"
+  puts "Detected #{@detected_ram_b} bytes of RAM"
   min_ram_b = convert_to_bytes(min_ram.to_i, unit)
   # All RAM will not be reported by `free`, so we allow a 128 MB gap
   gap = convert_to_bytes(128, "MiB")
-  assert(detected_b + gap >= min_ram_b, "Didn't detect enough RAM")
+  assert(@detected_ram_b + gap >= min_ram_b, "Didn't detect enough RAM")
 end
 
 def pattern_coverage_in_guest_ram
@@ -64,7 +64,7 @@ def pattern_coverage_in_guest_ram
   File.delete dump
   # Pattern is 16 bytes long
   patterns_b = patterns*16
-  coverage = patterns_b.to_f/@vm.get_ram_size_in_bytes.to_f
+  coverage = patterns_b.to_f/@detected_ram_b.to_f
   puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_b} bytes)"
   return coverage
 end
@@ -76,8 +76,7 @@ Given /^I fill the guest's memory with a known pattern$/ do
   # after the first one has finished, i.e. when the memory is full,
   # since the others otherwise may continue re-filling the same memory
   # unnecessarily.
-  detected_ram_b = detected_ram_in_bytes(@vm)
-  instances = (detected_ram_b.to_f/(2**30)).ceil
+  instances = (@detected_ram_b.to_f/(2**30)).ceil
   instances.times { @vm.spawn('/usr/local/sbin/fillram; killall fillram') }
   # We make sure that the filling has started...
   try_for(10, { :msg => "fillram didn't start" }) {
@@ -88,8 +87,7 @@ Given /^I fill the guest's memory with a known pattern$/ do
     ! @vm.execute("pgrep fillram").success?
   }
   coverage = pattern_coverage_in_guest_ram()
-  available_ram = 1 - detected_ram_b.to_f/@vm.get_ram_size_in_bytes.to_f
-  min_coverage = 0.5*available_ram
+  min_coverage = 0.9
   assert(coverage > min_coverage,
          "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
          "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
