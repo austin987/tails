@@ -16,21 +16,23 @@ Given /^the computer is an old pentium without the PAE extension$/ do
   @vm.disable_pae_workaround
 end
 
-def kernel_check(expected_kernel)
+def which_kernel
   kernel_path = @vm.execute("/usr/local/bin/tails-get-bootinfo kernel").stdout.chomp
-  kernel = File.basename(kernel_path)
-  assert(kernel == expected_kernel,
-         "Kernel #{kernel} is running, expected #{expected_kernel}")
+  return File.basename(kernel_path)
 end
 
 Given /^the PAE kernel is running$/ do
   next if @skip_steps_while_restoring_background
-  kernel_check("vmlinuz2")
+  kernel = which_kernel
+  assert(kernel == "vmlinuz2",
+         "Kernel #{kernel} is running, expected 'vmlinuz2' (PAE)")
 end
 
 Given /^the non-PAE kernel is running$/ do
   next if @skip_steps_while_restoring_background
-  kernel_check("vmlinuz")
+  kernel = which_kernel
+  assert(kernel == "vmlinuz",
+         "Kernel #{kernel} is running, expected 'vmlinuz' (non-PAE)")
 end
 
 def detected_ram_in_bytes
@@ -71,6 +73,31 @@ end
 
 Given /^I fill the guest's memory with a known pattern$/ do
   next if @skip_steps_while_restoring_background
+
+  # Free some more memory by dropping the caches etc.
+  @vm.execute("echo 3 > /proc/sys/vm/drop_caches")
+
+  # The non-PAE kernel often crashes when approaching full memory, so
+  # we adjust oom and memory overcommitment limitations in that case.
+  if which_kernel == "vmlinuz"
+    [
+     "echo 256 > /proc/sys/vm/min_free_kbytes",
+     "echo 2   > /proc/sys/vm/overcommit_memory",
+     "echo 97  > /proc/sys/vm/overcommit_ratio",
+     "echo 1   > /proc/sys/vm/oom_kill_allocating_task",
+     "echo 0   > /proc/sys/vm/oom_dump_tasks"
+    ].each { |c| @vm.execute(c) }
+  end
+
+  # The remote shell is sometimes OOM killed when we fill the memory,
+  # and since we depend on it after the memory fill we try to prevent
+  # that from happening.
+  # XXX: pgrep detects itself for mysterios reasons
+  pids1 = @vm.execute("pgrep -f autotest_remote_shell.py").stdout.chomp.split
+  pids2 = @vm.execute("pgrep -f autotest_remote_shell.py").stdout.chomp.split
+  pid = (pids1 & pids2)[0]
+  @vm.execute("echo -17 > /proc/#{pid}/oom_adj")
+
   # To be sure that we fill all memory we run one fillram instance
   # for each GiB of detected memory, rounded up. We also kill all instances
   # after the first one has finished, i.e. when the memory is full,
