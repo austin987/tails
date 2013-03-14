@@ -16,7 +16,8 @@ Feature: System memory erasure on shutdown
     And process "memlockd" is running
     And process "udev-watchdog" is running
     When I fill the guest's memory with a known pattern
-    And I shutdown Tails and let it wipe the memory
+    And I safely shutdown Tails
+    And I wait for Tails to finish wiping the memory
     Then I find very few patterns in the guest's memory
 
   Scenario: An old computer
@@ -32,5 +33,6 @@ Feature: System memory erasure on shutdown
     And process "memlockd" is running
     And process "udev-watchdog" is running
     When I fill the guest's memory with a known pattern
-    And I shutdown Tails and let it wipe the memory
+    And I safely shutdown Tails
+    And I wait for Tails to finish wiping the memory
     Then I find very few patterns in the guest's memory

@@ -139,8 +139,12 @@ Then /^I find very few patterns in the guest's memory$/ do
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
 end
 
-When /^I shutdown Tails and let it wipe the memory$/ do
+When /^I safely shutdown Tails$/ do
   next if @skip_steps_while_restoring_background
   @vm.execute("halt")
+end
+
+When /^I wait for Tails to finish wiping the memory$/ do
+  next if @skip_steps_while_restoring_background
   @screen.wait('MemoryWipeCompleted.png', 120)
 end
