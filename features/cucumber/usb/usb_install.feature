@@ -109,7 +109,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     When I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And Tails seems to have booted normally
+    Then Tails seems to have booted normally
     And Tails is running from a USB drive
     And the boot device has safe access rights
 
