@@ -11,7 +11,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   # test what to me deels like logically different features, e.g.
   # the two named above would be concatenated.
 
-  Scenario: Install Tails to a USB drive
+  Scenario: Installing Tails to a prestine USB drive
     Given a computer
     And the computer is set to boot from the Tails DVD
     And the network is unplugged
@@ -26,7 +26,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     Then Tails is installed on USB drive "A"
     And I unplug USB drive "A"
 
-  Scenario: Tails boot from USB drive without persistent partition
+  Scenario: Booting Tails from a USB drive without a persistent partition
     Given a computer
     And the computer is setup up to boot from USB drive "A"
     And the network is unplugged
@@ -52,7 +52,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     Then a Tails persistence partition with password "asdf" exists on USB drive "A"
     And I shutdown Tails
 
-  Scenario: Writing files to read/write-enabled persistent partition
+  Scenario: Writing files to a read/write-enabled persistent partition
     Given a computer
     And the computer is setup up to boot from USB drive "A"
     And the network is unplugged
@@ -67,7 +67,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I shutdown Tails
     Then only the expected files should persist on USB drive "A"
 
-  Scenario: Writing files to read-only-enabled persistent partition
+  Scenario: Writing files to a read-only-enabled persistent partition
     Given a computer
     And the computer is setup up to boot from USB drive "A"
     And the network is unplugged
@@ -83,7 +83,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I shutdown Tails
     Then only the expected files should persist on USB drive "A"
 
-  Scenario: Upgrading a Tails USB from a Tails DVD
+  Scenario: Upgrading a Tails USB drive from a Tails DVD
     Given a computer
     And the computer is set to boot from the Tails DVD
     And the network is unplugged
@@ -102,7 +102,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   # bad, we probably want USB drive A to contain an old version of Tails
   # (give OLD_ISO as env variable?) and then verify that an up-to-date
   # version is booted in this step.
-  Scenario: Boot from USB drive upgraded from DVD with persistence enabled
+  Scenario: Booting Tails from a USB drive upgraded from DVD with persistence enabled
     Given a computer
     And the computer is setup up to boot from USB drive "A"
     And the network is unplugged
@@ -115,7 +115,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the boot device has safe access rights
     And the expected persistent files are present in the filesystem
 
-  Scenario: Upgrading a Tails USB from another Tails USB and booting it
+  Scenario: Upgrading a Tails USB drive from another Tails USB drive
     Given a computer
     And I clone USB drive "A" to a new USB drive "B"
     And the computer is setup up to boot from USB drive "A"
@@ -134,7 +134,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I unplug USB drive "A"
 
   # Same issue as with scenario "Boot from USB drive upgraded from DVD"
-  Scenario: Boot from USB drive upgraded from USB with persistence enabled
+  Scenario: Booting Tails from a USB drive upgraded from USB with persistence enabled
     Given a computer
     And the computer is setup up to boot from USB drive "B"
     And the network is unplugged
@@ -148,7 +148,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the boot device has safe access rights
     And the expected persistent files are present in the filesystem
 
-  Scenario: Upgrading a Tails USB from an ISO image and booting it
+  Scenario: Upgrading a Tails USB drive from an ISO image
     Given a computer
     And the computer is set to boot from the Tails DVD
     And the network is unplugged
@@ -164,7 +164,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I unplug USB drive "A"
 
   # Same issue as with scenario "Boot from USB drive upgraded from DVD"
-  Scenario: Boot from USB drive upgraded from ISO with persistence enabled
+  Scenario: Booting Tails from a USB drive upgraded from ISO with persistence enabled
     Given a computer
     And the computer is setup up to boot from USB drive "A"
     And the network is unplugged
