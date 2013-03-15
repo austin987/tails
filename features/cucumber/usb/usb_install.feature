@@ -34,7 +34,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the computer boots Tails
     And I log in to a new session
     Then Tails seems to have booted normally
-    And Tails is running from a USB drive
+    And Tails is running from USB drive "A"
     And the boot device has safe access rights
 
   Scenario: Creating a persistent partition
@@ -43,7 +43,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
-    And Tails is running from a USB drive
+    And Tails is running from USB drive "A"
     And the boot device has safe access rights
     And I log in to a new session
     And GNOME has started
@@ -58,7 +58,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
-    And Tails is running from a USB drive
+    And Tails is running from USB drive "A"
     And the boot device has safe access rights
     And I enable persistence with password "asdf"
     And I log in to a new session
@@ -73,7 +73,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
-    And Tails is running from a USB drive
+    And Tails is running from USB drive "A"
     And the boot device has safe access rights
     And I enable read-only persistence with password "asdf"
     And I log in to a new session
@@ -111,7 +111,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I enable read-only persistence with password "asdf"
     And I log in to a new session
     Then Tails seems to have booted normally
-    And Tails is running from a USB drive
+    And Tails is running from USB drive "A"
     And the boot device has safe access rights
 
   Scenario: Upgrading a Tails USB from another Tails USB and booting it
@@ -121,7 +121,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
-    And Tails is running from a USB drive
+    And Tails is running from USB drive "A"
     And the boot device has safe access rights
     And I log in to a new session
     And GNOME has started
@@ -143,7 +143,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I log in to a new session
     Then Tails seems to have booted normally
     And persistence has been enabled
-    And Tails is running from a USB drive
+    And Tails is running from USB drive "B"
     And the boot device has safe access rights
 
   Scenario: Upgrading a Tails USB from an ISO image and booting it
@@ -172,5 +172,5 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I log in to a new session
     Then Tails seems to have booted normally
     And persistence has been enabled
-    And Tails is running from a USB drive
+    And Tails is running from USB drive "A"
     And the boot device has safe access rights

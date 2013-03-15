@@ -267,10 +267,15 @@ def boot_device_type
   return boot_dev_type
 end
 
-Then /^Tails is running from a USB drive$/ do
+Then /^Tails is running from USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   assert(boot_device_type == "usb",
          "Got device type '#{boot_device_type}' while expecting 'usb'")
+  actual_dev = boot_device
+  expected_dev = @vm.disk_dev(name) + "1"
+  assert(actual_dev == expected_dev,
+         "USB drive '#{name}' has device #{expected_dev}, but we are " +
+         "running from #{actual_dev}")
 end
 
 Then /^the boot device has safe access rights$/ do
