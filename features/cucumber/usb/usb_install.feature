@@ -24,6 +24,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I plug USB drive "A"
     And I "Clone & Install" Tails to USB drive "A"
     Then Tails is installed on USB drive "A"
+    But there is no persistence partition on USB drive "A"
     And I unplug USB drive "A"
 
   Scenario: Booting Tails from a USB drive without a persistent partition
@@ -36,6 +37,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     Then Tails seems to have booted normally
     And Tails is running from USB drive "A"
     And the boot device has safe access rights
+    And there is no persistence partition on USB drive "A"
 
   Scenario: Creating a persistent partition
     Given a computer
@@ -51,6 +53,19 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I create a persistent partition with password "asdf"
     Then a Tails persistence partition with password "asdf" exists on USB drive "A"
     And I shutdown Tails
+
+  Scenario: Booting Tails from a USB drive with a disabled persistent partition
+    Given a computer
+    And the computer is setup up to boot from USB drive "A"
+    And the network is unplugged
+    When I start the computer
+    And the computer boots Tails
+    And I log in to a new session
+    Then Tails seems to have booted normally
+    And Tails is running from USB drive "A"
+    And the boot device has safe access rights
+    And persistence is not enabled
+    But a Tails persistence partition with password "asdf" exists on USB drive "A"
 
   Scenario: Writing files to a read/write-enabled persistent partition
     Given a computer
@@ -177,3 +192,19 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And Tails is running from USB drive "A"
     And the boot device has safe access rights
     And the expected persistent files are present in the filesystem
+
+  Scenario: Deleting a Tails persistent partition
+    Given a computer
+    And the computer is setup up to boot from USB drive "A"
+    And the network is unplugged
+    And I start the computer
+    And the computer boots Tails
+    And I log in to a new session
+    And Tails is running from USB drive "A"
+    And the boot device has safe access rights
+    And Tails seems to have booted normally
+    And persistence is not enabled
+    But a Tails persistence partition with password "asdf" exists on USB drive "A"
+    And I have closed all annoying notifications
+    When I delete the persistent partition
+    Then there is no persistence partition on USB drive "A"

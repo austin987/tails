@@ -179,6 +179,13 @@ Then /^Tails is installed on USB drive "([^"]+)"$/ do |name|
   @vm.execute("sync")
 end
 
+Then /^there is no persistence partition on USB drive "([^"]+)"$/ do |name|
+  next if @skip_steps_while_restoring_background
+  data_part_dev = @vm.disk_dev(name) + "2"
+  assert(!@vm.execute("test -b #{data_part_dev}").success?,
+         "USB drive #{name} has a partition '#{data_part_dev}'")
+end
+
 Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive "([^"]+)"$/ do |pwd, name|
   next if @skip_steps_while_restoring_background
   dev = @vm.disk_dev(name) + "2"
@@ -220,6 +227,13 @@ Given /^I enable persistence with password "([^"]+)"$/ do |pwd|
   pos_y = match.y + match.height/2
   @screen.click(pos_x, pos_y)
   @screen.type(pwd)
+end
+
+Given /^persistence is not enabled$/ do
+  next if @skip_steps_while_restoring_background
+  data_part_dev = boot_device + "2"
+  assert(!@vm.execute("grep -q '^#{data_part_dev} ' /proc/mounts").success?,
+         "Partition '#{data_part_dev}' from the boot device is mounted")
 end
 
 Given /^I enable read-only persistence with password "([^"]+)"$/ do |pwd|
@@ -364,4 +378,13 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "persistence has been enabled"
   step "the expected persistent files are present in the filesystem"
   step "I shutdown Tails"
+end
+
+When /^I delete the persistent partition$/ do
+  next if @skip_steps_while_restoring_background
+  step "I run \"tails-persistence-setup --step delete\""
+  @screen.wait("PersistenceWizardWindow.png", 10)
+  @screen.wait("PersistenceWizardDeletionStart.png", 10)
+  @screen.type(" ")
+  @screen.wait("PersistenceWizardDone.png", 120)
 end
