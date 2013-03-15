@@ -342,6 +342,16 @@ When /^I write some files not expected to persist$/ do
   end
 end
 
+Then /^the expected persistent files are present in the filesystem$/ do
+  next if @skip_steps_while_restoring_background
+  persistent_dirs.each do |dir|
+    assert(@vm.execute("test -e #{dir}/XXX_persist").success?,
+           "Could not find expected file in persistent directory #{dir}")
+    assert(!@vm.execute("test -e #{dir}/XXX_gone").success?,
+           "Found file that should not have persisted in persistent directory #{dir}")
+  end
+end
+
 Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   step "a computer"
@@ -352,11 +362,6 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "I enable read-only persistence with password \"asdf\""
   step "I log in to a new session"
   step "persistence has been enabled"
-  persistent_dirs.each do |dir|
-    assert(@vm.execute("test -e #{dir}/XXX_persist").success?,
-           "Could not find expected file in persistent directory #{dir}")
-    assert(!@vm.execute("test -e #{dir}/XXX_gone").success?,
-           "Found file that should not have persisted in persistent directory #{dir}")
-  end
+  step "the expected persistent files are present in the filesystem"
   step "I shutdown Tails"
 end

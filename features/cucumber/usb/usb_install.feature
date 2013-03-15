@@ -113,6 +113,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     Then Tails seems to have booted normally
     And Tails is running from USB drive "A"
     And the boot device has safe access rights
+    And the expected persistent files are present in the filesystem
 
   Scenario: Upgrading a Tails USB from another Tails USB and booting it
     Given a computer
@@ -145,6 +146,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And persistence has been enabled
     And Tails is running from USB drive "B"
     And the boot device has safe access rights
+    And the expected persistent files are present in the filesystem
 
   Scenario: Upgrading a Tails USB from an ISO image and booting it
     Given a computer
@@ -174,3 +176,4 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And persistence has been enabled
     And Tails is running from USB drive "A"
     And the boot device has safe access rights
+    And the expected persistent files are present in the filesystem
