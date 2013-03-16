@@ -196,7 +196,7 @@ It must then be copied to `config/binary_rootfs/squashfs.sort`. This file is
 automatically used by `lb_binary_rootfs` to tell `mksquashfs` to use the
 provided *sort list*.
 
-(See [[todo/improve_boot_time_on_cd]] for details.)
+(See [[!tails_todo improve_boot_time_on_cd]] for details.)
 
 Build the final image
 ---------------------
@@ -221,7 +221,7 @@ Example:
 Prepare update-description files
 --------------------------------
 
-1. Prepare update-description files (see [[todo/incremental_upgrades]]
+1. Prepare update-description files (see [[!tails_todo incremental_upgrades]]
    for details):
    * update (create if needed) an update-description file for every
      *previous* supported releases (e.g. N-1, N-1~rc2), that describes
@@ -234,7 +234,7 @@ Prepare update-description files
 Testing
 =======
 
-Until [[todo/automated_builds_and_tests]] are setup, some manual testing
+Until [[!tails_todo automated_builds_and_tests]] are setup, some manual testing
 has to be done by the persons preparing the release, in addition to the
 real-world tests done by fellow beta-testers.
 
@@ -318,11 +318,6 @@ Update todo and bugs tags:
 
 Update the [[support/known_issues]] page.
 
-Compare the fingerprint of Tails and the latest TBB using at least
-<https://panopticlick.eff.org/> and <http://ip-check.info/>, and update the
-[[fingerprint section|support/known_issues#fingerprint]] of the known issues
-page.
-
 Write the announcement for the release in `news/version_X.Y.mdwn`. Use the
 meta directive to set the post title to "Tails X.Y is out" so
 that aggregators (such as Planet Debian Derivatives) display a more
@@ -341,7 +336,7 @@ shortly, perhaps even soon enough to integrate them before pushing the
 release out officially.
 
 Import the update description files and their detached OpenPGP
-signature into the `updates/` tree. See [[todo/incremental_upgrades]]
+signature into the `updates/` tree. See [[!tails_todo incremental_upgrades]]
 for the file naming conventions.
 
 Then, record the last commit before putting the release out for real:
@@ -403,5 +398,8 @@ Prepare for the next release
    - take note of branches merged into `experimental`, but not into
      `devel` (`git log --merges devel..experimental` may help)
    - `git checkout experimental && git reset --hard devel`
-   - merge additional branches into experimental
+   - hard reset the `experimental` APT suite to the state of the
+     `devel` one
+   - merge additional branches into experimental (both at the Git and
+     APT levels)
    - `git push --force origin experimental`
