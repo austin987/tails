@@ -1,0 +1,127 @@
+#!/usr/bin/env python
+
+import gettext
+import syslog
+import glob
+import os.path
+import sys
+import subprocess
+
+PACKAGES_LIST_FILE="live-additional-software.conf"
+
+def _launch_apt_get(args):
+    """Launch apt-get with given args
+    
+    Launch apt-get with given arguments list, log its standard and error output
+    and returns its returncode"""
+    apt_get_env = os.environ.copy()
+    apt_get_env['PATH'] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    apt_get_env['LANG'] = "C"
+    apt_get = subprocess.Popen(
+        args,
+        env=apt_get_env,
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE)
+    for line in iter(apt_get.stdout.readline, ''):
+        if not line.startswith('('):
+            syslog.syslog(line.rstrip())
+    apt_get.wait()
+    return apt_get.returncode
+
+def _notify(title, body):
+    """Display a notification to the user of the live system
+    """
+    try:
+        subprocess.check_call(["/usr/local/sbin/tails-notify-user", title, body])
+    except:
+        syslog.syslog("WARNING: unable to notify the user. The notification was: %s %s" % (title, body))
+
+def get_additional_packages_lists():
+    """Returns the paths of additional packageslists
+    """
+    syslog.syslog("Reading additional packages list")
+    packages_list = []
+    for persistent_dir in glob.glob("/lib/live/mount/persistence/*_unlocked/"):
+        if os.path.isfile(persistent_dir + PACKAGES_LIST_FILE):
+            syslog.syslog("Found additional packages list in %s" % persistent_dir)
+            packages_list.append(persistent_dir + PACKAGES_LIST_FILE)
+    return packages_list
+
+def get_additional_packages():
+    """Returns on stdout the list of all the additional packages
+    """
+    packages = []
+    for package_list in get_additional_packages_lists():
+        with open(package_list) as f:
+            for line in f:
+                packages.append(line.strip())
+        f.closed
+    return packages
+
+def install_additional_packages():
+    """The subcommand which installs all additional packages
+    """
+    print("entered install")
+    syslog.syslog("Starting to install additional software...")
+    packages_string = " ".join(get_additional_packages())
+    syslog.syslog("Will install the following packages: %s" % packages_string)
+    apt_get_returncode = _launch_apt_get(["apt-get",
+        "--quiet",
+        "--no-remove",
+        "--yes",
+        "--option", "DPkg::Options::=--force-confold", 
+        "install",
+        packages_string])
+    if apt_get_returncode: 
+        syslog.syslog("WARNING: installation of %s failed" % packages_string)
+        return False
+    else:
+        syslog.syslog("Install completed successfully")
+        return True
+
+def upgrade_additional_packages():
+    """The subcommand which upgrades all additional packages
+    """
+    syslog.syslog("Starting to upgrade additional software...")
+    apt_get_returncode = _launch_apt_get(["apt-get",
+        "--quiet",
+        "update"])
+    if apt_get_returncode:
+        syslog.syslog("WARNING: the update failed.")
+        _notify(_("Tails additional software"),
+             _("The update failed. That might be due to network issues. You can find more informations in the system log."))
+        return False
+    if install_additional_packages():
+        _notify(_("Tails additional software"),
+            _("The upgrade was successful"))
+        return True
+    else:
+        _notify(_("Tails additional software"),
+            _("The upgrade failed. That might be due to network issues. You can find more informations in the system log."))
+        return False
+
+def print_help():
+    """The subcommand which displays help
+    """
+    sys.stderr.write("Usage: %s <subcommand>\n" % program_name)
+    sys.stderr.write("""Subcommands:
+    install
+    upgrade\n""")
+
+if __name__ == "__main__":
+    program_name = os.path.basename(sys.argv[0])
+
+    syslog.openlog("%s[%i]" % (program_name, os.getpid()))
+    gettext.install(program_name)
+
+    if len(sys.argv) < 2:
+         print_help()
+
+    if sys.argv[1] == "install":
+        if not install_additional_packages():
+            sys.exit(1)
+    elif sys.argv[1] == "upgrade":
+        if not upgrade_additional_packages():
+            sys.exit(2)
+    else:
+        print_help()
