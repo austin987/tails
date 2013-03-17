@@ -58,7 +58,8 @@ wants to have persistent. This is the `~/Persistent/` directory.
 If a user need some program not present in Tails per default it can be
 quite annoying to fetch the APT information and download it (slow over
 Tor). Therefore, APT packages lists and cache can be easily
-made persistent.
+made persistent. It's also possible to store a in persistence a list of
+additional software packages that would be automatically installed on boot.
 
 Persistence storage location
 ----------------------------
@@ -340,3 +341,21 @@ other developers want to add support for their preferred usecases.
 To start with, we've factored out only the custom mounts part from the
 main `live-boot` script; it depends on factoring out other kinds of
 persistence (e.g. all types of unionfs-style filesystems) first.
+
+additional software packages
+----------------------------
+
+The `tails-additional-software` script takes care of installing a list of
+additional software packages from persistence.
+
+The persitence root includes a file containing a list of packages to install
+from persistence (live-additional-software.conf).
+
+Additional software packages are first installed offline from tails-greeter
+`PostLogin` script.
+
+Once network pops up, a NetworkManager script then takes care of looking for
+upgrades if additional software were activated (`apt-get update`, `apt-get
+install` the additional software packages). For some packages (e.g.  already
+running app) the change will only be effective at next boot but a outdated
+version won't stay too long.
