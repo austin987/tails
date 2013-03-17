@@ -8,6 +8,7 @@ import sys
 import subprocess
 
 PACKAGES_LIST_FILE="live-additional-software.conf"
+ACTIVATION_FILE="/var/lib/live-additional-software/activated"
 
 def _launch_apt_get(args):
     """Launch apt-get with given args
@@ -59,10 +60,10 @@ def get_additional_packages():
     return packages
 
 def install_additional_packages():
-    """The subcommand which installs all additional packages
+    """The subcommand which activates and installs all additional packages
     """
-    print("entered install")
     syslog.syslog("Starting to install additional software...")
+    do_activate()
     packages_string = " ".join(get_additional_packages())
     syslog.syslog("Will install the following packages: %s" % packages_string)
     apt_get_returncode = _launch_apt_get(["apt-get",
@@ -80,8 +81,11 @@ def install_additional_packages():
         return True
 
 def upgrade_additional_packages():
-    """The subcommand which upgrades all additional packages
+    """The subcommand which upgrades all additional packages if they are activated
     """
+    if not check_activation():
+        syslog.syslog("WARNING: additional packages not activated, exiting")
+        return True
     syslog.syslog("Starting to upgrade additional software...")
     apt_get_returncode = _launch_apt_get(["apt-get",
         "--quiet",
@@ -100,13 +104,33 @@ def upgrade_additional_packages():
             _("The upgrade failed. That might be due to network issues. You can find more informations in the system log."))
         return False
 
+def check_activation():
+    """Check if additional software has been activated
+    """
+    if os.path.isfile(ACTIVATION_FILE):
+        return True
+    else:
+        return False
+
+def do_activate():
+    """Save that additional software has been activated
+    """
+    syslog.syslog("Activating persistent software packages")
+    activation_file_dir = os.path.dirname(ACTIVATION_FILE)
+    if not os.path.exists(activation_file_dir):
+        os.makedirs(activation_file_dir)
+    try:
+        f = open(ACTIVATION_FILE, 'w')
+    finally:
+        if f: f.close()
+
 def print_help():
     """The subcommand which displays help
     """
     sys.stderr.write("Usage: %s <subcommand>\n" % program_name)
     sys.stderr.write("""Subcommands:
-    install
-    upgrade\n""")
+    install: activate and install additional software
+    upgrade: upgrade additional software if activated\n""")
 
 if __name__ == "__main__":
     program_name = os.path.basename(sys.argv[0])
