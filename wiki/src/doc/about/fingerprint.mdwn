@@ -1,0 +1,74 @@
+[[!meta title="Can I hide the fact that I am using Tails?"]]
+
+In this context we use the term *fingerprint* to refer to the
+**specificities in the way Tails behaves on Internet**. Those
+specificities could be used to determine whether a particular user is
+using Tails or not.
+
+[[As explained on our warning page|warning#fingerprint]], when using
+Tails it is possible to know that you are using Tor. But Tails tries to
+**make it as difficult as possible to distinguish Tails users from other
+Tor users**, especially Tor Browser Bundle (TBB) users. If it is
+possible to determine whether your are a Tails users or a TBB user, this
+provides more information about you and in consequence reduces your
+anonymity.
+
+This section explains some issues regarding the fingerprint of Tails and
+how this could be used to identify you as a Tails user.
+
+For the websites that you are visiting
+======================================
+
+The websites that you are visiting can retrieve a lot of information
+about your browser. That information can include its name and version,
+window size, list of available extensions, timezone, available fonts,
+etc.
+
+To make it difficult to distinguish Tails users from TBB users, **the
+Tails browser tries to provide the same information as the TBB** in
+order to have similar fingerprints.
+
+See the [[fingerprint section of know issues
+page|support/known_issues#fingerprint]] for a list of known differences
+between the fingerprints of the Tails browser and the TBB.
+
+Apart from that, **some of the extensions included in Tails browser are
+different** than the ones included in the TBB. More sophisticated
+attacks can use those differences to distinguish Tails user from TBB
+users.
+
+For example, Tails includes <span class="application">Adblock
+Plus</span> which removes advertisements. If an attacker can determine
+that you are not downloading the advertisements that are included in a
+webpage, that could help identify you as a Tails user.
+
+For the moment, you should consider that **no special care is taken
+regarding the fingerprint of the [[<span class="application">Unsafe
+Browser</span>|doc/anonymous_internet/unsafe_browser]]**.
+
+For your ISP or local network administrator
+===========================================
+
+  - A Tails system is **almost exclusively generating Tor activity** on
+    the network. Usually TBB users also have network activity outside of
+    Tor, either from another web browser or other applications. So the
+    proportion of Tor activity could be used to determine whether a user
+    is using Tails or the TBB.  If you are sharing your Internet
+    connection with other users that are not using Tails it is probably
+    harder for your ISP to determine whether a single user is generating
+    only Tor traffic and so maybe using Tails.
+
+  - Tails **do not use the entry guards mechanism of Tor**. With the
+    [entry guard
+    mechanism](https://www.torproject.org/docs/faq#EntryGuards), a Tor
+    user always uses the same few relays as first hops. As Tails do not
+    store any Tor information between separate working sessions, it does
+    not store the entry guards information either. This behaviour could
+    be used to distinguish Tails users from TBB users across several
+    working sessions.
+
+  - When starting, Tails synchronizes the system clock to make sure it
+    is accurate. While doing this, if the time is set too much in the
+    past or in the future, Tor is shut down and started again. This
+    behavior could be used to distinguish Tails from TBB users,
+    especially this happens every time Tails starts.

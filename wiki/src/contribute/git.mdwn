@@ -2,8 +2,15 @@
 
 <div id="intro">
 
-<p>The Amnesic Incognito Live System and this documentation wiki are
-developed in a bunch of Git repositories.</p>
+<p>Tails and its website are developed in several Git repositories.</p>
+
+<p><span class="application">Git</span> is a distributed version control
+system. It allows several people to work on the same source code and
+handle changes in a distributed and efficient way.</p>
+
+<p>To learn more about <span class="application">Git</span>, refer to
+its <a href="http://git-scm.com/">homepage</a>, and <a
+href="http://git-scm.com/documentation">official documentation</a>.</p>
 
 <p><strong>Related pages</strong></p>
 
@@ -135,8 +142,13 @@ Developers with write access to the repositories should instead:
 We have a Gitweb available for [our custom
 live-config](http://git.immerda.ch/?p=tails_live-config.git).
 
+<a id="liveusb-creator"></a>
+
 liveusb-creator
-=============
+===============
+
+The program used to install USB stick is customized version of [Fedora LiveUSB
+Creator](https://fedorahosted.org/liveusb-creator/).
 
 Anyone can check it out like this:
 
@@ -146,10 +158,16 @@ Developers with write access to the repositories should instead:
 
 	git clone git@git.immerda.ch:tails/liveusb-creator.git
 
-We have a Gitweb available for [liveusb-creator](http://git.immerda.ch/?p=tails/liveusb-creator.git).
+We have a Gitweb available for [liveusb-creator](http://git.immerda.ch/?p=tails/liveusb-creator.git)
+and a [[release process|release_process/liveusb-creator]].
+
+<a id="tails-greeter"></a>
 
 tails-greeter
 =============
+
+Tails Greeter is the set of dialogs that allows to define [[startup
+options|/doc/first_steps/startup_options#tails_greeter]].
 
 Anyone can check it out like this:
 
@@ -159,7 +177,10 @@ Developers with write access to the repositories should instead:
 
 	git clone git@git.immerda.ch:tails/tails-greeter.git
 
-We have a Gitweb available for [tails-greeter](http://git.immerda.ch/?p=tails/tails-greeter.git).
+We have a Gitweb available for [tails-greeter](http://git.immerda.ch/?p=tails/tails-greeter.git)
+and a [[release process|release_process/tails-greeter]].
+
+<a id="tails-iuk"></a>
 
 tails-iuk
 =========
@@ -174,6 +195,8 @@ Developers with write access to the repositories should instead:
 
 We have a Gitweb available for [tails-greeter](http://git.immerda.ch/?p=tails/iuk.git).
 
+<a id="tails-persistence-setup"></a>
+
 tails-persistence-setup
 =======================
 
@@ -185,7 +208,22 @@ Developers with write access to the repositories should instead:
 
 	git clone 'git@git.immerda.ch:tails/persistence-setup.git'
 
-We have a Gitweb available for [tails-persistence-setup](http://git.immerda.ch/?p=tails/persistence-setup.git).
+We have a Gitweb available for [tails-persistence-setup](http://git.immerda.ch/?p=tails/persistence-setup.git)
+and a [[release process|release_process/persistence-setup]].
+
+Torbutton
+=========
+
+Anyone can check it out like this:
+
+	gbp-clone --no-pristine-tar git://git.immerda.ch/tails/torbutton.git
+
+Developers with write access to the repositories should instead:
+
+	gbp-clone --no-pristine-tar 'git@git.immerda.ch:tails/torbutton.git'
+
+We have a Gitweb available for [Torbutton](http://git.immerda.ch/?p=tails/torbutton.git)
+and a [[release process|release_process/Torbutton]].
 
 Vidalia
 =======
@@ -240,6 +278,73 @@ Developers with write access to the repositories should instead:
 
 	git clone gitosis@labs.riseup.net:tails_icedove.git
 
+iceweasel
+=========
+
+Anyone can check it out like this:
+
+	git clone git://labs.riseup.net/tails_iceweasel.git
+
+Developers with write access to the repositories should instead:
+
+	git clone gitosis@labs.riseup.net:tails_iceweasel.git
+
+<a id="whisperback"></a>
+
+WhisperBack
+===========
+
+Whisperback allows to [[report bugs|/doc/first_steps/bug_reporting]] from
+inside Tails.
+
+- Git: `git://git.immerda.ch/whisperback.git`
+- Gitweb: <http://git.immerda.ch/?p=whisperback.git>
+
+Puppet modules
+==============
+
+Those who have SSH access to these repositories must configure their
+SSH client a bit, e.g.:
+
+	Host git.puppet.tails.boum.org
+		HostName d53ykjpeekuikgoq.onion
+		ProxyCommand torsocks monkeysphere ssh-proxycommand %h %p
+
+tails
+-----
+
+This is the main *public* Puppet module to manage Tails infrastructure,
+including classes such as `tails::reprepro` and `tails::whisperback::relay`.
+
+Anyone can check it out like this:
+
+	git clone git://git.puppet.tails.boum.org/puppet-tails
+
+Developers with write access to the repositories should instead:
+
+	git clone gitolite@git.puppet.tails.boum.org:puppet-tails
+
+tails_lizard_manifests
+----------------------
+
+Developers with access to the APT secrets can check it out like this:
+
+	git clone gitolite@git.puppet.tails.boum.org:puppet-lizard-manifests
+
+tails_secrets_apt
+-----------------
+
+Developers with access to the APT secrets can check it out like this:
+
+	git clone gitolite@git.puppet.tails.boum.org:puppet-tails_secrets_apt
+
+tails_secrets_whisperback
+-------------------------
+
+Developers with access to the WhisperBack secrets can check it out like this:
+
+	git clone gitolite@git.puppet.tails.boum.org:puppet-tails_secrets_whisperback
+
 New repository
 ==============
 
@@ -265,4 +370,4 @@ in every of your local clones' directories:
 If you intend to prepare Tails releases, you'll also need to make
 the development team signing key the default one for Git tags:
 
-	git config user.signingkey BE2CD9C1
+	git config user.signingkey 1202821CBE2CD9C1

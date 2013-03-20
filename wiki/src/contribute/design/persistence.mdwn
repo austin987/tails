@@ -1,5 +1,5 @@
 Data persistence is a somewhat tricky topic in a Live system context,
-especially one explicitely designed to avoid leaving any trace of
+especially one explicitly designed to avoid leaving any trace of
 its use.
 
 Some real-life usecases however require to setup some kind of data
@@ -24,6 +24,7 @@ This is relevant for the following applications:
 - GnuPG configuration
 - SSH client configuration
 - iceweasel certificate trust
+- iceweasel bookmarks
 - Pidgin configuration
 - MUA configuration
 - Tor's data/cache for faster bootstrap with slow connections and
@@ -91,7 +92,7 @@ Moreover:
 Current state of things
 =======================
 
-Tails 0.11 supports the **persistent application-specific
+Tails 0.11 and greater supports the **persistent application-specific
 configurations** and **persistent user data store** usecases.
 
 Implementation
@@ -220,8 +221,8 @@ Setting up a Tails persistent volume means:
   of us who wrote it is the most efficient at.
 
 * Partition / filesystem / LUKS management is done using `udisks`; the
-  [[udisks bug wrt.
-  partition attributes|todo/usb_install_and_upgrade/todo]]
+  [[!tails_todo usb_install_and_upgrade/todo desc="udisks bug wrt.
+  partition attributes"]]
   is workaround'ed.
 
 ### Configure which bits are persistent
@@ -242,12 +243,17 @@ Persistence settings changes are taken into account at next boot.
 * apart of this, let's consider non-directories persistence an
   advanced feature: to start with, and possibly forever, this could
   only be configured by manually editing live-persist file
-* a few **presets** are made available (e.g. `~/.gnupg/`); the GUI
+* a few **presets** are made available (e.g. `~/.gnupg/`);
+  technically, each of these has a name, optionally a short
+  description and icon, and the needed information to make a simple
+  directory persistent (e.g. make `/home/amnesia/.gnupg` persist,
+  as the "gnupg" sub-directory of the persistent volume).
+  The GUI
   displays every available preset, along with its current
-  (enabled/disabled) status, and optionally a short description and
-  icon; therefore, tails-persistence-setup needs to have means to
-  merge the presets list with the configuration read from the input
-  configuration file; to this end, it needs to know if a given preset
+  (enabled/disabled) status and available details (description, icon).
+  tails-persistence-setup has means to
+  merge its presets list with the configuration read from the input
+  configuration file; to this end, it knows if a given preset
   is enabled in the input configuration file;
 * by default, the current configuration is displayed as a list of
   items (= config lines); listed items may be toggled on/off; an *Add
@@ -257,7 +263,8 @@ Persistence settings changes are taken into account at next boot.
 ### Enable persistence at boot time
 
 Choosing between various persistence modes is one of the reasons why
-we've written a graphical [[todo/boot_menu]]: [[todo/TailsGreeter]].
+we've written a graphical [[!tails_todo boot_menu]]:
+[[!tails_todo TailsGreeter]].
 
 #### Design
 

@@ -7,7 +7,7 @@ Many solutions were proposed, here's the one we will implement:
 Let's leave this button at the same top-right place; clicking it
 should open a dropdown menu with three entries:
 
-- Lock screen (once tails-greeter is part of the game)
+- Lock screen (requires the addition of the package *xscreensaver* )
 - Shutdown *immediately*
 - Reboot *immediately*
 
@@ -18,4 +18,37 @@ This way:
 - reboot comes back
 - much less dangerous
 
-[[!tag todo/code todo/easy]]
+# Implementation
+
+A simple GNOME applet for this has been developed in the branch
+`feature/better_power_off_button`. There are some issues:
+
+## Issues to be solved or discussed.
+
+The remaining issues are either pedantic to the point of irrelevance,
+or things we will know if we need to do once we have some user
+feedback. New tickets can be opened if that happens.
+
+* For the "Lock screen" action we need to implement
+  [[todo/screen_locker]]. This branch currently implements using the
+  "Password-less amnesia account" approach, which turned out to be
+  problematic (see ticket).
+
+* Translations work for the applet (i.e. its action menu entries) but
+  I don't know (I haven't even investigated) how to make its bonobo
+  server file translatable. That would make the strings shown in the
+  applet list (as seen via "Add to panel" for instance)
+  translatable. IMHO this isn't important and I'd rather not waste my
+  energy on it. What do you think?
+
+* Since "Shutdown Immediately" is right below "Lock Screen" in the
+  menu, I assume users could miss-click it pretty easily. Perhaps
+  making the menu entries larger and/or putting separators between
+  them could help prevent that.
+
+* The icon it currently uses for "Reboot Immediately" is
+  "gtk-refresh". It seems like the default GNOME theme doesn't have a
+  dedicated icon for reboot. We could use the same icon as for
+  "Shutdown Immediately" but I'd rather have something distinct.
+
+[[!tag todo/done]]

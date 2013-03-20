@@ -1,9 +1,15 @@
-The [Monkeysphere](http://web.monkeysphere.info/) project now seems to
-propose a working infrastructure (validation agent, Iceweasel plugin)
+The [Monkeysphere](http://web.monkeysphere.info/) project now
+proposes a working infrastructure (validation agent, Iceweasel plugin)
 for validating HTTPS certificates using the GnuPG web-of-trust.
 
 We now install `monkeysphere`, `msva-perl` and `xul-ext-monkeysphere`
 into the system. Monkeysphere is setup to use a hkps:// keyserver.
+
+Next things to do
+=================
+
+We have to [[!taglink todo/wait]] for a decision regarding which
+candidate(s) we want to support for the [[todo/web_browser_profile_with_no_CA]].
 
 Use cases
 =========
@@ -44,34 +50,3 @@ Monkeysphere support for https will be quite poor. This can be seen as
 a problem; on the other hand it demonstrates how weak the servers
 authentication process really is unless you take care of it yourself
 and reclaim your trust-paths!
-
-Implementation
-==============
-
-Iceweasel profile
------------------
-
-We should now provide a second iceweasel profile with all root CAs
-disabled.
-
-One way to do it would be to `dpkg-divert libnssckbi.so` by default,
-extract all the CAs from the original `libnssckbi.so` and stuff them
-into the "normal X.509 usage" profile's DB.
-
-See also the `mozilla/security/nss/lib/ckfw/builtins/README` file in
-the `nss` package source tree to learn how to build a `libnssckbi.so`
-with a custom list of builtin CAs.
-
-According to [a blog
-post](http://blog.rupamsunyata.org/2008/06/30/consolation-prize.xhtml),
-`certutil` may be an adequate tool for the task:
-
-        apt-get install libnss3-tools
-        certutil -d $HOME/.mozilla/firefox/$HLAGHLLAGHGAAHLGALHHGHLAGH.default -A -n 'CA Cert Signing Authority - Root CA' -t CT,C,C -i /etc/ssl/certs/root.pem
-
-What does not work is to disable this module for the no-CAs profile
-using:
-
-    modutil -dbdir PROFILE_DIR -disable "NSS Internal PKCS #11 Module"
-
-[[!tag todo/discuss todo/research]]

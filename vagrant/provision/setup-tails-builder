@@ -9,6 +9,27 @@ if [ "$http_proxy" = "http://$(hostname -f):3142" ] &&
 	http_proxy=''
 fi
 
+# Uninstall custom Ikiwiki in case the build directory is still there
+if [ -d /home/vagrant/ikiwiki ]; then
+	rm -f /usr/local/bin/ikiwiki*
+	rm -rf /usr/local/lib/perl/5.10.1/auto/IkiWiki
+	rm -rf /usr/local/share/perl/5.10.1/
+	rm -rf /home/vagrant/ikiwiki
+fi
+
+# Add unstable repository for ikiwiki, and pin it low
+echo 'deb http://cdn.debian.net/debian unstable main' > /etc/apt/sources.list.d/unstable.list
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/unstable <<EOF
+	Package: *
+	Pin: release a=unstable
+	Pin-Priority: 99
+EOF
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/ikiwiki <<EOF
+	Package: ikiwiki
+	Pin: release a=unstable
+	Pin-Priority: 500
+EOF
+
 apt-get update
 apt-get -y install apt-cacher-ng
 
@@ -30,30 +51,31 @@ apt-get -y install \
 	eatmydata/squeeze-backports \
 	time whois \
 	dpkg-dev \
-	git
+	git \
+	aufs-tools \
+	ikiwiki
 
-# Let's build a custom Ikiwiki
+# Be sure to get all the modules we need for our Ikiwiki
 apt-get -y --no-install-recommends install \
-	libyaml-perl libyaml-libyaml-perl po4a perlmagick libyaml-syck-perl \
-	libfile-chdir-perl liburi-perl libhtml-parser-perl wdg-html-validator \
-	libhtml-scrubber-perl libhtml-template-perl libtimedate-perl \
-	libxml-simple-perl libtext-multimarkdown-perl
-
-su - vagrant -c '
-set -e
-cd /home/vagrant
-test -d ikiwiki || git clone git://git.ikiwiki.info/ ikiwiki
-cd ikiwiki
-git fetch origin
-git remote add gaffer git://gaffer.ptitcanardnoir.org/ikiwiki.git || true
-git fetch gaffer
-git checkout mirrorlist || true
-git reset --hard gaffer/mirrorlist
-./Makefile.PL
-make
-'
-
-(cd /home/vagrant/ikiwiki && make install)
+       libyaml-perl libyaml-libyaml-perl po4a perlmagick libyaml-syck-perl \
+       libfile-chdir-perl liburi-perl libhtml-parser-perl wdg-html-validator \
+       libhtml-scrubber-perl libhtml-template-perl libtimedate-perl \
+       libxml-simple-perl libtext-multimarkdown-perl
 
 # Add build script
 install -o root -g root -m 755 /vagrant/provision/assets/build-tails /usr/local/bin
+
+update_live_build_conf()
+{
+	local var="$1"
+	local value="$2"
+
+	mkdir -p /etc/live
+	touch /etc/live/build.conf
+	sed -e "/^[[:space:]]*$var=/d" -i /etc/live/build.conf
+	echo "$var='$value'" >> /etc/live/build.conf
+}
+
+# Force APT repositories to a fixed mirror
+update_live_build_conf LB_MIRROR_BINARY "http://ftp.us.debian.org/debian/"
+update_live_build_conf LB_PARENT_MIRROR_BINARY "http://ftp.us.debian.org/debian/"

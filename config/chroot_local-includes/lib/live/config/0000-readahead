@@ -1,0 +1,51 @@
+#!/bin/sh
+
+READAHEAD_LIST="/usr/share/amnesia/readahead-list"
+BACKGROUND_AT="^usr/bin/Xorg$"
+
+Readahead ()
+{
+
+	# Do not readahead when "profile" appears on kernel command line
+	if grep -qw "profile" /proc/cmdline
+	then
+		return 0
+	fi
+
+	if ! test -e "$READAHEAD_LIST"
+	then
+		echo "the readahead list (${READAHEAD}) does not exist."
+		return
+	fi
+
+	echo " readahead"
+	Start_readahead
+}
+
+Start_readahead ()
+{
+	FG_FILES="sed -n -e \\:$BACKGROUND_AT:q;p $READAHEAD_LIST"
+	BG_FILES="sed -n -e \\:$BACKGROUND_AT:,\$p $READAHEAD_LIST"
+	FG_SIZE=$(
+	 cd /
+	 $FG_FILES |
+	 xargs du -bc 2>/dev/null |
+	 awk '$2 ~ /^total$/ { t = t + $1 } END { print t }')
+	(cd /
+	 $BG_FILES |
+	 xargs stat >/dev/null 2>/dev/null || :)
+	(cd /
+	 $FG_FILES |
+	 xargs cat 2>/dev/null |
+	 pv -f -s ${FG_SIZE} >/dev/null || :)
+	(cd /
+	 start-stop-daemon \
+		--start --background --make-pidfile --startas /bin/sh \
+		--pidfile /var/run/background-readahead.pid -- \
+		-c "$BG_FILES | xargs cat >/dev/null 2>&1")
+
+	# Creating state file
+	touch /var/lib/live/config/readahead
+}
+
+Readahead

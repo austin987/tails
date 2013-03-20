@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -e
+
+service tor restart
+
+# The main point of this script is to make sure that if vidalia is
+# running, and Tor is restarted, then we also restart Vidalia. This is
+# because Vidalia doesn't re-connect to Tor automatically, so the user
+# has to restart it to be able to control Tor again. Also, any options
+# set by Vidalia will be lost since they weren't written to torrc.
+if pgrep "\<vidalia\>" >/dev/null; then
+    killall vidalia
+    # Since Tor just restarted we wait for a while until the
+    # ControlPort hopefully is up.
+    local counter=0
+    until [ "${counter}" -ge 10 ] || nc -z localhost 9051 2>/dev/null; do
+        sleep 1
+        counter=$((${counter}+1))
+    done
+    restart-vidalia
+fi
