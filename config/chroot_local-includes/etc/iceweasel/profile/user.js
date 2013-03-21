@@ -58,6 +58,7 @@ user_pref("noscript.contentBlocker", true);
 user_pref("noscript.default", "about:blank about:credits addons.mozilla.org flashgot.net google.com gstatic.com googlesyndication.com informaction.com yahoo.com yimg.com maone.net noscript.net hotmail.com msn.com passport.com passport.net passportimages.com live.com");
 user_pref("noscript.firstRunRedirection", false);
 user_pref("noscript.forbidFonts", false);
+user_pref("noscript.forbidMedia", false);
 user_pref("noscript.forbidWebGL", true);
 user_pref("noscript.global", true);
 user_pref("noscript.gtemp", "");
