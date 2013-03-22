@@ -35,7 +35,8 @@ error() {
 }
 
 check_dependency() {
-    if ! which "${1}" >/dev/null && ! dpkg -s "${1}" >/dev/null 2>&1; then
+    if ! which "${1}" >/dev/null && \
+       ! dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"; then
         error "'${1}' is missing, please install it and run again. Aborting..."
     fi
 }
