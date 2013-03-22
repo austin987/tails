@@ -4,11 +4,11 @@ When /^I see and accept the Unsafe Browser start verification$/ do
 end
 
 Then /^I see and close the Unsafe Browser start notification$/ do
-  @screen.wait_and_click("UnsafeBrowserStartNotification.png", 10)
+  @screen.wait_and_click("UnsafeBrowserStartNotification.png", 30)
 end
 
 Then /^the Unsafe Browser has started$/ do
-  @screen.wait("UnsafeBrowserWindow.png", 30)
+  @screen.wait("UnsafeBrowserWindow.png", 180)
 end
 
 Then /^the Unsafe Browser has a red theme$/ do
