@@ -44,8 +44,8 @@ Check the image size has not changed much since the last release.
 # Iceweasel
 
 * is web browsing really torified?
- - <https://check.torproject.org/>
- - <http://monip.org/>
+  - <https://check.torproject.org/>
+  - <http://monip.org/>
 * does the exposed User-Agent match the TBB's one?
   (connect to a website you can check the access logs for)
 * Browsing (by IP) a HTTP or HTTPS server on the LAN should be possible.
@@ -109,7 +109,8 @@ Check the image size has not changed much since the last release.
   1. Save the `cached-microdesc-consensus` out of the VM (it's needed
      to analyze the network dump later on).
   1. Do *a lot* of network stuff (why not run do this while doing all
-     the other tests?).
+     the other tests **but** I2P and the unsafe browser, which would
+     show many false positives?)
   1. Then check all destinations, e.g. by using tshark and the script below:
 
      	# set DUMP to the output of tcpdump above
@@ -145,8 +146,7 @@ Check the image size has not changed much since the last release.
      	rm ${NODES}
 
      Note that this script will produce some false positives, like your
-     gateway, broadcasts, etc. Also note that running I2P during these
-     test will list every I2P peer as "bad", so that is not recommended.
+     gateway, broadcasts, etc.
 
 ## Stream isolation
 
@@ -248,10 +248,9 @@ correctly.
   device:
   * on USB
   * on DVD
-- remove Tails boot medium and check that the memory
-  erasure process is started (`Loading new kernel`, at least):
-  * on USB
-  * on DVD
+- After booting from DVD, remove Tails boot medium and check that the
+  memory erasure process is started (`Loading new kernel`, at least).
+  The USB tests are bellow, in the USB installer section.
 
 Testing that the needed files are really mapped in memory, and the
 erasing process actually works, involves a more complicated
@@ -290,8 +289,7 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 * Check that I2P connects to the network:
   - The numbers in the "Peers" section of the router console should be
     non-zero.
-  - You should get "Network: Firewalled" in the "General" section
-    (implying that the I2P network is reachable but UDP is blocked).
+  - You should get "Network: Hidden" in the "General" section.
 * Check that you can reach some eepsites within Iceweasel, like
   <http://www.i2p2.i2p> and <http://forum.i2p>.
 * Check that you can connect to the I2P IRC server through Pidgin.
@@ -320,8 +318,16 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # USB Installer/Upgrader
 
-The installed or upgraded Tails medium shall be successfully booted
-after each of the following tests.
+After each of the following tests:
+
+* The installed or upgraded Tails medium shall be successfully booted.
+* The installed or upgraded Tails medium shall have the "emergency
+  shutdown on boot medium removal" feature working: remove Tails boot
+  medium and check that the memory erasure process is started
+  (`Loading new kernel`, at least).
+* The TailsData partition must survive upgrades.
+
+Tests to run:
 
 * Test "Clone & Install":
   - from DVD.
@@ -334,14 +340,10 @@ after each of the following tests.
   Tails):
   - from DVD.
   - from USB.
-  - make sure to test that TailsData partitions survive upgrades.
   - onto a USB stick that already has a old-fashioned cat'd hybrid
     Tails on it: should warn this action is not supported, and direct
     the user to the "Clone & Install" operation mode.
 * Test "Upgrade from ISO".
-  - make sure to test that TailsData partitions survive upgrades.
-* Test "emergency shutdown on boot medium removal" feature, on Tails
-  system installed by this installer.
 
 # Incremental updates
 
