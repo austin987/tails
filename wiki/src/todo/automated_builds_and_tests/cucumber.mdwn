@@ -183,6 +183,7 @@ The below points refer to the tests in [[contribute/release_process/test]]:
   - Browsing (by hostname) a FTP server on the Internet should be
     possible using GNOME's *Connect to server* feature
     (once [[!tails_todo fix Internet FTP support]] is fixed)
+  - Check that TrueCrypt is minimally usable (create a volume and unlock it).
 
 ## Move documentation to the right place
 
@@ -452,7 +453,7 @@ All scenarios fail for intrigeri: for some reason "encrypt with
 passphrase" is selected even in the scenario that's supposed to hit
 "k" to select "encrypt with pubkey".
 
-## unsafer browser feature
+## unsafe browser feature
 
 The unsafe browser should be started from the applications menu,
 or at least in exactly the same way as it is run by the `.desktop`
@@ -478,6 +479,25 @@ sudo).
 
 `pkexec` to run the action, after using `pkcheck` to verify that the
 action requires to be an admin, perhaps?
+
+## "the shipped Tails signing key is not outdated" scenario
+
+Why not test "old w.r.t. the one we fetch from Tails' website", but
+what we mainly need to test here (and the reason why this test was
+added to begin with) is that the key (nor any of its subkeys) has
+not expired, and won't expire any time soon.
+
+## MAT check fails
+
+... presumably due to some race condition that might simply be avoided
+if moved to a dedicated feature:
+
+    And I setup a filesystem share containing a sample PDF               # features/cucumber/misc_tests/step_definitions/checks.rb:103
+    And I start the computer                                             # features/cucumber/step_definitions/common_steps.rb:120
+      Call to virDomainCreateWithFlags failed: Unable to read from monitor: Connection reset by peer (Libvirt::Error)
+      ./features/cucumber/support/helpers/vm_helper.rb:359:in `start'
+      ./features/cucumber/step_definitions/common_steps.rb:124:in `(root)':in `/^I start the computer$/'
+      features/cucumber/misc_tests/checks.feature:44:in `And I start the computer'
 
 ## ruby tcpdump replacement?
 
