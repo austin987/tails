@@ -1,107 +1,113 @@
-[[!meta title="Test suite installation"]]
+[[!meta title="Test suite installation and setup"]]
 
-As the goal of this tool is to start Tails virtual machines, all that is needed
-to use it is to install its dependecies on the system used to run the tests, and
-setup the user environnment.
+Debian packages
+===============
 
+The following packages are necessary on Debian Wheezy, with unstable
+and experimental sources added:
 
-Caution
-=======
+    apt-get install build-essential curl git xvfb virt-viewer \
+        libsikuli-script-java libxslt1-dev libxml2-dev tcpdump \
+        unclutter radvd x11-apps graphicsmagick
+    apt-get -t experimental install qemu-kvm qemu-system-x86 libvirt0 \
+        libvirt-dev libvirt-bin seabios/unstable dnsmasq-base/unstable
 
-This tool actuallly needs root privileges in order to be able to capture the
-network traffic. This means either using sudo, which sadly is not currently
-supported, or start it as root.
+The above libvirt packages lack support for the `removable` disk
+property (needed by the `usb_install` feature), but we have a
+[patch](https://www.redhat.com/archives/libvir-list/2013-March/msg01051.html)
+in an upstreaming process. Until that happens and it lands in Debian
+experimental you need to build libvirt packages yourself with this
+patch added.
 
-Thus it might be preferable to use a kvm virtual machine to run the tests
-inside until it supports sudo, for obvious security reasons.
+If you intend to use the RVM installer (you probably must do that; see
+next section) you need:
 
-If you choose to use a dedicated virtual machine to run this tests, you need to
-enable the nested Kvm feature on the host that will run it. This way this tool
-will be able to start Tails virtual machines inside this dedicated virtual
-machine using its libvirt.
+    apt-get install curl ant
 
+(Optional) If you want to watch the test session live you need:
 
-Packages
-========
+    apt-get install x11vnc xtightvncviewer
 
-The following packages are necessary on Debian:
+(Optional) If you want to capture the test session as a video you
+need:
 
- * build-essential
- * curl (if you intend to use the rvm installer)
- * git
- * xvfb
- * libvirt-bin
- * libvirt-dev
- * virt-viewer
- * libsikuli-script-java
- * libxslt1-dev
- * libxml2-dev
- * tcpdump
+    apt-get install ffmpeg libvpx1
 
 
-Jruby 1.6 with Rvm
-==================
+JRuby 1.6 via RVM
+=================
 
-You also need a Jruby >= 1.6 environnement, which sadly isn't possible using
-Debian packages yet.
+You also need a JRuby >= 1.6 environment (we currently fix this to
+version 1.6.8), which sadly isn't possible using Debian packages yet.
 
-The actual workaround is to use [[rvm|http://rvm.io/]].
+The actual workaround is to use [RVM](http://rvm.io/). You first need
+to fetch the installer:
 
-Using the root user to start the application doesn't necessary means that you
-need to install rvm in its $HOME.
+    wget -O rvm.install https://get.rvm.io
+    chmod 755 rvm.install
 
-It's still possible to install rvm in a dedicated user $HOME, and run the tests
-in there as root, after having setup the root's shell environnment as explained
-in the Usage section.
+You can do a system-wide installation of RVM (available to all users
+in the `rvm` group) by starting the installer as `root`. For any other
+user it's installed in `$HOME`. Both approaches work just fine,
+depending on your needs. The installer is started with:
 
-If you choose not to use the root user $HOME, you can install rvm as the choosen
-dedicated $USER.
+    ./rvm.install --verify-downloads 0
 
-You first need to fetch and start the installer
+If you installed RVM as `root` you run:
 
-    $ wget -O rvm.install http://get.rvm.io
-    $ chmod 755 rvm.install
-    $ ./rvm.install
+    source /etc/profile.d/rvm.sh
 
-To be available at user login, rvm needs a little integration in the
-environnment. You need to adapt your terminal or screenrc settings. See the
-"Integration" and "Workflow" part of [[Rvm's homepage|http://rvm.io/]].
-Starting by hand the rvm command often output a link to some help to have it
-nicely installed in the session.
+otherwise (i.e. if you installed it as an unprivileged user) you run:
 
-You can then use rvm to install jruby:
+    source $HOME/.rvm/scripts/rvm
 
-    $ rvm install jruby
-    $ rvm use --default jruby
+You can then use RVM to install JRuby:
 
-
-Rvm heavily uses environnment variables, you can use its mechanism and modify
-~/.rvm/environments/jruby-$VERSION to add the one you need (like `$SIKULI_HOME`)
-to have them automatically exported too.
-
-A .rvmrc configuration is included in the sources, which automatically configure
-the use of rvm's jruby by default when you cd into the features/ directory.
+    rvm install --disable-binary --verify-downloads 0 jruby-1.6.8
+    rvm use --default jruby-1.6.8
 
 
 Rubygems
 ========
 
-Every ruby/gem related command should now use the jruby installed in $HOME/.rvm.
-To get the necessary gems from github, add it to the remote sources:
+Every `ruby`/`gem`-related command should now use the JRuby installed
+via RVM. Run the following to install the necessary gems for JRuby:
 
-    $ gem sources -a http://gems.github.com
+    gem sources -a http://gems.github.com
+    export JRUBY_OPTS=-Xcext.enabled=true
+    gem install cucumber \
+        sikuli \
+        ruby-libvirt \
+        packetfu \
+        json \
+        system_timer
 
-And install the following gems:
 
- * cucumber
- * sikuli
- * ruby-libvirt
+Running test suite as a non-root user
+=====================================
 
+This is entirely possible, but there's some additional configuration
+required. Run the following as `root`:
 
-Configuration
-=============
+    dpkg-statoverride --update --add root tcpdump 754 /usr/sbin/tcpdump
+    setcap CAP_NET_RAW+eip /usr/sbin/tcpdump
+    adduser $USER tcpdump
+    adduser $USER libvirt
+    # The following is not necessary if $USER performed the RVM
+    # install of JRuby above
+    adduser $USER rvm
 
-Usually on Debian the root user has access to qemu:///system. Check if it
-works, so that virt-viewer will be able to connect to the Tails virtual machine
-display.
+It's important to run `setcap` after `dpkg-statoverride` since the
+latter deletes all capabilities. Unfortunately the `setcap` command
+has to be rerun for that reason everytime the `tcpdump` package is
+updated until [[!debbug 662845]] is fixed.
 
+Running these commands will add some interesting capabilities to
+`$USER`, so you may want to do this for a dedicated user separate from
+your normal user. In that case (and if you run the tests as root) the
+`--view` option won't work unless you grant `$USER` access to your
+display via `xhost +SI:localhost:$USER`. Alternatively you can use the
+`--vnc-server-only` option and manually connect to the VNC server with
+your normal user. Just make sure the VNC viewer is in view-only mode
+(e.g. `xtightvncviewer --view-only ...`) in order to not interfere
+with the testing session.
