@@ -23,7 +23,7 @@ Feature: Microsoft Windows XP Camouflage
 
   Scenario: Windows should appear like those in Microsoft Windows XP
     When I run "iceweasel"
-    Then I see "WinXPIceweaselWindow.png" after at most 10 seconds
+    Then I see "WinXPIceweaselWindow.png" after at most 30 seconds
     And I see "WinXPIceweaselTaskBar.png" after at most 10 seconds
     And I see "WinXPWindowButtons.png" after at most 10 seconds
 
