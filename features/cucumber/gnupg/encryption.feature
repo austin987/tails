@@ -1,6 +1,6 @@
 Feature: Encryption and verification using GnuPG
   As a Tails user
-  I want to be able to esily encrypt and sign messages using GnuPG
+  I want to be able to easily encrypt and sign messages using GnuPG
   And decrypt and verify GnuPG blocks
 
   Background:

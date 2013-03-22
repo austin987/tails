@@ -18,7 +18,7 @@ Feature: Installing packages through APT
     And Iceweasel has autostarted and is not loading a web page
     And the time has synced
     And I have closed all annoying notifications
-    And APT's sources are only {ftp.us,security,back-ports}.debian.org
+    And APT's sources are only {ftp.us,security,backports}.debian.org
     And I save the state so the background can be restored next scenario
 
   Scenario: Install packages using apt-get

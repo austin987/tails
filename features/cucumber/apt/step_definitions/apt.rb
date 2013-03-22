@@ -1,6 +1,6 @@
 require 'uri'
 
-Given /^APT's sources are only \{ftp.us,security,back-ports\}\.debian\.org$/ do
+Given /^APT's sources are only \{ftp.us,security,backports\}\.debian\.org$/ do
   next if @skip_steps_while_restoring_background
   @vm.execute("cat /etc/apt/sources.list").stdout.chomp.each_line { |line|
     next if ! line.start_with? "deb"
