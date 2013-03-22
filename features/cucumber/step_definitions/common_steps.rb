@@ -151,7 +151,7 @@ Given /^the computer boots Tails$/ do
   @screen.waitVanish('TailsBootSplashTabMsg.png', 1)
   @screen.type(" autotest_never_use_this_option #{@boot_options}" +
                Sikuli::KEY_RETURN)
-  @screen.wait('TailsGreeter.png', 5*60)
+  @screen.wait('TailsGreeter.png', 10*60)
   @vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
 end
