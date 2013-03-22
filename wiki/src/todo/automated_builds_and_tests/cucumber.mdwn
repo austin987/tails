@@ -208,6 +208,11 @@ usecase will be to run it with nested virtualization, on
 not-so-powerful hardware, so the whole test suite must be tested in
 that context, and timeouts accordingly bumped as needed.
 
+## Review all the tests
+
+All the tests should be run and reviewed by someone else than
+their authors.
+
 ## sdmem job waiting vs erase_memory feature
 
 When we'll merge `feature/automated_tests/cucumber` into `stable` we'll
@@ -446,6 +451,33 @@ some of the above quoted scenarios concatenated.
 All scenarios fail for intrigeri: for some reason "encrypt with
 passphrase" is selected even in the scenario that's supposed to hit
 "k" to select "encrypt with pubkey".
+
+## unsafer browser feature
+
+The unsafe browser should be started from the applications menu,
+or at least in exactly the same way as it is run by the `.desktop`
+(that is, `sudo unsafe-browser`), possibly by extracting that
+command-line from the `.desktop`.
+
+## apt feature
+
+Synaptic should be started from the applications menu, or at least we
+should make sure it's started in exactly the same way as it is run by
+the `.desktop` by extracting that command-line from the `.desktop`
+(e.g. on Wheezy, this will be `synaptic-pkexec`).
+
+## root access control feature
+
+We're testing "the live user should be able to get administrative
+privileges through PolicyKit" by... running `gksu synaptic`. This is
+wrong, as being a sudoer is orthogonal to being an administrator from
+the PolicyKit point-of-view (IIRC on Debian PolicyKit is configured so
+that members of the `sudo` group are PolicyKit admins, which can be
+confusing, but still, one cannot test PolicyKit privileges by running
+sudo).
+
+`pkexec` to run the action, after using `pkcheck` to verify that the
+action requires to be an admin, perhaps?
 
 ## ruby tcpdump replacement?
 
