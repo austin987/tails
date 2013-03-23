@@ -499,6 +499,31 @@ sudo).
 `pkexec` to run the action, after using `pkcheck` to verify that the
 action requires to be an admin, perhaps?
 
+## usb install feature
+
+This scenario fails:
+
+    Scenario: Writing files to a read/write-enabled persistent partition # features/cucumber/usb/usb_install.feature:70
+    Given a computer                                                   # features/cucumber/step_definitions/common_steps.rb:63
+    And the computer is setup up to boot from USB drive "A"            # features/cucumber/usb/step_definitions/usb.rb:257
+    And the network is unplugged                                       # features/cucumber/step_definitions/common_steps.rb:102
+    When I start the computer                                          # features/cucumber/step_definitions/common_steps.rb:120
+    And the computer boots Tails                                       # features/cucumber/step_definitions/common_steps.rb:146
+    And Tails is running from USB drive "A"                            # features/cucumber/usb/step_definitions/usb.rb:284
+    And the boot device has safe access rights                         # features/cucumber/usb/step_definitions/usb.rb:295
+      This check is temporarily disabled since it currently always fails
+    And I enable persistence with password "asdf"                      # features/cucumber/usb/step_definitions/usb.rb:216
+    And I log in to a new session                                      # features/cucumber/step_definitions/common_steps.rb:159
+    And persistence has been enabled                                   # features/cucumber/usb/step_definitions/usb.rb:245
+    And I write some files expected to persist                         # features/cucumber/usb/step_definitions/usb.rb:333
+    And I shutdown Tails                                               # features/cucumber/step_definitions/common_steps.rb:376
+      The image 'TailsEmergencyShutdownButton.png' did not match in this region. (Sikuli::ImageNotFound)
+      ./features/cucumber/support/helpers/sikuli_helper.rb:31:in `wait_and_click'
+      ./features/cucumber/step_definitions/common_steps.rb:379:in `(root)':in `/^I shutdown Tails$/'
+      features/cucumber/usb/usb_install.feature:82:in `And I shutdown Tails'
+
+Then all following scenarios fail with `Cannot allocate memory`.
+
 ## "the shipped Tails signing key is not outdated" scenario
 
 Why not test "old w.r.t. the one we fetch from Tails' website", but
