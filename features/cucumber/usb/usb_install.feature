@@ -11,7 +11,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   # test what to me deels like logically different features, e.g.
   # the two named above would be concatenated.
 
-  Scenario: Installing Tails to a prestine USB drive
+  Scenario: Installing Tails to a pristine USB drive
     Given a computer
     And the computer is set to boot from the Tails DVD
     And the network is unplugged
