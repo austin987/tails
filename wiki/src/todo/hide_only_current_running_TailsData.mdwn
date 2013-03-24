@@ -5,8 +5,17 @@ However, this actually hides *any* partition that is labeled TailsData. What
 if I am using Tails to look the content of the persistent partition of
 another Tails USB stick (e.g. to fix issues or make backups)?
 
-A proper fix that is coming to my mind is to add a similar udev rule
-when the persistence is activated, matching the (known) UUID of the
-partition and not its label.
+Potential fixes:
+
+1. add a similar udev rule when the persistence is activated, matching
+   the (known) UUID of the partition and not its label.
+
+2. add a static udev rule that only hides such a partition if it's
+   found on the boot device by using the same approach as in
+   `/etc/udev/rules.d/99-boot-dev-ownership.rules` (introduced in
+   branch `bugfix/writable_boot_media`). A difference compared to the
+   other fix suggested would be that this fix always hides the boot
+   device's TailsData partition, even if it's not activated, which we
+   may or may not want.
 
 [[!tag todo/code]]

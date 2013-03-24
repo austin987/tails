@@ -24,17 +24,20 @@ This is done in the branch `feature/remember_installed_packages`.
 
 Next steps:
 
-- improve the code now that it was quickly reviewed once [[!tag todo/code]]
+- test the current state of the code [[!taglink todo/code]]
 - write design and usage [[!taglink todo/documentation]]
 - allow to opt-out of the installation of these packages in the greeter
 - nice GUI in persistence-setup select packages to make autoinstallation
   persistent (possibly among those that have been installed during
   session)
 
-Possible interfaces
-===================
+Past research
+=============
 
-## 1
+Possible interfaces
+-------------------
+
+### 1
 
 Either in the greeter or upon login, an
 interface could appear offering the user to select which packages should be
@@ -46,7 +49,7 @@ software without having an administrative password set.
 > This interface would quickly become messy, as soon as a desired
 > additional package pulls dozens (if not hundreds) of dependencies.
 
-## 2
+### 2
 
 Alternative idea: in tails-persistence-setup, allow selecting
 packages (among the ones additionally installed during the current
@@ -57,7 +60,7 @@ something else started from tails-greeter) would (unconditionally?)
 read this packages list from the persistent volume and install them.
 
 Things to think about
-=====================
+---------------------
 
 - security implications of this whole idea needs to be researched before
   diving in the code.
@@ -81,15 +84,15 @@ Things to think about
 [[!tag todo/research]]
 
 Possible implementation tricks
-==============================
+------------------------------
 
-## Installing at startup, then upgrading
+### Installing at startup, then upgrading
 
 One solution to the upgrad/offline use problem might be to install the packages
 at from cache at startup, then to try to fetch upgrades and install them if
 network appears.
 
-## Creating a list of user-installed packages
+### Creating a list of user-installed packages
 
 A configuration snippet can be add in `/etc/apt/apt.conf.d` with a
 `Dpkg::Post-Invoke` option. This allows to trigger a script each time
@@ -117,7 +120,5 @@ shipped with Tails.
 > default-packages.txt is the list of packages shipped with Tails, generated at ISO creation time with list-manually-installed-packages
 >
 > session-packages.txt is a temporary file, can be placed in /tmp
-
-
 
 [[!tag release/2.0]]
