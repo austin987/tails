@@ -13,6 +13,8 @@ ensure a few facts:
 - new code does not break anything
 - new build tools (`live-build`) and included software
   (`live-config`, `live-boot`) don't break anything
+- updates pushed to the APT repositories we don't control (e.g. Debian's)
+  don't break anything
 - the quality of our releases is good enough
 - power users get to test early images built from feature branches,
   or from `experimental`
@@ -97,9 +99,9 @@ In order to properly test features like USB installer, the
 virtualization environment must support USB 2.0. That pretty much
 limits the choice to recent QEMU or KVM versions.
 
-A first POC has been created in the `feature/automated_tests/cucumber` git
-branch. Read [[the dedicated documentation|automated_builds_and_tests/cucumber]]
-for more informations.
+This is being implemented: see the `feature/automated_tests/cucumber`
+Git branch and [[the dedicated
+sub-ticket|automated_builds_and_tests/cucumber]].
 
 Infrastructure
 --------------
@@ -111,9 +113,9 @@ Fresh image can be tested without having to be transferred.
 
 In order to be able to build Tails in memory (which greatly speeds up builds)
 and to properly test HIGHMEM memory wipes, the test server should have at
-least 32 GB. Using Vagrant (hence VirtualBox) or libvirt/KVM inside a KVM
+least 32 GB. Using KVM inside a KVM
 virtual machine is supported by the "nested KVM" feature available since
-Linux 3.1.
+Linux 3.1. VirtualBox (Vagrant) in KVM is not supported as of March 2013.
 
 We could set a threshold of tests that have to be successful before publishing
 one daily build image. This would prevent too-broken images to spread out and
