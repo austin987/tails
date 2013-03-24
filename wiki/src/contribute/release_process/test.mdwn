@@ -37,9 +37,34 @@ Check the image size has not changed much since the last release.
 
 # Cucumber
 
+## "Old" features
+
 	$ sudo apt-get install cucumber ruby-rspec
 	$ cd $TAILS_GIT_WORKDIR
 	$ cucumber
+
+## "New" features
+
+Use the `run_test_suite` script found in the Tails source root to run
+all automated Cucumber test features.
+
+A typical example run could be:
+
+    ./run_test_suite --view --capture test-0.17.webm \
+        path/to/tails.iso \
+        features/cucumber/iceweasel features/cucumber/erase_memory
+
+which will test only the `iceweasel` and `erase_memory` features (if
+no feature paths are given, all features in `features/cucumber` will
+be tested) of the given ISO image `tails.iso` while showing the test
+session in a VNC viewer (`--view`) and also capturing it into a video
+called `test-0.17.web` (`--capture`).
+
+For full instructions, see its `--help`.
+
+Note: since the test suite itself uses `virt-viewer` to interact with
+the Tails guest you cannot use it as that will steal the session from
+the test suite, leaving it with a blank screen.
 
 # Iceweasel
 
