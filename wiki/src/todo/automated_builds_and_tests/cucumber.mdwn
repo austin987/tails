@@ -51,9 +51,17 @@ TODO and issues
 
 ## Merge this branch
 
-1. Sort the following between release blockers and non-blockers
-1. Fix blockers.
+1. Fix blockers:
+   - File and directory layout reorganisation
+   - Support "slow" systems
+   - Design documentation
+1. Draw serious plans to make the JRuby / Sikuli / C extensions
+   solution sustainable for us.
 1. Split non-blockers into separate tickets.
+1. List the tests and their current status: needs-implementation,
+   needs-review, needs-to-pass-for-someone-else. This should be done
+   by building upon the "Tests from our manual test suite not yet
+   covered" list.
 1. Merge this branch.
 
 ## Tests from our manual test suite not yet covered
@@ -181,10 +189,16 @@ usecase will be to run it with nested virtualization, on
 not-so-powerful hardware, so the whole test suite must be tested in
 that context, and timeouts accordingly bumped as needed.
 
-## Review all the tests
+Tests are being reported on <https://pad.riseup.net/p/timeout-bumping>.
+
+## Review all the tests and have them replace the manual ones
 
 All the tests should be run and reviewed by someone else than
 their authors.
+
+That's not a blocker for the merge, just a blocker before we end up
+saying that the test suite can replace manual testing. That can be
+done on a feature-by-feature (or even scenario-by-scenario) basis.
 
 ## sdmem job waiting vs erase_memory feature
 
@@ -192,15 +206,17 @@ When we'll merge `feature/automated_tests/cucumber` into `stable` we'll
 revert commit `255aa71` ("Make sure the memory dumping debug message
 is shown cleanly") to not mess anything up for the imminent 0.17.2
 release at the time. However, the `erase_memory` feature depends on
-it, so we must remember to revert that revert in `devel` once `stable`
-has been merged into `devel`. Then we should determine whether
-`255aa71` is safe or even the right approach.
+it, so we must remember to consider reverting that revert after the
+release: we should first determine whether `255aa71` is safe or even
+the right approach.
 
 ## Get rid of RVM and ruby gems
 
 Ultimately we want good enough versions of JRuby and the required ruby
 gems properly packaged in Debian. Filing RFP bugs, to let people know
 what we need, would be a good start.
+
+We need serious plans to make this solution sustainable for us.
 
 ## jruby 1.7 has deprecated the C extension
 
@@ -223,6 +239,10 @@ so bad in the short run, but we need a contingency plan.
 > packages on Wheezy soon after the Jessie development cycle starts,
 > so it's likely that we soon have to manage a testing environment
 > based on Jessie... or maintain tons of backports.
+
+The best would probably be if we could move to native ruby, which
+would mean porting the sikuli gem somehow, maybe:
+<http://rjb.rubyforge.org/>
 
 ## File and directory layout reorganisation
 
@@ -288,22 +308,6 @@ is failing when inside Tails, and indeed several SMART tests fail.
 > What's the practical downside of this? In other words, why do
 > we care? --intrigeri
 
-## Host-to-guest filesystem share incompatibility with snapshots
-
-Filesystem shares cannot (due to QEMU limitations) be added to an
-active VM, and cannot (due to QEMU limitations) be active
-(i.e. mounted) during a snapshot save. Hence unmounting before save
-and remounting after restore them seems like a good idea.
-
-However, the `9p*` modules seem to get into a broken state during a
-save + restore (the "tags" used as `mount` source cannot be found), so
-unloading before save and reload after restore comes to mind. But
-loading `9pnet_virtio` fails after a restore with `probe of virtio2
-failed with error -2` (in `dmesg`) and the shares remain unmountable.
-
-This has to be investigated further, and possible upstream bugs
-should be reported.
-
 ## Background snapshots
 
 While these are invaluable for speeding up the test suite and not
@@ -352,49 +356,18 @@ errors going on. This prevents implementation of the tests:
 
 ## Remote shell
 
-This started out as a hack, and while it has evolved it largely
-remains so. A proper, reliable, established replacement would be
-welcome, but seems unlikely given the requirements:
-
-Requirements on the host (the remote shell client):
-
-* can execute a command with blocking until command completion on the
-  server, and get back return code, stdout and stderr separately.
-* can spawn a command without blocking (except an ACK that the server
-  has run the command, perhaps).
-* usable by an unprivileged user
-
-Requirements on the guest (the remote shell server):
-
-* has to work without a network connection.
-* should interfere minimally with the surrounding system (e.g. no
-  firewall exceptions; actually we don't want any network traffic at
-  all from it, but this kind of follows from the previous requirement
-  any way)
-
-### Minor groups not set
-
-If we run `@vm.execute("groups", "amnesia")` it'll only list
-membership in the major group, i.e. `amnesia`.
-
 ### pgrep -f detects itself
 
 When running `@vm.execute("pgrep -f $something")` it currently the
 case that `pgrep` lists its own pid (and hence never fails, which
-could be of great importance), unlike when you run it natively.
+could be of great importance), unlike when you run it natively, and
+unlike "The running pgrep or pkill process will never report itself as
+a match." in `pgrep(1)`.
 
-### Instability
+The practical problem is the (potentially serious) surprise one can be
+hit by when writing a step definition.
 
-Although very rare, the remote shell can get into a state where it
-stops responding, resulting in the test suite waiting for a response
-forever. The reason for this has proved hard to determine, but it
-seems to basically only happen for the very first interaction with it.
-
-I think it has to do with the fact that its transport is TCP on the
-host bridged to a serial device on the guest (see `<serial
-type='tcp'>` in Libvirt domain XML format). Perhaps the TCP state vs
-the guest's serial port's state gets out-of-sync if the TCP packet
-times out before the serial port is up and running?
+Why is that happening? Are other tools misbehaving?
 
 ## usb_install feature
 
@@ -412,16 +385,6 @@ reopened)) is not working any more. the boot device (including boot
 partition and any persistent partition) is owned by group `floppy`
 which the `amnesia` user is a member of, enabling it full write
 permissions to it. Is udev doing this at a later stage now?
-
-### Scenario dependencies
-
-An issue with this feature is that scenarios depend on earlier
-scenarios. For instance, "Booting Tails from USB drive ..."  depends
-on "Installing Tails to a prestine USB drive" or one of the, Upgrading
-a Tails USB drive from ..." which in turn depend on "Installing
-...". This is not goo practice, but the alternative would be gigantic
-scenarios that test several logically different scenarios in turn,
-some of the above quoted scenarios concatenated.
 
 ## GnuPG encryption feature
 
@@ -519,15 +482,6 @@ if moved to a dedicated feature:
       ./features/cucumber/step_definitions/common_steps.rb:124:in `(root)':in `/^I start the computer$/'
       features/cucumber/misc_tests/checks.feature:44:in `And I start the computer'
 
-## ruby tcpdump replacement?
-
-If we want to rid ourselves of running external processes like we do
-with `tcpdump`, we may want to look into:
-
- * [nfqueue](http://rubydoc.info/gems/nfqueue)
-
-> Just curious: what's the problem with running `tcpdump`? --intrigeri
-
 ## fix or remove `--newest-iso`
 
 `run_test_suite` has a `--newest-iso` option that does not work.
@@ -538,6 +492,85 @@ We should fix or remove it.
 Relevant design and implementation notes that are currently spread on
 this page and on [[todo/automated_builds_and_tests]] should be moved
 to a sub-page of contribute/design.
+
+### Remote shell
+
+This started out as a hack, and while it has evolved it largely
+remains so. A proper, reliable, established replacement would be
+welcome, but seems unlikely given the requirements:
+
+Requirements on the host (the remote shell client):
+
+* can execute a command with blocking until command completion on the
+  server, and get back return code, stdout and stderr separately.
+* can spawn a command without blocking (except an ACK that the server
+  has run the command, perhaps).
+* usable by an unprivileged user
+
+Requirements on the guest (the remote shell server):
+
+* has to work without a network connection.
+* should interfere minimally with the surrounding system (e.g. no
+  firewall exceptions; actually we don't want any network traffic at
+  all from it, but this kind of follows from the previous requirement
+  any way)
+
+### Remote shell instability
+
+Although very rare, the remote shell can get into a state where it
+stops responding, resulting in the test suite waiting for a response
+forever. The reason for this has proved hard to determine, but it
+seems to basically only happen for the very first interaction with it.
+
+I think it has to do with the fact that its transport is TCP on the
+host bridged to a serial device on the guest (see `<serial
+type='tcp'>` in Libvirt domain XML format). Perhaps the TCP state vs
+the guest's serial port's state gets out-of-sync if the TCP packet
+times out before the serial port is up and running?
+
+### Remote shell: minor groups not set
+
+If we run `@vm.execute("groups", "amnesia")` it'll only list
+membership in the major group, i.e. `amnesia`.
+
+Ideally, as long as we don't use the remote shell to test actions that
+a real user could perform, and only use it to check results and
+prepare stuff, this should not be a practical problem.
+
+However, we have at least one exception (apt-get update / install)
+that uses the remote shell to emulate user action, and it would be
+a pain to rewrite using Sikuli, so we'd rather keep this exception.
+
+Then, we have to document this remote shell shortcoming in the
+upcoming "how to write tests" documentation, and forget about minor
+groups. We also have to document that this remote shell should be used
+as little as possible to emulate user actions.
+
+### USB scenario dependencies
+
+An issue with this feature is that scenarios depend on earlier
+scenarios. For instance, "Booting Tails from USB drive ..."  depends
+on "Installing Tails to a prestine USB drive" or one of the, Upgrading
+a Tails USB drive from ..." which in turn depend on "Installing
+...". This is not goo practice, but the alternative would be gigantic
+scenarios that test several logically different scenarios in turn,
+some of the above quoted scenarios concatenated.
+
+### Host-to-guest filesystem share incompatibility with snapshots
+
+Filesystem shares cannot (due to QEMU limitations) be added to an
+active VM, and cannot (due to QEMU limitations) be active
+(i.e. mounted) during a snapshot save. Hence unmounting before save
+and remounting after restore them seems like a good idea.
+
+However, the `9p*` modules seem to get into a broken state during a
+save + restore (the "tags" used as `mount` source cannot be found), so
+unloading before save and reload after restore comes to mind. But
+loading `9pnet_virtio` fails after a restore with `probe of virtio2
+failed with error -2` (in `dmesg`) and the shares remain unmountable.
+
+This has to be investigated further, and possible upstream bugs
+should be reported.
 
 Resources
 =========
