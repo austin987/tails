@@ -7,7 +7,8 @@ end
 
 # Call block (ignoring any exceptions it may throw) repeatedly with one
 # second breaks until it returns true, or until `t` seconds have
-# passed when we throw Timeout:Error.
+# passed when we throw Timeout::Error. As a precondition, the code
+# block cannot throw Timeout::Error.
 def try_for(t, options = {})
   options[:delay] ||= 1
   begin
@@ -15,6 +16,12 @@ def try_for(t, options = {})
       loop do
         begin
           return true if yield
+        rescue Timeout::Error => e
+          if options[:msg]
+            raise RuntimeError, options[:msg], caller
+          else
+            raise e
+          end
         rescue Exception
           # noop
         end
