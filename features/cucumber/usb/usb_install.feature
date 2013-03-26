@@ -77,6 +77,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the boot device has safe access rights
     And I enable persistence with password "asdf"
     And I log in to a new session
+    And GNOME has started
+    And I have closed all annoying notifications
     And persistence has been enabled
     And I write some files expected to persist
     And I shutdown Tails
@@ -92,6 +94,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the boot device has safe access rights
     And I enable read-only persistence with password "asdf"
     And I log in to a new session
+    And GNOME has started
+    And I have closed all annoying notifications
     And persistence has been enabled
     And I write some files not expected to persist
     And I remove some files expected to persist
