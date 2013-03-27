@@ -1,3 +1,4 @@
+@product
 Feature: Root access control enforcement
   As a Tails user
   when I set an administration password in Tails Greeter

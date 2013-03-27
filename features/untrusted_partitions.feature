@@ -1,3 +1,4 @@
+@product
 Feature: Untrusted partitions
   As a Tails user
   I don't want to touch other media than the one Tails runs from

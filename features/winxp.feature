@@ -1,3 +1,4 @@
+@product
 Feature: Microsoft Windows XP Camouflage
   As a Tails user
   when I select the Microsoft Windows XP Camouflage in Tails Greeter

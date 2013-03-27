@@ -1,3 +1,4 @@
+@product
 Feature: Installing packages through APT
   As a Tails user
   when I set an administration password in Tails Greeter

@@ -1,3 +1,4 @@
+@product
 Feature: System memory erasure on shutdown
   As a Tails user
   when I shutdown Tails

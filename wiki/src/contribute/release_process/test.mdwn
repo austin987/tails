@@ -44,30 +44,31 @@ Check the image size has not changed much since the last release.
 
 # Cucumber
 
-## "Old" features
-
-	$ sudo apt-get install cucumber ruby-rspec
-	$ cd $TAILS_GIT_WORKDIR
-	$ cucumber
-
-## "New" features
-
 Use the `run_test_suite` script found in the Tails source root to run
 all automated Cucumber test features. See the [[setup
 documentation|test/setup]] in case you don't have a testing
 environment yet.
 
-A typical example run could be:
+It's important to note that some features only depend on the Tails
+sources, and some on the actual product of the sources, i.e. a Tails
+ISO image. These features are tagged `@source` and `@product`,
+respectively. The arguments passed to `run_test_suite` may only affect
+one of these types of features and not the other.
+
+A typical example run of a few `@product` features could be:
 
     ./run_test_suite --view --capture test-0.17.webm \
-        path/to/tails.iso \
-        features/cucumber/iceweasel features/cucumber/erase_memory
+        --iso path/to/tails.iso \
+        features/.feature features/erase_memory.feature
 
 which will test only the `iceweasel` and `erase_memory` features (if
 no feature paths are given, all features in `features/cucumber` will
 be tested) of the given ISO image `tails.iso` while showing the test
 session in a VNC viewer (`--view`) and also capturing it into a video
-called `test-0.17.web` (`--capture`).
+called `test-0.17.web` (`--capture`). Similarly, to test a `@source`
+feature, we'd simply run something like:
+
+    ./run_test_suite features/build.feature
 
 For full instructions, see its `--help`.
 

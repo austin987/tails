@@ -1,4 +1,10 @@
+require 'java'
+require 'rubygems'
+require "#{Dir.pwd}/features/support/extra_hooks.rb"
+require 'time'
 require 'rspec'
+
+$time_at_start = Time.now
 
 def fatal_system(str)
   unless system(str)

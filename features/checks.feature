@@ -1,3 +1,4 @@
+@product
 Feature: Various checks
 
   Background:

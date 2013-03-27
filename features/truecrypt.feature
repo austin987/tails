@@ -1,3 +1,4 @@
+@product
 Feature: TrueCrypt
   As a Tails user
   I *might* want to use TrueCrypt

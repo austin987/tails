@@ -7,11 +7,11 @@ set -e
 NAME=$(basename ${0})
 
 usage() {
-    echo "Usage: $NAME [OPTION]... ISO [FEATURE]...
+    echo "Usage: $NAME [OPTION]... [FEATURE]...
 Tests the FEATUREs (all by default) of ISO. Note that this command must be run
 from the Tails source directory.
 
-Options:
+Options for '@product' features:
   --capture=FILE     Captures the test session into FILE using VP8 encoding.
                      Requires ffmpeg and libvpx1.
   --keep-snapshots   Don't ever delete the background snapshots. This can a big
@@ -23,8 +23,11 @@ Options:
   --view             Shows the test session in a windows. Requires x11vnc
                      and xtightvncviewer.
   --vnc-server-only  Starts a VNC server for the test session. Requires x11vnc.
-  --newest-iso       Omits the ISO argument; instead we use the ISO image
-                     with most recent mtime in the current directory
+  --iso IMAGE        Test all '@product' features with IMAGE.
+  --newest-iso       Like above, but we use the ISO image with most recent
+                     mtime in the current directory
+
+Note that '@source' features has no relevant options.
 "
 }
 
@@ -92,7 +95,7 @@ capture_session() {
 
 unset CAPTURE_FILE VNC_VIEWER VNC_SERVER
 SHORTOPTS="a:c"
-LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,newest-iso:,keep-snapshots"
+LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,newest-iso:,keep-snapshots,iso:"
 OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -116,6 +119,10 @@ while [ $# -gt 0 ]; do
             shift
             export TEMP_DIR="$(readlink -f $1)"
             ;;
+        --iso)
+            shift
+            export ISO="$(readlink -f $1)"
+            ;;
         --newest-iso)
 	    NEWEST_ISO=yes
 	    unset ISO
@@ -126,21 +133,11 @@ while [ $# -gt 0 ]; do
             ;;
         --)
             shift
-            if [ -z "${NEWEST_ISO}" ]; then
-                if [ -n "$1" ]; then
-                    export ISO="$(readlink -f $1)"
-                    shift
-                fi
-            fi
             break
             ;;
     esac
     shift
 done
-
-if [ -z "${NEWEST_ISO}" ] && [ -z "${ISO}" ]; then
-    error "No ISO provided and --newest-iso not given. Aborting..."
-fi
 
 for dep in git libvirt-bin libvirt-dev virt-viewer libsikuli-script-java \
             libxslt1-dev libxml2-dev tcpdump xvfb graphicsmagick-imagemagick-compat; do
@@ -166,7 +163,7 @@ export DISPLAY=${TARGET_DISPLAY}
 . features/.rvmrc
 check_dependency cucumber
 if [ -z "${*}" ]; then
-    cucumber --format ExtraHooks::Pretty features/cucumber/
+    cucumber --format ExtraHooks::Pretty features
 else
-    cucumber --format ExtraHooks::Pretty features/cucumber/step_definitions features/cucumber/support ${*}
+    cucumber --format ExtraHooks::Pretty features/step_definitions features/support ${*}
 fi

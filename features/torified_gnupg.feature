@@ -1,3 +1,4 @@
+@product
 Feature: Keyserver interaction with GnuPG
   As a Tails user
   when I interact with keyservers using various GnuPG tools

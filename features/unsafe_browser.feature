@@ -1,3 +1,4 @@
+@product
 Feature: Browsing the web using the Unsafe Browser
   As a Tails user
   when I browse the web using the Unsafe Browser
