@@ -1,6 +1,45 @@
-We should integrate macchanger in some way.
-
 [[!toc levels=2]]
+
+Rationale
+=========
+
+All network interfaces, both wired or wireless, have a unique
+[[!wikipedia MAC address]] which is broadcasted on any local network
+it is connected to (for wireless interfaces that also means that any
+radio receiver in the vicinity sees it). The uniqueness of this
+address is problematic, as it can:
+
+* be used a to tie a computer and its owner to a time and place for
+  observers with a list of device MAC addresses and their owners,
+* or at least track the location history of a specific device, which
+  can tell a great deal about its owner.
+
+While broadcasting the MAC addres in one's home *only* is not problem,
+broadcasting the MAC address in public is, so we need to device a
+simple user interface which gives the option to obfuscate this address
+when using Tails in public.
+
+Roadmap
+=======
+
+0. Decide which use cases we want to support and how to deal with
+   them.
+0. Design the user interface:
+   * Tails Greeter option.
+   * Potential post-connect error detection and error handling.
+0. [[!tag todo/research]] the merits of the different implementation
+   options and decide which ones to use:
+    * Trigger:
+      - `ifupdown` hook, or
+      - `udev` rule, or
+      - NetworkManager plugin, or
+      - NetworkManager hook.
+    * Tool:
+      - `macchiato`, or
+      - `macchanger`, or
+      - something else?
+0. Implement the feature based on the above design and research.
+0. Write user documentation.
 
 Use cases
 =========
