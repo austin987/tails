@@ -376,6 +376,8 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "I enable read-only persistence with password \"asdf\""
   step "I log in to a new session"
   step "persistence has been enabled"
+  step "GNOME has started"
+  step "I have closed all annoying notifications"
   step "the expected persistent files are present in the filesystem"
   step "I shutdown Tails"
 end
