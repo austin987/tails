@@ -23,9 +23,9 @@ Options for '@product' features:
   --view             Shows the test session in a windows. Requires x11vnc
                      and xtightvncviewer.
   --vnc-server-only  Starts a VNC server for the test session. Requires x11vnc.
-  --iso IMAGE        Test all '@product' features with IMAGE.
-  --newest-iso       Like above, but we use the ISO image with most recent
-                     mtime in the current directory
+  --iso IMAGE        Test '@product' features using IMAGE. If none is given,
+                     any '@product' feature will use the ISO image with most
+                     recet mtime in the current directory
 
 Note that '@source' features has no relevant options.
 "
@@ -95,7 +95,7 @@ capture_session() {
 
 unset CAPTURE_FILE VNC_VIEWER VNC_SERVER
 SHORTOPTS="a:c"
-LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,newest-iso:,keep-snapshots,iso:"
+LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,iso:"
 OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -122,10 +122,6 @@ while [ $# -gt 0 ]; do
         --iso)
             shift
             export ISO="$(readlink -f $1)"
-            ;;
-        --newest-iso)
-	    NEWEST_ISO=yes
-	    unset ISO
             ;;
         --help)
 	    usage
