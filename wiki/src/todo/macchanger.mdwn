@@ -71,6 +71,50 @@ USB wireless dongle is inserted in Tails after it has booted?
 Network manager will automatically begin to scan the network with a
 non-fake mac address. Is it a problem?
 
+User interface
+==============
+
+Tails Greeter option
+--------------------
+
+As has been proved many times on our forum, MAC addresses is a big
+source of user confusion. To help users make a good choice we probably
+want to avoid a wording that contains the word "MAC address", both to
+accomodate users that don't know what that is, and users whose
+misconseptions may lead them to pick a sub-optimal option. Wordings
+like "I am using a public network" or "I am using a public computer"
+are preferred for these reasons.
+
+Ideally we'd like a single, binary option (e.g. a check box) whose
+state then determines what to do with each network interface, but
+depending on the use cases we want to support (see dedicated section
+above), that may be too limiting. For instance "public vs home/trusted
+network" and "public vs owned/trusted computer" result in four
+different combinations. However, having two binary options for the
+above could prove interesting for other features than MAC changer, so
+it may be worthwhile (note, this list is not a list of TODOs; just a
+list of examples that may motivate adding the above *two* options):
+
+* On a public/untrusted computer we may want to completely disable
+  certain hardware to
+  [[todo/protect_against_external_bus_memory_forensics]].
+* On a public/untrusted computer we may want to disable keyboard input
+  for the [[doc/first_steps/persistence]] passphrase and
+  [[doc/first_steps/startup_options/administration_password]] (due to
+  the threat of hardware key loggers), forcing usage of a
+  [[virtual keyboard|todo/Add_a_virtual_keyboard_in_Tails_Greeter]].
+* On a public/untrused network we may want to disable network
+  printers.
+
+Post-login
+----------
+
+Since MAC changing can cause network problems (see "Caveats" section
+above) we may want to try to detect such errors after we've logged in.
+Upon detection we could show a notification linking to some
+appropriate documentation, and offer the option to reset the MAC
+address of the device to the default and re-connect.
+
 Implementation
 ==============
 
