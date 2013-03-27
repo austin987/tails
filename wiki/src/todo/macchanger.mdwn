@@ -27,6 +27,7 @@ Roadmap
 0. Design the user interface:
    * Tails Greeter option.
    * Potential post-connect error detection and error handling.
+0. Reconsider changing the vendor bits or not.
 0. [[!tag todo/research]] the merits of the different implementation
    options and decide which ones to use:
     * Trigger:
@@ -216,13 +217,35 @@ packaged in Debian ([[!debpkg macchanger-gtk]]).
 macchiato
 ---------
 
-[macchiato](https://github.com/EtiennePerot/macchiato) is a Bash
+Our [[MAC address design document|contribute/design/MAC_address]]
+explains the way we've chosen until now to generate partially random
+MAC addresses.
+
+It's mostly implemented by
+[macchiato](https://github.com/EtiennePerot/macchiato): a Bash
 script, released under the 3-clauses BSD license, that assigns
 a random MAC address to specified network interfaces, using lists of
 per-device-type common vendor OUI. It can be configured per-device,
 has code to generate udev rules, and has some systemd integration.
 It's been described in more details [in a blog
 post](https://perot.me/mac-spoofing-what-why-how-and-something-about-coffee).
+
+However, there are issues with this approach:
+
+* as of February 2013, macchiato's lists are very short; the author is
+  open to adding to them, but it does not come for free
+* There are web interfaces out there to query the ieee.org OUI database,
+  like [this one](https://db.uga.edu/network/public/vendorcode.cgi).
+* A list of the biggest ethernet vendors is quite harder to find, but
+  [wikipedia](https://secure.wikimedia.org/wikipedia/en/wiki/List_of_PC_hardware_manufacturers#Network_cards)
+  can help, as some other sites
+  [here](http://www.mcgelec.com/Support/mfglinks/nics-wired.aspx) or
+  [here](http://www.charydent.com/network-adapter.asp)
+
+So, the path we've chosen (choose 20 most common vendors) seems to be
+harder than expected, and maybe rather choosing to randomize only the
+last part of the MAC address while keeping the original vendor prefix
+would be easier.
 
 Improving macchanger
 ====================
