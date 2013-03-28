@@ -118,7 +118,7 @@ Given /^I fill the guest's memory with a known pattern$/ do
   STDERR.print "Memory fill progress: "
   ram_usage = ""
   # ... and that it finishes
-  try_for(instances*60, { :msg => "fillram didn't complete, probably the VM crashed" }) do
+  try_for(instances*2*60, { :msg => "fillram didn't complete, probably the VM crashed" }) do
     used_ram = used_ram_in_bytes
     remove_chars = ram_usage.size
     ram_usage = "%3d%% " % ((used_ram.to_f/@detected_ram_b)*100)
@@ -152,5 +152,11 @@ end
 
 When /^I wait for Tails to finish wiping the memory$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait('MemoryWipeCompleted.png', 120)
+  nr_gibs_of_ram = (@detected_ram_b.to_f/(2**30)).ceil
+  try_for(nr_gibs_of_ram*5*60, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
+    # We spam keypresses to prevent console blanking from hiding the
+    # image we're waiting for
+    @screen.type(" ")
+    @screen.wait('MemoryWipeCompleted.png')
+  end
 end
