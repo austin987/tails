@@ -3,9 +3,6 @@ Feature: Untrusted partitions
   As a Tails user
   I don't want to touch other media than the one Tails runs from
 
-  # XXX: For some strange reason plugging sata drives below result in
-  # SMART errors for the drives inside Tails, so we stick with ide.
-
   Scenario: Tails does not boot from live systems stored on hard drives
     Given a computer
     And I create a 1 GiB disk named "live_hd"
