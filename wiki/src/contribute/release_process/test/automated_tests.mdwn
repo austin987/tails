@@ -33,29 +33,6 @@ With this tool, it is possible to:
     sessions can also be captured into a video.
   * Capture and analyze the network traffic of the system under testing.
 
-## Setup and usage
-
-* [[Setup|contribute/release_process/test/setup]]
-* [[Usage|contribute/release_process/test]]
-
-When it comes to usage it's advised to use the `run_test_suite` script
-as instructed above. It is, however, possible to use `cucumber`
-directly once the correct environment is setup:
-
-* You have to source `features/.rvmrc`, which uses bashisms, so using
-  `bash` as your shell is advised.
-* The environment variable `DISPLAY` has to point to an unused X
-  display (tip: use `Xvfb`). The images Sikuli uses are optimized for
-  a 1024x768 display with 24-bit colour depth.
-* The environment variable `SIKULI_HOME` must be set to the directory
-  where sikuli script is installed for Java (`/usr/share/java` in
-  Debian).
-* It's advised to run `unclutter` on `$DISPLAY` to prevent the mouse
-  pointer from blocking GUI elements looked for by Sikuli.
-* When calling `cucumber` you have to use `--format
-  ExtraHooks::Pretty`, to get access to our custom
-  `{After,Before}Feature` hooks.
-
 ## source vs. product cucumber features
 
 Fundamentally speaking there are two types of tests:
@@ -72,6 +49,25 @@ The requirement of these are quite different; for instance, a
 `@source` test doesn't. Therefore their environments are setup
 separately using our custom `BeforeFeature` hook, with the respective
 tag.
+
+# Implementation
+
+The `run_test_suite` script is a wrapper on top of `cucumber`, that
+sets the correct environment up:
+
+* It sources `features/.rvmrc`, which uses bashisms, so it uses `bash`
+  as a shell.
+* It uses `Xvfb` so that the `DISPLAY` environment variable points to
+  an unused X display (tip: use `Xvfb`) with screen size and color
+  depth matching what the Sikuli images are optimized for (that is,
+  1024x768 / 24-bit).
+* It sets the `SIKULI_HOME` environment variable to the directory
+  where sikuli script is installed for Java (`/usr/share/java` in
+  Debian).
+* It runs `unclutter` on `$DISPLAY` to prevent the mouse
+  pointer from masking GUI elements looked for by Sikuli.
+* It passes `--format ExtraHooks::Pretty` to `cucumber` calls, to get
+  access to our custom `{After,Before}Feature` hooks.
 
 # The art of writing new (`@product`) tests
 
