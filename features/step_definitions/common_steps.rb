@@ -151,7 +151,7 @@ Given /^the computer boots Tails$/ do
   @screen.waitVanish('TailsBootSplashTabMsg.png', 1)
   @screen.type(" autotest_never_use_this_option #{@boot_options}" +
                Sikuli::KEY_RETURN)
-  @screen.wait('TailsGreeter.png', 10*60)
+  @screen.wait('TailsGreeter.png', 15*60)
   @vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
 end
@@ -205,7 +205,7 @@ Given /^GNOME has started$/ do
   else
     desktop_started_picture = 'GnomeApplicationsMenu.png'
   end
-  @screen.wait(desktop_started_picture, 60)
+  @screen.wait(desktop_started_picture, 180)
 end
 
 Given /^I have a network connection$/ do

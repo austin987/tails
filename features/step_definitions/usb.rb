@@ -55,14 +55,14 @@ end
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   step "I run \"liveusb-creator-launcher\""
-  @screen.wait_and_click('USBCloneAndInstall.png', 10)
+  @screen.wait_and_click('USBCloneAndInstall.png', 30)
   usb_install_helper(name)
 end
 
 When /^I "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   step "I run \"liveusb-creator-launcher\""
-  @screen.wait_and_click('USBCloneAndUpgrade.png', 10)
+  @screen.wait_and_click('USBCloneAndUpgrade.png', 30)
   usb_install_helper(name)
 end
 
