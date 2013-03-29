@@ -19,18 +19,19 @@ Integration server.
 With this tool, it is possible to:
 
   * Create, modify and destroy virtual machines that can run Tails from
-	a variety of media (primarily DVD and USB drives).
-  * Create different kinds of virtual storage (ide, USB, DVD, ...),
-    and either cold or hot plug/unplug them to the virtual machine.
-  * Modify the virtual machine's hardware, e.g. how much RAM it has,
-	its processor features (PAE), etc.
-  * Simulate user interaction with the Tails virtual machine, and test
+    a variety of media (primarily DVD and USB drives).
+  * Create different kinds of virtual storage (IDE, USB, DVD...),
+    and either cold or hot plug/unplug them into/from the
+    virtual machine.
+  * Modify the virtual machine's hardware, e.g. its amount of RAM,
+    its processor features (PAE), etc.
+  * Simulate user interaction with the system under testing and check
     its state.
   * Run arbitrary shell commands inside the virtual machine.
   * Take screenshots from the display of the virtual machine, at
     particular events, like when a scenario fails. Complete test
     sessions can also be captured into a video.
-  * Capture and analyse Tails virtual machine network traffic.
+  * Capture and analyze the network traffic of the system under testing.
 
 ## Setup and usage
 
@@ -55,17 +56,19 @@ directly once the correct environment is setup:
   ExtraHooks::Pretty`, to get access to our custom
   `{After,Before}Feature` hooks.
 
-# `@source` vs `@product` features
+## source vs. product cucumber features
 
 Fundamentally speaking there are two types of tests:
 
-* Tests depending on the Tails sources (example:
-  `features/build.feature`) which is aptly tagged with `@source`, and
-* Tests depending on the product of the Tails sources, i.e. a Tails
-  ISO image, which is tagged `@product`.
+* Tests that make sure that the Tails *sources* behave correctly *at
+  build time* (example: `features/build.feature`); these ones are
+  aptly tagged `@source`; and,
+* Tests that make sure that the product built from Tails sources, i.e.
+  a Tails ISO image, behaves correctly *at run time*; these ones are
+  tagged `@product`.
 
 The requirement of these are quite different; for instance, a
-`@product` test must have a Tails ISO image to test, whereas a
+`@product` test must have access to a Tails ISO image to test, whereas a
 `@source` test doesn't. Therefore their environments are setup
 separately using our custom `BeforeFeature` hook, with the respective
 tag.
@@ -99,7 +102,7 @@ destroys any residual VM from a previous scenario, and sets up a
 completely fresh one, with all defaults. The defaults are defined in
 `features/domains/default.xml`, but some highlights are:
 
-* One virtual x86_64 CPU with one core
+* One virtual `x86_64` CPU with one core
 * 1 GiB of RAM
 * ACPI, APIC and PAE enabled
 * UTC harware clock
@@ -113,7 +116,7 @@ above...
 
     And I create a 10 GiB disk named "some_disk"
 
-The identifier ("some_disk") is later used if we want to plug it or
+The identifier (`some_disk`) is later used if we want to plug it or
 otherwise act on it. Note that all media created this way are backed
 by [[!wikipedia qcow2]] images, which grow only as they consume
 capacity. All such media are destroyed after the feature ends.
@@ -123,18 +126,18 @@ if we want to plug it as a non-removable drive...
 
     And I plug ide drive "some_disk"
 
-Note that we can decide which type of drive "some_disk" is here. If we
+Note that we can decide which type of drive `some_disk` is here. If we
 pick a non-removable media, like in this case, it has to be done
 before we start the virtual machine. Removable media, such as USB
 drives, can be plugged into a live system at any later point.
 
-	And the network is plugged
+    And the network is plugged
 
 This plugs the network interface to the host-bridged network (which is
 the default). There's also the "unplugged" version, which generally is
 preferred for features that don't rely on the network (mostly so we
 won't hammer the Tor network unnecessarily). These steps can also be
-done to a live system.
+performed on a already running system under test.
 
     And I start the computer
 
@@ -146,8 +149,8 @@ This step:
 
 * verifies that we see the boot menu
 * adds any boot options added via `I set Tails to boot with options ...`
-* making sure that Tails Greeter starts
-* making sure that the remote shell is up and running
+* makes sure that Tails Greeter starts
+* makes sure that the remote shell is up and running
 
     And I enable more Tails Greeter options
 
@@ -157,7 +160,7 @@ next one, or the `I enable Microsoft Windows XP camouflage` step.
     And I set sudo password "asdf"
 
 Beyond the obvious, after this step all steps requiring the
-administrative password has access to it.
+administrative password have access to it.
 
     And I log in to a new session
     And GNOME has started
@@ -165,7 +168,8 @@ administrative password has access to it.
     And Tor has built a circuit
 
 All these should be pretty obvious. It could be mentioned that the
-last two steps, like many others, depend on the remote shell working.
+last two steps, like many others, depend on the remote shell to
+be working.
 
     And Iceweasel has autostarted and is not loading a web page
 
@@ -190,7 +194,7 @@ reasonably correct clock.
 The notifications can block GUI elements that we're looking for later
 with Sikuli, so they are to be closed whenever for essentially all
 tests of GUI applications. If we have a network connection, so the
-time syncing starts and shows its notifications, this step should be
+time syncing starts and shows its notifications, then this step should be
 run after the previous step. Otherwise it always depends on the `GNOME
 has started` step.
 
@@ -237,10 +241,10 @@ The remote shell:
 * Useful for testing non-GUI state.
 * Useful for reaching some state required before we test stuff
   depending on user interaction (which should use Sikuli!).
-* It is acceptible (but not encouraged) to use the remote shell for
+* It is acceptable (but not encouraged) to use the remote shell for
   simulating user terminal interaction when we need to analyze the
-  commands output. This is because Sikuli's poor OCR capabilities, so
-  we cannot depend on it.
+  commands output. This is because of Sikuli's OCR capabilities are
+  poor, and cannot be depended on.
 
 ### Background snapshot compatibility
 
@@ -251,11 +255,13 @@ general contain the following in its absolute beginning:
     next if @skip_steps_while_restoring_background
 
 This is what makes it possible to pass the step without actually
-running it. Note the "in general" above, though. Sometimes we there
-may be code in a step that we should let run before we skip the
-test. In general that's just assignment of input from a step into a
-global/class variable that is used in subsequent steps. For an
-instructive example of this, see the `I set sudo password ...` step in
+running it.
+
+Note the "in general" above, though. Sometimes there may be code in
+a step that we should let run before we skip the test. In general
+that's just assignment of input from a step into a global/class
+variable that is used in subsequent steps. For an instructive example
+of this, see the `I set sudo password ...` step in
 `features/step_definitions/common_steps.rb`, which saves the password
 into a class variable so it can be used by, among others, the `I enter
 the sudo password ...` step.
@@ -264,7 +270,7 @@ the sudo password ...` step.
 
 ## The remote shell
 
-The remote shells have a few surprises in store which one 
+The remote shells have a few surprises in store:
 
 * `pgrep -f` detects itself, which can have potentially serious
   consequences if not dealt with.
