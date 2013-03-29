@@ -22,8 +22,6 @@ Then /^the shipped Tails signing key is not outdated$/ do
          fresh_sig_key_info)
 end
 
-
-
 Then /^the live user has been setup by live\-boot$/ do
   next if @skip_steps_while_restoring_background
   assert(@vm.execute("test -e /var/lib/live/config/user-setup").success?,
