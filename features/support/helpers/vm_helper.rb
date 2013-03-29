@@ -9,7 +9,7 @@ class VM
   # which can persist for different VM instances (even in parallel)
   @@virt = nil
   # This is a storage helper that deals with volume manipulation. The
-  # storage it deals with persist across VMs, by necessity.
+  # storage it deals with persists across VMs, by necessity.
   @@storage = nil
 
   def VM.storage
