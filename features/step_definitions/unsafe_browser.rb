@@ -24,7 +24,13 @@ Then /^the Unsafe Browser shows a warning as its start page$/ do
 end
 
 When /^I start the Unsafe Browser$/ do
-  step "I run \"gksu unsafe-browser\""
+  unsafe_browser_cmd = nil
+  @vm.execute("cat /usr/share/applications/unsafe-browser.desktop").stdout.chomp.each_line { |line|
+    next if ! line.start_with? "Exec="
+    unsafe_browser_cmd = line[/^Exec=(.*)/,1]
+  }
+  assert(!unsafe_browser_cmd.nil?, "failed to extract the unsafe browser command")
+  step "I run \"#{unsafe_browser_cmd}\""
   step "I see and accept the Unsafe Browser start verification"
   step "I see and close the Unsafe Browser start notification"
   step "the Unsafe Browser has started"
