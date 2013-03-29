@@ -23,7 +23,9 @@ Feature: Root access control enforcement
   Scenario: If no administrative password is set in Tails Greeter the live user should not be able to run arbitrary commands administrative privileges.
     Given I log in to a new session
     And Tails Greeter has dealt with the sudo password
-    Then I should not be able to run administration commands as the live user
+    Then I should not be able to run administration commands as the live user with the "" password
+    And I should not be able to run administration commands as the live user with the "amnesia" password
+    And I should not be able to run administration commands as the live user with the "live" password
 
   Scenario: If an administrative password is set in Tails Greeter the live user should be able to get administrative privileges through PolicyKit
     Given I enable more Tails Greeter options

@@ -4,10 +4,10 @@ Then /^I should be able to run administration commands as the live user$/ do
          "Could not use sudo")
 end
 
-Then /^I should not be able to run administration commands as the live user$/ do
-  stderr = @vm.execute("echo | sudo -S whoami", $live_user).stderr
-  assert(stderr.include?("The administration password is disabled"),
-         "The administration password is not disabled")
+Then /^I should not be able to run administration commands as the live user with the "([^"]*)" password$/ do |password|
+  stderr = @vm.execute("echo #{password} | sudo -S whoami", $live_user).stderr
+  sudo_failed = stderr.include?("The administration password is disabled") || stderr.include?("is not allowed to execute")
+  assert(sudo_failed, "The administration password is not disabled:" + stderr)
 end
 
 Then /^I should be able to run synaptic$/ do
