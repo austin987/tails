@@ -349,11 +349,11 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 * Boot Tails without setting a password and check you can't get
   PolicyKit administrative privileges (e.g. change internal hard
   disks in the Disk Utility), neither with the `amnesia` password nor
-  with the `live` one.
+  with the `live` one. `[needs-fix: root_access_control]`
 * Boot Tails with a password and check you can
   sudo. `[needs-review, needs-pass: root_access_control]`
 * Boot Tails with a password and check you can get PolicyKit
-  administrative privileges.
+  administrative privileges. `[needs-fix: root_access_control]`
 * Check that the $TAILS_USER_PASSWORD variable, if still existing in the system
   environment after the boot has finished, does not contain the clear text
   password.
@@ -502,6 +502,9 @@ that the theme resembles Windows XP, including:
 
 # Unsafe Web Browser
 
+`[needs-fix]` (see ticket) before anything else can be reviewed and
+tested again.
+
 * On start, check that:
   - it requires launch
     verification. `[needs-review, needs-pass: unsafe_browser]`
@@ -563,28 +566,16 @@ language.
 
 # Misc
 
-* Check that there are no unexpected applications listening to external
-  connections with `sudo netstat -ltupn` (everything should be
-  `127.0.0.1` (IPv4) or `::1` (IPv6)). Ignore:
-  `[needs-review, needs-pass: checks]`
-  - `cupsd`, which listens on `0.0.0.0:631` to detect network printers.
-  - `dhclient`, which listens on `0.0.0.0:68`.
 * Check that all seems well during init (mostly that all services
   start without errors), and that dmesg seems ok.
-* Boot without network connection, and then plug it in after
-  some arbitrary time; Tor and Vidalia must be autostarted and end up
-  in working state. `[needs-review, needs-pass: checks]`
 * Try to start with the `truecrypt` option on boot, see if it can be found in
   the *Applications* → *Accessories* menu and that it runs correctly.
   `[needs-review, needs-pass: truecrypt]`
-* The `amnesia` user must be part of the following groups:
-  `amnesia audio cdrom dialout floppy video plugdev netdev fuse debian-tor scanner lp lpadmin vboxsf`. `[needs-review, needs-pass: checks]`
-* MAT should be able to clean a PDF
-  file. `[needs-review, needs-pass: checks]`
+* MAT should be able to clean a PDF file. `[needs-fix]` (see ticket)
 * Browsing (by hostname) a FTP server on the Internet should be
   possible using GNOME's *Connect to server* feature
   (once [[!tails_todo fix Internet FTP support]] is fixed)
 * The Tails signing key in `/usr/share/keyrings/tails-keyring.gpg`
   should be up-to-date (that is, neither it nor one its subkeys must
   have expired, or be about to expire any time
-  soon). `[needs-review, needs-pass: checks]`
+  soon). `[needs-fix]` (see ticket)
