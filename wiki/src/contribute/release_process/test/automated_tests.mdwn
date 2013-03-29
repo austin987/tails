@@ -52,6 +52,8 @@ tag.
 
 # Implementation
 
+## Running cucumber in the right environment
+
 The `run_test_suite` script is a wrapper on top of `cucumber`, that
 sets the correct environment up:
 
@@ -68,6 +70,28 @@ sets the correct environment up:
   pointer from masking GUI elements looked for by Sikuli.
 * It passes `--format ExtraHooks::Pretty` to `cucumber` calls, to get
   access to our custom `{After,Before}Feature` hooks.
+
+## Remote shell
+
+This started out as a hack, and while it has evolved it largely
+remains so. A proper, reliable, established replacement would be
+welcome, but seems unlikely given the requirements:
+
+Requirements on the host (the remote shell client):
+
+* can execute a command with blocking until command completion on the
+  server, and get back return code, stdout and stderr separately.
+* can spawn a command without blocking (except an ACK that the server
+  has run the command, perhaps).
+* usable by an unprivileged user
+
+Requirements on the guest (the remote shell server):
+
+* has to work without a network connection.
+* should interfere minimally with the surrounding system (e.g. no
+  firewall exceptions; actually we don't want any network traffic at
+  all from it, but this kind of follows from the previous requirement
+  any way)
 
 # The art of writing new product test cases
 
