@@ -9,11 +9,8 @@ class IPAddr
     IPAddr.new("192.168.0.0/16")
   ]
 
-  # Tails' firewall apparently leaks multicast ff02::1 == "all
-  # (link-local) nodes address"
   PrivateIPv6Ranges = [
     IPAddr.new("fc00::/7"),   # private
-    IPAddr.new("ff02::1/64")  # link-local multicast
   ]
 
   def private?
