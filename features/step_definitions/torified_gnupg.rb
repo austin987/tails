@@ -17,10 +17,10 @@ When /^the GnuPG fetch is successful$/ do
          "gpg keyserver fetch failed:\n#{@gnupg_recv_key_res.stderr}")
 end
 
-When /^GnuPG uses the "([^"]*)" keyserver$/ do |keyserver_url|
+When /^GnuPG uses the configured keyserver$/ do
   next if @skip_steps_while_restoring_background
-  assert(@gnupg_recv_key_res.stderr[keyserver_url],
-         "GnuPG's stderr did not mention keyserver #{keyserver_url}")
+  assert(@gnupg_recv_key_res.stderr[$configured_keyserver_hostname],
+         "GnuPG's stderr did not mention keyserver #{$configured_keyserver_hostname}")
 end
 
 When /^the "([^"]*)" key is in the live user's public keyring after at most (\d+) seconds$/ do |keyid, delay|
