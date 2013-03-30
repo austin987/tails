@@ -18,18 +18,18 @@ Feature: Browsing the web using the Unsafe Browser
     And I have closed all annoying notifications
     And I save the state so the background can be restored next scenario
 
-  Scenario: Closing the Unsafe Browser shows a stop notification.
-    When I start the Unsafe Browser
-    Then the Unsafe Browser has started
-    And I close the Unsafe Browser
-    Then I see the Unsafe Browser stop notification
-
   Scenario: Starting the Unsafe Browser works as it should.
     When I start the Unsafe Browser
     Then the Unsafe Browser has started
     And the Unsafe Browser has a red theme
     And the Unsafe Browser has Wikipedia pre-selected in the search bar
     And the Unsafe Browser shows a warning as its start page
+
+  Scenario: Closing the Unsafe Browser shows a stop notification.
+    When I start the Unsafe Browser
+    Then the Unsafe Browser has started
+    And I close the Unsafe Browser
+    Then I see the Unsafe Browser stop notification
 
   Scenario: Starting a second instance of the Unsafe Browser results in an error message being shown.
     When I start the Unsafe Browser
