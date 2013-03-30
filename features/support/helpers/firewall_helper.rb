@@ -33,7 +33,7 @@ class IPAddr
 end
 
 class FirewallLeakCheck
-  attr_reader :ipv4_tcp_leaks, :ipv4_nontcp_leaks, :ipv6_leaks
+  attr_reader :ipv4_tcp_leaks, :ipv4_nontcp_leaks, :ipv6_leaks, :nonip_leaks
 
   def initialize(pcap_file, tor_relays)
     packets = PacketFu::PcapFile.new.file_to_array(:filename => pcap_file)
@@ -41,6 +41,7 @@ class FirewallLeakCheck
     ipv4_tcp_packets = []
     ipv4_nontcp_packets = []
     ipv6_packets = []
+    nonip_packets = []
     packets.each do |p|
       if PacketFu::TCPPacket.can_parse?(p)
         ipv4_tcp_packets << PacketFu::TCPPacket.parse(p)
@@ -48,6 +49,8 @@ class FirewallLeakCheck
         ipv4_nontcp_packets << PacketFu::IPPacket.parse(p)
       elsif PacketFu::IPv6Packet.can_parse?(p)
         ipv6_packets << PacketFu::IPv6Packet.parse(p)
+      else
+        nonip_packets << p
       end
     end
     ipv4_tcp_hosts = get_public_hosts_from_ippackets ipv4_tcp_packets
@@ -55,6 +58,7 @@ class FirewallLeakCheck
     @ipv4_tcp_leaks = ipv4_tcp_hosts.select{|host| !tor_nodes.member?(host)}
     @ipv4_nontcp_leaks = get_public_hosts_from_ippackets ipv4_nontcp_packets
     @ipv6_leaks = get_public_hosts_from_ippackets ipv6_packets
+    @nonip_leaks = nonip_packets
   end
 
   # Returns a list of all unique non-LAN destination IP addresses
@@ -91,7 +95,7 @@ class FirewallLeakCheck
   end
 
   def empty?
-    @ipv4_tcp_leaks.empty? and @ipv4_nontcp_leaks.empty? and @ipv6_leaks.empty?
+    @ipv4_tcp_leaks.empty? and @ipv4_nontcp_leaks.empty? and @ipv6_leaks.empty? and @nonip_leaks.empty?
   end
 
 end

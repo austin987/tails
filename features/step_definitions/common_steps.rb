@@ -325,6 +325,9 @@ Then /^all Internet traffic has only flowed through Tor$/ do
       puts leaks.ipv6_leaks.join("\n")
       puts
     end
+    if !leaks.nonip_leaks.empty?
+      puts "Some non-IP packets were sent\n"
+    end
     pcap_copy = "#{$tmp_dir}/pcap_with_leaks-#{DateTime.now}"
     FileUtils.cp(@sniffer.pcap_file, pcap_copy)
     puts "Full network capture available at: #{pcap_copy}"
