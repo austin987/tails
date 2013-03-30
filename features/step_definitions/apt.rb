@@ -1,15 +1,13 @@
 require 'uri'
 
-Given /^APT sources are only \{ftp.us,security,backports\}\.debian\.org$/ do
+Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   next if @skip_steps_while_restoring_background
-  @vm.execute("cat /etc/apt/sources.list").stdout.chomp.each_line { |line|
+  hosts = hosts_str.split(',')
+  @vm.execute("cat /etc/apt/sources.list /etc/apt/sources.list.d/*").stdout.chomp.each_line { |line|
     next if ! line.start_with? "deb"
-    source = line.split[1]
-    source_host = URI(source).host
-    if source_host != "ftp.us.debian.org" and \
-       source_host != "security.debian.org" and \
-       source_host != "backports.debian.org"
-      raise "Bad APT source '#{source}'"
+    source_host = URI(line.split[1]).host
+    if !hosts.include?(source_host)
+      raise "Bad APT source '#{line}'"
     end
   }
 end
