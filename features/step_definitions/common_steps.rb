@@ -387,6 +387,6 @@ end
 
 Given /^package "([^"]+)" is installed$/ do |package|
   next if @skip_steps_while_restoring_background
-  assert(@vm.execute("dpkg -s #{package}").success?,
+  assert(@vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
          "Package '#{package}' is not installed")
 end
