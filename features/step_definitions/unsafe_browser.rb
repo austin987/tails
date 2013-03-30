@@ -108,7 +108,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
 
     # Configure the proxy
     @screen.type(proxy_type, Sikuli::KEY_ALT)  # Select correct proxy type
-    @screen.type("localhost\t#{proxy_port}") if proxy_type != no_proxy
+    @screen.type("127.0.0.1\t#{proxy_port}") if proxy_type != no_proxy
     # For http proxy we set "Use this proxy server for all protocols"
     @screen.type("s", Sikuli::KEY_ALT) if proxy_type == http_proxy
 
