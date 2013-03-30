@@ -482,32 +482,15 @@ Enable Windows XP camouflage via the Tails Greeter checkbox and:
 
 # Unsafe Web Browser
 
-* On start, check that:
-  - it requires launch
-    verification. `[needs-review, needs-pass: unsafe_browser]`
-  - a start notification is
-    shown. `[needs-review, needs-pass: unsafe_browser]`
-  - there's an error if no DNS server was configured in NetworkManager
-    (e.g. if there's no network connection).
+* On start, if no DNS server was configured in NetworkManager
+  (e.g. if there's no network connection), there must be an error.
 * Once started, check that:
-  - it has a scary red theme (except when Windows Camouflage is
-    activated). `[needs-review, needs-pass: unsafe_browser]`
-  - the start page makes it clear that this is the Unsafe Web Browser.
-	`[needs-review, needs-pass: winxp]`
+  - it has no scary red theme when Windows Camouflage is activated.
   - the iceweasel instance runs as the `clearnet` user.
   - it has no proxy configured.
-  - it gets a direct Internet
-    connection. `[needs-review, needs-pass: unsafe_browser]`
-  - configuring any of Tor's SocksPorts or polipo as a proxy
-    shouldn't work (should result in "The proxy server is refusing
-    connections") `[needs-review, needs-pass: unsafe_browser]`
   - no extensions are installed.
   - there are no bookmarks.
-  - the default search engine is
-    Wikipedia. `[needs-review, needs-pass: unsafe_browser]`
 * On exit, check that:
-  - a shutdown notification is
-    shown. `[needs-review, needs-pass: unsafe_browser]`
   - make sure that its chroot gets properly teared down on exit (there
     should be nothing mounted inside `/var/lib/unsafe-browser`).
 
