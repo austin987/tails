@@ -33,7 +33,6 @@ When /^I start the Unsafe Browser$/ do
   step "I run \"#{unsafe_browser_cmd}\""
   step "I see and accept the Unsafe Browser start verification"
   step "I see and close the Unsafe Browser start notification"
-  step "the Unsafe Browser has started"
 end
 
 Then /^I see a warning about another instance already running$/ do
