@@ -40,7 +40,7 @@ Then /^I see a warning about another instance already running$/ do
   @screen.wait('UnsafeBrowserWarnAlreadyRunning.png', 10)
 end
 
-When /^close the Unsafe Browser$/ do
+When /^I close the Unsafe Browser$/ do
   @screen.type("q", Sikuli::KEY_CTRL)
 end
 

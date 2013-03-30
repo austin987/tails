@@ -20,7 +20,7 @@ Feature: Browsing the web using the Unsafe Browser
 
   Scenario: Closing the Unsafe Browser shows a stop notification.
     When I start the Unsafe Browser
-    And close the Unsafe Browser
+    And I close the Unsafe Browser
     Then I see the Unsafe Browser stop notification
 
   Scenario: Starting the Unsafe Browser works as it should.
@@ -39,11 +39,11 @@ Feature: Browsing the web using the Unsafe Browser
 
   Scenario: The Unsafe Browser cannot be restarted before the previous instance has been cleaned up.
     When I start the Unsafe Browser
-    And close the Unsafe Browser
+    And I close the Unsafe Browser
     And I run "gksu unsafe-browser"
     Then I see a warning about another instance already running
 
-  Scenario: Opening check.torproject.org in the Unsafe Browser will show the red onion and the warning message.
+  Scenario: Opening check.torproject.org in the Unsafe Browser shows the red onion and a warning message.
     When I start the Unsafe Browser
     And I open the address "https://check.torproject.org" in the Unsafe Browser
     Then I see "UnsafeBrowserTorCheckFail.png" after at most 30 seconds
