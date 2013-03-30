@@ -112,7 +112,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     # For http proxy we set "Use this proxy server for all protocols"
     @screen.type("s", Sikuli::KEY_ALT) if proxy_type == http_proxy
 
-    # Close settings settings
+    # Close settings
     @screen.type(Sikuli::KEY_RETURN)
 #    @screen.waitVanish('UnsafeBrowserProxySettings.png', 10)
     sleep 0.5
