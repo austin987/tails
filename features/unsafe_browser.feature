@@ -25,10 +25,8 @@ Feature: Browsing the web using the Unsafe Browser
     Then I see the Unsafe Browser stop notification
 
   Scenario: Starting the Unsafe Browser works as it should.
-    When I run "gksu unsafe-browser"
-    And I see and accept the Unsafe Browser start verification
-    Then I see and close the Unsafe Browser start notification
-    And the Unsafe Browser has started
+    When I start the Unsafe Browser
+    Then the Unsafe Browser has started
     And the Unsafe Browser has a red theme
     And the Unsafe Browser has Wikipedia pre-selected in the search bar
     And the Unsafe Browser shows a warning as its start page
