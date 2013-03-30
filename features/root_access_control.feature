@@ -33,10 +33,10 @@ Feature: Root access control enforcement
     And I log in to a new session
     And Tails Greeter has dealt with the sudo password
     And GNOME has started
-    Then I should be able to run synaptic
+    Then I should be able to run Synaptic
 
   Scenario: If no administrative password is set in Tails Greeter the live user should not be able to get administrative privileges through PolicyKit.
     Given I log in to a new session
     And Tails Greeter has dealt with the sudo password
     And GNOME has started
-    Then I should not be able to run synaptic
+    Then I should not be able to run Synaptic

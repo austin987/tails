@@ -1,6 +1,6 @@
 require 'uri'
 
-Given /^APT's sources are only \{ftp.us,security,backports\}\.debian\.org$/ do
+Given /^APT sources are only \{ftp.us,security,backports\}\.debian\.org$/ do
   next if @skip_steps_while_restoring_background
   @vm.execute("cat /etc/apt/sources.list").stdout.chomp.each_line { |line|
     next if ! line.start_with? "deb"
@@ -36,8 +36,8 @@ Then /^I should be able to install a package using apt-get$/ do
   step "package \"#{package}\" is installed"
 end
 
-When /^I update APT using synaptic$/ do
-  # Upon start the interface will be frozen while synaptic loads the
+When /^I update APT using Synaptic$/ do
+  # Upon start the interface will be frozen while Synaptic loads the
   # package list
   try_for(20, :msg => "Failed to click the Synaptic 'Reload' button") {
     # Note: here we want to spam clicks, so we don't use wait_and_click()
@@ -47,7 +47,7 @@ When /^I update APT using synaptic$/ do
   @screen.waitVanish('SynapticReloadPrompt.png', 30*60)
 end
 
-Then /^I should be able to install a package using synaptic$/ do
+Then /^I should be able to install a package using Synaptic$/ do
   package = "cowsay"
   # We do this after a Reload, so the interface will be frozen until
   # the package list has been loaded

@@ -10,15 +10,15 @@ Then /^I should not be able to run administration commands as the live user with
   assert(sudo_failed, "The administration password is not disabled:" + stderr)
 end
 
-Then /^I should be able to run synaptic$/ do
+Then /^I should be able to run Synaptic$/ do
   step "I run \"gksu synaptic\""
   step "I enter the sudo password in the PolicyKit prompt"
-  try_for(10, :msg => "Unable to start synaptic using PolicyKit") {
+  try_for(10, :msg => "Unable to start Synaptic using PolicyKit") {
     @vm.has_process?("synaptic")
   }
 end
 
-Then /^I should not be able to run synaptic$/ do
+Then /^I should not be able to run Synaptic$/ do
   for p in ["", "live", $live_user]
     step "I run \"gksu synaptic\""
     @sudo_password = p
