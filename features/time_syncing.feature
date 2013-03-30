@@ -2,7 +2,7 @@
 Feature: Time syncing
   As a Tails user
   I want Tor to work properly
-  And for that I need a reasonable accurate system clock
+  And for that I need a reasonably accurate system clock
 
   Background:
     Given a computer
