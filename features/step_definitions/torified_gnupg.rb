@@ -1,23 +1,45 @@
-When /^I successfully fetch an OpenPGP key using the GnuPG CLI$/ do
+When /^the "([^"]*)" OpenPGP key is not in the live user's public keyring$/ do |keyid|
   next if @skip_steps_while_restoring_background
-  res = @vm.execute("gpg --recv-key 52B69F10A3B0785AD05AFB471D84CCF010CC5BC7",
-                    $live_user)
-  assert(res.success?, "gpg keyserver fetch failed:\n#{res.stderr}")
+  assert(!@vm.execute("gpg --batch --list-keys '#{keyid}'", $live_user).success?,
+         "The '#{keyid}' key is in the live user's public keyring.")
 end
 
-When /^I successfully fetch an OpenPGP key using Seahorse$/ do
+When /^I fetch the "([^"]*)" OpenPGP key using the GnuPG CLI$/ do |keyid|
   next if @skip_steps_while_restoring_background
+  @gnupg_recv_key_res = @vm.execute(
+    "gpg --batch --recv-key '#{keyid}'",
+    $live_user)
+end
+
+When /^the GnuPG fetch is successful$/ do
+  next if @skip_steps_while_restoring_background
+  assert(@gnupg_recv_key_res.success?,
+         "gpg keyserver fetch failed:\n#{@gnupg_recv_key_res.stderr}")
+end
+
+When /^GnuPG uses the "([^"]*)" keyserver$/ do |keyserver_url|
+  next if @skip_steps_while_restoring_background
+  assert(@gnupg_recv_key_res.stderr[keyserver_url],
+         "GnuPG's stderr did not mention keyserver #{keyserver_url}")
+end
+
+When /^the "([^"]*)" key is in the live user's public keyring after at most (\d+) seconds$/ do |keyid, delay|
+  next if @skip_steps_while_restoring_background
+  try_for(delay.to_f, :msg => "The '#{keyid}' key is not in the live user's public keyring") {
+    @vm.execute("gpg --batch --list-keys '#{keyid}'", $live_user).success?
+  }
+end
+
+When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|
+  step "I run \"seahorse\""
   @screen.wait("SeahorseWindow.png", 10)
   @screen.type("r", Sikuli::KEY_ALT) # Menu: "Remote" ->
   @screen.type("f")                  # "Find Remote Keys...".
   @screen.wait("SeahorseFindKeysWindow.png", 10)
   # Seahorse doesn't seem to support searching for fingerprints
-  @screen.type("10CC5BC7" + Sikuli::KEY_RETURN)
+  @screen.type(keyid + Sikuli::KEY_RETURN)
   @screen.wait("SeahorseFoundKeyResult.png", 5*60)
   @screen.type(Sikuli::DOWN_ARROW)   # Select first item in result menu
   @screen.type("f", Sikuli::KEY_ALT) # Menu: "File" ->
   @screen.type("i")                  # "Import"
-  try_for(120, :msg => "Failed to fetch key using seahorse") {
-    @vm.execute("gpg --list-key 10CC5BC7", $live_user).success?
-  }
 end
