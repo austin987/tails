@@ -34,14 +34,14 @@ Feature: Browsing the web using the Unsafe Browser
   Scenario: Starting a second instance of the Unsafe Browser results in an error message being shown.
     When I start the Unsafe Browser
     Then the Unsafe Browser has started
-    And I run "gksu unsafe-browser"
+    And I run "sudo unsafe-browser"
     Then I see a warning about another instance already running
 
   Scenario: The Unsafe Browser cannot be restarted before the previous instance has been cleaned up.
     When I start the Unsafe Browser
     Then the Unsafe Browser has started
     And I close the Unsafe Browser
-    And I run "gksu unsafe-browser"
+    And I run "sudo unsafe-browser"
     Then I see a warning about another instance already running
 
   Scenario: Opening check.torproject.org in the Unsafe Browser shows the red onion and a warning message.
