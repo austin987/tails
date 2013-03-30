@@ -490,9 +490,27 @@ if moved to a dedicated feature:
       ./features/cucumber/step_definitions/common_steps.rb:124:in `(root)':in `/^I start the computer$/'
       features/cucumber/misc_tests/checks.feature:44:in `And I start the computer'
 
+## time syncing feature
+
+* After setting the date to something wrong, one should assert the
+  date change actually took place, else it makes little sense
+  verifying later that our stuff indeed has "fixed" the date:  if we
+  don't know for sure that it was broken, we're not really
+  verifying anything. This should be implemented at least in
+  `step_definitions/time_syncing.rb`.
+
 ## firewall helper
 
-* Don't ignore non-IP packets.
+[intrigeri working on this.]
+
+* Don't ignore non-IP packets: this is now implemented in the network
+  trace inspector, but only IPv4 packets are currently captured, so
+  it's still useless.
+* Capture and inspect all packets originating from the system under
+  test, even if they don't have this system's IPv4 address set as
+  source address. This probably implies to filter captured packets
+  based on their source MAC address rather than depending on their
+  source IPv4 address.
 
 ## add anti-tests
 
