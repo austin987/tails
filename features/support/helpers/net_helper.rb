@@ -8,11 +8,6 @@
 # is waaay to much resource consumming, notmuch reliable and soooo slow. Let's
 # not bother too much with that. :)
 #
-# Scenario: Iceweasel should connect only through Tor
-#   Given I open Iceweasel
-#   When I browse to http://any.url
-#   Then the network traffic should flow only through Tor
-
 # Should put all that in a Module.
 
 class Sniffer
