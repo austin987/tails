@@ -1,11 +1,11 @@
-When /^I successfully fetch a GnuPG key using the CLI$/ do
+When /^I successfully fetch an OpenPGP key using the GnuPG CLI$/ do
   next if @skip_steps_while_restoring_background
   res = @vm.execute("gpg --recv-key 52B69F10A3B0785AD05AFB471D84CCF010CC5BC7",
                     $live_user)
   assert(res.success?, "gpg keyserver fetch failed:\n#{res.stderr}")
 end
 
-When /^I successfully fetch a GnuPG key using seahorse$/ do
+When /^I successfully fetch an OpenPGP key using Seahorse$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("SeahorseWindow.png", 10)
   @screen.type("r", Sikuli::KEY_ALT) # Menu: "Remote" ->

@@ -2,7 +2,7 @@
 Feature: Keyserver interaction with GnuPG
   As a Tails user
   when I interact with keyservers using various GnuPG tools
-  all network traffic should flow only through Tor.
+  all Internet traffic should flow only through Tor.
 
   Background:
     Given a computer
@@ -18,11 +18,11 @@ Feature: Keyserver interaction with GnuPG
     And I have closed all annoying notifications
     And I save the state so the background can be restored next scenario
 
-  Scenario: Fetching PGP keys using the CLI should be done over Tor.
-    When I successfully fetch a GnuPG key using the CLI
+  Scenario: Fetching OpenPGP keys using GnuPG should be done over Tor.
+    When I successfully fetch an OpenPGP key using the GnuPG CLI
     Then all Internet traffic has only flowed through Tor
 
-  Scenario: Fetching PGP keys using seahorse should be done over Tor.
+  Scenario: Fetching OpenPGP keys using Seahorse should be done over Tor.
     When I run "seahorse"
-    And I successfully fetch a GnuPG key using seahorse
+    And I successfully fetch an OpenPGP key using Seahorse
     Then all Internet traffic has only flowed through Tor

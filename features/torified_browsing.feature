@@ -2,7 +2,7 @@
 Feature: Browsing the web using Iceweasel
   As a Tails user
   when I browse the web using Iceweasel
-  all network traffic should flow only through Tor
+  all Internet traffic should flow only through Tor
 
   Background:
     Given a computer

@@ -3,7 +3,7 @@ Feature: Installing packages through APT
   As a Tails user
   when I set an administration password in Tails Greeter
   I should be able to install packages using apt-get and synaptic
-  and all network traffic should flow only through Tor.
+  and all Internet traffic should flow only through Tor.
 
   Background:
     Given a computer
