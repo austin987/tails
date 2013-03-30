@@ -14,16 +14,16 @@ class Sniffer
 
   attr_reader :name, :pcap_file, :pid
 
-  def initialize(name, bridge_name, ip)
+  def initialize(name, bridge_name, mac)
     @name = name
     @bridge_name = bridge_name
-    @ip = ip
+    @mac = mac
     @pcap_file = "#{$tmp_dir}/#{name}.pcap"
   end
 
-  # FIXME: Do we also want to keep "dst host #{@ip}"? We should if we
+  # FIXME: Do we also want to keep "ether dst host #{@mac}"? We should if we
   # want to test the firewall's INPUT dropping.
-  def capture(filter="src host #{@ip}")
+  def capture(filter="ether src host #{@mac}")
     job = IO.popen("/usr/sbin/tcpdump -n -i #{@bridge_name} -w #{@pcap_file} -U #{filter} >/dev/null 2>&1")
     @pid = job.pid
   end
