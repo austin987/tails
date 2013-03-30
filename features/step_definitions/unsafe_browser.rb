@@ -65,7 +65,6 @@ When /^I open the address "([^"]*)" in the Unsafe Browser$/ do |address|
   @screen.type(address + Sikuli::KEY_RETURN)
 end
 
-
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
   sleep 0.5
