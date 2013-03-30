@@ -20,7 +20,7 @@ class VM
     return @@storage
   end
 
-  attr_reader :domain, :display, :ip, :net
+  attr_reader :domain, :display, :ip, :mac, :net
 
   def initialize(xml_path, x_display)
     @@virt ||= Libvirt::open("qemu:///system")
@@ -52,7 +52,8 @@ class VM
   def update_net(xml)
     net_xml = REXML::Document.new(xml)
     @net_name = net_xml.elements['network/name'].text
-    @ip = net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
+    @ip  = net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
+    @mac = net_xml.elements['network/ip/dhcp/host/'].attributes['mac']
     clean_up_net
     @net = @@virt.define_network_xml(xml)
     @net.create
