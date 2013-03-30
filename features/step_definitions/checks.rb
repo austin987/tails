@@ -7,12 +7,12 @@ Then /^the shipped Tails signing key is not outdated$/ do
   key_url = "https://tails.boum.org/tails-signing.key"
   @vm.execute("curl --silent --socks5-hostname localhost:9062 " +
               "#{key_url} -o #{fresh_sig_key}", $live_user)
-  @vm.execute("gpg --no-default-keyring --keyring #{tmp_keyring} " +
+  @vm.execute("gpg --batch --no-default-keyring --keyring #{tmp_keyring} " +
               "--import #{fresh_sig_key}", $live_user)
   fresh_sig_key_info =
-    @vm.execute("gpg --no-default-keyring --keyring #{tmp_keyring} " +
+    @vm.execute("gpg --batch --no-default-keyring --keyring #{tmp_keyring} " +
                 "--list-key #{sig_key_fingerprint}", $live_user).stdout
-  shipped_sig_key_info = @vm.execute("gpg --list-key #{sig_key_fingerprint}",
+  shipped_sig_key_info = @vm.execute("gpg --batch --list-key #{sig_key_fingerprint}",
                                      $live_user).stdout
   assert(shipped_sig_key_info == fresh_sig_key_info,
          "The Tails signing key shipped inside Tails is outdated:\n" +
