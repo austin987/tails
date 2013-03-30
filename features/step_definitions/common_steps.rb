@@ -108,7 +108,7 @@ Given /^I capture all network traffic$/ do
   # Note: We don't want skip this particular stpe if
   # @skip_steps_while_restoring_background is set since it starts
   # something external to the VM state.
-  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name, @vm.ip, @vm.ip6)
+  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name, @vm.ip)
   @sniffer.capture
 end
 

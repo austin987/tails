@@ -20,7 +20,7 @@ class VM
     return @@storage
   end
 
-  attr_reader :domain, :display, :ip, :ip6, :net
+  attr_reader :domain, :display, :ip, :net
 
   def initialize(xml_path, x_display)
     @@virt ||= Libvirt::open("qemu:///system")
@@ -53,11 +53,6 @@ class VM
     net_xml = REXML::Document.new(xml)
     @net_name = net_xml.elements['network/name'].text
     @ip = net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
-    net_xml.elements.each('network/ip') do |e|
-      if e.attribute('family').to_s == "ipv6"
-        @ip6 = e.attribute('address').to_s
-      end
-    end
     clean_up_net
     @net = @@virt.define_network_xml(xml)
     @net.create
