@@ -1,5 +1,5 @@
 When /^I see and accept the Unsafe Browser start verification$/ do
-  @screen.wait("UnsafeBrowserStartVerification.png", 10)
+  @screen.wait("UnsafeBrowserStartVerification.png", 30)
   @screen.type("l", Sikuli::KEY_ALT)
 end
 
@@ -8,7 +8,7 @@ Then /^I see and close the Unsafe Browser start notification$/ do
 end
 
 Then /^the Unsafe Browser has started$/ do
-  @screen.wait("UnsafeBrowserWindow.png", 180)
+  @screen.wait("UnsafeBrowserWindow.png", 360)
 end
 
 Then /^the Unsafe Browser has a red theme$/ do
