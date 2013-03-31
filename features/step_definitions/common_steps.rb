@@ -395,7 +395,7 @@ Given /^I shutdown Tails$/ do
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
-  try_for(120, :msg => "VM is still running") { ! @vm.is_running? }
+  try_for(360, :msg => "VM is still running") { ! @vm.is_running? }
 end
 
 Given /^package "([^"]+)" is installed$/ do |package|
