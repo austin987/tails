@@ -31,7 +31,7 @@ Feature: Installing packages through APT
 
   Scenario: Install packages using Synaptic
     When I run "gksu synaptic"
-    And I enter the sudo password in the PolicyKit prompt
+    And I enter the sudo password in the gksu prompt
     And I update APT using Synaptic
     Then I should be able to install a package using Synaptic
     And all Internet traffic has only flowed through Tor
