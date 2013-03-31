@@ -68,8 +68,6 @@ Then /^no unexpected services are listening for network connections$/ do
   next if @skip_steps_while_restoring_background
   netstat_cmd = @vm.execute("netstat -ltupn")
   assert netstat_cmd.success?
-  exceptions = [["cupsd", "0.0.0.0", "631"],
-                ["dhclient", "0.0.0.0", "68"]]
   for line in netstat_cmd.stdout.chomp.split("\n") do
     splitted = line.split(/[[:blank:]]+/)
     proto = splitted[0]
@@ -84,7 +82,7 @@ Then /^no unexpected services are listening for network connections$/ do
     proc = splitted[proc_index].split("/")[1]
     # Services listening on loopback is not a threat
     if /127(\.[[:digit:]]{1,3}){3}/.match(laddr).nil?
-      if exceptions.include? [proc, laddr, lport]
+      if $services_expected_on_all_ifaces.include? [proc, laddr, lport]
         puts "Service '#{proc}' is listening on #{laddr}:#{lport} " +
              "but has an exception"
       else

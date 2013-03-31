@@ -1,4 +1,9 @@
 $configured_keyserver_hostname = 'hkps.pool.sks-keyservers.net'
+$services_expected_on_all_ifaces =
+  [
+   ["cupsd",    "0.0.0.0", "631"],
+   ["dhclient", "0.0.0.0", "68"]
+  ]
 $tor_authorities =
   # List grabbed from Tor's sources, src/or/config.c:~750.
   # FIXME: This is a static list. Can we fetch it reliably from
