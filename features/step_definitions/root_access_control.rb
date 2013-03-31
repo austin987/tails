@@ -10,20 +10,38 @@ Then /^I should not be able to run administration commands as the live user with
   assert(sudo_failed, "The administration password is not disabled:" + stderr)
 end
 
-Then /^I should be able to run Synaptic$/ do
-  step "I run \"gksu synaptic\""
-  step "I enter the sudo password in the PolicyKit prompt"
-  try_for(10, :msg => "Unable to start Synaptic using PolicyKit") {
-    @vm.has_process?("synaptic")
+When /^running a command as root with pkexec requires PolicyKit administrator privileges$/ do
+  next if @skip_steps_while_restoring_background
+  action = 'org.freedesktop.policykit.exec'
+  action_details = @vm.execute("pkaction --verbose --action-id #{action}").stdout
+  assert(action_details[/\s+implicit any:\s+auth_admin$/],
+         "Expected 'auth_admin' for 'any':\n#{action_details}")
+  assert(action_details[/\s+implicit inactive:\s+auth_admin$/],
+         "Expected 'auth_admin' for 'inactive':\n#{action_details}")
+  assert(action_details[/\s+implicit active:\s+auth_admin$/],
+         "Expected 'auth_admin' for 'active':\n#{action_details}")
+end
+
+Then /^I should be able to run a command as root with pkexec$/ do
+  next if @skip_steps_while_restoring_background
+  step 'I run "gnome-terminal"'
+  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+  @screen.type('pkexec touch /root/pkexec-test' + Sikuli::KEY_RETURN)
+  step 'I enter the sudo password in the PolicyKit prompt'
+  try_for(10, :msg => 'The /root/pkexec-test file was not created.') {
+    @vm.execute('ls /root/pkexec-test').success?
   }
 end
 
-Then /^I should not be able to run Synaptic$/ do
-  for p in ["", "live", $live_user]
-    step "I run \"gksu synaptic\""
-    @sudo_password = p
-    step "I enter the sudo password in the PolicyKit prompt"
+Then /^I should not be able to run a command as root with pkexec and the standard passwords$/ do
+  next if @skip_steps_while_restoring_background
+  step 'I run "gnome-terminal"'
+  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+  @screen.type('pkexec touch /root/pkexec-test' + Sikuli::KEY_RETURN)
+  ['', 'live'].each do |password|
+    step "I enter the \"#{password}\" password in the PolicyKit prompt"
+    @screen.wait('PolicyKitAuthFailure.png', 20)
   end
-  assert(!@vm.has_process?("synaptic"),
-         "Synaptic started despite administration being disabled")
+  step "I enter the \"amnesia\" password in the PolicyKit prompt"
+  @screen.wait('PolicyKitAuthCompleteFailure.png', 20)
 end
