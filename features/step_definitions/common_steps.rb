@@ -368,6 +368,12 @@ Given /^process "([^"]+)" is running$/ do |process|
          "Process '#{process}' is not running")
 end
 
+Given /^process "([^"]+)" is not running$/ do |process|
+  next if @skip_steps_while_restoring_background
+  assert(!@vm.has_process?(process),
+         "Process '#{process}' is running")
+end
+
 Given /^I have killed the process "([^"]+)"$/ do |process|
   next if @skip_steps_while_restoring_background
   @vm.execute("killall #{process}")
