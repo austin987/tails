@@ -92,6 +92,18 @@ Then /^no unexpected services are listening for network connections$/ do
   end
 end
 
+When /^Tails has booted a 686-pae kernel$/ do
+  next if @skip_steps_while_restoring_background
+  assert(@vm.execute("uname -r | grep -qs '686-pae$'").success?,
+         "Tails has not booted a 686-pae kernel.")
+end
+
+Then /^the VirtualBox guest modules are available$/ do
+  next if @skip_steps_while_restoring_background
+  assert(@vm.execute("modinfo vboxguest").success?,
+         "The vboxguest module is not available.")
+end
+
 def shared_pdf_dir_on_guest
   "/tmp/shared_dir"
 end

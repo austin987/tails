@@ -11,6 +11,10 @@ Feature: Various checks
     And I have closed all annoying notifications
     And I save the state so the background can be restored next scenario
 
+  Scenario: VirtualBox guest modules are available
+    When Tails has booted a 686-pae kernel
+    Then the VirtualBox guest modules are available
+
    Scenario: The shipped Tails signing key is up-to-date
     Given the network is plugged
     And Tor has built a circuit
