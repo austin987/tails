@@ -357,10 +357,14 @@ Given /^I enter the sudo password in the gksu prompt$/ do
 end
 
 Given /^I enter the sudo password in the PolicyKit prompt$/ do
+  step "I enter the \"#{@sudo_password}\" password in the PolicyKit prompt"
+end
+
+Given /^I enter the "([^"]*)" password in the PolicyKit prompt$/ do |password|
   next if @skip_steps_while_restoring_background
   @screen.wait('PolicyKitAuthPrompt.png', 60)
   sleep 1 # wait for weird fade-in to unblock the "Ok" button
-  @screen.type(@sudo_password)
+  @screen.type(password)
   @screen.type(Sikuli::KEY_RETURN)
   @screen.waitVanish('PolicyKitAuthPrompt.png', 10)
 end
