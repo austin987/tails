@@ -180,13 +180,7 @@ Given /^I set sudo password "([^"]*)"$/ do |password|
   @sudo_password = password
   next if @skip_steps_while_restoring_background
   @screen.wait("TailsGreeterAdminPassword.png", 20)
-  match = @screen.find('TailsGreeterPassword.png')
-  # width*3 may seem odd, but we want to click the field right of the
-  # match. This may even work accross different screen resolutions.
-  pos_x = match.x + match.width*3
-  pos_y = match.y + match.height/2
-  @screen.click(pos_x, pos_y)
-  @screen.type(@sudo_password + "\t" + @sudo_password)
+  @screen.type(@sudo_password + Sikuli::KEY_RETURN + @sudo_password)
 end
 
 Given /^Tails Greeter has dealt with the sudo password$/ do
