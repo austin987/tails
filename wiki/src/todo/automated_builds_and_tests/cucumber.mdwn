@@ -236,6 +236,12 @@ Ultimately we want good enough versions of JRuby and the required ruby
 gems properly packaged in Debian. Filing RFP bugs, to let people know
 what we need, would be a good start.
 
+Alternatively we drop JRuby and use native Ruby, which means we can
+use the Ruby gems already packaged for Debian, which include all but
+`sikuli` (which we cannot use without JRuby, so we need another
+solution; see below) and `packetfu`, so in effect only the latter
+needs an RFP bug, with this approach.
+
 We need serious plans to make this solution sustainable for us.
 
 ## jruby 1.7 has deprecated the C extension
@@ -261,8 +267,9 @@ so bad in the short run, but we need a contingency plan.
 > based on Jessie... or maintain tons of backports.
 
 The best would probably be if we could move to native ruby, which
-would mean porting the sikuli gem somehow.
-
+would mean porting the sikuli gem somehow. Since many of our gems are
+in Debian for native ruby, we'd mostly solve "Get rid of RVM and ruby
+gems" at the same time.
 
 ### Rjb
 
