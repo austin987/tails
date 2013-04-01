@@ -36,12 +36,13 @@ end
 
 When /^I update APT using Synaptic$/ do
   # Upon start the interface will be frozen while Synaptic loads the
-  # package list
-  try_for(20, :msg => "Failed to click the Synaptic 'Reload' button") {
-    # Note: here we want to spam clicks, so we don't use wait_and_click()
-    @screen.click('SynapticReload.png')
+  # package list. Since the frozen GUI is so similar to the unfrozen
+  # one there's no easy way to reliably wait for the latter. Hence we
+  # spam reload until it's performed, which is easier to detect.
+  try_for(20, :msg => "Failed to reload the package list in Synaptic") {
+    @screen.type("r", Sikuli::KEY_CTRL)
+    @screen.find('SynapticReloadPrompt.png')
   }
-  @screen.wait('SynapticReloadPrompt.png', 20)
   @screen.waitVanish('SynapticReloadPrompt.png', 30*60)
 end
 
