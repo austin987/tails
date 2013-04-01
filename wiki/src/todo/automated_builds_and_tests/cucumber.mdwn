@@ -56,121 +56,12 @@ TODO and issues
 1. Draw serious plans to make the JRuby / Sikuli / C extensions
    solution sustainable for us.
 1. Split non-blockers into separate tickets.
-1. List the tests and their current status: needs-implementation,
-   needs-review, needs-to-pass-for-someone-else. This should be done
-   by building upon the "Tests from our manual test suite not yet
-   covered" list.
 1. Merge this branch.
 
 ## Tests from our manual test suite not yet covered
 
-The below points refer to the tests in [[contribute/release_process/test]]:
-
-* Iceweasel
-  - does the exposed User-Agent match the TBB's one?
-  - Running `getTorbuttonUserAgent` should produce the useragent set
-    by the Torbutton version installed and used in Iceweasel.
-  - Browsing (by IP) a HTTP or HTTPS server on the LAN should be possible.
-  - Browsing (by IP) a FTP server on the LAN should be possible.
-  - Browsing (by hostname) a FTP server on the Internet should be
-    possible, and downloading a file should be possible (once
-    [[!tails_todo fix Internet FTP support]] is fixed)
-  - Does playing HTML5 videos work? In particular, (due to its
-    popularity) do [youtube](http://www.youtube.com) videos work (once
-    [[!tails_todo easier YouTube]] is fixed -- currently object
-    unblocking in NoScript is required)?
-  - Compare the fingerprint of Tails and the latest TBB using at least
-    <https://panopticlick.eff.org/> and <http://ip-check.info/>, and
-    update the
-    [[fingerprint section|support/known_issues#fingerprint]] of the
-    known issues page.
-
-* Pidgin
-  - (everything)
-
-* Tor
- - firewall: is the Tor-enforcement effective?
- - firewall: is IPv6 traffic blocked?
- - is `/etc/resolv.conf` OK both before/after DHCP has been setup? it should
-  *always* read `nameserver 127.0.0.1`
- - [[doc/first_steps/startup_options/bridge_mode]] should work
-
-* Stream isolation
-  - (everything)
-
-* Claws
-  - (everything)
-
-* Whisperback
-  - (everything)
-
-* Monkeysphere
-  - (everything)
-
-* erase memory on shutdown
-  - check that `udev-watchdog` is running and monitors the right
-    device:
-    * on USB
-    * on DVD
-  - After booting from DVD, remove Tails boot medium and check that
-    the memory erasure process is started (`Loading new kernel`, at
-    least).  The USB tests are bellow, in the USB installer section.
-
-* Virtualization support (these have to be tested manually)
-
-  - `modinfo vboxguest` should work when booted on the 686-pae kernel
-  - test in VirtualBox
-
-* I2P
-  - (everything)
-
-* Git
-  - (everything)
-
-* SSH
-  - (everything)
-
-* USB Installer/Upgrader
-  - The installed or upgraded Tails medium shall have the "emergency
-    shutdown on boot medium removal" feature working: remove Tails boot
-    medium and check that the memory erasure process is started
-    (`Loading new kernel`, at least).
-  - Test "Clone & Install":
-    * onto a USB stick that has a MBR partition table, and no
-      partition at all (regression test)
-    * onto a USB stick that already has an old-fashioned hybrid cat'd
-      Tails on it
-  - Test "Clone & Upgrade" (onto a USB install containing an older
-    Tails):
-    * (currently we use the same Tails version, not an older one)
-    * onto a USB stick that already has a old-fashioned cat'd hybrid
-      Tails on it: should warn this action is not supported, and direct
-      the user to the "Clone & Install" operation mode.
-
-* Incremental updates
-  - (everything)
-
-* Real (non-VM) hardware
-  - (duh! :))
-
-* Unsafe Web Browser
-  -  On exit, check that:
-    * make sure that its chroot gets properly teared down on exit (there
-      should be nothing mounted inside `/var/lib/unsafe-browser`).
-
-* Documentation
-  - (everything)
-
-* Internationalization
-  - (everything)
-
-* Misc
-  - Check that all seems well during init (mostly that all services
-    start without errors), and that dmesg seems ok.
-  - Browsing (by hostname) a FTP server on the Internet should be
-    possible using GNOME's *Connect to server* feature
-    (once [[!tails_todo fix Internet FTP support]] is fixed)
-  - Check that TrueCrypt is minimally usable (create a volume and unlock it).
+The progress can be tracked in `contribute/release_process/test.mdwn`
+in the `feature/automated_tests/cucumber` branch (until it's merged).
 
 ## Puppet module to manage the tester system
 
