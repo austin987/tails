@@ -359,7 +359,7 @@ end
 Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   step "a computer"
-  step "the computer is setup up to boot from USB drive \"#{name}\""
+  step "the computer is set to boot from USB drive \"#{name}\""
   step "the network is unplugged"
   step "I start the computer"
   step "the computer boots Tails"
