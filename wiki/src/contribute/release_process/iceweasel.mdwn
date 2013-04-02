@@ -57,8 +57,43 @@ a bit more work is needed.
 New iceweasel release
 =====================
 
-FIXME: add missing steps to merge iceweasel's updated Git if possible,
-to import the source package into Git else.
+The way to proceed is different depending on whether Debian's
+iceweasel was pushed to it yet, or not.
+
+If Debian's iceweasel was pushed to Git already
+-----------------------------------------------
+
+FIXME: add missing steps to merge iceweasel's updated Git.
+
+If Debian's iceweasel was not pushed to Git yet
+-----------------------------------------------
+
+FIXME: test these instructions.
+
+Then, we have to import the source package into Git ourselves, and
+merge from Debian's Vcs-Git later.
+
+* Download, verify and extract the new iceweasel source package with dget.
+
+* Checkout our `tails/master` branch.
+
+* Overwrite the files in the Git checkout with the new ones.
+  Assuming the new extracted iceweasel package is in
+  `iceweasel-17.0.2esr`, and our iceweasel Git repository checkout is
+  in `git`:
+
+  	rsync --stats -a --exclude=.git --delete iceweasel-17.0.2esr/ git/
+
+* `git add` the new files and the modified ones
+
+* `git rm` the deleted files
+
+* Commit.
+
+* Verify with `diff` that the current state of the `tails/master` is
+  exactly the same as Debian's iceweasel source package one.
+
+* Bring our `debian/changelog` and `debian/rules` changes back.
 
 Update Torbrowser patches
 =========================
