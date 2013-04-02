@@ -74,9 +74,9 @@ end
 
 def cmd_helper(cmd)
   IO.popen(cmd + " 2>&1") do |p|
-    p.readlines
+    out = p.readlines
     p.close
     ret = $?
-    assert(ret == 0, "Command failed (returned #{ret}): #{cmd}")
+    assert(ret == 0, "Command failed (returned #{ret}): #{cmd}:\n#{out}")
   end
 end
