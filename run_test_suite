@@ -14,6 +14,8 @@ that this script must be run from the Tails source directory root.
 Options for '@product' features:
   --capture=FILE     Captures the test session into FILE using VP8 encoding.
                      Requires ffmpeg and libvpx1.
+  --debug            Display various debugging information while running the
+                     test suite.
   --keep-snapshots   Don't ever delete the background snapshots. This can a big
                      time saver when debugging new features.
   --temp-dir         Directory where various temporary files are written
@@ -95,7 +97,7 @@ capture_session() {
 
 unset CAPTURE_FILE VNC_VIEWER VNC_SERVER
 SHORTOPTS="a:c"
-LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,iso:"
+LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,iso:,debug"
 OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -111,6 +113,9 @@ while [ $# -gt 0 ]; do
         --capture)
             shift
             CAPTURE_FILE="$1"
+            ;;
+        --debug)
+            export DEBUG="yes"
             ;;
         --keep-snapshots)
             export KEEP_SNAPSHOTS="yes"

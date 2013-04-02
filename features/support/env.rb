@@ -5,6 +5,7 @@ require 'time'
 require 'rspec'
 
 $time_at_start = Time.now
+$debug = !ENV['DEBUG'].nil?
 
 def fatal_system(str)
   unless system(str)
