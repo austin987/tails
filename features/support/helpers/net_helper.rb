@@ -21,8 +21,6 @@ class Sniffer
     @pcap_file = "#{$tmp_dir}/#{name}.pcap"
   end
 
-  # FIXME: Do we also want to keep "ether dst host #{@mac}"? We should if we
-  # want to test the firewall's INPUT dropping.
   def capture(filter="ether src host #{@mac} and not ether proto \\arp and not ether proto \\rarp")
     job = IO.popen("/usr/sbin/tcpdump -n -i #{@bridge_name} -w #{@pcap_file} -U '#{filter}' >/dev/null 2>&1")
     @pid = job.pid

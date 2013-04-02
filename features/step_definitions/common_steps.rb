@@ -164,9 +164,6 @@ end
 Given /^I log in to a new session$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
-  # FIXME: Here we should do something which waits for all Tails
-  # Greeter post-hooks to finish so we can rid ourselves of steps like
-  # "Tails Greeter has dealt with the sudo password"
 end
 
 Given /^I enable more Tails Greeter options$/ do
@@ -215,7 +212,6 @@ end
 
 Then /^Tails seems to have booted normally$/ do
   next if @skip_steps_while_restoring_background
-  # FIXME: Something more we should check for?
   step "GNOME has started"
 end
 
