@@ -49,8 +49,11 @@ class FirewallLeakCheck
         ipv4_nontcp_packets << PacketFu::IPPacket.parse(p)
       elsif PacketFu::IPv6Packet.can_parse?(p)
         ipv6_packets << PacketFu::IPv6Packet.parse(p)
+      elsif PacketFu::Packet.can_parse?(p)
+        nonip_packets << PacketFu::Packet.parse(p)
       else
-        nonip_packets << p
+        save_pcap_file
+        raise "Found something in the pcap file that cannot be parsed"
       end
     end
     ipv4_tcp_hosts = get_public_hosts_from_ippackets ipv4_tcp_packets
