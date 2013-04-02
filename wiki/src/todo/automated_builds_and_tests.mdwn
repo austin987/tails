@@ -73,32 +73,6 @@ Our [[Vagrant build environment|contribute/build]] can be used to automate build
 Tests
 -----
 
-Having test automation for every build, implementing programmatically
-at least the [[release tests|contribute/release_process/test]] we
-currently run by hand at release time... and maybe more. One more step
-towards Continuous Integration.
-
-Jenkins should also be able to drive the automated test phase. One way
-would be to have the slave talking to the libvirt daemon running on the
-host system, asking to start the last built iso, then run tests on it.
-This has some requirements to work though:
-
-* Tests have to be in the Tails sources, so that the slave is able to
-  run them. The tools used for testing may be installed inside the
-  Live system being tested at runtime.
-* There might be some cases where the tests have to be started
-  from inside the tested Tails system. In this case, the easiest way
-  might be to have this tests included in the Tails release. That might
-  be an interesting idea for other moments, like for bug reporting or to
-  provide users a way to test a functionnality themselves. But then,
-  ways have to be defined for the slave to start the tests inside the
-  remote VM and get their return codes (maybe sikuli might be of some
-  help here?) so that it can reports which one failed.
-
-In order to properly test features like USB installer, the
-virtualization environment must support USB 2.0. That pretty much
-limits the choice to recent QEMU or KVM versions.
-
 This is being implemented: see the `feature/automated_tests/cucumber`
 Git branch and [[the dedicated
 sub-ticket|automated_builds_and_tests/cucumber]].
