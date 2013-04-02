@@ -217,6 +217,11 @@ responds back with something easily parsable, like
 exact exception name and message are) on failure, otherwise it just
 sends an ACK so `screen.wait()` can stop blocking execution.
 
+> I'd rather not invent a new protocol entirely, and instead
+> piggy-back e.g. on HTTP or something more appropriate. Also, I'd
+> rather use a well-known, well-defined serialization format (YAML,
+> JSON, you name it) instead of inventing a new one.
+
 #### Obstacles
 
 * There may be some complexity to deal with `Region` objects (returned
@@ -232,6 +237,8 @@ sends an ACK so `screen.wait()` can stop blocking execution.
   those coordinates and dimensions. We could then implement methods
   via the `Screen` object, like `Region.click()` could use those
   coordinates and dimensions to `Screen.click()` on the right place.
+  We currently only use `Region` in our `wait_and_click` helper, so
+  a ad-hoc solution would probably be enough.
 
 * Getting Sikuli's key constants (e.g. `Sikuli::KEY_CTRL`) into
   `sikuli_helper.rb` is not completely trivial. Perhaps we could make
