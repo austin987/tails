@@ -20,7 +20,7 @@ Given /^I cat an ISO hybrid of the Tails image to disk "([^"]+)"$/ do |name|
   tails_iso_hybrid = "#{$tmp_dir}/#{File.basename($tails_iso)}"
   cmd_helper("cp '#{$tails_iso}' '#{tails_iso_hybrid}'")
   cmd_helper("isohybrid '#{tails_iso_hybrid}' --entry 4 --type 0x1c")
-  cmd_helper("dd if='#{tails_iso_hybrid}' of=#{disk_path} conv=notrunc")
+  cmd_helper("dd if='#{tails_iso_hybrid}' of='#{disk_path}' conv=notrunc")
   cmd_helper("rm -f '#{tails_iso_hybrid}'")
 end
 
