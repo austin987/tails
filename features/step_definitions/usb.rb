@@ -254,7 +254,7 @@ Given /^persistence has been enabled$/ do
   }
 end
 
-Given /^the computer is setup up to boot from USB drive "([^"]+)"$/ do |name|
+Given /^the computer is set to boot from USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   @vm.set_usb_boot(name)
 end

@@ -30,7 +30,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
 
   Scenario: Booting Tails from a USB drive without a persistent partition
     Given a computer
-    And the computer is setup up to boot from USB drive "A"
+    And the computer is set to boot from USB drive "A"
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
@@ -42,7 +42,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
 
   Scenario: Creating a persistent partition
     Given a computer
-    And the computer is setup up to boot from USB drive "A"
+    And the computer is set to boot from USB drive "A"
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
@@ -57,7 +57,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
 
   Scenario: Booting Tails from a USB drive with a disabled persistent partition
     Given a computer
-    And the computer is setup up to boot from USB drive "A"
+    And the computer is set to boot from USB drive "A"
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
@@ -70,7 +70,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
 
   Scenario: Writing files to a read/write-enabled persistent partition
     Given a computer
-    And the computer is setup up to boot from USB drive "A"
+    And the computer is set to boot from USB drive "A"
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
@@ -87,7 +87,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
 
   Scenario: Writing files to a read-only-enabled persistent partition
     Given a computer
-    And the computer is setup up to boot from USB drive "A"
+    And the computer is set to boot from USB drive "A"
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
@@ -124,7 +124,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   # version is booted in this step.
   Scenario: Booting Tails from a USB drive upgraded from DVD with persistence enabled
     Given a computer
-    And the computer is setup up to boot from USB drive "A"
+    And the computer is set to boot from USB drive "A"
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
@@ -138,7 +138,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   Scenario: Upgrading a Tails USB drive from another Tails USB drive
     Given a computer
     And I clone USB drive "A" to a new USB drive "B"
-    And the computer is setup up to boot from USB drive "A"
+    And the computer is set to boot from USB drive "A"
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
@@ -156,7 +156,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   # Same issue as with scenario "Boot from USB drive upgraded from DVD"
   Scenario: Booting Tails from a USB drive upgraded from USB with persistence enabled
     Given a computer
-    And the computer is setup up to boot from USB drive "B"
+    And the computer is set to boot from USB drive "B"
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
@@ -186,7 +186,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   # Same issue as with scenario "Boot from USB drive upgraded from DVD"
   Scenario: Booting Tails from a USB drive upgraded from ISO with persistence enabled
     Given a computer
-    And the computer is setup up to boot from USB drive "A"
+    And the computer is set to boot from USB drive "A"
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
@@ -200,7 +200,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
 
   Scenario: Deleting a Tails persistent partition
     Given a computer
-    And the computer is setup up to boot from USB drive "A"
+    And the computer is set to boot from USB drive "A"
     And the network is unplugged
     And I start the computer
     And the computer boots Tails
