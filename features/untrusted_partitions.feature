@@ -3,10 +3,21 @@ Feature: Untrusted partitions
   As a Tails user
   I don't want to touch other media than the one Tails runs from
 
-  Scenario: Tails does not boot from live systems stored on hard drives
+  Scenario: Tails can boot from live systems stored on hard drives
     Given a computer
-    And I create a 1 GiB disk named "live_hd"
+    And I create a 2 GiB disk named "live_hd"
     And I cat an ISO hybrid of the Tails image to disk "live_hd"
+    And the computer is set to boot from ide drive "live_hd"
+    And I set Tails to boot with options "live-media="
+    And the network is unplugged
+    When I start the computer
+    And the computer boots Tails
+    And I log in to a new session
+    Then Tails seems to have booted normally
+
+  Scenario: Tails booting from a DVD does not use live systems stored on hard drives
+    Given a computer
+    And the computer is set to boot from the Tails DVD
     And I plug ide drive "live_hd"
     And the network is unplugged
     When I start the computer

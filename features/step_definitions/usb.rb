@@ -254,17 +254,6 @@ Given /^persistence has been enabled$/ do
   }
 end
 
-Given /^the computer is set to boot from USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
-  @vm.set_usb_boot(name)
-end
-
-Then /^Tails seems to have booted normally$/ do
-  next if @skip_steps_while_restoring_background
-  # FIXME: Something more we should check for?
-  step "GNOME has started"
-end
-
 def boot_device
   # Approach borrowed from
   # config/chroot_local_includes/lib/live/config/998-permissions

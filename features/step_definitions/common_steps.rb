@@ -75,6 +75,11 @@ Given /^the computer is set to boot from the Tails DVD$/ do
   @vm.set_cdrom_boot($tails_iso)
 end
 
+Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
+  next if @skip_steps_while_restoring_background
+  @vm.set_disk_boot(name, type.downcase)
+end
+
 Given /^I plug ([[:alpha:]]+) drive "([^"]+)"$/ do |bus, name|
   next if @skip_steps_while_restoring_background
   @vm.plug_drive(name, bus.downcase)
@@ -206,6 +211,12 @@ Given /^GNOME has started$/ do
     desktop_started_picture = 'GnomeApplicationsMenu.png'
   end
   @screen.wait(desktop_started_picture, 180)
+end
+
+Then /^Tails seems to have booted normally$/ do
+  next if @skip_steps_while_restoring_background
+  # FIXME: Something more we should check for?
+  step "GNOME has started"
 end
 
 Given /^I have a network connection$/ do

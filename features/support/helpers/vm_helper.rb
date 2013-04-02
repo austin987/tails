@@ -217,11 +217,11 @@ class VM
     return execute("test -b #{disk_dev(name)}").success?
   end
 
-  def set_usb_boot(name)
+  def set_disk_boot(name, type)
     if is_running?
       raise "boot settings can only be set for inactive vms"
     end
-    plug_drive(name, 'usb')
+    plug_drive(name, type)
     set_boot_device('hd')
     # FIXME: For some reason setting the boot device doesn't prevent
     # cdrom boot unless it's empty
