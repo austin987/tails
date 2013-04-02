@@ -402,7 +402,10 @@ Given /^I shutdown Tails$/ do
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
-  try_for(360, :msg => "VM is still running") { ! @vm.is_running? }
+  nr_gibs_of_ram = (detected_ram_in_bytes.to_f/(2**30)).ceil
+  try_for(nr_gibs_of_ram*5*60, :msg => "VM is still running") do
+    ! @vm.is_running?
+  end
 end
 
 Given /^package "([^"]+)" is installed$/ do |package|
