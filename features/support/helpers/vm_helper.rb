@@ -223,8 +223,8 @@ class VM
     end
     plug_drive(name, type)
     set_boot_device('hd')
-    # FIXME: For some reason setting the boot device doesn't prevent
-    # cdrom boot unless it's empty
+    # For some reason setting the boot device doesn't prevent cdrom
+    # boot unless it's empty
     remove_cdrom
   end
 

@@ -120,7 +120,7 @@ end
 # AfterScenario
 After('@source') do
   Dir.chdir @orig_pwd
-  # XXX: Seems like JRuby has issues with remove_entry_secure()
+  # Seems like JRuby has issues with remove_entry_secure()
   FileUtils.remove_entry @git_clone
 end
 

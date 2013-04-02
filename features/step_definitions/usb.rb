@@ -31,7 +31,8 @@ end
 def usb_install_helper(name)
   @screen.wait('USBCreateLiveUSB.png', 10)
 
-  # FIXME: here we should select USB drive using #{name}
+  # Here we'd like to select USB drive using #{name}, but Sikuli's
+  # OCR seems to be too unreliable.
 #  @screen.wait('USBTargetDevice.png', 10)
 #  match = @screen.find('USBTargetDevice.png')
 #  region_x = match.x
