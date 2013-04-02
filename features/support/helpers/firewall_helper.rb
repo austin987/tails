@@ -74,6 +74,10 @@ class FirewallLeakCheck
         candidate = p.ip_daddr
       elsif p.kind_of?(PacketFu::IPv6Packet)
         candidate = p.ipv6_header.ipv6_daddr
+      else
+        save_pcap_file
+        raise "Expected an IP{v4,v6} packet, but got something else:\n" +
+              p.peek_format
       end
       if candidate != nil and IPAddr.new(candidate).public?
         hosts << candidate
