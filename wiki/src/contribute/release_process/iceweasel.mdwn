@@ -133,3 +133,57 @@ Update Torbrowser patches
 * Apply Torbrowser patches:
 
   	quilt push -a && git commit -a -m 'Apply Torbrowser patches.'
+
+Build packages
+==============
+
+Update debian/changelog
+-----------------------
+
+* set a version such as `17.0.5esr-0+tails1`
+* list our changes, especially the TBB commit at which the
+  patches were imported, and the ones we skipped
+* set distribution to unstable
+* commit:
+
+  	git commit -a -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+
+Tag the release
+---------------
+
+	git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" $TAG_NAME
+
+Build for unstable
+------------------
+
+If you have no available non-Tails setup to comfortably test these
+packages, then skip this step.
+
+* Build for unstable and the architecture you can test on (most likely
+  amd64).
+* Install and test the resulting packages.
+
+Build for squeeze-backports
+---------------------------
+
+* Checkout the `tails/squeeze` branch.
+* Merge the tag.
+* Add a backport changelog entry:
+
+  	dch --bpo
+
+* Commit:
+
+  	git commit -a -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+
+* Tag the backport:
+
+  	git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" $TAG_NAME
+
+* Build for squeeze-backports and i386, e.g. in our debomatic instance.
+* Test the resulting packages in Tails.
+* Make sure the `.orig.*` tarballs are included in the `.changes`
+  file. FIXME: check if that's needed, or done automatically by the
+  above instructions.
+* Upload the resulting packages to the relevant suite of our
+  [[contribute/APT repository]].
