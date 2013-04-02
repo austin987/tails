@@ -70,11 +70,9 @@ class FirewallLeakCheck
     hosts = []
     packets.each do |p|
       candidate = nil
-      # TCPPacket is not a subclass of IPPacket. Ugly!
-      if p.instance_of?(PacketFu::IPPacket) or
-          p.instance_of?(PacketFu::TCPPacket)
+      if p.kind_of?(PacketFu::IPPacket)
         candidate = p.ip_daddr
-      elsif p.instance_of?(PacketFu::IPv6Packet)
+      elsif p.kind_of?(PacketFu::IPv6Packet)
         candidate = p.ipv6_header.ipv6_daddr
       end
       if candidate != nil and IPAddr.new(candidate).public?
