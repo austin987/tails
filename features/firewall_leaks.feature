@@ -1,7 +1,7 @@
 @product
-Feature: 
+Feature:
   As a Tails developer
-  I want that the automated test suite detects firewall leaks reliably
+  I want to ensure that the automated test suite detects firewall leaks reliably
 
   Background:
     Given a computer
@@ -26,7 +26,7 @@ Feature:
 
   Scenario: Detecting IPv4 TCP leaks of TCP DNS lookups
     Given I disable Tails' firewall
-    When I do a TCP DNS lookup of "torproject.org" 
+    When I do a TCP DNS lookup of "torproject.org"
     Then the firewall leak detector has detected IPv4 TCP leaks
 
   Scenario: Detecting IPv4 non-TCP leaks (UDP) of UDP DNS lookups
