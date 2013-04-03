@@ -5,45 +5,12 @@
 About this
 ==========
 
-This is a glue between:
+The automated test suite is being implemented in the
+`feature/automated_tests/cucumber` branch.
 
-* [Sikuli](http://www.sikuli.org/), used for simulating user
-  interaction,
-* [libvirt](http://libvirt.org/), used for running a specific build of
-  Tails in a virtual machine, and
-* [cucumber](http://cukes.info/), to write features with scenarios to
-  be tested by the above two components.
-
-Its goal is to automate the release testing process with a Continuous
-Integration server, or for developers to implement features the "Agile
-Way".
-
-
-Features
-========
-
-With this tool, it is possible to:
-
-  * Create, modify and destroy virtual machines meant to run Tails.
-  * Simulate user interaction with the Tails virtual machine, and test
-    its state.
-  * Run arbitrary shell commands inside the virtual machine.
-  * Take screenshots from the display of the virtual machine, at
-    particular events, like when a scenario fails. Complete test
-    sessions can also be captured into a video.
-  * Capture and analyse Tails virtual machine network traffic.
-  * Create different kinds of virtual storage (ide, USB, DVD, ...),
-    and either cold or hot plug/unplug them to the virtual machine.
-
-
-Setup and usage
-===============
-
-The setup and usage documentation is being worked on along with the
-code, on the `feature/automated_tests/cucumber` WIP branch:
-
-* `contribute/release_process/test/setup.mdwn`
-* `contribute/release_process/test.mdwn`
+* Documentation: `contribute/release_process/test/automated_tests.mdwn`
+* Setup: `contribute/release_process/test/setup.mdwn`
+* Usage: `contribute/release_process/test.mdwn`
 
 
 TODO and issues
@@ -51,8 +18,6 @@ TODO and issues
 
 ## Merge this branch
 
-1. Sort the following between release blockers and non-blockers
-1. Fix blockers.
 1. Split non-blockers into separate tickets.
 1. Merge this branch.
 
@@ -62,23 +27,11 @@ See [[contribute/release_process/test]] for progress.
 
 ## Puppet module to manage the tester system
 
-The [[cucumber/install]] documentation should be turned into a Puppet
+The [[contribute/release_process/test/setup]] documentation should be
+turned into a Puppet
 module, so that we can deploy this on lizard (and so that individual
 developers can reproduce this setup in a way that's easy to keep
 up-to-date with future changes).
-
-## Support "slow" systems
-
-In the current state of things, substantial parts of the test suite
-fail unless run on powerful dedicated hardware. The most common
-usecase will be to run it with nested virtualization, on
-not-so-powerful hardware, so the whole test suite must be tested in
-that context, and timeouts accordingly bumped as needed.
-
-## Review all the tests
-
-All the tests should be run and reviewed by someone else than
-their authors.
 
 ## sdmem job waiting vs erase_memory feature
 
@@ -86,15 +39,51 @@ When we'll merge `feature/automated_tests/cucumber` into `stable` we'll
 revert commit `255aa71` ("Make sure the memory dumping debug message
 is shown cleanly") to not mess anything up for the imminent 0.17.2
 release at the time. However, the `erase_memory` feature depends on
-it, so we must remember to revert that revert in `devel` once `stable`
-has been merged into `devel`. Then we should determine whether
-`255aa71` is safe or even the right approach.
+it, so we must remember to consider reverting that revert after the
+release: we should first determine whether `255aa71` is safe or even
+the right approach.
+
+## Kernel Oops on real host for erase_memory feature in nested VM setup
+
+The top excerpt of the kernel oops (which leaves the real host
+completely unresponsive) is:
+
+    BUG: unable to handle kernel paging request at ffff87ffffffffff
+    IP: [<ffffffffa06ea57a>] __direct_map.isra.92+0xe3/0x1a1 [kvm]
+    PDF 0
+    Oops: 0000 [#1] SMP
+    Modules: [snip]
+    CPU 2
+    Pid: 5229, comm: kvm Not tainted 3.8-trunk-amd64 #1 Debian 3.8.3-1~experimental.1 [snip]
+	[snip]
+
+It has happened every time I tried this feature, either when filling
+the memory or when wiping it. I've tested all combinations of the
+current Wheezy kernel (3.2.39-2) and current experimental kernel
+(3.8.3-1) on both the real host and the testing VM, but to no avail.
+
+I don't get this with a non-nested VM setup (i.e. when the automated
+test suite is run from bare metal).
+
+Also, I don't get it *as often* in the nested VM setup if I decrease
+the TailsToaster RAM from 8 GiB to 5 GiB in both scenarios.
+
+So it seems we may have an upstream linux kernel bug. Can someone else
+than me (anonym) try to verify this?
 
 ## Get rid of RVM and ruby gems
 
 Ultimately we want good enough versions of JRuby and the required ruby
 gems properly packaged in Debian. Filing RFP bugs, to let people know
 what we need, would be a good start.
+
+Alternatively we drop JRuby and use native Ruby, which means we can
+use the Ruby gems already packaged for Debian, which include all but
+`sikuli` (which we cannot use without JRuby, so we need another
+solution; see below) and `packetfu`, so in effect only the latter
+needs an RFP bug, with this approach.
+
+We need serious plans to make this solution sustainable for us.
 
 ## jruby 1.7 has deprecated the C extension
 
@@ -118,16 +107,104 @@ so bad in the short run, but we need a contingency plan.
 > so it's likely that we soon have to manage a testing environment
 > based on Jessie... or maintain tons of backports.
 
-## File and directory layout reorganisation
+The best would probably be if we could move to native ruby, which
+would mean porting the sikuli gem somehow. Since many of our gems are
+in Debian for native ruby, we'd mostly solve "Get rid of RVM and ruby
+gems" at the same time.
 
-A complete reorganisation of the `features/cucumber` directory
-structure may be worth considering. Maybe we can put all `.feature`:s
-in its root (not group "similar" ones in separate sub-dirs) and have
-them share a single `step_definitions` sub-dir?
+### Rjb
 
-More generally, it would be great to integrate the Cucumber feature
-that existed before this branch was started (`features/build.feature`)
-into the general `run_test_suite` framework.
+[[rjb|<http://rjb.rubyforge.org/>]] seems maintained, if not actively developed.
+
+Other projects using it or interesting stuff at:
+
+* [rjb-require](https://github.com/svenfuchs/rjb-require)
+* [rjb-examples](https://github.com/L2G/rjb-example)
+* [poi_pond](https://github.com/lgleasain/poi_pond) (uses Rjb)
+* [Antrap](https://github.com/atoulme/Antwrap) (uses rjb)
+
+The jruby sikuli gem is quite simple, implementing it in Rjb can be as
+lightweight, or not...
+
+### Wrapping Sikuli commands via a stand-alone Sikuli server
+
+If the Rjb solution doesn't work out, this fallback is a drop-in
+replacement for the Sikuli gem, and that we know will work no matter
+what, and that should be reasonably easy to implement.
+
+In short, we create a pure Java program that controls a single
+`Screen` object, and listens for commands that that it translates into
+Sikuli API calls for that `Screen` object, and then responds
+appropriately to the calling client.
+
+#### Details
+
+1. We write a pure Java program using the Java API for Sikuli, that
+   takes the `$DISPLAY`, image dir etc. as arguments and then sets up
+   all required Sikuli objects: Mouse and Keyboard robots, and a single
+   `Screen` object. Let's call this the "Sikuli server".
+
+1. The Sikuli server listens (on a UNIX socket, or whatever) for
+   "Sikuli commands" that it translates to Sikuli calls on the single
+   `Screen` object via the Sikuli API, and then translates the result
+   and sends that as a response.
+
+1. We completely re-write `sikuli_helper.rb`, defining a `Screen`
+   class (and possibly `Region`; see below). On `initialize()` it
+   starts a Sikuli server instance (simply via `Popen()` or whatever).
+   We implement simple wrappers for all methods we've used earlier
+   (i.e. `find()`, `wait()`, `type()`, `hover()` and `click()`) that
+   will send an appropriate command to the Sikuli server.
+
+#### Example
+
+Say `screen` is an instance of `sikuli_helper.rb`'s `Screen`. Then
+`screen.wait("image.png", 100)` will result in something like
+`wait,image.png,100` being sent to the Sikuli server, which it
+translates into the call `screenObject.wait("image.png", 100)`, and
+responds back with something easily parsable, like
+`exception=ImageNotFound:Could not find image.png` (or whatever the
+exact exception name and message are) on failure, otherwise it just
+sends an ACK so `screen.wait()` can stop blocking execution.
+
+> I'd rather not invent a new protocol entirely, and instead
+> piggy-back e.g. on HTTP or something more appropriate. Also, I'd
+> rather use a well-known, well-defined serialization format (YAML,
+> JSON, you name it) instead of inventing a new one.
+
+#### Obstacles
+
+* There may be some complexity to deal with `Region` objects (returned
+  by e.g. `find()`, which we use in `wait_and_click()`) since we'd
+  need some way (an identifier?) to know which `Region` object in
+  `sikuli_helper.rb` corresponds to which `Region` (Java) object in
+  the Sikuli server; we avoid this issue with `Screen` since each
+  Sikuli server deals with a single `Screen` object, but we can
+  potentially deal with any number of `Region` objects. A simple
+  solution would be to only store the appropriate coordinates and
+  dimensions in `sikuli_helper.rb`'s `Region` object and then whenever
+  it's used we create a new `Region` object in the Sikuli server using
+  those coordinates and dimensions. We could then implement methods
+  via the `Screen` object, like `Region.click()` could use those
+  coordinates and dimensions to `Screen.click()` on the right place.
+  We currently only use `Region` in our `wait_and_click` helper, so
+  a ad-hoc solution would probably be enough.
+
+* Getting Sikuli's key constants (e.g. `Sikuli::KEY_CTRL`) into
+  `sikuli_helper.rb` is not completely trivial. Perhaps we could make
+  the Sikuli server send the values of all these so they can be stored
+  into the appropriate constants upon `Screen.initialize()`, when the
+  server is first contacted? Otherwise we can always statically define
+  them with magic values.
+
+### Plan for dropping JRuby and the Sikuli gem
+
+1. bertagaz investigates (hopefully done in early-mid April 2013)
+   whether a native ruby port of the Sikuli gem (using Rjb or other
+   means) is possible *and* easy.
+
+2. If not, anonym will implement the Sikuli wrapper server during the
+   summer 2013.
 
 ## Use libguestfs
 
@@ -173,30 +250,11 @@ want to tag such scenarios with `@uses_tor`, and create an
 `Around('@uses_tor')` hook which re-tries those scenarios some number
 of times before actually failing it.
 
-## SATA drives don't work?
+## Fetch Tor authorities from somewhere?
 
-When creating a (`raw`) disk via the storage helper, and then plugging
-it to a Tails instance as SATA drive, GNOME will report that the drive
-is failing when inside Tails, and indeed several SMART tests fail.
-
-> What's the practical downside of this? In other words, why do
-> we care? --intrigeri
-
-## Host-to-guest filesystem share incompatibility with snapshots
-
-Filesystem shares cannot (due to QEMU limitations) be added to an
-active VM, and cannot (due to QEMU limitations) be active
-(i.e. mounted) during a snapshot save. Hence unmounting before save
-and remounting after restore them seems like a good idea.
-
-However, the `9p*` modules seem to get into a broken state during a
-save + restore (the "tags" used as `mount` source cannot be found), so
-unloading before save and reload after restore comes to mind. But
-loading `9pnet_virtio` fails after a restore with `probe of virtio2
-failed with error -2` (in `dmesg`) and the shares remain unmountable.
-
-This has to be investigated further, and possible upstream bugs
-should be reported.
+In `features/support/config.rb` we have a static list of the IP
+addresses of the Tor authorities. It'd be great if we could fetch it
+dynamically, but with up-to-date info, and with authentication.
 
 ## Background snapshots
 
@@ -228,10 +286,10 @@ the state ..." step.
 
 ## Media removal doesn't register (for udev) in guest
 
-While it's possible to tell libvirt to forcefully remove both DVD and
-USB media, it doesn't give emit the signal (or whatever) that our udev
-watchdog wants. The media just gets inaccessible with lots of IO
-errors going on. This prevents implementation of the tests:
+While it's possible to tell libvirt to forcefully remove both DVD and USB
+media, it doesn't result in the signal (or whatever) that our udev watchdog
+wants being emited. The media just gets inaccessible with lots of IO errors
+going on. This prevents implementation of the tests:
 
 * erase memory on shutdown
   - After booting from DVD, remove Tails boot medium and check that
@@ -246,56 +304,73 @@ errors going on. This prevents implementation of the tests:
 
 ## Remote shell
 
-This started out as a hack, and while it has evolved it largely
-remains so. A proper, reliable, established replacement would be
-welcome, but seems unlikely given the requirements:
-
-Requirements on the host (the remote shell client):
-
-* can execute a command with blocking until command completion on the
-  server, and get back return code, stdout and stderr separately.
-* can spawn a command without blocking (except an ACK that the server
-  has run the command, perhaps).
-* usable by an unprivileged user
-
-Requirements on the guest (the remote shell server):
-
-* has to work without a network connection.
-* should interfere minimally with the surrounding system (e.g. no
-  firewall exceptions; actually we don't want any network traffic at
-  all from it, but this kind of follows from the previous requirement
-  any way)
-
-### Minor groups not set
-
-If we run `@vm.execute("groups", "amnesia")` it'll only list
-membership in the major group, i.e. `amnesia`.
-
 ### pgrep -f detects itself
 
 When running `@vm.execute("pgrep -f $something")` it currently the
 case that `pgrep` lists its own pid (and hence never fails, which
-could be of great importance), unlike when you run it natively.
+could be of great importance), unlike when you run it natively, and
+unlike "The running pgrep or pkill process will never report itself as
+a match." in `pgrep(1)`.
 
-### Instability
+The practical problem is the (potentially serious) surprise one can be
+hit by when writing a step definition.
 
-Although very rare, the remote shell can get into a state where it
-stops responding, resulting in the test suite waiting for a response
-forever. The reason for this has proved hard to determine, but it
-seems to basically only happen for the very first interaction with it.
-
-I think it has to do with the fact that its transport is TCP on the
-host bridged to a serial device on the guest (see `<serial
-type='tcp'>` in Libvirt domain XML format). Perhaps the TCP state vs
-the guest's serial port's state gets out-of-sync if the TCP packet
-times out before the serial port is up and running?
+Why is that happening? Are other tools misbehaving?
 
 ## usb_install feature
+
+This feature seems to require a fast setup to work. Other than that it often
+fails in quite random fashion (frozen in the 'unmouting /dev/sda'
+liveusb-creator step for example).
+
+It could be considered stable and useable only on fast setup.
+
+### Shutdown Tails step
+
+Is actually a bit error prone. As this feature has to run on fast VM, this
+step often fails if the Tails VM has more memory than the default, as the VM
+takes long time to do the memory wiping on shutdown (perticulary in nested VM
+setup).
+
+> Indeed. Let's bump the timeout into "5 minutes per GiB or RAM", like
+> when we wait for the memory to be wiped in in erase_memory.feature.
+> See commit 0867398.
+
+This `Shutdown Tails` step seems to be used only in this feature and the
+memory wiping one. Maybe we could have 2 different ways to shutdown the
+machine, and in the case of this feature, simply use a `@vm.destroy`.
+
+> erase_memory.feature uses "I safely shutdown Tails" (which is a bad
+> name) which doesn't wait for the VM to shutdown, like "I shutdown
+> Tails" does. In that feature we instead wait for the wipe to finish
+> so we can dump the memory.
+
+> In this feature we cannot use `@vm.destroy` since that can result in
+> data loss from the USB drive (perhaps not for after installing or
+> upgrading since the installer syncs, but certainly when read-write
+> persistence is used).
 
 ### Upgrade should be from an older Tails
 
 Currently we upgrade Tails from the same version, which isn't what's
 said in the manual test suite.
+
+We could save an installed USB disk image at some point (in a step or by a
+jenkins trick?), and have it stored somewhere accessible to the test suite so
+that it's used in the tests of the next version of Tails. Should be accessible
+also for people willing to test this feature.
+
+> I think this would be hard to implement in a not-too-fragile way,
+> so I'd rather simply add a `--old-iso` option to `run_test_suite`.
+
+Alternatively we can add an `--old-iso` option to `run_test_suite`,
+which, if omitted, defaults to the .iso with oldest mtime. If the
+current and "old" ISO images are the same (and perhaps if the time
+diff is too small?), we get a warning (or a fatal error?). Actually,
+since mtime is not really reliable, I plan to extract the image
+creation date via:
+
+    /sbin/blkid -p -s LABEL -o value /path/to/iso
 
 ### Disabled scenario: "the boot device has safe access rights"
 
@@ -307,28 +382,38 @@ partition and any persistent partition) is owned by group `floppy`
 which the `amnesia` user is a member of, enabling it full write
 permissions to it. Is udev doing this at a later stage now?
 
-### Scenario dependencies
+### liveusb-creator hangs
 
-An issue with this feature is that scenarios depend on earlier
-scenarios. For instance, "Booting Tails from USB drive ..."  depends
-on "Installing Tails to a prestine USB drive" or one of the, Upgrading
-a Tails USB drive from ..." which in turn depend on "Installing
-...". This is not goo practice, but the alternative would be gigantic
-scenarios that test several logically different scenarios in turn,
-some of the above quoted scenarios concatenated.
+For me (anonym) `liveusb-creator` constantly hangs at "Unmounting
+/dev/sda" when using the nested setup (not otherwise). If I take over
+the session with `virt-viewer`, close `liveusv-creator` and restart
+it, then it works. Also, doing something completely retarted like this
+also works:
+
+    ...
+    And I create a new 4 GiB USB drive named "A"
+    And I plug USB drive "A"
+    And I wait 10 seconds
+    And I unplug USB drive "A"
+    And I wait 10 seconds
+    And I plug USB drive "A"
+    And I wait 10 seconds
+    And I "Clone & Install" Tails to USB drive "A"
+    ...
+
+What can be the cause of this?
+
+## Reliably wait for all post Tails Greeter hooks
+
+In the `I log in to a new session` step we should do something which waits
+for all Tails Greeter post-hooks to finish so we can rid ourselves of
+steps like `Tails Greeter has dealt with the sudo password`.
 
 ## GnuPG encryption feature
 
 All scenarios fail for intrigeri: for some reason "encrypt with
 passphrase" is selected even in the scenario that's supposed to hit
 "k" to select "encrypt with pubkey".
-
-## unsafe browser feature
-
-The unsafe browser should be started from the applications menu,
-or at least in exactly the same way as it is run by the `.desktop`
-(that is, `sudo unsafe-browser`), possibly by extracting that
-command-line from the `.desktop`.
 
 ## apt feature
 
@@ -342,6 +427,18 @@ command-line from the `.desktop`.
         ./features/cucumber/apt/step_definitions/apt.rb:46:in `(root)':in `/^I update APT using synaptic$/'
         features/cucumber/apt/apt.feature:32:in `And I update APT using synaptic'
 
+> This should be fixed. Can the bug reporter please retry?
+
+>> Perhaps, but it's now broken earlier:
+
+    Scenario: Install packages using Synaptic                              # features/apt.feature:32
+    When I run "gksu synaptic"                                           # features/step_definitions/common_steps.rb:355
+    And I enter the sudo password in the gksu prompt                     # features/step_definitions/common_steps.rb:361
+      The image 'GksuAuthPrompt.png' did not match in this region. (Sikuli::ImageNotFound)
+      ./features/step_definitions/common_steps.rb:363:in `(root)':in `/^I enter the sudo password in the gksu prompt$/'
+      features/apt.feature:34:in `And I enter the sudo password in the gksu prompt'
+
+
 ### should run synaptic in a more realistic way
 
 Synaptic should be started from the applications menu, or at least we
@@ -349,50 +446,6 @@ should make sure it's started in exactly the same way as it is run by
 the `.desktop` by extracting that command-line from the `.desktop`
 (e.g. on Wheezy, this will be `synaptic-pkexec`).
 
-### should test Tails APT repository sources
-
-* Make sure the Tails repository suite matching the release tag is in
-  APT sources.
-* Make sure the Tails repository unversioned suites (e.g. `testing`,
-  `stable` and `devel`) are *not* in APT sources.
-
-## root access control feature
-
-We're testing "the live user should be able to get administrative
-privileges through PolicyKit" by... running `gksu synaptic`. This is
-wrong, as being a sudoer is orthogonal to being an administrator from
-the PolicyKit point-of-view (IIRC on Debian PolicyKit is configured so
-that members of the `sudo` group are PolicyKit admins, which can be
-confusing, but still, one cannot test PolicyKit privileges by running
-sudo).
-
-`pkexec` to run the action, after using `pkcheck` to verify that the
-action requires to be an admin, perhaps?
-
-## usb install feature
-
-This scenario fails:
-
-    Scenario: Writing files to a read/write-enabled persistent partition # features/cucumber/usb/usb_install.feature:70
-    Given a computer                                                   # features/cucumber/step_definitions/common_steps.rb:63
-    And the computer is setup up to boot from USB drive "A"            # features/cucumber/usb/step_definitions/usb.rb:257
-    And the network is unplugged                                       # features/cucumber/step_definitions/common_steps.rb:102
-    When I start the computer                                          # features/cucumber/step_definitions/common_steps.rb:120
-    And the computer boots Tails                                       # features/cucumber/step_definitions/common_steps.rb:146
-    And Tails is running from USB drive "A"                            # features/cucumber/usb/step_definitions/usb.rb:284
-    And the boot device has safe access rights                         # features/cucumber/usb/step_definitions/usb.rb:295
-      This check is temporarily disabled since it currently always fails
-    And I enable persistence with password "asdf"                      # features/cucumber/usb/step_definitions/usb.rb:216
-    And I log in to a new session                                      # features/cucumber/step_definitions/common_steps.rb:159
-    And persistence has been enabled                                   # features/cucumber/usb/step_definitions/usb.rb:245
-    And I write some files expected to persist                         # features/cucumber/usb/step_definitions/usb.rb:333
-    And I shutdown Tails                                               # features/cucumber/step_definitions/common_steps.rb:376
-      The image 'TailsEmergencyShutdownButton.png' did not match in this region. (Sikuli::ImageNotFound)
-      ./features/cucumber/support/helpers/sikuli_helper.rb:31:in `wait_and_click'
-      ./features/cucumber/step_definitions/common_steps.rb:379:in `(root)':in `/^I shutdown Tails$/'
-      features/cucumber/usb/usb_install.feature:82:in `And I shutdown Tails'
-
-Then all following scenarios fail with `Cannot allocate memory`.
 
 ## "the shipped Tails signing key is not outdated" scenario
 
@@ -413,22 +466,73 @@ if moved to a dedicated feature:
       ./features/cucumber/step_definitions/common_steps.rb:124:in `(root)':in `/^I start the computer$/'
       features/cucumber/misc_tests/checks.feature:44:in `And I start the computer'
 
-## ruby tcpdump replacement?
+## time syncing feature
 
-If we want to rid ourselves of running external processes like we do
-with `tcpdump`, we may want to look into:
+* After setting the date to something wrong, one should assert the
+  date change actually took place, else it makes little sense
+  verifying later that our stuff indeed has "fixed" the date:  if we
+  don't know for sure that it was broken, we're not really
+  verifying anything. This should be implemented at least in
+  `step_definitions/time_syncing.rb`.
 
- * [nfqueue](http://rubydoc.info/gems/nfqueue)
+## check firewall leaks in every scenario
 
-> Just curious: what's the problem with running `tcpdump`? --intrigeri
+... or at least, in every scenario that involves the Internet?
 
-## fix or remove `--newest-iso`
+## add anti-tests
 
-`run_test_suite` has a `--newest-iso` option that does not work.
-We should fix or remove it.
+... that is, tests that verify that the test suite would properly
+detect failure. Our manual erase memory test procedure is a good
+example thereof: it checks that we *can* find the pattern in memory if
+we skip the memory wipe step on purpose.
 
-Resources
-=========
+### firewall_meta.feature
 
- * [ruby-libvirt api](http://libvirt.org/ruby/api/index.html)
- * [sikuli gem api](http://rubydoc.info/gems/sikuli/0.3.0/frames)
+* Do we need an anti-test for non-IP packets? Does it even make sense?
+  After all, so far we've only cared about leaks to the Internet. What
+  non-IP packets can leak to the Internet?
+
+## Remote shell: minor groups not set
+
+If we run `@vm.execute("groups", "amnesia")` it'll only list
+membership in the major group, i.e. `amnesia`.
+
+Ideally, as long as we don't use the remote shell to test actions that
+a real user could perform, and only use it to check results and
+prepare stuff, this should not be a practical problem.
+
+However, we have at least one exception (apt-get update / install)
+that uses the remote shell to emulate user action, and it would be
+a pain to rewrite using Sikuli, so we'd rather keep this exception.
+
+This was documented in the "how to write tests" documentation,
+but could still be worth fixing.
+
+## Remote shell instability
+
+Although very rare, the remote shell can get into a state where it
+stops responding, resulting in the test suite waiting for a response
+forever. The reason for this has proved hard to determine, but it
+seems to basically only happen for the very first interaction with it.
+
+I think it has to do with the fact that its transport is TCP on the
+host bridged to a serial device on the guest (see `<serial
+type='tcp'>` in Libvirt domain XML format). Perhaps the TCP state vs
+the guest's serial port's state gets out-of-sync if the TCP packet
+times out before the serial port is up and running?
+
+## Host-to-guest filesystem share incompatibility with snapshots
+
+Filesystem shares cannot (due to QEMU limitations) be added to an
+active VM, and cannot (due to QEMU limitations) be active
+(i.e. mounted) during a snapshot save. Hence unmounting before save
+and remounting after restore them seems like a good idea.
+
+However, the `9p*` modules seem to get into a broken state during a
+save + restore (the "tags" used as `mount` source cannot be found), so
+unloading before save and reload after restore comes to mind. But
+loading `9pnet_virtio` fails after a restore with `probe of virtio2
+failed with error -2` (in `dmesg`) and the shares remain unmountable.
+
+This has to be investigated further, and possible upstream bugs
+should be reported.

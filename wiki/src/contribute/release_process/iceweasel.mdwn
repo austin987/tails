@@ -13,17 +13,19 @@ a bit more work is needed.
 * Copy the `debian/` directory from our previous package into the new
   upstream source directory.
 * Use `dch` to add a `debian/changelog` entry matching the new
-  upstream version.
-* Download and repack the other tarballs:
-
-  	make -f debian/rules download
-
+  upstream version. Use 0 for the Debian packaging version, e.g.
+  `17.0.5esr-0`, to leave room for the official packaging that we will
+  want to merge when it's out.
 * `cd` into our Iceweasel Git directory.
 * Checkout the `tails/master` branch.
 * Get yourself a new upstream branch:
 
   	git branch -d upstream && \
   	git branch upstream tails/master
+
+* Download and repack the other tarballs:
+
+  	cd .. && make -f debian/rules download
 
 * Trick the tarball importer to import the correct version:
 
@@ -32,12 +34,11 @@ a bit more work is needed.
 
 * Import the new upstream release into the `upstream` branch:
 
-  	make -f debian/rules import
+  	cd git && make -f debian/rules import
 
 * Merge the import commit into `tails/master`:
 
   	git reset --hard && \
-  	git checkout tails/master && \
 	git merge upstream
 
 * Get the `debian` directory back:
@@ -56,8 +57,43 @@ a bit more work is needed.
 New iceweasel release
 =====================
 
-FIXME: add missing steps to merge iceweasel's updated Git if possible,
-to import the source package into Git else.
+The way to proceed is different depending on whether Debian's
+iceweasel was pushed to it yet, or not.
+
+If Debian's iceweasel was pushed to Git already
+-----------------------------------------------
+
+FIXME: add missing steps to merge iceweasel's updated Git.
+
+If Debian's iceweasel was not pushed to Git yet
+-----------------------------------------------
+
+FIXME: test these instructions.
+
+Then, we have to import the source package into Git ourselves, and
+merge from Debian's Vcs-Git later.
+
+* Download, verify and extract the new iceweasel source package with dget.
+
+* Checkout our `tails/master` branch.
+
+* Overwrite the files in the Git checkout with the new ones.
+  Assuming the new extracted iceweasel package is in
+  `iceweasel-17.0.2esr`, and our iceweasel Git repository checkout is
+  in `git`:
+
+  	rsync --stats -a --exclude=.git --delete iceweasel-17.0.2esr/ git/
+
+* `git add` the new files and the modified ones
+
+* `git rm` the deleted files
+
+* Commit.
+
+* Verify with `diff` that the current state of the `tails/master` is
+  exactly the same as Debian's iceweasel source package one.
+
+* Bring our `debian/changelog` and `debian/rules` changes back.
 
 Update Torbrowser patches
 =========================
@@ -73,7 +109,10 @@ Update Torbrowser patches
 
   	git rm -r debian/patches/torbrowser/
 
-* Commit.
+* Commit:
+
+  	git commit -m 'Remove Torbrowser patches.'
+
 * Import the latest TBB patches:
 
   	export TBB_SRC=XXX_PATH_TO_TBB_SRC_XXX
@@ -94,3 +133,57 @@ Update Torbrowser patches
 * Apply Torbrowser patches:
 
   	quilt push -a && git commit -a -m 'Apply Torbrowser patches.'
+
+Build packages
+==============
+
+Update debian/changelog
+-----------------------
+
+* set a version such as `17.0.5esr-0+tails1`
+* list our changes, especially the TBB commit at which the
+  patches were imported, and the ones we skipped
+* set distribution to unstable
+* commit:
+
+  	git commit -a -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+
+Tag the release
+---------------
+
+	git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" $TAG_NAME
+
+Build for unstable
+------------------
+
+If you have no available non-Tails setup to comfortably test these
+packages, then skip this step.
+
+* Build for unstable and the architecture you can test on (most likely
+  amd64).
+* Install and test the resulting packages.
+
+Build for squeeze-backports
+---------------------------
+
+* Checkout the `tails/squeeze` branch.
+* Merge the tag.
+* Add a backport changelog entry:
+
+  	dch --bpo
+
+* Commit:
+
+  	git commit -a -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+
+* Tag the backport:
+
+  	git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" $TAG_NAME
+
+* Build for squeeze-backports and i386, e.g. in our debomatic instance.
+* Test the resulting packages in Tails.
+* Make sure the `.orig.*` tarballs are included in the `.changes`
+  file. FIXME: check if that's needed, or done automatically by the
+  above instructions.
+* Upload the resulting packages to the relevant suite of our
+  [[contribute/APT repository]].

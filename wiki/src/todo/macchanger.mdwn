@@ -1,6 +1,47 @@
-We should integrate macchanger in some way.
-
 [[!toc levels=2]]
+
+Rationale
+=========
+
+All network interfaces, both wired or wireless, have a unique
+[[!wikipedia MAC address]] which is broadcasted on any local network
+it is connected to (for wireless interfaces that also means that any
+radio receiver in the vicinity sees it). The uniqueness of this
+address is problematic, as it can:
+
+* be used a to tie a computer and its owner to a time and place for
+  observers with a list of device MAC addresses and their owners,
+* or at least track the location history of a specific device, which
+  can tell a great deal about its owner.
+
+While broadcasting the MAC addres in one's home *only* is not problem,
+broadcasting the MAC address in public is, so we need to device a
+simple user interface which gives the option to obfuscate this address
+when using Tails in public.
+
+Roadmap
+=======
+
+0. Decide which use cases we want to support and how to deal with
+   them.
+0. Design the user interface:
+   * Tails Greeter option.
+   * Potential post-connect error detection and error handling.
+0. Reconsider changing the vendor bits or not.
+0. [[!tag todo/research]] the merits of the different implementation
+   options and decide which ones to use:
+    * Trigger:
+      - `ifupdown` hook, or
+      - `udev` rule, or
+      - NetworkManager plugin, or
+      - NetworkManager hook, or
+      - systemd integration.
+    * Tool:
+      - `macchiato`, or
+      - `macchanger`, or
+      - something else?
+0. Implement the feature based on the above design and research.
+0. Write user and design documentation.
 
 Use cases
 =========
@@ -40,9 +81,10 @@ distinction does not make sense, but there are two main situations:
    wants to use their real MAC address.
 2. In most (all?) other cases, we want to anonymize the MAC address.
 
-So, as suggested by tailshelper@tormail.org on tails-dev (January
-2013), Wi-Fi adapters' MAC address should be randomized by default,
-with an option in tails-greeter to set the original address back.
+So, as suggested by <tailshelper@tormail.org> on the tails-dev
+mailing-list (January 2013), Wi-Fi adapters' MAC address should be
+randomized by default, with an option in tails-greeter to set the
+original address back.
 
 Caveats
 =======
@@ -70,6 +112,50 @@ for its network configuration, it introduces new questions: what if an
 USB wireless dongle is inserted in Tails after it has booted?
 Network manager will automatically begin to scan the network with a
 non-fake mac address. Is it a problem?
+
+User interface
+==============
+
+Tails Greeter option
+--------------------
+
+As has been proved many times on our forum, MAC addresses is a big
+source of user confusion. To help users make a good choice we probably
+want to avoid a wording that contains the word "MAC address", both to
+accomodate users that don't know what that is, and users whose
+misconseptions may lead them to pick a sub-optimal option. Wordings
+like "I am using a public network" or "I am using a public computer"
+are preferred for these reasons.
+
+Ideally we'd like a single, binary option (e.g. a check box) whose
+state then determines what to do with each network interface, but
+depending on the use cases we want to support (see dedicated section
+above), that may be too limiting. For instance "public vs home/trusted
+network" and "public vs owned/trusted computer" result in four
+different combinations. However, having two binary options for the
+above could prove interesting for other features than MAC changer, so
+it may be worthwhile (note, this list is not a list of TODOs; just a
+list of examples that may motivate adding the above *two* options):
+
+* On a public/untrusted computer we may want to completely disable
+  certain hardware to
+  [[todo/protect_against_external_bus_memory_forensics]].
+* On a public/untrusted computer we may want to disable keyboard input
+  for the [[doc/first_steps/persistence]] passphrase and
+  [[doc/first_steps/startup_options/administration_password]] (due to
+  the threat of hardware key loggers), forcing usage of a
+  [[virtual keyboard|todo/Add_a_virtual_keyboard_in_Tails_Greeter]].
+* On a public/untrused network we may want to disable network
+  printers.
+
+Post-login
+----------
+
+Since MAC changing can cause network problems (see "Caveats" section
+above) we may want to try to detect such errors after we've logged in.
+Upon detection we could show a notification linking to some
+appropriate documentation, and offer the option to reset the MAC
+address of the device to the default and re-connect.
 
 Implementation
 ==============
@@ -132,7 +218,12 @@ packaged in Debian ([[!debpkg macchanger-gtk]]).
 macchiato
 ---------
 
-[macchiato](https://github.com/EtiennePerot/macchiato) is a Bash
+Our [[MAC address design document|contribute/design/MAC_address]]
+explains the way we've chosen until now to generate partially random
+MAC addresses.
+
+It's mostly implemented by
+[macchiato](https://github.com/EtiennePerot/macchiato): a Bash
 script, released under the 3-clauses BSD license, that assigns
 a random MAC address to specified network interfaces, using lists of
 per-device-type common vendor OUI. It can be configured per-device,
@@ -140,53 +231,22 @@ has code to generate udev rules, and has some systemd integration.
 It's been described in more details [in a blog
 post](https://perot.me/mac-spoofing-what-why-how-and-something-about-coffee).
 
-Partially random MAC address
-============================
+However, there are issues with this approach:
 
-Our [[MAC address design document|contribute/design/MAC_address]]
-explains our chosen way to generate partially random MAC addresses.
+* as of February 2013, macchiato's lists are very short; the author is
+  open to adding to them, but it does not come for free
+* There are web interfaces out there to query the ieee.org OUI database,
+  like [this one](https://db.uga.edu/network/public/vendorcode.cgi).
+* A list of the biggest ethernet vendors is quite harder to find, but
+  [wikipedia](https://secure.wikimedia.org/wikipedia/en/wiki/List_of_PC_hardware_manufacturers#Network_cards)
+  can help, as some other sites
+  [here](http://www.mcgelec.com/Support/mfglinks/nics-wired.aspx) or
+  [here](http://www.charydent.com/network-adapter.asp)
 
-What now needs to be done is:
-
-- [[!taglink todo/research]] the list of 20 or so most common network
-  interface vendors ([[!taglink todo/easy]])
-  * [macchiato](https://github.com/EtiennePerot/macchiato) has
-    per-device-type lists of commonly used vendor OUI. As of February
-    2013, these lists are very short, but the author is open to adding
-    to them.
-  * There are web interfaces out there to query the ieee.org OUI database,
-    like [this one](https://db.uga.edu/network/public/vendorcode.cgi).
-  * A list of the biggest ethernet vendors is quite harder to find, but
-    [wikipedia](https://secure.wikimedia.org/wikipedia/en/wiki/List_of_PC_hardware_manufacturers#Network_cards)
-    can help, as some other sites
-    [here](http://www.mcgelec.com/Support/mfglinks/nics-wired.aspx) or
-    [here](http://www.charydent.com/network-adapter.asp)
-  * Following the wikipedia link, and from memory, 20 vendors will be hard to
-    find. Common vendors/chipset manufacturers aren't that much, at least for
-    Personnal Computers. A (probably incomplete) list would include Ralink, 3com,
-    Broadcom, Intel, Atheros, Realtek, marvell. Other vendors often build their
-    cards on chipset of these manufacturers.
-    This path (choose 20 most common vendors) seems to be the harder and the most
-    error prone one, and maybe rather choosing to randomize only the last part of
-    the MAC address while keeping the original vendor prefix would be easier.
-    Not sure to see what are the cons of this solution.
-
-- [[!taglink todo/research]] how to take into account the media type:
-  there are separate vendor IDs for wireless NICs ([[!taglink
-  todo/easy]])
-> On this item too, keeping the original vendor prefix might be the easiest
-> implementation, considering the poor information that can be found on that
-> topic.
-
-Once this is done a script to generate a MAC address shall be written
-along those lines:
-
-	IF=? # the interface we want to change MAC address of
-	VENDORS=(00:00:01 00:00:02 ...) # array of 20 most common vendor IDs
-	X=$[$RANDOM%20] # random integer; 0 <= X <= 19
-	RND_VENDOR="${VENDORS[$X]}:00:00:00"
-	macchanger --mac=${RND_VENDOR} ${IF}
-	macchanger -e ${IF}
+So, the path we've chosen (choose 20 most common vendors) seems to be
+harder than expected, and maybe rather choosing to randomize only the
+last part of the MAC address while keeping the original vendor prefix
+would be easier.
 
 Improving macchanger
 ====================
