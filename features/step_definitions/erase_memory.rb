@@ -96,7 +96,7 @@ Given /^I fill the guest's memory with a known pattern$/ do
   # The remote shell is sometimes OOM killed when we fill the memory,
   # and since we depend on it after the memory fill we try to prevent
   # that from happening.
-  # pgrep detects itself for mysterios reasons
+  # pgrep detects itself for mysterious reasons
   pids1 = @vm.execute("pgrep -f autotest_remote_shell.py").stdout.chomp.split
   pids2 = @vm.execute("pgrep -f autotest_remote_shell.py").stdout.chomp.split
   pid = (pids1 & pids2)[0]
