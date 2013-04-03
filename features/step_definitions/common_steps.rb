@@ -396,7 +396,7 @@ Given /^I have killed the process "([^"]+)"$/ do |process|
   }
 end
 
-Given /^I shutdown Tails$/ do
+Given /^I completely shutdown Tails$/ do
   next if @skip_steps_while_restoring_background
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)

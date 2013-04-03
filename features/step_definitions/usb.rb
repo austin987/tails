@@ -369,7 +369,7 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "GNOME has started"
   step "I have closed all annoying notifications"
   step "the expected persistent files are present in the filesystem"
-  step "I shutdown Tails"
+  step "I completely shutdown Tails"
 end
 
 When /^I delete the persistent partition$/ do

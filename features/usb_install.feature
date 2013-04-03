@@ -53,7 +53,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I have closed all annoying notifications
     And I create a persistent partition with password "asdf"
     Then a Tails persistence partition with password "asdf" exists on USB drive "A"
-    And I shutdown Tails
+    And I completely shutdown Tails
 
   Scenario: Booting Tails from a USB drive with a disabled persistent partition
     Given a computer
@@ -82,7 +82,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I have closed all annoying notifications
     And persistence has been enabled
     And I write some files expected to persist
-    And I shutdown Tails
+    And I completely shutdown Tails
     Then only the expected files should persist on USB drive "A"
 
   Scenario: Writing files to a read-only-enabled persistent partition
@@ -100,7 +100,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And persistence has been enabled
     And I write some files not expected to persist
     And I remove some files expected to persist
-    And I shutdown Tails
+    And I completely shutdown Tails
     Then only the expected files should persist on USB drive "A"
 
   Scenario: Upgrading a Tails USB drive from a Tails DVD
