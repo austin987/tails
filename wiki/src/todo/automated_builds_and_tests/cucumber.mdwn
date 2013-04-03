@@ -1,15 +1,22 @@
 [[!meta title="Automated tests using cucumber"]]
 
+[[!toc levels=2]]
+
 About this
 ==========
 
-This little glue provides for now a way to test Tails' images (or others)
-against features written in cucumber. This tests use sikuli to simulate user
-interactions with the UI and are written in ruby. Each features are tested
-against Tails images started in fresh virtual machines thanks to libvirt/Kvm.
+This is a glue between:
 
-It can be used to automate the release testing process with a Continuous
-Integration server, or for developers to implement features the "Agile Way".
+* [Sikuli](http://www.sikuli.org/), used for simulating user
+  interaction,
+* [libvirt](http://libvirt.org/), used for running a specific build of
+  Tails in a virtual machine, and
+* [cucumber](http://cukes.info/), to write features with scenarios to
+  be tested by the above two components.
+
+Its goal is to automate the release testing process with a Continuous
+Integration server, or for developers to implement features the "Agile
+Way".
 
 
 Features
@@ -17,104 +24,411 @@ Features
 
 With this tool, it is possible to:
 
-  * Create, modify and destroy kvm virtual machines meant to run Tails iso though
-    libvirt.
-  * Simulate user interaction with the Tails virtual machine desktop, or test
-    its content.
-  * Take screenshots, from the earlier Tails virtual machine boot process to
-    its final shutdown, either when some event occurs or at regular intervals.
-  * Read and parse the Tails virtual machine network traffic and run tests
-    against it.
-  * Add or remove different kind of storages (ide, usb,...) to the Tails virtual
-    machine, in either a cold or hot plug way and the test the way Tails
-    behaves.
+  * Create, modify and destroy virtual machines meant to run Tails.
+  * Simulate user interaction with the Tails virtual machine, and test
+    its state.
+  * Run arbitrary shell commands inside the virtual machine.
+  * Take screenshots from the display of the virtual machine, at
+    particular events, like when a scenario fails. Complete test
+    sessions can also be captured into a video.
+  * Capture and analyse Tails virtual machine network traffic.
+  * Create different kinds of virtual storage (ide, USB, DVD, ...),
+    and either cold or hot plug/unplug them to the virtual machine.
 
 
-Installation
-============
+Setup and usage
+===============
 
-See the [[dedicated page|cucumber/install]].
+The setup and usage documentation is being worked on along with the
+code, on the `feature/automated_tests/cucumber` WIP branch:
 
-
-Usage
-======
-
-For now there are some steps to follow to ensure that everything is setup
-correctly. In the future, we might want to automate this steps too.
+* `contribute/release_process/test/setup.mdwn`
+* `contribute/release_process/test.mdwn`
 
 
-## Non root $HOME installation
+TODO and issues
+===============
 
-If you have chosen not to install rvm in the root user $HOME, you have to load
-the rvm environnment variables in the root shell you are using to start this
-tool.
+## Merge this branch
 
-Assuming $USER is the user whose $HOME has been choosen to install rvm and run
-the tests:
+1. Sort the following between release blockers and non-blockers
+1. Fix blockers.
+1. Split non-blockers into separate tickets.
+1. Merge this branch.
 
-    $ cd /home/$USER
-    $ source .rvm/environnment/jrubry-$VERSION
-    $ cd TAILS_SOURCE/features
-    $ source .rvmrc
+## Tests from our manual test suite not yet covered
 
-You should be prompted on the screen that you are now using jruby. Now go on with
-the rest of the usual process to start this tool.
+See [[contribute/release_process/test]] for progress.
 
+## Puppet module to manage the tester system
 
-## General use
+The [[cucumber/install]] documentation should be turned into a Puppet
+module, so that we can deploy this on lizard (and so that individual
+developers can reproduce this setup in a way that's easy to keep
+up-to-date with future changes).
 
-As a starter, ensure you're in the features/ directory of Tails sources. It
-should have mentionned that you are using jruby when you have cd in there.
+## Support "slow" systems
 
-Set the DISPLAY env to something relevant (a non-used one)
+In the current state of things, substantial parts of the test suite
+fail unless run on powerful dedicated hardware. The most common
+usecase will be to run it with nested virtualization, on
+not-so-powerful hardware, so the whole test suite must be tested in
+that context, and timeouts accordingly bumped as needed.
 
-    $ export DISPLAY=":8"
-    $ export SIKULI_HOME="/usr/share/java"
+## Review all the tests
 
-Start a Xvfb virtual X display on it (once for all, no need to be root for
-that):
+All the tests should be run and reviewed by someone else than
+their authors.
 
-    $ Xvfb $DISPLAY >/dev/null 2>&1
+## sdmem job waiting vs erase_memory feature
 
-You can also use another more reliable way to start and monitor Xvfb, like runit
-or daemontools so that you won't have to stop it yourself after executing the
-tests.
+When we'll merge `feature/automated_tests/cucumber` into `stable` we'll
+revert commit `255aa71` ("Make sure the memory dumping debug message
+is shown cleanly") to not mess anything up for the imminent 0.17.2
+release at the time. However, the `erase_memory` feature depends on
+it, so we must remember to revert that revert in `devel` once `stable`
+has been merged into `devel`. Then we should determine whether
+`255aa71` is safe or even the right approach.
 
-This tests expect to find iso files in the top directory of the Tails sources,
-as it happens after a succesfull build. It will use the newer iso file it can
-find in this directory.
+## Get rid of RVM and ruby gems
 
-This behavior can be changed if you want to use an iso stored somewhere else.
-For this you have to set an ISO environment variable to the iso absolute path.
+Ultimately we want good enough versions of JRuby and the required ruby
+gems properly packaged in Debian. Filing RFP bugs, to let people know
+what we need, would be a good start.
 
-You need to pass the VM domain name used to start the system under test as a
-"VM" env variable, so that the script knows wich domain to start and connect
-virt-viewer to.
+## jruby 1.7 has deprecated the C extension
 
-So to run the tests:
+This is bad news as some of the ruby gems we use depend on it:
 
-    $ VM="VM_NAME" cucumber cucumber/
+* `ruby-libvirt` (highly critical)
+* `system_timer` (not critical)
 
-Or to test /home/$USER/src/tails.iso:
+It currently means that we're stuck using `jruby 1.6.x`, which isn't
+so bad in the short run, but we need a contingency plan.
 
-    $ ISO="/home/$USER/src/tails.iso" VM="VM_NAME" cucumber cucumber/
+> Perhaps we can allow ourselves to be stuck with 1.6.x for Wheezy
+> iff. we do whatever is needed so that we can do better for Jessie,
+> considering a newer OS will probably bring incompatibilities with
+> "old" software.
+>
+> Actually, this may be needed quite soon: our current tester system
+> setup needs a libvirt/qemu stack that is only available in unstable
+> and experimental; we'll be unable to install new versions of these
+> packages on Wheezy soon after the Jessie development cycle starts,
+> so it's likely that we soon have to manage a testing environment
+> based on Jessie... or maintain tons of backports.
 
-and see the testing process goes on :)
+## File and directory layout reorganisation
 
+A complete reorganisation of the `features/cucumber` directory
+structure may be worth considering. Maybe we can put all `.feature`:s
+in its root (not group "similar" ones in separate sub-dirs) and have
+them share a single `step_definitions` sub-dir?
 
-TODO
-====
+More generally, it would be great to integrate the Cucumber feature
+that existed before this branch was started (`features/build.feature`)
+into the general `run_test_suite` framework.
 
-  * Full automation : integrate the management of Xvfb instances, and
-    environment variable settings.
-  * Sudo support.
-  * ...
+## Use libguestfs
 
+Currently we use an ad-hoc `dd`/`parted` combo in the storage helper
+to create disk images with formatted filesystems outside of Tails to
+later be used within Tails (e.g. for the untrusted partitions
+feature). This limits us in many ways:
+
+* the disk can only be backed by a `raw` image, which consumes its
+  full capacity in disk space on the host unlike e.g. `qcow2` images.
+* we can only create filesystems supported by `parted` which are
+  very limited in number.
+* acting directly on the block device (= image) if we want to use
+  `LVM` or `LUKS` will probably get complicated permission-wise as the
+  test suite runs as an unprivileged user. It gets impossible if we'd
+  use image types other than `raw` (unless something like `qemu-nbd`
+  is used to create virtual block devices of the images, which again
+  will require privileges).
+
+At other places (e.g. the USB install feature) we use `udisks` from
+inside Tails to query disk information, but this should preferably be
+made from the "outside" (i.e. no inside Tails, which is what we test).
+
+[libguestfs](http://libguestfs.org/) supports all of the above and is
+part of the libvirt "family" of tools (and deal with permissions in
+the same, sane way), and it has ruby bindings. It seems like a perfect
+fit.
+
+## Remove race condition-prone sleep():s
+
+A `sleep` that's good enough on your hardware might not be good enough
+on mine. We need to, whenever possible, use reliable ways to detect
+the state we are waiting for instead of `sleep`:ing some fixed time
+and hoping we've reached that state by then.
+
+## Retry when Tor fails
+
+Some scenarios uses the live Tor network, which is not entirely
+reliable, so we may get failing scenarios when in fact we just
+happened to pick a Tor circuit that's too slow, or even one that's
+broken but Tor fails to remedy the situation. For this reason we may
+want to tag such scenarios with `@uses_tor`, and create an
+`Around('@uses_tor')` hook which re-tries those scenarios some number
+of times before actually failing it.
+
+## SATA drives don't work?
+
+When creating a (`raw`) disk via the storage helper, and then plugging
+it to a Tails instance as SATA drive, GNOME will report that the drive
+is failing when inside Tails, and indeed several SMART tests fail.
+
+> What's the practical downside of this? In other words, why do
+> we care? --intrigeri
+
+## Host-to-guest filesystem share incompatibility with snapshots
+
+Filesystem shares cannot (due to QEMU limitations) be added to an
+active VM, and cannot (due to QEMU limitations) be active
+(i.e. mounted) during a snapshot save. Hence unmounting before save
+and remounting after restore them seems like a good idea.
+
+However, the `9p*` modules seem to get into a broken state during a
+save + restore (the "tags" used as `mount` source cannot be found), so
+unloading before save and reload after restore comes to mind. But
+loading `9pnet_virtio` fails after a restore with `probe of virtio2
+failed with error -2` (in `dmesg`) and the shares remain unmountable.
+
+This has to be investigated further, and possible upstream bugs
+should be reported.
+
+## Background snapshots
+
+While these are invaluable for speeding up the test suite and not
+hammering the Tor authorities excessively with complete bootstraps,
+they do introduce some ugly code overhead and confusion:
+
+* There's the need of the "I save the state ..." step at the end of
+  the Background, which is pretty hackish.
+* Each "skippable" step needs an `next if ...` line around the top of
+  the step.
+* In the previous point I say "around" the top, because sometimes
+  input from a step are to be saved in some global variable to be
+  accessible for subsequent steps, and then those assignments should
+  happen before the `next if ...`. It's pretty confusing.
+
+It'd be great if we could tag steps `@skippable` and skip them when
+appropriate using something like an `AroundStep('@skippable')` hook,
+but vanilla cucumber supports neither tagging of steps not such a hook
+([cucumber-cpp](https://www.ohloh.net/p/cucumber-cpp/) does,
+though). OTOH, with all that we'd be unable to save any input from the
+skipped steps, which probably would require some interesting
+workarounds (maybe using real `$global` variables instead of `@class`
+variables will do?).
+
+So the question is if we really can improve the situation. An
+`AfterBackground` hook would at least be nice for killing the "I save
+the state ..." step.
+
+## Media removal doesn't register (for udev) in guest
+
+While it's possible to tell libvirt to forcefully remove both DVD and
+USB media, it doesn't give emit the signal (or whatever) that our udev
+watchdog wants. The media just gets inaccessible with lots of IO
+errors going on. This prevents implementation of the tests:
+
+* erase memory on shutdown
+  - After booting from DVD, remove Tails boot medium and check that
+    the memory erasure process is started (`Loading new kernel`, at
+    least).  The USB tests are bellow, in the USB installer section.
+
+* USB Installer/Upgrader
+  - The installed or upgraded Tails medium shall have the "emergency
+    shutdown on boot medium removal" feature working: remove Tails
+    boot medium and check that the memory erasure process is started
+    (`Loading new kernel`, at least).
+
+## Remote shell
+
+This started out as a hack, and while it has evolved it largely
+remains so. A proper, reliable, established replacement would be
+welcome, but seems unlikely given the requirements:
+
+Requirements on the host (the remote shell client):
+
+* can execute a command with blocking until command completion on the
+  server, and get back return code, stdout and stderr separately.
+* can spawn a command without blocking (except an ACK that the server
+  has run the command, perhaps).
+* usable by an unprivileged user
+
+Requirements on the guest (the remote shell server):
+
+* has to work without a network connection.
+* should interfere minimally with the surrounding system (e.g. no
+  firewall exceptions; actually we don't want any network traffic at
+  all from it, but this kind of follows from the previous requirement
+  any way)
+
+### Minor groups not set
+
+If we run `@vm.execute("groups", "amnesia")` it'll only list
+membership in the major group, i.e. `amnesia`.
+
+### pgrep -f detects itself
+
+When running `@vm.execute("pgrep -f $something")` it currently the
+case that `pgrep` lists its own pid (and hence never fails, which
+could be of great importance), unlike when you run it natively.
+
+### Instability
+
+Although very rare, the remote shell can get into a state where it
+stops responding, resulting in the test suite waiting for a response
+forever. The reason for this has proved hard to determine, but it
+seems to basically only happen for the very first interaction with it.
+
+I think it has to do with the fact that its transport is TCP on the
+host bridged to a serial device on the guest (see `<serial
+type='tcp'>` in Libvirt domain XML format). Perhaps the TCP state vs
+the guest's serial port's state gets out-of-sync if the TCP packet
+times out before the serial port is up and running?
+
+## usb_install feature
+
+### Upgrade should be from an older Tails
+
+Currently we upgrade Tails from the same version, which isn't what's
+said in the manual test suite.
+
+### Disabled scenario: "the boot device has safe access rights"
+
+It turns out our fix for Debian bug #645466 (see
+`config/chroot_local_includes/lib/live/config/998-permissions` and the
+bug: [[bugs/writable_system_disk:_belongs_to_floppy_group]] (now
+reopened)) is not working any more. the boot device (including boot
+partition and any persistent partition) is owned by group `floppy`
+which the `amnesia` user is a member of, enabling it full write
+permissions to it. Is udev doing this at a later stage now?
+
+### Scenario dependencies
+
+An issue with this feature is that scenarios depend on earlier
+scenarios. For instance, "Booting Tails from USB drive ..."  depends
+on "Installing Tails to a prestine USB drive" or one of the, Upgrading
+a Tails USB drive from ..." which in turn depend on "Installing
+...". This is not goo practice, but the alternative would be gigantic
+scenarios that test several logically different scenarios in turn,
+some of the above quoted scenarios concatenated.
+
+## GnuPG encryption feature
+
+All scenarios fail for intrigeri: for some reason "encrypt with
+passphrase" is selected even in the scenario that's supposed to hit
+"k" to select "encrypt with pubkey".
+
+## unsafe browser feature
+
+The unsafe browser should be started from the applications menu,
+or at least in exactly the same way as it is run by the `.desktop`
+(that is, `sudo unsafe-browser`), possibly by extracting that
+command-line from the `.desktop`.
+
+## apt feature
+
+### fails
+
+    Scenario: Install packages using synaptic                              # features/cucumber/apt/apt.feature:29
+      When I run "gksu synaptic"                                           # features/cucumber/step_definitions/common_steps.rb:347
+      And I enter the sudo password in the PolicyKit prompt                # features/cucumber/step_definitions/common_steps.rb:353
+      And I update APT using synaptic                                      # features/cucumber/apt/step_definitions/apt.rb:39
+        The image 'SynapticReloadPrompt.png' did not match in this region. (Sikuli::ImageNotFound)
+        ./features/cucumber/apt/step_definitions/apt.rb:46:in `(root)':in `/^I update APT using synaptic$/'
+        features/cucumber/apt/apt.feature:32:in `And I update APT using synaptic'
+
+### should run synaptic in a more realistic way
+
+Synaptic should be started from the applications menu, or at least we
+should make sure it's started in exactly the same way as it is run by
+the `.desktop` by extracting that command-line from the `.desktop`
+(e.g. on Wheezy, this will be `synaptic-pkexec`).
+
+### should test Tails APT repository sources
+
+* Make sure the Tails repository suite matching the release tag is in
+  APT sources.
+* Make sure the Tails repository unversioned suites (e.g. `testing`,
+  `stable` and `devel`) are *not* in APT sources.
+
+## root access control feature
+
+We're testing "the live user should be able to get administrative
+privileges through PolicyKit" by... running `gksu synaptic`. This is
+wrong, as being a sudoer is orthogonal to being an administrator from
+the PolicyKit point-of-view (IIRC on Debian PolicyKit is configured so
+that members of the `sudo` group are PolicyKit admins, which can be
+confusing, but still, one cannot test PolicyKit privileges by running
+sudo).
+
+`pkexec` to run the action, after using `pkcheck` to verify that the
+action requires to be an admin, perhaps?
+
+## usb install feature
+
+This scenario fails:
+
+    Scenario: Writing files to a read/write-enabled persistent partition # features/cucumber/usb/usb_install.feature:70
+    Given a computer                                                   # features/cucumber/step_definitions/common_steps.rb:63
+    And the computer is setup up to boot from USB drive "A"            # features/cucumber/usb/step_definitions/usb.rb:257
+    And the network is unplugged                                       # features/cucumber/step_definitions/common_steps.rb:102
+    When I start the computer                                          # features/cucumber/step_definitions/common_steps.rb:120
+    And the computer boots Tails                                       # features/cucumber/step_definitions/common_steps.rb:146
+    And Tails is running from USB drive "A"                            # features/cucumber/usb/step_definitions/usb.rb:284
+    And the boot device has safe access rights                         # features/cucumber/usb/step_definitions/usb.rb:295
+      This check is temporarily disabled since it currently always fails
+    And I enable persistence with password "asdf"                      # features/cucumber/usb/step_definitions/usb.rb:216
+    And I log in to a new session                                      # features/cucumber/step_definitions/common_steps.rb:159
+    And persistence has been enabled                                   # features/cucumber/usb/step_definitions/usb.rb:245
+    And I write some files expected to persist                         # features/cucumber/usb/step_definitions/usb.rb:333
+    And I shutdown Tails                                               # features/cucumber/step_definitions/common_steps.rb:376
+      The image 'TailsEmergencyShutdownButton.png' did not match in this region. (Sikuli::ImageNotFound)
+      ./features/cucumber/support/helpers/sikuli_helper.rb:31:in `wait_and_click'
+      ./features/cucumber/step_definitions/common_steps.rb:379:in `(root)':in `/^I shutdown Tails$/'
+      features/cucumber/usb/usb_install.feature:82:in `And I shutdown Tails'
+
+Then all following scenarios fail with `Cannot allocate memory`.
+
+## "the shipped Tails signing key is not outdated" scenario
+
+Why not test "old w.r.t. the one we fetch from Tails' website", but
+what we mainly need to test here (and the reason why this test was
+added to begin with) is that the key (nor any of its subkeys) has
+not expired, and won't expire any time soon.
+
+## MAT check fails
+
+... presumably due to some race condition that might simply be avoided
+if moved to a dedicated feature:
+
+    And I setup a filesystem share containing a sample PDF               # features/cucumber/misc_tests/step_definitions/checks.rb:103
+    And I start the computer                                             # features/cucumber/step_definitions/common_steps.rb:120
+      Call to virDomainCreateWithFlags failed: Unable to read from monitor: Connection reset by peer (Libvirt::Error)
+      ./features/cucumber/support/helpers/vm_helper.rb:359:in `start'
+      ./features/cucumber/step_definitions/common_steps.rb:124:in `(root)':in `/^I start the computer$/'
+      features/cucumber/misc_tests/checks.feature:44:in `And I start the computer'
+
+## ruby tcpdump replacement?
+
+If we want to rid ourselves of running external processes like we do
+with `tcpdump`, we may want to look into:
+
+ * [nfqueue](http://rubydoc.info/gems/nfqueue)
+
+> Just curious: what's the problem with running `tcpdump`? --intrigeri
+
+## fix or remove `--newest-iso`
+
+`run_test_suite` has a `--newest-iso` option that does not work.
+We should fix or remove it.
 
 Resources
 =========
 
- * [[ruby-libvirt api|http://libvirt.org/ruby/api/index.html]]
- * [[sikuli gem api|http://rubydoc.info/gems/sikuli/0.3.0/frames]]
- * [[rvm|http://rvm.io]]
- * [[nfqueue gem api|http://rubydoc.info/gems/nfqueue/1.0.1/frames]]
+ * [ruby-libvirt api](http://libvirt.org/ruby/api/index.html)
+ * [sikuli gem api](http://rubydoc.info/gems/sikuli/0.3.0/frames)

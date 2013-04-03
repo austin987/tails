@@ -1,4 +1,11 @@
+require 'java'
+require 'rubygems'
+require "#{Dir.pwd}/features/support/extra_hooks.rb"
+require 'time'
 require 'rspec'
+
+$time_at_start = Time.now
+$debug = !ENV['DEBUG'].nil?
 
 def fatal_system(str)
   unless system(str)
@@ -23,6 +30,8 @@ END_OF_CHANGELOG
   end
 
   fatal_system "git init --quiet"
+  fatal_system "git config user.email 'tails@boum.org'"
+  fatal_system "git config user.name 'Tails developers'"
   fatal_system "git add debian/changelog"
   fatal_system "git commit --quiet debian/changelog -m 'First release'"
   fatal_system "git branch -M stable"

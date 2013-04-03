@@ -1,3 +1,4 @@
+@source
 Feature: custom APT sources to build branches
   As a Tails developer, when I build Tails, I'd be happy if
   the proper APT sources were automatically picked depending
