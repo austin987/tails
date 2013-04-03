@@ -1,0 +1,32 @@
+Currently we use an ad-hoc `dd`/`parted` combo in the storage helper
+to create disk images with formatted filesystems outside of Tails to
+later be used within Tails (e.g. for the untrusted partitions
+feature). This limits us in many ways:
+
+* the disk can only be backed by a `raw` image, which consumes its
+  full capacity in disk space on the host unlike e.g. `qcow2` images.
+* we can only create filesystems supported by `parted` which are
+  very limited in number.
+* acting directly on the block device (= image) if we want to use
+  `LVM` or `LUKS` will probably get complicated permission-wise as the
+  test suite runs as an unprivileged user. It gets impossible if we'd
+  use image types other than `raw` (unless something like `qemu-nbd`
+  is used to create virtual block devices of the images, which again
+  will require privileges).
+
+This forces us to use `udisks` from inside Tails to query disk
+information in `usb_install.feature`, but this should preferably be
+made from the "outside" (i.e. no inside Tails, which is what we test).
+In the same feature we also have to completely boot Tails *again* in
+the `only the expected files should persist on USB drive ...` step,
+which is really slow, and have proved to be quite error prone when
+changes are made to the steps it uses (one usually only looks for step
+usage in `.feature` files, and forgets to look inside step definition
+files).
+
+[libguestfs](http://libguestfs.org/) supports all of the above and is
+part of the libvirt "family" of tools (and deal with permissions in
+the same, sane way), and it has ruby bindings. It seems like a perfect
+fit.
+
+[[!tag todo/code]]

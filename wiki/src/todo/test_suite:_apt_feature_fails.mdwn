@@ -1,0 +1,20 @@
+It fails with:
+
+    Scenario: Install packages using synaptic                              # features/cucumber/apt/apt.feature:29
+      When I run "gksu synaptic"                                           # features/cucumber/step_definitions/common_steps.rb:347
+      And I enter the sudo password in the PolicyKit prompt                # features/cucumber/step_definitions/common_steps.rb:353
+      And I update APT using synaptic                                      # features/cucumber/apt/step_definitions/apt.rb:39
+        The image 'SynapticReloadPrompt.png' did not match in this region. (Sikuli::ImageNotFound)
+        ./features/cucumber/apt/step_definitions/apt.rb:46:in `(root)':in `/^I update APT using synaptic$/'
+        features/cucumber/apt/apt.feature:32:in `And I update APT using synaptic'
+
+> This should be fixed. Can the bug reporter please retry?
+
+>> Perhaps, but it's now broken earlier:
+
+    Scenario: Install packages using Synaptic                              # features/apt.feature:32
+    When I run "gksu synaptic"                                           # features/step_definitions/common_steps.rb:355
+    And I enter the sudo password in the gksu prompt                     # features/step_definitions/common_steps.rb:361
+      The image 'GksuAuthPrompt.png' did not match in this region. (Sikuli::ImageNotFound)
+      ./features/step_definitions/common_steps.rb:363:in `(root)':in `/^I enter the sudo password in the gksu prompt$/'
+      features/apt.feature:34:in `And I enter the sudo password in the gksu prompt'

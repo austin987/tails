@@ -1,0 +1,21 @@
+Should we check for firewall leaks in every scenario, or at least, in
+every scenario that involves the Internet?
+
+[[!tag todo/discuss]]
+
+Actually, we don't want to do it for all features/scenarios involving
+the Internet (think about e.g. `unsafe_browser.feature`). Instead we
+could:
+
+1. add a tag `@uses_tor` (which is relevant for other things, like
+   [[retrying when Tor fails|test_suite:_retry_when_tor_fails]]) to
+   all features/scenarios that uses Tor.
+
+2. add a `Before('@uses_tor')` hook that starts the sniffer, and a
+   `After('@uses_tor')` hook that check for leaks.
+
+We'd still keep the current firewall leak checker steps for the
+features and scenarios that need more control, like the
+`firewall_leaks.feature`:s anti-tests.
+
+[[!tag todo/code]]
