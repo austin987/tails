@@ -395,6 +395,16 @@ passphrase" is selected even in the scenario that's supposed to hit
 
 > This should be fixed. Can the bug reporter please retry?
 
+>> Perhaps, but it's now broken earlier:
+
+    Scenario: Install packages using Synaptic                              # features/apt.feature:32
+    When I run "gksu synaptic"                                           # features/step_definitions/common_steps.rb:355
+    And I enter the sudo password in the gksu prompt                     # features/step_definitions/common_steps.rb:361
+      The image 'GksuAuthPrompt.png' did not match in this region. (Sikuli::ImageNotFound)
+      ./features/step_definitions/common_steps.rb:363:in `(root)':in `/^I enter the sudo password in the gksu prompt$/'
+      features/apt.feature:34:in `And I enter the sudo password in the gksu prompt'
+
+
 ### should run synaptic in a more realistic way
 
 Synaptic should be started from the applications menu, or at least we
