@@ -501,6 +501,11 @@ tunnel when connecting to a keyserver (read: `hkps://`).
 
 Tools for creating and using encrypted storage containers are also RECOMMENDED.
 
+A password manager SHOULD be included and allow one to store many
+passwords in an encrypted database which is protected by a single key.
+This is meant to encourage users to use strong passwords, and to
+discourage password reuse.
+
 Any cryptographic tool shipped in the PELD SHOULD by default use
 up-to-date parameters with respect to the current commonly agreed best
 practices: digests, ciphers and key sizes.
@@ -733,56 +738,15 @@ kernel security feature than the stock Debian kernel.
 
 ### 3.2.2 Other applications
 
-- [[!debpkg Iceweasel]]: the [Firefox](http://www.firefox.com/) web
-  browser
-  [rebranded](https://secure.wikimedia.org/wikipedia/en/wiki/Iceweasel)
-  by Debian for trademark reasons.
-- [Torbutton](https://www.torproject.org/torbutton/): Iceweasel
-  extension that offers all kind of protection against non-HTML
-  anonymity attacks.
-* [Claws Mail](http://www.claws-mail.org/): email client with
-  user-friendly GnuPG support.
-* [Pidgin](http://www.pidgin.im/): instant messaging software
-  preconfigured with the [OTR](http://www.cypherpunks.ca/otr/index.php)
-  (Off-the-Record Messaging) plugin.
-- [cryptsetup](http://code.google.com/p/cryptsetup/): command-line
-  interface configuring and accessing storage devices
-  encrypted using [LUKS](http://en.wikipedia.org/wiki/LUKS) and
-  dm-crypt.
-- [GNOME](http://www.gnome.org): intuitive and attractive desktop
-  environment. GNOME provides the graphical user interface to access
-  LUKS-encrypted devices.
-- [palimpsest](http://git.gnome.org/cgit/gnome-disk-utility/) from the
-  gnome-disk-utility project allows, among other disk management
-  features, to create LUKS-encrypted devices in a user-friendly
-  interface.
-- [GnuPG](http://gnupg.org): complete and free implementation of the
-  OpenPGP standard.
-- [Seahorse](http://www.gnome.org/projects/seahorse): GNOME front end
-  for GnuPG that eases key management as well as asymmetric encryption
-  and digital signature operations.
-- [onBoard](https://launchpad.net/onboard): virtual keyboard as a
-  countermeasure against hardware keyloggers.
-- [haveged](http://freshmeat.net/projects/haveged) feeds /dev/random
-  using HArdware Volatile Entropy Gathering and Expansion algorithm.
-- [macchanger](http://www.alobbs.com/macchanger): command-line
-  interface to manipulate the MAC address of network interfaces.
-- [secure-delete](http://www.thc.org): tool to securely wipe data from
-  files, swap or memory.
-- [OpenOffice.org](http://www.openoffice.org/),
-  [Gimp](http://www.gimp.org/), [Inkscape](http://www.inkscape.org/),
-  [Scribus](http://www.scribus.net),
-  [Audacity](http://audacity.sourceforge.net/),
-  [Simple Scan](https://launchpad.net/simple-scan) and
-  [SANE](http://www.sane-project.org/): media and text production
-  software.
-- [Exiv2](http://www.exiv2.org): EXIF/IPTC metadata manipulation tool.
+See [[doc/about/features]].
 
 ## 3.3 Internationalization
 
 Tails ships, as is, localization files provided by the installed
 Debian packages. All available iceweasel localization packages
-are installed.
+are installed. Spell checking software and data is installed for the
+set of best supported languages; it is usable at least is Iceweasel,
+OpenOffice.org and gedit.
 
 ## 3.4 Notification of security issues and new Tails release
 
@@ -795,8 +759,9 @@ application is internationalized.
 
 ## 3.5 Feedback
 
-Users can send feedback in several ways to Tails developers. A [[bug
-tracker|/bugs]] and a [[forum|/forum]] are available on the website.
+Users can send feedback in several ways to Tails developers.
+A [[!tails_bug "" desc="bug tracker"]] and a [[forum|/forum]] are
+available on the website.
 Users can also send email to the private [developers mailing
 list](tails@boum.org). A dedicated application called *WhisperBack*
 is also available in every running Tails copy. WhisperBack allows
@@ -811,8 +776,7 @@ OpenPGP public key in case further discussion is needed to address the
 reported issue. WhisperBack's graphical interface fully supports
 internationalization and is ready to be translated.
 
-- [[!tails_gitweb config/chroot_local-packages/]]
-- [[!tails_gitweb config/chroot_local-includes/etc/whisperback/]]
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/whisperback]]
 - [WhisperBack source code](http://git.immerda.ch/?p=whisperback.git)
 
 ## 3.6 Configuration
@@ -869,7 +833,7 @@ configured for completeness.
 
 It is planned to anonymize the network interfaces MAC address in a
 later Tails version. See the related [[design
-document|design/MAC_address]] and [[todo item|todo/macchanger]].
+document|design/MAC_address]] and [[!tails_todo macchanger desc="todo item"]].
 
 ### 3.6.8 Host system swap
 
@@ -909,9 +873,9 @@ Wipe](http://wipetools.tuxfamily.org/nautilus-wipe.html).
 ### 3.6.12 Passwords
 
 Two users are intended to be used for logins: `amnesia` and `root`.
-Both have `amnesia` set as a password, and the `amnesia` user is
-allowed to gain super user privileges, without providing a password,
-using `sudo`.
+None have a password by default; the `amnesia` user is
+allowed to gain super user privileges, using `sudo`, if an
+administrator password is set in tails-greeter.
 
 The PELD specification recommends to prevent executable code to be
 modifiable, even temporarily; Tails does not implement this
@@ -927,18 +891,12 @@ executable code by:
   tasks that need software not shipped in Tails.
 
 Such modifications happen only in RAM, the user will remove the CD/USB
-when done and there are no services allowing logins from the network,
-but still: we are aware of the security risks involved by
-password-less sudo and are [[working on better
-solutions|todo/better_root_access_control]] to enhance security
-without decreasing the user freedom.
+when done and there are no services allowing logins from the network.
 
-As a first step one of the next major Tails releases will stop
-granting `sudo` privileges to the `amnesia` user; a root console will
-be available for two minutes after boot: this leaves the user 2
-minutes to set a root password. Unless this is done before this delay
-has expired, the root console will be disabled, and no root access
-will be possible afterwards.
+As a first step Tails has stopped
+granting `sudo` privileges to the `amnesia` user by default.
+Unless an administrator password is set in tails-greeter,
+no root access is possible afterwards.
 
 ### 3.6.13 Iceweasel
 
@@ -976,7 +934,7 @@ extension that:
 - allows using I2P instead of Tor to visit eepsites (I2P's own hidden
   services look-alike); see [[the design document dedicated to Tails
   use of I2P|I2P]] for details;
-- could help [[fixing Iceweasel's FTP support|todo/FTP_in_Iceweasel]].
+- could help [[!tails_todo FTP_in_Iceweasel desc="fixing Iceweasel's FTP support"]].
 
 Thanks to Torbutton, Iceweasel is configured so that Tails browser
 fingerprint appears uniformly among Torbutton users. Tails enables
@@ -991,7 +949,7 @@ Git history explains
 it all; any other relevant settings may thus be investigated by
 looking in there.
 
-- [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/]]
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/iceweasel]]
 
 ### 3.6.14 Claws Mail
 
@@ -1007,7 +965,7 @@ HTML in order to get rid of a whole class of privacy concerns.
 
 OpenPGP support is provided by the PGP/inline and PGP/MIME plugins.
 
-- [[!tails_gitweb config/chroot_local-includes/etc/skel/.claws-mail/]] is copied to
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.claws-mail]] is copied to
   the user's `$HOME` at boot time
 
 ### 3.6.15 Pidgin
@@ -1026,36 +984,24 @@ with probability 0.05. Pidgin does not leak any informations appart from the
 name when answering to CTCP requests.
 
 - [[!tails_gitweb config/chroot_local-includes/lib/live/config/201-pidgin]]
-- [[!tails_gitweb config/chroot_local-includes/etc/skel/.purple]]
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.purple]]
 
 ### 3.6.16 GnuPG
 
-All GnuPG tools (namely: GPG itself and Seahorse) are
-configured to use the keys.indymedia.org hidden-service keyserver (`hkp://2eghzlv2wwcq7u7y.onion`) since:
+GnuPG tools (namely: GPG itself and Seahorse) are configured to use
+the sks-keyservers pool since it's reliable, well-synchronized with
+the other HKP keyservers pools, and reachable over `hkps://`.
 
-- it is run by privacy-friendly people who go as far as providing a
-  Tor hidden service;
-- it is well-synchronized with the HKP keyservers pool.
-
-GPG is configured to connect to this keyserver
-over a TLS encrypted tunnel (`hkps://`). On the other hand Seahorse
-[[does not support hkps|bugs/seahorse_does_not_support_hkps]] so it is
-using cleartext `hkp://` instead.
-
-When a hkps-capable front end is used, the keyserver is currently
-authenticated thanks to the CaCert X.509 certification authority.
-[[todo/Monkeysphere]]'s `hkpms://` support will be used as soon as
+[[!tails_todo Monkeysphere]]'s `hkpms://` support will be used as soon as
 possible in place of the hierarchical X.509 certification model.
 
 GnuPG is configured to prefer non-outdated digest algorithms such as
 SHA256.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/gpg.conf]]
-- [[!tails_gitweb config/chroot_local-includes/usr/share/amnesia/gconf/apps_seahorse.xml]]
-- [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/profile/user.js]]
-- hkpms [announcement](https://lists.riseup.net/www/arc/monkeysphere/2010-12/msg00001.html)
-- [hkpms in the Monkeysphere issue tracker](https://labs.riseup.net/code/issues/2016)
-- hkpms is [available in Debian experimental](http://packages.debian.org/source/experimental/msva-perl)
+- [[!tails_gitweb config/chroot_local-includes/etc/ssl/certs/sks-keyservers.netCA.pem]]
+- [[!tails_gitweb config/chroot_local-includes/usr/share/amnesia/gconf/desktop_pgp.xml]]
+- hkpms is available in Debian: [[!debpkg msva-perl]]
 
 ### 3.6.17 Persistence feature
 
@@ -1091,7 +1037,7 @@ user|design/virtualization_support]] if it is.
 
 ### 3.7.3 Running Tails inside a Windows session
 
-[[Ongoing work|todo/virtualization_support]] will make it easier to
+[[!tails_todo virtualization_support desc="Ongoing work"]] will make it easier to
 run the CD/USB in a virtual machine inside a Windows session whenever
 native boot is impossible or not desirable. This probably will be
 implemented by shipping a [QEMU](http://www.qemu.org/) or
@@ -1118,8 +1064,8 @@ regressions in Tails, especially anonymity and security related
 ones. It would also make it easier to work on Tails for developers
 who do not own modern powerful hardware.
 
-Research and practical work to setup such an environment [[has slowly
-started|todo/automated_builds_and_tests]]. In the meantime, a [[manual
+Research and practical work to setup such an environment [[!tails_todo
+automated_builds_and_tests desc="has slowly started"]]. In the meantime, a [[manual
 test suite|contribute/release_process/test]] is "run" against Tails
 release candidates images before they are officially published.
 
@@ -1142,12 +1088,12 @@ security-related — bugs.
 
 ## 3.9 Hardware support
 
-Tails ships the latest kernel from [Debian
+Tails generally ships the latest kernel from Debian unstable or [Debian
 Backports](http://backports.debian.org) as a compromise between
-stability and recent hardware support.
+stability and recent hardware support. Recent Intel and AMD microcode
+are included as well.
 
-The x86 hardware architecture is the main supported one but work is
-ongoing to additionally support the PowerPC architecture.
+The x86 hardware architecture is the main supported one.
 
 ## 3.10 Caveats
 
@@ -1159,15 +1105,16 @@ those yet. Outgoing UDP and IPv6 packets are dropped altogether by
 netfilter for this reason. Additionally, IPv6 is disabled
 using sysctl ([[!tails_gitweb chroot_local-includes/etc/sysctl.d/ipv6.conf]]).
 
-Support of arbitrary DNS queries is currently [[missing but
-planned|todo/support_arbitrary_dns_queries]].
+Support of arbitrary DNS queries is only provided by ttdnsd listening
+on 127.0.0.2. ttdnsd has proved too be far too buggy to be inserted in
+the default DNS resolution chain.
 
-Bridge support is [[missing but planned|todo/bridge_support]].
+Improvements to bridge support are [[!tails_todo bridge_support desc="planned"]].
 
 Some tools currently available to command-line users lack the
 integration into Tails and/or graphical user interface that would be
-needed to make them useful to anyone. See the [[macchanger TODO
-page|todo/macchanger]] as an example.
+needed to make them useful to anyone. See the [[!tails_todo
+macchanger desc="macchanger TODO page"]] as an example.
 
 Providing an easy-to-use tool to inspect and cleanup meta-data in
 files (e.g. before they are published on the Web) would help any PELD
@@ -1179,8 +1126,31 @@ for Tails being ready to be translated, actual translation work is
 not done for many languages: we lack trusted translators teams.
 Sharing the Tor translation infrastructure may help.
 
-See the development [[contribute/roadmap]] for more information about
+See the development [[!tails_roadmap]] for more information about
 where Tails is heading to.
+
+# 3.11 Fingerprint
+
+Tails tries to make it as difficult as possible to distinguish Tails
+users from other Tor users.
+
+Iceweasel is configured to match the fingerprint of the Tor Browser
+Bundle and the known differences, if any, are listed in the [[known
+issues|support/known_issues]] page.
+
+However the fact that different extensions are installed in Tails and in
+the TBB surely allows more sophisticated attacks that usual fingerprint
+as returned by tools such as <https://panopticlick.eff.org/> and
+<http://ip-check.info/>. For example, the fact that Adblock is removing
+ads could be analysed.
+
+From the point of view of the local network administrator, Tails is
+almost exclusively generating Tor activity and that is probably quite
+different from other TBB users. We believe this would be hard to avoid.
+Other possible fingerprint issues on the LAN or ISP exist but we believe
+they would be harder to detect. See the discussion on fingerprinting in
+the [[Time sync|contribute/design/Time_syncing]] design document and the
+[[fingerprint|doc/about/fingerprint]] documentation.
 
 # 4 Security analysis
 

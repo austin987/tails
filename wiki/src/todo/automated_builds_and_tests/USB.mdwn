@@ -57,13 +57,10 @@ and `-device usb-storage,drive=DRIVE-ID`. At least with qemu-kvm:
 ### Drawbacks
 
 * **removable property**: by default the emulated USB disk is *not*
-  marked as removable; in qemu and qemu-kvm from Wheezy, `-device` can
-  receive an optional `removable=` property, as documented in
-  `docs/qdev-device-use.txt`; this should be enough (untested), but
-  libvirt apparently has no way to pass this option.
-  - We should ask for this to be implemented.
-  - In the meantime, we *might* be able to use the [Pass-through of
-    arbitrary qemu
-    commands](http://libvirt.org/drvqemu.html#qemucommand) libvirt
-    feature to achieve our goals, depending on how much flexibility
-    the libvirt binding we'll use give to us.
+  marked as removable; qemu and qemu-kvm from Wheezy support emulating
+  removable USB devices, but libvirt has no way to pass this option.
+  - [upstream ticket](https://bugzilla.redhat.com/show_bug.cgi?id=922495)
+  - The qemu part was [discussed on
+    Launchpad](https://bugs.launchpad.net/qemu/+bug/686613) already.
+  - A patch that adds the missing feature is being upstream'd, see
+    [[contribute/release_process/test/setup]] for details.

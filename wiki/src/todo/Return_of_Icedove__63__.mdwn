@@ -1,14 +1,4 @@
-The [[security/IP_address_leak_with_icedove]] can be fixed by setting
-mail.smtpserver.default.hello_argument to "localhost". See [this Tor
-wiki
-entry](https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/TorifyHOWTO/EMail#ExperimentalSuggestionsforpossiblymakingthunderbirdandorclawsstopleakinginfoExperimental)
-for other goodies. By applying those configurations I think both claws
-and icedove comes to an equal level security-wise.
-
-The question is, though, why we would want to migrate back to Icedove
-from claws.
-
-[[!toc levels=2]]
+[[!toc levels=3]]
 
 Rationale
 =========
@@ -16,7 +6,7 @@ Rationale
 Pros
 ----
 
-* Icedove has a *much* easier guide for setting up an email account -- just enter a name, email address and password, and Icedove will check if the domain of it has IMAP (preferred) or POP, and SMPT, and set up an account correctly and automatically, beginning with trying SSL/STARTTLS so no login credentials are unnecessarily leaked. claws is pretty much impossible to setup for normal people, but seeding the config could make that easier, but will it be as easy?
+* Icedove has a *much* easier guide for setting up an email account -- just enter a name, email address and password, and Icedove will check if the domain of it has IMAP (preferred) or POP, and SMTP, and set up an account correctly and automatically, beginning with trying SSL/STARTTLS so no login credentials are unnecessarily leaked. Claws is pretty much impossible to setup for normal people, but seeding the config could make that easier, but will it be as easy?
 * Enigmail has a *much* easier guide for generating a key and setting up GnuPG. The guide starts pretty much automatically and is very informative.
 * Icedove is more widely used, so it's less fingerprintable and perhaps familiar to more users. This (and its larger development team) also likely results in earlier bug fixes.
 
@@ -41,7 +31,7 @@ Design decisions
   has no locale. Our Icedove shall do the same. So we will keep
   `mailnews.reply_header_authorwrote` default value (that is, `%s
   wrote` and will ignore tagnaq's suggestion on this; details: [doc on
-    reply_header_](http://kb.mozillazine.org/Reply_header_settings)
+  reply_header_](http://kb.mozillazine.org/Reply_header_settings)
 
 Things to implement
 ===================
@@ -51,12 +41,20 @@ Infrastructure
 
 * [[!taglink todo/wait]] for a [[Debian package build
   infrastructure|todo/buildd]]: to allow working on this stuff without
-  needing a über-powerful system at $HOME
+  needing a über-powerful system at `$HOME`
 
-torbutton-birdy
----------------
-[torbutton-birdy](https://github.com/ioerror/torbutton-birdy) aims to
-take care of (among other things):
+TorBirdy
+--------
+
+### Plans
+
+[[!taglink todo/wait]] for TorBirdy to be in Debian: [[!debbug 699107]].
+
+### Design
+
+[TorBirdy](https://github.com/ioerror/torbirdy) ([Design
+goals](https://trac.torproject.org/projects/tor/raw-attachment/wiki/doc/TorifyHOWTO/EMail/Thunderbird/Thunderbird%2BTor.pdf))
+aims to take care of (among other things):
 
 * Enhance the privacy of the emails (prevent email header information
   leaks)
@@ -66,24 +64,37 @@ take care of (among other things):
 * Mixmaster/Mixminion integration.
 
 All these seem terrific, so this is something we definitely want to
-include once it's released. Even though it's not mentioned anywhere
-one can assume they will deal with the "Spoof User-Agent" issue below
-so we don't have to deal with it.
+include.
 
-[[!tag todo/wait]]
+Spoof or remove User-Agent header
+---------------------------------
 
-Spoof User-Agent
-----------------
+TorBirdy's design document says they want to omit this header.
 
-[[!tag todo/code]]
-
-1. pretend to be Thunderbird
-2. pretend to be running on the same OS as Firefox Torbutton does
-3. pretend to be the Thunderbird version that was current when the
-   Firefox version advertised by Torbutton itself was
+Next thing to do:
+[[!taglink todo/test]] if the extension does it already.
 
 Modified autoconfig wizard
 --------------------------
+
+This was implemented in the `secure_account_creation` branch in that
+Git repository: `git://labs.riseup.net/tails_icedove.git`.
+
+### Plans
+
+1. [[!taglink todo/research]] why the account creation wizard fails on
+   our custom packages built with this patchset (in
+   `feature/icedove`), in Tails. Lack of MX query support, perhaps?
+1. [[!taglink todo/research]] how to fix the "Re-test fails in the
+   account creation wizard manual configuration window": Icedove
+   ignores proxy settings, tries to connect to the Internet directly,
+   and is forbidden to.
+1. Try to get these patches merged upstream, preferably to Mozilla,
+   but Debian would also be OK. [[!tag todo/upstream]]
+1. [[!taglink todo/wait]] for TorBirdy 0.0.14 that won't disable the
+   wizard when running Tails.
+
+### Design
 
 In order to mitigate the concern's raised by tagnaq about Icedove's
 autoconfig wizard, the following changes has been made to it:
@@ -103,13 +114,31 @@ autoconfig wizard, the following changes has been made to it:
   - Only probe the mail server for safe protocols (SSL/TLS for
     SMTP/IMAP/POP).
 
-These changes are implemented in the `secure_account_creation` branch
-in a git repository that can be cloned as follow:
+To prevent TorBirdy from disabling the autoconfig wizard, we set the
+`vendor.name` Icedove pref to `Tails`.
 
-    git clone git://labs.riseup.net/tails_icedove.git
+Basic configuration and integration
+-----------------------------------
 
-The next step is to at least try to get these patches merged upstream,
-preferably to Mozilla, but Debian would also be ok.
+[[!tag todo/code]]
+
+* Use `127.0.0.1:9061` SOCKS proxy.
+* Don't display the "Adblock Plus installation complete" tab.
+* Don't prompt whether one wants to report usage and performance
+  information to Mozilla.
+* Disable FoxyProxy.
+* Add launcher to the GNOME panel.
+* Enable "Only use secure protocols" by default (one may still
+  uncheck it when needed).
+* Don't check updates for Add-ons.
+* More generally: have a look at our Iceweasel prefs and copy all
+  those that exist and make sense for Icedove.
+* The [[security/IP_address_leak_with_icedove]] can be fixed by
+  setting `mail.smtpserver.default.hello_argument` to "localhost".
+  See [this Tor wiki
+  entry](https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/TorifyHOWTO/EMail#ExperimentalSuggestionsforpossiblymakingthunderbirdandorclawsstopleakinginfoExperimental)
+  for other goodies. By applying those configurations I think both
+  claws and icedove comes to an equal level security-wise.
 
 Things to be checked / researched
 =================================
@@ -118,6 +147,10 @@ Things to be checked / researched
 
 * general privacy/anonymity issues: [tagnaq's
   paper](http://bit.ly/qDZm7C)
+* TorBirdy team patches against Thunderbird (in `patches/*` in
+  TorBirdy Git repository). **Next think to do**:
+  [[!taglink todo/wait]] for the design documentation (asked on
+  2013-01-29 in <8538xk1i8q.fsf@boum.org>)
 
 found answers
 -------------
@@ -132,7 +165,14 @@ found answers
 Misc. TODO
 ==========
 
+* Disable `--no-throw-keyids` (set by default by Torbirdy)?
+  [[!tag todo/discuss]]
 * Adapt [[end-user documentation|doc/anonymous_internet/thunderbird]]
   from Incognito.
+  [[!tag todo/documentation]]
+* Disable by default the indexer from
+  `Preferences → Advanced → General → Enable Global Search and Indexer`.
+  Otherwise pinentry dialogs can appear while checking email in the
+  background.
 
 [[!tag release/2.0]]

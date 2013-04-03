@@ -1,4 +1,4 @@
-[[!meta title="How to release tails-greeter"]]
+[[!meta title="Releasing tails-greeter"]]
 
 *Tails Greeter* is a native Debian package.
 
@@ -19,15 +19,15 @@ Update `debian/changelog`:
 
 Commit the changelog:
 
-    git commit debian/changelog
+    git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
-Build a new Debian package:
+Build a new Debian package (use a Squeeze/i386 chroot):
 
     git-buildpackage
 
 If everything is fine, tag the release and push the changes:
 
-    git-buildpackage --git-tag-only
+    git-buildpackage --git-tag-only --git-sign-tags --git-keyid=$PGP_PUB_KEY
     git push && git push --tags
 
 Add the Debian package to Tails

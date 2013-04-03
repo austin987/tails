@@ -41,7 +41,7 @@ Hence, running I2P should be opt-in, i.e. it should not start per
 default. The user must start I2P manually, either by some easily
 accessible icon on the desktop/in the applications menu, or by
 specifying so during boot (once we make that possible, see the
-[[todo/boot_menu]] TODO page).
+[[!tails_todo boot_menu]] TODO page).
 
 In addition to providing the I2P client, iceweasel should be able to
 handle eepsites (.i2p tld) seamlessly without interfering with any
@@ -78,7 +78,19 @@ network directly, both through TCP and UDP. As per the standard I2P
 configuration, UPnP will try to set up port-forwarding with any
 present firewall so that full performance can be achieved.
 
-[[FoxyProxy|todo/iceweasel_addon_-_FoxyProxy]] has been installed
+The I2P router is configured to run in hidden mode: killing I2P
+ungracefully is bad for the I2P network, and this is most likely
+a prevalent behaviour among Tails users. For I2P to shutdown
+gracefully, it needs up to 11 minutes to let all its current
+participatory tunnels to expire. Killing I2P before that makes peers
+using these participatory tunnels experience timeouts and disconnects,
+which most definitely is bad for the network. Since Tails users are
+likely to shutdown Tails quickly without waiting these 11 minutes,
+this is a good reason to enable hidden mode, that is to disable
+participating in I2P traffic:
+[[!tails_gitweb config/chroot_local-includes/usr/share/i2p/router.config]].
+
+[[!tails_todo iceweasel_addon_-_FoxyProxy desc="FoxyProxy"]] has been installed
 system-wide, and the default iceweasel profile provides with a
 configuration handling the I2P integration. FoxyProxy's whitelist
 filter is used to make sure that the corresponding urls will be
@@ -129,7 +141,7 @@ Things to meditate upon
   SOCKS5. This effectively breaks FTP completely, so there's room for
   adding a pattern above number 4 which matches ftp connections
   (i.e. `^ftp://.*`) and proxies them through some ftp proxy using Tor
-  as its parent proxy. See [[todo/FTP_in_Iceweasel]]. As an addition,
+  as its parent proxy. See [[!tails_todo FTP_in_Iceweasel]]. As an addition,
   at the moment (versions <=0.8) ftp does not work in I2P for
   technical reasons, so no pattern for that is needed.
 
@@ -156,4 +168,4 @@ Things to meditate upon
    
 * Are the patterns used above correct for their intended purposes?
   Does the FoxyProxy setup in any way open up for attacks? See
-  [[todo/iceweasel_addon_-_FoxyProxy]].
+  [[!tails_todo iceweasel_addon_-_FoxyProxy]].

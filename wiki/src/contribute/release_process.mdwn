@@ -1,4 +1,4 @@
-[[!toc levels=1]]
+[[!toc levels=2]]
 
 See the [[release_schedule]].
 
@@ -21,6 +21,12 @@ upgrade our Debian package to the latest release if needed.
 
 Going through the usual [[review and merge
 process|contribute/merge_policy]] is welcome.
+
+Sync' iceweasel preferences with TBB
+------------------------------------
+
+* `general.useragent.override` is not kept up-to-date anymore in
+  Torbutton, so we have to keep in sync manually with TBB's `prefs.js`
 
 Coordinate with Debian security updates
 ---------------------------------------
@@ -47,22 +53,28 @@ Patterns are stored in
 1. Boot Tails
 2. Open *Tools* → *Addons*
 3. Select *Adblock Plus* in extensions
-4. Open *Filter preferences…*
-5. For each filters, click *Actions* and *Update filters*
+4. Open *Preferences* → *Filter preferences…*
+5. For each filters, click *Actions* → *Update filters*
 6. Close Iceweasel
-7. Copy `.mozilla/firefox/default/adblockplus/patterns.ini` to
-   Tails checkout inside
+7. Copy the `.mozilla/firefox/default/adblockplus/patterns.ini` from
+   this Iceweasel instance to the
    `config/chroot_local-includes/etc/iceweasel/profile/adblockplus`
+   directory in the Tails Git checkout.
+8. `git commit -m 'Update AdBlock Plus patterns.' config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini`
 
 upgrade bundled binary Debian packages
 --------------------------------------
 
-That is: make sure the bundles binary Debian packages contain
+That is: make sure the bundled binary Debian packages contain
 up-to-date localization files.
 
 For each bundled Debian package, get updated PO files from the
 Transifex branches of `git://git.torproject.org/translation.git` (e.g.
 `whisperback_completed`). Verify and commit.
+
+Then check the PO files [[using i18nspector|contribute/l10n_tricks]].
+Correct all the errors that are not in the ignored list of
+[[`check_po.sh`|contribute/l10n_tricks]]. Commit the changes if any.
 
 Then see the relevant release processes:
 
@@ -81,8 +93,8 @@ Freeze
 If we are at freeze time (e.g. preparing RC1):
 
 * Merge the `devel` Git branch into `testing`.
-* Merge `devel` APT suite into the `testing` one, as documented on
-  [[contribute/APT_repository#workflow-freeze]].
+* Reset the `testing` APT suite to the state of the `devel` one, as
+  documented on [[contribute/APT_repository#workflow-freeze]].
 
 Changelog
 ---------
@@ -98,24 +110,7 @@ example:
 
 This populates the Changelog with the Git log entries.
 
-Now cleanup some parts of it (semi-)automatically:
-
-	perl -pi'' -e 's/\A  \[ IkiWiki::Plugin::po::change \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* updated PO files\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* \n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ 127\.0\.0\.1 \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ amnesia \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ anonym \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ T\(A\)ILS developers \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ Tails developers \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ Tails \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* Added a comment\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* Added a comment:.*\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* todo\+\+\n//i' debian/changelog
-	perl -pi'' -e 's/\A  \* todo--\n//i' debian/changelog
-
-
-... then launch an editor for the needed cleanup of the result.
+Then, launch an editor for the needed cleanup of the result.
 
 included website
 ----------------
@@ -145,7 +140,8 @@ Also:
 
 ... and remove the `PENDING-FOR-N.M` warnings.
 
-### PO files
+PO files
+--------
 
 Refresh the code PO files with `./refresh-translations`, commit
 the result.
@@ -154,6 +150,10 @@ Refresh the website PO files with `./build-wiki`, and add / commit the ones
 corresponding to pages that were added or changed accordingly to
 changes coming with the new release. This e.g. ensures that the RC
 call for translation points translators to up-to-date PO files.
+
+If preparing a RC, ask on tails-l10n that someone checks the PO files
+of the website [[using `check_po.sh`|contribute/l10n_tricks]], and
+corrects all the errors.
 
 Tag the release in Git
 ======================
@@ -196,7 +196,7 @@ It must then be copied to `config/binary_rootfs/squashfs.sort`. This file is
 automatically used by `lb_binary_rootfs` to tell `mksquashfs` to use the
 provided *sort list*.
 
-(See [[todo/improve_boot_time_on_cd]] for details.)
+(See [[!tails_todo improve_boot_time_on_cd]] for details.)
 
 Build the final image
 ---------------------
@@ -221,7 +221,7 @@ Example:
 Prepare update-description files
 --------------------------------
 
-1. Prepare update-description files (see [[todo/incremental_upgrades]]
+1. Prepare update-description files (see [[!tails_todo incremental_upgrades]]
    for details):
    * update (create if needed) an update-description file for every
      *previous* supported releases (e.g. N-1, N-1~rc2), that describes
@@ -234,7 +234,7 @@ Prepare update-description files
 Testing
 =======
 
-Until [[todo/automated_builds_and_tests]] are setup, some manual testing
+Until [[!tails_todo automated_builds_and_tests]] are setup, some manual testing
 has to be done by the persons preparing the release, in addition to the
 real-world tests done by fellow beta-testers.
 
@@ -336,7 +336,7 @@ shortly, perhaps even soon enough to integrate them before pushing the
 release out officially.
 
 Import the update description files and their detached OpenPGP
-signature into the `updates/` tree. See [[todo/incremental_upgrades]]
+signature into the `updates/` tree. See [[!tails_todo incremental_upgrades]]
 for the file naming conventions.
 
 Then, record the last commit before putting the release out for real:
@@ -398,5 +398,8 @@ Prepare for the next release
    - take note of branches merged into `experimental`, but not into
      `devel` (`git log --merges devel..experimental` may help)
    - `git checkout experimental && git reset --hard devel`
-   - merge additional branches into experimental
+   - hard reset the `experimental` APT suite to the state of the
+     `devel` one
+   - merge additional branches into experimental (both at the Git and
+     APT levels)
    - `git push --force origin experimental`
