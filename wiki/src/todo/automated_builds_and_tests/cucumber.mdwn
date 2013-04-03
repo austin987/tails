@@ -333,9 +333,23 @@ step often fails if the Tails VM has more memory than the default, as the VM
 takes long time to do the memory wiping on shutdown (perticulary in nested VM
 setup).
 
+> Indeed. Let's bump the timeout into "5 minutes per GiB or RAM", like
+> when we wait for the memory to be wiped in in erase_memory.feature.
+> See commit 0867398.
+
 This `Shutdown Tails` step seems to be used only in this feature and the
 memory wiping one. Maybe we could have 2 different ways to shutdown the
 machine, and in the case of this feature, simply use a `@vm.destroy`.
+
+> erase_memory.feature uses "I safely shutdown Tails" (which is a bad
+> name) which doesn't wait for the VM to shutdown, like "I shutdown
+> Tails" does. In that feature we instead wait for the wipe to finish
+> so we can dump the memory.
+
+> In this feature we cannot use `@vm.destroy` since that can result in
+> data loss from the USB drive (perhaps not for after installing or
+> upgrading since the installer syncs, but certainly when read-write
+> persistence is used).
 
 ### Upgrade should be from an older Tails
 
