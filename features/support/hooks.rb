@@ -20,7 +20,6 @@ def delete_all_snapshots
 end
 
 BeforeFeature('@product') do |feature|
-  $tmp_dir = ENV['TEMP_DIR'] || "/tmp/TailsToaster"
   if File.exist?($tmp_dir)
     if !File.directory?($tmp_dir)
       raise "Temporary directory '#{$tmp_dir}' exists but is not a " +
@@ -38,11 +37,7 @@ BeforeFeature('@product') do |feature|
       raise "Cannot create temporary directory: #{e.to_s}"
     end
   end
-  $vm_xml_path = ENV['VM_XML_PATH'] || "#{Dir.pwd}/features/domains"
-  $misc_files_dir = "#{Dir.pwd}/features/misc_files"
-  $keep_snapshots = !ENV['KEEP_SNAPSHOTS'].nil?
   delete_all_snapshots if !$keep_snapshots
-  $tails_iso = ENV['ISO'] || get_newest_iso
   if $tails_iso.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
           "current directory"
@@ -66,8 +61,6 @@ BeforeFeature('@product') do |feature|
   else
     raise "The specified Tails ISO image '#{$tails_iso}' does not exist"
   end
-  $x_display = ENV['DISPLAY']
-  $live_user = "amnesia"
   base = File.basename(feature.file, ".feature").to_s
   $background_snapshot = "#{$tmp_dir}/#{base}_background.state"
 end
