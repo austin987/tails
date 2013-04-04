@@ -13,6 +13,7 @@ $keep_snapshots = !ENV['KEEP_SNAPSHOTS'].nil?
 $x_display = ENV['DISPLAY']
 $debug = !ENV['DEBUG'].nil?
 $time_at_start = Time.now
+$live_user = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
 
 # Static
 $configured_keyserver_hostname = 'hkps.pool.sks-keyservers.net'
@@ -31,4 +32,3 @@ $tor_authorities =
   ]
 # OpenDNS
 $some_dns_server = "208.67.222.222"
-$live_user = "amnesia"
