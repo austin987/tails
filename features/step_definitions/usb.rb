@@ -281,10 +281,16 @@ Then /^Tails is running from USB drive "([^"]+)"$/ do |name|
   assert(boot_device_type == "usb",
          "Got device type '#{boot_device_type}' while expecting 'usb'")
   actual_dev = boot_device
-  expected_dev = @vm.disk_dev(name) + "1"
-  assert(actual_dev == expected_dev,
-         "USB drive '#{name}' has device #{expected_dev}, but we are " +
-         "running from #{actual_dev}")
+  # The boot partition differs between a "normal" install using the
+  # USB installer and isohybrid installations
+  expected_dev_normal = @vm.disk_dev(name) + "1"
+  expected_dev_isohybrid = @vm.disk_dev(name) + "4"
+  assert(actual_dev == expected_dev_normal ||
+         actual_dev == expected_dev_isohybrid,
+         "We are running from device #{actual_dev}, but for USB drive " +
+         "'#{name}' we expected to run from either device " +
+         "#{expected_dev_normal} (when installed via the USB installer) " +
+         "or #{expected_dev_normal} (when installed from an isohybrid)")
 end
 
 Then /^the boot device has safe access rights$/ do
