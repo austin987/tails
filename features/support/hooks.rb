@@ -42,7 +42,7 @@ BeforeFeature('@product') do |feature|
   $misc_files_dir = "#{Dir.pwd}/features/misc_files"
   $keep_snapshots = !ENV['KEEP_SNAPSHOTS'].nil?
   delete_all_snapshots if !$keep_snapshots
-  $tails_iso = ENV['ISO'] || get_last_iso
+  $tails_iso = ENV['ISO'] || get_newest_iso
   if $tails_iso.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
           "current directory"
