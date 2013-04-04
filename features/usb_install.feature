@@ -297,7 +297,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     Then Tails seems to have booted normally
     And Tails is running from USB drive "isohybrid"
 
-  Scenario: Installing Tails to a USB drive containing a Tails isohybrid installation
+  Scenario: Try upgrading but end up installing Tails to a USB drive containing a Tails isohybrid installation
     Given a computer
     And the computer is set to boot from the Tails DVD
     And the network is unplugged
@@ -307,6 +307,9 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And GNOME has started
     And I have closed all annoying notifications
     And I plug USB drive "isohybrid"
+    And I try a "Clone & Upgrade" Tails to USB drive "isohybrid"
+    But I am suggested to do a "Clone & Upgrade"
+    And I kill process "liveusb-creator"
     And I "Clone & Install" Tails to USB drive "isohybrid"
     Then Tails is installed on USB drive "isohybrid"
     But there is no persistence partition on USB drive "isohybrid"

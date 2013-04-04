@@ -33,6 +33,9 @@ Given /^the computer is set to boot from the old Tails DVD$/ do
   @vm.set_cdrom_boot($old_tails_iso)
 end
 
+class ISOHybridUpgradeNotSupported < StandardError
+end
+
 def usb_install_helper(name)
   @screen.wait('USBCreateLiveUSB.png', 10)
 
@@ -50,6 +53,13 @@ def usb_install_helper(name)
 #  # when it should be /dev/sda1
 
   @screen.wait_and_click('USBCreateLiveUSB.png', 10)
+  begin
+    if @screen.find("USBSuggestsInstall.png")
+      raise ISOHybridUpgradeNotSupported
+    end
+  rescue Sikuli::ImageNotFound
+    # we didn't get the warning, so we can proceed with the install
+  end
 #  @screen.hide_cursor
   @screen.wait_and_click('USBCreateLiveUSBNext.png', 10)
 #  @screen.hide_cursor
@@ -70,6 +80,22 @@ When /^I "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   step "I run \"liveusb-creator-launcher\""
   @screen.wait_and_click('USBCloneAndUpgrade.png', 30)
   usb_install_helper(name)
+end
+
+When /^I try a "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
+  next if @skip_steps_while_restoring_background
+  begin
+    step "I \"Clone & Upgrade\" Tails to USB drive \"#{name}\""
+  rescue ISOHybridUpgradeNotSupported
+    # this is what we expect
+  else
+    raise "The USB installer should not succeed"
+  end
+end
+
+When /^I am suggested to do a "Clone & Upgrade"$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.find("USBSuggestsInstall.png")
 end
 
 def shared_iso_dir_on_guest
