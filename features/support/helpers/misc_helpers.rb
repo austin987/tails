@@ -93,6 +93,10 @@ def get_newest_iso
   return sort_isos_by_creation_date.last
 end
 
+def get_oldest_iso
+  return sort_isos_by_creation_date.first
+end
+
 # This command will grab all router IP addresses from the Tor
 # consensus in the VM.
 def get_tor_relays

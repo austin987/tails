@@ -19,6 +19,19 @@ def delete_all_snapshots
   end
 end
 
+BeforeFeature('@old_iso') do
+  if $old_tails_iso.nil?
+    raise "No old Tails ISO image specified, and none could be found in the " +
+          "current directory"
+  end
+  if !File.exist?($old_tails_iso)
+    raise "The specified old Tails ISO image '#{$old_tails_iso}' does not exist"
+  end
+  if $tails_iso == $old_tails_iso
+    raise "The old Tails ISO is the same as the Tails ISO we're testing"
+  end
+end
+
 BeforeFeature('@product') do |feature|
   if File.exist?($tmp_dir)
     if !File.directory?($tmp_dir)

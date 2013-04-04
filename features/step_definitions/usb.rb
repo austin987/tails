@@ -28,6 +28,11 @@ Given /^I unplug USB drive "([^"]+)"$/ do |name|
   @vm.unplug_drive(name)
 end
 
+Given /^the computer is set to boot from the old Tails DVD$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.set_cdrom_boot($old_tails_iso)
+end
+
 def usb_install_helper(name)
   @screen.wait('USBCreateLiveUSB.png', 10)
 
