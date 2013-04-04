@@ -1,18 +1,16 @@
-All scenarios in `features/encryption.feature` fail for intrigeri: for
-some reason "encrypt with passphrase" is selected even in the scenario
-that's supposed to hit "k" to select "encrypt with pubkey".
+All scenarios in `features/encryption.feature` failed on a slow system,
+due to the "sleep" time between "clicking the gpgapplet icon" and
+"sending a keypress that was supposed to be received by the gpgapplet
+contextual menu" was too small.
 
-It also seems that the "k" keypress is passed to the gedit window,
-while it should go to the gpgapplet contextual menu.
-
-Perhaps the following code (`step_definitions/encryption.rb`) is
-a little bit too racy?
+This sleep time was bumped in commit 4eff913, but really, such code is too
+racy:
 
     @screen.click("GpgAppletIconNormal.png")
-    sleep 0.5
+    sleep 2
     @screen.type("k")
 
-On the short run, let's simply [[!taglink todo/test]] if a longer
-sleep time would workaround this, but on the long run it would be good
-to implement something better, like... waiting for the context menu to
-be displayed before sending the "k" keypress. [[!tag todo/code]]
+It would be good to implement something better, like... waiting for
+the context menu to be displayed before sending the "k" keypress.
+
+[[!tag todo/code]]
