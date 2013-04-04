@@ -255,3 +255,32 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
     And the expected persistent files are present in the filesystem
+
+  Scenario: Installing Tails to a USB drive with an MBR partition table but no partitions
+    Given a computer
+    And I create a 2 GiB disk named "mbr"
+    And I create a msdos label on disk "mbr"
+    And the computer is set to boot from the Tails DVD
+    And the network is unplugged
+    And I start the computer
+    When the computer boots Tails
+    And I log in to a new session
+    And GNOME has started
+    And I have closed all annoying notifications
+    And I plug USB drive "mbr"
+    And I "Clone & Install" Tails to USB drive "mbr"
+    Then Tails is installed on USB drive "mbr"
+    But there is no persistence partition on USB drive "mbr"
+    And I unplug USB drive "mbr"
+
+  Scenario: Booting Tails from a USB drive that originally had an MBR partition table but no partitions, without a persistent partition
+    Given a computer
+    And the computer is set to boot from USB drive "mbr"
+    And the network is unplugged
+    When I start the computer
+    And the computer boots Tails
+    And I log in to a new session
+    Then Tails seems to have booted normally
+    And Tails is running from USB drive "mbr"
+    And the boot device has safe access rights
+    And there is no persistence partition on USB drive "mbr"
