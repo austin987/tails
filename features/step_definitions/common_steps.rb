@@ -391,7 +391,7 @@ Given /^process "([^"]+)" is not running$/ do |process|
          "Process '#{process}' is running")
 end
 
-Given /^I have killed the process "([^"]+)"$/ do |process|
+Given /^I kill the process "([^"]+)"$/ do |process|
   next if @skip_steps_while_restoring_background
   @vm.execute("killall #{process}")
   try_for(10, :msg => "Process '#{process}' could not be killed") {
