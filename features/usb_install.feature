@@ -284,3 +284,42 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And Tails is running from USB drive "mbr"
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "mbr"
+
+  Scenario: Cat:ing a Tails isobydrid a USB drive and booting it
+    Given a computer
+    And I create a 2 GiB disk named "isohybrid"
+    And I cat an ISO hybrid of the Tails image to disk "isohybrid"
+    And the computer is set to boot from USB drive "isohybrid"
+    And the network is unplugged
+    When I start the computer
+    And the computer boots Tails
+    And I log in to a new session
+    Then Tails seems to have booted normally
+    And Tails is running from USB drive "isohybrid"
+
+  Scenario: Installing Tails to a USB drive containing a Tails isohybrid installation
+    Given a computer
+    And the computer is set to boot from the Tails DVD
+    And the network is unplugged
+    And I start the computer
+    When the computer boots Tails
+    And I log in to a new session
+    And GNOME has started
+    And I have closed all annoying notifications
+    And I plug USB drive "isohybrid"
+    And I "Clone & Install" Tails to USB drive "isohybrid"
+    Then Tails is installed on USB drive "isohybrid"
+    But there is no persistence partition on USB drive "isohybrid"
+    And I unplug USB drive "isohybrid"
+
+  Scenario: Booting Tails from a USB drive that originally had a Tails isohybrid installation, without a persistent partition
+    Given a computer
+    And the computer is set to boot from USB drive "isohybrid"
+    And the network is unplugged
+    When I start the computer
+    And the computer boots Tails
+    And I log in to a new session
+    Then Tails seems to have booted normally
+    And Tails is running from USB drive "isohybrid"
+    And the boot device has safe access rights
+    And there is no persistence partition on USB drive "isohybrid"
