@@ -103,6 +103,22 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I completely shutdown Tails
     Then only the expected files should persist on USB drive "current"
 
+  Scenario: Deleting a Tails persistent partition
+    Given a computer
+    And the computer is set to boot from USB drive "current"
+    And the network is unplugged
+    And I start the computer
+    And the computer boots Tails
+    And I log in to a new session
+    And Tails is running from USB drive "current"
+    And the boot device has safe access rights
+    And Tails seems to have booted normally
+    And persistence is not enabled
+    But a Tails persistence partition with password "asdf" exists on USB drive "current"
+    And I have closed all annoying notifications
+    When I delete the persistent partition
+    Then there is no persistence partition on USB drive "current"
+
   Scenario: Installing an old version of Tails to a pristine USB drive
     Given a computer
     And the computer is set to boot from the old Tails DVD
@@ -239,19 +255,3 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
     And the expected persistent files are present in the filesystem
-
-  Scenario: Deleting a Tails persistent partition
-    Given a computer
-    And the computer is set to boot from USB drive "current"
-    And the network is unplugged
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And Tails is running from USB drive "current"
-    And the boot device has safe access rights
-    And Tails seems to have booted normally
-    And persistence is not enabled
-    But a Tails persistence partition with password "asdf" exists on USB drive "current"
-    And I have closed all annoying notifications
-    When I delete the persistent partition
-    Then there is no persistence partition on USB drive "current"
