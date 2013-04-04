@@ -1,8 +1,11 @@
+require 'fileutils'
 require "#{Dir.pwd}/features/support/helpers/misc_helpers.rb"
 
 # Dynamic
 $tails_iso = ENV['ISO'] || get_newest_iso
 $old_tails_iso = ENV['OLD_ISO'] || get_oldest_iso
+puts "Testing ISO image: #{File.basename($tails_iso)}"
+puts "Using old ISO image: #{File.basename($old_tails_iso)}"
 $tmp_dir = ENV['TEMP_DIR'] || "/tmp/TailsToaster"
 $vm_xml_path = ENV['VM_XML_PATH'] || "#{Dir.pwd}/features/domains"
 $misc_files_dir = "#{Dir.pwd}/features/misc_files"
