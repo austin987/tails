@@ -89,6 +89,7 @@ Given /^I plug ([[:alpha:]]+) drive "([^"]+)"$/ do |bus, name|
 end
 
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
+  next if @skip_steps_while_restoring_background
   if @vm.is_running?
     try_for(10, :msg => "Drive '#{name}' is not detected by Tails") {
       @vm.disk_detected?(name)
@@ -192,6 +193,7 @@ Given /^I set sudo password "([^"]*)"$/ do |password|
 end
 
 Given /^Tails Greeter has dealt with the sudo password$/ do
+  next if @skip_steps_while_restoring_background
   f1 = "/etc/sudoers.d/tails-greeter"
   f2 = "#{f1}-no-password-lecture"
   try_for(20) {
@@ -364,6 +366,7 @@ Given /^I enter the sudo password in the gksu prompt$/ do
 end
 
 Given /^I enter the sudo password in the PolicyKit prompt$/ do
+  next if @skip_steps_while_restoring_background
   step "I enter the \"#{@sudo_password}\" password in the PolicyKit prompt"
 end
 
