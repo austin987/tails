@@ -1,0 +1,35 @@
+As [[pointed out in the
+forum|/forum/Wiping_Flash_Media:_Problem_in_TAILS_Doc/]], former
+versions of our [[documentation on secure
+deletion|doc/encryption_and_privacy/secure_deletion]], was wrongly
+stating that *overwriting twice the available diskspace [on a USB or
+solid-state drive] is usually, but not always, sufficient to securely
+clean the drive.*
+
+This basically says that in order to securely delete a file from a USB
+you could delete the file and then the run "Wipe available diskspace"
+even if you have other files on the volume. Which is wrong according to
+the paper by [[Wei & al.|http://www.usenix.org/events/fast11/tech/full_papers/Wei.pdf]].
+
+We could propose to wipe the entire device and then reformat it.  But
+`srm` doesn't seem to run on block devices: I get "Warning: /dev/sdc is
+not a regular file, rename/unlink only!". On the other hand `shred`
+seems to work as usual. It is included in Tails but doesn't have a
+graphical interface.
+
+So we cannot document a GUI procedure to truly wipe a USB stick at the
+moment.
+
+> The documentation was fixed in June.
+
+Now that the plans for nautilus-wipe to be based on diskscrub are
+abandoned, the most sensible way to fix this would probably be:
+
+1. add an option to wipe with 3 random passes, rather than a mere zero
+   one, to the [udisks Format
+   method](http://udisks.freedesktop.org/docs/latest/gdbus-org.freedesktop.UDisks2.Block.html#gdbus-method-org-freedesktop-UDisks2-Block.Format)
+2. add access to this feature from Palimpsest, which seems a more
+   appropriate place to trigger destructive operations at the block
+   device level than a Nautilus extension
+
+**Next thing to do**: report this as wishlist tickets [[!taglink todo/upstream]].

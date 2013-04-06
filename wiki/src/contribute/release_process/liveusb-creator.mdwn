@@ -1,4 +1,4 @@
-[[!meta title="Release liveusb-creator"]]
+[[!meta title="Releasing liveusb-creator"]]
 
 [[!toc levels=1]]
 
@@ -33,15 +33,15 @@ Update `debian/changelog`:
 
 Commit:
 
-    git commit debian/changelog
+    git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
-Build a new Debian package:
+Build a new Debian package (use a Squeeze/i386 chroot):
 
     git-buildpackage
 
 Add a signed tag to the Git repository:
 
-    git-buildpackage --git-tag-only
+    git-buildpackage --git-tag-only --git-sign-tags
 
 Push the changes:
 
