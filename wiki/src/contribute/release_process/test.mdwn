@@ -42,17 +42,74 @@ Check the output for:
 
 Check the image size has not changed much since the last release.
 
-# Cucumber
+# Automated test suite
 
-	$ sudo apt-get install cucumber ruby-rspec
-	$ cd $TAILS_GIT_WORKDIR
-	$ cucumber
+Our long term goal is to eliminate the manual test suite (except the
+parts which require real hardware) and have the automated test suite
+run all our tests. It's design, and how to write new tests, are
+documented on a [[dedicated page|test/automated_tests]].
+
+## Usage
+
+Use the `run_test_suite` script found in the Tails source root to run
+all automated Cucumber test features. See the [[setup
+documentation|test/setup]] in case you don't have a testing
+environment yet.
+
+It's important to note that some features only depend on the Tails
+sources, and some on the actual product of the sources, i.e. a Tails
+ISO image. These features are tagged `@source` and `@product`,
+respectively. The arguments passed to `run_test_suite` may only affect
+one of these types of features and not the other.
+
+A typical example run of a few `@product` features could be:
+
+    ./run_test_suite --view --capture test-0.17.webm \
+        --iso path/to/tails.iso \
+        features/apt.feature features/erase_memory.feature
+
+which will test only the `iceweasel` and `erase_memory` features (if
+no feature paths are given, all features in `features/cucumber` will
+be tested) of the given ISO image `tails.iso` while showing the test
+session in a VNC viewer (`--view`) and also capturing it into a video
+called `test-0.17.web` (`--capture`). Similarly, to test a `@source`
+feature, we'd simply run something like:
+
+    ./run_test_suite features/build.feature
+
+For full instructions, see its `--help`.
+
+Note: since the test suite itself uses `virt-viewer` to interact with
+the Tails guest you cannot use it as that will steal the session from
+the test suite, leaving it with a blank screen.
+
+## Automated test suite migration progress
+
+In the manual feature tests below we "tag" tests the following way to
+keep track of their progress of being replaced by a corresponding test
+in the automated test suite:
+
+* Not tag means that an appriopriate automated test is not implemented
+  at all.
+* `[needs-fix]` means that there's a partial implementation of an
+  automated test, or that it has some issue that needs a fix.
+* `[needs-review]` means that an automated test is implemented and
+  that someone else than the author should review it for correctness.
+* `[needs-pass]` means that an automated test is implemented and that
+  someone else than the author must run it and see it pass.
+* `[can't-automate]` means that these tests cannot possibly be
+  implemented in an automated way and will require manual testing.
+
+In the tags we also refer to the name of the `.feature` file(s), and
+for `[needs-fix]` we link to the corresponding TODO item (XXX: will be
+done once merged into the `master` branch).
+
+Tests which are completely implemented, reviewed and passed are
+removed from below. Such tests are considered to be covered by the
+automated test suite and do not have to be manually tested any more.
 
 # Iceweasel
 
-* is web browsing really torified?
-  - <https://check.torproject.org/>
-  - <http://monip.org/>
 * does the exposed User-Agent match the TBB's one?
   (connect to a website you can check the access logs for)
 * Running `getTorbuttonUserAgent` should produce the useragent set by the
@@ -62,8 +119,6 @@ Check the image size has not changed much since the last release.
 * Browsing (by hostname) a FTP server on the Internet should be possible, and
   downloading a file should be possible (once [[!tails_todo fix Internet FTP support]]
   is fixed)
-* Entering `about:plugins` in the location bar should say no plugin is
-  installed.
 * Does playing HTML5 videos work? In particular, (due to its popularity)
   do [youtube](http://www.youtube.com) videos work (once
   [[!tails_todo easier YouTube]] is fixed -- currently object unblocking in
@@ -112,7 +167,9 @@ Check the image size has not changed much since the last release.
   1. Check from time to time with `netstat` that the only outgoing
      direct network connections go to the configured bridge(s).
 * Verify that all destinations reached from an intensive Tails session
-  are tor routers or authorities:
+  are tor routers or
+  authorities: `[needs-fix: many scenarios]` (see "check firewall
+  leaks in every scenario" on the ticket).
   1. Boot Tails without the network in.
   1. Start dumping your whole session's network activity with `sudo
      tcpdump -n -i any -w dump` (or better, do the dump on another machine,
@@ -195,6 +252,7 @@ features properly do their work; second, our `torrc` sets the right
   LVM. The DVD/USB ramdisk must use the Tails system found on the
   DVD/USB, and not the one found on the hard disk. (Also check that
   without Tails, that other Live system boots.)
+  `[needs-review, needs-pass: untrusted_partitions]`
 * is a persistence volume on a local hard-disk partition used?
 
 # Claws
@@ -226,23 +284,14 @@ features properly do their work; second, our `torrc` sets the right
 * can a bug report e-mail be sent?
 * is it correctly encrypted?
 
-# GnuPG
-
-Those tests shall be run using GnuPG from the command-line and through
-the Seahorse GUI:
-
-* key search/receive: torified? going to the configured keyserver?
- - `gpg --search` tells what server it is connecting to
- - the connection to the configured keyserver must appear in Vidalia's
-   list of connections
- - if you run a keyserver, have a look there.
-
 # Monkeysphere
 
 * Monkeysphere validation agent key search/receive: torified? uses
   configured keyserver?
 
 # Time
+
+`[needs-review, needs-pass]`
 
 1. Boot Tails without a network cable connected (i.e. no network on boot).
 2. set the time to an obviously wrong one:
@@ -257,8 +306,9 @@ correctly.
 # erase memory on shutdown
 
 - check that `memlockd` is running
-- check that `udev-watchdog` is running and monitors the right
-  device:
+  `[needs-review, needs-pass: erase_memory]`
+- check that `udev-watchdog` is running and monitors the right device:
+  `[needs-fix: erase_memory: check that it's monitoring the right device]`
   * on USB
   * on DVD
 - After booting from DVD, remove Tails boot medium and check that the
@@ -268,17 +318,18 @@ correctly.
 Testing that the needed files are really mapped in memory, and the
 erasing process actually works, involves a more complicated
 process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
+`[needs-review, needs-pass: erase_memory]`
 
 # Root access control
 
 * Check you can login as root neither with the `amnesia` password nor
   with the `live` one.
-* Boot Tails without setting a password and check you can't sudo nor get
-  PolicyKit administrative privileges (e.g. change internal hard
-  disks in the Disk Utility), neither with the `amnesia` password nor
-  with the `live` one.
-* Boot Tails with a password and check you can sudo and get PolicyKit
-  administrative privileges.
+* Boot Tails without setting a password and check you can't get
+  PolicyKit administrative privileges (e.g. run a command with pkexec),
+  neither with the `amnesia` password nor
+  with the `live` one. `[needs-review: root_access_control]`
+* Boot Tails with a password and check you can get PolicyKit
+  administrative privileges. `[needs-review: root_access_control]`
 * Check that the $TAILS_USER_PASSWORD variable, if still existing in the system
   environment after the boot has finished, does not contain the clear text
   password.
@@ -286,8 +337,8 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 # Virtualization support
 
 * `modinfo vboxguest` should work when booted on the 686-pae kernel
-* test in VirtualBox
-* test in qemu/kvm
+  `[needs-review, needs-pass: checks]`
+* test in VirtualBox `[can't-automate?]`
 
 # I2P
 
@@ -322,8 +373,6 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # APT
 
-* Make sure APT is configured to point to ftp.us.debian.org.
-* Doing an apt-get update and installing random packages.
 * Make sure the Tails repository suite matching the release tag is in
   APT sources.
 * Make sure the Tails repository unversioned suites (e.g. `testing`,
@@ -334,29 +383,31 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 After each of the following tests:
 
 * The installed or upgraded Tails medium shall be successfully booted.
+  `[needs-review, needs-pass: usb_install]`
 * The installed or upgraded Tails medium shall have the "emergency
   shutdown on boot medium removal" feature working: remove Tails boot
   medium and check that the memory erasure process is started
   (`Loading new kernel`, at least).
-* The TailsData partition must survive upgrades.
+* The TailsData partition must survive
+  upgrades. `[needs-review, needs-pass: usb_install]`
 
 Tests to run:
 
 * Test "Clone & Install":
-  - from DVD.
-  - from USB.
+  - from DVD. `[needs-review: usb_install]`
+  - from USB. `[needs-review, needs-pass: usb_install]`
   - onto a USB stick that has a MBR partition table, and no
     partition at all (regression test)
   - onto a USB stick that already has an old-fashioned hybrid cat'd
     Tails on it
 * Test "Clone & Upgrade" (onto a USB install containing an older
   Tails):
+  `[needs-fix: usb_install: to-be-upgraded USB drive must contain an old Tails]`
   - from DVD.
   - from USB.
   - onto a USB stick that already has a old-fashioned cat'd hybrid
     Tails on it: should warn this action is not supported, and direct
     the user to the "Clone & Install" operation mode.
-* Test "Upgrade from ISO".
 
 # Incremental updates
 
@@ -384,62 +435,45 @@ stuff: **FIXME**.
 
 # Persistence
 
-* Activate persistence on a Tails USB install with all presets
-  on, and a few custom directories.
+* Activate persistence on a Tails USB install with all presets on, and
+  a few custom directories. `[needs-review, needs-pass: usb_install]`
 * Reboot, enable persistence. Verify via `mount` that each preset has
   a mount that seem correct (e.g. "Pidgin preset =>
-  `/home/amnesia/.purple` has something mounted on it").
+  `/home/amnesia/.purple` has something mounted on
+  it"). `[needs-review, needs-pass: usb_install]`
 * Try read-write mode. Make sure that persistent files are writeable,
-  and that changes do survive reboot.
+  and that changes do survive
+  reboot. `[needs-review, needs-pass: usb_install]`
 * Try read-only mode. Make sure that persistent files are writeable,
-  but that no changes survive reboot.
+  but that no changes survive
+  reboot. `[needs-review, needs-pass: usb_install]`
 * Turn off some persistence presets, reboot, and make sure they are
   not activated.
 
 # Windows Camouflage
 
-Enable Windows XP camouflage via the Tails Greeter checkbox and verify
-that the theme resembles Windows XP, including:
+Enable Windows XP camouflage via the Tails Greeter checkbox and:
 
-* Windows XP desktop layout:
-  - Only one desktop panel, located at the bottom of the screen.
-  - All panel menus are merged into one, using the Start icon.
-  - Panel layout (left-to-right): Start button, application launchers,
-    window list, notification area, clock.
-* Windows XP "Luna" theme (blue + orange) for windows decorations.
-* [Bliss](http://en.wikipedia.org/wiki/Bliss_(image)) desktop
-  background picture.
-* Windows equivalents for application launcher icons:
-  - Iceweasel -> Internet Explorer
-  - Claws Mail -> Outlook
-  - Pidgin -> MSN Messenger
 * gpgApplet's context menu should look readable
+* iceweasel should use a Internet Explorer theme
 
 # Unsafe Web Browser
 
-* On start, check that:
-  - it requires launch verification.
-  - a start notification is shown.
-  - there's an error if no DNS server was configured in NetworkManager
-    (e.g. if there's no network connection).
+* On start, if no DNS server was configured in NetworkManager
+  (e.g. if there's no network connection), there must be an error.
 * Once started, check that:
-  - it has a scary red theme (except when Windows Camouflage is
-    activated).
-  - the start page makes it clear that this is the Unsafe Web Browser.
+  - it has no scary red theme when Windows Camouflage is activated.
   - the iceweasel instance runs as the `clearnet` user.
-  - it has no proxy configured and gets a direct Internet connection.
-  - configuring any of Tor's SocksPorts or polipo as a proxy
-    shouldn't work (should result in "The proxy server is refusing
-    connections")
+  - it has no proxy configured.
   - no extensions are installed.
   - there are no bookmarks.
-  - the default search engine is Wikipedia.
 * On exit, check that:
-  - a shutdown notification is shown.
   - make sure that its chroot gets properly teared down on exit (there
     should be nothing mounted inside `/var/lib/unsafe-browser`).
 
 # Real (non-VM) hardware
+
+`[can't-automate]`
 
 * Boot on bare-metal on USB.
 * Boot on bare-metal on DVD.
@@ -471,24 +505,13 @@ language.
 
 # Misc
 
-* Check that there are no unexpected applications listening to external
-  connections with `sudo netstat -ltupn` (everything should be
-  `127.0.0.1` (IPv4) or `::1` (IPv6)). Ignore:
-  - `cupsd`, which listens on `0.0.0.0:631` to detect network printers.
-  - `dhclient`, which listens on `0.0.0.0:68`.
 * Check that all seems well during init (mostly that all services
   start without errors), and that dmesg seems ok.
-* Boot without network connection, and then plug it in after
-  some arbitrary time; Tor and Vidalia must be autostarted and end up
-  in working state.
-* Try to start with the `truecrypt` option on boot, see if it can be found in
-  the *Applications* → *Accessories* menu and that it runs correctly.
-* The `amnesia` user must be part of the following groups:
-  `amnesia audio cdrom dialout floppy video plugdev netdev fuse debian-tor scanner lp lpadmin vboxsf`
-* MAT should be able to clean a PDF file.
+* MAT should be able to clean a PDF file. `[needs-fix]` (see ticket)
 * Browsing (by hostname) a FTP server on the Internet should be
   possible using GNOME's *Connect to server* feature
   (once [[!tails_todo fix Internet FTP support]] is fixed)
 * The Tails signing key in `/usr/share/keyrings/tails-keyring.gpg`
   should be up-to-date (that is, neither it nor one its subkeys must
-  have expired, or be about to expire any time soon).
+  have expired, or be about to expire any time
+  soon). `[needs-fix]` (see ticket)

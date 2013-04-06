@@ -1,0 +1,45 @@
+When /^the "([^"]*)" OpenPGP key is not in the live user's public keyring$/ do |keyid|
+  next if @skip_steps_while_restoring_background
+  assert(!@vm.execute("gpg --batch --list-keys '#{keyid}'", $live_user).success?,
+         "The '#{keyid}' key is in the live user's public keyring.")
+end
+
+When /^I fetch the "([^"]*)" OpenPGP key using the GnuPG CLI$/ do |keyid|
+  next if @skip_steps_while_restoring_background
+  @gnupg_recv_key_res = @vm.execute(
+    "gpg --batch --recv-key '#{keyid}'",
+    $live_user)
+end
+
+When /^the GnuPG fetch is successful$/ do
+  next if @skip_steps_while_restoring_background
+  assert(@gnupg_recv_key_res.success?,
+         "gpg keyserver fetch failed:\n#{@gnupg_recv_key_res.stderr}")
+end
+
+When /^GnuPG uses the configured keyserver$/ do
+  next if @skip_steps_while_restoring_background
+  assert(@gnupg_recv_key_res.stderr[$configured_keyserver_hostname],
+         "GnuPG's stderr did not mention keyserver #{$configured_keyserver_hostname}")
+end
+
+When /^the "([^"]*)" key is in the live user's public keyring after at most (\d+) seconds$/ do |keyid, delay|
+  next if @skip_steps_while_restoring_background
+  try_for(delay.to_f, :msg => "The '#{keyid}' key is not in the live user's public keyring") {
+    @vm.execute("gpg --batch --list-keys '#{keyid}'", $live_user).success?
+  }
+end
+
+When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|
+  step "I run \"seahorse\""
+  @screen.wait("SeahorseWindow.png", 10)
+  @screen.type("r", Sikuli::KEY_ALT) # Menu: "Remote" ->
+  @screen.type("f")                  # "Find Remote Keys...".
+  @screen.wait("SeahorseFindKeysWindow.png", 10)
+  # Seahorse doesn't seem to support searching for fingerprints
+  @screen.type(keyid + Sikuli::KEY_RETURN)
+  @screen.wait("SeahorseFoundKeyResult.png", 5*60)
+  @screen.type(Sikuli::DOWN_ARROW)   # Select first item in result menu
+  @screen.type("f", Sikuli::KEY_ALT) # Menu: "File" ->
+  @screen.type("i")                  # "Import"
+end

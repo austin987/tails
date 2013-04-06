@@ -1,16 +1,3 @@
-Tails is affected by [[!debbug 645466]].
+See [[todo/make_system_disk_read-only]].
 
-In short: the system USB disk and partition block devices (e.g.
-`/dev/sdb*`) are writable by the default Live user, because they
-belong to the `floppy` group.
-
-> Does it mean you guys didn't even audit user permissions? Oh wow...
-
-This was fixed in Tails 0.12 (see
-`config/chroot_local_includes/lib/live/config/998-permissions`) but
-the bug has since reappeared so the bug is now reopened. Our `udev`
-packages hasn't been updated since, but perhaps the `udev` init script
-runs (or re-runs?) after `live-config` wheras it previously only ran
-before?
-
-See branch `bugfix/writable_boot_media` for a new fix using `udev`.
+[[done]]
