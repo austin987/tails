@@ -1,31 +1,29 @@
 [[!meta title="Installing onto a USB stick, for Mac"]]
 
-[[!toc levels=1]]
+**Warning!** If at some point you are not sure about a device name it is
+recommended to stop proceeding otherwise **you might risk overwriting any hard
+drive on the system**. Proceed at your own discretion! We admit that this method
+is pretty crude at the moment and we are working on a more intuitive one.
 
-<h2 class="bullet-number-one">Setup rEFInd</h2>
+### Step 1: Setup rEFInd.
 
-rEFInd will replace your original bootloader. If something goes wrong,
-this could cause your Mac to not boot. It is recommended to create a full backup and know how to 
-restore. See Apple's instructions [here](https://support.apple.com/kb/HT1427).
+**Warning!** rEFInd will replace your original bootloader. If something goes wrong,
+this could cause your mac to not boot. Be sure to create a full backup and know how to 
+restore. See apple's instructions [here](https://support.apple.com/kb/HT1427).
 
 You need to have [rEFInd](http://sourceforge.net/projects/refind/) installed and
-working on the Mac.
+working on the mac.
 
 If you need help with rEFInd, look at [their installation
 documentation](http://www.rodsbooks.com/refind/installing.html).
 
-<a id="step_2"></a>
-
-<h2 class="bullet-number-two">Find out the device name of the USB stick</h2>
-
-**Warning!** If you are not sure about the device name you should not proceed or **you risk
-overwriting any hard drive on the system**.
+### Step 2: Find out the device name of the destination USB stick.
 
 The device name should be something like `/dev/disk1`, `/dev/disk2`, etc.
 
 If you're not sure about the precise device name, do the following.
 
-Unplug the USB stick.
+Unplug the destination USB stick.
 
 Open Terminal from *Applications* → *Utilities* → *Terminal.app*:
 
@@ -43,13 +41,11 @@ Plug back the destination USB stick and run the same command as before:
 
 A new device should appear in the list of storage devices.
 Check that the size of the device corresponds to your destination USB drive.
-On this screenshot the USB drive is 4.0 GB and the location is /dev/disk1:
+In my case the USB drive is 4.0 GB and the location is /dev/disk1:
 
 [[!img mac/diskUtil_list_USB_shows_small.png link=no alt="A new storage device appeared at the end of the list"]]
 
-<a id="step_3"></a>
-
-<h2 class="bullet-number-three">Unmount the USB drive</h2>
+### Step 3: Unmount the USB drive.
 
 In the terminal window issue the following command, again replacing the destination
 with the device name found in step 1.
@@ -58,23 +54,26 @@ with the device name found in step 1.
 
 [[!img mac/diskUtil_unmountDisk_small.png link=no alt="Unmounting the USB drive"]]
 
-<h2 class="bullet-number-four">Get isohybrid.pl</h2>
+### Step 4: Get isohybrid.pl
 
-4a - You need to modify the Tails ISO before installing it onto a USB stick.
-     Download [syslinux](http://ftp.debian.org/debian/pool/main/s/syslinux/syslinux_4.02+dfsg.orig.tar.gz).
-4b - Extract (double click) the package and copy isohybrid.pl from the /utils folder to your Desktop.
-4c - Copy the tails image (tails-i386-0.17.1.iso) to your Desktop.
+Tails uses a non-standard ISO which will need to be modified before it will boot from the USB drive.
+Download [the syslinux source package](http://ftp.de.debian.org/debian/pool/main/s/syslinux/syslinux_4.02+dfsg.orig.tar.gz).
+Extract (double click) the package and copy isohybrid.pl from the /utils folder to your Desktop.
+Copy the tails image (tails-i386-0.17.1.iso) to your Desktop.
 
 Now in your terminal window change directories into your Desktop
 
 	cd Desktop
 
+[[!img mac/cd_Desktop.png link=no alt="cd into Desktop"]]
+
 Now run the isohybrid.pl to prepare the tails image.
 
-	perl isohybrid.pl tails-i386-0.17.1.iso
+	perl isohybrid.pl tails-i386-0.17.1.iso --entry 4 --type 0x1c
 
-Press enter and wait
-<h2 class="bullet-number-five">Do the copy from the terminal.</h2>
+[[!img mac/perl_isohybrid.png link=no alt="run isohybrid"]]
+
+### Step 5: Do the copy from the terminal.
 
 In the terminal window issue the following command, replacing `[tails.iso]` by the path to the ISO
 image that you want to copy and `[destination]` by the device name found in step
@@ -92,24 +91,22 @@ You should get something like this:
 
     cat tails-i386-0.17.1.iso > /dev/disk1 && sync
 
-Press enter and wait
+[[!img mac/cat_copy_to_USB.png link=0 alt="Copying the tails.iso to the USB drive"]]
+
+### Step 6: Press enter and wait.
+
 If you don't see any error message, Tails is being copied onto the key. The
 whole process might take a while, generally a few minutes. Be patient…
 
-<h2 class="bullet-number-six">Reboot your Mac</h2>
+### Step 7:
 
-
-Wait for the rEFInd menu and select the USB drive to boot.
+Reboot your Mac, wait for the rEFInd menu and select the USB drive to boot.
 
 Notes
 =====
 
-This method was tested on a MacBookPro Model A1150 (year 2006)
-running OSX 10.6.8
-
 Note that Tails developers are in general not very knowledgeable about
 Mac. Any additional information is welcome.
-
 
 An alternative method was suggested:
 
