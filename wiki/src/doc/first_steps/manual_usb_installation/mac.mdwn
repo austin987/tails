@@ -1,12 +1,14 @@
 [[!meta title="Installing onto a USB stick, for Mac"]]
 
+[[!inline pages="doc/first_steps/manual_usb_installation.intro" raw="yes"]]
+
 [[!toc levels=1]]
 
 <h2 class="bullet-number-one">Setup rEFInd</h2>
 
 rEFInd will replace your original bootloader. If something goes wrong,
 this could cause your Mac to not boot. It is recommended to create a full backup and know how to 
-restore. See Apple's instructions [here](https://support.apple.com/kb/HT1427).
+restore. See Apple's instructions [there](https://support.apple.com/kb/HT1427).
 
 You need to have [rEFInd](http://sourceforge.net/projects/refind/) installed and
 working on the Mac.
@@ -37,12 +39,13 @@ This will list all the current storage devices:
 
 [[!img mac/diskUtil_list_empty_small.png link=no alt="Empty list"]]
 
-Plug back the destination USB stick and run the same command as before:
+Plug back the USB stick and run the same command as before:
 
 	 diskUtil list
 
 A new device should appear in the list of storage devices.
-Check that the size of the device corresponds to your destination USB drive.
+Check that the description of the device corresponds to your USB
+stick, its brand, its size, etc. on the right side of the screen.
 On this screenshot the USB drive is 4.0 GB and the location is /dev/disk1:
 
 [[!img mac/diskUtil_list_USB_shows_small.png link=no alt="A new storage device appeared at the end of the list"]]
@@ -51,21 +54,20 @@ On this screenshot the USB drive is 4.0 GB and the location is /dev/disk1:
 
 <h2 class="bullet-number-three">Unmount the USB drive</h2>
 
-In the terminal window issue the following command, again replacing the destination
-with the device name found in step 1.
+In the Terminal window issue the following command, replacing `[device]`
+with the device name found in step 2.
 
-     diskUtil unmountDisk [destination]
+     diskUtil unmountDisk [device]
 
-[[!img mac/diskUtil_unmountDisk_small.png link=no alt="Unmounting the USB drive"]]
 
 <h2 class="bullet-number-four">Get isohybrid.pl</h2>
 
-4a - You need to modify the Tails ISO before installing it onto a USB stick.
-     Download [syslinux](http://ftp.debian.org/debian/pool/main/s/syslinux/syslinux_4.02+dfsg.orig.tar.gz).
-4b - Extract (double click) the package and copy isohybrid.pl from the /utils folder to your Desktop.
-4c - Copy the tails image (tails-i386-0.17.1.iso) to your Desktop.
+'1. You need to modify the Tails ISO before installing it onto a USB stick.
+     Download [syslinux](http://ftp.debian.org/debian/pool/main/s/syslinux/syslinux_4.02+dfsg.orig.tar.gz).'
+'1. Extract (double click) the package and copy isohybrid.pl from the /utils folder to your Desktop.'
+'1. - Copy the tails image (tails-i386-0.17.1.iso) to your Desktop.'
 
-Now in your terminal window change directories into your Desktop
+Now in your Terminal window change directories into your Desktop
 
 	cd Desktop
 
@@ -73,28 +75,38 @@ Now run the isohybrid.pl to prepare the tails image.
 
 	perl isohybrid.pl tails-i386-0.17.1.iso
 
-Press enter and wait
-<h2 class="bullet-number-five">Do the copy from the terminal.</h2>
+If you are not sure about the path to the ISO image or if you get a "No such
+file or directory" error, you can first type `perl isohybrid.pl`, followed by a space, and
+then drag and drop the icon of the ISO image from a file browser onto the
+Terminal. This should insert the correct path to the ISO image in the Terminal.
 
-In the terminal window issue the following command, replacing `[tails.iso]` by the path to the ISO
-image that you want to copy and `[destination]` by the device name found in step
+Press enter and wait.
+<h2 class="bullet-number-five">Do the copy from the Terminal.</h2>
+
+In the Terminal window issue the following command, replacing `[tails.iso]` by the path to the ISO
+image that you want to copy and `[device]` by the device name found in step
 1.
 
-	cat [tails.iso] > [destination] && sync
+	cat [tails.iso] > [device] && sync
 
 If you are not sure about the path to the ISO image or if you get a "No such
 file or directory" error, you can first type `cat`, followed by a space, and
 then drag and drop the icon of the ISO image from a file browser onto the
-terminal. This should insert the correct path to the ISO image in the terminal.
+Terminal. This should insert the correct path to the ISO image in the Terminal.
 Then type the rest of the command.
 
 You should get something like this:
 
     cat tails-i386-0.17.1.iso > /dev/disk1 && sync
 
-Press enter and wait
+Press enter and wait.
 If you don't see any error message, Tails is being copied onto the key. The
 whole process might take a while, generally a few minutes. Be patient…
+
+<div class="next">
+<p>Once the command prompt reappears, you can
+[[start Tails|/download/#start]] from this new USB stick.</p>
+</div>
 
 <h2 class="bullet-number-six">Reboot your Mac</h2>
 
