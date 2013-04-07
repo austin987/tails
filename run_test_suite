@@ -25,9 +25,13 @@ Options for '@product' features:
   --view             Shows the test session in a windows. Requires x11vnc
                      and xtightvncviewer.
   --vnc-server-only  Starts a VNC server for the test session. Requires x11vnc.
-  --iso IMAGE        Test '@product' features using IMAGE. If none is given,
-                     any '@product' feature will use the ISO image with most
-                     recet mtime in the current directory
+  --iso=IMAGE        Test '@product' features using IMAGE. If none is given,
+                     the ISO with most recent creation date (according to the
+                     ISO's label) in the current directory will be used.
+  --old-iso=IMAGE    For some '@product' features (e.g. usb_install) we need
+                     an older version of Tails, which this options sets to
+                     IMAGE. If none is given, the ISO with the least recent
+                     creation date will be used.
 
 Note that '@source' features has no relevant options.
 "
@@ -96,9 +100,9 @@ capture_session() {
 # main script
 
 unset CAPTURE_FILE VNC_VIEWER VNC_SERVER
-unset DEBUG KEEP_SNAPSHOTS TEMP_DIR ISO
+unset DEBUG KEEP_SNAPSHOTS TEMP_DIR ISO OLD_ISO
 SHORTOPTS="a:c"
-LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,iso:,debug"
+LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,iso:,old-iso:,debug"
 OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -128,6 +132,10 @@ while [ $# -gt 0 ]; do
         --iso)
             shift
             export ISO="$(readlink -f $1)"
+            ;;
+        --old-iso)
+            shift
+            export OLD_ISO="$(readlink -f $1)"
             ;;
         --help)
 	    usage

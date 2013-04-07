@@ -157,19 +157,18 @@ automated test suite and do not have to be manually tested any more.
  - check output of `ip6tables -L -n`
  - at a place with working IPv6: try connecting to a known-working
    IPv6-enabled server on its IPv6 address over TCP and icmp6.
-* is `/etc/resolv.conf` OK both before/after DHCP has been setup? it should
+* is `/etc/resolv.conf` OK both before/after DHCP has been set up? it should
   *always* read `nameserver 127.0.0.1`
 * [[doc/first_steps/startup_options/bridge_mode]] should work:
   1. Boot with the `bridge` option.
-  1. Setup an administrator password.
+  1. Set up an administrator password.
   1. Enter a bridge or a few.
   1. Use the Internet.
   1. Check from time to time with `netstat` that the only outgoing
      direct network connections go to the configured bridge(s).
 * Verify that all destinations reached from an intensive Tails session
   are tor routers or
-  authorities: `[needs-fix: many scenarios]` (see "check firewall
-  leaks in every scenario" on the ticket).
+  authorities: `[needs-fix: many scenarios]` (see [[todo/test_suite:_always_check_for_firewall_leaks.mdwn]]).
   1. Boot Tails without the network in.
   1. Start dumping your whole session's network activity with `sudo
      tcpdump -n -i any -w dump` (or better, do the dump on another machine,
@@ -308,7 +307,7 @@ correctly.
 - check that `memlockd` is running
   `[needs-review, needs-pass: erase_memory]`
 - check that `udev-watchdog` is running and monitors the right device:
-  `[needs-fix: erase_memory: check that it's monitoring the right device]`
+  `[needs-fix: erase_memory:]` (see: [[todo/test_suite:_udev-watchdog_device]])
   * on USB
   * on DVD
 - After booting from DVD, remove Tails boot medium and check that the
@@ -380,29 +379,31 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # USB Installer/Upgrader
 
+All this was successfully reviewed at commit cdbbf4d8.
+
 After each of the following tests:
 
 * The installed or upgraded Tails medium shall be successfully booted.
-  `[needs-review, needs-pass: usb_install]`
+  `[needs-pass: usb_install]`
 * The installed or upgraded Tails medium shall have the "emergency
   shutdown on boot medium removal" feature working: remove Tails boot
   medium and check that the memory erasure process is started
   (`Loading new kernel`, at least).
 * The TailsData partition must survive
-  upgrades. `[needs-review, needs-pass: usb_install]`
+  upgrades. `[needs-pass: usb_install]`
 
 Tests to run:
 
 * Test "Clone & Install":
-  - from DVD. `[needs-review: usb_install]`
-  - from USB. `[needs-review, needs-pass: usb_install]`
+  - from USB. `[needs-pass: usb_install]`
   - onto a USB stick that has a MBR partition table, and no
-    partition at all (regression test)
+    partition at all (regression test) `[needs-pass: usb_install]`
   - onto a USB stick that already has an old-fashioned hybrid cat'd
-    Tails on it
+    Tails on it `[needs-pass: usb_install]`
 * Test "Clone & Upgrade" (onto a USB install containing an older
   Tails):
-  `[needs-fix: usb_install: to-be-upgraded USB drive must contain an old Tails]`
+  `[needs-pass: usb_install]` (also see
+  [[this ticket|todo/test_suite:_usb_upgrade_from_old_install]])
   - from DVD.
   - from USB.
   - onto a USB stick that already has a old-fashioned cat'd hybrid
@@ -507,11 +508,12 @@ language.
 
 * Check that all seems well during init (mostly that all services
   start without errors), and that dmesg seems ok.
-* MAT should be able to clean a PDF file. `[needs-fix]` (see ticket)
+* MAT should be able to clean a PDF file. `[needs-fix]` (see:
+  [[todo/test_suite:_mat_scenario_fails]])
 * Browsing (by hostname) a FTP server on the Internet should be
   possible using GNOME's *Connect to server* feature
   (once [[!tails_todo fix Internet FTP support]] is fixed)
 * The Tails signing key in `/usr/share/keyrings/tails-keyring.gpg`
   should be up-to-date (that is, neither it nor one its subkeys must
-  have expired, or be about to expire any time
-  soon). `[needs-fix]` (see ticket)
+  have expired, or be about to expire any time soon). `[needs-fix]`
+  (see: [[todo/test_suite:_shipped_signing_key_scenario]])

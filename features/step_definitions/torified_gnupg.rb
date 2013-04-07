@@ -31,6 +31,7 @@ When /^the "([^"]*)" key is in the live user's public keyring after at most (\d+
 end
 
 When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|
+  next if @skip_steps_while_restoring_background
   step "I run \"seahorse\""
   @screen.wait("SeahorseWindow.png", 10)
   @screen.type("r", Sikuli::KEY_ALT) # Menu: "Remote" ->

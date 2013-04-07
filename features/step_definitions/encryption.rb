@@ -44,7 +44,7 @@ def encrypt_sign_helper
   @screen.type("a", Sikuli::KEY_CTRL)
   sleep 0.5
   @screen.click("GpgAppletIconNormal.png")
-  sleep 0.5
+  sleep 2
   @screen.type("k")
   @screen.wait_and_click("GpgAppletChooseKeyWindow.png", 30)
   sleep 0.5
@@ -62,7 +62,7 @@ def decrypt_verify_helper(icon)
   @screen.type("a", Sikuli::KEY_CTRL)
   sleep 0.5
   @screen.click(icon)
-  sleep 0.5
+  sleep 2
   @screen.type("d")
   maybe_deal_with_pinentry
   @screen.wait("GpgAppletResults.png", 10)
@@ -121,7 +121,7 @@ When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
   @screen.type("a", Sikuli::KEY_CTRL)
   sleep 0.5
   @screen.click("GpgAppletIconNormal.png")
-  sleep 0.5
+  sleep 2
   @screen.type("p")
   @screen.wait("PinEntryPrompt.png", 10)
   @screen.type(@passphrase + Sikuli::KEY_RETURN)

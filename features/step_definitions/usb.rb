@@ -28,6 +28,14 @@ Given /^I unplug USB drive "([^"]+)"$/ do |name|
   @vm.unplug_drive(name)
 end
 
+Given /^the computer is set to boot from the old Tails DVD$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.set_cdrom_boot($old_tails_iso)
+end
+
+class ISOHybridUpgradeNotSupported < StandardError
+end
+
 def usb_install_helper(name)
   @screen.wait('USBCreateLiveUSB.png', 10)
 
@@ -45,6 +53,13 @@ def usb_install_helper(name)
 #  # when it should be /dev/sda1
 
   @screen.wait_and_click('USBCreateLiveUSB.png', 10)
+  begin
+    if @screen.find("USBSuggestsInstall.png")
+      raise ISOHybridUpgradeNotSupported
+    end
+  rescue Sikuli::ImageNotFound
+    # we didn't get the warning, so we can proceed with the install
+  end
 #  @screen.hide_cursor
   @screen.wait_and_click('USBCreateLiveUSBNext.png', 10)
 #  @screen.hide_cursor
@@ -65,6 +80,22 @@ When /^I "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   step "I run \"liveusb-creator-launcher\""
   @screen.wait_and_click('USBCloneAndUpgrade.png', 30)
   usb_install_helper(name)
+end
+
+When /^I try a "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
+  next if @skip_steps_while_restoring_background
+  begin
+    step "I \"Clone & Upgrade\" Tails to USB drive \"#{name}\""
+  rescue ISOHybridUpgradeNotSupported
+    # this is what we expect
+  else
+    raise "The USB installer should not succeed"
+  end
+end
+
+When /^I am suggested to do a "Clone & Upgrade"$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.find("USBSuggestsInstall.png")
 end
 
 def shared_iso_dir_on_guest
@@ -276,10 +307,16 @@ Then /^Tails is running from USB drive "([^"]+)"$/ do |name|
   assert(boot_device_type == "usb",
          "Got device type '#{boot_device_type}' while expecting 'usb'")
   actual_dev = boot_device
-  expected_dev = @vm.disk_dev(name) + "1"
-  assert(actual_dev == expected_dev,
-         "USB drive '#{name}' has device #{expected_dev}, but we are " +
-         "running from #{actual_dev}")
+  # The boot partition differs between a "normal" install using the
+  # USB installer and isohybrid installations
+  expected_dev_normal = @vm.disk_dev(name) + "1"
+  expected_dev_isohybrid = @vm.disk_dev(name) + "4"
+  assert(actual_dev == expected_dev_normal ||
+         actual_dev == expected_dev_isohybrid,
+         "We are running from device #{actual_dev}, but for USB drive " +
+         "'#{name}' we expected to run from either device " +
+         "#{expected_dev_normal} (when installed via the USB installer) " +
+         "or #{expected_dev_normal} (when installed from an isohybrid)")
 end
 
 Then /^the boot device has safe access rights$/ do
@@ -359,7 +396,7 @@ end
 Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   step "a computer"
-  step "the computer is setup up to boot from USB drive \"#{name}\""
+  step "the computer is set to boot from USB drive \"#{name}\""
   step "the network is unplugged"
   step "I start the computer"
   step "the computer boots Tails"
@@ -369,14 +406,14 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "GNOME has started"
   step "I have closed all annoying notifications"
   step "the expected persistent files are present in the filesystem"
-  step "I shutdown Tails"
+  step "I completely shutdown Tails"
 end
 
 When /^I delete the persistent partition$/ do
   next if @skip_steps_while_restoring_background
   step "I run \"tails-persistence-setup --step delete\""
-  @screen.wait("PersistenceWizardWindow.png", 10)
-  @screen.wait("PersistenceWizardDeletionStart.png", 10)
+  @screen.wait("PersistenceWizardWindow.png", 20)
+  @screen.wait("PersistenceWizardDeletionStart.png", 20)
   @screen.type(" ")
   @screen.wait("PersistenceWizardDone.png", 120)
 end

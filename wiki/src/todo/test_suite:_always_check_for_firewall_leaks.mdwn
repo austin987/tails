@@ -1,0 +1,27 @@
+Should we check for firewall leaks in every scenario, or at least, in
+every scenario that involves the Internet?
+
+> If we want to fully replace the manual leak check we've been doing
+> until now, yes, we do want this. I don't see why we would *not* want
+> this. Feel free to re-add a `todo/discuss` tag (and perhaps raise
+> the discussion on tails-dev) if there's some good reason I've missed
+> that makes it worth discussing this any further. --intrigeri
+
+Actually, we don't want to do it for all features/scenarios involving
+the Internet (think about e.g. `unsafe_browser.feature`). Instead we
+could:
+
+1. add a tag `@uses_tor` (which is relevant for other things, like
+   [[retrying when Tor fails|test_suite:_retry_when_tor_fails]]) to
+   all features/scenarios that uses Tor.
+
+2. add a `Before('@uses_tor')` hook that starts the sniffer, and a
+   `After('@uses_tor')` hook that check for leaks.
+
+> Looks good. --intrigeri
+
+We'd still keep the current firewall leak checker steps for the
+features and scenarios that need more control, like the
+`firewall_leaks.feature`:s anti-tests.
+
+[[!tag todo/code]]

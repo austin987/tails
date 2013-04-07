@@ -138,6 +138,7 @@ Given /^I fill the guest's memory with a known pattern$/ do
 end
 
 Then /^I find very few patterns in the guest's memory$/ do
+  next if @skip_steps_while_restoring_background
   coverage = pattern_coverage_in_guest_ram()
   max_coverage = 0.001
   assert(coverage < max_coverage,
@@ -145,13 +146,9 @@ Then /^I find very few patterns in the guest's memory$/ do
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
 end
 
-When /^I safely shutdown Tails$/ do
+When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   next if @skip_steps_while_restoring_background
   @vm.execute("halt")
-end
-
-When /^I wait for Tails to finish wiping the memory$/ do
-  next if @skip_steps_while_restoring_background
   nr_gibs_of_ram = (@detected_ram_b.to_f/(2**30)).ceil
   try_for(nr_gibs_of_ram*5*60, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
     # We spam keypresses to prevent console blanking from hiding the
