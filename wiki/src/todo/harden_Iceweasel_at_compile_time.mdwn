@@ -13,8 +13,19 @@ Roadmap
 1. Find out what additional hardening compilation option can possibly
    be added to Iceweasel by the Debian maintainer. The Debian security team
    might be happy to help.
-   - [[!tag todo/research]] Gather the maintainer's already stated
-     opinions on the topic: [[!debbug 609975]] and [[!debbug 653191]]
+   - Here's what the maintainer's already stated opinions on the
+     topic ([[!debbug 609975]] and [[!debbug 653191]]):
+     - "I'm really not a big fan of -Wl,-z,relro and -Wl,-z,now"
+     - "For instance, I'm not sure -z relro buys anything worth, while
+       it may have a significant startup performance impact on big
+       applications. (and if I'm not mistaken, -z relro actually makes
+       things not work with selinux, seeing how selinux already breaks
+       the mprotect that removes the write bit on code sections after
+       text relocations)"
+       > Moritz
+       > [has doubts](http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=653191#27)
+       > about the relro part, and "Support for selinux in Debian is
+       > marginal at best, anyway".
    - Design a great plan. Hardening compilation options currently
      enabled in:
      - TBB: none
