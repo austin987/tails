@@ -188,18 +188,17 @@ make sure nothing bad happened.
 SquashFS files order
 --------------------
 
-Build an ISO image, burn a DVD and profile it **on bare metal** and update
-`squashfs.order` in the Git repository.
+1. Build an ISO image.
+1. Burn a DVD.
+1. Boot this DVD **on bare metal**.
+1. Add `profile` to the kernel command-line.
+1. 30 seconds after `iceweasel` has been loaded, retrieve the new sort
+   file from `/var/log/boot-profile`.
+1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
+1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
 
-In order to refresh the sort file, `profile` must be added to the kernel
-command-line. Then, 30 seconds after `iceweasel` has been loaded, the sort
-file can be retrieved from `/var/log/boot-profile`.
-
-It must then be copied to `config/binary_rootfs/squashfs.sort`. This file is
-automatically used by `lb_binary_rootfs` to tell `mksquashfs` to use the
-provided *sort list*.
-
-(See [[!tails_todo improve_boot_time_on_cd]] for details.)
+(This sort list is automatically passed by live-build to `mksquashfs`:
+see [[!tails_todo improve_boot_time_on_cd]] for details.)
 
 Build the final image
 ---------------------
