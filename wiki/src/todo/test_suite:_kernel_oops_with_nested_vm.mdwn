@@ -1,0 +1,27 @@
+I (anonym) get a Kernel oops on my real host when running
+`erase_memory.feature` in nested VM setup (not otherwise). The top
+excerpt of the kernel oops (which leaves the real host completely
+unresponsive) is:
+
+    BUG: unable to handle kernel paging request at ffff87ffffffffff
+    IP: [<ffffffffa06ea57a>] __direct_map.isra.92+0xe3/0x1a1 [kvm]
+    PDF 0
+    Oops: 0000 [#1] SMP
+    Modules: [snip]
+    CPU 2
+    Pid: 5229, comm: kvm Not tainted 3.8-trunk-amd64 #1 Debian 3.8.3-1~experimental.1 [snip]
+	[snip]
+
+It has happened every time I tried this feature, either when filling
+the memory or when wiping it. I've tested all combinations of the
+current Wheezy kernel (3.2.39-2) and current experimental kernel
+(3.8.3-1) on both the real host and the testing VM, but to no avail.
+
+I don't get this with a non-nested VM setup (i.e. when the automated
+test suite is run from bare metal).
+
+Also, I don't get it *as often* in the nested VM setup if I decrease
+the TailsToaster RAM from 8 GiB to 5 GiB in both scenarios.
+
+So it seems we may have an upstream linux kernel bug. Can someone else
+please [[!taglink todo/test]] this?
