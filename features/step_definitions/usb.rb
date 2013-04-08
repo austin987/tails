@@ -238,7 +238,7 @@ Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive
   @vm.execute("mkdir -p #{mount_dir}")
   c = @vm.execute("mount #{luks_dev} #{mount_dir}")
   assert(c.success?,
-         "Couldn't mount opened LUKS device '#{dev}' on  drive '#{name}'")
+         "Couldn't mount opened LUKS device '#{dev}' on drive '#{name}'")
 
   @vm.execute("umount #{mount_dir}")
   @vm.execute("sync")
