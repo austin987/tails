@@ -1,10 +1,12 @@
 Then /^I should be able to run administration commands as the live user$/ do
+  next if @skip_steps_while_restoring_background
   stdout = @vm.execute("echo #{@sudo_password} | sudo -S whoami", $live_user).stdout
   assert(stdout.sub(/^\[sudo\] password for #{$live_user}: /, "") == "root\n",
          "Could not use sudo")
 end
 
 Then /^I should not be able to run administration commands as the live user with the "([^"]*)" password$/ do |password|
+  next if @skip_steps_while_restoring_background
   stderr = @vm.execute("echo #{password} | sudo -S whoami", $live_user).stderr
   sudo_failed = stderr.include?("The administration password is disabled") || stderr.include?("is not allowed to execute")
   assert(sudo_failed, "The administration password is not disabled:" + stderr)

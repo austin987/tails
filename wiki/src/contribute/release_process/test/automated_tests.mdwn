@@ -302,6 +302,9 @@ the sudo password ...` step.
 
 # Limitations and issues
 
+These things are good to know when developing new features, scenarios
+or steps.
+
 ## The remote shell
 
 ### Different behaviour compared to "real" shell
@@ -323,11 +326,13 @@ Although very rare, the remote shell can get into a state where it
 stops responding, resulting in the test suite waiting for a response
 forever.
 
-## Host-to-guest filesystem shares are incompatibility with snapshots
+## Host-to-guest filesystem shares are incompatibile with snapshots
 
 Filesystem shares cannot (due to QEMU limitations) be added to an
 active VM, and cannot (due to QEMU limitations) be active
-(i.e. mounted) during a snapshot save.
+(i.e. mounted) during a snapshot save. For this reason, don't use
+filesystem shares in combination with background snapshots. For more
+information, see [[this ticket|todo/test_suite:_fs_shares_vs_snapshots]].
 
 ## Plugging SATA drives
 
@@ -336,3 +341,29 @@ storage helper, and then plugging it to a Tails instance as SATA
 drive, GNOME will report that the drive is failing when inside Tails,
 and indeed several SMART tests fail. For now, plug hard disks as IDE
 only (or USB, of course).
+
+## Class variables assigned in skippable steps
+
+This is best explained with an example. Let's say we have this feature:
+
+	Background:
+    ...
+	Given I assign @x with something we read from the VMs state and we know should be 100
+	And I save the state so the background can be restored next scenario
+
+	Scenario: 1
+	Then @x == 100
+
+	Scenario: 2
+	Then @x == 100
+
+As expected, scenario 1 will succeed, but since class variables lie
+`@x` are cleared between scenarios, scenario 2 will fail if it is
+skippable (i.e. it has the `next if...` thing at the top), which it
+should besince it interacts with the VM. To avoid this, make sure to
+put *all* steps dealing with the class variable in the background, or
+all of them after the background. Alternatively, use global variables
+(e.g. `$x`) instead of class variables, since they are never cleared.
+
+Also, see
+[[this ticket|todo/test_suite:_assigning_class_variables_in_skippable_steps]].
