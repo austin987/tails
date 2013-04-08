@@ -276,7 +276,7 @@ end
 
 Given /^persistence has been enabled$/ do
   next if @skip_steps_while_restoring_background
-  try_for(60, :msg => "Some persistent dir was not mounted") {
+  try_for(120, :msg => "Some persistent dir was not mounted") {
     mount = @vm.execute("mount").stdout.chomp
     persistent_dirs.each do |dir|
       if ! mount.include? "on #{dir} "
