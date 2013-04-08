@@ -137,7 +137,7 @@ class VMStorage
   def disk_mkpartfs(name, fstype)
     assert disk_format(name) == "raw"
     path = disk_path(name)
-    cmd_helper("/sbin/parted -s '#{path}' mkpartfs primary ext2 0% 100%")
+    cmd_helper("/sbin/parted -s '#{path}' mkpartfs primary '#{fstype}' 0% 100%")
   end
 
 end
