@@ -115,6 +115,9 @@ After('@product') do |scenario|
   @vm.destroy if @vm
 end
 
+After('@product', '~@keep_volumes') do
+  $vmstorage.clear_volumes
+end
 
 # For @source tests
 ###################
