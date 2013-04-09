@@ -241,17 +241,10 @@ features properly do their work; second, our `torrc` sets the right
 
 # Use of untrusted partitions
 
-* are any local hard-disk partitions mounted or used as swap?
+* is any local hard-disk swap partition used as swap?
   boot on a (possibly virtual) machine that has a cleartext swap
   partition not managed by LVM. This swap partition must not be used
   by Tails.
-* is a Live system found on a local hard-disk partition used? boot the
-  DVD/USB stick you are testing on a (possibly virtual) machine that
-  has a Tails system copied on a cleartext partition not managed by
-  LVM. The DVD/USB ramdisk must use the Tails system found on the
-  DVD/USB, and not the one found on the hard disk. (Also check that
-  without Tails, that other Live system boots.)
-  `[needs-review, needs-pass: untrusted_partitions]`
 * is a persistence volume on a local hard-disk partition used?
 
 # Claws
@@ -290,7 +283,7 @@ features properly do their work; second, our `torrc` sets the right
 
 # Time
 
-`[needs-review, needs-pass]`
+`[needs-fix]` ([[todo/test_suite:_verify_time_changes]])
 
 1. Boot Tails without a network cable connected (i.e. no network on boot).
 2. set the time to an obviously wrong one:
@@ -305,9 +298,9 @@ correctly.
 # erase memory on shutdown
 
 - check that `memlockd` is running
-  `[needs-review, needs-pass: erase_memory]`
-- check that `udev-watchdog` is running and monitors the right device:
-  `[needs-fix: erase_memory:]` (see: [[todo/test_suite:_udev-watchdog_device]])
+  `[needs-pass: erase_memory]`
+- check that `udev-watchdog` monitors the right device
+  ([[todo/test_suite:_udev-watchdog_device]])
   * on USB
   * on DVD
 - After booting from DVD, remove Tails boot medium and check that the
@@ -317,7 +310,7 @@ correctly.
 Testing that the needed files are really mapped in memory, and the
 erasing process actually works, involves a more complicated
 process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
-`[needs-review, needs-pass: erase_memory]`
+`[needs-fix: erase_memory]` ([[todo/test_suite:_anti-tests]])
 
 # Root access control
 
@@ -355,7 +348,8 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
   - You should get "Network: Hidden" in the "General" section.
 * Check that you can reach some eepsites within Iceweasel, like
   <http://www.i2p2.i2p> and <http://forum.i2p>.
-* Check that you can connect to the I2P IRC server through Pidgin.
+* Check that you can connect to the I2P IRC server through Pidgin and
+  the preconfigured IRC account on 127.0.0.1.
 
 # Git
 
@@ -402,10 +396,8 @@ Tests to run:
     Tails on it `[needs-pass: usb_install]`
 * Test "Clone & Upgrade" (onto a USB install containing an older
   Tails):
-  `[needs-pass: usb_install]` (also see
-  [[this ticket|todo/test_suite:_usb_upgrade_from_old_install]])
-  - from DVD.
-  - from USB.
+  - from DVD. `[needs-pass: usb_install]`
+  - from USB. `[needs-pass: usb_install]`
   - onto a USB stick that already has a old-fashioned cat'd hybrid
     Tails on it: should warn this action is not supported, and direct
     the user to the "Clone & Install" operation mode.
@@ -436,18 +428,20 @@ stuff: **FIXME**.
 
 # Persistence
 
+`[needs-fix]`
+([[todo/test_suite:_fix_persistence_is_not_enabled_check]]);
+otherwise, reviewed OK at commit ea0ca6d5.
+
+`[needs-fix]` [[todo/test_suite:_fix_shutdown_step]]
+
 * Activate persistence on a Tails USB install with all presets on, and
-  a few custom directories. `[needs-review, needs-pass: usb_install]`
-* Reboot, enable persistence. Verify via `mount` that each preset has
-  a mount that seem correct (e.g. "Pidgin preset =>
-  `/home/amnesia/.purple` has something mounted on
-  it"). `[needs-review, needs-pass: usb_install]`
-* Try read-write mode. Make sure that persistent files are writeable,
-  and that changes do survive
-  reboot. `[needs-review, needs-pass: usb_install]`
+  a few custom directories (also done by the automated test suite,
+  but required to test what follows until it's green too).
+* Try read-write mode. Make sure that changes do survive
+  reboot. `[needs-pass: usb_install]`
 * Try read-only mode. Make sure that persistent files are writeable,
   but that no changes survive
-  reboot. `[needs-review, needs-pass: usb_install]`
+  reboot. `[needs-pass: usb_install]`
 * Turn off some persistence presets, reboot, and make sure they are
   not activated.
 

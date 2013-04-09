@@ -51,6 +51,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I log in to a new session
     And GNOME has started
     And I have closed all annoying notifications
+    And there is no persistence partition on USB drive "current"
     And I create a persistent partition with password "asdf"
     Then a Tails persistence partition with password "asdf" exists on USB drive "current"
     And I completely shutdown Tails
@@ -309,7 +310,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I plug USB drive "isohybrid"
     And I try a "Clone & Upgrade" Tails to USB drive "isohybrid"
     But I am suggested to do a "Clone & Upgrade"
-    And I kill process "liveusb-creator"
+    And I kill the process "liveusb-creator"
     And I "Clone & Install" Tails to USB drive "isohybrid"
     Then Tails is installed on USB drive "isohybrid"
     But there is no persistence partition on USB drive "isohybrid"

@@ -238,7 +238,7 @@ Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive
   @vm.execute("mkdir -p #{mount_dir}")
   c = @vm.execute("mount #{luks_dev} #{mount_dir}")
   assert(c.success?,
-         "Couldn't mount opened LUKS device '#{dev}' on  drive '#{name}'")
+         "Couldn't mount opened LUKS device '#{dev}' on drive '#{name}'")
 
   @vm.execute("umount #{mount_dir}")
   @vm.execute("sync")
@@ -276,7 +276,7 @@ end
 
 Given /^persistence has been enabled$/ do
   next if @skip_steps_while_restoring_background
-  try_for(60, :msg => "Some persistent dir was not mounted") {
+  try_for(120, :msg => "Some persistent dir was not mounted") {
     mount = @vm.execute("mount").stdout.chomp
     persistent_dirs.each do |dir|
       if ! mount.include? "on #{dir} "

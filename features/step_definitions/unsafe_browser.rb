@@ -73,6 +73,7 @@ When /^I open the address "([^"]*)" in the Unsafe Browser$/ do |address|
   next if @skip_steps_while_restoring_background
   step "I open a new tab in the Unsafe Browser"
   @screen.type("l", Sikuli::KEY_CTRL)
+  sleep 0.5
   @screen.type(address + Sikuli::KEY_RETURN)
 end
 
