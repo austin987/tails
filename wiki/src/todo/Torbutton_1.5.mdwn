@@ -2,19 +2,21 @@
 
 # Roadmap
 
-1. Adapt our codebase to Torbutton 1.5.1 or later,
-   if possible early in the 0.18 dev cycle. [[!tag todo/code]]
+We have to adapt our codebase to Torbutton 1.5.1 or later,
+if possible early in the 0.18 dev cycle.
+
+1. [[!taglink todo/test]] Tails with Torbutton 1.5.1:
+   - see what breaks
+   - verify that our branding extension works fine
+   - verify that our custom prefs are set
 
 # Problem description
 
 Tails 0.17.x ship a month old snapshot of Torbutton
 (1.5.0~pre-alpha-1).
 
-Torbutton 1.5.x can be downloaded from
-<https://people.torproject.org/~mikeperry/>.
-
 Between 1.5.0~pre and 1.5.x final, Torbutton and TBB have changed
-quite a lot they way they handle Firefox preferences. We have to
+quite a lot the way they handle Firefox preferences. We have to
 update quite a lot of how we configure Iceweasel in Tails:
 
 * We have to disable the Browser-based update notification
@@ -25,7 +27,7 @@ update quite a lot of how we configure Iceweasel in Tails:
 * We perhaps have to migrate the way we configure Iceweasel to
   TBB's new shiny way (`#tor.js` and `extension-overrides.js`).
 
-Quoting Mike Perry:
+Freely quoting Mike Perry:
 
 * [about our branding extension] so I am not sure how you want to
   handle updating the default browser prefs. we also went with an ugly
@@ -35,13 +37,12 @@ Quoting Mike Perry:
   default prefs from there. I didn't think that was normally possible
   from extensions
   - here's our pref file for Tor Browser:
-    <https://gitweb.torproject.org/erinn/torbrowser.git/blob/bug3944-erinn:/build-scripts/config/pound_tor.js>
+    `build-scripts/config/pound_tor.js`
   - and here's our new extensions-overrides file:
-    <https://gitweb.torproject.org/erinn/torbrowser.git/blob/bug3944-erinn:/build-scripts/config/extension-overrides.js>
-  - here's the makefile hacks to shove the browser prefs into place:
-    <https://gitweb.torproject.org/erinn/torbrowser.git/blob/bug3944-erinn:/build-scripts/linux-alpha.mk#l468>
-  - and likewise for the extension overrides:
-    <https://gitweb.torproject.org/erinn/torbrowser.git/blob/bug3944-erinn:/build-scripts/linux-alpha.mk#l323>
+    `build-scripts/config/extension-overrides.js`
+  - here's the makefile hacks to shove the browser prefs and the
+    extension overrides into place:
+    `build-scripts/linux.mk`
   - those two changes make it so our default pref values are now
     actually defaults in about:config
 * I also cleaned up and reduced number of prefs we set
