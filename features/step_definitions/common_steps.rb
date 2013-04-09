@@ -63,7 +63,7 @@ end
 
 Given /^a computer$/ do
   @vm.destroy if @vm
-  @vm = VM.new($vm_xml_path, $x_display)
+  @vm = VM.new($virt, $vm_xml_path, $vmnet, $x_display)
 end
 
 Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
@@ -115,7 +115,7 @@ Given /^I capture all network traffic$/ do
   # Note: We don't want skip this particular stpe if
   # @skip_steps_while_restoring_background is set since it starts
   # something external to the VM state.
-  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name)
+  @sniffer = Sniffer.new("TestSniffer", $vmnet)
   @sniffer.capture
 end
 

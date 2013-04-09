@@ -12,15 +12,13 @@ require 'etc'
 
 class VMStorage
 
-  @@virt = nil
-
   def initialize(virt, xml_path)
-    @@virt ||= virt
+    @virt = virt
     @xml_path = xml_path
     pool_xml = REXML::Document.new(File.read("#{@xml_path}/storage_pool.xml"))
     pool_name = pool_xml.elements['pool/name'].text
     begin
-      @pool = @@virt.lookup_storage_pool_by_name(pool_name)
+      @pool = @virt.lookup_storage_pool_by_name(pool_name)
     rescue Libvirt::RetrieveError
       # There's no pool with that name, so we don't have to clear it
     else
@@ -28,7 +26,7 @@ class VMStorage
     end
     @pool_path = "#{$tmp_dir}/#{pool_name}"
     pool_xml.elements['pool/target/path'].text = @pool_path
-    @pool = @@virt.define_storage_pool_xml(pool_xml.to_s)
+    @pool = @virt.define_storage_pool_xml(pool_xml.to_s)
     @pool.build
     @pool.create
     @pool.refresh
