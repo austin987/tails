@@ -54,3 +54,22 @@ Resources
 - [[!cpan Jenkins-NotificationListener]] is a server that listens to
   messages from Jenkins [Notification
   plugin](https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin).
+
+Web setup
+---------
+
+We'd like our Jenkins instance to be visible read-only on the web.
+We'd rather not rely on Jenkins authentication / authorization to
+enforce this read-only policy. We'd rather see the frontend reverse
+proxy take care of this.
+
+The
+[`getUnprotectedRootActions()`](http://javadoc.jenkins-ci.org/jenkins/model/Jenkins.html#getUnprotectedRootActions())
+method should return the list of URL prefixes that we want to allow.
+And we could forbid anything else.
+
+The [Reverse Proxy
+Auth](https://wiki.jenkins-ci.org/display/JENKINS/Reverse+Proxy+Auth+Plugin)
+Jenkins plugin can be useful to display [an example
+usage](https://github.com/jenkinsci/reverse-proxy-auth-plugin/commit/72567a974960be2363107614ba3f705ec6e9b695)
+of this method.
