@@ -89,7 +89,7 @@ as_root_do ./build-wiki
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
 if [ "$TAILS_RAM_BUILD" ]; then
 	TMPFS_DIR=$(mktemp -d /tmp/tmpfs.XXXXXXXX)
-	as_root_do mount -t tmpfs -o "noatime,size=${TMPFS_SIZE_BYTES},mode=0770,uid=root,gid=vagrant" tmpfs "$TMPFS_DIR"
+	as_root_do mount -t tmpfs -o "noatime,size=${TMPFS_SIZE_BYTES},mode=0770,uid=root,gid=${USER}" tmpfs "$TMPFS_DIR"
 	as_root_do mount -t aufs -o "noatime,noxino,dirs=$TMPFS_DIR=rw:${WORKSPACE}/=rr+wh" aufs "$BUILD_DIR"
 else
 	as_root_do rsync -a "$WORKSPACE"/ "$BUILD_DIR"/
