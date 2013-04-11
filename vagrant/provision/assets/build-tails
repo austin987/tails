@@ -65,6 +65,8 @@ if [ -n "$JENKINS_URL" ]; then
 	REV="$GIT_BRANCH"
 	COMMIT="$GIT_COMMIT"
 	cd "$WORKSPACE"
+	git checkout --force "$REV"
+	git reset --hard "$COMMIT"
 else
 	# Build triggered by Vagrant
 	WORKSPACE=/home/vagrant/amnesia
@@ -74,10 +76,9 @@ else
 	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
 	cd "$WORKSPACE"
 	git fetch origin
+	as_root_do git checkout --force "$REV"
+	as_root_do git reset --hard "$COMMIT"
 fi
-
-as_root_do git checkout --force "$REV"
-as_root_do git reset --hard "$COMMIT"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
