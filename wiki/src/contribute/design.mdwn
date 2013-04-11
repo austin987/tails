@@ -515,12 +515,12 @@ practices: digests, ciphers and key sizes.
 Only stable releases SHOULD be considered since Tor really is at the
 core of the PELD.
 
-Tor SHOULD be setup to enable its DNS server (`DNSPort`) to allow DNS
+Tor SHOULD be set up to enable its DNS server (`DNSPort`) to allow DNS
 lookups through the Tor network; alternatively a local DNS server can
 be configured to use Tor.
 
 If transparent proxying (as opposed to dropping non-Tor traffic) was
-chosen in the network section, then Tor MUST be setup to enable its
+chosen in the network section, then Tor MUST be set up to enable its
 transparent proxy (`TransPort`, `TransListen`); alternatively any
 transparent proxy configured to use Tor as the parent proxy can be
 used.
@@ -760,7 +760,7 @@ application is internationalized.
 ## 3.5 Feedback
 
 Users can send feedback in several ways to Tails developers.
-A [[!tails_bug "" desc="bug tracker"]] and a [[forum|/forum]] are
+A [[!tails_todo "" desc="task tracker"]] and a [[forum|/forum]] are
 available on the website.
 Users can also send email to the private [developers mailing
 list](tails@boum.org). A dedicated application called *WhisperBack*
@@ -910,7 +910,7 @@ uses Tor as SOCKS5 proxy. SOCKS is configured to perform name
 resolution through this proxy. Iceweasel is also configured to not
 cache to disk (mainly to reduce memory usage for CD users as disk
 writes will be stored there), history is disabled (just in case) and
-many other things. It is also setup not to automatically check for
+many other things. It is also set up not to automatically check for
 updates of its installed extensions. Java support is disabled.
 
 Iceweasel is shipped with some extensions to help users manage their
@@ -967,6 +967,8 @@ OpenPGP support is provided by the PGP/inline and PGP/MIME plugins.
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.claws-mail]] is copied to
   the user's `$HOME` at boot time
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/torified-claws-mail]]
+- [[!tails_gitweb config/chroot_local-includes/etc/tor/tor-tsocks-mua.conf]]
 
 ### 3.6.15 Pidgin
 
@@ -988,12 +990,9 @@ name when answering to CTCP requests.
 
 ### 3.6.16 GnuPG
 
-All GnuPG tools (namely: GPG itself and Seahorse) are
-configured to use the keys.indymedia.org hidden-service keyserver (`hkp://2eghzlv2wwcq7u7y.onion`) since:
-
-- it is run by privacy-friendly people who go as far as providing a
-  Tor hidden service;
-- it is well-synchronized with the HKP keyservers pool.
+GnuPG tools (namely: GPG itself and Seahorse) are configured to use
+the sks-keyservers pool since it's reliable, well-synchronized with
+the other HKP keyservers pools, and reachable over `hkps://`.
 
 [[!tails_todo Monkeysphere]]'s `hkpms://` support will be used as soon as
 possible in place of the hierarchical X.509 certification model.
@@ -1002,6 +1001,7 @@ GnuPG is configured to prefer non-outdated digest algorithms such as
 SHA256.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/gpg.conf]]
+- [[!tails_gitweb config/chroot_local-includes/etc/ssl/certs/sks-keyservers.netCA.pem]]
 - [[!tails_gitweb config/chroot_local-includes/usr/share/amnesia/gconf/desktop_pgp.xml]]
 - hkpms is available in Debian: [[!debpkg msva-perl]]
 
@@ -1066,7 +1066,7 @@ regressions in Tails, especially anonymity and security related
 ones. It would also make it easier to work on Tails for developers
 who do not own modern powerful hardware.
 
-Research and practical work to setup such an environment [[!tails_todo
+Research and practical work to set up such an environment [[!tails_todo
 automated_builds_and_tests desc="has slowly started"]]. In the meantime, a [[manual
 test suite|contribute/release_process/test]] is "run" against Tails
 release candidates images before they are officially published.

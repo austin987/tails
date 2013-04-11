@@ -1,3 +1,5 @@
+[[!meta title="Release process"]]
+
 [[!toc levels=2]]
 
 See the [[release_schedule]].
@@ -83,14 +85,15 @@ Then see the relevant release processes:
 * [[persistence-setup]]
 * [[tails-iuk]]
 * whisperback: 
-  * see release process on <http://git.immerda.ch/?p=whisperback.git;a=blob;f=HACKING>
+  * see release process on
+    <http://git.immerda.ch/?p=whisperback.git;a=blob;f=HACKING>
   * build a debian package
   * upload it to [[APT repository]]
 
 Freeze
 ------
 
-If we are at freeze time (e.g. preparing RC1):
+If we are at freeze time for a major release:
 
 * Merge the `devel` Git branch into `testing`.
 * Reset the `testing` APT suite to the state of the `devel` one, as
@@ -125,7 +128,7 @@ If preparing a RC, skip this part.
 
 In the branch used to build the release, update the `inc/*` files to
 match the *version number* and *date* of the new release. Set the date
-at least 24 hours in the future! Between tests and mirror synchronisation,
+at least 24 hours in the future! Between tests and mirror synchronization,
 the build will not be released on the same day. Try to make sure it
 matches the date of the future signature.
 
@@ -179,24 +182,25 @@ Build images
 Build the almost-final image
 ----------------------------
 
-[[Build images|contribute/build]] and carefully read the build logs to make sure
-nothing bad happened.
+[[Build images|contribute/build]] and carefully read the build logs to
+make sure nothing bad happened.
 
 SquashFS files order
 --------------------
 
-Build an ISO image, burn a DVD and profile it **on bare metal** and update
-`squashfs.order` in the Git repository.
+1. Build an ISO image.
+1. Burn a DVD.
+1. Boot this DVD **on bare metal**.
+1. Add `profile` to the kernel command-line.
+1. Three minutes after `iceweasel` has been loaded, retrieve the new sort
+   file from `/var/log/boot-profile`.
+1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
+1. Cleanup a bit.
+1. Inspect the Git diff (including diff stat), apply common sense.
+1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
 
-In order to refresh the sort file, `profile` must be added to the kernel
-command-line. Then, 30 seconds after `iceweasel` has been loaded, the sort
-file can be retrieved from `/var/log/boot-profile`.
-
-It must then be copied to `config/binary_rootfs/squashfs.sort`. This file is
-automatically used by `lb_binary_rootfs` to tell `mksquashfs` to use the
-provided *sort list*.
-
-(See [[!tails_todo improve_boot_time_on_cd]] for details.)
+(This sort list is automatically passed by live-build to `mksquashfs`:
+see [[!tails_todo improve_boot_time_on_cd]] for details.)
 
 Build the final image
 ---------------------
@@ -234,7 +238,8 @@ Prepare update-description files
 Testing
 =======
 
-Until [[!tails_todo automated_builds_and_tests]] are setup, some manual testing
+Until [[!tails_todo automated_builds_and_tests]] are set up, some
+manual testing
 has to be done by the persons preparing the release, in addition to the
 real-world tests done by fellow beta-testers.
 
@@ -311,10 +316,7 @@ Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
 	sha256sum tails-i386-0.7.1.iso | cut -f 1 -d ' ' | tr -d '\n' \
 	  > stable_i386_hash.html
 
-Update todo and bugs tags:
-
- - in `todo/*`: replace `pending` tags with `todo/done` tags
- - in `bugs/*`: replace links to `pending` with links to `done` (`[[todo/done]]`)
+In `todo/*`, replace `pending` tags with `todo/done` tags.
 
 Update the [[support/known_issues]] page.
 
@@ -375,7 +377,8 @@ We announce *major* releases on the Tor blog:
 - add a link to our [[download page|download]]
 - change the internal links into external links
 - turn `<h1>` into `<strong>`
-- direct users to [[our communication channels|support/talk]] for comments and feedback,
+- direct users to [[our communication channels|support/talk]] for
+  comments and feedback,
 - disable comments
 
 Twitter
