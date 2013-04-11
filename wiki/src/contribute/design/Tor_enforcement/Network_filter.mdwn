@@ -53,7 +53,21 @@ local service to the users that actually need it. This blocks
 potential leaks due to misconfigurations or bugs, and deanonymization
 attacks by compromised processes. For specifics, see the firewall
 configuration where this is well commented:
-[[!tails_gitweb config/chroot_local-includes/etc/ferm.conf]]
+[[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]]
+
+#### Automapped addresses
+
+`AutomapHostsOnResolve` is enabled in Tor configuration, and
+a firewall rule transparently redirects to the Tor transparent proxy
+port the connections targeted at the `127.192.0.0/10` virtual mapped
+address space.
+
+Only the `amnesia` user is granted access to the Tor transparent proxy
+port, so in practice only them can use this hostname-to-address
+mapping facility.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
+- [[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]]
 
 #### IPv6
 

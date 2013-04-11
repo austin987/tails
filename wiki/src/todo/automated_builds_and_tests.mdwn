@@ -33,37 +33,32 @@ What we have
 Roadmap
 =======
 
-0. See if/how jenkins.debian.net, grml, Ubuntu and others keep their
-   job config in Git. [[!tag todo/research]]
-   - for Debian, their `update_jdn.sh` uses [Jenkins Jobs
-     Builder](http://ci.openstack.org/jenkins-job-builder/): it runs
-     `jenkins-jobs update $config` after importing updated YAML job
-     config files from Git
-   - jenkins.debian.net uses the [SCM
-     Sync](https://wiki.jenkins-ci.org/display/JENKINS/SCM+Sync+configuration+plugin)
-     plugin, that apparently handles committing to the VCS on
-     configuration changes done in the web interface, and maybe more
-   - there's also the [jenkins_jobs puppet
-     module](http://tradeshift.com/blog/tstech-managing-jenkins-job-configurations-by-puppet/)
-0. See if/how people use Puppet to deploy Jenkins jobs. [[!tag todo/research]]
 0. Setup a few basic Jenkins jobs, e.g. simply run cucumber in Tails
    source tree after every commit in `stable`, `testing`, `devel`,
-   `experimental`, `feature/*` and `bugfix/*` [[!tag todo/sysadmin]]
-0. Setup Jenkins authentication with the [standard security
-   setup](https://wiki.jenkins-ci.org/display/JENKINS/Standard+Security+Setup)
+   `experimental`, and unmerged `feature/*` and `bugfix/*`.
    [[!tag todo/sysadmin]]
-0. Setup a web frontend so that the Jenkins web interface is shown to
-   the world [[!tag todo/sysadmin]]
-0. Setup email notifications
+0. Fix redirects to plain http://.
+0. Setup a Jenkins slave on builder.lizard.
+0. Setup email notifications.
 0. Add more Jenkins jobs such as:
-   - run our various [[custom programs|contribute/git]]' test suite
-     (see the section about Perl projects on [[automated builds and tests]])
-     and build Debian packages for them
    - check PO files [[validity with
      i18nspector|contribute/l10n_tricks]]
    - automated ISO builds
+     * make sure only one such build is run at a given time:
+       [[!taglink todo/research]] if that's possible without using the
+       Jenkins slave/master feature.
    - automated test suite
-0. Setup IRC notifications (see [[resources|automated builds and tests/jenkins]])
+0. run our various [[custom programs|contribute/git]]' test suite
+   (see the section about Perl projects on [[automated builds and tests]])
+   and build Debian packages for them:
+   a. set up a `perl-tester.lizard` Jenkins slave
+0. Run `jenkins-jobs update /etc/jenkins_jobs/jobs/` when the Jenkins
+   jobs repository gets an update.
+0. Setup IRC notifications (see [[resources|automated builds and tests/jenkins]]).
+0. Think through a plugins upgrade policy and possibly create the
+   needed tools.
+0. Make our Jenkins visible and read-only on the web.
+0. Start/stop `builder.lizard` before/after building an ISO.
 
 What we need
 ============
