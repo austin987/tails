@@ -74,15 +74,15 @@ else
 	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
 	cd "$WORKSPACE"
 	git fetch origin
-	as_root_do git checkout --force "$REV"
-	as_root_do git reset --hard "$COMMIT"
+	git checkout --force "$REV"
+	git reset --hard "$COMMIT"
 fi
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
 	sudo rm -rf /var/cache/stages_bootstrap
 fi
-as_root_do ./build-wiki
+./build-wiki
 
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
 if [ "$TAILS_RAM_BUILD" ]; then
