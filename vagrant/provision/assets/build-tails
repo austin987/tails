@@ -32,6 +32,7 @@ bootstrap_stage_is_ok() {
 }
 
 cleanup() {
+	[ -n "$BUILD_DIR" ] || return 0
 	cd /
 	mounts=$(mount | grep -E "^[^[:space:]]+ on $BUILD_DIR" | \
 		awk '{print $3}' | sort -r)
