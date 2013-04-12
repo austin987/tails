@@ -1,0 +1,81 @@
+[[!meta title="Unblock a wireless device"]]
+
+When Tails starts it unblocks Wi-Fi, Bluetooth, WWAN and WiMAX
+devices.
+
+It also blocks all other kinds of wireless devices such as GPS and FM
+ones. So, if you want to use one such device, you need to unblock
+it first.
+
+This technique uses the command line.
+
+[[!toc levels=1]]
+
+<h2 class="bullet-number-one">Set up an administration password</h2>
+
+Start Tails and [[set up an administration
+password|doc/first_steps/startup_options/administration_password]].
+
+<a id="step_2"></a>
+
+<h2 class="bullet-number-two">Find out the index of the wireless device</h2>
+
+Open a [[root
+terminal|doc/first_steps/startup_options/administration_password#open_root_terminal]].
+
+Execute the following command in the root terminal:
+
+	rfkill list
+
+The output should be something vaguely similar to:
+
+	0: phy0: Wireless LAN
+	        Soft blocked: no
+	        Hard blocked: no
+	1: hci0: Bluetooth
+	        Soft blocked: no
+	        Hard blocked: no
+ 	2: gps0: GPS
+	        Soft blocked: yes
+	        Hard blocked: no
+
+The device index is the number that starts the relevant device's
+three-lines section. In this example, the index of the Bluetooth
+device is 1, while the index of the GPS device is 2. Yours are
+probably different.
+
+<h2 class="bullet-number-three">Unblock the wireless device</h2>
+
+Execute the following command in the root terminal, replacing
+`[index]` with the index found at [[step 2|wireless#step_2]]:
+
+	rfkill unblock [index]
+
+Here is an example of the command to execute, yours is probably
+different:
+
+	rfkill unblock 2
+
+<h2 class="bullet-number-four">Verify that the wireless device was unblocked</h2>
+
+Execute the following command in the root terminal again:
+
+	rfkill list
+
+This output should be very similar to the one seen at step 2, with one
+difference: the device unblocked at step 3 should not be soft
+blocked anymore.
+
+In this example, the output would be:
+
+	0: phy0: Wireless LAN
+	        Soft blocked: no
+	        Hard blocked: no
+	1: hci0: Bluetooth
+	        Soft blocked: no
+	        Hard blocked: no
+ 	2: gps0: GPS
+	        Soft blocked: no
+	        Hard blocked: no
+
+Yours is probably different.
