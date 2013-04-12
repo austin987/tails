@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# This script is used by both our Vagrant and Jenkins -based build environments.
+
 set -e
 
 TMPFS_SIZE_MB=6144 # 6 GB
@@ -30,6 +32,7 @@ bootstrap_stage_is_ok() {
 }
 
 cleanup() {
+	[ -n "$BUILD_DIR" ] || return 0
 	cd /
 	mounts=$(mount | grep -E "^[^[:space:]]+ on $BUILD_DIR" | \
 		awk '{print $3}' | sort -r)
@@ -47,30 +50,47 @@ if [ "$TAILS_RAM_BUILD" ]; then
 	fi
 fi
 
-REV="${1:-$(git --git-dir=/amnesia.git name-rev --name-only HEAD)}"
-COMMIT="$(git --git-dir=/amnesia.git rev-parse --verify "$REV")"
-
-test -d /home/vagrant/amnesia || git clone /amnesia.git /home/vagrant/amnesia
-
-cd /home/vagrant/amnesia
-
-git fetch origin
-as_root_do git checkout --force "$REV"
-as_root_do git reset --hard "$COMMIT"
+if [ -n "$JENKINS_URL" ]; then
+	# Build triggered by Jenkins
+	if [ -z "$WORKSPACE" ]; then
+		echo "WORKSPACE environment variable is not set. Aborting." >&2
+	fi
+	ARTIFACTS_DIR="$WORKSPACE"
+	if [ -z "$GIT_BRANCH" ]; then
+		echo "GIT_BRANCH environment variable is not set. Aborting." >&2
+	fi
+	if [ -z "$GIT_COMMIT" ]; then
+		echo "GIT_COMMIT environment variable is not set. Aborting." >&2
+	fi
+	REV="$GIT_BRANCH"
+	COMMIT="$GIT_COMMIT"
+	cd "$WORKSPACE"
+else
+	# Build triggered by Vagrant
+	WORKSPACE=/home/vagrant/amnesia
+	ARTIFACTS_DIR=/vagrant
+	REV="${1:-$(git --git-dir=/amnesia.git name-rev --name-only HEAD)}"
+	COMMIT="$(git --git-dir=/amnesia.git rev-parse --verify "$REV")"
+	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
+	cd "$WORKSPACE"
+	git fetch origin
+	git checkout --force "$REV"
+	git reset --hard "$COMMIT"
+fi
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
-	[ -d "$dir" ] && sudo rm -rf /var/cache/stages_bootstrap
+	sudo rm -rf /var/cache/stages_bootstrap
 fi
-as_root_do ./build-wiki
+./build-wiki
 
-BUILD_DIR=$(mktemp -d /home/vagrant/tails-build.XXXXXXXX)
+BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
 if [ "$TAILS_RAM_BUILD" ]; then
-	TMPFS_DIR=$(mktemp -d /home/vagrant/tmpfs.XXXXXXXX)
-	as_root_do mount -t tmpfs -o "noatime,size=${TMPFS_SIZE_BYTES},mode=0770,uid=root,gid=vagrant" tmpfs "$TMPFS_DIR"
-	as_root_do mount -t aufs -o "noatime,noxino,dirs=$TMPFS_DIR=rw:/home/vagrant/amnesia/=rr+wh" aufs "$BUILD_DIR"
+	TMPFS_DIR=$(mktemp -d /tmp/tmpfs.XXXXXXXX)
+	as_root_do mount -t tmpfs -o "noatime,size=${TMPFS_SIZE_BYTES},mode=0770,uid=root,gid=${USER}" tmpfs "$TMPFS_DIR"
+	as_root_do mount -t aufs -o "noatime,noxino,dirs=$TMPFS_DIR=rw:${WORKSPACE}/=rr+wh" aufs "$BUILD_DIR"
 else
-	as_root_do rsync -a /home/vagrant/amnesia/ "$BUILD_DIR"/
+	as_root_do rsync -a "$WORKSPACE"/ "$BUILD_DIR"/
 fi
 
 cd "$BUILD_DIR"
@@ -88,7 +108,7 @@ fi
 
 as_root_do lb build
 
-mv -f tails-* /vagrant
+mv -f tails-* "$ARTIFACTS_DIR"
 
 if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
     ! sudo umount "$BUILD_DIR"/cache/stages_bootstrap 2>/dev/null; then

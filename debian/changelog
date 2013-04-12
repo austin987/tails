@@ -1,3 +1,68 @@
+tails (0.17.2) unstable; urgency=low
+
+  * Iceweasel
+  - Upgrade to Iceweasel 17.0.5esr-0+tails2~bpo60+1.
+  - Stop displaying obsolete context menu entries ("Open Tor URL" and friends).
+
+  * Hardware support
+  - Update Linux to 3.2.41-2
+
+  * Bugfixes
+  - Use more reliable OpenPGP keyservers:
+    · use the hkps pool in GnuPG (and import their SSL CA)
+    · use hkp://pool.sks-keyservers.net in Seahorse (as it does not support
+      hkps yet)
+  - Keep udisks users (GNOME Disk Utility, tails-persistence-setup, etc.)
+    from resetting the system partition's attributes when manipulating the
+    partition table. To this end, backport the relevant bugfix from Wheezy
+    into parted 2.3-5+tails1. This allowed to remove the sgdisk-based
+    workaround in tais-persistence-setup, and to stop installing
+    python-parted. All this is a first needed step to fix
+    todo/make_system_disk_read-only in a future release.
+
+  * Minor improvements
+  - Disable NoScript's HTML5 media click-to-play for better user experience.
+
+  * Localization
+  - Tails USB installer: update translations for French, German, Spanish,
+    Finnish, Greek, Italian, Latvian, Dutch, Polish and Chinese.
+  - Tails Greeter: update translations for Farsi, Chinese, French;
+    new translations: Finnish, Norwegian Bokmål, Galician.
+  - tails-persistence-setup: update Farsi and Chinese translations;
+    import new translations for Finnish and Swedish.
+  - WhisperBack: update translations for Arabic, French, German, Greek,
+    Spanish, Korean, Polish, Russian. New translations: Finnish, Chinese.
+
+  * Build process
+  - Add automated testing framework (Sikuli, Cucumber, libvirt -based)
+    with a bunch of tests.
+
+ -- Tails developers <amnesia@boum.org>  Sun, 07 Apr 2013 12:17:26 +0200
+
+tails (0.17.1) unstable; urgency=low
+
+  * Iceweasel
+  - Upgrade to Iceweasel 17.0.4esr-0+tails1~bpo60+1.
+
+  * Hardware support
+  - Update Linux to 3.2.39-2.
+    It includes the drm and agp subsystems from Linux 3.4.29.
+  - Don't install xserver-xorg-video-rendition backport.
+    xserver-xorg-video-rendition has been removed from squeeze-backports
+    due to an upstream tarball mismatch discover when merging backports
+    into the main Debian archive, and xserver-xorg-video-all still depends
+    on it, so we explicitly install all drivers from -all but -rendition
+    as a (hopefully temporary) workaround.
+
+  * Minor improvements
+  - Remove Indymedia IRC account, until we ship a version of Pidgin
+    with SASL support, that is when Tails is based on Wheezy.
+
+  * Build system
+  - Don't ship the wiki's todo and bugs on ISO images.
+
+ -- Tails developers <amnesia@boum.org>  Thu, 21 Mar 2013 18:54:11 +0100
+
 tails (0.17) unstable; urgency=low
 
   * New features

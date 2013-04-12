@@ -1,0 +1,108 @@
+[[!meta title="Erase memory: the GRUB way"]]
+
+GRUB is a really small and featureful kernel. Among other thing, it knows
+perfectly how to shut down x86 hardware. So how about adding a command that
+would erase memory? A simple `grub.cfg` script could then be used perform the
+wipe and shutdown (or reboot) the system.
+
+Status:
+
+ * `wipe_memory` command is basically complete.
+ * The minimal set of GRUB modules to use is known.
+ * There is GRUB configuration using `gfxterm` to get a nice display.
+ * Figure out why using `kexec` fails on real hardware.
+
+Patches
+=======
+
+ * [[version 2|grub-wipe-memory-v2.patch]]
+
+Version history:
+
+ * Changes since v1:
+   - Adjust line width to fit ascii font in gfxterm 640x480.
+   - Do not always include all modules in grub-mkstandalone. This makes
+     testing easier.
+ * Changes since v0:
+   - Really fill memory with zeros.
+   - Change strategy for `grub_wipe_with_malloc`. Use dichotomy and recursion
+     for a more robust allocation strategy.
+   - Debug output has been cleaned up and isolated.
+   - Now with a progress bar!
+
+Known issues:
+
+ * The code related to high order wipe is not portable to other architectures
+   than `i386` so it should be labeled clearly as such.
+
+How to test
+===========
+
+Using a qemu image
+------------------
+
+1. Uncompress GRUB 2.00 sources:
+
+       tar -zxf grub-2.00.tar.gz
+
+2. Apply the patch and copy the boot configuration files:
+
+       cd grub-2.00
+       patch -p1 < /path/to/amnesia/wiki/src/todo/more_efficient_memory_wipe/grub/grub-wipe-memory-v2.patch
+       cp -r /path/to/amnesia/wiki/src/todo/more_efficient_memory_wipe/grub/boot .
+
+3. Build:
+
+       ./autogen.sh
+       test -f Makefile && make distclean
+       ./configure --with-platform=qemu --target=i386
+       mkdir -p /tmp/tftp
+       make -j4 &&
+           pkgdatadir='.' ./grub-mkstandalone -C xz -o /tmp/qemu.bin \
+               -d ./grub-core -O i386-qemu --grub-mkimage='./grub-mkimage' \
+               --modules="all_video echo gfxterm halt normal png reboot serial test wipe_memory" \
+               boot/grub/grub.cfg boot/grub/ascii.pf2 boot/grub/splash.png
+
+4. Start qemu:
+
+       qemu -hda /dev/zero -bios /tmp/qemu.bin \
+           -vga std -enable-kvm -m 5120
+
+
+Using a `lnxboot`
+-----------------
+
+GRUB can actually be loaded using an image compatible with *bzImage* in
+`lnxboot.img`. It will actually load and execute a GRUB image given as a
+ramdisk.
+
+1. Uncompress GRUB 2.00 sources.
+2. Apply the patch and copy the boot configuration files.
+3. Build:
+
+       test -f Makefile && make distclean
+       ./configure --with-platform=pc --target=i386
+       make -j4 &&
+           pkgdatadir='.' ./grub-mkstandalone -C xz -o /tmp/core.img \
+               -d ./grub-core -O i386-pc --grub-mkimage='./grub-mkimage' \
+               --modules="all_video echo gfxterm halt normal pci png reboot serial test wipe_memory" \
+               boot/grub/grub.cfg boot/grub/ascii.pf2 boot/grub/splash.png
+
+4. Start qemu:
+
+       qemu -hda /dev/zero -kernel grub-core/lnxboot.img -initrd /tmp/core.img \
+            -vga std -m 256
+
+The image can be also be started with kexec given `lnxboot.img` is extended
+(e.g. filled with zeros) to be at least 32kB in size. Then, the following
+should work:
+
+    kexec --load --real-mode --initrd=/tmp/core.img grub-core/lnxboot.img
+    kexec --exec
+
+Tests done with the former worked on qemu, VirtualBox but not on bare metal.
+
+Screenshot
+==========
+
+[[!img grub_wipe_memory.png]]
