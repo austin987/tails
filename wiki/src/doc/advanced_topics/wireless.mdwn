@@ -9,73 +9,63 @@ it first.
 
 This technique uses the command line.
 
-[[!toc levels=1]]
+1. When starting Tails, [[set up an administration
+   password|doc/first_steps/startup_options/administration_password]].
 
-1. Set up an administration password
+2. To find out the index of the wireless device,
+   open a [[root
+   terminal|doc/first_steps/startup_options/administration_password#open_root_terminal]],
+   and execute the following command:
 
-Start Tails and [[set up an administration
-password|doc/first_steps/startup_options/administration_password]].
+       rfkill list
 
-<a id="step_2"></a>
+   The output should be something vaguely similar to:
 
-2. Find out the index of the wireless device
+       0: phy0: Wireless LAN
+               Soft blocked: no
+               Hard blocked: no
+       1: hci0: Bluetooth
+               Soft blocked: no
+               Hard blocked: no
+       2: gps0: GPS
+               Soft blocked: yes
+               Hard blocked: no
 
-Open a [[root
-terminal|doc/first_steps/startup_options/administration_password#open_root_terminal]].
+   The device index is the number that starts the relevant device's
+   three-lines section. In this example, the index of the Bluetooth
+   device is 1, while the index of the GPS device is 2. Yours are
+   probably different.
 
-Execute the following command in the root terminal:
+3. To enable the wireless device,
+   execute the following command in the root terminal, replacing
+   `[index]` with the index found at [[step 2|wireless#step_2]]:
 
-	rfkill list
+       rfkill unblock [index]
 
-The output should be something vaguely similar to:
+   Here is an example of the command to execute, yours is probably
+   different:
 
-	0: phy0: Wireless LAN
-	        Soft blocked: no
-	        Hard blocked: no
-	1: hci0: Bluetooth
-	        Soft blocked: no
-	        Hard blocked: no
- 	2: gps0: GPS
-	        Soft blocked: yes
-	        Hard blocked: no
+       rfkill unblock 2
 
-The device index is the number that starts the relevant device's
-three-lines section. In this example, the index of the Bluetooth
-device is 1, while the index of the GPS device is 2. Yours are
-probably different.
+4. To verify that the wireless device was enabled,
+   execute the following command in the root terminal again:
 
-3. Enable the wireless device
+       rfkill list
 
-Execute the following command in the root terminal, replacing
-`[index]` with the index found at [[step 2|wireless#step_2]]:
+   This output should be very similar to the one seen at step 2, with one
+   difference: the device enabled at step 3 should not be soft
+   blocked anymore.
 
-	rfkill unblock [index]
+   In this example, the output would be:
 
-Here is an example of the command to execute, yours is probably
-different:
+       0: phy0: Wireless LAN
+               Soft blocked: no
+               Hard blocked: no
+       1: hci0: Bluetooth
+               Soft blocked: no
+               Hard blocked: no
+       2: gps0: GPS
+               Soft blocked: no
+               Hard blocked: no
 
-	rfkill unblock 2
-
-4. Verify that the wireless device was enabled
-
-Execute the following command in the root terminal again:
-
-	rfkill list
-
-This output should be very similar to the one seen at step 2, with one
-difference: the device enabled at step 3 should not be soft
-blocked anymore.
-
-In this example, the output would be:
-
-	0: phy0: Wireless LAN
-	        Soft blocked: no
-	        Hard blocked: no
-	1: hci0: Bluetooth
-	        Soft blocked: no
-	        Hard blocked: no
- 	2: gps0: GPS
-	        Soft blocked: no
-	        Hard blocked: no
-
-Yours is probably different.
+   Yours is probably different.
