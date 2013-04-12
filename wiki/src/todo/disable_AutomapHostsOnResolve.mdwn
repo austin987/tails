@@ -9,7 +9,20 @@ discussing it and making a decision, hence the todo/research tag :)
 > has access to the `127.192.0.0/10` address space, there should be
 > no possibility of any more leaks than in other situations.
 
->> This is a trivial change that could be made to our `ferm.conf`.
->> Let's try this.
+>> Actually, in Tails 0.17.2, as said above only the `amnesia` user
+>> has access to Tor's `TransPort` (9040). Any other user who tries
+>> to use an automapped address (`127.192.0.0/10`) is forbidden to do
+>> so:
+>> 
+>> 	Dropped outbound packet: IN= OUT=lo SRC=127.0.0.1 DST=127.0.0.1 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=7190 DF PROTO=TCP SPT=58781 DPT=9040 WINDOW=32792 RES=0x00 SYN URGP=0 UID=0 GID=0
+>> 
+>> ... while the `amnesia` user can do the same flawlessly.
+>> 
+>> Test case for anyone to reproduce: `curl 127.192.0.1:11371` after
+>> having `tor-resolve`'d `2eghzlv2wwcq7u7y.onion` to 127.192.0.1.
+>> 
+>> Therefore, what's already in place does exactly what we decided we
+>> wanted. Now documented on
+>> [[contribute/design/Tor_enforcement/Network_filter]].
 
-[[!tag todo/test]]
+[[!tag todo/done]]
