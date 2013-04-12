@@ -1,0 +1,47 @@
+Hello,
+
+a Tails user just reported it on IRC and I report it here as I had the same thought too for a while.
+
+Possibly it's better to mute the audio or set the volume to zero at boot time because system sounds and accidentially run audio/video files could raise suspicion.
+
+Maybe it's better to let the user do the 2 clicks to enable it, just to be on the safe side.
+
+--JohnDoe
+
+> Why not, thanks for mentioning it. Care to bring us a patch? --intrigeri
+
+Inspiration sources
+===================
+
+* The "Small patch to mute sound on boot time" thread on
+  tails-dev; last patch [[attached
+  here|mute_audio_output/0001-Small-patch-to-mute-the-sound-card-Master-channel-on.patch]].
+* Debian's `alsa-utils` initscript and its `/usr/share/alsa/utils.sh`
+  library deals with channel levels in a way that supports many
+  specific tricks needed by various hardware.
+* Liberte Linux' `src/usr/local/bin/reset-mixer` (which
+  seems to only mute the first sound-card, and supports a limited set
+  of controls, and therefore a limited set of hardware).
+
+Implementation issues
+=====================
+
+What channel(s) shall be muted?
+-------------------------------
+
+According to the [archlinux
+documentation](https://wiki.archlinux.org/index.php/Advanced_Linux_Sound_Architecture#Unmuting_the_channels),
+"ALSA installs with all channels muted by default"; indeed, most of
+the work done by the `alsa-utils` initscript in Debian is merely to
+unmute many channels and toggle many controls.
+
+If we mute all possible channels, most users won't know what
+hardware-dependent list of channels they must unmute and increase
+level in order to get sound output.
+
+So we may want to mute only the `Master` channel. However, this would
+only be a partial implementation of the stated goal: it seems there
+are ALSA drivers that don't expose a `Master` channel, e.g. see [this
+bug report](https://bugzilla.redhat.com/show_bug.cgi?id=594936).
+
+[[wishlist]]

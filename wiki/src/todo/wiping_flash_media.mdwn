@@ -20,15 +20,16 @@ graphical interface.
 So we cannot document a GUI procedure to truly wipe a USB stick at the
 moment.
 
-The developer of nautilus-wipe is planning to switch from
-secure-delete, which is not maintained anymore, to [diskscrub].
-Fortunately, diskscrub knows how to wipe entire block devices, and
-actually do advertise this as a safer option than wiping individual
-files.
-
-[diskscrub]: https://code.google.com/p/diskscrub/
-
 > The documentation was fixed in June.
 
-We have to [[!taglink todo/wait]] for nautilus-wipe to be based on
-diskscrub.
+Now that the plans for nautilus-wipe to be based on diskscrub are
+abandoned, the most sensible way to fix this would probably be:
+
+1. add an option to wipe with 3 random passes, rather than a mere zero
+   one, to the [udisks Format
+   method](http://udisks.freedesktop.org/docs/latest/gdbus-org.freedesktop.UDisks2.Block.html#gdbus-method-org-freedesktop-UDisks2-Block.Format)
+2. add access to this feature from Palimpsest, which seems a more
+   appropriate place to trigger destructive operations at the block
+   device level than a Nautilus extension
+
+**Next thing to do**: report this as wishlist tickets [[!taglink todo/upstream]].

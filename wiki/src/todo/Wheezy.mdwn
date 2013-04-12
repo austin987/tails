@@ -2,8 +2,7 @@ We need to start porting Tails to Wheezy, and test it.
 
 Work is done in the `feature/wheezy` Git branch.
 
-**Current state**: builds; booting this ISO gives no usable
-tails-greeter, though.
+**Current state**: does not build.
 
 [[!toc levels=2]]
 
@@ -12,12 +11,10 @@ Problems to fix
 
 [[!tag todo/code]]
 
-* Fix tails-greeter:
-  - support for setting the keyboard layout was removed from GDM
-  - Once the call to `GdmGreeterService.SelectLayout` in
-    `community-greeter.py` is replaced by `pass`, the greeter GNOME
-    session starts, but no window is displayed in there.
-  - Rewrite as a lightdm greeter (like unity-greeter)?
+* Fix the build: merge up-to-date APT suite, update some
+  custom packages.
+* Test by skipping tails-greeter (drop the `nox11autologin` option).
+* [[Fix tails-greeter|todo/tails-greeter_vs._Wheezy]]
 * Fix `/etc/init.d/tails-kexec`: `/etc/default/locale` does not exist.
 * `amnesia` users sudoers credentials to localize console at profile
   time don't work
@@ -49,6 +46,9 @@ Problems to fix
   broken when indices are not available. Actually, if `lb source` just
   exited early unless `LB_SOURCE` is enabled, we would not have
   this problem.
+* Re-enable Indymedia IRC account (disabled by
+  `bugfix/disable-indymedia-irc-account`) and convert it to use the
+  hidden service and SASL.
 
 Tests to do
 ===========
@@ -61,6 +61,9 @@ Tests to do
 * does `liveusb-creator` work fine with both shipped kernels on
   Wheezy? does it work fine *without* our patched `dbus-python`
   package too?
+* replace laptop-mode-tools with acpi-support + pm-utils + hdparm
+  (that ships `/usr/lib/pm-utils/power.d/95hdparm-apm`);
+  does this combination take care of Wi-Fi power management?
 
 Research to do
 ==============
