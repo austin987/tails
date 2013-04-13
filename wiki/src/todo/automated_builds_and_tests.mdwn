@@ -33,28 +33,35 @@ What we have
 Roadmap
 =======
 
-0. Setup a few basic Jenkins jobs, e.g. simply run cucumber in Tails
-   source tree after every commit in `stable`, `testing`, `devel`,
-   `experimental`, and unmerged `feature/*` and `bugfix/*`.
-   [[!tag todo/sysadmin]]
-0. Fix redirects to plain http://.
-0. Setup a Jenkins slave on builder.lizard.
+[[!tag todo/sysadmin]]
+
+0. Archive built ISO images to `www.lizard`:
+   a. Set a NFS server up on `www.lizard`.
+   a. Add a 2nd build step that `cp tails-* /some/place`, where
+      `/some/place` is a NFS mount of a directory exported by
+      `www.lizard`.
+0. Firewall the Jenkins port on `jenkins.lizard` against access from
+   the other VMs.
+0. Build Debian packages for our custom programs:
+   a. Setup [jenkins-debian-glue](http://jenkins-debian-glue.org/).
+0. Run `jenkins-jobs update /etc/jenkins_jobs/jobs/` when the Jenkins
+   jobs repository gets an update.
+0. [[!taglink todo/wait]] for the [[centralized Git
+   repositories|todo/centralize_Git_repositories]], then have the
+   master repository push to `gitolite@puppet-git.lizard:tails`,
+   e.g. using Gitolite's [mirroring support](http://gitolite.com/gitolite/mirroring.html).
+0. Factor out Jenkins setup code from the
+   `{jenkins,builder,www,...}.lizard` node definitions to a set of
+   `tails::` Puppet modules.
 0. Setup email notifications.
+0. Setup IRC notifications (see [[resources|automated builds and tests/jenkins]]).
+0. Run our various [[custom programs|contribute/git]]' test suite
+   (see the section about Perl projects on [[automated builds and tests]])
+   a. set up a `perl-tester.lizard` Jenkins slave
 0. Add more Jenkins jobs such as:
    - check PO files [[validity with
      i18nspector|contribute/l10n_tricks]]
-   - automated ISO builds
-     * make sure only one such build is run at a given time:
-       [[!taglink todo/research]] if that's possible without using the
-       Jenkins slave/master feature.
    - automated test suite
-0. run our various [[custom programs|contribute/git]]' test suite
-   (see the section about Perl projects on [[automated builds and tests]])
-   and build Debian packages for them:
-   a. set up a `perl-tester.lizard` Jenkins slave
-0. Run `jenkins-jobs update /etc/jenkins_jobs/jobs/` when the Jenkins
-   jobs repository gets an update.
-0. Setup IRC notifications (see [[resources|automated builds and tests/jenkins]]).
 0. Think through a plugins upgrade policy and possibly create the
    needed tools.
 0. Make our Jenkins visible and read-only on the web.
