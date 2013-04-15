@@ -55,7 +55,13 @@ if [ -n "$JENKINS_URL" ]; then
 	if [ -z "$WORKSPACE" ]; then
 		echo "WORKSPACE environment variable is not set. Aborting." >&2
 	fi
-	ARTIFACTS_DIR="$WORKSPACE"
+	SHARE=$(mount | grep "/srv/www")
+	if [ -n "$SHARE" ]; then
+		ARTIFACTS_DIR=/srv/www/"$JOB_NAME"
+	else
+		echo "Shared directory is not available, saving artifacts in workspace." >&2
+		ARTIFACTS_DIR="$WORKSPACE"
+	fi
 	if [ -z "$GIT_BRANCH" ]; then
 		echo "GIT_BRANCH environment variable is not set. Aborting." >&2
 	fi
@@ -107,6 +113,12 @@ if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
 fi
 
 as_root_do lb build
+
+if [ -n "$JENKINS_URL" ] && [ -n "$SHARE" ]; then
+	if [ ! -d "$ARTIFACTS_DIR" ] ; then
+		mkdir -p "$ARTIFACTS_DIR"
+	fi
+fi
 
 mv -f tails-* "$ARTIFACTS_DIR"
 
