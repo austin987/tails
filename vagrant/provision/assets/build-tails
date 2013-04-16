@@ -83,6 +83,8 @@ else
 	git reset --hard "$COMMIT"
 fi
 
+install -m 0700 -d "$ARTIFACTS_DIR"
+
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
 	sudo rm -rf /var/cache/stages_bootstrap
@@ -112,12 +114,6 @@ if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
 fi
 
 as_root_do lb build
-
-if [ -n "$JENKINS_URL" ] && [ -n "$SHARE" ]; then
-	if [ ! -d "$ARTIFACTS_DIR" ] ; then
-		mkdir -p "$ARTIFACTS_DIR"
-	fi
-fi
 
 mv -f tails-* "$ARTIFACTS_DIR"
 
