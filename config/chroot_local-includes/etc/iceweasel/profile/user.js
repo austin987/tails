@@ -17,7 +17,7 @@ user_pref("extensions.torbutton.block_nthwrite", true);
 user_pref("extensions.torbutton.block_tforms", false);
 user_pref("extensions.torbutton.clear_cookies", true);
 user_pref("extensions.torbutton.cookie_jars", false);
-user_pref("extensions.torbutton.disable_domstorage", true);
+user_pref("extensions.torbutton.disable_domstorage", false);
 user_pref("extensions.torbutton.display_panel", false);
 user_pref("extensions.torbutton.fresh_install", false);
 user_pref("extensions.torbutton.google_redir_url", 4);
