@@ -14,13 +14,14 @@ user_pref("extensions.https_everywhere._observatory.popup_shown", true);
 user_pref("extensions.torbutton.block_nthread", true);
 user_pref("extensions.torbutton.block_nthwrite", true);
 
-// Torbutton preferences from the TBB
+// Torbutton preferences the TBB also sets.
+// We use the same value as the TBB unless noted.
 user_pref("extensions.torbutton.fresh_install", false);
 user_pref("extensions.torbutton.tor_enabled", true);
 user_pref("extensions.torbutton.proxies_applied", true);
 user_pref("extensions.torbutton.settings_applied", true);
 user_pref("extensions.torbutton.socks_host", "127.0.0.1");
-// user_pref("extensions.torbutton.socks_port", 9150); // see below
+user_pref("extensions.torbutton.socks_port", 9063); // Tails-specific
 user_pref("extensions.torbutton.tz_string", "UTC+00:00");
 
 // .saved version of the Torbutton preferences the TBB also sets
@@ -40,7 +41,6 @@ user_pref("extensions.torbutton.no_updates", true);
 user_pref("extensions.torbutton.nonontor_sessionstore", true);
 user_pref("extensions.torbutton.nontor_memory_jar", true);
 user_pref("extensions.torbutton.prompted_language", true);
-user_pref("extensions.torbutton.socks_port", 9063);
 user_pref("extensions.torbutton.socks_remote_dns", true);
 user_pref("extensions.torbutton.socks_version", 5);
 user_pref("extensions.torbutton.startup", true);
