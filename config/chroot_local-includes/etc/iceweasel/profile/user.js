@@ -44,7 +44,6 @@ user_pref("extensions.torbutton.saved.search_suggest", false);
 user_pref("extensions.torbutton.saved.socks_remote_dns", true);
 user_pref("extensions.torbutton.saved.socks_version", 5);
 user_pref("extensions.torbutton.saved.type", 5);
-user_pref("extensions.torbutton.saved.share_proxy_settings", false);
 user_pref("extensions.torbutton.socks_port", 9063);
 user_pref("extensions.torbutton.socks_remote_dns", true);
 user_pref("extensions.torbutton.socks_version", 5);
