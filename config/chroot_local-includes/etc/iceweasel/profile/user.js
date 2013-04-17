@@ -63,6 +63,7 @@ user_pref("network.proxy.socks_version", 5);
 user_pref("network.proxy.type", 1);
 
 // Other non-Torbutton prefs
+user_pref("extensions.foxyproxy.socks_remote_dns", true);
 user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
 user_pref("noscript.ABE.wanIpAsLocal", false);
