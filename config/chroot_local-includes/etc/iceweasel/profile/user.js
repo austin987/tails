@@ -54,6 +54,8 @@ user_pref("extensions.torbutton.tor_memory_jar", true);
 user_pref("extensions.torbutton.use_privoxy", false);
 user_pref("extensions.torbutton.versioncheck_enabled", false);
 user_pref("extensions.torbutton.warned_ff3", true);
+
+// Non-Torbutton prefs
 user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
 user_pref("noscript.ABE.wanIpAsLocal", false);
