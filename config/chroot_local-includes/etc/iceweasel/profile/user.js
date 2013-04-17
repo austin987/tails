@@ -40,11 +40,6 @@ user_pref("extensions.torbutton.no_updates", true);
 user_pref("extensions.torbutton.nonontor_sessionstore", true);
 user_pref("extensions.torbutton.nontor_memory_jar", true);
 user_pref("extensions.torbutton.prompted_language", true);
-user_pref("extensions.torbutton.saved.download_retention", 0);
-user_pref("extensions.torbutton.saved.search_suggest", false);
-user_pref("extensions.torbutton.saved.socks_remote_dns", true);
-user_pref("extensions.torbutton.saved.socks_version", 5);
-user_pref("extensions.torbutton.saved.type", 5);
 user_pref("extensions.torbutton.socks_port", 9063);
 user_pref("extensions.torbutton.socks_remote_dns", true);
 user_pref("extensions.torbutton.socks_version", 5);
@@ -54,6 +49,13 @@ user_pref("extensions.torbutton.tor_memory_jar", true);
 user_pref("extensions.torbutton.use_privoxy", false);
 user_pref("extensions.torbutton.versioncheck_enabled", false);
 user_pref("extensions.torbutton.warned_ff3", true);
+
+// .saved version of the Tails -specific Torbutton preferences
+user_pref("extensions.torbutton.saved.download_retention", 0);
+user_pref("extensions.torbutton.saved.search_suggest", false);
+user_pref("extensions.torbutton.saved.socks_remote_dns", true);
+user_pref("extensions.torbutton.saved.socks_version", 5);
+user_pref("extensions.torbutton.saved.type", 5);
 
 // Non-Torbutton prefs
 user_pref("noscript.ABE.enabled", false);
