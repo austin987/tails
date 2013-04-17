@@ -62,6 +62,10 @@ user_pref("network.proxy.socks_remote_dns", true);
 user_pref("network.proxy.socks_version", 5);
 user_pref("network.proxy.type", 1);
 
+// Fingerprinting
+user_pref("webgl.min_capability_mode", true);
+user_pref("webgl.disable-extensions", true);
+
 // Other non-Torbutton prefs
 user_pref("extensions.foxyproxy.socks_remote_dns", true);
 user_pref("noscript.ABE.enabled", false);
@@ -95,5 +99,3 @@ user_pref("noscript.subscription.lastCheck", -142148139);
 user_pref("noscript.temp", "");
 user_pref("noscript.untrusted", "google-analytics.com");
 user_pref("torbrowser.version", "Tails");
-user_pref("webgl.disable-extensions", true);
-user_pref("webgl.min_capability_mode", true);
