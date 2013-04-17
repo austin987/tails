@@ -53,7 +53,7 @@ user_pref("extensions.torbutton.warned_ff3", true);
 // .saved version of the Tails -specific Torbutton preferences
 user_pref("extensions.torbutton.saved.socks_remote_dns", true);
 user_pref("extensions.torbutton.saved.socks_version", 5);
-user_pref("extensions.torbutton.saved.type", 5);
+user_pref("extensions.torbutton.saved.type", 1);
 
 // Non-Torbutton prefs
 user_pref("noscript.ABE.enabled", false);
