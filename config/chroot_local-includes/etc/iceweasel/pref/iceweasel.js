@@ -82,7 +82,6 @@ pref("network.http.keep-alive.timeout", 20);
 pref("network.http.connection-retry-timeout", 0);
 
 // Extension support
-pref("extensions.autoDisableScopes", 0);
 pref("xpinstall.whitelist.add", "");
 pref("xpinstall.whitelist.add.103", "");
 

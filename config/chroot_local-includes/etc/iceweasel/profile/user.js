@@ -66,6 +66,9 @@ user_pref("network.proxy.type", 1);
 user_pref("webgl.min_capability_mode", true);
 user_pref("webgl.disable-extensions", true);
 
+// Extension support
+user_pref("extensions.autoDisableScopes", 0);
+
 // Other non-Torbutton prefs
 user_pref("extensions.foxyproxy.socks_remote_dns", true);
 user_pref("noscript.ABE.enabled", false);
