@@ -23,6 +23,14 @@ user_pref("extensions.torbutton.socks_host", "127.0.0.1");
 // user_pref("extensions.torbutton.socks_port", 9150); // see below
 user_pref("extensions.torbutton.tz_string", "UTC+00:00");
 
+// .saved version of the Torbutton preferences the TBB also sets
+user_pref("extensions.torbutton.saved.fresh_install", false);
+user_pref("extensions.torbutton.saved.tor_enabled", true);
+user_pref("extensions.torbutton.saved.proxies_applied", true);
+user_pref("extensions.torbutton.saved.settings_applied", true);
+user_pref("extensions.torbutton.saved.socks_host", "127.0.0.1");
+user_pref("extensions.torbutton.saved.socks_port", 9063);
+
 user_pref("extensions.torbutton.block_tforms", false);
 user_pref("extensions.torbutton.disable_domstorage", true);
 user_pref("extensions.torbutton.display_panel", false);
@@ -34,8 +42,6 @@ user_pref("extensions.torbutton.prompted_language", true);
 user_pref("extensions.torbutton.saved.download_retention", 0);
 user_pref("extensions.torbutton.saved.search_suggest", false);
 user_pref("extensions.torbutton.saved.socks_remote_dns", true);
-user_pref("extensions.torbutton.saved.socks_host", "127.0.0.1");
-user_pref("extensions.torbutton.saved.socks_port", 9063);
 user_pref("extensions.torbutton.saved.socks_version", 5);
 user_pref("extensions.torbutton.saved.type", 5);
 user_pref("extensions.torbutton.saved.share_proxy_settings", false);
