@@ -15,7 +15,6 @@ user_pref("extensions.torbutton.block_nthread", true);
 user_pref("extensions.torbutton.block_nthwrite", true);
 
 user_pref("extensions.torbutton.block_tforms", false);
-user_pref("extensions.torbutton.clear_cookies", true);
 user_pref("extensions.torbutton.cookie_jars", false);
 user_pref("extensions.torbutton.disable_domstorage", true);
 user_pref("extensions.torbutton.display_panel", false);
