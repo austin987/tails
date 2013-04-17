@@ -31,6 +31,7 @@ user_pref("extensions.torbutton.saved.settings_applied", true);
 user_pref("extensions.torbutton.saved.socks_host", "127.0.0.1");
 user_pref("extensions.torbutton.saved.socks_port", 9063);
 
+// Tails -specific Torbutton preferences
 user_pref("extensions.torbutton.block_tforms", false);
 user_pref("extensions.torbutton.disable_domstorage", true);
 user_pref("extensions.torbutton.display_panel", false);
