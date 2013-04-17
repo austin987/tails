@@ -55,7 +55,13 @@ user_pref("extensions.torbutton.saved.socks_remote_dns", true);
 user_pref("extensions.torbutton.saved.socks_version", 5);
 user_pref("extensions.torbutton.saved.type", 1);
 
-// Non-Torbutton prefs
+// Proxy and proxy security
+user_pref("network.proxy.socks", "127.0.0.1");
+user_pref("network.proxy.socks_port", 9063);
+user_pref("network.proxy.socks_remote_dns", true);
+user_pref("network.proxy.type", 1);
+
+// Other non-Torbutton prefs
 user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
 user_pref("noscript.ABE.wanIpAsLocal", false);
