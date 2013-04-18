@@ -261,29 +261,38 @@ Given /^I enable persistence with password "([^"]+)"$/ do |pwd|
   @screen.type(pwd)
 end
 
-Given /^persistence is not enabled$/ do
+def tails_persistence_enabled?
+  persistence_state_file = "/var/lib/live/config/tails.persistence"
+  return @vm.execute("test -e #{persistence_state_file}").success? &&
+         @vm.execute(". #{persistence_state_file}; " +
+                     "test $TAILS_PERSISTENCE_ENABLED = true").success?
+end
+
+Given /^persistence is enabled$/ do
   next if @skip_steps_while_restoring_background
-  data_part_dev = boot_device + "2"
-  assert(!@vm.execute("grep -q '^#{data_part_dev} ' /proc/mounts").success?,
-         "Partition '#{data_part_dev}' from the boot device is mounted")
+  try_for(120, :msg => "Persistence is disabled") do
+    tails_persistence_enabled?
+  end
+end
+
+Given /^all persistent directories are mounted$/ do
+  next if @skip_steps_while_restoring_background
+  mount = @vm.execute("mount").stdout.chomp
+  for dir in persistent_dirs do
+    assert(mount.include?("on #{dir} "),
+           "Persistent directory '#{dir}' is not mounted")
+  end
+end
+
+Given /^persistence is disabled$/ do
+  next if @skip_steps_while_restoring_background
+  assert(!tails_persistence_enabled?, "Persistence is enabled")
 end
 
 Given /^I enable read-only persistence with password "([^"]+)"$/ do |pwd|
   step "I enable persistence with password \"#{pwd}\""
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click('TailsGreeterPersistenceReadOnly.png', 10)
-end
-
-Given /^persistence has been enabled$/ do
-  next if @skip_steps_while_restoring_background
-  try_for(120, :msg => "Some persistent dir was not mounted") {
-    mount = @vm.execute("mount").stdout.chomp
-    persistent_dirs.each do |dir|
-      if ! mount.include? "on #{dir} "
-        raise "persistent dir #{dir} missing"
-      end
-    end
-  }
 end
 
 def boot_device
@@ -402,7 +411,8 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "the computer boots Tails"
   step "I enable read-only persistence with password \"asdf\""
   step "I log in to a new session"
-  step "persistence has been enabled"
+  step "persistence is enabled"
+  step "all persistent directories are mounted"
   step "GNOME has started"
   step "I have closed all annoying notifications"
   step "the expected persistent files are present in the filesystem"

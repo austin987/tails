@@ -66,7 +66,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     Then Tails seems to have booted normally
     And Tails is running from USB drive "current"
     And the boot device has safe access rights
-    And persistence is not enabled
+    And persistence is disabled
     But a Tails persistence partition with password "asdf" exists on USB drive "current"
 
   Scenario: Writing files to a read/write-enabled persistent partition
@@ -81,7 +81,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I log in to a new session
     And GNOME has started
     And I have closed all annoying notifications
-    And persistence has been enabled
+    And persistence is enabled
+    And all persistent directories are mounted
     And I write some files expected to persist
     And I completely shutdown Tails
     Then only the expected files should persist on USB drive "current"
@@ -98,7 +99,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I log in to a new session
     And GNOME has started
     And I have closed all annoying notifications
-    And persistence has been enabled
+    And persistence is enabled
+    And all persistent directories are mounted
     And I write some files not expected to persist
     And I remove some files expected to persist
     And I completely shutdown Tails
@@ -114,7 +116,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And Tails is running from USB drive "current"
     And the boot device has safe access rights
     And Tails seems to have booted normally
-    And persistence is not enabled
+    And persistence is disabled
     But a Tails persistence partition with password "asdf" exists on USB drive "current"
     And I have closed all annoying notifications
     When I delete the persistent partition
@@ -162,7 +164,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I log in to a new session
     And GNOME has started
     And I have closed all annoying notifications
-    And persistence has been enabled
+    And persistence is enabled
+    And all persistent directories are mounted
     And I write some files expected to persist
     And I completely shutdown Tails
     Then only the expected files should persist on USB drive "old"
@@ -222,7 +225,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I enable read-only persistence with password "asdf"
     And I log in to a new session
     Then Tails seems to have booted normally
-    And persistence has been enabled
+    And persistence is enabled
+    And all persistent directories are mounted
     And Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
     And the expected persistent files are present in the filesystem
@@ -252,7 +256,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I enable read-only persistence with password "asdf"
     And I log in to a new session
     Then Tails seems to have booted normally
-    And persistence has been enabled
+    And persistence is enabled
+    And all persistent directories are mounted
     And Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
     And the expected persistent files are present in the filesystem
