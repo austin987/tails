@@ -100,7 +100,6 @@ pref("browser.search.update", false);
 pref("browser.sessionstore.enabled", false);
 pref("dom.event.contextmenu.enabled", false);
 pref("dom.storage.enabled", false);
-pref("extensions.foxyproxy.last-version", "99999.99");
 pref("extensions.shownSelectionUI", true);
 pref("extensions.update.autoUpdateDefault", false);
 pref("extensions.update.enabled", false);

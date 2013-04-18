@@ -70,6 +70,7 @@ user_pref("webgl.disable-extensions", true);
 user_pref("extensions.autoDisableScopes", 0);
 
 // Other non-Torbutton prefs
+user_pref("extensions.foxyproxy.last-version", "99999.99");
 user_pref("extensions.foxyproxy.socks_remote_dns", true);
 user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
