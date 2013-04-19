@@ -30,6 +30,7 @@ BeforeFeature('@old_iso') do
   if $tails_iso == $old_tails_iso
     raise "The old Tails ISO is the same as the Tails ISO we're testing"
   end
+  puts "Using old ISO image: #{File.basename($old_tails_iso)}"
 end
 
 BeforeFeature('@product') do |feature|
@@ -74,6 +75,7 @@ BeforeFeature('@product') do |feature|
   else
     raise "The specified Tails ISO image '#{$tails_iso}' does not exist"
   end
+  puts "Testing ISO image: #{File.basename($tails_iso)}"
   base = File.basename(feature.file, ".feature").to_s
   $background_snapshot = "#{$tmp_dir}/#{base}_background.state"
 end
