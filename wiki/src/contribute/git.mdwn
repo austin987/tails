@@ -289,6 +289,8 @@ Developers with write access to the repositories should instead:
 
 	git clone gitosis@labs.riseup.net:tails_iceweasel.git
 
+See the [[release process|release_process/iceweasel]].
+
 <a id="whisperback"></a>
 
 WhisperBack
@@ -303,41 +305,65 @@ inside Tails.
 Puppet modules
 ==============
 
+Those who have SSH access to these repositories must configure their
+SSH client a bit, e.g.:
+
+	Host git.puppet.tails.boum.org
+		HostName d53ykjpeekuikgoq.onion
+		ProxyCommand torsocks monkeysphere ssh-proxycommand %h %p
+
 tails
 -----
 
-This is the main public Puppet module to manage Tails infrastructure,
+This is the main *public* Puppet module to manage Tails infrastructure,
 including classes such as `tails::reprepro` and `tails::whisperback::relay`.
 
 Anyone can check it out like this:
 
-	git clone git://webmasters.boum.org/tails-puppet-module-tails
+	git clone git://git.puppet.tails.boum.org/puppet-tails
 
 Developers with write access to the repositories should instead:
 
-	git clone gitolite@webmasters.boum.org:tails-puppet-module-tails
+	git clone gitolite@git.puppet.tails.boum.org:puppet-tails
+
+tails_lizard_manifests
+----------------------
+
+Developers with access to the APT secrets can check it out like this:
+
+	git clone gitolite@git.puppet.tails.boum.org:puppet-lizard-manifests
 
 tails_secrets_apt
 -----------------
 
-Until lizard is up: ask intrigeri.
+Developers with access to the APT secrets can check it out like this:
+
+	git clone gitolite@git.puppet.tails.boum.org:puppet-tails_secrets_apt
 
 tails_secrets_whisperback
 -------------------------
 
-Until lizard is up: ask intrigeri.
+Developers with access to the WhisperBack secrets can check it out like this:
+
+	git clone gitolite@git.puppet.tails.boum.org:puppet-tails_secrets_whisperback
+
+Jenkins jobs
+============
+
+Our jenkins jobs written in YAML for jenkins-job-builder to configure them in
+our jenkins installation can be checked out like this:
+
+	git clone git://git.puppet.tails.boum.org/jenkins-jobs
+
+Developers with write access to the repositories should instead:
+
+	git clone gitolite@git.puppet.tails.boum.org:jenkins-jobs
 
 New repository
 ==============
 
 1. Get Git hosting space somewhere nice.
 2. Add a section to this page.
-3. Register a `tails_NEWREPO` mirror repository at
-   [repo.or.cz](http://repo.or.cz/), and configure it to notify the
-   `TAILS` project at cia.vc, so that we get IRC notifications
-   of commits.
-4. Share the repo.or.cz admin password with the other Tails
-   core developers.
 
 Caution!
 ========

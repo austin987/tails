@@ -1,4 +1,65 @@
 For Wheezy, we'll want to backport [[!debpkg seahorse-nautilus]]
 (currently in NEW, ITP: [[!debbug 668221]]).
 
-[[!tag todo/wait]]
+Let's [[!taglink todo/wait]] for Wheezy, then.
+
+Upstream: <https://launchpad.net/seahorse-nautilus>
+
+The [Ubuntu package for `seahorse-nautilus`
+3.7.5](http://packages.ubuntu.com/raring/seahorse-nautilus) can be
+installed and works on Wheezy.
+
+There's also a command-line tool `seahorse-tool` in the same package.
+
+Asymmetric encryption: ok
+=========================
+
+  - There is a menu item "Encrypt..." below "Compress..."
+  - Double-click on the file also works
+  - The key selection window is a bit tiny by default. It really
+    looks like the one from GPG Applet. But this one doesn't have the "Trust"
+    column.
+  - Encryption works: it creates a file with .pgp extension
+
+Signing: ok
+===========
+
+  - There is a menu item "Sign" below "Encrypt..."
+  - Works: creates a detached signature with .sig extension
+  - It is also possible to sign while doing asymmetric encryption
+
+Signature check: missing
+========================
+
+  - No menu entry to check a signature (either selecting only the detached
+    signature or both the original file and the detached signature)
+  - There is signature checking in seahorse-tool.
+  - The notification is far from ideal (doens't show keyid nor fingerprint and disappears quickly).
+  - <https://bugs.launchpad.net/ubuntu/+source/seahorse-nautilus/+bug/995623>
+
+Asymmetric decryption: ok
+=========================
+
+ - Works: the menu item is on top of the list "Open with Decrypt
+   file"
+ - Asks where to save the file
+
+Symmetric encryption: missing
+=============================
+
+  - Not available
+  - `seahorse-tool` does not do symmetric encryption either
+
+Symmetric decryption: could be improved
+=======================================
+
+  - "Open with Decrypt File" or double-click managed to open an armored message
+    with symmetric encryption
+  - When decrypting such a message, a first dialog with "Encryption passphrase"
+    appears, followed by another dialog "Decrypting" which takes away the focus
+    from the passphrase dialog. That's annoying.
+
+Support for multiple identities
+===============================
+
+  - There is a "Sign as" drop list when signing

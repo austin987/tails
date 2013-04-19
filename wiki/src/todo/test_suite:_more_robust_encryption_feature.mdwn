@@ -1,0 +1,16 @@
+All scenarios in `features/encryption.feature` failed on a slow system,
+due to the "sleep" time between "clicking the gpgapplet icon" and
+"sending a keypress that was supposed to be received by the gpgapplet
+contextual menu" was too small.
+
+This sleep time was bumped in commit 4eff913, but really, such code is too
+racy:
+
+    @screen.click("GpgAppletIconNormal.png")
+    sleep 2
+    @screen.type("k")
+
+It would be good to implement something better, like... waiting for
+the context menu to be displayed before sending the "k" keypress.
+
+[[!tag todo/code]]

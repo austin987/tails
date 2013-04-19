@@ -1,7 +1,7 @@
 [[!toc levels=2]]
 
 To avoid cluttering our main Git repository with Debian source and
-binary packages, we have setup an APT repository.
+binary packages, we have set an APT repository up.
 
 [[!toc levels=2]]
 
@@ -55,6 +55,14 @@ Also, if we're building from a bugfix or feature branch, add its
 own suite.
 
 This logic is implemented in Tails 0.14~rc2 and later.
+
+SSH access
+==========
+
+One must configure their SSH client to connect to the APT server:
+
+	Host incoming.deb.tails.boum.org
+		Port 3003
 
 HTTP access
 ===========
@@ -125,29 +133,51 @@ Check the result:
 
 	$ ssh reprepro@incoming.deb.tails.boum.org reprepro list $SUITE $PACKAGENAME
 
+<a id="workflow-merge-topic-branch"></a>
+
 Merging a topic branch
 ----------------------
 
 When a Git *topic* branch is merged into a *main* branch, the
-corresponding similar operation must be done on the APT suites.
+corresponding operation must be done on the APT suites.
 
 Example:
 
 	$ git checkout devel
 	$ git merge feature/icedove
 	$ ssh reprepro@incoming.deb.tails.boum.org \
-	     tails-merge-suite feature/icedove devel
+	     tails-merge-suite feature-icedove devel
 	$ git push
 
-**FIXME**: I think I had to `retrack` after importing a package, who
-knows why, so that `reprepro dumptracks` (called by
-`tails-merge-suite`) outputs anything and the suite merge process
-works. Should be retried and fixed.
-
-Note that unfortunately, contrary to what whoever with a Git
+(Note that unfortunately, contrary to what whoever with a Git
 background would guess, the reprepro operation called *pull* is not
 what we want: it pulls from *all* other suites into the ones specified
-on the command-line.
+on the command-line.)
+
+<a id="workflow-merge-main-branch"></a>
+
+Merging a main branch
+----------------------
+
+When a Git *main* branch (`devel`, `experimental`, `testing`,
+`stable`) is merged into another *main* branch, the corresponding
+operation must be done on the APT suites.
+
+1. Save the list of packages currently present in the APT suite we
+   want to merge *into*, e.g. `reprepro list experimental`.
+2. Merge the APT suites [[the same way as when we merge a topic
+   branch|APT_repository#workflow-merge-topic-branch]].
+3. Make sure not to re-add, into the branch we merge into, any package
+   that was removed from it, but still is in the branch we merge from:
+   e.g. when merging `devel` into `experimental`, it may be that
+   `experimental` had some packages removed (e.g. due to previously
+   merging a topic branch into it, whose purpose is to *remove* custom
+   packages). To this end, compare the resulting list of (package,
+   version) in the `experimental` APT suite with the one saved before
+   the merge, check Git merges history if needed, apply common sense,
+   and remove from `experimental` the packages that were removed from
+   it a while ago, and were just erroneously re-added by the
+   merge operation.
 
 <a id="workflow-freeze"></a>
 
@@ -158,16 +188,16 @@ Freezing devel into testing
 2. (Manually) hard reset `testing` suite to the current state of the
    `devel` one:
 
-   a. First, merge `devel` into `testing`
+   a. First, empty the `testing` suite:
 
-   	$ ssh reprepro@incoming.deb.tails.boum.org \
-   	     tails-merge-suite devel testing
+      	$ ssh reprepro@incoming.deb.tails.boum.org \
+      	      reprepro removematched testing '*'
 
-   b. Then, compare the resulting list of (package, version) in
-      `testing` with the ones in `devel`, remove from `testing`
-      packages that were removed from `devel` as needed, and generally
-      make it so the lists are the same in the end.
-   
+   b. Then, merge `devel` into `testing`
+
+      	$ ssh reprepro@incoming.deb.tails.boum.org \
+      	      tails-merge-suite devel testing
+
 <a id="workflow-post-tag"></a>
 
 Tagging a new Tails release
@@ -191,9 +221,14 @@ suite that just appeared:
 After a new Tails release is out
 --------------------------------
 
-After merging stable or testing into devel, increment the version
-number in devel's `debian/changelog` so that next builds from the
-`devel` branch do not use the APT suite meant for the last release.
+After [[merging `stable` or `testing` into
+`devel`|APT_repository#workflow-merge-main-branch]], increment the
+version number in devel's `debian/changelog` so that next builds from
+the `devel` branch do not use the APT suite meant for the
+last release.
+
+If the release was a major one, then [[merge testing into
+stable|APT_repository#workflow-merge-main-branch]].
 
 Giving access to a core developer
 ---------------------------------

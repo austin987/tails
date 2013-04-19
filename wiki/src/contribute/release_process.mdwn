@@ -1,3 +1,5 @@
+[[!meta title="Release process"]]
+
 [[!toc levels=2]]
 
 See the [[release_schedule]].
@@ -21,6 +23,12 @@ upgrade our Debian package to the latest release if needed.
 
 Going through the usual [[review and merge
 process|contribute/merge_policy]] is welcome.
+
+Sync' iceweasel preferences with TBB
+------------------------------------
+
+* `general.useragent.override` is not kept up-to-date anymore in
+  Torbutton, so we have to keep in sync manually with TBB's `prefs.js`
 
 Coordinate with Debian security updates
 ---------------------------------------
@@ -47,17 +55,19 @@ Patterns are stored in
 1. Boot Tails
 2. Open *Tools* → *Addons*
 3. Select *Adblock Plus* in extensions
-4. Open *Filter preferences…*
-5. For each filters, click *Actions* and *Update filters*
+4. Open *Preferences* → *Filter preferences…*
+5. For each filters, click *Actions* → *Update filters*
 6. Close Iceweasel
-7. Copy `.mozilla/firefox/default/adblockplus/patterns.ini` to
-   Tails checkout inside
+7. Copy the `.mozilla/firefox/default/adblockplus/patterns.ini` from
+   this Iceweasel instance to the
    `config/chroot_local-includes/etc/iceweasel/profile/adblockplus`
+   directory in the Tails Git checkout.
+8. `git commit -m 'Update AdBlock Plus patterns.' config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini`
 
 upgrade bundled binary Debian packages
 --------------------------------------
 
-That is: make sure the bundles binary Debian packages contain
+That is: make sure the bundled binary Debian packages contain
 up-to-date localization files.
 
 For each bundled Debian package, get updated PO files from the
@@ -75,18 +85,19 @@ Then see the relevant release processes:
 * [[persistence-setup]]
 * [[tails-iuk]]
 * whisperback: 
-  * see release process on <http://git.immerda.ch/?p=whisperback.git;a=blob;f=HACKING>
+  * see release process on
+    <http://git.immerda.ch/?p=whisperback.git;a=blob;f=HACKING>
   * build a debian package
   * upload it to [[APT repository]]
 
 Freeze
 ------
 
-If we are at freeze time (e.g. preparing RC1):
+If we are at freeze time for a major release:
 
 * Merge the `devel` Git branch into `testing`.
-* Merge `devel` APT suite into the `testing` one, as documented on
-  [[contribute/APT_repository#workflow-freeze]].
+* Reset the `testing` APT suite to the state of the `devel` one, as
+  documented on [[contribute/APT_repository#workflow-freeze]].
 
 Changelog
 ---------
@@ -102,24 +113,7 @@ example:
 
 This populates the Changelog with the Git log entries.
 
-Now cleanup some parts of it (semi-)automatically:
-
-	perl -pi'' -e 's/\A  \[ IkiWiki::Plugin::po::change \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* updated PO files\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* \n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ 127\.0\.0\.1 \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ amnesia \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ anonym \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ T\(A\)ILS developers \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ Tails developers \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \[ Tails \]\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* Added a comment\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* Added a comment:.*\n//' debian/changelog
-	perl -pi'' -e 's/\A  \* todo\+\+\n//i' debian/changelog
-	perl -pi'' -e 's/\A  \* todo--\n//i' debian/changelog
-
-
-... then launch an editor for the needed cleanup of the result.
+Then, launch an editor for the needed cleanup of the result.
 
 included website
 ----------------
@@ -134,7 +128,7 @@ If preparing a RC, skip this part.
 
 In the branch used to build the release, update the `inc/*` files to
 match the *version number* and *date* of the new release. Set the date
-at least 24 hours in the future! Between tests and mirror synchronisation,
+at least 24 hours in the future! Between tests and mirror synchronization,
 the build will not be released on the same day. Try to make sure it
 matches the date of the future signature.
 
@@ -149,7 +143,8 @@ Also:
 
 ... and remove the `PENDING-FOR-N.M` warnings.
 
-### PO files
+PO files
+--------
 
 Refresh the code PO files with `./refresh-translations`, commit
 the result.
@@ -159,9 +154,9 @@ corresponding to pages that were added or changed accordingly to
 changes coming with the new release. This e.g. ensures that the RC
 call for translation points translators to up-to-date PO files.
 
-Check the PO files of the website [[using
-`check_po.sh`|contribute/l10n_tricks]]. Correct all the errors and
-commit the changes if any.
+If preparing a RC, ask on tails-l10n that someone checks the PO files
+of the website [[using `check_po.sh`|contribute/l10n_tricks]], and
+corrects all the errors.
 
 Tag the release in Git
 ======================
@@ -187,24 +182,25 @@ Build images
 Build the almost-final image
 ----------------------------
 
-[[Build images|contribute/build]] and carefully read the build logs to make sure
-nothing bad happened.
+[[Build images|contribute/build]] and carefully read the build logs to
+make sure nothing bad happened.
 
 SquashFS files order
 --------------------
 
-Build an ISO image, burn a DVD and profile it **on bare metal** and update
-`squashfs.order` in the Git repository.
+1. Build an ISO image.
+1. Burn a DVD.
+1. Boot this DVD **on bare metal**.
+1. Add `profile` to the kernel command-line.
+1. Three minutes after `iceweasel` has been loaded, retrieve the new sort
+   file from `/var/log/boot-profile`.
+1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
+1. Cleanup a bit.
+1. Inspect the Git diff (including diff stat), apply common sense.
+1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
 
-In order to refresh the sort file, `profile` must be added to the kernel
-command-line. Then, 30 seconds after `iceweasel` has been loaded, the sort
-file can be retrieved from `/var/log/boot-profile`.
-
-It must then be copied to `config/binary_rootfs/squashfs.sort`. This file is
-automatically used by `lb_binary_rootfs` to tell `mksquashfs` to use the
-provided *sort list*.
-
-(See [[todo/improve_boot_time_on_cd]] for details.)
+(This sort list is automatically passed by live-build to `mksquashfs`:
+see [[!tails_todo improve_boot_time_on_cd]] for details.)
 
 Build the final image
 ---------------------
@@ -229,7 +225,7 @@ Example:
 Prepare update-description files
 --------------------------------
 
-1. Prepare update-description files (see [[todo/incremental_upgrades]]
+1. Prepare update-description files (see [[!tails_todo incremental_upgrades]]
    for details):
    * update (create if needed) an update-description file for every
      *previous* supported releases (e.g. N-1, N-1~rc2), that describes
@@ -242,7 +238,8 @@ Prepare update-description files
 Testing
 =======
 
-Until [[todo/automated_builds_and_tests]] are setup, some manual testing
+Until [[!tails_todo automated_builds_and_tests]] are set up, some
+manual testing
 has to be done by the persons preparing the release, in addition to the
 real-world tests done by fellow beta-testers.
 
@@ -319,17 +316,9 @@ Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
 	sha256sum tails-i386-0.7.1.iso | cut -f 1 -d ' ' | tr -d '\n' \
 	  > stable_i386_hash.html
 
-Update todo and bugs tags:
-
- - in `todo/*`: replace `pending` tags with `todo/done` tags
- - in `bugs/*`: replace links to `pending` with links to `done` (`[[todo/done]]`)
+In `todo/*`, replace `pending` tags with `todo/done` tags.
 
 Update the [[support/known_issues]] page.
-
-Compare the fingerprint of Tails and the latest TBB using at least
-<https://panopticlick.eff.org/> and <http://ip-check.info/>, and update the
-[[fingerprint section|support/known_issues#fingerprint]] of the known issues
-page.
 
 Write the announcement for the release in `news/version_X.Y.mdwn`. Use the
 meta directive to set the post title to "Tails X.Y is out" so
@@ -349,7 +338,7 @@ shortly, perhaps even soon enough to integrate them before pushing the
 release out officially.
 
 Import the update description files and their detached OpenPGP
-signature into the `updates/` tree. See [[todo/incremental_upgrades]]
+signature into the `updates/` tree. See [[!tails_todo incremental_upgrades]]
 for the file naming conventions.
 
 Then, record the last commit before putting the release out for real:
@@ -388,7 +377,8 @@ We announce *major* releases on the Tor blog:
 - add a link to our [[download page|download]]
 - change the internal links into external links
 - turn `<h1>` into `<strong>`
-- direct users to [[our communication channels|support/talk]] for comments and feedback,
+- direct users to [[our communication channels|support/talk]] for
+  comments and feedback,
 - disable comments
 
 Twitter
@@ -409,7 +399,10 @@ Prepare for the next release
 1. Push the resulting `devel` branch.
 1. Reset experimental:
    - take note of branches merged into `experimental`, but not into
-     `devel` (`git log --merges devel..experimental` may help)
+     `devel` (`git log --pretty=oneline --color=never --merges devel..experimental | /bin/grep 'into experimental$' | sed -e 's,^[a-f0-9]\+\s\+,,' | sort -u` may help)
    - `git checkout experimental && git reset --hard devel`
-   - merge additional branches into experimental
+   - hard reset the `experimental` APT suite to the state of the
+     `devel` one
+   - merge additional branches into experimental (both at the Git and
+     APT levels)
    - `git push --force origin experimental`

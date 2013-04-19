@@ -15,10 +15,13 @@ Apple hardware
 For the moment, Tails has a very limited support for Apple hardware.
 
 Most recent Apple hardware does not boot without UEFI, and currently
-Tails does not start with UEFI. See the corresponding
-[[ticket|/todo/UEFI]].
+Tails does not start with UEFI. See [[!tails_todo UEFI desc="the corresponding ticket"]].
 
-See also [[bugs/Some old Macbooks running Lion 10.7 not booting Lion..can we get booting fixed ?]].
+See also [[manual USB installation with
+Mac|doc/first_steps/manual_usb_installation/mac]] for more compatibility
+reports, as well as [[!tails_bug
+Some_old_Macbooks_running_Lion_10.7_not_booting_Lion..can_we_get_booting_fixed___63__
+desc="this bug report"]].
 
 Dell Inc. Latitude E6430/0CPWYR
 -------------------------------
@@ -46,10 +49,22 @@ Dell Inspiron 8100
 The display panel will have the wrong resolution unless `video=LVDS-1:1600x1200
 nouveau.noaccel=1` is added to the boot command line.
 
-ThinkPad X220 / T520
---------------------
+Dell Dimension 2400
+-------------------
 
-See the corresponding [[ticket|/bugs/ThinkPad_X220_vs_GPT]].
+Cannot start neither from USB nor from DVD. System crashes with a blank
+screen and locked up keyboard.
+
+ThinkPad X220, T520 and E325
+----------------------------
+
+See the corresponding [[!tails_bug ThinkPad_X220_vs_GPT desc="ticket"]].
+
+ASUSTeK G75VW
+-------------
+
+Since Tails 0.17.1 starts all right with "failsafe" mode but not
+otherwise.
 
 Security issues
 ===============
@@ -58,8 +73,9 @@ Tails may not erase all the system memory on shutdown
 -----------------------------------------------------
 
 On rare systems (non-PAE with big amounts of memory),
-Tails does not consistently [[erase all system memory as it
-should|bugs/sdmem_does_not_clear_all_memory]].
+Tails does not consistently [[!tails_todo
+more_efficient_memory_wipe desc="erase all system memory as it
+should"]].
 
 After using the Tails USB installer, the "emergency shutdown" doesn't work.
 ---------------------------------------------------------------------------
@@ -76,7 +92,7 @@ Pressing the DVD eject button does not trigger emergency shutdown.
 Also, the "normal" (non-emergency) shutdown procedure does not eject
 the DVD anymore.
 
-(Ticket: [[todo/fix_DVD_eject_at_shutdown]])
+(Ticket: [[!tails_todo fix_DVD_eject_at_shutdown]])
 
 Stream isolation inconsistency in Claws Mail
 --------------------------------------------
@@ -86,6 +102,26 @@ service IMAP/POP/SMTP servers (instead Tor's TransPort is used). This
 is just a deviation from Tails' design and should have no adverse real
 world consequences.
 
+Tails fails to completely shutdown or restart
+---------------------------------------------
+
+When stopping Tails on some hardware, the memory wipe procedure fails to
+complete: the display gets scrambled, but the computer doesn't
+completely shutdown or restart. Sometimes the caps-lock button light of
+the keyboard flashes.
+
+<div class="caution">
+When this happen, there is no guarantee that the memory is wiped entirely.
+</div>
+
+This issue has been reported on the following hardware:
+
+  - Hewlett-Packard HP Pavilion dv6 Notebook PC
+  - Lenovo ThinkPad X61, only on emergency shutdown when pulling out the
+    USB stick
+  - Toshiba Satellite C855D
+  - Dell Inc. Studio 1458
+
 <a id="fingerprint"></a>
 
 Fingerprint
@@ -93,13 +129,24 @@ Fingerprint
 
 <!-- If this section is empty adjust the [[fingerprint documentation|doc/about/fingerprint]]. -->
 
-Tails and TBB reports different fonts as being available
---------------------------------------------------------
+Tails and TBB report different DOM storage support
+--------------------------------------------------
 
-Some websites use JavaScript to help determine which fonts are available
-on a web browser. Tails browser and the TBB report different fonts as
-being available. This difference can be used to distinguish Tails users
-from TBB users.
+Some websites use [[!wikipedia DOM storage]] if available in the
+browser. Tails browser does not allow DOM storage yet, while the TBB
+does (probably safely). This difference can be used to distinguish
+Tails users from TBB users. This [[!tails_todo
+iceweasel_DOM_storage_isolation desc="will be fixed"]] in a future
+release of Tails.
+
+Tails does not handle image cache the same way as TBB
+-----------------------------------------------------
+
+The latest and greatest TBB isolates image cache to URL bar domain.
+Tails does not do so yet. This difference can be used to distinguish
+Tails users from TBB users. This [[!tails_todo
+iceweasel_image_cache_isolation desc="will be fixed"]] in a future
+release of Tails.
 
 Other issues
 ============
@@ -108,12 +155,13 @@ Connecting to FTP servers is not possible
 -----------------------------------------
 
 Public FTP servers on the Internet are not reachable using Tails.
-See [[the corresponding task|todo/fix_Internet_FTP_support]] for more details.
+See [[!tails_todo fix_Internet_FTP_support desc="the corresponding
+task"]] for more details.
 
 YouTube video are hard to get
 -----------------------------
 
-[[HTML5 video are not easily seen on YouTube|todo/easier_YouTube]]. When the
+[[!tails_todo easier_YouTube desc="HTML5 video are not easily seen on YouTube"]]. When the
 message *This video is currently unavailable* appears, the video can actually be viewed.
 Right-click on the page, select **NoScript** → **Blocked objects** and
 **Temporarily allow…** the video.
@@ -135,3 +183,12 @@ Tails fails to connect to certain Wi-Fi networks
 
 This may be related to the introduction of wireless regulation support
 in Tails 0.13.
+
+Tails could behave better when run inside VirtualBox
+----------------------------------------------------
+
+Since 0.17.1, VirtualBox guest modules are no shipped anymore.
+
+See [[!tails_todo fix_virtualbox_guest_modules_build desc="the
+corresponding task"]] for details.
+

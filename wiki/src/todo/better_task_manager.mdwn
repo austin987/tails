@@ -1,15 +1,26 @@
-Our current approach to managing Tails [[/todo]] and [[/bugs]] does
-not scale. We have some nice ideas to improve it slightly, but it's
-not clear the result will be good enough.
+Our current approach to managing Tails [[!tails_todo "" desc="todo"]]
+does not scale. We have some ideas to improve it slightly, but it's
+unlikely the result will be good enough, so we will instead migrate
+to Redmine.
 
 [[!toc levels=2]]
 
 # Roadmap
 
-* [[!taglink todo/test]] the Redmine plugins we're interested in [Ague]
-* [[!taglink todo/documentation]]: make sure our offline doc makes
-  sense without `todo/*` and `bugs/*`
+* [[!taglink todo/test]] the Redmine Importer plugin
+* [[!taglink todo/research]] how to implement our "Next thing to
+  do" workflow.
+* [[!taglink todo/discuss]] if we care about migrating closed tickets?
+  Asked to tails-dev on February 7th.
+* [[!tag todo/code]] write a conversion script to import our existing
+  tickets (see *Convert and import* section below).
+* update developers documentation
 * migrate!
+  - import existing tickets
+  - setup rewrite rules from the ikiwiki tickets URL to the new ones
+  - remove tickets that are not blueprints from ikiwiki
+* If needed, have additional plugins packaged and installed to fine
+  tune our processes.
 
 # Wiki / Tasks
 
@@ -34,7 +45,7 @@ developers).
  * Create tickets over email.
    => Redmine, bugs-everywhere
  * Reply to tickets over email.
-   => bugs-everywhere
+   => Redmine, bugs-everywhere
  * Being able to search through tickets offline (caching).
    Ability to import a DB dump into a local instance of the webapp would be
    an acceptable way to do it, even if clearly suboptimal.
@@ -58,7 +69,7 @@ developers).
  * Blocking property
    => Redmine, bugs-everywhere
  * Change a ticket's metadata via email.
-   => bugs-everywhere
+   => Redmine, bugs-everywhere
  * Due time, deadlines
    => Redmine (with email reminders), bugs-everywhere
 
@@ -80,21 +91,7 @@ developers).
 
  * Encryption support.
 
-# Past experiences
-
-* intrigeri: I've used Trac in the past. I've recently started using Redmine, and
-  like it much better. Doesn't know anything about their email interface.
-* ague: Trac & Redmine
-* bertagaz: Redmine is faster and easier to use, good UI. Taohe-LAFS' Trac is
-  quite nicely organized.
-
-# Available options
-
-## Trac
-
-* [email2trac utilities](https://subtrac.sara.nl/oss/email2trac/)
-
-## Redmine
+# Redmine
 
 * [homepage](http://www.redmine.org)
 * easy to setup thanks to the Debian package
@@ -107,181 +104,136 @@ developers).
 * apparently, there no more powerful way to interact with it
   asynchronously ([feature request for offline
   mode](http://www.redmine.org/issues/2728))
-* [[!debpkg redmine-plugin-markdown]]
-* Plugins of interest:
-  - [Carousel](http://www.redmine.org/plugins/redmine_carousel): can be used
-    for periodic actions that occur during project development process. It
-    automatically generates issue assigned to the next user in the carousel
-    queue every specified time period. Marked compatible with 1.4.x.
-  - [Digest](http://www.redmine.org/plugins/digest): send a summary of a
-    project's activity over a period of time by email. Marked as
-    compatible with 1.4.x and 2.0.x.
-  - [Importer](http://www.redmine.org/plugins/importer): import issues in bulk
-    from .csv files. Not marked as compatible with 1.4.x.
-  - [Issue checklist](http://www.redmine.org/plugins/issue_checklist):
-    add checklist functionality to issues. Marked as compatible with
-    2.0.x -- what about 1.4.x?
-  - [Git branch hook](https://github.com/mikoto20000/redmine_git_branch_hook):
-    add issue related revision by branch name. Can close tickets
-    on merge. One apparently may configure the branch that, when
-    merged into, triggers this behavior, thanks to the
-    `merge_branch` setting. Apparently impossible to use it for
-    the two-steps pending + fixed workflow we've been using,
-    but we may want to change this when switching tools anyway.
-  - [Silencer](http://www.redmine.org/plugins/silencer): suppress email
-    notifications (at will) when updating issues. Not marked as
-    compatible with 1.4.x.
-  - [Whining](http://www.redmine.org/plugins/redmine_whining): email alerts
-    when an issue had not been updated since X days. Not marked as
-    compatible with 1.4.x.
+* Textile syntax. Pandoc knows how to convert our existing Markdown to
+  Textile, but still, having Markdown support would be awesome.
+* Git integration won't easily work with our many-branches workflow,
+  but we can probably do without for a while.
 
-Offline usage:
+## Plugins of interest
+
+* Markdown syntax:
+  - [redcarpet formatter](https://github.com/alminium/redmine_redcarpet_formatter)
+    In Debian unstable ([[!debpkg redmine-plugin-markdown]]).
+    Marked as compatible with 1.x and 2.x,
+    but the version that is being packaged is the one for 2.x.
+    Depends on [[!debpkg ruby-redcarpet]] that is in Wheezy, but not
+    in Squeeze, and may be a pain to backport due to a few missing build-deps.
+  - [Markdown formatter](https://github.com/bitherder/redmine_markdown_formatter)
+    Depends on [[!debpkg ruby-rdiscount]] that is in Wheezy, but not
+    in Squeeze, and a pain to backport (due to the gem2deb (>=
+    0.3.0~) dependency). Untouched since 2010.
+  - [Markdown Extra formatter](https://github.com/juno/redmine_markdown_extra_formatter/tree)
+    Depends of [BlueFeather
+    gem](http://ruby.morphball.net/bluefeather/index_en.html) that is
+    not in Debian. Untouched since 2010.
+* [Carousel](http://www.redmine.org/plugins/redmine_carousel): can be used
+  for periodic actions that occur during project development process. It
+  automatically generates issue assigned to the next user in the carousel
+  queue every specified time period. Marked as compatible with 1.1.x
+  and 1.4.x.
+  > Looks interesting, but most (if not all) tasks we do switches for
+  > depend on our availability etc., so I'm not sure an automated
+  > solution would do. --intrigeri
+* [Digest](http://www.redmine.org/plugins/digest): send a summary of a
+  project's activity over a period of time by email. Marked as
+  compatible with 1.4.x and 2.0.x. The [sample email
+  output](https://github.com/drewkeller/redmine_digest/blob/master/screenshot_emailoutput.png)
+  does not make me think this is any better than some way (feed
+  reader or rss2email) to subscribe to the project's activity.
+* [Importer](http://www.redmine.org/plugins/importer): import issues in bulk
+  from .csv files. Compatible with 1.1.x. We do need this to import
+  existing tickets.
+* [Issue checklist](http://www.redmine.org/plugins/issue_checklist):
+  add checklist functionality to issues. Marked as compatible with
+  2.0.x -- what about 1.4.x or older? Having something lighter than
+  sub-tickets could be good, but certainly not critical. We'll see.
+* [Git branch hook](https://github.com/mikoto20000/redmine_git_branch_hook):
+  add issue related revision by branch name. Can close tickets
+  on merge. One apparently may configure the branch that, when
+  merged into, triggers this behavior, thanks to the
+  `merge_branch` setting. Apparently impossible to use it for
+  the two-steps pending + fixed workflow we've been using,
+  but we may want to change this when switching tools anyway.
+  According to Git log, should at least support Redmine 1.4.x and
+  2.0.x.
+  We can start using Redmine and see later how much we need something
+  like this.
+* [Silencer](http://www.redmine.org/plugins/silencer): suppress email
+  notifications (at will) when updating issues. Marked as
+  compatible with 1.1.x, not with 1.4.x.
+  > I'm not sure why we would want this. --intrigeri
+* [Whining](http://www.redmine.org/plugins/redmine_whining): email alerts
+  when an issue had not been updated since X days. Marked as
+  compatible with 1.1.x, not with 1.4.x.
+  Would be very useful, looks easy to package and install.
+* [Custom Workflows](http://www.redmine.org/plugins/custom-workflows):
+  define own rules of issue processing, e.g. change issue properties
+  or create sub-task if some conditions are met, enforce policies...
+  Marked as compatible with 1.2.x to 2.1.x.
+  Hopefully we won't need it, but it's still good to know it
+  exists.
+
+## Offline usage
 
  * Sending an email can create an issue with:
    - subject: mail subject
    - description: mail body
-   - tracker: keyword in mail body
-   - priority: keyword in mail body
-   - status: keyword in mail body
-   - category: keyword in mail body
-   - assignee: keyword in mail body
+   - tracker: keyword (`Tracker:`) in mail body
+   - priority: keyword (`Priority:`) in mail body
+   - status: keyword (`Status:`) in mail body
+   - category: keyword (`Category:`) in mail body
+   - assignee: keyword (`Assigned To:`) in mail body
    - kind of next thing to be done: keyword in mail body
-   - target version: keyword in mail body
-   - QA check (or any other custom field): keyword in mail body
- * Sending an email with '[Project - Bug #2]' in the subject will add
+   - target version: keyword (`Fixed version:`) in mail body
+   - QA check (or any other custom field): keyword (name of the
+     custom field) in mail body
+ * Sending an email with '[#24175]' in the subject will add
    information to the ticket. Same keywords as before can be used to change
    metadata.
  * Email address in From, To, or Cc are added to watchers (if they match
-   a Redmine user).
- * Clicking on *Watch* enable one to receive emails when the ticket changes.
- * Every ticket as an Atom feed. It contains all changes made to a ticket.
- * There is an atom feed with all open tickets, together with status and
+   a Redmine user) when *creating* a new ticket over email.
+ * Clicking on *Watch* enables one to receive emails when the ticket changes.
+ * Every ticket has an Atom feed that contains all changes made to a ticket.
+ * There is an Atom feed with all open tickets, together with status and
    description.
-* Missing: set parent task, set related issues, delete ticket.
+ * Missing: set parent task, set related issues, delete ticket.
 
-## Bugs everywhere
+## Convert and import
 
-* [Homepage](http://bugseverywhere.org/)
-* General impression: nice
-* Compliance: yes but
-  - there are no *true* subtickets but depends
-  - it is not anymore in Debian because the maintainer was not willing to
-    take care of its outdated package anymore. Other bugs were wishlist.
-* Features
-  - totally distributed
-  - very nice command line interface
-  - nice BTS-like email interface
-  - minimal web interface (viewing and commenting bugs)
-  - well written, simple to customize
+**Note**: this is an initial rough draft, that probably misses tons of
+things to do, but should be enough to run some initial tests to
+confirm the general idea is workable.
 
-Let's see if it is possible to use Bugs Everywhere while not making
-the entry barrier too high for new contributors.
-
-### First interaction: looking
-
-The static web output looks good enough, doesn't it?
-
-### Second interaction: commenting
-
-#### Solution A
-
-Let's add <mailto:> links with the subject prepared to ease replying
-to a comment over email.
-
-(Note: supposed to work with GMail + Chrome. And others?)
-
-#### Solution B
-
-Let's add an option to allow a single (anonymous) action in the web
-interface: commenting... while disabling other kinds of changes.
-
-Pros: more familiar to some kind of potential new contributors.
-
-Cons: we have to handle comments spam somehow. Urghl.
-
-### Third interaction: assigning to self
-
-#### Solution A: over Git
-
-Let's allow _anonymous_ Git push to our Bugs Everywhere repository.
-
-Changing a ticket's metadata then requires cloning, installing Bugs
-Everywhere, running a `be` command or doing the changes inside the
-(local) web interface, and then commit + push.
-
-#### Solution B: over email
-
-Sending an email whose body includes a command phrased as a special
-pseudo-header.
-
-#### Discussion
-
-Both are clearly non-trivial, but probably not harder than
-understanding our tasks workflow and processes ;) Yes, it adds to the
-list of what you have to learn to contribute.
-
-### Fourth interaction: subscribing to a ticket
-
-The command-line interface allows subscribing to email notifications
-(all changes, or only ticket creation, or specific tickets).
-
-Presumably one may use email commands to subscribe.
-If it is the case, then we can have the web interface
-display a <mailto:> link on each ticket page to subscribe to it.
-
-## Other distributed task trackers with Git backend
-
- * https://lwn.net/Articles/281849/
- * https://www.ohloh.net/p/cil/ in Debian
-   → No active development since 2010?
-   → https://github.com/maspalio/cil
- * http://github.com/jeffWelling/ticgit/
- * http://ditz.rubyforge.org/ in Debian
-   → The version in Wheezy is from 2009 but it is still in active
-     development
-   - nice *but* impossible to modify/comment bug through web interface
- * http://bugseverywhere.org/
-   → In Squeeze and Sid but not Wheezy ;)
-   → Static HTML bug repository dumps for online browsing: discared?
- * https://github.com/bkeepers/gaskit#readme
-   → Ruby web application with Git backend
-   → Is it possible to use it through the command line?
- * http://www.mkgnu.net/scmbug
-   → Latest version from 2011, previous one from 2009
-
-## Others
-
- * https://en.wikipedia.org/wiki/GNATS in Debian
- * https://en.wikipedia.org/wiki/GLPI in Debian
- * https://en.wikipedia.org/wiki/Launchpad_%28website%29 in Debian
- * https://en.wikipedia.org/wiki/Redmine in Debian
-   → We can ask for an instance to Riseup
-   → Demo: https://labs.riseup.net/code/projects/crabgrass/
-   → http://www.chrisstucchio.com/blog/2012/idli.html
- * https://en.wikipedia.org/wiki/Roundup_%28issue_tracker%29 in Debian
- * https://en.wikipedia.org/wiki/Trac in Debian
-   → https://subtrac.sara.nl/oss/email2trac
-   → "sd" support is totally broken, no upstream anymore, removed from Debian
-   → http://www.chrisstucchio.com/blog/2012/idli.html
- * https://en.wikipedia.org/wiki/Zentrack
- * https://en.wikipedia.org/wiki/BugTracker.NET
- * https://en.wikipedia.org/wiki/Bugzilla
-   → better than it used to be, but would be a pain to host?
- * https://www.chiliproject.org/
-   → https://www.chiliproject.org/projects/chiliproject/wiki
-     - email interface
-     - wiki, forum, etc.
-
-## Discarded
-
- * https://en.wikipedia.org/wiki/Veracity_%28software%29
-   → Distributed version control system and bugtracker but not using Git
- * http://www.fossil-scm.org/ in Debian
-   → Distributed control system but no Git backend (only Git import/export)
- * https://en.wikipedia.org/wiki/OTRS in Debian
- * https://en.wikipedia.org/wiki/Request_Tracker in Debian
-   →  bertagaz doesn't like them : overkill, no so nice to use
- * https://en.wikipedia.org/wiki/Mantis_Bug_Tracker in Debian
-   → Discarded by intrigeri and bertagaz
+1. Tag `todo/*` pages that should be kept as blueprints.
+1. Split tickets that have several `todo/*` tags, and save the
+   parent/child relationship (probably using a custom preprocessor
+   directive). In the end, each ticket should only have one
+   `todo/*` tag.
+1. Add a `External Id` custom field.
+1. Add a `Kind of next thing to do` custom field whose possible values
+   are the same as our current `todo/*` tags.
+1. Write a custom ikiwiki plugin to:
+   - save original ikiwiki ticket name as `External Id` column
+   - save parent/child relationship
+   - turn Markdown into Textile
+   - wrap the whole ticket information into a CSV line
+   - filter out `toc`
+   - save `todo/*` tags into the "Kind of next thing to do" column
+   - XXX: what to do with blueprints? create a parent ticket matching
+     the blueprint and linking to it?
+1. Run ikiwiki with this special plugin, then merge all these CSV
+   lines to produce a first CSV file that can be imported with the
+   Importer plugin.
+1. Import the first CSV file, using `External Id` as `Unique Column`.
+1. Build a (External Id, Redmine Id) mapping.
+1. With a modified version of the ikiwiki plugin, plus this mapping
+   information, produce a second CSV files with tickets description
+   modified so that links to other tickets are updated to use Redmine
+   ticket linking syntax.
+1. Import the second CSV file, using `External Id` as `Unique Column`
+   again, and enabling the *Update Existing Issues* option.
+   Links between tickets should now be good.
+1. Generate the Apache rewrite rules from the (External Id, Redmine
+   Id) mapping. Skip blueprints while doing so.
 
 [[!tag broken_window]]
