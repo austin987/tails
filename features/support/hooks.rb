@@ -19,7 +19,7 @@ def delete_all_snapshots
   end
 end
 
-BeforeFeature('@old_iso') do
+BeforeFeature('@product', '@old_iso') do
   if $old_tails_iso.nil?
     raise "No old Tails ISO image specified, and none could be found in the " +
           "current directory"
