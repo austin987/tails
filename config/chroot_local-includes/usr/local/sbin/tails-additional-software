@@ -63,6 +63,9 @@ def install_additional_packages():
     """The subcommand which activates and installs all additional packages
     """
     syslog.syslog("Starting to install additional software...")
+    if not get_additional_packages_lists():
+        syslog.syslog("WARNING: no additional software configured, exiting.")
+        return True
     do_activate()
     packages_string = " ".join(get_additional_packages())
     syslog.syslog("Will install the following packages: %s" % packages_string)
