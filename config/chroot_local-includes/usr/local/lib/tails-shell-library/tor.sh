@@ -33,10 +33,10 @@ tor_control_setconf() {
 # stuck at "Bootstrapped 5%" quite often. Is Tor sensitive to opening
 # control ports and/or issuing "getinfo status/bootstrap-phase" during
 # early bootstrap? Because of this we fallback to greping the log.
-#tor_bootstrap_progress() {
-#	tor_control_getinfo status/bootstrap-phase | \
-#	    sed 's/^.* BOOTSTRAP PROGRESS=\([[:digit:]]\+\) .*$/\1/'
-#}
+tor_bootstrap_progress() {
+	tor_control_getinfo status/bootstrap-phase | \
+	    sed 's/^.* BOOTSTRAP PROGRESS=\([[:digit:]]\+\) .*$/\1/'
+}
 
 tor_is_working() {
 	[ -e $TOR_DESCRIPTORS ] || [ -e $NEW_TOR_DESCRIPTORS ]
