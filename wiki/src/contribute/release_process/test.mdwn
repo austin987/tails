@@ -85,28 +85,11 @@ the test suite, leaving it with a blank screen.
 
 ## Automated test suite migration progress
 
-In the manual feature tests below we "tag" tests the following way to
-keep track of their progress of being replaced by a corresponding test
-in the automated test suite:
-
-* Not tag means that an appriopriate automated test is not implemented
-  at all.
-* `[needs-fix]` means that there's a partial implementation of an
-  automated test, or that it has some issue that needs a fix.
-* `[needs-review]` means that an automated test is implemented and
-  that someone else than the author should review it for correctness.
-* `[needs-pass]` means that an automated test is implemented and that
-  someone else than the author must run it and see it pass.
-* `[can't-automate]` means that these tests cannot possibly be
-  implemented in an automated way and will require manual testing.
-
-In the tags we also refer to the name of the `.feature` file(s), and
-for `[needs-fix]` we link to the corresponding TODO item (XXX: will be
-done once merged into the `master` branch).
-
-Tests which are completely implemented, reviewed and passed are
-removed from below. Such tests are considered to be covered by the
-automated test suite and do not have to be manually tested any more.
+The manual test suite below either contains tests that cannot be
+automated, has no automated test implemented yet, or has a test
+implemented, but it either hasn't been reviewed, had a confirmed pass
+by someone other than the test author, or has issues. The latter is
+tracked by tickets prefixed with `todo/test_suite:`.
 
 # Iceweasel
 
@@ -168,7 +151,7 @@ automated test suite and do not have to be manually tested any more.
      direct network connections go to the configured bridge(s).
 * Verify that all destinations reached from an intensive Tails session
   are tor routers or
-  authorities: `[needs-fix: many scenarios]` (see [[todo/test_suite:_always_check_for_firewall_leaks.mdwn]]).
+  authorities:
   1. Boot Tails without the network in.
   1. Start dumping your whole session's network activity with `sudo
      tcpdump -n -i any -w dump` (or better, do the dump on another machine,
@@ -283,8 +266,6 @@ features properly do their work; second, our `torrc` sets the right
 
 # Time
 
-`[needs-fix]` ([[todo/test_suite:_verify_time_changes]])
-
 1. Boot Tails without a network cable connected (i.e. no network on boot).
 2. set the time to an obviously wrong one:
 
@@ -298,7 +279,6 @@ correctly.
 # erase memory on shutdown
 
 - check that `memlockd` is running
-  `[needs-pass: erase_memory]`
 - check that `udev-watchdog` monitors the right device
   ([[todo/test_suite:_udev-watchdog_device]])
   * on USB
@@ -319,9 +299,9 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 * Boot Tails without setting a password and check you can't get
   PolicyKit administrative privileges (e.g. run a command with pkexec),
   neither with the `amnesia` password nor
-  with the `live` one. `[needs-review: root_access_control]`
+  with the `live` one.
 * Boot Tails with a password and check you can get PolicyKit
-  administrative privileges. `[needs-review: root_access_control]`
+  administrative privileges.
 * Check that the $TAILS_USER_PASSWORD variable, if still existing in the system
   environment after the boot has finished, does not contain the clear text
   password.
@@ -329,8 +309,7 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 # Virtualization support
 
 * `modinfo vboxguest` should work when booted on the 686-pae kernel
-  `[needs-review, needs-pass: checks]`
-* test in VirtualBox `[can't-automate?]`
+* test in VirtualBox
 
 # I2P
 
@@ -378,26 +357,25 @@ All this was successfully reviewed at commit cdbbf4d8.
 After each of the following tests:
 
 * The installed or upgraded Tails medium shall be successfully booted.
-  `[needs-pass: usb_install]`
 * The installed or upgraded Tails medium shall have the "emergency
   shutdown on boot medium removal" feature working: remove Tails boot
   medium and check that the memory erasure process is started
   (`Loading new kernel`, at least).
 * The TailsData partition must survive
-  upgrades. `[needs-pass: usb_install]`
+  upgrades.
 
 Tests to run:
 
 * Test "Clone & Install":
-  - from USB. `[needs-pass: usb_install]`
+  - from USB.
   - onto a USB stick that has a MBR partition table, and no
-    partition at all (regression test) `[needs-pass: usb_install]`
+    partition at all (regression test)
   - onto a USB stick that already has an old-fashioned hybrid cat'd
-    Tails on it `[needs-pass: usb_install]`
+    Tails on it
 * Test "Clone & Upgrade" (onto a USB install containing an older
   Tails):
-  - from DVD. `[needs-pass: usb_install]`
-  - from USB. `[needs-pass: usb_install]`
+  - from DVD.
+  - from USB.
   - onto a USB stick that already has a old-fashioned cat'd hybrid
     Tails on it: should warn this action is not supported, and direct
     the user to the "Clone & Install" operation mode.
@@ -428,20 +406,14 @@ stuff: **FIXME**.
 
 # Persistence
 
-`[needs-fix]`
-([[todo/test_suite:_fix_persistence_is_not_enabled_check]]);
-otherwise, reviewed OK at commit ea0ca6d5.
-
-`[needs-fix]` [[todo/test_suite:_fix_shutdown_step]]
-
 * Activate persistence on a Tails USB install with all presets on, and
   a few custom directories (also done by the automated test suite,
   but required to test what follows until it's green too).
 * Try read-write mode. Make sure that changes do survive
-  reboot. `[needs-pass: usb_install]`
+  reboot.
 * Try read-only mode. Make sure that persistent files are writeable,
   but that no changes survive
-  reboot. `[needs-pass: usb_install]`
+  reboot.
 * Turn off some persistence presets, reboot, and make sure they are
   not activated.
 
@@ -502,12 +474,10 @@ language.
 
 * Check that all seems well during init (mostly that all services
   start without errors), and that dmesg seems ok.
-* MAT should be able to clean a PDF file. `[needs-fix]` (see:
-  [[todo/test_suite:_mat_scenario_fails]])
+* MAT should be able to clean a PDF file.
 * Browsing (by hostname) a FTP server on the Internet should be
   possible using GNOME's *Connect to server* feature
   (once [[!tails_todo fix Internet FTP support]] is fixed)
 * The Tails signing key in `/usr/share/keyrings/tails-keyring.gpg`
   should be up-to-date (that is, neither it nor one its subkeys must
-  have expired, or be about to expire any time soon). `[needs-fix]`
-  (see: [[todo/test_suite:_shipped_signing_key_scenario]])
+  have expired, or be about to expire any time soon).
