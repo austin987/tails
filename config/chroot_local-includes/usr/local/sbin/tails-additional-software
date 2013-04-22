@@ -80,7 +80,7 @@ def install_additional_packages():
         syslog.syslog("WARNING: installation of %s failed" % packages_string)
         return False
     else:
-        syslog.syslog("Install completed successfully")
+        syslog.syslog("Installation completed successfully.")
         return True
 
 def upgrade_additional_packages():
@@ -96,15 +96,15 @@ def upgrade_additional_packages():
     if apt_get_returncode:
         syslog.syslog("WARNING: the update failed.")
         _notify(_("Tails additional software"),
-             _("The update failed. That might be due to network issues. You can find more informations in the system log."))
+             _("The upgrade failed. This might be due to a network problem. You can find more information in the system log."))
         return False
     if install_additional_packages():
         _notify(_("Tails additional software"),
-            _("The upgrade was successful"))
+             _("The upgrade was successful."))
         return True
     else:
         _notify(_("Tails additional software"),
-            _("The upgrade failed. That might be due to network issues. You can find more informations in the system log."))
+             _("The upgrade failed. This might be due to a network problem. You can find more information in the system log."))
         return False
 
 def check_activation():
