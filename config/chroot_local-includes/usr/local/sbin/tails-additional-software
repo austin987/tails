@@ -67,16 +67,19 @@ def install_additional_packages():
         syslog.syslog("WARNING: no additional software configured, exiting.")
         return True
     do_activate()
-    packages_string = " ".join(get_additional_packages())
-    syslog.syslog("Will install the following packages: %s" % packages_string)
+    packages = get_additional_packages()
+    if not packages:
+	syslog.syslog("WARNING: no packages to install, exiting")
+        return True
+    syslog.syslog("Will install the following packages: %s" % " ".join(packages))
     apt_get_returncode = _launch_apt_get(["apt-get",
         "--quiet",
         "--no-remove",
         "--yes",
         "--option", "DPkg::Options::=--force-confold", 
-        "install"] + get_additional_packages())
+        "install"] + packages)
     if apt_get_returncode: 
-        syslog.syslog("WARNING: installation of %s failed" % packages_string)
+        syslog.syslog("WARNING: installation of %s failed" % " ".join(packages))
         return False
     else:
         syslog.syslog("Installation completed successfully.")
