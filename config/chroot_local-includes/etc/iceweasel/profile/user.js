@@ -14,41 +14,64 @@ user_pref("extensions.https_everywhere._observatory.popup_shown", true);
 user_pref("extensions.torbutton.block_nthread", true);
 user_pref("extensions.torbutton.block_nthwrite", true);
 
-user_pref("extensions.torbutton.block_tforms", false);
-user_pref("extensions.torbutton.clear_cookies", true);
-user_pref("extensions.torbutton.cookie_jars", false);
-user_pref("extensions.torbutton.disable_domstorage", true);
-user_pref("extensions.torbutton.display_panel", false);
+// Torbutton preferences the TBB also sets.
+// We use the same value as the TBB unless noted.
 user_pref("extensions.torbutton.fresh_install", false);
-user_pref("extensions.torbutton.google_redir_url", 4);
+user_pref("extensions.torbutton.tor_enabled", true);
+user_pref("extensions.torbutton.proxies_applied", true);
+user_pref("extensions.torbutton.settings_applied", true);
+user_pref("extensions.torbutton.socks_host", "127.0.0.1");
+user_pref("extensions.torbutton.socks_port", 9063); // Tails-specific
+user_pref("extensions.torbutton.tz_string", "UTC+00:00");
+
+// .saved version of the Torbutton preferences the TBB also sets
+user_pref("extensions.torbutton.saved.fresh_install", false);
+user_pref("extensions.torbutton.saved.tor_enabled", true);
+user_pref("extensions.torbutton.saved.proxies_applied", true);
+user_pref("extensions.torbutton.saved.settings_applied", true);
+user_pref("extensions.torbutton.saved.socks_host", "127.0.0.1");
+user_pref("extensions.torbutton.saved.socks_port", 9063);
+
+// Tails -specific Torbutton preferences
+user_pref("extensions.torbutton.block_tforms", false);
+user_pref("extensions.torbutton.disable_domstorage", false);
+user_pref("extensions.torbutton.display_panel", false);
 user_pref("extensions.torbutton.launch_warning", false);
-user_pref("extensions.torbutton.locked_mode", true);
 user_pref("extensions.torbutton.no_updates", true);
-user_pref("extensions.torbutton.normal_exit", true);
 user_pref("extensions.torbutton.nonontor_sessionstore", true);
 user_pref("extensions.torbutton.nontor_memory_jar", true);
 user_pref("extensions.torbutton.prompted_language", true);
-user_pref("extensions.torbutton.restore_tor", true);
-user_pref("extensions.torbutton.saved.download_retention", 0);
-user_pref("extensions.torbutton.saved.search_suggest", false);
-user_pref("extensions.torbutton.saved.socks_remote_dns", true);
-user_pref("extensions.torbutton.saved.socks_host", "127.0.0.1");
-user_pref("extensions.torbutton.saved.socks_port", 9063);
-user_pref("extensions.torbutton.saved.socks_version", 5);
-user_pref("extensions.torbutton.saved.type", 5);
-user_pref("extensions.torbutton.saved.share_proxy_settings", false);
-user_pref("extensions.torbutton.socks_host", "127.0.0.1");
-user_pref("extensions.torbutton.socks_port", 9063);
 user_pref("extensions.torbutton.socks_remote_dns", true);
 user_pref("extensions.torbutton.socks_version", 5);
-user_pref("extensions.torbutton.spoof_english", true);
 user_pref("extensions.torbutton.startup", true);
 user_pref("extensions.torbutton.startup_state", 1);
 user_pref("extensions.torbutton.tor_memory_jar", true);
-user_pref("extensions.torbutton.tz_string", "UTC+00:00");
 user_pref("extensions.torbutton.use_privoxy", false);
 user_pref("extensions.torbutton.versioncheck_enabled", false);
 user_pref("extensions.torbutton.warned_ff3", true);
+
+// .saved version of the Tails -specific Torbutton preferences
+user_pref("extensions.torbutton.saved.socks_remote_dns", true);
+user_pref("extensions.torbutton.saved.socks_version", 5);
+user_pref("extensions.torbutton.saved.type", 1);
+
+// Proxy and proxy security
+user_pref("network.proxy.socks", "127.0.0.1");
+user_pref("network.proxy.socks_port", 9063);
+user_pref("network.proxy.socks_remote_dns", true);
+user_pref("network.proxy.socks_version", 5);
+user_pref("network.proxy.type", 1);
+
+// Fingerprinting
+user_pref("webgl.min_capability_mode", true);
+user_pref("webgl.disable-extensions", true);
+
+// Extension support
+user_pref("extensions.autoDisableScopes", 0);
+
+// Other non-Torbutton prefs
+user_pref("extensions.foxyproxy.last-version", "99999.99");
+user_pref("extensions.foxyproxy.socks_remote_dns", true);
 user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
 user_pref("noscript.ABE.wanIpAsLocal", false);
@@ -80,5 +103,3 @@ user_pref("noscript.subscription.lastCheck", -142148139);
 user_pref("noscript.temp", "");
 user_pref("noscript.untrusted", "google-analytics.com");
 user_pref("torbrowser.version", "Tails");
-user_pref("webgl.disable-extensions", true);
-user_pref("webgl.min_capability_mode", true);

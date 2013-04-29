@@ -20,6 +20,8 @@ refresh_translations () {
    if [ -e "${progpath}" ]; then
       xgettext --language="${proglang}" --from-code=UTF-8 \
         -o "${pot}" "${progpath}"
+      sed -i "s@^\"Content-Type: text/plain\; charset=CHARSET\\\n\"@\"Content-Type: text/plain\; charset=UTF-8\\\n\"@" "${pot}"
+
    fi
 
    for locale in $AMNESIA_SUPPORTED_LANGUAGES ; do
