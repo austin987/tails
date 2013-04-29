@@ -142,12 +142,7 @@ if __name__ == "__main__":
     program_name = os.path.basename(sys.argv[0])
 
     syslog.openlog("%s[%i]" % (program_name, os.getpid()))
-    try:
-        gettext.install(program_name)
-    except LookupError:
-        # Workaround error occuring with new PO files created by refresh-translations
-        # which contain the invalid charset "CHARSET"
-        _ = lambda x: x
+    gettext.install(program_name)
 
     if len(sys.argv) < 2:
          print_help()
