@@ -9,6 +9,7 @@ import subprocess
 
 PACKAGES_LIST_FILE="live-additional-software.conf"
 ACTIVATION_FILE="/var/lib/live-additional-software/activated"
+UNLOCKED_PERSISTENCE_DIRS_GLOB="/lib/live/mount/persistence/*_unlocked/"
 
 def _launch_apt_get(args):
     """Launch apt-get with given args
@@ -42,7 +43,7 @@ def get_additional_packages_lists():
     """
     syslog.syslog("Reading additional packages list")
     packages_list = []
-    for persistent_dir in glob.glob("/lib/live/mount/persistence/*_unlocked/"):
+    for persistent_dir in glob.glob(UNLOCKED_PERSISTENCE_DIRS_GLOB):
         if os.path.isfile(persistent_dir + PACKAGES_LIST_FILE):
             syslog.syslog("Found additional packages list in %s" % persistent_dir)
             packages_list.append(persistent_dir + PACKAGES_LIST_FILE)
