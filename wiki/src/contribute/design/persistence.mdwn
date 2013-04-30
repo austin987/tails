@@ -57,7 +57,7 @@ wants to have persistent. This is the `~/Persistent/` directory.
 
 If a user needs software that is not included in Tails by default it can be
 quite annoying to fetch the APT information and download it (slow over
-Tor) every time. Therefore, APT packages lists and cache can be easily
+Tor) every time. Therefore, APT packages lists and cache can easily be
 made persistent. It's also possible to store in persistence a list of
 additional software packages to be automatically reinstalled on boot.
 
@@ -348,14 +348,15 @@ Additional software packages
 The `tails-additional-software` script installs a list of
 additional software packages stored in persistence.
 
-The persistence root includes a file containing a list of packages to install
-from persistence (live-additional-software.conf).
+To this aim, the persistent volume root directory may contain
+a `live-additional-software.conf` file that holds the list of packages to install
+(from persistence, since they were cached already).
 
 First, those additional software packages are installed offline from tails-greeter
 `PostLogin` script.
 
-Then, once connected to the network, a NetworkManager script looks for
-upgrades if additional software were activated (`apt-get update`, `apt-get
+Then, once connected to the network, a NetworkManager dispatcher hook looks for
+upgrades if additional software were activated (`apt-get update`, then `apt-get
 install` the additional software packages). For some packages (e.g.  already
-running software) the change will only be effective at next boot but a outdated
-version won't stay too long.
+running software) the change will only be effective at next boot but hopefully a outdated
+version won't be used too long in the meantime.
