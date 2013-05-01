@@ -6,15 +6,19 @@ import gettext
 import subprocess
 
 gettext.install("tails-about")
-tails_version = subprocess.Popen(["tails-version"], stdout=subprocess.PIPE).communicate()[0]
-tails_main_version = tails_version.split("-")
+try:
+    tails_version = subprocess.Popen(["tails-version"], stdout=subprocess.PIPE).communicate()[0]
+    tails_main_version = tails_version.split("-")[0]
+except OSError:
+    tails_version = _("not available")
+    tails_main_version = ""
 about_dialog = gtk.AboutDialog()
 about_dialog.set_program_name(_("Tails"))
 about_dialog.set_comments(_("The Amnesic Incognito Live System") + "\n\n" +
     _("Build information:\n%s") % tails_version)
 about_dialog.set_copyright("Tails developers")
 about_dialog.set_title=(_("About Tails"))
-about_dialog.set_version(tails_main_version[0])
+about_dialog.set_version(tails_main_version)
 about_dialog.set_website("https://tails.boum.org/")
 
 about_dialog.connect("delete-event", gtk.main_quit)
