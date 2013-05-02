@@ -47,6 +47,7 @@ pref("browser.safebrowsing.malware.enabled", false);
 // Fingerprinting
 pref("browser.display.max_font_attempts", 10);
 pref("browser.display.max_font_count", 5);
+pref("gfx.downloadable_fonts.fallback_delay", -1);
 pref("general.useragent.override", "Mozilla/5.0 (Windows NT 6.1; rv:17.0) Gecko/20100101 Firefox/17.0");
 pref("dom.enable_performance", false);
 pref("plugin.expose_full_path", false);
