@@ -28,6 +28,9 @@ def _launch_apt_get(args):
         if not line.startswith('('):
             syslog.syslog(line.rstrip())
     apt_get.wait()
+    if apt_get.returncode:
+        syslog.syslog(syslog.LOG_WARNING,
+            "apt-get exited with returncode %i" % apt_get.returncode)
     return apt_get.returncode
 
 def _notify(title, body):
