@@ -156,10 +156,10 @@ configure_chroot () {
     chroot ${CHROOT} apt-get remove --yes xul-ext-*
 
     # Disable proxying in the chroot
-    sed -i '/^pref("network.proxy.type",/d' \
-        ${CHROOT}/etc/iceweasel/pref/iceweasel.js
-    echo 'pref("network.proxy.type", 0);' >> \
-        ${CHROOT}/etc/iceweasel/pref/iceweasel.js
+    sed -i '/^user_pref("network.proxy.type",/d' \
+        ${CHROOT}/etc/iceweasel/profile/user.js
+    echo 'user_pref("network.proxy.type", 0);' >> \
+        ${CHROOT}/etc/iceweasel/profile/user.js
     rm -rf ${CHROOT}/etc/iceweasel/profile/extensions
 
     # Set a scary theme (except if we're using Windows camouflage)
