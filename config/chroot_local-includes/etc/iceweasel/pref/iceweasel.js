@@ -58,6 +58,8 @@ pref("browser.zoom.siteSpecific", false);
 pref("network.cookie.cookieBehavior", 1);
 pref("security.enable_tls_session_tickets", false);
 pref("network.http.spdy.enabled", false);
+pref("network.http.spdy.enabled.v2", false); // Seems redundant, but just in case
+pref("network.http.spdy.enabled.v3", false); // Seems redundant, but just in case
 
 // Proxy and proxy security
 pref("network.security.ports.banned", "8118,8123,9050,9051,9061,9062,9063");
