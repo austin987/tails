@@ -84,6 +84,8 @@ pref("security.ssl.enable_false_start", true);
 pref("network.http.keep-alive.timeout", 20);
 pref("network.http.connection-retry-timeout", 0);
 pref("network.http.max-persistent-connections-per-proxy", 256);
+pref("network.http.pipelining.reschedule-timeout", 15000);
+pref("network.http.pipelining.read-timeout", 60000);
 // Quoting TBB: 'Hacked pref: Now means "Attempt to pipeline at least this many requests together"'
 pref("network.http.pipelining.max-optimistic-requests", 3);
 
