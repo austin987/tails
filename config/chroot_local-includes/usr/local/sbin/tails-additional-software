@@ -36,7 +36,7 @@ def _notify(title, body):
     try:
         subprocess.check_call(["/usr/local/sbin/tails-notify-user", title, body])
     except:
-        syslog.syslog("WARNING: unable to notify the user. The notification was: %s %s" % (title, body))
+        syslog.syslog(syslog.LOG_WARNING, "Warning: unable to notify the user. The notification was: %s %s" % (title, body))
 
 def get_additional_packages_lists():
     """Returns the paths of additional packageslists
@@ -65,12 +65,12 @@ def install_additional_packages():
     """
     syslog.syslog("Starting to install additional software...")
     if not get_additional_packages_lists():
-        syslog.syslog("WARNING: no additional software configured, exiting.")
+        syslog.syslog(syslog.LOG_WARNING, "Warning: no additional software configured, exiting.")
         return True
     set_activated()
     packages = get_additional_packages()
     if not packages:
-	syslog.syslog("WARNING: no packages to install, exiting")
+	syslog.syslog(syslog.LOG_WARNING, "Warning: no packages to install, exiting")
         return True
     syslog.syslog("Will install the following packages: %s" % " ".join(packages))
     apt_get_returncode = _launch_apt_get(["apt-get",
@@ -80,7 +80,7 @@ def install_additional_packages():
         "--option", "DPkg::Options::=--force-confold",
         "install"] + packages)
     if apt_get_returncode:
-        syslog.syslog("WARNING: installation of %s failed" % " ".join(packages))
+        syslog.syslog(syslog.LOG_WARNING, "Warning: installation of %s failed" % " ".join(packages))
         return False
     else:
         syslog.syslog("Installation completed successfully.")
@@ -90,14 +90,14 @@ def upgrade_additional_packages():
     """The subcommand which upgrades all additional packages if they are activated
     """
     if not is_activated():
-        syslog.syslog("WARNING: additional packages not activated, exiting")
+        syslog.syslog(syslog.LOG_WARNING, "Warning: additional packages not activated, exiting")
         return True
     syslog.syslog("Starting to upgrade additional software...")
     apt_get_returncode = _launch_apt_get(["apt-get",
         "--quiet",
         "update"])
     if apt_get_returncode:
-        syslog.syslog("WARNING: the update failed.")
+        syslog.syslog(syslog.LOG_WARNING, "Warning: the update failed.")
         _notify(_("Your additional software"),
              _("The upgrade failed. This might be due to a network problem. Please check your network connexion or try to restart Tails."))
         return False
