@@ -80,6 +80,9 @@ pref("network.http.proxy.pipelining", true);
 pref("security.ssl.enable_false_start", true);
 pref("network.http.keep-alive.timeout", 20);
 pref("network.http.connection-retry-timeout", 0);
+pref("network.http.max-persistent-connections-per-proxy", 256);
+// Quoting TBB: 'Hacked pref: Now means "Attempt to pipeline at least this many requests together"'
+pref("network.http.pipelining.max-optimistic-requests", 3);
 
 // Extension support
 pref("xpinstall.whitelist.add", "");
