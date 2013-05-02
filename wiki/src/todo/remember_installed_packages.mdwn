@@ -4,8 +4,8 @@ extra packages they have installed.
 We propose to use the term "your additional software" to mention to the
 user those packages in the GUI, notifications, etc.
 
-1st step implementation proposal
-================================
+1st step: implement required backend
+====================================
 
 Approach: offline install of a package list, upgrade when/if a working Internet
 connection appears later
@@ -25,6 +25,27 @@ This is done in the branch `feature/remember_installed_packages`.
 Next steps:
 
 - merge this 1st step [[!taglink todo/qa]]
+
+Improvements for a next version
+-------------------------------
+
+- fail in tails-greeter if tails-additional-software doesn't exist (instead
+  of doing nothing)
+- test how does NM react when one of the dispatcher hooks fails? Does it run
+  the next ones? If it does not, then I doubt we want a failure of
+  70-upgrade-* to prevent running the next ones, so perhaps we want to
+  catch the hook's exit code so that the whole process does not abort.
+- verify the need of a custom apt-get PATH and add a comment to explain if
+  it's really needed.
+- discuss what is the best behaviour for the upgrade when the config file
+  changed since the install.
+- when the notification fails, consider logging stdout/stderr/returncode
+  of the tails-notify-user
+- explain the user what happens when APT lists are expired
+
+2nd step
+========
+
 - allow to opt-out of the installation of these packages in the greeter [[!taglink todo/code]]
 - nice GUI in persistence-setup select packages to make autoinstallation
   persistent (possibly among those that have been installed during
