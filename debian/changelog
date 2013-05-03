@@ -1,8 +1,75 @@
-tails (0.18) UNRELEASED; urgency=low
+tails (0.18~rc1) unstable; urgency=low
 
-  * Upcoming release
+  * New features
+  - Support obfs3 bridges.
+  - Automatically install a custom list of additional packages chosen by
+    the user at the beginning of every working session, and upgrade them
+    once a network connection is established (technology preview).
 
- -- Tails developers <tails@boum.org>  Mon, 25 Feb 2013 00:37:39 +0100
+  * Iceweasel
+  - Update Torbrowser patches to current maint-2.4 branch (567682b).
+  - Isolate DOM storage to first party URI, and enable DOM storage.
+  - Isolate the image cache per url bar domain.
+  - Torbutton 1.5.2, and various prefs hacks to fix breakage:
+    · Add .saved version of the Torbutton preferences the TBB also sets.
+    · Set TOR_SOCKS_HOST and TOR_SOCKS_PORT.
+    · Move some prefs (network.proxy.*, extensions.autoDisableScopes,
+      extensions.foxyproxy.last-version) to user.js.
+      Else, with Torbutton 1.5.x, these ones are not taken into account.
+    · Set network.proxy.socks_version.
+      Else we get the meaningless user_pref("network.proxy.socks_version", 9063);
+      in prefs.js after the initial startup.
+    · Set extensions.foxyproxy.socks_remote_dns to true.
+      Else, it overrides the various ways we set network.proxy.socks_remote_dns,
+      which in turn makes Torbutton think it should start in non-Tor mode.
+  - Update prefs to match the TBB's, fix bugs, and take advantage of the latest
+    Torbrowser patches:
+    · Increase pipeline randomization.
+    · Fix @font-face handling of local() fonts.
+      Also disable fallback font rendering.
+    · Explicitly disable SPDY v2 and v3.
+    · Update http pipelining prefs.
+  - Make prefs organization closer to the TBB's:
+    · Remove Torbutton prefs that we set at their default value.
+    · Import Torbutton preferences from the TBB.
+    · Organize iceweasel config files in sections the same way as the TBB.
+  - Cleanup prefs:
+    · Don't set extensions.torbutton.clear_cookies nor
+      extensions.torbutton.saved.share_proxy_settings:
+      we don't care about toggling anymore.
+    · Don't set extensions.torbutton.saved.download_retention nor
+      extensions.torbutton.saved.search_suggest:
+      these settings are not used in Torbutton anymore.
+  - Update unsafe browser prefs mangling accordingly.
+
+  * Bugfixes
+  - Fixed swapped filenames of tails-{reboot,shutdown}.desktop.
+    Thanks to Mikko Harhanen for the patch.
+  - Only add ClientTransportPlugin to torrc when bridge mode is enabled.
+    This should bring back support for proxies of type other than obfsproxy.
+
+  * Minor improvements
+  - Set kernel.dmesg_restrict=1, and make /proc/<pid>/ invisible
+    and restricted for other users. It makes it slightly harder for an attacker
+    to gather information that may allow them to escalate privileges.
+  - Install gnome-screenshot.
+  - Don't disable IPv6 on all network interfaces anymore.
+    It turns out the IPv6 leaks we wanted to fix actually don't exist.
+  - Add a "About Tails" launcher in the System menu.
+  - Install GNOME accessibility themes.
+  - Use 'Getting started...' as the homepage for Tails documentation button.
+  - Stop relying on the obsolete /live/image compatibility symlink.
+  - Disable audio preview in Nautilus.
+
+  * Localization
+
+  * Build process
+  - Make Vagrant's build-tails script support Jenkins too.
+
+  * Test suite
+  - Fix Unsafe Browser test broken by hidepid.
+
+ -- Tails developers <amnesia@boum.org>  Fri, 03 May 2013 15:42:12 +0200
 
 tails (0.17.2) unstable; urgency=low
 
