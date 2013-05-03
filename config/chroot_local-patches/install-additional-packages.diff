@@ -1,0 +1,13 @@
+--- chroot.orig/etc/gdm3/PostLogin/Default
++++ chroot/etc/gdm3/PostLogin/Default
+@@ -103,6 +103,10 @@ if [ -r /var/lib/gdm3/tails.persistence ] ; then
+       /var/lib/gdm3/tails.persistence /var/lib/live/config/tails.persistence
+ fi
+ 
++# Install persistent packages
++if [ -x /usr/local/sbin/tails-additional-software ] ; then
++	/usr/local/sbin/tails-additional-software install
++fi
+ 
+ ### Password
+ 
