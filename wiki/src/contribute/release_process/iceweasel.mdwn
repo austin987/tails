@@ -111,7 +111,7 @@ Update Torbrowser patches
 
 * Commit:
 
-  	git commit -m 'Remove Torbrowser patches.'
+  	git commit -a -m 'Remove Torbrowser patches.'
 
 * Import the latest TBB patches:
 
@@ -120,7 +120,7 @@ Update Torbrowser patches
   	  p=$(basename "$patch")
   	  quilt import -P "torbrowser/$p" "$patch"
   	done
-  	git add debian/patches/torbrowser
+  	git add debian/patches/torbrowser debian/patches/series
   	TBB_COMMIT=$(git --git-dir=$TBB_SRC/.git rev-parse HEAD)
   	git commit -a -m "Import Torbrowser patches at commit ${TBB_COMMIT}."
 
@@ -146,7 +146,8 @@ Update debian/changelog
 * set distribution to unstable
 * commit:
 
-  	git commit -a -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+  	git commit debian/changelog \
+  	    -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
 Tag the release
 ---------------
@@ -174,7 +175,8 @@ Build for squeeze-backports
 
 * Commit:
 
-  	git commit -a -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+  	git commit debian/changelog \
+  	    -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
 * Tag the backport:
 
