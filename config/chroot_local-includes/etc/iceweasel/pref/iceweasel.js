@@ -47,6 +47,7 @@ pref("browser.safebrowsing.malware.enabled", false);
 // Fingerprinting
 pref("browser.display.max_font_attempts", 10);
 pref("browser.display.max_font_count", 5);
+pref("gfx.downloadable_fonts.fallback_delay", -1);
 pref("general.useragent.override", "Mozilla/5.0 (Windows NT 6.1; rv:17.0) Gecko/20100101 Firefox/17.0");
 pref("dom.enable_performance", false);
 pref("plugin.expose_full_path", false);
@@ -57,6 +58,8 @@ pref("browser.zoom.siteSpecific", false);
 pref("network.cookie.cookieBehavior", 1);
 pref("security.enable_tls_session_tickets", false);
 pref("network.http.spdy.enabled", false);
+pref("network.http.spdy.enabled.v2", false); // Seems redundant, but just in case
+pref("network.http.spdy.enabled.v3", false); // Seems redundant, but just in case
 
 // Proxy and proxy security
 pref("network.security.ports.banned", "8118,8123,9050,9051,9061,9062,9063");
@@ -80,6 +83,11 @@ pref("network.http.proxy.pipelining", true);
 pref("security.ssl.enable_false_start", true);
 pref("network.http.keep-alive.timeout", 20);
 pref("network.http.connection-retry-timeout", 0);
+pref("network.http.max-persistent-connections-per-proxy", 256);
+pref("network.http.pipelining.reschedule-timeout", 15000);
+pref("network.http.pipelining.read-timeout", 60000);
+// Quoting TBB: 'Hacked pref: Now means "Attempt to pipeline at least this many requests together"'
+pref("network.http.pipelining.max-optimistic-requests", 3);
 
 // Extension support
 pref("xpinstall.whitelist.add", "");
