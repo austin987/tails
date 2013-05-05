@@ -48,10 +48,20 @@ pref("browser.safebrowsing.malware.enabled", false);
 pref("browser.display.max_font_attempts", 10);
 pref("browser.display.max_font_count", 5);
 pref("gfx.downloadable_fonts.fallback_delay", -1);
+pref("general.appname.override", "Netscape");
+pref("general.appversion.override", "5.0 (Windows)");
+pref("general.buildID.override", "0");
+pref("general.useragent.locale", "en-US");
+pref("general.oscpu.override", "Windows NT 6.1");
+pref("general.platform.override", "Win32");
+pref("general.productSub.override", "20100101");
 pref("general.useragent.override", "Mozilla/5.0 (Windows NT 6.1; rv:17.0) Gecko/20100101 Firefox/17.0");
+pref("general.useragent.vendor", "");
+pref("general.useragent.vendorSub", "");
 pref("dom.enable_performance", false);
 pref("plugin.expose_full_path", false);
-pref("browser.startup.homepage_override.mstone", "ignore");
+pref("browser.startup.homepage_override.buildID", "20110325121920");
+pref("browser.startup.homepage_override.mstone", "rv:2.0");
 pref("browser.zoom.siteSpecific", false);
 
 // Third party stuff
