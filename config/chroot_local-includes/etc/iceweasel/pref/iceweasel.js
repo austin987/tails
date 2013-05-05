@@ -110,7 +110,6 @@ pref("browser.history_expire_days", 0);
 pref("browser.history_expire_days.mirror", 0);
 pref("browser.microsummary.updateGenerators", false);
 pref("browser.safebrowsing.remoteLookups", false);
-pref("browser.search.update", false);
 pref("browser.sessionstore.enabled", false);
 pref("dom.event.contextmenu.enabled", false);
 pref("extensions.shownSelectionUI", true);
