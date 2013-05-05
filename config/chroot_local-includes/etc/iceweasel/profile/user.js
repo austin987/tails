@@ -61,6 +61,11 @@ user_pref("network.proxy.socks_port", 9063);
 user_pref("network.proxy.socks_remote_dns", true);
 user_pref("network.proxy.socks_version", 5);
 user_pref("network.proxy.type", 1);
+user_pref("network.protocol-handler.warn-external.mailto", true);
+user_pref("network.protocol-handler.warn-external.news", true);
+user_pref("network.protocol-handler.warn-external.nntp", true);
+user_pref("network.protocol-handler.warn-external.snews", true);
+user_pref("network.protocol-handler.warn-external.file", true);
 
 // Fingerprinting
 user_pref("webgl.min_capability_mode", true);

@@ -79,10 +79,6 @@ pref("network.protocol-handler.external.mailto", false);
 pref("network.protocol-handler.external.news", false);
 pref("network.protocol-handler.external.nntp", false);
 pref("network.protocol-handler.external.snews", false)
-pref("network.protocol-handler.warn-external.mailto", true);
-pref("network.protocol-handler.warn-external.news", true);
-pref("network.protocol-handler.warn-external.nntp", true);
-pref("network.protocol-handler.warn-external.snews", true);
 
 // Network and performance
 pref("network.http.pipelining", true);
@@ -123,7 +119,6 @@ pref("extensions.update.enabled", false);
 pref("extensions.update.notifyUser", false);
 pref("layout.css.report_errors", false);
 pref("network.cookie.prefsMigrated", true);
-pref("network.protocol-handler.warn-external.file", true);
 pref("network.proxy.failover_timeout", 0);
 pref("layout.spellcheckDefault", 0);
 pref("network.dns.disableIPv6", true);
