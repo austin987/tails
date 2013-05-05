@@ -117,7 +117,6 @@ pref("browser.safebrowsing.remoteLookups", false);
 pref("browser.search.update", false);
 pref("browser.sessionstore.enabled", false);
 pref("dom.event.contextmenu.enabled", false);
-pref("dom.storage.enabled", false);
 pref("extensions.shownSelectionUI", true);
 pref("extensions.update.autoUpdateDefault", false);
 pref("extensions.update.enabled", false);
