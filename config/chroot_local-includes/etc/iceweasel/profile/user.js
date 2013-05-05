@@ -90,9 +90,15 @@ user_pref("webgl.disable-extensions", true);
 user_pref("extensions.autoDisableScopes", 0);
 
 // Other non-Torbutton prefs
+user_pref("browser.chrome.favicons", false);
+user_pref("browser.chrome.image_icons.max_size", 0);
+user_pref("browser.download.manager.closeWhenDone", true);
 user_pref("browser.search.update", false);
+user_pref("dom.event.contextmenu.enabled", false);
 user_pref("extensions.foxyproxy.last-version", "99999.99");
 user_pref("extensions.foxyproxy.socks_remote_dns", true);
+user_pref("extensions.update.enabled", false);
+user_pref("layout.css.report_errors", false);
 user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
 user_pref("noscript.ABE.wanIpAsLocal", false);
