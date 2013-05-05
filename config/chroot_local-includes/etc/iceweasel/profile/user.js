@@ -90,6 +90,7 @@ user_pref("webgl.disable-extensions", true);
 user_pref("extensions.autoDisableScopes", 0);
 
 // Other non-Torbutton prefs
+user_pref("browser.cache.disk.capacity", 0);
 user_pref("browser.chrome.favicons", false);
 user_pref("browser.chrome.image_icons.max_size", 0);
 user_pref("browser.download.manager.closeWhenDone", true);
@@ -99,6 +100,9 @@ user_pref("extensions.foxyproxy.last-version", "99999.99");
 user_pref("extensions.foxyproxy.socks_remote_dns", true);
 user_pref("extensions.update.enabled", false);
 user_pref("layout.css.report_errors", false);
+user_pref("layout.spellcheckDefault", 0);
+user_pref("network.dns.disableIPv6", true);
+user_pref("network.proxy.failover_timeout", 0);
 user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
 user_pref("noscript.ABE.wanIpAsLocal", false);
@@ -129,4 +133,9 @@ user_pref("noscript.STS.enabled", false);
 user_pref("noscript.subscription.lastCheck", -142148139);
 user_pref("noscript.temp", "");
 user_pref("noscript.untrusted", "google-analytics.com");
+user_pref("privacy.item.cookies", true);
+user_pref("privacy.sanitize.sanitizeOnShutdown", true);
+user_pref("security.xpconnect.plugin.unrestricted", false);
+user_pref("security.warn_leaving_secure", true);
+user_pref("security.warn_submit_insecure", true);
 user_pref("torbrowser.version", "Tails");
