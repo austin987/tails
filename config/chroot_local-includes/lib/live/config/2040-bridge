@@ -8,13 +8,20 @@ append_to_torrc () {
 
 AddBuggyBridgeSettings ()
 {
-	grep -qw bridge /proc/cmdline || return 0
-
 	append_to_torrc ''
 	append_to_torrc '# Enforce use of bridges. UseBridges enabled requires at least one bridge (otherwise Tor refuses to start) so for now a harmless bogus bridge is added until Tor bug #2355 is implemented (if ever)'
 	append_to_torrc 'UseBridges 1'
 	append_to_torrc 'Bridge 127.0.0.1:7777'
 }
 
-AddBuggyBridgeSettings
+AddObfsProxySupport ()
+{
+	append_to_torrc '# Add support for obfsproxy'
+	append_to_torrc 'ClientTransportPlugin obfs2,obfs3 exec /usr/bin/obfsproxy managed'
+}
 
+if grep -qw bridge /proc/cmdline
+then
+	AddBuggyBridgeSettings
+	AddObfsProxySupport
+fi

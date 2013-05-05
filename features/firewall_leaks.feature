@@ -21,7 +21,7 @@ Feature:
     When I start the Unsafe Browser
     And the Unsafe Browser has started
     And I open the address "https://check.torproject.org" in the Unsafe Browser
-    And I see "UnsafeBrowserTorCheckFail.png" after at most 30 seconds
+    And I see "UnsafeBrowserTorCheckFail.png" after at most 60 seconds
     Then the firewall leak detector has detected IPv4 TCP leaks
 
   Scenario: Detecting IPv4 TCP leaks of TCP DNS lookups

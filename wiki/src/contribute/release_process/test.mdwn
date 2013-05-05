@@ -85,28 +85,11 @@ the test suite, leaving it with a blank screen.
 
 ## Automated test suite migration progress
 
-In the manual feature tests below we "tag" tests the following way to
-keep track of their progress of being replaced by a corresponding test
-in the automated test suite:
-
-* Not tag means that an appriopriate automated test is not implemented
-  at all.
-* `[needs-fix]` means that there's a partial implementation of an
-  automated test, or that it has some issue that needs a fix.
-* `[needs-review]` means that an automated test is implemented and
-  that someone else than the author should review it for correctness.
-* `[needs-pass]` means that an automated test is implemented and that
-  someone else than the author must run it and see it pass.
-* `[can't-automate]` means that these tests cannot possibly be
-  implemented in an automated way and will require manual testing.
-
-In the tags we also refer to the name of the `.feature` file(s), and
-for `[needs-fix]` we link to the corresponding TODO item (XXX: will be
-done once merged into the `master` branch).
-
-Tests which are completely implemented, reviewed and passed are
-removed from below. Such tests are considered to be covered by the
-automated test suite and do not have to be manually tested any more.
+The manual test suite below either contains tests that cannot be
+automated, has no automated test implemented yet, or has a test
+implemented, but it either hasn't been reviewed, had a confirmed pass
+by someone other than the test author, or has issues. The latter is
+tracked by tickets prefixed with `todo/test_suite:`.
 
 # Iceweasel
 
@@ -157,19 +140,18 @@ automated test suite and do not have to be manually tested any more.
  - check output of `ip6tables -L -n`
  - at a place with working IPv6: try connecting to a known-working
    IPv6-enabled server on its IPv6 address over TCP and icmp6.
-* is `/etc/resolv.conf` OK both before/after DHCP has been setup? it should
+* is `/etc/resolv.conf` OK both before/after DHCP has been set up? it should
   *always* read `nameserver 127.0.0.1`
 * [[doc/first_steps/startup_options/bridge_mode]] should work:
   1. Boot with the `bridge` option.
-  1. Setup an administrator password.
+  1. Set up an administrator password.
   1. Enter a bridge or a few.
   1. Use the Internet.
   1. Check from time to time with `netstat` that the only outgoing
      direct network connections go to the configured bridge(s).
 * Verify that all destinations reached from an intensive Tails session
   are tor routers or
-  authorities: `[needs-fix: many scenarios]` (see "check firewall
-  leaks in every scenario" on the ticket).
+  authorities:
   1. Boot Tails without the network in.
   1. Start dumping your whole session's network activity with `sudo
      tcpdump -n -i any -w dump` (or better, do the dump on another machine,
@@ -242,17 +224,10 @@ features properly do their work; second, our `torrc` sets the right
 
 # Use of untrusted partitions
 
-* are any local hard-disk partitions mounted or used as swap?
+* is any local hard-disk swap partition used as swap?
   boot on a (possibly virtual) machine that has a cleartext swap
   partition not managed by LVM. This swap partition must not be used
   by Tails.
-* is a Live system found on a local hard-disk partition used? boot the
-  DVD/USB stick you are testing on a (possibly virtual) machine that
-  has a Tails system copied on a cleartext partition not managed by
-  LVM. The DVD/USB ramdisk must use the Tails system found on the
-  DVD/USB, and not the one found on the hard disk. (Also check that
-  without Tails, that other Live system boots.)
-  `[needs-review, needs-pass: untrusted_partitions]`
 * is a persistence volume on a local hard-disk partition used?
 
 # Claws
@@ -291,8 +266,6 @@ features properly do their work; second, our `torrc` sets the right
 
 # Time
 
-`[needs-review, needs-pass]`
-
 1. Boot Tails without a network cable connected (i.e. no network on boot).
 2. set the time to an obviously wrong one:
 
@@ -306,9 +279,8 @@ correctly.
 # erase memory on shutdown
 
 - check that `memlockd` is running
-  `[needs-review, needs-pass: erase_memory]`
-- check that `udev-watchdog` is running and monitors the right device:
-  `[needs-fix: erase_memory: check that it's monitoring the right device]`
+- check that `udev-watchdog` monitors the right device
+  ([[todo/test_suite:_udev-watchdog_device]])
   * on USB
   * on DVD
 - After booting from DVD, remove Tails boot medium and check that the
@@ -318,7 +290,7 @@ correctly.
 Testing that the needed files are really mapped in memory, and the
 erasing process actually works, involves a more complicated
 process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
-`[needs-review, needs-pass: erase_memory]`
+`[needs-fix: erase_memory]` ([[todo/test_suite:_anti-tests]])
 
 # Root access control
 
@@ -327,9 +299,9 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 * Boot Tails without setting a password and check you can't get
   PolicyKit administrative privileges (e.g. run a command with pkexec),
   neither with the `amnesia` password nor
-  with the `live` one. `[needs-review: root_access_control]`
+  with the `live` one.
 * Boot Tails with a password and check you can get PolicyKit
-  administrative privileges. `[needs-review: root_access_control]`
+  administrative privileges.
 * Check that the $TAILS_USER_PASSWORD variable, if still existing in the system
   environment after the boot has finished, does not contain the clear text
   password.
@@ -337,8 +309,7 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 # Virtualization support
 
 * `modinfo vboxguest` should work when booted on the 686-pae kernel
-  `[needs-review, needs-pass: checks]`
-* test in VirtualBox `[can't-automate?]`
+* test in VirtualBox
 
 # I2P
 
@@ -356,7 +327,8 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
   - You should get "Network: Hidden" in the "General" section.
 * Check that you can reach some eepsites within Iceweasel, like
   <http://www.i2p2.i2p> and <http://forum.i2p>.
-* Check that you can connect to the I2P IRC server through Pidgin.
+* Check that you can connect to the I2P IRC server through Pidgin and
+  the preconfigured IRC account on 127.0.0.1.
 
 # Git
 
@@ -380,29 +352,28 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # USB Installer/Upgrader
 
+All this was successfully reviewed at commit cdbbf4d8.
+
 After each of the following tests:
 
 * The installed or upgraded Tails medium shall be successfully booted.
-  `[needs-review, needs-pass: usb_install]`
 * The installed or upgraded Tails medium shall have the "emergency
   shutdown on boot medium removal" feature working: remove Tails boot
   medium and check that the memory erasure process is started
   (`Loading new kernel`, at least).
 * The TailsData partition must survive
-  upgrades. `[needs-review, needs-pass: usb_install]`
+  upgrades.
 
 Tests to run:
 
 * Test "Clone & Install":
-  - from DVD. `[needs-review: usb_install]`
-  - from USB. `[needs-review, needs-pass: usb_install]`
+  - from USB.
   - onto a USB stick that has a MBR partition table, and no
     partition at all (regression test)
   - onto a USB stick that already has an old-fashioned hybrid cat'd
     Tails on it
 * Test "Clone & Upgrade" (onto a USB install containing an older
   Tails):
-  `[needs-fix: usb_install: to-be-upgraded USB drive must contain an old Tails]`
   - from DVD.
   - from USB.
   - onto a USB stick that already has a old-fashioned cat'd hybrid
@@ -436,17 +407,13 @@ stuff: **FIXME**.
 # Persistence
 
 * Activate persistence on a Tails USB install with all presets on, and
-  a few custom directories. `[needs-review, needs-pass: usb_install]`
-* Reboot, enable persistence. Verify via `mount` that each preset has
-  a mount that seem correct (e.g. "Pidgin preset =>
-  `/home/amnesia/.purple` has something mounted on
-  it"). `[needs-review, needs-pass: usb_install]`
-* Try read-write mode. Make sure that persistent files are writeable,
-  and that changes do survive
-  reboot. `[needs-review, needs-pass: usb_install]`
+  a few custom directories (also done by the automated test suite,
+  but required to test what follows until it's green too).
+* Try read-write mode. Make sure that changes do survive
+  reboot.
 * Try read-only mode. Make sure that persistent files are writeable,
   but that no changes survive
-  reboot. `[needs-review, needs-pass: usb_install]`
+  reboot.
 * Turn off some persistence presets, reboot, and make sure they are
   not activated.
 
@@ -507,11 +474,10 @@ language.
 
 * Check that all seems well during init (mostly that all services
   start without errors), and that dmesg seems ok.
-* MAT should be able to clean a PDF file. `[needs-fix]` (see ticket)
+* MAT should be able to clean a PDF file.
 * Browsing (by hostname) a FTP server on the Internet should be
   possible using GNOME's *Connect to server* feature
   (once [[!tails_todo fix Internet FTP support]] is fixed)
 * The Tails signing key in `/usr/share/keyrings/tails-keyring.gpg`
   should be up-to-date (that is, neither it nor one its subkeys must
-  have expired, or be about to expire any time
-  soon). `[needs-fix]` (see ticket)
+  have expired, or be about to expire any time soon).

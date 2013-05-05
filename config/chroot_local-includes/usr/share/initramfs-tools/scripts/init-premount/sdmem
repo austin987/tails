@@ -30,11 +30,12 @@ if [ -n "${sdmem}" ] ; then
       sdmemopts="v"
    fi
    for i in $(seq 0 30) ; do /usr/bin/sdmem "-${sdmemopts}" & done
-   # Wait for at least one sdmem job to complete.
-   /usr/bin/sdmem "-${sdmemopts}"
+   # Wait for sdmem jobs to complete.
+   wait
 fi
 
 if [ "${sdmemdebug}" = 1 ] ; then
+   clear
    echo "Going to sleep 10 minutes. Happy dumping!"
    sleep 600
 fi

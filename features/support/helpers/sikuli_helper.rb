@@ -37,7 +37,7 @@ end
 
 class Sikuli::Screen
   def hide_cursor()
-    hover(self.width/2, self.height/2)
+    hover(self.width, self.height/2)
   end
 end
 

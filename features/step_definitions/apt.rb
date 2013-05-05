@@ -13,6 +13,7 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
 end
 
 When /^I update APT using apt-get$/ do
+  next if @skip_steps_while_restoring_background
   SystemTimer.timeout(30*60) do
     cmd = @vm.execute("echo #{@sudo_password} | " +
                       "sudo -S apt-get update", $live_user)
@@ -23,6 +24,7 @@ When /^I update APT using apt-get$/ do
 end
 
 Then /^I should be able to install a package using apt-get$/ do
+  next if @skip_steps_while_restoring_background
   package = "cowsay"
   SystemTimer.timeout(120) do
     cmd = @vm.execute("echo #{@sudo_password} | " +
@@ -35,6 +37,7 @@ Then /^I should be able to install a package using apt-get$/ do
 end
 
 When /^I update APT using Synaptic$/ do
+  next if @skip_steps_while_restoring_background
   # Upon start the interface will be frozen while Synaptic loads the
   # package list. Since the frozen GUI is so similar to the unfrozen
   # one there's no easy way to reliably wait for the latter. Hence we
@@ -47,6 +50,7 @@ When /^I update APT using Synaptic$/ do
 end
 
 Then /^I should be able to install a package using Synaptic$/ do
+  next if @skip_steps_while_restoring_background
   package = "cowsay"
   # We do this after a Reload, so the interface will be frozen until
   # the package list has been loaded

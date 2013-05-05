@@ -18,25 +18,10 @@ Roadmap
      - Anonymous posting is not working
      - What are the criteria to go through moderation?
 0. Create ourselves accounts on ask.torproject.org
+0. [[Clean the forum.|improve_the_forum#index3h1]]
+0. Migrate the relevant content from the forum to ask.torproject.org.
 0. Wait for ask.torproject.org to be announced and used.
 0. Close the current forum for new posts and redirect to ask.torproject.org
-0. Sort out the interesting content of the forum in the doc/sort_the_forum branch
-   Here's how to do it, for each forum thread in `wiki/src/forum/':
-
-       If the question is relevant and was answered well enough
-       Then
-           move the question and best answer to wiki/src/forum2migrate
-           (with git mv)
-       Else
-          delete the whole thread (with git rm)
-
-       >From time to time, merge from master branch to get the new threads.
-       >From time to time, send us a pull request so that your work is
-        integrated into the main doc/sort_the_forum branch, and so that work
-        is not duplicated.
-
-       I'm told using mc helps in the process.
-
 0. Adapt our website to point to the new place.
    Encourage people to use the appropriate ways to report bugs, and
    get better support this way, proposal:
@@ -98,6 +83,39 @@ The service ask.torproject.org is using Askbot.
       in different subsites
     - allow to move questions between subsites (if allowed to do so)
     - subsites can be tied to one or more languages (see multilanguage)
+
+Clean the forum
+===============
+
+The forum is getting huge (about 3700 posts) and that creates
+important problems on the server. For example, at release time,
+rebuilding the whole wiki takes hours.
+
+So let's start to delete everything except the interesting questions and
+most relevant answers that will be migrated to the Q&A application.
+
+Using <span class="application">mc</span>, the GNU Midnight Commander,
+you can then browse the forum content by chronological order.
+
+  - Move to the `forum` folder.
+  - Run the [[`restore_mtime.sh`|todo/improve_the_forum/restore_mtime.sh]]
+    script that updates the modification time of both the original post
+    and the folder containing the corresponding comments to the date of
+    the original post, retrieved through Git.
+  - Start mc in the `forum` folder.
+  - To mix both directories and file in the file listing, press F9 and
+    choose Options → Panel options... → Mix all files.
+  - To sort files by modify time, press F9 and choose Left → Sort order
+    → Modify time.
+  - To have a preview of files in the right panel, press F9 and choose
+    Right → Quick view.
+
+This happens in the `doc/sort_the_forum` branch.
+
+From time to time, merge from master branch to get the new threads.
+From time to time also merge this branch into master to reduce the load
+on the server. Pushing such commits can take a while, even if they are
+only delete content from the forum...
 
 [[!tag todo/website]]
 
