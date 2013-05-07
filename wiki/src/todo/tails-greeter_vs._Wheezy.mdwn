@@ -14,8 +14,8 @@ Roadmap
 1. [[!taglink todo/research]] how to use GDM in Wheezy, without
    spending too much time on it
 1. [[!taglink todo/research]] a bit more potential lightdm drawbacks,
-   especially in the area of accessibility (both in a Python GTK
-   greeter and in a WebKit greeter one)
+   especially in the area of accessibility (in the case of a Python GTK
+   greeter)
 1. decide about GDM vs. lightdm
 1. if going with lightdm: decide what language and UI toolkit to use
 1. migrate tails-greeter code to the new chosen DM, [[revamping the
@@ -59,8 +59,7 @@ lightdm
 -------
 
 **Summary**: lightdm looks very promising, but it may be lacking in
-some areas (accessibility) and some of the exciting (optional) stuff,
-such as writing the UI as a web page, is quite a bit hackish.
+some areas (accessibility).
 
 [lightdm](https://launchpad.net/lightdm) has made huge progress since
 the time we considered it in the early pre-tails-greeter days:
@@ -91,11 +90,6 @@ the time we considered it in the early pre-tails-greeter days:
   `lightdm --test-mode --debug` starts a greeter in a window inside
   your existing session, as an unprivileged user (and logs to
   `~/.cache/lightdm/log/x-*-greeter.log`)
-* [lightdm-webkit-greeter](https://launchpad.net/lightdm-webkit-greeter)
-  and [lightdm-pywebkit-greeter](https://github.com/lamikae/lightdm-pywebkit-greeter)
-  allow writing greeters in HTML/CSS + JavaScript... in case we want
-  a Web-like look'n'feel, and possibly make it easier for people who
-  are more into design to contribute to our greeter.
 
 One should have a look at possible drawbacks, though:
 
@@ -107,10 +101,21 @@ One should have a look at possible drawbacks, though:
     GTK theme. Not running a full GNOME session, window manager
     included (contrary to GDM), forces them to manage a few things by
     hand, but it still does not look that crazy.
-* Wheezy's, sid's (1.2.3-1) and experimental's (1.4.0-1) lightdm don't build
-  GObject introspection data, while Ubuntu does -- how easy is it to
-  enable it, and in turn enable us to write greeters in something else
-  than C? Propose a patch for [[!debbug 699821]]. [[!tag todo/code]]
+* Wheezy's, sid's (1.2.3-1) and experimental's (1.4.0-1) lightdm don't
+  build GObject introspection data -- this is needed to enable us to
+  write greeters in something else than C. A fix
+  [[!debbug 699821 desc="is pending"]]. [[!tag todo/code]]
+
+### Archive: webkit
+
+We've given up the idea of writing our greeter as a web interface.
+Here's some initial archived research in this area:
+
+* [lightdm-webkit-greeter](https://launchpad.net/lightdm-webkit-greeter)
+  and [lightdm-pywebkit-greeter](https://github.com/lamikae/lightdm-pywebkit-greeter)
+  allow writing greeters in HTML/CSS + JavaScript... in case we want
+  a Web-like look'n'feel, and possibly make it easier for people who
+  are more into design to contribute to our greeter.
 * JavaScript can't run arbitrary commands nor create files, so
   a WebKit greeter could not work exactly the same way as current
   tails-greeter does (worst case: at least with pywebkit-greeter, the
