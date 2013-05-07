@@ -1,7 +1,7 @@
 user_pref("capability.policy.maonoscript.javascript.enabled", "allAccess");
 user_pref("capability.policy.maonoscript.sites", "about: about:addons about:blank about:certerror about:config about:crashes about:credits about:home about:neterror about:plugins about:privatebrowsing about:sessionrestore chrome: resource:");
 user_pref("extensions.adblockplus.correctTypos", false);
-user_pref("extensions.adblockplus.currentVersion", "2.0.3");
+user_pref("extensions.adblockplus.currentVersion", "2.1");
 user_pref("extensions.adblockplus.savestats", false);
 user_pref("extensions.adblockplus.showinaddonbar", false);
 user_pref("extensions.adblockplus.showintoolbar", false);
@@ -61,6 +61,26 @@ user_pref("network.proxy.socks_port", 9063);
 user_pref("network.proxy.socks_remote_dns", true);
 user_pref("network.proxy.socks_version", 5);
 user_pref("network.proxy.type", 1);
+user_pref("network.protocol-handler.warn-external.mailto", true);
+user_pref("network.protocol-handler.warn-external.news", true);
+user_pref("network.protocol-handler.warn-external.nntp", true);
+user_pref("network.protocol-handler.warn-external.snews", true);
+user_pref("network.protocol-handler.warn-external.file", true);
+
+// Network and performance
+user_pref("network.http.pipelining", true);
+user_pref("network.http.pipelining.aggressive", true);
+user_pref("network.http.pipelining.maxrequests", 12);
+user_pref("network.http.pipelining.ssl", true);
+user_pref("network.http.proxy.pipelining", true);
+user_pref("security.ssl.enable_false_start", true);
+user_pref("network.http.keep-alive.timeout", 20);
+user_pref("network.http.connection-retry-timeout", 0);
+user_pref("network.http.max-persistent-connections-per-proxy", 256);
+user_pref("network.http.pipelining.reschedule-timeout", 15000);
+user_pref("network.http.pipelining.read-timeout", 60000);
+// Quoting TBB: 'Hacked pref: Now means "Attempt to pipeline at least this many requests together"'
+user_pref("network.http.pipelining.max-optimistic-requests", 3);
 
 // Fingerprinting
 user_pref("webgl.min_capability_mode", true);
@@ -70,8 +90,19 @@ user_pref("webgl.disable-extensions", true);
 user_pref("extensions.autoDisableScopes", 0);
 
 // Other non-Torbutton prefs
+user_pref("browser.cache.disk.capacity", 0);
+user_pref("browser.chrome.favicons", false);
+user_pref("browser.chrome.image_icons.max_size", 0);
+user_pref("browser.download.manager.closeWhenDone", true);
+user_pref("browser.search.update", false);
+user_pref("dom.event.contextmenu.enabled", false);
 user_pref("extensions.foxyproxy.last-version", "99999.99");
 user_pref("extensions.foxyproxy.socks_remote_dns", true);
+user_pref("extensions.update.enabled", false);
+user_pref("layout.css.report_errors", false);
+user_pref("layout.spellcheckDefault", 0);
+user_pref("network.dns.disableIPv6", true);
+user_pref("network.proxy.failover_timeout", 0);
 user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
 user_pref("noscript.ABE.wanIpAsLocal", false);
@@ -102,4 +133,9 @@ user_pref("noscript.STS.enabled", false);
 user_pref("noscript.subscription.lastCheck", -142148139);
 user_pref("noscript.temp", "");
 user_pref("noscript.untrusted", "google-analytics.com");
+user_pref("privacy.item.cookies", true);
+user_pref("privacy.sanitize.sanitizeOnShutdown", true);
+user_pref("security.xpconnect.plugin.unrestricted", false);
+user_pref("security.warn_leaving_secure", true);
+user_pref("security.warn_submit_insecure", true);
 user_pref("torbrowser.version", "Tails");
