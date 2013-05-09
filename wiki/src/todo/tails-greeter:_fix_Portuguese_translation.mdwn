@@ -1,0 +1,19 @@
+Tails Greeter has a pt_BR.po file, and the .deb installs
+`/usr/share/locale/pt_BR/LC_MESSAGES/tails-greeter.mo`, but the
+interface doesn't get translated into Brazilian Portuguese when
+Portuguese / Brazil is selected.
+
+This bug is present at least on Tails 0.17.1, Tails 0.17, Tails 0.16.
+
+Let's first [[!taglink todo/test]] if another translation for a locale
+that's not the default one for its language (e.g. `fr_BE` or `de_AT`)
+is applied.
+
+If it is, then the problem is specific to the `pt_BR` translation.
+
+Else, then the problem is a general one related to how a locale change
+in the UI reflects to the UI language. FWIW, the call chain, from the
+signal triggered by the UI change, to the window being translated on
+the fly, should be: `locale_selected` -> `set_locale` ->
+`self.__apply_locale()` ->
+`self._greeter.SelectLanguage(self._locale)` -> `translate_to`.

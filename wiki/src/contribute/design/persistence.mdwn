@@ -2,7 +2,7 @@ Data persistence is a somewhat tricky topic in a Live system context,
 especially one explicitly designed to avoid leaving any trace of
 its use.
 
-Some real-life usecases however require to setup some kind of data
+Some real-life usecases however require to set up some kind of data
 persistence, which were then carefully introduced and supported.
 
 [[!toc levels=4]]
@@ -53,12 +53,13 @@ Stuff we don't want to actively support making persistent:
 A persistent non-home data store for whatever random files the user
 wants to have persistent. This is the `~/Persistent/` directory.
 
-### Additional applications installation
+### Additional software packages
 
-If a user need some program not present in Tails per default it can be
+If a user needs software that is not included in Tails by default it can be
 quite annoying to fetch the APT information and download it (slow over
-Tor). Therefore, APT packages lists and cache can be easily
-made persistent.
+Tor) every time. Therefore, APT packages lists and cache can easily be
+made persistent. It's also possible to store in persistence a list of
+additional software packages to be automatically reinstalled on boot.
 
 Persistence storage location
 ----------------------------
@@ -149,7 +150,7 @@ User interface
 ### bootstrap persistent storage
 
 A *Configure persistent storage* menu entry is the entry point to the
-*bootstrap persistent storage* UI. This UI allows the user to setup
+*bootstrap persistent storage* UI. This UI allows the user to set up
 a persistent storage container in the free space left on the USB stick
 by [[our USB installer|usb_installation]].
 
@@ -221,8 +222,8 @@ Setting up a Tails persistent volume means:
   of us who wrote it is the most efficient at.
 
 * Partition / filesystem / LUKS management is done using `udisks`; the
-  [[udisks bug wrt.
-  partition attributes|todo/usb_install_and_upgrade/todo]]
+  [[!tails_todo usb_install_and_upgrade/todo desc="udisks bug wrt.
+  partition attributes"]]
   is workaround'ed.
 
 ### Configure which bits are persistent
@@ -237,7 +238,7 @@ Persistence settings changes are taken into account at next boot.
   the persistence partition is already mounted; or the user is
   directly coming from bootstrap, and then we must mount the partition
   ourselves
-* by default setup, setup a linkfiles-enabled persistent
+* by default, set up a linkfiles-enabled persistent
   `${HOME}/dotfiles`, preconfigured to have its contents symlinked
   into `$HOME`.
 * apart of this, let's consider non-directories persistence an
@@ -263,7 +264,8 @@ Persistence settings changes are taken into account at next boot.
 ### Enable persistence at boot time
 
 Choosing between various persistence modes is one of the reasons why
-we've written a graphical [[todo/boot_menu]]: [[todo/TailsGreeter]].
+we've written a graphical [[!tails_todo boot_menu]]:
+[[!tails_todo TailsGreeter]].
 
 #### Design
 
@@ -276,8 +278,8 @@ we've written a graphical [[todo/boot_menu]]: [[todo/TailsGreeter]].
   supports *one* persistence container
 * ask LUKS passphrase, deals with errors
 * for a given persistent container, it's all or nothing: all bits of
-  persistence configured in its `live.persist` are to be setup
-* runs `live-persist` to setup persistent data where it belong
+  persistence configured in its `live.persist` are to be set up
+* runs `live-persist` to set up persistent data where it belong
 * pass information to the user session (at least
   `tails-persistence-setup` needs information) through shell variables
   set in `/var/lib/gdm3/tails.persistence`
@@ -295,7 +297,7 @@ backend / tails-greeter interface
 0. For each such volume, `tails-greeter` asks the user to enter the
    passphrase or to skip it, and tries to unlock. `tails-greeter`
    deals with error catching, retrying, etc. as appropriate.
-0. `tails-greeter` asks `live-boot` to setup persistence (at least
+0. `tails-greeter` asks `live-boot` to set up persistence (at least
    custom mounts and linkfiles), passing it the list of volumes that
    were successfully unlocked.
 
@@ -334,8 +336,27 @@ passing to `tails-greeter`; . `live-persist` will support non-Tails
 usecases on a best-effort basis, leaving room for improvement in case
 other developers want to add support for their preferred usecases.
 
-### Asking live-persist to setup persistence
+### Asking live-persist to set up persistence
 
 To start with, we've factored out only the custom mounts part from the
 main `live-boot` script; it depends on factoring out other kinds of
 persistence (e.g. all types of unionfs-style filesystems) first.
+
+Additional software packages
+----------------------------
+
+The `tails-additional-software` script installs a list of
+additional software packages stored in persistence.
+
+To this aim, the persistent volume root directory may contain
+a `live-additional-software.conf` file that holds the list of packages to install
+(from persistence, since they were cached already).
+
+First, those additional software packages are installed offline from tails-greeter
+`PostLogin` script.
+
+Then, once connected to the network, a NetworkManager dispatcher hook looks for
+upgrades if additional software were activated (`apt-get update`, then `apt-get
+install` the additional software packages). For some packages (e.g.  already
+running software) the change will only be effective at next boot but hopefully a outdated
+version won't be used too long in the meantime.

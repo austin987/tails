@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -e
+
+# Get LIVE_USERNAME
+. /etc/live/config.d/username.conf
+
+if [ $# -ne 2 ] && [ $# -ne 3 ]; then
+	echo "Usage: $0 SUMMARY BODY [TIMEOUT]" >&2
+	exit 16
+fi
+
+# Notify the desktop user
+summary="$1"
+body="$2"
+
+if [ -n "$3" ]; then
+        timeout_args="--expire-time=$3"
+fi
+(
+        export DISPLAY=':0.0'
+        export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
+        exec /bin/su -c "notify-send ${timeout_args} \"${summary}\" \"${body}\"" "${LIVE_USERNAME}" &
+)
+

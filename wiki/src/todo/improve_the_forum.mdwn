@@ -1,66 +1,42 @@
-Let's switch to a more advanced Question & Answer webapp instead!
+Let's migrate to [ask.torproject.org](https://ask.torproject.org/)
+instead.
 
 [[!toc levels=2]]
+
+Tor made it available in March 2013, it is based on Askbot.
+
+<https://trac.torproject.org/projects/tor/ticket/5995>
 
 Roadmap
 =======
 
-0. decide what tool we'll use, hopefully sharing one with Tor:
-   [[!tor_bug 5995]] [[!tag todo/discuss]]
-0. setup the thing
-0. import worthy old posts (Ague as a nice setup to select these,
-   should be documented somewhere we can easily find it when needed)
-
-Required features
-=================
-
-- Allow to vote for the answers and display the answer sorted by votes.
-- Allow to ask questions anonymously.
-- Handle karma for logged in users.
-- Have decently smart email notifications.
-- By default, proposes to search before asking a new question.
-
-Candidates
-==========
-
-OSQA
-----
-
-In the end OSQA might not be the good solution.
-
-  - They did [some releases](http://www.osqa.net/blog/) quite quickly
-    between 2010 and March 2011, but nothing since then.
-  - The [developers mailing
-    list](http://lists.osqa.net/pipermail/lists.osqa.net/dev/) has been
-    almost dead since the last release.
-  - There are [some](https://github.com/BinaryRage/OSQA/commits/master)
-    [people](https://github.com/cdman/OSQA/commits/master) still
-    developing it somehow on github though not on a regular basis.
-  - People working on OSQA started their own business with
-    [Answerhub](http://answerhub.com/). And it seems like they are not
-    really working on OSQA anymore.
-  - Officially they are still supporting OSQA, and there indeed are some
-    recent commits in the subversion but way less than before: 510
-    (2011), 60 (2012).
-
-At first, we selected OSQA for the following reasons:
-
-  - Django application.
-  - Shows the ‘Search’ button first by default and the ‘Ask a question’
-    button on the side.
-  - Easy to install: checkout the source code, install all the
-    dependencies from Debian: `python-django-south python-django
-    python-django-debug-toolbar python-markdown python-html5lib
-    python-openid` (instead of using easy_install), configure the
-    desired server to use WSGI, create the DB and that's it.
-    <http://wiki.osqa.net/display/docs/Ubuntu+with+Apache+and+MySQL>
-  - We will host it under http://tails.boum.org/ask/.
+0. Test and report our findings about ask.torproject.org [[!taglink todo/test]]
+   - How are we going to filter Tails content?
+   - Do we need to be granted special rights as Tails dev?
+   - Comments to be made:
+     - Search engine is too strict ("turtles" → 2 threads, but "turtles question" → 0 threads)
+     - Anonymous posting is not working
+     - What are the criteria to go through moderation?
+0. Create ourselves accounts on ask.torproject.org
+0. [[Clean the forum.|improve_the_forum#index3h1]]
+0. Migrate the relevant content from the forum to ask.torproject.org.
+0. Wait for ask.torproject.org to be announced and used.
+0. Close the current forum for new posts and redirect to ask.torproject.org
+0. Adapt our website to point to the new place.
+   Encourage people to use the appropriate ways to report bugs, and
+   get better support this way, proposal:
+   “You are much more likely to get help with hardware related issues,
+   and bugs, if you report them using WhisperBack. See
+   [[doc/first_steps/bug_reporting]]".
+0. Remove the old forum.
 
 Askbot
-------
+======
+
+The service ask.torproject.org is using Askbot.
 
   - <http://askbot.org/>
-  - Another Django webapp, forked from OSQA.
+  - Django webapp, forked from OSQA.
   - <https://github.com/ASKBOT/askbot-devel>
   - Has [many dependencies](https://github.com/ASKBOT/askbot-devel/blob/master/askbot_requirements.txt) outside of Debian:
     - akismet
@@ -74,19 +50,15 @@ Askbot
     - pystache
     - pytz
     - longusername
-  - The test installation did not succeeded because of many issues on
-    database support, and migration during installation.
   - Most of the development is [done by 2
     people](https://github.com/ASKBOT/askbot-devel/graphs/contributors),
     they are also selling it as a service.
   - The commit count looks promising: 393 (2009), 594 (2010), 1249
     (2011), 1106 (2012)
-  - Bug tracker: <http://bugs.askbot.org/projects/askbot/>, but are they
-    really using it?
 
 ### Features
 
-  - Anonymous posting: like for OSQA, filling up the email field is
+  - Anonymous posting: filling up the email field is
     required but the validity of the email is not checked.
   - Email notifications:
     - *Asked by me*
@@ -98,114 +70,52 @@ Askbot
   - The software is
     [translated](https://www.transifex.com/projects/p/askbot/) but there
     is no multilingual support from the web interface.
-  - No group feature.
+  - No subsite feature.
 
-Shapado
--------
+### Wishlist
 
-  - <http://shapado.com>
-  - Written in Ruby
-  - <https://gitorious.org/shapado>
-  - More or less standard Rails app. Uses MongoDB. See
-    [[!debbug 633407]] regarding Debian support. See
-    <https://gitorious.org/shapado/shapado/merge_requests/17> for up-to-date
-    documentation.
-  - Upstream does not often runs the product outside the 'shapado.com'
-    environment. A few tweaks were needed to get the application
-    running.
-  - Developers tools: IRC channel, bug tracking through questions on
-    Shapado.com.
-  - Pivotal Tracker, but not used anymore?
-    <https://www.pivotaltracker.com/projects/74584#>
-  - Most of the development is done by 3 people, probably the people
-    behind <http://ricodigo.com/>, the company running shapado.com.
-  - Last release in September 2011, and no official release since then.
-    The commit count dropped, but there is still recent activity: 730
-    (2009), 2276 (2010), 1832 (2011), 344 (2012)
+  * Add multilanguage feature to:
+    - allow users to change the language of the interface they see
+    - allow to filter the content by the language of the questions
+  * Add a subsite feature:
+    - a single login should allow to post on different subsites
+    - a single user might have different credentials, karmas and badges
+      in different subsites
+    - allow to move questions between subsites (if allowed to do so)
+    - subsites can be tied to one or more languages (see multilanguage)
 
-### Features
+Clean the forum
+===============
 
-  - Anonymous posting:
-    - Like for OSQA, filling up the email field is required but the
-      validity of the email is not checked.
-    - Setting `Enable Anonymous` for a group, but that only allows
-      people logged in to answer a question without showing their
-      username.
-  - Email notifications:
-    - *Get email notifications for new answers*
-    - *Receive email notifications about questions in your field of
-      expertise*
-    - *Receive email notifications about system activities such as
-      earned badges, new followers, etc*
-    - *Receive a report with latest group activity (only for group
-      admins)*
-  - When something is typed in the 'Ask a question' form,
-    the current set of matching questions are displayed on the fly.
-    Maybe an intermediate screen will be better if anything is found.
-  - Group feature:
-    - User can join different groups with a single login.
-    - Some code is present to move a question from one group to another,
-      but it seems broken.
-    - Group can be tied to one or more languages.
-  - Multilingual support with user settings such as:
-    - *Language used for the interface of the site*, that works.
-    - *You want to read questions in the following languages*, works but
-      is buggy: the default language for the group (English) doesn't
-      show up in the list of languages when asking a question, nor in
-      the filter when listing questions.
-  - Weird limitation on password size: `Password is too long (maximum is
-    20 characters)`.
-  - Browser compatibility: I faced some issues while signing up, login
-    in, or joining a group. But all that seems to work fine from Tails.
-  - Unable to vote on questions?
+The forum is getting huge (about 3700 posts) and that creates
+important problems on the server. For example, at release time,
+rebuilding the whole wiki takes hours.
 
-Q2A
----
+So let's start to delete everything except the interesting questions and
+most relevant answers that will be migrated to the Q&A application.
 
-  - <http://www.question2answer.org/>
-  - Written in PHP
-  - <https://github.com/q2a/question2answer> but only one commit per
-    release!
-  - No dependencies outside of PHP and MySQL
-  - No public developers tools?
-    <http://www.question2answer.org/qa/3665/can-find-q2a-project-repository-anywhere-like-sourceforge>
-  - Many plugins by the community:
-    <http://www.question2answer.org/addons.php>
-  - Four releases in 2012
+Using <span class="application">mc</span>, the GNU Midnight Commander,
+you can then browse the forum content by chronological order.
 
-### Features
+  - Move to the `forum` folder.
+  - Run the [[`restore_mtime.sh`|todo/improve_the_forum/restore_mtime.sh]]
+    script that updates the modification time of both the original post
+    and the folder containing the corresponding comments to the date of
+    the original post, retrieved through Git.
+  - Start mc in the `forum` folder.
+  - To mix both directories and file in the file listing, press F9 and
+    choose Options → Panel options... → Mix all files.
+  - To sort files by modify time, press F9 and choose Left → Sort order
+    → Modify time.
+  - To have a preview of files in the right panel, press F9 and choose
+    Right → Quick view.
 
-  - Anonymous posting: like the others, need registration but no real
-    check on the email address.
-  - Categories, see <http://frageee.de/>
-  - Only translatable, no multilingual support
-  - Markdown editor, as a plugin:
-    <http://codelair.co.uk/11/markdown-editor-plugin-q2a>
-  - Captcha, as a plugin
-    <https://github.com/KrzysztofKielce/q2a-captcha-antibot>
-  - Email notifications, as a plugin with minimal features (no
-    subscription, not handling categories, etc.)
-    <https://github.com/sawtoothsoftware/Q2A-Email-Notifications>
-  - Question2Answer Network Sites, a plugin to link a network of Q2A
-    site, including the possibility of migrating questions between sites
-    of a same farm (experimental).
+This happens in the `doc/sort_the_forum` branch.
 
-Others
-------
-
-  - [Reddit](https://github.com/reddit/reddit), not really Q&A.
-
-Things to be done on the Q&A application
-========================================
-
-  - Have a ‘hardware’ tag.
-  - Encourage people to use the appropriate ways to report bugs, and
-    get getter support this way, proposal:
-    “You are much more likely to get help with hardware related issues,
-    and bugs, if you report them using WhisperBack. See
-    [[doc/first_steps/bug_reporting]]".
-  - Make the submission of an email optional when registering.
-  - Get the source code in a Git repository using `git-svn`.
+From time to time, merge from master branch to get the new threads.
+From time to time also merge this branch into master to reduce the load
+on the server. Pushing such commits can take a while, even if they are
+only delete content from the forum...
 
 [[!tag todo/website]]
 
