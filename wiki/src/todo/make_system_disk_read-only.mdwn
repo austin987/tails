@@ -2,6 +2,11 @@
 
 Tails is affected by [[!debbug 645466]].
 
+[[!toc levels=2]]
+
+The problem
+===========
+
 In short: the system USB disk and partition block devices (e.g.
 `/dev/sdb*`) are writable by the default Live user, because they
 belong to the `floppy` group.
@@ -13,17 +18,35 @@ packages hasn't been updated since, but perhaps the `udev` init script
 runs (or re-runs?) after `live-config` wheras it previously only ran
 before?
 
+Roadmap
+=======
+
+1. [[!taglink todo/discuss]] whether we want to go the bilibop way.
+1. Do policykit and udisk take into account the group ownership? Needs to
+   be tested.
+1. When this bug is fixed, we can re-enable the `the boot device has safe
+   access rights` step in `features/usb_install.feature` of the automated
+   test suite.
+
+Candidate solutions
+===================
+
+This is being discussed in the *Help needed with branch
+bugfix/writable_boot_media* thread on tails-dev.
+
+home-made udev rules
+--------------------
+
 See branch `bugfix/writable_boot_media` for a new fix using `udev`.
 
 > First review done, a bit more [[!taglink todo/code]] is needed.
+
+bilibop
+-------
 
 See also [bilibop](https://un.poivron.org/~quidame/bilibop_project/):
 it's potential usefulness for Tails was discussed on the [[!debbug
 675467 desc="ITP"]] and [[!debbug 675532 desc="RFS"]] bugs.
 
-Do policykit and udisk take into account the group ownership? Needs to
-be tested.
-
-When this bug is fixed, we can re-enable the `the boot device has safe
-access rights` step in `features/usb_install.feature` of the automated
-test suite.
+Our `feature/bilibop` branch installs bilibop-udev (0.4.11~quidame). It works fine and
+makes the "the boot device has safe access rights" test pass.
