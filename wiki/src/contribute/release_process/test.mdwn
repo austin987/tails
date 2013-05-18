@@ -269,12 +269,15 @@ features properly do their work; second, our `torrc` sets the right
 
 # Time
 
-1. Boot Tails without a network cable connected (i.e. no network on boot).
-2. set the time to an obviously wrong one:
+1. Boot Tails without a network cable connected.
+   (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 down`.)
+2. Set an administration password.
+3. set the time to an obviously wrong one:
 
            date --set="Mon, 01 Mar 2000 15:45:34 - 0800"
 
-3. connect the network cable
+4. Connect the network cable.
+   (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 up`)
 
 => the date should be corrected and Tor/Vidalia should start
 correctly.
