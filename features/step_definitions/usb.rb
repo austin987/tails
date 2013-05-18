@@ -148,7 +148,7 @@ Given /^I create a persistent partition with password "([^"]+)"$/ do |pwd|
   @screen.wait('PersistenceWizardWindow.png', 20)
   @screen.wait('PersistenceWizardStart.png', 20)
   @screen.type(pwd + "\t" + pwd + Sikuli::KEY_RETURN)
-  @screen.wait('PersistenceWizardPresets.png', 120)
+  @screen.wait('PersistenceWizardPresets.png', 300)
   step "I enable all persistence presets"
 end
 
