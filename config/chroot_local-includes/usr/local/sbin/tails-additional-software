@@ -77,11 +77,11 @@ def install_additional_packages():
     if not get_additional_packages_lists():
         syslog.syslog(syslog.LOG_WARNING, "Warning: no additional software configured, exiting.")
         return True
-    set_activated()
     packages = get_additional_packages()
     if not packages:
 	syslog.syslog(syslog.LOG_WARNING, "Warning: no packages to install, exiting")
         return True
+    set_activated()
     syslog.syslog("Will install the following packages: %s" % " ".join(packages))
     apt_get_returncode = _launch_apt_get(["apt-get",
         "--quiet",
