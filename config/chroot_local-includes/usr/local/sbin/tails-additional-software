@@ -11,7 +11,7 @@ PACKAGES_LIST_FILE="live-additional-software.conf"
 ACTIVATION_FILE="/var/run/live-additional-software/activated"
 UNLOCKED_PERSISTENCE_DIRS_GLOB="/lib/live/mount/persistence/*_unlocked/"
 
-def _launch_apt_get(args):
+def _launch_apt_get(specific_args):
     """Launch apt-get with given args
     
     Launch apt-get with given arguments list, log its standard and error output
@@ -19,6 +19,8 @@ def _launch_apt_get(args):
     apt_get_env = os.environ.copy()
     apt_get_env['PATH'] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     apt_get_env['LANG'] = "C" # we will log the output and want it in English when included in bug reports
+    args = ["apt-get", "--quiet", "--yes"]
+    args.extend(specific_args)
     apt_get = subprocess.Popen(
         args,
         env=apt_get_env,
@@ -83,10 +85,7 @@ def install_additional_packages():
         return True
     set_activated()
     syslog.syslog("Will install the following packages: %s" % " ".join(packages))
-    apt_get_returncode = _launch_apt_get(["apt-get",
-        "--quiet",
-        "--no-remove",
-        "--yes",
+    apt_get_returncode = _launch_apt_get(["--no-remove",
         "--option", "DPkg::Options::=--force-confold",
         "install"] + packages)
     if apt_get_returncode:
@@ -103,10 +102,7 @@ def upgrade_additional_packages():
         syslog.syslog(syslog.LOG_WARNING, "Warning: additional packages not activated, exiting")
         return True
     syslog.syslog("Starting to upgrade additional software...")
-    apt_get_returncode = _launch_apt_get(["apt-get",
-        "--quiet",
-        "--yes",
-        "update"])
+    apt_get_returncode = _launch_apt_get(["update"])
     if apt_get_returncode:
         syslog.syslog(syslog.LOG_WARNING, "Warning: the update failed.")
         _notify(_("Your additional software"),
