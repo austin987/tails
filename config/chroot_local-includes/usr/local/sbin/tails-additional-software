@@ -17,8 +17,11 @@ def _launch_apt_get(specific_args):
     Launch apt-get with given arguments list, log its standard and error output
     and return its returncode"""
     apt_get_env = os.environ.copy()
+    # The environnment provided in GDM PostLogin hooks doesn't contain /sbin/
+    # which is required by dpkg. Let's use the default path for root in Tails.
     apt_get_env['PATH'] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-    apt_get_env['LANG'] = "C" # we will log the output and want it in English when included in bug reports
+    # We will log the output and want it in English when included in bug reports
+    apt_get_env['LANG'] = "C"
     args = ["apt-get", "--quiet", "--yes"]
     args.extend(specific_args)
     apt_get = subprocess.Popen(
