@@ -28,18 +28,34 @@ and was merged for Tails 0.18.
 2nd step
 ========
 
+The following issues are fixed in `feature/remember_installed_packages`:
+------------------------------------------------------------------------
+
+[[!tag todo/test]]
+
 - filter out empty lines from the conf file: else, APT is called in
   a way that makes it crash
-- have it work with read-only persistence
-- verify the need of a custom apt-get PATH and add a comment to explain if
-  it's really needed.
-- when the notification fails, consider logging stdout/stderr/returncode
+- when the notification fails, logging stdout/stderr/returncode
   of the tails-notify-user
 - explain the user that most APT lists expire after a week or so, and
   that will make offline packages installation fail after a while
 - move the args we always want to pass to apt-get (`--yes` and
-  `--quiet`) into a variable on top of the script.
-- have `_launch_apt_get` automatically inject these args?
+  `--quiet`) into `_launch_apt_get`.
+- verify the need of a custom apt-get PATH and add a comment to explain if
+  it's really needed.
+
+The following issue is not yet fixed
+------------------------------------
+
+### Have it work with read-only persistence
+
+[[!tag todo/research]]
+
+Apt wants to create `/var/cache/archive/pkgcache.bin` on the root of
+an aufs mount. Unfortunaly, the kernel doesn'l like that.
+
+    # touch /var/cache/apt/packages.bin
+    aufs au_lkup_neg:326:touch[<PID>]: I/O Error, apt should be negative on b0
 
 3rd step
 ========
@@ -56,7 +72,7 @@ session).
 
 Proposal:
 
-- (preembre) merge the 3 APT persistence options : APT lists cache, APT packages cache,
+- (preemble) merge the 3 APT persistence options : APT lists cache, APT packages cache,
   additional software packages
 - when Alice (logged with administrative privileges with additional software
   persistence setup) installs a package, she gets a notification "Do you want to
