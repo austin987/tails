@@ -33,10 +33,13 @@ The following issues are fixed in `feature/remember_installed_packages`
 
 ... but nobody tested it yet, so let's [[!taglink todo/test]] it.
 
-- filter out empty lines from the conf file: else, APT is called in
-  a way that makes it crash
 - when the notification fails, logging stdout/stderr/returncode
   of the tails-notify-user
+
+These were tested OK:
+
+- filter out empty lines from the conf file: else, APT is called in
+  a way that makes it crash
 - explain the user that most APT lists expire after a week or so, and
   that will make offline packages installation fail after a while
 - move the args we always want to pass to apt-get (`--yes` and
@@ -51,8 +54,8 @@ The following issue is not yet fixed
 
 [[!tag todo/research]]
 
-Apt wants to create `/var/cache/archive/pkgcache.bin` on the root of
-an aufs mount. Unfortunaly, the kernel doesn'l like that.
+Apt wants to create `/var/cache/archive/pkgcache.bin` near the root of
+an aufs mount (but outside it). Unfortunaly, the kernel doesn'l like that.
 
     # touch /var/cache/apt/packages.bin
     aufs au_lkup_neg:326:touch[<PID>]: I/O Error, apt should be negative on b0
