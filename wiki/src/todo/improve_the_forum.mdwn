@@ -113,6 +113,13 @@ you can then browse the forum content by chronological order.
 
 This happens in the `doc/sort_the_forum` branch.
 
+  - Before pushing changes it's good to check the forum for old
+    questions without answers and possibly answers without questions:
+
+        for i in * ; do [ -d $i ] && [ ! -f "$i.mdwn" ] && echo $i ; done
+
+        for i in * ; do [ ! -d ${i%%.mdwn} ] && ls -l $i ; done
+
   - Merge from master branch to get the new threads.
   - Merge this branch into master to reduce the load on the server.
     Pushing such commits can take a while, even if they are only delete
