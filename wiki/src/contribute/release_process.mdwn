@@ -24,11 +24,14 @@ upgrade our Debian package to the latest release if needed.
 Going through the usual [[review and merge
 process|contribute/merge_policy]] is welcome.
 
-Sync' iceweasel preferences with TBB
-------------------------------------
+Update iceweasel preferences
+----------------------------
 
-* `general.useragent.override` is not kept up-to-date anymore in
-  Torbutton, so we have to keep in sync manually with TBB's `prefs.js`
+* Torbutton does not handle `general.*` and
+  `browser.startup.homepage_override.*` anymore, so we have to keep in
+  sync manually, in our `/etc/iceweasel/pref/iceweasel.js`, with TBB's
+  `pound_tor.js`
+* update `extensions.adblockplus.currentVersion`
 
 Coordinate with Debian security updates
 ---------------------------------------
@@ -95,6 +98,7 @@ Freeze
 
 If we are at freeze time for a major release:
 
+* Merge the `master` Git branch into `devel`.
 * Merge the `devel` Git branch into `testing`.
 * Reset the `testing` APT suite to the state of the `devel` one, as
   documented on [[contribute/APT_repository#workflow-freeze]].
@@ -199,9 +203,6 @@ SquashFS files order
 1. Inspect the Git diff (including diff stat), apply common sense.
 1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
 
-(This sort list is automatically passed by live-build to `mksquashfs`:
-see [[!tails_todo improve_boot_time_on_cd]] for details.)
-
 Build the final image
 ---------------------
 
@@ -284,8 +285,8 @@ Upload images
 ## Upload to HTTP mirrors
 
 - upload the images to the primary rsync mirror
-- update the `project/trace` file (with current epoch in it: `date
-  +%s`) on the primary rsync mirror
+- update the `project/trace` file (with current epoch in it:
+  `date +%s`) on the primary rsync mirror
 - update the `inc/trace` of the wiki with the same epoch as you
   previously put in `project/trace`, even for a release candidate
 - make sure every webserver listed in the `dl.amnesia.boum.org` round
@@ -362,6 +363,11 @@ IRC
 
 Update the topic in our [[chatroom|chat]].
 
+Twitter
+-------
+
+Announce the release by tweeting a link to the "news" page.
+
 Tor blog
 --------
 
@@ -380,11 +386,6 @@ We announce *major* releases on the Tor blog:
 - direct users to [[our communication channels|support/talk]] for
   comments and feedback,
 - disable comments
-
-Twitter
--------
-
-Announce the release by tweeting a link to the "news" page.
 
 Prepare for the next release
 ============================

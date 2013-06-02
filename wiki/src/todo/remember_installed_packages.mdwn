@@ -4,8 +4,10 @@ extra packages they have installed.
 We propose to use the term "your additional software" to mention to the
 user those packages in the GUI, notifications, etc.
 
-1st step implementation proposal
-================================
+[[!toc levels=2]]
+
+1st step: implement required backend
+====================================
 
 Approach: offline install of a package list, upgrade when/if a working Internet
 connection appears later
@@ -20,15 +22,69 @@ connection appears later
   packages (e.g. already running app) the change will only be effective at next
   boot but a outdated version won't stay too long.
 
-This is done in the branch `feature/remember_installed_packages`.
+This is done in the branch `feature/remember_installed_packages`,
+and was merged for Tails 0.18.
 
-Next steps:
+2nd step
+========
 
-- merge this 1st step [[!taglink todo/qa]]
-- allow to opt-out of the installation of these packages in the greeter [[!taglink todo/code]]
-- nice GUI in persistence-setup select packages to make autoinstallation
-  persistent (possibly among those that have been installed during
-  session)
+The following issues are fixed in `feature/remember_installed_packages`
+-----------------------------------------------------------------------
+
+... but nobody tested it yet, so let's [[!taglink todo/test]] it.
+
+- when the notification fails, logging stdout/stderr/returncode
+  of the tails-notify-user
+
+These were tested OK:
+
+- filter out empty lines from the conf file: else, APT is called in
+  a way that makes it crash
+- explain the user that most APT lists expire after a week or so, and
+  that will make offline packages installation fail after a while
+- move the args we always want to pass to apt-get (`--yes` and
+  `--quiet`) into `_launch_apt_get`.
+- verify the need of a custom apt-get PATH and add a comment to explain if
+  it's really needed.
+
+The following issue is not yet fixed
+------------------------------------
+
+### Have it work with read-only persistence
+
+[[!tag todo/research]]
+
+Apt wants to create `/var/cache/archive/pkgcache.bin` near the root of
+an aufs mount (but outside it). Unfortunaly, the kernel doesn'l like that.
+
+    # touch /var/cache/apt/packages.bin
+    aufs au_lkup_neg:326:touch[<PID>]: I/O Error, apt should be negative on b0
+
+3rd step
+========
+
+## Opt-out additionnal software packages greeter option
+
+Allow to opt-out of the installation of these packages in the greeter [[!taglink todo/code]]
+
+## GUI to edit additional software packages configuration
+
+Design and implement a nice GUI to select additional software packages to make persistent
+persistent (possibly among those that have been installed during
+session).
+
+Proposal:
+
+- (preemble) merge the 3 APT persistence options : APT lists cache, APT packages cache,
+  additional software packages
+- when Alice (logged with administrative privileges with additional software
+  persistence setup) installs a package, she gets a notification "Do you want to
+  reinstall this software package next time you boot Tails?" with a button to add
+  this package to additional software packages
+- when Alice removes a packages incuded in additional software packages, the
+  package is removed from the list of additional software packages and she
+  gets a notification "The software package was removed from your additional
+  software.".
 
 Past research
 =============
