@@ -42,7 +42,7 @@ When /^I update APT using Synaptic$/ do
   # package list. Since the frozen GUI is so similar to the unfrozen
   # one there's no easy way to reliably wait for the latter. Hence we
   # spam reload until it's performed, which is easier to detect.
-  try_for(20, :msg => "Failed to reload the package list in Synaptic") {
+  try_for(60, :msg => "Failed to reload the package list in Synaptic") {
     @screen.type("r", Sikuli::KEY_CTRL)
     @screen.find('SynapticReloadPrompt.png')
   }
@@ -54,17 +54,17 @@ Then /^I should be able to install a package using Synaptic$/ do
   package = "cowsay"
   # We do this after a Reload, so the interface will be frozen until
   # the package list has been loaded
-  try_for(20, :msg => "Failed to open the Synaptic 'Find' window") {
+  try_for(60, :msg => "Failed to open the Synaptic 'Find' window") {
     @screen.type("f", Sikuli::KEY_CTRL)  # Find key
     @screen.find('SynapticSearch.png')
   }
   @screen.type(package + Sikuli::KEY_RETURN)
   @screen.wait_and_click('SynapticCowsaySearchResult.png', 20)
-  sleep 1
+  sleep 5
   @screen.type("i", Sikuli::KEY_CTRL)    # Mark for installation
-  sleep 1
+  sleep 5
   @screen.type("p", Sikuli::KEY_CTRL)    # Apply
-  @screen.wait('SynapticApplyPrompt.png', 20)
+  @screen.wait('SynapticApplyPrompt.png', 60)
   @screen.type("a", Sikuli::KEY_ALT)     # Verify apply
   @screen.wait('SynapticChangesAppliedPrompt.png', 120)
   step "package \"#{package}\" is installed"
