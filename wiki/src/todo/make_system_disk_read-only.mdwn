@@ -22,35 +22,9 @@ Roadmap
 =======
 
 1. Fix write access to boot medium at the block device level:
-   1. Review and merge `feature/bilibop`. [[!tag todo/qa]]
+   1. Review and merge `feature/bilibop`. 
    1. Re-enable the `the boot device has safe access rights` step in
       `features/usb_install.feature` of the automated test suite.
-1. Fix write access to boot medium via udisks.
-   a. Improve the `the boot device has safe access rights` step in
-      `features/usb_install.feature` of the automated test suite to
-      take this kind of write access into account.
-   a. [[!taglink todo/research]] a solution. Hopefully bilibop knows
-      how to do this, see README.Debian in the bilibop-rules package,
-      especially the parts about `UDISKS_*`.
-   a. [[!taglink todo/research]] potential consequences on:
-      * tails-persistence-setup
-      * incremental updates
-
-Candidate solutions
-===================
-
-This is being discussed in the *Help needed with branch
-bugfix/writable_boot_media* thread on tails-dev.
-
-home-made udev rules
---------------------
-
-See branch `bugfix/writable_boot_media` for a new fix using `udev`.
-
-> First review done, a bit more [[!taglink todo/code]] is needed.
-
-bilibop
--------
 
 See also [bilibop](https://un.poivron.org/~quidame/bilibop_project/):
 it's potential usefulness for Tails was discussed on the [[!debbug
@@ -58,3 +32,32 @@ it's potential usefulness for Tails was discussed on the [[!debbug
 
 Our `feature/bilibop` branch installs bilibop-udev (0.4.11~quidame). It works fine and
 makes the "the boot device has safe access rights" test pass.
+
+[[!tag pending]]
+
+Older notes
+===========
+
+This is being discussed in the *Help needed with branch
+bugfix/writable_boot_media* thread on tails-dev.
+
+Another solution, described below, was considered
+
+home-made udev rules
+--------------------
+
+See branch `bugfix/writable_boot_media` for a new fix using `udev`.
+
+> First review done, a bit more code is needed.
+
+1. Fix write access to boot medium via udisks.
+   a. Improve the `the boot device has safe access rights` step in
+      `features/usb_install.feature` of the automated test suite to
+      take this kind of write access into account.
+   a. [[!taglink todo/research]] a solution. Hopefully bilibop knows
+      how to do this, see README.Debian in the bilibop-rules package,
+      especially the parts about `UDISKS_*`.
+   a. research potential consequences on:
+      * tails-persistence-setup
+      * incremental updates
+
