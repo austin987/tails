@@ -41,13 +41,20 @@ def _launch_apt_get(specific_args):
 def _notify(title, body):
     """Display a notification to the user of the live system
     """
+    cmd = "/usr/local/sbin/tails-notify-user"
     try:
-        subprocess.check_output(["/usr/local/sbin/tails-notify-user", title, body],
-                                stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError, e:
-        syslog.syslog(syslog.LOG_WARNING, "Warning: unable to notify the user. %s returned with exit code %s" % (e.cmd, e.returncode))
-        syslog.syslog(syslog.LOG_WARNING, "%s output follows: %s." % (e.cmd, e.output))
-        syslog.syslog(syslog.LOG_WARNING, "The notification was: %s %s" % (title, body))
+        # XXX: replace with check_output when Tails will be based on wheezy
+        # (which inclides python 2.7)
+        notify_user = subprocess.Popen([cmd, title, body],
+                                       stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        notify_user_output = notify_user.stdout.read()
+        notify_user.wait()
+        if notify_user.returncode != 0:
+            syslog.syslog(syslog.LOG_WARNING, "Warning: unable to notify the user. %s returned with exit code %s"
+                 % (cmd, notify_user.returncode))
+            syslog.syslog(syslog.LOG_WARNING, "%s output follows: %s."
+                 % (cmd, notify_user_output))
+            syslog.syslog(syslog.LOG_WARNING, "The notification was: %s %s" % (title, body))
     except OSError, e:
         syslog.syslog(syslog.LOG_WARNING, "Warning: unable to notify the user. %s" % e)
         syslog.syslog(syslog.LOG_WARNING, "The notification was: %s %s" % (title, body))
