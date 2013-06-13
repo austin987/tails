@@ -1,8 +1,51 @@
-tails (0.18.1) UNRELEASED; urgency=low
+tails (0.19~rc1) unstable; urgency=low
 
-  * Upcoming release
+  * Major new features
+  - Install Linux kernel 3.9.5-1 from Debian unstable.
+    Features of particular interest for Tails are the Yama LSM
+    (ptrace scope restrictions) and improved hardware support.
+    As a corollary, install initramfs-tools from there too.
+  - Unblock Bluetooth, Wi-Fi, WWAN and WiMAX; block every other type of
+    wireless device. Next steps are described on the
+    todo/protect_against_external_bus_memory_forensics ticket.
 
- -- Tails developers <tails@boum.org>  Wed, 15 May 2013 12:29:18 +0200
+  * Bugfixes
+  - Fix write access to boot medium at the block device level,
+    by installing bilibop-udev. Thanks to quidame for his support.
+  - tails-greeter l10n-related fixes, thanks to winterfairy:
+    · Fix so translations is applied on password mismatch messages.
+    · Separate forward and login buttons and make them translatable.
+  - Fix link to documentation when no sudo password is set.
+  - gpgApplet: partial fix for clipboard emptying after a wrong passphrase
+    was entered.
+
+  * Minor improvements
+  - Drop GNOME proxy settings: we did not find any use of it we were keen
+    to support, other than two programs (Seahorse, Pidgin) that are now run
+    with torsocks.
+  - Format newly created persistent volumes as ext4.
+  - GnuPG: don't connect to the keyserver specified by the key owner.
+    This feature opens the door to a variety of subtle attacks.
+  - GnuPG: locate keys only from local keyrings.
+    This is probably the default, but better safe than sorry.
+  - Install virt-what from Wheezy.
+    The version from Squeeze does not detect at least Parallels for Mac v.8.
+  - Upgrade live-boot and live-config to the 3.0.x final version from Wheezy.
+    · Remove /live and /lib/live/image compatibility symlinks.
+    · Add /live/overlay -> /lib/live/mount/overlay symlink.
+      The live-boot changes (commit d2b2a461) brought to fix Debian bug
+      #696495 revert some of our previous changes (commit 77dab1cb), and as
+      a result, at the time live-persist runs, no tmpfs is mounted on
+      /live/overlay, which breaks the aufs mount. So, let's just ensure
+      /live/overlay points to a tmpfs.
+
+  * Localization
+  - Many translation updates all over the place.
+
+  * Test suite
+  - Re-enable previously disabled boot device permissions test.
+
+ -- Tails developers <tails@boum.org>  Thu, 13 Jun 2013 16:36:20 +0200
 
 tails (0.18) unstable; urgency=low
 
