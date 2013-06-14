@@ -231,7 +231,7 @@ Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive
   info = @vm.execute("udisks --show-info #{luks_dev}").stdout
   assert info.match("^  cleartext luks device:$")
   assert info.match("^  usage: +filesystem$")
-  assert info.match("^  type: +ext3$")
+  assert info.match("^  type: +ext[34]$")
   assert info.match("^  label: +TailsData$")
 
   mount_dir = "/mnt/#{name}"
