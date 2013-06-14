@@ -330,7 +330,6 @@ Then /^the boot device has safe access rights$/ do
     groups = @vm.execute("groups #{user}").stdout.chomp.sub(/^#{user} : /, "").split(" ")
     [user, groups]
   end
-  STDERR.puts "#{all_users_with_groups.join(", ")}"
   for dev in devs do
     dev_owner = @vm.execute("stat -c %U #{dev}").stdout.chomp
     dev_group = @vm.execute("stat -c %G #{dev}").stdout.chomp
