@@ -289,7 +289,7 @@ end
 def boot_device
   # Approach borrowed from
   # config/chroot_local_includes/lib/live/config/998-permissions
-  boot_dev_id = @vm.execute("udevadm info --device-id-of-file=/live/image").stdout.chomp
+  boot_dev_id = @vm.execute("udevadm info --device-id-of-file=/lib/live/mount/medium").stdout.chomp
   boot_dev = @vm.execute("readlink -f /dev/block/'#{boot_dev_id}'").stdout.chomp
   return boot_dev
 end
