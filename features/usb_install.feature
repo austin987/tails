@@ -157,7 +157,6 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     When I start the computer
     And the computer boots Tails
     And Tails is running from USB drive "old"
-    And the boot device has safe access rights
     And I enable persistence with password "asdf"
     And I log in to a new session
     And GNOME has started
