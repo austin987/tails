@@ -285,7 +285,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "mbr"
 
-  Scenario: Cat:ing a Tails isobydrid a USB drive and booting it
+  Scenario: Cat:ing a Tails isobydrid to a USB drive and booting it
     Given a computer
     And I create a 2 GiB disk named "isohybrid"
     And I cat an ISO hybrid of the Tails image to disk "isohybrid"
