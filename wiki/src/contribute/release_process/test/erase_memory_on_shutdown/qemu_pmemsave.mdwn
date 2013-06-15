@@ -1,7 +1,16 @@
-	qemu -enable-kvm -boot c -m 4096 -cdrom tails.iso
+* Start the VM
+  - with default CPU (pae)
+
+    kvm -cdrom tails.iso -m 5120 -no-reboot -no-shutdown
+
+  - with 486 CPU
+
+    kvm -cpu 486 -cdrom tails.iso -m 5120 -no-reboot -no-shutdown -snapshot
 
 * Open the qemu console (CTRL-ALT-2).
-* Save physical memory to the `tails.dump` file (replace `0xF0000000`
-  (= 4GiB) with the amount of memory bytes assigned to the VM):
+* Save physical memory to the `tails.dump` file (length is an integer, max size for one dump is 4G):
 
-	pmemsave 0 0xF0000000 tails.dump
+    pmemsave <start adsress> <length> <filename>
+
+    pmemsave 0 0xF0000000 tails14.dump
+    pmemsave 0x100000000 0x40000000 tails5.dump
