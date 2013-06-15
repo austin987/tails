@@ -35,3 +35,12 @@ Unsorted
 --------
 
 [[libtorrent] socks proxy obedience](http://sourceforge.net/mailarchive/forum.php?thread_name=41dcd1d6b4a3635860722f7c74bf5f51%40mail.cs.umu.se&forum_name=libtorrent-discuss)
+
+Feedback from a user
+--------------------
+
+I tried "apt-get install ctorrent" followed by "torify ctorrent torrentfile.torrent" while monitoring all communication with Wireshark. While ctorrent always generate new unique peer and key IDs each time the torrent is started, always report the same port, and always report IP=0.0.0.0, do not attempt to discover external ip, and no proxy bypasses happens, I concluded it may be safe to use.
+
+Besides that UDP does not work at all over Tor (DHT, uTP, UDP trackers etc...), which of course reduce the usefulness of a BitTorrent client in Tails, there is one real major problem I can see:
+
+Each connection to a peer is going through its own Tor circuit. This means Tor ends up building about 100 circuits, using about half of them at any time. It also means it easily reach download speeds of 3 megabyte/second. One basically never get over 150 kilobytes/second through one single circuit (e.g. http downloads), so this DOES put a lot of load on the Tor network. Proposed solution would be to get all connections for the same torrent through the same circuit.
