@@ -110,6 +110,9 @@ setup_chroot () {
     mount -t proc proc ${CHROOT}/proc && \
     mount --bind /dev ${CHROOT}/dev || \
     error "`gettext \"Failed to setup chroot.\"`"
+
+    # Workaround for todo/buggy_aufs_vs_unsafe-browser
+    chmod -t ${COW}
 }
 
 set_chroot_browser_name () {

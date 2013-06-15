@@ -231,7 +231,7 @@ Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive
   info = @vm.execute("udisks --show-info #{luks_dev}").stdout
   assert info.match("^  cleartext luks device:$")
   assert info.match("^  usage: +filesystem$")
-  assert info.match("^  type: +ext3$")
+  assert info.match("^  type: +ext[34]$")
   assert info.match("^  label: +TailsData$")
 
   mount_dir = "/mnt/#{name}"
@@ -289,7 +289,7 @@ end
 def boot_device
   # Approach borrowed from
   # config/chroot_local_includes/lib/live/config/998-permissions
-  boot_dev_id = @vm.execute("udevadm info --device-id-of-file=/live/image").stdout.chomp
+  boot_dev_id = @vm.execute("udevadm info --device-id-of-file=/lib/live/mount/medium").stdout.chomp
   boot_dev = @vm.execute("readlink -f /dev/block/'#{boot_dev_id}'").stdout.chomp
   return boot_dev
 end
@@ -322,12 +322,6 @@ end
 Then /^the boot device has safe access rights$/ do
   next if @skip_steps_while_restoring_background
 
-  # XXX: It turns out our fix for Debian bug #645466 (see the live-config
-  # hook called 9980-permissions) is not working any more. Is udev doing
-  # this at a later stage now?
-  puts "This check is temporarily disabled since it currently always fails"
-  next
-
   super_boot_dev = boot_device.sub(/[[:digit:]]+$/, "")
   devs = @vm.execute("ls -1 #{super_boot_dev}*").stdout.chomp.split
   assert(devs.size > 0, "Could not determine boot device")
@@ -336,7 +330,6 @@ Then /^the boot device has safe access rights$/ do
     groups = @vm.execute("groups #{user}").stdout.chomp.sub(/^#{user} : /, "").split(" ")
     [user, groups]
   end
-  STDERR.puts "#{all_users_with_groups.join(", ")}"
   for dev in devs do
     dev_owner = @vm.execute("stat -c %U #{dev}").stdout.chomp
     dev_group = @vm.execute("stat -c %G #{dev}").stdout.chomp

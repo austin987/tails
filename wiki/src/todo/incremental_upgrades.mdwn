@@ -23,12 +23,6 @@ should provide an automated way of doing the upgrade.
 
 # Roadmap
 
-[[!tag todo/code]]
-
-**Note**: also see the *Bugs and Future Improvements* section on this page.
-
-## General plan
-
 1. (**past**) Tails 0.13 has the harmless part of the
    `feature/incremental-upgrades` branch merged (users creation with
    sudo credentials, dependencies installation), leaving aside the
@@ -43,58 +37,30 @@ should provide an automated way of doing the upgrade.
    * Prepare IUK: **done**
    * Update update-description files: **done**
    * Ask beta testers to try the incremental upgrade process: **done**
-   * Catch and fix most remaining bugs.
-   * Write user documentation and hand it to translators.
+   * Find most critical bugs: **done**.
 
-3. When 0.15 is out:
+3. Complete phase one: **make ready for beta testing**
 
-   * Write developers documentation and tools
+   Fix all child tickets of
+   [[todo/incremental_upgrades:_complete_phase_one]], and then:
+
    * Prepare IUK
    * Update update-description files
    * Ask beta testers to try the incremental upgrade process
    * Catch and fix most remaining bugs.
    * Review user documentation and translations.
 
-4. Once we're happy with the whole thing, ship it, enabled by
-   default, in the next Tails major release (that is, presumably
-   0.16, unless 1.0 is due already -- who knows :)
-   This requires to think how to integrate with / replace the
-   **security warning program** (see 5d039b3a).
+4. Complete **phase two: deploy in production**
 
-4. Later
+   Once we're happy with the whole thing, ship it, enabled by
+   default, in the next Tails major release.
+
+   See child tickets of [[todo/incremental_upgrades:_complete_phase_two]].
+
+5. Later
 
   * make it easy to **generate update-description files** for a point
     release: phase two
-
-## Documentation
-
-[[!tag todo/documentation]]
-
-### For users
-
-Users must be explained how to download and install an Incremental
-Upgrade Kit.
-
-Missing pages:
-
-* `doc/upgrade/error/get_update_description`: the user is pointed to
-  this page when the update-description file cannot be downloaded or
-  verified
-* `doc/upgrade/error/get_target_file`: the user is pointed to this
-  page when a target file file cannot be downloaded or verified
-* `doc/upgrade/error/install_iuk`: the user is pointed to this page
-  when the installation of a downloaded IUK failed This page should be
-  about what to do in this case. My Tails may be left in a broken
-  state, as long as I am told what broke, and explained how to repair
-  it (possibly by re-installing from scratch, or by performing a full
-  update).
-
-### For developers
-
-* update **[[design documentation|contribute/design]]**
-* update **[[release process|contribute/release_process]]**
-* document what and how to **test** when [[preparing a Tails
-  point-release|contribute/release_process/test]]
 
 # Scenarios
 
@@ -809,65 +775,10 @@ Initial test is pretty conclusive!
 
 See the [[page about discarded options|todo/incremental_upgrades/archive]].
 
-# Bugs and Future Improvements
+# Random ideas for future improvements
 
-## Grave
-
-### Should not try to update a Tails booted from DVD
-
-`Tails::Persistence::Setup` has code to check if the system was booted
-from a optical / USB device. It should not be too hard to reuse it.
-
-### Should not try to update a Tails that was not created using Tails USB installer
-
-`Tails::Persistence::Setup` has code to check if the system was
-created using the Tails UBS installer (`device_has_tails`). It should
-not be too hard to reuse it.
-
-## Serious
-
-### Progress bar for download and installation
-
-E.g. run `tails-iuk-get-target-file` in the background using
-`IPC::Run`'s `start`, and use `pump` and `timer` to regularly check if
-the process has finished and if not, update a zenity progress bar.
-
-## Important
-
-### Should be tested with *two* IUK
-
-IIRC I tested this a while ago, but this should be confirmed to work
-in real conditions with the latest code and `live-boot`.
-
-### Should check available memory before downloading target files
-
-Target files are downloaded to tmpfs, so at the very least, their size
-should be available in RAM.
-
-### Should be more robust on flaky Internet connections
-
-E.g. when a target file download times out, it should be retried
-a few times.
-
-Alternatively, there could be a button for resuming an interrupted download.
-
-## Normal
-
-### Integration with "old" security warning program should be re-thought
-
-In the current state of things, they are rather complementary, but
-should probably be merged to make the overall user experience a bit
-more consistent.
-
-### Should not leave zenity dialogs around after closing
-
-A dialog displayed by the `in_progress` is left on screen after the
-application has quit due to a fatal error in the in progress process.
-
-> Can this be reproduced after this commit?
-> [764d6e5] Don't require the "in progress" dialog boxes to be clicked to continue.
-
-## Minor
+These are not worth creating tickets yet, as it's not even clear these
+changes are useful enough to put time in it.
 
 ### Packaging could be more self-contained
 
@@ -878,8 +789,6 @@ that it's more self-contained and easier to test.
 ### Button for aborting upgrade cleanly
 
 ### Compute and display ETA
-
-## Wishlist
 
 ### Multi-step incremental upgrade
 
@@ -902,10 +811,6 @@ download happen in the clear, that is without going through the Tor
 network. It looks doable given it's a separate process: we may run it
 as a dedicated user, and reuse the `clearnet` infrastructure
 implemented for the Unsafe Browser.
-
-## Perhaps
-
-(Needs thought and maybe discussion.)
 
 ### "Retry with new circuit" button
 

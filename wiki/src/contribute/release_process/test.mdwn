@@ -1,5 +1,7 @@
 [[!toc levels=1]]
 
+Some [[test results]] that might be useful to keep are saved.
+
 # Changes
 
 Keeping an eye on the changes between released versions is one of the
@@ -232,6 +234,11 @@ features properly do their work; second, our `torrc` sets the right
   partition not managed by LVM. This swap partition must not be used
   by Tails.
 * is a persistence volume on a local hard-disk partition used?
+  (Hint: setup a libvirt USB disk with GPT and a partition labeled
+  `TailsData`, set the `removable` flag on it, check that
+  tails-greeter proposes to enable persistence. Then remove the
+  `removable` flag, and check that tails-greeter does not propose to
+  enable persistence anymore.)
 
 # Claws
 
@@ -264,12 +271,15 @@ features properly do their work; second, our `torrc` sets the right
 
 # Time
 
-1. Boot Tails without a network cable connected (i.e. no network on boot).
-2. set the time to an obviously wrong one:
+1. Boot Tails without a network cable connected.
+   (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 down`.)
+2. Set an administration password.
+3. set the time to an obviously wrong one:
 
            date --set="Mon, 01 Mar 2000 15:45:34 - 0800"
 
-3. connect the network cable
+4. Connect the network cable.
+   (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 up`)
 
 => the date should be corrected and Tor/Vidalia should start
 correctly.
@@ -306,7 +316,6 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # Virtualization support
 
-* `modinfo vboxguest` should work when booted on the 686-pae kernel
 * test in VirtualBox
 
 # I2P
@@ -379,6 +388,9 @@ Tests to run:
     the user to the "Clone & Install" operation mode.
 
 # Incremental updates
+
+The following should be tested once incremental updates are ready for
+real-world deployment.
 
 Try every update path supported by the generated update-description
 files:
@@ -463,10 +475,12 @@ language.
 * The chosen keyboard layout must be applied.
 * The virtual keyboard must work and be auto-configured to
   use the same keyboard layout as the X session.
-* The iceweasel search engine must be localized (for languages we
-  ship a localized searchplugin for).
-* The iceweasel spelling dictionary must be localized (for languages
-  that are supported by our branding extension).
+* Once [[todo/fix_localized_iceweasel_search_engine]] is fixed, the
+  iceweasel search engine must be localized (for languages we ship
+  a localized searchplugin for).
+* Once [[todo/select_localized_spelling_dictionary_in_Iceweasel]] is
+  fixed, the iceweasel spelling dictionary must be localized (for
+  languages that are supported by our branding extension).
 
 # Misc
 
