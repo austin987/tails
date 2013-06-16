@@ -1,46 +1,90 @@
 #! /bin/sh
 
+set -e
+set -u
+
+PERL_PROGS="/usr/local/bin/gpgApplet /usr/local/bin/tails-security-check \
+   /usr/local/bin/tails-htp-notify-user /usr/local/bin/tails-virt-notify-user"
+PYTHON_PROGS="/etc/whisperback/config.py /usr/local/bin/shutdown_helper_applet \
+   /usr/local/bin/tails-about /usr/local/sbin/tails-additional-software"
+SHELL_PROGS="/usr/local/sbin/unsafe-browser"
+
+LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
+POTFILE=config/chroot_local-includes/usr/share/tails/messages.pot
+
 # get AMNESIA_SUPPORTED_LANGUAGES
 . config/amnesia
 if [ -e config/amnesia.local ] ; then
    . config/amnesia.local
 fi
 
-refresh_translations () {
-   progpath="config/chroot_local-includes$1" ; shift
-   domain=$1 ; shift
-   proglang=$1 ; shift
+### Functions
 
+prog_potfile () {
+   prog=$1
+
+   progpath="config/chroot_local-includes$prog"
+   domain=$(basename $prog)
    sharedir="config/chroot_local-includes/usr/share/${domain}"
-   locale_basedir="config/chroot_local-includes/usr/share/locale"
    pot="${sharedir}/messages.pot"
 
-   mkdir -p "${sharedir}"
+   echo $pot
+}
+
+refresh_pot () {
+   prog=$1
+   proglang=$2
+
+   progpath="config/chroot_local-includes$prog"
+   pot=$(prog_potfile $prog)
+
+   mkdir -p "$(dirname $pot)"
 
    if [ -e "${progpath}" ]; then
       xgettext --language="${proglang}" --from-code=UTF-8 \
         -o "${pot}" "${progpath}"
       sed -i "s@^\"Content-Type: text/plain\; charset=CHARSET\\\n\"@\"Content-Type: text/plain\; charset=UTF-8\\\n\"@" "${pot}"
-
    fi
+}
 
-   for locale in $AMNESIA_SUPPORTED_LANGUAGES ; do
-      po="${locale_basedir}/${locale}/LC_MESSAGES/${domain}.po"
-      mo="${locale_basedir}/${locale}/LC_MESSAGES/${domain}.mo"
-      mkdir -p "${locale_basedir}/${locale}/LC_MESSAGES"
+merged_pofile () {
+   locale=$1
+
+   prog_pofile tails $locale
+}
+
+prog_pofile () {
+   prog=$1
+   locale=$2
+
+   echo "${LOCALE_BASEDIR}/${locale}/LC_MESSAGES/$(basename ${prog}).po"
+}
+
+concat_translations () {
+   msgcat --to-code=UTF-8 \
+      $(for prog in $@ ; do echo -n "$(prog_potfile $prog) " ; done)
+}
+
+refresh_po_and_mo () {
+   pot=$1 ; shift
+   for locale in "$@" ; do
+      po=$(merged_pofile $locale)
+      mo=$(echo "$po" | sed -e s,\.po$,.mo,)
+      mkdir -p $(dirname "$po")
       [ -e "${po}" ] || cp "${pot}" "${po}"
       msgmerge --update "${po}" "${pot}"
       msgfmt -o "${mo}" "${po}"
    done
 }
 
-#################### file                                       domain                      lang
-refresh_translations /usr/local/bin/gpgApplet                   gpgApplet                   Perl
-refresh_translations /usr/local/bin/tails-security-check        tails-security-check        Perl
-refresh_translations /usr/local/bin/tails-htp-notify-user       tails-htp-notify-user       Perl
-refresh_translations /usr/local/bin/tails-virt-notify-user      tails-virt-notify-user      Perl
-refresh_translations /usr/local/sbin/unsafe-browser             unsafe-browser              Shell
-refresh_translations /etc/whisperback/config.py                 amnesia                     Python
-refresh_translations /usr/local/bin/shutdown_helper_applet      shutdown_helper_applet      Python
-refresh_translations /usr/local/bin/tails-about                 tails-about                 Python
-refresh_translations /usr/local/sbin/tails-additional-software  tails-additional-software   Python
+### Main
+
+mkdir -p $(dirname $POTFILE)
+
+for prog in $PERL_PROGS   ; do refresh_pot $prog Perl   ; done
+for prog in $PYTHON_PROGS ; do refresh_pot $prog Python ; done
+for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
+
+concat_translations $PERL_PROGS $PYTHON_PROGS $SHELL_PROGS > $POTFILE
+
+refresh_po_and_mo $POTFILE $AMNESIA_SUPPORTED_LANGUAGES
