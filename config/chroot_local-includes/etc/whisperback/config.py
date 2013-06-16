@@ -53,7 +53,7 @@ def __get_localised_doc_link():
 
 def _(string):
     try:
-        string = gettext.translation("amnesia", "/usr/share/locale").lgettext(string)
+        string = gettext.translation("tails", "/usr/share/locale").lgettext(string)
     except IOError:
         pass
     finally:
