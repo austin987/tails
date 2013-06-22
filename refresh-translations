@@ -79,6 +79,12 @@ refresh_mo () {
    done
 }
 
+no_left_out_files () {
+   (cd po && intltool-update --maintain)
+   [ ! -e po/missing ] || return 1
+   return 0
+}
+
 intltool_update () {
    cd po
    intltool-update -x --pot --gettext-package=tails
@@ -95,9 +101,14 @@ for prog in $PERL_PROGS   ; do refresh_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do refresh_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
 
+# If left out files are detected, intltool-update --maintain writes
+# them to po/missing.
+no_left_out_files || exit 3
+
 concat_pot_files $PERL_PROGS $PYTHON_PROGS $SHELL_PROGS > $POTFILE
 
 refresh_po $POTFILE $LANGUAGES
 refresh_mo $LANGUAGES
 
 intltool_update $LANGUAGES
+
