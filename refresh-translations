@@ -48,17 +48,10 @@ refresh_pot () {
    fi
 }
 
-merged_pofile () {
+po_file () {
    locale=$1
 
-   prog_pofile tails $locale
-}
-
-prog_pofile () {
-   prog=$1
-   locale=$2
-
-   echo "${LOCALE_BASEDIR}/${locale}/LC_MESSAGES/$(basename ${prog}).po"
+   echo "${LOCALE_BASEDIR}/${locale}/LC_MESSAGES/tails.po"
 }
 
 concat_translations () {
@@ -69,7 +62,7 @@ concat_translations () {
 refresh_po_and_mo () {
    pot=$1 ; shift
    for locale in "$@" ; do
-      po=$(merged_pofile $locale)
+      po=$(po_file $locale)
       mo=$(echo "$po" | sed -e s,\.po$,.mo,)
       mkdir -p $(dirname "$po")
       [ -e "${po}" ] || cp "${pot}" "${po}"
