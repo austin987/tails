@@ -86,11 +86,13 @@ no_left_out_files () {
 }
 
 intltool_update () {
-   cd po
-   intltool-update --pot --gettext-package=tails
-   for locale in "$@" ; do
-      intltool-update --dist --gettext-package=tails $locale
-   done
+   (
+      cd po
+      intltool-update --pot --gettext-package=tails
+      for locale in "$@" ; do
+	 intltool-update --dist --gettext-package=tails $locale
+      done
+   )
 }
 
 ### Main
