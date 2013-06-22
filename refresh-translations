@@ -54,6 +54,12 @@ po_file () {
    echo "${LOCALE_BASEDIR}/${locale}/LC_MESSAGES/tails.po"
 }
 
+mo_file () {
+   locale=$1
+
+   echo "${LOCALE_BASEDIR}/${locale}/LC_MESSAGES/tails.mo"
+}
+
 concat_pot_files () {
    msgcat --to-code=UTF-8 \
       $(for prog in $@ ; do echo -n "$(prog_potfile $prog) " ; done)
@@ -63,7 +69,7 @@ refresh_po_and_mo () {
    pot=$1 ; shift
    for locale in "$@" ; do
       po=$(po_file $locale)
-      mo=$(echo "$po" | sed -e s,\.po$,.mo,)
+      mo=$(mo_file $locale)
       mkdir -p $(dirname "$po")
       [ -e "${po}" ] || cp "${pot}" "${po}"
       msgmerge --update "${po}" "${pot}"
