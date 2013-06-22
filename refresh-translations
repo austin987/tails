@@ -10,14 +10,9 @@ PYTHON_PROGS="/etc/whisperback/config.py /usr/local/bin/shutdown_helper_applet \
    /usr/local/bin/tails-about /usr/local/sbin/tails-additional-software"
 SHELL_PROGS="/usr/local/sbin/unsafe-browser"
 
+LANGUAGES=$(for po in po/*.po ; do rel="${po%.po}" ; echo "${rel#po/}"; done)
 LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
 POTFILE=config/chroot_local-includes/usr/share/tails/messages.pot
-
-# get AMNESIA_SUPPORTED_LANGUAGES
-. config/amnesia
-if [ -e config/amnesia.local ] ; then
-   . config/amnesia.local
-fi
 
 ### Functions
 
@@ -94,5 +89,5 @@ for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
 
 concat_pot_files $PERL_PROGS $PYTHON_PROGS $SHELL_PROGS > $POTFILE
 
-refresh_po $POTFILE $AMNESIA_SUPPORTED_LANGUAGES
-refresh_mo $AMNESIA_SUPPORTED_LANGUAGES
+refresh_po $POTFILE $LANGUAGES
+refresh_mo $LANGUAGES
