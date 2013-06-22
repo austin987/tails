@@ -65,14 +65,21 @@ concat_pot_files () {
       $(for prog in $@ ; do echo -n "$(prog_potfile $prog) " ; done)
 }
 
-refresh_po_and_mo () {
+refresh_po () {
    pot=$1 ; shift
    for locale in "$@" ; do
       po=$(po_file $locale)
-      mo=$(mo_file $locale)
       mkdir -p $(dirname "$po")
       [ -e "${po}" ] || cp "${pot}" "${po}"
       msgmerge --update "${po}" "${pot}"
+   done
+}
+
+refresh_mo () {
+   for locale in "$@" ; do
+      po=$(po_file $locale)
+      mo=$(mo_file $locale)
+      mkdir -p $(dirname "$mo")
       msgfmt -o "${mo}" "${po}"
    done
 }
@@ -87,4 +94,5 @@ for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
 
 concat_pot_files $PERL_PROGS $PYTHON_PROGS $SHELL_PROGS > $POTFILE
 
-refresh_po_and_mo $POTFILE $AMNESIA_SUPPORTED_LANGUAGES
+refresh_po $POTFILE $AMNESIA_SUPPORTED_LANGUAGES
+refresh_mo $AMNESIA_SUPPORTED_LANGUAGES
