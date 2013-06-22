@@ -95,6 +95,14 @@ intltool_update () {
    )
 }
 
+intltool_merge () {
+   grep -E --no-filename '[^ #]*\.(desktop|directory)\.in$' po/POTFILES.in \
+      | while read infile ; do
+           intltool-merge --quiet --desktop-style --utf8 \
+	      po "$infile" "${infile%.in}"
+        done
+}
+
 intltool_report () {
    (cd po && intltool-update --report --gettext-package=tails)
 }
@@ -118,4 +126,5 @@ refresh_mo $LANGUAGES
 
 intltool_update $LANGUAGES
 
+intltool_merge
 intltool_report
