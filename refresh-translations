@@ -54,7 +54,7 @@ po_file () {
    echo "${LOCALE_BASEDIR}/${locale}/LC_MESSAGES/tails.po"
 }
 
-concat_translations () {
+concat_pot_files () {
    msgcat --to-code=UTF-8 \
       $(for prog in $@ ; do echo -n "$(prog_potfile $prog) " ; done)
 }
@@ -79,6 +79,6 @@ for prog in $PERL_PROGS   ; do refresh_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do refresh_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
 
-concat_translations $PERL_PROGS $PYTHON_PROGS $SHELL_PROGS > $POTFILE
+concat_pot_files $PERL_PROGS $PYTHON_PROGS $SHELL_PROGS > $POTFILE
 
 refresh_po_and_mo $POTFILE $AMNESIA_SUPPORTED_LANGUAGES
