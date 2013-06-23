@@ -14,10 +14,8 @@ fatal () {
 ### Main
 
 # we require building from git
-if ! git rev-parse --is-inside-work-tree &> /dev/null; then
-    echo "${PWD} is not a Git tree."
-    exit 1
-fi
+git rev-parse --is-inside-work-tree &> /dev/null \
+   || fatal "${PWD} is not a Git tree."
 
 . config/amnesia
 if [ -e config/amnesia.local ] ; then
@@ -80,8 +78,7 @@ else
     else
 	# this shouldn't reasonably happen (e.g. only if you checkout a
         # tag, remove the tag and then build)
-	echo "Neither a Git branch nor a tag, exiting."
-	exit 1
+	fatal "Neither a Git branch nor a tag, exiting."
     fi
 fi
 
@@ -103,8 +100,7 @@ case "$LB_BINARY_IMAGES" in
       BUILD_FILENAME=binary
       ;;
    *)
-      echo "Image type ${LB_BINARY_IMAGES} is not supported." >&2
-      exit 1
+      fatal "Image type ${LB_BINARY_IMAGES} is not supported."
       ;;
 esac
 BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
@@ -120,6 +116,5 @@ if time eatmydata lb build noauto ${@} 2>&1 | tee "${BUILD_LOG}" ; then
    mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
    mv -i binary.packages "${BUILD_PACKAGES}"
 else
-   echo "lb build failed." >&2
-   exit 1
+   fatal "lb build failed ($?)."
 fi
