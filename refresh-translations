@@ -85,10 +85,16 @@ no_left_out_files () {
    return 0
 }
 
-intltool_update () {
+intltool_update_pot () {
    (
       cd po
       intltool-update --pot --gettext-package=tails
+   )
+}
+
+intltool_update_po () {
+   (
+      cd po
       for locale in "$@" ; do
 	 intltool-update --dist --gettext-package=tails $locale
       done
@@ -111,20 +117,22 @@ intltool_report () {
 
 mkdir -p $(dirname $POTFILE)
 
+# If left out files are detected, intltool-update --maintain writes
+# them to po/missing.
+no_left_out_files || exit 3
+
 for prog in $PERL_PROGS   ; do refresh_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do refresh_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
 
-# If left out files are detected, intltool-update --maintain writes
-# them to po/missing.
-no_left_out_files || exit 3
+intltool_update_pot
 
 concat_pot_files $PERL_PROGS $PYTHON_PROGS $SHELL_PROGS > $POTFILE
 
 refresh_po $POTFILE $LANGUAGES
 refresh_mo $LANGUAGES
 
-intltool_update $LANGUAGES
+intltool_update_po $LANGUAGES
 
 intltool_merge
 intltool_report
