@@ -2,16 +2,21 @@
 
 [[!toc levels=2]]
 
-Was iceweasel updated?
-======================
+1. Was Iceweasel updated?
+=========================
 
 It might have been updated in one of these sources:
 
 * branch `esr17/master` in `git://git.debian.org/git/pkg-mozilla/iceweasel.git`
 * <http://mozilla.debian.net/pool/iceweasel-esr/i/iceweasel/>
 
-New Firefox release
-===================
+**If** it was updated, then skip to [[New Iceweasel release|#new-iceweasel-release]].
+**Else**, skip to [[New Firefox release|#new-firefox-release]].
+
+<a id="new-firefox-release"></a>
+
+2. New Firefox release
+======================
 
 If Iceweasel was not updated to match the new Firefox release we want,
 a bit more work is needed.
@@ -84,8 +89,12 @@ in time for the security announce.
 
       git commit -a -m 'Apply all quilt patches.'
 
-New iceweasel release
-=====================
+<a id="new-iceweasel-release"></a>
+
+3. New Iceweasel release
+=========================
+
+Skip this entire stage if you imported a new Firefox release.
 
 The way to proceed is different depending on whether Debian's
 iceweasel was pushed to it yet, or not.
@@ -125,8 +134,15 @@ merge from Debian's Vcs-Git later.
 
 * Bring our `debian/changelog` and `debian/rules` changes back.
 
-Update Torbrowser patches
-=========================
+4. Update Torbrowser patches
+============================
+
+First, check if the Torbrowser patches were updated since the last
+time we imported them (that's why we always record in
+`debian/changelog` the TBB Git commit we are importing from).
+
+**If** the Torbrowser patches were not updated, then skip this entire stage.
+**Else**, proceed with the following steps.
 
 * Make sure all quilt patches are applied.
 * Unapply all Torbrowser patches: use `quilt pop` as many times
@@ -164,8 +180,8 @@ Update Torbrowser patches
 
       quilt push -a && git commit -a -m 'Apply Torbrowser patches.'
 
-Build packages
-==============
+5. Build packages
+=================
 
 Update debian/changelog
 -----------------------
