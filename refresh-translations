@@ -51,16 +51,6 @@ mo_file () {
    echo "${LOCALE_BASEDIR}/${locale}/LC_MESSAGES/tails.mo"
 }
 
-refresh_po () {
-   pot=$1 ; shift
-   for locale in "$@" ; do
-      po=$(po_file $locale)
-      mkdir -p $(dirname "$po")
-      [ -e "${po}" ] || cp "${pot}" "${po}"
-      msgmerge --update "${po}" "${pot}"
-   done
-}
-
 refresh_mo () {
    for locale in "$@" ; do
       po=$(po_file $locale)
