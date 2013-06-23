@@ -30,30 +30,30 @@ a bit more work is needed.
 
 * Trick the tarball importer to import the correct version:
 
-  	cp ../mozilla-esr17/browser/config/version.txt browser/config/ && \
-  	cp ../mozilla-esr17/debian/changelog debian/
+      cp ../mozilla-esr17/browser/config/version.txt browser/config/ && \
+      cp ../mozilla-esr17/debian/changelog debian/
 
 * Import the new upstream release into the `upstream` branch:
 
-  	make -f debian/rules import
+      make -f debian/rules import
 
 * Merge the import commit into `tails/master`:
 
-  	git reset --hard && \
+      git reset --hard && \
 	git merge upstream
 
 * Get the `debian` directory back:
 
-  	git checkout HEAD^ -- debian
-  	git commit -m 'Get Debian packaging directory back.'
+      git checkout HEAD^ -- debian
+      git commit -m 'Get Debian packaging directory back.'
 
 * Cleanup quilt status:
 
-  	rm -rf .pc
+      rm -rf .pc
 
 * Apply all quilt patches:
 
-  	quilt push -a
+      quilt push -a
 
 * `git rm` files deleted by quilt patches
 
@@ -61,7 +61,7 @@ a bit more work is needed.
 
 * Commit:
 
-  	git commit -a -m 'Apply all quilt patches.'
+      git commit -a -m 'Apply all quilt patches.'
 
 New iceweasel release
 =====================
@@ -91,7 +91,7 @@ merge from Debian's Vcs-Git later.
   `iceweasel-17.0.2esr`, and our iceweasel Git repository checkout is
   in `git`:
 
-  	rsync --stats -a --exclude=.git --delete iceweasel-17.0.2esr/ git/
+      rsync --stats -a --exclude=.git --delete iceweasel-17.0.2esr/ git/
 
 * `git add` the new files and the modified ones
 
@@ -112,26 +112,26 @@ Update Torbrowser patches
   as needed.
 * Remove all Torbrowser patches from the series:
 
-  	quilt unapplied | xargs -n 1 quilt delete
+      quilt unapplied | xargs -n 1 quilt delete
 
 * Remove Torbrowser patches from Git:
 
-  	git rm -r debian/patches/torbrowser/
+      git rm -r debian/patches/torbrowser/
 
 * Commit:
 
-  	git commit -a -m 'Remove Torbrowser patches.'
+      git commit -a -m 'Remove Torbrowser patches.'
 
 * Import the latest TBB patches:
 
-  	export TBB_SRC=XXX_PATH_TO_TBB_SRC_XXX
-  	for patch in $(\ls --reverse ${TBB_SRC}/src/current-patches/firefox/*.patch) ; do
-  	  p=$(basename "$patch")
-  	  quilt import -P "torbrowser/$p" "$patch"
-  	done
-  	git add debian/patches/torbrowser debian/patches/series
-  	TBB_COMMIT=$(git --git-dir=$TBB_SRC/.git rev-parse HEAD)
-  	git commit -a -m "Import Torbrowser patches at commit ${TBB_COMMIT}."
+      export TBB_SRC=XXX_PATH_TO_TBB_SRC_XXX
+      for patch in $(\ls --reverse ${TBB_SRC}/src/current-patches/firefox/*.patch) ; do
+        p=$(basename "$patch")
+        quilt import -P "torbrowser/$p" "$patch"
+      done
+      git add debian/patches/torbrowser debian/patches/series
+      TBB_COMMIT=$(git --git-dir=$TBB_SRC/.git rev-parse HEAD)
+      git commit -a -m "Import Torbrowser patches at commit ${TBB_COMMIT}."
 
 * Remove from the quilt series, using `quilt delete`, the Torbrowser
   patches we don't want: see `debian/changelog` for the list of
@@ -141,7 +141,7 @@ Update Torbrowser patches
 
 * Apply Torbrowser patches:
 
-  	quilt push -a && git commit -a -m 'Apply Torbrowser patches.'
+      quilt push -a && git commit -a -m 'Apply Torbrowser patches.'
 
 Build packages
 ==============
@@ -155,8 +155,8 @@ Update debian/changelog
 * set distribution to unstable
 * commit:
 
-  	git commit debian/changelog \
-  	    -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+      git commit debian/changelog \
+          -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
 Tag the release
 ---------------
@@ -180,16 +180,16 @@ Build for squeeze-backports
 * Merge the tag.
 * Add a backport changelog entry:
 
-  	dch --bpo
+      dch --bpo
 
 * Commit:
 
-  	git commit debian/changelog \
-  	    -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+      git commit debian/changelog \
+          -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
 * Tag the backport:
 
-  	git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" $TAG_NAME
+      git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" $TAG_NAME
 
 * Build for squeeze-backports and i386, e.g. in our debomatic instance.
 * Test the resulting packages in Tails.
