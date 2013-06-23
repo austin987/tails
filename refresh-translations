@@ -20,10 +20,7 @@ prog_potfile () {
 
    progpath="config/chroot_local-includes$prog"
    domain=$(basename $prog)
-   sharedir="config/chroot_local-includes/usr/share/${domain}"
-   pot="${sharedir}/messages.pot"
-
-   echo $pot
+   echo "tmp/pot/${domain}.pot"
 }
 
 refresh_pot () {
@@ -109,15 +106,16 @@ intltool_report () {
 
 ### Main
 
-# If left out files are detected, intltool-update --maintain writes
-# them to po/missing.
-no_left_out_files || exit 3
-
 # Update POT files
+mkdir -p tmp/pot
 for prog in $PERL_PROGS   ; do refresh_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do refresh_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
 intltool_update_pot
+
+# If left out files are detected, intltool-update --maintain writes
+# them to po/missing.
+no_left_out_files || exit 3
 
 # Update PO files
 intltool_update_po $LANGUAGES
