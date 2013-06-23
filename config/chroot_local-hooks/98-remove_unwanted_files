@@ -4,6 +4,9 @@ set -e
 
 echo "Removing unwanted files"
 
+# Get POTFILES_DOT_IN
+. /usr/share/amnesia/build/variables
+
 rm /usr/share/icons/gnome/icon-theme.cache
 
 rm -r \
@@ -33,3 +36,6 @@ find /usr -name "*.pyc" -print0 | xargs -0r rm -f
 for file in $(find /var/log/ -type f); do
 	: > "${file}"
 done
+
+# Remove .in files managed by intltool
+rm $POTFILES_DOT_IN
