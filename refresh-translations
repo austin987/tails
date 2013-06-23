@@ -121,18 +121,20 @@ mkdir -p $(dirname $POTFILE)
 # them to po/missing.
 no_left_out_files || exit 3
 
+# Update POT files
 for prog in $PERL_PROGS   ; do refresh_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do refresh_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
-
 intltool_update_pot
-
 concat_pot_files $PERL_PROGS $PYTHON_PROGS $SHELL_PROGS > $POTFILE
 
+# Update PO files
 refresh_po $POTFILE $LANGUAGES
-refresh_mo $LANGUAGES
-
 intltool_update_po $LANGUAGES
 
+# Update files that are actually used at runtime
+refresh_mo $LANGUAGES
 intltool_merge
+
+# Report back
 intltool_report
