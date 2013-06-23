@@ -12,7 +12,6 @@ SHELL_PROGS="/usr/local/sbin/unsafe-browser"
 
 LANGUAGES=$(for po in po/*.po ; do rel="${po%.po}" ; echo "${rel#po/}"; done)
 LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
-POTFILE=config/chroot_local-includes/usr/share/tails/messages.pot
 
 ### Functions
 
@@ -53,11 +52,6 @@ mo_file () {
    locale=$1
 
    echo "${LOCALE_BASEDIR}/${locale}/LC_MESSAGES/tails.mo"
-}
-
-concat_pot_files () {
-   msgcat --to-code=UTF-8 \
-      $(for prog in $@ ; do echo -n "$(prog_potfile $prog) " ; done)
 }
 
 refresh_po () {
@@ -115,8 +109,6 @@ intltool_report () {
 
 ### Main
 
-mkdir -p $(dirname $POTFILE)
-
 # If left out files are detected, intltool-update --maintain writes
 # them to po/missing.
 no_left_out_files || exit 3
@@ -126,10 +118,8 @@ for prog in $PERL_PROGS   ; do refresh_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do refresh_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
 intltool_update_pot
-concat_pot_files $PERL_PROGS $PYTHON_PROGS $SHELL_PROGS > $POTFILE
 
 # Update PO files
-refresh_po $POTFILE $LANGUAGES
 intltool_update_po $LANGUAGES
 
 # Update files that are actually used at runtime
