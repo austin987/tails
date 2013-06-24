@@ -1,10 +1,11 @@
-tails (0.19~rc1) unstable; urgency=low
+tails (0.19) unstable; urgency=low
 
   * Major new features
   - Install Linux kernel 3.9.5-1 from Debian unstable.
     Features of particular interest for Tails are the Yama LSM
     (ptrace scope restrictions) and improved hardware support.
     As a corollary, install initramfs-tools from there too.
+  - Iceweasel 17.0.7esr + Torbrowser patches.
   - Unblock Bluetooth, Wi-Fi, WWAN and WiMAX; block every other type of
     wireless device. Next steps are described on the
     todo/protect_against_external_bus_memory_forensics ticket.
@@ -18,6 +19,7 @@ tails (0.19~rc1) unstable; urgency=low
   - Fix link to documentation when no sudo password is set.
   - gpgApplet: partial fix for clipboard emptying after a wrong passphrase
     was entered.
+  - Workaround aufs bug in Unsafe Browser script.
 
   * Minor improvements
   - Drop GNOME proxy settings: we did not find any use of it we were keen
@@ -38,6 +40,9 @@ tails (0.19~rc1) unstable; urgency=low
       a result, at the time live-persist runs, no tmpfs is mounted on
       /live/overlay, which breaks the aufs mount. So, let's just ensure
       /live/overlay points to a tmpfs.
+    · Really disable policykit and sudo live-config hooks.
+      ... by making it believe they've already been run.
+      This workarounds new live-config's default behavior.
 
   * Localization
   - Many translation updates all over the place.
@@ -45,7 +50,7 @@ tails (0.19~rc1) unstable; urgency=low
   * Test suite
   - Re-enable previously disabled boot device permissions test.
 
- -- Tails developers <tails@boum.org>  Thu, 13 Jun 2013 16:36:20 +0200
+ -- Tails developers <tails@boum.org>  Wed, 26 Jun 2013 12:36:20 +0200
 
 tails (0.18) unstable; urgency=low
 
