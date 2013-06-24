@@ -4,6 +4,18 @@
 
 See the [[release_schedule]].
 
+Environment
+===========
+
+Export the following environment variables to be able to copy'n'paste
+the scripts snippets found on this page:
+
+* `VERSION`: the version number of the release being prepared.
+* `ISOS`: the directory where one stores `tails-i386-*`
+  sub-directories like the ones downloaded with BitTorrent.
+* `MASTER_CHECKOUT`: a checkout of the `master` branch of the main
+  Tails Git repository.
+
 Pre-freeze
 ==========
 
@@ -302,14 +314,26 @@ Test them with a BitTorrent client running in a different place.
 
 ## Upload to HTTP mirrors
 
-- upload the images to the primary rsync mirror
-- update the `project/trace` file (with current epoch in it:
-  `date +%s`) on the primary rsync mirror
-- update the `inc/trace` of the wiki with the same epoch as you
-  previously put in `project/trace`, even for a release candidate
-- make sure every webserver listed in the `dl.amnesia.boum.org` round
-  robin pool has the new version
-- test downloading
+Upload the images to the primary rsync mirror.
+
+Update the time in `project/trace` file on the primary rsync mirror
+and on the live wiki (even for a release candidate):
+
+	TRACE_TIME=$(date +%s) &&
+	echo $TRACE_TIME | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
+	[ -n "$MASTER_CHECKOUT" ] && \
+	echo $TRACE_TIME > "$MASTER_CHECKOUT/wiki/src/inc/trace" &&
+	(
+	   cd "$MASTER_CHECKOUT" && \
+	   git commit wiki/src/inc/trace -m "Updating trace file after uploading $VERSION."
+	)
+
+Wait for the next rsync pull.
+
+Make sure every webserver listed in the `dl.amnesia.boum.org` round
+robin pool has the new version.
+
+Test downloading.
 
 Update the website and Git repository
 =====================================
