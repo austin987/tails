@@ -228,10 +228,17 @@ Build for squeeze-backports
 
       git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" $TAG_NAME
 
-* Build for squeeze-backports and i386, e.g. in our debomatic instance.
+* Build for squeeze-backports and i386, e.g. in our
+  debomatic instance.
+* Integrate these debs into your apt-cacher cache. That's one cp to
+  `/var/cache/apt-cacher-ng/_import/` away, + 1 click in the
+  web interface.
 * Test the resulting packages in Tails.
 * Make sure the `.orig.*` tarballs are included in the `.changes`
   file. FIXME: check if that's needed, or done automatically by the
   above instructions.
 * Upload the resulting packages to the relevant suite of our
   [[contribute/APT repository]].
+* Merge this APT suite where you need it: generally, that's `devel`,
+  `experimental`, one of `stable` or `testing`, and maybe
+  a release tag.
