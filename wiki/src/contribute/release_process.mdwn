@@ -259,34 +259,36 @@ page|release_process/test]].
 Generate the OpenPGP signatures and Torrents
 ============================================
 
-First, create a directory with a suitable name for every image to be
-released, such as `tails-i386-0.7`.
+First, create a directory with a suitable name:
 
-Second, copy the built images to these brand new directories and
-rename it to fit our `tails-ARCH-VERSION.iso`. naming
-convention e.g. `tails-i386-0.7.iso`.
+	mkdir tails-i386-$VERSION
 
-Third, generate detached GnuPG signatures for every published image,
-in the same directory as the image and with a `.pgp` extension; e.g.
+Second, copy the built images to this brand new directory and
+rename it:
+
+	cd tails-i386-$VERSION
+	mv *.iso tails-i386-$VERSION.iso
+
+Third, generate detached OpenPGP signatures for the image to be
+published, in the same directory as the image and with a `.pgp`
+extension; e.g.
 
 	gpg --armor --default-key 1202821CBE2CD9C1 --detach-sign *.iso
 	rename 's,\.asc$,.pgp,' *.asc
 
-Fourth, create a `.torrent` file for every directory to be published:
+Fourth, go up to the parent directory, create a `.torrent` file and
+check the generated `.torrent` files metainfo:
 
-	mktorrent -a 'http://torrent.gresille.org/announce' \
-	  <DIRECTORY>
+	cd .. && \
+	mktorrent -a 'http://torrent.gresille.org/announce' "tails-i386-${VERSION}" && \
+	btshowmetainfo tails-i386-$VERSION.torrent
 
-Fifth, check the generated `.torrent` files metainfo, e.g.
-using `btshowmetainfo`, to make sure they don't contain
-unwanted information.
-
-Sixth, generate detached GnuPG signatures for every published
+Fifth, generate detached OpenPGP signatures for every published
 `.torrent` file:
 
 	gpg --armor --default-key 1202821CBE2CD9C1 --detach-sign \
-	  tails-i386-0.7.torrent
-	rename 's,\.asc$,.pgp,' *.asc
+	  tails-i386-$VERSION.torrent && \
+	mv tails-i386-$VERSION.torrent.{asc,pgp}
 
 Upload images
 =============
