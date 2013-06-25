@@ -1,7 +1,20 @@
 In Tails 0.18, choosing German in tails-greeter => iceweasel has
 Google configured as the default search engine. No localized Startpage
-is available. "Startpage HTTPS" is available. Only English Wikipedia
-is available.
+is available. "Startpage HTTPS" is available. Wikipedia is available,
+while it's normally only shown in English locales.
+
+No localized search engine (from
+`/etc/iceweasel/searchplugins/locale/$LOCALE`) is available.
+
+It's as if the localized search engines were picked when the profile
+is generated at build time, then used forever: when logged in German,
+`~/.mozilla/firefox/default/search.json` contains `"locale":"en-US"`
+and references `/etc/iceweasel/searchplugins/locale/en-US`, but not
+its `de` counterpart. However, there is no `search.json` in
+`/etc/skel/.mozilla/firefox/default`.
+
+Could it be that `intl.locale.matchOS` is overridden by the way we now
+set `general.useragent.*`?
 
 Same at least for Spanish and French. Added to 0.18's known issues.
 
