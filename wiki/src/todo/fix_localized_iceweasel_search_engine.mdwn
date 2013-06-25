@@ -3,6 +3,9 @@ Google configured as the default search engine. No localized Startpage
 is available. "Startpage HTTPS" is available. Wikipedia is available,
 while it's normally only shown in English locales.
 
+Same at least for Spanish and French. Added to 0.18's known issues.
+Still the case in 0.19.
+
 No localized search engine (from
 `/etc/iceweasel/searchplugins/locale/$LOCALE`) is available.
 
@@ -13,10 +16,16 @@ and references `/etc/iceweasel/searchplugins/locale/en-US`, but not
 its `de` counterpart. However, there is no `search.json` in
 `/etc/skel/.mozilla/firefox/default`.
 
-Could it be that `intl.locale.matchOS` is overridden by the way we now
-set `general.useragent.*`?
+Commenting-out `pref("general.useragent.locale", "en-US");` in
+`/etc/iceweasel/pref/iceweasel.js`, then removing `~/.mozilla/` and
+starting a fresh Iceweasel gives the intended behavior. But then
+`general.useragent.locale` is set to `de`. ip-check.info still reports
+a en-US user agent and OS, though, so presumably the Torbutton
+protections are enough to spoof this nevertheless. Moreover, TBB
+itself does set this pref to the language chosen at downloaded time,
+so this should be safe.
 
-Same at least for Spanish and French. Added to 0.18's known issues.
+This was implemented in branch
+`bugfix/fix-localized-iceweasel-search-engine`.
 
-[[!tag todo/research]]
-
+[[!tag todo/qa]]
