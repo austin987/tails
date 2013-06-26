@@ -52,18 +52,6 @@ log() {
 	logger -t time "$@"
 }
 
-notify_user() {
-	local summary="$1"
-	local body="$2"
-
-	if [ -n "$3" ]; then
-		timeout_args='--expire-time=$3'
-	fi
-	export DISPLAY=':0.0'
-	export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
-	exec /bin/su -c "notify-send ${timeout_args} \"${summary}\" \"${body}\"" "${LIVE_USERNAME}" &
-}
-
 has_consensus() {
 	local files="${TOR_CONSENSUS} ${TOR_UNVERIFIED_CONSENSUS}"
 
@@ -102,7 +90,7 @@ wait_for_tor_consensus() {
 	else
 		log "Waited for too long, let's stop waiting for Tor consensus."
 		# FIXME: gettext-ize
-		notify_user "Synchronizing the system's clock" \
+		/usr/local/sbin/tails-notify-user "Synchronizing the system's clock" \
 			"Could not fetch Tor consensus."
 		exit 2
 	fi

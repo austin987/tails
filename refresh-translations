@@ -20,6 +20,8 @@ refresh_translations () {
    if [ -e "${progpath}" ]; then
       xgettext --language="${proglang}" --from-code=UTF-8 \
         -o "${pot}" "${progpath}"
+      sed -i "s@^\"Content-Type: text/plain\; charset=CHARSET\\\n\"@\"Content-Type: text/plain\; charset=UTF-8\\\n\"@" "${pot}"
+
    fi
 
    for locale in $AMNESIA_SUPPORTED_LANGUAGES ; do
@@ -32,11 +34,13 @@ refresh_translations () {
    done
 }
 
-#################### file                                   domain                  lang
-refresh_translations /usr/local/bin/gpgApplet               gpgApplet               Perl
-refresh_translations /usr/local/bin/tails-security-check    tails-security-check    Perl
-refresh_translations /usr/local/bin/tails-htp-notify-user   tails-htp-notify-user   Perl
-refresh_translations /usr/local/bin/tails-virt-notify-user  tails-virt-notify-user  Perl
-refresh_translations /usr/local/sbin/unsafe-browser         unsafe-browser          Shell
-refresh_translations /etc/whisperback/config.py             amnesia                 Python
-refresh_translations /usr/local/bin/shutdown_helper_applet  shutdown_helper_applet  Python
+#################### file                                       domain                      lang
+refresh_translations /usr/local/bin/gpgApplet                   gpgApplet                   Perl
+refresh_translations /usr/local/bin/tails-security-check        tails-security-check        Perl
+refresh_translations /usr/local/bin/tails-htp-notify-user       tails-htp-notify-user       Perl
+refresh_translations /usr/local/bin/tails-virt-notify-user      tails-virt-notify-user      Perl
+refresh_translations /usr/local/sbin/unsafe-browser             unsafe-browser              Shell
+refresh_translations /etc/whisperback/config.py                 amnesia                     Python
+refresh_translations /usr/local/bin/shutdown_helper_applet      shutdown_helper_applet      Python
+refresh_translations /usr/local/bin/tails-about                 tails-about                 Python
+refresh_translations /usr/local/sbin/tails-additional-software  tails-additional-software   Python

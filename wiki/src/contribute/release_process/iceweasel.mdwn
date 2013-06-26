@@ -1,13 +1,37 @@
+[[!meta title="Releasing Iceweasel + Torbrowser patches"]]
+
 [[!toc levels=2]]
 
-New Firefox release
-===================
+1. Was Iceweasel updated?
+=========================
+
+It might have been updated in one of these sources:
+
+* branch `esr17/master` in `git://git.debian.org/git/pkg-mozilla/iceweasel.git`
+* <http://mozilla.debian.net/pool/iceweasel-esr/i/iceweasel/>
+
+**If** it was updated, then skip to [[New Iceweasel release|iceweasel#new-iceweasel-release]].
+**Else**, skip to [[New Firefox release|iceweasel#new-firefox-release]].
+
+<a id="new-firefox-release"></a>
+
+2. New Firefox release
+======================
 
 If Iceweasel was not updated to match the new Firefox release we want,
 a bit more work is needed.
 
-* Download the Firefox tarball and detached signature.
+Note that usually, we're doing these steps (usually on Sunday or
+Monday) *before* the new ESR was officially released (which usually
+happens on Tuesday). Mozilla make the source available on previous
+Friday or Saturday, so that downstreams (such as us!) can get their stuff ready
+in time for the security announce.
+
+* Download the Firefox tarball and detached signature from
+  <https://ftp.mozilla.org/pub/mozilla.org/firefox/releases/VERSION/source/>
+  (`VERSION` is the version we want to build, that is something like `17.0.7esr`).
 * Check the signature.
+* Put the tarball in the parent directory of your Iceweasel Git repository.
 * Extract the tarball.
 * `cd` into the extracted directory.
 * Copy the `debian/` directory from our previous package into the new
@@ -15,47 +39,62 @@ a bit more work is needed.
 * Use `dch` to add a `debian/changelog` entry matching the new
   upstream version. Use 0 for the Debian packaging version, e.g.
   `17.0.5esr-0`, to leave room for the official packaging that we will
-  want to merge when it's out.
+  want to merge when it's out:
+
+      dch -v ${VERSION}-0 "New upstream release."
+
+* Download and repack the other tarballs:
+
+      make -f debian/rules download
+
 * `cd` into our Iceweasel Git directory.
 * Checkout the `tails/master` branch.
 * Get yourself a new upstream branch:
 
-  	git branch -d upstream && \
-  	git branch upstream tails/master
-
-* Download and repack the other tarballs:
-
-  	cd .. && make -f debian/rules download
+      git branch -D upstream
+      git branch upstream tails/master
 
 * Trick the tarball importer to import the correct version:
 
-  	cp mozilla-esr17/browser/config/version.txt git/browser/config/
-  	cp mozilla-esr17/debian/changelog git/debian/
+      cp ../mozilla-esr17/browser/config/version.txt browser/config/ && \
+      cp ../mozilla-esr17/debian/changelog debian/
 
 * Import the new upstream release into the `upstream` branch:
 
-  	cd git && make -f debian/rules import
+      make -f debian/rules import
 
 * Merge the import commit into `tails/master`:
 
-  	git reset --hard && \
+      git reset --hard && \
 	git merge upstream
 
 * Get the `debian` directory back:
 
-  	git checkout HEAD^ -- debian
-  	git commit -m 'Get Debian packaging directory back.'
+      git checkout HEAD^ -- debian
+      git commit -m 'Get Debian packaging directory back.'
 
 * Cleanup quilt status:
 
-  	rm -rf .pc
+      rm -rf .pc
 
 * Apply all quilt patches:
 
-  	quilt push -a
+      quilt push -a
 
-New iceweasel release
-=====================
+* `git rm` files deleted by quilt patches
+
+* `git add` files created by quilt patches
+
+* Commit:
+
+      git commit -a -m 'Apply all quilt patches.'
+
+<a id="new-iceweasel-release"></a>
+
+3. New Iceweasel release
+=========================
+
+Skip this entire stage if you imported a new Firefox release.
 
 The way to proceed is different depending on whether Debian's
 iceweasel was pushed to it yet, or not.
@@ -82,7 +121,7 @@ merge from Debian's Vcs-Git later.
   `iceweasel-17.0.2esr`, and our iceweasel Git repository checkout is
   in `git`:
 
-  	rsync --stats -a --exclude=.git --delete iceweasel-17.0.2esr/ git/
+      rsync --stats -a --exclude=.git --delete iceweasel-17.0.2esr/ git/
 
 * `git add` the new files and the modified ones
 
@@ -95,34 +134,41 @@ merge from Debian's Vcs-Git later.
 
 * Bring our `debian/changelog` and `debian/rules` changes back.
 
-Update Torbrowser patches
-=========================
+4. Update Torbrowser patches
+============================
+
+First, check if the Torbrowser patches were updated since the last
+time we imported them (that's why we always record in
+`debian/changelog` the TBB Git commit we are importing from).
+
+**If** the Torbrowser patches were not updated, then skip this entire stage.
+**Else**, proceed with the following steps.
 
 * Make sure all quilt patches are applied.
 * Unapply all Torbrowser patches: use `quilt pop` as many times
   as needed.
 * Remove all Torbrowser patches from the series:
 
-  	quilt unapplied | xargs -n 1 quilt delete
+      quilt unapplied | xargs -n 1 quilt delete
 
 * Remove Torbrowser patches from Git:
 
-  	git rm -r debian/patches/torbrowser/
+      git rm -r debian/patches/torbrowser/
 
 * Commit:
 
-  	git commit -m 'Remove Torbrowser patches.'
+      git commit -a -m 'Remove Torbrowser patches.'
 
 * Import the latest TBB patches:
 
-  	export TBB_SRC=XXX_PATH_TO_TBB_SRC_XXX
-  	for patch in $(\ls --reverse ${TBB_SRC}/src/current-patches/firefox/*.patch) ; do
-  	  p=$(basename "$patch")
-  	  quilt import -P "torbrowser/$p" "$patch"
-  	done
-  	git add debian/patches/torbrowser
-  	TBB_COMMIT=$(git --git-dir=$TBB_SRC/.git rev-parse HEAD)
-  	git commit -a -m "Import Torbrowser patches at commit ${TBB_COMMIT}."
+      export TBB_SRC=XXX_PATH_TO_TBB_SRC_XXX
+      for patch in $(\ls --reverse ${TBB_SRC}/src/current-patches/firefox/*.patch) ; do
+        p=$(basename "$patch")
+        quilt import -P "torbrowser/$p" "$patch"
+      done
+      git add debian/patches/torbrowser debian/patches/series
+      TBB_COMMIT=$(git --git-dir=$TBB_SRC/.git rev-parse HEAD)
+      git commit -a -m "Import Torbrowser patches at commit ${TBB_COMMIT}."
 
 * Remove from the quilt series, using `quilt delete`, the Torbrowser
   patches we don't want: see `debian/changelog` for the list of
@@ -132,10 +178,10 @@ Update Torbrowser patches
 
 * Apply Torbrowser patches:
 
-  	quilt push -a && git commit -a -m 'Apply Torbrowser patches.'
+      quilt push -a && git commit -a -m 'Apply Torbrowser patches.'
 
-Build packages
-==============
+5. Build packages
+=================
 
 Update debian/changelog
 -----------------------
@@ -146,7 +192,8 @@ Update debian/changelog
 * set distribution to unstable
 * commit:
 
-  	git commit -a -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+      git commit debian/changelog \
+          -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
 Tag the release
 ---------------
@@ -160,7 +207,7 @@ If you have no available non-Tails setup to comfortably test these
 packages, then skip this step.
 
 * Build for unstable and the architecture you can test on (most likely
-  amd64).
+  amd64), e.g. using our [[contribute/Debian_package_builder]].
 * Install and test the resulting packages.
 
 Build for squeeze-backports
@@ -170,20 +217,28 @@ Build for squeeze-backports
 * Merge the tag.
 * Add a backport changelog entry:
 
-  	dch --bpo
+      dch --bpo
 
 * Commit:
 
-  	git commit -a -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+      git commit debian/changelog \
+          -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
 * Tag the backport:
 
-  	git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" $TAG_NAME
+      git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" $TAG_NAME
 
-* Build for squeeze-backports and i386, e.g. in our debomatic instance.
+* Build for squeeze-backports and i386, e.g. using our
+  [[contribute/Debian_package_builder]].
+* Integrate these debs into your apt-cacher cache. That's one cp to
+  `/var/cache/apt-cacher-ng/_import/` away, + 1 click in the
+  web interface.
 * Test the resulting packages in Tails.
 * Make sure the `.orig.*` tarballs are included in the `.changes`
   file. FIXME: check if that's needed, or done automatically by the
   above instructions.
 * Upload the resulting packages to the relevant suite of our
   [[contribute/APT repository]].
+* Merge this APT suite where you need it: generally, that's `devel`,
+  `experimental`, one of `stable` or `testing`, and maybe
+  a release tag.
