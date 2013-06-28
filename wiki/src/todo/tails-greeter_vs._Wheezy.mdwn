@@ -137,3 +137,27 @@ Here's some initial archived research in this area:
 * Arbitrary data can be passed from the pywebkit greeter as arguments
   to JS functions, once serialized in JSON, using the WebKit
   `execute_script` method.
+
+GDM migration
+=============
+
+Setup
+-----
+
+	apt-get install gdm3 gtk2-engines
+	dpkg -i --force-all tails-greeter*.deb
+	ln -s /bin/true /usr/local/sbin/live-persist
+
+TODO
+----
+
+* Get rid of the `__fill_layouts_dict` mess, it should not be needed
+  now that we use GObject introspection.
+* Fix installation if this happens during Tails build too:
+
+	# dpkg -i /tmp/tails-greeter_0.7.15+wheezy1_all.deb
+	(Reading database ... 46655 files and directories currently installed.)
+	Unpacking tails-greeter (from .../tails-greeter_0.7.15+wheezy1_all.deb) ...
+	dpkg: error processing /tmp/tails-greeter_0.7.15+wheezy1_all.deb (--install):
+	 trying to overwrite '/usr/share/gdm/greeter/applications/gdm-simple-greeter.desktop', which is also in package gdm3 3.4.1-8
+	dpkg-deb: error: subprocess paste was killed by signal (Broken pipe)
