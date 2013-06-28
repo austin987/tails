@@ -151,6 +151,17 @@ Setup
 TODO
 ----
 
+* The fix for region and keyboard layout lists initialization (itself
+  broken by the move to accountsservice) broke on-the-fly GUI
+  translation
+* Clean up the greeter's GNOME session properly on login: e.g.
+  don't let dbus-daemon processes floating around: explicitly
+  disconnect from accountsservice and gdmgreeter?
+* Better default keyboard for a given language (e.g. use France layout
+  instead of Belgium one in French language): it's über-weird: `if ln
+  == layout_code` fails in `__set_default_layout` while it should
+  succeed; FWIW the two compared variables have apparently the same
+  content, are of the same type, and have the same list of methods
 * Get rid of the `__fill_layouts_dict` mess, it should not be needed
   now that we use GObject introspection.
 * Fix installation if this happens during Tails build too:
