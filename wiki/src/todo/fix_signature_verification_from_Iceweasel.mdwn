@@ -7,10 +7,14 @@ open it with *Decrypt File*.
 The same happens with a update-description file hosted at tails.b.o:
 <https://tails.boum.org/update/v1/Tails/0.16/i386/stable/updates.yml.pgp>.
 
-This may be a GNOME MIME association issue or a web
-server misconfiguration.
+To fix that the next things to do are:
 
-Next thing to do is to check the MIME type the web server(s) pretend
-these files are. [[!tag todo/test]]
+  - All signature files have to be renamed with a .sig extension.
+  - The webserver providing the file has to associated the
+    application/pgp-signature MIME type to it. That's the default in
+    Debian Wheezy, but was not the case in Debian Squeeze.
+  - To make sure that the webserver returns the right MIME type, link to
+    a signature file on tails.boum.org from the download page so we
+    don't rely on the configuration of the mirrors.
 
-[[!tag todo/easy]]
+[[!tag todo/code todo/easy]]
