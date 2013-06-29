@@ -1,14 +1,21 @@
+[[!toc levels=2]]
+
 Next steps
 ==========
 
 0. remove greasemonkey and the youtube script: **done**
-0. [[!taglink todo/wait]] a bit for [[todo/minitube]] to mature; if
+0. integrate the test reports below and the next steps they suggest as
+   part of this roadmap
+0. [[!taglink todo/wait]] a bit for [[todo/smtube]] to mature; if
    it's acceptable and merged, then perhaps we will consider the
    *easier YouTube* task as completed.
 0. We're told that adding `*.youtube.com https://www.youtube.com/*` to
    "no script -> options -> advanced -> external filters -> do not
    filter objects coming from these sites" works. Let's try this and
    see how things go. [[!tag todo/test]]
+* [[!taglink todo/test]] the [Permanently Enable HTML5 on
+  YouTube](https://userscripts.org/scripts/show/105433) greasemonky
+  userscript, that Tails used to ship (before commit 167946958).
 0. also, [[!taglink todo/test]] the [YouTube HTML5
    Switch](https://addons.mozilla.org/en-us/firefox/addon/youtube-html5-switch/)
    iceweasel add-on.
@@ -34,5 +41,57 @@ Background
 * [[forum thread|forum/Youtube_is_now_automatically_HTML5_enabled]],
 * [[!tor_bug 3347]]
 
+Test reports
+============
+
+Out-of-the box YouTube support in Tails 0.18
+--------------------------------------------
+
+With Tails 0.18, I visited one of the featured videos on youtube which
+is <https://www.youtube.com/watch?v=aK_eKGK4JrM>.
+
+At first it gave me the usual msg flash player, then I added
+`&html5=1` on the URL and refreshed the page. It worked as it should
+be no issues.
+
+After that, most of the videos played out of the box without the
+`&html5=1` that where on the right side as featured/similar.
+
+From on of them I got the msg "The browser does not currently
+recognize any of the video formats available."
+
+Later I entered <https://www.youtube.com/html5> where I verified that
+my browser does not support h.264, also I had the msg "You are not
+currently in the HTML5 trial." Hope that helps.
+
+Test report of the ViewTube Greasemonkey userscript
+---------------------------------------------------
+
+With Tails 0.18, I first ran `apt-get install xul-ext-greasemonkey`,
+that installed the version 0.8.20100408.6-1. Iceweasel said that this
+extension is not compatible with iceweasel 17.0.6.
+
+So `apt-get remove --purge xul-ext-greasemonkey`
+
+Then from iceweasel, I installed both 
+<https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/> (1.8)
+and <https://userscripts.org/scripts/show/87011> (version 2013.05.21)
+
+The page <http://isebaro.com/contact/?ln=en&sb=viewtube> reads "Videos
+don't play on secure URLs (HTTPS)", but even with HTTPSEverywhere and
+Noscript desactivated, the video quoted in the Test repot #1 is not
+working: "The video should be loading. If it doesn't load, make sure
+a video plugin is installed."
+
+It's however possible to download the video, by clicking on "Get" in
+the top-right corner of the video.
+
+Left to test:
+
+* Try installing xul-ext-greasemonkey 0.9.20-1 from unstable
+* Check if there is an answer there
+  <http://isebaro.com/contact/?ln=en&sb=viewtube#reply536>
+* Checkout the last news at <http://www.greasespot.net/> and
+  <http://isebaro.com/viewtube/?ln=en>
 
 [[!tag broken_window]]

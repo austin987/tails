@@ -69,7 +69,6 @@ if [ -n "$JENKINS_URL" ]; then
 	fi
 	REV="$GIT_BRANCH"
 	COMMIT="$GIT_COMMIT"
-	cd "$WORKSPACE"
 else
 	# Build triggered by Vagrant
 	WORKSPACE=/home/vagrant/amnesia
@@ -79,9 +78,11 @@ else
 	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
 	cd "$WORKSPACE"
 	git fetch origin
-	git checkout --force "$REV"
-	git reset --hard "$COMMIT"
 fi
+
+cd "$WORKSPACE"
+git checkout --force "$REV"
+git reset --hard "$COMMIT"
 
 install -m 0700 -d "$ARTIFACTS_DIR"
 

@@ -1,5 +1,7 @@
 [[!toc levels=1]]
 
+Some [[test results]] that might be useful to keep are saved.
+
 # Changes
 
 Keeping an eye on the changes between released versions is one of the
@@ -49,39 +51,9 @@ parts which require real hardware) and have the automated test suite
 run all our tests. It's design, and how to write new tests, are
 documented on a [[dedicated page|test/automated_tests]].
 
-## Usage
+## Running the automated test suite
 
-Use the `run_test_suite` script found in the Tails source root to run
-all automated Cucumber test features. See the [[setup
-documentation|test/setup]] in case you don't have a testing
-environment yet.
-
-It's important to note that some features only depend on the Tails
-sources, and some on the actual product of the sources, i.e. a Tails
-ISO image. These features are tagged `@source` and `@product`,
-respectively. The arguments passed to `run_test_suite` may only affect
-one of these types of features and not the other.
-
-A typical example run of a few `@product` features could be:
-
-    ./run_test_suite --view --capture test-0.17.webm \
-        --iso path/to/tails.iso \
-        features/apt.feature features/erase_memory.feature
-
-which will test only the `iceweasel` and `erase_memory` features (if
-no feature paths are given, all features in `features/cucumber` will
-be tested) of the given ISO image `tails.iso` while showing the test
-session in a VNC viewer (`--view`) and also capturing it into a video
-called `test-0.17.web` (`--capture`). Similarly, to test a `@source`
-feature, we'd simply run something like:
-
-    ./run_test_suite features/build.feature
-
-For full instructions, see its `--help`.
-
-Note: since the test suite itself uses `virt-viewer` to interact with
-the Tails guest you cannot use it as that will steal the session from
-the test suite, leaving it with a blank screen.
+See [[test/setup]] and [[test/usage]].
 
 ## Automated test suite migration progress
 
@@ -122,8 +94,11 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Check if pidgin doesn't leak too many informations on replying to different
   CTCP requests:
   * Start Tails and launch pidgin once done. Connect to an IRC server where you're already on
-  * try to /ctcp <Tails_account_nick> COMMAND
-  (for a list of commands, see [this page](http://www.wikkedwire.com/irccommands)).
+  * try to `/ctcp <Tails_account_nick> COMMAND`
+    with a client that supports sending CTCP commands properly --
+    Pidgin does not, apparently
+    (for a list of commands, see [this page](http://www.wikkedwire.com/irccommands)).
+    See the [[current known-broken state|todo/Pidgin_ctcp_replies]].
 
 # Tor
 
@@ -229,6 +204,11 @@ features properly do their work; second, our `torrc` sets the right
   partition not managed by LVM. This swap partition must not be used
   by Tails.
 * is a persistence volume on a local hard-disk partition used?
+  (Hint: setup a libvirt USB disk with GPT and a partition labeled
+  `TailsData`, set the `removable` flag on it, check that
+  tails-greeter proposes to enable persistence. Then remove the
+  `removable` flag, and check that tails-greeter does not propose to
+  enable persistence anymore.)
 
 # Claws
 
@@ -259,19 +239,17 @@ features properly do their work; second, our `torrc` sets the right
 * can a bug report e-mail be sent?
 * is it correctly encrypted?
 
-# Monkeysphere
-
-* Monkeysphere validation agent key search/receive: torified? uses
-  configured keyserver?
-
 # Time
 
-1. Boot Tails without a network cable connected (i.e. no network on boot).
-2. set the time to an obviously wrong one:
+1. Boot Tails without a network cable connected.
+   (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 down`.)
+2. Set an administration password.
+3. set the time to an obviously wrong one:
 
            date --set="Mon, 01 Mar 2000 15:45:34 - 0800"
 
-3. connect the network cable
+4. Connect the network cable.
+   (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 up`)
 
 => the date should be corrected and Tor/Vidalia should start
 correctly.
@@ -308,7 +286,6 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # Virtualization support
 
-* `modinfo vboxguest` should work when booted on the 686-pae kernel
 * test in VirtualBox
 
 # I2P
@@ -381,6 +358,9 @@ Tests to run:
     the user to the "Clone & Install" operation mode.
 
 # Incremental updates
+
+The following should be tested once incremental updates are ready for
+real-world deployment.
 
 Try every update path supported by the generated update-description
 files:
@@ -465,10 +445,12 @@ language.
 * The chosen keyboard layout must be applied.
 * The virtual keyboard must work and be auto-configured to
   use the same keyboard layout as the X session.
-* The iceweasel search engine must be localized (for languages we
-  ship a localized searchplugin for).
-* The iceweasel spelling dictionary must be localized (for languages
-  that are supported by our branding extension).
+* Once [[todo/fix_localized_iceweasel_search_engine]] is fixed, the
+  iceweasel search engine must be localized (for languages we ship
+  a localized searchplugin for).
+* Once [[todo/select_localized_spelling_dictionary_in_Iceweasel]] is
+  fixed, the iceweasel spelling dictionary must be localized (for
+  languages that are supported by our branding extension).
 
 # Misc
 

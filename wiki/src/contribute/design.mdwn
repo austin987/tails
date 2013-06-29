@@ -760,7 +760,7 @@ application is internationalized.
 ## 3.5 Feedback
 
 Users can send feedback in several ways to Tails developers.
-A [[!tails_todo "" desc="task tracker"]] and a [[forum|/forum]] are
+A [[!tails_todo "" desc="task tracker"]] is
 available on the website.
 Users can also send email to the private [developers mailing
 list](tails@boum.org). A dedicated application called *WhisperBack*
@@ -777,7 +777,7 @@ reported issue. WhisperBack's graphical interface fully supports
 internationalization and is ready to be translated.
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/whisperback]]
-- [WhisperBack source code](http://git.immerda.ch/?p=whisperback.git)
+- [WhisperBack source code](https://git-tails.immerda.ch/whisperback)
 
 ## 3.6 Configuration
 
@@ -903,7 +903,7 @@ no root access is possible afterwards.
 (Note: Iceweasel is the name of the web browser, based on Mozilla
 Firefox, that is shipped by Debian and thus by Tails.)
 
-Tails ships custom Iceweasel packages built with the Torbrowser
+Tails ships custom Iceweasel ESR packages built with the Torbrowser
 patches to better blend in the Tor Browser Bundle's anonymity set.
 The following patches are not applied, though:
 
@@ -1025,6 +1025,18 @@ newer. See [[contribute/design/persistence]] for details.
 An easy (read: not command-line based) way to install and
 upgrade Tails on USB sticks is available in Tails 0.11 and newer.
 See [[design/usb_installation]] for details.
+
+### 3.6.19 Wireless devices handling
+
+Tails puts the wireless devices in a sensible state at boot time.
+
+At boot time, Tails unblocks Wi-Fi, WWAN and WiMAX radios, unblocks
+Bluetooth radio (so that it can be dealt another way:
+[[todo/protect_against_external_bus_memory_forensics]]), and
+soft-blocks all other kinds of wireless devices (e.g. UWB, GPS, FM).
+
+- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-set-wireless-devices-state]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-set-wireless-devices-state]]
 
 ## 3.7 Running Tails in virtual machines
 
