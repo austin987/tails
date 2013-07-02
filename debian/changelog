@@ -1,3 +1,176 @@
+tails (0.19) unstable; urgency=low
+
+  * Major new features
+  - Install Linux kernel 3.9.5-1 from Debian unstable.
+    Features of particular interest for Tails are the Yama LSM
+    (ptrace scope restrictions) and improved hardware support.
+    As a corollary, install initramfs-tools from there too.
+  - Iceweasel 17.0.7esr + Torbrowser patches.
+  - Unblock Bluetooth, Wi-Fi, WWAN and WiMAX; block every other type of
+    wireless device. Next steps are described on the
+    todo/protect_against_external_bus_memory_forensics ticket.
+
+  * Bugfixes
+  - Fix write access to boot medium at the block device level,
+    by installing bilibop-udev. Thanks to quidame for his support.
+  - tails-greeter l10n-related fixes, thanks to winterfairy:
+    · Fix so translations is applied on password mismatch messages.
+    · Separate forward and login buttons and make them translatable.
+  - Fix link to documentation when no sudo password is set.
+  - gpgApplet: partial fix for clipboard emptying after a wrong passphrase
+    was entered.
+  - Workaround aufs bug in Unsafe Browser script.
+
+  * Minor improvements
+  - Drop GNOME proxy settings: we did not find any use of it we were keen
+    to support, other than two programs (Seahorse, Pidgin) that are now run
+    with torsocks.
+  - Format newly created persistent volumes as ext4.
+  - GnuPG: don't connect to the keyserver specified by the key owner.
+    This feature opens the door to a variety of subtle attacks.
+  - GnuPG: locate keys only from local keyrings.
+    This is probably the default, but better safe than sorry.
+  - Install virt-what from Wheezy.
+    The version from Squeeze does not detect at least Parallels for Mac v.8.
+  - Upgrade live-boot and live-config to the 3.0.x final version from Wheezy.
+    · Remove /live and /lib/live/image compatibility symlinks.
+    · Add /live/overlay -> /lib/live/mount/overlay symlink.
+      The live-boot changes (commit d2b2a461) brought to fix Debian bug
+      #696495 revert some of our previous changes (commit 77dab1cb), and as
+      a result, at the time live-persist runs, no tmpfs is mounted on
+      /live/overlay, which breaks the aufs mount. So, let's just ensure
+      /live/overlay points to a tmpfs.
+    · Really disable policykit and sudo live-config hooks.
+      ... by making it believe they've already been run.
+      This workarounds new live-config's default behavior.
+
+  * Localization
+  - Many translation updates all over the place.
+
+  * Test suite
+  - Re-enable previously disabled boot device permissions test.
+
+ -- Tails developers <tails@boum.org>  Wed, 26 Jun 2013 12:36:20 +0200
+
+tails (0.18) unstable; urgency=low
+
+  * New features
+  - Support obfs3 bridges.
+  - Automatically install a custom list of additional packages chosen by
+    the user at the beginning of every working session, and upgrade them
+    once a network connection is established (technology preview).
+
+  * Iceweasel
+  - Upgrade to Iceweasel 17.0.6esr-0+tails1~bpo60+1.
+  - Update Torbrowser patches to current maint-2.4 branch (567682b).
+  - Isolate DOM storage to first party URI, and enable DOM storage:
+    don't set dom.storage.enabled anymore, and set Torbutton's
+    disable_domstorage to false.
+  - Isolate the image cache per url bar domain.
+  - Torbutton 1.5.2, and various prefs hacks to fix breakage:
+    · Add .saved version of the Torbutton preferences the TBB also sets.
+    · Set TOR_SOCKS_HOST and TOR_SOCKS_PORT.
+    · Move some prefs (network.proxy.*, extensions.autoDisableScopes,
+      extensions.foxyproxy.last-version) to user.js.
+      Else, with Torbutton 1.5.x, these ones are not taken into account.
+    · Set network.proxy.socks_version.
+      Else we get the meaningless user_pref("network.proxy.socks_version", 9063);
+      in prefs.js after the initial startup.
+    · Set extensions.foxyproxy.socks_remote_dns to true.
+      Else, it overrides the various ways we set network.proxy.socks_remote_dns,
+      which in turn makes Torbutton think it should start in non-Tor mode.
+    · Also pass the TOR_SOCKS_* environment variables to iceweasel when
+      generating the profile: Torbutton behaves differently depending on
+      these variables, so we don't want the initial profile generation to be
+      done without them. In practice, this has no implication that we could
+      see right now, but better safe than sorry.
+    · Import all version overrides from the TBB prefs.
+      Else, the User-Agent sent in the HTTP headers is fine, but real
+      values leak with JavaScript, as demonstrated by ip-check's "Browser
+      type" test.
+    · Move a bunch of settings to user_pref(), that are not applied otherwise.
+      For some, this fixes a regression in 0.18~rc1.
+      For other, the  bug was already present in Tails 0.17.2.
+  - HTTPS Everywhere 3.2.
+  - Update prefs to match the TBB's, fix bugs, and take advantage of the latest
+    Torbrowser patches:
+    · Increase pipeline randomization.
+    · Fix @font-face handling of local() fonts.
+      Also disable fallback font rendering.
+    · Explicitly disable SPDY v2 and v3.
+    · Update http pipelining prefs.
+  - Make prefs organization closer to the TBB's:
+    · Remove Torbutton prefs that we set at their default value.
+    · Import Torbutton preferences from the TBB.
+    · Organize iceweasel config files in sections the same way as the TBB.
+  - Cleanup prefs:
+    · Don't set extensions.torbutton.clear_cookies nor
+      extensions.torbutton.saved.share_proxy_settings:
+      we don't care about toggling anymore.
+    · Don't set extensions.torbutton.saved.download_retention nor
+      extensions.torbutton.saved.search_suggest:
+      these settings are not used in Torbutton anymore.
+  - Update unsafe browser prefs mangling accordingly.
+  - Move network.protocol-handler.warn-external.* to user_pref().
+    Else they're not applied.
+    These prefs are actually ignored by Firefox these days -- the TBB
+    design doc reads "They are set still anyway out of respect for the
+    dead". Let's go on doing the same.
+  - Update extensions.adblockplus.currentVersion.
+  - Fetch xul-ext-https-everywhere (3.2-2) and xul-ext-noscript (2.6.6.1-1)
+    from Debian unstable. They were uploaded there, and accordingly removed
+    from experimental.
+
+  * Bugfixes
+  - Linux 3.2.41-2+deb7u2.
+  - Fixed swapped filenames of tails-{reboot,shutdown}.desktop.
+    Thanks to Mikko Harhanen for the patch.
+  - Only add ClientTransportPlugin to torrc when bridge mode is enabled.
+    This should bring back support for proxies of type other than obfsproxy.
+
+  * Minor improvements
+  - Set kernel.dmesg_restrict=1, and make /proc/<pid>/ invisible
+    and restricted for other users. It makes it slightly harder for an attacker
+    to gather information that may allow them to escalate privileges.
+  - Install gnome-screenshot.
+  - Don't disable IPv6 on all network interfaces anymore.
+    It turns out the IPv6 leaks we wanted to fix actually don't exist.
+  - Add a "About Tails" launcher in the System menu.
+  - Install GNOME accessibility themes.
+  - Use 'Getting started...' as the homepage for Tails documentation button.
+  - Stop relying on the obsolete /live/image compatibility symlink.
+  - Disable audio preview in Nautilus.
+  - Wheezy was released => Squeeze is now oldstable.
+  - Pick Tor from deb.torproject.org regardless of the release name they
+    advertise. At some point we needed it, their APT repository still thought
+    that stable == Squeeze.
+  - Add Wheezy APT sources.
+  - Install Linux and related packages from Wheezy.
+    Debian sid just got Linux 3.8, and we don't want to switch to a new kernel
+    yet.
+  - Fetch laptop-mode-tools from Wheezy.
+    Wheezy has the version we've been installing in 0.18~rc1,
+    while a newer one was uploaded to sid in the meantime.
+  - Fetch a few packages from Wheezy instead of unstable.
+    Namely: spice-vdagent, libregexp-common-perl, macchanger, service-wrapper,
+    libservice-wrapper-java and libservice-wrapper-jni.
+    Wheezy has the versions we've been installing for a while, so let's
+    avoid having unstable push a newer one to us uselessly at some point.
+    Note that at the time of this writing, the versions in sid and in Wheezy
+    are the same, so this commit is effectively a no-op as of today: it is
+    merely a safeguard for the future.
+
+  * Localization
+  - Many translation updates all over the place.
+
+  * Build process
+  - Make Vagrant's build-tails script support Jenkins too.
+
+  * Test suite
+  - Fix Unsafe Browser test broken by hidepid.
+
+ -- Tails developers <tails@boum.org>  Mon, 13 May 2013 22:17:38 +0200
+
 tails (0.17.2) unstable; urgency=low
 
   * Iceweasel

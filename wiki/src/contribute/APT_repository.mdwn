@@ -179,6 +179,26 @@ operation must be done on the APT suites.
    it a while ago, and were just erroneously re-added by the
    merge operation.
 
+<a id="workflow-reset"></a>
+
+Resetting a suite to the state of another one
+---------------------------------------------
+
+   a. First, set some environment variables:
+
+        OLD=testing # the suite to reset
+        NEW=devel   # the final state it should be in
+
+   b. Then, empty the `OLD` suite:
+
+      	ssh reprepro@incoming.deb.tails.boum.org \
+      	      reprepro removematched $OLD '\*'
+
+   c. Finally, merge `NEW` into `OLD`
+
+      	ssh reprepro@incoming.deb.tails.boum.org \
+      	      tails-merge-suite $NEW $OLD
+
 <a id="workflow-freeze"></a>
 
 Freezing devel into testing
@@ -186,17 +206,7 @@ Freezing devel into testing
 
 1. Merge `devel` branch into `testing` in Git
 2. (Manually) hard reset `testing` suite to the current state of the
-   `devel` one:
-
-   a. First, empty the `testing` suite:
-
-      	$ ssh reprepro@incoming.deb.tails.boum.org \
-      	      reprepro removematched testing '*'
-
-   b. Then, merge `devel` into `testing`
-
-      	$ ssh reprepro@incoming.deb.tails.boum.org \
-      	      tails-merge-suite devel testing
+   `devel` one: [[APT_repository#workflow-reset]].
 
 <a id="workflow-post-tag"></a>
 
@@ -227,8 +237,8 @@ version number in devel's `debian/changelog` so that next builds from
 the `devel` branch do not use the APT suite meant for the
 last release.
 
-If the release was a major one, then [[merge testing into
-stable|APT_repository#workflow-merge-main-branch]].
+If the release was a major one, then [[reset the stable APT suite to
+the state of the testing one|APT_repository#workflow-reset]].
 
 Giving access to a core developer
 ---------------------------------

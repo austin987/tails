@@ -101,7 +101,8 @@ you can then browse the forum content by chronological order.
   - Run the [[`restore_mtime.sh`|todo/improve_the_forum/restore_mtime.sh]]
     script that updates the modification time of both the original post
     and the folder containing the corresponding comments to the date of
-    the original post, retrieved through Git.
+    the original post, retrieved through Git. It takes as argument the
+    maximum age, in days, of the threads for which to restore the date.
   - Start mc in the `forum` folder.
   - To mix both directories and file in the file listing, press F9 and
     choose Options → Panel options... → Mix all files.
@@ -110,10 +111,19 @@ you can then browse the forum content by chronological order.
   - To have a preview of files in the right panel, press F9 and choose
     Right → Quick view.
 
-From time to time, merge from master branch to get the new threads.
-From time to time also merge this branch into master to reduce the load
-on the server. Pushing such commits can take a while, even if they are
-only delete content from the forum...
+This happens in the `doc/sort_the_forum` branch.
+
+  - Before pushing changes it's good to check the forum for old
+    questions without answers and possibly answers without questions:
+
+        for i in * ; do [ -d $i ] && [ ! -f "$i.mdwn" ] && echo $i ; done
+
+        for i in * ; do [ ! -d ${i%%.mdwn} ] && ls -l $i ; done
+
+  - Merge from master branch to get the new threads.
+  - Merge this branch into master to reduce the load on the server.
+    Pushing such commits can take a while, even if they are only delete
+    content from the forum...
 
 [[!tag todo/website]]
 

@@ -7,11 +7,6 @@ to Redmine.
 
 # Roadmap
 
-* [[!taglink todo/test]] the Redmine Importer plugin
-* [[!taglink todo/research]] how to implement our "Next thing to
-  do" workflow.
-* [[!taglink todo/discuss]] if we care about migrating closed tickets?
-  Asked to tails-dev on February 7th.
 * [[!tag todo/code]] write a conversion script to import our existing
   tickets (see *Convert and import* section below).
 * update developers documentation
@@ -111,11 +106,13 @@ developers).
 
 ## Plugins of interest
 
-* Markdown syntax:
+* Markdown syntax.
+  A blocker is that each such plugin switches the syntax
+  instance-wide, no way to enable it for a single project.
   - [redcarpet formatter](https://github.com/alminium/redmine_redcarpet_formatter)
     In Debian unstable ([[!debpkg redmine-plugin-markdown]]).
     Marked as compatible with 1.x and 2.x,
-    but the version that is being packaged is the one for 2.x.
+    but the packaged version is the one for 2.x.
     Depends on [[!debpkg ruby-redcarpet]] that is in Wheezy, but not
     in Squeeze, and may be a pain to backport due to a few missing build-deps.
   - [Markdown formatter](https://github.com/bitherder/redmine_markdown_formatter)
@@ -143,6 +140,8 @@ developers).
 * [Importer](http://www.redmine.org/plugins/importer): import issues in bulk
   from .csv files. Compatible with 1.1.x. We do need this to import
   existing tickets.
+  A [fork](https://github.com/ksauzz/redmine_importer/tree/redmine2.x)
+  supports Redmine 2.x.
 * [Issue checklist](http://www.redmine.org/plugins/issue_checklist):
   add checklist functionality to issues. Marked as compatible with
   2.0.x -- what about 1.4.x or older? Having something lighter than
@@ -204,27 +203,68 @@ developers).
 things to do, but should be enough to run some initial tests to
 confirm the general idea is workable.
 
-1. Tag `todo/*` pages that should be kept as blueprints.
+1. **done** Close wishlist tickets not modified since more than a year.
+1. List `todo/*` pages that should be kept as blueprints.
 1. Split tickets that have several `todo/*` tags, and save the
-   parent/child relationship (probably using a custom preprocessor
-   directive). In the end, each ticket should only have one
-   `todo/*` tag.
-1. Add a `External Id` custom field.
-1. Add a `Kind of next thing to do` custom field whose possible values
-   are the same as our current `todo/*` tags.
+   parent/child relationship using `[[!parent]]`. In the end, each
+   ticket should only have one `todo/*` tag. `make
+   list-more-than-one-todo-tag` should help.
+1. Prepare a branch that updates the website to advertise the new task
+   manager instead of the old one.
+1. Add a `External Id` custom field. Check "Used as a filter".
+1. Add a `QA Check` custom field. Make it searchable.
+1. Add a `Type of work` custom field whose possible values
+   are the same as our current `todo/*` tags:
+   	Code
+   	Discuss
+   	Documentation
+   	Pass Test
+   	Promote
+   	Qa
+   	Research
+   	Sysadmin
+   	Test
+   	Translate
+   	Upstream
+   	Wait
+   	Website
+   Mark it as "used as a filter" and searchable.
+1. Add a `Blueprint` text custom field, with regexp `^https://tails[.]boum[.]org/blueprint/`.
+1. Add a `Fix committed` issue status.
+1. Make the `Fix committed` status available in Administration -> Workflow.
+1. Add a `Confirmed` issue status.
+1. Make the `Confirmed` status available in Administration -> Workflow.
+1. Mark the `Resolved` issue status as "Issue closed".
+1. Add an `Elevated` issue priority, rank it between Normal and High.
 1. Write a custom ikiwiki plugin to:
-   - save original ikiwiki ticket name as `External Id` column
-   - save parent/child relationship
-   - turn Markdown into Textile
-   - wrap the whole ticket information into a CSV line
-   - filter out `toc`
-   - save `todo/*` tags into the "Kind of next thing to do" column
+   - **done** save original ikiwiki ticket name as `External Id` column
+   - **done** save parent/child relationship
+   - **done** wrap the whole ticket information into a CSV line
+   - **done** filter out `toc`
+   - **done** save `todo/*` tags into the "Type of work" column
+   - **done** save `release/1.0` and `todo/2.0` tags into the "Fixed
+     version" column, ditto for broken windows
+   - **done** turns `todo/qa` into `QA Check` == `Ready for QA`.
+   - **done** convert ikiwiki shortcuts to external links
+   - **done** turn internal links to non-todo pages into external links
+   - **done** convert Markdown to Textile
+   - **done** removes links to wishlist
+   - **done** converts TOC directive into Redmine's syntax
+   - **done** drops obsolete taglinks
+   - import `priority/*` tags
+   - import `category/*` tags
    - XXX: what to do with blueprints? create a parent ticket matching
      the blueprint and linking to it?
 1. Run ikiwiki with this special plugin, then merge all these CSV
    lines to produce a first CSV file that can be imported with the
    Importer plugin.
-1. Import the first CSV file, using `External Id` as `Unique Column`.
+1. Import the first CSV file:
+   * use an account that has Manager privs on the current project
+   * ignore `Parent Issue` fields
+1. Import this CSV file again to apply the relationships:
+   * use an account that has Manager privs on the current project
+   * use `External Id` as `Unique Column`
+   * check "Update existing issues"
 1. Build a (External Id, Redmine Id) mapping.
 1. With a modified version of the ikiwiki plugin, plus this mapping
    information, produce a second CSV files with tickets description
@@ -233,7 +273,48 @@ confirm the general idea is workable.
 1. Import the second CSV file, using `External Id` as `Unique Column`
    again, and enabling the *Update Existing Issues* option.
    Links between tickets should now be good.
+1. Manually add attachments (the Importer plugin does not support
+   this).
+1. Manually take care of tickets sub-pages that were imported as
+   full-blown tickets (`PRODUCTION=1 make list-sub-pages` should
+   help). These sub-pages are used in too many different ways to allow
+   us to process them automatically.
 1. Generate the Apache rewrite rules from the (External Id, Redmine
    Id) mapping. Skip blueprints while doing so.
+   (`PRODUCTION=1 make rewrite-rules` should do the job.)
+1. Git repository mangling:
+   * Move blueprints tickets to `wiki/src/blueprints/`
+   * Move attachments out of the way for future processing.
+   * Delete the rest.
+1. Set correct `Type of work` values for tickets that were tagged
+   `todo/qa`, and that were migrated to `Qa`.
+1. Remove the `Qa` value from possible types of work.
+1. Set a valid `Type of work` field for every ticket that lacks one.
+1. Mark the `Type of work` custom field as mandatory.
+1. Sort bugs and features to the relevant trackers.
+1. Add a `Feature branch` custom field to ease review.
+1. Sort tickets into categories.
+1. Add sub-tickets blocks/before/after relationships.
+
+## Setup
+
+1. Install a Squeeze system with backports enabled.
+1. Install packages:
+
+   	apt-get install redmine/squeeze-backports redmine-sqlite/squeeze-backports
+
+1. Follow the "QUICK LAUNCH USING WEBRICK" instructions in
+   `/usr/share/doc/redmine/README.Debian.gz`
+
+1. Install the importer plugin:
+
+   	cd /usr/share/redmine/vendor/plugins && git clone https://github.com/leovitch/redmine_importer.git
+   	cd /usr/share/redmine && rake db:migrate_plugins RAILS_ENV=production
+
+1. Install a backport of [[!debpkg ruby-fastercsv]], that's
+   a dependency of the importer plugin.
+   One has to decrease the build-dep on gem2deb to 0.2.7~.
+
+1. Restart WEBrick.
 
 [[!tag broken_window]]

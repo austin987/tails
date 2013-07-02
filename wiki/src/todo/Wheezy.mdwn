@@ -2,7 +2,9 @@ We need to start porting Tails to Wheezy, and test it.
 
 Work is done in the `feature/wheezy` Git branch.
 
-**Current state**: does not build.
+**Current state** (2013-06-30): builds, boots. Quite some things are
+broken, and many minor features had to be disabled to workaround
+build issues.
 
 [[!toc levels=2]]
 
@@ -11,9 +13,6 @@ Problems to fix
 
 [[!tag todo/code]]
 
-* Fix the build: merge up-to-date APT suite, update some
-  custom packages.
-* Test by skipping tails-greeter (drop the `nox11autologin` option).
 * [[Fix tails-greeter|todo/tails-greeter_vs._Wheezy]]
 * Fix `/etc/init.d/tails-kexec`: `/etc/default/locale` does not exist.
 * `amnesia` users sudoers credentials to localize console at profile
@@ -49,6 +48,19 @@ Problems to fix
 * Re-enable Indymedia IRC account (disabled by
   `bugfix/disable-indymedia-irc-account`) and convert it to use the
   hidden service and SASL.
+* Upload aircrack-ng to wheezy-backports and install from there (see
+  70068b4).
+* Restore tails-about patch functionality (this desktop file does not
+  exist on Wheezy, see commit 65a776d).
+* List newly installed packages, remove those we don't want.
+* Don't show the "GNOME 3 Failed to Load" notification.
+* Replace "Debian Live user" fullname with something else?
+  It's now displayed in the top GNOME panel.
+* Use a less aggressive Florence theme? Seems like none is shipped by
+  default, so perhaps we don't want to spend too much time on this.
+* Add a fast shutdown button back. That probably means adapting our
+  applet to work with GNOME Panel 3.4.
+* Add `feature/wheezy` to the set of branches built by Jenkins.
 
 Tests to do
 ===========
@@ -58,9 +70,8 @@ Tests to do
 * is [[bugs/plymouth_stops_too_early]] fixed on Wheezy?
 * is [[bugs/desktop_crashes_with_claws-mail_and_gpg-agent]]
   fixed on Wheezy?
-* does `liveusb-creator` work fine with both shipped kernels on
-  Wheezy? does it work fine *without* our patched `dbus-python`
-  package too?
+* does `liveusb-creator` work fine *without* our patched
+  `dbus-python` package?
 * replace laptop-mode-tools with acpi-support + pm-utils + hdparm
   (that ships `/usr/lib/pm-utils/power.d/95hdparm-apm`);
   does this combination take care of Wi-Fi power management?

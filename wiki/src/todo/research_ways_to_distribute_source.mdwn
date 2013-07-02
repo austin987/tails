@@ -1,0 +1,44 @@
+Let's first list pros & cons of the various solutions in more details.
+
+# Possible implementations
+
+## live-build --source
+
+live-build's `--source` option allows to build a source image
+corresponding to the binary image that is being built. The default
+source image format is tar.
+
+It would not be too much work to upload such a source image along with
+a newly released Tails ISO. On the other hand:
+
+- our sometimes scarse upload bandwidth would feel even more painful
+  that it currently does;
+- on the long run, doing this without any de-duplication would waste
+  big amounts of storage space, especially considering a big set of
+  packages is shared between quite a few Tails releases, during a
+  given Debian stable release life-cycle.
+
+## reprepro
+
+Our own [[contribute/APT repository]] uses reprepro.
+reprepro knows how to
+partially mirror APT repositories, so we could use it to inject, at
+release time, the needed list of source packages.
+
+## direct offer of source upon request
+
+See [Finnix and GPL
+compliance](http://blog.finnix.org/2011/08/21/finnix-and-gpl-compliance/).
+
+The relevant parts of the GPL are section 3(b) of the GPLv2 and
+section 6(b) of the GPLv3.
+
+## grml source-report
+
+See their
+[Gitweb](http://git.grml.org/?p=grml-infrastructure.git;a=tree;f=source-report).
+Seems clever, as usual.
+
+[[!tag todo/research]]
+[[!parent distribute_source]]
+[[!tag broken_window]]

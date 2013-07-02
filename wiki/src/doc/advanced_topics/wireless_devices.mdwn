@@ -1,0 +1,69 @@
+[[!meta title="Enable a wireless device"]]
+
+When Tails starts, Wi-Fi, Bluetooth, WWAN and WiMAX
+devices are enabled.
+
+But all other kinds of wireless devices such as GPS and FM devices are
+disabled by default. If you want to use such a device, you need to enabled
+it first.
+
+This technique uses the command line.
+
+1. When starting Tails, [[set up an administration
+   password|doc/first_steps/startup_options/administration_password]].
+
+2. To find out the index of the wireless device that you want to enable,
+   open a [[root
+   terminal|doc/first_steps/startup_options/administration_password#open_root_terminal]],
+   and execute the following command:
+
+       rfkill list
+
+   For example, the command could return the following:
+
+       0: phy0: Wireless LAN
+               Soft blocked: no
+               Hard blocked: no
+       1: hci0: Bluetooth
+               Soft blocked: no
+               Hard blocked: no
+       2: gps0: GPS
+               Soft blocked: yes
+               Hard blocked: no
+
+   The device index is the number that appears at the beginning of the
+   three lines describing each device. In this example, the index of the Bluetooth
+   device is 1, while the index of the GPS device is 2. Yours are
+   probably different.
+
+3. To enable the wireless device,
+   execute the following command in the root terminal, replacing
+   `[index]` with the index found at step 2:
+
+       rfkill unblock [index]
+
+   Here is an example of the command to execute. Yours is probably
+   different:
+
+       rfkill unblock 2
+
+4. To verify that the wireless device is enabled,
+   execute the following command in the root terminal again:
+
+       rfkill list
+
+   This output should be very similar to the one of step 2, but
+   the device enabled at step 3 should not be soft
+   blocked anymore.
+
+   For example, the command could return the following:
+
+       0: phy0: Wireless LAN
+               Soft blocked: no
+               Hard blocked: no
+       1: hci0: Bluetooth
+               Soft blocked: no
+               Hard blocked: no
+       2: gps0: GPS
+               Soft blocked: no
+               Hard blocked: no
