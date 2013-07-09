@@ -51,7 +51,6 @@ pref("gfx.downloadable_fonts.fallback_delay", -1);
 pref("general.appname.override", "Netscape");
 pref("general.appversion.override", "5.0 (Windows)");
 pref("general.buildID.override", "0");
-pref("general.useragent.locale", "en-US");
 pref("general.oscpu.override", "Windows NT 6.1");
 pref("general.platform.override", "Win32");
 pref("general.productSub.override", "20100101");
