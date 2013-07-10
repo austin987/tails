@@ -1,0 +1,33 @@
+We currently ship Iceweasel with the `xul-ext-monkeysphere` addon,
+which adds Monkeysphere into the mix for certificate validation when
+using HTTPS. The Monkeysphere keyserver policy in Tails is set to
+`unlessvalid` (the default), which means that the configured keyserver
+will be queried only if Iceweasel's X.509 certificate validation
+fails.
+
+Is this a good idea?
+
+* Imagine a MitM:ing attacker in control of some Tor exit. If a Tails
+  user picks that exit for some HTTPS connection, and the attacker
+  MitM:s it (resulting in a cert failure), the attacker has caused a
+  *client-side* non-standard behavior, namely a key server query to a
+  known hidden service. Could this be used in some way?
+
+* What about the information this leaks to the keyserver?
+
+Given that most (*understatement*) Tails users do not use
+Monkeysphere, perhaps the safest thing to do is to change the
+keyserver policy to `never`, at least until we known exactly what to
+do with [[todo/monkeysphere]].
+
+> I now tend to think we should *not* ship `xul-ext-monkeysphere`
+> anymore, until we make up our mind on [[todo/web_browser_profile_with_no_CA]].
+> I'd be in favour of keeping the `msva-perl`, though, as it's running
+> as a desktop session wrapper, so it would be a pain, for
+> Monkeysphere users among us, to install and use it in Tails if the
+> MSVA was removed too. --intrigeri
+
+>> We decided to do this.
+
+>>> Implemented in `feature/remove-xul-ext-monkeysphere`,
+>>> [[!taglink todo/done]] in 0.16.

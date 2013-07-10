@@ -48,3 +48,39 @@ use now.
 
 The fact that torchat provides safe authentication was put in doubt by
 a core Tor developer.
+
+## FUD (RE: "unsafe feeling")
+Please not this unfounded old FUD about TorChat again it has been identified as such already years ago.
+
+> Torchat was written by someone Tor people don't trust 
+
+Security of open source software or the lack thereof is determined by analyzing the code and the behavior of the software and not by whether some poeple trust some other people they don't even know. Thats why the source code is published.
+
+The core Tor team is neutral against TorChat, the official statement is "we don't produce it, its a 3rd party application, we did not audit it yet, we cannot make any statement for or against it" and this answer is perfectly ok and btw also applies to most other software that is used in conjunction with Tor. There is nothing about "we don't trust this guy". Where did you read that?
+
+> There was a thread on tor-talk about a confirmed attack in which
+> anyone could impersonate anyone to a TorChat user
+
+No, this is simply not true, there has not been any proposed attack against TorChat, let alone a confirmed one in all the 5 years of its existence. You are probably referring to that old post from someone named Paul C. on or-talk, maybe you should read it again and also read and try to understand the reply to it. This person, Paul C. admitted in his very first sentence that he has not the slightest clue about what he is going to write now and then goes on fantasizing about an attack against a fictitious TorChat from his dreams or from a parallel universe that is using an entirely different protocol. There is a follow-up to this posting by the author explaining TorChat's mutual challenge-response authentication that existed in its current form unchanged since the very first version, there exists no known attack against it, not even a theoretical one, essentially making Paul C. with his made up allegations and his lies about non existing "features" of TorChat look rather dumb.
+
+> The same author who f***ed up the protocol completely 
+> the first time changed the protocol,
+
+It was not f***ed up at any time. The protocol did not change. The only change that was made as a response to this discussion will make the attempted mitm attack fail with a human readable error message in the log file (if logging is enabled) and closing the connection as opposed to just letting the attack fail silently and letting the connection time out after 120 seconds. The proposed scenario simply does not work and never did (and reading the protocol and applying common sense it is easy to see why this simply cannot work). Therefore that entire discussion on or-talk is not a proposed attack but rather a question what would happen and a detailed response about why the TorChat protocol will not and can not allow this kind of attack to succeed.
+
+> The fact that torchat provides safe authentication
+> was put in doubt by a core Tor developer.
+
+No it was not. This is FUD. And even if someone had doubts because everybody was only referring to hearsay and nobody bothered actually reading and looking how the real thing actually works then the doubts have been removed after the question on or-talk was answered and the authentication mechanism has been explained.
+
+> unsafe feeling
+
+Personal bad feelings that are not based on facts and reality are not relevant for security discussions. TorChat has been around for 5 years now, the source code is open for everyone to look at and during all these years nobody has come up with any remote vulnerability of any kind, not even a theoretical one. TorChat might be one of the most secure (and foolproof at the same time!) IM clients that is currently in existence.
+
+## Integration in something like TAILS
+
+TorChat does not need read/write access to the hidden service folder, this is only one of the many possible configurations, it only needs to know the .onion hostname of the service. TorChat can be configured to run with an existing global Tor proxy, then you have to tell it (torchat.ini) the address and port of the socks proxy and the name of the hidden service that will receive the incoming connections. Tor must run with a hidden service that redirects to localhost:11009 and you need to make a small start script that puts the .onion name into the torchat.ini after tor has successfully started. Alternatively you can patch torchat so that it will read the hostname file on its own (make a symlink to the hostname file that it may read on application start)
+
+[[Another Request for TorChat]]
+
+People are starting to adopt torchat as their go-to torIM. If you can add this in your next release you will be doing your users a great service. That is of course, if its safe.

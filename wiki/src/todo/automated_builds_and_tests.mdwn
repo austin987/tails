@@ -1,7 +1,5 @@
 [[!meta title="Automated builds and tests"]]
 
-[[!tag todo/code]]
-
 [[!toc levels=2]]
 
 Rationale
@@ -13,116 +11,126 @@ ensure a few facts:
 - new code does not break anything
 - new build tools (`live-build`) and included software
   (`live-config`, `live-boot`) don't break anything
+- updates pushed to the APT repositories we don't control (e.g. Debian's)
+  don't break anything
 - the quality of our releases is good enough
-- every developer can comfortably test his/her code without owning
-  modern high-end hardware (8GB RAM is needed in order to build
-  a Tails image in tmpfs).
-
+- power users get to test early images built from feature branches,
+  or from `experimental`
+- we can ask bug reporters to test an image built from a bugfix
+  branch, and see if it fixes their problem
 
 What we have
 ============
 
-## Automated builds
+* An unconfigured Jenkins instance running on lizard.
+* A partially automated test suite:
+  - [[documentation|contribute/release_process/test/automated_tests]]
+  - [[setup|contribute/release_process/test/setup]]
+  - [[usage|contribute/release_process/test]]
+  - [[test cases|contribute/release_process/test]] that are not
+    implemented yet.
 
-A buildbot instance automatically builds the `devel`, `testing` and
-`stable` branches. No build result is currently kept as there is no
-way for developpers to start and test them remotely yet.
+Roadmap
+=======
 
-## Setup
+[[!tag todo/sysadmin]]
 
-Our buildbot's instance runs inside a KVM.
-
-The host system uses libvirt to manage the hosted virtual machines.
-
-We use a custom buildbot package as it is outdated in Debian. Work is
-done with others to have a better Debian packaging, reporting
-[[!debbug 587313]], working on the package and pushing to upstream
-some changes that would make buildot sit better in a Debian
-environment: init script/upstart, log rotation, etc.
-
-## Left to do
-
-1. Custom notifications when a build fails: the one currently sent
-   lacks some useful information.
-2. Ask a mailing list to have buildbot sending it's build error
-   reports there.
-3. Make it so that the buildbot sends the build report to the
-   specified email address when someone hits the "Build" button on its
-   webpage, rather to bug everyone on the list. If too painful, just
-   give up :)
-2. Allow developers to have their personal branch(es?) autobuilt as
-   well => help developers test their code *before* pushing it to the
-   `devel` branch.
+0. Make built ISO images available online:
+   a. Fix NFS mount of www.lizard on builder.lizard (uid/gid mapping issue).
+0. Make the Jenkins installation safer and easier to maintain:
+   a. Firewall the Jenkins port on `jenkins.lizard` against access
+      from the other VMs.
+   a. Run `jenkins-jobs update /etc/jenkins_jobs/jobs/` when the
+      Jenkins jobs repository gets an update.
+0. Build an ISO on every commit:
+   a. Fix experimental job to use its own APT suite and not the `devel` one.
+   a. Clean up current workspaces and builds archives, else it will
+      soon become unmanageable.
+   a. [[!taglink todo/Wait]] for the [[centralized Git
+      repositories|todo/centralize_Git_repositories]]
+   a. Have the master repository on immerda push to `gitolite@puppet-git.lizard:tails`,
+      e.g. using Gitolite's [mirroring support](http://gitolite.com/gitolite/mirroring.html).
+0. Refactoring: factor out Jenkins setup code from the
+   `{jenkins,builder,www,...}.lizard` node definitions to a set of
+   `tails::` Puppet modules.
+0. Setup notifications:
+   a. Setup email notifications.
+   a. Setup IRC notifications (see [[resources|automated builds and tests/jenkins]]).
+0. Build Debian packages for our custom programs:
+   a. Setup [jenkins-debian-glue](http://jenkins-debian-glue.org/).
+0. Run our various [[custom programs|contribute/git]]' test suite
+   (see the section about Perl projects on [[automated builds and tests]])
+   a. set up a `perl-tester.lizard` Jenkins slave
+0. Add more Jenkins jobs such as:
+   - check PO files [[validity with
+     i18nspector|contribute/l10n_tricks]]
+   - automated test suite
+0. Think through a plugins upgrade policy, create tools if needed.
+0. Make our Jenkins visible and read-only on the web.
+0. Start/stop `builder.lizard` before/after building an ISO.
 
 What we need
 ============
 
-## Automated tests
+Automated builds
+----------------
 
-Having test automation for every build, implementing programatically the
-[[release tests|contribute/release_process/test]] actually done
-by hands on every release, and maybe more.
+Ideally, every commit pushed to Git should result in an ISO being
+built, and made available online.
 
-Buildbot should also be able to drive the automated test phase. One way
-would be to have the slave talking to the libvirt daemon running on the
-host system, asking to start the last build iso, then run tests on it.
-This has some requirements to work though :
+Automated tests
+---------------
 
-* Tests have to be in the Tails sources, so that the slave is able to
-  run them. The tools used for testing may be installed inside the
-  Live system being tested at runtime.
-* There might be some cases where the tests have to be started
-  from inside the tested Tails system. In this case, the easiest way
-  might be to have this tests included in the tails release. That might
-  be an interesting idea for other moments, like for bug reporting or to
-  provide users a way to test a functionnality themselves. But then,
-  ways have to be defined for the slave to start the tests inside the
-  remote VM and get their return codes (maybe sikuli might be of some
-  help here?) so that it can reports which one failed.
+Ideally, every automatically built ISO should be automatically tested,
+and the results displayed online.
 
+Infrastructure
+--------------
 
-## Manual tests
+Putting automatic builds and automatic tests on the same physical
+machine (while using
+virtualization to separate concerns) saves hosting and bandwidth costs:
+fresh images can be tested without being transferred.
 
-One of the feature we want is the ability for developpers to have an
-easy process to start the last build done from their commit so that they
-can test their changes.
+In order to be able to build Tails in memory (which greatly speeds up builds)
+and to properly test HIGHMEM memory wipes, the test server should have at
+least 32 GB. Using KVM inside a KVM
+virtual machine is supported by the "nested KVM" feature available since
+Linux 3.1. VirtualBox (Vagrant) in KVM is not supported as of March 2013.
 
-The machine used to run the buildbot instance doesn't have a lot of
-bandwidth; some Tails developers also have poor connection to the
-Internet. The most convenient way to go would therefore be to start
-the built ISO in a KVM instance and have the developpers connect via
-VNC to this VM, rather than requiring them to download the built ISO
-image to test it on their own machine.
+We could set a threshold of tests that have to be successful before publishing
+one daily build image. This would prevent too-broken images to spread out and
+potentially harm users.
 
-A tricky feature is that the developper might need to connect to the KVM
-at early boot stage, e.g if they need to test some changes in the boot
-options.
-
-Libvirt supports [remote connections](http://libvirt.org/remote.html),
-using TLS or ssh transport. SASL, SSL certificates or SSH can be used
-for authentication depending on the choosen transport.
-
-For SSH to be supported, users have to be able to login as a
-privileged user (more or less equivalent to `root`) on the machine
-running libvirtd, which might be problematic. TLS transport and SSL
-certificates might be the way to connect, but that would require some
-tests. The libvirt read-only mode shall be investigated.
-
-`kvm(1)` and `qemu-kvm(1)` support a `reverse` option to their VNC
-display, which tells them to what client IP:port the VNC server will
-have to connect to. With this option, a developper could connect to
-libvirtd, tell it to start X iso image and send the VNC display to the
-client he/she started on his/her local machine. Cons of this method is
-that the developper has to have a public IP address or setup port
-forwarding if behind a NAT, so that the remote VNC server can connect to
-his/her client. A VPN connection might be helpful to circumvent this NAT
-problem.
-
+The setup of the automated build and test server should be done
+with public Puppet modules.
 
 Resources
 =========
 
+## Jenkins
+
+See [[our wiki page|automated builds and tests/jenkins]] dedicated to Jenkins.
+
+## Testing tools and examples
+
+- <http://live.debian.net/gitweb/?p=live-autobuild.git> is currently
+  used to build "official" daily Debian Live images
+- [buildbot](http://buildbot.net) : a continous integration bot, able to
+  communicate over mail or IRC. Used by many projects.
+- Tor project's [buildbot configuration](https://gitweb.torproject.org/admin/buildbot-conf.git)
+- Martin Pitt
+  [announces](http://www.piware.de/2013/02/umockdev-record-and-mock-hardware-for-debugging-and-testing/)
+  umockdev ([source code](https://github.com/martinpitt/umockdev)),
+  a set of tools to record and mock hardware for debugging and testing
+
+## emulated boot from USB
+
+See [[the page that's dedicated to that|automated_builds_and_tests/USB]].
+
 ## Buildbot
+
+We [[used to have a buildbot setup|todo/automated_builds_and_tests/buildbot]].
 
 Buildbot can be seen as a [framework](http://jacobian.org/writing/buildbot/) to
 deploy continuous integration. It has no real configuration file, but
@@ -137,44 +145,4 @@ play with buildbot and understand its logic :
   which is the one driving their [builbot instance](http://build.chromium.org/)
 * [Buildbot's documentation](http://buildbot.net/buildbot/docs/latest/)
 
-## Testing tools
-
-- <http://live.debian.net/gitweb/?p=live-autobuild.git> is currently
-  used to build "official" daily Debian Live images
-- <http://git.debian.org/?p=debian-live/autotesting.git> and its
-  [example results](http://autotesting.livecd.org/autotesting/current/)
-- <http://git.webconverger.org/?p=build;a=summary>
-- thread `Subject: Autotesting Update` on debian-live mailing-list
-- http://autotest.kernel.org
-- http://wiki.ubuntu.com/AutomatedTesting/
-- grml's Michael Prokop talks about autotesting in KVM during his
-  [talk at DebConf
-  10](http://penta.debconf.org/dc10_schedule/events/547.en.html)
-- openSUSE's [openQA](http://openqa.opensuse.org/) is said to be able
-  to "run tests on every level of the OS, from core functionality like
-  the bootloader and booting the kernel up to testing applications
-  like Firefox and LibreOffice":
-  [announce](http://news.opensuse.org/2011/10/11/opensuse-announces-first-public-release-of-openqa/).
-  It's a test-scheduler and web-frontend for openSUSE using
-  [OS-autoinst](http://www.os-autoinst.org/), that sends key presses
-  and takes snapshots over the KVM `-monitor` interface; [test
-  modules](http://os-autoinst.org/testmodules.html) are written in
-  Perl, can move mouse, send key presses, wait for images to appear,
-  verify checksums of screenshots. See [example of
-  results](http://openqa.opensuse.org/results/).
-- Mozilla's [Automation QA team](http://quality.mozilla.org/teams/automation/)
-- [Sikuli](https://launchpad.net/sikuli), visual technology to automate
-  graphical user interfaces (GUI) using images (screenshots), used by Ubuntu,
-  even has an IDE!
-- [buildbot](http://buildbot.net) : a continous integration bot, able to
-  communicate over mail or IRC. Used by many projects.
-- [[!debpts autopkgtest]]: automatic as-installed testing for Debian
-  packages, implementation of the
-  [DEP-8](http://dep.debian.net/deps/dep8/) specification. Git is at
-  `git://git.debian.org/git/autopkgtest/autopkgtest.git`
-- [AMD Tapper](http://developer.amd.com/zones/opensource/amdtapper/pages/default.aspx)
-
-## libvirt
-
-- [Remote management using TLS](http://publib.boulder.ibm.com/infocenter/lnxinfo/v3r0m0/topic/liaai/kvmsec/kvmsecsrmtls.htm)
-- [Remote support](http://libvirt.org/remote.html)
+[[!tag broken_window]]

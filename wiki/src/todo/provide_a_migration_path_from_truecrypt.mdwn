@@ -11,14 +11,11 @@ solutions.
 
 # Next steps
 
-0. decide what alternative we want to push users to (mainly boils
-   down to cryptkeeper/encfs vs. LUKS) [[!tag todo/research]]
-1. write the migration documentation [[!tag todo/documentation]]
+0. [[todo/decide_TrueCrypt_alternative]]
+1. write the migration documentation
 2. ship TrueCrypt for releases N and N+1, announcing it will be
-   removed in release N+2, and pointing to the migration doc. Writing
-   a tiny wrapper around the TrueCrypt executable is probably needed
-   to ensure this announce is displayed. (shell script + zenity looks
-   like the adequate tools) [[!tag todo/code todo/easy]]
+   removed in release N+2, and pointing to the migration doc:
+   [[todo/wrap_TrueCrypt_to_announce_removal]]
 3. don't ship TrueCrypt in release N+2
 
 # Use cases
@@ -26,8 +23,21 @@ solutions.
 ## Encrypted USB stick
 
 GNOME Disk Utility provides an easy way to encrypt storage media.
+(Sure, but what about people who don't use GNOME? - see notes on interoperability below)
 
 ## Plausible deniability
+Supported with TrueCrypt hidden containers - is there a Free alternative for this?
+
+## File containers
+This is a filesystem-in-a-file, which makes portability a breeze. It's easy to take your secrets with you on a USB stick, without having to prepare/sacrifice the entire USB stick. Ditto for any storage medium. Combine TrueCrypt file containers with an untrustworthy service like Dropbox and you have your secrets synced across computers with very little effort.
+
+## Cross-platform support
+A TrueCrypt file container can be used from any OS and any distro we happen to be using at the time.
+
+## Consistent GUI
+First of all, TrueCrypt has a GUI which exposes all functions a non-admin user needs.
+Secondly, the GUI is consistent across operating systems. Master TrueCrypt on Windows, and you know how to use it on Linux, MacOSX etc.
+Thirdly, the GUI has not significantly changed in years
 
 ## More?
 
@@ -39,3 +49,4 @@ decide if and how we want to support the described usecases.
 * [RealCrypt](http://rpmfusion.org/Package/realcrypt): one Fedora
   maintainer forked TrueCrypt and ships 3rd-party RPMs outside of
   Fedora.
+  - [Mandriva page](http://wiki.mandriva.com/en/RealCrypt) about it

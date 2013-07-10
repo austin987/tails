@@ -1,0 +1,373 @@
+[[!toc levels=2]]
+
+# Introduction
+
+The automated test suite is essentially a glue between:
+
+* [Sikuli](http://www.sikuli.org/), used for simulating user
+  interaction,
+* [libvirt](http://libvirt.org/), used for running a specific build of
+  Tails in a virtual machine, and
+* [cucumber](http://cukes.info/), for defining features and scenarios
+  testing them using the above two components.
+
+Its goal is to automate the release testing process with a Continuous
+Integration server.
+
+## Setup and usage
+
+See [[contribute/release_process/test/setup]] and [[contribute/release_process/test/usage]].
+
+## Features
+
+With this tool, it is possible to:
+
+  * Create, modify and destroy virtual machines that can run Tails from
+    a variety of media (primarily DVD and USB drives).
+  * Create different kinds of virtual storage (IDE, USB, DVD...),
+    and either cold or hot plug/unplug them into/from the
+    virtual machine.
+  * Modify the virtual machine's hardware, e.g. its amount of RAM,
+    its processor features (PAE), etc.
+  * Simulate user interaction with the system under testing and check
+    its state.
+  * Run arbitrary shell commands inside the virtual machine.
+  * Take screenshots from the display of the virtual machine, at
+    particular events, like when a scenario fails. Complete test
+    sessions can also be captured into a video.
+  * Capture and analyze the network traffic of the system under testing.
+
+## source vs. product cucumber features
+
+Fundamentally speaking there are two types of tests:
+
+* Tests that make sure that the Tails *sources* behave correctly *at
+  build time* (example: `features/build.feature`); these ones are
+  aptly tagged `@source`; and,
+* Tests that make sure that the product built from Tails sources, i.e.
+  a Tails ISO image, behaves correctly *at run time*; these ones are
+  tagged `@product`.
+
+The requirement of these are quite different; for instance, a
+`@product` test must have access to a Tails ISO image to test, whereas a
+`@source` test doesn't. Therefore their environments are setup
+separately using our custom `BeforeFeature` hook, with the respective
+tag.
+
+# Implementation
+
+## Running cucumber in the right environment
+
+The `run_test_suite` script is a wrapper on top of `cucumber`, that
+sets the correct environment up:
+
+* It sources `features/.rvmrc`, which uses bashisms, so it uses `bash`
+  as a shell.
+* It uses `Xvfb` so that the `DISPLAY` environment variable points to
+  an unused X display (tip: use `Xvfb`) with screen size and color
+  depth matching what the Sikuli images are optimized for (that is,
+  1024x768 / 24-bit).
+* It sets the `SIKULI_HOME` environment variable to the directory
+  where sikuli script is installed for Java (`/usr/share/java` in
+  Debian).
+* It runs `unclutter` on `$DISPLAY` to prevent the mouse
+  pointer from masking GUI elements looked for by Sikuli.
+* It passes `--format ExtraHooks::Pretty` to `cucumber` calls, to get
+  access to our custom `{After,Before}Feature` hooks.
+
+## Remote shell
+
+This started out as a hack, and while it has evolved it largely
+remains so. A proper, reliable, established replacement would be
+welcome, but seems unlikely given the requirements:
+
+Requirements on the host (the remote shell client):
+
+* can execute a command with blocking until command completion on the
+  server, and get back return code, stdout and stderr separately.
+* can spawn a command without blocking (except an ACK that the server
+  has run the command, perhaps).
+* usable by an unprivileged user
+
+Requirements on the guest (the remote shell server):
+
+* has to work without a network connection.
+* should interfere minimally with the surrounding system (e.g. no
+  firewall exceptions; actually we don't want any network traffic at
+  all from it, but this kind of follows from the previous requirement
+  any way)
+
+# The art of writing new product test cases
+
+Writing new `@source` features, scenarios or steps should be pretty
+straightforward for anyone with experience with `cucumber`, but the
+same can't be said about `@product` tests, so below we give some
+pointers for the latter.
+
+## Resources
+
+In addition to the Sikuli, libvirt and Cucumber documentation linked
+to in the introduction:
+
+ * [ruby-libvirt api](http://libvirt.org/ruby/api/index.html)
+ * [sikuli gem api](http://rubydoc.info/gems/sikuli/0.3.0/frames)
+
+## Writing new features and scenarios
+
+First, one should have a good look at especially
+`features/step_definitions/common_steps.rb` and the other features to
+get a general idea of what already is possible. There is a good chance
+there's already implementations for many steps necessary for reaching
+the desired state right before when the stuff special to the intended
+feature begins.
+
+### Common steps example
+
+In order to learn some basic step dependencies, and concepts and
+features of the automated test suite used in features and scenarios,
+let's walk through a few typical steps, in order:
+
+    Given a computer
+
+This is how each scenario (or background) should start. This step
+destroys any residual VM from a previous scenario, and sets up a
+completely fresh one, with all defaults. The defaults are defined in
+`features/domains/default.xml`, but some highlights are:
+
+* One virtual `x86_64` CPU with one core
+* 1 GiB of RAM
+* ACPI, APIC and PAE enabled
+* UTC harware clock
+* A DVD drive loaded with the Tails from the ISO
+* No other storage plugged
+* USB 2.0 controller
+* Ethernet interface, plugged into a network bridged with the host
+
+After this step there's a number of steps that reconfigures the
+above...
+
+    And I create a 10 GiB disk named "some_disk"
+
+The identifier (`some_disk`) is later used if we want to plug it or
+otherwise act on it. Note that all media created this way are backed
+by [[!wikipedia qcow2]] images, which grow only as they consume
+capacity. All such media are destroyed after the feature ends.
+
+This step does not necessarily have to be run this early, but it does
+if we want to plug it as a non-removable drive...
+
+    And I plug ide drive "some_disk"
+
+Note that we can decide which type of drive `some_disk` is here. If we
+pick a non-removable media, like in this case, it has to be done
+before we start the virtual machine. Removable media, such as USB
+drives, can be plugged into a live system at any later point.
+
+    And the network is plugged
+
+This plugs the network interface to the host-bridged network (which is
+the default). There's also the "unplugged" version, which generally is
+preferred for features that don't rely on the network (mostly so we
+won't hammer the Tor network unnecessarily). These steps can also be
+performed on a already running system under test.
+
+    And I start the computer
+
+This is where we actually boot the virtual machine.
+
+    And the computer boots Tails
+
+This step:
+
+* verifies that we see the boot menu
+* adds any boot options added via `I set Tails to boot with options ...`
+* makes sure that Tails Greeter starts
+* makes sure that the remote shell is up and running
+
+    And I enable more Tails Greeter options
+
+This is required for steps enabling Tails Greeter options, like the
+next one, or the `I enable Microsoft Windows XP camouflage` step.
+
+    And I set sudo password "asdf"
+
+Beyond the obvious, after this step all steps requiring the
+administrative password have access to it.
+
+    And I log in to a new session
+    And GNOME has started
+    And I have a network connection
+    And Tor has built a circuit
+
+All these should be pretty obvious. It could be mentioned that the
+last two steps, like many others, depend on the remote shell to
+be working.
+
+    And Iceweasel has autostarted and is not loading a web page
+
+Since Tor is working, Iceweasel will autostart. We stop if from
+loading the home page because that generally will break later if we
+use a background snapshot.
+
+    And I have killed the process "iceweasel"
+
+If we want to test some application other than Iceweasel, we want to
+make sure that Iceweasel is not running, and hence in the way. This
+and the previous step makes sure that it won't appear from the blue,
+blocking that application.
+
+    And the time has synced
+
+If we want to use hidden services, we must make sure we have a
+reasonably correct clock.
+
+    And I have closed all annoying notifications
+
+The notifications can block GUI elements that we're looking for later
+with Sikuli, so they are to be closed whenever for essentially all
+tests of GUI applications. If we have a network connection, so the
+time syncing starts and shows its notifications, then this step should be
+run after the previous step. Otherwise it always depends on the `GNOME
+has started` step.
+
+    And I save the state so the background can be restored next scenario
+
+This is where the state of the VM is saved into the so called
+background snapshot the first time it is reached within a feature. For
+all subsequent scenarios, all steps before this one are skipped and
+the VM state is restored from the snapshot in this state. This step
+also makes sure that the remote shell is back up, and if Tor was
+running, that the time is resynced from the host and Tor is restarted
+and working again.
+
+It's called the background snapshot because generally we only want to
+do this if we define a background in a feature. We don't want to use
+the above step if scenarios that have different steps before this one.
+
+### Scenarios involving the Internet
+
+Each such new scenario should sniff network traffic, and check that
+all Internet traffic has only flowed through Tor. See the `apt`
+feature for a simple example of how to do it.
+
+## Writing new steps
+
+### The tools and some guidelines for their usage
+
+In essense, the tools we have for interacting with the Tails instance
+are:
+
+* the VM helper class,
+* Sikuli, and
+* the remote shell.
+
+It should be fairly obvious when to use the VM helper class (stuff
+relating to the virtual hardware), but there is some overlap between
+Sikuli and the remote shell.
+
+Sikuli:
+
+* Should be used in all instances where we want to simulate user
+  interaction with the Tails system. For instance, when we start an
+  application we usually want to click our way through the GNOME
+  applications menu to stay true to what an actual user would do.
+* It comes in handy when we want to verify some state pertaining
+  to the GUI.
+
+The remote shell:
+
+* Useful for testing non-GUI state.
+* Useful for reaching some state required before we test stuff
+  depending on user interaction (which should use Sikuli!).
+* It is acceptable (but not encouraged) to use the remote shell for
+  simulating user terminal interaction when we need to analyze the
+  commands output. This is because of Sikuli's OCR capabilities are
+  poor, and cannot be depended on.
+
+### Background snapshot compatibility
+
+All steps that possibly could be in a feature's background (that can
+be quickly skipped through thanks to background snapshots) should in
+general contain the following in its absolute beginning:
+
+    next if @skip_steps_while_restoring_background
+
+This is what makes it possible to pass the step without actually
+running it.
+
+Note the "in general" above, though. Sometimes there may be code in
+a step that we should let run before we skip the test. In general
+that's just assignment of input from a step into a global/class
+variable that is used in subsequent steps. For an instructive example
+of this, see the `I set sudo password ...` step in
+`features/step_definitions/common_steps.rb`, which saves the password
+into a class variable so it can be used by, among others, the `I enter
+the sudo password ...` step.
+
+# Limitations and issues
+
+These things are good to know when developing new features, scenarios
+or steps.
+
+## The remote shell
+
+### Different behaviour compared to "real" shell
+
+The remote shells have a few surprises in store:
+
+* `pgrep -f` detects itself, which can have potentially serious
+  consequences if not dealt with.
+* Minor groups are not set, so e.g. the `groups` command may not do
+  what you expect, but `groups $USER` does.
+
+These are the currently known oddities of the remote shell, but there
+may be more, so beware, and make sure to verify that any commands sent
+through it does what you want them to do.
+
+### Remote shell instability
+
+Although very rare, the remote shell can get into a state where it
+stops responding, resulting in the test suite waiting for a response
+forever.
+
+## Host-to-guest filesystem shares are incompatibile with snapshots
+
+Filesystem shares cannot (due to QEMU limitations) be added to an
+active VM, and cannot (due to QEMU limitations) be active
+(i.e. mounted) during a snapshot save. For this reason, don't use
+filesystem shares in combination with background snapshots. For more
+information, see [[this ticket|todo/test_suite:_fs_shares_vs_snapshots]].
+
+## Plugging SATA drives
+
+When creating a disk (at least when backed by a `raw` image) via the
+storage helper, and then plugging it to a Tails instance as SATA
+drive, GNOME will report that the drive is failing when inside Tails,
+and indeed several SMART tests fail. For now, plug hard disks as IDE
+only (or USB, of course).
+
+## Class variables assigned in skippable steps
+
+This is best explained with an example. Let's say we have this feature:
+
+	Background:
+    ...
+	Given I assign @x with something we read from the VMs state and we know should be 100
+	And I save the state so the background can be restored next scenario
+
+	Scenario: 1
+	Then @x == 100
+
+	Scenario: 2
+	Then @x == 100
+
+As expected, scenario 1 will succeed, but since class variables lie
+`@x` are cleared between scenarios, scenario 2 will fail if it is
+skippable (i.e. it has the `next if...` thing at the top), which it
+should besince it interacts with the VM. To avoid this, make sure to
+put *all* steps dealing with the class variable in the background, or
+all of them after the background. Alternatively, use global variables
+(e.g. `$x`) instead of class variables, since they are never cleared.
+
+Also, see
+[[this ticket|todo/test_suite:_assigning_class_variables_in_skippable_steps]].

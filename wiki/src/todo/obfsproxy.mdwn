@@ -1,17 +1,40 @@
-[[!tag todo/research]]
+The [Obfsproxy](https://www.torproject.org/projects/obfsproxy.html.en) 
+project exists to achieve the benefits of Tor's 
+bridges together with traffic obfuscation.
+
+# Use cases
+
+## Censorship circumvention
 
 Since bridges are easily detected and blocked in some areas (in
 particular China, but also places where wholesale SSL blocking is
-used), we need to support
-[obfsproxy](https://www.torproject.org/projects/obfsproxy-instructions.html.en).
+used), something like obfsproxy is needed in Tails.
 
-There was a Vidalia [plugin](http://gitorious.org/obfs_gui/) project
-which could have made the configuration easier for the end user, and
-more easily integrated into our current [[bridge
-mode|todo/bridge_support]]; however, we're told it is stillborn.
+## Hiding Tor usage
 
-We're said no replacement is planned. At some point TBB may ship with
-obfsproxy but Tor would only launch it when you configure an
-obfs2 bridge.
+In situations where both reliability *and* obfuscation are required
+despite an adversary having control of the user's local network
+*traffic obfuscation* must also be employed. This traffic obfuscation
+is **imperative** where the user's welfare or liberty my be
+jeopardised by her use of Tor.
 
-obfsproxy is now part of Debian.
+# Implementation
+
+The branch `feature/obfsproxy` currently adds rudimentary support for
+obfsproxy. It's possible to just add a bridge like `obfs2 $IP:$PORT`
+through Vidalia's settings and it works (also works with
+[[bridge-mode|todo/bridge_support]] so that even in its current
+implementation (which doesn't use `DisableNetwork`), Tails prevents
+Tor from talking to the network, and makes Vidalia prompt the user for
+bridges, `obfs2` or not).
+
+Merged in Tails 0.15.
+
+[[!tag todo/done]]
+
+# Next steps
+
+* [[todo/obfsproxy_design_documentation]]
+* [[todo/preconfigured_obfs2_bridges?]]
+
+[[!tag release/2.0]]

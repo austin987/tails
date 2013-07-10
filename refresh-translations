@@ -7,22 +7,26 @@ if [ -e config/amnesia.local ] ; then
 fi
 
 refresh_translations () {
-   prog=$1
-   proglang=$2
+   progpath="config/chroot_local-includes$1" ; shift
+   domain=$1 ; shift
+   proglang=$1 ; shift
 
-   sharedir="config/chroot_local-includes/usr/share/${prog}"
+   sharedir="config/chroot_local-includes/usr/share/${domain}"
    locale_basedir="config/chroot_local-includes/usr/share/locale"
    pot="${sharedir}/messages.pot"
 
    mkdir -p "${sharedir}"
 
-   xgettext --language="${proglang}" --from-code=UTF-8 \
-      -o "${pot}" \
-      "config/chroot_local-includes/usr/local/bin/${prog}"
+   if [ -e "${progpath}" ]; then
+      xgettext --language="${proglang}" --from-code=UTF-8 \
+        -o "${pot}" "${progpath}"
+      sed -i "s@^\"Content-Type: text/plain\; charset=CHARSET\\\n\"@\"Content-Type: text/plain\; charset=UTF-8\\\n\"@" "${pot}"
+
+   fi
 
    for locale in $AMNESIA_SUPPORTED_LANGUAGES ; do
-      po="${locale_basedir}/${locale}/LC_MESSAGES/${prog}.po"
-      mo="${locale_basedir}/${locale}/LC_MESSAGES/${prog}.mo"
+      po="${locale_basedir}/${locale}/LC_MESSAGES/${domain}.po"
+      mo="${locale_basedir}/${locale}/LC_MESSAGES/${domain}.mo"
       mkdir -p "${locale_basedir}/${locale}/LC_MESSAGES"
       [ -e "${po}" ] || cp "${pot}" "${po}"
       msgmerge --update "${po}" "${pot}"
@@ -30,6 +34,13 @@ refresh_translations () {
    done
 }
 
-for prog in gpgApplet tails-security-check tails-htp-notify-user tails-virt-notify-user ; do
-   refresh_translations $prog Perl
-done
+#################### file                                       domain                      lang
+refresh_translations /usr/local/bin/gpgApplet                   gpgApplet                   Perl
+refresh_translations /usr/local/bin/tails-security-check        tails-security-check        Perl
+refresh_translations /usr/local/bin/tails-htp-notify-user       tails-htp-notify-user       Perl
+refresh_translations /usr/local/bin/tails-virt-notify-user      tails-virt-notify-user      Perl
+refresh_translations /usr/local/sbin/unsafe-browser             unsafe-browser              Shell
+refresh_translations /etc/whisperback/config.py                 amnesia                     Python
+refresh_translations /usr/local/bin/shutdown_helper_applet      shutdown_helper_applet      Python
+refresh_translations /usr/local/bin/tails-about                 tails-about                 Python
+refresh_translations /usr/local/sbin/tails-additional-software  tails-additional-software   Python

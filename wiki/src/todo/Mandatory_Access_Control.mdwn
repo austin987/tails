@@ -11,13 +11,25 @@ Possible solutions
 AppArmor
 --------
 
-Used in Ubuntu, part of upstream Linux kernel (>= 2.6.36).
-AppArmor userspace tools are in Debian sid; AppArmor is enabled in the
-Debian Linux kernel 3.2 and greater.
+Used in Ubuntu, part of upstream Linux kernel (>= 2.6.36), supported
+to a certain degree in Debian Wheezy.
 
 Seems really easy to write and maintain policies, many already exist.
 
-- [AppArmor security goals](http://kerneltrap.org/Linux/AppArmors_Security_Goals)
+- [AppArmor security
+  goals](http://kerneltrap.org/Linux/AppArmors_Security_Goals)
+- [[!debwiki AppArmor]]
+
+A [critical problem with stacked
+filesystems](<https://lists.ubuntu.com/archives/apparmor/2012-April/002623.html>),
+such as aufs, must be fixed at [[!taglink todo/upstream]] level before
+we can use AppArmor in Tails. It *should* be fixed in AppArmor 3.0,
+which is scheduled for 2013 Q3.
+
+It can be workaround'd if
+<https://bugs.launchpad.net/apparmor/+bug/888077> is fixed (a month or
+two of dev time, we're told), or by adding "Kernel based alias
+support" (being discussed privately, stay tuned).
 
 grsecurity
 ----------
@@ -42,23 +54,28 @@ Users:
 - Although Liberte Linux uses PaX (Address space modification protection)
   it does not include grsecurity RBAC feature.
 
-- Debian Wheezy (and thus squeeze-backports as well) is likely to have
-  a grsec kernel flavour available:  [[!debbug 605090]]
-- Ubuntu developers [are
-  working](https://wiki.ubuntu.com/SecurityTeam/Roadmap/KernelHardening)
-  to upstream grsec features mainline
+- Work to add a grsec kernel flavour to Debian seems to be stalled:
+  [[!debbug 605090]].
+- Ubuntu developers [used to actively work](https://wiki.ubuntu.com/SecurityTeam/Roadmap/KernelHardening)
+  to upstream grsec features mainline, but this effort seems to have
+  stalled, or rather moved to another employer along with Kees Cook.
 
 SELinux
 -------
 
-Seems pretty hard to write and maintain policies. Developed initially by big
-brother (NSA). Poor support in Debian, does not look like it's going to improve
-that much.
+Developed initially by big brother (NSA).
 
+It is pretty hard to write and maintain policies, but such policies
+exist and they can "mostly" be used by different Linux distributions.
+
+Poor support in Debian, improved in Squeeze, does not look like it's
+going to improve that much.
+
+- <http://etbe.coker.com.au/2012/06/17/debian-selinux-june-2012/>
 - <http://etbe.coker.com.au/2010/07/25/se-linux-status-squeeze/>
-- selinux policies likely won't be part of Squeeze
-- GNOME, policykit, etc. are currently not supported by
-  Debian-packaged policies
+- selinux policies are part of Squeeze
+- GNOME, policykit, etc. are supported by Debian-packaged policies,
+  but who is actually using them to confirm they work well?
 
 Smack
 -----
@@ -109,5 +126,3 @@ Resources
 - [yet another comparison](http://elinux.org/Mandatory_Access_Control_Comparison)
 - [An exploit that was able to bypass SELinux and AppArmor protections](http://lwn.net/Articles/341773/) by the author
   of grsecurity, which was safe.
-
-[[!tag todo/research]]

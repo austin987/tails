@@ -1,3 +1,14 @@
+Roadmap
+=======
+
+Will be solved when a 686-pae kernel is shipped, and automatically
+used when possible, in Tails. Tracked on [[todo/nx_bit]].
+
+> [[!taglink todo/done]] in Tails 0.14.
+
+Discussion
+==========
+
 It would be very nice to have (cpu) power saving enabled by default (with the ondemand governor). To enable power saving for all CPUs on multi-core machines it would also be neccessary to enable SMP support in the kernel (and also to make use of the other CPUs). Right now the power consumption with tails is way to high to be usable from a laptop computer and also unneccessarily high for a desktop computer. SMP support does not do any harm for non-SMP machines, so enabling it in the kernel config should not cause problems.
 
 > As far as I can tell, SMP is supported in Tails kernel. What makes
@@ -7,11 +18,9 @@ It would be very nice to have (cpu) power saving enabled by default (with the on
 
 >>> Oops, you're right, the `-486` kernel we ship does not support
 >>> SMP. Sorry for the confusion. This will be fixed once we ship
->>> several kernels; this feature is tracked on [[todo/nx_bit]], which
->>> is implemented, but needs polishing. So, all this is likely to
->>> land into Tails 0.12.
+>>> several kernels.
 
-[[!tag todo/wait]]
+>>> waiting for a -686-pae kernel to be shipped in Tails.
 
 > Also, in Tails 0.10.1, I see the `ondemand` governor in use on my
 > laptop. If it's not the case on your hardware, please report a bug.
@@ -22,3 +31,29 @@ Ok. I pasted such information in a [[shiny new dedicated bug
 report|bugs/ondemand_governor_not_enabled_on_some_processors]], as
 mixing several unrelated issues in the same ticket makes bug tracking
 a pain.
+
+
+[[!tag broken_window]]
+
+
+>>> Regression: CPU power saving can enable, and make easier, side
+>>> channel attacks on a tails (or any computer) user, see acoustic
+>>> and tempest.
+
+>>>> Reference, please?
+
+>>>>> Just a quick reference though am having trouble finding the
+>>>>> original research I relied upon:
+>>>>> <http://gauss.ececs.uc.edu/Courses/c653/lectures/PDF/side-channel.pdf>
+>>>>>
+>>>>> The original research showed the correlation between the
+>>>>> acoustic emissions of a CPU doing a GPG operation and the secret
+>>>>> key in use. A constant state CPU that doesnt change much (eg one
+>>>>> power state) is harder to correlate
+>>>>>
+>>>>> Power consumption and electromagnetic radiation will now be more
+>>>>> closely related to the activities the tails user is performing,
+>>>>> because there isnt one constant power state, the power state
+>>>>> changes to reflect the load put on the CPU by the user. The PDF
+>>>>> shows it is possible to show different signatures depending on
+>>>>> the secret-key in use as well.

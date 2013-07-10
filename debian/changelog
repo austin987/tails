@@ -1,3 +1,977 @@
+tails (0.20) UNRELEASED; urgency=low
+
+  * Upcoming release.
+
+ -- Tails developers <tails@boum.org>  Mon, 24 Jun 2013 10:40:33 +0200
+
+tails (0.19) unstable; urgency=low
+
+  * Major new features
+  - Install Linux kernel 3.9.5-1 from Debian unstable.
+    Features of particular interest for Tails are the Yama LSM
+    (ptrace scope restrictions) and improved hardware support.
+    As a corollary, install initramfs-tools from there too.
+  - Iceweasel 17.0.7esr + Torbrowser patches.
+  - Unblock Bluetooth, Wi-Fi, WWAN and WiMAX; block every other type of
+    wireless device. Next steps are described on the
+    todo/protect_against_external_bus_memory_forensics ticket.
+
+  * Bugfixes
+  - Fix write access to boot medium at the block device level,
+    by installing bilibop-udev. Thanks to quidame for his support.
+  - tails-greeter l10n-related fixes, thanks to winterfairy:
+    · Fix so translations is applied on password mismatch messages.
+    · Separate forward and login buttons and make them translatable.
+  - Fix link to documentation when no sudo password is set.
+  - gpgApplet: partial fix for clipboard emptying after a wrong passphrase
+    was entered.
+  - Workaround aufs bug in Unsafe Browser script.
+
+  * Minor improvements
+  - Drop GNOME proxy settings: we did not find any use of it we were keen
+    to support, other than two programs (Seahorse, Pidgin) that are now run
+    with torsocks.
+  - Format newly created persistent volumes as ext4.
+  - GnuPG: don't connect to the keyserver specified by the key owner.
+    This feature opens the door to a variety of subtle attacks.
+  - GnuPG: locate keys only from local keyrings.
+    This is probably the default, but better safe than sorry.
+  - Install virt-what from Wheezy.
+    The version from Squeeze does not detect at least Parallels for Mac v.8.
+  - Upgrade live-boot and live-config to the 3.0.x final version from Wheezy.
+    · Remove /live and /lib/live/image compatibility symlinks.
+    · Add /live/overlay -> /lib/live/mount/overlay symlink.
+      The live-boot changes (commit d2b2a461) brought to fix Debian bug
+      #696495 revert some of our previous changes (commit 77dab1cb), and as
+      a result, at the time live-persist runs, no tmpfs is mounted on
+      /live/overlay, which breaks the aufs mount. So, let's just ensure
+      /live/overlay points to a tmpfs.
+    · Really disable policykit and sudo live-config hooks.
+      ... by making it believe they've already been run.
+      This workarounds new live-config's default behavior.
+
+  * Localization
+  - Many translation updates all over the place.
+
+  * Test suite
+  - Re-enable previously disabled boot device permissions test.
+
+ -- Tails developers <tails@boum.org>  Wed, 26 Jun 2013 12:36:20 +0200
+
+tails (0.18) unstable; urgency=low
+
+  * New features
+  - Support obfs3 bridges.
+  - Automatically install a custom list of additional packages chosen by
+    the user at the beginning of every working session, and upgrade them
+    once a network connection is established (technology preview).
+
+  * Iceweasel
+  - Upgrade to Iceweasel 17.0.6esr-0+tails1~bpo60+1.
+  - Update Torbrowser patches to current maint-2.4 branch (567682b).
+  - Isolate DOM storage to first party URI, and enable DOM storage:
+    don't set dom.storage.enabled anymore, and set Torbutton's
+    disable_domstorage to false.
+  - Isolate the image cache per url bar domain.
+  - Torbutton 1.5.2, and various prefs hacks to fix breakage:
+    · Add .saved version of the Torbutton preferences the TBB also sets.
+    · Set TOR_SOCKS_HOST and TOR_SOCKS_PORT.
+    · Move some prefs (network.proxy.*, extensions.autoDisableScopes,
+      extensions.foxyproxy.last-version) to user.js.
+      Else, with Torbutton 1.5.x, these ones are not taken into account.
+    · Set network.proxy.socks_version.
+      Else we get the meaningless user_pref("network.proxy.socks_version", 9063);
+      in prefs.js after the initial startup.
+    · Set extensions.foxyproxy.socks_remote_dns to true.
+      Else, it overrides the various ways we set network.proxy.socks_remote_dns,
+      which in turn makes Torbutton think it should start in non-Tor mode.
+    · Also pass the TOR_SOCKS_* environment variables to iceweasel when
+      generating the profile: Torbutton behaves differently depending on
+      these variables, so we don't want the initial profile generation to be
+      done without them. In practice, this has no implication that we could
+      see right now, but better safe than sorry.
+    · Import all version overrides from the TBB prefs.
+      Else, the User-Agent sent in the HTTP headers is fine, but real
+      values leak with JavaScript, as demonstrated by ip-check's "Browser
+      type" test.
+    · Move a bunch of settings to user_pref(), that are not applied otherwise.
+      For some, this fixes a regression in 0.18~rc1.
+      For other, the  bug was already present in Tails 0.17.2.
+  - HTTPS Everywhere 3.2.
+  - Update prefs to match the TBB's, fix bugs, and take advantage of the latest
+    Torbrowser patches:
+    · Increase pipeline randomization.
+    · Fix @font-face handling of local() fonts.
+      Also disable fallback font rendering.
+    · Explicitly disable SPDY v2 and v3.
+    · Update http pipelining prefs.
+  - Make prefs organization closer to the TBB's:
+    · Remove Torbutton prefs that we set at their default value.
+    · Import Torbutton preferences from the TBB.
+    · Organize iceweasel config files in sections the same way as the TBB.
+  - Cleanup prefs:
+    · Don't set extensions.torbutton.clear_cookies nor
+      extensions.torbutton.saved.share_proxy_settings:
+      we don't care about toggling anymore.
+    · Don't set extensions.torbutton.saved.download_retention nor
+      extensions.torbutton.saved.search_suggest:
+      these settings are not used in Torbutton anymore.
+  - Update unsafe browser prefs mangling accordingly.
+  - Move network.protocol-handler.warn-external.* to user_pref().
+    Else they're not applied.
+    These prefs are actually ignored by Firefox these days -- the TBB
+    design doc reads "They are set still anyway out of respect for the
+    dead". Let's go on doing the same.
+  - Update extensions.adblockplus.currentVersion.
+  - Fetch xul-ext-https-everywhere (3.2-2) and xul-ext-noscript (2.6.6.1-1)
+    from Debian unstable. They were uploaded there, and accordingly removed
+    from experimental.
+
+  * Bugfixes
+  - Linux 3.2.41-2+deb7u2.
+  - Fixed swapped filenames of tails-{reboot,shutdown}.desktop.
+    Thanks to Mikko Harhanen for the patch.
+  - Only add ClientTransportPlugin to torrc when bridge mode is enabled.
+    This should bring back support for proxies of type other than obfsproxy.
+
+  * Minor improvements
+  - Set kernel.dmesg_restrict=1, and make /proc/<pid>/ invisible
+    and restricted for other users. It makes it slightly harder for an attacker
+    to gather information that may allow them to escalate privileges.
+  - Install gnome-screenshot.
+  - Don't disable IPv6 on all network interfaces anymore.
+    It turns out the IPv6 leaks we wanted to fix actually don't exist.
+  - Add a "About Tails" launcher in the System menu.
+  - Install GNOME accessibility themes.
+  - Use 'Getting started...' as the homepage for Tails documentation button.
+  - Stop relying on the obsolete /live/image compatibility symlink.
+  - Disable audio preview in Nautilus.
+  - Wheezy was released => Squeeze is now oldstable.
+  - Pick Tor from deb.torproject.org regardless of the release name they
+    advertise. At some point we needed it, their APT repository still thought
+    that stable == Squeeze.
+  - Add Wheezy APT sources.
+  - Install Linux and related packages from Wheezy.
+    Debian sid just got Linux 3.8, and we don't want to switch to a new kernel
+    yet.
+  - Fetch laptop-mode-tools from Wheezy.
+    Wheezy has the version we've been installing in 0.18~rc1,
+    while a newer one was uploaded to sid in the meantime.
+  - Fetch a few packages from Wheezy instead of unstable.
+    Namely: spice-vdagent, libregexp-common-perl, macchanger, service-wrapper,
+    libservice-wrapper-java and libservice-wrapper-jni.
+    Wheezy has the versions we've been installing for a while, so let's
+    avoid having unstable push a newer one to us uselessly at some point.
+    Note that at the time of this writing, the versions in sid and in Wheezy
+    are the same, so this commit is effectively a no-op as of today: it is
+    merely a safeguard for the future.
+
+  * Localization
+  - Many translation updates all over the place.
+
+  * Build process
+  - Make Vagrant's build-tails script support Jenkins too.
+
+  * Test suite
+  - Fix Unsafe Browser test broken by hidepid.
+
+ -- Tails developers <tails@boum.org>  Mon, 13 May 2013 22:17:38 +0200
+
+tails (0.17.2) unstable; urgency=low
+
+  * Iceweasel
+  - Upgrade to Iceweasel 17.0.5esr-0+tails2~bpo60+1.
+  - Stop displaying obsolete context menu entries ("Open Tor URL" and friends).
+
+  * Hardware support
+  - Update Linux to 3.2.41-2
+
+  * Bugfixes
+  - Use more reliable OpenPGP keyservers:
+    · use the hkps pool in GnuPG (and import their SSL CA)
+    · use hkp://pool.sks-keyservers.net in Seahorse (as it does not support
+      hkps yet)
+  - Keep udisks users (GNOME Disk Utility, tails-persistence-setup, etc.)
+    from resetting the system partition's attributes when manipulating the
+    partition table. To this end, backport the relevant bugfix from Wheezy
+    into parted 2.3-5+tails1. This allowed to remove the sgdisk-based
+    workaround in tais-persistence-setup, and to stop installing
+    python-parted. All this is a first needed step to fix
+    todo/make_system_disk_read-only in a future release.
+
+  * Minor improvements
+  - Disable NoScript's HTML5 media click-to-play for better user experience.
+
+  * Localization
+  - Tails USB installer: update translations for French, German, Spanish,
+    Finnish, Greek, Italian, Latvian, Dutch, Polish and Chinese.
+  - Tails Greeter: update translations for Farsi, Chinese, French;
+    new translations: Finnish, Norwegian Bokmål, Galician.
+  - tails-persistence-setup: update Farsi and Chinese translations;
+    import new translations for Finnish and Swedish.
+  - WhisperBack: update translations for Arabic, French, German, Greek,
+    Spanish, Korean, Polish, Russian. New translations: Finnish, Chinese.
+
+  * Build process
+  - Add automated testing framework (Sikuli, Cucumber, libvirt -based)
+    with a bunch of tests.
+
+ -- Tails developers <amnesia@boum.org>  Sun, 07 Apr 2013 12:17:26 +0200
+
+tails (0.17.1) unstable; urgency=low
+
+  * Iceweasel
+  - Upgrade to Iceweasel 17.0.4esr-0+tails1~bpo60+1.
+
+  * Hardware support
+  - Update Linux to 3.2.39-2.
+    It includes the drm and agp subsystems from Linux 3.4.29.
+  - Don't install xserver-xorg-video-rendition backport.
+    xserver-xorg-video-rendition has been removed from squeeze-backports
+    due to an upstream tarball mismatch discover when merging backports
+    into the main Debian archive, and xserver-xorg-video-all still depends
+    on it, so we explicitly install all drivers from -all but -rendition
+    as a (hopefully temporary) workaround.
+
+  * Minor improvements
+  - Remove Indymedia IRC account, until we ship a version of Pidgin
+    with SASL support, that is when Tails is based on Wheezy.
+
+  * Build system
+  - Don't ship the wiki's todo and bugs on ISO images.
+
+ -- Tails developers <amnesia@boum.org>  Thu, 21 Mar 2013 18:54:11 +0100
+
+tails (0.17) unstable; urgency=low
+
+  * New features
+  - Install the KeePassX password manager, with a configuration and
+    documentation that makes it easy to persist the password database.
+
+  * Iceweasel
+  - Upgrade to Iceweasel 17.0.3esr-1+tails1~bpo60+1.
+  - Install xul-ext-adblock-plus from squeeze-backports.
+  - Do not allow listing all available fonts.
+    Set browser.display.max_font_attempts and browser.display.max_font_count
+    to enable the Torbrowser Limit-the-number-of-fonts-per-document patch.
+  - Set default spellchecker dictionary to English (USA),
+    and localize it according to locale with our custom branding extension.
+  - Disable the add-ons automatic update feature.
+  - Make the generated profile world-readable.
+  - Remove NoScript click-to-play confirmation.
+  - Sync some prefs set by Torbutton, to be ready when it stops setting these.
+  - Disable navigation timing.
+  - Disable SPDY. It stores state and may have keepalive issues.
+  - More aggressive iceweasel HTTP pipelining settings.
+  - Enable WebGL (as click-to-play only).
+  - Disable network.http.connection-retry-timeout.
+  - Disable full path information for plugins.
+  - Remove NoScript blocks of WebFonts.
+  - Disable DOM storage in Torbutton.
+    Since we don't apply the 0026-Isolate-DOM-storage-to-first-party-URI.patch
+    Torbrowser patch yet, and still disable DOM storage, we need to tell
+    Torbutton not to use it.
+  - Synchronize iceweasel's general.useragent.override with TBB based on FF17.
+    The User-Agent settings are not kept up-to-date anymore in Torbutton, so
+    we have to keep in sync manually with TBB's settings.
+  - Remove obsolete APT pining for Torbutton.
+    It's not maintained in Debian anymore, so we now fetch it from our own
+    APT repository.
+  - Fetch FoxyProxy from Debian experimental and libnspr4-0d from
+    squeeze-backports, for compatibility with Iceweasel 17.
+  - Rebase bookmarks file on top of the default iceweasel 17 one.
+  - Explicitly disable AdBlock Plus "correct typos" feature.
+    This feature connects to http://urlfixer.org/.
+    It is disabled by default in 2.2-1, but let's be careful.
+
+  * Minor improvements
+  - Upgrade to live-boot 3.0~b11-1 and live-config 3.0.12-1.
+    Accordingly update the 9980-permissions hook, live-persist,
+    unsafe-browser and boot-profile.
+    Add compatibility symlinks from /live to /lib/live, and from /live/image
+    to /lib/live/mount/medium, to ease the transition.
+  - Check for errors when sourcing live-boot files, e.g. to detect when
+    they have been renamed upstream.
+  - Don't add "quiet" to the kernel command-line ourselves.
+    Else, it appears twice as live-build's lb_binary_syslinux adds it too.
+    Historically, we've been adding it ourselves on top of that because
+    lb_binary_yaboot does not add it, but since we gave up the PowerPC support
+    attempt, we're now only interested in syslinux, so let's make it easier
+    for the general case, e.g. when one wants to remove the "quiet" parameter
+    as suggested by our "Tails does not start" debugging documentation.
+  - Upgrade I2P to 0.9.4.
+
+  * Bugfixes
+  - Many bugfixes brought by the Debian Squeeze 6.0.7 point-release.
+  - Use the regular GnuPG agent + pinentry-gtk2 instead of Seahorse
+    as a GnuPG agent. This fixes usage of OpenPGP in Claws Mail,
+    and brings support for OpenPGP smartcards.
+  - Enable I2P hidden mode.
+    Else, killing I2P ungracefully is bad for the I2P network.
+  - live-persist: move error() function before the first potential usecase.
+  - Add missing executable bit on restart-tor and restart-vidalia.
+  - Add shutdown and reboot launchers to the menu.
+    This workarounds the lack of a shutdown helper applet in camouflage mode.
+  - Remove Pidgin's MXit and Sametime support.
+    ... at least until CVE-2013-0273, CVE-2013-0272 and CVE-2013-0271 are
+    fixed in Debian stable. While we're at it, don't force file removal in
+    these "set -e" build scripts: fail hard, instead of silently ignoring
+    the fact that files may have moved or disappeared.
+
+  * Hardware support
+  - Install recent Intel and AMD microcode from squeeze-backports,
+    explicitly excluding the iucode-tool package that's not a good idea
+    for Live systems.
+  - Install firmware loader for Qualcomm Gobi USB chipsets.
+    This is needed to have various mobile broadband chipsets work.
+  - Upgrade barry to 0.18.3-5~bpo60+1.
+    This much improved new version supports more hardware & ISP,
+    and does not display dozens of spurious error messages at boot time.
+
+  * Build system
+  - Remove APT local cache (/Var/cache/apt/{,src}pkgcache.bin).
+
+ -- Tails developers <amnesia@boum.org>  Sat, 23 Feb 2013 10:37:57 +0100
+
+tails (0.16) unstable; urgency=low
+
+  * Minor improvements
+  - Replace the too-easy-to-misclick shutdown button with a better
+    "Shutdown Helper" Gnome applet.
+  - Display ~/Persistent in GNOME Places and GtkFileChooser if it is mounted.
+  - Set Unsafe Browser's window title to "Unsafe Browser".
+  - Install ekeyd to support the EntropyKey.
+  - Install font for Sinhala.
+  - Update Poedit to 1.5.4.
+  - Kill Vidalia when restarting Tor.
+    Doing this as early as possible exposes Vidalia's "broken onion" icon
+    to users less.
+  - Hide the persistence setup launchers in kiosk mode.
+  - Add a shell library for Tor functions.
+    These are shared among multiple of our scripts.
+  - Install dictionaries for supported languages.
+    Install hunspell dictionaries when possible,
+    fall back on myspell ones else.
+
+  * Bugfixes
+  - Disable IPv6 on all network interfaces.
+    This is a workaround for the IPv6 link-local multicast leak that was recently
+    discovered. Tails has no local service that listens on IPv6, so there should be
+    no regression, hopefully, unless one wants to play with OnionCat and VoIP,
+    but those of us should know how to workaround this anyway.
+  - live-persist: Fix variable mismatch, fixing probe white-list.
+    Tails may previously have been able to list GPT partitions labelled
+    "TailsData" on hard drives (!) as valid persistence volumes...
+  - live-persist: Fix --media option when no devices are attached.
+    Earlier, if it was set to e.g. 'removable-usb' and no USB storage was
+    connected, $whitelistdev would be empty, which is interpreted like
+    all devices are ok by the rest of the code.
+  - Fix SCIM in the autostarted web browser: save IM environment variables
+    to a file during Desktop session startup, and export them into the
+    autostarted browser's environment.
+  - Talk of DVD, not of CD, in the shutdown messages.
+  - Make tordate work in bridge mode with an incorrect clock.
+    When using a bridge Tor reports TLS cert lifetime errors (e.g. when
+    the system clock is way off) with severity "info", but when no bridge
+    is used the severity is "warn". tordate/20-time.sh depends on grepping
+    these error messages, so we termporarily increase Tor's logging
+    severity when using bridge mode. If we don't do this tordate will
+    sleep forever, leaving Tor in a non-working state.
+    · White-list root to use Tor's ControlPort.
+    · Add logging for is_clock_way_off().
+    · Remove Tor's log before time syncing.
+      We depend on grepping stuff from the Tor log (especially for
+      tordate/20-time.sh), so deleting it seems like a Good Thing(TM).
+    · Stop Tor before messing with its log or data dir.
+  - live-persist: limit searched devices the same way as live-boot.
+    If no --media argument is specified, use live-boot's
+    "(live-media|bootfrom)=removable(|-usb)" argument to limit devices
+    searched for a persistent volume.
+  - tails-greeter: do not pass media=removable to live-persist.
+    Now that we have autodetection with kernel command-line,
+    it should not be needed anymore.
+  - Start memlockd after configuring it,
+    instead of starting it before and restarting it after.
+    This avoids running memlockd twice, and prevents other possibly
+    surprising race-conditions.
+    As a consequence, also have tails-sdmem-on-media-removal start after the
+    memlockd service *and* tails-reconfigure-memlockd: to start the watchdog,
+    we need memlockd to be properly configured *and* running.
+
+  * iceweasel
+  - Set iceweasel homepage to the news section on the Tails website.
+    ... using the localized one when possible.
+  - Hide the iceweasel add-on bar by default.
+    Now that we don't want to ship the Monkeysphere addon anymore,
+    that was the only one displayed in there, we can as well hide the whole bar.
+  - Don't hide the AdBlock-Plus button in the add-on bar anymore. Now that
+    we hide the whole addon bar, we can get rid of this old
+    UX improvement.
+  - Do not install a placeholder (fake) FireGPG iceweasel extension anymore.
+    It was shipped from 0.10 (early 2012) to 0.15 (late November),
+    so the migration period should be over now.
+  - Don't install xul-ext-monkeysphere anymore.
+    The implication of the current keyserver policy are not well
+    understood, Monkeysphere is little used in Tails, and we're not sure
+    anymore it would be our first bet for the web browser profile with no
+    CA. Let's keep the various configuration bits (e.g. FoxyProxy,
+    patching MSVA), though, so that advanced users who are used to have
+    Monkeysphere in Tails just have to install the package.
+
+  * Build system
+  - Install the "standard" task with tasksel for better consistency in the
+    Tails ISO images built in various environments.
+  - Install p7zip-full. It's a dep by file-roller, but we explicily use it
+    elsewhere, and it's better to be safe than sorry.
+  - Remove pinning of libvpx0 to sid.
+    This package is part of Squeeze, and not from testing/sid.
+    We have been shipping the version from Squeeze for a while.
+  - Remove config/chroot_local-packages/ from .gitignore.
+    The documented way for "external" contributors to add custom packages
+    is to put them in chroot_local-packages, and once we pull we import
+    any such package into our APT repo and rewrite the
+    history appropriately.
+    Also, the ability to add packages in there and not see them in "git
+    status" makes it very easy to build tainted ISO images with
+    non-standard packages, which makes some of us fear can lead to hard to
+    debug situations.
+  - Make it clearer what can and cannot be done in terms of local packages.
+
+ -- Tails developers <amnesia@boum.org>  Thu, 10 Jan 2013 12:47:42 +0100
+
+tails (0.15) unstable; urgency=low
+
+  * Major new features
+  - Persistence for browser bookmarks.
+  - Support for obfsproxy bridges.
+
+  * Minor improvements
+  - Add the Hangul (Korean) Input Method Engine for SCIM.
+  - Add vendor-specific dpkg origin information. This makes dpkg-vendor
+    return correct information.
+  - Install pcscd and libccid from squeeze-backports. This is needed to
+    support, to some extent, some OpenPGP SmartCard readers.
+  - Install HPIJS PPD files and the IJS driver (hpijs).
+    This adds support for some printers, such as Xerox DocumentCenter400.
+  - Optimize fonts display for LCD.
+  - Update TrueCrypt to version 7.1a.
+
+  * Bugfixes
+  - Do not use pdnsd anymore. It has been orphaned in Debian, has quite
+    some bugs in there, and apparently Tor's DNSPort's own caching is
+    be good enough.
+  - Remove useless iceweasel cookies exceptions. They are useless as
+    per-session cookies are allowed.
+  - Do not run setupcon on X. This call is only needed on the Linux
+    console, no need to annoy the user with a weird "Press enter to
+    activate this console" when the open a root shell in a GNOME
+    Terminal.
+  - Allow the tails-iuk-get-target-file user to connect to the SOCKSPort
+    dedicated for Tails-specific software.
+  - Fix gpgApplet menu display in Windows camouflage mode.
+  - Fix Tor reaching an inactive state if it's restarted in "bridge mode",
+    e.g. during the time sync' process.
+
+  * Iceweasel
+  - Update iceweasel to 10.0.11esr-1+tails1.
+  - User profile is now generated at build time in order to support persistent
+    bookmarks.
+  - Update HTTPS Everywhere to version 3.0.4.
+  - Update NoScript to version 2.6.
+  - Fix bookmark to I2P router console.
+  - Re-enable Monkeysphere extension to connect to the validation agent.
+
+  * Localization
+  - The Tails USB installer, tails-persistence-setup and tails-greeter
+    are now translated into Bulgarian.
+  - Update Chinese translation for tails-greeter.
+  - Update Euskadi translation for WhisperBack.
+
+  * Build system
+  - Custom packages are now retrieved from Tails APT repository instead
+    of bloating the Git repository.
+  - Allow '~' in wiki filenames. This makes it possible to ship
+    update-description files for release candidates.
+  - Document how to create incremental update kit.
+  - Handle release candidates when generating custom APT sources.
+  - Remove pinning for xul-ext-adblock-plus.
+    It is obsolete since we've added this package to our APT repository.
+
+ -- Tails developers <amnesia@boum.org>  Sun, 25 Nov 2012 12:59:17 +0100
+
+tails (0.14) unstable; urgency=low
+
+  * Major new features
+  - Enable Tor stream isolation; several new SocksPorts with
+    appropriate Isolate* options have been added for different use
+    cases (i.e. applications). All application's have been
+    reconfigured to use these new SocksPorts, which should increase
+    anonymity by making it more difficulte to correlate traffic from
+    different applications or "online identities".
+  - The web browser now has the anonymity enhancing patches from the
+    TorBrowser applied.
+  - gpgApplet can now handle public-key cryptography.
+  - Install an additional, PAE-enabled kernel with NX-bit
+    support. This kernel is auto-selected when the hardware supports
+    it and will:
+    * provide executable space protection, preventing certain types of
+      buffer overflows from being exploitable.
+    * enable more than 4 GiB of system memory.
+    * make all processors/cores available, including their
+      power-saving functionality.
+  - Add a persistence preset for NetworkManager connections.
+
+  * Minor improvements
+  - On kexec reboot, make the boot quiet only if debug=wipemem was not
+    enabled.
+  - Update torproject.org's APT repo key.
+  - Update the embedded Tails signing key.
+  - Use symlinks instead of duplicating localized searchplugins.
+  - Rewrite Tails firewall using ferm. Tails firewall was written in
+    very unsophisticated iptables-save/restore format. As more feature
+    creeped in, it started to be quite unreadable.
+  - Optimize VirtualBox modules build at runtime to avoid installing the
+    userspace utils N times.
+  - Drop most of Vidalia's configuration. Our custom lines just caused
+    trouble (with multiple SocksPorts) and the default works well.
+  - Blacklist PC speaker module. On some computers, having the pcspkr
+    module loaded means loud beeps at bootup, shutdown and when using
+    the console. As it draws useless attention to Tails users, it is
+    better to prevent Linux from loading it by default.
+  - Remove all addons from the Unsafe Browser. No addons are essential
+    for the Unsafe Browser's intent. If anything they will modify the
+    network fingerprint compared to a normal Iceweasel install, which
+    is undesirable.
+  - Prevent some unwanted packages to be installed at all, rather than
+    uninstalling them later. This should speed up the build a bit.
+  - Add a symlink from /etc/live/config to /etc/live/config.d. This
+    makes the system compatible with live-config 3.0.4-1, without
+    breaking backward compatibility with various parts of the system
+    that use the old path.
+  - Do not run unecessary scripts during shutdown sequence, to make
+    shutdown faster.
+  - Make live-persist deal with persistent ~/.gconf subdirs so that
+    any options saved therein actually get persistent.
+  - Prevent memlockd unload on shutdown, to make sure that all
+    necessary tools for memory wiping are available when the new
+    kernel has kexec'd.
+  - Patch initscripts headers instead of fiddling with update-rc.d. We
+    now let insserv figure out the correct ordering for the services
+    during startup and shutdown, i.e. use dependency-based boot
+    sequencing.
+  - Remove the last absolute path in our isolinux config, which makes
+    it easier to migrate from isolinux to syslinux (just rename the
+    directory), and hence might make it easier for 3rd party USB
+    installers (like the Universal USB Installer) to support Tails.
+
+  * Bugfixes
+  - Include `seq` in the ramdisk environment: it is used to wipe more
+    memory. This fixes the long-standing bug about Tails not cleaning
+    all memory on shutdown.
+  - Fix Yelp crashing on internal links
+  - Allow amnesia user to use Tor's TransPort. This firewall exception
+    is necessary for applications that doesn't have in-built SOCKS
+    support and cannot use torsocks. One such example is Claws Mail,
+    which uses tsocks since torsocks makes it leak the hostname. This
+    exception, together with Tor's automatic .onion mapping makes
+    Claws Mail able to use hidden service mail providers again.
+  - Force threads locking support in Python DBus binding. Without this
+    liveusb-creator doesn't work with a PAE-enabled kernel.
+  - Fix localized search plugins for 'es' and 'pt'
+  - Fix live-boot's readahead, which caused an unnecessary pause
+    during boot.
+  - Factorize GCC wanted / available version numbers in VirtualBox
+    modules building hook. This, incidentally, fixes a bug caused by
+    duplication and not updating all instances.
+  - Fix tordate vs. Tor 0.2.3.x. Since 0.2.3.x Tor doesn't download a
+    consensus for clocks that are more than 30 days in the past or 2
+    days in the future (see commits f4c1fa2 and 87622e4 in Tor's git
+    repo). For such clock skews we set the time to the Tor authority's
+    cert's valid-after date to ensure that a consensus can be
+    downloaded.
+
+  * Tor
+  - Update to version 0.2.3.24-rc-1~~squeeze+1, a new major
+    version. It's not a stable release, but we have been assured by
+    the Tor developers that this is the right move.
+  - Stop setting custom value for the Tor LongLivedPorts
+    setting. Gobby's port was upstreamed in Tor 0.2.3.x.
+
+  * Iceweasel
+  - Update to 10.0.10esr-1+tails1, which has all the anonymity enhancing
+    patches from the TorBrowser applied.
+  - Install iceweasel from our own repo, http://deb.tails.boum.org.
+  - Fix Iceweasel's file associations. No more should you be suggested
+    to open a PDF in the GIMP.
+
+  * htpdate
+  - Use curl instead of wget, and add a --proxy option passed through
+    to curl.
+  - Remove the --fullrequest option, we don't need it anymore.
+  - Remove --dns-timeout option, we don't need it anymore.
+  - Change --proxy handling to support Debian Squeeze's curl.
+  - Clarify what happens if --proxy is not used.
+  - Compute the median of the diffs more correctly.
+
+  * Hardware support
+  - Update Linux to 3.2.32-1.
+
+  * Software
+  - Update vidalia to 0.2.20-1+tails1.
+  - Update bundled WhisperBack package to 1.6.2:
+    * Raise the socket library timeout to 120 seconds
+    * Use smtplib's timeout parameter
+    * Fix error output when calling send a 2nd time
+  - Update liveusb-creator to 3.11.6-3.
+  - Update i2p to 0.9.2.
+  - Update tails-persistence-setup to 0.20-1, which should make it
+    possible to install Tails on large (>= 32 GiB) USB drives.
+  - Install console-setup and keyboard-configuration from unstable
+    (required by new initramfs-tools).
+  - Update tails-greeter to 0.7.3:
+    * Import pt_BR translation.
+    * Let langpanel usable during option selection stage
+    * Print less debugging messages by default
+    (below are changes in tails-greeter 0.7.2:)
+    * Use correct test operators.
+    * Generate language codes of available locales at package build
+      time.
+    * Read list of language codes from where we have saved it at
+      package build time.
+    * Drop tails-lang-helper, not used anymore.
+    * Do not compile locales at login time anymore. Tails now ships
+      locales-all.
+  - Import live-config{,-sysvinit} 3.0.8-1. live-config >= 3.0.9-1
+    has basically nothing useful for us, and it migrates to new paths
+    brought by live-boot 3.0~b7, which we're not ready for yet (see:
+    todo/newer_live-boot).
+
+  * Localization
+  - Fix Tails specific Iceweasel localization for pt-BR
+  - Add Japanese input system: scim-anthy.
+  - whisperback is now also translated into German, Hebrew, Hungarian,
+    Italian and Korean.
+  - tails-persistence-setup is now also translated into Arabic.
+  - tails-greeter is now also translated into Arabic, Hebrew, Basque,
+    Hungarian, Italian and Chinese.
+
+  * Build system
+  - Catch more errors in during build time:
+    - Ensure that all local hooks start with 'set -e'.
+    - Fail hard if adduser fails in local hooks.
+    - Fail hard if 'rm' fails in local hooks.
+  - vagrant: Ensure we have the set of Perl packages needed by our
+    Ikiwiki
+  - vagrant: Configure live-build to ship with ftp.us.debian.org.
+    Using cdn.debian.net leads to bad interactions with Tor.
+  - vagrant: Don't use gzip compression when building from a tag, i.e.
+    a release.
+  - vagrant: Optionally use bootstrap stage cache for faster builds
+    via the 'cache' build option.
+  - vagrant: Make sure release builds are clean, i.e. they don't use
+    any potentially dangerous build options.
+  - vagrant: Disable live-build package caching. This build system is
+    meant to use an external caching proxy, so live-build's cache just
+    wastes RAM (for in-memory builds) or disk space.
+  - vagrant: use aufs magic instead of copying source into tmpfs.
+    This reduces the amount of RAM required for building Tails in.
+  - vagrant: Allow in-memory builds when a VM with enough memory is
+    already started.
+
+ -- Tails developers <amnesia@boum.org>  Sat, 10 Nov 2012 12:34:56 +0000
+
+tails (0.13) unstable; urgency=low
+
+  * Major new features
+  - Use white-list/principle of least privelege approach for local services.
+    Only users that need a certain local (i.e. hosted on loopback) service
+    (according to our use cases) are granted access to it by our firewall;
+    all other users are denied access.
+  - Ship a first version of the incremental update system. Updates are not
+    currently triggered automatically, but this will allow tests to be done
+    on larger scales.
+
+  * Minor improvements
+  - Enable four workspaces in the Windows XP camouflage. This allows
+    users to quickly switch to a more innocent looking workspace in case
+    they are working on sensitive data and attract unwanted attention.
+    The workspace switcher applet isn't there, though, since there's no
+    such thing in Windows XP, so switching is only possible via keyboard
+    shortcuts.
+  - Ship with precompiled locales instead of generating them upon login.
+  - Add support for wireless regulation.
+  - Use color for Git output, not intended for machine consumption,
+    written to the terminal.
+  - Have ttdnsd use OpenDNS. Using Google's DNS servers was very
+    glitchy, and rarely succeeded when it should. It can probably be
+    attributed to Google's DNS, which is known to take issue with Tor
+    exits.
+  - Upgrade WhisperBack to 1.6, with many UI improvements and new translations.
+  - Include GDM logs and dmidecode informations in the reports.
+  - Allow to modify language and layout in the "Advanced options" screen
+    of the greeter.
+  - GnuPG: bump cert-digest-algo to SHA512.
+  - Update torproject.org's APT repo key.
+
+  * Bugfixes
+  - Make Claws Mail save local/POP emails in its dot-directory. The
+    default is to save them at ~/Mail, which isn't included in our
+    current Claws Mail persistence preset.
+  - Fix the System Monitor applet.
+  - Remove broken ttdnsd from the default DNS resolution loop.
+  - Hide the 'TailsData' partition in desktop applications.
+  - Ship unrar-free again, so that the GNOME archive manager knows about
+    it.
+  - Ship with an empty whitelist for Noscript.
+  - Disable FoxyProxy's advertisement on proxy error page.
+  - Fix slow browsing experience for offline documentation.
+  - Raise the socket timeout to 120 seconds in WhisperBack.
+  - Enable the ikiwiki trail plugin for the locally built wiki too.
+
+  * Iceweasel
+  - Upgrade iceweasel to 10.0.6esr-1 (Extended Support Release) and install it
+    and its dependencies from squeeze-backports.
+
+  * Hardware support
+  - Upgrade Linux to 3.2.23-1.
+
+  * Software
+  - Update tor to version 0.2.2.39.
+  - Update Iceweasel to version 10.0.7esr-2.
+  - Update i2p to version 0.9.1.
+
+  * Build system
+  - vagrant: Install Ikiwiki from Debian unstable. The 'mirrorlist'
+    patches have finally been merged in upstream Ikiwiki. So instead of
+    building Ikiwiki by hand, we can now install the package directly
+    from Debian unstable.
+  - Do not build the ikiwiki forum on the bundled static website copy.
+
+ -- Tails developers <amnesia@boum.org>  Mon, 17 Sep 2012 15:19:25 +0200
+
+tails (0.12.1) unstable; urgency=low
+
+  This is a brown paper bag release to fix two major problems introduced in
+  Tails 0.12.
+
+  * Iceweasel
+  - Upgrade Torbutton to 1.4.6.
+  - Upgrade AdBlock Plus to 2.1.
+  - Update AdBlock Plus patterns.
+
+  * Hardware support
+  - Upgrade Linux to 3.2.21-3 (linux-image-3.2.0-3-486).
+
+  * Software
+  - Install MAT from Debian backports, drop custom package.
+  - Install python-pdfrw to re-add PDF support to the MAT.
+  - Upgrade tails-greeter to 0.7.1, which fixes the race condition that
+    broke administration password and locale settings on some systems.
+
+  * Boot
+  - Remove the Tails specific plymouth theme. The theme interfers heavily with
+    the boot process on some hardware.
+
+ -- Tails developers <amnesia@boum.org>  Mon, 17 Sep 2012 13:06:03 +0200
+
+tails (0.12) unstable; urgency=low
+
+  * Major new features
+  - Add the Unsafe Web Browser, which has direct access to the Internet and
+    can be used to login to captive portals.
+  - The (previously experimental, now deemed stable) Windows camouflage can now
+    be enabled via a check box in Tails greeter.
+
+  * Tor
+  - Upgrade to 0.2.2.37-1~~squeeze+1.
+
+  * Iceweasel
+  - Upgrade iceweasel to 10.0.5esr-1 (Extended Support Release) and install it
+    and its dependencies from squeeze-backports.
+  - Add a bookmark for the offline Tails documentation.
+  - Update AdBlock patterns.
+
+  * Persistence
+  - Allow using larger USB drives by increasing the mkfs timeout to 10 minutes.
+  - Tell the user what's going on when the Tails boot device cannot be found.
+
+  * Hardware support
+  - Upgrade Linux to 3.2.20-1 (linux-image-3.2.0-2-amd64).
+
+  * Software
+  - Install rfkill.
+  - Install torsocks. Note that this makes `torify' use `torsocks' instead of
+    `tsocks'. The `tsocks' binary is dropped to avoid problems, but remaining
+    files (the library) are kept since ttdnsd depends on them.
+  - Fetch live-config-sysvinit from sid so that it matches live-config version.
+  - Update virtualbox backports to 4.1.10-dfsg-1~bpo60+1.
+  - Install pciutils (needed by virtualbox-guest-utils).
+  - Install mousetweaks. This is needed to use the mouse accessibility settings
+    in System -> Preferences -> Mouse -> Accessibility.
+  - Install the "hardlink" files deduplicator.
+  - Do not install cryptkeeper anymore. See todo/remove_cryptkeeper for reason.
+    Users of cryptkeeper are encouraged to install cryptkeeper via `apt-get
+    update; apt-get install --yes cryptkeeper`, open their volume and move
+    their to Tails' built-in persistence instead, as a one-time migration.
+  - Upgrade I2P to version 0.9.
+  - Don't install GParted. GNOME Disk Utility has been on par with GParted
+    since Squeeze was released.
+  - Upgrade live-boot to 3.0~a27-1+tails2~1.gbp319fe6.
+  - Upgrade live-config to 3.0~a39-1 and install it from Debian experimental.
+  - Upgrade tails-greeter to 0.7.
+  - Upgrade tails-persistence-setup to 0.17-1.
+  - Install libyaml-libyaml-perl.
+  - Upgrade MAT, the metadata anonymisation toolkit, 0.3.2-1~bpo60+1.
+  - Fetch python-pdfrw from backports, drop custom package.
+
+  * Internationalization
+  - The Tails website and documentation now has a (partial) Portuguese
+    translation.
+
+  * Build system
+  - Tails can now be built without using a HTTP proxy.
+  - Tails can now easily be built by using Vagrant. See the updated
+    contribute/build page for instructions.
+
+  * Boot
+  - Remove obsolete noswap boot parameter. live-boot now handles swap on an
+    opt-in basis.
+  - The squashfs.sort files generated with boot-profile should now be ok which
+    makes the generate images boot noticeably faster on optical media. See
+    bugs/weird_squashfs.sort_entries for more information.
+  - Set Tails specific syslinux and plymouth themes.
+  - Add NVidia KMS video drivers to the initrd in order to show our shiny new
+    plymouth theme on more systems.
+
+ -- Tails developers <amnesia@boum.org>  Mon, 11 Jun 2012 13:37:00 +0200
+
+tails (0.11) unstable; urgency=low
+
+  * Major new features
+  - Do not grant the desktop user root credentials by default.
+  - A graphical boot menu (tails-greeter 0.6.3) allows choosing among
+    many languages, and setting an optional sudoer password.
+  - Support opt-in targeted persistence
+    · tails-persistence-setup 0.14-1
+    · live-boot 3.0~a25-1+tails1~5.gbp48d06c
+    · live-config 3.0~a35-1
+  - USB installer: liveusb-creator 3.11.6-1
+
+  * iceweasel
+  - Install iceweasel 10.0.4esr-1 (Extended Support Release).
+    Let's stop tracking a too fast moving target.
+    Debian Wheezy will ship ESR versions.
+  - Install needed dependencies from squeeze-backports.
+  - Search plugins:
+    · Remove bing.
+      bing appeared due to our upgrading iceweasel.
+      Removing it makes things consistent with the way they have been
+      until now, that is: let's keep only the general search engines
+      we've been asked to add, plus Google, and a few specialized ones.
+    · Replace Debian-provided DuckDuckGo search plugin with the "HTML SSL"
+      one, version 20110219. This is the non-JavaScript, SSL, POST flavour.
+    · Add ixquick.com.
+    · Install localized search engines in the correct place.
+      No need to copy them around at boot time anymore.
+    · Remove Scroogle. RIP.
+  - Enable TLS false start, like the TBB does since December.
+  - Adblock Plus: don't count and save filter hits, supress first run dialog.
+  - Install neither the GreaseMonkey add-on, nor any GreaseMonkey script.
+    YouTube's HTML5 opt-in program is over.
+    HTML5 video support is now autodetected and used.
+
+  * Vidalia
+  - Upgrade to 0.2.17-1+tails1: drop Do-not-warn-about-Tor-version.patch,
+    applied upstream.
+  - Set SkipVersionCheck=true.
+    Thanks to chiiph for implementing this upstream (needs Vidalia 0.2.16+).
+
+  * Internationalization
+  - Install all available iceweasel l10n packages.
+  - Remove syslinux language choosing menu.
+    tails-greeter allows choosing a non-English language.
+  - Add fonts for Hebrew, Thai, Khmer, Lao and Korean languages.
+  - Add bidi support.
+  - Setup text console at profile time.
+    Context: Tails runs with text console autologin on.
+    These consoles now wait, using a "Press enter to activate this console"
+    message, for the user. When they press enter in there, they should have chosen
+    their preferred keyboard layout in tails-greeter by now. Then, we run setupcon.
+    As a result, the resulting shell is properly localized, and setupcon
+    sets the correct keyboard layout, both according to the preferences expressed by
+    the user in tails-greeter.
+  - Don't use localepurge, don't remove any Scribus translations anymore,
+    don't localize environment at live-config time:
+    tails-greeter allows us to support many, many more languages.
+
+  * Hardware support
+  - Linux 3.2.15-1 (linux-image-3.2.0-2-amd64).
+  - Fix low sound level on MacBook5,2.
+  - Disable laptop-mode-tools automatic modules. This modules set often
+    needs some amount of hardware-specific tweaking to work properly.
+    This makes them rather not well suited for a Live system.
+
+  * Software
+  - Install GNOME keyring.
+    This is needed so that NetworkManager remembers the WEP/WPA secrets
+    for the time of a Tails session. Initialize GNOME keyring at user
+    creation time.
+  - Install usbutils to have the lsusb command.
+  - Install the Traverso multitrack audio recorder and editor.
+
+  * Miscellaneous
+  - GNOME Terminal: keep 8192 scrollback lines instead of the smallish
+    default.
+  - Replaced tails-wifi initscript with laptop-mode-tools matching feature.
+  - Disable gdomap service.
+  - Fetch klibc-utils and libklibc from sid.
+    The last initramfs-tools depends on these.
+  - Set root password to "root" if debug=root is passed on the
+    kernel cmdline. Allow setting root password on kernel cmdline via
+    rootpw=. Looks like we implemented this feature twice.
+  - Append a space on the kernel command line. This eases manually adding
+    more options.
+  - Rename sudoers.d snippets to match naming scheme.
+    Sudo credentials that shall be unconditionally granted to the Tails
+    default user are named zzz_*, to make sure they are applied.
+  - WhisperBack: also include /var/log/live-persist and
+    /var/lib/gdm3/tails.persistence.
+  - Add a wrapper to torify whois.
+  - Rework the VirtualBox guest modules building hook to support
+    multiple kernels.
+  - Consistently wait for nm-applet when waiting for user session to come up.
+    Waiting for gnome-panel or notification-daemon worked worse.
+  - Don't start the NetworkManager system service via init.
+    Some Tails NM hooks need the user to be logged in to run properly.
+    That's why tails-greeter starts NetworkManager at PostLogin time.
+  - Also lock /bin/echo into memory. For some reason, kexec-load needs it.
+  - Pidgin: don't use the OFTC hidden service anymore.
+    It proved to be quite unreliable, being sometimes down for days.
+  - Do not display storage volumes on Desktop, by disabling
+    /apps/nautilus/desktop/volumes_visible GConf entry. Enabling that
+    GConf setting avoids displaying the bind-mounted persistent
+    directories on the Desktop, and reduces user confusion. It also is
+    a first step towards a bigger UI change: GNOME3 does not manage the
+    Desktop anymore, so volume icons and other Desktop icons are meant to
+    disappear anyway. It implies we'll have to move all Desktop icons
+    elsewhere. Let's start this move now: this will smooth the UI change
+    Wheezy will carry for our users, by applying some of it progressively.
+
+  * Build system
+  - Don't build hybrid ISO images anymore. They boot less reliably on
+    a variety of hardware, and are made less useful by us shipping
+    a USB installer from now on.
+  - Append .conf to live-config configuration filenames:
+    live-config >3.0~a36-1 only takes into account files named *.conf
+    in there. Accordingly update scripts that source these files.
+  - Remove long-obsolete home-refresh script and its configuration.
+
+  * Virtualization support
+  - Support Spice and QXL: install the Spice agent from Debian sid,
+    install xserver-xorg-video-qxl from squeeze-backports.
+
+ -- Tails developers <amnesia@boum.org>  Tue, 17 Apr 2012 14:54:00 +0200
+
 tails (0.10.2) unstable; urgency=low
 
   * Iceweasel

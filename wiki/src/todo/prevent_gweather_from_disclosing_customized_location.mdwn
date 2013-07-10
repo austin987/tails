@@ -1,0 +1,24 @@
+When one adds a custom location in the GNOME Clock applet, and "Set"'s
+it, a request for weather information is made to weather.noaa.gov,
+that presumably discloses the custom location chosen by the user.
+
+Setting the `/apps/gweather/prefs/auto_update` GConf key to false does
+not help.
+
+A workaround that was suggested to us is to add `weather.noaa.gov` to
+the "Ignore Host" list in the GNOME Network Proxy preferences: without
+a proxy configured, these requests cannot go out. At first glance, it
+looks a bit hackish, and it would be nicer to disable this feature in
+a way that works even if the hostname in use changes some day, but in
+last resort, we might end up doing that.
+
+We should research a (probably GConf -based) way to disable
+that feature.
+
+**Next thing to do**: [[!taglink todo/test]] the
+`/schemas/apps/clock_applet/prefs/show_weather` and
+`/schemas/apps/clock_applet/prefs/show_temperature` GConf options.
+
+Note that the connection is apparently done by `gnome-panel`,
+through the configured HTTP proxy (Polipo). It ignores SOCKS
+proxy settings.

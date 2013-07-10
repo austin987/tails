@@ -1,0 +1,59 @@
+#!/bin/sh
+
+set -e
+
+APT_MIRROR_URL="http://deb.tails.boum.org/"
+DEFAULT_COMPONENTS="main"
+
+git_tag_exists() {
+	local tag="$1"
+
+	test -f ".git/refs/tags/$tag"
+}
+
+version_was_released() {
+	local version="$1"
+
+	version="$(echo "$version" | tr '~' '-')"
+	git_tag_exists "$version"
+}
+
+version_in_changelog() {
+	dpkg-parsechangelog | awk '/^Version: / { print $2 }'
+}
+
+output_apt_binary_source() {
+	local suite="$1"
+	local components="${2:-$DEFAULT_COMPONENTS}"
+
+	echo "deb $APT_MIRROR_URL $suite $components"
+}
+
+current_branch() {
+	git branch | awk '/^\* / { print $2 }'
+}
+
+on_topic_branch() {
+	current_branch | grep -qE '^(feature|bug|bugfix)/'
+}
+
+branch_name_to_suite() {
+	local branch="$1"
+
+	echo "$branch" | sed -e 's,[^.a-z0-9-],-,ig'  | tr '[A-Z]' '[a-z]'
+}
+
+
+if version_was_released "$(version_in_changelog)"; then
+	output_apt_binary_source "$(branch_name_to_suite "$(version_in_changelog)")"
+elif [ "$(current_branch)" = "testing" ]; then
+	output_apt_binary_source testing
+elif [ "$(current_branch)" = "experimental" ]; then
+	output_apt_binary_source experimental
+else
+	output_apt_binary_source devel
+fi
+
+if on_topic_branch; then
+	output_apt_binary_source "$(branch_name_to_suite $(current_branch))"
+fi

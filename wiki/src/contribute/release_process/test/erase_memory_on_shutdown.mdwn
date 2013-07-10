@@ -4,10 +4,12 @@
 
 # 0. Prepare the needed tools
 
+Make sure the BIOS is *not* configured to "test" the memory on startup.
+
 Pick one of those:
 
 * [[erase_memory_on_shutdown/qemu_pmemsave]] (pros: no initial setup)
-* [[erase_memory_on_shutdown/virtualbox_dumpguestcore.mdwn]]
+* [[erase_memory_on_shutdown/virtualbox_dumpguestcore]]
   (pros: no initial setup)
 * [[erase_memory_on_shutdown/pxedump]] (pros: works for bare metal,
   possible to `|grep` and avoid writting the huge dump file to disk;
@@ -18,12 +20,15 @@ Pick one of those:
 
 # 1. Fill the RAM with a known pattern
 
-* Boot Tails.
 * Run `fillram` a few times in parallel (on a 32-bit architecture the
   address space of a given process is usually limited at 3 GiB - or
   less, depends on the kernel configuration); as root:
   
-  	for i in $(seq 0 31) ; do fillram & done ; watch free -m
+  	for i in $(seq 0 31) ; do fillram & done ; watch -n 1 free -m
+
+* The `free` output should allow you to reboot late enough (so that
+  enough memory is filled) and soon enough (so that the system is
+  still reactive somehow).
 
 # 2. Test that you can get the pattern after rebooting, if no memory wiping takes place
 
@@ -46,7 +51,8 @@ Pick one of those:
 
 # 3. Test that you can*not* get the pattern after rebooting Tails normally
 
-* Redo step 1.
+* Redo step 1 (don't forget to add `debug=wipemem` to the kernel
+  command-line if your memory scrapper toolkit needs it).
 * Reboot Tails by running `reboot` as root.
 * Make sure your preferred memory scrapper toolkit is ready (e.g.
   plug your USB scrapper stick).

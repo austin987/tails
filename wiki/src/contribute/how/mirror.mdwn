@@ -1,8 +1,8 @@
-[[!meta title="Setup a Tails mirror"]]
+[[!meta title="Set up a Tails mirror"]]
 
 <div id="intro">
 
-<p>Setting up a Tails BitTorrent or HTTP mirror may help Tails users
+<p>Setting up a Tails BitTorrent or HTTP mirror helps Tails users
 downloading it faster and more reliably.</p>
 
 [[!toc levels=2]]
@@ -64,12 +64,13 @@ pushing at least a few dozens [[!wikipedia GiB]] (bytes, not bits) on
 a normal day, and at least 100 GiB a day for a short period after
 each release.
 
-This being said, if you satisfy these practical requirements, please
-read on, you are most welcome aboard!
+If you satisfy these practical requirements, please read on!
+Else, please consider seeding Tails images over BitTorrent instead.
 
-Before starting doing any real work on this topic, you should probably
-get in touch (<tails@boum.org>) and send us your OpenPGP public key
-so that any further communication between us can be properly encrypted.
+Before starting doing any real work on this topic, please
+get in touch (<tails@boum.org>) and send us your OpenPGP public key,
+so that any further communication between us can be properly encrypted
+and authenticated.
 
 1. The big picture
 ------------------
@@ -81,10 +82,10 @@ Every HTTP mirror makes our files available under a fixed URL
 sub-directories (such as
 `http://dl.amnesia.boum.org/tails/stable/tails-i386-lenny-0.6.2/`).
 
-2. Setup your web server
-------------------------
+2. Set up your web server
+-------------------------
 
-You need to setup a VirtualHost with dl.amnesia.boum.org as the
+You need to set up a VirtualHost with dl.amnesia.boum.org as the
 ServerName and indexing enabled. Here is an example Apache
 configuration:
 
@@ -107,14 +108,15 @@ configuration:
 
 Download a snapshot of the current Tails files:
 
-	rsync -r --delete archive.torproject.org::amnesia-archive \
+	rsync -rt --delete rsync.torproject.org::amnesia-archive \
 	         /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
 
-4. Schedule the pulling of Tails files
---------------------------------------
+4. Schedule the pulling of the files
+------------------------------------
 
 Secondary mirrors (like yours) should sync every hour + 15 minutes.
-This process shall obviously be scheduled using cron or equivalent.
+Use `cron` or equivalent to schedule the same `rsync` command
+as above.
 
 5. Go wild
 ----------

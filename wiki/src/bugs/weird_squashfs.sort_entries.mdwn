@@ -1,0 +1,22 @@
+With live-boot-3.x /live/rofs contains the mounted rofs squashfs. It
+seems that the [[read-ahead profiling|todo/improve_boot_time_on_cd]]
+includes a lot of files from there by mistake, including duplicates
+e.g.:
+
+    live/rofs/filesystem.squashfs/etc/group                              32766
+    live/rofs/filesystem.squashfs/usr/share/amnesia/readahead-list       32765
+    usr/share/amnesia/readahead-list                                     32764
+    live/rofs/filesystem.squashfs/bin/touch                              32763
+    bin/touch                                                            32762
+    [...]
+
+End result: Boot takes about twice as long as using no read-ahead at
+all.
+
+These "weird" lines must be taken care of some how. Until then,
+read-ahead profiling is disabled.
+
+> Fixed in the `bugfix/boot-profile_vs_live-rofs` branch, merged into
+> the `stable` and `devel` branches.
+
+> [[done]] in Tails 0.12.

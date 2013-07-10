@@ -112,7 +112,7 @@ degraded security.
   aka TorVM design document
 * JanusVM
 
-#A promising, alternative solution: Qubes
+# A promising, alternative solution: Qubes
 
 Qubes is Fedora spin off which takes [security by isolation to the extreme](http://qubes-os.org/Architecture.html): a Xen hypervizor manages user defined "lightweight virtual machines" or "AppVMs" that isolate user processes, and even certain system-components like the network stack, from each other. Appropriate IPC, file and clip-board sharing supposedly works between programs in different AppVMs.
 
@@ -259,4 +259,71 @@ absolutely unmodified from the latest upstream release.
 2. I suspect it would also speed up the process of propagating upstream fixes... which is probably the single best thing you can do for the security of the application VM.
 3. It would also discipline you to being client-agnostic, which would mean that others could grab your images (especially the Tor VM image) and reuse them for other things.
 
-[[wishlist]]
+# Update October 2012
+
+New developments in other projects:
+
+ * [Qubes OS + Tor](http://theinvisiblethings.blogspot.com/2011/09/playing-with-qubes-networking-for-fun.html): detailed instructions on how to set up transparent Tor proxy with Qubes OS.; lacks considerations for identity correlation though circuit sharing 
+ * [Whonix](http://whonix.sourceforge.net/): Anonymous General Purpose Operating System; Isolating and Transparent Tor proxy based on Virtual Box, Debian GNU/Linux and Tor; not a live system
+
+
+> There are many users who would be able to set this up themselves, see [[todo/amd64_kernel]], the virtualisation software can be stored in the persistent storage and installed after booting a tails livecd. As long as the tails kernel supports running virtualisation software, the features in this document can be used today by a great many users
+
+# Semi-simple solution
+
+Let's say we [[todo/add_virtualbox_host_software]] to Tails and note
+that a host can start several guests using the same boot media. Hence
+we could add some kind of hook during Tails' boot process that,
+depending on some "magic" parameter set by the host (if any), makes
+Tails boot into specialized profiles (e.g. one that only runs Tor and
+one that runs the GUI stuff). For instance:
+
+* tor-guest: Boot Tails into a minimal mode (no Xorg etc.) that just:
+  - starts Tor with all its ports listening on the network.
+  - sets an appropriate firewall (only allow inbound traffic from the
+    'app-guest' vm (see below) to Tor's ports, and only the outbound
+    traffic made by Tor).
+* i2p-guest: Same as 'tor-guest' but adapted for i2p.
+* app-guest: Boot Tails exactly like it's done now except:
+  - it uses the Tor instance running on 'tor-guest' vm.
+  - sets an appropriate firewall (only allow connections to the
+   'tor-guest' and 'i2p-guest' vms)
+
+If no such profile is set Tails boots normally. In Tails Greeter we add
+an option called "Use isolation through virtualization" (or similar)
+that when set:
+
+1. Continues from Tails Greeter to a simple X screen (no GNOME etc.
+   running; only vms are supposed to be run from the host from now on).
+2. Starts a Tails guest with the 'tor-guest' parameter in headless
+   mode. (not sure about the 'i2p-guest' yet since it should start
+   automatically)
+3. Starts a Tails guest with the 'app-guest' parameter in fullscreen
+   mode. This is where the user should interact with Tails from now on.
+
+Relevant settings from Tails Greeter on the host must be forwarded to
+these guests appropriately, e.g. persistent Tor data dir to
+'tor-guest' and all other persistent directories to 'app-guest' (using
+VirtualBox' shared directories, I guess), and the language settings
+should be set in 'app-guest' etc.
+
+A fine question, though, is whether there exist something like this
+"magical" parameter I talk about above in VirtualBox. The simplest
+would be if Virtualbox could add stuff to the kernel commandline,
+but I doubt that is possible in any sane way. More likely something
+can be achieved through the guest additions. It seems like the host
+can execute arbitrary commands on guests using `vboxmanage
+guestcontrol execute`, which could be used to alter how Tails boots
+from then on.
+
+> You could communicate with Virtual Box using hardware serials. Examples:
+
+> `sudo -u $USERNAME VBoxManage setextradata "$VMNAME" "VBoxInternal/Devices/pcbios/0/Config/DmiBIOSVendor" "BIOS Vendor"`
+
+> `sudo -u $USERNAME VBoxManage setextradata "$VMNAME" "VBoxInternal/Devices/pcbios/0/Config/DmiSystemUuid""9852bf98-b83c-49db-a8de-182c42c7226b"`
+
+> <https://github.com/adrelanos/Whonix/blob/master/whonix_createvm>
+> for more examples
+
+> Change hardware serials to some specified value, let Tails read it and
+> let Tails act accordingly.

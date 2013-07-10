@@ -1,0 +1,83 @@
+[[!toc levels=2]]
+
+Rationale
+=========
+
+Internet connections restricted by captive portals pose a problem in
+environments like Tails, where all Internet traffic is routed through
+Tor. There's a catch 22 since the portal cannot be reached before Tor
+is working (and it most likely isn't reachable through Tor any way)
+and Tor cannot work before logging in to the portal. Since most (if
+not all) of these portals are web based, a web browser with direct
+Internet access seem required for avoiding this problem.
+
+Requirements
+============
+
+* It must run a completely separate Iceweasel profile from the
+  Torified browser's.
+* It must be hard to start by mistake.
+* It must be hard to mistake for the Torified browser.
+* It must be configured to use the DNS provided by DHCP (which is required
+  by some captive portals).
+* It must be granted full access to the network so that any captive
+  portals can be reached.
+* It should be restricted access to as much information from the
+  system as possible in case of leaks or compromise.
+
+Implementation
+==============
+
+The aptly named *Unsafe Browser* implements all the above, although at
+this time only a reasonable effort has been made to sandbox it to
+fulfill the last point (restrict access to information).
+
+User interface
+--------------
+
+The Unsafe Browser can be found in the `Applications -> Internet`
+section (with a "warning triangle" as icon) and does the following
+when started:
+
+0. Show a dialog asking the user for verification, while also briefly
+   explaining that the Unsafe Browser won't be anonymous.
+0. "No" is the default answer, but if "Yes", we start a separate
+   Iceweasel instance.
+0. Iceweasel is configured to use a theme with scary colors (red). To
+   not raise suspicion the scary theme is not used when Windows
+   camouflage is activated.
+0. Set the default navigation bar search engine to English Wikipedia.
+   This will serve as a visual indicator that the Unsafe Browser is
+   being used, which will be especially useful when Windows camouflage
+   is activated since the scary colored theme is disabled.
+0. Its start page (locally stored) makes it clear that this is the Unsafe
+   Browser and explains the issues involved with the Unsafe Browser
+   and how to proceed from now on.
+
+Security
+--------
+
+The Unsafe Browser is run by a separate `clearnet` user, wich is
+allowed to make TCP connections to any port, and UDP DNS queries;
+access to local services like Tor etc. are blocked so it cannot
+interfere with them if compromised. Restricting the TCP ports to
+HTTP(S) and DNS only is not done since some captive portals use
+non-standard ports. Port restrictions are a pretty weak defense any
+way since just *one* open port is enough to do anything.
+
+The Unsafe Browser is run inside a chroot consisting of a throw away
+aufs union between a read-only version of the pre-boot Tails
+filesystem, and a tmpfs as the rw branch. Hence, the post-boot
+filesystem (which contains all user data) isn't available to the
+Unsafe Browser within the chroot. The chroot and aufs union is created
+upon Unsafe Browser start, and is torn down after it exits, forcefully
+killing any remaining processes run from inside it.
+
+It should be noted that chroots are pretty weak jails, so an exploit
+could easily escape it and have access to the complete filesystem (as
+restricted for the `clearnet` user). Hence, the reason for using a
+chroot is not for that purpose, but for separating its insecure
+configuration from the rest of the Tails system. For instance, within
+the chroot the DNS server obtained through DNS is configured as the
+system resolver, which would be dangerous if used in the outside
+system.

@@ -11,7 +11,7 @@ whole bunch of fingerprinting attacks an attacker could mount if it
 could pose as the time server and mess with the user's time. We
 therefore want to be able to *authenticate* the servers that provide
 us with supposedly accurate time information. Home-made research
-[[demonstrated|todo/authenticate_time_servers]] that NTPv4's server
+[[!tails_todo authenticate_time_servers desc="demonstrated"]] that NTPv4's server
 authentication features do not fit our usecase yet, so we have to look
 for solutions elsewhere.
 
@@ -98,7 +98,7 @@ probably a compromise we can make.
 
 If using a bridge: your bridge can replay an old (one week old max.)
 consensus, which is used until HTP has fixed the time; not good, but
-probably a compromise we can make. If your bridge also can setup a SSL
+probably a compromise we can make. If your bridge also can set up a SSL
 MitM attack against the HTP connections (e.g. the attacker also
 controls a SSL CA shipped by Debian), it can trick you into using this
 old consensus for max. one week, which is much worse.
@@ -123,23 +123,25 @@ being.
 
 As what follows clearly shows, the upstream HTP has quite a few
 drawbacks that make it unfit for our needs. That's why Tails uses a
-custom version of the Perl HTP client into `/usr/local/sbin/htpdate`.
+custom version of the Perl HTP client into
+[[!tails_gitweb config/chroot_local-includes/usr/local/sbin/htpdate]].
 The repository we copied this script from can be found there:
 
-    git://git.immerda.ch/tails_htp.git
+    git://git.tails.boum.org/htp
 
-For reasons detailed bellow, this version of htpdate uses wget for all
+For reasons detailed bellow, this version of htpdate uses curl for all
 of its HTTP operations.
 
 ## Authentication of servers
 
-The custom `/usr/local/sbin/htpdate` we use delegates certificate
-verification to wget. It also uses several different pools of time
+The custom `/usr/local/sbin/htpdate` we use only connects to HTTPS servers,
+and delegates TLS X.509 certificate
+verification to curl. It also uses several different pools of time
 sources, and if there are too many that fail for any given pool,
 e.g. because of failed certificate checking or being unreachable, the
-pool is considered to be potentially compomised and htpdate aborts.
+pool is considered to be potentially compromised and htpdate aborts.
 
-wget is also directed to only use TLSv1 as a "secure" protocol.
+curl is also directed to only use TLSv1 as a "secure" protocol.
 
 ## HTP source pools
 
@@ -150,7 +152,8 @@ The HTP pools used by Tails are based on stable and reliable
 webservers that get great amounts of traffic. They are categorized
 into three different pools according to their members' relationship to
 the members in the other pools; any member in a one pool should be
-unlikely to share logs or other identifying data with a member from
+unlikely to share logs (or other identifying data), or to agree to
+send fake time information, with a member from
 the the other pools. The pools are as follows:
 
 * The "pal" pool are run by groups that are likely to take great care
@@ -159,7 +162,10 @@ the the other pools. The pools are as follows:
 * The "neutral" pool members have a neutral raltionship to both the
   "pal" and "foe" pool.
 
-The pools are listed in `/etc/default/htpdate`.
+The pools are listed in [[!tails_gitweb config/chroot_local-includes/etc/default/htpdate]].
+
+Basically, Tails `htpdate` pick three random servers (one from each
+pool), and then build the mediate of the three advertised dates.
 
 # Fingerprinting Tails users
 
@@ -181,4 +187,4 @@ efforts and compromise should be made to prevent these?
 # Implementation
 
 A Network Manager hook runs the whole thing:
-`/etc/NetworkManager/dispatcher.d/20-time.sh`.
+[[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/20-time.sh]].

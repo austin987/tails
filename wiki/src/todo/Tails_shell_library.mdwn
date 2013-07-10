@@ -1,0 +1,29 @@
+Some of our custom shell scripts duplicate code that should be
+refactored out to our shell script library
+(`config/chroot_local-includes/usr/local/lib/tails-shell-library/`)
+that these can included
+instead, both for improved code clarity and the usual reasons for
+avoiding code duplication.
+
+Left to do:
+
+* extracting long and short language codes from $LANG
+  - /usr/local/sbin/unsafe-browser
+  - /usr/local/bin/tails-documentation
+  - also see [[todo/fix_locales_form_wrong_assumption]]
+* Various `wait_until_some_condition_is_met` constructs used here and
+  there.
+* Greping boot parameters in `/proc/cmdline`.
+* Uniform way to start GUI applications from system scripts:
+  - `/etc/NetworkManager/dispatcher.d/60-iceweasel.sh`
+  - `/usr/local/sbin/restart-vidalia`
+
+Note that bilibop (once we ship it) adds some nice bonus.
+
+- if the symlink `/dev/bilibop` exists, it means the system is running
+  from a writable media (USB, MMC and the like, but not DVD);
+- if you don't like 'bilibop' but prefer 'Tails' or 'bootdev', just
+  set up `BILIBOP_COMMON_BASENAME` to the value of your choice in
+  `/etc/bilibop/bilibop.conf`
+
+[[!tag todo/code]]

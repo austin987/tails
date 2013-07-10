@@ -11,6 +11,9 @@ import os.path
 # Ignore files matching this regular expression
 IGNORE_RE = "^/(tmp|sys|proc|dev|live/cow)"
 
+# Remove the following prefix (except the last /) from all paths
+IGNORE_PREFIX="/lib/live/mount/rootfs/filesystem.squashfs/"
+
 class ProfileProcessor(ProcessEvent):
     def __init__(self, profile_path):
         self.priority = 32767
@@ -24,11 +27,15 @@ class ProfileProcessor(ProcessEvent):
             # Skip path with white spaces: mksquashfs -sort does not
             # handle them!  fscanf(fd, "%s %d", ...)
             return
+        if path.startswith(IGNORE_PREFIX):
+            path = path[len(IGNORE_PREFIX)-1:]
         if not self.files.has_key(path):
             self.files[path] = self.priority
             self.priority -= 1
 
     def ignore_file(self, path):
+        if path.startswith(IGNORE_PREFIX):
+            path = path[len(IGNORE_PREFIX)-1:]
         self.ignored_files[path] = None
 
     def process_IN_OPEN(self, event):
@@ -45,6 +52,8 @@ class ProfileProcessor(ProcessEvent):
         self.ignore_file(event.pathname)
 
     def is_excluded(self, path):
+        if path.startswith(IGNORE_PREFIX):
+            path = path[len(IGNORE_PREFIX)-1:]
         return self.ignore_re.match(path)
 
     def end_profiling(self):

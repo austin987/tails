@@ -1,0 +1,303 @@
+[[!meta title="Create & Configure the Persistent Volume"]]
+
+[[!inline pages="doc/first_steps/persistence.caution" raw="yes"]]
+
+[[!toc levels=2]]
+
+Start the Persistent Volume Assistant
+=====================================
+
+To start the persistent volume assistant, choose
+<span class="menuchoice">
+  <span class="guimenu">Applications</span>&nbsp;▸
+  <span class="guisubmenu">Tails</span>&nbsp;▸
+  <span class="guimenuitem">Configure persistent storage</span></span>.
+
+<div class="note">
+The error message <span class="emphasis">Error, Persistence partition is not
+unlocked.</span> means that the persistent volume was not enabled from
+<span class="application">Tails greeter</span>. So you can not configure it
+but you can delete it and create a new one.
+</div>
+
+Creating the Persistent Volume
+==============================
+
+When run for the first time, or after [[deleting the persistent
+volume|delete]], the assistant proposes to create a new persistent volume on
+the USB stick from which Tails is running.
+
+1. The persistent volume is an encrypted partition protected by a passphrase.
+Specify a passphrase of your choice in both the
+<span class="guilabel">Passphrase</span> and <span class="guilabel">Verify
+Passphrase</span> text boxes.
+
+2. Click on the <span class="guilabel">Create</span> button.
+
+3. Wait for the creation to finish.
+
+<div class="bug">
+<strong>If the creation is interrupted before it finishes</strong>, you may not
+be able to start Tails from this USB stick any more. This can happen if you
+close the window of the wizard or unplug the USB stick during the creation of
+the persistent volume. [[Delete|first_steps/usb_reset]] and
+[[reinstall|first_steps/usb_installation]] Tails to fix this issue.
+</div>
+
+Persistent Volume Features
+==========================
+
+When run from a USB stick that already has a persistent volume, the assistant
+shows a list of the possible persistent features. Each feature corresponds to a
+set a files to be saved in the persistent volume.
+
+<div class="note">
+<strong>Restart Tails to apply the changes</strong> after selecting or
+unselecting one or several features.
+</div>
+
+<div class="bug">
+If you unselect a feature that used to be activated, it will be
+deactivated after restarting Tails but the corresponding files will
+remain on the persistent volume.
+</div>
+
+<a id="personal_data"></a>
+
+<div class="icon">
+[[!img stock_folder.png link=no]]
+<div class="text"><h2>Personal Data</h2></div>
+</div>
+
+When this feature is activated, you can save your personal files and working
+documents in the <span class="filename">Persistent</span> folder.
+
+To open the <span class="filename">Persistent</span> folder, choose
+<span class="menuchoice">
+  <span class="guimenu">Places</span>&nbsp;▸
+  <span class="guimenuitem">Home Folder</span></span>, and open the <span
+  class="guilabel">Persistent</span> folder.
+
+<a id="gnupg"></a>
+
+<div class="icon">
+[[!img seahorse-key.png link=no]]
+<div class="text"><h2>GnuPG</h2></div>
+</div>
+
+When this feature is activated, the OpenPGP keys that you create or import are
+saved in the persistent volume.
+
+<div class="caution">
+If you manually edit or overwrite the
+<span class="filename">~/.gnupg/gpg.conf</span> configuration file
+you may lessen your anonymity,
+weaken the encryption defaults or render GnuPG unusable.
+</div>
+
+<a id="ssh_client"></a>
+
+<div class="icon">
+[[!img seahorse-key-ssh.png link=no]]
+<div class="text"><h2>SSH Client</h2></div>
+</div>
+    
+When this feature is activated, all the files related to the secure-shell client
+are saved in the persistent volume:
+
+  - The SSH keys that you create or import
+  - The public keys of the hosts you connect to
+  - The SSH configuration file in <span class="filename">~/.ssh/config</span> 
+
+<div class="caution">
+If you manually edit the <span class="filename">~/.ssh/config</span>
+configuration file, make sure not to overwrite the
+default configuration from the
+<span class="filename">/etc/ssh/ssh_config</span> file. Otherwise, you may weaken the
+encryption defaults or render SSH unusable.
+</div>
+
+<a id="pidgin"></a>
+
+<div class="icon">
+[[!img pidgin.png link=no]]
+<div class="text"><h2>Pidgin</h2></div>
+</div>
+
+When this feature is activated, all the configuration files of the
+<span class="application">Pidgin</span> Internet messenger are saved in the
+persistent volume:
+
+  - The configuration of your accounts, buddies and chats.
+  - Your OTR encryption keys and keyring.
+  - The content of the discussions is not saved unless you configure
+    <span class="application">Pidgin</span> to do so.
+
+All the configuration options are available from the graphical interface. There
+is no need to manually edit or overwrite the configuration files.
+
+<a id="claws_mail"></a>
+
+<div class="icon">
+[[!img claws-mail.png link=no]]
+<div class="text"><h2>Claws Mail</h2></div>
+</div>
+
+When this feature is activated, the configuration and emails stored locally by
+the <span class="application">Claws Mail</span> email client are saved in the
+persistent volume.
+
+All the configuration options are available from the graphical interface. There
+is no need to manually edit or overwrite the configuration files.
+
+<a id="gnome_keyring"></a>
+
+<div class="icon">
+[[!img seahorse-key-personal.png link=no]]
+<div class="text"><h2>GNOME Keyring</h2></div>
+</div>
+
+When this feature is activated, the secrets of
+<span class="application">GNOME Keyring</span> are saved in the persistent
+volume.
+
+GNOME Keyring is a collection of components in GNOME that store secrets,
+passwords, keys, certificates and make them available to applications.
+For more information about <span class="application">GNOME Keyring</span> see
+the [official documentation](http://live.gnome.org/GnomeKeyring).
+
+<a id="network-manager"></a>
+
+<div class="icon">
+[[!img network-manager.png link=no]]
+<div class="text"><h2>Network Connections</h2></div>
+</div>
+
+When this feature is activated, the configuration of the network devices
+and connections is saved in the persistent volume.
+
+To save passwords, for example the passwords of encrypted wireless connections,
+the [[<span class="application">GNOME Keyring</span> persistence
+feature|configure#gnome_keyring]] must also be activated.
+
+<a id="apt_packages"></a>
+
+<div class="icon">
+[[!img synaptic.png link=no]]
+<div class="text"><h2>APT Packages</h2></div>
+</div>
+
+When this feature is activated, the packages that you install using the
+<span class="application">Synaptic</span> package manager or the
+<span class="command">apt-get</span> command are saved in the persistent volume.
+
+If you install additional programs, this feature allows you to download them
+once and reinstall them during future working sessions, even offline.
+Note that those packages are not automatically installed when restarting Tails.
+
+If you activate this feature, it is recommended to activate the
+<span class="guilabel">APT Lists</span> feature as well.
+
+<a id="apt_lists"></a>
+
+<div class="icon">
+[[!img synaptic.png link=no]]
+<div class="text"><h2>APT Lists</h2></div>
+</div>
+
+When this feature is activated, the lists of all the software packages available
+for installation are saved in the persistent volume.
+
+Those so called <span class="emphasis">APT lists</span> correspond to the files
+downloaded while doing
+<span class="guilabel">Reload</span> from the
+<span class="application">Synaptic</span> package manager or issuing the
+<span class="command">apt-get update</span> command.
+
+The <span class="emphasis">APT lists</span> are needed to install additional
+programs or explore the list of available software packages. This feature allows
+you to reuse them during future working sessions, even offline.
+
+<a id="browser_bookmarks"></a>
+
+<div class="icon">
+[[!img user-bookmarks.png link=no]]
+<div class="text"><h2>Browser bookmarks</h2></div>
+</div>
+
+When this feature is activated, changes to the bookmarks in the
+<span class="application">Iceweasel</span> web browser are saved in the persistent
+volume. This does not apply to the Unsafe web browser.
+
+<a id="dotfiles"></a>
+
+<div class="icon">
+[[!img preferences-desktop.png link=no]]
+<div class="text"><h2>Dotfiles</h2></div>
+</div>
+
+When this feature is activated, all the files in the <span
+class="filename">/lib/live/mount/persistence/XXX_unlocked/dotfiles</span> folder
+are linked in the <span class="filename">Home Folder</span> (files in
+subfolders of <span class="filename">dotfiles</span> are also linked
+in the corresponding subfolder of your <span class="filename">Home
+Folder</span>). The `XXX` in the above should be something like `sdb2`
+but since there will only ever be one folder in <span
+class="filename">/lib/live/mount/persistence</span> there should be little risk
+for confusion.
+
+This option is useful if you want to make some specific files
+persistent, but not the folders they are stored in. A fine example are
+the so called "dotfiles" (and hence the name of this feature), the
+hidden configuration files in the root of your home directory, like
+<span class="filename">~/.git</span> and <span
+class="filename">~/.bashrc</span>.
+
+<a id="custom_directory"></a>
+
+Custom directory
+----------------
+
+With this feature you can specify other folders of your choice to be saved in
+the persistent volume.
+
+If for example you want to create and make persistent an
+<span class="filename">Images</span> folder in the
+<span class="filename">Home Folder</span> you can specify
+<span class="filename">/home/amnesia/Images</span> as a custom directory.
+
+<a id="additional_packages"></a>
+
+Additional software packages
+----------------------------
+
+<div class="note">
+This is an experimental feature which does not appear in the assistant.
+</div>
+
+When this feature is enabled, a list of additional software of your
+choice is automatically installed at the beginning of every working
+session. The corresponding software packages are stored in the
+persistent volume. They are automatically upgraded for security
+after a network connection is established.
+
+To use this feature you need to enable both the <span
+class="guilabel">APT Lists</span> and <span class="guilabel">APT
+Packages</span> features.
+
+To choose the list of additional software, create a file called
+`/lib/live/mount/persistence/XXX_unlocked/live-additional-software.conf`
+(`XXX` corresponds to the name of the device where the persistent
+storage is stored: probably `sdb2`). Each line of this file must contain
+the name of a Debian package to be installed as an additional software
+package.
+
+For example, to automatically install the `dia` software, a diagram
+editor, and the `fontmatrix` software, a font manager, create a
+`live-additional-software.conf` file with the following content:
+
+    dia
+    fontmatrix
+
+To learn about the many software packages available in Debian, visit
+<http://packages.debian.org/stable/>.

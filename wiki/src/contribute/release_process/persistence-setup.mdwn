@@ -1,0 +1,93 @@
+[[!meta title="Releasing persistence-setup"]]
+
+[[!toc levels=1]]
+
+Install build and test dependencies
+===================================
+
+Required dependencies on Debian:
+
+    libdist-zilla-perl libdist-zilla-plugins-cjm-perl
+    libdist-zilla-plugin-git-perl
+    liblocale-msgfmt-perl libmoosex-has-sugar-perl
+    dh-make-perl
+
+Install the dependencies:
+
+    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::InstallGuide
+    DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::OurPkgVersion
+    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::CriticTests
+    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::NoTabsTests
+    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::CheckChangeLog
+    DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::LocaleMsgfmt
+
+Make an upstream release
+========================
+
+Enable new translations in `po/PACKAGE`.
+
+Update version number in `bin/tails-persistence-setup`.
+
+Update `Changes`.
+
+Commit all files that need to be.
+
+Build an upstream tarball:
+
+    dzil build
+
+Tag the release:
+
+    git tag -s $VERSION
+
+Move the tarball out of the build repository:
+
+    mv Tails-Persistence-*.tar.gz ..
+
+Delete the build directory:
+
+    rm -r Tails-Persistence-*
+
+Update the Debian package
+=========================
+
+Checkout the branch with Debian package specifics:
+
+    git checkout debian
+
+Import the new upstream tarball:
+
+    git-import-orig --upstream-vcs-tag=$VERSION ../Tails-Persistence-$VERSION.tar.gz
+
+Update `debian/changelog`:
+
+    git-dch
+
+(Do not forget to set the appropriate release.)
+
+Commit `debian/changelog`:
+
+        git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+
+Build a Debian package (use a Squeeze/i386 + backports chroot):
+
+    git-buildpackage
+
+If everything is fine, add a signed tag to the repository and push the
+changes:
+
+    git-buildpackage --git-tag-only --git-sign-tags
+    git push && git push --tags
+
+(Make sure `master`, `upstream`, `debian` and `pristine-tar` were all pushed.)
+
+Add the Debian package to Tails
+===============================
+
+Sign the package:
+
+    debsign $CHANGES_FILE
+
+Upload:
+
+    dupload --to tails $CHANGES_FILE

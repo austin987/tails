@@ -1,0 +1,34 @@
+Anonymouth is an open source project which offers a software package which includes
+
+* a stylometry package, Jstylo
+* a defensive package, Anonymouth, which uses the analysis of Jstylo to suggest to the writer ways to improve the anonymity of a draft document
+
+Unfortunately I think that at present these are available only for Windows, and Jstylo uses Java.  I can see that these features could considerably increase the work involved in porting to Tails.  But perhaps simply playing around with Anonymouth will suggest some ideas for writing from scratch something analogous for inclusion in Tails.
+
+For example, I hope it wouldn't be enormously difficult for a good programmer to write a package which suggests comparatively common synonyms for uncommon words in the draft.
+
+The open source statistical package R includes a number of text processing packages (including POS taggers) which could be backported to Debian stable.  Wordnet and some others are already available.
+
+Motivation: Narayanan et al. used 1188 features to classify about 2.4 million blog posts from 100,000 blogs using several methods.  Then they tried to identify new posts, ranking the blogs from best to worst fit.  Their best method performed well enough to be a bit scary:
+
+* 20% : listed the correct blog first
+* 35%: listed correct blog in top 10 (out of 100,000)
+* 50%: listed correct blog in top 200
+
+But they point out that defensive methods such as Anonymouth stand a chance of defeating their classifiers (maybe not more sophisticated ones).  See table 11 in Naranayan et al. for the top ten (of 1188) features, each of which contributes about one bit of de-anonymization (only 33 bits is needed to uniquely identify a living human, maybe less than 30 to uniquely identify most English-speaking humans).  Several of the top ten are simple punctuation character frequencies; only two would require a parts-of-speech tagger to defend against.
+
+The potential danger for Tails users who post as well as read while using Tails is that partial de-anonymization could easily reduce their anonymity by a dozen bits, and their browser fingerprint will probably reduce it by another dozen bits.  Then, if they simply mention their city of residence in a post, this might be enough to completely de-anonymize them.  And the work of Narayanan et al. suggests that capable adversaries may be able to mount such attacks for tens of millions of netizens at a time.
+
+References:
+
+* Anonymouth home page, <https://psal.cs.drexel.edu/index.php/Main_Page>
+* Narayanan et al., "On the Feasibility of Internet-Scale Author Identification", <http://www.randomwalker.info/publications/author-identification-draft.pdf>
+
+> I think Tails either underestimates the problem.
+
+> Or the problem is that critical and too difficult (impossible?) to solve that they rather defuse to believe it to be true? They made a great anonymity tool and now some lousy group of researchers almost voids their great efforts.
+
+>> Please take this discussion to the tails-dev mailing-list if you
+>> feel it's needed. --intrigeri
+
+[[wishlist]]

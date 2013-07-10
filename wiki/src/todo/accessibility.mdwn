@@ -11,7 +11,7 @@ Tails therefore needs to ship with accessibility technologies.
 
 # Enabling accessibility features
 
-These accessibility tools can be  enabled at boot time by people who
+These accessibility tools could be  enabled at boot time by people who
 need it, by passing `access=` option(s) to live-boot:
 
 	access=ACCESS
@@ -22,19 +22,32 @@ need it, by passing `access=` option(s) to live-boot:
 	  v3=blindness, m1=minor motor difficulties, m2=moderate motor
 	  difficulties.
 
-Once we've moved the language selection out of the syslinux boot menu,
-we might want to use it to enable accessibility features.
+We might want to use the syslinux boot menu to enable accessibility features.
+
+However, live-boot 3.0~a27-1 removed this feature: "Removing outdated
+and broken accessibility script, this will be redone in
+live-config properly." This did not happen upstream.
 
 # Visual
 
-## Basic tools
+Orca does not work with iceweasel yet. Also think of the Unsafe Browser.
 
-- screen magnifier: `gnome-mag` is installed in Tails
-  needs [[!taglink todo/test]] and [[!taglink todo/documentation]]
-- text-to-speech: `gnome-orca` is installed in Tails, needs
-  * [[!taglink todo/documentation]]
-  * it should automatically start when the `access=v3` boot option is
-    set; however, it does not. [[!tag todo/code]]
+# Motor
+
+live-boot's `access=m1` and `access=m2` options enable various GNOME
+options suitable for people having motor difficulties. This might be
+enough.
+
+We also probably want to install the `dasher` graphical predictive
+text input system, that adds eyetracking into the mix. It brings 10MB
+.deb files in: [[todo/install_dasher]].
+
+# Resources
+
+* [[!debwiki accessibility-devel]]
+* [[!debwiki accessibility]]
+
+# Archive: discarded tools
 
 ## Compiz
 
@@ -53,27 +66,6 @@ for some people with sight impairment; such features Compiz includes are:
   is much clearer cut than the mouse tracking in gnome-mag.
 - zoom: magnify the entire desktop
 
-On the other hand, Compiz requires modern graphics hardware, and seems
-pretty hard to get working on Debian Squeeze. We should [[!taglink
-todo/test]] and [[!taglink todo/research]]:
-
-- if there is a way to have Compiz properly working on Debian Squeeze;
-- if there is a practical way to enable Compiz automatically on
-  hardware that supports it.
-
-[[!taglink todo/research]]
-
-# Motor
-
-live-boot's `access=m1` and `access=m2` options enable various GNOME
-options suitable for people having motor difficulties. This might be
-enough.
-
-We also probably want to install the `dasher` graphical predictive
-text input system, that adds eyetracking into the mix. It brings 10MB
-.deb files in. Let's [[!taglink todo/code]].
-
-# Resources
-
-* [[!debwiki accessibility-devel]]
-* [[!debwiki accessibility]]
+On the other hand, Compiz requires modern graphics hardware, seems
+pretty hard to get working on Debian Squeeze, and won't be in Wheezy
+=> discarded.

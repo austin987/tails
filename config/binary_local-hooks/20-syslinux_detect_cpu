@@ -1,0 +1,102 @@
+#!/bin/bash
+
+# Including common functions
+. "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
+
+# Setting static variables
+DESCRIPTION="$(Echo 'adding CPU autodetection to the syslinux menu')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Reading configuration files
+Read_conffiles config/all config/bootstrap config/common config/binary
+Set_defaults
+
+# Safeguards
+if [ "${LB_BOOTLOADER}" != "syslinux" ]
+then
+	exit 0
+fi
+if [ "${LB_ARCHITECTURE}" != "i386" ]
+then
+	exit 0
+fi
+
+# Seems like we'll have work to do
+Echo_message "adding CPU autodetection to the syslinux menu"
+
+# Setting boot method specific variables
+case "${LB_BINARY_IMAGES}" in
+	iso|iso-hybrid)
+		SYSLINUX_PATH="binary/isolinux"
+		SYSLINUX_CFG="${SYSLINUX_PATH}/isolinux.cfg"
+		;;
+	usb-hdd)
+		SYSLINUX_PATH="binary/syslinux"
+		SYSLINUX_CFG="${SYSLINUX_PATH}/syslinux.cfg"
+		;;
+esac
+
+# Setting variables
+SYSLINUX_LIVE_CFG="${SYSLINUX_PATH}/live.cfg"
+SYSLINUX_MENU_CFG="${SYSLINUX_PATH}/menu.cfg"
+
+# Checking depends
+Check_package chroot/usr/bin/syslinux syslinux
+
+# Restoring cache
+Restore_cache cache/packages_binary
+
+# Installing depends
+Install_package
+
+# Copy necessary syslinux modules
+for module in ifcpu64.c32
+do
+	cp "chroot/usr/lib/syslinux/${module}" "${SYSLINUX_PATH}/"
+done
+
+# Saving cache
+Save_cache cache/packages_binary
+
+# Removing depends
+Remove_package
+
+# Replace syslinux.cfg with autodetection "code"
+cat > "${SYSLINUX_CFG}" <<EOF
+label select_menu
+       com32 ifcpu64.c32
+       append menu_686-pae -- menu_686-pae -- menu_486
+label menu_686-pae
+       kernel vesamenu.c32
+       append live686.cfg
+label menu_486
+       kernel vesamenu.c32
+       append live486.cfg
+default select_menu
+prompt 0
+EOF
+
+# Set a few variables in menu.cfg as loading vesamenu.c32 resets its
+# state to the defaults
+sed -i -e "1i prompt 0\ntimeout 40\n" "${SYSLINUX_MENU_CFG}"
+
+# Copy and adapt live.cfg for each kernel
+for arch in 486 686
+do
+	(
+		echo "include menu.cfg"
+
+		if [ $arch = 486 ]; then
+		   append=""
+		else
+		   append=2
+		fi
+		sed -e "s,/vmlinuz$,/vmlinuz${append}, ; s,initrd\.img,initrd${append}.img," "${SYSLINUX_LIVE_CFG}"
+	) | sed -n -e '/^label live-686-pae.*/ { q } ; p' \
+	  > "${SYSLINUX_PATH}/live${arch}.cfg"
+done
+
+# Don't load live.cfg from menu.cfg:
+# syslinux_cfg automatically loads arch-specific menus
+sed -i -e '/^include live\.cfg/d' "${SYSLINUX_MENU_CFG}"

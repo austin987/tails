@@ -1,0 +1,33 @@
+If Tor restarts during "bridge mode", Tor will lose any bridge info
+input by the user through Vidalia, bringing Tor to an inactive
+state. This is because options set by a controller, like Vidalia,
+aren't saved to `torrc` (atleast for us where Vidalia doesn't have
+write access to it), but are only kept in Tor's in-memory state.
+
+This can happen when:
+
+* `tordate` restarts Tor during bootstrap, which happens when the
+  system clock is too off compared to the consensus downloaded through
+  the bridge.
+* `unsafe-browser` restarts Tor on shutdown if Tor isn't working.
+
+The inevitable mismatches between what's in `torrc`, a running Tor's
+current state, and any Tor controllers configurations are troublesome
+to handle. The same goes with Vidalia's inability to "reconnect" to
+Tor if it restarts, which would fix this particular problem. I suspect
+that's largely an artifact from Vidalia being designed to completely
+own it's Tor instance by even starting/stopping it, which makes us,
+users of a system-wide Tor instance, prone to errors like this.
+
+One possible fix: we should aim for this: whenever Tor restarts,
+Vidalia should restart immediately after. Since there is some
+additional logic to this (e.g. if Vidalia isn't running but Tor
+restarts we don't want to start Vidalia, is is the case in the NM hook
+10-tor.sh) we may want to create yet another wrapper that we always
+use when at least restarting Tor.
+
+> Implemented in the branch `bugfix/bridge_mode_vs_tor_restarts`,
+> merged into `experimental`. Candidate for Tail 0.15.
+
+[[!taglink todo/done]] in 0.15.
+

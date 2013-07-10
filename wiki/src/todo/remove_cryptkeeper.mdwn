@@ -1,0 +1,21 @@
+Wikipedia [lists](http://en.wikipedia.org/wiki/Encfs#Disadvantages)
+the following disadvantages (by design) of EncFS (used by CryptKeeper,
+which we are shipping):
+
+* EncFS volumes cannot be formatted with an arbitrary filesystem. They
+  share the same features and restrictions as the filesystem
+  containing the source directory.
+* Fragmentation of the encrypted volume causes fragmentation of the
+  filesystem containing the source directory.
+* Anyone having access to the source directory is able to see how many
+  files are in the encrypted filesystem, what permissions they have,
+  their approximate size, and the last time they were accessed or
+  modified.
+
+The last point is especially worrying from a security POV (no leaks
+are good) and show why encrypted filesystems like EncFS are inferior
+to full disk encryption solutions like LUKS. Since [[persistence]] is
+implemented, and is using LUKS, we should consider removing
+CryptKeeper to stop encouraging its use.
+
+> [[!taglink todo/done]] in Tails 0.12.

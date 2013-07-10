@@ -13,11 +13,14 @@
 ## http://wiki.noreply.org/noreply/TheOnionRouter/TorFAQ#torrc
 
 
-## Replace this with "SocksPort 0" if you plan to run Tor only as a
-## server, and not make any local application connections yourself.
-SocksPort 9050 # what port to open for local application connections
-SocksListenAddress 127.0.0.1 # accept connections only from localhost
-#SocksListenAddress 192.168.0.1:9100 # listen on this IP:port also
+## Default SocksPort
+SocksPort 127.0.0.1:9050 IsolateDestAddr IsolateDestPort
+## SocksPort for the MUA
+SocksPort 127.0.0.1:9061 IsolateDestAddr
+## SocksPort for Tails-specific applications
+SocksPort 127.0.0.1:9062 IsolateDestAddr IsolateDestPort
+## SocksPort for the default web browser
+SocksPort 127.0.0.1:9063
 
 ## Entry policies to allow/deny SOCKS requests based on IP address.
 ## First entry that matches wins. If no SocksPolicy is set, we accept
@@ -153,7 +156,7 @@ ControlListenAddress 127.0.0.1
 ################ Local settings ########################################
 
 ## Torified DNS
-DNSPort 8853
+DNSPort 53
 AutomapHostsOnResolve 1
 AutomapHostsSuffixes .exit,.onion
 
@@ -167,6 +170,3 @@ AvoidDiskWrites 1
 ## We don't care if applications do their own DNS lookups since our Tor
 ## enforcement will handle it safely.
 WarnUnsafeSocks 0
-
-## Default list for 0.2.1.30 + 6523 (gobby)
-LongLivedPorts 21,22,706,1863,5050,5190,5222,5223,6523,6667,6697,8300

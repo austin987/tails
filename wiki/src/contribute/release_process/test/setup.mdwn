@@ -1,0 +1,139 @@
+[[!meta title="Test suite installation and setup"]]
+
+Until we have a Puppet module to manage this in automated fashion,
+here's how to setup an environment to run our automated test suite.
+
+Once you have a working environment, see [[test/usage]].
+
+[[!toc levels=2]]
+
+Debian packages
+===============
+
+The following packages are necessary on Debian Wheezy, with unstable
+and experimental sources added:
+
+    apt-get install build-essential curl git xvfb virt-viewer \
+        libsikuli-script-java libxslt1-dev libxml2-dev tcpdump \
+        unclutter radvd x11-apps graphicsmagick syslinux libcap2-bin \
+        graphicsmagick-imagemagick-compat devscripts
+    apt-get -t experimental install qemu-kvm qemu-system-x86 libvirt0 \
+        libvirt-dev libvirt-bin seabios/unstable dnsmasq-base/unstable
+
+The above libvirt packages lack support for the `removable` disk
+property (needed by the `usb_install` feature), but we have a
+[patch](https://www.redhat.com/archives/libvir-list/2013-March/msg01051.html)
+in an upstreaming process. Until that happens and it lands in Debian
+experimental you need to build libvirt packages yourself with this
+patch added.
+
+If you intend to use the RVM installer (you probably must do that; see
+next section) you need:
+
+    apt-get install curl ant
+
+(Optional) If you want to watch the test session live you need:
+
+    apt-get install x11vnc xtightvncviewer
+
+If you're running the test suite in a nested environnement, install
+xtightvncviewer on the bare metal level-0 host. Then you can use vncviewer's
+`-via` option so that it automatically setup a ssh tunnel to your first level
+test suite domain for you and display the Tails VM. Ex where $DISPLAY is the
+display given to you by `run_test_suite` (often 0):
+
+    vncviewer -viewonly -via user@level0 localhost:$DISPLAY
+
+(Optional) If you want to capture the test session as a video you
+need:
+
+    apt-get install ffmpeg libvpx1
+
+
+JRuby 1.6 via RVM
+=================
+
+You also need a JRuby >= 1.6 environment (we currently fix this to
+version 1.6.8), which sadly isn't possible using Debian packages yet.
+
+The actual workaround is to use [RVM](http://rvm.io/). You first need
+to fetch the installer:
+
+    wget -O rvm.install https://get.rvm.io
+
+You can do a system-wide installation of RVM (available to all users
+in the `rvm` group) by starting the installer as `root`. For any other
+user it's installed in `$HOME`. Both approaches work just fine,
+depending on your needs. The installer is started with:
+
+    bash rvm.install --verify-downloads 0
+
+If you installed RVM as `root` you run:
+
+    source /etc/profile.d/rvm.sh
+
+otherwise (i.e. if you installed it as an unprivileged user) you run:
+
+    source $HOME/.rvm/scripts/rvm
+
+You can then use RVM to install JRuby:
+
+    rvm install --disable-binary --verify-downloads 0 jruby-1.6.8
+    rvm use --default jruby-1.6.8
+
+
+Rubygems
+========
+
+Every `ruby`/`gem`-related command should now use the JRuby installed
+via RVM. Run the following to install the necessary gems for JRuby:
+
+    gem sources -a http://gems.github.com
+    export JRUBY_OPTS=-Xcext.enabled=true
+    gem install cucumber \
+        rspec \
+        sikuli \
+        ruby-libvirt \
+        packetfu \
+        json \
+        system_timer
+
+
+Other requirements
+==================
+
+The system running the test suite needs an accurate clock since we
+sync sync the clock from the host to the Tails guest after a
+background snapshot restore to appease Tor.
+
+
+Running test suite as a non-root user
+=====================================
+
+This is entirely possible, but there's some additional configuration
+required. Run the following as `root`:
+
+    addgroup tcpdump
+    dpkg-statoverride --update --add root tcpdump 754 /usr/sbin/tcpdump
+    setcap CAP_NET_RAW+eip /usr/sbin/tcpdump
+    adduser $USER tcpdump
+    adduser $USER libvirt
+    adduser $USER libvirt-qemu
+    # The following is not necessary if $USER performed the RVM
+    # install of JRuby above
+    adduser $USER rvm
+
+It's important to run `setcap` after `dpkg-statoverride` since the
+latter deletes all capabilities. Unfortunately the `setcap` command
+has to be rerun for that reason everytime the `tcpdump` package is
+updated until [[!debbug 662845]] is fixed.
+
+Running these commands will add some interesting capabilities to
+`$USER`, so you may want to do this for a dedicated user separate from
+your normal user. In that case (and if you run the tests as root) the
+`--view` option won't work unless you grant `$USER` access to your
+display via `xhost +SI:localhost:$USER`. Alternatively you can use the
+`--vnc-server-only` option and manually connect to the VNC server with
+your normal user. Just make sure the VNC viewer is in view-only mode
+(e.g. `xtightvncviewer --view-only ...`) in order to not interfere
+with the testing session.

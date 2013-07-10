@@ -1,0 +1,95 @@
+[[!meta title="Tor Bridge Mode"]]
+
+[[!toc levels=1]]
+
+What bridges are and when to use them
+=====================================
+
+When using Tor with Tails in its default configuration, anyone who can
+observe the traffic of your Internet connection (for example your
+Internet Service Provider and perhaps your government and law
+enforcement agencies) can know that you are using Tor.
+
+This may be an issue if you are in a country where the following
+applies:
+
+1. **Using Tor is blocked by censorship:** since all connections to the
+   Internet are forced to go through Tor, this would render Tails useless for
+   everything except for working offline on documents, etc.
+
+2. **Using Tor is dangerous or considered suspicious:** in this case
+   starting Tails in its default configuration might get you into
+   serious trouble.
+
+Tor bridges, also called Tor bridge relays, are alternative entry points
+to the Tor network that are not all listed publicly. Using a bridge
+makes it harder, but not impossible, for your Internet Service Provider
+to know that you are using Tor.
+
+If you are in one of the situations described above
+you might want to use Tor bridges in Tails. Please also read
+The Tor Project's [dedicated page about
+bridges](https://www.torproject.org/docs/bridges) to get a general
+idea about what bridges are.
+
+In order to use bridges, you must know in advance the address of at
+least one bridge. The Tor Project distributes bridge addresses in
+several ways, for example from their
+[website](https://bridges.torproject.org/) and via email.
+
+<div class="note">
+Bridges are less reliable and tend to have lower performance than other
+entry points.
+</div>
+
+How to use bridges in Tails
+===========================
+
+Tails provides a *bridge mode* that guides you through the process of
+setting up bridges before connecting to Tor.
+
+Note that you must have at hand at least one bridge address before
+starting Tails. For example, you can write it down on a piece of paper
+or store it in a [[persistent volume|doc/first_steps/persistence]].
+
+To activate the *bridge mode*, add the <span
+class="command">bridge</span> boot option to the <span
+class="application">boot menu</span>. For detailed instructions, see
+the documentation on
+[[using the <span class="application">boot menu</span>|startup_options#boot_menu]].
+
+If using Tor is dangerous in your country
+=========================================
+
+The Tor Project's [documentation on
+bridges](https://www.torproject.org/docs/bridges) mainly focuses on
+censorship circumvention, this means when the usage of Tor is blocked by
+censorship. If using Tor is dangerous or considered suspicious in your
+country, then there are some extra rules that you should follow in order
+to prevent you from being identified as a Tor user.
+
+<div class="caution">
+Bridges are important tools that work in many cases but <strong>they are
+not an absolute protection</strong> against the technical progress that
+an adversary could do to identify Tor users.
+</div>
+
+1. Always start Tails in *bridge mode*.
+
+2. Only use [*obfuscated
+   bridges*](https://www.torproject.org/docs/bridges#PluggableTransports)
+   since they are harder to identify than other bridges.
+
+3. The less publicly known the bridges are, the better.
+   Unfortunately, since some bridge addresses can be obtained by anyone
+   from the Tor website or by email, it is also
+   possible for an adversary to get the same
+   bridge information by the same means. The Tor Project has some
+   protection against that, but they are far from being perfect.
+
+   So the best is if you can find a trusted friend or
+   an organisation in a different country who runs a "private" *obfuscated
+   bridge* for you. In this case "private" means that the bridge is
+   configured with the option `PublishServerDescriptor 0`. Without this option The Tor
+   Project can learn about the bridge and may distribute its address to others
+   and so it could end up in the hands of your adversary.

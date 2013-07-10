@@ -1,0 +1,52 @@
+[[!toc levels=2]]
+
+Tails has a time-based release schedule, aligned with Firefox ESR
+(Extended Support Release) that are put out every 6 weeeks:
+
+* <https://wiki.mozilla.org/Releases>
+* <https://mail.mozilla.com/home/akeybl@mozilla.com/Release%20Management.html>
+* <https://ftp.mozilla.org/pub/mozilla.org/firefox/releases/>
+
+Reasons for this switch were [listed on
+tails-dev](https://mailman.boum.org/pipermail/tails-dev/2012-April/001132.html) first.
+
+The idea is to put a major Tails release out every 12 weeks, plus
+a point release in between.
+
+Schedule
+========
+
+	/       3w        \/   2w     /2|5d\
+	                                     
+	previous          freeze      firefox
+	release           RC1         ESR    
+	|                 |           |     new
+	|                 |           | RC2 release
+	|                 |           | |   |
+	↓                 ↓           ↓ ↓   ↓
+	._____._____._____._____._____._____.
+	0     1     2     3     4     5     6
+
+What if things go wrong?
+========================
+
+Postponing the final release causes problems for those who have
+scheduled time for post-release user support, press work, etc..
+
+Also, changing our mind (i.e. releasing a point-release instead of
+a major one) => switching minor/major release schedule for the future
+is probably not an option either.
+
+So we need to have a pessimistic enough RC->final schedule to handle
+unexpected issues.
+
+Reverting the faulty feature branch is an option too.
+
+Some day, manually sync'ing upstream APT repositories into [[our own
+one|contribute/APT_repository]] will remove quite some of the
+potential for last minute breakage.
+
+Remaining issues
+================
+
+* When to run the test suite: RC1 and/or RC2?

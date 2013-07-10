@@ -22,7 +22,7 @@ or GNOME keyring 3.x to manage passphrase input.
 =cut
 
 use strict;
-use warnings;
+use warnings FATAL => 'all';
 use 5.10.0;
 
 # VERSION
@@ -30,13 +30,16 @@ use 5.10.0;
 use Glib qw{TRUE FALSE};
 use Gtk2 qw{-init};
 use Gtk2::Gdk::Keysyms;
+use Gtk2::SimpleList;
 
 use Encode qw{decode encode find_encoding};
 use English;
-use GnuPG::Interface;
+use gpgApplet::GnuPG::Interface;
 use IO::Handle;
 use I18N::Langinfo qw{langinfo CODESET};
 use List::MoreUtils qw{none};
+use Switch;
+use DateTime;
 
 use Locale::gettext;
 use POSIX;
@@ -48,25 +51,42 @@ textdomain("gpgApplet");
 
 =cut
 
+use constant C_SELECT      => 0;
+use constant C_NAME        => 1;
+use constant C_KEYID       => 2;
+use constant C_STATUS      => 3;
+use constant C_FINGERPRINT => 4;
+use constant C_USERIDS     => 5;
+use constant C_TRUSTED     => 6;
+use constant VISIBLE_COLS  => (C_NAME, C_KEYID, C_STATUS);
+use constant HIDDEN_COLS   => (C_FINGERPRINT, C_USERIDS, C_TRUSTED);
+
+use constant COMBO_NAME        => 0;
+use constant COMBO_KEYID       => 1;
+use constant COMBO_FINGERPRINT => 2;
+use constant COMBO_ROLE        => 3;
+
+my $gnupg         = gpgApplet::GnuPG::Interface->new();
 my $codeset       = langinfo(CODESET());
 my $encoding      = find_encoding($codeset);
 my $main_window   = Gtk2::Window->new();
 my $icon_factory  = Gtk2::IconFactory->new();
-my %gnupg_options = (armor => 1, meta_interactive => 0);
+# Set always_trust since GnuPG otherwise will fail if the key's
+# trust hasn't been set.
+my %gnupg_options = (armor => 1, always_trust => 0, meta_interactive => 0);
 
-my @pgp_headers   = (
-    {
-        type   => 'message',
-        header => '-----BEGIN PGP MESSAGE-----',
-        footer => '-----END PGP MESSAGE-----',
-    },
-    {
-        type   => 'signed',
-        header => '-----BEGIN PGP SIGNED MESSAGE-----',
-        footer => '-----END PGP SIGNATURE-----',
-    },
-);
-
+my $pgp_encrypted_msg = {
+    type   => 'message',
+    header => '-----BEGIN PGP MESSAGE-----',
+    footer => '-----END PGP MESSAGE-----'
+};
+my $pgp_signed_msg = {
+    type   => 'signed',
+    header => '-----BEGIN PGP SIGNED MESSAGE-----',
+    middle => '-----BEGIN PGP SIGNATURE-----',
+    footer => '-----END PGP SIGNATURE-----'
+};
+my @pgp_headers = ($pgp_encrypted_msg, $pgp_signed_msg);
 
 =head1 MAIN
 
@@ -139,9 +159,8 @@ b) the "Artistic License" which comes with Perl.
         my $ticon = shift;
         my $event = shift;
         my $time = shift;
-        my ($x, $y, $push) = Gtk2::StatusIcon::position_menu($menu, $ticon);
         $menu->show_all;
-        $menu->popup(undef, undef, sub {($x, $y,$push)}, undef, $event, $time);
+        $menu->popup(undef, undef, undef, undef, $event, $time);
     });
 
     $icon->signal_connect('button-press-event' => sub {
@@ -149,9 +168,8 @@ b) the "Artistic License" which comes with Perl.
         my $event = shift;
         return unless $event->button == 1;
         my $action_menu = build_action_menu();
-        my ($x, $y, $push) = Gtk2::StatusIcon::position_menu($action_menu, $ticon);
         $action_menu->show_all;
-        $action_menu->popup(undef, undef, sub {($x, $y,$push)}, undef, $event->button, $event->time);
+        $action_menu->popup(undef, undef, undef, undef, $event->button, $event->time);
     });
 
     foreach (all_clipboards()) {
@@ -171,17 +189,27 @@ sub build_action_menu {
     my $text_type = detect_text_type(get_validated_clipboard_text());
 
     if ($text_type eq 'text' or $text_type eq 'none') {
-        my $mencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('En_crypt Clipboard')));
-        $mencrypt->signal_connect('activate' => sub { encrypt_clipboard(); });
-        $action_menu->append($mencrypt);
+        my $msymencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('Encrypt Clipboard with _Passphrase')));
+        $msymencrypt->signal_connect('activate' => sub { operate_on_clipboard(\&symmetric_encrypt, ['text']); });
+        $action_menu->append($msymencrypt);
+        my $msignencrypt    = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('Sign/Encrypt Clipboard with Public _Keys')));
+        $msignencrypt->signal_connect('activate' => sub { operate_on_clipboard(\&public_crypto, ['text']); });
+        $action_menu->append($msignencrypt);
     }
     if ($text_type eq 'message' or $text_type eq 'signed') {
         my $mdecryptver = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('_Decrypt/Verify Clipboard')));
-        $mdecryptver->signal_connect('activate' => sub { decrypt_verify_clipboard(); });
+        $mdecryptver->signal_connect('activate' => sub { operate_on_clipboard(\&decrypt_verify, ['message', 'signed']); });
         $action_menu->append($mdecryptver);
     }
+    my $mmanage = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext('_Manage Keys')));
+    $mmanage->signal_connect('activate' => sub { manage_keys(); });
+    $action_menu->append($mmanage);
 
     return $action_menu;
+}
+
+sub manage_keys {
+    system("seahorse &");
 }
 
 sub all_text_types {
@@ -256,11 +284,409 @@ sub set_clipboards_text {
     close $xclip or die "Error closing pipe to xclip";
 }
 
+sub get_status {
+    my $code = shift;
+    my $status;
+    my $trusted;
+    # Below taken from doc/DETAILS in GnuPG's sources
+    switch ($code) {
+        case "o" { $trusted = FALSE;
+                   $status = $encoding->decode(gettext("Unknown Trust")); }
+        case "-" { $trusted = FALSE;
+                    $status = $encoding->decode(gettext("Unknown Trust")); }
+        case "q" { $trusted = FALSE;
+                    $status = $encoding->decode(gettext("Unknown Trust")); }
+        case "m" { $trusted = FALSE;
+                    $status = $encoding->decode(gettext("Marginal Trust")); }
+        case "f" { $trusted = TRUE;
+                    $status = $encoding->decode(gettext("Full Trust")); }
+        case "u" { $trusted = TRUE;
+                    $status = $encoding->decode(gettext("Ultimate Trust")); }
+        else     { return; }
+    }
+    return ($status, $trusted);
+}
+
+sub get_private_key_status {
+    my $key = shift;
+
+    my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
+    my $pubkey = ($gnupg->get_public_keys_light($fingerprint))[0]; # ignore collisions
+
+    # a valid key may lack signing capabilities
+    return unless $pubkey->usage_flags =~ m/S/;
+
+    my $validity = $pubkey->user_ids->[0]->validity;
+    return get_status($validity);
+}
+
+sub get_public_key_status {
+    my $key = shift;
+
+    # a valid key may lack encryption capabilities
+    return unless $key->usage_flags =~ m/E/;
+
+    my $validity = $key->user_ids->[0]->validity;
+    return get_status($validity);
+}
+
+sub create_key_row {
+    my $key = shift;
+
+    my ($status, $trusted) = (ref($key) eq "GnuPG::SecretKey") ?
+        get_private_key_status($key)
+      : get_public_key_status($key);
+    # no status implies expired, revoked, etc. keys, which we don't want to list
+    return if !defined $status;
+
+    my $name    = $encoding->decode($key->user_ids->[0]->as_string);
+    my $userids = join("\n", map { my $a = $_->as_string; my $b = $encoding->decode("$a"); my $c ="x" . "$b" }
+                                 $key->user_ids);
+    my $keyid   = $encoding->decode($key->short_hex_id);
+
+    my $fingerprint = $encoding->decode($key->fingerprint->as_hex_string());
+    # Gtk2::SimpleList encodes these strings itself.
+    return [FALSE, $name, $keyid, $status, $fingerprint, $userids, $trusted];
+}
+
+sub make_pub_key_list {
+    my $pub_keys_ref = shift;
+
+    my $list = Gtk2::SimpleList->new (
+        ""                                    => 'bool', # C_SELECT
+        $encoding->decode(gettext("Name"))    => 'text', # C_NAME
+        $encoding->decode(gettext("Key ID"))  => 'text', # C_KEYID
+        $encoding->decode(gettext("Status"))  => 'text', # C_STATUS
+        ""                                    => 'text', # C_FINGERPRINT
+        ""                                    => 'text', # C_USERIDS
+        ""                                    => 'bool'  # C_TRUSTED
+        );
+    foreach my $i (VISIBLE_COLS) {
+        my $col = $list->get_column($i);
+        $col->set_max_width(400);
+        $col->set_resizable(TRUE);
+        $col->set_sort_column_id($i);
+    }
+    foreach my $i (HIDDEN_COLS) {
+        $list->get_column($i)->set_visible(FALSE);
+    }
+    $list->set_search_column(C_NAME);
+    $list->get_selection->set_mode('single');
+    $list->get_selection->unselect_all;
+    # Initially sort by name (couldn't find a cleaner way)
+    $list->get_column(C_NAME)->signal_emit('clicked');
+
+    # If we used Gtk2::TreeView instead of Gtk2::SimpleList we could
+    # show all user ids directly in the list, but we make it simple
+    # for us and instead show them in the tooltip.
+    $list->set_has_tooltip(TRUE);
+    $list->signal_connect('query-tooltip' => sub {
+        my ($wx, $wy, $tooltip) = ($_[1], $_[2], $_[4]);
+        my ($x, $y) = $list->convert_widget_to_bin_window_coords($wx, $wy);
+        my $path = $list->get_path_at_pos($x, $y);
+        return FALSE unless defined $path;
+        my $row = ($path->get_indices)[0];
+        my $fingerprint =
+            join(" ", (${$list->{data}}[$row][C_FINGERPRINT] =~ m/..../g));
+        my $fingerprint_label = $encoding->decode(gettext("Fingerprint:"));
+        my $uids = "${$list->{data}}[$row][C_USERIDS]";
+        my $uids_label = $encoding->decode(
+            ngettext("User ID:", "User IDs:", ($uids =~ tr/\n//) + 1));
+        my $text = sprintf("%s\n%s\n%s\n%s", $uids_label, $uids,
+                           $fingerprint_label, $fingerprint);
+        $tooltip->set_text("$text");
+        return TRUE;
+    });
+
+    $list->signal_connect('row-activated' => sub {
+        # Since we use 'single' selection mode, there can only be one
+        my $index = ($list->get_selected_indices)[0];
+        my $old_val = $list->{data}->[$index]->[C_SELECT];
+        $list->{data}->[$index]->[C_SELECT] = !$old_val;
+    });
+
+    push @{$list->{data}},
+        grep { $_ } map { create_key_row($_) } @{$pub_keys_ref};
+
+    $list->select(0);
+
+    return $list;
+}
+
+sub make_priv_key_combo {
+    my $priv_keys_ref = shift;
+
+    my $list_store = Gtk2::ListStore->new(
+        qw/Glib::String Glib::String Glib::String Glib::String/);
+    my $iter = $list_store->append;
+    $list_store->set ($iter,
+                      COMBO_NAME, $encoding->decode(gettext(
+                                      "None (Don't sign)")),
+                      COMBO_KEYID, "",
+                      COMBO_FINGERPRINT, "",
+                      COMBO_ROLE, "none");
+    $iter = $list_store->append;
+    $list_store->set ($iter,
+                      COMBO_NAME, "",
+                      COMBO_KEYID, "",
+                      COMBO_FINGERPRINT, "",
+                      COMBO_ROLE, "separator");
+    foreach my $key (@{$priv_keys_ref}) {
+        my $row = create_key_row($key);
+        next unless $row; # skip keys without signing capability
+        $iter = $list_store->append;
+        $list_store->set ($iter,
+                          COMBO_NAME, "$row->[C_NAME]",
+                          COMBO_KEYID, "($row->[C_KEYID])",
+                          COMBO_FINGERPRINT, "$row->[C_FINGERPRINT]",
+                          COMBO_ROLE, "");
+    }
+
+    my $sorted_list = Gtk2::TreeModelSort->new_with_model($list_store);
+    $sorted_list->set_default_sort_func(sub {
+        my ($model, $iter1, $iter2, $data) = @_;
+        my $name1 = $model->get($iter1, COMBO_NAME);
+        my $name2 = $model->get($iter2, COMBO_NAME);
+        my $role1 = $model->get($iter1, COMBO_ROLE);
+        my $role2 = $model->get($iter2, COMBO_ROLE);
+
+        if ($role1 eq "none") {
+            return -1;
+        } elsif ($role2 eq "none") {
+            return 1;
+        } elsif ($role1 eq "separator") {
+            return -1;
+        } elsif ($role2 eq "separator") {
+            return 1;
+        } else {
+            return (lc $name1 cmp lc $name2);
+        }
+                                });
+
+    my $combo = Gtk2::ComboBox->new_with_model($sorted_list);
+    my $renderer = Gtk2::CellRendererText->new();
+    $combo->pack_start($renderer, FALSE);
+    $combo->add_attribute($renderer, 'text', COMBO_NAME);
+    $renderer = Gtk2::CellRendererText->new();
+    $combo->pack_start($renderer, FALSE);
+    $combo->add_attribute($renderer, 'text', COMBO_KEYID);
+    $combo->set_row_separator_func( sub {
+        my ($model, $iter, $data) = @_;
+        return TRUE if ($model->get($iter, COMBO_ROLE) eq "separator");
+                                        });
+    $combo->set_active(0);
+
+    return $combo;
+}
+
+sub choose_keys {
+    my $priv_keys_ref = shift;
+    my $pub_keys_ref = shift;
+
+    my $pub_key_label = Gtk2::Label->new(
+        $encoding->decode(gettext("Select recipients:")));
+
+    my $pub_key_list = make_pub_key_list($pub_keys_ref);
+    my $pub_key_list_scroll = Gtk2::ScrolledWindow->new;
+    $pub_key_list_scroll->set_policy('automatic', 'always');
+    $pub_key_list_scroll->add($pub_key_list);
+
+    my $hide_recipients_checkbox = Gtk2::CheckButton->new(
+        $encoding->decode(gettext("Hide recipients")));
+    $hide_recipients_checkbox->set_has_tooltip(TRUE);
+    $hide_recipients_checkbox->set_tooltip_text(
+        $encoding->decode(gettext("Hide the user IDs of all recipients of " .
+                                  "an encrypted message. Otherwise anyone " .
+                                  "that sees the encrypted message can see " .
+                                  "who the recipients are.")));
+
+    my $priv_key_label = Gtk2::Label->new(
+        $encoding->decode(gettext("Sign message as:")));
+
+    my $priv_key_combo = make_priv_key_combo($priv_keys_ref);
+
+    my $dialog = Gtk2::Dialog->new($encoding->decode(gettext("Choose keys")),
+                                   $main_window, 'destroy-with-parent',
+                                   'gtk-cancel' => 'cancel', 'gtk-ok' => 'ok' );
+    $dialog->set_default_size(650,500);
+    $dialog->set_default_response('ok');
+    my $vbox = $dialog->get_content_area;
+    $vbox->pack_start($pub_key_label, FALSE, FALSE, 5);
+    $vbox->pack_start($pub_key_list_scroll, TRUE, TRUE, 0);
+    my $hbox = Gtk2::HBox->new;
+    $hbox->pack_start($priv_key_label, FALSE, FALSE, 0);
+    $hbox->pack_start($priv_key_combo, TRUE, TRUE, 0);
+    $vbox->pack_start($hbox, FALSE, FALSE, 5);
+    $vbox->pack_start($hide_recipients_checkbox, FALSE, FALSE, 0);
+
+    $pub_key_list->grab_focus;
+    $dialog->show_all;
+
+    $dialog->signal_connect('key-press-event' => sub {
+        my $event = $_[1];
+        return unless $event->keyval == $Gtk2::Gdk::Keysyms{Return};
+        $dialog->response('ok');
+        return 1;
+    });
+
+    while ($dialog->run eq 'ok') {
+        my @recipients;
+        my $signer;
+        my $always_trust = 0;
+
+        # Get signing key, if any
+        my $priv_key_combo_model = $priv_key_combo->get_model;
+        my $priv_key_iter = $priv_key_combo->get_active_iter;
+        $signer = $priv_key_combo_model->get($priv_key_iter, COMBO_FINGERPRINT);
+
+        # Get public keys, if any
+        my @list_selection = grep { $_->[C_SELECT] } @{$pub_key_list->{data}};
+        if (@list_selection) {
+            my @unauth = grep { ! $_->[C_TRUSTED] } @list_selection;
+            if (@unauth) {
+                my $title = $encoding->decode(gettext(
+                    "Do you trust these keys?"
+                                              ));
+                my $warning = $encoding->decode(ngettext(
+                    "The following selected key is not fully trusted:",
+                    "The following selected keys are not fully trusted:",
+                    scalar @unauth
+                                                ));
+                my $msg = sprintf("%s\n", $warning);
+                foreach my $key (@unauth) {
+                    # Each key will be listed RTL *or* LTR depending on the
+                    # direction of the first character of the name. This
+                    # unfortunately causes mixing of LTR and RTL in the
+                    # same list. A potential FIXME would be to display this
+                    # with a custom windows using SimpleList for the keys.
+                    # Also note that everything in $key (which originates
+                    # from $pub_key_list) already has been decoded, so we
+                    # don't have to do it again here.
+                    my $key_name = "$key->[C_NAME] ($key->[C_KEYID])";
+                    $msg = sprintf("%s%s\n", $msg, $key_name);
+                }
+                my $question = $encoding->decode(ngettext(
+                    "Do you trust this key enough to use it anyway?",
+                    "Do you trust these keys enough to use them anyway?",
+                    scalar @unauth
+                                                 ));
+                $msg = sprintf("%s%s", $msg, $question);
+                next unless display_question($dialog, $title, $msg);
+                $always_trust = 1;
+            }
+            @recipients = map { $_->[C_FINGERPRINT] } @list_selection;
+        }
+
+        if (!@recipients && !$signer) {
+            display_error($dialog,
+                          $encoding->decode(gettext("No keys selected")),
+                          $encoding->decode(gettext(
+                              "You must select a private key to sign the " .
+                              "message, or some public keys to encrypt the " .
+                              "message, or both."
+                                            )));
+            next;
+        }
+
+        $dialog->destroy;
+        return {
+            always_trust => $always_trust,
+            hide_recipients => $hide_recipients_checkbox->get_active,
+            signer => $signer,
+            recipients => \@recipients,
+        };
+    }
+    $dialog->destroy;
+    return ();
+}
+
+sub public_crypto {
+    my $args    = shift;
+    my $handles = $args->{handles};
+
+    my @priv_keys = $gnupg->get_secret_keys_light();
+    my @pub_keys = $gnupg->get_public_keys_light();
+
+    if (@priv_keys == 0 && @pub_keys == 0) {
+        display_error($main_window,
+                      $encoding->decode(gettext("No keys available")),
+                      $encoding->decode(gettext(
+                          "You need a private key to sign messages or a " .
+                          "public key to encrypt messages."
+                                       )));
+        return 0;
+    }
+
+    my $chosen = choose_keys(\@priv_keys, \@pub_keys);
+    my $signer = $chosen->{signer};
+    my $recipients_ref = $chosen->{recipients};
+    my @recipients = @{$recipients_ref} if defined $recipients_ref;
+    my $always_trust = $chosen->{always_trust};
+    my $hide_recipients = $chosen->{hide_recipients};
+
+    $gnupg->options->always_trust($always_trust);
+    $gnupg->options->clear_extra_args;
+    $gnupg->options->clear_meta_signing_key_id;
+    $gnupg->options->clear_recipients();
+
+    if ($signer) {
+        $gnupg->options->meta_signing_key_id($signer);
+    }
+
+    if (@recipients) {
+        if ($hide_recipients) {
+            # Since gpg's --no-throw-keyids seems to be broken (it doesn't
+            # work via the CLI either) we can't just push it to extra_args :/.
+            foreach my $recipient (@recipients) {
+                $gnupg->options->push_extra_args('--hidden-recipient',
+                                                 $recipient);
+            }
+        } else {
+            $gnupg->options->push_recipients(@recipients);
+        }
+    }
+
+    my $result = 0;
+
+    if ($signer && !@recipients) {
+        $result = $gnupg->clearsign(handles => $handles);
+    } elsif (@recipients && !$signer) {
+        $result = $gnupg->encrypt(handles => $handles);
+    } elsif ($signer && @recipients) {
+        $result = $gnupg->sign_and_encrypt(handles => $handles);
+    }
+
+    $gnupg->options->always_trust(0);
+    $gnupg->options->clear_extra_args;
+    $gnupg->options->clear_meta_signing_key_id;
+    $gnupg->options->clear_recipients();
+
+    return $result;
+}
+
+sub symmetric_encrypt {
+    my $args    = shift;
+    my $handles = $args->{handles};
+
+    return $gnupg->encrypt_symmetrically(handles => $handles);
+}
+
+sub decrypt_verify {
+    my $args    = shift;
+    my $handles = $args->{handles};
+    my $input   = $args->{input};
+
+    my $text_type = detect_text_type($input);
+    return
+        $text_type eq 'message'
+      ? $gnupg->decrypt(handles => $handles)
+      : $gnupg->verify(handles => $handles);
+}
+
 sub gpg_operate_on_text {
     my $operation = shift;
     my $text      = shift;
 
-    my $gnupg = GnuPG::Interface->new();
     $gnupg->options->hash_init(%gnupg_options);
     my $in_h    = IO::Handle->new();
     my $err_h   = IO::Handle->new();
@@ -271,30 +697,19 @@ sub gpg_operate_on_text {
         stdout => $out_h
     );
 
-    $operation->({
-        gnupg   => $gnupg,
+    my $args = {
         handles => $handles,
         input   => $text,
         in_h    => $in_h,
         err_h   => $err_h,
         out_h   => $out_h,
-    });
-}
+    };
 
-sub encrypt {
-    my $args    = shift;
-    my $gnupg   = $args->{gnupg};
-    my $handles = $args->{handles};
-    my $input   = $args->{input};
-    my $in_h    = $args->{in_h};
-    my $err_h   = $args->{err_h};
-    my $out_h   = $args->{out_h};
+    my $pid = $operation->($args) or return;
 
-    my $pid = $gnupg->encrypt_symmetrically(handles => $handles);
-
-    # We assume the recipient uses the same charset as us :/
+    # We assume the sender/recipient uses the same charset as us :/
     # PGP/MIME was invented for a reason.
-    print $in_h $encoding->encode($input);
+    print $in_h $encoding->encode($text);
     close $in_h;
 
     my ($err, $out) = read_err_out($err_h, $out_h);
@@ -307,11 +722,24 @@ sub encrypt {
     my $std_out = $encoding->decode(join('', @raw_stdout));
 
     if ($CHILD_ERROR == 0) {
-        set_clipboards_text($std_out);
+        if ($operation eq \&decrypt_verify) {
+            my $msg;
+            if ($text =~ m/$pgp_signed_msg->{header}/) {
+                $msg = $text;
+                $msg =~ s/^.*$pgp_signed_msg->{header}\nHash: [^\n]*\n\n//m;
+                $msg =~ s/^$pgp_signed_msg->{middle}.*//ms;
+            } else {
+                $msg = $std_out;
+            }
+            display_output($msg, $std_err);
+        } else {
+            set_clipboards_text($std_out);
+        }
     }
     else {
         display_error(
-            $encoding->decode(gettext("GnuPG encryption error")),
+            $main_window,
+            $encoding->decode(gettext("GnuPG error")),
             $std_out . "\n\n" . $std_err
         );
         return;
@@ -320,87 +748,34 @@ sub encrypt {
     return;
 }
 
-sub decrypt_verify {
-    my $args    = shift;
-    my $gnupg   = $args->{gnupg};
-    my $handles = $args->{handles};
-    my $input   = $args->{input};
-    my $in_h    = $args->{in_h};
-    my $err_h   = $args->{err_h};
-    my $out_h   = $args->{out_h};
+sub operate_on_clipboard {
+    my $operation   = shift;
+    my $valid_types = shift;
 
-    my $text_type = detect_text_type($input);
-    my $pid =
-        $text_type eq 'message'
-      ? $gnupg->decrypt(handles => $handles)
-      : $gnupg->verify(handles => $handles);
-
-    # We assume the sender uses the same charset as us :/
-    # PGP/MIME was invented for a reason.
-    print $in_h $encoding->encode($input);
-    close $in_h;
-
-    my ($err, $out) = read_err_out($err_h, $out_h);
-    my @raw_stderr = @{$err};
-    my @raw_stdout = @{$out};
-
-    waitpid $pid, 0; # Clean up the finished GnuPG process.
-
-    my $std_err = $encoding->decode(join('', @raw_stderr));
-    my $std_out = $encoding->decode(join('', @raw_stdout));
-
-    if ($CHILD_ERROR == 0) {
-        display_output($std_out, $std_err);
-    }
-    else {
-        display_error(
-            $encoding->decode(gettext("GnuPG decryption/verification error")),
-            $std_out . "\n\n" . $std_err
-        );
-        return;
-    }
-
-    return;
-}
-
-sub encrypt_clipboard {
     my ($text, $clip_error) = get_validated_clipboard_text(
-        { valid_types => ['text'] }
+        { valid_types => $valid_types }
     );
 
     if (defined $clip_error) {
         display_error(
+            $main_window,
             $clip_error, # already translated and decoded
-            $encoding->decode(gettext("Therefore, it cannot be encrypted."))
+            $encoding->decode(gettext("Therefore the operation cannot be " .
+                                      "performed."))
         );
         return;
     }
 
-    gpg_operate_on_text(\&encrypt, $text);
-}
-
-sub decrypt_verify_clipboard {
-    my ($text, $clip_error) = get_validated_clipboard_text(
-        { valid_types => ['message', 'signed'] }
-    );
-
-    if (defined $clip_error) {
-        display_error(
-            $clip_error, # already translated and decoded
-            $encoding->decode(gettext("Therefore, it cannot be decrypted."))
-        );
-        return;
-    }
-
-    gpg_operate_on_text(\&decrypt_verify, $text);
+    gpg_operate_on_text($operation, $text);
 }
 
 sub display_error {
+    my $parent = shift;
     my $title = shift;
     my $msg   = shift;
 
     my $dialog = Gtk2::MessageDialog->new(
-        $main_window, 'destroy-with-parent', 'error', 'ok',
+        $parent, 'destroy-with-parent', 'error', 'ok',
         $title
     );
     $dialog->format_secondary_text($msg);
@@ -408,9 +783,24 @@ sub display_error {
         response => sub { my $self = shift; $self->destroy; }
     );
     $dialog->set_position('center');
-    $dialog->show_all;
+    $dialog->run;
+    $dialog->destroy;
 
     return 1;
+}
+
+sub display_question {
+    my $parent = shift;
+    my $title = shift;
+    my $msg   = shift;
+
+    my $dialog = Gtk2::MessageDialog->new(
+        $parent, 'destroy-with-parent', 'question', 'yes-no', $title);
+    $dialog->format_secondary_text($msg);
+    $dialog->set_position('center');
+    my $answer = $dialog->run;
+    $dialog->destroy;
+    return $answer eq 'yes' ? TRUE : FALSE;
 }
 
 # FIXME: let window grow depending on output text size
@@ -426,7 +816,7 @@ sub display_output {
     my $my_height_request = 600;
     # TRANSLATORS: GnuPG stdout (encrypted or decrypted message)
     $dialog->format_secondary_text(sprintf($encoding->decode(gettext(
-        "Here is the GnuPG output:"
+        "Output of GnuPG:"
     ))));
 
     my $msg_area = $dialog->get_content_area;
@@ -451,16 +841,25 @@ sub display_output {
         my $std_err_title = Gtk2::Label->new(
             # TRANSLATORS: GnuPG stderr (other informational messages)
             $encoding->decode(gettext(
-                "While it were at it, GnuPG also mentionned in passing:"
+                "Other messages provided by GnuPG:"
             )));
         $std_err_title->set_alignment(0, 0);
         $std_err_title->set_padding(10, 0);
         $msg_area->pack_start($std_err_title, FALSE, FALSE, 0);
-        my $std_err_text = Gtk2::Label->new($std_err);
-        $std_err_text->modify_font($text_desc);
-        $std_err_text->set_alignment(0, 0);
-        $std_err_text->set_padding(10, 0);
-        $msg_area->pack_start($std_err_text, FALSE, FALSE, 0);
+        my $std_err_buf = Gtk2::TextBuffer->new();
+        $std_err_buf->set_text($std_err);
+        my $textview_err = Gtk2::TextView->new_with_buffer($std_err_buf);
+        $textview_err->set_editable(FALSE);
+        $textview_err->set_cursor_visible(FALSE);
+        $textview_err->set_left_margin(10);
+        $textview_err->set_right_margin(10);
+        $textview_err->set_wrap_mode('word');
+        $textview_err->modify_font($text_desc);
+        my $scrolled_win_err = Gtk2::ScrolledWindow->new;
+        $scrolled_win_err->set_policy('automatic', 'automatic');
+        $scrolled_win_err->add($textview_err);
+        $scrolled_win_err->set_size_request(-1, $my_height_request/5);
+        $msg_area->pack_start($scrolled_win_err, FALSE, FALSE, 0);
     }
 
     $dialog->signal_connect(
@@ -517,7 +916,13 @@ sub detect_received {
 sub handle_clipboard_owner_change {
     my $clipboard = shift;
 
-    set_freshest_clipboard($clipboard);
+    # Each time the applet is used, we receive an owner-change signal for an
+    # empty PRIMARY clipboard. We don't want to swich from a valid clipboard to
+    # an empty one.
+    my $content = $clipboard->wait_for_text;
+    if (defined $content && length $content) {
+        set_freshest_clipboard($clipboard);
+    }
     detect_received($clipboard);
 }
 

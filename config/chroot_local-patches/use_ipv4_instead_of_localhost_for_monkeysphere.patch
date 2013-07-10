@@ -1,0 +1,23 @@
+When Torbrowser patches are applied and the `socks_remote_dns` set to true,
+Iceweasel will not allow any name resolution that does not go through a proxy.
+This means that in order to be reachable by the Monkeysphere extension, MSVA
+must export the IPv4 address and not 'localhost' in
+`$MONKEYSPHERE_VALIDATION_AGENT_SOCKET`.
+
+--- chroot.orig/usr/share/perl5/Crypt/Monkeysphere/MSVA.pm	2012-11-14 14:49:35.301666762 +0100
++++ chroot/usr/share/perl5/Crypt/Monkeysphere/MSVA.pm	2012-11-14 14:50:10.010692842 +0100
+@@ -886,12 +886,12 @@
+           }
+           # restore default SIGCHLD handling:
+           $SIG{CHLD} = 'DEFAULT';
+-          $ENV{MONKEYSPHERE_VALIDATION_AGENT_SOCKET} = sprintf('http://localhost:%d', $self->port);
++          $ENV{MONKEYSPHERE_VALIDATION_AGENT_SOCKET} = sprintf('http://127.0.0.1:%d', $self->port);
+           exec(@args) or exit 111;
+         }
+       }
+     } else {
+-      printf("MONKEYSPHERE_VALIDATION_AGENT_SOCKET=http://localhost:%d;\nexport MONKEYSPHERE_VALIDATION_AGENT_SOCKET;\n", $self->port);
++      printf("MONKEYSPHERE_VALIDATION_AGENT_SOCKET=http://127.0.0.1:%d;\nexport MONKEYSPHERE_VALIDATION_AGENT_SOCKET;\n", $self->port);
+       # FIXME: consider daemonizing here to behave more like
+       # ssh-agent.  maybe avoid backgrounding by setting
+       # MSVA_NO_BACKGROUND.

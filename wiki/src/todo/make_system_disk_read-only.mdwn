@@ -1,0 +1,63 @@
+(Redirected from [[bugs/writable_system_disk:_belongs_to_floppy_group]].)
+
+[[!toc levels=2]]
+
+The problem
+===========
+
+In short: the system USB disk and partition block devices (e.g.
+`/dev/sdb*`) are writable by the default Live user, because they
+belong to the `floppy` group.
+
+This was fixed in Tails 0.12 (see
+`config/chroot_local_includes/lib/live/config/998-permissions`) but
+the bug has since reappeared so the bug is now reopened. Our `udev`
+packages hasn't been updated since, but perhaps the `udev` init script
+runs (or re-runs?) after `live-config` wheras it previously only ran
+before?
+
+Roadmap
+=======
+
+This is being discussed in the *Help needed with branch
+bugfix/writable_boot_media* thread on tails-dev.
+
+1. Fix write access to boot medium via udisks.
+   a. Improve the `the boot device has safe access rights` step in
+      `features/usb_install.feature` of the automated test suite to
+      take this kind of write access into account.
+   a. We've got a solution based on bilibop implemented in
+      `bugfix/safer-persistence`, but it relies on
+      `UDISKS_SYSTEM_INTERNAL` that exists in Wheezy, but not
+      in Squeeze. So, let's [[!taglink todo/wait]] for Tails to be
+      based on Wheezy.
+   a. Research potential consequences on:
+      * tails-persistence-setup
+      * incremental updates
+
+Done
+====
+
+1. Fix write access to boot medium at the block device level ([[!debbug 645466]]):
+   1. Review and merge `feature/bilibop`. 
+   1. Re-enable the `the boot device has safe access rights` step in
+      `features/usb_install.feature` of the automated test suite.
+
+We'll use [bilibop](https://un.poivron.org/~quidame/bilibop_project/):
+it's potential usefulness for Tails was discussed on the [[!debbug
+675467 desc="ITP"]] and [[!debbug 675532 desc="RFS"]] bugs.
+
+Our `feature/bilibop` branch installs bilibop-udev (0.4.11~quidame). It works fine and
+makes the "the boot device has safe access rights" test pass.
+
+This part is pending for Tails 0.19.
+
+Older notes
+===========
+
+This is being discussed in the *Help needed with branch
+bugfix/writable_boot_media* thread on tails-dev.
+
+Another solution, was considered: home-made udev rules.
+See branch `bugfix/writable_boot_media` for a new fix using `udev`.
+> First review done, a bit more code is needed.

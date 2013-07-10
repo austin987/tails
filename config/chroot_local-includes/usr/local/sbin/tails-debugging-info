@@ -1,0 +1,29 @@
+#!/bin/sh
+
+debug_command() {
+    echo
+    echo "===== output of command $@ ====="
+    "$@"
+}
+
+debug_file() {
+    echo
+    echo "===== content of $1 ====="
+    cat $1
+}
+
+debug_command /usr/sbin/dmidecode -s system-manufacturer
+debug_command /usr/sbin/dmidecode -s system-product-name
+debug_command /usr/sbin/dmidecode -s system-version
+debug_command "/bin/dmesg"
+debug_command "/bin/lsmod"
+debug_command "/usr/bin/lspci"
+
+debug_file "/etc/X11/xorg.conf"
+debug_file "/var/log/Xorg.0.log"
+debug_file "/var/log/gdm3/:0-slave.log"
+debug_file "/var/log/gdm3/:0-greeter.log"
+debug_file "/var/log/live-persist"
+debug_file "/var/log/live/boot.log"
+debug_file "/var/log/live/config.log"
+debug_file "/var/lib/gdm3/tails.persistence"

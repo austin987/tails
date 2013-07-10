@@ -1,5 +1,3 @@
-[[!tag todo/code]]
-
 Since the transparent firewall-level torification is gone, Tails now
 uses `torify` more and more. Given Tails does not include `torsocks`,
 `torify` uses `tsocks`, which is unmaintained upstream, and makes
@@ -8,6 +6,17 @@ leak DNS and UDP data. If you had torsocks we would use that.*.
 Not displaying that meaningless message would save some
 user-support time.
 
-1. install `torsocks` (probably 1.2-3 or later from squeeze-backports)
+1. install `torsocks` (probably 1.2-3 or later from squeeze-backports):
+   **done** in `feature/torsocks`
 1. test that every program that's torified using `torify` still works
-   correctly: `git grep -w torify`
+   correctly: as of Tails 0.11, `git grep -w torify` points us to
+   whois (tested OK), claws-mail (tested OK), gobby (tested OK) and gobby-0.5
+   (tested OK): **done**
+1. go on shipping the tsocks package (so that ttdns gets the library
+   it needs), *but* drop the `/usr/bin/tsocks` binary so that users
+   stop complaining about it not being well configured: **done**
+
+(Upstream has removed support in Tor 0.2.3.14-alpha for `tsocks` in the `torify` script. So this needs to be done before getting Tor 0.2.3 in Tails.)
+
+> [[!taglink todo/done]] in Tails 0.12.
+

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 echo "Building VirtualBox guest modules"
 
 hw_arch="`dpkg --print-architecture`"
@@ -7,23 +9,30 @@ if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
    exit 0
 fi
 
+available_gcc_version=4.4
+wanted_gcc_version=4.6
+
 # the -dkms package must be installed *after* dkms to be properly registered
 apt-get install --yes build-essential dkms dpatch
 
-# temporary workaround: pretend gcc-4.6 is available, so that
+# temporary workaround: pretend the "wanted" GCC is available, so that
 # the modules can build.
 # /usr/src/linux-headers-3.*-common/scripts/gcc-version.sh
-# is the one who says they should be run using 4.6.
-apt-get install --yes gcc-4.4
-ln -s /usr/bin/gcc-4.4 /usr/bin/gcc-4.6
+# is the one who says they should be run using that version.
+apt-get install --yes gcc-${available_gcc_version}
+ln -s /usr/bin/gcc-${available_gcc_version} /usr/bin/gcc-${wanted_gcc_version}
+
+# At this time of the build, we've got a recent enough X.Org installed,
+# so we can install the X11 tools eventually.
+dpkg --install \
+   /usr/share/amnesia/packages/virtualbox-guest-utils_*.deb \
+   /usr/share/amnesia/packages/virtualbox-guest-x11_*.deb
 
 # Have the modules built for every installed kernel
 for KERNEL in /boot/vmlinuz-* ; do
    KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
    VERSION_SCHEME="[[:digit:]]\+\(\.[[:digit:]]\+\)*-[[:digit:]]\+"
    KERNEL_ARCH="$(echo ${KERNEL_VERSION} | sed -e "s|${VERSION_SCHEME}-||")"
-
-   apt-get install --yes linux-headers-2.6-${KERNEL_ARCH}
 
    # dkms uses uname to find out what kernel to build modules for.
    # So, after installing dkms, but before installing
@@ -38,26 +47,23 @@ echo "$KERNEL_VERSION"
 EOF
    chmod 755 /bin/uname
 
+   # Install the headers for the kernel we are build modules for
+   apt-get install --yes linux-headers-$(uname -r)
+
    # Have the modules automagically built by dkms for all kernels.
-   # Also, at this time of the build, we've got a recent enough X.Org installed,
-   # so we can install the X11 tools eventually.
-   dpkg --install /usr/share/amnesia/packages/virtualbox*.deb
+   dpkg --install /usr/share/amnesia/packages/virtualbox-guest-dkms_*.deb
    apt-get -f install --yes
 
    # Revert to the real uname.
    mv /bin/uname.$$ /bin/uname
-
-   # Workaround /usr/lib/dkms/common.postinst which would remove the modules
-   # during the next iteration
-   rm -rf /var/lib/dkms/virtualbox-guest
 done
 
 # clean the build directory
-rm -rf /var/lib/dkms/virtualbox-guest/
+rm -r /var/lib/dkms/virtualbox-guest/
 
 # virtualbox-guest-dkms's postrm script deletes any previously
 # built binary module; let's delete it before purging the package.
-rm -f /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
+rm /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
 
 # remove temporary workaround
-rm -f /usr/bin/gcc-4.5
+rm /usr/bin/gcc-${wanted_gcc_version}

@@ -1,0 +1,24 @@
+Currently we use [[tordate|contribute/design/Time_syncing]] to set the
+inital clock. It's very messy and error prone, so we desperately need
+a robust replacement.
+
+Possible solutions:
+
+* [[Authenticated NTP|todo/authenticate_time_servers]]
+  - Easy to fingerprint due to low usage.
+* [tlsdate](https://github.com/ioerror/tlsdate)
+  - Used by ChromeOS on every network up event => no longer "easy to
+    fingerprint due to low usage" *iff* we use it exactly in the same
+    way (e.g. ask the very same HTTPS servers) as ChromeOS, and go on
+    doing so forever.
+    * their (outdated) [design doc](https://docs.google.com/a/chromium.org/document/d/1ylaCHabUIHoKRJQWhBxqQ5Vck270fX7XCWBdiJofHbU/edit)
+    * their [tlsdate clone](http://git.chromium.org/gitweb/?p=chromiumos/third_party/tlsdate.git;a=summary)
+    * their [upstart job](http://git.chromium.org/gitweb/?p=chromiumos/platform/init.git;a=blob;f=tlsdated.conf;h=d72d780c1f1d432bb7b7a06e787a745dbf5cdd46;hb=HEAD)
+    * They query `clients3.google.com` only currently, but intend to
+      use the multi-host feature some day.
+- Packaged for Debian.
+* Extend Tor some how, e.g.
+  * [like arma suggested](https://lists.torproject.org/pipermail/tor-talk/2011-January/008551.html).
+  * [answer network time requests](https://trac.torproject.org/projects/tor/ticket/6894)
+
+[[!tag todo/research]]

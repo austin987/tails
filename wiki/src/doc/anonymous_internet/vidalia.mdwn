@@ -3,34 +3,29 @@
 Vidalia is an anonymity manager. Basically this means that it can be used
 to control Tor, and is automatically launched on network connection.
 
+[[!toc levels=1]]
+
 As soon as the Tor client managed to establish a route to the Tor
-network, Vidalia hides as an onion icon on the upper right corner of
-the screen. Right-clicking this icon displays a configuration menu.
+network, Vidalia hides as an onion icon in the notification area of
+the screen.
 
+[[!img first_steps/introduction_to_gnome_and_the_tails_desktop/tor-on.png link=no]]
+[[!img first_steps/introduction_to_gnome_and_the_tails_desktop/tor-starting.png link=no]]
+[[!img first_steps/introduction_to_gnome_and_the_tails_desktop/tor-stopping.png link=no]]
+[[!img first_steps/introduction_to_gnome_and_the_tails_desktop/tor-off.png link=no]]
 
-[[!img Vidalia_menu_en.jpg title="Vidalia menu" align="center"]]
+Right-clicking this icon displays a configuration menu.
 
-Vidalia menu proposes essentialy two features:
+[[!img vidalia/right-click_menu.png link=no]]
 
-* a *Network map* which displays a window showing a map of the Tor network, a list
-  of Tor relays and a the list of currently used routes and their status.
-* a *New identity* entry, which will make Tor use a different
-  route for **future** connections, so that they will appear to come
-  from a different address. But **be carefull** that some software might
-  still continue to use the old route, depending on how it behaves with
-  network connections. If you want to be sure a software is using a new
-  route, you may want to close it, hit the *New identity* button, and
-  then start the software again once the popup window disappears.
+The <span class="emphasis">Network Map</span>
+=============================================
 
-**FIXME** cf explanations from warning: stop Tails,
-restart. So... remove the explanations here, develop correctly further
-down.
+The <span class="emphasis">network map</span> displays a window showing a map
+of the Tor network, a list of Tor relays and a list of currently used routes
+and their status.
 
-## The network map
-
-Next we will have a look at the Tor network map:
-
-[[!img Vidalia_Netmap_en.jpg title="Vidalia network map" align="center"]]
+[[!img vidalia/network_map.png link=no]]
 
 In here, all the Tor nodes in the Tor network are listed, as are all
 your circuits and connections that go through the Tor network. This
@@ -38,80 +33,36 @@ requires a bit of technical knowledge of how Tor works in order to
 understand and use, but it is not at all necessary. From the
 connection listing it should at least be relatively easy for you to
 see which exit node and country it appears your connections come from.
-Right-clicking on any established circuits enable you to close it in
-case this one is too slow.
 
-## The *New identity* feature
+The <span class="emphasis">New Identity</span> feature
+======================================================
 
-**FIXME**: instruct how to really "change identity"
+<div class="caution">
+[[As explained on our warning page|about/warning#identities]], this feature of
+Vidalia is not a solution to really separate different contextual identities.
+<strong>Shutdown and restart Tails instead.</strong>
+</div>
 
-One very useful thing when working with Tor is the following option,
-found in the Vidalia menu that you get by right-clicking its systray
-icon:
+Connect Through a Bridge
+========================
 
-<center><a href="tork-menu.jpg"><img border="0" height="98"
-src="tork-menu.jpg" width="182" /></a></center>
+[[See the corresponding documentation.|first_steps/startup_options/bridge_mode]]
 
-Clicking on the "New Identity" option will tear down all you current
-circuits and build new ones which means that the set of computers you
-route your Internet traffic through will exchanged by some others.
-This is very useful if you experience bad performance or even
-time-outs accessing some Internet resource as you might have better
-luck with the new circuits that are built. Also, if you ever want to
-make sure that one thing you are doing will not be linkable to the
-next thing you are going to do you should use this feature.
+Configuring a Tor relay
+=======================
 
-**FIXME** wrong. copy explanations from warning instead of this bullshit.
+You can also configure <span class="application">Vidalia</span> to set up
+yourself as a Tor relay. This helps out the Tor network by relaying the traffic
+of others.
 
-## Connect through a bridge
+[See the corresponding documentation from The Tor Project.](https://www.torproject.org/docs/tor-doc-relay.html)
 
-**FIXME**: This section have not been adapted now so please do not take it into
-account.
+Configuring Hidden Services for Tor
+===================================
 
-Vidalia also makes it easy to use some of the Tor Network's more
-advanced features. For example, you can  click on the *Settings* option,
-then on the *Network* tab of the newly opened window, and select the *My
-ISP blocks connections to the Tor network* checkbox to gain access to a
-form where you can add Tor
-[bridges](https://www.torproject.org/bridges.html) as entry points to
-the Tor network. This is a way to circumvent censorship systems that
-blocks normal access to the Tor network, intentially or not.
+Tor allows clients and relays to offer hidden services. That is, you can offer
+a web server, SSH server, etc. without revealing your IP address to its users.
+In fact, because you don't use any public address, you can run a hidden service
+from behind a firewall.
 
-## Setting up a Tor relay
-
-**FIXME**: discuss if we really want to document that
-> why not, since it's written... if it needs writing, just put a link
-> to the Tor documentation.
-
-Lastly Vidalia will assist you setting up yourself as a Tor server,
-helping out the Tor Network by relaying other people's traffic. You
-also have the possibility to act as an exit node, which means that
-other Tor users' traffic will exit in the clear from your computer.
-You should really think through if you want to do the latter (act as
-an exit node) as your ISP might start sending you complaints for other
-people's file sharing traffic that happens to exit from you, and
-potentially even worse things that might attract the attention of the
-police. But simply relaying traffic is completely safe and will only
-cost you some bandwidth (how much can be configured). However, at the
-same time you will get more anonymity – it will be impossible for
-eavesdroppers to distinguish the Tor traffic you are relaying from
-your own traffic generated by web browsing etc. So if you have
-bandwidth to spare, you might want to consider doing this.
-
-In order to succeed with setting up a relay you might have to do
-something about your firewall or router if you have one, like enable
-port-forwarding for ports 9001 and 9030 – if you do not know what this
-is or how to do it you should either look it up on with favourite search
-engine or simply skip it. The next step would be to actually enable it
-in Vidalia, which only requires a few clicks. First click the *settings*
-option in the systray menu, then go to the *Sharing* tab of the new
-window. There you can choose wether you want to setup a normal Tor relay
-or a Tor [bridge](https://www.torproject.org/bridges.html). In any case,
-you'll have to choose a nickname and a contact email in the newly
-appeared form. Other tabs of this form helps you to choose if you want
-to limit bandwith usage and the kind of trafic your relay will be used
-to.
-
-## Setup a hidden service
-
-**FIXME**: add instructions to setup a hidden service with Vidalia.
+[See the corresponding documentation from The Tor Project.](https://www.torproject.org/docs/tor-hidden-service.html)

@@ -1,13 +1,13 @@
 One serious security issue is that we don't know what software will
 attempt to contact the network and whether their proxy settings are
-setup to use the Tor SOCKS proxy or polipo HTTP(s) proxy correctly.
+set up to use the Tor SOCKS proxy or polipo HTTP(s) proxy correctly.
 This is solved by blocking all outbound Internet traffic except Tor
 and I2P, and explicitly configure all applications to use either of
 these.
 
-- [[!tails_gitweb config/chroot_local-includes/etc/firewall.conf]] for IPv4
-- [[!tails_gitweb config/chroot_local-includes/etc/firewall6.conf]] for IPv6
-- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/00-firewall.sh]]
+- [[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]]
+  (uses [ferm](http://ferm.foo-projects.org/) to build an `iptables`
+  ruleset)
 
 The default case is to block all outbound network traffic; let us now
 document all exceptions and some clarifications to this rule.
@@ -31,6 +31,12 @@ Like the `debian-tor` user, the `i2p` user is allowed to connect
 *directly* to the Internet. See [[the design document dedicated to
 Tails use of I2P|I2P]] for details.
 
+#### Unsafe Browser and the `clearnet` user
+
+The `clearnet` user used to run the
+[[contribute/design/Unsafe_Browser]] is granted full network access
+(but no loopback access) in order to deal with captive portals.
+
 #### Local Area Network (LAN)
 
 Tails short description talks of sending through Tor *outgoing
@@ -38,14 +44,34 @@ connections to the Internet*. Indeed: traffic to the local LAN
 (RFC1918 addresses) is wide open as well as the loopback traffic
 obviously.
 
-It is planned to [[forbid LAN DNS
-queries|todo/forbid_lan_dns_queries]] at some point to protect against
-some attacks; this is not implemented yet.
+LAN DNS queries are forbidden to protect against some attacks.
+
+#### Local services whitelist
+
+The Tails firewall uses a whitelist which only grants access to each
+local service to the users that actually need it. This blocks
+potential leaks due to misconfigurations or bugs, and deanonymization
+attacks by compromised processes. For specifics, see the firewall
+configuration where this is well commented:
+[[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]]
+
+#### Automapped addresses
+
+`AutomapHostsOnResolve` is enabled in Tor configuration, and
+a firewall rule transparently redirects to the Tor transparent proxy
+port the connections targeted at the `127.192.0.0/10` virtual mapped
+address space.
+
+Only the `amnesia` user is granted access to the Tor transparent proxy
+port, so in practice only them can use this hostname-to-address
+mapping facility.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
+- [[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]]
 
 #### IPv6
 
-Tor does not support IPv6 yet so IPv6 communication is allowed only on
-the loopback interface.
+Tor does not support IPv6 yet so IPv6 communication is blocked.
 
 #### UDP, ICMP and other non-TCP protocols
 

@@ -1,0 +1,29 @@
+While background snapshots are invaluable for speeding up the test
+suite and not hammering the Tor authorities excessively with complete
+bootstraps, they do introduce some ugly code overhead and confusion:
+
+* There's the need of the `I save the state ...` step at the end of
+  the Background, which is pretty hackish.
+* Each "skippable" step needs an `next if ...` line around the top of
+  the step.
+* In the previous point I say "around" the top, because sometimes
+  input from a step are to be saved in some global variable to be
+  accessible for subsequent steps, and then those assignments should
+  happen before the `next if ...`. It's pretty confusing.
+
+It'd be great if we could tag steps `@skippable` and skip them when
+appropriate using something like an `AroundStep('@skippable')` hook,
+but vanilla cucumber supports neither tagging of steps nor such a hook
+([cucumber-cpp](https://www.ohloh.net/p/cucumber-cpp/) does,
+though). OTOH, with all that we'd be unable to save any input from the
+skipped steps, which probably would require some interesting
+workarounds (maybe using real `$global` variables instead of `@class`
+variables will do?).
+
+So the question is if we really can improve the situation. An
+`AfterBackground('@snapshot')` hook would at least be nice for killing
+the `I save the state ...` step in features tagged `@snapshot`. Can
+this be implemented using formatters, e.g. like our custom
+`{After,Before}Feature` hooks in `features/support/extra_hooks.rb`?
+
+[[!tag todo/research]]

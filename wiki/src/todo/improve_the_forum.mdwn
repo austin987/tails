@@ -1,123 +1,130 @@
+Let's migrate to [ask.torproject.org](https://ask.torproject.org/)
+instead.
+
 [[!toc levels=2]]
 
-Improving the ikiwiki forum
-===========================
+Tor made it available in March 2013, it is based on Askbot.
 
-**Note**: we're much more likely to switch to another webapp, see next section.
+<https://trac.torproject.org/projects/tor/ticket/5995>
 
-As pointed out in
-[[forum/Forum_Design___38___Functionality:_Primitive__44___Awkward]], our forum
-can be improved in many ways.
+Roadmap
+=======
 
-- Allowing people to fill up an author name, even if not logged in. This should
-  be possible with the comments_allowauthor option. See
-  [http://ikiwiki.info/plugins/comments/](http://ikiwiki.info/plugins/comments/):
+0. Test and report our findings about ask.torproject.org [[!taglink todo/test]]
+   - How are we going to filter Tails content?
+   - Do we need to be granted special rights as Tails dev?
+   - Comments to be made:
+     - Search engine is too strict ("turtles" → 2 threads, but "turtles question" → 0 threads)
+     - Anonymous posting is not working
+     - What are the criteria to go through moderation?
+0. Create ourselves accounts on ask.torproject.org
+0. [[Clean the forum.|improve_the_forum#index3h1]]
+0. Migrate the relevant content from the forum to ask.torproject.org.
+0. Wait for ask.torproject.org to be announced and used.
+0. Close the current forum for new posts and redirect to ask.torproject.org
+0. Adapt our website to point to the new place.
+   Encourage people to use the appropriate ways to report bugs, and
+   get better support this way, proposal:
+   “You are much more likely to get help with hardware related issues,
+   and bugs, if you report them using WhisperBack. See
+   [[doc/first_steps/bug_reporting]]".
+0. Remove the old forum.
 
-> If true (default false), anonymous commenters may specify a name for themselves,
-> and the [[!meta author]] and [[!meta authorurl]] directives will not be
-> overridden by the comments plugin.
+Askbot
+======
 
-- As adviced on the same page we should consider the use of either the
-  `htmlbalance` or the `htmltidy` plugin. See
-  [http://ikiwiki.info/plugins/htmltidy/](http://ikiwiki.info/plugins/htmltidy/)
-  and
-  [http://ikiwiki.info/plugins/htmlbalance/](http://ikiwiki.info/plugins/htmlbalance/).
+The service ask.torproject.org is using Askbot.
 
-- Ikiwiki could be improved to provide a new sort parameter to order pages by
-  the modification time of its subpages. The
-  [sortbylastcomment](http://ikiwiki.info/todo/sortbylastcomment_plugin/) plugin
-  has been written to do that.
+  - <http://askbot.org/>
+  - Django webapp, forked from OSQA.
+  - <https://github.com/ASKBOT/askbot-devel>
+  - Has [many dependencies](https://github.com/ASKBOT/askbot-devel/blob/master/askbot_requirements.txt) outside of Debian:
+    - akismet
+    - coffin
+    - django-keyedcache
+    - django-robots
+    - django-kombu
+    - django-followit
+    - django-recaptcha-works
+    - markdown2
+    - pystache
+    - pytz
+    - longusername
+  - Most of the development is [done by 2
+    people](https://github.com/ASKBOT/askbot-devel/graphs/contributors),
+    they are also selling it as a service.
+  - The commit count looks promising: 393 (2009), 594 (2010), 1249
+    (2011), 1106 (2012)
 
-- If needed it should be possible to further restrict the open publishing and
-  deletion on the forum by locking the forum pages so that only its author can
-  edit it. Adding ' or forum/*' to locked_pages seems to do the tricks while
-  still allowing anonymous users to create new threads.
+### Features
 
-- The 'Remove comment' link below each comment could be removed from the comment
-  template.
+  - Anonymous posting: filling up the email field is
+    required but the validity of the email is not checked.
+  - Email notifications:
+    - *Asked by me*
+    - *Answered by me*
+    - *Individually selected*
+    - *Entire forum (tag filtered)*
+    - *Comments and posts mentioning me*
+  - List matching questions on the fly when typing a new question.
+  - The software is
+    [translated](https://www.transifex.com/projects/p/askbot/) but there
+    is no multilingual support from the web interface.
+  - No subsite feature.
 
-Switching to a more advanced Question & Answer webapp
-=====================================================
+### Wishlist
 
-Required features
------------------
+  * Add multilanguage feature to:
+    - allow users to change the language of the interface they see
+    - allow to filter the content by the language of the questions
+  * Add a subsite feature:
+    - a single login should allow to post on different subsites
+    - a single user might have different credentials, karmas and badges
+      in different subsites
+    - allow to move questions between subsites (if allowed to do so)
+    - subsites can be tied to one or more languages (see multilanguage)
 
-- Allow to vote for the answers and display the answer sorted by votes.
-- Allow to ask questions anonymously (possibly using a shared account with a
-  public password; in that case, make sure several people can be
-  logged-in at the same time under this one account)
-- Handle karma for logged in users.
-- Have decently smart email notifications.
-- By default, proposes to search before asking a new question.
+Clean the forum
+===============
 
-Possible candidates
--------------------
+The forum is getting huge (about 3700 posts) and that creates
+important problems on the server. For example, at release time,
+rebuilding the whole wiki takes hours.
 
-### OSQA
+So let's start to delete everything except the interesting questions and
+most relevant answers that will be migrated to the Q&A application.
 
-- [homepage](http://osqa.net/)
-- Anonymous posting doesn't seem possible so far. It's been a feature request
-  for a while, see <http://jira.osqa.net/browse/OSQA-134>.
-- Anonymous users are not yet able to vote, see
-  <http://meta.osqa.net/questions/9683/should-it-be-possible-to-make-user-votes-anonymous>
-- Check whether email notifications are cool enough, see
-  <http://wiki.osqa.net/display/docs/OSQA+Installation+and+Upgrade+Guides#OSQAInstallationandUpgradeGuides-EmailSubscriptions>
-  <http://jira.osqa.net/browse/OSQA-45>
-- Shows the 'Search' button first by default and the 'Ask a question' button on
-  the side
-- Easy to install: checkout the source code, install all the dependencies from
-  Debian, configure the desired server to use WSGI, create the DB and that's it.
-- Upstream uses subversion.
-- The message displayed when trying to post anonymously (which is not
-  supported) is very confusing: "You are welcome to start submitting
-  your question anonymously. After submiting your question, you will
-  be redirected to the login/signup page. Your question will be saved
-  in the current session and will be published after you login with
-  your existing account, or signup for a new account."
-- Uses ressources from google.com, googleapis.com, and gravatar.com.
-  Are we fine with that?
+Using <span class="application">mc</span>, the GNU Midnight Commander,
+you can then browse the forum content by chronological order.
 
-### Askbot
+  - Move to the `forum` folder.
+  - Run the [[`restore_mtime.sh`|todo/improve_the_forum/restore_mtime.sh]]
+    script that updates the modification time of both the original post
+    and the folder containing the corresponding comments to the date of
+    the original post, retrieved through Git. It takes as argument the
+    maximum age, in days, of the threads for which to restore the date.
+  - Start mc in the `forum` folder.
+  - To mix both directories and file in the file listing, press F9 and
+    choose Options → Panel options... → Mix all files.
+  - To sort files by modify time, press F9 and choose Left → Sort order
+    → Modify time.
+  - To have a preview of files in the right panel, press F9 and choose
+    Right → Quick view.
 
-- [homepage](http://askbot.org/)
-- used by Fedora on [Ask Fedora](http://ask.fedoraproject.org/questions/)
-- Python + Django
-- Does not allow anonymous posting, see
-  <http://askbot.org/en/question/500/ask-questions-anonymously-without-any-login>
-- Seems to have good enough email notifications, see
-  <http://askbot.org/en/question/639/default-email-settings>
-  <http://askbot.org/en/question/501/is-it-possible-to-subscribe-to-a-particular-tag>
-- Shows the 'Search' button first by default
-- By default, the automatic setup installs dependencies using Egg modules. Most
-  are in Debian though, except djando-keyedcache. The doc asks `WSGIPythonEggs
-  /var/python/eggs` to be writable by Apache. Giving up for the moment.
-- Upstream uses git.
-- Uses resources from openid, google, etc.; are we fine with that?
+This happens in the `doc/sort_the_forum` branch.
 
-### Q2A
+  - Before pushing changes it's good to check the forum for old
+    questions without answers and possibly answers without questions:
 
-- [homepage](http://www.question2answer.org/)
-- only dependencies are PHP / MySQL
-- few features
-- Anonymous posting seems possible.
-- Shows the 'Ask a question' first and the 'Search' form in a corner
+        for i in * ; do [ -d $i ] && [ ! -f "$i.mdwn" ] && echo $i ; done
 
-### Shapado
+        for i in * ; do [ ! -d ${i%%.mdwn} ] && ls -l $i ; done
 
-- [homepage](http://shapado.com)
-- Seems to be a pain to install / maintain / get hosted. Ruby
-  cool kids style, see [[!debbug 633407]].
-- Shows the 'Ask a question' first and the 'Search' form in the top bar
+  - Merge from master branch to get the new threads.
+  - Merge this branch into master to reduce the load on the server.
+    Pushing such commits can take a while, even if they are only delete
+    content from the forum...
 
-Other issues
-------------
+[[!tag todo/website]]
 
-- Do we want to have a shared "Tails" account or separate accounts per
-  contributors. Keeping in mind that we want to encourage people to create
-  themselves accounts so that we can vote them up or down. [[!tag todo/discuss]]
-
-- Do we want OpenID support? Do we want it off?
-
-- We propose to migrate the interesting content of the forum to the new app and
-  to remove the old forum from the website. [[!tag todo/website]]
-
+[[!tag broken_window]]

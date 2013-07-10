@@ -4,16 +4,22 @@ Given the increasing practice of blocking Tor usage in more
 authoritarian countries, censorship resistance is getting more
 important. To merely try to use Tor might even be dangerous in these
 countries as the government can log it and take action against the
-user. Hence we should provide an easy to use facility for our users to
+user. Hence we should provide an easy to use facility for our users to achieve:
 
-* make sure that they always can reach the Tor network, and
-* prevent others from knowing that they are using Tor.
+* Reliability: make sure that they always can reach the Tor network, and
+* Obfuscation: prevent others from knowing that our user may be using the Tor network.
 
 In Tor there is the concept of
-[bridges](http://www.torproject.org/bridges) which is used to hide the
-fact that you are communicating with the Tor network by relaying your
-Tor traffic through a so called bridge node which is not listed in
-Tor's directory. This is exactly what we want.
+[bridges](http://www.torproject.org/bridges). By relaying the user's
+Tor traffic through a so called *bridge node* which is not listed in
+Tor's directory the user may be able to achieve a reliable connection
+and hide the fact that the user is connecting to a Tor server.
+Tor's bridging makes no attempt to mask the (Tor) nature of the
+traffic between the Tails user's client and the bridge node.
+Therefore the users access to the Tor network can still be determined
+by simple traffic analysis.
+See [[obfsproxy|todo/obfsproxy]] for a much better
+solution to the obfuscation problem.
 
 Bridges in Tails
 ================
@@ -30,13 +36,12 @@ Internet, for instance from [the Tor project's
 website](https://bridges.torproject.org/), IRC or IM buddies and
 similar.
 
-
 Specification
 =============
 
 The use of bridges should be optional, and if desired it must be
 chosen before Tor starts. The best place for such an option is
-probably in the boot menu. When activated the following things should
+probably in tails-greeter. When activated the following things should
 happen:
 
 * Tor doesn't try to connect directly to the Tor network.
@@ -82,8 +87,11 @@ General
 -------
 
 0. Help implement the long-awaited solution, published as an
-   attachment to [[!tor_bug 2905]]. Tor and Vidalia need patching:
-   - *update*: Tor 0.2.3.9-alpha brings the `DisableNetwork` config option
+   attachment to [[!tor_bug 2905]]. Tor and Vidalia needed patching:
+   - *update*: Tor 0.2.3.9-alpha brings the `DisableNetwork` config
+     option
+   - *update*: Vidalia 0.3.2 implements this plan,
+     time to [[!taglink todo/test]]
    - [[!tor_bug 4290]]: Vidalia should not let users check "Use
      Bridges" without entering any
    - [[!tor_bug 3644]]: Config option to tell Tor whether it can use
@@ -96,7 +104,7 @@ General
 0. Migrate this page's content to the [[contribute/design]] section of
    the website.
 0. Let the user easily opt-in for connecting to Tor through bridges in
-   the [[todo/boot menu]].
+   tails-greeter
 
 Find bridges button
 -------------------
@@ -105,19 +113,20 @@ Vidalia has a "Find bridges now" button which won't work for us
 since it can't reach bridges.torproject.org. To get it to work we
 would need some kind of exception in the firewall rules.
 
-The following command is an easy way to download a list of bridges
-(requires an exception in the firewall table -- perhaps we can just
-run the command as the debian-tor user which has direct internet
-access?):
-
-    wget -q -O - https://bridges.torproject.org/ | grep -e "^bridge .*"
+Anyway, bridges.tpo now asks for a CAPTCHA, so an automated,
+out-of-the-browser solution seems not doable this way.
 
 It should be noted that just connecting to bridges.torproject.org
 can be dangerous if the regime is hostile towards Tor, and/or it
 could simply be censored. This must be explained to the user, and
 manual input of bridges must be available as an alternative.
 
+One can also get Obfsproxy [bridges by email](https://www.torproject.org/docs/bridges.html.en#FindingMore) (currently sent from Yahoo
+and Gmail email accounts only).
+
 [[!tag todo/research]]
 
 Until a solution is found for this issue, we should probably hide this
 button.
+
+[[!tag release/1.0]]
