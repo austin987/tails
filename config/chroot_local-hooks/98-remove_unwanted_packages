@@ -8,16 +8,14 @@ echo "Removing unwanted packages"
 
 # We use apt-get as aptitude doesn't know about globs.
 # There are packages we could be tempted to remove but we can't:
-#   - gcc-4.4-base (libstdc++6 depends on it)
+#   - gcc-4.7-base (libstdc++6 depends on it)
 #   - libgcc1 (vidalia depends on it)
 #   - cpp, cpp-4.4 (big parts of GNOME depend on it)
 apt-get --yes purge  \
    '^linux-kbuild-*' \
    '^linux-headers-*' \
    build-essential debhelper dkms dpatch dpkg-dev \
-   cpp-4.3 \
-   gcc gcc-4.3 gcc-4.3-base gcc-4.4 \
-   g++ '^g\+\+-*' \
+   gcc gcc-4.7 \
    intltool-debian \
    libc6-dev libgl1-mesa-dev libstdc++6-4.4-dev linux-libc-dev \
    make \
@@ -27,7 +25,7 @@ apt-get --yes purge  \
 
 ### Deinstall some other unwanted packages.
 apt-get --yes purge  \
-   aptitude live-build tasksel tasksel-data
+   aptitude live-build python2.6 python2.6-minimal tasksel tasksel-data
 
 ### Deinstall dependencies of the just removed packages.
 apt-get --yes --purge autoremove
@@ -42,8 +40,7 @@ apt-get --yes purge gnome-core
 
 # - evolution and its dependencies
 apt-get --yes purge \
-   evolution evolution-common libevolution \
-   libgtkhtml-editor-common libgtkhtml-editor0 libgtkhtml3.14-19
+   evolution evolution-common libevolution
 
 # - others
 apt-get --yes purge \
