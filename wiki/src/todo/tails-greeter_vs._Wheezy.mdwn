@@ -159,17 +159,3 @@ TODO
 	dpkg: error processing /tmp/tails-greeter_0.7.15+wheezy1_all.deb (--install):
 	 trying to overwrite '/usr/share/gdm/greeter/applications/gdm-simple-greeter.desktop', which is also in package gdm3 3.4.1-8
 	dpkg-deb: error: subprocess paste was killed by signal (Broken pipe)
-
-Wontfix
--------
-
-* Clean up the greeter's GNOME session properly on login: e.g.
-  don't let dbus-daemon processes floating around: explicitly
-  disconnect from accountsservice and gdmgreeter?
-> Tried to disconnect properly. Dbus daemon number doesn'increase on
-> connect+disconnect cycles, but increases on `service gdm3 restart`. It seems
-> me good enough
-* Get rid of the `__fill_layouts_dict` mess, it should not be needed
-  now that we use GObject introspection.
-> Removing the dictionnary appears to be a lot of work, to be slower and
-> moderately useful as a similar list needs to be calculated anyway.
