@@ -1,19 +1,24 @@
 #include <tunables/global>
 
 /usr/bin/vidalia {
-  #include <abstractions/base>
+  #include <abstractions/dbus-session>
+  #include <abstractions/kde>
   #include <abstractions/nameservice>
-  #include <abstractions/fonts>
-  #include <abstractions/freedesktop.org>
 
   /usr/lib/** mr,
-  /usr/share/qt4/translations/** rk,
-  /usr/share/icons/** rk,
 
-  owner @{HOME}/.config/Trolltech.conf rk,
-  owner @{HOME}/.vidalia rw,
+  owner @{HOME}/.vidalia/ rw,
   owner @{HOME}/.vidalia/** rwmk,
 
   /{var/,}run/tor/control rw,
   /{var/,}run/tor/control.authcookie r,
+
+  /usr/share/icons/*/index.theme k,
+  /usr/share/themes/**           r,
+
+  owner @{PROC}/[0-9]*/cmdline r,
+  owner @{PROC}/[0-9]*/fd/ r,
+
+  # Site-specific additions and overrides. See local/README for details.
+  #include <local/usr.bin.vidalia>
 }
