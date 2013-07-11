@@ -188,16 +188,15 @@ Freezing devel into testing
 2. (Manually) hard reset `testing` suite to the current state of the
    `devel` one:
 
-   a. First, merge `devel` into `testing`
+   a. First, empty the `testing` suite:
+
+      	$ ssh reprepro@incoming.deb.tails.boum.org \
+      	      reprepro removematched testing '\*'
+
+   b. Then, merge `devel` into `testing`
 
       	$ ssh reprepro@incoming.deb.tails.boum.org \
       	      tails-merge-suite devel testing
-
-   b. Then, [[merge the APT suites|APT_repository#workflow-merge-main-branch]].
-
-   c. Eventually, make it so the `testing` and `devel` packages lists
-      are *exactly* the same in the end (this is a *hard* reset, not
-      the usual merge).
 
 <a id="workflow-post-tag"></a>
 

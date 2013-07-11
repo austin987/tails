@@ -11,15 +11,18 @@ display manager and port our greeter to it.
 Roadmap
 =======
 
-1. [[!taglink todo/research]] how to use GDM in Wheezy, without
-   spending too much time on it
-1. [[!taglink todo/research]] a bit more potential lightdm drawbacks,
-   especially in the area of accessibility (both in a Python GTK
-   greeter and in a WebKit greeter one)
-1. decide about GDM vs. lightdm
-1. if going with lightdm: decide what language and UI toolkit to use
-1. migrate tails-greeter code to the new chosen DM, [[revamping the
-   UI|todo/tails-greeter: revamp UI]] along the way
+1. Spend 2 days trying to convert tails-greeter to Wheezy's GDM (Alan
+   and intrigeri, late June) [[!tag todo/code]]
+1. At the end of these 2 days, decide about GDM vs. lightdm.
+1. If GDM is chosen, then finish the migration to Wheezy's GDM (Alan
+   and intrigeri, before mid/late July).
+1. If GDM is chosen, then spend 2 days improving the UI/UX (Alan,
+   Tchou and intrigeri, late July / early August); we probably won't
+   do the [[full UI revamp|todo/tails-greeter: revamp UI]] we've been
+   dreaming of, but if that's cheap and good enough, moving to the
+   best of Alan's proposed mockups + tchou's proposed improvements
+   could be a wonderful first step.
+1. [[todo/migrate tails-greeter to Python 3]]?
 
 Candidates
 ==========
@@ -42,12 +45,30 @@ I had to rename `tails-greeter.desktop` to
 displays no window at all). I was not able to find any documentation
 on this. Nor did I find any existing custom greeter for GDM 3.x.
 
+**Update**: the gdm3 (3.4.1-7) `debian/changelog` entry reads:
+
+    * debian/patches/40_add_start_dir.patch:
+      + Call gnome-session with --start /usr/share/gdm/greeter/autostart.
+        .desktop files in that directory will be autostarted (if the
+        condition to do so is true) in the gdm session.
+
+... so perhaps that would be all that's needed to have our
+greeter started?
+
+Also see the *Custom greeter* thread on tails-dev (early April 2013);
+quoting Ray Strode there:
+
+> Here's the commit where the fallback greeter got ported to the new api:
+> <https://git.gnome.org/browse/gdm/commit/gui/simple-greeter?id=1ec0665b631965b8c73277374dddde8b1d8b6d1e>
+
+Incidentally, this last-minute patch for Wheezy gets
+accessibility back.
+
 lightdm
 -------
 
 **Summary**: lightdm looks very promising, but it may be lacking in
-some areas (accessibility) and some of the exciting (optional) stuff,
-such as writing the UI as a web page, is quite a bit hackish.
+some areas (accessibility).
 
 [lightdm](https://launchpad.net/lightdm) has made huge progress since
 the time we considered it in the early pre-tails-greeter days:
@@ -78,11 +99,6 @@ the time we considered it in the early pre-tails-greeter days:
   `lightdm --test-mode --debug` starts a greeter in a window inside
   your existing session, as an unprivileged user (and logs to
   `~/.cache/lightdm/log/x-*-greeter.log`)
-* [lightdm-webkit-greeter](https://launchpad.net/lightdm-webkit-greeter)
-  and [lightdm-pywebkit-greeter](https://github.com/lamikae/lightdm-pywebkit-greeter)
-  allow writing greeters in HTML/CSS + JavaScript... in case we want
-  a Web-like look'n'feel, and possibly make it easier for people who
-  are more into design to contribute to our greeter.
 
 One should have a look at possible drawbacks, though:
 
@@ -94,10 +110,20 @@ One should have a look at possible drawbacks, though:
     GTK theme. Not running a full GNOME session, window manager
     included (contrary to GDM), forces them to manage a few things by
     hand, but it still does not look that crazy.
-* Wheezy's, sid's (1.2.3-1) and experimental's (1.4.0-1) lightdm don't build
-  GObject introspection data, while Ubuntu does -- how easy is it to
-  enable it, and in turn enable us to write greeters in something else
-  than C? Propose a patch for [[!debbug 699821]]. [[!tag todo/code]]
+* Wheezy's (1.2.3-1) lightdm does not build GObject introspection
+  data, but sid's (1.6.0-2 and later) does -- this is needed to enable
+  us to write greeters in something else than C.
+
+### Archive: webkit
+
+We've given up the idea of writing our greeter as a web interface.
+Here's some initial archived research in this area:
+
+* [lightdm-webkit-greeter](https://launchpad.net/lightdm-webkit-greeter)
+  and [lightdm-pywebkit-greeter](https://github.com/lamikae/lightdm-pywebkit-greeter)
+  allow writing greeters in HTML/CSS + JavaScript... in case we want
+  a Web-like look'n'feel, and possibly make it easier for people who
+  are more into design to contribute to our greeter.
 * JavaScript can't run arbitrary commands nor create files, so
   a WebKit greeter could not work exactly the same way as current
   tails-greeter does (worst case: at least with pywebkit-greeter, the
