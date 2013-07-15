@@ -203,17 +203,11 @@ developers).
 things to do, but should be enough to run some initial tests to
 confirm the general idea is workable.
 
-1. **done** Close wishlist tickets not modified since more than a year.
-1. List `todo/*` pages that should be kept as blueprints.
-1. Split tickets that have several `todo/*` tags, and save the
-   parent/child relationship using `[[!parent]]`. In the end, each
-   ticket should only have one `todo/*` tag. `make
-   list-more-than-one-todo-tag` should help.
-1. Prepare a branch that updates the website to advertise the new task
-   manager instead of the old one.
-1. Add a `External Id` custom field. Check "Used as a filter".
-1. Add a `QA Check` custom field. Make it searchable.
-1. Add a `Type of work` custom field whose possible values
+### Set up Redmine
+
+1. **done** Add a `External Id` custom field. Check "Used as a filter".
+1. **done** Add a `QA Check` custom field. Make it searchable.
+1. **done** Add a `Type of work` custom field whose possible values
    are the same as our current `todo/*` tags:
    	Code
    	Discuss
@@ -229,13 +223,31 @@ confirm the general idea is workable.
    	Wait
    	Website
    Mark it as "used as a filter" and searchable.
-1. Add a `Blueprint` text custom field, with regexp `^https://tails[.]boum[.]org/blueprint/`.
-1. Add a `Fix committed` issue status.
-1. Make the `Fix committed` status available in Administration -> Workflow.
-1. Add a `Confirmed` issue status.
-1. Make the `Confirmed` status available in Administration -> Workflow.
-1. Mark the `Resolved` issue status as "Issue closed".
-1. Add an `Elevated` issue priority, rank it between Normal and High.
+1. **done** Add a `Blueprint` text custom field, with regexp `^https://tails[.]boum[.]org/blueprint/`.
+1. **done** Add a `Fix committed` issue status.
+1. **done** Make the `Fix committed` status available in Administration -> Workflow.
+1. **done** Add a `Confirmed` issue status.
+1. **done** Make the `Confirmed` status available in Administration -> Workflow.
+1. **done** Mark the `Resolved` issue status as "Issue closed".
+1. **done** Add an `Elevated` issue priority, rank it between Normal and High.
+1. **done** Add a `Feature branch` custom field to ease review.
+
+### Adapt impacted stuff
+
+1. Prepare a branch that updates the website to advertise the new task
+   manager instead of the old one.
+1. Generate the Apache rewrite rules from the (External Id, Redmine
+   Id) mapping. Skip blueprints while doing so.
+   (`PRODUCTION=1 make rewrite-rules` should do the job.)
+
+### Clean up and gather data
+
+1. **done** Close wishlist tickets not modified since more than a year.
+1. List `todo/*` pages that should be kept as blueprints.
+1. Split tickets that have several `todo/*` tags, and save the
+   parent/child relationship using `[[!parent]]`. In the end, each
+   ticket should only have one `todo/*` tag. `make
+   list-more-than-one-todo-tag` should help.
 1. Write a custom ikiwiki plugin to:
    - **done** save original ikiwiki ticket name as `External Id` column
    - **done** save parent/child relationship
@@ -251,8 +263,8 @@ confirm the general idea is workable.
    - **done** removes links to wishlist
    - **done** converts TOC directive into Redmine's syntax
    - **done** drops obsolete taglinks
-   - import `priority/*` tags
-   - import `category/*` tags
+   - **done** import `priority/*` tags
+   - **done** import `category/*` tags
    - XXX: what to do with blueprints? create a parent ticket matching
      the blueprint and linking to it?
 1. Run ikiwiki with this special plugin, then merge all these CSV
@@ -279,9 +291,6 @@ confirm the general idea is workable.
    full-blown tickets (`PRODUCTION=1 make list-sub-pages` should
    help). These sub-pages are used in too many different ways to allow
    us to process them automatically.
-1. Generate the Apache rewrite rules from the (External Id, Redmine
-   Id) mapping. Skip blueprints while doing so.
-   (`PRODUCTION=1 make rewrite-rules` should do the job.)
 1. Git repository mangling:
    * Move blueprints tickets to `wiki/src/blueprints/`
    * Move attachments out of the way for future processing.
@@ -292,9 +301,9 @@ confirm the general idea is workable.
 1. Set a valid `Type of work` field for every ticket that lacks one.
 1. Mark the `Type of work` custom field as mandatory.
 1. Sort bugs and features to the relevant trackers.
-1. Add a `Feature branch` custom field to ease review.
 1. Sort tickets into categories.
-1. Add sub-tickets blocks/before/after relationships.
+1. Add sub-tickets blocks/before/after relationships, starting with
+   tickets that are tagged `todo/wait` for another one.
 
 ## Setup
 
