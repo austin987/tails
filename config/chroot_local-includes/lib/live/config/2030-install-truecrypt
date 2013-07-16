@@ -33,6 +33,17 @@ Install_TrueCrypt ()
 		expect "Press Enter to exit..."
 		send "\n"
 	EOF
+
+    # Wrapper to TrueCrypt
+    cat  >/usr/local/bin/truecrypt <<-EOF
+        zenity --warning --title="`gettext \"Truecrypt will soon be removed from Tails.\"`" \
+            --text="`gettext \"Truecrypt will soon be removed from Tails due to license and development concerns.\"`"
+        exec /usr/bin/truecrypt
+    EOF
+
+    # Monkey patch the truecrypt.desktop file to show the greeter
+    sed -i 's/\/usr\/bin\/truecrypt/\/usr/\local\/bin\/truecrypt/' /usr/share/applications/truecrypt.desktop
+
 }
 
 Install_TrueCrypt
