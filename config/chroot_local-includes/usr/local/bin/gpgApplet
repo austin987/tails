@@ -44,7 +44,7 @@ use DateTime;
 use Locale::gettext;
 use POSIX;
 setlocale(LC_MESSAGES, "");
-textdomain("gpgApplet");
+textdomain("tails");
 
 
 =head1 GLOBALS
@@ -916,7 +916,13 @@ sub detect_received {
 sub handle_clipboard_owner_change {
     my $clipboard = shift;
 
-    set_freshest_clipboard($clipboard);
+    # Each time the applet is used, we receive an owner-change signal for an
+    # empty PRIMARY clipboard. We don't want to swich from a valid clipboard to
+    # an empty one.
+    my $content = $clipboard->wait_for_text;
+    if (defined $content && length $content) {
+        set_freshest_clipboard($clipboard);
+    }
     detect_received($clipboard);
 }
 
