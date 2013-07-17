@@ -265,8 +265,11 @@ confirm the general idea is workable.
    - **done** drops obsolete taglinks
    - **done** import `priority/*` tags
    - **done** import `category/*` tags
-   - XXX: what to do with blueprints? create a parent ticket matching
-     the blueprint and linking to it?
+   - feed the blueprint custom field with the URL to the relevant
+     blueprint, if any
+
+### Freeze and import data
+
 1. Run ikiwiki with this special plugin, then merge all these CSV
    lines to produce a first CSV file that can be imported with the
    Importer plugin.
@@ -277,7 +280,10 @@ confirm the general idea is workable.
    * use an account that has Manager privs on the current project
    * use `External Id` as `Unique Column`
    * check "Update existing issues"
-1. Build a (External Id, Redmine Id) mapping.
+1. Build a (External Id, Redmine Id) mapping
+
+    PRODUCTION=1 make ids.map
+
 1. With a modified version of the ikiwiki plugin, plus this mapping
    information, produce a second CSV files with tickets description
    modified so that links to other tickets are updated to use Redmine
@@ -285,16 +291,18 @@ confirm the general idea is workable.
 1. Import the second CSV file, using `External Id` as `Unique Column`
    again, and enabling the *Update Existing Issues* option.
    Links between tickets should now be good.
-1. Manually add attachments (the Importer plugin does not support
-   this).
+1. Git repository mangling:
+   * Move blueprints tickets to `wiki/src/blueprint/`: 
+     `PRODUCTION=1 make move-blueprints`
+   * Move attachments out of the way for future processing: 
+     `PRODUCTION=1 make move-attachments`
+   * Delete the rest.
 1. Manually take care of tickets sub-pages that were imported as
    full-blown tickets (`PRODUCTION=1 make list-sub-pages` should
    help). These sub-pages are used in too many different ways to allow
    us to process them automatically.
-1. Git repository mangling:
-   * Move blueprints tickets to `wiki/src/blueprints/`
-   * Move attachments out of the way for future processing.
-   * Delete the rest.
+1. Manually add attachments (the Importer plugin does not support
+   this).
 1. Set correct `Type of work` values for tickets that were tagged
    `todo/qa`, and that were migrated to `Qa`.
 1. Remove the `Qa` value from possible types of work.
