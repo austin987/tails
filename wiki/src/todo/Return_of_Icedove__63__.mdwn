@@ -50,7 +50,7 @@ TorBirdy
 
 ### Plans
 
-[[!taglink todo/wait]] for TorBirdy to be in Debian: [[!debbug 699107]].
+See tickets on [[Redmine|todo/Return of Icedove?]].
 
 ### Design
 
@@ -71,10 +71,8 @@ include.
 Spoof or remove User-Agent header
 ---------------------------------
 
-TorBirdy's design document says they want to omit this header.
-
-Next thing to do:
-[[!taglink todo/test]] if the extension does it already.
+Maybe done by Torbirdy, see tickets on [[Redmine|todo/Return of
+Icedove?]].
 
 Modified autoconfig wizard
 --------------------------
@@ -84,15 +82,7 @@ Git repository: `git://labs.riseup.net/tails_icedove.git`.
 
 ### Plans
 
-1. [[!taglink todo/research]] why the account creation wizard fails on
-   our custom packages built with this patchset (in
-   `feature/icedove`), in Tails. Lack of MX query support, perhaps?
-1. [[!taglink todo/research]] how to fix the "Re-test fails in the
-   account creation wizard manual configuration window": Icedove
-   ignores proxy settings, tries to connect to the Internet directly,
-   and is forbidden to.
-1. Try to get these patches merged upstream, preferably to Mozilla,
-   but Debian would also be OK.
+See tickets on [[Redmine|todo/secure_Icedove_autoconfig_wizard]].
 
 ### Design
 
@@ -117,20 +107,18 @@ autoconfig wizard, the following changes has been made to it:
 To prevent TorBirdy from disabling the autoconfig wizard, we set the
 `vendor.name` Icedove pref to `Tails`.
 
-Basic configuration and integration
------------------------------------
-
-[[!tag todo/code]]
+Basic configuration & integration
+---------------------------------
 
 * Use `127.0.0.1:9061` SOCKS proxy.
 * Don't display the "Adblock Plus installation complete" tab.
 * Don't prompt whether one wants to report usage and performance
   information to Mozilla.
 * Disable FoxyProxy.
-* Add launcher to the GNOME panel.
 * Enable "Only use secure protocols" by default (one may still
   uncheck it when needed).
 * Don't check updates for Add-ons.
+* Add launcher to the GNOME panel.
 * More generally: have a look at our Iceweasel prefs and copy all
   those that exist and make sense for Icedove.
 * The [[security/IP_address_leak_with_icedove]] can be fixed by
@@ -139,37 +127,20 @@ Basic configuration and integration
   entry](https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/TorifyHOWTO/EMail#ExperimentalSuggestionsforpossiblymakingthunderbirdandorclawsstopleakinginfoExperimental)
   for other goodies. By applying those configurations I think both
   claws and icedove comes to an equal level security-wise.
+* Disable by default the indexer from
+  `Preferences -> Advanced -> General -> Enable Global Search and Indexer`.
+  Otherwise pinentry dialogs can appear while checking email in the
+  background.
 
-Things to be checked / researched
-=================================
+Resources
+=========
 
-[[!tag todo/research]]
-
-* general privacy/anonymity issues: [tagnaq's
-  paper](http://bit.ly/qDZm7C)
-* TorBirdy team patches against Thunderbird (in `patches/*` in
-  TorBirdy Git repository). **Next think to do**:
-  [[!taglink todo/wait]] for the design documentation (asked on
-  2013-01-29 in <8538xk1i8q.fsf@boum.org>)
-
-found answers
--------------
-
+* [tagnaq's paper](http://bit.ly/qDZm7C)
 * how well are Enigmail, Icedove and l10n packages maintained in
   Debian? -> seems acceptable - I've seen much worse times, especially
   for this set of packages.
 * how much size does Icedove + Enigmail + l10n packages add to the
   SquashFS compared to Claws Mail? -> *9MB* (as of Tails pre-0.8 devel
   branch with XZ SquashFS compression)
-
-Misc. TODO
-==========
-
-* Disable `--no-throw-keyids` (set by default by Torbirdy)?
-  [[!tag todo/discuss]]
-* Disable by default the indexer from
-  `Preferences -> Advanced -> General -> Enable Global Search and Indexer`.
-  Otherwise pinentry dialogs can appear while checking email in the
-  background.
 
 [[!tag priority/high]]
