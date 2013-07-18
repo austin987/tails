@@ -234,20 +234,21 @@ confirm the general idea is workable.
 
 ### Adapt impacted stuff
 
-1. Prepare a branch that updates the website to advertise the new task
+1. **done** Prepare a branch that updates the website to advertise the new task
    manager instead of the old one.
 1. Generate the Apache rewrite rules from the (External Id, Redmine
-   Id) mapping. Skip blueprints while doing so.
+   Id) mapping.
    (`PRODUCTION=1 make rewrite-rules` should do the job.)
 
 ### Clean up and gather data
 
 1. **done** Close wishlist tickets not modified since more than a year.
-1. List `todo/*` pages that should be kept as blueprints.
 1. Split tickets that have several `todo/*` tags, and save the
    parent/child relationship using `[[!parent]]`. In the end, each
-   ticket should only have one `todo/*` tag. `make
-   list-more-than-one-todo-tag` should help.
+   ticket should only have one `todo/*` tag:
+
+        PRODUCTION=1 make list-more-than-one-todo-tag
+
 1. Write a custom ikiwiki plugin to:
    - **done** save original ikiwiki ticket name as `External Id` column
    - **done** save parent/child relationship
@@ -307,20 +308,35 @@ confirm the general idea is workable.
      `PRODUCTION=1 make move-attachments`
    * Delete the rest.
 1. Manually take care of tickets sub-pages that were imported as
-   full-blown tickets (`PRODUCTION=1 make list-sub-pages` should
-   help). These sub-pages are used in too many different ways to allow
-   us to process them automatically.
+   full-blown tickets. These sub-pages are used in too many different
+   ways to allow us to process them automatically:
+
+        PRODUCTION=1 make list-sub-pages
+
 1. Manually add attachments (the Importer plugin does not support
    this).
-1. Set correct `Type of work` values for tickets that were tagged
-   `todo/qa`, and that were migrated to `Qa`.
+1. Add some tickets relationships back:
+   - screen_locker is blocked by deactivate_screensaver_until_time_is_set
+   - clean_the_forum is blocked by decide_what_kind_of_web_support_do_we_want_to_provide
+   - new_greeter_ui:_implement_specifications is blocked by new_greeter_ui:_clarify_specifications
+   - new_greeter_ui:_call_for_translation is blocked by new_greeter_ui:_implement_specifications
+   - new_greeter_ui:_call_for_translation is blocked by new_greeter_ui:_update_documentation
+   - new_greeter_ui:_test_prototypes is blocked by new_greeter_ui:_propose_prototypes
+   - new_greeter_ui:_update_documentation is blocked by new_greeter_ui:_implement_specifications
+1. For each ticket:
+   - Add a *Category* value.
+   - Add a *Type of work* value.
+   - Decide if it should have been kept as a blueprint. If so, salvage
+     the content of the old ikiwiki ticket into a shiny new blueprint.
+   - If *Type of work* is *wait*, mark the ticket as blocked by the
+     relevant other ticket, if any.
 1. Remove the `Qa` value from possible types of work.
-1. Set a valid `Type of work` field for every ticket that lacks one.
 1. Mark the `Type of work` custom field as mandatory.
 1. Sort bugs and features to the relevant trackers.
-1. Sort tickets into categories.
 1. Add sub-tickets blocks/before/after relationships, starting with
    tickets that are tagged `todo/wait` for another one.
+1. Remove the `External Id` field.
+1. Clean `tags/*` up.
 
 ## Setup
 
