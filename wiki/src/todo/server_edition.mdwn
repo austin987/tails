@@ -134,7 +134,7 @@ The user should be able to have a secure shell (SSH) on the machine, to do admin
 
 Remove unnecessary/irrelevant things from boot process
 ------------------------------------------------------
-Tails server should not spawn a full-featured desktop anymore: the goal of this iteration is to remove as much irrelevant services as possible (e.g GNOME, Xorg, ...) in order to reduce boot-time and system resources. The only way the user have to do administration’s related tasks is to use SSH.
+Tails server should not spawn a full-featured desktop anymore: the goal of this iteration is to remove as much irrelevant services as possible (e.g GNOME, Xorg, ...) in order to reduce boot-time and system resources. The only way the user have to do administration's related tasks is to use SSH.
 
 Setup Tor hidden services
 -------------------------
@@ -146,7 +146,7 @@ This is the first Tor hidden service implementation and it will allow the user t
 
 Basic configuration management
 ------------------------------
-The user should be able to edit the configuration of the Gobby service during the creation of the Tails server USB stick; like using a password, changing the service’s name,
+The user should be able to edit the configuration of the Gobby service during the creation of the Tails server USB stick; like using a password, changing the service's name,
 
 
 Requirement/Deliverable
@@ -230,7 +230,7 @@ mode.
 ### Check configuration presence
 When Tails boots, it will at some point
 check for the presence of a storage media containing a Tails server
-configuration, using GPT partition’s label. So, the boot continues in
+configuration, using GPT partition's label. So, the boot continues in
 Tails server mode, if not, boot continues for normal Tails, the user
 warned, and prompted about what should be done, either reboot in
 Tails, or recheck for a preference USB stick.
@@ -257,7 +257,7 @@ Tails-server and finally stop avahi could be easily developed.
 #### Webpage
 Another way would be to use a simple webpage (php/apache are overkill : a simple CGI would be fine) to get the passphrase. This approach allows a simple client-side GUI in that starts/stops
 avahi, and scans and lists Tails-servers (they can be severals).
-When clicked, iceweasel simply opens the selected server’s webpage. This should even be doable in fairly small shell script using zenity. this solution has the advantage of being platform-
+When clicked, iceweasel simply opens the selected server's webpage. This should even be doable in fairly small shell script using zenity. this solution has the advantage of being platform-
 independent.
 
 #### Authentication
@@ -265,24 +265,24 @@ Self signed certificates do more harms than good, since they scare the user beca
 certificates fingerprint could be stored in a ~/.Tails-server folder
 on the client : Any certificates found there would be added to
 iceweasel on as soon as Tails has opened the persistent volume
-and found this preset. Client’s Ssh public key must be stored too,
+and found this preset. Client's Ssh public key must be stored too,
 and written in the /.ssh/known hoss of the server.
 
 ### ervices configuration with preseed
-Once Tails server is booted, it will preseed the Debian system’s debconf database with the settings
+Once Tails server is booted, it will preseed the Debian system's debconf database with the settings
 obtained from the Tails server configuration files.
 
 ### Services installation
-Service’s packages will be installed by APT (to
+Service's packages will be installed by APT (to
 take advantage of dependencies resolutions, upgrades, ..). Since the
 persistence code bind-mounting the cache directory onto the location
-where APT normally looks, there’s nothing more to tell APT about.
+where APT normally looks, there's nothing more to tell APT about.
 
 
 ### Services configuration patches
 As previously said, not every packages
 will be configurable in a suitable manner. We will have to patch some
-software’s configurations after their setup.
+software's configurations after their setup.
 
 ### Services startup
 Since not every services supports autostart, this is the step during which
@@ -295,40 +295,40 @@ Two solutions are available: either install all server softwares in the
 default Tails, or install them dynamically from the USB stick during
 the boot of Tails server. Even if the second solution is better (because
 it will not unnecessary bloat Tails), the first one is much more simpler to
-implement, and since it’s not a critical (or even important) feature, it can
+implement, and since it's not a critical (or even important) feature, it can
 be implemented later, outside the scope of the GSoC.
 
 Configuration management
 ------------------------
-Tails-server will often require custom ”default” configuration for a bunch
+Tails-server will often require custom "default" configuration for a bunch
 of softwares due to its nature. Service configuration requires a nice way to
 handle the configuration files in order to avoid a complete disparate mess.
 In an ideal world, every services configurations should be handled by deb-
 conf (and not by some ugly monkey patching). Doing so will keep Tails-
-server upgrade-proof, since configuration file’s format are not frozen, and
+server upgrade-proof, since configuration file's format are not frozen, and
 may evolve between updates, using debconf will make this transparent.
 ### Upstream (Debian)
 The best way is to ask to the related package maintainers to
 add in debconf options that we want to access from debconf to configure
 the package if they are not already present. Since the freeze of Wheezy (the
-next Debian stable) is planed for June, I don’t think there will be time for
+next Debian stable) is planed for June, I don't think there will be time for
 this to happen any time soon. Most likely the debconf approach way will
 be postponed to the Wheezy + 1 Debian release(probably in 3 years).
 
 ### Patch on boot
-If we can’t get the options we want from the package maintainers, the
+If we can't get the options we want from the package maintainers, the
 most appropriate solution is to patch configurations files on bootime. Such
 patches can be augeas scripts, Config::Model somethings, or whatever seems
 robust enough.
 
 ### Other options
-Some cases don’t fit well into the ”debconf or patch on boot” alternative.
+Some cases don't fit well into the "debconf or patch on boot" alternative.
 These situations would have to solved on a case-per-case basis.
 
 On Tails update
 ---------------
 When a new version of Tails is available, the server admin should be warned
-about this. Tails already implements this mechanism in it’s GUI, but as Tails
+about this. Tails already implements this mechanism in it's GUI, but as Tails
 server cannot rely on GUI in its normal operation, this must be redesigned.
 As a placeholder, the admin should be invited to subscribe to the amnesia-
 news mailing-list.
