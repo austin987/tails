@@ -1,0 +1,34 @@
+[[!meta date="Fri Jul 15 02:02:02 2011"]]
+
+## Current progress
+
+
+0. populate language list using list of available locales in /usr/share/i18n/SUPPORTED - DONE.
+0. supply parameter as 'en' (or smth else suitable for locale generation - investigate) to locale-gen - DONE.
+0. Language list should contain language's own name (e. g. 'Русский' for 'Russian')
+instead of current 2-letter code - DONE.
+0. translate language widget too (move lang choice handler from button_clicked to list_choice)
+0. Move locale-gen interaction to greeter from widget - DONE.
+0. cleanup commented\old\dead code - DONE.
+0. obtain list of kb layouts available (via python-xklavier)
+0. use existing code/UI from d-i/anaconda/ubuntu installer/ for language chooser if possible - partially done (PyICU utilized).
+0. apply correct layout after it's been chosen (both to present and following greeter widgets and to actual session)
+
+## Problems
+
+0. Some of the 'native' language names are not displayed correctly due to missing characters in the fonts (standard unicode squares shown instead). It's unclear how to filter them out because there are no actual errors shown in python.
+0. The language list is fairly long: maybe some of the exotic languages could be filtered or black-listed before list population?
+0. It's yet unclear how to pass information to the session initiated by gdm: especially how to set env. variable and apply language & layout settings - probably there are some dbus hooks available.
+0. xklavier and ICU seems like the right way to work with language and layout data but there is no obvious way to reuse code from installers (anaconda, d-i) directly.
+
+## Near-future plans
+
+0. Make widget for layout choice and populate it with data obtained via xklavier.
+0. Create version suitable for .iso build and test.
+0. Next week plans.
+
+## Additional notes
+
+0. Part of the code has been merged back to gdm-community-greeter project via special branch.
+0. The issue with wrongly displayed language names might be related to legacy (non-utf8) encodings. Right now there is no special treatment for those encodings. It's unclear whether some support required in tails-greeter for that at all.
+0. The general 'id' for the locale looks like ru_RU (language-country code) - see 'man localedef'. What's the acceptable id for layout is still unclear.
