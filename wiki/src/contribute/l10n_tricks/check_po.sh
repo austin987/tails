@@ -17,6 +17,7 @@ echo "
 boilerplate-in-language-team
 boilerplate-in-last-translator
 boilerplate-in-project-id-version
+fuzzy-header-entry
 invalid-content-transfer-encoding
 invalid-date
 invalid-language
