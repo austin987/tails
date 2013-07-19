@@ -1,52 +1,102 @@
 [[!meta title="Chatting with Pidgin"]]
 
-For instant messaging Tails includes the [Pidgin Instant
-Messenger](http://pidgin.im/).
-It is a multi-protocol client, so you can run IRC and Jabber at the
-same time, even with several instances of the same protocol.
+For chatting and instant messaging, Tails includes the <span class="application">[Pidgin Instant
+Messenger](http://pidgin.im/)</span>.
 
-For more detailed documentation refer to the [official Pidgin user
+You can use it to connect to [[!wikipedia IRC]] or [[!wikipedia XMPP]]
+(also known as Jabber) servers, and have several accounts connected at
+the same time.
+
+To start <span class="application">Pidgin</span> choose
+<span class="menuchoice">
+  <span class="guimenu">Applications</span>&nbsp;▸
+  <span class="guisubmenu">Internet</span>&nbsp;▸
+  <span class="guimenuitem">Pidgin Instant Messenger</span>
+</span> or click on the <span class="application">Pidgin</span> icon in
+the [[application
+shortcuts|doc/first_steps/introduction_to_gnome_and_the_tails_desktop#index4h2]].
+
+For more detailed documentation refer to the [official <span
+class="application">Pidgin</span> user
 guide](http://developer.pidgin.im/wiki/Using%20Pidgin).
 
-## OTR encryption
+[[!toc]]
 
-Of course the issue of end-to-end encryption arises again. As we
-mentioned earlier, we have [Off-the-record
-messaging](http://www.cypherpunks.ca/otr) (commonly called OTR) for
-instant messaging, and Pidgin and many other instant messengers have
-support for that. There are several resources on how it works and how
-to use it on their web site. Basically all you need to do is choose
-"Start private conversation" in the OTR menu and a key will be
-generated automatically if you do not have one already. After that OTR
-will establish a private conversation if the other end's instant
-messenger supports it.
+<span class="application">Off-the-record</span> (<span class="application">OTR</span>) encryption
+=================================================================================================
 
-OTR and other Pidgin plugins are enabled in the "Tools menu -&gt;
-Plug-ins" section. Simply check the appropriate box for enabling any
-plugin you want, and possibly you might also want to configure it by
-pressing the "Configure Plug-in" button. When this is done for the OTR
-plugin a window that can be used to manage your keys will open.
-The use of OTR is recommended as many instant messaging protocols
-normally sends your messages in plaintext. Force your friends to
-migrate to clients with support for OTR!
+As explained on its [official page](http://www.cypherpunks.ca/otr/),
+<span class="application">Off-the-Record</span> messaging allows you to
+have private conversations over instant messaging by providing:
 
-**FIXME**: mention `/me` is **not** encrypted when used in a OTR
-private conversation.
+- **Encryption**</br>
+    No one else can read your instant messages.
+- **Authentication**</br>
+    You are assured the correspondent is who you think it is.
+- **Deniability**</br>
+    The messages you send do not have digital signatures
+    that are checkable by a third party. Anyone can forge messages after
+    a conversation to make them look like they came from you.
+    However, during a conversation, your correspondent is assured
+    the messages he sees are authentic and unmodified.
+- **Perfect forward secrecy**</br>
+    If you lose control of your private keys, no previous conversation is compromised.
 
-Read also those [various other ressources about
-OTR](http://www.cypherpunks.ca/otr/index.php#docs).
+To learn how to use OTR with <span class="application">Pidgin</span>,
+refer to the documentation from [Security in-a-box: How to Use OTR to
+Initiate a Secure Messaging Session in
+Pidgin](https://securityinabox.org/en/pidgin_securechat).
 
-## Adding support for another protocol
+<div class="tip">
 
-For security reasons, Pidgin was slimmed down in Tails to only support
-IRC and Jabber. Here are the prerequisites to add support for another
-protocol that Pidgin upstream supports:
+To store your OTR keys and preferences across separate working sessions,
+you can activate the <span class="guilabel">[[Pidgin persistent volume
+feature|doc/first_steps/persistence/configure/#pidgin]]</span>.
 
-a. Pidgin's support for this protocol has been successfully tested
+</div>
+
+<div class="caution">
+
+In a private OTR conversation over IRC, <strong>a message sent using the
+<code>/me</code> command is not encrypted</strong>. The person receiving
+the message is notified by a warning.
+
+</div>
+
+Random username generation
+==========================
+
+Every time you start Tails, a random username is generated for all <span
+class="application">Pidgin</span> accounts.
+
+The generator uses a list of common English first names, and modifies
+them, so that they are almost unique, and does not reveal that you are
+using Tails.
+
+It is based on the <span class="application">language confluxer</span>
+by [Christopher Pound](http://generators.christopherpound.com/).
+
+<div class="tip">
+
+If you want to reuse the same username across separate working sessions,
+you can activate the <span class="guilabel">[[Pidgin persistent volume
+feature|doc/first_steps/persistence/configure/#pidgin]]</span>.
+
+</div>
+
+Adding support for another protocol
+===================================
+
+For security reasons, it is only possible to use IRC and XMPP with
+<span class="application">Pidgin</span> in Tails. Here are the
+prerequisites to enable another protocol that is supported by <span
+class="application">Pidgin</span> otherwise:
+
+a. The support in <span class="application">Pidgin</span> for this protocol has been successfully tested
    in Tails.
 a. Someone volunteers to maintain the corresponding support in Tails
    on the long term.
 a. Someone has verified that the security record of the desired plugin
-   (including open bugs) does not seem too scary.
+   (including open bugs) is good enough.
 
-If you are interested, see [[our contribute page|contribute/how/code]].
+If you want to work on this issue, see [[our contribute page|contribute/how/code]].
