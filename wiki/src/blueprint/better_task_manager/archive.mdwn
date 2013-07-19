@@ -1,0 +1,140 @@
+[[!toc levels=3]]
+
+# Past experiences
+
+* intrigeri: I've used Trac in the past. I've recently started using Redmine, and
+  like it much better. Doesn't know anything about their email interface.
+* ague: Trac & Redmine
+* bertagaz: Redmine is faster and easier to use, good UI. Taohe-LAFS' Trac is
+  quite nicely organized.
+
+# Other options
+
+## Trac
+
+* [email2trac utilities](https://subtrac.sara.nl/oss/email2trac/)
+
+## Bugs everywhere
+
+* [Homepage](http://bugseverywhere.org/)
+* General impression: nice
+* Compliance: yes but
+  - there are no *true* subtickets but depends
+  - it is not anymore in Debian because the maintainer was not willing to
+    take care of its outdated package anymore. Other bugs were wishlist.
+* Features
+  - totally distributed
+  - very nice command line interface
+  - nice BTS-like email interface
+  - minimal web interface (viewing and commenting bugs)
+  - well written, simple to customize
+
+Let's see if it is possible to use Bugs Everywhere while not making
+the entry barrier too high for new contributors.
+
+### First interaction: looking
+
+The static web output looks good enough, doesn't it?
+
+### Second interaction: commenting
+
+#### Solution A
+
+Let's add <mailto:> links with the subject prepared to ease replying
+to a comment over email.
+
+(Note: supposed to work with GMail + Chrome. And others?)
+
+#### Solution B
+
+Let's add an option to allow a single (anonymous) action in the web
+interface: commenting... while disabling other kinds of changes.
+
+Pros: more familiar to some kind of potential new contributors.
+
+Cons: we have to handle comments spam somehow. Urghl.
+
+### Third interaction: assigning to self
+
+#### Solution A: over Git
+
+Let's allow _anonymous_ Git push to our Bugs Everywhere repository.
+
+Changing a ticket's metadata then requires cloning, installing Bugs
+Everywhere, running a `be` command or doing the changes inside the
+(local) web interface, and then commit + push.
+
+#### Solution B: over email
+
+Sending an email whose body includes a command phrased as a special
+pseudo-header.
+
+#### Discussion
+
+Both are clearly non-trivial, but probably not harder than
+understanding our tasks workflow and processes ;) Yes, it adds to the
+list of what you have to learn to contribute.
+
+### Fourth interaction: subscribing to a ticket
+
+The command-line interface allows subscribing to email notifications
+(all changes, or only ticket creation, or specific tickets).
+
+Presumably one may use email commands to subscribe.
+If it is the case, then we can have the web interface
+display a <mailto:> link on each ticket page to subscribe to it.
+
+## Other distributed task trackers with Git backend
+
+ * https://lwn.net/Articles/281849/
+ * https://www.ohloh.net/p/cil/ in Debian
+   -> No active development since 2010?
+   -> https://github.com/maspalio/cil
+ * http://github.com/jeffWelling/ticgit/
+ * http://ditz.rubyforge.org/ in Debian
+   -> The version in Wheezy is from 2009 but it is still in active
+     development
+   - nice *but* impossible to modify/comment bug through web interface
+ * http://bugseverywhere.org/
+   -> In Squeeze and Sid but not Wheezy ;)
+   -> Static HTML bug repository dumps for online browsing: discared?
+ * https://github.com/bkeepers/gaskit#readme
+   -> Ruby web application with Git backend
+   -> Is it possible to use it through the command line?
+ * http://www.mkgnu.net/scmbug
+   -> Latest version from 2011, previous one from 2009
+
+## Others
+
+ * https://en.wikipedia.org/wiki/GNATS in Debian
+ * https://en.wikipedia.org/wiki/GLPI in Debian
+ * https://en.wikipedia.org/wiki/Launchpad_%28website%29 in Debian
+ * https://en.wikipedia.org/wiki/Redmine in Debian
+   -> We can ask for an instance to Riseup
+   -> Demo: https://labs.riseup.net/code/projects/crabgrass/
+   -> http://www.chrisstucchio.com/blog/2012/idli.html
+ * https://en.wikipedia.org/wiki/Roundup_%28issue_tracker%29 in Debian
+ * https://en.wikipedia.org/wiki/Trac in Debian
+   -> https://subtrac.sara.nl/oss/email2trac
+   -> "sd" support is totally broken, no upstream anymore, removed from Debian
+   -> http://www.chrisstucchio.com/blog/2012/idli.html
+ * https://en.wikipedia.org/wiki/Zentrack
+ * https://en.wikipedia.org/wiki/BugTracker.NET
+ * https://en.wikipedia.org/wiki/Bugzilla
+   -> better than it used to be, but would be a pain to host?
+ * https://www.chiliproject.org/
+   -> https://www.chiliproject.org/projects/chiliproject/wiki
+     - email interface
+     - wiki, forum, etc.
+
+## Discarded
+
+ * https://en.wikipedia.org/wiki/Veracity_%28software%29
+   -> Distributed version control system and bugtracker but not using Git
+ * http://www.fossil-scm.org/ in Debian
+   -> Distributed control system but no Git backend (only Git import/export)
+ * https://en.wikipedia.org/wiki/OTRS in Debian
+ * https://en.wikipedia.org/wiki/Request_Tracker in Debian
+   ->  bertagaz doesn't like them : overkill, no so nice to use
+ * https://en.wikipedia.org/wiki/Mantis_Bug_Tracker in Debian
+   -> Discarded by intrigeri and bertagaz
