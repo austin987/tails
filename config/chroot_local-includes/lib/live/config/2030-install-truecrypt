@@ -33,6 +33,13 @@ Install_TrueCrypt ()
 		expect "Press Enter to exit..."
 		send "\n"
 	EOF
+
+	# Activate TrueCrypt deprecation wrapper
+	cp /usr/share/tails/truecrypt-wrapper.disabled /usr/local/bin/truecrypt
+
+	# Monkey patch the truecrypt.desktop file to show the greeter
+	sed -i 's,/usr/bin/truecrypt,/usr/local/bin/truecrypt,' /usr/share/applications/truecrypt.desktop
+
 }
 
 Install_TrueCrypt
