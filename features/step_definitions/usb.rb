@@ -113,7 +113,7 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   @screen.wait_and_click('USBUpgradeFromISO.png', 10)
   @screen.wait('USBUseLiveSystemISO.png', 10)
   match = @screen.find('USBUseLiveSystemISO.png')
-  @screen.click(match.getCenter.offset(match.w/2, match.h*2))
+  @screen.click(match.getCenter.offset(0, match.h*2))
   @screen.wait('USBSelectISO.png', 10)
   @screen.wait_and_click('GnomeFileDiagTypeFilename.png', 10)
   iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"

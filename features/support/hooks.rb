@@ -103,7 +103,10 @@ After('@product') do |scenario|
     hrs  = "%02d" % (time_of_fail / (60*60))
     STDERR.puts "Scenario failed at time #{hrs}:#{mins}:#{secs}"
     base = File.basename(scenario.feature.file, ".feature").to_s
-    @vm.take_screenshot("#{base}-#{DateTime.now}") if @vm
+    tmp = @screen.capture.getFilename
+    out = "#{$tmp_dir}/#{base}-#{DateTime.now}.png"
+    FileUtils.mv(tmp, out)
+    STDERR.puts("Took screenshot \"#{out}\"")
   end
   if @sniffer
     @sniffer.stop
