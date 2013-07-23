@@ -168,9 +168,10 @@ if [ -n "${VNC_VIEWER}" ]; then
     start_vnc_viewer
 fi
 
+export JAVA_HOME="/usr/lib/jvm/java-6-openjdk-amd64"
+export LD_LIBRARY_PATH="${JAVA_HOME}/jre/lib/amd64"
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
-. features/.rvmrc
 check_dependency cucumber
 if [ -z "${*}" ]; then
     cucumber --format ExtraHooks::Pretty features

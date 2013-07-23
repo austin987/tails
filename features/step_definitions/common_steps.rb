@@ -5,7 +5,7 @@ def post_vm_start_hook
   # focus to virt-viewer or similar) so we do that now rather than
   # having an important click lost. The point we click should be
   # somewhere where no clickable elements generally reside.
-  @screen.click(@screen.width, @screen.height/2)
+  @screen.click_point(@screen.w, @screen.h/2)
 end
 
 def activate_filesystem_shares
@@ -153,10 +153,10 @@ Given /^the computer boots Tails$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('TailsBootSplash.png', 30)
   @screen.wait('TailsBootSplashTabMsg.png', 10)
-  @screen.type("\t")
+  @screen.type(Sikuli::Key.TAB)
   @screen.waitVanish('TailsBootSplashTabMsg.png', 1)
   @screen.type(" autotest_never_use_this_option #{@boot_options}" +
-               Sikuli::KEY_RETURN)
+               Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 15*60)
   @vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
@@ -170,11 +170,7 @@ end
 Given /^I enable more Tails Greeter options$/ do
   next if @skip_steps_while_restoring_background
   match = @screen.find('TailsGreeterMoreOptions.png')
-  pos_x = match.x + match.width/2
-  # height*2 may seem odd, but we want to click the button below the
-  # match. This may even work accross different screen resolutions.
-  pos_y = match.y + match.height*2
-  @screen.click(pos_x, pos_y)
+  @screen.click(match.getCenter.offset(match.w/2, match.h*2))
   @screen.wait_and_click('TailsGreeterForward.png', 10)
   @screen.wait('TailsGreeterLoginButton.png', 20)
 end
@@ -184,12 +180,8 @@ Given /^I set sudo password "([^"]*)"$/ do |password|
   next if @skip_steps_while_restoring_background
   @screen.wait("TailsGreeterAdminPassword.png", 20)
   match = @screen.find('TailsGreeterPassword.png')
-  # width*3 may seem odd, but we want to click the field right of the
-  # match. This may even work accross different screen resolutions.
-  pos_x = match.x + match.width*3
-  pos_y = match.y + match.height/2
-  @screen.click(pos_x, pos_y)
-  @screen.type(@sudo_password + "\t" + @sudo_password)
+  @screen.click(match.getCenter.offset(match.w*3, match.h/2))
+  @screen.type(@sudo_password + Sikuli::Key.TAB + @sudo_password)
 end
 
 Given /^Tails Greeter has dealt with the sudo password$/ do
@@ -247,8 +239,8 @@ Given /^Iceweasel has autostarted and is not loading a web page$/ do
   # from getting confused in case we save and restore a snapshot in
   # the middle of loading a page.
   @screen.wait_and_click(iceweasel_picture, 120)
-  @screen.type("l", Sikuli::KEY_CTRL)
-  @screen.type("about:blank" + Sikuli::KEY_RETURN)
+  @screen.type("l", Sikuli::KeyModifier.CTRL)
+  @screen.type("about:blank" + Sikuli::Key.ENTER)
 end
 
 Given /^I have closed all annoying notifications$/ do
@@ -272,9 +264,9 @@ Given /^I have closed all annoying notifications$/ do
     # have the positions from before we start closing notificatios,
     # but closing them will change the positions.
     while match = @screen.find(notification_picture)
-      @screen.click(match.x + match.width/2, match.y + match.height/2)
+      @screen.click(match)
     end
-  rescue Sikuli::ImageNotFound
+  rescue FindFailed
     # noop
   end
 end
@@ -340,7 +332,7 @@ end
 
 When /^I open the GNOME run dialog$/ do
   next if @skip_steps_while_restoring_background
-  @screen.type(Sikuli::KEY_F2, Sikuli::KEY_ALT)
+  @screen.type(Sikuli::Key.F2, Sikuli::KeyModifier.ALT)
   case @theme
   when "winxp"
     run_dialog_picture = 'WinXPRunDialog.png'
@@ -353,7 +345,7 @@ end
 When /^I run "([^"]*)"$/ do |program|
   next if @skip_steps_while_restoring_background
   step "I open the GNOME run dialog"
-  @screen.type(program + Sikuli::KEY_RETURN)
+  @screen.type(program + Sikuli::Key.ENTER)
 end
 
 Given /^I enter the sudo password in the gksu prompt$/ do
@@ -361,7 +353,7 @@ Given /^I enter the sudo password in the gksu prompt$/ do
   @screen.wait('GksuAuthPrompt.png', 60)
   sleep 1 # wait for weird fade-in to unblock the "Ok" button
   @screen.type(@sudo_password)
-  @screen.type(Sikuli::KEY_RETURN)
+  @screen.type(Sikuli::Key.ENTER)
   @screen.waitVanish('GksuAuthPrompt.png', 10)
 end
 
@@ -375,7 +367,7 @@ Given /^I enter the "([^"]*)" password in the PolicyKit prompt$/ do |password|
   @screen.wait('PolicyKitAuthPrompt.png', 60)
   sleep 1 # wait for weird fade-in to unblock the "Ok" button
   @screen.type(password)
-  @screen.type(Sikuli::KEY_RETURN)
+  @screen.type(Sikuli::Key.ENTER)
   @screen.waitVanish('PolicyKitAuthPrompt.png', 10)
 end
 
