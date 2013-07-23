@@ -1,0 +1,23 @@
+Tails-specific: add a persistent printers preset
+
+This should be merged into an upcoming release of tails-persistent-setup
+
+--- chroot.orig/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm   2013-07-23 12:35:51.544000000 +0000
++++ chroot/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm    2013-07-23 12:42:26.084000000 +0000
+@@ -125,6 +125,16 @@
+             icon_name   => 'user-bookmarks',
+         },
+         {
++            name        => $self->encoding->decode(gettext(q{Printers})),
++            description => $self->encoding->decode(gettext(
++                q{Printers configuration}
++            )),
++            destination => '/etc/cups',
++            options     => [ 'source=cups-configuration' ],
++            enabled     => 0,
++            icon_name   => 'printer',
++        },
++        {
+             name        => $self->encoding->decode(gettext(q{APT Packages})),
+             description => $self->encoding->decode(gettext(
+                 q{Packages downloaded by APT}
