@@ -136,6 +136,5 @@ user_pref("noscript.untrusted", "google-analytics.com");
 user_pref("privacy.item.cookies", true);
 user_pref("privacy.sanitize.sanitizeOnShutdown", true);
 user_pref("security.xpconnect.plugin.unrestricted", false);
-user_pref("security.warn_leaving_secure", true);
 user_pref("security.warn_submit_insecure", true);
 user_pref("torbrowser.version", "Tails");

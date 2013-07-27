@@ -4,6 +4,9 @@ set -e
 
 echo "Removing unwanted files"
 
+# Get POTFILES_DOT_IN
+. /usr/share/amnesia/build/variables
+
 rm /usr/share/icons/gnome/icon-theme.cache
 
 rm -r \
@@ -13,7 +16,8 @@ rm -r \
 # Ease transition to "stop shipping bugs/ and todo/ in ISO images"
 # This is for people who have a too-clever caching build setup that
 # goes on shipping files foverer as long as it has built them once.
-rm -rf /usr/share/doc/tails/website/bugs/                   \
+rm -rf /usr/share/doc/tails/website/blueprint/              \
+       /usr/share/doc/tails/website/bugs/                   \
        /usr/share/doc/tails/website/todo/                   \
        /usr/share/doc/tails/website/bugs.html               \
        /usr/share/doc/tails/website/todo.html               \
@@ -31,3 +35,6 @@ find /usr -name "*.pyc" -print0 | xargs -0r rm -f
 for file in $(find /var/log/ -type f); do
 	: > "${file}"
 done
+
+# Remove .in files managed by intltool
+rm $POTFILES_DOT_IN

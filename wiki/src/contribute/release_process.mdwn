@@ -255,7 +255,7 @@ Prepare update-description files
    * create a new update-description for the version being released,
      that expresses that no update is available for that one yet
 1. Detach-sign the update-description files.
-1. Rename the detached signatures from `.asc` to `.pgp`.
+1. Rename the detached signatures from `.asc` to `.sig`.
 
 Testing
 =======
@@ -282,11 +282,11 @@ rename it:
 	mv *.iso tails-i386-$VERSION.iso
 
 Third, generate detached OpenPGP signatures for the image to be
-published, in the same directory as the image and with a `.pgp`
+published, in the same directory as the image and with a `.sig`
 extension; e.g.
 
 	gpg --armor --default-key 1202821CBE2CD9C1 --detach-sign *.iso
-	rename 's,\.asc$,.pgp,' *.asc
+	rename 's,\.asc$,.sig,' *.asc
 
 Fourth, go up to the parent directory, create a `.torrent` file and
 check the generated `.torrent` files metainfo:
@@ -300,7 +300,7 @@ Fifth, generate detached OpenPGP signatures for every published
 
 	gpg --armor --default-key 1202821CBE2CD9C1 --detach-sign \
 	  tails-i386-$VERSION.torrent && \
-	mv tails-i386-$VERSION.torrent.{asc,pgp}
+	mv tails-i386-$VERSION.torrent.{asc,sig}
 
 Upload images
 =============
@@ -344,7 +344,7 @@ In order to get any new documentation into the website, merge either
 
 Rename the `.packages` file to remove the `.iso` part of its name.
 
-Copy the `.iso.pgp`, `.packages`, `.torrent` and `.torrent.pgp`
+Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig`
 files to the Git repository's `wiki/src/torrents/files/` directory.
 
 Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
@@ -424,6 +424,12 @@ We announce *major* releases on the Tor blog:
   comments and feedback,
 - disable comments
 
+Tor weekly news
+---------------
+
+Write a short announcement for the Tor weekly news, or find someone
+who's happy to do it.
+
 Prepare for the next release
 ============================
 
@@ -437,10 +443,24 @@ Prepare for the next release
 1. Push the resulting `devel` branch.
 1. Reset experimental:
    - take note of branches merged into `experimental`, but not into
-     `devel` (`git log --pretty=oneline --color=never --merges devel..experimental | /bin/grep 'into experimental$' | sed -e 's,^[a-f0-9]\+\s\+,,' | sort -u` may help)
+     `devel`:
+
+        git log --pretty=oneline --color=never --merges devel..experimental \
+          | /bin/grep 'into experimental$' \
+          | sed -e 's,^[a-f0-9]\+\s\+,,' | sort -u
+
    - `git checkout experimental && git reset --hard devel`
-   - hard reset the `experimental` APT suite to the state of the
-     `devel` one
+   - [[hard reset|contribute/APT_repository#workflow-reset]] the `experimental`
+     APT suite to the state of the `devel` one.
    - merge additional branches into experimental (both at the Git and
      APT levels)
+
+        for branch in $UNMERGED_BRANCHES ; do
+           suite=$(echo $branch | sed -e 's,[/_],-,g')
+           ssh reprepro@incoming.deb.tails.boum.org tails-merge-suite $suite experimental
+        done
+
+     Note that the merge will fail for suites that contain no package.
+
    - `git push --force origin experimental`
+1. Run a Jenkins build of experimental, devel and stable.
