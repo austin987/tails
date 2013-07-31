@@ -1,6 +1,5 @@
 def persistent_dirs
-  ["/etc/ssh",
-   "/home/#{$live_user}/.claws-mail",
+  ["/home/#{$live_user}/.claws-mail",
    "/home/#{$live_user}/.gconf/system/networking/connections",
    "/home/#{$live_user}/.gnome2/keyrings",
    "/home/#{$live_user}/.gnupg",
@@ -8,7 +7,6 @@ def persistent_dirs
    "/home/#{$live_user}/.purple",
    "/home/#{$live_user}/.ssh",
    "/home/#{$live_user}/Persistent",
-   "/home/#{$live_user}/custom_persistence",
    "/var/cache/apt/archives",
    "/var/lib/apt/lists"]
 end
@@ -132,11 +130,6 @@ Given /^I enable all persistence presets$/ do
   10.times do
     @screen.type(" \t")
   end
-  # Now we'll have the custom persistence field selected
-  @screen.type("/home/#{$live_user}/custom_persistence")
-  @screen.type('a', Sikuli::KEY_ALT)
-  @screen.type('/etc/ssh')
-  @screen.type('a', Sikuli::KEY_ALT)
   @screen.wait_and_click('PersistenceWizardSave.png', 10)
   @screen.wait('PersistenceWizardDone.png', 20)
   @screen.type(Sikuli::KEY_F4, Sikuli::KEY_ALT)
