@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+
+# Create the vidalia user.
+#
+# We run unsafe-browser under this user, so that we can whitelist its
+# non-Torified outgoing packets.
+
+echo "creating the vidalia user"
+
+adduser --system --quiet --group --no-create-home vidalia
+adduser vidalia debian-tor
+chown -R vidalia:vidalia /home/vidalia
