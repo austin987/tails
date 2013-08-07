@@ -320,9 +320,27 @@ A decent, stable and permanent Internet connection is required.
 
 Test them with a BitTorrent client running in a different place.
 
+## Download and seed image from lizard
+
+    scp tails-i386-$VERSION.torrent bittorent.lizard:
+    ssh bittorent.lizard transmission-remote --add tails-i386-$VERSION.torrent
+
 ## Upload to HTTP mirrors
 
-Upload the images to the primary rsync mirror.
+Upload the images to the primary rsync mirror. Best practice is to first
+let bittorrent.lizard download the image, and then copy it from there to
+rsync.lizard:
+
+    ssh lizard.tails.boum.org \
+        scp -3 -r \
+            bittorrent.lizard:/var/lib/transmission-daemon/downloads/tails-i386-$VERSION \
+            rsync.lizard:
+    # set DIST to either 'testing' (for RC:s) or 'stable' (for actual releases)
+    ssh rsync.lizard << EOF
+      chown -R root:rsync_tails tails-i386-$VERSION
+      chmod -R u=rwX,go=rX tails-i386-$VERSION
+      sudo mv tails-i386-$VERSION /srv/rsync/tails/tails/$DIST/
+    EOF
 
 Update the time in `project/trace` file on the primary rsync mirror
 and on the live wiki (even for a release candidate):
