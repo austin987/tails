@@ -67,9 +67,8 @@ if [ -n "$JENKINS_URL" ]; then
 	if [ -z "$GIT_COMMIT" ]; then
 		echo "GIT_COMMIT environment variable is not set. Aborting." >&2
 	fi
-	REV="$GIT_BRANCH"
+	REV="${GIT_BRANCH##origin/}"
 	COMMIT="$GIT_COMMIT"
-	cd "$WORKSPACE"
 else
 	# Build triggered by Vagrant
 	WORKSPACE=/home/vagrant/amnesia
@@ -79,11 +78,13 @@ else
 	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
 	cd "$WORKSPACE"
 	git fetch origin
-	git checkout --force "$REV"
-	git reset --hard "$COMMIT"
 fi
 
-install -m 0700 -d "$ARTIFACTS_DIR"
+cd "$WORKSPACE"
+git checkout --force "$REV"
+git reset --hard "$COMMIT"
+
+install -m 0755 -d "$ARTIFACTS_DIR"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all

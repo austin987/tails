@@ -11,14 +11,19 @@ PACKAGES_LIST_FILE="live-additional-software.conf"
 ACTIVATION_FILE="/var/run/live-additional-software/activated"
 UNLOCKED_PERSISTENCE_DIRS_GLOB="/live/persistence/*_unlocked/"
 
-def _launch_apt_get(args):
+def _launch_apt_get(specific_args):
     """Launch apt-get with given args
     
     Launch apt-get with given arguments list, log its standard and error output
     and return its returncode"""
     apt_get_env = os.environ.copy()
+    # The environnment provided in GDM PostLogin hooks doesn't contain /sbin/
+    # which is required by dpkg. Let's use the default path for root in Tails.
     apt_get_env['PATH'] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-    apt_get_env['LANG'] = "C" # we will log the output and want it in English when included in bug reports
+    # We will log the output and want it in English when included in bug reports
+    apt_get_env['LANG'] = "C"
+    args = ["apt-get", "--quiet", "--yes"]
+    args.extend(specific_args)
     apt_get = subprocess.Popen(
         args,
         env=apt_get_env,
@@ -36,10 +41,23 @@ def _launch_apt_get(args):
 def _notify(title, body):
     """Display a notification to the user of the live system
     """
+    cmd = "/usr/local/sbin/tails-notify-user"
     try:
-        subprocess.check_call(["/usr/local/sbin/tails-notify-user", title, body])
-    except:
-        syslog.syslog(syslog.LOG_WARNING, "Warning: unable to notify the user. The notification was: %s %s" % (title, body))
+        # XXX: replace with check_output when Tails will be based on Wheezy
+        # (which includes Python 2.7)
+        notify_user = subprocess.Popen([cmd, title, body],
+                                       stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        notify_user_output = notify_user.stdout.read()
+        notify_user.wait()
+        if notify_user.returncode != 0:
+            syslog.syslog(syslog.LOG_WARNING, "Warning: unable to notify the user. %s returned with exit code %s"
+                 % (cmd, notify_user.returncode))
+            syslog.syslog(syslog.LOG_WARNING, "%s output follows: %s."
+                 % (cmd, notify_user_output))
+            syslog.syslog(syslog.LOG_WARNING, "The notification was: %s %s" % (title, body))
+    except OSError, e:
+        syslog.syslog(syslog.LOG_WARNING, "Warning: unable to notify the user. %s" % e)
+        syslog.syslog(syslog.LOG_WARNING, "The notification was: %s %s" % (title, body))
 
 def get_additional_packages_lists():
     """Returns the paths of additional packageslists
@@ -59,7 +77,8 @@ def get_additional_packages():
     for package_list in get_additional_packages_lists():
         with open(package_list) as f:
             for line in f:
-                packages.append(line.strip())
+                line = line.strip()
+                if line: packages.append(line)
         f.closed
     return packages
 
@@ -70,16 +89,13 @@ def install_additional_packages():
     if not get_additional_packages_lists():
         syslog.syslog(syslog.LOG_WARNING, "Warning: no additional software configured, exiting.")
         return True
-    set_activated()
     packages = get_additional_packages()
     if not packages:
 	syslog.syslog(syslog.LOG_WARNING, "Warning: no packages to install, exiting")
         return True
+    set_activated()
     syslog.syslog("Will install the following packages: %s" % " ".join(packages))
-    apt_get_returncode = _launch_apt_get(["apt-get",
-        "--quiet",
-        "--no-remove",
-        "--yes",
+    apt_get_returncode = _launch_apt_get(["--no-remove",
         "--option", "DPkg::Options::=--force-confold",
         "install"] + packages)
     if apt_get_returncode:
@@ -96,10 +112,7 @@ def upgrade_additional_packages():
         syslog.syslog(syslog.LOG_WARNING, "Warning: additional packages not activated, exiting")
         return True
     syslog.syslog("Starting to upgrade additional software...")
-    apt_get_returncode = _launch_apt_get(["apt-get",
-        "--quiet",
-        "--yes",
-        "update"])
+    apt_get_returncode = _launch_apt_get(["update"])
     if apt_get_returncode:
         syslog.syslog(syslog.LOG_WARNING, "Warning: the update failed.")
         _notify(_("Your additional software"),
