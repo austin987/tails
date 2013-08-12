@@ -1,31 +1,38 @@
 [[!meta title="Protection against cold boot attacks"]]
 
-Due to how modern computing works, basically everything that you have
-done during a session is stored in the RAM. If an attacker has
-physical access to your computer when you are running Tails, it may
-enable her to recover everything that have been achieved during the
-session, from typed texts to saved files, including passwords and
-encryption keys.  The more recent the activity, the more likely it is
-that it is still in the RAM.
+When using a computer, everything done during a session is stored in the
+RAM: texts, saved files, but also passwords and encryption keys.The more
+recent the activity, the more likely it is that it is still in the RAM.
+Those datas can still be in the RAM up to several minutes after the computer
+is powered off.
 
-Furthermore, it has been shown that the data present in the RAM might be
-recoverable for seconds or even minutes after the computer is powered
-off using a [cold boot
-attack](http://en.wikipedia.org/wiki/Cold_boot_attack).
+A physical access to the computer you used may enable to recover everything
+you've been achieving during the session. Those datas can be recovered using
+a <span class=\"definition\">[[!wikipedia Cold_boot_attack desc=\"cold boot
+attack\"]]</span>. That's why when shutting down Tails, RAM is filled out with
+random junk, thus erasing everything that was stored there before so all
+traces from what you did on that computer.
 
-In both cases the RAM contents can be analysed in a computer forensics
-laboratory which might turn into a major disaster depending on what they
-find.
+That being said, on some computers [[Tails may not erase all the system memory
+on shutdown|support/known_issues#index9h2]] or [[fails to completely shutdown
+or restart|support/known_issues#index13h2]] which does not garantee that the
+memory has been wiped entirely. 
 
-So, what should you do when you hear an attacker knocking at your door?
-You could just remove the USB stick or DVD you are running Tails from. It
-will start to wipe the contents of the RAM by filling it out with random
-junk, thus erasing everything that was stored there before, including
-the encryption key of the encrypted storage devices you might use and
-the traces of your session. Then you wait, possibly trying to buy
-valuable time by barricading your door.
+Moreover, a physical access to the computer you're using Tails on, enable as
+well recovering datas from the RAM. In order to avoir such recovery, use
+emergency shutdown tools:
 
-As far as the authors know, cold boot attacks are not standard
-procedure within law enforcements and similar organisations anywhere
-in the world yet, but it might still be good to be prepared and stay
-on the safe side.
+* By removing the device you are running Tails from (USB stick, SD card).
+This method [[doesn't work with DVD|support/known_issues#index11h2]].
+
+* By pressing the power button of the computer.
+
+* By clicking on the emergency shutdown helper icon located on the top right
+corner of the panel and chosing <span class=\"guimenuitem\">Shutdown
+Immediately</span>.
+
+<div class=\"caution\">[[Emergency shutdown doesn't work after using the Tails
+USB installer|support/known_issues#index10h2]]</div>
+
+As far as we know, cold boot attacks are not standard procedure for datas
+recovery, but it might still be good to be prepared.
