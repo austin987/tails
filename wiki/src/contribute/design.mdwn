@@ -804,7 +804,15 @@ probably would not want this due to the added consumption of
 bandwidth. The user can nevertheless easily choose to turn his or her
 Tor client into a relay, thanks to the Vidalia graphical user
 interface.
- 
+
+If a compromised software had access to the Tor control port,
+an attacker who controls it could simply ask Tor the public
+IP through the `GETINFO address` command.
+To prevent this, access to the Tor control port is only
+granted to the vidalia user, who is running Vidalia.
+
+- [[!tails_gitweb chroot_local-hooks/06-adduser_vidalia]]
+- [[!tails_gitweb chroot_local-includes/usr/local/sbin/restart-vidalia]]
 - [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]
 
 ### 3.6.3 DNS
