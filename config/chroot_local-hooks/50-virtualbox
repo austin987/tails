@@ -10,7 +10,7 @@ if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
 fi
 
 available_gcc_version=4.4
-wanted_gcc_version=4.6
+wanted_gcc_version=4.7
 
 # the -dkms package must be installed *after* dkms to be properly registered
 apt-get install --yes build-essential dkms dpatch
@@ -20,50 +20,47 @@ apt-get install --yes build-essential dkms dpatch
 # /usr/src/linux-headers-3.*-common/scripts/gcc-version.sh
 # is the one who says they should be run using that version.
 apt-get install --yes gcc-${available_gcc_version}
+# Install custom fake GCC-4.7 package
+apt-get install --yes gcc-${wanted_gcc_version}
 ln -s /usr/bin/gcc-${available_gcc_version} /usr/bin/gcc-${wanted_gcc_version}
 
-# At this time of the build, we've got a recent enough X.Org installed,
-# so we can install the X11 tools eventually.
-dpkg --install \
-   /usr/share/amnesia/packages/virtualbox-guest-utils_*.deb \
-   /usr/share/amnesia/packages/virtualbox-guest-x11_*.deb
+# The version of the modules in Squeeze does not built on 3.8 and later [#704130].
+# Install version from Sid, but this requires a temporary upgrade of libc6.
+apt-get install --yes \
+   virtualbox-guest-utils/unstable \
+   virtualbox-guest-dkms/unstable \
+   libc6/unstable \
+   locales-all/unstable
 
 # Have the modules built for every installed kernel
 for KERNEL in /boot/vmlinuz-* ; do
    KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
-   VERSION_SCHEME="[[:digit:]]\+\(\.[[:digit:]]\+\)*-[[:digit:]]\+"
-   KERNEL_ARCH="$(echo ${KERNEL_VERSION} | sed -e "s|${VERSION_SCHEME}-||")"
+   MODULES_VERSION="$(dpkg-query -W -f='${Version\n}' virtualbox-guest-dkms)"
 
-   # dkms uses uname to find out what kernel to build modules for.
-   # So, after installing dkms, but before installing
-   # virtualbox-guest-dkms, we divert uname to a fake one that
-   # emulates 'uname -r' by reporting the kernel version found in /boot rather
-   # than the build system's one.
+   # Installing the headers should trigger the building of the modules for that kernel
+   apt-get install --yes linux-headers-$KERNEL_VERSION
+   # Only build and install if it was not done already
+   if [ ! "$(dkms status -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION)" ]; then
+      dkms build -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
+      dkms install -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
+   fi
 
-   mv /bin/uname /bin/uname.$$
-   cat > /bin/uname <<EOF
-#! /bin/sh
-echo "$KERNEL_VERSION"
-EOF
-   chmod 755 /bin/uname
-
-   # Install the headers for the kernel we are build modules for
-   apt-get install --yes linux-headers-$(uname -r)
-
-   # Have the modules automagically built by dkms for all kernels.
-   dpkg --install /usr/share/amnesia/packages/virtualbox-guest-dkms_*.deb
-   apt-get -f install --yes
-
-   # Revert to the real uname.
-   mv /bin/uname.$$ /bin/uname
 done
 
 # clean the build directory
 rm -r /var/lib/dkms/virtualbox-guest/
 
 # virtualbox-guest-dkms's postrm script deletes any previously
-# built binary module; let's delete it before purging the package.
+# built binary module; let's delete it before the package gets purged.
 rm /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
+
+# Rollback to the default version of virtualbox-guest-utils and virtualbox-guest-x11.
+# The 4.1.10 utilities seem to work all-right with the 4.2.16 modules.
+apt-get remove --yes virtualbox-guest-utils virtualbox-guest-x11
+apt-get install --yes virtualbox-guest-utils virtualbox-guest-x11
 
 # remove temporary workaround
 rm /usr/bin/gcc-${wanted_gcc_version}
+
+# Rollback to the default version of libc6.
+apt-get install --yes --force-yes libc6/squeeze locales-all/squeeze
