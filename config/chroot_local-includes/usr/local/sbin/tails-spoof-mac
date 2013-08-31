@@ -1,0 +1,81 @@
+#!/bin/sh -e
+
+# This script spoofs or resets the MAC addresses of all provided NICs
+# according to the settings in Tails Greeter. The default is to spoof.
+
+. /usr/local/lib/tails-shell-library/hardware.sh
+. /usr/local/lib/tails-shell-library/log.sh
+. /usr/local/lib/tails-shell-library/tails_greeter.sh
+
+get_permanent_mac() {
+    macchanger ${1} | sed -n "s/^Permanent MAC: \([0-9a-f:]\+\) .*$/\1/p"
+}
+
+get_current_mac() {
+    macchanger ${1} | sed -n "s/^Current   MAC: \([0-9a-f:]\+\) .*$/\1/p"
+}
+
+mac_is_changed() {
+    [ "$(get_permanent_mac ${1})" != "$(get_current_mac ${1})" ]
+}
+
+# Only use this helper when using macchanger options that may require
+# the interface to be down, i.e. those that actually change the MAC
+# address.
+# Note that we (for simplicity) specify the interface as the first
+# argument.
+macchanger_helper() {
+    local nic
+    local opts
+    local was_up
+    nic=$1
+    shift
+    opts=$*
+    unset was_up
+    if nic_is_up ${nic}; then
+        was_up=y
+        /sbin/ifconfig ${nic} down || ( log "failed to down ${nic}" ; return 1 )
+    fi
+    ret=0
+    macchanger ${opts} ${nic} || \
+        ( ret=$? ; log "macchanger returned error code ${ret}" )
+
+    if [ "${was_up}" ]; then
+        /sbin/ifconfig ${nic} up || ( log "failed to up ${nic}" ; return 1 )
+    fi
+    return ${ret}
+}
+
+spoof_mac() {
+    macchanger_helper -e $1
+}
+
+reset_mac() {
+    macchanger_helper -p $1
+}
+
+set_log_tag spoof-mac
+
+NICS=$*
+if echo "$NICS" | grep -qe "\<all\>"; then
+    NICS="$(get_all_ethernet_nics)"
+fi
+for NIC in ${NICS}; do
+    if mac_spoof_is_enabled; then
+	if mac_is_changed ${NIC}; then
+	    log "NIC ${NIC}'s MAC address is already spoofed, skipping"
+	else
+	    spoof_mac ${NIC} && \
+		log "Successfully spoofed MAC address of NIC ${NIC}"
+	fi
+    else
+	if mac_is_changed ${NIC}; then
+	    reset_mac ${NIC} && \
+		log "Successfully reset MAC address of NIC ${NIC}"
+	else
+	    log "NIC ${NIC}'s MAC address is already the default, skipping"
+	fi
+    fi
+done
+
+
