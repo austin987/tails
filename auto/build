@@ -71,13 +71,13 @@ export MKSQUASHFS_OPTIONS
 # get git branch or tag so we can set the basename appropriately, i.e.:
 # * if we build from a tag:    tails-$ARCH-$TAG.iso
 # * if we build from a branch: tails-$ARCH-$BRANCH-$VERSION-$DATE.iso
-# * if jenkins build from a branch: tails-$ARCH-$BRANCH-$VERSION-$COMMIT-$TIME.iso
+# * if Jenkins builds from a branch: tails-$ARCH-$BRANCH-$VERSION-$TIME-$COMMIT.iso
 if GIT_REF="$(git symbolic-ref HEAD)"; then
     GIT_BRANCH="${GIT_REF#refs/heads/}"
     CLEAN_GIT_BRANCH=$(echo "$GIT_BRANCH" | sed 's,/,_,g')
-    if [ ! -z "$JENKINS_URL" ]; then
+    if [ -n "$JENKINS_URL" ]; then
         GIT_SHORT_ID="$(git rev-parse --short HEAD)"
-        BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${GIT_SHORT_ID}-${AMNESIA_NOW}"
+        BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_NOW}-${GIT_SHORT_ID}"
     else
         BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
     fi
