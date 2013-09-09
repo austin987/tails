@@ -239,6 +239,22 @@ activate_volumes ()
 			|| error "Could not chown /live/persistence/*_unlocked"
 		chmod 1777 /live/persistence/*_unlocked \
 			|| error "Could not chmod /live/persistence/*_unlocked"
+		# Migrate known-safe settings from old configuration to new one.
+		for old_conf in /live/persistence/*_unlocked/live-persistence.conf
+		do
+			new_conf=$(echo "$old_conf" | sed -e 's,/live-persistence\.conf$,/persistence.conf,')
+			if [ -e "$new_conf" ]
+			then
+				error "$new_conf already exists, skipping migration of $old_conf"
+			fi
+			# grep -E "$known_presets" "$old_conf" > "$new_conf" \
+			cat "$old_conf" > "${new_conf}.new" \
+				|| error "Failed to import safe persistent settings into persistence.conf: $?"
+			mv "${new_conf}.new" "$new_conf" \
+				|| error "Failed to rename '${new_conf}.new' to '$new_conf': $?"
+			mv "$old_conf" "${old_conf}.old" \
+				|| error "Failed to rename $old_conf to ${old_conf}.old: $?"
+		done
 	fi
 
 	if [ -s "${custom_mounts}" ]
