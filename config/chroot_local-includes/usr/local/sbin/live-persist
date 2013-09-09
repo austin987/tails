@@ -255,6 +255,24 @@ activate_volumes ()
 			mv "$old_conf" "${old_conf}.old" \
 				|| error "Failed to rename $old_conf to ${old_conf}.old: $?"
 		done
+		# Migrate ownership & permissions for the configuration files.
+		# We do it this late so that the newly created files are affected as well.
+		# XXX: what to do with the .old?
+		find /live/persistence/*_unlocked/ -mindepth 1 -maxdepth 1 \
+			-name persistence.conf -o -name live-*.conf \
+			-exec chown tails-persistence-setup:tails-persistence-setup {} \; \
+			|| error "Failed to chown persistence.conf and live-*.conf: $?"
+		find /live/persistence/*_unlocked/ -mindepth 1 -maxdepth 1 \
+			-name persistence.conf -o -name live-*.conf \
+			-exec chmod 0600 {} \; \
+			|| error "Failed to chown persistence.conf and live-*.conf: $?"
+		# Disable live-additional-software.conf if XXX
+		find /live/persistence/*_unlocked/ -mindepth 1 -maxdepth 1 \
+			-name live-additional-software.conf \
+			-exec mv {} {}.disabled \; \
+			|| error "Failed to disable live-additional-software.conf: $?"
+		# Load the new persistence.conf.
+		get_custom_mounts ${custom_mounts} ${open_volumes}
 	fi
 
 	if [ -s "${custom_mounts}" ]
