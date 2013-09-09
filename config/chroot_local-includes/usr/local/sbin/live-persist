@@ -227,6 +227,20 @@ activate_volumes ()
 
 	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
 	get_custom_mounts ${custom_mounts} ${open_volumes}
+	# ... and now the persistent volumes should be mounted.
+
+	# If live-persistence.conf exists but persistence.conf does not,
+	# then migrate.
+	if ls /live/persistence/*_unlocked/live-persistence.conf >/dev/null 2>&1 \
+	   && ! ls /live/persistence/*_unlocked/persistence.conf >/dev/null 2>&1
+	then
+		# Migrate ownership & permissions for the filesystems.
+		chown root:amnesia /live/persistence/*_unlocked \
+			|| error "Could not chown /live/persistence/*_unlocked"
+		chmod 1777 /live/persistence/*_unlocked \
+			|| error "Could not chmod /live/persistence/*_unlocked"
+	fi
+
 	if [ -s "${custom_mounts}" ]
 	then
 		activate_custom_mounts ${custom_mounts} &> /dev/null
