@@ -1,6 +1,7 @@
 tails (0.20.1) unstable; urgency=low
 
   * Major new features
+  - Install Tor 0.2.4.x from the Tor project's repository.
   - Install Linux kernel 3.10-2 from sid.
 
   * Bugfixes
@@ -21,6 +22,17 @@ tails (0.20.1) unstable; urgency=low
   - Update AdBlock Plus patterns.
   - Use more unique ISO file name when building from Jenkins.
   - Additional software: point to the system log on upgrade failure.
+  - Set SOCKS5_USER and SOCKS5_PASSWORD in the connect-socks wrapper (used
+    by Git). Else, Tor 0.2.4's IsolateSOCKSAuth and connect-proxy
+    sometimes play together in some way that makes connect-proxy ask for
+    a password to connect to the SocksPort. SOCKS5_USER and
+    SOCKS5_PASSWORD are passed through unchanged if they were manually set
+    by the user already.
+  - Use our custom connect-socks wrapper for SSH. Else, Tor 0.2.4's
+    IsolateSOCKSAuth and connect-proxy sometimes play together in some way
+    that makes connect-proxy ask for a password to connect to the
+    SocksPort. Note that connect-socks uses the default SocksPort too, so
+    no change here wrt. our connection isolation design.
 
   * Localization
   - Import new translations from Transifex.
