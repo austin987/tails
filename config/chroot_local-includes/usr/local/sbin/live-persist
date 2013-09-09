@@ -257,6 +257,10 @@ activate_volumes ()
 			then
 				error "$new_conf already exists, skipping migration of $old_conf"
 			fi
+			install --owner tails-persistence-setup \
+				--group tails-persistence-setup --mode 0600 \
+				/dev/null "${new_conf}.new" \
+				|| error "Failed to create empty '${new_conf}.new': $?"
 			# grep -E "$known_presets" "$old_conf" > "$new_conf" \
 			cat "$old_conf" > "${new_conf}.new" \
 				|| error "Failed to import safe persistent settings into persistence.conf: $?"
@@ -264,15 +268,6 @@ activate_volumes ()
 				|| error "Failed to rename '${new_conf}.new' to '$new_conf': $?"
 			mv "$old_conf" "${old_conf}.old" \
 				|| error "Failed to rename $old_conf to ${old_conf}.old: $?"
-		done
-		# Migrate ownership & permissions for the configuration files.
-		# XXX: what to do with the .old and .disabled?
-		for f in /live/persistence/*_unlocked/persistence.conf /live/persistence/*_unlocked/live-*.conf
-		do
-			chown tails-persistence-setup:tails-persistence-setup "$f" \
-				|| error "Failed to chown '$f': $?"
-			chmod 0600 "$f" \
-				|| error "Failed to chown persistence.conf and live-*.conf: $?"
 		done
 		# Load the new persistence.conf.
 		get_custom_mounts ${custom_mounts} ${open_volumes}
