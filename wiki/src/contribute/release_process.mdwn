@@ -370,16 +370,16 @@ In order to get any new documentation into the website, merge either
 
 Rename the `.packages` file to remove the `.iso` part of its name.
 
-Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig`
-files to the Git repository's `wiki/src/torrents/files/` directory.
+Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
+rto the Git repository's `wiki/src/torrents/files/` directory and
+remove the one for the previous release (including any RCs). If
+prepareing an RC, only copy the `.iso.sig`.
 
 Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
 
 	sha256sum $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
 	  cut -f 1 -d ' ' | tr -d '\n' \
 	  > wiki/src/inc/stable_i386_hash.html
-
-In `todo/*`, replace `pending` tags with `todo/done` tags.
 
 Update the [[support/known_issues]] page.
 
@@ -420,6 +420,16 @@ Push
 Push the last commits to our Git repository:
 
 	git push
+
+... and ask <root@boum.org> to refresh the ikiwiki wrappers for
+our website.
+
+Bug tracker
+-----------
+
+Mark all issues fixed in this release as `Status: Resolved` in our bug
+tracker. For a list of candidates, see the [issues in *Fix committed*
+status](https://labs.riseup.net/code/projects/tails/issues?query_id=111).
 
 IRC
 ---
