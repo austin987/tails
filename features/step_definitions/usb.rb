@@ -331,7 +331,7 @@ Then /^the boot device has safe access rights$/ do
            "Boot device '#{dev}' owned by user '#{dev_owner}', expected 'root'")
     assert(dev_group == "disk" || dev_group == "root",
            "Boot device '#{dev}' owned by group '#{dev_group}', expected " +
-           "'disk' or 'root'. We are probably affected by Debian bug #645466.")
+           "'disk' or 'root'.")
     assert(dev_perms == "660",
            "Boot device '#{dev}' has permissions '#{dev_perms}', expected '660'")
     for user, groups in all_users_with_groups do
