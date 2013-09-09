@@ -1,0 +1,53 @@
+XXX: here's the place where we should explain people how to have their
+live-additional-software.conf and custom persistence.conf settings
+enabled back.
+
+Users are pointed to this page if
+a live-additional-software.conf.disabled file is found, or if not all
+settings could be migrated from live-persistence.conf to
+persistence.conf.
+
+Below is, hopefully, all the information the doc writers will need.
+This is an operational summary of what can be done at this point; for
+more advanced technical details, see the detailed plan to fix the
+general issue we're tackling here.
+
+First, it may be worth mentioning *why* these files were disabled, and
+(for live-persistence.conf) partially imported. At least to the extent
+of what the user needs to understand, that is: technically, there is
+a possibility that these files have been tampered with (needs
+a targetted attack against Tails, with remote arbitrary code exec as
+the `amnesia` user, and persistence enabled read-write at the same
+time), so their content should not be trusted.
+
+It also may be worth mentioning that whereas we're now temporarily
+running with degraded functionality, full functionality can be
+restored by following this doc. Yay!
+
+To enable things back, the user has to edit files (persistence.conf,
+live-additional-software.conf) as root (or as
+tails-persistence-setup), probably using gksudo gedit or something.
+
+It's probably worth mentioning somewhere (perhaps not on this very
+page, though), that persistence.conf and live-additional-software.conf
+MUST have mode 0600, and be owned by
+tails-persistence-setup:tails-persistence-setup. Just in case people
+try to do clever interesting things :)
+
+This also means checking that the disabled content (be it a line in
+live-persistence.conf.old or in live-additional-software.conf) is
+safe, before importing it.
+
+Old persistence config now is in live-persistence.conf.old.
+New persistence config (that is, safe settings that could be imported
+automatically) is in persistence.conf.
+
+Old, disabled additional software config now is in
+live-additional-software.conf.disabled. New, (empty) additional
+software config now is in live-additional-software.conf.
+
+To end with, when all was migrated, one should delete
+live-persistence.conf.old and live-additional-software.conf.disabled
+to avoid being nagged about stuff left to migrate.
+
+Enjoy!
