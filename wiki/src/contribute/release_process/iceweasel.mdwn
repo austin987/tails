@@ -102,7 +102,46 @@ iceweasel was pushed to it yet, or not.
 If Debian's iceweasel was pushed to Git already
 -----------------------------------------------
 
-FIXME: add missing steps to merge iceweasel's updated Git.
+* Retrieve the update from the iceweasel Git repository and verify the
+  Git tag you want to import, e.g.
+
+      git fetch debian && git tag -v debian/17.0.8esr-1
+
+* Checkout our `tails/master` branch.
+
+* Unapply all Torbrowser patches:
+  - If quilt knows they are applied (`quilt applied` will tell you),
+    then use `quilt pop` as many times as needed.
+  - Else, some manual care is needed so that quilt internal state
+    matches the actual state of the source tree. We need to manually
+    unapply all quilt patches, then reapply them all:
+
+        for p in $(tac debian/patches/series) ; do
+           patch -p1 -R < "debian/patches/$p"
+        done && quilt push -a
+
+    ... and then use `quilt pop` as many times as needed to unapply
+    all Torbrowser patches.
+
+* `git add` the new files and the modified ones
+
+* `git rm` the deleted files
+
+* Commit:
+
+      git commit -m 'Remove Torbrowser patches.'
+
+* Merge the tag, e.g.
+
+      git merge debian/17.0.8esr-1
+
+* Verify with that `tails/master` is in the same state as Debian's
+  iceweasel, e.g.
+
+      git diff --stat debian/17.0.8esr-1..tails/master
+
+  All expected differences should be in `debian/{changelog,rules}`,
+  and the addition of the Torbrowser patches.
 
 If Debian's iceweasel was not pushed to Git yet
 -----------------------------------------------
