@@ -155,6 +155,12 @@ Finally, commit:
 Included website
 ----------------
 
+### Merge master
+
+Merge `master` into the branch used for the release:
+
+	git fetch origin && git merge origin/master
+
 ### version number
 
 If preparing a RC, skip this part.
@@ -165,7 +171,6 @@ at least 24 hours in the future! Between tests and mirror synchronization,
 the build will not be released on the same day. Try to make sure it
 matches the date of the future signature.
 
-	VERSION='0.19'
 	RELEASE_DATE='June 26, 2013'
 
 	echo "$VERSION"      > wiki/src/inc/stable_i386_version.html
@@ -286,15 +291,14 @@ page|release_process/test]].
 Generate the OpenPGP signatures and Torrents
 ============================================
 
-First, create a directory with a suitable name:
+First, create a directory with a suitable name and go there:
 
-	mkdir tails-i386-$VERSION
+	mkdir "$ISOS/tails-i386-$VERSION" && cd "$ISOS/tails-i386-$VERSION"
 
-Second, copy the built image to this brand new directory and
-rename it:
+Second, copy the built image to this brand new directory.
+Then, rename it:
 
-	cd tails-i386-$VERSION
-	mv *.iso tails-i386-$VERSION.iso
+	mv *.iso "tails-i386-$VERSION.iso"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
@@ -329,8 +333,8 @@ Test them with a BitTorrent client running in a different place.
 
 ## Download and seed image from lizard
 
-    scp tails-i386-$VERSION.torrent bittorent.lizard:
-    ssh bittorent.lizard transmission-remote --add tails-i386-$VERSION.torrent
+    scp tails-i386-$VERSION.torrent bittorrent.lizard:
+    ssh bittorrent.lizard transmission-remote --add tails-i386-$VERSION.torrent
 
 ## Upload to HTTP mirrors
 
