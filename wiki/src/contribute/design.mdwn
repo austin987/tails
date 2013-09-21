@@ -732,7 +732,7 @@ to push usage of such hardening features in Debian.
 A lot of security features have been implemented upstream at the
 kernel level (ASLR, removal of `/dev/kmem`, `/dev/mem` protections,
 various stack and heap hardening features, `/proc` or `/sys` not leaking
-sensitive informations, etc.), most of them being slowly integrated
+sensitive information, etc.), most of them being slowly integrated
 into Debian. This is the reason why the Tails kernel has no more special
 kernel security feature than the stock Debian kernel.
 
@@ -760,8 +760,7 @@ application is internationalized.
 ## 3.5 Feedback
 
 Users can send feedback in several ways to Tails developers.
-A [[!tails_todo "" desc="task tracker"]] is
-available on the website.
+A [[!tails_redmine desc="task tracker"]] is available.
 Users can also send email to the private [developers mailing
 list](tails@boum.org). A dedicated application called *WhisperBack*
 is also available in every running Tails copy. WhisperBack allows
@@ -777,7 +776,7 @@ reported issue. WhisperBack's graphical interface fully supports
 internationalization and is ready to be translated.
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/whisperback]]
-- [WhisperBack source code](http://git.immerda.ch/?p=whisperback.git)
+- [WhisperBack source code](https://git-tails.immerda.ch/whisperback)
 
 ## 3.6 Configuration
 
@@ -928,7 +927,7 @@ session cookies by default; the [Cookie
 Monster](https://addons.mozilla.org/en-US/firefox/addon/cookie-monster)
 extension provides more
 fine-grained cookie control for users who need it. This prevents the
-known leak of browsing informations cookies can lead to. The [Adblock
+known leak of browsing information cookies can lead to. The [Adblock
 plus](https://addons.mozilla.org/fr/firefox/addon/1865/) extension
 protects against many tracking possibilities by removing most ads.
 
@@ -953,6 +952,9 @@ users into per-language anonymity sets.
 Torbutton is also configured to spoof the timezone settings the same
 way as the Tor Browser Bundle does, i.e. to `UTC+00:00`.
 
+Thanks to the Tor Browser patches, the in-memory web cache is isolated
+to the url bar origin.
+
 The Iceweasel config is poorly commented but the commit messages in
 Git history explains
 it all; any other relevant settings may thus be investigated by
@@ -960,6 +962,11 @@ looking in there.
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/iceweasel]]
 - Tails' Iceweasel source [[lives in Git|contribute/git]]
+- [[!tails_gitweb config/chroot_local-hooks/12-remove_unwanted_iceweasel_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/13-iceweasel_sqlite]]
+- [[!tails_gitweb config/chroot_local-hooks/14-add_localized_iceweasel_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/14-generate-iceweasel-profile]]
+- [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
 
 ### 3.6.14 Claws Mail
 
@@ -984,19 +991,21 @@ OpenPGP support is provided by the PGP/inline and PGP/MIME plugins.
 
 Pidgin is configured in Tails to not log anything as well as not to reveal too
 much of user activity by disabling reporting of online/away/typing
-status. MSN protocol support is disabled, to avoid the usage of such a
-privacy flawed and buggy plugin. The Off-the-record plugin is enabled
+status. Only IRC and Jabber/XMPP protocols are left available, to
+avoid the usage of less well audited plugins. The Off-the-record
+plugin is enabled
 to help one-to-one conversations being as private and unrecordable as
 possible. At boot a language confluxer generates a random looking default
 nickname from the 2000 most common U.S. names (according to the U.S. social
-security administration in the 70s), which results in something Englishesque
+security administration in the 1970's), which results in something Englishesque
 sounding. The nickname is further made to look like a typical IRC nickname by
 prefixing it with ^ or _ with probability 0.05, and changing it to leet speak
-with probability 0.05. Pidgin does not leak any informations appart from the
+with probability 0.05. Pidgin does not leak any information apart from the
 name when answering to CTCP requests.
 
 - [[!tails_gitweb config/chroot_local-includes/lib/live/config/201-pidgin]]
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.purple]]
+- [[!tails_gitweb config/chroot_local-hooks/09-remove_unsupported_pidgin_libs]]
 
 ### 3.6.16 GnuPG
 
@@ -1025,6 +1034,26 @@ newer. See [[contribute/design/persistence]] for details.
 An easy (read: not command-line based) way to install and
 upgrade Tails on USB sticks is available in Tails 0.11 and newer.
 See [[design/usb_installation]] for details.
+
+### 3.6.19 Wireless devices handling
+
+Tails puts the wireless devices in a sensible state at boot time.
+
+At boot time, Tails unblocks Wi-Fi, WWAN and WiMAX radios, unblocks
+Bluetooth radio (so that it can be dealt another way:
+[[todo/protect_against_external_bus_memory_forensics]]), and
+soft-blocks all other kinds of wireless devices (e.g. UWB, GPS, FM).
+
+- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-set-wireless-devices-state]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-set-wireless-devices-state]]
+
+### 3.6.20 OpenSSH
+
+The OpenSSH client is configured to use the Tor SOCKS proxy, and to
+prefer strong ciphers and MACs..
+
+- [[!tails_gitweb config/chroot_local-includes/etc/ssh/ssh_config]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/connect-socks]]
 
 ## 3.7 Running Tails in virtual machines
 

@@ -4,11 +4,18 @@
 
 umask 022
 
+### functions
+
+fatal () {
+   echo "$*" >&2
+   exit 1
+}
+
+### Main
+
 # we require building from git
-if ! git rev-parse --is-inside-work-tree &> /dev/null; then
-    echo "${PWD} is not a Git tree."
-    exit 1
-fi
+git rev-parse --is-inside-work-tree &> /dev/null \
+   || fatal "${PWD} is not a Git tree."
 
 . config/amnesia
 if [ -e config/amnesia.local ] ; then
@@ -28,11 +35,16 @@ rm -rf cache/stages_rootfs
 ./build-wiki
 
 # refresh translations of our programs
-./refresh-translations
+./refresh-translations || fatal "refresh-translations failed ($?)."
 
 # save variables that are needed by chroot_local-hooks
 echo "LB_DISTRIBUTION=${LB_DISTRIBUTION}" >> config/chroot_local-includes/usr/share/amnesia/build/variables
 echo "AMNESIA_SUPPORTED_LANGUAGES='${AMNESIA_SUPPORTED_LANGUAGES}'" >> config/chroot_local-includes/usr/share/amnesia/build/variables
+echo "POTFILES_DOT_IN='$(
+         /bin/grep -E --no-filename '[^ #]*\.in$' po/POTFILES.in \
+       | sed -e 's,^config/chroot_local-includes,,' | tr "\n" ' '
+   )'" \
+   >> config/chroot_local-includes/usr/share/amnesia/build/variables
 
 # fix permissions on some source files that will be copied as is to the chroot.
 # they may be wrong, e.g. if the Git repository was cloned with a strict umask.
@@ -42,6 +54,7 @@ chmod    0440  config/chroot_local-includes/etc/sudoers.d/*
 chmod    go+rX config/chroot_local-includes/lib
 chmod    go+rX config/chroot_local-includes/lib/live
 chmod -R go+rx config/chroot_local-includes/lib/live/config
+chmod    go+rX config/chroot_local-includes/live
 chmod -R go+rX config/chroot_local-includes/usr
 chmod -R go+rx config/chroot_local-includes/usr/local/bin
 chmod -R go+rx config/chroot_local-includes/usr/local/sbin
@@ -58,10 +71,16 @@ export MKSQUASHFS_OPTIONS
 # get git branch or tag so we can set the basename appropriately, i.e.:
 # * if we build from a tag:    tails-$ARCH-$TAG.iso
 # * if we build from a branch: tails-$ARCH-$BRANCH-$VERSION-$DATE.iso
+# * if Jenkins builds from a branch: tails-$ARCH-$BRANCH-$VERSION-$TIME-$COMMIT.iso
 if GIT_REF="$(git symbolic-ref HEAD)"; then
     GIT_BRANCH="${GIT_REF#refs/heads/}"
     CLEAN_GIT_BRANCH=$(echo "$GIT_BRANCH" | sed 's,/,_,g')
-    BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
+    if [ -n "$JENKINS_URL" ]; then
+        GIT_SHORT_ID="$(git rev-parse --short HEAD)"
+        BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_NOW}-${GIT_SHORT_ID}"
+    else
+        BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
+    fi
 else
     GIT_CURRENT_COMMIT="$(git rev-parse HEAD)"
     if GIT_TAG="$(git describe --tags --exact-match ${GIT_CURRENT_COMMIT})"; then
@@ -70,8 +89,7 @@ else
     else
 	# this shouldn't reasonably happen (e.g. only if you checkout a
         # tag, remove the tag and then build)
-	echo "Neither a Git branch nor a tag, exiting."
-	exit 1
+	fatal "Neither a Git branch nor a tag, exiting."
     fi
 fi
 
@@ -93,8 +111,7 @@ case "$LB_BINARY_IMAGES" in
       BUILD_FILENAME=binary
       ;;
    *)
-      echo "Image type ${LB_BINARY_IMAGES} is not supported." >&2
-      exit 1
+      fatal "Image type ${LB_BINARY_IMAGES} is not supported."
       ;;
 esac
 BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
@@ -110,6 +127,5 @@ if time eatmydata lb build noauto ${@} 2>&1 | tee "${BUILD_LOG}" ; then
    mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
    mv -i binary.packages "${BUILD_PACKAGES}"
 else
-   echo "lb build failed." >&2
-   exit 1
+   fatal "lb build failed ($?)."
 fi

@@ -1,0 +1,87 @@
+For Tails [[!taglink release/2.0]], we want at least basic UEFI boot
+including Mac.
+
+Some hardware ([[bugs/ThinkPad_X220_vs_GPT]], recent Mac) cannot boot
+Tails from USB, due to firmware limitations. Making Tails support UEFI
+would fix this problem on such hardware.
+
+* lernstick Grub configuration, implemented as a live-build binary
+  hook, that's meant to be nice with an existing syslinux
+  configuration managed by live-build:
+  <https://github.com/imedias/lernstickAdvanced.git> (oh, and they use
+  the [xmlboot](https://github.com/imedias/xmlboot) gfxboot script and
+  many crazy Grub configuration scripts)
+* [hellais' TAILS-OSX scripts](https://github.com/hellais/TAILS-OSX)
+* [Mac Linux USB Loader](http://sevenbits.github.io/Mac-Linux-USB-Loader/)
+  Doesn't work with Tails at the moment, but that's a frequent request
+  to upstream. Upstream is working on fixing this. That would allow
+  starting Tails on Mac UEFI.
+* Mike Hommey's
+  [Debian EFI mode boot on a Macbook Pro, without rEFIt](http://glandium.org/blog/?p=2830)
+* Steve McIntyre's EFI installation progress:
+  - [[!debpkg debian-cd]] 3.1.11 has x86 EFI support, see the
+    `debian/changelog` for details
+  - [fourth](http://blog.einval.com/2012/09/03#Debian_EFI_4) (2012-09-03)
+  - [third](http://blog.einval.com/2012/08/24#Debian_EFI_3)
+  - [second](http://blog.einval.com/2012/08/22#Debian_EFI_2) (2012-08-22)
+  - [first](http://blog.einval.com/2012/08/12#Debian_EFI) (2012-08-12)
+* <https://lists.debian.org/debian-devel/2012/01/msg00168.html>
+* [Debian: switch to UEFI boot](http://tanguy.ortolo.eu/blog/article51/debian-efi)
+* [[!debbug 658352]] about adding UEFI support to Debian CDs
+* a recent snapshot of Liberte Linux has added UEFI support
+* the [SprezzOS](http://www.sprezzatech.com/sprezzos.html)
+  Debian derivative is [working on this](https://github.com/dankamongmen/SprezzOS/wiki/Installer) too:
+  - [bug 11](https://www.sprezzatech.com/bugs/show_bug.cgi?id=11)
+  - [bug 104](https://www.sprezzatech.com/bugs/show_bug.cgi?id=104)
+* rEFIt developer, Rod Smith, may be willing to help:
+  [[forum/Boot_fails_from_usb_thumb_drive_on_Macbook_Pro]]
+* ArchLinux' page about
+  [UEFI Bootloaders](https://wiki.archlinux.org/index.php/UEFI_Bootloaders)
+* syslinux 6 (released in June 2013) has UEFI support. Debian Live's
+  UEFI support will be based on it. Early users [discussion and
+  hints](http://www.marshut.com/kyxhm/question-about-syslinux-efi-alpha-version.html).
+* Kanotix, based on Debian Live and GRUB2, has a isohybrid setup that
+  allows "multi-hybrid booting" as CD-ROM (EFI or El Torito) or as
+  a hard-drive (e.g. a USB pendrive) on Intel-Macs (EFI) and PCs (EFI
+  or MBR). [See
+  details](https://mailman.boum.org/pipermail/tails-dev/2013-February/002587.html).
+* Debian's Linux 3.2 kernel has "UEFI stub" support, which
+  allows it to be started directly since the EFI boot menu.
+* Running a UEFI firmware for virtual machines: 
+  `qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd`
+
+Matthew Garrett:
+
+* [Secure Boot bootloader for distributions available now](http://mjg59.dreamwidth.org/20303.html)
+* [Getting started with UEFI development](http://mjg59.dreamwidth.org/18773.html)
+* detailed [the ISO images for Fedora 17 installation
+  CD](http://mjg59.dreamwidth.org/11285.html) and [their Mac
+  support](http://mjg59.dreamwidth.org/12037.html): it supports BIOS,
+  UEFI, Mac platforms when burned to a CD or written directly to a USB
+  stick. This might be nice for the ISO that Tails distribute, but not
+  applicable to support USB sticks with incremental updates.
+* [An overview of Fedora's Secure Boot implementation](http://mjg59.dreamwidth.org/18945.html)
+
+More technical details:
+
+ * <http://bazaar.launchpad.net/~libburnia-team/libisofs/scdbackup/view/head:/doc/boot_sectors.txt#L398>
+
+There is then two big area that needs work to support EFI:
+
+ * ISO images need to support EFI, both for DVD and when [[dumped on USB
+   sticks|contribute/design/hybrid_ISO]]. A work similar to the one done by
+   Matthew Garrett on Fedora 17 should probably be done [[!taglink
+   todo/upstream]] in [live-build](http://live.debian.net/).
+ * The [[USB installer|contribute/design/usb_installation]] needs to
+   setup the partition table and system partition in a way that can boot
+   on both BIOS and UEFI systems. Proper Mac support would be a nice bonus.
+
+Later
+=====
+
+Secure Boot
+-----------
+
+* Matthew Garrett's [Handling UEFI Secure Boot in smaller distributions](http://mjg59.dreamwidth.org/17542.html)
+
+[[!tag priority/high]]

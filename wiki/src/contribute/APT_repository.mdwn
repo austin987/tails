@@ -165,9 +165,11 @@ operation must be done on the APT suites.
 
 1. Save the list of packages currently present in the APT suite we
    want to merge *into*, e.g. `reprepro list experimental`.
-2. Merge the APT suites [[the same way as when we merge a topic
+2. Make sure you are not going to overwrite newer packages by
+   older ones.
+3. Merge the APT suites [[the same way as when we merge a topic
    branch|APT_repository#workflow-merge-topic-branch]].
-3. Make sure not to re-add, into the branch we merge into, any package
+4. Make sure not to re-add, into the branch we merge into, any package
    that was removed from it, but still is in the branch we merge from:
    e.g. when merging `devel` into `experimental`, it may be that
    `experimental` had some packages removed (e.g. due to previously
@@ -179,6 +181,26 @@ operation must be done on the APT suites.
    it a while ago, and were just erroneously re-added by the
    merge operation.
 
+<a id="workflow-reset"></a>
+
+Resetting a suite to the state of another one
+---------------------------------------------
+
+   a. First, set some environment variables:
+
+        OLD=testing # the suite to reset
+        NEW=devel   # the final state it should be in
+
+   b. Then, empty the `OLD` suite:
+
+      	ssh reprepro@incoming.deb.tails.boum.org \
+      	      reprepro removematched $OLD '\*'
+
+   c. Finally, merge `NEW` into `OLD`
+
+      	ssh reprepro@incoming.deb.tails.boum.org \
+      	      tails-merge-suite $NEW $OLD
+
 <a id="workflow-freeze"></a>
 
 Freezing devel into testing
@@ -186,17 +208,7 @@ Freezing devel into testing
 
 1. Merge `devel` branch into `testing` in Git
 2. (Manually) hard reset `testing` suite to the current state of the
-   `devel` one:
-
-   a. First, empty the `testing` suite:
-
-      	$ ssh reprepro@incoming.deb.tails.boum.org \
-      	      reprepro removematched testing '\*'
-
-   b. Then, merge `devel` into `testing`
-
-      	$ ssh reprepro@incoming.deb.tails.boum.org \
-      	      tails-merge-suite devel testing
+   `devel` one: [[APT_repository#workflow-reset]].
 
 <a id="workflow-post-tag"></a>
 
@@ -209,12 +221,18 @@ This new APT suite is called the same as the new release version.
 One may check it has appeared in `~reprepro/conf/distributions`.
 
 Then, the APT suite corresponding to the branch that was used to
-prepare the release (namely:  `stable` if this is a point-release,
-`testing` if this is a major one) must be copied to the new empty APT
-suite that just appeared:
+prepare the release must be copied to the new empty APT suite that
+just appeared:
+
+If this is a major release:
 
 	$ ssh reprepro@incoming.deb.tails.boum.org \
-	     tails-merge-suite testing 0.14
+	     tails-merge-suite testing $TAG
+
+Else, if this is a point-release:
+
+	$ ssh reprepro@incoming.deb.tails.boum.org \
+	     tails-merge-suite stable $TAG
 
 <a id="workflow-post-release"></a>
 
@@ -227,8 +245,8 @@ version number in devel's `debian/changelog` so that next builds from
 the `devel` branch do not use the APT suite meant for the
 last release.
 
-If the release was a major one, then [[merge testing into
-stable|APT_repository#workflow-merge-main-branch]].
+If the release was a major one, then [[reset the stable APT suite to
+the state of the testing one|APT_repository#workflow-reset]].
 
 Giving access to a core developer
 ---------------------------------
@@ -243,8 +261,8 @@ Giving access to a core developer
 Contributing without privileged access
 --------------------------------------
 
-Non-core developer without access to the "private" APT infrastructure:
-they would add the .deb they want to their Git branch as we have been
+Non-core developers without access to the "private" APT infrastructure
+would add the .deb they want to their Git branch as we have been
 doing until now, push the result on repo.or.cz or whatever... and at
 merge time, we would rewrite their history to remove the .deb, and
 import it into our APT repo.

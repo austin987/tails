@@ -1,3 +1,138 @@
+tails (0.20.1) unstable; urgency=low
+
+  * Major new features
+  - Install Tor 0.2.4.17-rc-1~d60.squeeze+1 from the Tor project's repository.
+  - Install Iceweasel 17.0.9esr with Torbrowser patches.
+  - Install Linux kernel 3.10-3 (version 3.10.11-1) from sid.
+
+  * Bugfixes
+  - Remount persistence devices read-only at shutdown/reboot time
+    (Closes: #6228).
+  - Greeter: display a warning icon on admin password mismatch and on
+    persistence unlocking failure. Thanks to Andres Gomez Ramirez
+    <andres.gomez@cern.ch> for the fix!
+  - Don't torsocksify Pidgin.
+    Instead we disable Pidgin's GNOME integration to get the "Global proxy
+    configuration", which we set to use Tor. This fixes the I2P IRC account.
+  - Additional software: fix typo in notification.
+  - Allow installing "Priority: standard" packages that we do not install
+    by default: remove them late in the build process instead of assigning
+    them a -1 APT pinning level.
+
+  * Minor improvements
+  - Update AdBlock Plus patterns.
+  - Use more unique ISO file name when building from Jenkins.
+  - Additional software: point to the system log on upgrade failure.
+  - Set SOCKS5_USER and SOCKS5_PASSWORD in the connect-socks wrapper (used
+    by Git). Else, Tor 0.2.4's IsolateSOCKSAuth and connect-proxy
+    sometimes play together in some way that makes connect-proxy ask for
+    a password to connect to the SocksPort. SOCKS5_USER and
+    SOCKS5_PASSWORD are passed through unchanged if they were manually set
+    by the user already.
+  - Use our custom connect-socks wrapper for SSH. Else, Tor 0.2.4's
+    IsolateSOCKSAuth and connect-proxy sometimes play together in some way
+    that makes connect-proxy ask for a password to connect to the
+    SocksPort. Note that connect-socks uses the default SocksPort too, so
+    no change here wrt. our connection isolation design.
+
+  * Localization
+  - Import new translations from Transifex.
+
+  * Test suite
+  - Fix old ISO checking for consistent error reporting.
+  - Remove custom persistence test from manual test suite.
+    It was removed for the GUI in t-p-s 0.33.
+
+ -- Tails developers <tails@boum.org>  Sun, 15 Sep 2013 15:49:36 +0200
+
+tails (0.20) unstable; urgency=low
+
+  * Major new features
+  - Install Linux kernel 3.10.3-1 from Debian unstable.
+  - Iceweasel 17.0.8esr + Torbrowser patches.
+
+  * Bugfixes
+  - Prevent Iceweasel from displaying a warning when leaving HTTPS web sites.
+  - Make Iceweasel use the correct, localized search engine.
+  - Fix Git access to https:// repositories.
+
+  * Minor improvements
+  - Install Dasher, a predictive text entry tool.
+  - Add a wrapper around TrueCrypt which displays a warning about it soon
+    being deprecated in Tails.
+  - Remove Pidgin libraries for all protocols but IRC and Jabber/XMPP.
+    Many of the other protocols Pidgin support are broken in Tails and
+    haven't got any security auditting.
+  - Disable the pre-defined Pidgin accounts so they do not auto-connect
+    on Pidgin start.
+  - Include information about Alsa in WhisperBack reports.
+  - Explicitly restrict access to ptrace. While this setting was enabled
+    by default in Debian's Linux 3.9.6-1, it will later disabled in 3.9.7-1.
+    It's unclear what will happen next, so let's explicitly enable it ourselves.
+  - Do not display dialog when a message is sent in Claws Mail.
+  - Sync iceweasel preferences with the Torbrowser's.
+
+  * Localization
+  - Many translation updates all over the place.
+  - Merge all Tails-related POT files into one, and make use of intltoolize
+    for better integration with Transifex.
+
+ -- Tails developers <tails@boum.org>  Tue, 30 Jul 2013 14:19:57 +0200
+
+tails (0.19) unstable; urgency=low
+
+  * Major new features
+  - Install Linux kernel 3.9.5-1 from Debian unstable.
+    Features of particular interest for Tails are the Yama LSM
+    (ptrace scope restrictions) and improved hardware support.
+    As a corollary, install initramfs-tools from there too.
+  - Iceweasel 17.0.7esr + Torbrowser patches.
+  - Unblock Bluetooth, Wi-Fi, WWAN and WiMAX; block every other type of
+    wireless device. Next steps are described on the
+    todo/protect_against_external_bus_memory_forensics ticket.
+
+  * Bugfixes
+  - Fix write access to boot medium at the block device level,
+    by installing bilibop-udev. Thanks to quidame for his support.
+  - tails-greeter l10n-related fixes, thanks to winterfairy:
+    · Fix so translations is applied on password mismatch messages.
+    · Separate forward and login buttons and make them translatable.
+  - Fix link to documentation when no sudo password is set.
+  - gpgApplet: partial fix for clipboard emptying after a wrong passphrase
+    was entered.
+  - Workaround aufs bug in Unsafe Browser script.
+
+  * Minor improvements
+  - Drop GNOME proxy settings: we did not find any use of it we were keen
+    to support, other than two programs (Seahorse, Pidgin) that are now run
+    with torsocks.
+  - Format newly created persistent volumes as ext4.
+  - GnuPG: don't connect to the keyserver specified by the key owner.
+    This feature opens the door to a variety of subtle attacks.
+  - GnuPG: locate keys only from local keyrings.
+    This is probably the default, but better safe than sorry.
+  - Install virt-what from Wheezy.
+    The version from Squeeze does not detect at least Parallels for Mac v.8.
+  - Upgrade live-boot and live-config to the 3.0.x final version from Wheezy.
+    · Remove /live and /lib/live/image compatibility symlinks.
+    · Add /live/overlay -> /lib/live/mount/overlay symlink.
+      The live-boot changes (commit d2b2a461) brought to fix Debian bug
+      #696495 revert some of our previous changes (commit 77dab1cb), and as
+      a result, at the time live-persist runs, no tmpfs is mounted on
+      /live/overlay, which breaks the aufs mount. So, let's just ensure
+      /live/overlay points to a tmpfs.
+    · Really disable policykit and sudo live-config hooks.
+      ... by making it believe they've already been run.
+      This workarounds new live-config's default behavior.
+
+  * Localization
+  - Many translation updates all over the place.
+
+  * Test suite
+  - Re-enable previously disabled boot device permissions test.
+
+ -- Tails developers <tails@boum.org>  Wed, 26 Jun 2013 12:36:20 +0200
+
 tails (0.18) unstable; urgency=low
 
   * New features

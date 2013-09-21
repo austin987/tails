@@ -21,16 +21,40 @@ Install the dependencies:
     dh-make-perl --build --install --cpan Dist::Zilla::Plugin::CheckChangeLog
     DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::LocaleMsgfmt
 
+
+Update POT and PO files
+=======================
+
+    git checkout master && \
+        ( cd po && make pot && make update-po ) && \
+        git commit po -m 'Update POT and PO files.'
+
 Make an upstream release
 ========================
 
-Enable new translations in `po/PACKAGE`.
+Enable new translations in `po/PACKAGE` and commit.
 
-Update version number in `bin/tails-persistence-setup`.
+Export new upstream version number:
 
-Update `Changes`.
+    export VERSION=XXX
 
-Commit all files that need to be.
+Update version number in `bin/tails-persistence-setup`:
+
+    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-persistence-setup
+    perl -pi -E "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," bin/tails-persistence-setup
+
+Update `Changes`, starting with:
+
+    (echo "$VERSION   $(date '+%Y%m%d')" ; echo "\n" ; cat Changes) > Changes.new && mv Changes.new Changes
+
+Commit all files that need to be:
+
+    git commit Changes bin/tails-persistence-setup \
+        -m "tails-persistent-setup $VERSION"
+
+Run the upstream test suite:
+
+    RELEASE_TESTING=1 dzil test
 
 Build an upstream tarball:
 
@@ -38,15 +62,15 @@ Build an upstream tarball:
 
 Tag the release:
 
-    git tag -s $VERSION
+    git tag -s $VERSION -m "tails-persistent-setup $VERSION"
 
 Move the tarball out of the build repository:
 
     mv Tails-Persistence-*.tar.gz ..
 
-Delete the build directory:
+Delete the build directories:
 
-    rm -r Tails-Persistence-*
+    rm -rf Tails-Persistence-* .build
 
 Update the Debian package
 =========================
@@ -61,7 +85,7 @@ Import the new upstream tarball:
 
 Update `debian/changelog`:
 
-    git-dch
+    git-dch && dch -e
 
 (Do not forget to set the appropriate release.)
 
