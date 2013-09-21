@@ -1,25 +1,36 @@
 [[!meta title="Protection against cold boot attacks"]]
 
-When using a computer, everything done during a session is stored in
-RAM: texts, saved files, but also passwords and encryption keys.The more
-recent the activity, the more likely it is that it is still in RAM.
-Those data can still be in RAM up to several minutes after the computer
-is powered off.
+While using a computer, all the data manipulated is written temporarily
+in [[!wikipedia Random-access_memory desc="RAM"]]: texts, saved files,
+but also passwords and encryption keys. The more recent the activity,
+the more likely it is for the data to still be in RAM.
 
-A physical access to the computer you used may enable to recover everything
-you've been achieving during the session. Those data can be recovered using
-a <span class="definition">[[!wikipedia Cold_boot_attack desc="cold boot attack"]]
-</span>. That's why when shutting down Tails, RAM is filled out with
-random data, thus erasing every traces from what you did on and only on that computer.
+After a computer is powered off, the data in RAM disappears rapidly, but
+it can remain in RAM up to several minutes after shutdown. An attacker
+having access to a computer before it disappears completely could
+recover important data from your session.
 
-That being said, on some computers [[Tails may not erase all the system memory
-on shutdown|support/known_issues#index9h2]] or [[fails to completely shutdown
-or restart|support/known_issues#index13h2]] which does not guarantee that the
-memory has been wiped entirely. 
+This can be achieved using a technique called <span
+class="definition">[[!wikipedia Cold_boot_attack desc="cold boot
+attack"]] </span>. To prevent this attack, the data in RAM is
+overwritten by random data when shutting down Tails. This erases all
+traces from your session on that computer.
 
-Moreover, a physical access to the computer you're using Tails on, enable as
-well recovering data from RAM. In order to avoid such recovery, use
-[[Tails shutdown tools|doc/first_steps/shutting_down_tails]].
+<div class="bug">
+On some computers Tails might fail to:
+<ul>
+  <li>[[erase all the data in RAM on
+  shutdown|support/known_issues#index9h2]]</li>
+  <li>[[completely shutdown or restart|support/known_issues#index13h2]]
+  (in this case there is no guarantee that all the data in RAM is
+  erased).</li>
+</ul>
+</div>
 
-As far as we know, cold boot attacks are not standard procedure for data
+Moreover, an attacker having physical access to the computer *while
+Tails is running* can recover data from RAM as well. To avoid that,
+learn the different methods to [[shutdown
+Tails|doc/first_steps/shutdown]] rapidly.
+
+As far as we know, cold boot attacks are not a standard procedure for data
 recovery, but it might still be good to be prepared.
