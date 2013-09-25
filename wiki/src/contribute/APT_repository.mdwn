@@ -165,9 +165,11 @@ operation must be done on the APT suites.
 
 1. Save the list of packages currently present in the APT suite we
    want to merge *into*, e.g. `reprepro list experimental`.
-2. Merge the APT suites [[the same way as when we merge a topic
+2. Make sure you are not going to overwrite newer packages by
+   older ones.
+3. Merge the APT suites [[the same way as when we merge a topic
    branch|APT_repository#workflow-merge-topic-branch]].
-3. Make sure not to re-add, into the branch we merge into, any package
+4. Make sure not to re-add, into the branch we merge into, any package
    that was removed from it, but still is in the branch we merge from:
    e.g. when merging `devel` into `experimental`, it may be that
    `experimental` had some packages removed (e.g. due to previously
@@ -219,12 +221,18 @@ This new APT suite is called the same as the new release version.
 One may check it has appeared in `~reprepro/conf/distributions`.
 
 Then, the APT suite corresponding to the branch that was used to
-prepare the release (namely:  `stable` if this is a point-release,
-`testing` if this is a major one) must be copied to the new empty APT
-suite that just appeared:
+prepare the release must be copied to the new empty APT suite that
+just appeared:
+
+If this is a major release:
 
 	$ ssh reprepro@incoming.deb.tails.boum.org \
-	     tails-merge-suite testing 0.14
+	     tails-merge-suite testing $TAG
+
+Else, if this is a point-release:
+
+	$ ssh reprepro@incoming.deb.tails.boum.org \
+	     tails-merge-suite stable $TAG
 
 <a id="workflow-post-release"></a>
 
