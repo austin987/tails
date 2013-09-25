@@ -117,6 +117,14 @@ fi
 
 as_root_do lb build
 
+if [ -n "$JENKINS_URL" ]; then
+	ISO=$(ls *.iso)
+	for file in tails-*; do
+		sha512sum "$file" >> $ISO.shasum
+	done
+	gpg --batch --detach-sign --armor $ISO.shasum
+fi
+
 mv -f tails-* "$ARTIFACTS_DIR"
 
 if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
