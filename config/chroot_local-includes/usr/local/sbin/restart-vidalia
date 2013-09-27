@@ -23,5 +23,8 @@ export DISPLAY=':0.0'
 export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
 
 sudo -u ${LIVE_USERNAME} xhost +SI:localuser:vidalia
-sudo -u vidalia lckdo /var/lock/vidalia vidalia -DISPLAY=${DISPLAY} ${ARGS}
+sudo -u vidalia lckdo /var/lock/vidalia vidalia -DISPLAY=${DISPLAY} ${ARGS} &
+until pgrep -u vidalia vidalia >/dev/null ; do
+   sleep 5
+done
 sudo -u ${LIVE_USERNAME} xhost -SI:localuser:vidalia
