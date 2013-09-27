@@ -56,12 +56,12 @@ to the ISO image that you want to copy and `[device]` with the device
 name found in step 2.
 
     isohybrid [tails.iso] --entry 4 --type 0x1c
-    cat [tails.iso] > [device] && sync
+    dd if=[tails.iso] of=[device] bs=16M
 
 Here is an example of the commands to execute, yours are probably different:
 
     isohybrid '/home/amnesia/Desktop/tails-0.6.2.iso' --entry 4 --type 0x1c
-    cat '/home/amnesia/Desktop/tails-0.6.2.iso' > /dev/sdc && sync
+    dd if='/home/amnesia/Desktop/tails-0.6.2.iso' of=/dev/sdc bs=16M
 
 <div class="tip">
 If you are not sure about the path to the ISO image or if you get a
@@ -97,9 +97,8 @@ double-check it. If you are sure about the device name, this could be a
 permission problem and you could need to gain administration privileges before running the
 commands in the terminal. That could be:
 
-    sudo su -
     isohybrid [tails.iso] --entry 4 --type 0x1c
-    cat [tails.iso] > [device] && sync
+    sudo dd if=[tails.iso] of=[device] bs=16M
 
 ### cat: tails.iso: No such file or directory
 
