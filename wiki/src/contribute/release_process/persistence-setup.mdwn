@@ -1,0 +1,117 @@
+[[!meta title="Releasing persistence-setup"]]
+
+[[!toc levels=1]]
+
+Install build and test dependencies
+===================================
+
+Required dependencies on Debian:
+
+    libdist-zilla-perl libdist-zilla-plugins-cjm-perl
+    libdist-zilla-plugin-git-perl
+    liblocale-msgfmt-perl libmoosex-has-sugar-perl
+    dh-make-perl
+
+Install the dependencies:
+
+    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::InstallGuide
+    DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::OurPkgVersion
+    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::CriticTests
+    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::NoTabsTests
+    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::CheckChangeLog
+    DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::LocaleMsgfmt
+
+
+Update POT and PO files
+=======================
+
+    git checkout master && \
+        ( cd po && make pot && make update-po ) && \
+        git commit po -m 'Update POT and PO files.'
+
+Make an upstream release
+========================
+
+Enable new translations in `po/PACKAGE` and commit.
+
+Export new upstream version number:
+
+    export VERSION=XXX
+
+Update version number in `bin/tails-persistence-setup`:
+
+    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-persistence-setup
+    perl -pi -E "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," bin/tails-persistence-setup
+
+Update `Changes`, starting with:
+
+    (echo "$VERSION   $(date '+%Y%m%d')" ; echo "\n" ; cat Changes) > Changes.new && mv Changes.new Changes
+
+Commit all files that need to be:
+
+    git commit Changes bin/tails-persistence-setup \
+        -m "tails-persistent-setup $VERSION"
+
+Run the upstream test suite:
+
+    RELEASE_TESTING=1 dzil test
+
+Build an upstream tarball:
+
+    dzil build
+
+Tag the release:
+
+    git tag -s $VERSION -m "tails-persistent-setup $VERSION"
+
+Move the tarball out of the build repository:
+
+    mv Tails-Persistence-*.tar.gz ..
+
+Delete the build directories:
+
+    rm -rf Tails-Persistence-* .build
+
+Update the Debian package
+=========================
+
+Checkout the branch with Debian package specifics:
+
+    git checkout debian
+
+Import the new upstream tarball:
+
+    git-import-orig --upstream-vcs-tag=$VERSION ../Tails-Persistence-$VERSION.tar.gz
+
+Update `debian/changelog`:
+
+    git-dch && dch -e
+
+(Do not forget to set the appropriate release.)
+
+Commit `debian/changelog`:
+
+        git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+
+Build a Debian package (use a Squeeze/i386 + backports chroot):
+
+    git-buildpackage
+
+If everything is fine, add a signed tag to the repository and push the
+changes:
+
+    git-buildpackage --git-tag-only --git-sign-tags
+    git push && git push --tags
+
+(Make sure `master`, `upstream`, `debian` and `pristine-tar` were all pushed.)
+
+Add the Debian package to Tails
+===============================
+
+Sign the package:
+
+    debsign $CHANGES_FILE
+
+Upload:
+
+    dupload --to tails $CHANGES_FILE

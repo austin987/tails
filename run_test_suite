@@ -1,0 +1,179 @@
+#!/bin/bash
+# Note that we must use bash since we are gonna source files
+# that have bashisms in them.
+
+set -e
+
+NAME=$(basename ${0})
+
+usage() {
+    echo "Usage: $NAME [OPTION]... [FEATURE]...
+Sets up an appropriate environment and tests FEATUREs (all by default). Note
+that this script must be run from the Tails source directory root.
+
+Options for '@product' features:
+  --capture=FILE     Captures the test session into FILE using VP8 encoding.
+                     Requires ffmpeg and libvpx1.
+  --debug            Display various debugging information while running the
+                     test suite.
+  --keep-snapshots   Don't ever delete the background snapshots. This can a big
+                     time saver when debugging new features.
+  --temp-dir         Directory where various temporary files are written
+                     during a test, e.g. VM snapshots and memory dumps,
+                     failure screenshots, pcap files and disk images
+                     (default is /tmp/TailsToaster).
+  --view             Shows the test session in a windows. Requires x11vnc
+                     and xtightvncviewer.
+  --vnc-server-only  Starts a VNC server for the test session. Requires x11vnc.
+  --iso=IMAGE        Test '@product' features using IMAGE. If none is given,
+                     the ISO with most recent creation date (according to the
+                     ISO's label) in the current directory will be used.
+  --old-iso=IMAGE    For some '@product' features (e.g. usb_install) we need
+                     an older version of Tails, which this options sets to
+                     IMAGE. If none is given, the ISO with the least recent
+                     creation date will be used.
+
+Note that '@source' features has no relevant options.
+"
+}
+
+error() {
+    echo "${NAME}: error: ${*}" >&2
+    usage
+    exit 1
+}
+
+check_dependency() {
+    if ! which "${1}" >/dev/null && \
+       ! dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"; then
+        error "'${1}' is missing, please install it and run again. Aborting..."
+    fi
+}
+
+display_in_use() {
+    [ -e "/tmp/.X${1#:}-lock" ]
+}
+
+next_free_display() {
+    display_nr=0
+    while display_in_use ":${display_nr}"; do
+	display_nr=$((display_nr+1))
+    done
+    echo ":${display_nr}"
+}
+
+start_xvfb() {
+    Xvfb $TARGET_DISPLAY -screen 0 1024x768x24+32 >/dev/null 2>&1 &
+    XVFB_PID=$!
+    trap "kill -0 ${XVFB_PID} 2>/dev/null && kill -9 ${XVFB_PID}; \
+          rm -f /tmp/.X${TARGET_DISPLAY#:}-lock" EXIT
+    # Wait for Xvfb to run on TARGET_DISPLAY
+    until display_in_use $TARGET_DISPLAY; do
+	sleep 1
+    done
+    echo "Virtual X framebuffer started on display ${TARGET_DISPLAY}"
+    # Hide the mouse cursor so it won't mess up Sikuli's screen scanning
+    unclutter -display $TARGET_DISPLAY -root -idle 0 >/dev/null 2>&1 &
+}
+
+start_vnc_server() {
+    check_dependency x11vnc
+    VNC_SERVER_PORT="$(x11vnc -listen localhost -display ${TARGET_DISPLAY} \
+                              -bg -nopw 2>&1 | \
+                                  grep -m 1 "^PORT=[0-9]\+" | sed 's/^PORT=//')"
+    echo "VNC server running on: localhost:${VNC_SERVER_PORT}"
+}
+
+start_vnc_viewer() {
+    check_dependency xtightvncviewer
+    xtightvncviewer -viewonly localhost:${VNC_SERVER_PORT} 1>/dev/null 2>&1 &
+}
+
+capture_session() {
+    check_dependency ffmpeg
+    check_dependency libvpx1
+    echo "Capturing guest display into ${CAPTURE_FILE}"
+    ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
+        -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
+}
+
+# main script
+
+unset CAPTURE_FILE VNC_VIEWER VNC_SERVER
+unset DEBUG KEEP_SNAPSHOTS TEMP_DIR ISO OLD_ISO
+SHORTOPTS="a:c"
+LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,iso:,old-iso:,debug"
+OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
+eval set -- "$OPTS"
+while [ $# -gt 0 ]; do
+    case $1 in
+        --view)
+            VNC_VIEWER=yes
+            VNC_SERVER=yes
+            ;;
+        --vnc-server-only)
+            VNC_VIEWER=
+            VNC_SERVER=yes
+            ;;
+        --capture)
+            shift
+            CAPTURE_FILE="$1"
+            ;;
+        --debug)
+            export DEBUG="yes"
+            ;;
+        --keep-snapshots)
+            export KEEP_SNAPSHOTS="yes"
+            ;;
+        --temp-dir)
+            shift
+            export TEMP_DIR="$(readlink -f $1)"
+            ;;
+        --iso)
+            shift
+            export ISO="$(readlink -f $1)"
+            ;;
+        --old-iso)
+            shift
+            export OLD_ISO="$(readlink -f $1)"
+            ;;
+        --help)
+	    usage
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+    esac
+    shift
+done
+
+for dep in git libvirt-bin libvirt-dev virt-viewer libsikuli-script-java \
+            libxslt1-dev libxml2-dev tcpdump xvfb graphicsmagick-imagemagick-compat; do
+    check_dependency "${dep}"
+done
+
+TARGET_DISPLAY=$(next_free_display)
+
+start_xvfb
+
+if [ -n "${CAPTURE_FILE}" ]; then
+    capture_session
+fi
+if [ -n "${VNC_SERVER}" ]; then
+    start_vnc_server
+fi
+if [ -n "${VNC_VIEWER}" ]; then
+    start_vnc_viewer
+fi
+
+export SIKULI_HOME="/usr/share/java"
+export DISPLAY=${TARGET_DISPLAY}
+. features/.rvmrc
+check_dependency cucumber
+if [ -z "${*}" ]; then
+    cucumber --format ExtraHooks::Pretty features
+else
+    cucumber --format ExtraHooks::Pretty features/step_definitions features/support ${*}
+fi

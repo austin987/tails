@@ -1,0 +1,96 @@
+[[!meta title="Using squid-deb-proxy to build Tails images"]]
+
+[[!toc levels=2]]
+
+# Why?
+
+The Debian mirrors live-build uses are very much configurable (see
+[[build/custom_mirror]]), but Tails uses some non-Debian APT
+repositories whose location cannot be adapted to your build
+environment using only live-build settings.
+
+Moreover, some packages fetch data online over HTTP at install time
+i.e. at Tails build time.
+
+Both of these factors make it hard to build Tails offline... unless
+you have a HTTP proxy with all necessary files cached on disk, that is
+able to switch to offline mode.
+
+# How?
+
+## Install and configure squid-deb-proxy
+
+squid-deb-proxy is a Debian proxy solution based on Squid with a
+tweaked configuration. It has a [homepage on
+Launchpad](https://launchpad.net/squid-deb-proxy) and packages in
+Ubuntu.
+
+On the other hand, we've found the upstream and Ubuntu packages to
+require many changes to be usable in Debian and especially for Tails
+purposes. Until we manage to turn our changes into a proper Debian
+package and make them generic enough to be pushed upstream, we
+recommend using the installation instructions bellow.
+
+1. Install necessary dependencies:
+
+           apt-get install squid3
+
+2. Create the necessary directories:
+
+           install -o root  -g root -m 00755 -d /etc/squid-deb-proxy
+           install -o proxy -g root -m 00750 -d /var/cache/squid-deb-proxy
+           install -o proxy -g root -m 00750 -d /var/log/squid-deb-proxy
+
+3. Install the attached configuration files; all shall be owned by
+   `root:root` and have `00644` permissions unless otherwise noted:
+
+ * [[/etc/squid-deb-proxy/squid-deb-proxy.conf|squid-deb-proxy/squid-deb-proxy.conf]]
+   is the main configuration file passed to Squid3.
+ * [[/etc/squid-deb-proxy/allowed-networks-src.acl|squid-deb-proxy/allowed-networks-src.acl]]
+   lists the network sources that are allowed to access the cache
+ * [[/etc/squid-deb-proxy/mirror-dstdomain.acl|squid-deb-proxy/mirror-dstdomain.acl]]
+   lists the network destinations the proxy is allowed to reach
+ * [[/etc/init.d/squid-deb-proxy|squid-deb-proxy/squid-deb-proxy]] is
+   the initscript; it needs to be made executable.
+
+4. Adapt the configuration for your needs:
+
+ * The example `cache_mem` setting shall be changed depending on the
+   amount of RAM your build machine has
+ * The example `cache_dir` has a 10G limit that is a bit high if you
+   only want to use squid-deb-proxy to build Tails.
+
+5. Have the proxy start on boot:
+
+           update-rc.d squid-deb-proxy defaults
+
+6. Start the proxy:
+
+           invoke-rc.d squid-deb-proxy start
+
+## Use the proxy for live-build and APT
+
+You need to set a few options in live-build's configuration file
+(`/etc/live/build.conf`).
+
+First, the following line asks live-build to use the configured proxy
+for any use of APT it makes:
+
+	LB_APT_HTTP_PROXY="http://127.0.0.1:8000/"
+
+Second, you probably need to [[ask live-build to use a custom Debian
+mirror|build/custom_mirror]] to fit the destination domain
+restrictions you set previously up.
+
+## Use the proxy for non-APT purposes
+
+Export the `http_proxy='http://127.0.0.1:8000/'` environment variable
+in the (root) shell you want to run the build in. This way, HTTP
+requests that are made by anyone else than APT during the build will
+use the configured Squid proxy.
+
+## Build offline
+
+Un-comment the settings in the *Offline mode* section at the end of
+`/etc/squid-deb-proxy/squid-deb-proxy.conf`.
+

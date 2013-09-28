@@ -1,0 +1,29 @@
+#!/bin/sh
+
+running_pae_kernel() {
+   uname -r | grep -qs '686-pae$'
+}
+
+case "$1" in
+   kernel)
+      boot_kernel="$2"
+      if running_pae_kernel ; then
+         echo "$boot_kernel" | sed -e 's,/vmlinuz$,/vmlinuz2,'
+      else
+         echo "$boot_kernel"
+      fi
+      ;;
+   initrd)
+      boot_initrd="$2"
+      if running_pae_kernel ; then
+         echo "$boot_initrd" | sed -e 's,/initrd\.img$,/initrd2.img,'
+      else
+         echo "$boot_initrd"
+      fi
+      ;;
+   *)
+      usage "$0 kernel|initrd"
+      exit 3
+esac
+
+exit 0

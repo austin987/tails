@@ -1,0 +1,75 @@
+[[!meta title="Releasing tails-iuk"]]
+
+[[!toc levels=1]]
+
+Update POT and PO files
+=======================
+
+FIXME!
+
+Make an upstream release
+========================
+
+Update version number in `bin/tails-create-iuk`.
+
+Update `Changes`.
+
+Build an upstream tarball:
+
+    dzil build
+
+Tag the release:
+
+    git tag -s $VERSION
+
+Move the tarball out of the build repository:
+
+    mv *.tar.gz ..
+
+Delete the build directory:
+
+    rm -r Tails-IUK-*
+
+Update the Debian package
+=========================
+
+Checkout the branch with Debian package specifics:
+
+    git checkout debian
+
+Import the new upstream tarball:
+
+    git-import-orig --upstream-vcs-tag=$VERSION ../Tails-IUK-$VERSION.tar.gz
+
+Update `debian/changelog`, starting with `git-dch` if the last step
+did not do it:
+
+    dch
+
+(Do not forget to set the appropriate release.)
+
+Commit `debian/changelog`:
+
+        git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+
+Build a Debian package (use a Squeeze chroot with `squeeze-backports`
+enabled):
+
+    git-buildpackage
+
+If everything is fine, add a signed tag to the repository and push the
+changes:
+
+    git-buildpackage --git-tag-only --git-sign-tags
+    git push && git push --tags
+
+Add the Debian package to Tails
+===============================
+
+Sign the package:
+
+    debsign $CHANGES_FILE
+
+Upload:
+
+    dupload --to tails $CHANGES_FILE

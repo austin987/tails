@@ -1,0 +1,80 @@
+[[!meta title="Releasing liveusb-creator"]]
+
+[[!toc levels=1]]
+
+Tidy up upstream source
+=======================
+
+Merge new upstream changes if needed:
+
+    git checkout master
+    git remote add upstream git://git.fedorahosted.org/git/liveusb-creator
+    git fetch upstream
+    git remote add lmacken https://github.com/lmacken/liveusb-creator.git
+    git fetch lmacken
+
+Then see if they have tagged a release that we haven't merged yet,
+and merge the release tag if needed.
+
+Do extra changes if needed.
+
+Update PO and POT files
+=======================
+
+After importing PO files from Transifex, update PO and POT files to
+match new strings etc.:
+
+    make pot && \
+      rename -f 's,\.new$,,' po/*.new && \
+      git commit po -m 'Update POT and PO files.'
+
+Update the Debian package
+=========================
+
+Checkout the branch with Debian package specifics:
+
+    git checkout debian
+
+Merge upstream changes:
+
+    git merge master
+
+Update `debian/changelog`:
+
+    git-dch
+
+(Do not forget to set the appropriate release.)
+
+Commit:
+
+    git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+
+Build a new Debian package (use a Squeeze/i386 chroot):
+
+    git-buildpackage
+
+If `git-buildpackage` complains about a missing `upstream/$VERSION`,
+then manually download the corresponding tarball (which can be found
+in our Debian repo unless upstream just had a new release) and place
+it in `..`, and then re-run the command with `--git-no-pristine-tar`.
+
+Add a signed tag to the Git repository:
+
+    git-buildpackage --git-tag-only --git-sign-tags
+
+Push the changes:
+
+    git push && git push --tags
+
+(Make sure both `master` and `debian` are pushed.)
+
+Add the Debian package to Tails
+===============================
+
+Sign the package:
+
+    debsign $CHANGES_FILE
+
+Upload:
+
+    dupload --to tails $CHANGES_FILE

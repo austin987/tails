@@ -42,8 +42,8 @@ To end with, it might be that we simply have not thought of software
 XYZ yet. Reading our [[design document|contribute/design]] may help
 you understand which use cases Tails covers and hence which types of
 software we may consider. If you feel that XYZ would fill up an empty
-space, please [[suggest it to us|todo]] and give valid points for its
-inclusion.
+space, please [[!tails_redmine "" desc="suggest it to us"]] and give valid
+points for its inclusion.
 
 Why isn't Tails based on system XYZ?
 ====================================
@@ -60,12 +60,12 @@ Why isn't Tails based on system XYZ?
 0. Does system XYZ give to us, the developers, the same facilities as
    Debian does?
 
-See other reasons bellow, that are specific to Ubuntu.
+See other reasons below that are specific to Ubuntu.
 
 Why isn't Tails based on Ubuntu?
 ================================
 
-See other reasons above, that are not specific to Ubuntu.
+See other reasons above that are not specific to Ubuntu.
 
 Generic answers
 ---------------
@@ -76,7 +76,9 @@ Generic answers
    there is LTS, but then a lot of what might make the balance weight
    more on Ubuntu's side is not relevant anymore.
 0. Ubuntu adds "features" in ways we find dangerous for privacy;
-   Ubuntu One might be an isolated example, but we don't want to play
+   Ubuntu One and the [Amazon ads and data
+   leaks](https://www.eff.org/deeplinks/2012/10/privacy-ubuntu-1210-amazon-ads-and-data-leaks)
+   might be isolated examples, but we don't want to play
    this game of "let's see what kind of shiny'n'ugly new stuff we have to
    disable in this brand new release".
 0. Ubuntu is led by a company that makes most of the important
@@ -99,10 +101,10 @@ First, this is not that obvious if you compare things that can be
 compared, i.e. Ubuntu LTS and Debian stable (see the "too fast a
 development platform" answer above). Anyway, as a Debian derivative,
 we are free to pick more recent stuff from backports and from Debian
-testing/unstable, and we do when we find it sensible: e.g. Tails 0.8
-and later ship Linux 3.0; our intent is to go on shipping recent
-kernels, and possibly a [[todo/backported_Xorg]], for better hardware
-support.
+testing/unstable, and we do when we find it sensible: e.g. Tails 0.10
+and later ship Linux 3.1 or newer and a backported X.Org stack.
+Our intent is to go on shipping recent kernels and video drivers for
+better hardware support.
 
 Second, Ubuntu sometimes ships bleeding edge pre-alpha drivers that
 pretend to have some new hardware pieces working; Launchpad is full of
@@ -116,50 +118,26 @@ Isn't Ubuntu more secure?
 Yes and no. Sure, Ubuntu has some well-advertized security features
 Debian does not (see below). On the other hand, the general quality of
 the maintenance work being done on packages matters from a security
-perspective; Debian maintainers generally are experts in the fields
-their packages deal with; Ubuntu maintainers are not that often;
+perspective: Debian maintainers generally are experts in the fields
+their packages deal with and Ubuntu maintainers are not that often;
 hence, we think it makes sense to rely, as far as security is
 concerned, on the software Debian maintainers have considered to be
 fit for a stable Debian release, rather than on software that came as
 a snapshot of Debian testing/unstable at a given point of time.
 
 *Ubuntu ships the AppArmor Mandatory Access Control system.*
-**Answer**: right. We [[would like|todo/Mandatory_Access_Control]] to
-get something similar into Tails, and more generally into Debian. But
-don't misread the press releases: AppArmor is enabled for very few
-applications in Ubuntu.
+**Answer**: right. We [[!tails_todo Mandatory_Access_Control desc="would like"]] to
+get something similar into Tails: that's why we have done a great part
+of the work that was needed to add basic AppArmor support in Debian
+Wheezy. But don't misread the press releases: AppArmor is enabled for
+very few applications in Ubuntu.
 
 *Ubuntu uses compiler hardening options by default.* **Answers**:
-right. Ubuntu makes a point here. That's why we have been helping
-pushing this into Debian. This is now a release goal for Debian
-Wheezy, and being actively worked on. On the other hand, such options
-are not the security Grail; while they put the bar a bit higher for
-the attacker, there are known ways to workaround them, and exploit the
-so-called protected binaries anyway. Given the tendency is that more
-and more distribution vendors enable those options, it seems safe to
-bet serious attackers take this into account, and design their
-exploits accordingly.
-
-Why does Tails ship an obsolete Firefox / Iceweasel?
-====================================================
-
-Mozilla has decided to change their version numbering policy, which
-results in quickly increasing version numbers. Whatever we may think
-about the new policy, the fact is it makes the Iceweasel 3.5.x shipped
-in Tails look ooooold.
-
-Tails is based on Debian stable. Which means most of the software we
-ship won't be upgraded during the life-time of Debian Squeeze. This
-allows us to focus on new features development, rather than on
-constant adaptation to new software versions.
-
-Therefore, while it's true Tails ships an *old* Firefox / Iceweasel,
-it is by no means an *obsolete* version. Mozilla still schedules and
-releases security updates for the 3.5.x branch. Debian, and especially
-its security team, has committed itself to support this version during
-the Squeeze life-cycle. We are therefore confident this version is
-safe enough for Tails users.
-
-However, at least one feature that appeared in a newer Firefox /
-Iceweasel seems interesting for Tails. Therefore, [[we've been
-working|todo/Iceweasel_5.x]] towards shipping a more recent one.
+right. Ubuntu makes a point here, but this is quite temporary: Debian
+Wheezy ships with many packages compiled with hardening options
+too. On the other hand, such options are not the security Grail: while
+they put the bar a bit higher for the attacker, there are known ways
+to workaround them and exploit the so-called protected binaries
+anyway. Given the tendency is that more and more distribution vendors
+enable those options, it seems safe to bet serious attackers take this
+into account, and design their exploits accordingly.

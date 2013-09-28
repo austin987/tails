@@ -28,7 +28,7 @@ use POSIX;
 
 ### initialization
 setlocale(LC_MESSAGES, "");
-textdomain("tails-i2p-notify-user");
+textdomain("tails");
 
 ### helper subs
 
@@ -90,6 +90,19 @@ until (-e $tordate_done_file) {
     }
     sleep(1);
     $tordate_wait++;
+}
+
+my $htpdate_done_file = '/var/run/htpdate/done';
+my $htpdate_wait      = 0;
+
+# We also need to wait for htpdate for same the reason as
+# above. However, tordate will set the clock so that it is correct
+# enough for I2P to work (it can operate with +/- 2 hours clock skew)
+# so we optimistically try to start I2P even if htpdate doesn't
+# finish.
+until (-e $htpdate_done_file || $htpdate_wait > 120) {
+    sleep(1);
+    $htpdate_wait++;
 }
 
 start_i2psvc();

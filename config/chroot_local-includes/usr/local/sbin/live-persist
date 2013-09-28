@@ -1,0 +1,371 @@
+#!/bin/bash
+
+error ()
+{
+	echo "error: ${@}" >&2
+	exit 1
+}
+
+# import Cmdline_old()
+. /lib/live/boot/9990-cmdline-old \
+	|| error 'Could not source /lib/live/boot/9990-cmdline-old'
+
+# Set variable names needed by get_custom_mounts(),
+# and now initialized by live-boot in a file that we certainly
+# don't want to source.
+export persistence_list="persistence.conf"
+export old_persistence_list="live-persistence.conf"
+
+# This will import the following functions and variables used below:
+#   activate_custom_mounts()
+#   get_custom_mounts()
+#   open_luks_device()
+#   probe_for_gpt_name()
+#   removable_dev()
+#   removable_usb_dev()
+#   storage_devices()
+#   where_is_mounted()
+#   $custom_overlay_label
+. /lib/live/boot/9990-misc-helpers.sh \
+	|| error 'Could not source /lib/live/boot/9990-misc-helpers.sh'
+
+usage ()
+{
+	local cmd=${0##*/}
+	echo "Usage: ${cmd} [OPTION]... list [LABEL]...
+List (on stdout) all GPT partitions with names among LABEL(s) that are
+compatible with live-boot's overlay persistence, and that are adhering to
+live-boot's persistence filters (e.g. persistent-media). If no LABEL is given
+the default in live-boot is used ('${custom_overlay_label}').
+   or: ${cmd} [OPTION]... activate VOLUME...
+Activates persistence on the given VOLUME(s). Successes and failures are
+written to stdout. There are no checks for whether the given volumes adhere
+to live-boot's options.
+
+Kernel command-line options are parsed just like in live-boot and have the same
+effect (see live-boot(7) for more information)
+
+Arguments to options must be passed using an equality sign. LISTs are coma
+separated. Most options correspond to the persistent-* options of live-boot,
+and will override the corresponging options parsed from the kernel command-line.
+
+General options:
+  --help                display this help and exit
+  --log-file=FILE       log the bash execution trace to FILE
+
+Options affecting the 'list' action:
+  --encryption=LIST     override 'persistent-encryption'
+  --media=VALUE         override 'persistent-media'
+
+Options affecting the 'activate' action:
+  --read-only           enable 'persistent-read-only'
+  --read-write          disable 'persistent-read-only'
+  --union=VALUE         override 'union'
+"
+}
+
+warning ()
+{
+	echo "warning: ${@}" >&2
+}
+
+dbus_udisks_get_attribute ()
+{
+	local dev="${1}"
+	local attribute="${2}"
+	local re='^[[:space:]]*variant[[:space:]]\+string[[:space:]]\+"\(.*\)"$'
+	dbus-send --system --print-reply --dest=org.freedesktop.UDisks \
+		/org/freedesktop/UDisks/devices/$(basename ${dev}) \
+		org.freedesktop.DBus.Properties.Get \
+		string:org.freedesktop.UDisks.Device \
+		string:"${attribute}" 2>/dev/null | \
+		grep -e "${re}" | sed "s|${re}|\1|"
+}
+
+# We override the following two functions from live-helpers since old
+# blkid (i.e. util-linux and libblkid1) doesn't support GPT. We use dbus
+# instead (which should be available in user-space).
+get_gpt_name ()
+{
+	local dev="${1}"
+	dbus_udisks_get_attribute ${dev} partition-label
+}
+
+is_gpt_device ()
+{
+	local dev="${1}"
+	[ "$(dbus_udisks_get_attribute ${dev} partition-scheme)" = "gpt" ]
+}
+
+
+# We override live-boot's logging facilities to get more useful error messages
+log_warning_msg ()
+{
+	warning ${@}
+}
+
+# We override live-boot's panic() since it does a lot of crazy stuff
+panic ()
+{
+	error ${@}
+}
+
+# Fix persistent ~/.gconf sub-dirs; activate_custom_mounts() creates
+# empty dirs up to its mountpoint, but the file %gconf.xml has to be
+# present in each of ~/.gconf's subdirs to make them valid. Hence we
+# have a problem with a persistent ~/.gconf/X/Y if ~/.gconf/X was
+# created by activate_custom_mounts() since it would lack its
+# %gconf.xml file, making ~/.gconf/X/Y invalid. This functions makes
+# sure that all subdirs of ~/.gconf contain %gconf.xml.
+fix_gconf_dirs ()
+{
+	for home in /home/*
+	do
+		if [ ! -e "${home}/.gconf" ]
+		then
+			continue
+		fi
+		local ownership=$(stat -c "%u:%g" "${home}")
+		find "${home}/.gconf" -type d | while IFS="" read -r dir
+		do
+			local conf="${dir}/%gconf.xml"
+			if [ ! -e "${conf}" ]; then
+				touch "${conf}"
+				chown ${ownership} "${conf}"
+			fi
+		done
+	done
+}
+
+list_gpt_volumes ()
+{
+	local labels=${@}
+
+	local whitelistdev=""
+	case "${PERSISTENCE_MEDIA}" in
+		removable)
+			whitelistdev="$(removable_dev)"
+			[ -z "${whitelistdev}" ] && return
+			;;
+		removable-usb)
+			whitelistdev="$(removable_usb_dev)"
+			[ -z "${whitelistdev}" ] && return
+			;;
+		*)
+			if grep -qs -w -E '(live-media|bootfrom)=removable-usb' /proc/cmdline ; then
+				whitelistdev="$(removable_usb_dev)"
+				[ -z "${whitelistdev}" ] && return
+			elif grep -qs -w -E '(live-media|bootfrom)=removable' /proc/cmdline ; then
+				whitelistdev="$(removable_dev)"
+				[ -z "${whitelistdev}" ] && return
+			else
+				whitelistdev=""
+			fi
+			;;
+	esac
+
+	for dev in $(storage_devices "" "${whitelistdev}")
+	do
+		if ( is_luks_partition ${dev} >/dev/null 2>&1 && \
+		     echo ${PERSISTENCE_ENCRYPTION} | grep -qve "\<luks\>" ) || \
+
+		   ( ! is_luks_partition ${dev} >/dev/null 2>&1 && \
+		     echo ${PERSISTENCE_ENCRYPTION} | grep -qve "\<none\>" )
+		then
+			continue
+		fi
+		local result="$(probe_for_gpt_name "${labels}" ${dev})"
+		if [ -n "${result}" ]
+		then
+			echo ${result#*=}
+		fi
+	done
+
+	exit 0
+}
+
+activate_volumes ()
+{
+	local volumes=${@}
+	local ret=0
+	local open_volumes=""
+	local successes=""
+	local failures=""
+
+	# required by open_luks_device()
+	exec 6>&1
+
+	for vol in ${volumes}
+	do
+		if [ ! -b "${vol}" ]
+		then
+			warning "${vol} is not a block device"
+			failures="${failures} ${vol}"
+			ret=1
+			continue
+		fi
+		if [ -n "$(what_is_mounted_on ${dev})" ]
+		then
+			warning "${vol} is already mounted"
+			failures="${failures} ${vol}"
+			ret=1
+			continue
+		fi
+		local luks_vol=""
+		if /sbin/cryptsetup isLuks ${vol} >/dev/null 2>&1 
+		then
+			if luks_vol=$(open_luks_device "${vol}")
+			then
+				open_volumes="${open_volumes} ${luks_vol}"
+			else
+				failures="${failures} ${vol}"
+			fi
+		else
+			open_volumes="${open_volumes} ${vol}"
+		fi
+	done
+
+	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
+	get_custom_mounts ${custom_mounts} ${open_volumes}
+	if [ -s "${custom_mounts}" ]
+	then
+		activate_custom_mounts ${custom_mounts} &> /dev/null
+		fix_gconf_dirs
+	fi
+	rm -f ${custom_mounts} 2> /dev/null
+
+	for vol in ${open_volumes}
+	do
+		if grep -qe "^${vol}\>" /proc/mounts
+		then
+			successes="${successes} ${vol}"
+		else
+			failures="${failures} ${vol}"
+			ret=1
+		fi
+	done
+
+	if [ -n "${successes}" ]
+	then
+		echo "Successes:"
+		for vol in ${successes}
+		do
+			echo "  - ${vol}"
+		done
+	fi
+
+	if [ -n "${failures}" ]
+	then
+		echo "Failures:"
+		for vol in ${failures}
+		do
+			echo "  - ${vol}"
+		done
+	fi
+	exit ${ret}
+}
+
+close_volumes ()
+{
+	local volumes=${@}
+	local custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
+	get_custom_mounts ${custom_mounts} ${volumes}
+	while read device source dest options # < ${custom_mounts}
+	do
+		if [ "${options}" != linkfiles ]
+		then
+			umount ${dest} 2> /dev/null
+		fi
+	done < ${custom_mounts}
+	rm -f ${custom_mounts} 2> /dev/null
+	for vol in ${volumes}
+	do
+		local backing=$(where_is_mounted ${vol})
+		umount ${backing}
+	done
+}
+
+main ()
+{
+	# tracing get's activated by Arguments() if "debug" is in /proc/cmdline
+	# which may be something we don't want to flood stderr
+	exec 3<>"/dev/null"
+	BASH_XTRACEFD="3"
+
+	# parse the kernel cmdline for live-boot's configuration as defaults
+	Cmdline_old
+
+	# note that this is not enough for disabling tracing. we need to do the
+	# $BASH_XTRACEFD stuff above to avoid tracing until this point.
+	set +x
+
+	export PERSISTENCE="true"
+	export NOPERSISTENCE=""
+
+	# Should be set empty since live-boot already changed root for us
+	export rootmnt=""
+
+	while echo "${1}" | grep -qe "^--[^ ]\+\>"
+	do
+		case "${1}" in
+			--encryption=*)
+				export PERSISTENCE_ENCRYPTION="${1#*=}"
+				;;
+			--help)
+				usage
+				exit 0
+				;;
+			--log-file=*)
+				local log_file="${1#*=}"
+				[ -e "${log_file}" ] && rm -f "${log_file}"
+				exec 3<>"${log_file}"
+				set -x
+				;;
+			--media=*)
+				export PERSISTENCE_MEDIA="${1#*=}"
+				;;
+			--read-only)
+				export PERSISTENCE_READONLY="true"
+				;;
+			--read-write)
+				export PERSISTENCE_READONLY=""
+				;;
+			--union=*)
+				export UNIONTYPE="${1#*=}"
+				;;
+			*)
+				error "unrecognized option: ${1}"
+				;;
+		esac
+		shift
+	done
+
+	local action="${1}"
+	shift
+	case "${action}" in
+		list)
+			local labels=${@}
+			if ! echo ${labels} | grep -qe "[^[:space:]]"
+			then
+				# use default from live-helpers
+				labels=${custom_overlay_label}
+			fi
+			list_gpt_volumes ${labels}
+			;;
+		activate|close)
+			if ! echo ${@} | grep -qe "[^[:space:]]"
+			then
+				error "you must specify at least one volume"
+			fi
+			${action}_volumes "${@}"
+			;;
+		"")
+			error "no action specified"
+			;;
+		*)
+			error "unrecognized action: ${action}"
+			;;
+	esac
+}
+
+main ${@}

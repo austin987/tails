@@ -1,27 +1,34 @@
 #!/bin/sh
 
+set -e
+
 echo "Removing unwanted files"
 
-# Get AMNESIA_SUPPORTED_LANGUAGES
+# Get POTFILES_DOT_IN
 . /usr/share/amnesia/build/variables
 
-rm -f /usr/share/icons/gnome/icon-theme.cache
+rm /usr/share/icons/gnome/icon-theme.cache
 
-rm -rf \
+rm -r \
    /usr/share/inkscape/examples \
    /usr/share/inkscape/tutorials
 
-rm -rf /usr/share/amnesia/packages
+rm -r /usr/share/amnesia/packages
+
+# Ease transition to "stop shipping bugs/ and todo/ in ISO images"
+# This is for people who have a too-clever caching build setup that
+# goes on shipping files foverer as long as it has built them once.
+rm -rf /usr/share/doc/tails/website/blueprint/              \
+       /usr/share/doc/tails/website/bugs/                   \
+       /usr/share/doc/tails/website/todo/                   \
+       /usr/share/doc/tails/website/bugs.html               \
+       /usr/share/doc/tails/website/todo.html               \
+       /usr/share/doc/tails/website/wishlist.html           \
+       /usr/share/doc/tails/website/contribute/roadmap.html
 
 find /usr/share/doc -type f -name changelog.gz -exec rm "{}" \;
 find /usr/share/doc -type f -name changelog.Debian.gz -exec rm "{}" \;
 find /usr/share/doc -type f -name NEWS.Debian.gz -exec rm "{}" \;
-
-locales=$(echo "$AMNESIA_SUPPORTED_LANGUAGES" | sed 's/ /|/g')
-find /usr/share/scribus-ng/translations \
-   -type f \
-   -regextype 'posix-egrep' -not -regex ".*scribus\.(${locales}).*" \
-   -exec rm "{}" \;
 
 rm -rf /tmp/*
 find /usr -name "*.pyc" -print0 | xargs -0r rm -f
@@ -30,3 +37,6 @@ find /usr -name "*.pyc" -print0 | xargs -0r rm -f
 for file in $(find /var/log/ -type f); do
 	: > "${file}"
 done
+
+# Remove .in files managed by intltool
+rm $POTFILES_DOT_IN

@@ -1,0 +1,205 @@
+[[!meta title="Git repositories"]]
+
+<div id="intro">
+
+<p>Tails and its website are developed in numerous Git repositories.</p>
+
+<p><span class="application">Git</span> is a distributed version control
+system. It allows several people to work on the same source code and
+handle changes in a distributed and efficient way.</p>
+
+<p>To learn more about <span class="application">Git</span>, refer to
+its <a href="http://git-scm.com/">homepage</a>, and <a
+href="http://git-scm.com/documentation">official documentation</a>.</p>
+
+[[!toc levels=3]]
+
+</div>
+
+<a id="general-information"></a>
+
+General information
+===================
+
+Git hosting setup at immerda
+----------------------------
+
+Documentation for our Git hosting setup at immerda:
+
+* [main documentation](https://wiki.immerda.ch/index.php/GitRepositoriesImmerda)
+* [SSL and SSH fingerprints](https://www.immerda.ch/services/certs.html)
+
+Merge policy
+------------
+
+See our [[contribute/merge_policy]].
+
+Caution!
+--------
+
+If you want to commit patches that may be published later, you might
+want to anonymize them a bit; to do so, run the following commands
+in every of your local clones' directories:
+
+	git config user.name 'Tails developers'
+	git config user.email amnesia@boum.org
+
+If you intend to prepare Tails releases, you'll also need to make
+the development team signing key the default one for Git tags:
+
+	git config user.signingkey 1202821CBE2CD9C1
+
+Creating a new repository
+-------------------------
+
+1. Create a new repository at immerda.
+2. Create a pull-style mirror at repo.or.cz.
+
+Repositories
+============
+
+Main repository
+---------------
+
+This repository contains the Tails source code and the wiki source.
+
+Anyone can check it out like this:
+
+	git clone git://git.tails.boum.org/tails
+
+Developers with write access to the repositories should instead:
+
+	git clone 'ssh://boum_org_amnesia@webmasters.boum.org/~/wiki.git'
+
+We have a [web interface](https://git-tails.immerda.ch/tails/)
+available for the main repository.
+
+### Branches
+
+Tails development uses several branches modeled a bit like the
+Debian development process. Here they are.
+
+#### master
+
+The `master` branch is used by the online wiki.
+
+**FIXME**: document what should go in there, when other branches are
+merged into it, etc.
+
+#### stable
+
+The `stable` branch is intended to contain:
+
+- the state of the code tagged for the last stable release
+- fixes for security or important bugs.
+
+Its purpose is to prepare minor releases.
+
+#### testing
+
+The `testing` branch is used to prepare an imminent release: at some
+point of the development process, the `devel` branch code is merged
+into `testing`, frozen, and endures careful testing and bug-fixing
+until this branch is considered good enough to become a stable
+release. The `testing` branch is then merged into the `stable` and
+`master` ones, images built and shipped and we go back to code shiny
+new stuff in the `devel` branch.
+
+Please note that the `testing` branch generally has not been granted
+the same testing and attention as code that has made it into a
+stable release: please use it for testing purposes but do not rely
+on it for anything. No guarantee, blablabla.
+
+#### devel
+
+Most of the development work that is done in Tails, is done in the
+`devel` branch. This branch will never get released; instead, code
+from it will be merged into testing and then into a real release.
+
+Please note that the `devel` branch can be broken, have awful security
+problems and so on. No guarantee, blablabla.
+
+The `master` branch is merged into `devel` from time to time.
+
+#### Topic branches
+
+We use topic branches called `bugfix/*` and
+`feature/*`, respectively aimed at fixing a single bug and
+implementing a single new feature. Once ready, a topic branch is
+merged (with `--no-ff`) into the appropriate branch (generally
+`devel`). Until it has been merged, a topic branch's history may be
+rewritten, e.g. it may be rebased on top of `devel`.
+
+Unless there are good reasons to do otherwise, bugfix branches must be
+forked off the latest stable release tag, while feature branches
+should are forked off the devel branch.
+
+#### experimental
+
+Generally, it's `devel` plus a few topic branches merged in.
+These topic branches are not ready enough to be merged into devel, but
+we seriously would like to get them fit for the next stable release,
+so this branch serves to test all these new features and bugfixes by
+building / getting a single image. The history of this branch is
+frequently rewritten and must not be used as the basis of
+any development.
+
+Please note that the `experimental` branch can be broken, have awful
+security problems and so on. No guarantee, blablabla.
+
+Puppet modules
+--------------
+
+Those who have SSH access to these repositories must configure their
+SSH client a bit, e.g.:
+
+	Host git.puppet.tails.boum.org
+		HostName d53ykjpeekuikgoq.onion
+		ProxyCommand torsocks monkeysphere ssh-proxycommand %h %p
+
+### tails
+
+This is the main *public* Puppet module to manage Tails infrastructure,
+including classes such as `tails::reprepro` and `tails::whisperback::relay`.
+
+Anyone can check it out like this:
+
+	git clone git://git.puppet.tails.boum.org/puppet-tails
+
+Developers with write access to the repositories should instead:
+
+	git clone gitolite@git.puppet.tails.boum.org:puppet-tails
+
+### tails_lizard_manifests
+
+Developers with access to the APT secrets can check it out like this:
+
+	git clone gitolite@git.puppet.tails.boum.org:puppet-lizard-manifests
+
+### tails_secrets_apt
+
+Developers with access to the APT secrets can check it out like this:
+
+	git clone gitolite@git.puppet.tails.boum.org:puppet-tails_secrets_apt
+
+### tails_secrets_whisperback
+
+Developers with access to the WhisperBack secrets can check it out like this:
+
+	git clone gitolite@git.puppet.tails.boum.org:puppet-tails_secrets_whisperback
+
+<a id="other-repositories"></a>
+
+Other repositories
+------------------
+
+All other public Tails Git repositories are at
+<https://git-tails.immerda.ch/>.
+
+Unauthenticated access is of the form:
+
+	git clone git://git.tails.boum.org/$REPOSITORY
+
+Developers with write access to the repositories should instead:
+
+	git clone tails@git.tails.boum.org:$REPOSITORY

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Only enter kiosk mode if "kiosk" appears on the kernel command line
+grep -qw "kiosk" /proc/cmdline || return 0
+
+# Make the Unsafe Browser unavailable
+rm -f /usr/local/sbin/unsafe-browser
+rm -f /usr/share/applications/unsafe-browser.desktop
+rm -f /etc/sudoers.d/zzz_unsafe-browser
+
+# Hide the persistence setup launchers
+rm -f /usr/share/applications/tails-persistence-delete.desktop
+rm -f /usr/share/applications/tails-persistence-setup.desktop

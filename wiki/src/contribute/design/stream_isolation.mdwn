@@ -1,0 +1,99 @@
+[[!meta title="Tor stream isolation"]]
+
+Tails implements basic Tor stream isolation, using functionality
+described in
+[Tor proposal 171](https://gitweb.torproject.org/torspec.git/blob/HEAD:/proposals/171-separate-streams.txt).
+
+Special needs
+=============
+
+Tails-specific applications
+---------------------------
+
+Tails-specific applications use a dedicated `SocksPort`, so that they
+don't help trivial correlating of other kinds of network traffic with
+Tails:
+
+* incremental updates
+* htpdate
+* security check
+* WhisperBack (not implemented: given no other application than
+  WhisperBack has good reasons to talk to the hidden service used to
+  relay the bug reports, and the default `SocksPort` has
+  per-destination isolation on, we don't care that much isolating that
+  one from others)
+
+Web Browser
+-----------
+
+Until Torbrowser implements clever fine-grained stream isolation
+([[!tor_bug 3455]]), Iceweasel is merely directed to a dedicated SOCKS port.
+
+Destination address/port -based circuit isolation
+-------------------------------------------------
+
+Do we want to use `IsolateDestAddr` and/or `IsolateDestPort`?
+
+Using these settings may help protecting against traffic correlation.
+However:
+
+* These settings are likely to have a performance impact on
+  applications that connect to many remote hosts.
+* These settings probably put more load on the network. On the other
+  hand, the Tor people probably are happy with people using it given
+  they have added the option in the first place. We will anyway ask
+  them to review our proposed configuration with network load in mind
+  before we ship it to the masses.
+
+For performance reasons, we will start with *not* using
+`IsolateDestAddr`/`IsolateDestPort` for iceweasel we ship: nowadays,
+loading a mere web page often requires fetching resources from a dozen
+or more remote sources. (Also, it looks like the use of
+`IsolateDestAddr` in a modern web browser may create very uncommon
+HTTP behaviour patterns, that could ease fingerprinting.)
+
+Consider Pidgin with several accounts configured for different
+identities. If you connect with all of the accounts at the same time,
+they'll all get the same circuit, so the identities can be correlated.
+While Tails does not formally support using multiple contextual
+identities at the same time, Pidgin generally opens very few network
+connections, so the performance impact of using `IsolateDestAddr`
+should be small. Given how cheap it is, it looks like it is worth
+having Pidgin use a (not necessarily dedicated) `SocksPort` that has
+`IsolateDestAddr` and `IsolateDestPort` enabled.
+
+For the same reason, we actually want to enable `IsolateDestAddr` and
+`IsolateDestPort` for the `SocksPort` used by most applications,
+unless we tell them otherwise.
+
+The email client we ship is a special case: for the same
+multiple-accounts reason as the IM client, we want `IsolateDestAddr`
+for the MUA we ship. Adding `IsolateDestPort` to the mix would avoid
+correlating unrelated email and IM accounts, *but* it breaks
+POP-before-SMTP. Then, the MUA should use a `SocksPort` that has
+`IsolateDestAddr` enabled, but `IsolateDestPort` disabled.
+
+Implementation
+==============
+
+A few SOCKS ports are configured
+in [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]:
+
+* default system-wide `SocksPort` (9050): `IsolateDestAddr` and
+  `IsolateDestPort` enabled
+* dedicated `SocksPort` for the email client (9061): `IsolateDestAddr`
+  enabled
+* dedicated `SocksPort` for Tails-specific applications (9062):
+  `IsolateDestAddr` and `IsolateDestPort` enabled
+* dedicated `SocksPort` for web browser (9063): no stream isolation
+  options
+
+Applications are configured to use the right SOCKS port:
+
+- [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/pref/iceweasel.js]]
+- [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/profile/foxyproxy.xml]]
+- [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/profile/user.js]]
+- [[!tails_gitweb config/chroot_local-includes/etc/init.d/htpdate]]
+- [[!tails_gitweb config/chroot_local-includes/etc/tor/tor-tsocks-mua.conf]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/torified-claws-mail]]

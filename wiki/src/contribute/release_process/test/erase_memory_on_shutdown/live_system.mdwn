@@ -1,0 +1,42 @@
+[[!toc levels=2]]
+
+# Prepare the needed tools
+
+We will use a minimal Debian Lenny Live system to set up a coldboot
+attack. 
+
+Why minimal? So that it doesn't overwrite too much of the RAM we want
+to analyze.
+
+Why Lenny? To be able to grep `/dev/mem`, one must run a kernel that
+has `CONFIG_STRICT_DEVMEM` disabled. This setting has been enabled in
+Debian kernels since 2.6.28-1, so we use lenny:
+
+	lb config  --architecture i386 --linux-flavours 686 --apt-recommends false --distribution lenny --binary-images usb-hdd --binary-indices false  --memtest none --packages-lists="minimal" --syslinux-menu vesamenu --initramfs=live-initramfs --bootappend-live "init=/bin/bash"
+
+*Nota bene*: if you have 64 bits hardware, better build an `amd64` image.
+
+Then install this image on a USB stick.
+
+# Dump the RAM
+
+Grep'ing `/dev/mem` does not work on systems with large amounts of
+memory, so let's use `dd`.
+
+	RAM_SIZE_IN_KB=$(free -k | awk '/Mem:/ { print $2 }')
+	dd if=/dev/mem of=$DUMP bs=1K count=$RAM_SIZE_IN_KB oflag=direct
+
+where `$DUMP` is some large enough storage for dumping your entire RAM
+into. It could be a USB drive, but I'd recommend a fast harddrive
+unless you want to wait for half an hour or more. The longer the dump
+takes, the more RAM may be overwritten, so speed is crucial, actually.
+One problem is that the live system built above doesn't include
+cryptsetup, lvm2 and friends, so you'll need an unencrypted partition.
+
+The point is to get `$RAM_SIZE_IN_KB` exactly right -- it should be in
+kilobytes of the 1024 bytes variant. The important thing is just to
+get bs and count in such a way that dd reads as much of your RAM as
+possible, but *NOT* more. Also, bs should be small since dd allocates
+that much memory for its own buffer, and that will overwrite RAM.
+oflag=direct will ensure that no cache is used, which otherwise would
+start to over-write RAM for buffers.

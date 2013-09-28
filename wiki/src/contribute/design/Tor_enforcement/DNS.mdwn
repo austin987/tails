@@ -1,22 +1,9 @@
 Tor does not support UDP so we cannot simply redirect DNS queries to
 the Tor transparent proxy.
 
-Most DNS leaks are avoided by having the system resolver query a local
-caching DNS server (namely: pdnsd) that in turn performs its DNS
-lookups through the Tor network using the `DNSPort` configured in
-`torrc`. pdnsd is configured to listen on the loopback interface only;
-the single reason for its presence is the improvement of performance
-brought by its caching feature.
-
-But the Tor DNS resolver lacks support for most types of DNS queries
-except "A", so pdnsd is configured to query the Tor resolver first,
-and fallback to [ttdnsd](https://www.torproject.org/ttdnsd/) if the
-former fails. ttdnsd forwards incoming UDP DNS requests to a open,
-recursive TCP DNS resolver (namely: Google's `8.8.8.8`) via the Tor
-SOCKS proxy. Completely replacing the Tor resolver with ttdnsd was
-considered, but doing so would give too much power to a single
-third-party, that is to the organization or people that runs the
-recursive DNS resolver ttdnsd is configured to use.
+Most DNS leaks are avoided by having the system resolver query
+the Tor network using the `DNSPort` configured in
+`torrc`.
 
 There is a concern that any application could attempt to do its own
 DNS resolution without using the system resolver; UDP datagrams are
@@ -28,15 +15,29 @@ Tails also forbids DNS queries to RFC1918 addresses; those might
 indeed allow the system to learn the local network's public IP
 address.
 
+An exception to the above DNS configuration is the `clearnet` user
+used to run the [[contribute/design/Unsafe_Browser]], which uses the
+DNS server provided for DHCP for resolving.
+
 [resolvconf](http://alioth.debian.org/projects/resolvconf/) is used to
-configure the system resolver in `/etc/resolv.conf`; it is also setup
+configure the system resolver in `/etc/resolv.conf`; it is also set up
 to prevent NetworkManager and dhcp-client to modify this file.
 
+Since the Tor DNS resolver lacks support for most types of DNS queries
+except "A", [ttdnsd](https://www.torproject.org/ttdnsd/) is also
+running and offers support for all kinds of DNS queries Tor does not
+know about. However, ttdnsd is not used in the default name resolution
+loop, mostly due to it [[being quite too buggy|bugs/ttdnsd_broken]].
+It is configured to forward incoming UDP DNS requests to a open,
+recursive TCP DNS resolver (namely: OpenDNS's `208.67.222.222`) via the Tor
+SOCKS proxy. Completely replacing the Tor resolver with ttdnsd was
+considered, but doing so would give too much power to a single
+third-party, that is to the organization or people that runs the
+recursive DNS resolver ttdnsd is configured to use.
+
 - [[!tails_gitweb config/chroot_local-includes/etc/resolvconf/resolv.conf.d/base]]
-- [[!tails_gitweb config/chroot_local-includes/etc/pdnsd.conf]]
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
 - [[!tails_gitweb config/chroot_local-includes/etc/firewall.conf]]
 - [[!tails_gitweb config/chroot_local-includes/lib/live/config/000-resolv-conf]]
-- [[!tails_gitweb config/chroot_local-hooks/08-remove_pdnsd_resolvconf_hook]]
 - [[!tails_gitweb config/chroot_local-hooks/99-zzz_resolvconf]]
 - [[!tails_gitweb config/chroot_local-includes/etc/default/ttdnsd]]

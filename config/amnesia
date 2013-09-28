@@ -13,145 +13,7 @@
 # Base for the string that will be passed to "lb config --bootappend-live"
 # FIXME: see [[bugs/sdmem_on_eject_broken_for_CD]] for explanation why we
 # need to set block.events_dfl_poll_msecs
-AMNESIA_APPEND="noswap live-media=removable nopersistent noprompt quiet timezone=Etc/UTC block.events_dfl_poll_msecs=1000 splash"
-
-# Options passed to isohybrid
-# Default: "-entry 4 -type 1c"
-AMNESIA_ISOHYBRID_OPTS="-entry 4 -type 1c"
-
-### Options used only by the home-refresh script ###############################
-
-# Source directory used to refresh the live user's $HOME
-# Default: /home/amnesia
-AMNESIA_REFRESH_HOME_SOURCE="/home/amnesia"
-
-# Patterns to exclude when refreshing /home/amnesia
-# FIXME: remove the leading /home/amnesia or /home/amnesia/
-AMNESIA_HOME_EXCLUDES="/.DCOPserver_* \
-  /.ICEauthority \
-  /.Xauthority \
-  /.bash_history \
-  /.cache/ \
-  /.config/Thunar/accels.scm \
-  /.config/Trolltech.conf \
-  /.config/autostart/bluetooth-applet.desktop \
-  /.config/enchant/ \
-  /.dbus/session-bus/** \
-  /.dmrc \
-  /.fontconfig/ \
-  /.gconf/ \
-  /.gconfd/saved_state \
-  /.gnome/gnome-vfs/.trash_entry_cache \
-  /.gnome2/backgrounds.xml \
-  /.gnome2/epiphany/ \
-  /.gnome2/accels/ \
-  /.gnome2/accelsgedit \
-  /.gnome2/gedit-2 \
-  /.gnome2/gnome-power-manager/*.csv \
-  /.gnome2/keyrings/ \
-  /.gnome2/rhythmbox/ \
-  /.gnome2/seahorse \
-  /.gnome2/share/cursor-fonts/ \
-  /.gnome2/share/fonts/ \
-  /.gnupg/ \
-  /.gstreamer-*/registry*.bin
-  /.hplip/ \
-  /.kde/cache-* \
-  /.kde/share/apps/ \
-  /.kde/share/config/c* \
-  /.kde/share/config/e* \
-  /.kde/share/config/l* \
-  /.kde/share/config/n* \
-  /.kde/share/config/k* \
-  /.kde/socket-* \
-  /.kde/tmp-* \
-  /.local/share/Trash/ \
-  /.mcop/ \
-  /.mcoprc \
-  /.metacity/sessions/ \
-  /.mozilla/firefox/*/ABE/ \
-  /.mozilla/firefox/*/Cache/ \
-  /.mozilla/firefox/*/OfflineCache/ \
-  /.mozilla/firefox/*/adblockplus/*-backup*.ini \
-  /.mozilla/firefox/*/bookmarkbackups/ \
-  /.mozilla/firefox/*/cert_override.txt \
-  /.mozilla/firefox/*/chrome/ \
-  /.mozilla/firefox/*/content-prefs.sqlite \
-  /.mozilla/firefox/*/cookies.sqlite \
-  /.mozilla/firefox/*/downloads.sqlite \
-  /.mozilla/firefox/*/formhistory.sqlite \
-  /.mozilla/firefox/*/localstore.rdf \
-  /.mozilla/firefox/*/lock \
-  /.mozilla/firefox/*/mimeTypes.rdf \
-  /.mozilla/firefox/*/minidumps/ \
-  /.mozilla/firefox/*/parent.lock \
-  /.mozilla/firefox/*/permissions.sqlite \
-  /.mozilla/firefox/*/persdict.dat \
-  /.mozilla/firefox/*/places.sqlite-journal \
-  /.mozilla/firefox/*/pluginreg.dat \
-  /.mozilla/firefox/*/search.sqlite \
-  /.mozilla/firefox/*/searchplugins/scroogle-ssl-ar.xml \
-  /.mozilla/firefox/*/searchplugins/scroogle-ssl-de.xml \
-  /.mozilla/firefox/*/searchplugins/scroogle-ssl-en.xml \
-  /.mozilla/firefox/*/searchplugins/scroogle-ssl-es.xml \
-  /.mozilla/firefox/*/searchplugins/scroogle-ssl-fr.xml \
-  /.mozilla/firefox/*/searchplugins/scroogle-ssl-it.xml \
-  /.mozilla/firefox/*/searchplugins/scroogle-ssl-pt.xml \
-  /.mozilla/firefox/*/searchplugins/scroogle-ssl-zh.xml \
-  /.mozilla/firefox/*/sessionstore.js \
-  /.mozilla/firefox/*/signons*.sqlite \
-  /.mozilla/firefox/*/signons*.txt \
-  /.mozilla/firefox/*/urlclassifier*.sqlite \
-  /.mozilla/firefox/*/urlclassifier*.txt \
-  /.mozilla/firefox/*/webappsstore.sqlite \
-  /.mozilla/firefox/*/XPC.* \
-  /.mozilla/firefox/*/XUL.* \
-  /.mozilla/firefox/*/xpti.dat \
-  /.mozilla-thunderbird/*/Cache/ \
-  /.mozilla-thunderbird/*/OfflineCache/ \
-  /.mozilla-thunderbird/*/adblockplus/*-backup*.ini \
-  /.mozilla-thunderbird/*/bookmarkbackups/ \
-  /.mozilla-thunderbird/*/cert_override.txt \
-  /.mozilla-thunderbird/*/chrome/ \
-  /.mozilla-thunderbird/*/content-prefs.sqlite \
-  /.mozilla-thunderbird/*/cookies.sqlite \
-  /.mozilla-thunderbird/*/downloads.sqlite \
-  /.mozilla-thunderbird/*/formhistory.sqlite \
-  /.mozilla-thunderbird/*/localstore.rdf \
-  /.mozilla-thunderbird/*/lock \
-  /.mozilla-thunderbird/*/mimeTypes.rdf \
-  /.mozilla-thunderbird/*/minidumps/ \
-  /.mozilla-thunderbird/*/parent.lock \
-  /.mozilla-thunderbird/*/persdict.dat \
-  /.mozilla-thunderbird/*/places.sqlite-journal \
-  /.mozilla-thunderbird/*/pluginreg.dat \
-  /.mozilla-thunderbird/*/sessionstore.js \
-  /.mozilla-thunderbird/*/signons*.sqlite \
-  /.mozilla-thunderbird/*/signons*.txt \
-  /.mozilla-thunderbird/*/urlclassifier*.sqlite \
-  /.mozilla-thunderbird/*/urlclassifier*.txt \
-  /.mozilla-thunderbird/*/webappsstore.sqlite \
-  /.mozilla-thunderbird/*/XPC.* \
-  /.mozilla-thunderbird/*/XUL.* \
-  /.mozilla-thunderbird/*/xpti.dat \
-  /.nautilus/metafiles/ \
-  /.nautilus/saved-session-* \
-  /.pulse-cookie \
-  /.purple/smileys/ \
-  /.purple/status.xml \
-  /.qt/qt_plugins_*rc \
-  /.qt/*.lock \
-  /.recently-used.xbel \
-  /.sqlite_history \
-  /.ssh/ \
-  /.su-to-rootrc \
-  /.thumbnails/ \
-  /.update-notifier/ \
-  /.vidalia/geoip-cache \
-  /.vidalia/vidalia.pid \
-  /.viminfo \
-  /.xsession-errors \
-  /lost+found/"
+AMNESIA_APPEND="live-media=removable nopersistent noprompt timezone=Etc/UTC block.events_dfl_poll_msecs=1000 splash nox11autologin module=Tails"
 
 ### You should not have to change anything bellow this line ####################
 
@@ -162,14 +24,15 @@ if [ ! -x "`which dpkg-parsechangelog`" ]; then
 fi
 
 # Compute the current Amnesia's version once for all
+AMNESIA_NOW="`date --utc '+%Y%m%dT%H%MZ'`"
 AMNESIA_TODAY="`date '+%Y%m%d'`"
 AMNESIA_VERSION="`dpkg-parsechangelog | sed -n 's/^Version: //p'`"
 AMNESIA_FULL_VERSION="${AMNESIA_VERSION} - ${AMNESIA_TODAY}"
 
 # Developpers' data used by git-dch, debcommit and friends in the release script
 AMNESIA_DEV_FULLNAME='Tails developers'
-AMNESIA_DEV_EMAIL="amnesia@boum.org"
+AMNESIA_DEV_EMAIL="tails@boum.org"
 AMNESIA_DEV_KEYID="BE2CD9C1"
 
 # Supported languages (displayed in this order by the syslinux menu)
-AMNESIA_SUPPORTED_LANGUAGES="ar zh en fa fr de it pt ru es vi"
+AMNESIA_SUPPORTED_LANGUAGES="ar zh en fa fr de it pt ru es vi sv"

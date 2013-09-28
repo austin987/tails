@@ -7,19 +7,22 @@
 # In any case, we use HTP to ask more accurate time information to
 # a few authenticated HTTPS servers.
 
+# Get LIVE_USERNAME
+. /etc/live/config.d/username.conf
+
+# Import tor_control_*(), tor_is_working(), TOR_LOG, TOR_DIR
+. /usr/local/lib/tails-shell-library/tor.sh
 
 ### Init variables
 
 TORDATE_DIR=/var/run/tordate
 TORDATE_DONE_FILE=${TORDATE_DIR}/done
-TOR_DIR=/var/lib/tor
-TOR_CONSENSUS=${TOR_DIR}/cached-consensus
-TOR_UNVERIFIED_CONSENSUS=${TOR_DIR}/unverified-consensus
-TOR_DESCRIPTORS=${TOR_DIR}/cached-descriptors
+TOR_CONSENSUS=${TOR_DIR}/cached-microdesc-consensus
+TOR_UNVERIFIED_CONSENSUS=${TOR_DIR}/unverified-microdesc-consensus
+TOR_UNVERIFIED_CONSENSUS_HARDLINK=${TOR_UNVERIFIED_CONSENSUS}.bak
 INOTIFY_TIMEOUT=60
 DATE_RE='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
 VERSION_FILE=/etc/amnesia/version
-
 
 ### Exit conditions
 
@@ -49,39 +52,56 @@ log() {
 	logger -t time "$@"
 }
 
-tor_is_working() {
-	[ -e $TOR_DESCRIPTORS ]
-}
-
 has_consensus() {
-	grep -qs "^valid-until ${DATE_RE}"'$' ${TOR_CONSENSUS} \
-					      ${TOR_UNVERIFIED_CONSENSUS}
+	local files="${TOR_CONSENSUS} ${TOR_UNVERIFIED_CONSENSUS}"
+
+	if [ $# -ge 1 ]; then
+		files="$@"
+	fi
+	grep -qs "^valid-until ${DATE_RE}"'$' ${files}
 }
 
 has_only_unverified_consensus() {
-	has_consensus && [ ! -e ${TOR_CONSENSUS} ]
+	[ ! -e ${TOR_CONSENSUS} ] && has_consensus ${TOR_UNVERIFIED_CONSENSUS}
+}
+
+wait_for_tor_consensus_helper() {
+	tries=0
+	while ! has_consensus && [ $tries -lt 5 ]; do
+		inotifywait -q -t 30 -e close_write -e moved_to ${TOR_DIR} || log "timeout"
+		tries=$(expr $tries + 1)
+	done
+
+	# return some kind of success measurement
+	has_consensus
 }
 
 wait_for_tor_consensus() {
-	log "Waiting for the Tor consensus file to contain a valid time interval"
-	while :; do
-		if has_consensus; then
-			break;
-		fi
-
-		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
-	done
+	log "Waiting for a Tor consensus file to contain a valid time interval"
+	if ! has_consensus && ! wait_for_tor_consensus_helper; then
+		log "Unsuccessfully waited for Tor consensus, restarting Tor and retrying."
+		restart-tor
+	fi
+	if ! has_consensus && ! wait_for_tor_consensus_helper; then
+		log "Unsuccessfully retried waiting for Tor consensus, aborting."
+	fi
+	if has_consensus; then
+		log "A Tor consensus file now contains a valid time interval."
+	else
+		log "Waited for too long, let's stop waiting for Tor consensus."
+		# FIXME: gettext-ize
+		/usr/local/sbin/tails-notify-user "Synchronizing the system's clock" \
+			"Could not fetch Tor consensus."
+		exit 2
+	fi
 }
 
 wait_for_working_tor() {
-	log "Waiting for Tor to be working (i.e. cached descriptors exist)"
-	while :; do
-		if tor_is_working; then
-			break;
-		fi
-
-		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to --format %w%f ${TOR_DIR} || :
+	log "Waiting for Tor to be working (i.e. cached descriptors exist)..."
+	while ! tor_is_working; do
+		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to ${TOR_DIR} || log "timeout"
 	done
+	log "Tor is now working."
 }
 
 date_points_are_sane() {
@@ -105,22 +125,25 @@ ${vendcons}"
 	[ "${order}" = "${ordersrt}" ]
 }
 
-restart_tor() {
-	if service tor status >/dev/null; then
-		log "Restarting Tor service"
-		service tor restart
-	fi
-}
-
 maybe_set_time_from_tor_consensus() {
-	if [ ! -e ${TOR_CONSENSUS} ]; then
-		log "We do not have a Tor consensus so we cannot set the system time according to it."
-		return
+	local consensus=${TOR_CONSENSUS}
+
+	if has_only_unverified_consensus \
+	   && ln -f ${TOR_UNVERIFIED_CONSENSUS} ${TOR_UNVERIFIED_CONSENSUS_HARDLINK}; then
+		consensus=${TOR_UNVERIFIED_CONSENSUS_HARDLINK}
+		log "We do not have a Tor verified consensus, let's use the unverified one."
 	fi
+
+	log "Waiting for the chosen Tor consensus file to contain a valid time interval..."
+	while ! has_consensus ${consensus}; do
+		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to ${TOR_DIR} || log "timeout"
+	done
+	log "The chosen Tor consensus now contains a valid time interval, let's use it."
+
 
 	# Get various date points in Tor's format, and do some sanity checks
-	vstart=$(sed -n "/^valid-after \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${TOR_CONSENSUS})
-	vend=$(sed -n "/^valid-until \(${DATE_RE}\)"'$/s//\1/p; t q; b n; :q q; :n' ${TOR_CONSENSUS})
+	vstart=$(sed -n "/^valid-after \(${DATE_RE}\)"'$/s//\1/p; t q; b; :q q' ${consensus})
+	vend=$(sed -n "/^valid-until \(${DATE_RE}\)"'$/s//\1/p; t q; b; :q q' ${consensus})
 	vmid=$(date -ud "${vstart} -0130" +'%F %T')
 	log "Tor: valid-after=${vstart} | valid-until=${vend}"
 
@@ -141,53 +164,83 @@ maybe_set_time_from_tor_consensus() {
 	date -us "${vmid}" 1>/dev/null
 
 	# Tor is unreliable with picking a circuit after time change
-	restart_tor
+	restart-tor
 }
 
-release_date() {
-	# outputs something like 20111013
-	sed -n -e '1s/^.* - \([0-9]\+\)$/\1/p;q' "$VERSION_FILE"
+tor_cert_valid_after() {
+	# Only print the last = freshest match
+	sed -n 's/^.*certificate lifetime runs from \(.*\) through.*$/\1/p' \
+	    ${TOR_LOG} | tail -n 1
 }
 
+tor_bootstrap_progress() {
+	grep -o "\[notice\] Bootstrapped [[:digit:]]\+%:" ${TOR_LOG} | \
+	    tail -n1 | sed "s|\[notice\] Bootstrapped \([[:digit:]]\+\)%:|\1|"
+}
+
+tor_cert_lifetime_invalid() {
+	# To be sure that we only grep relevant information, we
+	# should delete the log when Tor is started, which we do
+	# in 10-tor.sh.
+	# The log severity will be "warn" if bootstrapping with
+	# authorities and "info" with bridges.
+	grep -q "\[\(warn\|info\)\] Certificate \(not yet valid\|already expired\)\." \
+	    ${TOR_LOG}
+}
+
+# This check is blocking until Tor reaches either of two states:
+# 1. Tor completes a handshake with an authority (or bridge).
+# 2. Tor fails the handshake with all authorities (or bridges).
+# Since 2 essentially is the negation of 1, one of them will happen,
+# so it won't block forever. Hence we shouldn't need a timeout.
+# FIXME: An exception would be if Tor has DisableNetwork=1, which we
+# will use once we fully support bridge mode, so we will have to
+# revisit this then.
 is_clock_way_off() {
-	local release_date_secs="$(date -d "$(release_date)" '+%s')"
-	local current_date_secs="$(date '+%s')"
-
-	if [ "$current_date_secs" -lt "$release_date_secs" ]; then
-	        log "Clock is before the release date"
-	        return 0
-	fi
-	if [ "$(($release_date_secs + 15552000))" -lt "$current_date_secs" ]; then
-	        log "Clock is more than 6 months after the release date"
-	        return 0
-	fi
+	log "Checking if system clock is way off"
+	until [ "$(tor_bootstrap_progress)" -gt 10 ]; do
+		if tor_cert_lifetime_invalid; then
+			return 0
+		fi
+		sleep 1
+	done
 	return 1
+}
+
+start_notification_helper() {
+	export DISPLAY=':0.0'
+	export XAUTHORITY="$(echo /var/run/gdm3/auth-for-$LIVE_USERNAME-*/database)"
+	exec /bin/su -c /usr/local/bin/tails-htp-notify-user "$LIVE_USERNAME" &
 }
 
 
 ### Main
 
+start_notification_helper
+
 # Delegate time setting to other daemons if Tor connections work
 if tor_is_working; then
 	log "Tor has already opened a circuit"
 else
-	wait_for_tor_consensus
-	# If Tor cannot verify the consensus this is probably because all
-	# authority certificates are "expired" due to a clock far off into
-	# the future.seen as invalid. In that case let's set the clock to 
-	# the release date.
-	if is_clock_way_off && has_only_unverified_consensus; then
-		log "It seems the clock is so badly off that Tor couldn't verify the consensus. Setting system time to the release date, restarting Tor and fetching a new consensus..."
-		date --set="$(release_date)" > /dev/null
-		service tor stop
-		rm -f "${TOR_UNVERIFIED_CONSENSUS}"
-		service tor start
-		wait_for_tor_consensus
+	# Since Tor 0.2.3.x Tor doesn't download a consensus for
+	# clocks that are more than 30 days in the past or 2 days in
+	# the future.  For such clock skews we set the time to the
+	# authority's cert's valid-after date.
+	if is_clock_way_off; then
+		log "The clock is so badly off that Tor cannot download a consensus. Setting system time to the authority's cert's valid-after date and trying to fetch a consensus again..."
+		date --set="$(tor_cert_valid_after)" > /dev/null
+		service tor reload
 	fi
+	wait_for_tor_consensus
 	maybe_set_time_from_tor_consensus
 fi
 
 wait_for_working_tor
+
+# Disable "info" logging workaround from 10-tor.sh
+if grep -qw bridge /proc/cmdline; then
+	tor_control_setconf "Log=\"notice file ${TOR_LOG}\""
+fi
 
 touch $TORDATE_DONE_FILE
 

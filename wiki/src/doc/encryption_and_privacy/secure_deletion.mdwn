@@ -1,0 +1,144 @@
+[[!meta title="Securely delete files and clean diskspace"]]
+
+[[!toc levels=2]]
+
+<a id="why"></a>
+
+Why use secure deletion?
+========================
+
+**Operating systems do not actually remove the contents of a file when it is
+deleted**, even after emptying the trash or explicitly removing the file, from
+the command line for example.
+
+Instead, they simply remove the file's entry from the file system directory,
+because this requires less work and is therefore faster. The contents of the
+file—the actual data—remain on the storage medium. The data will remain there
+until the operating system reuses the space for new data.
+
+Likewise, reformatting, repartitioning or reimaging a system is not always
+guaranteed to write to every area of the disk, though all will cause the disk to
+appear empty or, in the case of reimaging, empty except for the files present in
+the image, to most software.
+
+Finally, even when the storage medium is overwritten, physical properties of the
+medium may make it possible to recover the previous contents. In most cases
+however, this recovery is not possible by just reading from the storage device
+in the usual way, but requires using laboratory techniques such as disassembling
+the device and directly accessing/reading from its components.
+
+<p class="quoted-from">Quoted from [[!wikipedia Secure_file_deletion
+desc="Wikipedia: %s"]].</p>
+
+<a id="usb_and_ssd"></a>
+
+Warning about USB sticks and solid-state drives
+===============================================
+
+**The methods described below will not work as expected on USB sticks and
+solid-state drives.**
+
+- The existing hard drive-oriented techniques for secure deletion of
+  individual files are not effective.
+- Overwriting twice the entire drive is usually, but not always,
+  sufficient to securely clean the drive.
+
+<div class="caution">
+Unfortunately, Tails does not currently allow you to perform this task
+with graphical tools.
+
+[[!tails_todo wiping_flash_media desc="See the corresponding ticket."]]
+</div>
+
+For more details read, the corresponding section of the Wikipedia article on
+[[!wikipedia Secure_file_deletion#Data_on_solid-state_drives desc="Secure file
+deletion"]].
+
+Securely delete files
+=====================
+
+In Tails you can securely delete files thanks to an extension of the Nautilus
+file manager called [Nautilus
+Wipe](http://wipetools.tuxfamily.org/nautilus-wipe.html).
+
+<h2 class="bullet-number-one">Select the files you want to securely delete</h2>
+
+**Open Nautilus**, either from the **Places** menu or the **Computer** icon on
+the desktop.
+
+**Navigate to the folder** containing the files that you want to delete.
+
+**Select the files** that you want to delete with the mouse.
+
+[[!img select_files.png link=no alt="Three files selected in Nautilus"]]
+
+<h2 class="bullet-number-two">Securely delete them using Nautilus Wipe</h2>
+
+Securely delete them by doing **right-click** → **Wipe**.
+
+[[!img wipe_files.png link=no alt="Right-click → Wipe"]]
+
+**Confirm**.
+
+[[!img are_you_sure_files.png link=no alt="Are you sure you want to wipe the 3
+selected items?"]]
+
+The deletion will start. It can last from a few seconds to several minutes,
+according to the size of the files. Be patient…
+
+[[!img wiping_files.png link=no alt="Wiping files…"]]
+
+Once the deletion will be done you should be prompted with a message saying:
+
+[[!img wipe_successful.png link=no alt="Wipe successful."]]
+
+<a id="clean_disk_space"></a>
+
+Securely clean available disk space
+===================================
+
+In order to clean up the contents of all files that were previously suppressed
+but not securely deleted from a disk, it is also possible to securely clean all 
+the free space on the disk.
+
+<div class="caution">
+This method does not work as expected on solid-state drives or USB sticks.
+</div>
+
+The disk or the folder may or may not contain other files. Those files will not
+be deleted during the operation.
+
+<h2 class="bullet-number-one">Navigate to the disk you want to securely
+clean</h2>
+
+**Open Nautilus**, either from the **Places** menu or the **Computer** icon on
+the desktop.
+
+**Navigate to a folder on the disk** that you want to clean.
+
+<h2 class="bullet-number-two">Securely clean the available space using Nautilus
+Wipe</h2>
+
+Securely clean the available diskspace by doing **right-click** → **Wipe
+available diskspace**.
+
+[[!img wipe_available_diskspace.png link=no alt="Right-click → Wipe available
+diskspace"]]
+
+**Confirm**.
+
+[[!img are_you_sure_diskspace.png link=no alt="Are you sure you want to wipe the
+available diskspace?"]]
+
+The cleaning will start. It can last from a few minutes to a few hours,
+according to the size of the available diskspace. Be patient…
+
+Note that a file called `oooooooo.ooo` is created in the folder. Nautilus Wipe
+will try to make it as big as possible to use all the available diskspace and
+then will securely delete it.
+
+[[!img wiping_diskspace.png link=no "Wiping available diskspace…"]]
+
+Once the cleaning will be done you should be prompted with a message saying:
+
+[[!img wipe_successful_diskspace.png link=no "Wipe successful"]]

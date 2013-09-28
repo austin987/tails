@@ -22,10 +22,9 @@ $RUN_LB_CONFIG --distribution squeeze ${@}
 $RUN_LB_CONFIG \
    --apt-recommends false \
    --backports true \
-   --binary-images iso-hybrid \
+   --binary-images iso \
    --binary-indices false \
    --checksums none \
-   --isohybrid-options "$AMNESIA_ISOHYBRID_OPTS" \
    --bootappend-live "${AMNESIA_APPEND}" \
    --bootstrap "cdebootstrap" \
    --archive-areas "main contrib non-free" \
@@ -35,18 +34,20 @@ $RUN_LB_CONFIG \
    --iso-volume="TAILS ${AMNESIA_FULL_VERSION}" \
    --memtest none \
    --packages-lists="standard" \
+   --tasks="standard" \
+   --linux-packages="linux-image-3.10-3" \
    --syslinux-menu vesamenu \
    --syslinux-splash data/splash.png \
    --syslinux-timeout 4 \
    --initramfs=live-boot \
    ${@}
 
-# build i386 images on amd64 as well, include only 686 kernel
+# build i386 images on amd64 as well, include a bunch of kernels
 hw_arch="`dpkg --print-architecture`"
 if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
    $RUN_LB_CONFIG \
       --architecture i386 \
-      --linux-flavours 486 \
+      --linux-flavours "486 686-pae" \
       ${@}
 # build powerpc images on powerpc64 as well, include only powerpc kernel
 elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
@@ -71,12 +72,14 @@ if git rev-list HEAD 2>&1 >/dev/null; then
 fi
 echo "live-build: `dpkg-query -W -f='${Version}\n' live-build`" \
    >> config/chroot_local-includes/etc/amnesia/version
+# os-release
+cat >> config/chroot_local-includes/etc/os-release <<EOF
+TAILS_PRODUCT_NAME="Tails"
+TAILS_VERSION_ID="$AMNESIA_VERSION"
+EOF
 
 # changelog
 cp debian/changelog config/chroot_local-includes/usr/share/doc/amnesia/Changelog
-
-# GnuPG key
-cp wiki/src/amnesia.asc config/chroot_local-includes/usr/share/doc/amnesia/
 
 # create readahead-list from squashfs.sort
 if [ -e config/binary_rootfs/squashfs.sort ]; then
@@ -84,3 +87,6 @@ if [ -e config/binary_rootfs/squashfs.sort ]; then
     sort -k2 -n -r config/binary_rootfs/squashfs.sort |
         cut -d' ' -f1 > config/chroot_local-includes/usr/share/amnesia/readahead-list
 fi
+
+# custom APT sources
+tails-custom-apt-sources > config/chroot_sources/tails.chroot

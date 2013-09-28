@@ -1,0 +1,257 @@
+[[!meta title="Warning"]]
+
+Even though we're doing our best to offer you good tools to protect your
+privacy while using a computer, **there is no magic or perfect solution to such
+a complex problem**. Understanding well the limits of such tools is a crucial
+step in, first, deciding whether Tails is the right tool for you, and second,
+helping you making a good use of it.
+
+[[!toc levels=2]]
+
+<a id="exit_node"></a>
+
+Tor exit nodes can eavesdrop on communications
+==============================================
+
+**Tor is about hiding your location, not about encrypting your communication.**
+
+Instead of taking a direct route from source to destination, communications
+using the Tor network take a random pathway through several Tor relays that
+cover your tracks. So no observer at any single point can tell where the data
+came from or where it's going.
+
+[[!img htw2-tails.png link=no alt="A Tor connection usually goes through 3 relays with the last one establishing the actual connection to the final destination"]]
+
+The last relay on this circuit, called the exit node, is the one that
+establishes the actual connection to the destination server. As Tor does not,
+and by design cannot, encrypt the traffic between an exit node and the
+destination server, **any exit node is in a position to capture any traffic
+passing through it**. See [Tor FAQ: Can exit nodes eavesdrop on
+communications?](https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/TorFAQ#CanexitnodeseavesdroponcommunicationsIsntthatbad).
+
+For example, in 2007, a security researcher intercepted thousands of private
+e-mail messages sent by foreign embassies and human rights groups around the
+world by spying on the connections coming out of an exit node he was running.
+See [Wired: Rogue Nodes Turn Tor Anonymizer Into Eavesdropper's
+Paradise.](http://www.wired.com/politics/security/news/2007/09/embassy_hacks).
+
+**To protect yourself from such attacks you should use end-to-end encryption.**
+
+**Tails includes many tools to help you using strong encryption** while
+browsing, sending email or chatting, as presented on our [[about
+page|/about#cryptography]].
+
+<a id="fingerprint"></a>
+
+Tails makes it clear that you are using Tor and probably Tails
+==============================================================
+
+**Your Internet Service Provider (ISP) or your local network administrator**
+can see that you're connecting to a Tor relay, and not a normal web server for
+example. Using [[Tor bridges in certain
+conditions|first_steps/startup_options/bridge_mode]] can help you hide the fact
+that you are using Tor.
+
+**The destination server that you are contacting through Tor** can know whether your
+communication comes out from a Tor exit node by consulting the publicly
+available list of exit nodes that might contact it. For example using the [Tor
+Bulk Exit List tool](https://check.torproject.org/cgi-bin/TorBulkExitList.py) of
+the Tor Project.
+
+**So using Tails doesn't make you look like any random Internet user.**
+The anonymity provided by Tor and Tails works by trying to make all of their
+users look the same so it's not possible to identify who is who amongst them.
+
+See also [[Can I hide the fact that I am using Tails?|fingerprint]]
+
+<a id="man-in-the-middle"></a>
+
+Man-in-the-middle attacks
+=========================
+
+A man-in-the-middle attack (MitM) is a form of active eavesdropping in which the
+attacker makes independent connections with the victims and relays messages
+between them, making them believe that they are talking directly to each other
+over a private connection, when in fact the entire conversation is controlled by
+the attacker.
+
+[[!img man-in-the-middle.png link=no alt="Illustration of a man-in-the-middle attack"]]
+
+While using Tor, man-in-the-middle attacks can still happen between the exit
+node and the destination server. The exit node itself can also act as a
+man-in-the-middle. For an example of such an attack see [MW-Blog: TOR exit-node
+doing MITM
+attacks](http://www.teamfurry.com/wordpress/2007/11/20/tor-exit-node-doing-mitm-attacks).
+
+**Again, to protect yourself from such attacks you should use end-to-end
+encryption** and while doing so taking extra care at verifying the server
+authenticity.
+
+Usually, this is automatically done throught SSL certificates checked by your
+browser against a given set of recognized [[!wikipedia
+Certificate_authority desc="certificate authorities"]]).
+If you get a security exception message such as this one you might be victim of
+a man-in-the-middle attack and should not bypass it unless you have another
+trusted way of checking the certificate's fingerprint with the people running
+the service.
+
+[[!img ssl_warning.png link=no alt="This Connection is Untrusted"]]
+
+But on top of that the certificate authorities model of trust on Internet is
+susceptible to various methods of compromise.
+
+For example, on March 15, 2011,
+Comodo, one of the major SSL certificates company, reported that a user account
+with an affiliate registration authority had been compromised. It was then used
+to create a new user account that issued nine certificate signing requests for
+seven domains: mail.google.com, login.live.com, www.google.com, login.yahoo.com
+(three certificates), login.skype.com, addons.mozilla.org, and global trustee.
+See [Comodo: The Recent RA
+Compromise](http://blogs.comodo.com/it-security/data-security/the-recent-ra-compromise/).
+
+Later in 2011, DigiNotar, a Dutch SSL certificate company, incorrectly issued
+certificates to a malicious party or parties. Later on, it came to light that
+they were apparently compromised months before or perhaps even in May of 2009 if
+not earlier. Rogues certificates were issued for domains such as google.com,
+mozilla.org, torproject.org, login.yahoo.com and many more. See, [The Tor
+Project: The DigiNotar Debacle, and what you should do about
+it](https://blog.torproject.org/blog/diginotar-debacle-and-what-you-should-do-about-it).
+
+**This still leaves open the possibility of a man-in-the-middle attack even when
+your browser is trusting an HTTPS connection.**
+
+On one hand, by providing anonymity, Tor makes it more difficult to perform a
+man-in-the-middle attack targeted at **one specific person** with the blessing
+of a rogue SSL certificate. But on the other end, Tor makes it easier for people
+or organizations running exit nodes to perform large scale MitM attempts, or
+attacks targeted at **a specific server**, and especially those among its users
+who happen to use Tor.
+
+<p class="quoted-from">Quoted from [[!wikipedia Man-in-the-middle_attack
+desc="Wikipedia: %s"]], [[!wikipedia
+Comodo_Group#Iran_SSL_certificate_controversy desc="Wikipedia: %s"]] and <a
+href="https://blog.torproject.org/blog/detecting-certificate-authority-compromises-and-web-browser-collusion">Tor
+Project: Detecting Certificate Authority compromises and web browser
+collusion</a>.</p>
+
+Confirmation attacks
+====================
+
+The Tor design doesn't try to protect against an attacker who can see or measure
+both traffic going into the Tor network and also traffic coming out of the Tor
+network. That's because if you can see both flows, some simple statistics let
+you decide whether they match up.
+
+That could also be the case if your ISP (or your local network administrator)
+and the ISP of the destination server (or the destination server itself)
+cooperate to attack you.
+
+Tor tries to protect against traffic analysis, where an attacker tries to learn
+whom to investigate, but Tor can't protect against traffic confirmation (also
+known as end-to-end correlation), where an attacker tries to confirm an
+hypothesis by monitoring the right locations in the network and then doing the
+math.
+
+<p class="quoted-from">Quoted from <a
+href="https://blog.torproject.org/blog/one-cell-enough">Tor Project: "One cell
+is enough to break Tor's anonymity"</a>.</p>
+
+Tails doesn't encrypt your documents by default
+===============================================
+
+The documents that you might save on storage devices will not be encrypted by
+default. But Tails provides you with tools to encrypt your documents, such as
+GnuPG, or encrypt your storage device, such as LUKS. It is likely that the files
+you may create will keep tracks that they were created using Tails.
+
+**If you need to access the local hard-disks** of the computer you are using, be
+conscious that you might then leave trace of your activities with Tails on it.
+
+Tails doesn't clear the metadata of your documents for you and doesn't encrypt the Subject: and other headers of your encrypted e-mail messages
+===========================================================================================
+
+Numerous files format store hidden data or metadata inside of the files. Text
+processors or PDF files could store the name of the author, the date and time of
+creation of the file, and sometimes even parts of the editing history of the
+file… those hidden data depend on the file format and the software used. Please note also, that the Subject: as well as the rest of the header lines of your OpenPGP encrypted e-mail messages are not encrypted. This is not a bug of Tails or the [OpenPGP](http://www.mozilla-enigmail.org/forum/viewtopic.php?f=3&t=328) protocol; it's for backwards compatibility with the original SMTP protocol. Unfortunately no RFC standard exists yet for Subject encryption.
+
+Images file formats, like TIFF of JPEG, probably take the prize in this field.
+Those files, created by digital cameras or mobile phones, contain a metadata
+format called EXIF which can include the date, time and sometimes the GPS
+coordinates of the picture, the brand and serial number of the device which took
+it as well as a thumbnail of the original image. Image processing software tend
+to keep those data intact. Internet is full of cropped or blurred images for
+which the EXIF thumbnail still contains the full original picture.
+
+**Tails doesn't clear the metadata of your files for you**. Yet. Still it's in
+Tails' design goal to help you do that. For example, Tails already comes with
+the [Metadata anonymisation toolkit](https://mat.boum.org/).
+
+Tor doesn't protect you from a global adversary
+===============================================
+
+A global passive adversary would be a person or an entity able to monitor at the
+same time the traffic between all the computers in a network. By studying, for
+example, the timing and volume patterns of the different communications across
+the network, it would be statistically possible to identify Tor circuits and
+thus matching Tor users and destination servers.
+
+It is part of Tor's initial trade-off not to address such a threat in order to
+create a low-latency communication service usable for web browsing, Internet
+chat or SSH connections.
+
+For more expert information see [Tor Project: The Second-Generation Onion
+Router](https://svn.torproject.org/svn/projects/design-paper/tor-design.pdf),
+part 3. Design goals and assumptions.
+
+<a id="identities"></a>
+
+Tails doesn't magically separate your different contextual identities
+=====================================================================
+
+It is usually not advisable to use the same Tails session to perform two tasks
+or endorse two contextual identities that you really want to keep separate
+from another. For example hiding your location to check your email and
+publishing anonymously a document.
+
+First, because Tor tends to reuse the same circuits, for example amongst a same
+browsing session. Since the exit node of a circuit knows both the destination
+server (and possibly the content of the communication if not encrypted) and the
+address of the previous relay it received the communication from, it makes it
+easier to correlate the several browsing requests as part of a same circuit and
+possibly made by a same user. If you are facing a global adversary as described
+above, it might then also be in position to do this correlation.
+
+Second, in case of a security hole or a misuse in using Tails or one of its
+application, information about your session could be leaked. That could reveal
+that the same person was behind the various actions made during the session.
+
+**The solution to both threats is to shutdown and restart Tails** every time
+you're using a new identity, if you really want to isolate them better.
+
+Vidalia's "New Identity" button forces Tor to use new circuits but only for new
+connections: existing connections might stay open. Plus, apart from the Tor
+circuits, other kind of information can reveal your past activities, for example
+the cookies stored by your browser. So this feature of Vidalia is not a
+solution to really separate contextual identities. Shutdown and restart Tails
+instead.
+
+Tails doesn't make your crappy passwords stronger
+=================================================
+
+Tor allows you to be anonymous online; Tails allows you to leave no trace on the
+computer you're using. But again, **neither of both are magic spells for computer
+security**.
+
+If you use weak passwords, they can be guessed by brute-force attacks with or
+without Tails in the same way. To know if your passwords are weak and learn good
+practices to create better password, you can read [[!wikipedia
+Weak_password#Examples_of_weak_passwords desc="Wikipedia: Weak Passwords"]].
+
+Tails is a work in progress
+===========================
+
+Tails, as well as all the software it includes, are on continuous development
+and might contain programming errors or security holes. [[Stay
+tuned|download#stay_tuned]] to Tails development. Do not rely on it for strong
+anonymity.

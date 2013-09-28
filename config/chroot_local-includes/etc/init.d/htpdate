@@ -14,6 +14,7 @@ NAME=htpdate
 SCRIPTNAME=/etc/init.d/$NAME
 HTP_DIR=/var/run/$NAME
 PIDFILE=$HTP_DIR/pid
+HTP_DONE_FILE=$HTP_DIR/done
 HTP_SUCCESS_FILE=$HTP_DIR/success
 LOG=/var/log/$NAME.log
 
@@ -32,30 +33,51 @@ install -o htp -g nogroup -m 0644 /dev/null ${LOG}
 # Source configuration
 . /etc/default/$NAME
 
+log() {
+	echo "$@" >> "${LOG}"
+}
+
 # Sanity checks
 if [ -z "$HTTP_USER_AGENT" ]; then
 	log "HTTP_USER_AGENT is not set."
 	exit 2
 fi
-if [ -z "$HTP_POOL" ]; then
-	log "HTP_POOL is not set"
+if [ -z "$HTP_POOL_PAL" ]; then
+	log "HTP_POOL_PAL is not set"
+	exit 3
+fi
+if [ -z "$HTP_POOL_NEUTRAL" ]; then
+	log "HTP_POOL_NEUTRAL is not set"
+	exit 3
+fi
+if [ -z "$HTP_POOL_FOE" ]; then
+	log "HTP_POOL_FOE is not set"
 	exit 3
 fi
 
-log() {
-	echo "$@" >> "${LOG}"
-}
-
 do_start() {
+	if [ -e "$HTP_DONE_FILE" ]; then
+		rm -f "$HTP_DONE_FILE"
+	fi
+
+	if [ -e "$HTP_SUCCESS_FILE" ]; then
+		rm -f "$HTP_SUCCESS_FILE"
+	fi
+
 	start-stop-daemon -S -q -p ${PIDFILE} -bm -x /usr/local/sbin/htpdate -- \
-		-d \
-		-l "$LOG" \
-		-a "$HTTP_USER_AGENT" \
-		-f \
-		-p \
-		-u htp \
-		-T "$HTP_SUCCESS_FILE" \
-		$HTP_POOL
+		--debug \
+		--log_file "$LOG" \
+		--user_agent "$HTTP_USER_AGENT" \
+		--allowed_per_pool_failure_ratio 0.34 \
+		--user htp \
+		--done_file    "$HTP_DONE_FILE" \
+		--success_file "$HTP_SUCCESS_FILE" \
+		--pal_pool     "$HTP_POOL_PAL" \
+		--neutral_pool "$HTP_POOL_NEUTRAL" \
+		--foe_pool     "$HTP_POOL_FOE" \
+	        --proxy        127.0.0.1:9062
+
+	return $?
 }
 
 do_stop() {

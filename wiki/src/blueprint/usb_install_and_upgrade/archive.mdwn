@@ -1,0 +1,306 @@
+[[!toc levels=2]]
+
+Introduction
+============
+
+Unfortunately, no single existing piece of software satisfies the
+above specification. It seems like everyone writes their own USB
+installer; after the following round-up has been made, this is no
+surprise at all: since such tools are designed to be dead easy for the
+non-technical end-user, every author selects the few features that are
+the most important ones for their intended audience, and generally
+writes a very ad-hoc piece of software. Therefore, every Live system
+project whose needs are slightly different from the others needs to
+write its own USB installer, possibly reinventing more or less wheels
+along the road.
+
+We need to see if we can turn one of those tools into something that
+satisfies our specification; sadly, proceeding this way *without
+forking the existing tool* would probably need more initial
+development time than writing a new installer from scratch; we are not
+even sure any upstream author of such a software (good enough to be a
+possible viable basis) would want to make it more generic and maintain
+it this way; on the other hand, if we avoid forking or writing from
+scratch, we also avoid maintaining a Tails-specific tool on the long
+run.
+
+Frontend UI
+===========
+
+Wikipedia has a [[!wikipedia List of tools to create Live USB systems]]
+we should look at.
+
+* `live-installer` udeb and its `live-installer-launcher` desktop
+  companion allows to run the Debian Installer from the bootloader;
+  paraphrasing the manual: the "Live" Debian Installer flavour will
+  proceed in an identical fashion to the normal installation but at
+  the actual package installation stage, instead of using
+  `debootstrap` to fetch and install packages, the "live" filesystem
+  image is copied to the target. After this stage, the Debian
+  Installer continues as normal, installing and configuring items such
+  as bootloaders and local users, etc. This must be tested.
+
+  > Not usable without a lot of work: there is way too many
+  > questions asked, the graphical interface overlaps the
+  > panels (hence unreachable buttons), it tries to create
+  > a new user account, etc. Forget it, even if it was nice
+  > to have partman handy to configure partitions and
+  > bootloaders.
+
+* `live-boot`'s `todisk=DEVICE` boot parameter could be used to copy
+  the entire read-only media to the specified device; the process
+  could then be:
+
+  1. boot from CD
+  2. use some documentation or GUI to partition the USB stick and take
+     note of its device name
+  3. reboot; at syslinux prompt add the `todisk=DEVICE` parameter
+     using the previously noted device name; then let the system boot
+     once from the USB stick, and use some documentation or GUI to
+     install a bootloader on the USB stick. This step might be
+     automated in live-boot.
+  4. reboot and eject the CD: the system should now boot from USB.
+
+  This only works for the "clone existing system" usecase, though.
+
+* Ubuntu's [usb-creator](https://launchpad.net/usb-creator)
+   - supposed to replicate exactly the CD to USB
+   - how does it handle partitions?
+
+* [UNetbootin](http://unetbootin.sourceforge.net/)
+   - works on Windows and GNU/Linux
+   - has a plugin architecture that only allows rebranding and
+     pre-selection of the available distributions list
+   - included in squeeze and sid, easily backported to Lenny
+   - works like a charm to install an ISO image to USB, but the
+     syslinux menu has the unetbootin logo instead of Debian's one;
+     the installed syslinux defaults to the first menu entry (in
+     Tails case, Arabic); are the other bits of syslinux menu (Debian
+     Live help and so on) here?
+   - part of Debian
+   - non-destructive install: does not format the chosen partition
+   - no support for partitioning nor persistent storage
+   - works from a running Live CD; specify /dev/cdrom as ISO diskimage
+   - how would upgrading work?
+
+* [Ubuntu LiveUSB](http://klik.atekon.de/liveusb/)
+   - (a bit too) simplistic
+   - dedicated to "create a bootable Live USB medium from a running
+     Ubuntu Live CD"
+   - depending on sources, it partitions USB stick with one single
+     800MB partition or one partition using the whole device; in any
+     case, it unconditionally overwrites the device's content
+   - able to upgrade without re-partitioning the device?
+   - [launchpad](https://launchpad.net/liveusb)
+
+* aptosid's `aptosid-on-a-stick` needs an input ISO (check again), and
+  lacks partitioning capabilities, but it still deserves being looked
+  at more thoroughly; see the
+  [manual](http://manual.aptosid.com/en/hd-install-opts-en.htm#usb-hd).
+
+* Fedora's `livecd-iso-to-disk`:
+   - [manual](http://fedoraproject.org/wiki/FedoraLiveCD/USBHowTo)
+   - [Gitweb](http://git.fedorahosted.org/git/?p=livecd)
+   - cleanly and defensively written in Bash
+   - supports creating a file-backed filesystem for `$HOME`,
+     LUKS-encrypted by default, in the same partition where the Live
+     system is installed
+   - uses parted
+
+* Fedora's [liveusb-creator](https://fedorahosted.org/liveusb-creator/):
+   - works on Windows and GNU/Linux
+   - "non-destructive install", which means?
+   - supports FAT and EXT filesystems
+   - persistent storage creation: file-backed filesystem, no
+     partitioning capabilities
+   - actively developed (as of early 2011)
+   - written in Python
+   - input: ISO file or real CD
+   - output: extracts ISO's content to the partition
+   - does not use `livecd-iso-to-disk`
+   - needs to be slightly adapted/extended to support non-Fedora Live
+     systems, e.g. some directory names must be made configurable
+   - sidux ships a modified version:
+      - [.deb](http://sidux.office-vienna.at/sidux/debian/pool/main/l/liveusb-creator/),
+      - [source](http://w3you.com/liveusb-creator/liveusb-creator.htm)
+
+* [RIP’s mkusb](http://rip.7bf.de/current/mkusb.sh) and its
+  [README](http://rip.7bf.de/current/mkusb.txt)
+
+* SUSE Studio Image Writer([[!wikipedia SUSE Studio ImageWriter]],
+  [KIWI homepage](http://kiwi.berlios.de/), [source
+  code](http://git.berlios.de/cgi-bin/gitweb.cgi?p=kiwi;a=tree;f=tools/burner))
+   - supports Windows and GNU/Linux
+   - persistent storage creation - that is?
+
+## Dismissed
+
+* [FUSBi](http://aligunduz.org/FUSBi/)
+   - modified from UNetbootin; what are its enhancements?
+   - supports Windows and GNU/Linux
+   - no release in 2009 nor 2010
+
+* Incognito's `root_overlay/usr/sbin/create-usb` seems quite nice, as
+  it allows using an existing fat32 partition.
+   - no partition capabilities
+
+* Liberte Linux' `burn-usb` (old — 2010.0) creates a FAT32 partition for data and
+  an ext2 partition where it copies the system to. It installs Grub on
+  the USB stick.
+
+* [Mandriva Seed](http://git.mandriva.com/?p=projects/mandriva-seed.git;a=summary)
+   - supports Windows and GNU/Linux
+   - fork of Fedora's liveusb-creator; what are its enhancements?
+
+* Moblin's [Image
+  Writer](http://git.moblin.org/cgit.cgi/moblin-image-creator/plain/image-writer)
+   - written in Python
+   - simple dd wrapper with proper sanity checks
+
+* [usb-imagewriter](https://launchpad.net/usb-imagewriter)
+   - seems like a clone of the good old rawwrite with no more feature
+     at all
+
+* <http://wubi-installer.org/>: Windows installer for Ubuntu.
+
+* [makebootfat](http://advancemame.sourceforge.net/boot-readme.html):
+  command line utility able to create bootable USB disks
+  using the FAT filesystem and syslinux
+   - available in Debian
+   - able to autodetect/format/populate the USB disk in a
+     single step without any user interaction
+   - able to create disk images which are compatible with all the
+     three standards USB-FDD, USB-HDD and USB-ZIP at the same time
+   - if it supported partitioning as well, and supported Windows, it
+     could be used to do most of the low-level work
+
+Booting methods
+===============
+
+## Grub2
+
+### Grub2's loopback support
+
+Debian Live now supports Grub2 and `fromiso=`. The grub.cfg that is
+generated inside the binary image could be copied, adapted and used to
+(loopback) boot an ISO dropped on a USB stick.
+
+Here is how to test this.
+
+0. Build a Debian Live iso or iso-hybrid image with a working
+   `live-boot` installed in it, i.e. at least 2.0.12 (warning: Tails
+   0.6 series ship a buggy version).
+1. Create a ext2 filesystem on a USB stick partition.
+2. Copy a Tails ISO file **at the root** of the USB stick partition.
+3. Run `ln -s . boot` at the root of the (mounted) USB stick partition.
+4. Install Grub2 on the USB stick MBR, using the USB stick partition
+   as `--root-directory`.
+5. Create a `grub.cfg` file in there and try a menu entry like this:
+
+          menuentry 'test' --class debian --class gnu-linux --class gnu --class os {
+                insmod part_msdos
+                insmod ext2
+                insmod loopback
+                insmod iso9660
+                set root='(hd0,msdos1)'
+                search --no-floppy --fs-uuid --set=root b51975cd-c5ef-4b32-996a-2c8206516917
+                loopback loop /binary.iso
+                linux   (loop)/live/vmlinuz boot=live fromiso=/dev/sda1/binary.iso config
+                initrd  (loop)/live/initrd.img
+          }
+
+Details:
+
+* `insmod ext2` is because the partition that hosts Grub2 and the ISO
+  is a ext2 one
+* `(hd0,msdos1)` and the search UUID match this partition as well,
+  from Grub2 point-of-view
+* `/dev/sda1` is a path to this partition block device from inside the
+  Live initrd
+* `/binary.iso` is the path to the ISO file, relative to the root of
+  the partition
+* `/live/vmlinuz1` and `/live/initrd1.img` are respectively the path
+  to the kernel and ramdisk relative to the root of the ISO filesystem
+* `boot=live` enables `live-boot` and thus `fromiso=`
+* `config` enables `live-config`
+
+This might fails at kernel load time with following error:
+
+    error: invalid magic number
+
+In that case you probably need a newer Grub2 (see [[!debbug 543924]]
+for details).
+
+**Warning!**
+
+1. On some versions of Tails, this breaks the [[emergency
+   shutdown|contribute/design/memory_erasure]] on media removal.
+2. This is by no means a supported installation method. E.g. the
+   kernel parameters shall be manually updated when replacing the ISO
+   with a newer one.
+
+### Security matters
+
+In the above example, the Grub2 configuration file must contain
+information about the partition where the ISO file is stored.
+
+Doing this is feasible at install time, and ensures the ISO will be
+loaded from the right partition, rather than from a rogue one on the
+host system's hard-disk.
+
+Other Live systems that don't face the same threat model as Tails tend
+to prefer using automagic ISO loopback support so that Grub2 itself
+finds a partition where a properly named ISO is stored, e.g. using
+[GRML's patches against
+live-boot](http://git.grml.org/?p=live-boot-grml.git;a=tree;f=debian/patches)
+that add the `findiso=` boot parameter (by the way, does it respect
+`live-media=removable` ?); here is how they boot things up:
+
+- GRML (`grml-rescueboot` flavor) [now supports booting using Grub2
+  loopback](http://michael-prokop.at/blog/2011/01/07/booting-iso-images-from-within-grub2/)
+- comments of
+  http://blog.cyphermox.net/2010/10/booting-to-iso-images-from-usb-key.html
+- Super Grub Disk's
+  [loopback.cfg](http://www.supergrubdisk.org/wiki/Loopback.cfg) might
+  be [going
+  upstream](http://lists.gnu.org/archive/html/grub-devel/2010-09/msg00080.html).
+
+### Grub2 combined with syslinux' memdisk
+
+This is used by some in combination with Grub2, in place of its
+loopback support. The [memdisk
+page](http://syslinux.zytor.com/wiki/index.php/MEMDISK) on the
+syslinux wiki tells the whole low-level story and more.
+
+Resources:
+
+- GRML (`grub-imageboot` flavor) [now supports booting using
+  Grub2+memdisk](http://michael-prokop.at/blog/2011/01/07/booting-iso-images-from-within-grub2/);
+  according to this blog post, support for doing this is in live-boot
+  2.0.14-1. The memdiskfind/phram/mtdblock approach this blog post
+  talks of would ease cloning an existing Tails system, since it is
+  supposed to provide a `/dev/mtdblock0` device, which should be the
+  .ISO image. See the [details on the memdisk wiki
+  page](http://syslinux.zytor.com/wiki/index.php/MEMDISK#-_memdiskfind_in_combination_with_phram_and_mtdblock).
+- a [blog
+  post](http://blog.snow-crash.org/2010/11/cool-things-with-grub2-and-syslinux---booting-floppy-and-iso-images.html)
+  with a snippet for `grub.d` to automate booting ISO images from
+  Grub2, using syslinux' memdisk
+
+## extlinux and memdisk
+
+According to Philip Hands, who proposed this solution on [[!debbug
+534887]], it is possible to use extlinux merely to chainload the
+image's own bootloader.
+
+Partitioning
+============
+
+Various scripts, such as [Benjamin FOURTICQ's
+one](http://www.mail-archive.com/debian-live@lists.debian.org/msg01832.html),
+aim at adding a persistent home-rw partition to a Debian Live disk
+image, generally using losetup and parted. They don't suit Tails
+specification as they depend on knowing in advance the size of the
+persistent volume the user wants to setup and obviously cannot setup
+encryption on it in place of the user.
+

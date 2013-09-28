@@ -1,0 +1,177 @@
+#!/usr/bin/env python
+
+import gettext
+import syslog
+import glob
+import os.path
+import sys
+import subprocess
+
+PACKAGES_LIST_FILE="live-additional-software.conf"
+ACTIVATION_FILE="/var/run/live-additional-software/activated"
+UNLOCKED_PERSISTENCE_DIRS_GLOB="/live/persistence/*_unlocked/"
+
+def _launch_apt_get(specific_args):
+    """Launch apt-get with given args
+    
+    Launch apt-get with given arguments list, log its standard and error output
+    and return its returncode"""
+    apt_get_env = os.environ.copy()
+    # The environnment provided in GDM PostLogin hooks doesn't contain /sbin/
+    # which is required by dpkg. Let's use the default path for root in Tails.
+    apt_get_env['PATH'] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    # We will log the output and want it in English when included in bug reports
+    apt_get_env['LANG'] = "C"
+    args = ["apt-get", "--quiet", "--yes"]
+    args.extend(specific_args)
+    apt_get = subprocess.Popen(
+        args,
+        env=apt_get_env,
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE)
+    for line in iter(apt_get.stdout.readline, ''):
+        if not line.startswith('('):
+            syslog.syslog(line.rstrip())
+    apt_get.wait()
+    if apt_get.returncode:
+        syslog.syslog(syslog.LOG_WARNING,
+            "apt-get exited with returncode %i" % apt_get.returncode)
+    return apt_get.returncode
+
+def _notify(title, body):
+    """Display a notification to the user of the live system
+    """
+    cmd = "/usr/local/sbin/tails-notify-user"
+    try:
+        # XXX: replace with check_output when Tails will be based on Wheezy
+        # (which includes Python 2.7)
+        notify_user = subprocess.Popen([cmd, title, body],
+                                       stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        notify_user_output = notify_user.stdout.read()
+        notify_user.wait()
+        if notify_user.returncode != 0:
+            syslog.syslog(syslog.LOG_WARNING, "Warning: unable to notify the user. %s returned with exit code %s"
+                 % (cmd, notify_user.returncode))
+            syslog.syslog(syslog.LOG_WARNING, "%s output follows: %s."
+                 % (cmd, notify_user_output))
+            syslog.syslog(syslog.LOG_WARNING, "The notification was: %s %s" % (title, body))
+    except OSError, e:
+        syslog.syslog(syslog.LOG_WARNING, "Warning: unable to notify the user. %s" % e)
+        syslog.syslog(syslog.LOG_WARNING, "The notification was: %s %s" % (title, body))
+
+def get_additional_packages_lists():
+    """Returns the paths of additional packageslists
+    """
+    syslog.syslog("Reading additional packages list")
+    packages_list = []
+    for persistent_dir in glob.glob(UNLOCKED_PERSISTENCE_DIRS_GLOB):
+        if os.path.isfile(persistent_dir + PACKAGES_LIST_FILE):
+            syslog.syslog("Found additional packages list in %s" % persistent_dir)
+            packages_list.append(persistent_dir + PACKAGES_LIST_FILE)
+    return packages_list
+
+def get_additional_packages():
+    """Returns the list of all the additional packages
+    """
+    packages = []
+    for package_list in get_additional_packages_lists():
+        with open(package_list) as f:
+            for line in f:
+                line = line.strip()
+                if line: packages.append(line)
+        f.closed
+    return packages
+
+def install_additional_packages():
+    """The subcommand which activates and installs all additional packages
+    """
+    syslog.syslog("Starting to install additional software...")
+    if not get_additional_packages_lists():
+        syslog.syslog(syslog.LOG_WARNING, "Warning: no additional software configured, exiting.")
+        return True
+    packages = get_additional_packages()
+    if not packages:
+	syslog.syslog(syslog.LOG_WARNING, "Warning: no packages to install, exiting")
+        return True
+    set_activated()
+    syslog.syslog("Will install the following packages: %s" % " ".join(packages))
+    apt_get_returncode = _launch_apt_get(["--no-remove",
+        "--option", "DPkg::Options::=--force-confold",
+        "install"] + packages)
+    if apt_get_returncode:
+        syslog.syslog(syslog.LOG_WARNING, "Warning: installation of %s failed" % " ".join(packages))
+        return False
+    else:
+        syslog.syslog("Installation completed successfully.")
+        return True
+
+def upgrade_additional_packages():
+    """The subcommand which upgrades all additional packages if they are activated
+    """
+    if not is_activated():
+        syslog.syslog(syslog.LOG_WARNING, "Warning: additional packages not activated, exiting")
+        return True
+    syslog.syslog("Starting to upgrade additional software...")
+    apt_get_returncode = _launch_apt_get(["update"])
+    if apt_get_returncode:
+        syslog.syslog(syslog.LOG_WARNING, "Warning: the update failed.")
+        _notify(_("Your additional software"),
+             _("The upgrade failed. This might be due to a network problem. \
+Please check your network connection, try to restart Tails, or read the system \
+log to understand better the problem."))
+        return False
+    if install_additional_packages():
+        _notify(_("Your additional software"),
+             _("The upgrade was successful."))
+        return True
+    else:
+        _notify(_("Your additional software"),
+             _("The upgrade failed. This might be due to a network problem. \
+Please check your network connection, try to restart Tails, or read the system \
+log to understand better the problem."))
+        return False
+
+def is_activated():
+    """Check if additional software has been activated
+    """
+    return os.path.isfile(ACTIVATION_FILE)
+
+def set_activated():
+    """Save that additional software has been activated
+    """
+    syslog.syslog("Activating persistent software packages")
+    activation_file_dir = os.path.dirname(ACTIVATION_FILE)
+    if not os.path.exists(activation_file_dir):
+        os.makedirs(activation_file_dir)
+    try:
+        f = open(ACTIVATION_FILE, 'w')
+    finally:
+        if f: f.close()
+
+def print_help():
+    """The subcommand which displays help
+    """
+    sys.stderr.write("Usage: %s <subcommand>\n" % program_name)
+    sys.stderr.write("""Subcommands:
+    install: activate and install additional software
+    upgrade: upgrade additional software if activated\n""")
+
+if __name__ == "__main__":
+    program_name = os.path.basename(sys.argv[0])
+
+    syslog.openlog("%s[%i]" % (program_name, os.getpid()))
+    gettext.install("tails")
+
+    if len(sys.argv) < 2:
+         print_help()
+         sys.exit(4)
+
+    if sys.argv[1] == "install":
+        if not install_additional_packages():
+            sys.exit(1)
+    elif sys.argv[1] == "upgrade":
+        if not upgrade_additional_packages():
+            sys.exit(2)
+    else:
+        print_help()
+        sys.exit(4)

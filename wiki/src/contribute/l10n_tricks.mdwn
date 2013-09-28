@@ -1,0 +1,55 @@
+[[!toc]]
+
+Compare the content of two PO files
+===================================
+
+Here is how to check out the differences between two PO files without
+caring about strings order, line breaks or comments.
+
+    diff -u <(msgfmt -o - translation/es/es.po | msgunfmt) \
+            <(msgfmt -o - persistence-setup/po/es.po | msgunfmt)
+
+The syntax is bash specific. Replace the paths to the two PO files you
+are interested in comparing.
+
+Calculate statistics on the translations
+========================================
+
+Run the [[language statistics.sh]] script.
+
+Build the wiki offline
+======================
+
+To check your translations before you send them, you may want to browse the
+wiki offline. See the [[corresponding documentation|contribute/build/website]].
+
+Search for fuzzy strings with Vim
+=================================
+
+Ran inside Vim, the following command will search recursively for *fuzzy*
+inside *.fr.po* files
+
+    :vimgrep /fuzzy/ **/*.fr.po |:copen
+
+To switch easily between the file list and the editor, using Alt + Arrow
+up/down, you can add those lines in .vimrc:
+
+    nmap <silent> <A-Up> :wincmd k<CR>
+    nmap <silent> <A-Down> :wincmd j<CR>
+
+Check the validity of PO files
+==============================
+
+Use the tool [i18nspector](http://jwilk.net/software/i18nspector).
+
+To copy, install and run it issue the following commands in the folder where
+you want to download it:
+
+    apt-get install i18nspector/unstable
+    i18nspector <PO file>
+
+Run i18nspector on the whole wiki
+=================================
+
+    cd wiki/src
+    contribute/l10n_tricks/check_po.sh

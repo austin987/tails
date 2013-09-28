@@ -1,0 +1,42 @@
+#!/bin/sh
+
+Fix_debian_bug_645466 ()
+{
+	# Fix bugs/writable_system_disk:_belongs_to_floppy_group (Debian
+	# bug #645466). Short story: udev sets a USB boot device's group
+	# ownership to 'floppy' making it writable by the live user. To
+	# prevent this we set it to 'disk'.
+
+	boot_dev_id=$(udevadm info --device-id-of-file=/lib/live/mount/medium)
+	boot_dev=$(readlink -f /dev/block/"${boot_dev_id}")
+	boot_dev_type=$(udevadm info --query=property --name="${boot_dev}" | \
+	                awk -F'=' '/ID_BUS/ { print $2 }')
+	if [ "${boot_dev_type}" != usb ]; then
+		return
+	fi
+	boot_dev_group=$(stat -c %G "${boot_dev}")
+	if [ "${boot_dev_group}" != disk ]; then
+		chgrp disk "${boot_dev}"
+		parent_path=$(udevadm info --query=property --name="${boot_dev}" | \
+		              awk -F'=' '/UDISKS_PARTITION_SLAVE/ { print $2 }')
+		if [ -n "${parent_path}" ]; then
+			parent_name=$(udevadm info --query=name --path="${parent_path}")
+			if [ -n "${parent_name}" ]; then
+				parent_dev=/dev/${parent_name}
+				chgrp disk "${parent_dev}"*
+			fi
+		fi
+	fi
+}
+
+Fix_permissions ()
+{
+	echo "- fixing permissions"
+	chown -R "${LIVE_USERNAME}":"${LIVE_USERNAME}" "/home/${LIVE_USERNAME}"
+	Fix_debian_bug_645466
+
+	# Creating state file
+	touch /var/lib/live/config/permissions
+}
+
+Fix_permissions

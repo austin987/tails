@@ -9,14 +9,19 @@
 # Description:          Reconfigure kexec depending on running kernel
 ### END INIT INFO
 
+PATH="/usr/local/bin:${PATH}"
 KEXEC_CONF=/etc/default/kexec
 
 case "$1" in
   start)
-	echo "KERNEL_IMAGE=\"$(/usr/local/bin/tails-get-bootinfo kernel)\"" >> "$KEXEC_CONF"
-	echo "INITRD=\"$(/usr/local/bin/tails-get-bootinfo initrd)\"" >> "$KEXEC_CONF"
+	KERNEL_IMAGE=$(tails-boot-to-kexec kernel $(tails-get-bootinfo kernel))
+	INITRD=$(tails-boot-to-kexec initrd $(tails-get-bootinfo initrd))
+	echo "KERNEL_IMAGE=\"${KERNEL_IMAGE}\""   >> "$KEXEC_CONF"
+	echo "INITRD=\"${INITRD}\""               >> "$KEXEC_CONF"
 	if grep -qw debug=wipemem /proc/cmdline; then
 	   echo 'APPEND="${APPEND} sdmemdebug=1"' >> "$KEXEC_CONF"
+	else
+	   echo 'APPEND="${APPEND} quiet"'        >> "$KEXEC_CONF"
 	fi
 	;;
   *)

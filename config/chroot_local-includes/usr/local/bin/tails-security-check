@@ -53,13 +53,13 @@ use Net::SSLeay;
 BEGIN {
     IO::Socket::SSL::set_ctx_defaults(
         verify_mode => Net::SSLeay->VERIFY_PEER(),
-        ca_file => '/etc/ssl/certs/cacert.org.pem',
+        ca_file => '/etc/ssl/certs/UTN_USERFirst_Hardware_Root_CA.pem',
     );
 }
 use LWP::UserAgent; # needs to be *after* IO::Socket::SSL's initialization
 
 setlocale(LC_MESSAGES, "");
-textdomain("tails-security-check");
+textdomain("tails");
 
 ### configuration
 
@@ -116,7 +116,7 @@ sub atom_str {
     $ENV{HTTPS_VERSION} = 3;
 
     my $ua  = LWP::UserAgent->new;
-    $ua->proxy([qw(http https)] => 'socks://127.0.0.1:9050');
+    $ua->proxy([qw(http https)] => 'socks://127.0.0.1:9062');
     my $req = HTTP::Request->new('GET', $url);
     my $res = $ua->request($req);
     if (defined $res && $res->is_success) {

@@ -1,0 +1,143 @@
+[[!meta title="Verify the ISO image using other operating systems"]]
+
+<h3 id="firefox">Using Firefox</h3>
+
+<p>Instead of a cryptographic signature, this technique uses a
+cryptographic hash. We propose it because it's especially easy for
+Windows users.</p>
+
+<ol>
+
+<li>
+<p>Install the <span class="application"><a
+href="https://addons.mozilla.org/en-US/firefox/addon/md5-reborned-hasher/">MD5
+Reborned Hasher</a></span> extension for Firefox.</p>
+</li>
+
+<li>
+<p>Restart Firefox.</p>
+</li>
+
+<li>
+<p>Open the <span class="guilabel">Downloads</span> window from the menu
+<span class="menuchoice">
+  <span class="guimenu">Tools</span>&nbsp;▸
+  <span class="guimenuitem">Downloads</span></span>.
+<span class="application">MD5 Reborned Hasher</span> only operates from
+the files that are appearing in the <span
+class="guilabel">Downloads</span> window of Firefox.</p>
+</li>
+
+<div class="bug">
+
+<p><strong>If you are using Firefox 20 or later</strong>, <span
+class="application">MD5 Reborned Hasher</span> is incompatible with the
+new <span class="guilabel">Downloads</span> window. To go back to a
+compatible layout of the <span class="guilabel">Downloads</span> window,
+do the following:</p>
+
+<ol>
+<li>Open a new tab in <span class="application">Firefox</span>.</li>
+<li>Type <code>about:config</code> in the URL bar, then press <span
+class="keycap">Enter</span>.</li>
+<li>Paste the following preference name into the <span class="guilabel">search</span>
+field: <code>browser.download.useToolkitUI</code>.</li>
+<li>Change the value of this preference to <span
+class="guilabel">false</span>, by doing right-click on the preference and choosing <span
+class="guilabel">Toggle</span>.</li>
+<li>Restart <span class="application">Firefox</span>.</li>
+</ol>
+
+</div>
+
+<li>
+<p>If the ISO image does not appear in the list of recent downloads:
+<ul>
+  <li>Choose the menu
+  <span class="menuchoice">
+    <span class="guimenu">File</span>&nbsp;▸
+    <span class="guimenuitem">Open File…</span></span>.</li>
+  <li>Select the ISO image that you want to check. Choose to save it
+  with the same name. Answer <span class="guilabel">Yes</span> if
+  Firefox asks you whether you want to replace it.</li>
+  <li>This starts a local copy of the ISO image and adds it to the <span
+  class="guilabel">Downloads</span> window.</li>
+</ul></p>
+</li>
+
+<li>
+<p>Click on the <span class="guilabel">Check Digest…</span> link on the
+line of the <span class="guilabel">Downloads</span> window corresponding
+to the ISO image. If no <span class="guilabel">Check
+Digest…</span> link appear, then <span class="application">MD5 Reborned
+Hasher</span> is not installed correctly.</p>
+</li>
+
+<li>
+<p>In the <span class="guilabel">Check File</span> window, choose a
+<span class="guilabel">SHA256</span> hash type.</p>
+</li>
+
+<li>
+<p>Click on <span class="guilabel">Generate Digest</span>.</p>
+</li>
+
+<li>
+<p>Copy and paste the following hash for version [[!inline
+pages="inc/stable_i386_version" raw="yes"]] in the <span
+class="guilabel">Enter checksum</span> text box.</p>
+
+<pre>[[!inline pages="inc/stable_i386_hash" raw="yes"]]</pre>
+</li>
+
+<li>
+<p>When the hash is done generating, a result appears at the bottom of
+the window saying:
+<ul>
+  <li><span class="guilabel">Okay</span>, if the ISO image is
+  correct,</li>
+  <li><span class="guilabel">Match failed!</span>, if the ISO image is
+  not correct.</li>
+</ul></p>
+</li>
+
+</ol>
+
+<h3>Using the cryptographic signature</h3>
+
+<p>GnuPG, a common free software implementation of OpenPGP has versions
+and graphical frontends for both Windows and Mac OS X. This also make it
+possible to check the cryptographic signature with those operating
+systems:</p>
+
+<ul>
+  <li>[[Gpg4win|http://www.gpg4win.org/]], for Windows</li>
+  <li>[[GPGTools|http://www.gpgtools.org/]], for Mac OS X</li>
+</ul>
+
+<p>You will find on either of those websites detailed documentation on
+how to install and use them.</p>
+
+<h3 id="windows">For Windows using Gpg4win</h3>
+
+<p>After installing Gpg4win, download Tails signing key:</p>
+
+[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
+
+<p>[[Consult the Gpg4win documentation to import
+it|http://www.gpg4win.org/doc/en/gpg4win-compendium_15.html]]</p>
+
+<p>Then, download the cryptographic signature corresponding to the ISO
+image you want to verify:</p>
+
+[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
+
+<p>[[Consult the Gpg4win documentation to check the
+signature|http://www.gpg4win.org/doc/en/gpg4win-compendium_24.html#id4]]</p>
+
+<h3 id="mac">For Mac OS X using GPGTools</h3>
+
+<p>After installing GPGTools, you should be able to follow the instruction for
+[[Linux with the command line|verify_the_iso_image_using_the_command_line]]. To
+open the command line, navigate to your Applications folder, open Utilities, and
+double click on Terminal.</p>

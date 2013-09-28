@@ -1,40 +1,50 @@
 #!/bin/sh
 
-echo "managing initscripts"
+set -e
 
-# enable custom initscripts
-update-rc.d tails-detect-virtualization start 17 S .
-update-rc.d tails-kexec                    stop 85 0 6 .
-update-rc.d tails-wifi start 17 S .
-update-rc.d memlockd start 22 2 3 4 5 .
-update-rc.d tails-sdmem-on-media-removal start 23 2 3 4 5 . stop 01 0 6
-update-rc.d tails-reconfigure-kexec defaults
-update-rc.d tails-reconfigure-memlockd defaults
+CUSTOM_INITSCRIPTS="
+tails-detect-virtualization
+tails-kexec
+tails-reconfigure-kexec
+tails-reconfigure-memlockd
+tails-sdmem-on-media-removal
+tails-set-wireless-devices-state
+"
 
-# we run Tor ourselves after HTP via NetworkManager hooks
-update-rc.d tor disable
+PATCHED_INITSCRIPTS="
+alsa-utils
+gdomap
+haveged
+hdparm
+i2p
+ifupdown
+kexec
+kexec-load
+laptop-mode
+memlockd
+network-manager
+plymouth
+polipo
+resolvconf
+saned
+spice-vdagent
+tor
+ttdnsd
+urandom
+"
 
-# we reboot/halt using kexec->sdmem
-update-rc.d -f halt   remove
-update-rc.d -f reboot remove
+# Ensure that we are using dependency based boot
+if ! dpkg -s insserv >/dev/null 2>&1 || [ -f /etc/init.d/.legacy-bootordering ]; then
+	echo "Dependency based boot sequencing is not configured. Aborting." >&2
+	exit 1
+fi
 
-# we provide our own tails-kexec initscript (more friendly to ejected CD/USB)
-update-rc.d -f kexec  remove
+echo "configuring boot sequence"
 
-# we use kexec on halt too => enable kexec-load initscript on runlevel 0 as well
-update-rc.d -f kexec-load remove
-update-rc.d kexec-load stop 18 0 6 .
+# The patches to adjust the runlevels are applied to the chroot
+# after the packages have been installed. So we need to remove them first,
+# to re-install them with our settings.
+insserv -r $PATCHED_INITSCRIPTS
 
-# i2p should not start per default. At some point we want some script to start
-# i2p during init if so selected in tails-greeter, but ATM users have to start
-# the i2p script manually.
-
-update-rc.d -f i2p remove
-
-# we only want hdparm so that laptop-mode-tools can use it
-update-rc.d hdparm disable
-
-# don't use plymouth at shutdown/reboot
-# (plymouth.postinst creates links using update-rc.d,
-# so we cannot disable the links it creates by using LSB headers)
-rm -f /etc/rc[06].d/*plymouth
+# Re-install overriden initscripts and install our custom ones.
+insserv $PATCHED_INITSCRIPTS $CUSTOM_INITSCRIPTS

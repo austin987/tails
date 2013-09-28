@@ -1,39 +1,118 @@
 #! /bin/sh
 
-# get AMNESIA_SUPPORTED_LANGUAGES
-. config/amnesia
-if [ -e config/amnesia.local ] ; then
-   . config/amnesia.local
-fi
+set -e
+set -u
 
-refresh_translations () {
+PERL_PROGS="/usr/local/bin/gpgApplet /usr/local/bin/tails-security-check \
+   /usr/local/bin/tails-htp-notify-user /usr/local/bin/tails-start-i2p \
+   /usr/local/bin/tails-virt-notify-user"
+PYTHON_PROGS="/etc/whisperback/config.py /usr/local/bin/shutdown_helper_applet \
+   /usr/local/bin/tails-about /usr/local/sbin/tails-additional-software"
+SHELL_PROGS="/usr/local/sbin/unsafe-browser /usr/share/tails/truecrypt-wrapper.disabled"
+
+LANGUAGES=$(for po in po/*.po ; do rel="${po%.po}" ; echo "${rel#po/}"; done)
+LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
+
+### Functions
+
+prog_potfile () {
+   prog=$1
+
+   progpath="config/chroot_local-includes$prog"
+   domain=$(basename $prog)
+   echo "tmp/pot/${domain}.pot"
+}
+
+refresh_pot () {
    prog=$1
    proglang=$2
 
-   sharedir="config/chroot_local-includes/usr/share/${prog}"
-   locale_basedir="config/chroot_local-includes/usr/share/locale"
-   pot="${sharedir}/messages.pot"
+   progpath="config/chroot_local-includes$prog"
+   pot=$(prog_potfile $prog)
 
-   mkdir -p "${sharedir}"
+   mkdir -p "$(dirname $pot)"
 
-   xgettext --language="${proglang}" --from-code=UTF-8 \
-      -o "${pot}" \
-      "config/chroot_local-includes/usr/local/bin/${prog}"
+   if [ -e "${progpath}" ]; then
+      xgettext --language="${proglang}" --from-code=UTF-8 \
+        -o "${pot}" "${progpath}"
+      sed -i "s@^\"Content-Type: text/plain\; charset=CHARSET\\\n\"@\"Content-Type: text/plain\; charset=UTF-8\\\n\"@" "${pot}"
+   fi
+}
 
-   for locale in $AMNESIA_SUPPORTED_LANGUAGES ; do
-      po="${locale_basedir}/${locale}/LC_MESSAGES/${prog}.po"
-      mo="${locale_basedir}/${locale}/LC_MESSAGES/${prog}.mo"
-      mkdir -p "${locale_basedir}/${locale}/LC_MESSAGES"
-      [ -e "${po}" ] || cp "${pot}" "${po}"
-      msgmerge --update "${po}" "${pot}"
+po_file () {
+   locale=$1
+
+   echo "po/${locale}.po"
+}
+
+mo_file () {
+   locale=$1
+
+   echo "${LOCALE_BASEDIR}/${locale}/LC_MESSAGES/tails.mo"
+}
+
+refresh_mo () {
+   for locale in "$@" ; do
+      po=$(po_file $locale)
+      mo=$(mo_file $locale)
+      mkdir -p $(dirname "$mo")
       msgfmt -o "${mo}" "${po}"
    done
 }
 
-for prog in gpgApplet tails-security-check tails-htp-notify-user tails-virt-notify-user ; do
-   refresh_translations $prog Perl
-done
+no_left_out_files () {
+   (cd po && intltool-update --maintain)
+   [ ! -e po/missing ] || return 1
+   return 0
+}
 
-for prog in nautilus-sfill nautilus-wipe ; do
-   refresh_translations $prog Shell
-done
+intltool_update_pot () {
+   (
+      cd po
+      intltool-update --pot --gettext-package=tails
+   )
+}
+
+intltool_update_po () {
+   (
+      cd po
+      for locale in "$@" ; do
+	 intltool-update --dist --gettext-package=tails $locale
+      done
+   )
+}
+
+intltool_merge () {
+   grep -E --no-filename '[^ #]*\.(desktop|directory)\.in$' po/POTFILES.in \
+      | while read infile ; do
+           intltool-merge --quiet --desktop-style --utf8 \
+	      po "$infile" "${infile%.in}"
+        done
+}
+
+intltool_report () {
+   (cd po && intltool-update --report --gettext-package=tails)
+}
+
+### Main
+
+# Update POT files
+mkdir -p tmp/pot
+for prog in $PERL_PROGS   ; do refresh_pot $prog Perl   ; done
+for prog in $PYTHON_PROGS ; do refresh_pot $prog Python ; done
+for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
+intltool_update_pot
+
+# If left out files are detected, intltool-update --maintain writes
+# them to po/missing.
+no_left_out_files || exit 3
+
+# Update PO files
+intltool_update_po $LANGUAGES
+
+# Update files that are actually used at runtime
+refresh_mo $LANGUAGES
+intltool_merge
+
+# Report back
+intltool_report

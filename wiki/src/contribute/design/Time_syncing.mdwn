@@ -1,0 +1,190 @@
+[[!toc levels=2]]
+
+# Introduction
+
+Tor (and I2P) sometimes freaks out if they detect too large clock
+skews. It is therefore important for us to ensure that Tails somehow
+automatically synchronizes the system time at start in a safe manner.
+
+There probably is a
+whole bunch of fingerprinting attacks an attacker could mount if it
+could pose as the time server and mess with the user's time. We
+therefore want to be able to *authenticate* the servers that provide
+us with supposedly accurate time information. Home-made research
+[[!tails_todo authenticate_time_servers desc="demonstrated"]] that NTPv4's server
+authentication features do not fit our usecase yet, so we have to look
+for solutions elsewhere.
+
+Since we want no direct internet traffic, the time syncing should be
+run through Tor, but that creates a catch 22: we want to set the time
+using Tor so we can make Tor usable.
+
+# Overview
+
+In short this is how time syncing is performed when Tails starts:
+
+0. Start Tor. If Tor is already working, skip to HTP step.
+0. Let Tor fetch a consensus (wait 150 seconds twice, restarting Tor
+   in between).
+0. If the time is too badly off, the authority certificate may not be
+   valid any more, so we set the system time to the Tails release date, which
+   will guarantee that the certificates are valid. Then we SIGHUP Tor
+   and wait for a new consensus again.
+0. Set the system time to an initial "guess" based on the Tor
+   consensus validity period, no matter if the consensus was verifiable
+   or not.
+0. Restart Tor, which now should be working.
+0. Run HTP (see below) through Tor to get a more correct system time.
+
+A notification is shown while the whole process is running,
+informing the user that
+Tor may not function properly before it has finished (e.g. hidden
+services running Tor prior to version 0.2.3.7-alpha requires clients
+to have a time that is no more than 30 minutes incorrect).
+
+# Guessing time based on Tor consensus
+
+This idea originates from Liberte Linux' `tordate` script which uses
+Tor's consensus file to initially roughly set the time. The consensus
+file contains such information:
+
+	valid-after 2010-12-27 16:00:00
+	fresh-until 2010-12-27 17:00:00
+	valid-until 2010-12-27 19:00:00
+
+A consensus is valid for three hours. If the system time is in the
+[valid-after, valid-after + 2.5 hours] range, `tordate` exits.
+Else, it sets the system time to the middle of the [valid-after,
+fresh-until] range and restarts Tor.
+
+The system time is then ensured to be correct enough to enable Tor to
+successfully open a circuit, and HTP can then be used to more
+accurately set time *via Tor*. The whole idea is that while Tor does
+not manage to open a circuit if the system time is too incorrect, it
+still is able to retrieve its consensus file as soon as Internet
+connectivity is available.
+
+## Security discussion
+
+tordate's approach essentially removes the time skew check, which is
+used to prevent replay of consensus data. Let's discuss this class of
+attacks.
+
+First, replaying a consensus older than one week or so results in
+preventing access to the Tor network, and that's all, because onion
+keys will be wrong. An attacker who is in a position to replay a
+consensus to you could anyway do this, unrelated to time, so the issue
+at hand boils down to *replaying a consensus not older than one week
+or so*.
+
+Second, the same type of attacker as above could also try to forge a
+completely new consensus, which would be unverifiable since the
+attacker doesn't have access to the authorities' keys. We would still
+set Tails' system time according to the unverifiable consensus, but
+Tor would refuse to use the forged consensus, resulting in complete
+denial-of-service. An attacker in that position could do
+denial-of-service attacks in many other ways, so this doesn't make
+the situation any worse.
+
+Third, things are different depending on if you're using a bridge or
+not.
+
+If not using a bridge: Tails starts without a cached consensus, so its
+Tor client starts by connecting directly to a directory authority (and
+not to a directory mirror / entry guard), so feeding you an old
+consensus requires the attacker either to break SSL, or to control the
+directory authority your Tor client connects to. Not good, but
+probably a compromise we can make.
+
+If using a bridge: your bridge can replay an old (one week old max.)
+consensus, which is used until HTP has fixed the time; not good, but
+probably a compromise we can make. If your bridge also can set up a SSL
+MitM attack against the HTP connections (e.g. the attacker also
+controls a SSL CA shipped by Debian), it can trick you into using this
+old consensus for max. one week, which is much worse.
+
+# HTP
+
+[HTP](http://www.vervest.org/htp/) is not really a protocol, but uses
+a feature from HTTP, aka web traffic. According the specifications of
+HTTP/1.1 (RFC 2616) a web server needs to put a timestamp in a
+response to a web browser request. In web browsers you don't see the
+HTTP headers, but these headers contain a timestamp in Greenwich Mean
+Time (GMT), accurate in seconds.
+
+These timestamps can be used to get a pretty good estimate of the
+current time, even though not to the same accuracy level as NTP.
+
+Being based on HTTP, HTP can use its ready-made features related to
+server authentication, such as X.509 certificates... for the time
+being.
+
+## Why use a custom program?
+
+As what follows clearly shows, the upstream HTP has quite a few
+drawbacks that make it unfit for our needs. That's why Tails uses a
+custom version of the Perl HTP client into
+[[!tails_gitweb config/chroot_local-includes/usr/local/sbin/htpdate]].
+The repository we copied this script from can be found there:
+
+    git://git.tails.boum.org/htp
+
+For reasons detailed bellow, this version of htpdate uses curl for all
+of its HTTP operations.
+
+## Authentication of servers
+
+The custom `/usr/local/sbin/htpdate` we use only connects to HTTPS servers,
+and delegates TLS X.509 certificate
+verification to curl. It also uses several different pools of time
+sources, and if there are too many that fail for any given pool,
+e.g. because of failed certificate checking or being unreachable, the
+pool is considered to be potentially compromised and htpdate aborts.
+
+curl is also directed to only use TLSv1 as a "secure" protocol.
+
+## HTP source pools
+
+What sources should be trusted? This is of course also a problem
+with NTP.
+
+The HTP pools used by Tails are based on stable and reliable
+webservers that get great amounts of traffic. They are categorized
+into three different pools according to their members' relationship to
+the members in the other pools; any member in a one pool should be
+unlikely to share logs (or other identifying data), or to agree to
+send fake time information, with a member from
+the the other pools. The pools are as follows:
+
+* The "pal" pool are run by groups that are likely to take great care
+  of their visitors' privacy.
+* The "foe" pool are managed by adversaries of the "pal" pool.
+* The "neutral" pool members have a neutral raltionship to both the
+  "pal" and "foe" pool.
+
+The pools are listed in [[!tails_gitweb config/chroot_local-includes/etc/default/htpdate]].
+
+Basically, Tails `htpdate` pick three random servers (one from each
+pool), and then build the mediate of the three advertised dates.
+
+# Fingerprinting Tails users
+
+Tails runs HTP through Tor, so the fingerprintability should be
+limited to traffic flow only. It should be noted that HTP only fetches
+the HTTP header, so fingerprinting based on the known traffic pattern
+when fetching the full page of any of the members of Tails' HTP source
+pools is not possible.
+
+Our initial time guess based on the Tor consensus is probably easier
+to fingerprint, though: a fresh Tor is started,
+and restarted again right after the consensus has been
+downloaded.
+
+Tails developers still need to think thoroughly of these questions:
+are such fingerprinting possibilities a serious problem? What kind of
+efforts and compromise should be made to prevent these?
+
+# Implementation
+
+A Network Manager hook runs the whole thing:
+[[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/20-time.sh]].

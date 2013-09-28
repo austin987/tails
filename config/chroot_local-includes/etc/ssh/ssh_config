@@ -1,4 +1,9 @@
+Host 192.168.* 10.* 172.16.*
+ProxyCommand none
+
 Host *
+
+ProxyCommand /usr/local/bin/connect-socks %h %p
 
 Ciphers                 aes256-ctr,aes256-cbc,aes128-ctr,aes128-cbc,3des-cbc
 MACs                    hmac-sha1,hmac-md5,hmac-ripemd160
@@ -8,8 +13,6 @@ CompressionLevel 9
 
 ForwardX11              no
 ForwardX11Trusted       no
-
-ProxyCommand connect-proxy -S 127.0.0.1:9050 %h %p
 
 # Prevent fingerprinting when username was not specified
 User                    root

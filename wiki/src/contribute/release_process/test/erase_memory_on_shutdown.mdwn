@@ -1,59 +1,66 @@
 **FIXME** this process is quite complicated and should be automated using VMs
 
-# 0. prepare the systems
+[[!toc levels=2]]
 
-## prepare a Tails USB stick
+# 0. Prepare the needed tools
 
-Install the Tails version to test on a 1st USB stick.
+Make sure the BIOS is *not* configured to "test" the memory on startup.
 
-## prepare a minimal lenny live system 
+Pick one of those:
 
-We will use this system to do a coldboot attack. It is useful that it is a
-minimal system so that it doesn't fill the RAM to boot.
+* [[erase_memory_on_shutdown/qemu_pmemsave]] (pros: no initial setup)
+* [[erase_memory_on_shutdown/virtualbox_dumpguestcore]]
+  (pros: no initial setup)
+* [[erase_memory_on_shutdown/pxedump]] (pros: works for bare metal,
+  possible to `|grep` and avoid writting the huge dump file to disk;
+  cons: initial setup)
+* [[erase_memory_on_shutdown/live_system]] (pros: works for bare metal;
+  cons: storage requirements, quite more complicated to get right than
+  the other methods)
 
-To be able to grep /dev/mem, it must have a kernel with CONFIG_STRICT_DEVMEM
-disabled. It is enabled in debian since 2.6.28-1, so we use lenny:
+# 1. Fill the RAM with a known pattern
 
-    lb config  --architecture i386 --linux-flavours 686 --apt-recommends false --distribution lenny --binary-images usb-hdd --binary-indices false  --memtest none --packages-lists="minimal" --syslinux-menu vesamenu --initramfs=live-initramfs --bootappend-live "init=/bin/bash"
-
-Then install this image on a 2nd USB stick
-
-# 1. fill the RAM with a known pattern
-
-* boot on Tails
-* launch fillram a few times in parallel (on a 32-bit architecture the
+* Run `fillram` a few times in parallel (on a 32-bit architecture the
   address space of a given process is usually limited at 3 GiB - or
-  less, depends on the kernel configuration)
+  less, depends on the kernel configuration); as root:
+  
+  	for i in $(seq 0 31) ; do fillram & done ; watch -n 1 free -m
 
-  	# for i in $(seq 0 31) ; do fillram & done ; watch free -m
+* The `free` output should allow you to reboot late enough (so that
+  enough memory is filled) and soon enough (so that the system is
+  still reactive somehow).
 
-# 2. test that you can get the pattern
+# 2. Test that you can get the pattern after rebooting, if no memory wiping takes place
 
-* plug the USB stick containing the minimal Lenny Live system
-* reboot from Tails using SysRq + B
-* boot on the minimal Lenny Live system
-* actually run the test:
+* Make sure your preferred memory scrapper toolkit is ready.
+* Reboot from Tails using `SysRq + b`; if testing in a VM, you'd
+  better be careful not rebooting your host system and proceed like
+  this:
+  
+  	echo 1 > /proc/sys/kernel/sysrq ; echo b > /proc/sysrq-trigger
+  
+* Dump memory and try to find the known pattern in it, e.g.:
 
-  	grep -c wipe_didnt_work /dev/mem
+  	grep -c wipe_didnt_work tails.dump
 
   - you should get some integer larger than zero if the pattern was found in
-    RAM, which is the expected result ;
+    RAM, which is the expected result;
   - you should get `grep: /dev/mem: Cannot allocate memory` otherwise. In that
     case, it is **not** useful to process to the next step, there is something
     wrong in the way you tested.
 
-# 3. test that sdmem really hides the pattern
+# 3. Test that you can*not* get the pattern after rebooting Tails normally
 
-* redo step 1
-* reboot from Tails the recommanded way : system > reboot
-* plug the USB stick containing the minimal Lenny Live system
-* when Tails displays that you can remove the USB stick, unplug the
-  Tails stick and plug the USB stick containing the minimal Lenny Live
-  system in
-* boot on the minimal Lenny Live system
-* actually run the test:
+* Redo step 1 (don't forget to add `debug=wipemem` to the kernel
+  command-line if your memory scrapper toolkit needs it).
+* Reboot Tails by running `reboot` as root.
+* Make sure your preferred memory scrapper toolkit is ready (e.g.
+  plug your USB scrapper stick).
+* When Tails tells you you can unplug the USB stick, unplug the
+  Tails stick. 
+* Dump memory and try to find the known pattern in it, e.g.:
 
-  	grep -c wipe_didnt_work /dev/mem
+  	grep -c wipe_didnt_work tails.dump
 
   - you should get zero if the pattern was not found in RAM, which is the
     optimal (and expected) result;

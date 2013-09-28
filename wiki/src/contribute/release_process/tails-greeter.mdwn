@@ -1,0 +1,47 @@
+[[!meta title="Releasing tails-greeter"]]
+
+*Tails Greeter* is a native Debian package.
+
+[[!toc levels=1]]
+
+Update POT and PO files
+=======================
+
+FIXME!
+
+Update the Debian package
+=========================
+
+Checkout the correct branch:
+
+    git checkout master
+
+Update `debian/changelog`:
+
+    git-dch
+
+(Do not forget to set the appropriate release.)
+
+Commit the changelog:
+
+    git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+
+Build a new Debian package (use a Squeeze/i386 chroot):
+
+    git-buildpackage
+
+If everything is fine, tag the release and push the changes:
+
+    git-buildpackage --git-tag-only --git-sign-tags --git-keyid=$PGP_PUB_KEY
+    git push && git push --tags
+
+Add the Debian package to Tails
+===============================
+
+Sign the package:
+
+    debsign $CHANGES_FILE
+
+Upload:
+
+    dupload --to tails $CHANGES_FILE

@@ -1,18 +1,19 @@
 [[!meta title="Git merge policy: core developer"]]
 
-## No unfinished stuff rotting for too long in the `devel` branch
+All development should happen in topic branches. For a new feature XXX, it should
+be named `feature/XXX`. For a bugfix about YYY, it should be name `bugfix/YYY`.
+When the developer thinks it is good enough and has tested it, she must:
 
-A core developer who is commited to work on Tails on the long run may
-carefully decide to merge work-in-progress code into the `devel`
-branch, in order to get early feedback and testing results from
-others.
+- merge the topic branch into the `experimental` one
+- set the ticket's *QA Check* field to *Ready for QA*
+- set the ticket's *Feature Branch* field
+- ask the Release Managers to review and merge (in devel generally, in testing
+  or stable for bugfixes) by writing to the `tails-dev@boum.org`
+  mailing-list
 
-When doing this, one commits to bring such "technology preview"
-changes up to release quality in a timely manner. Unfinished code is
-subject to reverting next time we decide to merge the `devel` branch
-into the `testing` one and freeze it to prepare a release.
-
-A development workflow based on topic-branches guarantees against such
-hazards; moreover it helps linking together the various commits that
-are part of a given patchset that can therefore be easily reviewed as
-a whole, rather than as spread out individual commits.
+Then, if the reviewer asks for more development to be done before
+merging, they should set the ticket's *QA Check* field back to *Needs
+more dev* or *Needs more info* state, and
+from now on it's the responsibility of the branch/ticket "holder" to
+change it back to *Ready for QA* once they consider the issues raised by
+the reviewer are fixed.

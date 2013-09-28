@@ -1,5 +1,7 @@
 [[!toc levels=1]]
 
+Some [[test results]] that might be useful to keep are saved.
+
 # Changes
 
 Keeping an eye on the changes between released versions is one of the
@@ -7,18 +9,27 @@ many safeguards against releasing crap.
 
 ## Source
 
-Thanks to Git tags one can easily compare the to-be-released source
-code with previous version's one e.g.:
 
-	git diff 0.6.1..stable
+Compare the to-be-released source code with previous version's one e.g.:
+
+Boot the candidate ISO and find the commit it was build from with the
+`tails-version` command.
+
+Then, from the source tree, see the diff:
+
+	git diff <old tag>..<ISO commit>
+
+e.g. `git diff 0.17..06fa1ab80d55c9f29274b7459bd198edb1a8d53d`
 
 ## Result
 
-`wdiff -l` makes it easy to compare the list of bundled packages and
+Compare the list of bundled packages and
 versions with the one shipped last time e.g.:
 
-	wdiff -l wiki/src/torrents/files/tails-i386-lenny-0.6.1.packages \
-	  tails-i386-lenny-0.7.packages | less
+	/usr/bin/diff -u \
+	    wiki/src/torrents/files/tails-i386-0.16.packages \
+	    tails-i386-0.17.packages \
+	    | wdiff --diff-input  --terminal
 
 Check the output for:
 
@@ -29,18 +40,45 @@ Check the output for:
   does the combination of our configuration with software X version
   Y+1 achieve the same wished results as with software X version Y?)
 
+## Image size
+
+Check the image size has not changed much since the last release.
+
+# Automated test suite
+
+Our long term goal is to eliminate the manual test suite (except the
+parts which require real hardware) and have the automated test suite
+run all our tests. It's design, and how to write new tests, are
+documented on a [[dedicated page|test/automated_tests]].
+
+## Running the automated test suite
+
+See [[test/setup]] and [[test/usage]].
+
+## Automated test suite migration progress
+
+The manual test suite below either contains tests that cannot be
+automated, has no automated test implemented yet, or has a test
+implemented, but it either hasn't been reviewed, had a confirmed pass
+by someone other than the test author, or has issues. The latter is
+tracked by tickets prefixed with `todo/test_suite:`.
+
 # Iceweasel
 
-* is web browsing really torified?
- - <https://check.torproject.org/>
- - <http://monip.org/>
-* does the exposed User-Agent match the generic Torbutton's one?
+* does the exposed User-Agent match the TBB's one?
   (connect to a website you can check the access logs for)
-* firegpg: test symmetric encryption/decryption, same for asymmetric
-* Entering `about:plugins` in the location bar should say no plugin is
-  installed in every one of the following cases:
- 1. Torbutton add-on enabled in *Tor enabled* status
- 2. Torbutton add-on disabled
+* Running `getTorbuttonUserAgent` should produce the useragent set by the
+  Torbutton version installed and used in Iceweasel.
+* Browsing (by IP) a HTTP or HTTPS server on the LAN should be possible.
+* Browsing (by IP) a FTP server on the LAN should be possible.
+* Does playing HTML5 videos work? In particular, (due to its popularity)
+  do [youtube](http://www.youtube.com) videos work (once
+  [[!tails_todo easier YouTube]] is fixed -- currently object unblocking in
+  NoScript is required)?
+* Compare the fingerprint of Tails and the latest TBB using at least
+  <https://panopticlick.eff.org/> and <http://ip-check.info/>, and
+  update the [[fingerprint section|support/known_issues#fingerprint]] of
+  the known issues page.
 
 # Pidgin
 
@@ -50,126 +88,379 @@ Check the output for:
    connections list
 * Check OTR is working.
 * Check at least IRC and XMPP are working.
-* Check if pidgin doesn't leak to many informations on replying to different
+* Check if pidgin doesn't leak too many informations on replying to different
   CTCP requests:
   * Start Tails and launch pidgin once done. Connect to an IRC server where you're already on
-  * try to /ctcp <T(A)ILS_account_nick> COMMAND
-  (for a list of commands, see [this page](http://www.wikkedwire.com/irccommands)).
+  * try to `/ctcp <Tails_account_nick> COMMAND`
+    with a client that supports sending CTCP commands properly --
+    Pidgin does not, apparently
+    (for a list of commands, see [this page](http://www.wikkedwire.com/irccommands)).
+    See the [[!tails_ticket 5823 desc="current known-broken state"]].
 
-# Tor enforcement
+# Tor
 
+* The version of Tor should be the latest stable one.
 * firewall: is the Tor-enforcement effective?
  - check output of `iptables -L -n -v`
  - check output of `iptables -t nat -L -n -v`
  - try connecting to the Internet after unsetting `$http_proxy` and
    `$HTTP_PROXY` using a piece of software that does not obey the
-   GNOME proxy settings, *and* is not explicitely torified in Tails:
-   `unset http_proxy ; unset HTTP_PROXY ; wget http://monip.org`
+   GNOME proxy settings, *and* is not explicitly torified in Tails:
+   `unset http_proxy ; unset HTTP_PROXY ; wget --no-proxy
+   http://monip.org` (should result in a "`Connection refused`".
 * firewall: is IPv6 traffic blocked?
  - check output of `ip6tables -L -n`
  - at a place with working IPv6: try connecting to a known-working
    IPv6-enabled server on its IPv6 address over TCP and icmp6.
-* is `/etc/resolv.conf` OK both before/after DHCP has been setup? it should
+* is `/etc/resolv.conf` OK both before/after DHCP has been set up? it should
   *always* read `nameserver 127.0.0.1`
+* [[doc/first_steps/startup_options/bridge_mode]] should work:
+  1. Boot with the `bridge` option.
+  1. Set up an administrator password.
+  1. Enter a bridge or a few.
+  1. Use the Internet.
+  1. Check from time to time with `netstat` that the only outgoing
+     direct network connections go to the configured bridge(s).
+* Verify that all destinations reached from an intensive Tails session
+  are tor routers or
+  authorities:
+  1. Boot Tails without the network in.
+  1. Start dumping your whole session's network activity with `sudo
+     tcpdump -n -i any -w dump` (or better, do the dump on another machine,
+     or on the host OS if Tails is running in a VM).
+  1. Plug the network.
+  1. Wait for Tor to be functional.
+  1. Save the `cached-microdesc-consensus` out of the VM (it's needed
+     to analyze the network dump later on).
+  1. Do *a lot* of network stuff (why not run do this while doing all
+     the other tests **but** I2P and the unsafe browser, which would
+     show many false positives?)
+  1. Then check all destinations, e.g. by using tshark and the script below:
+
+     	# set DUMP to the output of tcpdump above
+     	DUMP=dump
+     	# set CONSENSUS to Tor's consensus from the Tails session
+     	CONSENSUS=cached-microdesc-consensus
+     	NODES=$(mktemp)
+     	awk '/^r / { print $6 }' ${CONSENSUS} > ${NODES}
+     	# Note that these default directory authorities may change! To be
+     	# sure, check in Tor's source, src/or/config.c:~900
+     	DIR_AUTHS="
+     	128.31.0.39
+     	86.59.21.38
+     	194.109.206.212
+     	82.94.251.203
+     	76.73.17.194
+     	212.112.245.170
+     	193.23.244.244
+     	208.83.223.34
+     	171.25.193.9
+     	154.35.32.5
+     	"
+     	tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
+     	while read x; do
+     	    ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
+     	    if echo ${DIR_AUTHS} | grep -qe "${ip_expr}"; then
+     	        continue
+     	    fi
+     	    if ! grep -qe "^${ip_expr}$" ${NODES}; then
+     	        echo "${x} is bad"
+     	    fi
+     	done
+     	rm ${NODES}
+
+     Note that this script will produce some false positives, like your
+     gateway, broadcasts, etc.
+
+## Stream isolation
+
+See our [[stream isolation design
+page|contribute/design/stream_isolation]] for details such as port
+numbers, that are not duplicated here to avoid desynchronization.
+
+Assumptions for the following tests: first, Tor stream isolation
+features properly do their work; second, our `torrc` sets the right
+`SocksPort` options to implement what we want.
+
+* Make sure Claws Mail use its dedicated `SocksPort` when connecting
+  to IMAP / POP3 / SMTP servers.
+* Make sure these use the `SocksPort` dedicated for Tails-specific applications:
+  - htpdate
+  - tails-security-check
+  - incremental updates
+* Make sure iceweasel uses its dedicated `SocksPort`.
+* Make sure other applications (Polipo, Gobby 0.4 and 0.5, SSH, whois)
+  use the default system-wide `SocksPort`.
+* Make sure a random application run using `torify` and `torsocks`
+  (e.g. `/usr/bin/gobby-0.5`) uses the default system-wide `SocksPort`.
 
 # Use of untrusted partitions
 
-* are any local hard-disk partitions mounted or used as swap?
+* is any local hard-disk swap partition used as swap?
   boot on a (possibly virtual) machine that has a cleartext swap
   partition not managed by LVM. This swap partition must not be used
   by Tails.
-* is a Live system found on a local hard-disk partition used? boot the
-  CD/USB stick you are testing on a (possibly virtual) machine that
-  has a Tails system copied on a cleartext partition not managed by
-  LVM. The CD/USB ramdisk must use the Tails system found on the
-  CD/USB, and not the one found on the hard disk. (Also check that
-  without Tails, that other Live system boots.)
+* is a persistence volume on a local hard-disk partition used?
+  (Hint: setup a libvirt USB disk with GPT and a partition labeled
+  `TailsData`, set the `removable` flag on it, check that
+  tails-greeter proposes to enable persistence. Then remove the
+  `removable` flag, and check that tails-greeter does not propose to
+  enable persistence anymore.)
 
 # Claws
 
-* Check mail over IMAP.
-* Send an email.
+* Check mail over IMAP using:
+  - a "clearnet" IMAP server.
+  - a hidden service IMAP server (e.g. TorMail, jhiwjjlqpyawmpjx.onion, or
+    RiseUp, xyvp43vrggckj427.onion).
+* Send an email using:
+  - a "clearnet" SMTP server.
+  - a hidden service SMTP server (see above).
 * Check that the profile works and is torified (specifically the
-  EHLO/HELO SMTP messages it sends). Send an email using Claws and a
-  non-anonymizing SMTP relay. Then check that email's headers once
-  received, especially the `Received:` and `Message-ID:` ones.
+  EHLO/HELO SMTP messages it sends):
+  1. Send an email using Claws and a non-anonymizing SMTP relay.
+  1. Then check that email's headers once received, especially the
+     `Received:` and `Message-ID:` ones.
 * Also check that the EHLO/HELO SMTP message is not leaking anything
-  with a packet sniffer: start Claws using the panel icon (which runs
-  `torify claws-mail`) to
-  avoid using the transparent proxy (which will confuse tcpdump).
-  Disable SSL/TLS for SMTP in Claws (so take precautions for not
-  leaking your password in plaintext by either changing it temporarily
-  or using a disposable account). Then run `sudo tcpdump -i lo -w
-  dump` to capture the packets before Tor encrypts it, and check the
-  dump for the HELO/EHLO message and verify that it only contains
-  `localhost`.
+  with a packet sniffer:
+  1. start Claws using the panel icon.
+  1. Disable SSL/TLS for SMTP in Claws (so take precautions for not
+     leaking your password in plaintext by either changing it
+     temporarily or using a disposable account).
+  2. Run `sudo tcpdump -n -i lo -w dump` to capture the packets before
+     Tor encrypts it, then close tcpdump, and check the dump for the HELO/EHLO message and
+     verify that it only contains `localhost`.
 
 # Whisperback
 
 * can a bug report e-mail be sent?
 * is it correctly encrypted?
 
-# GnuPG
-
-Those tests shall be run using GnuPG on the command-line, the
-Seahorse GUI and FireGPG:
-
-* key search/receive: torified? going to the configured keyserver?
- - `gpg --search` tells what server it is connecting to
- - the connection to the configured keyserver must appear in Vidalia's
-   list of connections
- - if you run a keyserver, have a look there.
-
-# Monkeysphere
-
-* Monkeysphere validation agent key search/receive: torified? uses
-  configured keyserver?
-
 # Time
 
-
-
-1. `sudo rm /var/run/htpdate/success /var/run/tordate/done /var/lib/tor/cached-descriptors`
-2. disconnect the network cable
-3. set the time to an obviously wrong one :
+1. Boot Tails without a network cable connected.
+   (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 down`.)
+2. Set an administration password.
+3. set the time to an obviously wrong one:
 
            date --set="Mon, 01 Mar 2000 15:45:34 - 0800"
 
-4. connect the network cable
+4. Connect the network cable.
+   (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 up`)
 
 => the date should be corrected and Tor/Vidalia should start
 correctly.
 
 # erase memory on shutdown
 
-- check that `memlockd` and `udev-watchdog` are running, and that the right
-  device is being watched by the later.
-- remove Tails' media (USB and cdrom) and check that the memory
-  erasure process is started (`Loading new kernel`, at least).
+- check that `memlockd` is running
+- check that `udev-watchdog` monitors the right device
+  ([[!tails_todo test_suite:_udev-watchdog_device]])
+  * on USB
+  * on DVD
+- After booting from DVD, remove Tails boot medium and check that the
+  memory erasure process is started (`Loading new kernel`, at least).
+  The USB tests are bellow, in the USB installer section.
 
 Testing that the needed files are really mapped in memory, and the
-erasing process actually works, involves slightly more complicated
-steps that are worth [[a dedicated page|test/erase_memory_on_shutdown]].
+erasing process actually works, involves a more complicated
+process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
+`[needs-fix: erase_memory]` ([[!tails_todo test_suite:_anti-tests]])
+
+For 0.20 (or its RC), we have to test this both on a PAE machine and
+on a non-PAE one, then close [[!tails_todo test_suite:_sdmem_job_waiting]].
+
+# Root access control
+
+* Check you can login as root neither with the `amnesia` password nor
+  with the `live` one.
+* Boot Tails without setting a password and check you can't get
+  PolicyKit administrative privileges (e.g. run a command with pkexec),
+  neither with the `amnesia` password nor
+  with the `live` one.
+* Boot Tails with a password and check you can get PolicyKit
+  administrative privileges.
+* Check that the $TAILS_USER_PASSWORD variable, if still existing in the system
+  environment after the boot has finished, does not contain the clear text
+  password.
 
 # Virtualization support
 
-* `modinfo vboxguest` should work
 * test in VirtualBox
 
-# Misc
+# I2P
+
+* Make sure that I2P is up-to-date, at least if the
+  [changelogs](http://www.i2p2.de/announcements.html) mention that
+  security critical bugs were fixed.
+* Check that "Applications -> Internet -> I2P" works:
+  - You get the "Starting I2P..." pop-up.
+  - The router console opens in Iceweasel upon success.
+  - You get the "I2P failed to start" pop-up on failure (e.g. no
+    network so tordate failed).
+* Check that I2P connects to the network:
+  - The numbers in the "Peers" section of the router console should be
+    non-zero.
+  - You should get "Network: Hidden" in the "General" section.
+* Check that you can reach some eepsites within Iceweasel, like
+  <http://www.i2p2.i2p> and <http://forum.i2p>.
+* Check that you can connect to the I2P IRC server through Pidgin and
+  the preconfigured IRC account on 127.0.0.1.
+
+# Git
+
+* clone a repository over `git://`
+* clone a repository over `https://`
+* clone a repository over SSH
+
+# SSH
+
+* Connecting over SSH to a server on the Internet should work (and
+  appear in Vidalia's connections list).
+* Connecting (by IP) over SSH to a server on the LAN should work.
+* Connecting to a sftp server on the Internet using GNOME's "Connect
+  to a server" should work.
+
+# APT
+
+* Make sure the Tails repository suite matching the release tag is in
+  APT sources.
+* Make sure the Tails repository unversioned suites (e.g. `testing`,
+  `stable` and `devel`) are *not* in APT sources.
+
+# USB Installer/Upgrader
+
+All this was successfully reviewed at commit cdbbf4d8.
+
+After each of the following tests:
+
+* The installed or upgraded Tails medium shall be successfully booted.
+* The installed or upgraded Tails medium shall have the "emergency
+  shutdown on boot medium removal" feature working: remove Tails boot
+  medium and check that the memory erasure process is started
+  (`Loading new kernel`, at least).
+* The TailsData partition must survive
+  upgrades.
+
+Tests to run:
+
+* Test "Clone & Install":
+  - from USB.
+  - onto a USB stick that has a MBR partition table, and no
+    partition at all (regression test)
+  - onto a USB stick that already has an old-fashioned hybrid cat'd
+    Tails on it
+* Test "Clone & Upgrade" (onto a USB install containing an older
+  Tails):
+  - from DVD.
+  - from USB.
+  - onto a USB stick that already has a old-fashioned cat'd hybrid
+    Tails on it: should warn this action is not supported, and direct
+    the user to the "Clone & Install" operation mode.
+
+# Incremental updates
+
+The following should be tested once incremental updates are ready for
+real-world deployment.
+
+Try every update path supported by the generated update-description
+files:
+
+* for every incremental update paths: make sure the resulting updated
+  system "works fine" (what does that mean? do we want to run the full
+  test suite on these? **FIXME**)
+* for updates that only propose a non-incremental paths: make sure the
+  user is guided just fine (that is? **FIXME**)
+
+Given these are not published yet, a local test setup is needed:
+
+* a web server
+* a replacement for the Tails website's `/update/` tree with
+  update-description files in there, e.g.
+  `/var/www/tails/update/v1/Tails/0.14~rc2/i386/stable/updates.yml`
+* a replacement for the Tails HTTP mirrors' `iuk` directories,
+  e.g. `/var/www/tails/stable/iuk/Tails_i386_0.14-rc2_to_0.14.iuk`
+
+Also, the updater must be called, from inside the system to update,
+with every needed option to use that rather than the online published
+stuff: **FIXME**.
+
+# Persistence
+
+* Activate persistence on a Tails USB install with all presets on
+  (also done by the automated test suite,
+  but required to test what follows until it's green too).
+* Try read-write mode. Make sure that changes do survive
+  reboot.
+* Try read-only mode. Make sure that persistent files are writeable,
+  but that no changes survive
+  reboot.
+* Turn off some persistence presets, reboot, and make sure they are
+  not activated.
+
+# Windows Camouflage
+
+Enable Windows XP camouflage via the Tails Greeter checkbox and:
+
+* gpgApplet's context menu should look readable
+* iceweasel should use a Internet Explorer theme
+
+# Unsafe Web Browser
+
+* On start, if no DNS server was configured in NetworkManager
+  (e.g. if there's no network connection), there must be an error.
+* Once started, check that:
+  - it has no scary red theme when Windows Camouflage is activated.
+  - the iceweasel instance runs as the `clearnet` user.
+  - it has no proxy configured.
+  - no extensions are installed.
+  - there are no bookmarks.
+* On exit, check that:
+  - make sure that its chroot gets properly teared down on exit (there
+    should be nothing mounted inside `/var/lib/unsafe-browser`).
+
+# Real (non-VM) hardware
+
+`[can't-automate]`
+
+* Boot on bare-metal on USB.
+* Boot on bare-metal on DVD.
+* Measure boot time (from syslinux menu the GNOME dektop ready - quickly press
+  enter in the greeter), then on some reference bare metal hardware, and
+  compare with previous version. The new one should not be significantly
+  slower to start.
+
+# Documentation
 
 * Check that links to the online website (`Mirror:`) at the bottom of
   bundled static web pages are working. Else, it probably means the
-  wiki was not built with the needed patched ikiwiki version.
+  wiki was not built with a recent enough ikiwiki.
+* Browse around in the documentation shipped in the image. Internal
+  links should be fine.
+
+# Internationalization
+
+Boot and check basic functionality is working for every supported
+language.
+
+* The chosen keyboard layout must be applied.
+* The virtual keyboard must work and be auto-configured to
+  use the same keyboard layout as the X session.
+* Once [[!tails_todo fix_localized_iceweasel_search_engine]] is fixed, the
+  iceweasel search engine must be localized (for languages we ship
+  a localized searchplugin for).
+* Once [[!tails_todo select_localized_spelling_dictionary_in_Iceweasel]] is
+  fixed, the iceweasel spelling dictionary must be localized (for
+  languages that are supported by our branding extension).
+
+# Misc
+
 * Check that all seems well during init (mostly that all services
   start without errors), and that dmesg seems ok.
-* Boot without network connection, and then plug it in after
-  some arbitrary time; Tor and Vidalia must be autostarted and end up
-  in working state.
-* Doing an apt-get update and installing random packages.
-* Boot on bare-metal on USB and CD.
-* Boot and check basic functionality is working for every supported
-  language. The virtual keyboard must work and be auto-configured to
-  use the same keyboard layout as the X session.
-* Try to start with the `truecrypt` option on boot, see if it can be found in
-  the *Applications* → *Accessories* menu and that it runs correctly.
+* MAT should be able to clean a PDF file.
+* Browsing (by hostname) a FTP server on the Internet should be
+  possible using GNOME's *Connect to server* feature
+  (once [[!tails_todo fix Internet FTP support]] is fixed)
+* The Tails signing key in `/usr/share/keyrings/tails-keyring.gpg`
+  should be up-to-date (that is, neither it nor one its subkeys must
+  have expired, or be about to expire any time soon).

@@ -44,6 +44,7 @@ add_plugins:
   - sidebar
   - tag
   - toc
+  - trail
   - typography
   - comments
   - meta
@@ -104,11 +105,11 @@ libdir: ''
 # environment variables
 ENV: {}
 # regexp of normally excluded files to include
-#include: '^\.htaccess$'
+include: '^\.htaccess$'
 # regexp of files that should be skipped
 exclude: (?-xism:/discussion)
 # specifies the characters that are allowed in source filenames
-wiki_file_chars: '-[:alnum:]+/.:_'
+wiki_file_chars: '-[:alnum:]+/.:_~'
 # allow symlinks in the path leading to the srcdir (potentially insecure)
 allow_symlinks_before_srcdir: 1
 
@@ -129,9 +130,9 @@ allow_symlinks_before_srcdir: 1
 # unix users whose commits should be checked by the pre-receive hook
 #untrusted_committers: []
 # gitweb url to show file history ([[file]] substituted)
-historyurl: 'http://git.immerda.ch/?p=amnesia.git;a=history;f=wiki/src/[[file]]'
+historyurl: 'https://git-tails.immerda.ch/tails/log/wiki/src/[[file]]'
 # gitweb url to show a diff ([[file]], [[sha1_to]], [[sha1_from]], [[sha1_commit]], and [[sha1_parent]] substituted)
-diffurl: 'http://git.immerda.ch/?p=amnesia.git;a=blobdiff;f=wiki/src/[[file]];h=[[sha1_to]];hp=[[sha1_from]];hb=[[sha1_commit]];hpb=[[sha1_parent]]'
+diffurl: 'https://git-tails.immerda.ch/tails/commit/wiki/src/[[file]]?id=[[sha1_commit]]'
 # where to pull and push changes (set to empty string to disable)
 gitorigin_branch: ''
 # branch that the wiki is stored in
@@ -179,7 +180,7 @@ pingurl: []
 
 # lockedit plugin
 # PageSpec controlling which pages are locked
-locked_pages: 'inc/* or download or GnuPG_key or sidebar or support or torrents/rss* or index'
+locked_pages: '! (bugs/* or forum/*)'
 
 # moderatedcomments plugin
 # PageSpec matching users or comment locations to moderate
@@ -222,8 +223,9 @@ po_slave_languages:
   - de|Deutsch
   - es|Español
   - fr|Français
+  - pt|Português
 # PageSpec controlling which pages are translatable
-po_translatable_pages: '!security/audits and !security/audits/* and (about or bug_reporting or chat or contribute or customize or doc or doc/* or download or features or found_a_problem or getting_started or git or GnuPG_key or inc/stable_i386_date or index or news or security or security/* or sidebar or stay_tuned or support or support/* or talk-dev or talk-users or tarball or torrents or upgrade or wishlist)'
+po_translatable_pages: '!security/audits and !security/audits/* and (about or chat or contribute or doc or doc/* or download or getting_started or inc/stable_i386_date or index or news or news/* or press or press/* or security or security/* or sidebar or support or support/* or torrents or wishlist)'
 # internal linking behavior (default/current/negotiated)
 po_link_to: current
 

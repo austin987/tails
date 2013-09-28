@@ -1,0 +1,369 @@
+Data persistence is a somewhat tricky topic in a Live system context,
+especially one explicitly designed to avoid leaving any trace of
+its use.
+
+Some real-life usecases however require to set up some kind of data
+persistence, which were then carefully introduced and supported.
+
+[[!toc levels=4]]
+
+Usecases
+========
+
+What can be made persistent?
+----------------------------
+
+Here are the usecases that are of interest for our users and we want
+to support.
+
+### Application-specific configurations
+
+This is relevant for the following applications:
+
+- GnuPG, SSH and OTR key pairs
+- GnuPG configuration
+- SSH client configuration
+- iceweasel certificate trust
+- iceweasel bookmarks
+- Pidgin configuration
+- MUA configuration
+- printers configuration
+- Tor's data/cache for faster bootstrap with slow connections and
+  better protections through more stable entry guards
+  (`/var/lib/tor/`); beware, this breaks tordate
+  [[contribute/design/Time_syncing]]
+- I2P data/cache/log directory (`/var/lib/i2p/`)
+- NoScript global behaviour (whitelist / blacklist) and exceptions
+
+A tool (`tails-persistence-setup`) helps the user to choose exactly
+what files/directories should be persistent. With such a general
+solution the above things don't have to be implemented individually,
+and are instead present as default suggestions in the tool, and
+advanced users with uncommon requirements can do whatever they want so
+we don't hear them nagging all the time.
+
+Stuff we don't want to actively support making persistent:
+
+- web browser addons (while we don't want to make it impossible to
+  install addons, we think it's a really bad idea, and won't actively
+  support it, since it partitions the Tails users anonymity set, thus
+  having bad consequences both on people who do it *and* on others)
+
+### User data store
+
+A persistent non-home data store for whatever random files the user
+wants to have persistent. This is the `~/Persistent/` directory.
+
+### Additional software packages
+
+If a user needs software that is not included in Tails by default it can be
+quite annoying to fetch the APT information and download it (slow over
+Tor) every time. Therefore, APT packages lists and cache can easily be
+made persistent. It's also possible to store in persistence a list of
+additional software packages to be automatically reinstalled on boot.
+
+Persistence storage location
+----------------------------
+
+The Tails persistent volume is a LUKS-encrypted GPT partition, labeled
+`TailsData`, stored on a removable storage device.
+
+Specifications
+==============
+
+Once a persistent volume is enabled, two operation modes are
+supported:
+
+* read-write access: changes to persistent files are saved
+* read-only access to **only** be able to *use* persistent files
+  (e.g. a GnuPG keyring) without leaving any new trace.
+
+Moreover:
+
+* Read-write access to a persistent data store is not the default: it
+  requires a voluntary user action such as choosing enabling
+  a *persistence* option in the boot menu.
+* The persistent data is stored using strong, well-known, Free
+  Software, peer-reviewed encryption tools (`dm-crypt` and LUKS)
+* Fixed storage devices are be blacklisted by default from the search
+  for persistent volumes. Rationale: preventing the risk of using
+  a malicious persistent volume seems more important than supporting
+  the rare "I want to store my persistent volume on a fixed hard-disk"
+  use-case.
+
+Current state of things
+=======================
+
+Tails 0.11 and greater supports the **persistent application-specific
+configurations** and **persistent user data store** usecases.
+
+Implementation
+==============
+
+Backend
+-------
+
+Debian Live already supports several kinds of persistence, including
+snapshots of selected files and persistence store automounting, both
+at the `$HOME` and system-wide levels. LUKS persistent volumes
+are supported.
+
+Neither home automounting nor `live-snapshot` currently fit the
+application-specific configuration persistence use case. Both because
+they are not finely grained enough and persist too much.
+
+That's why we have decided to:
+
+* [generalize overlays](http://live.debian.net/devel/rfc/persistence/)
+  (`*-rw`) to handle arbitrary directories, not just `/` and `/home`,
+* add a "linkfiles" (inspired by [Joey Hess'
+  dircombine](http://git.kitenet.net/?p=joey/home.git;a=blob;f=bin/dircombine))
+  option to create symlinks from the root of a non-persistent
+  directory (e.g. `$HOME`) to regular files stored in
+  a persistent location (e.g. `.gitconfig`, `.vimrc`, etc.)
+
+The read-only mode was implemented by merging the persistent
+volume with a "diff" branch on ramdisk using aufs, and mount the
+resultant device, so that the mountpoint is seen as writable by
+applications but no actual change is made on disk.
+
+The code we ship lives in the `tmp-persistent-custom` branch in
+our [[live-boot Git repository|contribute/git]]. We build packages
+from the `master` branch in there, and drop them into the Tails main
+Git repository.
+
+### Example
+
+Example `live.persist` configuration file:
+
+	# destination       options
+	/var/cache/apt
+	/home/amnesia       linkfiles,source=dotfiles
+
+This will result in:
+
+* `$MEDIA/apt` is bind-mounted onto `/var/cache/apt`
+* `/home/amnesia/` contains symlinks to every file in `$MEDIA/dotfiles`
+
+User interface
+--------------
+
+### bootstrap persistent storage
+
+A *Configure persistent storage* menu entry is the entry point to the
+*bootstrap persistent storage* UI. This UI allows the user to set up
+a persistent storage container in the free space left on the USB stick
+by [[our USB installer|usb_installation]].
+
+Choosing persistence is something *activelly* opt-in, i.e. "I want
+this, I read the documentation for related information, then run the
+setup tool", rather than something we throw to the face of every user
+who did not think of it herself.
+
+This UI is called `tails-persistence-setup` and its code lives in its
+own [[contribute/Git]] (gbp-style) repository.
+
+#### Design
+
+Setting up a Tails persistent volume means:
+
+* detect the device Tails is running from
+* error out if not running from USB
+* error out unless Tails was installed using the USB installer (i.e.
+  unless it's running from a GPT partition labeled `Tails`)
+* error out if the device Tails is running from already has
+  a persistent volume
+* ask the user an encryption passphrase (welcome bonus: pointing to
+  the relevant documentation about choosing a *strong* passphrase)
+* create a LUKS-encrypted partition on the Tails USB stick
+  - uses all the free space left by the USB installer
+  - labeled `TailsData`
+  - create a filesystem in the encrypted container
+  - give ownership on the filesystem to the default Tails user
+* explain the user how/when/why to run the *configure which bits are
+  persistent* UI
+
+* **How/when to run?** Initially, we wanted to do so on first boot.
+  However, to detect if a given Tails
+  system is booting for the first time or not, every first boot must
+  change something on the Tails system partition. We don't
+  want to do this, hence the `tails-persistence-setup` will be run
+  from the Applications menu by users who decide they want persistence.
+
+* **Storage location**: To keep the GUI and documentation simple, we
+  only support setting up a persistent volume *on the USB stick Tails
+  is running from*. **Note**: the underlying tools (live-boot backend,
+  tails-greeter) will support storage on whatever relevant device,
+  though; moreover, `tails-persistence-setup` actually knows how to
+  set up persistence on arbitrary devices, thanks to command-line
+  options. Therefore, brave and advanced users can prepare their store
+  their persistent data wherever they want, but this is not something
+  we will actively support and document beyond the bare minimum
+  (`--help` and manpage).
+
+* **Filesystem** to create on the encrypted storage container: `ext3`
+  looks like the safe bet. The default `ext3` journalling mode only
+  journals metadata, not data, so the impact of journalling on Flash
+  drives should be pretty minor.  Also, we could not find
+  a [[!wikipedia Flash file system]] with mature enough support for
+  block devices: they are rather targeted at raw access to
+  MTD devices.
+
+* **Integration with other configuration steps**: it seems doable to
+  have `tails-persistence-setup` host both the *bootstrap persistent
+  storage* and *configure which bits are persistent* user interfaces
+  in a wizard-like way. The current code provides the foundations to
+  do so, and the menu entry is called *Configure persistent storage*.
+  One may call it using multiple `--step` options, and the UI will
+  present every step sequentially; currently, the only implemented
+  steps are `bootstrap`, `configure` (that implements the *configure
+  which bits are persistent* UI) and `delete`.
+
+* **Programming language**: written in Perl, i.e. the language the one
+  of us who wrote it is the most efficient at.
+
+* Partition / filesystem / LUKS management is done using `udisks`; the
+  [[!tails_todo usb_install_and_upgrade/todo desc="udisks bug wrt.
+  partition attributes"]]
+  is workaround'ed.
+
+### Configure which bits are persistent
+
+This is automatically run right after the persistent storage bootstrap
+step. The user is enabled to change the configuration later.
+Persistence settings changes are taken into account at next boot.
+
+#### Design
+
+* either persistence is currently enabled in read-write mode, and thus
+  the persistence partition is already mounted; or the user is
+  directly coming from bootstrap, and then we must mount the partition
+  ourselves
+* by default, set up a linkfiles-enabled persistent
+  `${HOME}/dotfiles`, preconfigured to have its contents symlinked
+  into `$HOME`.
+* apart of this, let's consider non-directories persistence an
+  advanced feature: to start with, and possibly forever, this could
+  only be configured by manually editing live-persist file
+* a few **presets** are made available (e.g. `~/.gnupg/`);
+  technically, each of these has a name, optionally a short
+  description and icon, and the needed information to make a simple
+  directory persistent (e.g. make `/home/amnesia/.gnupg` persist,
+  as the "gnupg" sub-directory of the persistent volume).
+  The GUI
+  displays every available preset, along with its current
+  (enabled/disabled) status and available details (description, icon).
+  tails-persistence-setup has means to
+  merge its presets list with the configuration read from the input
+  configuration file; to this end, it knows if a given preset
+  is enabled in the input configuration file;
+* by default, the current configuration is displayed as a list of
+  items (= config lines); listed items may be toggled on/off; an *Add
+  custom* button allows to enter custom source, destination (and
+  comma-separated list of options?)
+
+### Enable persistence at boot time
+
+Choosing between various persistence modes is one of the reasons why
+we've written a graphical [[!tails_todo boot_menu]]:
+[[!tails_todo TailsGreeter]].
+
+#### Design
+
+* asks whether to enable persistence at all; if yes, read-only or
+  read-write
+* ask list of possibly valid persistent containers to `live-persist`
+* initial implementation (MVC -speak): the model (`live-persist` and
+  tails-greeter code that runs it) supports enabling multiple
+  persistence containers, but the view (tails-greeter GUI) only
+  supports *one* persistence container
+* ask LUKS passphrase, deals with errors
+* for a given persistent container, it's all or nothing: all bits of
+  persistence configured in its `live.persist` are to be set up
+* runs `live-persist` to set up persistent data where it belong
+* pass information to the user session (at least
+  `tails-persistence-setup` needs information) through shell variables
+  set in `/var/lib/gdm3/tails.persistence`
+
+backend / tails-greeter interface
+---------------------------------
+
+### Long story short
+
+0. The user chooses to toggle persistence on in `tails-greeter`.
+0. Still in `tails-greeter`, the user chooses if s/he wants read-only
+   or read-write persistence.
+0. `tails-greeter` asks `live-boot` the list of possibly valid
+   persistent containers.
+0. For each such volume, `tails-greeter` asks the user to enter the
+   passphrase or to skip it, and tries to unlock. `tails-greeter`
+   deals with error catching, retrying, etc. as appropriate.
+0. `tails-greeter` asks `live-boot` to set up persistence (at least
+   custom mounts and linkfiles), passing it the list of volumes that
+   were successfully unlocked.
+
+### Interfacing
+
+A `live-persist` script shall be written, implementing each kind of
+`tails-greeter` to `live-boot` communication as a sub-command, such
+as:
+
+	live-persist [OPTIONS] list [LABEL]...
+	live-persist [OPTIONS] activate VOLUME...
+
+`live-persist` will report success and failure as any other
+well-behaved synchronously-called shell script, that is: with
+appropriate exit codes and `STDERR`.
+
+### Possibly valid persistent containers
+
+In our case, that is quite simple: it means removable LUKS encrypted
+filesystem, stored on GPT partitions labeled `Tails-persistence` (or
+similar, must be decided upon taking into account technical
+restrictions such as what GPT supports).
+
+This means we need to:
+
+* make sure we can pass this desired label to `live-boot`, probably on
+  the kernel command-line along with other parameters
+
+In other (non-GPT) usecases, generally, it would be filesystems
+labeled with `live-rw` or `home-rw`, but if they're on encrypted
+device, then `live-boot` has to unlock the parent device them to see
+the label; also, in non-Tails usecases, any encrypted filesystem may
+contain a `*-rw` file, and must be unlocked to know too; so any
+encrypted device may be a valid persistent container that is worth
+passing to `tails-greeter`; . `live-persist` will support non-Tails
+usecases on a best-effort basis, leaving room for improvement in case
+other developers want to add support for their preferred usecases.
+
+### Asking live-persist to set up persistence
+
+To start with, we've factored out only the custom mounts part from the
+main `live-boot` script; it depends on factoring out other kinds of
+persistence (e.g. all types of unionfs-style filesystems) first.
+
+<a id="additional-software-packages"></a>
+
+Additional software packages
+----------------------------
+
+The `tails-additional-software` script installs a list of
+additional software packages stored in persistence.
+
+To this aim, the persistent volume root directory may contain
+a `live-additional-software.conf` file that holds the list of packages to install
+(from persistence, since they were cached already).
+
+First, those additional software packages are installed offline from tails-greeter
+`PostLogin` script.
+
+Then, once connected to the network, a NetworkManager dispatcher hook looks for
+upgrades if additional software were activated (`apt-get update`, then `apt-get
+install` the additional software packages). For some packages (e.g.  already
+running software) the change will only be effective at next boot but hopefully a outdated
+version won't be used too long in the meantime.
+
+- [PostLogin](https://git-tails.immerda.ch/greeter/plain/PostLogin.default)
+- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/70-upgrade-additional-software.sh]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-additional-software]]

@@ -1,40 +1,22 @@
 One serious security issue is that we don't know what software will
 attempt to contact the network and whether their proxy settings are
-setup to use the Tor SOCKS proxy or polipo HTTP(s) proxy correctly.
-This is solved by forwarding all direct TCP connections through Tor's
-transparent proxy using the Linux kernel level network filter.
+set up to use the Tor SOCKS proxy or polipo HTTP(s) proxy correctly.
+This is solved by blocking all outbound Internet traffic except Tor
+and I2P, and explicitly configure all applications to use either of
+these.
 
-- [[!tails_gitweb config/chroot_local-includes/etc/firewall.conf]] for IPv4
-- [[!tails_gitweb config/chroot_local-includes/etc/firewall6.conf]] for IPv6
-- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/00-firewall.sh]]
+- [[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]]
+  (uses [ferm](http://ferm.foo-projects.org/) to build an `iptables`
+  ruleset)
 
-The default case is to redirect traffic to the Tor transparent proxy;
-let us now document the few exceptions to this rule.
+The default case is to block all outbound network traffic; let us now
+document all exceptions and some clarifications to this rule.
 
 #### Tor user
 
 Tor itself obviously has to connect to the Internet without going
 through the Tor network. This is achieved by special-casing
 connections originating from the `debian-tor` Unix user.
-
-#### HTP
-
-Tails HTTP Time Protocol (HTP) setup is described on a [[dedicated
-design page|design/HTP]].
-
-Every HTP-related communication is established by the `htp` user, who
-is allowed to connect *directly* to services listening on the `https`
-TCP port or on the `domain` UDP/TCP ports.
-
-The rationale for this exception is that we have kind of a
-chicken'n'egg problem here. We want the clock to be pretty accurate in
-order for Tor to work properly so HTP time synchronization has to be
-done before Tor starts... hence *directly*. This means DNS queries to
-resolve the HTP hosts IPs, and HTTPS traffic to fetch the pages and
-associated resources.
-
-An alternative implementation that would not need HTP to bypass Tor is
-[[being thought of|todo/remove_the_htp_user_firewall_exception]].
 
 #### I2P
 
@@ -45,12 +27,15 @@ access to eepsites (.i2p tld); eepsites are a bit like Tor hidden
 services. Some users would like to be able to access eepsites from
 Tails.
 
-Next major Tails release will ship the I2P software. I2P usage will
-be opt-in, i.e. no I2P software will start by default.
+Like the `debian-tor` user, the `i2p` user is allowed to connect
+*directly* to the Internet. See [[the design document dedicated to
+Tails use of I2P|I2P]] for details.
 
-The `i2p` user will be allowed to connect *directly* to the Internet.
-See
-[[the design document dedicated to Tails use of I2P|I2P]] for details.
+#### Unsafe Browser and the `clearnet` user
+
+The `clearnet` user used to run the
+[[contribute/design/Unsafe_Browser]] is granted full network access
+(but no loopback access) in order to deal with captive portals.
 
 #### Local Area Network (LAN)
 
@@ -59,16 +44,37 @@ connections to the Internet*. Indeed: traffic to the local LAN
 (RFC1918 addresses) is wide open as well as the loopback traffic
 obviously.
 
-It is planned to [[forbid LAN DNS
-queries|todo/forbid_lan_dns_queries]] at some point to protect against
-some attacks; this is not implemented yet.
+LAN DNS queries are forbidden to protect against some attacks.
+
+#### Local services whitelist
+
+The Tails firewall uses a whitelist which only grants access to each
+local service to the users that actually need it. This blocks
+potential leaks due to misconfigurations or bugs, and deanonymization
+attacks by compromised processes. For specifics, see the firewall
+configuration where this is well commented:
+[[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]]
+
+#### Automapped addresses
+
+`AutomapHostsOnResolve` is enabled in Tor configuration, and
+a firewall rule transparently redirects to the Tor transparent proxy
+port the connections targeted at the `127.192.0.0/10` virtual mapped
+address space.
+
+Only the `amnesia` user is granted access to the Tor transparent proxy
+port, so in practice only them can use this hostname-to-address
+mapping facility.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
+- [[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]]
 
 #### IPv6
 
-Tor does not support IPv6 yet so IPv6 communication is allowed only on
-the loopback interface.
+Tor does not support IPv6 yet so IPv6 communication is blocked.
 
 #### UDP, ICMP and other non-TCP protocols
 
 Tor only supports TCP. Non-TCP traffic to the Internet, such as UDP
-datagrams and ICMP packets, is dropped.
+datagrams and ICMP packets, is dropped unless it's going through I2P,
+which supports UDP.
