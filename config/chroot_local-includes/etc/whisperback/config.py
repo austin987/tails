@@ -89,10 +89,10 @@ gnupg_keyring = "/usr/share/keyrings/tails-keyring.gpg"
 # This section defines the recepient parameters
 
 # The address of the recipient
-to_address = "tails@boum.org"
+to_address = "tails-bugs@boum.org"
 
 # The fingerprint of the recipient's GPG key 
-to_fingerprint = "09F6BC8FEEC9D8EE005DBAA41D2975EDF93E735F"
+to_fingerprint = "1F56EDD30741048035DAC1C5EC57B56EF0C43132"
 
 # SENDER
 #

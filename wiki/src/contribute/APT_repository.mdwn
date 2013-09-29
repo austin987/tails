@@ -219,12 +219,18 @@ This new APT suite is called the same as the new release version.
 One may check it has appeared in `~reprepro/conf/distributions`.
 
 Then, the APT suite corresponding to the branch that was used to
-prepare the release (namely:  `stable` if this is a point-release,
-`testing` if this is a major one) must be copied to the new empty APT
-suite that just appeared:
+prepare the release must be copied to the new empty APT suite that
+just appeared:
+
+If this is a major release:
 
 	$ ssh reprepro@incoming.deb.tails.boum.org \
-	     tails-merge-suite testing 0.14
+	     tails-merge-suite testing $TAG
+
+Else, if this is a point-release:
+
+	$ ssh reprepro@incoming.deb.tails.boum.org \
+	     tails-merge-suite stable $TAG
 
 <a id="workflow-post-release"></a>
 
@@ -253,8 +259,8 @@ Giving access to a core developer
 Contributing without privileged access
 --------------------------------------
 
-Non-core developer without access to the "private" APT infrastructure:
-they would add the .deb they want to their Git branch as we have been
+Non-core developers without access to the "private" APT infrastructure
+would add the .deb they want to their Git branch as we have been
 doing until now, push the result on repo.or.cz or whatever... and at
 merge time, we would rewrite their history to remove the .deb, and
 import it into our APT repo.

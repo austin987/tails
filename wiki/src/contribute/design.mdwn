@@ -732,7 +732,7 @@ to push usage of such hardening features in Debian.
 A lot of security features have been implemented upstream at the
 kernel level (ASLR, removal of `/dev/kmem`, `/dev/mem` protections,
 various stack and heap hardening features, `/proc` or `/sys` not leaking
-sensitive informations, etc.), most of them being slowly integrated
+sensitive information, etc.), most of them being slowly integrated
 into Debian. This is the reason why the Tails kernel has no more special
 kernel security feature than the stock Debian kernel.
 
@@ -927,7 +927,7 @@ session cookies by default; the [Cookie
 Monster](https://addons.mozilla.org/en-US/firefox/addon/cookie-monster)
 extension provides more
 fine-grained cookie control for users who need it. This prevents the
-known leak of browsing informations cookies can lead to. The [Adblock
+known leak of browsing information cookies can lead to. The [Adblock
 plus](https://addons.mozilla.org/fr/firefox/addon/1865/) extension
 protects against many tracking possibilities by removing most ads.
 
@@ -962,6 +962,11 @@ looking in there.
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/iceweasel]]
 - Tails' Iceweasel source [[lives in Git|contribute/git]]
+- [[!tails_gitweb config/chroot_local-hooks/12-remove_unwanted_iceweasel_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/13-iceweasel_sqlite]]
+- [[!tails_gitweb config/chroot_local-hooks/14-add_localized_iceweasel_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/14-generate-iceweasel-profile]]
+- [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
 
 ### 3.6.14 Claws Mail
 
@@ -992,10 +997,10 @@ plugin is enabled
 to help one-to-one conversations being as private and unrecordable as
 possible. At boot a language confluxer generates a random looking default
 nickname from the 2000 most common U.S. names (according to the U.S. social
-security administration in the 70s), which results in something Englishesque
+security administration in the 1970's), which results in something Englishesque
 sounding. The nickname is further made to look like a typical IRC nickname by
 prefixing it with ^ or _ with probability 0.05, and changing it to leet speak
-with probability 0.05. Pidgin does not leak any informations appart from the
+with probability 0.05. Pidgin does not leak any information apart from the
 name when answering to CTCP requests.
 
 - [[!tails_gitweb config/chroot_local-includes/lib/live/config/201-pidgin]]
@@ -1041,6 +1046,14 @@ soft-blocks all other kinds of wireless devices (e.g. UWB, GPS, FM).
 
 - [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-set-wireless-devices-state]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-set-wireless-devices-state]]
+
+### 3.6.20 OpenSSH
+
+The OpenSSH client is configured to use the Tor SOCKS proxy, and to
+prefer strong ciphers and MACs..
+
+- [[!tails_gitweb config/chroot_local-includes/etc/ssh/ssh_config]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/connect-socks]]
 
 ## 3.7 Running Tails in virtual machines
 
