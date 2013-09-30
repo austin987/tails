@@ -328,6 +328,21 @@ activate_volumes ()
 		for old_conf in /live/persistence/*_unlocked/live-persistence.conf
 		do
 			new_conf=$(dirname "$old_conf")/persistence.conf
+			if [ -e "$new_conf" ]
+			then
+				if [ "$ACCESS_RIGHTS_WERE_CORRECT" = true ]
+				then
+					warning "'$new_conf' already exists, skipping"
+					continue
+				else
+					# Let's handle the case when an attacker
+					# tries to block the migration by creating
+					# persistence.conf in advance.
+					warning "'$new_conf' already exists. It should not, moving it out of the way"
+					mv "$new_conf" "${new_conf}.old" \
+						|| error "Failed to rename $new_conf to ${new_conf}.old: $?"
+				fi
+			fi
 			install --owner tails-persistence-setup \
 				--group tails-persistence-setup --mode 0600 \
 				/dev/null "${new_conf}.new" \
