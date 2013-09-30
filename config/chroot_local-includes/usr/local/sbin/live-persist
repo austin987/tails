@@ -262,10 +262,14 @@ activate_volumes ()
 	if ls /live/persistence/*_unlocked/live-persistence.conf >/dev/null 2>&1 \
 	   && ! ls /live/persistence/*_unlocked/persistence.conf >/dev/null 2>&1
 	then
-		# Disable live-additional-software.conf if it was not migrated yet.
+		# Disable live-additional-software.conf unless it has the correct
+		# ownership and permissions, and an empty ACL.
 		for f in /live/persistence/*_unlocked/live-additional-software.conf
 		do
-			if [ $(stat -c %U "$f") = amnesia ]
+			if [ $(stat -c %U "$f") != tails-persistence-setup ] ||
+			   [ $(stat -c %G "$f") != tails-persistence-setup ] ||
+			   [ $(stat -c %a "$f") != 600 ] ||
+			   [ -n "$(getfacl --omit-header --skip-base "$f")" ]
 			then
 				mv "$f" "${f}.disabled" \
 					|| error "Failed to disable unsafe live-additional-software.conf: $?"
