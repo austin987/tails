@@ -364,9 +364,16 @@ activate_volumes ()
 				|| error "Failed to import safe persistent settings into '${new_conf}.new': $?"
 			mv "${new_conf}.new" "$new_conf" \
 				|| error "Failed to rename '${new_conf}.new' to '$new_conf': $?"
-			# XXX: delete old conf instead of renaming if everything could be migrated automatically.
-			mv "$old_conf" "${old_conf}.old" \
-				|| error "Failed to rename $old_conf to ${old_conf}.old: $?"
+			if [ $(wc -l "$old_conf") -eq $(wc -l "$new_conf") ]
+			then
+				warning "Fully imported '$old_conf' into '$new_conf'"
+				rm "$old_conf" \
+					|| error "Failed to delete old_conf: $?"
+			else
+				warning "Partially imported '$old_conf' into '$new_conf'"
+				mv "$old_conf" "${old_conf}.old" \
+					|| error "Failed to rename $old_conf to ${old_conf}.old: $?"
+			fi
 		done
 		# Load the new persistence.conf.
 		get_custom_mounts ${custom_mounts} ${open_volumes}
