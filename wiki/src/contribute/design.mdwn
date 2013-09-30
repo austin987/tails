@@ -975,7 +975,10 @@ the sender's email address, which does not leak usage of the PELD nor
 any user location information.
 
 It also always says `EHLO localhost` to the SMTP server instead of
-disclosing the real IP address and hostname.
+disclosing the real IP address and hostname. This is achieved thanks
+to tsocks, as Claws Mail leaks the hostname in the HELO/EHLO
+message, resulting in a hostname leak in the `Message ID` and
+`Received` email headers, when run with `torify` and `torsocks`.
 
 Furthermore, any account a user creates is pre-configured to not use
 HTML in order to get rid of a whole class of privacy concerns.
