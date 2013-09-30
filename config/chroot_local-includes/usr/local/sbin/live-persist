@@ -184,6 +184,42 @@ list_gpt_volumes ()
 	exit 0
 }
 
+mountpoint_has_correct_access_rights ()
+{
+	local mountpoint="$1"
+	local expected_user=root
+	local expected_group=root
+	local expected_perms=775
+	local expected_acl="user::rwx
+user:tails-persistence-setup:rwx
+group::rwx
+mask::rwx
+other::r-x"
+
+	if [ $(stat -c %U "$mountpoint") != "$expected_user" ]
+	then
+		warning "'$mountpoint' is not owned by the '$expected_user' user"
+		return 1
+	fi
+	if [ $(stat -c %G "$mountpoint") != "$expected_group" ]
+	then
+		warning "'$mountpoint' is not owned by the '$expected_group' group"
+		return 2
+	fi
+	if [ $(stat -c %a "$mountpoint") != "$expected_perms" ]
+	then
+		warning "'$mountpoint' permissions are not $expected_perms"
+		return 4
+	fi
+	if [ "$(getfacl --omit-header --skip-base "$f" 2>/dev/null | grep -v '^\s*$')"
+	      != "$expected_acl" ]
+	then
+		warning "'$mountpoint' has incorrect ACL"
+		return 8
+	fi
+	return 0
+}
+
 activate_volumes ()
 {
 	local volumes=${@}
@@ -235,33 +271,42 @@ activate_volumes ()
 		mount -o remount,acl "$mountpoint"
 	done
 
-	# XXX: detect if we have incorrect ownership, permissions and ACL.
-
-	# Set correct ownership, permissions and ACLs on the filesystems root.
-	chown root:root /live/persistence/*_unlocked \
-		|| error "Could not chown /live/persistence/*_unlocked: $?"
-	chmod 0775 /live/persistence/*_unlocked \
-		|| error "Could not chmod /live/persistence/*_unlocked: $?"
-	setfacl -b /live/persistence/*_unlocked \
-		|| error "Could not clear ACL on /live/persistence/*_unlocked: $?"
-	setfacl -m user:tails-persistence-setup:rwx /live/persistence/*_unlocked \
-		|| error "Could not set ACL on /live/persistence/*_unlocked: $?"
-
-	# XXX: migrate unless correct ownership and permissions, too:
-	# else, a non-root attacker could trivially block the
-	# migration by creating persistence.conf in advance. Note that
-	# a root attacker can still block the migration by setting the
-	# correct permissions in advance.
+	# Detect if we have incorrect ownership, permissions and ACL.
+	ACCESS_RIGHTS_WERE_CORRECT=true
+	for mountpoint in /live/persistence/*_unlocked
+	do
+		if ! mountpoint_has_correct_access_rights "$mountpoint"
+		then
+			ACCESS_RIGHTS_WERE_CORRECT=false
+			break
+		fi
+	done
 
 	# XXX: error out if migration is needed, but read-only was selected.
 
 	# XXX: beware of symlink attacks when creating new files.
 
-	# If live-persistence.conf exists but persistence.conf does not,
-	# then migrate.
-	if ls /live/persistence/*_unlocked/live-persistence.conf >/dev/null 2>&1 \
-	   && ! ls /live/persistence/*_unlocked/persistence.conf >/dev/null 2>&1
+	# Migrate:
+	#   * if live-persistence.conf exists but persistence.conf does not;
+	#   * unless correct ownership and permissions, too:
+	#     else, a non-root attacker could trivially block the
+	#     migration by creating persistence.conf in advance. Note that
+	#     a root attacker can still block the migration by setting the
+	#     correct permissions in advance, but there is no way we detect this.
+	if [ "$ACCESS_RIGHTS_WERE_CORRECT" != true ] || (
+		ls /live/persistence/*_unlocked/live-persistence.conf >/dev/null 2>&1 \
+		&& ! ls /live/persistence/*_unlocked/persistence.conf >/dev/null 2>&1
+		)
 	then
+		# Set correct ownership, permissions and ACLs on the filesystems root.
+		chown root:root /live/persistence/*_unlocked \
+			|| error "Could not chown /live/persistence/*_unlocked: $?"
+		chmod 0775 /live/persistence/*_unlocked \
+			|| error "Could not chmod /live/persistence/*_unlocked: $?"
+		setfacl -b /live/persistence/*_unlocked \
+			|| error "Could not clear ACL on /live/persistence/*_unlocked: $?"
+		setfacl -m user:tails-persistence-setup:rwx /live/persistence/*_unlocked \
+			|| error "Could not set ACL on /live/persistence/*_unlocked: $?"
 		# Disable live-additional-software.conf unless it has the correct
 		# ownership and permissions, and an empty ACL.
 		for f in /live/persistence/*_unlocked/live-additional-software.conf
