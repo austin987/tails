@@ -367,3 +367,22 @@ version won't be used too long in the meantime.
 - [PostLogin](https://git-tails.immerda.ch/greeter/plain/PostLogin.default)
 - [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/70-upgrade-additional-software.sh]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-additional-software]]
+
+Security
+--------
+
+The root directory of the persistent volume filesystem root is owned
+by `root:root`, with permissions 0775:
+
+* group-writable so that we can grant write access to other users with
+  ACLs;
+* world-readable for end-user's convenience;
+* additionally, an ACL grants write access to this directory for the
+  `tails-persistence-setup` user, so that it can edit the
+  persistence configuration.
+
+The persistence configuration assistant is run with password-less sudo
+as the `tails-persistence-setup` dedicated user. It creates and
+updates configuration files that are owned by
+`tails-persistence-setup:tails-persistence-setup`, with
+permissions 0600.
