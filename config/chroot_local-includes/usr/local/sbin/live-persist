@@ -352,6 +352,7 @@ activate_volumes ()
 				|| error "Failed to import safe persistent settings into persistence.conf: $?"
 			mv "${new_conf}.new" "$new_conf" \
 				|| error "Failed to rename '${new_conf}.new' to '$new_conf': $?"
+			# XXX: delete old conf instead of renaming if everything could be migrated automatically.
 			mv "$old_conf" "${old_conf}.old" \
 				|| error "Failed to rename $old_conf to ${old_conf}.old: $?"
 		done
