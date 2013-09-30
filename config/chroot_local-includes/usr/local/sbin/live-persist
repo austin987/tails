@@ -347,9 +347,21 @@ activate_volumes ()
 				--group tails-persistence-setup --mode 0600 \
 				/dev/null "${new_conf}.new" \
 				|| error "Failed to create empty '${new_conf}.new': $?"
-			# grep -E "$known_presets" "$old_conf" > "$new_conf" \
-			cat "$old_conf" > "${new_conf}.new" \
-				|| error "Failed to import safe persistent settings into persistence.conf: $?"
+			grep -E --line-regexp \
+				-e '/etc/cups\s+source=cups-configuration' \
+				-e '/home/amnesia\s+source=dotfiles,link' \
+				-e '/home/amnesia/Persistent\s+source=Persistent' \
+				-e '/home/amnesia/\.gnupg\s+source=gnupg' \
+				-e '/home/amnesia/\.ssh\s+source=openssh-client' \
+				-e '/home/amnesia/\.purple\s+source=pidgin' \
+				-e '/home/amnesia/\.claws-mail\s+source=claws-mail' \
+				-e '/home/amnesia/\.gnome2/keyrings\s+source=gnome-keyrings' \
+				-e '/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections' \
+				-e '/home/amnesia/\.mozilla/firefox/bookmarks\s+source=bookmarks' \
+				-e '/var/cache/apt/archives\s+source=apt/cache' \
+				-e '/var/lib/apt/lists\s+source=apt/lists' \
+				"$old_conf" > "${new_conf}.new" \
+				|| error "Failed to import safe persistent settings into '${new_conf}.new': $?"
 			mv "${new_conf}.new" "$new_conf" \
 				|| error "Failed to rename '${new_conf}.new' to '$new_conf': $?"
 			# XXX: delete old conf instead of renaming if everything could be migrated automatically.
