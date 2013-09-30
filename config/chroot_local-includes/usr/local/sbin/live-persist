@@ -235,6 +235,8 @@ activate_volumes ()
 		mount -o remount,acl "$mountpoint"
 	done
 
+	# XXX: detect if we have incorrect ownership, permissions and ACL.
+
 	# Set correct ownership, permissions and ACLs on the filesystems root.
 	chown root:root /live/persistence/*_unlocked \
 		|| error "Could not chown /live/persistence/*_unlocked: $?"
@@ -245,7 +247,16 @@ activate_volumes ()
 	setfacl -m user:tails-persistence-setup:rwx /live/persistence/*_unlocked \
 		|| error "Could not set ACL on /live/persistence/*_unlocked: $?"
 
+	# XXX: migrate unless correct ownership and permissions, too:
+	# else, a non-root attacker could trivially block the
+	# migration by creating persistence.conf in advance. Note that
+	# a root attacker can still block the migration by setting the
+	# correct permissions in advance.
+
 	# XXX: error out if migration is needed, but read-only was selected.
+
+	# XXX: beware of symlink attacks when creating new files.
+
 	# If live-persistence.conf exists but persistence.conf does not,
 	# then migrate.
 	if ls /live/persistence/*_unlocked/live-persistence.conf >/dev/null 2>&1 \
