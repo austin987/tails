@@ -273,6 +273,10 @@ activate_volumes ()
 			then
 				mv "$f" "${f}.disabled" \
 					|| error "Failed to disable unsafe '$f': $?"
+				install --owner tails-persistence-setup \
+					--group tails-persistence-setup --mode 0600 \
+					/dev/null "$f" \
+					|| error "Failed to create empty '$f': $?"
 			fi
 		done
 		# Migrate known-safe settings from old configuration to new one.
