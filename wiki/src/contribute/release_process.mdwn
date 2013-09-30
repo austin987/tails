@@ -11,6 +11,8 @@ Export the following environment variables to be able to copy'n'paste
 the scripts snippets found on this page:
 
 * `VERSION`: the version number of the release being prepared.
+* `export TAG=$(echo "$VERSION" | sed -e 's,~,-,')`
+* `PREVIOUS_VERSION`: the version number of the previous release.
 * `ISOS`: the directory where one stores `tails-i386-*`
   sub-directories like the ones downloaded with BitTorrent.
 * `MASTER_CHECKOUT`: a checkout of the `master` branch of the main
@@ -106,13 +108,17 @@ Then see the relevant release processes:
   * build a debian package
   * upload it to [[APT repository]]
 
-Import PO files from Transifex
-------------------------------
+Update PO files
+---------------
 
 Copy `*.po` from the `tails-misc_completed` branch in
 `https://git.torproject.org/translation.git` into `po/`, **but** skip
 [[languages that are maintained in
 Git|contribute/how/translate#translate]].
+
+Refresh the code PO files, commit the result:
+
+	./refresh-translations && git commit po -m 'Update PO files.'
 
 Freeze
 ------
@@ -124,21 +130,23 @@ If we are at freeze time for a major release:
 * Reset the `testing` APT suite to the state of the `devel` one, as
   documented on [[contribute/APT_repository#workflow-freeze]].
 
+Else, if we are at freeze time for a point-release:
+
+* Merge the `master` Git branch into `stable`.
+
 Changelog
 ---------
 
 Remove the placeholder entry for next release in `debian/changelog`,
 and then:
 
-	./release VERSION PREVIOUS_RELEASED_TAG
-
-example:
-
-	./release 0.3 0.2
+	./release $VERSION $PREVIOUS_VERSION
 
 This populates the Changelog with the Git log entries.
 
-Then, launch an editor for the needed cleanup of the result.
+Then, launch an editor for the needed cleanup of the result:
+
+	dch -e
 
 Finally, commit:
 
@@ -146,6 +154,12 @@ Finally, commit:
 
 Included website
 ----------------
+
+### Merge master
+
+Merge `master` into the branch used for the release:
+
+	git fetch origin && git merge origin/master
 
 ### version number
 
@@ -157,7 +171,6 @@ at least 24 hours in the future! Between tests and mirror synchronization,
 the build will not be released on the same day. Try to make sure it
 matches the date of the future signature.
 
-	VERSION='0.19'
 	RELEASE_DATE='June 26, 2013'
 
 	echo "$VERSION"      > wiki/src/inc/stable_i386_version.html
@@ -167,8 +180,8 @@ matches the date of the future signature.
 
 ### features and design documentation
 
-Read the Changelog carefully, and update the [[contribute/design]] and
-[[doc/about/features]] pages accordingly.
+Read the Changelog carefully, and update [[doc/about/features]]
+pages accordingly.
 
 Also:
 
@@ -176,25 +189,24 @@ Also:
 
 ... and remove the `PENDING-FOR-N.M` warnings.
 
-PO files
---------
+Website translations
+--------------------
 
-Refresh the code PO files with `./refresh-translations`, commit
-the result.
+Refresh the website PO files and commit the ones corresponding to
+pages that were added or changed accordingly to changes coming with
+the new release. This e.g. ensures that the RC call for translation
+points translators to up-to-date PO files:
 
-Refresh the website PO files with `./build-wiki`, and add / commit the ones
-corresponding to pages that were added or changed accordingly to
-changes coming with the new release. This e.g. ensures that the RC
-call for translation points translators to up-to-date PO files.
+	./build-wiki && git add wiki/src && git commit -m 'Update website PO files.'
 
-If preparing a RC, ask on tails-l10n that someone checks the PO files
-of the website [[using `check_po.sh`|contribute/l10n_tricks]], and
-corrects all the errors.
+If at freeze time, ask on tails-l10n that someone checks the PO files
+of `po/` and of the website [[using
+`check_po.sh`|contribute/l10n_tricks]], and corrects all the errors.
 
 Tag the release in Git
 ======================
 
-	git tag -u 1202821CBE2CD9C1 -m "tagging version ${VERSION}" "${VERSION}"
+	git tag -u 1202821CBE2CD9C1 -m "tagging version ${VERSION}" "${TAG}"
 	git push --tags
 
 (Pushing the tag is needed so that the APT repository is updated, and
@@ -279,15 +291,14 @@ page|release_process/test]].
 Generate the OpenPGP signatures and Torrents
 ============================================
 
-First, create a directory with a suitable name:
+First, create a directory with a suitable name and go there:
 
-	mkdir tails-i386-$VERSION
+	mkdir "$ISOS/tails-i386-$VERSION" && cd "$ISOS/tails-i386-$VERSION"
 
-Second, copy the built image to this brand new directory and
-rename it:
+Second, copy the built image to this brand new directory.
+Then, rename it:
 
-	cd tails-i386-$VERSION
-	mv *.iso tails-i386-$VERSION.iso
+	mv *.iso "tails-i386-$VERSION.iso"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
@@ -322,8 +333,8 @@ Test them with a BitTorrent client running in a different place.
 
 ## Download and seed image from lizard
 
-    scp tails-i386-$VERSION.torrent bittorent.lizard:
-    ssh bittorent.lizard transmission-remote --add tails-i386-$VERSION.torrent
+    scp tails-i386-$VERSION.torrent bittorrent.lizard:
+    ssh bittorrent.lizard transmission-remote --add tails-i386-$VERSION.torrent
 
 ## Upload to HTTP mirrors
 
@@ -371,17 +382,15 @@ In order to get any new documentation into the website, merge either
 Rename the `.packages` file to remove the `.iso` part of its name.
 
 Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
-rto the Git repository's `wiki/src/torrents/files/` directory and
+into the Git repository's `wiki/src/torrents/files/` directory and
 remove the one for the previous release (including any RCs). If
-prepareing an RC, only copy the `.iso.sig`.
+preparing an RC, only copy the `.iso.sig`.
 
 Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
 
 	sha256sum $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
 	  cut -f 1 -d ' ' | tr -d '\n' \
 	  > wiki/src/inc/stable_i386_hash.html
-
-In `todo/*`, replace `pending` tags with `todo/done` tags.
 
 Update the [[support/known_issues]] page.
 
@@ -395,7 +404,15 @@ Write the announcement for the release in
 Write an announcement listing the security bugs affecting the previous
 version in `security/` in order to let the users of the old versions
 know that they have to upgrade. Date it a few days before the ISO
-image to be released was *built*.
+image to be released was *built*. Including:
+
+- the list of CVE fixed in Linux since the one shipped in the previous
+  release of Tails:
+  <http://ftp-master.metadata.debian.org/changelogs/main/l/linux/unstable_changelog>
+- the list of DSA fixed in packages we ship since those that were in
+  the previous release of Tails: <http://security.debian.org/>
+- the list of MFSA fixed by the iceweasel update:
+  <https://www.mozilla.org/security/announce/>
 
 Generate PO files for the release and security announcements with
 `./build-wiki`.
@@ -422,6 +439,16 @@ Push
 Push the last commits to our Git repository:
 
 	git push
+
+... and ask <root@boum.org> to refresh the ikiwiki wrappers for
+our website.
+
+Bug tracker
+-----------
+
+Mark all issues fixed in this release as `Status: Resolved` in our bug
+tracker. For a list of candidates, see the [issues in *Fix committed*
+status](https://labs.riseup.net/code/projects/tails/issues?query_id=111).
 
 IRC
 ---
@@ -469,7 +496,7 @@ Prepare for the next release
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
    repository documentation.
 1. Push the resulting `devel` branch.
-1. Reset experimental:
+1. If this was a major release, then reset experimental:
    - take note of branches merged into `experimental`, but not into
      `devel`:
 
@@ -491,4 +518,5 @@ Prepare for the next release
      Note that the merge will fail for suites that contain no package.
 
    - `git push --force origin experimental`
-1. Run a Jenkins build of experimental, devel and stable.
+1. Manually trigger Jenkins builds of experimental, devel and stable:
+   <https://jenkins.tails.boum.org/>.
