@@ -307,23 +307,19 @@ activate_volumes ()
 			|| error "Could not clear ACL on /live/persistence/*_unlocked: $?"
 		setfacl -m user:tails-persistence-setup:rwx /live/persistence/*_unlocked \
 			|| error "Could not set ACL on /live/persistence/*_unlocked: $?"
-		# Disable live-additional-software.conf unless it has the correct
-		# ownership and permissions, and an empty ACL.
-		for f in /live/persistence/*_unlocked/live-additional-software.conf
-		do
-			if [ $(stat -c %U "$f") != tails-persistence-setup ] ||
-			   [ $(stat -c %G "$f") != tails-persistence-setup ] ||
-			   [ $(stat -c %a "$f") != 600 ] ||
-			   [ -n "$(getfacl --omit-header --skip-base "$f")" ]
-			then
+		# Disable live-additional-software.conf if needed.
+		if [ "$ACCESS_RIGHTS_WERE_CORRECT" != true ]
+		then
+			for f in /live/persistence/*_unlocked/live-additional-software.conf
+			do
 				mv "$f" "${f}.disabled" \
 					|| error "Failed to disable unsafe '$f': $?"
 				install --owner tails-persistence-setup \
 					--group tails-persistence-setup --mode 0600 \
 					/dev/null "$f" \
 					|| error "Failed to create empty '$f': $?"
-			fi
-		done
+			done
+		fi
 		# Migrate known-safe settings from old configuration to new one.
 		for old_conf in /live/persistence/*_unlocked/live-persistence.conf
 		do
