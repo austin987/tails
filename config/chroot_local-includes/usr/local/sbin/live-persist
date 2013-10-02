@@ -360,7 +360,7 @@ activate_volumes ()
 				|| error "Failed to import safe persistent settings into '${new_conf}.new': $?"
 			mv "${new_conf}.new" "$new_conf" \
 				|| error "Failed to rename '${new_conf}.new' to '$new_conf': $?"
-			if [ $(wc -l "$old_conf") -eq $(wc -l "$new_conf") ]
+			if [ $(wc -l "$old_conf" | awk '{print $1}') -eq $(wc -l "$new_conf" | awk '{print $1}') ]
 			then
 				warning "Fully imported '$old_conf' into '$new_conf'"
 				rm "$old_conf" \
