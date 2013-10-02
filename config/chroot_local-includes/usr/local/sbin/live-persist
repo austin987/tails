@@ -282,8 +282,6 @@ activate_volumes ()
 		fi
 	done
 
-	# XXX: error out if migration is needed, but read-only was selected.
-
 	# XXX: beware of symlink attacks when creating new files.
 
 	# Migrate:
@@ -296,6 +294,10 @@ activate_volumes ()
 	if [ "$ACCESS_RIGHTS_WERE_CORRECT" != true ] ||
 		ls /live/persistence/*_unlocked/live-persistence.conf >/dev/null 2>&1
 	then
+		if [ "$PERSISTENCE_READONLY" = true ]
+		then
+			error "Persistence configuration needs to be migrated, but read-only was selected; please retry in read-write mode"
+		fi
 		# Set correct ownership, permissions and ACLs on the filesystems root.
 		chown root:root /live/persistence/*_unlocked \
 			|| error "Could not chown /live/persistence/*_unlocked: $?"
