@@ -287,16 +287,14 @@ activate_volumes ()
 	# XXX: beware of symlink attacks when creating new files.
 
 	# Migrate:
-	#   * if live-persistence.conf exists but persistence.conf does not;
+	#   * if live-persistence.conf exists;
 	#   * unless correct ownership and permissions, too:
 	#     else, a non-root attacker could trivially block the
 	#     migration by creating persistence.conf in advance. Note that
 	#     a root attacker can still block the migration by setting the
 	#     correct permissions in advance, but there is no way we detect this.
-	if [ "$ACCESS_RIGHTS_WERE_CORRECT" != true ] || (
-		ls /live/persistence/*_unlocked/live-persistence.conf >/dev/null 2>&1 \
-		&& ! ls /live/persistence/*_unlocked/persistence.conf >/dev/null 2>&1
-		)
+	if [ "$ACCESS_RIGHTS_WERE_CORRECT" != true ] ||
+		ls /live/persistence/*_unlocked/live-persistence.conf >/dev/null 2>&1
 	then
 		# Set correct ownership, permissions and ACLs on the filesystems root.
 		chown root:root /live/persistence/*_unlocked \
