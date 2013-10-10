@@ -5,7 +5,7 @@ warn() {
 }
 
 die() {
-    warn $*
+    warn "$*"
     exit 1
 }
 
@@ -17,8 +17,8 @@ set_log_tag() {
 
 log() {
     if [ "${_LOG_TAG}" ]; then
-        logger -t ${_LOG_TAG} "$*"
-    else
+        logger -t "${_LOG_TAG}" "$*"
+    elses
         logger "$*"
     fi
 }
