@@ -962,6 +962,11 @@ looking in there.
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/iceweasel]]
 - Tails' Iceweasel source [[lives in Git|contribute/git]]
+- [[!tails_gitweb config/chroot_local-hooks/12-remove_unwanted_iceweasel_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/13-iceweasel_sqlite]]
+- [[!tails_gitweb config/chroot_local-hooks/14-add_localized_iceweasel_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/14-generate-iceweasel-profile]]
+- [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
 
 ### 3.6.14 Claws Mail
 
@@ -970,7 +975,10 @@ the sender's email address, which does not leak usage of the PELD nor
 any user location information.
 
 It also always says `EHLO localhost` to the SMTP server instead of
-disclosing the real IP address and hostname.
+disclosing the real IP address and hostname. This is achieved thanks
+to tsocks, as Claws Mail leaks the hostname in the HELO/EHLO
+message, resulting in a hostname leak in the `Message ID` and
+`Received` email headers, when run with `torify` and `torsocks`.
 
 Furthermore, any account a user creates is pre-configured to not use
 HTML in order to get rid of a whole class of privacy concerns.
@@ -995,8 +1003,10 @@ nickname from the 2000 most common U.S. names (according to the U.S. social
 security administration in the 1970's), which results in something Englishesque
 sounding. The nickname is further made to look like a typical IRC nickname by
 prefixing it with ^ or _ with probability 0.05, and changing it to leet speak
-with probability 0.05. Pidgin does not leak any information apart from the
-name when answering to CTCP requests.
+with probability 0.05. When answering to CTCP requests, Pidgin does
+not leak any information apart from PING and VERSION (`Purple IRC`),
+which is deemed acceptable as there are probably other weirdness in
+how the protocol is implemented, that disclose as much.
 
 - [[!tails_gitweb config/chroot_local-includes/lib/live/config/201-pidgin]]
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.purple]]
@@ -1043,6 +1053,14 @@ soft-blocks all other kinds of wireless devices (e.g. UWB, GPS, FM).
 
 - [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-set-wireless-devices-state]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-set-wireless-devices-state]]
+
+### 3.6.20 OpenSSH
+
+The OpenSSH client is configured to use the Tor SOCKS proxy, and to
+prefer strong ciphers and MACs..
+
+- [[!tails_gitweb config/chroot_local-includes/etc/ssh/ssh_config]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/connect-socks]]
 
 ## 3.7 Running Tails in virtual machines
 
