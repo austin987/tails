@@ -7,7 +7,3 @@ get_all_ethernet_nics() {
 nic_is_up() {
     /sbin/ifconfig | grep -qe "^${1}\>"
 }
-
-nic_is_wireless() {
-    /sbin/iwconfig ${1} >/dev/null 2>&1
-}
