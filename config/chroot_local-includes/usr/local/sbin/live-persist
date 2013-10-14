@@ -266,14 +266,14 @@ activate_volumes ()
 	# ... and now the persistent volumes should be mounted.
 
 	# Enable the acl mount option on all persistent filesystems.
-	for mountpoint in /live/persistence/*_unlocked
+	for mountpoint in $(ls -d /live/persistence/*_unlocked || true)
 	do
 		mount -o remount,acl "$mountpoint"
 	done
 
 	# Detect if we have incorrect ownership, permissions and ACL.
 	ACCESS_RIGHTS_WERE_CORRECT=true
-	for mountpoint in /live/persistence/*_unlocked
+	for mountpoint in $(ls -d /live/persistence/*_unlocked || true)
 	do
 		if ! mountpoint_has_correct_access_rights "$mountpoint"
 		then
@@ -308,7 +308,7 @@ activate_volumes ()
 		# Disable live-additional-software.conf if needed.
 		if [ "$ACCESS_RIGHTS_WERE_CORRECT" != true ]
 		then
-			for f in /live/persistence/*_unlocked/live-additional-software.conf
+			for f in $(ls /live/persistence/*_unlocked/live-additional-software.conf || true)
 			do
 				mv "$f" "${f}.disabled" \
 					|| error "Failed to disable unsafe '$f': $?"
@@ -319,7 +319,7 @@ activate_volumes ()
 			done
 		fi
 		# Migrate known-safe settings from old configuration to new one.
-		for old_conf in /live/persistence/*_unlocked/live-persistence.conf
+		for old_conf in $(ls /live/persistence/*_unlocked/live-persistence.conf || true)
 		do
 			new_conf=$(dirname "$old_conf")/persistence.conf
 			if [ -e "$new_conf" ]
