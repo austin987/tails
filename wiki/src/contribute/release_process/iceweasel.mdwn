@@ -162,14 +162,24 @@ If Debian's iceweasel was pushed to Git already
 If Debian's iceweasel was not pushed to Git yet
 -----------------------------------------------
 
-FIXME: test these instructions.
-
 Then, we have to import the source package into Git ourselves, and
 merge from Debian's Vcs-Git later.
 
 * Download, verify and extract the new iceweasel source package with dget.
 
 * Checkout our `tails/master` branch.
+
+* Unapply all quilt patches and commit:
+
+      quilt pop -a
+
+* `git rm` the deleted files
+
+* `git add` the new files and the modified ones
+
+* Commit:
+
+      git commit -m 'Remove all quilt patches.'
 
 * Overwrite the files in the Git checkout with the new ones.
   Assuming the new extracted iceweasel package is in
@@ -178,14 +188,18 @@ merge from Debian's Vcs-Git later.
 
       rsync --stats -a --exclude=.git --delete iceweasel-17.0.2esr/ git/
 
-* `git add` the new files and the modified ones
-
 * `git rm` the deleted files
 
-* Commit.
+* `git add` the new files and the modified ones
+
+* Commit:
+
+      git commit -m "Import $(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
 * Verify with `diff` that the current state of the `tails/master` is
-  exactly the same as Debian's iceweasel source package one.
+  exactly the same as Debian's iceweasel source package one:
+
+      diff --exclude=.git iceweasel-17.0.2esr/ git/
 
 * Bring our `debian/changelog` and `debian/rules` changes back.
 
@@ -222,20 +236,52 @@ and commit:
 
 * Import the latest TBB patches:
 
-      export TBB_SRC=XXX_PATH_TO_TBB_SRC_XXX
-      for patch in $(\ls --reverse ${TBB_SRC}/src/current-patches/firefox/*.patch) ; do
-        p=$(basename "$patch")
-        quilt import -P "torbrowser/$p" "$patch"
-      done
-      git add debian/patches/torbrowser debian/patches/series
-      TBB_COMMIT=$(git --git-dir=$TBB_SRC/.git rev-parse HEAD)
-      git commit -a -m "Import Torbrowser patches at commit ${TBB_COMMIT}."
+  - If working on Iceweasel 17:
 
-* Remove from the quilt series, using `quilt delete`, the Torbrowser
-  patches we don't want: see `debian/changelog` for the list of
-  patches skipped last time, see the TBB Git log to make your opinion
-  about new or updated patches, use common sense. Commit with
-  a message explaining your decisions.
+        export TBB_SRC=XXX_PATH_TO_TBB_SRC_XXX
+        for patch in $(\ls --reverse ${TBB_SRC}/src/current-patches/firefox/*.patch) ; do
+          p=$(basename "$patch")
+          quilt import -P "torbrowser/$p" "$patch"
+        done
+        git add debian/patches/torbrowser debian/patches/series
+        TBB_COMMIT=$(git --git-dir=$TBB_SRC/.git rev-parse HEAD)
+        git commit -a -m "Import Torbrowser patches at commit ${TBB_COMMIT}."
+
+    * Remove from the quilt series, using `quilt delete`, the
+      Torbrowser patches we don't want: see `debian/changelog` for the
+      list of patches skipped last time, see the TBB Git log to make
+      your opinion about new or updated patches, use common sense.
+      Commit with a message explaining your decisions.
+
+  - If working on Iceweasel 24:
+    * Ensure you have Mike Perry's latest stuff available:
+
+          git remote add mikeperry https://git.torproject.org/user/mikeperry/tor-browser.git
+          git fetch mikeperry
+
+    * Find the most recent commit in mikeperry/torbrowser-firefox24.0
+      that is an import from Mozilla (see e.g. 5175d069); save its ID:
+
+          export LAST_MOZILLA_COMMIT=XXX
+
+    * Export the Torbrowser patches:
+
+          TORBROWSER_PATCHES_DIR=$(mktemp -d)
+          git format-patch -o "$TORBROWSER_PATCHES_DIR" \
+              "$LAST_MOZILLA_COMMIT..mikeperry/torbrowser-firefox24.0"
+
+    * Remove from $TORBROWSER_PATCHES_DIR the patches we don't want.
+      See the section about Iceweasel 17 above for details.
+
+    * Import the Torbrowser patches:
+
+          for patch in $(\ls --reverse ${TORBROWSER_PATCHES_DIR}/*.patch) ; do
+            p=$(basename "$patch")
+            quilt import -P "torbrowser/$p" "$patch"
+          done
+          git add debian/patches/torbrowser debian/patches/series
+          TBB_COMMIT=$(git rev-parse mikeperry/torbrowser-firefox24.0)
+          git commit -a -m "Import Torbrowser 24 patches at commit ${TBB_COMMIT}."
 
 * Apply Torbrowser patches:
 
