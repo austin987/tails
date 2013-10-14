@@ -74,7 +74,9 @@ else
 fi
 
 DEV_UDEV_PATH=$(udevadm info --query path     $QUERY_SELECTOR)
-DEV_TYPE_LINE=$(udevadm info --query property $QUERY_SELECTOR | grep -w '^ID_TYPE')
+# SD in SDIO has no ID_TYPE, let's pretend it's a disk just like USB sticks
+DEV_TYPE_LINE=$(udevadm info --query property $QUERY_SELECTOR | grep -w '^ID_TYPE') \
+	|| DEV_TYPE_LINE='ID_TYPE=disk'
 DEV_TYPE="${DEV_TYPE_LINE#*=}"
 
 # If the world was sane we'd want to *disable* the eject lock, but it turns out
