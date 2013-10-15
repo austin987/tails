@@ -380,6 +380,7 @@ Then /^persistence configuration files have safe access rights$/ do
       assert(file_perms = "600",
              "'#{f}' has permissions '#{file_perms}', expected '600'")
     end
+  end
 end
 
 When /^I write some files expected to persist$/ do
