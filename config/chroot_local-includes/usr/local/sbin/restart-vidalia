@@ -2,12 +2,29 @@
 
 set -e
 
-# Get LIVE_USERNAME, whose instance we want to restart
+ARGS=
+if grep -qw bridge /proc/cmdline; then
+   ARGS='-bridgeconf'
+fi
+
+
+# Get LIVE_USERNAME
 . /etc/live/config.d/username.conf
 
 if killall vidalia 2> /dev/null; then
    sleep 2 # give lckdo a chance to release the lockfile
 fi
+
+until pgrep -u "${LIVE_USERNAME}" nm-applet >/dev/null ; do
+   sleep 5
+done
+
 export DISPLAY=':0.0'
 export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
-exec /bin/su -c /usr/local/bin/vidalia-wrapper "${LIVE_USERNAME}" &
+
+sudo -u ${LIVE_USERNAME} xhost +SI:localuser:vidalia
+sudo -u vidalia lckdo /var/lock/vidalia vidalia -DISPLAY=${DISPLAY} ${ARGS} &
+until pgrep -u vidalia vidalia >/dev/null ; do
+   sleep 5
+done
+sudo -u ${LIVE_USERNAME} xhost -SI:localuser:vidalia
