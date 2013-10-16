@@ -1,0 +1,16 @@
+Tails-specific: reload CUPS configuration to take into account persistent printers
+
+--- chroot.orig/etc/gdm3/PostLogin/Default    2013-07-23 12:51:28.436000000 +0000
++++ chroot/etc/gdm3/PostLogin/Default 2013-07-23 13:09:07.476000000 +0000
+@@ -110,6 +110,11 @@
+    log_n_exit "'/usr/local/sbin/tails-additional-software' does not exist or is not executable."
+ fi
+ 
++# Reload CUPS configuration to take persistent printers into account if necessary
++if grep -qs '^/etc/cups\s\+' /live/persistence/*_unlocked/live-persistence.conf ; then
++    service cups force-reload
++fi
++
+ ### Password
+ 
+ # Import password for superuser access
