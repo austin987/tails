@@ -334,7 +334,7 @@ EOF
   end
 
   def has_process?(process)
-    return execute("pidof " + process).success?
+    return spawn("pidof " + process).success?
   end
 
   def save_snapshot(path)
