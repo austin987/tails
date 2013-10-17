@@ -1,0 +1,85 @@
+#! /usr/bin/perl
+
+use strict;
+use warnings FATAL => 'all';
+use 5.10.1;
+use autodie qw{:all};
+use Desktop::Notify;
+use Locale::gettext;
+use POSIX;
+use Path::Class;
+use String::Errf qw{errf};
+
+setlocale(LC_MESSAGES, "");
+textdomain("tails");
+
+
+=head1 Functions
+
+=head2 current_lang
+
+Returns the two-letters language code of the current session.
+
+=cut
+sub current_lang {
+    my ($code) = ($ENV{LANG} =~ m/([a-z]{2}).*/);
+
+    return $code;
+}
+
+=head2 doc_url
+
+Returns the best local URL to a given piece of doc.
+
+=cut
+sub doc_url {
+    my $website_root = shift;
+    my $doc_resource = shift;
+
+    my @try_files = (
+        file($website_root, $doc_resource . "." . current_lang() . ".html" ),
+        file($website_root, $doc_resource . ".en.html" ),
+    );
+
+    foreach my $file (@try_files) {
+        return "file://$file" if -e $file;
+    }
+
+    return;
+}
+
+
+=head1 Main
+
+=cut
+
+my @disabled_files = (
+    glob('/live/persistence/*_unlocked/live-additional-software.conf.disabled'),
+    glob('/live/persistence/*_unlocked/live-persistence.conf.old'),
+);
+
+exit 0 unless @disabled_files;
+
+my $website_root = '/usr/share/doc/tails/website';
+my $doc_resource = 'doc/first_steps/persistence/upgrade';
+my $doc_url = doc_url($website_root, $doc_resource)
+    or die "Could not find best URL for '$doc_resource' at '$website_root'";
+
+my $notify = Desktop::Notify->new();
+my $summary = gettext(q{Some persistence settings were temporarily disabled});
+my $body    = errf(
+    gettext(
+        "%{disabled_conf_files}s\n"
+        . "<a href='%{doc_url}s'>Learn how to enable them again.</a>"
+    ),
+    {
+        disabled_conf_files => join(', ', @disabled_files),
+        doc_url             => $doc_url,
+    },
+);
+
+$notify->create(
+    summary => $summary,
+    body    => $body,
+    timeout => 0
+)->show();
