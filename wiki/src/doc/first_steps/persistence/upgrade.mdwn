@@ -1,4 +1,236 @@
-XXX: here's the place where we should explain people how to have their
+[[!meta title="Upgrade to a more secure persistent volume"]]
+
+Tails 0.21 introduces a more secure access control on the persistent
+volume settings. This also means that before Tails 0.21, an attacker who
+could run an exploit from inside your Tails session could corrupt the
+persistent volume settings and possibly gain administrator rights or
+install malicious software.
+
+For more technical details about the security of the persistent volume,
+read our [[design document|contribute/design/persistence#security]].
+
+<div id="automatic_upgrade">
+
+Automatic upgrade
+=================
+
+We designed a migration mechanism that allows, in most cases, to upgrade
+to this more secure persistent volume automatically. To do this upgrade,
+start Tails 0.21 or later, and enable persistence without the read-only
+option.
+
+XXX: Be more explicit about the fact that with the read-only option
+Tails Greeter will get stuck?
+
+But this automatic upgrade might not be sufficient in some cases.
+
+1. **If you have custom persistence settings or use
+[[additional software packages|configure#additional_software]]**, the
+corresponding settings are not enabled automatically during the upgrade.
+
+   A notification should appear when starting Tails that indicates which
+   persistent settings are temporarily disabled. In that case, follow
+   the instructions to [[enable again your custom persistence
+   settings|upgrade#custom_settings]].
+
+   <div class="caution">
+
+     If you have custom persistence settings or use additional software
+     but no notification appear on the desktop, then your Tails system
+     might be corrupted. Then, follow the instructions to [[copy
+     manually your persistent data to a new device|upgrade#new_device]].
+
+   </div>
+
+1. **If you have good reasons to think that your persistence settings
+are corrupted** or if want to be extra careful, follow the instructions
+to [[copy manually your persistent data to a new
+device|upgrade#new_device]].
+
+<div id="custom_settings">
+
+Enabling again your custom persistence settings
+===============================================
+
+Custom persistence settings and additional software are disabled during
+the automatic upgrade because, there is technically a possibility for
+these files to be corrupted.
+
+The following instructions explain how to verify the content of these
+files and enable again your custom settings.
+
+1. Start Tails and set an
+[[administration password|startup_options/administration_password]].
+
+1. Choose **Applications → Accessories → Root Terminal** to open a
+terminal with administration rights.
+
+1. Execute the `nautilus` command to start the file browser.
+
+1. In the file browser navigate to `/live/persistence/`. Open the folder
+named `XXX_unlocked`. The *`XXX`* in this example is probably `sdb2`.
+But there should be only one folder in `/live/persistence`, so there is
+little risk for confusion.
+
+`live-persistence.conf.old`
+---------------------------
+
+If there is a file named `live-persistence.conf.old` in this folder,
+then some of your persistent settings need to be enabled manually.
+
+1. In the file browser, right-click on the `live-persistence.conf.old`
+file and open it by choosing Open with Other Application... → gedit.
+
+1. Right-click on the `persistence.conf` file and choose **Open with
+Other Application... → gedit** to open it in a new tab in *gedit*.
+
+1. Switch between the two tabs in *gedit* corresponding to those files.
+Compare their content and copy from `live-persistence.conf.old` to
+`persistence.conf` the lines corresponding to your custom settings that
+have not been added automatically.
+
+Those missing lines should correspond to your custom directories or
+other custom persistence settings. If you detect lines in
+`live-persistence.conf.old` that do not correspond to any change that
+you have made, it might have been introduced by an attacker. In this
+case, do the following:
+
+1. [[Report a bug using *WhisperBack*|bug_reporting]] and explain which
+are the lines that look suspicious to you.
+
+1. Keep that Tails device without modifying in order to analyse it later
+if required.
+
+1. Follow the instructions to [[copy manually your persistent data to a
+new device|upgrade#new_device]].
+
+If you cannot detect any suspicious line, close *gedit* and delete the
+file `live-persistence.conf.old` using the file browser.
+
+`live-additional-software.conf.disabled`
+----------------------------------------
+
+If there is a file named `live-additional-software.conf.disabled` in
+this folder, then some of your [[additional
+software|configure#additional_software]] need to be enabled manually.
+
+1. In the file browser, right-click on the
+`live-additional-software.conf.disabled` file and open it by choosing
+**Open with with Other Application...** → **gedit**.
+
+1. Right-click on the `live-additional-software.conf` file and choose
+**Open with Other Application...** → **gedit** to open it in a new tab
+in *gedit*.
+
+1. Copy from `live-additional-software.conf.disabled` to
+`live-additional-software.conf` the lines corresponding to your
+additional software.
+
+If you detect lines in `live-additional-software.conf.disabled` that do
+not correspond to any additional software added by you, it might have
+been introduced by an attacker. In this case, do the following:
+
+1. [[Report a bug using *WhisperBack*|bug_reporting]] and explain which
+are the lines that look suspicious to you.
+
+1. Keep that Tails device without modifying in order to analyse it later
+if required.
+
+1. Follow the instructions to [[copy manually your persistent data to a
+new device|upgrade#new_device]].
+
+If you cannot detect any suspicious line, close *gedit* and delete the
+file `live-additional-software.conf.disabled` using the file browser.
+
+<div id="new_device">
+
+Copying manually your persistent data to a new device
+=====================================================
+
+If you have good reasons to think that your persistence settings are
+corrupted or if want to be extra careful, then copy manually your
+persistent data to a new device using the following instructions.
+
+Create a new device
+-------------------
+
+1. Install Tails 0.21 or later to a new device using the usual
+[[installing instructions|usb_installation]]. Do not use on the Tails
+device that might be corrupted in the process of installing the new one.
+
+1. [[Create a persistent volume|configure]] on this new device.
+
+1. Configure it again to enable the persistent features of your choice.
+
+1. Restart Tails and enable persistence.
+
+Rescue your files from the old Tails device
+-------------------------------------------
+
+1. Choose **Applications → System Tools →  Disk Utility** to open the
+*GNOME Disk Utility*.
+
+1. In the left panel, click on the device corresponding to the old Tails
+device.
+
+1. In the right panel, click on the partition labeled as **Encrypted**.
+The **Partition Label** must be **TailsData**.
+
+1. Click on **Unlock Volume** to unlock the old persistent volume.
+Enter the passphrase of the old persistent volume and click **Unlock**.
+
+1. Click on the **TailsData** partition that appears below the
+**Encrypted Volume** partition.
+
+1. Click on **Mount Volume**. The old persistent volume is now mounted
+as `/media/TailsData`.
+
+1. Choose **Places → TailsData** from the top navigation bar to open to
+the old persistent volume.
+
+1. In the file browser, choose **File → New Tab** and navigate to
+`/live/persistence/` in this new tab. Open the new persistent volume in
+the folder named `XXX_unlocked`. The *XXX* in this example is probably
+`sdb2`. But there should be only one folder in the `/live/persistence`
+folder, so there is little risk for confusion.
+
+1. Click on the **TailsData** tab.
+
+1. To import a folder containing persistent data from the old persistent
+volume to the new one, drag and drop the folder to the **XXX_unlocked**
+tab. When importing a folder, choose to **Merge All** the folder, and
+**Replace All** files. Do not import a folder if you don't know what it
+is used for.
+
+    - The `apt` folder corresponds to the **[[APT
+      Packages|configure#apt_packages]]** and **[[APT
+      Lists|configure#apt_lists]]** persistence feature but requires
+      administration rights to be imported. This goes beyond the scope
+      of these instructions. Note that this folder does not contain
+      personal data.
+    - The `bookmarks` folder corresponds to the **[[Browser
+      bookmarks|configure#browser_bookmarks]]** persistent feature.
+    - The `claws-mail` folder corresponds to the **[[Claws
+      Mail|configure#claws_mail]]** persistence feature.
+    - The `dotfiles` folder corresponds to the
+      **[[Dotfiles|configure#dotfiles]]** persistence feature.
+    - The `gnome-keyring` folder corresponds to the **[[GNOME
+      Keyring|configure#gnome_keyring]]** persistence feature.
+    - The `gnupg` folder corresponds to the
+      **[[GnuPG|configure#gnupg]]** persistence feature.
+    - The `nm-connections` folder corresponds to the **[[Network
+      Connections|configure#network_connections]]** persistence feature.
+    - The `openssh-client` folder corresponds to the **[[SSH
+      Client|configure#ssh_client]]** persistence feature.
+    - The `Persistent` folder corresponds to the **[[Personal
+      Data|configure#personal_data]]** feature.
+    - The `pidgin` folder corresponds to the
+      **[[Pidgin|configure#pidgin]]** feature.
+
+Notes
+=====
+
+Here's the place where we should explain people how to have their
 `live-additional-software.conf` and custom `persistence.conf` settings
 enabled back.
 
@@ -13,8 +245,8 @@ to block the migration, and the desktop notification. (But then,
 things get trickier: no automated process is able to handle this case,
 so the user has to apply the correct permissions, and migrate their
 configuration by hand. Technical details are in
-[[contribute/design/persistence#security|the persistence design
-documentation]]. I don't think we can offer anything better than
+[[the persistence design documentation|contribute/design/persistence#security]].
+I don't think we can offer anything better than
 "please create a new persistent volume on another storage device, and
 carefully migrate your files and configuration by hand" if this case
 arises in practice, which seems unlikely, so better not make the
@@ -24,8 +256,7 @@ Below is, hopefully, all the information the doc writers will need.
 This is an operational summary of what can be done at this point; for
 more advanced technical details, see the detailed plan to fix the
 general issue we're tackling here, and
-[[contribute/design/persistence#security|the persistence design
-documentation]].
+[[the persistence design documentation|contribute/design/persistence#security]].
 
 First, it may be worth mentioning *why* these files were disabled, and
 (for `live-persistence.conf`) only partially imported. At least to the
