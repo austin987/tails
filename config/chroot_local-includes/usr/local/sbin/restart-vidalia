@@ -11,6 +11,9 @@ fi
 # Get LIVE_USERNAME
 . /etc/live/config.d/username.conf
 
+# Get LANG
+. /etc/default/locale
+
 if killall vidalia 2> /dev/null; then
    sleep 2 # give lckdo a chance to release the lockfile
 fi
@@ -19,6 +22,7 @@ until pgrep -u "${LIVE_USERNAME}" nm-applet >/dev/null ; do
    sleep 5
 done
 
+export LANG
 export DISPLAY=':0.0'
 export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
 
