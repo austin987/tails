@@ -38,6 +38,7 @@ user_pref("extensions.torbutton.block_tforms", false);
 user_pref("extensions.torbutton.disable_domstorage", false);
 user_pref("extensions.torbutton.display_panel", false);
 user_pref("extensions.torbutton.launch_warning", false);
+user_pref("extensions.torbutton.lastUpdateCheck", "9999999999.999");
 user_pref("extensions.torbutton.no_updates", true);
 user_pref("extensions.torbutton.nonontor_sessionstore", true);
 user_pref("extensions.torbutton.nontor_memory_jar", true);
@@ -47,8 +48,9 @@ user_pref("extensions.torbutton.socks_version", 5);
 user_pref("extensions.torbutton.startup", true);
 user_pref("extensions.torbutton.startup_state", 1);
 user_pref("extensions.torbutton.tor_memory_jar", true);
+user_pref("extensions.torbutton.updateNeeded", false);
 user_pref("extensions.torbutton.use_privoxy", false);
-user_pref("extensions.torbutton.versioncheck_enabled", false);
+user_pref("extensions.torbutton.versioncheck_enabled", true);
 user_pref("extensions.torbutton.warned_ff3", true);
 
 // .saved version of the Tails -specific Torbutton preferences
