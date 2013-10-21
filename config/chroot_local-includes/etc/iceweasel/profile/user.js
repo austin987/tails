@@ -22,7 +22,7 @@ user_pref("extensions.torbutton.tor_enabled", true);
 user_pref("extensions.torbutton.proxies_applied", true);
 user_pref("extensions.torbutton.settings_applied", true);
 user_pref("extensions.torbutton.socks_host", "127.0.0.1");
-user_pref("extensions.torbutton.socks_port", 9063); // Tails-specific
+user_pref("extensions.torbutton.socks_port", 9151); // Tails-specific
 user_pref("extensions.torbutton.tz_string", "UTC+00:00");
 
 // .saved version of the Torbutton preferences the TBB also sets
@@ -31,7 +31,7 @@ user_pref("extensions.torbutton.saved.tor_enabled", true);
 user_pref("extensions.torbutton.saved.proxies_applied", true);
 user_pref("extensions.torbutton.saved.settings_applied", true);
 user_pref("extensions.torbutton.saved.socks_host", "127.0.0.1");
-user_pref("extensions.torbutton.saved.socks_port", 9063);
+user_pref("extensions.torbutton.saved.socks_port", 9151);
 
 // Tails -specific Torbutton preferences
 user_pref("extensions.torbutton.block_tforms", false);
@@ -60,7 +60,7 @@ user_pref("extensions.torbutton.saved.type", 1);
 
 // Proxy and proxy security
 user_pref("network.proxy.socks", "127.0.0.1");
-user_pref("network.proxy.socks_port", 9063);
+user_pref("network.proxy.socks_port", 9151);
 user_pref("network.proxy.socks_remote_dns", true);
 user_pref("network.proxy.socks_version", 5);
 user_pref("network.proxy.type", 1);

@@ -71,7 +71,7 @@ pref("network.http.spdy.enabled.v2", false); // Seems redundant, but just in cas
 pref("network.http.spdy.enabled.v3", false); // Seems redundant, but just in case
 
 // Proxy and proxy security
-pref("network.security.ports.banned", "8118,8123,9050,9051,9061,9062,9063");
+pref("network.security.ports.banned", "8118,8123,9050,9051,9061,9062,9151");
 pref("network.dns.disablePrefetch", true);
 pref("network.protocol-handler.external-default", false);
 pref("network.protocol-handler.external.mailto", false);
