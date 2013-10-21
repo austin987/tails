@@ -1,8 +1,10 @@
 For Tails [[!taglink release/2.0]], we want at least basic UEFI boot
 including Mac.
 
-Some hardware ([[bugs/ThinkPad_X220_vs_GPT]], recent Mac) cannot boot
-Tails from USB, due to firmware limitations. Making Tails support UEFI
+Some hardware (ThinkPad X220, recent Mac) cannot boot
+Tails from USB, due to firmware limitations.
+
+Making Tails support UEFI
 would fix this problem on such hardware.
 
 * lernstick Grub configuration, implemented as a live-build binary
@@ -12,6 +14,9 @@ would fix this problem on such hardware.
   the [xmlboot](https://github.com/imedias/xmlboot) gfxboot script and
   many crazy Grub configuration scripts)
 * [hellais' TAILS-OSX scripts](https://github.com/hellais/TAILS-OSX)
+  and the [list of
+  hardware](https://github.com/hellais/TAILS-OSX/blob/master/tested-on.md)
+  it was tested on
 * [Mac Linux USB Loader](http://sevenbits.github.io/Mac-Linux-USB-Loader/)
   Doesn't work with Tails at the moment, but that's a frequent request
   to upstream. Upstream is working on fixing this. That would allow
@@ -38,8 +43,18 @@ would fix this problem on such hardware.
 * ArchLinux' page about
   [UEFI Bootloaders](https://wiki.archlinux.org/index.php/UEFI_Bootloaders)
 * syslinux 6 (released in June 2013) has UEFI support. Debian Live's
-  UEFI support will be based on it. Early users [discussion and
-  hints](http://www.marshut.com/kyxhm/question-about-syslinux-efi-alpha-version.html).
+  UEFI support will be based on it.
+  - Early users [discussion and
+    hints](http://www.marshut.com/kyxhm/question-about-syslinux-efi-alpha-version.html).
+  - It seems that syslinux does not do very well with CD booting and
+    UEFI: a FAT32 ElTorito image (with kernel, initrd and boot loader
+    configuration) must be embedded into the ISO9660. syslinux can't
+    read any other file system than the one it was booted from, so we
+    have to duplicate these files. Also, this image must be smaller
+    than 32MB. Indeed,
+    [Knoppix](http://www.knopper.net/knoppix/index-en.html) 7.2 uses
+    syslinux 6, and supports "UEFI-Boot (DVD: 32 and 64bit, CD: only
+    32bit) *after installation on USB flash disk*".
 * Kanotix, based on Debian Live and GRUB2, has a isohybrid setup that
   allows "multi-hybrid booting" as CD-ROM (EFI or El Torito) or as
   a hard-drive (e.g. a USB pendrive) on Intel-Macs (EFI) and PCs (EFI
@@ -49,6 +64,14 @@ would fix this problem on such hardware.
   allows it to be started directly since the EFI boot menu.
 * Running a UEFI firmware for virtual machines: 
   `qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd`
+* [Booting a Self-signed Linux
+  Kernel](http://www.kroah.com/log/blog/2013/09/02/booting-a-self-signed-linux-kernel/),
+  by Greg Kroah-Hartman
+* [Ubuntu Privacy Remix](https://www.privacy-cd.org/)'s next release
+  (UPR 12.04r1) will support UEFI; a beta is available; they copied
+  the solution from Ubuntu 13.10 (beta): the shim bootloader and
+  a corresponding GRUB binary which passes secure boot. See their
+  [build script](https://www.privacy-cd.org/en/tutorials/build-your-own-cd/79).
 
 Matthew Garrett:
 

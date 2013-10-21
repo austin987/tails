@@ -14,7 +14,7 @@ error ()
 # and now initialized by live-boot in a file that we certainly
 # don't want to source.
 export persistence_list="persistence.conf"
-export old_persistence_list="live-persistence.conf"
+export old_persistence_list="nonexistent"
 
 # This will import the following functions and variables used below:
 #   activate_custom_mounts()
@@ -184,6 +184,42 @@ list_gpt_volumes ()
 	exit 0
 }
 
+mountpoint_has_correct_access_rights ()
+{
+	local mountpoint="$1"
+	local expected_user=root
+	local expected_group=root
+	local expected_perms=775
+	local expected_acl="user::rwx
+user:tails-persistence-setup:rwx
+group::rwx
+mask::rwx
+other::r-x"
+
+	if [ $(stat -c %U "$mountpoint") != "$expected_user" ]
+	then
+		warning "'$mountpoint' is not owned by the '$expected_user' user"
+		return 1
+	fi
+	if [ $(stat -c %G "$mountpoint") != "$expected_group" ]
+	then
+		warning "'$mountpoint' is not owned by the '$expected_group' group"
+		return 2
+	fi
+	if [ $(stat -c %a "$mountpoint") != "$expected_perms" ]
+	then
+		warning "'$mountpoint' permissions are not $expected_perms"
+		return 4
+	fi
+	if [ "$(getfacl --omit-header --skip-base "$f" 2>/dev/null | grep -v '^\s*$')"
+	      != "$expected_acl" ]
+	then
+		warning "'$mountpoint' has incorrect ACL"
+		return 8
+	fi
+	return 0
+}
+
 activate_volumes ()
 {
 	local volumes=${@}
@@ -227,6 +263,116 @@ activate_volumes ()
 
 	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
 	get_custom_mounts ${custom_mounts} ${open_volumes}
+	# ... and now the persistent volumes should be mounted.
+
+	# Enable the acl mount option on all persistent filesystems.
+	for mountpoint in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		mount -o remount,acl "$mountpoint"
+	done
+
+	# Detect if we have incorrect ownership, permissions and ACL.
+	ACCESS_RIGHTS_WERE_CORRECT=true
+	for mountpoint in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		if ! mountpoint_has_correct_access_rights "$mountpoint"
+		then
+			ACCESS_RIGHTS_WERE_CORRECT=false
+			break
+		fi
+	done
+
+	# Migrate:
+	#   * if live-persistence.conf exists;
+	#   * unless correct ownership and permissions, too:
+	#     else, a non-root attacker could trivially block the
+	#     migration by creating persistence.conf in advance. Note that
+	#     a root attacker can still block the migration by setting the
+	#     correct permissions in advance, but there is no way we detect this.
+	if [ "$ACCESS_RIGHTS_WERE_CORRECT" != true ] ||
+		ls /live/persistence/*_unlocked/live-persistence.conf >/dev/null 2>&1
+	then
+		if [ "$PERSISTENCE_READONLY" = true ]
+		then
+			error "Persistence configuration needs to be migrated, but read-only was selected; please retry in read-write mode"
+		fi
+		# Set correct ownership, permissions and ACLs on the filesystems root.
+		chown root:root /live/persistence/*_unlocked \
+			|| error "Could not chown /live/persistence/*_unlocked: $?"
+		chmod 0775 /live/persistence/*_unlocked \
+			|| error "Could not chmod /live/persistence/*_unlocked: $?"
+		setfacl -b /live/persistence/*_unlocked \
+			|| error "Could not clear ACL on /live/persistence/*_unlocked: $?"
+		setfacl -m user:tails-persistence-setup:rwx /live/persistence/*_unlocked \
+			|| error "Could not set ACL on /live/persistence/*_unlocked: $?"
+		# Disable live-additional-software.conf if needed.
+		if [ "$ACCESS_RIGHTS_WERE_CORRECT" != true ]
+		then
+			for f in $(ls /live/persistence/*_unlocked/live-additional-software.conf || true)
+			do
+				mv "$f" "${f}.disabled" \
+					|| error "Failed to disable unsafe '$f': $?"
+				install --owner tails-persistence-setup \
+					--group tails-persistence-setup --mode 0600 \
+					/dev/null "$f" \
+					|| error "Failed to create empty '$f': $?"
+			done
+		fi
+		# Migrate known-safe settings from old configuration to new one.
+		for old_conf in $(ls /live/persistence/*_unlocked/live-persistence.conf || true)
+		do
+			new_conf=$(dirname "$old_conf")/persistence.conf
+			if [ -e "$new_conf" ]
+			then
+				if [ "$ACCESS_RIGHTS_WERE_CORRECT" = true ]
+				then
+					warning "'$new_conf' already exists, skipping"
+					continue
+				else
+					# Let's handle the case when an attacker
+					# tries to block the migration by creating
+					# persistence.conf in advance.
+					warning "'$new_conf' already exists. It should not, moving it out of the way"
+					mv "$new_conf" "${new_conf}.old" \
+						|| error "Failed to rename $new_conf to ${new_conf}.old: $?"
+				fi
+			fi
+			install --owner tails-persistence-setup \
+				--group tails-persistence-setup --mode 0600 \
+				/dev/null "${new_conf}.new" \
+				|| error "Failed to create empty '${new_conf}.new': $?"
+			grep -E --line-regexp \
+				-e '/etc/cups\s+source=cups-configuration' \
+				-e '/home/amnesia\s+source=dotfiles,link' \
+				-e '/home/amnesia/Persistent\s+source=Persistent' \
+				-e '/home/amnesia/\.gnupg\s+source=gnupg' \
+				-e '/home/amnesia/\.ssh\s+source=openssh-client' \
+				-e '/home/amnesia/\.purple\s+source=pidgin' \
+				-e '/home/amnesia/\.claws-mail\s+source=claws-mail' \
+				-e '/home/amnesia/\.gnome2/keyrings\s+source=gnome-keyrings' \
+				-e '/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections' \
+				-e '/home/amnesia/\.mozilla/firefox/bookmarks\s+source=bookmarks' \
+				-e '/var/cache/apt/archives\s+source=apt/cache' \
+				-e '/var/lib/apt/lists\s+source=apt/lists' \
+				"$old_conf" > "${new_conf}.new" \
+				|| error "Failed to import safe persistent settings into '${new_conf}.new': $?"
+			mv "${new_conf}.new" "$new_conf" \
+				|| error "Failed to rename '${new_conf}.new' to '$new_conf': $?"
+			if [ $(wc -l "$old_conf" | awk '{print $1}') -eq $(wc -l "$new_conf" | awk '{print $1}') ]
+			then
+				warning "Fully imported '$old_conf' into '$new_conf'"
+				rm "$old_conf" \
+					|| error "Failed to delete old_conf: $?"
+			else
+				warning "Partially imported '$old_conf' into '$new_conf'"
+				mv "$old_conf" "${old_conf}.old" \
+					|| error "Failed to rename $old_conf to ${old_conf}.old: $?"
+			fi
+		done
+		# Load the new persistence.conf.
+		get_custom_mounts ${custom_mounts} ${open_volumes}
+	fi
+
 	if [ -s "${custom_mounts}" ]
 	then
 		activate_custom_mounts ${custom_mounts} &> /dev/null

@@ -1,0 +1,70 @@
+[[!toc levels=2]]
+
+These issues were discovered when ttdnsd was in the default DNS
+resolution loop. Since then, we decided (<85zk731slu.fsf@boum.org>) to
+pull ttdnsd out of the "normal" DNS resolution loop, but leave it
+installed, configured and running. This was done in Tails 0.13.
+
+# the bugs
+
+### `ttdnsd` can't resolve
+
+Running:
+
+    host -t A boum.org 127.0.0.2
+
+produces the result:
+
+    ;; connection timed out; no servers could be reached
+
+In Tails' `ttdnsd` is configured to use Google's DNS server
+(`8.8.8.8`) which seem to have started to block connections
+originating from the Tor network. Configuring `ttdnsd` to use OpenDNS
+(`208.67.2222.222`) instead fixes this issue.
+
+### `ttdnsd` has concurrency issues, part 1 (upstream bug?)
+
+In Tails, when Iceweasel starts, `ttdnsd` crashes. When Iceweasel
+starts it concurrently does an A and AAAA query for several of the
+search engines and the startpage. It seems like this is the cause of
+`ttdnsd` crashing. A crash can reliably be reproduced the following
+way:
+
+    host -t A boum.org 127.0.0.2 &
+    host -t AAAA boum.org 127.0.0.2 &
+
+It has been verified via packet sniffing that ttdnsd indeed gets both
+the A and AAAA queries sent by iceweasel (which is weird, see below),
+which creates the same situation as running the two commands above.
+
+Running ttdnsd with the `-c` option seems to prevent the crash, but
+then no circuits are built, so `ttdnsd` is still useless.
+
+It seems this crash only occurs when `ttdnsd` is configured to use a
+DNS server that blocks the Tor network, like Google DNS. Switching to
+OpenDNS prevents the crash, but...
+
+### `ttdnsd` has concurrency issues, part 2 (upstream bug?)
+
+When using OpenDNS, running:
+
+    host -t A boum.org 127.0.0.2 &
+    host -t AAAA boum.org 127.0.0.2 &
+
+fails with the same old timeout error for both requests. It seems
+`ttdnsd` can only handle one request at a time; if a request is made
+while it handles another, **both** fails.
+
+### `ttdnsd` gets A queries (it shouldn't)
+
+A fine question is why `ttdnsd` gets both the A and AAAA
+requests. Tails' system resolver, `pdnsd`, is configured to first use
+Tor's resolver (i.e. `DNSPort`), which should work for A requests, and
+fallback to `ttdnsd` only if the former failed, i.e. for all non-A
+requests. Explicitly using the system resolver shows this expected
+behaviour:
+
+    host -t A boum.org 127.0.0.1 &
+    host -t AAAA boum.org 127.0.0.1 &
+
+i.e. Tor's resolver handles At and `ttdnsd` handles AAAA.
