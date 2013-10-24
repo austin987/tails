@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+
+. /usr/local/lib/tails-shell-library/log.sh
+set_log_tag unblock-network
+
+BLACKLIST=/etc/modprobe.d/all-net-blacklist.conf
+
+rm -f "${BLACKLIST}" || true
+/sbin/udevadm trigger --action=add
+
+if [ -e "${BLACKLIST}" ]; then
+    log "${BLACKLIST} wasn't removed so the network will still be blocked"
+fi
