@@ -1,0 +1,70 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+#man{{{
+
+=head1 NAME
+
+tails-blocked-network-detector
+
+=head1 VERSION
+
+Version X.XX
+
+=head1 AUTHOR
+
+Tails dev team <tails@boum.org>
+See https://tails.boum.org/.
+
+=cut
+
+#}}}
+
+use File::Tail;
+use Parse::Syslog;
+use Locale::gettext;
+use POSIX;
+
+setlocale(LC_MESSAGES, "");
+textdomain("tails");
+
+sub notify_maybe_blocked {
+    my $summary = gettext('Network connection blocked?');
+    my $body    = gettext(
+        'It looks like you are blocked from the network. This may be ' .
+        'related to the MAC spoofing feature. For more information, see the ' .
+        '<a href=\"file:///usr/share/doc/tails/website/doc/advanced_topics/' .
+        'mac_changer.en.html#blocked\">MAC spoofing documentation</a>.');
+    # We can't use Desktop::Notify since this script is supposed to be run
+    # as root (for access to syslog), started in an env without DESKTOP etc,
+    # which also causes issues with opening links in the text body.
+    system("/usr/local/sbin/tails-notify-user '$summary' '$body' 30000");
+}
+
+my %state = ();
+my $syslog = File::Tail->new(name => "/var/log/syslog",
+                             maxinterval => 1,
+                             interval => 1);
+my $parser = Parse::Syslog->new($syslog, allow_future => 1);
+while(my $sl = $parser->next) {
+    next if !($sl->{program} eq "NetworkManager");
+    my $text = $sl->{text};
+    if ($text =~ /Activation \(([^)]+)\) starting connection/) {
+        # The beginning of *all* (not only wireless) new
+        # connections. We drop any previous state so it won't
+        # interfere.
+        $state{$1} = undef;
+    } elsif ($text =~ /\(([^)]+)\): supplicant connection state:.*-> (.*)$/) {
+        # Wireless connection state transition.
+        $state{$1} = $2;
+    } elsif ($text =~ /Activation \(([^)]+)\/[^)]*\): association took too long/) {
+        # Wireless connection failure. If it happens during
+        # "associating" it *may* indicate that the AP is blocking the
+        # MAC address in use.
+        if ($state{$1} eq "associating") {
+            notify_maybe_blocked();
+        }
+    }
+}
