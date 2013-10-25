@@ -34,16 +34,16 @@ macchanger_helper() {
     nic=$1
     shift
     opts=$*
-    unset was_up
+    was_up=no
     if nic_is_up ${nic}; then
-        was_up=y
+        was_up=yes
         /sbin/ifconfig ${nic} down || ( log "failed to down ${nic}" ; return 1 )
     fi
     ret=0
     macchanger ${opts} ${nic} || \
         ( ret=$? ; log "macchanger returned error code ${ret}" )
 
-    if [ "${was_up}" ]; then
+    if [ "${was_up}" = yes ]; then
         /sbin/ifconfig ${nic} up || ( log "failed to up ${nic}" ; return 1 )
     fi
     return ${ret}
