@@ -41,19 +41,20 @@ a bit more work is needed.
 Note that usually, we're doing these steps (usually on Sunday or
 Monday) *before* the new ESR was officially released (which usually
 happens on Tuesday). Mozilla make the source available on previous
-Friday or Saturday, so that downstreams (such as us!) can get their stuff ready
-in time for the security announce.
+Friday or Saturday, so that downstreams (such as us!) can get their
+stuff ready in time for the security announce.
 
 * Download the Firefox tarball and detached signature from
   <https://ftp.mozilla.org/pub/mozilla.org/firefox/releases/VERSION/source/>
-  (`VERSION` is the version we want to build, that is something like `17.0.7esr`).
+  (`VERSION` is the version we want to build, that is something like
+  `17.0.7esr`).
 * Check the signature.
 * Put the tarball in the parent directory of your Iceweasel Git repository.
 * Extract the tarball.
 * `cd` into the extracted directory.
 * Copy the `debian/` directory from our previous package into the new
   upstream source directory.
-* Use `dch` to add a `debian/changelog` entry matching the new
+* Add a `debian/changelog` entry matching the new
   upstream version. Use 0 for the Debian packaging version, e.g.
   `17.0.5esr-0`, to leave room for the official packaging that we will
   want to merge when it's out:
@@ -309,7 +310,13 @@ Update debian/changelog
 Tag the release
 ---------------
 
-	git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" "debian/${VERSION}-0+tails1"
+	DEB_VERSION=$(dpkg-parsechangelog -SVersion)
+	git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" "debian/${DEB_VERSION}"
+
+Clean up the source tree
+------------------------
+
+	rm -f .mozconfig*
 
 Build for unstable
 ------------------
@@ -339,7 +346,8 @@ Build for squeeze-backports
 
 * Tag the backport:
 
-      git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" $TAG_NAME
+      git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" \
+          "debian/$(dpkg-parsechangelog -SVersion | sed -e 's,~,_,')"
 
 * Build for squeeze-backports and i386, e.g. using our
   [[contribute/Debian_package_builder]].
