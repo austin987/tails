@@ -2,6 +2,8 @@
 
 [[!toc levels=2]]
 
+You are highly welcome to save the result of this test in [[test_results]]
+
 # 0. Prepare the needed tools
 
 Make sure the BIOS is *not* configured to "test" the memory on startup.
@@ -24,7 +26,7 @@ Pick one of those:
   address space of a given process is usually limited at 3 GiB - or
   less, depends on the kernel configuration); as root:
   
-  	for i in $(seq 0 31) ; do fillram & done ; watch -n 1 free -m
+      for i in $(seq 0 31) ; do fillram & done ; watch -n 1 free -m
 
 * The `free` output should allow you to reboot late enough (so that
   enough memory is filled) and soon enough (so that the system is
@@ -37,11 +39,11 @@ Pick one of those:
   better be careful not rebooting your host system and proceed like
   this:
   
-  	echo 1 > /proc/sys/kernel/sysrq ; echo b > /proc/sysrq-trigger
+      echo 1 > /proc/sys/kernel/sysrq ; echo b > /proc/sysrq-trigger
   
 * Dump memory and try to find the known pattern in it, e.g.:
 
-  	grep -c wipe_didnt_work tails.dump
+      grep -c wipe_didnt_work tails.dump
 
   - you should get some integer larger than zero if the pattern was found in
     RAM, which is the expected result;
@@ -60,7 +62,7 @@ Pick one of those:
   Tails stick. 
 * Dump memory and try to find the known pattern in it, e.g.:
 
-  	grep -c wipe_didnt_work tails.dump
+      grep -c wipe_didnt_work tails.dump
 
   - you should get zero if the pattern was not found in RAM, which is the
     optimal (and expected) result;
