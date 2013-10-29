@@ -79,7 +79,9 @@ Patterns are stored in
    this Iceweasel instance to the
    `config/chroot_local-includes/etc/iceweasel/profile/adblockplus`
    directory in the Tails Git checkout.
-8. `git commit -m 'Update AdBlock Plus patterns.' config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini`
+8. Commit:
+       git commit -m 'Update AdBlock Plus patterns.' \
+          config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini`
 
 Upgrade bundled binary Debian packages
 --------------------------------------
@@ -102,7 +104,7 @@ Then see the relevant release processes:
 * [[tails-greeter]]
 * [[persistence-setup]]
 * [[tails-iuk]]
-* whisperback: 
+* whisperback:
   * see release process on
     <https://git-tails.immerda.ch/whisperback/plain/HACKING>
   * build a debian package
@@ -148,12 +150,21 @@ Then, launch an editor for the needed cleanup of the result:
 
 	dch -e
 
+Then, gather other useful information from every custom bundled
+package's own Changelog (Greeter, Persistent Volume Assistant, etc.).
+
 Finally, commit:
 
 	git commit debian/changelog -m "Update changelog for $VERSION."
 
 Included website
 ----------------
+
+### Merge master
+
+Merge `master` into the branch used for the release:
+
+	git fetch origin && git merge origin/master
 
 ### version number
 
@@ -165,11 +176,11 @@ at least 24 hours in the future! Between tests and mirror synchronization,
 the build will not be released on the same day. Try to make sure it
 matches the date of the future signature.
 
-	VERSION='0.19'
 	RELEASE_DATE='June 26, 2013'
 
 	echo "$VERSION"      > wiki/src/inc/stable_i386_version.html
 	echo "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
+	$EDITOR wiki/src/inc/*.html
 	./build-wiki
 	git commit wiki/src/inc/ -m "Update version and date for $VERSION."
 
@@ -286,15 +297,14 @@ page|release_process/test]].
 Generate the OpenPGP signatures and Torrents
 ============================================
 
-First, create a directory with a suitable name:
+First, create a directory with a suitable name and go there:
 
-	mkdir tails-i386-$VERSION
+	mkdir "$ISOS/tails-i386-$VERSION" && cd "$ISOS/tails-i386-$VERSION"
 
-Second, copy the built image to this brand new directory and
-rename it:
+Second, copy the built image to this brand new directory.
+Then, rename it:
 
-	cd tails-i386-$VERSION
-	mv *.iso tails-i386-$VERSION.iso
+	mv *.iso "tails-i386-$VERSION.iso"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
@@ -329,8 +339,8 @@ Test them with a BitTorrent client running in a different place.
 
 ## Download and seed image from lizard
 
-    scp tails-i386-$VERSION.torrent bittorent.lizard:
-    ssh bittorent.lizard transmission-remote --add tails-i386-$VERSION.torrent
+    scp tails-i386-$VERSION.torrent bittorrent.lizard:
+    ssh bittorrent.lizard transmission-remote --add tails-i386-$VERSION.torrent
 
 ## Upload to HTTP mirrors
 
@@ -353,7 +363,7 @@ Update the time in `project/trace` file on the primary rsync mirror
 and on the live wiki (even for a release candidate):
 
 	TRACE_TIME=$(date +%s) &&
-	echo $TRACE_TIME | ssh rsync.lizard sudo tee /srv/rsync/tails/tails/project/trace && \
+	echo $TRACE_TIME | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
 	[ -n "$MASTER_CHECKOUT" ] && \
 	echo $TRACE_TIME > "$MASTER_CHECKOUT/wiki/src/inc/trace" &&
 	(
@@ -378,9 +388,9 @@ In order to get any new documentation into the website, merge either
 Rename the `.packages` file to remove the `.iso` part of its name.
 
 Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
-rto the Git repository's `wiki/src/torrents/files/` directory and
+into the Git repository's `wiki/src/torrents/files/` directory and
 remove the one for the previous release (including any RCs). If
-prepareing an RC, only copy the `.iso.sig`.
+preparing an RC, only copy the `.iso.sig`.
 
 Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
 
@@ -393,14 +403,26 @@ Update the [[support/known_issues]] page.
 Write the announcement for the release in
 `news/version_$VERSION.mdwn`, including:
 
-- Updating the `meta title` directive.
-- Making sure there's an `announce` tag to have an email sent to the
+- Update the `meta title` directive.
+- Make sure there's an `announce` tag to have an email sent to the
   news mailing-list.
+- Document important config changes that persistence users have to do
+  themselves (e.g. the Pidgin proxy settings change in
+  [[!tails_gitweb_commit 9925321]] breaks all existing persistent
+  profiles).
 
 Write an announcement listing the security bugs affecting the previous
 version in `security/` in order to let the users of the old versions
 know that they have to upgrade. Date it a few days before the ISO
-image to be released was *built*.
+image to be released was *built*. Including:
+
+- the list of CVE fixed in Linux since the one shipped in the previous
+  release of Tails:
+  <http://ftp-master.metadata.debian.org/changelogs/main/l/linux/unstable_changelog>
+- the list of DSA fixed in packages we ship since those that were in
+  the previous release of Tails: <http://security.debian.org/>
+- the list of MFSA fixed by the iceweasel update:
+  <https://www.mozilla.org/security/announce/>
 
 Generate PO files for the release and security announcements with
 `./build-wiki`.
@@ -484,7 +506,7 @@ Prepare for the next release
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
    repository documentation.
 1. Push the resulting `devel` branch.
-1. Reset experimental:
+1. If this was a major release, then reset experimental:
    - take note of branches merged into `experimental`, but not into
      `devel`:
 
