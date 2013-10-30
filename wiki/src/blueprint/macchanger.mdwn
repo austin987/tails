@@ -1,235 +1,426 @@
 [[!toc levels=2]]
 
-Rationale
-=========
+# Rationale
 
-All network interfaces, both wired or wireless, have a unique
-[[!wikipedia MAC address]] which is broadcasted on any local network
-it is connected to (for wireless interfaces that also means that any
-radio receiver in the vicinity sees it). The uniqueness of this
-address is problematic, as it can:
+The uniqueness of [[!wikipedia MAC addresses]] introduce two types of
+potential issues for Tails users, in particular if the MAC address can
+be linked to the user's identity:
 
-* be used a to tie a computer and its owner to a time and place for
-  observers with a list of device MAC addresses and their owners,
-* or at least track the location history of a specific device, which
-  can tell a great deal about its owner.
+1. Geographical location tracking: A time-stamped log of a MAC address
+   ties a device to a certain location at a particular time. If the
+   device's owner is known, his or her movements are also known. In
+   case an unknown owner, the tracked movements leak information about
+   the owner, which eventually may lead to identification.
 
-While broadcasting the MAC addres in one's home *only* is not problem,
-broadcasting the MAC address in public is, so we need to devise a
-simple user interface which gives the option to obfuscate this address
-when using Tails in public.
+2. Identify Tails (or Tor) users: If the usage of Tails (or Tor) can
+   be fingerprinted on the network (despite other measures taken), and
+   the owner of a device is known, it can be determined that the owner
+   also is a Tails (or Tor) user.
+
+Spoofing the MAC address is the natural solution. Unfortunately, in
+some cases MAC spoofing may cause network connection issues or even
+raise alarms; care should be taken to prevent MAC spoofing in such
+situations.
+
+# Threat model
+
+## Adversary goals
+
+We assume an adversary whose goals are the following:
+
+1. Monitoring of when and where a particular MAC address with a known
+   owner is used, or, in other words, monitoring of an individual's
+   geographical movement while using a certain device.
+   [AdvGoalTracking]
+
+2. Dragnet-style logging of when and where MAC addresses with unknown
+   owners are used for large-scale social graphing and profiling which
+   leaks information owners' identities. [AdvGoalProfiling]
+
+3. Identify Tails (and Tor) users, i.e. if Tails (or Tor) can be
+   fingerprinted, note that about a particular
+   individual. [AdvGoalIdTails]
+
+4. Identify MAC spoofing individuals. We assume that our adversary has
+   bought into the "nothing to hide" argument, which makes such
+   suspicious behaviour valuable information. [AdvGoalSuspicion]
+
+Note that none of the goals deal with other types of unique
+identifiers than MAC addresses. In particular, logging of IMEI:s [1],
+used by mobile NIC:s, are omitted (mostly due to lack of proper
+tools).
+
+[1] http://en.wikipedia.org/wiki/IMEI
+
+## Adversary capabilities
+
+The adversary's capabilities are assumed to be:
+
+1. Omniscient wireless snooping of when and where (via triangulation)
+   all MAC addresses are used. Also access to Time-stamped logs of the
+   presence of MAC addresses on all wired networks (think compromised
+   routers and/or ISP:s). [AdvCapSniff]
+
+2. Has access, on specific request, to all user/customer records and
+   surveillance data of any public network. [AdvCapRecords]
+
+3. Knows who owns which MAC address according to the last traceable
+   transaction (e.g. credit card trail). Cash purchase, trade, trash
+   salvaging or theft are ways to potentially avoid this but the
+   adversary can interrogate the previous owner to obtain that
+   information if remembered (or at all known). [AdvCapOwners]
+
+## Tails user goals
+
+1. Hide geographical movement, i.e. prevent AdvGoalTracking and
+   AdvGoalProfiling. [AvoidTracking]
+
+2. No unspoofed usage of Tails (or Tor), i.e. prevent AdvGoalIdTails.
+   [AvoidIdTails]
+
+3. Not raising alarms on the network, i.e. prevent AdvGoalSuspicion,
+   but also avoid alarming the the local administrators (imagine a
+   situation where security guards are sent to investigate an "alien
+   computer" at your workplace, or similar). [AvoidSuspicion]
+
+4. Avoid network connection problems due to MAC address white-listing,
+   fixed ARP tables, hardware or driver issues, or
+   similar. [AvoidConnectionProbs]
+
+# Use case analysis
+
+Below we analyse how MAC address spoofing relates to each user goal
+for the given situation.
+
+## Using Tails at home
+
+First, note that the user's relation (owner, family member's,
+friend's, work's, borrowed, etc.) to the computer running Tails
+doesn't matter; the location is already directly related to the user's
+identity. Similarly, because of this, MAC spoofing is of very limited
+value for both AvoidTracking and AvoidIdTails value.
+
+MAC spoofing could hinder AvoidSuspicion if detected by the ISP's
+hardware (i.e. no trusted router in the way). Similarly, ISP-provided
+hardware may employ some sort of MAC address white-listing (e.g. only
+X unique ones are allowed) that can prevent AvoidConnectionProbs.
+
+Summary: MAC spoofing should be avoided but isn't terribly dangerous
+if enabled.
+
+## Using Tails at a friend's place
+
+### Using your computer
+
+MAC spoofing should be enabled for both AvoidTracking and
+AvoidIdTails. AvoidSuspicion won't be your problem but your friend's
+(which isn't a problem at all unless you're there spoofing all the
+time). AvoidConnectionProbs can be problematic for the same reasons as
+in "Using Tails at home".
+
+Summary: Enable MAC spoofing!
+
+### Using any other computer
+
+Since the computer you use isn't tied to you, AvoidTracking and
+AvoidIfTails isn't relevant. AvoidSuspicion won't be your problem but
+your friend's. AvoidConnectionProbs can be problematic for the same
+reasons as in "Using Tails at home".
+
+Summary: MAC spoofing should be avoided but isn't terribly dangerous
+if enabled.
+
+## Using Tails at a restricted public network
+
+Access is restricted to registered users' identities only. We use
+"registration" a bit loosely, but example of networks like these are:
+
+* paid-for access when there's a money trail (e.g. credit cards).
+* captive portals requiring logging in with an identity-tied account.
+* locations requiring a identity-tied key card (e.g. university
+  computer labs and workplaces) to access.
+
+This should probably also cover otherwise unrestricted networks that
+snoops on users in other ways, e.g. a library with video camera
+surveillance.
+
+### Using your computer
+
+Since the user is registered for network access, both AvoidTracking
+and AvoidIfTails are hard to get. However, AdvCapRecords requires
+explicit targeting (more expensive), while AdvCapSniff isn't, and MAC
+spoofing would defeat the latter, so it's not without merit.
+
+AvoidSuspicion could be problematic if your registered presence on the
+network is correlated to constantly new MAC addresses. A quite likely
+situation for this case is that you login via some captive portal, and
+these often use your MAC address for access control purposes, so a log
+of which you have used
+
+AvoidConnectionProbs is a problem if your MAC address becomes part of
+your registration, and is assumed to not change (maybe a place where
+you have to pay for each device you connect with). This seems pretty
+far-fetched, though.
+
+Summary: There's no easy choice here but in most scenarios
+AvoidTracking is probably more valuable than AvoidSuspicion, so MAC
+spoofing should be enabled.
+
+### Using a public computer
+
+Since the computer isn't tied to you, MAC spoofing does nothing to
+AvoidTracking and AvoidIfTails. It could cause problems to both
+AvoidSuspicion and AvoidConnectionProbs.
+
+Summary: MAC spoofing should be avoided but isn't terribly dangerous
+if enabled.
+
+## Using Tails at an open public network
+
+Access is completely open, and no kind of registration is needed.
+
+### Using your computer
+
+MAC spoofing should be enabled for both AvoidTracking and
+AvoidIdTails. Such a network should expect to see many unique MAC
+addresses daily, and be ready to deal with it, so AvoidSuspicion and
+AvoidConnectionProbs are of no consequence.
+
+Summary: Enable MAC spoofing!
+
+### Using a public computer
+
+Same as using a public computer at a restricted public network.
+
+Summary: MAC spoofing should be avoided but isn't terribly dangerous
+if enabled.
+
+## Conclusions
+
+The strong requirement of enabling MAC spoofing in a few cases, and
+the low risk of keeping it enabled even in the cases where it should
+be avoided, warrants for making this feature enabled by default, with
+the possibility to opt-out.
+
+# User interface design
+
+This option, which is of the on/off variety, will be implemented as a
+check box in Tails Greeter. The problem is to formulate a concise
+description that's clear and informative enough to guide the user to
+make an informed decision.
+
+In our previous blueprint we state that we want a user interface that
+presents the option using "simple words such as 'I am using a public
+computer' instead of speaking geek-language about mac addresses or
+whatever". However, in the use case analysis above it's obvious that
+simply "public or not" isn't enough to differentiate between the
+different use cases, and it seems unlikely to be the case for any
+other easily understood concept.
+
+Therefore it seems that the label of the option isn't what we should
+focus on, so we might just as well call it "Spoof all MAC addresses",
+which at least can help advanced users that know what they're
+doing. Beyond a concise summary in Tails Greeter, it's also highly
+important that we have clear and complete documentation about this.
+
+I envision a GUI looking like this:
 
 
-Use cases
-=========
+    ---------- Spoof all network cards' MAC addresses ----------
 
-Wired networking
-----------------
+    This options prevents leaving traces of your geographical
+    location. Leaving this option enabled is generally not harmful but
+    may cause network connection problems. See the documentation.
 
-We could distinguish two main use-cases:
+    [x] Spoof all network cards' MAC addresses
 
-* using a public computer (e.g. in a library, Internet-cafe) => the mac
-  address should not be changed, as it may bring undesired admin
-  attention and/or simply forbid access to the Internet
-* using a personal computer (e.g. a laptop, wherever it happens) =>
-  the mac address should be changed
+## Things to consider
 
-A way to integrate this analysis UI-wise could then be to allow, in a
-[[todo/boot_menu]], to choose between the default case (that
-has to be decided) and the other one, using simple words such as "I am using a
-public computer" instead of speaking geek-language about mac addresses or
-whatever.
+### No mention of AvoidIdTails as motivation?
 
-As a bonus, other unrelated settings could also be automatically
-changed at runtime depending on the answer to this question.
+The real solution to AvoidIdTails is to use obfuscated Tor bridges;
+MAC spoofing is at best an additional safe-guard if the obfuscation is
+broken. While this can be mentioned in the full documentation, we
+don't have to make the short summary any more complicated by trying to
+include it.
 
-Enabling the "public computer" mode could setup the needed bits so
-that every network interface has its mac address changed before
-attempting to access the network.
+### Be more specific about when to disable?
 
-Wireless networking
--------------------
+The current wording is based on that it's "generally not harmful" to
+leave this option enabled. Indeed, the situation when it may be
+harmful are first of all not very harmful to begin with, and also
+quite very difficult to explain in a few words. Therefore I think we
+should just refer to the documentation. After all, users that don't
+press on "more options" won't even be aware of any issue we would
+spell out there. If that's a problem for this case, we definitely have
+to reconsider having MAC spoofing enabled by default option as well.
 
-The Wi-Fi usecase is a bit different: the public / private computer
-distinction does not make sense, but there are two main situations:
+### "network connection problems" problems :)
 
-1. Some Wi-Fi networks restrict access to a list of known
-   MAC addresses, so in this case, the user of a known computer
-   wants to use their real MAC address.
-2. In most (all?) other cases, we want to anonymize the MAC address.
+We may want to drop the "network connection problems" part of the
+short summary. Although it refers to being able to establish a network
+connection, users may confuse it with the similar problem of a captive
+portal blocking the normal browser, or other post-connect problems.
+The user may then wrongly disable MAC spoofing in a bad situation.
 
-So, as suggested by <tailshelper@tormail.org> on the tails-dev
-mailing-list (January 2013), Wi-Fi adapters' MAC address should be
-randomized by default, with an option in tails-greeter to set the
-original address back.
+# Implementation
 
-Whonix' use cases overview
---------------------------
+The current implementation assumes we want MAC spoofing of the
+end-bits for all Ethernet NICs by default, so all such devices present
+before T-G log in are spoofed as soon as they are plugged. This is
+reversed in T-G's post-login script if the option is disabled
+there. Any device plugged afterwards will have the user's chosen
+preference enforced.
 
-See <https://sourceforge.net/p/whonix/wiki/MAC/>.
+## Trigger
 
-Caveats
-=======
+We use udev as the trigger that hooks MAC address spoofing. Because of
+that, it happens for every Ethernet device automatically, as early as
+possible (i.e. immediately after it's added), so even if there's some
+kind of weird leak before a device is up:ed (someone on tails-dev@
+alluded to this being possible for wireless NICs [2] although without
+any references) the real MAC address shouldn't leak.
 
-Randomizing mac adresses has several cons:
+[2] https://mailman.boum.org/pipermail/tails-dev/2013-January/002491.html
 
-* may trigger attention of admins of the network.
-* may break in some network configuration were static addresses are
-  assigned by a DHCP server based on the interface mac address, and/or
-  ARP tables are fixed to avoid spoofing.
+All other triggers that were considered do not deal with the "early"
+leaks issue, in addition to other reasons for being discarded:
 
-According to chapter 3.4.7 of the [Incognito's
-documentation](http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/docs.html),
-Incognito does have an option in the boot menu and an [initrd
-script](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/init.d/macchanger),
-and the randomization is done on a small part of the mac address.
-It does not really solve both issues, it's still not working for
-static DHCP, and if mac adresses are watched, even modifying only it's
-end would probably trigger an alert (admins willing to see if mac
-addresses are changing may have installed an automated way to do it,
-like arpwatch).
+* ifupdown hook: A if-pre-up hook would probably work but since we use
+  NetworManager the exact behaviour is blurred and not particularly
+  well-documented. It doesn't feel robust for this reason.
 
-However, as Tails is based on debian live and using network-manager
-for its network configuration, it introduces new questions: what if an
-USB wireless dongle is inserted in Tails after it has booted?
-Network manager will automatically begin to scan the network with a
-non-fake mac address. Is it a problem?
+* NetworkManager hook: NM doesn't trigger events equivalent to
+  if-pre-up, so this isn't possible. See the commented parts in:
+  /etc/NetworkManager/dispatcher.d/01ifupdown
 
-User interface
-==============
+* systemd integration: We don't use this yet.
 
-Tails Greeter option
---------------------
+* NetworkManager plugin: While this certainly would have a nice impact
+  outside of Tails, the added maintenance burden makes it less
+  attractive.
 
-As has been proved many times on our forum, MAC addresses is a big
-source of user confusion. To help users make a good choice we probably
-want to avoid a wording that contains the word "MAC address", both to
-accomodate users that don't know what that is, and users whose
-misconseptions may lead them to pick a sub-optimal option. Wordings
-like "I am using a public network" or "I am using a public computer"
-are preferred for these reasons.
+## MAC changing tool
 
-Ideally we'd like a single, binary option (e.g. a check box) whose
-state then determines what to do with each network interface, but
-depending on the use cases we want to support (see dedicated section
-above), that may be too limiting. For instance "public vs home/trusted
-network" and "public vs owned/trusted computer" result in four
-different combinations. However, having two binary options for the
-above could prove interesting for other features than MAC changer, so
-it may be worthwhile (note, this list is not a list of TODOs; just a
-list of examples that may motivate adding the above *two* options):
+The tool used to change the MAC address is simply macchanger, mostly
+because it's in Debian (where the known vulnerabilities are patched)
+and macchiato isn't (and it's not as well tested, yet). macchanger is
+used in a very straightforward way, so if we want to switch tool in
+the future it's a simple task.
 
-* On a public/untrusted computer we may want to completely disable
-  certain hardware to
-  [[todo/protect_against_external_bus_memory_forensics]].
-* On a public/untrusted computer we may want to disable keyboard input
-  for the [[doc/first_steps/persistence]] passphrase and
-  [[doc/first_steps/startup_options/administration_password]] (due to
-  the threat of hardware key loggers), forcing usage of a
-  [[virtual keyboard|todo/Add_a_virtual_keyboard_in_Tails_Greeter]].
-* On a public/untrused network we may want to disable network
-  printers.
+# Future work
 
-Post-login
-----------
+## Documentation access in Tails Greeter
 
-Since MAC changing can cause network problems (see "Caveats" section
-above) we may want to try to detect such errors after we've logged in.
-Upon detection we could show a notification linking to some
-appropriate documentation, and offer the option to reset the MAC
-address of the device to the default and re-connect.
+For this Tails Greeter option, and similar complicated options to
+come, it would be very handy to be able to access the appropriate
+documentation inside Tails Greeter, similar to how we do it in
+Whisperback.
 
-Implementation
-==============
+## Connection failure detection
 
-ifupdown
---------
+I've failed to find a way to hook into NetworkManager's connection
+error handling. An experiment showed that when connecting to a
+password-protected (WPA-PSK) wireless network with MAC address
+white-listing, spoofed (and hence blocked) MAC addresses resulted in
+an endless cycle of NM asking for passphrase. When cancelled, NM
+displays a "Disconnected" notification, and during this time no NM
+dispatcher events were emitted.
 
-An [ifupdown script](https://help.ubuntu.com/community/AnonymizingNetworkMACAddresses),
-put in `/etc/network/if-pre-up.d/` can do the job, but this solution is
-permanent and not easy to disable, as each time an interface will be
-reconfigured it's mac address will be automatically changed. This
-solution does not help really if we want users to be able to choose to
-enable/disable it (at boot time or on a running Tails). At least it
-integrates nicely in an environement where NetworkManager is in charge
-of the network configuration, but still that doesn't solve the user's
-choice problem.
+Unfortunately I'm not sure we can do this one without some serious
+patching of NetworkManager. Some bugs of interest that may bring some
+hope:
 
-> My take on this is that this place is the one where we can ensure
-> the mac address is changed (or not) when needed; at least it works
-> when network configuration is done through `ifupdown` or Network
-> Manager (but not when using `ip` or `ifconfig` by hand; if we really
-> want to support these, I guess that only udev rules can do the job
-> properly).
-> 
-> Anyway: IMHO, using this `.d` directory or not is pretty unrelated
-> to the method used to get the user's choice. Enabling/disabling such
-> a ifupdown script is quite feasible:
->
-> * if chosen at boot time: a `live-initramfs` hook will do the job,
->   based on `grep /proc/cmdline`
-> * if chosen by any nice-random-desktop-UI: a suid wrapper could
->   toggle this script on/off, restore the original mac address and
->   restart Network Manager as needed.
+* <https://bugzilla.gnome.org/show_bug.cgi?id=387832>
+* <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=518368>
+* <https://bugs.launchpad.net/ubuntu/+source/network-manager/+bug/336736>
 
-Network Manager
----------------
+## Pre-up Failsafe
 
-Network Manager does actually support plugins, that could be a way to
-interface it with macchanger, and have the user prompted before
-configuring the network to ask if the interface have to be randomized
-or not. A button could also be added to enable/disable this feature.
-Attention have to be taken on the way it would be done at boot
-time too.
+In the current implementation there's no failsafe that verifies that
+the selected MAC spoofing setting has been enforced before
+connecting. This would be easy if there was something like pre-up NM
+dispatcher hooks but just like in the previous section, there's none
+yet.
 
-An easy interface to propose to get the original mac address back, in
-case Network Manager fails to get a working networking setup, would be
-a nice bonus.
+## Vendor bit randomisation with macchiato
 
-macchanger-gtk
---------------
+These are the current relevant OUI counts from macchiato's git:
 
-A GTK interface to macchanger does exist:
-[macchanger-gtk](http://www.mogaal.com/macchanger-gtk). Might be
-usable as the button to let people use macchanger on a running
-Tails, but it lacks a way to restore genuine hardware address. It's
-packaged in Debian ([[!debpkg macchanger-gtk]]).
+5       oui/bluetooth_laptop.sh
+2       oui/bluetooth_misc.sh
+12      oui/bluetooth_mobile.sh
+1       oui/bluetooth_pmp.sh
+2       oui/wired_console.sh
+3       oui/wired_desktop_dedicated.sh
+11      oui/wired_desktop_onboard.sh
+8       oui/wired_infrastructure.sh
+17      oui/wired_laptop.sh
+6       oui/wired_misc.sh
+4       oui/wired_printer.sh
+2       oui/wireless_camera.sh
+1       oui/wireless_console.sh
+4       oui/wireless_desktop_dedicated.sh
+2       oui/wireless_desktop_onboard.sh
+4       oui/wireless_handheld.sh
+6       oui/wireless_infrastructure.sh
+1       oui/wireless_laptop_dedicated.sh
+21      oui/wireless_laptop.sh
+17      oui/wireless_mobile.sh
+7       oui/wireless_pmp.sh
+4       oui/wireless_printer.sh
+8       oui/wireless_usb.sh
 
-macchiato
----------
+In particular there's ~20 each in wireless_laptop and wired_laptop,
+which is what we should care about most (desktops rarely need MAC
+spoofing). However, after investigating the sources for some OUI:s
+(via git history), some OUI:s are (according to the submitter) only
+common in certain geographical areas. This makes the lists too small
+and unreliable at the moment.
 
-Our [[MAC address design document|contribute/design/MAC_address]]
-explains the way we've chosen until now to generate partially random
-MAC addresses.
+# Questions, remaining issues, and other random stuff
 
-It's mostly implemented by
-[macchiato](https://github.com/EtiennePerot/macchiato): a Bash
-script, released under the 3-clauses BSD license, that assigns
-a random MAC address to specified network interfaces, using lists of
-per-device-type common vendor OUI. It can be configured per-device,
-has code to generate udev rules, and has some systemd integration.
-It's been described in more details [in a blog
-post](https://perot.me/mac-spoofing-what-why-how-and-something-about-coffee).
+## Leaking spoofed MAC address on public computer?
 
-However, there are issues with this approach:
+In the current implementation all NICs will be spoofed before the user
+has the option to disable it, which s/he shouldn't do when using
+e.g. a public computer. This may be an issue if there are "early"
+leaks like alluded to in [3], as it may raise alarms; first an unknown
+MAC address is detected from a computer, than it shortly after
+switches back to the expected one. So we have these sub-questions:
 
-* as of February 2013, macchiato's lists are very short; the author is
-  open to adding to them, but it does not come for free
-* There are web interfaces out there to query the ieee.org OUI database,
-  like [this one](https://db.uga.edu/network/public/vendorcode.cgi).
-* A list of the biggest ethernet vendors is quite harder to find, but
-  [wikipedia](https://secure.wikimedia.org/wikipedia/en/wiki/List_of_PC_hardware_manufacturers#Network_cards)
-  can help, as some other sites
-  [here](http://www.mcgelec.com/Support/mfglinks/nics-wired.aspx) or
-  [here](http://www.charydent.com/network-adapter.asp)
+### Is there any wired activity before T-G?
 
-So, the path we've chosen (choose 20 most common vendors) seems to be
-harder than expected, and maybe rather choosing to randomize only the
-last part of the MAC address while keeping the original vendor prefix
-would be easier.
+As of commit 34a6bf0 we only start NM after T-G logs in. Hopefully
+there's no wired activity for other reasons but this should be
+investigated.
 
-Improving macchanger
-====================
+### Is there any wireless activity before T-G?
+
+In our blueprint it's stated that: "Network manager will automatically
+begin to scan the network with a non-fake mac address". This implies
+that scanning is active, not passive. Is this what [3] alludes to?
+Does any one know more about this?
+
+### Should we rfkill wifi?
+
+Especially if the previous question has a positive answer, maybe we
+should make a udev hook for when the rfkill switch device is added by
+udev (assuming that it's possible) that blocks wifi. After Tails Greeter
+logs in, we'd then unblock it.
+
+### Completely block network devices until T-G post-login?
+
+If we block all network devices from being added by udev until after
+T-G has logged in (when we known the user's MAC spoof preference) then
+the whole "early leaks of spoofed MAC addresses" issue would be
+solved, provided the user did the right choice. Maybe this is
+worthwhile?
+
+
+# Old stuff from blueprint
+
+## Improving macchanger
 
 Some of our goals would be easier to achieve by patching macchanger
 itself. Since it's been unmaintained upstream for a while, we've been
@@ -243,26 +434,22 @@ and has already started patching it to better suit our needs:
   sid: 1.5.0-8) and is likely to go on this way. Tails has been
   using this improved version for a while.
 
-Inspiration sources
-===================
+## Inspiration sources
 
-Haven
------
+### Haven
 
 Haven does not automatically start network-manager at boot time.
 It provides shortcuts in the application menu to run macchanger-gtk
 and start the network if desired.
 
-Liberte Linux
--------------
+### Liberte Linux
 
 Liberte Linux randomizes wireless MAC addresses at boot time and
 allows changing wired interfaces' MAC addresses after boot, see their
 `src/usr/local/sbin/mac-randomize` that uses `ifconfig IFACE hw ether`
 rather than macchanger.
 
-Documentation
-=============
+## Documentation
 
 Investigate and possibly document the kind of information that could
 still be seen on the LAN about the system. Such as the manufacturer (ex:
