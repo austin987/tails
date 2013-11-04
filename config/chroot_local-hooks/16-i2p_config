@@ -1,7 +1,59 @@
-#!/bin/sh
+#!/bin/sh -e
 
-set -e
+I2P="/usr/share/i2p"
+WRAPPER="/etc/i2p/wrapper.config"
+
+# Settings that are set or unset in this file will be useful for all versions
+# of Tails.
 
 # This must be set in order for the i2p init script to work
+sed -i 's/^RUN_DAEMON=.*$/RUN_DAEMON="true"/' /etc/default/i2p
 
-sed -ie 's/^RUN_DAEMON=.*$/RUN_DAEMON="true"/' /etc/default/i2p
+# Remove the false.i2p outproxy from i2ptunnel
+# We already go out through Tor so this will never be reached anyway.
+sed -i '/^tunnel.0.proxyList/d' "$I2P/i2ptunnel.config"
+
+# Disable the https outproxy
+# We go out through Tor so this is redundant.
+sed -i 's|^.*\(tunnel.6.startOnLoad\).*|\1=false|' "$I2P/i2ptunnel.config"
+
+# Don't serve the router console on IPv6
+sed -i 's|^clientApp\.0\.args=7657\s\+::1,127\.0\.0\.1|clientApp.0.args=7657 127.0.0.1|' "$I2P/clients.config"
+
+# Disable IPv6 in the wrapper
+sed -i 's|^.*\(wrapper\.java\.additional\.5=-Djava\.net\.preferIPv4Stack=\).*|\1true|' "$WRAPPER"
+sed -i 's|^.*\(wrapper\.java\.additional\.6=-Djava\.net\.preferIPv6Addresses=\).*|\1false|' "$WRAPPER"
+
+# Loosen wrapper permissions so that the amnesia user (who'll be added to the i2psvc group) has access
+sed -i 's|^.*\(wrapper.*umask=\).*|\10007|g' "$WRAPPER"
+
+# Tails specific router configs:
+# * i2cp: allows java clients to communicate with I2P outside of the JVM. Disabled.
+# * IPv6: Disabled
+# * HiddenMode: Enabled
+# * In-I2P Network Updates: Disabled
+# * insecure files: Enabled. This means that permissions will not be forced
+#   to 700 for the i2psvc user, giving i2psvc group members access.
+# * reseeding through proxy: Enabled. Reseeding (bootstrapping) will be done
+#   through the proxy at 127.0.0.1:8118. While this may not be required I
+#   thought it might alleviate confusion for end-users. The fewer support
+#   requests, the better. ;)
+cat > "$I2P/router.config" << EOF
+# NOTE: This I2P config file must use UTF-8 encoding
+i2cp.disableInterface=true
+i2np.ntcp.ipv6=false
+i2np.udp.ipv6=false
+i2p.insecureFiles=true
+router.isHidden=true
+router.reseedProxy.authEnable=false
+router.reseedProxyEnable=true
+router.reseedProxyHost=127.0.0.1
+router.reseedProxyPort=8118
+router.updateDisabled=true
+EOF
+
+# Allow the i2psvc group to also access torrents saved with I2PSnark
+cat > "$I2P/i2psnark.config" << EOF
+# NOTE: This I2P config file must use UTF-8 encoding
+i2psnark.filesPublic=true
+EOF
