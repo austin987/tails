@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# Start the IBus input method and configure it with
+# sensible settings for use in Tails.
+
+# The input method will be configured so it is usable
+# no matter what locale the user login with, but with
+# correct default engine for those locales that need it.
+
+# Deside order in which input methods are preferred
+# (chinese needs pinyin, japanese needs anthy, korean needs hangul)
+LANGPREFIX=`echo "$LANG" | sed 's/_.*//'`
+PREFLIST="[pinyin,anthy,hangul]"
+
+if [ "$LANGPREFIX" = "ja" ]; then
+	PREFLIST="[anthy,pinyin,hangul]"
+fi
+
+if [ "$LANGPREFIX" = "ko" ]; then
+	PREFLIST="[hangul,pinyin,anthy]"
+fi
+
+# Configure enabled input methods and their preferred order
+gconftool-2 --type=list --list-type=string --set \
+	/desktop/ibus/general/preload_engines "$PREFLIST"
+
+# Start the IBus input method daemon
+/usr/bin/ibus-daemon --daemonize --xim
+
+# Export environment variables to enable use of IBus
+export GTK_IM_MODULE="ibus"
+export QT_IM_MODULE="ibus"
+export XMODIFIERS="@im=ibus"
