@@ -104,7 +104,7 @@ Then see the relevant release processes:
 * [[tails-greeter]]
 * [[persistence-setup]]
 * [[tails-iuk]]
-* whisperback: 
+* whisperback:
   * see release process on
     <https://git-tails.immerda.ch/whisperback/plain/HACKING>
   * build a debian package
@@ -180,6 +180,7 @@ matches the date of the future signature.
 
 	echo "$VERSION"      > wiki/src/inc/stable_i386_version.html
 	echo "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
+	$EDITOR wiki/src/inc/*.html
 	./build-wiki
 	git commit wiki/src/inc/ -m "Update version and date for $VERSION."
 
@@ -284,6 +285,18 @@ Prepare update-description files
 
 Testing
 =======
+
+Sanity check
+------------
+
+Verify that the current source for Firefox is still the same we've
+used when preparing our custom Iceweasel package: e.g. FF17.0.8 got
+re-tagged and re-uploaded at the last minute, due to a test failure.
+
+Better catch this before people spend time doing manual tests.
+
+Manual and automated tests
+--------------------------
 
 Until [[!tails_todo automated_builds_and_tests]] are set up, some
 manual testing
@@ -407,7 +420,7 @@ Write the announcement for the release in
   news mailing-list.
 - Document important config changes that persistence users have to do
   themselves (e.g. the Pidgin proxy settings change in
-  [[!tails_gitweb_commit 9925321]] break all existing persistent
+  [[!tails_gitweb_commit 9925321]] breaks all existing persistent
   profiles).
 
 Write an announcement listing the security bugs affecting the previous
@@ -439,6 +452,12 @@ Then, record the last commit before putting the release out for real:
 
 Go wild!
 ========
+
+Sanity check
+------------
+
+Verify once more that the current source for Firefox is still the same
+we've used when preparing our custom Iceweasel packages.
 
 Push
 ----
@@ -529,3 +548,10 @@ Prepare for the next release
    - `git push --force origin experimental`
 1. Manually trigger Jenkins builds of experimental, devel and stable:
    <https://jenkins.tails.boum.org/>.
+1. Bonus points if you care about Tails 1.1: update the Iceweasel
+   packages for feature/wheezy, and trigger a Jenkins build thereof.
+
+Related pages
+=============
+
+[[!map pages="contribute/release_process/*"]]

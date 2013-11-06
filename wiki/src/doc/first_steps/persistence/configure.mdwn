@@ -27,7 +27,7 @@ Creating the Persistent Volume
 
 When run for the first time, or after [[deleting the persistent
 volume|delete]], the assistant proposes to create a new persistent volume on
-the USB stick from which Tails is running.
+the device from which Tails is running.
 
 1. The persistent volume is an encrypted partition protected by a passphrase.
 Specify a passphrase of your choice in both the
@@ -41,18 +41,18 @@ Passphrase</span> text boxes.
 <div class="bug">
 
 <strong>If the creation is interrupted before it finishes</strong>, you may not
-be able to start Tails from this USB stick any more. This can happen if you
-close the window of the wizard or unplug the USB stick during the creation of
-the persistent volume. [[Delete|first_steps/usb_reset]] and
-[[reinstall|first_steps/usb_installation]] Tails to fix this issue.
+be able to start Tails from this device any more. This can happen if you
+close the window of the wizard or unplug the USB stick or SD card during the creation of
+the persistent volume. [[Delete|first_steps/reset]] and
+[[reinstall|first_steps/installation]] Tails to fix this issue.
 
 </div>
 
 Persistent Volume Features
 ==========================
 
-When run from a USB stick that already has a persistent volume, the assistant
-shows a list of the possible persistent features. Each feature corresponds to a
+When run from a Tails device that already has a persistent volume, the assistant
+shows a list of the possible persistence features. Each feature corresponds to a
 set a files to be saved in the persistent volume.
 
 <div class="note">
@@ -193,7 +193,7 @@ passwords, keys, certificates and make them available to applications.
 For more information about <span class="application">GNOME Keyring</span> see
 the [official documentation](http://live.gnome.org/GnomeKeyring).
 
-<a id="network-manager"></a>
+<a id="network_connections"></a>
 
 <div class="icon">
 [[!img network-manager.png link=no]]
@@ -256,6 +256,16 @@ When this feature is activated, changes to the bookmarks in the
 <span class="application">Iceweasel</span> web browser are saved in the persistent
 volume. This does not apply to the Unsafe web browser.
 
+<a id="printers"></a>
+
+<div class="icon">
+[[!img printer.png link=no]]
+<div class="text"><h2>Printers</h2></div>
+</div>
+
+When this feature is activated, the configuration of the printers is saved in the
+persistent volume.
+
 <a id="dotfiles"></a>
 
 <div class="icon">
@@ -264,14 +274,11 @@ volume. This does not apply to the Unsafe web browser.
 </div>
 
 When this feature is activated, all the files in the <span
-class="filename">/live/persistence/XXX_unlocked/dotfiles</span> folder
+class="filename">/lib/live/mount/persistence/TailsData_unlocked/dotfiles</span> folder
 are linked in the <span class="filename">Home Folder</span> (files in
 subfolders of <span class="filename">dotfiles</span> are also linked
 in the corresponding subfolder of your <span class="filename">Home
-Folder</span>). The `XXX` in the above should be something like `sdb2`
-but since there will only ever be one folder in <span
-class="filename">/live/persistence</span> there should be little risk
-for confusion.
+Folder</span>).
 
 This option is useful if you want to make some specific files
 persistent, but not the folders they are stored in. A fine example are
@@ -280,7 +287,7 @@ hidden configuration files in the root of your home directory, like
 <span class="filename">~/.git</span> and <span
 class="filename">~/.bashrc</span>.
 
-<a id="additional_packages"></a>
+<a id="additional_software"></a>
 
 Additional software packages
 ----------------------------
@@ -310,9 +317,8 @@ connect Tails to Internet with persistence activated.
 </div>
 
 To choose the list of additional software, create a file called
-`/live/persistence/XXX_unlocked/live-additional-software.conf`
-(`XXX` corresponds to the name of the device where the persistent
-storage is stored: probably `sdb2`). Each line of this file must contain
+`/lib/live/mount/persistence/TailsData_unlocked/live-additional-software.conf`.
+Each line of this file must contain
 the name of a Debian package to be installed as an additional software
 package.
 

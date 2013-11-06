@@ -27,6 +27,7 @@ This is relevant for the following applications:
 - iceweasel bookmarks
 - Pidgin configuration
 - MUA configuration
+- printers configuration
 - Tor's data/cache for faster bootstrap with slow connections and
   better protections through more stable entry guards
   (`/var/lib/tor/`); beware, this breaks tordate
@@ -152,7 +153,7 @@ User interface
 A *Configure persistent storage* menu entry is the entry point to the
 *bootstrap persistent storage* UI. This UI allows the user to set up
 a persistent storage container in the free space left on the USB stick
-by [[our USB installer|usb_installation]].
+by [[Tails Installer|installation]].
 
 Choosing persistence is something *activelly* opt-in, i.e. "I want
 this, I read the documentation for related information, then run the
@@ -168,14 +169,14 @@ Setting up a Tails persistent volume means:
 
 * detect the device Tails is running from
 * error out if not running from USB
-* error out unless Tails was installed using the USB installer (i.e.
+* error out unless Tails was installed using Tails Installer (i.e.
   unless it's running from a GPT partition labeled `Tails`)
 * error out if the device Tails is running from already has
   a persistent volume
 * ask the user an encryption passphrase (welcome bonus: pointing to
   the relevant documentation about choosing a *strong* passphrase)
 * create a LUKS-encrypted partition on the Tails USB stick
-  - uses all the free space left by the USB installer
+  - uses all the free space left by Tails Installer
   - labeled `TailsData`
   - create a filesystem in the encrypted container
   - give ownership on the filesystem to the default Tails user
@@ -354,6 +355,11 @@ To this aim, the persistent volume root directory may contain
 a `live-additional-software.conf` file that holds the list of packages to install
 (from persistence, since they were cached already).
 
+<!-- FIXME (0.22) -->
+<!-- To be taken into account, this file must be owned by -->
+<!-- `tails-persistence-setup:tails-persistence-setup`, and not be writable -->
+<!-- by anyone else than the `tails-persistence-setup` user. -->
+
 First, those additional software packages are installed offline from tails-greeter
 `PostLogin` script.
 
@@ -366,3 +372,74 @@ version won't be used too long in the meantime.
 - [PostLogin](https://git-tails.immerda.ch/greeter/plain/PostLogin.default)
 - [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/70-upgrade-additional-software.sh]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-additional-software]]
+
+<a id="security"></a>
+
+Security
+--------
+
+The root directory of the persistent volume filesystem root is created
+by the persistence configuration assistant, owned by `root:root`, with
+permissions 0775:
+
+* group-writable so that we can grant write access to other users with
+  ACLs;
+* world-readable for end-user's convenience;
+* additionally, an ACL grants write access on this directory to the
+  `tails-persistence-setup` user, so that it can edit the
+  persistence configuration.
+
+The persistence configuration assistant is run with password-less sudo
+as the `tails-persistence-setup` dedicated user. It creates and
+updates a configuration file called `persistence.conf`, that is owned
+by `tails-persistence-setup:tails-persistence-setup`, with permissions
+0600 and no ACLs. It refuses to read configuration files with
+different permissions.
+
+Migration from pre-0.21 persistent volumes
+------------------------------------------
+
+Before Tails 0.21, the persistent volume and configuration file had
+weaker permissions. An attacker who could run arbitrary code as the
+desktop `amnesia` user could tamper with the persistence
+configuration, and — with some minimal amount of imagination — give
+themselves persistent root credentials, etc.
+
+A migration process allows users to move to the new setup relatively
+safely and (in most cases) very easily. This section describes how the
+migration is performed.
+
+When persistence is enabled read-write on Tails 0.21, any persistent
+volume that has not had this new set of ownership and permissions
+applied (such as, if it was created with an older version), or that
+still has a `live-persistence.conf` file, sees the following changes
+applied:
+
+* The new set of ownership, permissions and ACLs is applied to the
+  filesystem root.
+* Unless the parent directory had correct ownership, permissions and
+  ACLs already, `live-additional-software.conf` is treated as
+  untrusted and disabled (renamed to
+  `live-additional-software.conf.disabled`). A new empty file is
+  created with the correct ownership and permissions, so that users
+  just have to edit it without having to care about giving it the
+  proper ownership etc.
+* Known-safe persistence settings are migrated from the old
+  configuration file (`live-persistence.conf`) to a newly created one
+  (`persistence.conf`). If all settings could be migrated
+  automatically, then the old configuration file is deleted; else, it
+  is renamed to `live-persistence.conf.old`.
+
+Then, after login, if some settings could not be migrated
+automatically (i.e. if `live-additional-software.conf` or
+`live-persistence.conf.old` is found), a desktop notification makes
+the user aware of it, and points them to the [[migration
+documentation|doc/first_steps/persistence/upgrade]] so that they can
+hand-migrate the rest themselves.
+
+The migration code will be removed in a latter version of Tails.
+
+<!-- FIXME (0.22) -->
+<!-- When persistence is activated at boot time, any persistent filesystem -->
+<!-- is ignored unless its root directory and persistence configuration -->
+<!-- files have the correct permissions. -->

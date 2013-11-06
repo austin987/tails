@@ -804,7 +804,15 @@ probably would not want this due to the added consumption of
 bandwidth. The user can nevertheless easily choose to turn his or her
 Tor client into a relay, thanks to the Vidalia graphical user
 interface.
- 
+
+If a compromised software had access to the Tor control port,
+an attacker who controls it could simply ask Tor the public
+IP through the `GETINFO address` command.
+To prevent this, access to the Tor control port is only
+granted to the vidalia user, who is running Vidalia.
+
+- [[!tails_gitweb chroot_local-hooks/06-adduser_vidalia]]
+- [[!tails_gitweb chroot_local-includes/usr/local/sbin/restart-vidalia]]
 - [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]
 
 ### 3.6.3 DNS
@@ -1022,7 +1030,9 @@ the other HKP keyservers pools, and reachable over `hkps://`.
 possible in place of the hierarchical X.509 certification model.
 
 GnuPG is configured to prefer non-outdated digest algorithms such as
-SHA256.
+SHA256, to force exclusion of the version string in ASCII armored
+output, to avoid automatically locating and retrieving keys, and to
+disregard the preferred keyserver assigned to specific keys.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/gpg.conf]]
 - [[!tails_gitweb config/chroot_local-includes/etc/ssl/certs/sks-keyservers.netCA.pem]]
@@ -1038,7 +1048,7 @@ newer. See [[contribute/design/persistence]] for details.
 
 An easy (read: not command-line based) way to install and
 upgrade Tails on USB sticks is available in Tails 0.11 and newer.
-See [[design/usb_installation]] for details.
+See [[design/installation]] for details.
 
 ### 3.6.19 Wireless devices handling
 

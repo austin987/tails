@@ -12,7 +12,7 @@ Problems starting Tails
 Acer Travelmate 8573T-254G50M
 -----------------------------
 
-Does not start on USB sticks created using Tails USB Installer.
+Does not start on USB sticks created using Tails Installer.
 Booting from DVD works fine.
 
 Apple hardware
@@ -23,8 +23,8 @@ For the moment, Tails has a very limited support for Apple hardware.
 Most recent Apple hardware does not boot without UEFI, and currently
 Tails does not start with UEFI. See [[!tails_todo UEFI desc="the corresponding ticket"]].
 
-See also [[manual USB installation with
-Mac|doc/first_steps/manual_usb_installation/mac]] for more compatibility
+See also [[manual installation using
+Mac|doc/first_steps/installation/manual/mac]] for more compatibility
 reports, as well as [[!tails_bug
 Some_old_Macbooks_running_Lion_10.7_not_booting_Lion..can_we_get_booting_fixed___63__
 desc="this bug report"]].
@@ -35,10 +35,16 @@ ASUS VivoBook X202E
 Legacy support needs to be enabled in order to start Tails. To enable
 legacy boot support, enable 'Launch CSM' under boot (menu).
 
+Compaq 615
+----------
+
+You need to update the firmware to its latest version in order to start from a
+device installed using Tails Installer.
+
 Dell Inc. Latitude E6430/0CPWYR
 -------------------------------
 
-Does not start on USB sticks created using Tails USB Installer.
+Does not start on USB sticks created using Tails Installer.
 
 With BIOS versions A03 06/03/2012
 
@@ -47,11 +53,11 @@ Error message: `Invalid partition table!`
 Dell XPS L702X/03RG89, Samsung RV520
 ------------------------------------
 
-Does not start on USB sticks created using Tails USB Installer.
+Does not start on USB sticks created using Tails Installer.
 
 We were reported that the legacy BIOS shipped on these systems doesn't
 know how to deal with the GPT partition scheme installed by Tails
-USB Installer.
+Installer.
 
 <http://en.community.dell.com/support-forums/laptop/f/3518/p/19392884/20010995.aspx>
 
@@ -74,20 +80,34 @@ These machines do not start on USB sticks created using Tails USB
 Installer, due to a firmware limitation.
 
 A workaround for some of these machines is to use the [[manual
-installation process|doc/first_steps/manual_usb_installation/linux]].
+installation process|doc/first_steps/installation/manual/linux]].
 Note, however, that this technique does not allow you to set up
 a persistent volume.
 
 <a id="problematic-usb-sticks"></a>
 
+Toshiba Satellite C50-A-12K and C855D-S5106
+-------------------------------------------
+
+Fails to start from a Tails USB unless forced to boot using CSM, and not UEFI,
+first, as advised on:
+
+<http://forums.toshiba.com/t5/Computer-Troubleshooting/System-does-not-have-any-usb-boot-optoon/td-p/406325>
+
 Problematic USB sticks
 ----------------------
 
-The following USB sticks have issues starting Tails:
+The following USB sticks have issues starting Tails.
+They require removing the `live-media=removable` boot parameter,
+which [[is dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
 
-* SanDisk Cruzer Fit USB 2.0 8GB, SanDisk Cruzer Switch USB 2.0 32GB, and
-  USB 3.0 64GB: requires removing the `live-media=removable` bootparameter,
-  which [[is dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
+* SanDisk Cruzer Fit USB 2.0 8GB
+* SanDisk Cruzer Switch USB 2.0 8GB and 32GB
+* SanDisk Cruzer USB 3.0 64GB
+* SanDisk Cruzer Glide 8GB and 16GB
+* SanDisk Cruzer Extreme USB 3.0 16GB
+
+See also [[!tails_ticket 6397]].
 
 Security issues
 ===============
@@ -100,10 +120,10 @@ Tails does not consistently [[!tails_todo
 more_efficient_memory_wipe desc="erase all system memory as it
 should"]].
 
-After using the Tails USB installer, the "emergency shutdown" doesn't work.
----------------------------------------------------------------------------
+After using Tails Installer, the "emergency shutdown" doesn't work
+------------------------------------------------------------------
 
-The Tails USB installer messes a bit too much with the USB devices for the
+Tails Installer messes a bit too much with the USB devices for the
 "emergency shutdown on media removal" feature to continue working after using
 it. If you believe this feature is critical for the session you're running, we
 advice you to reboot Tails.
@@ -148,6 +168,12 @@ This issue has been reported on the following hardware:
   - Dell Inc. Studio 1458
   - Fujitsu Lifebook AH531/GFO, only on regular shutdown, emergency
     shutdown works
+
+I2P is not maintained in Tails
+------------------------------
+
+Either we [[!tails_ticket 5889 desc="find a maintainer"]] for I2P in
+Tails, or it will be removed.
 
 <a id="fingerprint"></a>
 
@@ -211,3 +237,15 @@ Touchpad configurations
     synclient VertTwoFingerScroll=1;
     synclient FingerLow=1;
     synclient FingerHigh=1;
+
+New Identity feature
+--------------------
+
+Since Tails 0.21, the "New Identity" feature in the web browser is not
+available anymore ([[!tails_ticket 6383]]).
+
+As a workaround it is possible to:
+
+  1. Close the web browser.
+  2. Right-click on the Vidalia icon and choose "New identity".
+  3. Open the web browser again.

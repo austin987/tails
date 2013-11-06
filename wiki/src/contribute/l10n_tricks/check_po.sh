@@ -14,9 +14,11 @@ ONLY_LANG="$1"
 
 PATTERNS_FILE="$(mktemp -t XXXXXX.patterns)"
 echo "
+boilerplate-in-date
 boilerplate-in-language-team
 boilerplate-in-last-translator
 boilerplate-in-project-id-version
+conflict-marker-in-header-entry
 fuzzy-header-entry
 invalid-content-transfer-encoding
 invalid-date
