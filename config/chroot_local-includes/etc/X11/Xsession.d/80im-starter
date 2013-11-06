@@ -10,15 +10,17 @@
 # Deside order in which input methods are preferred
 # (chinese needs pinyin, japanese needs anthy, korean needs hangul)
 LANGPREFIX=`echo "$LANG" | sed 's/_.*//'`
-PREFLIST="[pinyin,anthy,hangul]"
 
-if [ "$LANGPREFIX" = "ja" ]; then
-	PREFLIST="[anthy,pinyin,hangul]"
-fi
-
-if [ "$LANGPREFIX" = "ko" ]; then
-	PREFLIST="[hangul,pinyin,anthy]"
-fi
+case "$LANGPREFIX" in
+   ja)
+      PREFLIST="[anthy,pinyin,hangul]"
+      ;;
+   ko)
+      PREFLIST="[hangul,pinyin,anthy]"
+      ;;
+   *)
+      PREFLIST="[pinyin,anthy,hangul]"
+esac
 
 # Configure enabled input methods and their preferred order
 gconftool-2 --type=list --list-type=string --set \
