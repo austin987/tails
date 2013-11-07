@@ -43,18 +43,14 @@ Update version number in `bin/tails-persistence-setup`:
     perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-persistence-setup
     perl -pi -E "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," bin/tails-persistence-setup
 
-Update `Changes`, starting with:
-
-    (echo "$VERSION   $(date '+%Y%m%d')" ; echo "\n" ; cat Changes) > Changes.new && mv Changes.new Changes
-
 Commit all files that need to be:
 
-    git commit Changes bin/tails-persistence-setup \
-        -m "tails-persistent-setup $VERSION"
+    git commit bin/tails-persistence-setup -m "tails-persistent-setup $VERSION"
 
-Run the upstream test suite:
+Run the upstream test suite (point `PERL5LIB` to a checkout of the
+relevant tag of Tails' perl5lib):
 
-    RELEASE_TESTING=1 fakeroot dzil test
+    RELEASE_TESTING=1 PERL5LIB=/home/user/tails/perl5lib/lib fakeroot dzil test
 
 Build an upstream tarball:
 
@@ -64,13 +60,9 @@ Tag the release:
 
     git tag -s $VERSION -m "tails-persistent-setup $VERSION"
 
-Move the tarball out of the build repository:
+Move the tarball out of the build repository and delete the build directories:
 
-    mv Tails-Persistence-*.tar.gz ..
-
-Delete the build directories:
-
-    rm -rf Tails-Persistence-* .build
+    mv Tails-Persistence-*.tar.gz .. && rm -rf Tails-Persistence-* .build
 
 Update the Debian package
 =========================
