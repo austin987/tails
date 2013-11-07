@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+
+# Create the vidalia user.
+#
+# We run vidalia under this user,
+# which belongs to the debian-tor group.
+
+echo "creating the vidalia user"
+
+adduser --system --quiet --group --no-create-home vidalia
+adduser vidalia debian-tor
+chown -R vidalia:vidalia /home/vidalia

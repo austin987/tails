@@ -748,6 +748,22 @@ are installed. Spell checking software and data is installed for the
 set of best supported languages; it is usable at least is Iceweasel,
 OpenOffice.org and gedit.
 
+### 3.3.1 Input methods
+
+Tails ships with IBus and a few engines (Anthy for Japanese, Pinyin
+and Bopomofo for Chinese, and Hangul for Korean).
+
+A login script configures and enables IBus for all locales: it must be
+started at login time to be fully usable (environment variables must
+be set up); also, one may want to work on documents written in
+Chinese, Japanese or Korean even when selecting English as their
+preferred language.
+
+When a Japanese, Chinese or Korean locale is selected, this login
+script also selects the right default input method.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/X11/Xsession.d/80im-starter]]
+
 ## 3.4 Notification of security issues and new Tails release
 
 Shipped in Tails is a script that checks at each desktop start if
@@ -804,7 +820,15 @@ probably would not want this due to the added consumption of
 bandwidth. The user can nevertheless easily choose to turn his or her
 Tor client into a relay, thanks to the Vidalia graphical user
 interface.
- 
+
+If a compromised software had access to the Tor control port,
+an attacker who controls it could simply ask Tor the public
+IP through the `GETINFO address` command.
+To prevent this, access to the Tor control port is only
+granted to the vidalia user, who is running Vidalia.
+
+- [[!tails_gitweb chroot_local-hooks/06-adduser_vidalia]]
+- [[!tails_gitweb chroot_local-includes/usr/local/sbin/restart-vidalia]]
 - [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]
 
 ### 3.6.3 DNS
@@ -1040,7 +1064,7 @@ newer. See [[contribute/design/persistence]] for details.
 
 An easy (read: not command-line based) way to install and
 upgrade Tails on USB sticks is available in Tails 0.11 and newer.
-See [[design/usb_installation]] for details.
+See [[design/installation]] for details.
 
 ### 3.6.19 Wireless devices handling
 
