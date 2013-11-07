@@ -18,8 +18,6 @@ Required dependencies on Debian:
 
 Install the dependencies:
 
-    DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::OurPkgVersion
-    dh-make-perl --build --install --cpan Dist::Zilla::Plugin::CheckChangeLog
     DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::LocaleMsgfmt
 
 Update POT and PO files
@@ -45,19 +43,15 @@ Update version number in `bin/tails-persistence-setup`:
 
 Commit all files that need to be:
 
-    git commit Changes lib/Tails.pm -m "Tails-perl5lib $VERSION"
+    git commit lib/Tails.pm -m "Tails-perl5lib $VERSION"
 
 Run the upstream test suite:
 
     RELEASE_TESTING=1 dzil test
 
-Build an upstream tarball:
+Build an upstream tarball and tag the release:
 
-    dzil build
-
-Tag the release:
-
-    git tag -s "Tails-perl5lib_$VERSION" -m "Tails-perl5lib $VERSION"
+    dzil build && git tag -s "Tails-perl5lib_$VERSION" -m "Tails-perl5lib $VERSION"
 
 Move the tarball out of the build repository and delete the build directories:
 
@@ -66,12 +60,9 @@ Move the tarball out of the build repository and delete the build directories:
 Update the Debian package
 =========================
 
-Checkout the branch with Debian package specifics:
+Checkout the branch with Debian package specifics and import the new upstream tarball:
 
-    git checkout debian
-
-Import the new upstream tarball:
-
+    git checkout debian && \
     git-import-orig --upstream-vcs-tag=Tails-perl5lib_$VERSION ../Tails-perl5lib-$VERSION.tar.gz
 
 Update `debian/changelog`:
@@ -91,7 +82,7 @@ Build a Debian package (use a Squeeze/i386 + backports chroot):
 If everything is fine, add a signed tag to the repository and push the
 changes:
 
-    git-buildpackage --git-tag-only --git-sign-tags
+    git-buildpackage --git-tag-only --git-sign-tags && \
     git push && git push --tags
 
 (Make sure `master`, `upstream`, `debian` and `pristine-tar` were all pushed.)
