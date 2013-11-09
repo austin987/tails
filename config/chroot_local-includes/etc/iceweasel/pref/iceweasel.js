@@ -84,14 +84,9 @@ pref("xpinstall.whitelist.add", "");
 pref("xpinstall.whitelist.add.103", "");
 
 // Unsorted prefs
-pref("browser.chrome.site_icons", false);
-pref("browser.microsummary.updateGenerators", false);
-pref("browser.safebrowsing.remoteLookups", false);
 pref("browser.download.manager.scanWhenDone", false);
-pref("browser.sessionstore.enabled", false);
 pref("extensions.shownSelectionUI", true);
 pref("extensions.update.autoUpdateDefault", false);
-pref("extensions.update.notifyUser", false);
 pref("network.cookie.prefsMigrated", true);
 pref("pref.privacy.disable_button.cookie_exceptions", false);
 pref("pref.privacy.disable_button.view_cookies", false);
