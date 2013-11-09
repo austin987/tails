@@ -84,7 +84,6 @@ pref("xpinstall.whitelist.add", "");
 pref("xpinstall.whitelist.add.103", "");
 
 // Unsorted prefs
-pref("browser.bookmarks.livemark_refresh_seconds", 31536000);
 pref("browser.chrome.site_icons", false);
 pref("browser.history_expire_days", 0);
 pref("browser.history_expire_days.mirror", 0);
