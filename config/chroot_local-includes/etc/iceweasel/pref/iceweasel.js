@@ -86,7 +86,6 @@ pref("xpinstall.whitelist.add.103", "");
 // Unsorted prefs
 pref("browser.download.manager.scanWhenDone", false);
 pref("extensions.shownSelectionUI", true);
-pref("extensions.update.autoUpdateDefault", false);
 pref("network.cookie.prefsMigrated", true);
 pref("security.enable_ssl3", true);
 pref("security.enable_tls", true);
