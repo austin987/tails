@@ -6,38 +6,22 @@ Relevant ticket: [[!tails_ticket 5768]]
 
 We set these settings in our config files, but they don't appear in about:config:
 
-* browser.bookmarks.livemark_refresh_seconds
-* browser.history_expire_days
-* browser.history_expire_days.mirror
-* browser.microsummary.updateGenerators
-* browser.safebrowsing.remoteLookups
-* browser.sessionstore.enabled
-* capability.policy.maonoscript.javascript.enabled
-* capability.policy.maonoscript.sites
-* extensions.update.notifyUser
-* pref.privacy.disable_button.cookie_exceptions
-* pref.privacy.disable_button.view_cookies
-* pref.privacy.disable_button.view_passwords
-* privacy.item.offlineApps
-* privacy.item.passwords
-* privacy.sanitize.didShutdownSanitize
-* privacy.sanitize.promptOnSanitize
-* security.disable_button.openCertManager
-* security.enable_java
-* security.enable_ssl2
-* signon.prefillForms
 * xpinstall.whitelist.add.103
-
-Most of these settings are probably obsolete.
-
-We should verify this and remove them from our configuration.
 
 # different value in about:config than in our configuration files
 
-* `browser.chrome.site_icons`: not set by the TBB / Torbutton; let's research if we really want to set it to a non-default value.
-* `extensions.update.autoUpdateDefault`: not set by the TBB / Torbutton; let's research if we really want to set it to a non-default value.
-* `noscript.subscription.lastCheck`: research if the value is expected to be modified at runtime
-* `extensions.torbutton.startup`: expected to be set to false, as `torbutton_do_startup()` sets this to false after it has done its job.
-* `browser.startup.homepage_override.buildID` is set to the build time of Iceweasel on startup. The same happens in TBB, so we can probably just ignore this.
-* `browser.startup.homepage_override.mstone` same as above, but set to the version (e.g. 17.0.5). The same happens in TBB, so we can probably just ignore this.
+* `browser.startup.homepage_override.buildID` is set to the build time
+  of Iceweasel on startup. The same happens in TBB, so we can probably
+  just ignore this.
+* `browser.startup.homepage_override.mstone` same as above, but set to
+  the version (e.g. 17.0.5). The same happens in TBB, so we can
+  probably just ignore this.
 
+## Expected
+
+* `noscript.subscription.lastCheck`: setting this to the TBB's value
+  (-142148139) in about:config immediately sets it to
+  a positive value.
+* `extensions.torbutton.startup`: expected to be set to false, as
+  `torbutton_do_startup()` sets this to false after it has done
+  its job.
