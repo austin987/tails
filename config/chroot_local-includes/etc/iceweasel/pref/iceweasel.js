@@ -106,5 +106,4 @@ pref("privacy.sanitize.promptOnSanitize", false);
 pref("security.disable_button.openCertManager", false);
 pref("security.enable_ssl3", true);
 pref("security.enable_tls", true);
-pref("signon.prefillForms", false);
 pref("spellchecker.dictionary", "en_US");
