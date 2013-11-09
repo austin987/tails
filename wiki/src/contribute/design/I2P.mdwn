@@ -111,6 +111,133 @@ blocking|Tor_enforcement/Network_filter]] ensures that no Internet
 traffic can be escape both Tor or I2P (and thus be non-anonymous) even
 if something is wrong in the above filters (or a future revision).
 
+Ports allowed through the firewall
+==================================
+
+Services on I2P are accessed through tunnels built by I2P. Services that a user
+hosts, such as an *eepsite* or *IRC Server* are accessed remotely via **Server Tunnels**.
+End users will access services using *client tunnels*. I2P is shipped with a
+few tunnels preconfigured and the ports that they use have exceptions added to
+ferm. These ports include:
+
+<table>
+    <tr>
+        <td>
+            2727
+        </td>
+        <td>
+            BOB
+        </td>
+        <td>
+            <a href="http://www.i2p2.de/bob">BOB</a> is an application bridge allowing non-Java clients to interact with I2P.
+        </td>
+    </tr>
+    <tr>
+        <td>
+            4444
+        </td>
+        <td>
+            I2P HTTP Proxy
+        </td>
+        <td>
+            Used to access sites with the <code>.i2p</code> TLD
+        </td>
+    </tr>
+    <tr>
+        <td>
+            4445
+        </td>
+        <td>
+            HTTPS Outproxy tunnel
+        </td>
+        <td>
+            Disabled in by default in <a href="http://127.0.0.1:7657/i2ptunnel">I2PTunnel</a> since all HTTPS traffic is routed through Tor.
+        </td>
+    </tr>
+    <tr>
+        <td>
+            6668
+        </td>
+        <td>
+            Tunnel to Irc2P
+        </td>
+        <td>
+            Used to connect to the main I2P-only IRC network
+        </td>
+    </tr>
+    <tr>
+        <td>
+            7656
+        </td>
+        <td>
+            SAM
+        </td>
+        <td>
+            SAM is an application bridge allowing non-Java clients to use I2P.
+            More information: <a href="http://www.i2p2.de/sam">SAMv1</a>, <a href="http://www.i2p2.de/samv2">SAMv2</a>,
+            <a href="http://www.i2p2.de/samv3"</a>SAMv3</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            7657
+        </td>
+        <td>
+            I2P router console
+        </td>
+        <td>
+            The router console is accessible via the web browser at <a href="http://127.0.0.1:7657">http://127.0.0.1:7657</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            7658
+        </td>
+        <td>
+            local 'eepsite'
+        </td>
+        <td>
+            Each I2P installation is configured out of the box with the
+            possibility to host one's own website (or *eepsite*) on the I2P
+            network. The eepsite will not be acessible remotely unless its <a href="http://127.0.0.1:7657/i2ptunnel#localServerTunnelList">tunnel</a>
+            is started.
+        </td>
+    </tr>
+    <tr>
+        <td>
+            7659
+        </td>
+        <td>
+            SMTP Proxy
+        </td>
+        <td>
+            Tunnel to smtp.postman.i2p. More information is available from within I2P at <a href="http://hq.postman.i2p/?page_id=10">Postman's HQ</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            7660
+        </td>
+        <td>
+            POP3 Proxy
+        </td>
+        <td>
+            Tunnel to pop3.postman.i2p. More information is available from within I2P at <a href="http://hq.postman.i2p/?page_id=11">Postman's HQ</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            8998
+        </td>
+        <td>
+            MTN Proxy
+        </td>
+        <td>
+            Tunnel to mtn.i2p2.i2p, a <a href="http://monotone.ca">Monotone</a> server.
+        </td>
+    </tr>
+</table>
+
 Package source and upgrading I2P
 ================================
 
