@@ -1,0 +1,48 @@
+We'll need to migrate our custom programs to python3
+
+# Python 3 libraries we need that are missing in Jessie
+
+    $ git grep "^ *import " config/
+    $ git grep "^ *from [^ -]* import " config/
+
+## Python imports in tails repository
+
+Modules not inculded in standard library follow:
+
+### config/chroot_local-includes/etc/whisperback/config.py
+
+None
+
+### config/chroot_local-includes/usr/local/bin/lc.py
+
+None
+
+### config/chroot_local-includes/usr/local/bin/shutdown_helper_applet
+
+- `gtk`: depercated, replaced by `python3-gi` and `gir1.2-gtk-3.0`
+- `gnomeapplet`: deprecated, replaced by `python3-gi` and `gir1.2-panelapplet-4.0`
+
+### config/chroot_local-includes/usr/local/bin/tails-about
+
+- `gtk`: depercated, replaced by `python3-gi` and `gir1.2-gtk-3.0`
+
+### config/chroot_local-includes/usr/local/sbin/autotest_remote_shell.py
+
+- `serial`: OK, `python3-serial`
+
+### config/chroot_local-includes/usr/local/sbin/boot-profile
+
+- `pyinotify`: OK, `python3-pyinotify`
+
+### config/chroot_local-includes/usr/local/sbin/tails-additional-software
+
+- `posix1e`: OK, `python3-pylibacl`
+
+## Python imports in WhisperBack
+
+- `GnuPGInterface`: **no python3 version, unmaintained**
+- `gtk`: deprecated, replaced by `python3-gi` and `gir1.2-gtk-3.0`
+- `gobject`: deprecated, replaced by `python3-gi`
+- `webkit`: deprecated, replaced by `python3-gi` and `gir1.2-webkit-3.0`
+- `gnutls`: no python3 version, seems replaced by <https://gitorious.org/pygnutls> but we might not need it anymore
+- `urlparse`: renamed `urllib.urlparse`
