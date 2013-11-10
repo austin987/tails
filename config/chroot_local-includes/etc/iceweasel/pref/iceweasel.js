@@ -13,9 +13,6 @@
 // Use LANG environment variable to choose locale
 pref("intl.locale.matchOS", true);
 
-// Proxy and proxy security
-pref("network.security.ports.banned", "8118,8123,9050,9051,9061,9062,9151");
-
 // Extension support
 pref("xpinstall.whitelist.add.103", "");
 

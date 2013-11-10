@@ -1,5 +1,6 @@
 // Override prefs set in 000-tor-browser.js
 user_pref("extensions.enabledScopes", 15);
+user_pref("network.security.ports.banned", "8118,8123,9050,9051,9061,9062,9151");
 
 // Adblock Plus preferences (Tails-specific, as TBB does not ship this extension)
 user_pref("extensions.adblockplus.correctTypos", false);
