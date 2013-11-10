@@ -66,7 +66,6 @@ user_pref("extensions.foxyproxy.socks_remote_dns", true);
 user_pref("extensions.update.enabled", false);
 user_pref("layout.spellcheckDefault", 0);
 user_pref("network.dns.disableIPv6", true);
-user_pref("network.proxy.failover_timeout", 0);
 user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
 user_pref("noscript.ABE.wanIpAsLocal", false);
