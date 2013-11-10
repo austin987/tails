@@ -1,3 +1,4 @@
+// Adblock Plus preferences (Tails-specific, as TBB does not ship this extension)
 user_pref("extensions.adblockplus.correctTypos", false);
 user_pref("extensions.adblockplus.currentVersion", "2.1");
 user_pref("extensions.adblockplus.savestats", false);
@@ -5,6 +6,7 @@ user_pref("extensions.adblockplus.showinaddonbar", false);
 user_pref("extensions.adblockplus.showintoolbar", false);
 user_pref("extensions.adblockplus.subscriptions_autoupdate", false);
 
+// HTTPS Everywhere preferences
 user_pref("extensions.https_everywhere._observatory.enabled", false);
 user_pref("extensions.https_everywhere._observatory.popup_shown", true);
 user_pref("extensions.https_everywhere.toolbar_hint_shown", true);
