@@ -100,7 +100,9 @@ archive (`.orig.tar.{gz,bz2,xz}`) if it is not already in our APT
 repository; this can be done by passing `-sa` to pdebuild's
 `--debbuildopts`.
 
-### Configuring dupload
+### Configuring an upload tool
+
+#### Configuring dupload
 
 Add this configuration snippet to your `dupload` configuration:
 
@@ -112,7 +114,17 @@ Add this configuration snippet to your `dupload` configuration:
 	        dinstall_runs => 1,
 	};
 
-(`dput` lovers, please contribute your own snippet.)
+#### Confuguring dput
+
+Add this to `.dput.cf`:
+
+    [tails]
+    fqdn            = incoming.deb.tails.boum.org
+    method          = scp
+    login           = reprepro
+    incoming        = /srv/reprepro/incoming/
+    run_dinstall    = 0
+
 
 ### Uploading and importing process
 
