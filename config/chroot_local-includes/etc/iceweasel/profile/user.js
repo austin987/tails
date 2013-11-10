@@ -91,7 +91,9 @@ user_pref("noscript.subscription.lastCheck", -142148139);
 user_pref("noscript.temp", "");
 user_pref("noscript.untrusted", "google-analytics.com"); // Tails-specific
 user_pref("noscript.forbidMedia", false);
-// XXX: Now handled by plugins.click_to_play
+// Quoting TBB: "Now handled by plugins.click_to_play"
+// Tails: we don't support these plugins, so letting NoScript block it seems
+// to be potentially useful defense-in-depth.
 // user_pref("noscript.forbidFlash", false);
 // user_pref("noscript.forbidSilverlight", false);
 // user_pref("noscript.forbidJava", false);
