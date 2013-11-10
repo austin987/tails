@@ -104,7 +104,7 @@ user_pref("noscript.showTempAllowPage", true);
 user_pref("noscript.showRevokeTemp", true);
 user_pref("noscript.notify", false);
 
-// Other non-Torbutton prefs
+// Other non-Torbutton, Tails-specific prefs
 user_pref("browser.download.manager.closeWhenDone", true);
 user_pref("extensions.foxyproxy.last-version", "99999.99");
 user_pref("extensions.foxyproxy.socks_remote_dns", true);
