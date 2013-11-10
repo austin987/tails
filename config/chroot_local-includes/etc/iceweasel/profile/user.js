@@ -61,8 +61,8 @@ user_pref("network.proxy.socks_port", 9151);
 
 // NoScript preferences the TBB also sets.
 // We use the same value as the TBB unless noted.
-// XXX: user_pref("capability.policy.maonoscript.javascript.enabled", "allAccess");
-// XXX: user_pref("capability.policy.maonoscript.sites", "addons.mozilla.org about: about:addons about:blank about:blocked about:certerror about:config about:crashes about:credits about:home about:neterror about:plugins about:privatebrowsing about:sessionrestore chrome: resource:");
+user_pref("capability.policy.maonoscript.javascript.enabled", "allAccess");
+user_pref("capability.policy.maonoscript.sites", "addons.mozilla.org about: about:addons about:blank about:blocked about:certerror about:config about:crashes about:credits about:home about:neterror about:plugins about:privatebrowsing about:sessionrestore chrome: resource:");
 user_pref("noscript.ABE.enabled", false);
 user_pref("noscript.ABE.notify", false);
 user_pref("noscript.ABE.wanIpAsLocal", false);
