@@ -61,7 +61,6 @@ user_pref("network.proxy.socks_port", 9151);
 
 // Other non-Torbutton prefs
 user_pref("browser.download.manager.closeWhenDone", true);
-user_pref("browser.search.update", false);
 user_pref("dom.event.contextmenu.enabled", false);
 user_pref("extensions.foxyproxy.last-version", "99999.99");
 user_pref("extensions.foxyproxy.socks_remote_dns", true);
