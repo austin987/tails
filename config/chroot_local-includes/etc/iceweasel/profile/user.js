@@ -60,8 +60,6 @@ user_pref("extensions.torbutton.saved.type", 1);
 user_pref("network.proxy.socks_port", 9151);
 
 // Other non-Torbutton prefs
-user_pref("browser.chrome.favicons", false);
-user_pref("browser.chrome.image_icons.max_size", 0);
 user_pref("browser.download.manager.closeWhenDone", true);
 user_pref("browser.search.update", false);
 user_pref("dom.event.contextmenu.enabled", false);
