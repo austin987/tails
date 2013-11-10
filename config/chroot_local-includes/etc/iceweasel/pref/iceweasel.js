@@ -13,9 +13,6 @@
 // Use LANG environment variable to choose locale
 pref("intl.locale.matchOS", true);
 
-// Disable browser auto updaters and associated homepage notifications
-pref("app.update.disable_button.showUpdateHistory", false);
-
 // Proxy and proxy security
 pref("network.security.ports.banned", "8118,8123,9050,9051,9061,9062,9151");
 
@@ -23,8 +20,5 @@ pref("network.security.ports.banned", "8118,8123,9050,9051,9061,9062,9151");
 pref("xpinstall.whitelist.add.103", "");
 
 // Unsorted prefs
-pref("extensions.shownSelectionUI", true);
 pref("network.cookie.prefsMigrated", true);
-pref("security.enable_ssl3", true);
-pref("security.enable_tls", true);
 pref("spellchecker.dictionary", "en_US");
