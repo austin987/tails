@@ -98,8 +98,8 @@ user_pref("noscript.forbidMedia", false);
 // user_pref("noscript.forbidSilverlight", false);
 // user_pref("noscript.forbidJava", false);
 // user_pref("noscript.forbidPlugins", false);
-// XXX: Usability tweaks
-// user_pref("noscript.showPermanent", false);
+// Usability tweaks
+user_pref("noscript.showPermanent", false);
 user_pref("noscript.showTempAllowPage", true);
 user_pref("noscript.showRevokeTemp", true);
 user_pref("noscript.notify", false);
