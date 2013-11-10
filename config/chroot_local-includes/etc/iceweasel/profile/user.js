@@ -7,8 +7,9 @@ user_pref("extensions.adblockplus.showintoolbar", false);
 user_pref("extensions.adblockplus.subscriptions_autoupdate", false);
 
 // HTTPS Everywhere preferences
+// We use the same value as the TBB unless noted.
 user_pref("extensions.https_everywhere._observatory.popup_shown", true);
-user_pref("extensions.https_everywhere.toolbar_hint_shown", true);
+user_pref("extensions.https_everywhere.toolbar_hint_shown", true); // Tails-specific
 
 // Block read and write access to the history in non-Tor mode
 user_pref("extensions.torbutton.block_nthread", true);
