@@ -57,38 +57,7 @@ user_pref("extensions.torbutton.saved.socks_version", 5);
 user_pref("extensions.torbutton.saved.type", 1);
 
 // Proxy and proxy security
-user_pref("network.proxy.socks", "127.0.0.1");
 user_pref("network.proxy.socks_port", 9151);
-user_pref("network.proxy.socks_remote_dns", true);
-user_pref("network.proxy.socks_version", 5);
-user_pref("network.proxy.type", 1);
-user_pref("network.protocol-handler.warn-external.mailto", true);
-user_pref("network.protocol-handler.warn-external.news", true);
-user_pref("network.protocol-handler.warn-external.nntp", true);
-user_pref("network.protocol-handler.warn-external.snews", true);
-user_pref("network.protocol-handler.warn-external.file", true);
-
-// Network and performance
-user_pref("network.http.pipelining", true);
-user_pref("network.http.pipelining.aggressive", true);
-user_pref("network.http.pipelining.maxrequests", 12);
-user_pref("network.http.pipelining.ssl", true);
-user_pref("network.http.proxy.pipelining", true);
-user_pref("security.ssl.enable_false_start", true);
-user_pref("network.http.keep-alive.timeout", 20);
-user_pref("network.http.connection-retry-timeout", 0);
-user_pref("network.http.max-persistent-connections-per-proxy", 256);
-user_pref("network.http.pipelining.reschedule-timeout", 15000);
-user_pref("network.http.pipelining.read-timeout", 60000);
-// Quoting TBB: 'Hacked pref: Now means "Attempt to pipeline at least this many requests together"'
-user_pref("network.http.pipelining.max-optimistic-requests", 3);
-
-// Fingerprinting
-user_pref("webgl.min_capability_mode", true);
-user_pref("webgl.disable-extensions", true);
-
-// Extension support
-user_pref("extensions.autoDisableScopes", 0);
 
 // Other non-Torbutton prefs
 user_pref("browser.cache.disk.capacity", 0);
