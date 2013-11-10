@@ -1,3 +1,6 @@
+// Override prefs set in 000-tor-browser.js
+user_pref("extensions.enabledScopes", 15);
+
 // Adblock Plus preferences (Tails-specific, as TBB does not ship this extension)
 user_pref("extensions.adblockplus.correctTypos", false);
 user_pref("extensions.adblockplus.currentVersion", "2.1");
