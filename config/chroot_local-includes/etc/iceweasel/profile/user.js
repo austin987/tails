@@ -9,6 +9,7 @@ user_pref("extensions.adblockplus.subscriptions_autoupdate", false);
 
 user_pref("extensions.https_everywhere._observatory.enabled", false);
 user_pref("extensions.https_everywhere._observatory.popup_shown", true);
+user_pref("extensions.https_everywhere.toolbar_hint_shown", true);
 
 // Block read and write access to the history in non-Tor mode
 user_pref("extensions.torbutton.block_nthread", true);
@@ -116,6 +117,7 @@ user_pref("noscript.forbidMedia", false);
 user_pref("noscript.forbidWebGL", true);
 user_pref("noscript.global", true);
 user_pref("noscript.gtemp", "");
+user_pref("noscript.notify", false);
 user_pref("noscript.opacizeObject", 3);
 user_pref("noscript.options.tabSelectedIndexes", "5,0,0");
 user_pref("noscript.policynames", "");
@@ -124,9 +126,9 @@ user_pref("noscript.showAllowPage", false);
 user_pref("noscript.showBaseDomain", false);
 user_pref("noscript.showDistrust", false);
 user_pref("noscript.showRecentlyBlocked", false);
-user_pref("noscript.showRevokeTemp", false);
+user_pref("noscript.showRevokeTemp", true);
 user_pref("noscript.showTemp", false);
-user_pref("noscript.showTempAllowPage", false);
+user_pref("noscript.showTempAllowPage", true);
 user_pref("noscript.showTempToPerm", false);
 user_pref("noscript.showUntrusted", false);
 user_pref("noscript.STS.enabled", false);

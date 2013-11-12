@@ -2,14 +2,13 @@
 
 import gettext
 import syslog
-import glob
 import os.path
 import sys
 import subprocess
 
-PACKAGES_LIST_FILE="live-additional-software.conf"
+PERSISTENCE_DIR="/live/persistence/TailsData_unlocked"
+PACKAGES_LIST_FILE= PERSISTENCE_DIR + "/live-additional-software.conf"
 ACTIVATION_FILE="/var/run/live-additional-software/activated"
-UNLOCKED_PERSISTENCE_DIRS_GLOB="/live/persistence/*_unlocked/"
 
 def _launch_apt_get(specific_args):
     """Launch apt-get with given args
@@ -59,34 +58,31 @@ def _notify(title, body):
         syslog.syslog(syslog.LOG_WARNING, "Warning: unable to notify the user. %s" % e)
         syslog.syslog(syslog.LOG_WARNING, "The notification was: %s %s" % (title, body))
 
-def get_additional_packages_lists():
-    """Returns the paths of additional packageslists
+def has_additional_packages_list():
+    """Return true iff PACKAGES_LIST_FILE exists
     """
-    syslog.syslog("Reading additional packages list")
-    packages_list = []
-    for persistent_dir in glob.glob(UNLOCKED_PERSISTENCE_DIRS_GLOB):
-        if os.path.isfile(persistent_dir + PACKAGES_LIST_FILE):
-            syslog.syslog("Found additional packages list in %s" % persistent_dir)
-            packages_list.append(persistent_dir + PACKAGES_LIST_FILE)
-    return packages_list
+    return os.path.isfile(PACKAGES_LIST_FILE)
 
 def get_additional_packages():
     """Returns the list of all the additional packages
     """
+    if not has_additional_packages_list():
+        return None
     packages = []
-    for package_list in get_additional_packages_lists():
-        with open(package_list) as f:
-            for line in f:
-                line = line.strip()
-                if line: packages.append(line)
-        f.closed
+    with open(PACKAGES_LIST_FILE) as f:
+        for line in f:
+            line = line.strip()
+            if line: packages.append(line)
+    f.closed
     return packages
 
 def install_additional_packages():
     """The subcommand which activates and installs all additional packages
     """
     syslog.syslog("Starting to install additional software...")
-    if not get_additional_packages_lists():
+    if has_additional_packages_list():
+        syslog.syslog("Found additional packages list")
+    else:
         syslog.syslog(syslog.LOG_WARNING, "Warning: no additional software configured, exiting.")
         return True
     packages = get_additional_packages()
@@ -116,7 +112,9 @@ def upgrade_additional_packages():
     if apt_get_returncode:
         syslog.syslog(syslog.LOG_WARNING, "Warning: the update failed.")
         _notify(_("Your additional software"),
-             _("The upgrade failed. This might be due to a network problem. Please check your network connexion or try to restart Tails."))
+             _("The upgrade failed. This might be due to a network problem. \
+Please check your network connection, try to restart Tails, or read the system \
+log to understand better the problem."))
         return False
     if install_additional_packages():
         _notify(_("Your additional software"),
@@ -124,7 +122,9 @@ def upgrade_additional_packages():
         return True
     else:
         _notify(_("Your additional software"),
-             _("The upgrade failed. This might be due to a network problem. Please check your network connexion or try to restart Tails."))
+             _("The upgrade failed. This might be due to a network problem. \
+Please check your network connection, try to restart Tails, or read the system \
+log to understand better the problem."))
         return False
 
 def is_activated():

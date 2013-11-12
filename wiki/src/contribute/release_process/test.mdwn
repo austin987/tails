@@ -23,8 +23,8 @@ e.g. `git diff 0.17..06fa1ab80d55c9f29274b7459bd198edb1a8d53d`
 
 ## Result
 
-Compare the list of bundled packages and
-versions with the one shipped last time e.g.:
+Compare the list of bundled packages and versions with the one shipped last
+time. `.packages` are usually attached to the email announcing the ISO is ready.
 
 	/usr/bin/diff -u \
 	    wiki/src/torrents/files/tails-i386-0.16.packages \
@@ -71,9 +71,6 @@ tracked by tickets prefixed with `todo/test_suite:`.
   Torbutton version installed and used in Iceweasel.
 * Browsing (by IP) a HTTP or HTTPS server on the LAN should be possible.
 * Browsing (by IP) a FTP server on the LAN should be possible.
-* Browsing (by hostname) a FTP server on the Internet should be possible, and
-  downloading a file should be possible (once [[!tails_todo fix Internet FTP support]]
-  is fixed)
 * Does playing HTML5 videos work? In particular, (due to its popularity)
   do [youtube](http://www.youtube.com) videos work (once
   [[!tails_todo easier YouTube]] is fixed -- currently object unblocking in
@@ -90,7 +87,8 @@ tracked by tickets prefixed with `todo/test_suite:`.
  - else: see if the connection to the IRC server appears in Vidalia
    connections list
 * Check OTR is working.
-* Check at least IRC and XMPP are working.
+* Check that IRC is working with the default OFTC profile.
+* Check that XMPP is working with a new test profile.
 * Check if pidgin doesn't leak too many informations on replying to different
   CTCP requests:
   * Start Tails and launch pidgin once done. Connect to an IRC server where you're already on
@@ -98,7 +96,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
     with a client that supports sending CTCP commands properly --
     Pidgin does not, apparently
     (for a list of commands, see [this page](http://www.wikkedwire.com/irccommands)).
-    See the [[!tails_todo Pidgin_ctcp_replies desc="current known-broken state"]].
+    See the [[!tails_ticket 5823 desc="current known-broken state"]].
 
 # Tor
 
@@ -231,7 +229,7 @@ features properly do their work; second, our `torrc` sets the right
      leaking your password in plaintext by either changing it
      temporarily or using a disposable account).
   2. Run `sudo tcpdump -n -i lo -w dump` to capture the packets before
-     Tor encrypts it, and check the dump for the HELO/EHLO message and
+     Tor encrypts it, then close tcpdump, and check the dump for the HELO/EHLO message and
      verify that it only contains `localhost`.
 
 # Whisperback
@@ -263,15 +261,12 @@ correctly.
   * on DVD
 - After booting from DVD, remove Tails boot medium and check that the
   memory erasure process is started (`Loading new kernel`, at least).
-  The USB tests are bellow, in the USB installer section.
+  The USB tests are bellow, in the Tails Installer section.
 
 Testing that the needed files are really mapped in memory, and the
 erasing process actually works, involves a more complicated
 process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 `[needs-fix: erase_memory]` ([[!tails_todo test_suite:_anti-tests]])
-
-For 0.20 (or its RC), we have to test this both on a PAE machine and
-on a non-PAE one, then close [[!tails_todo test_suite:_sdmem_job_waiting]].
 
 # Root access control
 
@@ -312,7 +307,8 @@ on a non-PAE one, then close [[!tails_todo test_suite:_sdmem_job_waiting]].
 
 # Git
 
-* clone a repository over dumb transport (`git://`)
+* clone a repository over `git://`
+* clone a repository over `https://`
 * clone a repository over SSH
 
 # SSH
@@ -330,7 +326,7 @@ on a non-PAE one, then close [[!tails_todo test_suite:_sdmem_job_waiting]].
 * Make sure the Tails repository unversioned suites (e.g. `testing`,
   `stable` and `devel`) are *not* in APT sources.
 
-# USB Installer/Upgrader
+# Tails Installer
 
 All this was successfully reviewed at commit cdbbf4d8.
 
@@ -389,8 +385,8 @@ stuff: **FIXME**.
 
 # Persistence
 
-* Activate persistence on a Tails USB install with all presets on, and
-  a few custom directories (also done by the automated test suite,
+* Activate persistence on a Tails USB install with all presets on
+  (also done by the automated test suite,
   but required to test what follows until it's green too).
 * Try read-write mode. Make sure that changes do survive
   reboot.
@@ -399,6 +395,8 @@ stuff: **FIXME**.
   reboot.
 * Turn off some persistence presets, reboot, and make sure they are
   not activated.
+* Delete a persistent volume, reboot, the persistence option should
+  not appear in the Greeter anymore.
 
 # Windows Camouflage
 

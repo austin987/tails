@@ -1,8 +1,169 @@
-tails (0.20) UNRELEASED; urgency=low
+tails (0.22) UNRELEASED; urgency=low
 
-  * Upcoming release.
+  * Placeholder for next release.
 
- -- Tails developers <tails@boum.org>  Mon, 24 Jun 2013 10:40:33 +0200
+ -- Tails developers <tails@boum.org>  Thu, 17 Oct 2013 16:06:12 +0200
+
+tails (0.21) unstable; urgency=low
+
+  * Security fixes
+    - Don't grant access to the Tor control port for the desktop user
+      (amnesia). Else, an attacker able to run arbitrary code as this user
+      could obtain the public IP with a get_info command.
+      · Vidalia is now run as a dedicated user.
+      · Remove the amnesia user from the debian-tor group.
+      · Remove the Vidalia launcher in the Applications menu.
+        The Vidalia instance it starts is useless, since it can't connect
+        to the Tor control port.
+    - Don't allow the desktop user to directly change persistence settings.
+      Else, an attacker able to run arbitrary code as this user could
+      leverage this feature to gain persistent root access, as long as
+      persistence is enabled.
+      · Fully rework the persistent filesystem and files ownership
+        and permissions.
+      · Run the Persistent Volume Assistant as a dedicated user, that is
+        granted the relevant udisks and filesystem -level credentials.
+      · At persistence activation time, don't trust existing persistence
+        configuration files, migrate to the new ownership and permissions,
+        migrate every known-safe existing settings and backup what's left.
+        Warn the user when not all persistence settings could be migrated.
+      · Persistent Volume Assistant uses the new ownership and permissions
+        scheme when initializing a new persistent volume, and refuses to
+        read persistence.conf if it, or the parent directory, hasn't the
+        expected permissions.
+      · Make boot medium 'system internal' for udisks with bilibop.
+        Once Tails is based on Wheezy, this will further complete the
+        protection (see #6172 for details).
+    - Update Iceweasel to 17.0.10esr-0+tails2~bpo60+1.
+    - Update Torbutton to 1.5.2-2, including a patch cherry-picked from
+      upstream to make window resizing closer to what the design says.
+
+  * Major new features
+    - Add a persistence preset for printing settings (Closes: #5686).
+      Reload CUPS configuration after persistence activation.
+    - Support SD card connected through a SDIO host adapter (Closes: #6324).
+      · Rebrand Tails USB installer to Tails installer.
+      · Display devices brand, model and size in the Installer
+        (Closes: #6292).
+      · Ask for confirmation before installing Tails onto a device
+        (Closes: #6293).
+      · Add support for SDIO and MMC block devices to the Tails Installer
+        (Closes: #5744) and the Persistent Volume Assistant (Closes: #6325).
+      · Arm the udev watchdog when booted from SD (plugged in SDIO) too
+        (Closes: #6327).
+
+  * Minor improvements
+    - Provide a consistent path to the persistent volume mountpoint
+      (Closes: #5854).
+    - Add a KeePassX launcher to the top GNOME panel (Closes: #6290).
+    - Rework bug reporting workflow: point the desktop launcher to
+      the troubleshooting page.
+    - Make /home world-readable at build time, regardless of the Git
+      working copy permissions. This makes the build process more robust
+      against strict umasks.
+    - Add signing capabilities to the tails-build script (Closes: #6267).
+      This is in turn used to sign ISO images built by our Jenkins setup
+      (Closes: #6193).
+    - Simplify the ikiwiki setup and make more pages translatable.
+    - Exclude the version string in GnuPG's ASCII armored output.
+    - Prefer stronger ciphers (AES256,AES192,AES,CAST5) when encrypting
+      data with GnuPG.
+    - Use the same custom Startpage search URL than the TBB.
+      This apparently disables the new broken "family" filter.
+    - Update AdBlock Plus patterns.
+    - Install Linux from Debian testing.
+      (That is, the same version that was shipped in 0.20.1.)
+
+  * Test suite
+    - Look for "/tmp/.X11-unix/X${1#:}" too when detecting displays in use.
+    - Adapt tests to match the Control Port access security fix:
+      · Take into account that the amnesia user isn't part of the debian-tor
+        group anymore.
+      · Run as root the checks to see if a process is running: this
+        is required to see other users' processes.
+
+ -- Tails developers <tails@boum.org>  Sat, 26 Oct 2013 23:42:46 +0200
+
+tails (0.20.1) unstable; urgency=low
+
+  * Major new features
+  - Install Tor 0.2.4.17-rc-1~d60.squeeze+1 from the Tor project's repository.
+  - Install Iceweasel 17.0.9esr with Torbrowser patches.
+  - Install Linux kernel 3.10-3 (version 3.10.11-1) from sid.
+
+  * Bugfixes
+  - Remount persistence devices read-only at shutdown/reboot time
+    (Closes: #6228).
+  - Greeter: display a warning icon on admin password mismatch and on
+    persistence unlocking failure. Thanks to Andres Gomez Ramirez
+    <andres.gomez@cern.ch> for the fix!
+  - Don't torsocksify Pidgin.
+    Instead we disable Pidgin's GNOME integration to get the "Global proxy
+    configuration", which we set to use Tor. This fixes the I2P IRC account.
+  - Additional software: fix typo in notification.
+  - Allow installing "Priority: standard" packages that we do not install
+    by default: remove them late in the build process instead of assigning
+    them a -1 APT pinning level.
+
+  * Minor improvements
+  - Update AdBlock Plus patterns.
+  - Use more unique ISO file name when building from Jenkins.
+  - Additional software: point to the system log on upgrade failure.
+  - Set SOCKS5_USER and SOCKS5_PASSWORD in the connect-socks wrapper (used
+    by Git). Else, Tor 0.2.4's IsolateSOCKSAuth and connect-proxy
+    sometimes play together in some way that makes connect-proxy ask for
+    a password to connect to the SocksPort. SOCKS5_USER and
+    SOCKS5_PASSWORD are passed through unchanged if they were manually set
+    by the user already.
+  - Use our custom connect-socks wrapper for SSH. Else, Tor 0.2.4's
+    IsolateSOCKSAuth and connect-proxy sometimes play together in some way
+    that makes connect-proxy ask for a password to connect to the
+    SocksPort. Note that connect-socks uses the default SocksPort too, so
+    no change here wrt. our connection isolation design.
+
+  * Localization
+  - Import new translations from Transifex.
+
+  * Test suite
+  - Fix old ISO checking for consistent error reporting.
+  - Remove custom persistence test from manual test suite.
+    It was removed for the GUI in t-p-s 0.33.
+
+ -- Tails developers <tails@boum.org>  Sun, 15 Sep 2013 15:49:36 +0200
+
+tails (0.20) unstable; urgency=low
+
+  * Major new features
+  - Install Linux kernel 3.10.3-1 from Debian unstable.
+  - Iceweasel 17.0.8esr + Torbrowser patches.
+
+  * Bugfixes
+  - Prevent Iceweasel from displaying a warning when leaving HTTPS web sites.
+  - Make Iceweasel use the correct, localized search engine.
+  - Fix Git access to https:// repositories.
+
+  * Minor improvements
+  - Install Dasher, a predictive text entry tool.
+  - Add a wrapper around TrueCrypt which displays a warning about it soon
+    being deprecated in Tails.
+  - Remove Pidgin libraries for all protocols but IRC and Jabber/XMPP.
+    Many of the other protocols Pidgin support are broken in Tails and
+    haven't got any security auditting.
+  - Disable the pre-defined Pidgin accounts so they do not auto-connect
+    on Pidgin start.
+  - Include information about Alsa in WhisperBack reports.
+  - Explicitly restrict access to ptrace. While this setting was enabled
+    by default in Debian's Linux 3.9.6-1, it will later disabled in 3.9.7-1.
+    It's unclear what will happen next, so let's explicitly enable it ourselves.
+  - Do not display dialog when a message is sent in Claws Mail.
+  - Sync iceweasel preferences with the Torbrowser's.
+
+  * Localization
+  - Many translation updates all over the place.
+  - Merge all Tails-related POT files into one, and make use of intltoolize
+    for better integration with Transifex.
+
+ -- Tails developers <tails@boum.org>  Tue, 30 Jul 2013 14:19:57 +0200
 
 tails (0.19) unstable; urgency=low
 

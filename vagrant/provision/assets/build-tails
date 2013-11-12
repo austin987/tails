@@ -14,6 +14,7 @@ as_root_do() {
 		${https_proxy:+https_proxy="$https_proxy"} \
 		${ftp_proxy:+ftp_proxy="$ftp_proxy"} \
 		${no_proxy:+no_proxy="$no_proxy"} \
+		${JENKINS_URL:+JENKINS_URL="$JENKINS_URL"} \
 		${MKSQUASHFS_OPTIONS:+MKSQUASHFS_OPTIONS="$MKSQUASHFS_OPTIONS"} \
 		"$@"
 }
@@ -67,7 +68,7 @@ if [ -n "$JENKINS_URL" ]; then
 	if [ -z "$GIT_COMMIT" ]; then
 		echo "GIT_COMMIT environment variable is not set. Aborting." >&2
 	fi
-	REV="$GIT_BRANCH"
+	REV="${GIT_BRANCH##origin/}"
 	COMMIT="$GIT_COMMIT"
 else
 	# Build triggered by Vagrant
@@ -115,6 +116,14 @@ if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
 fi
 
 as_root_do lb build
+
+if [ -n "$JENKINS_URL" ]; then
+	ISO=$(ls *.iso)
+	for file in tails-*; do
+		sha512sum "$file" >> "$ISO.shasum"
+	done
+	gpg --batch --detach-sign --armor "$ISO.shasum"
+fi
 
 mv -f tails-* "$ARTIFACTS_DIR"
 

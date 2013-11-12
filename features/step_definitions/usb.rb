@@ -1,6 +1,5 @@
 def persistent_dirs
-  ["/etc/ssh",
-   "/home/#{$live_user}/.claws-mail",
+  ["/home/#{$live_user}/.claws-mail",
    "/home/#{$live_user}/.gconf/system/networking/connections",
    "/home/#{$live_user}/.gnome2/keyrings",
    "/home/#{$live_user}/.gnupg",
@@ -8,9 +7,12 @@ def persistent_dirs
    "/home/#{$live_user}/.purple",
    "/home/#{$live_user}/.ssh",
    "/home/#{$live_user}/Persistent",
-   "/home/#{$live_user}/custom_persistence",
    "/var/cache/apt/archives",
    "/var/lib/apt/lists"]
+end
+
+def persistent_volumes_mountpoints
+  @vm.execute("ls -1 /live/persistence/*_unlocked/").stdout.chomp.split
 end
 
 Given /^I create a new (\d+) ([[:alpha:]]+) USB drive named "([^"]+)"$/ do |size, unit, name|
@@ -130,11 +132,6 @@ Given /^I enable all persistence presets$/ do
   10.times do
     @screen.type(Sikuli::Key.SPACE + Sikuli::Key.TAB)
   end
-  # Now we'll have the custom persistence field selected
-  @screen.type("/home/#{$live_user}/custom_persistence")
-  @screen.type('a', Sikuli::KeyModifier.ALT)
-  @screen.type('/etc/ssh')
-  @screen.type('a', Sikuli::KeyModifier.ALT)
   @screen.wait_and_click('PersistenceWizardSave.png', 10)
   @screen.wait('PersistenceWizardDone.png', 20)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
@@ -330,7 +327,7 @@ Then /^the boot device has safe access rights$/ do
            "Boot device '#{dev}' owned by user '#{dev_owner}', expected 'root'")
     assert(dev_group == "disk" || dev_group == "root",
            "Boot device '#{dev}' owned by group '#{dev_group}', expected " +
-           "'disk' or 'root'. We are probably affected by Debian bug #645466.")
+           "'disk' or 'root'.")
     assert(dev_perms == "660",
            "Boot device '#{dev}' has permissions '#{dev_perms}', expected '660'")
     for user, groups in all_users_with_groups do
@@ -338,6 +335,42 @@ Then /^the boot device has safe access rights$/ do
       assert(!(groups.include?(dev_group)),
              "Unprivileged user '#{user}' is in group '#{dev_group}' which " +
              "owns boot device '#{dev}'")
+    end
+  end
+end
+
+Then /^persistent filesystems have safe access rights$/ do
+  persistent_volumes_mountpoints.each do |mountpoint|
+    fs_owner = @vm.execute("stat -c %U #{mountpoint}").stdout.chomp
+    fs_group = @vm.execute("stat -c %G #{mountpoint}").stdout.chomp
+    fs_perms = @vm.execute("stat -c %a #{mountpoint}").stdout.chomp
+    assert(fs_owner == "root",
+           "Persistent filesystem '#{mountpoint}' owned by user '#{fs_owner}', expected 'root'")
+    assert(fs_group == "amnesia",
+           "Persistent filesystem '#{mountpoint}' owned by group '#{fs_group}', expected 'amnesia'")
+    assert(fs_perms == '1777',
+           "Persistent filesystem '#{mountpoint}' has permissions '#{fs_perms}', expected '1777'")
+  end
+end
+
+Then /^persistence configuration files have safe access rights$/ do
+  persistent_volumes_mountpoints.each do |mountpoint|
+    assert(@vm.execute("test -e #{mountpoint}/persistence.conf").success?,
+           "#{mountpoint}/persistence.conf does not exist, while it should")
+    assert(@vm.execute("test ! -e #{mountpoint}/live-persistence.conf").success?,
+           "#{mountpoint}/live-persistence.conf does exist, while it should not")
+    @vm.execute(
+      "ls -1 #{mountpoint}/persistence.conf #{mountpoint}/live-*.conf"
+    ).stdout.chomp.split.each do |f|
+      file_owner = @vm.execute("stat -c %U '#{f}'").stdout.chomp
+      file_group = @vm.execute("stat -c %G '#{f}'").stdout.chomp
+      file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
+      assert(file_owner = "tails-persistence-setup",
+             "'#{f}' is owned by user '#{file_owner}', expected 'tails-persistence-setup'")
+      assert(file_group = "tails-persistence-setup",
+             "'#{f}' is owned by group '#{file_group}', expected 'tails-persistence-setup'")
+      assert(file_perms = "600",
+             "'#{f}' has permissions '#{file_perms}', expected '600'")
     end
   end
 end
