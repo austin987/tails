@@ -10,46 +10,22 @@ The `feature/ff24` branch builds, boots and basically works fine.
 Needs to be checked
 ===================
 
-Prefs in a weird state
-----------------------
-
-We already have a list of prefs that are in a weird state
-([[!tails_ticket 5768]]). It can be useful to check what follows, and
-perhaps the move to FF24 would be a great time to clean them up,
-update the list, and if possible finally empty it and be done with
-that task.
-
-Differing user-set prefs
-------------------------
-
-* `browser.startup.homepage_override.buildID`
-* `browser.startup.homepage_override.mstone`
-
-New(ly) user-set prefs
-----------------------
-
-* `dom.mozApps.used`
-* `extensions.ui.*`
-* `pdfjs.*`
-* `plugin.disable_full_page_plugin_for_types`
-
-Torbrowser prefs bundled into omni.ja
--------------------------------------
-
-The `0022-Tor-Browser-s-Firefox-preference-overrides.patch` Torbrowser
-patch bundles their prefs directly into `omni.ja`.
-
-Most of them are probably just what we want, so we could just drop
-them from our own `/etc/iceweasel/{pref/iceweasel.js,profile/user.js`:
-this would be a nice first step for [[!tails_ticket 5706]].
-
-Some others default Torbrowser prefs may not be what we want, and then
-we have to check that they are correctly overriden by our own prefs.
-
 Basic fingerprinting
 --------------------
 
-Compare to TBB 3.0b1.
+Comparing to TBB 3.0b1:
+
+* ip-check.info says TBB 3.0b1 has JavaScript version 1.8, while the
+  Tails browser 24.1 has version 1.5
+  - It says 1.8 too for Tails 0.21 and TBB 2.3.25-14-dev, so that
+    looks like a regression.
+  - It says 1.5 too for iceweasel 24.1.0esr-1 on Debian sid, so
+    perhaps we should investigate the changes in the Iceweasel
+    patchset between 17 and 24.1.
+  - No downgraded package in that ISO vs. 0.21.
+  - Perhaps some build-dep picked by the weird pbuilder chroot we had
+    to setup to build our 24.1 browser is at fault.
+* panopticlick: same results, modulo screen size
 
 Known working
 =============
@@ -59,3 +35,9 @@ Basic fingerprinting
 
 A build from `feature/ff24` is seen by ip-check.info just the same way
 is Tails 0.20.1's browser.
+
+Prefs
+-----
+
+... were cleaned up (#5768), many were merged with Torbrowser's ones,
+and they are in the intended state at runtime.
