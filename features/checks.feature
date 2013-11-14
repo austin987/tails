@@ -22,7 +22,7 @@ Feature: Various checks
 
   Scenario: The live user is setup correctly
     Then the live user has been setup by live-boot
-    And the live user is a member of only its own group and "audio cdrom dialout floppy video plugdev netdev fuse scanner lp lpadmin vboxsf i2psvc"
+    And the live user is a member of only its own group and "audio cdrom dialout floppy video plugdev netdev fuse scanner lp lpadmin vboxsf"
     And the live user owns its home dir and it has normal permissions
 
   Scenario: No initial network
