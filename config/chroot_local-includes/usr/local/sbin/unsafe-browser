@@ -123,11 +123,11 @@ set_chroot_browser_name () {
     BRANDING=branding/brand.dtd
     if [ -e "${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi" ]; then
         PACK="${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi"
-        TOP=chrome
+        TOP=browser/chrome
         REST=${LONG}/locale
     elif [ -e "${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi" ]; then
         PACK="${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi"
-        TOP=chrome
+        TOP=browser/chrome
         REST=${SHORT}/locale
     else
         PACK=${CHROOT}/usr/share/iceweasel/browser/chrome/en-US.jar
@@ -136,9 +136,12 @@ set_chroot_browser_name () {
     fi
 
     TMP=$(mktemp -d)
-    7z x "${PACK}" -o"${TMP}"
+    # Non-zero exit code due to non-standard ZIP archive.
+    # The following steps will fail soon if the extraction failed anyway.
+    unzip -d "${TMP}" "${PACK}" || true
     sed -i "s/Iceweasel/${NAME}/" "${TMP}"/"${TOP}"/"${REST}"/"${BRANDING}"
-    7z u -tzip "${PACK}" "${TMP}"/"${TOP}"
+    rm "${PACK}"
+    (cd $TMP ; 7z a -tzip "${PACK}" .)
     chmod a+r "${PACK}"
     rm -Rf "${TMP}"
 }
