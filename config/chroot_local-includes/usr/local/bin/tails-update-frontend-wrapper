@@ -26,6 +26,7 @@ ${@}"
 
 check_free_memory () {
    local min_memfree min_total_memfree memfree buffers cached total_memfree
+   local errormsg
 
    min_memfree="$1"
    min_total_memfree="$2"
@@ -35,12 +36,20 @@ check_free_memory () {
    cached=$(awk '/^Cached:/{print $2}' /proc/meminfo)
    total_memfree=$(($memfree + $buffers + $cached))
 
+   errormsg="`gettext \"Not enough memory to check for updates.
+
+Verify that this system satisfies the <a href='file:///usr/share/doc/tails/website/doc/about/requirements/index.en.html'>Tails requirements</a>.
+
+Try to restart Tails and run <b>Applications</b> -> <b>Tails</b> -> <b>Tails Updater</b> or visit the <a href='https://tails.boum.org/news/'>Tails website</a> to see if a new version is available.\"`"
+
    if [ "$memfree" -lt "$MIN_MEMFREE" ] ; then
-      error "`gettext \"Only $memfree MemFree, while $MIN_MEMFREE is needed.\"`"
+      echo "Only $memfree MemFree, while $MIN_MEMFREE is needed." >&2
+      error "$errormsg"
    fi
 
    if [ "$total_memfree" -lt "$MIN_TOTAL_MEMFREE" ] ; then
-      error "`gettext \"Only $total_memfree MemFree + Buffers + Cached, while $MIN_TOTAL_MEMFREE is needed.\"`"
+      echo "Only $total_memfree MemFree + Buffers + Cached, while $MIN_TOTAL_MEMFREE is needed." >&2
+      error "$errormsg"
    fi
 }
 
