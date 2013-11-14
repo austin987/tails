@@ -1,8 +1,50 @@
 #!/bin/sh
 
+CMD=$(basename ${0})
+
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
 TORDATE_DIR=/var/run/tordate
 TORDATE_DONE_FILE="${TORDATE_DIR}/done"
 INOTIFY_TIMEOUT=60
+MIN_MEMFREE=$((200 * 1024))
+MIN_TOTAL_MEMFREE=$((500 * 1024))
+
+### Functions
+
+error () {
+    local cli_text="${CMD}: `gettext \"error:\"` ${@}"
+    local dialog_text="<b><big>`gettext \"Error\"`</big></b>
+
+${@}"
+    echo "${cli_text}" >&2
+    zenity --error --title "" --text "${dialog_text}"
+    exit 1
+}
+
+check_free_memory () {
+   local min_memfree min_total_memfree memfree buffers cached total_memfree
+
+   min_memfree="$1"
+   min_total_memfree="$2"
+
+   memfree=$(awk '/^MemFree:/{print $2}' /proc/meminfo)
+   buffers=$(awk '/^Buffers:/{print $2}' /proc/meminfo)
+   cached=$(awk '/^Cached:/{print $2}' /proc/meminfo)
+   total_memfree=$(($memfree + $buffers + $cached))
+
+   if [ "$memfree" -lt "$MIN_MEMFREE" ] ; then
+      error "`gettext \"Only $memfree MemFree, while $MIN_MEMFREE is needed.\"`"
+   fi
+
+   if [ "$total_memfree" -lt "$MIN_TOTAL_MEMFREE" ] ; then
+      error "`gettext \"Only $total_memfree MemFree + Buffers + Cached, while $MIN_TOTAL_MEMFREE is needed.\"`"
+   fi
+}
+
+### Main
 
 # wait for the $TORDATE_DIR directory to appear
 while [ ! -d "$TORDATE_DIR" ]; do
@@ -13,5 +55,7 @@ done
 while ! [ -e "$TORDATE_DONE_FILE" ]; do
    inotifywait -q -t "$INOTIFY_TIMEOUT" -e create --format %w%f "$TORDATE_DIR"
 done
+
+check_free_memory "$MIN_MEMFREE" "$MIN_TOTAL_MEMFREE"
 
 exec /usr/bin/tails-update-frontend "$@"
