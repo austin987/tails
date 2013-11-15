@@ -2,6 +2,7 @@
 
 import gettext
 import os.path
+import pwd
 import subprocess
 import sys
 import syslog
@@ -82,7 +83,8 @@ def install_additional_packages():
     if has_additional_packages_list():
         syslog.syslog("Found additional packages list")
     else:
-        syslog.syslog(syslog.LOG_WARNING, "Warning: no additional software configured, exiting.")
+        syslog.syslog(syslog.LOG_WARNING, "Warning: no configuration file found, creating an empty one.")
+        create_additional_packages_list()
         return True
     packages = get_additional_packages()
     if not packages:
@@ -125,6 +127,18 @@ log to understand better the problem."))
 Please check your network connection, try to restart Tails, or read the system \
 log to understand better the problem."))
         return False
+
+def create_additional_packages_list():
+    """Creates the additional packages list if it doesn't exist
+    """
+    if not has_additional_packages_list():
+        syslog.syslog("Creating additional software configuration file")
+        f = open(PACKAGES_LIST_FILE, 'w')
+        f.closed
+        os.chmod(PACKAGES_LIST_FILE, 0600)
+        os.chown(PACKAGES_LIST_FILE,
+                 pwd.getpwnam('tails-persistence-setup').pw_uid,
+                 pwd.getpwnam('tails-persistence-setup').pw_gid)
 
 def is_activated():
     """Check if additional software has been activated
