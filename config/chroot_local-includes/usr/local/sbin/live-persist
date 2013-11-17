@@ -220,6 +220,18 @@ other::r-x"
 	return 0
 }
 
+disable_and_create_empty_persistence_conf_file ()
+{
+	local conf="$1"
+
+	mv "$conf" "${conf}.disabled" \
+		|| error "Failed to disable '$conf': $?"
+	install --owner tails-persistence-setup \
+		--group tails-persistence-setup --mode 0600 \
+		/dev/null "$conf" \
+		|| error "Failed to create empty '$conf': $?"
+}
+
 activate_volumes ()
 {
 	local volumes=${@}
@@ -282,6 +294,19 @@ activate_volumes ()
 		fi
 	done
 
+	# Disable all persistence configuration files if the mountpoint
+	# has wrong access rights.
+	if [ "$ACCESS_RIGHTS_ARE_CORRECT" != true ]
+	then
+		for f in $(ls /live/persistence/*_unlocked/persistence.conf \
+		              /live/persistence/*_unlocked/live-additional-software.conf || true)
+		do
+			warning "Disabling '$f': persistent volume has unsafe access rights"
+			disable_and_create_empty_persistence_conf_file "$f"
+		done
+
+	# Load the new persistence.conf.
+	get_custom_mounts ${custom_mounts} ${open_volumes}
 
 	if [ -s "${custom_mounts}" ]
 	then
