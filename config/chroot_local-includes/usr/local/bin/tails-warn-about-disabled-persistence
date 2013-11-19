@@ -70,6 +70,10 @@ my @files_disabled_by_0_21_upgrade = (
     glob('/live/persistence/*_unlocked/live-persistence.conf.old'),
 );
 
+my @files_never_migrated = (
+    glob('/live/persistence/*_unlocked/live-persistence.conf'),
+);
+
 my @files_disabled_for_wrong_access_rights = (
     glob('/live/persistence/*_unlocked/persistence.conf.insecure_disabled'),
     glob('/live/persistence/*_unlocked/live-additional-software.conf.insecure_disabled'),
@@ -87,9 +91,13 @@ my $doc_insecure_disabled_url = doc_url($website_root, $doc_insecure_disabled_re
 
 my @notifications;
 
-if (@files_disabled_by_0_21_upgrade) {
+if (@files_disabled_by_0_21_upgrade + @files_never_migrated) {
     push @notifications, {
-        disabled_conf_files => join(', ', @files_disabled_by_0_21_upgrade),
+        disabled_conf_files => join(
+            ', ',
+            @files_disabled_by_0_21_upgrade,
+            @files_never_migrated
+        ),
         doc_url             => $doc_upgrade_url,
     };
 }
