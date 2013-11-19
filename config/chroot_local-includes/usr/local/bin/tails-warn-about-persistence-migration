@@ -53,12 +53,12 @@ sub doc_url {
 
 =cut
 
-my @disabled_files = (
+my @files_disabled_by_0_21_upgrade = (
     glob('/live/persistence/*_unlocked/live-additional-software.conf.disabled'),
     glob('/live/persistence/*_unlocked/live-persistence.conf.old'),
 );
 
-exit 0 unless @disabled_files;
+exit 0 unless @files_disabled_by_0_21_upgrade;
 
 my $website_root = '/usr/share/doc/tails/website';
 my $doc_resource = 'doc/first_steps/persistence/upgrade';
@@ -73,7 +73,7 @@ my $body    = errf(
         . "<a href='%{doc_url}s'>Learn how to enable them again.</a>"
     ),
     {
-        disabled_conf_files => join(', ', @disabled_files),
+        disabled_conf_files => join(', ', @files_disabled_by_0_21_upgrade),
         doc_url             => $doc_url,
     },
 );
