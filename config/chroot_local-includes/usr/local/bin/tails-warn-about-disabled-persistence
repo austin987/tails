@@ -48,6 +48,18 @@ sub doc_url {
     return;
 }
 
+sub notify {
+    my $summary = shift;
+    my $body    = shift;
+
+    my $notify = Desktop::Notify->new();
+    $notify->create(
+        summary => $summary,
+        body    => $body,
+        timeout => 0
+    )->show();
+}
+
 
 =head1 Main
 
@@ -68,21 +80,19 @@ my $doc_resource = 'doc/first_steps/persistence/upgrade';
 my $doc_url = doc_url($website_root, $doc_resource)
     or die "Could not find best URL for '$doc_resource' at '$website_root'";
 
-my $notify = Desktop::Notify->new();
-my $summary = gettext(q{Some persistence settings were temporarily disabled});
-my $body    = errf(
-    gettext(
-        "%{disabled_conf_files}s\n"
-        . "<a href='%{doc_url}s'>Learn how to enable them again.</a>"
-    ),
-    {
-        disabled_conf_files => join(', ', @files_disabled_by_0_21_upgrade),
-        doc_url             => $doc_url,
-    },
-);
+if (@files_disabled_by_0_21_upgrade) {
+    notify(
+        gettext(q{Some persistence settings were temporarily disabled}),
+        errf(
+            gettext(
+                "%{disabled_conf_files}s\n"
+                . "<a href='%{doc_url}s'>Learn how to enable them again.</a>"
+            ),
+            {
+                disabled_conf_files => join(', ', @files_disabled_by_0_21_upgrade),
+                doc_url             => $doc_url,
+            },
+        )
+    );
+}
 
-$notify->create(
-    summary => $summary,
-    body    => $body,
-    timeout => 0
-)->show();
