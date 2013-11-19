@@ -15,4 +15,4 @@ fi
 # - X-GNOME-AutoRestart does not exist in Lenny's Gnome
 # - we do not start Vidalia automatically anymore and *this* is the time
 #   when it is supposed to start.
-restart-vidalia
+restart-vidalia&
