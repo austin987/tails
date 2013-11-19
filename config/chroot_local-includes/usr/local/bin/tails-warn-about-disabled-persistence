@@ -76,11 +76,32 @@ my @files_disabled_for_wrong_access_rights = (
 );
 
 my $website_root = '/usr/share/doc/tails/website';
-my $doc_resource = 'doc/first_steps/persistence/upgrade';
-my $doc_url = doc_url($website_root, $doc_resource)
-    or die "Could not find best URL for '$doc_resource' at '$website_root'";
+
+my $doc_upgrade_resource = 'doc/first_steps/persistence/upgrade';
+my $doc_upgrade_url = doc_url($website_root, $doc_upgrade_resource)
+    or die "Could not find best URL for '$doc_upgrade_resource' at '$website_root'";
+
+my $doc_insecure_disabled_resource = 'doc/first_steps/persistence/insecure_disabled';
+my $doc_insecure_disabled_url = doc_url($website_root, $doc_insecure_disabled_resource)
+    or die "Could not find best URL for '$doc_insecure_disabled_resource' at '$website_root'";
+
+my @notifications;
 
 if (@files_disabled_by_0_21_upgrade) {
+    push @notifications, {
+        disabled_conf_files => join(', ', @files_disabled_by_0_21_upgrade),
+        doc_url             => $doc_upgrade_url,
+    };
+}
+
+if (@files_disabled_for_wrong_access_rights) {
+    push @notifications, {
+        disabled_conf_files => join(', ', @files_disabled_for_wrong_access_rights),
+        doc_url             => $doc_insecure_disabled_url,
+    };
+}
+
+foreach my $notification_params (@notifications) {
     notify(
         gettext(q{Some persistence settings were temporarily disabled}),
         errf(
@@ -88,11 +109,7 @@ if (@files_disabled_by_0_21_upgrade) {
                 "%{disabled_conf_files}s\n"
                 . "<a href='%{doc_url}s'>Learn how to enable them again.</a>"
             ),
-            {
-                disabled_conf_files => join(', ', @files_disabled_by_0_21_upgrade),
-                doc_url             => $doc_url,
-            },
+            $notification_params,
         )
     );
 }
-
