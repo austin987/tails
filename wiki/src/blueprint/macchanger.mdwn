@@ -221,7 +221,7 @@ scenarios, depending on which point MAC spoofing is enabled:
   The sudden switch of MAC address may result in a breach of
   AvoidIdMacSpoof.
 
-The first is clearly less bad than the second, but the the ideal,
+The first is clearly less bad than the second, but the ideal,
 which avoids these problems altogether, would be to prevent any
 network devices from being plugged at all.
 
@@ -259,7 +259,7 @@ for Wi-Fi connections. This puts AvoidTracking at risk.
 Wi-Fi has both a passive and active scanning mode. Passive scanning,
 as the name suggests, passively listens for broadcasted wireless
 networks, which is entirely safe. Active scanning, however, actively
-send probes for any known networks. In our case these are the saved
+sends probes for any known networks. In our case these are the saved
 connections in NetworkManager, so this turns especially problematic
 when persistent NM-connections are used; the (potentially long) list of
 networks actively probed for can be used as a fingerprint by an
@@ -342,7 +342,7 @@ Helper scripts:
 
 ## Connection failure detection
 
-This section deals with AvoidConnectionProbs. The goal is to some how
+This section deals with AvoidConnectionProbs. The goal is to somehow
 identify connection errors that are related to MAC spoofing, and
 notify the user when this happens.
 
@@ -358,7 +358,7 @@ positives.
 
 At the moment this script only deals with wireless connections. It
 successfully distinguishes between MAC-spoof related errors and errors
-when entering the wring passphrase, so no false positives in that
+when entering the wrong passphrase, so no false positives in that
 (relatively common) case.
 
 For details, see the script:
@@ -366,7 +366,7 @@ For details, see the script:
 
 ## MAC spoofing and virtual machine networking issues
 
-Some virtual machines seems to behave poorly when spoofing virtual NIC
+Some virtualization tools seem to behave poorly when spoofing virtual NIC
 MAC addresses. For instance, VirtualBox's networking completely breaks
 when using bridge- and NAT-based adapters in combination with
 MAC-spoofing, and those two are probably the two most common scenarios
@@ -461,11 +461,11 @@ verify that the spoofing indeed happened for the NIC in question, and
 if it didn't we could go into full-out panic mode:
 
 1. Down the interface
-2. Kill NetworkManage
+2. Kill NetworkManager
 3. Try to unload the module used by the NIC
 4. Show a scary error message to the user
 
-It'd obviously require to drop `set -e`, because errors are indeed
+It would obviously require to drop `set -e`, because errors are indeed
 what could cause this to happen.
 
 ## Loss of hotplugged devices
@@ -474,7 +474,7 @@ There may be a window of time where any plugged device simply will be
 ignored. The window in question is from the point where udev starts,
 until after we unblock the network (i.e. when we log in via Tails
 Greeter). The manual of `udevadm` is a bit vague on exactly what
-events that are replayed when using its `trigger` action. Hopefully it
+events are replayed when using its `trigger` action. Hopefully it
 replays all events, but it could be that it only replays events from
 coldplug time, i.e. before udev starts.
 
@@ -518,7 +518,7 @@ and start the network if desired.
 
 ### Liberte Linux
 
-Liberte Linux randomizes wireless MAC addresses at boot time and
+Liberte Linux randomises wireless MAC addresses at boot time and
 allows changing wired interfaces' MAC addresses after boot, see their
 `src/usr/local/sbin/mac-randomize` that uses `ifconfig IFACE hw ether`
 rather than macchanger.
