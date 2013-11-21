@@ -23,28 +23,16 @@ sed -i 's|^clientApp\.0\.args=7657\s\+::1,127\.0\.0\.1|clientApp.0.args=7657 127
 sed -i 's|^.*\(wrapper\.java\.additional\.5=-Djava\.net\.preferIPv4Stack=\).*|\1true|' "$WRAPPER"
 sed -i 's|^.*\(wrapper\.java\.additional\.6=-Djava\.net\.preferIPv6Addresses=\).*|\1false|' "$WRAPPER"
 
-# Loosen wrapper permissions so that the amnesia user (who'll be added to the i2psvc group) has access
-sed -i 's|^.*\(wrapper.*umask=\).*|\10007|g' "$WRAPPER"
-
 # Tails specific router configs:
 # * i2cp: allows java clients to communicate with I2P outside of the JVM. Disabled.
 # * IPv6: Disabled
 # * HiddenMode: Enabled
 # * In-I2P Network Updates: Disabled
-# * insecure files: Enabled. This means that permissions will not be forced
-#   to 700 for the i2psvc user, giving i2psvc group members access.
 cat > "$I2P/router.config" << EOF
 # NOTE: This I2P config file must use UTF-8 encoding
 i2cp.disableInterface=true
 i2np.ntcp.ipv6=false
 i2np.udp.ipv6=false
-i2p.insecureFiles=true
 router.isHidden=true
 router.updateDisabled=true
-EOF
-
-# Allow the i2psvc group to also access torrents saved with I2PSnark
-cat > "$I2P/i2psnark.config" << EOF
-# NOTE: This I2P config file must use UTF-8 encoding
-i2psnark.filesPublic=true
 EOF
