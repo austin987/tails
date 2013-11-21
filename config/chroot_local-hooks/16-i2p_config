@@ -33,10 +33,6 @@ sed -i 's|^.*\(wrapper.*umask=\).*|\10007|g' "$WRAPPER"
 # * In-I2P Network Updates: Disabled
 # * insecure files: Enabled. This means that permissions will not be forced
 #   to 700 for the i2psvc user, giving i2psvc group members access.
-# * reseeding through proxy: Enabled. Reseeding (bootstrapping) will be done
-#   through the proxy at 127.0.0.1:8118. While this may not be required I
-#   thought it might alleviate confusion for end-users. The fewer support
-#   requests, the better. ;)
 cat > "$I2P/router.config" << EOF
 # NOTE: This I2P config file must use UTF-8 encoding
 i2cp.disableInterface=true
@@ -44,10 +40,6 @@ i2np.ntcp.ipv6=false
 i2np.udp.ipv6=false
 i2p.insecureFiles=true
 router.isHidden=true
-router.reseedProxy.authEnable=false
-router.reseedProxyEnable=true
-router.reseedProxyHost=127.0.0.1
-router.reseedProxyPort=8118
 router.updateDisabled=true
 EOF
 
