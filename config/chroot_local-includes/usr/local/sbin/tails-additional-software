@@ -66,14 +66,13 @@ def has_additional_packages_list():
 def get_additional_packages():
     """Returns the list of all the additional packages
     """
-    if not has_additional_packages_list():
-        return None
     packages = []
-    with open(PACKAGES_LIST_FILE) as f:
-        for line in f:
-            line = line.strip()
-            if line: packages.append(line)
-    f.closed
+    if has_additional_packages_list():
+        with open(PACKAGES_LIST_FILE) as f:
+            for line in f:
+                line = line.strip()
+                if line: packages.append(line)
+        f.closed
     return packages
 
 def install_additional_packages():
