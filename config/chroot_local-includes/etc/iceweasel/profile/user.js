@@ -51,6 +51,7 @@ user_pref("extensions.torbutton.socks_remote_dns", true);
 user_pref("extensions.torbutton.socks_version", 5);
 user_pref("extensions.torbutton.startup", true);
 user_pref("extensions.torbutton.startup_state", 1);
+user_pref("extensions.torbutton.test_enabled", false); // Tails-specific
 user_pref("extensions.torbutton.tor_memory_jar", true);
 user_pref("extensions.torbutton.updateNeeded", false);
 user_pref("extensions.torbutton.use_privoxy", false);
