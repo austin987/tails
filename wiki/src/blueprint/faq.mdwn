@@ -241,6 +241,33 @@ Debian.
 If you want to implement this feature outside of Tails, have a look at the
 corresponding [design documentation](contribute/design/memory_erasure/).
 
+Is it safe to use the new identity feature of Vidalia?
+------------------------------------------------------
+
+<div class="bug">
+The <span class="guilabel">New Identity</span> feature of the web browser is
+not available anymore (ticket [[!tails_ticket 6383]]).
+</div>
+
+In our [[warning page|doc/about/warning#identities]] we advice to restart Tails
+every time that you want to use a different contextual identity. The <span
+class="guilabel">New Identity</span> feature of <span
+class="application">Vidalia</span> forces Tor to use new circuits but only for
+new connections. The two main drawbacks of this techniques are:
+
+- The circuits used by connections that remain open might not be changed, for
+example, a circuit used to connect to an open webpage or to an instant
+messaging server.
+
+- Each application might contain information that can identify you,
+independently of the Tor circuit that are used. For example, the browser might
+contain cookies from previous websites, <span
+class="application">[[Pidgin|doc/anonymous_internet/pidgin]] will reuse the
+same nickname by default, etc.
+
+Tails is a full operating system, so a *new identity* should be thought on a
+broader level than only changing the Tor circuits.
+
 Other topics
 ============
 
