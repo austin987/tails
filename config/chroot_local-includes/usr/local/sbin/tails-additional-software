@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 import gettext
-import syslog
 import os.path
-import sys
 import subprocess
+import sys
+import syslog
 
-PERSISTENCE_DIR="/live/persistence/TailsData_unlocked"
-PACKAGES_LIST_FILE= PERSISTENCE_DIR + "/live-additional-software.conf"
-ACTIVATION_FILE="/var/run/live-additional-software/activated"
+PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
+PACKAGES_LIST_FILE = PERSISTENCE_DIR + "/live-additional-software.conf"
+ACTIVATION_FILE = "/var/run/live-additional-software/activated"
 
 def _launch_apt_get(specific_args):
     """Launch apt-get with given args
@@ -66,14 +66,13 @@ def has_additional_packages_list():
 def get_additional_packages():
     """Returns the list of all the additional packages
     """
-    if not has_additional_packages_list():
-        return None
     packages = []
-    with open(PACKAGES_LIST_FILE) as f:
-        for line in f:
-            line = line.strip()
-            if line: packages.append(line)
-    f.closed
+    if has_additional_packages_list():
+        with open(PACKAGES_LIST_FILE) as f:
+            for line in f:
+                line = line.strip()
+                if line: packages.append(line)
+        f.closed
     return packages
 
 def install_additional_packages():
@@ -87,7 +86,7 @@ def install_additional_packages():
         return True
     packages = get_additional_packages()
     if not packages:
-	syslog.syslog(syslog.LOG_WARNING, "Warning: no packages to install, exiting")
+        syslog.syslog(syslog.LOG_WARNING, "Warning: no packages to install, exiting")
         return True
     set_activated()
     syslog.syslog("Will install the following packages: %s" % " ".join(packages))
