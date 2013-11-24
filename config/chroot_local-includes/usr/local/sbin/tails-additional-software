@@ -129,16 +129,19 @@ log to understand better the problem."))
         return False
 
 def create_additional_packages_list():
-    """Creates the additional packages list if it doesn't exist
+    """Creates the additional packages list
+
+    Creates the additional packages list file with the right permissions.
+    The caller must ensure the file doesn't already exist.
     """
-    if not has_additional_packages_list():
-        syslog.syslog("Creating additional software configuration file")
-        f = open(PACKAGES_LIST_FILE, 'w')
-        f.closed
-        os.chmod(PACKAGES_LIST_FILE, 0600)
-        os.chown(PACKAGES_LIST_FILE,
-                 pwd.getpwnam('tails-persistence-setup').pw_uid,
-                 pwd.getpwnam('tails-persistence-setup').pw_gid)
+    assert not has_additional_packages_list(), "%s already exists" % PACKAGES_LIST_FILE
+    syslog.syslog("Creating additional software configuration file")
+    f = open(PACKAGES_LIST_FILE, 'w')
+    f.closed
+    os.chmod(PACKAGES_LIST_FILE, 0600)
+    os.chown(PACKAGES_LIST_FILE,
+             pwd.getpwnam('tails-persistence-setup').pw_uid,
+             pwd.getpwnam('tails-persistence-setup').pw_gid)
 
 def is_activated():
     """Check if additional software has been activated
