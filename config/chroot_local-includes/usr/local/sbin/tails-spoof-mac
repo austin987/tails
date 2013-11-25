@@ -39,14 +39,22 @@ macchanger_helper() {
     was_up=no
     if nic_is_up ${nic}; then
         was_up=yes
-        /sbin/ifconfig ${nic} down || ( log "failed to down ${nic}" ; return 1 )
+        if ! /sbin/ifconfig ${nic} down; then
+            log "failed to down ${nic}"
+            return 1
+        fi
     fi
-    ret=0
-    macchanger ${opts} ${nic} || \
-        ( ret=$? ; log "macchanger returned error code ${ret}" )
+    macchanger ${opts} ${nic}
+    ret=$?
+    if [ "${ret}" -ne 0 ]; then
+        log "macchanger returned error code ${ret}"
+    fi
 
     if [ "${was_up}" = yes ]; then
-        /sbin/ifconfig ${nic} up || ( log "failed to up ${nic}" ; return 1 )
+        if ! /sbin/ifconfig ${nic} up; then
+            log "failed to up ${nic}"
+            return 1
+        fi
     fi
     return ${ret}
 }
