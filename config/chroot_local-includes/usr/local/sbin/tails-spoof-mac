@@ -65,35 +65,24 @@ spoof_mac() {
     macchanger_helper -e $1
 }
 
-reset_mac() {
-    macchanger_helper -p $1
-}
-
 set_log_tag spoof-mac
 
-NICS=$*
-if echo "$NICS" | grep -qe "\<all\>"; then
-    NICS="$(get_all_ethernet_nics)"
+NIC=${1}
+
+if ! mac_spoof_is_enabled; then
+    exit 0
 fi
-for NIC in ${NICS}; do
-    if ! nic_exists ${NIC}; then
-        log "NIC ${NIC} doesn't exist, skipping"
-        continue
-    fi
-    log "Trying to spoof MAC address of NIC ${NIC}..."
-    if mac_spoof_is_enabled; then
-        if mac_is_changed ${NIC}; then
-            log "NIC ${NIC}'s MAC address is already spoofed, skipping"
-        else
-            spoof_mac ${NIC} && \
-                log "Successfully spoofed MAC address of NIC ${NIC}"
-        fi
-    else
-        if mac_is_changed ${NIC}; then
-            reset_mac ${NIC} && \
-                log "Successfully reset MAC address of NIC ${NIC}"
-        else
-            log "NIC ${NIC}'s MAC address is already the default, skipping"
-        fi
-    fi
-done
+
+log "Trying to spoof MAC address of NIC ${NIC}..."
+
+if ! nic_exists ${NIC}; then
+    log "NIC ${NIC} doesn't exist, skipping"
+    exit 1
+fi
+
+if mac_is_changed ${NIC}; then
+    log "NIC ${NIC}'s MAC address is already spoofed, skipping"
+else
+    spoof_mac ${NIC} && \
+        log "Successfully spoofed MAC address of NIC ${NIC}"
+fi
