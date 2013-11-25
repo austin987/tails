@@ -326,6 +326,8 @@ packages, then skip this step.
 
 * Build for unstable and the architecture you can test on (most likely
   amd64), e.g. using our [[contribute/Debian_package_builder]].
+* Copy `browser/app/profile/000-tor-browser.js` into
+  `/etc/iceweasel/pref/` on the test system.
 * Install and test the resulting packages.
 
 Build for squeeze-backports
@@ -363,3 +365,13 @@ Build for squeeze-backports
 * Merge this APT suite where you need it: generally, that's `devel`,
   `experimental`, one of `stable` or `testing`, and maybe
   a release tag.
+
+Import bundled preferences
+--------------------------
+
+* Copy `browser/app/profile/000-tor-browser.js` from the tag the
+  Squeeze backport was built from, into
+  `config/chroot_local-includes/etc/iceweasel/pref/`.
+* Commit this to the branch that is being used to prepare the release:
+  ideally, a topic branch that will be reviewed and merged; in
+  practice, more likely this will be `stable` or `testing`.
