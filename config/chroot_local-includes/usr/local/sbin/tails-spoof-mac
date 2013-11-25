@@ -34,6 +34,7 @@ macchanger_helper() {
     local opts
     local was_up
     local ret
+    local msg
     nic=$1
     shift
     opts=$*
@@ -45,10 +46,10 @@ macchanger_helper() {
             return 1
         fi
     fi
-    macchanger ${opts} ${nic}
+    msg=$(macchanger ${opts} ${nic} 2>&1 >/dev/null)
     ret=$?
     if [ "${ret}" -ne 0 ]; then
-        log "macchanger returned error code ${ret}"
+        log "macchanger returned error code ${ret} and reported: ${msg}"
     fi
 
     if [ "${was_up}" = yes ]; then
