@@ -18,7 +18,7 @@ set_log_tag() {
 log() {
     if [ "${_LOG_TAG}" ]; then
         logger -t "${_LOG_TAG}" "$*"
-    elses
+    else
         logger "$*"
     fi
 }
