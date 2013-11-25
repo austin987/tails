@@ -83,6 +83,9 @@ fi
 if mac_is_changed ${NIC}; then
     log "NIC ${NIC}'s MAC address is already spoofed, skipping"
 else
-    spoof_mac ${NIC} && \
+    if spoof_mac ${NIC}; then
         log "Successfully spoofed MAC address of NIC ${NIC}"
+    else
+        log "Something went wrong while trying to spoof MAC address of NIC ${NIC}"
+    fi
 fi
