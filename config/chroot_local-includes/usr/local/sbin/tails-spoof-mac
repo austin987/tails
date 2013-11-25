@@ -81,18 +81,18 @@ for NIC in ${NICS}; do
     fi
     log "Trying to spoof MAC address of NIC ${NIC}..."
     if mac_spoof_is_enabled; then
-	if mac_is_changed ${NIC}; then
-	    log "NIC ${NIC}'s MAC address is already spoofed, skipping"
-	else
-	    spoof_mac ${NIC} && \
-		log "Successfully spoofed MAC address of NIC ${NIC}"
-	fi
+        if mac_is_changed ${NIC}; then
+            log "NIC ${NIC}'s MAC address is already spoofed, skipping"
+        else
+            spoof_mac ${NIC} && \
+                log "Successfully spoofed MAC address of NIC ${NIC}"
+        fi
     else
-	if mac_is_changed ${NIC}; then
-	    reset_mac ${NIC} && \
-		log "Successfully reset MAC address of NIC ${NIC}"
-	else
-	    log "NIC ${NIC}'s MAC address is already the default, skipping"
-	fi
+        if mac_is_changed ${NIC}; then
+            reset_mac ${NIC} && \
+                log "Successfully reset MAC address of NIC ${NIC}"
+        else
+            log "NIC ${NIC}'s MAC address is already the default, skipping"
+        fi
     fi
 done
