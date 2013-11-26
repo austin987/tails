@@ -205,26 +205,41 @@ the possibility to opt-out.
 
 # Leak prevention
 
-It is conceivable that NICs may send packets even before the user has
-made a decision about whether to use MAC spoofing or not. If this is
-the case it would lead to either of the following problematic
-scenarios, depending on which point MAC spoofing is enabled:
+It is conceivable that NICs may send packets before the user has made
+a decision about whether to use MAC spoofing or not. In fact, someone
+on tails-dev@
+[alluded](https://mailman.boum.org/pipermail/tails-dev/2013-January/002491.htm)
+to this being possible for wireless NICs although without any
+references (this may refer to so called "active probing"; see section
+below). If this is the case it at the very least implies that we must
+enforce the MAC spoofing setting as early as possible.
+
+However, since we (obviously) cannot foresee the user's decision we get
+a problematic time frame between when a network device is added during
+early boot and when the user makes the decision later on. Enforcing a
+default MAC spoofing setting immediately when a network device is
+added, that then potentially is reversed when the user makes the
+decision, leads to problems in some scenarios if we assume these early
+leaks happen:
 
 * If MAC spoofing is enabled before the user has made the decision, a
   fake MAC address would leak before the user made the decision, and
   the decision was to disable MAC spoofing. The sudden switch of MAC
   address may result in a breach of AvoidIdMacSpoof.
 
-* If MAC spoofing is enabled after the user has made the decision, the
+* If MAC spoofing is disabled before the user has made the decision, the
   real MAC address would leak even if the user wanted MAC spoofing
   enabled, which leaks to breaches of AvoidTracking and AvoidIdTails.
   The sudden switch of MAC address may result in a breach of
   AvoidIdMacSpoof.
 
-The first is clearly less bad than the second, but the ideal,
-which avoids these problems altogether, would be to prevent any
-network devices from being enabled at all until the decision has
-been made.
+The first is clearly less bad than the second, but the ideal, which
+avoids these problems altogether.
+
+The real solution is therefore to eliminate the problematic this time
+frame completely by preventing any network devices from being enabled
+at all until the decision has been made, and have the MAC spoofing
+setting applied immediately when the device is added.
 
 # User interface design
 
@@ -302,12 +317,7 @@ We use udev as the trigger that hooks MAC address spoofing. Because of
 that, it happens for every Ethernet device automatically, as early as
 possible (i.e. immediately after it's added), so even if there's some
 kind of weird leak before a device is up:ed the real MAC address
-shouldn't leak. Someone on tails-dev@
-[alluded](https://mailman.boum.org/pipermail/tails-dev/2013-January/002491.htm)
-to this being possible for wireless NICs although without any
-references. This shouldn't be a problem since we block all network
-devices until when we known whether the user needs MAC spoofing or
-not.
+shouldn't leak.
 
 Hook:
 [[!tails_gitweb config/chroot_local-includes/etc/udev/rules.d/00-mac-spoof.rules]]
