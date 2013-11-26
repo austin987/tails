@@ -82,9 +82,12 @@ def install_additional_packages():
     syslog.syslog("Starting to install additional software...")
     if has_additional_packages_list():
         syslog.syslog("Found additional packages list")
-    else:
+    elif os.path.isdir(PERSISTENCE_DIR):
         syslog.syslog(syslog.LOG_WARNING, "Warning: no configuration file found, creating an empty one.")
         create_additional_packages_list()
+        return True
+    else:
+        syslog.syslog(syslog.LOG_WARNING, "Warning: persistence is not mounted, exiting")
         return True
     packages = get_additional_packages()
     if not packages:
