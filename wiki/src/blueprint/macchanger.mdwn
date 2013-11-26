@@ -477,8 +477,18 @@ verify that the spoofing indeed happened for the NIC in question, and
 if it didn't we could go into full-out panic mode:
 
 1. Down the interface
-2. Kill NetworkManager
-3. Try to unload the module used by the NIC
+2. Try to unload the module used by the NIC. While one easily can find
+   the module used by a `$NIC` via `readlink
+   "/sys/class/net/${NIC}/device/driver/module"`, we'd also have to
+   resolve reverse dependencies. For instance, for current Intel
+   wireless chipsets, the `iwlwifi` module is loaded, but with current
+   Linux kernels another module called `iwldvm` is loaded, and it uses
+   `iwlwifi`, so a `morprobe -r iwlwifi` will fail. Sadly `modprobe`
+   doesn't have a `--recursive-remove` or `--show-reverse-depends` so
+   we'd have to e.g. parse "Used by" field of `lsmod` or similar, and
+   we'd have to do it recursively to be rigorous.
+3. Perhaps prevent NetworkManager from starting if the previous step
+   failed?
 4. Show a scary error message to the user
 
 It would obviously require to drop `set -e`, because errors are indeed
