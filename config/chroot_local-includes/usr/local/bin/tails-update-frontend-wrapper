@@ -11,6 +11,7 @@ TORDATE_DONE_FILE="${TORDATE_DIR}/done"
 INOTIFY_TIMEOUT=60
 MIN_MEMFREE=$((200 * 1024))
 MIN_TOTAL_MEMFREE=$((500 * 1024))
+RUN_AS_USER=tails-update-frontend
 
 ### Functions
 
@@ -65,4 +66,6 @@ done
 
 check_free_memory "$MIN_MEMFREE" "$MIN_TOTAL_MEMFREE"
 
-exec /usr/bin/tails-update-frontend "$@"
+xhost +SI:localuser:"$RUN_AS_USER"
+gksudo -u "$RUN_AS_USER" "/usr/bin/tails-update-frontend $@"
+xhost -SI:localuser:"$RUN_AS_USER"
