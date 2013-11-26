@@ -223,7 +223,8 @@ scenarios, depending on which point MAC spoofing is enabled:
 
 The first is clearly less bad than the second, but the ideal,
 which avoids these problems altogether, would be to prevent any
-network devices from being plugged at all.
+network devices from being enabled at all until the decision has
+been made.
 
 # User interface design
 
@@ -273,15 +274,15 @@ NetworkManager when MAC spoofing is enabled.
 # Implementation
 
 The current implementation spoofs the non-vendors bits of any network
-device's MAC address immediately after it is plugged. Furthermore, to
+device's MAC address immediately after it is added by udev. Furthermore, to
 deal with potential network leaks before the user has chosen whether
-to enable MAC spoofing or not, plugging of network devices is delayed
+to enable MAC spoofing or not, the addition of network devices is delayed
 until after Tails Greeter knows the user's final decision.
 
 ## Network blocking
 
 As suggested in the "Leak prevention" section, we block all network
-devices from being plugged until the user has made the decision about
+devices' modules from being loaded until the user has made the decision about
 whether to enable MAC spoofing or not. The way we do this is by
 generating a list of all network device modules during build time, and
 add these to a `modprobe.d`-type blacklist. In Tails Greeter's
