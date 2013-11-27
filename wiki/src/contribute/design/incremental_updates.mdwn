@@ -2,19 +2,19 @@
 
 # Rationale
 
-Partial upgrades should provide only what has changed between two
+Partial updates should provide only what has changed between two
 releases (deltas) and have a way to apply those changes to the
 previous version. 
 
 At boot-time the security warning telling that a new Tails version is available
-should provide an automated way of doing the upgrade.
+should provide an automated way of doing the update.
 
 # Definitions
 
 * **update-description file**: a file that describes the update from
   a given version, to another, newer given version of a software
   product.
-* **Incremental Upgrade Kit (IUK)**: a file that contains everything
+* **Incremental Update Kit (IUK)**: a file that contains everything
   needed to update from.
 * **full image**: a file that is sufficient to install and run Tails
   (currently, that means an ISO image).
@@ -88,9 +88,9 @@ FIXME
 
 # Implementation
 
-## Upgrade paths
+## Update paths
 
-To ease implementation, only upgrades to the next closest step
+To ease implementation, only updates to the next closest step
 are supported.
 
 E.g. say one has installed Tails 0.11 a while ago, and forgets
@@ -98,9 +98,9 @@ about it. We then release Tails 0.11.1, and publish a `0.11_to_0.11.1`
 IUK, advertised by the update-description file for 0.11 users. We then
 release Tails 0.11.2, and publish a `0.11.1_to_0.11.2` IUK, advertised
 by the update-description file for 0.11.1 users. If the user starts
-their Tails 0.11, the upgrade system proposes upgrading to 0.11.1.
-Say the user accepts, the upgrade is performed, the user reboots, and
-the upgrade system now proposes upgrading to 0.11.2.
+their Tails 0.11, the update system proposes updating to 0.11.1.
+Say the user accepts, the update is performed, the user reboots, and
+the update system now proposes updating to 0.11.2.
 
 Allowing to run these two steps in a row, without rebooting, is
 mainly a GUI problem, and is postponed.
@@ -184,7 +184,7 @@ of update-description file files.
   to start with.
 * product name (e.g. *Tails*, but some day we may have *TailsServer*,
   *TailsHandheld* or whatever)
-* product version -- the currently running version to upgrade from,
+* product version -- the currently running version to update from,
   e.g. *0.11* or *0.11.1*
 * build-target (e.g. *i386*)
 * channel (e.g. *stable* or *beta*)
@@ -225,9 +225,9 @@ to update it to that version. The keys for an update path element are
 as follows:
 
 * `type` -- *full* or *incremental* (IUK are about incremental
-  upgrades, but let's make room to announce full images this way too
+  updates, but let's make room to announce full images this way too
   at some point)
-* `target-files`: a list of target files for this upgrade path.
+* `target-files`: a list of target files for this update path.
 
 Every target file element has the following keys:
 
@@ -282,7 +282,7 @@ followed by the `.iuk` suffix:
 
 * product name (e.g. *Tails*)
 * build-target (e.g. *i386*)
-* product version -- the currently running version to upgrade from,
+* product version -- the currently running version to update from,
   e.g. *0.11* or *0.11.1*
 * `to`
 * the version of this update, that is the version of the running
@@ -345,12 +345,12 @@ Failure, at any of the above steps, must be reported to the caller.
     verified target file into the tempdir (either the default umask
     will do, or steps shall be taken to make sure the
     `tails-install-iuk` user may read the resulting files)
-* Else, point at full upgrade documentation.
+* Else, point at full update documentation.
 * Shutdown the network.
 * Remount the system partition read-write.
 * Perform the update using the files provided by the "target files
   downloader and verifier".
-* Tell the user the upgrade process is finished, and they *MUST*
+* Tell the user the update process is finished, and they *MUST*
   immediately reboot (due to system partition being left mounted
   read-write, 'cause we cannot remount it read-only once it's been
   mounted read-write).
