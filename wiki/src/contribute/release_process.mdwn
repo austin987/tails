@@ -283,29 +283,6 @@ Prepare update-description files
 1. Detach-sign the update-description files.
 1. Rename the detached signatures from `.asc` to `.sig`.
 
-Testing
-=======
-
-Sanity check
-------------
-
-Verify that the current source for Firefox is still the same we've
-used when preparing our custom Iceweasel package: e.g. FF17.0.8 got
-re-tagged and re-uploaded at the last minute, due to a test failure.
-
-Better catch this before people spend time doing manual tests.
-
-Manual and automated tests
---------------------------
-
-Until [[!tails_todo automated_builds_and_tests]] are set up, some
-manual testing
-has to be done by the persons preparing the release, in addition to the
-real-world tests done by fellow beta-testers.
-
-The manual testing process [[is documented on a dedicated
-page|release_process/test]].
-
 Generate the OpenPGP signatures and Torrents
 ============================================
 
@@ -342,10 +319,18 @@ Fifth, generate detached OpenPGP signatures for every published
 Upload images
 =============
 
+Sanity check
+------------
+
+Verify that the current source for Firefox is still the same we've
+used when preparing our custom Iceweasel package: e.g. FF17.0.8 got
+re-tagged and re-uploaded at the last minute, due to a test failure.
+
+Better catch this before people spend time doing manual tests.
+
 ## Announce, seed and test the Torrents
 
-Announce and seed the Torrents using whatever box you can.
-A decent, stable and permanent Internet connection is required.
+Announce and seed the Torrents.
 
 Test them with a BitTorrent client running in a different place.
 
@@ -354,7 +339,8 @@ Test them with a BitTorrent client running in a different place.
     scp tails-i386-$VERSION.torrent bittorrent.lizard:
     ssh bittorrent.lizard transmission-remote --add tails-i386-$VERSION.torrent
 
-## Upload to HTTP mirrors
+Publish the ISO over HTTP
+-------------------------
 
 Upload the images to the primary rsync mirror. Best practice is to first
 let bittorrent.lizard download the image, and then copy it from there to
@@ -383,12 +369,34 @@ and on the live wiki (even for a release candidate):
 	   git commit wiki/src/inc/trace -m "Updating trace file after uploading $VERSION."
 	)
 
+Wait for the HTTP mirrors to catch up
+-------------------------------------
+
 Wait for the next rsync pull.
 
 Make sure every webserver listed in the `dl.amnesia.boum.org` round
-robin pool has the new version.
+robin pool has the new version. Drop those that are lagging behind and
+notify their administrators.
 
-Test downloading.
+Test downloading the ISO over HTTP.
+
+Testing
+=======
+
+1. Set up a Gobby document and copy the [[test
+   suite|contribute/release_process/test]] in it.
+1. Email <tails@boum.org> to announce that tests may start:
+   - make it clear what's the deadline
+   - make it clear where and how you expect to get feedback
+   - attach the Torrent
+   - attach the `.packages` file
+1. Make sure someone is committed to run the automated test suite.
+1. Make sure that enough people are here to run the tests, that they
+   report their results in due time, and that they make it clear when
+   they're leaving for good.
+
+While this happens, the release manager should prepare for the next
+steps. Please read on!
 
 Update the website and Git repository
 =====================================
