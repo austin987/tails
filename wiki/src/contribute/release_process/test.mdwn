@@ -364,11 +364,10 @@ real-world deployment.
 Try every update path supported by the generated update-description
 files:
 
-* for every incremental update paths: make sure the resulting updated
-  system "works fine" (what does that mean? do we want to run the full
-  test suite on these? **FIXME**)
+* the resulting incrementally updated system must boot and *About
+  Tails* must pretend it has indeed been updated
 * for updates that only propose a non-incremental paths: make sure the
-  user is guided just fine (that is? **FIXME**)
+  user is guided just fine to the download web page
 
 Given these are not published yet, a local test setup is needed:
 
@@ -380,8 +379,8 @@ Given these are not published yet, a local test setup is needed:
   e.g. `/var/www/tails/stable/iuk/Tails_i386_0.14-rc2_to_0.14.iuk`
 
 Also, the updater must be called, from inside the system to update,
-with every needed option to use that rather than the online published
-stuff, e.g.:
+with every needed option to use the local web server rather than the
+online one, e.g.:
 
     DISABLE_PROXY=1 SSL_NO_VERIFY=1 \
        tails-update-frontend-wrapper --override-baseurl http://10.36.24.33/tails
