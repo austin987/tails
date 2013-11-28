@@ -21,6 +21,11 @@ We use one single APT repository hosting multiple *suites*:
   by any Tails git branch; it can be used as hosting space for other
   packaging work we might do, e.g. acting as upstream or
   Debian maintainers.
+* We also have a `debomatic-squeeze-backports-mozilla` suite, used
+  (hopefully temporarily) import build-deps for our web browser, that
+  are not available elsewhere (anymore). This suite is used by the
+  `squeeze-backports-mozilla` chroot in our [[contribute/Debian
+  package builder]].
 
 The suite(s) to use as sources for APT, during the build and inside
 the resulting system, are determined at Tails build time
@@ -95,7 +100,9 @@ archive (`.orig.tar.{gz,bz2,xz}`) if it is not already in our APT
 repository; this can be done by passing `-sa` to pdebuild's
 `--debbuildopts`.
 
-### Configuring dupload
+### Configuring an upload tool
+
+#### Configuring dupload
 
 Add this configuration snippet to your `dupload` configuration:
 
@@ -107,7 +114,17 @@ Add this configuration snippet to your `dupload` configuration:
 	        dinstall_runs => 1,
 	};
 
-(`dput` lovers, please contribute your own snippet.)
+#### Confuguring dput
+
+Add this to `.dput.cf`:
+
+    [tails]
+    fqdn            = incoming.deb.tails.boum.org
+    method          = scp
+    login           = reprepro
+    incoming        = /srv/reprepro/incoming/
+    run_dinstall    = 0
+
 
 ### Uploading and importing process
 
@@ -165,7 +182,7 @@ operation must be done on the APT suites.
 
 1. Save the list of packages currently present in the APT suite we
    want to merge *into*, e.g. `reprepro list experimental`.
-2. Make sure you are not going to overwrite newer packages by
+2. Make sure you are not going to overwrite newer packages with
    older ones.
 3. Merge the APT suites [[the same way as when we merge a topic
    branch|APT_repository#workflow-merge-topic-branch]].

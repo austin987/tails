@@ -5,14 +5,46 @@
 Update POT and PO files
 =======================
 
-FIXME!
+    git checkout master && \
+        ( cd po && make pot && make update-po ) && \
+        git commit po -m 'Update POT and PO files.'
 
 Make an upstream release
 ========================
 
+Enable new translations in `po/PACKAGE` and commit.
+
+Export new upstream version number:
+
+    export VERSION=XXX
+
 Update version number in `bin/tails-create-iuk`.
 
-Update `Changes`.
+    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-create-iuk
+    perl -pi -E \
+       "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," \
+       bin/tails-create-iuk
+
+Commit all files that need to be:
+
+    git commit bin/tails-create-iuk -m "tails-iuk $VERSION"
+
+Run the upstream test suite (point `PERL5LIB` to a checkout of the
+relevant tag of Tails' perl5lib):
+
+    # get an authentication token, needed by the test suite
+    sudo true
+    # run the tests in closer to real conditions
+    umask 077
+    
+    # Run the pherkin tests
+    # for each $FEATURE in features/* :
+    LC_ALL=C PERL5LIB=/home/user/tails/perl5lib/lib pherkin $FEATURE
+    # ... and manually cleanup mounted filesystems and busy loopback
+    # devices left behind between each run, sorry :(
+
+    # Run the rest of the test suite
+    RELEASE_TESTING=1 LC_ALL=C PERL5LIB=/home/user/tails/perl5lib/lib dzil test
 
 Build an upstream tarball:
 
@@ -20,26 +52,22 @@ Build an upstream tarball:
 
 Tag the release:
 
-    git tag -s $VERSION
+    git tag -s $VERSION -m "tails-iuk $VERSION"
 
-Move the tarball out of the build repository:
+Move the tarball out of the build repository and cleanup:
 
-    mv *.tar.gz ..
-
-Delete the build directory:
-
-    rm -r Tails-IUK-*
+    mv Tails-IUK*.tar.gz .. && rm -rf Tails-IUK-* .build po/*.mo
 
 Update the Debian package
 =========================
 
-Checkout the branch with Debian package specifics:
+Checkout the branch with Debian package specifics and import the new
+upstream tarball:
 
-    git checkout debian
+    git checkout debian && \
+       git-import-orig --upstream-vcs-tag=$VERSION ../Tails-IUK-$VERSION.tar.gz
 
-Import the new upstream tarball:
-
-    git-import-orig --upstream-vcs-tag=$VERSION ../Tails-IUK-$VERSION.tar.gz
+Update the packaging (e.g. look at changes in `dist.ini`).
 
 Update `debian/changelog`, starting with `git-dch` if the last step
 did not do it:
@@ -50,18 +78,18 @@ did not do it:
 
 Commit `debian/changelog`:
 
-        git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+    git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
 Build a Debian package (use a Squeeze chroot with `squeeze-backports`
-enabled):
+enabled, and the `tails-perl5lib` package available):
 
     git-buildpackage
 
 If everything is fine, add a signed tag to the repository and push the
 changes:
 
-    git-buildpackage --git-tag-only --git-sign-tags
-    git push && git push --tags
+    git-buildpackage --git-tag-only --git-sign-tags && \
+       git push && git push --tags
 
 Add the Debian package to Tails
 ===============================
