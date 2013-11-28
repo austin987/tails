@@ -261,39 +261,40 @@ suite should be ready, so it is time to:
 * `git push --tags`
 *  build the final image!
 
+<a id="prepare-iuk"></a>
+
 Build the Incremental Update Kit
 --------------------------------
 
-Example:
+Skip this step when preparing a major release.
 
-    $ sudo tails-create-iuk --squashfs-diff-name 0.14.squashfs \
-        --old-iso tails-i386-0.14\~rc2.iso \
-        --new-iso tails-i386-0.14.iso      \
-        --outfile Tails_i386_0.14-rc2_to_0.14.iuk
+Example (point `PERL5LIB` to a checkout of the relevant tag of Tails'
+perl5lib):
+
+    # PERL5LIB=/home/user/tails/perl5lib/lib \
+        tails-create-iuk --squashfs-diff-name "$VERSION.squashfs" \
+           --old-iso tails-i386-0.13.iso \
+           --new-iso tails-i386-0.14.iso      \
+           --outfile Tails_i386_0.13_to_0.14.iuk
+
+<a id="prepare-update-description-files"></a>
 
 Prepare update-description files
 --------------------------------
 
-1. Prepare update-description files (see [[!tails_todo incremental_upgrades]]
+1. Prepare update-description files (see the [[Update-description
+   files
+   specification|contribute/design/incremental_updates#update-description-files]]
    for details):
    * update (create if needed) an update-description file for every
      *previous* supported release (e.g. N-1, N-1~rc2) that describes
      the path to the one being released,
    * create a new update-description for the version being released,
-     that expresses that no update is available for that one yet
-1. Detach-sign the update-description files.
+     that expresses that *no* update is available for that one yet
+1. Detach-sign each update-description file.
 1. Rename the detached signatures from `.asc` to `.sig`.
-
-Testing
-=======
-
-Until [[!tails_todo automated_builds_and_tests]] are set up, some
-manual testing
-has to be done by the persons preparing the release, in addition to the
-real-world tests done by fellow beta-testers.
-
-The manual testing process [[is documented on a dedicated
-page|release_process/test]].
+1. Add the update-description files and their detached signatures to
+   the Git branch used to prepare the release (`stable` or `testing`).
 
 Generate the OpenPGP signatures and Torrents
 ============================================
@@ -331,10 +332,18 @@ Fifth, generate detached OpenPGP signatures for every published
 Upload images
 =============
 
+Sanity check
+------------
+
+Verify that the current source for Firefox is still the same we've
+used when preparing our custom Iceweasel package: e.g. FF17.0.8 got
+re-tagged and re-uploaded at the last minute, due to a test failure.
+
+Better catch this before people spend time doing manual tests.
+
 ## Announce, seed and test the Torrents
 
-Announce and seed the Torrents using whatever box you can.
-A decent, stable and permanent Internet connection is required.
+Announce and seed the Torrents.
 
 Test them with a BitTorrent client running in a different place.
 
@@ -343,7 +352,8 @@ Test them with a BitTorrent client running in a different place.
     scp tails-i386-$VERSION.torrent bittorrent.lizard:
     ssh bittorrent.lizard transmission-remote --add tails-i386-$VERSION.torrent
 
-## Upload to HTTP mirrors
+Publish the ISO over HTTP
+-------------------------
 
 Upload the images to the primary rsync mirror. Best practice is to first
 let bittorrent.lizard download the image, and then copy it from there to
@@ -372,12 +382,42 @@ and on the live wiki (even for a release candidate):
 	   git commit wiki/src/inc/trace -m "Updating trace file after uploading $VERSION."
 	)
 
+<a id="publish-iuk"></a>
+
+Publish the IUK
+---------------
+
+Same as for the ISO, but the IUK should land into
+`/srv/rsync/tails/tails/$DIST/iuk/`.
+
+Wait for the HTTP mirrors to catch up
+-------------------------------------
+
 Wait for the next rsync pull.
 
 Make sure every webserver listed in the `dl.amnesia.boum.org` round
-robin pool has the new version.
+robin pool has the new version. Drop those that are lagging behind and
+notify their administrators.
 
-Test downloading.
+Test downloading the ISO and IUK over HTTP.
+
+Testing
+=======
+
+1. Set up a Gobby document and copy the [[test
+   suite|contribute/release_process/test]] in it.
+1. Email <tails@boum.org> to announce that tests may start:
+   - make it clear what's the deadline
+   - make it clear where and how you expect to get feedback
+   - attach the Torrent
+   - attach the `.packages` file
+1. Make sure someone is committed to run the automated test suite.
+1. Make sure that enough people are here to run the tests, that they
+   report their results in due time, and that they make it clear when
+   they're leaving for good.
+
+While this happens, the release manager should prepare for the next
+steps. Please read on!
 
 Update the website and Git repository
 =====================================
@@ -441,6 +481,12 @@ Then, record the last commit before putting the release out for real:
 
 Go wild!
 ========
+
+Sanity check
+------------
+
+Verify once more that the current source for Firefox is still the same
+we've used when preparing our custom Iceweasel packages.
 
 Push
 ----
@@ -536,5 +582,13 @@ Prepare for the next release
      Note that the merge will fail for suites that contain no package.
 
    - `git push --force origin experimental`
+1. Push the release tag to lizard for Jenkins' consumption: `git push --tags lizard`
 1. Manually trigger Jenkins builds of experimental, devel and stable:
    <https://jenkins.tails.boum.org/>.
+1. Bonus points if you care about Tails 1.1: update the Iceweasel
+   packages for feature/wheezy, and trigger a Jenkins build thereof.
+
+Related pages
+=============
+
+[[!map pages="contribute/release_process/*"]]
