@@ -2,24 +2,24 @@
 
 # Rationale
 
-Partial updates should provide only what has changed between two
+Partial upgrades should provide only what has changed between two
 releases (deltas) and have a way to apply those changes to the
 previous version. 
 
 At boot-time the security warning telling that a new Tails version is available
-should provide an automated way of doing the update.
+should provide an automated way of doing the upgrade.
 
 # Definitions
 
-* **update-description file**: a file that describes the update from
+* **upgrade-description file**: a file that describes the upgrade from
   a given version, to another, newer given version of a software
   product.
-* **Incremental Update Kit (IUK)**: a file that contains everything
-  needed to update from.
+* **Incremental Upgrade Kit (IUK)**: a file that contains everything
+  needed to upgrade from.
 * **full image**: a file that is sufficient to install and run Tails
   (currently, that means an ISO image).
 * **target files**: the whole set of files included by reference into
-  an update; e.g. this may be an IUK or a full image.
+  an upgrade; e.g. this may be an IUK or a full image.
 
 # Current status and roadmap
 
@@ -57,55 +57,55 @@ I should manually try to install the IUK as intended on top of the old
 version of Tails, and I should check that the resulting system behaves
 as it should.
 
-See [[contribute/release_process/test#incremental-updates]].
+See [[contribute/release_process/test#incremental-upgrades]].
 
-#### I should prepare update-description files
+#### I should prepare upgrade-description files
 
-* for the previous release (to announce they may update using the IUK
+* for the previous release (to announce they may upgrade using the IUK
   that's being prepared)
-* for the new release (to announce no update is available)
+* for the new release (to announce no upgrade is available)
 
-See [[contribute/release_process#prepare-update-description-files]].
+See [[contribute/release_process#prepare-upgrade-description-files]].
 
 #### I should publish the IUK
 
 See [[contribute/release_process#publish-iuk]].
 
-#### I should publish update-description files
+#### I should publish upgrade-description files
 
 This is done at the same time as the release is announced, by simply
 pushing the release Git branch live to master.
 
 ### When I prepare a major release
 
-#### I should prepare an update-description file
+#### I should prepare an upgrade-description file
 
-* for the previous release (to announce they may update using the
+* for the previous release (to announce they may upgrade using the
   release that's being prepared)
-* for the new release (to announce that no update is available)
+* for the new release (to announce that no upgrade is available)
 
-See [[contribute/release_process#prepare-update-description-files]].
+See [[contribute/release_process#prepare-upgrade-description-files]].
 
-#### I should publish the update-description file
+#### I should publish the upgrade-description file
 
 This is done at the same time as the release is announced, by simply
 pushing the release Git branch live to master.
 
 # Implementation
 
-## Update paths
+## Upgrade paths
 
-To ease implementation, only updates to the next closest step
+To ease implementation, only upgrades to the next closest step
 are supported.
 
 E.g. say one has installed Tails 0.11 a while ago, and forgets
 about it. We then release Tails 0.11.1, and publish a `0.11_to_0.11.1`
-IUK, advertised by the update-description file for 0.11 users. We then
+IUK, advertised by the upgrade-description file for 0.11 users. We then
 release Tails 0.11.2, and publish a `0.11.1_to_0.11.2` IUK, advertised
-by the update-description file for 0.11.1 users. If the user starts
-their Tails 0.11, the update system proposes updating to 0.11.1.
-Say the user accepts, the update is performed, the user reboots, and
-the update system now proposes updating to 0.11.2.
+by the upgrade-description file for 0.11.1 users. If the user starts
+their Tails 0.11, the upgrade system proposes upgrading to 0.11.1.
+Say the user accepts, the upgrade is performed, the user reboots, and
+the upgrade system now proposes upgrading to 0.11.2.
 
 Allowing to run these two steps in a row, without rebooting, is
 mainly a GUI problem, and is postponed.
@@ -120,7 +120,7 @@ We have a `tails-create-iuk` program that takes two Tails full images as input, 
 * gets the new kernel(s), initrd(s), bootloader configuration
 * brings all this together into a single file, in the IUK format
 
-### Incremental Update Kit
+### Incremental Upgrade Kit
 
 #### IUK format
 
@@ -134,7 +134,7 @@ following files:
     system partition.
 * zero, one or more `*.tar[.bz2]`: tar archives, compatible with GNU tar, optionally
   compressed with bzip2, that contain the set of files to add to, or
-  update in the system partition: kernel(s), initrd(s), bootloader
+  upgrade in the system partition: kernel(s), initrd(s), bootloader
   configuration, `*.squashfs` (the SquashFS "diff" that must be
   stacked on top of the older SquashFS filesystem(s)), etc.
 
@@ -164,102 +164,102 @@ rely upon.
 Using something like [Mozilla's
 channels](https://wiki.mozilla.org/Software_Update:Channels)
 (*stable*, *beta*, *nightly*) would e.g. allow us to push beta
-updates earlier to a brave subset of users. Subscribing to a channel
+upgrades earlier to a brave subset of users. Subscribing to a channel
 other than *stable* is something that would be worth
 [[persisting|doc/first_steps/persistence]]. We are not likely to
 implement a channels system in phase one, but the infrastructure we
 set up does leave room for such future extension.
 
-<a id="update-description-files"></a>
+<a id="upgrade-description-files"></a>
 
-### Update-description files
+### Upgrade-description files
 
 We want the client to get an answer to questions such as "I run
-version N of product P on architecture A, what stable release update
+version N of product P on architecture A, what stable release upgrade
 is available?". To allow us changing the way the answer is computed in
 the future, the amount of work done on the client's side should be
 kept to a minimum. So, let's insert a level of indirection, and
 pre-compute server-side the answer to the queries we want to support.
 
 The answers are distributed on our HTTP servers in the form of a set
-of update-description file files.
+of upgrade-description file files.
 
-#### update-description file URL
+#### upgrade-description file URL
 
-* `https://tails.boum.org/update`
+* `https://tails.boum.org/upgrade`
 * URL schema version (so we can change it in the future), that is `v1`
   to start with.
 * product name (e.g. *Tails*, but some day we may have *TailsServer*,
   *TailsHandheld* or whatever)
-* product version -- the currently running version to update from,
+* product version -- the currently running version to upgrade from,
   e.g. *0.11* or *0.11.1*
 * build-target (e.g. *i386*)
 * channel (e.g. *stable* or *beta*)
-* `update.yml`
+* `upgrade.yml`
 
-Example: <https://tails.boum.org/update/v1/Tails/0.11/i386/beta/updates.yml>
+Example: <https://tails.boum.org/upgrade/v1/Tails/0.11/i386/beta/upgrades.yml>
 
 Such a file shall be shipped along with its OpenPGP detached signature
-(`updates.yml.pgp`).
+(`upgrades.yml.pgp`).
 
-#### update-description file format
+#### upgrade-description file format
 
-An update-description file contains a YAML associative array with the
+An upgrade-description file contains a YAML associative array with the
 following top-level keys:
 
 * `product-name`
 * `product-version`
 * `build-target`
 * `channel`
-* `updates`: a list of update elements.
+* `upgrades`: a list of upgrade elements.
 
-Each update element is itself an associative array describing an
-update to an individual product version, with the following keys:
+Each upgrade element is itself an associative array describing an
+upgrade to an individual product version, with the following keys:
 
-* `version` -- the version of this update, that is the version of the
-  running product after the update is completed and the system
+* `version` -- the version of this upgrade, that is the version of the
+  running product after the upgrade is completed and the system
   restarted (e.g. *0.11.1*)
 * `type` -- *major* or *minor*
 * `details-url` (optional) -- a URL to a web page with more
-  information about the specified update (e.g.
+  information about the specified upgrade (e.g.
   <https://tails.boum.org/news/version_0.11.1/>)
-* `update-paths` -- a list of at least one and no more than two
-  update path elements.
+* `upgrade-paths` -- a list of at least one and no more than two
+  upgrade path elements.
 
-An update path element describes a set of target files that lives on
+An upgrade path element describes a set of target files that lives on
 a remote server that must all be downloaded and applied to the product
-to update it to that version. The keys for an update path element are
+to upgrade it to that version. The keys for an upgrade path element are
 as follows:
 
 * `type` -- *full* or *incremental* (IUK are about incremental
-  updates, but let's make room to announce full images this way too
+  upgrades, but let's make room to announce full images this way too
   at some point)
-* `target-files`: a list of target files for this update path.
+* `target-files`: a list of target files for this upgrade path.
 
 Every target file element has the following keys:
 
 * `url` -- A URL to the target file.
-* `size` -- The size of the update, in bytes.
+* `size` -- The size of the upgrade, in bytes.
 * `sha256` -- The SHA-256 hash of the patch file, encoded as an
   hexadecimal string. If the client generated value does not match
   this, the integrity check fails after download. (Other kind of
-  hashes may be added in a future revision of the update-description
+  hashes may be added in a future revision of the upgrade-description
   file format -- which of these multiple hashes the client must verify
   will need to be specified when this happens.)
 
 Example that would be found at
-<https://tails.boum.org/update/v1/Tails/0.11.1/i386/stable/updates.yml>:
+<https://tails.boum.org/upgrade/v1/Tails/0.11.1/i386/stable/upgrades.yml>:
 
 	product-name: Tails
 	product-version: 0.11.1
 	channel: stable
 	build-target: i386
 	
-	updates:
+	upgrades:
 	  - version: 0.11.2
 	    type: minor
 	    details-url: https://tails.boum.org/news/version_0.11.2/
-	    update-paths:
+	    upgrade-paths:
 	      - type: incremental
 	        target-files:
 	          - url: http://dl.amnesia.boum.org/tails/stable/iuk/Tails_i386_0.11.1_to_0.11.2.iuk
@@ -275,8 +275,8 @@ Example that would be found at
 
 This section is not a specification. The URL where the IUK's are
 stored, and their file name, may change. If this happens, any
-update-description file available on Tails HTTP mirrors, that
-references an IUK whose URL changes, must be updated accordingly.
+upgrade-description file available on Tails HTTP mirrors, that
+references an IUK whose URL changes, must be upgraded accordingly.
 
 #### IUK file basename
 
@@ -289,11 +289,11 @@ followed by the `.iuk` suffix:
 
 * product name (e.g. *Tails*)
 * build-target (e.g. *i386*)
-* product version -- the currently running version to update from,
+* product version -- the currently running version to upgrade from,
   e.g. *0.11* or *0.11.1*
 * `to`
-* the version of this update, that is the version of the running
-  product after the update is completed and the system restarted (e.g.
+* the version of this upgrade, that is the version of the running
+  product after the upgrade is completed and the system restarted (e.g.
   *0.11.2*)
 
 Example: `Tails_i386_0.11.1_to_0.11.2.iuk`
@@ -310,41 +310,41 @@ Example: <http://dl.amnesia.boum.org/tails/iuk/Tails_i386_0.11.1_to_0.11.2.iuk>
 ## Client and user interface
 
 The program currently telling that a new Tails version is available
-must be updated to use update-description files
+must be upgraded to use upgrade-description files
 instead of the current Atom feed.
 
-### update-description downloader and verifier
+### upgrade-description downloader and verifier
 
 This program has the responsibility to download and verify an
-update-description file.
+upgrade-description file.
 
-* Build the URI to its update-description file (might even be done at
+* Build the URI to its upgrade-description file (might even be done at
   build time and hard-coded into the image) and to its
   cryptographic signature.
-* Fetch the update-description file and its signature at these URIs.
-* Verify the cryptographic signature of the update-description file.
-* Check that content of the update-description file matches the
+* Fetch the upgrade-description file and its signature at these URIs.
+* Verify the cryptographic signature of the upgrade-description file.
+* Check that content of the upgrade-description file matches the
   currently running system (in terms of product name, product
   version, build-target and channel).
 * Once all these steps have been successfully performed, the content
-  of the update-description file is trusted to be legit, and is
+  of the upgrade-description file is trusted to be legit, and is
   returned to the caller as such.
 
 Failure, at any of the above steps, must be reported to the caller.
 
-### update frontend
+### upgrade frontend
 
-* The update frontend is run (with password-less sudo) by the desktop
-  `amnesia` user, as the dedicated `tails-update-frontend` user that
-  has the right to run all other incremental updates program as their
+* The upgrade frontend is run (with password-less sudo) by the desktop
+  `amnesia` user, as the dedicated `tails-upgrade-frontend` user that
+  has the right to run all other incremental upgrades program as their
   own dedicated user.
-* Get a verified update-description file from the update-description
+* Get a verified upgrade-description file from the upgrade-description
   downloader and verifier.
-* Extract information about available updates from the
-  update-description file.
+* Extract information about available upgrades from the
+  upgrade-description file.
 * Present such information to the user, let them decide if they want
-  to perform the update.
-* If an incremental update path to the new version is available:
+  to perform the upgrade.
+* If an incremental upgrade path to the new version is available:
   - securely create a tempdir in `tmpfs`, owned by
     `tails-iuk-get-target-file:tails-iuk-get-target-file`,
     with mode 0750
@@ -352,25 +352,25 @@ Failure, at any of the above steps, must be reported to the caller.
     verified target file into the tempdir (either the default umask
     will do, or steps shall be taken to make sure the
     `tails-install-iuk` user may read the resulting files)
-* Else, point at full update documentation.
+* Else, point at full upgrade documentation.
 * Shutdown the network.
 * Remount the system partition read-write.
-* Perform the update using the files provided by the "target files
+* Perform the upgrade using the files provided by the "target files
   downloader and verifier".
-* Tell the user the update process is finished, and they *MUST*
+* Tell the user the upgrade process is finished, and they *MUST*
   immediately reboot (due to system partition being left mounted
   read-write, 'cause we cannot remount it read-only once it's been
   mounted read-write).
-* The update frontend checks if enough disk space is available on the
+* The upgrade frontend checks if enough disk space is available on the
   Tails system partition. The (disk space needed / target file size)
   factor was defined experimentally to 3.0 (2.72 fails, 2.8 works, and
   we want some safety margin in case other IUKs are not formed exactly
   the same way). If too little disk space is available, the
-  incremental update is not attempted, and the user is pointed at the
-  full update path.
-* The update frontend is run by a shell wrapper that checks if enough
-  free memory is available: we do not want the user to miss updates,
-  merely because the Tails Updater was run in low-memory conditions,
+  incremental upgrade is not attempted, and the user is pointed at the
+  full upgrade path.
+* The upgrade frontend is run by a shell wrapper that checks if enough
+  free memory is available: we do not want the user to miss upgrades,
+  merely because the Tails Upgrader was run in low-memory conditions,
   and could not do its job.
 
 ### target file downloader and verifier
@@ -425,18 +425,18 @@ Resources:
 * [Mozilla's updates
   processing](https://wiki.mozilla.org/Software_Update:Processing_Updates):
   building up some mechanism (such as their pending / applying /
-  succeeded / failed status) to avoid retrying the same buggy update
+  succeeded / failed status) to avoid retrying the same buggy upgrade
   in a loop seems worth being considered.
 
-### full update
+### full upgrade
 
-The Tails installer is still in charge of performing full updates.
+The Tails installer is still in charge of performing full upgrades.
 It deletes any `live/*.squashfs` file other than the one shipped
 in the new ISO.
 
 ### signature verification
 
-update-description file polling, parsing and verification is
+upgrade-description file polling, parsing and verification is
 implemented in Perl. Signature verification is made using
 `GnuPG::Interface`'s `verify` method.
 
@@ -457,7 +457,7 @@ non-zero means verification failure).
 
 # Research
 
-## Secure update
+## Secure upgrade
 
 * [TUF: The Update Framework](https://www.updateframework.com/)
 * [Thandy specification](https://gitweb.torproject.org/thandy.git/blob_plain/HEAD:/specs/thandy-spec.txt)
@@ -465,4 +465,4 @@ non-zero means verification failure).
 ## Discarded options and historical information
 
 See the [[page about discarded options and historical
-information|contribute/design/incremental_updates/archive]].
+information|contribute/design/incremental_upgrades/archive]].
