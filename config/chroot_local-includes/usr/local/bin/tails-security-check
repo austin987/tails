@@ -33,6 +33,7 @@ See https://tails.boum.org/.
 #}}}
 
 use Carp;
+use Carp::Assert::More;
 use DateTime;
 use DateTime::Format::ISO8601;
 use Desktop::Notify;
@@ -78,9 +79,9 @@ sub build_date {
     open my $version_h, '<', $version_file;
     my ($version, $date) = ( <$version_h> =~ /(.*) - (\d+)(?:\n)?$/ );
     close $version_h;
-    if (!defined $date || !$date) {
-        croak gettext("Unparseable line in %s", $version_file);
-    }
+    assert_defined($date);
+    assert_nonblank($date);
+
     return DateTime::Format::ISO8601->parse_datetime($date);
 }
 
@@ -104,10 +105,7 @@ Returns the Atom's feed content on success, undef on failure.
 =cut
 sub atom_str {
     my $url = shift;
-
-    if (!defined $url) {
-        croak gettext("atom_str was passed an undefined argument");
-    }
+    assert_defined($url);
 
     $ENV{HTTPS_VERSION} = 3;
 
@@ -168,10 +166,8 @@ sub get_new_entries {
     foreach my $url (@try_urls) {
         last if ($feed_str = atom_str($url));
     }
+    assert_defined($feed_str);
 
-    if (!defined $feed_str) {
-        croak gettext("Empty fetched feed.");
-    }
     my $feed = XML::Atom::Feed->new(\$feed_str);
     return grep { is_newer_than($_, $since_dt) } $feed->entries();
 }
