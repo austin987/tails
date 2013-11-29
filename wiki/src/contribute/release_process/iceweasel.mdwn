@@ -41,19 +41,20 @@ a bit more work is needed.
 Note that usually, we're doing these steps (usually on Sunday or
 Monday) *before* the new ESR was officially released (which usually
 happens on Tuesday). Mozilla make the source available on previous
-Friday or Saturday, so that downstreams (such as us!) can get their stuff ready
-in time for the security announce.
+Friday or Saturday, so that downstreams (such as us!) can get their
+stuff ready in time for the security announce.
 
 * Download the Firefox tarball and detached signature from
   <https://ftp.mozilla.org/pub/mozilla.org/firefox/releases/VERSION/source/>
-  (`VERSION` is the version we want to build, that is something like `17.0.7esr`).
+  (`VERSION` is the version we want to build, that is something like
+  `17.0.7esr`).
 * Check the signature.
 * Put the tarball in the parent directory of your Iceweasel Git repository.
 * Extract the tarball.
 * `cd` into the extracted directory.
 * Copy the `debian/` directory from our previous package into the new
   upstream source directory.
-* Use `dch` to add a `debian/changelog` entry matching the new
+* Add a `debian/changelog` entry matching the new
   upstream version. Use 0 for the Debian packaging version, e.g.
   `17.0.5esr-0`, to leave room for the official packaging that we will
   want to merge when it's out:
@@ -86,7 +87,7 @@ in time for the security announce.
 
 * Get the `debian` directory back:
 
-      git checkout HEAD^ -- debian
+      git checkout HEAD^ -- debian && \
       git commit -m 'Get Debian packaging directory back.'
 
 * Cleanup quilt status:
@@ -190,7 +191,9 @@ merge from Debian's Vcs-Git later.
 
 * `git rm` the deleted files
 
-* `git add` the new files and the modified ones
+* `git add *`
+
+* Add other added or modified files *but* `.pc`.
 
 * Commit:
 
@@ -199,7 +202,7 @@ merge from Debian's Vcs-Git later.
 * Verify with `diff` that the current state of the `tails/master` is
   exactly the same as Debian's iceweasel source package one:
 
-      diff --exclude=.git iceweasel-17.0.2esr/ git/
+      diff -Naur --exclude=.git iceweasel-17.0.2esr/ git/
 
 * Bring our `debian/changelog`, `debian/rules`, `debian/control` and
   `debian/control.in` changes back.
@@ -260,7 +263,7 @@ and commit:
           git remote add mikeperry https://git.torproject.org/user/mikeperry/tor-browser.git
           git fetch mikeperry
 
-    * Find the most recent commit in mikeperry/torbrowser-firefox24.0
+    * Find the most recent commit in mikeperry/torbrowser-firefox24.1.0esr
       that is an import from Mozilla (see e.g. 5175d069); save its ID:
 
           export LAST_MOZILLA_COMMIT=XXX
@@ -269,7 +272,7 @@ and commit:
 
           TORBROWSER_PATCHES_DIR=$(mktemp -d)
           git format-patch -o "$TORBROWSER_PATCHES_DIR" \
-              "$LAST_MOZILLA_COMMIT..mikeperry/torbrowser-firefox24.0"
+              "$LAST_MOZILLA_COMMIT..mikeperry/torbrowser-firefox24.1.0esr"
 
     * Remove from $TORBROWSER_PATCHES_DIR the patches we don't want.
       See the section about Iceweasel 17 above for details.
@@ -281,12 +284,14 @@ and commit:
             quilt import -P "torbrowser/$p" "$patch"
           done
           git add debian/patches/torbrowser debian/patches/series
-          TBB_COMMIT=$(git rev-parse mikeperry/torbrowser-firefox24.0)
+          TBB_COMMIT=$(git rev-parse mikeperry/torbrowser-firefox24.1.0esr)
           git commit -m "Import Torbrowser 24 patches at commit ${TBB_COMMIT}."
 
 * Apply Torbrowser patches:
 
       quilt push -a && git commit -a -m 'Apply Torbrowser patches.'
+
+* Add untracked files *but* `.pc` and `commit --amend`.
 
 6. Build packages
 =================
@@ -309,7 +314,13 @@ Update debian/changelog
 Tag the release
 ---------------
 
-	git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" "debian/${VERSION}-0+tails1"
+	DEB_VERSION=$(dpkg-parsechangelog -SVersion)
+	git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" "debian/${DEB_VERSION}"
+
+Clean up the source tree
+------------------------
+
+	rm -f .mozconfig*
 
 Build for unstable
 ------------------
@@ -319,6 +330,8 @@ packages, then skip this step.
 
 * Build for unstable and the architecture you can test on (most likely
   amd64), e.g. using our [[contribute/Debian_package_builder]].
+* Copy `browser/app/profile/000-tor-browser.js` into
+  `/etc/iceweasel/pref/` on the test system.
 * Install and test the resulting packages.
 
 Build for squeeze-backports
@@ -339,7 +352,8 @@ Build for squeeze-backports
 
 * Tag the backport:
 
-      git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" $TAG_NAME
+      git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" \
+          "debian/$(dpkg-parsechangelog -SVersion | sed -e 's,~,_,')"
 
 * Build for squeeze-backports and i386, e.g. using our
   [[contribute/Debian_package_builder]].
@@ -355,3 +369,13 @@ Build for squeeze-backports
 * Merge this APT suite where you need it: generally, that's `devel`,
   `experimental`, one of `stable` or `testing`, and maybe
   a release tag.
+
+Import bundled preferences
+--------------------------
+
+* Copy `browser/app/profile/000-tor-browser.js` from the tag the
+  Squeeze backport was built from, into
+  `config/chroot_local-includes/etc/iceweasel/pref/`.
+* Commit this to the branch that is being used to prepare the release:
+  ideally, a topic branch that will be reviewed and merged; in
+  practice, more likely this will be `stable` or `testing`.

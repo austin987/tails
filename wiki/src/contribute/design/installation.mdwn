@@ -1,0 +1,134 @@
+[[!meta title="Installing onto a USB Stick"]]
+
+Tails is easily installed to a USB storage device
+by cloning an existing Tails system that is running from CD or USB.
+Tails Installer also supports upgrades from an ISO image or from
+the currently running Tails system.
+
+The choice between possible destination
+devices or partitions is proposed amongst the
+available removable storage devices.
+
+Upgrades
+========
+
+Tails Installer is able to do full upgrades of an already installed
+USB stick. During the needed operations, everything except the Tails system
+partition is left untouched.
+
+Mode of operation and booting methods
+=====================================
+
+In order to be able to have non-destructive upgrades, blind overwrites
+(using `dd` or similar raw copy methods) of the boot media is not possible 
+(even if Tails [[shipped hybrid ISO
+images|contribute/design/hybrid_ISO]]).
+
+Two alternatives booting methods have been investigated:
+
+1. **Boot ISO file**: Set up a bootloader on the USB stick that is able
+   to boot an ISO image dropped into the right directory of it. Even
+   early boot files (kernel, initramfs) are loaded from *inside* the
+   ISO file.
+
+2. **Copy ISO's content**: Copy needed files (mainly the kernel,
+   initramfs and SquashFS image that live in the `live/` directory)
+   from the ISO filesystem to the destination partition, then set up a
+   bootloader that uses files in that directory. The end result is
+   more or less equivalent to dd'ing the ISO image to the USB stick,
+   but achieved with a non-destructive process.
+
+We have settled on the *copy ISO's content* way, mostly because it is overall
+simpler, more robust, and allows
+implementing [[!tails_todo incremental_upgrades]] relatively easily.
+
+Partitioning
+============
+
+The storage device is partitioned using [GPT](https://en.wikipedia.org/wiki/GUID_Partition_Table). Using GPT has several desirable properties:
+
+ * The system partition can be hidden from Windows. Hopefully this
+   should prevent some misuse of Tails system partition, even if we
+   explicitly discourage users to plug their Tails USB stick to a
+   running system (Windows among other OS).
+ * `sgdisk` can run on Windows whereas no other free partitioning tools
+   are available under Windows for other partioning method.
+ * Partitions can be labeled. The [[design/persistence]] setup tools can
+   easily detect the right partitions without blind tries.
+
+The system partition (holding Tails) has a size of 1.5 GB, with the
+following estimates:
+
+ * Tails ISO: 1GB
+ * 3 [[!tails_todo incremental_upgrades desc="incremental upgrade kits"]], 60 MB each: 180MB
+
+The Tails system partition uses a FAT32 filesystem, mainly because it is the
+one supported by SYSLINUX we may easily create, in a programmatic manner, from
+Windows systems. This choice has consequences that are barely related to the
+USB installation task: the restrictions on filenames imposed by the FAT32
+filesystem limits what can be shipped on the system parition
+(e.g. Tails documentation is only available inside Tails).
+
+The rest of the device is left unpartitionned for an encrypted storage
+partition that can be used for the [[design/persistence]] feature.
+
+Branding of liveusb-creator
+===========================
+
+The original liveusb-creator is Fedora-specific. We have made configurable
+most of the branding we needed to change.
+
+ * Allow disabling the download feature.
+ * Allow defaults/vendor/site configuration of the
+   window title, download widget title, and custom artwork.
+
+Currently supported config options (in the "branding" section) are:
+
+ * `distribution`: name used in window title and download widget title,
+ * `header`: pixmap displayed on top of the main dialog.
+
+These options can be set in `/etc/liveusb-creator/{vendor,site}.ini`.
+
+Both Qt resources and regular paths are supported for the `header`
+option:
+
+    # Qt resource
+    [branding]
+    distribution = Tails
+    header = :/tails-liveusb-header.png
+    partition_label = Tails
+
+    # Regular path
+    [branding]
+    distribution = Tails
+    header = /path/to/tails-liveusb-header.png
+
+Launchers
+=========
+
+We need to pass the `-u` and `-n` switches in any case; specific modes
+of operation need other switches:
+
+ * Initial installation needs `-P` and `-m`, upgrade does not.
+ * Cloning needs `--clone`, installing from ISO does not.
+
+We have `.desktop` files for the following usecases:
+
+ * Clone the currently running Tails onto a shiny new USB stick:
+   `--clone -P -m`
+ * Upgrade a (non-running) Tails system using a ISO file: no
+   additional switch required.
+ * Upgrade a (non-running) Tails system using another, fresher,
+   running Tails: no additional switch required.
+
+Why a fork of liveusb-creator?
+==============================
+
+After an initial [[!tails_todo usb_install_and_upgrade/archive desc="roundup of existing tools"]],
+we decided to use Fedora's `liveusb-creator` as a basis, for reasons that are now
+obsolete due to more recent design choices. While we did most of our initial
+adaptation work on liveusb-creator with future upstreaming of our changes in
+mind, it proved to be hard, and future extension seems now out of question.
+Our [[!tails_todo usb_install_and_upgrade desc="future plans"]] include moving to another
+piece of software as a basis, and hopefully working more closely with this
+future upstream of ours.
