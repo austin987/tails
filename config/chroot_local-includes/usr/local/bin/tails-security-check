@@ -209,8 +209,11 @@ sub notify_user {
                     timeout => 0)->show();
 }
 
-### sanity checks
+=head1 MAIN
 
+=head2 sanity checks
+
+=cut
 if (! -e "$version_file") {
     die "The Tails version file ($version_file) does not exist."
 }
@@ -218,8 +221,9 @@ if (! -r "$version_file") {
     die "The Tails version file ($version_file) is not readable."
 }
 
-### parse command line args
+=head2 parse command line args
 
+=cut
 my $base_url  = shift || $default_base_url;
 my $opt_since = shift;
 my $since_dt;
@@ -230,8 +234,9 @@ else {
     $since_dt = build_date($version_file);
 }
 
-### main
+=head2 do the work
 
+=cut
 my @newer_entries = get_new_entries($base_url, $since_dt);
 
 if (! @newer_entries) {
