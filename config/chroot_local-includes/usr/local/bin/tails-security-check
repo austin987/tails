@@ -163,8 +163,12 @@ Return the list of categories of the input XML::Atom::Entry object.
 =cut
 sub categories {
     my $entry = shift;
-    my $ns = XML::Atom::Namespace->new(dc => 'http://purl.org/dc/elements/1.1/');
-    my @category = ($entry->can('categories')) ? $entry->categories : $entry->category;
+    my $ns = XML::Atom::Namespace->new(
+        dc => 'http://purl.org/dc/elements/1.1/'
+    );
+    my @category = ($entry->can('categories'))
+        ? $entry->categories
+        : $entry->category;
     @category
         ? (map { $_->label || $_->term } @category)
         : $entry->getlist($ns, 'subject');

@@ -774,7 +774,14 @@ version of Tails are taken care of by [[Tails
 Upgrader|contribute/design/incremental_upgrades]] that tells the user
 whenever they should upgrade.
 
-This script is run once Tor is known-working.
+The connections are made to the Tails website through Tor, over HTTPS
+with a pinned CA. The only piece of information leaked to the Tails
+web server (apart of [[!cpan LWP::UserAgent]]'s specific User-Agent
+and HTTP behavior) is the first two chars of the `LANG`
+environment variable.
+
+This script is run after the user has logged-in and Tor is
+in known-working state.
 
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check-wrapper]]
