@@ -10,20 +10,6 @@ set -eu
 . /usr/local/lib/tails-shell-library/log.sh
 . /usr/local/lib/tails-shell-library/tails_greeter.sh
 
-# The following helpers will only work if the argument is a NIC that
-# actually exists
-get_permanent_mac() {
-    macchanger ${1} | sed -n "s/^Permanent\s*MAC:\s*\([0-9a-f:]\+\)\s.*$/\1/p"
-}
-
-get_current_mac() {
-    macchanger ${1} | sed -n "s/^Current\s*MAC:\s*\([0-9a-f:]\+\)\s.*$/\1/p"
-}
-
-mac_is_changed() {
-    [ "$(get_permanent_mac ${1})" != "$(get_current_mac ${1})" ]
-}
-
 # Only use this helper when using macchanger options that may require
 # the interface to be down, i.e. those that actually change the MAC
 # address.
@@ -80,8 +66,9 @@ if ! nic_exists ${NIC}; then
     exit 1
 fi
 
-if mac_is_changed ${NIC}; then
+if nic_has_spoofed_mac ${NIC}; then
     log "NIC ${NIC}'s MAC address is already spoofed, skipping"
+    exit 0
 else
     if spoof_mac ${NIC}; then
         log "Successfully spoofed MAC address of NIC ${NIC}"
