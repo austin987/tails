@@ -2,9 +2,48 @@
 
 set -e
 
+. /usr/local/lib/tails-shell-library/hardware.sh
 . /usr/local/lib/tails-shell-library/log.sh
+. /usr/local/lib/tails-shell-library/tails_greeter.sh
 set_log_tag unblock-network
 
+show_notification() {
+    until pgrep gnome-panel >/dev/null; do
+        sleep 1
+    done
+    /usr/local/sbin/tails-notify-user "${1}" "${2}" 0
+}
+
+notify_panic_success() {
+    show_notification "MAC spoofing failure!" "MAC spoofing failed for network device '${2}' (${1}). The device has been disabled to prevent it from leaking your geographical location. For more information, see the <a href='file:///usr/share/doc/tails/website/doc/advanced_topics/mac_changer.en.html'>documentation</a>."
+}
+
+notify_panic_failure() {
+    show_notification "MAC spoofing failure!" "MAC spoofing failed for network device '${2}' (${1}). Because of failures when trying to disable the device, networking has been completely disabled instead. For more information, see the <a href='file:///usr/share/doc/tails/website/doc/advanced_topics/mac_changer.en.html'>documentation</a>."
+}
+
+mac_spoof_panic() {
+    local nic
+    local module
+    local nic_name
+    local unload_success
+    nic=${1}
+    /sbin/ifconfig ${nic} down
+    module=$(get_module_used_by_nic ${nic})
+    nic_name="$(get_name_of_nic ${nic})"
+    echo "blacklist ${module}" >> /etc/modprobe.d/${module}-blacklist.conf
+    unload_module_and_rev_deps ${module}
+    if [ "$?" -ne 0 ] || lsmod | grep -q "^${module}\s"; then
+        DISABLE_NETWORKMANAGER=true
+        log "Failed to unload module ${module} of NIC ${nic}. Refusing to start NetworkManager."
+	notify_panic_failure "${nic}" "${nic_name}" &
+    else
+        log "Successfully unloaded module ${module} of NIC ${nic}."
+        notify_panic_success "${nic}" "${nic_name}" &
+    fi
+}
+
+DISABLE_NETWORKMANAGER=false
 BLACKLIST=/etc/modprobe.d/all-net-blacklist.conf
 
 rm -f "${BLACKLIST}" || true
@@ -17,6 +56,22 @@ rm -f "${BLACKLIST}" || true
 # operations are not possible on the device, like MAC spoofing. Hence,
 # if NM wins, the udev trigger's run of tails-spoof-mac will fail.
 /sbin/udevadm settle
+
+# MAC spoofing fail-safe: if any NIC's MAC address isn't spoofed at
+# this point we have to take some drastic measures in order to prevent
+# potential leaks.
+if mac_spoof_is_enabled; then
+    for nic in $(get_all_ethernet_nics); do
+        if ! nic_has_spoofed_mac ${nic}; then
+            log "MAC spoofing is enabled but NIC ${nic} is not spoofed. Going into panic mode for NIC ${nic}."
+            mac_spoof_panic ${nic}
+        fi
+    done
+fi
+
+if [ "${DISABLE_NETWORKMANAGER}" = false ]; then
+    service network-manager start
+fi
 
 if [ -e "${BLACKLIST}" ]; then
     log "${BLACKLIST} wasn't removed so the network will still be blocked"
