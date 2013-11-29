@@ -153,6 +153,10 @@ layout does not allow us to use content negotiation.
 sub get_new_entries {
     my $base_url = shift;
     my $since_dt = shift;
+    assert_defined($base_url);
+    assert_nonblank($base_url);
+    assert_defined($since_dt);
+    assert_isa($since_dt, 'DateTime');
 
     my $separator = '';
     $separator = '/' unless $base_url =~ m{/\z}xms;
@@ -225,6 +229,8 @@ if (defined $opt_since) {
 else {
     $since_dt = build_date($version_file);
 }
+assert_defined($since_dt);
+
 
 =head2 do the work
 
