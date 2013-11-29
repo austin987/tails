@@ -7,6 +7,10 @@ set -e
 . /usr/local/lib/tails-shell-library/tails_greeter.sh
 set_log_tag unblock-network
 
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
 show_notification() {
     until pgrep gnome-panel >/dev/null; do
         sleep 1
@@ -15,11 +19,19 @@ show_notification() {
 }
 
 notify_panic_success() {
-    show_notification "MAC spoofing failure!" "MAC spoofing failed for network device '${2}' (${1}). The device has been disabled to prevent it from leaking your geographical location. For more information, see the <a href='file:///usr/share/doc/tails/website/doc/advanced_topics/mac_changer.en.html'>documentation</a>."
+    local nic
+    local nic_name
+    nic="${1}"
+    nic_name="${2}"
+    show_notification "`gettext \"MAC spoofing failure!\"`" "`eval_gettext \"MAC spoofing failed for network device '\\\${nic_name}' (\\\${nic}). The device has been disabled to prevent it from leaking your geographical location. For more information, see the <a href='file:///usr/share/doc/tails/website/doc/advanced_topics/mac_changer.en.html'>documentation</a>.\"`"
 }
 
 notify_panic_failure() {
-    show_notification "MAC spoofing failure!" "MAC spoofing failed for network device '${2}' (${1}). Because of failures when trying to disable the device, networking has been completely disabled instead. For more information, see the <a href='file:///usr/share/doc/tails/website/doc/advanced_topics/mac_changer.en.html'>documentation</a>."
+    local nic
+    local nic_name
+    nic="${1}"
+    nic_name="${2}"
+    show_notification "`gettext \"MAC spoofing failure!\"`" "`eval_gettext \"MAC spoofing failed for network device '\\\${nic_name}' (\\\${nic}). Because of failures when trying to disable the device, networking has been completely disabled instead. For more information, see the <a href='file:///usr/share/doc/tails/website/doc/advanced_topics/mac_changer.en.html'>documentation</a>.\"`"
 }
 
 mac_spoof_panic() {
