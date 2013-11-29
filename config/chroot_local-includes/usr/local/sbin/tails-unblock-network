@@ -51,6 +51,9 @@ if [ -e "${BLACKLIST}" ]; then
     log "${BLACKLIST} wasn't removed so the network will still be blocked"
 fi
 
+# Now we'll load any present network device previously blocked by
+# BLACKLIST. In particular, the MAC spoofing udev rule should trigger
+# for each network device added.
 /sbin/udevadm trigger --action=add
 
 # Make this script block until all triggers have been run. We normally
