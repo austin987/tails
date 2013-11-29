@@ -89,9 +89,10 @@ Upgrade bundled binary Debian packages
 That is: make sure the bundled binary Debian packages contain
 up-to-date localization files.
 
-For each bundled Debian package, get updated PO files from the
+For each bundled Debian package, run the included `import-translations`
+script if one exists, or copy updated PO files from the
 Transifex branches of `git://git.torproject.org/translation.git` (e.g.
-`whisperback_completed`). Verify and commit.
+`whisperback_completed`) manually if it doesn't. Verify and commit.
 
 Then check the PO files [[using i18nspector|contribute/l10n_tricks]].
 Correct all the errors that are not in the ignored list of
@@ -114,14 +115,18 @@ Then see the relevant release processes:
 Update PO files
 ---------------
 
-Copy `*.po` from the `tails-misc_completed` branch in
-`https://git.torproject.org/translation.git` into `po/`, **but** skip
-[[languages that are maintained in
-Git|contribute/how/translate#translate]].
+Pull updated translations for languages translated in Transifex:
 
-Refresh the code PO files, commit the result:
+	./import-translations
 
-	./refresh-translations && git commit po -m 'Update PO files.'
+Refresh the code PO files:
+
+	./refresh-translations
+
+Commit the result, including new PO files:
+
+	git add po
+	git commit -m 'Update PO files.'
 
 Freeze
 ------
