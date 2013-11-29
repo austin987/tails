@@ -47,6 +47,10 @@ DISABLE_NETWORKMANAGER=false
 BLACKLIST=/etc/modprobe.d/all-net-blacklist.conf
 
 rm -f "${BLACKLIST}" || true
+if [ -e "${BLACKLIST}" ]; then
+    log "${BLACKLIST} wasn't removed so the network will still be blocked"
+fi
+
 /sbin/udevadm trigger --action=add
 
 # Make this script block until all triggers have been run. We normally
@@ -71,8 +75,4 @@ fi
 
 if [ "${DISABLE_NETWORKMANAGER}" = false ]; then
     service network-manager start
-fi
-
-if [ -e "${BLACKLIST}" ]; then
-    log "${BLACKLIST} wasn't removed so the network will still be blocked"
 fi
