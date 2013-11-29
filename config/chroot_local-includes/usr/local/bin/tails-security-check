@@ -40,7 +40,7 @@ use Carp;
 use DateTime;
 use DateTime::Format::ISO8601;
 use Desktop::Notify;
-use Fatal qw( open close );
+use Fatal qw{open close};
 use Locale::gettext;
 use POSIX;
 use XML::Atom;
@@ -63,7 +63,7 @@ textdomain("tails");
 
 ### configuration
 
-my $version_file = '/etc/amnesia/version';
+my $version_file     = '/etc/amnesia/version';
 my $default_base_url = 'https://tails.boum.org/security/';
 
 ### helper subs
@@ -135,7 +135,7 @@ newer than the time represented by the DateTime object.
 
 =cut
 sub is_newer_than {
-    my $entry = shift;
+    my $entry  = shift;
     my $ref_dt = shift;
 
     my $entry_published_dt = DateTime::Format::ISO8601->parse_datetime($entry->published);
@@ -220,7 +220,7 @@ if (! -r "$version_file") {
 
 ### parse command line args
 
-my $base_url = shift || $default_base_url;
+my $base_url  = shift || $default_base_url;
 my $opt_since = shift;
 my $since_dt;
 if (defined $opt_since) {
