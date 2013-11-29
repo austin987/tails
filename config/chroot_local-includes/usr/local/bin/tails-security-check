@@ -17,7 +17,7 @@ tails-security-check
 
 =head1 SYNOPSIS
 
-tails-security-check [ ATOM_FEED_BASE_URL [ BUILD_DATE ] ]
+tails-security-check [ ATOM_FEED_BASE_URL ]
 
   ATOM_FEED_BASE_URL will be appended /index.XX.atom,
   for XX in (current locale's language code, 'en'),
@@ -34,8 +34,6 @@ See https://tails.boum.org/.
 
 use Carp;
 use Carp::Assert::More;
-use DateTime;
-use DateTime::Format::ISO8601;
 use Desktop::Notify;
 use Fatal qw{open close};
 use Locale::gettext;
@@ -64,26 +62,6 @@ my $version_file     = '/etc/amnesia/version';
 my $default_base_url = 'https://tails.boum.org/security/';
 
 =head1 FUNCTIONS
-
-=head2 build_date
-
-Argument: file which the version information must be extracted from.
-
-Returns a DateTime object that represents the build time extracted
-from the version file.
-
-=cut
-sub build_date {
-    my $version_file = shift;
-
-    open my $version_h, '<', $version_file;
-    my ($version, $date) = ( <$version_h> =~ /(.*) - (\d+)(?:\n)?$/ );
-    close $version_h;
-    assert_defined($date);
-    assert_nonblank($date);
-
-    return DateTime::Format::ISO8601->parse_datetime($date);
-}
 
 =head2 current_lang
 
@@ -121,43 +99,20 @@ sub atom_str {
     return undef;
 }
 
-=head2 is_newer_than
+=head2 get_entries
 
-Arguments: a XML::Atom::Entry, a DateTime object
+Arguments: the Atom feed URL.
 
-Returns true if, and only if, the published field of the Atom entry is
-newer than the time represented by the DateTime object.
-
-=cut
-sub is_newer_than {
-    my $entry  = shift;
-    my $ref_dt = shift;
-
-    my $entry_published_dt = DateTime::Format::ISO8601->parse_datetime($entry->published);
-    if (DateTime->compare($entry_published_dt, $ref_dt) == 1) {
-        return 1;
-    }
-    return undef;
-}
-
-=head2 get_new_entries
-
-Arguments: the Atom feed URL, a DateTime reference object.
-
-Returns the list of XML::Atom::Entry objects, taken from the feed, that
-were published after the reference time.
+Returns the list of XML::Atom::Entry objects from the feed.
 
 We use this poor man's manual Accept-Language algorithm as the website
 layout does not allow us to use content negotiation.
 
 =cut
-sub get_new_entries {
+sub get_entries {
     my $base_url = shift;
-    my $since_dt = shift;
     assert_defined($base_url);
     assert_nonblank($base_url);
-    assert_defined($since_dt);
-    assert_isa($since_dt, 'DateTime');
 
     my $separator = '';
     $separator = '/' unless $base_url =~ m{/\z}xms;
@@ -173,8 +128,7 @@ sub get_new_entries {
     }
     assert_defined($feed_str);
 
-    my $feed = XML::Atom::Feed->new(\$feed_str);
-    return grep { is_newer_than($_, $since_dt) } $feed->entries();
+    return XML::Atom::Feed->new(\$feed_str)->entries();
 }
 
 =head2 notify_user
@@ -191,19 +145,54 @@ sub notify_user {
     my $summary = gettext('This version of Tails has known security issues:');
     my $body = '';
 
-    map { $body = $body
-              . '- '
-              . '<a href="'
-              . $_->id
-              . '">'
-              . $_->title
-              . '</a>'
-              . "\n";
-      } @entries;
+    for (@entries) {
+        $body .= '- ' . '<a href="' . $_->id . '">' . $_->title . '</a>' . "\n";
+    }
+
+    say $body;
 
     $notify->create(summary => $summary,
                     body => $body,
                     timeout => 0)->show();
+}
+
+=head2 categories
+
+Return the list of categories of the input XML::Atom::Entry object.
+
+=cut
+sub categories {
+    my $entry = shift;
+    my $ns = XML::Atom::Namespace->new(dc => 'http://purl.org/dc/elements/1.1/');
+    my @category = ($entry->can('categories')) ? $entry->categories : $entry->category;
+    @category
+        ? (map { $_->label || $_->term } @category)
+        : $entry->getlist($ns, 'subject');
+}
+
+=head2 is_not_fixed
+
+Returns true iff. the input XML::Atom::Entry object hasn't the
+security/fixed tag.
+
+=cut
+sub is_not_fixed {
+    my $entry = shift;
+    assert_isa($entry, 'XML::Atom::Entry');
+
+    ! grep { 'security/fixed' } categories($entry);
+}
+
+=head2 unfixed_entries
+
+Filter the input list of XML::Atom::Entry objects to only keep entries
+that are not marked as fixed yet.
+
+=cut
+sub unfixed_entries {
+    my @entries = @_;
+
+    grep { is_not_fixed($_) } @entries;
 }
 
 =head1 MAIN
@@ -223,24 +212,16 @@ if (! -r "$version_file") {
 =cut
 my $base_url  = shift || $default_base_url;
 my $opt_since = shift;
-my $since_dt;
-if (defined $opt_since) {
-    $since_dt = DateTime::Format::ISO8601->parse_datetime($opt_since);
-}
-else {
-    $since_dt = build_date($version_file);
-}
-assert_defined($since_dt);
 
 
 =head2 do the work
 
 =cut
-my @newer_entries = get_new_entries($base_url, $since_dt);
+my @unfixed_entries = unfixed_entries(get_entries($base_url));
 
-if (! @newer_entries) {
+if (! @unfixed_entries) {
     exit 0;
 }
 else {
-    notify_user(@newer_entries);
+    notify_user(@unfixed_entries);
 }
