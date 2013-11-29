@@ -767,11 +767,17 @@ script also selects the right default input method.
 ## 3.4 Notification of security issues and new Tails release
 
 Shipped in Tails is a script that checks at each desktop start if
-security issues or new Tails releases are published on the website. If
-some are found, a graphical notification is displayed. This
-application is internationalized.
+security issues or new Tails releases are published on the website.
+If some are found, a graphical notification is displayed.
+The connections go through tor and are made over HTTPS with a pinned
+CA. The only information leaked to the Tails web server (apart of
+[[!cpan LWP::UserAgent]]'s specific User-Agent and HTTP behavior) is
+the first two chars of the `LANG` environment variable.
+
+This script is run once Tor is known-working.
 
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check-wrapper]]
 
 ## 3.5 Feedback
 
