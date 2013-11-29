@@ -387,6 +387,30 @@ online one, e.g.:
     DISABLE_PROXY=1 SSL_NO_VERIFY=1 \
        tails-upgrade-frontend-wrapper --override-baseurl http://10.36.24.33/tails
 
+# Incremental updates
+
+Try every update path supported by the generated update-description
+files:
+
+* for every incremental update paths: make sure the resulting updated
+  system "works fine" (what does that mean? do we want to run the full
+  test suite on these? **FIXME**)
+* for updates that only propose a non-incremental paths: make sure the
+  user is guided just fine (that is? **FIXME**)
+
+Given these are not published yet, a local test setup is needed:
+
+* a web server
+* a replacement for the Tails website's `/update/` tree with
+  update-description files in there, e.g.
+  `/var/www/tails/update/v1/Tails/0.14~rc2/i386/stable/updates.yml`
+* a replacement for the Tails HTTP mirrors' `iuk` directories,
+  e.g. `/var/www/tails/stable/iuk/Tails_i386_0.14-rc2_to_0.14.iuk`
+
+Also, the updater must be called, from inside the system to update,
+with every needed option to use that rather than the online published
+stuff: **FIXME**.
+
 # Persistence
 
 * Activate persistence on a Tails USB install with all presets on
