@@ -110,7 +110,8 @@ sub atom_str {
     $ENV{HTTPS_VERSION} = 3;
 
     my $ua  = LWP::UserAgent->new;
-    $ua->proxy([qw(http https)] => 'socks://127.0.0.1:9062');
+    $ua->proxy([qw(http https)] => 'socks://127.0.0.1:9062')
+        unless $ENV{DISABLE_PROXY};
     my $req = HTTP::Request->new('GET', $url);
     my $res = $ua->request($req);
     if (defined $res && $res->is_success) {
