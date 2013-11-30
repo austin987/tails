@@ -3,40 +3,38 @@
 set -e
 set -u
 
-EXCLUDE_LANGS="fr pt_BR"
+EXCLUDE_LANGS='fr pt_BR'
+TAILS_PO_DIR='po'
+TOR_TRANSLATION_REMOTE='https://git.torproject.org/translation.git'
+TOR_TRANSLATION_DIR='tmp/tor-translation'
+GIT_IN_TOR_TRANSLATION_DIR="git \
+   --work-tree=$TOR_TRANSLATION_DIR \
+   --git-dir=$TOR_TRANSLATION_DIR/.git"
+
+lang_is_excluded () {
+	local lang="$1"
+	echo -n "$EXCLUDE_LANGS" | grep -qs -w "$lang"
+}
 
 # Clone or update the translation repository
-mkdir -p tmp
-cd tmp
-
-if [ -d translation ]; then
-	cd translation
-	git fetch origin
-	cd ..
+if [ -d "$TOR_TRANSLATION_DIR" ]; then
+	$GIT_IN_TOR_TRANSLATION_DIR fetch origin
 else
-	git clone https://git.torproject.org/translation.git
+	mkdir -p tmp
+	git clone $TOR_TRANSLATION_REMOTE $TOR_TRANSLATION_DIR
 fi
 
 # Checkout the correct branch
-cd translation
-
-git checkout tails-misc_completed
-git merge origin/tails-misc_completed
+$GIT_IN_TOR_TRANSLATION_DIR checkout tails-misc_completed
+$GIT_IN_TOR_TRANSLATION_DIR merge origin/tails-misc_completed
 
 # For each completely translated language, merge it,
 # unless it is translated outside Transifex
-for i in *.po; do
-	lang="`echo $i | tr - _ | sed 's/\.po$//'`"
+for po_file in $TOR_TRANSLATION_DIR/*.po; do
+	lang=$(basename "$po_file" | tr - _ | sed 's/\.po$//')
 
-	skip='n'
-	for j in $EXCLUDE_LANGS; do
-		if [ "$lang" = "$j" ]; then skip='y'; fi
-	done
-
-	if [ "$skip" = 'n' ]; then
-		echo $lang
-		cp $lang.po ../../po/
+	if ! lang_is_excluded "$lang"; then
+		echo "Importing translation for $lang..."
+		cp "$po_file" "$TAILS_PO_DIR"
 	fi
 done
-
-cd ../..
