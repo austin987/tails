@@ -1,8 +1,86 @@
-tails (0.22) UNRELEASED; urgency=low
+tails (0.22~rc1) unstable; urgency=low
 
-  * Placeholder for next release.
+  [Tails developpers]
+  * Security fixes
+   - Stop migrating persistence configuration and access rights.
+   - Only tails-persistence-setup can configure persistence (Closes: #6435).
+   - Disable live-additional-software.conf if parent directory has unsafe
+     permissions (Closes: #6413).
+   - Additional software should create a config file with the right permissions
+     if needed (Closes: #6436).
 
- -- Tails developers <tails@boum.org>  Thu, 17 Oct 2013 16:06:12 +0200
+  * Major improvements
+   - Switch to Iceweasel 24 (Closes: #6370).
+   - Switch to Torbutton 1.6 (Closes: #6371).
+   - Install Linux 3.11-2 from Debian testing.
+   - Resync' (most) Iceweasel prefs with TBB 3.0-beta-1.
+   - Prepare incremental upgrades to be the next default way to upgrade Tails.
+   - Disable Torbutton 1.6's check for Tor.
+     Unfortunately, the new check.torproject.org breaks the remote Tor check.
+     We cannot use the local Tor check with the control port. So, the shortest
+     and sanest path to fixing the check issue, because the remote Tor check is
+     broken" seems to simply disable this check.
+
+  * Bugfixes
+   - Fix Torbrowser green onion checking.
+   - Prevent Torbutton from asking users to "upgrade TBB".
+   - Use the same Tor SOCKS port as the TBB (9151) for our web browser.
+     This should be enough to avoid being affected by Tor#8511.
+   - Disable DPMS screen blanking (Closes: #5617).
+   - Deny X auth only after vidalia exits (Closes: #6389).
+   - Fix persistent volume ACL checking.
+   - Disable all persistence configuration files if the mountpoint has wrong
+     access rights.
+   - More generic IP and MAC sanitizing regexp in bug reports (Closes: #6391).
+
+  * Minor improvements
+   - Translations all over the place.
+   - Document more problematic USB sticks and laptops.
+   - Improve documentation when verifying without a trusted key.
+   - Rework the "contribute" section of the documentation.
+   - Add basic info about how we are using Redmine.
+   - Update and improve various release processes.
+   - Enable favicons in Iceweasel.
+   - Disable noscript.showPermanent.
+     In Tails, every such thing is temporary, so better only display the menu
+     entry that's about temporarily allowing something.
+   - Add more FAQ entries in the documentation.
+   - Update AdBlock Plus patterns.
+   - Clarify which HTTPS Everywhere settings are Tails-specific.
+   - Improve "Leak prevention" section.
+   - Only include 10 entries in the security atom feeds.
+     Until now, we've been including all entries, which is constantly growing
+     and not that useful.
+
+  [ WinterFairy ]
+  * Use IBus instead of SCIM (Closes: #6206).
+    It makes possible to input passwords in pinentry for Japanese, Chinese and
+    Korean language
+  * Add bopomofo as a configured input method too.
+    It is installed, and apparently (according to Wikipedia)
+    preferred over pinyin in some regions in China.
+  * Add an import-translation script.
+    This will make the importation of completed translations from Transifex
+    automated.
+
+  [ Kytv]
+  * Update I2P to 0.9.8.1 (Closes: #6080).
+  * Tails specific settings/configs for I2P.
+    * Disable IPv6 support.
+    * Disable i2cp (allows java clients to communicate from outside the JVM). If
+      this is unset an exception for port 7654 would need to be added to ferm.
+    * Disable "in-network" updates (this is also done in the regular I2P packages)
+    * Disable the outproxies. Access to the Internet is already routed through Tor
+      so these are unnecessary. If end-users have a good reason to go through one of the
+      I2P outproxies they can turn them back on.
+    * relaxed permissions so that both the i2psvc user and the i2psvc group have access
+    * Boostrap through 127.0.0.1:8118
+  * Add a couple of default I2P IRC channels to Pidgin
+  * Allow access to the local 'eepsite' through FoxyProxy
+  * Add exceptions to ferm for the standard I2P ports
+  * I2P documentation updates
+
+ -- Tails developers <tails@boum.org>  Sat, 30 Nov 2013 16:47:18 +0100
 
 tails (0.21) unstable; urgency=low
 
