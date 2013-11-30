@@ -259,6 +259,23 @@ The I2P source package and its binaries will be imported into to our own
 [[APT repository|APT_repository]] into the devel or stable suite.  The suite
 will depend on whether a major- or point-release is being prepared.
 
+## Check the imported binary packages
+
+### Content
+
+    dpkg-deb --contents i2p-router_*.deb | awk '{print $6}' | \
+       grep -v -E '^\./($|usr/(share/doc/i2p-router/|share/i2p/|share/$|share/doc/$|bin/eepget|bin/i2prouter-nowrapper|share/man/man1/eepget\.1\.gz$|share/man/$|share/man/man1/$|bin/$|$))'
+
+    dpkg-deb --contents i2p_*.deb | awk '{print $6}' | \
+       grep -v -E '^\./($|etc/$|etc/i2p/|etc/init\.d/i2p$|etc/init\.d/$|usr/$|usr/share/$|usr/share/man/$|usr/share/man/man1/$|usr/share/man/man1/i2prouter\.1\.gz$|usr/share/doc/$|usr/share/doc/i2p$|usr/bin/$|usr/bin/i2prouter$)'
+
+    dpkg-deb --contents libjbigi-jni_*.deb | awk '{print $6}' | \
+       grep -v -E '^\./($|usr/$|usr/lib/$|usr/lib/jni/|usr/share/$|usr/share/doc/$|usr/share/doc/libjbigi-jni$)'
+
+### Maintainer scripts
+
+Have a look at `*.{pre,post}{inst,rm}`.
+
 Things to meditate upon
 =======================
 
