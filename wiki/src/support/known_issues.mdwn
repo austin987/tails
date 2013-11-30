@@ -35,6 +35,12 @@ ASUS VivoBook X202E
 Legacy support needs to be enabled in order to start Tails. To enable
 legacy boot support, enable 'Launch CSM' under boot (menu).
 
+Compaq 615
+----------
+
+You need to update the firmware to its latest version in order to start from a
+device installed using Tails Installer.
+
 Dell Inc. Latitude E6430/0CPWYR
 -------------------------------
 
@@ -91,11 +97,18 @@ first, as advised on:
 Problematic USB sticks
 ----------------------
 
-The following USB sticks have issues starting Tails:
+The following USB sticks have issues starting Tails.
+They require removing the `live-media=removable` boot parameter,
+which [[is dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
 
-* SanDisk Cruzer Fit USB 2.0 8GB, SanDisk Cruzer Switch USB 2.0 32GB, and
-  USB 3.0 64GB: requires removing the `live-media=removable` bootparameter,
-  which [[is dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
+* SanDisk Cruzer Extreme USB 3.0 16GB
+* SanDisk Cruzer Fit USB 2.0 8GB
+* SanDisk Cruzer Force 8GB
+* SanDisk Cruzer Glide 8GB and 16GB
+* SanDisk Cruzer Switch USB 2.0 8GB and 32GB
+* SanDisk Cruzer USB 3.0 64GB
+
+See also [[!tails_ticket 6397]].
 
 Security issues
 ===============
@@ -165,10 +178,19 @@ Tails, or it will be removed.
 
 <a id="fingerprint"></a>
 
-<!-- Fingerprint -->
-<!-- =========== -->
+Fingerprint
+===========
 
 <!-- If this section is empty adjust the [[fingerprint documentation|doc/about/fingerprint]]. -->
+
+The fingerprints of the Tails browser and the TBB are different:
+
+* ip-check.info reports that TBB 3.0b1 supports JavaScript version
+  1.8, while the Tails browser 24.1 supports version 1.5.
+* ip-check.info returns a *Screen* line for TBB, but not with
+  Tails browser.
+* Browser window resizing is in not reliable: [[!tails_ticket 6377]]
+  and [[!tor_bug 10095]].
 
 Other issues
 ============
@@ -225,3 +247,15 @@ Touchpad configurations
     synclient VertTwoFingerScroll=1;
     synclient FingerLow=1;
     synclient FingerHigh=1;
+
+New Identity feature
+--------------------
+
+Since Tails 0.21, the "New Identity" feature in the web browser is not
+available anymore ([[!tails_ticket 6383]]).
+
+As a workaround it is possible to:
+
+  1. Close the web browser.
+  2. Right-click on the Vidalia icon and choose "New identity".
+  3. Open the web browser again.

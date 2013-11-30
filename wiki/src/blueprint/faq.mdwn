@@ -1,1 +1,282 @@
+[[!meta title="Frequently asked questions"]]
+
+[[!toc levels=2]]
+
+Can I install other add-ons in the browser?
+-------------------------------------------
+
+Installing add-ons in the browser might break the security built in Tails.
+
+Add-ons can do anything within the browser, and even if all the networking goes
+through Tor, some add-ons might interact badly with the rest of the
+configuration or leak private information.
+
+1. They can track and reveal information about your browsing behaviour, browsing
+history, or system information, either on purpose or by mistake.
+
+2. They can have bugs and security holes that can be remotely exploited by an
+attacker.
+
+4. They can have bugs breaking the security from the other add-ons, for example
+Torbutton, and break your anonymity.
+
+5. They can break your anonymity by making your browsing behaviour
+distinguishable amongst other Tails users.
+
+No add-on, apart from the ones already included in Tails, have been seriously
+audited and should be considered safe to use in this context, unless proven
+otherwise.
+
+<div class="next">
+  <ul>
+    <li>[[Warnings about persistence|doc/first_steps/persistence/warnings#index3h1]]</li>
+    <li>[[Browsing the web with Iceweasel|doc/anonymous_internet/iceweasel]]</li>
+    <li>[[Can I hide the fact that I am using Tails?|doc/about/fingerprint/]]</li>
+  </ul>
+</div>
+
+<!--
+XXX: Push that information to the browser documentation?
+XXX: Check https://www.torproject.org/torbutton/torbutton-faq.html.en#recommendedextensions
+-->
+
+Does Tails work with 64-bit processors?
+---------------------------------------
+
+Tails is a 32-bit operating system. But it also works on 64-bit processors, such
+as 64-bit Intel and AMD processors, since they have backwards compatibility with
+32-bit.
+
+We are working on a 64-bit version of Tails see [[!tails_ticket 5456]].
+
+Does Tails work on ARM architecture, Raspberry Pi, or tablets?
+--------------------------------------------------------------
+
+For the moment, Tails is only available on the x86 and x86_64 architectures.
+The Raspberry Pi and many tablets are based on the ARM architecture. Tails do
+not work on the ARM architecture so far.
+
+Look for a tablet with an AMD or Intel processor. Try to verify its
+compatibility with Debian beforehand, for example make sure that the Wi-Fi card
+is supported.
+
+Can I download using BitTorrent with Tails?
+-------------------------------------------
+
+Tails does not ship any BitTorrent software and is unlikely to do so in the
+future.
+
+The problem with using BitTorrent over Tor is double:
+
+  - It is technically hard to do it properly, see:
+    <https://blog.torproject.org/blog/bittorrent-over-tor-isnt-good-idea>.
+  - It harms the network, see:
+    <https://blog.torproject.org/blog/why-tor-is-slow>.
+
+We have (relatively vague) [[!tails_ticket 5991 desc="plans to improve
+this situation"]], though.
+
+Is it safe to use Tails on a compromised system?
+------------------------------------------------
+
+Tails runs independently from the operating system installed on the computer.
+So, if the computer has only been compromised by software, running from inside
+your operating system (virus, trojan, etc.), it is safe to use Tails. This is
+true as long as Tails itself has been installed on a trusted system.
+
+If the computer has been compromised by someone having physical access to it and
+who installed untrusted pieces of hardware, then it might not be safe to use
+Tails.
+
+Why does tails.boum.org rely on a commercial SSL certificate?
+-------------------------------------------------------------
+
+HTTPS provides encryption and authentication on the web. The standard
+authentication mechanism through SSL certificates is centralized and based on
+commercial or institutional certificate authorities. This mechanism has proven
+to be susceptible to various methods of compromise. See our [[warning about
+man-in-the-middle attacks|doc/about/warning#man-in-the-middle]].
+
+Still, we use HTTPS on our website and rely on a commercial certificate even if
+we acknowledge those security problems.
+
+1. Providing no HTTPS and no kind of encryption would be a worse option.
+
+2. Providing a self-signed certificate or another marginally supported
+authentication mechanism would not work for the majority of users. Modern
+browsers provide very strong warning when facing a self-signed certificate, and
+many people would think the website is broken when it is not.
+
+We prefer to provide weak security, using a commercial certificate, that still
+works for most people. At the same time, we make clear this security is limited
+and encourage stronger ways of verifying the authenticity of Tails once
+downloaded.  See our documentation on [[verifying the ISO|download#verify]].
+
+How to analyse the results of online anonymity tests?
+-----------------------------------------------------
+
+Fingerprinting websites such as <https://panopticlick.eff.org/> or
+<https://ip-check.info/> try to retrieve as much information as possible from
+your browser to see if it can be used to identify you.
+
+As explained in our documentation about
+[[fingerprinting|doc/about/fingerprint]], Tails provides anonymity on the web by
+making it difficult to distinguish a particular user amongst all the users of
+Tails and the Tor Browser Bundle (TBB).
+
+So, the information retrieved by such fingerprinting websites is not harmful for
+anonymity in itself, as long as it is the same for all Tor users.
+
+For example, the user-agent property of the browser is set to `Mozilla/5.0
+(Windows; U; Windows NT 6.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3`,
+as of Tails 0.21 and TBB 2.3.25-13. This value preserves your anonymity even if
+the operating system installed on the computer is Windows NT and you usually run
+Firefox. On the other hand, changing this value makes you distinguishable from
+others Tor users and breaks your anonymity.
+
+Furthermore, we verify the result of those websites before each release, see our
+[[test suite|contribute/release_process/test]].
+
+Can I view websites using Adobe Flash with Tails?
+-------------------------------------------------
+
+Adobe Flash is not included in Tails for several reasons:
+
+  - It is proprietary software which prevents us from legally including it in
+    Tails.
+  - It is closed source and so we have no idea of what it really does.
+  - It has a very long history of serious security vulnerabilities.
+  - It is known to favor privacy invasive technologies such as
+    [Flash cookies](XXX Add link to Flash cookies,
+    https://addons.mozilla.org/en-US/firefox/addon/betterprivacy/?).
+  - Adobe has basically stopped maintaining their Flash plugin for
+    GNU/Linux.
+
+We have considered including open-source alternative software to Adobe
+Flash, such as [Gnash](http://www.gnu.org/software/gnash/), but it is
+not the case yet, see [[!tails_ticket 5363]].
+
+But you can already watch HTML5 videos and view WebGL websites with the Tails
+browser.
+
+Can I install Tails permanently onto my hard disk?
+--------------------------------------------------
+
+This is not possible using the recommended installation methods. Tails is
+designed to be a live system running from a removable media: DVD, USB stick or
+SD card.
+
+This is a conscious decision as this mode of operation is better for what we
+want to provide to our users: amnesia, the fact that Tails leaves no traces on
+the computer after a session is closed.
+
+Can I verify the integrity of a Tails device?
+---------------------------------------------
+
+It is not possible to verify the integrity of a Tails device when running Tails
+from this same device. This would be like asking to someone whether she is a
+liar; the answer of a true liar would always be "no".
+
+- To verify the integrity of a DVD from a separate trusted system , you can
+  verify the signature of the ISO image as documented in [[verify the ISO image
+  using the command line|doc/get/verify_the_iso_image_using_the_command_line]]
+  against the DVD itself.
+
+- There is no documented method of verifying the integrity of a USB stick or SD
+  card installed using <span class="application">Tails
+  Installer</span>. However, given another trusted Tails system,
+  [[cloning it onto the untrusted one|doc/first_steps/upgrade]] will
+  reset it to a trusted state.
+
+Is Java installed in the Tails browser?
+---------------------------------------
+
+Tails does not include a Java plugin in its browser because it could break your anonymity.
+
+Why is JavaScript enabled by default in the Tails browser?
+----------------------------------------------------------
+
+Many websites today require JavaScript to work correctly. As a consequence
+JavaScript is enabled by default in Tails to avoid confusing many users. But
+the [[Torbutton|doc/anonymous_internet/iceweasel#torbutton]] extension,
+included in Tails, takes care of blocking dangerous JavaScript functionalities.
+
+Tails also includes the [[NoScript|doc/anonymous_internet/iceweasel#noscript]]
+extension to disable more JavaScript if needed. Note that if you disable
+JavaScript, then your browser [[fingerprint|doc/about/fingerprint]] might
+differ from most of Tor users and break your anonymity.
+
+We think that having JavaScript enabled by default is the best possible
+compromise between usability and security in this case.
+
+Is it possible to recover the passphrase of the persistent volume?
+------------------------------------------------------------------
+
+No. The encryption of the persistent volume is very strong and it is not
+possible to recover the passphrase of the persistent volume. If the passphrase
+is weak enough, an attacker, using a brute force attack, could try many
+possible passphrases and end up guessing your passphrase.
+
+Does Tails change the MAC address of my network cards by default?
+-----------------------------------------------------------------
+
+No, but we are working on this topic, see [[!tails_ticket 5421]].
+
+Note that Tails includes <span class="application">macchanger</span>, a tool to
+change your MAC address. But if you use <span
+class="application">macchanger</span> after Tails is started, your MAC address
+might have already been leaked on the local network.
+
+To prevent this, unplug your network cable or switch off the hardware switch of
+your Wi-Fi card, and execute the following commands:
+
+  - `sudo service network-manager stop`
+  - `sudo macchanger -a -e eth0`
+  - `sudo macchanger -a -e wlan0`
+  - `sudo service network-manager start`
+
+Then only plug your network cable or switch on the hardware switch of your
+Wi-Fi card.
+
+Can I use the memory wipe feature of Tails on another operating system?
+-----------------------------------------------------------------------
+
+The memory wipe mechanism that Tails uses on shutdown to [[protect against cold
+boot attacks|doc/advanced_topics/cold_boot_attacks]] is not yet available in
+other Linux distributions. In the future, we would like to package it for
+Debian.
+
+If you want to implement this feature outside of Tails, have a look at the
+corresponding [design documentation](contribute/design/memory_erasure/).
+
+Is it safe to use the new identity feature of Vidalia?
+------------------------------------------------------
+
+<div class="bug">
+The <span class="guilabel">New Identity</span> feature of the web browser is
+not available anymore (ticket [[!tails_ticket 6383]]).
+</div>
+
+In our [[warning page|doc/about/warning#identities]] we advice to restart Tails
+every time that you want to use a different contextual identity. The <span
+class="guilabel">New Identity</span> feature of <span
+class="application">Vidalia</span> forces Tor to use new circuits but only for
+new connections. The two main drawbacks of this techniques are:
+
+- The circuits used by connections that remain open might not be changed, for
+example, a circuit used to connect to an open webpage or to an instant
+messaging server.
+
+- Each application might contain information that can identify you,
+independently of the Tor circuit that are used. For example, the browser might
+contain cookies from previous websites, <span
+class="application">[[Pidgin|doc/anonymous_internet/pidgin]]</span> will reuse the
+same nickname by default, etc.
+
+Tails is a full operating system, so a *new identity* should be thought on a
+broader level than only changing the Tor circuits.
+
+Other topics
+============
+
 - XXX_NICK_XXX in Pidgin might be caused by a lack of RAM
