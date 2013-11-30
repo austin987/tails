@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -e
+
+EXCLUDE_LANGS="fr pt_BR"
+
+# Clone or update the translation repository
+mkdir -p tmp
+cd tmp
+
+if [ -d translation ]; then
+	cd translation
+	git fetch origin
+	cd ..
+else
+	git clone https://git.torproject.org/translation.git
+fi
+
+# Checkout the correct branch
+cd translation
+
+git checkout tails-misc_completed
+git merge origin/tails-misc_completed
+
+# For each completely translated language, merge it,
+# unless it is translated outside Transifex
+for i in *.po; do
+	lang="`echo $i | tr - _ | sed 's/\.po$//'`"
+
+	skip='n'
+	for j in $EXCLUDE_LANGS; do
+		if [ "$lang" = "$j" ]; then skip='y'; fi
+	done
+
+	if [ "$skip" = 'n' ]; then
+		echo $lang
+		cp $lang.po ../../po/
+	fi
+done
+
+# Fix syntax of the po files
+cd ../../po
+
+for i in *.po; do
+	lang="`echo $i | tr - _ | sed 's/\.po$//'`"
+
+	intltool-update --dist --gettext-package=tails $lang
+done
