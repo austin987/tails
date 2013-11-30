@@ -16,60 +16,37 @@ sources added:
     apt-get install git xvfb virt-viewer libsikuli-script-java \
         libxslt1-dev tcpdump unclutter radvd x11-apps syslinux \
         libcap2-bin devscripts ruby libvirt-ruby ruby-rspec \
-        ruby-json cucumber x11vnc xtightvncviewer
+        ruby-json cucumber x11vnc xtightvncviewer ffmpeg libvpx1
     apt-get -t wheezy-backports install qemu-kvm qemu-system-x86 libvirt0 \
-        libvirt-dev libvirt-bin seabios/unstable dnsmasq-base/unstable
+        libvirt-dev libvirt-bin seabios/unstable dnsmasq-base/unstable \
+        ruby-rjb ruby-packetfu
 
-The above libvirt packages lack support for the `removable` disk
-property (needed by the `usb_install` feature), but we our patch is
-now in upstream 1.1.x which should be in wheezy-backports by now.
-
-If you're running the test suite in a nested environnement, install
-xtightvncviewer on the bare metal level-0 host. Then you can use vncviewer's
-`-via` option so that it automatically setup a ssh tunnel to your first level
-test suite domain for you and display the Tails VM. Ex where $DISPLAY is the
-display given to you by `run_test_suite` (often 0):
-
-    vncviewer -viewonly -via user@level0 localhost:$DISPLAY
-
-(Optional) If you want to capture the test session as a video you
-need:
-
-    apt-get install ffmpeg libvpx1
-
-rjb
-===
-
-Not a part of Debian yet, and the rubygem is broken (no `rjb/extension`),
-but it can be installed as follows:
-
-    apt-get install build-essential ruby-dev openjdk-6-jdk
-    export JAVA_HOME="/usr/lib/jvm/java-6-openjdk-amd64"
-    git clone https://github.com/arton/rjb
-    cd rjb
-    # this is rjb-1.4.8 (there are no tags...)
-    git checkout a30070810492e492de071ec4614a557099b23f6f
-    ruby setup.rb
-
-
-packetfu
-========
-
-Not a part of Debian yet, but there's a rubygem:
-
-    gem install packetfu
-
+A feature we need (the `removable` disk property) and have implemented
+is now in upstream 1.1.x which should be in wheezy-backports by now.
 
 Other requirements
 ==================
 
 The system running the test suite needs an accurate clock since we
-sync sync the clock from the host to the Tails guest after a
+sync the clock from the host to the Tails guest after a
 background snapshot restore to appease Tor.
 
+Special use cases
+=================
 
-Running test suite as a non-root user
-=====================================
+Access the system under test with VNC
+-------------------------------------
+
+If you're running the test suite in a nested environnement, install
+xtightvncviewer on the bare metal level-0 host. Then you can use vncviewer's
+`-via` option so that it automatically setup a ssh tunnel to your first level
+test suite domain for you and display the Tails VM. E.g.
+where `$DISPLAY` is the display given to you by `run_test_suite` (often 0):
+
+    vncviewer -viewonly -via user@level0 localhost:$DISPLAY
+
+Running the test suite as a non-root user
+-----------------------------------------
 
 This is entirely possible, but there's some additional configuration
 required. Run the following as `root`:
