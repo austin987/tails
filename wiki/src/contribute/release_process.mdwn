@@ -13,38 +13,26 @@ the scripts snippets found on this page:
 * `VERSION`: the version number of the release being prepared.
 * `export TAG=$(echo "$VERSION" | sed -e 's,~,-,')`
 * `PREVIOUS_VERSION`: the version number of the previous release.
+* `MAJOR_RELEASE`: set to 1 if preparing a major release, to 0 else
 * `ISOS`: the directory where one stores `tails-i386-*`
   sub-directories like the ones downloaded with BitTorrent.
 * `MASTER_CHECKOUT`: a checkout of the `master` branch of the main
   Tails Git repository.
+* `RELEASE_CHECKOUT`: a checkout of the branch of the main Tails Git
+  repository used to prepare the release (`stable` or `testing`).
+* `TAILS_SIGNATURE_KEY=0D24B36AA9A2A651787876451202821CBE2CD9C1`
+* `IUK_CHECKOUT`: a checkout of the relevant tag of the `iuk`
+  Git repository.
 
 Pre-freeze
 ==========
 
-upgrade i2p
------------
+The [[contribute/working_together/roles/release_manager]] role
+documentation has more tasks that should be done early enough.
 
-See [[contribute/design/I2P]].
-
-Going through the usual [[review and merge
-process|contribute/merge_policy]] is welcome.
-
-Upgrade Torbutton
------------------
-
-Since Torbutton is not maintained in Debian anymore,
-upgrade our Debian package to the latest release if needed.
-
-Going through the usual [[review and merge
-process|contribute/merge_policy]] is welcome.
-
-Update iceweasel preferences
+Update Iceweasel preferences
 ----------------------------
 
-* Torbutton does not handle `general.*` and
-  `browser.startup.homepage_override.*` anymore, so we have to keep in
-  sync manually, in our `/etc/iceweasel/pref/iceweasel.js`, with TBB's
-  `pound_tor.js`
 * update `extensions.adblockplus.currentVersion`
 
 Coordinate with Debian security updates
@@ -80,6 +68,7 @@ Patterns are stored in
    `config/chroot_local-includes/etc/iceweasel/profile/adblockplus`
    directory in the Tails Git checkout.
 8. Commit:
+
        git commit -m 'Update AdBlock Plus patterns.' \
           config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini`
 
@@ -89,9 +78,11 @@ Upgrade bundled binary Debian packages
 That is: make sure the bundled binary Debian packages contain
 up-to-date localization files.
 
-For each bundled Debian package, get updated PO files from the
+For each bundled Debian package, run the included `import-translations`
+script if one exists, or copy updated PO files from the
 Transifex branches of `git://git.torproject.org/translation.git` (e.g.
-`whisperback_completed`). Verify and commit.
+`whisperback_completed`). Skip PO files for [[translation teams that use
+Git|contribute/how/translate#translate]]. Verify and commit.
 
 Then check the PO files [[using i18nspector|contribute/l10n_tricks]].
 Correct all the errors that are not in the ignored list of
@@ -102,6 +93,7 @@ Then see the relevant release processes:
 * [[iceweasel]]
 * [[liveusb-creator]]
 * [[tails-greeter]]
+* [[perl5lib]]
 * [[persistence-setup]]
 * [[tails-iuk]]
 * whisperback:
@@ -113,14 +105,18 @@ Then see the relevant release processes:
 Update PO files
 ---------------
 
-Copy `*.po` from the `tails-misc_completed` branch in
-`https://git.torproject.org/translation.git` into `po/`, **but** skip
-[[languages that are maintained in
-Git|contribute/how/translate#translate]].
+Pull updated translations for languages translated in Transifex:
 
-Refresh the code PO files, commit the result:
+	./import-translations
 
-	./refresh-translations && git commit po -m 'Update PO files.'
+Refresh the code PO files:
+
+	./refresh-translations
+
+Commit the result, including new PO files:
+
+	git add po
+	git commit -m 'Update PO files.'
 
 Freeze
 ------
@@ -260,39 +256,90 @@ suite should be ready, so it is time to:
 * `git push --tags`
 *  build the final image!
 
-Build the Incremental Update Kit
---------------------------------
+<a id="prepare-iuk"></a>
 
-Example:
+Build the Incremental Upgrade Kits
+----------------------------------
 
-    $ sudo tails-create-iuk --squashfs-diff-name 0.14.squashfs \
-        --old-iso tails-i386-0.14\~rc2.iso \
-        --new-iso tails-i386-0.14.iso      \
-        --outfile Tails_i386_0.14-rc2_to_0.14.iuk
+Skip this step when preparing a major release.
 
-Prepare update-description files
---------------------------------
+Use `tails-create-iuk` to build an IUK for the previous stable release
+and (if applicable) the last RC for the version being released.
+Example (point `PERL5LIB` to a checkout of the relevant tag of Tails'
+perl5lib):
 
-1. Prepare update-description files (see [[!tails_todo incremental_upgrades]]
-   for details):
-   * update (create if needed) an update-description file for every
-     *previous* supported release (e.g. N-1, N-1~rc2) that describes
-     the path to the one being released,
-   * create a new update-description for the version being released,
-     that expresses that no update is available for that one yet
-1. Detach-sign the update-description files.
-1. Rename the detached signatures from `.asc` to `.sig`.
+    # cd $IUK_CHECKOUT && \
+      PERL5LIB=/home/user/tails/perl5lib/lib \
+        ./bin/tails-create-iuk --squashfs-diff-name "$VERSION.squashfs" \
+           --old-iso tails-i386-0.13.iso \
+           --new-iso tails-i386-0.14.iso      \
+           --outfile Tails_i386_0.13_to_0.14.iuk
 
-Testing
-=======
+Save the generated IUK to
+`$ISOS/Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk`.
 
-Until [[!tails_todo automated_builds_and_tests]] are set up, some
-manual testing
-has to be done by the persons preparing the release, in addition to the
-real-world tests done by fellow beta-testers.
+Note that developer tools for creating IUK and upgrade-description
+files were only tested on sid. They should hopefully work well on
+Wheezy, but I would not try to make them work on Squeeze.
 
-The manual testing process [[is documented on a dedicated
-page|release_process/test]].
+<a id="prepare-upgrade-description-files"></a>
+
+Prepare upgrade-description files
+---------------------------------
+
+Do **not** skip this step when preparing a major release.
+
+1. Prepare upgrade-description files (see the [[upgrade-description
+   files
+   specification|contribute/design/incremental_upgrades#upgrade-description-files]]
+   for details). The idea is to:
+
+   * update (create if needed) an upgrade-description file for every
+     *previous* supported release (e.g. N~rc1, N-1, N-1~rc2) that replaces
+     all existing upgrade paths with the path to the version being
+     released;
+   * create a new upgrade-description for the version being released,
+     that expresses that *no* upgrade is available for that one yet.
+
+   This is what `tails-iuk-generate-ugrade-description-files` tool
+   does:
+
+       cd $IUK_CHECKOUT && \
+       ./bin/tails-iuk-generate-upgrade-description-files \
+           --version "$VERSION" \
+           --iso "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso" \
+           --previous-version "$PREVIOUS_VERSION" \
+           --previous-version "${VERSION}-rc1" \
+           --iuks "$ISOS" \
+           --release-checkout "$RELEASE_CHECKOUT" \
+           --major-release "$MAJOR_RELEASE"
+
+   Note:
+   * The `--iuks` argument must point to the directory where the IUKs
+     generated at the previous step are stored.
+   * At least the last stable release and the previous release
+     candidates for the version being released must be passed to
+     `--previous-version`.
+   * A few (say, 2 or 3) older versions must be passed with
+     `--previous-version`, so that users who skipped a release or two
+     are directly informed of the new one.
+
+1. Create an armoured detached signature for each created or modified
+   upgrade-description file.
+
+1. Rename each detached signature to `.pgp`:
+
+       find "$RELEASE_CHECKOUT/wiki/src/upgrade/" -type f \
+          -name upgrades.yml.asc -exec rename 's,\.asc$,.pgp,' {} \;
+
+1. Add and commit the upgrade-description files and their detached
+   signatures to the Git branch used to prepare the release (`stable`
+   or `testing`).
+
+1. Check the syntactic correctness of all upgrade-description files:
+
+       ./bin/tails-iuk-check-upgrade-description-file \
+          ${RELEASE_CHECKOUT}/wiki/src/upgrade/v1/*/*/*/*/upgrades.yml
 
 Generate the OpenPGP signatures and Torrents
 ============================================
@@ -330,10 +377,18 @@ Fifth, generate detached OpenPGP signatures for every published
 Upload images
 =============
 
+Sanity check
+------------
+
+Verify that the current source for Firefox is still the same we've
+used when preparing our custom Iceweasel package: e.g. FF17.0.8 got
+re-tagged and re-uploaded at the last minute, due to a test failure.
+
+Better catch this before people spend time doing manual tests.
+
 ## Announce, seed and test the Torrents
 
-Announce and seed the Torrents using whatever box you can.
-A decent, stable and permanent Internet connection is required.
+Announce and seed the Torrents.
 
 Test them with a BitTorrent client running in a different place.
 
@@ -342,7 +397,8 @@ Test them with a BitTorrent client running in a different place.
     scp tails-i386-$VERSION.torrent bittorrent.lizard:
     ssh bittorrent.lizard transmission-remote --add tails-i386-$VERSION.torrent
 
-## Upload to HTTP mirrors
+Publish the ISO over HTTP
+-------------------------
 
 Upload the images to the primary rsync mirror. Best practice is to first
 let bittorrent.lizard download the image, and then copy it from there to
@@ -371,12 +427,42 @@ and on the live wiki (even for a release candidate):
 	   git commit wiki/src/inc/trace -m "Updating trace file after uploading $VERSION."
 	)
 
+<a id="publish-iuk"></a>
+
+Publish the IUK
+---------------
+
+Same as for the ISO, but the IUK should land into
+`/srv/rsync/tails/tails/$DIST/iuk/`.
+
+Wait for the HTTP mirrors to catch up
+-------------------------------------
+
 Wait for the next rsync pull.
 
 Make sure every webserver listed in the `dl.amnesia.boum.org` round
-robin pool has the new version.
+robin pool has the new version. Drop those that are lagging behind and
+notify their administrators.
 
-Test downloading.
+Test downloading the ISO and IUK over HTTP.
+
+Testing
+=======
+
+1. Set up a Gobby document and copy the [[test
+   suite|contribute/release_process/test]] in it.
+1. Email <tails@boum.org> to announce that tests may start:
+   - make it clear what's the deadline
+   - make it clear where and how you expect to get feedback
+   - attach the Torrent
+   - attach the `.packages` file
+1. Make sure someone is committed to run the automated test suite.
+1. Make sure that enough people are here to run the tests, that they
+   report their results in due time, and that they make it clear when
+   they're leaving for good.
+
+While this happens, the release manager should prepare for the next
+steps. Please read on!
 
 Update the website and Git repository
 =====================================
@@ -430,16 +516,18 @@ Then, send them to <tails-l10n@boum.org> so that they get translated
 shortly, perhaps even soon enough to integrate them before pushing the
 release out officially.
 
-Import the update description files and their detached OpenPGP
-signature into the `updates/` tree. See [[!tails_todo incremental_upgrades]]
-for the file naming conventions.
-
 Then, record the last commit before putting the release out for real:
 
 	git commit -m "releasing version ${VERSION}"
 
 Go wild!
 ========
+
+Sanity check
+------------
+
+Verify once more that the current source for Firefox is still the same
+we've used when preparing our custom Iceweasel packages.
 
 Push
 ----
@@ -452,6 +540,13 @@ Push the last commits to our Git repository:
 
 ... and ask <root@boum.org> to refresh the ikiwiki wrappers for
 our website.
+
+Publish update-description files
+--------------------------------
+
+Upload the update description files and their detached OpenPGP
+signature to the primary rsync mirror.
+See [[blueprint/incremental_upgrades]] for details.
 
 Bug tracker
 -----------
@@ -528,5 +623,13 @@ Prepare for the next release
      Note that the merge will fail for suites that contain no package.
 
    - `git push --force origin experimental`
+1. Push the release tag to lizard for Jenkins' consumption: `git push --tags lizard`
 1. Manually trigger Jenkins builds of experimental, devel and stable:
    <https://jenkins.tails.boum.org/>.
+1. Bonus points if you care about Tails 1.1: update the Iceweasel
+   packages for feature/wheezy, and trigger a Jenkins build thereof.
+
+Related pages
+=============
+
+[[!map pages="contribute/release_process/*"]]
