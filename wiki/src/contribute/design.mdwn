@@ -767,18 +767,27 @@ script also selects the right default input method.
 ## 3.4 Notification of security issues and new Tails release
 
 Shipped in Tails is a script that checks at each desktop start if
-security issues or new Tails releases are published on the website. If
-some are found, a graphical notification is displayed. This
-application is internationalized.
+security issues or new Tails releases are published on the website.
+If some are found, a graphical notification is displayed.
+The connections go through tor and are made over HTTPS with a pinned
+CA. The only information leaked to the Tails web server (apart of
+[[!cpan LWP::UserAgent]]'s specific User-Agent and HTTP behavior) is
+the first two chars of the `LANG` environment variable.
+
+This script is run once Tor is known-working.
 
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check-wrapper]]
 
 ## 3.5 Feedback
 
 Users can send feedback in several ways to Tails developers.
 A [[!tails_redmine desc="task tracker"]] is available.
 Users can also send email to the private [developers mailing
-list](tails@boum.org). A dedicated application called *WhisperBack*
+list](tails@boum.org) or to the public [support mailing
+list](tails-support@boum.org).
+
+A dedicated application called *WhisperBack*
 is also available in every running Tails copy. WhisperBack allows
 users to send anonymous or pseudonymous feedback via OpenPGP-encrypted
 email. It is configured in Tails to use a Tor hidden service run by
@@ -811,7 +820,7 @@ proxy). The client listens on a control port 9051
 
 The client listens on a few SOCKS ports (the rationale being detailed
 on the [[Tor stream isolation design
-page|contribute/design/stream_isolation]]): 9050, 9061, 9062 and 9063.
+page|contribute/design/stream_isolation]]): 9050, 9061, 9062 and 9151.
 
 Only connections from localhost are accepted. It can be argued
 that running a Tor server (onion router) would increase one's
@@ -980,14 +989,23 @@ Thanks to the Tor Browser patches, the in-memory web cache is isolated
 to the url bar origin.
 
 The Iceweasel config is poorly commented but the commit messages in
-Git history explains
-it all; any other relevant settings may thus be investigated by
-looking in there.
+Git history explains it all. In a nutshell, Iceweasel preferences are
+set in various ways:
+
+* A Tor Browser patch called
+  `0022-Tor-Browser-s-Firefox-preference-overrides.patch` bundles
+  their prefs directly into `omni.ja`.
+* `/etc/iceweasel/*/*.js` contains:
+  - Torbutton preferences that the TBB also sets;
+  - some Tails-specific settings.
+
+Source code, scripts and configuration:
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/iceweasel]]
 - Tails' Iceweasel source [[lives in Git|contribute/git]]
 - [[!tails_gitweb config/chroot_local-hooks/12-remove_unwanted_iceweasel_searchplugins]]
 - [[!tails_gitweb config/chroot_local-hooks/13-iceweasel_sqlite]]
+- [[!tails_gitweb config/chroot_local-hooks/13-override-tbb-branding]]
 - [[!tails_gitweb config/chroot_local-hooks/14-add_localized_iceweasel_searchplugins]]
 - [[!tails_gitweb config/chroot_local-hooks/14-generate-iceweasel-profile]]
 - [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
@@ -1060,10 +1078,11 @@ disregard the preferred keyserver assigned to specific keys.
 An opt-in data persistence feature is available in Tails 0.11 and
 newer. See [[contribute/design/persistence]] for details.
 
-### 3.6.18 USB installation
+### 3.6.18 Installation on USB sticks and SD cards
 
-An easy (read: not command-line based) way to install and
-upgrade Tails on USB sticks is available in Tails 0.11 and newer.
+An easy (read: not command-line based) way to install and upgrade
+Tails on USB sticks and SD cards is available in Tails 0.11 and newer.
+SD cards readers wired via SDIO are supported since Tails 0.21.
 See [[design/installation]] for details.
 
 ### 3.6.19 Wireless devices handling
@@ -1085,6 +1104,14 @@ prefer strong ciphers and MACs..
 
 - [[!tails_gitweb config/chroot_local-includes/etc/ssh/ssh_config]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/connect-socks]]
+
+### 3.6.21 Incremental upgrades
+
+PENDING-FOR-0.22-or-0.23:
+
+When a Tails release is out, Tails users are proposed to download and
+apply a partial upgrade (that is, only what has changed between two
+releases). See [[contribute/design/incremental_upgrades]] for details.
 
 ## 3.7 Running Tails in virtual machines
 
@@ -1109,7 +1136,7 @@ user|design/virtualization_support]] if it is.
 
 ### 3.7.3 Running Tails inside a Windows session
 
-[[!tails_todo virtualization_support desc="Ongoing work"]] will make it easier to
+[[!tails_ticket 6083 desc="Potential work"]] may make it easier to
 run the DVD/USB in a virtual machine inside a Windows session whenever
 native boot is impossible or not desirable. This probably will be
 implemented by shipping a [QEMU](http://www.qemu.org/) or
@@ -1143,12 +1170,10 @@ release candidates images before they are officially published.
 
 ### 3.8.3 Upgrades
 
-Keeping the following applications up-to-date is a priority:
+Keeping Tor (stable releases only, unless the Tor core developers
+recommend otherwise) and Iceweasel up-to-date is a priority.
 
-- Tor (stable releases only);
-- Vidalia.
-
-Remaining applications, including the base system, will be updated
+Remaining applications, including the base system, will be upgraded
 using Debian standard upgrade process, and generally based on the
 latest Debian stable release so there are not many problems.
 
@@ -1186,16 +1211,6 @@ Some tools currently available to command-line users lack the
 integration into Tails and/or graphical user interface that would be
 needed to make them useful to anyone. See the [[!tails_todo
 macchanger desc="macchanger TODO page"]] as an example.
-
-Providing an easy-to-use tool to inspect and cleanup meta-data in
-files (e.g. before they are published on the Web) would help any PELD
-implementation to achieve its mission. Such software is being designed
-and should be implemented at some point.
-
-Despite any software and documentation piece developed specifically
-for Tails being ready to be translated, actual translation work is
-not done for many languages: we lack trusted translators teams.
-Sharing the Tor translation infrastructure may help.
 
 See the development [[!tails_roadmap]] for more information about
 where Tails is heading to.
