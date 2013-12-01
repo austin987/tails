@@ -11,6 +11,9 @@ GIT_IN_TOR_TRANSLATION_DIR="git \
    --work-tree=$TOR_TRANSLATION_DIR \
    --git-dir=$TOR_TRANSLATION_DIR/.git"
 
+### External libraries
+. config/chroot_local-includes/usr/local/lib/tails-shell-library/po.sh
+
 lang_is_excluded () {
 	local lang="$1"
 	echo -n "$EXCLUDE_LANGS" | grep -qs -w "$lang"
@@ -38,3 +41,6 @@ for po_file in $TOR_TRANSLATION_DIR/*.po; do
 		cp "$po_file" "$TAILS_PO_DIR"
 	fi
 done
+
+# Update PO files
+intltool_update_po $(po_languages)
