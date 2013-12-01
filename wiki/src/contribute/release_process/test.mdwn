@@ -183,17 +183,96 @@ Assumptions for the following tests: first, Tor stream isolation
 features properly do their work; second, our `torrc` sets the right
 `SocksPort` options to implement what we want.
 
+**Note**: the following commands would advantageously be replaced with
+the appropriate tcpdump or tshark filters.
+
 * Make sure Claws Mail use its dedicated `SocksPort` when connecting
-  to IMAP / POP3 / SMTP servers.
+  to IMAP / POP3 / SMTP servers. As root:
+
+      watch -n 0.1 'netstat -taupen | grep claws'
+
 * Make sure these use the `SocksPort` dedicated for Tails-specific applications:
-  - htpdate
-  - tails-security-check
-  - incremental upgrades
-* Make sure iceweasel uses its dedicated `SocksPort`.
-* Make sure other applications (Polipo, Gobby 0.4 and 0.5, SSH, whois)
-  use the default system-wide `SocksPort`.
+  - htpdate — as root, run:
+
+        service htpdate stop \
+           && rm -f /var/run/htpdate/{done,success} \
+           && service htpdate start
+
+    ... with the following command running as root in another
+    terminal:
+
+        watch -n 0.1 'netstat -taupen | grep curl'
+
+  - security check — run `tails-security-check` with the following
+    command running as root in another terminal:
+
+        watch -n 0.1 'netstat -taupen | grep perl'
+
+  - incremental upgrades — run `tails-upgrade-frontend-wrapper` with
+    the following command running as root in another terminal:
+
+        watch -n 0.1 'netstat -taupen | grep perl'
+
+* Make sure iceweasel uses its dedicated `SocksPort`: quit Iceweasel
+  then start it with the following command running as root in another
+  terminal:
+
+      watch -n 0.1 'netstat -taupen | grep iceweasel'
+
+* Make sure other applications use the default system-wide
+  `SocksPort`:
+  - Polipo — run:
+
+        wget https://tails.boum.org/
+
+    ... with the following command running as root in another
+    terminal:
+
+        watch -n 0.1 'netstat -taupen | grep polipo'
+
+  - Gobby 0.4 — start Gobby 0.4 from the *Applications* menu and
+    connect to a server, with the following command running as root in
+    another terminal:
+
+        watch -n 0.1 'netstat -taupen | grep gobby'
+
+  - Gobby 0.5 — start Gobby 0.5 from the *Applications* menu and
+    connect to a server, with the following command running as root in
+    another terminal:
+
+        watch -n 0.1 'netstat -taupen | grep gobby'
+
+  - SSH — run (no need to authenticate the server or to login):
+
+        ssh lizard.tails.boum.org
+
+    ... with the following command running as root in another
+    terminal:
+
+        watch -n 0.1 'netstat -taupen | grep -E "connect-proxy|ssh"'
+
+  - whois — run:
+
+        whois example.com
+
+    ... with the following command running as root in another
+    terminal:
+
+        watch -n 0.1 'netstat -taupen | grep whois'
+
 * Make sure a random application run using `torify` and `torsocks`
-  (e.g. `/usr/bin/gobby-0.5`) uses the default system-wide `SocksPort`.
+  uses the default system-wide `SocksPort`. Run:
+
+      torify /usr/bin/gobby-0.5
+
+    ... and connect to a server, with the following command running as
+    root in another terminal:
+
+        watch -n 0.1 'netstat -taupen | grep gobby'
+
+    Then do the same test for:
+
+      torsocks /usr/bin/gobby-0.5
 
 # Use of untrusted partitions
 
