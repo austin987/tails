@@ -4,72 +4,55 @@ Rationale
 =========
 
 I2P is yet another anonymizing network (load-balanced unspoofable
-packet switching network) that provides access to eepsites (.i2p tld);
+packet switching network) that provides access to eepsites (`.i2p` TLD);
 eepsites are a bit like Tor hidden services. Some users would like to
 be able to access eepsites from Tails.
 
 Versions
 ========
 
-Some release after 0.6 (most likely 0.7) will ship with
-[I2P](http://www.i2pproject.net/) and have it nicely integrated with
-Iceweasel so that eepsites (.i2p tld) can be reached through I2P, and
-the rest through Tor.
+I2P[http://www.i2p2.de] has been included since Tails v0.7 with Iceweasel
+preconfigured using FoxyProxy so that eepsites (`.i2p` TLD) are directed to
+I2P. All other traffic gets routed through Tor.
 
 Design
 ======
 
-Unfortunately, I2P seems to not be very widely used yet, so it can be
-assumed that not all of our users want to use (or even know about)
-I2P. Some potential drawbacks for such users by having I2P start
-automatically in each Tails session are:
+I2P has seen increased growth over the last few years with around 30,000 active
+peers routing traffic but it is still not as well known as Tor. I2P is not
+started automatically. Some reasons behind this decision include:
 
-1. increased network traffic due to relaying others' traffic (every
-   I2P peer is a relay)
 
-2. increased usage of the system CPU (lots of computationally heavy
+1. increased usage of the system CPU (lots of computationally heavy
    crypto is needed for relaying traffic) and RAM (Java based)
 
-3. the possible raised suspicion from adversaries by being associated
+2. the possible raised suspicion from adversaries by being associated
    with yet another anonymity network (especially severe if one uses
    Tor bridges)
 
-4. some level of system compromise through 0-day exploits in the I2P
+3. some level of system compromise through 0-day exploits in the I2P
    client
 
-Hence, running I2P should be opt-in, i.e. it should not start per
-default. The user must start I2P manually, either by some easily
-accessible icon on the desktop/in the applications menu, or by
-specifying so during boot (once we make that possible, see the
-[[!tails_todo boot_menu]] TODO page).
-
-In addition to providing the I2P client, iceweasel should be able to
-handle eepsites (.i2p tld) seamlessly without interfering with any
-concurrent browsing through Tor.
-
-The [standard I2P client](http://www.i2pproject.net/download.html) is
-by default set up to perform automatic installs. Whether or not we
-want this can be debated, but for the time being the most reasonable
-option is to have it turned off. 
+Users that want to use I2P must start it manually from the `Applications` menu.
+In the future one may be able to start I2P during boot (see the [[!tails_todo
+boot_menu]] TODO page).
 
 Implementation
 ==============
 
-The [German Privacy Foundation](https://www.awxcnx.de/) has an [APT
-repository](https://www.awxcnx.de/wabbel.htm) containing a prepackaged
-binary of i2p. It installs the actual program into /usr/lib/i2p while
-the so-called data directory is set up to /var/lib/i2p. This
-separation is essential and was not possible some years
-ago. Furthermore, this package installs an init script and sets up a user called
-i2p-daemon which the init script starts the I2P client under, which is
-good security-wise. 
+The I2P project hosts an [APT repository](http://deb.i2p2.no) from which users can
+easily install I2P. It installs the application to `/usr/share/i2p`. Upon the
+first start template files are copied, with changes, to the data directory at
+`/var/lib/i2p/i2p-config/`.  This separation is essential and was not possible
+some years ago. This package includes an initscript which is configured by
+default to start the I2P client as the `i2psvc` user.
 
-The above package should be installed, but its init script should not
-start during boot. An I2P shortcut has been added to the applications
+The above package is installed but its init script is not automatically run
+during boot. Instead, an I2P shortcut has been added to the applications
 menu which the user can use to start the I2P init script manually. A
 side-effect of installing the actual I2P program into /usr is that
 automatic updates are disabled by the program since the installation
-directory is not writable by the i2p-daemon user.
+directory is not writable by the `i2psvc` user.
 
 For better performance an exception has been made in the [[firewall
 configuration|Tor_enforcement/Network_filter]] that grants direct access to the
@@ -88,7 +71,7 @@ which most definitely is bad for the network. Since Tails users are
 likely to shutdown Tails quickly without waiting these 11 minutes,
 this is a good reason to enable hidden mode, that is to disable
 participating in I2P traffic:
-[[!tails_gitweb config/chroot_local-includes/usr/share/i2p/router.config]].
+[[!tails_gitweb config/chroot_local-hooks/16-i2p_config]].
 
 [[!tails_todo iceweasel_addon_-_FoxyProxy desc="FoxyProxy"]] has been installed
 system-wide, and the default iceweasel profile provides with a
@@ -100,39 +83,181 @@ Below are the patterns that each url handeled by iceweasel will be
 matched against. These patterns will be tried in order, from top to
 bottom, until the first match is found:
 
-1. The I2P router console: urls matching one of the
-   `http://127.0.0.1:7657/*` and `http://localhost:7657/*` wildcard
-   patterns will get a direct connection to the local host so the I2P
+1. The I2P router console: urls matching the `http://127.0.0.1:7657/*` wildcard
+   pattern will get a direct connection to the local host so the I2P
    router console can be reached.
 
-2. I2P eepsites: urls matching the
+2. The local *eepsite*: urls matching the `http://127.0.0.1:7658/*` wildcard
+   pattern will get a direct connection to the local host so the locally
+   hosted eepsite can be reached.
+
+3. I2P eepsites: urls matching the
    `^https?://[-a-zA-Z0-9.]+\.i2p(:[0-9]{1,5})?(/.*)?$` regexp will be
    proxied through the local eepsite HTTP proxy run by the I2P client.
    Implementation note: FoxyProxy encloses the regexps between `^` and
    `$` itself since `isMultiLine="false"`, that's why the regexp in
    `foxyproxy.xml` lacks these chars.
 
-3. Tor HTTP(s): urls matching one of the `https://*` and `http://*`
+4. Tor HTTP(s): urls matching one of the `https://*` and `http://*`
    wildcard patterns will be proxied through polipo (and then its
    parent proxy, Tor).
 
-4. The rest: all remaining urls will be SOCKS5-proxied through Tor.
+5. The rest: all remaining urls will be SOCKS5-proxied through Tor.
 
 Also, do note that Tails' [[netfilter-based
 blocking|Tor_enforcement/Network_filter]] ensures that no Internet
 traffic can be escape both Tor or I2P (and thus be non-anonymous) even
 if something is wrong in the above filters (or a future revision).
 
+Ports allowed through the firewall
+==================================
+
+Services on I2P are accessed through tunnels built by I2P. Services that a user
+hosts, such as an *eepsite* or *IRC Server* are accessed remotely via **Server Tunnels**.
+End users will access services using *client tunnels*. I2P is shipped with a
+few tunnels preconfigured and the ports that they use have exceptions added to
+ferm. These ports include:
+
+<table>
+    <tr>
+        <td>
+            2727
+        </td>
+        <td>
+            BOB
+        </td>
+        <td>
+            <a href="http://www.i2p2.de/bob">BOB</a> is an application bridge allowing non-Java clients to interact with I2P.
+        </td>
+    </tr>
+    <tr>
+        <td>
+            4444
+        </td>
+        <td>
+            I2P HTTP Proxy
+        </td>
+        <td>
+            Used to access sites with the <code>.i2p</code> TLD
+        </td>
+    </tr>
+    <tr>
+        <td>
+            4445
+        </td>
+        <td>
+            HTTPS Outproxy tunnel
+        </td>
+        <td>
+            Disabled in by default in <a href="http://127.0.0.1:7657/i2ptunnel">I2PTunnel</a> since all HTTPS traffic is routed through Tor.
+        </td>
+    </tr>
+    <tr>
+        <td>
+            6668
+        </td>
+        <td>
+            Tunnel to Irc2P
+        </td>
+        <td>
+            Used to connect to the main I2P-only IRC network
+        </td>
+    </tr>
+    <tr>
+        <td>
+            7656
+        </td>
+        <td>
+            SAM
+        </td>
+        <td>
+            SAM is an application bridge allowing non-Java clients to use I2P.
+            More information: <a href="http://www.i2p2.de/sam">SAMv1</a>, <a href="http://www.i2p2.de/samv2">SAMv2</a>,
+            <a href="http://www.i2p2.de/samv3"</a>SAMv3</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            7657
+        </td>
+        <td>
+            I2P router console
+        </td>
+        <td>
+            The router console is accessible via the web browser at <a href="http://127.0.0.1:7657">http://127.0.0.1:7657</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            7658
+        </td>
+        <td>
+            local 'eepsite'
+        </td>
+        <td>
+            Each I2P installation is configured out of the box with the
+            possibility to host one's own website (or *eepsite*) on the I2P
+            network. The eepsite will not be acessible remotely unless its <a href="http://127.0.0.1:7657/i2ptunnel#localServerTunnelList">tunnel</a>
+            is started.
+        </td>
+    </tr>
+    <tr>
+        <td>
+            7659
+        </td>
+        <td>
+            SMTP Proxy
+        </td>
+        <td>
+            Tunnel to smtp.postman.i2p. More information is available from within I2P at <a href="http://hq.postman.i2p/?page_id=10">Postman's HQ</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            7660
+        </td>
+        <td>
+            POP3 Proxy
+        </td>
+        <td>
+            Tunnel to pop3.postman.i2p. More information is available from within I2P at <a href="http://hq.postman.i2p/?page_id=11">Postman's HQ</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            8998
+        </td>
+        <td>
+            MTN Proxy
+        </td>
+        <td>
+            Tunnel to mtn.i2p2.i2p, a <a href="http://monotone.ca">Monotone</a> server.
+        </td>
+    </tr>
+</table>
+
+Features that require an administration password
+================================================
+
+The `amnesia` user does not have access to `/var/lib/i2p`. In practice this
+will not be an issue unless one wants to
+
+* host content on an `eepsite`
+* use the integrated I2P-only bittorrent client,
+  [I2PSnark](http://127.0.0.1:7657/i2psnark)
+
+In order to utilize these features users need to set an
+[[doc/first_steps/startup_options/administration_password]].
+
 Package source and upgrading I2P
 ================================
 
-Tails uses the I2P (and deps) [Debian packages prepared by
-KillYourTV](http://killyourtv.i2p.to/debian/), the official I2P Linux package
-maintainer as listed on the
-[I2P Team page](https://www.i2p2.de/team.html). The `i2p` source
-package and its binaries must be uploaded
-to our own [[APT repository|APT_repository]] as communications with
-KillYourTV's repository are too slow for our builds.
+Tails uses the I2P (and deps)
+[Debian packages prepared by KillYourTV](http://deb.i2p2.no/), the official I2P
+Linux package maintainer as listed on the [I2P Team page](https://www.i2p2.de/team).
+The I2P source package and its binaries will be imported into to our own
+[[APT repository|APT_repository]] into the devel or stable suite.  The suite
+will depend on whether a major- or point-release is being prepared.
 
 ## Check the imported binary packages
 
@@ -182,7 +307,7 @@ Things to meditate upon
 
   - there's no "cover-traffic", which may decrease the anonymity
     somewhat.
-   
+
 * Are the patterns used above correct for their intended purposes?
   Does the FoxyProxy setup in any way open up for attacks? See
   [[!tails_todo iceweasel_addon_-_FoxyProxy]].
