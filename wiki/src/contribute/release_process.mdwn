@@ -208,7 +208,7 @@ of `po/` and of the website [[using
 Tag the release in Git
 ======================
 
-	git tag -u 1202821CBE2CD9C1 -m "tagging version ${VERSION}" "${TAG}"
+	git tag -u "$TAILS_SIGNATURE_KEY" -m "tagging version ${VERSION}" "${TAG}"
 	git push --tags
 
 (Pushing the tag is needed so that the APT repository is updated, and
@@ -357,7 +357,7 @@ Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
 extension; e.g.
 
-	gpg --armor --default-key 1202821CBE2CD9C1 --detach-sign *.iso
+	gpg --armor --default-key "$TAILS_SIGNATURE_KEY" --detach-sign *.iso
 	rename 's,\.asc$,.sig,' *.asc
 
 Fourth, go up to the parent directory, create a `.torrent` file and
@@ -370,7 +370,7 @@ check the generated `.torrent` files metainfo:
 Fifth, generate detached OpenPGP signatures for every published
 `.torrent` file:
 
-	gpg --armor --default-key 1202821CBE2CD9C1 --detach-sign \
+	gpg --armor --default-key "$TAILS_SIGNATURE_KEY" --detach-sign \
 	  tails-i386-$VERSION.torrent && \
 	mv tails-i386-$VERSION.torrent.{asc,sig}
 
@@ -473,12 +473,14 @@ In order to get any new documentation into the website, merge either
 
 Rename the `.packages` file to remove the `.iso` part of its name.
 
-Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
-into the Git repository's `wiki/src/torrents/files/` directory and
-remove the one for the previous release (including any RCs). If
-preparing an RC, only copy the `.iso.sig`.
+If preparing a final release, copy the `.iso.sig`, `.packages`,
+`.torrent` and `.torrent.sig` files into the Git repository's
+`wiki/src/torrents/files/` directory and remove the one for the
+previous release (including any RCs). If preparing an RC, only copy
+the `.iso.sig`.
 
-Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
+If preparing a final release, generate the SHA-256 hash of every image
+to be released in `inc/*`:
 
 	sha256sum $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
 	  cut -f 1 -d ' ' | tr -d '\n' \
