@@ -594,9 +594,9 @@ Prepare for the next release
    - take note of branches merged into `experimental`, but not into
      `devel`:
 
-        git log --pretty=oneline --color=never --merges devel..experimental \
-          | /bin/grep 'into experimental$' \
-          | sed -e 's,^[a-f0-9]\+\s\+,,' | sort -u
+         git log --pretty=oneline --color=never --merges devel..experimental \
+           | /bin/grep 'into experimental$' \
+           | sed -e 's,^[a-f0-9]\+\s\+,,' | sort -u
 
    - `git checkout experimental && git reset --hard devel`
    - [[hard reset|contribute/APT_repository#workflow-reset]] the `experimental`
@@ -604,10 +604,10 @@ Prepare for the next release
    - merge additional branches into experimental (both at the Git and
      APT levels)
 
-        for branch in $UNMERGED_BRANCHES ; do
-           suite=$(echo $branch | sed -e 's,[/_],-,g')
-           ssh reprepro@incoming.deb.tails.boum.org tails-merge-suite $suite experimental
-        done
+         for branch in $UNMERGED_BRANCHES ; do
+            suite=$(echo $branch | sed -e 's,[/_],-,g')
+            ssh reprepro@incoming.deb.tails.boum.org tails-merge-suite $suite experimental
+         done
 
      Note that the merge will fail for suites that contain no package.
 
