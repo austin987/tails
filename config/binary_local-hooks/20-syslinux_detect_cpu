@@ -66,10 +66,10 @@ Remove_package
 cat > "${SYSLINUX_CFG}" <<EOF
 label select_menu
        com32 ifcpu64.c32
-       append menu_686-pae -- menu_686-pae -- menu_486
-label menu_686-pae
+       append menu_amd64 -- menu_amd64 -- menu_486
+label menu_amd64
        kernel vesamenu.c32
-       append live686.cfg
+       append liveamd64.cfg
 label menu_486
        kernel vesamenu.c32
        append live486.cfg
@@ -82,7 +82,7 @@ EOF
 sed -i -e "1i prompt 0\ntimeout 40\n" "${SYSLINUX_MENU_CFG}"
 
 # Copy and adapt live.cfg for each kernel
-for arch in 486 686
+for arch in 486 amd64
 do
 	(
 		echo "include menu.cfg"
@@ -93,7 +93,7 @@ do
 		   append=2
 		fi
 		sed -e "s,/vmlinuz$,/vmlinuz${append}, ; s,initrd\.img,initrd${append}.img," "${SYSLINUX_LIVE_CFG}"
-	) | sed -n -e '/^label live-686-pae.*/ { q } ; p' \
+	) | sed -n -e '/^label live-amd64.*/ { q } ; p' \
 	  > "${SYSLINUX_PATH}/live${arch}.cfg"
 done
 
