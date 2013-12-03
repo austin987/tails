@@ -60,7 +60,7 @@ mod_rev_dep_aux() {
 
 # Prints a list of all modules depending on $1, including $1. It's
 # ordered by descending "maximum dependency distance" from $1, so the
-# output is ideal if we want to unload $1 and (by necessicty) all
+# output is ideal if we want to unload $1 and (by necessity) all
 # modules that uses $1.
 mod_rev_dep() {
   MOD_REV_DEP_VISITED=""
