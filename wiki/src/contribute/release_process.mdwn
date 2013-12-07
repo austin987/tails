@@ -23,6 +23,8 @@ the scripts snippets found on this page:
 * `TAILS_SIGNATURE_KEY=0D24B36AA9A2A651787876451202821CBE2CD9C1`
 * `IUK_CHECKOUT`: a checkout of the relevant tag of the `iuk`
   Git repository.
+* `PERL5LIB_CHECKOUT`: a checkout of the relevant tag of the
+  `perl5lib` Git repository.
 
 Pre-freeze
 ==========
@@ -264,23 +266,19 @@ Build the Incremental Upgrade Kits
 Skip this step when preparing a major release.
 
 Use `tails-create-iuk` to build an IUK for the previous stable release
-and (if applicable) the last RC for the version being released.
-Example (point `PERL5LIB` to a checkout of the relevant tag of Tails'
-perl5lib):
+and (if applicable) the last RC for the version being released. Example:
 
-    # cd $IUK_CHECKOUT && \
-      PERL5LIB=/home/user/tails/perl5lib/lib \
-        ./bin/tails-create-iuk --squashfs-diff-name "$VERSION.squashfs" \
-           --old-iso tails-i386-0.13.iso \
-           --new-iso tails-i386-0.14.iso      \
-           --outfile Tails_i386_0.13_to_0.14.iuk
-
-Save the generated IUK to
-`$ISOS/Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk`.
+    sudo su -c "cd $IUK_CHECKOUT && \
+      PERL5LIB=\"$PERL5LIB_CHECKOUT/lib\" \
+        ./bin/tails-create-iuk \
+           --squashfs-diff-name \"$VERSION.squashfs\"           \
+           --old-iso \"$ISOS/tails-i386-$PREVIOUS_VERSION/tails-i386-$PREVIOUS_VERSION.iso\" \
+           --new-iso \"$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso\"          \
+           --outfile \"$ISOS/Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk\""
 
 Note that developer tools for creating IUK and upgrade-description
-files were only tested on sid. They should hopefully work well on
-Wheezy, but I would not try to make them work on Squeeze.
+files were only tested on Debian sid. It should hopefully work well on
+Wheezy too, but I would not even try to use it on Squeeze.
 
 <a id="prepare-upgrade-description-files"></a>
 
