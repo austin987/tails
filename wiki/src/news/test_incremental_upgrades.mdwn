@@ -1,0 +1,83 @@
+[[!meta title="Call for testing: incremental upgrades"]]
+
+[[!meta date="2013-12-08 16:00:00"]]
+
+You can help Tails! [[Incremental
+upgrades|contribute/design/incremental_upgrades]] are ready for
+testing. Please try it and see if all works for you.
+
+If you have security auditing skills, you are more than welcome to
+review our [[design|contribute/design/incremental_upgrades]] and
+[[code|contribute/design/incremental_upgrades#code]].
+
+[[!toc levels=1]]
+
+# How to test incremental upgrades?
+
+These steps allow you to incrementally upgrade from Tails 0.22~rc1 to
+Tails 0.22~rc2.
+
+1. **Keep in mind that this is the first broad call for testing of
+   Tails incremental upgrades**. Also, **Tails 0.22~rc2 is a test
+   release**. Both might have undiscovered issues.
+
+1. Install [[Tails 0.22~rc1|news/test_0.22-rc1]] with <span
+   class="application">Tails Installer</span> onto a USB stick or
+   SD card.
+
+1. Start Tails 0.22~rc1 and [[set an administration
+   password|doc/first_steps/startup_options/administration_password]].
+
+1. Run this command in a <span class="application">Root
+   Terminal</span> to correct the firewall:
+
+       sed -i -e \
+          's/tails-iuk-get-target-file/(tails-iuk-get-target-file tails-upgrade-frontend)/' \
+          /etc/ferm/ferm.conf && \
+       /usr/sbin/ferm /etc/ferm/ferm.conf
+
+1. Run this command in a <span class="application">Root
+   Terminal</span> to select the *alpha* upgrade channel:
+
+       echo TAILS_CHANNEL=\"alpha\" >> /etc/os-release
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Tails</span>&nbsp;▸
+     <span class="guimenuitem">Tails Upgrader</span>
+   </span>
+   to start <span class="application">Tails Upgrader</span>.
+
+1. Accept <span class="application">Tails Upgrader</span>'s proposal
+   to upgrade to Tails 0.22~rc2.
+
+1. Wait while the upgrade is downloaded and applied.
+
+1. Restart the system when advised to do so.
+
+1. Once the system is restarted, choose
+   <span class="menuchoice">
+     <span class="guimenu">System</span>&nbsp;▸
+     <span class="guimenuitem">About Tails</span>
+   </span>
+   to confirm that the running system is Tails 0.22~rc2.
+
+If you find anything that is not working as it should, please [[report
+to us|doc/first_steps/bug_reporting]]! Bonus points if you check that
+it is not a [[known issue of this
+release|test_incremental_upgrades#known_issues]] or a [[longstanding
+known issue|support/known_issues]].
+
+<a name="known_issues">
+
+# Known issues
+
+Known issues of incremental upgrades are [tracked in
+Redmine](https://labs.riseup.net/code/projects/tails/issues?query_id=126).
+
+Some of the [[known issues of Tails
+0.22~rc1|news/test_0.22-rc1#known_issues]] also apply to Tails
+0.22~rc2.
+
+Tails 0.22~rc2 has no other known issue of its own.
