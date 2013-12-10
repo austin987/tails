@@ -260,6 +260,42 @@ suite should be ready, so it is time to:
 
 <a id="prepare-iuk"></a>
 
+Generate the OpenPGP signatures and Torrents
+============================================
+
+First, create a directory with a suitable name and go there:
+
+	mkdir "$ISOS/tails-i386-$VERSION" && cd "$ISOS/tails-i386-$VERSION"
+
+Second, copy the built image to this brand new directory.
+Then, rename it:
+
+	mv *.iso "tails-i386-$VERSION.iso"
+
+Third, generate detached OpenPGP signatures for the image to be
+published, in the same directory as the image and with a `.sig`
+extension; e.g.
+
+	gpg --armor --default-key "$TAILS_SIGNATURE_KEY" --detach-sign *.iso
+	rename 's,\.asc$,.sig,' *.asc
+
+Fourth, go up to the parent directory, create a `.torrent` file and
+check the generated `.torrent` files metainfo:
+
+	cd .. && \
+	mktorrent -a 'http://torrent.gresille.org/announce' "tails-i386-${VERSION}" && \
+	btshowmetainfo tails-i386-$VERSION.torrent
+
+Fifth, generate detached OpenPGP signatures for every published
+`.torrent` file:
+
+	gpg --armor --default-key "$TAILS_SIGNATURE_KEY" --detach-sign \
+	  tails-i386-$VERSION.torrent && \
+	mv tails-i386-$VERSION.torrent.{asc,sig}
+
+Prepare incremental upgrades
+============================
+
 Build the Incremental Upgrade Kits
 ----------------------------------
 
@@ -325,52 +361,27 @@ Do **not** skip this step when preparing a major release.
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
 
+       find "$RELEASE_CHECKOUT/wiki/src/upgrade/" \
+          -type f -name upgrades.yml -exec \
+             gpg -u "$TAILS_SIGNATURE_KEY" --armor --detach-sign {} \;
+
 1. Rename each detached signature to `.pgp`:
 
        find "$RELEASE_CHECKOUT/wiki/src/upgrade/" -type f \
-          -name upgrades.yml.asc -exec rename 's,\.asc$,.pgp,' {} \;
+          -name upgrades.yml.asc -exec rename -f 's,\.asc$,.pgp,' {} \;
 
 1. Add and commit the upgrade-description files and their detached
    signatures to the Git branch used to prepare the release (`stable`
-   or `testing`).
+   or `testing`):
+
+       cd "$RELEASE_CHECKOUT" && git add wiki/src/upgrade && \
+          git commit -m "Update upgrade-description files."
 
 1. Check the syntactic correctness of all upgrade-description files:
 
-       ./bin/tails-iuk-check-upgrade-description-file \
-          ${RELEASE_CHECKOUT}/wiki/src/upgrade/v1/*/*/*/*/upgrades.yml
-
-Generate the OpenPGP signatures and Torrents
-============================================
-
-First, create a directory with a suitable name and go there:
-
-	mkdir "$ISOS/tails-i386-$VERSION" && cd "$ISOS/tails-i386-$VERSION"
-
-Second, copy the built image to this brand new directory.
-Then, rename it:
-
-	mv *.iso "tails-i386-$VERSION.iso"
-
-Third, generate detached OpenPGP signatures for the image to be
-published, in the same directory as the image and with a `.sig`
-extension; e.g.
-
-	gpg --armor --default-key "$TAILS_SIGNATURE_KEY" --detach-sign *.iso
-	rename 's,\.asc$,.sig,' *.asc
-
-Fourth, go up to the parent directory, create a `.torrent` file and
-check the generated `.torrent` files metainfo:
-
-	cd .. && \
-	mktorrent -a 'http://torrent.gresille.org/announce' "tails-i386-${VERSION}" && \
-	btshowmetainfo tails-i386-$VERSION.torrent
-
-Fifth, generate detached OpenPGP signatures for every published
-`.torrent` file:
-
-	gpg --armor --default-key "$TAILS_SIGNATURE_KEY" --detach-sign \
-	  tails-i386-$VERSION.torrent && \
-	mv tails-i386-$VERSION.torrent.{asc,sig}
+       cd $IUK_CHECKOUT && \
+          ./bin/tails-iuk-check-upgrade-description-file \
+             ${RELEASE_CHECKOUT}/wiki/src/upgrade/v1/*/*/*/*/upgrades.yml
 
 Upload images
 =============
@@ -392,8 +403,9 @@ Test them with a BitTorrent client running in a different place.
 
 ## Download and seed image from lizard
 
-    scp tails-i386-$VERSION.torrent bittorrent.lizard:
-    ssh bittorrent.lizard transmission-remote --add tails-i386-$VERSION.torrent
+    scp "$RELEASE_CHECKOUT/wiki/src/torrents/files/tails-i386-$VERSION.torrent" \
+       bittorrent.lizard: && \
+       ssh bittorrent.lizard transmission-remote --add tails-i386-$VERSION.torrent
 
 Publish the ISO over HTTP
 -------------------------
@@ -427,10 +439,10 @@ and on the live wiki (even for a release candidate):
 
 <a id="publish-iuk"></a>
 
-Publish the IUK
----------------
+Publish the IUKs
+----------------
 
-Same as for the ISO, but the IUK should land into
+Same as for the ISO, but the IUKs should land into
 `/srv/rsync/tails/tails/$DIST/iuk/`.
 
 Wait for the HTTP mirrors to catch up
@@ -482,7 +494,7 @@ to be released in `inc/*`:
 
 	sha256sum $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
 	  cut -f 1 -d ' ' | tr -d '\n' \
-	  > wiki/src/inc/stable_i386_hash.html
+	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_hash.html"
 
 Update the [[support/known_issues]] page.
 
