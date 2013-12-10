@@ -144,37 +144,37 @@ tracked by tickets prefixed with `todo/test_suite:`.
      show many false positives?)
   1. Then check all destinations, e.g. by using tshark and the script below:
 
-     	# set DUMP to the output of tcpdump above
-     	DUMP=dump
-     	# set CONSENSUS to Tor's consensus from the Tails session
-     	CONSENSUS=cached-microdesc-consensus
-     	NODES=$(mktemp)
-     	awk '/^r / { print $6 }' ${CONSENSUS} > ${NODES}
-     	# Note that these default directory authorities may change! To be
-     	# sure, check in Tor's source, src/or/config.c:~900
-     	DIR_AUTHS="
-     	128.31.0.39
-     	86.59.21.38
-     	194.109.206.212
-     	82.94.251.203
-     	76.73.17.194
-     	212.112.245.170
-     	193.23.244.244
-     	208.83.223.34
-     	171.25.193.9
-     	154.35.32.5
-     	"
-     	tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
-     	while read x; do
-     	    ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
-     	    if echo ${DIR_AUTHS} | grep -qe "${ip_expr}"; then
-     	        continue
-     	    fi
-     	    if ! grep -qe "^${ip_expr}$" ${NODES}; then
-     	        echo "${x} is bad"
-     	    fi
-     	done
-     	rm ${NODES}
+         # set DUMP to the output of tcpdump above
+         DUMP=dump
+         # set CONSENSUS to Tor's consensus from the Tails session
+         CONSENSUS=cached-microdesc-consensus
+         NODES=$(mktemp)
+         awk '/^r / { print $6 }' ${CONSENSUS} > ${NODES}
+         # Note that these default directory authorities may change! To be
+         # sure, check in Tor's source, src/or/config.c:~900
+         DIR_AUTHS="
+         128.31.0.39
+         86.59.21.38
+         194.109.206.212
+         82.94.251.203
+         76.73.17.194
+         212.112.245.170
+         193.23.244.244
+         208.83.223.34
+         171.25.193.9
+         154.35.32.5
+         "
+         tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
+         while read x; do
+             ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
+             if echo ${DIR_AUTHS} | grep -qe "${ip_expr}"; then
+                 continue
+             fi
+             if ! grep -qe "^${ip_expr}$" ${NODES}; then
+                 echo "${x} is bad"
+             fi
+         done
+         rm ${NODES}
 
      Note that this script will produce some false positives, like your
      gateway, broadcasts, etc.
