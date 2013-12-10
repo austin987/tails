@@ -157,8 +157,9 @@ If Debian's iceweasel was pushed to Git already
 
       git diff --stat debian/17.0.8esr-1..tails/master
 
-  All expected differences should be in `debian/{changelog,rules,control,control.in}`,
-  and the addition of the Torbrowser patches.
+  All expected differences should be in `.gitignore`,
+  `debian/{changelog,rules,control,control.in}`, and the addition of
+  the Torbrowser patches.
 
 If Debian's iceweasel was not pushed to Git yet
 -----------------------------------------------
@@ -204,8 +205,8 @@ merge from Debian's Vcs-Git later.
 
       diff -Naur --exclude=.git iceweasel-17.0.2esr/ git/
 
-* Bring our `debian/changelog`, `debian/rules`, `debian/control` and
-  `debian/control.in` changes back.
+* Bring our `.gitignore`, `debian/changelog`, `debian/rules`,
+  `debian/control` and `debian/control.in` changes back.
 
 5. Update Torbrowser patches
 ============================
@@ -309,7 +310,7 @@ Tag the release
 Clean up the source tree
 ------------------------
 
-	rm -f .mozconfig*
+	git clean -fdx -e /.pc/
 
 Build for unstable
 ------------------
@@ -326,8 +327,10 @@ packages, then skip this step.
 Build for squeeze-backports
 ---------------------------
 
-* Checkout the `tails/squeeze` branch.
-* Merge the tag.
+* Checkout the `tails/squeeze` branch and merge the tag:
+
+      git checkout tails/squeeze && git merge "debian/${DEB_VERSION}"
+
 * Add a squeeze-backport changelog entry:
 
       dch --bpo
@@ -371,3 +374,40 @@ Import bundled preferences
 * Commit this to the branch that is being used to prepare the release:
   ideally, a topic branch that will be reviewed and merged; in
   practice, more likely this will be `stable` or `testing`.
+
+7. Potential problems (and solutions)
+=====================================
+
+Problems with ./configure
+-------------------------
+
+E.g. `configure.patch` does not apply, or the build fails since
+`{js/src/,}configure.in` was modified but `{js/src/,}configure` was
+not refreshed.
+
+In a nutshell (that is, with most of the gory quilt and Git details
+skipped) the solution is to:
+
+1. Make sure the patches that modify `{js/src/,}configure.in` are
+   applied (this is the case after a `quilt push -a`, that is during
+   most of the steps documented above).
+
+1. Update `{js/src/,}configure`:
+
+        sudo apt-get install autoconf2.13
+        make -f client.mk configure
+
+   The `make` command may fail due to missing dependencies. We don't
+   care, as long as `{js/src/,}configure` have been refreshed.
+
+1. Replace `configure.patch` with the diff between the original and
+   updated version of `{js/src/,}configure`:
+
+        configure_diff=$(mktemp) && \
+           git diff configure js/src/configure > "$configure_diff" && \
+           git reset --hard && \
+           git clean -fdx -e /.pc/ && \
+           quilt import -P configure.patch "$configure_diff" && \
+           git commit debian/patches -m "Refresh configure.patch." && \
+           quilt push && \
+           git commit -a -m 'Apply configure.patch.'
