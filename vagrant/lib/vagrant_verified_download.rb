@@ -15,22 +15,30 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 require 'digest'
+require 'vagrant/util/downloader'
 
-# The following will monkeypatch Vagrant (successfuly tested against Vagrant
-# 1.0.2) in order to verify the checksum of a downloaded box.
-module Vagrant
-  class Config::VMConfig
-    attr_accessor :box_checksum
+def check(path)
+  checksum = Digest::SHA256.new.file(path).hexdigest
+  if checksum != BOX_CHECKSUM
+    raise Errors::BoxVerificationFailed.new
   end
+end
 
-  class Action::Box::Download
-    alias :unverified_download :download
-    def download
-      unverified_download
-
-      checksum = Digest::SHA256.new.file(@temp_path).hexdigest
-      if checksum != @env['global_config'].vm.box_checksum
-        raise Errors::BoxVerificationFailed.new
+module Vagrant
+  if vagrant_old
+    class Action::Box::Download
+      alias :unverified_download :download
+      def download
+        unverified_download
+        check(@temp_path)
+      end
+    end
+  else
+    class Util::Downloader
+      alias :unverified_download! :download!
+      def download!
+        unverified_download!
+        check(@destination)
       end
     end
   end

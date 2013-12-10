@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
-#
 # Tails: The Amnesic Incognito Live System
 # Copyright © 2012 Tails developers <tails@boum.org>
 #
@@ -18,14 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Hostname of the virtual machine (must be in /etc/hosts)
-VIRTUAL_MACHINE_HOSTNAME = 'squeeze.vagrantup.com'
+require 'vagrant/version'
 
-# Virtual machine memory size for in-memory builds
-VM_MEMORY_FOR_RAM_BUILDS = 6 * 1024 + 512 # 6.5 GB
-
-# Virtual machine memory size for on-disk builds
-VM_MEMORY_FOR_DISK_BUILDS = 1024 # 1 GB
-
-# Checksum for BOX
-BOX_CHECKSUM = 'ffb3f68f55a3458e007b9abed3eac057f71c518713fcdf982b78f8b59e28318e'
+def vagrant_old
+  version = Vagrant::VERSION.split(".")
+  return version[1].to_i < 3
+end
