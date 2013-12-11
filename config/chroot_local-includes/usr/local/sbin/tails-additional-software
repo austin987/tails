@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
 import gettext
-import syslog
 import os.path
-import sys
+import pwd
 import subprocess
+import sys
+import syslog
 
-PERSISTENCE_DIR="/live/persistence/TailsData_unlocked"
-PACKAGES_LIST_FILE= PERSISTENCE_DIR + "/live-additional-software.conf"
-ACTIVATION_FILE="/var/run/live-additional-software/activated"
+PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
+PACKAGES_LIST_FILE = PERSISTENCE_DIR + "/live-additional-software.conf"
+ACTIVATION_FILE = "/var/run/live-additional-software/activated"
 
 def _launch_apt_get(specific_args):
     """Launch apt-get with given args
@@ -66,14 +67,13 @@ def has_additional_packages_list():
 def get_additional_packages():
     """Returns the list of all the additional packages
     """
-    if not has_additional_packages_list():
-        return None
     packages = []
-    with open(PACKAGES_LIST_FILE) as f:
-        for line in f:
-            line = line.strip()
-            if line: packages.append(line)
-    f.closed
+    if has_additional_packages_list():
+        with open(PACKAGES_LIST_FILE) as f:
+            for line in f:
+                line = line.strip()
+                if line: packages.append(line)
+        f.closed
     return packages
 
 def install_additional_packages():
@@ -83,11 +83,12 @@ def install_additional_packages():
     if has_additional_packages_list():
         syslog.syslog("Found additional packages list")
     else:
-        syslog.syslog(syslog.LOG_WARNING, "Warning: no additional software configured, exiting.")
+        syslog.syslog(syslog.LOG_WARNING, "Warning: no configuration file found, creating an empty one.")
+        create_additional_packages_list()
         return True
     packages = get_additional_packages()
     if not packages:
-	syslog.syslog(syslog.LOG_WARNING, "Warning: no packages to install, exiting")
+        syslog.syslog(syslog.LOG_WARNING, "Warning: no packages to install, exiting")
         return True
     set_activated()
     syslog.syslog("Will install the following packages: %s" % " ".join(packages))
@@ -126,6 +127,21 @@ log to understand better the problem."))
 Please check your network connection, try to restart Tails, or read the system \
 log to understand better the problem."))
         return False
+
+def create_additional_packages_list():
+    """Creates the additional packages list
+
+    Creates the additional packages list file with the right permissions.
+    The caller must ensure the file doesn't already exist.
+    """
+    assert not has_additional_packages_list(), "%s already exists" % PACKAGES_LIST_FILE
+    syslog.syslog("Creating additional software configuration file")
+    f = open(PACKAGES_LIST_FILE, 'w')
+    f.closed
+    os.chmod(PACKAGES_LIST_FILE, 0600)
+    os.chown(PACKAGES_LIST_FILE,
+             pwd.getpwnam('tails-persistence-setup').pw_uid,
+             pwd.getpwnam('tails-persistence-setup').pw_gid)
 
 def is_activated():
     """Check if additional software has been activated
