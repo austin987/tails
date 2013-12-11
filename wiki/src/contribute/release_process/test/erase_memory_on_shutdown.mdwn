@@ -55,7 +55,12 @@ Pick one of those:
 
 * Redo step 1 (don't forget to add `debug=wipemem` to the kernel
   command-line if your memory scrapper toolkit needs it).
-* Reboot Tails by running `reboot` as root.
+* Kill fillram processes and reboot Tails when free memory is under a threshold by running:
+
+       while [ $(free -m -o | grep Mem | sed -e 's/  */ /g' | cut -d ' ' -f 4) -ge 128 ] ; do sleep 0.1 ; done ; killall fillram ; reboot
+
+  This is especially important on 486 kernels. The threshold might be fine tuned.
+
 * Make sure your preferred memory scrapper toolkit is ready (e.g.
   plug your USB scrapper stick).
 * When Tails tells you you can unplug the USB stick, unplug the

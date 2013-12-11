@@ -1,18 +1,8 @@
-tails (0.22-rc2) unstable; urgency=medium
-
-  * Get back to installing Linux 3.10-1 (Closes: #6467).
-  * Tails Installer: list devices with isohybrid Tails installed
-    (Closes: #6462).
-  * Allow the tails-upgrade-frontend user to connect to the 9062 Tor SOCKS port.
-    The tails-upgrade-frontend program now runs as this user, and it needs
-    to reach the Internet to download upgrade-description files.
-
- -- Tails developers <tails@boum.org>  Sat, 07 Dec 2013 17:26:23 +0100
-
-tails (0.22~rc1) unstable; urgency=low
+tails (0.22) unstable; urgency=medium
 
   [Tails developers]
   * Security fixes
+    - Upgrade to Iceweasel 24.2.0esr that fixes a few serious security issues.
     - Stop migrating persistence configuration and access rights. Instead,
       disable all persistence configuration files if the mountpoint has wrong
       access rights (Closes: #6413).
@@ -23,7 +13,11 @@ tails (0.22~rc1) unstable; urgency=low
     - Switch to Iceweasel 24 (Closes: #6370).
       · Resync' (most) Iceweasel prefs with TBB 3.0-beta-1 and get rid
         of many obsolete or default settings.
-    - Switch to Torbutton 1.6 (Closes: #6371).
+      · Disable WebRTC (Closes: #6468).
+      · Import TorBrowser profile at commit
+        51bf06502c46ee6c1f587459e8370aef11a3422d from the tor-browser-24.2.0esr-1
+        branch at https://git.torproject.org/tor-browser.git.
+    - Switch to Torbutton 1.6.5 (Closes: #6371).
       · Prevent Torbutton from asking users to "upgrade TBB".
       · Use the same Tor SOCKS port as the TBB (9151) for our web browser.
         This should be enough to avoid being affected by Tor#8511.
@@ -33,7 +27,6 @@ tails (0.22~rc1) unstable; urgency=low
         the shortest and sanest path to fixing the check issue, because the
         remote Tor check is broken" seems to simply disable this check.
         Patch submitted upstream as Tor#10216.
-    - Install Linux 3.11-2 (3.11.8-1) from Debian testing.
     - Prepare incremental upgrades to be the next default way to upgrade Tails,
       on point-releases at least.
 
@@ -44,6 +37,8 @@ tails (0.22~rc1) unstable; urgency=low
     - Sanitize more IP and MAC addresses in bug reports (Closes: #6391).
     - Do not fail USB upgrade when the "tmp" directory exists on the
       destination device.
+    - Tails Installer: list devices with isohybrid Tails installed
+      (Closes: #6462).
 
   * Minor improvements
     - Create a configuration file for additional software if needed
@@ -58,7 +53,7 @@ tails (0.22~rc1) unstable; urgency=low
     - Make wording in Tails Installer more consistent.
 
   [ WinterFairy ]
-  * Use IBus instead of SCIM (Closes: #6206).
+  * Use IBus instead of SCIM (Closes: #5624, #6206).
     It makes it possible to input passwords in pinentry for at least Japanese,
     Chinese and Korean languages.
   * Add an import-translation script.
