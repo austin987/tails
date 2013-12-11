@@ -17,7 +17,7 @@ Boot the candidate ISO and find the commit it was build from with the
 
 Then, from the source tree, see the diff:
 
-	git diff <old tag>..<ISO commit>
+	git diff --find-renames <old tag>..<ISO commit>
 
 e.g. `git diff 0.17..06fa1ab80d55c9f29274b7459bd198edb1a8d53d`
 
@@ -79,6 +79,16 @@ tracked by tickets prefixed with `todo/test_suite:`.
   <https://panopticlick.eff.org/> and <http://ip-check.info/>, and
   update the [[fingerprint section|support/known_issues#fingerprint]] of
   the known issues page.
+* Verify that WebRTC is disabled (compare with another Tails that has
+  the `media.peerconnection.enabled` pref set to *true*):
+  - <http://mozilla.github.io/webrtc-landing/> (it's expected that the
+    `getUserMedia` audio test works if you agree to share a microphone
+    with the remote website; anything else should fail)
+  - <http://net.ipcalf.com/>
+* Verify that we're protected against <http://samy.pl/evercookie/>:
+  visit this website so that it installs its crap, close the browser,
+  re-open the browser, visit this website again. The cookie should not
+  be present anymore.
 
 # Pidgin
 
@@ -138,37 +148,37 @@ tracked by tickets prefixed with `todo/test_suite:`.
      show many false positives?)
   1. Then check all destinations, e.g. by using tshark and the script below:
 
-     	# set DUMP to the output of tcpdump above
-     	DUMP=dump
-     	# set CONSENSUS to Tor's consensus from the Tails session
-     	CONSENSUS=cached-microdesc-consensus
-     	NODES=$(mktemp)
-     	awk '/^r / { print $6 }' ${CONSENSUS} > ${NODES}
-     	# Note that these default directory authorities may change! To be
-     	# sure, check in Tor's source, src/or/config.c:~900
-     	DIR_AUTHS="
-     	128.31.0.39
-     	86.59.21.38
-     	194.109.206.212
-     	82.94.251.203
-     	76.73.17.194
-     	212.112.245.170
-     	193.23.244.244
-     	208.83.223.34
-     	171.25.193.9
-     	154.35.32.5
-     	"
-     	tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
-     	while read x; do
-     	    ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
-     	    if echo ${DIR_AUTHS} | grep -qe "${ip_expr}"; then
-     	        continue
-     	    fi
-     	    if ! grep -qe "^${ip_expr}$" ${NODES}; then
-     	        echo "${x} is bad"
-     	    fi
-     	done
-     	rm ${NODES}
+         # set DUMP to the output of tcpdump above
+         DUMP=dump
+         # set CONSENSUS to Tor's consensus from the Tails session
+         CONSENSUS=cached-microdesc-consensus
+         NODES=$(mktemp)
+         awk '/^r / { print $6 }' ${CONSENSUS} > ${NODES}
+         # Note that these default directory authorities may change! To be
+         # sure, check in Tor's source, src/or/config.c:~900
+         DIR_AUTHS="
+         128.31.0.39
+         86.59.21.38
+         194.109.206.212
+         82.94.251.203
+         76.73.17.194
+         212.112.245.170
+         193.23.244.244
+         208.83.223.34
+         171.25.193.9
+         154.35.32.5
+         "
+         tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
+         while read x; do
+             ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
+             if echo ${DIR_AUTHS} | grep -qe "${ip_expr}"; then
+                 continue
+             fi
+             if ! grep -qe "^${ip_expr}$" ${NODES}; then
+                 echo "${x} is bad"
+             fi
+         done
+         rm ${NODES}
 
      Note that this script will produce some false positives, like your
      gateway, broadcasts, etc.
@@ -279,7 +289,7 @@ the appropriate tcpdump or tshark filters.
 * is any local hard-disk swap partition used as swap?
   boot on a (possibly virtual) machine that has a cleartext swap
   partition not managed by LVM. This swap partition must not be used
-  by Tails.
+  by Tails. Run `cat /proc/swaps`.
 * is a persistence volume on a local hard-disk partition used?
   (Hint: setup a libvirt USB disk with GPT and a partition labeled
   `TailsData`, set the `removable` flag on it, check that
@@ -331,7 +341,7 @@ the appropriate tcpdump or tshark filters.
 => the date should be corrected and Tor/Vidalia should start
 correctly.
 
-# erase memory on shutdown
+# Erase memory on shutdown
 
 - check that `memlockd` is running
 - check that `udev-watchdog` monitors the right device
@@ -362,7 +372,7 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # Virtualization support
 
-* test in VirtualBox
+* Test that Tails starts and the browser launches in VirtualBox.
 
 # I2P
 
@@ -555,9 +565,10 @@ language.
 * Once [[!tails_todo fix_localized_iceweasel_search_engine]] is fixed, the
   iceweasel search engine must be localized (for languages we ship
   a localized searchplugin for).
-* Once [[!tails_todo select_localized_spelling_dictionary_in_Iceweasel]] is
-  fixed, the iceweasel spelling dictionary must be localized (for
-  languages that are supported by our branding extension).
+* Once [[!tails_ticket 5962]] is fixed, the browser spelling
+  dictionary must be localized (for languages that are supported by
+  our branding extension). In the meantime, it must at least work for
+  French, German, Italian, Portuguese and Spanish.
 
 # Misc
 
