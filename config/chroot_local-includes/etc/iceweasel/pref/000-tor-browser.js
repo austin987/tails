@@ -40,6 +40,8 @@ pref("browser.safebrowsing.enabled", false);
 pref("browser.safebrowsing.malware.enabled", false);
 pref("browser.download.manager.scanWhenDone", false); // prevents AV remote reporting of downloads
 pref("extensions.ui.lastCategory", "addons://list/extension");
+pref("datareporting.healthreport.service.enabled", false);
+pref("security.mixed_content.block_active_content", false); // Disable until https://bugzilla.mozilla.org/show_bug.cgi?id=878890 is patched
 
 // Fingerprinting
 pref("webgl.min_capability_mode", true);
@@ -53,7 +55,7 @@ pref("general.appname.override", "Netscape");
 pref("general.appversion.override", "5.0 (Windows)");
 pref("general.oscpu.override", "Windows NT 6.1");
 pref("general.platform.override", "Win32");
-pref("general.useragent.override", "Mozilla/5.0 (Windows NT 6.1; rv:17.0) Gecko/20100101 Firefox/17.0");
+pref("general.useragent.override", "Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0");
 pref("general.productSub.override", "20100101");
 pref("general.buildID.override", "20100101");
 pref("browser.startup.homepage_override.buildID", "20100101");
@@ -92,6 +94,7 @@ pref("network.protocol-handler.warn-external.snews", true);
 pref("plugins.click_to_play", true);
 pref("plugin.state.flash", 1);
 pref("plugins.hide_infobar_for_missing_plugin", true);
+pref("media.peerconnection.enabled", false); // Disable WebRTC interfaces
 
 // Network and performance
 pref("network.http.pipelining", true);
