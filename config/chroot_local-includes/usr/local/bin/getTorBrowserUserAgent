@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use 5.10.0;
+use Fatal qw( open close );
+
+sub getTorBrowserUserAgent {
+    my $file = shift;
+
+    my $ua;
+    open (my $in, "<", $file);
+    while (my $line = <$in>) {
+        chomp $line;
+        if (($ua) = ($line =~ m/^pref[(]"general[.]useragent[.]override", "(.*)"[)];$/)) {
+            last;
+        }
+    }
+    close $in;
+    return $ua;
+}
+
+my $ua = getTorBrowserUserAgent('config/chroot_local-includes/etc/iceweasel/pref/000-tor-browser.js');
+if (defined $ua && $ua) {
+    say $ua;
+}
+else {
+    die "Unparseable file."
+}
