@@ -1,3 +1,5 @@
+[[!meta title="Incremental upgrades"]]
+
 [[!toc levels=3]]
 
 # Rationale
@@ -21,9 +23,22 @@ should provide an automated way of doing the upgrade.
 * **target files**: the whole set of files included by reference into
   an upgrade; e.g. this may be an IUK or a full image.
 
-# Current status and roadmap
+# Roadmap
 
 See [[the blueprint|blueprint/incremental_upgrades]].
+
+<a id="code"></a>
+
+# Code
+
+Most the code needed to implement this design lives in the `iuk` [Git
+repository](https://git-tails.immerda.ch/iuk/).
+
+The rest lives in the main Tails [[contribute/Git]] repository:
+
+* [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-upgrade-frontend-wrapper]]
+* [[!tails_gitweb config/chroot_local-includes/etc/sudoers.d/zzz_upgrade]]
+* [[!tails_gitweb config/chroot_local-includes/usr/share/applications/tails-upgrader.desktop]]
 
 # Scenarios
 
@@ -449,11 +464,6 @@ GnuPG trusts the signatures made with the associated private key.
 The `verify` method return value is `waitpid`'d for, and the GnuPG
 child process exit status examined (zero means verification succeeded,
 non-zero means verification failure).
-
-# Code
-
-* The bulk of the code needed to implement this design lives in the
-  `iuk` [[contribute/Git]] repository.
 
 <a id="security"></a>
 

@@ -46,17 +46,12 @@ relevant tag of Tails' perl5lib):
     # Run the rest of the test suite
     RELEASE_TESTING=1 LC_ALL=C PERL5LIB=/home/user/tails/perl5lib/lib dzil test
 
-Build an upstream tarball:
+Build an upstream tarball, tag the release, move the tarball out of
+the build repository and cleanup:
 
-    dzil build
-
-Tag the release:
-
-    git tag -s $VERSION -m "tails-iuk $VERSION"
-
-Move the tarball out of the build repository and cleanup:
-
-    mv Tails-IUK*.tar.gz .. && rm -rf Tails-IUK-* .build po/*.mo
+    dzil build && \
+       git tag -s $VERSION -m "tails-iuk $VERSION" && \
+       mv Tails-IUK*.tar.gz .. && rm -rf Tails-IUK-* .build po/*.mo
 
 Update the Debian package
 =========================
@@ -81,14 +76,11 @@ Commit `debian/changelog`:
     git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
 Build a Debian package (use a Squeeze chroot with `squeeze-backports`
-enabled, and the `tails-perl5lib` package available):
+enabled, and the `tails-perl5lib` package available), add a signed tag
+to the repository and push the changes:
 
-    git-buildpackage
-
-If everything is fine, add a signed tag to the repository and push the
-changes:
-
-    git-buildpackage --git-tag-only --git-sign-tags && \
+    git-buildpackage && \
+       git-buildpackage --git-tag-only --git-sign-tags && \
        git push && git push --tags
 
 Add the Debian package to Tails

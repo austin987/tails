@@ -11,8 +11,11 @@ PYTHON_PROGS="/etc/whisperback/config.py /usr/local/bin/shutdown_helper_applet \
 SHELL_PROGS="/usr/local/bin/tails-update-frontend-wrapper \
    /usr/local/sbin/unsafe-browser /usr/share/tails/truecrypt-wrapper.disabled"
 
-LANGUAGES=$(for po in po/*.po ; do rel="${po%.po}" ; echo "${rel#po/}"; done)
 LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
+
+### External libraries
+
+. config/chroot_local-includes/usr/local/lib/tails-shell-library/po.sh
 
 ### Functions
 
@@ -74,15 +77,6 @@ intltool_update_pot () {
    )
 }
 
-intltool_update_po () {
-   (
-      cd po
-      for locale in "$@" ; do
-	 intltool-update --dist --gettext-package=tails $locale
-      done
-   )
-}
-
 intltool_merge () {
    grep -E --no-filename '[^ #]*\.(desktop|directory)\.in$' po/POTFILES.in \
       | while read infile ; do
@@ -109,10 +103,10 @@ intltool_update_pot
 no_left_out_files || exit 3
 
 # Update PO files
-intltool_update_po $LANGUAGES
+intltool_update_po $(po_languages)
 
 # Update files that are actually used at runtime
-refresh_mo $LANGUAGES
+refresh_mo $(po_languages)
 intltool_merge
 
 # Report back

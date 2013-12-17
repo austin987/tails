@@ -276,6 +276,91 @@ same nickname by default, etc.
 Tails is a full operating system, so a *new identity* should be thought on a
 broader level than only changing the Tor circuits.
 
+<rawmaterial>
+
+Random package
+--------------
+
+That is not an official Debian package and in that sense it won't benefit from
+the many advantages of a real inclusion in Debian, which makes it otherwise
+non-sustainable for us to include such packages:
+
+  - be under the scrutiny of the Debian community
+  - provide OpenPGP signed packages
+  - follow the Debian process for security updates and new versions
+
+But if Retroshare already proposes a non-official Debian package, maybe they are not so far from having it into Debian. You could check with them if that is in their plan.
+
+Why doesn't Tails ship software XYZ?
+
+First of all, please ask yourself, seriously, why should Tails ship
+software XYZ.
+
+There are many, many possible reasons why Tails does not ship software
+XYZ.
+
+0. It may have licensing issues that prohibit us from shipping it (or
+   shipping modified versions of it, which is just as bad).
+0. It may not be part of Debian stable, or even part of Debian, or
+   even packaged for Debian.
+0. It may be in conflict with our [[specification|contribute/design]],
+   or it may satisfy use cases Tails is not supposed to support.
+0. It may have privacy or anonymity issues. Was it ever audited in
+   this context?
+
+Also, generally we try not to add too much software into Tails,
+and are very careful before adding more stuff:
+
+* More software implies more security issues.
+* We do care about backward compatibility. Removing a software package
+  is problematic, even if it should be removed due to e.g. security
+  concerns, since users may have come to rely on it. In these cases we
+  really want to provide them with suitable alternatives.
+* Tails ISO image size matters.
+
+To end with, it might be that we simply have not thought of software
+XYZ yet. Reading our [[design document|contribute/design]] may help
+you understand which use cases Tails covers and hence which types of
+software we may consider. If you feel that XYZ would fill up an empty
+space, please [[!tails_redmine "" desc="suggest it to us"]] and give valid
+points for its inclusion.
+
+Proxy
+-----
+
+How_do_you_chain_a_proxy_after_TOR___63__
+Next_Tails_version_should_have_proxychains_for_socks_after_exit_node
+alternative_way_to_connect_to_web
+featurerequest:_proxychains
+
+easy way to chain a SOCKS5 proxy after the hop off the exit node of TOR.
+
+I need to  hide the fact that I'm coming from TOR, because many websites block tor.
+
+I have found some websites that explain how to create an SSH tunnel, but using the terminal is above my level of skills :)
+
+It should be possible to use a program like Proxify to chain a proxy, but I
+don't know if this creates conflicts, and I don't know how to install a program
+that can run of the persistent volume.
+
+Surely there is someone who can simply give us a paragraph of text to enter into
+the polipo config file ( where i add the ip address and port for the SOCKS5 i
+bought ) or give some other instructions.
+
+ * Use something like `ssh -D 1081`. See `DynamicFoward` in `ssh_config(5)`.                                        * Use `iptables` to allow connections to 1081 on localhost.
+ * For websites, modify FoxyProxy settings to add a new proxy, before rules
+   for Tor, that contains the addresses that needs to be reached, and
+   which directs connections to 1081.
+ * For other programs, draft a dedicated `tsocks.conf`. Use
+   `TSOCKS_CONF_FILE=tsocks-specific.conf tsocks ssh one.example.org`.
+
+`proxychains` is in Debian, the package is called by the same name. This means
+it is straightforword to install it in Tails. There is no way in can be
+preconfigured for every Tails users, so it's hard to see why it should be
+included in the default package set.
+
+</rawmaterial>
+
 Other topics
 ============
 
