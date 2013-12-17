@@ -529,6 +529,9 @@ image to be released was *built*. Including:
   <http://ftp-master.metadata.debian.org/changelogs/main/l/linux/unstable_changelog>
 - the list of DSA fixed in packages we ship since those that were in
   the previous release of Tails: <http://security.debian.org/>
+- the list of BSA fixed in packages we ship since those that were in
+  the previous release of Tails:
+  <https://lists.debian.org/debian-backports-announce/>
 - the list of MFSA fixed by the iceweasel update:
   <https://www.mozilla.org/security/announce/>
 
@@ -631,18 +634,29 @@ Prepare for the next release
      APT levels)
 
          for branch in $UNMERGED_BRANCHES ; do
+            git merge $branch
             suite=$(echo $branch | sed -e 's,[/_],-,g')
-            ssh reprepro@incoming.deb.tails.boum.org tails-merge-suite $suite experimental
+            if [ $(ssh reprepro@incoming.deb.tails.boum.org reprepro list $suite | wc -l) -gt 0 ] ; then
+               ssh reprepro@incoming.deb.tails.boum.org tails-merge-suite $suite experimental
+            fi
          done
-
-     Note that the merge will fail for suites that contain no package.
 
    - `git push --force origin experimental`
 1. Push the release tag to lizard for Jenkins' consumption: `git push --tags lizard`
-1. Manually trigger Jenkins builds of experimental, devel and stable:
+1. Force-push all major branches to lizard:
+
+           for branch in stable testing devel experimental ; do
+              git push --force lizard $branch:$branch
+           done
+
+1. Make sure Jenkins manages to build all major branches fine:
    <https://jenkins.tails.boum.org/>.
-1. Bonus points if you care about Tails 1.1: update the Iceweasel
-   packages for feature/wheezy, and trigger a Jenkins build thereof.
+1. Bonus points if you:
+   - Merge devel into feature/wheezy, if the latter is not lagging
+     behind too much. Doing it for APT is quite tricky, enjoy.
+   - Update the packages (Iceweasel, tails-greeter, etc.) that require
+     to be rebuilt for feature-wheezy.
+   - Trigger a Jenkins build of feature/wheezy.
 
 Related pages
 =============

@@ -225,11 +225,18 @@ and commit:
 **Else**, proceed with the following steps.
 
 * Make sure all quilt patches are applied.
-* Unapply all Torbrowser patches: use `quilt pop` as many times
-  as needed.
+* Unapply all Torbrowser patches: use `quilt pop` as many times as
+  needed.
+* Revert our changes (with `--no-commit`) to
+  `debian/patches/configure.patch` if needed, and deapply it:
+
+      cat debian/patches/configure.patch | patch -p1 --reverse
+
+* `quilt delete` the `configure.patch` if it exists.
+
 * Remove all Torbrowser patches from the series:
 
-      quilt unapplied | xargs -n 1 quilt delete
+      quilt unapplied | grep --color=never '^torbrowser/' | xargs -n 1 quilt delete
 
 * Remove Torbrowser patches from Git:
 
@@ -407,7 +414,10 @@ skipped) the solution is to:
            git diff configure js/src/configure > "$configure_diff" && \
            git reset --hard && \
            git clean -fdx -e /.pc/ && \
-           quilt import -P configure.patch "$configure_diff" && \
+           quilt import -f -P configure.patch "$configure_diff" && \
            git commit debian/patches -m "Refresh configure.patch." && \
            quilt push && \
            git commit -a -m 'Apply configure.patch.'
+
+Note that `configure.patch` must always be the *last* patch in the
+quilt series file, after the TorBrowser ones.
