@@ -52,6 +52,14 @@ def primary_vm
   end
 end
 
+def primary_vm_state
+  if vagrant_old
+    return primary_vm.state
+  else
+    return primary_vm.state.id
+  end
+end
+
 def current_vm_memory
   vm = primary_vm
   uuid = vm.uuid
@@ -67,8 +75,7 @@ def current_vm_cpus
 end
 
 def vm_running?
-  vm = primary_vm
-  vm.state == :running
+  primary_vm_state == :running
 end
 
 def enough_free_memory?
@@ -228,7 +235,7 @@ end
 namespace :vm do
   desc 'Start the build virtual machine'
   task :up => ['parse_build_options', 'validate_http_proxy'] do
-    case primary_vm.state
+    case primary_vm_state
     when :not_created
       # Do not use non-existant in-VM proxy to download the basebox
       if ENV['http_proxy'] == INTERNEL_HTTP_PROXY
