@@ -117,6 +117,7 @@ user_pref("extensions.foxyproxy.last-version", "99999.99");
 user_pref("extensions.foxyproxy.socks_remote_dns", true);
 user_pref("extensions.update.enabled", false);
 user_pref("layout.spellcheckDefault", 0);
+user_pref("media.peerconnection.enabled", false);
 user_pref("network.dns.disableIPv6", true);
 user_pref("security.warn_submit_insecure", true);
 user_pref("torbrowser.version", "Tails");

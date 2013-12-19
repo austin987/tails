@@ -22,13 +22,6 @@ Install the dependencies:
     DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::LocaleMsgfmt
 
 
-Update POT and PO files
-=======================
-
-    git checkout master && \
-        ( cd po && make pot && make update-po ) && \
-        git commit po -m 'Update POT and PO files.'
-
 Make an upstream release
 ========================
 
@@ -86,7 +79,9 @@ Commit `debian/changelog`:
 
         git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
-Build a Debian package (use a Squeeze/i386 + backports chroot):
+Build a Debian package (use a Squeeze/i386 + backports chroot, that
+has either tails-perl5lib installed, or the Tails APT repository
+configured):
 
     git-buildpackage
 

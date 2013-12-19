@@ -767,18 +767,27 @@ script also selects the right default input method.
 ## 3.4 Notification of security issues and new Tails release
 
 Shipped in Tails is a script that checks at each desktop start if
-security issues or new Tails releases are published on the website. If
-some are found, a graphical notification is displayed. This
-application is internationalized.
+security issues or new Tails releases are published on the website.
+If some are found, a graphical notification is displayed.
+The connections go through tor and are made over HTTPS with a pinned
+CA. The only information leaked to the Tails web server (apart of
+[[!cpan LWP::UserAgent]]'s specific User-Agent and HTTP behavior) is
+the first two chars of the `LANG` environment variable.
+
+This script is run once Tor is known-working.
 
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check-wrapper]]
 
 ## 3.5 Feedback
 
 Users can send feedback in several ways to Tails developers.
 A [[!tails_redmine desc="task tracker"]] is available.
 Users can also send email to the private [developers mailing
-list](tails@boum.org). A dedicated application called *WhisperBack*
+list](tails@boum.org) or to the public [support mailing
+list](tails-support@boum.org).
+
+A dedicated application called *WhisperBack*
 is also available in every running Tails copy. WhisperBack allows
 users to send anonymous or pseudonymous feedback via OpenPGP-encrypted
 email. It is configured in Tails to use a Tor hidden service run by
@@ -1098,7 +1107,7 @@ prefer strong ciphers and MACs..
 
 ### 3.6.21 Incremental upgrades
 
-PENDING-FOR-0.22-or-0.23:
+PENDING-FOR-0.23:
 
 When a Tails release is out, Tails users are proposed to download and
 apply a partial upgrade (that is, only what has changed between two
