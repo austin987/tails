@@ -340,6 +340,22 @@ Scripts:
 * [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-unblock-network]]
   (runs right after Tails Greeter logs in)
 
+### Potential for blocking the desktop
+
+The call of `udev settle` may block for up to 120 seconds (the default
+timeout) during Tails Greeter's PostLogin in case of some broken
+hardware and/or crappy udev rules. In other words, the Tails desktop
+may be blocked for this long, without any notification.
+
+If this turns out to be a problem (currently it's only guesswork) we
+could make two `udev settle`:s, one with a short timeout (10 seconds)
+and if it fails we show a notification and optimistically start
+another `udev settle` *in* *a* *sub-shell* so it doesn't block the
+Tails desktop from starting any more.
+
+For more, see this sub-thread on tails-dev:
+<https://mailman.boum.org/pipermail/tails-dev/2013-November/004299.html>
+
 ## Trigger
 
 We use udev as the trigger that hooks MAC address spoofing. Because of
