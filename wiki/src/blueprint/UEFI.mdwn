@@ -230,7 +230,7 @@ EOF
 syslinux
 --------
 
-Tested with syslinux 6.02+dfsg-1.
+Tested with .
 
 	sudo apt-get install syslinux/experimental \
 	   syslinux-common/experimental isolinux/experimental
@@ -242,11 +242,13 @@ Tested with syslinux 6.02+dfsg-1.
 	   cp /usr/lib/SYSLINUX/efi64/syslinux.efi \
 	      "$TAILS_MOUNTPOINT"/EFI/BOOT/bootx64.efi && \
 	   cp "$TAILS_MOUNTPOINT"/syslinux/* "$TAILS_MOUNTPOINT"/EFI/BOOT/ & \
-	   cp /usr/lib/syslinux/modules/efi64/* "$TAILS_MOUNTPOINT"/EFI/BOOT/
+	   /bin/cp -f /usr/lib/syslinux/modules/efi64/* "$TAILS_MOUNTPOINT"/EFI/BOOT/
 
-* boots on ThinkPad X220, X230, ThinkPenguin Royal
-* does not boot on MacBook Pro 13-inc Mid 2012 without rEFInd
+* boots on ThinkPad X220 (syslinux 6.02+dfsg-1)
+* boots on X230 (syslinux 6.02+dfsg-1)
+* boots on ThinkPenguin Royal (syslinux 6.02+dfsg-1 and 6.03~pre1+dfsg-1)
+* does not boot on MacBook Pro 13-inc Mid 2012 without rEFInd (expected)
 * boots on MacBook Pro 13-inc Mid 2012 with rEFInd *if* `menu
   background splash.png` is removed from `stdmenu.cfg`; one has to
   choose *Fallback boot loader from Tails* in rEFInd, *Boot Linux from
-  Tails* does nothing at all
+  Tails* does nothing at all (syslinux 6.02+dfsg-1 and 6.03~pre1+dfsg-1)
