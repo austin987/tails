@@ -421,29 +421,6 @@ when entering the wrong passphrase, so no false positives in that
 For details, see the script:
 [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-blocked-network-detector]]
 
-## MAC spoofing and virtual machine networking issues
-
-Some virtualization tools seem to behave poorly when spoofing virtual NIC
-MAC addresses. For instance, VirtualBox's networking completely breaks
-when using bridge- and NAT-based adapters in combination with
-MAC-spoofing, and those two are probably the two most common scenarios
-(NAT-based in particular). Therefore, if it is detected (using
-`virt-what`) that Tails is running inside a virtual machine, then
-MAC spoofing is disabled by default. If the user still enables the
-option, a warning is immediately shown.
-
-When running Tails inside a virtual machine, MAC spoofing is mostly
-useless, at least when NAT-based (and similar) approaches to network
-sharing are used, since only the host system will see the MAC address.
-However, that's not the case with bridged connections, but on the other
-hand only the virtual NICs MAC address is leaked, which usually is
-randomised upon creation any way. Still, this could leak to breaking
-AvoidTracking, since the MAC address usually is persistent. We may
-want to document this, and advice users to preferably use NAT-based
-virtual adapters (which usually is the default). Users that must use
-bridged connection will have to manually randomise the MAC address
-each boot.
-
 # Future work
 
 ## Using NetwokManager for AvoidConnectionProbs?
