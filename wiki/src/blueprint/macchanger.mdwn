@@ -22,6 +22,38 @@ some cases MAC spoofing may cause network connection issues or even
 raise alarms; care should be taken to prevent MAC spoofing in such
 situations.
 
+# Restrictions
+
+While some of the following concerns are related to MAC spoofing (or
+very similar in spirit) they are not covered in this feature.
+
+## IMEI
+
+[[!wikipedia IMEI] numbers is another unique modifier affecting mobile
+network devices (e.g. 3G, but *not* Wi-Fi) that is very similar to MAC
+addresses and can be used by adversaries in similar ways. Given this
+similarity we'd like to deal with IMEI spoofing (or similar) in this
+feature but the lack of proper tools prevent us from doing it
+properly.
+
+## Pre-OS network activity
+
+It should be noted that we cannot do anything against network activity
+caused at BIOS time, such as [[!wikipedia Intel AMT]], beyond urging
+users to disable such feature (if possible, like it is for Intel AMT).
+
+## Profiling based on chipset/driver particularities
+
+It's possible to profile the particular chipset and/or driver used by
+a device based on the active probing algorithm used, and its
+parameters (e.g. channel probe order, how many probes sent per
+channel, time spend per channel). See for instance the paper
+[A Characterization of Wireless NIC Active Scanning Algorithms](http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=4224690&tag=1).
+
+Dealing with this may be impossible, or at least require re-writing
+all Linux wireless drivers so that the parameters can be changed so we
+cannot practically deal with this issue at this point.
+
 # Threat model
 
 ## Adversary capabilities
@@ -63,13 +95,6 @@ happens on a global, omniscient level thanks to AdvCapSniff:
 4. Identify MAC spoofing individuals. We assume that our adversary has
    bought into the "nothing to hide" argument, which makes such
    suspicious behaviour valuable information. [AdvGoalIdMacSpoof]
-
-Note that none of the goals deal with other types of unique
-identifiers than MAC addresses. In particular, logging of IMEI:s [1],
-used by mobile NIC:s, are omitted (mostly due to lack of proper
-tools).
-
-[1] http://en.wikipedia.org/wiki/IMEI
 
 ## Tails user goals
 
