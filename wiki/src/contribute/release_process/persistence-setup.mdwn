@@ -45,29 +45,21 @@ relevant tag of Tails' perl5lib):
 
     RELEASE_TESTING=1 PERL5LIB=/home/user/tails/perl5lib/lib fakeroot dzil test
 
-Build an upstream tarball:
+Build an upstream tarball, tag the release, move the tarball out of
+the build repository and cleanup:
 
-    dzil build
-
-Tag the release:
-
-    git tag -s $VERSION -m "tails-persistent-setup $VERSION"
-
-Move the tarball out of the build repository and cleanup:
-
-    mv Tails-Persistence-*.tar.gz .. && \
+    dzil build && \
+       git tag -s $VERSION -m "tails-persistent-setup $VERSION" && \
+       mv Tails-Persistence-*.tar.gz .. && \
        rm -rf Tails-Persistence-* .build po/*.mo
 
 Update the Debian package
 =========================
 
-Checkout the branch with Debian package specifics:
+Checkout the Debian packaging branch and import the new upstream tarball:
 
-    git checkout debian
-
-Import the new upstream tarball:
-
-    git-import-orig --upstream-vcs-tag=$VERSION ../Tails-Persistence-$VERSION.tar.gz
+    git checkout debian && \
+       git-import-orig --upstream-vcs-tag=$VERSION ../Tails-Persistence-$VERSION.tar.gz
 
 Update `debian/changelog`:
 
