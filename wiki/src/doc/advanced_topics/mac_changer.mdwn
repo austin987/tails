@@ -1,25 +1,90 @@
-[[!meta title="Enable MAC Changer"]]
+[[!meta title="MAC address spoofing"]]
 
-<div class="bug">
+# Background
 
-<p>Macchanger is shipped in Tails but there is currently no documented method of
-using it.</p>
+Every network device (wired, Wi-Fi/wireless, 3G/mobile) has a so
+called [[!wikipedia MAC address]], which is a unique identifier used
+to address them on the local network. Broadcasting a unique identifier
+in this manner introduce a couple of potential privacy issues for
+Tails users of which the main one is geographical location tracking;
+observing a MAC address at a particular location and time ties the
+corresponding device to the same location and time. If the real
+identity of the device is known, his or her movements can be
+determined. To prevent this one can temporarily change the MAC address
+to something random at each boot, which is referred to as "MAC address
+spoofing".
 
-<p>[[!tails_todo macchanger desc="See the corresponding ticket."]]</p>
+As mentioned above, MAC addresses are normally only used on the
+*local* network, and are not supposed to ever reach the Internet.
+However, [[!wikipedia captive portals]] may send MAC addresses of
+users accessing its services to authentication servers. In any case it
+should be noted that the location tracking issue we are talking about
+here ha no effect on Internet anonymity, like Tails' web-browser.
 
-</div>
+# When to keep MAC address spoofing enabled
 
-First of all, you should know that all network cards, both wired and
-wireless, have a unique identifier stored in them called their MAC
-address. This address is actually used to address your computer on the
-_local_ network. It will usually not go out on the Internet but some
-public Wi-Fi connections transmit that MAC address to a central
-authentication server, for example when logging into their service.
-It is never
-useful enabling this option if you are using a public computer – only
-use this if you are using a computer that can be linked to you on a
-public network.
+Tails spoofs the MAC addresses of all network devices **by default**.
+It can be disabled by unchecking the corresponding option in Tails
+Greeter but in general it is beneficial (or of little or no
+consequence) to keep it enabled even if one doesn't care about hiding
+one's geographical location.
 
-The reason why this is not always enabled is that is might cause
-problems on some networks, so if you experience network problems while
-it is enabled you might want try disabling it.
+Here are a few examples of when you may want to leave this option
+enabled in order to hide you geographical movement while using Tails:
+
+* **Running Tails on your computer on an *open* public network**. With
+  an "open" public network we mean a network that doesn't require any
+  kind of registration (with you real identity) in order to access.
+
+* **Running Tails on your computer at a friend's place**. This rule
+  also applies to "workplace", "school/university" or other locations
+  you have a strong relationship with. The relationship ties you to
+  the location any way but sometimes one may want to not be associated
+  to the place at a *particular* *time*, which makes keeping this
+  option enabled worthwhile.
+
+# When to disable MAC address spoofing
+
+In some situations MAC address spoofing won't add any benefits but
+instead only cause suspicious network activity or connection
+issues. Therefore, in the following situations we recommend disabling
+this option:
+
+* **Running Tails at home**. The deep association to the location
+  makes this essentially meaningless, and may cause connection issues
+  (some ISP-provided modems or routers restrict access based on MAC
+  addresses).
+
+* **Running Tails on a public computer**, like a library
+  computer. Since it's not your device, it's not associated to you
+  directly, so spoofing its MAC address is pointless. Not only that,
+  it can cause connection issues, or worse, attract suspicion from the
+  network administrators, so it should really be avoided.
+
+* **Running Tails on your computer using a *restricted* public
+  network**. As opposed to an "open" public network, with "restricted"
+  we mean that real identity registration is required.
+
+* **When you experience network issues** due to MAC address
+  restrictions on the network, or problems with your network devices
+  (or its driver). In this case MAC address spoofing simply isn't
+  available, so disabling it is the only way to get a working network
+  connect. However, disabling it brings back location tracking, so if
+  that is of importance the only option may be to either use a
+  different network device, or move to a location without MAC address
+  restrictions, depending on which of them that caused the issue.
+
+# Other considerations
+
+* We urge users to disable [[!wikipedia Intel AMT]] since it may leak
+  the *real* MAC address before Tails starts and is able to do
+  anything about it.
+
+* If you have MAC address spoofing enabled and then reboot your
+  computer to another operating system (like Windows or Mac OS X) you
+  will give away your geographical location any way.
+
+* Otherwise "open" public networks should perhaps be considered as
+  "restricted" in case heavy video surveillance (or similar) is
+  employed. Note that you may want to consider the memory of employees
+  or other regulars at the place as surveillance.
