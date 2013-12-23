@@ -1,10 +1,11 @@
 require 'digest'
 require 'vagrant/util/downloader'
+require 'vagrant/errors'
 
 def check(path)
   checksum = Digest::SHA256.new.file(path).hexdigest
   if checksum != BOX_CHECKSUM
-    raise Errors::BoxVerificationFailed.new
+    raise Vagrant::Errors::BoxVerificationFailed.new
   end
 end
 
