@@ -156,8 +156,10 @@ configure_chroot () {
 
     # Remove all Iceweasel addons: some adds proxying, which we don't
     # want; some may change the fingerprint compared to a standard
-    # Iceweasel install.
-    chroot ${CHROOT} apt-get remove --yes xul-ext-*
+    # Iceweasel install. Note: We cannot use apt-get since we don't ship its
+    # lists (#6531). Too bad, APT supports globbing, while dkpg does not.
+    dpkg -l 'xul-ext-*' | /bin/grep '^ii' | awk '{print $2}' | \
+        xargs chroot ${CHROOT} dpkg --remove
 
     # Disable proxying in the chroot
     sed -r -i '/^(user_|)pref\("network\.proxy\..*",/d' \
