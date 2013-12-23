@@ -81,11 +81,21 @@ Upgrade bundled binary Debian packages
 That is: make sure the bundled binary Debian packages contain
 up-to-date localization files.
 
-For each bundled Debian package, run the included `import-translations`
-script if one exists, or copy updated PO files from the
+For each bundled Debian package, `cd` into the package's root
+directory (e.g. a checkout of the `whisperback` repository),
+and then run the `import-translations` script that is in the
+main Tails repository. For example:
+
+	cd whisperback
+	../tails/import-translations
+
+If the `import-translations` script fails to import translations for
+the current package, manually copy updated PO files from the
 Transifex branches of `git://git.torproject.org/translation.git` (e.g.
-`whisperback_completed`). Skip PO files for [[translation teams that use
-Git|contribute/how/translate#translate]]. Verify and commit.
+`whisperback_completed`) instead. Skip PO files for [[translation
+teams that use Git|contribute/how/translate#translate]].
+
+Verify, add and commit.
 
 Then check the PO files [[using i18nspector|contribute/l10n_tricks]].
 Correct all the errors that are not in the ignored list of
@@ -519,6 +529,9 @@ image to be released was *built*. Including:
   <http://ftp-master.metadata.debian.org/changelogs/main/l/linux/unstable_changelog>
 - the list of DSA fixed in packages we ship since those that were in
   the previous release of Tails: <http://security.debian.org/>
+- the list of BSA fixed in packages we ship since those that were in
+  the previous release of Tails:
+  <https://lists.debian.org/debian-backports-announce/>
 - the list of MFSA fixed by the iceweasel update:
   <https://www.mozilla.org/security/announce/>
 
@@ -621,18 +634,29 @@ Prepare for the next release
      APT levels)
 
          for branch in $UNMERGED_BRANCHES ; do
+            git merge $branch
             suite=$(echo $branch | sed -e 's,[/_],-,g')
-            ssh reprepro@incoming.deb.tails.boum.org tails-merge-suite $suite experimental
+            if [ $(ssh reprepro@incoming.deb.tails.boum.org reprepro list $suite | wc -l) -gt 0 ] ; then
+               ssh reprepro@incoming.deb.tails.boum.org tails-merge-suite $suite experimental
+            fi
          done
-
-     Note that the merge will fail for suites that contain no package.
 
    - `git push --force origin experimental`
 1. Push the release tag to lizard for Jenkins' consumption: `git push --tags lizard`
-1. Manually trigger Jenkins builds of experimental, devel and stable:
+1. Force-push all major branches to lizard:
+
+           for branch in stable testing devel experimental ; do
+              git push --force lizard $branch:$branch
+           done
+
+1. Make sure Jenkins manages to build all major branches fine:
    <https://jenkins.tails.boum.org/>.
-1. Bonus points if you care about Tails 1.1: update the Iceweasel
-   packages for feature/wheezy, and trigger a Jenkins build thereof.
+1. Bonus points if you:
+   - Merge devel into feature/wheezy, if the latter is not lagging
+     behind too much. Doing it for APT is quite tricky, enjoy.
+   - Update the packages (Iceweasel, tails-greeter, etc.) that require
+     to be rebuilt for feature-wheezy.
+   - Trigger a Jenkins build of feature/wheezy.
 
 Related pages
 =============
