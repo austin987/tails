@@ -3,8 +3,6 @@
 # This script sets up the live user's Gnome theme to something that
 # resembles Microsoft Windows XP.
 
-. /etc/live/config.d/username.conf
-
 # Set IE icon in iceweasel
 ie_icon="/usr/share/icons/GnomeXP/48x48/apps/iceweasel.png"
 for x in /usr/share/iceweasel/chrome/icons/default/*; do
@@ -13,18 +11,17 @@ for x in /usr/share/iceweasel/chrome/icons/default/*; do
 done
 
 # Remove Tails-specific desktop icons
-rm --interactive=never -f /home/${LIVE_USERNAME}/Desktop/*.desktop \
-    /etc/skel/Desktop/*.desktop 2> /dev/null || true
+rm --interactive=never -f ${HOME}/Desktop/*.desktop 2> /dev/null || true
 
 # The part below is based on the XpGnome installation script, written
 # by PhrankDaChicken, available from http://ubunut.online02.com/xpgnome
 
 gconf_set() {
-	sudo -H -u "${LIVE_USERNAME}" gconftool-2 --set "$@"
+	gconftool-2 --set "$@"
 }
 
 gsettings_set() {
-	sudo -H -u "${LIVE_USERNAME}" gsettings set "$@"
+	gsettings set "$@"
 }
 
 # Icon theme
