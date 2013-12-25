@@ -1,10 +1,33 @@
 For Tails 2.0 we want at least basic UEFI boot including Mac.
 
-Some hardware (ThinkPad X220, recent Mac) cannot boot
-Tails from USB, due to firmware limitations.
+[[!toc levels=2]]
 
-Making Tails support UEFI
-would fix this problem on such hardware.
+Goals and non-goals
+===================
+
+Goals
+-----
+
+* devices produced by Tails Installer should boot on most UEFI-only
+  hardware (e.g. some relevant set of Macs)
+* devices produced by Tails Installer should boot on most hardware
+  that only supports UEFI boot for GPT devices (e.g. ThinkPad X220)
+
+Non-goals
+---------
+
+* UEFI DVD boot: BIOS boot from DVD works fine on most hardware,
+  including Macs; adding the files needed to have UEFI DVD boot work
+  on some systems will break what currently works for others.
+* UEFI boot from hybrid ISO cat'd on a USB device: given BIOS DVD boot
+  works generally fine, it's OK to require users to go this way and
+  install their UEFI-capable Tails USB stick from DVD.
+* Secure Boot support is not part of this plan. Picking technical
+  solutions that leave room for Secure Boot would be a great
+  bonus, though.
+
+Resources
+=========
 
 * lernstick Grub configuration, implemented as a live-build binary
   hook, that's meant to be nice with an existing syslinux
@@ -20,8 +43,6 @@ would fix this problem on such hardware.
   Doesn't work with Tails at the moment, but that's a frequent request
   to upstream. Upstream is working on fixing this. That would allow
   starting Tails on Mac UEFI.
-* Mike Hommey's
-  [Debian EFI mode boot on a Macbook Pro, without rEFIt](http://glandium.org/blog/?p=2830)
 * Steve McIntyre's EFI installation progress:
   - [[!debpkg debian-cd]] 3.1.11 has x86 EFI support, see the
     `debian/changelog` for details
@@ -61,8 +82,8 @@ would fix this problem on such hardware.
   details](https://mailman.boum.org/pipermail/tails-dev/2013-February/002587.html).
 * Debian's Linux 3.2 kernel has "UEFI stub" support, which
   allows it to be started directly since the EFI boot menu.
-* Running a UEFI firmware for virtual machines: 
-  `qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd`
+* Running a UEFI firmware for virtual machines (after installing the
+  `ovmf` package): `qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd`
 * [Booting a Self-signed Linux
   Kernel](http://www.kroah.com/log/blog/2013/09/02/booting-a-self-signed-linux-kernel/),
   by Greg Kroah-Hartman
@@ -79,13 +100,6 @@ would fix this problem on such hardware.
 Matthew Garrett:
 
 * [Secure Boot bootloader for distributions available now](http://mjg59.dreamwidth.org/20303.html)
-* [Getting started with UEFI development](http://mjg59.dreamwidth.org/18773.html)
-* detailed [the ISO images for Fedora 17 installation
-  CD](http://mjg59.dreamwidth.org/11285.html) and [their Mac
-  support](http://mjg59.dreamwidth.org/12037.html): it supports BIOS,
-  UEFI, Mac platforms when burned to a CD or written directly to a USB
-  stick. This might be nice for the ISO that Tails distribute, but not
-  applicable to support USB sticks with incremental updates.
 * [An overview of Fedora's Secure Boot implementation](http://mjg59.dreamwidth.org/18945.html)
 
 More technical details:
@@ -96,8 +110,8 @@ There is then two big area that needs work to support EFI:
 
  * ISO images need to support EFI, both for DVD and when [[dumped on USB
    sticks|contribute/design/hybrid_ISO]]. A work similar to the one done by
-   Matthew Garrett on Fedora 17 should probably be done [[!taglink
-   todo/upstream]] in [live-build](http://live.debian.net/).
+   Matthew Garrett on Fedora 17 should probably be done upstream
+   in [live-build](http://live.debian.net/).
  * The [[USB installer|contribute/design/installation]] needs to
    setup the partition table and system partition in a way that can boot
    on both BIOS and UEFI systems. Proper Mac support would be a nice bonus.
@@ -105,7 +119,136 @@ There is then two big area that needs work to support EFI:
 Later
 =====
 
+EFI boot on Mac without rEFInd
+------------------------------
+
+This is not a requirement of ours for the first iteration, but could
+be a nice future improvement.
+
+* Mike Hommey's
+  [Debian EFI mode boot on a Macbook Pro, without
+  rEFIt](http://glandium.org/blog/?p=2830).
+* Matthew Garrett detailed [the ISO images for Fedora 17 installation
+  CD](http://mjg59.dreamwidth.org/11285.html) and [their Mac
+  support](http://mjg59.dreamwidth.org/12037.html): it supports BIOS,
+  UEFI, Mac platforms when burned to a CD or written directly to a USB
+  stick. This might be nice for the ISO that Tails distribute, but not
+  applicable to support USB sticks with incremental updates.
+
 Secure Boot
 -----------
 
 * Matthew Garrett's [Handling UEFI Secure Boot in smaller distributions](http://mjg59.dreamwidth.org/17542.html)
+
+Test results
+============
+
+Prerequisite: Tails with an amd64 kernel (e.g. from current
+experimental branch).
+
+grub-efi
+--------
+
+Tested with grub-efi 2.00-22 from Debian unstable.
+
+	sudo apt-get install grub-efi-amd64-bin
+
+	# make the system partition an *EFI System Partition* (ESP)
+	parted "$TAILS_DEVICE" set 1 boot on
+
+        MODULES="
+           all_video
+           bitmap
+           bitmap_scale
+           boot
+           btrfs
+           bufio
+           cat
+           chain
+           configfile
+           crypto
+           echo
+           efifwsetup
+           efi_gop
+           efinet
+           efi_uga
+           ext2
+           extcmd
+           fat
+           font
+           gettext
+           gfxmenu
+           gfxterm
+           gzio
+           halt
+           hfsplus
+           iso9660
+           jpeg
+           keystatus
+           linux
+           linuxefi
+           loadenv
+           memdisk
+           minicmd
+           normal
+           part_apple
+           part_gpt
+           part_msdos
+           password_pbkdf2
+           png
+           read
+           reboot
+           search
+           search_fs_file
+           search_fs_uuid
+           search_label
+           sleep
+           terminal
+           test
+           trig
+           video
+           video_fb
+        "
+
+	mkdir -p "$TAILS_MOUNTPOINT"/{boot/grub,EFI/BOOT} && \
+	   grub-mkimage --output="$TAILS_MOUNTPOINT"/EFI/BOOT/bootx64.efi \
+	      --format x86_64-efi $MODULES
+
+	cat > "$TAILS_MOUNTPOINT"/boot/grub/grub.cfg <<EOF
+	menuentry Tails --class start {
+		echo $"Loading Tails..."
+		linux /live/vmlinuz2 initrd=/live/initrd2.img boot=live config live-media=removable nopersistent noprompt timezone=Etc/UTC block.events_dfl_poll_msecs=1000 splash nox11autologin module=Tails quiet
+		initrd /live/initrd2.img
+	}
+	EOF
+
+* boots on ThinkPenguin Royal
+* boots on Macbook 13-inch Mid-2012 with rEFInd; one has to choose
+  *Fallback boot loader from Tails* in rEFInd, *Boot Linux from Tails*
+  does nothing at all
+
+syslinux
+--------
+
+Tested with syslinux 6.02+dfsg-1.
+
+	sudo apt-get install syslinux/experimental \
+	   syslinux-common/experimental isolinux/experimental
+
+	# make the system partition an *EFI System Partition* (ESP)
+	parted "$TAILS_DEVICE" set 1 boot on
+
+	mkdir -p "$TAILS_MOUNTPOINT"/EFI/BOOT && \
+	   cp /usr/lib/SYSLINUX/efi64/syslinux.efi \
+	      "$TAILS_MOUNTPOINT"/EFI/BOOT/bootx64.efi && \
+	   cp "$TAILS_MOUNTPOINT"/syslinux/* "$TAILS_MOUNTPOINT"/EFI/BOOT/ & \
+	   /bin/cp -f /usr/lib/syslinux/modules/efi64/* "$TAILS_MOUNTPOINT"/EFI/BOOT/
+
+* boots on ThinkPad X220 (syslinux 6.02+dfsg-1)
+* boots on X230 (syslinux 6.02+dfsg-1)
+* boots on ThinkPenguin Royal (syslinux 6.02+dfsg-1 and 6.03~pre1+dfsg-1)
+* does not boot on MacBook Pro 13-inc Mid 2012 without rEFInd (expected)
+* boots on MacBook Pro 13-inc Mid 2012 with rEFInd *if* `menu
+  background splash.png` is removed from `stdmenu.cfg`; one has to
+  choose *Fallback boot loader from Tails* in rEFInd, *Boot Linux from
+  Tails* does nothing at all (syslinux 6.02+dfsg-1 and 6.03~pre1+dfsg-1)
