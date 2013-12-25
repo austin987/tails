@@ -37,9 +37,15 @@ check_free_memory () {
    cached=$(awk '/^Cached:/{print $2}' /proc/meminfo)
    total_memfree=$(($memfree + $buffers + $cached))
 
-   errormsg="`gettext \"Not enough memory to check if an upgrade is available.
+   errormsg="`gettext \"<b>Not enough memory available to check for upgrades.</b>
 
-Make sure this system satisfies the <a href='file:///usr/share/doc/tails/website/doc/about/requirements/index.en.html'>Tails requirements</a>, try to restart and run <b>Applications</b> -> <b>Tails</b> -> <b>Tails Upgrader</b>.\"`"
+Make sure this system satisfies the requirements for running Tails.
+See file:///usr/share/doc/tails/website/doc/about/requirements/index.en.html.
+
+Try to restart Tails and upgrade again.
+
+Or do a manual upgrade.
+See https://tails.boum.org/doc/first_steps/upgrade#manual\"`"
 
    if [ "$memfree" -lt "$MIN_MEMFREE" ] ; then
       echo "Only $memfree MemFree, while $MIN_MEMFREE is needed." >&2
