@@ -11,7 +11,7 @@ end
 
 Then /^the Unsafe Browser has started$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("UnsafeBrowserWindow.png", 360)
+  @screen.wait("UnsafeBrowserHomepage.png", 360)
 end
 
 Then /^the Unsafe Browser has a red theme$/ do
