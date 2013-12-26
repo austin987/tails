@@ -67,8 +67,6 @@ def usb_install_helper(name)
   @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
 #  @screen.hide_cursor
   @screen.wait('USBInstallationComplete.png', 60*60)
-  @screen.type(Sikuli::Key.ENTER)
-  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
 
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
