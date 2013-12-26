@@ -138,7 +138,7 @@ end
 
 Given /^I create a persistent partition with password "([^"]+)"$/ do |pwd|
   next if @skip_steps_while_restoring_background
-  step "I run \"tails-persistence-setup\""
+  step "I run \"/usr/local/bin/tails-persistence-setup\""
   @screen.wait('PersistenceWizardWindow.png', 20)
   @screen.wait('PersistenceWizardStart.png', 20)
   @screen.type(pwd + "\t" + pwd + Sikuli::Key.ENTER)
