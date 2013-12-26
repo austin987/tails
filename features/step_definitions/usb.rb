@@ -426,7 +426,7 @@ end
 
 When /^I delete the persistent partition$/ do
   next if @skip_steps_while_restoring_background
-  step "I run \"tails-persistence-setup --step delete\""
+  step "I run \"/usr/local/bin/tails-delete-persistent-volume\""
   @screen.wait("PersistenceWizardWindow.png", 20)
   @screen.wait("PersistenceWizardDeletionStart.png", 20)
   @screen.type(" ")
