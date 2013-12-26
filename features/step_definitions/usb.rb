@@ -345,10 +345,10 @@ Then /^persistent filesystems have safe access rights$/ do
     fs_perms = @vm.execute("stat -c %a #{mountpoint}").stdout.chomp
     assert(fs_owner == "root",
            "Persistent filesystem '#{mountpoint}' owned by user '#{fs_owner}', expected 'root'")
-    assert(fs_group == "amnesia",
-           "Persistent filesystem '#{mountpoint}' owned by group '#{fs_group}', expected 'amnesia'")
-    assert(fs_perms == '1777',
-           "Persistent filesystem '#{mountpoint}' has permissions '#{fs_perms}', expected '1777'")
+    assert(fs_group == "root",
+           "Persistent filesystem '#{mountpoint}' owned by group '#{fs_group}', expected 'root'")
+    assert(fs_perms == '775',
+           "Persistent filesystem '#{mountpoint}' has permissions '#{fs_perms}', expected '775'")
   end
 end
 
