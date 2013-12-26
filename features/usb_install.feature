@@ -262,7 +262,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
 
   Scenario: Installing Tails to a USB drive with an MBR partition table but no partitions
     Given a computer
-    And I create a 2 GiB disk named "mbr"
+    And I create a 4 GiB disk named "mbr"
     And I create a msdos label on disk "mbr"
     And the computer is set to boot from the Tails DVD
     And the network is unplugged
@@ -291,7 +291,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
 
   Scenario: Cat:ing a Tails isohybrid to a USB drive and booting it
     Given a computer
-    And I create a 2 GiB disk named "isohybrid"
+    And I create a 4 GiB disk named "isohybrid"
     And I cat an ISO hybrid of the Tails image to disk "isohybrid"
     And the computer is set to boot from USB drive "isohybrid"
     And the network is unplugged
