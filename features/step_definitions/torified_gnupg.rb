@@ -32,7 +32,7 @@ end
 
 When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|
   next if @skip_steps_while_restoring_background
-  step "I run \"seahorse\""
+  step "I run \"torsocks seahorse\""
   @screen.wait("SeahorseWindow.png", 10)
   @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
   @screen.type("f")                  # "Find Remote Keys...".
