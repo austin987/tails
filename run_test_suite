@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -e
+set -u
 
 NAME=$(basename ${0})
 
@@ -97,8 +98,15 @@ capture_session() {
 
 # main script
 
-unset CAPTURE_FILE VNC_VIEWER VNC_SERVER
-unset DEBUG KEEP_SNAPSHOTS TEMP_DIR ISO OLD_ISO
+CAPTURE_FILE=
+VNC_VIEWER=
+VNC_SERVER=
+DEBUG=
+KEEP_SNAPSHOTS=
+TEMP_DIR=
+ISO=
+OLD_ISO=
+
 SHORTOPTS="a:c"
 LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,iso:,old-iso:,debug"
 OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
