@@ -136,7 +136,9 @@ end
 
 Given /^I create a persistent partition with password "([^"]+)"$/ do |pwd|
   next if @skip_steps_while_restoring_background
-  step "I run \"/usr/local/bin/tails-persistence-setup\""
+  step 'I run "gnome-terminal"'
+  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+  @screen.type('/usr/local/bin/tails-persistence-setup' + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardWindow.png', 20)
   @screen.wait('PersistenceWizardStart.png', 20)
   @screen.type(pwd + "\t" + pwd + Sikuli::Key.ENTER)
@@ -426,7 +428,9 @@ end
 
 When /^I delete the persistent partition$/ do
   next if @skip_steps_while_restoring_background
-  step "I run \"/usr/local/bin/tails-delete-persistent-volume\""
+  step 'I run "gnome-terminal"'
+  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+  @screen.type('/usr/local/bin/tails-delete-persistent-volume' + Sikuli::Key.ENTER)
   @screen.wait("PersistenceWizardWindow.png", 20)
   @screen.wait("PersistenceWizardDeletionStart.png", 20)
   @screen.type(" ")
