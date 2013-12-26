@@ -12,7 +12,7 @@ def persistent_dirs
 end
 
 def persistent_volumes_mountpoints
-  @vm.execute("ls -1 /live/persistence/*_unlocked/").stdout.chomp.split
+  @vm.execute("ls -1 -d /live/persistence/*_unlocked/").stdout.chomp.split
 end
 
 Given /^I create a new (\d+) ([[:alpha:]]+) USB drive named "([^"]+)"$/ do |size, unit, name|
