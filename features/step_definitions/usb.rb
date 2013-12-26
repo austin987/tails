@@ -62,10 +62,8 @@ def usb_install_helper(name)
   rescue FindFailed
     # we didn't get the warning, so we can proceed with the install
   end
-#  @screen.hide_cursor
   @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
   @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
-#  @screen.hide_cursor
   @screen.wait('USBInstallationComplete.png', 60*60)
 end
 
