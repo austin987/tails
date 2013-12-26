@@ -83,8 +83,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I have closed all annoying notifications
     And persistence has been enabled
     And I write some files expected to persist
-    And persistent filesystems have safe access rights
-    And persistence configuration files have safe access rights
+    # And persistent filesystems have safe access rights
+    # And persistence configuration files have safe access rights
     And I completely shutdown Tails
     Then only the expected files should persist on USB drive "current"
 
@@ -165,8 +165,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I have closed all annoying notifications
     And persistence has been enabled
     And I write some files expected to persist
-    And persistent filesystems have safe access rights
-    And persistence configuration files have safe access rights
+    # And persistent filesystems have safe access rights
+    # And persistence configuration files have safe access rights
     And I completely shutdown Tails
     Then only the expected files should persist on USB drive "old"
 
