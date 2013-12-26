@@ -82,7 +82,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And GNOME has started
     And I have closed all annoying notifications
     And persistence has been enabled
-    And persistence filesystems have safe access rights
+    And persistent filesystems have safe access rights
     And persistence configuration files have safe access rights
     And I write some files expected to persist
     And I completely shutdown Tails
@@ -164,7 +164,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And GNOME has started
     And I have closed all annoying notifications
     And persistence has been enabled
-    And persistence filesystems have safe access rights
+    And persistent filesystems have safe access rights
     And persistence configuration files have safe access rights
     And I write some files expected to persist
     And I completely shutdown Tails
