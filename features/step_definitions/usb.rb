@@ -364,11 +364,11 @@ Then /^persistence configuration files have safe access rights$/ do
       file_owner = @vm.execute("stat -c %U '#{f}'").stdout.chomp
       file_group = @vm.execute("stat -c %G '#{f}'").stdout.chomp
       file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
-      assert(file_owner = "tails-persistence-setup",
+      assert(file_owner == "tails-persistence-setup",
              "'#{f}' is owned by user '#{file_owner}', expected 'tails-persistence-setup'")
-      assert(file_group = "tails-persistence-setup",
+      assert(file_group == "tails-persistence-setup",
              "'#{f}' is owned by group '#{file_group}', expected 'tails-persistence-setup'")
-      assert(file_perms = "600",
+      assert(file_perms == "600",
              "'#{f}' has permissions '#{file_perms}', expected '600'")
     end
   end
