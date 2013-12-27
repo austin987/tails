@@ -25,6 +25,7 @@ require 'uri'
 
 $:.unshift File.expand_path('../vagrant/lib', __FILE__)
 require 'tails_build_settings'
+require 'vagrant_version'
 
 # Path to the directory which holds our Vagrantfile
 VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
@@ -41,23 +42,40 @@ EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 # In-VM proxy URL
 INTERNEL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 
-def current_vm_memory
+def primary_vm
   env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-  uuid = env.primary_vm.uuid
-  info = env.primary_vm.driver.execute 'showvminfo', uuid, '--machinereadable'
+  if vagrant_old
+    return env.primary_vm
+  else
+    name = env.primary_machine_name
+    return env.machine(name, env.default_provider)
+  end
+end
+
+def primary_vm_state
+  if vagrant_old
+    return primary_vm.state
+  else
+    return primary_vm.state.id
+  end
+end
+
+def current_vm_memory
+  vm = primary_vm
+  uuid = vm.uuid
+  info = vm.driver.execute 'showvminfo', uuid, '--machinereadable'
   $1.to_i if info =~ /^memory=(\d+)/
 end
 
 def current_vm_cpus
-  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-  uuid = env.primary_vm.uuid
-  info = env.primary_vm.driver.execute 'showvminfo', uuid, '--machinereadable'
+  vm = primary_vm
+  uuid = vm.uuid
+  info = vm.driver.execute 'showvminfo', uuid, '--machinereadable'
   $1.to_i if info =~ /^cpus=(\d+)/
 end
 
 def vm_running?
-  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-  env.primary_vm.state == :running
+  primary_vm_state == :running
 end
 
 def enough_free_memory?
@@ -197,9 +215,12 @@ desc 'Build Tails'
 task :build => ['parse_build_options', 'ensure_clean_repository', 'validate_http_proxy', 'vm:up'] do
   exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                   collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
-
-  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH)
-  status = env.primary_vm.channel.execute("#{exported_env} build-tails",
+  if vagrant_old
+    chan = primary_vm.channel
+  else
+    chan = primary_vm.communicate
+  end
+  status = chan.execute("#{exported_env} build-tails",
                                           :error_check => false) do |fd, data|
     (fd == :stdout ? $stdout : $stderr).write data
   end
@@ -214,8 +235,7 @@ end
 namespace :vm do
   desc 'Start the build virtual machine'
   task :up => ['parse_build_options', 'validate_http_proxy'] do
-    env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-    case env.primary_vm.state
+    case primary_vm_state
     when :not_created
       # Do not use non-existant in-VM proxy to download the basebox
       if ENV['http_proxy'] == INTERNEL_HTTP_PROXY
@@ -268,6 +288,7 @@ namespace :vm do
         abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
       end
     end
+    env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
     result = env.cli('up')
     abort "'vagrant up' failed" unless result
 
