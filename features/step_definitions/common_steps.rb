@@ -60,6 +60,15 @@ def restore_background
   end
 end
 
+def run_dialog_picture
+  case @theme
+  when "winxp"
+    return 'WinXPRunDialog.png'
+  else
+    return 'GnomeRunDialog.png'
+  end
+end
+
 Given /^a computer$/ do
   @vm.destroy if @vm
   @vm = VM.new($vm_xml_path, $x_display)
@@ -333,12 +342,6 @@ end
 When /^I open the GNOME run dialog$/ do
   next if @skip_steps_while_restoring_background
   @screen.type(Sikuli::Key.F2, Sikuli::KeyModifier.ALT)
-  case @theme
-  when "winxp"
-    run_dialog_picture = 'WinXPRunDialog.png'
-  else
-    run_dialog_picture = 'GnomeRunDialog.png'
-  end
   @screen.wait(run_dialog_picture, 10)
 end
 
