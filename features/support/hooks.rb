@@ -19,19 +19,6 @@ def delete_all_snapshots
   end
 end
 
-BeforeFeature('@old_iso') do
-  if $old_tails_iso.nil?
-    raise "No old Tails ISO image specified, and none could be found in the " +
-          "current directory"
-  end
-  if !File.exist?($old_tails_iso)
-    raise "The specified old Tails ISO image '#{$old_tails_iso}' does not exist"
-  end
-  if $tails_iso == $old_tails_iso
-    raise "The old Tails ISO is the same as the Tails ISO we're testing"
-  end
-end
-
 BeforeFeature('@product') do |feature|
   if File.exist?($tmp_dir)
     if !File.directory?($tmp_dir)
@@ -60,11 +47,9 @@ BeforeFeature('@product') do |feature|
     # become unreadable for the live user inside the guest in the
     # host-to-guest share used for some tests.
 
-    # jruby 1.5.6 doesn't have world_readable? in File or File::Stat so we
-    # manually check for it in the mode string
-    if !(File.stat($tails_iso).mode & 04)
+    if !File.world_readable?($tails_iso)
       if File.owned?($tails_iso)
-        chmod(0644, $tails_iso)
+        File.chmod(0644, $tails_iso)
       else
         raise "warning: the Tails ISO image must be world readable or be " +
               "owned by the current user to be available inside the guest " +
@@ -74,6 +59,7 @@ BeforeFeature('@product') do |feature|
   else
     raise "The specified Tails ISO image '#{$tails_iso}' does not exist"
   end
+  puts "Testing ISO image: #{File.basename($tails_iso)}"
   base = File.basename(feature.file, ".feature").to_s
   $background_snapshot = "#{$tmp_dir}/#{base}_background.state"
 end
@@ -81,6 +67,20 @@ end
 AfterFeature('@product') do
   delete_snapshot($background_snapshot) if !$keep_snapshots
   VM.storage.clear_volumes if VM.storage
+end
+
+BeforeFeature('@product', '@old_iso') do
+  if $old_tails_iso.nil?
+    raise "No old Tails ISO image specified, and none could be found in the " +
+          "current directory"
+  end
+  if !File.exist?($old_tails_iso)
+    raise "The specified old Tails ISO image '#{$old_tails_iso}' does not exist"
+  end
+  if $tails_iso == $old_tails_iso
+    raise "The old Tails ISO is the same as the Tails ISO we're testing"
+  end
+  puts "Using old ISO image: #{File.basename($old_tails_iso)}"
 end
 
 # BeforeScenario
@@ -103,7 +103,10 @@ After('@product') do |scenario|
     hrs  = "%02d" % (time_of_fail / (60*60))
     STDERR.puts "Scenario failed at time #{hrs}:#{mins}:#{secs}"
     base = File.basename(scenario.feature.file, ".feature").to_s
-    @vm.take_screenshot("#{base}-#{DateTime.now}") if @vm
+    tmp = @screen.capture.getFilename
+    out = "#{$tmp_dir}/#{base}-#{DateTime.now}.png"
+    FileUtils.mv(tmp, out)
+    STDERR.puts("Took screenshot \"#{out}\"")
   end
   if @sniffer
     @sniffer.stop
@@ -126,8 +129,7 @@ end
 # AfterScenario
 After('@source') do
   Dir.chdir @orig_pwd
-  # Seems like JRuby has issues with remove_entry_secure()
-  FileUtils.remove_entry @git_clone
+  FileUtils.remove_entry_secure @git_clone
 end
 
 

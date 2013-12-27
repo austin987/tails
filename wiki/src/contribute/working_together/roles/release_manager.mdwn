@@ -2,21 +2,38 @@
 
 # Tasks
 
-* Making the release happen: [[contribute/release_process]].
-  - sending the release schedule on tails-dev when beginning their shift
+## In the beginning of your shift
 
-* Go to the `todo/*` and `bugs/*` pages, and for every ticket:
-  - ensure the proper set of tags
-    (and either update tags or ping whoever could/should do it)
-  - ensure it is clearly stated what is the next
-    thing to do, and that someone is feeling responsible to make it happen.
-    (or it's a wishlist/patches-welcome/don't-care-that-much = would be great,
-    but *We* don't feel commited to make it happen any time soon).
-  - For "todo/qa" (quality assurance) make sure reviews and merges
-    happen.
-  - Add todo/easy tags where relevant.
-  - For todo/wait and todo/upstream check if what was blocking was
-    eventually resolved outside of Tails.
+- Send the release schedule to <tails-dev@boum.org> and
+  <tails-l10n@boum.org> when beginning your shift.
+- Update [[contribute/calendar]] accordingly.
+- Ask to be added to the `rsync_tails` group on `rsync.lizard`,
+  if needed.
+- Make sure you have access to the various systems used to do
+  the release.
+
+## Around two weeks before the freeze
+
+- Have a look at recent changes in the
+  [Torbrowser](https://gitweb.torproject.org/torbrowser.git)'s prefs
+  (e.g. `git log -p build-scripts/config/*.js`) and import the
+  relevant ones to our Iceweasel configuration, following the normal
+  review'n'merge process. **Note**: for TBB 3.0 and beyond, the
+  `tor-browser.git` patch that adds
+  `browser/app/profile/000-tor-browser.js` will be the only place
+  for these prefs, instead of config files in `torbrowser.git`
+  (notice the additional *-*).
+- In particular, make sure the `general.*` and
+  `browser.startup.homepage_override.*` prefs are in sync', in our
+  `/etc/iceweasel/pref/iceweasel.js`, with TBB's `pound_tor.js`.
+- Have a look at recent changes
+  in [Torbutton](https://gitweb.torproject.org/torbutton.git), and
+  do whatever is needed to get the fixes we need in the release.
+- Have kytv upgrade I2P if needed. See [[contribute/design/I2P]].
+
+## Make the release happen
+
+No kidding. See [[contribute/release_process]].
 
 # Shifts
 

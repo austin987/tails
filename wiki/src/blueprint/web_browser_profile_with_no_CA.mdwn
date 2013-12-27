@@ -1,0 +1,52 @@
+**Corresponding ticket**: [[!tails_ticket 5766]].
+
+Tails should ship a (non-default) web browser profile that would not
+trust the CA cartel, but instead use some alternative, more agile and
+stronger trust system.
+
+[[!toc levels=2]]
+
+Candidates
+==========
+
+* Monkeysphere: [[!tails_ticket 5763]]
+* Convergence: [[!tails_ticket 6102]]
+* TACK
+* EFF's sovereign keys
+* Google's proposal
+
+Criteria
+========
+
+* beware of the browser fingerprint
+
+Implementation
+==============
+
+Iceweasel profile
+-----------------
+
+We should now provide a second iceweasel profile with all root CAs
+disabled.
+
+One way to do it would be to `dpkg-divert libnssckbi.so` by default,
+extract all the CAs from the original `libnssckbi.so` and stuff them
+into the "normal X.509 usage" profile's DB.
+
+See also the `mozilla/security/nss/lib/ckfw/builtins/README` file in
+the `nss` package source tree ([read
+online](https://mxr.mozilla.org/mozilla/source/security/nss/lib/ckfw/builtins/README))
+to learn how to build a `libnssckbi.so` with a custom list of
+builtin CAs.
+
+According to [a blog
+post](http://blog.rupamsunyata.org/2008/06/30/consolation-prize.xhtml),
+`certutil` may be an adequate tool for the task:
+
+        apt-get install libnss3-tools
+        certutil -d $HOME/.mozilla/firefox/$HLAGHLLAGHGAAHLGALHHGHLAGH.default -A -n 'CA Cert Signing Authority - Root CA' -t CT,C,C -i /etc/ssl/certs/root.pem
+
+What does not work is to disable this module for the no-CAs profile
+using:
+
+    modutil -dbdir PROFILE_DIR -disable "NSS Internal PKCS #11 Module"

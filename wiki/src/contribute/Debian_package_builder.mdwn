@@ -4,13 +4,14 @@ debomatic.lizard runs the
 [Deb-o-Matic](https://launchpad.net/debomatic) automatic build machine
 for Debian source packages.
 
-Packages are built for the i386 architecture.
-
 Supported distributions are:
 
-* `stable`
-* `squeeze-backports`
-* `unstable`
+* `stable` (i386)
+* `squeeze-backports` (i386)
+* `squeeze-backports-mozilla` (i386): Squeeze + squeeze-backports +
+  mozilla.debian.net's squeeze-backport
+* `unstable` (i386)
+* `unstable-amd64` (amd64)
 
 # How?
 
@@ -23,5 +24,9 @@ The `changestool(1)` command, from [[!debpkg reprepro]], is very handy
 to set this after building the source package locally, and before
 uploading it to Deb-o-Matic.
 
-Built packages can be copied from debomatic.lizard to apt.lizard
-e.g. by using `scp -3` on the host.
+Once binary packages are built:
+
+* the `.changes` file must be signed
+* resulting files can be copied from `debomatic.lizard` to
+  `apt.lizard:/srv/reprepro/incoming/` e.g. by using `scp -3` on
+  the host, and `debsign -r` from your local system.

@@ -11,6 +11,7 @@ Feature: Various checks
     And I have closed all annoying notifications
     And I save the state so the background can be restored next scenario
 
+  # FIXME: #5972
   Scenario: VirtualBox guest modules are available
     When Tails has booted a 686-pae kernel
     Then the VirtualBox guest modules are available
@@ -22,7 +23,7 @@ Feature: Various checks
 
   Scenario: The live user is setup correctly
     Then the live user has been setup by live-boot
-    And the live user is a member of only its own group and "audio cdrom dialout floppy video plugdev netdev fuse debian-tor scanner lp lpadmin vboxsf"
+    And the live user is a member of only its own group and "audio cdrom dialout floppy video plugdev netdev fuse scanner lp lpadmin vboxsf"
     And the live user owns its home dir and it has normal permissions
 
   Scenario: No initial network

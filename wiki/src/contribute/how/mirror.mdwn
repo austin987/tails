@@ -67,10 +67,10 @@ each release.
 If you satisfy these practical requirements, please read on!
 Else, please consider seeding Tails images over BitTorrent instead.
 
-Before starting doing any real work on this topic, please
-get in touch (<tails@boum.org>) and send us your OpenPGP public key,
-so that any further communication between us can be properly encrypted
-and authenticated.
+Before starting doing any real work on this topic, please get in touch
+(<tails@boum.org>, [[OpenPGP key|doc/about/openpgp_keys]]) and send us
+your OpenPGP public key, so that any further communication between us
+can be properly encrypted and authenticated.
 
 1. The big picture
 ------------------
@@ -85,9 +85,10 @@ sub-directories (such as
 2. Set up your web server
 -------------------------
 
-You need to set up a VirtualHost with dl.amnesia.boum.org as the
-ServerName and indexing enabled. Here is an example Apache
-configuration:
+You need to set up a virtual host for dl.amnesia.boum.org, with indexing
+enabled.
+
+### Apache configuration example
 
 	<VirtualHost YOUR_WEBSERVER_IP:80>
 	   ServerName dl.amnesia.boum.org
@@ -102,6 +103,13 @@ configuration:
 	      IndexOrderDefault Descending Date
 	   </Directory>
 	</VirtualHost>
+
+### Lighttpd configuration example
+
+	$HTTP["host"] =~ "^dl\.amnesia\.boum\.org$" {
+		server.document-root = "/var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/"
+		server.dir-listing = "enable"
+	}
 
 3. Download the files
 ---------------------

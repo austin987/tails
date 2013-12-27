@@ -14,7 +14,7 @@ end
 
 When /^I update APT using apt-get$/ do
   next if @skip_steps_while_restoring_background
-  SystemTimer.timeout(30*60) do
+  Timeout::timeout(30*60) do
     cmd = @vm.execute("echo #{@sudo_password} | " +
                       "sudo -S apt-get update", $live_user)
     if !cmd.success?
@@ -26,7 +26,7 @@ end
 Then /^I should be able to install a package using apt-get$/ do
   next if @skip_steps_while_restoring_background
   package = "cowsay"
-  SystemTimer.timeout(120) do
+  Timeout::timeout(120) do
     cmd = @vm.execute("echo #{@sudo_password} | " +
                       "sudo -S apt-get install #{package}", $live_user)
     if !cmd.success?
@@ -42,8 +42,8 @@ When /^I update APT using Synaptic$/ do
   # package list. Since the frozen GUI is so similar to the unfrozen
   # one there's no easy way to reliably wait for the latter. Hence we
   # spam reload until it's performed, which is easier to detect.
-  try_for(20, :msg => "Failed to reload the package list in Synaptic") {
-    @screen.type("r", Sikuli::KEY_CTRL)
+  try_for(60, :msg => "Failed to reload the package list in Synaptic") {
+    @screen.type("r", Sikuli::KeyModifier.CTRL)
     @screen.find('SynapticReloadPrompt.png')
   }
   @screen.waitVanish('SynapticReloadPrompt.png', 30*60)
@@ -54,18 +54,18 @@ Then /^I should be able to install a package using Synaptic$/ do
   package = "cowsay"
   # We do this after a Reload, so the interface will be frozen until
   # the package list has been loaded
-  try_for(20, :msg => "Failed to open the Synaptic 'Find' window") {
-    @screen.type("f", Sikuli::KEY_CTRL)  # Find key
+  try_for(60, :msg => "Failed to open the Synaptic 'Find' window") {
+    @screen.type("f", Sikuli::KeyModifier.CTRL)  # Find key
     @screen.find('SynapticSearch.png')
   }
-  @screen.type(package + Sikuli::KEY_RETURN)
+  @screen.type(package + Sikuli::Key.ENTER)
   @screen.wait_and_click('SynapticCowsaySearchResult.png', 20)
-  sleep 1
-  @screen.type("i", Sikuli::KEY_CTRL)    # Mark for installation
-  sleep 1
-  @screen.type("p", Sikuli::KEY_CTRL)    # Apply
-  @screen.wait('SynapticApplyPrompt.png', 20)
-  @screen.type("a", Sikuli::KEY_ALT)     # Verify apply
+  sleep 5
+  @screen.type("i", Sikuli::KeyModifier.CTRL)    # Mark for installation
+  sleep 5
+  @screen.type("p", Sikuli::KeyModifier.CTRL)    # Apply
+  @screen.wait('SynapticApplyPrompt.png', 60)
+  @screen.type("a", Sikuli::KeyModifier.ALT)     # Verify apply
   @screen.wait('SynapticChangesAppliedPrompt.png', 120)
   step "package \"#{package}\" is installed"
 end

@@ -1,6 +1,5 @@
 def persistent_dirs
-  ["/etc/ssh",
-   "/home/#{$live_user}/.claws-mail",
+  ["/home/#{$live_user}/.claws-mail",
    "/home/#{$live_user}/.gconf/system/networking/connections",
    "/home/#{$live_user}/.gnome2/keyrings",
    "/home/#{$live_user}/.gnupg",
@@ -8,9 +7,12 @@ def persistent_dirs
    "/home/#{$live_user}/.purple",
    "/home/#{$live_user}/.ssh",
    "/home/#{$live_user}/Persistent",
-   "/home/#{$live_user}/custom_persistence",
    "/var/cache/apt/archives",
    "/var/lib/apt/lists"]
+end
+
+def persistent_volumes_mountpoints
+  @vm.execute("ls -1 -d /live/persistence/*_unlocked/").stdout.chomp.split
 end
 
 Given /^I create a new (\d+) ([[:alpha:]]+) USB drive named "([^"]+)"$/ do |size, unit, name|
@@ -44,9 +46,9 @@ def usb_install_helper(name)
 #  @screen.wait('USBTargetDevice.png', 10)
 #  match = @screen.find('USBTargetDevice.png')
 #  region_x = match.x
-#  region_y = match.y + match.height
-#  region_w = match.width*3
-#  region_h = match.height*2
+#  region_y = match.y + match.h
+#  region_w = match.w*3
+#  region_h = match.h*2
 #  ocr = Sikuli::Region.new(region_x, region_y, region_w, region_h).text
 #  STDERR.puts ocr
 #  # Unfortunately this results in almost garbage, like "|]dev/sdm"
@@ -57,15 +59,12 @@ def usb_install_helper(name)
     if @screen.find("USBSuggestsInstall.png")
       raise ISOHybridUpgradeNotSupported
     end
-  rescue Sikuli::ImageNotFound
+  rescue FindFailed
     # we didn't get the warning, so we can proceed with the install
   end
-#  @screen.hide_cursor
-  @screen.wait_and_click('USBCreateLiveUSBNext.png', 10)
-#  @screen.hide_cursor
+  @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
+  @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
   @screen.wait('USBInstallationComplete.png', 60*60)
-  @screen.type(Sikuli::KEY_RETURN)
-  @screen.type(Sikuli::KEY_F4, Sikuli::KEY_ALT)
 end
 
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
@@ -93,7 +92,7 @@ When /^I try a "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   end
 end
 
-When /^I am suggested to do a "Clone & Upgrade"$/ do
+When /^I am suggested to do a "Clone & Install"$/ do
   next if @skip_steps_while_restoring_background
   @screen.find("USBSuggestsInstall.png")
 end
@@ -113,13 +112,11 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   @screen.wait_and_click('USBUpgradeFromISO.png', 10)
   @screen.wait('USBUseLiveSystemISO.png', 10)
   match = @screen.find('USBUseLiveSystemISO.png')
-  pos_x = match.x + match.width/2
-  pos_y = match.y + match.height*2
-  @screen.click(pos_x, pos_y)
+  @screen.click(match.getCenter.offset(0, match.h*2))
   @screen.wait('USBSelectISO.png', 10)
   @screen.wait_and_click('GnomeFileDiagTypeFilename.png', 10)
   iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"
-  @screen.type(iso + Sikuli::KEY_RETURN)
+  @screen.type(iso + Sikuli::Key.ENTER)
   usb_install_helper(name)
 end
 
@@ -127,28 +124,25 @@ Given /^I enable all persistence presets$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('PersistenceWizardPresets.png', 20)
   # Mark first non-default persistence preset
-  @screen.type("\t\t")
+  @screen.type(Sikuli::Key.TAB*2)
   # Check all non-default persistence presets
   10.times do
-    @screen.type(" \t")
+    @screen.type(Sikuli::Key.SPACE + Sikuli::Key.TAB)
   end
-  # Now we'll have the custom persistence field selected
-  @screen.type("/home/#{$live_user}/custom_persistence")
-  @screen.type('a', Sikuli::KEY_ALT)
-  @screen.type('/etc/ssh')
-  @screen.type('a', Sikuli::KEY_ALT)
   @screen.wait_and_click('PersistenceWizardSave.png', 10)
   @screen.wait('PersistenceWizardDone.png', 20)
-  @screen.type(Sikuli::KEY_F4, Sikuli::KEY_ALT)
+  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
 
 Given /^I create a persistent partition with password "([^"]+)"$/ do |pwd|
   next if @skip_steps_while_restoring_background
-  step "I run \"tails-persistence-setup\""
+  step 'I run "gnome-terminal"'
+  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+  @screen.type('/usr/local/bin/tails-persistence-setup' + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardWindow.png', 20)
   @screen.wait('PersistenceWizardStart.png', 20)
-  @screen.type(pwd + "\t" + pwd + Sikuli::KEY_RETURN)
-  @screen.wait('PersistenceWizardPresets.png', 120)
+  @screen.type(pwd + "\t" + pwd + Sikuli::Key.ENTER)
+  @screen.wait('PersistenceWizardPresets.png', 300)
   step "I enable all persistence presets"
 end
 
@@ -231,7 +225,7 @@ Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive
   info = @vm.execute("udisks --show-info #{luks_dev}").stdout
   assert info.match("^  cleartext luks device:$")
   assert info.match("^  usage: +filesystem$")
-  assert info.match("^  type: +ext3$")
+  assert info.match("^  type: +ext[34]$")
   assert info.match("^  label: +TailsData$")
 
   mount_dir = "/mnt/#{name}"
@@ -247,17 +241,11 @@ end
 
 Given /^I enable persistence with password "([^"]+)"$/ do |pwd|
   next if @skip_steps_while_restoring_background
-  match = @screen.find('TailsGreeterPersistence.png')
-  pos_x = match.x + match.width/2
-  # height*2 may seem odd, but we want to click the button below the
-  # match. This may even work accross different screen resolutions.
-  pos_y = match.y + match.height*2
-  @screen.click(pos_x, pos_y)
+  @screen.wait('TailsGreeterPersistence.png', 10)
+  @screen.type(Sikuli::Key.SPACE)
   @screen.wait('TailsGreeterPersistencePassphrase.png', 10)
   match = @screen.find('TailsGreeterPersistencePassphrase.png')
-  pos_x = match.x + match.width*2
-  pos_y = match.y + match.height/2
-  @screen.click(pos_x, pos_y)
+  @screen.click(match.getCenter.offset(match.w*2, match.h/2))
   @screen.type(pwd)
 end
 
@@ -298,7 +286,7 @@ end
 def boot_device
   # Approach borrowed from
   # config/chroot_local_includes/lib/live/config/998-permissions
-  boot_dev_id = @vm.execute("udevadm info --device-id-of-file=/live/image").stdout.chomp
+  boot_dev_id = @vm.execute("udevadm info --device-id-of-file=/lib/live/mount/medium").stdout.chomp
   boot_dev = @vm.execute("readlink -f /dev/block/'#{boot_dev_id}'").stdout.chomp
   return boot_dev
 end
@@ -331,12 +319,6 @@ end
 Then /^the boot device has safe access rights$/ do
   next if @skip_steps_while_restoring_background
 
-  # XXX: It turns out our fix for Debian bug #645466 (see the live-config
-  # hook called 9980-permissions) is not working any more. Is udev doing
-  # this at a later stage now?
-  puts "This check is temporarily disabled since it currently always fails"
-  next
-
   super_boot_dev = boot_device.sub(/[[:digit:]]+$/, "")
   devs = @vm.execute("ls -1 #{super_boot_dev}*").stdout.chomp.split
   assert(devs.size > 0, "Could not determine boot device")
@@ -345,7 +327,6 @@ Then /^the boot device has safe access rights$/ do
     groups = @vm.execute("groups #{user}").stdout.chomp.sub(/^#{user} : /, "").split(" ")
     [user, groups]
   end
-  STDERR.puts "#{all_users_with_groups.join(", ")}"
   for dev in devs do
     dev_owner = @vm.execute("stat -c %U #{dev}").stdout.chomp
     dev_group = @vm.execute("stat -c %G #{dev}").stdout.chomp
@@ -354,7 +335,7 @@ Then /^the boot device has safe access rights$/ do
            "Boot device '#{dev}' owned by user '#{dev_owner}', expected 'root'")
     assert(dev_group == "disk" || dev_group == "root",
            "Boot device '#{dev}' owned by group '#{dev_group}', expected " +
-           "'disk' or 'root'. We are probably affected by Debian bug #645466.")
+           "'disk' or 'root'.")
     assert(dev_perms == "660",
            "Boot device '#{dev}' has permissions '#{dev_perms}', expected '660'")
     for user, groups in all_users_with_groups do
@@ -362,6 +343,42 @@ Then /^the boot device has safe access rights$/ do
       assert(!(groups.include?(dev_group)),
              "Unprivileged user '#{user}' is in group '#{dev_group}' which " +
              "owns boot device '#{dev}'")
+    end
+  end
+end
+
+Then /^persistent filesystems have safe access rights$/ do
+  persistent_volumes_mountpoints.each do |mountpoint|
+    fs_owner = @vm.execute("stat -c %U #{mountpoint}").stdout.chomp
+    fs_group = @vm.execute("stat -c %G #{mountpoint}").stdout.chomp
+    fs_perms = @vm.execute("stat -c %a #{mountpoint}").stdout.chomp
+    assert(fs_owner == "root",
+           "Persistent filesystem '#{mountpoint}' owned by user '#{fs_owner}', expected 'root'")
+    assert(fs_group == "root",
+           "Persistent filesystem '#{mountpoint}' owned by group '#{fs_group}', expected 'root'")
+    assert(fs_perms == '775',
+           "Persistent filesystem '#{mountpoint}' has permissions '#{fs_perms}', expected '775'")
+  end
+end
+
+Then /^persistence configuration files have safe access rights$/ do
+  persistent_volumes_mountpoints.each do |mountpoint|
+    assert(@vm.execute("test -e #{mountpoint}/persistence.conf").success?,
+           "#{mountpoint}/persistence.conf does not exist, while it should")
+    assert(@vm.execute("test ! -e #{mountpoint}/live-persistence.conf").success?,
+           "#{mountpoint}/live-persistence.conf does exist, while it should not")
+    @vm.execute(
+      "ls -1 #{mountpoint}/persistence.conf #{mountpoint}/live-*.conf"
+    ).stdout.chomp.split.each do |f|
+      file_owner = @vm.execute("stat -c %U '#{f}'").stdout.chomp
+      file_group = @vm.execute("stat -c %G '#{f}'").stdout.chomp
+      file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
+      assert(file_owner == "tails-persistence-setup",
+             "'#{f}' is owned by user '#{file_owner}', expected 'tails-persistence-setup'")
+      assert(file_group == "tails-persistence-setup",
+             "'#{f}' is owned by group '#{file_group}', expected 'tails-persistence-setup'")
+      assert(file_perms == "600",
+             "'#{f}' has permissions '#{file_perms}', expected '600'")
     end
   end
 end
@@ -421,7 +438,9 @@ end
 
 When /^I delete the persistent partition$/ do
   next if @skip_steps_while_restoring_background
-  step "I run \"tails-persistence-setup --step delete\""
+  step 'I run "gnome-terminal"'
+  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+  @screen.type('/usr/local/bin/tails-delete-persistent-volume' + Sikuli::Key.ENTER)
   @screen.wait("PersistenceWizardWindow.png", 20)
   @screen.wait("PersistenceWizardDeletionStart.png", 20)
   @screen.type(" ")

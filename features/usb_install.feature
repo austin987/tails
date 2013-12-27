@@ -28,29 +28,19 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     But there is no persistence partition on USB drive "current"
     And I unplug USB drive "current"
 
-  Scenario: Booting Tails from a USB drive without a persistent partition
+  Scenario: Booting Tails from a USB drive without a persistent partition and creating one
     Given a computer
     And the computer is set to boot from USB drive "current"
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
-    And I log in to a new session
-    Then Tails seems to have booted normally
-    And Tails is running from USB drive "current"
-    And the boot device has safe access rights
-    And there is no persistence partition on USB drive "current"
-
-  Scenario: Creating a persistent partition
-    Given a computer
-    And the computer is set to boot from USB drive "current"
-    And the network is unplugged
-    When I start the computer
-    And the computer boots Tails
-    And Tails is running from USB drive "current"
     And the boot device has safe access rights
     And I log in to a new session
     And GNOME has started
     And I have closed all annoying notifications
+    Then Tails seems to have booted normally
+    And Tails is running from USB drive "current"
+    And the boot device has safe access rights
     And there is no persistence partition on USB drive "current"
     And I create a persistent partition with password "asdf"
     Then a Tails persistence partition with password "asdf" exists on USB drive "current"
@@ -84,6 +74,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And persistence is enabled
     And all persistent directories are mounted
     And I write some files expected to persist
+    And persistent filesystems have safe access rights
+    And persistence configuration files have safe access rights
     And I completely shutdown Tails
     Then only the expected files should persist on USB drive "current"
 
@@ -159,7 +151,6 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     When I start the computer
     And the computer boots Tails
     And Tails is running from USB drive "old"
-    And the boot device has safe access rights
     And I enable persistence with password "asdf"
     And I log in to a new session
     And GNOME has started
@@ -167,6 +158,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And persistence is enabled
     And all persistent directories are mounted
     And I write some files expected to persist
+    And persistent filesystems have safe access rights
+    And persistence configuration files have safe access rights
     And I completely shutdown Tails
     Then only the expected files should persist on USB drive "old"
 
@@ -264,7 +257,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
 
   Scenario: Installing Tails to a USB drive with an MBR partition table but no partitions
     Given a computer
-    And I create a 2 GiB disk named "mbr"
+    And I create a 4 GiB disk named "mbr"
     And I create a msdos label on disk "mbr"
     And the computer is set to boot from the Tails DVD
     And the network is unplugged
@@ -291,9 +284,9 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "mbr"
 
-  Scenario: Cat:ing a Tails isobydrid a USB drive and booting it
+  Scenario: Cat:ing a Tails isohybrid to a USB drive and booting it
     Given a computer
-    And I create a 2 GiB disk named "isohybrid"
+    And I create a 4 GiB disk named "isohybrid"
     And I cat an ISO hybrid of the Tails image to disk "isohybrid"
     And the computer is set to boot from USB drive "isohybrid"
     And the network is unplugged
@@ -314,7 +307,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I have closed all annoying notifications
     And I plug USB drive "isohybrid"
     And I try a "Clone & Upgrade" Tails to USB drive "isohybrid"
-    But I am suggested to do a "Clone & Upgrade"
+    But I am suggested to do a "Clone & Install"
     And I kill the process "liveusb-creator"
     And I "Clone & Install" Tails to USB drive "isohybrid"
     Then Tails is installed on USB drive "isohybrid"

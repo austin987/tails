@@ -1,5 +1,7 @@
 [[!toc levels=1]]
 
+Some [[test results]] that might be useful to keep are saved.
+
 # Changes
 
 Keeping an eye on the changes between released versions is one of the
@@ -15,14 +17,14 @@ Boot the candidate ISO and find the commit it was build from with the
 
 Then, from the source tree, see the diff:
 
-	git diff <old tag>..<ISO commit>
+	git diff --find-renames <old tag>..<ISO commit>
 
 e.g. `git diff 0.17..06fa1ab80d55c9f29274b7459bd198edb1a8d53d`
 
 ## Result
 
-Compare the list of bundled packages and
-versions with the one shipped last time e.g.:
+Compare the list of bundled packages and versions with the one shipped last
+time. `.packages` are usually attached to the email announcing the ISO is ready.
 
 	/usr/bin/diff -u \
 	    wiki/src/torrents/files/tails-i386-0.16.packages \
@@ -49,64 +51,17 @@ parts which require real hardware) and have the automated test suite
 run all our tests. It's design, and how to write new tests, are
 documented on a [[dedicated page|test/automated_tests]].
 
-## Usage
+## Running the automated test suite
 
-Use the `run_test_suite` script found in the Tails source root to run
-all automated Cucumber test features. See the [[setup
-documentation|test/setup]] in case you don't have a testing
-environment yet.
-
-It's important to note that some features only depend on the Tails
-sources, and some on the actual product of the sources, i.e. a Tails
-ISO image. These features are tagged `@source` and `@product`,
-respectively. The arguments passed to `run_test_suite` may only affect
-one of these types of features and not the other.
-
-A typical example run of a few `@product` features could be:
-
-    ./run_test_suite --view --capture test-0.17.webm \
-        --iso path/to/tails.iso \
-        features/apt.feature features/erase_memory.feature
-
-which will test only the `iceweasel` and `erase_memory` features (if
-no feature paths are given, all features in `features/cucumber` will
-be tested) of the given ISO image `tails.iso` while showing the test
-session in a VNC viewer (`--view`) and also capturing it into a video
-called `test-0.17.web` (`--capture`). Similarly, to test a `@source`
-feature, we'd simply run something like:
-
-    ./run_test_suite features/build.feature
-
-For full instructions, see its `--help`.
-
-Note: since the test suite itself uses `virt-viewer` to interact with
-the Tails guest you cannot use it as that will steal the session from
-the test suite, leaving it with a blank screen.
+See [[test/setup]] and [[test/usage]].
 
 ## Automated test suite migration progress
 
-In the manual feature tests below we "tag" tests the following way to
-keep track of their progress of being replaced by a corresponding test
-in the automated test suite:
-
-* Not tag means that an appriopriate automated test is not implemented
-  at all.
-* `[needs-fix]` means that there's a partial implementation of an
-  automated test, or that it has some issue that needs a fix.
-* `[needs-review]` means that an automated test is implemented and
-  that someone else than the author should review it for correctness.
-* `[needs-pass]` means that an automated test is implemented and that
-  someone else than the author must run it and see it pass.
-* `[can't-automate]` means that these tests cannot possibly be
-  implemented in an automated way and will require manual testing.
-
-In the tags we also refer to the name of the `.feature` file(s), and
-for `[needs-fix]` we link to the corresponding TODO item (XXX: will be
-done once merged into the `master` branch).
-
-Tests which are completely implemented, reviewed and passed are
-removed from below. Such tests are considered to be covered by the
-automated test suite and do not have to be manually tested any more.
+The manual test suite below either contains tests that cannot be
+automated, has no automated test implemented yet, or has a test
+implemented, but it either hasn't been reviewed, had a confirmed pass
+by someone other than the test author, or has issues. The latter is
+tracked by tickets prefixed with `todo/test_suite:`.
 
 # Iceweasel
 
@@ -116,9 +71,6 @@ automated test suite and do not have to be manually tested any more.
   Torbutton version installed and used in Iceweasel.
 * Browsing (by IP) a HTTP or HTTPS server on the LAN should be possible.
 * Browsing (by IP) a FTP server on the LAN should be possible.
-* Browsing (by hostname) a FTP server on the Internet should be possible, and
-  downloading a file should be possible (once [[!tails_todo fix Internet FTP support]]
-  is fixed)
 * Does playing HTML5 videos work? In particular, (due to its popularity)
   do [youtube](http://www.youtube.com) videos work (once
   [[!tails_todo easier YouTube]] is fixed -- currently object unblocking in
@@ -127,6 +79,16 @@ automated test suite and do not have to be manually tested any more.
   <https://panopticlick.eff.org/> and <http://ip-check.info/>, and
   update the [[fingerprint section|support/known_issues#fingerprint]] of
   the known issues page.
+* Verify that WebRTC is disabled (compare with another Tails that has
+  the `media.peerconnection.enabled` pref set to *true*):
+  - <http://mozilla.github.io/webrtc-landing/> (it's expected that the
+    `getUserMedia` audio test works if you agree to share a microphone
+    with the remote website; anything else should fail)
+  - <http://net.ipcalf.com/>
+* Verify that we're protected against <http://samy.pl/evercookie/>:
+  visit this website so that it installs its crap, close the browser,
+  re-open the browser, visit this website again. The cookie should not
+  be present anymore.
 
 # Pidgin
 
@@ -135,12 +97,16 @@ automated test suite and do not have to be manually tested any more.
  - else: see if the connection to the IRC server appears in Vidalia
    connections list
 * Check OTR is working.
-* Check at least IRC and XMPP are working.
+* Check that IRC is working with the default OFTC profile.
+* Check that XMPP is working with a new test profile.
 * Check if pidgin doesn't leak too many informations on replying to different
   CTCP requests:
   * Start Tails and launch pidgin once done. Connect to an IRC server where you're already on
-  * try to /ctcp <Tails_account_nick> COMMAND
-  (for a list of commands, see [this page](http://www.wikkedwire.com/irccommands)).
+  * try to `/ctcp <Tails_account_nick> COMMAND`
+    with a client that supports sending CTCP commands properly --
+    Pidgin does not, apparently
+    (for a list of commands, see [this page](http://www.wikkedwire.com/irccommands)).
+    See the [[!tails_ticket 5823 desc="current known-broken state"]].
 
 # Tor
 
@@ -168,7 +134,7 @@ automated test suite and do not have to be manually tested any more.
      direct network connections go to the configured bridge(s).
 * Verify that all destinations reached from an intensive Tails session
   are tor routers or
-  authorities: `[needs-fix: many scenarios]` (see [[todo/test_suite:_always_check_for_firewall_leaks.mdwn]]).
+  authorities:
   1. Boot Tails without the network in.
   1. Start dumping your whole session's network activity with `sudo
      tcpdump -n -i any -w dump` (or better, do the dump on another machine,
@@ -182,37 +148,37 @@ automated test suite and do not have to be manually tested any more.
      show many false positives?)
   1. Then check all destinations, e.g. by using tshark and the script below:
 
-     	# set DUMP to the output of tcpdump above
-     	DUMP=dump
-     	# set CONSENSUS to Tor's consensus from the Tails session
-     	CONSENSUS=cached-microdesc-consensus
-     	NODES=$(mktemp)
-     	awk '/^r / { print $6 }' ${CONSENSUS} > ${NODES}
-     	# Note that these default directory authorities may change! To be
-     	# sure, check in Tor's source, src/or/config.c:~900
-     	DIR_AUTHS="
-     	128.31.0.39
-     	86.59.21.38
-     	194.109.206.212
-     	82.94.251.203
-     	76.73.17.194
-     	212.112.245.170
-     	193.23.244.244
-     	208.83.223.34
-     	171.25.193.9
-     	154.35.32.5
-     	"
-     	tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
-     	while read x; do
-     	    ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
-     	    if echo ${DIR_AUTHS} | grep -qe "${ip_expr}"; then
-     	        continue
-     	    fi
-     	    if ! grep -qe "^${ip_expr}$" ${NODES}; then
-     	        echo "${x} is bad"
-     	    fi
-     	done
-     	rm ${NODES}
+         # set DUMP to the output of tcpdump above
+         DUMP=dump
+         # set CONSENSUS to Tor's consensus from the Tails session
+         CONSENSUS=cached-microdesc-consensus
+         NODES=$(mktemp)
+         awk '/^r / { print $6 }' ${CONSENSUS} > ${NODES}
+         # Note that these default directory authorities may change! To be
+         # sure, check in Tor's source, src/or/config.c:~900
+         DIR_AUTHS="
+         128.31.0.39
+         86.59.21.38
+         194.109.206.212
+         82.94.251.203
+         76.73.17.194
+         212.112.245.170
+         193.23.244.244
+         208.83.223.34
+         171.25.193.9
+         154.35.32.5
+         "
+         tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
+         while read x; do
+             ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
+             if echo ${DIR_AUTHS} | grep -qe "${ip_expr}"; then
+                 continue
+             fi
+             if ! grep -qe "^${ip_expr}$" ${NODES}; then
+                 echo "${x} is bad"
+             fi
+         done
+         rm ${NODES}
 
      Note that this script will produce some false positives, like your
      gateway, broadcasts, etc.
@@ -227,25 +193,109 @@ Assumptions for the following tests: first, Tor stream isolation
 features properly do their work; second, our `torrc` sets the right
 `SocksPort` options to implement what we want.
 
+**Note**: the following commands would advantageously be replaced with
+the appropriate tcpdump or tshark filters.
+
 * Make sure Claws Mail use its dedicated `SocksPort` when connecting
-  to IMAP / POP3 / SMTP servers.
+  to IMAP / POP3 / SMTP servers. As root:
+
+      watch -n 0.1 'netstat -taupen | grep claws'
+
 * Make sure these use the `SocksPort` dedicated for Tails-specific applications:
-  - htpdate
-  - tails-security-check
-  - incremental updates
-* Make sure iceweasel uses its dedicated `SocksPort`.
-* Make sure other applications (Polipo, Gobby 0.4 and 0.5, SSH, whois)
-  use the default system-wide `SocksPort`.
+  - htpdate — as root, run:
+
+        service htpdate stop \
+           && rm -f /var/run/htpdate/{done,success} \
+           && service htpdate start
+
+    ... with the following command running as root in another
+    terminal:
+
+        watch -n 0.1 'netstat -taupen | grep curl'
+
+  - security check — run `tails-security-check` with the following
+    command running as root in another terminal:
+
+        watch -n 0.1 'netstat -taupen | grep perl'
+
+  - incremental upgrades — run `tails-upgrade-frontend-wrapper` with
+    the following command running as root in another terminal:
+
+        watch -n 0.1 'netstat -taupen | grep perl'
+
+* Make sure iceweasel uses its dedicated `SocksPort`: quit Iceweasel
+  then start it with the following command running as root in another
+  terminal:
+
+      watch -n 0.1 'netstat -taupen | grep iceweasel'
+
+* Make sure other applications use the default system-wide
+  `SocksPort`:
+  - Polipo — run:
+
+        wget https://tails.boum.org/
+
+    ... with the following command running as root in another
+    terminal:
+
+        watch -n 0.1 'netstat -taupen | grep polipo'
+
+  - Gobby 0.4 — start Gobby 0.4 from the *Applications* menu and
+    connect to a server, with the following command running as root in
+    another terminal:
+
+        watch -n 0.1 'netstat -taupen | grep gobby'
+
+  - Gobby 0.5 — start Gobby 0.5 from the *Applications* menu and
+    connect to a server, with the following command running as root in
+    another terminal:
+
+        watch -n 0.1 'netstat -taupen | grep gobby'
+
+  - SSH — run (no need to authenticate the server or to login):
+
+        ssh lizard.tails.boum.org
+
+    ... with the following command running as root in another
+    terminal:
+
+        watch -n 0.1 'netstat -taupen | grep -E "connect-proxy|ssh"'
+
+  - whois — run:
+
+        whois example.com
+
+    ... with the following command running as root in another
+    terminal:
+
+        watch -n 0.1 'netstat -taupen | grep whois'
+
 * Make sure a random application run using `torify` and `torsocks`
-  (e.g. `/usr/bin/gobby-0.5`) uses the default system-wide `SocksPort`.
+  uses the default system-wide `SocksPort`. Run:
+
+      torify /usr/bin/gobby-0.5
+
+    ... and connect to a server, with the following command running as
+    root in another terminal:
+
+        watch -n 0.1 'netstat -taupen | grep gobby'
+
+    Then do the same test for:
+
+      torsocks /usr/bin/gobby-0.5
 
 # Use of untrusted partitions
 
 * is any local hard-disk swap partition used as swap?
   boot on a (possibly virtual) machine that has a cleartext swap
   partition not managed by LVM. This swap partition must not be used
-  by Tails.
+  by Tails. Run `cat /proc/swaps`.
 * is a persistence volume on a local hard-disk partition used?
+  (Hint: setup a libvirt USB disk with GPT and a partition labeled
+  `TailsData`, set the `removable` flag on it, check that
+  tails-greeter proposes to enable persistence. Then remove the
+  `removable` flag, and check that tails-greeter does not propose to
+  enable persistence anymore.)
 
 # Claws
 
@@ -268,69 +318,61 @@ features properly do their work; second, our `torrc` sets the right
      leaking your password in plaintext by either changing it
      temporarily or using a disposable account).
   2. Run `sudo tcpdump -n -i lo -w dump` to capture the packets before
-     Tor encrypts it, and check the dump for the HELO/EHLO message and
+     Tor encrypts it, then close tcpdump, and check the dump for the HELO/EHLO message and
      verify that it only contains `localhost`.
 
-# Whisperback
+# WhisperBack
 
 * can a bug report e-mail be sent?
 * is it correctly encrypted?
 
-# Monkeysphere
-
-* Monkeysphere validation agent key search/receive: torified? uses
-  configured keyserver?
-
 # Time
 
-`[needs-fix]` ([[todo/test_suite:_verify_time_changes]])
-
-1. Boot Tails without a network cable connected (i.e. no network on boot).
-2. set the time to an obviously wrong one:
+1. Boot Tails without a network cable connected.
+   (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 down`.)
+2. Set an administration password.
+3. set the time to an obviously wrong one:
 
            date --set="Mon, 01 Mar 2000 15:45:34 - 0800"
 
-3. connect the network cable
+4. Connect the network cable.
+   (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 up`)
 
 => the date should be corrected and Tor/Vidalia should start
 correctly.
 
-# erase memory on shutdown
+# Erase memory on shutdown
 
 - check that `memlockd` is running
-  `[needs-pass: erase_memory]`
 - check that `udev-watchdog` monitors the right device
-  ([[todo/test_suite:_udev-watchdog_device]])
+  ([[!tails_todo test_suite:_udev-watchdog_device]])
   * on USB
   * on DVD
 - After booting from DVD, remove Tails boot medium and check that the
   memory erasure process is started (`Loading new kernel`, at least).
-  The USB tests are bellow, in the USB installer section.
+  The USB tests are bellow, in the Tails Installer section.
 
 Testing that the needed files are really mapped in memory, and the
 erasing process actually works, involves a more complicated
 process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
-`[needs-fix: erase_memory]` ([[todo/test_suite:_anti-tests]])
+`[needs-fix: erase_memory]` ([[!tails_todo test_suite:_anti-tests]])
 
 # Root access control
 
 * Check you can login as root neither with the `amnesia` password nor
   with the `live` one.
 * Boot Tails without setting a password and check you can't get
-  PolicyKit administrative privileges (e.g. run a command with pkexec),
-  neither with the `amnesia` password nor
-  with the `live` one. `[needs-review: root_access_control]`
+  PolicyKit administrative privileges (e.g. run `pkexec ls`), neither
+  with the `amnesia` password nor with the `live` one.
 * Boot Tails with a password and check you can get PolicyKit
-  administrative privileges. `[needs-review: root_access_control]`
-* Check that the $TAILS_USER_PASSWORD variable, if still existing in the system
+  administrative privileges (e.g. run `pkexec ls`).
+* Check that the `$TAILS_USER_PASSWORD` variable, if still existing in the system
   environment after the boot has finished, does not contain the clear text
   password.
 
 # Virtualization support
 
-* `modinfo vboxguest` should work when booted on the 686-pae kernel
-  `[needs-review, needs-pass: checks]`
-* test in VirtualBox `[can't-automate?]`
+* Test that Tails starts and the browser launches in VirtualBox.
 
 # I2P
 
@@ -353,7 +395,8 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # Git
 
-* clone a repository over dumb transport (`git://`)
+* clone a repository over `git://`
+* clone a repository over `https://`
 * clone a repository over SSH
 
 # SSH
@@ -371,36 +414,66 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 * Make sure the Tails repository unversioned suites (e.g. `testing`,
   `stable` and `devel`) are *not* in APT sources.
 
-# USB Installer/Upgrader
+# Tails Installer
 
 All this was successfully reviewed at commit cdbbf4d8.
 
 After each of the following tests:
 
 * The installed or upgraded Tails medium shall be successfully booted.
-  `[needs-pass: usb_install]`
 * The installed or upgraded Tails medium shall have the "emergency
   shutdown on boot medium removal" feature working: remove Tails boot
   medium and check that the memory erasure process is started
   (`Loading new kernel`, at least).
 * The TailsData partition must survive
-  upgrades. `[needs-pass: usb_install]`
+  upgrades.
 
 Tests to run:
 
 * Test "Clone & Install":
-  - from USB. `[needs-pass: usb_install]`
+  - from USB.
   - onto a USB stick that has a MBR partition table, and no
-    partition at all (regression test) `[needs-pass: usb_install]`
+    partition at all (regression test)
   - onto a USB stick that already has an old-fashioned hybrid cat'd
-    Tails on it `[needs-pass: usb_install]`
+    Tails on it
 * Test "Clone & Upgrade" (onto a USB install containing an older
   Tails):
-  - from DVD. `[needs-pass: usb_install]`
-  - from USB. `[needs-pass: usb_install]`
+  - from DVD.
+  - from USB.
   - onto a USB stick that already has a old-fashioned cat'd hybrid
     Tails on it: should warn this action is not supported, and direct
     the user to the "Clone & Install" operation mode.
+
+<a id="incremental-upgrades"></a>
+
+# Incremental upgrades
+
+The following should be tested once incremental upgrades are ready for
+real-world deployment.
+
+Try every upgrade path supported by the generated upgrade-description
+files:
+
+* the resulting incrementally upgraded system must boot and *About
+  Tails* must pretend it has indeed been upgraded
+* for upgrades that only propose a non-incremental paths: make sure the
+  user is guided just fine to the download web page
+
+Given these are not published yet, a local test setup is needed:
+
+* a web server
+* a replacement for the Tails website's `/upgrade/` tree with
+  upgrade-description files in there, e.g.
+  `/var/www/tails/upgrade/v1/Tails/0.14~rc2/i386/stable/upgrades.yml`
+* a replacement for the Tails HTTP mirrors' `iuk` directories,
+  e.g. `/var/www/tails/stable/iuk/Tails_i386_0.14-rc2_to_0.14.iuk`
+
+Also, the upgrader must be called, from inside the system to upgrade,
+with every needed option to use the local web server rather than the
+online one, e.g.:
+
+    DISABLE_PROXY=1 SSL_NO_VERIFY=1 \
+       tails-upgrade-frontend-wrapper --override-baseurl http://10.36.24.33/tails
 
 # Incremental updates
 
@@ -428,22 +501,18 @@ stuff: **FIXME**.
 
 # Persistence
 
-`[needs-fix]`
-([[todo/test_suite:_fix_persistence_is_not_enabled_check]]);
-otherwise, reviewed OK at commit ea0ca6d5.
-
-`[needs-fix]` [[todo/test_suite:_fix_shutdown_step]]
-
-* Activate persistence on a Tails USB install with all presets on, and
-  a few custom directories (also done by the automated test suite,
+* Activate persistence on a Tails USB install with all presets on
+  (also done by the automated test suite,
   but required to test what follows until it's green too).
 * Try read-write mode. Make sure that changes do survive
-  reboot. `[needs-pass: usb_install]`
+  reboot.
 * Try read-only mode. Make sure that persistent files are writeable,
   but that no changes survive
-  reboot. `[needs-pass: usb_install]`
+  reboot.
 * Turn off some persistence presets, reboot, and make sure they are
   not activated.
+* Delete a persistent volume, reboot, the persistence option should
+  not appear in the Greeter anymore.
 
 # Windows Camouflage
 
@@ -493,21 +562,22 @@ language.
 * The chosen keyboard layout must be applied.
 * The virtual keyboard must work and be auto-configured to
   use the same keyboard layout as the X session.
-* The iceweasel search engine must be localized (for languages we
-  ship a localized searchplugin for).
-* The iceweasel spelling dictionary must be localized (for languages
-  that are supported by our branding extension).
+* Once [[!tails_todo fix_localized_iceweasel_search_engine]] is fixed, the
+  iceweasel search engine must be localized (for languages we ship
+  a localized searchplugin for).
+* Once [[!tails_ticket 5962]] is fixed, the browser spelling
+  dictionary must be localized (for languages that are supported by
+  our branding extension). In the meantime, it must at least work for
+  French, German, Italian, Portuguese and Spanish.
 
 # Misc
 
 * Check that all seems well during init (mostly that all services
   start without errors), and that dmesg seems ok.
-* MAT should be able to clean a PDF file. `[needs-fix]` (see:
-  [[todo/test_suite:_mat_scenario_fails]])
+* MAT should be able to clean a PDF file.
 * Browsing (by hostname) a FTP server on the Internet should be
   possible using GNOME's *Connect to server* feature
   (once [[!tails_todo fix Internet FTP support]] is fixed)
 * The Tails signing key in `/usr/share/keyrings/tails-keyring.gpg`
   should be up-to-date (that is, neither it nor one its subkeys must
-  have expired, or be about to expire any time soon). `[needs-fix]`
-  (see: [[todo/test_suite:_shipped_signing_key_scenario]])
+  have expired, or be about to expire any time soon).

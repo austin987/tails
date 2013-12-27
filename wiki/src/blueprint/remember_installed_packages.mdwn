@@ -1,0 +1,96 @@
+When user have enabled persistence, it could be nice to remember which
+extra packages they have installed.
+
+We propose to use the term "your additional software" to mention to the
+user those packages in the GUI, notifications, etc.
+
+This feature will be implemented in several steps.
+
+Past research
+=============
+
+Possible interfaces
+-------------------
+
+### 1
+
+Either in the greeter or upon login, an
+interface could appear offering the user to select which packages should be
+reinstalled (all unselected by default).
+
+Having this choice in the greeter could allow users to install their preferred
+software without having an administrative password set.
+
+> This interface would quickly become messy, as soon as a desired
+> additional package pulls dozens (if not hundreds) of dependencies.
+
+### 2
+
+Alternative idea: in tails-persistence-setup, allow selecting
+packages (among the ones additionally installed during the current
+session, and/or offer a "All installed additional packages"
+option) to be automatically re-installed next time. Then, at boot
+time, when persistence is enabled, our live-persistence script (or
+something else started from tails-greeter) would (unconditionally?)
+read this packages list from the persistent volume and install them.
+
+Things to think about
+---------------------
+
+- security implications of this whole idea needs to be researched before
+  diving in the code.
+
+> since the cached APT packages are
+> hand picked by the user, security will depend on these packages and
+> security of the persistent volume where the *.deb are going to be
+> stored. Am I missing something here?
+
+- how to answer pontential apt/dpkg/debconf questions? record answers? force yes?
+
+- re-install these packages from cache only, or prefer fetching more up-to-date
+  versions from online mirrors if available? If we want to fetch updates, when
+  should the install start? Think about offline usage and about network
+  fingerprint.
+
+- should the packages been installed before starting the session (required for
+  packages related to session modification e.g. `msva-perl`) or after (e.g.
+  requiring network, like firmware downloader)
+
+Possible implementation tricks
+------------------------------
+
+### Installing at startup, then upgrading
+
+One solution to the upgrad/offline use problem might be to install the packages
+at from cache at startup, then to try to fetch upgrades and install them if
+network appears.
+
+### Creating a list of user-installed packages
+
+A configuration snippet can be add in `/etc/apt/apt.conf.d` with a
+`Dpkg::Post-Invoke` option. This allows to trigger a script each time
+APT is run.
+
+This script should query APT database and record all packages that are
+not in `autoinstall` state.
+
+On boot time, that list should be filtered with packages that are already
+shipped with Tails.
+
+> Here's an example script which filters shipped packages on runtime instead:
+> 
+    comm -23 <(list-manually-installed-packages) <default-packages.txt >session-packages.txt
+    comm -23 <(cat session-packages.txt|sort) <(cat saved-packages.txt|sort) >> saved-packages.txt
+> 
+> It mantains a list of packages manually installed by the user in saved-packages.txt. This file should be placed in its own directory so it can be made persistent.
+>
+> list-manually-installed-packages is another script which does what its name says. In squeeze it can be done with:
+>
+    comm -3 <(dpkg -l | grep '^ii' | cut -d\  -f 3|sort) <(apt-mark showauto|sort)
+>
+> When we move to wheezy it may simply become 'apt-mark showmanual', if it proves to be equivalent.
+>
+> default-packages.txt is the list of packages shipped with Tails, generated at ISO creation time with list-manually-installed-packages
+>
+> session-packages.txt is a temporary file, can be placed in /tmp
+

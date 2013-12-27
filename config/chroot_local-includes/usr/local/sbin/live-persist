@@ -14,7 +14,7 @@ error ()
 # and now initialized by live-boot in a file that we certainly
 # don't want to source.
 export persistence_list="persistence.conf"
-export old_persistence_list="live-persistence.conf"
+export old_persistence_list="nonexistent"
 
 # This will import the following functions and variables used below:
 #   activate_custom_mounts()
@@ -184,6 +184,86 @@ list_gpt_volumes ()
 	exit 0
 }
 
+mountpoint_has_correct_access_rights ()
+{
+	local mountpoint="$1"
+	local expected_user=root
+	local expected_group=root
+	local expected_perms=775
+	local expected_acl="user::rwx
+user:tails-persistence-setup:rwx
+group::rwx
+mask::rwx
+other::r-x"
+
+	if [ $(stat -c %U "$mountpoint") != "$expected_user" ]
+	then
+		warning "'$mountpoint' is not owned by the '$expected_user' user"
+		return 1
+	fi
+	if [ $(stat -c %G "$mountpoint") != "$expected_group" ]
+	then
+		warning "'$mountpoint' is not owned by the '$expected_group' group"
+		return 2
+	fi
+	if [ $(stat -c %a "$mountpoint") != "$expected_perms" ]
+	then
+		warning "'$mountpoint' permissions are not $expected_perms"
+		return 4
+	fi
+	if [ "$(getfacl --omit-header --skip-base "$mountpoint" 2>/dev/null | grep -v '^\s*$')" \
+	      != "$expected_acl" ]
+	then
+		warning "'$mountpoint' has incorrect ACL"
+		return 8
+	fi
+	return 0
+}
+
+persistence_conf_file_has_correct_access_rights ()
+{
+	local conf="$1"
+	local expected_user=tails-persistence-setup
+	local expected_group=tails-persistence-setup
+	local expected_perms=600
+	local expected_acl=""
+
+	if [ $(stat -c %U "$conf") != "$expected_user" ]
+	then
+		warning "'$conf' is not owned by the '$expected_user' user"
+		return 1
+	fi
+	if [ $(stat -c %G "$conf") != "$expected_group" ]
+	then
+		warning "'$conf' is not owned by the '$expected_group' group"
+		return 2
+	fi
+	if [ $(stat -c %a "$conf") != "$expected_perms" ]
+	then
+		warning "'$conf' permissions are not $expected_perms"
+		return 4
+	fi
+	if [ "$(getfacl --omit-header --skip-base "$conf" 2>/dev/null | grep -v '^\s*$')" \
+	      != "$expected_acl" ]
+	then
+		warning "'$conf' has incorrect ACL"
+		return 8
+	fi
+	return 0
+}
+
+disable_and_create_empty_persistence_conf_file ()
+{
+	local conf="$1"
+
+	mv "$conf" "${conf}.insecure_disabled" \
+		|| error "Failed to disable '$conf': $?"
+	install --owner tails-persistence-setup \
+		--group tails-persistence-setup --mode 0600 \
+		/dev/null "$conf" \
+		|| error "Failed to create empty '$conf': $?"
+}
+
 activate_volumes ()
 {
 	local volumes=${@}
@@ -227,6 +307,53 @@ activate_volumes ()
 
 	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
 	get_custom_mounts ${custom_mounts} ${open_volumes}
+	# ... and now the persistent volumes should be mounted.
+
+	# Enable the acl mount option on all persistent filesystems.
+	for mountpoint in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		mount -o remount,acl "$mountpoint"
+	done
+
+	# Detect if we have incorrect ownership, permissions and ACL.
+	ACCESS_RIGHTS_ARE_CORRECT=true
+	for mountpoint in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		if ! mountpoint_has_correct_access_rights "$mountpoint"
+		then
+			ACCESS_RIGHTS_ARE_CORRECT=false
+			break
+		fi
+	done
+
+	# Disable all persistence configuration files if the mountpoint
+	# has wrong access rights.
+	if [ "$ACCESS_RIGHTS_ARE_CORRECT" != true ]
+	then
+		for f in $(ls /live/persistence/*_unlocked/persistence.conf \
+		              /live/persistence/*_unlocked/live-additional-software.conf || true)
+		do
+			warning "Disabling '$f': persistent volume has unsafe access rights"
+			disable_and_create_empty_persistence_conf_file "$f"
+		done
+	fi
+
+	# Regardless of the mountpoint access rights, disable persistence
+	# configuration files with wrong access rights.
+	for f in $(ls /live/persistence/*_unlocked/persistence.conf \
+	              /live/persistence/*_unlocked/live-additional-software.conf || true)
+	do
+		if ! persistence_conf_file_has_correct_access_rights "$f"
+		then
+			warning "Disabling '$f', that has unsafe access rights"
+			disable_and_create_empty_persistence_conf_file "$f"
+		fi
+	done
+
+	# Load the new persistence.conf.
+	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
+	get_custom_mounts ${custom_mounts} ${open_volumes}
+
 	if [ -s "${custom_mounts}" ]
 	then
 		activate_custom_mounts ${custom_mounts} &> /dev/null

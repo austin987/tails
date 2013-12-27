@@ -25,6 +25,7 @@ Feature: Microsoft Windows XP Camouflage
   Scenario: Windows should appear like those in Microsoft Windows XP
     When I run "iceweasel"
     Then I see "WinXPIceweaselWindow.png" after at most 120 seconds
+    # FIXME: #6536
     And I see "WinXPIceweaselTaskBar.png" after at most 10 seconds
     And I see "WinXPWindowButtons.png" after at most 10 seconds
 

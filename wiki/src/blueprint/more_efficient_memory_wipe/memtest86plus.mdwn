@@ -1,0 +1,135 @@
+[[!meta title="Erase memory: the memtest86+ way"]]
+
+Rationale
+=========
+
+Memory erasure on shutdown is currently buggy. Sdmem and linux memtest
+implementation are failing. But a program exist that is actually dedicated at
+memory testing, and that has thus access to most (if tot all) available memory: 
+[memtest86+](http://www.memtest.org/). This is a research using a modified
+memtest86+ to erase memory.
+
+Adapting memtest
+================
+
+We started from memtest86+ version 4.20 available at
+<http://www.memtest.org/download/4.20/memtest86+-4.20.tar.gz>.
+
+Executing a single test
+-----------------------
+
+We patched memtest86+ to execute a single test, and then reboot. We choosed
+test #1 "Address test, own address" but quicker one could probably be choosen.
+
+The corresponding patchset:
+
+[0001-Do-only-one-test-and-hopefully-reboot.patch](https://labs.riseup.net/code/attachments/312/0001-Do-only-one-test-and-hopefully-reboot.patch)
+
+Nice display
+------------
+
+We patched memtest86+ to only display "Memory wipe, please wait..." with a
+progress bar, and then report success.
+
+The corresponding patchset:
+
+- [0002-Only-write-a-nice-title.patch](https://labs.riseup.net/code/attachments/314/0002-Only-write-a-nice-title.patch)
+- [0003-Remove-most-colors.patch](https://labs.riseup.net/code/attachments/315/0003-Remove-most-colors.patch)
+- [0004-Actually-writes-the-progress-bar-and-move-it-up.patch](https://labs.riseup.net/code/attachments/320/0004-Actually-writes-the-progress-bar-and-move-it-up.patch)
+- [0005-Display-message-at-the-end.patch](https://labs.riseup.net/code/attachments/322/0005-Display-message-at-the-end.patch)
+
+A screenshot:
+
+<img src="https://labs.riseup.net/code/attachments/323/memwipe.png">
+
+Unfortunately, this is useless as when kexec launches memtest from Tails, the
+video mode in not native and nothing is displayed.
+
+Left to do
+----------
+
+- Actually halt the machine
+- Choose or write a quicker test
+- Disable keyboard shortcuts
+
+
+Integreating into Tails
+=======================
+
+We patched tails experimental to kexec on our modified memtest86+ instead of on
+linux on shutdown. The `memtest` binary built on Tails from upstream with our
+patches applied is correctly recognised by kexec. Note that we didn't achive to
+kexec on a memtest built on another OS.
+
+The corresponding patchset:
+
+- [0001-Test-memory-wipe-with-memtest86.patch](https://labs.riseup.net/code/attachments/313/0001-Test-memory-wipe-with-memtest86.patch)
+
+Testing procedure
+=================
+
+We launched the system to test with qemu or virtualbox. We dumped the ram just
+before shutdown, then after machine halt.
+
+With qemu, one should start the system to test with `-no-shutdown`, e.g.:
+
+    qemu -enable-kvm -snapshot -m 2048 -no-shutdown -cdrom tails-i386-experimental-0.12.1-20120816.iso
+
+We launched 4 `fillram` processes in parallel, whatching them with `top` and
+waiting for them to be killed by oom killer. At least one terminated with
+`MemoryError`. Fillram fills the RAM with the pattern `wipe_didnt_work\n`.
+
+Then we dumped RAM with the following command in qemu console (CTRL+ALT+2). Note
+that the end address must be adapted to the amount of RAM available in the VM:
+
+    pmemsave 0 0x80000000 before.dump
+
+Then shutdown Tails pressing the red button, and once the machine halted, dump
+the RAM again:
+
+    pmemsave 0 0x80000000 after.dump
+
+Then we count the occurences of the pattern in the memory dump:
+
+    grep -c wipe_didnt_work before.dump
+    grep -c wipe_didnt_work after.dump
+
+Testing results
+===============
+
+    Machine             RAM         Patterns                %patterns               %wipe
+                                    before wipe after wipe  before wipe after wipe
+
+    Tails sdmem+kexec   2147483648   1772984624    17168336 82,561%     0,799%      99,032%
+
+    Tails memwipe+kexec 2147483648   1755221472         240 81,734%     <0,001%     >0,999%
+
+    Tails sdmem+kexec   8589934592   3243648688  1128607952 37,761%     13,139%     65,206%
+
+    Tails memwipe+kexec 8589934592   3372274816         240 39,258%     <0,001%     >0,999%
+
+    Units: bytes
+
+    Resolution: 16 bytes accuacy
+
+Memwipe erase memory better than current Tails implementation.
+There is a remaining area of 240 bytes that does not get erased.
+
+Conclusion
+==========
+
+For the memory wipe approches we know about, this one is the most efficient we
+experimented.
+
+Pros:
+
+- We have something that works better than any other methods we know about.
+
+Cons:
+
+- There is still a small amount of memory not wiped.
+- We have to maintain a patchset. However there is only one memtest86+ release
+  by year since 2009.
+- There is no output on screen, and it may be difficult to fix.
+
+
