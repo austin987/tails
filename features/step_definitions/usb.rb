@@ -139,7 +139,7 @@ Given /^I create a persistent partition with password "([^"]+)"$/ do |pwd|
   step 'I run "gnome-terminal"'
   @screen.wait_and_click('GnomeTerminalWindow.png', 20)
   @screen.type('/usr/local/bin/tails-persistence-setup' + Sikuli::Key.ENTER)
-  @screen.wait('PersistenceWizardWindow.png', 20)
+  @screen.wait('PersistenceWizardWindow.png', 40)
   @screen.wait('PersistenceWizardStart.png', 20)
   @screen.type(pwd + "\t" + pwd + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)
@@ -437,7 +437,7 @@ When /^I delete the persistent partition$/ do
   step 'I run "gnome-terminal"'
   @screen.wait_and_click('GnomeTerminalWindow.png', 20)
   @screen.type('/usr/local/bin/tails-delete-persistent-volume' + Sikuli::Key.ENTER)
-  @screen.wait("PersistenceWizardWindow.png", 20)
+  @screen.wait("PersistenceWizardWindow.png", 40)
   @screen.wait("PersistenceWizardDeletionStart.png", 20)
   @screen.type(" ")
   @screen.wait("PersistenceWizardDone.png", 120)
