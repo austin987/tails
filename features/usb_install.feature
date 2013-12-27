@@ -28,29 +28,19 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     But there is no persistence partition on USB drive "current"
     And I unplug USB drive "current"
 
-  Scenario: Booting Tails from a USB drive without a persistent partition
+  Scenario: Booting Tails from a USB drive without a persistent partition and creating one
     Given a computer
     And the computer is set to boot from USB drive "current"
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
-    And I log in to a new session
-    Then Tails seems to have booted normally
-    And Tails is running from USB drive "current"
-    And the boot device has safe access rights
-    And there is no persistence partition on USB drive "current"
-
-  Scenario: Creating a persistent partition
-    Given a computer
-    And the computer is set to boot from USB drive "current"
-    And the network is unplugged
-    When I start the computer
-    And the computer boots Tails
-    And Tails is running from USB drive "current"
     And the boot device has safe access rights
     And I log in to a new session
     And GNOME has started
     And I have closed all annoying notifications
+    Then Tails seems to have booted normally
+    And Tails is running from USB drive "current"
+    And the boot device has safe access rights
     And there is no persistence partition on USB drive "current"
     And I create a persistent partition with password "asdf"
     Then a Tails persistence partition with password "asdf" exists on USB drive "current"
