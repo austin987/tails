@@ -4,7 +4,7 @@
 # depends on the sniffer name. The resulting captured packets for each sniffers
 # can be accessed as an array through its `packets` method.
 #
-# Use of more jrubyish internal ways to sniff a network like with pcap-able gems
+# Use of more rubyish internal ways to sniff a network like with pcap-able gems
 # is waaay to much resource consumming, notmuch reliable and soooo slow. Let's
 # not bother too much with that. :)
 #
