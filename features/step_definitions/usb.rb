@@ -261,10 +261,7 @@ Given /^persistence is enabled$/ do
   try_for(120, :msg => "Persistence is disabled") do
     tails_persistence_enabled?
   end
-end
-
-Given /^all persistent directories are mounted$/ do
-  next if @skip_steps_while_restoring_background
+  # Check that all persistent directories are mounted
   mount = @vm.execute("mount").stdout.chomp
   for dir in persistent_dirs do
     assert(mount.include?("on #{dir} "),
@@ -429,7 +426,6 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "I enable read-only persistence with password \"asdf\""
   step "I log in to a new session"
   step "persistence is enabled"
-  step "all persistent directories are mounted"
   step "GNOME has started"
   step "I have closed all annoying notifications"
   step "the expected persistent files are present in the filesystem"

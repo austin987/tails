@@ -72,7 +72,6 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And GNOME has started
     And I have closed all annoying notifications
     And persistence is enabled
-    And all persistent directories are mounted
     And I write some files expected to persist
     And persistent filesystems have safe access rights
     And persistence configuration files have safe access rights
@@ -92,7 +91,6 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And GNOME has started
     And I have closed all annoying notifications
     And persistence is enabled
-    And all persistent directories are mounted
     And I write some files not expected to persist
     And I remove some files expected to persist
     And I completely shutdown Tails
@@ -156,7 +154,6 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And GNOME has started
     And I have closed all annoying notifications
     And persistence is enabled
-    And all persistent directories are mounted
     And I write some files expected to persist
     And persistent filesystems have safe access rights
     And persistence configuration files have safe access rights
@@ -219,7 +216,6 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I log in to a new session
     Then Tails seems to have booted normally
     And persistence is enabled
-    And all persistent directories are mounted
     And Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
     And the expected persistent files are present in the filesystem
@@ -250,7 +246,6 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I log in to a new session
     Then Tails seems to have booted normally
     And persistence is enabled
-    And all persistent directories are mounted
     And Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
     And the expected persistent files are present in the filesystem
