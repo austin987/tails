@@ -116,7 +116,7 @@ After('@product') do |scenario|
 end
 
 After('@product', '~@keep_volumes') do
-  $vmstorage.clear_volumes
+  VM.storage.clear_volumes
 end
 
 # For @source tests
