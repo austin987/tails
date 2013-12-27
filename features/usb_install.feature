@@ -312,7 +312,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I have closed all annoying notifications
     And I plug USB drive "isohybrid"
     And I try a "Clone & Upgrade" Tails to USB drive "isohybrid"
-    But I am suggested to do a "Clone & Upgrade"
+    But I am suggested to do a "Clone & Install"
     And I kill the process "liveusb-creator"
     And I "Clone & Install" Tails to USB drive "isohybrid"
     Then Tails is installed on USB drive "isohybrid"

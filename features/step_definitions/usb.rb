@@ -92,7 +92,7 @@ When /^I try a "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   end
 end
 
-When /^I am suggested to do a "Clone & Upgrade"$/ do
+When /^I am suggested to do a "Clone & Install"$/ do
   next if @skip_steps_while_restoring_background
   @screen.find("USBSuggestsInstall.png")
 end
