@@ -241,8 +241,8 @@ end
 
 Given /^I enable persistence with password "([^"]+)"$/ do |pwd|
   next if @skip_steps_while_restoring_background
-  match = @screen.find('TailsGreeterPersistence.png')
-  @screen.click(match.getCenter.offset(match.w/2, match.h*2))
+  @screen.wait('TailsGreeterPersistence.png', 10)
+  @screen.type(Sikuli::Key.SPACE)
   @screen.wait('TailsGreeterPersistencePassphrase.png', 10)
   match = @screen.find('TailsGreeterPersistencePassphrase.png')
   @screen.click(match.getCenter.offset(match.w*2, match.h/2))
