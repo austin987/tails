@@ -4,7 +4,7 @@ Feature: System memory erasure on shutdown
   when I shutdown Tails
   I want the system memory to be free from sensitive data.
 
-  Scenario: A modern computer
+  Scenario: Memory erasure on a modern computer
     Given a computer
     And the computer is a modern 64-bit system
     And the computer has 8 GiB of RAM
@@ -20,7 +20,7 @@ Feature: System memory erasure on shutdown
     And I shutdown and wait for Tails to finish wiping the memory
     Then I find very few patterns in the guest's memory
 
-  Scenario: An old computer
+  Scenario: Memory erasure on an old computer
     Given a computer
     And the computer is an old pentium without the PAE extension
     And the computer has 8 GiB of RAM
