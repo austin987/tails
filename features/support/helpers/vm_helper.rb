@@ -334,7 +334,7 @@ EOF
   end
 
   def has_process?(process)
-    return execute("pidof -o '%PPID' " + process).success?
+    return execute("pidof -x -o '%PPID' " + process).success?
   end
 
   def save_snapshot(path)
