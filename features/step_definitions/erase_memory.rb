@@ -96,10 +96,7 @@ Given /^I fill the guest's memory with a known pattern$/ do
   # The remote shell is sometimes OOM killed when we fill the memory,
   # and since we depend on it after the memory fill we try to prevent
   # that from happening.
-  # pgrep detects itself for mysterious reasons
-  pids1 = @vm.execute("pgrep -f autotest_remote_shell.py").stdout.chomp.split
-  pids2 = @vm.execute("pgrep -f autotest_remote_shell.py").stdout.chomp.split
-  pid = (pids1 & pids2)[0]
+  pid = @vm.pidof("autotest_remote_shell.py")[0]
   @vm.execute("echo -17 > /proc/#{pid}/oom_adj")
 
   used_mem_before_fill = used_ram_in_bytes
@@ -113,7 +110,7 @@ Given /^I fill the guest's memory with a known pattern$/ do
   instances.times { @vm.spawn('/usr/local/sbin/fillram; killall fillram') }
   # We make sure that the filling has started...
   try_for(10, { :msg => "fillram didn't start" }) {
-    @vm.execute("pgrep fillram").success?
+    @vm.has_process?("fillram")
   }
   STDERR.print "Memory fill progress: "
   ram_usage = ""
@@ -123,7 +120,7 @@ Given /^I fill the guest's memory with a known pattern$/ do
     remove_chars = ram_usage.size
     ram_usage = "%3d%% " % ((used_ram.to_f/@detected_ram_b)*100)
     STDERR.print "\b"*remove_chars + ram_usage
-    ! @vm.execute("pgrep fillram").success?
+    ! @vm.has_process?("fillram")
   end
   STDERR.print "\b"*ram_usage.size + "100%\n"
   coverage = pattern_coverage_in_guest_ram()
