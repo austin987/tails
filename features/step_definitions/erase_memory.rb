@@ -155,8 +155,7 @@ end
 
 When /^I reboot without wiping the memory$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute('echo 1 > /proc/sys/kernel/sysrq')
-  @vm.spawn('echo b > /proc/sysrq-trigger')
+  @vm.reset
   @screen.wait('TailsBootSplash.png', 30)
 end
 
