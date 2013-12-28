@@ -360,6 +360,12 @@ EOF
     @display.start
   end
 
+  def reset
+    # ruby-libvirt 0.4 does not support the reset method.
+    # XXX: Once we use Jessie, use @domain.reset instead.
+    system("virsh reset " + @domain_name) if is_running?
+  end
+
   def power_off
     @domain.destroy if is_running?
     @display.stop
