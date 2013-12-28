@@ -114,6 +114,7 @@ Given /^I fill the guest's memory with a known pattern$/ do
   }
   STDERR.print "Memory fill progress: "
   ram_usage = ""
+  remove_chars = 0
   # ... and that it finishes
   try_for(instances*2*60, { :msg => "fillram didn't complete, probably the VM crashed" }) do
     used_ram = used_ram_in_bytes
@@ -122,7 +123,7 @@ Given /^I fill the guest's memory with a known pattern$/ do
     STDERR.print "\b"*remove_chars + ram_usage
     ! @vm.has_process?("fillram")
   end
-  STDERR.print "\b"*ram_usage.size + "100%\n"
+  STDERR.print "\b"*remove_chars + "finished.\n"
   coverage = pattern_coverage_in_guest_ram()
   # Let's aim for having the pattern cover at least 80% of the free RAM.
   # More would be good, but it seems like OOM kill strikes around 90%,
