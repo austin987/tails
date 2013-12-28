@@ -16,7 +16,7 @@ Feature: System memory erasure on shutdown
     And at least 8 GiB of RAM was detected
     And process "memlockd" is running
     And process "udev-watchdog" is running
-    When I fill the guest's memory with a known pattern
+    When I fill the guest's memory with a known pattern without verifying
     And I reboot without wiping the memory
     Then I find many patterns in the guest's memory
 
@@ -48,7 +48,7 @@ Feature: System memory erasure on shutdown
     And at least 3500 MiB of RAM was detected
     And process "memlockd" is running
     And process "udev-watchdog" is running
-    When I fill the guest's memory with a known pattern
+    When I fill the guest's memory with a known pattern without verifying
     And I reboot without wiping the memory
     Then I find many patterns in the guest's memory
 
