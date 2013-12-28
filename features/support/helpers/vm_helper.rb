@@ -337,6 +337,10 @@ EOF
     return execute("pidof -x -o '%PPID' " + process).success?
   end
 
+  def pidof(process)
+    return execute("pidof -x -o '%PPID' " + process).stdout.chomp.split
+  end
+
   def save_snapshot(path)
     @domain.save(path)
     @display.stop
