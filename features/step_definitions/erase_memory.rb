@@ -146,6 +146,22 @@ Then /^I find very few patterns in the guest's memory$/ do
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
 end
 
+Then /^I find many patterns in the guest's memory$/ do
+  next if @skip_steps_while_restoring_background
+  coverage = pattern_coverage_in_guest_ram()
+  min_coverage = 0.7
+  assert(coverage > min_coverage,
+         "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
+         "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
+end
+
+When /^I reboot without wiping the memory$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.execute('echo 1 > /proc/sys/kernel/sysrq')
+  @vm.execute('echo b > /proc/sysrq-trigger')
+  @screen.wait('TailsBootSplash.png', 30)
+end
+
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   next if @skip_steps_while_restoring_background
   @vm.execute("halt")
