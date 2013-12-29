@@ -26,18 +26,21 @@ use File::Tail;
 use Parse::Syslog;
 use IPC::System::Simple qw(runx);
 use Locale::gettext;
+use I18N::Langinfo qw{langinfo CODESET};
+use Encode qw{decode find_encoding};
 use POSIX;
 
 setlocale(LC_MESSAGES, "");
 textdomain("tails");
 
 sub notify_maybe_blocked {
-    my $summary = gettext('Network connection blocked?');
-    my $body    = gettext(
+    my $encoding = find_encoding(langinfo(CODESET()));
+    my $summary  = $encoding->decode(gettext('Network connection blocked?'));
+    my $body     = $encoding->decode(gettext(
         'It looks like you are blocked from the network. This may be ' .
         'related to the MAC spoofing feature. For more information, see the ' .
         '<a href=\"file:///usr/share/doc/tails/website/doc/advanced_topics/' .
-        'mac_changer.en.html#blocked\">MAC spoofing documentation</a>.');
+        'mac_changer.en.html#blocked\">MAC spoofing documentation</a>.'));
     # We can't use Desktop::Notify since this script is supposed to be run
     # as root (for access to syslog), started in an env without DESKTOP etc,
     # which also causes issues with opening links in the text body.
