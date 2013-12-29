@@ -24,6 +24,7 @@ See https://tails.boum.org/.
 
 use File::Tail;
 use Parse::Syslog;
+use IPC::System::Simple qw(runx);
 use Locale::gettext;
 use POSIX;
 
@@ -40,7 +41,7 @@ sub notify_maybe_blocked {
     # We can't use Desktop::Notify since this script is supposed to be run
     # as root (for access to syslog), started in an env without DESKTOP etc,
     # which also causes issues with opening links in the text body.
-    system("/usr/local/sbin/tails-notify-user '$summary' '$body' 30000");
+    runx('/usr/local/sbin/tails-notify-user', ($summary, $body, '30000'));
 }
 
 my %state;
