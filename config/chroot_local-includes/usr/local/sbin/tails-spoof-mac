@@ -50,12 +50,12 @@ macchanger_helper() {
 }
 
 spoof_mac() {
-    macchanger_helper -e $1
+    macchanger_helper -e "${1}"
 }
 
 set_log_tag spoof-mac
 
-NIC=${1}
+NIC="${1}"
 
 if ! mac_spoof_is_enabled; then
     exit 0
@@ -63,16 +63,16 @@ fi
 
 log "Trying to spoof MAC address of NIC ${NIC}..."
 
-if ! nic_exists ${NIC}; then
+if ! nic_exists "${NIC}"; then
     log "NIC ${NIC} doesn't exist, skipping"
     exit 1
 fi
 
-if nic_has_spoofed_mac ${NIC}; then
+if nic_has_spoofed_mac "${NIC}"; then
     log "NIC ${NIC}'s MAC address is already spoofed, skipping"
     exit 0
 else
-    if spoof_mac ${NIC}; then
+    if spoof_mac "${NIC}"; then
         log "Successfully spoofed MAC address of NIC ${NIC}"
     else
         log "Something went wrong while trying to spoof MAC address of NIC ${NIC}"
