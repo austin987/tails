@@ -27,7 +27,7 @@ macchanger_helper() {
     was_up=no
     if nic_is_up ${nic}; then
         was_up=yes
-        if ! /sbin/ifconfig ${nic} down; then
+        if ! /sbin/ip link set dev ${nic} down; then
             log "failed to down ${nic}"
             return 1
         fi
@@ -39,7 +39,7 @@ macchanger_helper() {
     fi
 
     if [ "${was_up}" = yes ]; then
-        if ! /sbin/ifconfig ${nic} up; then
+        if ! /sbin/ip link set dev ${nic} up; then
             log "failed to up ${nic}"
             return 1
         fi
