@@ -1,15 +1,21 @@
 #!/bin/sh
 
 get_all_ethernet_nics() {
-    /sbin/ifconfig -a | grep "Link encap:Ethernet" | cut -f 1 -d " "
+    for i in /sys/class/net/*; do
+        # type = 1 means ethernet (ARPHDR_ETHER, see Linux' sources,
+        # beginning of include/linux/if_arp.h)
+        if [ "$(cat "${i}"/type)" = 1 ]; then
+            basename "${i}"
+        fi
+    done
 }
 
 nic_exists() {
-    /sbin/ifconfig "${1}" >/dev/null 2>&1
+    [ -e /sys/class/net/"${1}" ]
 }
 
 nic_is_up() {
-    /sbin/ifconfig | grep -qe "^${1}\>"
+    [ "$(cat /sys/class/net/"${1}"/operstate)" = "up" ]
 }
 
 # The following "nic"-related functions require that the argument is a
