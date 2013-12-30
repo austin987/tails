@@ -11,7 +11,7 @@ class VMCommand
 
   def VMCommand.wait_until_remote_shell_is_up(vm, timeout = 30)
     begin
-      SystemTimer.timeout(timeout) do
+      Timeout::timeout(timeout) do
         VMCommand.execute(vm, "true", { :user => "root", :spawn => false })
       end
     rescue Timeout::Error

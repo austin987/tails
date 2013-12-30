@@ -11,8 +11,13 @@ The automated test suite is essentially a glue between:
 * [cucumber](http://cukes.info/), for defining features and scenarios
   testing them using the above two components.
 
-Its goal is to automate the release testing process with a Continuous
-Integration server.
+Its goal is to automate the development and release testing processes
+with a Continuous Integration server.
+
+A [[!tails_gitweb features/support/helpers/sikuli_helper.rb
+desc="custom thin Ruby wrapper"]], using the
+[rjb](http://rjb.rubyforge.org/) Ruby-Java bridge, gives us access to
+the Sikuli programmatic interface from our step definitions.
 
 ## Setup and usage
 
@@ -61,8 +66,6 @@ tag.
 The `run_test_suite` script is a wrapper on top of `cucumber`, that
 sets the correct environment up:
 
-* It sources `features/.rvmrc`, which uses bashisms, so it uses `bash`
-  as a shell.
 * It uses `Xvfb` so that the `DISPLAY` environment variable points to
   an unused X display (tip: use `Xvfb`) with screen size and color
   depth matching what the Sikuli images are optimized for (that is,
@@ -109,8 +112,8 @@ pointers for the latter.
 In addition to the Sikuli, libvirt and Cucumber documentation linked
 to in the introduction:
 
- * [ruby-libvirt api](http://libvirt.org/ruby/api/index.html)
- * [sikuli gem api](http://rubydoc.info/gems/sikuli/0.3.0/frames)
+ * [ruby-libvirt API](http://libvirt.org/ruby/api/index.html)
+ * [sikuli API](http://doc.sikuli.org/toc.html)
 
 ## Writing new features and scenarios
 
@@ -336,7 +339,7 @@ Filesystem shares cannot (due to QEMU limitations) be added to an
 active VM, and cannot (due to QEMU limitations) be active
 (i.e. mounted) during a snapshot save. For this reason, don't use
 filesystem shares in combination with background snapshots. For more
-information, see [[!tails_todo test_suite:_fs_shares_vs_snapshots desc="this ticket"]].
+information, see [[!tails_ticket 5571]].
 
 ## Plugging SATA drives
 
@@ -369,6 +372,4 @@ put *all* steps dealing with the class variable in the background, or
 all of them after the background. Alternatively, use global variables
 (e.g. `$x`) instead of class variables, since they are never cleared.
 
-Also, see
-[[!tails_todo
-test_suite:_assigning_class_variables_in_skippable_steps desc="this ticket"]].
+Also, see [[!tails_ticket 5847]].
