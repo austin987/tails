@@ -31,7 +31,8 @@ end
 
 def maybe_deal_with_pinentry
   begin
-    @screen.wait("PinEntryPrompt.png", 3)
+    @screen.wait_and_click("PinEntryPrompt.png", 3)
+    sleep 1
     @screen.type(@passphrase + Sikuli::KEY_RETURN)
   rescue Sikuli::ImageNotFound
     # The passphrase was cached or we wasn't prompted at all (e.g. when
