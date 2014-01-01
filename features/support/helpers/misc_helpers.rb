@@ -64,6 +64,10 @@ def convert_to_bytes(size, unit)
   return (size*convert_bytes_mod(unit)).to_i
 end
 
+def convert_to_MiB(size, unit)
+  return (size*convert_bytes_mod(unit) / (2**20)).to_i
+end
+
 def convert_from_bytes(size, unit)
   return size.to_f/convert_bytes_mod(unit).to_f
 end

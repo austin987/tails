@@ -35,22 +35,22 @@ Given /^the non-PAE kernel is running$/ do
          "Kernel #{kernel} is running, expected 'vmlinuz' (non-PAE)")
 end
 
-def used_ram_in_bytes
-  return @vm.execute("free -b | awk '/^-\\/\\+ buffers\\/cache:/ { print $3 }'").stdout.chomp.to_i
+def used_ram_in_MiB
+  return @vm.execute("free -m | awk '/^-\\/\\+ buffers\\/cache:/ { print $3 }'").stdout.chomp.to_i
 end
 
-def detected_ram_in_bytes
-  return @vm.execute("free -b | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
+def detected_ram_in_MiB
+  return @vm.execute("free -m | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
 end
 
 Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
-  @detected_ram_b = detected_ram_in_bytes
+  @detected_ram_m = detected_ram_in_MiB
   next if @skip_steps_while_restoring_background
-  puts "Detected #{@detected_ram_b} bytes of RAM"
-  min_ram_b = convert_to_bytes(min_ram.to_i, unit)
+  puts "Detected #{@detected_ram_m} MiB of RAM"
+  min_ram_m = convert_to_MiB(min_ram.to_i, unit)
   # All RAM will not be reported by `free`, so we allow a 128 MB gap
-  gap = convert_to_bytes(128, "MiB")
-  assert(@detected_ram_b + gap >= min_ram_b, "Didn't detect enough RAM")
+  gap = convert_to_MiB(128, "MiB")
+  assert(@detected_ram_m + gap >= min_ram_m, "Didn't detect enough RAM")
 end
 
 def pattern_coverage_in_guest_ram
@@ -70,7 +70,7 @@ def pattern_coverage_in_guest_ram
   File.delete dump
   # Pattern is 16 bytes long
   patterns_b = patterns*16
-  coverage = patterns_b.to_f/@detected_ram_b.to_f
+  coverage = patterns_b.to_f/convert_to_bytes(@detected_ram_m.to_f, 'MiB')
   puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_b} bytes)"
   return coverage
 end
@@ -100,14 +100,14 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   pid = @vm.pidof("autotest_remote_shell.py")[0]
   @vm.execute("echo -17 > /proc/#{pid}/oom_adj")
 
-  used_mem_before_fill = used_ram_in_bytes
+  used_mem_before_fill = used_ram_in_MiB
 
   # To be sure that we fill all memory we run one fillram instance
   # for each GiB of detected memory, rounded up. We also kill all instances
   # after the first one has finished, i.e. when the memory is full,
   # since the others otherwise may continue re-filling the same memory
   # unnecessarily.
-  instances = (@detected_ram_b.to_f/(2**30)).ceil
+  instances = (@detected_ram_m.to_f/(2**10)).ceil
   instances.times { @vm.spawn('/usr/local/sbin/fillram; killall fillram') }
   # We make sure that the filling has started...
   try_for(10, { :msg => "fillram didn't start" }) {
@@ -118,9 +118,9 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   remove_chars = 0
   # ... and that it finishes
   try_for(instances*2*60, { :msg => "fillram didn't complete, probably the VM crashed" }) do
-    used_ram = used_ram_in_bytes
+    used_ram = used_ram_in_MiB
     remove_chars = ram_usage.size
-    ram_usage = "%3d%% " % ((used_ram.to_f/@detected_ram_b)*100)
+    ram_usage = "%3d%% " % ((used_ram.to_f/@detected_ram_m)*100)
     STDERR.print "\b"*remove_chars + ram_usage
     ! @vm.has_process?("fillram")
   end
@@ -130,8 +130,8 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
     # Let's aim for having the pattern cover at least 80% of the free RAM.
     # More would be good, but it seems like OOM kill strikes around 90%,
     # and we don't want this test to fail all the time.
-    min_coverage = ((@detected_ram_b - used_mem_before_fill).to_f /
-                    @detected_ram_b.to_f)*0.8
+    min_coverage = ((@detected_ram_m - used_mem_before_fill).to_f /
+                    @detected_ram_m.to_f)*0.8
     assert(coverage > min_coverage,
            "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
            "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
@@ -165,7 +165,7 @@ end
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   next if @skip_steps_while_restoring_background
   @vm.execute("halt")
-  nr_gibs_of_ram = (@detected_ram_b.to_f/(2**30)).ceil
+  nr_gibs_of_ram = (@detected_ram_m.to_f/(2**10)).ceil
   try_for(nr_gibs_of_ram*5*60, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
     # We spam keypresses to prevent console blanking from hiding the
     # image we're waiting for
