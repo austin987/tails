@@ -75,7 +75,8 @@ def pattern_coverage_in_guest_ram
   return coverage
 end
 
-Given /^I fill the guest's memory with a known pattern$/ do
+Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do |dont_verify|
+  verify = dont_verify.empty?
   next if @skip_steps_while_restoring_background
 
   # Free some more memory by dropping the caches etc.
@@ -96,10 +97,7 @@ Given /^I fill the guest's memory with a known pattern$/ do
   # The remote shell is sometimes OOM killed when we fill the memory,
   # and since we depend on it after the memory fill we try to prevent
   # that from happening.
-  # pgrep detects itself for mysterious reasons
-  pids1 = @vm.execute("pgrep -f autotest_remote_shell.py").stdout.chomp.split
-  pids2 = @vm.execute("pgrep -f autotest_remote_shell.py").stdout.chomp.split
-  pid = (pids1 & pids2)[0]
+  pid = @vm.pidof("autotest_remote_shell.py")[0]
   @vm.execute("echo -17 > /proc/#{pid}/oom_adj")
 
   used_mem_before_fill = used_ram_in_bytes
@@ -113,28 +111,31 @@ Given /^I fill the guest's memory with a known pattern$/ do
   instances.times { @vm.spawn('/usr/local/sbin/fillram; killall fillram') }
   # We make sure that the filling has started...
   try_for(10, { :msg => "fillram didn't start" }) {
-    @vm.execute("pgrep fillram").success?
+    @vm.has_process?("fillram")
   }
   STDERR.print "Memory fill progress: "
   ram_usage = ""
+  remove_chars = 0
   # ... and that it finishes
   try_for(instances*2*60, { :msg => "fillram didn't complete, probably the VM crashed" }) do
     used_ram = used_ram_in_bytes
     remove_chars = ram_usage.size
     ram_usage = "%3d%% " % ((used_ram.to_f/@detected_ram_b)*100)
     STDERR.print "\b"*remove_chars + ram_usage
-    ! @vm.execute("pgrep fillram").success?
+    ! @vm.has_process?("fillram")
   end
-  STDERR.print "\b"*ram_usage.size + "100%\n"
-  coverage = pattern_coverage_in_guest_ram()
-  # Let's aim for having the pattern cover at least 80% of the free RAM.
-  # More would be good, but it seems like OOM kill strikes around 90%,
-  # and we don't want this test to fail all the time.
-  min_coverage = ((@detected_ram_b - used_mem_before_fill).to_f /
-                  @detected_ram_b.to_f)*0.8
-  assert(coverage > min_coverage,
-         "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
-         "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
+  STDERR.print "\b"*remove_chars + "finished.\n"
+  if verify
+    coverage = pattern_coverage_in_guest_ram()
+    # Let's aim for having the pattern cover at least 80% of the free RAM.
+    # More would be good, but it seems like OOM kill strikes around 90%,
+    # and we don't want this test to fail all the time.
+    min_coverage = ((@detected_ram_b - used_mem_before_fill).to_f /
+                    @detected_ram_b.to_f)*0.8
+    assert(coverage > min_coverage,
+           "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
+           "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
+  end
 end
 
 Then /^I find very few patterns in the guest's memory$/ do
@@ -144,6 +145,21 @@ Then /^I find very few patterns in the guest's memory$/ do
   assert(coverage < max_coverage,
          "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
+end
+
+Then /^I find many patterns in the guest's memory$/ do
+  next if @skip_steps_while_restoring_background
+  coverage = pattern_coverage_in_guest_ram()
+  min_coverage = 0.7
+  assert(coverage > min_coverage,
+         "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
+         "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
+end
+
+When /^I reboot without wiping the memory$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.reset
+  @screen.wait('TailsBootSplashPostReset.png', 30)
 end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do

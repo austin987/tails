@@ -334,7 +334,11 @@ EOF
   end
 
   def has_process?(process)
-    return spawn("pidof " + process).success?
+    return execute("pidof -x -o '%PPID' " + process).success?
+  end
+
+  def pidof(process)
+    return execute("pidof -x -o '%PPID' " + process).stdout.chomp.split
   end
 
   def save_snapshot(path)
@@ -354,6 +358,12 @@ EOF
     return if is_running?
     @domain.create
     @display.start
+  end
+
+  def reset
+    # ruby-libvirt 0.4 does not support the reset method.
+    # XXX: Once we use Jessie, use @domain.reset instead.
+    system("virsh reset " + @domain_name) if is_running?
   end
 
   def power_off

@@ -28,7 +28,7 @@ Then /^I should be able to run a command as root with pkexec$/ do
   next if @skip_steps_while_restoring_background
   step 'I run "gnome-terminal"'
   @screen.wait_and_click('GnomeTerminalWindow.png', 20)
-  @screen.type('pkexec touch /root/pkexec-test' + Sikuli::KEY_RETURN)
+  @screen.type('pkexec touch /root/pkexec-test' + Sikuli::Key.ENTER)
   step 'I enter the sudo password in the PolicyKit prompt'
   try_for(10, :msg => 'The /root/pkexec-test file was not created.') {
     @vm.execute('ls /root/pkexec-test').success?
@@ -39,7 +39,7 @@ Then /^I should not be able to run a command as root with pkexec and the standar
   next if @skip_steps_while_restoring_background
   step 'I run "gnome-terminal"'
   @screen.wait_and_click('GnomeTerminalWindow.png', 20)
-  @screen.type('pkexec touch /root/pkexec-test' + Sikuli::KEY_RETURN)
+  @screen.type('pkexec touch /root/pkexec-test' + Sikuli::Key.ENTER)
   ['', 'live'].each do |password|
     step "I enter the \"#{password}\" password in the PolicyKit prompt"
     @screen.wait('PolicyKitAuthFailure.png', 20)
