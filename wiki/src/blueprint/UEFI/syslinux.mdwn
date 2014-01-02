@@ -1,0 +1,38 @@
+Prerequisite: Tails with an amd64 kernel (e.g. from current
+experimental branch).
+
+Tested with syslinux 6.02+dfsg-1.
+
+	sudo apt-get install syslinux/experimental \
+	   syslinux-common/experimental isolinux/experimental
+
+	# make the system partition an *EFI System Partition* (ESP)
+	parted "$TAILS_DEVICE" set 1 boot on
+
+	mkdir -p "$TAILS_MOUNTPOINT"/EFI/BOOT && \
+	   cp /usr/lib/SYSLINUX/efi64/syslinux.efi \
+	      "$TAILS_MOUNTPOINT"/EFI/BOOT/bootx64.efi && \
+	   cp "$TAILS_MOUNTPOINT"/syslinux/* "$TAILS_MOUNTPOINT"/EFI/BOOT/ && \
+	   /bin/cp -f /usr/lib/syslinux/modules/efi64/* "$TAILS_MOUNTPOINT"/EFI/BOOT/
+
+* boots on ThinkPad X220 (syslinux 6.02+dfsg-1)
+* boots on X230 (syslinux 6.02+dfsg-1)
+* boots on ThinkPenguin Royal (syslinux 6.02+dfsg-1 and 6.03~pre1+dfsg-1)
+* does not boot on MacBook Pro 13-inch Mid 2012 without rEFInd (expected)
+* boots on MacBook Pro 13-inch Mid 2012 (EFI 2.9) with rEFInd *if* `menu
+  background splash.png` is removed from `stdmenu.cfg`; adding `menu
+  resolution 640 480` before `menu background` makes the menu display
+  "correctly" (only taking 1/4 of the screen, but oh well), *but* the
+  system does not boot
+* boots on MacBook Pro 13-inch Late 2011 (EFI 2.7) with rEFInd *if* `menu
+  background splash.png` is removed from `stdmenu.cfg`
+* on MacBook Pro 13-inch Mid 2012 with rEFInd, one has to choose
+  *Fallback boot loader from Tails* in rEFInd to boot, as the *Boot
+  Linux from Tails* entry does nothing at all (syslinux 6.02+dfsg-1
+  and 6.03~pre1+dfsg-1)
+* The ThinkPenguin Royal does not detect the bootloader if installed
+  as `EFI/Tails/syslinux.efi`; hence the use of the fallback bootloader
+  path (`BOOT/bootx64.efi`), which should work on more hardware.
+* tails-i386-feature_uefi-0.23-20131222T0855Z-8acf864.iso
+  boots fine on a Apple MacBook Air 13" mid 2011 (MacBookAir4,2)
+  once installed with Tails Installer
