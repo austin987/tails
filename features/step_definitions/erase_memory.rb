@@ -70,8 +70,9 @@ def pattern_coverage_in_guest_ram
   File.delete dump
   # Pattern is 16 bytes long
   patterns_b = patterns*16
+  patterns_m = convert_to_MiB(patterns_b, 'b')
   coverage = patterns_b.to_f/convert_to_bytes(@detected_ram_m.to_f, 'MiB')
-  puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_b} bytes)"
+  puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_m} MiB)"
   return coverage
 end
 
