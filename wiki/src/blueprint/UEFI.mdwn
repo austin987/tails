@@ -17,6 +17,8 @@ Goals
   hardware (e.g. some relevant set of Macs)
 * devices produced by Tails Installer should boot on most hardware
   that only supports UEFI boot for GPT devices (e.g. ThinkPad X220)
+* Legacy BIOS boot support should be left unaffected (modulo a tiny
+  amount of really crazy firmware bugs, probably)
 
 <a id="non-goals"></a>
 
@@ -28,11 +30,11 @@ Non-goals
   on some systems will break what currently works for others.
 * UEFI boot from hybrid ISO cat'd on a USB device: given BIOS DVD boot
   works generally fine, it's OK to require users to go this way and
-  install their UEFI-capable Tails USB stick from DVD. Other options
-  potentially workable for them, in case they have no DVD writer
-  available, include bootstrapping in Legacy BIOS boot mode from
-  hybrid ISO cat'd on a USB device, either on the same computer if the
-  firmware supports it, or from another computer that does.
+  install their UEFI-capable Tails USB stick from DVD. In case one has
+  no DVD writer, another potentially workable option is to bootstrap
+  in Legacy BIOS boot mode from hybrid ISO cat'd on a USB device.
+  If the firmware supports it, this can be done on the same computer;
+  else, from another computer.
 * 32-bit UEFI boot: this hardware is rare and mostly obsolete these
   days
 * [[blueprint/UEFI Secure boot]] is not part of this plan.
@@ -181,24 +183,24 @@ user feedback showed that none of the other available options is good
 enough by itself, we might have to reconsider.
 
 Second, in our [[early testing|blueprint/UEFI#testing-results]], GRUB
-and syslinux appeared to be perfectly on par as far as hardware
-support is concerned. To be fair, it must be noted that GRUB was
-tested in the presumably more robust text-only mode, while we have
-taken benefit of our existing configuration and graphical theme to
-test syslinux a bit more extensively. So, with the data we have at
-hand, quality of hardware support cannot be used as a criterion in
-this decision.
+and syslinux appeared to be perfectly on par with each other, as far
+as hardware support is concerned. To be fair, it must be noted that
+GRUB was tested in the simpler, and likely more robust text-only mode,
+while we have taken benefit of our existing configuration and
+graphical theme to test syslinux a bit more extensively. So, with the
+data we have at hand, quality of hardware support cannot be used as
+a criterion in this decision.
 
 We must say that GRUB's flexibility and mature UEFI support is
 seriously appealing to us. Also, even if Secure boot is not part of
-this initial iteration, it is very tempting to bet on a boot loader
-that is already in wide use in this area. Still, we feel that
-continuing to use syslinux both for Legacy BIOS and UEFI boot will
-make Tails blend better with the surrounding Live operating system
-environment, particularly Debian Live, which has many advantages both
-for users and developers. Added to that, the lesser risk of
-regressions for existing Tails users, and the lesser impact on our
-project's resources, were decisive.
+this first iteration, it is very tempting to bet on a boot loader that
+is already in wide use in this area. Still, we feel that continuing to
+use syslinux both for Legacy BIOS and UEFI boot will make Tails blend
+better with the surrounding Live operating system environment,
+particularly Debian Live, which has many advantages both for Tails
+users and developers. Added to that, the lesser risk of regressions
+for existing Tails users, and the lesser impact on our project's
+resources, were decisive.
 
 Our final take on this is to use syslinux 6 as our boot loader of
 choice, for the initial UEFI boot support in Tails.
@@ -208,7 +210,7 @@ future appears to be pretty easy from a technical standpoint.
 Of course, the quality assurance effort that would go with it in order
 to assert the risk for regressions, shall not be overlooked: it is
 generally bad for user experience to break support for hardware that
-was previously known-working, even if the very change that cause this
+was previously known-working, even if the very change that causes this
 breakage allows to support many more systems in total. Regardless, we
 do not consider the current decision as set in stone. We think it
 would be perfectly workable to switch to GRUB or another boot loader
@@ -228,20 +230,20 @@ this research and testing project.
 ### Boot device partitioning
 
 UEFI theoretically supports the standard PC disk partition scheme
-(MBR), but in practice it is most often used with devices with a GUID
-Partition Table (GPT). Add to this that GPT supports labelling
+(MBR), but in practice it is most often used to boot off devices with
+a GUID Partition Table (GPT). Add to this that GPT supports labelling
 partitions (as opposed to *filesystem* labels, that are useless for
 detecting an encrypted Debian Live persistent volume). This is why we
-have decided, back when we implemented persistence support and
-a graphical USB installer in 2012, to format the boot device with
-a GPT. Since then, we have made great use of this feature in Tails
-Persistent Volume Assistant, Incremental Upgrader and Greeter.
+have decided, back when we were implementing persistence support and
+a graphical USB installer in 2012, to initialize Tails boot devices
+with a GPT. Since then, we have made great use of this feature in
+Tails Persistent Volume Assistant, Incremental Upgrader and Greeter.
 
 Despite a few painful consequences we discovered along the way, all
-caused by buggy firmware, we think that picking GPT at that point was
-the right choice to make. We now have the opportunity to take
-advantage of it even more, and to surpass the aforementioned firmware
-limitations, by adding UEFI support to Tails.
+caused by buggy firmware implementations, we think that picking GPT at
+that point was the right choice to make. We now have the opportunity
+to take advantage of it even more, and to surpass the aforementioned
+firmware limitations, by adding UEFI support to Tails.
 
 ### Boot loader installation path
 
@@ -279,14 +281,14 @@ We are aiming to support UEFI boot in Tails for 64-bit hardware only.
 Then, the included UEFI boot loader has to be a 64-bit one.
 Running a 32-bit kernel from a 64-bit UEFI boot loader does not work.
 Therefore, we have to ship a 64-bit kernel, in addition to (at least)
-one 32-bit kernel, the latter being needed to to provide continued
+one 32-bit kernel, the latter being needed to provide continued
 support for 32-bit hardware.
 
 The set of Linux kernels shipped in Tails has to [[!tails_ticket 5456
 desc="be modified"]] to add a 64-bit kernel, in replacement of the
 686-pae flavour. This causes only a few minor problems that, in our
-opinion, are worth neither blocking UEFI support, nor keeping the
-686-pae kernel and bloating the ISO with a third kernel.
+opinion, are worth neither blocking the addition of UEFI support, nor
+keeping the 686-pae kernel and bloating the ISO with a third kernel.
 
 ### Boot loader configuration
 
@@ -295,7 +297,7 @@ is copied as-is into the UEFI boot loader configuration directory.
 
 ### Build-time implementation
 
-Two build-time hooks take care of the boot loader setup:
+Two build-time hooks take care of the UEFI boot loader setup:
 
 * `config/chroot_local-hooks/60-copy-syslinux-modules`
 * `config/binary_local-hooks/99-syslinux_uefi`
@@ -303,16 +305,17 @@ Two build-time hooks take care of the boot loader setup:
 ### Tails Installer
 
 Tails Installer creates the Tails system partition as an EFI System
-Partition, with the corresponding GUID. Additionally, it was adapted
-to support paths used by the syslinux 6 Debian packages, and in the
-`EFI/BOOT` directory.
+Partition (ESP), with the corresponding GUID. Additionally, it was
+adapted to support paths used by the syslinux 6 Debian packages, and
+in the `EFI/BOOT` directory.
 
 ### syslinux backport
 
 A backport of syslinux 6.x for Squeeze is installed from our APT
-repository. We intend to prepare and use an official backport instead,
-uploaded to the official Debian backports repositories, once this
-package is available in Debian testing.
+repository. We intend to [[!tails_ticket 6563 desc="prepare"]] and use
+an official backport for Wheezy instead, uploaded to the official
+Debian backports repositories, once syslinux 6.x is available in
+Debian testing.
 
 Next steps
 ----------
@@ -332,14 +335,13 @@ tickets on [[!tails_redmine desc="Redmine"]], meaning that patches are
 welcome, but we do not feel committed, as a project, to make
 it happen.
 
-On the other hand, it appears that adding support for
-[[blueprint/UEFI Secure boot]] will be necessary at some point: more
-and more new off-the-shelf PC hardware is shipped with this system
-enabled, and having to constantly disable and re-enable is not the
-best user experience we can provide to the people who need to switch
-daily between an operating system with UEFI Secure boot enabled on the
-one hand, and another OS without Secure boot support — such as Tails —
-on the other hand.
+On the other hand, it appears that adding support for [[blueprint/UEFI
+Secure boot]] will be necessary at some point. More and more
+off-the-shelf PC hardware is shipped with this functionality enabled.
+Also, having to constantly disable and re-enable Secure boot in the
+firmware configuration is not the best dual-boot user experience we
+can provide (in case the other, non-Tails operating system only starts
+with Secure boot enabled).
 
 To end with, another task that we would be very happy to tackle would
 be to upstream our work and make it available to all Debian Live users
