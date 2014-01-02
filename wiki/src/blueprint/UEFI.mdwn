@@ -5,6 +5,8 @@ For Tails 2.0 we want at least basic UEFI boot including Mac.
 
 [[!toc levels=2]]
 
+<a id="goals-and-non-goals"></a>
+
 Goals and non-goals
 ===================
 
@@ -146,39 +148,43 @@ Test results
 Discussion and conclusions
 ==========================
 
-We have conducted an initial research and testing effort, that was
-aiming at choosing tools and procedures to add UEFI boot support to
-Tails. This project's outcome exceeded our expectations: we not only
-design choices, but also in a prototype implementation that can
-already be
+We have conducted an initial research and testing effort, aiming at
+choosing tools and procedures to add UEFI boot support to Tails.
+Our goals and non-goals are [[stated
+above|blueprint/UEFI#goals-and-non-goals]].
+
+The outcome of this project exceeded our expectations: we now have not
+only all important design decisions made, but also a prototype
+implementation that can already be
 [downloaded](http://nightly.tails.boum.org/build_Tails_ISO_feature-uefi/)
 and tested. It is built from our [[!tails_gitweb_branch feature/uefi]]
 Git branch.
 
-In this section we first summarize our findings regarding the choice
-of a boot loader and state the conclusions we have reached. Then, we
+In this document, we first summarize our findings regarding the choice
+of a boot loader, and state the conclusions we have reached. Then, we
 discuss the implementation details that matter most. Finally, we sum
 up the next steps toward deploying Tails with UEFI support to the
-masses, and provide an overview of improvements that we may have to
-add in the future.
+masses, and provide an overview of improvements that we may need to
+make in the future.
 
 Choosing a boot loader
 ----------------------
 
-Many UEFI boot loaders are available. We have limited our selection to
-the options that meet the following conditions:
+A large number of UEFI boot loader implementations are available.
+We have limited our selection to the options that meet the following
+conditions:
 
 1. available in Debian (excludes Gummiboot and rEFInd);
 1. actively maintained upstream (excludes BURG, ELILO and rEFIt);
-1. easy to integrate into the Tails ISO build process;
-1. no requirement to add entries to NVRAM;
-1. no requirement to recompile or modify the Linux kernels installed
+1. easy to integrate into the Debian Live ISO build process;
+1. no requirement to add boot entries to NVRAM;
+1. no requirement to recompile or modify the Linux kernels we install
    from Debian (excludes the Linux kernel EFISTUB).
 
 So, we have considered two boot loaders, namely GRUB (not to be
 confused with GRUB Legacy) and syslinux (version 6). There is a lot to
 say about these two pieces of software, and we will focus on the
-criteria that seem relevant for a Live system, and for Tails
+criteria that seem relevant for a Debian Live system, and for Tails
 in particular.
 
 ### GRUB
@@ -394,9 +400,29 @@ Next steps
 The next steps toward delivering UEFI boot support to Tails users are
 maintained as sub-tasks of [[!tails_ticket 5739]].
 
-Another task that we would be very happy to tackle would be to
-upstream our work and make it available to all Debian Live users and
-downstreams. However, as explained on [[!tails_ticket 5691]] and
+Ideas for future work
+---------------------
+
+Most of the possible candidate goals that were
+[[rejected|UEFI#non-goals]] for this initial iteration are not
+critical. Pursuing these would require substantial effort, that is
+better put into other Tails improvements. Therefore, they have not
+made their way into our [[!tails_roadmap]]. Some have low-priority
+tickets on [[!tails_redmine]], meaning that patches are welcome, but
+we do not feel committed, as a project, to make it happen.
+
+On the other hand, it appears that adding support for [[blueprint/UEFI
+Secure boot]] will be necessary at some point: more and more new
+off-the-shelf PC hardware is shipped with this system enabled, and
+having to constantly disable and re-enable is not the best user
+experience we can provide to the people who need to switch daily
+between an operating system with UEFI Secure boot enabled on the one
+hand, and another OS without Secure boot support — such as Tails — on
+the other hand.
+
+To end with, another task that we would be very happy to tackle would
+be to upstream our work and make it available to all Debian Live users
+and downstreams. However, as explained on [[!tails_ticket 5691]] and
 <https://lists.debian.org/debian-live/2013/11/msg00017.html>:
 
 1. we are still using an old version of live-build;
@@ -418,23 +444,3 @@ option available to us is to go on using custom hooks and
 configuration. The best we can do to be team players is to share our
 experience and conclusions, as well as our custom scripts
 and configuration.
-
-Ideas for future work
----------------------
-
-Most of the possible candidate goals that were
-[[rejected|UEFI#non-goals]] for this initial iteration are not
-critical. Pursuing these would require substantial effort, that is
-better put into other Tails improvements. Therefore, they have not
-made their way into our [[!tails_roadmap]]. Some have low-priority
-tickets on [[!tails_redmine]], meaning that patches are welcome, but
-we do not feel committed, as a project, to make it happen.
-
-On the other hand, it appears that adding support for [[blueprint/UEFI
-Secure boot]] will be necessary at some point: more and more new
-off-the-shelf PC hardware is shipped with this system enabled, and
-having to constantly disable and re-enable is not the best user
-experience we can provide to the people who need to switch daily
-between an operating system with UEFI Secure boot enabled on the one
-hand, and another OS without Secure boot support — such as Tails — on
-the other hand.
