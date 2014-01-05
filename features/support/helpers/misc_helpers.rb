@@ -1,5 +1,5 @@
 require 'date'
-require 'system_timer'
+require 'timeout'
 
 def assert(b, msg = "Assertion failed!")
   raise RuntimeError, msg, caller if ! b
@@ -12,7 +12,7 @@ end
 def try_for(t, options = {})
   options[:delay] ||= 1
   begin
-    SystemTimer.timeout(t) do
+    Timeout::timeout(t) do
       loop do
         begin
           return true if yield
