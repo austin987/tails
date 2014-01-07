@@ -8,9 +8,6 @@ set -e
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-# Import tor_bootstrap_progress()
-. /usr/local/lib/tails-shell-library/tor.sh
-
 ask_for_confirmation() {
     local dialog_title="`gettext \"Tor is not ready\"`"
     local dialog_text="`gettext \"Tor is not ready. Start Tor Browser anyway?\"`"
@@ -23,6 +20,10 @@ ask_for_confirmation() {
         --cancel-label "$dialog_start" --ok-label "$dialog_cancel"
 }
 
-if [ "$(tor_bootstrap_progress)" -eq 100 ] || ask_for_confirmation; then
+tor_has_bootstrapped() {
+    sudo -n -u debian-tor /usr/local/sbin/tor-has-bootstrapped
+}
+
+if tor_has_bootstrapped || ask_for_confirmation; then
     exec /usr/bin/iceweasel "$@" &
 fi
