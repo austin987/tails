@@ -11,6 +11,5 @@ if [ $2 != "up" ]; then
 fi
 
 #XXX gettextize
-/usr/local/sbin/tails-notify-user "Tor is now ready!" \
-   "You are now free to browse the Internet anonymously."
-
+/usr/local/sbin/tails-notify-user "Tor is now ready" \
+   "Tor is ready. You can now use the Internet."
