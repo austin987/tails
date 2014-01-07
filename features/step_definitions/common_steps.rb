@@ -235,7 +235,7 @@ Given /^the time has synced$/ do
   end
 end
 
-Given /^Iceweasel has autostarted and is not loading a web page$/ do
+Given /^Iceweasel has started and is not loading a web page$/ do
   next if @skip_steps_while_restoring_background
   case @theme
   when "winxp"

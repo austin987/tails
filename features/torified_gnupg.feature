@@ -14,7 +14,6 @@ Feature: Keyserver interaction with GnuPG
     And GNOME has started
     And I have a network connection
     And Tor has built a circuit
-    And Iceweasel has autostarted and is not loading a web page
     And the time has synced
     And I have closed all annoying notifications
     And the "10CC5BC7" OpenPGP key is not in the live user's public keyring
