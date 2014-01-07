@@ -10,6 +10,10 @@ if [ $2 != "up" ]; then
    exit 0
 fi
 
+# Get LANG
+. /etc/default/locale
+export LANG
+
 # Initialize gettext support
 . gettext.sh
 TEXTDOMAIN="tails"
