@@ -11,9 +11,6 @@ export TEXTDOMAIN
 # Import tor_bootstrap_progress()
 . /usr/local/lib/tails-shell-library/tor.sh
 
-# Import LIVE_USERNAME
-. /etc/live/config.d/username.conf
-
 ask_for_confirmation() {
     local dialog_title="`gettext \"Tor is not ready\"`"
     local dialog_text="`gettext \"Tor is not ready. Start Tor Browser anyway?\"`"
@@ -21,7 +18,7 @@ ask_for_confirmation() {
     local dialog_cancel="`gettext \"Cancel\"`"
     # zenity can't set the default button to cancel, so we switch the
     # labels and interpret the return value as its negation.
-    ! sudo -u "$LIVE_USERNAME" zenity --question \
+    ! zenity --question \
         --title "$dialog_title" --text="$dialog_text" \
         --cancel-label "$dialog_start" --ok-label "$dialog_cancel"
 }
