@@ -21,4 +21,4 @@ export TEXTDOMAIN
 
 /usr/local/sbin/tails-notify-user \
    "`gettext \"Tor is now ready\"`" \
-   "`gettext \"Tor is ready. You can now use the Internet.\"`"
+   "`gettext \"Tor is ready. You can now use Internet.\"`"
