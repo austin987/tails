@@ -1,7 +1,21 @@
-	qemu -enable-kvm -boot c -m 4096 -cdrom tails.iso
+Note that you need the qemu command, which is provided on wheezy by the `qemu-system` package.
+
+* Start the VM
+
+  - with a CPU that supports PAE
+
+        qemu -enable-kvm -cpu Nehalem -cdrom tails.iso -m 5120 -no-reboot -no-shutdown
+
+  - with a CPU that does not support PAE
+
+        qemu -enable-kvm -cpu 486 -cdrom tails.iso -m 5120 -no-reboot -no-shutdown
 
 * Open the qemu console (CTRL-ALT-2).
-* Save physical memory to the `tails.dump` file (replace `0xF0000000`
-  (= 4GiB) with the amount of memory bytes assigned to the VM):
+* Save physical memory to the `tails.dump` file (length is an integer, max size for one dump is 4G = 0xF0000000):
 
-	pmemsave 0 0xF0000000 tails.dump
+        pmemsave <start address> <length> <filename>
+
+  e.g for 5G one has to do two dumps:
+
+        pmemsave 0 0xFFFFFFFF tails14.dump
+        pmemsave 0x100000000 0x40000000 tails5.dump

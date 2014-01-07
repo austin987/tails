@@ -18,7 +18,7 @@ if [ -d /home/vagrant/ikiwiki ]; then
 fi
 
 # Add unstable repository for ikiwiki, and pin it low
-echo 'deb http://cdn.debian.net/debian unstable main' > /etc/apt/sources.list.d/unstable.list
+echo 'deb http://http.debian.net/debian unstable main' > /etc/apt/sources.list.d/unstable.list
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/unstable <<EOF
 	Package: *
 	Pin: release a=unstable
@@ -53,7 +53,8 @@ apt-get -y install \
 	dpkg-dev \
 	git \
 	aufs-tools \
-	ikiwiki
+	ikiwiki \
+	intltool
 
 # Be sure to get all the modules we need for our Ikiwiki
 apt-get -y --no-install-recommends install \

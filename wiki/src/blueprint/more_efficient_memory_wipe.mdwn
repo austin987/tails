@@ -1,0 +1,114 @@
+After following the steps for "[[contribute/release_process/test/erase_memory_on_shutdown]]"
+it turns out some patterns may survive the wipe which indicates that
+not all memory was wiped. One theory for this is that the new kernel
+loaded by kexec may allocate some buffer, which then is filled with
+the pattern and won't get cleared, since sdmem only wipes unallocated
+memory.
+
+This was supposedly not a problem for some testers prior to Tails 0.8
+but I can reliably reproduce this problem on a machine (with 4 GB or
+RAM if that matters) with both Tails 0.8 and 0.7.2.
+
+[[!toc levels=2]]
+
+Roadmap
+=======
+
+* wait for [[todo/hugetlb_mem_wipe]] to be fine
+  tuned and finished.
+
+Implementation ideas
+====================
+
+initramfs + sdmem
+-----------------
+
+> Hi, not sure how to comment so I will just add it here. The test is
+> incorrect, since on a 32-bit architecture the address space of a
+> given process is usually limited at 3 GiB (or less, depends on the
+> kernel configuration). It's not easy to change the Python script to
+> fill all available memory (it's possible, but complex due to
+> kernel's OOM killer behavior), but your best bet would be to spawn
+> many pattern filler processes simultaneously, hoping that at least
+> some executions will overlap. Then, on a 4 GiB machine you will see
+> about 1 GiB of non-wiped memory (and on systems with > 4 GiB RAM,
+> with PAE enabled, you won't wipe that extra memory, too, of course).
+> Sorry to burst your bubble -- wiping memory is not easy, and THC's
+> SecureDelete package is mostly badly implemented snake oil based on
+> wrongly interpreted old theoretical papers. Anyway, to see whether
+> the 3 GiB limit has anything to do with the unwiped patterns you
+> have seen thus far, retry on a system with less than 3 GiB RAM. --MK
+
+>> Right. Updated the [[testing
+>> documentation|contribute/release_process/test/erase_memory_on_shutdown]]
+>> accordingly. Thanks for pointing this out. --intrigeri
+
+Possible fixes (180f058 + 0f1f476d) now waiting to be tested in devel branch.
+
+This change is shipped in Tails 0.14 and later, and works already
+quite well in practice (almost always perfect wiping on PAE systems
+according to our tests, a bit worse on non-PAE).
+
+In theory, it's supposed to work "most of the time", but it is not
+reliable as is:  sdmem kills itself as soon as it's refused to
+allocate memory, so there's no guarantee several instances of it will
+be allocating enough memory at the same time to ensure all memory is
+erased. In the worst case, this change can make the memory erasure
+process 32 times longer, with no efficiency improvement.
+
+initramfs + custom program
+--------------------------
+
+Using a custom memory wiping program from initramfs is mostly
+implemented in the `feature/hugetlb_mem_wipe` branch.
+
+Linux memtest
+-------------
+
+Better would be to imitate Liberte Linux, that recently switched to
+using the Linux kernel's `memtest=2` feature, which is simpler, more
+robust, and allows wiping more RAM. This option will be
+enabled in the next (> 3.1.4-1) Debian kernel.
+
+=> registered as a [[TODO page|todo/move_from_sdmem_to_memtest]] with
+actual action plans.
+
+This needs to kexec a specific [[todo/amd64_kernel]] when possible to
+be of any use on systems with more than 1 GB of memory.
+
+Testing results:
+
+* a 1GB 686-pae (no NX bit) box: 2MB pattern found after wiping, 813MB
+  after not wiping
+* another 1GB 686-pae box: 640MB found after not wiping, 0 after
+  wiping
+* VM 64-bit PAE 4G RAM:
+  - 3313MB found after not wiping
+  - 0 found after wiping with memtest (64-bit kernel)
+  - 2675MB found after wiping with memtest (686-pae kernel)
+
+Dedicated operating systems
+---------------------------
+
+On the long run, if the Linux kernel does not wipe whatever memory
+pages it allocates to use for its own data structures, the kexec'd
+program could be a custom, dedicated to memory erasure one, instead
+of a regular Linux kernel + ramdisk + userspace memory erasure
+program. This is probably the only way to overwrite **all** memory
+that was used in Tails.
+
+An experiment has been done on [[patching memtest86+|memtest86plus]]
+to do this job.
+
+Another experiment with [[GRUB|grub]] is in progress.
+
+Other ideas
+-----------
+
+* in 686-pae kernel, mount a `tmpfs` and fill it (that can cover more
+  memory than a single sdmem process in 32-bit environment); beware
+  how the kernel currently handles out-of-memory with when using
+  tmpfs: instead of erroring write(2) with ENOSPC, it simply kills the
+  process. This makes it harder to implement a nice progress bar...
+  But yeah, combination of dd, pv and a tmpfs should also be able to
+  do a faire amount of wiping.

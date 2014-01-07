@@ -1,0 +1,13 @@
+diff --git a/bin/boot-init.sh b/bin/boot-init.sh
+index f85b2b2..fec1496 100755
+--- a/lib/live/boot-init.sh
++++ b/lib/live/boot-init.sh
+@@ -161,7 +161,7 @@ done
+ mount -o remount,ro /lib/live/mount/overlay > /dev/null 2>&1
+ 
+ # Remounting any persistence devices read-only
+-for _MOUNT in $(awk '/\/lib\/live\/mount\/persistence/ { print $2 }' /proc/mounts)
++for _MOUNT in $(awk '/\/(lib\/live\/mount|live)\/persistence/ { print $2 }' /proc/mounts)
+ do
+ 	mount -o remount,ro ${_MOUNT} > /dev/null 2>&1
+ done

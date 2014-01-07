@@ -1,0 +1,67 @@
+For users that haven't read the documentation about the unsafe browser
+and/or just don't understand when it's necessary, it would be good if
+Tails does a reasonable job to try to detect whether a captive portal
+seems to be in place and notify the user if so. The approaches could
+range from simplistic to more sophisticated:
+
+* If `wait_for_tor_consensus()` fails during time syncing. Note that
+  this would happen if Tails is booted on a LAN without Internet
+  conneciton.
+* Use [ooni-probe](https://gitweb.torproject.org/ooni-probe.git)?
+* Other approaches.
+
+The method used likely has to be active, but it should preferably hook
+into some common, innocent looking network connection in order to
+avoid fingerprinting.
+
+Tools
+=====
+
+Using WWW::Mechanize::Shell
+---------------------------
+
+For each kind of hotspot:
+
+* list of possible ESSID
+* optional: allocated IP address classes
+* optional: network test script?
+* optional: SSL certificate fingerprint?
+* a WWW::Mechanize::Shell script
+
+Main script in in /etc/NetworkManager/dispatcher.d.
+
+Test current connection against known hotspots.
+
+When connected to a known hotspot, starts WWW::Mechanize::Shell
+script. Values are entered through a callback than will uses
+Gtk2::Notify and some custom widgets. Known login/passwords should be
+put in gnome-keyring with a browser like completion system (enter
+first letters, pick login, password is prefilled). Maybe we could use
+the same login/password database as Epiphany.
+
+For hotspots that requires a periodic refresh, we can run another
+WWW::Mechanize::Shell script in a loop. NetworkManager is meanwhile
+monitored through DBUS to kill the loop if connection is lost. If loop
+fails try once more through default script before displaying a
+notification.
+
+Existing hotspot connection applications
+----------------------------------------
+
+Looks like there is at least two Python apps doing this already:
+
+* [autowifi](http://www.manatlan.com/page/autowifi)
+* [autologin-applet](http://antoine.mairesse.free.fr/autologin-applet/)
+
+Captive portal detection
+------------------------
+
+hellais and friends are working on
+[ooni-probe](https://gitweb.torproject.org/ooni-probe.git) which may be
+interesting, depeding on how stealthy the probe is.
+
+Beta testers
+============
+
+* San Bergmans <info@sbprojects.com>: FON network, KPN hotspots in the
+  Netherlands

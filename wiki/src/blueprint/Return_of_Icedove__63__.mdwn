@@ -1,0 +1,139 @@
+[[!toc levels=3]]
+
+Rationale
+=========
+
+Pros
+----
+
+* Icedove has a *much* easier guide for setting up an email account -- just enter a name, email address and password, and Icedove will check if the domain of it has IMAP (preferred) or POP, and SMTP, and set up an account correctly and automatically, beginning with trying SSL/STARTTLS so no login credentials are unnecessarily leaked. Claws is pretty much impossible to setup for normal people, but seeding the config could make that easier, but will it be as easy?
+* Enigmail has a *much* easier guide for generating a key and setting up GnuPG. The guide starts pretty much automatically and is very informative.
+* Icedove is more widely used, so it's less fingerprintable and perhaps familiar to more users. This (and its larger development team) also likely results in earlier bug fixes.
+
+Cons
+----
+
+* It will be somewhat harder to implement the [[todo/easy_MUA_configuration]] with Icedove compared to claws. That would allow us some flexibility for our use case, e.g. specific recommendations w.r.t. anonymity.
+* Icedove's automatic account creation process will fallback to plaintext POP/IMAP/SMTP if SSL/STARTTLS fails. That could result in leaks of login/password in many circumstances, like if the user types the wrong domain in the email address. I can't seem to find any options to disallow plaintext, although mail.smtp.ssl=2 (must use SSL) seems interesting (haven't found anything for POP/IMAP though).
+* Icedove requires an additional ~20 MB uncompressed space over claws.
+* Icedove probably has more bugs given its code size.
+
+I think implementing the [[todo/easy_MUA_configuration]] is pretty far from trivial, at least if we want it to be as easy as Icedove's account creation guide, which brings that whole idea into question. Maybe a better approach would be to write an addon for Icedove that alters the account creation process (if that is possible -- I have no insight in how much addons can do)? It'd give the user some use case specific information, e.g. to not use a non-anonymous email account, and also implement the other ideas from [[todo/easy_MUA_configuration]]. And it would disallow plaintext plaintext POP/IMAP/SMTP.
+
+Roadmap
+=======
+
+1. List blockers (from the *Things to implement* list bellow).
+1. Implement blockers.
+1. Write design documentation.
+1. Adapt [[end-user documentation|doc/anonymous_internet/thunderbird]]
+   from Incognito.
+
+Design decisions
+================
+
+* Follow the suggestions in [tagnaq's paper](http://bit.ly/qDZm7C)
+  as much as possible. We'll likely ignore some impractical stuff
+  like using PGP-inline instead of PGP/MIME.
+
+* Our Iceweasel says it prefers English. It does not try to pretend it
+  has no locale. Our Icedove shall do the same. So we will keep
+  `mailnews.reply_header_authorwrote` default value (that is, `%s
+  wrote` and will ignore tagnaq's suggestion on this; details: [doc on
+  reply_header_](http://kb.mozillazine.org/Reply_header_settings)
+
+Things to implement
+===================
+
+TorBirdy
+--------
+
+### Plans
+
+See tickets on [[Redmine|todo/Return of Icedove?]].
+
+### Design
+
+[TorBirdy](https://github.com/ioerror/torbirdy) ([Design
+goals](https://trac.torproject.org/projects/tor/raw-attachment/wiki/doc/TorifyHOWTO/EMail/Thunderbird/Thunderbird%2BTor.pdf))
+aims to take care of (among other things):
+
+* Enhance the privacy of the emails (prevent email header information
+  leaks)
+* Protect against all kinds of HTML issues
+* Support Tor's prop 171 (stream isolation via per-account proxy
+  settings)
+* Mixmaster/Mixminion integration.
+* Removes User-Agent header.
+
+All these seem terrific, so this is something we definitely want to
+include.
+
+Modified autoconfig wizard
+--------------------------
+
+This was implemented in the `secure_account_creation` branch in that
+Git repository: `git://labs.riseup.net/tails_icedove.git`.
+
+### Plans
+
+See tickets on [[Redmine|todo/secure_Icedove_autoconfig_wizard]].
+
+### Design
+
+In order to mitigate the concern's raised by tagnaq about Icedove's
+autoconfig wizard, the following changes has been made to it:
+
+* When probing a mail provider for an xml config, first try HTTPS,
+  then http (old behaviour: http only).
+* Introduce a boolean pref called `mailnews.auto_config_ssl_only`
+  (that has a checkbox in the autoconfiguration wizard) that does the
+  following when true:
+  - Only allow HTTPS when fetching xml configs from mail provider.
+  - Only allow HTTPS when fetching xml configs from Mozilla's database
+    (luckily the default URL *is* using HTTPS).
+  - Don't check DNS MX records for mail configurations. This may need
+    some rethinking for DNSSEC.
+  - Only accept fetched xml configs that use safe email protocols
+    (SSL/TLS for SMTP/IMAP/POP).
+  - Only probe the mail server for safe protocols (SSL/TLS for
+    SMTP/IMAP/POP).
+
+To prevent TorBirdy from disabling the autoconfig wizard, we set the
+`vendor.name` Icedove pref to `Tails`.
+
+Basic configuration & integration
+---------------------------------
+
+* Use `127.0.0.1:9061` SOCKS proxy.
+* Don't display the "Adblock Plus installation complete" tab.
+* Don't prompt whether one wants to report usage and performance
+  information to Mozilla.
+* Disable FoxyProxy.
+* Enable "Only use secure protocols" by default (one may still
+  uncheck it when needed).
+* Don't check updates for Add-ons.
+* Add launcher to the GNOME panel.
+* More generally: have a look at our Iceweasel prefs and copy all
+  those that exist and make sense for Icedove.
+* The [[security/IP_address_leak_with_icedove]] can be fixed by
+  setting `mail.smtpserver.default.hello_argument` to "localhost".
+  See [this Tor wiki
+  entry](https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/TorifyHOWTO/EMail#ExperimentalSuggestionsforpossiblymakingthunderbirdandorclawsstopleakinginfoExperimental)
+  for other goodies. By applying those configurations I think both
+  claws and icedove comes to an equal level security-wise.
+* Disable by default the indexer from
+  `Preferences -> Advanced -> General -> Enable Global Search and Indexer`.
+  Otherwise pinentry dialogs can appear while checking email in the
+  background.
+
+Resources
+=========
+
+* [tagnaq's paper](http://bit.ly/qDZm7C)
+* how well are Enigmail, Icedove and l10n packages maintained in
+  Debian? -> seems acceptable - I've seen much worse times, especially
+  for this set of packages.
+* how much size does Icedove + Enigmail + l10n packages add to the
+  SquashFS compared to Claws Mail? -> *9MB* (as of Tails pre-0.8 devel
+  branch with XZ SquashFS compression)

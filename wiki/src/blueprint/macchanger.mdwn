@@ -1,0 +1,143 @@
+[[!toc levels=2]]
+
+# Future work
+
+## Using NetwokManager for AvoidConnectionProbs?
+
+Instead of our current hack, we'd ideally want to hook into
+NetworkManager's error handling, which certainly would be more robust,
+and hopefully would provide more information about the error, but this
+currently seems unsupported.
+
+An experiment has showed that when connecting to a password-protected
+(WPA-PSK) wireless network with MAC address white-listing, spoofed
+(and hence blocked) MAC addresses resulted in an endless cycle of NM
+asking for passphrase. When cancelled, NM displays a "Disconnected"
+notification, and during this time no NM dispatcher events were
+emitted.
+
+Some bugs of interest that may bring some hope:
+
+* <https://bugzilla.gnome.org/show_bug.cgi?id=387832>
+* <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=518368>
+* <https://bugs.launchpad.net/ubuntu/+source/network-manager/+bug/336736>
+
+## Vendor bit randomisation with macchiato
+
+These are the current relevant OUI counts from macchiato's git:
+
+5       oui/bluetooth_laptop.sh
+2       oui/bluetooth_misc.sh
+12      oui/bluetooth_mobile.sh
+1       oui/bluetooth_pmp.sh
+2       oui/wired_console.sh
+3       oui/wired_desktop_dedicated.sh
+11      oui/wired_desktop_onboard.sh
+8       oui/wired_infrastructure.sh
+17      oui/wired_laptop.sh
+6       oui/wired_misc.sh
+4       oui/wired_printer.sh
+2       oui/wireless_camera.sh
+1       oui/wireless_console.sh
+4       oui/wireless_desktop_dedicated.sh
+2       oui/wireless_desktop_onboard.sh
+4       oui/wireless_handheld.sh
+6       oui/wireless_infrastructure.sh
+1       oui/wireless_laptop_dedicated.sh
+21      oui/wireless_laptop.sh
+17      oui/wireless_mobile.sh
+7       oui/wireless_pmp.sh
+4       oui/wireless_printer.sh
+8       oui/wireless_usb.sh
+
+In particular there's ~20 each in wireless_laptop and wired_laptop,
+which is what we should care about most (desktops rarely need MAC
+spoofing). However, after investigating the sources for some OUI:s
+(via git history), some OUI:s are (according to the submitter) only
+common in certain geographical areas. This makes the lists too small
+and unreliable at the moment.
+
+# Questions, remaining issues, and other random stuff
+
+## MAC spoof failure warning and failsafe
+
+If MAC spoofing fails for some interface we'd like to prevent it from
+exposing the real MAC address, and warn the user about this via a
+notification.
+
+In the current implementation there's no failsafe that verifies that
+the selected MAC spoofing setting has been enforced before
+connecting. This would be easy if there was something like pre-up NM
+dispatcher hooks but just like in the section about "Connection
+failure detection", there's none yet.
+
+An alternative would be to do this in
+[[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-spoof-mac]], which
+is run by the udev hook. In the end of the script we could try to
+verify that the spoofing indeed happened for the NIC in question, and
+if it didn't we could go into full-out panic mode:
+
+1. Down the interface
+2. Try to unload the module used by the NIC. While one easily can find
+   the module used by a `$NIC` via `readlink
+   "/sys/class/net/${NIC}/device/driver/module"`, we'd also have to
+   resolve reverse dependencies. For instance, for current Intel
+   wireless chipsets, the `iwlwifi` module is loaded, but with current
+   Linux kernels another module called `iwldvm` is loaded, and it uses
+   `iwlwifi`, so a `morprobe -r iwlwifi` will fail. Sadly `modprobe`
+   doesn't have a `--recursive-remove` or `--show-reverse-depends` so
+   we'd have to e.g. parse "Used by" field of `lsmod` or similar, and
+   we'd have to do it recursively to be rigorous.
+3. Perhaps prevent NetworkManager from starting if the previous step
+   failed?
+4. Show a scary error message to the user
+
+It would obviously require to drop `set -e`, because errors are indeed
+what could cause this to happen.
+
+## Detecting MAC-spoof related connection errors for wired NICs
+
+While Wi-Fi connection are covered, this gets trickier for wired
+connections. The problem is that there's no strong concept of being
+"associated" to a wired network (at least a "standard" one, perhaps
+there is with 802.1x security...). It'll probably be hard to identify
+blocking without confusing it with other types of wired connection
+failures (i.e. false positives). How does wired MAC address blocking
+usually work? On which level? DHCP? Lower layer?
+
+# Old stuff from blueprint
+
+## Improving macchanger
+
+Some of our goals would be easier to achieve by patching macchanger
+itself. Since it's been unmaintained upstream for a while, we've been
+discussing and working with someone who has taken its maintenance over
+and has already started patching it to better suit our needs:
+
+* [Redmine project](https://labs.riseup.net/code/projects/show/macchanger)
+* Git repository: `git://labs.riseup.net/backupninja.git`
+* Debian packages: the maintainer of the macchanger package in
+  Debian has already integrated some of these patches (uploaded to
+  sid: 1.5.0-8) and is likely to go on this way. Tails has been
+  using this improved version for a while.
+
+## Inspiration sources
+
+### Haven
+
+Haven does not automatically start network-manager at boot time.
+It provides shortcuts in the application menu to run macchanger-gtk
+and start the network if desired.
+
+### Liberte Linux
+
+Liberte Linux randomises wireless MAC addresses at boot time and
+allows changing wired interfaces' MAC addresses after boot, see their
+`src/usr/local/sbin/mac-randomize` that uses `ifconfig IFACE hw ether`
+rather than macchanger.
+
+## Documentation
+
+Investigate and possibly document the kind of information that could
+still be seen on the LAN about the system. Such as the manufacturer (ex:
+Sony), model number, BIOS and version, etc.?

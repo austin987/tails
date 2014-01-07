@@ -1,0 +1,128 @@
+Rationale
+=========
+
+Using some kind of [[!wikipedia Mandatory Access Control]], such as
+GrSecurity, AppArmor or SELinux, would make exploitation of security
+issues in bundled software harder.
+
+Possible solutions
+==================
+
+AppArmor
+--------
+
+Used in Ubuntu, part of upstream Linux kernel (>= 2.6.36), supported
+to a certain degree in Debian Wheezy.
+
+Seems really easy to write and maintain policies, many already exist.
+
+- [AppArmor security
+  goals](http://kerneltrap.org/Linux/AppArmors_Security_Goals)
+- [[!debwiki AppArmor]]
+
+A [critical problem with stacked
+filesystems](<https://lists.ubuntu.com/archives/apparmor/2012-April/002623.html>),
+such as aufs, must be fixed at upstream level before
+we can use AppArmor in Tails. It *should* be fixed in AppArmor 3.0,
+which is scheduled for 2013 Q3.
+
+It can be workaround'd if
+<https://bugs.launchpad.net/apparmor/+bug/888077> is fixed (a month or
+two of dev time, we're told), or by adding "Kernel based alias
+support" (being discussed privately, stay tuned).
+
+grsecurity
+----------
+
+[homepage](http://grsecurity.net/)
+
+grsecurity, along with more kernel hardening features, provides Role-Based
+Access Control. Some of its bonus features are slowly implemented upstream
+though (ASLR stack/heap protection, information leakage through the proc and
+sys filesystems, ways to disable module loading, etc).
+
+A feature that might be problematic is the "admin role" which is a superuser
+(more then root in grsec) that has the ability to modify/(des)activate
+grsecurity. How to implement this in a Tails environment, where passwords
+aren't that secret? Should users of Tails be able to login in that role, and
+if so, how could we provide a way to do so without lower grsec security by
+revealing worldwide this password?
+
+Users:
+
+- Hardened Gentoo offers a grsec-enabled kernel. RBAC policy?
+- Although Liberte Linux uses PaX (Address space modification protection)
+  it does not include grsecurity RBAC feature.
+
+- Work to add a grsec kernel flavour to Debian seems to be stalled:
+  [[!debbug 605090]].
+- Ubuntu developers [used to actively work](https://wiki.ubuntu.com/SecurityTeam/Roadmap/KernelHardening)
+  to upstream grsec features mainline, but this effort seems to have
+  stalled, or rather moved to another employer along with Kees Cook.
+
+SELinux
+-------
+
+Developed initially by big brother (NSA).
+
+It is pretty hard to write and maintain policies, but such policies
+exist and they can "mostly" be used by different Linux distributions.
+
+Poor support in Debian, improved in Squeeze, does not look like it's
+going to improve that much.
+
+- <http://etbe.coker.com.au/2012/06/17/debian-selinux-june-2012/>
+- <http://etbe.coker.com.au/2010/07/25/se-linux-status-squeeze/>
+- selinux policies are part of Squeeze
+- GNOME, policykit, etc. are supported by Debian-packaged policies,
+  but who is actually using them to confirm they work well?
+
+Smack
+-----
+
+The Smack MAC LSM is part of the Linux kernel
+([homepage](http://schaufler-ca.com/), [[!wikipedia
+Simplified_Mandatory_Access_Control_Kernel]]). It does not seem to be
+used by any GNU/Linux distribution out there.
+
+TOMOYO Linux
+------------
+
+Some (MAC for files) of the TOMOYO Linux LSM
+([homepage](http://tomoyo.sourceforge.jp/)) was mainlined in 2.6.30;
+more of it was merged in 2.6.34 and 2.6.36.
+
+It is compiled into Debian Squeeze's kernel.
+
+The out-of-tree patch has far more features, see the [comparison of
+versions](http://tomoyo.sourceforge.jp/comparison.html.en) for
+details.
+
+A "tomoyo learning daemon" is actually being developed by a third party :
+[tomld](http://log69.com/tomld_en.html), might be worst having a look and test it.
+
+For informations on the ongoing tests of this solution, see the
+[[tomoyo|Mandatory_Access_Control/tomoyo]] subpage.
+
+RSBAC
+-----
+
+RSBAC is a Rule Set Based Access Control. It has a lot of other features. It's
+just a patch to the linux kernel, and probably won't be integrated upstream.
+Seems no distributions did integrate it or provide easy ways to do so.
+
+Ubuntu has a [package](http://packages.ubuntu.com/search?keywords=rsbac-admin) of the rsbac-admin utility.
+
+- <https://rsbac.m-privacy.de/>
+- <http://www.rsbac.org/doc/media/linux-kongress/linux-kongress.html>
+
+Resources
+=========
+
+- <https://wiki.ubuntu.com/SecurityTeam/Roadmap/KernelHardening>
+- <https://wiki.ubuntu.com/SecurityTeam/Roadmap>
+- [Comparing SELinux/AppArmor/GRSecurity](http://www.cyberciti.biz/tips/selinux-vs-apparmor-vs-grsecurity.html)
+- [Another comparison from gentoo](http://www.gentoo-wiki.info/Access_Control_Comparison_Table)
+- [yet another comparison](http://elinux.org/Mandatory_Access_Control_Comparison)
+- [An exploit that was able to bypass SELinux and AppArmor protections](http://lwn.net/Articles/341773/) by the author
+  of grsecurity, which was safe.

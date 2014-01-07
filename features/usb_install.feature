@@ -82,6 +82,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And GNOME has started
     And I have closed all annoying notifications
     And persistence has been enabled
+    And persistence filesystems have safe access rights
+    And persistence configuration files have safe access rights
     And I write some files expected to persist
     And I completely shutdown Tails
     Then only the expected files should persist on USB drive "current"
@@ -157,12 +159,13 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     When I start the computer
     And the computer boots Tails
     And Tails is running from USB drive "old"
-    And the boot device has safe access rights
     And I enable persistence with password "asdf"
     And I log in to a new session
     And GNOME has started
     And I have closed all annoying notifications
     And persistence has been enabled
+    And persistence filesystems have safe access rights
+    And persistence configuration files have safe access rights
     And I write some files expected to persist
     And I completely shutdown Tails
     Then only the expected files should persist on USB drive "old"
@@ -286,7 +289,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "mbr"
 
-  Scenario: Cat:ing a Tails isobydrid a USB drive and booting it
+  Scenario: Cat:ing a Tails isohybrid to a USB drive and booting it
     Given a computer
     And I create a 2 GiB disk named "isohybrid"
     And I cat an ISO hybrid of the Tails image to disk "isohybrid"

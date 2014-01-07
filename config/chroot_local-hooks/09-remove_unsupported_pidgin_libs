@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+# Remove pidgin's (libpurple's) support for protocols we don't support.
+
+echo "removing Pidgin libraries for protocols we do not support"
+
+KEEP="irc|jabber|xmpp"
+
+find /usr/lib/purple-2/ -name 'lib*.so' \
+   | /bin/grep -Ev "/lib($KEEP)\.so" \
+   | xargs rm

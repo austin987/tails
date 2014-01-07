@@ -4,7 +4,7 @@
 
 set -e
 apt-get --yes install xvfb
-xvfb-run /usr/bin/iceweasel -CreateProfile default
+TOR_SOCKS_HOST='127.0.0.1' TOR_SOCKS_PORT='9151' xvfb-run /usr/bin/iceweasel -CreateProfile default
 mv ~/.mozilla/firefox/*.default ~/.mozilla/firefox/default
 sed -i "s@Path=.*\.default@Path=default@" ~/.mozilla/firefox/profiles.ini
 mv ~/.mozilla /etc/skel

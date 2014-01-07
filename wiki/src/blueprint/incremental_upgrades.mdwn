@@ -1,0 +1,202 @@
+[[!toc levels=4]]
+
+See also:
+
+ * the [[corresponding design document|contribute/design/incremental_upgrades]];
+ * the [corresponding open tickets](https://labs.riseup.net/code/projects/tails/issues?query_id=126).
+
+# Roadmap
+
+1. (**past**) Tails 0.13 has the harmless part of the
+   `feature/incremental-upgrades` branch merged (users creation with
+   sudo credentials, dependencies installation), leaving aside the
+   part about running the upgrade frontend automatically at startup.
+   => Tails 0.13 should have been able to incrementally upgrade to
+   something newer, when running the upgrade frontend by hand,
+   but the included Tails OpenPGP signing key expired too quickly for
+   this to happen.
+
+2. (**past**) Now that 0.14 is out:
+
+   * Prepare IUK: **done**
+   * Update upgrade-description files: **done**
+   * Ask beta testers to try the incremental upgrade process: **done**
+   * Find most critical bugs: **done**.
+
+3. (**pending review**) Complete **phase one: make ready for more alpha testing**
+
+   See [[!tails_ticket 5922 desc="phase one"]].
+
+4. (**pending review**) Complete **phase two: make ready for beta testing**
+
+   See [[!tails_ticket 5490 desc="phase two"]]. Once part of a release
+   (candidate):
+
+   * Prepare IUK
+   * Update upgrade-description files
+   * Ask beta testers to try the incremental upgrade process
+   * Catch and fix most remaining bugs
+
+5. Complete **phase three: deploy in production**
+
+   Once we're happy with the whole thing, ship it, enabled by
+   default, in the next Tails major release.
+
+   See child tickets of [[!tails_ticket 6014 desc="phase three"]].
+
+6. Later
+
+   See tickets with *Incremental upgrades* category on
+   [[!tails_redmine desc="Redmine"]].
+
+# Code
+
+* The bulk of the code needed to implement this design lives in the
+  `iuk` [[contribute/Git]] repository.
+* Integration work is being done in the `feature/incremental-upgrades`
+  branch of the main Tails [[contribute/Git]] repository.
+
+# Random ideas for future improvements
+
+These are not worth creating tickets yet, as it's not even clear these
+changes are useful enough to put time in it.
+
+### Packaging could be more self-contained
+
+Move `/etc/sudoers.d/zzz_upgrade` and IUK-related user creation from
+the Tails main Git repository to the `tails-iuk` Debian package, so
+that it's more self-contained and easier to test.
+
+### Button for aborting upgrade cleanly
+
+### Compute and display ETA
+
+### Multi-step incremental upgrade
+
+E.g. 0.11 boots after 0.11.1 and 0.11.2 are out. Tails fetches
+https://tails.boum.org/upgrade/v1/Tails/0.11/i386/stable/upgrades.yml,
+that shall contain an incremental upgrade path with two target files:
+the 0.11 to 0.11.1 IUK, and the 0.11.1 to 0.11.2 IUK. The upgrader
+would download these two files and install the two IUKs in the
+correct order.
+
+### sharing upgrade material
+
+Once the incremental upgrade has been applied, I may be proposed to
+save a copy of the target files to a location of my choosing.
+
+### allow one to download target files in the clear
+
+The downloader program could provide an opt-in way to have the
+download happen in the clear, that is without going through the Tor
+network. It looks doable given it's a separate process: we may run it
+as a dedicated user, and reuse the `clearnet` infrastructure
+implemented for the Unsafe Browser.
+
+### "Retry with new circuit" button
+
+Circuit throughput varies wildly, and since this is a large download,
+it'll quickly wear out users' patience if a bad circuit is picked.
+Or maybe this can happen behind the scenes, e.g.:  Automatically
+switch circuit every X minutes or Y% progress? That could even make
+fingerprinting the download on the Tor client <-> Entry Node side of
+the pipe a bit more difficult, for whatever that's worth.
+
+# Dialogs and error messages
+
+## Not enough memory available
+
+**Not enough memory available to check for upgrades.**
+
+- Make sure this system satisfies the requirements for running Tails.<br/>
+  See file:///usr/share/doc/tails/website/doc/about/requirements.en.html
+- Try to restart Tails and upgrade again.
+- Or do a manual upgrade.<br/>
+  See https://tails.boum.org/doc/first_steps/upgrade#manual
+
+## Error while checking for upgrades
+
+**Could not determine whether an upgrade is available from our website.**
+
+Check your network connection, and restart Tails to try upgrading again.
+
+If the problem persists, go to file:///usr/share/doc/tails/website/doc/upgrade/error/check.en.html.
+
+**Debugging information**
+
+...
+
+## Upgrade available
+
+**You should upgrade to Tails 0.22.**
+
+For more information about this new version, go to https://tails.boum.org/news/version_0.22/.
+
+Note that:
+
+  - It is recommended to close all the open applications during the upgrade.
+  - Downloading the upgrade might take a long time, from several minutes to a few hours.
+  - The networking will be disabled after downloading the upgrade.
+
+Download size: 201 MB
+
+Do you want to upgrade now?
+
+[Upgrade later] [Upgrade now]
+
+## New version available
+
+**You should manually upgrade to Tails 0.22.**
+
+For more information about this new version, go to https://tails.boum.org/news/version_0.22/.
+
+Note that it is not possible to do an automatic upgrade on your
+system. Automatic upgrades are only possible on a Tails device
+installed using Tails Installer.
+
+To learn how to manually upgrade, go to https://tails.boum.org/doc/first_steps/upgrade#manual
+
+## Downloading upgrade
+
+Downloading the upgrade to Tails 0.22...
+
+## Error while downloading the upgrade
+
+**The upgrade could not be downloaded.**
+
+Check your network connection, and restart Tails to try upgrading again.
+
+If the problem persists, go to file:///usr/share/doc/tails/website/doc/upgrade/error/download.en.html.
+
+**Debugging information**
+
+...
+
+## Upgrading the system
+
+**Your Tails device is being upgraded...**
+
+For security reasons, the networking is now disabled.
+
+## Error while installing the upgrade
+
+**An error occured while installing the upgrade.**
+
+Your Tails device needs to be repaired and might be unable to restart.
+
+Please follow the instructions at file:///usr/share/doc/tails/website/doc/upgrade/error/install.en.html
+
+**Debugging information**
+
+...
+
+## Restart Tails
+
+**Your Tails device was successfully upgraded.**
+
+Some security features were temporarily disabled.<br/>
+You should restart Tails on the new version as soon as possible.
+
+Do you want to restart now?
+
+[Restart later] [Restart now]

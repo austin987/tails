@@ -1,0 +1,328 @@
+[[!toc levels=2]]
+
+This is an "unfunded mandate", I'm afraid; I can't work on this. And
+it's a reasonable amount of work.
+
+It is, however, based on a long, long acquaintance with the problem
+space. This is something I was thinking about doing for the old
+Zero-Knowledge Freedom system back in 2000, because of bugs we kept
+finding and attacks we kept coming up with.
+
+If you want to discuss this, I'm jbash at-sign velvet period com .
+
+# The Problem
+
+A lot of code runs inside amnesia: big programs like Web browsers,
+Pidgin (with plugins), OpenOffice (eek!), etc. Each of those programs
+will (not may, but definitely will) have security holes that will leak
+the real IP address of the machine, and possibly other information.
+
+They will also have holes that will allow remote sites to execute
+arbitrary code sent back through Tor connections. This code can then
+grovel through /sys, /proc, and wherever else, and extract an endless
+number of hardware serial numbers, MAC addresses, unique combinations
+of configuration elements, and so forth, any of which may identify the
+user's machine to the remote attacker. That's especially true if the
+remote attacker is in a position to ask a manufacturer who bought a
+given piece of hardware, but that's not the only way of using the
+information.
+
+Exploit code can also try to disable or circumvent the local firewall
+and send traffic that doesn't go through Tor. There are a lot of
+tricks for doing this, especially because all it takes is one packet,
+sent from any part of the system, to a chosen destination without
+going through Tor.
+
+# The Partial Solution
+
+Split amnesia into two parts: an outer, host part running on the
+user's real hardware, and an inner, guest part running in a virtual
+machine. Keep all information about the real identity of the user or
+the user's computer in the outer machine. Keep all applications in the
+inner machine. Mount any storage meant to be writable by the inner
+machine as a virtual device provided by the outer machine. If you
+encrypt the writable storage, the crypto should probably run on the
+outer machine, so that the inner machine doesn't need to have access
+to the key.
+
+Ship the entire inner virtual machine image as part of amnesia, so
+that each instance is identical in every way that can be seen from
+inside... so, for example, the inner machine might always have MAC
+address 00:11:22:33:44:55 , and IP address 10.1.2.3.
+
+Make sure that the face presented to the inner machine by the outer
+machine is also always the same; for example, the inner machine might
+always see the outer machine as a default router at MAC
+00:55:44:33:22:11, with an IP address of 10.1.2.1. You don't want any
+information about the outer machine to leak to the inner machine via,
+say, ARP, or DHCP, or any weird management protocol.
+
+The outer machine should run the hypervisor, and all code that has to
+talk to the "real" network: link-layer supplicants, DHCP client, NTP,
+Tor itself. The inner machine should be able to connect only to the
+Tor port of the outer machine. The outer machine should have a
+firewall configured such that no traffic can ever be relayed directly
+from the inner machine to the network. The only way the inner machine
+can talk to anything should be through Tor.
+
+This includes traffic to the local LAN, BTW; local LAN commmunication
+is a huge security hole, because it's usually easy to get a machine on
+the local LAN to send something to the outside for you, identifying
+the user in the process.
+
+The inner machine can and almost certainly should be aware that it's
+talking through a SOCKS proxy. Trying to be transparent using firewall
+diversion hacks will probably break more things than it fixes.
+
+# Remaining Holes
+
+This change reduces the attack surface a lot, but it's still subject
+to attack through bugs in Tor, bugs in the hypervisor, bugs in the
+outer machine's IP stack, and bugs in the kernel on the outer machine.
+Oh, and bugs in the hardware. The good news is that you have to crack
+the applications before you can attack any of those, so there's some
+defense in depth; it takes knowledge of two unpatched bugs, instead of
+just one, to actually nail the user.
+
+The hypervisor used should be as simple as possible. I don't know
+about Virtualbox, but VMWare is a nightmare of complexity and
+guaranteed to be full of holes. qemu might be a better bet than
+either, simply because it's not so loaded down with features, and does
+fewer things to "help" you (and potentially leak information).
+
+# Interacting With User Virtualization
+
+It's presumably an important use case to have users run amnesia inside
+of virtual machines that are part of the users' regular enviroments.
+As far as I know, no X86 virtualization system will let you nest VMs,
+so that implies that you can't do this trick when amnesia is run under
+the user's hypervisor. Probably the "best" solution would be to
+reconfigure the user's environment to provide the necessary services
+to the amnesia internal virtual machine, but that's also probably an
+unsupportable release nightmare. The alternative would be to fall back
+to something like the way things work now, with Tor running inside the
+virtual machine... but to warn the user that she was operating with
+degraded security.
+
+# Inspiration
+
+* [A Tor Virtual Machine Design and
+  Implementation](https://svn.torproject.org/svn/torvm/trunk/doc/design.html),
+  aka TorVM design document
+* JanusVM
+
+# A promising, alternative solution: Qubes
+
+Qubes is Fedora spin off which takes [security by isolation to the extreme](http://qubes-os.org/Architecture.html): a Xen hypervizor manages user defined "lightweight virtual machines" or "AppVMs" that isolate user processes, and even certain system-components like the network stack, from each other. Appropriate IPC, file and clip-board sharing supposedly works between programs in different AppVMs.
+
+One fine thing with this approach is that it most likely would be easy to fallback to starting processes without these AppVMs in case it's detected that Tails itself runs inside a VM.
+
+The two key questions that remain to answer is:
+
+1. if these AppVMs can be "NAT:ed" or similarly made oblivious to the system interfaces' IP addresses.
+2. if all this can be incorporated into Debian without too much trouble.
+
+Read more at their [homepage](http://qubes-os.org/) and [wiki](http://www.qubes-os.org/trac/wiki).
+
+# Comment from jbash 2010-02-22
+
+I was asked to comment on the Qubes proposal above, and specifically on
+the two questions about NAT and "adapting to Debian". This has gotten
+too long for a comments page
+
+## On Qubes
+
+On Qubes in general: it looks like a cool system and a useful
+approach. I think you could easily put a "Tails VM" (more
+properly a "Tor VM") into it in place of the "Net VM". Since
+you're going to be hacking all over that VM anyhow, no problem to add
+NAT to it.
+
+... but there's a caveat: I'd be very careful about becoming dependent
+on a small project with limited adoption. You could end up having to
+take on all of the maintenance and development of Qubes itself. The
+alternative would be having to port off of Qubes, which argues for not
+becoming dependent on it. Also, you may have trouble finding people who
+are willing to learn Qubes before they can start working. I suspect that
+you might be better advised to come up with something that could run
+with a variety of VM providers.
+
+As for whether you could adapt the application VMs to run Debian,
+I guess I'd ask "why do you want to adapt to Debian, particularly?".
+You'd be undoing a lot of Qubes' work to put a big unconfined
+Debian system in there.
+
+Since I wrote the initial suggestion, I've actually been thinking, off
+an on, about a two-VM alternative with a structure vaguely similar to the
+Qubes idea, and I think one of the good things about that idea equally
+applies to using Qubes. That good thing is that is that you don't
+have to really care about "adapting to Debian" any more. At all.
+
+## Getting off the distro treadmill
+
+The insights are that:
+
+1. If the application VM doesn't have to handle the user's "real" identity, and doesn't necessarily have to handle any data that persist between sessions, then there's much less pressure to do anything special in the application VM to protect anonymity.
+2. It's possible to set up Tor as a transparent Internet gateway, so that clients don't have to even be configured to use a SOCKS proxy. [Here's a HOWTO.](https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/TransparentProxy)
+
+That means you can get out of the business of patching up a whole
+distribution to get everything to use Tor properly. You need to
+stay current on general security updates, but that's about it,
+especially if you don't enable the applications to write to any
+storage. In fact, you don't even have to configure anything to
+use Tor.
+
+Instead, you provide two very minimal, targeted environments: a VM
+to run Tor (this would replace the "NetVM" in Qubes), and a host environment
+to run the hypervisor (this would be Qubes', and Xen's, "dom0")
+
+Here's a slightly tweaked version of my block diagram, which is
+obviously very similar to Qubes'.:
+
+[[!img virtails.png alt="Block diagram"]]
+
+### The host
+
+The way I've drawn it, the host:
+
+1. Runs the hypervisor (and is therefore responsible for network, device, and memory isolation).
+2. Handles storage crypto (so that the application VM doesn't have to know any keys that might be useful beyond the current session).
+3. Handles the user's choices about whether any writable storage is available to the application VM (if you allow the user that choice)
+4. Keeeps the time of day accurate for everybody.
+5. Presumably handles other houskeeping functions, like cleaning memory.
+
+If the user wanted to, she could even use her own "regular" system
+as the host, and boot the Tor and application VMs within that.
+She'd better look to her swap encryption, and she'd better know
+what's going on generally, but she can do it.
+
+Veering back in the direction of better security, it looks like
+the Qubes people have been careful to have the host do a good job
+of isolating the VMs, for example not permitting the very large
+security hole of direct 3D graphic access from the VMs. Even if you
+didn't use Qubes, it sounds like they'd be a good project to learn
+from.
+
+### The Tor VM
+
+The Tor VM handles all communication between the application VM
+and the outside world.
+
+When the application VM boots, the Tor VM gives it an address using
+DHCP. The application VM uses the Tor VM as its default gateway and
+DNS server.
+
+Internally, the Tor VM diverts DNS requests and all TCP connections
+originating on the application side to Tor, which transparently
+anonymizes them. IP filtering prevents the application VM from sending
+anything else (and can be used to filter out "bad" traffic, as well, if
+need be). Probably the filter should also stop any unexpected traffic
+generated from within the Tor VM from being sent on the application
+side, as well.
+
+Kernel IP forwarding is totally disabled. Filtering on the Internet
+side prevents any process other than Tor from sending any packets
+whatsoever to the Internet. Much ICMP should probably also be filtered,
+just in case. Traffic *from* the Internet is limited to return
+traffic on TCP connections opened by Tor (maybe later it could be extended
+to act as a relay, too).
+
+You could clamp this down still further using SELinux.
+
+Since it has access to Tor and all its secrets, Vidalia runs in the Tor VM.
+That means the user has to do a console switch to see it. I don't see
+that as a big problem; YMMV. You definitely could NOT run it in the
+application VM.
+
+### The application VM
+
+With this sort of approach, the application VM *only* runs
+applications. It has no idea of the real IP address, or even of
+any machine's real MAC address. It doesn't know anything that identifies
+the user unless the user types it in.
+
+As a result, the application VM can be anything at all.
+Windows, if you really wanted to use it. What I'd actually use would be a stock
+Ubuntu LiveCD, for the following reasons:
+
+1. It's widespread, and it, or close variants of it, are probably what people are booting behind various homebrew Tor proxies right now. So you may get a larger anonymity set.
+2. It's very actively maintained... which means you're going to get upstream security patches.
+
+I could see a very good case for staying with Debian, though, to avoid
+Ubuntu's feature creep.
+
+But I suggest that it can nonetheless be *stock* Debian,
+absolutely unmodified from the latest upstream release.
+
+1. That would conserve important resources for Tails-specific development
+2. I suspect it would also speed up the process of propagating upstream fixes... which is probably the single best thing you can do for the security of the application VM.
+3. It would also discipline you to being client-agnostic, which would mean that others could grab your images (especially the Tor VM image) and reuse them for other things.
+
+# Update October 2012
+
+New developments in other projects:
+
+ * [Qubes OS + Tor](http://theinvisiblethings.blogspot.com/2011/09/playing-with-qubes-networking-for-fun.html): detailed instructions on how to set up transparent Tor proxy with Qubes OS.; lacks considerations for identity correlation though circuit sharing 
+ * [Whonix](http://whonix.sourceforge.net/): Anonymous General Purpose Operating System; Isolating and Transparent Tor proxy based on Virtual Box, Debian GNU/Linux and Tor; not a live system
+
+
+> There are many users who would be able to set this up themselves, see [[todo/amd64_kernel]], the virtualisation software can be stored in the persistent storage and installed after booting a tails livecd. As long as the tails kernel supports running virtualisation software, the features in this document can be used today by a great many users
+
+# Semi-simple solution
+
+Let's say we [[todo/add_virtualbox_host_software]] to Tails and note
+that a host can start several guests using the same boot media. Hence
+we could add some kind of hook during Tails' boot process that,
+depending on some "magic" parameter set by the host (if any), makes
+Tails boot into specialized profiles (e.g. one that only runs Tor and
+one that runs the GUI stuff). For instance:
+
+* tor-guest: Boot Tails into a minimal mode (no Xorg etc.) that just:
+  - starts Tor with all its ports listening on the network.
+  - sets an appropriate firewall (only allow inbound traffic from the
+    'app-guest' vm (see below) to Tor's ports, and only the outbound
+    traffic made by Tor).
+* i2p-guest: Same as 'tor-guest' but adapted for i2p.
+* app-guest: Boot Tails exactly like it's done now except:
+  - it uses the Tor instance running on 'tor-guest' vm.
+  - sets an appropriate firewall (only allow connections to the
+   'tor-guest' and 'i2p-guest' vms)
+
+If no such profile is set Tails boots normally. In Tails Greeter we add
+an option called "Use isolation through virtualization" (or similar)
+that when set:
+
+1. Continues from Tails Greeter to a simple X screen (no GNOME etc.
+   running; only vms are supposed to be run from the host from now on).
+2. Starts a Tails guest with the 'tor-guest' parameter in headless
+   mode. (not sure about the 'i2p-guest' yet since it should start
+   automatically)
+3. Starts a Tails guest with the 'app-guest' parameter in fullscreen
+   mode. This is where the user should interact with Tails from now on.
+
+Relevant settings from Tails Greeter on the host must be forwarded to
+these guests appropriately, e.g. persistent Tor data dir to
+'tor-guest' and all other persistent directories to 'app-guest' (using
+VirtualBox' shared directories, I guess), and the language settings
+should be set in 'app-guest' etc.
+
+A fine question, though, is whether there exist something like this
+"magical" parameter I talk about above in VirtualBox. The simplest
+would be if Virtualbox could add stuff to the kernel commandline,
+but I doubt that is possible in any sane way. More likely something
+can be achieved through the guest additions. It seems like the host
+can execute arbitrary commands on guests using `vboxmanage
+guestcontrol execute`, which could be used to alter how Tails boots
+from then on.
+
+> You could communicate with Virtual Box using hardware serials. Examples:
+
+> `sudo -u $USERNAME VBoxManage setextradata "$VMNAME" "VBoxInternal/Devices/pcbios/0/Config/DmiBIOSVendor" "BIOS Vendor"`
+
+> `sudo -u $USERNAME VBoxManage setextradata "$VMNAME" "VBoxInternal/Devices/pcbios/0/Config/DmiSystemUuid""9852bf98-b83c-49db-a8de-182c42c7226b"`
+
+> <https://github.com/adrelanos/Whonix/blob/master/whonix_createvm>
+> for more examples
+
+> Change hardware serials to some specified value, let Tails read it and
+> let Tails act accordingly.

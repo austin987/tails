@@ -1,0 +1,183 @@
+[[!toc levels=2]]
+
+**Parent ticket**: [[!tails_ticket 6354]]
+
+# Installation
+
+This is currently easiest to set up (to avoid backporting, see below)
+on a Debian Sid box with libvirt installed:
+
+    sudo apt-get install vagrant
+    vagrant plugin install vagrant-libvirt
+
+After this, the Tails branch `feature/vagrant-libvirt` makes
+everything work like when Vagrant was using Virtualbox, except basebox
+building (see below).
+
+# Issues (and their workarounds) with vagrant-libvirt
+
+## Packaging
+
+`vagrant-libvirt` is not packaged in Debian yet, so we need to RFP it,
+and then have it backported to Wheezy.
+
+Also, some of `vagrant-libvirt`'s dependencies are too old in Wheezy:
+
+* `ruby-fog >= 1.10.0`: Sid has 1.12.1 and backporting is trivial
+  (i.e. just rebuild in a Wheezy chroot).
+* `vagrant >= 1.1`: Sid has 1.2.2, backporting is trivial but also
+  requires packporting the follwing dependencies:
+  - `ruby-childprocess >= 0.3.7`: Sid has 0.3.9 and backporting is
+    trivial.
+  - `ruby-net-scp >= 1.1.0`: Sid has 1.1.1 and backporting is almost
+    trivial; tests are failing due to errors loading `ruby-mocha`.
+    This can probably be fixed in
+    `debian/patches/disable-rubygems-in-tests.patch` by requiring
+    `mocha` instead of `mocha/setup` or similar (see the difference
+    between this patch in the Wheezy and Sid sources). It of course
+    builds if tests are disabled (i.e. `DEB_BUILD_OPTIONS=nocheck`).
+  - `ruby-net-ssh >= 2.6.6`: Sid has 2.6.8, and backporting is
+    identical to backporting `ruby-net-scp`, described above.
+
+## Syncing (Tails' Git and built images)
+
+When using the libvirt provider in Vagrant, "synced folders" are
+simply `rsync`:ed into the VM's filesystem, unlike with Vagrant with
+Virtualbox, which uses its shared folder feature. The `rsync:`ing only
+happens at VM start (not at VM stop; Vagrant specifies this as legit
+behaviour, so it's not a bug), so any changes made to Tails' git after
+that are not pulled into `/amnesia.git` (a VM restart is required),
+and the built image can't be synced to the host using `/vagrant`
+(remember, syncing back to host never happens). The current
+implementation therefore doesn't rely on synced folders but instead:
+
+* manually uploads Tails' git before starting the build using
+  Vagrant's upload feature.
+* manually downloads the built image after building is complete
+  using Vagrant's download feature.
+
+Proper synced folders (bidirectional, continously "syncing", like
+Virtualbox' shared folders) would be preferable (faster, less disk
+usage (size of Tails' .git) in build guest, less code complexity,
+etc.), so we'd like this
+[upstream issue](https://github.com/pradels/vagrant-libvirt/issues/7)
+to get fixed.
+
+It should be noted that the libvirt provider does support shares using
+NFS, which would give synced folders with the properties we want, but
+this requires configuring an NFS server on the host box, which makes
+this approach too complicated.
+
+## Get rid of the Vagrant "verified downloads" monkeypatch
+
+We monkeypatch Vagrant to verify the integrity of the downloaded
+basebox in `vagrant/lib/vagrant_verified_download.rb`. Due to heavy
+code reorganizing of Vagrant beween 1.0.x and 1.2.x, the monkeypatch
+isn't very pretty or convenient any more. Although the current one
+works, it's very fragile, but so are monkeypatches in general. A
+proper patch has been written and submitted upstream
+([issue](https://github.com/mitchellh/vagrant/issues/1124), [pull
+request](https://github.com/tails-developers/vagrant/pull/1)) and, if
+accepted, we hopefully can get the next Vagrant containing the patch
+backported to Wheezy.
+
+## Basebox building
+
+The squeeze definition on Tails branch `feature/vagrant-libvirt` can
+be successfully built using KVM (`veewee kvm build squeeze`) with the
+current release of `veewee` (0.3.7, installed per our
+[[current instructions|contribute/design/vagrant]]), but:
+
+* `veewee kvm export` is not implemented.
+* the box image is created in the `raw` format, so it consumes the
+  full 10 GiB disk space, and is incompatible with `vagrant-libvirt`,
+  which only supports `qcow2`.
+
+Both of these issues are fixed in `veewee`'s Git, but getting it to
+run/install brought gem dependency hell onto my machine, so I've been
+unable to test it. Hopefully this will be easier after next realse (so
+there's a Ruby gem). Having the next version of `veewee` in Debian
+(and backported to Wheezy) would of course be ideal
+([RFP](http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=658863)).
+
+Until a `vagrant-libvirt`-compatible `veewee` is released, basebox
+building won't be fully automatic using `rake` any more. One will have
+to pick either of steps `1.{a,b,c}` below to create a disk image, and
+then step `2` to package it into a `.box` (personally I went with
+`1c + 2` as that doesn't require any fiddling with Ruby gems):
+
+### 1.a How to fix images built with veewee 0.3.7 using KVM
+
+For now we can manually convert the `raw` image created by `veewee`
+like this (note: `squeeze.img` below can be found in your libvirt pool's
+directory):
+
+    qemu-img convert -c -O qcow2 squeeze.img box.img
+
+### 1.b How to fix images built with veewee using Virtualbox
+
+Since Virtualbox currently is better supported (both be `veewee` and
+our Rakefile) this may be an easier approach. The disk image can be
+extracted from the exported `.box` with `tar xf` (or `tar xzf`), and
+if we assume it's named `box.vmdk` we can make it compatible with
+`vagrant-libvirt` like this:
+
+    qemu-img convert -c -O qcow2 box.vmdk box.img
+
+### 1.c How to fix our old squeeze.box
+
+We can actually use the disk image `box-disk1.vmdk` from our
+[old `squeeze.box`](http://dl.amnesia.boum.org/tails/project/vagrant/squeeze.box),
+unpack it with `tar xf`). While libvirt/KVM supports the vmdk format I
+recommend converting it to a better supported one (I/O errors are
+common in libvirt/KVM when using vmdk):
+
+    qemu-img convert -c -O qcow2 box-disk1.vmdk box-disk1.img
+
+Next, setup a `x86_64` domain in libvirt and boot it with a virtual
+hard drive backed by `box-disk1.img`, and install the new
+dependencies, which actually only is `rsync`, and while we're at it we
+might just as well update the system and take steps to reduce the
+image size:
+
+    unset HISTFILE
+    sudo apt-get update
+    sudo apt-get upgrade
+    sudo apt-get install rsync
+    sudo apt-get remove virtualbox*
+    sudo apt-get autoremove
+    sudo apt-get clean
+    sudo rm -rf /var/lib/apt/lists/*
+    sudo rm -f /var/lib/dhcp/*.leases
+    sudo dd if=/dev/zero of=/EMPTY bs=1M
+    sudo rm -f /EMPTY
+    date | sudo tee /etc/vagrant_box_build_time
+    sudo halt
+
+Note that even though our `box-disk1.img` is in `qcow2` format
+already, we want to re-convert it using `qemu-img` to reduce the image
+size (that's why we run `dd` in the VM above):
+
+    qemu-img convert -c -O qcow2 box-disk1.img box.img
+
+### 2 How to package the .box
+
+This is how we package `box.img` from any of the previous steps into a
+`vagrant-libvirt`-compatible `.box`:
+
+    echo 'Vagrant.require_plugin "vagrant-libvirt"' > Vagrantfile
+    cat > metadata.json << END
+    {
+      "provider"     : "libvirt",
+      "format"       : "qcow2",
+      "virtual_size" : 10
+    }
+    END
+    tar czf squeeze-libvirt.box ./metadata.json  ./Vagrantfile ./box.img
+
+To test it, temporarily set (overwriting existing values):
+
+    config.vm.box_url = 'file:///path/to/squeeze-libvirt.box'
+    config.vm.box_checksum = '<sha256 checksum of squeeze-libvirt.box>'
+
+in `vagrant/Vagrantfile`.

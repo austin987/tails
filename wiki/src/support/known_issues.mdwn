@@ -9,22 +9,42 @@ This list might not be accurate nor complete.
 Problems starting Tails
 =======================
 
+Acer Travelmate 8573T-254G50M
+-----------------------------
+
+Does not start on USB sticks created using Tails Installer.
+Booting from DVD works fine.
+
 Apple hardware
 --------------
 
 For the moment, Tails has a very limited support for Apple hardware.
 
 Most recent Apple hardware does not boot without UEFI, and currently
-Tails does not start with UEFI. See [[!tails_todo UEFI desc="the corresponding ticket"]].
+Tails does not start with UEFI. See [[the corresponding blueprint|blueprint/UEFI]].
 
-See also [[!tails_bug
+See also [[manual installation using
+Mac|doc/first_steps/installation/manual/mac]] for more compatibility
+reports, as well as [[!tails_bug
 Some_old_Macbooks_running_Lion_10.7_not_booting_Lion..can_we_get_booting_fixed___63__
 desc="this bug report"]].
+
+ASUS VivoBook X202E
+-------------------
+
+Legacy support needs to be enabled in order to start Tails. To enable
+legacy boot support, enable 'Launch CSM' under boot (menu).
+
+Compaq 615
+----------
+
+You need to update the firmware to its latest version in order to start from a
+device installed using Tails Installer.
 
 Dell Inc. Latitude E6430/0CPWYR
 -------------------------------
 
-Do not start on USB sticks created using Tails USB Installer.
+Does not start on USB sticks created using Tails Installer.
 
 With BIOS versions A03 06/03/2012
 
@@ -33,11 +53,11 @@ Error message: `Invalid partition table!`
 Dell XPS L702X/03RG89, Samsung RV520
 ------------------------------------
 
-Do not start on USB sticks created using Tails USB Installer.
+Does not start on USB sticks created using Tails Installer.
 
 We were reported that the legacy BIOS shipped on these systems doesn't
 know how to deal with the GPT partition scheme installed by Tails
-USB Installer.
+Installer.
 
 <http://en.community.dell.com/support-forums/laptop/f/3518/p/19392884/20010995.aspx>
 
@@ -53,26 +73,65 @@ Dell Dimension 2400
 Cannot start neither from USB nor from DVD. System crashes with a blank
 screen and locked up keyboard.
 
-ThinkPad X220, T520 and E325
-----------------------------
+ThinkPad X220, X230, T430, T520, T530 and E325
+----------------------------------------------
 
-See the corresponding [[!tails_bug ThinkPad_X220_vs_GPT desc="ticket"]].
+These machines do not start on USB sticks created using Tails USB
+Installer, due to a firmware limitation.
+
+A workaround for some of these machines is to use the [[manual
+installation process|doc/first_steps/installation/manual/linux]].
+Note, however, that this technique does not allow you to set up
+a persistent volume.
+
+<a id="problematic-usb-sticks"></a>
+
+Toshiba Satellite C50-A-12K and C855D-S5106
+-------------------------------------------
+
+Fails to start from a Tails USB unless forced to boot using CSM, and not UEFI,
+first, as advised on:
+
+<http://forums.toshiba.com/t5/Computer-Troubleshooting/System-does-not-have-any-usb-boot-optoon/td-p/406325>
+
+Problematic USB sticks
+----------------------
+
+The following USB sticks have issues starting Tails.  They are configured by the
+manufacturer as a fixed disk, and not as a removable disk. As a consequence,
+they require removing the `live-media=removable` boot parameter, which [[is
+dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
+
+* SanDisk Cruzer Extreme USB 3.0 16GB and 32GB
+* SanDisk Cruzer Fit USB 2.0 8GB
+* SanDisk Cruzer Force 8GB
+* SanDisk Cruzer Glide 4GB, 8GB and 16GB
+* SanDisk Cruzer Switch USB 2.0 8GB and 32GB
+* SanDisk Cruzer USB 3.0 64GB
+
+SanDisk had begun the production of flash drives configured as fixed disk in
+2012 to meet new requirements for Windows 8 Certification. The flash drives that
+comply with this certification will have the Windows 8 logo on their packaging.
+If a flash drive does not have the Windows 8 logo on its packaging, then that
+drive will function as a removable disk about should work with Tails.
+
+See also [[!tails_ticket 6397]].
 
 Security issues
 ===============
 
-Tails may not erase all the system memory on shutdown
------------------------------------------------------
+Tails might not erase all the system memory on shutdown
+-------------------------------------------------------
 
 On rare systems (non-PAE with big amounts of memory),
 Tails does not consistently [[!tails_todo
 more_efficient_memory_wipe desc="erase all system memory as it
 should"]].
 
-After using the Tails USB installer, the "emergency shutdown" doesn't work.
----------------------------------------------------------------------------
+After using Tails Installer, the "emergency shutdown" doesn't work
+------------------------------------------------------------------
 
-The Tails USB installer messes a bit too much with the USB devices for the
+Tails Installer messes a bit too much with the USB devices for the
 "emergency shutdown on media removal" feature to continue working after using
 it. If you believe this feature is critical for the session you're running, we
 advice you to reboot Tails.
@@ -103,7 +162,9 @@ completely shutdown or restart. Sometimes the caps-lock button light of
 the keyboard flashes.
 
 <div class="caution">
-When this happen, there is no guarantee that the memory is wiped entirely.
+
+When this happens, there is no guarantee that the memory is wiped entirely.
+
 </div>
 
 This issue has been reported on the following hardware:
@@ -113,6 +174,8 @@ This issue has been reported on the following hardware:
     USB stick
   - Toshiba Satellite C855D
   - Dell Inc. Studio 1458
+  - Fujitsu Lifebook AH531/GFO, only on regular shutdown, emergency
+    shutdown works
 
 <a id="fingerprint"></a>
 
@@ -121,24 +184,10 @@ Fingerprint
 
 <!-- If this section is empty adjust the [[fingerprint documentation|doc/about/fingerprint]]. -->
 
-Tails and TBB report different DOM storage support
---------------------------------------------------
+<!-- The fingerprints of the Tails browser and the TBB are different: -->
 
-Some websites use [[!wikipedia DOM storage]] if available in the
-browser. Tails browser does not allow DOM storage yet, while the TBB
-does (probably safely). This difference can be used to distinguish
-Tails users from TBB users. This [[!tails_todo
-iceweasel_DOM_storage_isolation desc="will be fixed"]] in a future
-release of Tails.
-
-Tails does not handle image cache the same way as TBB
------------------------------------------------------
-
-The latest and greatest TBB isolates image cache to URL bar domain.
-Tails does not do so yet. This difference can be used to distinguish
-Tails users from TBB users. This [[!tails_todo
-iceweasel_image_cache_isolation desc="will be fixed"]] in a future
-release of Tails.
+* Browser window resizing is in not reliable: [[!tails_ticket 6377]]
+  and [[!tor_bug 10095]].
 
 Other issues
 ============
@@ -150,21 +199,21 @@ Public FTP servers on the Internet are not reachable using Tails.
 See [[!tails_todo fix_Internet_FTP_support desc="the corresponding
 task"]] for more details.
 
-YouTube video are hard to get
------------------------------
+YouTube videos are hard to get
+------------------------------
 
 [[!tails_todo easier_YouTube desc="HTML5 video are not easily seen on YouTube"]]. When the
 message *This video is currently unavailable* appears, the video can actually be viewed.
 Right-click on the page, select **NoScript** → **Blocked objects** and
 **Temporarily allow…** the video.
 
-Tails will never support videos which requires Flash (those with ads).
+Tails will never support videos which require Flash (those with ads).
 
-"Connect automatically" for NetworkManager connections isn't persistent.
-------------------------------------------------------------------------
+"Connect automatically" for NetworkManager connections isn't persistent
+-----------------------------------------------------------------------
 
 When the "Network Connections" persistence feature is
-activated, the "Connect automatically" settings isn't saved for any
+activated, the "Connect automatically" setting isn't saved for any
 connection.  While this is a bug, it's actually a good
 one. NetworkManager itself enables this option by default for all new
 connections, and could result in users re-connecting to a previous network at
@@ -173,14 +222,37 @@ times when they don't want that.
 Tails fails to connect to certain Wi-Fi networks
 ------------------------------------------------
 
-This may be related to the introduction of wireless regulation support
+This might be related to the introduction of wireless regulation support
 in Tails 0.13.
 
 Tails could behave better when run inside VirtualBox
 ----------------------------------------------------
 
-Since 0.17.1, VirtualBox guest modules are no shipped anymore.
+Since 0.17.1, VirtualBox guest modules are not shipped anymore.
 
 See [[!tails_todo fix_virtualbox_guest_modules_build desc="the
 corresponding task"]] for details.
 
+Touchpad configurations
+-----------------------
+
+### Acer TravelMate B113 - ETPS/2 Elantech Touchpad
+
+    synclient FingerPress=256;
+    synclient TapButton3=0;
+    synclient Clickpad=1;
+    synclient VertTwoFingerScroll=1;
+    synclient FingerLow=1;
+    synclient FingerHigh=1;
+
+New Identity feature
+--------------------
+
+Since Tails 0.21, the "New Identity" feature in the web browser is not
+available anymore ([[!tails_ticket 6383]]).
+
+As a workaround it is possible to:
+
+  1. Close the web browser.
+  2. Right-click on the Vidalia icon and choose "New identity".
+  3. Open the web browser again.

@@ -1,0 +1,355 @@
+Our current approach to managing Tails [[!tails_todo "" desc="todo"]]
+does not scale. We have some ideas to improve it slightly, but it's
+unlikely the result will be good enough, so we will instead migrate
+to Redmine.
+
+[[!toc levels=2]]
+
+# Roadmap
+
+**All this was done!**
+
+See our [migration scripts](https://git-tails.immerda.ch/ikiwiki2redmine/).
+
+* write a conversion script to import our existing
+  tickets (see *Convert and import* section below).
+* update developers documentation
+* migrate!
+  - import existing tickets
+  - setup rewrite rules from the ikiwiki tickets URL to the new ones
+  - remove tickets that are not blueprints from ikiwiki
+* If needed, have additional plugins packaged and installed to fine
+  tune our processes.
+
+# Wiki / Tasks
+
+Let's keep our wiki for blueprints and research for long-term big next
+features.
+
+Let's try not to use the wiki for tasks (else it defeats the purpose of
+tracking tasks), let's not try to use the tasks manager for research and other
+things that would be better suited for the wiki (else it harms mostly-offline
+developers).
+
+# Specifications
+
+## Must have
+
+ * Should have categories (and display the related tasks in a meaningful way).
+   => Redmine, bugs-everywhere
+ * Should let us assign tasks to individuals
+   => bugs-everywhere
+ * Can handle tasks and sub-tasks
+   => Redmine, bugs-everywhere
+ * Create tickets over email.
+   => Redmine, bugs-everywhere
+ * Reply to tickets over email.
+   => Redmine, bugs-everywhere
+ * Being able to search through tickets offline (caching).
+   Ability to import a DB dump into a local instance of the webapp would be
+   an acceptable way to do it, even if clearly suboptimal.
+   => bugs-everywhere
+ * Email notifications: subscribing to a ticket, or to new tickets, etc.
+   => Redmine (for existing tickets), bugs-everywhere
+ * Advanced search queries, or filters (among metadata)
+   (roadmap, milestone, overview, individual dashboard)
+   => Redmine
+ * Hosted somewhere else **or** fully available in Debian
+   (or all deps in Debian? to be discussed if need arises.)
+   => Redmine (Riseup Labs & in a little bit outdated Debian),
+      bugs-everywhere (needs some care)
+ * milestones (target version)
+   => Redmine, bugs-everywhere
+ * Random users may reply to tasks.
+   => bugs-everywhere
+
+## Important
+
+ * Blocking property
+   => Redmine, bugs-everywhere
+ * Change a ticket's metadata via email.
+   => Redmine, bugs-everywhere
+ * Due time, deadlines
+   => Redmine (with email reminders), bugs-everywhere
+
+## Bonus
+
+ * Having tags
+   => bugs-everywhere
+ * Possible to assign tasks to a team / to multiple people
+ * Sub-tasks having precedence support or wait state or something that makes
+   the "let's create all future sub-tickets for a task at the same time"
+   workflow practically doable (i.e. I don't want to be shown all future steps
+   that are blocked by the first one)
+ * Possible to change a ticket's state from Git commit messages (todo->pending),
+   bonus points if merging that branch into stable ->done, or something like
+   that.
+ * Reminder for deadlines.
+
+## Unsorted
+
+ * Encryption support.
+
+# Redmine
+
+* [homepage](http://www.redmine.org)
+* easy to setup thanks to the Debian package
+* supports [issue creation or comments via
+  email](http://www.redmine.org/projects/redmine/wiki/RedmineReceivingEmails),
+* supports [updating ticket attributes over
+  email](https://we.riseup.net/cgdev/using-email-with-redmine#sending-emails)
+* the email interface, according to someone I trust who set it up and
+  uses it, is quite fragile and can be a bit mysterious to setup
+* apparently, there no more powerful way to interact with it
+  asynchronously ([feature request for offline
+  mode](http://www.redmine.org/issues/2728))
+* Textile syntax. Pandoc knows how to convert our existing Markdown to
+  Textile, but still, having Markdown support would be awesome.
+* Git integration won't easily work with our many-branches workflow,
+  but we can probably do without for a while.
+
+## Plugins of interest
+
+* Markdown syntax.
+  A blocker is that each such plugin switches the syntax
+  instance-wide, no way to enable it for a single project.
+  - [redcarpet formatter](https://github.com/alminium/redmine_redcarpet_formatter)
+    In Debian unstable ([[!debpkg redmine-plugin-markdown]]).
+    Marked as compatible with 1.x and 2.x,
+    but the packaged version is the one for 2.x.
+    Depends on [[!debpkg ruby-redcarpet]] that is in Wheezy, but not
+    in Squeeze, and may be a pain to backport due to a few missing build-deps.
+  - [Markdown formatter](https://github.com/bitherder/redmine_markdown_formatter)
+    Depends on [[!debpkg ruby-rdiscount]] that is in Wheezy, but not
+    in Squeeze, and a pain to backport (due to the gem2deb (>=
+    0.3.0~) dependency). Untouched since 2010.
+  - [Markdown Extra formatter](https://github.com/juno/redmine_markdown_extra_formatter/tree)
+    Depends of [BlueFeather
+    gem](http://ruby.morphball.net/bluefeather/index_en.html) that is
+    not in Debian. Untouched since 2010.
+* [Carousel](http://www.redmine.org/plugins/redmine_carousel): can be used
+  for periodic actions that occur during project development process. It
+  automatically generates issue assigned to the next user in the carousel
+  queue every specified time period. Marked as compatible with 1.1.x
+  and 1.4.x.
+  > Looks interesting, but most (if not all) tasks we do switches for
+  > depend on our availability etc., so I'm not sure an automated
+  > solution would do. --intrigeri
+* [Digest](http://www.redmine.org/plugins/digest): send a summary of a
+  project's activity over a period of time by email. Marked as
+  compatible with 1.4.x and 2.0.x. The [sample email
+  output](https://github.com/drewkeller/redmine_digest/blob/master/screenshot_emailoutput.png)
+  does not make me think this is any better than some way (feed
+  reader or rss2email) to subscribe to the project's activity.
+* [Importer](http://www.redmine.org/plugins/importer): import issues in bulk
+  from .csv files. Compatible with 1.1.x. We do need this to import
+  existing tickets.
+  A [fork](https://github.com/ksauzz/redmine_importer/tree/redmine2.x)
+  supports Redmine 2.x.
+* [Issue checklist](http://www.redmine.org/plugins/issue_checklist):
+  add checklist functionality to issues. Marked as compatible with
+  2.0.x -- what about 1.4.x or older? Having something lighter than
+  sub-tickets could be good, but certainly not critical. We'll see.
+* [Git branch hook](https://github.com/mikoto20000/redmine_git_branch_hook):
+  add issue related revision by branch name. Can close tickets
+  on merge. One apparently may configure the branch that, when
+  merged into, triggers this behavior, thanks to the
+  `merge_branch` setting. Apparently impossible to use it for
+  the two-steps pending + fixed workflow we've been using,
+  but we may want to change this when switching tools anyway.
+  According to Git log, should at least support Redmine 1.4.x and
+  2.0.x.
+  We can start using Redmine and see later how much we need something
+  like this.
+* [Silencer](http://www.redmine.org/plugins/silencer): suppress email
+  notifications (at will) when updating issues. Marked as
+  compatible with 1.1.x, not with 1.4.x.
+  > I'm not sure why we would want this. --intrigeri
+* [Whining](http://www.redmine.org/plugins/redmine_whining): email alerts
+  when an issue had not been updated since X days. Marked as
+  compatible with 1.1.x, not with 1.4.x.
+  Would be very useful, looks easy to package and install.
+* [Custom Workflows](http://www.redmine.org/plugins/custom-workflows):
+  define own rules of issue processing, e.g. change issue properties
+  or create sub-task if some conditions are met, enforce policies...
+  Marked as compatible with 1.2.x to 2.1.x.
+  Hopefully we won't need it, but it's still good to know it
+  exists.
+
+## Offline usage
+
+ * Sending an email can create an issue with:
+   - subject: mail subject
+   - description: mail body
+   - tracker: keyword (`Tracker:`) in mail body
+   - priority: keyword (`Priority:`) in mail body
+   - status: keyword (`Status:`) in mail body
+   - category: keyword (`Category:`) in mail body
+   - assignee: keyword (`Assigned To:`) in mail body
+   - kind of next thing to be done: keyword in mail body
+   - target version: keyword (`Fixed version:`) in mail body
+   - QA check (or any other custom field): keyword (name of the
+     custom field) in mail body
+ * Sending an email with '[#24175]' in the subject will add
+   information to the ticket. Same keywords as before can be used to change
+   metadata.
+ * Email address in From, To, or Cc are added to watchers (if they match
+   a Redmine user) when *creating* a new ticket over email.
+ * Clicking on *Watch* enables one to receive emails when the ticket changes.
+ * Every ticket has an Atom feed that contains all changes made to a ticket.
+ * There is an Atom feed with all open tickets, together with status and
+   description.
+ * Missing: set parent task, set related issues, delete ticket.
+
+## Convert and import
+
+**Note**: this is an initial rough draft, that probably misses tons of
+things to do, but should be enough to run some initial tests to
+confirm the general idea is workable.
+
+### Set up Redmine
+
+1. **done** Add a `External Id` custom field. Check "Used as a filter".
+1. **done** Add a `QA Check` custom field. Make it searchable.
+1. **done** Add a `Type of work` custom field whose possible values
+   are the same as our current `todo/*` tags:
+   	Code
+   	Discuss
+   	Documentation
+   	Pass Test
+   	Promote
+   	Qa
+   	Research
+   	Sysadmin
+   	Test
+   	Translate
+   	Upstream
+   	Wait
+   	Website
+   Mark it as "used as a filter" and searchable.
+1. **done** Add a `Blueprint` text custom field, with regexp `^https://tails[.]boum[.]org/blueprint/`.
+1. **done** Add a `Fix committed` issue status.
+1. **done** Make the `Fix committed` status available in Administration -> Workflow.
+1. **done** Add a `Confirmed` issue status.
+1. **done** Make the `Confirmed` status available in Administration -> Workflow.
+1. **done** Mark the `Resolved` issue status as "Issue closed".
+1. **done** Add an `Elevated` issue priority, rank it between Normal and High.
+1. **done** Add a `Feature branch` custom field to ease review.
+
+### Adapt impacted stuff
+
+1. **done** Prepare a branch that updates the website to advertise the new task
+   manager instead of the old one.
+1. **done** Generate the Apache rewrite rules from the (External Id, Redmine
+   Id) mapping.
+   (`PRODUCTION=1 make rewrite-rules` should do the job.)
+
+### Clean up and gather data
+
+1. **done** Close wishlist tickets not modified since more than a year.
+1. **done** Split tickets that have several `todo/*` tags, and save the
+   parent/child relationship using `[[!parent]]`. In the end, each
+   ticket should only have one `todo/*` tag:
+
+        PRODUCTION=1 make list-more-than-one-todo-tag
+
+1. Write a custom ikiwiki plugin to:
+   - **done** save original ikiwiki ticket name as `External Id` column
+   - **done** save parent/child relationship
+   - **done** wrap the whole ticket information into a CSV line
+   - **done** filter out `toc`
+   - **done** save `todo/*` tags into the "Type of work" column
+   - **done** save `release/1.0` and `todo/2.0` tags into the "Fixed
+     version" column, ditto for broken windows
+   - **done** turns `todo/qa` into `QA Check` == `Ready for QA`.
+   - **done** convert ikiwiki shortcuts to external links
+   - **done** turn internal links to non-todo pages into external links
+   - **done** convert Markdown to Textile
+   - **done** removes links to wishlist
+   - **done** converts TOC directive into Redmine's syntax
+   - **done** drops obsolete taglinks
+   - **done** import `priority/*` tags
+   - **done** import `category/*` tags
+   - **done** feed the blueprint custom field with the URL to the
+     relevant blueprint, if any
+
+### Freeze and import data
+
+1. Run ikiwiki with this special plugin, then merge all these CSV
+   lines to produce a first CSV file that can be imported with the
+   Importer plugin.
+
+        PRODUCTION=1 make export1.csv
+
+1. Import the first CSV file:
+   * use an account that has Manager privs on the current project
+   * ignore `Parent Issue` fields
+1. Import this CSV file again to apply the relationships:
+   * use an account that has Manager privs on the current project
+   * use `External Id` as `Unique Column`
+   * check "Update existing issues"
+1. Build a (External Id, Redmine Id) mapping
+
+       PRODUCTION=1 make ids.map
+
+1. With a modified version of the ikiwiki plugin, plus this mapping
+   information, produce a second CSV files with tickets description
+   modified so that links to other tickets are updated to use Redmine
+   ticket linking syntax.
+
+        PRODUCTION=1 make export2.csv
+
+1. Import the second CSV file, using `External Id` as `Unique Column`
+   again, and enabling the *Update Existing Issues* option.
+   Links between tickets should now be good.
+
+### Polish imported data and update the rest of the world
+
+1. **done** Mangle the content of the Git repository:
+   * Move blueprints tickets to `wiki/src/blueprint/`: 
+     `PRODUCTION=1 make move-blueprints`
+   * Move attachments out of the way for future processing: 
+     `PRODUCTION=1 make move-attachments`
+   * Delete the rest.
+1. **done** Manually take care of tickets sub-pages that were imported as
+   full-blown tickets. These sub-pages are used in too many different
+   ways to allow us to process them automatically:
+1. **done** Manually add attachments (the Importer plugin does not support
+   this).
+1. **done** Add some tickets relationships back.
+1. For each ticket:
+   - Add a *Category* value.
+   - **done** Add a *Type of work* value.
+   - Decide if it should have been kept as a blueprint. If so, salvage
+     the content of the old ikiwiki ticket into a shiny new blueprint.
+   - If *Type of work* is *wait*, mark the ticket as blocked by the
+     relevant other ticket, if any.
+1. **done** Move to the wiki stuff that should never have been migrated.
+1. **done** Remove the `Qa` value from possible types of work.
+1. **done** Mark the `Type of work` custom field as required.
+1. **wontfix** Sort bugs and features to the relevant trackers.
+1. **done** Add sub-tickets blocks/before/after relationships, starting with
+   tickets that are tagged `todo/wait` for another one.
+1. **done** Remove the `External Id` field.
+1. **wontfix** Clean `tags/*` up.
+
+## Setup
+
+1. Install a Squeeze system with backports enabled.
+1. Install packages:
+
+        apt-get install redmine/squeeze-backports redmine-sqlite/squeeze-backports
+
+1. Follow the "QUICK LAUNCH USING WEBRICK" instructions in
+   `/usr/share/doc/redmine/README.Debian.gz`
+
+1. Install the importer plugin:
+
+        cd /usr/share/redmine/vendor/plugins && git clone https://github.com/leovitch/redmine_importer.git
+        cd /usr/share/redmine && rake db:migrate_plugins RAILS_ENV=production
+
+1. Install a backport of [[!debpkg ruby-fastercsv]], that's
+   a dependency of the importer plugin.
+   One has to decrease the build-dep on gem2deb to 0.2.7~.
+
+1. Restart WEBrick.
