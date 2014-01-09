@@ -31,7 +31,7 @@ very similar in spirit) they are not covered in this feature.
 
 ## IMEI
 
-[[!wikipedia IMEI] numbers is another unique modifier affecting mobile
+[[!wikipedia IMEI]] numbers is another unique modifier affecting mobile
 network devices (e.g. 3G, but *not* Wi-Fi) that is very similar to MAC
 addresses and can be used by adversaries in similar ways. Given this
 similarity we'd like to deal with IMEI spoofing (or similar) in this
@@ -42,7 +42,7 @@ properly.
 
 It should be noted that we cannot do anything against network activity
 caused at BIOS time, such as [[!wikipedia Intel AMT]], beyond urging
-users to disable such feature (if possible, like it is for Intel AMT).
+users to disable such features (if possible, like it is for Intel AMT).
 
 ## Profiling based on chipset/driver particularities
 
@@ -295,7 +295,7 @@ Tails Greeter.
 
 # Active probe fingerprinting
 
-**NO PREVENTION AGAINST THIS IS IMPLEMENTED YET**
+**No protection against this is implemented yet**
 
 There's an opportunity for an adversary to achieve AdvGoalTracking and
 AdvGoalProfiling due to "active probing" performed by NetworkManager
@@ -306,14 +306,14 @@ as the name suggests, passively listens for broadcasted wireless
 networks, which is entirely safe. Active scanning, however, actively
 sends probes for any known networks. In our case these are the saved
 connections in NetworkManager, so this turns especially problematic
-when persistent NM-connections are used; the (potentially long) list of
+when persistent NM connections are used; the (potentially long) list of
 networks actively probed for can be used as a fingerprint by an
 adversary, breaching AvoidTracking.
 
 While this has nothing to do with MAC spoofing, it does strongly
 affect the (arguably) most important user goal of this feature, namely
 AvoidTracking. Because of this, active scanning should be disabled in
-NetworkManager when MAC spoofing is enabled.
+NetworkManager when MAC spoofing is enabled: [[!tails_ticket 6453]].
 
 # Implementation
 
@@ -392,7 +392,8 @@ leaks issue, in addition to other reasons for being discarded:
 
 The tool used to change the MAC address is simply macchanger, mostly
 because it's in Debian (where the known vulnerabilities are patched)
-and macchiato isn't (and it's not as well tested, yet). macchanger is
+and [macchiato](https://github.com/EtiennePerot/macchiato) isn't (and
+it's not as well tested, yet). macchanger is
 used in a very straightforward way, so if we want to switch tool in
 the future it's a simple task.
 
