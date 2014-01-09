@@ -27,7 +27,7 @@ instructions</a>.
 
 <h2 class="bullet-number-two">Find out the device name of the USB stick</h2>
 
-The device name should be something like `/dev/disk1`, `/dev/disk2`, etc.
+The device name should be something like `/dev/disk8`, `/dev/disk9`, etc.
 
 If you are not sure about the exact device name, do the following:
 
@@ -40,12 +40,12 @@ If you are not sure about the exact device name, do the following:
      </span>
   1. Execute the following command:
 
-         diskUtil list
+         diskutil list
 
      This returns a list of all the current storage devices. For example:
 
 <pre>
-$ diskUtil list
+$ diskutil list
 /dev/disk0
     #:                       TYPE NAME                 SIZE       IDENTIFIER
     0:      GUID_partition_scheme                     *500.1 GB   disk0
@@ -57,14 +57,14 @@ $ diskUtil list
 
   1. Plug back the USB stick and run the same command as before:
 
-         diskUtil list
+         diskutil list
 
      A new device should appear in the list of storage devices. Check
      that the size of the device corresponds to the size of your USB
      stick.
 
 <pre>
-$ diskUtil list
+$ diskutil list
 /dev/disk0
    #:                       TYPE NAME                 SIZE       IDENTIFIER
    0:      GUID_partition_scheme                     *500.1 GB   disk0
@@ -95,7 +95,7 @@ If you are not sure about the device name you should stop proceeding or
 Execute the following command, replacing `[device]`
 with the device name found in step 2.
 
-     diskUtil unmountDisk [device]
+     diskutil unmountDisk [device]
 
 <h2 class="bullet-number-four">Run isohybrid.pl on the ISO image</h2>
 
@@ -139,14 +139,26 @@ Execute the following command, replacing `[tails.iso]` by the path to the ISO
 image that you want to copy and `[device]` by the device name found in step
 1.
 
-    dd if=[tails.iso] of=[device] bs=16M
+    dd if=[tails.iso] of=[device]
 
 You should get something like this:
 
-    dd if=tails-0.17.1.iso of=/dev/disk1 bs=16M
+    dd if=tails-0.17.1.iso of=/dev/disk9
 
 If you don't see any error message, Tails is being copied onto the USB
 stick. The whole process might take some time, generally a few minutes.
+
+<div class="tip">
+
+If you get a "Permission denied" error, try executing the command with
+<code>sudo</code>:
+
+<pre>sudo if=[tails.iso] of=[device]</pre>
+
+Be careful, if the device name is wrong you might overwriting any hard drive on
+the system.
+
+</div>
 
 <div class="next">
 
