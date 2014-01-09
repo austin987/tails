@@ -999,6 +999,19 @@ set in various ways:
   - Torbutton preferences that the TBB also sets;
   - some Tails-specific settings.
 
+Whenever the user tries to start Iceweasel before Tor is ready, they
+are informed it won't work, and asked whether to start the browser
+anyway:
+
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/iceweasel]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
+- [[!tails_gitweb config/chroot_local-includes/etc/sudoers.d/zzz_tor-has-bootstrapped]]
+
+Once Tor is ready to be used, the user is informed they can now use
+the Internet:
+
+- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/60-tor-ready-notification.sh]]
+
 Source code, scripts and configuration:
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/iceweasel]]
