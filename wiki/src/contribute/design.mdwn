@@ -764,20 +764,29 @@ script also selects the right default input method.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/X11/Xsession.d/80im-starter]]
 
-## 3.4 Notification of security issues and new Tails release
+## 3.4 Notification of security issues and new Tails releases
 
-Shipped in Tails is a script that checks at each desktop start if
-security issues or new Tails releases are published on the website.
-If some are found, a graphical notification is displayed.
-The connections go through tor and are made over HTTPS with a pinned
-CA. The only information leaked to the Tails web server (apart of
-[[!cpan LWP::UserAgent]]'s specific User-Agent and HTTP behavior) is
-the first two chars of the `LANG` environment variable.
+Tails ships a script that checks if there are security issues that are
+not fixed by any Tails release (and thus, affect the currently running
+Tails regardless of its version). A desktop notification is displayed
+for every such issue.
 
-This script is run once Tor is known-working.
+The connections are made to the Tails website through Tor, over HTTPS
+with a pinned CA. The only piece of information leaked to the Tails
+web server (apart of [[!cpan LWP::UserAgent]]'s specific User-Agent
+and HTTP behavior) is the first two chars of the `LANG`
+environment variable.
+
+This script is run after the user has logged-in and Tor is
+in known-working state.
 
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check-wrapper]]
+
+Security issues that were fixed in a newer version of Tails are taken
+care of by [[Tails Upgrader|contribute/design/incremental_upgrades]]
+that tells the user whenever they should upgrade and leads them
+through the necessary steps.
 
 ## 3.5 Feedback
 
@@ -1120,11 +1129,11 @@ prefer strong ciphers and MACs..
 
 ### 3.6.21 Incremental upgrades
 
-PENDING-FOR-0.23:
-
 When a Tails release is out, Tails users are proposed to download and
 apply a partial upgrade (that is, only what has changed between two
 releases). See [[contribute/design/incremental_upgrades]] for details.
+To start with, this upgrade mechanism may be only available for
+point-releases.
 
 ## 3.7 Running Tails in virtual machines
 
