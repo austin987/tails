@@ -22,7 +22,7 @@ two gems we depend on hsa become unusabe: `ruby-libvirt`, which is
 highly critical for us, and `system_timer`, which is not so critical.
 
 A move to native Ruby would put us in a much better position, since
-all gems except `packetfu` ([[!debbug 719297 desc="RFP"]]) are packaged in Debian, and native Ruby
+all gems are packaged in Debian, and native Ruby
 still has a C extension. To be able to do this we need a replacement
 for the `sikuli-ruby` gem, though.
 
@@ -31,8 +31,7 @@ for the `sikuli-ruby` gem, though.
 ## Rjb
 
 [[rjb|<http://rjb.rubyforge.org/>]] seems maintained, if not actively developed.
-
-We've filed a [[!debbug 719301 desc="RFP bug"]] for RJB in the Debian BTS.
+It is now in Debian Jessie and wheezy-backports.
 
 Other projects using it or interesting stuff at:
 
@@ -43,6 +42,8 @@ Other projects using it or interesting stuff at:
 
 The jruby sikuli gem is quite simple, implementing it in Rjb can be as
 lightweight, or not.
+
+See [[!tails_ticket 6399]], `test/rjb-migration` branch.
 
 ## Wrapping Sikuli commands via a stand-alone Sikuli server
 
@@ -117,17 +118,4 @@ sends an ACK so `screen.wait()` can stop blocking execution.
 
 # Roadmap
 
-1. bertagaz investigates (hopefully done in early-mid April 2013)
-   whether a native ruby port of the `sikuli-ruby` gem (using Rjb or
-   other means) is possible, easy and maintainable. [[!tag todo/code]]
-
-1. If so, bertagaz or anonym will port the `sikuli-ruby` gem to native
-   Ruby.
-
-1. If not, anonym will implement the Sikuli wrapper server during the
-   summer 2013.
-
-In parallel to the above:
-
-1. `$someone` makes sure our [[!debbug 719297 desc="RFP"]] for the
-   `packetfu` Ruby gem is taken into account.
+Complete the move to Rjb in `test/rjb-migration`.

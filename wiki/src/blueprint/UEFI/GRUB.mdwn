@@ -1,0 +1,81 @@
+Prerequisite: Tails with an amd64 kernel (e.g. from current
+experimental branch).
+
+Tested with grub-efi 2.00-22 from Debian unstable.
+
+	sudo apt-get install grub-efi-amd64-bin
+
+	# make the system partition an *EFI System Partition* (ESP)
+	parted "$TAILS_DEVICE" set 1 boot on
+
+        MODULES="
+           all_video
+           bitmap
+           bitmap_scale
+           boot
+           btrfs
+           bufio
+           cat
+           chain
+           configfile
+           crypto
+           echo
+           efifwsetup
+           efi_gop
+           efinet
+           efi_uga
+           ext2
+           extcmd
+           fat
+           font
+           gettext
+           gfxmenu
+           gfxterm
+           gzio
+           halt
+           hfsplus
+           iso9660
+           jpeg
+           keystatus
+           linux
+           linuxefi
+           loadenv
+           memdisk
+           minicmd
+           normal
+           part_apple
+           part_gpt
+           part_msdos
+           password_pbkdf2
+           png
+           read
+           reboot
+           search
+           search_fs_file
+           search_fs_uuid
+           search_label
+           sleep
+           terminal
+           test
+           trig
+           video
+           video_fb
+        "
+
+	mkdir -p "$TAILS_MOUNTPOINT"/{boot/grub,EFI/BOOT} && \
+	   grub-mkimage --output="$TAILS_MOUNTPOINT"/EFI/BOOT/bootx64.efi \
+	      --format x86_64-efi $MODULES
+
+	cat > "$TAILS_MOUNTPOINT"/boot/grub/grub.cfg <<EOF
+	menuentry Tails --class start {
+		echo $"Loading Tails..."
+		linux /live/vmlinuz2 initrd=/live/initrd2.img boot=live config live-media=removable nopersistent noprompt timezone=Etc/UTC block.events_dfl_poll_msecs=1000 splash nox11autologin module=Tails quiet
+		initrd /live/initrd2.img
+	}
+	EOF
+
+* boots on ThinkPenguin Royal
+* boots on Macbook 13-inch Mid-2012 with rEFInd; one has to choose
+  *Fallback boot loader from Tails* in rEFInd, *Boot Linux from Tails*
+  does nothing at all
+

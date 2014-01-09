@@ -18,16 +18,6 @@ and merge the release tag if needed.
 
 Do extra changes if needed.
 
-Update PO and POT files
-=======================
-
-After importing PO files from Transifex, update PO and POT files to
-match new strings etc.:
-
-    make pot && \
-      rename -f 's,\.new$,,' po/*.new && \
-      git commit po -m 'Update POT and PO files.'
-
 Update the Debian package
 =========================
 
@@ -41,7 +31,7 @@ Merge upstream changes:
 
 Update `debian/changelog`:
 
-    git-dch
+    git-dch && dch -e
 
 (Do not forget to set the appropriate release.)
 
@@ -58,13 +48,10 @@ then manually download the corresponding tarball (which can be found
 in our Debian repo unless upstream just had a new release) and place
 it in `..`, and then re-run the command with `--git-no-pristine-tar`.
 
-Add a signed tag to the Git repository:
+Add a signed tag to the Git repository and push the changes:
 
-    git-buildpackage --git-tag-only --git-sign-tags
-
-Push the changes:
-
-    git push && git push --tags
+    git-buildpackage --git-tag-only --git-sign-tags && \
+       git push && git push --tags
 
 (Make sure both `master` and `debian` are pushed.)
 

@@ -1,17 +1,14 @@
 #! /usr/bin/perl
 
 use strict;
-use warnings;
+use warnings FATAL => 'all';
+use 5.10.1;
 
 #man{{{
 
 =head1 NAME
 
 tails-security-check
-
-=head1 VERSION
-
-Version X.XX
 
 =cut
 
@@ -20,7 +17,7 @@ Version X.XX
 
 =head1 SYNOPSIS
 
-tails-security-check [ ATOM_FEED_BASE_URL [ BUILD_DATE ] ]
+tails-security-check [ ATOM_FEED_BASE_URL ]
 
   ATOM_FEED_BASE_URL will be appended /index.XX.atom,
   for XX in (current locale's language code, 'en'),
@@ -28,19 +25,17 @@ tails-security-check [ ATOM_FEED_BASE_URL [ BUILD_DATE ] ]
 
 =head1 AUTHOR
 
-Tails dev team <amnesia@boum.org>
+Tails developers <tails@boum.org>
 See https://tails.boum.org/.
 
 =cut
 
 #}}}
 
-use feature qw/say/;
 use Carp;
-use DateTime;
-use DateTime::Format::ISO8601;
+use Carp::Assert::More;
 use Desktop::Notify;
-use Fatal qw( open close );
+use Fatal qw{open close};
 use Locale::gettext;
 use POSIX;
 use XML::Atom;
@@ -63,30 +58,10 @@ textdomain("tails");
 
 ### configuration
 
-my $version_file = '/etc/amnesia/version';
+my $version_file     = '/etc/amnesia/version';
 my $default_base_url = 'https://tails.boum.org/security/';
 
-### helper subs
-
-=head2 build_date
-
-Argument: file which the version information must be extracted from.
-
-Returns a DateTime object that represents the build time extracted
-from the version file.
-
-=cut
-sub build_date {
-    my $version_file = shift;
-
-    open my $version_h, '<', $version_file;
-    my ($version, $date) = ( <$version_h> =~ /(.*) - (\d+)(?:\n)?$/ );
-    close $version_h;
-    if (!defined $date || !$date) {
-        croak gettext("Unparseable line in %s", $version_file);
-    }
-    return DateTime::Format::ISO8601->parse_datetime( $date );
-}
+=head1 FUNCTIONS
 
 =head2 current_lang
 
@@ -108,15 +83,13 @@ Returns the Atom's feed content on success, undef on failure.
 =cut
 sub atom_str {
     my $url = shift;
-
-    if (!defined $url) {
-        croak gettext("atom_str was passed an undefined argument");
-    }
+    assert_defined($url);
 
     $ENV{HTTPS_VERSION} = 3;
 
     my $ua  = LWP::UserAgent->new;
-    $ua->proxy([qw(http https)] => 'socks://127.0.0.1:9062');
+    $ua->proxy([qw(http https)] => 'socks://127.0.0.1:9062')
+        unless $ENV{DISABLE_PROXY};
     my $req = HTTP::Request->new('GET', $url);
     my $res = $ua->request($req);
     if (defined $res && $res->is_success) {
@@ -126,39 +99,20 @@ sub atom_str {
     return undef;
 }
 
-=head2 is_newer_than
+=head2 get_entries
 
-Arguments: a XML::Atom::Entry, a DateTime object
+Arguments: the Atom feed URL.
 
-Returns true if, and only if, the published field of the Atom entry is
-newer than the time represented by the DateTime object.
-
-=cut
-sub is_newer_than {
-    my $entry = shift;
-    my $ref_dt = shift;
-
-    my $entry_published_dt = DateTime::Format::ISO8601->parse_datetime($entry->published);
-    if (DateTime->compare( $entry_published_dt, $ref_dt) == 1) {
-        return 1;
-    }
-    return undef;
-}
-
-=head2 get_new_entries
-
-Arguments: the Atom feed URL, a DateTime reference object.
-
-Returns the list of XML::Atom::Entry's, taken from the feed, that have
-been published after the reference time.
+Returns the list of XML::Atom::Entry objects from the feed.
 
 We use this poor man's manual Accept-Language algorithm as the website
 layout does not allow us to use content negotiation.
 
 =cut
-sub get_new_entries {
+sub get_entries {
     my $base_url = shift;
-    my $since_dt = shift;
+    assert_defined($base_url);
+    assert_nonblank($base_url);
 
     my $separator = '';
     $separator = '/' unless $base_url =~ m{/\z}xms;
@@ -172,12 +126,9 @@ sub get_new_entries {
     foreach my $url (@try_urls) {
         last if ($feed_str = atom_str($url));
     }
+    assert_defined($feed_str);
 
-    if (!defined $feed_str) {
-        croak gettext("Empty fetched feed.");
-    }
-    my $feed = XML::Atom::Feed->new(\$feed_str);
-    return grep { is_newer_than($_, $since_dt) } $feed->entries();
+    return XML::Atom::Feed->new(\$feed_str)->entries();
 }
 
 =head2 notify_user
@@ -194,23 +145,65 @@ sub notify_user {
     my $summary = gettext('This version of Tails has known security issues:');
     my $body = '';
 
-    map { $body = $body
-              . '- '
-              . '<a href="'
-              . $_->id
-              . '">'
-              . $_->title
-              . '</a>'
-              . "\n";
-      } @entries;
+    for (@entries) {
+        $body .= '- ' . '<a href="' . $_->id . '">' . $_->title . '</a>' . "\n";
+    }
+
+    say $body;
 
     $notify->create(summary => $summary,
                     body => $body,
                     timeout => 0)->show();
 }
 
-### sanity checks
+=head2 categories
 
+Return the list of categories of the input XML::Atom::Entry object.
+
+=cut
+sub categories {
+    my $entry = shift;
+    my $ns = XML::Atom::Namespace->new(
+        dc => 'http://purl.org/dc/elements/1.1/'
+    );
+    my @category = ($entry->can('categories'))
+        ? $entry->categories
+        : $entry->category;
+    @category
+        ? (map { $_->label || $_->term } @category)
+        : $entry->getlist($ns, 'subject');
+}
+
+=head2 is_not_fixed
+
+Returns true iff. the input XML::Atom::Entry object hasn't the
+security/fixed tag.
+
+=cut
+sub is_not_fixed {
+    my $entry = shift;
+    assert_isa($entry, 'XML::Atom::Entry');
+
+    ! grep { 'security/fixed' } categories($entry);
+}
+
+=head2 unfixed_entries
+
+Filter the input list of XML::Atom::Entry objects to only keep entries
+that are not marked as fixed yet.
+
+=cut
+sub unfixed_entries {
+    my @entries = @_;
+
+    grep { is_not_fixed($_) } @entries;
+}
+
+=head1 MAIN
+
+=head2 sanity checks
+
+=cut
 if (! -e "$version_file") {
     die "The Tails version file ($version_file) does not exist."
 }
@@ -218,25 +211,21 @@ if (! -r "$version_file") {
     die "The Tails version file ($version_file) is not readable."
 }
 
-### parse command line args
+=head2 parse command line args
 
-my $base_url = shift || $default_base_url;
+=cut
+my $base_url  = shift || $default_base_url;
 my $opt_since = shift;
-my $since_dt;
-if (defined $opt_since) {
-    $since_dt = DateTime::Format::ISO8601->parse_datetime($opt_since);
-}
-else {
-    $since_dt = build_date($version_file);
-}
 
-### main
 
-my @newer_entries = get_new_entries($base_url, $since_dt);
+=head2 do the work
 
-if (! @newer_entries) {
+=cut
+my @unfixed_entries = unfixed_entries(get_entries($base_url));
+
+if (! @unfixed_entries) {
     exit 0;
 }
 else {
-    notify_user(@newer_entries);
+    notify_user(@unfixed_entries);
 }

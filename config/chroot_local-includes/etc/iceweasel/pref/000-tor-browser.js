@@ -40,6 +40,14 @@ pref("browser.safebrowsing.enabled", false);
 pref("browser.safebrowsing.malware.enabled", false);
 pref("browser.download.manager.scanWhenDone", false); // prevents AV remote reporting of downloads
 pref("extensions.ui.lastCategory", "addons://list/extension");
+pref("datareporting.healthreport.service.enabled", false); // Yes, all three of these must be set
+pref("datareporting.healthreport.uploadEnabled", false);
+pref("datareporting.policy.dataSubmissionEnabled", false);
+pref("security.mixed_content.block_active_content", false); // Disable until https://bugzilla.mozilla.org/show_bug.cgi?id=878890 is patched
+pref("browser.syncPromoViewsLeftMap", "{\"addons\":0, \"passwords\":0, \"bookmarks\":0}"); // Don't promote sync
+pref("services.sync.engine.prefs", false); // Never sync prefs, addons, or tabs with other browsers
+pref("services.sync.engine.addons", false);
+pref("services.sync.engine.tabs", false);
 
 // Fingerprinting
 pref("webgl.min_capability_mode", true);
@@ -53,7 +61,7 @@ pref("general.appname.override", "Netscape");
 pref("general.appversion.override", "5.0 (Windows)");
 pref("general.oscpu.override", "Windows NT 6.1");
 pref("general.platform.override", "Win32");
-pref("general.useragent.override", "Mozilla/5.0 (Windows NT 6.1; rv:17.0) Gecko/20100101 Firefox/17.0");
+pref("general.useragent.override", "Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0");
 pref("general.productSub.override", "20100101");
 pref("general.buildID.override", "20100101");
 pref("browser.startup.homepage_override.buildID", "20100101");
@@ -92,6 +100,7 @@ pref("network.protocol-handler.warn-external.snews", true);
 pref("plugins.click_to_play", true);
 pref("plugin.state.flash", 1);
 pref("plugins.hide_infobar_for_missing_plugin", true);
+pref("media.peerconnection.enabled", false); // Disable WebRTC interfaces
 
 // Network and performance
 pref("network.http.pipelining", true);
@@ -124,7 +133,9 @@ pref("xpinstall.whitelist.add.36", "");
 pref("keyword.URL", "https://startpage.com/do/search?q=");
 
 // Hacks/workarounds: Direct2D seems to crash w/ lots of video cards w/ MinGW?
+// Nvida cards also experience crashes without the second pref set to disabled
 pref("gfx.direct2d.disabled", true);
+pref("layers.acceleration.disabled", true);
 
 // Version placeholder
 pref("torbrowser.version", "UNKNOWN");

@@ -11,6 +11,7 @@ Feature: Various checks
     And I have closed all annoying notifications
     And I save the state so the background can be restored next scenario
 
+  # FIXME: #5972
   Scenario: VirtualBox guest modules are available
     When Tails has booted a 686-pae kernel
     Then the VirtualBox guest modules are available

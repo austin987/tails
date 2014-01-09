@@ -63,15 +63,6 @@ ${@}"
     exit 1
 }
 
-warning () {
-    local cli_text="${CMD}: `gettext \"warning:\"` ${text}"
-    local dialog_text="<b><big>`gettext \"Warning\"`</big></b>
-
-${@}"
-    echo "${cli_text}" >&2
-    sudo -u ${SUDO_USER} zenity --warning --title "" --text "${dialob_text}"
-}
-
 verify_start () {
     # Make sure the user really wants to start the browser
     local dialog_msg="<b><big>`gettext \"Do you really want to launch the Unsafe Browser?\"`</big></b>
@@ -164,6 +155,8 @@ configure_chroot () {
         ${CHROOT}/etc/iceweasel/*/*.js
     echo 'user_pref("network.proxy.type", 0);' >> \
         ${CHROOT}/etc/iceweasel/profile/user.js
+    echo 'user_pref("network.proxy.socks_remote_dns", false);' >> \
+        ${CHROOT}/etc/iceweasel/profile/user.js
     rm -rf ${CHROOT}/etc/iceweasel/profile/extensions
 
     # Set a scary theme (except if we're using Windows camouflage)
@@ -214,7 +207,7 @@ run_browser_in_chroot () {
     echo "* Starting Unsafe Browser"
 
     sudo -u ${SUDO_USER} xhost +SI:localuser:${CLEARNET_USER} 2>/dev/null
-    chroot ${CHROOT} sudo -u ${CLEARNET_USER} iceweasel -DISPLAY=:0.0
+    chroot ${CHROOT} sudo -u ${CLEARNET_USER} /usr/bin/iceweasel -DISPLAY=:0.0
     sudo -u ${SUDO_USER} xhost -SI:localuser:${CLEARNET_USER} 2>/dev/null
 }
 

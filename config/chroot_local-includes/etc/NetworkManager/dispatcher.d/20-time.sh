@@ -173,11 +173,6 @@ tor_cert_valid_after() {
 	    ${TOR_LOG} | tail -n 1
 }
 
-tor_bootstrap_progress() {
-	grep -o "\[notice\] Bootstrapped [[:digit:]]\+%:" ${TOR_LOG} | \
-	    tail -n1 | sed "s|\[notice\] Bootstrapped \([[:digit:]]\+\)%:|\1|"
-}
-
 tor_cert_lifetime_invalid() {
 	# To be sure that we only grep relevant information, we
 	# should delete the log when Tor is started, which we do

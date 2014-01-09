@@ -29,6 +29,11 @@ tor_control_setconf() {
 	tor_control_send "SETCONF ${1}" >/dev/null
 }
 
+tor_bootstrap_progress() {
+	grep -o "\[notice\] Bootstrapped [[:digit:]]\+%:" ${TOR_LOG} | \
+	    tail -n1 | sed "s|\[notice\] Bootstrapped \([[:digit:]]\+\)%:|\1|"
+}
+
 # Potential Tor bug: it seems like using this version makes Tor get
 # stuck at "Bootstrapped 5%" quite often. Is Tor sensitive to opening
 # control ports and/or issuing "getinfo status/bootstrap-phase" during
