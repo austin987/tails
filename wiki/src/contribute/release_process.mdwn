@@ -19,6 +19,8 @@ the scripts snippets found on this page:
 * `MAJOR_RELEASE`: set to 1 if preparing a major release, to 0 else
 * `ISOS`: the directory where one stores `tails-i386-*`
   sub-directories like the ones downloaded with BitTorrent.
+* `ARTIFACTS`: the directory where build artifacts (e.g.
+  the `.packages` file) land.
 * `MASTER_CHECKOUT`: a checkout of the `master` branch of the main
   Tails Git repository.
 * `RELEASE_CHECKOUT`: a checkout of the branch of the main Tails Git
@@ -284,7 +286,7 @@ First, create a directory with a suitable name and go there:
 Second, copy the built image to this brand new directory.
 Then, rename it:
 
-	mv *.iso "tails-i386-$VERSION.iso"
+	mv "$ARTIFACTS/tails-i386-*-$VERSION-*.iso" "tails-i386-$VERSION.iso"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
@@ -493,19 +495,37 @@ steps. Please read on!
 Update the website and Git repository
 =====================================
 
+What follows in this section happens on the `master` branch in
+`$MASTER_CHECKOUT`.
+
+If preparing a final release
+----------------------------
+
+Skip this part if preparing a RC.
+
 In order to get any new documentation into the website, merge either
 `stable` or `testing` (depending on which release you just did) into
 `master`.
 
-Rename the `.packages` file to remove the `.iso` part of its name.
+Rename the `.packages` file to remove the `.iso` and build date parts
+of its name:
 
-If preparing a final release, copy the `.iso.sig`, `.packages`,
-`.torrent` and `.torrent.sig` files into the Git repository's
-`wiki/src/torrents/files/` directory and remove the one for the
-previous release (including any RCs). If preparing an RC, only copy
-the `.iso.sig`.
+	mv "$ARTIFACTS"/tails-i386-*-"$VERSION"-*.iso.packages \
+	   "$ARTIFACTS/tails-i386-$VERSION.packages"
 
-If preparing a final release, generate the SHA-256 hash of every image
+Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
+into the website repository:
+
+	cp "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso.sig" \
+	   "$ARTIFACTS/tails-i386-$VERSION.packages" \
+	   "$ISOS/tails-i386-$VERSION.torrent" \
+	   "$ISOS/tails-i386-$VERSION.torrent.sig" \
+	   "$MASTER_CHECKOUT/wiki/src/torrents/files/"
+
+Remove from `wiki/src/torrents/files/` any remaining file from the
+previous release (including any RC).
+
+Generate the SHA-256 hash of every image
 to be released in `inc/*`:
 
 	sha256sum $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
@@ -515,15 +535,17 @@ to be released in `inc/*`:
 Update the [[support/known_issues]] page.
 
 Write the announcement for the release in
-`news/version_$VERSION.mdwn`, including:
+`news/version_$TAG.mdwn`, including:
 
 - Update the `meta title` directive.
+- Update the `meta date` directive.
 - Make sure there's an `announce` tag to have an email sent to the
   news mailing-list.
 - Document important config changes that persistence users have to do
   themselves (e.g. the Pidgin proxy settings change in
   [[!tails_gitweb_commit 9925321]] breaks all existing persistent
   profiles).
+- Document known issues.
 
 Write an announcement listing the security bugs affecting the previous
 version in `security/` in order to let the users of the old versions
@@ -541,14 +563,39 @@ image to be released was *built*. Including:
 - the list of MFSA fixed by the iceweasel update:
   <https://www.mozilla.org/security/announce/>
 
-Generate PO files for the release and security announcements with
-`./build-wiki`.
+If preparing a release candidate
+--------------------------------
+
+Skip this part if preparing a final release.
+
+Copy the `.iso.sig` file into the website repository:
+
+	cp "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso.sig" \
+	   "$MASTER_CHECKOUT/wiki/src/torrents/files/"
+
+Write the announcement for the release in
+`$MASTER_CHECKOUT/wiki/src/news/test_$TAG.html`, including:
+
+- Update the `meta title` directive.
+- Update the `meta date` directive.
+- Document important config changes that persistence users have to do
+  themselves (e.g. the Pidgin proxy settings change in
+  [[!tails_gitweb_commit 9925321]] breaks all existing persistent
+  profiles).
+- Document known issues.
+
+In any case
+-----------
+
+Generate PO files for the announcements with `./build-wiki`.
+
 Then, send them to <tails-l10n@boum.org> so that they get translated
 shortly, perhaps even soon enough to integrate them before pushing the
 release out officially.
 
 Then, record the last commit before putting the release out for real:
 
+	git add wiki/src && \
 	git commit -m "releasing version ${VERSION}"
 
 Go wild!
@@ -567,13 +614,15 @@ Push
 
 Push the last commits to our Git repository:
 
-	git push
+	( cd "$MASTER_CHECKOUT" && git push )
 
 ... and ask <root@boum.org> to refresh the ikiwiki wrappers for
 our website.
 
 Bug tracker
 -----------
+
+Skip this part if preparing a release candidate.
 
 Mark all issues fixed in this release as `Status: Resolved` in our bug
 tracker. For a list of candidates, see the [issues in *Fix committed*
@@ -616,6 +665,8 @@ who's happy to do it.
 
 Prepare for the next release
 ============================
+
+XXX: adapt / fork for release candidates.
 
 1. Move the previous stable release to `obsolete` on the mirrors.
 1. Remove any remaining RC for the just-published release from
