@@ -10,9 +10,12 @@ Environment
 Export the following environment variables to be able to copy'n'paste
 the scripts snippets found on this page:
 
-* `VERSION`: the version number of the release being prepared.
-* `export TAG=$(echo "$VERSION" | sed -e 's,~,-,')`
-* `PREVIOUS_VERSION`: the version number of the previous release.
+* version numbers:
+
+      export VERSION=$(dpkg-parsechangelog -SVersion)
+      export TAG=$(echo "$VERSION" | sed -e 's,~,-,')
+      export PREVIOUS_VERSION=$(dpkg-parsechangelog --offset 1 --count 1 -SVersion)
+
 * `MAJOR_RELEASE`: set to 1 if preparing a major release, to 0 else
 * `ISOS`: the directory where one stores `tails-i386-*`
   sub-directories like the ones downloaded with BitTorrent.
@@ -73,7 +76,7 @@ Patterns are stored in
 8. Commit:
 
        git commit -m 'Update AdBlock Plus patterns.' \
-          config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini`
+          config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini
 
 Upgrade bundled binary Debian packages
 --------------------------------------
@@ -100,10 +103,9 @@ Then see the relevant release processes:
 * [[persistence-setup]]
 * [[tails-iuk]]
 * whisperback:
-  * see release process on
-    <https://git-tails.immerda.ch/whisperback/plain/HACKING>
-  * build a debian package
-  * upload it to [[APT repository]]
+  * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
+  * build a Debian package
+  * upload it to our [[APT repository]]
 
 Update PO files
 ---------------
@@ -148,8 +150,12 @@ Then, launch an editor for the needed cleanup of the result:
 
 	dch -e
 
-Then, gather other useful information from every custom bundled
-package's own Changelog (Greeter, Persistent Volume Assistant, etc.).
+Then, gather other useful information from:
+
+* every custom bundled package's own Changelog (Greeter, Persistent
+  Volume Assistant, etc.);
+* the "Fix committed" section on the [Release Manager
+  View](https://labs.riseup.net/code/projects/tails/issues?query_id=130).
 
 Finally, commit:
 
@@ -203,9 +209,17 @@ points translators to up-to-date PO files:
 
 	./build-wiki && git add wiki/src && git commit -m 'Update website PO files.'
 
-If at freeze time, ask on tails-l10n that someone checks the PO files
-of `po/` and of the website [[using
-`check_po.sh`|contribute/l10n_tricks]], and corrects all the errors.
+Call for translation
+====================
+
+If at freeze time:
+
+1. Ask on tails-l10n that someone checks the PO files of `po/` and of
+   the website [[using `check_po.sh`|contribute/l10n_tricks]], and
+   corrects all the errors.
+2. Send a call for translations to tails-l10n, making it clear what
+   Git branch the translations must be based on, and what are
+   the priorities.
 
 Tag the release in Git
 ======================
@@ -338,7 +352,7 @@ Do **not** skip this step when preparing a major release.
    This is what `tails-iuk-generate-ugrade-description-files` tool
    does:
 
-       cd $IUK_CHECKOUT && \
+       ( cd $IUK_CHECKOUT && \
        ./bin/tails-iuk-generate-upgrade-description-files \
            --version "$VERSION" \
            --iso "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso" \
@@ -346,7 +360,8 @@ Do **not** skip this step when preparing a major release.
            --previous-version "${VERSION}-rc1" \
            --iuks "$ISOS" \
            --release-checkout "$RELEASE_CHECKOUT" \
-           --major-release "$MAJOR_RELEASE"
+           --major-release "$MAJOR_RELEASE" \
+       )
 
    Note:
    * The `--iuks` argument must point to the directory where the IUKs
@@ -357,6 +372,7 @@ Do **not** skip this step when preparing a major release.
    * A few (say, 2 or 3) older versions must be passed with
      `--previous-version`, so that users who skipped a release or two
      are directly informed of the new one.
+   * If preparing a release candidate, add `--channel alpha`
 
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
@@ -379,9 +395,9 @@ Do **not** skip this step when preparing a major release.
 
 1. Check the syntactic correctness of all upgrade-description files:
 
-       cd $IUK_CHECKOUT && \
+       ( cd $IUK_CHECKOUT && \
           ./bin/tails-iuk-check-upgrade-description-file \
-             ${RELEASE_CHECKOUT}/wiki/src/upgrade/v1/*/*/*/*/upgrades.yml
+             ${RELEASE_CHECKOUT}/wiki/src/upgrade/v1/*/*/*/*/upgrades.yml )
 
 Upload images
 =============
@@ -418,7 +434,7 @@ rsync.lizard:
         scp -3 -r \
             bittorrent.lizard:/var/lib/transmission-daemon/downloads/tails-i386-$VERSION \
             rsync.lizard:
-    # set DIST to either 'testing' (for RC:s) or 'stable' (for actual releases)
+    # set DIST to either 'alpha' (for RC:s) or 'stable' (for actual releases)
     ssh rsync.lizard << EOF
       chown -R root:rsync_tails tails-i386-$VERSION
       chmod -R u=rwX,go=rX tails-i386-$VERSION
