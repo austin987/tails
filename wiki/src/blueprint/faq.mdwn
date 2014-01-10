@@ -73,8 +73,8 @@ The problem with using BitTorrent over Tor is double:
   - It harms the network, see:
     <https://blog.torproject.org/blog/why-tor-is-slow>.
 
-We have (relatively vague) [[!tails_ticket 5991 desc="plans to improve
-this situation"]], though.
+We have a relatively vague [[!tails_ticket 5991 desc="plans to improve
+on this situation"]].
 
 Is it safe to use Tails on a compromised system?
 ------------------------------------------------
@@ -177,15 +177,15 @@ It is not possible to verify the integrity of a Tails device when running Tails
 from this same device. This would be like asking to someone whether she is a
 liar; the answer of a true liar would always be "no".
 
-- To verify the integrity of a DVD from a separate trusted system , you can
+- To verify the integrity of a DVD from a separate trusted system, you can
   verify the signature of the ISO image as documented in [[verify the ISO image
   using the command line|doc/get/verify_the_iso_image_using_the_command_line]]
   against the DVD itself.
 
 - There is no documented method of verifying the integrity of a USB stick or SD
   card installed using <span class="application">Tails
-  Installer</span>. However, given another trusted Tails system,
-  [[cloning it onto the untrusted one|doc/first_steps/upgrade]] will
+  Installer</span>. However, if you have another trusted Tails device,
+  you can [[clone it onto the untrusted device|doc/first_steps/upgrade]] to
   reset it to a trusted state.
 
 Is Java installed in the Tails browser?
@@ -276,54 +276,75 @@ same nickname by default, etc.
 Tails is a full operating system, so a *new identity* should be thought on a
 broader level than only changing the Tor circuits.
 
+Can my favourite software be included in Tails?
+-----------------------------------------------
+
+First of all, make sure that this software is already available in Debian, as
+this is a requirement to be included in Tails. Adding to Tails software which is
+not in Debian imply an additional workload that could compromise the
+sustainability of the project. On top of that, being in Debian brings many
+advantages:
+
+  - It is included in the Debian process for security updates and new versions.
+  - It is authenticated using OpenPGP signatures.
+  - It is under the scrutiny of the Debian community and its many users and
+    derivatives, including Ubuntu.
+
+To check whether a software is in Debian, search for it on
+<https://packages.debian.org/>. If it is not yet available in Debian, you should
+ask its developers why it is not the case yet.
+
+Second, this software might not be useful to accomplish our design goals. Refer
+to our [[design documents|contribute/design]] to understand which are the use
+cases and assumptions on which Tails is based.
+
+We also try to limit the quantity of software included in Tails, and we only add
+new software with a very good reason to do so:
+
+  - We try to limit the growth of the ISO image.
+  - More software implies more security issues.
+  - We avoid proposing several options to accomplish the same task.
+  - If a package needs to be removed after its inclusion, for example because of
+    security problems, then this might be problematic as users might rely on it.
+
+After considering all this, if you still think that this software is a good
+candidate to be included in Tails, please [[explain us|/contribute/talk]] your
+proposal.
+
+<div class="tip">
+
+If a software is not included in Tails, but is included in Debian, you can use
+the [[additional
+software|doc/first_steps/persistence/configure#additional_software]] feature of
+the persistent volume to install it automatically at the beginning of each
+working session.
+
+</div>
+
+What is the relationship between Tor and Tails?
+-----------------------------------------------
+
+The Tor software is made by [The Tor Project](https://torproject.org/).
+
+Tails is an separate project made by a different group of people.
+
+Tails is a complete operating system which uses Tor as its default networking
+application. The Tor Project recommends the usage of Tails for the use cases
+that are not covered by its own projects (for example the <span
+class="application">Tor Browser</span>).
+
+But many people use Tor outside of Tails, and many people use Tails to do other
+things than accessing the Internet through Tor, for example to work offline on
+sensitive documents.
+
+<div class="note">
+
+Tails also allows you to connect to [[I2P|doc/anonymous_internet/i2p]], which
+is another anonymous network different from Tor.
+
+</div>
+
 <rawmaterial>
-
-Random package
---------------
-
-That is not an official Debian package and in that sense it won't benefit from
-the many advantages of a real inclusion in Debian, which makes it otherwise
-non-sustainable for us to include such packages:
-
-  - be under the scrutiny of the Debian community
-  - provide OpenPGP signed packages
-  - follow the Debian process for security updates and new versions
-
-But if Retroshare already proposes a non-official Debian package, maybe they are not so far from having it into Debian. You could check with them if that is in their plan.
-
-Why doesn't Tails ship software XYZ?
-
-First of all, please ask yourself, seriously, why should Tails ship
-software XYZ.
-
-There are many, many possible reasons why Tails does not ship software
-XYZ.
-
-0. It may have licensing issues that prohibit us from shipping it (or
-   shipping modified versions of it, which is just as bad).
-0. It may not be part of Debian stable, or even part of Debian, or
-   even packaged for Debian.
-0. It may be in conflict with our [[specification|contribute/design]],
-   or it may satisfy use cases Tails is not supposed to support.
-0. It may have privacy or anonymity issues. Was it ever audited in
-   this context?
-
-Also, generally we try not to add too much software into Tails,
-and are very careful before adding more stuff:
-
-* More software implies more security issues.
-* We do care about backward compatibility. Removing a software package
-  is problematic, even if it should be removed due to e.g. security
-  concerns, since users may have come to rely on it. In these cases we
-  really want to provide them with suitable alternatives.
-* Tails ISO image size matters.
-
-To end with, it might be that we simply have not thought of software
-XYZ yet. Reading our [[design document|contribute/design]] may help
-you understand which use cases Tails covers and hence which types of
-software we may consider. If you feel that XYZ would fill up an empty
-space, please [[!tails_redmine "" desc="suggest it to us"]] and give valid
-points for its inclusion.
 
 Proxy
 -----
