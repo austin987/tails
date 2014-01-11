@@ -17,47 +17,47 @@ bindtextdomain(PACKAGE, LOCALE_DIR)
 textdomain(TEXT_DOMAIN)
 
 def applet_factory(applet, iid):
-   image = Gtk.Image()
-   image.set_from_file('/usr/share/icons/tails-system-shutdown.png')
-   applet.add(image)
-   applet.connect('button-press-event', show_action_menu)
-   applet.show_all()
-   return True
+    image = Gtk.Image()
+    image.set_from_file('/usr/share/icons/tails-system-shutdown.png')
+    applet.add(image)
+    applet.connect('button-press-event', show_action_menu)
+    applet.show_all()
+    return True
 
 def show_action_menu(applet, event):
-   # Magic number denotes "left mouse button"
-   if event.button != 1:
-      return
+    # Magic number denotes "left mouse button"
+    if event.button != 1:
+        return
 
-   menu = Gtk.Menu()
-   menu_entries = [
-#                  [_("Lock Screen"),          'gnome-lockscreen', lock_screen],
+    menu = Gtk.Menu()
+    menu_entries = [
+#                   [_("Lock Screen"),          'gnome-lockscreen', lock_screen],
                    [_("Shutdown Immediately"), 'gnome-shutdown',   shutdown],
                    [_("Reboot Immediately"),   'gtk-refresh',      reboot]
                   ]
-   for [label, icon_name, action] in menu_entries:
-      item = Gtk.ImageMenuItem.new_with_label(label)
-      icon = Gtk.Image()
-      icon.set_from_icon_name(icon_name, Gtk.IconSize.MENU)
-      item.set_image(icon)
-      item.connect("activate", action)
-      item.show()
-      menu.add(item)
-   menu.popup(parent_menu_shell=None,
-              parent_menu_item=None,
-              func=None,
-              data=None,
-              button=event.button,
-              activate_time=event.time)
-
+    for [label, icon_name, action] in menu_entries:
+        item = Gtk.ImageMenuItem.new_with_label(label)
+        icon = Gtk.Image()
+        icon.set_from_icon_name(icon_name, Gtk.IconSize.MENU)
+        item.set_image(icon)
+        item.connect("activate", action)
+        item.show()
+        menu.add(item)
+    menu.popup(parent_menu_shell=None,
+               parent_menu_item=None,
+               func=None,
+               data=None,
+               button=event.button,
+               activate_time=event.time)
+ 
 def lock_screen(widget):
-   subprocess.call(["gnome-screensaver-command", "--lock"])
+    subprocess.call(["gnome-screensaver-command", "--lock"])
 
 def shutdown(widget):
-   subprocess.call(["sudo", "-n", "halt"])
+    subprocess.call(["sudo", "-n", "halt"])
 
 def reboot(widget):
-   subprocess.call(["sudo", "-n", "reboot"])
+    subprocess.call(["sudo", "-n", "reboot"])
 
 import sys
 # run it in a gtk window
@@ -72,6 +72,6 @@ if len(sys.argv) > 1 and sys.argv[1] == "test":
 
 if __name__ == '__main__':
     PanelApplet.Applet.factory_main("ShutdownHelperFactory",
-       PanelApplet.Applet.__gtype__,
-       applet_factory,
-       None)
+        PanelApplet.Applet.__gtype__,
+        applet_factory,
+        None)
