@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-import gtk
-import gnomeapplet
 import subprocess
 from gettext import gettext as _
 from gettext import bindtextdomain, textdomain
 from os import sep
 from locale import setlocale, LC_ALL
+
+from gi.repository import Gtk
+from gi.repository import PanelApplet
 
 LOCALE_PREFIX = "%susr" % (sep)
 LOCALE_DIR = "%s%sshare%slocale" % ( LOCALE_PREFIX, sep, sep )
@@ -16,7 +17,7 @@ bindtextdomain(PACKAGE, LOCALE_DIR)
 textdomain(TEXT_DOMAIN)
 
 def applet_factory(applet, iid):
-   image = gtk.Image()
+   image = Gtk.Image()
    image.set_from_file('/usr/share/icons/tails-system-shutdown.png')
    applet.add(image)
    applet.connect('button-press-event', show_action_menu)
@@ -28,21 +29,26 @@ def show_action_menu(applet, event):
    if event.button != 1:
       return
 
-   menu = gtk.Menu()
+   menu = Gtk.Menu()
    menu_entries = [
 #                  [_("Lock Screen"),          'gnome-lockscreen', lock_screen],
                    [_("Shutdown Immediately"), 'gnome-shutdown',   shutdown],
                    [_("Reboot Immediately"),   'gtk-refresh',      reboot]
                   ]
    for [label, icon_name, action] in menu_entries:
-      item = gtk.ImageMenuItem(label, True)
-      icon = gtk.Image()
-      icon.set_from_icon_name(icon_name, gtk.ICON_SIZE_MENU)
+      item = Gtk.ImageMenuItem.new_with_label(label)
+      icon = Gtk.Image()
+      icon.set_from_icon_name(icon_name, Gtk.IconSize.MENU)
       item.set_image(icon)
       item.connect("activate", action)
       item.show()
       menu.add(item)
-   menu.popup(None, None, None, event.button, event.time)
+   menu.popup(parent_menu_shell=None,
+              parent_menu_item=None,
+              func=None,
+              data=None,
+              button=event.button,
+              activate_time=event.time)
 
 def lock_screen(widget):
    subprocess.call(["gnome-screensaver-command", "--lock"])
@@ -56,18 +62,18 @@ def reboot(widget):
 import sys
 # run it in a gtk window
 if len(sys.argv) > 1 and sys.argv[1] == "test":
-    main_window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+    main_window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
     main_window.set_title("Shutdown Helper")
-    main_window.connect("destroy", gtk.mainquit) 
-    app = gnomeapplet.Applet()
+    main_window.connect("destroy", Gtk.main_quit)
+    app = PanelApplet.Applet()
     applet_factory(app, None)
     app.reparent(main_window)
     main_window.show_all()
-    gtk.main()
+    Gtk.main()
     sys.exit()
 
 if __name__ == '__main__':
-   gnomeapplet.bonobo_factory('OAFIID:ShutdownHelper_Factory',
-                              gnomeapplet.Applet.__gtype__,
-                              _("Shutdown Helper"), '0.1',
-                              applet_factory)
+    PanelApplet.Applet.factory_main("ShutdownHelperFactory",
+       PanelApplet.Applet.__gtype__,
+       applet_factory,
+       None)
