@@ -8,6 +8,7 @@ import sys
 from gettext import gettext as _
 from gettext import bindtextdomain, textdomain
 
+from gi.repository import Gdk
 from gi.repository import Gtk
 from gi.repository import PanelApplet
 
@@ -28,8 +29,7 @@ def applet_factory(applet, iid, data=None):
     return True
 
 def show_action_menu(applet, event):
-    # Magic number denotes "left mouse button"
-    if event.button != 1:
+    if event.button != Gdk.BUTTON_PRIMARY:
         return
 
     menu = Gtk.Menu()
