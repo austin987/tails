@@ -1,8 +1,56 @@
-tails (0.22.1) UNRELEASED; urgency=medium
+tails (0.22.1~rc1) unstable; urgency=medium
 
-  * Placeholder for next release.
+  * Security fixes
+    - Update NSS to 3.14.5-1~bpo60+1.
 
- -- Tails developers <tails@boum.org>  Sun, 15 Dec 2013 22:58:08 +0100
+  * Major new features
+    - Check for upgrades availability using Tails Upgrader, and propose
+      to apply an incremental upgrade whenever possible (Closes: #6014).
+      · Run tails-update-frontend at session login time.
+      · Have tails-security-check only report unfixed security issues.
+      · Greatly improve the Tails Upgrader UI and strings phrasing.
+      · Enable startup notification for Tails Upgrader.
+    - Install Linux 3.12 (3.12.6-2) from Debian testing. Unfortunately,
+      this breaks the memory wipe feature on some hardware (#6460), but
+      it fixes quite a few security issues, and improves hardware support.
+    - Update the build system to be compatible with Vagrant 1.2 and 1.3,
+      in addition to the already supported versions (Closes: #6221).
+      Thanks to David Isaac Wolinsky <isaac.wolinsky@gmail.com>.
+
+  * Bugfixes
+    - Do not start IBus for languages that don't need it. This fixes
+      the keybindings problems introduced in 0.22 (Closes: #6478).
+      Thanks to WinterFairy.
+    - Disable network.proxy.socks_remote_dns in the Unsafe Browser.
+      Bugfix against 0.22 (Closes: #6479).
+    - Fetch Tor Browser User-Agent from its own prefs, rather than from
+      the obsolete Torbutton ones. Bugfix against 0.22 (Closes: #6477).
+    - Upgrade Vagrant basebox to include up-to-date Debian archive keys
+      (Closes: #6515, #6527).
+    - Do not use a non-working proxy for downloading the Vagrant basebox
+      (Closes: #6514).
+    - Use IE's icon in Windows camouflage mode.
+      Bugfix against 0.22 (Closes: #6536).
+    - Support "upgrading" a partial Tails installation (Closes: #6438)
+      and fix missing confirmation dialog in Tails Installer (Closes: #6437).
+      Thanks to Andres Gomez Ramirez <andres.gomez@cern.ch>.
+
+  * Minor improvements
+    - Tor 0.2.4 is stable! Adapt APT sources accordingly.
+    - Update Tor Browser to 24.2.0esr-1+tails1, that uses its own NSS
+      library instead of the system one.
+    - Update Torbutton to 1.6.5.3.
+    - Do not start Tor Browser automatically, but notify when Tor is ready.
+      Warn the user when they attempt to start Tor Browser before Tor is ready.
+    - Import Tor Browser profile at
+      3ed5d9511e783deb86835803a6f40e7d5a182a12 from ttp/tor-browser-24.2.0esr-1.
+    - Use http.debian.net for Vagrant builds, instead of the mostly broken
+      (and soon obsolete) cdn.debian.net.
+    - Phrasing and UI improvements in tails-upgrade-frontend.
+    - Style and robustness improvements in tails-security-check.
+    - Make room for upcoming UEFI support in Tails Installer.
+
+ -- Tails developers <tails@boum.org>  Fri, 10 Jan 2014 12:26:22 +0100
 
 tails (0.22) unstable; urgency=medium
 

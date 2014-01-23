@@ -1,0 +1,154 @@
+[[!meta title="Call for testing: 0.22.1~rc1"]]
+
+[[!meta date="2014-01-11 00:18:00"]]
+
+<p>You can help Tails! The first release candidate for the upcoming version
+0.22.1 is out. Please test it and see if it works for you.</p>
+
+[[!toc levels=1]]
+
+<h1>How to test Tails 0.22.1~rc1?</h1>
+
+<ol>
+  <li>
+    <p>
+      <strong>Keep in mind that this is a test image.</strong> We have made sure
+      that it is not broken in an obvious way, but it might still contain
+      undiscovered issues.
+    </p>
+  </li>
+  <li>
+    <p>Either try the <a href="#automatic_upgrade">automatic upgrade</a>, or
+    download the ISO image and its signature:</p>
+    <p>
+      <a class="download-file"
+         href="http://dl.amnesia.boum.org/tails/alpha/tails-i386-0.22.1~rc1/tails-i386-0.22.1~rc1.iso"
+      >Tails 0.22.1~rc1 ISO image</a>
+    </p>
+    <p>
+      <a class="download-signature"
+         href="https://tails.boum.org/torrents/files/tails-i386-0.22.1~rc1.iso.sig
+"
+      >Tails 0.22.1~rc1 signature</a>
+    </p>
+  </li>
+  <li>
+    <p>
+      [[Verify the ISO image|download#verify]].
+    </p>
+  </li>
+  <li>
+    <p>
+      Have a look at the list of <a href="#known_issues">known issues
+      of this release</a> and the list of [[longstanding known
+      issues|support/known_issues]].
+    </p>
+  </li>
+  <li>
+    <p>
+      Test wildly!
+    </p>
+  </li>
+</ol>
+
+<p>If you find anything that is not working as it should, please [[report to
+us|doc/first_steps/bug_reporting]]! Bonus points if you check that it is not a
+<a href="#known_issues">known issue of this release</a> or a
+[[longstanding known issue|support/known_issues]].</p>
+
+<h1><a id="automatic_upgrade"></a>How automatically upgrade from 0.22?</h1>
+
+<p>These steps allow you to automatically upgrade a device installed with <span
+class="application">Tails Installer</span> from Tails 0.22 to Tails 0.22.1~rc1.</p>
+
+<ol>
+
+  <li><p>Start Tails 0.22 and [[set an administration
+  password|doc/first_steps/startup_options/administration_password]].</p></li>
+
+  <li><p>Run this command in a <span class="application">Root
+  Terminal</span> to select the "alpha" upgrade channel:
+  <pre><code>echo TAILS_CHANNEL=\"alpha\" >> /etc/os-release</code></pre>
+  </p></li>
+
+  <li><p>Run this command in a <span class="application">Root
+  Terminal</span> to install the latest version of <span
+  class="application">Tails Upgrader</span>:
+  <pre><code>echo "deb http://deb.tails.boum.org/ 0.22.1-rc1 main" \
+    > /etc/apt/sources.list.d/tails-0.22-rc1.list &amp;&amp; \
+    sed -i -e &#39;/tor-0.2.4.x-squeeze/ d&#39; \
+   /etc/apt/sources.list.d/torproject.list &amp;&amp;
+    apt-get update &amp;&amp; \
+    apt-get install tails-iuk</code></pre>
+  </p></li>
+
+  <li><p>Choose
+  <span class="menuchoice">
+    <span class="guimenu">Applications</span>&nbsp;&#x25B8;
+    <span class="guisubmenu">Tails</span>&nbsp;&#x25B8;
+    <span class="guimenuitem">Tails Upgrader</span>
+  </span>
+  to start <span class="application">Tails Upgrader</span>.</p></li>
+
+<li><p>Accept <span class="application">Tails Upgrader</span>&#39;s proposal
+to upgrade to Tails 0.22.1~rc1.</p></li>
+<li><p>Wait while the upgrade is downloaded and applied.</p></li>
+<li><p>Restart the system when advised to do so.</p></li>
+<li><p>Once the system is restarted, choose
+<span class="menuchoice">
+  <span class="guimenu">System</span>&nbsp;&#x25B8;
+  <span class="guimenuitem">About Tails</span>
+</span>
+to confirm that the running system is now Tails 0.22.1~rc1.</p></li>
+
+</ol>
+
+<h1>What's new since 0.22?</h1>
+
+<ul>
+
+<li>Security fixes</li>
+<ul>
+  <li>
+    <p>Update NSS to 3.14.5-1~bpo60+1.</p>
+  </li>
+</ul>
+
+<li>Major improvements</li>
+<ul>
+  <li><p>Check for upgrades availability using Tails Upgrader, and propose to
+  apply an incremental upgrade whenever possible.</p></li>
+  <li><p>Install Linux 3.12 (3.12.6-2).</p></li>
+</ul>
+
+<li><p>Bugfixes</p></li>
+<ul>
+  <li><p>Fix the keybindings problem introduced in 0.22.</p></li>
+  <li><p>Fix the Unsafe Browser problem introduced in 0.22.</p></li>
+  <li><p>Use IE's icon in Windows camouflage mode.</p></li>
+  <li><p>Handle some corner cases better in Tails Installer.</p></li>
+</ul>
+
+<li><p>Minor improvements</p></li>
+<ul>
+  <li><p>Update Tor Browser to 24.2.0esr-1+tails1.</p></li>
+  <li><p>Update Torbutton to 1.6.5.3.</p></li>
+  <li><p>Do not start Tor Browser automatically, but notify when Tor is ready.</p></li>
+  <li><p>Import latest Tor Browser prefs.</p></li>
+  <li><p>Many user interface improvements in Tails Upgrader.</p></li>
+</ul>
+
+</ul>
+
+<p>See the <a
+href="https://git-tails.immerda.ch/tails/plain/debian/changelog?h=stable">online
+Changelog</a> for technical details.</p>
+
+<h1><a id="known_issues"></a>Known issues in 0.22.1~rc1</h1>
+
+<ul>
+  <li>
+    <p>The memory erasure on shutdown [[!tails_ticket 6460 desc="does not work on
+    some hardware"]].</p>
+  </li>
+</ul>
