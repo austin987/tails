@@ -67,6 +67,10 @@ stuff ready in time for the security announce.
 
 * `cd` into our Iceweasel Git directory.
 * Checkout the `tails/master` branch.
+* Unapply all quilt patches and commit:
+
+      quilt pop -a
+
 * Get yourself a new upstream branch:
 
       git branch -D upstream
@@ -98,13 +102,12 @@ stuff ready in time for the security announce.
 
       quilt push -a
 
-* `git rm` files deleted by quilt patches
-
-* `git add` files created by quilt patches
+  It might be that the last patch (`configure.patch`) fails. Ignore it
+  for now.
 
 * Commit:
 
-      git commit -a -m 'Apply all quilt patches.'
+      git add . && git reset HEAD .pc && git commit -a -m 'Apply all quilt patches.'
 
 <a id="new-iceweasel-release"></a>
 
@@ -246,7 +249,7 @@ and commit:
 
       git commit -a -m 'Remove Torbrowser patches.'
 
-* Import the latest TorBroswer patches:
+* Import the latest TorBrowser patches:
 
   - Ensure you have Mike Perry's latest stuff available:
 
@@ -282,9 +285,7 @@ and commit:
 
 * Apply Torbrowser patches:
 
-      quilt push -a && git commit -a -m 'Apply Torbrowser patches.'
-
-* Add untracked files *but* `.pc` and `commit --amend`.
+      quilt push -a && git add . && git reset HEAD .pc && git commit -a -m 'Apply Torbrowser patches.'
 
 * Push to Git:
 
@@ -326,7 +327,9 @@ If you have no available non-Tails setup to comfortably test these
 packages, then skip this step.
 
 * Build for unstable and the architecture you can test on (most likely
-  amd64), e.g. using our [[contribute/Debian_package_builder]].
+  amd64), e.g. using our [[contribute/Debian_package_builder]].  
+  **Note:** if building locally in a ramdisk, it needs to be at least
+  14GB large.
 * Copy `browser/app/profile/000-tor-browser.js` into
   `/etc/iceweasel/pref/` on the test system.
 * Install and test the resulting packages.
@@ -392,8 +395,7 @@ E.g. `configure.patch` does not apply, or the build fails since
 `{js/src/,}configure.in` was modified but `{js/src/,}configure` was
 not refreshed.
 
-In a nutshell (that is, with most of the gory quilt and Git details
-skipped) the solution is to:
+In a nutshell, the solution is to:
 
 1. Make sure the patches that modify `{js/src/,}configure.in` are
    applied (this is the case after a `quilt push -a`, that is during
