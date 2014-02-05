@@ -25,14 +25,15 @@ Tested with syslinux 6.02+dfsg-1.
   - boots fine in Legacy BIOS mode, so at least we have no hardware
     support regression here
 * boots on ThinkPenguin Royal (syslinux 6.02+dfsg-1 and 6.03~pre1+dfsg-1)
-* does not boot on MacBook Pro 13-inch Mid 2012 without rEFInd (expected)
-* boots on MacBook Pro 13-inch Mid 2012 (EFI 2.9) with rEFInd *if* `menu
-  background splash.png` is removed from `stdmenu.cfg`; adding `menu
-  resolution 640 480` before `menu background` makes the menu display
-  "correctly" (only taking 1/4 of the screen, but oh well), *but* the
-  system does not boot
-* boots on MacBook Pro 13-inch Late 2011 (EFI 2.7) with rEFInd *if* `menu
-  background splash.png` is removed from `stdmenu.cfg`
+* boots on MacBook Pro 13-inch Mid 2012 9,2 (EFI 2.9), and MacBook Pro
+  13-inch Late 2011 8,1 (EFI 2.7), both with and without rEFInd *if*
+  `menu background splash.png` is removed from `stdmenu.cfg`; adding
+  `menu resolution 640 480` before `menu background` makes the menu
+  display "correctly" (only taking 1/4 of the screen, but oh well),
+  *but* the system does not boot; without rEFInd, one has to press Alt
+  before powering the laptop up, and keep it pressed until a menu
+  appears, and then choose the entry that's called *Boot EFI* (as
+  every other entry) and looks like a USB stick.
 * on MacBook Pro 13-inch Mid 2012 with rEFInd, one has to choose
   *Fallback boot loader from Tails* in rEFInd to boot, as the *Boot
   Linux from Tails* entry does nothing at all (syslinux 6.02+dfsg-1
@@ -52,3 +53,9 @@ Tested with syslinux 6.02+dfsg-1.
   tails-i386-feature_uefi-0.23-20140104T0920Z-3305611.iso boots fine.
 * Lenovo E325: tails-i386-feature_uefi-0.23-20140104T0920Z-3305611.iso
   boots fine.
+* MacBook Air Original (1,1): one has to press Esc twice in rEFInd to
+  have it see the USB stick; then, rEFInd apparently loads syslinux,
+  that fails to display its menu, even after commenting out most
+  menu-related setting that has to do with color or positioning.
+  Finally, Tails does not boot.
+* Fails to boot in VirtualBox (version?) with EFI enabled.
