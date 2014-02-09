@@ -19,18 +19,24 @@ case "$LANGPREFIX" in
    ko)
       PREFLIST='[hangul,pinyin,anthy,bopomofo]'
       ;;
-   *)
+   zh)
       PREFLIST='[pinyin,anthy,hangul,bopomofo]'
+      ;;
+   *)
+      PREFLIST=
+      ;;
 esac
 
-# Configure enabled input methods and their preferred order
-gconftool-2 --type=list --list-type=string --set \
-	/desktop/ibus/general/preload_engines "$PREFLIST"
+if [ -n "$PREFLIST" ]; then
+   # Configure enabled input methods and their preferred order
+   gconftool-2 --type=list --list-type=string --set \
+      /desktop/ibus/general/preload_engines "$PREFLIST"
 
-# Start the IBus input method daemon
-/usr/bin/ibus-daemon --daemonize --xim
+   # Start the IBus input method daemon
+   /usr/bin/ibus-daemon --daemonize --xim
 
-# Export environment variables to enable use of IBus
-export GTK_IM_MODULE='ibus'
-export QT_IM_MODULE='ibus'
-export XMODIFIERS='@im=ibus'
+   # Export environment variables to enable use of IBus
+   export GTK_IM_MODULE='ibus'
+   export QT_IM_MODULE='ibus'
+   export XMODIFIERS='@im=ibus'
+fi
