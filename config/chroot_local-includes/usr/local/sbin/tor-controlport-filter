@@ -77,8 +77,8 @@ def do_newnym():
 
 def handle_connection(sock):
 	# Create file handles for the socket
-	readh = sock.makefile('r')
-	writeh = sock.makefile('w')
+	readh = sock.makefile("r")
+	writeh = sock.makefile("w")
 
 	# Keep accepting commands
 	while True:
@@ -87,23 +87,23 @@ def handle_connection(sock):
 		if not line: break
 
 		# Check what it is
-		if line.startswith('AUTHENTICATE'):
+		if line.startswith("AUTHENTICATE"):
 			# Don't check authentication, since only
 			# safe commands are allowed
-			writeh.write('250 OK\n')
-		elif line.startswith('SIGNAL NEWNYM'):
+			writeh.write("250 OK\n")
+		elif line.startswith("SIGNAL NEWNYM"):
 			# Perform a real SIGNAL NEWNYM (new Tor circuit)
 			if do_newnym():
-				writeh.write('250 OK\n')
+				writeh.write("250 OK\n")
 			else:
-				writeh.write('510 Newnym signal failed\n')
-		elif line.startswith('QUIT'):
+				writeh.write("510 Newnym signal failed\n")
+		elif line.startswith("QUIT"):
 			# Quit session
-			writeh.write('250 Closing connection\n')
+			writeh.write("250 Closing connection\n")
 			break
 		else:
 			# Everything else we ignore/block
-			writeh.write('510 Command filtered\n')
+			writeh.write("510 Command filtered\n")
 
 		# Ensure the answer was written
 		writeh.flush()
