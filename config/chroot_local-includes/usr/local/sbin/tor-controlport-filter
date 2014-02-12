@@ -43,7 +43,7 @@ def do_newnym_real():
 	writeh.flush()
 
 	answer = readh.readline(128)
-	if answer.find("250") != 0:
+	if not answer.startswith("250"):
 		raise UnexpectedAnswer("AUTHENTICATE failed")
 
 	# Send the newnym signal
@@ -51,7 +51,7 @@ def do_newnym_real():
 	writeh.flush()
 
 	answer = readh.readline(128)
-	if answer.find("250") != 0:
+	if not answer.startswith("250"):
 		raise UnexpectedAnswer("SIGNAL NEWNYM failed")
 
 	# Close the connection
@@ -59,7 +59,7 @@ def do_newnym_real():
 	writeh.flush()
 
 	answer = readh.readline(128)
-	if answer.find("250") != 0:
+	if not answer.startswith("250"):
 		raise UnexpectedAnswer("QUIT failed")
 
 	sock.close()
@@ -87,17 +87,17 @@ def handle_connection(sock):
 		if not line: break
 
 		# Check what it is
-		if line.find('AUTHENTICATE') == 0:
+		if line.startswith('AUTHENTICATE'):
 			# Don't check authentication, since only
 			# safe commands are allowed
 			writeh.write('250 OK\n')
-		elif line.find('SIGNAL NEWNYM') == 0:
+		elif line.startswith('SIGNAL NEWNYM'):
 			# Perform a real SIGNAL NEWNYM (new Tor circuit)
 			if do_newnym():
 				writeh.write('250 OK\n')
 			else:
 				writeh.write('510 Newnym signal failed\n')
-		elif line.find('QUIT') == 0:
+		elif line.startswith('QUIT'):
 			# Quit session
 			writeh.write('250 Closing connection\n')
 			break
