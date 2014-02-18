@@ -24,7 +24,7 @@ tor_has_bootstrapped() {
 }
 
 while ! tor_has_bootstrapped; do
-   sleep 1
+   sleep 10
 done
 
 /usr/local/sbin/tails-notify-user \
