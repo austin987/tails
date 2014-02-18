@@ -112,6 +112,8 @@ anonymity.
 
 ### 2.1.6 Filling some empty room in the Tor distributions landscape
 
+XXX: update
+
 The PELD is meant to be complementary to other Tor distributions. It
 has no such goal as replacing other existing tool that properly
 fulfills its use cases.
@@ -171,8 +173,7 @@ Internet for anyone anywhere.
 The goal of staying anonymous and keeping sensitive information
 protected stands in direct conflict with the goals of several entities
 "present" on the Internet. The following threat model is meant to
-describe the intentions and capabilities of such hypothetical
-attackers.
+describe the intentions and capabilities of such attackers.
 
 ### 2.2.1 The goal of the attacker
 
@@ -245,6 +246,8 @@ This section handles mostly the criteria that the PELD should be
 portable and able to run in as many environments as possible.
 
 ### 2.4.1 Platform
+
+XXX: update
 
 The binaries MUST all be executable on the most common computer
 hardware architecture(s). As of 2011, the x86 computer architecture
@@ -764,20 +767,29 @@ script also selects the right default input method.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/X11/Xsession.d/80im-starter]]
 
-## 3.4 Notification of security issues and new Tails release
+## 3.4 Notification of security issues and new Tails releases
 
-Shipped in Tails is a script that checks at each desktop start if
-security issues or new Tails releases are published on the website.
-If some are found, a graphical notification is displayed.
-The connections go through tor and are made over HTTPS with a pinned
-CA. The only information leaked to the Tails web server (apart of
-[[!cpan LWP::UserAgent]]'s specific User-Agent and HTTP behavior) is
-the first two chars of the `LANG` environment variable.
+Tails ships a script that checks if there are security issues that are
+not fixed by any Tails release (and thus, affect the currently running
+Tails regardless of its version). A desktop notification is displayed
+for every such issue.
 
-This script is run once Tor is known-working.
+The connections are made to the Tails website through Tor, over HTTPS
+with a pinned CA. The only piece of information leaked to the Tails
+web server (apart of [[!cpan LWP::UserAgent]]'s specific User-Agent
+and HTTP behavior) is the first two chars of the `LANG`
+environment variable.
+
+This script is run after the user has logged-in and Tor is
+in known-working state.
 
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check-wrapper]]
+
+Security issues that were fixed in a newer version of Tails are taken
+care of by [[Tails Upgrader|contribute/design/incremental_upgrades]]
+that tells the user whenever they should upgrade and leads them
+through the necessary steps.
 
 ## 3.5 Feedback
 
@@ -999,6 +1011,19 @@ set in various ways:
   - Torbutton preferences that the TBB also sets;
   - some Tails-specific settings.
 
+Whenever the user tries to start Iceweasel before Tor is ready, they
+are informed it won't work, and asked whether to start the browser
+anyway:
+
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/iceweasel]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
+- [[!tails_gitweb config/chroot_local-includes/etc/sudoers.d/zzz_tor-has-bootstrapped]]
+
+Once Tor is ready to be used, the user is informed they can now use
+the Internet:
+
+- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/60-tor-ready-notification.sh]]
+
 Source code, scripts and configuration:
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/iceweasel]]
@@ -1107,11 +1132,11 @@ prefer strong ciphers and MACs..
 
 ### 3.6.21 Incremental upgrades
 
-PENDING-FOR-0.23:
-
 When a Tails release is out, Tails users are proposed to download and
 apply a partial upgrade (that is, only what has changed between two
 releases). See [[contribute/design/incremental_upgrades]] for details.
+To start with, this upgrade mechanism may be only available for
+point-releases.
 
 ## 3.7 Running Tails in virtual machines
 
@@ -1185,12 +1210,19 @@ security-related — bugs.
 
 ## 3.9 Hardware support
 
-Tails generally ships the latest kernel from Debian unstable or [Debian
+Tails generally ships the latest Linux kernel from Debian unstable or [Debian
 Backports](http://backports.debian.org) as a compromise between
 stability and recent hardware support. Recent Intel and AMD microcode
 are included as well.
 
 The x86 hardware architecture is the main supported one.
+
+A 64-bit Linux kernel (*amd64* flavour) and a 32-bit one (*486*
+flavor, for maximal backward-compatibility) are provided. The best
+supported one is used.
+
+* [[!tails_gitweb auto/config]]
+* [[!tails_gitweb config/binary_local-hooks/20-syslinux_detect_cpu]]
 
 ## 3.10 Caveats
 

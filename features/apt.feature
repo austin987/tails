@@ -16,13 +16,12 @@ Feature: Installing packages through APT
     And GNOME has started
     And I have a network connection
     And Tor has built a circuit
-    And Iceweasel has autostarted and is not loading a web page
     And the time has synced
     And I have closed all annoying notifications
     And I save the state so the background can be restored next scenario
 
   Scenario: APT sources are configured correctly
-    Then the only hosts in APT sources are "ftp.us.debian.org,security.debian.org,backports.debian.org,deb.tails.boum.org,deb.torproject.org"
+    Then the only hosts in APT sources are "ftp.us.debian.org,security.debian.org,backports.debian.org,deb.tails.boum.org,deb.torproject.org,mozilla.debian.net"
 
   Scenario: Install packages using apt-get
     When I update APT using apt-get

@@ -40,8 +40,14 @@ pref("browser.safebrowsing.enabled", false);
 pref("browser.safebrowsing.malware.enabled", false);
 pref("browser.download.manager.scanWhenDone", false); // prevents AV remote reporting of downloads
 pref("extensions.ui.lastCategory", "addons://list/extension");
-pref("datareporting.healthreport.service.enabled", false);
+pref("datareporting.healthreport.service.enabled", false); // Yes, all three of these must be set
+pref("datareporting.healthreport.uploadEnabled", false);
+pref("datareporting.policy.dataSubmissionEnabled", false);
 pref("security.mixed_content.block_active_content", false); // Disable until https://bugzilla.mozilla.org/show_bug.cgi?id=878890 is patched
+pref("browser.syncPromoViewsLeftMap", "{\"addons\":0, \"passwords\":0, \"bookmarks\":0}"); // Don't promote sync
+pref("services.sync.engine.prefs", false); // Never sync prefs, addons, or tabs with other browsers
+pref("services.sync.engine.addons", false);
+pref("services.sync.engine.tabs", false);
 
 // Fingerprinting
 pref("webgl.min_capability_mode", true);
@@ -127,7 +133,9 @@ pref("xpinstall.whitelist.add.36", "");
 pref("keyword.URL", "https://startpage.com/do/search?q=");
 
 // Hacks/workarounds: Direct2D seems to crash w/ lots of video cards w/ MinGW?
+// Nvida cards also experience crashes without the second pref set to disabled
 pref("gfx.direct2d.disabled", true);
+pref("layers.acceleration.disabled", true);
 
 // Version placeholder
 pref("torbrowser.version", "UNKNOWN");

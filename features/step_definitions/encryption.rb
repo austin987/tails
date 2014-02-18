@@ -32,8 +32,8 @@ end
 def maybe_deal_with_pinentry
   begin
     @screen.wait("PinEntryPrompt.png", 3)
-    @screen.type(@passphrase + Sikuli::KEY_RETURN)
-  rescue Sikuli::ImageNotFound
+    @screen.type(@passphrase + Sikuli::Key.ENTER)
+  rescue FindFailed
     # The passphrase was cached or we wasn't prompted at all (e.g. when
     # only encrypting to a public key)
   end
@@ -41,7 +41,7 @@ end
 
 def encrypt_sign_helper
   @screen.wait_and_click("GeditWindow.png", 10)
-  @screen.type("a", Sikuli::KEY_CTRL)
+  @screen.type("a", Sikuli::KeyModifier.CTRL)
   sleep 0.5
   @screen.click("GpgAppletIconNormal.png")
   sleep 2
@@ -52,14 +52,14 @@ def encrypt_sign_helper
   maybe_deal_with_pinentry
   @screen.wait_and_click("GeditWindow.png", 10)
   sleep 0.5
-  @screen.type("n", Sikuli::KEY_CTRL)
+  @screen.type("n", Sikuli::KeyModifier.CTRL)
   sleep 0.5
-  @screen.type("v", Sikuli::KEY_CTRL)
+  @screen.type("v", Sikuli::KeyModifier.CTRL)
 end
 
 def decrypt_verify_helper(icon)
   @screen.wait_and_click("GeditWindow.png", 10)
-  @screen.type("a", Sikuli::KEY_CTRL)
+  @screen.type("a", Sikuli::KeyModifier.CTRL)
   sleep 0.5
   @screen.click(icon)
   sleep 2
@@ -72,7 +72,7 @@ end
 When /^I encrypt the message using my OpenPGP key$/ do
   next if @skip_steps_while_restoring_background
   encrypt_sign_helper do
-    @screen.type(@key_name + Sikuli::KEY_RETURN + Sikuli::KEY_RETURN)
+    @screen.type(@key_name + Sikuli::Key.ENTER + Sikuli::Key.ENTER)
   end
 end
 
@@ -85,9 +85,9 @@ end
 When /^I sign the message using my OpenPGP key$/ do
   next if @skip_steps_while_restoring_background
   encrypt_sign_helper do
-    @screen.type("\t" + Sikuli::DOWN_ARROW + Sikuli::KEY_RETURN)
+    @screen.type(Sikuli::Key.TAB + Sikuli::Key.DOWN + Sikuli::Key.ENTER)
     @screen.wait("PinEntryPrompt.png", 10)
-    @screen.type(@passphrase + Sikuli::KEY_RETURN)
+    @screen.type(@passphrase + Sikuli::Key.ENTER)
   end
 end
 
@@ -100,10 +100,10 @@ end
 When /^I both encrypt and sign the message using my OpenPGP key$/ do
   next if @skip_steps_while_restoring_background
   encrypt_sign_helper do
-    @screen.type(@key_name + Sikuli::KEY_RETURN)
-    @screen.type("\t" + Sikuli::DOWN_ARROW + Sikuli::KEY_RETURN)
+    @screen.type(@key_name + Sikuli::Key.ENTER)
+    @screen.type(Sikuli::Key.TAB + Sikuli::Key.DOWN + Sikuli::Key.ENTER)
     @screen.wait("PinEntryPrompt.png", 10)
-    @screen.type(@passphrase + Sikuli::KEY_RETURN)
+    @screen.type(@passphrase + Sikuli::Key.ENTER)
   end
 end
 
@@ -118,19 +118,19 @@ When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
   @passphrase = pwd
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("GeditWindow.png", 10)
-  @screen.type("a", Sikuli::KEY_CTRL)
+  @screen.type("a", Sikuli::KeyModifier.CTRL)
   sleep 0.5
   @screen.click("GpgAppletIconNormal.png")
   sleep 2
   @screen.type("p")
   @screen.wait("PinEntryPrompt.png", 10)
-  @screen.type(@passphrase + Sikuli::KEY_RETURN)
+  @screen.type(@passphrase + Sikuli::Key.ENTER)
   sleep 1
   @screen.wait("PinEntryPrompt.png", 10)
-  @screen.type(@passphrase + Sikuli::KEY_RETURN)
+  @screen.type(@passphrase + Sikuli::Key.ENTER)
   @screen.wait_and_click("GeditWindow.png", 10)
   sleep 0.5
-  @screen.type("n", Sikuli::KEY_CTRL)
+  @screen.type("n", Sikuli::KeyModifier.CTRL)
   sleep 0.5
-  @screen.type("v", Sikuli::KEY_CTRL)
+  @screen.type("v", Sikuli::KeyModifier.CTRL)
 end
