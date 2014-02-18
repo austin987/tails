@@ -13,7 +13,7 @@ Feature: Various checks
 
   # FIXME: #5972
   Scenario: VirtualBox guest modules are available
-    When Tails has booted a 686-pae kernel
+    When Tails has booted a 64-bit kernel
     Then the VirtualBox guest modules are available
 
    Scenario: The shipped Tails signing key is up-to-date
