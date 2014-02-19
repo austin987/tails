@@ -11,7 +11,6 @@ Feature:
     And I log in to a new session
     And I have a network connection
     And Tor has built a circuit
-    And Iceweasel has autostarted and is not loading a web page
     And the time has synced
     And I have closed all annoying notifications
     And all Internet traffic has only flowed through Tor
