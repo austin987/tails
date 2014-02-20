@@ -83,10 +83,18 @@ fi
 
 OLD_MAC="$(get_current_mac_of_nic "${NIC}")"
 
-# Ignore errors since the fail-safe below will catch them.
-spoof_mac "${NIC}" || :
-
-NEW_MAC="$(get_current_mac_of_nic "${NIC}")"
+# There is a 1/2^24 chance macchanger will randomly pick the real MAC
+# address. We try to making it really unlikely repeating it up to
+# three times. Theoretically speaking this leaks information about the
+# real MAC address at each occasion but actually leaking the real MAC
+# address will be more serious in practice.
+for i in 1 2 3; do
+    spoof_mac "${NIC}" || :
+    NEW_MAC="$(get_current_mac_of_nic "${NIC}")"
+    if [ "${OLD_MAC}" != "${NEW_MAC}" ]; then
+        break
+    fi
+done
 
 # MAC spoofing fail-safe: if $NIC's MAC address isn't spoofed at this
 # point we have to take some drastic measures in order to prevent
