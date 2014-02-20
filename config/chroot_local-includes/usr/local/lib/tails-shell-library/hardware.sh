@@ -20,8 +20,14 @@ nic_is_up() {
 
 # The following "nic"-related functions require that the argument is a
 # NIC that exists
+
+# Will just output nothing on failure
 get_current_mac_of_nic() {
-    macchanger ${1} | sed -n "s/^Current\s*MAC:\s*\([0-9a-f:]\+\)\s.*$/\1/p"
+    local mac
+    mac="$(macchanger "${1}" | sed -n "s/^Current\s*MAC:\s*\([0-9a-f:]\+\)\s.*$/\1/p" || :)"
+    if echo "${mac}:" | grep -q "^\([0-9a-fA-F]\{2\}:\)\{6\}$"; then
+        echo "${mac}"
+    fi
 }
 
 get_module_used_by_nic() {
