@@ -50,7 +50,7 @@ mac_spoof_panic() {
     nic_name="$(get_name_of_nic ${nic})"
     echo "blacklist ${module}" >> /etc/modprobe.d/"${module}"-blacklist.conf
     unload_module_and_rev_deps "${module}" || :
-    if lsmod | grep -q "^${module}\s"; then
+    if nic_exists "${nic}"; then
         service network-manager stop
         log "Failed to unload module ${module} of NIC ${nic}. Stopping NetworkManager."
         notify_panic_failure "${nic}" "${nic_name}" &
