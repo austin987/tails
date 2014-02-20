@@ -81,18 +81,19 @@ if ! nic_exists "${NIC}"; then
     exit 1
 fi
 
-if nic_has_spoofed_mac "${NIC}"; then
-    log "NIC ${NIC}'s MAC address is already spoofed, skipping"
-    exit 0
-fi
+OLD_MAC="$(get_current_mac_of_nic "${NIC}")"
 
 # Ignore errors since the fail-safe below will catch them.
 spoof_mac "${NIC}" || :
 
+NEW_MAC="$(get_current_mac_of_nic "${NIC}")"
+
 # MAC spoofing fail-safe: if $NIC's MAC address isn't spoofed at this
 # point we have to take some drastic measures in order to prevent
 # potential leaks.
-if ! nic_has_spoofed_mac "${NIC}"; then
+if [ -z "${OLD_MAC}" ] || [ -z "${NEW_MAC}" ] || \
+   [ "${OLD_MAC}" = "${NEW_MAC}" ]
+then
     log "Failed to spoof MAC address of NIC ${NIC}. Going into panic mode."
     if ! mac_spoof_panic "${NIC}"; then
         # If mac_spoof_panic() fails we're quite screwed, so we kill

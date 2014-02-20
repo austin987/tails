@@ -20,16 +20,8 @@ nic_is_up() {
 
 # The following "nic"-related functions require that the argument is a
 # NIC that exists
-get_permanent_mac_of_nic() {
-    macchanger ${1} | sed -n "s/^Permanent\s*MAC:\s*\([0-9a-f:]\+\)\s.*$/\1/p"
-}
-
 get_current_mac_of_nic() {
     macchanger ${1} | sed -n "s/^Current\s*MAC:\s*\([0-9a-f:]\+\)\s.*$/\1/p"
-}
-
-nic_has_spoofed_mac() {
-    [ "$(get_permanent_mac_of_nic ${1})" != "$(get_current_mac_of_nic ${1})" ]
 }
 
 get_module_used_by_nic() {
