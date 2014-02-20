@@ -58,47 +58,12 @@ mac_spoof_panic() {
     fi
 }
 
-# Only use this helper when using macchanger options that may require
-# the interface to be down, i.e. those that actually change the MAC
-# address.
-# Note that we (for simplicity) specify the interface as the first
-# argument.
-macchanger_helper() {
-    local nic
-    local opts
-    local was_up
-    local ret
-    local msg
-    nic=$1
-    shift
-    opts=$*
-    was_up=no
-    if nic_is_up ${nic}; then
-        was_up=yes
-        msg="$(/sbin/ip link set dev "${nic}" down 2>&1)"
-        if [ "$?" -ne 0 ] ; then
-            log "failed to down ${nic}: ${msg}"
-            return 1
-        fi
-    fi
-    msg=$(macchanger ${opts} ${nic} 2>&1 >/dev/null)
-    ret=$?
-    if [ "${ret}" -ne 0 ]; then
-        log "macchanger returned error code ${ret} and reported: ${msg}"
-    fi
-
-    if [ "${was_up}" = yes ]; then
-        msg="$(/sbin/ip link set dev "${nic}" up 2>&1)"
-        if [ "$?" -ne 0 ]; then
-            log "failed to up ${nic}: ${msg}"
-            return 1
-        fi
-    fi
-    return ${ret}
-}
-
 spoof_mac() {
-    macchanger_helper -e "${1}"
+    local msg
+    if ! msg=$(macchanger -e "${1}" 2>&1); then
+        log "macchanger failed for NIC ${1}, returned ${?} and said: ${msg}"
+        exit 1
+    fi
 }
 
 set_log_tag spoof-mac
