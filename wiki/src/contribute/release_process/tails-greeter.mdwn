@@ -8,6 +8,10 @@ Update POT and PO files
 =======================
 
     ./setup.py build_i18n && \
+       (cd po && \
+           for po in *.po ; do msgmerge --update "$po" \
+           tails-greeter.pot ; done \
+       ) && \
        git commit po -m 'Update POT and PO files.'
 
 Update the Debian package
