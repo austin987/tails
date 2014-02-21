@@ -378,6 +378,31 @@ the future it's a simple task.
 Helper scripts:
 [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-spoof-mac]]
 
+## MAC spoofing fail safe
+
+For any network device, the MAC address is recorded both before and
+after the actual MAC spoofing. If the values are equal, or if they
+could not be obtained, we fail closed by going into "panic mode" for
+the device. This means that the device is `down`:ed, and its module is
+unloaded and blacklisted. If the network device's interface still
+exists after this, networking is completely disabled by shutting down
+NetworkManager. The user is notified of which device was the culprit,
+and whether the module was unloaded, or if the network was completely
+disabled.
+
+Note that we treat the perfectly fine `macchanger` behaviour of
+randomly picking the real MAC address as a failure. Since we randomise
+the lower 3 bytes of the MAC address there's a `1/2^24` chance for
+this happening for each device. To make it a bit less frequent (!) we
+repeat the MAC spoofing until a new address is obtained, with up to
+three tries. Theoretically speaking this leaks up to `24/2^24` bits of
+the lower 3 bytes of the real MAC address per Tails session, which in
+practice is much less of a problem than randomly "spoofing" to the
+real MAC address.
+
+Script:
+[[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-spoof-mac]]
+
 ## Connection failure detection
 
 This section deals with AvoidConnectionProbs. The goal is to somehow
