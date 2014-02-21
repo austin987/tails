@@ -303,7 +303,9 @@ As suggested in the "Leak prevention" section, we block all network
 devices' modules from being loaded until the user has made the decision about
 whether to enable MAC spoofing or not. The way we do this is by
 generating a list of all network device modules during build time, and
-add these to a `modprobe.d`-type blacklist. In Tails Greeter's
+add these to a `modprobe.d`-type blacklist. An implication of this is
+that in-kernel drivers and modules installed after build time will not
+be in the blacklist and hence are not supported. In Tails Greeter's
 post-login script (when we know the user's decision) we unblock the
 network by simply removing that list, and then we have udev "re-probe"
 for network devices and load their modules.
