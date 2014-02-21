@@ -17,6 +17,7 @@ Feature: Browsing the web using Iceweasel
     And I run "iceweasel"
     And Iceweasel has started and is not loading a web page
     And I have closed all annoying notifications
+    And available upgrades have been checked
     And I save the state so the background can be restored next scenario
 
   Scenario: Opening check.torproject.org in Iceweasel shows the green onion and the congratulations message

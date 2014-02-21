@@ -13,6 +13,7 @@ Feature: Encryption and verification using GnuPG
     And GNOME has started
     And I have closed all annoying notifications
     And I generate an OpenPGP key named "test" with password "asdf"
+    And available upgrades have been checked
     And I save the state so the background can be restored next scenario
 
   Scenario: Encryption and decryption using gpgApplet

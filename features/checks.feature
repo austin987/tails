@@ -9,6 +9,7 @@ Feature: Various checks
     And I log in to a new session
     And GNOME has started
     And I have closed all annoying notifications
+    And available upgrades have been checked
     And I save the state so the background can be restored next scenario
 
   # FIXME: #5972
