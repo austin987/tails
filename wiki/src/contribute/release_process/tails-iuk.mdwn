@@ -18,16 +18,13 @@ Export new upstream version number:
 
     export VERSION=XXX
 
-Update version number in `bin/tails-create-iuk`.
+Update version number in `bin/tails-create-iuk`, commit all files that need to be:.
 
-    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-create-iuk
-    perl -pi -E \
-       "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," \
-       bin/tails-create-iuk
-
-Commit all files that need to be:
-
-    git commit bin/tails-create-iuk -m "tails-iuk $VERSION"
+    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-create-iuk && \
+       perl -pi -E \
+          "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," \
+          bin/tails-create-iuk && \
+       git commit bin/tails-create-iuk -m "tails-iuk $VERSION"
 
 Run the upstream test suite (point `PERL5LIB` to a checkout of the
 relevant tag of Tails' perl5lib):
