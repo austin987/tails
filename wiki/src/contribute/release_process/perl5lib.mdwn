@@ -49,13 +49,13 @@ Run the upstream test suite:
 
     RELEASE_TESTING=1 dzil test
 
-Build an upstream tarball and tag the release:
+Build an upstream tarball, tag the release, move the tarball out of
+the build repository and clean it up:
 
-    dzil build && git tag -s "Tails-perl5lib_$VERSION" -m "Tails-perl5lib $VERSION"
-
-Move the tarball out of the build repository and delete the build directories:
-
-    mv Tails-perl5lib-*.tar.gz .. && rm -rf Tails-perl5lib-* .build
+    dzil build && \
+       git tag -s "Tails-perl5lib_$VERSION" -m "Tails-perl5lib $VERSION" && \
+       mv Tails-perl5lib-*.tar.gz .. && \
+       git clean -fdx
 
 Update the Debian package
 =========================
