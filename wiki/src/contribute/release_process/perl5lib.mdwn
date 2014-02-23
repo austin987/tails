@@ -1,0 +1,99 @@
+[[!meta title="Releasing perl5lib"]]
+
+[[!toc levels=1]]
+
+Install build and test dependencies
+===================================
+
+Required dependencies on Debian:
+
+    libdist-zilla-perl libdist-zilla-plugins-cjm-perl \
+    libdist-zilla-plugin-changelogfromgit-perl \
+    libdist-zilla-plugin-installguide-perl \
+    libdist-zilla-plugin-test-perl-critic-perl \
+    libdist-zilla-plugin-test-notabs-perl \
+    libdist-zilla-plugin-git-perl \
+    liblocale-msgfmt-perl libmoosex-has-sugar-perl \
+    dh-make-perl
+
+Install the dependencies:
+
+    DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::LocaleMsgfmt
+
+Update POT and PO files
+=======================
+
+    git checkout master && \
+        ( cd po && make pot && make update-po ) && \
+        git commit po -m 'Update POT and PO files.'
+
+Make an upstream release
+========================
+
+Enable new translations in `po/PACKAGE` and commit.
+
+Export new upstream version number:
+
+    export VERSION=XXX
+
+Update version number in `bin/tails-persistence-setup`:
+
+    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' lib/Tails.pm
+    perl -pi -E "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," lib/Tails.pm
+
+Commit all files that need to be:
+
+    git commit lib/Tails.pm -m "Tails-perl5lib $VERSION"
+
+Run the upstream test suite:
+
+    RELEASE_TESTING=1 dzil test
+
+Build an upstream tarball and tag the release:
+
+    dzil build && git tag -s "Tails-perl5lib_$VERSION" -m "Tails-perl5lib $VERSION"
+
+Move the tarball out of the build repository and delete the build directories:
+
+    mv Tails-perl5lib-*.tar.gz .. && rm -rf Tails-perl5lib-* .build
+
+Update the Debian package
+=========================
+
+Checkout the branch with Debian package specifics and import the new upstream tarball:
+
+    git checkout debian && \
+    git-import-orig --upstream-vcs-tag=Tails-perl5lib_$VERSION ../Tails-perl5lib-$VERSION.tar.gz
+
+Update `debian/changelog`:
+
+    git-dch && dch -e
+
+(Do not forget to set the appropriate release.)
+
+Commit `debian/changelog`:
+
+        git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+
+Build a Debian package (use a Squeeze/i386 + backports chroot):
+
+    git-buildpackage
+
+If everything is fine, add a signed tag to the repository and push the
+changes:
+
+    git-buildpackage --git-tag-only --git-sign-tags && \
+    git push && git push --tags
+
+(Make sure `master`, `upstream`, `debian` and `pristine-tar` were all pushed.)
+
+Add the Debian package to Tails
+===============================
+
+Sign the package:
+
+    debsign $CHANGES_FILE
+
+Upload:
+
+    dupload --to tails $CHANGES_FILE
