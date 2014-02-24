@@ -13,11 +13,11 @@ if [ $2 != "up" ]; then
    exit 0
 fi
 
-# Import tor_control_*(), TOR_LOG
+# Import tor_control_*(), tor_set_in_torrc(), TOR_LOG
 . /usr/local/lib/tails-shell-library/tor.sh
 
-# It's safest that Tor is not running when messing with its log and
-# data dir.
+# It's safest that Tor is not running when messing with its
+# configuration and logs.
 service tor stop
 
 # Workaround https://trac.torproject.org/projects/tor/ticket/2355
@@ -28,6 +28,11 @@ fi
 # We depend on grepping stuff from the Tor log (especially for
 # tordate/20-time.sh), so deleting it seems like a Good Thing(TM).
 rm -f "${TOR_LOG}"
+
+if grep -qw bridge /proc/cmdline; then
+   tor_set_in_torrc "DisableNetwork" "1"
+   tor_set_in_torrc "ClientTransportPlugin" "obfs2,obfs3 exec /usr/bin/obfsproxy managed"
+fi
 
 # A SIGHUP should be enough but there's a bug in Tor. Details:
 # * https://trac.torproject.org/projects/tor/ticket/1247
@@ -42,8 +47,5 @@ if grep -qw bridge /proc/cmdline; then
    # increase Tor's logging severity.
    tor_control_setconf "Log=\"info file ${TOR_LOG}\""
 
-   # In bridge mode Vidalia needs to start before tordate (20-time.sh)
-   # since we need bridges to be configured before any consensus or
-   # descriptors can be downloaded, which tordate depends on.
-   restart-vidalia
+   /usr/local/sbin/tails-tor-launcher --force-net-config
 fi
