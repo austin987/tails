@@ -20,11 +20,6 @@ fi
 # configuration and logs.
 service tor stop
 
-# Workaround https://trac.torproject.org/projects/tor/ticket/2355
-if grep -qw bridge /proc/cmdline; then
-   rm -f /var/lib/tor/*
-fi
-
 # We depend on grepping stuff from the Tor log (especially for
 # tordate/20-time.sh), so deleting it seems like a Good Thing(TM).
 rm -f "${TOR_LOG}"
