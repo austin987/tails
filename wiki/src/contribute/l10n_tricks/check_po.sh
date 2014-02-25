@@ -20,6 +20,7 @@ boilerplate-in-last-translator
 boilerplate-in-project-id-version
 conflict-marker-in-header-entry
 fuzzy-header-entry
+incorrect-plural-forms
 invalid-content-transfer-encoding
 invalid-date
 invalid-language
