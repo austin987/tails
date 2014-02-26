@@ -1,0 +1,46 @@
+#!/bin/sh
+
+set -e
+set -u
+
+EXCLUDE_LANGS='fr pt_BR'
+TAILS_PO_DIR='po'
+TOR_TRANSLATION_REMOTE='https://git.torproject.org/translation.git'
+TOR_TRANSLATION_DIR='tmp/tor-translation'
+GIT_IN_TOR_TRANSLATION_DIR="git \
+   --work-tree=$TOR_TRANSLATION_DIR \
+   --git-dir=$TOR_TRANSLATION_DIR/.git"
+
+### External libraries
+. config/chroot_local-includes/usr/local/lib/tails-shell-library/po.sh
+
+lang_is_excluded () {
+	local lang="$1"
+	echo -n "$EXCLUDE_LANGS" | grep -qs -w "$lang"
+}
+
+# Clone or update the translation repository
+if [ -d "$TOR_TRANSLATION_DIR" ]; then
+	$GIT_IN_TOR_TRANSLATION_DIR fetch origin
+else
+	mkdir -p tmp
+	git clone $TOR_TRANSLATION_REMOTE $TOR_TRANSLATION_DIR
+fi
+
+# Checkout the correct branch
+$GIT_IN_TOR_TRANSLATION_DIR checkout tails-misc_completed
+$GIT_IN_TOR_TRANSLATION_DIR reset --hard origin/tails-misc_completed
+
+# For each completely translated language, merge it,
+# unless it is translated outside Transifex
+for po_file in $TOR_TRANSLATION_DIR/*.po; do
+	lang=$(basename "$po_file" | tr - _ | sed 's/\.po$//')
+
+	if ! lang_is_excluded "$lang"; then
+		echo "Importing translation for $lang..."
+		cp "$po_file" "$TAILS_PO_DIR"
+	fi
+done
+
+# Update PO files
+intltool_update_po $(po_languages)

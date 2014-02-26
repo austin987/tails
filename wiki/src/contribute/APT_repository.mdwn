@@ -59,8 +59,6 @@ The build system adds the relevant APT sources:
 Also, if we're building from a bugfix or feature branch, add its
 own suite.
 
-This logic is implemented in Tails 0.14~rc2 and later.
-
 SSH access
 ==========
 
@@ -100,7 +98,9 @@ archive (`.orig.tar.{gz,bz2,xz}`) if it is not already in our APT
 repository; this can be done by passing `-sa` to pdebuild's
 `--debbuildopts`.
 
-### Configuring dupload
+### Configuring an upload tool
+
+#### Configuring dupload
 
 Add this configuration snippet to your `dupload` configuration:
 
@@ -112,7 +112,17 @@ Add this configuration snippet to your `dupload` configuration:
 	        dinstall_runs => 1,
 	};
 
-(`dput` lovers, please contribute your own snippet.)
+#### Confuguring dput
+
+Add this to `.dput.cf`:
+
+    [tails]
+    fqdn            = incoming.deb.tails.boum.org
+    method          = scp
+    login           = reprepro
+    incoming        = /srv/reprepro/incoming/
+    run_dinstall    = 0
+
 
 ### Uploading and importing process
 
@@ -181,10 +191,10 @@ operation must be done on the APT suites.
    merging a topic branch into it, whose purpose is to *remove* custom
    packages). To this end, compare the resulting list of (package,
    version) in the `experimental` APT suite with the one saved before
-   the merge, check Git merges history if needed, apply common sense,
-   and remove from `experimental` the packages that were removed from
-   it a while ago, and were just erroneously re-added by the
-   merge operation.
+   the merge (hint: use the `tails-diff-suites` script), check Git
+   merges history if needed, apply common sense, and remove from
+   `experimental` the packages that were removed from it a while ago,
+   and were just erroneously re-added by the merge operation.
 
 <a id="workflow-reset"></a>
 
@@ -214,8 +224,8 @@ Freezing devel into testing
 ---------------------------
 
 1. Merge `devel` branch into `testing` in Git
-2. (Manually) hard reset `testing` suite to the current state of the
-   `devel` one: [[APT_repository#workflow-reset]].
+2. (Manually) [[hard reset|APT_repository#workflow-reset]] the
+   `testing` suite to the current state of the `devel` one.
 
 <a id="workflow-post-tag"></a>
 

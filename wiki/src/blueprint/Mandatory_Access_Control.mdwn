@@ -22,14 +22,51 @@ Seems really easy to write and maintain policies, many already exist.
 
 A [critical problem with stacked
 filesystems](<https://lists.ubuntu.com/archives/apparmor/2012-April/002623.html>),
-such as aufs, must be fixed at [[!taglink todo/upstream]] level before
-we can use AppArmor in Tails. It *should* be fixed in AppArmor 3.0,
-which is scheduled for 2013 Q3.
+such as aufs, must be fixed at upstream level before we can use
+AppArmor in Tails.
 
-It can be workaround'd if
-<https://bugs.launchpad.net/apparmor/+bug/888077> is fixed (a month or
-two of dev time, we're told), or by adding "Kernel based alias
-support" (being discussed privately, stay tuned).
+It can be workaround'd with alias rules if
+<https://bugs.launchpad.net/apparmor/+bug/888077> is fixed , or by
+adding "Kernel based alias support". An AppArmor upstream developer is
+working on improving alias rules support so that we can workaround
+this. Once this work is complete:
+
+* We will be able to (and actually, we'll need to) add an alias rule:
+
+      echo 'alias / -> /lib/live/mount/rootfs/filesystem.squashfs/,' \
+      >> /etc/apparmor.d/tunables/alias
+
+* We will need to change the `/lib{,32,64}/**/ld{,32,64}-*.so mrix,`
+  rule into:
+
+      /lib{32,64}/**/ld{,32,64}-*.so     mrix,
+      /lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**/ld{,32,64}-*.so mrix,
+
+  ... to avoid it to overlap due to our added alias.
+
+* We have to deal with other overlaps, such as `audit deny owner /**/*
+  m,` (from the Evince profile), that will take away the executable
+  mmap permission from> applications in the `/lib/live/` path, if the
+  root user (who owns the file) tries to launch an application:
+
+  - either we use rewrite rules instead of aliases. Rewrite rule is
+    the same as alias except it doesn't result in an overlay of the
+    two rule sets, hence getting rid of the deny and x perm conflicts;
+  - or we need a way to define that the alias rules should have
+    priority in the union, thus removing the problems; this requires
+    an update to the AppArmor permission merging logic.
+
+* Alias rules dramatically increase the profiles compile time (e.g.
+  1min40 for the Evince one, and 8 seconds with the aforementioned
+  rule change). To mitigate that problem, we could:
+
+  - either look at the rules and see if we can't make some tweaks to
+    them;
+  - or ship a precompiled policy cached. As long as the parser and
+    kernel are in sync, then policy can be pulled straight from the
+    cache, without an compilation. If the parser detects that the
+    policy is out of date, then the cache will be ignored and
+    compilation will happen.
 
 grsecurity
 ----------
@@ -126,5 +163,3 @@ Resources
 - [yet another comparison](http://elinux.org/Mandatory_Access_Control_Comparison)
 - [An exploit that was able to bypass SELinux and AppArmor protections](http://lwn.net/Articles/341773/) by the author
   of grsecurity, which was safe.
-
-[[!tag release/3.0]]

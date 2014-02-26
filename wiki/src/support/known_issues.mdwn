@@ -1,9 +1,5 @@
 [[!meta title="Known issues"]]
 
-Some machines have been reported to have problems starting Tails.
-
-This list might not be accurate nor complete.
-
 [[!toc levels=2]]
 
 Problems starting Tails
@@ -21,7 +17,7 @@ Apple hardware
 For the moment, Tails has a very limited support for Apple hardware.
 
 Most recent Apple hardware does not boot without UEFI, and currently
-Tails does not start with UEFI. See [[!tails_todo UEFI desc="the corresponding ticket"]].
+Tails does not start with UEFI. See [[the corresponding blueprint|blueprint/UEFI]].
 
 See also [[manual installation using
 Mac|doc/first_steps/installation/manual/mac]] for more compatibility
@@ -73,8 +69,8 @@ Dell Dimension 2400
 Cannot start neither from USB nor from DVD. System crashes with a blank
 screen and locked up keyboard.
 
-ThinkPad X220, X230, T430, T520, T530 and E325
-----------------------------------------------
+ThinkPad X121e, X220, X230, T420i, T430, T520, W520, T530 and E325
+------------------------------------------------------------
 
 These machines do not start on USB sticks created using Tails USB
 Installer, due to a firmware limitation.
@@ -97,15 +93,25 @@ first, as advised on:
 Problematic USB sticks
 ----------------------
 
-The following USB sticks have issues starting Tails.
-They require removing the `live-media=removable` boot parameter,
-which [[is dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
+The following USB sticks have issues starting Tails.  They are configured by the
+manufacturer as a fixed disk, and not as a removable disk. As a consequence,
+they require removing the `live-media=removable` boot parameter, which [[is
+dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
 
-* SanDisk Cruzer Fit USB 2.0 8GB
+* SanDisk Cruzer Edge 8GB
+* SanDisk Cruzer Extreme USB 3.0 16GB and 32GB
+* SanDisk Cruzer Fit USB 2.0 8GB and 16GB
+* SanDisk Cruzer Force 8GB
+* SanDisk Cruzer Glide 4GB, 8GB and 16GB
 * SanDisk Cruzer Switch USB 2.0 8GB and 32GB
 * SanDisk Cruzer USB 3.0 64GB
-* SanDisk Cruzer Glide 8GB and 16GB
-* SanDisk Cruzer Extreme USB 3.0 16GB
+* Sandisk Cruzer Blade 4GB
+
+SanDisk had begun the production of flash drives configured as fixed disk in
+2012 to meet new requirements for Windows 8 Certification. The flash drives that
+comply with this certification will have the Windows 8 logo on their packaging.
+If a flash drive does not have the Windows 8 logo on its packaging, then that
+drive will function as a removable disk about should work with Tails.
 
 See also [[!tails_ticket 6397]].
 
@@ -169,18 +175,17 @@ This issue has been reported on the following hardware:
   - Fujitsu Lifebook AH531/GFO, only on regular shutdown, emergency
     shutdown works
 
-I2P is not maintained in Tails
-------------------------------
-
-Either we [[!tails_ticket 5889 desc="find a maintainer"]] for I2P in
-Tails, or it will be removed.
-
 <a id="fingerprint"></a>
 
-<!-- Fingerprint -->
-<!-- =========== -->
+Fingerprint
+===========
 
 <!-- If this section is empty adjust the [[fingerprint documentation|doc/about/fingerprint]]. -->
+
+<!-- The fingerprints of the Tails browser and the TBB are different: -->
+
+* Browser window resizing is in not reliable: [[!tails_ticket 6377]]
+  and [[!tor_bug 10095]].
 
 Other issues
 ============
@@ -249,3 +254,10 @@ As a workaround it is possible to:
   1. Close the web browser.
   2. Right-click on the Vidalia icon and choose "New identity".
   3. Open the web browser again.
+
+TorBrowser takes too long to shutdown
+-------------------------------------
+
+Since Tails 0.22, the browser sometimes takes too long to shutdown
+([[!tails_ticket 6480]]). Waiting a few more seconds is usually enough
+to let it close itself correctly.
