@@ -18,16 +18,14 @@ Export new upstream version number:
 
     export VERSION=XXX
 
-Update version number in `bin/tails-create-iuk`.
+Update version number in `bin/tails-create-iuk`, commit all files that
+need to be.
 
-    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-create-iuk
-    perl -pi -E \
-       "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," \
-       bin/tails-create-iuk
-
-Commit all files that need to be:
-
-    git commit bin/tails-create-iuk -m "tails-iuk $VERSION"
+    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-create-iuk && \
+       perl -pi -E \
+          "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," \
+          bin/tails-create-iuk && \
+       git commit bin/tails-create-iuk -m "tails-iuk $VERSION"
 
 Run the upstream test suite (point `PERL5LIB` to a checkout of the
 relevant tag of Tails' perl5lib):
@@ -41,7 +39,7 @@ relevant tag of Tails' perl5lib):
     # for each $FEATURE in features/* :
     LC_ALL=C PERL5LIB=/home/user/tails/perl5lib/lib pherkin $FEATURE
     # ... and manually cleanup mounted filesystems and busy loopback
-    # devices left behind between each run, sorry :(
+    # devices left behind between each run of some features, sorry :(
 
     # Run the rest of the test suite
     RELEASE_TESTING=1 LC_ALL=C PERL5LIB=/home/user/tails/perl5lib/lib dzil test
@@ -57,19 +55,18 @@ Update the Debian package
 =========================
 
 Checkout the branch with Debian package specifics and import the new
-upstream tarball:
+upstream tarball, update `debian/changelog`:
 
     git checkout debian && \
-       git-import-orig --upstream-vcs-tag=$VERSION ../Tails-IUK-$VERSION.tar.gz
-
-Update the packaging (e.g. look at changes in `dist.ini`).
-
-Update `debian/changelog`, starting with `git-dch` if the last step
-did not do it:
-
-    dch
+       git-import-orig --upstream-vcs-tag=$VERSION \
+          ../Tails-IUK-$VERSION.tar.gz && \
+       git-dch --auto && \
+       dch -e
 
 (Do not forget to set the appropriate release.)
+
+Update the packaging (e.g. look at changes in `dist.ini`),
+and then update `debian/changelog` again if needed.
 
 Commit `debian/changelog`:
 
