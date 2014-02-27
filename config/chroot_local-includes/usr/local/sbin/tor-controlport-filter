@@ -13,10 +13,14 @@
 # simultaneously. A malicious application that is running as a
 # local user could use this to prevent other applications from
 # doing NEWNYM. But it could just as well rewrite the
-# TOR_CONTROL_PORT environment varible to itself or do something else.
+# TOR_CONTROL_PORT environment variable to itself or do something else.
 
 import socket
 import binascii
+
+# Limit the length of a line, to prevent DoS attacks trying to
+# crash this filter proxy by sending infinitely long lines.
+MAX_LINESIZE = 128
 
 class UnexpectedAnswer(Exception):
 	def __init__(self, msg):
@@ -42,7 +46,7 @@ def do_newnym_real():
 	writeh.write("AUTHENTICATE " + hexcookie + "\n")
 	writeh.flush()
 
-	answer = readh.readline(128)
+	answer = readh.readline(MAX_LINESIZE)
 	if not answer.startswith("250"):
 		raise UnexpectedAnswer("AUTHENTICATE failed")
 
@@ -50,7 +54,7 @@ def do_newnym_real():
 	writeh.write("SIGNAL NEWNYM\n")
 	writeh.flush()
 
-	answer = readh.readline(128)
+	answer = readh.readline(MAX_LINESIZE)
 	if not answer.startswith("250"):
 		raise UnexpectedAnswer("SIGNAL NEWNYM failed")
 
@@ -58,7 +62,7 @@ def do_newnym_real():
 	writeh.write("QUIT\n")
 	writeh.flush()
 
-	answer = readh.readline(128)
+	answer = readh.readline(MAX_LINESIZE)
 	if not answer.startswith("250"):
 		raise UnexpectedAnswer("QUIT failed")
 
@@ -82,8 +86,8 @@ def handle_connection(sock):
 
 	# Keep accepting commands
 	while True:
-		# Read in a newline terminated line (max 128 chars)
-		line = readh.readline(128)
+		# Read in a newline terminated line
+		line = readh.readline(MAX_LINESIZE)
 		if not line: break
 
 		# Check what it is
