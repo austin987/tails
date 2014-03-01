@@ -9,6 +9,7 @@ tails-reconfigure-kexec
 tails-reconfigure-memlockd
 tails-sdmem-on-media-removal
 tails-set-wireless-devices-state
+tor-controlport-filter
 "
 
 PATCHED_INITSCRIPTS="
