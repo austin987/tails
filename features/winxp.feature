@@ -14,7 +14,6 @@ Feature: Microsoft Windows XP Camouflage
     And I log in to a new session
     And GNOME has started
     And I have closed all annoying notifications
-    And available upgrades have been checked
     And I save the state so the background can be restored next scenario
 
   Scenario: I should be presented with a Microsoft Windows XP like desktop
@@ -29,6 +28,7 @@ Feature: Microsoft Windows XP Camouflage
     And Tor has built a circuit
     And the time has synced
     And I have closed all annoying notifications
+    And available upgrades have been checked
     And I run "iceweasel"
     Then I see "WinXPIceweaselWindow.png" after at most 120 seconds
     # FIXME: #6536
