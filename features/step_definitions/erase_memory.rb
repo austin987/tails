@@ -48,8 +48,8 @@ Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
   next if @skip_steps_while_restoring_background
   puts "Detected #{@detected_ram_b} bytes of RAM"
   min_ram_b = convert_to_bytes(min_ram.to_i, unit)
-  # All RAM will not be reported by `free`, so we allow a 128 MB gap
-  gap = convert_to_bytes(128, "MiB")
+  # All RAM will not be reported by `free`, so we allow a 196 MB gap
+  gap = convert_to_bytes(196, "MiB")
   assert(@detected_ram_b + gap >= min_ram_b, "Didn't detect enough RAM")
 end
 
