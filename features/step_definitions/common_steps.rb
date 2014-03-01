@@ -269,8 +269,10 @@ Given /^I have closed all annoying notifications$/ do
   case @theme
   when "winxp"
     notification_picture = "WinXPNotificationX.png"
+    start_button_picture = "WinXPStartButton.png"
   else
     notification_picture = "GnomeNotificationX.png"
+    start_button_picture = "GnomeStartButton.png"
   end
 
   # First we wait a short while to give notifications a chance to show
@@ -284,8 +286,16 @@ Given /^I have closed all annoying notifications$/ do
     # note that we cannot use find_all as the resulting matches will
     # have the positions from before we start closing notifications,
     # but closing them will change the positions.
+
+    # Move the mouse pointer out of the way, so that the cross to close
+    # the first notification is not highlighted and can be found.
+    @screen.wait_and_click(start_button_picture, 10)
+    @screen.type(Sikuli::Key.ESC)
     while match = @screen.find(notification_picture)
       @screen.click(match)
+      # ... same for the next notification:
+      @screen.wait_and_click(start_button_picture, 10)
+      @screen.type(Sikuli::Key.ESC)
     end
   rescue FindFailed
     # noop
