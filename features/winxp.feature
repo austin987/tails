@@ -30,7 +30,6 @@ Feature: Microsoft Windows XP Camouflage
     And I have closed all annoying notifications
     And I run "iceweasel"
     Then I see "WinXPIceweaselWindow.png" after at most 120 seconds
-    # FIXME: #6536
     And I see "WinXPIceweaselTaskBar.png" after at most 10 seconds
     And I see "WinXPWindowButtons.png" after at most 10 seconds
 
