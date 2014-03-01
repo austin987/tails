@@ -363,6 +363,7 @@ end
 
 When /^I open the GNOME run dialog$/ do
   next if @skip_steps_while_restoring_background
+  @screen.type(Sikuli::Key.ESC)
   @screen.type(Sikuli::Key.F2, Sikuli::KeyModifier.ALT)
   @screen.wait(run_dialog_picture, 10)
 end
