@@ -270,7 +270,7 @@ Given /^I have closed all annoying notifications$/ do
 
   begin
     # note that we cannot use find_all as the resulting matches will
-    # have the positions from before we start closing notificatios,
+    # have the positions from before we start closing notifications,
     # but closing them will change the positions.
     while match = @screen.find(notification_picture)
       @screen.click(match)
