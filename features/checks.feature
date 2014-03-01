@@ -19,6 +19,8 @@ Feature: Various checks
    Scenario: The shipped Tails signing key is up-to-date
     Given the network is plugged
     And Tor has built a circuit
+    And I am told that Tor is ready
+    And I have closed all annoying notifications
     Then the shipped Tails signing key is not outdated
 
   Scenario: The live user is setup correctly
@@ -31,6 +33,8 @@ Feature: Various checks
     When the network is plugged
     Then I have a network connection
     And Tor has built a circuit
+    And I am told that Tor is ready
+    And I have closed all annoying notifications
     And process "vidalia" is running
     And the time has synced
 

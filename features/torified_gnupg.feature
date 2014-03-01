@@ -15,6 +15,7 @@ Feature: Keyserver interaction with GnuPG
     And I have a network connection
     And Tor has built a circuit
     And the time has synced
+    And I am told that Tor is ready
     And I have closed all annoying notifications
     And the "10CC5BC7" OpenPGP key is not in the live user's public keyring
     And I save the state so the background can be restored next scenario

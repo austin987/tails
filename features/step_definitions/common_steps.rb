@@ -252,6 +252,18 @@ Given /^Iceweasel has started and is not loading a web page$/ do
   @screen.type("about:blank" + Sikuli::Key.ENTER)
 end
 
+Given /^I am told that Tor is ready$/ do
+  next if @skip_steps_while_restoring_background
+  case @theme
+  when "winxp"
+    notification_picture = "WinXPTorIsReady.png"
+  else
+    notification_picture = "GnomeTorIsReady.png"
+  end
+
+  @screen.wait(notification_picture, 300)
+end
+
 Given /^I have closed all annoying notifications$/ do
   next if @skip_steps_while_restoring_background
   case @theme
