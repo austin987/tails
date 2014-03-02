@@ -349,13 +349,8 @@ When /^I run "([^"]*)"$/ do |program|
   next if @skip_steps_while_restoring_background
   step "I open the GNOME run dialog"
   @screen.type(program)
-  begin
-    while @screen.find(run_dialog_picture)
-      @screen.type(Sikuli::Key.ENTER)
-    end
-  rescue FindFailed
-    # noop
-  end
+  sleep 0.5
+  @screen.type(Sikuli::Key.ENTER)
 end
 
 Given /^I enter the sudo password in the gksu prompt$/ do

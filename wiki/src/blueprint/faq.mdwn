@@ -344,6 +344,90 @@ is another anonymous network different from Tor.
 
 </div>
 
+Can I use Tails with a VPN?
+---------------------------
+
+Three possible scenarios need to be distinguished:
+
+  - Using a VPN instead of Tor
+  - Using a VPN to connect to Tor (VPN before Tor)
+  - Connecting to a VPN using Tor (VPN after Tor)
+
+For more information, see our [[blueprint on VPN
+support|blueprint/vpn_support/]].
+
+### Using a VPN instead of Tor
+
+It is a very [[fundamental assumption of Tails|about#tor]] to force all outgoing
+traffic to anonymity networks such as Tor or I2P. VPN are not anonymity
+networks, because the administrators of the VPN can know both where you are
+connecting from and where you are connecting to. Tor provides anonymity by
+making it impossible for a single point in the network to know both the origin
+and the destination of a connection.
+
+### Using a VPN to connect to Tor (VPN before Tor)
+
+In some situations, you might be forced to use a VPN to connect to the Internet,
+for example by your ISP. This is currenlty not possible using Tails. See
+[[!tails_ticket 5858]].
+
+[[Tor bridges|doc/first_steps/startup_options/bridge_mode]] can also be useful
+to bypass the limitations of your ISP.
+
+### Connecting to a VPN using Tor (VPN after Tor)
+
+In some situtations, it can be useful to connect to a VPN through Tor:
+
+  - To access services that block connections coming from Tor.
+  - To access ressources only available inside a VPN, for example at your
+    company or University.
+
+This is currenlty not possible easily using Tails.
+
+<a id="luks"></a>
+
+How strong is the encryption of the persistent volume and LUKS?
+---------------------------------------------------------------
+
+Tails uses LUKS to encrypt the persistent volume. This is the same technique as
+the one we recommend for [[creating and using encrypted
+volumes|doc/encryption_and_privacy/encrypted_volumes]] in general.
+
+LUKS is a very popular standard for disk encryption in Linux. LUKS is the
+default technique for full-disk encryption proposed by many distribution,
+including Debian and Ubuntu, when installing a regular system.
+
+Currently the default cipher is `aes-cbc-essiv:sha256` with a key size of 256
+bits.
+
+To understand better how persistence work, see our [[design
+document|contribute/design/persistence]].
+
+Can I use TrueCrypt with Tails?
+-------------------------------
+
+Yes, but Truecrypt needs to be activated when starting Tails, see our
+[[documentation|doc/encryption_and_privacy/truecrypt]].
+
+However, we recommend using other [[encryption
+tools|doc/encryption_and_privacy/encrypted_volumes]] such as [[LUKS|faq#luks]].
+The development process of Truecrypt has been long criticized, while LUKS is a
+recognized open standard.
+
+Why is the time set wrong?
+--------------------------
+
+When Tails starts, your timezone is set to UTC (Greenwich time). So, this time
+might be a few hours in the future if you are West from the UK, or in the past
+if you are East from the UK. The minutes should be accurate.
+
+We do this for anonymity reasons: if some application reveals your actual
+timezone, it might help identifying who you are.
+
+Having all Tails users set to the same timezone, makes it more difficult to
+distinguish you amongst all the other Tails users.
+
+<!--
 <rawmaterial>
 
 Proxy
@@ -383,6 +467,7 @@ included in the default package set.
 </rawmaterial>
 
 Other topics
-============
+------------
 
 - XXX_NICK_XXX in Pidgin might be caused by a lack of RAM
+-->
