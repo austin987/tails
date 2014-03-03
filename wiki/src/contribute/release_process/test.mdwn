@@ -409,36 +409,6 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 * Make sure the Tails repository unversioned suites (e.g. `testing`,
   `stable` and `devel`) are *not* in APT sources.
 
-# Tails Installer
-
-All this was successfully reviewed at commit cdbbf4d8.
-
-After each of the following tests:
-
-* The installed or upgraded Tails medium shall be successfully booted.
-* The installed or upgraded Tails medium shall have the "emergency
-  shutdown on boot medium removal" feature working: remove Tails boot
-  medium and check that the memory erasure process is started
-  (`Loading new kernel`, at least).
-* The TailsData partition must survive
-  upgrades.
-
-Tests to run:
-
-* Test "Clone & Install":
-  - from USB.
-  - onto a USB stick that has a MBR partition table, and no
-    partition at all (regression test)
-  - onto a USB stick that already has an old-fashioned hybrid cat'd
-    Tails on it
-* Test "Clone & Upgrade" (onto a USB install containing an older
-  Tails):
-  - from DVD.
-  - from USB.
-  - onto a USB stick that already has a old-fashioned cat'd hybrid
-    Tails on it: should warn this action is not supported, and direct
-    the user to the "Clone & Install" operation mode.
-
 <a id="incremental-upgrades"></a>
 
 # Incremental upgrades
@@ -496,21 +466,6 @@ Given these are not published yet, a local test setup is needed:
 Also, the updater must be called, from inside the system to update,
 with every needed option to use that rather than the online published
 stuff: **FIXME**.
-
-# Persistence
-
-* Activate persistence on a Tails USB install with all presets on
-  (also done by the automated test suite,
-  but required to test what follows until it's green too).
-* Try read-write mode. Make sure that changes do survive
-  reboot.
-* Try read-only mode. Make sure that persistent files are writeable,
-  but that no changes survive
-  reboot.
-* Turn off some persistence presets, reboot, and make sure they are
-  not activated.
-* Delete a persistent volume, reboot, the persistence option should
-  not appear in the Greeter anymore.
 
 # Windows Camouflage
 
