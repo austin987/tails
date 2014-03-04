@@ -20,3 +20,12 @@ mac_spoof_is_enabled() {
     # safety.
     [ "${TAILS_MACSPOOF_ENABLED}" != false ]
 }
+
+tails_netconf() {
+    local TAILS_NETCONF
+    TAILS_NETCONF=""
+    if [ -r "${PHYSICAL_SECURITY_SETTINGS}" ]; then
+        . "${PHYSICAL_SECURITY_SETTINGS}"
+    fi
+    echo "${TAILS_NETCONF}"
+}

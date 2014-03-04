@@ -13,6 +13,9 @@
 # Import tor_control_*(), tor_is_working(), TOR_LOG, TOR_DIR
 . /usr/local/lib/tails-shell-library/tor.sh
 
+# Import tails_netconf()
+. /usr/local/lib/tails-shell-library/tails_greeter.sh
+
 ### Init variables
 
 TORDATE_DIR=/var/run/tordate
@@ -233,7 +236,7 @@ fi
 wait_for_working_tor
 
 # Disable "info" logging workaround from 10-tor.sh
-if grep -qw bridge /proc/cmdline; then
+if [ "$(tails_netconf)" = "obstacle" ]; then
 	tor_control_setconf "Log=\"notice file ${TOR_LOG}\""
 fi
 

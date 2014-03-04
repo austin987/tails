@@ -16,6 +16,9 @@ fi
 # Import tor_control_*(), tor_set_in_torrc(), TOR_LOG
 . /usr/local/lib/tails-shell-library/tor.sh
 
+# Import tails_netconf()
+. /usr/local/lib/tails-shell-library/tails_greeter.sh
+
 # It's safest that Tor is not running when messing with its
 # configuration and logs.
 service tor stop
@@ -24,7 +27,7 @@ service tor stop
 # tordate/20-time.sh), so deleting it seems like a Good Thing(TM).
 rm -f "${TOR_LOG}"
 
-if grep -qw bridge /proc/cmdline; then
+if [ "$(tails_netconf)" = "obstacle" ]; then
    tor_set_in_torrc "DisableNetwork" "1"
    tor_set_in_torrc "ClientTransportPlugin" "obfs2,obfs3 exec /usr/bin/obfsproxy managed"
 fi
@@ -34,7 +37,7 @@ fi
 # * https://tails.boum.org/bugs/tor_vs_networkmanager/
 restart-tor
 
-if grep -qw bridge /proc/cmdline; then
+if [ "$(tails_netconf)" = "obstacle" ]; then
    # When using a bridge Tor reports TLS cert lifetime errors
    # (e.g. when the system clock is way off) with severity "info", but
    # when no bridge is used the severity is "warn". tordate/20-time.sh
