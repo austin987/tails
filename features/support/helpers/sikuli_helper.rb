@@ -58,12 +58,16 @@ def sikuli_script_proxy.new(*args)
     self.click(Sikuli::Location.new(x, y))
   end
 
+  def s.hover_point(x, y)
+    self.hover(Sikuli::Location.new(x, y))
+  end
+
   def s.wait_and_click(pic, time)
     self.click(self.wait(pic, time))
   end
 
   def s.hide_cursor
-    self.hover(Sikuli::Location.new(self.w, self.h/2))
+    self.hover_point(self.w, self.h/2)
   end
 
   s
