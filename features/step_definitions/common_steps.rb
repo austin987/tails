@@ -218,9 +218,25 @@ Then /^Tails seems to have booted normally$/ do
   step "GNOME has started"
 end
 
-Given /^I have a network connection$/ do
+Given /^Tor is ready$/ do
   next if @skip_steps_while_restoring_background
-  try_for(120) { @vm.has_network? }
+
+  # First, we wait for the notification to be displayed:
+  # it disappears after a timeout, so if we wait for other events first,
+  # we sometimes cannot find the notification picture on screen later.
+  case @theme
+  when "winxp"
+    notification_picture = "WinXPTorIsReady.png"
+  else
+    notification_picture = "GnomeTorIsReady.png"
+  end
+  @screen.wait(notification_picture, 300)
+
+  # Having seen the "Tor is ready" notification implies that Tor has
+  # built a circuit, but let's check it directly to be on the safe side.
+  step "Tor has built a circuit"
+
+  step "the time has synced"
 end
 
 Given /^Tor has built a circuit$/ do
@@ -270,10 +286,16 @@ Given /^I have closed all annoying notifications$/ do
 
   begin
     # note that we cannot use find_all as the resulting matches will
-    # have the positions from before we start closing notificatios,
+    # have the positions from before we start closing notifications,
     # but closing them will change the positions.
+
+    # Move the mouse pointer out of the way, so that the cross to close
+    # the first notification is not highlighted and can be found.
+    @screen.hide_cursor
     while match = @screen.find(notification_picture)
       @screen.click(match)
+      # ... same for the next notification:
+      @screen.hide_cursor
     end
   rescue FindFailed
     # noop
