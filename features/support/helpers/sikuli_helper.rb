@@ -40,6 +40,13 @@ end
 # Ruby class (it's just an instance of Rjb_JavaProxy) we can't
 # monkey patch any class, so additional methods must be added
 # to each Screen object.
+#
+# All Java classes' methods are immediately available in the proxied
+# Ruby classes, but care has to be given to match their type. For a
+# list of methods, see: <http://doc.sikuli.org/javadoc/index.html>.
+# The type "PRSML" is a union of Pattern, Region, Screen, Match and
+# Location.
+#
 # Also, due to limitations in Ruby's syntax we can't do:
 #     def Sikuli::Screen.new
 # so we work around it with the following vairable.
@@ -51,12 +58,16 @@ def sikuli_script_proxy.new(*args)
     self.click(Sikuli::Location.new(x, y))
   end
 
+  def s.hover_point(x, y)
+    self.hover(Sikuli::Location.new(x, y))
+  end
+
   def s.wait_and_click(pic, time)
     self.click(self.wait(pic, time))
   end
 
   def s.hide_cursor
-    self.hover(Sikuli::Location.new(self.w, self.h/2))
+    self.hover_point(self.w, self.h/2)
   end
 
   s
