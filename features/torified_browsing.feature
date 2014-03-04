@@ -12,9 +12,7 @@ Feature: Browsing the web using Iceweasel
     And I log in to a new session
     And GNOME has started
     And I have a network connection
-    And Tor has built a circuit
-    And the time has synced
-    And I am told that Tor is ready
+    And Tor is ready
     And I have closed all annoying notifications
     And I run "iceweasel"
     And Iceweasel has started and is not loading a web page

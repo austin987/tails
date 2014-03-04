@@ -10,9 +10,7 @@ Feature:
     And the computer boots Tails
     And I log in to a new session
     And I have a network connection
-    And Tor has built a circuit
-    And the time has synced
-    And I am told that Tor is ready
+    And Tor is ready
     And I have closed all annoying notifications
     And all Internet traffic has only flowed through Tor
     And I save the state so the background can be restored next scenario

@@ -11,9 +11,7 @@ Feature: Browsing the web using the Unsafe Browser
     And I log in to a new session
     And GNOME has started
     And I have a network connection
-    And Tor has built a circuit
-    And the time has synced
-    And I am told that Tor is ready
+    And Tor is ready
     And I have closed all annoying notifications
     And I save the state so the background can be restored next scenario
 

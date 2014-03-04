@@ -25,9 +25,7 @@ Feature: Microsoft Windows XP Camouflage
   Scenario: Windows should appear like those in Microsoft Windows XP
     When the network is plugged
     And I have a network connection
-    And Tor has built a circuit
-    And the time has synced
-    And I am told that Tor is ready
+    And Tor is ready
     And I have closed all annoying notifications
     And I run "iceweasel"
     Then I see "WinXPIceweaselWindow.png" after at most 120 seconds

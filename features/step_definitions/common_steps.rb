@@ -223,6 +223,27 @@ Given /^I have a network connection$/ do
   try_for(120) { @vm.has_network? }
 end
 
+Given /^Tor is ready$/ do
+  next if @skip_steps_while_restoring_background
+
+  # First, we wait for the notification to be displayed:
+  # it disappears after a timeout, so if we wait for other events first,
+  # we sometimes cannot find the notification picture on screen later.
+  case @theme
+  when "winxp"
+    notification_picture = "WinXPTorIsReady.png"
+  else
+    notification_picture = "GnomeTorIsReady.png"
+  end
+  @screen.wait(notification_picture, 300)
+
+  # Having seen the "Tor is ready" notification implies that Tor has
+  # built a circuit, but let's check it directly to be on the safe side.
+  step "Tor has built a circuit"
+
+  step "the time has synced"
+end
+
 Given /^Tor has built a circuit$/ do
   next if @skip_steps_while_restoring_background
   wait_until_tor_is_working
@@ -250,18 +271,6 @@ Given /^Iceweasel has started and is not loading a web page$/ do
   @screen.wait_and_click(iceweasel_picture, 120)
   @screen.type("l", Sikuli::KeyModifier.CTRL)
   @screen.type("about:blank" + Sikuli::Key.ENTER)
-end
-
-Given /^I am told that Tor is ready$/ do
-  next if @skip_steps_while_restoring_background
-  case @theme
-  when "winxp"
-    notification_picture = "WinXPTorIsReady.png"
-  else
-    notification_picture = "GnomeTorIsReady.png"
-  end
-
-  @screen.wait(notification_picture, 300)
 end
 
 Given /^I have closed all annoying notifications$/ do
