@@ -10,9 +10,7 @@ Feature: Browsing the web using the Unsafe Browser
     And the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I have a network connection
-    And Tor has built a circuit
-    And the time has synced
+    And Tor is ready
     And I have closed all annoying notifications
     And available upgrades have been checked
     And I save the state so the background can be restored next scenario

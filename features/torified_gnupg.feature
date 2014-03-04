@@ -12,9 +12,7 @@ Feature: Keyserver interaction with GnuPG
     And the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I have a network connection
-    And Tor has built a circuit
-    And the time has synced
+    And Tor is ready
     And I have closed all annoying notifications
     And available upgrades have been checked
     And the "10CC5BC7" OpenPGP key is not in the live user's public keyring
