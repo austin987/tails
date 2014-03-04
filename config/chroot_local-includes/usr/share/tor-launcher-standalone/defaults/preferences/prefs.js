@@ -12,7 +12,7 @@ pref("extensions.torlauncher.prompt_at_startup", true);
 pref("extensions.torlauncher.tor_path", "");
 pref("extensions.torlauncher.torrc_path", "");
 pref("extensions.torlauncher.tordatadir_path", "");
-pref("extensions.torlauncher.transportproxy_path", "");
+pref("extensions.torlauncher.transportproxy_path", "/usr/bin/obfsproxy");
 
 // Recommended default bridge type (can be set per localized bundle).
 // pref("extensions.torlauncher.default_bridge_recommended_type", "obfs3");
