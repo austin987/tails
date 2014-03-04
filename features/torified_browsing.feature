@@ -11,7 +11,6 @@ Feature: Browsing the web using Iceweasel
     And the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I have a network connection
     And Tor is ready
     And I have closed all annoying notifications
     And I run "iceweasel"

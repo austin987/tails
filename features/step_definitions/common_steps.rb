@@ -218,11 +218,6 @@ Then /^Tails seems to have booted normally$/ do
   step "GNOME has started"
 end
 
-Given /^I have a network connection$/ do
-  next if @skip_steps_while_restoring_background
-  try_for(120) { @vm.has_network? }
-end
-
 Given /^Tor is ready$/ do
   next if @skip_steps_while_restoring_background
 

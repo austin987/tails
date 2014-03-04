@@ -15,35 +15,30 @@ Feature: Time syncing
 
   Scenario: Clock with host's time
     When the network is plugged
-    And I have a network connection
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
   Scenario: Clock is one day in the past
     When I bump the system time with "-1 day"
     And the network is plugged
-    And I have a network connection
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
   Scenario: Clock way in the past
     When I set the system time to "01 Jan 2000 12:34:56"
     And the network is plugged
-    And I have a network connection
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
   Scenario: Clock is one day in the future
     When I bump the system time with "+1 day"
     And the network is plugged
-    And I have a network connection
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
   Scenario: Clock way in the future
     When I set the system time to "01 Jan 2020 12:34:56"
     And the network is plugged
-    And I have a network connection
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 

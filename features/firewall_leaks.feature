@@ -9,7 +9,6 @@ Feature:
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And I have a network connection
     And Tor is ready
     And I have closed all annoying notifications
     And all Internet traffic has only flowed through Tor

@@ -18,7 +18,6 @@ Feature: Various checks
 
    Scenario: The shipped Tails signing key is up-to-date
     Given the network is plugged
-    And I have a network connection
     And Tor is ready
     And I have closed all annoying notifications
     Then the shipped Tails signing key is not outdated
@@ -31,7 +30,6 @@ Feature: Various checks
   Scenario: No initial network
     Given I wait between 30 and 60 seconds
     When the network is plugged
-    Then I have a network connection
     And Tor is ready
     And I have closed all annoying notifications
     And process "vidalia" is running
@@ -39,7 +37,7 @@ Feature: Various checks
 
   Scenario: No unexpected network services
     When the network is plugged
-    And I have a network connection
+    And Tor is ready
     Then no unexpected services are listening for network connections
 
   # We ditch the background snapshot for this scenario since we cannot

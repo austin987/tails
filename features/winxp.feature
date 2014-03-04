@@ -24,7 +24,6 @@ Feature: Microsoft Windows XP Camouflage
 
   Scenario: Windows should appear like those in Microsoft Windows XP
     When the network is plugged
-    And I have a network connection
     And Tor is ready
     And I have closed all annoying notifications
     And I run "iceweasel"
