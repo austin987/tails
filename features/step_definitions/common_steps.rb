@@ -251,6 +251,13 @@ Given /^the time has synced$/ do
   end
 end
 
+Given /^available upgrades have been checked$/ do
+  next if @skip_steps_while_restoring_background
+  try_for(300) {
+    @vm.execute("test -e '/var/run/tails-upgrader/checked_upgrades'").success?
+  }
+end
+
 Given /^Iceweasel has started and is not loading a web page$/ do
   next if @skip_steps_while_restoring_background
   case @theme
