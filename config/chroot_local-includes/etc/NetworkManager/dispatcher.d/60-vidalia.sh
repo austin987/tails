@@ -5,14 +5,13 @@ if [ $1 = "lo" ]; then
    exit 0
 fi
 
-# Run whenever an interface gets "up", not otherwise:
-if [ $2 != "up" ]; then
-   exit 0
+if [ "${2}" = "up" ]; then
+   # Restart Vidalia because it does not automatically reconnect to the new
+   # Tor instance. Use kill+start as:
+   # - X-GNOME-AutoRestart does not exist in Lenny's Gnome
+   # - we do not start Vidalia automatically anymore and *this* is the time
+   #   when it is supposed to start.
+   restart-vidalia
+elif [ "${2}" = "down" ]; then
+   killall vidalia
 fi
-
-# Restart Vidalia because it does not automatically reconnect to the new
-# Tor instance. Use kill+start as:
-# - X-GNOME-AutoRestart does not exist in Lenny's Gnome
-# - we do not start Vidalia automatically anymore and *this* is the time
-#   when it is supposed to start.
-restart-vidalia
