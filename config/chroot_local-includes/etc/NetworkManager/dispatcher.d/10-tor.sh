@@ -39,5 +39,5 @@ if [ "$(tails_netconf)" = "obstacle" ]; then
    # increase Tor's logging severity.
    tor_control_setconf "Log=\"info file ${TOR_LOG}\""
 
-   /usr/local/sbin/tails-tor-launcher
+   /usr/local/sbin/tails-tor-launcher &
 fi
