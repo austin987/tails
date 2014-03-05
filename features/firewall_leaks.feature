@@ -11,6 +11,7 @@ Feature:
     And I log in to a new session
     And Tor is ready
     And I have closed all annoying notifications
+    And available upgrades have been checked
     And all Internet traffic has only flowed through Tor
     And I save the state so the background can be restored next scenario
 
