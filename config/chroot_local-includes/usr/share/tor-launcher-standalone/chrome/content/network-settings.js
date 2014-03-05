@@ -929,6 +929,11 @@ function getAndValidateProxySettings()
     }
   }
 
+  // ClientTransportPlugin is mutually exclusive with any of the
+  // *Proxy settings.
+  if (proxyType)
+    settings[kTorConfKeyClientTransportPlugin] = null;
+
   if ("SOCKS4" == proxyType)
   {
     settings[kTorConfKeySocks4Proxy] = proxyAddrPort;
@@ -1051,6 +1056,9 @@ function applyBridgeSettings()
 }
 
 function extractTransportPlugins(bridgeList) {
+  if (!bridgeList)
+    return null;
+
   var transports = new Array;
 
   for (var i = 0; i < bridgeList.length; i++)
@@ -1071,6 +1079,7 @@ function getAndValidateBridgeSettings()
   var settings = {};
   settings[kTorConfKeyUseBridges] = null;
   settings[kTorConfKeyBridgeList] = null;
+  settings[kTorConfKeyClientTransportPlugin] = null;
 
   var useBridges = (getWizard()) ? getElemValue("bridgesRadioYes", false)
                                  : getElemValue(kUseBridgesCheckbox, false);
@@ -1109,23 +1118,18 @@ function getAndValidateBridgeSettings()
   if (defaultBridgeType)
     bridgeList = TorLauncherUtil.defaultBridges;
 
-  var transportPlugins = extractTransportPlugins(bridgeList);
-  var transportConfig;
-  if (transportPlugins)
-  {
-    var kPrefTransportProxyPath = "extensions.torlauncher.transportproxy_path";
-    var transportProxyPath = TorLauncherUtil.getCharPref(kPrefTransportProxyPath, "");
-    transportConfig = transportPlugins + " exec " + transportProxyPath +
-                      " managed";
-  }
-
   setBridgeListElemValue(bridgeList);
   if (useBridges && bridgeList)
   {
     settings[kTorConfKeyUseBridges] = true;
     settings[kTorConfKeyBridgeList] = bridgeList;
-    if (transportConfig)
-      settings[kTorConfKeyClientTransportPlugin] = transportConfig;
+
+    var transportPlugins = extractTransportPlugins(bridgeList);
+    var kPrefTransportProxyPath = "extensions.torlauncher.transportproxy_path";
+    var transportProxyPath = TorLauncherUtil.getCharPref(kPrefTransportProxyPath, null);
+    if (transportPlugins && transportProxyPath)
+      settings[kTorConfKeyClientTransportPlugin] =
+        transportPlugins + " exec " + transportProxyPath + " managed";
   }
 
   return settings;
