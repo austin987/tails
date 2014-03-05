@@ -13,23 +13,18 @@ if [ $2 != "up" ]; then
    exit 0
 fi
 
-# Import tor_control_*(), tor_set_in_torrc(), TOR_LOG
+# Import tor_control_setconf(), TOR_LOG
 . /usr/local/lib/tails-shell-library/tor.sh
 
 # Import tails_netconf()
 . /usr/local/lib/tails-shell-library/tails_greeter.sh
 
-# It's safest that Tor is not running when messing with its
-# configuration and logs.
+# It's safest that Tor is not running when messing with its logs.
 service tor stop
 
 # We depend on grepping stuff from the Tor log (especially for
 # tordate/20-time.sh), so deleting it seems like a Good Thing(TM).
 rm -f "${TOR_LOG}"
-
-if [ "$(tails_netconf)" = "obstacle" ]; then
-   tor_set_in_torrc "DisableNetwork" "1"
-fi
 
 # A SIGHUP should be enough but there's a bug in Tor. Details:
 # * https://trac.torproject.org/projects/tor/ticket/1247
