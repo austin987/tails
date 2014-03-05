@@ -25,6 +25,11 @@ tor_control_getinfo() {
 	    sed "s|^250-${1}=\(.*\)[[:space:]]\+$|\1|"
 }
 
+tor_control_getconf() {
+	tor_control_send "GETCONF ${1}" | \
+            sed -n "s/^250 ${1}=\(.*\)$/\1/p"
+}
+
 tor_control_setconf() {
 	tor_control_send "SETCONF ${1}" >/dev/null
 }
