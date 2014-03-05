@@ -29,7 +29,6 @@ rm -f "${TOR_LOG}"
 
 if [ "$(tails_netconf)" = "obstacle" ]; then
    tor_set_in_torrc "DisableNetwork" "1"
-   tor_set_in_torrc "ClientTransportPlugin" "obfs2,obfs3 exec /usr/bin/obfsproxy managed"
 fi
 
 # A SIGHUP should be enough but there's a bug in Tor. Details:
