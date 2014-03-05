@@ -9,11 +9,9 @@ Feature:
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And I have a network connection
-    And Tor has built a circuit
-    And Iceweasel has autostarted and is not loading a web page
-    And the time has synced
+    And Tor is ready
     And I have closed all annoying notifications
+    And available upgrades have been checked
     And all Internet traffic has only flowed through Tor
     And I save the state so the background can be restored next scenario
 

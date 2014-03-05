@@ -67,7 +67,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 * does the exposed User-Agent match the TBB's one?
   (connect to a website you can check the access logs for)
-* Running `getTorbuttonUserAgent` should produce the useragent set by the
+* Running `getTorBrowserUserAgent` should produce the useragent set by the
   Torbutton version installed and used in Iceweasel.
 * Browsing (by IP) a HTTP or HTTPS server on the LAN should be possible.
 * Browsing (by IP) a FTP server on the LAN should be possible.
@@ -355,17 +355,12 @@ correctly.
 Testing that the needed files are really mapped in memory, and the
 erasing process actually works, involves a more complicated
 process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
-`[needs-fix: erase_memory]` ([[!tails_todo test_suite:_anti-tests]])
+`[needs-fix: erase_memory]` ([[!tails_ticket 5959]])
 
 # Root access control
 
 * Check you can login as root neither with the `amnesia` password nor
   with the `live` one.
-* Boot Tails without setting a password and check you can't get
-  PolicyKit administrative privileges (e.g. run `pkexec ls`), neither
-  with the `amnesia` password nor with the `live` one.
-* Boot Tails with a password and check you can get PolicyKit
-  administrative privileges (e.g. run `pkexec ls`).
 * Check that the `$TAILS_USER_PASSWORD` variable, if still existing in the system
   environment after the boot has finished, does not contain the clear text
   password.
@@ -377,7 +372,7 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 # I2P
 
 * Make sure that I2P is up-to-date, at least if the
-  [changelogs](http://www.i2p2.de/announcements.html) mention that
+  [changelogs](https://geti2p.net/announcements.html) mention that
   security critical bugs were fixed.
 * Check that "Applications -> Internet -> I2P" works:
   - You get the "Starting I2P..." pop-up.
@@ -389,7 +384,7 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
     non-zero.
   - You should get "Network: Hidden" in the "General" section.
 * Check that you can reach some eepsites within Iceweasel, like
-  <http://www.i2p2.i2p> and <http://forum.i2p>.
+  <http://i2p-projekt.i2p> and <http://forum.i2p>.
 * Check that you can connect to the I2P IRC server through Pidgin and
   the preconfigured IRC account on 127.0.0.1.
 
@@ -467,6 +462,9 @@ Given these are not published yet, a local test setup is needed:
   `/var/www/tails/upgrade/v1/Tails/0.14~rc2/i386/stable/upgrades.yml`
 * a replacement for the Tails HTTP mirrors' `iuk` directories,
   e.g. `/var/www/tails/stable/iuk/Tails_i386_0.14-rc2_to_0.14.iuk`
+* patch /etc/hosts on Tails to include
+
+    10.36.24.33    dl.amnesia.boum.org
 
 Also, the upgrader must be called, from inside the system to upgrade,
 with every needed option to use the local web server rather than the
