@@ -8,7 +8,13 @@ set -e
 # Get LANG
 . /etc/default/locale
 
-killall -SIGKILL vidalia || :
+for i in $(seq 10); do
+   killall -SIGKILL vidalia || :
+   sleep 1
+   if ! pgrep "^vidalia$"; then
+      break
+   fi
+done
 
 until pgrep -u "${LIVE_USERNAME}" "^nm-applet$" >/dev/null ; do
    sleep 5
