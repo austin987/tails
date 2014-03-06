@@ -3,20 +3,23 @@
 PERSISTENCE_STATE='/var/lib/live/config/tails.persistence'
 PHYSICAL_SECURITY_SETTINGS='/var/lib/live/config/tails.physical_security'
 
-persistence_is_enabled() {
-    local TAILS_PERSISTENCE_ENABLED
-    TAILS_PERSISTENCE_ENABLED=""
-    if [ -r "${PERSISTENCE_STATE}" ]; then
-        . "${PERSISTENCE_STATE}"
+_get_tg_setting() {
+    if [ -r "${1}" ]; then
+        . "${1}"
+        eval "echo \$${2}"
     fi
-    [ "${TAILS_PERSISTENCE_ENABLED}" = true ]
+}
+
+persistence_is_enabled() {
+    [ "$(_get_tg_setting "${PERSISTENCE_STATE}" TAILS_PERSISTENCE_ENABLED)" = true ]
 }
 
 mac_spoof_is_enabled() {
-    if [ -r "${PHYSICAL_SECURITY_SETTINGS}" ]; then
-        . "${PHYSICAL_SECURITY_SETTINGS}"
-    fi
     # Only return false when explicitly told so to increase failure
     # safety.
-    [ "${TAILS_MACSPOOF_ENABLED}" != false ]
+    [ "$(_get_tg_setting "${PHYSICAL_SECURITY_SETTINGS}" TAILS_MACSPOOF_ENABLED)" != false ]
+}
+
+tails_netconf() {
+    _get_tg_setting "${PHYSICAL_SECURITY_SETTINGS}" TAILS_NETCONF
 }
