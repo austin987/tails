@@ -14,20 +14,19 @@ tor_control_send() {
 	COOKIE=/var/run/tor/control.authcookie
 	HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
 	/bin/echo -ne "AUTHENTICATE ${HEXCOOKIE}\r\n${1}\r\nQUIT\r\n" | \
-	    nc 127.0.0.1 $(get_tor_control_port)
+	    nc 127.0.0.1 $(get_tor_control_port) | tr -d "\r"
 }
 
 # This function may be dangerous to use. See "Potential Tor bug" below.
 # Only handles GETINFO keys with single-line answers
 tor_control_getinfo() {
-	tor_control_send "GETINFO ${1}" | grep -m 1 "^250-${1}=" | \
-	    # Note: we have to remove trailing CL+RF to not confuse the shell
-	    sed "s|^250-${1}=\(.*\)[[:space:]]\+$|\1|"
+	tor_control_send "GETINFO ${1}" | \
+	    sed -n "s|^250-${1}=\(.*\)$|\1|p"
 }
 
 tor_control_getconf() {
 	tor_control_send "GETCONF ${1}" | \
-            sed -n "s/^250 ${1}=\(.*\)$/\1/p"
+            sed -n "s|^250 ${1}=\(.*\)$|\1|p"
 }
 
 tor_control_setconf() {
