@@ -414,12 +414,17 @@ Try every update path supported by the generated update-description
 files:
 
 * for every incremental update paths: make sure the resulting updated
-  system "works fine" (what does that mean? do we want to run the full
-  test suite on these? **FIXME**)
+  system "works fine" (boots and pretends to be the correct version)
 * for updates that only propose a non-incremental paths: make sure the
-  user is guided just fine (that is? **FIXME**)
+  user is told to do a manual upgrade
 
-Given these are not published yet, a local test setup is needed:
+If the IUKs and update-description files have been published on the
+*alpha* channel already:
+
+	echo TAILS_CHANNEL=alpha | sudo tee --append /etc/os-release && \
+	tails-upgrade-frontend-wrapper
+
+Else, use a local test setup:
 
 * a web server
 * a replacement for the Tails website's `/update/` tree with
