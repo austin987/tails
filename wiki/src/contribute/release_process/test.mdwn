@@ -137,12 +137,15 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * is `/etc/resolv.conf` OK both before/after DHCP has been set up? it should
   *always* read `nameserver 127.0.0.1`
 * [[doc/first_steps/startup_options/bridge_mode]] should work:
-  1. Boot with the `bridge` option.
   1. Set up an administrator password.
-  1. Enter a bridge or a few.
+  1. Enable network configuration in Tails Greeter.
+  1. Configure a bridge or a few in Tor Launcher:
+     bridge 198.252.153.59:9001
+     obfs2 198.252.153.59:16492
+     obfs3 198.252.153.59:16493
   1. Use the Internet.
-  1. Check from time to time with `netstat` that the only outgoing
-     direct network connections go to the configured bridge(s).
+  1. Check with `sudo watch "netstat -taupen | grep ESTABLISHED"` that the only outgoing
+     direct network connections go to the configured bridges.
 * Verify that all destinations reached from an intensive Tails session
   are tor routers or
   authorities:
