@@ -67,6 +67,10 @@ stuff ready in time for the security announce.
 
 * `cd` into our Iceweasel Git directory.
 * Checkout the `tails/master` branch.
+* Unapply all quilt patches and commit:
+
+      quilt pop -a
+
 * Get yourself a new upstream branch:
 
       git branch -D upstream
@@ -98,13 +102,12 @@ stuff ready in time for the security announce.
 
       quilt push -a
 
-* `git rm` files deleted by quilt patches
-
-* `git add` files created by quilt patches
+  It might be that the last patch (`configure.patch`) fails. Ignore it
+  for now.
 
 * Commit:
 
-      git commit -a -m 'Apply all quilt patches.'
+      git add . && git reset HEAD .pc && git commit -a -m 'Apply all quilt patches.'
 
 <a id="new-iceweasel-release"></a>
 
@@ -157,9 +160,11 @@ If Debian's iceweasel was pushed to Git already
 
       git diff --stat debian/17.0.8esr-1..tails/master
 
-  All expected differences should be in `.gitignore`,
-  `debian/{changelog,rules,control,control.in}`, and the addition of
-  the Torbrowser patches.
+  All expected differences should be:
+  * files modified: `.gitignore`
+    `debian/{changelog,rules,control,control.in,browser.mozconfig,xulrunner.mozconfig.in}`
+  * files added: `.mozconfig*`, `debian/tails.mozconfig`,
+    `debian/patches/series` and the Torbrowser patches.
 
 If Debian's iceweasel was not pushed to Git yet
 -----------------------------------------------
@@ -205,8 +210,11 @@ merge from Debian's Vcs-Git later.
 
       diff -Naur --exclude=.git iceweasel-17.0.2esr/ git/
 
-* Bring our `.gitignore`, `debian/changelog`, `debian/rules`,
-  `debian/control` and `debian/control.in` changes back.
+* Bring our changes back:
+  - files modified: `.gitignore`
+    `debian/{changelog,rules,control,control.in,browser.mozconfig,xulrunner.mozconfig.in}`
+  - files added: `.mozconfig*`, `debian/tails.mozconfig`,
+    `debian/patches/series` and the Torbrowser patches.
 
 5. Update Torbrowser patches
 ============================
@@ -225,11 +233,18 @@ and commit:
 **Else**, proceed with the following steps.
 
 * Make sure all quilt patches are applied.
-* Unapply all Torbrowser patches: use `quilt pop` as many times
-  as needed.
+* Unapply all Torbrowser patches: use `quilt pop` as many times as
+  needed.
+* Revert our changes (with `--no-commit`) to
+  `debian/patches/configure.patch` if needed, and deapply it:
+
+      cat debian/patches/configure.patch | patch -p1 --reverse
+
+* `quilt delete` the `configure.patch` if it exists.
+
 * Remove all Torbrowser patches from the series:
 
-      quilt unapplied | xargs -n 1 quilt delete
+      quilt unapplied | grep --color=never '^torbrowser/' | xargs -n 1 quilt delete
 
 * Remove Torbrowser patches from Git:
 
@@ -239,7 +254,7 @@ and commit:
 
       git commit -a -m 'Remove Torbrowser patches.'
 
-* Import the latest TorBroswer patches:
+* Import the latest TorBrowser patches:
 
   - Ensure you have Mike Perry's latest stuff available:
 
@@ -275,9 +290,7 @@ and commit:
 
 * Apply Torbrowser patches:
 
-      quilt push -a && git commit -a -m 'Apply Torbrowser patches.'
-
-* Add untracked files *but* `.pc` and `commit --amend`.
+      quilt push -a && git add . && git reset HEAD .pc && git commit -a -m 'Apply Torbrowser patches.'
 
 * Push to Git:
 
@@ -319,7 +332,9 @@ If you have no available non-Tails setup to comfortably test these
 packages, then skip this step.
 
 * Build for unstable and the architecture you can test on (most likely
-  amd64), e.g. using our [[contribute/Debian_package_builder]].
+  amd64), e.g. using our [[contribute/Debian_package_builder]].  
+  **Note:** if building locally in a ramdisk, it needs to be at least
+  14GB large.
 * Copy `browser/app/profile/000-tor-browser.js` into
   `/etc/iceweasel/pref/` on the test system.
 * Install and test the resulting packages.
@@ -385,8 +400,7 @@ E.g. `configure.patch` does not apply, or the build fails since
 `{js/src/,}configure.in` was modified but `{js/src/,}configure` was
 not refreshed.
 
-In a nutshell (that is, with most of the gory quilt and Git details
-skipped) the solution is to:
+In a nutshell, the solution is to:
 
 1. Make sure the patches that modify `{js/src/,}configure.in` are
    applied (this is the case after a `quilt push -a`, that is during
@@ -407,7 +421,10 @@ skipped) the solution is to:
            git diff configure js/src/configure > "$configure_diff" && \
            git reset --hard && \
            git clean -fdx -e /.pc/ && \
-           quilt import -P configure.patch "$configure_diff" && \
+           quilt import -f -P configure.patch "$configure_diff" && \
            git commit debian/patches -m "Refresh configure.patch." && \
            quilt push && \
            git commit -a -m 'Apply configure.patch.'
+
+Note that `configure.patch` must always be the *last* patch in the
+quilt series file, after the TorBrowser ones.

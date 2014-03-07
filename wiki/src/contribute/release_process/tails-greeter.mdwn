@@ -8,6 +8,10 @@ Update POT and PO files
 =======================
 
     ./setup.py build_i18n && \
+       (cd po && \
+           for po in *.po ; do msgmerge --update "$po" \
+           tails-greeter.pot ; done \
+       ) && \
        git commit po -m 'Update POT and PO files.'
 
 Update the Debian package
@@ -33,7 +37,7 @@ Build a new Debian package (use a Squeeze/i386 chroot):
 
 If everything is fine, tag the release and push the changes:
 
-    git-buildpackage --git-tag-only --git-sign-tags --git-keyid=$PGP_PUB_KEY
+    git-buildpackage --git-tag-only --git-sign-tags --git-keyid=$PGP_PUB_KEY && \
     git push && git push --tags
 
 Add the Debian package to Tails

@@ -92,10 +92,10 @@ Then /^no unexpected services are listening for network connections$/ do
   end
 end
 
-When /^Tails has booted a 686-pae kernel$/ do
+When /^Tails has booted a 64-bit kernel$/ do
   next if @skip_steps_while_restoring_background
-  assert(@vm.execute("uname -r | grep -qs '686-pae$'").success?,
-         "Tails has not booted a 686-pae kernel.")
+  assert(@vm.execute("uname -r | grep -qs 'amd64$'").success?,
+         "Tails has not booted a 64-bit kernel.")
 end
 
 Then /^the VirtualBox guest modules are available$/ do
