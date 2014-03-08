@@ -44,6 +44,10 @@ Check the output for:
 
 Check the image size has not changed much since the last release.
 
+In a directory with many Tails ISO images:
+
+    find -iname "tails*.iso" -exec ls -lh '{}' \; | sort -rhk 8
+
 # Automated test suite
 
 Our long term goal is to eliminate the manual test suite (except the
@@ -65,20 +69,19 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 # Iceweasel
 
-* does the exposed User-Agent match the TBB's one?
-  (connect to a website you can check the access logs for)
+* Compare the fingerprint of Tails and the latest TBB using at least
+  <https://panopticlick.eff.org/> and <http://ip-check.info/>
+  - Update the [[fingerprint section|support/known_issues#fingerprint]] of the
+    known issues page if needed.
+  - Does the exposed User-Agent match the TBB's one?
 * Running `getTorBrowserUserAgent` should produce the useragent set by the
   Torbutton version installed and used in Iceweasel.
 * Browsing (by IP) a HTTP or HTTPS server on the LAN should be possible.
 * Browsing (by IP) a FTP server on the LAN should be possible.
 * Does playing HTML5 videos work? In particular, (due to its popularity)
   do [youtube](http://www.youtube.com) videos work (once
-  [[!tails_todo easier YouTube]] is fixed -- currently object unblocking in
+  [[!tails_ticket 5476]] is fixed -- currently object unblocking in
   NoScript is required)?
-* Compare the fingerprint of Tails and the latest TBB using at least
-  <https://panopticlick.eff.org/> and <http://ip-check.info/>, and
-  update the [[fingerprint section|support/known_issues#fingerprint]] of
-  the known issues page.
 * Verify that WebRTC is disabled (compare with another Tails that has
   the `media.peerconnection.enabled` pref set to *true*):
   - <http://mozilla.github.io/webrtc-landing/> (it's expected that the
@@ -102,16 +105,23 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Check that XMPP is working with a new test profile.
 * Check if pidgin doesn't leak too many informations on replying to different
   CTCP requests:
-  * Start Tails and launch pidgin once done. Connect to an IRC server where you're already on
-  * try to `/ctcp <Tails_account_nick> COMMAND`
-    with a client that supports sending CTCP commands properly --
-    Pidgin does not, apparently
-    (for a list of commands, see [this page](http://www.wikkedwire.com/irccommands)).
-    See the [[!tails_ticket 5823 desc="current known-broken state"]].
+  * Start Tails, launch pidgin, and join #tails.
+  * Also join #tails from the webchat of OFTC on <https://webchat.oftc.net/>
+    using another nickname.
+  * Try to send `/ctcp <Tails_account_nick> COMMAND` from the webchat to pidgin:
+    - See the [[!tails_ticket 5823 desc="current known-broken state"]].
+    - List of `/ctcp` commands, see [this page](http://www.wikkedwire.com/irccommands):
+      - PING
+      - VERSION
+      - FINGER
+      - USERINFO
+      - CLIENTINFO
+      - TIME
 
 # Tor
 
-* The version of Tor should be the latest stable one.
+* The version of Tor should be the latest stable one, which is the highest version number
+  before alpha releases on <http://deb.torproject.org/torproject.org/pool/main/t/tor/>.
 * firewall: is the Tor-enforcement effective?
  - check output of `iptables -L -n -v`
  - check output of `iptables -t nat -L -n -v`
@@ -127,22 +137,26 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * is `/etc/resolv.conf` OK both before/after DHCP has been set up? it should
   *always* read `nameserver 127.0.0.1`
 * [[doc/first_steps/startup_options/bridge_mode]] should work:
-  1. Boot with the `bridge` option.
   1. Set up an administrator password.
-  1. Enter a bridge or a few.
+  1. Enable network configuration in Tails Greeter.
+  1. Configure a bridge or a few in Tor Launcher:
+     - `bridge 198.252.153.59:9001`
+     - `obfs2 198.252.153.59:16492`
+     - `obfs3 198.252.153.59:16493`
   1. Use the Internet.
-  1. Check from time to time with `netstat` that the only outgoing
-     direct network connections go to the configured bridge(s).
+  1. Check with `sudo watch "netstat -taupen | grep ESTABLISHED"` that the only outgoing
+     direct network connections go to the configured bridges.
 * Verify that all destinations reached from an intensive Tails session
   are tor routers or
   authorities:
   1. Boot Tails without the network in.
+  1. Set up an administration password.
   1. Start dumping your whole session's network activity with `sudo
      tcpdump -n -i any -w dump` (or better, do the dump on another machine,
      or on the host OS if Tails is running in a VM).
   1. Plug the network.
   1. Wait for Tor to be functional.
-  1. Save the `cached-microdesc-consensus` out of the VM (it's needed
+  1. Save `/var/lib/tor/cached-microdesc-consensus` out of the VM (it's needed
      to analyze the network dump later on).
   1. Do *a lot* of network stuff (why not run do this while doing all
      the other tests **but** I2P and the unsafe browser, which would
@@ -303,7 +317,7 @@ the appropriate tcpdump or tshark filters.
 * Check mail over IMAP using:
   - a "clearnet" IMAP server.
   - a hidden service IMAP server (e.g. TorMail, jhiwjjlqpyawmpjx.onion, or
-    RiseUp, xyvp43vrggckj427.onion).
+    Riseup, xyvp43vrggckj427.onion with SSL).
 * Send an email using:
   - a "clearnet" SMTP server.
   - a hidden service SMTP server (see above).
@@ -483,15 +497,28 @@ Boot and check basic functionality is working for every supported
 language.
 
 * The chosen keyboard layout must be applied.
-* The virtual keyboard must work and be auto-configured to
-  use the same keyboard layout as the X session.
-* Once [[!tails_todo fix_localized_iceweasel_search_engine]] is fixed, the
-  iceweasel search engine must be localized (for languages we ship
-  a localized searchplugin for).
-* Once [[!tails_ticket 5962]] is fixed, the browser spelling
-  dictionary must be localized (for languages that are supported by
-  our branding extension). In the meantime, it must at least work for
-  French, German, Italian, Portuguese and Spanish.
+* The virtual keyboard must work and be auto-configured to use the same keyboard
+  layout as the X session.
+* The Startpage search engine must be localized for the languages we ship a
+  searchplug for:
+
+      find /etc/iceweasel/searchplugins/locale/ -iname startpage-*.html
+
+* The Wikipedia search engine must be localized for all languages.
+
+## Spellchecking
+
+* Check that every supported language is listed in the list of languages for
+  spell checking.
+  - Visit <https://translate.google.com/>.
+  - Right-click and choose "Check spelling".
+  - Right-click and check the list of available languages.
+* For a few languages, check the spell checking:
+  - Type something in the textarea.
+  - Right-click and select a language.
+  - Verify that the spelling suggestion are from that language.
+* Once [[!tails_ticket 5962]] is fixed, the browser spelling dictionary must be
+  localized (for languages that are supported by our branding extension).
 
 # Misc
 
@@ -499,10 +526,11 @@ language.
   on a display with 600 px height.
 * Check that all seems well during init (mostly that all services
   start without errors), and that dmesg seems ok.
-* MAT should be able to clean a PDF file.
+* MAT should be able to clean a PDF file, such as:
+  <http://examples.itextpdf.com/results/part3/chapter12/pdf_metadata.pdf>
 * Browsing (by hostname) a FTP server on the Internet should be
   possible using GNOME's *Connect to server* feature
-  (once [[!tails_todo fix Internet FTP support]] is fixed)
-* The Tails signing key in `/usr/share/keyrings/tails-keyring.gpg`
-  should be up-to-date (that is, neither it nor one its subkeys must
-  have expired, or be about to expire any time soon).
+  (once [[!tails_ticket 6096]] is fixed)
+* The Tails signing key shipped should be up-to-date (that is, neither it nor
+  one its subkeys must have expired, or be about to expire any time soon).
+  - `gpg --list-keys 1202821CBE2CD9C1`

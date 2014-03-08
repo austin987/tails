@@ -188,9 +188,9 @@ Given /^I set sudo password "([^"]*)"$/ do |password|
   @sudo_password = password
   next if @skip_steps_while_restoring_background
   @screen.wait("TailsGreeterAdminPassword.png", 20)
-  match = @screen.find('TailsGreeterPassword.png')
-  @screen.click(match.getCenter.offset(match.w*3, match.h/2))
-  @screen.type(@sudo_password + Sikuli::Key.TAB + @sudo_password)
+  @screen.type(@sudo_password)
+  @screen.type(Sikuli::Key.TAB)
+  @screen.type(@sudo_password)
 end
 
 Given /^Tails Greeter has dealt with the sudo password$/ do
