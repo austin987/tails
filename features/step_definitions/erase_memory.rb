@@ -48,8 +48,8 @@ Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
   next if @skip_steps_while_restoring_background
   puts "Detected #{@detected_ram_m} MiB of RAM"
   min_ram_m = convert_to_MiB(min_ram.to_i, unit)
-  # All RAM will not be reported by `free`, so we allow a 128 MB gap
-  gap = convert_to_MiB(128, "MiB")
+  # All RAM will not be reported by `free`, so we allow a 196 MB gap
+  gap = convert_to_MiB(196, "MiB")
   assert(@detected_ram_m + gap >= min_ram_m, "Didn't detect enough RAM")
 end
 
@@ -142,7 +142,7 @@ end
 Then /^I find very few patterns in the guest's memory$/ do
   next if @skip_steps_while_restoring_background
   coverage = pattern_coverage_in_guest_ram()
-  max_coverage = 0.001
+  max_coverage = 0.0025
   assert(coverage < max_coverage,
          "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")

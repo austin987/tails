@@ -123,7 +123,7 @@ Given /^I capture all network traffic$/ do
   # Note: We don't want skip this particular stpe if
   # @skip_steps_while_restoring_background is set since it starts
   # something external to the VM state.
-  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name, @vm.mac)
+  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name)
   @sniffer.capture
 end
 
@@ -188,9 +188,9 @@ Given /^I set sudo password "([^"]*)"$/ do |password|
   @sudo_password = password
   next if @skip_steps_while_restoring_background
   @screen.wait("TailsGreeterAdminPassword.png", 20)
-  match = @screen.find('TailsGreeterPassword.png')
-  @screen.click(match.getCenter.offset(match.w*3, match.h/2))
-  @screen.type(@sudo_password + Sikuli::Key.TAB + @sudo_password)
+  @screen.type(@sudo_password)
+  @screen.type(Sikuli::Key.TAB)
+  @screen.type(@sudo_password)
 end
 
 Given /^Tails Greeter has dealt with the sudo password$/ do
@@ -218,9 +218,25 @@ Then /^Tails seems to have booted normally$/ do
   step "GNOME has started"
 end
 
-Given /^I have a network connection$/ do
+Given /^Tor is ready$/ do
   next if @skip_steps_while_restoring_background
-  try_for(120) { @vm.has_network? }
+
+  # First, we wait for the notification to be displayed:
+  # it disappears after a timeout, so if we wait for other events first,
+  # we sometimes cannot find the notification picture on screen later.
+  case @theme
+  when "winxp"
+    notification_picture = "WinXPTorIsReady.png"
+  else
+    notification_picture = "GnomeTorIsReady.png"
+  end
+  @screen.wait(notification_picture, 300)
+
+  # Having seen the "Tor is ready" notification implies that Tor has
+  # built a circuit, but let's check it directly to be on the safe side.
+  step "Tor has built a circuit"
+
+  step "the time has synced"
 end
 
 Given /^Tor has built a circuit$/ do
@@ -233,6 +249,13 @@ Given /^the time has synced$/ do
   ["/var/run/tordate/done", "/var/run/htpdate/success"].each do |file|
     try_for(300) { @vm.execute("test -e #{file}").success? }
   end
+end
+
+Given /^available upgrades have been checked$/ do
+  next if @skip_steps_while_restoring_background
+  try_for(300) {
+    @vm.execute("test -e '/var/run/tails-upgrader/checked_upgrades'").success?
+  }
 end
 
 Given /^Iceweasel has started and is not loading a web page$/ do
@@ -270,10 +293,16 @@ Given /^I have closed all annoying notifications$/ do
 
   begin
     # note that we cannot use find_all as the resulting matches will
-    # have the positions from before we start closing notificatios,
+    # have the positions from before we start closing notifications,
     # but closing them will change the positions.
+
+    # Move the mouse pointer out of the way, so that the cross to close
+    # the first notification is not highlighted and can be found.
+    @screen.hide_cursor
     while match = @screen.find(notification_picture)
       @screen.click(match)
+      # ... same for the next notification:
+      @screen.hide_cursor
     end
   rescue FindFailed
     # noop
@@ -349,13 +378,8 @@ When /^I run "([^"]*)"$/ do |program|
   next if @skip_steps_while_restoring_background
   step "I open the GNOME run dialog"
   @screen.type(program)
-  begin
-    while @screen.find(run_dialog_picture)
-      @screen.type(Sikuli::Key.ENTER)
-    end
-  rescue FindFailed
-    # noop
-  end
+  sleep 0.5
+  @screen.type(Sikuli::Key.ENTER)
 end
 
 Given /^I enter the sudo password in the gksu prompt$/ do

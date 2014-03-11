@@ -13,6 +13,9 @@
 # Import tor_control_*(), tor_is_working(), TOR_LOG, TOR_DIR
 . /usr/local/lib/tails-shell-library/tor.sh
 
+# Import tails_netconf()
+. /usr/local/lib/tails-shell-library/tails_greeter.sh
+
 ### Init variables
 
 TORDATE_DIR=/var/run/tordate
@@ -188,9 +191,6 @@ tor_cert_lifetime_invalid() {
 # 2. Tor fails the handshake with all authorities (or bridges).
 # Since 2 essentially is the negation of 1, one of them will happen,
 # so it won't block forever. Hence we shouldn't need a timeout.
-# FIXME: An exception would be if Tor has DisableNetwork=1, which we
-# will use once we fully support bridge mode, so we will have to
-# revisit this then.
 is_clock_way_off() {
 	log "Checking if system clock is way off"
 	until [ "$(tor_bootstrap_progress)" -gt 10 ]; do
@@ -210,6 +210,15 @@ start_notification_helper() {
 
 
 ### Main
+
+# When the network is obstacled (e.g. we need a bridge) we wait until
+# Tor Launcher has unset DisableNetwork, since Tor's bootstrapping
+# won't start until then.
+if [ "$(tails_netconf)" = "obstacle" ]; then
+	until [ "$(tor_control_getconf DisableNetwork)" = 0 ]; do
+		sleep 1
+	done
+fi
 
 start_notification_helper
 
@@ -233,7 +242,7 @@ fi
 wait_for_working_tor
 
 # Disable "info" logging workaround from 10-tor.sh
-if grep -qw bridge /proc/cmdline; then
+if [ "$(tails_netconf)" = "obstacle" ]; then
 	tor_control_setconf "Log=\"notice file ${TOR_LOG}\""
 fi
 

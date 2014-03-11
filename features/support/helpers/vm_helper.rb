@@ -20,7 +20,7 @@ class VM
     return @@storage
   end
 
-  attr_reader :domain, :display, :ip, :mac, :net
+  attr_reader :domain, :display, :ip, :net
 
   def initialize(xml_path, x_display)
     @@virt ||= Libvirt::open("qemu:///system")
@@ -53,7 +53,6 @@ class VM
     net_xml = REXML::Document.new(xml)
     @net_name = net_xml.elements['network/name'].text
     @ip  = net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
-    @mac = net_xml.elements['network/ip/dhcp/host/'].attributes['mac']
     clean_up_net
     @net = @@virt.define_network_xml(xml)
     @net.create
@@ -363,7 +362,7 @@ EOF
   def reset
     # ruby-libvirt 0.4 does not support the reset method.
     # XXX: Once we use Jessie, use @domain.reset instead.
-    system("virsh reset " + @domain_name) if is_running?
+    system("virsh -c qemu:///system reset " + @domain_name) if is_running?
   end
 
   def power_off

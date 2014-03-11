@@ -105,7 +105,7 @@ class GreeterMockup:
                    ("Luxembouge", None, "cb_keyboard"),
                    ("Suisse", None, "cb_keyboard"),
                    ("Other...", None, "cb_more_languages")])
-        self._locale_label.set_text("you choosed french language; please select your region")
+        self._locale_label.set_text("you have chosen French language; please select your region")
         if self._linkbutton_language:
             self._linkbutton_language.set_visible(True)
 
