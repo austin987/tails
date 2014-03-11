@@ -14,14 +14,14 @@ class Sniffer
 
   attr_reader :name, :pcap_file, :pid
 
-  def initialize(name, bridge_name, mac)
+  def initialize(name, bridge_name)
     @name = name
     @bridge_name = bridge_name
-    @mac = mac
+    @bridge_mac = File.open("/sys/class/net/#{@bridge_name}/address", "rb").read.chomp
     @pcap_file = "#{$tmp_dir}/#{name}.pcap"
   end
 
-  def capture(filter="ether src host #{@mac} and not ether proto \\arp and not ether proto \\rarp")
+  def capture(filter="not ether src host #{@bridge_mac} and not ether proto \\arp and not ether proto \\rarp")
     job = IO.popen("/usr/sbin/tcpdump -n -i #{@bridge_name} -w #{@pcap_file} -U '#{filter}' >/dev/null 2>&1")
     @pid = job.pid
   end

@@ -1,0 +1,137 @@
+[[!meta title="MAC address spoofing"]]
+
+[[!toc]]
+
+What is a MAC address?
+======================
+
+Every network interface — wired or Wi-Fi — has a [[!wikipedia MAC address]] which is
+a serial number defined for each interface from factory by its vendor. MAC addresses
+are used on the local network to identify the communications of each network
+interface.
+
+While your IP address identifies where you are on the Internet, your MAC address
+identifies which device you are using on the local network. MAC addresses are
+only useful on the local network and are not sent over the Internet.
+
+Having such a unique identifier used on the local network can harm your privacy.
+Here are two examples:
+
+1. If you use your laptop to connect to several Wi-Fi networks, the
+same MAC address of your Wi-Fi interface is used on all those local networks. Someone
+observing those networks can recognize your MAC address and **track your
+geographical location**.
+
+2. As explained in our documentation on [[network
+fingerprint|about/fingerprint]], someone observing the traffic coming out of
+your computer on the local network can probably see that you are using Tails. In
+that case, your MAC address can **identify you as a Tails user**.
+
+What is MAC address spoofing?
+=============================
+
+Tails can temporarily change the MAC address of your network interfaces to random
+values for the time of a working session. This is what we call "MAC address
+spoofing". MAC address spoofing in Tails hides the serial number of your network interface,
+and so to some extend, who you are, to the local network.
+
+MAC address spoofing is enabled by default in Tails because it is usually
+beneficial. But in some situations it might also lead to connectivity problems
+or make your network activity look suspicious. This documentation explains
+whether to use MAC spoofing or not, depending on your situation.
+
+When to keep MAC address spoofing enabled
+=========================================
+
+**MAC address spoofing is enabled by default for all network interfaces.** This is
+usually beneficial, even if you don't want to hide your geographical location.
+
+Here are a few examples:
+
+* **Using your own computer on an public network without registration**, for
+  example a free Wi-Fi service in a restaurant where you don't need to register with your
+  identity. In this case, MAC address spoofing hides the fact that your computer
+  is connected to this network.
+
+* **Using your own computer on a network that you use frequently**, for example
+  at a friend's place, at work, at university, etc. You already have a strong
+  relationship with this place but MAC address spoofing hides the fact that your
+  computer is connected to this network *at a particular time*. It also hides
+  the fact that you are running Tails on this network.
+
+When to disable MAC address spoofing
+====================================
+
+In some situations MAC address spoofing is not useful but can instead be
+problematic. In such cases, you might want to [[disable MAC address
+spoofing|mac_spoofing#disable]].
+
+Note that even if MAC spoofing is disabled, your anonymity on the Internet is
+preserved:
+
+  - An adversary on the local network can only see encrypted connections to the
+    Tor network.
+  - Your MAC address is not sent over the Internet to the websites that you are
+    visiting.
+
+However, disabling MAC address spoofing makes it possible again for the local
+network to track your geographical location. If this is problematic, consider
+using a different network device or moving to another network.
+
+Here are a few examples:
+
+- **Using a public computer**, for example in an Internet café or a library.
+  This computer is regularly used on this local network, and its MAC address is
+  not associated with your identity. In this case, MAC address spoofing can make
+  it impossible to connect. It can even **look suspicious** to the network
+  administrators to see an unknown MAC address being used on that network.
+
+- On some network interfaces, **MAC address spoofing is impossible** due to
+  limitations in the hardware or in Linux. Tails temporarily disables such
+  network interfaces. You might disable MAC address spoofing to be able to use them.
+
+- Some networks **only allow connections from a list of authorized MAC
+  addresses**. In this case, MAC address spoofing makes it impossible to connect
+  to such networks. If you were granted access to such network in the past, then
+  MAC address spoofing might prevent you from connecting.
+
+- **Using your own computer at home**. Your identity and the MAC address of your
+  computer are already associated to this local network, so MAC address spoofing
+  is probably useless. But if access to your local network is restricted based
+  on MAC addresses it might be impossible to connect with a spoofed MAC address.
+
+<a id="disable"></a>
+
+Disable MAC address spoofing
+============================
+
+You can disable MAC address spoofing from [[<span class="application">Tails
+Greeter</span>|startup_options#tails_greeter]]:
+
+1. When <span class="application">Tails Greeter</span> appears, in the
+   <span class="guilabel">Welcome to Tails</span> window, click on the
+   <span class="button">Yes</span> button. Then click on the
+   <span class="button">Forward</span> button.
+
+2. In the <span class="guilabel">MAC address spoofing</span> section, deselect
+   the <span class="guilabel">Spoof all MAC addresses</span> option.
+
+Other considerations
+====================
+
+- Other means of surveillance can reveal your geographical location: video
+  surveillance, mobile phone activity, credit card transactions, social
+  interactions, etc.
+
+- While using Wi-Fi, anybody within range of your Wi-Fi interface can
+  see your MAC address, even without being connected to the same Wi-Fi
+  access point.
+
+- When using mobile phone connectivity, such as 3G or GSM, the identifier of
+  your SIM card (IMSI) and the serial number of your phone (IMEI) are always
+  revealed to the mobile phone operator.
+
+- Some [[!wikipedia captive portals]] might send your MAC address over the
+  Internet to their authentication servers. This should not affect your decision
+  regarding MAC address spoofing. If you decide to disable MAC address spoofing
+  your computer can already be identified by your ISP.
