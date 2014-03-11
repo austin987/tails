@@ -99,8 +99,8 @@ Web browser
 
 <a id="javascript"></a>
 
-Why is JavaScript enabled by default in the Tails browser?
-----------------------------------------------------------
+Why is JavaScript enabled by default in the Tor browser?
+--------------------------------------------------------
 
 Many websites today require JavaScript to work correctly. As a consequence
 JavaScript is enabled by default in Tails to avoid confusing many users. But
@@ -108,7 +108,7 @@ the [[Torbutton|doc/anonymous_internet/Tor_browser#torbutton]] extension,
 included in Tails, takes care of blocking dangerous JavaScript functionalities.
 
 Tails also includes the [[NoScript|doc/anonymous_internet/Tor_browser#noscript]]
-extension to disable more JavaScript if desired. This may improve
+extension to optionally disable more JavaScript. This might improve
 security in some cases. However, if you disable JavaScript, then the
 [[fingerprint|doc/about/fingerprint]] of your browser will
 differ from most Tor users. This might break your anonymity.
@@ -139,7 +139,7 @@ Torbutton, and break your anonymity.
 5. They can break your anonymity by making your browsing behaviour
 distinguishable amongst other Tails users.
 
-Unless proven otherwise: no add-on, apart from the ones already
+Unless proven otherwise, no add-on, apart from the ones already
 included in Tails, have been seriously audited and should be
 considered safe to use in this context.
 
@@ -170,13 +170,13 @@ Adobe Flash Player is not included in Tails for several reasons:
   - It is known to favor privacy invasive technologies such as
     [Flash cookies](XXX Add link to Flash cookies,
     https://addons.mozilla.org/en-US/firefox/addon/betterprivacy/?).
-  - Adobe only maintain their GNU/Linux Flash plugin for Google Chrome.
+  - Adobe only maintains their GNU/Linux Flash plugin for Google Chrome.
 
 We have considered including open-source alternative software to Adobe
 Flash, such as [Gnash](http://www.gnu.org/software/gnash/), but it is
 not the case yet, see [[!tails_ticket 5363]].
 
-But you can already watch HTML5 videos with the Tails browser.
+But you can already watch HTML5 videos with the Tor browser.
 
 <a id="anonymity_test"></a>
 
@@ -195,7 +195,7 @@ Tails and the Tor Browser Bundle (TBB).
 So, the information retrieved by such fingerprinting websites is not harmful for
 anonymity in itself, as long as it is the same for all Tor users.
 
-For example, the user-agent property of the browser is set to `Mozilla/5.0
+For example, the user-agent property of the browser was set to `Mozilla/5.0
 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3`,
 as of Tails 0.21 and TBB 2.3.25-13. This value preserves your anonymity even if
 the operating system installed on the computer is Windows NT and you usually run
@@ -207,7 +207,7 @@ Furthermore, we verify the result of those websites before each release, see our
 
 <a id="java"></a>
 
-Is Java installed in the Tails browser?
+Is Java installed in the Tor browser?
 ---------------------------------------
 
 Tails does not include a Java plugin in its browser because it could break your anonymity.
@@ -447,6 +447,13 @@ timezone, it might help identifying who you are.
 Having all Tails users set to the same timezone, makes it more difficult to
 distinguish you amongst all the other Tails users.
 
+<div class="note">
+
+We are working on a custom clock applet with configurable timezone. See
+[[!tails_ticket 6284]].
+
+</div>
+
 <a id="misc"></a>
 
 Other security issues
@@ -519,8 +526,10 @@ Is it safe to use the new identity feature of Vidalia?
 ------------------------------------------------------
 
 <div class="bug">
-The <span class="guilabel">New Identity</span> feature of the web browser is
+
+The <span class="guilabel">New Identity</span> feature of the web browser was
 not available anymore (ticket [[!tails_ticket 6383]]).
+
 </div>
 
 In our [[warning page|doc/about/warning#identities]] we advice to restart Tails
@@ -560,14 +569,19 @@ recognized open standard.
 Does Tails collect information about its users?
 -----------------------------------------------
 
-When starting Tails, a security check is performed to know if security issues or
-newer versions have been announced for this version of Tails. This security
-check is done through Tor via an HTTPS request to our website. The language of
-the working session is passed along with this request to display the
-notification in the preferred language of the user.
+When Tails starts, two HTTPS requests are made automatically to our website
+through Tor:
+
+- A security check is performed to know if security issues have been announced
+  for this version of Tails. The language of the working session is passed along
+  with this request to display the notification in the preferred language of the
+  user.
+- [[<span class="application">Tails Upgrader</span>|doc/first_steps/upgrade]]
+  checks for newer versions. The version of the running Tails is passed along
+  with this request.
 
 We believe it is important to notify the user of known security issues and newer
-versions. We calculate statistics based on those requests to know how many times
+versions. We calculate statistics based on the security check to know how many times
 Tails has been started and connected to Tor. Those statistics are published in
 our [[monthly reports|news]].
 

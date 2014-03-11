@@ -5,9 +5,9 @@
 1. Prepare environment
 ======================
 
-* Clone the Tails browser [[Git
-  repository|contribute/git#other-repositories]] if you do not have it
-  handy yet.
+* Clone the Tor browser
+  [[Git repository|contribute/git#other-repositories]] if you do not
+  have it handy yet.
 
 * Add (and fetch from) a Git remote for the Debian iceweasel packaging
   repository:
@@ -160,9 +160,12 @@ If Debian's iceweasel was pushed to Git already
 
       git diff --stat debian/17.0.8esr-1..tails/master
 
-  All expected differences should be in `.gitignore`,
-  `debian/{changelog,rules,control,control.in}`, and the addition of
-  the Torbrowser patches.
+  All expected differences should be:
+  * files modified: `.gitignore`,
+    `debian/{changelog,rules,control,control.in}`,
+    `debian/{browser.mozconfig,xulrunner.mozconfig.in}`
+  * files added: `.mozconfig*`, `debian/tails.*.mozconfig`,
+    `debian/patches/series`, and the Torbrowser patches.
 
 If Debian's iceweasel was not pushed to Git yet
 -----------------------------------------------
@@ -208,8 +211,12 @@ merge from Debian's Vcs-Git later.
 
       diff -Naur --exclude=.git iceweasel-17.0.2esr/ git/
 
-* Bring our `.gitignore`, `debian/changelog`, `debian/rules`,
-  `debian/control` and `debian/control.in` changes back.
+* Bring our changes back:
+  * files modified: `.gitignore`,
+    `debian/{changelog,rules,control,control.in}`,
+    `debian/{browser.mozconfig,xulrunner.mozconfig.in}`
+  * files added: `.mozconfig*`, `debian/tails.*.mozconfig`,
+    `debian/patches/series`, and the Torbrowser patches.
 
 5. Update Torbrowser patches
 ============================
@@ -286,6 +293,16 @@ and commit:
 * Apply Torbrowser patches:
 
       quilt push -a && git add . && git reset HEAD .pc && git commit -a -m 'Apply Torbrowser patches.'
+
+* Update `debian/tails.*.mozconfig`:
+  - copy all `ac_add_options` lines from `.mozconfig` into the *Tor
+    Browser's options* section in `debian/tails.common.mozconfig`,
+    *but* the ones that break the xulrunner build, that go into *Tor
+    Browser's options specific to the browser component* section in
+    `debian/tails.browser.mozconfig` instead
+  - review the changes to these settings
+  - if needed, update the `debian/tails.common.mozconfig`'s *Override
+    Tor Browser's options* section
 
 * Push to Git:
 
