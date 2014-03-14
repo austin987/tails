@@ -66,17 +66,6 @@ var gRestoreAfterHelpPanelID = null;
 
 function initDialog()
 {
-  var startPrompt = document.getElementById("startPrompt");
-  var startPromptConfigOnly = document.getElementById("startPromptConfigOnly");
-  if (startPromptConfigOnly && TorLauncherUtil.shouldOnlyConfigureTor)
-  {
-      startPrompt.setAttribute("hidden", "true");
-  }
-  else if (startPrompt)
-  {
-    startPromptConfigOnly.setAttribute("hidden", "true");
-  }
-
   var isWindows = TorLauncherUtil.isWindows;
   if (isWindows)
     document.documentElement.setAttribute("class", "os-windows");
