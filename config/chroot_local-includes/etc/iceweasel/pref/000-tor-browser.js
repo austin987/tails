@@ -30,6 +30,7 @@ pref("signon.rememberSignons", false);
 pref("browser.formfill.enable", false);
 pref("signon.autofillForms", false);
 pref("browser.sessionstore.privacy_level", 2);
+pref("media.cache_size", 0);
 
 // Misc privacy: Remote
 pref("browser.send_pings", false);
@@ -70,6 +71,7 @@ pref("general.useragent.vendorSub", "");
 pref("dom.enable_performance", false);
 pref("plugin.expose_full_path", false);
 pref("browser.zoom.siteSpecific", false);
+pref("intl.charset.default", "windows-1252");
 // pref("intl.accept_languages", "en-us, en"); // Set by Torbutton
 // pref("intl.accept_charsets", "iso-8859-1,*,utf-8"); // Set by Torbutton
 // pref("intl.charsetmenu.browser.cache", "UTF-8"); // Set by Torbutton
@@ -85,6 +87,7 @@ pref("network.http.spdy.enabled.v3", false); // Seems redundant, but just in cas
 pref("network.proxy.socks", "127.0.0.1");
 pref("network.proxy.socks_port", 9150);
 pref("network.proxy.socks_remote_dns", true);
+pref("network.proxy.no_proxies_on", ""); // For fingerprinting and local service vulns (#10419)
 pref("network.proxy.type", 1);
 pref("network.security.ports.banned", "9050,9051,9150,9151");
 pref("network.dns.disablePrefetch", true);
