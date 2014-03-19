@@ -25,6 +25,8 @@ the scripts snippets found on this page:
   the `.packages` file) land.
 * `MASTER_CHECKOUT`: a checkout of the `master` branch of the main
   Tails Git repository.
+* `RELEASE_BRANCH`: the name of the branch of the main Tails Git
+  repository used to prepare the release (`stable` or `testing`).
 * `RELEASE_CHECKOUT`: a checkout of the branch of the main Tails Git
   repository used to prepare the release (`stable` or `testing`).
 * `TAILS_SIGNATURE_KEY=0D24B36AA9A2A651787876451202821CBE2CD9C1`
@@ -88,11 +90,21 @@ Upgrade bundled binary Debian packages
 That is: make sure the bundled binary Debian packages contain
 up-to-date localization files.
 
-For each bundled Debian package, run the included `import-translations`
-script if one exists, or copy updated PO files from the
+For each bundled Debian package, `cd` into the package's root
+directory (e.g. a checkout of the `whisperback` repository),
+and then run the `import-translations` script that is in the
+main Tails repository. For example:
+
+	cd whisperback
+	../tails/import-translations
+
+If the `import-translations` script fails to import translations for
+the current package, manually copy updated PO files from the
 Transifex branches of `git://git.torproject.org/translation.git` (e.g.
-`whisperback_completed`). Skip PO files for [[translation teams that use
-Git|contribute/how/translate#translate]]. Verify and commit.
+`whisperback_completed`) instead. In this case, skip PO files for
+[[translation teams that use Git|contribute/how/translate#translate]].
+
+Add and commit.
 
 Then check the PO files [[using i18nspector|contribute/l10n_tricks]].
 Correct all the errors that are not in the ignored list of
@@ -222,8 +234,11 @@ If at freeze time:
    the website [[using `check_po.sh`|contribute/l10n_tricks]], and
    corrects all the errors.
 2. Send a call for translations to tails-l10n, making it clear what
-   Git branch the translations must be based on, and what are
-   the priorities.
+   Git branch the translations must be based on, and what are the
+   priorities. Also, add a few words to remember the translation teams
+   using Git that they should regularly contact Transifex translators,
+   as detailed on the [[documentation for
+   translators|contribute/how/translate]].
 
 Tag the release in Git
 ======================
@@ -317,8 +332,6 @@ Prepare incremental upgrades
 Build the Incremental Upgrade Kits
 ----------------------------------
 
-Skip this step when preparing a major release.
-
 Use `tails-create-iuk` to build an IUK for the previous stable release
 and (if applicable) the last RC for the version being released. Example:
 
@@ -339,8 +352,6 @@ Wheezy too, but I would not even try to use it on Squeeze.
 Prepare upgrade-description files
 ---------------------------------
 
-Do **not** skip this step when preparing a major release.
-
 1. Prepare upgrade-description files (see the [[upgrade-description
    files
    specification|contribute/design/incremental_upgrades#upgrade-description-files]]
@@ -360,6 +371,7 @@ Do **not** skip this step when preparing a major release.
        ./bin/tails-iuk-generate-upgrade-description-files \
            --version "$VERSION" \
            --next-version "$NEXT_VERSION" \
+           --next-version "${NEXT_VERSION}~rc1" \
            --iso "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso" \
            --previous-version "$PREVIOUS_VERSION" \
            --previous-version "${VERSION}~rc1" \
@@ -378,6 +390,8 @@ Do **not** skip this step when preparing a major release.
      `--previous-version`, so that users who skipped a release or two
      are directly informed of the new one.
    * If preparing a release candidate, add `--channel alpha`
+   * If preparing a release candidate, do not pass
+     `--next-version "${NEXT_VERSION}~rc1"`
 
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
@@ -395,8 +409,8 @@ Do **not** skip this step when preparing a major release.
    signatures to the Git branch used to prepare the release (`stable`
    or `testing`):
 
-       cd "$RELEASE_CHECKOUT" && git add wiki/src/upgrade && \
-          git commit -m "Update upgrade-description files."
+       ( cd "$RELEASE_CHECKOUT" && git add wiki/src/upgrade && \
+          git commit -m "Update upgrade-description files." )
 
 1. Check the syntactic correctness of all upgrade-description files:
 
@@ -430,7 +444,7 @@ Test them with a BitTorrent client running in a different place.
 
 ## Download and seed image from lizard
 
-    scp "$RELEASE_CHECKOUT/wiki/src/torrents/files/tails-i386-$VERSION.torrent" \
+    scp "$ISOS/tails-i386-$VERSION.torrent" \
        bittorrent.lizard: && \
        ssh bittorrent.lizard transmission-remote --add tails-i386-$VERSION.torrent
 
@@ -504,8 +518,8 @@ steps. Please read on!
 Update the website and Git repository
 =====================================
 
-What follows in this section happens on the `master` branch in
-`$MASTER_CHECKOUT`.
+What follows in this section happens on the release branch in
+`$RELEASE_CHECKOUT`.
 
 If preparing a final release
 ----------------------------
@@ -529,7 +543,7 @@ into the website repository:
 	   "$ARTIFACTS/tails-i386-$VERSION.packages" \
 	   "$ISOS/tails-i386-$VERSION.torrent" \
 	   "$ISOS/tails-i386-$VERSION.torrent.sig" \
-	   "$MASTER_CHECKOUT/wiki/src/torrents/files/"
+	   "$RELEASE_CHECKOUT/wiki/src/torrents/files/"
 
 Remove from `wiki/src/torrents/files/` any remaining file from the
 previous release (including any RC).
@@ -583,7 +597,7 @@ Copy the `.iso.sig` file into the website repository:
 	   "$MASTER_CHECKOUT/wiki/src/torrents/files/"
 
 Write the announcement for the release in
-`$MASTER_CHECKOUT/wiki/src/news/test_$TAG.html`, including:
+`$MASTER_CHECKOUT/wiki/src/news/test_$TAG.mdwn`, including:
 
 - Update the `meta title` directive.
 - Update the `meta date` directive.
@@ -623,7 +637,8 @@ Push
 
 Push the last commits to our Git repository:
 
-	( cd "$MASTER_CHECKOUT" && git push )
+	( cd "$RELEASE_CHECKOUT" && git push ) && \
+	( cd "$MASTER_CHECKOUT" && git fetch && git merge "$RELEASE_BRANCH" && git push )
 
 ... and ask <root@boum.org> to refresh the ikiwiki wrappers for
 our website.
@@ -634,8 +649,31 @@ Bug tracker
 Skip this part if preparing a release candidate.
 
 Mark all issues fixed in this release as `Status: Resolved` in our bug
-tracker. For a list of candidates, see the [issues in *Fix committed*
-status](https://labs.riseup.net/code/projects/tails/issues?query_id=111).
+tracker. For a list of candidates, see:
+
+* the [issues in *Fix committed*
+  status](https://labs.riseup.net/code/projects/tails/issues?query_id=111);
+* the "Fix committed" section on the [Release Manager
+  View](https://labs.riseup.net/code/projects/tails/issues?query_id=130).
+
+Then, mark the just-released Redmine milestone as done: go to the
+target version page, click *Edit*, and set *Status* to *Closed*.
+
+### Tickets linked from the website
+
+Go through the tickets linked from the documentation and support sections of the
+website and point documentation writers to the ticket that might be resolved in
+this release.
+
+    git grep tails_ticket -- "wiki/src/[ds]*/*.mdwn"
+
+Test suite
+----------
+
+Remove indications of known broken tests that were fixed by this
+release:
+
+	git grep XXX -- features
 
 IRC
 ---
@@ -675,7 +713,8 @@ who's happy to do it.
 Prepare for the next release
 ============================
 
-XXX: adapt / fork for release candidates.
+XXX: adapt / fork for release candidates. In the meantime, read all
+this, and skip what does not make sense for a RC.
 
 1. Move the previous stable release to `obsolete` on the mirrors.
 1. Remove any remaining RC for the just-published release from
@@ -720,6 +759,8 @@ XXX: adapt / fork for release candidates.
 1. In the [Release Manager
    View](https://labs.riseup.net/code/projects/tails/issues?query_id=130)
    custom Redmine query, set *Target version* to the next release. Save.
+1. On the [[!tails_roadmap]], update the *Due date* for the *Broken
+   windows* so that this section appears after the next release.
 1. Bonus points if you:
    - Merge devel into feature/wheezy, if the latter is not lagging
      behind too much. Doing it for APT is quite tricky, enjoy.

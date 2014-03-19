@@ -112,6 +112,8 @@ anonymity.
 
 ### 2.1.6 Filling some empty room in the Tor distributions landscape
 
+XXX: update
+
 The PELD is meant to be complementary to other Tor distributions. It
 has no such goal as replacing other existing tool that properly
 fulfills its use cases.
@@ -171,8 +173,7 @@ Internet for anyone anywhere.
 The goal of staying anonymous and keeping sensitive information
 protected stands in direct conflict with the goals of several entities
 "present" on the Internet. The following threat model is meant to
-describe the intentions and capabilities of such hypothetical
-attackers.
+describe the intentions and capabilities of such attackers.
 
 ### 2.2.1 The goal of the attacker
 
@@ -245,6 +246,8 @@ This section handles mostly the criteria that the PELD should be
 portable and able to run in as many environments as possible.
 
 ### 2.4.1 Platform
+
+XXX: update
 
 The binaries MUST all be executable on the most common computer
 hardware architecture(s). As of 2011, the x86 computer architecture
@@ -436,10 +439,10 @@ supported:
   cookies, etc. Benefiting from this work is essential for maintaining
   anonymity, so it is REQUIRED to include only web browsers that are
   endorsed by the Tor Project, accompanied with any configurations,
-  extensions/plugins, etc. that they recommend (for instance, Firefox
-  with the Torbutton extension). The PELD browser fingerprint SHOULD
-  make the PELD users appear uniformly among Tor users with generally
-  recommended configuration, such as Torbutton users.
+  extensions/plugins, etc. that they recommend (for instance, Tor
+  Browser Bundle). The PELD browser fingerprint SHOULD make the PELD
+  users appear uniformly among Tor users with generally recommended
+  configuration, such as Tor Browser Bundle users.
 - **Email**: support for PGP or S/MIME is highly RECOMMENDED. Also,
   beware that the EHLO/HELO sent to the SMTP-server will contain the
   host's IP address in many email clients. The `Message-ID` headers and
@@ -753,14 +756,15 @@ OpenOffice.org and gedit.
 Tails ships with IBus and a few engines (Anthy for Japanese, Pinyin
 and Bopomofo for Chinese, and Hangul for Korean).
 
-A login script configures and enables IBus for all locales: it must be
-started at login time to be fully usable (environment variables must
-be set up); also, one may want to work on documents written in
-Chinese, Japanese or Korean even when selecting English as their
-preferred language.
+A login script prepares and configures IBus. When a Japanese,
+Chinese or Korean locale is selected, this login script selects
+the right default input method, and then starts the IBus daemon.
 
-When a Japanese, Chinese or Korean locale is selected, this login
-script also selects the right default input method.
+Since one may want to work on documents written in
+Chinese, Japanese or Korean even when selecting English as their
+preferred language, IBus can also be manually started in other locales
+using the "IBus Preferences" launcher in the System->Preferences menu.
+IBus' environment variables is always exported on login to make this work.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/X11/Xsession.d/80im-starter]]
 
@@ -844,10 +848,15 @@ an attacker who controls it could simply ask Tor the public
 IP through the `GETINFO address` command.
 To prevent this, access to the Tor control port is only
 granted to the vidalia user, who is running Vidalia.
+A filtering proxy to the control port exists, so
+Torbutton still can perform safe commands like `SIGNAL NEWNYM`.
 
 - [[!tails_gitweb chroot_local-hooks/06-adduser_vidalia]]
 - [[!tails_gitweb chroot_local-includes/usr/local/sbin/restart-vidalia]]
+- [[!tails_gitweb chroot_local-includes/usr/local/sbin/tor-controlport-filter]]
 - [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]
+
+<a id="dns"></a>
 
 ### 3.6.3 DNS
 
@@ -870,11 +879,9 @@ configured for completeness.
 
 [[!inline pages="contribute/design/Tor_enforcement/Network_filter" raw=yes]]
 
-### 3.6.7 Random MAC Address
+### 3.6.7 MAC address spoofing
 
-It is planned to anonymize the network interfaces MAC address in a
-later Tails version. See the related [[design
-document|design/MAC_address]] and [[!tails_todo macchanger desc="todo item"]].
+See [[the dedicated design document|design/MAC_address]].
 
 ### 3.6.8 Host system swap
 
@@ -965,10 +972,7 @@ updates of its installed extensions. Java support is disabled.
 
 Iceweasel is shipped with some extensions to help users manage their
 browsing experience. The Torbutton settings treat all cookies as
-session cookies by default; the [Cookie
-Monster](https://addons.mozilla.org/en-US/firefox/addon/cookie-monster)
-extension provides more
-fine-grained cookie control for users who need it. This prevents the
+session cookies by default. This prevents the
 known leak of browsing information cookies can lead to. The [Adblock
 plus](https://addons.mozilla.org/fr/firefox/addon/1865/) extension
 protects against many tracking possibilities by removing most ads.
@@ -986,7 +990,7 @@ extension that:
   use of I2P|I2P]] for details;
 - could help [[!tails_todo FTP_in_Iceweasel desc="fixing Iceweasel's FTP support"]].
 
-Thanks to Torbutton, Iceweasel is configured so that Tails browser
+Thanks to Torbutton, Iceweasel is configured so that Tor browser
 fingerprint appears uniformly among Torbutton users. Tails enables
 Torbutton's EN-US locale spoofing to avoid partitioning Tails
 users into per-language anonymity sets.
@@ -1072,7 +1076,7 @@ not leak any information apart from PING and VERSION (`Purple IRC`),
 which is deemed acceptable as there are probably other weirdness in
 how the protocol is implemented, that disclose as much.
 
-- [[!tails_gitweb config/chroot_local-includes/lib/live/config/201-pidgin]]
+- [[!tails_gitweb config/chroot_local-includes/lib/live/config/2010-pidgin]]
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.purple]]
 - [[!tails_gitweb config/chroot_local-hooks/09-remove_unsupported_pidgin_libs]]
 
@@ -1207,12 +1211,19 @@ security-related — bugs.
 
 ## 3.9 Hardware support
 
-Tails generally ships the latest kernel from Debian unstable or [Debian
+Tails generally ships the latest Linux kernel from Debian unstable or [Debian
 Backports](http://backports.debian.org) as a compromise between
 stability and recent hardware support. Recent Intel and AMD microcode
 are included as well.
 
 The x86 hardware architecture is the main supported one.
+
+A 64-bit Linux kernel (*amd64* flavour) and a 32-bit one (*486*
+flavor, for maximal backward-compatibility) are provided. The best
+supported one is used.
+
+* [[!tails_gitweb auto/config]]
+* [[!tails_gitweb config/binary_local-hooks/20-syslinux_detect_cpu]]
 
 ## 3.10 Caveats
 
@@ -1231,8 +1242,7 @@ Improvements to bridge support are [[!tails_todo bridge_support desc="planned"]]
 
 Some tools currently available to command-line users lack the
 integration into Tails and/or graphical user interface that would be
-needed to make them useful to anyone. See the [[!tails_todo
-macchanger desc="macchanger TODO page"]] as an example.
+needed to make them useful to anyone.
 
 See the development [[!tails_roadmap]] for more information about
 where Tails is heading to.
@@ -1262,7 +1272,7 @@ the [[Time sync|contribute/design/Time_syncing]] design document and the
 
 # 4 Security analysis
 
-(It would be great to have links to peer reviews here.)
+See [[the security audits of Tails|security/audits]].
 
 # 5 Bibliography
 
