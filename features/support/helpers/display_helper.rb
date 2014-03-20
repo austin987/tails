@@ -25,21 +25,6 @@ class Display
     start_virtviewer(@domain)
   end
 
-  # We could use libvirt functionality to take a screenshot (e.g.
-  # `virsh -c qemu:///system screenshot TailsToaster`) but with
-  # this approach we see the same exact same display as sikuli,
-  # which could help debug future DISPLAY problems.
-  def take_screenshot(description)
-    out = "#{$tmp_dir}/#{description}"
-    IO.popen(["xwd", "-display",
-                     @x_display,
-                     "-root",
-                     "-out", out + ".xwd"].join(' '))
-    IO.popen("convert " + out + ".xwd " + out + ".png")
-    IO.popen("rm " + out + ".xwd")
-    STDERR.puts("Took screenshot \"" + out + ".png\"")
-  end
-
   def start_virtviewer(domain)
     # virt-viewer forks, so we cannot (easily) get the child pid
     # and use it in active? and stop_virtviewer below...

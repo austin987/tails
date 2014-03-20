@@ -23,7 +23,11 @@ Feature: Microsoft Windows XP Camouflage
     And I see "WinXPSysTray.png" after at most 10 seconds
 
   Scenario: Windows should appear like those in Microsoft Windows XP
-    When I run "iceweasel"
+    When the network is plugged
+    And Tor is ready
+    And I have closed all annoying notifications
+    And available upgrades have been checked
+    And I run "iceweasel"
     Then I see "WinXPIceweaselWindow.png" after at most 120 seconds
     And I see "WinXPIceweaselTaskBar.png" after at most 10 seconds
     And I see "WinXPWindowButtons.png" after at most 10 seconds

@@ -32,15 +32,15 @@ end
 
 When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|
   next if @skip_steps_while_restoring_background
-  step "I run \"seahorse\""
+  step "I run \"torsocks seahorse\""
   @screen.wait("SeahorseWindow.png", 10)
-  @screen.type("r", Sikuli::KEY_ALT) # Menu: "Remote" ->
+  @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
   @screen.type("f")                  # "Find Remote Keys...".
   @screen.wait("SeahorseFindKeysWindow.png", 10)
   # Seahorse doesn't seem to support searching for fingerprints
-  @screen.type(keyid + Sikuli::KEY_RETURN)
+  @screen.type(keyid + Sikuli::Key.ENTER)
   @screen.wait("SeahorseFoundKeyResult.png", 5*60)
-  @screen.type(Sikuli::DOWN_ARROW)   # Select first item in result menu
-  @screen.type("f", Sikuli::KEY_ALT) # Menu: "File" ->
+  @screen.type(Sikuli::Key.DOWN)   # Select first item in result menu
+  @screen.type("f", Sikuli::KeyModifier.ALT) # Menu: "File" ->
   @screen.type("i")                  # "Import"
 end

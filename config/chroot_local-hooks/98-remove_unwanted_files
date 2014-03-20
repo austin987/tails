@@ -7,29 +7,9 @@ echo "Removing unwanted files"
 # Get POTFILES_DOT_IN
 . /usr/share/amnesia/build/variables
 
-rm /usr/share/applications/vidalia.desktop
-
-rm /usr/share/icons/gnome/icon-theme.cache
-
-rm -r \
-   /usr/share/inkscape/examples \
-   /usr/share/inkscape/tutorials
-
-rm -r /usr/share/amnesia/packages
-
-rm -rf /usr/share/doc/tails/website/blueprint/
-
-find /usr/share/doc -type f -name changelog.gz -exec rm "{}" \;
-find /usr/share/doc -type f -name changelog.Debian.gz -exec rm "{}" \;
-find /usr/share/doc -type f -name NEWS.Debian.gz -exec rm "{}" \;
-
-rm -rf /tmp/*
-find /usr -name "*.pyc" -print0 | xargs -0r rm -f
-
-# truncate logs
-for file in $(find /var/log/ -type f); do
-	: > "${file}"
-done
+find /usr/share/doc -type f -name changelog.gz        -delete
+find /usr/share/doc -type f -name changelog.Debian.gz -delete
+find /usr/share/doc -type f -name NEWS.Debian.gz      -delete
 
 # Remove .in files managed by intltool
 rm $POTFILES_DOT_IN
