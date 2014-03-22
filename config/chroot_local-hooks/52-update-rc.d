@@ -17,6 +17,7 @@ alsa-utils
 gdomap
 haveged
 hdparm
+i2p
 kexec
 kexec-load
 laptop-mode
