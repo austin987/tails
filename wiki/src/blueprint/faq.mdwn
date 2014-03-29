@@ -73,11 +73,8 @@ Hardware compatibility
 Does Tails work with 64-bit processors?
 ---------------------------------------
 
-Tails is a 32-bit operating system. But it also works on 64-bit processors, such
-as 64-bit Intel and AMD processors, since they have backwards compatibility with
-32-bit.
-
-We are working on a 64-bit version of Tails see [[!tails_ticket 5456]].
+Yes. Tails automatically detects the type of processor of the computer and loads
+a 32-bit or a 64-bit kernel accordingly.
 
 <a id="arm"></a>
 
@@ -89,8 +86,8 @@ The Raspberry Pi and many tablets are based on the ARM architecture. Tails does
 not work on the ARM architecture so far.
 
 Look for a tablet with an AMD or Intel processor. Try to verify its
-compatibility with Debian beforehand, for example make sure that the Wi-Fi card
-is supported.
+compatibility with Debian beforehand, for example make sure that the Wi-Fi
+interface is supported.
 
 <a id="browser"></a>
 
@@ -313,26 +310,12 @@ This is currenlty not possible easily using Tails.
 
 <a id="mac_address"></a>
 
-Does Tails change the MAC address of my network cards by default?
------------------------------------------------------------------
+Does Tails change the MAC address of my network interfaces?
+-----------------------------------------------------------
 
-No, but we are working on this topic, see [[!tails_ticket 5421]].
-
-Note that Tails includes <span class="application">macchanger</span>, a tool to
-change your MAC address. But if you use <span
-class="application">macchanger</span> after Tails is started, your MAC address
-might have already been leaked on the local network.
-
-To prevent this, unplug your network cable or switch off the hardware switch of
-your Wi-Fi card, and execute the following commands:
-
-  - `sudo service network-manager stop`
-  - `sudo macchanger -a -e eth0`
-  - `sudo macchanger -a -e wlan0`
-  - `sudo service network-manager start`
-
-Then only plug your network cable or switch on the hardware switch of your
-Wi-Fi card.
+Starting from Tails 0.23, [[MAC
+spoofing|doc/first_steps/startup_options/mac_spoofing]] is enabled by default
+on all interfaces.
 
 <a id="dns"></a>
 
@@ -526,10 +509,8 @@ Is it safe to use the new identity feature of Vidalia?
 ------------------------------------------------------
 
 <div class="bug">
-
 The <span class="guilabel">New Identity</span> feature of the web browser was
-not available anymore (ticket [[!tails_ticket 6383]]).
-
+broken until Tails 0.23 (ticket [[!tails_ticket 6383]]).
 </div>
 
 In our [[warning page|doc/about/warning#identities]] we advice to restart Tails

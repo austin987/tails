@@ -90,11 +90,21 @@ Upgrade bundled binary Debian packages
 That is: make sure the bundled binary Debian packages contain
 up-to-date localization files.
 
-For each bundled Debian package, run the included `import-translations`
-script if one exists, or copy updated PO files from the
+For each bundled Debian package, `cd` into the package's root
+directory (e.g. a checkout of the `whisperback` repository),
+and then run the `import-translations` script that is in the
+main Tails repository. For example:
+
+	cd whisperback
+	../tails/import-translations
+
+If the `import-translations` script fails to import translations for
+the current package, manually copy updated PO files from the
 Transifex branches of `git://git.torproject.org/translation.git` (e.g.
-`whisperback_completed`). Skip PO files for [[translation teams that use
-Git|contribute/how/translate#translate]]. Verify and commit.
+`whisperback_completed`) instead. In this case, skip PO files for
+[[translation teams that use Git|contribute/how/translate#translate]].
+
+Add and commit.
 
 Then check the PO files [[using i18nspector|contribute/l10n_tricks]].
 Correct all the errors that are not in the ignored list of
@@ -361,6 +371,7 @@ Prepare upgrade-description files
        ./bin/tails-iuk-generate-upgrade-description-files \
            --version "$VERSION" \
            --next-version "$NEXT_VERSION" \
+           --next-version "${NEXT_VERSION}~rc1" \
            --iso "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso" \
            --previous-version "$PREVIOUS_VERSION" \
            --previous-version "${VERSION}~rc1" \
@@ -379,6 +390,8 @@ Prepare upgrade-description files
      `--previous-version`, so that users who skipped a release or two
      are directly informed of the new one.
    * If preparing a release candidate, add `--channel alpha`
+   * If preparing a release candidate, do not pass
+     `--next-version "${NEXT_VERSION}~rc1"`
 
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
@@ -487,7 +500,7 @@ Test downloading the ISO and IUK over HTTP.
 Testing
 =======
 
-1. Set up a Gobby document and copy the [[test
+1. Set up a Gobby document and copy the [[manual test
    suite|contribute/release_process/test]] in it.
 1. Email <tails@boum.org> to announce that tests may start:
    - make it clear what's the deadline
@@ -584,7 +597,7 @@ Copy the `.iso.sig` file into the website repository:
 	   "$MASTER_CHECKOUT/wiki/src/torrents/files/"
 
 Write the announcement for the release in
-`$MASTER_CHECKOUT/wiki/src/news/test_$TAG.html`, including:
+`$MASTER_CHECKOUT/wiki/src/news/test_$TAG.mdwn`, including:
 
 - Update the `meta title` directive.
 - Update the `meta date` directive.
@@ -654,6 +667,14 @@ this release.
 
     git grep tails_ticket -- "wiki/src/[ds]*/*.mdwn"
 
+Test suite
+----------
+
+Remove indications of known broken tests that were fixed by this
+release:
+
+	git grep XXX -- features
+
 IRC
 ---
 
@@ -692,7 +713,8 @@ who's happy to do it.
 Prepare for the next release
 ============================
 
-XXX: adapt / fork for release candidates.
+XXX: adapt / fork for release candidates. In the meantime, read all
+this, and skip what does not make sense for a RC.
 
 1. Move the previous stable release to `obsolete` on the mirrors.
 1. Remove any remaining RC for the just-published release from

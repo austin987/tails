@@ -256,11 +256,23 @@ Else, if this is a point-release:
 After a new Tails release is out
 --------------------------------
 
-After [[merging `stable` or `testing` into
-`devel`|APT_repository#workflow-merge-main-branch]], increment the
-version number in devel's `debian/changelog` so that next builds from
-the `devel` branch do not use the APT suite meant for the
-last release.
+If you just put out a final release:
+
+* [[merge `stable` or `testing` into
+  `devel`|APT_repository#workflow-merge-main-branch]]
+* increment the version number in devel's `debian/changelog` so that
+  next builds from the `devel` branch do not use the APT suite meant
+  for the last release
+
+If you just released a RC:
+
+* add a dummy changelog entry (for the upcoming, non-RC version) in
+  the branch used for the release (`stable` or `testing`), so that the
+  next builds from it do not use the APT suite meant for the RC
+* add a dummy changelog entry (for the release *after* the one you
+  released a RC for) in the branch used for the release (`stable` or
+  `testing`), so that the next builds from it do not use the APT suite
+  meant for the RC
 
 If the release was a major one, then [[reset the stable APT suite to
 the state of the testing one|APT_repository#workflow-reset]].
