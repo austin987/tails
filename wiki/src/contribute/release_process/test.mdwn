@@ -71,20 +71,16 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 # Iceweasel
 
+## Security and fingerprinting
+
+* Run the [tests the TBB folks
+  use](https://trac.torproject.org/projects/tor/wiki/doc/build/BuildSignoff#TestPagestoUse).
 * Compare the fingerprint of Tails and the latest TBB using at least
-  <https://panopticlick.eff.org/> and <http://ip-check.info/>
+  <https://panopticlick.eff.org/>
+  - The exposed User-Agent should match the latest TBB's one.
   - Update the [[fingerprint section|support/known_issues#fingerprint]] of the
     known issues page if needed.
-  - Does the exposed User-Agent match the TBB's one?
-* Running `getTorBrowserUserAgent` should produce the useragent set by the
-  Torbutton version installed and used in Iceweasel.
-* Browsing (by IP) a HTTP or HTTPS server on the LAN should be possible.
-* Browsing (by IP) a FTP server on the LAN should be possible.
-* Does playing HTML5 videos work? In particular, (due to its popularity)
-  do [youtube](http://www.youtube.com) videos work (once
-  [[!tails_ticket 5476]] is fixed -- currently object unblocking in
-  NoScript is required)?
-* Verify that WebRTC is disabled:
+* WebRTC should be disabled:
   - In `about:config` check that `media.peerconnection.enabled` is set to
     `false`.
   - <http://mozilla.github.io/webrtc-landing/>, especially the `getUserMedia`
@@ -92,11 +88,14 @@ tracked by tickets prefixed with `todo/test_suite:`.
     microphone with the remote website; anything else should fail.
   - <http://net.ipcalf.com/> should display
     `ifconfig | grep inet | grep -v inet6 | cut -d" " -f2 | tail -n1`
-* Verify that we're protected against <http://samy.pl/evercookie/>:
-  visit this website so that it installs its crap, close the browser,
-  re-open the browser, visit this website again. The cookie should not
-  be present anymore.
 * One should be able to switch identities from the web browser.
+* Running `getTorBrowserUserAgent` should produce the User-Agent set by the
+  installed version of Torbutton, and used in Iceweasel.
+
+## Functionality
+
+* Browsing (by IP) a HTTP or HTTPS server on the LAN should be possible.
+* Browsing (by IP) a FTP server on the LAN should be possible.
 
 # Pidgin
 
