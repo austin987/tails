@@ -4,6 +4,14 @@ Feature: custom APT sources to build branches
   the proper APT sources were automatically picked depending
   on which Git branch I am working on.
 
+  Scenario: build from an untagged stable branch
+    Given I am working on the stable branch
+    And last released version mentioned in debian/changelog is 1.0
+    And Tails 1.0 has not been released yet
+    When I run tails-custom-apt-sources
+    Then I should see the 'stable' suite
+    Then I should not see '1.0' suite
+
   Scenario: build from a tagged stable branch
     Given Tails 0.10 has been released
     And last released version mentioned in debian/changelog is 0.10
