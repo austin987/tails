@@ -20,7 +20,7 @@ Feature: Installing packages through APT
     And I save the state so the background can be restored next scenario
 
   Scenario: APT sources are configured correctly
-    Then the only hosts in APT sources are "ftp.us.debian.org,security.debian.org,backports.debian.org,deb.tails.boum.org,deb.torproject.org,mozilla.debian.net"
+    Then the only hosts in APT sources are "ftp.us.debian.org,security.debian.org,backports.debian.org,deb.tails.boum.org,deb.torproject.org,mozilla.debian.net,deb.i2p2.no"
 
   Scenario: Install packages using apt-get
     When I update APT using apt-get
