@@ -221,21 +221,7 @@ end
 Given /^Tor is ready$/ do
   next if @skip_steps_while_restoring_background
 
-  # First, we wait for the notification to be displayed:
-  # it disappears after a timeout, so if we wait for other events first,
-  # we sometimes cannot find the notification picture on screen later.
-  case @theme
-  when "winxp"
-    notification_picture = "WinXPTorIsReady.png"
-  else
-    notification_picture = "GnomeTorIsReady.png"
-  end
-  @screen.wait(notification_picture, 300)
-
-  # Having seen the "Tor is ready" notification implies that Tor has
-  # built a circuit, but let's check it directly to be on the safe side.
   step "Tor has built a circuit"
-
   step "the time has synced"
 end
 

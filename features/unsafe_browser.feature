@@ -22,12 +22,6 @@ Feature: Browsing the web using the Unsafe Browser
     And the Unsafe Browser has Wikipedia pre-selected in the search bar
     And the Unsafe Browser shows a warning as its start page
 
-  Scenario: Closing the Unsafe Browser shows a stop notification.
-    When I start the Unsafe Browser
-    Then the Unsafe Browser has started
-    And I close the Unsafe Browser
-    Then I see the Unsafe Browser stop notification
-
   Scenario: Starting a second instance of the Unsafe Browser results in an error message being shown.
     When I start the Unsafe Browser
     Then the Unsafe Browser has started

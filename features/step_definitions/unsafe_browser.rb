@@ -4,11 +4,6 @@ When /^I see and accept the Unsafe Browser start verification$/ do
   @screen.type("l", Sikuli::KeyModifier.ALT)
 end
 
-Then /^I see and close the Unsafe Browser start notification$/ do
-  next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("UnsafeBrowserStartNotification.png", 30)
-end
-
 Then /^the Unsafe Browser has started$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserHomepage.png", 360)
@@ -39,7 +34,6 @@ When /^I start the Unsafe Browser$/ do
   assert(!unsafe_browser_cmd.nil?, "failed to extract the unsafe browser command")
   step "I run \"#{unsafe_browser_cmd}\""
   step "I see and accept the Unsafe Browser start verification"
-  step "I see and close the Unsafe Browser start notification"
 end
 
 Then /^I see a warning about another instance already running$/ do
@@ -50,12 +44,6 @@ end
 When /^I close the Unsafe Browser$/ do
   next if @skip_steps_while_restoring_background
   @screen.type("q", Sikuli::KeyModifier.CTRL)
-end
-
-Then /^I see the Unsafe Browser stop notification$/ do
-  next if @skip_steps_while_restoring_background
-  @screen.wait('UnsafeBrowserStopNotification.png', 20)
-  @screen.waitVanish('UnsafeBrowserStopNotification.png', 20)
 end
 
 Then /^I can start the Unsafe Browser again$/ do
