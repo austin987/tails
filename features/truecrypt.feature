@@ -13,4 +13,5 @@ Feature: TrueCrypt
     And GNOME has started
     And I have closed all annoying notifications
     When I start TrueCrypt through the GNOME menu
+    And I deal with the removal warning prompt
     Then I see "TrueCryptWindow.png" after at most 60 seconds
