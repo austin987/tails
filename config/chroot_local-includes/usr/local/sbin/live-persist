@@ -110,33 +110,6 @@ panic ()
 	error ${@}
 }
 
-# Fix persistent ~/.gconf sub-dirs; activate_custom_mounts() creates
-# empty dirs up to its mountpoint, but the file %gconf.xml has to be
-# present in each of ~/.gconf's subdirs to make them valid. Hence we
-# have a problem with a persistent ~/.gconf/X/Y if ~/.gconf/X was
-# created by activate_custom_mounts() since it would lack its
-# %gconf.xml file, making ~/.gconf/X/Y invalid. This functions makes
-# sure that all subdirs of ~/.gconf contain %gconf.xml.
-fix_gconf_dirs ()
-{
-	for home in /home/*
-	do
-		if [ ! -e "${home}/.gconf" ]
-		then
-			continue
-		fi
-		local ownership=$(stat -c "%u:%g" "${home}")
-		find "${home}/.gconf" -type d | while IFS="" read -r dir
-		do
-			local conf="${dir}/%gconf.xml"
-			if [ ! -e "${conf}" ]; then
-				touch "${conf}"
-				chown ${ownership} "${conf}"
-			fi
-		done
-	done
-}
-
 list_gpt_volumes ()
 {
 	local labels=${@}
@@ -357,7 +330,6 @@ activate_volumes ()
 	if [ -s "${custom_mounts}" ]
 	then
 		activate_custom_mounts ${custom_mounts} &> /dev/null
-		fix_gconf_dirs
 	fi
 	rm -f ${custom_mounts} 2> /dev/null
 

@@ -3,8 +3,6 @@
 # This script sets up the live user's Gnome theme to something that
 # resembles Microsoft Windows XP.
 
-. /etc/live/config.d/username.conf
-
 # Set IE icon in iceweasel
 ie_icon="/usr/share/icons/GnomeXP/48x48/apps/iceweasel.png"
 for x in /usr/share/iceweasel/browser/chrome/icons/default/*; do
@@ -13,27 +11,30 @@ for x in /usr/share/iceweasel/browser/chrome/icons/default/*; do
 done
 
 # Remove Tails-specific desktop icons
-rm --interactive=never -f /home/${LIVE_USERNAME}/Desktop/*.desktop \
-    /etc/skel/Desktop/*.desktop 2> /dev/null || true
+rm --interactive=never -f ${HOME}/Desktop/*.desktop 2> /dev/null || true
 
 # The part below is based on the XpGnome installation script, written
 # by PhrankDaChicken, available from http://ubunut.online02.com/xpgnome
 
 gconf_set() {
-	sudo -H -u "${LIVE_USERNAME}" gconftool-2 --set "$@"
+	gconftool-2 --set "$@"
+}
+
+gsettings_set() {
+	gsettings set "$@"
 }
 
 # Icon theme
 gconf_set "/desktop/gnome/interface/icon_theme" --type string "GnomeXP"
 
 # Cursor theme
-gconf_set "/desktop/gnome/peripherals/mouse/cursor_theme" --type string "xp-cursor"
+gsettings_set org.gnome.desktop.interface cursor-theme xp-cursor
 
 # GTK theme
 gconf_set "/desktop/gnome/interface/gtk_theme" --type string "XPLuna"
 
 # Metacity theme
-gconf_set "/apps/metacity/general/theme" --type string "XPLuna"
+gsettings_set org.gnome.desktop.wm.preferences theme XPLuna
 
 # Toolbars - Icons Only
 gconf_set "/desktop/gnome/interface/toolbar_style" --type string "icons"
@@ -54,8 +55,8 @@ gconf_set "/apps/nautilus/desktop/trash_icon_name" --type string "Recycle Bin"
 gconf_set "/apps/nautilus/desktop/volumes_visible" --type bool FALSE
 
 # Background
-gconf_set "/desktop/gnome/background/picture_filename" --type string "/usr/share/pixmaps/backgrounds/xp-bliss.jpg"
-gconf_set "/desktop/gnome/background/picture_options" --type string "stretched"
+gsettings_set org.gnome.desktop.background picture-uri file:///usr/share/pixmaps/backgrounds/xp-bliss.jpg
+gsettings_set org.gnome.desktop.background picture-options stretched
 
 # Make sure there are four workspaces
 gconf_set "/apps/metacity/general/num_workspaces" --type int 4
