@@ -55,12 +55,8 @@ def usb_install_helper(name)
 #  # when it should be /dev/sda1
 
   @screen.wait_and_click('USBCreateLiveUSB.png', 10)
-  begin
-    if @screen.find("USBSuggestsInstall.png")
-      raise ISOHybridUpgradeNotSupported
-    end
-  rescue FindFailed
-    # we didn't get the warning, so we can proceed with the install
+  if @screen.exists("USBSuggestsInstall.png")
+    raise ISOHybridUpgradeNotSupported
   end
   @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
   @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
