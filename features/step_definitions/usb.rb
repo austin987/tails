@@ -343,6 +343,10 @@ Then /^the boot device has safe access rights$/ do
              "owns boot device '#{dev}'")
     end
   end
+
+  info = @vm.execute("udisks --show-info #{super_boot_dev}").stdout
+  assert(info.match("^  system internal: +1$"),
+         "Boot device '#{super_boot_dev}' is not system internal for udisks")
 end
 
 Then /^persistent filesystems have safe access rights$/ do
