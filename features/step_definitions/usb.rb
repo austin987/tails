@@ -1,6 +1,6 @@
 def persistent_dirs
-  ["/home/#{$live_user}/.claws-mail",
-   "/home/#{$live_user}/.gconf/system/networking/connections",
+  ["/etc/NetworkManager/system-connections",
+   "/home/#{$live_user}/.claws-mail",
    "/home/#{$live_user}/.gnome2/keyrings",
    "/home/#{$live_user}/.gnupg",
    "/home/#{$live_user}/.mozilla/firefox/bookmarks",
