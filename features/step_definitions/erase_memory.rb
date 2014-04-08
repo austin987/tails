@@ -83,17 +83,15 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   # Free some more memory by dropping the caches etc.
   @vm.execute("echo 3 > /proc/sys/vm/drop_caches")
 
-  # The non-PAE kernel often crashes when approaching full memory, so
-  # we adjust oom and memory overcommitment limitations in that case.
-  if which_kernel == "vmlinuz"
-    [
-     "echo 256 > /proc/sys/vm/min_free_kbytes",
-     "echo 2   > /proc/sys/vm/overcommit_memory",
-     "echo 97  > /proc/sys/vm/overcommit_ratio",
-     "echo 1   > /proc/sys/vm/oom_kill_allocating_task",
-     "echo 0   > /proc/sys/vm/oom_dump_tasks"
-    ].each { |c| @vm.execute(c) }
-  end
+  # The (guest) kernel may freeze when approaching full memory without
+  # adjusting the OOM killer and memory overcommitment limitations.
+  [
+   "echo 256 > /proc/sys/vm/min_free_kbytes",
+   "echo 2   > /proc/sys/vm/overcommit_memory",
+   "echo 97  > /proc/sys/vm/overcommit_ratio",
+   "echo 1   > /proc/sys/vm/oom_kill_allocating_task",
+   "echo 0   > /proc/sys/vm/oom_dump_tasks"
+  ].each { |c| @vm.execute(c) }
 
   # The remote shell is sometimes OOM killed when we fill the memory,
   # and since we depend on it after the memory fill we try to prevent
