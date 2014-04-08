@@ -213,6 +213,11 @@ Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive
   dev = @vm.disk_dev(name) + "2"
   check_part_integrity(name, dev, "crypto", "crypto_LUKS", "gpt", "TailsData")
 
+  # Unlike in Squeeze, in Wheezy the TailsData container remains
+  # opened after t-p-s is finished.
+  @vm.execute("umount /media/TailsData")
+  @vm.execute("cryptsetup luksClose /dev/dm-0")
+
   c = @vm.execute("echo #{pwd} | cryptsetup luksOpen #{dev} #{name}")
   assert(c.success?, "Couldn't open LUKS device '#{dev}' on  drive '#{name}'")
   luks_dev = "/dev/mapper/#{name}"
