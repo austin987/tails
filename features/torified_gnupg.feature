@@ -13,7 +13,7 @@ Feature: Keyserver interaction with GnuPG
     And I log in to a new session
     And GNOME has started
     And Tor is ready
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And available upgrades have been checked
     And the "10CC5BC7" OpenPGP key is not in the live user's public keyring
     And I save the state so the background can be restored next scenario

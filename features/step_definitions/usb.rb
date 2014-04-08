@@ -428,7 +428,7 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "I log in to a new session"
   step "persistence is enabled"
   step "GNOME has started"
-  step "I have closed all annoying notifications"
+  step "all notifications have disappeared"
   step "the expected persistent files are present in the filesystem"
   step "I completely shutdown Tails"
 end

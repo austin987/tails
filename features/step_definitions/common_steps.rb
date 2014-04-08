@@ -261,7 +261,7 @@ Given /^Iceweasel has started and is not loading a web page$/ do
   @screen.type("about:blank" + Sikuli::Key.ENTER)
 end
 
-Given /^I have closed all annoying notifications$/ do
+Given /^all notifications have disappeared$/ do
   next if @skip_steps_while_restoring_background
   case @theme
   when "winxp"
@@ -269,30 +269,7 @@ Given /^I have closed all annoying notifications$/ do
   else
     notification_picture = "GnomeNotificationX.png"
   end
-
-  # First we wait a short while to give notifications a chance to show
-  begin
-    @screen.wait(notification_picture, 10)
-  rescue
-    # noop
-  end
-
-  begin
-    # note that we cannot use find_all as the resulting matches will
-    # have the positions from before we start closing notifications,
-    # but closing them will change the positions.
-
-    # Move the mouse pointer out of the way, so that the cross to close
-    # the first notification is not highlighted and can be found.
-    @screen.hide_cursor
-    while match = @screen.find(notification_picture)
-      @screen.click(match)
-      # ... same for the next notification:
-      @screen.hide_cursor
-    end
-  rescue FindFailed
-    # noop
-  end
+  @screen.waitVanish(notification_picture, 60)
 end
 
 Given /^I save the state so the background can be restored next scenario$/ do

@@ -14,7 +14,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     When the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And I create a new 4 GiB USB drive named "current"
     And I plug USB drive "current"
     And I "Clone & Install" Tails to USB drive "current"
@@ -32,7 +32,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the boot device has safe access rights
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     Then Tails seems to have booted normally
     And Tails is running from USB drive "current"
     And the boot device has safe access rights
@@ -67,7 +67,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I enable persistence with password "asdf"
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And persistence is enabled
     And I write some files expected to persist
     And persistent filesystems have safe access rights
@@ -87,7 +87,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I enable read-only persistence with password "asdf"
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And persistence is enabled
     And I write some files not expected to persist
     And I remove some files expected to persist
@@ -107,7 +107,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And Tails seems to have booted normally
     And persistence is disabled
     But a Tails persistence partition with password "asdf" exists on USB drive "current"
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     When I delete the persistent partition
     Then there is no persistence partition on USB drive "current"
 
@@ -120,7 +120,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     When the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And I create a new 4 GiB USB drive named "old"
     And I plug USB drive "old"
     And I "Clone & Install" Tails to USB drive "old"
@@ -138,7 +138,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And Tails is running from USB drive "old"
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And I create a persistent partition with password "asdf"
     Then a Tails persistence partition with password "asdf" exists on USB drive "old"
     And I completely shutdown Tails
@@ -154,7 +154,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I enable persistence with password "asdf"
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And persistence is enabled
     And I write some files expected to persist
     And persistent filesystems have safe access rights
@@ -172,7 +172,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And I plug USB drive "to_upgrade"
     And I "Clone & Upgrade" Tails to USB drive "to_upgrade"
     Then Tails is installed on USB drive "to_upgrade"
@@ -204,7 +204,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the boot device has safe access rights
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And I plug USB drive "to_upgrade"
     And I "Clone & Upgrade" Tails to USB drive "to_upgrade"
     Then Tails is installed on USB drive "to_upgrade"
@@ -237,7 +237,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And I plug USB drive "to_upgrade"
     And I do a "Upgrade from ISO" on USB drive "to_upgrade"
     Then Tails is installed on USB drive "to_upgrade"
@@ -268,7 +268,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     When the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And I plug USB drive "mbr"
     And I "Clone & Install" Tails to USB drive "mbr"
     Then Tails is installed on USB drive "mbr"
@@ -309,7 +309,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     When the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And I plug USB drive "isohybrid"
     And I try a "Clone & Upgrade" Tails to USB drive "isohybrid"
     But I am suggested to do a "Clone & Install"

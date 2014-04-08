@@ -8,7 +8,7 @@ Feature: Various checks
     And the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And I save the state so the background can be restored next scenario
 
   # FIXME: #5972
@@ -19,7 +19,7 @@ Feature: Various checks
    Scenario: The shipped Tails signing key is up-to-date
     Given the network is plugged
     And Tor is ready
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     Then the shipped Tails signing key is not outdated
 
   Scenario: The live user is setup correctly
@@ -31,7 +31,7 @@ Feature: Various checks
     Given I wait between 30 and 60 seconds
     When the network is plugged
     And Tor is ready
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And process "vidalia" is running
     And the time has synced
 
@@ -52,5 +52,5 @@ Feature: Various checks
     And the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     Then MAT can clean some sample PDF file
