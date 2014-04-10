@@ -113,6 +113,22 @@ drive will function as a removable disk about should work with Tails.
 
 See also [[!tails_ticket 6397]].
 
+<a id="chainloading"></a>
+
+Chainloading Tails from GRUB
+----------------------------
+
+To workaround problems in booting Tails on laptops with UEFI support, it is
+possible to chainload the syslinux on the ISO image from another boot loader
+that is already working on the laptop, like GRUB. Be careful not to modify at
+all the options of syslinux in the process.
+
+The following commands, run from the GRUB shell, might be helpful:
+
+    set root=(hd1)
+    chainloader +1
+    boot
+
 Security issues
 ===============
 
