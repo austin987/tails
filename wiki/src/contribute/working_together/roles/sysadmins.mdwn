@@ -1,0 +1,174 @@
+[[!meta title="System administrators"]]
+
+[[!toc levels=2]]
+
+<a id="goals"></a>
+
+# Goals
+
+The Tails system administrators set up and maintain the infrastructure
+that supports the development and operations of Tails. We aim at
+making the life of Tails contributors easier, and to improve the quality of
+the Tails releases.
+
+<a id="principles"></a>
+
+# Principles
+
+## Infrastructure as code
+
+We want to treat system administration like a (free) software
+development project:
+
+* We want to enable people to participate without needing an account
+  on the Tails servers.
+* We want to review the changes that are applied to our systems.
+* We want to be able to easily reproduce our systems via
+  automatic deployment.
+* We want to share knowledge with other people.
+
+This is why we try to publish as much as possible of our systems
+configuration, and to manage our whole infrastructure with
+configuration management tools. That is, without needing to log
+into hosts.
+
+## Free Software
+
+We use Free Software, as defined by the [Debian Free Software
+Guidelines](https://www.debian.org/social_contract#guidelines).  
+The firmware our systems might need are the only exception to
+this rule.
+
+## Relationships with upstream
+
+The [[principles used by the broader Tails
+project|contribute/relationship_with_upstream]] also apply for
+system administration.
+
+<a id="tools"></a>
+
+# Tools
+
+The main tools used to manage the Tails infrastructure are:
+
+* [Debian](https://www.debian.org/) GNU/Linux; in the vast majority of
+  cases, we run the current stable release
+* [Puppet](http://projects.puppetlabs.com/projects/puppet),
+  a configuration management system
+* [Git](http://git-scm.com/) to host and deploy configuration,
+  including our [[Puppet modules|contribute/git#puppet]]
+
+<a id="communication"></a>
+
+# Communication
+
+A few people have write access to the puppetmasters, and can log into
+the hosts.  
+They read the <tails-sysadmins@boum.org> encrypted mailing-list.
+
+We use Redmine tickets for public discussion and tasks management:
+
+* [tasks requiring *Sysadmin*
+  work](https://labs.riseup.net/code/projects/tails/issues?query_id=113)
+* [tasks belonging to the *Infrastructure*
+  category](https://labs.riseup.net/code/projects/tails/issues?query_id=140)
+
+<a id="services"></a>
+
+# Services
+
+## APT repository
+
+* purpose: host Tails-specific Debian packages
+* [[documentation|contribute/APT repository]]
+* access: anyone can read, Tails core developers can write
+* tools: [[!debpts reprepro]]
+* configuration: `tails::reprepro` class in [[!tails_gitweb_repo puppet-tails]]
+
+## Bitcoind
+
+* purpose: handle the Tails Bitcoin wallet
+* access: Tails core developers only
+* tools: [[!debpts bitcoind]]
+* configuration: `bitcoind` class in [[!tails_gitweb_repo puppet-bitcoind]]
+
+## BitTorrent
+
+* purpose: seed the new ISO image when preparing a release
+* [[documentation|contribute/release_process]]
+* access: anyone can read, Tails core developers can write
+* tools: [[!debpts transmission-daemon]]
+* configuration: done by hand ([[!tails_ticket 6926]])
+
+## Debian package builder
+
+* purpose: build Tails-specific Debian packages
+* [[documentation|contribute/Debian_package_builder]]
+* access: Tails core developers only
+* tools: [[!debpts debomatic desc="Deb-o-Matic"]]
+* configuration: hard-coded in the manifest ([[!tails_ticket 6920]])
+
+## Gitolite
+
+* purpose: host Git repositories used by the puppetmaster and other
+  services; mostly useless for humans
+* access: Tails core developers only
+* tools: [[!debpts gitolite]]
+* configuration: `tails::gitolite` class in [[!tails_gitweb_repo
+  puppet-tails]]
+
+## Jenkins
+
+* purpose: continuous integration, e.g. build Tails ISO images from
+  source and run test suites
+* access: only Tails core developers can see the Jenkins web interface
+  ([[!tails_ticket 6270]]); anyone can [[download the built
+  products|contribute/how/testing]]
+* tools: [[!debpts jenkins desc="Jenkins"]], [[!debpts jenkins-job-builder]]
+* configuration:
+  - master:
+    * `jenkins` class in [[!tails_gitweb_repo puppet-jenkins]],
+    * a few Jenkins pluggins installed with `jenkins::plugin`
+    * manifests to glue the above tools together ([[!tails_ticket 6056]])
+    * YAML jobs configuration lives in a dedicated Git repository;
+      jenkins-job-builder uses it to configure Jenkins
+  - slaves:
+    * `tails::builder` class in [[!tails_gitweb_repo puppet-tails]]
+
+## rsync
+
+* purpose: provide content to the public rsync server, from which all
+  HTTP mirrors in turn pull
+* access: read-only for those who need it, read-write for Tails core
+  developers
+* tools: [[!debpts rsync]]
+* configuration: `tails::rsync` in [[!tails_gitweb_repo puppet-tails]]
+
+## Tor bridge
+
+* purpose: provide a Tor bridge that Tails contributors can easily use
+  for testing
+* access: anyone who gets it from
+  [BridgeDB](https://bridges.torproject.org/)
+* tools: [[!debpts tor]], [[!debpts obfsproxy]]
+* configuration:
+  - `tails::apt::repository::torproject` in
+    [[!tails_gitweb_repo puppet-tails]]
+  - `tor::daemon::relay` in [[!tails_gitweb_repo puppet-tor]]
+
+## Web server
+
+* purpose: serve web content for any other service that need it
+* access: depending on the service
+* tools: [[!debpts nginx]]
+* configuration:
+  - `nginx` class in [[!tails_gitweb_repo puppet-nginx]]
+  - hard-coded manifest snippets and files on the puppetmaster
+    ([[!tails_ticket 6938]])
+
+## WhisperBack relay
+
+* purpose: forward bug reports sent with WhisperBack to <tails-bugs@boum.org>
+* access: public; WhisperBack (and hence, any bug reporter) uses it
+* tools: [[!debpts postfix desc="Postfix"]]
+* configuration: `tails::whisperback::relay` in [[!tails_gitweb_repo puppet-tails]]

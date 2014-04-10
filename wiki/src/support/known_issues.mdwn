@@ -21,9 +21,7 @@ Tails does not start with UEFI. See [[the corresponding blueprint|blueprint/UEFI
 
 See also [[manual installation using
 Mac|doc/first_steps/installation/manual/mac]] for more compatibility
-reports, as well as [[!tails_bug
-Some_old_Macbooks_running_Lion_10.7_not_booting_Lion..can_we_get_booting_fixed___63__
-desc="this bug report"]].
+reports.
 
 ASUS VivoBook X202E
 -------------------
@@ -69,8 +67,8 @@ Dell Dimension 2400
 Cannot start neither from USB nor from DVD. System crashes with a blank
 screen and locked up keyboard.
 
-ThinkPad X121e, X220, X230, T420i, T430, T520, W520, T530, E325 and E530
-------------------------------------------------------------------------
+Clevo W258CU, ThinkPad X121e, X220, X230, T420i, T430, T410, T520, W520, T530, E325 and E530
+--------------------------------------------------------------------------------------------
 
 These machines do not start on USB sticks created using Tails USB
 Installer, due to a firmware limitation.
@@ -114,6 +112,22 @@ If a flash drive does not have the Windows 8 logo on its packaging, then that
 drive will function as a removable disk about should work with Tails.
 
 See also [[!tails_ticket 6397]].
+
+<a id="chainloading"></a>
+
+Chainloading Tails from GRUB
+----------------------------
+
+To workaround problems in booting Tails on laptops with UEFI support, it is
+possible to chainload the syslinux on the ISO image from another boot loader
+that is already working on the laptop, like GRUB. Be careful not to modify at
+all the options of syslinux in the process.
+
+The following commands, run from the GRUB shell, might be helpful:
+
+    set root=(hd1)
+    chainloader +1
+    boot
 
 Security issues
 ===============
