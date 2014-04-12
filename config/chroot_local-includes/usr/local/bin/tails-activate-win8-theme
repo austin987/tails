@@ -1,0 +1,74 @@
+#!/bin/sh
+
+# This script sets up the live user's Gnome theme to something that
+# resembles Microsoft Windows 8.
+
+# Set IE icon in iceweasel
+# XXX: doesn't work as amnesia
+ie_icon="/usr/share/icons/GnomeXP/48x48/apps/iceweasel.png"
+for x in /usr/share/iceweasel/browser/chrome/icons/default/*; do
+	rm ${x}
+	ln -s ${ie_icon} ${x}
+done
+
+# Remove Tails-specific desktop icons
+rm --interactive=never -f ${HOME}/Desktop/*.desktop 2> /dev/null || true
+
+# The part below is based on the XpGnome installation script, written
+# by PhrankDaChicken, available from http://ubunut.online02.com/xpgnome
+
+# Icon theme
+gsettings set org.gnome.desktop.interface icon-theme Win2-7
+
+# Cursor theme
+gsettings set org.gnome.desktop.interface cursor-theme win8
+
+# GTK theme
+gsettings set org.gnome.desktop.interface gtk-theme Windows8
+
+# Metacity theme
+gsettings set org.gnome.desktop.wm.preferences theme Win8-01-Blue
+
+# Toolbars - Icons Only
+gsettings set org.gnome.desktop.interface toolbar-style icons
+
+# FIXME: Localization needed below
+# Desktop Icons
+gsettings set org.gnome.nautilus.desktop computer-icon-visible true
+gsettings set org.gnome.nautilus.desktop computer-icon-name "My Computer"
+gsettings set org.gnome.nautilus.desktop home-icon-visible true 
+gsettings set org.gnome.nautilus.desktop home-icon-name "My Documents"
+gsettings set org.gnome.nautilus.desktop network-icon-visible true
+gsettings set org.gnome.nautilus.desktop network-icon-name "My Network Places"
+gsettings set org.gnome.nautilus.desktop trash-icon-visible true
+gsettings set org.gnome.nautilus.desktop trash-icon-name "Recycle Bin"
+gsettings set org.gnome.nautilus.desktop volumes-visible false
+
+# Background
+gsettings set org.gnome.desktop.background picture-uri file:///usr/share/pixmaps/backgrounds/xp-bliss.jpg
+gsettings set org.gnome.desktop.background picture-options stretched
+
+# Only one workspace
+gsettings set org.gnome.desktop.wm.preferences num-workspaces 1
+
+# Panel
+gsettings set org.gnome.gnome-panel.layout object-id-list "['menu-button', 'iceweasel-launcher', 'claws-launcher', 'pidgin-launcher', 'keepassx-launcher', 'gnome-terminal-launcher', 'window-list', 'notification-area', 'shutdown-helper', 'clock']"
+gsettings set org.gnome.gnome-panel.layout toplevel-id-list "['bottom-panel']"
+
+# Panel toplevels - there is no schema so we can't use gsettings
+dconf write /org/gnome/gnome-panel/layout/toplevels/bottom-panel/size '48'
+
+# Panel objects - there is no schema so we can't use gsettings
+dconf write /org/gnome/gnome-panel/layout/objects/menu-button/object-iid '"PanelInternalFactory::MenuButton"'
+dconf write /org/gnome/gnome-panel/layout/objects/menu-button/pack-index '0'
+dconf write /org/gnome/gnome-panel/layout/objects/menu-button/pack-type '"start"'
+dconf write /org/gnome/gnome-panel/layout/objects/menu-button/toplevel-id '"bottom-panel"'
+dconf write /org/gnome/gnome-panel/layout/objects/iceweasel-launcher/toplevel-id '"bottom-panel"'
+dconf write /org/gnome/gnome-panel/layout/objects/claws-launcher/toplevel-id '"bottom-panel"'
+dconf write /org/gnome/gnome-panel/layout/objects/pidgin-launcher/toplevel-id '"bottom-panel"'
+dconf write /org/gnome/gnome-panel/layout/objects/keepassx-launcher/toplevel-id '"bottom-panel"'
+dconf write /org/gnome/gnome-panel/layout/objects/gnome-terminal-launcher/toplevel-id '"bottom-panel"'
+dconf write /org/gnome/gnome-panel/layout/objects/notification-area/toplevel-id '"bottom-panel"'
+dconf write /org/gnome/gnome-panel/layout/objects/shutdown-helper/toplevel-id '"bottom-panel"'
+dconf write /org/gnome/gnome-panel/layout/objects/clock/toplevel-id '"bottom-panel"'
+dconf write /org/gnome/gnome-panel/layout/objects/clock/pack-type '"end"'
