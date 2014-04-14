@@ -33,12 +33,12 @@ programs and documentation into your native language:
 
 ## With Transifex
 
-Most of Tails can be translated directly online with 
+Most of Tails can be translated directly online with
 [Transifex](http://help.transifex.com/intro/translating.html#translating):
 
-- [Tails 
+- [Tails
 Greeter](https://www.transifex.com/projects/p/torproject/resource/3-tails-tails-greeter-pot/)
-- [Tails Persistence 
+- [Tails Persistence
 Setup](https://www.transifex.com/projects/p/torproject/resource/3-tails-tails-persistence-setup-pot/)
 - [Tails Installer](https://www.transifex.com/projects/p/torproject/resource/3-tails-liveusb-creator-pot/)
 - [Tails Upgrader](https://www.transifex.com/projects/p/torproject/resource/tails-tails-iukpot/)
@@ -95,8 +95,22 @@ class="application">[Poedit](http://www.poedit.net/screenshots.php)</span>, a
 cross-platform editor for PO
 files. <span class="application">Poedit</span> is included in Tails.
 
-If there is no existing PO file for your language, you can copy the 
+Please ensure that you use at least version 1.5 of Poedit, as this version
+handles line breaks of our files correctly.
+
+When setting up Poedit, you might want to ensure to use "Tails translators"
+or "Tails developers" as translator name and "amnesia@boum.org" as translator
+contact email address.
+
+If you do not use Poedit, but for example Vim or Emacs with the po-plugin, please
+verify for each translation that the syntax of the files is not broken. In order to do
+do so, please refer to the [[localization tricks page|contribute/l10n_tricks]].
+
+If there is no existing PO file for your language, you can copy the
 corresponding `.pot` file into a new `.po` file.
+
+It is highly recommended that you [[build the wiki locally|contribute/build/website/]] in order to
+verify your modifications or to review the translations of somebody else.
 
 ### Workflow
 
@@ -109,14 +123,87 @@ translators teams:
    else, [fork us on repo.or.cz](http://repo.or.cz/w/tails.git) or ask
    the Tails system administrators (<tails-sysadmins@boum.org>) to host
    your repository.
-2. Translate whatever you can in your preferred PO file editor.
-3. Commit the changes you made to `.po` files.
-4. Merge our main repository into yours.
-5. Push your changes to your online Git repository.
-6. Ask other members of your translation team to review your work.
-7. The reviewer, once happy with the result, should ask on the
+
+   On your computer, set up the repository. This example will clone
+   an empty repository into the folder "tails":
+
+   `git clone http://repo.or.cz/r/tails/yourrepo.git tails`
+
+2. Once you have this set up, you will need to setup
+   the remote Tails main repository in that same folder.
+
+   `cd tails`
+
+   `git remote add tails https://git-tails.immerda.ch/tails`
+
+   Typing `git remote` should now show two entries:
+
+   `origin
+   tails`
+
+   "origin" is your own repository, "tails" will contain the files of the
+   main repository once we fetch them. This operation will require some time
+   at setup, as it requires to pull the whole repository.
+
+   `git fetch tails master`
+
+3. Now setup git, type:
+
+   `git config user.name "Tails developers"
+   git config user.email "amnesia@boum.org"`
+
+   Verify this configuration by typing
+
+   `git config --list`
+
+4. Create a branch for every translation you make, for example, if you want to
+   translate the "contribute" page, create a branch named "translation-contribute":
+
+   `git branch translation-contribute`
+
+   `git checkout translation-contribute`
+
+   Now typing `git branch` should show a star in front of the active branch.
+5. Translate whatever you can in your preferred PO file editor.
+6. Commit the changes you made to `.po` files.
+
+   `git add <files>`
+
+   `git commit <files>`
+
+7. Merge our main repository into yours.
+   Regularly, pull from the master branch of the main repository to update
+   your local files.
+
+   `git fetch tails master` will only fetch new files,
+
+   `git pull tails master` will fetch and merge the files.
+
+8. Push your changes to your online Git repository.
+
+   `git push origin <name of branch>`
+
+   `git push origin translation-contribute`
+
+9. Ask other members of your translation team to review your work by writing
+   an email to [[the mailing list for
+   translators|translate#follow-up]], containing in its subject
+   "(Review)" and the short code for the translated language, for example "[fr]".
+
+10. The reviewer, once happy with the result, should ask on the
    [[mailing list for translators|translate#follow-up]] to pull from
-   the branch that was worked on.
+   the branch that was worked on, writing an email with "(pull)" and the language
+   short code in its' subject.
+
+
+You might want to use Git over Tor, for example, by using a Tails device when you translate.
+
+If you know what you are doing, you could also add a bash alias to your .bashrc:
+
+`alias git=usewithtor git`
+
+Read more about the Tails [[Git|contribute/git]] setup.
+
 
 ### Let's get organized
 
@@ -185,7 +272,7 @@ batch of translations.
     - [[/doc/about]] section
     - [[/doc/first_steps]] section
 
-Do not hesitate to report the progress of your work on the [[mailing list for 
+Do not hesitate to report the progress of your work on the [[mailing list for
 translators|translate#follow-up]].
 
 <a id="follow-up"></a>
