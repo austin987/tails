@@ -53,3 +53,37 @@ Run i18nspector on the whole wiki
 
     cd wiki/src
     contribute/l10n_tricks/check_po.sh
+
+Rewrap files
+=================================
+
+To rewrap one .po file:
+
+    msgcat --width=80 -o your_output_file.po your_input_file.po
+
+To rewrap several .po files:
+
+    for f in $(find . -type f -name .po) ; do msgcat --width=80 -o \
+         "${f}.new" "$f" ; mv -f "${f}.new" "$f" ; done
+
+To rewrap a .mdwn file:
+
+    fold -s -w 80 translate.mdwn > translate.mdwn.out
+
+Quickly update several repositories
+====================================
+
+Tails is split in [[several git repositories|contribute/git]]: tails-greeter,
+whisperback, persistence-setup, *etc*.
+
+If you cloned those differents repositories in the same folder, you can pull them all
+in a row with the following bash script:
+
+    #!/bin/sh
+        for d in $(find . -type d -name ".git" | sed 's/\/.git\+$//' ); do
+           echo "Current repository: $d";
+           cd $d && git pull && cd - || exit 1
+    done
+
+This will basically check in all subfolders if there is an existing `.git` folder,
+and run `git pull` if appropriate.
