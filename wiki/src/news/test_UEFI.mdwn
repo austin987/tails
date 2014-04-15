@@ -1,0 +1,135 @@
+[[!meta title="Call for testing: UEFI"]]
+
+[[!meta date="2014-04-15 16:00:00"]]
+
+You can help Tails! UEFI support is ready for testing.
+
+UEFI support allows you to start Tails using a USB stick on recent
+hardware, and especially Apple hardware. It turn, you can use great
+features such as [[doc/first_steps/persistence]] and [[automatic
+upgrades doc/first_steps/upgrade]].
+
+Please try it and see if all works for you:
+
+ * If you have previously had problems starting Tails on your
+   hardware, using a USB stick created with <span
+   class="application">Tails Installer</span>: a new Tails with UEFI
+   support may fix these problems.
+
+ * if you are used to start Tails using a USB stick created with <span
+   class="application">Tails Installer</span>: it would be sad to
+   realize that the next version of Tails breaks things for you, only
+   after it has been released, right?
+
+[[!toc levels=1]]
+
+# How to try UEFI support?
+
+These instructions allow you to try an **experimental version of
+Tails** with UEFI support. Use it only for experimenting.
+
+To follow these instructions, you will need two boot devices
+compatible with Tails: either a DVD and a USB sticks, or two
+USB sticks.
+
+Follow these steps exactly: e.g. upgrading an existing Tails USB stick
+won't work.
+
+1. Download the latest [test ISO](http://nightly.tails.boum.org/build_Tails_ISO_feature-uefi/).
+
+1. Use any officially supported way to
+   [[install|doc/first_steps/installation]] the experimental ISO image
+   to device *Alpha*, that can be a DVD or a USB stick. At this point,
+   device *Alpha* does not support UEFI.
+
+1. Start Tails from device *Alpha* in legacy mode.
+
+1. Take detailed notes about how this boot went.
+
+1. *Clone & Install* device *Alpha* onto a USB stick [[with <span
+   class="application">Tails
+   Installer</span>|doc/first_steps/installation]]. From now on, we
+   will call this second device *Beta*, and it supports UEFI.
+
+1. Start Tails from the USB stick *Beta* in legacy mode.
+
+1. Take detailed notes about how this boot went. If it failed, don't
+   despair: maybe the following test will succeed!
+
+1. Start Tails from the USB stick *Beta* in UEFI mode:
+   * On a Mac: plug the USB stick, press the power button, immediately
+     press the `alt` key until a boot menu appears, and then choose
+     the entry that reads *Boot EFI* and looks like a USB stick.
+   * On a PC: look first into the boot menu; if nothing reads *EFI* in
+     there, look in the BIOS settings, and try any of the following
+     options if available: `Disable Legacy mode`, `Disable CSM boot`,
+     and `Enable UEFI`.
+
+1. Take detailed notes about how this boot went.
+
+1. Report your results to us, as documented below.
+
+Reporting success and failure
+=============================
+
+We are interested both in your success and failure reports.
+
+To make such reports useful, we need quite a bit of information: the
+exact information we need depends on whether you are reporting success
+or failure.
+
+## Reporting success
+
+From Tails started in UEFI mode, please [[send us
+a report|doc/first_steps/bug_reporting]] with <span
+class="application">WhisperBack</span>. Include your testing notes,
+and the answer to the following questions:
+
+1. What is the filename of the ISO you have been testing?
+1. How exactly did you prepare the boot device?
+1. What exact steps did you follow to start Tails from this device?
+
+## Reporting failure
+
+If you find a computer that cannot start with an experimental version
+of Tails that supports UEFI, please first check if the problem you are
+experiencing is [[already known|test_UEFI#known_issues]]. If it is,
+then you do not need to send us a report. Else, read on.
+
+Your report must include the answer to the following questions:
+
+1. What is the filename of the ISO you have been testing?
+1. How exactly did you prepare the boot device?
+1. What exact steps did you follow to start Tails from this device?
+1. What are the brand and model of the computer your have been
+   testing on?
+1. What are the type, brand and model of the boot device?
+1. What exactly happens when you tried to start Tails from
+   this device?
+
+Please also consider trying what follows, and including the results
+in your report:
+
+1. Try to reproduce the problem with the latest official version of
+   Tails, installed in the same way, on the same hardware.
+1. Try to reproduce the problem with an [experimental ISO built from
+   the devel
+   branch](http://nightly.tails.boum.org/build_Tails_ISO_devel/),
+   installed in the same way, on the same hardware.
+
+In any case, please email your report to <intrigeri@boum.org>. You may
+encrypt it with OpenPGP to:
+
+	pub   4096R/0xBACE15D2A57498FF 2009-09-13 [expires: 2014-09-12]
+	      Key fingerprint = 1152 BF13 6B7A 1B1C 49FC  A659 BACE 15D2 A574 98FF
+	uid                            intrigeri <intrigeri@boum.org>
+	sub   4096R/0x4F5C654A93F976C9 2009-09-13 [expires: 2014-09-12]
+
+<a id="known_issues">
+
+# Known issues
+
+Known issues of UEFI support are listed:
+
+* as subtasks of [[!tails_ticket 5739]] in Redmine
+* on [[the blueprint|blueprint/UEFI/syslinux#known_issues]]
