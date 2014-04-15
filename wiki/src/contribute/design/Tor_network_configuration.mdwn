@@ -1,0 +1,60 @@
+[[!meta title="Tor network configuration"]]
+
+[[!toc levels=1]]
+
+# Rationale
+
+Certain networks are restricted in ways that prevent Tor from
+connecting properly without further configuration. Examples are:
+
+* Egress port filtering (solved with `ReachableAddresses`).
+
+* The Internet is only reachable via a proxy (solved with the `*Proxy`
+  options).
+
+* Tor is explicitly blocked (the Tor people like the term "censored"),
+  which can be circumvented by using Tor bridges (solved with
+  `UseBridges`, `Bridge`, and possibly `ClientTransportPlugin`).
+
+In addition, bridges can be used to obfuscate Tor's traffic so that it
+becomes harder for adversaries to identify Tor usage, especially in
+combination with pluggable transports. This makes Tor (and hence
+Tails) safer to use in regions where it's dangerous for some reason,
+or in other situations where users want to hide that they use Tor. In
+Tails we think this is a highly useful use case of Tor bridges beyond
+its more publicly announced "censorship circumvention" usage.
+
+In Tails we need a user-friendly and safe way for users to configure
+these options before Tor tries to connect to the public Tor network.
+
+# Implementation
+
+In Tails Greeter the "Network Configuration" section contains a
+non-default option called "My Internet Connection is
+censored...". When activated, the following deviations from normal
+Tails behaviour occur, in order:
+
+1. Tails Greeter adds `DisableNetwork 1` to torrc so Tor will not
+   connect to the network without user intervention.
+
+2. When we connect to the network, a NetworkManager hook starts Tor
+   Launcher in the background, i.e. non-blocking.
+
+3. [[Time_syncing]] waits until the user has committed its
+   configuration via Tor Launcher and then does its usual magic to
+   ensure that Tor bootstraps even if the clock was incorrect. That is
+   the reason why we have to take the more complex approach of
+   starting Tor Launcher in parallel.
+
+Scripts:
+
+* [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-tor-launcher]]
+  (Wrapper for Tor Launcher)
+
+* [[!greeter_gitweb PostLogin.default]] (sets `DisableNetwork`)
+
+* [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/10-tor.sh]]
+  (Tor Launcher is started here)
+
+* [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/20-time.sh]]
+  (Time syncing)
