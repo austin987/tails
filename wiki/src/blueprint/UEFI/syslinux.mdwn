@@ -1,19 +1,19 @@
-Prerequisite: Tails with an amd64 kernel (e.g. from current
-devel branch).
+[[!toc levels=1]]
 
-Tested with syslinux 6.02+dfsg-1.
+<a id="known_issues">
 
-	sudo apt-get install syslinux/experimental \
-	   syslinux-common/experimental isolinux/experimental
+Known issues
+============
 
-	# make the system partition an *EFI System Partition* (ESP)
-	parted "$TAILS_DEVICE" set 1 boot on
+* Mac: *some* Mac need rEFInd installed to boot Tails in UEFI mode.
+* ThinkPad X230: when booting in UEFI mode, the syslinux boot menu is
+  not displayed properly, and one cannot see the kernel command-line
+  when editing it.
+* VirtualBox: at least one version of VirtualBox cannot boot Tails
+  in UEFI mode.
 
-	mkdir -p "$TAILS_MOUNTPOINT"/EFI/BOOT && \
-	   cp /usr/lib/SYSLINUX/efi64/syslinux.efi \
-	      "$TAILS_MOUNTPOINT"/EFI/BOOT/bootx64.efi && \
-	   cp "$TAILS_MOUNTPOINT"/syslinux/* "$TAILS_MOUNTPOINT"/EFI/BOOT/ && \
-	   /bin/cp -f /usr/lib/syslinux/modules/efi64/* "$TAILS_MOUNTPOINT"/EFI/BOOT/
+Miscellaneous test results
+==========================
 
 * With Lenovo Yoga 2 Pro, the UEFI nightly release does work, while it didn't
   work previously.
@@ -60,7 +60,6 @@ Tested with syslinux 6.02+dfsg-1.
   that fails to display its menu, even after commenting out most
   menu-related setting that has to do with color or positioning.
   Finally, Tails does not boot.
-* Fails to boot in VirtualBox (version?) with EFI enabled.
 * ASUSTeK COMPUTER INC. X55VD: boots fine with `menu background
   splash.png` removed (both with CSM enabled and disabled); only boots
   in CSM mode with `menu background splash.png` kept in place
