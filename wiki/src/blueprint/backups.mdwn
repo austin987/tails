@@ -1,0 +1,101 @@
+[[!meta title="Backups of the persistent volume"]]
+
+We want to allow our users to backup the data they have in their persistent
+volume.
+
+See the thread on tails-dev:
+
+<https://mailman.boum.org/pipermail/tails-dev/2014-April/005388.html>
+
+Backup techniques
+=================
+
+We shouldn't maintain yet another shiny new piece of code to do that. Or we
+might hit tons of corner cases to handle, that one initially does not think of.
+And once we take it all into account, then we get a large piece of code to
+maintain all by ourselves, because it was meant only for Tails' needs.
+
+So, we should try to reinvent this wheel, and use an existing, proven solution instead.
+
+Tar + GPG
+---------
+
+A simple approach might be to combine tar and GPG:
+
+    tar cjf - . | gpg --cipher-algo AES -c - > /home/amnesia/YYYY-MM-DD-backup.tbz2.gpg
+
+Initial implementation might be easy but that will probably end up being quite a
+big piece of custom code.
+
+Duplicity
+---------
+
+<http://duplicity.nongnu.org/>
+
+It supports something that's basically "tar | gpg" for the first iteration, and
+it also leaves room for future improvements, thanks to its support for
+incremental and remote backups. Also, it allows users to restore or inspect
+their backups outside of Tails, without having to manually decipher yet another
+backup file format.
+
+Cons:
+
+- Duplicity creates tons of messy files on the file system.
+
+Loopback LUKS
+-------------
+
+Cons:
+
+- We still need to find another tool to create the device and copy the files.
+- Maybe backups done this way would be much bigger than duplicity backups.
+- Duplicity supports incremental backups even if they have some limitations.
+
+Pros:
+
+- One file per backup.
+
+Obnam
+-----
+
+Obnam only supports encrypting to a GnuPG key, so this would require another
+layer of encryption (such as a LUKS container file, or something else) if we
+want to support encrypting with a passphrase (and I think we should).
+
+Other solutions
+---------------
+
+We should investigate how others have already solved this problem.
+
+User experience
+===============
+
+- The user should be prompted about where to save the backup as this will most
+  probably end up directly on a storage device and not go through RAM.
+
+- Ask the user which folders of the persistence setup to backup. But maybe
+  that's not needed for a first prototype, as we might assume that the info in
+  persistence is kept to the minimum.
+
+- The restore step would do the current delete partition steps (if there was
+  already a persistence partition found), then most of the current steps to
+  create a partition, but instead of asking the user what they want to use their
+  new partition for, it would instead ask the user to pick a backup and would
+  restore it.  
+
+- There could be a single menu entry called "Backup and restore persistent
+  volume". Combining both actions in a single menu entry makes it clear that
+  they are directly related, and limits the number of menu entries.
+
+- There should be a graphical way to restore backups. It is important let
+  non-techy users restore their backups if necessary.
+
+Implementation
+==============
+
+- Avoid running the GUI as root and rather run the GUI as amnesia or a dedicated
+  user and execute precise actions through policykit (execute a command with
+  pkexec or implement a dbus service)
+
+- Write the code in GTK3 for Tails 1.1 which will be the next major release,
+  based on Debian Wheezy.
