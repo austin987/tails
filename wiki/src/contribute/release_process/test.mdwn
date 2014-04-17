@@ -48,7 +48,7 @@ Check the image size has not changed much since the last release.
 
 In a directory with many Tails ISO images:
 
-    find -iname "tails*.iso" -exec ls -lh '{}' \; | sort -rhk 8
+    find -iname "tails*.iso" -exec ls -lh '{}' \; | sort -rhk 5
 
 # Automated test suite
 
@@ -99,16 +99,16 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 # Pidgin
 
-* pidgin: is an IRC session really torified?
+* Check that an IRC session is really torified:
  - if you are running an IRC server: check there
  - else: see if the connection to the IRC server appears in Vidalia
    connections list
-* Check OTR is working.
+* Check that you can initiate an OTR conversation.
 * Check that IRC is working with the default OFTC profile.
 * Check that XMPP is working with a new test profile.
-* Check if pidgin doesn't leak too many informations on replying to different
+* Check that Pidgin doesn't leak too much information when replying to
   CTCP requests:
-  * Start Tails, launch pidgin, and join #tails.
+  * Start Tails, launch Pidgin, and join #tails.
   * Also join #tails from the webchat of OFTC on <https://webchat.oftc.net/>
     using another nickname.
   * Try to send `/ctcp <Tails_account_nick> COMMAND` from the webchat to pidgin:
@@ -126,30 +126,38 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 * The version of Tor should be the latest stable one, which is the highest version number
   before alpha releases on <http://deb.torproject.org/torproject.org/pool/main/t/tor/>.
-* firewall: is the Tor-enforcement effective?
- - check output of `iptables -L -n -v`
- - check output of `iptables -t nat -L -n -v`
- - try connecting to the Internet after unsetting `$http_proxy` and
-   `$HTTP_PROXY` using a piece of software that does not obey the
-   GNOME proxy settings, *and* is not explicitly torified in Tails:
-   `unset http_proxy ; unset HTTP_PROXY ; wget --no-proxy
-   http://monip.org` (should result in a "`Connection refused`".
-* firewall: is IPv6 traffic blocked?
- - check output of `ip6tables -L -n`
- - at a place with working IPv6: try connecting to a known-working
-   IPv6-enabled server on its IPv6 address over TCP and icmp6.
-* is `/etc/resolv.conf` OK both before/after DHCP has been set up? it should
-  *always* read `nameserver 127.0.0.1`
+* Check that the firewall-level Tor enforcement is effective:
+  - check output of `iptables -L -n -v`
+  - check output of `iptables -t nat -L -n -v`
+  - try connecting to the Internet after unsetting `$http_proxy` and
+    `$HTTP_PROXY` using a piece of software that does not obey the
+    GNOME proxy settings, *and* is not explicitly torified in Tails:
+    
+        	unset http_proxy ; unset HTTP_PROXY
+        	wget --no-proxy http://monip.org/
+    
+    ... should only give you "Connection refused" error message.
+* Check that IPv6 traffic is blocked:
+  - check output of `ip6tables -L -n`
+  - at a place with working IPv6: try connecting to a known-working
+    IPv6-enabled server on its IPv6 address over TCP and icmp6.
+* After DHCP has been set up, `/etc/resolv.conf` must read `nameserver 127.0.0.1`.
+* Before DHCP has been set up, `/etc/resolv.conf` must read `nameserver 127.0.0.1`.
 * [[doc/first_steps/startup_options/bridge_mode]] should work:
   1. Set up an administrator password.
   1. Enable network configuration in Tails Greeter.
-  1. Configure a bridge or a few in Tor Launcher:
-     - `bridge 198.252.153.59:9001`
-     - `obfs2 198.252.153.59:16492`
-     - `obfs3 198.252.153.59:16493`
+  1. Configure a few bridges in Tor Launcher:
+     
+         	bridge 198.252.153.59:9001
+         	obfs2 198.252.153.59:16492
+        	obfs3 198.252.153.59:16493
+     
   1. Use the Internet.
-  1. Check with `sudo watch "netstat -taupen | grep ESTABLISHED"` that the only outgoing
-     direct network connections go to the configured bridges.
+  1. Check that the only outgoing direct network connections go to the
+     configured bridges:
+     
+         	sudo watch "netstat -taupen | grep ESTABLISHED"
+
 * Verify that all destinations reached from an intensive Tails session
   are tor routers or
   authorities:
@@ -216,9 +224,9 @@ features properly do their work; second, our `torrc` sets the right
 the appropriate tcpdump or tshark filters.
 
 * Make sure Claws Mail use its dedicated `SocksPort` when connecting
-  to IMAP / POP3 / SMTP servers. As root:
+  to IMAP / POP3 / SMTP servers:
 
-      watch -n 0.1 'netstat -taupen | grep claws'
+      sudo watch -n 0.1 'netstat -taupen | grep claws'
 
 * Make sure these use the `SocksPort` dedicated for Tails-specific applications:
   - htpdate — as root, run:
@@ -227,26 +235,25 @@ the appropriate tcpdump or tshark filters.
            && rm -f /var/run/htpdate/{done,success} \
            && service htpdate start
 
-    ... with the following command running as root in another
-    terminal:
+    ... with the following command running in another terminal:
 
-        watch -n 0.1 'netstat -taupen | grep curl'
+        sudo watch -n 0.1 'netstat -taupen | grep curl'
 
   - security check — run `tails-security-check` with the following
-    command running as root in another terminal:
+    command running in another terminal:
 
-        watch -n 0.1 'netstat -taupen | grep perl'
+        sudo watch -n 0.1 'netstat -taupen | grep perl'
 
   - incremental upgrades — run `tails-upgrade-frontend-wrapper` with
-    the following command running as root in another terminal:
+    the following command running in another terminal:
 
-        watch -n 0.1 'netstat -taupen | grep perl'
+        sudo watch -n 0.1 'netstat -taupen | grep perl'
 
 * Make sure iceweasel uses its dedicated `SocksPort`: quit Iceweasel
-  then start it with the following command running as root in another
+  then start it with the following command running in another
   terminal:
 
-      watch -n 0.1 'netstat -taupen | grep iceweasel'
+      sudo watch -n 0.1 'netstat -taupen | grep iceweasel'
 
 * Make sure other applications use the default system-wide
   `SocksPort`:
@@ -254,50 +261,47 @@ the appropriate tcpdump or tshark filters.
 
         wget https://tails.boum.org/
 
-    ... with the following command running as root in another
-    terminal:
+    ... with the following command running in another terminal:
 
-        watch -n 0.1 'netstat -taupen | grep polipo'
+        sudo watch -n 0.1 'netstat -taupen | grep polipo'
 
   - Gobby 0.4 — start Gobby 0.4 from the *Applications* menu and
-    connect to a server, with the following command running as root in
+    connect to a server, with the following command running in
     another terminal:
 
-        watch -n 0.1 'netstat -taupen | grep gobby'
+        sudo watch -n 0.1 'netstat -taupen | grep gobby'
 
   - Gobby 0.5 — start Gobby 0.5 from the *Applications* menu and
-    connect to a server (for example `gobby.debian.org`), with the following command running as root in
+    connect to a server (for example `gobby.debian.org`), with the following command running in
     another terminal:
 
-        watch -n 0.1 'netstat -taupen | grep gobby'
+        sudo watch -n 0.1 'netstat -taupen | grep gobby'
 
   - SSH — run (no need to authenticate the server or to login):
 
         ssh lizard.tails.boum.org
 
-    ... with the following command running as root in another
-    terminal:
+    ... with the following command running in another terminal:
 
-        watch -n 0.1 'netstat -taupen | grep -E "connect-proxy|ssh"'
+        sudo watch -n 0.1 'netstat -taupen | grep -E "connect-proxy|ssh"'
 
   - whois — run:
 
         whois example.com
 
-    ... with the following command running as root in another
-    terminal:
+    ... with the following command running in another terminal:
 
-        watch -n 0.1 'netstat -taupen | grep whois'
+        sudo watch -n 0.1 'netstat -taupen | grep whois'
 
 * Make sure a random application run using `torify` and `torsocks`
   uses the default system-wide `SocksPort`. Run:
 
       torify /usr/bin/gobby-0.5
 
-    ... and connect to a server (for example `gobby.debian.org`), with the following command running as
-    root in another terminal:
+    ... and connect to a server (for example `gobby.debian.org`), with the following command running
+    in another terminal:
 
-        watch -n 0.1 'netstat -taupen | grep gobby'
+        sudo watch -n 0.1 'netstat -taupen | grep gobby'
 
     Then do the same test for:
 
@@ -346,8 +350,9 @@ the appropriate tcpdump or tshark filters.
 
 # WhisperBack
 
-* can a bug report e-mail be sent?
-* is it correctly encrypted?
+* I should be able to send a bug report with WhisperBack.
+* When we receive this bug report on the tails-bugs mailing-list,
+  Schleuder tells us that it was sent encrypted.
 
 # Time
 
@@ -366,13 +371,12 @@ correctly.
 
 # Erase memory on shutdown
 
-- check that `memlockd` is running
-- check that `udev-watchdog` monitors the right device ([[!tails_ticket 5560]])
-  * on USB
-  * on DVD
+- `memlockd` must be running
+- `udev-watchdog` must monitor the right device when booted off USB (automate: [[!tails_ticket 5560]])
+- `udev-watchdog` must monitor the right device when booted off DVD (automate: [[!tails_ticket 5560]])
 - After booting from DVD, remove Tails boot medium and check that the
   memory erasure process is started (`Loading new kernel`, at least).
-  [[!tails_ticket 5472]]
+  (automate: [[!tails_ticket 5472]])
 - After booting from USB, remove Tails boot medium and check that the
   memory erasure process is started (`Loading new kernel`, at least).
 
@@ -562,8 +566,9 @@ language.
   (once [[!tails_ticket 6096]] is fixed)
 * The Tails signing key shipped should be up-to-date (that is, neither it nor
   one its subkeys must have expired, or be about to expire any time soon).
-  - `gpg --list-keys 1202821CBE2CD9C1`
+  - `gpg --list-keys --with-colons 1202821CBE2CD9C1`
 * The "Report an error" desktop launcher should open the [[support]]
-  page (automate: [[!tails_ticket 6904]]).
+  page, both in English and in one language to which the website is
+  translated (automate: [[!tails_ticket 6904]]).
 * One should be able to refresh the GnuPG keyring in Seahorse (once
   [[!tails_ticket 7051]] is resolved).
