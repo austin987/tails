@@ -5,6 +5,10 @@
 Problems starting Tails
 =======================
 
+This section lists known problems with specific hardware. To report a problem
+with different hardware see our [[report guidelines when Tails does not
+start|doc/first_steps/bug_reporting/tails_does_not_start]].
+
 Acer Travelmate 8573T-254G50M
 -----------------------------
 
@@ -103,7 +107,9 @@ dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
 * SanDisk Cruzer Glide 4GB, 8GB and 16GB
 * SanDisk Cruzer Switch USB 2.0 8GB and 32GB
 * SanDisk Cruzer USB 3.0 64GB
-* Sandisk Cruzer Blade 4GB
+* SanDisk Cruzer Blade 4GB
+* SanDisk Cruzer Facet
+* Staples Relay USB 2.0 16GB
 
 SanDisk had begun the production of flash drives configured as fixed disk in
 2012 to meet new requirements for Windows 8 Certification. The flash drives that
@@ -112,6 +118,22 @@ If a flash drive does not have the Windows 8 logo on its packaging, then that
 drive will function as a removable disk about should work with Tails.
 
 See also [[!tails_ticket 6397]].
+
+<a id="chainloading"></a>
+
+Chainloading Tails from GRUB
+----------------------------
+
+To workaround problems in booting Tails on laptops with UEFI support, it is
+possible to chainload the syslinux on the ISO image from another boot loader
+that is already working on the laptop, like GRUB. Be careful not to modify at
+all the options of syslinux in the process.
+
+The following commands, run from the GRUB shell, might be helpful:
+
+    set root=(hd1)
+    chainloader +1
+    boot
 
 Security issues
 ===============
