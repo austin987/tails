@@ -62,6 +62,34 @@ Obnam only supports encrypting to a GnuPG key, so this would require another
 layer of encryption (such as a LUKS container file, or something else) if we
 want to support encrypting with a passphrase (and I think we should).
 
+grsync + encrypted device
+------------------------------
+
+[grsync](http://www.opbyte.it/grsync/) is a GUI for the renown and rock-solid `rsync`, already shipped in Tails.
+
+Grsync is [packaged for debian](https://packages.debian.org/squeeze/grsync).
+
+The documentation for the creation of the encrypted device [[is already written|doc/encryption_and_privacy/encrypted_volumes]].
+
+**How to test?**
+
+* create an encrypted device.
+* install the `grsync` package.
+* paste [those lines](http://chopapp.com/#twledfq4) in a `.grsync` file, then double-click on it.
+  (grsync ask you first to confirm the profile you want to use. Just click on "Open")
+* define the destination (i.e your encrypted device)
+* test wildly!
+
+**Todo**
+
+* some files are normally not readable by rsync (for example persistence.conf, apt/*)
+  Grsync can bypass that with the option "Run as superuser", we should investigate the consequences of using such an option.
+* decide if we activate the option `--delete` by default.
+* test restoration, then check files permissions.
+* test backup + restoration with symlinks and hardlinks in the Persistent folder.
+* eventually test remote backups.
+
+
 Other solutions
 ---------------
 
