@@ -1,5 +1,7 @@
 [[!meta title="Backups of the persistent volume"]]
 
+[[!toc  levels=2]]
+
 We want to allow our users to backup the data they have in their persistent
 volume.
 
@@ -61,6 +63,46 @@ Obnam
 Obnam only supports encrypting to a GnuPG key, so this would require another
 layer of encryption (such as a LUKS container file, or something else) if we
 want to support encrypting with a passphrase (and I think we should).
+
+grsync + encrypted device
+------------------------------
+
+[grsync](http://www.opbyte.it/grsync/) is a GUI for the renown and rock-solid `rsync`, already shipped in Tails.
+
+Grsync is [packaged for debian](https://packages.debian.org/squeeze/grsync).
+
+The documentation for the creation of the encrypted device [[is already written|doc/encryption_and_privacy/encrypted_volumes]].
+
+**Pros**:
+
+* not that much things to code
+* grsync can be easily preconfigurated, eventually with multiple profiles
+* this solution separate backup and encryption work
+* allows remote backups
+
+**Cons**
+
+* seems not really actively developped
+
+**How to test?**
+
+* create an encrypted device.
+* install the `grsync` package.
+* paste [those lines](http://chopapp.com/#twledfq4) in a `.grsync` file, then double-click on it.
+  (grsync ask you first to confirm the profile you want to use. Just click on "Open")
+* define the destination (i.e your encrypted device)
+* test wildly!
+
+**Todo**
+
+* some files are normally not readable by rsync (for example persistence.conf, apt/*)
+  Grsync can bypass that with the option "Run as superuser", we should investigate the consequences of using such an option.
+  We still have the possibility to ignore those files: we just have then to add `--exclude="apt"` in the preconfiguration file.
+* decide if we activate the option `--delete` by default.
+* test restoration (see File → Invert source and destination), then at least check files permissions.
+* test backup + restoration with symlinks and hardlinks in the Persistent folder.
+* eventually test remote backups.
+
 
 Other solutions
 ---------------
