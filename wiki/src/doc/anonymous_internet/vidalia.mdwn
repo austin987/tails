@@ -1,61 +1,118 @@
-[[!meta title="Controlling Tor with Vidalia"]]
+[[!meta title="Controlling Tor using Vidalia"]]
 
-Vidalia is an anonymity manager. Basically this means that it can be used
-to control Tor, and is automatically launched on network connection.
+<span class="application">Vidalia</span> allows you to control some of the
+functionalities of Tor. It is started automatically when an [[Internet
+connection|networkmanager]] is established.
 
 [[!toc levels=1]]
 
-As soon as the Tor client managed to establish a route to the Tor
-network, Vidalia hides as an onion icon in the notification area of
-the screen.
+Status icon
+===========
 
+<span class="application">Vidalia</span> appears as an onion icon in the
+notification area:
+
+<div class="icon">
 [[!img first_steps/introduction_to_gnome_and_the_tails_desktop/tor-on.png link=no]]
+<div class="text"><strong>The onion icon is green</strong> when you are connected
+to Tor.</div>
+</div>
+
+<div class="icon">
 [[!img first_steps/introduction_to_gnome_and_the_tails_desktop/tor-starting.png link=no]]
+<div class="text"><strong>The onion icon is yellow</strong> while Tor is
+starting.
+</div>
+
+<div class="bug">
+
+The <span class="application">Vidalia</span> onion icon sometimes stays yellow
+even if Tor is already started. If the <span class="guilabel">Tor is
+ready</span> notification appears or if you can browse the Internet using the
+<span class="application">Tor Browser</span>, then Tor is started correctly.
+
+Tails has other protections that would prevent your from connecting to the
+Internet without going through Tor.
+
+</div>
+
+<div class="icon">
 [[!img first_steps/introduction_to_gnome_and_the_tails_desktop/tor-stopping.png link=no]]
+<div class="text"><strong>The onion icon is red</strong> while Tor is shutting
+down.
+</div>
+
+<div class="icon">
 [[!img first_steps/introduction_to_gnome_and_the_tails_desktop/tor-off.png link=no]]
+<div class="text"><strong>The onion icon is crossed out</strong> when Tor is
+stopped.
+</div>
 
-Right-clicking this icon displays a configuration menu.
+<div class="tip">
 
-[[!img vidalia/right-click_menu.png link=no]]
+When Tor is stopped all connections to the Internet are blocked by default.
 
-The <span class="emphasis">Network Map</span>
-=============================================
+</div>
 
-The <span class="emphasis">network map</span> displays a window showing a map
-of the Tor network, a list of Tor relays and a list of currently used routes
-and their status.
+Popup menu
+==========
+
+To access more features of <span class="application">Vidalia</span>, right-click
+on the onion icon to open its popup menu:
+
+[[!img vidalia/right-click_menu.png link=no alt="Vidalia popup menu"]]
+
+The <span class="guilabel">Network Map</span> feature
+=====================================================
+
+The <span class="guilabel">Network Map</span> feature displays information about
+the available Tor relays and your established circuits and connections:
+
+  - In the left pane, there is a list of all the public Tor relays. Click on a
+    relay in the list to see its technical details in the right pane.
+
+  - In the bottom pane, there is a list of the
+    [[circuits|about/warning#exit_node]] established by Tor. When you connect to
+    a destination server, the connection appears in the list below the circuit
+    it uses.
+
+    In the example below, the connection to
+    <span class="code">irc.oftc.net</span> goes through the relays
+    <span class="guilabel">PiratenNDS2</span>,
+    <span class="guilabel">AxleRelay3</span>, and the exit node
+    <span class="guilabel">DFRI3</span>.
+
+  - In the top pane, there is an approximate map of where the relays of each
+    circuit are located.
+
+    In the example below, the relay <span class="guilabel">PiratenNDS2</span>
+    is in Germany, the relay <span class="guilabel">AxleRelay3</span> is in the
+    USA, and the relay <span class="guilabel">DFRI3</span> is in Sweden.
+
+  - If you click on a circuit, in the right pane are displayed technical details
+    of the relays composing the circuit.
 
 [[!img vidalia/network_map.png link=no]]
 
-In here, all the Tor nodes in the Tor network are listed, as are all
-your circuits and connections that go through the Tor network. This
-requires a bit of technical knowledge of how Tor works in order to
-understand and use, but it is not at all necessary. From the
-connection listing it should at least be relatively easy for you to
-see which exit node and country it appears your connections come from.
-
-The <span class="emphasis">New Identity</span> feature
+The <span class="guilabel">New Identity</span> feature
 ======================================================
 
 <div class="caution">
 
 [[As explained on our warning page|about/warning#identities]], this feature of
-Vidalia is not a solution to really separate different contextual identities.
+<span class="application">Vidalia</span> is not a solution to really separate different contextual identities.
 <strong>Shutdown and restart Tails instead.</strong>
 
 </div>
 
-Connect Through a Bridge
-========================
+Additional Tor configuration
+============================
 
-[[See the corresponding documentation.|first_steps/startup_options/bridge_mode]]
-
-Configuring Hidden Services for Tor
-===================================
-
-Tor allows clients and relays to offer hidden services. That is, you can offer
-a web server, SSH server, etc. without revealing your IP address to its users.
-In fact, because you don't use any public address, you can run a hidden service
-from behind a firewall.
-
-[See the corresponding documentation from The Tor Project.](https://www.torproject.org/docs/tor-hidden-service.html)
+  - To configure bridges, firewall, or proxy settings [[select the corresponding
+    option in <span class="application">Tails Greeter</span>
+    |first_steps/startup_options/bridge_mode]]
+  - It is impossible to edit the <span class="filename">torrc</span>
+    configuration file using <span class="application">Vidalia</span>. See
+    [[!tails_ticket 6601]].
+  - It is impossible to configure Tails to act as a Tor relay using <span
+    class="application">Vidalia</span>. See [[!tails_ticket 5438]].
