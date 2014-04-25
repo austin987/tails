@@ -69,8 +69,3 @@ Then /^I should be able to install a package using Synaptic$/ do
   @screen.wait('SynapticChangesAppliedPrompt.png', 120)
   step "package \"#{package}\" is installed"
 end
-
-When /^I work around a strange bug$/ do
-  next if @skip_steps_while_restoring_background
-  @vm.execute("rm /etc/apt/apt.conf")
-end
