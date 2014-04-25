@@ -243,7 +243,7 @@ namespace :vm do
         restore_internal_proxy = true
       end
 
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         This is the first time that the Tails builder virtual machine is
         started. The virtual machine template is about 300 MB to download,
@@ -256,7 +256,7 @@ namespace :vm do
 
       END_OF_MESSAGE
     when :poweroff
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         Starting Tails builder virtual machine. This might take a short while.
         Please remember to shut it down once your work on Tails is done:
