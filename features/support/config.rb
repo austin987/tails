@@ -12,6 +12,7 @@ $x_display = ENV['DISPLAY']
 $debug = !ENV['DEBUG'].nil?
 $time_at_start = Time.now
 $live_user = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
+$sikuli_retry_findfailed = !ENV['SIKULI_RETRY_FINDFAILED'].nil?
 
 # Static
 $configured_keyserver_hostname = 'hkps.pool.sks-keyservers.net'
