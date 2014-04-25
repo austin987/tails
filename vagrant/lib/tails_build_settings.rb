@@ -6,7 +6,7 @@
 VIRTUAL_MACHINE_HOSTNAME = 'squeeze.vagrantup.com'
 
 # Virtual machine memory size for in-memory builds
-VM_MEMORY_FOR_RAM_BUILDS = 6 * 1024 + 512 # 6.5 GB
+VM_MEMORY_FOR_RAM_BUILDS = 7 * 1024 # 7 GB
 
 # Virtual machine memory size for on-disk builds
 VM_MEMORY_FOR_DISK_BUILDS = 1024 # 1 GB
