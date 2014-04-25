@@ -60,17 +60,29 @@ def primary_vm_state
   end
 end
 
+def vm_id
+  if vagrant_old
+    primary_vm.uuid
+  else
+    primary_vm.id
+  end
+end
+
+def vm_driver
+  if vagrant_old
+    primary_vm.driver
+  else
+    primary_vm.provider.driver
+  end
+end
+
 def current_vm_memory
-  vm = primary_vm
-  uuid = vm.uuid
-  info = vm.driver.execute 'showvminfo', uuid, '--machinereadable'
+  info = vm_driver.execute 'showvminfo', vm_id, '--machinereadable'
   $1.to_i if info =~ /^memory=(\d+)/
 end
 
 def current_vm_cpus
-  vm = primary_vm
-  uuid = vm.uuid
-  info = vm.driver.execute 'showvminfo', uuid, '--machinereadable'
+  info = vm_driver.execute 'showvminfo', vm_id, '--machinereadable'
   $1.to_i if info =~ /^cpus=(\d+)/
 end
 
