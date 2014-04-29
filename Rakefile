@@ -60,17 +60,29 @@ def primary_vm_state
   end
 end
 
+def vm_id
+  if vagrant_old
+    primary_vm.uuid
+  else
+    primary_vm.id
+  end
+end
+
+def vm_driver
+  if vagrant_old
+    primary_vm.driver
+  else
+    primary_vm.provider.driver
+  end
+end
+
 def current_vm_memory
-  vm = primary_vm
-  uuid = vm.uuid
-  info = vm.driver.execute 'showvminfo', uuid, '--machinereadable'
+  info = vm_driver.execute 'showvminfo', vm_id, '--machinereadable'
   $1.to_i if info =~ /^memory=(\d+)/
 end
 
 def current_vm_cpus
-  vm = primary_vm
-  uuid = vm.uuid
-  info = vm.driver.execute 'showvminfo', uuid, '--machinereadable'
+  info = vm_driver.execute 'showvminfo', vm_id, '--machinereadable'
   $1.to_i if info =~ /^cpus=(\d+)/
 end
 
@@ -213,6 +225,31 @@ end
 
 desc 'Build Tails'
 task :build => ['parse_build_options', 'ensure_clean_repository', 'validate_http_proxy', 'vm:up'] do
+
+  if ENV['TAILS_RAM_BUILD'] && current_vm_memory < VM_MEMORY_FOR_RAM_BUILDS
+    $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+
+      The virtual machine is not currently set with enough memory to
+      perform an in-memory build. Either remove the `ram` option from
+      the TAILS_BUILD_OPTIONS environment variable, or shut the
+      virtual machine down using `rake vm:halt` before trying again.
+
+    END_OF_MESSAGE
+    abort 'Not enough memory for the virtual machine to run an in-memory build. Aborting.'
+  end
+
+  if ENV['TAILS_BUILD_CPUS'] && current_vm_cpus != ENV['TAILS_BUILD_CPUS'].to_i
+    $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+
+      The virtual machine is currently running with #{current_vm_cpus}
+      virtual CPU(s). In order to change that number, you need to
+      stop the VM first, using `rake vm:halt`. Otherwise, please
+      adjust the `cpus` options accordingly.
+
+    END_OF_MESSAGE
+    abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
+  end
+
   exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                   collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
   if vagrant_old
@@ -243,7 +280,7 @@ namespace :vm do
         restore_internal_proxy = true
       end
 
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         This is the first time that the Tails builder virtual machine is
         started. The virtual machine template is about 300 MB to download,
@@ -256,7 +293,7 @@ namespace :vm do
 
       END_OF_MESSAGE
     when :poweroff
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         Starting Tails builder virtual machine. This might take a short while.
         Please remember to shut it down once your work on Tails is done:
@@ -264,29 +301,6 @@ namespace :vm do
             $ rake vm:halt
 
       END_OF_MESSAGE
-    when :running
-      if ENV['TAILS_RAM_BUILD'] && current_vm_memory < VM_MEMORY_FOR_RAM_BUILDS
-        $stderr.puts <<-END_OF_MESSAGE.gsub(/^          /, '')
-
-          The virtual machine is not currently set with enough memory to
-          perform an in-memory build. Either remove the `ram` option from
-          the TAILS_BUILD_OPTIONS environment variable, or shut the
-          virtual machine down using `rake vm:halt` before trying again.
-
-        END_OF_MESSAGE
-        abort 'Not enough memory for the virtual machine to run an in-memory build. Aborting.'
-      end
-      if ENV['TAILS_BUILD_CPUS'] && current_vm_cpus != ENV['TAILS_BUILD_CPUS'].to_i
-        $stderr.puts <<-END_OF_MESSAGE.gsub(/^          /, '')
-
-          The virtual machine is currently running with #{current_vm_cpus}
-          virtual CPU(s). In order to change that number, you need to
-          stop the VM first, using `rake vm:halt`. Otherwise, please
-          adjust the `cpus` options accordingly.
-
-        END_OF_MESSAGE
-        abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
-      end
     end
     env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
     result = env.cli('up')
