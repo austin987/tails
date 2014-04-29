@@ -66,6 +66,6 @@ Then /^I should see the ['"]?([[:alnum:].-]+)['"]? suite$/ do |suite|
   @output.should have_suite(suite)
 end
 
-Then /^I should not see ['"]?([[:alnum:].-]+)['"]? suite$/ do |suite|
+Then /^I should not see the ['"]?([[:alnum:].-]+)['"]? suite$/ do |suite|
   @output.should_not have_suite(suite)
 end
