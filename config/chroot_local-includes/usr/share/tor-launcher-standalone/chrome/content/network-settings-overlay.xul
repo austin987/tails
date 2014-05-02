@@ -75,34 +75,36 @@
 
   <groupbox id="bridgeSpecificSettings">
     <hbox pack="end">
-      <radiogroup id="bridgeTypeRadioGroup" flex="1" style="margin: 0px">
-          <radio id="bridgeRadioDefault"
-                 label="&torsettings.useBridges.default;" selected="true" />
-          <hbox align="baseline">
-           <spacer style="width: 1.9em" />
-           <label value="&torsettings.useBridges.type;"
-                  control="defaultBridgeType" />
-           <menulist id="defaultBridgeType" oncommand="onBridgeTypeChange()">
+      <radiogroup id="bridgeTypeRadioGroup" flex="1" style="margin: 0px"
+                  oncommand="onBridgeTypeRadioChange()">
+        <radio id="bridgeRadioDefault"
+               label="&torsettings.useBridges.default;" selected="true" />
+        <hbox align="baseline" style="margin-top: -5px">
+          <spacer style="width: 1.9em" />
+          <label id="defaultBridgeTypeLabel"
+                 value="&torsettings.useBridges.type;"
+                 control="defaultBridgeType"/>
+          <menulist id="defaultBridgeType">
             <menupopup id="defaultBridgeType_menuPopup" />
-           </menulist>
-           <spring/>
-          </hbox>
+          </menulist>
+          <spring/>
+        </hbox>
         <spacer style="height: 0.5em" />
 
-        <hbox align="baseline" flex="1">
-          <radio align="start" id="bridgeRadioCustom" label="&torsettings.useBridges.custom;"
-               oncommand="onCustomBridges()" />
-          <button align="end" dlgtype="help" oncommand="onOpenHelp()" />
-       </hbox>
+        <radio align="start" id="bridgeRadioCustom"
+               label="&torsettings.useBridges.custom;" />
       </radiogroup>
     </hbox>
     <vbox id="bridgeCustomEntry">
-       <label style="margin-top:0px;"
+      <label id="bridgeListLabel" style="margin-top:0px;"
              value="&torsettings.useBridges.label;" control="bridgeList"/>
       <textbox id="bridgeList" multiline="true" rows="3"
                oninput="onCustomBridgesTextInput();"
                placeholder="&torsettings.useBridges.placeholder;" />
     </vbox>
+    <hbox pack="end">
+      <button align="end" dlgtype="help" oncommand="onOpenHelp()" />
+    </hbox>
   </groupbox>
 
   <vbox id="bridgeHelpContent">
