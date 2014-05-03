@@ -235,7 +235,7 @@ the possibility to opt-out.
 It is conceivable that NICs may send packets before the user has made
 a decision about whether to use MAC spoofing or not. In fact, someone
 on tails-dev@
-[alluded](https://mailman.boum.org/pipermail/tails-dev/2013-January/002491.htm)
+[alluded](https://mailman.boum.org/pipermail/tails-dev/2013-January/002491.html)
 to this being possible for wireless NICs although without any
 references (this may refer to so called "active probing"; see section
 below). If this is the case it at the very least implies that we must
@@ -289,13 +289,67 @@ affect the (arguably) most important user goal of this feature, namely
 AvoidTracking. Because of this, active scanning should be disabled in
 NetworkManager when MAC spoofing is enabled: [[!tails_ticket 6453]].
 
+# How to spoof the MAC address
+
+## Spoofing the OUI part of the MAC address
+
+**This is currently not implemented. See the
+[[Limitation: Only spoof the NIC part of the MAC address|MAC_address#limitation-only-spoof-nic-part]]
+section below.**
+
+The first six bytes of a MAC address determine the Organizationally Unique Identifier
+(OUI) which in practice determines the chipset's manufacturer, who
+generally owns several OUIs. Spoofing the OUI part in a way that
+satisfies our threat model is not straightforward because of
+`AvoidIdMacSpoof` since multiple, large categories of OUIs violate
+that user goal:
+
+* Unregistered OUI so it's not used for any real device.
+
+* Registered OUI that was never used for any device.
+
+* Registered OUI that is used for special purpose devices unlikely to
+  be used on most networks, e.g. NICs only used in ATMs, vending
+  machines or embedded devices.
+
+* Registered OUI used for NICs in normal computers but for a different
+  type of NIC than the device being spoofed. This is only relevant
+  when this difference actually can be detected by the adversary, like
+  with wired vs. wireless.
+
+* Registered OUI used for NICs in normal computers but they were
+  manufactured decades ago.
+
+* Registered OUI used for NICs in normal computers but whose
+  distribution is limited to some restricted, geographical area.
+
+* Registered OUI used for NICs in normal computers but that simply is
+  very rare.
+
+Great care should be taken when picking the OUI to avoid these
+categories. The whole point is to randomly pick an OUI that the
+adversary expects to see. In particular the OUI should be one used for
+common, consumer oriented hardware.
+
+## Spoofing the NIC part of the MAC address
+
+The last six bytes of the MAC address are meant to distinguish
+individual devices among those with the same OUI. These should simply
+be selected at random, with the exception that we never allow it to
+stay the same, even if done in a fair, random way. Theoretically
+speaking this leaks up to `24/2^24` bits of the NIC part of the real
+MAC address per Tails session but in practice the complete NIC part is
+leaked to adversaries that do not anticipate MAC spoofing, which is
+much worse.
+
 # Implementation
 
-The current implementation spoofs the non-vendors bits of any network
-device's MAC address immediately after it is added by udev. Furthermore, to
-deal with potential network leaks before the user has chosen whether
-to enable MAC spoofing or not, the addition of network devices is delayed
-until after Tails Greeter knows the user's final decision.
+The current implementation leaves the OUI part unchanged, and only spoofs the
+last six bytes of any network device's MAC address immediately after
+it is added by udev. Furthermore, to deal with potential network leaks
+before the user has chosen whether to enable MAC spoofing or not, the
+addition of network devices is delayed until after Tails Greeter knows
+the user's final decision.
 
 ## Network blocking
 
@@ -378,6 +432,52 @@ the future it's a simple task.
 Helper scripts:
 [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-spoof-mac]]
 
+<a id="limitation-only-spoof-nic-part"></a>
+
+### Limitation: Only spoof the NIC part of the MAC address
+
+To put the categories listed in the "Spoofing the OUI part of the MAC
+address" section into context, let's look at `macchanger`'s
+options. Among the ones that some how modifies the OUI part of the MAC
+address (`-r`, `-a` and `-A`) all have a significant probability of
+picking an OUI from the problematic categories that violate the
+`AvoidIdMacSpoof` user goal.
+
+Another MAC spoofing tool,
+[`macchiato`](https://github.com/EtiennePerot/macchiato), takes this
+to the next level by maintaining lists of "common enough" OUIs for
+different categories of devices so a less suspicious choice of OUI can
+be made. However, the verification of the OUI being "common enough"
+lands on the submitter, so an ignorant (not necessarily malicious)
+submitter can easily get an uncommon OUI into the lists. See e.g. the
+"Contribute" section of its homepage, or the author's request on
+[reddit](http://www.reddit.com/r/privacy/comments/1avca3/got_any_internetconnected_devices_yes_you_do_help/).
+
+Another issue is that `macchiato`'s lists do not take into account
+that some devices are pretty much only used in some geographical
+areas. Note that collecting such data probably is orders of magnitude
+harder than `macchiato`'s current quest, and that the user interface
+would be further complicated (in Tails we'd have to ask for the
+current geographical location in Tails Greeter, or similar). The real
+impact of this should be evaluated; it's very likely that the benefits
+still outweigh this risk.
+
+To end with, `macchiato`'s lists are very small with only ~20 OUIs in
+most of the relevant categories as of the current Git state (commit
+90fa147d), 2014-04-25. The exact impact of this is not
+well-understood. This is probably the main blocker for Tails to switch
+to `macchiato` and dare saying we satisfy the "Spoofing the OUI part
+of the MAC address" requirement from above.
+
+What remains is to only spoof the latter six bytes, the NIC part. We
+know it isn't a perfect strategy. The more uncommon the OUI of a
+user's device is, the more it can be used for tracking the user, i.e.
+the more it violates the `AvoidTracking` user goal. At least this
+comes with some uncertainty compared to many of the impossible choices
+of OUI listed above, which would guarantee widespread violation of
+`AvoidIdMacSpoof` among Tails users, so this seems like a reasonable
+tradeoff at the moment.
+
 ## MAC spoofing fail safe
 
 For any network device, the MAC address is recorded both before and
@@ -395,10 +495,7 @@ randomly picking the real MAC address as a failure. Since we randomise
 the lower 3 bytes of the MAC address there's a `1/2^24` chance for
 this happening for each device. To make it a bit less frequent (!) we
 repeat the MAC spoofing until a new address is obtained, with up to
-three tries. Theoretically speaking this leaks up to `24/2^24` bits of
-the lower 3 bytes of the real MAC address per Tails session, which in
-practice is much less of a problem than randomly "spoofing" to the
-real MAC address.
+three tries.
 
 Script:
 [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-spoof-mac]]
