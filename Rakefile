@@ -60,6 +60,15 @@ def primary_vm_state
   end
 end
 
+def primary_vm_chan
+  if vagrant_old
+    return primary_vm.channel
+  else
+    return primary_vm.communicate
+  end
+end
+
+
 def vm_id
   if vagrant_old
     primary_vm.uuid
@@ -252,13 +261,8 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'validate_http
 
   exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                   collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
-  if vagrant_old
-    chan = primary_vm.channel
-  else
-    chan = primary_vm.communicate
-  end
-  status = chan.execute("#{exported_env} build-tails",
-                                          :error_check => false) do |fd, data|
+  status = primary_vm_chan.execute("#{exported_env} build-tails",
+                                   :error_check => false) do |fd, data|
     (fd == :stdout ? $stdout : $stderr).write data
   end
 
