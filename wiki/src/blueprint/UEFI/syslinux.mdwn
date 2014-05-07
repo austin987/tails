@@ -1,19 +1,28 @@
-Prerequisite: Tails with an amd64 kernel (e.g. from current
-devel branch).
+[[!toc levels=1]]
 
-Tested with syslinux 6.02+dfsg-1.
+<a id="known_issues">
 
-	sudo apt-get install syslinux/experimental \
-	   syslinux-common/experimental isolinux/experimental
+Known issues
+============
 
-	# make the system partition an *EFI System Partition* (ESP)
-	parted "$TAILS_DEVICE" set 1 boot on
+* Mac: *some* Mac need rEFInd installed to boot Tails in UEFI mode.
+* Mac: *some* Mac fail to shutdown properly when booted in UEFI mode.
+* Boot menu display issues (ThinkPad X230, MacBookPro8,1): when
+  booting in UEFI mode, the syslinux boot menu is not displayed
+  properly, and one cannot see the kernel command-line when
+  editing it.
+* VirtualBox: at least one version of VirtualBox cannot boot Tails
+  in UEFI mode.
+* Apple MacBookPro5,5 does not boot with Tails in UEFI mode. We are told it
+  is due to missing native USB drivers, and the Plop boot-manager can
+  fix it, as it has this drivers.
+* Apple MacBook Air 3,2 A1369 EMC 2392, with rEFInd 0.7.8, USB
+  stick installed with Tails Installer: fails to boot.
+* Fails to boot from DVD on early 2011 MacBook pro, while 0.23
+  boots fine.
 
-	mkdir -p "$TAILS_MOUNTPOINT"/EFI/BOOT && \
-	   cp /usr/lib/SYSLINUX/efi64/syslinux.efi \
-	      "$TAILS_MOUNTPOINT"/EFI/BOOT/bootx64.efi && \
-	   cp "$TAILS_MOUNTPOINT"/syslinux/* "$TAILS_MOUNTPOINT"/EFI/BOOT/ && \
-	   /bin/cp -f /usr/lib/syslinux/modules/efi64/* "$TAILS_MOUNTPOINT"/EFI/BOOT/
+Miscellaneous test results
+==========================
 
 * With Lenovo Yoga 2 Pro, the UEFI nightly release does work, while it didn't
   work previously.
@@ -26,7 +35,8 @@ Tested with syslinux 6.02+dfsg-1.
     have to do it blindly
   - boots fine in Legacy BIOS mode, so at least we have no hardware
     support regression here
-* boots on ThinkPenguin Royal (syslinux 6.02+dfsg-1 and 6.03~pre1+dfsg-1)
+* boots on ThinkPenguin Royal (syslinux 6.02+dfsg-1 and
+  6.03~pre1+dfsg-1)
 * boots on MacBook Pro 13-inch Mid 2012 9,2 (EFI 2.9), and MacBook Pro
   13-inch Late 2011 8,1 (EFI 2.7), both with and without rEFInd *if*
   `menu background splash.png` is removed from `stdmenu.cfg`; adding
@@ -60,7 +70,30 @@ Tested with syslinux 6.02+dfsg-1.
   that fails to display its menu, even after commenting out most
   menu-related setting that has to do with color or positioning.
   Finally, Tails does not boot.
-* Fails to boot in VirtualBox (version?) with EFI enabled.
 * ASUSTeK COMPUTER INC. X55VD: boots fine with `menu background
   splash.png` removed (both with CSM enabled and disabled); only boots
   in CSM mode with `menu background splash.png` kept in place
+* Boots fine on ThinkPad W520 (tails-i386-feature_uefi-1.0-20140324T1026Z-dd350d4.iso).
+* Boots fine on Lenovo ThinkPad E320 (tails-i386-feature_uefi-1.1-20140407T1357Z-02a2adf)
+* Boots fine on Macbook Pro 11,3 (15 Inch Retina-Late 2013)
+* Boots fine on Late 2013 Macbook Pro 13" Retina
+* Boots fine on Macbook Air 3,1 in UEFI mode
+* Boots fine on HP/Compaq 6330s in UEFI mode
+* ThinkCentre M82 boots fine with:
+  - an alpha generation (isohybrid + dd) USB stick
+  - a beta generation (prepared with Tails Installer) USB stick in
+    both UEFI and "legacy" BIOS mode
+* Boots fine on ASUS 701 (eeepc).
+* Boots fine on Acer Aspire E1-531 (V2.09, EFI v2.31) in UEFI mode.
+* Boots fine on MacBookPro8,1 (Early 2011, Model A1278).
+* Boots fine on Gateway NE56R w/ Bios V2.13 in UEFI mode, with Secure
+  Boot disabled. Doesn't boot (as expected) with Secure Boot enabled.
+* Boots fine on Hewlett-Packard Presario CQ57
+* Boots fine on Apple MacBook Air 3,2 A1369 EMC 2392, with rEFInd
+  0.7.8 installed, when installed with isohybrid + dd.
+* Boots fine on ASUS ux31a in CSM mode, when installed with isohybrid + dd.
+* Boots fine on Lenovo Thinkpad T400.
+* Boots fine on Mac Mini 2.3 Ghz Intel Core i7 from DVD, and from USB
+  stick created with Tails Installer.
+* Boots fine on MacBookAir5,1 from DVD, and from USB stick created
+  with Tails Installer on the same machine.
