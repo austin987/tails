@@ -32,8 +32,8 @@ Feature: Various checks
     When the network is plugged
     And Tor is ready
     And all notifications have disappeared
-    And process "vidalia" is running
     And the time has synced
+    And process "vidalia" is running within 30 seconds
 
   Scenario: No unexpected network services
     When the network is plugged
