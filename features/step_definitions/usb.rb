@@ -213,14 +213,23 @@ Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive
   dev = @vm.disk_dev(name) + "2"
   check_part_integrity(name, dev, "crypto", "crypto_LUKS", "gpt", "TailsData")
 
-  # Unlike in Squeeze, in Wheezy the TailsData container remains
-  # opened after t-p-s is finished.
-  @vm.execute("umount /media/TailsData")
-  @vm.execute("cryptsetup luksClose /dev/dm-0")
-
-  c = @vm.execute("echo #{pwd} | cryptsetup luksOpen #{dev} #{name}")
-  assert(c.success?, "Couldn't open LUKS device '#{dev}' on  drive '#{name}'")
-  luks_dev = "/dev/mapper/#{name}"
+  # The LUKS container may already be opened, e.g. by udisks after
+  # we've run tails-persistence-setup.
+  c = @vm.execute("ls -1 /dev/mapper/")
+  if c.success?
+    for candidate in c.stdout.split("\n")
+      luks_info = @vm.execute("cryptsetup status #{candidate}")
+      if luks_info.success? and luks_info.stdout.match("^\s+device:\s+#{dev}$")
+        luks_dev = "/dev/mapper/#{candidate}"
+        break
+      end
+    end
+  end
+  if luks_dev.nil?
+    c = @vm.execute("echo #{pwd} | cryptsetup luksOpen #{dev} #{name}")
+    assert(c.success?, "Couldn't open LUKS device '#{dev}' on  drive '#{name}'")
+    luks_dev = "/dev/mapper/#{name}"
+  end
 
   # Adapting check_part_integrity() seems like a bad idea so here goes
   info = @vm.execute("udisks --show-info #{luks_dev}").stdout
