@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -eu
+
+# Get $TAILS_XKBMODEL, $TAILS_XKBLAYOUT, $TAILS_XKBVARIANT and $TAILS_XKBOPTIONS
+. /var/lib/tails-user-session/keyboard
+
+dconf write /org/gnome/libgnomekbd/keyboard/model   "'$XKBMODEL'"
+dconf write /org/gnome/libgnomekbd/keyboard/layouts "['$XKBLAYOUT\\t$XKBVARIANT']"
+dconf write /org/gnome/libgnomekbd/keyboard/options "['$XKBOPTIONS']"
