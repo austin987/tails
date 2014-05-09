@@ -351,14 +351,14 @@ packages, then skip this step.
   `/etc/iceweasel/pref/` on the test system.
 * Install and test the resulting packages.
 
-Build for squeeze-backports
----------------------------
+Build for wheezy-backports
+--------------------------
 
-* Checkout the `tails/squeeze` branch and merge the tag:
+* Checkout the `tails/wheezy` branch and merge the tag:
 
-      git checkout tails/squeeze && git merge "debian/${DEB_VERSION}"
+      git checkout tails/wheezy && git merge "debian/${DEB_VERSION}"
 
-* Add a squeeze-backport changelog entry:
+* Add a wheezy-backport changelog entry:
 
       dch --bpo
 
@@ -374,7 +374,7 @@ Build for squeeze-backports
       git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" \
           "debian/$(dpkg-parsechangelog -SVersion | sed -e 's,~,_,')"
 
-* Build for squeeze-backports and i386, e.g. using our
+* Build for wheezy-backports and i386, e.g. using our
   [[contribute/Debian_package_builder]]. You may also do it yourself
   using `pbuilder`. Note that this repo is *not* adapted to be built
   with `git-buildpackage` or `git-pbuilder`.
@@ -392,13 +392,13 @@ Build for squeeze-backports
   a release tag.
 * Push to Git:
 
-      git push origin tails/squeeze && git push --tags
+      git push origin tails/wheezy && git push --tags
 
 Import bundled preferences
 --------------------------
 
 * Copy `browser/app/profile/000-tor-browser.js` from the tag the
-  Squeeze backport was built from, into
+  Wheezy backport was built from, into
   `config/chroot_local-includes/etc/iceweasel/pref/`.
 * Commit this to the branch that is being used to prepare the release:
   ideally, a topic branch that will be reviewed and merged; in
