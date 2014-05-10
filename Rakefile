@@ -60,6 +60,15 @@ def primary_vm_state
   end
 end
 
+def primary_vm_chan
+  if vagrant_old
+    return primary_vm.channel
+  else
+    return primary_vm.communicate
+  end
+end
+
+
 def vm_id
   if vagrant_old
     primary_vm.uuid
@@ -76,11 +85,6 @@ def vm_driver
   end
 end
 
-def current_vm_memory
-  info = vm_driver.execute 'showvminfo', vm_id, '--machinereadable'
-  $1.to_i if info =~ /^memory=(\d+)/
-end
-
 def current_vm_cpus
   info = vm_driver.execute 'showvminfo', vm_id, '--machinereadable'
   $1.to_i if info =~ /^cpus=(\d+)/
@@ -90,7 +94,7 @@ def vm_running?
   primary_vm_state == :running
 end
 
-def enough_free_memory?
+def enough_free_host_memory_for_ram_build?
   return false unless RbConfig::CONFIG['host_os'] =~ /linux/i
 
   begin
@@ -98,6 +102,24 @@ def enough_free_memory?
     usable_free_mem > VM_MEMORY_FOR_RAM_BUILDS * 1024
   rescue
     false
+  end
+end
+
+def free_vm_memory
+  primary_vm_chan.execute("free", :error_check => false) do |fd, data|
+    return data.split[16].to_i
+  end
+end
+
+def enough_free_vm_memory_for_ram_build?
+  free_vm_memory > BUILD_SPACE_REQUIREMENT * 1024
+end
+
+def enough_free_memory_for_ram_build?
+  if vm_running?
+    enough_free_vm_memory_for_ram_build?
+  else
+    enough_free_host_memory_for_ram_build?
   end
 end
 
@@ -121,7 +143,7 @@ task :parse_build_options do
   options = ''
 
   # Default to in-memory builds if there is enough RAM available
-  options += 'ram ' if enough_free_memory?
+  options += 'ram ' if enough_free_memory_for_ram_build?
 
   # Use in-VM proxy unless an external proxy is set
   options += 'vmproxy ' unless EXTERNAL_HTTP_PROXY
@@ -141,9 +163,6 @@ task :parse_build_options do
     case opt
     # Memory build settings
     when 'ram'
-      unless vm_running? || enough_free_memory?
-        abort "Not enough free memory to do an in-memory build. Aborting."
-      end
       ENV['TAILS_RAM_BUILD'] = '1'
     when 'noram'
       ENV['TAILS_RAM_BUILD'] = nil
@@ -226,7 +245,7 @@ end
 desc 'Build Tails'
 task :build => ['parse_build_options', 'ensure_clean_repository', 'validate_http_proxy', 'vm:up'] do
 
-  if ENV['TAILS_RAM_BUILD'] && current_vm_memory < VM_MEMORY_FOR_RAM_BUILDS
+  if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
     $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
 
       The virtual machine is not currently set with enough memory to
@@ -252,13 +271,8 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'validate_http
 
   exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                   collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
-  if vagrant_old
-    chan = primary_vm.channel
-  else
-    chan = primary_vm.communicate
-  end
-  status = chan.execute("#{exported_env} build-tails",
-                                          :error_check => false) do |fd, data|
+  status = primary_vm_chan.execute("#{exported_env} build-tails",
+                                   :error_check => false) do |fd, data|
     (fd == :stdout ? $stdout : $stderr).write data
   end
 
