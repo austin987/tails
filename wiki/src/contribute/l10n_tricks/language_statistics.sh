@@ -4,7 +4,7 @@
 
 set -e
 
-LANGUAGES=${@:-de es fr pt}
+LANGUAGES=${@:-de fr pt}
 
 count_msgids () {
     cat | grep -E '^msgid\s+' | wc -l
