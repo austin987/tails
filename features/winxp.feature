@@ -1,5 +1,3 @@
-# FIXME: #6342
-@skip
 @product
 Feature: Microsoft Windows XP Camouflage
   As a Tails user

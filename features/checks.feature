@@ -12,7 +12,6 @@ Feature: Various checks
     And I save the state so the background can be restored next scenario
 
   # FIXME: #5972
-  @skip
   Scenario: VirtualBox guest modules are available
     When Tails has booted a 64-bit kernel
     Then the VirtualBox guest modules are available
