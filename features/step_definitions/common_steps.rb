@@ -376,7 +376,8 @@ end
 
 Given /^process "([^"]+)" is running within (\d+) seconds$/ do |process, time|
   next if @skip_steps_while_restoring_background
-  try_for(time.to_i, :msg => "Process '#{process}' is not running") do
+  try_for(time.to_i, :msg => "Process '#{process}' is not running after " +
+                             "waiting for #{time} seconds") do
     @vm.has_process?(process)
   end
 end
