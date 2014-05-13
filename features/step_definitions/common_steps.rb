@@ -250,7 +250,7 @@ Given /^Iceweasel has started and is not loading a web page$/ do
   when "winxp"
     iceweasel_picture = "WinXPIceweaselWindow.png"
   else
-    iceweasel_picture = "IceweaselRunning.png"
+    iceweasel_picture = "IceweaselWindow.png"
   end
 
   # Stop iceweasel to load its home page. We do this to prevent Tor
