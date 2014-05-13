@@ -16,12 +16,12 @@ fi
 RUN_LB_CONFIG="lb config noauto"
 
 # init config/ with defaults for the target distribution
-$RUN_LB_CONFIG --distribution squeeze ${@}
+$RUN_LB_CONFIG --distribution wheezy ${@}
 
 # set Amnesia's general options
 $RUN_LB_CONFIG \
    --apt-recommends false \
-   --backports true \
+   --backports false \
    --binary-images iso \
    --binary-indices false \
    --checksums none \
@@ -35,7 +35,7 @@ $RUN_LB_CONFIG \
    --memtest none \
    --packages-lists="standard" \
    --tasks="standard" \
-   --linux-packages="linux-image-3.10-2" \
+   --linux-packages="linux-image-3.14-1" \
    --syslinux-menu vesamenu \
    --syslinux-splash data/splash.png \
    --syslinux-timeout 4 \
@@ -47,7 +47,7 @@ hw_arch="`dpkg --print-architecture`"
 if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
    $RUN_LB_CONFIG \
       --architecture i386 \
-      --linux-flavours "486 686-pae" \
+      --linux-flavours "486 amd64" \
       ${@}
 # build powerpc images on powerpc64 as well, include only powerpc kernel
 elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then

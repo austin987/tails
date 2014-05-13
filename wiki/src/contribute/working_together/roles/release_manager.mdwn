@@ -2,13 +2,52 @@
 
 # Tasks
 
-* Around two weeks before the freeze, have a look at recent changes in
-  the [Torbrowser](https://gitweb.torproject.org/torbrowser.git)'s
-  prefs (e.g. `git log -p build-scripts/config/*.js`) and import the
-  relevant ones to our Iceweasel configuration, following the normal
-  review'n'merge process.
-* Making the release happen: [[contribute/release_process]].
-  - sending the release schedule on tails-dev when beginning their shift
+## In the beginning of your shift
+
+- Send the release schedule to <tails-dev@boum.org> and
+  <tails-l10n@boum.org>. Use the [Mozilla release
+  calendar](https://wiki.mozilla.org/RapidRelease/Calendar).
+  Ask the core team and contributors for availability at the
+  dates designated for testing the RC and final image.
+- Update [[contribute/calendar]] accordingly.
+- Update the due date on [[!tails_roadmap]] accordingly.
+- Ask to be added to the `rsync_tails` group on `rsync.lizard`,
+  if needed.
+- Make sure you have access to the various systems used to do
+  the release.
+
+## Around two weeks before the freeze
+
+- Have a look at recent changes in:
+  * the [TBB](https://gitweb.torproject.org/torbrowser.git)'s prefs
+    (e.g. `git log -p build-scripts/config/*.js`)
+  * the [Tor Browser](https://git.torproject.org/tor-browser.git)
+    patch that creates `browser/app/profile/000-tor-browser.js`:
+
+        git diff $LAST_IMPORT_COMMIT..$CURRENT_WIP_BRANCH \
+           browser/app/profile/000-tor-browser.js
+
+    - `$LAST_IMPORT_COMMIT` is the commit from which we imported the
+      Tor Browser patches last time: see our iceweasel's
+      `debian/changelog`
+    - `$CURRENT_WIP_BRANCH` is the name of the branch the Tor Browser
+      folks are working on these days, or the most recent one (for the
+      relevant version of Firefox) that can be found in
+      their repository, e.g. *tor-browser-24.3.0esr-2*
+
+- Import the relevant changes into our Iceweasel configuration,
+  following the normal review'n'merge process.
+- In particular, make sure the `general.*` and
+  `browser.startup.homepage_override.*` prefs are in sync', in our
+  `/etc/iceweasel/pref/iceweasel.js`, with TBB's `pound_tor.js`.
+- Have a look at recent changes
+  in [Torbutton](https://gitweb.torproject.org/torbutton.git), and
+  do whatever is needed to get the fixes we need in the release.
+- Have Kill Your TV upgrade I2P if needed. See [[contribute/design/I2P]].
+
+## Make the release happen
+
+No kidding. See [[contribute/release_process]].
 
 # Shifts
 
@@ -16,3 +55,10 @@ The release manager shifts could be done by a team. They start right after the
 publication of the previous release to the publication and announcement of the
 release they are taking care of, which should be 6 weeks long if everything goes
 fine.
+
+# Tools
+
+On Redmine:
+
+* [Release Manager View](https://labs.riseup.net/code/projects/tails/issues?query_id=130)
+* [Ready for QA](https://labs.riseup.net/code/projects/tails/issues?query_id=117)

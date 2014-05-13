@@ -1,0 +1,118 @@
+[[!meta title="Manual installation using Linux"]]
+
+[[!inline pages="doc/first_steps/manual_usb_installation.intro" raw="yes"]]
+
+This technique uses the command line.
+
+[[!toc levels=1]]
+
+<h2 class="bullet-number-one">Install isohybrid</h2>
+
+Under Debian or Ubuntu the `isohybrid` utility is included in the `syslinux`
+package. To install it, you can execute the following command:
+
+    sudo apt-get install syslinux
+
+<a id="step_2"></a>
+
+<h2 class="bullet-number-two">Find out the device name of the device</h2>
+
+The device name should be something like `/dev/sdb`, `/dev/sdc`, etc.
+
+If you are not sure about the exact device name, with GNOME, do the
+following:
+
+  1. Make sure that the USB stick or SD card onto which you want to
+     install Tails is unplugged.
+
+  1. Open <span class="application">GNOME Disk Utility</span> from the menu
+     <span class="menuchoice">
+       <span class="guimenu">Applications</span>&nbsp;▸
+       <span class="guisubmenu">System Tools</span>&nbsp;▸
+       <span class="guimenuitem">Disk Utility</span>
+     </span>
+
+  1. <span class="application">Disk Utility</span> lists all the current storage devices in the
+     left pane of the window.
+
+  1. Plug the USB stick or SD card onto which you want to install Tails.
+
+     A new device appears in the list of storage devices. Click on it.
+
+  1. In the right pane of the window, verify that the device corresponds
+     to your device, its brand, its size, etc.
+
+     [[!img destination_device_description.png link=no alt="Drive description containing: 'Device: /dev/sdc'"]]
+
+     On this screenshot, the USB stick is a Kingston DataTraveler of 2.0
+     GB and its device name is `/dev/sdc`. Yours are probably different.
+
+<div class="caution">
+
+If you are not sure about the device name, you should stop
+proceeding or <strong>you risk overwriting any hard drive on the
+system</strong>.
+
+</div>
+
+<a id="step_3"></a>
+
+<h2 class="bullet-number-three">Do the copy</h2>
+
+Execute the following commands, replacing `[tails.iso]` with the path
+to the ISO image that you want to copy and `[device]` with the device
+name found in step 2.
+
+    isohybrid [tails.iso] --entry 4 --type 0x1c
+    dd if=[tails.iso] of=[device] bs=16M
+
+Here is an example of the commands to execute, yours are probably different:
+
+    isohybrid '/home/amnesia/Desktop/tails-0.6.2.iso' --entry 4 --type 0x1c
+    dd if='/home/amnesia/Desktop/tails-0.6.2.iso' of=/dev/sdc bs=16M
+
+<div class="tip">
+
+If you are not sure about the path to the ISO image or if you get a
+<span class="guilabel">No such
+file or directory</span> error message, you can first type
+<code>dd</code>, followed by a space, and
+then drag and drop the icon of the ISO image from a file browser onto the
+terminal. This should insert the correct path to the ISO image in the terminal.
+Then complete the command and execute it.
+
+</div>
+
+If you don't see any error message, Tails is being copied
+onto the device. The whole process might take some time, generally a few
+minutes.
+
+<div class="next">
+
+<p>Once the command prompt reappears, you can shutdown your computer, and
+[[start Tails|/download/#start]] from this new device.</p>
+
+</div>
+
+Troubleshooting
+===============
+
+### dd: /dev/sdx: No such file or directory
+
+Then double-check the name of the device you found in [[step
+2|linux#step_2]].
+
+### dd: /dev/sdx: Permission denied
+
+You might also have committed a mistake in the device name, so please
+double-check it. If you are sure about the device name, this could be a
+permission problem and you could need to gain administration privileges before running the
+commands in the terminal. That could be:
+
+    isohybrid [tails.iso] --entry 4 --type 0x1c
+    sudo dd if=[tails.iso] of=[device] bs=16M
+
+### dd: tails.iso: No such file or directory
+
+Then you surely have committed a mistake on the path to the ISO image in [[step
+3|linux#step_3]].

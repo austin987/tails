@@ -1,235 +1,117 @@
 [[!toc levels=2]]
 
-Rationale
-=========
+# Future work
 
-All network interfaces, both wired or wireless, have a unique
-[[!wikipedia MAC address]] which is broadcasted on any local network
-it is connected to (for wireless interfaces that also means that any
-radio receiver in the vicinity sees it). The uniqueness of this
-address is problematic, as it can:
+## Using NetwokManager for AvoidConnectionProbs?
 
-* be used a to tie a computer and its owner to a time and place for
-  observers with a list of device MAC addresses and their owners,
-* or at least track the location history of a specific device, which
-  can tell a great deal about its owner.
+Instead of our current hack, we'd ideally want to hook into
+NetworkManager's error handling, which certainly would be more robust,
+and hopefully would provide more information about the error, but this
+currently seems unsupported.
 
-While broadcasting the MAC addres in one's home *only* is not problem,
-broadcasting the MAC address in public is, so we need to devise a
-simple user interface which gives the option to obfuscate this address
-when using Tails in public.
+An experiment has showed that when connecting to a password-protected
+(WPA-PSK) wireless network with MAC address white-listing, spoofed
+(and hence blocked) MAC addresses resulted in an endless cycle of NM
+asking for passphrase. When cancelled, NM displays a "Disconnected"
+notification, and during this time no NM dispatcher events were
+emitted.
 
+Some bugs of interest that may bring some hope:
 
-Use cases
-=========
+* <https://bugzilla.gnome.org/show_bug.cgi?id=387832>
+* <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=518368>
+* <https://bugs.launchpad.net/ubuntu/+source/network-manager/+bug/336736>
 
-Wired networking
-----------------
+## Vendor bit randomisation with macchiato
 
-We could distinguish two main use-cases:
+These are the current relevant OUI counts from macchiato's git:
 
-* using a public computer (e.g. in a library, Internet-cafe) => the mac
-  address should not be changed, as it may bring undesired admin
-  attention and/or simply forbid access to the Internet
-* using a personal computer (e.g. a laptop, wherever it happens) =>
-  the mac address should be changed
+5       oui/bluetooth_laptop.sh
+2       oui/bluetooth_misc.sh
+12      oui/bluetooth_mobile.sh
+1       oui/bluetooth_pmp.sh
+2       oui/wired_console.sh
+3       oui/wired_desktop_dedicated.sh
+11      oui/wired_desktop_onboard.sh
+8       oui/wired_infrastructure.sh
+17      oui/wired_laptop.sh
+6       oui/wired_misc.sh
+4       oui/wired_printer.sh
+2       oui/wireless_camera.sh
+1       oui/wireless_console.sh
+4       oui/wireless_desktop_dedicated.sh
+2       oui/wireless_desktop_onboard.sh
+4       oui/wireless_handheld.sh
+6       oui/wireless_infrastructure.sh
+1       oui/wireless_laptop_dedicated.sh
+21      oui/wireless_laptop.sh
+17      oui/wireless_mobile.sh
+7       oui/wireless_pmp.sh
+4       oui/wireless_printer.sh
+8       oui/wireless_usb.sh
 
-A way to integrate this analysis UI-wise could then be to allow, in a
-[[todo/boot_menu]], to choose between the default case (that
-has to be decided) and the other one, using simple words such as "I am using a
-public computer" instead of speaking geek-language about mac addresses or
-whatever.
+In particular there's ~20 each in wireless_laptop and wired_laptop,
+which is what we should care about most (desktops rarely need MAC
+spoofing). However, after investigating the sources for some OUI:s
+(via git history), some OUI:s are (according to the submitter) only
+common in certain geographical areas. This makes the lists too small
+and unreliable at the moment.
 
-As a bonus, other unrelated settings could also be automatically
-changed at runtime depending on the answer to this question.
+Another attempt at collecting MAC addresses for various kinds of
+hardware is [Boruch-Baum's
+mac_changer_choice](https://github.com/Boruch-Baum/mac_changer_choice).
 
-Enabling the "public computer" mode could setup the needed bits so
-that every network interface has its mac address changed before
-attempting to access the network.
+# Questions, remaining issues, and other random stuff
 
-Wireless networking
--------------------
+## MAC spoof failure warning and failsafe
 
-The Wi-Fi usecase is a bit different: the public / private computer
-distinction does not make sense, but there are two main situations:
+If MAC spoofing fails for some interface we'd like to prevent it from
+exposing the real MAC address, and warn the user about this via a
+notification.
 
-1. Some Wi-Fi networks restrict access to a list of known
-   MAC addresses, so in this case, the user of a known computer
-   wants to use their real MAC address.
-2. In most (all?) other cases, we want to anonymize the MAC address.
+In the current implementation there's no failsafe that verifies that
+the selected MAC spoofing setting has been enforced before
+connecting. This would be easy if there was something like pre-up NM
+dispatcher hooks but just like in the section about "Connection
+failure detection", there's none yet.
 
-So, as suggested by <tailshelper@tormail.org> on the tails-dev
-mailing-list (January 2013), Wi-Fi adapters' MAC address should be
-randomized by default, with an option in tails-greeter to set the
-original address back.
+An alternative would be to do this in
+[[!tails_spoof-mac_gitweb config/chroot_local-includes/usr/local/sbin/tails-spoof-mac]], which
+is run by the udev hook. In the end of the script we could try to
+verify that the spoofing indeed happened for the NIC in question, and
+if it didn't we could go into full-out panic mode:
 
-Whonix' use cases overview
---------------------------
+1. Down the interface
+2. Try to unload the module used by the NIC. While one easily can find
+   the module used by a `$NIC` via `readlink
+   "/sys/class/net/${NIC}/device/driver/module"`, we'd also have to
+   resolve reverse dependencies. For instance, for current Intel
+   wireless chipsets, the `iwlwifi` module is loaded, but with current
+   Linux kernels another module called `iwldvm` is loaded, and it uses
+   `iwlwifi`, so a `morprobe -r iwlwifi` will fail. Sadly `modprobe`
+   doesn't have a `--recursive-remove` or `--show-reverse-depends` so
+   we'd have to e.g. parse "Used by" field of `lsmod` or similar, and
+   we'd have to do it recursively to be rigorous.
+3. Perhaps prevent NetworkManager from starting if the previous step
+   failed?
+4. Show a scary error message to the user
 
-See <https://sourceforge.net/p/whonix/wiki/MAC/>.
+It would obviously require to drop `set -e`, because errors are indeed
+what could cause this to happen.
 
-Caveats
-=======
+## Detecting MAC-spoof related connection errors for wired NICs
 
-Randomizing mac adresses has several cons:
+While Wi-Fi connection are covered, this gets trickier for wired
+connections. The problem is that there's no strong concept of being
+"associated" to a wired network (at least a "standard" one, perhaps
+there is with 802.1x security...). It'll probably be hard to identify
+blocking without confusing it with other types of wired connection
+failures (i.e. false positives). How does wired MAC address blocking
+usually work? On which level? DHCP? Lower layer?
 
-* may trigger attention of admins of the network.
-* may break in some network configuration were static addresses are
-  assigned by a DHCP server based on the interface mac address, and/or
-  ARP tables are fixed to avoid spoofing.
+# Old stuff from blueprint
 
-According to chapter 3.4.7 of the [Incognito's
-documentation](http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/docs.html),
-Incognito does have an option in the boot menu and an [initrd
-script](https://tor-svn.freehaven.net/svn/incognito/trunk/root_overlay/etc/init.d/macchanger),
-and the randomization is done on a small part of the mac address.
-It does not really solve both issues, it's still not working for
-static DHCP, and if mac adresses are watched, even modifying only it's
-end would probably trigger an alert (admins willing to see if mac
-addresses are changing may have installed an automated way to do it,
-like arpwatch).
-
-However, as Tails is based on debian live and using network-manager
-for its network configuration, it introduces new questions: what if an
-USB wireless dongle is inserted in Tails after it has booted?
-Network manager will automatically begin to scan the network with a
-non-fake mac address. Is it a problem?
-
-User interface
-==============
-
-Tails Greeter option
---------------------
-
-As has been proved many times on our forum, MAC addresses is a big
-source of user confusion. To help users make a good choice we probably
-want to avoid a wording that contains the word "MAC address", both to
-accomodate users that don't know what that is, and users whose
-misconseptions may lead them to pick a sub-optimal option. Wordings
-like "I am using a public network" or "I am using a public computer"
-are preferred for these reasons.
-
-Ideally we'd like a single, binary option (e.g. a check box) whose
-state then determines what to do with each network interface, but
-depending on the use cases we want to support (see dedicated section
-above), that may be too limiting. For instance "public vs home/trusted
-network" and "public vs owned/trusted computer" result in four
-different combinations. However, having two binary options for the
-above could prove interesting for other features than MAC changer, so
-it may be worthwhile (note, this list is not a list of TODOs; just a
-list of examples that may motivate adding the above *two* options):
-
-* On a public/untrusted computer we may want to completely disable
-  certain hardware to
-  [[todo/protect_against_external_bus_memory_forensics]].
-* On a public/untrusted computer we may want to disable keyboard input
-  for the [[doc/first_steps/persistence]] passphrase and
-  [[doc/first_steps/startup_options/administration_password]] (due to
-  the threat of hardware key loggers), forcing usage of a
-  [[virtual keyboard|todo/Add_a_virtual_keyboard_in_Tails_Greeter]].
-* On a public/untrused network we may want to disable network
-  printers.
-
-Post-login
-----------
-
-Since MAC changing can cause network problems (see "Caveats" section
-above) we may want to try to detect such errors after we've logged in.
-Upon detection we could show a notification linking to some
-appropriate documentation, and offer the option to reset the MAC
-address of the device to the default and re-connect.
-
-Implementation
-==============
-
-ifupdown
---------
-
-An [ifupdown script](https://help.ubuntu.com/community/AnonymizingNetworkMACAddresses),
-put in `/etc/network/if-pre-up.d/` can do the job, but this solution is
-permanent and not easy to disable, as each time an interface will be
-reconfigured it's mac address will be automatically changed. This
-solution does not help really if we want users to be able to choose to
-enable/disable it (at boot time or on a running Tails). At least it
-integrates nicely in an environement where NetworkManager is in charge
-of the network configuration, but still that doesn't solve the user's
-choice problem.
-
-> My take on this is that this place is the one where we can ensure
-> the mac address is changed (or not) when needed; at least it works
-> when network configuration is done through `ifupdown` or Network
-> Manager (but not when using `ip` or `ifconfig` by hand; if we really
-> want to support these, I guess that only udev rules can do the job
-> properly).
-> 
-> Anyway: IMHO, using this `.d` directory or not is pretty unrelated
-> to the method used to get the user's choice. Enabling/disabling such
-> a ifupdown script is quite feasible:
->
-> * if chosen at boot time: a `live-initramfs` hook will do the job,
->   based on `grep /proc/cmdline`
-> * if chosen by any nice-random-desktop-UI: a suid wrapper could
->   toggle this script on/off, restore the original mac address and
->   restart Network Manager as needed.
-
-Network Manager
----------------
-
-Network Manager does actually support plugins, that could be a way to
-interface it with macchanger, and have the user prompted before
-configuring the network to ask if the interface have to be randomized
-or not. A button could also be added to enable/disable this feature.
-Attention have to be taken on the way it would be done at boot
-time too.
-
-An easy interface to propose to get the original mac address back, in
-case Network Manager fails to get a working networking setup, would be
-a nice bonus.
-
-macchanger-gtk
---------------
-
-A GTK interface to macchanger does exist:
-[macchanger-gtk](http://www.mogaal.com/macchanger-gtk). Might be
-usable as the button to let people use macchanger on a running
-Tails, but it lacks a way to restore genuine hardware address. It's
-packaged in Debian ([[!debpkg macchanger-gtk]]).
-
-macchiato
----------
-
-Our [[MAC address design document|contribute/design/MAC_address]]
-explains the way we've chosen until now to generate partially random
-MAC addresses.
-
-It's mostly implemented by
-[macchiato](https://github.com/EtiennePerot/macchiato): a Bash
-script, released under the 3-clauses BSD license, that assigns
-a random MAC address to specified network interfaces, using lists of
-per-device-type common vendor OUI. It can be configured per-device,
-has code to generate udev rules, and has some systemd integration.
-It's been described in more details [in a blog
-post](https://perot.me/mac-spoofing-what-why-how-and-something-about-coffee).
-
-However, there are issues with this approach:
-
-* as of February 2013, macchiato's lists are very short; the author is
-  open to adding to them, but it does not come for free
-* There are web interfaces out there to query the ieee.org OUI database,
-  like [this one](https://db.uga.edu/network/public/vendorcode.cgi).
-* A list of the biggest ethernet vendors is quite harder to find, but
-  [wikipedia](https://secure.wikimedia.org/wikipedia/en/wiki/List_of_PC_hardware_manufacturers#Network_cards)
-  can help, as some other sites
-  [here](http://www.mcgelec.com/Support/mfglinks/nics-wired.aspx) or
-  [here](http://www.charydent.com/network-adapter.asp)
-
-So, the path we've chosen (choose 20 most common vendors) seems to be
-harder than expected, and maybe rather choosing to randomize only the
-last part of the MAC address while keeping the original vendor prefix
-would be easier.
-
-Improving macchanger
-====================
+## Improving macchanger
 
 Some of our goals would be easier to achieve by patching macchanger
 itself. Since it's been unmaintained upstream for a while, we've been
@@ -243,29 +125,23 @@ and has already started patching it to better suit our needs:
   sid: 1.5.0-8) and is likely to go on this way. Tails has been
   using this improved version for a while.
 
-Inspiration sources
-===================
+## Inspiration sources
 
-Haven
------
+### Haven
 
 Haven does not automatically start network-manager at boot time.
 It provides shortcuts in the application menu to run macchanger-gtk
 and start the network if desired.
 
-Liberte Linux
--------------
+### Liberte Linux
 
-Liberte Linux randomizes wireless MAC addresses at boot time and
+Liberte Linux randomises wireless MAC addresses at boot time and
 allows changing wired interfaces' MAC addresses after boot, see their
 `src/usr/local/sbin/mac-randomize` that uses `ifconfig IFACE hw ether`
 rather than macchanger.
 
-Documentation
-=============
+## Documentation
 
 Investigate and possibly document the kind of information that could
 still be seen on the LAN about the system. Such as the manufacturer (ex:
 Sony), model number, BIOS and version, etc.?
-
-[[!tag release/1.0]]

@@ -15,7 +15,8 @@ python-gnutls
 python-gtk2
 python-pyme
 # needed by tails-security-check
-libdatetime-format-iso8601-perl
+libcarp-assert-perl
+libcarp-assert-more-perl
 libdesktop-notify-perl
 libio-socket-ssl-perl
 liblocale-gettext-perl
@@ -48,27 +49,45 @@ libgnupg-interface-perl
 libgtk2-perl
 liblocale-gettext-perl
 xclip
+# needed by shutdown-helper-applet
+gir1.2-panelapplet
 # needed by 20-time.sh
 libnotify-bin
+notification-daemon
+# needed by unsafe-browser
+zenity
+# needed by tails-documentation
+yelp
+# for /usr/local/sbin/tails-blocked-network-detector
+libfile-tail-perl
+libparse-syslog-perl
+# needed by live-persist
+acl
+# needed by the Unsafe Browser
+unzip
+# ships gksudo, needed by various wrappers of ours
+gksu
 
 ### Software
 
-#include <gnome-core>
+#include <standard-x11>
 
+aircrack-ng
 audacity
 barry-util
 bilibop-udev
 cups
 cryptsetup
 rsync
-aircrack-ng
 bash-completion
+bookletimposer
 claws-mail
 claws-mail-archiver-plugin
 claws-mail-i18n
 claws-mail-pgpinline
 claws-mail-pgpmime
 connect-proxy
+desktop-base
 dmz-cursor-theme
 dosfstools
 eatmydata
@@ -78,22 +97,30 @@ evince
 exiv2
 file-roller
 florence
+fonts-cantarell
 gcalctool
+gdm3
 gedit
 gimp
 git
+gnome-control-center
 gnome-disk-utility
 gnome-media
+gnome-menus
+gnome-panel
 gnome-power-manager
 gnome-search-tool
 gnome-screenshot
+gnome-session-fallback
 gnome-system-log
 gnome-system-monitor
+gnome-terminal
+gnome-themes
+gnome-themes-standard
 gnupg-agent
 gnupg-curl
 gobi-loader
-gobby
-gobby-infinote
+gobby-0.5
 ## breaks lb because of desktop-base.postinst (see Debian bug #467620)
 #if ARCHITECTURE i386 amd64
 # grub
@@ -102,18 +129,20 @@ gstreamer0.10-ffmpeg
 gstreamer0.10-plugins-base
 gstreamer0.10-plugins-good
 gstreamer0.10-plugins-ugly
+gstreamer0.10-pulseaudio
+gvfs-backends
 hardlink
 haveged
 # needed by laptop-mode-tools to spin-down hard drives
 hdparm
-#if ARCHITECTURE i386
-i2p
-#endif
+hledger
 iceweasel
 iceweasel-l10n-all
 inkscape
 ipheth-utils
 iptables
+# ships isolinux.bin in syslinux 6.x packaging
+isolinux
 ferm
 keepassx
 kexec-tools
@@ -122,6 +151,7 @@ less
 laptop-mode-tools
 libgfshare-bin
 libgnomevfs2-extra
+libqt4-qt3support
 libsane-hpaio
 liferea
 live-config
@@ -129,33 +159,35 @@ live-config-sysvinit
 lvm2
 macchanger
 mat
+monkeysign
 monkeysphere
 # our vidialia-wrapper needs lckdo
 moreutils
 msmtp
 msva-perl
 mutt
+nautilus
 nautilus-wipe
 network-manager-gnome
 ntfs-3g
 ntfsprogs
 obfsproxy
-openoffice.org-calc
-openoffice.org-draw
-openoffice.org-gnome
-openoffice.org-impress
-openoffice.org-math
-openoffice.org-writer
-openoffice.org-l10n-ar
-openoffice.org-l10n-de
-openoffice.org-l10n-es
-openoffice.org-l10n-fa
-openoffice.org-l10n-fr
-openoffice.org-l10n-it
-openoffice.org-l10n-pt
-openoffice.org-l10n-ru
-openoffice.org-l10n-vi
-openoffice.org-l10n-zh-cn
+libreoffice-calc
+libreoffice-draw
+libreoffice-gnome
+libreoffice-impress
+libreoffice-math
+libreoffice-writer
+libreoffice-l10n-ar
+libreoffice-l10n-de
+libreoffice-l10n-es
+libreoffice-l10n-fa
+libreoffice-l10n-fr
+libreoffice-l10n-it
+libreoffice-l10n-pt
+libreoffice-l10n-ru
+libreoffice-l10n-vi
+libreoffice-l10n-zh-cn
 openssh-client
 parted
 pidgin
@@ -166,24 +198,29 @@ plymouth
 poedit
 polipo
 ppp
+pulseaudio
 pwgen
 p7zip-full
 resolvconf
 rfkill
 sane-utils
-scribus-ng
+scribus
 seahorse
-seahorse-plugins
+seahorse-daemon
+seahorse-nautilus
 secure-delete
 simple-scan
 sshfs
+# ships the *.c32 modules in syslinux 6.x packaging
+syslinux-common
 system-config-printer
+systemd
 synaptic
 torsocks
 totem-plugins
 traverso
 ttf-dejavu
-ttf-liberation
+fonts-liberation
 tcpdump
 tcpflow
 tor
@@ -191,16 +228,16 @@ tor-geoipdb
 sound-juicer
 ssss
 tor-arm
-totem-gstreamer
+totem
 ttdnsd
 unar
 unrar-free
 usbutils
 vidalia
 vim-nox
+virtualbox-guest-utils
 wireless-tools
 xul-ext-adblock-plus
-xul-ext-cookie-monster
 xul-ext-foxyproxy-standard
 xul-ext-https-everywhere
 xul-ext-noscript
@@ -222,7 +259,7 @@ firmware-linux-free
 firmware-linux-nonfree
 firmware-ralink
 firmware-realtek
-zd1211-firmware
+firmware-zd1211
 b43-fwcutter
 firmware-b43-installer
 firmware-b43legacy-installer
@@ -234,43 +271,47 @@ xserver-xorg-video-geode
 #endif
 xserver-xorg-video-all
 
+### Input methods
+ibus-gtk
+ibus-gtk3
+ibus-qt4
+## Chinese
+ibus-pinyin
+## Japanese
+ibus-anthy
+## Korean
+ibus-hangul
+
 ### l10n, i18n
 ## precompiled locales
 locales-all
 ## arabic fonts
-ttf-kacst
-ttf-farsiweb
-## chinese fonts and input systems
-scim-pinyin
-scim-tables-zh
-scim-uim
+fonts-kacst
+fonts-farsiweb
+## chinese fonts
 xfonts-intl-chinese
-ttf-arphic-ukai
-ttf-arphic-uming
+fonts-arphic-ukai
+fonts-arphic-uming
 xfonts-wqy
 ## Hebrew support
 culmus
 libfribidi0
 ## indic fonts
-ttf-indic-fonts
-## Japanese input systems
-scim-anthy
+fonts-indic
 ## Khmer language, used in Cambodia
-ttf-khmeros
+fonts-khmeros
 ## Korean fonts
-ttf-unfonts-core
-## Korean input systems
-scim-hangul
+fonts-unfonts-core
 ## Lao fonts
-ttf-lao
+fonts-lao
 ## russian fonts
 xfonts-bolkhov-koi8r-75dpi
 xfonts-bolkhov-koi8r-misc
 xfonts-cronyx-koi8r-100dpi
 ## Sinhala fonts
-ttf-sinhala-lklug
+fonts-lklug-sinhala
 ## Thai fonts
-ttf-thai-tlwg
+fonts-thai-tlwg
 
 ### CD burning
 brasero
@@ -286,6 +327,10 @@ gnome-orca
 gnome-accessibility-themes
 ## graphical predictive text input system
 dasher
+
+### CPU microcodes
+amd64-microcode
+intel-microcode
 
 ### Dictionaries and spell checking
 hunspell-ar
@@ -306,12 +351,16 @@ usb-modeswitch
 usb-modeswitch-data
 
 ### Printing support
-foomatic-filters-ppds
+foomatic-db
+foomatic-db-engine
+foomatic-filters
 hpijs-ppds
 hplip
 hplip-cups
+printer-driver-escpr
 
 ### Make the MAT more powerful
+gir1.2-poppler-0.18
 libimage-exiftool-perl
 python-cairo
 python-mutagen
@@ -350,3 +399,5 @@ wireless-regdb
 
 ### Automated test suite
 python-serial
+
+i2p

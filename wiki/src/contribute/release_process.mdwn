@@ -10,40 +10,42 @@ Environment
 Export the following environment variables to be able to copy'n'paste
 the scripts snippets found on this page:
 
-* `VERSION`: the version number of the release being prepared.
+* version numbers:
+
+      export VERSION=$(dpkg-parsechangelog -SVersion)
+      export TAG=$(echo "$VERSION" | sed -e 's,~,-,')
+      export PREVIOUS_VERSION=$(dpkg-parsechangelog --offset 1 --count 1 -SVersion)
+
+* `NEXT_VERSION`: set to the version number of the next Tails release
+  (e.g. 0.23 when releasing 0.22.1)
+* `MAJOR_RELEASE`: set to 1 if preparing a major release, to 0 else
 * `ISOS`: the directory where one stores `tails-i386-*`
   sub-directories like the ones downloaded with BitTorrent.
+* `ARTIFACTS`: the directory where build artifacts (e.g.
+  the `.packages` file) land.
 * `MASTER_CHECKOUT`: a checkout of the `master` branch of the main
   Tails Git repository.
+* `RELEASE_BRANCH`: the name of the branch of the main Tails Git
+  repository used to prepare the release (`stable` or `testing`).
+* `RELEASE_CHECKOUT`: a checkout of the branch of the main Tails Git
+  repository used to prepare the release (`stable` or `testing`).
+* `TAILS_SIGNATURE_KEY=0D24B36AA9A2A651787876451202821CBE2CD9C1`
+* `IUK_CHECKOUT`: a checkout of the relevant tag of the `iuk`
+  Git repository.
+* `PERL5LIB_CHECKOUT`: a checkout of the relevant tag of the
+  `perl5lib` Git repository.
 
 Pre-freeze
 ==========
 
-upgrade i2p
------------
+The [[contribute/working_together/roles/release_manager]] role
+documentation has more tasks that should be done early enough.
 
-See [[contribute/design/I2P]].
-
-Going through the usual [[review and merge
-process|contribute/merge_policy]] is welcome.
-
-Upgrade Torbutton
------------------
-
-Since Torbutton is not maintained in Debian anymore,
-upgrade our Debian package to the latest release if needed.
-
-Going through the usual [[review and merge
-process|contribute/merge_policy]] is welcome.
-
-Update iceweasel preferences
+Update Iceweasel preferences
 ----------------------------
 
-* Torbutton does not handle `general.*` and
-  `browser.startup.homepage_override.*` anymore, so we have to keep in
-  sync manually, in our `/etc/iceweasel/pref/iceweasel.js`, with TBB's
-  `pound_tor.js`
-* update `extensions.adblockplus.currentVersion`
+* update `extensions.adblockplus.currentVersion` in
+  `config/chroot_local-includes/etc/iceweasel/profile/user.js`
 
 Coordinate with Debian security updates
 ---------------------------------------
@@ -77,7 +79,10 @@ Patterns are stored in
    this Iceweasel instance to the
    `config/chroot_local-includes/etc/iceweasel/profile/adblockplus`
    directory in the Tails Git checkout.
-8. `git commit -m 'Update AdBlock Plus patterns.' config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini`
+8. Commit:
+
+       git commit -m 'Update AdBlock Plus patterns.' \
+          config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini
 
 Upgrade bundled binary Debian packages
 --------------------------------------
@@ -85,9 +90,21 @@ Upgrade bundled binary Debian packages
 That is: make sure the bundled binary Debian packages contain
 up-to-date localization files.
 
-For each bundled Debian package, get updated PO files from the
+For each bundled Debian package, `cd` into the package's root
+directory (e.g. a checkout of the `whisperback` repository),
+and then run the `import-translations` script that is in the
+main Tails repository. For example:
+
+	cd whisperback
+	../tails/import-translations
+
+If the `import-translations` script fails to import translations for
+the current package, manually copy updated PO files from the
 Transifex branches of `git://git.torproject.org/translation.git` (e.g.
-`whisperback_completed`). Verify and commit.
+`whisperback_completed`) instead. In this case, skip PO files for
+[[translation teams that use Git|contribute/how/translate#translate]].
+
+Add and commit.
 
 Then check the PO files [[using i18nspector|contribute/l10n_tricks]].
 Correct all the errors that are not in the ignored list of
@@ -98,21 +115,28 @@ Then see the relevant release processes:
 * [[iceweasel]]
 * [[liveusb-creator]]
 * [[tails-greeter]]
+* [[perl5lib]]
 * [[persistence-setup]]
 * [[tails-iuk]]
-* whisperback: 
-  * see release process on
-    <https://git-tails.immerda.ch/whisperback/plain/HACKING>
-  * build a debian package
-  * upload it to [[APT repository]]
+* whisperback:
+  * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
+  * build a Debian package
+  * upload it to our [[APT repository]]
 
-Import PO files from Transifex
-------------------------------
+Update PO files
+---------------
 
-Copy `*.po` from the `tails-misc_completed` branch in
-`https://git.torproject.org/translation.git` into `po/`, **but** skip
-[[languages that are maintained in
-Git|contribute/how/translate#translate]].
+Pull updated translations for languages translated in Transifex:
+
+	./import-translations
+
+Refresh the code PO files:
+
+	./refresh-translations
+
+Commit the result, including new PO files:
+
+	git add po && git commit -m 'Update PO files.'
 
 Freeze
 ------
@@ -124,21 +148,30 @@ If we are at freeze time for a major release:
 * Reset the `testing` APT suite to the state of the `devel` one, as
   documented on [[contribute/APT_repository#workflow-freeze]].
 
+Else, if we are at freeze time for a point-release:
+
+* Merge the `master` Git branch into `stable`.
+
 Changelog
 ---------
 
 Remove the placeholder entry for next release in `debian/changelog`,
 and then:
 
-	./release VERSION PREVIOUS_RELEASED_TAG
-
-example:
-
-	./release 0.3 0.2
+	./release $VERSION $PREVIOUS_VERSION
 
 This populates the Changelog with the Git log entries.
 
-Then, launch an editor for the needed cleanup of the result.
+Then, launch an editor for the needed cleanup of the result:
+
+	dch -e
+
+Then, gather other useful information from:
+
+* every custom bundled package's own Changelog (Greeter, Persistent
+  Volume Assistant, etc.);
+* the "Fix committed" section on the [Release Manager
+  View](https://labs.riseup.net/code/projects/tails/issues?query_id=130).
 
 Finally, commit:
 
@@ -147,28 +180,34 @@ Finally, commit:
 Included website
 ----------------
 
+### Merge master
+
+Merge `master` into the branch used for the release:
+
+	git fetch origin && git merge origin/master
+
 ### version number
 
 If preparing a RC, skip this part.
 
-In the branch used to build the release, update the `inc/*` files to
+In the branch used to build the release, update the `wiki/src/inc/*` files to
 match the *version number* and *date* of the new release. Set the date
 at least 24 hours in the future! Between tests and mirror synchronization,
 the build will not be released on the same day. Try to make sure it
 matches the date of the future signature.
 
-	VERSION='0.19'
 	RELEASE_DATE='June 26, 2013'
 
 	echo "$VERSION"      > wiki/src/inc/stable_i386_version.html
 	echo "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
+	$EDITOR wiki/src/inc/*.html
 	./build-wiki
 	git commit wiki/src/inc/ -m "Update version and date for $VERSION."
 
 ### features and design documentation
 
-Read the Changelog carefully, and update the [[contribute/design]] and
-[[doc/about/features]] pages accordingly.
+Read the Changelog carefully, and update [[doc/about/features]]
+pages accordingly.
 
 Also:
 
@@ -176,25 +215,35 @@ Also:
 
 ... and remove the `PENDING-FOR-N.M` warnings.
 
-PO files
---------
+Website translations
+--------------------
 
-Refresh the code PO files with `./refresh-translations`, commit
-the result.
+Refresh the website PO files and commit the ones corresponding to
+pages that were added or changed accordingly to changes coming with
+the new release. This e.g. ensures that the RC call for translation
+points translators to up-to-date PO files:
 
-Refresh the website PO files with `./build-wiki`, and add / commit the ones
-corresponding to pages that were added or changed accordingly to
-changes coming with the new release. This e.g. ensures that the RC
-call for translation points translators to up-to-date PO files.
+	./build-wiki && git add wiki/src && git commit -m 'Update website PO files.'
 
-If preparing a RC, ask on tails-l10n that someone checks the PO files
-of the website [[using `check_po.sh`|contribute/l10n_tricks]], and
-corrects all the errors.
+Call for translation
+====================
+
+If at freeze time:
+
+1. Ask on tails-l10n that someone checks the PO files of `po/` and of
+   the website [[using `check_po.sh`|contribute/l10n_tricks]], and
+   corrects all the errors.
+2. Send a call for translations to tails-l10n, making it clear what
+   Git branch the translations must be based on, and what are the
+   priorities. Also, add a few words to remember the translation teams
+   using Git that they should regularly contact Transifex translators,
+   as detailed on the [[documentation for
+   translators|contribute/how/translate]].
 
 Tag the release in Git
 ======================
 
-	git tag -u 1202821CBE2CD9C1 -m "tagging version ${VERSION}" "${VERSION}"
+	git tag -u "$TAILS_SIGNATURE_KEY" -m "tagging version ${VERSION}" "${TAG}"
 	git push --tags
 
 (Pushing the tag is needed so that the APT repository is updated, and
@@ -242,58 +291,25 @@ suite should be ready, so it is time to:
 * `git push --tags`
 *  build the final image!
 
-Build the Incremental Update Kit
---------------------------------
-
-Example:
-
-    $ sudo tails-create-iuk --squashfs-diff-name 0.14.squashfs \
-        --old-iso tails-i386-0.14\~rc2.iso \
-        --new-iso tails-i386-0.14.iso      \
-        --outfile Tails_i386_0.14-rc2_to_0.14.iuk
-
-Prepare update-description files
---------------------------------
-
-1. Prepare update-description files (see [[!tails_todo incremental_upgrades]]
-   for details):
-   * update (create if needed) an update-description file for every
-     *previous* supported release (e.g. N-1, N-1~rc2) that describes
-     the path to the one being released,
-   * create a new update-description for the version being released,
-     that expresses that no update is available for that one yet
-1. Detach-sign the update-description files.
-1. Rename the detached signatures from `.asc` to `.sig`.
-
-Testing
-=======
-
-Until [[!tails_todo automated_builds_and_tests]] are set up, some
-manual testing
-has to be done by the persons preparing the release, in addition to the
-real-world tests done by fellow beta-testers.
-
-The manual testing process [[is documented on a dedicated
-page|release_process/test]].
+<a id="prepare-iuk"></a>
 
 Generate the OpenPGP signatures and Torrents
 ============================================
 
-First, create a directory with a suitable name:
+First, create a directory with a suitable name and go there:
 
-	mkdir tails-i386-$VERSION
+	mkdir "$ISOS/tails-i386-$VERSION" && cd "$ISOS/tails-i386-$VERSION"
 
-Second, copy the built image to this brand new directory and
-rename it:
+Second, copy the built image to this brand new directory.
+Then, rename it:
 
-	cd tails-i386-$VERSION
-	mv *.iso tails-i386-$VERSION.iso
+	mv "$ARTIFACTS/tails-i386-*-$VERSION-*.iso" "tails-i386-$VERSION.iso"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
 extension; e.g.
 
-	gpg --armor --default-key 1202821CBE2CD9C1 --detach-sign *.iso
+	gpg --armor --default-key "$TAILS_SIGNATURE_KEY" --detach-sign *.iso
 	rename 's,\.asc$,.sig,' *.asc
 
 Fourth, go up to the parent directory, create a `.torrent` file and
@@ -306,26 +322,134 @@ check the generated `.torrent` files metainfo:
 Fifth, generate detached OpenPGP signatures for every published
 `.torrent` file:
 
-	gpg --armor --default-key 1202821CBE2CD9C1 --detach-sign \
+	gpg --armor --default-key "$TAILS_SIGNATURE_KEY" --detach-sign \
 	  tails-i386-$VERSION.torrent && \
 	mv tails-i386-$VERSION.torrent.{asc,sig}
+
+Prepare incremental upgrades
+============================
+
+Build the Incremental Upgrade Kits
+----------------------------------
+
+Use `tails-create-iuk` to build an IUK for the previous stable release
+and (if applicable) the last RC for the version being released. Example:
+
+    sudo su -c "cd $IUK_CHECKOUT && \
+      PERL5LIB=\"$PERL5LIB_CHECKOUT/lib\" \
+        ./bin/tails-create-iuk \
+           --squashfs-diff-name \"$VERSION.squashfs\"           \
+           --old-iso \"$ISOS/tails-i386-$PREVIOUS_VERSION/tails-i386-$PREVIOUS_VERSION.iso\" \
+           --new-iso \"$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso\"          \
+           --outfile \"$ISOS/Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk\""
+
+Note that developer tools for creating IUK and upgrade-description
+files were only tested on Debian sid. It should hopefully work well on
+Wheezy too.
+
+<a id="prepare-upgrade-description-files"></a>
+
+Prepare upgrade-description files
+---------------------------------
+
+1. Prepare upgrade-description files (see the [[upgrade-description
+   files
+   specification|contribute/design/incremental_upgrades#upgrade-description-files]]
+   for details). The idea is to:
+
+   * update (create if needed) an upgrade-description file for every
+     *previous* supported release (e.g. N~rc1, N-1, N-1~rc2) that replaces
+     all existing upgrade paths with the path to the version being
+     released;
+   * create a new upgrade-description for the version being released,
+     that expresses that *no* upgrade is available for that one yet.
+
+   This is what `tails-iuk-generate-ugrade-description-files` tool
+   does:
+
+       ( cd $IUK_CHECKOUT && \
+       ./bin/tails-iuk-generate-upgrade-description-files \
+           --version "$VERSION" \
+           --next-version "$NEXT_VERSION" \
+           --next-version "${NEXT_VERSION}~rc1" \
+           --iso "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso" \
+           --previous-version "$PREVIOUS_VERSION" \
+           --previous-version "${VERSION}~rc1" \
+           --iuks "$ISOS" \
+           --release-checkout "$RELEASE_CHECKOUT" \
+           --major-release "$MAJOR_RELEASE" \
+       )
+
+   Note:
+   * The `--iuks` argument must point to the directory where the IUKs
+     generated at the previous step are stored.
+   * At least the last stable release and the previous release
+     candidates for the version being released must be passed to
+     `--previous-version`.
+   * A few (say, 2 or 3) older versions must be passed with
+     `--previous-version`, so that users who skipped a release or two
+     are directly informed of the new one.
+   * If preparing a release candidate, add `--channel alpha`
+   * If preparing a release candidate, do not pass
+     `--next-version "${NEXT_VERSION}~rc1"`
+
+1. Create an armoured detached signature for each created or modified
+   upgrade-description file.
+
+       find "$RELEASE_CHECKOUT/wiki/src/upgrade/" \
+          -type f -name upgrades.yml -exec \
+             gpg -u "$TAILS_SIGNATURE_KEY" --armor --detach-sign {} \;
+
+1. Rename each detached signature to `.pgp`:
+
+       find "$RELEASE_CHECKOUT/wiki/src/upgrade/" -type f \
+          -name upgrades.yml.asc -exec rename -f 's,\.asc$,.pgp,' {} \;
+
+1. Add and commit the upgrade-description files and their detached
+   signatures to the Git branch used to prepare the release (`stable`
+   or `testing`):
+
+       ( cd "$RELEASE_CHECKOUT" && git add wiki/src/upgrade && \
+          git commit -m "Update upgrade-description files." )
+
+1. Check the syntactic correctness of all upgrade-description files:
+
+       ( cd $IUK_CHECKOUT && \
+          ./bin/tails-iuk-check-upgrade-description-file \
+             ${RELEASE_CHECKOUT}/wiki/src/upgrade/v1/*/*/*/*/upgrades.yml )
+
+1. If preparing a release candidate, move the generated or updated
+   files to `$MASTER_CHECKOUT`, commit and push: given the updates are
+   advertised on the *alpha* channel, while all users use the *stable*
+   one by default, this will allow you to more easily test the IUK
+   without impacting anyone.
 
 Upload images
 =============
 
+Sanity check
+------------
+
+Verify that the current source for Firefox is still the same we've
+used when preparing our custom Iceweasel package: e.g. FF17.0.8 got
+re-tagged and re-uploaded at the last minute, due to a test failure.
+
+Better catch this before people spend time doing manual tests.
+
 ## Announce, seed and test the Torrents
 
-Announce and seed the Torrents using whatever box you can.
-A decent, stable and permanent Internet connection is required.
+Announce and seed the Torrents.
 
 Test them with a BitTorrent client running in a different place.
 
 ## Download and seed image from lizard
 
-    scp tails-i386-$VERSION.torrent bittorent.lizard:
-    ssh bittorent.lizard transmission-remote --add tails-i386-$VERSION.torrent
+    scp "$ISOS/tails-i386-$VERSION.torrent" \
+       bittorrent.lizard: && \
+       ssh bittorrent.lizard transmission-remote --add tails-i386-$VERSION.torrent
 
-## Upload to HTTP mirrors
+Publish the ISO over HTTP
+-------------------------
 
 Upload the images to the primary rsync mirror. Best practice is to first
 let bittorrent.lizard download the image, and then copy it from there to
@@ -335,7 +459,7 @@ rsync.lizard:
         scp -3 -r \
             bittorrent.lizard:/var/lib/transmission-daemon/downloads/tails-i386-$VERSION \
             rsync.lizard:
-    # set DIST to either 'testing' (for RC:s) or 'stable' (for actual releases)
+    # set DIST to either 'alpha' (for RC:s) or 'stable' (for actual releases)
     ssh rsync.lizard << EOF
       chown -R root:rsync_tails tails-i386-$VERSION
       chmod -R u=rwX,go=rX tails-i386-$VERSION
@@ -346,7 +470,7 @@ Update the time in `project/trace` file on the primary rsync mirror
 and on the live wiki (even for a release candidate):
 
 	TRACE_TIME=$(date +%s) &&
-	echo $TRACE_TIME | ssh rsync.lizard sudo tee /srv/rsync/tails/tails/project/trace && \
+	echo $TRACE_TIME | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
 	[ -n "$MASTER_CHECKOUT" ] && \
 	echo $TRACE_TIME > "$MASTER_CHECKOUT/wiki/src/inc/trace" &&
 	(
@@ -354,63 +478,158 @@ and on the live wiki (even for a release candidate):
 	   git commit wiki/src/inc/trace -m "Updating trace file after uploading $VERSION."
 	)
 
+<a id="publish-iuk"></a>
+
+Publish the IUKs
+----------------
+
+Same as for the ISO, but the IUKs should land into
+`/srv/rsync/tails/tails/$DIST/iuk/`.
+
+Wait for the HTTP mirrors to catch up
+-------------------------------------
+
 Wait for the next rsync pull.
 
 Make sure every webserver listed in the `dl.amnesia.boum.org` round
-robin pool has the new version.
+robin pool has the new version. Drop those that are lagging behind and
+notify their administrators.
 
-Test downloading.
+Test downloading the ISO and IUK over HTTP.
+
+Testing
+=======
+
+1. Set up a Gobby document and copy the [[manual test
+   suite|contribute/release_process/test]] in it.
+1. Email to <tails@boum.org> and potential contributors that tests may start:
+   - make it clear what's the deadline
+   - make it clear where and how you expect to get feedback
+   - attach the Torrent
+   - attach the `.packages` file
+1. Email <tails-testers@boum.org> to ask them to test the tentative ISO.
+1. Make sure someone is committed to run the automated test suite.
+1. Make sure that enough people are here to run the tests, that they
+   report their results in due time, and that they make it clear when
+   they're leaving for good.
+
+While this happens, the release manager should prepare for the next
+steps. Please read on!
 
 Update the website and Git repository
 =====================================
+
+What follows in this section happens on the release branch in
+`$RELEASE_CHECKOUT`.
+
+If preparing a final release
+----------------------------
+
+Skip this part if preparing a RC.
 
 In order to get any new documentation into the website, merge either
 `stable` or `testing` (depending on which release you just did) into
 `master`.
 
-Rename the `.packages` file to remove the `.iso` part of its name.
+Rename the `.packages` file to remove the `.iso` and build date parts
+of its name:
 
-Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig`
-files to the Git repository's `wiki/src/torrents/files/` directory.
+	mv "$ARTIFACTS"/tails-i386-*-"$VERSION"-*.iso.packages \
+	   "$ARTIFACTS/tails-i386-$VERSION.packages"
 
-Generate the SHA-256 hash of every image to be released in `inc/*`; e.g.
+Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
+into the website repository:
+
+	cp "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso.sig" \
+	   "$ARTIFACTS/tails-i386-$VERSION.packages" \
+	   "$ISOS/tails-i386-$VERSION.torrent" \
+	   "$ISOS/tails-i386-$VERSION.torrent.sig" \
+	   "$RELEASE_CHECKOUT/wiki/src/torrents/files/"
+
+Remove from `wiki/src/torrents/files/` any remaining file from the
+previous release (including any RC).
+
+Generate the SHA-256 hash of every image
+to be released in `inc/*`:
 
 	sha256sum $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
 	  cut -f 1 -d ' ' | tr -d '\n' \
-	  > wiki/src/inc/stable_i386_hash.html
-
-In `todo/*`, replace `pending` tags with `todo/done` tags.
+	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_hash.html"
 
 Update the [[support/known_issues]] page.
 
 Write the announcement for the release in
-`news/version_$VERSION.mdwn`, including:
+`news/version_$TAG.mdwn`, including:
 
-- Updating the `meta title` directive.
-- Making sure there's an `announce` tag to have an email sent to the
+- Update the `meta title` directive.
+- Update the `meta date` directive.
+- Make sure there's an `announce` tag to have an email sent to the
   news mailing-list.
+- Document important config changes that persistence users have to do
+  themselves (e.g. the Pidgin proxy settings change in
+  [[!tails_gitweb_commit 9925321]] breaks all existing persistent
+  profiles).
+- Document known issues.
 
 Write an announcement listing the security bugs affecting the previous
 version in `security/` in order to let the users of the old versions
 know that they have to upgrade. Date it a few days before the ISO
-image to be released was *built*.
+image to be released was *built*. Including:
 
-Generate PO files for the release and security announcements with
-`./build-wiki`.
+- the list of CVE fixed in Linux since the one shipped in the previous
+  release of Tails:
+  <http://ftp-master.metadata.debian.org/changelogs/main/l/linux/unstable_changelog>
+- the list of DSA fixed in packages we ship since those that were in
+  the previous release of Tails: <http://security.debian.org/>
+- the list of BSA fixed in packages we ship since those that were in
+  the previous release of Tails:
+  <https://lists.debian.org/debian-backports-announce/>
+- the list of MFSA fixed by the iceweasel update:
+  <https://www.mozilla.org/security/announce/>
+
+If preparing a release candidate
+--------------------------------
+
+Skip this part if preparing a final release.
+
+Copy the `.iso.sig` file into the website repository:
+
+	cp "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso.sig" \
+	   "$MASTER_CHECKOUT/wiki/src/torrents/files/"
+
+Write the announcement for the release in
+`$MASTER_CHECKOUT/wiki/src/news/test_$TAG.mdwn`, including:
+
+- Update the `meta title` directive.
+- Update the `meta date` directive.
+- Document important config changes that persistence users have to do
+  themselves (e.g. the Pidgin proxy settings change in
+  [[!tails_gitweb_commit 9925321]] breaks all existing persistent
+  profiles).
+- Document known issues.
+
+In any case
+-----------
+
+Generate PO files for the announcements with `./build-wiki`.
+
 Then, send them to <tails-l10n@boum.org> so that they get translated
 shortly, perhaps even soon enough to integrate them before pushing the
 release out officially.
 
-Import the update description files and their detached OpenPGP
-signature into the `updates/` tree. See [[!tails_todo incremental_upgrades]]
-for the file naming conventions.
-
 Then, record the last commit before putting the release out for real:
 
+	git add wiki/src && \
 	git commit -m "releasing version ${VERSION}"
 
 Go wild!
 ========
+
+Sanity check
+------------
+
+Verify once more that the current source for Firefox is still the same
+we've used when preparing our custom Iceweasel packages.
 
 Push
 ----
@@ -419,7 +638,43 @@ Push
 
 Push the last commits to our Git repository:
 
-	git push
+	( cd "$RELEASE_CHECKOUT" && git push ) && \
+	( cd "$MASTER_CHECKOUT" && git fetch && git merge "$RELEASE_BRANCH" && git push )
+
+... and ask <root@boum.org> to refresh the ikiwiki wrappers for
+our website.
+
+Bug tracker
+-----------
+
+Skip this part if preparing a release candidate.
+
+Mark all issues fixed in this release as `Status: Resolved` in our bug
+tracker. For a list of candidates, see:
+
+* the [issues in *Fix committed*
+  status](https://labs.riseup.net/code/projects/tails/issues?query_id=111);
+* the "Fix committed" section on the [Release Manager
+  View](https://labs.riseup.net/code/projects/tails/issues?query_id=130).
+
+Then, mark the just-released Redmine milestone as done: go to the
+target version page, click *Edit*, and set *Status* to *Closed*.
+
+### Tickets linked from the website
+
+Go through the tickets linked from the documentation and support sections of the
+website and point documentation writers to the ticket that might be resolved in
+this release.
+
+    git grep tails_ticket -- "wiki/src/[ds]*/*.mdwn"
+
+Test suite
+----------
+
+Remove indications of known broken tests that were fixed by this
+release:
+
+	git grep XXX -- features
 
 IRC
 ---
@@ -459,6 +714,9 @@ who's happy to do it.
 Prepare for the next release
 ============================
 
+XXX: adapt / fork for release candidates. In the meantime, read all
+this, and skip what does not make sense for a RC.
+
 1. Move the previous stable release to `obsolete` on the mirrors.
 1. Remove any remaining RC for the just-published release from
    the mirrors.
@@ -467,13 +725,13 @@ Prepare for the next release
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
    repository documentation.
 1. Push the resulting `devel` branch.
-1. Reset experimental:
+1. If this was a major release, then reset experimental:
    - take note of branches merged into `experimental`, but not into
      `devel`:
 
-        git log --pretty=oneline --color=never --merges devel..experimental \
-          | /bin/grep 'into experimental$' \
-          | sed -e 's,^[a-f0-9]\+\s\+,,' | sort -u
+         git log --pretty=oneline --color=never --merges devel..experimental \
+           | /bin/grep 'into experimental$' \
+           | sed -e 's,^[a-f0-9]\+\s\+,,' | sort -u
 
    - `git checkout experimental && git reset --hard devel`
    - [[hard reset|contribute/APT_repository#workflow-reset]] the `experimental`
@@ -481,12 +739,37 @@ Prepare for the next release
    - merge additional branches into experimental (both at the Git and
      APT levels)
 
-        for branch in $UNMERGED_BRANCHES ; do
-           suite=$(echo $branch | sed -e 's,[/_],-,g')
-           ssh reprepro@incoming.deb.tails.boum.org tails-merge-suite $suite experimental
-        done
-
-     Note that the merge will fail for suites that contain no package.
+         for branch in $UNMERGED_BRANCHES ; do
+            git merge $branch
+            suite=$(echo $branch | sed -e 's,[/_],-,g')
+            if [ $(ssh reprepro@incoming.deb.tails.boum.org reprepro list $suite | wc -l) -gt 0 ] ; then
+               ssh reprepro@incoming.deb.tails.boum.org tails-merge-suite $suite experimental
+            fi
+         done
 
    - `git push --force origin experimental`
-1. Run a Jenkins build of experimental, devel and stable.
+1. Push the release tag to lizard for Jenkins' consumption: `git push --tags lizard`
+1. Force-push all major branches to lizard:
+
+           for branch in stable testing devel experimental ; do
+              git push --force lizard $branch:$branch
+           done
+
+1. Make sure Jenkins manages to build all major branches fine:
+   <https://jenkins.tails.boum.org/>.
+1. In the [Release Manager
+   View](https://labs.riseup.net/code/projects/tails/issues?query_id=130)
+   custom Redmine query, set *Target version* to the next release. Save.
+1. On the [[!tails_roadmap]], update the *Due date* for the *Broken
+   windows* so that this section appears after the next release.
+1. Bonus points if you:
+   - Merge devel into feature/wheezy, if the latter is not lagging
+     behind too much. Doing it for APT is quite tricky, enjoy.
+   - Update the packages (Iceweasel, tails-greeter, etc.) that require
+     to be rebuilt for feature-wheezy.
+   - Trigger a Jenkins build of feature/wheezy.
+
+Related pages
+=============
+
+[[!map pages="contribute/release_process/*"]]

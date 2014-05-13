@@ -1,0 +1,131 @@
+[[!meta title="Manually copying your persistent data to a new device"]]
+
+These instructions explain how to manually copy your persistent data to
+a new device. Follow them if you have good reasons to think that your
+persistence settings are corrupted or if you want to be extra careful.
+
+Create a new device
+===================
+
+1. Install the latest Tails onto a new device using the usual
+   [[installing instructions|installation]]. Do not use the Tails device
+   that might be corrupted in the process of installing the new one.
+
+1. [[Create a persistent volume|configure]] on this new device. We
+   advice you to use a different passphrase to protect this new
+   persistent volume.
+
+1. Enable again on this new device the persistence features of your
+   choice.
+
+1. Restart Tails, enable persistence, and [[set up an administration password|startup_options/administration_password]].
+
+Rescue your files from the old Tails device
+===========================================
+
+Mount the old persistent volume
+-------------------------------
+
+1. Plug in the old Tails device from which you want to rescue your data.
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">System Tools</span>&nbsp;▸
+     <span class="guimenuitem">Disk Utility</span>
+   </span>
+   to open the <span class="application">GNOME Disk Utility</span>.
+
+1. In the left pane, click on the device corresponding to the old Tails
+   device.
+
+1. In the right pane, click on the partition labeled as
+   <span class="guilabel">Encrypted</span>. The
+   <span class="guilabel">Partition Label</span> must be
+   <span class="label">TailsData</span>.
+
+1. Click on <span class="guilabel">Unlock Volume</span> to unlock the
+   old persistent volume. Enter the passphrase of the old persistent
+   volume and click <span class="guilabel">Unlock</span>.
+
+1. Click on the <span class="guilabel">TailsData</span> partition that
+   appears below the <span class="guilabel">Encrypted Volume</span>
+   partition.
+
+1. Click on <span class="guilabel">Mount Volume</span>. The old
+   persistent volume is now mounted as
+   <span class="filename">/media/TailsData</span>.
+
+Copy your old files to the new persistent volume
+------------------------------------------------
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Accessories</span>&nbsp;▸
+     <span class="guimenuitem">Root Terminal</span>
+   </span>
+   to open a terminal with administration rights.
+
+1. Execute the <span class="code">nautilus</span> command to open the
+   file browser with administration rights.
+
+1. In the file browser, navigate to
+   <span class="filename">/media/TailsData</span>
+   to open the old persistent volume.
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">File</span>&nbsp;▸
+     <span class="guimenuitem">New Tab</span>
+   </span>
+   and navigate to
+   <span class="filename">/live/persistence/TailsData_unlocked</span> in
+   this new tab.
+
+1. Click on the <span class="guilabel">TailsData</span> tab.
+
+1. To copy a folder containing persistent data from the old persistent
+   volume to the new one, drag and drop that folder from the
+   <span class="guilabel">TailsData</span> onto the
+   <span class="guilabel">TailsData_unlocked</span> tab. When copying
+   a folder, choose to <span class="guilabel">Merge All</span> the
+   folder, and <span class="guilabel">Replace All</span> files. Do not
+   copy a folder if you do not know what it is used for.
+
+    - The <span class="filename">apt</span> folder corresponds to the
+      <span class="guilabel">[[APT Packages|configure#apt_packages]]</span>
+      and <span class="guilabel">[[APT Lists|configure#apt_lists]]</span>
+      persistence features. But it requires administration rights to be
+      imported and this goes beyond the scope of these instructions.
+      Note that this folder does not contain personal data.
+    - The <span class="filename">bookmarks</span> folder corresponds to the
+      <span class="guilabel">[[Browser bookmarks|configure#browser_bookmarks]]</span>
+      persistence feature.
+    - The <span class="filename">claws-mail</span> folder corresponds to the
+      <span class="guilabel">[[Claws Mail|configure#claws_mail]]</span>
+      persistence feature.
+    - The <span class="filename">cups-configuration</span> folder corresponds to the
+      <span class="guilabel">[[Printers|configure#printers]]</span>
+      persistence feature.
+    - The <span class="filename">dotfiles</span> folder corresponds to the
+      <span class="guilabel">[[Dotfiles|configure#dotfiles]]</span>
+      persistence feature.
+    - The <span class="filename">gnome-keyring</span> folder corresponds to the
+      <span class="guilabel">[[GNOME Keyring|configure#gnome_keyring]]</span>
+      persistence feature.
+    - The <span class="filename">gnupg</span> folder corresponds to the
+      <span class="guilabel">[[GnuPG|configure#gnupg]]</span>
+      persistence feature.
+    - The <span class="filename">nm-connections</span> folder corresponds to the
+      <span class="guilabel">[[Network Connections|configure#network_connections]]</span>
+      persistence feature.
+    - The <span class="filename">openssh-client</span> folder corresponds to the
+      <span class="guilabel">[[SSH Client|configure#ssh_client]]</span>
+      persistence feature.
+    - The <span class="filename">Persistent</span> folder corresponds to the
+      <span class="guilabel">[[Personal Data|configure#personal_data]]</span>
+      persistence feature.
+    - The <span class="filename">pidgin</span> folder corresponds to the
+      <span class="guilabel">[[Pidgin|configure#pidgin]]</span>
+      persistence feature.

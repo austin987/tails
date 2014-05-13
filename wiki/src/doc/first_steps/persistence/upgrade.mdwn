@@ -1,0 +1,185 @@
+[[!meta title="Upgrade to more secure persistence settings"]]
+
+Tails 0.21 introduces a more secure access control over the persistent
+volume settings. This also means that before Tails 0.21, an attacker who
+could run an exploit from inside your Tails session could corrupt the
+persistent volume settings. By doing this, an attacker could possibly
+gain persistent administrator rights or install malicious software.
+
+For more technical details about the security of the persistent volume,
+read our [[design document|contribute/design/persistence#security]].
+
+[[!toc]]
+
+<div id="automatic_upgrade">
+
+Automatic upgrade
+=================
+
+We designed a migration mechanism that allows, in most cases, to upgrade
+automatically to those more secure persistent volume settings. To do this
+upgrade, once and for all:
+
+1. **Start Tails 0.21**.
+2. **Enable persistence** without the read-only option. Activating the read-only
+   option prevents Tails from starting correctly until the upgrade is made.
+3. If the upgrade is successful, Tails starts as usual and no notification
+   appears.
+
+But this automatic upgrade might not be sufficient in some cases.
+
+a. **If you skipped the upgrade to Tails 0.21 and upgraded directly
+   to Tails 0.22 or later**, then follow the instructions to [[manually copy
+   your persistent data to a new device|copy]].
+   For security reasons the automatic upgrade is not available in Tails 0.22 or
+   later.
+
+b. **If you have custom persistence settings or use
+   [[additional software packages|configure#additional_software]]**, the
+   corresponding settings are not upgraded automatically.
+
+   A notification should appear when starting Tails that indicates which
+   persistence settings are temporarily disabled. In that case, follow
+   the instructions to [[enable again your custom persistence
+   settings|upgrade#custom_settings]].
+
+   <div class="caution">
+
+     If you have custom persistence settings or use additional software
+     but no notification appear on the desktop, then your Tails system
+     might be corrupted. In that case, follow the instructions to [[manually copy
+     your persistent data to a new device|copy]].
+
+   </div>
+
+c. **If you have good reasons to think that your persistence settings
+   are corrupted** or if you want to be extra careful, then follow the
+   instructions to [[manually copy your persistent data to a new
+   device|copy]].
+
+<div id="custom_settings">
+
+Enabling again your custom persistence settings
+===============================================
+
+Custom persistence settings and additional software are disabled during
+the automatic upgrade because, there is technically a possibility for
+these files to be corrupted.
+
+These instructions explain how to verify the content of these files and
+enable again your custom persistence settings.
+
+1. Start Tails and set an
+   [[administration password|startup_options/administration_password]].
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Accessories</span>&nbsp;▸
+     <span class="guimenuitem">Root Terminal</span>
+   </span>
+   to open a terminal with administration rights.
+
+1. Execute the <span class="code">nautilus</span> command to open the
+   file browser.
+
+1. In the file browser navigate to
+   <span class="filename">/live/persistence/TailsData_unlocked</span>.
+
+<span class="filename">live-persistence.conf.old</span>
+-------------------------------------------------------
+
+If there is a file named
+<span class="filename">live-persistence.conf.old</span> in the
+<span class="filename">TailsData_unlocked</span> folder, then some of your
+persistence settings need to be enabled manually.
+
+1. In the file browser, right-click on the
+   <span class="filename">live-persistence.conf.old</span> file and open
+   it by choosing
+   <span class="guilabel">Open with Other Application...</span>
+   and then <span class="guilabel">gedit</span>.
+
+1. Switch back to the file browser, right-click on the
+   <span class="filename">persistence.conf</span>
+   file and choose
+   <span class="guilabel">Open with Other Application...</span> and then
+   <span class="guilabel">gedit</span> to open it in a new tab in
+   <span class="application">gedit</span>.
+
+1. Switch between the two tabs corresponding to those files in
+   <span class="application">gedit</span> and compare their content.
+   Copy from <span class="filename">live-persistence.conf.old</span> to
+   <span class="filename">persistence.conf</span> the lines
+   corresponding to your custom settings that have not been upgraded
+   automatically.
+
+Those missing lines should correspond to your custom directories or
+other custom persistence settings.
+
+**If you detect unexpected lines in
+<span class="filename">live-persistence.conf.old</span>** that do not
+correspond to any change that you have made, they might have been
+introduced by an attacker. In this case, do the following:
+
+1. [[Report a bug using
+   <span class="application">WhisperBack</span>|bug_reporting]] and
+   explain which are the lines that look suspicious to you.
+
+1. Keep that Tails device without modifying it in order to analyse it
+   later if needed.
+
+1. Follow the instructions to [[manually copy your persistent data to a
+   new device|copy]].
+
+**If you do not detect any suspicious line**, close
+<span class="application">gedit</span> and delete the
+<span class="filename">live-persistence.conf.old</span> file using the
+file browser.
+
+<span class="filename">live-additional-software.conf.disabled</span>
+--------------------------------------------------------------------
+
+If there is a file named
+<span class="filename">live-additional-software.conf.disabled</span> in
+the <span class="filename">TailsData_unlocked</span> folder, then your
+[[additional software|configure#additional_software]] need to be enabled
+manually.
+
+1. In the file browser, right-click on the
+   <span class="filename">live-additional-software.conf.disabled</span>
+   file and open it by choosing
+   <span class="guilabel">Open with Other Application...</span> and then
+   <span class="guilabel">gedit</span>.
+
+1. Right-click on the
+   <span class="filename">live-additional-software.conf</span> file and
+   choose <span class="guilabel">Open with Other Application...</span>
+   and then <span class="guilabel">gedit</span> to open it in a new tab
+   in <span class="application">gedit</span>.
+
+1. Copy from
+   <span class="filename">live-additional-software.conf.disabled</span>
+   to <span class="filename">live-additional-software.conf</span> the
+   lines corresponding to your additional software.
+
+**If you detect unexpected lines in
+<span class="filename">live-additional-software.conf.disabled</span>**
+that do not correspond to any additional software added by you, they
+might have been introduced by an attacker. In this case, do the
+following:
+
+1. [[Report a bug using
+   <span class="application">WhisperBack</span>|bug_reporting]] and
+   explain which are the lines that look suspicious to you.
+
+1. Keep that Tails device without modifying it in order to analyse it
+   later if needed.
+
+1. Follow the instructions to [[manually copy your persistent data to a
+   new device|copy]].
+
+**If you do not detect any suspicious line**, close
+<span class="application">gedit</span> and delete the
+<span class="filename">live-additional-software.conf.disabled</span>
+file using the file browser.

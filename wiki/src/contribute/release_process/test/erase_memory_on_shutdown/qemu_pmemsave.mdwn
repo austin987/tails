@@ -1,11 +1,12 @@
 Note that you need the qemu command, which is provided on wheezy by the `qemu-system` package.
 
 * Start the VM
-  - with default CPU (pae)
 
-        qemu -enable-kvm -cdrom tails.iso -m 5120 -no-reboot -no-shutdown
+  - with a 64-bit CPU that supports PAE
 
-  - with 486 CPU
+        qemu -enable-kvm -cpu Nehalem -cdrom tails.iso -m 5120 -no-reboot -no-shutdown
+
+  - with a 32-bit CPU that does not support PAE
 
         qemu -enable-kvm -cpu 486 -cdrom tails.iso -m 5120 -no-reboot -no-shutdown
 
@@ -16,5 +17,5 @@ Note that you need the qemu command, which is provided on wheezy by the `qemu-sy
 
   e.g for 5G one has to do two dumps:
 
-        pmemsave 0 0xF0000000 tails14.dump
+        pmemsave 0 0xFFFFFFFF tails14.dump
         pmemsave 0x100000000 0x40000000 tails5.dump

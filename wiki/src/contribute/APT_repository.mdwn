@@ -21,6 +21,11 @@ We use one single APT repository hosting multiple *suites*:
   by any Tails git branch; it can be used as hosting space for other
   packaging work we might do, e.g. acting as upstream or
   Debian maintainers.
+* We also have a `debomatic-squeeze-backports-mozilla` suite, used
+  (hopefully temporarily) import build-deps for our web browser, that
+  are not available elsewhere (anymore). This suite is used by the
+  `squeeze-backports-mozilla` chroot in our [[contribute/Debian
+  package builder]].
 
 The suite(s) to use as sources for APT, during the build and inside
 the resulting system, are determined at Tails build time
@@ -53,8 +58,6 @@ The build system adds the relevant APT sources:
 
 Also, if we're building from a bugfix or feature branch, add its
 own suite.
-
-This logic is implemented in Tails 0.14~rc2 and later.
 
 SSH access
 ==========
@@ -95,7 +98,9 @@ archive (`.orig.tar.{gz,bz2,xz}`) if it is not already in our APT
 repository; this can be done by passing `-sa` to pdebuild's
 `--debbuildopts`.
 
-### Configuring dupload
+### Configuring an upload tool
+
+#### Configuring dupload
 
 Add this configuration snippet to your `dupload` configuration:
 
@@ -107,7 +112,17 @@ Add this configuration snippet to your `dupload` configuration:
 	        dinstall_runs => 1,
 	};
 
-(`dput` lovers, please contribute your own snippet.)
+#### Confuguring dput
+
+Add this to `.dput.cf`:
+
+    [tails]
+    fqdn            = incoming.deb.tails.boum.org
+    method          = scp
+    login           = reprepro
+    incoming        = /srv/reprepro/incoming/
+    run_dinstall    = 0
+
 
 ### Uploading and importing process
 
@@ -165,19 +180,21 @@ operation must be done on the APT suites.
 
 1. Save the list of packages currently present in the APT suite we
    want to merge *into*, e.g. `reprepro list experimental`.
-2. Merge the APT suites [[the same way as when we merge a topic
+2. Make sure you are not going to overwrite newer packages with
+   older ones.
+3. Merge the APT suites [[the same way as when we merge a topic
    branch|APT_repository#workflow-merge-topic-branch]].
-3. Make sure not to re-add, into the branch we merge into, any package
+4. Make sure not to re-add, into the branch we merge into, any package
    that was removed from it, but still is in the branch we merge from:
    e.g. when merging `devel` into `experimental`, it may be that
    `experimental` had some packages removed (e.g. due to previously
    merging a topic branch into it, whose purpose is to *remove* custom
    packages). To this end, compare the resulting list of (package,
    version) in the `experimental` APT suite with the one saved before
-   the merge, check Git merges history if needed, apply common sense,
-   and remove from `experimental` the packages that were removed from
-   it a while ago, and were just erroneously re-added by the
-   merge operation.
+   the merge (hint: use the `tails-diff-suites` script), check Git
+   merges history if needed, apply common sense, and remove from
+   `experimental` the packages that were removed from it a while ago,
+   and were just erroneously re-added by the merge operation.
 
 <a id="workflow-reset"></a>
 
@@ -186,8 +203,10 @@ Resetting a suite to the state of another one
 
    a. First, set some environment variables:
 
-        OLD=testing # the suite to reset
-        NEW=devel   # the final state it should be in
+        # the suite to reset
+        OLD=testing
+        # the final state it should be in
+        NEW=devel
 
    b. Then, empty the `OLD` suite:
 
@@ -205,8 +224,8 @@ Freezing devel into testing
 ---------------------------
 
 1. Merge `devel` branch into `testing` in Git
-2. (Manually) hard reset `testing` suite to the current state of the
-   `devel` one: [[APT_repository#workflow-reset]].
+2. (Manually) [[hard reset|APT_repository#workflow-reset]] the
+   `testing` suite to the current state of the `devel` one.
 
 <a id="workflow-post-tag"></a>
 
@@ -219,23 +238,46 @@ This new APT suite is called the same as the new release version.
 One may check it has appeared in `~reprepro/conf/distributions`.
 
 Then, the APT suite corresponding to the branch that was used to
-prepare the release (namely:  `stable` if this is a point-release,
-`testing` if this is a major one) must be copied to the new empty APT
-suite that just appeared:
+prepare the release must be copied to the new empty APT suite that
+just appeared:
+
+If this is a major release:
 
 	$ ssh reprepro@incoming.deb.tails.boum.org \
-	     tails-merge-suite testing 0.14
+	     tails-merge-suite testing $TAG
+
+Else, if this is a point-release:
+
+	$ ssh reprepro@incoming.deb.tails.boum.org \
+	     tails-merge-suite stable $TAG
 
 <a id="workflow-post-release"></a>
 
 After a new Tails release is out
 --------------------------------
 
-After [[merging `stable` or `testing` into
-`devel`|APT_repository#workflow-merge-main-branch]], increment the
-version number in devel's `debian/changelog` so that next builds from
-the `devel` branch do not use the APT suite meant for the
-last release.
+If you just put out a final release:
+
+* [[merge `stable` or `testing` into
+  `devel`|APT_repository#workflow-merge-main-branch]]
+* increment the version number in devel's `debian/changelog` to match
+  the next major release, so that
+  next builds from the `devel` branch do not use the APT suite meant
+  for the last release
+* increment the version number in devel's `debian/changelog` to match
+  the next point release, so that
+  next builds from the `stable` branch do not use the APT suite meant
+  for the last release
+
+If you just released a RC:
+
+* add a dummy changelog entry (for the upcoming, non-RC version) in
+  the branch used for the release (`stable` or `testing`), so that the
+  next builds from it do not use the APT suite meant for the RC
+* add a dummy changelog entry (for the release *after* the one you
+  released a RC for) in the branch used for the release (`stable` or
+  `testing`), so that the next builds from it do not use the APT suite
+  meant for the RC
 
 If the release was a major one, then [[reset the stable APT suite to
 the state of the testing one|APT_repository#workflow-reset]].

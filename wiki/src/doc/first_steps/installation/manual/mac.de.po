@@ -1,0 +1,388 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2014-02-22 09:44+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!meta title=\"Manual installation using Mac\"]]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!inline pages=\"doc/first_steps/manual_usb_installation.intro\" raw=\"yes\"]]\n"
+msgstr ""
+
+#. type: Plain text
+msgid "This technique uses the command line."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!toc levels=1]]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "<h2 class=\"bullet-number-one\">Find out the device name of the USB stick</h2>\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"The device name should be something like `/dev/disk8`, `/dev/disk9`, etc."
+msgstr ""
+
+#. type: Plain text
+msgid "If you are not sure about the exact device name, do the following:"
+msgstr ""
+
+#. type: Bullet: '  1. '
+msgid "Unplug the USB stick."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"  1. Open <span class=\"application\">Terminal</span> from\n"
+"     <span class=\"menuchoice\">\n"
+"       <span class=\"guimenu\">Applications</span>&nbsp;▸\n"
+"       <span class=\"guisubmenu\">Utilities</span>&nbsp;▸\n"
+"       <span class=\"guimenuitem\">Terminal.app</span>\n"
+"     </span>\n"
+"  1. Execute the following command:\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "         diskutil list\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "     This returns a list of all the current storage devices. For example:\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"<pre>\n"
+"$ diskutil list\n"
+"/dev/disk0\n"
+"    #:                       TYPE NAME                 SIZE       IDENTIFIER\n"
+"    0:      GUID_partition_scheme                     *500.1 GB   disk0\n"
+"    1:                        EFI                      209.7 MB   disk0s1\n"
+"    2:                  Apple_HFS MacDrive             250.0 GB   disk0s2\n"
+"    3:                        EFI                      134.1 GB   disk0s3\n"
+"    4:       Microsoft Basic Data BOOTCAMP             115.5 GB   disk0s4\n"
+"</pre>\n"
+msgstr ""
+
+#. type: Bullet: '  1. '
+msgid "Plug back the USB stick and run the same command as before:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"     A new device should appear in the list of storage devices. Check\n"
+"     that the size of the device corresponds to the size of your USB\n"
+"     stick.\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"<pre>\n"
+"$ diskutil list\n"
+"/dev/disk0\n"
+"   #:                       TYPE NAME                 SIZE       IDENTIFIER\n"
+"   0:      GUID_partition_scheme                     *500.1 GB   disk0\n"
+"   1:                        EFI                      209.7 MB   disk0s1\n"
+"   2:                  Apple_HFS MacDrive             250.0 GB   disk0s2\n"
+"   3:                        EFI                      134.1 GB   disk0s3\n"
+"   4:       Microsoft Basic Data BOOTCAMP             115.5 GB   disk0s4\n"
+"/dev/disk1\n"
+"   #:                       TYPE NAME                 SIZE       IDENTIFIER\n"
+"   0:     FDisk_partition_scheme                     *4.0 GB     disk1\n"
+"   1:                  Apple_HFS Untitled 1           4.0 GB     disk1s1\n"
+"</pre>\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"In this example, the USB stick is 4.0 GB and the device name is `/dev/"
+"disk1`.  Yours are probably different."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "<div class=\"caution\">\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"If you are not sure about the device name you should stop proceeding or\n"
+"<strong>you risk overwriting any hard drive on the system</strong>.\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "</div>\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "<h2 class=\"bullet-number-two\">Unmount the USB drive</h2>\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Execute the following command, replacing `[device]` with the device name "
+"found in step 1."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "     diskutil unmountDisk [device]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "<h2 class=\"bullet-number-three\">Run isohybrid.pl on the ISO image</h2>\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"You need to modify the ISO image using `isohybrid` before copying it onto "
+"the USB stick."
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid ""
+"Download [syslinux](http://ftp.debian.org/debian/pool/main/s/syslinux/"
+"syslinux_4.02+dfsg.orig.tar.gz)."
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid "Double click on the package to extract it."
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid "Copy `isohybrid.pl` from the `/utils` folder to the desktop."
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid ""
+"Copy the ISO image (for example `tails-i386-0.17.1.iso`) to the desktop."
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid "To change directory into the desktop, execute:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "       cd Desktop\n"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid ""
+"To run `isohybrid.pl` on the ISO image, execute the following command, "
+"replacing `[tails.iso]` with the path to the ISO image that you want to "
+"install."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "       perl isohybrid.pl [tails.iso]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "   Here is an example of the commands to execute, yours are probably different:\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "       perl isohybrid.pl tails-i386-0.17.1.iso\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "<div class=\"tip\">\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"If you are not sure about the path to the ISO image or if you get a\n"
+"<span class=\"guilabel\">No such\n"
+"file or directory</span> error, you can first type `perl isohybrid.pl`, followed by a space, and\n"
+"then drag and drop the icon of the ISO image from a file browser onto\n"
+"<span class=\"application\">\n"
+"Terminal</span>. This should insert the correct path to the ISO image in\n"
+"<span class=\"application\">Terminal</span>.\n"
+"Then complete the command and execute it.\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "<h2 class=\"bullet-number-four\">Do the copy</h2>\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Execute the following command, replacing `[tails.iso]` by the path to the "
+"ISO image that you want to copy and `[device]` by the device name found in "
+"step 1."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "    dd if=[tails.iso] of=[device]\n"
+msgstr ""
+
+#. type: Plain text
+msgid "You should get something like this:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "    dd if=tails-0.17.1.iso of=/dev/disk9\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"If you don't see any error message, Tails is being copied onto the USB "
+"stick. The whole process might take some time, generally a few minutes."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"If you get a \"Permission denied\" error, try executing the command with\n"
+"<code>sudo</code>:\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "<pre>sudo dd if=[tails.iso] of=[device]</pre>\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Be careful, if the device name is wrong you might overwriting any hard drive "
+"on the system."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "<p>The installation is complete when the command prompt reappears.</p>\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "<h2 class=\"bullet-number-five\">Setup rEFInd</h2>\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"To start Tails from that USB stick, you need to have [rEFInd](http://"
+"sourceforge.net/projects/refind/) installed on the Mac."
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"If you need help with rEFInd, look at [their installation documentation]"
+"(http://www.rodsbooks.com/refind/installing.html)."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"rEFInd will replace your original bootloader.<br/>\n"
+"<strong>This could cause your Mac to not boot.</strong> It is recommended to create a full backup and know how to\n"
+"restore. See <a href=\"https://support.apple.com/kb/HT1427\">Apple's\n"
+"instructions</a>.\n"
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Notes\n"
+msgstr ""
+
+#. type: Plain text
+msgid "This method was successfully tested on the following hardware:"
+msgstr ""
+
+#. type: Bullet: '  - '
+msgid "MacBook Pro Model A1150 with OS X 10.6.8, 2006"
+msgstr ""
+
+#. type: Bullet: '  - '
+msgid "MacBook Pro Retina 15\" Mid-2012 (aka MacBookPro10,1)"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"The method worked on some hardware but a bug in the video support prevented "
+"Tails to start successfully:"
+msgstr ""
+
+#. type: Bullet: '  - '
+msgid "MacBook Pro Retina with OS X 10.8.3, December 2012"
+msgstr ""
+
+#. type: Bullet: '  - '
+msgid "Macbook Pro model A1150"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Note that Tails developers are in general not very knowledgeable about Mac. "
+"Any additional information is welcome."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"<!--\n"
+"An alternative method was suggested:\n"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid "Open Disk Utility"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid "Find The Drive"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid "Format Tab"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid "Source is ISO File"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"1. Destination is USB Drive\n"
+"-->\n"
+msgstr ""
