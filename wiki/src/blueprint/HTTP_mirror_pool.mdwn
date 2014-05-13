@@ -1,0 +1,145 @@
+**Ticket:**: [[!tails_ticket 7161]]
+
+The idea I had was to let the server(s) send a reduced list of hosts. Not
+only it would allow to work-around Tor DNS limitations, but also to have
+some weighted round robin, in order to prioritize some high bandwidth
+mirrors, if we choose to.
+
+If I had to mention the ideal design goals for such changes, I would say
+that the more straightforward would be the better for implementation and
+also for maintainability.
+
+[[!toc levels=2]]
+
+# Using DNS
+
+Using DNS seems to be an easy way to do some round robin in low level. It
+allows some kind of transparency to the upper layers protocols and
+distribute the load and to avoid having a single server that can became a
+SPOF.
+
+The following ways are available to implement it:
+
+* CNAME Hacks
+* NS Hacks
+* Modified DNS servers
+
+## CNAME Hacks
+
+As mention by ToBeFree something that can be done is to have different
+pools of servers like:
+
+	a.dl.amnesia.boum.org A $MIRROR1
+	a.dl.amnesia.boum.org A $MIRROR2
+	a.dl.amnesia.boum.org A $MIRROR3
+	a.dl.amnesia.boum.org A $MIRROR4
+	a.dl.amnesia.boum.org A $MIRROR5
+
+	b.dl.amnesia.boum.org A $MIRROR6
+	b.dl.amnesia.boum.org A $MIRROR7
+
+	dl.amnedia.boum.org CNAME a.dl.amnesia.boum.org
+	dl.amnedia.boum.org CNAME b.dl.amnesia.boum.org
+
+Interestingly the requests would be equally distributed betwen a.dl and
+b.dl, thus if their is more mirrors in one name than one other some
+servers would be somehow prioritized. For example: here "a" mirrors will
+share 50% of requests, giving 10% for every host where "b" mirrors will
+share the other 50% of requests betwen two host giving them 25% of
+requests each.
+
+However this kind of CNAME hack is not supported by current DNS
+Servers. Bind 8 used to support it with a [configuration
+option](http://docstore.mik.ua/orelly/networking_2ndEd/dns/ch10_07.htm)
+that has not been ported to bind 9. Neither NSD nor PowerDNS seem to
+support it, and their is no actual data about how resolvers would
+handle this case, so I don't think it is the best option.
+
+### NS Hacks
+
+Following the same idea the dl amnesia.boum.org could be delegated to a
+few different DNS servers, and those servers may have different versions
+of the zone. For example:
+
+	dl.amnesia.boum.org NS $DNS1
+	dl.amnesia.boum.org NS $DNS2
+	
+DNS1 would have a zone similar to a.dl.amnesia.boum.org:
+
+	dl.amnesia.boum.org A $MIRROR1
+	dl.amnesia.boum.org A $MIRROR2
+	dl.amnesia.boum.org A $MIRROR3
+	dl.amnesia.boum.org A $MIRROR4
+	dl.amnesia.boum.org A $MIRROR5
+	
+And DNS2 would have a zone similar to b.dl.amnesia.boum.org:
+
+	dl.amnesia.boum.org A $MIRROR6
+	dl.amnesia.boum.org A $MIRROR7
+
+In theory it should work (and give almost the same load distribution as
+CNAME hacks, almost as the NS servers will not receive 50% of requests
+because of [[!rfc 5452]]). However, I am not sure that playing with DNS
+inconsistency will be a so good idea, for example for maintainability :)
+
+### Using modified DNS servers
+
+Interestingly Tails is not the first project to be looking how to use DNS
+for load distribution. People already wrote some DNS software designed to
+handle those usecases and return the visitor a reduced list of servers
+according to some rules like weights or geolocalisation. They work by
+delegating a subzone (like dl.amnesia.boum.org) to those servers and with
+zone files containing additionals fields. There is two main softwares for
+those usecases:
+
+* <http://gdnsd.org/> which is available on debian and used for
+  example for wikipedia.
+
+* <https://github.com/abh/geodns> that requires manual installation
+  and is used for example by pool.ntp.org.
+
+Deploying such software would solve the problem in a more elegant way than
+CNAME or NS hacks. It would require a bit of system administration that
+maybe can be done using some puppet templates in a few Virtal Machines.
+
+# Using HTTP(s)
+
+DNS is not the only way to do some load balancing. It is mostly used for
+low level protocols that don't allow redirects (for example: ntp). As
+content download is already done using HTTP(s). HTTP(s) can be leveraged
+to do this kind of load balancing. It is what is done by sourceforge.net
+as pointed by ToBeFree.
+
+For example using a PHP script (or more complete options such as
+mirrorbrain, thanks Sagi!) that would redirect requests to
+`dl.amnesia.boum.org/$file to $mirror.dl.amnesia.boum.org/$file`
+randomly or according to some additional rules (weights,
+geolocalisation, SSL availability ...).
+
+There is a few drawbacks on this approach:
+
+* It would increase a bit the load on boum.org's server.
+* It would increase the dependency on this server, meaning that it is
+  unavailable (down, blocked...), downloads will be blocked (but in this
+  case the site will be too).
+* It would require to develop the script or to install one such as
+  mirrorbrain.
+
+On the other side it has a few advantage:
+
+* It will only require a few ~20 lines of PHP script when DNS based
+  solutions require to install and maintain additional software and servers.
+* It can allow the script to be personnalised to add some additional rules
+  if necessary.
+* As boum.org server will see every requests, it would allow to do some
+  stats.
+* It can allow to use $mirror.dl.amnesia.boum.org URLs, allowing to deploy
+  SSL certificates easier that if all mirrors use dl.amnesia.boum.org.
+* As ToBeFree mentionned (thanks!) it is also possible to use some client
+  side scripts to select the mirror. I would not recommend to rely only on
+  this option as it would not work for browsers without scripts, but it can
+  be done as a complementary approach, it order to reduce the load and
+  dependency to dl.amnesia.boum.org's server.
+
+Thus, if I may, I would like to recommend considering the HTTP(s) option,
+even if it means that I have to write the PHP script by myself :).
