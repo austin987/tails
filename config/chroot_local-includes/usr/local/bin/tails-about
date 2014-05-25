@@ -1,9 +1,12 @@
 #!/usr/bin/python
 # -*- encoding: UTF-8
 
-import gtk
 import gettext
 import subprocess
+
+import glib
+import gtk
+import gtk.gdk
 
 gettext.install("tails")
 try:
@@ -14,6 +17,10 @@ except OSError:
     tails_main_version = ""
 about_dialog = gtk.AboutDialog()
 about_dialog.set_program_name(_("Tails"))
+try:
+    about_dialog.set_logo(gtk.gdk.pixbuf_new_from_file_at_size('/usr/share/doc/tails/website/promote/logo/tails-logo-flat-inverted.svg', 400, 200))
+except glib.GError:
+    pass
 about_dialog.set_comments(_("The Amnesic Incognito Live System") + "\n\n" +
     _("Build information:\n%s") % tails_version)
 about_dialog.set_copyright("Tails developers")
