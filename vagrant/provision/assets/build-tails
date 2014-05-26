@@ -74,8 +74,17 @@ else
 	# Build triggered by Vagrant
 	WORKSPACE=/home/vagrant/amnesia
 	ARTIFACTS_DIR=/vagrant
-	REV="${1:-$(git --git-dir=/amnesia.git name-rev --name-only HEAD)}"
-	COMMIT="$(git --git-dir=/amnesia.git rev-parse --verify "$REV")"
+	COMMIT="$(git --git-dir=/amnesia.git rev-parse --verify HEAD)"
+	if git --git-dir=/amnesia.git symbolic-ref HEAD >/dev/null 2>&1; then
+		# We are building from a branch
+		REV="${1:-$(git --git-dir=/amnesia.git name-rev --name-only HEAD)}"
+	else
+		# We are (hopefully) building from a tag
+		if ! REV="${1:-$(git --git-dir=/amnesia.git describe --tags --exact-match ${COMMIT})}"; then
+			echo "It seems we are building from an untagged detached HEAD. Aborting." >&2
+			exit 1
+		fi
+	fi
 	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
 	cd "$WORKSPACE"
 	git fetch origin
