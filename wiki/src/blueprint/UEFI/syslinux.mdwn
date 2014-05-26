@@ -12,15 +12,22 @@ Known issues
   properly, and one cannot see the kernel command-line when
   editing it.
 * VirtualBox 4.1.18-dfsg-2+deb7u3: doesn't boot at all from DVD (EFI mode
-  doesn't help). This was with an image built from commit e0a3c64
-  in `feature/uefi`.
+  doesn't help): [[!tails_ticket 7173]]
 * Apple MacBookPro5,5 does not boot with Tails in UEFI mode. We are told it
   is due to missing native USB drivers, and the Plop boot-manager can
   fix it, as it has this drivers.
-* Apple MacBook Air 3,2 A1369 EMC 2392, with rEFInd 0.7.8, USB
-  stick installed with Tails Installer: fails to boot.
+* Apple MacBook Air 3,2 A1369 EMC 2392
+  - with rEFInd 0.7.8, USB stick installed with Tails Installer: fails
+    to boot most of the times. Failure modes:
+    * blank gray screen (frozen)
+    * gray screen with strings of seemingly random characters (frozen)
+    * black rEFInd screen with an empty list of boot options (frozen)
+    * black rEFInd screen with a working prompt asking for a boot file
+  - bypassing rEFInd (alt key): system freezes
 * Fails to boot from DVD on early 2011 MacBook pro, while 0.23
   boots fine.
+* Apple MacBookAir5,1 fails to shutdown after booting from a UEFI
+  Tails USB stick. Works fine when booted from DVD.
 
 Miscellaneous test results
 ==========================
@@ -92,7 +99,9 @@ Miscellaneous test results
 * Boots fine on Hewlett-Packard Presario CQ57
 * Boots fine on Apple MacBook Air 3,2 A1369 EMC 2392, with rEFInd
   0.7.8 installed, when installed with isohybrid + dd.
-* Boots fine on ASUS ux31a in CSM mode, when installed with isohybrid + dd.
+* Boots fine on ASUS ux31a
+  - in CSM mode, when installed with isohybrid + dd
+  - in UEFI mode, when installed with Tails Installer
 * Boots fine on Lenovo Thinkpad T400.
 * Boots fine on Mac Mini 2.3 Ghz Intel Core i7 from DVD, and from USB
   stick created with Tails Installer.
@@ -100,3 +109,4 @@ Miscellaneous test results
   with Tails Installer on the same machine.
 * Boots fine from DVD on VirtualBox 4.3.10-dfsg-1~bpo70+1 (as of commit e0a3c64
   in `feature/uefi`).
+* Boots fine on Lenovo G700.
