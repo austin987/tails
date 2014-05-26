@@ -63,6 +63,11 @@ user_pref("extensions.torbutton.saved.socks_remote_dns", true);
 user_pref("extensions.torbutton.saved.socks_version", 5);
 user_pref("extensions.torbutton.saved.type", 1);
 
+// These must be set to the same value to prevent Torbutton from
+// flashing its upgrade notification.
+user_pref("extensions.torbutton.lastBrowserVersion", "Tails");
+user_pref("torbrowser.version", "Tails");
+
 // Proxy and proxy security
 user_pref("network.proxy.socks_port", 9151);
 
@@ -120,4 +125,3 @@ user_pref("layout.spellcheckDefault", 0);
 user_pref("media.peerconnection.enabled", false);
 user_pref("network.dns.disableIPv6", true);
 user_pref("security.warn_submit_insecure", true);
-user_pref("torbrowser.version", "Tails");
