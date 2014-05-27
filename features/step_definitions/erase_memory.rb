@@ -140,7 +140,7 @@ end
 Then /^I find very few patterns in the guest's memory$/ do
   next if @skip_steps_while_restoring_background
   coverage = pattern_coverage_in_guest_ram()
-  max_coverage = 0.0025
+  max_coverage = 0.005
   assert(coverage < max_coverage,
          "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
