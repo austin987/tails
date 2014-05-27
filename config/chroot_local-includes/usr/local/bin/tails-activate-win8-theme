@@ -56,9 +56,6 @@ gsettings set org.gnome.desktop.lockdown disable-log-out true
 # Window picker config
 gsettings set org.gnome.window-picker-applet expand-task-list true
 
-# Panel toplevels - there is no schema so we can't use gsettings
-dconf write /org/gnome/gnome-panel/layout/toplevels/bottom-panel/size '48'
-
 # Panel objects - there is no schema so we can't use gsettings
 dconf write /org/gnome/gnome-panel/layout/objects/menu-button/object-iid '"PanelInternalFactory::MenuButton"'
 dconf write /org/gnome/gnome-panel/layout/objects/menu-button/pack-index '0'
@@ -91,6 +88,12 @@ dconf write /org/gnome/gnome-panel/layout/objects/shutdown-helper/toplevel-id '"
 dconf write /org/gnome/gnome-panel/layout/objects/clock/pack-index '0'
 dconf write /org/gnome/gnome-panel/layout/objects/clock/toplevel-id '"bottom-panel"'
 dconf write /org/gnome/gnome-panel/layout/objects/clock/pack-type '"end"'
+
+# Panel toplevels - there is no schema so we can't use gsettings.
+# Note that the height must be set after adding the object to the
+# panel since some of them, like window-picket-applet, seem to reset
+# it.
+dconf write /org/gnome/gnome-panel/layout/toplevels/bottom-panel/size '48'
 
 # Restart the panel
 # XXX this is ugly
