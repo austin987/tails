@@ -26,6 +26,8 @@ We use one single APT repository hosting multiple *suites*:
   are not available elsewhere (anymore). This suite is used by the
   `squeeze-backports-mozilla` chroot in our [[contribute/Debian
   package builder]].
+* We also have a `builder-wheezy` suite, used to provide additional
+  packages needed on a Wheezy system to build Tails.
 
 The suite(s) to use as sources for APT, during the build and inside
 the resulting system, are determined at Tails build time
@@ -260,8 +262,13 @@ If you just put out a final release:
 
 * [[merge `stable` or `testing` into
   `devel`|APT_repository#workflow-merge-main-branch]]
-* increment the version number in devel's `debian/changelog` so that
+* increment the version number in devel's `debian/changelog` to match
+  the next major release, so that
   next builds from the `devel` branch do not use the APT suite meant
+  for the last release
+* increment the version number in devel's `debian/changelog` to match
+  the next point release, so that
+  next builds from the `stable` branch do not use the APT suite meant
   for the last release
 
 If you just released a RC:
