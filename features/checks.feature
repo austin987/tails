@@ -40,6 +40,14 @@ Feature: Various checks
     And Tor is ready
     Then no unexpected services are listening for network connections
 
+  Scenario: The emergency shutdown applet can shutdown Tails
+    When I request a shutdown using the emergency shutdown applet
+    Then Tails eventually shuts down
+
+  Scenario: The emergency shutdown applet can reboot Tails
+    When I request a reboot using the emergency shutdown applet
+    Then Tails eventually restarts
+
   # We ditch the background snapshot for this scenario since we cannot
   # add a filesystem share to a live VM so it would have to be in the
   # background above. However, there's a bug that seems to make shares

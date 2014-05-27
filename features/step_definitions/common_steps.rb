@@ -396,16 +396,41 @@ Given /^I kill the process "([^"]+)"$/ do |process|
   }
 end
 
-Given /^I completely shutdown Tails$/ do
+Then /^Tails eventually shuts down$/ do
+  next if @skip_steps_while_restoring_background
+  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
+  timeout = nr_gibs_of_ram*5*60
+  try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
+    ! @vm.is_running?
+  end
+end
+
+Then /^Tails eventually restarts$/ do
+  next if @skip_steps_while_restoring_background
+  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
+  @screen.wait('TailsBootSplashPostReset.png', nr_gibs_of_ram*5*60)
+end
+
+Given /^I shutdown Tails and wait for the computer to power off$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.execute("halt -p")
+  step 'Tails eventually shuts down'
+end
+
+When /^I request a shutdown using the emergency shutdown applet$/ do
   next if @skip_steps_while_restoring_background
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
-  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
-  try_for(nr_gibs_of_ram*5*60, :msg => "VM is still running") do
-    ! @vm.is_running?
-  end
+end
+
+When /^I request a reboot using the emergency shutdown applet$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.hide_cursor
+  @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  @screen.hide_cursor
+  @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
 Given /^package "([^"]+)" is installed$/ do |package|

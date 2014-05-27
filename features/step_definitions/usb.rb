@@ -443,7 +443,7 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "GNOME has started"
   step "all notifications have disappeared"
   step "the expected persistent files are present in the filesystem"
-  step "I completely shutdown Tails"
+  step "I shutdown Tails and wait for the computer to power off"
 end
 
 When /^I delete the persistent partition$/ do

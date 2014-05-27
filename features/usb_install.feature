@@ -39,7 +39,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And there is no persistence partition on USB drive "current"
     And I create a persistent partition with password "asdf"
     Then a Tails persistence partition with password "asdf" exists on USB drive "current"
-    And I completely shutdown Tails
+    And I shutdown Tails and wait for the computer to power off
 
   @keep_volumes
   Scenario: Booting Tails from a USB drive with a disabled persistent partition
@@ -72,7 +72,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I write some files expected to persist
     And persistent filesystems have safe access rights
     And persistence configuration files have safe access rights
-    And I completely shutdown Tails
+    And I shutdown Tails and wait for the computer to power off
     Then only the expected files should persist on USB drive "current"
 
   @keep_volumes
@@ -91,7 +91,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And persistence is enabled
     And I write some files not expected to persist
     And I remove some files expected to persist
-    And I completely shutdown Tails
+    And I shutdown Tails and wait for the computer to power off
     Then only the expected files should persist on USB drive "current"
 
   @keep_volumes
@@ -141,7 +141,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And all notifications have disappeared
     And I create a persistent partition with password "asdf"
     Then a Tails persistence partition with password "asdf" exists on USB drive "old"
-    And I completely shutdown Tails
+    And I shutdown Tails and wait for the computer to power off
 
   @keep_volumes
   Scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
@@ -159,7 +159,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I write some files expected to persist
     And persistent filesystems have safe access rights
     And persistence configuration files have safe access rights
-    And I completely shutdown Tails
+    And I shutdown Tails and wait for the computer to power off
     Then only the expected files should persist on USB drive "old"
 
   @keep_volumes
