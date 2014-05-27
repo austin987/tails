@@ -418,7 +418,7 @@ end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute("halt -p")
+  @vm.execute("halt --poweroff")
   step 'Tails eventually shuts down'
 end
 
