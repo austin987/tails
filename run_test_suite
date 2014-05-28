@@ -17,6 +17,9 @@ Options for '@product' features:
                      test suite.
   --keep-snapshots   Don't ever delete the background snapshots. This can a big
                      time saver when debugging new features.
+  --retry-find       Print a warning whenever Sikuli fails to find an image
+                     and allow *one* retry after pressing ENTER. This is useful
+                     for updating outdated images.
   --temp-dir         Directory where various temporary files are written
                      during a test, e.g. VM snapshots and memory dumps,
                      failure screenshots, pcap files and disk images
@@ -103,13 +106,13 @@ VNC_VIEWER=
 VNC_SERVER=
 DEBUG=
 KEEP_SNAPSHOTS=
+SIKULI_RETRY_FINDFAILED=
 TEMP_DIR=
 ISO=
 OLD_ISO=
 
-SHORTOPTS="a:c"
-LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,iso:,old-iso:,debug"
-OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
+LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,retry-find,iso:,old-iso:,debug"
+OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
     case $1 in
@@ -130,6 +133,9 @@ while [ $# -gt 0 ]; do
             ;;
         --keep-snapshots)
             export KEEP_SNAPSHOTS="yes"
+            ;;
+        --retry-find)
+            export SIKULI_RETRY_FINDFAILED="yes"
             ;;
         --temp-dir)
             shift
