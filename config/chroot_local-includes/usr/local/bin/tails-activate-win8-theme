@@ -11,6 +11,27 @@
 #	ln -s ${ie_icon} ${x}
 #done
 
+# Set claws-mail icon
+CLAWSTHEMEDIR="$HOME/.claws-mail/themes/Windows8"
+CLAWSCONFSECTION="\[Common\]"
+CLAWSCONFLABEL="pixmap_theme_path"
+# Create claws-mail theme
+mkdir -p "$CLAWSTHEMEDIR"
+cp /usr/share/icons/Windows8/apps/claws-mail.png "$CLAWSTHEMEDIR/claws_mail_icon.png"
+echo > "$CLAWSTHEMEDIR/.claws_themeinfo" <<EOF 
+Tails Windows 8
+Tails Developers
+EOF
+# Apply claws-mail theme
+# XXX: this will disable any user-defined theme stored in persistence
+#      and the change will be permanent, even though it has no effect if the theme
+#      doesn't exist, which should be the case if camouflage has not been enabled.
+if grep "$CLAWSCONFLABEL" "$HOME/.claws-mail/clawsrc"; then
+    sed -e "s;$CLAWSCONFLABEL=.*$;$CLAWSCONFLABEL=$CLAWSTHEMEDIR;" -i "$HOME/.claws-mail/clawsrc"
+else
+    sed -e "/$CLAWSCONFSECTION/ a $CLAWSCONFLABEL=$CLAWSTHEMEDIR" -i "$HOME/.claws-mail/clawsrc"
+fi
+
 # Remove Tails-specific desktop icons
 rm --interactive=never -f ${HOME}/Desktop/*.desktop 2> /dev/null || true
 
