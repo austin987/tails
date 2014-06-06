@@ -40,22 +40,22 @@ incremental and remote backups. Also, it allows users to restore or inspect
 their backups outside of Tails, without having to manually decipher yet another
 backup file format.
 
-Cons:
+### Cons
 
 - Duplicity creates tons of messy files on the file system.
 
 Loopback LUKS
 -------------
 
-Cons:
+### Pros
+
+- One file per backup.
+
+### Cons
 
 - We still need to find another tool to create the device and copy the files.
 - Maybe backups done this way would be much bigger than duplicity backups.
 - Duplicity supports incremental backups even if they have some limitations.
-
-Pros:
-
-- One file per backup.
 
 Obnam
 -----
@@ -73,21 +73,21 @@ Grsync is [packaged for debian](https://packages.debian.org/squeeze/grsync).
 
 The documentation for the creation of the encrypted device [[is already written|doc/encryption_and_privacy/encrypted_volumes]].
 
-**Pros**:
+### Pros
 
 * not that much things to code
 * grsync can be easily preconfigurated, eventually with multiple profiles
 * this solution separate backup and encryption work
 * allows remote backups
 
-**Cons**
+### Cons
 
 * seems not really actively developped
 * not possible to do incremental backups
 * needs a separate encrypted device for backups or reuse the "loopback LUKS"
   solution
 
-**How to test?**
+### How to test?
 
 * create an encrypted device.
 * install the `grsync` package.
@@ -96,7 +96,7 @@ The documentation for the creation of the encrypted device [[is already written|
 * define the destination (i.e your encrypted device)
 * test wildly!
 
-**Todo**
+### Todo
 
 * some files are normally not readable by rsync (for example persistence.conf, apt/*)
   Grsync can bypass that with the option "Run as superuser", we should investigate the consequences of using such an option.
@@ -116,15 +116,15 @@ supports filters to compress and encrypt individual files (typically
 using gpg or mcrypt) as well as path names and can do both full as
 well as incremental backups.
 
-** Pros **
+### Pros
 
 * simple and small command line programs
-
 * more sophisticated than tar+gpg and probably addresses many of the
   corner cases that would otherwise have to be handled by increasingly
   complicated scripts
+* in Debian Squeeze / Wheezy / testing
 
-** Cons **
+### Cons
 
 * still requires a script of some sort to drive it
 * probably requires a gui to make it simple to use
