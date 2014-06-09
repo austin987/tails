@@ -11,7 +11,7 @@ be able to access eepsites from Tails.
 Versions
 ========
 
-I2P[http://www.i2p2.de] has been included since Tails v0.7 with Iceweasel
+[I2P](https:/geti2p.net) has been included since Tails v0.7 with Iceweasel
 preconfigured using FoxyProxy so that eepsites (`.i2p` TLD) are directed to
 I2P. All other traffic gets routed through Tor.
 
@@ -57,9 +57,7 @@ directory is not writable by the `i2psvc` user.
 For better performance an exception has been made in the [[firewall
 configuration|Tor_enforcement/Network_filter]] that grants direct access to the
 network for the I2P user running the client so it can reach the I2P
-network directly, both through TCP and UDP. As per the standard I2P
-configuration, UPnP will try to set up port-forwarding with any
-present firewall so that full performance can be achieved.
+network directly, both through TCP and UDP.
 
 The I2P router is configured to run in hidden mode: killing I2P
 ungracefully is bad for the I2P network, and this is most likely
@@ -118,123 +116,24 @@ End users will access services using *client tunnels*. I2P is shipped with a
 few tunnels preconfigured and the ports that they use have exceptions added to
 ferm. These ports include:
 
-<table>
-    <tr>
-        <td>
-            2727
-        </td>
-        <td>
-            BOB
-        </td>
-        <td>
-            <a href="http://www.i2p2.de/bob">BOB</a> is an application bridge allowing non-Java clients to interact with I2P.
-        </td>
-    </tr>
-    <tr>
-        <td>
-            4444
-        </td>
-        <td>
-            I2P HTTP Proxy
-        </td>
-        <td>
-            Used to access sites with the <code>.i2p</code> TLD
-        </td>
-    </tr>
-    <tr>
-        <td>
-            4445
-        </td>
-        <td>
-            HTTPS Outproxy tunnel
-        </td>
-        <td>
-            Disabled in by default in <a href="http://127.0.0.1:7657/i2ptunnel">I2PTunnel</a> since all HTTPS traffic is routed through Tor.
-        </td>
-    </tr>
-    <tr>
-        <td>
-            6668
-        </td>
-        <td>
-            Tunnel to Irc2P
-        </td>
-        <td>
-            Used to connect to the main I2P-only IRC network
-        </td>
-    </tr>
-    <tr>
-        <td>
-            7656
-        </td>
-        <td>
-            SAM
-        </td>
-        <td>
-            SAM is an application bridge allowing non-Java clients to use I2P.
-            More information: <a href="http://www.i2p2.de/sam">SAMv1</a>, <a href="http://www.i2p2.de/samv2">SAMv2</a>,
-            <a href="http://www.i2p2.de/samv3"</a>SAMv3</a>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            7657
-        </td>
-        <td>
-            I2P router console
-        </td>
-        <td>
-            The router console is accessible via the web browser at <a href="http://127.0.0.1:7657">http://127.0.0.1:7657</a>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            7658
-        </td>
-        <td>
-            local 'eepsite'
-        </td>
-        <td>
-            Each I2P installation is configured out of the box with the
-            possibility to host one's own website (or *eepsite*) on the I2P
-            network. The eepsite will not be acessible remotely unless its <a href="http://127.0.0.1:7657/i2ptunnel#localServerTunnelList">tunnel</a>
-            is started.
-        </td>
-    </tr>
-    <tr>
-        <td>
-            7659
-        </td>
-        <td>
-            SMTP Proxy
-        </td>
-        <td>
-            Tunnel to smtp.postman.i2p. More information is available from within I2P at <a href="http://hq.postman.i2p/?page_id=10">Postman's HQ</a>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            7660
-        </td>
-        <td>
-            POP3 Proxy
-        </td>
-        <td>
-            Tunnel to pop3.postman.i2p. More information is available from within I2P at <a href="http://hq.postman.i2p/?page_id=11">Postman's HQ</a>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            8998
-        </td>
-        <td>
-            MTN Proxy
-        </td>
-        <td>
-            Tunnel to mtn.i2p2.i2p, a <a href="http://monotone.ca">Monotone</a> server.
-        </td>
-    </tr>
-</table>
+* 2727, BOB: [BOB](https://geti2p.net/bob) is an application bridge allowing
+  non-Java clients to interact with I2P.
+* 4444, I2P HTTP Proxy: Used to access sites with the `.i2p` TLD
+* 4445, HTTPS Outproxy tunnel: Disabled in by default in Tails in
+  [I2PTunnel](http://127.0.0.1:7657/i2ptunnel) since all HTTPS traffic in Tails
+  gets routed through Tor.
+* 6668, Tunnel to Irc2P: Used to connect to the main I2P-only IRC network
+* 7656, [SAM](https://geti2p.net/sam): SAM is an application bridge allowing
+  non-Java clients to use I2P.  More information:
+  [SAMv1](https://geti2p.net/samv1), [SAMv2](https://geti2p.net/samv2),
+* 7657, I2P router console: The router console is accessible in the web browser at <http://127.0.0.1:7657>
+* 7658, local 'eepsite': Each I2P installation is configured out of the box
+  with the possibility to host one's own website (or *eepsite*) on the I2P
+  network. The eepsite will not be acessible remotely unless its
+  [tunnel](http://127.0.0.1:7657/i2ptunnel#localServerTunnelList) is started.
+* 7659, SMTP Proxy: Tunnel to `smtp.postman.i2p`. More information is available from within I2P at [Postman's HQ](http://hq.postman.i2p/?page_id=10)
+* 7660, POP3 Proxy: Tunnel to `pop3.postman.i2p`. More information is available from within I2P at [Postman's HQ](http://hq.postman.i2p/?page_id=11)
+* 8998, MTN Proxy: Tunnel to `mtn.i2p2.i2p`, a [Monotone](http://monotone.ca) server.
 
 Features that require an administration password
 ================================================
@@ -254,12 +153,12 @@ Package source and upgrading I2P
 
 Tails uses the I2P (and deps)
 [Debian packages prepared by KillYourTV](http://deb.i2p2.no/), the official I2P
-Linux package maintainer as listed on the [I2P Team page](https://www.i2p2.de/team).
-The I2P source package and its binaries will be imported into to our own
+Linux package maintainer as listed on the [I2P Team page](https://geti2p.net/team).
+The I2P source package and its binaries are imported into to our own
 [[APT repository|APT_repository]] into the devel or stable suite.  The suite
 will depend on whether a major- or point-release is being prepared.
 
-## Check the imported binary packages
+## Check the binary packages
 
 ### Content
 
@@ -275,6 +174,14 @@ will depend on whether a major- or point-release is being prepared.
 ### Maintainer scripts
 
 Have a look at `*.{pre,post}{inst,rm}`.
+
+## Import the packages
+
+1. scp the source and binary packages to incoming.deb.tails.boum.org
+1. move the uploaded files somewhere, and set permissions on it, so
+   that the `reprepro` user can read it
+1. use `reprepro includesrc` to import the source package(s)
+1. use `reprepro includedeb` to import the binary package(s)
 
 Things to meditate upon
 =======================

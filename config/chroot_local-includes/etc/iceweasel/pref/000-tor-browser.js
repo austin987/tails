@@ -30,6 +30,7 @@ pref("signon.rememberSignons", false);
 pref("browser.formfill.enable", false);
 pref("signon.autofillForms", false);
 pref("browser.sessionstore.privacy_level", 2);
+pref("media.cache_size", 0);
 
 // Misc privacy: Remote
 pref("browser.send_pings", false);
@@ -48,6 +49,7 @@ pref("browser.syncPromoViewsLeftMap", "{\"addons\":0, \"passwords\":0, \"bookmar
 pref("services.sync.engine.prefs", false); // Never sync prefs, addons, or tabs with other browsers
 pref("services.sync.engine.addons", false);
 pref("services.sync.engine.tabs", false);
+pref("extensions.getAddons.cache.enabled", false); // https://blog.mozilla.org/addons/how-to-opt-out-of-add-on-metadata-updates/
 
 // Fingerprinting
 pref("webgl.min_capability_mode", true);
@@ -70,6 +72,7 @@ pref("general.useragent.vendorSub", "");
 pref("dom.enable_performance", false);
 pref("plugin.expose_full_path", false);
 pref("browser.zoom.siteSpecific", false);
+pref("intl.charset.default", "windows-1252");
 // pref("intl.accept_languages", "en-us, en"); // Set by Torbutton
 // pref("intl.accept_charsets", "iso-8859-1,*,utf-8"); // Set by Torbutton
 // pref("intl.charsetmenu.browser.cache", "UTF-8"); // Set by Torbutton
@@ -85,6 +88,7 @@ pref("network.http.spdy.enabled.v3", false); // Seems redundant, but just in cas
 pref("network.proxy.socks", "127.0.0.1");
 pref("network.proxy.socks_port", 9150);
 pref("network.proxy.socks_remote_dns", true);
+pref("network.proxy.no_proxies_on", ""); // For fingerprinting and local service vulns (#10419)
 pref("network.proxy.type", 1);
 pref("network.security.ports.banned", "9050,9051,9150,9151");
 pref("network.dns.disablePrefetch", true);
@@ -136,6 +140,21 @@ pref("keyword.URL", "https://startpage.com/do/search?q=");
 // Nvida cards also experience crashes without the second pref set to disabled
 pref("gfx.direct2d.disabled", true);
 pref("layers.acceleration.disabled", true);
+
+// Security enhancements
+// https://trac.torproject.org/projects/tor/ticket/9387#comment:17
+pref("javascript.options.ion.content", false);
+pref("javascript.options.baselinejit.content", false);
+pref("javascript.options.asmjs", false);
+pref("javascript.options.typeinference", false);
+
+// Audio_data is deprecated in future releases, but still present
+// in FF24. This is a dangerous combination (spotted by iSec)
+pref("media.audio_data.enabled", false);
+
+// Enable TLS 1.1 and 1.2:
+// https://trac.torproject.org/projects/tor/ticket/11253
+pref("security.tls.version.max", 3);
 
 // Version placeholder
 pref("torbrowser.version", "UNKNOWN");

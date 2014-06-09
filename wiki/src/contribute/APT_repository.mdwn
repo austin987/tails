@@ -26,6 +26,8 @@ We use one single APT repository hosting multiple *suites*:
   are not available elsewhere (anymore). This suite is used by the
   `squeeze-backports-mozilla` chroot in our [[contribute/Debian
   package builder]].
+* We also have a `builder-wheezy` suite, used to provide additional
+  packages needed on a Wheezy system to build Tails.
 
 The suite(s) to use as sources for APT, during the build and inside
 the resulting system, are determined at Tails build time
@@ -58,8 +60,6 @@ The build system adds the relevant APT sources:
 
 Also, if we're building from a bugfix or feature branch, add its
 own suite.
-
-This logic is implemented in Tails 0.14~rc2 and later.
 
 SSH access
 ==========
@@ -193,10 +193,10 @@ operation must be done on the APT suites.
    merging a topic branch into it, whose purpose is to *remove* custom
    packages). To this end, compare the resulting list of (package,
    version) in the `experimental` APT suite with the one saved before
-   the merge, check Git merges history if needed, apply common sense,
-   and remove from `experimental` the packages that were removed from
-   it a while ago, and were just erroneously re-added by the
-   merge operation.
+   the merge (hint: use the `tails-diff-suites` script), check Git
+   merges history if needed, apply common sense, and remove from
+   `experimental` the packages that were removed from it a while ago,
+   and were just erroneously re-added by the merge operation.
 
 <a id="workflow-reset"></a>
 
@@ -258,11 +258,28 @@ Else, if this is a point-release:
 After a new Tails release is out
 --------------------------------
 
-After [[merging `stable` or `testing` into
-`devel`|APT_repository#workflow-merge-main-branch]], increment the
-version number in devel's `debian/changelog` so that next builds from
-the `devel` branch do not use the APT suite meant for the
-last release.
+If you just put out a final release:
+
+* [[merge `stable` or `testing` into
+  `devel`|APT_repository#workflow-merge-main-branch]]
+* increment the version number in devel's `debian/changelog` to match
+  the next major release, so that
+  next builds from the `devel` branch do not use the APT suite meant
+  for the last release
+* increment the version number in devel's `debian/changelog` to match
+  the next point release, so that
+  next builds from the `stable` branch do not use the APT suite meant
+  for the last release
+
+If you just released a RC:
+
+* add a dummy changelog entry (for the upcoming, non-RC version) in
+  the branch used for the release (`stable` or `testing`), so that the
+  next builds from it do not use the APT suite meant for the RC
+* add a dummy changelog entry (for the release *after* the one you
+  released a RC for) in the branch used for the release (`stable` or
+  `testing`), so that the next builds from it do not use the APT suite
+  meant for the RC
 
 If the release was a major one, then [[reset the stable APT suite to
 the state of the testing one|APT_repository#workflow-reset]].

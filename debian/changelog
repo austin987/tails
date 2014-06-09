@@ -1,7 +1,181 @@
-tails (0.22.1~rc1) unstable; urgency=medium
+tails (1.0.1) unstable; urgency=medium
 
   * Security fixes
-    - Update NSS to 3.14.5-1~bpo60+1.
+    - Upgrade the web browser to 24.6.0esr-0+tails1~bpo60+1
+      (Firefox 24.6.0esr + Iceweasel patches + Torbrowser patches).
+      Also import the Tor Browser profile at commit
+      90ba8fbaf6f23494f1a0e38d63153b3b7e65d3d3 from
+      ttp/tor-browser-24.6.0esr-3.x-1.
+    - Install Linux 3.14 from Debian unstable (fixes CVE-2014-3153 and
+      others).
+    - Install openssl from Squeeze LTS (fixes CVE-2014-0076,
+      CVE-2014-0195, CVE-2014-0221, CVE-2014-3470 and CVE-2014-0224).
+    - Install GnuTLS from Squeeze LTS (fixes CVE-2014-3466.).
+
+  * Minor improvements
+    - Add Squeeze LTS APT sources. It has been given a low pinning
+      priority so explicit pinning must be used to actually install
+      anything from it.
+    - Upgrade Tor to 0.2.4.22-1~d60.squeeze+1.
+    - Upgrade I2P to 0.9.13-1~deb6u+1.
+
+ -- Tails developers <tails@boum.org>  Sun, 08 Jun 2014 19:14:00 +0200
+
+tails (1.0) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade the web browser to 24.5.0esr-0+tails1~bpo60+1
+      (Firefox 24.5.0esr + Iceweasel patches + Torbrowser patches).
+    - Upgrade Tor to 0.2.4.21-1+tails1~d60.squeeze+1:
+      * Based on 0.2.4.21-1~d60.squeeze+1.
+      * Backport the fix for Tor bug #11464. It adds client-side blacklists for
+        all Tor directory authority keys that was vulnerable to Heartbleed.
+        This protects clients in case attackers were able to compromise a
+        majority of the authority signing and identity keys.
+
+   * Bugfixes
+    - Disable inbound I2P connections. Tails already restricts incoming
+      connections, but this change tells I2P about it.
+    - Fix link to the system requirements documentation page in the Tails
+      Upgrader error shown when too little RAM is available.
+
+  * Minor improvements
+    - Upgrade I2P to 0.9.12-2~deb6u+1.
+    - Import TorBrowser profile. This was forgotten in Tails 0.23 and even
+      though we didn't explicitly set those preferences in that release
+      they defaulted to the same values. This future-proofs us in case the
+      defaults would ever change.
+    - Import new custom version of tor-launcher:
+      * Based on upstream Tor Launcher 0.2.5.3.
+      * Improve how Tor Launcher handles incomplete translation.
+        (Tor bug #11483; more future-proof fix for Tails bug #6885)
+      * Remove the bridge settings prompt. (Tor bug #11482; closes Tails
+        bug #6934,)
+      * Always show bridge help button. (Tor bug #11484)
+    - Integrate the new Tails logo into various places:
+      * The website
+      * The boot splash
+      * The "About Tails" dialog
+
+  * Build system
+    - Use the stable APT suite when building from the stable Git branch
+      (Closes: #7022).
+
+  * Test suite
+    - Add test for the #7022 fix.
+
+ -- Tails developers <tails@boum.org>  Sun, 27 Apr 2014 19:34:01 +0200
+
+tails (0.23) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade the web browser to 24.4.0esr-0+tails1~bpo60+1
+      (Firefox 24.4.0esr + Iceweasel patches + Torbrowser patches).
+
+  * Major new features
+    - Spoof the network interfaces' MAC address by default (Closes: #5421),
+      as designed on https://tails.boum.org/contribute/design/MAC_address/.
+    - Rework the way to configure how Tor connects to the network
+      (bridges, proxy, fascist firewall): add an option to Tails Greeter,
+      start Tor Launcher when needed (Closes: #5920, #5343).
+
+  * Bugfixes
+    - Additional software: do not crash when persistence is disabled
+      (Closes: #6440).
+    - Upgrade Pidgin to 2.10.9, that fixes some regressions introduced
+      in the 2.10.8 security update (Closes: #6661).
+    - Wait for Tor to have fully bootstrapped, plus a bit more time,
+      before checking for upgrades (Closes: #6728) and unfixed known
+      security issues.
+    - Disable the Intel Management Engine Interface driver (Closes: #6460).
+      We don't need it in Tails, it might be dangerous, and it causes bugs
+      on various hardware such as systems that reboot when asked to shut down
+    - Add a launcher for the Tails documentation. This makes it available
+      in Windows Camouflage mode (Closes: #5374, #6767).
+    - Remove the obsolete wikileaks.de account from Pidgin (Closes: #6807).
+
+  * Minor improvements
+    - Upgrade Tor to 0.2.4.21-1~d60.squeeze+1.
+    - Upgrade obfsproxy to 0.2.6-2~~squeeze+1.
+    - Upgrade I2P to 0.9.11-1deb6u1.
+    - Install 64-bit kernel instead of the 686-pae one (Closes: #5456).
+      This is a necessary first step towards UEFI boot support.
+    - Install Monkeysign (in a not-so-functional shape yet).
+    - Disable the autologin text consoles (Closes: #5588). This was one of
+      the blockers before a screen saver can be installed
+      in a meaningful way (#5684).
+    - Don't localize the text consoles anymore: it is broken on Wheezy,
+      the intended users can as well use loadkeys, and we now do not have
+      to trust setupcon to be safe for being run as root by the desktop user.
+    - Make it possible to manually start IBus.
+    - Reintroduce the possibility to switch identities in the Tor Browser,
+      using a filtering proxy in front of the Tor ControlPort to avoid giving
+      full control over Tor to the desktop user (Closes: #6383).
+    - Incremental upgrades improvements:
+      · Drop the Tails Upgrader launcher, to limit users' confusion
+        (Closes: #6513).
+      · Lock down sudo credentials a bit.
+      · Hide debugging information (Closes: #6505).
+      · Include ~/.xsession-errors in WhisperBack bug reports.
+        This captures the Tails Upgrader errors and debugging information.
+      · Report more precisely why an incremental upgrade cannot be done
+        (Closes: #6575).
+      · Various user interface and phrasing improvements.
+    - Don't install the Cookie Monster browser extension (Closes: #6790).
+    - Add a browser bookmark pointing to Tor's Stack Exchange (Closes: #6632).
+    - Remove the preconfigured #tor channel from the Pidgin: apparently,
+      too many Tails users go ask Tails questions there, without making
+      it clear that they are running Tails, hence creating a user-support
+      nightmare (Closes: #6679).
+    - Use (most of) Tor Browser's mozconfig (Closes: #6474).
+    - Rebase the browser on top of iceweasel 24.3.0esr-1, to get
+      the certificate authorities added by Debian back (Closes: #6704).
+    - Give access to the relevant documentation pages from Tails Greeter.
+    - Hide Tails Greeter's password mismatch warning when entry is changed.
+    - Persistent Volume Assistant:
+      · Take into account our installer is now called Tails Installer.
+      · Optimize window height (Closes: #5458).
+      · Display device paths in a more user-friendly way (Closes: #5311).
+
+  * Build system
+    - Ease updating POT and PO files at release time, and importing translations
+      from Transifex (Closes: #6288, #6207).
+    - Drop custom poedit backport, install it from squeeze-backports-sloppy.
+    - Make ISO and IUK smaller (Closes: #6390, #6425):
+      · Exclude more files from being included in the ISO.
+      · Remove *.pyc later so that they are not recreated.
+      · Truncate log files later so that they are not filled again.
+      · At ISO build time, set mtime to the epoch for large files whose content
+        generally does not change between releases. This forces rsync
+        to compare the actual content of these files, when preparing an IUK,
+        instead of blindly adding it to the IUK merely because the mtime
+        has changed, while the content is the same.
+    - Make local hooks logging consistent.
+
+  * Test suite
+    - Migrate from JRuby to native Ruby + rjb.
+    - The test suite can now be run on Debian Wheezy + backports.
+    - Fix buggy "persistence is not enabled" step (Closes: #5465).
+    - Use IPv6 private address as of RFC 4193 for the test suite's virtual
+      network. Otherwise dnsmasq from Wheezy complains, as it is not capable
+      of handling public IPv6 addresses.
+    - Delete volumes after each scenario unless tagged @keep_volumes.
+    - Add an anti-test to make sure the memory erasure test works fine.
+    - A *lot* of bugfixes, simplifications and robustness improvements.
+
+ -- Tails developers <tails@boum.org>  Tue, 18 Mar 2014 00:58:50 +0100
+
+tails (0.22.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade the web browser to 24.3.0esr-0+tails1~bpo60+2
+      (Firefox 24.3.0esr + Iceweasel patches + Torbrowser patches).
+    - Upgrade NSS to 3.14.5-1~bpo60+1.
+    - Upgrade Pidgin to 2.10.8.
+    - Workaround browser size fingerprinting issue by using small icons
+      in the web browser's navigation toolbar (Closes: #6377).
+      We're actually hit by Tor#9268, and this is the best workaround gk
+      and I were able to find when discussing this on Tor#10095.
 
   * Major new features
     - Check for upgrades availability using Tails Upgrader, and propose
@@ -34,6 +208,7 @@ tails (0.22.1~rc1) unstable; urgency=medium
     - Support "upgrading" a partial Tails installation (Closes: #6438)
       and fix missing confirmation dialog in Tails Installer (Closes: #6437).
       Thanks to Andres Gomez Ramirez <andres.gomez@cern.ch>.
+    - Fix browser homepage in Spanish locales (Closes: #6612).
 
   * Minor improvements
     - Tor 0.2.4 is stable! Adapt APT sources accordingly.
@@ -50,7 +225,7 @@ tails (0.22.1~rc1) unstable; urgency=medium
     - Style and robustness improvements in tails-security-check.
     - Make room for upcoming UEFI support in Tails Installer.
 
- -- Tails developers <tails@boum.org>  Fri, 10 Jan 2014 12:26:22 +0100
+ -- Tails developers <tails@boum.org>  Wed, 29 Jan 2014 15:08:13 +0100
 
 tails (0.22) unstable; urgency=medium
 

@@ -16,7 +16,7 @@ baseline for all similar projects out there.
 
 This document is heavily based on preliminary work that was done as
 part of [Incognito 2008.1-r1
-Documentation](http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/docs.html).
+Documentation](https://web.archive.org/web/20100220124424/http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/docs.html).
 The *Bibliography* section has pointers to other inspiration and reference sources.
 
 # 2 Privacy Enhancing Live Distribution Specification
@@ -112,6 +112,8 @@ anonymity.
 
 ### 2.1.6 Filling some empty room in the Tor distributions landscape
 
+XXX: update
+
 The PELD is meant to be complementary to other Tor distributions. It
 has no such goal as replacing other existing tool that properly
 fulfills its use cases.
@@ -171,8 +173,7 @@ Internet for anyone anywhere.
 The goal of staying anonymous and keeping sensitive information
 protected stands in direct conflict with the goals of several entities
 "present" on the Internet. The following threat model is meant to
-describe the intentions and capabilities of such hypothetical
-attackers.
+describe the intentions and capabilities of such attackers.
 
 ### 2.2.1 The goal of the attacker
 
@@ -245,6 +246,8 @@ This section handles mostly the criteria that the PELD should be
 portable and able to run in as many environments as possible.
 
 ### 2.4.1 Platform
+
+XXX: update
 
 The binaries MUST all be executable on the most common computer
 hardware architecture(s). As of 2011, the x86 computer architecture
@@ -436,10 +439,10 @@ supported:
   cookies, etc. Benefiting from this work is essential for maintaining
   anonymity, so it is REQUIRED to include only web browsers that are
   endorsed by the Tor Project, accompanied with any configurations,
-  extensions/plugins, etc. that they recommend (for instance, Firefox
-  with the Torbutton extension). The PELD browser fingerprint SHOULD
-  make the PELD users appear uniformly among Tor users with generally
-  recommended configuration, such as Torbutton users.
+  extensions/plugins, etc. that they recommend (for instance, Tor
+  Browser Bundle). The PELD browser fingerprint SHOULD make the PELD
+  users appear uniformly among Tor users with generally recommended
+  configuration, such as Tor Browser Bundle users.
 - **Email**: support for PGP or S/MIME is highly RECOMMENDED. Also,
   beware that the EHLO/HELO sent to the SMTP-server will contain the
   host's IP address in many email clients. The `Message-ID` headers and
@@ -618,8 +621,7 @@ this specification can provide reasonable guidance about them.
 
 ### 2.7.1 Memory recovery attacks
 
-[Recent
-research](http://www.blackhat.com/html/bh-dc-11/bh-dc-11-briefings.html#Case)
+[Research](http://www.blackhat.com/html/bh-dc-11/bh-dc-11-briefings.html#Case)
 aims at recovering a Live system's in-memory filesystem and partial
 recovery of its previously deleted contents. Most current Live systems
 do not protect against that kind of attacks: at best, they erase free
@@ -708,7 +710,7 @@ extension).
 
 ### 3.2.1 Core software
  
-- [Debian GNU/Linux](http://www.debian.org/): the base operating
+- [Debian GNU/Linux](https://www.debian.org/): the base operating
   system, provides hardware detection, infrastructure. Please note
   that the Debian distribution does not provide or endorse Tails.
 - [Tor](http://www.torproject.org/): anonymizing overlay network for
@@ -726,7 +728,7 @@ used in Debian yet. Thus having them included in Tails would require
 to recompile every package with the right compile-time options. This
 would badly impact the development and build efforts required to
 release Tails. As an alternative, efforts [have been
-started](http://bugs.debian.org/cgi-bin/pkgreport.cgi?tag=hardening;users=debian-security@lists.debian.org)
+started](https://bugs.debian.org/cgi-bin/pkgreport.cgi?tag=hardening;users=debian-security@lists.debian.org)
 to push usage of such hardening features in Debian.
 
 A lot of security features have been implemented upstream at the
@@ -753,14 +755,15 @@ OpenOffice.org and gedit.
 Tails ships with IBus and a few engines (Anthy for Japanese, Pinyin
 and Bopomofo for Chinese, and Hangul for Korean).
 
-A login script configures and enables IBus for all locales: it must be
-started at login time to be fully usable (environment variables must
-be set up); also, one may want to work on documents written in
-Chinese, Japanese or Korean even when selecting English as their
-preferred language.
+A login script prepares and configures IBus. When a Japanese,
+Chinese or Korean locale is selected, this login script selects
+the right default input method, and then starts the IBus daemon.
 
-When a Japanese, Chinese or Korean locale is selected, this login
-script also selects the right default input method.
+Since one may want to work on documents written in
+Chinese, Japanese or Korean even when selecting English as their
+preferred language, IBus can also be manually started in other locales
+using the "IBus Preferences" launcher in the System->Preferences menu.
+IBus' environment variables is always exported on login to make this work.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/X11/Xsession.d/80im-starter]]
 
@@ -844,10 +847,15 @@ an attacker who controls it could simply ask Tor the public
 IP through the `GETINFO address` command.
 To prevent this, access to the Tor control port is only
 granted to the vidalia user, who is running Vidalia.
+A filtering proxy to the control port exists, so
+Torbutton still can perform safe commands like `SIGNAL NEWNYM`.
 
 - [[!tails_gitweb chroot_local-hooks/06-adduser_vidalia]]
 - [[!tails_gitweb chroot_local-includes/usr/local/sbin/restart-vidalia]]
+- [[!tails_gitweb chroot_local-includes/usr/local/sbin/tor-controlport-filter]]
 - [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]
+
+<a id="dns"></a>
 
 ### 3.6.3 DNS
 
@@ -870,11 +878,9 @@ configured for completeness.
 
 [[!inline pages="contribute/design/Tor_enforcement/Network_filter" raw=yes]]
 
-### 3.6.7 Random MAC Address
+### 3.6.7 MAC address spoofing
 
-It is planned to anonymize the network interfaces MAC address in a
-later Tails version. See the related [[design
-document|design/MAC_address]] and [[!tails_todo macchanger desc="todo item"]].
+See [[the dedicated design document|design/MAC_address]].
 
 ### 3.6.8 Host system swap
 
@@ -946,12 +952,10 @@ Firefox, that is shipped by Debian and thus by Tails.)
 
 Tails ships custom Iceweasel ESR packages built with the Torbrowser
 patches to better blend in the Tor Browser Bundle's anonymity set.
-The following patches are not applied, though:
-
-- `0012-Rebrand-Firefox-to-TorBrowser.patch`: not needed for anonymity
-  purposes; likely to conflict with Iceweasel's own rebranding patch.
-- `0014-Add-DDG-and-StartPage-to-Omnibox.patch`: Iceweasel already
-  adds DuckDuckGo, and we have a hook to add localized Startpage.
+Some patches, that are not relevant for Tails, are not
+applied, though: see the Tails browser's
+[changelog](https://git-tails.immerda.ch/iceweasel/plain/debian/changelog?h=tails/master)
+for the current status.
 
 Iceweasel uses the Torbutton extension in order to prevent attacks
 using JavaScript, plugins and other non-HTTP features like web
@@ -965,10 +969,7 @@ updates of its installed extensions. Java support is disabled.
 
 Iceweasel is shipped with some extensions to help users manage their
 browsing experience. The Torbutton settings treat all cookies as
-session cookies by default; the [Cookie
-Monster](https://addons.mozilla.org/en-US/firefox/addon/cookie-monster)
-extension provides more
-fine-grained cookie control for users who need it. This prevents the
+session cookies by default. This prevents the
 known leak of browsing information cookies can lead to. The [Adblock
 plus](https://addons.mozilla.org/fr/firefox/addon/1865/) extension
 protects against many tracking possibilities by removing most ads.
@@ -986,7 +987,8 @@ extension that:
   use of I2P|I2P]] for details;
 - could help [[!tails_todo FTP_in_Iceweasel desc="fixing Iceweasel's FTP support"]].
 
-Thanks to Torbutton, Iceweasel is configured so that Tails browser
+Thanks to Torbutton, to the Tor Browser patches, and to us importing
+(most of) the TBB preferences, Iceweasel is configured so that Tor browser
 fingerprint appears uniformly among Torbutton users. Tails enables
 Torbutton's EN-US locale spoofing to avoid partitioning Tails
 users into per-language anonymity sets.
@@ -1072,7 +1074,7 @@ not leak any information apart from PING and VERSION (`Purple IRC`),
 which is deemed acceptable as there are probably other weirdness in
 how the protocol is implemented, that disclose as much.
 
-- [[!tails_gitweb config/chroot_local-includes/lib/live/config/201-pidgin]]
+- [[!tails_gitweb config/chroot_local-includes/lib/live/config/2010-pidgin]]
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.purple]]
 - [[!tails_gitweb config/chroot_local-hooks/09-remove_unsupported_pidgin_libs]]
 
@@ -1207,12 +1209,19 @@ security-related — bugs.
 
 ## 3.9 Hardware support
 
-Tails generally ships the latest kernel from Debian unstable or [Debian
-Backports](http://backports.debian.org) as a compromise between
+Tails generally ships the latest Linux kernel from Debian unstable or [Debian
+Backports](http://backports.debian.org/) as a compromise between
 stability and recent hardware support. Recent Intel and AMD microcode
 are included as well.
 
 The x86 hardware architecture is the main supported one.
+
+A 64-bit Linux kernel (*amd64* flavour) and a 32-bit one (*486*
+flavor, for maximal backward-compatibility) are provided. The best
+supported one is used.
+
+* [[!tails_gitweb auto/config]]
+* [[!tails_gitweb config/binary_local-hooks/20-syslinux_detect_cpu]]
 
 ## 3.10 Caveats
 
@@ -1227,12 +1236,11 @@ Support of arbitrary DNS queries is only provided by ttdnsd listening
 on 127.0.0.2. ttdnsd has proved too be far too buggy to be inserted in
 the default DNS resolution chain.
 
-Improvements to bridge support are [[!tails_todo bridge_support desc="planned"]].
-
 Some tools currently available to command-line users lack the
 integration into Tails and/or graphical user interface that would be
-needed to make them useful to anyone. See the [[!tails_todo
-macchanger desc="macchanger TODO page"]] as an example.
+needed to make them useful to anyone.
+
+Other caveats are listed on the [[support/known issues]] page.
 
 See the development [[!tails_roadmap]] for more information about
 where Tails is heading to.
@@ -1262,7 +1270,7 @@ the [[Time sync|contribute/design/Time_syncing]] design document and the
 
 # 4 Security analysis
 
-(It would be great to have links to peer reviews here.)
+See [[the security audits of Tails|security/audits]].
 
 # 5 Bibliography
 
@@ -1274,5 +1282,4 @@ Documentation](http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/do
 - Roger Dingledine, Nick Mathewson and Paul Syverson. [Tor: The
   Second-Generation Onion
   Router](https://svn.torproject.org/svn/projects/design-paper/tor-design.pdf)
-- Mike Perry. [Torbutton Design
-  Documentation](https://www.torproject.org/torbutton/en/design/index.html.en)
+- Mike Perry, Erinn Clark, Steven Murdoch. [The Design and Implementation of the Tor Browser](https://www.torproject.org/projects/torbrowser/design/)

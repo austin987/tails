@@ -20,6 +20,7 @@ boilerplate-in-last-translator
 boilerplate-in-project-id-version
 conflict-marker-in-header-entry
 fuzzy-header-entry
+incorrect-plural-forms
 invalid-content-transfer-encoding
 invalid-date
 invalid-language
@@ -27,6 +28,7 @@ invalid-last-translator
 language-team-equal-to-last-translator
 no-language-header-field
 no-package-name-in-project-id-version
+no-plural-forms-header-field
 no-report-msgid-bugs-to-header-field
 no-version-in-project-id-version
 unable-to-determine-language
