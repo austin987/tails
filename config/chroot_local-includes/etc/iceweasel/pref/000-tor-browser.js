@@ -148,6 +148,5 @@ pref("javascript.options.baselinejit.content", false);
 pref("javascript.options.asmjs", false);
 pref("javascript.options.typeinference", false);
 
-
 // Version placeholder
 pref("torbrowser.version", "UNKNOWN");
