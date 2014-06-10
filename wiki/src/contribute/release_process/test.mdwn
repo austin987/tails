@@ -435,7 +435,7 @@ correctly.
 * List the versions from which an upgrade paths to this one is described.
   In the `stable` or `testing` branch:
 
-      git grep -l "  version: '0.23'" wiki/src/upgrade/
+      git grep -l "  version: '\?0.23'\?" wiki/src/upgrade/
 
 * For each description file, open it and verify if it allows incremental upgrade
   or only full upgrade.
@@ -464,7 +464,7 @@ correctly.
 
     To synchronize your local copy:
 
-        usewithtor rsync -rt --progress rsync.torproject.org::amnesia-archive/tails/stable/iuk/ /var/www/tails/stable/iuk/
+        torsocks rsync -rt --progress rsync.torproject.org::amnesia-archive/tails/stable/iuk/ /var/www/tails/stable/iuk/
 
   * Patch `/etc/hosts` in Tails to point to your web server:
 
@@ -552,17 +552,14 @@ language.
 * Check that Tails Greeter's "more options" screen displays properly
   on a display with 600 px height.
 * Check that all seems well during init (mostly that all services
-  start without errors), and that dmesg seems ok.
+  start without errors), and that `/var/log/syslog` seems OK.
 * MAT should be able to clean a PDF file, such as:
   <http://examples.itextpdf.com/results/part3/chapter12/pdf_metadata.pdf>
-* Browsing (by hostname) a FTP server on the Internet should be
-  possible using GNOME's *Connect to server* feature
-  (once [[!tails_ticket 6096]] is fixed)
 * The Tails signing key shipped should be up-to-date (that is, neither it nor
   one its subkeys must have expired, or be about to expire any time soon).
   - `gpg --list-keys --with-colons 1202821CBE2CD9C1`
 * The "Report an error" desktop launcher should open the [[support]]
   page, both in English and in one language to which the website is
   translated (automate: [[!tails_ticket 6904]]).
-* One should be able to refresh the GnuPG keyring in Seahorse (once
-  [[!tails_ticket 7051]] is resolved).
+* One should be able to refresh the GnuPG keyring in Seahorse (with
+  the workaround documented in comment 4 on [[!tails_ticket 7051]]).
