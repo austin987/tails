@@ -24,6 +24,15 @@ else
     sed -e "/$CLAWSCONFSECTION/ a $CLAWSCONFLABEL=$CLAWSTHEMEDIR" -i "$HOME/.claws-mail/clawsrc"
 fi
 
+# Iceweasel
+# Copy the file containing toolbars configurations
+cp /usr/share/tails/firefox-localstore-win8.rdf ${HOME}/.mozilla/firefox/default/localstore.rdf
+# Setup a blue lightweight theme
+cat >> ${HOME}/.mozilla/firefox/default/user.js <<EOF
+user_pref("lightweightThemes.isThemeSelected", true);
+user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/blue_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/blue_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#3399FF\",\"updateDate\":0,\"installDate\":0}]");
+EOF
+
 # Remove Tails-specific desktop icons
 rm --interactive=never -f ${HOME}/Desktop/*.desktop 2> /dev/null || true
 

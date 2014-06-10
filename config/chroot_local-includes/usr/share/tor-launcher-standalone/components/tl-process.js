@@ -655,8 +655,10 @@ TorProcessService.prototype =
                     .getService(Ci.nsIProperties).get("CurProcD", Ci.nsIFile);
             while (tbbBrowserDepth > 0)
             {
+              var didRemove = (topDir.leafName != ".");
               topDir = topDir.parent;
-              tbbBrowserDepth--;
+              if (didRemove)
+                tbbBrowserDepth--;
             }
           }
 

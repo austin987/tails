@@ -85,7 +85,7 @@ if GIT_REF="$(git symbolic-ref HEAD)"; then
 else
     GIT_CURRENT_COMMIT="$(git rev-parse HEAD)"
     if GIT_TAG="$(git describe --tags --exact-match ${GIT_CURRENT_COMMIT})"; then
-        CLEAN_GIT_TAG=$(echo "$GIT_TAG" | sed -e 's,/,_,g' -e 's,-rc,~rc,')
+        CLEAN_GIT_TAG=$(echo "$GIT_TAG" | tr '/-' '_~')
 	BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_TAG}"
     else
 	# this shouldn't reasonably happen (e.g. only if you checkout a

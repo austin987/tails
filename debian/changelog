@@ -1,8 +1,102 @@
-tails (1.1) unstable; urgency=medium
+tails (1.1) UNRELEASED; urgency=medium
 
   * Dummy entry for next release.
 
- -- Tails developers <tails@boum.org>  Tue, 29 Apr 2014 12:00:00 +0200
+ -- Tails developers <tails@boum.org>  Fri, 30 May 2014 17:03:06 +0200
+
+tails (1.1~beta1) unstable; urgency=medium
+
+  * Rebase on Debian Wheezy
+    - Upgrade literally thousands of packages.
+    - Migrate to GNOME3 fallback mode.
+    - Install LibreOffice instead of OpenOffice.
+    - Install systemd. It is not enabled by default, but having it
+      around will help doing the migration work.
+    - Enable AppArmor on the kernel command-line. This is a no-op
+      without the userspace tools and with no profile shipped, but it
+      will make it easier to fix this part of the situation.
+    - Remove custom LSB logging: Wheezy has fancy colored init
+      logging.
+
+  * Security fixes
+    - Upgrade Tor to 0.2.4.22.
+    - Fix write access to boot medium via udisks (#6172).
+
+  * Major new features
+    - Replace the Windows XP camouflage with an experimental Windows 8
+      camouflage.
+    - UEFI boot support.
+    - Install Linux 3.14 from Debian unstable.
+    - Bring back VirtualBox guest modules, installed from Wheezy
+      backports. Full functionality is only available when using the
+      32-bit kernel.
+
+  * Minor improvements
+    - Install seahorse-nautilus, replacing seahorse-plugins (Closes #5516).
+    - Install hledger (custom backport, for now): our accountant needs this.
+    - Install stable Scribus instead of scribus-ng.
+    - Install the printer driver for Epson Inkjet that use ESC/P-R.
+    - Install the BookletImposer PDF imposition toolkit. It's tiny,
+      and really helpful e.g. when producing booklets.
+    - Install gtkhash and nautilus-gtkhash (Closes #6763).
+    - Import new version of Tor Launcher:
+      · Now based on upstream Tor Launcher 0.2.5.4.
+      · Tor bug #11772: Proxy Type menu not set correctly
+      · Tor bug #11699: Change &amp;#160 to &#160; in network-settings.dtd
+      · Correctly handle startup paths that contain dot.
+    - Upgrade to Torbutton 1.6.9.0.
+    - Upgrade the web browser to 24.5.0esr-1+tails1~bpo60+1
+      (Firefox 24.4.0esr + Iceweasel patches + Torbrowser patches).
+    - Avoid shipping python2.6 in addition to python2.7.
+    - Don't install Gobby 0.4 anymore. Gobby 0.5 has been available in
+      Debian since Squeeze, now is a good time to drop the obsolete
+      0.4 implementation.
+    - Require a bit less free memory before checking for upgrades with
+      Tails Upgrader. The general goal is to avoid displaying "Not
+      enough memory available to check for upgrades" too often due to
+      over-cautious memory requirements checked in the wrapper.
+    - Make Tails Greeter's help window resolution-aware. Previously it
+      used a static 800x600 which was problematic on lower resolutions,
+      and sub-optimal on higher resolutions. Now it adapts itself
+      according to the screen resolution.
+    - Whisperback now sanitizes attached logs better with respect to
+      DMI data, IPv6 addresses, and serial numbers (Closes #6797,
+      #6798, #6804).
+    - Integrate the new logo in Tails Installer (Closes #7095)
+
+  * Build system
+    - Bump Vagrant builder's memory for RAM builds. Wheezy requires
+      more space to build, and the resulting image is larger.
+    - Fix Vagrant compatibility issue. Some classes' methods/fields
+      have been renamed between Vagrant versions, so we need a simple
+      compatibility layer to support all versions. Without this, it's
+      not possible to issue e.g. a `build` command to an already
+      running (i.e. `vm:up`:ed) Vagrant instance.
+    - Move cpu and mem checks to the `build` task. Previously, when
+      they were checked in `vm:up` *only* when issued while the VM
+      already is up, so these checks weren't run if one issues a
+      `build` when the VM is off. Now we'll fail earlier with a more
+      informative error message, and it looks like a more logical home
+      for them too.
+    - Fix buggy memory checks for RAM building. We have to take into
+      account which state the Vagrant VM is in for determining *where*
+      we check if enough memory is available for a RAM build. If it's
+      off, we check the host; if it's on we check the VM. Previously
+      we always checked the host, which doesn't make sense when the VM
+      is already started.
+
+  * Test suite
+    - Bump the tester VM's RAM by 256 MiB. There is not enough free
+      RAM to run Tails Upgrader with just 1 GiB of RAM after the
+      migration to Wheezy.
+    - Always adjust OOM and memory overcommit settings. The kernel
+      freezes seem to also happen for the amd64 kernel when filling
+      the memory.
+    - Add option to make Sikuli rety on FindFailed. This makes it
+      possible to update manu images for Sikuli in just *one* test
+      suite run, by continuously updating outdated pictures as we go.
+
+ -- Tails developers <tails@boum.org>  Thu, 29 May 2014 00:23:52 +0200
 
 tails (1.0) unstable; urgency=medium
 

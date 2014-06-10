@@ -13,7 +13,7 @@ Feature: Microsoft Windows XP Camouflage
     And I enable Microsoft Windows XP camouflage
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And I save the state so the background can be restored next scenario
 
   Scenario: I should be presented with a Microsoft Windows XP like desktop
@@ -25,7 +25,7 @@ Feature: Microsoft Windows XP Camouflage
   Scenario: Windows should appear like those in Microsoft Windows XP
     When the network is plugged
     And Tor is ready
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And available upgrades have been checked
     And I run "iceweasel"
     Then I see "WinXPIceweaselWindow.png" after at most 120 seconds
