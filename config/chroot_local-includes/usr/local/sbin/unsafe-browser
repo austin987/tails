@@ -188,25 +188,6 @@ EOF
     # Remove all bookmarks
     rm -f ${CLEARNET_PROFILE}/bookmarks.html
     rm -f ${CLEARNET_PROFILE}/places.sqlite
-
-    # Make the English wikipedia the only available and default search
-    # engine (this is a documented cue for identifying the Unsafe Browser,
-    # which is extra important in camouflage mode when the scary coloured
-    # theme is disabled.)
-    find ${CLEARNET_PROFILE}/searchplugins -name "*.xml" | \
-        while read searchengine; do
-            if basename "$searchengine" | grep -qvi wikipedia; then
-                rm "${searchengine}"
-            fi
-        done
-    sed -i '/^user_pref("browser.search.defaultenginename",/d' \
-        ${CLEARNET_PROFILE}/user.js
-    echo 'user_pref("browser.search.defaultenginename", "Wikipedia (en)");' >> \
-        ${CLEARNET_PROFILE}/user.js
-    sed -i '/^user_pref("browser.search.selectedEngine",/d' \
-        ${CLEARNET_PROFILE}/user.js
-    echo 'user_pref("browser.search.selectedEngine", "Wikipedia (en)");' >> \
-        ${CLEARNET_PROFILE}/user.js
 }
 
 run_browser_in_chroot () {
