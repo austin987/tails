@@ -1,11 +1,13 @@
 #!/bin/sh
 
-# This script runs the steps required for windows 8 camouflage that cannot
-# be run as the desktop user and then launches the main script as the desktop
-# user.
-#
-# The script consists mainly of ugly workarounds. Running this script will
-# change the system until next reboot.
+# This script runs the few steps required for windows 8 camouflage that cannot
+# be run as the desktop user. It consists mainly of ugly workarounds. Running this
+# script will change the system until next reboot.
+
+# Activate the camouflage for the next session
+install -m 0644 \
+    /usr/share/applications/tails-activate-win8-theme.desktop \
+    /etc/xdg/autostart/
 
 # Setup pidgin application icon (show in the windows list)
 # The path to /usr/share/icons/hicolor is hardcoded in pidgin.
@@ -29,6 +31,3 @@ rm "/usr/share/pixmaps/gpgApplet/scalable" -r
 ln -s "/usr/share/pixmaps/gpgApplet/scalable-grey" "/usr/share/pixmaps/gpgApplet/scalable"
 rm "/usr/share/pixmaps/gpgApplet/48x48/" -r
 ls -s "/usr/share/pixmaps/gpgApplet/48x48-grey" "/usr/share/pixmaps/gpgApplet/48x48"
-
-# Run user part of the theme
-sudo -u "$LIVE_USERNAME" HOME="/home/$LIVE_USERNAME" /usr/local/bin/tails-activate-win8-theme
