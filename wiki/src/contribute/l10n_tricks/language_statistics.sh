@@ -1,8 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 # -*- mode: sh; sh-basic-offset: 4; indent-tabs-mode: nil; -*-
 # vim: set filetype=sh sw=4 sts=4 expandtab autoindent:
 
 set -e
+set -o pipefail
 
 LANGUAGES=${@:-de fr pt}
 
