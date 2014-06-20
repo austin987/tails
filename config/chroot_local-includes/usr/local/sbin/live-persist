@@ -324,8 +324,6 @@ activate_volumes ()
 	done
 
 	# Migrate Squeeze-era NetworkManager persistence setting to Wheezy.
-	# XXX: keep the old setting in place? Even if we drop it, the data still
-	# is on the persistent volume. Is there an automated importation mechanism?
 	for conf in $(ls /live/persistence/*_unlocked/persistence.conf || true)
 	do
 		if grep -E -qs --line-regex \
@@ -345,6 +343,10 @@ activate_volumes ()
 				>> "$conf" \
 				|| error "Failed to make /etc/NetworkManager/system-connections persistent: $?"
 			warning "Successfully made /etc/NetworkManager/system-connections persistent"
+			# disable pre-Wheezy NM persistence setting
+			sed -r -i \
+				-e 's,^(/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections)$,#\1,' \
+				"$conf"
 		fi
 	done
 
