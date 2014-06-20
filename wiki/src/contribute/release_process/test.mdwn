@@ -470,6 +470,13 @@ correctly.
 
         echo "192.168.1.4    dl.amnesia.boum.org" | sudo tee --append /etc/hosts
 
+  * Patch sudo configuration to allow passing arbitrary arguments to
+    `tails-upgrade-frontend`:
+
+        sudo sed -i \
+            -e 's,/usr/bin/tails-upgrade-frontend ""$,/usr/bin/tails-upgrade-frontend,' \
+            /etc/sudoers.d/zzz_upgrade
+
   * Call the upgrader must be called, from inside the system to upgrade,
     with every needed option to use the local web server rather than the
     online one, for example:
