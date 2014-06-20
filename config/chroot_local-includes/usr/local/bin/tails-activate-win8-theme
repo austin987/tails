@@ -3,13 +3,47 @@
 # This script sets up the live user's Gnome theme to something that
 # resembles Microsoft Windows 8.
 
-# Set IE icon in iceweasel
-# XXX: doesn't work as amnesia
-#ie_icon="/usr/share/icons/GnomeXP/48x48/apps/iceweasel.png"
-#for x in /usr/share/iceweasel/browser/chrome/icons/default/*; do
-#	rm ${x}
-#	ln -s ${ie_icon} ${x}
-#done
+# Set claws-mail icon
+CLAWSTHEMEDIR="$HOME/.claws-mail/themes/Windows8"
+CLAWSCONFSECTION="\[Common\]"
+CLAWSCONFLABEL="pixmap_theme_path"
+# Create claws-mail theme
+mkdir -p "$CLAWSTHEMEDIR"
+cp /usr/share/icons/Windows8/apps/claws-mail.png "$CLAWSTHEMEDIR/claws_mail_icon.png"
+echo > "$CLAWSTHEMEDIR/.claws_themeinfo" <<EOF 
+Tails Windows 8
+Tails Developers
+EOF
+# Apply claws-mail theme
+# XXX: this will disable any user-defined theme stored in persistence
+#      and the change will be permanent, even though it has no effect if the theme
+#      doesn't exist, which should be the case if camouflage has not been enabled.
+if [ -d "$HOME/.claws-mail" ]; then
+    if grep "$CLAWSCONFLABEL" "$HOME/.claws-mail/clawsrc"; then
+        sed -e "s;$CLAWSCONFLABEL=.*$;$CLAWSCONFLABEL=$CLAWSTHEMEDIR;" -i "$HOME/.claws-mail/clawsrc"
+    else
+        sed -e "/$CLAWSCONFSECTION/ a $CLAWSCONFLABEL=$CLAWSTHEMEDIR" -i "$HOME/.claws-mail/clawsrc"
+    fi
+fi
+
+# Iceweasel
+# Copy the file containing toolbars configurations
+if [ -d "$HOME/.mozilla/firefox/default" ]; then
+    cp /usr/share/tails/firefox-localstore-win8.rdf \
+       ${HOME}/.mozilla/firefox/default/localstore.rdf
+    # Setup a blue lightweight theme
+    cat >> ${HOME}/.mozilla/firefox/default/user.js <<EOF
+user_pref("lightweightThemes.isThemeSelected", true);
+user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/blue_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/blue_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#3399FF\",\"updateDate\":0,\"installDate\":0}]");
+EOF
+	# Tune chrome
+	cat >> ${HOME}/.mozilla/firefox/default/chrome/userChrome.css <<EOF
+
+/* Camouflage */
+.tab-close-button { list-style-image: url("moz-icon://stock/gtk-close-grey?size=menu") !important; }
+#navigator-toolbox { background-color: #6badf6 !important; }
+EOF
+fi
 
 # Remove Tails-specific desktop icons
 rm --interactive=never -f ${HOME}/Desktop/*.desktop 2> /dev/null || true
@@ -61,22 +95,8 @@ dconf write /org/gnome/gnome-panel/layout/objects/menu-button/object-iid '"Panel
 dconf write /org/gnome/gnome-panel/layout/objects/menu-button/pack-index '0'
 dconf write /org/gnome/gnome-panel/layout/objects/menu-button/pack-type '"start"'
 dconf write /org/gnome/gnome-panel/layout/objects/menu-button/toplevel-id '"bottom-panel"'
-dconf write /org/gnome/gnome-panel/layout/objects/home-launcher/object-iid '"PanelInternalFactory::Launcher"'
-dconf write /org/gnome/gnome-panel/layout/objects/home-launcher/pack-index '1'
-dconf write /org/gnome/gnome-panel/layout/objects/home-launcher/pack-type '"start"'
-dconf write /org/gnome/gnome-panel/layout/objects/home-launcher/toplevel-id '"bottom-panel"'
-dconf write /org/gnome/gnome-panel/layout/objects/home-launcher/instance-config/location '"/usr/share/applications/nautilus.desktop"'
-dconf write /org/gnome/gnome-panel/layout/objects/iceweasel-launcher/pack-index '2'
-dconf write /org/gnome/gnome-panel/layout/objects/iceweasel-launcher/pack-type '"start"'
-dconf write /org/gnome/gnome-panel/layout/objects/iceweasel-launcher/toplevel-id '"bottom-panel"'
-dconf write /org/gnome/gnome-panel/layout/objects/claws-launcher/pack-index '3'
-dconf write /org/gnome/gnome-panel/layout/objects/claws-launcher/pack-type '"start"'
-dconf write /org/gnome/gnome-panel/layout/objects/claws-launcher/toplevel-id '"bottom-panel"'
-dconf write /org/gnome/gnome-panel/layout/objects/pidgin-launcher/pack-index '4'
-dconf write /org/gnome/gnome-panel/layout/objects/pidgin-launcher/pack-type '"start"'
-dconf write /org/gnome/gnome-panel/layout/objects/pidgin-launcher/toplevel-id '"bottom-panel"'
 dconf write /org/gnome/gnome-panel/layout/objects/window-list/object-iid '"WindowPickerFactory::WindowPicker"'
-dconf write /org/gnome/gnome-panel/layout/objects/window-list/pack-index '5'
+dconf write /org/gnome/gnome-panel/layout/objects/window-list/pack-index '1'
 dconf write /org/gnome/gnome-panel/layout/objects/window-list/pack-type '"start"'
 dconf write /org/gnome/gnome-panel/layout/objects/window-list/toplevel-id '"bottom-panel"'
 dconf write /org/gnome/gnome-panel/layout/objects/notification-area/pack-index '2'
@@ -95,6 +115,12 @@ dconf write /org/gnome/gnome-panel/layout/objects/clock/pack-type '"end"'
 # it.
 dconf write /org/gnome/gnome-panel/layout/toplevels/bottom-panel/size '48'
 
+# XXX Ugly restart hacks because this script runs too late
 # Restart the panel
-# XXX this is ugly
 pkill gnome-panel
+# Restart florence to make it use the right icon
+pkill florence && florence &/usr/share/pixmaps/gpgApplet/48x48-grey/gpgApplet
+# Mute and unmute volume to fix its icon
+amixer set Master toggle
+sleep 0.1
+amixer set Master toggle
