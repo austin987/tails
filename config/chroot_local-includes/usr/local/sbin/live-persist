@@ -323,6 +323,33 @@ activate_volumes ()
 		fi
 	done
 
+	# Migrate Squeeze-era NetworkManager persistence setting to Wheezy.
+	for conf in $(ls /live/persistence/*_unlocked/persistence.conf || true)
+	do
+		if grep -E -qs --line-regex \
+			-e '/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections' \
+			"$conf" \
+		   && ! grep -E -qs --line-regex \
+			-e '/etc/NetworkManager/system-connections\s+source=nm-system-connections' \
+			"$conf"
+		then
+			warning "Needs to make /etc/NetworkManager/system-connections persistent"
+			if [ "$PERSISTENCE_READONLY" = true ]
+			then
+				# XXX: don't really error-out, do we?
+				error "Persistence configuration needs to be migrated, but read only was selected; please retry in read-write mode"
+			fi
+			echo '/etc/NetworkManager/system-connections	source=nm-system-connections' \
+				>> "$conf" \
+				|| error "Failed to make /etc/NetworkManager/system-connections persistent: $?"
+			warning "Successfully made /etc/NetworkManager/system-connections persistent"
+			# disable pre-Wheezy NM persistence setting
+			sed -r -i \
+				-e 's,^(/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections)$,#\1,' \
+				"$conf"
+		fi
+	done
+
 	# Load the new persistence.conf.
 	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
 	get_custom_mounts ${custom_mounts} ${open_volumes}
