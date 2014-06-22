@@ -708,6 +708,16 @@ sudo, every command required by its task (currently: `chmod`, `cp`,
 It is a member of the `tails-iuk-get-target-file` group, which allows it to
 read the files downloaded by the `tails-iuk-get-target-file` program.
 
+## Running syslinux after applying an IUK
+
+Anyone who can feed `tails-install-iuk` with an arbitrary IUK can run
+arbitrary code as root, by storing the attack code in one of the
+tarballs contained in the IUK, as `utils/linux/syslinux`. This does
+not introduce new security risks: the very same adversary could plant
+a persistent rootkit anyway. Our protection against this instead
+relies in the privilege separation described above: all that the
+`amnesia` user can do is run the frontend with no arguments.
+
 # Research
 
 ## Secure upgrade
