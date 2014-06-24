@@ -12,9 +12,25 @@ available removable storage devices.
 Upgrades
 ========
 
-Tails Installer is able to do full upgrades of an already installed
-USB stick. During the needed operations, everything except the Tails system
-partition is left untouched.
+Tails Installer can perform a full upgrade of an already installed
+USB stick. During this process, nothing is modified on the target
+drive but the Tails system partition and the [[!wikipedia Master boot record]].
+
+At the end of the upgrade process, we upgrade syslinux with the binary
+found in `utils/linux/syslinux` on the Tails system partition.
+Likewise, upgrade the boot device's MBR with the one found in
+`utils/mbr/mbr.bin` on the Tails system partition. This ensures that
+the installed version of syslinux matches the version of the COM32
+modules that are shipped by the version of Tails the target drive was
+just upgraded to.
+
+Security discussion: with this mechanism in place, anyone who can feed
+an arbitrary ISO into Tails Installer can run arbitrary code (stored
+in the ISO filesystem as `utils/linux/syslinux`) as the user running
+Tails Installer. We have no mechanism to run Tails Installer with
+elevated privileges currently, so this should not be a problem: being
+able to run `liveusb-creator` with arbitrary arguments is equivalent
+to being able to run arbitrary code already.
 
 Mode of operation and booting methods
 =====================================
@@ -40,7 +56,7 @@ Two alternatives booting methods have been investigated:
 
 We have settled on the *copy ISO's content* way, mostly because it is overall
 simpler, more robust, and allows
-implementing [[!tails_todo incremental_upgrades]] relatively easily.
+implementing [[contribute/design/incremental_upgrades]] relatively easily.
 
 Partitioning
 ============
@@ -56,11 +72,13 @@ The storage device is partitioned using [GPT](https://en.wikipedia.org/wiki/GUID
  * Partitions can be labeled. The [[design/persistence]] setup tools can
    easily detect the right partitions without blind tries.
 
-The system partition (holding Tails) has a size of 1.5 GB, with the
+The system partition (holding Tails) has a size of 2.5 GB, with the
 following estimates:
 
  * Tails ISO: 1GB
- * 3 [[!tails_todo incremental_upgrades desc="incremental upgrade kits"]], 60 MB each: 180MB
+ * 3 [[incremental upgrade kits|contribute/design/incremental upgrade]], 200 MB each: 600MB
+ * free space needed to install an incremental upgrade kit: 2 * 200 MB
+   = 600 MB
 
 The Tails system partition uses a FAT32 filesystem, mainly because it is the
 one supported by SYSLINUX we may easily create, in a programmatic manner, from
@@ -124,11 +142,11 @@ We have `.desktop` files for the following usecases:
 Why a fork of liveusb-creator?
 ==============================
 
-After an initial [[!tails_todo usb_install_and_upgrade/archive desc="roundup of existing tools"]],
+After an initial [[roundup of existing tools|blueprint/usb_install_and_upgrade/archive]],
 we decided to use Fedora's `liveusb-creator` as a basis, for reasons that are now
 obsolete due to more recent design choices. While we did most of our initial
 adaptation work on liveusb-creator with future upstreaming of our changes in
 mind, it proved to be hard, and future extension seems now out of question.
-Our [[!tails_todo usb_install_and_upgrade desc="future plans"]] include moving to another
+Our [[future plans|blueprint/usb_install_and_upgrade]] include moving to another
 piece of software as a basis, and hopefully working more closely with this
 future upstream of ours.

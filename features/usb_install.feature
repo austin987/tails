@@ -227,7 +227,24 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the expected persistent files are present in the filesystem
 
   @keep_volumes
-  Scenario: Upgrading an old Tails USB installation from an ISO image
+  Scenario: Upgrading an old Tails USB installation from an ISO image, running on the old version
+    Given a computer
+    And I clone USB drive "old" to a new USB drive "to_upgrade"
+    And the computer is set to boot from USB drive "old"
+    And the network is unplugged
+    And I setup a filesystem share containing the Tails ISO
+    When I start the computer
+    And the computer boots Tails
+    And I log in to a new session
+    And GNOME has started
+    And all notifications have disappeared
+    And I plug USB drive "to_upgrade"
+    And I do a "Upgrade from ISO" on USB drive "to_upgrade"
+    Then Tails is installed on USB drive "to_upgrade"
+    And I unplug USB drive "to_upgrade"
+
+  @keep_volumes
+  Scenario: Upgrading an old Tails USB installation from an ISO image, running on the new version
     Given a computer
     And I clone USB drive "old" to a new USB drive "to_upgrade"
     And the computer is set to boot from the Tails DVD
