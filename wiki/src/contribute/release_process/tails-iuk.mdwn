@@ -23,6 +23,10 @@ Install build-dependencies from Debian:
     liblocale-msgfmt-perl libmoosex-has-sugar-perl \
     dh-make-perl
 
+If running something older than Jessie:
+
+    apt-get install libtest-bdd-cucumber/wheezy-backports
+
 Install build-dependencies that are not in Debian yet:
 
     DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::LocaleMsgfmt
@@ -60,12 +64,6 @@ relevant tag of Tails' perl5lib):
     # run the tests in closer to real conditions
     umask 077
     
-    # Run the pherkin tests
-    # for each $FEATURE in features/* :
-    LC_ALL=C PERL5LIB=/home/user/tails/perl5lib/lib pherkin $FEATURE
-    # ... and manually cleanup mounted filesystems and busy loopback
-    # devices left behind between each run of some features, sorry :(
-
     # Run the rest of the test suite
     RELEASE_TESTING=1 LC_ALL=C PERL5LIB=/home/user/tails/perl5lib/lib dzil test
 
@@ -97,9 +95,9 @@ Commit `debian/changelog`:
 
     git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
-Build a Debian package (use a Wheezy chroot with the `tails-perl5lib`
-package available), add a signed tag to the repository and push the
-changes:
+Build a Debian package (use a Wheezy chroot with the right version of
+`tails-perl5lib` installed), add a signed tag to the repository and
+push the changes:
 
     git-buildpackage && \
        git-buildpackage --git-tag-only --git-sign-tags && \
