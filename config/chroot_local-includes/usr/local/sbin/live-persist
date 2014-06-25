@@ -356,7 +356,12 @@ activate_volumes ()
 
 	if [ -s "${custom_mounts}" ]
 	then
+		OLD_UMASK="$(umask)"
+		# Have activate_custom_mounts create new directories
+		# with safe permissions (#7443)
+		umask 0077
 		activate_custom_mounts ${custom_mounts} &> /dev/null
+		umask "$OLD_UMASK"
 	fi
 	rm -f ${custom_mounts} 2> /dev/null
 
