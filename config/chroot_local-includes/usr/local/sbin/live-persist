@@ -350,6 +350,34 @@ activate_volumes ()
 		fi
 	done
 
+	# Fix permissions on persistent directories that were created
+	# with unsafe permissions.
+	for persistent_fs in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		[ -d "$persistent_fs" ] || continue
+		for child in $(ls "$persistent_fs" || true)
+		do
+			subdir="$persistent_fs/$child"
+			[ -d "$subdir" ] || continue
+			# Note: we chmod even custom persistent directories.
+			# This may break things by changing otherwise correct
+			# permissions copied from the directory that was made
+			# persistent, so we only do that if the persistent directory
+			# is owned by amnesia:amnesia, and thus unlikely to be
+			# a system directory. This e.g. avoids setting wrong
+			# permissions on the APT, CUPS and NetworkManager
+			# persistent directories.
+			[ $(stat -c '%U' "$subdir") = 'amnesia' ] || continue
+			[ $(stat -c '%G' "$subdir") = 'amnesia' ] || continue
+			if [ "$PERSISTENCE_READONLY" = true ]
+			then
+				warning "Permissions of '$subdir' may need to be fixed, but read only was selected; please retry in read-write mode"
+			else
+				chmod go= "$subdir"
+			fi
+		done
+	done
+
 	# Load the new persistence.conf.
 	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
 	get_custom_mounts ${custom_mounts} ${open_volumes}
