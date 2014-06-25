@@ -12,6 +12,21 @@ def persistent_dirs
    "/var/lib/apt/lists"]
 end
 
+def persistent_source_dirs
+  ["Persistent",
+   "apt",
+   "bookmarks",
+   "claws-mail",
+   "cups",
+   "dotfiles",
+   "gnome-keyrings",
+   "gnupg",
+   "nm-system-connections",
+   "openssh-client",
+   "pidgin",
+  ]
+end
+
 def persistent_volumes_mountpoints
   @vm.execute("ls -1 -d /live/persistence/*_unlocked/").stdout.chomp.split
 end
@@ -391,6 +406,19 @@ Then /^persistence configuration files have safe access rights$/ do
              "'#{f}' is owned by group '#{file_group}', expected 'tails-persistence-setup'")
       assert(file_perms == "600",
              "'#{f}' has permissions '#{file_perms}', expected '600'")
+    end
+  end
+end
+
+Then /^persistent directories have safe access rights$/ do
+  persistent_volumes_mountpoints.each do |mountpoint|
+    persistent_source_dirs.each do |dir|
+      f = "#{mountpoint}/#{dir}"
+      next unless @vm.execute("test -d #{f}").success?
+      file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
+      expected_perms = "600"
+      assert(file_perms == expected_perms,
+             "'#{f}' has permissions '#{file_perms}', expected '#{expected_perms}'")
     end
   end
 end
