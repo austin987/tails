@@ -49,6 +49,7 @@ pref("browser.syncPromoViewsLeftMap", "{\"addons\":0, \"passwords\":0, \"bookmar
 pref("services.sync.engine.prefs", false); // Never sync prefs, addons, or tabs with other browsers
 pref("services.sync.engine.addons", false);
 pref("services.sync.engine.tabs", false);
+pref("extensions.getAddons.cache.enabled", false); // https://blog.mozilla.org/addons/how-to-opt-out-of-add-on-metadata-updates/
 
 // Fingerprinting
 pref("webgl.min_capability_mode", true);
@@ -139,6 +140,21 @@ pref("keyword.URL", "https://startpage.com/do/search?q=");
 // Nvida cards also experience crashes without the second pref set to disabled
 pref("gfx.direct2d.disabled", true);
 pref("layers.acceleration.disabled", true);
+
+// Security enhancements
+// https://trac.torproject.org/projects/tor/ticket/9387#comment:17
+pref("javascript.options.ion.content", false);
+pref("javascript.options.baselinejit.content", false);
+pref("javascript.options.asmjs", false);
+pref("javascript.options.typeinference", false);
+
+// Audio_data is deprecated in future releases, but still present
+// in FF24. This is a dangerous combination (spotted by iSec)
+pref("media.audio_data.enabled", false);
+
+// Enable TLS 1.1 and 1.2:
+// https://trac.torproject.org/projects/tor/ticket/11253
+pref("security.tls.version.max", 3);
 
 // Version placeholder
 pref("torbrowser.version", "UNKNOWN");
