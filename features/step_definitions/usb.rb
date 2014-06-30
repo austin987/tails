@@ -413,6 +413,7 @@ end
 Then /^persistent directories have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
     persistent_source_dirs.each do |dir|
+      next if "#{dir}" == 'nm-system-connections'
       f = "#{mountpoint}/#{dir}"
       next unless @vm.execute("test -d #{f}").success?
       file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
