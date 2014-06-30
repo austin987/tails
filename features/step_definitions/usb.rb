@@ -435,7 +435,8 @@ end
 When /^I remove some files expected to persist$/ do
   next if @skip_steps_while_restoring_background
   persistent_dirs.each do |dir|
-    assert(@vm.execute("rm #{dir}/XXX_persist").success?,
+    owner = @vm.execute("stat -c %U #{dir}").stdout.chomp
+    assert(@vm.execute("rm #{dir}/XXX_persist", user=owner).success?,
            "Could not remove file in persistent directory #{dir}")
   end
 end
