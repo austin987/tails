@@ -416,7 +416,7 @@ Then /^persistent directories have safe access rights$/ do
       f = "#{mountpoint}/#{dir}"
       next unless @vm.execute("test -d #{f}").success?
       file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
-      expected_perms = "600"
+      expected_perms = "700"
       assert(file_perms == expected_perms,
              "'#{f}' has permissions '#{file_perms}', expected '#{expected_perms}'")
     end
