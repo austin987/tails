@@ -17,7 +17,7 @@ def persistent_source_dirs
    "apt",
    "bookmarks",
    "claws-mail",
-   "cups",
+   "cups-configuration",
    "dotfiles",
    "gnome-keyrings",
    "gnupg",
