@@ -160,48 +160,61 @@ def check_part_integrity(name, dev, usage, type, scheme, label)
          "Unexpected partition label on USB drive '#{name}', '#{dev}'")
 end
 
-Then /^Tails is installed on USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
+def tails_is_installed_helper(name, tails_root, loader)
   dev = @vm.disk_dev(name) + "1"
   check_part_integrity(name, dev, "filesystem", "vfat", "gpt", "Tails")
 
-  old_root = "/lib/live/mount/medium"
-  new_root = "/mnt/new"
-  @vm.execute("mkdir -p #{new_root}")
-  @vm.execute("mount #{dev} #{new_root}")
+  target_root = "/mnt/new"
+  @vm.execute("mkdir -p #{target_root}")
+  @vm.execute("mount #{dev} #{target_root}")
 
-  c = @vm.execute("diff -qr '#{old_root}/live' '#{new_root}/live'")
+  c = @vm.execute("diff -qr '#{tails_root}/live' '#{target_root}/live'")
   assert(c.success?,
          "USB drive '#{name}' has differences in /live:\n#{c.stdout}")
 
-  loader = boot_device_type == "usb" ? "syslinux" : "isolinux"
-  syslinux_files = @vm.execute("ls -1 #{new_root}/syslinux").stdout.chomp.split
+  syslinux_files = @vm.execute("ls -1 #{target_root}/syslinux").stdout.chomp.split
   # We deal with these files separately
   ignores = ["syslinux.cfg", "exithelp.cfg", "ldlinux.sys"]
   for f in syslinux_files - ignores do
-    c = @vm.execute("diff -q '#{old_root}/#{loader}/#{f}' " +
-                    "'#{new_root}/syslinux/#{f}'")
+    c = @vm.execute("diff -q '#{tails_root}/#{loader}/#{f}' " +
+                    "'#{target_root}/syslinux/#{f}'")
     assert(c.success?, "USB drive '#{name}' has differences in " +
            "'/syslinux/#{f}'")
   end
 
   # The main .cfg is named differently vs isolinux
-  c = @vm.execute("diff -q '#{old_root}/#{loader}/#{loader}.cfg' " +
-                  "'#{new_root}/syslinux/syslinux.cfg'")
+  c = @vm.execute("diff -q '#{tails_root}/#{loader}/#{loader}.cfg' " +
+                  "'#{target_root}/syslinux/syslinux.cfg'")
   assert(c.success?, "USB drive '#{name}' has differences in " +
          "'/syslinux/syslinux.cfg'")
 
   # We have to account for the different path vs isolinux
-  old_exithelp = @vm.execute("cat '#{old_root}/#{loader}/exithelp.cfg'").stdout
-  new_exithelp = @vm.execute("cat '#{new_root}/syslinux/exithelp.cfg'").stdout
+  old_exithelp = @vm.execute("cat '#{tails_root}/#{loader}/exithelp.cfg'").stdout
+  new_exithelp = @vm.execute("cat '#{target_root}/syslinux/exithelp.cfg'").stdout
   new_exithelp_undiffed = new_exithelp.sub("kernel /syslinux/vesamenu.c32",
                                            "kernel /#{loader}/vesamenu.c32")
   assert(new_exithelp_undiffed == old_exithelp,
          "USB drive '#{name}' has unexpected differences in " +
          "'/syslinux/exithelp.cfg'")
 
-  @vm.execute("umount #{new_root}")
+  @vm.execute("umount #{target_root}")
   @vm.execute("sync")
+end
+
+Then /^the running Tails is installed on USB drive "([^"]+)"$/ do |target_name|
+  next if @skip_steps_while_restoring_background
+  loader = boot_device_type == "usb" ? "syslinux" : "isolinux"
+  tails_is_installed_helper(target_name, "/lib/live/mount/medium", loader)
+end
+
+Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
+  next if @skip_steps_while_restoring_background
+  iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"
+  iso_root = "/mnt/iso"
+  @vm.execute("mkdir -p #{iso_root}")
+  @vm.execute("mount -o loop #{iso} #{iso_root}")
+  tails_is_installed_helper(target_name, iso_root, "isolinux")
+  @vm.execute("umount #{iso_root}")
 end
 
 Then /^there is no persistence partition on USB drive "([^"]+)"$/ do |name|

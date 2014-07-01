@@ -18,7 +18,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I create a new 4 GiB USB drive named "current"
     And I plug USB drive "current"
     And I "Clone & Install" Tails to USB drive "current"
-    Then Tails is installed on USB drive "current"
+    Then the running Tails is installed on USB drive "current"
     But there is no persistence partition on USB drive "current"
     And I unplug USB drive "current"
 
@@ -125,7 +125,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I create a new 4 GiB USB drive named "old"
     And I plug USB drive "old"
     And I "Clone & Install" Tails to USB drive "old"
-    Then Tails is installed on USB drive "old"
+    Then the running Tails is installed on USB drive "old"
     But there is no persistence partition on USB drive "old"
     And I unplug USB drive "old"
 
@@ -177,7 +177,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And all notifications have disappeared
     And I plug USB drive "to_upgrade"
     And I "Clone & Upgrade" Tails to USB drive "to_upgrade"
-    Then Tails is installed on USB drive "to_upgrade"
+    Then the running Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
 
   @keep_volumes
@@ -210,7 +210,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And all notifications have disappeared
     And I plug USB drive "to_upgrade"
     And I "Clone & Upgrade" Tails to USB drive "to_upgrade"
-    Then Tails is installed on USB drive "to_upgrade"
+    Then the running Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
     And I unplug USB drive "current"
 
@@ -244,7 +244,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And all notifications have disappeared
     And I plug USB drive "to_upgrade"
     And I do a "Upgrade from ISO" on USB drive "to_upgrade"
-    Then Tails is installed on USB drive "to_upgrade"
+    Then the ISO's Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
 
   @keep_volumes
@@ -261,7 +261,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And all notifications have disappeared
     And I plug USB drive "to_upgrade"
     And I do a "Upgrade from ISO" on USB drive "to_upgrade"
-    Then Tails is installed on USB drive "to_upgrade"
+    Then the ISO's Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
 
   Scenario: Booting a USB drive upgraded from ISO with persistence enabled
@@ -293,7 +293,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And all notifications have disappeared
     And I plug USB drive "mbr"
     And I "Clone & Install" Tails to USB drive "mbr"
-    Then Tails is installed on USB drive "mbr"
+    Then the running Tails is installed on USB drive "mbr"
     But there is no persistence partition on USB drive "mbr"
     And I unplug USB drive "mbr"
 
@@ -337,7 +337,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     But I am suggested to do a "Clone & Install"
     And I kill the process "liveusb-creator"
     And I "Clone & Install" Tails to USB drive "isohybrid"
-    Then Tails is installed on USB drive "isohybrid"
+    Then the running Tails is installed on USB drive "isohybrid"
     But there is no persistence partition on USB drive "isohybrid"
     And I unplug USB drive "isohybrid"
 
