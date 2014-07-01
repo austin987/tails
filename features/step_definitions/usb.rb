@@ -1,15 +1,17 @@
-def persistent_dirs
-  ["/etc/cups",
-   "/etc/NetworkManager/system-connections",
-   "/home/#{$live_user}/.claws-mail",
-   "/home/#{$live_user}/.gnome2/keyrings",
-   "/home/#{$live_user}/.gnupg",
-   "/home/#{$live_user}/.mozilla/firefox/bookmarks",
-   "/home/#{$live_user}/.purple",
-   "/home/#{$live_user}/.ssh",
-   "/home/#{$live_user}/Persistent",
-   "/var/cache/apt/archives",
-   "/var/lib/apt/lists"]
+def persistent_mounts
+  {
+    "cups-configuration" => "/etc/cups",
+    "nm-system-connections" => "/etc/NetworkManager/system-connections",
+    "claws-mail" => "/home/#{$live_user}/.claws-mail",
+    "gnome-keyrings" => "/home/#{$live_user}/.gnome2/keyrings",
+    "gnupg" => "/home/#{$live_user}/.gnupg",
+    "bookmarks" => "/home/#{$live_user}/.mozilla/firefox/bookmarks",
+    "pidgin" => "/home/#{$live_user}/.purple",
+    "openssh-client" => "/home/#{$live_user}/.ssh",
+    "Persistent" => "/home/#{$live_user}/Persistent",
+    "apt/cache" => "/var/cache/apt/archives",
+    "apt/lists" => "/var/lib/apt/lists",
+  }
 end
 
 def persistent_volumes_mountpoints
@@ -274,7 +276,7 @@ Given /^persistence is enabled$/ do
   end
   # Check that all persistent directories are mounted
   mount = @vm.execute("mount").stdout.chomp
-  for dir in persistent_dirs do
+  for _, dir in persistent_mounts do
     assert(mount.include?("on #{dir} "),
            "Persistent directory '#{dir}' is not mounted")
   end
@@ -395,9 +397,27 @@ Then /^persistence configuration files have safe access rights$/ do
   end
 end
 
+Then /^persistent directories have safe access rights$/ do
+  next if @skip_steps_while_restoring_background
+  expected_perms = "700"
+  persistent_volumes_mountpoints.each do |mountpoint|
+    # We also want to check that dotfiles' source has safe permissions
+    all_persistent_dirs = persistent_mounts.clone
+    all_persistent_dirs["dotfiles"] = "/home/#{$live_user}/"
+    persistent_mounts.each do |src, dest|
+      next unless dest.start_with?("/home/#{$live_user}/")
+      f = "#{mountpoint}/#{src}"
+      next unless @vm.execute("test -d #{f}").success?
+      file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
+      assert(file_perms == expected_perms,
+             "'#{f}' has permissions '#{file_perms}', expected '#{expected_perms}'")
+    end
+  end
+end
+
 When /^I write some files expected to persist$/ do
   next if @skip_steps_while_restoring_background
-  persistent_dirs.each do |dir|
+  persistent_mounts.each do |_, dir|
     owner = @vm.execute("stat -c %U #{dir}").stdout.chomp
     assert(@vm.execute("touch #{dir}/XXX_persist", user=owner).success?,
            "Could not create file in persistent directory #{dir}")
@@ -406,15 +426,16 @@ end
 
 When /^I remove some files expected to persist$/ do
   next if @skip_steps_while_restoring_background
-  persistent_dirs.each do |dir|
-    assert(@vm.execute("rm #{dir}/XXX_persist").success?,
+  persistent_mounts.each do |_, dir|
+    owner = @vm.execute("stat -c %U #{dir}").stdout.chomp
+    assert(@vm.execute("rm #{dir}/XXX_persist", user=owner).success?,
            "Could not remove file in persistent directory #{dir}")
   end
 end
 
 When /^I write some files not expected to persist$/ do
   next if @skip_steps_while_restoring_background
-  persistent_dirs.each do |dir|
+  persistent_mounts.each do |_, dir|
     owner = @vm.execute("stat -c %U #{dir}").stdout.chomp
     assert(@vm.execute("touch #{dir}/XXX_gone", user=owner).success?,
            "Could not create file in persistent directory #{dir}")
@@ -423,7 +444,7 @@ end
 
 Then /^the expected persistent files are present in the filesystem$/ do
   next if @skip_steps_while_restoring_background
-  persistent_dirs.each do |dir|
+  persistent_mounts.each do |_, dir|
     assert(@vm.execute("test -e #{dir}/XXX_persist").success?,
            "Could not find expected file in persistent directory #{dir}")
     assert(!@vm.execute("test -e #{dir}/XXX_gone").success?,
