@@ -212,6 +212,7 @@ Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
   @vm.execute("mkdir -p #{iso_root}")
   @vm.execute("mount -o loop #{iso} #{iso_root}")
   tails_is_installed_helper(target_name, iso_root, "isolinux")
+  @vm.execute("umount #{iso_root}")
 end
 
 Then /^there is no persistence partition on USB drive "([^"]+)"$/ do |name|
