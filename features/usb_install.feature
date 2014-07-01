@@ -187,7 +187,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
-    And I enable read-only persistence with password "asdf"
+    And I enable persistence with password "asdf"
     And I log in to a new session
     Then Tails seems to have booted normally
     And Tails is running from USB drive "to_upgrade"
@@ -221,7 +221,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
-    And I enable read-only persistence with password "asdf"
+    And I enable persistence with password "asdf"
     And I log in to a new session
     Then Tails seems to have booted normally
     And persistence is enabled
@@ -270,7 +270,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the network is unplugged
     When I start the computer
     And the computer boots Tails
-    And I enable read-only persistence with password "asdf"
+    And I enable persistence with password "asdf"
     And I log in to a new session
     Then Tails seems to have booted normally
     And persistence is enabled
