@@ -53,7 +53,7 @@ Then /^the live user owns its home dir and it has normal permissions$/ do
   perms = @vm.execute("stat -c %a #{home}").stdout.chomp
   assert(owner == "#{$live_user}:#{$live_user}",
          "The live user's home has unexpected ownership '#{owner}'")
-  assert(perms == "755",
+  assert(perms == "700",
          "The live user's home has unexpected permissions '#{perms}'")
 end
 
