@@ -1,44 +1,63 @@
-We'll need to migrate our custom programs to python3
+[[!meta title="Python 3"]]
 
-# Python 3 libraries we need that are missing in Jessie
+We'll need to migrate our custom programs to Python 3. First of all,
+we need to make sure all the Python 3 libraries we need are in Jessie:
+[[!tails_ticket 5875]], [[!tails_ticket 6175]].
+
+[[!toc levels=2]]
 
     $ git grep "^ *import " config/
     $ git grep "^ *from [^ -]* import " config/
 
-## Python imports in tails repository
+# Main Git repository
 
-Modules not inculded in standard library follow:
+Modules not included in standard library follow:
 
-### config/chroot_local-includes/etc/whisperback/config.py
-
-None
-
-### config/chroot_local-includes/usr/local/bin/lc.py
+## config/chroot_local-includes/etc/whisperback/config.py
 
 None
 
-### config/chroot_local-includes/usr/local/bin/shutdown_helper_applet
+## config/chroot_local-includes/usr/local/bin/lc.py
 
-- `gtk`: depercated, replaced by `python3-gi` and `gir1.2-gtk-3.0`
+None
+
+## config/chroot_local-includes/usr/local/bin/shutdown_helper_applet
+
+- `gtk`: deprecated, replaced by `python3-gi` and `gir1.2-gtk-3.0`
 - `gnomeapplet`: deprecated, replaced by `python3-gi` and `gir1.2-panelapplet-4.0`
 
-### config/chroot_local-includes/usr/local/bin/tails-about
+## config/chroot_local-includes/usr/local/bin/tails-about
 
-- `gtk`: depercated, replaced by `python3-gi` and `gir1.2-gtk-3.0`
+- `gtk`: deprecated, replaced by `python3-gi` and `gir1.2-gtk-3.0`
 
-### config/chroot_local-includes/usr/local/sbin/autotest_remote_shell.py
+## config/chroot_local-includes/usr/local/sbin/autotest_remote_shell.py
 
 - `serial`: OK, `python3-serial`
 
-### config/chroot_local-includes/usr/local/sbin/boot-profile
+## config/chroot_local-includes/usr/local/sbin/boot-profile
 
 - `pyinotify`: OK, `python3-pyinotify`
 
-### config/chroot_local-includes/usr/local/sbin/tails-additional-software
+## config/chroot_local-includes/usr/local/sbin/tails-additional-software
 
 - `posix1e`: OK, `python3-pylibacl`
 
-## Python imports in WhisperBack
+# Tails Greeter
+
+* `pycountry`: **no Python 3 version in Debian**
+- `icu`: OK, `python3-icu`
+
+# Tails Installer
+
+- `configobj`: **no Python 3 version in Debian**
+- `StringIO`: the `StringIO` module is included in the stdlib, and
+  available in python3 as `io.StringIO` or `io.BytesIO`
+- `PyQt4`: OK, `python3-pyqt4`
+- `dbus`: OK, `python3-dbus`
+- `parted`: OK, `python3-parted`
+- `urlparse`: renamed `urllib.urlparse`
+
+# WhisperBack
 
 - `GnuPGInterface`: **no python3 version, unmaintained**
 - `gtk`: deprecated, replaced by `python3-gi` and `gir1.2-gtk-3.0`
