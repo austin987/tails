@@ -46,67 +46,52 @@ called [Veewee].
 Installing the requirements
 ---------------------------
 
-To build the *base box* from scratch using Veewee, you will need to get both
-Veewee and Vargant from Rubygems:
+    sudo apt-get install ruby ruby-dev rubygems build-essential libxslt1-dev \
+                 libxml2-dev virtualbox linux-headers-amd64
 
-    # gem install --no-ri --no-rdoc vagrant
-    # gem install --no-ri --no-rdoc veewee
-
-*Note:* Unfortunately, using `gem --user` does not work. The `basebox`
-subcommands that is made available by Veewee never shows up in Vagrant.
-That needs to sorted out upstream.
-
-*Note:* Installing the Veewee gem will install the Vagrant gem, even
-if the Debian package is installed.
-
-Running Veewee
---------------
-
-Running Veewee has been automated using Rake. So creating the *base box* is
-just a matter of running:
-
-    $ http_proxy="http://proxy.lan:3142" rake basebox:create_basebox
-
-Obivously, you can drop the `http_proxy` part if you don't have one.
-
-The rest should be fully automatic, and leave you with a `squeeze.box` file in
-the `vagrant` directory.
+    sudo gem install --no-ri --no-rdoc veewee
 
 Update the distributed *base box*
 ---------------------------------
 
-The *base box* on Tails mirrors is expected to lie at
-`project/vagrant/squeeze.box`.
+The `veewee` sources can be obtained via Git:
 
-Do not forget to update the corresponding SHA256 sum in `vagrant/Vagrantfile`.
+    git clone https://github.com/jedi4ever/veewee
 
-In details
-----------
+Please set the `TAILS_SRC` and `VEEWEE_SRC` environment variables to
+the path to the Tails and veewee sources, respectively. Then run:
 
-To create the *basebox* from the `squeeze` template (in `definitions`
-directory), the command is the following:
 
-    $ vagrant basebox build squeeze
+    ORIG_BOXNAME=tails-builder
+    DATE="$(date +%Y%m%d)"
+    BOXNAME="${ORIG_BOXNAME}-${DATE}"
+    sed -i "s/tails-builder-[0-9]\{8\}/${BOXNAME}/" \
+        "${TAILS_SRC}"/vagrant/Vagrantfile
+    mkdir -p "${VEEWEE_SRC}"/definitions
+    cp -a "${TAILS_SRC}/vagrant/definitions/${ORIG_BOXNAME}" \
+          "${VEEWEE_SRC}/definitions/${BOXNAME}"
+    cd "${VEEWEE_SRC}"
+    veewee vbox build "${BOXNAME}"
+    vboxmanage controlvm "${BOXNAME}" acpipowerbutton
+    # wait until VM shuts down, then:
+    veewee vbox export "${BOXNAME}"
+    vboxmanage unregistervm "${BOXNAME}" --delete
+    rm -rf definitions/"${BOXNAME}"
+    CHECKSUM="$(sha256sum ${BOXNAME}.box | grep -o '^\w\+')"
+    (
+      cd "${TAILS_SRC}"
+      sed -i -e "s/^BOX_CHECKSUM = .*$/BOX_CHECKSUM = '${CHECKSUM}'/" \
+             vagrant/lib/tails_build_settings.rb
+      sed -i "s/tails-builder-[0-9]\{8\}/${BOXNAME}/" \
+             vagrant/lib/tails_build_settings.rb vagrant/Vagrantfile
+      git commit vagrant -m "Updated Vagrant basebox."
+    )
 
-> *Note:* It looks like the current version of the `virtualbox` gem is not
-> compatible with VirtualBox 4.0.x that is in `squeeze-backports`. Using
-> a hand made backport of virtualbox 4.1.12-dfsg-2 worked fine.
+Then `$BOXNAME.box` will be placed in the current working directory,
+and all needed changes committed to the current checked out branch in
+`$TAILS_SRC`. The basebox should be uploaded to the Tails mirrors at
+`http://dl.amnesia.boum.org/tails/project/vagrant/$BOXNAME.box`, as
+define defined in `vagrant/Vagrantfile`.
 
-After issuing that command, Veewee will download the boot ISO image,
-drive the debian-installer using [preeseding] and run `postinstall.sh` that
-will take care of seting up the environment expected by Vagrant.
-
-[preseeding]: https://www.debian.org/releases/stable/i386/apbs02.html
-
-In order to support local HTTP proxy, the `preseed.cfg` is generated from an
-ERB template during the Rake task `create_preseed_cfg`.
-
-Once the initial setup is done, it is worthwhile to see if the *basebox*
-fits Vagrant requirements. Veewee ships with an automated test suite:
-
-    $ vagrant basebox validate squeeze
-
-If everything goes well, then, great, we have our *basebox*. Let's export
-it to a `.box` file that Vagrant can use:
-
-    $ vagrant basebox export squeeze
+Do not forget to update the SHA256 sum in
+`vagrant/lib/tails_build_settings.rb`.
