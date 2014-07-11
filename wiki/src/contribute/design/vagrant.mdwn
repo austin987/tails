@@ -46,13 +46,24 @@ called [Veewee].
 Installing the requirements
 ---------------------------
 
+Debian packages:
+
     sudo apt-get install ruby ruby-dev rubygems build-essential libxslt1-dev \
                  libxml2-dev virtualbox linux-headers-amd64
+
+Veewee isn't packaged in Debian, so we install the Ruby Gem as the
+user that is gonna build the basebox:
 
     gem install --user --no-ri --no-rdoc veewee
 
 Update the distributed *base box*
 ---------------------------------
+
+After issuing the commands below, Veewee will download the boot ISO
+image, drive the debian-installer using
+[preeseding](https://www.debian.org/releases/stable/i386/apbs02.html)
+and run `postinstall.sh` to take care of seting up the environment
+expected by Vagrant.
 
     ORIG_BOXNAME=tails-builder
     DATE="$(date +%Y%m%d)"
