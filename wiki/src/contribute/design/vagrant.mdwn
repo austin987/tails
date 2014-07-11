@@ -54,23 +54,14 @@ Installing the requirements
 Update the distributed *base box*
 ---------------------------------
 
-The `veewee` sources can be obtained via Git:
-
-    git clone https://github.com/jedi4ever/veewee
-
-Please set the `TAILS_SRC` and `VEEWEE_SRC` environment variables to
-the path to the Tails and veewee sources, respectively. Then run:
-
-
     ORIG_BOXNAME=tails-builder
     DATE="$(date +%Y%m%d)"
     BOXNAME="${ORIG_BOXNAME}-${DATE}"
     sed -i "s/tails-builder-[0-9]\{8\}/${BOXNAME}/" \
         "${TAILS_SRC}"/vagrant/Vagrantfile
     mkdir -p "${VEEWEE_SRC}"/definitions
-    cp -a "${TAILS_SRC}/vagrant/definitions/${ORIG_BOXNAME}" \
-          "${VEEWEE_SRC}/definitions/${BOXNAME}"
-    cd "${VEEWEE_SRC}"
+    cp -a vagrant/definitions/${ORIG_BOXNAME}" \
+          vagrant/definitions/${BOXNAME}"
     veewee vbox build "${BOXNAME}"
     vboxmanage controlvm "${BOXNAME}" acpipowerbutton
     # wait until VM shuts down, then:
@@ -78,16 +69,13 @@ the path to the Tails and veewee sources, respectively. Then run:
     vboxmanage unregistervm "${BOXNAME}" --delete
     rm -rf definitions/"${BOXNAME}"
     CHECKSUM="$(sha256sum ${BOXNAME}.box | grep -o '^\w\+')"
-    (
-      cd "${TAILS_SRC}"
-      sed -i -e "s/^BOX_CHECKSUM = .*$/BOX_CHECKSUM = '${CHECKSUM}'/" \
-             vagrant/lib/tails_build_settings.rb
-      sed -i "s/tails-builder-[0-9]\{8\}/${BOXNAME}/" \
-             vagrant/lib/tails_build_settings.rb vagrant/Vagrantfile
-      git commit vagrant -m "Updated Vagrant basebox."
-    )
+    sed -i -e "s/^BOX_CHECKSUM = .*$/BOX_CHECKSUM = '${CHECKSUM}'/" \
+           vagrant/lib/tails_build_settings.rb
+    sed -i "s/tails-builder-[0-9]\{8\}/${BOXNAME}/" \
+           vagrant/lib/tails_build_settings.rb vagrant/Vagrantfile
+    git commit vagrant -m "Updated Vagrant basebox."
 
-Then `$BOXNAME.box` will be placed in the current working directory,
+Then `$BOXNAME.box` will be placed in tails source root,
 and all needed changes committed to the current checked out branch in
 `$TAILS_SRC`. The basebox should be uploaded to the Tails mirrors at
 `http://dl.amnesia.boum.org/tails/project/vagrant/$BOXNAME.box`, as
