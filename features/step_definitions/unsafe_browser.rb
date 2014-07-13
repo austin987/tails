@@ -20,11 +20,6 @@ Then /^the Unsafe Browser has a red theme$/ do
   @screen.wait("UnsafeBrowserRedTheme.png", 10)
 end
 
-Then /^the Unsafe Browser has Wikipedia pre-selected in the search bar$/ do
-  next if @skip_steps_while_restoring_background
-  @screen.wait("UnsafeBrowserSearchBar.png", 10)
-end
-
 Then /^the Unsafe Browser shows a warning as its start page$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserStartPage.png", 10)

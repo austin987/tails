@@ -60,6 +60,10 @@ branch and changes should be made from there.
 
 From minor releases, work should happen in `stable`.
 
+<div class="caution">
+Then, read this document from the branch used to prepare the release.
+</div>
+
 Update included files
 =====================
 
@@ -239,6 +243,23 @@ If at freeze time:
    using Git that they should regularly contact Transifex translators,
    as detailed on the [[documentation for
    translators|contribute/how/translate]].
+
+Import the signing key
+======================
+
+You should never import the Tails signing key into your own keyring,
+and a good practice is to import it to a tmpfs so no key material is
+written to disk:
+
+    export GNUPGHOME=$(mktemp -d)
+    sudo mount -t tmpfs tmpfs "$GNUPGHOME"
+    gpg --homedir $HOME/.gnupg --export $TAILS_SIGNATURE_KEY | gpg --import
+    gpg --import path/to/private-key
+
+Let's also ensure that strong digest algorithms are used for our
+signatures, like the defaults we set in Tails:
+
+    cp config/chroot_local-includes/etc/skel/.gnupg/gpg.conf "$GNUPGHOME"
 
 Tag the release in Git
 ======================
