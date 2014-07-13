@@ -3,13 +3,47 @@
 # This script sets up the live user's Gnome theme to something that
 # resembles Microsoft Windows 8.
 
-# Set IE icon in iceweasel
-# XXX: doesn't work as amnesia
-#ie_icon="/usr/share/icons/GnomeXP/48x48/apps/iceweasel.png"
-#for x in /usr/share/iceweasel/browser/chrome/icons/default/*; do
-#	rm ${x}
-#	ln -s ${ie_icon} ${x}
-#done
+# Set claws-mail icon
+CLAWSTHEMEDIR="$HOME/.claws-mail/themes/Windows8"
+CLAWSCONFSECTION="\[Common\]"
+CLAWSCONFLABEL="pixmap_theme_path"
+# Create claws-mail theme
+mkdir -p "$CLAWSTHEMEDIR"
+cp /usr/share/icons/Windows8/apps/claws-mail.png "$CLAWSTHEMEDIR/claws_mail_icon.png"
+echo > "$CLAWSTHEMEDIR/.claws_themeinfo" <<EOF 
+Tails Windows 8
+Tails Developers
+EOF
+# Apply claws-mail theme
+# XXX: this will disable any user-defined theme stored in persistence
+#      and the change will be permanent, even though it has no effect if the theme
+#      doesn't exist, which should be the case if camouflage has not been enabled.
+if [ -d "$HOME/.claws-mail" ]; then
+    if grep "$CLAWSCONFLABEL" "$HOME/.claws-mail/clawsrc"; then
+        sed -e "s;$CLAWSCONFLABEL=.*$;$CLAWSCONFLABEL=$CLAWSTHEMEDIR;" -i "$HOME/.claws-mail/clawsrc"
+    else
+        sed -e "/$CLAWSCONFSECTION/ a $CLAWSCONFLABEL=$CLAWSTHEMEDIR" -i "$HOME/.claws-mail/clawsrc"
+    fi
+fi
+
+# Iceweasel
+# Copy the file containing toolbars configurations
+if [ -d "$HOME/.mozilla/firefox/default" ]; then
+    cp /usr/share/tails/firefox-localstore-win8.rdf \
+       ${HOME}/.mozilla/firefox/default/localstore.rdf
+    # Setup a blue lightweight theme
+    cat >> ${HOME}/.mozilla/firefox/default/user.js <<EOF
+user_pref("lightweightThemes.isThemeSelected", true);
+user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/blue_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/blue_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#3399FF\",\"updateDate\":0,\"installDate\":0}]");
+EOF
+	# Tune chrome
+	cat >> ${HOME}/.mozilla/firefox/default/chrome/userChrome.css <<EOF
+
+/* Camouflage */
+.tab-close-button { list-style-image: url("moz-icon://stock/gtk-close-grey?size=menu") !important; }
+#navigator-toolbox { background-color: #6badf6 !important; }
+EOF
+fi
 
 # Remove Tails-specific desktop icons
 rm --interactive=never -f ${HOME}/Desktop/*.desktop 2> /dev/null || true
@@ -32,17 +66,14 @@ gsettings set org.gnome.desktop.wm.preferences theme Windows8
 # Toolbars - Icons Only
 gsettings set org.gnome.desktop.interface toolbar-style icons
 
-# FIXME: Localization needed below
 # Desktop Icons
-gsettings set org.gnome.nautilus.desktop computer-icon-visible true
-gsettings set org.gnome.nautilus.desktop computer-icon-name "My Computer"
-gsettings set org.gnome.nautilus.desktop home-icon-visible true 
-gsettings set org.gnome.nautilus.desktop home-icon-name "My Documents"
-gsettings set org.gnome.nautilus.desktop network-icon-visible true
-gsettings set org.gnome.nautilus.desktop network-icon-name "My Network Places"
+gsettings set org.gnome.nautilus.desktop computer-icon-visible false
+gsettings set org.gnome.nautilus.desktop home-icon-visible false
+gsettings set org.gnome.nautilus.desktop network-icon-visible false
 gsettings set org.gnome.nautilus.desktop trash-icon-visible true
+gsettings set org.gnome.nautilus.desktop volumes-visible true
+# FIXME: Localization needed below
 gsettings set org.gnome.nautilus.desktop trash-icon-name "Recycle Bin"
-gsettings set org.gnome.nautilus.desktop volumes-visible false
 
 # Background
 gsettings set org.gnome.desktop.background picture-uri file:///usr/share/pixmaps/backgrounds/Windows8.jpg
@@ -56,42 +87,40 @@ gsettings set org.gnome.gnome-panel.layout object-id-list "['menu-button', 'icew
 gsettings set org.gnome.gnome-panel.layout toplevel-id-list "['bottom-panel']"
 gsettings set org.gnome.desktop.lockdown disable-log-out true
 
-# Panel toplevels - there is no schema so we can't use gsettings
-dconf write /org/gnome/gnome-panel/layout/toplevels/bottom-panel/size '48'
+# Window picker config
+gsettings set org.gnome.window-picker-applet expand-task-list true
 
 # Panel objects - there is no schema so we can't use gsettings
 dconf write /org/gnome/gnome-panel/layout/objects/menu-button/object-iid '"PanelInternalFactory::MenuButton"'
 dconf write /org/gnome/gnome-panel/layout/objects/menu-button/pack-index '0'
 dconf write /org/gnome/gnome-panel/layout/objects/menu-button/pack-type '"start"'
 dconf write /org/gnome/gnome-panel/layout/objects/menu-button/toplevel-id '"bottom-panel"'
-dconf write /org/gnome/gnome-panel/layout/objects/iceweasel-launcher/pack-index '1'
-dconf write /org/gnome/gnome-panel/layout/objects/iceweasel-launcher/pack-type '"start"'
-dconf write /org/gnome/gnome-panel/layout/objects/iceweasel-launcher/toplevel-id '"bottom-panel"'
-dconf write /org/gnome/gnome-panel/layout/objects/claws-launcher/pack-index '2'
-dconf write /org/gnome/gnome-panel/layout/objects/claws-launcher/pack-type '"start"'
-dconf write /org/gnome/gnome-panel/layout/objects/claws-launcher/toplevel-id '"bottom-panel"'
-dconf write /org/gnome/gnome-panel/layout/objects/pidgin-launcher/pack-index '3'
-dconf write /org/gnome/gnome-panel/layout/objects/pidgin-launcher/pack-type '"start"'
-dconf write /org/gnome/gnome-panel/layout/objects/pidgin-launcher/toplevel-id '"bottom-panel"'
-dconf write /org/gnome/gnome-panel/layout/objects/keepassx-launcher/pack-index '4'
-dconf write /org/gnome/gnome-panel/layout/objects/keepassx-launcher/pack-type '"start"'
-dconf write /org/gnome/gnome-panel/layout/objects/keepassx-launcher/toplevel-id '"bottom-panel"'
-dconf write /org/gnome/gnome-panel/layout/objects/gnome-terminal-launcher/pack-index '5'
-dconf write /org/gnome/gnome-panel/layout/objects/gnome-terminal-launcher/pack-type '"start"'
-dconf write /org/gnome/gnome-panel/layout/objects/gnome-terminal-launcher/toplevel-id '"bottom-panel"'
-dconf write /org/gnome/gnome-panel/layout/objects/window-list/pack-index '6'
+dconf write /org/gnome/gnome-panel/layout/objects/window-list/object-iid '"WindowPickerFactory::WindowPicker"'
+dconf write /org/gnome/gnome-panel/layout/objects/window-list/pack-index '1'
 dconf write /org/gnome/gnome-panel/layout/objects/window-list/pack-type '"start"'
 dconf write /org/gnome/gnome-panel/layout/objects/window-list/toplevel-id '"bottom-panel"'
 dconf write /org/gnome/gnome-panel/layout/objects/notification-area/pack-index '2'
 dconf write /org/gnome/gnome-panel/layout/objects/notification-area/pack-type '"end"'
 dconf write /org/gnome/gnome-panel/layout/objects/notification-area/toplevel-id '"bottom-panel"'
-dconf write /org/gnome/gnome-panel/layout/objects/clock/pack-index '1'
-dconf write /org/gnome/gnome-panel/layout/objects/clock/toplevel-id '"bottom-panel"'
-dconf write /org/gnome/gnome-panel/layout/objects/clock/pack-type '"end"'
-dconf write /org/gnome/gnome-panel/layout/objects/shutdown-helper/pack-index '0'
+dconf write /org/gnome/gnome-panel/layout/objects/shutdown-helper/pack-index '1'
 dconf write /org/gnome/gnome-panel/layout/objects/shutdown-helper/pack-type '"end"'
 dconf write /org/gnome/gnome-panel/layout/objects/shutdown-helper/toplevel-id '"bottom-panel"'
+dconf write /org/gnome/gnome-panel/layout/objects/clock/pack-index '0'
+dconf write /org/gnome/gnome-panel/layout/objects/clock/toplevel-id '"bottom-panel"'
+dconf write /org/gnome/gnome-panel/layout/objects/clock/pack-type '"end"'
 
+# Panel toplevels - there is no schema so we can't use gsettings.
+# Note that the height must be set after adding the object to the
+# panel since some of them, like window-picket-applet, seem to reset
+# it.
+dconf write /org/gnome/gnome-panel/layout/toplevels/bottom-panel/size '48'
+
+# XXX Ugly restart hacks because this script runs too late
 # Restart the panel
-# XXX this is ugly
 pkill gnome-panel
+# Restart florence to make it use the right icon
+pkill florence && florence &/usr/share/pixmaps/gpgApplet/48x48-grey/gpgApplet
+# Mute and unmute volume to fix its icon
+amixer set Master toggle
+sleep 0.1
+amixer set Master toggle

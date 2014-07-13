@@ -36,6 +36,14 @@ for p in package_members
   mod.const_set(class_name, imported_class)
 end
 
+def findfailed_hook(pic)
+  STDERR.puts ""
+  STDERR.puts "FindFailed for: #{pic}"
+  STDERR.puts ""
+  STDERR.puts "Update the image and press RETURN to retry"
+  STDIN.gets
+end
+
 # Since rjb imports Java classes without creating a corresponding
 # Ruby class (it's just an instance of Rjb_JavaProxy) we can't
 # monkey patch any class, so additional methods must be added
@@ -52,18 +60,56 @@ end
 # so we work around it with the following vairable.
 sikuli_script_proxy = Sikuli::Screen
 $_original_sikuli_screen_new ||= Sikuli::Screen.method :new
+
 def sikuli_script_proxy.new(*args)
   s = $_original_sikuli_screen_new.call(*args)
+
+  if $sikuli_retry_findfailed
+    # The usage of `_invoke()` below exemplifies how one can wrap
+    # around Java objects' methods when they're imported using RJB. It
+    # isn't pretty. The seconds argument is the parameter signature,
+    # which can be obtained by creating the intended Java object using
+    # RJB, and then calling its `java_methods` method.
+
+    def s.wait(pic, time)
+      self._invoke('wait', 'Ljava.lang.Object;D', pic, time)
+    rescue FindFailed => e
+      findfailed_hook(pic)
+      self._invoke('wait', 'Ljava.lang.Object;D', pic, time)
+    end
+
+    def s.find(pic)
+      self._invoke('find', 'Ljava.lang.Object;', pic)
+    rescue FindFailed => e
+      findfailed_hook(pic)
+      self._invoke('find', 'Ljava.lang.Object;', pic)
+    end
+
+    def s.waitVanish(pic, time)
+      self._invoke('waitVanish', 'Ljava.lang.Object;D', pic, time)
+    rescue FindFailed => e
+      findfailed_hook(pic)
+      self._invoke('waitVanish', 'Ljava.lang.Object;D', pic, time)
+    end
+
+    def s.click(pic)
+      self._invoke('click', 'Ljava.lang.Object;', pic)
+    rescue FindFailed => e
+      findfailed_hook(pic)
+      self._invoke('click', 'Ljava.lang.Object;', pic)
+    end
+  end
+
   def s.click_point(x, y)
     self.click(Sikuli::Location.new(x, y))
   end
 
-  def s.hover_point(x, y)
-    self.hover(Sikuli::Location.new(x, y))
-  end
-
   def s.wait_and_click(pic, time)
     self.click(self.wait(pic, time))
+  end
+
+  def s.hover_point(x, y)
+    self.hover(Sikuli::Location.new(x, y))
   end
 
   def s.hide_cursor

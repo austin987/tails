@@ -1,6 +1,6 @@
 [[!meta title="Replace TrueCrypt"]]
 
-Due to various concerns, Trecrypt is about to be replaced in Tails,
+Due to various concerns, TrueCrypt is about to be replaced in Tails,
 either by tcplay or cryptsetup.
 
 This is the blueprint for [[!tails_ticket 5373]] and subtasks.
@@ -15,6 +15,10 @@ It is in Debian sid ([[!debpts tcplay]]), and would serve as a full
 replacement of TrueCrypt... once a proper GUI available.
 
 tc-play allows to create TrueCrypt volumes.
+
+version 2 added an ability to save and restore TrueCrypt volume headers to
+external header files.This feature can be used to change a TrueCrypt volume
+password.
 
 ## Cryptsetup
 
@@ -39,3 +43,15 @@ cryptsetup 1.6.4 does not support creating TrueCrypt volumes.
 and tcplay, it make easy to manage Truecrypt
 volumes through a GUI, but it's not packaged in Debian yet
 ([[!debbug 703911 desc="RFP #703911"]]).
+
+  - It uses cryptsetup to unlock TrueCrypt volumes and LUKS volumes.
+  - It uses cryptsetup to backup and restore LUKS volume headers.
+  - It uses cryptsetup to add and remove keys in LUKS volumes.
+  - It uses tcplay to create TrueCrypt volumes.
+  - It uses tcplay to backup and restore TrueCrypt volume headers
+
+zuluCrypt now has a [hidden volume like functionality using
+cryptsetup](https://code.google.com/p/cryptsetup/issues/detail?id=7#c28).
+
+zuluCrypt can open [LUKS volumes with a detached
+header](https://code.google.com/p/cryptsetup/wiki/Cryptsetup140).
