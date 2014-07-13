@@ -4,6 +4,10 @@
 
 Some [[test results]] that might be useful to keep are saved.
 
+<div class="caution">
+Read this document from the branch used to prepare the release.
+</div>
+
 # Changes
 
 Keeping an eye on the changes between released versions is one of the
@@ -303,11 +307,14 @@ the appropriate tcpdump or tshark filters.
 
 # Use of untrusted partitions
 
-* is any local hard-disk swap partition used as swap?
+* Is any local hard-disk swap partition used as swap?
   boot on a (possibly virtual) machine that has a cleartext swap
-  partition not managed by LVM. This swap partition must not be used
-  by Tails. Run `cat /proc/swaps`.
-* is a persistence volume on a local hard-disk partition used?
+  partition not managed by LVM. To verify that a local GTP partition is swap,
+  check its type code with `sgdisk -p`, Linux swap is code 8200.
+
+  This swap partition must not be used by Tails. Run `cat /proc/swaps`.
+
+* Is a persistence volume on a local hard-disk partition used?
   (Hint: setup a libvirt USB disk with GPT and a partition labeled
   `TailsData`, set the `removable` flag on it, check that
   tails-greeter proposes to enable persistence. Then remove the
@@ -319,7 +326,7 @@ the appropriate tcpdump or tshark filters.
 * Check mail over IMAP using:
   - a "clearnet" IMAP server.
   - a hidden service IMAP server (e.g. TorMail, jhiwjjlqpyawmpjx.onion, or
-    Riseup, xyvp43vrggckj427.onion with SSL).
+    Riseup, zsolxunfmbfuq7wf.onion with SSL).
 * Send an email using:
   - a "clearnet" SMTP server.
   - a hidden service SMTP server (see above).
