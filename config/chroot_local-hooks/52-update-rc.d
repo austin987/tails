@@ -13,7 +13,6 @@ tor-controlport-filter
 "
 
 PATCHED_INITSCRIPTS="
-alsa-utils
 gdomap
 haveged
 hdparm
