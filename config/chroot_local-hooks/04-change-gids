@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+# Free the fixed GIDs we're using.
+
+echo "Change GIDs"
+
+TPS_GROUP_STEALER=$(getent group 122 | awk -F ':' '{print $1}')
+if [ -n "$TPS_GROUP_STEALER" ]; then
+   groupmod --gid 150 "$TPS_GROUP_STEALER"
+   find / -wholename /proc -prune -o \( \! -type l -a -gid 122 -exec chgrp 150 '{}' \; \)
+fi
