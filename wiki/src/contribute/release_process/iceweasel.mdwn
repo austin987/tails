@@ -5,9 +5,9 @@
 1. Prepare environment
 ======================
 
-* Clone the Tails browser [[Git
-  repository|contribute/git#other-repositories]] if you do not have it
-  handy yet.
+* Clone the Tor browser
+  [[Git repository|contribute/git#other-repositories]] if you do not
+  have it handy yet.
 
 * Add (and fetch from) a Git remote for the Debian iceweasel packaging
   repository:
@@ -94,6 +94,11 @@ stuff ready in time for the security announce.
       git checkout HEAD^ -- debian && \
       git commit -m 'Get Debian packaging directory back.'
 
+* Don't ignore `.mozconfig`'s:
+
+      grep -v -F '/.mozconfig*' .gitignore | sponge .gitignore && \
+      git commit -m "Don't ignore .mozconfig's." .gitignore
+
 * Cleanup quilt status:
 
       rm -rf .pc
@@ -160,9 +165,12 @@ If Debian's iceweasel was pushed to Git already
 
       git diff --stat debian/17.0.8esr-1..tails/master
 
-  All expected differences should be in `.gitignore`,
-  `debian/{changelog,rules,control,control.in}`, and the addition of
-  the Torbrowser patches.
+  All expected differences should be:
+  * files modified: `.gitignore`,
+    `debian/{changelog,rules,control,control.in}`,
+    `debian/{browser.mozconfig,xulrunner.mozconfig.in}`
+  * files added: `.mozconfig*`, `debian/tails.*.mozconfig`,
+    `debian/patches/series`, and the Torbrowser patches.
 
 If Debian's iceweasel was not pushed to Git yet
 -----------------------------------------------
@@ -208,8 +216,12 @@ merge from Debian's Vcs-Git later.
 
       diff -Naur --exclude=.git iceweasel-17.0.2esr/ git/
 
-* Bring our `.gitignore`, `debian/changelog`, `debian/rules`,
-  `debian/control` and `debian/control.in` changes back.
+* Bring our changes back:
+  * files modified: `.gitignore`,
+    `debian/{changelog,rules,control,control.in}`,
+    `debian/{browser.mozconfig,xulrunner.mozconfig.in}`
+  * files added: `.mozconfig*`, `debian/tails.*.mozconfig`,
+    `debian/patches/series`, and the Torbrowser patches.
 
 5. Update Torbrowser patches
 ============================
@@ -287,6 +299,16 @@ and commit:
 
       quilt push -a && git add . && git reset HEAD .pc && git commit -a -m 'Apply Torbrowser patches.'
 
+* Update `debian/tails.*.mozconfig`:
+  - copy all `ac_add_options` lines from `.mozconfig` into the *Tor
+    Browser's options* section in `debian/tails.common.mozconfig`,
+    *but* the ones that break the xulrunner build, that go into *Tor
+    Browser's options specific to the browser component* section in
+    `debian/tails.browser.mozconfig` instead
+  - review the changes to these settings
+  - if needed, update the `debian/tails.common.mozconfig`'s *Override
+    Tor Browser's options* section
+
 * Push to Git:
 
       git push origin tails/master && git push --tags
@@ -334,14 +356,14 @@ packages, then skip this step.
   `/etc/iceweasel/pref/` on the test system.
 * Install and test the resulting packages.
 
-Build for squeeze-backports
----------------------------
+Build for wheezy-backports
+--------------------------
 
-* Checkout the `tails/squeeze` branch and merge the tag:
+* Checkout the `tails/wheezy` branch and merge the tag:
 
-      git checkout tails/squeeze && git merge "debian/${DEB_VERSION}"
+      git checkout tails/wheezy && git merge "debian/${DEB_VERSION}"
 
-* Add a squeeze-backport changelog entry:
+* Add a wheezy-backport changelog entry:
 
       dch --bpo
 
@@ -357,8 +379,10 @@ Build for squeeze-backports
       git tag -s -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')" \
           "debian/$(dpkg-parsechangelog -SVersion | sed -e 's,~,_,')"
 
-* Build for squeeze-backports and i386, e.g. using our
-  [[contribute/Debian_package_builder]].
+* Build for wheezy-backports and i386, e.g. using our
+  [[contribute/Debian_package_builder]]. You may also do it yourself
+  using `pbuilder`. Note that this repo is *not* adapted to be built
+  with `git-buildpackage` or `git-pbuilder`.
 * Integrate these debs into your apt-cacher cache. That's one cp to
   `/var/cache/apt-cacher-ng/_import/` away, + 1 click in the
   web interface.
@@ -373,13 +397,13 @@ Build for squeeze-backports
   a release tag.
 * Push to Git:
 
-      git push origin tails/squeeze && git push --tags
+      git push origin tails/wheezy && git push --tags
 
 Import bundled preferences
 --------------------------
 
 * Copy `browser/app/profile/000-tor-browser.js` from the tag the
-  Squeeze backport was built from, into
+  Wheezy backport was built from, into
   `config/chroot_local-includes/etc/iceweasel/pref/`.
 * Commit this to the branch that is being used to prepare the release:
   ideally, a topic branch that will be reviewed and merged; in

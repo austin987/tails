@@ -2,21 +2,60 @@
 
 [[!toc levels=1]]
 
+Upstream and packaging
+======================
+
+For this package, "upstream" means, from a Debian packaging
+point-of-view, the state of our master branch. Let's not pretend we
+have not forked liveusb-creator, and admit we are now upstream for our
+own version.
+
+Still, most of the time, we will be releasing -N "Debian"-specific
+packages, that really are packaged Git snapshots, rather than new
+"upstream" releases. Only when we really need it, we will update the
+"orig" tarball from our master branch.
+
+Topic branches
+==============
+
+For how to package `bugfix` and `feature`, see
+[[the dedicated page|topic_branch]].
+
 Tidy up upstream source
 =======================
 
-Merge new upstream changes if needed:
+Merge new Fedora's changes if needed:
 
     git checkout master
-    git remote add upstream git://git.fedorahosted.org/git/liveusb-creator
-    git fetch upstream
+    git remote add fedora git://git.fedorahosted.org/git/liveusb-creator
+    git fetch fedora
     git remote add lmacken https://github.com/lmacken/liveusb-creator.git
     git fetch lmacken
 
 Then see if they have tagged a release that we haven't merged yet,
-and merge the release tag if needed.
+and merge the release tag if needed (in advance before the freeze,
+and following our usual review'n'merge process).
 
 Do extra changes if needed.
+
+Generate a new upstream tarball
+===============================
+
+**If needed** (that is, basically if dpkg-source complains, when
+running git-buildpackage below, that it cannot represent changes in
+binary files), generate a new upstream tarball from the tip of our
+master branch.
+
+The new upstream version should be something like `3.11.6+tails1`:
+only increment the number after `+tails` if the new release is still
+based on Fedora's 3.11.6. Else, set the part before `+tails` to the
+new Fedora release's version number, and reset the right side to
+`+tails1`.
+
+    export NEW_UPSTREAM_VERSION=XXX
+    git archive --prefix=git/ \
+       --output=../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION.orig.tar.xz \
+       master
 
 Update the Debian package
 =========================
@@ -39,7 +78,7 @@ Commit:
 
     git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
-Build a new Debian package (use a Squeeze/i386 chroot):
+Build a new Debian package (use a Wheezy/i386 chroot):
 
     git-buildpackage
 

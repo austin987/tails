@@ -46,6 +46,8 @@ branch_name_to_suite() {
 
 if version_was_released "$(version_in_changelog)"; then
 	output_apt_binary_source "$(branch_name_to_suite "$(version_in_changelog)")"
+elif [ "$(current_branch)" = "stable" ]; then
+	output_apt_binary_source stable
 elif [ "$(current_branch)" = "testing" ]; then
 	output_apt_binary_source testing
 elif [ "$(current_branch)" = "experimental" ]; then
@@ -55,5 +57,5 @@ else
 fi
 
 if on_topic_branch; then
-	output_apt_binary_source "$(branch_name_to_suite $(current_branch))"
+       output_apt_binary_source "$(branch_name_to_suite $(current_branch))"
 fi

@@ -168,8 +168,8 @@ The initial IUK generator will ship those files in every IUK:
 
 * `system.tar` contains files that are already compressed
   (e.g. kernel, initrd, `*.squashfs`)
-* `boot.tar.bz2` contains files that are not compressed already
-  (that is the syslinux configuration)
+* `boot.tar.bz2` contains files that are not compressed yet
+  (that is: syslinux configuration, modules and utilities)
 
 These are implementation details the IUK installer software must not
 rely upon.
@@ -427,6 +427,12 @@ medium read-write.
 * Delete files that are listed in the `delete_files` control field.
 * Append the new SquashFS diff file name to the `live/Tails.module`
   file, in the Tails system partition.
+* Upgrade syslinux with the binary found in `utils/linux/syslinux` on
+  the Tails system partition. Likewise, upgrade the boot device's MBR
+  with the one found in `utils/mbr/mbr.bin` on the Tails system
+  partition. This ensures that the installed version of syslinux
+  matches the version of the COM32 modules that were shipped by the
+  IUK.
 
 Detailed executable scenarios describe and test the behaviour of this
 piece of software in Cucumber-style, using [[!cpan
@@ -679,8 +685,9 @@ fix this.
 
 ## Privilege separation
 
-The default Live user (`amnesia`) runs the upgrade frontend as the
-dedicated `tails-upgrade-frontend` user, who:
+The default Live user (`amnesia`) is allowed to run the upgrade
+frontend, without arguments, as the dedicated `tails-upgrade-frontend`
+user, who itself:
 
 * is allowed to run the `tails-shutdown-network` and `/sbin/reboot`
   programs, using passwordless sudo, as any user;
@@ -690,13 +697,26 @@ dedicated `tails-upgrade-frontend` user, who:
   argument, using passwordless sudo, as the
   `tails-iuk-get-target-file` user;
 * is allowed to run `tails-iuk-mktemp-get-target-file`, using
-  passwordless sudo, as the `tails-iuk-get-target-file` user.
+  passwordless sudo, as the `tails-iuk-get-target-file` user;
+* is allowed to run `tor-has-bootstrapped`, using passwordless sudo,
+  as the `debian-tor` user.
 
 The `tails-install-iuk` user is allowed to run, using passwordless
 sudo, every command required by its task (currently: `chmod`, `cp`,
-`mkdir`, `mktemp`, `mount`, `rm` and `tar`). It is a member of the
-`tails-iuk-get-target-file` group, which allows it to read the files
-downloaded by the `tails-iuk-get-target-file` program.
+`dd`, `mkdir`, `mktemp`, `mount`, `rm`, `tar` and
+`/lib/live/mount/medium/utils/linux/syslinux`) with any arguments.
+It is a member of the `tails-iuk-get-target-file` group, which allows it to
+read the files downloaded by the `tails-iuk-get-target-file` program.
+
+## Running syslinux after applying an IUK
+
+Anyone who can feed `tails-install-iuk` with an arbitrary IUK can run
+arbitrary code as root, by storing the attack code in one of the
+tarballs contained in the IUK, as `utils/linux/syslinux`. This does
+not introduce new security risks: the very same adversary could plant
+a persistent rootkit anyway. Our protection against this instead
+relies in the privilege separation described above: all that the
+`amnesia` user can do is run the frontend with no arguments.
 
 # Research
 

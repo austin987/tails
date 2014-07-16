@@ -2,6 +2,8 @@
 
 set -e
 
+echo "Configuring I2P"
+
 I2P="/usr/share/i2p"
 WRAPPER="/etc/i2p/wrapper.config"
 
@@ -27,10 +29,12 @@ sed -i 's|^.*\(wrapper\.java\.additional\.6=-Djava\.net\.preferIPv6Addresses=\).
 # * IPv6: Disabled
 # * HiddenMode: Enabled
 # * In-I2P Network Updates: Disabled
+# * Inbound connections: Disabled (setting is "i2cp.ntcp.autoip")
 cat > "$I2P/router.config" << EOF
 # NOTE: This I2P config file must use UTF-8 encoding
 i2cp.disableInterface=true
 i2np.ntcp.ipv6=false
+i2np.ntcp.autoip=false
 i2np.udp.ipv6=false
 router.isHidden=true
 router.updateDisabled=true
