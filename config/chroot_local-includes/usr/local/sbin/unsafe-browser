@@ -152,23 +152,30 @@ configure_chroot () {
     dpkg -l 'xul-ext-*' | /bin/grep '^ii' | awk '{print $2}' | \
         xargs chroot ${CHROOT} dpkg --remove
 
+    # Create a fresh Iceweasel profile for the clearnet user
+    cp -a ${CHROOT}/etc/skel/.mozilla/ ${CHROOT}/home/clearnet/
+    chown -R clearnet:clearnet ${CHROOT}/home/clearnet/.mozilla/
+    CLEARNET_PROFILE=${CHROOT}/home/clearnet/.mozilla/firefox/default
+
     # Disable proxying in the chroot
     sed -r -i '/^(user_|)pref\("network\.proxy\..*",/d' \
-        ${CHROOT}/etc/iceweasel/*/*.js
+        ${CLEARNET_PROFILE}/*.js
     echo 'user_pref("network.proxy.type", 0);' >> \
-        ${CHROOT}/etc/iceweasel/profile/user.js
+        ${CLEARNET_PROFILE}/user.js
     echo 'user_pref("network.proxy.socks_remote_dns", false);' >> \
-        ${CHROOT}/etc/iceweasel/profile/user.js
-    rm -rf ${CHROOT}/etc/iceweasel/profile/extensions
+        ${CLEARNET_PROFILE}/user.js
+    rm -rf ${CLEARNET_PROFILE}/extensions
 
     # Set a scary theme (except if we're using Windows camouflage)
     if [ -z "${CAMOUFLAGE}" ]; then
-        cat >> ${CHROOT}/etc/iceweasel/profile/user.js <<EOF
+        cat >> ${CLEARNET_PROFILE}/user.js <<EOF
 user_pref("lightweightThemes.isThemeSelected", true);
 user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");
 EOF
     else
-        chroot ${CHROOT} sudo -H -u clearnet tails-activate-winxp-theme
+        # The camouflage activation script requires a dbus server for
+        # properly configuring GNOME, so we start one in the chroot
+        chroot ${CHROOT} sudo -H -u clearnet sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
     fi
 
     # Set the name (e.g. window title) of the browser
@@ -176,30 +183,11 @@ EOF
 
     # Set start page to something that explains what's going on
     echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
-        ${CHROOT}/etc/iceweasel/profile/user.js
+        ${CLEARNET_PROFILE}/user.js
 
     # Remove all bookmarks
-    rm -f ${CHROOT}/etc/iceweasel/profile/bookmarks.html
-
-    # Make the English wikipedia the only available and default search
-    # engine (this is a documented cue for identifying the Unsafe Browser,
-    # which is extra important in camouflage mode when the scary coloured
-    # theme is disabled.)
-    find ${CHROOT}/etc/iceweasel/profile/searchplugins/ \
-         ${CHROOT}/etc/iceweasel/searchplugins -name "*.xml" | \
-        while read searchengine; do
-            if basename "$searchengine" | grep -qvi wikipedia; then
-                rm "${searchengine}"
-            fi
-        done
-    sed -i '/^user_pref("browser.search.defaultenginename",/d' \
-        ${CHROOT}/etc/iceweasel/profile/user.js
-    echo 'user_pref("browser.search.defaultenginename", "Wikipedia (en)");' >> \
-        ${CHROOT}/etc/iceweasel/profile/user.js
-    sed -i '/^user_pref("browser.search.selectedEngine",/d' \
-        ${CHROOT}/etc/iceweasel/profile/user.js
-    echo 'user_pref("browser.search.selectedEngine", "Wikipedia (en)");' >> \
-        ${CHROOT}/etc/iceweasel/profile/user.js
+    rm -f ${CLEARNET_PROFILE}/bookmarks.html
+    rm -f ${CLEARNET_PROFILE}/places.sqlite
 }
 
 run_browser_in_chroot () {

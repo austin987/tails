@@ -4,6 +4,10 @@
 
 Some [[test results]] that might be useful to keep are saved.
 
+<div class="caution">
+Read this document from the branch used to prepare the release.
+</div>
+
 # Changes
 
 Keeping an eye on the changes between released versions is one of the
@@ -303,11 +307,14 @@ the appropriate tcpdump or tshark filters.
 
 # Use of untrusted partitions
 
-* is any local hard-disk swap partition used as swap?
+* Is any local hard-disk swap partition used as swap?
   boot on a (possibly virtual) machine that has a cleartext swap
-  partition not managed by LVM. This swap partition must not be used
-  by Tails. Run `cat /proc/swaps`.
-* is a persistence volume on a local hard-disk partition used?
+  partition not managed by LVM. To verify that a local GTP partition is swap,
+  check its type code with `sgdisk -p`, Linux swap is code 8200.
+
+  This swap partition must not be used by Tails. Run `cat /proc/swaps`.
+
+* Is a persistence volume on a local hard-disk partition used?
   (Hint: setup a libvirt USB disk with GPT and a partition labeled
   `TailsData`, set the `removable` flag on it, check that
   tails-greeter proposes to enable persistence. Then remove the
@@ -319,7 +326,7 @@ the appropriate tcpdump or tshark filters.
 * Check mail over IMAP using:
   - a "clearnet" IMAP server.
   - a hidden service IMAP server (e.g. TorMail, jhiwjjlqpyawmpjx.onion, or
-    Riseup, xyvp43vrggckj427.onion with SSL).
+    Riseup, zsolxunfmbfuq7wf.onion with SSL).
 * Send an email using:
   - a "clearnet" SMTP server.
   - a hidden service SMTP server (see above).
@@ -435,7 +442,7 @@ correctly.
 * List the versions from which an upgrade paths to this one is described.
   In the `stable` or `testing` branch:
 
-      git grep -l "  version: '0.23'" wiki/src/upgrade/
+      git grep -l "  version: '\?0.23'\?" wiki/src/upgrade/
 
 * For each description file, open it and verify if it allows incremental upgrade
   or only full upgrade.
@@ -464,11 +471,18 @@ correctly.
 
     To synchronize your local copy:
 
-        usewithtor rsync -rt --progress rsync.torproject.org::amnesia-archive/tails/stable/iuk/ /var/www/tails/stable/iuk/
+        torsocks rsync -rt --progress rsync.torproject.org::amnesia-archive/tails/stable/iuk/ /var/www/tails/stable/iuk/
 
   * Patch `/etc/hosts` in Tails to point to your web server:
 
         echo "192.168.1.4    dl.amnesia.boum.org" | sudo tee --append /etc/hosts
+
+  * Patch sudo configuration to allow passing arbitrary arguments to
+    `tails-upgrade-frontend`:
+
+        sudo sed -i \
+            -e 's,/usr/bin/tails-upgrade-frontend ""$,/usr/bin/tails-upgrade-frontend,' \
+            /etc/sudoers.d/zzz_upgrade
 
   * Call the upgrader must be called, from inside the system to upgrade,
     with every needed option to use the local web server rather than the
@@ -480,7 +494,7 @@ correctly.
 
 # Windows Camouflage
 
-Enable Windows XP camouflage via the Tails Greeter checkbox and:
+Enable Windows camouflage via the Tails Greeter checkbox and:
 
 * Tails OpenPGP Applet's context menu should look readable
 * iceweasel should use a Internet Explorer theme
@@ -552,17 +566,15 @@ language.
 * Check that Tails Greeter's "more options" screen displays properly
   on a display with 600 px height.
 * Check that all seems well during init (mostly that all services
-  start without errors), and that dmesg seems ok.
+  start without errors), and that `/var/log/syslog` seems OK.
 * MAT should be able to clean a PDF file, such as:
   <http://examples.itextpdf.com/results/part3/chapter12/pdf_metadata.pdf>
-* Browsing (by hostname) a FTP server on the Internet should be
-  possible using GNOME's *Connect to server* feature
-  (once [[!tails_ticket 6096]] is fixed)
 * The Tails signing key shipped should be up-to-date (that is, neither it nor
   one its subkeys must have expired, or be about to expire any time soon).
   - `gpg --list-keys --with-colons 1202821CBE2CD9C1`
 * The "Report an error" desktop launcher should open the [[support]]
   page, both in English and in one language to which the website is
   translated (automate: [[!tails_ticket 6904]]).
-* One should be able to refresh the GnuPG keyring in Seahorse (once
-  [[!tails_ticket 7051]] is resolved).
+* One should be able to refresh the GnuPG keyring in Seahorse (with
+  the workaround documented in comment 4 on [[!tails_ticket 7051]],
+  until that ticket is fixed for real).

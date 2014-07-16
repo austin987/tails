@@ -148,6 +148,13 @@ pref("javascript.options.baselinejit.content", false);
 pref("javascript.options.asmjs", false);
 pref("javascript.options.typeinference", false);
 
+// Audio_data is deprecated in future releases, but still present
+// in FF24. This is a dangerous combination (spotted by iSec)
+pref("media.audio_data.enabled", false);
+
+// Enable TLS 1.1 and 1.2:
+// https://trac.torproject.org/projects/tor/ticket/11253
+pref("security.tls.version.max", 3);
 
 // Version placeholder
 pref("torbrowser.version", "UNKNOWN");
