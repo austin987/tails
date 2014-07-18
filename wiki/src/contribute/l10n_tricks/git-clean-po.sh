@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
-LANG=C
+# Remove modified *.po *.pot files when they are not staged for commit
+# In case one file type doesn't exist in the directory, the whole command
+#  exits with an error, so splitting into two commands.
+git checkout *.po  2>/dev/null
+git checkout *.pot 2>/dev/null
 
-git status | \
-	grep -E "modified:\s.+.pot?$" | \
-	cut -d ' ' -f 4 | \
-	while read po ; do
-		git checkout "$po" ;
-	done
+# Remove ignored *.pot files
+git clean -f -q -x *.pot >/dev/null
