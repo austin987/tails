@@ -23,6 +23,23 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I unplug USB drive "current"
 
   @keep_volumes
+  Scenario: Booting Tails from a USB drive in UEFI mode
+    Given a computer
+    And the computer is set to boot from USB drive "current"
+    And the computer is set to boot in UEFI mode
+    And the network is unplugged
+    When I start the computer
+    And the computer boots Tails
+    And the boot device has safe access rights
+    And I log in to a new session
+    And GNOME has started
+    And all notifications have disappeared
+    Then Tails seems to have booted normally
+    And Tails is running from USB drive "current"
+    And the boot device has safe access rights
+    And Tails has started in UEFI mode
+
+  @keep_volumes
   Scenario: Booting Tails from a USB drive without a persistent partition and creating one
     Given a computer
     And the computer is set to boot from USB drive "current"

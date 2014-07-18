@@ -92,6 +92,7 @@ Before('@product') do
     @skip_steps_while_restoring_background = false
   end
   @theme = "gnome"
+  @os_loader = "MBR"
 end
 
 # AfterScenario
