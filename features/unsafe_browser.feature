@@ -19,7 +19,6 @@ Feature: Browsing the web using the Unsafe Browser
     When I start the Unsafe Browser
     Then the Unsafe Browser has started
     And the Unsafe Browser has a red theme
-    And the Unsafe Browser has Wikipedia pre-selected in the search bar
     And the Unsafe Browser shows a warning as its start page
 
   Scenario: Closing the Unsafe Browser shows a stop notification.

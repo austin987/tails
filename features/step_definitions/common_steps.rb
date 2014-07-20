@@ -62,8 +62,8 @@ end
 
 def run_dialog_picture
   case @theme
-  when "winxp"
-    return 'WinXPRunDialog.png'
+  when "windows"
+    return 'WindowsRunDialog.png'
   else
     return 'GnomeRunDialog.png'
   end
@@ -205,8 +205,8 @@ end
 Given /^GNOME has started$/ do
   next if @skip_steps_while_restoring_background
   case @theme
-  when "winxp"
-    desktop_started_picture = 'WinXPStartButton.png'
+  when "windows"
+    desktop_started_picture = 'WindowsStartButton.png'
   else
     desktop_started_picture = 'GnomeApplicationsMenu.png'
   end
@@ -252,8 +252,8 @@ end
 Given /^Iceweasel has started and is not loading a web page$/ do
   next if @skip_steps_while_restoring_background
   case @theme
-  when "winxp"
-    iceweasel_picture = "WinXPIceweaselWindow.png"
+  when "windows"
+    iceweasel_picture = "WindowsIceweaselWindow.png"
   else
     iceweasel_picture = "IceweaselWindow.png"
   end
@@ -269,8 +269,8 @@ end
 Given /^all notifications have disappeared$/ do
   next if @skip_steps_while_restoring_background
   case @theme
-  when "winxp"
-    notification_picture = "WinXPNotificationX.png"
+  when "windows"
+    notification_picture = "WindowsNotificationX.png"
   else
     notification_picture = "GnomeNotificationX.png"
   end
