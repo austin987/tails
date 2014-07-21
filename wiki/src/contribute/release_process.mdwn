@@ -353,8 +353,21 @@ Prepare incremental upgrades
 Build the Incremental Upgrade Kits
 ----------------------------------
 
-Use `tails-create-iuk` to build an IUK for the previous stable release
-and (if applicable) the last RC for the version being released. Example:
+Use `tails-create-iuk` to build the following IUKs:
+
+* From the previous stable release, e.g. 1.0 to 1.0.1 or 1.0 to
+  1.0.1~rc1. This may be skipped if the delta is too big (like when
+  migrating to a new Debian release) or if there are changes outside
+  of the scope for IUKs (like partition table changes).
+
+* From the last RC for the version being released, e.g. 1.0~rc1 to
+  1.0. This should be done even if there was no IUK generated from the
+  previous stable release since it is a good way to test the iuk code
+  that'll be used for the incremental upgrade paths to the
+  `$NEXT_VERSION`.
+
+Example (for RC, replace `$PREVIOUS_VERSION` with e.g. `$VERSION~rc1`
+below):
 
     sudo su -c "cd $IUK_CHECKOUT && \
       PERL5LIB=\"$PERL5LIB_CHECKOUT/lib\" \
