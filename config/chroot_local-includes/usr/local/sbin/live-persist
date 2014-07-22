@@ -110,33 +110,6 @@ panic ()
 	error ${@}
 }
 
-# Fix persistent ~/.gconf sub-dirs; activate_custom_mounts() creates
-# empty dirs up to its mountpoint, but the file %gconf.xml has to be
-# present in each of ~/.gconf's subdirs to make them valid. Hence we
-# have a problem with a persistent ~/.gconf/X/Y if ~/.gconf/X was
-# created by activate_custom_mounts() since it would lack its
-# %gconf.xml file, making ~/.gconf/X/Y invalid. This functions makes
-# sure that all subdirs of ~/.gconf contain %gconf.xml.
-fix_gconf_dirs ()
-{
-	for home in /home/*
-	do
-		if [ ! -e "${home}/.gconf" ]
-		then
-			continue
-		fi
-		local ownership=$(stat -c "%u:%g" "${home}")
-		find "${home}/.gconf" -type d | while IFS="" read -r dir
-		do
-			local conf="${dir}/%gconf.xml"
-			if [ ! -e "${conf}" ]; then
-				touch "${conf}"
-				chown ${ownership} "${conf}"
-			fi
-		done
-	done
-}
-
 list_gpt_volumes ()
 {
 	local labels=${@}
@@ -350,14 +323,73 @@ activate_volumes ()
 		fi
 	done
 
+	# Migrate Squeeze-era NetworkManager persistence setting to Wheezy.
+	for conf in $(ls /live/persistence/*_unlocked/persistence.conf || true)
+	do
+		if grep -E -qs --line-regex \
+			-e '/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections' \
+			"$conf" \
+		   && ! grep -E -qs --line-regex \
+			-e '/etc/NetworkManager/system-connections\s+source=nm-system-connections' \
+			"$conf"
+		then
+			warning "Needs to make /etc/NetworkManager/system-connections persistent"
+			if [ "$PERSISTENCE_READONLY" = true ]
+			then
+				# XXX: don't really error-out, do we?
+				error "Persistence configuration needs to be migrated, but read only was selected; please retry in read-write mode"
+			fi
+			echo '/etc/NetworkManager/system-connections	source=nm-system-connections' \
+				>> "$conf" \
+				|| error "Failed to make /etc/NetworkManager/system-connections persistent: $?"
+			warning "Successfully made /etc/NetworkManager/system-connections persistent"
+			# disable pre-Wheezy NM persistence setting
+			sed -r -i \
+				-e 's,^(/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections)$,#\1,' \
+				"$conf"
+		fi
+	done
+
+	# Fix permissions on persistent directories that were created
+	# with unsafe permissions.
+	for persistent_fs in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		[ -d "$persistent_fs" ] || continue
+		for child in $(ls "$persistent_fs" || true)
+		do
+			subdir="$persistent_fs/$child"
+			[ -d "$subdir" ] || continue
+			# Note: we chmod even custom persistent directories.
+			# This may break things by changing otherwise correct
+			# permissions copied from the directory that was made
+			# persistent, so we only do that if the persistent directory
+			# is owned by amnesia:amnesia, and thus unlikely to be
+			# a system directory. This e.g. avoids setting wrong
+			# permissions on the APT, CUPS and NetworkManager
+			# persistent directories.
+			[ $(stat -c '%U' "$subdir") = 'amnesia' ] || continue
+			[ $(stat -c '%G' "$subdir") = 'amnesia' ] || continue
+			if [ "$PERSISTENCE_READONLY" = true ]
+			then
+				warning "Permissions of '$subdir' may need to be fixed, but read only was selected; please retry in read-write mode"
+			else
+				chmod go= "$subdir"
+			fi
+		done
+	done
+
 	# Load the new persistence.conf.
 	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
 	get_custom_mounts ${custom_mounts} ${open_volumes}
 
 	if [ -s "${custom_mounts}" ]
 	then
+		OLD_UMASK="$(umask)"
+		# Have activate_custom_mounts create new directories
+		# with safe permissions (#7443)
+		umask 0077
 		activate_custom_mounts ${custom_mounts} &> /dev/null
-		fix_gconf_dirs
+		umask "$OLD_UMASK"
 	fi
 	rm -f ${custom_mounts} 2> /dev/null
 

@@ -28,6 +28,8 @@ Feature: System memory erasure on shutdown
     And the network is unplugged
     And I start the computer
     And the computer boots Tails
+    And I log in to a new session
+    And GNOME has started
     And the PAE kernel is running
     And at least 8 GiB of RAM was detected
     And process "memlockd" is running
@@ -60,6 +62,8 @@ Feature: System memory erasure on shutdown
     And the network is unplugged
     And I start the computer
     And the computer boots Tails
+    And I log in to a new session
+    And GNOME has started
     And the non-PAE kernel is running
     And at least 3500 MiB of RAM was detected
     And process "memlockd" is running

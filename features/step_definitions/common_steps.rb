@@ -62,8 +62,8 @@ end
 
 def run_dialog_picture
   case @theme
-  when "winxp"
-    return 'WinXPRunDialog.png'
+  when "windows"
+    return 'WindowsRunDialog.png'
   else
     return 'GnomeRunDialog.png'
   end
@@ -205,8 +205,8 @@ end
 Given /^GNOME has started$/ do
   next if @skip_steps_while_restoring_background
   case @theme
-  when "winxp"
-    desktop_started_picture = 'WinXPStartButton.png'
+  when "windows"
+    desktop_started_picture = 'WindowsStartButton.png'
   else
     desktop_started_picture = 'GnomeApplicationsMenu.png'
   end
@@ -220,17 +220,8 @@ end
 
 Given /^Tor is ready$/ do
   next if @skip_steps_while_restoring_background
-
-  # First, we wait for the notification to be displayed:
-  # it disappears after a timeout, so if we wait for other events first,
-  # we sometimes cannot find the notification picture on screen later.
-  case @theme
-  when "winxp"
-    notification_picture = "WinXPTorIsReady.png"
-  else
-    notification_picture = "GnomeTorIsReady.png"
-  end
-  @screen.wait(notification_picture, 300)
+  @screen.wait("GnomeTorIsReady.png", 300)
+  @screen.waitVanish("GnomeTorIsReady.png", 15)
 
   # Having seen the "Tor is ready" notification implies that Tor has
   # built a circuit, but let's check it directly to be on the safe side.
@@ -261,10 +252,10 @@ end
 Given /^Iceweasel has started and is not loading a web page$/ do
   next if @skip_steps_while_restoring_background
   case @theme
-  when "winxp"
-    iceweasel_picture = "WinXPIceweaselWindow.png"
+  when "windows"
+    iceweasel_picture = "WindowsIceweaselWindow.png"
   else
-    iceweasel_picture = "IceweaselRunning.png"
+    iceweasel_picture = "IceweaselWindow.png"
   end
 
   # Stop iceweasel to load its home page. We do this to prevent Tor
@@ -275,38 +266,15 @@ Given /^Iceweasel has started and is not loading a web page$/ do
   @screen.type("about:blank" + Sikuli::Key.ENTER)
 end
 
-Given /^I have closed all annoying notifications$/ do
+Given /^all notifications have disappeared$/ do
   next if @skip_steps_while_restoring_background
   case @theme
-  when "winxp"
-    notification_picture = "WinXPNotificationX.png"
+  when "windows"
+    notification_picture = "WindowsNotificationX.png"
   else
     notification_picture = "GnomeNotificationX.png"
   end
-
-  # First we wait a short while to give notifications a chance to show
-  begin
-    @screen.wait(notification_picture, 10)
-  rescue
-    # noop
-  end
-
-  begin
-    # note that we cannot use find_all as the resulting matches will
-    # have the positions from before we start closing notifications,
-    # but closing them will change the positions.
-
-    # Move the mouse pointer out of the way, so that the cross to close
-    # the first notification is not highlighted and can be found.
-    @screen.hide_cursor
-    while match = @screen.find(notification_picture)
-      @screen.click(match)
-      # ... same for the next notification:
-      @screen.hide_cursor
-    end
-  rescue FindFailed
-    # noop
-  end
+  @screen.waitVanish(notification_picture, 60)
 end
 
 Given /^I save the state so the background can be restored next scenario$/ do
@@ -411,6 +379,14 @@ Given /^process "([^"]+)" is running$/ do |process|
          "Process '#{process}' is not running")
 end
 
+Given /^process "([^"]+)" is running within (\d+) seconds$/ do |process, time|
+  next if @skip_steps_while_restoring_background
+  try_for(time.to_i, :msg => "Process '#{process}' is not running after " +
+                             "waiting for #{time} seconds") do
+    @vm.has_process?(process)
+  end
+end
+
 Given /^process "([^"]+)" is not running$/ do |process|
   next if @skip_steps_while_restoring_background
   assert(!@vm.has_process?(process),
@@ -425,16 +401,41 @@ Given /^I kill the process "([^"]+)"$/ do |process|
   }
 end
 
-Given /^I completely shutdown Tails$/ do
+Then /^Tails eventually shuts down$/ do
+  next if @skip_steps_while_restoring_background
+  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
+  timeout = nr_gibs_of_ram*5*60
+  try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
+    ! @vm.is_running?
+  end
+end
+
+Then /^Tails eventually restarts$/ do
+  next if @skip_steps_while_restoring_background
+  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
+  @screen.wait('TailsBootSplashPostReset.png', nr_gibs_of_ram*5*60)
+end
+
+Given /^I shutdown Tails and wait for the computer to power off$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.execute("poweroff")
+  step 'Tails eventually shuts down'
+end
+
+When /^I request a shutdown using the emergency shutdown applet$/ do
   next if @skip_steps_while_restoring_background
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
-  nr_gibs_of_ram = (detected_ram_in_bytes.to_f/(2**30)).ceil
-  try_for(nr_gibs_of_ram*5*60, :msg => "VM is still running") do
-    ! @vm.is_running?
-  end
+end
+
+When /^I request a reboot using the emergency shutdown applet$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.hide_cursor
+  @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  @screen.hide_cursor
+  @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
 Given /^package "([^"]+)" is installed$/ do |package|

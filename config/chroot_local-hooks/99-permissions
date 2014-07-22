@@ -6,6 +6,15 @@ echo "Setting correct file permissions"
 
 chmod 00440 /etc/sudoers.d/*
 
+# NetworkManager requires these permissions
+chmod 00600 /etc/NetworkManager/system-connections/*
+
 # For persistent Tor settings via Tor Launcher, the debian-tor user
 # must be able to write into `/etc/tor`.
 chown -R debian-tor:debian-tor /etc/tor
+
+# Otherwise, such files may be copied to /home/amnesia, and in turn
+# to the persistent volume, with unsafe permissions. That's no big deal
+# in /home/amnesia (that is itself not world-readable), *but* the root
+# of the persistent volume has to be world-readable.
+chmod -R go= /etc/skel/* /etc/skel/.[a-z]*
