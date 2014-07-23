@@ -12,9 +12,25 @@ available removable storage devices.
 Upgrades
 ========
 
-Tails Installer is able to do full upgrades of an already installed
-USB stick. During the needed operations, everything except the Tails system
-partition is left untouched.
+Tails Installer can perform a full upgrade of an already installed
+USB stick. During this process, nothing is modified on the target
+drive but the Tails system partition and the [[!wikipedia Master boot record]].
+
+At the end of the upgrade process, we upgrade syslinux with the binary
+found in `utils/linux/syslinux` on the Tails system partition.
+Likewise, upgrade the boot device's MBR with the one found in
+`utils/mbr/mbr.bin` on the Tails system partition. This ensures that
+the installed version of syslinux matches the version of the COM32
+modules that are shipped by the version of Tails the target drive was
+just upgraded to.
+
+Security discussion: with this mechanism in place, anyone who can feed
+an arbitrary ISO into Tails Installer can run arbitrary code (stored
+in the ISO filesystem as `utils/linux/syslinux`) as the user running
+Tails Installer. We have no mechanism to run Tails Installer with
+elevated privileges currently, so this should not be a problem: being
+able to run `liveusb-creator` with arbitrary arguments is equivalent
+to being able to run arbitrary code already.
 
 Mode of operation and booting methods
 =====================================

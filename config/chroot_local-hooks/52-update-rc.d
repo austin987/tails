@@ -18,7 +18,6 @@ gdomap
 haveged
 hdparm
 i2p
-ifupdown
 kexec
 kexec-load
 laptop-mode
@@ -31,7 +30,6 @@ saned
 spice-vdagent
 tor
 ttdnsd
-urandom
 "
 
 # Ensure that we are using dependency based boot

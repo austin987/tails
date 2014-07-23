@@ -1,14 +1,17 @@
-def persistent_dirs
-  ["/home/#{$live_user}/.claws-mail",
-   "/home/#{$live_user}/.gconf/system/networking/connections",
-   "/home/#{$live_user}/.gnome2/keyrings",
-   "/home/#{$live_user}/.gnupg",
-   "/home/#{$live_user}/.mozilla/firefox/bookmarks",
-   "/home/#{$live_user}/.purple",
-   "/home/#{$live_user}/.ssh",
-   "/home/#{$live_user}/Persistent",
-   "/var/cache/apt/archives",
-   "/var/lib/apt/lists"]
+def persistent_mounts
+  {
+    "cups-configuration" => "/etc/cups",
+    "nm-system-connections" => "/etc/NetworkManager/system-connections",
+    "claws-mail" => "/home/#{$live_user}/.claws-mail",
+    "gnome-keyrings" => "/home/#{$live_user}/.gnome2/keyrings",
+    "gnupg" => "/home/#{$live_user}/.gnupg",
+    "bookmarks" => "/home/#{$live_user}/.mozilla/firefox/bookmarks",
+    "pidgin" => "/home/#{$live_user}/.purple",
+    "openssh-client" => "/home/#{$live_user}/.ssh",
+    "Persistent" => "/home/#{$live_user}/Persistent",
+    "apt/cache" => "/var/cache/apt/archives",
+    "apt/lists" => "/var/lib/apt/lists",
+  }
 end
 
 def persistent_volumes_mountpoints
@@ -55,12 +58,8 @@ def usb_install_helper(name)
 #  # when it should be /dev/sda1
 
   @screen.wait_and_click('USBCreateLiveUSB.png', 10)
-  begin
-    if @screen.find("USBSuggestsInstall.png")
-      raise ISOHybridUpgradeNotSupported
-    end
-  rescue FindFailed
-    # we didn't get the warning, so we can proceed with the install
+  if @screen.exists("USBSuggestsInstall.png")
+    raise ISOHybridUpgradeNotSupported
   end
   @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
   @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
@@ -126,7 +125,7 @@ Given /^I enable all persistence presets$/ do
   # Mark first non-default persistence preset
   @screen.type(Sikuli::Key.TAB*2)
   # Check all non-default persistence presets
-  10.times do
+  12.times do
     @screen.type(Sikuli::Key.SPACE + Sikuli::Key.TAB)
   end
   @screen.wait_and_click('PersistenceWizardSave.png', 10)
@@ -161,48 +160,61 @@ def check_part_integrity(name, dev, usage, type, scheme, label)
          "Unexpected partition label on USB drive '#{name}', '#{dev}'")
 end
 
-Then /^Tails is installed on USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
+def tails_is_installed_helper(name, tails_root, loader)
   dev = @vm.disk_dev(name) + "1"
   check_part_integrity(name, dev, "filesystem", "vfat", "gpt", "Tails")
 
-  old_root = "/lib/live/mount/medium"
-  new_root = "/mnt/new"
-  @vm.execute("mkdir -p #{new_root}")
-  @vm.execute("mount #{dev} #{new_root}")
+  target_root = "/mnt/new"
+  @vm.execute("mkdir -p #{target_root}")
+  @vm.execute("mount #{dev} #{target_root}")
 
-  c = @vm.execute("diff -qr '#{old_root}/live' '#{new_root}/live'")
+  c = @vm.execute("diff -qr '#{tails_root}/live' '#{target_root}/live'")
   assert(c.success?,
          "USB drive '#{name}' has differences in /live:\n#{c.stdout}")
 
-  loader = boot_device_type == "usb" ? "syslinux" : "isolinux"
-  syslinux_files = @vm.execute("ls -1 #{new_root}/syslinux").stdout.chomp.split
+  syslinux_files = @vm.execute("ls -1 #{target_root}/syslinux").stdout.chomp.split
   # We deal with these files separately
   ignores = ["syslinux.cfg", "exithelp.cfg", "ldlinux.sys"]
   for f in syslinux_files - ignores do
-    c = @vm.execute("diff -q '#{old_root}/#{loader}/#{f}' " +
-                    "'#{new_root}/syslinux/#{f}'")
+    c = @vm.execute("diff -q '#{tails_root}/#{loader}/#{f}' " +
+                    "'#{target_root}/syslinux/#{f}'")
     assert(c.success?, "USB drive '#{name}' has differences in " +
            "'/syslinux/#{f}'")
   end
 
   # The main .cfg is named differently vs isolinux
-  c = @vm.execute("diff -q '#{old_root}/#{loader}/#{loader}.cfg' " +
-                  "'#{new_root}/syslinux/syslinux.cfg'")
+  c = @vm.execute("diff -q '#{tails_root}/#{loader}/#{loader}.cfg' " +
+                  "'#{target_root}/syslinux/syslinux.cfg'")
   assert(c.success?, "USB drive '#{name}' has differences in " +
          "'/syslinux/syslinux.cfg'")
 
   # We have to account for the different path vs isolinux
-  old_exithelp = @vm.execute("cat '#{old_root}/#{loader}/exithelp.cfg'").stdout
-  new_exithelp = @vm.execute("cat '#{new_root}/syslinux/exithelp.cfg'").stdout
+  old_exithelp = @vm.execute("cat '#{tails_root}/#{loader}/exithelp.cfg'").stdout
+  new_exithelp = @vm.execute("cat '#{target_root}/syslinux/exithelp.cfg'").stdout
   new_exithelp_undiffed = new_exithelp.sub("kernel /syslinux/vesamenu.c32",
                                            "kernel /#{loader}/vesamenu.c32")
   assert(new_exithelp_undiffed == old_exithelp,
          "USB drive '#{name}' has unexpected differences in " +
          "'/syslinux/exithelp.cfg'")
 
-  @vm.execute("umount #{new_root}")
+  @vm.execute("umount #{target_root}")
   @vm.execute("sync")
+end
+
+Then /^the running Tails is installed on USB drive "([^"]+)"$/ do |target_name|
+  next if @skip_steps_while_restoring_background
+  loader = boot_device_type == "usb" ? "syslinux" : "isolinux"
+  tails_is_installed_helper(target_name, "/lib/live/mount/medium", loader)
+end
+
+Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
+  next if @skip_steps_while_restoring_background
+  iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"
+  iso_root = "/mnt/iso"
+  @vm.execute("mkdir -p #{iso_root}")
+  @vm.execute("mount -o loop #{iso} #{iso_root}")
+  tails_is_installed_helper(target_name, iso_root, "isolinux")
+  @vm.execute("umount #{iso_root}")
 end
 
 Then /^there is no persistence partition on USB drive "([^"]+)"$/ do |name|
@@ -217,9 +229,23 @@ Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive
   dev = @vm.disk_dev(name) + "2"
   check_part_integrity(name, dev, "crypto", "crypto_LUKS", "gpt", "TailsData")
 
-  c = @vm.execute("echo #{pwd} | cryptsetup luksOpen #{dev} #{name}")
-  assert(c.success?, "Couldn't open LUKS device '#{dev}' on  drive '#{name}'")
-  luks_dev = "/dev/mapper/#{name}"
+  # The LUKS container may already be opened, e.g. by udisks after
+  # we've run tails-persistence-setup.
+  c = @vm.execute("ls -1 /dev/mapper/")
+  if c.success?
+    for candidate in c.stdout.split("\n")
+      luks_info = @vm.execute("cryptsetup status #{candidate}")
+      if luks_info.success? and luks_info.stdout.match("^\s+device:\s+#{dev}$")
+        luks_dev = "/dev/mapper/#{candidate}"
+        break
+      end
+    end
+  end
+  if luks_dev.nil?
+    c = @vm.execute("echo #{pwd} | cryptsetup luksOpen #{dev} #{name}")
+    assert(c.success?, "Couldn't open LUKS device '#{dev}' on  drive '#{name}'")
+    luks_dev = "/dev/mapper/#{name}"
+  end
 
   # Adapting check_part_integrity() seems like a bad idea so here goes
   info = @vm.execute("udisks --show-info #{luks_dev}").stdout
@@ -263,7 +289,7 @@ Given /^persistence is enabled$/ do
   end
   # Check that all persistent directories are mounted
   mount = @vm.execute("mount").stdout.chomp
-  for dir in persistent_dirs do
+  for _, dir in persistent_mounts do
     assert(mount.include?("on #{dir} "),
            "Persistent directory '#{dir}' is not mounted")
   end
@@ -333,7 +359,7 @@ Then /^the boot device has safe access rights$/ do
     assert(dev_group == "disk" || dev_group == "root",
            "Boot device '#{dev}' owned by group '#{dev_group}', expected " +
            "'disk' or 'root'.")
-    assert(dev_perms == "660",
+    assert(dev_perms == "1660",
            "Boot device '#{dev}' has permissions '#{dev_perms}', expected '660'")
     for user, groups in all_users_with_groups do
       next if user == "root"
@@ -342,6 +368,10 @@ Then /^the boot device has safe access rights$/ do
              "owns boot device '#{dev}'")
     end
   end
+
+  info = @vm.execute("udisks --show-info #{super_boot_dev}").stdout
+  assert(info.match("^  system internal: +1$"),
+         "Boot device '#{super_boot_dev}' is not system internal for udisks")
 end
 
 Then /^persistent filesystems have safe access rights$/ do
@@ -380,9 +410,27 @@ Then /^persistence configuration files have safe access rights$/ do
   end
 end
 
+Then /^persistent directories have safe access rights$/ do
+  next if @skip_steps_while_restoring_background
+  expected_perms = "700"
+  persistent_volumes_mountpoints.each do |mountpoint|
+    # We also want to check that dotfiles' source has safe permissions
+    all_persistent_dirs = persistent_mounts.clone
+    all_persistent_dirs["dotfiles"] = "/home/#{$live_user}/"
+    persistent_mounts.each do |src, dest|
+      next unless dest.start_with?("/home/#{$live_user}/")
+      f = "#{mountpoint}/#{src}"
+      next unless @vm.execute("test -d #{f}").success?
+      file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
+      assert(file_perms == expected_perms,
+             "'#{f}' has permissions '#{file_perms}', expected '#{expected_perms}'")
+    end
+  end
+end
+
 When /^I write some files expected to persist$/ do
   next if @skip_steps_while_restoring_background
-  persistent_dirs.each do |dir|
+  persistent_mounts.each do |_, dir|
     owner = @vm.execute("stat -c %U #{dir}").stdout.chomp
     assert(@vm.execute("touch #{dir}/XXX_persist", user=owner).success?,
            "Could not create file in persistent directory #{dir}")
@@ -391,15 +439,16 @@ end
 
 When /^I remove some files expected to persist$/ do
   next if @skip_steps_while_restoring_background
-  persistent_dirs.each do |dir|
-    assert(@vm.execute("rm #{dir}/XXX_persist").success?,
+  persistent_mounts.each do |_, dir|
+    owner = @vm.execute("stat -c %U #{dir}").stdout.chomp
+    assert(@vm.execute("rm #{dir}/XXX_persist", user=owner).success?,
            "Could not remove file in persistent directory #{dir}")
   end
 end
 
 When /^I write some files not expected to persist$/ do
   next if @skip_steps_while_restoring_background
-  persistent_dirs.each do |dir|
+  persistent_mounts.each do |_, dir|
     owner = @vm.execute("stat -c %U #{dir}").stdout.chomp
     assert(@vm.execute("touch #{dir}/XXX_gone", user=owner).success?,
            "Could not create file in persistent directory #{dir}")
@@ -408,7 +457,7 @@ end
 
 Then /^the expected persistent files are present in the filesystem$/ do
   next if @skip_steps_while_restoring_background
-  persistent_dirs.each do |dir|
+  persistent_mounts.each do |_, dir|
     assert(@vm.execute("test -e #{dir}/XXX_persist").success?,
            "Could not find expected file in persistent directory #{dir}")
     assert(!@vm.execute("test -e #{dir}/XXX_gone").success?,
@@ -427,9 +476,9 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "I log in to a new session"
   step "persistence is enabled"
   step "GNOME has started"
-  step "I have closed all annoying notifications"
+  step "all notifications have disappeared"
   step "the expected persistent files are present in the filesystem"
-  step "I completely shutdown Tails"
+  step "I shutdown Tails and wait for the computer to power off"
 end
 
 When /^I delete the persistent partition$/ do

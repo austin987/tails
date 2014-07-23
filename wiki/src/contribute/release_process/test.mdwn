@@ -269,12 +269,6 @@ the appropriate tcpdump or tshark filters.
 
         sudo watch -n 0.1 'netstat -taupen | grep polipo'
 
-  - Gobby 0.4 — start Gobby 0.4 from the *Applications* menu and
-    connect to a server, with the following command running in
-    another terminal:
-
-        sudo watch -n 0.1 'netstat -taupen | grep gobby'
-
   - Gobby 0.5 — start Gobby 0.5 from the *Applications* menu and
     connect to a server (for example `gobby.debian.org`), with the following command running in
     another terminal:
@@ -483,6 +477,13 @@ correctly.
 
         echo "192.168.1.4    dl.amnesia.boum.org" | sudo tee --append /etc/hosts
 
+  * Patch sudo configuration to allow passing arbitrary arguments to
+    `tails-upgrade-frontend`:
+
+        sudo sed -i \
+            -e 's,/usr/bin/tails-upgrade-frontend ""$,/usr/bin/tails-upgrade-frontend,' \
+            /etc/sudoers.d/zzz_upgrade
+
   * Call the upgrader must be called, from inside the system to upgrade,
     with every needed option to use the local web server rather than the
     online one, for example:
@@ -493,7 +494,7 @@ correctly.
 
 # Windows Camouflage
 
-Enable Windows XP camouflage via the Tails Greeter checkbox and:
+Enable Windows camouflage via the Tails Greeter checkbox and:
 
 * Tails OpenPGP Applet's context menu should look readable
 * iceweasel should use a Internet Explorer theme
@@ -542,7 +543,7 @@ language.
 * The Startpage search engine must be localized for the languages we ship a
   searchplug for:
 
-      find /etc/iceweasel/searchplugins/locale/ -iname startpage-*.html
+      find /usr/share/amnesia/iceweasel/searchplugins/locale/ -iname startpage-*.xml
 
 * The Wikipedia search engine must be localized for all languages.
 
@@ -575,4 +576,5 @@ language.
   page, both in English and in one language to which the website is
   translated (automate: [[!tails_ticket 6904]]).
 * One should be able to refresh the GnuPG keyring in Seahorse (with
-  the workaround documented in comment 4 on [[!tails_ticket 7051]]).
+  the workaround documented in comment 4 on [[!tails_ticket 7051]],
+  until that ticket is fixed for real).
