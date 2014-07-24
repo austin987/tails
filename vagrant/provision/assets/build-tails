@@ -4,9 +4,6 @@
 
 set -e
 
-TMPFS_SIZE_MB=6144 # 6 GB
-TMPFS_SIZE_BYTES=$(($TMPFS_SIZE_MB * 1024 * 1024))
-
 as_root_do() {
 	sudo \
 		${RSYNC_PROXY:+RSYNC_PROXY="$RSYNC_PROXY"} \
@@ -43,13 +40,6 @@ cleanup() {
 }
 
 trap cleanup EXIT
-
-if [ "$TAILS_RAM_BUILD" ]; then
-	if [ "$(usable_memory)" -lt "$TMPFS_SIZE_BYTES" ]; then
-		echo "Not enough memory available for an in-memory build. Aborting." >&2
-		exit 1
-	fi
-fi
 
 if [ -n "$JENKINS_URL" ]; then
 	# Build triggered by Jenkins
@@ -105,7 +95,7 @@ fi
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
 if [ "$TAILS_RAM_BUILD" ]; then
 	TMPFS_DIR=$(mktemp -d /tmp/tmpfs.XXXXXXXX)
-	as_root_do mount -t tmpfs -o "noatime,size=${TMPFS_SIZE_BYTES},mode=0770,uid=root,gid=${USER}" tmpfs "$TMPFS_DIR"
+	as_root_do mount -t tmpfs -o "noatime,size=100%,mode=0770,uid=root,gid=${USER}" tmpfs "$TMPFS_DIR"
 	as_root_do mount -t aufs -o "noatime,noxino,dirs=$TMPFS_DIR=rw:${WORKSPACE}/=rr+wh" aufs "$BUILD_DIR"
 else
 	as_root_do rsync -a "$WORKSPACE"/ "$BUILD_DIR"/

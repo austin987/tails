@@ -11,7 +11,7 @@ Feature: Browsing the web using the Unsafe Browser
     And I log in to a new session
     And GNOME has started
     And Tor is ready
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And available upgrades have been checked
     And I save the state so the background can be restored next scenario
 
@@ -19,7 +19,6 @@ Feature: Browsing the web using the Unsafe Browser
     When I start the Unsafe Browser
     Then the Unsafe Browser has started
     And the Unsafe Browser has a red theme
-    And the Unsafe Browser has Wikipedia pre-selected in the search bar
     And the Unsafe Browser shows a warning as its start page
 
   Scenario: Closing the Unsafe Browser shows a stop notification.

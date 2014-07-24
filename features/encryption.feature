@@ -11,7 +11,7 @@ Feature: Encryption and verification using GnuPG
     And the computer boots Tails
     And I log in to a new session
     And GNOME has started
-    And I have closed all annoying notifications
+    And all notifications have disappeared
     And I generate an OpenPGP key named "test" with password "asdf"
     And I save the state so the background can be restored next scenario
 

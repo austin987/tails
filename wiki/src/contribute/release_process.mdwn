@@ -353,8 +353,21 @@ Prepare incremental upgrades
 Build the Incremental Upgrade Kits
 ----------------------------------
 
-Use `tails-create-iuk` to build an IUK for the previous stable release
-and (if applicable) the last RC for the version being released. Example:
+Use `tails-create-iuk` to build the following IUKs:
+
+* From the previous stable release, e.g. 1.0 to 1.0.1 or 1.0 to
+  1.0.1~rc1. This may be skipped if the delta is too big (like when
+  migrating to a new Debian release) or if there are changes outside
+  of the scope for IUKs (like partition table changes).
+
+* From the last RC for the version being released, e.g. 1.0~rc1 to
+  1.0. This should be done even if there was no IUK generated from the
+  previous stable release since it is a good way to test the iuk code
+  that'll be used for the incremental upgrade paths to the
+  `$NEXT_VERSION`.
+
+Example (for RC, replace `$PREVIOUS_VERSION` with e.g. `$VERSION~rc1`
+below):
 
     sudo su -c "cd $IUK_CHECKOUT && \
       PERL5LIB=\"$PERL5LIB_CHECKOUT/lib\" \
@@ -366,7 +379,7 @@ and (if applicable) the last RC for the version being released. Example:
 
 Note that developer tools for creating IUK and upgrade-description
 files were only tested on Debian sid. It should hopefully work well on
-Wheezy too, but I would not even try to use it on Squeeze.
+Wheezy too.
 
 <a id="prepare-upgrade-description-files"></a>
 
@@ -518,25 +531,6 @@ notify their administrators.
 
 Test downloading the ISO and IUK over HTTP.
 
-Testing
-=======
-
-1. Set up a Gobby document and copy the [[manual test
-   suite|contribute/release_process/test]] in it.
-1. Email <tails@boum.org> to announce that tests may start:
-   - make it clear what's the deadline
-   - make it clear where and how you expect to get feedback
-   - attach the Torrent
-   - attach the `.packages` file
-1. Email <tails-testers@boum.org> to ask them to test the tentative ISO.
-1. Make sure someone is committed to run the automated test suite.
-1. Make sure that enough people are here to run the tests, that they
-   report their results in due time, and that they make it clear when
-   they're leaving for good.
-
-While this happens, the release manager should prepare for the next
-steps. Please read on!
-
 Update the website and Git repository
 =====================================
 
@@ -645,6 +639,22 @@ Then, record the last commit before putting the release out for real:
 
 	git add wiki/src && \
 	git commit -m "releasing version ${VERSION}"
+
+Testing
+=======
+
+1. Set up a Gobby document and copy the [[manual test
+   suite|contribute/release_process/test]] in it.
+1. Email to <tails@boum.org> and potential contributors that tests may start:
+   - make it clear what's the deadline
+   - make it clear where and how you expect to get feedback
+   - attach the Torrent
+   - attach the `.packages` file
+1. Email <tails-testers@boum.org> to ask them to test the tentative ISO.
+1. Make sure someone is committed to run the automated test suite.
+1. Make sure that enough people are here to run the tests, that they
+   report their results in due time, and that they make it clear when
+   they're leaving for good.
 
 Go wild!
 ========
@@ -781,17 +791,10 @@ this, and skip what does not make sense for a RC.
 
 1. Make sure Jenkins manages to build all major branches fine:
    <https://jenkins.tails.boum.org/>.
-1. In the [Release Manager
-   View](https://labs.riseup.net/code/projects/tails/issues?query_id=130)
-   custom Redmine query, set *Target version* to the next release. Save.
+1. Delete the _Release Manager View for $VERSION_ Redmine custom query.
+1. Ensure the next few releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Broken
    windows* so that this section appears after the next release.
-1. Bonus points if you:
-   - Merge devel into feature/wheezy, if the latter is not lagging
-     behind too much. Doing it for APT is quite tricky, enjoy.
-   - Update the packages (Iceweasel, tails-greeter, etc.) that require
-     to be rebuilt for feature-wheezy.
-   - Trigger a Jenkins build of feature/wheezy.
 
 Related pages
 =============
