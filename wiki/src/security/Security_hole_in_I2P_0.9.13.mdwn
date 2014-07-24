@@ -17,26 +17,24 @@ To be able to conduct this attack:
 
 1. the attacker must be able to affect the content of a website that
    you are visiting using the [[Tor
-   Browser|doc/anonymous_internet/Tor_Browser]] in Tails; in most
-   cases, this includes a large amount of people;
+   Browser|doc/anonymous_internet/Tor_Browser]] in Tails — many people
+   are able to do so;
 
-2. and, the attacker must know the details of this security hole; as
-   far as we know, this information has not been published yet, but
-   your adversaries may somehow have found about it already.
+2. and, the attacker must find out how to exploit this security hole;
+   this information has not been published yet, but they may somehow
+   already have discovered it, or been made aware of it.
 
 <div class="note">
 
-<p><strong>Tails does not start I2P by default.</strong></p>
+<p><strong>Tails does not start I2P by default.</strong> [[This design
+decision|contribute/design/I2P#design]] was made precisely in order to
+protect the Tails users who do not use I2P from security holes in this
+piece of software.</p>
 
-<p>One of the [[reasons|contribute/design/I2P#design]] for this is
-precisely to protect Tails users who do not use I2P from this kind of
-problems.</p>
-
-<p>Still, an attacker who would be able to exploit another,
-undisclosed security hole allowing them to run arbitrary programs as
-the `amnesia` user on your Tails, can very well start I2P, and then
-use the I2P security hole to de-anonymize you. To be able to do so,
-they also have to satisfy the requirements listed above.</p>
+<p>Still, an attacker who would also be able to start I2P on your
+Tails, either by exploiting another undisclosed security hole, or by
+tricking you into starting it yourself, could then use this I2P
+security hole to de-anonymize you.</p>
 
 </div>
 
@@ -46,10 +44,17 @@ Temporary solutions
 You can protect yourself from this security hole until it
 is corrected.
 
-Either, do not start I2P in Tails 1.1 and earlier. Wait for us to
-announce a security update.
+Do not start I2P in Tails 1.1 and earlier. You can protect yourself
+further by removing the `i2p` package every time you start Tails:
 
-Or, if you need to use I2P: every time you start I2P, disable
-JavaScript globally [[with
+1. [[Set an administration
+   password|doc/first_steps/startup_options/administration_password]].
+1. Run this command in a <span class="application">Root
+   Terminal</span>:
+
+       apt-get purge i2p
+
+However, if you really need to use I2P in Tails 1.1: before you start
+I2P, disable JavaScript globally [[with
 NoScript|doc/anonymous_internet/Tor_Browser#noscript]] in the
 Tor Browser.
