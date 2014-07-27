@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -e
+set -u
+
+# This script reverses everything done by config/chroot_local-hooks/97_remove_i2p
+# when the string "i2p" is added to the boot prompt.
+
+grep -qw "i2p" /proc/cmdline || return 0
+SRC="/usr/share/tails/i2p"
+[ -d "$SRC" ] || return 0
+
+Install_I2P(){
+    mv "$SRC/wrapper" /usr/sbin/wrapper
+    mv "$SRC/i2p.desktop" /usr/share/applications
+    mv "$SRC" /usr/share
+    chown -R i2psvc:i2psvc /usr/share/i2p
+}
+
+Add_Sudo_Config(){
+    echo "amnesia   ALL = NOPASSWD: /etc/init.d/i2p" > /etc/sudoers.d/zzz_i2p
+    chown root:root /etc/sudoers.d/zzz_i2p
+    chmod 644 /etc/sudoers.d/zzz_i2p
+}
+
+Install_I2P
+Add_Sudo_Config

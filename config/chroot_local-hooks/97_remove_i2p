@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -u
+set -e
+
+# Everything moved by this hook script will be reversed in the event that
+# the string "i2p" is entered at a boot prompt
+
+DEST="/usr/share/tails"
+
+[ -d "/usr/share/i2p" ] || return 0
+
+# Let's make sure that *just* the "i2psvc" user has access to the I2P files
+chown -R i2psvc:i2psvc /usr/share/i2p
+find /usr/share/i2p -type f \( -name '*.jar' -o -name '*.war' \) -print0 | xargs -r -0 chmod 640
+
+mv -f /usr/share/i2p "$DEST"
+mv -f /usr/sbin/wrapper "$DEST/i2p"
+mv -f /usr/share/applications/i2p.desktop "$DEST/i2p"
