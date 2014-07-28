@@ -51,6 +51,8 @@ Else, new versions are announced on:
   <a href='/torrents/rss/index.atom'>Atom</a> feeds that announce new available
   BitTorrent files.
 
+<a id="http"></a>
+
 HTTP
 ====
 
@@ -60,9 +62,10 @@ bandwidth: a domestic DSL connection won't help; neither will a shared
 web hosting setup that provides FTP access only.
 
 To give you an idea, a few dedicated Mb/s is a must; you must expect
-pushing at least a few dozens [[!wikipedia GiB]] (bytes, not bits) on
-a normal day, and at least 100 GiB a day for a short period after
-each release.
+pushing at least 50-100GB [[!wikipedia GiB]] (bytes, not bits) on
+a normal day, and twice as much for a short period after each release.
+So, it is a must to be able to push at least 2 [[!wikipedia TiB]]
+a month, and preferably 3 or 4 TiB.
 
 If you satisfy these practical requirements, please read on!
 Else, please consider seeding Tails images over BitTorrent instead.
@@ -109,6 +112,16 @@ enabled.
 	$HTTP["host"] =~ "^dl\.amnesia\.boum\.org$" {
 		server.document-root = "/var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/"
 		server.dir-listing = "enable"
+	}
+
+### nginx configuration example
+
+	server {
+		server_name dl.amnesia.boum.org;
+		root /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE;
+		location / {
+			autoindex on;
+		}
 	}
 
 3. Download the files

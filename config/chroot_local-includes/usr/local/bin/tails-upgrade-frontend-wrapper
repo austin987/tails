@@ -9,7 +9,7 @@ export TEXTDOMAIN
 TORDATE_DIR=/var/run/tordate
 TORDATE_DONE_FILE="${TORDATE_DIR}/done"
 INOTIFY_TIMEOUT=60
-MIN_MEMFREE=$((200 * 1024))
+MIN_MEMFREE=$((125 * 1024))
 MIN_TOTAL_MEMFREE=$((500 * 1024))
 RUN_AS_USER=tails-upgrade-frontend
 
@@ -40,7 +40,7 @@ check_free_memory () {
    errormsg="`gettext \"<b>Not enough memory available to check for upgrades.</b>
 
 Make sure this system satisfies the requirements for running Tails.
-See file:///usr/share/doc/tails/website/doc/about/requirements/index.en.html.
+See file:///usr/share/doc/tails/website/doc/about/requirements.en.html
 
 Try to restart Tails to check for upgrades again.
 
@@ -68,6 +68,15 @@ sleep 30
 
 check_free_memory "$MIN_MEMFREE" "$MIN_TOTAL_MEMFREE"
 
+# Go to a place where everyone, especially Archive::Tar::Wrapper called by
+# tails-install-iuk, can chdir back after it has chdir'd elsewhere to do
+# its job.
+cd /
+
 xhost +SI:localuser:"$RUN_AS_USER"
-gksudo -u "$RUN_AS_USER" "/usr/bin/tails-upgrade-frontend $@"
+if [ $# -gt 0 ] ; then
+   gksudo -u "$RUN_AS_USER" "/usr/bin/tails-upgrade-frontend $@"
+else
+   gksudo -u "$RUN_AS_USER" /usr/bin/tails-upgrade-frontend
+fi
 xhost -SI:localuser:"$RUN_AS_USER"

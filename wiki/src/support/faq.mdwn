@@ -1,0 +1,659 @@
+[[!meta title="Frequently asked questions"]]
+
+[[!toc levels=2]]
+
+<a id="project"></a>
+
+Other useful resources
+======================
+
+  - [The Tor Project: FAQ](https://www.torproject.org/docs/faq.html.en)
+  - [The Tor Project: Stack Exchange, question & answer site](https://tor.stackexchange.com/)
+
+Tails project
+=============
+
+<a id="relationship_with_tor"></a>
+
+What is the relationship between Tor and Tails?
+-----------------------------------------------
+
+See our explanation about [[why does Tails use Tor|doc/about/tor#relationship]].
+
+<a id="debian"></a>
+
+Why is Tails based on Debian and not on another distribution?
+-------------------------------------------------------------
+
+We are deeply rooted and involved in Debian. The friendships, relationships, and
+technical expertise we have in Debian have many benefits for Tails, and we are
+not ready to build the same relationship with Ubuntu, OpenBSD, or any other
+distribution. See our statement about our
+[[contribute/relationship_with_upstream]] for details.
+
+See also the article [Why there are so many Debian
+derivatives](http://upsilon.cc/~zack/blog/posts/2011/09/why_there_are_so_many_debian_derivatives/)
+by Stefano Zacchiroli.
+
+<a id="ubuntu"></a>
+
+Why isn't Tails based on Ubuntu?
+--------------------------------
+
+First, see the answer to the [[previous question|faq#debian]].
+
+0. The rapid development cycle of Ubuntu would be too fast for Tails.
+0. Ubuntu adds features in ways that we find dangerous for privacy. For example
+   Ubuntu One
+   ([partly discontinued](http://blog.canonical.com/2014/04/02/shutting-down-ubuntu-one-file-services/))
+   and the [Amazon ads and data leaks](https://www.eff.org/deeplinks/2012/10/privacy-ubuntu-1210-amazon-ads-and-data-leaks).
+0. Ubuntu is led by a company that takes most of the important decisions and has
+   the power to make them happen.
+0. We usually ship kernels and video drivers from [Debian
+   backports](http://backports.debian.org/). The result
+   is comparable to Ubuntu in terms of support for recent hardware.
+0. We think that the general quality of the maintenance work being done on
+   packages matters from a security perspective. Debian maintainers generally are
+   experts in the fields their packages deal with; while it is generally not
+   the case outside of the limited number of packages Ubuntu officially supports.
+0. We are actively working on adding
+   [[AppArmor|blueprint/Mandatory_Access_Control]] support to Tails; a security
+   framework that is already used in a few Ubuntu applications.
+0. We are also working on adding compiler hardening options to more Debian
+   packages included in Tails; another security feature that Ubuntu already
+   provides.
+
+<a id="website"></a>
+
+Tails website
+=============
+
+<a id="ssl_certificate"></a>
+
+Why does tails.boum.org rely on a commercial SSL certificate?
+-------------------------------------------------------------
+
+HTTPS provides encryption and authentication on the web. The standard
+authentication mechanism through SSL certificates is centralized and based on
+commercial or institutional certificate authorities. This mechanism has proven
+to be susceptible to various methods of compromise. See our [[warning about
+man-in-the-middle attacks|doc/about/warning#man-in-the-middle]].
+
+Still, we use HTTPS on our website and rely on a commercial certificate even if
+we acknowledge those security problems.
+
+1. Providing no HTTPS and no kind of encryption would be a worse option.
+
+2. Providing a self-signed certificate or another marginally supported
+authentication mechanism would not work for the majority of users. Modern
+browsers display very strong warnings when facing a self-signed certificate, and
+many people would think the website is broken while it is not.
+
+We prefer to provide weak security, using a commercial certificate, that still
+works for most people. At the same time, we make clear this security is limited
+and encourage stronger ways of verifying the authenticity of Tails once
+downloaded.  See our documentation on [[verifying the ISO|download#verify]].
+
+<a id="hardware"></a>
+
+Hardware compatibility
+======================
+
+<a id="64-bit"></a>
+
+Does Tails work with 64-bit processors?
+---------------------------------------
+
+Yes. Tails automatically detects the type of processor of the computer and loads
+a 32-bit or a 64-bit kernel accordingly.
+
+<a id="arm"></a>
+
+Does Tails work on ARM architecture, Raspberry Pi, or tablets?
+--------------------------------------------------------------
+
+For the moment, Tails is only available on the x86 and x86_64 architectures.
+The Raspberry Pi and many tablets are based on the ARM architecture. Tails does
+not work on the ARM architecture so far.
+
+Look for a tablet with an AMD or Intel processor. Try to verify its
+compatibility with Debian beforehand, for example make sure that the Wi-Fi
+interface is supported.
+
+<a id="installation"></a>
+
+Installation
+============
+
+<a id="install_permanently"></a>
+
+Can I install Tails permanently onto my hard disk?
+--------------------------------------------------
+
+This is not possible using the recommended installation methods. Tails is
+designed to be a live system running from a removable media: DVD, USB stick or
+SD card.
+
+This is a conscious decision as this mode of operation is better for what we
+want to provide to Tails users: amnesia, the fact that Tails leaves no traces on
+the computer after a session is closed.
+
+<a id="browser"></a>
+
+Web browser
+===========
+
+<a id="javascript"></a>
+
+Why is JavaScript enabled by default in the Tor browser?
+--------------------------------------------------------
+
+Many websites today require JavaScript to work correctly. As a consequence
+JavaScript is enabled by default in Tails to avoid confusing many users. But
+the [[Torbutton|doc/anonymous_internet/Tor_browser#torbutton]] extension,
+included in Tails, takes care of blocking dangerous JavaScript functionalities.
+
+Tails also includes the [[NoScript|doc/anonymous_internet/Tor_browser#noscript]]
+extension to optionally disable more JavaScript. This might improve
+security in some cases. However, if you disable JavaScript, then the
+[[fingerprint|doc/about/fingerprint]] of your browser will
+differ from most Tor users. This might break your anonymity.
+
+We think that having JavaScript enabled by default is the best possible
+compromise between usability and security in this case.
+
+<a id="add-ons"></a>
+
+Can I install other add-ons in the browser?
+-------------------------------------------
+
+Installing add-ons in the browser might break the security built in Tails.
+
+Add-ons can do many things within the browser, and even if all the networking goes
+through Tor, some add-ons might interact badly with the rest of the
+configuration or leak private information.
+
+1. They can track and reveal information about your browsing behaviour, browsing
+history, or system information, either on purpose or by mistake.
+
+2. They can have bugs and security holes that can be remotely exploited by an
+attacker.
+
+4. They can have bugs breaking the security offered by other add-ons, for example
+Torbutton, and break your anonymity.
+
+5. They can break your anonymity by making your browsing behaviour
+distinguishable amongst other Tails users.
+
+Unless proven otherwise, no add-on, apart from the ones already
+included in Tails, have been seriously audited and should be
+considered safe to use in this context.
+
+<div class="next">
+  <ul>
+    <li>[[Warnings about persistence|doc/first_steps/persistence/warnings#index3h1]]</li>
+    <li>[[Browsing the web with Iceweasel|doc/anonymous_internet/Tor_browser]]</li>
+    <li>[[Can I hide the fact that I am using Tails?|doc/about/fingerprint/]]</li>
+  </ul>
+</div>
+
+<!--
+XXX: Push that information to the browser documentation?
+XXX: Check https://www.torproject.org/torbutton/torbutton-faq.html.en#recommendedextensions
+-->
+
+<a id="flash"></a>
+
+Can I view websites using Adobe Flash with Tails?
+-------------------------------------------------
+
+Adobe Flash Player is not included in Tails for several reasons:
+
+  - It is proprietary software which prevents us from legally including it in
+    Tails.
+  - It is closed source and so we have no idea of what it really does.
+  - It has a very long history of serious security vulnerabilities.
+  - It is known to favor privacy invasive technologies such as [[!wikipedia Local_shared_object]].
+  - Adobe only maintains their GNU/Linux Flash plugin for Google Chrome.
+
+We have considered including open-source alternative software to Adobe
+Flash, such as [Gnash](http://www.gnu.org/software/gnash/), but it is
+not the case yet, see [[!tails_ticket 5363]].
+
+But you can already watch HTML5 videos with the Tor browser.
+
+<a id="anonymity_test"></a>
+
+How to analyse the results of online anonymity tests?
+-----------------------------------------------------
+
+Fingerprinting websites such as <https://panopticlick.eff.org/> or
+<https://ip-check.info/> try to retrieve as much information as possible from
+your browser to see if it can be used to identify you.
+
+As explained in our documentation about
+[[fingerprinting|doc/about/fingerprint]], Tails provides anonymity on the web by
+making it difficult to distinguish a particular user amongst all the users of
+Tails and the Tor Browser Bundle (TBB).
+
+So, the information retrieved by such fingerprinting websites is not harmful for
+anonymity in itself, as long as it is the same for all Tor users.
+
+For example, the user-agent property of the browser was set to `Mozilla/5.0
+(Windows; U; Windows NT 6.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3`,
+as of Tails 0.21 and TBB 2.3.25-13. This value preserves your anonymity even if
+the operating system installed on the computer is Windows NT and you usually run
+Firefox. On the other hand, changing this value makes you distinguishable from
+others Tor users and breaks your anonymity.
+
+Furthermore, we verify the result of those websites before each release, see our
+[[test suite|contribute/release_process/test]].
+
+<a id="java"></a>
+
+Is Java installed in the Tor browser?
+---------------------------------------
+
+Tails does not include a Java plugin in its browser because it could break your anonymity.
+
+<a id="unsafe_browser"></a>
+
+Can I use the Unsafe Browser to browse the web or download files?
+-----------------------------------------------------------------
+
+No. The Unsafe Browser is only included in Tails as a tool to log into [[captive
+portals|doc/anonymous_internet/unsafe_browser]]. It is not meant to be used as a
+regular web browser. As a consequence, the files that you might download using
+the Unsafe Browser are not accessible by your user.
+
+<a id="persistence"></a>
+
+Persistence
+===========
+
+<a id="persistent_features"></a>
+
+Can I save my custom settings?
+------------------------------
+
+<em>&hellip; like language, keyboard layout, background image, toolbar position,
+browser settings, touchpad preferences, etc.</em>
+
+By default Tails does not save anything from one working session to another.
+Only the persistent volume allows you to reuse data across different working
+sessions. See the list of existing [[persistent
+features|doc/first_steps/persistence/configure#features]].
+
+We are frequently requested to add new persistent features but we are usually
+busy working on other priorities. See our [open
+tickets](https://labs.riseup.net/code/projects/tails/issues?query_id=122)
+about persistence. Any bit of help [[is welcome|contribute/how/code]].
+
+<a id="luks"></a>
+
+How strong is the encryption of the persistent volume and LUKS?
+---------------------------------------------------------------
+
+Tails uses LUKS to encrypt the persistent volume. This is the same technique as
+the one we recommend for [[creating and using encrypted
+volumes|doc/encryption_and_privacy/encrypted_volumes]] in general.
+
+LUKS is a very popular standard for disk encryption in Linux. LUKS is the
+default technique for full-disk encryption proposed by many distribution,
+including Debian and Ubuntu, when installing a regular system.
+
+Currently the default cipher is `aes-cbc-essiv:sha256` with a key size of 256
+bits.
+
+To understand better how persistence work, see our [[design
+document|contribute/design/persistence]].
+
+<a id="recover_passphrase"></a>
+
+Is it possible to recover the passphrase of the persistent volume?
+------------------------------------------------------------------
+
+No. The encryption of the persistent volume is very strong and it is not
+possible to recover the passphrase of the persistent volume. If the passphrase
+is weak enough, an attacker, using a brute force attack, could try many
+possible passphrases and end up guessing your passphrase.
+
+<a id="networking"></a>
+
+Networking
+==========
+
+<a id="vpn"></a>
+
+Can I use Tails with a VPN?
+---------------------------
+
+Three possible scenarios need to be distinguished:
+
+  - Using a VPN instead of Tor
+  - Using a VPN to connect to Tor (VPN before Tor)
+  - Connecting to a VPN using Tor (VPN after Tor)
+
+For more information, see our [[blueprint on VPN
+support|blueprint/vpn_support/]].
+
+### Using a VPN instead of Tor
+
+It is a very [[fundamental assumption of Tails|about#tor]] to force all outgoing
+traffic to anonymity networks such as Tor or I2P. VPN are not anonymity
+networks, because the administrators of the VPN can know both where you are
+connecting from and where you are connecting to. Tor provides anonymity by
+making it impossible for a single point in the network to know both the origin
+and the destination of a connection.
+
+### Using a VPN to connect to Tor (VPN before Tor)
+
+In some situations, you might be forced to use a VPN to connect to the Internet,
+for example by your ISP. This is currenlty not possible using Tails. See
+[[!tails_ticket 5858]].
+
+[[Tor bridges|doc/first_steps/startup_options/bridge_mode]] can also be useful
+to bypass the limitations imposed by your ISP.
+
+### Connecting to a VPN using Tor (VPN after Tor)
+
+In some situtations, it can be useful to connect to a VPN through Tor:
+
+  - To access services that block connections coming from Tor.
+  - To access ressources only available inside a VPN, for example at your
+    company or University.
+
+This is currenlty not possible easily using Tails.
+
+<a id="mac_address"></a>
+
+Does Tails change the MAC address of my network interfaces?
+-----------------------------------------------------------
+
+Starting from Tails 0.23, [[MAC
+spoofing|doc/first_steps/startup_options/mac_spoofing]] is enabled by default
+on all interfaces.
+
+<a id="dns"></a>
+
+How does the DNS resolution work in Tails?
+------------------------------------------
+
+See our [[design document|contribute/design/Tor_enforcement/DNS]] on this topic.
+
+<a id="htp"></a>
+
+Why does Tails automatically connect to several websites when starting?
+-----------------------------------------------------------------------
+
+Tor and I2P require the system clock to be well synchronized in order to work
+properly. When starting Tails, a notification is displayed while the clock is
+being synchronized.
+
+This synchronization is made by sending HTTPS queries through Tor to severals
+websites and deducing a correct time from their answers. The list of websites
+that could be queried in this process can be found in `/etc/default/htpdate`.
+
+See also our [[design document|contribute/design/Time_syncing]] on this topic.
+
+<a id="software"></a>
+
+Software not included in Tails
+==============================
+
+<a id="new_software"></a>
+
+Can my favourite software be included in Tails?
+-----------------------------------------------
+
+First of all, make sure that this software is already available in Debian, as
+this is a requirement to be included in Tails. Adding to Tails software which is
+not in Debian imply an additional workload that could compromise the
+sustainability of the project. On top of that, being in Debian brings many
+advantages:
+
+  - It is included in the Debian process for security updates and new versions.
+  - It is authenticated using OpenPGP signatures.
+  - It is under the scrutiny of the Debian community and its many users and
+    derivatives, including Ubuntu.
+
+To check whether a software is in Debian, search for it on
+<https://packages.debian.org/>. If it is not yet available in Debian, you should
+ask its developers why it is not the case yet.
+
+Second, this software might not be useful to accomplish our design goals. Refer
+to our [[design documents|contribute/design]] to understand which are
+the intended use cases, and the assumptions on which Tails is based.
+
+We also try to limit the amount of software included in Tails, and we only add
+new software with a very good reason to do so:
+
+  - We try to limit the growth of the ISO image and automatic upgrades.
+  - More software implies more security issues.
+  - We avoid proposing several options to accomplish the same task.
+  - If a package needs to be removed after its inclusion, for example because of
+    security problems, then this might be problematic as users might rely on it.
+
+After considering all this, if you still think that this software is a good
+candidate to be included in Tails, please [[explain us|/contribute/talk]] your
+proposal.
+
+<div class="tip">
+
+If a software is not included in Tails, but is included in Debian, you can use
+the [[additional
+software|doc/first_steps/persistence/configure#additional_software]] feature of
+the persistent volume to install it automatically at the beginning of each
+working session.
+
+</div>
+
+Here is some of the software we are often asked to include in Tails:
+
+  - **bitmessage**: not in Debian
+  - **torchat**: see [[!tails_ticket 5554]]
+  - **bitcoin**, **electrum**: see [[!tails_ticket 6739]]
+
+<a id="bittorrent"></a>
+
+Can I download using BitTorrent with Tails?
+-------------------------------------------
+
+Tails does not ship any BitTorrent software and is unlikely to do so in the
+future.
+
+The problem with using BitTorrent over Tor is double:
+
+  - It is technically hard to do it properly, see:
+    <https://blog.torproject.org/blog/bittorrent-over-tor-isnt-good-idea>.
+  - It harms the network, see:
+    <https://blog.torproject.org/blog/why-tor-is-slow>.
+
+We have relatively vague [[!tails_ticket 5991 desc="plans to improve
+on this situation"]].
+
+<a id="desktop"></a>
+
+Desktop environment
+===================
+
+<a id="timezone"></a>
+
+Why is the time set wrong?
+--------------------------
+
+When Tails starts, the system timezone is set to UTC (Greenwich time). So, this time
+might be a few hours in the future if you are West from the United
+Kingdom, or in the past if you are East from the UK. The minutes
+should be accurate.
+
+We do this for anonymity reasons: if some application reveals your actual
+timezone, it might help identifying who you are.
+
+Having all Tails users set to the same timezone, makes it more difficult to
+distinguish you amongst all the other Tails users.
+
+<div class="note">
+
+We are working on a custom clock applet with configurable timezone. See
+[[!tails_ticket 6284]].
+
+</div>
+
+<a id="misc"></a>
+
+Other security issues
+=====================
+
+<a id="compromised_system"></a>
+
+Is it safe to use Tails on a compromised system?
+------------------------------------------------
+
+Tails runs independently from the operating system installed on the computer.
+So, if the computer has only been compromised by software, running from inside
+your regular operating system (virus, trojan, etc.), then it is safe
+to use Tails. This is true as long as Tails itself has been installed
+using a trusted system.
+
+If the computer has been compromised by someone having physical access to it and
+who installed untrusted pieces of hardware, then it might not be safe to use
+Tails.
+
+<a id="integrity"></a>
+
+Can I verify the integrity of a Tails device?
+---------------------------------------------
+
+It is not possible to verify the integrity of a Tails device when running Tails
+from this same device. This would be like asking to someone whether she is a
+liar; the answer of a true liar would always be "no".
+
+- To verify the integrity of a DVD from a separate trusted system, you can
+  verify the signature of the ISO image as documented in [[verify the ISO image
+  using the command line|doc/get/verify_the_iso_image_using_the_command_line]]
+  against the DVD itself.
+
+- There is no documented method of verifying the integrity of a USB stick or SD
+  card installed using <span class="application">Tails
+  Installer</span>. However, if you have another trusted Tails device,
+  you can [[clone it onto the untrusted device|doc/first_steps/upgrade]] to
+  reset it to a trusted state.
+
+<a id="reuse_memory_wipe"></a>
+
+Can I use the memory wipe feature of Tails on another operating system?
+-----------------------------------------------------------------------
+
+The memory wipe mechanism that Tails uses on shutdown to [[protect against cold
+boot attacks|doc/advanced_topics/cold_boot_attacks]] is not yet available in
+other Linux distributions. In the future, we would like to package it for
+Debian.
+
+If you want to implement this feature outside of Tails, have a look at the
+corresponding [[design documentation|contribute/design/memory_erasure]].
+
+<a id="new_identity"></a>
+
+Is it safe to use the new identity feature of Vidalia?
+------------------------------------------------------
+
+In our [[warning page|doc/about/warning#identities]] we advice to restart Tails
+every time that you want to use a different contextual identity. The <span
+class="guilabel">New Identity</span> feature of <span
+class="application">Vidalia</span> forces Tor to use new circuits but only for
+new connections. The two main drawbacks of this technique are:
+
+- The circuits used by connections that remain open might not be changed: for
+example, a circuit used to connect to an open webpage or to an instant
+messaging server.
+
+- Each application might contain information that can identify you,
+independently of the Tor circuit that are used. For example, the browser might
+contain cookies from previous websites, <span
+class="application">[[Pidgin|doc/anonymous_internet/pidgin]]</span> will reuse the
+same nickname by default, etc.
+
+Tails is a full operating system, so a *new identity* should be thought on a
+broader level than only switching Tor circuits.
+
+<a id="truecrypt"></a>
+
+Can I use TrueCrypt with Tails?
+-------------------------------
+
+Yes, but TrueCrypt needs to be activated when starting Tails, see our
+[[documentation|doc/encryption_and_privacy/truecrypt]]. Tails includes TrueCrypt
+only for backward compatibility and we are working on [[choosing a free software
+as replacement|blueprint/replace_truecrypt]] to open TrueCrypt volumes.
+
+Furthermore, [TrueCrypt is now discontinued](http://truecrypt.sourceforge.net/)
+and its development team recommends against using it. We recommend using other
+[[encryption tools|doc/encryption_and_privacy/encrypted_volumes]] such as
+[[LUKS|faq#luks]].
+
+<a id="boot_statistics"></a>
+
+Does Tails collect information about its users?
+-----------------------------------------------
+
+When Tails starts, two HTTPS requests are made automatically to our website
+through Tor:
+
+- A security check is performed to know if security issues have been announced
+  for this version of Tails. The language of the working session is passed along
+  with this request to display the notification in the preferred language of the
+  user.
+- [[<span class="application">Tails Upgrader</span>|doc/first_steps/upgrade]]
+  checks for newer versions. The version of the running Tails is passed along
+  with this request.
+
+We believe it is important to notify the user of known security issues and newer
+versions. We calculate statistics based on the security check to know how many times
+Tails has been started and connected to Tor. Those statistics are published in
+our [[monthly reports|news]].
+
+<!--
+<rawmaterial>
+
+Proxy
+-----
+
+How_do_you_chain_a_proxy_after_TOR___63__
+Next_Tails_version_should_have_proxychains_for_socks_after_exit_node
+alternative_way_to_connect_to_web
+featurerequest:_proxychains
+
+easy way to chain a SOCKS5 proxy after the hop off the exit node of TOR.
+
+I need to  hide the fact that I'm coming from TOR, because many websites block tor.
+
+I have found some websites that explain how to create an SSH tunnel, but using the terminal is above my level of skills :)
+
+It should be possible to use a program like Proxify to chain a proxy, but I
+don't know if this creates conflicts, and I don't know how to install a program
+that can run of the persistent volume.
+
+Surely there is someone who can simply give us a paragraph of text to enter into
+the polipo config file ( where i add the ip address and port for the SOCKS5 i
+bought ) or give some other instructions.
+
+ * Use something like `ssh -D 1081`. See `DynamicFoward` in `ssh_config(5)`.                                        * Use `iptables` to allow connections to 1081 on localhost.
+ * For websites, modify FoxyProxy settings to add a new proxy, before rules
+   for Tor, that contains the addresses that needs to be reached, and
+   which directs connections to 1081.
+ * For other programs, draft a dedicated `tsocks.conf`. Use
+   `TSOCKS_CONF_FILE=tsocks-specific.conf tsocks ssh one.example.org`.
+
+`proxychains` is in Debian, the package is called by the same name. This means
+it is straightforword to install it in Tails. There is no way in can be
+preconfigured for every Tails users, so it's hard to see why it should be
+included in the default package set.
+
+</rawmaterial>
+
+Other topics
+------------
+
+- XXX_NICK_XXX in Pidgin might be caused by a lack of RAM
+-->

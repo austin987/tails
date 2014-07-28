@@ -1,0 +1,169 @@
+[[!meta title="Backups of the persistent volume"]]
+
+[[!toc  levels=2]]
+
+We want to allow our users to backup the data they have in their persistent
+volume.
+
+See the thread on tails-dev:
+
+<https://mailman.boum.org/pipermail/tails-dev/2014-April/005388.html>
+
+Backup techniques
+=================
+
+We shouldn't maintain yet another shiny new piece of code to do that. Or we
+might hit tons of corner cases to handle, that one initially does not think of.
+And once we take it all into account, then we get a large piece of code to
+maintain all by ourselves, because it was meant only for Tails' needs.
+
+So, we should try to reinvent this wheel, and use an existing, proven solution instead.
+
+Tar + GPG
+---------
+
+A simple approach might be to combine tar and GPG:
+
+    tar cjf - . | gpg --cipher-algo AES -c - > /home/amnesia/YYYY-MM-DD-backup.tbz2.gpg
+
+Initial implementation might be easy but that will probably end up being quite a
+big piece of custom code.
+
+Duplicity
+---------
+
+<http://duplicity.nongnu.org/>
+
+It supports something that's basically "tar | gpg" for the first iteration, and
+it also leaves room for future improvements, thanks to its support for
+incremental and remote backups. Also, it allows users to restore or inspect
+their backups outside of Tails, without having to manually decipher yet another
+backup file format.
+
+### Cons
+
+- Duplicity creates tons of messy files on the file system.
+
+Loopback LUKS
+-------------
+
+### Pros
+
+- One file per backup.
+
+### Cons
+
+- We still need to find another tool to create the device and copy the files.
+- Maybe backups done this way would be much bigger than duplicity backups.
+- Duplicity supports incremental backups even if they have some limitations.
+
+Obnam
+-----
+
+Obnam only supports encrypting to a GnuPG key, so this would require another
+layer of encryption (such as a LUKS container file, or something else) if we
+want to support encrypting with a passphrase (and I think we should).
+
+grsync + encrypted device
+------------------------------
+
+[grsync](http://www.opbyte.it/grsync/) is a GUI for the renown and rock-solid `rsync`, already shipped in Tails.
+
+Grsync is [packaged for debian](https://packages.debian.org/squeeze/grsync).
+
+The documentation for the creation of the encrypted device [[is already written|doc/encryption_and_privacy/encrypted_volumes]].
+
+### Pros
+
+* not that much things to code
+* grsync can be easily preconfigurated, eventually with multiple profiles
+* this solution separate backup and encryption work
+* allows remote backups
+
+### Cons
+
+* seems not really actively developped
+* not possible to do incremental backups
+* needs a separate encrypted device for backups or reuse the "loopback LUKS"
+  solution
+* does not check if enough space is available on the destination before running
+
+### How to test?
+
+* create an encrypted device.
+* install the grsync package.
+* paste [those lines](http://dustri.org/p/38e76b) in a .grsync file, then double-click on it.
+(grsync ask you first to confirm the profile you want to use. Just click on "Open")
+* define the destination (i.e your encrypted device)
+* test wildly! and please report your results
+
+### Todo
+
+* some files are normally not readable by rsync (for example persistence.conf, apt/*)
+  Grsync can bypass that with the option "Run as superuser", we should investigate the consequences of using such an option.
+  We still have the possibility to ignore those files: we just have then to add `--exclude="apt"` in the preconfiguration file.
+* decide if we activate the option `--delete` by default.
+* test restoration (see File → Invert source and destination), then at least check files permissions.
+* test backup + restoration with symlinks and hardlinks in the Persistent folder.
+* eventually test remote backups.
+
+rdup
+----
+
+<https://github.com/miekg/rdup>
+
+rdup separates the logic of backing up from the actual copying. It
+supports filters to compress and encrypt individual files (typically
+using gpg or mcrypt) as well as path names and can do both full as
+well as incremental backups.
+
+### Pros
+
+* simple and small command line programs
+* more sophisticated than tar+gpg and probably addresses many of the
+  corner cases that would otherwise have to be handled by increasingly
+  complicated scripts
+* in Debian Squeeze / Wheezy / testing
+
+### Cons
+
+* still requires a script of some sort to drive it
+* probably requires a gui to make it simple to use
+
+Other solutions
+---------------
+
+We should investigate how others have already solved this problem.
+
+User experience
+===============
+
+- The user should be prompted about where to save the backup as this will most
+  probably end up directly on a storage device and not go through RAM.
+
+- Ask the user which folders of the persistence setup to backup. But maybe
+  that's not needed for a first prototype, as we might assume that the info in
+  persistence is kept to the minimum.
+
+- The restore step would do the current delete partition steps (if there was
+  already a persistence partition found), then most of the current steps to
+  create a partition, but instead of asking the user what they want to use their
+  new partition for, it would instead ask the user to pick a backup and would
+  restore it.  
+
+- There could be a single menu entry called "Backup and restore persistent
+  volume". Combining both actions in a single menu entry makes it clear that
+  they are directly related, and limits the number of menu entries.
+
+- There should be a graphical way to restore backups. It is important let
+  non-techy users restore their backups if necessary.
+
+Implementation
+==============
+
+- Avoid running the GUI as root and rather run the GUI as amnesia or a dedicated
+  user and execute precise actions through policykit (execute a command with
+  pkexec or implement a dbus service)
+
+- Write the code in GTK3 for Tails 1.1 which will be the next major release,
+  based on Debian Wheezy.
