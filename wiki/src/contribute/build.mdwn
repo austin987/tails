@@ -11,18 +11,26 @@ Tails can be built easily in a virtual machine using [Rake], [Vagrant] and
 [VirtualBox]. The process requires a minimum of 1 GB of free memory and a
 maximum of 10 GB of free storage.
 
-Install the needed tools on Debian Jessie:
-
-    $ sudo apt-get install git virtualbox rake vagrant/unstable
-
-Or, on Debian Wheezy:
-
-    $ sudo apt-get install git virtualbox rake vagrant/unstable \
-      ruby-childprocess/jessie ruby-net-scp/jessie ruby-net-ssh/jessie
-
 [Rake]: http://rake.rubyforge.org/
 [Vagrant]: http://vagrantup.com/
 [VirtualBox]: http://www.virtualbox.org/
+
+Set up the build environment on Debian Jessie:
+
+1. Add Debian unstable to your APT sources.
+2. Pin all packages from Debian unstable at 500 (`apt_preferences(5)`).
+3. Install the needed tools:
+
+       $ sudo apt-get install git virtualbox rake vagrant/unstable
+
+Or, on Debian Wheezy:
+
+1. Add Debian Jessie and unstable to your APT sources.
+2. Pin all packages from Debian Jessie and unstable at 500 (`apt_preferences(5)`).
+3. Install the needed tools:
+
+       $ sudo apt-get install git virtualbox rake vagrant/unstable \
+         ruby-childprocess/jessie ruby-net-scp/jessie ruby-net-ssh/jessie
 
 Then, please run:
 
@@ -221,9 +229,12 @@ Build process
 Every build command must be run as `root`, at the root of a clone of the
 [[`tails` repository|git]].
 
-In short, a build could be done using:
+In short, a build shall be done using:
 
     # lb clean --all && lb config && lb build
+
+Running `lb config` or `lb build` in an environment that wasn't full
+cleaned first is not supported.
 
 ### Customize the build process if needed
 
@@ -238,22 +249,12 @@ The most common customizations are documented on this wiki:
   build environment;
 * [[using a custom Debian mirror to build Tails
   images|build/custom_mirror]];
-* [[using squid-deb-proxy to build Tails images|build/squid-deb-proxy]].
+* [[using squid-deb-proxy to build Tails images|build/squid-deb-proxy]]
+  (**Note**: most Tails contributors using the manual build method
+  use [[!debpts apt-cacher-ng]] instead, nowadays.)
 
 More documentation about this can be found in the [Debian Live
 Manual](http://live.debian.net/manual-2.x/html/live-manual.en.html).
-
-### Initialize the Live system's configuration
-
-Initialize the Live system's configuration with `lb config` in a
-**clean** build tree. Most `lb config` options are supported, have a
-look to the `lb_config(1)` manpage for details.
-
-### Build the system
-
-You can then use the standard live-build commands as root to build
-the image (`lb build`) and to cleanup the build directory (`lb
-clean`).
 
 More information
 ================
