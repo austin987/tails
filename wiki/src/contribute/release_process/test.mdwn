@@ -578,3 +578,10 @@ language.
 * One should be able to refresh the GnuPG keyring in Seahorse (with
   the workaround documented in comment 4 on [[!tails_ticket 7051]],
   until that ticket is fixed for real).
+* Test that the hostname is not leaked via DHCP requests (automate: [[!tails_ticket 7712]]):
+  1. Install Wireshark in the system under testing.
+  1. Monitor the network until a periodic DHCP refresh is done, or
+     manually trigger one.
+  1. Click on the "DHCP Request" packet going out to the local DHCP server.
+  1. Look for `Option: (12) Host Name`. There should *not* be `Host
+     Name: amnesia` in there.
