@@ -7,13 +7,14 @@ set -u
 # when the string "i2p" is added to the boot prompt.
 
 grep -qw "i2p" /proc/cmdline || return 0
-SRC="/usr/share/tails/i2p"
+SRC="/usr/share/tails/i2p-disabled"
 [ -d "$SRC" ] || return 0
 
 Install_I2P(){
     mv "$SRC/wrapper" /usr/sbin/wrapper
     mv "$SRC/i2p.desktop" /usr/share/applications
-    mv "$SRC" /usr/share
+    mv "$SRC/i2p" /usr/share
+    rmdir "$SRC"
 }
 
 Add_Sudo_Config(){
