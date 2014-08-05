@@ -65,8 +65,8 @@ done
 
 # core PO files
 echo ""
-echo "Core website PO files"
-echo "====================="
+echo "[[Core PO files|contribute/l10n_tricks/core_po_files.txt]]"
+echo "=========================================================="
 echo ""
 
 for lang in $LANGUAGES ; do
