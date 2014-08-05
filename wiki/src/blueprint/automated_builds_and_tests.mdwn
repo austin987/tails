@@ -22,7 +22,9 @@ ensure a few facts:
 What we have
 ============
 
-* A Jenkins instance running on lizard.
+* A Jenkins instance running on lizard, that builds a few branches
+  whenever they are pushed. Results [are available
+  publicly](http://nightly.tails.boum.org/).
 * A partially automated test suite:
   - [[documentation|contribute/release_process/test/automated_tests]]
   - [[setup|contribute/release_process/test/setup]]
@@ -36,17 +38,13 @@ Roadmap
 0. Complete phase one (**build and publish ISOs automatically**):
    fix all child tickets of
    [[!tails_ticket 5324]].
+0. Run the test suite automatically on autobuilt ISOs:
+   [[!tails_ticket 5288]]
 0. See other tickets in the *Continuous Integration* category,
    and organize the next steps.
 
 What we need
 ============
-
-Automated builds
-----------------
-
-Ideally, every commit pushed to Git should result in an ISO being
-built, and made available online.
 
 Automated tests
 ---------------
@@ -65,8 +63,8 @@ fresh images can be tested without being transferred.
 In order to be able to build Tails in memory (which greatly speeds up builds)
 and to properly test HIGHMEM memory wipes, the test server should have at
 least 32 GB. Using KVM inside a KVM
-virtual machine is supported by the "nested KVM" feature available since
-Linux 3.1. VirtualBox (Vagrant) in KVM is not supported as of March 2013.
+virtual machine is supported by the "nested KVM" feature.
+VirtualBox (Vagrant) in KVM is not supported as of March 2013.
 
 We could set a threshold of tests that have to be successful before publishing
 one daily build image. This would prevent too-broken images to spread out and
