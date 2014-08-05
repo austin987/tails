@@ -52,8 +52,8 @@ else
 fi
 
 # all PO files
-echo "All PO files"
-echo "============"
+echo "All website PO files"
+echo "===================="
 echo ""
 
 for lang in $LANGUAGES ; do
@@ -65,8 +65,8 @@ done
 
 # core PO files
 echo ""
-echo "Core PO files"
-echo "============="
+echo "Core website PO files"
+echo "====================="
 echo ""
 
 for lang in $LANGUAGES ; do
