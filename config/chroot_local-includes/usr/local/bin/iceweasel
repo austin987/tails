@@ -25,5 +25,9 @@ tor_has_bootstrapped() {
 }
 
 if tor_has_bootstrapped || ask_for_confirmation; then
+    # Torbutton 1.5.1+ uses those environment variables
+    export TOR_SOCKS_HOST='127.0.0.1'
+    export TOR_SOCKS_PORT='9151'
+
     exec /usr/bin/iceweasel "$@" &
 fi
