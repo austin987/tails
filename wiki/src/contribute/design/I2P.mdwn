@@ -39,9 +39,9 @@ started automatically. Some reasons behind this decision include:
 3. some level of system compromise through 0-day exploits in the I2P
    client
 
-Users that want to use I2P must start it manually from the `Applications` menu.
-In the future one may be able to start I2P during boot (see the [[!tails_todo
-boot_menu]] TODO page).
+Users that want to use I2P must enable it by addinng the <span class="command">i2p</span> boot option
+to the <span class="application">boot menu</span>. Once enabled, I2P will be started automatically by a NetworkManager hook
+(see [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/30-i2p.sh]]).
 
 Implementation
 ==============
@@ -54,11 +54,10 @@ some years ago. This package includes an initscript which is configured by
 default to start the I2P client as the `i2psvc` user.
 
 The above package is installed but its init script is not automatically run
-during boot. Instead, an I2P shortcut has been added to the applications
-menu which the user can use to start the I2P init script manually. A
-side-effect of installing the actual I2P program into /usr is that
-automatic updates are disabled by the program since the installation
-directory is not writable by the `i2psvc` user.
+during boot. Instead, a NetworkManager hook will start I2P if the user
+specified "i2p" at the boot menu.  A side-effect of installing the actual I2P
+program into /usr is that automatic updates are disabled by the program since
+the installation directory is not writable by the `i2psvc` user.
 
 For better performance an exception has been made in the [[firewall
 configuration|Tor_enforcement/Network_filter]] that grants direct access to the
