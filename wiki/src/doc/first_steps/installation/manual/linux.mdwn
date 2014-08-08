@@ -72,13 +72,22 @@ Execute the following commands, replacing `[tails.iso]` with the path
 to the ISO image that you want to copy and `[device]` with the device
 name found in step 2.
 
-    isohybrid [tails.iso] --entry 4 --type 0x1c
-    dd if=[tails.iso] of=[device] bs=16M
+<div class="note">
+
+<p>Note that the <code>isohybrid</code> command modifies the ISO image. As a
+consequence, you won't be able to [[verify|download/#verify]] it again
+afterwards. So we recommend you to execute those commands on a copy of the
+original ISO image that you downloaded.</p>
+
+</div>
+
+    isohybrid [tails-isohybrid.iso] --entry 4 --type 0x1c
+    dd if=[tails-isohybrid.iso] of=[device] bs=16M
 
 Here is an example of the commands to execute, yours are probably different:
 
-    isohybrid '/home/amnesia/Desktop/tails-0.6.2.iso' --entry 4 --type 0x1c
-    dd if='/home/amnesia/Desktop/tails-0.6.2.iso' of=/dev/sdc bs=16M
+    isohybrid '/home/amnesia/Desktop/tails-0.6.2-isohybrid.iso' --entry 4 --type 0x1c
+    dd if='/home/amnesia/Desktop/tails-0.6.2-isohybrid.iso' of=/dev/sdc bs=16M
 
 <div class="tip">
 
