@@ -47,6 +47,7 @@ start_i2p() {
 if [ $2 = "up" ]; then
     if check_if_ready "/run/tordate/done"; then
         start_i2p
+        /usr/local/bin/tails-i2p-notify &
     fi
 elif [ "$2" = "down" ]; then
     service i2p stop
