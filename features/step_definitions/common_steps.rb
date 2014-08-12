@@ -359,18 +359,22 @@ Given /^I enter the sudo password in the gksu prompt$/ do
   @screen.waitVanish('GksuAuthPrompt.png', 10)
 end
 
-Given /^I enter the sudo password in the PolicyKit prompt$/ do
+Given /^I enter the sudo password in the pkexec prompt$/ do
   next if @skip_steps_while_restoring_background
-  step "I enter the \"#{@sudo_password}\" password in the PolicyKit prompt"
+  step "I enter the \"#{@sudo_password}\" password in the pkexec prompt"
 end
 
-Given /^I enter the "([^"]*)" password in the PolicyKit prompt$/ do |password|
-  next if @skip_steps_while_restoring_background
-  @screen.wait('PolicyKitAuthPrompt.png', 60)
+def deal_with_polkit_prompt (image, password)
+  @screen.wait(image, 60)
   sleep 1 # wait for weird fade-in to unblock the "Ok" button
   @screen.type(password)
   @screen.type(Sikuli::Key.ENTER)
-  @screen.waitVanish('PolicyKitAuthPrompt.png', 10)
+  @screen.waitVanish(image, 10)
+end
+
+Given /^I enter the "([^"]*)" password in the pkexec prompt$/ do |password|
+  next if @skip_steps_while_restoring_background
+  deal_with_polkit_prompt('PolicyKitAuthPrompt.png', password)
 end
 
 Given /^process "([^"]+)" is running$/ do |process|
