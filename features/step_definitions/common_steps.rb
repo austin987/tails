@@ -60,15 +60,6 @@ def restore_background
   end
 end
 
-def run_dialog_picture
-  case @theme
-  when "windows"
-    return 'WindowsRunDialog.png'
-  else
-    return 'GnomeRunDialog.png'
-  end
-end
-
 Given /^a computer$/ do
   @vm.destroy if @vm
   @vm = VM.new($vm_xml_path, $x_display)
@@ -334,20 +325,6 @@ Then /^all Internet traffic has only flowed through Tor$/ do
     save_pcap_file
     raise "There were network leaks!"
   end
-end
-
-When /^I open the GNOME run dialog$/ do
-  next if @skip_steps_while_restoring_background
-  @screen.type(Sikuli::Key.F2, Sikuli::KeyModifier.ALT)
-  @screen.wait(run_dialog_picture, 10)
-end
-
-When /^I run "([^"]*)"$/ do |program|
-  next if @skip_steps_while_restoring_background
-  step "I open the GNOME run dialog"
-  @screen.type(program)
-  sleep 0.5
-  @screen.type(Sikuli::Key.ENTER)
 end
 
 Given /^I enter the sudo password in the gksu prompt$/ do
