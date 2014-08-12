@@ -26,7 +26,7 @@ Feature: Microsoft Windows Camouflage
     And Tor is ready
     And all notifications have disappeared
     And available upgrades have been checked
-    And I run "iceweasel"
+    And I start Iceweasel
     Then I see "WindowsIceweaselWindow.png" after at most 120 seconds
     And I see "WindowsIceweaselTaskBar.png" after at most 10 seconds
     And I see "WindowsWindowButtons.png" after at most 10 seconds

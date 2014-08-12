@@ -447,3 +447,17 @@ Given /^package "([^"]+)" is installed$/ do |package|
   assert(@vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
          "Package '#{package}' is not installed")
 end
+
+When /^I start Iceweasel$/ do
+  next if @skip_steps_while_restoring_background
+  case @theme
+  when "windows"
+    step 'I click the start menu'
+    @screen.wait_and_click("WindowsApplicationsInternet.png", 10)
+    @screen.wait_and_click("WindowsApplicationsIceweasel.png", 10)
+  else
+    @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+    @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
+    @screen.wait_and_click("GnomeApplicationsIceweasel.png", 10)
+  end
+end
