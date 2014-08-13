@@ -183,8 +183,14 @@ Tails uses the I2P (and deps)
 [Debian packages prepared by KillYourTV](http://deb.i2p2.no/), the official I2P
 Linux package maintainer as listed on the [I2P Team page](https://geti2p.net/team).
 The I2P source package and its binaries are imported into to our own
-[[APT repository|APT_repository]] into the devel or stable suite.  The suite
+[[APT repository|APT_repository]] into the devel or stable suite. The suite
 will depend on whether a major- or point-release is being prepared.
+
+## Prepare a Git topic branch
+
+Create a Git branch, forked off the branch into which the new packages
+shall eventually be imported into, and called e.g.
+`feature/i2p-0.n.m`. Push this branch.
 
 ## Check the binary packages
 
@@ -201,15 +207,22 @@ will depend on whether a major- or point-release is being prepared.
 
 ### Maintainer scripts
 
-Have a look at `*.{pre,post}{inst,rm}`.
+Have a look at `*.{pre,post}{inst,rm}` and `*.configure` maintainer
+scripts in each binary package.
 
 ## Import the packages
 
 1. scp the source and binary packages to incoming.deb.tails.boum.org
 1. move the uploaded files somewhere, and set permissions on it, so
    that the `reprepro` user can read it
-1. use `reprepro includesrc` to import the source package(s)
-1. use `reprepro includedeb` to import the binary package(s)
+1. use `reprepro includedsc` to import the source package(s) into the
+   APT suite dedicated to the Git topic branch create above (e.g.
+   `feature-i2p-0.n.m`)
+1. use `reprepro includedeb` to import the binary package(s) into the
+   same dedicated APT suite
+1. build an ISO from the Git branch created above
+1. test this ISO
+1. merge the Git branch and APT suite as appropriate
 
 Things to meditate upon
 =======================

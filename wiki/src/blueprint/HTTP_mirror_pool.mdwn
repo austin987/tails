@@ -144,3 +144,57 @@ On the other side it has a few advantage:
 Thus, if I may, I would like to recommend considering the HTTP(s) option,
 even if it means that I have to write the PHP script by myself or to create
 an easy task entry on the ticket tracker and follow it :)
+
+# Proof of concept: JavaScript + multiple DNS pools / named mirrors
+
+This method can either be used with multiple DNS pools (dl1.amnesia.boum.org, dl2.amnesia.boum.org etc.) or with named mirrors (freiwuppertal.dl.amnesia.boum.org, othermirror.dl.amnesia.boum.org, ...). Using named mirrors allows you to use a huge, unlimited list of completely equally used mirrors; using multiple DNS pools leads to effects described under "CNAME hacks".
+
+These POCs should be 1:1 usable on the Tails [[download]] page. All that would be needed is setting up the DNS pools and/or named mirrors, and telling the mirror owners to configure their servers to respond to \*.amnesia.boum.org (the wildcard is important).
+
+## JavaScript POC (multiple DNS pools)
+   
+    <script src="//code.jquery.com/jquery.min.js"></script>
+    <script type="text/javascript">//<![CDATA[ 
+    $(window).load(function(){
+        var hosts = Array("dl.amnesia.boum.org","dl2.amnesia.boum.org","dl3.amnesia.boum.org","dl4.amnesia.boum.org","dl5.amnesia.boum.org");
+        var host = hosts[Math.floor(Math.random()*hosts.length)];
+    $(document).ready(function() {
+        var strNewString = $('body').html().replace(/dl\.amnesia\.boum\.org/g,host);
+        $('body').html(strNewString);
+    });
+    });//]]>  
+    </script>
+
+For this to work and to be flexible, mirrors need to respond to \*.amnesia.boum.org. Just responding to one of the pool names would make this a very unflexible solution, so the wildcard is needed. 
+
+At least nginx is unable to use a wildcard like dl\*.amnesia.boum.org, so \*.amnesia.boum.org has to be used. This is more flexible anyway.
+
+### Example webpage (see the webpage source there too)
+
+<http://freiwuppertal.de/tails-mirror-example-dns.htm>
+
+
+## JavaScript POC (named mirrors)
+    
+    <script src="//code.jquery.com/jquery.min.js"></script>
+    <script type="text/javascript">//<![CDATA[ 
+    $(window).load(function(){
+        var hosts = Array("freiwuppertal.dl.amnesia.boum.org","othermirror.dl.amnesia.boum.org","yetanother.dl.amnesia.boum.org","weirdname.dl.amnesia.boum.org","supermirror.dl.amnesia.boum.org");
+        var host = hosts[Math.floor(Math.random()*hosts.length)];
+    $(document).ready(function() {
+        var strNewString = $('body').html().replace(/dl\.amnesia\.boum\.org/g,host);
+        $('body').html(strNewString);
+    });
+    });//]]>  
+    </script>
+
+For this to work and to be flexible, mirrors need to respond to \*.amnesia.boum.org. Just responding to a fixed name would make this an unflexible solution, so the wildcard is needed.
+
+### Example webpage (see the webpage source there too)
+
+<http://freiwuppertal.de/tails-mirror-example-named.htm>
+
+### Giving mirrors higher or lower weight
+
+Using this approach, giving one mirror more weight than others is very easy: Simply add it's name multiple times to the array of mirrors. :D
+
