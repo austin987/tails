@@ -165,6 +165,47 @@ user_pref("network.proxy.ssl_port", 4444);
 user_pref("network.proxy.share_proxy_settings", true);
 user_pref("network.proxy.no_proxies_on", "127.0.0.1");
 EOF
+    # Hide options from the <strike>Firefox</strike> I2P Browser.
+    cat > ${BROWSER_PROFILE}/chrome/userChrome.css << EOF
+/* Required, do not remove */
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* Hide the option for emailing links since it's doomed to failure
+ * without a configured email client.
+ */
+menuitem[command="Browser:SendLink"],
+
+/* Hide the sync functionality which won't work with I2P */
+#BrowserPreferences radio[pane="paneSync"],
+#sync-button,
+#sync-menu-button,
+#sync-setup,
+#sync-setup-appmenu,
+#sync-status-button,
+#sync-syncnowitem-appmenu,
+#wrapper-sync-button,
+
+/* Without I2P search engines defined, the search bar is useless.
+ *  Since there are no I2P search engines added to Tails (yet),
+ *  let's hide it and the Update Pane in Firefox's Preferences.
+ */
+#search-container,
+#updateTab,
+
+/* Hide options in the Help menu that lead to disallowed resources on the
+ * Internet.
+ */
+#appmenu_feedbackPage,
+#appmenu_gettingStarted,
+#appmenu_openHelp,
+#feedbackPage,
+#gettingStarted,
+#menu_HelpPopup_reportPhishingtoolmenu,
+#menu_openHelp
+
+/* Now the actual hiding */
+{display: none !important}
+EOF
     rm -rf ${BROWSER_PROFILE}/extensions
 
     # Change the theme when not using Windows camouflage
