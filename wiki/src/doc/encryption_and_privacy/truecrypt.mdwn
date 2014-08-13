@@ -8,21 +8,107 @@ Although *TrueCrypt* looks like free software, [concerns](http://www.happyassass
 Truecrypt is also *developed* in a closed
 fashion, so while the source code is freely available,
 it may receive less review than might a comparable openly developed project.
+Lastly, on 28 May 2014, the *TrueCrypt* website announced that the
+project was no longer maintained and recommended users to find
+alternate solutions. That website now reads:
+
+> WARNING: Using TrueCrypt is not secure as it may contain unfixed security issues.
 
 For the above reasons, *Tails* developers do not recommend *TrueCrypt*.
 We include *TrueCrypt* only to allow users of the (old
 and now unsupported) *Incognito* live system to access the data on
 previously created media.
 
-In the future, we would like to [[!tails_ticket 5373 desc="replace
-*TrueCrypt* with a compatible alternative"]]. However, there might be
-some time during which that is not possible, and [[!tails_ticket 5474
-desc="moving away from *TrueCrypt*"]] is the only sensible way we can
-go. This means that you should **not** create new TrueCrypt media if
-you intend to stay with Tails in the long run.
+Opening TrueCrypt volumes in Tails
+==================================
+
+You can open *TrueCrypt* volumes:
+
+ * [[with `cryptsetup`|truecrypt#cryptsetup]], which is here to stay;
+ * [[with *TrueCrypt*|truecrypt#truecrypt]], that will be removed in
+   Tails 1.3 to the latest.
+
+<a id="cryptsetup"></a>
+
+Using `cryptsetup` to open TrueCrypt volumes in Tails
+-----------------------------------------------------
+
+`cryptsetup` allows one to open most existing *TrueCrypt* volumes.
+Both standard and hidden *TrueCrypt* volumes are supported.
+
+This technique uses the command line.
+
+1. [[Set up an administration
+   password|startup_options/administration_password]].
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Accessories</span>&nbsp;▸
+     <span class="guimenuitem">Root Terminal</span>
+   </span>
+   to open a terminal with administration rights.
+
+1. **If you want to open a standard *TrueCrypt* volume**, execute the
+   following command, replacing `[device]` with the name of the device
+   found in the previous step, and `[name]` with a mapping name of
+   your choice.
+
+       cryptsetup open --type tcrypt [device] [name]
+   
+   Here is an example of the command to execute, yours is probably
+   different:
+
+       cryptsetup open --type tcrypt /dev/sdc1 truecrypt1
+
+   **Else, if you want to open a hidden *TrueCrypt* volume**, execute
+   the following command, replacing `[device]` with the name of the
+   device found in the previous step, and `[name]` with a mapping name
+   of your choice.
+
+       cryptsetup --tcrypt-hidden open --type tcrypt [device] [name]
+   
+   Here is an example of the command to execute, yours is probably
+   different:
+
+       cryptsetup --tcrypt-hidden open --type tcrypt /dev/sdc2 truecrypt2
+
+1. Once the command prompt reappears, execute the following commands,
+   replacing `[name]`with the mapping name chosen above.
+
+       mkdir /mnt/[name]
+       mount /dev/mapper/[name] /mnt/[name]
+
+1. If you don't see any error message, the data stored in your
+   TrueCrypt volume is now available in the `/mnt/[name]` directory.
+   
+   Depending on the kind of filesystem being used, you might need
+   administration rights to modify the content of this directory.
+   A better solution is generally to adjust the `mount` command above:
+   for instance, if this is a `vfat` filesystem, then you may want to
+   use the `uid=` mount option; see the `mount` manpage for details.
+
+1. To ensure that your data was really written on your *TrueCrypt*
+   volume, once you don't need it during this Tails session, execute
+   the following commands, replacing `[name]`with the mapping name
+   chosen above.
+
+       umount /mnt/[name]
+       cryptsetup close [name]
+
+<a id="truecrypt"></a>
 
 Using TrueCrypt in Tails
-========================
+------------------------
+
+<div class="caution">
+
+<emph>TrueCrypt</emph> will be removed in Tails 1.3, to the latest.
+We recommend that you get familiar with [[opening
+<emph>TrueCrypt</emph> volumes with
+<code>cryptsetup</code>|truecrypt#cryptsetup]] as soon as possible.
+
+</div>
 
 *TrueCrypt* is not enabled by default when Tails starts. In order to use
 *TrueCrypt*, add the <span class="command">truecrypt</span> boot option
