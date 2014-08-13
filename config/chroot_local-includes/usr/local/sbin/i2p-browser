@@ -166,9 +166,51 @@ user_pref("network.proxy.share_proxy_settings", true);
 user_pref("network.proxy.no_proxies_on", "127.0.0.1");
 EOF
     # Hide options from the <strike>Firefox</strike> I2P Browser.
+    # It would be good to implement the ability to persist the browser profile in the
+    # future. At that point, the Bookmark functionality will be restored.
     cat > ${BROWSER_PROFILE}/chrome/userChrome.css << EOF
 /* Required, do not remove */
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* Hide access to the bookmarks to try to prevent "data loss" due to users
+ * adding bookmarks even though the profile is destroyed at browser close.
+ * Keyboard shortcuts still work, but this makes it harder to 'accidentally'
+ * lose bookmarks.
+ *
+ * Note that any of the selectors that start with 'app' apply to the menu that
+ * is used if the main menu is hidden. Any that start with 'wrapper' are
+ * buttons that are normally visible within the 'customize toolbar' option. The
+ * others are probably self-explanatory.
+ */
+
+/* Remove the History and Bookmarks menus and buttons */
+#appmenu_bookmarks,
+#appmenu_history,
+#bookmarks,
+#bookmarks-menu-button,
+#bookmarksMenu,
+#history,
+#history-menu,
+#history-menu-button,
+#wrapper-history-button,
+#wrapper-bookmarks-button,
+
+/* Hide the sidebar menu (underneath View) since the default sidebars consist
+ * of history and bookmarks.  Also disable the bookmark toolbar.
+ */
+#toggle_PersonalToolbar,
+#viewSidebarMenuMenu,
+
+/* Remove the "Star button" and "History Dropdown arrow" from the URL bar
+ * since neither history nor bookmarks are saved.
+ */
+#star-button,
+[anonid="historydropmarker"],
+
+/* Remove bookmark options from the context menus */
+#context-bookmarkframe,
+#context-bookmarklink,
+#context-bookmarkpage,
 
 /* Hide the option for emailing links since it's doomed to failure
  * without a configured email client.
