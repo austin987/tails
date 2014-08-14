@@ -154,6 +154,9 @@ configure_chroot () {
     # while trying to communicate with CUPS, since access to port 631 isn't allowed through.
     echo 'user_pref("print.postscript.cups.enabled", false);' >> \
         ${BROWSER_PROFILE}/user.js
+    # Hide "Get Addons" in Add-ons manager
+    echo 'user_pref("extensions.getAddons.showPane", false);' >> \
+        ${BROWSER_PROFILE}/user.js
     # add the I2P proxy to all protocols
     cat >> ${BROWSER_PROFILE}/user.js << EOF
 user_pref("network.proxy.http", "127.0.0.1");
