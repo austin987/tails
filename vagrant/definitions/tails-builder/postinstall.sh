@@ -2,12 +2,9 @@
 
 date > /etc/vagrant_box_build_time
 
-# Install Chef
-gem install chef --no-ri --no-rdoc
-
 # Set up sudo
 cp /etc/sudoers /etc/sudoers.orig
-sed -i -e 's/%sudo ALL=(ALL) ALL/%sudo ALL=NOPASSWD:ALL/g' /etc/sudoers
+sed -i -e 's/^%sudo\W.*$/%sudo ALL=NOPASSWD:ALL/' /etc/sudoers
 
 # Install vagrant keys
 mkdir -p /home/vagrant/.ssh

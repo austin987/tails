@@ -35,7 +35,7 @@ statistics () {
         msgattrib --translated --no-fuzzy --no-obsolete --no-wrap $PO_MESSAGES \
 	    | count_translated_words
     )
-    echo "$lang: $(($TRANSLATED*100/$TOTAL))% strings translated, $(($FUZZY*100/$TOTAL))% strings fuzzy, $(($TRANSLATED_WC*100/$TOTAL_WC))% words translated"
+    echo "  - $lang: $(($TRANSLATED*100/$TOTAL))% ($TRANSLATED) strings translated, $(($FUZZY*100/$TOTAL))% strings fuzzy, $(($TRANSLATED_WC*100/$TOTAL_WC))% words translated"
     rm -f $PO_FILES $PO_MESSAGES
 }
 
@@ -52,8 +52,8 @@ else
 fi
 
 # all PO files
-echo "All PO files"
-echo "============"
+echo "All website PO files"
+echo "===================="
 echo ""
 
 for lang in $LANGUAGES ; do
@@ -65,8 +65,8 @@ done
 
 # core PO files
 echo ""
-echo "Core PO files"
-echo "============="
+echo "[[Core PO files|contribute/l10n_tricks/core_po_files.txt]]"
+echo "=========================================================="
 echo ""
 
 for lang in $LANGUAGES ; do

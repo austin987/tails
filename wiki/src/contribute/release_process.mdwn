@@ -16,8 +16,8 @@ the scripts snippets found on this page:
       export TAG=$(echo "$VERSION" | sed -e 's,~,-,')
       export PREVIOUS_VERSION=$(dpkg-parsechangelog --offset 1 --count 1 -SVersion)
 
-* `NEXT_VERSION`: set to the version number of the next Tails release
-  (e.g. 0.23 when releasing 0.22.1)
+* `NEXT_MAJOR_VERSION`: set to the version number of the next Tails release
+  (e.g. 0.23 when releasing 0.22.1, and 1.3 when releasing 1.2)
 * `MAJOR_RELEASE`: set to 1 if preparing a major release, to 0 else
 * `ISOS`: the directory where one stores `tails-i386-*`
   sub-directories like the ones downloaded with BitTorrent.
@@ -204,6 +204,7 @@ matches the date of the future signature.
 
 	echo "$VERSION"      > wiki/src/inc/stable_i386_version.html
 	echo "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
+	sed -ri "s%news/version_.*]]%news/version_$VERSION]]%" wiki/src/inc/stable_i386_release_notes.*
 	$EDITOR wiki/src/inc/*.html
 	./build-wiki
 	git commit wiki/src/inc/ -m "Update version and date for $VERSION."
@@ -295,10 +296,17 @@ SquashFS file order
 1. Burn a DVD.
 1. Boot this DVD **on bare metal**.
 1. Add `profile` to the kernel command-line.
-1. Three minutes after `iceweasel` has been loaded, retrieve the new sort
-   file from `/var/log/boot-profile`.
+1. Login.
+1. Wait for the "Tor is ready" notification.
+1. Start the web browser.
+1. A few minutes later, once the `boot-profile` process has been
+   killed, retrieve the new sort file from `/var/log/boot-profile`.
 1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
-1. Cleanup a bit.
+1. Cleanup a bit:
+   - remove `var/log/live/config.pipe`: otherwise the boot is broken
+     or super-slow
+   - remove the bits about `kill-boot-profile` at the end: they're
+     only useful when profiling the boot
 1. Inspect the Git diff (including diff stat), apply common sense.
 1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
 
@@ -364,7 +372,7 @@ Use `tails-create-iuk` to build the following IUKs:
   1.0. This should be done even if there was no IUK generated from the
   previous stable release since it is a good way to test the iuk code
   that'll be used for the incremental upgrade paths to the
-  `$NEXT_VERSION`.
+  next version.
 
 Example (for RC, replace `$PREVIOUS_VERSION` with e.g. `$VERSION~rc1`
 below):
@@ -404,8 +412,10 @@ Prepare upgrade-description files
        ( cd $IUK_CHECKOUT && \
        ./bin/tails-iuk-generate-upgrade-description-files \
            --version "$VERSION" \
-           --next-version "$NEXT_VERSION" \
-           --next-version "${NEXT_VERSION}~rc1" \
+           --next-version "$NEXT_MAJOR_VERSION" \
+           --next-version "${NEXT_MAJOR_VERSION}~rc1" \
+           --next-version "${VERSION}.1" \
+           --next-version "${VERSION}.1~rc1" \
            --iso "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso" \
            --previous-version "$PREVIOUS_VERSION" \
            --previous-version "${VERSION}~rc1" \
@@ -424,8 +434,12 @@ Prepare upgrade-description files
      `--previous-version`, so that users who skipped a release or two
      are directly informed of the new one.
    * If preparing a release candidate, add `--channel alpha`
-   * If preparing a release candidate, do not pass
-     `--next-version "${NEXT_VERSION}~rc1"`
+   * If preparing a release candidate, drop all `--next-version`
+     arguments, and instead pass (**untested!**)
+     `--next-version $(echo $VERSION | sed -e 's,~rc*$,,')`
+   * If preparing a point-release, pass neither
+     `--next-version "${VERSION}.1"`,
+     nor `--next-version "${VERSION}.1~rc1"`
 
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
@@ -588,6 +602,8 @@ Write the announcement for the release in
   [[!tails_gitweb_commit 9925321]] breaks all existing persistent
   profiles).
 - Document known issues.
+- Update the link(s) to these release notes in
+  `wiki/src/doc/first_steps/upgrade.mdwn`.
 
 Write an announcement listing the security bugs affecting the previous
 version in `security/` in order to let the users of the old versions
@@ -782,14 +798,7 @@ this, and skip what does not make sense for a RC.
          done
 
    - `git push --force origin experimental`
-1. Push the release tag to lizard for Jenkins' consumption: `git push --tags lizard`
-1. Force-push all major branches to lizard:
-
-           for branch in stable testing devel experimental ; do
-              git push --force lizard $branch:$branch
-           done
-
-1. Make sure Jenkins manages to build all major branches fine:
+1. Make sure Jenkins manages to build all updated major branches fine:
    <https://jenkins.tails.boum.org/>.
 1. Delete the _Release Manager View for $VERSION_ Redmine custom query.
 1. Ensure the next few releases have their own _Release Manager View_.

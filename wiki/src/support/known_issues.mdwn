@@ -14,7 +14,11 @@ start|doc/first_steps/bug_reporting/tails_does_not_start]].
 Problematic USB sticks
 ----------------------
 
-The following USB sticks have issues starting Tails.  They are configured by the
+<a id="sandisk"></a>
+
+### SanDisk
+
+Many SanDisk USB sticks are configured by the
 manufacturer as a fixed disk, and not as a removable disk. As a consequence,
 they require removing the `live-media=removable` boot parameter, which [[is
 dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
@@ -28,15 +32,42 @@ dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
 * SanDisk Cruzer USB 3.0 64GB
 * SanDisk Cruzer Blade 4GB, 8GB, and 32GB
 * SanDisk Cruzer Facet
-* Staples Relay USB 2.0 16GB
+* SanDisk Ultra 32 GB
 
 SanDisk had begun the production of flash drives configured as fixed disk in
-2012 to meet new requirements for Windows 8 Certification. The flash drives that
+2012 to meet new requirements for Windows 8 Certification, and ended it in mid-2014. The flash drives that
 comply with this certification will have the Windows 8 logo on their packaging.
 If a flash drive does not have the Windows 8 logo on its packaging, then that
-drive will function as a removable disk about should work with Tails.
+drive will function as a removable disk and should work with Tails.
 
 See also [[!tails_ticket 6397]].
+
+<a id="pny"></a>
+
+### PNY
+
+When installing Tails, PNY USB sticks have problems with the constant write load
+and are prone to failure.
+
+### Other vendors
+
+* Staples Relay USB 2.0 16GB, suffers from the same problem as [[some SanDisk USB sticks|known_issues#sandisk]].
+
+<a id="isohybrid-options"></a>
+
+Manual installation with Linux using `isohybrid`
+------------------------------------------------
+
+If you are not able to start Tails from a USB stick installed using the [[manual
+installation instructions for Linux|doc/first_steps/installation/manual/linux]],
+try to execute the following commands on a **new copy** of the original ISO
+image:</p>
+
+    isohybrid [tails-isohybrid.iso] -h 255 -s 63
+    dd if=[tails-isohybrid.iso] of=[device] bs=16M
+
+Then report back your results as explained on
+<https://mailman.boum.org/pipermail/tails-testers/2014-July/000059.html>.
 
 Acer Chromebook C720
 --------------------
@@ -119,8 +150,18 @@ HP ProBook 4330s
 With UEFI enabled, when chosing a boot device, select `Boot From EFI File` and
 then `Filesystem Tails` and `EFI/BOOT/bootx64.efi`.
 
-Clevo W258CU, ThinkPad X121e, T420i, T430, T410, T520, W520, T530, E325 and E530
---------------------------------------------------------------------------------
+Lenovo IdeaPad Y410p
+--------------------
+
+Cannot start Tails 1.1 from USB installed manually in Linux.
+
+Lenovo IdeaPad z585
+-------------------
+
+Goes back continuously to boot menu on Tails installed on DVD.
+
+Clevo W258CU, ThinkPad X121e, T420i, T410, T520, W520, T530, E325 and E530
+--------------------------------------------------------------------------
 
 These machines do not start on USB sticks created using Tails USB
 Installer, due to a firmware limitation.
@@ -144,7 +185,7 @@ Mac
 * MacBook Air 3,2 (A1369 EMC 2392) freezes when booting Tails in
   UEFI mode.
 * MacBookPro (early 2011) fails to boot from DVD since Tails 1.1.
-* Mac Pro Tower (early 2008) fails to boot from a USB stick created by
+* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) fail to boot from a USB stick created by
   Tails Installer.
 
 <a id="problematic-virtual-machines"></a>
@@ -226,9 +267,13 @@ When this happens, there is no guarantee that the memory is wiped entirely.
 
 This issue has been reported on the following hardware:
 
-  - Apple MacBookAir5,1, MacBook Pro 13-inch Mid 2012 9,2, MacBook Pro
-    13-inch Late 2011 8,1, MacBook Pro Retina 13-inch, and
-    MacBookPro10,2, when booting from a USB stick
+  - Apple when booting from a USB stick:
+    - MacBook Air 5,1
+    - MacBook Pro 7,1, 13-inch mid 2010
+    - MacBook Pro 9,2, 13-inch mid 2012
+    - MacBook Pro 8,1, 13-inch late 2011
+    - MacBook Pro 10,2
+    - MacBook Pro Retina 11,1, late 2013
   - Hewlett-Packard HP Pavilion dv6 Notebook PC
   - Lenovo ThinkPad X61, only on emergency shutdown when pulling out the
     USB stick
