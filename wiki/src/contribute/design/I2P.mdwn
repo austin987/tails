@@ -15,6 +15,12 @@ Versions
 preconfigured using FoxyProxy so that eepsites (`.i2p` TLD) are directed to
 I2P. All other traffic gets routed through Tor.
 
+Starting with Tails 1.1.1, I2P is not enabled by default when Tails starts.
+In order to use I2P, a user must add the <span class="command">i2p</span> boot option
+to the <span class="application">boot menu</span>.
+
+<a id="design"></a>
+
 Design
 ======
 
@@ -77,7 +83,7 @@ configuration handling the I2P integration. FoxyProxy's whitelist
 filter is used to make sure that the corresponding urls will be
 proxied appropriately.
 
-Below are the patterns that each url handeled by iceweasel will be
+Below are the patterns that each url handled by iceweasel will be
 matched against. These patterns will be tried in order, from top to
 bottom, until the first match is found:
 
@@ -107,17 +113,25 @@ blocking|Tor_enforcement/Network_filter]] ensures that no Internet
 traffic can be escape both Tor or I2P (and thus be non-anonymous) even
 if something is wrong in the above filters (or a future revision).
 
+Disabling / Enabling I2P
+========================
+
+During the build process, [[!tails_gitweb config/chroot_local-hooks/97-remove_i2p]]
+moves I2P from its normal location at `/usr/share/i2p` to
+`/usr/share/tails/i2p-disabled`. The script [[!tails_gitweb config/chroot_local-includes/lib/live/config/2080-install-i2p]] checks for the
+string `i2p` in the kernel command line. If it is found, everything moved by
+[[!tails_gitweb config/chroot-local_hooks/97-remove_i2p]] is undone, making I2P available in the system.
+
+
 Ports allowed through the firewall
 ==================================
 
 Services on I2P are accessed through tunnels built by I2P. Services that a user
 hosts, such as an *eepsite* or *IRC Server* are accessed remotely via **Server Tunnels**.
-End users will access services using *client tunnels*. I2P is shipped with a
+End users will access services using **client tunnels**. I2P is shipped with a
 few tunnels preconfigured and the ports that they use have exceptions added to
 ferm. These ports include:
 
-* 2727, BOB: [BOB](https://geti2p.net/bob) is an application bridge allowing
-  non-Java clients to interact with I2P.
 * 4444, I2P HTTP Proxy: Used to access sites with the `.i2p` TLD
 * 4445, HTTPS Outproxy tunnel: Disabled in by default in Tails in
   [I2PTunnel](http://127.0.0.1:7657/i2ptunnel) since all HTTPS traffic in Tails
@@ -135,6 +149,9 @@ ferm. These ports include:
 * 7660, POP3 Proxy: Tunnel to `pop3.postman.i2p`. More information is available from within I2P at [Postman's HQ](http://hq.postman.i2p/?page_id=11)
 * 8998, MTN Proxy: Tunnel to `mtn.i2p2.i2p`, a [Monotone](http://monotone.ca) server.
 
+Note: These ports will only be opened if the user explicitly requests I2P at the boot prompt.
+See [[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]] for details.
+
 Features that require an administration password
 ================================================
 
@@ -148,6 +165,17 @@ will not be an issue unless one wants to
 In order to utilize these features users need to set an
 [[doc/first_steps/startup_options/administration_password]].
 
+Changes from upstream
+=====================
+
+* i2cp, allowing java clients to communicate with I2P from outside of the JVM, is disabled
+* IPv6 is disabled
+* HiddenMode is set for all users
+* Updating I2P from within the I2P network is disabled; updates are done using the .debs
+* Inbound connections are disabled
+* I2P plugins are disabled
+* The webapp `susimail` will leave mail on the server
+
 Package source and upgrading I2P
 ================================
 
@@ -155,8 +183,14 @@ Tails uses the I2P (and deps)
 [Debian packages prepared by KillYourTV](http://deb.i2p2.no/), the official I2P
 Linux package maintainer as listed on the [I2P Team page](https://geti2p.net/team).
 The I2P source package and its binaries are imported into to our own
-[[APT repository|APT_repository]] into the devel or stable suite.  The suite
+[[APT repository|APT_repository]] into the devel or stable suite. The suite
 will depend on whether a major- or point-release is being prepared.
+
+## Prepare a Git topic branch
+
+Create a Git branch, forked off the branch into which the new packages
+shall eventually be imported into, and called e.g.
+`feature/i2p-0.n.m`. Push this branch.
 
 ## Check the binary packages
 
@@ -173,15 +207,22 @@ will depend on whether a major- or point-release is being prepared.
 
 ### Maintainer scripts
 
-Have a look at `*.{pre,post}{inst,rm}`.
+Have a look at `*.{pre,post}{inst,rm}` and `*.configure` maintainer
+scripts in each binary package.
 
 ## Import the packages
 
 1. scp the source and binary packages to incoming.deb.tails.boum.org
 1. move the uploaded files somewhere, and set permissions on it, so
    that the `reprepro` user can read it
-1. use `reprepro includesrc` to import the source package(s)
-1. use `reprepro includedeb` to import the binary package(s)
+1. use `reprepro includedsc` to import the source package(s) into the
+   APT suite dedicated to the Git topic branch create above (e.g.
+   `feature-i2p-0.n.m`)
+1. use `reprepro includedeb` to import the binary package(s) into the
+   same dedicated APT suite
+1. build an ISO from the Git branch created above
+1. test this ISO
+1. merge the Git branch and APT suite as appropriate
 
 Things to meditate upon
 =======================

@@ -682,7 +682,7 @@ fitness for a particular purpose, including total anonymity. Anonymity
 depends not only on the software but also on the user understanding
 the risks involved and how to manage those risks.
 
-Other Tails design documents:
+## 3.0 Other Tails design documents
 
 [[!map pages="contribute/design/*"]]
 
@@ -1153,6 +1153,38 @@ The Tails OpenPGP applet allows to symmetrically and asymmetrically
 encrypt and decrypt text, and to verify OpenPGP signatures.
 
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/gpgApplet]]
+
+### 3.6.23 DHCP hostname leaks
+
+Tails prevents dhclient from sending the hostname over the network.
+
+First, only the `keyfile` NetworkManager plugin is used; that is, the
+`ifupdown` plugin is disabled:
+
+* this is needed, because the only the `keyfile` plugin supports
+  setting `dhcp-send-hostname` to false, while the `ifupdown` plugin
+  retrieves the hostname to send from `/etc/hostname`;
+* this is OK, because we actually don't use the functionality provided
+  by the `ifupdown` plugin (that is, reading from
+  `/etc/network/interfaces` -- that only configures the loopback
+  connection in Tails, which is itself ignored by NetworkManager
+  anyway).
+
+Second, the NetworkManager `keyfile` plugin is configured to *not*
+send the hostname over DHCP by default. Likely this can be overridden
+on a per-connection basis if one really needs to change this.
+
+Third, dhclient itself is told not to send the hostname. This is
+needed because on Wheezy, NetworkManager runs dhclient with the `-cf
+/var/run/nm-dhclient-eth0.conf` option, and generates that file by
+concatenating `/etc/dhcp/dhclient.conf` with its own settings.
+
+Fourth, dhclient is told to override any hostname provided by the DHCP
+server with `amnesia`. This is meant to prevent dhclient hooks,
+NetworkManager and others from setting the hostname to a value
+controlled by the DHCP server.
+
+* [[!tails_gitweb config/chroot_local-patches/dhcp-dont-send-hostname.diff]]
 
 ## 3.7 Running Tails in virtual machines
 

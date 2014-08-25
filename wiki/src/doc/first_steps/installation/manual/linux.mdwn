@@ -59,17 +59,32 @@ system</strong>.
 
 <h2 class="bullet-number-three">Do the copy</h2>
 
+<div class="caution">
+
+<p><strong>All the data on the installed device will be lost.</strong></p>
+
+</div>
+
 Execute the following commands, replacing `[tails.iso]` with the path
 to the ISO image that you want to copy and `[device]` with the device
 name found in step 2.
 
-    isohybrid [tails.iso] --entry 4 --type 0x1c
-    dd if=[tails.iso] of=[device] bs=16M
+<div class="note">
+
+<p>Note that the <code>isohybrid</code> command modifies the ISO image. As a
+consequence, you won't be able to [[verify|download/#verify]] it again
+afterwards. So we recommend you to execute those commands on a copy of the
+original ISO image that you downloaded.</p>
+
+</div>
+
+    isohybrid [tails-isohybrid.iso] --entry 4 --type 0x1c
+    dd if=[tails-isohybrid.iso] of=[device] bs=16M
 
 Here is an example of the commands to execute, yours are probably different:
 
-    isohybrid '/home/amnesia/Desktop/tails-0.6.2.iso' --entry 4 --type 0x1c
-    dd if='/home/amnesia/Desktop/tails-0.6.2.iso' of=/dev/sdc bs=16M
+    isohybrid '/home/amnesia/Desktop/tails-0.6.2-isohybrid.iso' --entry 4 --type 0x1c
+    dd if='/home/amnesia/Desktop/tails-0.6.2-isohybrid.iso' of=/dev/sdc bs=16M
 
 <div class="tip">
 
@@ -91,6 +106,13 @@ minutes.
 
 <p>Once the command prompt reappears, you can shutdown your computer, and
 [[start Tails|start_tails]] from this new device.</p>
+
+</div>
+
+<div class="bug">
+
+<p>If you are not able to start Tails from that USB stick, refer to this [[known
+issue|support/known_issues#isohybrid-options]].</p>
 
 </div>
 
