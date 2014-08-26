@@ -60,15 +60,6 @@ def restore_background
   end
 end
 
-def run_dialog_picture
-  case @theme
-  when "windows"
-    return 'WindowsRunDialog.png'
-  else
-    return 'GnomeRunDialog.png'
-  end
-end
-
 Given /^a computer$/ do
   @vm.destroy if @vm
   @vm = VM.new($vm_xml_path, $x_display)
@@ -336,20 +327,6 @@ Then /^all Internet traffic has only flowed through Tor$/ do
   end
 end
 
-When /^I open the GNOME run dialog$/ do
-  next if @skip_steps_while_restoring_background
-  @screen.type(Sikuli::Key.F2, Sikuli::KeyModifier.ALT)
-  @screen.wait(run_dialog_picture, 10)
-end
-
-When /^I run "([^"]*)"$/ do |program|
-  next if @skip_steps_while_restoring_background
-  step "I open the GNOME run dialog"
-  @screen.type(program)
-  sleep 0.5
-  @screen.type(Sikuli::Key.ENTER)
-end
-
 Given /^I enter the sudo password in the gksu prompt$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('GksuAuthPrompt.png', 60)
@@ -359,18 +336,22 @@ Given /^I enter the sudo password in the gksu prompt$/ do
   @screen.waitVanish('GksuAuthPrompt.png', 10)
 end
 
-Given /^I enter the sudo password in the PolicyKit prompt$/ do
+Given /^I enter the sudo password in the pkexec prompt$/ do
   next if @skip_steps_while_restoring_background
-  step "I enter the \"#{@sudo_password}\" password in the PolicyKit prompt"
+  step "I enter the \"#{@sudo_password}\" password in the pkexec prompt"
 end
 
-Given /^I enter the "([^"]*)" password in the PolicyKit prompt$/ do |password|
-  next if @skip_steps_while_restoring_background
-  @screen.wait('PolicyKitAuthPrompt.png', 60)
+def deal_with_polkit_prompt (image, password)
+  @screen.wait(image, 60)
   sleep 1 # wait for weird fade-in to unblock the "Ok" button
   @screen.type(password)
   @screen.type(Sikuli::Key.ENTER)
-  @screen.waitVanish('PolicyKitAuthPrompt.png', 10)
+  @screen.waitVanish(image, 10)
+end
+
+Given /^I enter the "([^"]*)" password in the pkexec prompt$/ do |password|
+  next if @skip_steps_while_restoring_background
+  deal_with_polkit_prompt('PolicyKitAuthPrompt.png', password)
 end
 
 Given /^process "([^"]+)" is running$/ do |process|
@@ -442,4 +423,54 @@ Given /^package "([^"]+)" is installed$/ do |package|
   next if @skip_steps_while_restoring_background
   assert(@vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
          "Package '#{package}' is not installed")
+end
+
+When /^I start Iceweasel$/ do
+  next if @skip_steps_while_restoring_background
+  case @theme
+  when "windows"
+    step 'I click the start menu'
+    @screen.wait_and_click("WindowsApplicationsInternet.png", 10)
+    @screen.wait_and_click("WindowsApplicationsIceweasel.png", 10)
+  else
+    @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+    @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
+    @screen.wait_and_click("GnomeApplicationsIceweasel.png", 10)
+  end
+end
+
+Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
+  next if @skip_steps_while_restoring_background
+  con_content = <<EOF
+[802-3-ethernet]
+duplex=full
+
+[connection]
+id=#{con_name}
+uuid=bbc60668-1be0-11e4-a9c6-2f1ce0e75bf1
+type=802-3-ethernet
+timestamp=1395406011
+
+[ipv6]
+method=auto
+
+[ipv4]
+method=auto
+EOF
+  con_content.split("\n").each do |line|
+    @vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
+  end
+  @vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '/etc/NetworkManager/system-connections/#{con_name}'")
+  try_for(10) {
+    nm_con_list = @vm.execute("nmcli --terse --fields NAME con list").stdout
+    nm_con_list.split("\n").include? "#{con_name}"
+  }
+end
+
+Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
+  next if @skip_steps_while_restoring_background
+  @vm.execute("nmcli con up id #{con_name}")
+  try_for(60) {
+    @vm.execute("nmcli --terse --fields NAME,STATE con status").stdout.chomp == "#{con_name}:activated"
+  }
 end
