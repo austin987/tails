@@ -438,3 +438,39 @@ When /^I start Iceweasel$/ do
     @screen.wait_and_click("GnomeApplicationsIceweasel.png", 10)
   end
 end
+
+Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
+  next if @skip_steps_while_restoring_background
+  con_content = <<EOF
+[802-3-ethernet]
+duplex=full
+
+[connection]
+id=#{con_name}
+uuid=bbc60668-1be0-11e4-a9c6-2f1ce0e75bf1
+type=802-3-ethernet
+timestamp=1395406011
+
+[ipv6]
+method=auto
+
+[ipv4]
+method=auto
+EOF
+  con_content.split("\n").each do |line|
+    @vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
+  end
+  @vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '/etc/NetworkManager/system-connections/#{con_name}'")
+  try_for(10) {
+    nm_con_list = @vm.execute("nmcli --terse --fields NAME con list").stdout
+    nm_con_list.split("\n").include? "#{con_name}"
+  }
+end
+
+Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
+  next if @skip_steps_while_restoring_background
+  @vm.execute("nmcli con up id #{con_name}")
+  try_for(60) {
+    @vm.execute("nmcli --terse --fields NAME,STATE con status").stdout.chomp == "#{con_name}:activated"
+  }
+end
