@@ -17,14 +17,14 @@ Feature: Browsing the web using Iceweasel
     And I save the state so the background can be restored next scenario
 
   Scenario: Opening check.torproject.org in Iceweasel shows the green onion and the congratulations message
-    When I run "iceweasel"
+    When I start Iceweasel
     And Iceweasel has started and is not loading a web page
     And I open the address "https://check.torproject.org" in Iceweasel
     Then I see "IceweaselTorCheck.png" after at most 180 seconds
     And all Internet traffic has only flowed through Tor
 
   Scenario: Iceweasel should not have any plugins enabled
-    When I run "iceweasel"
+    When I start Iceweasel
     And Iceweasel has started and is not loading a web page
     And I open the address "about:plugins" in Iceweasel
     Then I see "IceweaselNoPlugins.png" after at most 60 seconds
