@@ -108,27 +108,29 @@ set_chroot_browser_name () {
     NAME="${1}"
     LONG=$(echo ${LANG} | grep -o "^[a-zA-Z_]*")
     SHORT=${LONG%%_*}
-    EXT_DIR=${CHROOT}/usr/lib/iceweasel/browser/extensions
+    EXT_DIR=${CHROOT}/usr/local/lib/tor-browser/extensions
     BRANDING=branding/brand.dtd
-    if [ -e "${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi" ]; then
-        PACK="${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi"
+    if [ -e "${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi" ]; then
+        PACK="${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi"
         TOP=browser/chrome
         REST=${LONG}/locale
-    elif [ -e "${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi" ]; then
-        PACK="${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi"
+        OLD_NAME="Mozilla Firefox"
+    elif [ -e "${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi" ]; then
+        PACK="${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi"
         TOP=browser/chrome
         REST=${SHORT}/locale
+        OLD_NAME="Mozilla Firefox"
     else
-        PACK=${CHROOT}/usr/share/iceweasel/browser/chrome/en-US.jar
-        TOP=locale
-        REST=
+        PACK="${CHROOT}/usr/local/lib/tor-browser/Browser/browser/omni.ja"
+        TOP=chrome
+        REST=en-US/locale
+        OLD_NAME="Tor Browser"
     fi
-
     TMP=$(mktemp -d)
     # Non-zero exit code due to non-standard ZIP archive.
     # The following steps will fail soon if the extraction failed anyway.
     unzip -d "${TMP}" "${PACK}" || true
-    sed -i "s/Iceweasel/${NAME}/" "${TMP}"/"${TOP}"/"${REST}"/"${BRANDING}"
+    sed -i "s/${OLD_NAME}/${NAME}/" "${TMP}/${TOP}/${REST}/${BRANDING}"
     rm "${PACK}"
     (cd $TMP ; 7z a -tzip "${PACK}" .)
     chmod a+r "${PACK}"
@@ -153,24 +155,29 @@ configure_chroot () {
         xargs chroot ${CHROOT} dpkg --remove
 
     # Create a fresh Iceweasel profile for the clearnet user
-    cp -a ${CHROOT}/etc/skel/.mozilla/ ${CHROOT}/home/clearnet/
-    chown -R clearnet:clearnet ${CHROOT}/home/clearnet/.mozilla/
-    CLEARNET_PROFILE=${CHROOT}/home/clearnet/.mozilla/firefox/default
+    CLEARNET_PROFILE="${CHROOT}"/home/clearnet/.tor-browser/profile.default
+
+    CLEARNET_EXT="${CLEARNET_PROFILE}"/extensions
+    mkdir -p "${CLEARNET_EXT}"
+    cp -Pr /etc/tor-browser/profile/extensions/langpack-*.xpi \
+           /etc/tor-browser/profile/extensions/branding@amnesia.boum.org \
+           "${CLEARNET_EXT}"
+
+    CLEARNET_PREFS="${CLEARNET_PROFILE}"/preferences/prefs.js
+    mkdir -p "$(dirname "${CLEARNET_PREFS}")"
+
+    # Localization
+    cat /var/lib/tails-user-session/browser-locale.js >> "${CLEARNET_PREFS}"
 
     # Disable proxying in the chroot
-    sed -r -i '/^(user_|)pref\("network\.proxy\..*",/d' \
-        ${CLEARNET_PROFILE}/*.js
-    echo 'user_pref("network.proxy.type", 0);' >> \
-        ${CLEARNET_PROFILE}/user.js
-    echo 'user_pref("network.proxy.socks_remote_dns", false);' >> \
-        ${CLEARNET_PROFILE}/user.js
-    rm -rf ${CLEARNET_PROFILE}/extensions
+    echo 'pref("network.proxy.type", 0);' >> "${CLEARNET_PREFS}"
+    echo 'pref("network.proxy.socks_remote_dns", false);' >>  "${CLEARNET_PREFS}"
 
     # Set a scary theme (except if we're using Windows camouflage)
     if [ -z "${CAMOUFLAGE}" ]; then
-        cat >> ${CLEARNET_PROFILE}/user.js <<EOF
-user_pref("lightweightThemes.isThemeSelected", true);
-user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");
+        cat >> "${CLEARNET_PREFS}" <<EOF
+pref("lightweightThemes.isThemeSelected", true);
+pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");
 EOF
     else
         # The camouflage activation script requires a dbus server for
@@ -183,12 +190,14 @@ EOF
 
     # Set start page to something that explains what's going on
     echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
-        ${CLEARNET_PROFILE}/user.js
+        "${CLEARNET_PREFS}"
 
     # Remove all bookmarks
-    rm -f ${CHROOT}/etc/iceweasel/profile/bookmarks.html
+    rm -f ${CHROOT}/etc/tor-browser/default.profile/bookmarks.html
     rm -f ${CLEARNET_PROFILE}/bookmarks.html
     rm -f ${CLEARNET_PROFILE}/places.sqlite
+
+    chown -R clearnet:clearnet ${CHROOT}/home/clearnet/.tor-browser
 }
 
 run_browser_in_chroot () {
@@ -196,7 +205,7 @@ run_browser_in_chroot () {
     echo "* Starting Unsafe Browser"
 
     sudo -u ${SUDO_USER} xhost +SI:localuser:${CLEARNET_USER} 2>/dev/null
-    chroot ${CHROOT} sudo -u ${CLEARNET_USER} /usr/bin/iceweasel -DISPLAY=:0.0
+    chroot ${CHROOT} sudo -u ${CLEARNET_USER} /usr/local/lib/tor-browser/Browser/firefox -DISPLAY=:0.0 -profile /home/clearnet/.tor-browser/profile.default
     sudo -u ${SUDO_USER} xhost -SI:localuser:${CLEARNET_USER} 2>/dev/null
 }
 

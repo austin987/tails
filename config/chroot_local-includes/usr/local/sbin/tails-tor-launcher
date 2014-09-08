@@ -26,6 +26,24 @@ until pgrep -u "${LIVE_USERNAME}" nm-applet >/dev/null ; do
    sleep 5
 done
 
+# Use the Tor Browser's hardcoded relative-patch only default profile
+# dir. And no, -profile doesn't work together with -app.
+if [ ! -e /usr/Data ]; then
+    mkdir -p /usr/Data/Browser/profile.default/preferences
+    cat << EOF > /usr/Data/Browser/profiles.ini
+[General]
+StartWithLastProfile=1
+
+[Profile0]
+Name=default
+IsRelative=1
+Path=profile.default
+EOF
+    ln -s /var/lib/tails-user-session/browser-locale.js \
+          /usr/Data/Browser/profile.default/preferences/locale.js
+    chown -R tor-launcher:tor-launcher /usr/Data
+fi
+
 export LANG
 export DISPLAY=':0.0'
 export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
@@ -35,6 +53,6 @@ RET=${?}
 sudo -u ${LIVE_USERNAME} xhost -SI:localuser:tor-launcher
 
 # Save ~10 RAM (due to the tmpfs) by removing this unused file
-rm -f /home/tor-launcher/.torproject/.torlauncher/*.default/places.sqlite
+rm -f /usr/Data/Browser/*.default/places.sqlite
 
 exit ${RET}

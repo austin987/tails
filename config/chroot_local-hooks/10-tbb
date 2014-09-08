@@ -1,0 +1,147 @@
+#!/bin/sh
+
+set -eu
+
+echo "Install the Tor Browser"
+
+# Get the below with `grep "tor-browser-linux32-linux32-.*\.tar.xz" sha256sums.txt`
+BUNDLES="$(cat <<EOF
+6d45a3592f14c5d9db76d8567722cf21339ee87bb6a24e79899e8f1b1a65fb09  tor-browser-linux32-3.6.5_ar.tar.xz
+57cb7ec7031ccdd6f045b075e51653078aa5040065dde75398eb2d57ef1bd035  tor-browser-linux32-3.6.5_de.tar.xz
+ce9ee66dbde246acac9e2574317fc983b7ed1086591d60e7124a446d6dd1fea5  tor-browser-linux32-3.6.5_en-US.tar.xz
+9953c8ccd95981e83ff6f22ed6cdfa54a114323d43d78a8a2ab1aa7a4d727cf6  tor-browser-linux32-3.6.5_es-ES.tar.xz
+e2bf78eaaec3ca4e9e1bc52db6077676c2bd6e0a624283ec37cc70aad9c65730  tor-browser-linux32-3.6.5_fa.tar.xz
+30f2dc943fb1ff0aaaf3ea7d7f1c869b5a85127f594322c1ec637fa43c8a5ceb  tor-browser-linux32-3.6.5_fr.tar.xz
+d28adc1385b412ef06deb8d1f46cf123f7f582b3d0c057effc342bbbba613a29  tor-browser-linux32-3.6.5_it.tar.xz
+689d387bdaf21d2b92ba59b298e863ca0be011e63538e4948b4f445c7461fa4e  tor-browser-linux32-3.6.5_ko.tar.xz
+dc940b23531616f11cc1a8d36a077ccd6d0bd1cf16ade8a1688d791f5465b1ce  tor-browser-linux32-3.6.5_nl.tar.xz
+f5a9ad3801d9102a4a32e7abd3f35c341d4a98e80bd83149aa1023c86f1c3fc4  tor-browser-linux32-3.6.5_pl.tar.xz
+1a56594213ece5fb28f4f7d7ed02b9d87fd2ab0699fae4f11aa9c307a711afcd  tor-browser-linux32-3.6.5_pt-PT.tar.xz
+8c86bd7c40f95d50ce572aa61301001d76882e8f024507b82e0797121e3a00cd  tor-browser-linux32-3.6.5_ru.tar.xz
+e4fad4cb87950dce71e663541cb2ba412eac3ced74f74b5e6317381ab67b6a09  tor-browser-linux32-3.6.5_tr.tar.xz
+6f2e40b14f81fbd44f78a9c6c2aa7bda3164b679497ff1043bb4e0e4a4eeb087  tor-browser-linux32-3.6.5_vi.tar.xz
+26a258feceebef43c789425fd0810141400504e117ea8229c36fbce76921b14c  tor-browser-linux32-3.6.5_zh-CN.tar.xz
+EOF
+)"
+
+MAIN_BUNDLE="$(echo "${BUNDLES}" | grep -o "tor-browser-linux32-.*_en-US.tar.xz")"
+VERSION="$(echo "${MAIN_BUNDLE}" | sed 's/tor-browser-linux32-\(.*\)_en-US.tar.xz/\1/')"
+# Note that we cannot use https here since apt-cacher-ng (used by vagrant)
+# gets confused and throws a 403. It doesn't matter, though, since we verify
+# the checksums of each file downloaded.
+TBB_DIST_URL="http://www.torproject.org/dist/torbrowser/${VERSION}/"
+#TBB_DIST_URL="http://people.torproject.org/~mikeperry/builds/${VERSION}/"
+
+# Later we're gonna split TBB's actual browser (binaries etc), user
+# data and extension into these folders, respectively
+TBB_INSTALL=/usr/local/lib/tor-browser
+TBB_PROFILE=/etc/tor-browser/profile
+TBB_EXT="${TBB_INSTALL}/extensions"
+mkdir -p "${TBB_INSTALL}" "${TBB_PROFILE}" "${TBB_EXT}"
+
+# Use the builder's caching APT proxy, if any
+if [ -e /etc/apt/apt.conf.d/00http-proxy ]; then
+    APT_PROXY=$(sed -n 's/Acquire::http::Proxy "\(.*\)";/\1/p' /etc/apt/apt.conf.d/00http-proxy)
+    export HTTP_PROXY="${APT_PROXY}"
+    export http_proxy="${APT_PROXY}"
+    export HTTPS_PROXY="${APT_PROXY}"
+    export https_proxy="${APT_PROXY}"
+fi
+
+TMP="$(mktemp -d)"
+
+echo "${BUNDLES}" | while read expected_sha256 tarball; do
+    (
+        cd "${TMP}"
+        echo "Fetching ${TBB_DIST_URL}/${tarball} ..."
+        curl -O "${TBB_DIST_URL}/${tarball}"
+    )
+    actual_sha256="$(sha256sum "${TMP}/${tarball}" | cut -d' ' -f1)"
+    if [ "${actual_sha256}" != "${expected_sha256}" ]; then
+        echo "SHA256 mismatch for ${tarball}" >&2
+        exit 1
+    fi
+done
+
+# We'll use the en-US bundle as our basis ...
+tar -xJf "${TMP}/${MAIN_BUNDLE}" -C "${TMP}"
+TBB_PREP="${TMP}"/tor-browser_en-US
+
+# ... only extracting the localization addon from the other ones, which
+# we'll put in a global extensions directory that we'll symlink to so
+# we don't have to deal with wasteful copies.
+for tarball in "${TMP}"/tor-browser-*.tar.xz; do
+    locale="$(echo "${tarball}" | sed "s@^.*/tor-browser-.*_\(.*\)\.tar\.xz@\1@")"
+    if [ "${locale}" = en-US ]; then
+        continue
+    fi
+    xpi="tor-browser_${locale}/Data/Browser/profile.default/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
+    (
+        cd "${TMP}"
+        tar xJf "${tarball}" "${xpi}"
+        mv "${xpi}" "${TBB_EXT}"
+    )
+done
+
+# We don't want tor-launcher to be part of the browser, and we need our
+# patched stand-alone version any way.
+rm "${TBB_PREP}/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi"
+
+# Remove TBB's torbutton since the "Tor test" will fail and about:tor
+# will report an error. We'll install our own Torbutton later, which
+# has the extensions.torbutton.test_enabled boolean pref as a workaround.
+rm "${TBB_PREP}/Data/Browser/profile.default/extensions/torbutton@torproject.org.xpi"
+
+# See comment below why we need the Browser sub-dir
+mv "${TBB_PREP}/Browser" "${TBB_INSTALL}"/Browser
+
+# The Tor Browser will fail, complaining about an incomplete profile,
+# unless there's a readable Data/Browser/Caches in the parent
+# directory of where the firefox executable is located.
+mkdir -p "${TBB_INSTALL}"/Data/Browser/Caches
+
+# Let's put all the bundled extensions in the global extensions directory
+mv "${TBB_PREP}"/Data/Browser/profile.default/extensions/* "${TBB_EXT}"
+rmdir "${TBB_PREP}"/Data/Browser/profile.default/extensions
+
+# Create and install a fake iceweasel package so we can install our
+# desired Debian-packaged Iceweasel addons
+apt-get install --yes equivs
+FAKE_ICEWEASEL_VERSION=$(sed -n 's/^Version=\(.*\)$/\1/p' "${TBB_INSTALL}"/Browser/application.ini)+fake1
+cat > /root/iceweasel.control << EOF
+Section: web
+Priority: optional
+Homepage: https://tails.boum.org/
+Standards-Version: 3.6.2
+
+Package: iceweasel
+Version: ${FAKE_ICEWEASEL_VERSION}
+Maintainer: Tails developers <amnesia@boum.org>
+Architecture: all
+Description: (Fake) Iceweasel
+ Make it possible to install Debian's Iceweasel addons without having to
+ install a real Iceweasel.
+EOF
+(
+    cd /root
+    equivs-build /root/iceweasel.control
+    dpkg -i iceweasel_"${FAKE_ICEWEASEL_VERSION}"_all.deb
+)
+rm /root/iceweasel*
+
+apt-get install --yes xul-ext-adblock-plus xul-ext-foxyproxy-standard xul-ext-torbutton
+
+ln -s /usr/share/xul-ext/adblock-plus/ "${TBB_EXT}"/'{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}'
+ln -s /usr/share/xul-ext/foxyproxy-standard/ "${TBB_EXT}"/foxyproxy@eric.h.jung
+ln -s /usr/share/xul-ext/torbutton/ "${TBB_EXT}"/torbutton@torproject.org
+
+cp -r "${TBB_PREP}"/Data/Browser/profile.default/* "${TBB_PROFILE}"/
+mkdir -p "${TBB_PROFILE}"/extensions
+for ext in "${TBB_EXT}"/*; do
+    ln -s "${ext}" "${TBB_PROFILE}"/extensions/
+done
+
+chown -R root:root "${TBB_INSTALL}" "${TBB_PROFILE}"
+chmod -R a+rX "${TBB_INSTALL}" "${TBB_PROFILE}"
+
+rm -rf "${TMP}"

@@ -101,7 +101,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   proxies = [[socks_proxy, 9050],
              [socks_proxy, 9061],
              [socks_proxy, 9062],
-             [socks_proxy, 9151],
+             [socks_proxy, 9150],
              [http_proxy,  8118],
              [no_proxy,       0]]
 
