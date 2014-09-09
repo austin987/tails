@@ -73,6 +73,7 @@ pref("dom.enable_performance", false);
 pref("plugin.expose_full_path", false);
 pref("browser.zoom.siteSpecific", false);
 pref("intl.charset.default", "windows-1252");
+pref("browser.link.open_newwindow.restriction", 0); // Bug 9881: Open popups in new tabs (to avoid fullscreen popups)
 // pref("intl.accept_languages", "en-us, en"); // Set by Torbutton
 // pref("intl.accept_charsets", "iso-8859-1,*,utf-8"); // Set by Torbutton
 // pref("intl.charsetmenu.browser.cache", "UTF-8"); // Set by Torbutton

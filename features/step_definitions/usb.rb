@@ -66,16 +66,23 @@ def usb_install_helper(name)
   @screen.wait('USBInstallationComplete.png', 60*60)
 end
 
+When /^I start Tails Installer$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+  @screen.wait_and_click("GnomeApplicationsTails.png", 10)
+  @screen.wait_and_click("GnomeApplicationsTailsInstaller.png", 20)
+end
+
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I run \"liveusb-creator-launcher\""
+  step "I start Tails Installer"
   @screen.wait_and_click('USBCloneAndInstall.png', 30)
   usb_install_helper(name)
 end
 
 When /^I "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I run \"liveusb-creator-launcher\""
+  step "I start Tails Installer"
   @screen.wait_and_click('USBCloneAndUpgrade.png', 30)
   usb_install_helper(name)
 end
@@ -107,7 +114,7 @@ end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I run \"liveusb-creator-launcher\""
+  step "I start Tails Installer"
   @screen.wait_and_click('USBUpgradeFromISO.png', 10)
   @screen.wait('USBUseLiveSystemISO.png', 10)
   match = @screen.find('USBUseLiveSystemISO.png')
@@ -135,9 +142,9 @@ end
 
 Given /^I create a persistent partition with password "([^"]+)"$/ do |pwd|
   next if @skip_steps_while_restoring_background
-  step 'I run "gnome-terminal"'
-  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
-  @screen.type('/usr/local/bin/tails-persistence-setup' + Sikuli::Key.ENTER)
+  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+  @screen.wait_and_click("GnomeApplicationsTails.png", 10)
+  @screen.wait_and_click("GnomeApplicationsConfigurePersistentVolume.png", 20)
   @screen.wait('PersistenceWizardWindow.png', 40)
   @screen.wait('PersistenceWizardStart.png', 20)
   @screen.type(pwd + "\t" + pwd + Sikuli::Key.ENTER)
@@ -483,9 +490,9 @@ end
 
 When /^I delete the persistent partition$/ do
   next if @skip_steps_while_restoring_background
-  step 'I run "gnome-terminal"'
-  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
-  @screen.type('/usr/local/bin/tails-delete-persistent-volume' + Sikuli::Key.ENTER)
+  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+  @screen.wait_and_click("GnomeApplicationsTails.png", 10)
+  @screen.wait_and_click("GnomeApplicationsDeletePersistentVolume.png", 20)
   @screen.wait("PersistenceWizardWindow.png", 40)
   @screen.wait("PersistenceWizardDeletionStart.png", 20)
   @screen.type(" ")
