@@ -2,14 +2,14 @@
 
 set -eu
 
-# Get $TAILS_XKBMODEL, $TAILS_XKBLAYOUT, $TAILS_XKBVARIANT and $TAILS_XKBOPTIONS
+# Get $XKBMODEL, $XKBLAYOUT, $XKBVARIANT and $XKBOPTIONS
 . /var/lib/tails-user-session/keyboard
 
-dconf write /org/gnome/libgnomekbd/keyboard/model   "'$XKBMODEL'"
-dconf write /org/gnome/libgnomekbd/keyboard/layouts "['$XKBLAYOUT\\t$XKBVARIANT']"
-if [ "$XKBLAYOUT" != "us" ]; then
-  # Add 'us' switch. Note that it's important that we set the layout
-  # on its own above, because otherwise the following will make 'us'
-  # the default.
-  dconf write /org/gnome/libgnomekbd/keyboard/layouts "['$XKBLAYOUT\\t$XKBVARIANT', 'us']"
+if [ -z $XKBVARIANT ] ; then
+	XKBCONF=$XKBLAYOUT
+else
+	XKBCONF=$XKBLAYOUT+$XKBVARIANT
 fi
+
+dconf write /org/gnome/desktop/input-sources/sources "[('xkb', '$XKBCONF'), ('xkb', 'us')]"
+dconf write /org/gnome/desktop/input-sources/xkb-options "$XKBOPTIONS"
