@@ -5,11 +5,13 @@ set -eu
 # Get $XKBMODEL, $XKBLAYOUT, $XKBVARIANT and $XKBOPTIONS
 . /var/lib/tails-user-session/keyboard
 
-if [ -z $XKBVARIANT ] ; then
-	XKBCONF=$XKBLAYOUT
+if [ -z "$XKBVARIANT" ] ; then
+	XKBCONF="$XKBLAYOUT"
 else
-	XKBCONF=$XKBLAYOUT+$XKBVARIANT
+	XKBCONF="$XKBLAYOUT+$XKBVARIANT"
 fi
 
 dconf write /org/gnome/desktop/input-sources/sources "[('xkb', '$XKBCONF'), ('xkb', 'us')]"
-dconf write /org/gnome/desktop/input-sources/xkb-options "$XKBOPTIONS"
+if [ -n "$XKBOPTIONS" ] ; then
+    dconf write /org/gnome/desktop/input-sources/xkb-options "$XKBOPTIONS"
+fi
