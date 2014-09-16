@@ -48,6 +48,10 @@ stuff ready in time for the security announce.
   <https://ftp.mozilla.org/pub/mozilla.org/firefox/releases/VERSION/source/>
   (`VERSION` is the version we want to build, that is something like
   `17.0.7esr`).
+  If it's not ready there yet, look at
+  <https://ftp.mozilla.org/pub/mozilla.org/firefox/candidates/VERSION-candidates/>
+  instead: Mozilla now only moves the tarballs to the `releases` directory after
+  it has passed their internal QA.
 * Check the signature.
 * Put the tarball in the parent directory of your Iceweasel Git repository.
 * Extract the tarball.
@@ -61,6 +65,31 @@ stuff ready in time for the security announce.
 
       dch -v ${VERSION}-0 "New upstream release."
 
+* If you had to download a *candidate* version above, patch
+  `debian/upstream.mk` so that it downloads stuff from the same place,
+  e.g.:
+
+	--- a/debian/upstream.mk
+	+++ b/debian/upstream.mk
+	@@ -89,12 +89,12 @@ ifndef L10N_CHANNEL
+	 L10N_CHANNEL := $(SOURCE_CHANNEL)
+	 endif
+	 
+	-BASE_URL = ftp://ftp.mozilla.org/pub/mozilla.org/$(PRODUCT_NAME)/$(SOURCE_TYPE)
+	+BASE_URL = ftp://ftp.mozilla.org/pub/mozilla.org/$(PRODUCT_NAME)/candidates
+	 
+	 L10N_FILTER = awk '(NF == 1 || /linux/) && $$1 != "en-US" { print $$1 }'
+	 $(call lazy,L10N_LANGS,$$(shell $$(L10N_FILTER) $(PRODUCT)/locales/shipped-locales))
+	 ifeq ($(SOURCE_TYPE),releases)
+	-SOURCE_URL = $(BASE_URL)/$(SOURCE_VERSION)/source/$(PRODUCT_NAME)-$(SOURCE_VERSION).source.tar.bz2
+	+SOURCE_URL = $(BASE_URL)/$(SOURCE_VERSION)-candidates/build1/source/$(PRODUCT_NAME)-$(SOURCE_VERSION).source.tar.bz2
+	 SOURCE_REV = $(call uc,$(PRODUCT_NAME))_$(subst .,_,$(SOURCE_VERSION))_RELEASE
+	 L10N_REV = $(SOURCE_REV)
+	 SOURCE_REPO = http://hg.mozilla.org/releases/$(SOURCE_CHANNEL)
+
+  **Beware**: make sure to replace `build1` with the name of the
+  directory you downloaded the upstream candidate tarball above.
+
 * Download and repack the other tarballs:
 
       make -f debian/rules download
@@ -69,11 +98,12 @@ stuff ready in time for the security announce.
 * Checkout the `tails/master` branch.
 * Unapply all quilt patches and commit:
 
-      quilt pop -a
+      quilt pop -a && \
+      git add . && git reset HEAD .pc && git commit -a -m 'Unapply all quilt patches.'
 
 * Get yourself a new upstream branch:
 
-      git branch -D upstream
+      git branch -D upstream && \
       git branch upstream tails/master
 
 * Trick the tarball importer to import the correct version:
@@ -277,7 +307,7 @@ and commit:
 
           TORBROWSER_PATCHES_DIR=$(mktemp -d)
           git format-patch -o "$TORBROWSER_PATCHES_DIR" \
-              "$LAST_MOZILLA_COMMIT..ttp/tor-browser-24.2.0esr-1"
+              "$LAST_MOZILLA_COMMIT..ttp/tor-browser-$VERSION-3.x-1"
 
   - Remove from $TORBROWSER_PATCHES_DIR the patches we don't want.
     See `debian/changelog` for the - list of patches skipped last
@@ -291,8 +321,8 @@ and commit:
             p=$(basename "$patch")
             quilt import -P "torbrowser/$p" "$patch"
           done
-          git add debian/patches/torbrowser debian/patches/series
-          TORBROWSER_COMMIT=$(git rev-parse ttp/tor-browser-24.2.0esr-1)
+          git add debian/patches/torbrowser debian/patches/series && \
+          TORBROWSER_COMMIT=$(git rev-parse ttp/tor-browser-$VERSION-3.x-1)
           git commit -m "Import Torbrowser patches at commit ${TORBROWSER_COMMIT}."
 
 * Apply Torbrowser patches:

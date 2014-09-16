@@ -68,6 +68,11 @@ sleep 30
 
 check_free_memory "$MIN_MEMFREE" "$MIN_TOTAL_MEMFREE"
 
+# Go to a place where everyone, especially Archive::Tar::Wrapper called by
+# tails-install-iuk, can chdir back after it has chdir'd elsewhere to do
+# its job.
+cd /
+
 xhost +SI:localuser:"$RUN_AS_USER"
 if [ $# -gt 0 ] ; then
    gksudo -u "$RUN_AS_USER" "/usr/bin/tails-upgrade-frontend $@"

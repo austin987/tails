@@ -4,6 +4,10 @@
 
 Some [[test results]] that might be useful to keep are saved.
 
+<div class="caution">
+Read this document from the branch used to prepare the release.
+</div>
+
 # Changes
 
 Keeping an eye on the changes between released versions is one of the
@@ -99,6 +103,8 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 # Pidgin
 
+(automate: [[!tails_ticket 7820]])
+
 * Check that an IRC session is really torified:
  - if you are running an IRC server: check there
  - else: see if the connection to the IRC server appears in Vidalia
@@ -123,6 +129,8 @@ tracked by tickets prefixed with `todo/test_suite:`.
       - TIME
 
 # Tor
+
+(automate: [[!tails_ticket 7821]])
 
 * The version of Tor should be the latest stable one, which is the highest version number
   before alpha releases on <http://deb.torproject.org/torproject.org/pool/main/t/tor/>.
@@ -303,11 +311,16 @@ the appropriate tcpdump or tshark filters.
 
 # Use of untrusted partitions
 
-* is any local hard-disk swap partition used as swap?
+(automate: [[!tails_ticket 7822]])
+
+* Is any local hard-disk swap partition used as swap?
   boot on a (possibly virtual) machine that has a cleartext swap
-  partition not managed by LVM. This swap partition must not be used
-  by Tails. Run `cat /proc/swaps`.
-* is a persistence volume on a local hard-disk partition used?
+  partition not managed by LVM. To verify that a local GTP partition is swap,
+  check its type code with `sgdisk -p`, Linux swap is code 8200.
+
+  This swap partition must not be used by Tails. Run `cat /proc/swaps`.
+
+* Is a persistence volume on a local hard-disk partition used?
   (Hint: setup a libvirt USB disk with GPT and a partition labeled
   `TailsData`, set the `removable` flag on it, check that
   tails-greeter proposes to enable persistence. Then remove the
@@ -319,7 +332,7 @@ the appropriate tcpdump or tshark filters.
 * Check mail over IMAP using:
   - a "clearnet" IMAP server.
   - a hidden service IMAP server (e.g. TorMail, jhiwjjlqpyawmpjx.onion, or
-    Riseup, xyvp43vrggckj427.onion with SSL).
+    Riseup, zsolxunfmbfuq7wf.onion with SSL).
 * Send an email using:
   - a "clearnet" SMTP server.
   - a hidden service SMTP server (see above).
@@ -349,6 +362,8 @@ the appropriate tcpdump or tshark filters.
   Schleuder tells us that it was sent encrypted.
 
 # Time
+
+(automate: [[!tails_ticket 5836]])
 
 1. Boot Tails without a network cable connected.
    (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 down`.)
@@ -457,8 +472,8 @@ correctly.
   Else, use a local test setup:
 
   * A web server on the LAN.
-  * A copy of `wiki/src/update` from the `stable` or `testing` branch,
-    for example in `/var/www/tails/update/v1/Tails/0.14~rc2/i386/stable/updates.yml`
+  * A copy of `wiki/src/upgrade` from the `stable` or `testing` branch,
+    for example in `/var/www/tails/upgrade/v1/Tails/0.14~rc2/i386/stable/updates.yml`
   * A copy of the `iuk` directory of our HTTP mirrors,
     for example in `/var/www/tails/stable/iuk/Tails_i386_0.14-rc2_to_0.14.iuk`.
 
@@ -493,6 +508,8 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 * iceweasel should use a Internet Explorer theme
 
 # Unsafe Web Browser
+
+(automate: [[!tails_ticket 7823]])
 
 * On start, if no DNS server was configured in NetworkManager
   (e.g. if there's no network connection), there must be an error.
@@ -536,9 +553,10 @@ language.
 * The Startpage search engine must be localized for the languages we ship a
   searchplug for:
 
-      find /etc/iceweasel/searchplugins/locale/ -iname startpage-*.html
+      find /usr/share/amnesia/iceweasel/searchplugins/locale/ -iname startpage-*.xml
 
 * The Wikipedia search engine must be localized for all languages.
+  - Except for Farsi, see [[!tails_ticket 6884]]
 
 ## Spellchecking
 
@@ -571,3 +589,10 @@ language.
 * One should be able to refresh the GnuPG keyring in Seahorse (with
   the workaround documented in comment 4 on [[!tails_ticket 7051]],
   until that ticket is fixed for real).
+* Test that the hostname is not leaked via DHCP requests (automate: [[!tails_ticket 7712]]):
+  1. Install Wireshark in the system under testing.
+  1. Monitor the network until a periodic DHCP refresh is done, or
+     manually trigger one.
+  1. Click on the "DHCP Request" packet going out to the local DHCP server.
+  1. Look for `Option: (12) Host Name`. There should *not* be `Host
+     Name: amnesia` in there.

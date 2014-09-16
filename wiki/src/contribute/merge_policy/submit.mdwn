@@ -1,0 +1,29 @@
+[[!meta title="Git merge policy: how to submit code"]]
+
+All development should happen in topic branches. For a new feature XXX, it should
+be named `feature/XXX`. For a bugfix about YYY, it should be named
+`bugfix/YYY`. Ideally, include the relevant ticket number in the topic
+branch name, e.g. `bugfix/7173-upgrade-syslinux`.
+
+When the developer thinks it is good enough and has tested it, she must:
+
+- if you have the commit bit, merge the topic branch into the `experimental` one
+- set the ticket's *QA Check* field to *Ready for QA*
+- assign this ticket to nobody (aka. unassign it from yourself) by
+  default. Unless it's clear to you that the current release manager won't be able
+  or willing to do this specific review; in that case, _you_ shall try
+  to find someone else to do the review, and assign the ticket
+  to them.
+- set the ticket's *Feature Branch* field
+- set the ticket's *Target version* field to the release you would
+  like your changes to be in
+- ask for a review and merge (in devel generally, in testing
+  or stable for bugfixes) by writing to the `tails-dev@boum.org`
+  mailing-list
+
+Then, if the reviewer asks for more development to be done before
+merging, they should set the ticket's *QA Check* field back to *Needs
+more dev* or *Needs more info* state, and
+from now on it's the responsibility of the branch/ticket "holder" to
+change it back to *Ready for QA* once they consider the issues raised by
+the reviewer are fixed.
