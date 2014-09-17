@@ -4,8 +4,6 @@ require "#{Dir.pwd}/features/support/helpers/misc_helpers.rb"
 # Dynamic
 $tails_iso = ENV['ISO'] || get_newest_iso
 $old_tails_iso = ENV['OLD_ISO'] || get_oldest_iso
-puts "Testing ISO image: #{File.basename($tails_iso)}"
-puts "Using old ISO image: #{File.basename($old_tails_iso)}"
 $tmp_dir = ENV['TEMP_DIR'] || "/tmp/TailsToaster"
 $vm_xml_path = ENV['VM_XML_PATH'] || "#{Dir.pwd}/features/domains"
 $misc_files_dir = "#{Dir.pwd}/features/misc_files"
@@ -14,13 +12,14 @@ $x_display = ENV['DISPLAY']
 $debug = !ENV['DEBUG'].nil?
 $time_at_start = Time.now
 $live_user = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
+$sikuli_retry_findfailed = !ENV['SIKULI_RETRY_FINDFAILED'].nil?
 
 # Static
 $configured_keyserver_hostname = 'hkps.pool.sks-keyservers.net'
 $services_expected_on_all_ifaces =
   [
    ["cupsd",    "0.0.0.0", "631"],
-   ["dhclient", "0.0.0.0", "68"]
+   ["dhclient", "0.0.0.0", "*"]
   ]
 $tor_authorities =
   # List grabbed from Tor's sources, src/or/config.c:~750.

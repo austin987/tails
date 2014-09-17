@@ -5,7 +5,7 @@ def post_vm_start_hook
   # focus to virt-viewer or similar) so we do that now rather than
   # having an important click lost. The point we click should be
   # somewhere where no clickable elements generally reside.
-  @screen.click(@screen.width, @screen.height/2)
+  @screen.click_point(@screen.w, @screen.h/2)
 end
 
 def activate_filesystem_shares
@@ -114,7 +114,7 @@ Given /^I capture all network traffic$/ do
   # Note: We don't want skip this particular stpe if
   # @skip_steps_while_restoring_background is set since it starts
   # something external to the VM state.
-  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name, @vm.mac)
+  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name)
   @sniffer.capture
 end
 
@@ -153,11 +153,11 @@ Given /^the computer boots Tails$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('TailsBootSplash.png', 30)
   @screen.wait('TailsBootSplashTabMsg.png', 10)
-  @screen.type("\t")
+  @screen.type(Sikuli::Key.TAB)
   @screen.waitVanish('TailsBootSplashTabMsg.png', 1)
   @screen.type(" autotest_never_use_this_option #{@boot_options}" +
-               Sikuli::KEY_RETURN)
-  @screen.wait('TailsGreeter.png', 15*60)
+               Sikuli::Key.ENTER)
+  @screen.wait('TailsGreeter.png', 30*60)
   @vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
 end
@@ -170,11 +170,7 @@ end
 Given /^I enable more Tails Greeter options$/ do
   next if @skip_steps_while_restoring_background
   match = @screen.find('TailsGreeterMoreOptions.png')
-  pos_x = match.x + match.width/2
-  # height*2 may seem odd, but we want to click the button below the
-  # match. This may even work accross different screen resolutions.
-  pos_y = match.y + match.height*2
-  @screen.click(pos_x, pos_y)
+  @screen.click(match.getCenter.offset(match.w/2, match.h*2))
   @screen.wait_and_click('TailsGreeterForward.png', 10)
   @screen.wait('TailsGreeterLoginButton.png', 20)
 end
@@ -183,13 +179,9 @@ Given /^I set sudo password "([^"]*)"$/ do |password|
   @sudo_password = password
   next if @skip_steps_while_restoring_background
   @screen.wait("TailsGreeterAdminPassword.png", 20)
-  match = @screen.find('TailsGreeterPassword.png')
-  # width*3 may seem odd, but we want to click the field right of the
-  # match. This may even work accross different screen resolutions.
-  pos_x = match.x + match.width*3
-  pos_y = match.y + match.height/2
-  @screen.click(pos_x, pos_y)
-  @screen.type(@sudo_password + "\t" + @sudo_password)
+  @screen.type(@sudo_password)
+  @screen.type(Sikuli::Key.TAB)
+  @screen.type(@sudo_password)
 end
 
 Given /^Tails Greeter has dealt with the sudo password$/ do
@@ -204,8 +196,8 @@ end
 Given /^GNOME has started$/ do
   next if @skip_steps_while_restoring_background
   case @theme
-  when "winxp"
-    desktop_started_picture = 'WinXPStartButton.png'
+  when "windows"
+    desktop_started_picture = 'WindowsStartButton.png'
   else
     desktop_started_picture = 'GnomeApplicationsMenu.png'
   end
@@ -217,9 +209,16 @@ Then /^Tails seems to have booted normally$/ do
   step "GNOME has started"
 end
 
-Given /^I have a network connection$/ do
+Given /^Tor is ready$/ do
   next if @skip_steps_while_restoring_background
-  try_for(120) { @vm.has_network? }
+  @screen.wait("GnomeTorIsReady.png", 300)
+  @screen.waitVanish("GnomeTorIsReady.png", 15)
+
+  # Having seen the "Tor is ready" notification implies that Tor has
+  # built a circuit, but let's check it directly to be on the safe side.
+  step "Tor has built a circuit"
+
+  step "the time has synced"
 end
 
 Given /^Tor has built a circuit$/ do
@@ -234,49 +233,39 @@ Given /^the time has synced$/ do
   end
 end
 
-Given /^Iceweasel has autostarted and is not loading a web page$/ do
+Given /^available upgrades have been checked$/ do
+  next if @skip_steps_while_restoring_background
+  try_for(300) {
+    @vm.execute("test -e '/var/run/tails-upgrader/checked_upgrades'").success?
+  }
+end
+
+Given /^Iceweasel has started and is not loading a web page$/ do
   next if @skip_steps_while_restoring_background
   case @theme
-  when "winxp"
-    iceweasel_picture = "WinXPIceweaselWindow.png"
+  when "windows"
+    iceweasel_picture = "WindowsIceweaselWindow.png"
   else
-    iceweasel_picture = "IceweaselRunning.png"
+    iceweasel_picture = "IceweaselWindow.png"
   end
 
   # Stop iceweasel to load its home page. We do this to prevent Tor
   # from getting confused in case we save and restore a snapshot in
   # the middle of loading a page.
   @screen.wait_and_click(iceweasel_picture, 120)
-  @screen.type("l", Sikuli::KEY_CTRL)
-  @screen.type("about:blank" + Sikuli::KEY_RETURN)
+  @screen.type("l", Sikuli::KeyModifier.CTRL)
+  @screen.type("about:blank" + Sikuli::Key.ENTER)
 end
 
-Given /^I have closed all annoying notifications$/ do
+Given /^all notifications have disappeared$/ do
   next if @skip_steps_while_restoring_background
   case @theme
-  when "winxp"
-    notification_picture = "WinXPNotificationX.png"
+  when "windows"
+    notification_picture = "WindowsNotificationX.png"
   else
     notification_picture = "GnomeNotificationX.png"
   end
-
-  # First we wait a short while to give notifications a chance to show
-  begin
-    @screen.wait(notification_picture, 10)
-  rescue
-    # noop
-  end
-
-  begin
-    # note that we cannot use find_all as the resulting matches will
-    # have the positions from before we start closing notificatios,
-    # but closing them will change the positions.
-    while match = @screen.find(notification_picture)
-      @screen.click(match.x + match.width/2, match.y + match.height/2)
-    end
-  rescue Sikuli::ImageNotFound
-    # noop
-  end
+  @screen.waitVanish(notification_picture, 60)
 end
 
 Given /^I save the state so the background can be restored next scenario$/ do
@@ -338,51 +327,45 @@ Then /^all Internet traffic has only flowed through Tor$/ do
   end
 end
 
-When /^I open the GNOME run dialog$/ do
-  next if @skip_steps_while_restoring_background
-  @screen.type(Sikuli::KEY_F2, Sikuli::KEY_ALT)
-  case @theme
-  when "winxp"
-    run_dialog_picture = 'WinXPRunDialog.png'
-  else
-    run_dialog_picture = 'GnomeRunDialog.png'
-  end
-  @screen.wait(run_dialog_picture, 10)
-end
-
-When /^I run "([^"]*)"$/ do |program|
-  next if @skip_steps_while_restoring_background
-  step "I open the GNOME run dialog"
-  @screen.type(program + Sikuli::KEY_RETURN)
-end
-
 Given /^I enter the sudo password in the gksu prompt$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('GksuAuthPrompt.png', 60)
   sleep 1 # wait for weird fade-in to unblock the "Ok" button
   @screen.type(@sudo_password)
-  @screen.type(Sikuli::KEY_RETURN)
+  @screen.type(Sikuli::Key.ENTER)
   @screen.waitVanish('GksuAuthPrompt.png', 10)
 end
 
-Given /^I enter the sudo password in the PolicyKit prompt$/ do
+Given /^I enter the sudo password in the pkexec prompt$/ do
   next if @skip_steps_while_restoring_background
-  step "I enter the \"#{@sudo_password}\" password in the PolicyKit prompt"
+  step "I enter the \"#{@sudo_password}\" password in the pkexec prompt"
 end
 
-Given /^I enter the "([^"]*)" password in the PolicyKit prompt$/ do |password|
-  next if @skip_steps_while_restoring_background
-  @screen.wait('PolicyKitAuthPrompt.png', 60)
+def deal_with_polkit_prompt (image, password)
+  @screen.wait(image, 60)
   sleep 1 # wait for weird fade-in to unblock the "Ok" button
   @screen.type(password)
-  @screen.type(Sikuli::KEY_RETURN)
-  @screen.waitVanish('PolicyKitAuthPrompt.png', 10)
+  @screen.type(Sikuli::Key.ENTER)
+  @screen.waitVanish(image, 10)
+end
+
+Given /^I enter the "([^"]*)" password in the pkexec prompt$/ do |password|
+  next if @skip_steps_while_restoring_background
+  deal_with_polkit_prompt('PolicyKitAuthPrompt.png', password)
 end
 
 Given /^process "([^"]+)" is running$/ do |process|
   next if @skip_steps_while_restoring_background
   assert(@vm.has_process?(process),
          "Process '#{process}' is not running")
+end
+
+Given /^process "([^"]+)" is running within (\d+) seconds$/ do |process, time|
+  next if @skip_steps_while_restoring_background
+  try_for(time.to_i, :msg => "Process '#{process}' is not running after " +
+                             "waiting for #{time} seconds") do
+    @vm.has_process?(process)
+  end
 end
 
 Given /^process "([^"]+)" is not running$/ do |process|
@@ -399,20 +382,95 @@ Given /^I kill the process "([^"]+)"$/ do |process|
   }
 end
 
-Given /^I completely shutdown Tails$/ do
+Then /^Tails eventually shuts down$/ do
+  next if @skip_steps_while_restoring_background
+  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
+  timeout = nr_gibs_of_ram*5*60
+  try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
+    ! @vm.is_running?
+  end
+end
+
+Then /^Tails eventually restarts$/ do
+  next if @skip_steps_while_restoring_background
+  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
+  @screen.wait('TailsBootSplashPostReset.png', nr_gibs_of_ram*5*60)
+end
+
+Given /^I shutdown Tails and wait for the computer to power off$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.execute("poweroff")
+  step 'Tails eventually shuts down'
+end
+
+When /^I request a shutdown using the emergency shutdown applet$/ do
   next if @skip_steps_while_restoring_background
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
-  nr_gibs_of_ram = (detected_ram_in_bytes.to_f/(2**30)).ceil
-  try_for(nr_gibs_of_ram*5*60, :msg => "VM is still running") do
-    ! @vm.is_running?
-  end
+end
+
+When /^I request a reboot using the emergency shutdown applet$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.hide_cursor
+  @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  @screen.hide_cursor
+  @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
 Given /^package "([^"]+)" is installed$/ do |package|
   next if @skip_steps_while_restoring_background
   assert(@vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
          "Package '#{package}' is not installed")
+end
+
+When /^I start Iceweasel$/ do
+  next if @skip_steps_while_restoring_background
+  case @theme
+  when "windows"
+    step 'I click the start menu'
+    @screen.wait_and_click("WindowsApplicationsInternet.png", 10)
+    @screen.wait_and_click("WindowsApplicationsIceweasel.png", 10)
+  else
+    @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+    @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
+    @screen.wait_and_click("GnomeApplicationsIceweasel.png", 10)
+  end
+end
+
+Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
+  next if @skip_steps_while_restoring_background
+  con_content = <<EOF
+[802-3-ethernet]
+duplex=full
+
+[connection]
+id=#{con_name}
+uuid=bbc60668-1be0-11e4-a9c6-2f1ce0e75bf1
+type=802-3-ethernet
+timestamp=1395406011
+
+[ipv6]
+method=auto
+
+[ipv4]
+method=auto
+EOF
+  con_content.split("\n").each do |line|
+    @vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
+  end
+  @vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '/etc/NetworkManager/system-connections/#{con_name}'")
+  try_for(10) {
+    nm_con_list = @vm.execute("nmcli --terse --fields NAME con list").stdout
+    nm_con_list.split("\n").include? "#{con_name}"
+  }
+end
+
+Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
+  next if @skip_steps_while_restoring_background
+  @vm.execute("nmcli con up id #{con_name}")
+  try_for(60) {
+    @vm.execute("nmcli --terse --fields NAME,STATE con status").stdout.chomp == "#{con_name}:activated"
+  }
 end

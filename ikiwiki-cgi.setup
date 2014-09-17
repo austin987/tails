@@ -32,13 +32,14 @@ cgi_wrappermode: 06755
 rcs: git
 # plugins to add to the default configuration
 add_plugins:
+  - comments
+  - editpage
   - favicon
   - html
+  - lockedit
   - map
-  - remove
-  - rename
-  - passwordauth
   - mirrorlist
+  - passwordauth
   - po
   - shortcut
   - sidebar
@@ -46,19 +47,18 @@ add_plugins:
   - toc
   - trail
   - typography
-  - comments
   - meta
   - img
-  - editpage
   - recentchanges
-  - anonok
   - search
-  - lockedit
   - toggle
 # plugins to disable
 disable_plugins:
+  - anonok
   - openid
   - httpauth
+  - remove
+  - rename
   - signinedit
 # additional directory to search for template files
 # templatedir: /usr/share/ikiwiki/templates
@@ -109,7 +109,7 @@ include: '^\.htaccess$'
 # regexp of files that should be skipped
 exclude: (?-xism:/discussion)
 # specifies the characters that are allowed in source filenames
-wiki_file_chars: '-[:alnum:]+/.:_~'
+wiki_file_chars: '-[:alnum:]+/._~'
 # allow symlinks in the path leading to the srcdir (potentially insecure)
 allow_symlinks_before_srcdir: 1
 
@@ -180,7 +180,7 @@ pingurl: []
 
 # lockedit plugin
 # PageSpec controlling which pages are locked
-locked_pages: '! (bugs/* or forum/*)'
+locked_pages: '! blueprint/*'
 
 # moderatedcomments plugin
 # PageSpec matching users or comment locations to moderate
@@ -221,11 +221,10 @@ po_master_language: en|English
 # slave languages (translated via PO files) format: ll|Langname
 po_slave_languages:
   - de|Deutsch
-  - es|Español
   - fr|Français
   - pt|Português
 # PageSpec controlling which pages are translatable
-po_translatable_pages: '!security/audits and !security/audits/* and (about or chat or contribute or doc or doc/* or download or getting_started or inc/stable_i386_date or index or news or news/* or press or press/* or security or security/* or sidebar or support or support/* or torrents or wishlist)'
+po_translatable_pages: '!security/audits and !security/audits/* and (about or bugs or chat or contribute or contribute/how/donate or doc or doc/* or download or getting_started or inc/stable_i386_date or index or news or news/* or press or press/* or security or security/* or sidebar or support or support/* or todo or torrents or wishlist or misc or misc/*)'
 # internal linking behavior (default/current/negotiated)
 po_link_to: current
 
@@ -251,7 +250,7 @@ po_link_to: current
 # PageSpec of pages where comments are allowed
 comments_pagespec: forum/*
 # PageSpec of pages where posting new comments is not allowed
-comments_closed_pagespec: ''
+#comments_closed_pagespec: ''
 # Base name for comments, e.g. "comment_" for pages like "sandbox/comment_12"
 comments_pagename: comment_
 # Interpret directives in comments?

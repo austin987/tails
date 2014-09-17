@@ -1,5 +1,5 @@
 require 'date'
-require 'system_timer'
+require 'timeout'
 
 def assert(b, msg = "Assertion failed!")
   raise RuntimeError, msg, caller if ! b
@@ -12,7 +12,7 @@ end
 def try_for(t, options = {})
   options[:delay] ||= 1
   begin
-    SystemTimer.timeout(t) do
+    Timeout::timeout(t) do
       loop do
         begin
           return true if yield
@@ -62,6 +62,10 @@ end
 
 def convert_to_bytes(size, unit)
   return (size*convert_bytes_mod(unit)).to_i
+end
+
+def convert_to_MiB(size, unit)
+  return (size*convert_bytes_mod(unit) / (2**20)).to_i
 end
 
 def convert_from_bytes(size, unit)

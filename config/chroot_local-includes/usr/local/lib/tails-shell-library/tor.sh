@@ -14,19 +14,28 @@ tor_control_send() {
 	COOKIE=/var/run/tor/control.authcookie
 	HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
 	/bin/echo -ne "AUTHENTICATE ${HEXCOOKIE}\r\n${1}\r\nQUIT\r\n" | \
-	    nc 127.0.0.1 $(get_tor_control_port)
+	    nc 127.0.0.1 $(get_tor_control_port) | tr -d "\r"
 }
 
 # This function may be dangerous to use. See "Potential Tor bug" below.
 # Only handles GETINFO keys with single-line answers
 tor_control_getinfo() {
-	tor_control_send "GETINFO ${1}" | grep -m 1 "^250-${1}=" | \
-	    # Note: we have to remove trailing CL+RF to not confuse the shell
-	    sed "s|^250-${1}=\(.*\)[[:space:]]\+$|\1|"
+	tor_control_send "GETINFO ${1}" | \
+	    sed -n "s|^250-${1}=\(.*\)$|\1|p"
+}
+
+tor_control_getconf() {
+	tor_control_send "GETCONF ${1}" | \
+            sed -n "s|^250 ${1}=\(.*\)$|\1|p"
 }
 
 tor_control_setconf() {
 	tor_control_send "SETCONF ${1}" >/dev/null
+}
+
+tor_bootstrap_progress() {
+	grep -o "\[notice\] Bootstrapped [[:digit:]]\+%:" ${TOR_LOG} | \
+	    tail -n1 | sed "s|\[notice\] Bootstrapped \([[:digit:]]\+\)%:|\1|"
 }
 
 # Potential Tor bug: it seems like using this version makes Tor get
@@ -40,4 +49,17 @@ tor_control_setconf() {
 
 tor_is_working() {
 	[ -e $TOR_DESCRIPTORS ] || [ -e $NEW_TOR_DESCRIPTORS ]
+}
+
+tor_append_to_torrc () {
+	echo "${@}" >> "${TOR_RC}"
+}
+
+# Set a (possibly existing) option $1 to $2 in torrc. Shouldn't be
+# used for options that can be set multiple times (e.g. the listener
+# options). Does not support configuration entries split into multiple
+# lines (with the backslash character).
+tor_set_in_torrc () {
+	sed -i "/^${1}\s/d" "${TOR_RC}"
+	tor_append_to_torrc "${1} ${2}"
 }

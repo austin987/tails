@@ -1,8 +1,751 @@
-tails (0.20) UNRELEASED; urgency=low
+tails (1.2) UNRELEASED; urgency=medium
 
-  * Upcoming release.
+  * Dummy entry for next release.
 
- -- Tails developers <tails@boum.org>  Mon, 24 Jun 2013 10:40:33 +0200
+ -- Tails developers <tails@boum.org>  Mon, 14 Jul 2014 16:15:19 +0200
+
+tails (1.1.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade the web browser to 24.8.0esr-0+tails1~bpo70+1
+      (Firefox 24.8.0esr + Iceweasel patches + Torbrowser patches).
+      Also import the Tor Browser profile at commit
+      271b64b889e5c549196c3ee91c888de88148560f from
+      ttp/tor-browser-24.8.0esr-3.x-1.
+    - Upgrade Tor to 0.2.4.23-2~d70.wheezy+1 (fixes CVE-2014-5117).
+    - Upgrade I2P to 0.9.14.1-1~deb7u+1.
+    - Upgrade Linux to 3.14.15-2 (fixes CVE-2014-3534, CVE-2014-4667
+      and CVE-2014-4943).
+    - Upgrade CUPS-based packages to 1.5.3-5+deb7u4 (fixes
+      CVE-2014-3537, CVE-2014-5029, CVE-2014-5030 and CVE-2014-5031).
+    - Upgrade libnss3 to 2:3.14.5-1+deb7u1 (fixes CVE-2013-1741,
+      CVE-2013-5606, CVE-2014-1491 and CVE-2014-1492).
+    - Upgrade openssl to 1.0.1e-2+deb7u12 (fixes CVE-2014-3505,
+      CVE-2014-3506, CVE-2014-3507, CVE-2014-3508, CVE-2014-3509,
+      CVE-2014-3510, CVE-2014-3511, CVE-2014-3512 and CVE-2014-5139).
+    - Upgrade krb5-based packages to 1.10.1+dfsg-5+deb7u2 (fixes
+      CVE-2014-4341, CVE-2014-4342, CVE-2014-4343, CVE-2014-4344 and
+      CVE-2014-4345).
+    - Upgrade libav-based packages to 6:0.8.15-1 (fixes CVE-2011-3934,
+      CVE-2011-3935, CVE-2011-3946, CVE-2013-0848, CVE-2013-0851,
+      CVE-2013-0852, CVE-2013-0860, CVE-2013-0868, CVE-2013-3672,
+      CVE-2013-3674 and CVE-2014-2263.
+    - Upgrade libgpgme11 to 1.2.0-1.4+deb7u1 (fixes CVE-2014-5117).
+    - Upgrade python-imaging to 1.1.7-4+deb7u1 (fixes CVE-2014-3589).
+    - Prevent dhclient from sending the hostname over the network
+      (Closes: #7688).
+    - Override the hostname provided by the DHCP server (Closes: #7769).
+    - Add an I2P boot parameter. Without adding "i2p" to the kernel
+      command line, I2P will not be accessible for the Live user.
+    - Stricter I2P firewall rules:
+      * deny I2P from accessing the LAN
+      * deny I2P from accessing the loopback device, except for select
+        whitelisted services
+      * allow I2P access to the Internet
+      The ACCEPT rules will only be enabled when the string 'i2p' is
+      passed at the boot prompt. The rules which DENY or REJECT
+      access for the 'i2psvc' user will always be applied.
+    - Disable I2P plugins, since it doesn't make much sense without
+      persistence, and should eliminate some attack vectors.
+    - Disable I2P's BOB port. No maintained I2P application uses it.
+
+  * Bugfixes
+    - Fix condition clause in tails-security-check (Closes: #7657).
+    - Don't ship OpenJDK 6: I2P prefers v7, and we don't need both.
+    - Prevent Tails Installer from updating the system partition
+      properties on MBR partitions (Closes: #7716).
+
+  * Minor improvements
+    - Upgrade to Torbutton 1.6.12.1.
+    - Install gnome-user-guide (Closes: #7618).
+    - Install cups-pk-helper (Closes: #7636).
+    - Update the SquashFS sort file.
+    - Compress the SquashFS more aggressively (Closes: #7706).
+    - I2P: Keep POP3 email on server. The default in the I2P webmail
+      app was to keep mail on the server, but that setting was changed
+      recently. This configuration setting (susimail.config) will only
+      be copied over in I2P 0.9.14 and newer.
+    - Add a Close button to the Tails Installer launcher window.
+
+  * Build system
+    - Migrate Vagrant basebox to Debian Wheezy (Closes #7133, #6736).
+    - Consistently use the same Debian mirror.
+    - Disable runtime APT proxy configuration when using APT in
+      binary_local-hooks (Closes: #7691).
+
+  * Automated test suite
+    - Automatically test hostname leaks (Closes: #7712).
+    - Move autotest live-config hook to be run last. This way we'll
+      notice if some earlier live-config hook cancels all hooks by
+      running the automated test suite since the remote shell won't be
+      running in that case.
+    - Test that the I2P boot parameter does what it's supposed to do
+      (Closes: #7760).
+    - Start applications by using the GNOME Applications menu instead
+      of the GNOME Run Dialog (Closes: #5550, #7060).
+
+ -- Tails developers <tails@boum.org>  Sun, 31 Aug 2014 20:49:28 +0000
+
+tails (1.1) unstable; urgency=medium
+
+  * Rebase on Debian Wheezy
+    - Upgrade literally thousands of packages.
+    - Migrate to GNOME3 fallback mode.
+    - Install LibreOffice instead of OpenOffice.
+    - Remove custom LSB logging: Wheezy has fancy colored init
+      logging.
+
+  * Major new features
+    - UEFI boot support.
+    - Replace the Windows XP camouflage with an experimental Windows 8
+      camouflage.
+    - Install Linux 3.14.12-1 from Debian unstable.
+    - Bring back VirtualBox guest modules, installed from Wheezy
+      backports. Full functionality is only available when using the
+      32-bit kernel.
+
+  * Security fixes
+    - Fix write access to boot medium via udisks (#6172).
+    - Don't allow the desktop user to pass arguments to
+      tails-upgrade-frontend (Closes: #7410).
+    - Make persistent file permissions safer (Closes #7443):
+      * Make the content of /etc/skel non-world-readable. Otherwise,
+        such files may be copied to /home/amnesia, and in turn to the
+        persistent volume, with unsafe permissions. That's no big deal
+        in /home/amnesia (that is itself not world-readable), *but*
+        the root of the persistent volume has to be world-readable.
+      * Have activate_custom_mounts create new directories with safe
+        permissions.
+      * Set strict permissions on /home/amnesia (Closes: #7463).
+      * Fix permissions on persistent directories that were created
+        with unsafe permissions (Closes: #7458).
+      * Fix files ownership while copying persistence (Closes: #7216).
+        The previous instructions to copy the persistent data were
+        creating personal files that belong to root. I don't think
+        there is a way of preserving the original ownership using
+        Nautilus (unless doing a "move" instead of a "copy" but that's
+        not what we are trying to do here).
+    - Disable FoxyProxy's proxy:// protocol handler (Closes: #7479).
+      FoxyProxy adds the proxy:// protocol handler, which can be used
+      to configure the proxy via an URI. A malicious web page can
+      include (or a malicious exit node can inject) some JavaScript
+      code to visit such an URI and disable or otherwise change
+      Iceweasel's proxy settings. While using this to disable
+      proxying will be dealt with safely by our firewall, this could
+      be used to defeat stream isolation, although the user must be
+      tricked into accepting the new proxy settings.
+    - Upgrade the web browser to 24.7.0esr-0+tails1~bpo70+1
+      (Firefox 24.7.0esr + Iceweasel patches + Torbrowser patches).
+    - Upgrade to Linux 3.14.12-1 (fixes CVE-2014-4699).
+    - Upgrade libav-based packages to 0.8.13-1 (fixes CVE-2014-4609).
+    - Upgrade to libxml2 2.8.0+dfsg1-7+wheezy1 (fixes CVE-2014-0191).
+    - Upgrade to dbus 1.6.8-1+deb7u3 (fixes CVE-2014-3477,
+      CVE-2014-3532 and CVE-2014-3533).
+
+  * Bugfixes
+    - Disable GNOME keyring's GnuPG functionality. (Closes: #7330) In
+      feature/regular-gnupg-agent, we installed the regular GnuPG
+      agent so that it is used instead of GNOME keyring's one. This is
+      not enough on Wheezy, so let's disable the starting of the "gpg"
+      component of GNOME keyring.
+    - Make sure /etc/default/locale exists, with a sensible default
+      value (Closes: #7333). Before Tails Greeter's PostLogin script
+      are run, /etc/default/locale does not exist on Wheezy. Our
+      tails-kexec initscript (and quite a few other scripts we run)
+      depends on this file to exist. So, let's make sure it exists,
+      with a sensible default value.
+    - Create the tails-persistence-setup user with the same UID/GID it
+      had on Tails/Squeeze. (Closes: #7343) Else, our various checks
+      for safe access rights on persistence.conf fail.
+    - Revert back to browsing the offline documentation using Iceweasel
+      instead of Yelp (Closes: #7390, #7285).
+    - Make the new NetworkManager configuration directory persistent,
+      when the old one was, but disable the old one (Closes: #7338).
+    - Before running tails-upgrade-frontend, chdir to a world-readable
+      place (Closes: #7641). In particular, Archive::Tar::Wrapper,
+      when called by tails-install-iuk, wants to chdir back to the
+      original cwd after it has chdir'd elsewhere to do its job.
+
+  * Minor improvements
+    - Install seahorse-nautilus, replacing seahorse-plugins (Closes #5516).
+    - Install hledger (custom backport, for now): our accountants need this.
+    - Install stable Scribus instead of scribus-ng.
+    - Install the printer driver for Epson Inkjet that use ESC/P-R.
+    - Install the BookletImposer PDF imposition toolkit. It's tiny,
+      and really helpful e.g. when producing booklets.
+    - Install gtkhash and nautilus-gtkhash (Closes #6763).
+    - Import new version of Tor Launcher:
+      · Now based on upstream Tor Launcher 0.2.5.4.
+      · Tor bug #11772: Proxy Type menu not set correctly
+      · Tor bug #11699: Change &amp;#160 to &#160; in network-settings.dtd
+      · Correctly handle startup paths that contain dot.
+    - Upgrade to Torbutton 1.6.9.0.
+    - Avoid shipping python2.6 in addition to python2.7.
+    - Don't install Gobby 0.4 anymore. Gobby 0.5 has been available in
+      Debian since Squeeze, now is a good time to drop the obsolete
+      0.4 implementation.
+    - Require a bit less free memory before checking for upgrades with
+      Tails Upgrader. The general goal is to avoid displaying "Not
+      enough memory available to check for upgrades" too often due to
+      over-cautious memory requirements checked in the wrapper.
+    - Make Tails Greeter's help window resolution-aware. Previously it
+      used a static 800x600 which was problematic on lower resolutions,
+      and sub-optimal on higher resolutions. Now it adapts itself
+      according to the screen resolution.
+    - Whisperback now sanitizes attached logs better with respect to
+      DMI data, IPv6 addresses, and serial numbers (Closes #6797,
+      #6798, #6804).
+    - Integrate the new logo in Tails Installer (Closes #7095)
+    - Also install linux-base and linux-compiler-gcc-4.8-x86 from
+      sid. This way, we can get rid of our linux-compiler-gcc-4.8-x86
+      3.12, and it makes things a bit more consistent.
+    - Include the syslinux binary, and its MBR, in the ISO filesystem.
+      This in turn allows Tails Installer to use this binary and MBR,
+      which is critical for avoiding problems (such as #7345) on
+      "Upgrade from ISO".
+    - Include syslinux.exe for win32 in utils/win32/ on the ISO
+      filesystem (Closes: #7425).
+    - Tails Installer:
+      * Add consistent margins in GUI.
+      * Always reset the target drive's MBR, without asking for
+        confirmation, after installing or upgrading.
+      * Install the bootloader using the syslinux binary found on the
+        target device, once the Live OS has been extracted/copied
+        there.
+    - Enable double-clicking to pick entries in the language or
+      keyboard layout lists in Tails Greeter.
+    - Install backport of shared-mime-info 1.3 (Closes: #7079).
+    - Make sanity-check prompts closable in Tails Persistence Setup
+      (Closes: #7119).
+    - Fix quick search in Tails Greeter's Other languages window
+      (Closes: #5387).
+    - Install systemd. It is not enabled by default, but having it
+      around will help doing the migration work.
+    - Enable AppArmor on the kernel command-line. This is a no-op
+      without the userspace tools and with no profile shipped, but it
+      will make it easier to fix this part of the situation.
+
+  * Build system
+    - Bump Vagrant builder's memory for RAM builds. Wheezy requires
+      more space to build, and the resulting image is larger.
+    - Fix Vagrant compatibility issue. Some classes' methods/fields
+      have been renamed between Vagrant versions, so we need a simple
+      compatibility layer to support all versions. Without this, it's
+      not possible to issue e.g. a `build` command to an already
+      running (i.e. `vm:up`:ed) Vagrant instance.
+    - Move cpu and mem checks to the `build` task. Previously, when
+      they were checked in `vm:up` *only* when issued while the VM
+      already is up, so these checks weren't run if one issues a
+      `build` when the VM is off. Now we'll fail earlier with a more
+      informative error message, and it looks like a more logical home
+      for them too.
+    - Fix buggy memory checks for RAM building. We have to take into
+      account which state the Vagrant VM is in for determining *where*
+      we check if enough memory is available for a RAM build. If it's
+      off, we check the host; if it's on we check the VM. Previously
+      we always checked the host, which doesn't make sense when the VM
+      is already started.
+
+  * Automated test suite
+    - Bump the tester VM's RAM by 256 MiB. There is not enough free
+      RAM to run Tails Upgrader with just 1 GiB of RAM after the
+      migration to Wheezy.
+    - Always adjust OOM and memory overcommit settings. The kernel
+      freezes seem to also happen for the amd64 kernel when filling
+      the memory.
+    - Add option to make Sikuli rety on FindFailed. This makes it
+      possible to update manu images for Sikuli in just *one* test
+      suite run, by continuously updating outdated pictures as we go.
+    - Actually run "Upgrade from ISO" from a USB drive running the old
+      version. That's what users do, and is buggy.
+    - Automatically test persistent directories permissions (Closes: #7560).
+    - Use read-write persistence when testing upgraded USB
+      installations.  Otherwise e.g. the permission fixes won't get
+      applied, and the subsequent steps testing the permissions will
+      fail.
+    - Actually check that the ISO's Tails is installed. The step
+      "Tails is installed on USB drive $TARGET" only checks that the
+      *running* Tails is installed on $TARGET, which obviously fails
+      when doing an upgrade from ISO running an old Tails. That it
+      worked for the same scenario running the current Tails is just
+      coincidental.
+    - Use OpenJDK 7 to run our test suite (Closes #7175).
+    - Use qemu-system-x86_64 directly, instead of kvm, for running the
+      automated test suite (Closes: #7605).
+
+ -- Tails developers <tails@boum.org>  Sun, 20 Jul 2014 23:16:13 +0200
+
+tails (1.0.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade the web browser to 24.6.0esr-0+tails1~bpo60+1
+      (Firefox 24.6.0esr + Iceweasel patches + Torbrowser patches).
+      Also import the Tor Browser profile at commit
+      90ba8fbaf6f23494f1a0e38d63153b3b7e65d3d3 from
+      ttp/tor-browser-24.6.0esr-3.x-1.
+    - Install Linux 3.14 from Debian unstable (fixes CVE-2014-3153 and
+      others).
+    - Install openssl from Squeeze LTS (fixes CVE-2014-0076,
+      CVE-2014-0195, CVE-2014-0221, CVE-2014-3470 and CVE-2014-0224).
+    - Install GnuTLS from Squeeze LTS (fixes CVE-2014-3466.).
+
+  * Minor improvements
+    - Add Squeeze LTS APT sources. It has been given a low pinning
+      priority so explicit pinning must be used to actually install
+      anything from it.
+    - Upgrade Tor to 0.2.4.22-1~d60.squeeze+1.
+    - Upgrade I2P to 0.9.13-1~deb6u+1.
+
+ -- Tails developers <tails@boum.org>  Sun, 08 Jun 2014 19:14:00 +0200
+
+tails (1.0) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade the web browser to 24.5.0esr-0+tails1~bpo60+1
+      (Firefox 24.5.0esr + Iceweasel patches + Torbrowser patches).
+    - Upgrade Tor to 0.2.4.21-1+tails1~d60.squeeze+1:
+      * Based on 0.2.4.21-1~d60.squeeze+1.
+      * Backport the fix for Tor bug #11464. It adds client-side blacklists for
+        all Tor directory authority keys that was vulnerable to Heartbleed.
+        This protects clients in case attackers were able to compromise a
+        majority of the authority signing and identity keys.
+
+   * Bugfixes
+    - Disable inbound I2P connections. Tails already restricts incoming
+      connections, but this change tells I2P about it.
+    - Fix link to the system requirements documentation page in the Tails
+      Upgrader error shown when too little RAM is available.
+
+  * Minor improvements
+    - Upgrade I2P to 0.9.12-2~deb6u+1.
+    - Import TorBrowser profile. This was forgotten in Tails 0.23 and even
+      though we didn't explicitly set those preferences in that release
+      they defaulted to the same values. This future-proofs us in case the
+      defaults would ever change.
+    - Import new custom version of tor-launcher:
+      * Based on upstream Tor Launcher 0.2.5.3.
+      * Improve how Tor Launcher handles incomplete translation.
+        (Tor bug #11483; more future-proof fix for Tails bug #6885)
+      * Remove the bridge settings prompt. (Tor bug #11482; closes Tails
+        bug #6934,)
+      * Always show bridge help button. (Tor bug #11484)
+    - Integrate the new Tails logo into various places:
+      * The website
+      * The boot splash
+      * The "About Tails" dialog
+
+  * Build system
+    - Use the stable APT suite when building from the stable Git branch
+      (Closes: #7022).
+
+  * Test suite
+    - Add test for the #7022 fix.
+
+ -- Tails developers <tails@boum.org>  Sun, 27 Apr 2014 19:34:01 +0200
+
+tails (0.23) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade the web browser to 24.4.0esr-0+tails1~bpo60+1
+      (Firefox 24.4.0esr + Iceweasel patches + Torbrowser patches).
+
+  * Major new features
+    - Spoof the network interfaces' MAC address by default (Closes: #5421),
+      as designed on https://tails.boum.org/contribute/design/MAC_address/.
+    - Rework the way to configure how Tor connects to the network
+      (bridges, proxy, fascist firewall): add an option to Tails Greeter,
+      start Tor Launcher when needed (Closes: #5920, #5343).
+
+  * Bugfixes
+    - Additional software: do not crash when persistence is disabled
+      (Closes: #6440).
+    - Upgrade Pidgin to 2.10.9, that fixes some regressions introduced
+      in the 2.10.8 security update (Closes: #6661).
+    - Wait for Tor to have fully bootstrapped, plus a bit more time,
+      before checking for upgrades (Closes: #6728) and unfixed known
+      security issues.
+    - Disable the Intel Management Engine Interface driver (Closes: #6460).
+      We don't need it in Tails, it might be dangerous, and it causes bugs
+      on various hardware such as systems that reboot when asked to shut down
+    - Add a launcher for the Tails documentation. This makes it available
+      in Windows Camouflage mode (Closes: #5374, #6767).
+    - Remove the obsolete wikileaks.de account from Pidgin (Closes: #6807).
+
+  * Minor improvements
+    - Upgrade Tor to 0.2.4.21-1~d60.squeeze+1.
+    - Upgrade obfsproxy to 0.2.6-2~~squeeze+1.
+    - Upgrade I2P to 0.9.11-1deb6u1.
+    - Install 64-bit kernel instead of the 686-pae one (Closes: #5456).
+      This is a necessary first step towards UEFI boot support.
+    - Install Monkeysign (in a not-so-functional shape yet).
+    - Disable the autologin text consoles (Closes: #5588). This was one of
+      the blockers before a screen saver can be installed
+      in a meaningful way (#5684).
+    - Don't localize the text consoles anymore: it is broken on Wheezy,
+      the intended users can as well use loadkeys, and we now do not have
+      to trust setupcon to be safe for being run as root by the desktop user.
+    - Make it possible to manually start IBus.
+    - Reintroduce the possibility to switch identities in the Tor Browser,
+      using a filtering proxy in front of the Tor ControlPort to avoid giving
+      full control over Tor to the desktop user (Closes: #6383).
+    - Incremental upgrades improvements:
+      · Drop the Tails Upgrader launcher, to limit users' confusion
+        (Closes: #6513).
+      · Lock down sudo credentials a bit.
+      · Hide debugging information (Closes: #6505).
+      · Include ~/.xsession-errors in WhisperBack bug reports.
+        This captures the Tails Upgrader errors and debugging information.
+      · Report more precisely why an incremental upgrade cannot be done
+        (Closes: #6575).
+      · Various user interface and phrasing improvements.
+    - Don't install the Cookie Monster browser extension (Closes: #6790).
+    - Add a browser bookmark pointing to Tor's Stack Exchange (Closes: #6632).
+    - Remove the preconfigured #tor channel from the Pidgin: apparently,
+      too many Tails users go ask Tails questions there, without making
+      it clear that they are running Tails, hence creating a user-support
+      nightmare (Closes: #6679).
+    - Use (most of) Tor Browser's mozconfig (Closes: #6474).
+    - Rebase the browser on top of iceweasel 24.3.0esr-1, to get
+      the certificate authorities added by Debian back (Closes: #6704).
+    - Give access to the relevant documentation pages from Tails Greeter.
+    - Hide Tails Greeter's password mismatch warning when entry is changed.
+    - Persistent Volume Assistant:
+      · Take into account our installer is now called Tails Installer.
+      · Optimize window height (Closes: #5458).
+      · Display device paths in a more user-friendly way (Closes: #5311).
+
+  * Build system
+    - Ease updating POT and PO files at release time, and importing translations
+      from Transifex (Closes: #6288, #6207).
+    - Drop custom poedit backport, install it from squeeze-backports-sloppy.
+    - Make ISO and IUK smaller (Closes: #6390, #6425):
+      · Exclude more files from being included in the ISO.
+      · Remove *.pyc later so that they are not recreated.
+      · Truncate log files later so that they are not filled again.
+      · At ISO build time, set mtime to the epoch for large files whose content
+        generally does not change between releases. This forces rsync
+        to compare the actual content of these files, when preparing an IUK,
+        instead of blindly adding it to the IUK merely because the mtime
+        has changed, while the content is the same.
+    - Make local hooks logging consistent.
+
+  * Test suite
+    - Migrate from JRuby to native Ruby + rjb.
+    - The test suite can now be run on Debian Wheezy + backports.
+    - Fix buggy "persistence is not enabled" step (Closes: #5465).
+    - Use IPv6 private address as of RFC 4193 for the test suite's virtual
+      network. Otherwise dnsmasq from Wheezy complains, as it is not capable
+      of handling public IPv6 addresses.
+    - Delete volumes after each scenario unless tagged @keep_volumes.
+    - Add an anti-test to make sure the memory erasure test works fine.
+    - A *lot* of bugfixes, simplifications and robustness improvements.
+
+ -- Tails developers <tails@boum.org>  Tue, 18 Mar 2014 00:58:50 +0100
+
+tails (0.22.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade the web browser to 24.3.0esr-0+tails1~bpo60+2
+      (Firefox 24.3.0esr + Iceweasel patches + Torbrowser patches).
+    - Upgrade NSS to 3.14.5-1~bpo60+1.
+    - Upgrade Pidgin to 2.10.8.
+    - Workaround browser size fingerprinting issue by using small icons
+      in the web browser's navigation toolbar (Closes: #6377).
+      We're actually hit by Tor#9268, and this is the best workaround gk
+      and I were able to find when discussing this on Tor#10095.
+
+  * Major new features
+    - Check for upgrades availability using Tails Upgrader, and propose
+      to apply an incremental upgrade whenever possible (Closes: #6014).
+      · Run tails-update-frontend at session login time.
+      · Have tails-security-check only report unfixed security issues.
+      · Greatly improve the Tails Upgrader UI and strings phrasing.
+      · Enable startup notification for Tails Upgrader.
+    - Install Linux 3.12 (3.12.6-2) from Debian testing. Unfortunately,
+      this breaks the memory wipe feature on some hardware (#6460), but
+      it fixes quite a few security issues, and improves hardware support.
+    - Update the build system to be compatible with Vagrant 1.2 and 1.3,
+      in addition to the already supported versions (Closes: #6221).
+      Thanks to David Isaac Wolinsky <isaac.wolinsky@gmail.com>.
+
+  * Bugfixes
+    - Do not start IBus for languages that don't need it. This fixes
+      the keybindings problems introduced in 0.22 (Closes: #6478).
+      Thanks to WinterFairy.
+    - Disable network.proxy.socks_remote_dns in the Unsafe Browser.
+      Bugfix against 0.22 (Closes: #6479).
+    - Fetch Tor Browser User-Agent from its own prefs, rather than from
+      the obsolete Torbutton ones. Bugfix against 0.22 (Closes: #6477).
+    - Upgrade Vagrant basebox to include up-to-date Debian archive keys
+      (Closes: #6515, #6527).
+    - Do not use a non-working proxy for downloading the Vagrant basebox
+      (Closes: #6514).
+    - Use IE's icon in Windows camouflage mode.
+      Bugfix against 0.22 (Closes: #6536).
+    - Support "upgrading" a partial Tails installation (Closes: #6438)
+      and fix missing confirmation dialog in Tails Installer (Closes: #6437).
+      Thanks to Andres Gomez Ramirez <andres.gomez@cern.ch>.
+    - Fix browser homepage in Spanish locales (Closes: #6612).
+
+  * Minor improvements
+    - Tor 0.2.4 is stable! Adapt APT sources accordingly.
+    - Update Tor Browser to 24.2.0esr-1+tails1, that uses its own NSS
+      library instead of the system one.
+    - Update Torbutton to 1.6.5.3.
+    - Do not start Tor Browser automatically, but notify when Tor is ready.
+      Warn the user when they attempt to start Tor Browser before Tor is ready.
+    - Import Tor Browser profile at
+      3ed5d9511e783deb86835803a6f40e7d5a182a12 from ttp/tor-browser-24.2.0esr-1.
+    - Use http.debian.net for Vagrant builds, instead of the mostly broken
+      (and soon obsolete) cdn.debian.net.
+    - Phrasing and UI improvements in tails-upgrade-frontend.
+    - Style and robustness improvements in tails-security-check.
+    - Make room for upcoming UEFI support in Tails Installer.
+
+ -- Tails developers <tails@boum.org>  Wed, 29 Jan 2014 15:08:13 +0100
+
+tails (0.22) unstable; urgency=medium
+
+  [Tails developers]
+  * Security fixes
+    - Upgrade to Iceweasel 24.2.0esr that fixes a few serious security issues.
+    - Stop migrating persistence configuration and access rights. Instead,
+      disable all persistence configuration files if the mountpoint has wrong
+      access rights (Closes: #6413).
+    - Upgrade to NSS 3.15.3 that fixes a few serious security issues affecting
+      the browser, such as CVE-2013-1741, CVE-2013-5605 and CVE-2013-5606.
+
+  * Major improvements
+    - Switch to Iceweasel 24 (Closes: #6370).
+      · Resync' (most) Iceweasel prefs with TBB 3.0-beta-1 and get rid
+        of many obsolete or default settings.
+      · Disable WebRTC (Closes: #6468).
+      · Import TorBrowser profile at commit
+        51bf06502c46ee6c1f587459e8370aef11a3422d from the tor-browser-24.2.0esr-1
+        branch at https://git.torproject.org/tor-browser.git.
+    - Switch to Torbutton 1.6.5 (Closes: #6371).
+      · Prevent Torbutton from asking users to "upgrade TBB".
+      · Use the same Tor SOCKS port as the TBB (9151) for our web browser.
+        This should be enough to avoid being affected by Tor#8511.
+      · Disable Torbutton 1.6's check for Tor.
+        Unfortunately, the new check.torproject.org breaks the remote Tor
+        check. We cannot use the local Tor check with the control port. So,
+        the shortest and sanest path to fixing the check issue, because the
+        remote Tor check is broken" seems to simply disable this check.
+        Patch submitted upstream as Tor#10216.
+    - Prepare incremental upgrades to be the next default way to upgrade Tails,
+      on point-releases at least.
+
+  * Bugfixes
+    - Deny X authentication only after Vidalia exits (Closes: #6389).
+    - Disable DPMS screen blanking (Closes: #5617).
+    - Fix checking of the persistent volume's ACL.
+    - Sanitize more IP and MAC addresses in bug reports (Closes: #6391).
+    - Do not fail USB upgrade when the "tmp" directory exists on the
+      destination device.
+    - Tails Installer: list devices with isohybrid Tails installed
+      (Closes: #6462).
+
+  * Minor improvements
+    - Create a configuration file for additional software if needed
+      (Closes: #6436).
+    - Translations all over the place.
+    - Enable favicons in Iceweasel.
+    - Do not propose to make permanent NoScript exceptions.
+      In Tails, every such thing is temporary, so better only display the menu
+      entry that's about temporarily allowing something.
+    - Clearer warning when deleting persistent volume (thanks to Andres Gomez
+      Ramirez <andres.gomez@cern.ch> for the patch).
+    - Make wording in Tails Installer more consistent.
+
+  [ WinterFairy ]
+  * Use IBus instead of SCIM (Closes: #5624, #6206).
+    It makes it possible to input passwords in pinentry for at least Japanese,
+    Chinese and Korean languages.
+  * Add an import-translation script.
+    This automates the importation process of completed translations
+    from Transifex.
+  * Always list optimal keyboard layout in the greeter (Closes: #5741).
+  * Fix on-the-fly translation of the greeter in various languages
+    (Closes: #5469).
+
+  [ Kytv]
+  * Update I2P to 0.9.8.1 (Closes: #6080, #5889).
+  * Improve I2P configuration:
+    - Disable IPv6 support in a nicer way.
+    - Disable i2cp (allows java clients to communicate from outside the JVM). If
+      this is unset an exception for port 7654 would need to be added to ferm.
+    - Disable "in-network" updates (this is also done in the regular I2P
+      packages).
+    - Disable the outproxies. Access to the Internet is already routed through
+      Tor so these are unnecessary. If end-users have a good reason to go
+      through one of the I2P outproxies they can turn them back on.
+  * Add a couple of default I2P IRC channels to Pidgin.
+  * Allow access to the local 'eepsite' through FoxyProxy.
+  * Add firewall exceptions for the standard I2P ports.
+
+ -- Tails developers <tails@boum.org>  Sat, 30 Nov 2013 16:47:18 +0100
+
+tails (0.21) unstable; urgency=low
+
+  * Security fixes
+    - Don't grant access to the Tor control port for the desktop user
+      (amnesia). Else, an attacker able to run arbitrary code as this user
+      could obtain the public IP with a get_info command.
+      · Vidalia is now run as a dedicated user.
+      · Remove the amnesia user from the debian-tor group.
+      · Remove the Vidalia launcher in the Applications menu.
+        The Vidalia instance it starts is useless, since it can't connect
+        to the Tor control port.
+    - Don't allow the desktop user to directly change persistence settings.
+      Else, an attacker able to run arbitrary code as this user could
+      leverage this feature to gain persistent root access, as long as
+      persistence is enabled.
+      · Fully rework the persistent filesystem and files ownership
+        and permissions.
+      · Run the Persistent Volume Assistant as a dedicated user, that is
+        granted the relevant udisks and filesystem -level credentials.
+      · At persistence activation time, don't trust existing persistence
+        configuration files, migrate to the new ownership and permissions,
+        migrate every known-safe existing settings and backup what's left.
+        Warn the user when not all persistence settings could be migrated.
+      · Persistent Volume Assistant uses the new ownership and permissions
+        scheme when initializing a new persistent volume, and refuses to
+        read persistence.conf if it, or the parent directory, hasn't the
+        expected permissions.
+      · Make boot medium 'system internal' for udisks with bilibop.
+        Once Tails is based on Wheezy, this will further complete the
+        protection (see #6172 for details).
+    - Update Iceweasel to 17.0.10esr-0+tails2~bpo60+1.
+    - Update Torbutton to 1.5.2-2, including a patch cherry-picked from
+      upstream to make window resizing closer to what the design says.
+
+  * Major new features
+    - Add a persistence preset for printing settings (Closes: #5686).
+      Reload CUPS configuration after persistence activation.
+    - Support SD card connected through a SDIO host adapter (Closes: #6324).
+      · Rebrand Tails USB installer to Tails installer.
+      · Display devices brand, model and size in the Installer
+        (Closes: #6292).
+      · Ask for confirmation before installing Tails onto a device
+        (Closes: #6293).
+      · Add support for SDIO and MMC block devices to the Tails Installer
+        (Closes: #5744) and the Persistent Volume Assistant (Closes: #6325).
+      · Arm the udev watchdog when booted from SD (plugged in SDIO) too
+        (Closes: #6327).
+
+  * Minor improvements
+    - Provide a consistent path to the persistent volume mountpoint
+      (Closes: #5854).
+    - Add a KeePassX launcher to the top GNOME panel (Closes: #6290).
+    - Rework bug reporting workflow: point the desktop launcher to
+      the troubleshooting page.
+    - Make /home world-readable at build time, regardless of the Git
+      working copy permissions. This makes the build process more robust
+      against strict umasks.
+    - Add signing capabilities to the tails-build script (Closes: #6267).
+      This is in turn used to sign ISO images built by our Jenkins setup
+      (Closes: #6193).
+    - Simplify the ikiwiki setup and make more pages translatable.
+    - Exclude the version string in GnuPG's ASCII armored output.
+    - Prefer stronger ciphers (AES256,AES192,AES,CAST5) when encrypting
+      data with GnuPG.
+    - Use the same custom Startpage search URL than the TBB.
+      This apparently disables the new broken "family" filter.
+    - Update AdBlock Plus patterns.
+    - Install Linux from Debian testing.
+      (That is, the same version that was shipped in 0.20.1.)
+
+  * Test suite
+    - Look for "/tmp/.X11-unix/X${1#:}" too when detecting displays in use.
+    - Adapt tests to match the Control Port access security fix:
+      · Take into account that the amnesia user isn't part of the debian-tor
+        group anymore.
+      · Run as root the checks to see if a process is running: this
+        is required to see other users' processes.
+
+ -- Tails developers <tails@boum.org>  Sat, 26 Oct 2013 23:42:46 +0200
+
+tails (0.20.1) unstable; urgency=low
+
+  * Major new features
+  - Install Tor 0.2.4.17-rc-1~d60.squeeze+1 from the Tor project's repository.
+  - Install Iceweasel 17.0.9esr with Torbrowser patches.
+  - Install Linux kernel 3.10-3 (version 3.10.11-1) from sid.
+
+  * Bugfixes
+  - Remount persistence devices read-only at shutdown/reboot time
+    (Closes: #6228).
+  - Greeter: display a warning icon on admin password mismatch and on
+    persistence unlocking failure. Thanks to Andres Gomez Ramirez
+    <andres.gomez@cern.ch> for the fix!
+  - Don't torsocksify Pidgin.
+    Instead we disable Pidgin's GNOME integration to get the "Global proxy
+    configuration", which we set to use Tor. This fixes the I2P IRC account.
+  - Additional software: fix typo in notification.
+  - Allow installing "Priority: standard" packages that we do not install
+    by default: remove them late in the build process instead of assigning
+    them a -1 APT pinning level.
+
+  * Minor improvements
+  - Update AdBlock Plus patterns.
+  - Use more unique ISO file name when building from Jenkins.
+  - Additional software: point to the system log on upgrade failure.
+  - Set SOCKS5_USER and SOCKS5_PASSWORD in the connect-socks wrapper (used
+    by Git). Else, Tor 0.2.4's IsolateSOCKSAuth and connect-proxy
+    sometimes play together in some way that makes connect-proxy ask for
+    a password to connect to the SocksPort. SOCKS5_USER and
+    SOCKS5_PASSWORD are passed through unchanged if they were manually set
+    by the user already.
+  - Use our custom connect-socks wrapper for SSH. Else, Tor 0.2.4's
+    IsolateSOCKSAuth and connect-proxy sometimes play together in some way
+    that makes connect-proxy ask for a password to connect to the
+    SocksPort. Note that connect-socks uses the default SocksPort too, so
+    no change here wrt. our connection isolation design.
+
+  * Localization
+  - Import new translations from Transifex.
+
+  * Test suite
+  - Fix old ISO checking for consistent error reporting.
+  - Remove custom persistence test from manual test suite.
+    It was removed for the GUI in t-p-s 0.33.
+
+ -- Tails developers <tails@boum.org>  Sun, 15 Sep 2013 15:49:36 +0200
+
+tails (0.20) unstable; urgency=low
+
+  * Major new features
+  - Install Linux kernel 3.10.3-1 from Debian unstable.
+  - Iceweasel 17.0.8esr + Torbrowser patches.
+
+  * Bugfixes
+  - Prevent Iceweasel from displaying a warning when leaving HTTPS web sites.
+  - Make Iceweasel use the correct, localized search engine.
+  - Fix Git access to https:// repositories.
+
+  * Minor improvements
+  - Install Dasher, a predictive text entry tool.
+  - Add a wrapper around TrueCrypt which displays a warning about it soon
+    being deprecated in Tails.
+  - Remove Pidgin libraries for all protocols but IRC and Jabber/XMPP.
+    Many of the other protocols Pidgin support are broken in Tails and
+    haven't got any security auditting.
+  - Disable the pre-defined Pidgin accounts so they do not auto-connect
+    on Pidgin start.
+  - Include information about Alsa in WhisperBack reports.
+  - Explicitly restrict access to ptrace. While this setting was enabled
+    by default in Debian's Linux 3.9.6-1, it will later disabled in 3.9.7-1.
+    It's unclear what will happen next, so let's explicitly enable it ourselves.
+  - Do not display dialog when a message is sent in Claws Mail.
+  - Sync iceweasel preferences with the Torbrowser's.
+
+  * Localization
+  - Many translation updates all over the place.
+  - Merge all Tails-related POT files into one, and make use of intltoolize
+    for better integration with Transifex.
+
+ -- Tails developers <tails@boum.org>  Tue, 30 Jul 2013 14:19:57 +0200
 
 tails (0.19) unstable; urgency=low
 

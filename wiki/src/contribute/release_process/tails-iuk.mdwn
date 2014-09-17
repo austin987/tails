@@ -2,61 +2,106 @@
 
 [[!toc levels=1]]
 
+If running Wheezy or older, you will have to do the upstream part of
+the work in a Jessie chroot (e.g. with pbuilder).
+
+Install build and test dependencies
+===================================
+
+Install build-dependencies listed in `debian/control`:
+
+    mk-build-deps -i -r
+
+Install build-dependencies from Debian:
+
+    libdist-zilla-perl libdist-zilla-plugins-cjm-perl \
+    libdist-zilla-plugin-changelogfromgit-perl \
+    libdist-zilla-plugin-installguide-perl \
+    libdist-zilla-plugin-test-perl-critic-perl \
+    libdist-zilla-plugin-test-notabs-perl \
+    libdist-zilla-plugin-git-perl \
+    liblocale-msgfmt-perl libmoosex-has-sugar-perl \
+    dh-make-perl
+
+If running something older than Jessie:
+
+    apt-get install libtest-bdd-cucumber/wheezy-backports
+
+Install build-dependencies that are not in Debian yet:
+
+    DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::LocaleMsgfmt
+
+Update POT and PO files
+=======================
+
+    git checkout master && \
+        ( cd po && make pot && make update-po ) && \
+        git commit po -m 'Update POT and PO files.'
+
 Make an upstream release
 ========================
 
-Update version number in `bin/tails-create-iuk`.
+Enable new translations in `po/PACKAGE` and commit.
 
-Update `Changes`.
+Export new upstream version number:
 
-Build an upstream tarball:
+    export VERSION=XXX
 
-    dzil build
+Update version number in `bin/tails-create-iuk`, commit all files that
+need to be.
 
-Tag the release:
+    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-create-iuk && \
+       perl -pi -E \
+          "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," \
+          bin/tails-create-iuk && \
+       git commit bin/tails-create-iuk -m "tails-iuk $VERSION"
 
-    git tag -s $VERSION
+Run the upstream test suite (point `PERL5LIB` to a checkout of the
+relevant tag of Tails' perl5lib):
 
-Move the tarball out of the build repository:
+    # get an authentication token, needed by the test suite
+    sudo true
+    # run the tests in closer to real conditions
+    umask 077
+    
+    # Run the rest of the test suite
+    RELEASE_TESTING=1 LC_ALL=C PERL5LIB=/home/user/tails/perl5lib/lib dzil test
 
-    mv *.tar.gz ..
+Build an upstream tarball, tag the release, move the tarball out of
+the build repository and cleanup:
 
-Delete the build directory:
-
-    rm -r Tails-IUK-*
+    dzil build && \
+       git tag -s $VERSION -m "tails-iuk $VERSION" && \
+       mv Tails-IUK*.tar.gz .. && git clean -fdx
 
 Update the Debian package
 =========================
 
-Checkout the branch with Debian package specifics:
+Checkout the branch with Debian package specifics and import the new
+upstream tarball, update `debian/changelog`:
 
-    git checkout debian
-
-Import the new upstream tarball:
-
-    git-import-orig --upstream-vcs-tag=$VERSION ../Tails-IUK-$VERSION.tar.gz
-
-Update `debian/changelog`, starting with `git-dch` if the last step
-did not do it:
-
-    dch
+    git checkout debian && \
+       git-import-orig --upstream-vcs-tag=$VERSION \
+          ../Tails-IUK-$VERSION.tar.gz && \
+       git-dch --auto && \
+       dch -e
 
 (Do not forget to set the appropriate release.)
 
+Update the packaging (e.g. look at changes in `dist.ini`),
+and then update `debian/changelog` again if needed.
+
 Commit `debian/changelog`:
 
-        git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+    git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
-Build a Debian package (use a Squeeze chroot with `squeeze-backports`
-enabled):
+Build a Debian package (use a Wheezy chroot with the right version of
+`tails-perl5lib` installed), add a signed tag to the repository and
+push the changes:
 
-    git-buildpackage
-
-If everything is fine, add a signed tag to the repository and push the
-changes:
-
-    git-buildpackage --git-tag-only --git-sign-tags
-    git push && git push --tags
+    git-buildpackage && \
+       git-buildpackage --git-tag-only --git-sign-tags && \
+       git push && git push --tags
 
 Add the Debian package to Tails
 ===============================

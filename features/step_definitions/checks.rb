@@ -53,7 +53,7 @@ Then /^the live user owns its home dir and it has normal permissions$/ do
   perms = @vm.execute("stat -c %a #{home}").stdout.chomp
   assert(owner == "#{$live_user}:#{$live_user}",
          "The live user's home has unexpected ownership '#{owner}'")
-  assert(perms == "755",
+  assert(perms == "700",
          "The live user's home has unexpected permissions '#{perms}'")
 end
 
@@ -82,7 +82,8 @@ Then /^no unexpected services are listening for network connections$/ do
     proc = splitted[proc_index].split("/")[1]
     # Services listening on loopback is not a threat
     if /127(\.[[:digit:]]{1,3}){3}/.match(laddr).nil?
-      if $services_expected_on_all_ifaces.include? [proc, laddr, lport]
+      if $services_expected_on_all_ifaces.include? [proc, laddr, lport] or
+         $services_expected_on_all_ifaces.include? [proc, laddr, "*"]
         puts "Service '#{proc}' is listening on #{laddr}:#{lport} " +
              "but has an exception"
       else
@@ -92,10 +93,10 @@ Then /^no unexpected services are listening for network connections$/ do
   end
 end
 
-When /^Tails has booted a 686-pae kernel$/ do
+When /^Tails has booted a 64-bit kernel$/ do
   next if @skip_steps_while_restoring_background
-  assert(@vm.execute("uname -r | grep -qs '686-pae$'").success?,
-         "Tails has not booted a 686-pae kernel.")
+  assert(@vm.execute("uname -r | grep -qs 'amd64$'").success?,
+         "Tails has not booted a 64-bit kernel.")
 end
 
 Then /^the VirtualBox guest modules are available$/ do

@@ -9,17 +9,14 @@ Feature:
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And I have a network connection
-    And Tor has built a circuit
-    And Iceweasel has autostarted and is not loading a web page
-    And the time has synced
-    And I have closed all annoying notifications
+    And Tor is ready
+    And all notifications have disappeared
+    And available upgrades have been checked
     And all Internet traffic has only flowed through Tor
     And I save the state so the background can be restored next scenario
 
   Scenario: Detecting IPv4 TCP leaks from the Unsafe Browser
-    When I start the Unsafe Browser
-    And the Unsafe Browser has started
+    When I successfully start the Unsafe Browser
     And I open the address "https://check.torproject.org" in the Unsafe Browser
     And I see "UnsafeBrowserTorCheckFail.png" after at most 60 seconds
     Then the firewall leak detector has detected IPv4 TCP leaks

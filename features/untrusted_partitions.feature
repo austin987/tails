@@ -3,6 +3,7 @@ Feature: Untrusted partitions
   As a Tails user
   I don't want to touch other media than the one Tails runs from
 
+  @keep_volumes
   Scenario: Tails can boot from live systems stored on hard drives
     Given a computer
     And I create a 2 GiB disk named "live_hd"

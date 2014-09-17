@@ -1,27 +1,23 @@
 When /^I see and accept the Unsafe Browser start verification$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserStartVerification.png", 30)
-  @screen.type("l", Sikuli::KEY_ALT)
+  @screen.type("l", Sikuli::KeyModifier.ALT)
 end
 
-Then /^I see and close the Unsafe Browser start notification$/ do
+Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("UnsafeBrowserStartNotification.png", 30)
+  @screen.wait("UnsafeBrowserStartNotification.png", 30)
+  @screen.waitVanish("UnsafeBrowserStartNotification.png", 10)
 end
 
 Then /^the Unsafe Browser has started$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("UnsafeBrowserWindow.png", 360)
+  @screen.wait("UnsafeBrowserHomepage.png", 360)
 end
 
 Then /^the Unsafe Browser has a red theme$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserRedTheme.png", 10)
-end
-
-Then /^the Unsafe Browser has Wikipedia pre-selected in the search bar$/ do
-  next if @skip_steps_while_restoring_background
-  @screen.wait("UnsafeBrowserSearchBar.png", 10)
 end
 
 Then /^the Unsafe Browser shows a warning as its start page$/ do
@@ -31,15 +27,17 @@ end
 
 When /^I start the Unsafe Browser$/ do
   next if @skip_steps_while_restoring_background
-  unsafe_browser_cmd = nil
-  @vm.execute("cat /usr/share/applications/unsafe-browser.desktop").stdout.chomp.each_line { |line|
-    next if ! line.start_with? "Exec="
-    unsafe_browser_cmd = line[/^Exec=(.*)/,1]
-  }
-  assert(!unsafe_browser_cmd.nil?, "failed to extract the unsafe browser command")
-  step "I run \"#{unsafe_browser_cmd}\""
+  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+  @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
+  @screen.wait_and_click("GnomeApplicationsUnsafeBrowser.png", 20)
+end
+
+When /^I successfully start the Unsafe Browser$/ do
+  next if @skip_steps_while_restoring_background
+  step "I start the Unsafe Browser"
   step "I see and accept the Unsafe Browser start verification"
-  step "I see and close the Unsafe Browser start notification"
+  step "I see the Unsafe Browser start notification and wait for it to close"
+  step "the Unsafe Browser has started"
 end
 
 Then /^I see a warning about another instance already running$/ do
@@ -49,13 +47,13 @@ end
 
 When /^I close the Unsafe Browser$/ do
   next if @skip_steps_while_restoring_background
-  @screen.type("q", Sikuli::KEY_CTRL)
+  @screen.type("q", Sikuli::KeyModifier.CTRL)
 end
 
 Then /^I see the Unsafe Browser stop notification$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('UnsafeBrowserStopNotification.png', 20)
-  @screen.waitVanish('UnsafeBrowserStopNotification.png', 20)
+  @screen.waitVanish('UnsafeBrowserStopNotification.png', 10)
 end
 
 Then /^I can start the Unsafe Browser again$/ do
@@ -66,15 +64,15 @@ end
 When /^I open a new tab in the Unsafe Browser$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
-  @screen.type("t", Sikuli::KEY_CTRL)
+  @screen.type("t", Sikuli::KeyModifier.CTRL)
 end
 
 When /^I open the address "([^"]*)" in the Unsafe Browser$/ do |address|
   next if @skip_steps_while_restoring_background
   step "I open a new tab in the Unsafe Browser"
-  @screen.type("l", Sikuli::KEY_CTRL)
+  @screen.type("l", Sikuli::KeyModifier.CTRL)
   sleep 0.5
-  @screen.type(address + Sikuli::KEY_RETURN)
+  @screen.type(address + Sikuli::Key.ENTER)
 end
 
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
@@ -83,13 +81,13 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   sleep 0.5
   # First we open the proxy settings page to prepare it with the
   # correct open tabs for the loop below.
-  @screen.type("e", Sikuli::KEY_ALT)
+  @screen.type("e", Sikuli::KeyModifier.ALT)
   @screen.type("n")
   @screen.wait('UnsafeBrowserPreferences.png', 10)
   @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
   @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
   sleep 0.5
-  @screen.type(Sikuli::KEY_ESC)
+  @screen.type(Sikuli::Key.ESC)
 #  @screen.waitVanish('UnsafeBrowserPreferences.png', 10)
   sleep 0.5
 
@@ -103,7 +101,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   proxies = [[socks_proxy, 9050],
              [socks_proxy, 9061],
              [socks_proxy, 9062],
-             [socks_proxy, 9063],
+             [socks_proxy, 9151],
              [http_proxy,  8118],
              [no_proxy,       0]]
 
@@ -112,24 +110,24 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     proxy_port = proxy[1]
 
     # Open proxy settings and select manual proxy configuration
-    @screen.type("e", Sikuli::KEY_ALT)
+    @screen.type("e", Sikuli::KeyModifier.ALT)
     @screen.type("n")
     @screen.wait('UnsafeBrowserPreferences.png', 10)
-    @screen.type("e", Sikuli::KEY_ALT)
+    @screen.type("e", Sikuli::KeyModifier.ALT)
     @screen.wait('UnsafeBrowserProxySettings.png', 10)
-    @screen.type("m", Sikuli::KEY_ALT)
+    @screen.type("m", Sikuli::KeyModifier.ALT)
 
     # Configure the proxy
-    @screen.type(proxy_type, Sikuli::KEY_ALT)  # Select correct proxy type
-    @screen.type("127.0.0.1\t#{proxy_port}") if proxy_type != no_proxy
+    @screen.type(proxy_type, Sikuli::KeyModifier.ALT)  # Select correct proxy type
+    @screen.type("127.0.0.1" + Sikuli::Key.TAB + "#{proxy_port}") if proxy_type != no_proxy
     # For http proxy we set "Use this proxy server for all protocols"
-    @screen.type("s", Sikuli::KEY_ALT) if proxy_type == http_proxy
+    @screen.type("s", Sikuli::KeyModifier.ALT) if proxy_type == http_proxy
 
     # Close settings
-    @screen.type(Sikuli::KEY_RETURN)
+    @screen.type(Sikuli::Key.ENTER)
 #    @screen.waitVanish('UnsafeBrowserProxySettings.png', 10)
     sleep 0.5
-    @screen.type(Sikuli::KEY_ESC)
+    @screen.type(Sikuli::Key.ESC)
 #    @screen.waitVanish('UnsafeBrowserPreferences.png', 10)
     sleep 0.5
 

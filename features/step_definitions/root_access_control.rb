@@ -24,12 +24,19 @@ When /^running a command as root with pkexec requires PolicyKit administrator pr
          "Expected 'auth_admin' for 'active':\n#{action_details}")
 end
 
+When /^I start GNOME Terminal$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+  @screen.wait_and_click("GnomeApplicationsAccessories.png", 10)
+  @screen.wait_and_click("GnomeApplicationsTerminal.png", 20)
+end
+
 Then /^I should be able to run a command as root with pkexec$/ do
   next if @skip_steps_while_restoring_background
-  step 'I run "gnome-terminal"'
+  step 'I start GNOME Terminal'
   @screen.wait_and_click('GnomeTerminalWindow.png', 20)
-  @screen.type('pkexec touch /root/pkexec-test' + Sikuli::KEY_RETURN)
-  step 'I enter the sudo password in the PolicyKit prompt'
+  @screen.type('pkexec touch /root/pkexec-test' + Sikuli::Key.ENTER)
+  step 'I enter the sudo password in the pkexec prompt'
   try_for(10, :msg => 'The /root/pkexec-test file was not created.') {
     @vm.execute('ls /root/pkexec-test').success?
   }
@@ -37,13 +44,13 @@ end
 
 Then /^I should not be able to run a command as root with pkexec and the standard passwords$/ do
   next if @skip_steps_while_restoring_background
-  step 'I run "gnome-terminal"'
+  step 'I start GNOME Terminal'
   @screen.wait_and_click('GnomeTerminalWindow.png', 20)
-  @screen.type('pkexec touch /root/pkexec-test' + Sikuli::KEY_RETURN)
+  @screen.type('pkexec touch /root/pkexec-test' + Sikuli::Key.ENTER)
   ['', 'live'].each do |password|
-    step "I enter the \"#{password}\" password in the PolicyKit prompt"
+    step "I enter the \"#{password}\" password in the pkexec prompt"
     @screen.wait('PolicyKitAuthFailure.png', 20)
   end
-  step "I enter the \"amnesia\" password in the PolicyKit prompt"
+  step "I enter the \"amnesia\" password in the pkexec prompt"
   @screen.wait('PolicyKitAuthCompleteFailure.png', 20)
 end
