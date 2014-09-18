@@ -36,11 +36,9 @@ Then /^the I2P firewall rules are (enabled|disabled)$/ do |mode|
   accept_rules = @vm.execute("iptables -L -n -v | grep -E '^\s+[0-9]+\s+[0-9]+\s+ACCEPT.*owner UID match #{i2p_uid}$'").stdout
   accept_rules_count = accept_rules.lines.count
   if mode == 'enabled'
-    assert(accept_rules_count == 13,
-           "Unexpected I2P ACCEPT rules count: #{accept_rules_count} (expected 13)")
+    assert_equal(accept_rules_count, 13)
   elsif mode == 'disabled'
-    assert(accept_rules_count == 0,
-           "Unexpected I2P ACCEPT rules count: #{accept_rules_count} (expected 0)")
+    assert_equal(accept_rules_count, 0)
   else
     raise "Unsupported mode passed: '#{mode}'"
   end

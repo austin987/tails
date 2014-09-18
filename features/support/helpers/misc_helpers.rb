@@ -77,7 +77,7 @@ def cmd_helper(cmd)
     out = p.readlines.join("\n")
     p.close
     ret = $?
-    assert(ret == 0, "Command failed (returned #{ret}): #{cmd}:\n#{out}")
+    assert_equal(ret, 0, "Command failed (returned #{ret}): #{cmd}:\n#{out}")
     return out
   end
 end

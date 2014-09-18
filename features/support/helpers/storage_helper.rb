@@ -128,14 +128,14 @@ class VMStorage
 
   # For type, see label-type for mklabel in parted(8)
   def disk_mklabel(name, type)
-    assert disk_format(name) == "raw"
+    assert_equal(disk_format(name), "raw")
     path = disk_path(name)
     cmd_helper("/sbin/parted -s '#{path}' mklabel #{type}")
   end
 
   # For fstype, see fs-type for mkfs in parted(8)
   def disk_mkpartfs(name, fstype)
-    assert disk_format(name) == "raw"
+    assert(disk_format(name), "raw")
     path = disk_path(name)
     cmd_helper("/sbin/parted -s '#{path}' mkpartfs primary '#{fstype}' 0% 100%")
   end
