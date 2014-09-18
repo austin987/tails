@@ -47,6 +47,24 @@ command line.
    </span>
    to open a terminal with administration rights.
 
+1. **If your *TrueCrypt* volume is in a file container** (and not within a
+partition), you first need to attach it to a device.
+
+   To find the name of an available device, execute the following
+   command:
+
+      losetup -f
+
+   Then to attach your file container to that device, execute the following
+   command. Replace `[loop]` by the name of the device returned by the
+   previous command and `[file]` by the path to your *TrueCrypt* file container:
+
+      losetup [device] [file]
+
+   Here is an example of the command to execute, yours is probably different:
+
+      losetup /dev/loop1 /home/amnesia/Persistent/container
+
 1. **If you want to open a standard *TrueCrypt* volume**, execute the
    following command, replacing `[device]` with the name of the device
    found in the previous step, and `[name]` with a mapping name of
