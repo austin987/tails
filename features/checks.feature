@@ -11,6 +11,10 @@ Feature: Various checks
     And all notifications have disappeared
     And I save the state so the background can be restored next scenario
 
+  Scenario: AppArmor is enabled and has enforced profiles
+    Then AppArmor is enabled
+    And some AppArmor profiles are enforced
+
   Scenario: VirtualBox guest modules are available
     When Tails has booted a 64-bit kernel
     Then the VirtualBox guest modules are available

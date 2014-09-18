@@ -136,3 +136,12 @@ Then /^MAT can clean some sample PDF file$/ do
            "MAT failed to clean '#{pdf_on_host}'")
   end
 end
+
+Then /^AppArmor is enabled$/ do
+  assert(@vm.execute("aa-status").success?, "AppArmor is not enabled")
+end
+
+Then /^some AppArmor profiles are enforced$/ do
+  assert(@vm.execute("aa-status --enforced").stdout.chomp.to_i > 0,
+         "No AppArmor profile is enforced")
+end
