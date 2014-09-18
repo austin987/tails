@@ -1,9 +1,9 @@
 require 'date'
 require 'timeout'
+require 'test/unit'
 
-def assert(b, msg = "Assertion failed!")
-  raise RuntimeError, msg, caller if ! b
-end
+# Make all the assert_* methods easily accessible in any context.
+include Test::Unit::Assertions
 
 # Call block (ignoring any exceptions it may throw) repeatedly with one
 # second breaks until it returns true, or until `t` seconds have
