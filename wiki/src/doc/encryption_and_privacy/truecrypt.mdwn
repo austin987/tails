@@ -91,17 +91,18 @@ partition), you first need to attach it to a device.
    the volume. Replace `[name]` with the name chosen above.
 
        mkdir /media/[name]
-       mount /dev/mapper/[name] /media/[name]
+
+   a. If your volume contains a **NTFS or FAT file system** (default):
+
+          mount -o uid=1000 /dev/mapper/[name] /media/[name]
+
+   a. Else, if your volume contains an **Ext2, Ext3, or Ext4 file system**:
+
+          mount /dev/mapper/[name] /media/[name]
 
 1. If you don't see any error message, the volume is now available from the
    <span class="guimenu">Places</span> menu.
    
-   Depending on the kind of filesystem being used, you might need
-   administration rights to modify the content of this directory.
-   A better solution is generally to adjust the `mount` command above:
-   for instance, if this is a `vfat` filesystem, then you may want to
-   use the `uid=` mount option; see the `mount` manpage for details.
-
 1. To ensure that your data was really written on your *TrueCrypt*
    volume, once you don't need it during this Tails session, execute
    the following commands. Replace `[name]`with the mapping name
