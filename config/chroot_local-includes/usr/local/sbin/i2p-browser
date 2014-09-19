@@ -17,8 +17,12 @@ CONF_DIR=/var/lib/i2p-browser
 COW=${CONF_DIR}/cow
 CHROOT=${CONF_DIR}/chroot
 BROWSER_USER=i2pbrowser
-
+TBB_PREFS="/etc/tor-browser/profile/preferences"
 START_PAGE="http://127.0.0.1:7657"
+
+ADBLOCK_EXT="/usr/share/xul-ext/adblock-plus"
+ADBLOCK_UUID="{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}"
+NOSCRIPT="/usr/local/lib/tor-browser/extensions/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
 
 if [ -e /var/lib/gdm3/tails.camouflage ]; then
     CAMOUFLAGE=yes
@@ -102,27 +106,30 @@ set_chroot_browser_name () {
     NAME="${1}"
     LONG=$(echo ${LANG} | grep -o "^[a-zA-Z_]*")
     SHORT=${LONG%%_*}
-    EXT_DIR=${CHROOT}/usr/lib/iceweasel/browser/extensions
+    EXT_DIR=${CHROOT}/usr/local/lib/tor-browser/extensions
     BRANDING=branding/brand.dtd
-    if [ -e "${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi" ]; then
-        PACK="${EXT_DIR}/langpack-${LONG}@iceweasel.mozilla.org.xpi"
+    if [ -e "${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi" ]; then
+        PACK="${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi"
         TOP=browser/chrome
         REST=${LONG}/locale
-    elif [ -e "${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi" ]; then
-        PACK="${EXT_DIR}/langpack-${SHORT}@iceweasel.mozilla.org.xpi"
+        OLD_NAME="Mozilla Firefox"
+    elif [ -e "${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi" ]; then
+        PACK="${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi"
         TOP=browser/chrome
         REST=${SHORT}/locale
+        OLD_NAME="Mozilla Firefox"
     else
-        PACK=${CHROOT}/usr/share/iceweasel/browser/chrome/en-US.jar
-        TOP=locale
-        REST=
+        PACK="${CHROOT}/usr/local/lib/tor-browser/Browser/browser/omni.ja"
+        TOP=chrome
+        REST=en-US/locale
+        OLD_NAME="Tor Browser"
     fi
 
     TMP=$(mktemp -d)
     # Non-zero exit code due to non-standard ZIP archive.
     # The following steps will fail soon if the extraction failed anyway.
     unzip -d "${TMP}" "${PACK}" || true
-    sed -i "s/Iceweasel/${NAME}/" "${TMP}"/"${TOP}"/"${REST}"/"${BRANDING}"
+    sed -i "s/${OLD_NAME}/${NAME}/" "${TMP}"/"${TOP}"/"${REST}"/"${BRANDING}"
     rm "${PACK}"
     (cd $TMP ; 7z a -tzip "${PACK}" .)
     chmod a+r "${PACK}"
@@ -140,25 +147,38 @@ configure_chroot () {
             | awk '/^ii/{print $2}' | xargs chroot ${CHROOT} dpkg --remove
 
     # Create a fresh Iceweasel profile for the i2pbrowser user
-    cp -a ${CHROOT}/etc/skel/.mozilla/ ${CHROOT}/home/i2pbrowser/
-    chown -R i2pbrowser:i2pbrowser ${CHROOT}/home/i2pbrowser/.mozilla/
-    BROWSER_PROFILE=${CHROOT}/home/i2pbrowser/.mozilla/firefox/default
+    BROWSER_PROFILE="${CHROOT}/home/i2pbrowser/.tor-browser/profile.default"
+    BROWSER_EXT="${BROWSER_PROFILE}/extensions"
+    mkdir -p "${BROWSER_EXT}"
+    cp -Pr /etc/tor-browser/profile/extensions/langpack-*.xpi \
+           ${NOSCRIPT} "${BROWSER_EXT}"
+    ln -s "${ADBLOCK_EXT}" "${BROWSER_EXT}/${ADBLOCK_UUID}"
 
-    # Remove any existing FoxyProxy or Torbutton configs
-    sed -i '/extensions\.\(foxyproxy\|torbutton\)/d' \
-        ${BROWSER_PROFILE}/*.js
-    # Remove any existing proxies in the chroot
-    sed -r -i '/^(user_|)pref\("network\.proxy\..*",/d' \
-        ${BROWSER_PROFILE}/*.js
-    # Prevent File -> Print or CTRL+P from causing the browser to hang for several minutes
-    # while trying to communicate with CUPS, since access to port 631 isn't allowed through.
+    BROWSER_PREF_DIR="${BROWSER_PROFILE}/preferences"
+    BROWSER_PREFS="${BROWSER_PREF_DIR}/prefs.js"
+    mkdir -p "${BROWSER_PREF_DIR}"
+    rsync -a /etc/tor-browser/profile/adblockplus ${BROWSER_PROFILE}
+
+    # Selectively copy the TBB prefs we want
+    sed '/\(adblock\|security\|update\|download\|spell\|noscript\)/!d' $TBB_PREFS/zzz_tails.js > \
+                    ${BROWSER_PREF_DIR}/zz_tails.js
+    sed '/\(capability\|noscript\)/!d' ${TBB_PREFS}/extension-overrides.js > \
+                    ${BROWSER_PREF_DIR}/extension-overrides.js
+
+    # Localization
+    cat /var/lib/tails-user-session/browser-locale.js >> "${BROWSER_PREFS}"
+
+
+    # Prevent File -> Print or CTRL+P from causing the browser to hang for
+    # several minutes while trying to communicate with CUPS, since access to
+    # port 631 isn't allowed through.
     echo 'user_pref("print.postscript.cups.enabled", false);' >> \
-        ${BROWSER_PROFILE}/user.js
+        ${BROWSER_PREFS}
     # Hide "Get Addons" in Add-ons manager
     echo 'user_pref("extensions.getAddons.showPane", false);' >> \
-        ${BROWSER_PROFILE}/user.js
+        ${BROWSER_PREFS}
     # add the I2P proxy to all protocols
-    cat >> ${BROWSER_PROFILE}/user.js << EOF
+    cat > "${BROWSER_PREF_DIR}/i2p.js" << EOF
 user_pref("network.proxy.http", "127.0.0.1");
 user_pref("network.proxy.http_port", 4444);
 user_pref("network.proxy.ftp", "127.0.0.1");
@@ -168,10 +188,12 @@ user_pref("network.proxy.ssl_port", 4444);
 user_pref("network.proxy.share_proxy_settings", true);
 user_pref("network.proxy.no_proxies_on", "127.0.0.1");
 EOF
-    # Hide options from the <strike>Firefox</strike> I2P Browser.
+    # Hide options in the I2P Browser.
     # It would be good to implement the ability to persist the browser profile in the
-    # future. At that point, the Bookmark functionality will be restored.
-    cat > ${BROWSER_PROFILE}/chrome/userChrome.css << EOF
+    # future. At that point, the Bookmark functionality could be restored.
+    BROWSER_CHROME="${BROWSER_PROFILE}/chrome/userChrome.css"
+    mkdir -p "$(dirname "${BROWSER_CHROME}")"
+    cat > ${BROWSER_CHROME} << EOF
 /* Required, do not remove */
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -260,11 +282,11 @@ menuitem[command="Browser:SendLink"],
 /* Now the actual hiding */
 {display: none !important}
 EOF
-    rm -rf ${BROWSER_PROFILE}/extensions
+    rm -rf ${BROWSER_EXT}/branding@amnesia.boum.org
 
     # Change the theme when not using Windows camouflage
     if [ -z "${CAMOUFLAGE}" ]; then
-        cat >> ${BROWSER_PROFILE}/user.js <<EOF
+        cat >> ${BROWSER_PREFS} <<EOF
 user_pref("lightweightThemes.isThemeSelected", true);
 user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"I2P Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#66ABEB\",\"updateDate\":0,\"installDate\":0}]");
 EOF
@@ -279,12 +301,14 @@ EOF
 
     # Set start page to something that explains what's going on
     echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
-        ${BROWSER_PROFILE}/user.js
+        ${BROWSER_PREFS}
 
     ## Remove all bookmarks
-    rm -f ${CHROOT}/etc/iceweasel/profile/bookmarks.html
+    rm -f ${CHROOT}/etc/tor-browser/default.profile/bookmarks.html
     rm -f ${BROWSER_PROFILE}/bookmarks.html
     rm -f ${BROWSER_PROFILE}/places.sqlite
+
+   chown -R i2pbrowser:i2pbrowser "${CHROOT}/home/i2pbrowser/.tor-browser"
 }
 
 run_browser_in_chroot () {
@@ -292,7 +316,7 @@ run_browser_in_chroot () {
     echo "* Starting I2P Browser"
 
     sudo -u ${SUDO_USER} xhost +SI:localuser:${BROWSER_USER} 2>/dev/null
-    chroot ${CHROOT} sudo -u ${BROWSER_USER} /usr/bin/iceweasel -DISPLAY=:0.0
+    chroot ${CHROOT} sudo -u ${BROWSER_USER} /usr/local/lib/tor-browser/Browser/firefox -DISPLAY=:0.0 -profile /home/i2pbrowser/.tor-browser/profile.default
     sudo -u ${SUDO_USER} xhost -SI:localuser:${BROWSER_USER} 2>/dev/null
 }
 
