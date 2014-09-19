@@ -40,8 +40,8 @@ TBB_EXT="${TBB_INSTALL}/extensions"
 mkdir -p "${TBB_INSTALL}" "${TBB_PROFILE}" "${TBB_EXT}"
 
 # Use the builder's caching APT proxy, if any
-if [ -e /etc/apt/apt.conf.d/00http-proxy ]; then
-    APT_PROXY=$(sed -n 's/Acquire::http::Proxy "\(.*\)";/\1/p' /etc/apt/apt.conf.d/00http-proxy)
+APT_PROXY="$(apt-config --format '%v' dump Acquire::http::Proxy)"
+if [ -n "${APT_PROXY}" ]; then
     export HTTP_PROXY="${APT_PROXY}"
     export http_proxy="${APT_PROXY}"
     export HTTPS_PROXY="${APT_PROXY}"
