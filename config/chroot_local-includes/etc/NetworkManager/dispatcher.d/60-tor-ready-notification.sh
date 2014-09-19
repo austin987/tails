@@ -34,7 +34,7 @@ done
 if pgrep -f "firefox --app.*tor-launcher-standalone"; then
    pkill -f "firefox --app.*tor-launcher-standalone"
    pref=/user/Data/Browser/profile.default/prefs.js
-   sed -i '/^user_pref("extensions.torlauncher.prompt_at_startup"/d' "${pref}"
+   sed -i '/^user_pref("extensions\.torlauncher\.prompt_at_startup"/d' "${pref}"
    echo 'user_pref("extensions.torlauncher.prompt_at_startup", false);' >> "${pref}"
 fi
 
