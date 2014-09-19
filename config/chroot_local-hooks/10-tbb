@@ -64,7 +64,7 @@ echo "${BUNDLES}" | while read expected_sha256 tarball; do
 done
 
 # We'll use the en-US bundle as our basis ...
-tar -xJf "${TMP}/${MAIN_BUNDLE}" -C "${TMP}"
+tar -xf "${TMP}/${MAIN_BUNDLE}" -C "${TMP}"
 TBB_PREP="${TMP}"/tor-browser_en-US
 
 # ... only extracting the localization addon from the other ones, which
@@ -78,7 +78,7 @@ for tarball in "${TMP}"/tor-browser-*.tar.xz; do
     xpi="tor-browser_${locale}/Data/Browser/profile.default/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
     (
         cd "${TMP}"
-        tar xJf "${tarball}" "${xpi}"
+        tar -xf "${tarball}" "${xpi}"
         mv "${xpi}" "${TBB_EXT}"
     )
 done
