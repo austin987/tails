@@ -108,7 +108,7 @@ rmdir "${TBB_PREP}"/Data/Browser/profile.default/extensions
 # desired Debian-packaged Iceweasel addons
 apt-get install --yes equivs
 FAKE_ICEWEASEL_VERSION=$(sed -n 's/^Version=\(.*\)$/\1/p' "${TBB_INSTALL}"/Browser/application.ini)+fake1
-cat > /root/iceweasel.control << EOF
+cat > "${TMP}"/iceweasel.control << EOF
 Section: web
 Priority: optional
 Homepage: https://tails.boum.org/
@@ -123,11 +123,10 @@ Description: (Fake) Iceweasel
  install a real Iceweasel.
 EOF
 (
-    cd /root
-    equivs-build /root/iceweasel.control
-    dpkg -i iceweasel_"${FAKE_ICEWEASEL_VERSION}"_all.deb
+    cd "${TMP}"
+    equivs-build "${TMP}"/iceweasel.control
+    dpkg -i "${TMP}"/iceweasel_"${FAKE_ICEWEASEL_VERSION}"_all.deb
 )
-rm /root/iceweasel*
 
 apt-get install --yes xul-ext-adblock-plus xul-ext-foxyproxy-standard xul-ext-torbutton
 
