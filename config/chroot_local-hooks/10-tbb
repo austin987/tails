@@ -54,7 +54,7 @@ echo "${BUNDLES}" | while read expected_sha256 tarball; do
     (
         cd "${TMP}"
         echo "Fetching ${TBB_DIST_URL}/${tarball} ..."
-        curl -O "${TBB_DIST_URL}/${tarball}"
+        curl --remote-name "${TBB_DIST_URL}/${tarball}"
     )
     actual_sha256="$(sha256sum "${TMP}/${tarball}" | cut -d' ' -f1)"
     if [ "${actual_sha256}" != "${expected_sha256}" ]; then
