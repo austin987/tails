@@ -27,15 +27,17 @@ end
 
 When /^I start the Unsafe Browser$/ do
   next if @skip_steps_while_restoring_background
-  unsafe_browser_cmd = nil
-  @vm.execute("cat /usr/share/applications/unsafe-browser.desktop").stdout.chomp.each_line { |line|
-    next if ! line.start_with? "Exec="
-    unsafe_browser_cmd = line[/^Exec=(.*)/,1]
-  }
-  assert(!unsafe_browser_cmd.nil?, "failed to extract the unsafe browser command")
-  step "I run \"#{unsafe_browser_cmd}\""
+  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+  @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
+  @screen.wait_and_click("GnomeApplicationsUnsafeBrowser.png", 20)
+end
+
+When /^I successfully start the Unsafe Browser$/ do
+  next if @skip_steps_while_restoring_background
+  step "I start the Unsafe Browser"
   step "I see and accept the Unsafe Browser start verification"
   step "I see the Unsafe Browser start notification and wait for it to close"
+  step "the Unsafe Browser has started"
 end
 
 Then /^I see a warning about another instance already running$/ do
