@@ -114,23 +114,20 @@ set_chroot_browser_name () {
         PACK="${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi"
         TOP=browser/chrome
         REST=${LONG}/locale
-        OLD_NAME="Mozilla Firefox"
     elif [ -e "${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi" ]; then
         PACK="${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi"
         TOP=browser/chrome
         REST=${SHORT}/locale
-        OLD_NAME="Mozilla Firefox"
     else
         PACK="${CHROOT}/usr/local/lib/tor-browser/Browser/browser/omni.ja"
         TOP=chrome
         REST=en-US/locale
-        OLD_NAME="Tor Browser"
     fi
     TMP=$(mktemp -d)
     # Non-zero exit code due to non-standard ZIP archive.
     # The following steps will fail soon if the extraction failed anyway.
     unzip -d "${TMP}" "${PACK}" || true
-    sed -i "s/${OLD_NAME}/${NAME}/" "${TMP}/${TOP}/${REST}/${BRANDING}"
+    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${NAME}\">/" "${TMP}/${TOP}/${REST}/${BRANDING}"
     rm "${PACK}"
     (cd $TMP ; 7z a -tzip "${PACK}" .)
     chmod a+r "${PACK}"
