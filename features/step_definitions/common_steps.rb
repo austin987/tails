@@ -240,21 +240,17 @@ Given /^available upgrades have been checked$/ do
   }
 end
 
-Given /^Iceweasel has started and is not loading a web page$/ do
+Given /^the Tor Browser has started and loaded the startup page$/ do
   next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
-    iceweasel_picture = "WindowsIceweaselWindow.png"
+    tor_browser_picture = "WindowsTorBrowserWindow.png"
   else
-    iceweasel_picture = "IceweaselWindow.png"
+    tor_browser_picture = "TorBrowserWindow.png"
   end
 
-  # Stop iceweasel to load its home page. We do this to prevent Tor
-  # from getting confused in case we save and restore a snapshot in
-  # the middle of loading a page.
-  @screen.wait_and_click(iceweasel_picture, 120)
-  @screen.type("l", Sikuli::KeyModifier.CTRL)
-  @screen.type("about:blank" + Sikuli::Key.ENTER)
+  @screen.wait(tor_browser_picture, 60)
+  @screen.wait("TorBrowserStartupPage.png", 120)
 end
 
 Given /^all notifications have disappeared$/ do
@@ -425,17 +421,17 @@ Given /^package "([^"]+)" is installed$/ do |package|
          "Package '#{package}' is not installed")
 end
 
-When /^I start Iceweasel$/ do
+When /^I start the Tor Browser$/ do
   next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
     step 'I click the start menu'
     @screen.wait_and_click("WindowsApplicationsInternet.png", 10)
-    @screen.wait_and_click("WindowsApplicationsIceweasel.png", 10)
+    @screen.wait_and_click("WindowsApplicationsTorBrowser.png", 10)
   else
     @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
     @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
-    @screen.wait_and_click("GnomeApplicationsIceweasel.png", 10)
+    @screen.wait_and_click("GnomeApplicationsTorBrowser.png", 10)
   end
 end
 
