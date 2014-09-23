@@ -170,18 +170,6 @@ configure_chroot () {
     echo 'pref("network.proxy.type", 0);' >> "${CLEARNET_PREFS}"
     echo 'pref("network.proxy.socks_remote_dns", false);' >>  "${CLEARNET_PREFS}"
 
-    # Set a scary theme (except if we're using Windows camouflage)
-    if [ -z "${CAMOUFLAGE}" ]; then
-        cat >> "${CLEARNET_PREFS}" <<EOF
-pref("lightweightThemes.isThemeSelected", true);
-pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");
-EOF
-    else
-        # The camouflage activation script requires a dbus server for
-        # properly configuring GNOME, so we start one in the chroot
-        chroot ${CHROOT} sudo -H -u clearnet sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
-    fi
-
     # Set the name (e.g. window title) of the browser
     set_chroot_browser_name "`gettext \"Unsafe Browser\"`"
 
@@ -195,6 +183,22 @@ EOF
     rm -f ${CLEARNET_PROFILE}/places.sqlite
 
     chown -R clearnet:clearnet ${CHROOT}/home/clearnet/.tor-browser
+
+    # Set a scary theme (except if we're using Windows
+    # camouflage). Note that the tails-activate-win8-theme script that
+    # we may run below requires that the browser profile is writable
+    # by the user running the script (i.e. clearnet).
+    if [ -z "${CAMOUFLAGE}" ]; then
+        cat >> "${CLEARNET_PREFS}" <<EOF
+pref("lightweightThemes.isThemeSelected", true);
+pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");
+EOF
+    else
+        # The camouflage activation script requires a dbus server for
+        # properly configuring GNOME, so we start one in the chroot
+        chroot ${CHROOT} sudo -H -u clearnet sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
+    fi
+
 }
 
 run_browser_in_chroot () {
