@@ -11,6 +11,9 @@ export TEXTDOMAIN
 
 PROFILE="${HOME}/.tor-browser/profile.default"
 
+# Import the TBB_INSTALL variable
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
 ask_for_confirmation() {
     local dialog_title="`gettext \"Tor is not ready\"`"
     local dialog_text="`gettext \"Tor is not ready. Start Tor Browser anyway?\"`"
@@ -40,7 +43,7 @@ start_browser() {
 
     unset SESSION_MANAGER
 
-    exec /usr/local/lib/tor-browser/Browser/firefox -no-remote --class "Tor Browser" -profile "${PROFILE}" "${@}"
+    exec "${TBB_INSTALL}"/Browser/firefox -no-remote --class "Tor Browser" -profile "${PROFILE}" "${@}"
 }
 
 

@@ -18,6 +18,9 @@ CLEARNET_USER=clearnet
 # Import tor_is_working()
 . /usr/local/lib/tails-shell-library/tor.sh
 
+# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
 WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
 LANG_CODE="$(echo ${LANG} | head -c 2)"
 if [ -r "${WARNING_PAGE}.${LANG_CODE}.html" ]; then
@@ -108,7 +111,7 @@ set_chroot_browser_name () {
     NAME="${1}"
     LONG=$(echo ${LANG} | grep -o "^[a-zA-Z_]*")
     SHORT=${LONG%%_*}
-    EXT_DIR=${CHROOT}/usr/local/lib/tor-browser/extensions
+    EXT_DIR=${CHROOT}/"${TBB_EXT}"
     BRANDING=branding/brand.dtd
     if [ -e "${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi" ]; then
         PACK="${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi"
@@ -119,7 +122,7 @@ set_chroot_browser_name () {
         TOP=browser/chrome
         REST=${SHORT}/locale
     else
-        PACK="${CHROOT}/usr/local/lib/tor-browser/Browser/browser/omni.ja"
+        PACK="${CHROOT}/"${TBB_EXT}"/Browser/browser/omni.ja"
         TOP=chrome
         REST=en-US/locale
     fi
@@ -156,8 +159,8 @@ configure_chroot () {
 
     CLEARNET_EXT="${CLEARNET_PROFILE}"/extensions
     mkdir -p "${CLEARNET_EXT}"
-    cp -Pr /etc/tor-browser/profile/extensions/langpack-*.xpi \
-           /etc/tor-browser/profile/extensions/branding@amnesia.boum.org \
+    cp -Pr "${TBB_PROFILE}"/extensions/langpack-*.xpi \
+           "${TBB_PROFILE}"/extensions/branding@amnesia.boum.org \
            "${CLEARNET_EXT}"
 
     CLEARNET_PREFS="${CLEARNET_PROFILE}"/preferences/prefs.js
@@ -178,7 +181,7 @@ configure_chroot () {
         "${CLEARNET_PREFS}"
 
     # Remove all bookmarks
-    rm -f ${CHROOT}/etc/tor-browser/default.profile/bookmarks.html
+    rm -f ${CHROOT}/"${TBB_PROFILE}"/bookmarks.html
     rm -f ${CLEARNET_PROFILE}/bookmarks.html
     rm -f ${CLEARNET_PROFILE}/places.sqlite
 
@@ -206,7 +209,7 @@ run_browser_in_chroot () {
     echo "* Starting Unsafe Browser"
 
     sudo -u ${SUDO_USER} xhost +SI:localuser:${CLEARNET_USER} 2>/dev/null
-    chroot ${CHROOT} sudo -u ${CLEARNET_USER} /usr/local/lib/tor-browser/Browser/firefox -DISPLAY=:0.0 -profile /home/clearnet/.tor-browser/profile.default
+    chroot ${CHROOT} sudo -u ${CLEARNET_USER} "${TBB_INSTALL}"/Browser/firefox -DISPLAY=:0.0 -profile /home/clearnet/.tor-browser/profile.default
     sudo -u ${SUDO_USER} xhost -SI:localuser:${CLEARNET_USER} 2>/dev/null
 }
 

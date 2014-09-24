@@ -1,5 +1,8 @@
 #!/bin/sh
 
-unzip -q -p /usr/local/lib/tor-browser/Browser/browser/omni.ja \
+# Import the TBB_INSTALL variable
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
+unzip -q -p "${TBB_INSTALL}"/Browser/browser/omni.ja \
     defaults/preferences/000-tor-browser.js | \
     sed -n 's@^pref("general\.useragent\.override", "\(.*\)");$@\1@p'

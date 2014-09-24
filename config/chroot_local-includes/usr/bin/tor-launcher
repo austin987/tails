@@ -2,6 +2,9 @@
 
 set -e
 
+# Import the TBB_INSTALL variable
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
 # The Tor Browser hardcodes the default profile dir to ../.. from the
 # folder storing the application.ini file supplied via -app. Sadly,
 # -profile doesn't work together with -app. Therefore we copy the
@@ -24,4 +27,4 @@ EOF
     ln -s /var/lib/tails-user-session/browser-locale.js \
           "${HOME}"/.tor-launcher/TorBrowser/Data/Browser/profile.default/preferences/locale.js
 fi
-/usr/local/lib/tor-browser/Browser/firefox --app "${HOME}"/.tor-launcher/tor-launcher-standalone/application.ini
+exec "${TBB_INSTALL}"/Browser/firefox --app "${HOME}"/.tor-launcher/tor-launcher-standalone/application.ini
