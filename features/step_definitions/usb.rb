@@ -38,6 +38,12 @@ Given /^the computer is set to boot from the old Tails DVD$/ do
   @vm.set_cdrom_boot($old_tails_iso)
 end
 
+Given /^the computer is set to boot in UEFI mode$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.set_os_loader('UEFI')
+  @os_loader = 'UEFI'
+end
+
 class ISOHybridUpgradeNotSupported < StandardError
 end
 
@@ -498,3 +504,8 @@ When /^I delete the persistent partition$/ do
   @screen.type(" ")
   @screen.wait("PersistenceWizardDone.png", 120)
 end
+
+Then /^Tails has started in UEFI mode$/ do
+  assert(@vm.execute("test -d /sys/firmware/efi").success?,
+         "/sys/firmware/efi does not exist")
+ end
