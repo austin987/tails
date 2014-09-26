@@ -151,10 +151,25 @@ end
 
 Given /^the computer boots Tails$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait('TailsBootSplash.png', 30)
-  @screen.wait('TailsBootSplashTabMsg.png', 10)
+
+  case @os_loader
+  when "UEFI"
+    @screen.wait('TailsBootSplashUEFI.png', 30)
+    @screen.wait('TailsBootSplashTabMsgUEFI.png', 10)
+  else
+    @screen.wait('TailsBootSplash.png', 30)
+    @screen.wait('TailsBootSplashTabMsg.png', 10)
+  end
+
   @screen.type(Sikuli::Key.TAB)
-  @screen.waitVanish('TailsBootSplashTabMsg.png', 1)
+
+  case @os_loader
+  when "UEFI"
+    @screen.waitVanish('TailsBootSplashTabMsgUEFI.png', 1)
+  else
+    @screen.waitVanish('TailsBootSplashTabMsg.png', 1)
+  end
+
   @screen.type(" autotest_never_use_this_option #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 30*60)
