@@ -25,8 +25,8 @@ get_eep() {
     # This shouldn't be anywhere other than 127.0.0.1:4444
     # but in case someone modifies the hook scripts or the default changes in I2P,
     # this check should still work
-    LISTENHOST=$(awk -F= '/tunnel\.0\.interface/{print $2}' "$I2PTUNNEL")
-    LISTENPORT=$(awk -F= '/tunnel\.0\.listenPort/{print $2}' "$I2PTUNNEL")
+    LISTENHOST=$(awk -F= '/^tunnel\.0\.interface/{print $2}' "$I2PTUNNEL")
+    LISTENPORT=$(awk -F= '/^tunnel\.0\.listenPort/{print $2}' "$I2PTUNNEL")
     echo ${LISTENHOST}:${LISTENPORT}
 }
 
