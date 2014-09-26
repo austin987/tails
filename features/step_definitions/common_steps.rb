@@ -149,26 +149,31 @@ When /^I destroy the computer$/ do
   @vm.destroy
 end
 
-Given /^the computer boots Tails$/ do
+Given /^the computer (re)?boots Tails$/ do |reboot|
   next if @skip_steps_while_restoring_background
 
   case @os_loader
   when "UEFI"
-    @screen.wait('TailsBootSplashUEFI.png', 30)
-    @screen.wait('TailsBootSplashTabMsgUEFI.png', 10)
+    assert(!reboot, "Testing of reboot with UEFI enabled is not implemented")
+    bootsplash = 'TailsBootSplashUEFI.png'
+    bootsplash_tab_msg = 'TailsBootSplashTabMsgUEFI.png'
+    boot_timeout = 30
   else
-    @screen.wait('TailsBootSplash.png', 30)
-    @screen.wait('TailsBootSplashTabMsg.png', 10)
+    if reboot
+      bootsplash = 'TailsBootSplashPostReset.png'
+      bootsplash_tab_msg = 'TailsBootSplashTabMsgPostReset.png'
+      boot_timeout = 120
+    else
+      bootsplash = 'TailsBootSplash.png'
+      bootsplash_tab_msg = 'TailsBootSplashTabMsg.png'
+      boot_timeout = 30
+    end
   end
 
+  @screen.wait(bootsplash, boot_timeout)
+  @screen.wait(bootsplash_tab_msg, 10)
   @screen.type(Sikuli::Key.TAB)
-
-  case @os_loader
-  when "UEFI"
-    @screen.waitVanish('TailsBootSplashTabMsgUEFI.png', 1)
-  else
-    @screen.waitVanish('TailsBootSplashTabMsg.png', 1)
-  end
+  @screen.waitVanish(bootsplash_tab_msg, 1)
 
   @screen.type(" autotest_never_use_this_option #{@boot_options}" +
                Sikuli::Key.ENTER)
@@ -266,6 +271,27 @@ Given /^the Tor Browser has started and loaded the startup page$/ do
 
   @screen.wait(tor_browser_picture, 60)
   @screen.wait("TorBrowserStartupPage.png", 120)
+end
+
+Given /^the Tor Browser has started in offline mode$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("TorBrowserOffline.png", 60)
+end
+
+Given /^I add a bookmark to eff.org in the Tor Browser$/ do
+  next if @skip_steps_while_restoring_background
+  url = "https://www.eff.org"
+  step "I open the address \"#{url}\" in the Tor Browser"
+  @screen.wait("TorBrowserOffline.png", 5)
+  @screen.type("d", Sikuli::KeyModifier.CTRL)
+  @screen.wait("TorBrowserBookmarkPrompt.png", 10)
+  @screen.type(url + Sikuli::Key.ENTER)
+end
+
+Given /^the Tor Browser has a bookmark to eff.org$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.type("b", Sikuli::KeyModifier.ALT)
+  @screen.wait("TorBrowserEFFBookmark.png", 10)
 end
 
 Given /^all notifications have disappeared$/ do
@@ -422,6 +448,11 @@ When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
 end
 
+When /^I warm reboot the computer$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.execute("reboot")
+end
+
 When /^I request a reboot using the emergency shutdown applet$/ do
   next if @skip_steps_while_restoring_background
   @screen.hide_cursor
@@ -447,6 +478,19 @@ When /^I start the Tor Browser$/ do
     @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
     @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
     @screen.wait_and_click("GnomeApplicationsTorBrowser.png", 10)
+  end
+end
+
+When /^I start the Tor Browser in offline mode$/ do
+  next if @skip_steps_while_restoring_background
+  step "I start the Tor Browser"
+  case @theme
+  when "windows"
+    @screen.wait_and_click("WindowsTorBrowserOfflinePrompt.png", 10)
+    @screen.click("WindowsTorBrowserOfflinePromptStart.png")
+  else
+    @screen.wait_and_click("TorBrowserOfflinePrompt.png", 10)
+    @screen.click("TorBrowserOfflinePromptStart.png")
   end
 end
 

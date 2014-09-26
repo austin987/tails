@@ -73,6 +73,35 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     But a Tails persistence partition with password "asdf" exists on USB drive "current"
 
   @keep_volumes
+  Scenario: Persistent browser bookmarks
+    Given a computer
+    And the computer is set to boot from USB drive "current"
+    And the network is unplugged
+    When I start the computer
+    And the computer boots Tails
+    And Tails is running from USB drive "current"
+    And the boot device has safe access rights
+    And I enable persistence with password "asdf"
+    And I log in to a new session
+    And GNOME has started
+    And all notifications have disappeared
+    And persistence is enabled
+    And persistent filesystems have safe access rights
+    And persistence configuration files have safe access rights
+    And persistent directories have safe access rights
+    And I start the Tor Browser in offline mode
+    And the Tor Browser has started in offline mode
+    And I add a bookmark to eff.org in the Tor Browser
+    And I warm reboot the computer
+    And the computer reboots Tails
+    And I enable read-only persistence with password "asdf"
+    And I log in to a new session
+    And GNOME has started
+    And I start the Tor Browser in offline mode
+    And the Tor Browser has started in offline mode
+    Then the Tor Browser has a bookmark to eff.org
+
+  @keep_volumes
   Scenario: Writing files to a read/write-enabled persistent partition
     Given a computer
     And the computer is set to boot from USB drive "current"
