@@ -14,7 +14,7 @@ Then /^the shipped Tails signing key is not outdated$/ do
                 "--list-key #{sig_key_fingerprint}", $live_user).stdout
   shipped_sig_key_info = @vm.execute("gpg --batch --list-key #{sig_key_fingerprint}",
                                      $live_user).stdout
-  assert_equal(shipped_sig_key_info, fresh_sig_key_info,
+  assert_equal(fresh_sig_key_info, shipped_sig_key_info,
          "The Tails signing key shipped inside Tails is outdated:\n" +
          "Shipped key:\n" +
          shipped_sig_key_info +
@@ -28,7 +28,7 @@ Then /^the live user has been setup by live\-boot$/ do
          "live-boot failed its user-setup")
   actual_username = @vm.execute(". /etc/live/config/username.conf; " +
                                 "echo $LIVE_USERNAME").stdout.chomp
-  assert_equal(actual_username, $live_user)
+  assert_equal($live_user, actual_username)
 end
 
 Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
@@ -37,9 +37,9 @@ Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
   actual_groups = @vm.execute("groups #{$live_user}").stdout.chomp.sub(/^#{$live_user} : /, "").split(" ")
   unexpected = actual_groups - expected_groups
   missing = expected_groups - actual_groups
-  assert_equal(unexpected.size, 0,
+  assert_equal(0, unexpected.size,
          "live user in unexpected groups #{unexpected}")
-  assert_equal(missing.size, 0,
+  assert_equal(0, missing.size,
          "live user not in expected groups #{missing}")
 end
 
@@ -50,8 +50,8 @@ Then /^the live user owns its home dir and it has normal permissions$/ do
          "The live user's home doesn't exist or is not a directory")
   owner = @vm.execute("stat -c %U:%G #{home}").stdout.chomp
   perms = @vm.execute("stat -c %a #{home}").stdout.chomp
-  assert_equal(owner, "#{$live_user}:#{$live_user}")
-  assert_equal(perms, "700")
+  assert_equal("#{$live_user}:#{$live_user}", owner)
+  assert_equal("700", perms)
 end
 
 Given /^I wait between (\d+) and (\d+) seconds$/ do |min, max|

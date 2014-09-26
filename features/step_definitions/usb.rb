@@ -200,7 +200,7 @@ def tails_is_installed_helper(name, tails_root, loader)
   new_exithelp = @vm.execute("cat '#{target_root}/syslinux/exithelp.cfg'").stdout
   new_exithelp_undiffed = new_exithelp.sub("kernel /syslinux/vesamenu.c32",
                                            "kernel /#{loader}/vesamenu.c32")
-  assert_equal(new_exithelp_undiffed, old_exithelp,
+  assert_equal(old_exithelp, new_exithelp_undiffed,
          "USB drive '#{name}' has unexpected differences in " +
          "'/syslinux/exithelp.cfg'")
 
@@ -331,7 +331,7 @@ end
 
 Then /^Tails is running from USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  assert_equal(boot_device_type, "usb")
+  assert_equal("usb", boot_device_type)
   actual_dev = boot_device
   # The boot partition differs between a "normal" install using the
   # USB installer and isohybrid installations
@@ -360,11 +360,11 @@ Then /^the boot device has safe access rights$/ do
     dev_owner = @vm.execute("stat -c %U #{dev}").stdout.chomp
     dev_group = @vm.execute("stat -c %G #{dev}").stdout.chomp
     dev_perms = @vm.execute("stat -c %a #{dev}").stdout.chomp
-    assert_equal(dev_owner, "root")
+    assert_equal("root", dev_owner)
     assert(dev_group == "disk" || dev_group == "root",
            "Boot device '#{dev}' owned by group '#{dev_group}', expected " +
            "'disk' or 'root'.")
-    assert_equal(dev_perms, "1660")
+    assert_equal("1660", dev_perms)
     for user, groups in all_users_with_groups do
       next if user == "root"
       assert(!(groups.include?(dev_group)),
@@ -383,9 +383,9 @@ Then /^persistent filesystems have safe access rights$/ do
     fs_owner = @vm.execute("stat -c %U #{mountpoint}").stdout.chomp
     fs_group = @vm.execute("stat -c %G #{mountpoint}").stdout.chomp
     fs_perms = @vm.execute("stat -c %a #{mountpoint}").stdout.chomp
-    assert_equal(fs_owner, "root")
-    assert_equal(fs_group, "root")
-    assert_equal(fs_perms, '775')
+    assert_equal("root", fs_owner)
+    assert_equal("root", fs_group)
+    assert_equal('775', fs_perms)
   end
 end
 
@@ -401,9 +401,9 @@ Then /^persistence configuration files have safe access rights$/ do
       file_owner = @vm.execute("stat -c %U '#{f}'").stdout.chomp
       file_group = @vm.execute("stat -c %G '#{f}'").stdout.chomp
       file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
-      assert_equal(file_owner, "tails-persistence-setup")
-      assert_equal(file_group, "tails-persistence-setup")
-      assert_equal(file_perms, "600")
+      assert_equal("tails-persistence-setup", file_owner)
+      assert_equal("tails-persistence-setup", file_group)
+      assert_equal("600", file_perms)
     end
   end
 end
@@ -420,7 +420,7 @@ Then /^persistent directories have safe access rights$/ do
       f = "#{mountpoint}/#{src}"
       next unless @vm.execute("test -d #{f}").success?
       file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
-      assert_equal(file_perms, expected_perms)
+      assert_equal(expected_perms, file_perms)
     end
   end
 end
