@@ -12,6 +12,9 @@ LOCK=/var/lock/${CMD}
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
+# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
 ROFS=/lib/live/mount/rootfs/filesystem.squashfs
 CONF_DIR=/var/lib/i2p-browser
 COW=${CONF_DIR}/cow
@@ -22,7 +25,7 @@ START_PAGE="http://127.0.0.1:7657"
 
 ADBLOCK_EXT="/usr/share/xul-ext/adblock-plus"
 ADBLOCK_UUID="{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}"
-NOSCRIPT="/usr/local/lib/tor-browser/extensions/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
+NOSCRIPT="${TBB_INSTALL}/extensions/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
 
 if [ -e /var/lib/gdm3/tails.camouflage ]; then
     CAMOUFLAGE=yes
@@ -106,30 +109,27 @@ set_chroot_browser_name () {
     NAME="${1}"
     LONG=$(echo ${LANG} | grep -o "^[a-zA-Z_]*")
     SHORT=${LONG%%_*}
-    EXT_DIR=${CHROOT}/usr/local/lib/tor-browser/extensions
+    EXT_DIR="${CHROOT}/${TBB_EXT}"
     BRANDING=branding/brand.dtd
     if [ -e "${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi" ]; then
         PACK="${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi"
         TOP=browser/chrome
         REST=${LONG}/locale
-        OLD_NAME="Mozilla Firefox"
     elif [ -e "${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi" ]; then
         PACK="${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi"
         TOP=browser/chrome
         REST=${SHORT}/locale
-        OLD_NAME="Mozilla Firefox"
     else
-        PACK="${CHROOT}/usr/local/lib/tor-browser/Browser/browser/omni.ja"
+        PACK="${CHROOT}/${TBB_INSTALL}/Browser/browser/omni.ja"
         TOP=chrome
         REST=en-US/locale
-        OLD_NAME="Tor Browser"
     fi
 
     TMP=$(mktemp -d)
     # Non-zero exit code due to non-standard ZIP archive.
     # The following steps will fail soon if the extraction failed anyway.
     unzip -d "${TMP}" "${PACK}" || true
-    sed -i "s/${OLD_NAME}/${NAME}/" "${TMP}"/"${TOP}"/"${REST}"/"${BRANDING}"
+    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${NAME}\">/" "${TMP}/${TOP}/${REST}/${BRANDING}"
     rm "${PACK}"
     (cd $TMP ; 7z a -tzip "${PACK}" .)
     chmod a+r "${PACK}"
@@ -150,7 +150,7 @@ configure_chroot () {
     BROWSER_PROFILE="${CHROOT}/home/i2pbrowser/.tor-browser/profile.default"
     BROWSER_EXT="${BROWSER_PROFILE}/extensions"
     mkdir -p "${BROWSER_EXT}"
-    cp -Pr /etc/tor-browser/profile/extensions/langpack-*.xpi \
+    cp -Pr "${TBB_PROFILE}/extensions/langpack-*.xpi" \
            ${NOSCRIPT} "${BROWSER_EXT}"
     ln -s "${ADBLOCK_EXT}" "${BROWSER_EXT}/${ADBLOCK_UUID}"
 
@@ -309,7 +309,7 @@ EOF
         ${BROWSER_PREFS}
 
     ## Remove all bookmarks
-    rm -f ${CHROOT}/etc/tor-browser/default.profile/bookmarks.html
+    rm -f "${CHROOT}/${TBB_PROFILE}/bookmarks.html"
     rm -f ${BROWSER_PROFILE}/bookmarks.html
     rm -f ${BROWSER_PROFILE}/places.sqlite
 
@@ -321,7 +321,7 @@ run_browser_in_chroot () {
     echo "* Starting I2P Browser"
 
     sudo -u ${SUDO_USER} xhost +SI:localuser:${BROWSER_USER} 2>/dev/null
-    chroot ${CHROOT} sudo -u ${BROWSER_USER} /usr/local/lib/tor-browser/Browser/firefox -DISPLAY=:0.0 -profile /home/i2pbrowser/.tor-browser/profile.default
+    chroot ${CHROOT} sudo -u ${BROWSER_USER} "${TBB_INSTALL}/Browser/firefox" -DISPLAY=:0.0 -profile /home/i2pbrowser/.tor-browser/profile.default
     sudo -u ${SUDO_USER} xhost -SI:localuser:${BROWSER_USER} 2>/dev/null
 }
 
