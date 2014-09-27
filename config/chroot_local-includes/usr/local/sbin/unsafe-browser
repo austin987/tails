@@ -186,6 +186,19 @@ configure_chroot () {
     # Set start page to something that explains what's going on
     echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
         "${CLEARNET_PREFS}"
+    BROWSER_CHROME="${CLEARNET_PROFILE}/chrome/userChrome.css"
+    mkdir -p "$(dirname "${BROWSER_CHROME}")"
+    cat > ${BROWSER_CHROME} << EOF
+/* Required, do not remove */
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* Hide TorBrowser Health Report and its configuration option */
+#appmenu_healthReport,
+#dataChoicesTab,
+#healthReport
+
+{display: none !important}
+EOF
 
     # Remove all bookmarks
     rm -f ${CHROOT}/"${TBB_PROFILE}"/bookmarks.html
