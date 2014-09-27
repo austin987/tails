@@ -23,8 +23,6 @@ BROWSER_USER=i2pbrowser
 TBB_PREFS="/etc/tor-browser/profile/preferences"
 START_PAGE="http://127.0.0.1:7657"
 
-ADBLOCK_EXT="/usr/share/xul-ext/adblock-plus"
-ADBLOCK_UUID="{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}"
 NOSCRIPT="${TBB_INSTALL}/extensions/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
 
 if [ -e /var/lib/gdm3/tails.camouflage ]; then
@@ -143,24 +141,24 @@ configure_chroot () {
     echo "127.0.0.1 localhost amnesia" > ${CHROOT}/etc/hosts
 
     # Remove Torbutton and Foxyproxy Iceweasel addons
-    chroot ${CHROOT} dpkg -l 'xul-ext*' |grep -v 'noscript\|adblock' \
+    chroot ${CHROOT} dpkg -l 'xul-ext*' |grep -v 'noscript' \
             | awk '/^ii/{print $2}' | xargs chroot ${CHROOT} dpkg --remove
 
     # Create a fresh Iceweasel profile for the i2pbrowser user
     BROWSER_PROFILE="${CHROOT}/home/i2pbrowser/.tor-browser/profile.default"
     BROWSER_EXT="${BROWSER_PROFILE}/extensions"
     mkdir -p "${BROWSER_EXT}"
-    cp -Pr "${TBB_PROFILE}/extensions/langpack-*.xpi" \
-           ${NOSCRIPT} "${BROWSER_EXT}"
-    ln -s "${ADBLOCK_EXT}" "${BROWSER_EXT}/${ADBLOCK_UUID}"
+    ln -s "${NOSCRIPT}" "${BROWSER_EXT}"
+    for LANGPACK in $(ls "${TBB_PROFILE}/extensions/langpack-*.xpi"); do
+        ln -s "${LANGPACK}" "${BROWSER_EXT}"
+    done
 
     BROWSER_PREF_DIR="${BROWSER_PROFILE}/preferences"
     BROWSER_PREFS="${BROWSER_PREF_DIR}/prefs.js"
     mkdir -p "${BROWSER_PREF_DIR}"
-    rsync -a /etc/tor-browser/profile/adblockplus ${BROWSER_PROFILE}
 
     # Selectively copy the TBB prefs we want
-    sed '/\(adblock\|security\|update\|download\|spell\|noscript\)/!d' $TBB_PREFS/zzz_tails.js > \
+    sed '/\(security\|update\|download\|spell\|noscript\)/!d' $TBB_PREFS/zzz_tails.js > \
                     ${BROWSER_PREF_DIR}/zz_tails.js
     sed '/\(capability\|noscript\)/!d' ${TBB_PREFS}/extension-overrides.js > \
                     ${BROWSER_PREF_DIR}/extension-overrides.js
