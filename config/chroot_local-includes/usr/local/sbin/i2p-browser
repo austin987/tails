@@ -24,6 +24,7 @@ TBB_PREFS="/etc/tor-browser/profile/preferences"
 START_PAGE="http://127.0.0.1:7657"
 
 NOSCRIPT="${TBB_INSTALL}/extensions/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
+TORBUTTON="${TBB_INSTALL}/extensions/torbutton@torproject.org"
 
 if [ -e /var/lib/gdm3/tails.camouflage ]; then
     CAMOUFLAGE=yes
@@ -140,8 +141,8 @@ configure_chroot () {
     # Prevent sudo from complaining about failing to resolve the 'amnesia' host
     echo "127.0.0.1 localhost amnesia" > ${CHROOT}/etc/hosts
 
-    # Remove Torbutton and Foxyproxy Iceweasel addons
-    chroot ${CHROOT} dpkg -l 'xul-ext*' |grep -v 'noscript' \
+    # Keep the NoScript and TorButton addons
+    chroot ${CHROOT} dpkg -l 'xul-ext*' |grep -v 'noscript\|torbutton' \
             | awk '/^ii/{print $2}' | xargs chroot ${CHROOT} dpkg --remove
 
     # Create a fresh Iceweasel profile for the i2pbrowser user
@@ -149,6 +150,7 @@ configure_chroot () {
     BROWSER_EXT="${BROWSER_PROFILE}/extensions"
     mkdir -p "${BROWSER_EXT}"
     ln -s "${NOSCRIPT}" "${BROWSER_EXT}"
+    ln -s "${TORBUTTON}" "${BROWSER_EXT}"
     for LANGPACK in $(ls "${TBB_PROFILE}/extensions/langpack-*.xpi"); do
         ln -s "${LANGPACK}" "${BROWSER_EXT}"
     done
@@ -158,9 +160,9 @@ configure_chroot () {
     mkdir -p "${BROWSER_PREF_DIR}"
 
     # Selectively copy the TBB prefs we want
-    sed '/\(security\|update\|download\|spell\|noscript\)/!d' $TBB_PREFS/zzz_tails.js > \
+    sed '/\(security\|update\|download\|spell\|noscript\|torbrowser\|torbutton\)/!d' $TBB_PREFS/zzz_tails.js > \
                     ${BROWSER_PREF_DIR}/zz_tails.js
-    sed '/\(capability\|noscript\)/!d' ${TBB_PREFS}/extension-overrides.js > \
+    sed '/\(capability\|noscript\|torbutton\)/!d' ${TBB_PREFS}/extension-overrides.js > \
                     ${BROWSER_PREF_DIR}/extension-overrides.js
 
     # Localization
