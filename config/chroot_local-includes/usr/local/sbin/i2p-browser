@@ -12,9 +12,6 @@ LOCK=/var/lock/${CMD}
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables
-. /usr/local/lib/tails-shell-library/tor-browser.sh
-
 ROFS=/lib/live/mount/rootfs/filesystem.squashfs
 CONF_DIR=/var/lib/i2p-browser
 COW=${CONF_DIR}/cow
@@ -22,6 +19,9 @@ CHROOT=${CONF_DIR}/chroot
 BROWSER_USER=i2pbrowser
 TBB_PREFS="/etc/tor-browser/profile/preferences"
 START_PAGE="http://127.0.0.1:7657"
+
+# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables
+. /usr/local/lib/tails-shell-library/tor-browser.sh
 
 NOSCRIPT="${TBB_INSTALL}/extensions/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
 TORBUTTON="${TBB_INSTALL}/extensions/torbutton@torproject.org"
@@ -53,6 +53,16 @@ cleanup () {
     rmdir ${COW} ${CHROOT} 2>/dev/null
 }
 
+error () {
+    local cli_text="${CMD}: `gettext \"error:\"` ${@}"
+    local dialog_text="<b><big>`gettext \"Error\"`</big></b>
+
+${@}"
+    echo "${cli_text}" >&2
+    sudo -u ${SUDO_USER} zenity --error --title "" --text "${dialog_text}"
+    exit 1
+}
+
 verify_start () {
     # Make sure the user really wants to start the browser in case the router console isn't available
     local dialog_msg="<b><big>`gettext \"Do you still want to launch I2P Browser?\"`</big></b>
@@ -66,16 +76,6 @@ verify_start () {
        --cancel-label "${launch}" --text "${dialog_msg}"; then
         exit 0
     fi
-}
-
-error () {
-    local cli_text="${CMD}: `gettext \"error:\"` ${@}"
-    local dialog_text="<b><big>`gettext \"Error\"`</big></b>
-
-${@}"
-    echo "${cli_text}" >&2
-    sudo -u ${SUDO_USER} zenity --error --title "" --text "${dialog_text}"
-    exit 1
 }
 
 show_start_notification () {
@@ -123,7 +123,6 @@ set_chroot_browser_name () {
         TOP=chrome
         REST=en-US/locale
     fi
-
     TMP=$(mktemp -d)
     # Non-zero exit code due to non-standard ZIP archive.
     # The following steps will fail soon if the extraction failed anyway.
@@ -145,8 +144,8 @@ configure_chroot () {
     chroot ${CHROOT} dpkg -l 'xul-ext*' |grep -v 'noscript\|torbutton' \
             | awk '/^ii/{print $2}' | xargs chroot ${CHROOT} dpkg --remove
 
-    # Create a fresh Iceweasel profile for the i2pbrowser user
-    BROWSER_PROFILE="${CHROOT}/home/i2pbrowser/.tor-browser/profile.default"
+    # Create a fresh Tor Browser profile for the i2pbrowser user
+    BROWSER_PROFILE="${CHROOT}/home/${BROWSER_USER}/.tor-browser/profile.default"
     BROWSER_EXT="${BROWSER_PROFILE}/extensions"
     mkdir -p "${BROWSER_EXT}"
     ln -s "${NOSCRIPT}" "${BROWSER_EXT}"
@@ -169,11 +168,20 @@ configure_chroot () {
     cat /var/lib/tails-user-session/browser-locale.js >> "${BROWSER_PREFS}"
 
 
-    # Prevent File -> Print or CTRL+P from causing the browser to hang for
-    # several minutes while trying to communicate with CUPS, since access to
-    # port 631 isn't allowed through.
+    # Prevent File -> Print or CTRL+P from causing the browser to hang
+    # for several minutes while trying to communicate with CUPS, since
+    # access to port 631 isn't allowed through.
     echo 'user_pref("print.postscript.cups.enabled", false);' >> \
         ${BROWSER_PREFS}
+
+    # Set the name (e.g. window title) of the browser
+    set_chroot_browser_name "`gettext \"I2P Browser\"`"
+
+    # Set start page to the router console
+    echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
+        ${BROWSER_PREFS}
+
+
     # Disable searching from the URL bar
     echo 'user_pref("keyword.enabled", false);' >> \
         ${BROWSER_PREFS}
@@ -292,6 +300,13 @@ menuitem[command="Browser:SendLink"],
 EOF
     rm -rf ${BROWSER_EXT}/branding@amnesia.boum.org
 
+    # Remove all bookmarks
+    rm -f "${CHROOT}/${TBB_PROFILE}/bookmarks.html"
+    rm -f ${BROWSER_PROFILE}/bookmarks.html
+    rm -f ${BROWSER_PROFILE}/places.sqlite
+
+   chown -R ${BROWSER_USER}:${BROWSER_USER} "${CHROOT}/home/${BROWSER_USER}/.tor-browser"
+
     # Change the theme when not using Windows camouflage
     if [ -z "${CAMOUFLAGE}" ]; then
         cat >> ${BROWSER_PREFS} <<EOF
@@ -301,22 +316,9 @@ EOF
     else
         # The camouflage activation script requires a dbus server for
         # properly configuring GNOME, so we start one in the chroot
-        chroot ${CHROOT} sudo -H -u i2pbrowser sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
+        chroot ${CHROOT} sudo -H -u ${BROWSER_USER} sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
     fi
 
-    # Set the name (e.g. window title) of the browser
-    set_chroot_browser_name "`gettext \"I2P Browser\"`"
-
-    # Set start page to something that explains what's going on
-    echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
-        ${BROWSER_PREFS}
-
-    ## Remove all bookmarks
-    rm -f "${CHROOT}/${TBB_PROFILE}/bookmarks.html"
-    rm -f ${BROWSER_PROFILE}/bookmarks.html
-    rm -f ${BROWSER_PROFILE}/places.sqlite
-
-   chown -R i2pbrowser:i2pbrowser "${CHROOT}/home/i2pbrowser/.tor-browser"
 }
 
 run_browser_in_chroot () {
@@ -324,7 +326,7 @@ run_browser_in_chroot () {
     echo "* Starting I2P Browser"
 
     sudo -u ${SUDO_USER} xhost +SI:localuser:${BROWSER_USER} 2>/dev/null
-    chroot ${CHROOT} sudo -u ${BROWSER_USER} "${TBB_INSTALL}/Browser/firefox" -DISPLAY=:0.0 -profile /home/i2pbrowser/.tor-browser/profile.default
+    chroot ${CHROOT} sudo -u ${BROWSER_USER} "${TBB_INSTALL}/Browser/firefox" -DISPLAY=:0.0 -profile /home/${BROWSER_USER}/.tor-browser/profile.default
     sudo -u ${SUDO_USER} xhost -SI:localuser:${BROWSER_USER} 2>/dev/null
 }
 
