@@ -1,7 +1,6 @@
 // As suggested in TBB's start-tor-browser script for system-wide Tor
 // instances
 pref("extensions.torbutton.banned_ports", "9150,9051");
-pref("extensions.torbutton.block_disk", false);
 pref("extensions.torbutton.custom.socks_host", "127.0.0.1");
 pref("extensions.torbutton.custom.socks_port", 9150);
 pref("extensions.torbutton.launch_warning",  false);
