@@ -147,14 +147,14 @@ configure_chroot () {
     done
     chmod a+r ${CHROOT}/etc/resolv.conf
 
-    # Remove all Iceweasel addons: some adds proxying, which we don't
+    # Remove all addons: some adds proxying, which we don't
     # want; some may change the fingerprint compared to a standard
-    # Iceweasel install. Note: We cannot use apt-get since we don't ship its
+    # Firefox install. Note: We cannot use apt-get since we don't ship its
     # lists (#6531). Too bad, APT supports globbing, while dkpg does not.
     dpkg -l 'xul-ext-*' | /bin/grep '^ii' | awk '{print $2}' | \
         xargs chroot ${CHROOT} dpkg --remove
 
-    # Create a fresh Iceweasel profile for the clearnet user
+    # Create a fresh browser profile for the clearnet user
     CLEARNET_PROFILE="${CHROOT}"/home/clearnet/.tor-browser/profile.default
 
     CLEARNET_EXT="${CLEARNET_PROFILE}"/extensions
@@ -210,7 +210,7 @@ EOF
 }
 
 run_browser_in_chroot () {
-    # Start Iceweasel in the chroot
+    # Start the browser in the chroot
     echo "* Starting Unsafe Browser"
 
     sudo -u ${SUDO_USER} xhost +SI:localuser:${CLEARNET_USER} 2>/dev/null
