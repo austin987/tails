@@ -142,6 +142,10 @@ ln -s /usr/share/xul-ext/torbutton/ "${TBB_EXT}"/torbutton@torproject.org
 rsync -a --exclude bookmarks.html --exclude extensions \
     "${TBB_INSTALL}"/Browser/TorBrowser/Data/Browser/profile.default/ \
     "${TBB_PROFILE}"/
+
+# Remove TBB's default bridges
+sed -i '/extensions\.torlauncher\.default_bridge\./d' "${TBB_PROFILE}"/preferences/extension-overrides.js
+
 mkdir -p "${TBB_PROFILE}"/extensions
 for ext in "${TBB_EXT}"/*; do
     ln -s "${ext}" "${TBB_PROFILE}"/extensions/
