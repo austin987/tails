@@ -85,6 +85,14 @@ for tarball in "${TMP}"/tor-browser-*.tar.xz; do
     )
 done
 
+# Enable our myspell/hunspell dictionaries. TBB only provides the one
+# for en-US, but Debian's seems more comprehensive, so we'll only use
+# Debian's dictionaries.
+rm -f "${TBB_PREP}"/Browser/dictionaries/*
+for f in /usr/share/hunspell/*.aff /usr/share/hunspell/*.dic; do
+    name="$(basename "${f}")"
+    ln -s "${f}" "${TBB_PREP}"/Browser/dictionaries/"${name}"
+done
 
 # We don't want tor-launcher to be part of the regular browser
 # profile. Moreover, for the stand-alone tor-launcher we use, we need
