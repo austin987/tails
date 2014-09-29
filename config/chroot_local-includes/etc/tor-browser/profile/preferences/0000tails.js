@@ -20,6 +20,9 @@ pref("extensions.torlauncher.start_tor", false);
 
 // Tails-specific configuartion below
 
+// Disable the Tor Browser's automatic update checking
+pref("app.update.enabled", false);
+
 // Adblock Plus preferences
 pref("extensions.adblockplus.correctTypos", false);
 pref("extensions.adblockplus.currentVersion", "2.1");
