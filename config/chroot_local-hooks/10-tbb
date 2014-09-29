@@ -6,21 +6,21 @@ echo "Install the Tor Browser"
 
 # Get the below with `grep "tor-browser-linux32-.*\.tar.xz" sha256sums.txt`
 BUNDLES="$(cat <<EOF
-3a33a3ad31b6d84e3c3aafe3036a6142999cde2d34241284ca39a73231423d34  tor-browser-linux32-4.0-alpha-2_ar.tar.xz
-5a4782b36ebbbeb5ee389a02492cee061660621a4a65159e8cd0bebdad5159c3  tor-browser-linux32-4.0-alpha-2_de.tar.xz
-79c718c1b0faeff2f0746f38a437de520b2fbae46bf1c799bf59bfa6f28a787e  tor-browser-linux32-4.0-alpha-2_en-US.tar.xz
-993fea315635b84b7d42d285426528a4694f80f2e2b72adb9f4014b18a9eb539  tor-browser-linux32-4.0-alpha-2_es-ES.tar.xz
-f2c633f7e0c3bb1dbf532aabbd12057a7a4f308827eb1887b8b6670c6e7e165a  tor-browser-linux32-4.0-alpha-2_fa.tar.xz
-f147305b1997bcc5a13c724ff94f3a53a887d53541055801d699034798f12169  tor-browser-linux32-4.0-alpha-2_fr.tar.xz
-e2df844002e0c0d34c3c6005149bbe8aa12f3a4aac0aab3852a1a07dc09138f4  tor-browser-linux32-4.0-alpha-2_it.tar.xz
-909b4a44624a3080a38cd34b4c1a271078611259ecb97ade91725665d4e6f818  tor-browser-linux32-4.0-alpha-2_ko.tar.xz
-4a28ea7d086196fb80f20e0cd430455c5b750a95f327f5f537b2bdbe087ef675  tor-browser-linux32-4.0-alpha-2_nl.tar.xz
-fb85361495d17c4cc81c63386796116e57820f128c427acdefb7b3f7d6e1d577  tor-browser-linux32-4.0-alpha-2_pl.tar.xz
-6f3e5ec7c2ad6e6f26f48f7ba6b5946e2e3add6f7492000671b33941c8679d35  tor-browser-linux32-4.0-alpha-2_pt-PT.tar.xz
-8e4158c1d5e6916a8d7514fc94cb995ffcbaab0b3e516dba93d909a9110fb4ec  tor-browser-linux32-4.0-alpha-2_ru.tar.xz
-55b91b84f0afc37c695dc89ff057eed7cd415e0c3f28a5a7ed9dd7d2e2d7be0d  tor-browser-linux32-4.0-alpha-2_tr.tar.xz
-1e8df88b043b8e3ae610cb560e0d05676be6b5fd27b112317a952e8aa3bf1198  tor-browser-linux32-4.0-alpha-2_vi.tar.xz
-323fe636ea4dc0b6b039ec50a812fdeebb2291bcf9dc481dd2cce5ba767b8889  tor-browser-linux32-4.0-alpha-2_zh-CN.tar.xz
+fe920b32b105a9c356af44f2f64652cdda9144b26b9c9d49e48b9a73d03a9b05  tor-browser-linux32-4.0-alpha-3_ar.tar.xz
+594212333fccbf5a069f9656f09f683cba7ade0807042b0d3acd5f53b417705d  tor-browser-linux32-4.0-alpha-3_de.tar.xz
+06100939b3260b4beafc20090e291e007229fc1a0858e8316844087d37bfc10f  tor-browser-linux32-4.0-alpha-3_en-US.tar.xz
+65d4649d17a509232984a0f422bec52b70788d347212b6df34333575cd565951  tor-browser-linux32-4.0-alpha-3_es-ES.tar.xz
+a8d38e3e7277d4964b0df85698b2465cd051298b25d2efe792eddd630676ed3a  tor-browser-linux32-4.0-alpha-3_fa.tar.xz
+e627d5234da400f6d25042ace6fa596e9ff651ce1568f7c4a208cfe78914f265  tor-browser-linux32-4.0-alpha-3_fr.tar.xz
+c06af5211c7ec2f0d5faa27f09759617a60d16d4ad21b212bedc7ac7f6bd8891  tor-browser-linux32-4.0-alpha-3_it.tar.xz
+dbb8238785bc3fd69657b74148dbede7a6f478c5490d6d9de7220d3b83fe1c6d  tor-browser-linux32-4.0-alpha-3_ko.tar.xz
+76f703e78874bbbb40e6f57989aa6b52c9681bee3c414f425f9c3957aa006811  tor-browser-linux32-4.0-alpha-3_nl.tar.xz
+7b88b20d413666109fe24b66de9702387ca2584725501880ce86af1a256829c6  tor-browser-linux32-4.0-alpha-3_pl.tar.xz
+c06c0149976ab98d11c8a551749fbd2c18db0790cf0918c75a628d4987c0f6eb  tor-browser-linux32-4.0-alpha-3_pt-PT.tar.xz
+37d1d4cb066fada40d594589df4047ea2b2f36041a89ed919d74ef5fa7cc81a3  tor-browser-linux32-4.0-alpha-3_ru.tar.xz
+7ba4cdff727cae576a18e6268b68155f77cc85e975d65dce9fac4071b1355970  tor-browser-linux32-4.0-alpha-3_tr.tar.xz
+1ac091e600853a02f2012fc939cb0c635cc674b5321d89e8af981c324775dfe7  tor-browser-linux32-4.0-alpha-3_vi.tar.xz
+d16fc17581bf4741f76268b57e7bd3cd249ee97328b8b508366cef85fbc1ee01  tor-browser-linux32-4.0-alpha-3_zh-CN.tar.xz
 EOF
 )"
 
@@ -29,8 +29,9 @@ VERSION="$(echo "${MAIN_BUNDLE}" | sed 's/tor-browser-linux32-\(.*\)_en-US.tar.x
 # Note that we cannot use https here since apt-cacher-ng (used by vagrant)
 # gets confused and throws a 403. It doesn't matter, though, since we verify
 # the checksums of each file downloaded.
+TBB_DIST_URL="http://archive.torproject.org/tor-package-archive/torbrowser/${VERSION}"
 #TBB_DIST_URL="http://www.torproject.org/dist/torbrowser/${VERSION}/"
-TBB_DIST_URL="http://people.torproject.org/~mikeperry/builds/${VERSION}/"
+#TBB_DIST_URL="http://people.torproject.org/~mikeperry/builds/${VERSION}/"
 
 # Import the TBB_INSTALL, TBB_PROFILE and TBB_EXT variables, which
 # contains the paths we will split TBB's actual browser (binaries
