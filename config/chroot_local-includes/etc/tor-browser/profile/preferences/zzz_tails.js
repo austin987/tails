@@ -65,6 +65,9 @@ pref("noscript.forbidSilverlight", true);
 pref("noscript.forbidJava", true);
 pref("noscript.forbidPlugins", true);
 
+// Other Tails-specific NoScript preferences
+pref("noscript.untrusted", "google-analytics.com");
+
 // Other non-Torbutton, Tails-specific prefs
 pref("browser.download.manager.closeWhenDone", true);
 pref("extensions.update.enabled", false);
