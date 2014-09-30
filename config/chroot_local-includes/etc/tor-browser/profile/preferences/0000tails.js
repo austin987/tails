@@ -18,7 +18,7 @@ pref("extensions.torlauncher.logmethod", 0);
 pref("extensions.torlauncher.prompt_at_startup", false);
 pref("extensions.torlauncher.start_tor", false);
 
-// Tails-specific configuartion below
+// Tails-specific configuration below
 
 // Disable the Tor Browser's automatic update checking
 pref("app.update.enabled", false);
