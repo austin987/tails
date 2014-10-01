@@ -12,6 +12,8 @@ LOCK=/var/lock/${CMD}
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
+. /usr/local/lib/tails-shell-library/i2p.sh
+
 ROFS=/lib/live/mount/rootfs/filesystem.squashfs
 CONF_DIR=/var/lib/i2p-browser
 COW=${CONF_DIR}/cow
@@ -357,7 +359,7 @@ if ! flock -x -n 9; then
     error "`gettext \"Another I2P Browser is currently running, or being cleaned up. Please retry in a while.\"`"
 fi
 
-if ! netstat -4nlp |grep -wq "127\.0\.0\.1:7657"; then
+if ! i2p_router_console_is_ready; then
     verify_start
 fi
 show_start_notification
