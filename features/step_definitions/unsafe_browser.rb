@@ -78,12 +78,11 @@ end
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
-  sleep 0.5
   # First we open the proxy settings page to prepare it with the
   # correct open tabs for the loop below.
-  @screen.type("e", Sikuli::KeyModifier.ALT)
-  @screen.type("n")
-  @screen.wait('UnsafeBrowserPreferences.png', 10)
+  @screen.wait_and_click('UnsafeBrowserEditMenu.png', 10)
+  @screen.wait_and_click('UnsafeBrowserEditPreferences.png', 10)  
+  @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
   @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
   @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
   sleep 0.5
@@ -109,10 +108,12 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     proxy_type = proxy[0]
     proxy_port = proxy[1]
 
+    @screen.hide_cursor
+
     # Open proxy settings and select manual proxy configuration
-    @screen.type("e", Sikuli::KeyModifier.ALT)
-    @screen.type("n")
-    @screen.wait('UnsafeBrowserPreferences.png', 10)
+    @screen.wait_and_click('UnsafeBrowserEditMenu.png', 10)
+    @screen.wait_and_click('UnsafeBrowserEditPreferences.png', 10)  
+    @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
     @screen.type("e", Sikuli::KeyModifier.ALT)
     @screen.wait('UnsafeBrowserProxySettings.png', 10)
     @screen.type("m", Sikuli::KeyModifier.ALT)

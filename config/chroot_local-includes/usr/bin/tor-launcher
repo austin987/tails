@@ -2,17 +2,19 @@
 
 set -e
 
+# Import the TBB_INSTALL variable
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
 # The Tor Browser hardcodes the default profile dir to ../.. from the
 # folder storing the application.ini file supplied via -app. Sadly,
 # -profile doesn't work together with -app. Therefore we copy the
 # whole Tor Launcher application (just ~350 KB) into the user's home
 # so we can get the profile directory in a sane place.
 if [ ! -e "${HOME}"/.tor-launcher ]; then
-    mkdir -p "${HOME}"/.tor-launcher/application
-    cp -r /usr/share/tor-launcher-standalone \
-          "${HOME}"/.tor-launcher/application/
-    mkdir -p "${HOME}"/.tor-launcher/Data/Browser/
-    cat << EOF > "${HOME}"/.tor-launcher/Data/Browser/profiles.ini
+    mkdir -p "${HOME}"/.tor-launcher
+    cp -r /usr/share/tor-launcher-standalone "${HOME}"/.tor-launcher/tor-launcher-standalone
+    mkdir -p "${HOME}"/.tor-launcher/TorBrowser/Data/Browser/
+    cat << EOF > "${HOME}"/.tor-launcher/TorBrowser/Data/Browser/profiles.ini
 [General]
 StartWithLastProfile=1
 
@@ -21,8 +23,8 @@ Name=default
 IsRelative=1
 Path=profile.default
 EOF
-    mkdir -p "${HOME}"/.tor-launcher/Data/Browser/profile.default/preferences
+    mkdir -p "${HOME}"/.tor-launcher/TorBrowser/Data/Browser/profile.default/preferences
     ln -s /var/lib/tails-user-session/browser-locale.js \
-          "${HOME}"/.tor-launcher/Data/Browser/profile.default/preferences/locale.js
+          "${HOME}"/.tor-launcher/TorBrowser/Data/Browser/profile.default/preferences/locale.js
 fi
-/usr/local/lib/tor-browser/Browser/firefox --app "${HOME}"/.tor-launcher/application/tor-launcher-standalone/application.ini
+exec "${TBB_INSTALL}"/Browser/firefox --app "${HOME}"/.tor-launcher/tor-launcher-standalone/application.ini

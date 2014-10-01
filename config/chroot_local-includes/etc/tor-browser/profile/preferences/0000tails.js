@@ -1,10 +1,8 @@
 // As suggested in TBB's start-tor-browser script for system-wide Tor
 // instances
 pref("extensions.torbutton.banned_ports", "9150,9051");
-pref("extensions.torbutton.block_disk", false);
 pref("extensions.torbutton.custom.socks_host", "127.0.0.1");
 pref("extensions.torbutton.custom.socks_port", 9150);
-pref("extensions.torbutton.inserted_button", true);
 pref("extensions.torbutton.launch_warning",  false);
 pref("extensions.torbutton.loglevel", 2);
 pref("extensions.torbutton.logmethod", 0);
@@ -20,7 +18,10 @@ pref("extensions.torlauncher.logmethod", 0);
 pref("extensions.torlauncher.prompt_at_startup", false);
 pref("extensions.torlauncher.start_tor", false);
 
-// Tails-specific configuartion below
+// Tails-specific configuration below
+
+// Disable the Tor Browser's automatic update checking
+pref("app.update.enabled", false);
 
 // Adblock Plus preferences
 pref("extensions.adblockplus.correctTypos", false);
@@ -62,6 +63,9 @@ pref("noscript.forbidFlash", true);
 pref("noscript.forbidSilverlight", true);
 pref("noscript.forbidJava", true);
 pref("noscript.forbidPlugins", true);
+
+// Other Tails-specific NoScript preferences
+pref("noscript.untrusted", "google-analytics.com");
 
 // Other non-Torbutton, Tails-specific prefs
 pref("browser.download.manager.closeWhenDone", true);

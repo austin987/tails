@@ -41,12 +41,6 @@ Pre-freeze
 The [[contribute/working_together/roles/release_manager]] role
 documentation has more tasks that should be done early enough.
 
-Update Iceweasel preferences
-----------------------------
-
-* update `extensions.adblockplus.currentVersion` in
-  `config/chroot_local-includes/etc/iceweasel/profile/user.js`
-
 Coordinate with Debian security updates
 ---------------------------------------
 
@@ -71,22 +65,22 @@ AdBlock patterns
 ----------------
 
 Patterns are stored in
-`config/chroot_local-includes/etc/iceweasel/profile/adblockplus/`.
+`config/chroot_local-includes/etc/tor-browser/profile.default/adblockplus/`.
 
 1. Boot Tails
-2. Open *Tools* → *Addons*
+2. Start the tor Browser and open *Tools* → *Addons*
 3. Select *Adblock Plus* in extensions
 4. Open *Preferences* → *Filter preferences…*
 5. For each filters, click *Actions* → *Update filters*
-6. Close Iceweasel
-7. Copy the `.mozilla/firefox/default/adblockplus/patterns.ini` from
-   this Iceweasel instance to the
-   `config/chroot_local-includes/etc/iceweasel/profile/adblockplus`
+6. Close the Tor Browser
+7. Copy the `.tor-browser/profile.default/adblockplus/patterns.ini` from
+   this Tor Browser instance to the
+   `config/chroot_local-includes/etc/tor-browser/profile.default/adblockplus`
    directory in the Tails Git checkout.
 8. Commit:
 
        git commit -m 'Update AdBlock Plus patterns.' \
-          config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini
+          config/chroot_local-includes/etc/tor-browser/profile.default/adblockplus/patterns.ini
 
 Upgrade bundled binary Debian packages
 --------------------------------------
@@ -116,7 +110,6 @@ Correct all the errors that are not in the ignored list of
 
 Then see the relevant release processes:
 
-* [[iceweasel]]
 * [[liveusb-creator]]
 * [[tails-greeter]]
 * [[perl5lib]]
@@ -126,6 +119,11 @@ Then see the relevant release processes:
   * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
   * build a Debian package
   * upload it to our [[APT repository]]
+
+Upgrade the Tor Browser
+-----------------------
+
+See the dedicated page: [[tor-browser]]
 
 Update PO files
 ---------------
@@ -479,15 +477,6 @@ Prepare upgrade-description files
 Upload images
 =============
 
-Sanity check
-------------
-
-Verify that the current source for Firefox is still the same we've
-used when preparing our custom Iceweasel package: e.g. FF17.0.8 got
-re-tagged and re-uploaded at the last minute, due to a test failure.
-
-Better catch this before people spend time doing manual tests.
-
 ## Announce, seed and test the Torrents
 
 Announce and seed the Torrents.
@@ -622,7 +611,7 @@ image to be released was *built*. Including:
 - the list of BSA fixed in packages we ship since those that were in
   the previous release of Tails:
   <https://lists.debian.org/debian-backports-announce/>
-- the list of MFSA fixed by the iceweasel update:
+- the list of MFSA fixed by the Tor Browser update:
   <https://www.mozilla.org/security/announce/>
 
 If preparing a release candidate
@@ -678,12 +667,6 @@ Testing
 
 Go wild!
 ========
-
-Sanity check
-------------
-
-Verify once more that the current source for Firefox is still the same
-we've used when preparing our custom Iceweasel packages.
 
 Push
 ----

@@ -18,6 +18,9 @@ CLEARNET_USER=clearnet
 # Import tor_is_working()
 . /usr/local/lib/tails-shell-library/tor.sh
 
+# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
 WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
 LANG_CODE="$(echo ${LANG} | head -c 2)"
 if [ -r "${WARNING_PAGE}.${LANG_CODE}.html" ]; then
@@ -108,29 +111,26 @@ set_chroot_browser_name () {
     NAME="${1}"
     LONG=$(echo ${LANG} | grep -o "^[a-zA-Z_]*")
     SHORT=${LONG%%_*}
-    EXT_DIR=${CHROOT}/usr/local/lib/tor-browser/extensions
+    EXT_DIR=${CHROOT}/"${TBB_EXT}"
     BRANDING=branding/brand.dtd
     if [ -e "${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi" ]; then
         PACK="${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi"
         TOP=browser/chrome
         REST=${LONG}/locale
-        OLD_NAME="Mozilla Firefox"
     elif [ -e "${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi" ]; then
         PACK="${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi"
         TOP=browser/chrome
         REST=${SHORT}/locale
-        OLD_NAME="Mozilla Firefox"
     else
-        PACK="${CHROOT}/usr/local/lib/tor-browser/Browser/browser/omni.ja"
+        PACK="${CHROOT}/${TBB_INSTALL}/Browser/browser/omni.ja"
         TOP=chrome
         REST=en-US/locale
-        OLD_NAME="Tor Browser"
     fi
     TMP=$(mktemp -d)
     # Non-zero exit code due to non-standard ZIP archive.
     # The following steps will fail soon if the extraction failed anyway.
     unzip -d "${TMP}" "${PACK}" || true
-    sed -i "s/${OLD_NAME}/${NAME}/" "${TMP}/${TOP}/${REST}/${BRANDING}"
+    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${NAME}\">/" "${TMP}/${TOP}/${REST}/${BRANDING}"
     rm "${PACK}"
     (cd $TMP ; 7z a -tzip "${PACK}" .)
     chmod a+r "${PACK}"
@@ -147,20 +147,20 @@ configure_chroot () {
     done
     chmod a+r ${CHROOT}/etc/resolv.conf
 
-    # Remove all Iceweasel addons: some adds proxying, which we don't
+    # Remove all addons: some adds proxying, which we don't
     # want; some may change the fingerprint compared to a standard
-    # Iceweasel install. Note: We cannot use apt-get since we don't ship its
+    # Firefox install. Note: We cannot use apt-get since we don't ship its
     # lists (#6531). Too bad, APT supports globbing, while dkpg does not.
     dpkg -l 'xul-ext-*' | /bin/grep '^ii' | awk '{print $2}' | \
         xargs chroot ${CHROOT} dpkg --remove
 
-    # Create a fresh Iceweasel profile for the clearnet user
+    # Create a fresh browser profile for the clearnet user
     CLEARNET_PROFILE="${CHROOT}"/home/clearnet/.tor-browser/profile.default
 
     CLEARNET_EXT="${CLEARNET_PROFILE}"/extensions
     mkdir -p "${CLEARNET_EXT}"
-    cp -Pr /etc/tor-browser/profile/extensions/langpack-*.xpi \
-           /etc/tor-browser/profile/extensions/branding@amnesia.boum.org \
+    cp -Pr "${TBB_PROFILE}"/extensions/langpack-*.xpi \
+           "${TBB_PROFILE}"/extensions/branding@amnesia.boum.org \
            "${CLEARNET_EXT}"
 
     CLEARNET_PREFS="${CLEARNET_PROFILE}"/preferences/prefs.js
@@ -173,7 +173,29 @@ configure_chroot () {
     echo 'pref("network.proxy.type", 0);' >> "${CLEARNET_PREFS}"
     echo 'pref("network.proxy.socks_remote_dns", false);' >>  "${CLEARNET_PREFS}"
 
-    # Set a scary theme (except if we're using Windows camouflage)
+    # Prevent File -> Print or CTRL+P from causing the browser to hang
+    # for several minutes while trying to communicate with CUPS, since
+    # access to port 631 isn't allowed through.
+    echo 'pref("print.postscript.cups.enabled", false);' >> "${CLEARNET_PREFS}"
+
+    # Set the name (e.g. window title) of the browser
+    set_chroot_browser_name "`gettext \"Unsafe Browser\"`"
+
+    # Set start page to something that explains what's going on
+    echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
+        "${CLEARNET_PREFS}"
+
+    # Remove all bookmarks
+    rm -f ${CHROOT}/"${TBB_PROFILE}"/bookmarks.html
+    rm -f ${CLEARNET_PROFILE}/bookmarks.html
+    rm -f ${CLEARNET_PROFILE}/places.sqlite
+
+    chown -R clearnet:clearnet ${CHROOT}/home/clearnet/.tor-browser
+
+    # Set a scary theme (except if we're using Windows
+    # camouflage). Note that the tails-activate-win8-theme script that
+    # we may run below requires that the browser profile is writable
+    # by the user running the script (i.e. clearnet).
     if [ -z "${CAMOUFLAGE}" ]; then
         cat >> "${CLEARNET_PREFS}" <<EOF
 pref("lightweightThemes.isThemeSelected", true);
@@ -185,27 +207,14 @@ EOF
         chroot ${CHROOT} sudo -H -u clearnet sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
     fi
 
-    # Set the name (e.g. window title) of the browser
-    set_chroot_browser_name "`gettext \"Unsafe Browser\"`"
-
-    # Set start page to something that explains what's going on
-    echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
-        "${CLEARNET_PREFS}"
-
-    # Remove all bookmarks
-    rm -f ${CHROOT}/etc/tor-browser/default.profile/bookmarks.html
-    rm -f ${CLEARNET_PROFILE}/bookmarks.html
-    rm -f ${CLEARNET_PROFILE}/places.sqlite
-
-    chown -R clearnet:clearnet ${CHROOT}/home/clearnet/.tor-browser
 }
 
 run_browser_in_chroot () {
-    # Start Iceweasel in the chroot
+    # Start the browser in the chroot
     echo "* Starting Unsafe Browser"
 
     sudo -u ${SUDO_USER} xhost +SI:localuser:${CLEARNET_USER} 2>/dev/null
-    chroot ${CHROOT} sudo -u ${CLEARNET_USER} /usr/local/lib/tor-browser/Browser/firefox -DISPLAY=:0.0 -profile /home/clearnet/.tor-browser/profile.default
+    chroot ${CHROOT} sudo -u ${CLEARNET_USER} "${TBB_INSTALL}"/Browser/firefox -DISPLAY=:0.0 -profile /home/clearnet/.tor-browser/profile.default
     sudo -u ${SUDO_USER} xhost -SI:localuser:${CLEARNET_USER} 2>/dev/null
 }
 
