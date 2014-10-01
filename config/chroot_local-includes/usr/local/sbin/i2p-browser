@@ -27,6 +27,7 @@ START_PAGE="http://127.0.0.1:7657"
 
 NOSCRIPT="${TBB_INSTALL}/extensions/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
 TORBUTTON="${TBB_INSTALL}/extensions/torbutton@torproject.org"
+NAME="`gettext \"I2P Browser\"`"
 
 if [ -e /var/lib/gdm3/tails.camouflage ]; then
     CAMOUFLAGE=yes
@@ -144,18 +145,25 @@ configure_chroot () {
 
     # Keep the NoScript and TorButton addons
     chroot ${CHROOT} dpkg -l 'xul-ext*' |grep -v 'noscript\|torbutton' \
-            | awk '/^ii/{print $2}' | xargs chroot ${CHROOT} dpkg --remove
+            | awk '/^ii/{print $2}' | xargs -r chroot ${CHROOT} dpkg --remove
 
     # Create a fresh Tor Browser profile for the i2pbrowser user
     BROWSER_PROFILE="${CHROOT}/home/${BROWSER_USER}/.tor-browser/profile.default"
     BROWSER_EXT="${BROWSER_PROFILE}/extensions"
     mkdir -p "${BROWSER_EXT}"
     ln -s "${NOSCRIPT}" "${BROWSER_EXT}"
-    ln -s "${TORBUTTON}" "${BROWSER_EXT}"
+    # TorButton forces the Browser name to Tor Browser. This hack is to undo that and set it to I2P Browser
+    # to try to prevent user confusion.
+    #ln -s "${TORBUTTON}" "${BROWSER_EXT}"
+    TMP=$(mktemp -d)
+    cp -a /usr/share/xul-ext/torbutton/ $TMP
     for LANGPACK in $(ls ${TBB_PROFILE}/extensions/langpack-*.xpi); do
         ln -s "${LANGPACK}" "${BROWSER_EXT}"
     done
-
+    find $TMP/torbutton  -name 'brand.dtd' -print0 | \
+       xargs -0 -r sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${NAME}\">/"
+    cd $TMP/torbutton && 7z a -tzip "${BROWSER_EXT}/torbutton@torproject.org.xpi" .
+    rm -r $TMP
     BROWSER_PREF_DIR="${BROWSER_PROFILE}/preferences"
     BROWSER_PREFS="${BROWSER_PREF_DIR}/prefs.js"
     mkdir -p "${BROWSER_PREF_DIR}"
