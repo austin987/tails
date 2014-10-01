@@ -10,14 +10,6 @@ pref("extensions.torbutton.settings_method", "custom");
 pref("extensions.torbutton.socks_port", 9150);
 pref("extensions.torbutton.use_privoxy", false);
 
-// Also suggested, but probably not needed given Tails uses its own
-// Tor Launcher
-pref("extensions.torlauncher.control_port", 9052);
-pref("extensions.torlauncher.loglevel", 2);
-pref("extensions.torlauncher.logmethod", 0);
-pref("extensions.torlauncher.prompt_at_startup", false);
-pref("extensions.torlauncher.start_tor", false);
-
 // Tails-specific configuration below
 
 // Disable the Tor Browser's automatic update checking
