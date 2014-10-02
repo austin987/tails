@@ -75,12 +75,22 @@ When /^I open the address "([^"]*)" in the Unsafe Browser$/ do |address|
   @screen.type(address + Sikuli::Key.ENTER)
 end
 
+# Workaround until the TBB shows the menu bar by default
+# https://lists.torproject.org/pipermail/tor-qa/2014-October/000478.html
+def show_unsafe_browser_menu_bar
+  try_for(15, :msg => "Failed to show the menu bar") do
+    @screen.type("h", Sikuli::KeyModifier.ALT)
+    @screen.find('UnsafeBrowserEditMenu.png')
+  end
+end
+
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
   # First we open the proxy settings page to prepare it with the
   # correct open tabs for the loop below.
-  @screen.wait_and_click('UnsafeBrowserEditMenu.png', 10)
+  show_unsafe_browser_menu_bar
+  @screen.hover('UnsafeBrowserEditMenu.png')
   @screen.wait_and_click('UnsafeBrowserEditPreferences.png', 10)  
   @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
   @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
@@ -111,7 +121,8 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     @screen.hide_cursor
 
     # Open proxy settings and select manual proxy configuration
-    @screen.wait_and_click('UnsafeBrowserEditMenu.png', 10)
+    show_unsafe_browser_menu_bar
+    @screen.hover('UnsafeBrowserEditMenu.png')
     @screen.wait_and_click('UnsafeBrowserEditPreferences.png', 10)  
     @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
     @screen.type("e", Sikuli::KeyModifier.ALT)
