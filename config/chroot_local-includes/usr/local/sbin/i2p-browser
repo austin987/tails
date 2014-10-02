@@ -351,7 +351,10 @@ run_browser_in_chroot () {
     echo "* Starting I2P Browser"
 
     sudo -u ${SUDO_USER} xhost +SI:localuser:${BROWSER_USER} 2>/dev/null
-    chroot ${CHROOT} sudo -u ${BROWSER_USER} LD_LIBRARY_PATH="${TBB_INSTALL}" "${TBB_INSTALL}/Browser/firefox" -DISPLAY=:0.0 -profile /home/${BROWSER_USER}/.tor-browser/profile.default
+    chroot ${CHROOT} sudo -u ${BROWSER_USER} /bin/sh -c \
+        ". /usr/local/lib/tails-shell-library/tor-browser.sh && \
+         exec_firefox -DISPLAY=:0.0 \
+                      -profile /home/${BROWSER_USER}/.tor-browser/profile.default"
     sudo -u ${SUDO_USER} xhost -SI:localuser:${BROWSER_USER} 2>/dev/null
 }
 
