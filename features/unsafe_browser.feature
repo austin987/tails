@@ -17,8 +17,9 @@ Feature: Browsing the web using the Unsafe Browser
 
   Scenario: Starting the Unsafe Browser works as it should.
     When I successfully start the Unsafe Browser
-    And the Unsafe Browser has a red theme
+    Then the Unsafe Browser has a red theme
     And the Unsafe Browser shows a warning as its start page
+    And the Unsafe Browser uses all expected TBB shared libraries
 
   Scenario: Closing the Unsafe Browser shows a stop notification.
     When I successfully start the Unsafe Browser
