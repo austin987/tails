@@ -11,7 +11,7 @@ export TEXTDOMAIN
 
 PROFILE="${HOME}/.tor-browser/profile.default"
 
-# Import the TBB_INSTALL variable
+# Import exec_firefox()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 ask_for_confirmation() {
@@ -43,10 +43,7 @@ start_browser() {
 
     unset SESSION_MANAGER
 
-    LD_LIBRARY_PATH="${TBB_INSTALL}"/Browser
-    export LD_LIBRARY_PATH
-
-    exec "${TBB_INSTALL}"/Browser/firefox -allow-remote --class "Tor Browser" -profile "${PROFILE}" "${@}"
+    exec_firefox -allow-remote --class "Tor Browser" -profile "${PROFILE}" "${@}"
 }
 
 
