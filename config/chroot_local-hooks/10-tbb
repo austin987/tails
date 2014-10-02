@@ -6,32 +6,23 @@ echo "Install the Tor Browser"
 
 # Get the below with `grep "tor-browser-linux32-.*\.tar.xz" sha256sums.txt`
 BUNDLES="$(cat <<EOF
-fe920b32b105a9c356af44f2f64652cdda9144b26b9c9d49e48b9a73d03a9b05  tor-browser-linux32-4.0-alpha-3_ar.tar.xz
-594212333fccbf5a069f9656f09f683cba7ade0807042b0d3acd5f53b417705d  tor-browser-linux32-4.0-alpha-3_de.tar.xz
-06100939b3260b4beafc20090e291e007229fc1a0858e8316844087d37bfc10f  tor-browser-linux32-4.0-alpha-3_en-US.tar.xz
-65d4649d17a509232984a0f422bec52b70788d347212b6df34333575cd565951  tor-browser-linux32-4.0-alpha-3_es-ES.tar.xz
-a8d38e3e7277d4964b0df85698b2465cd051298b25d2efe792eddd630676ed3a  tor-browser-linux32-4.0-alpha-3_fa.tar.xz
-e627d5234da400f6d25042ace6fa596e9ff651ce1568f7c4a208cfe78914f265  tor-browser-linux32-4.0-alpha-3_fr.tar.xz
-c06af5211c7ec2f0d5faa27f09759617a60d16d4ad21b212bedc7ac7f6bd8891  tor-browser-linux32-4.0-alpha-3_it.tar.xz
-dbb8238785bc3fd69657b74148dbede7a6f478c5490d6d9de7220d3b83fe1c6d  tor-browser-linux32-4.0-alpha-3_ko.tar.xz
-76f703e78874bbbb40e6f57989aa6b52c9681bee3c414f425f9c3957aa006811  tor-browser-linux32-4.0-alpha-3_nl.tar.xz
-7b88b20d413666109fe24b66de9702387ca2584725501880ce86af1a256829c6  tor-browser-linux32-4.0-alpha-3_pl.tar.xz
-c06c0149976ab98d11c8a551749fbd2c18db0790cf0918c75a628d4987c0f6eb  tor-browser-linux32-4.0-alpha-3_pt-PT.tar.xz
-37d1d4cb066fada40d594589df4047ea2b2f36041a89ed919d74ef5fa7cc81a3  tor-browser-linux32-4.0-alpha-3_ru.tar.xz
-7ba4cdff727cae576a18e6268b68155f77cc85e975d65dce9fac4071b1355970  tor-browser-linux32-4.0-alpha-3_tr.tar.xz
-1ac091e600853a02f2012fc939cb0c635cc674b5321d89e8af981c324775dfe7  tor-browser-linux32-4.0-alpha-3_vi.tar.xz
-d16fc17581bf4741f76268b57e7bd3cd249ee97328b8b508366cef85fbc1ee01  tor-browser-linux32-4.0-alpha-3_zh-CN.tar.xz
+a339274902d79d72ab864f49072d0737564e29db56ddd8009dcee33437e3a011  tor-browser-linux32-tbb-nightly_ar.tar.xz
+d2e3300869c272c92f3a84c4da24164f958f45af16c7aaabe3ee4f8e5573015f  tor-browser-linux32-tbb-nightly_en-US.tar.xz
+49a1b0777ee0a3836a7ed0f22cac5423d5dc5355dd3a6f3c1f1bb70aa7c7832f  tor-browser-linux32-tbb-nightly_ru.tar.xz
+5eddfbb6bc7c72828fc338d791f9aecf802c8f4ac2e7b103f6c21f86ffe6ce06  tor-browser-linux32-tbb-nightly_zh-CN.tar.xz
 EOF
 )"
 
 MAIN_BUNDLE="$(echo "${BUNDLES}" | grep -o "tor-browser-linux32-.*_en-US.tar.xz")"
-VERSION="$(echo "${MAIN_BUNDLE}" | sed 's/tor-browser-linux32-\(.*\)_en-US.tar.xz/\1/')"
+#VERSION="$(echo "${MAIN_BUNDLE}" | sed 's/tor-browser-linux32-\(.*\)_en-US.tar.xz/\1/')"
+VERSION=esr31-nightly
 # Note that we cannot use https here since apt-cacher-ng (used by vagrant)
 # gets confused and throws a 403. It doesn't matter, though, since we verify
 # the checksums of each file downloaded.
-TBB_DIST_URL="http://archive.torproject.org/tor-package-archive/torbrowser/${VERSION}"
+#TBB_DIST_URL="http://archive.torproject.org/tor-package-archive/torbrowser/${VERSION}"
 #TBB_DIST_URL="http://www.torproject.org/dist/torbrowser/${VERSION}/"
 #TBB_DIST_URL="http://people.torproject.org/~mikeperry/builds/${VERSION}/"
+TBB_DIST_URL="http://people.torproject.org/~gk/testbuilds/${VERSION}"
 
 # Import the TBB_INSTALL, TBB_PROFILE and TBB_EXT variables, which
 # contains the paths we will split TBB's actual browser (binaries

@@ -260,7 +260,7 @@ Given /^available upgrades have been checked$/ do
   }
 end
 
-Given /^the Tor Browser has started and loaded the startup page$/ do
+Given /^the Tor Browser has started$/ do
   next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
@@ -270,6 +270,11 @@ Given /^the Tor Browser has started and loaded the startup page$/ do
   end
 
   @screen.wait(tor_browser_picture, 60)
+end
+
+Given /^the Tor Browser has started and loaded the startup page$/ do
+  next if @skip_steps_while_restoring_background
+  step "the Tor Browser has started"
   @screen.wait("TorBrowserStartupPage.png", 120)
 end
 
@@ -492,6 +497,64 @@ When /^I start the Tor Browser in offline mode$/ do
     @screen.wait_and_click("TorBrowserOfflinePrompt.png", 10)
     @screen.click("TorBrowserOfflinePromptStart.png")
   end
+end
+
+def xul_app_shared_lib_check(pid, chroot)
+  expected_absent_tbb_libs = ['libnssdbm3.so']
+  absent_tbb_libs = []
+  unwanted_native_libs = []
+  tbb_libs = @vm.execute_successfully(
+                 ". /usr/local/lib/tails-shell-library/tor-browser.sh; " +
+                 "ls -1 #{chroot}${TBB_INSTALL}/Browser/*.so"
+                                      ).stdout.split
+  firefox_pmap_info = @vm.execute("pmap #{pid}").stdout
+  for lib in tbb_libs do
+    lib_name = File.basename lib
+    if not /\W#{lib}$/.match firefox_pmap_info
+      absent_tbb_libs << lib_name
+    end
+    native_libs = @vm.execute_successfully(
+                       "find /usr/lib /lib -name \"#{lib_name}\""
+                                           ).stdout.split
+    for native_lib in native_libs do
+      if /\W#{native_lib}$"/.match firefox_pmap_info
+        unwanted_native_libs << lib_name
+      end
+    end
+  end
+  absent_tbb_libs -= expected_absent_tbb_libs
+  assert(absent_tbb_libs.empty? && unwanted_native_libs.empty?,
+         "The loaded shared libraries for the firefox process are not the " +
+         "way we expect them.\n" +
+         "Expected TBB libs that are absent: #{absent_tbb_libs}\n" +
+         "Native libs that we don't want: #{unwanted_native_libs}")
+end
+
+Then /^(.*) uses all expected TBB shared libraries$/ do |application|
+  next if @skip_steps_while_restoring_background
+  binary = @vm.execute_successfully(
+                '. /usr/local/lib/tails-shell-library/tor-browser.sh; ' +
+                'echo ${TBB_INSTALL}/Browser/firefox'
+                                    ).stdout.chomp
+  case application
+  when "the Tor Browser"
+    user = $live_user
+    cmd_regex = "^#{binary} .* -profile /home/#{user}/.tor-browser/profile.default$"
+    chroot = ""
+  when "the Unsafe Browser"
+    user = "clearnet"
+    cmd_regex = "^#{binary} .* -profile /home/#{user}/.tor-browser/profile.default$"
+    chroot = "/var/lib/unsafe-browser/chroot"
+  when "Tor Launcher"
+    user = "tor-launcher"
+    cmd_regex = "^#{binary} -app /home/#{user}/.tor-launcher/tor-launcher-standalone/application.ini"
+    chroot = ""
+  else
+    raise "Invalid browser or XUL application: #{application}"
+  end
+  pid = @vm.execute_successfully("pgrep -U #{user} -fx '#{cmd_regex}'").stdout.chomp
+  assert(/\A\d+\z/.match(pid), "It seems like #{application} is not running")
+  xul_app_shared_lib_check(pid, chroot)
 end
 
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|

@@ -16,6 +16,11 @@ Feature: Browsing the web using the Tor Browser
     And all notifications have disappeared
     And I save the state so the background can be restored next scenario
 
+  Scenario: The Tor Browser uses TBB's shared libraries
+    When I start the Tor Browser
+    And the Tor Browser has started
+    Then the Tor Browser uses all expected TBB shared libraries
+
   Scenario: Opening check.torproject.org in the Tor Browser shows the green onion and the congratulations message
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page

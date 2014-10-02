@@ -330,6 +330,12 @@ EOF
     return VMCommand.new(self, cmd, { :user => user, :spawn => false })
   end
 
+  def execute_successfully(cmd, user = "root")
+    p = execute(cmd, user)
+    assert_vmcommand_success(p)
+    return p
+  end
+
   def spawn(cmd, user = "root")
     return VMCommand.new(self, cmd, { :user => user, :spawn => true })
   end

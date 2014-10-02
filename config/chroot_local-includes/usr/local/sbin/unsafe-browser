@@ -214,7 +214,10 @@ run_browser_in_chroot () {
     echo "* Starting Unsafe Browser"
 
     sudo -u ${SUDO_USER} xhost +SI:localuser:${CLEARNET_USER} 2>/dev/null
-    chroot ${CHROOT} sudo -u ${CLEARNET_USER} "${TBB_INSTALL}"/Browser/firefox -DISPLAY=:0.0 -profile /home/clearnet/.tor-browser/profile.default
+    chroot ${CHROOT} sudo -u ${CLEARNET_USER} /bin/sh -c \
+        '. /usr/local/lib/tails-shell-library/tor-browser.sh && \
+         exec_firefox -DISPLAY=:0.0 \
+                      -profile /home/clearnet/.tor-browser/profile.default'
     sudo -u ${SUDO_USER} xhost -SI:localuser:${CLEARNET_USER} 2>/dev/null
 }
 
