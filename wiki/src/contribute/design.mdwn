@@ -991,9 +991,13 @@ In Tails we do not use the `start-tor-browser` script, since it does a
 lot of stuff not needed in Tails (error checking mainly) and isn't
 flexible since it looks for the browser profile in a specific
 place. Our custom script makes use of the global installation and also
-makes sure the default profile is used as a basis. Also, whenever the
-user tries to start the Tor Browser before Tor is ready, they are
-informed it won't work, and asked whether to start the browser anyway:
+makes sure the default profile is used as a basis. Any shared libraries
+shipped inside the TBB are also used (via `LD_LIBRARY_PATH`) since
+Debian stable often has too old versions to start the browser.
+
+Whenever the user tries to start the Tor Browser before Tor is
+ready, they are informed it won't work, and asked whether to start the
+browser anyway:
 
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tor-browser]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/generate-tor-browser-profile]]- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
