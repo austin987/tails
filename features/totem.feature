@@ -9,7 +9,7 @@ Feature: Using Totem
   # explained in checks.feature.
 
   Background:
-    Given I create a sample MP4 video
+    Given I create sample videos
 
   Scenario: I can watch an MP4 video stored in non-persistent /home/amnesia
     Given a computer

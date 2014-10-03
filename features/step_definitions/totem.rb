@@ -2,7 +2,7 @@ def shared_video_dir_on_guest
   "/tmp/shared_video_dir"
 end
 
-Given /^I create a sample MP4 video$/ do
+Given /^I create sample videos$/ do
   next if @skip_steps_while_restoring_background
   fatal_system("ffmpeg -loop 1 -t 30 -f image2 " +
                "-i 'features/images/TailsBootSplash.png' " +
