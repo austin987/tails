@@ -144,6 +144,19 @@ Given /^I start Tails from DVD with network unplugged and I login$/ do
   step "all notifications have disappeared"
 end
 
+Given /^I start Tails from (.+?) drive "(.+?)" with network unplugged and I login$/ do |drive_type, drive_name|
+  # we don't @skip_steps_while_restoring_background as we're only running
+  # other steps, that are taking care of it *if* they have to
+  step "a computer"
+  step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
+  step "the network is unplugged"
+  step "I start the computer"
+  step "the computer boots Tails"
+  step "I log in to a new session"
+  step "Tails seems to have booted normally"
+  step "all notifications have disappeared"
+end
+
 When /^I power off the computer$/ do
   next if @skip_steps_while_restoring_background
   assert(@vm.is_running?,
