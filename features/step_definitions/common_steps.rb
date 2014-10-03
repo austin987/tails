@@ -539,20 +539,20 @@ Then /^(.*) uses all expected TBB shared libraries$/ do |application|
   case application
   when "the Tor Browser"
     user = $live_user
-    cmd_regex = "^#{binary} .* -profile /home/#{user}/.tor-browser/profile.default$"
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
     chroot = ""
   when "the Unsafe Browser"
     user = "clearnet"
-    cmd_regex = "^#{binary} .* -profile /home/#{user}/.tor-browser/profile.default$"
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
     chroot = "/var/lib/unsafe-browser/chroot"
   when "Tor Launcher"
     user = "tor-launcher"
-    cmd_regex = "^#{binary} -app /home/#{user}/.tor-launcher/tor-launcher-standalone/application.ini"
+    cmd_regex = "#{binary} -app /home/#{user}/\.tor-launcher/tor-launcher-standalone/application\.ini"
     chroot = ""
   else
     raise "Invalid browser or XUL application: #{application}"
   end
-  pid = @vm.execute_successfully("pgrep -U #{user} -fx '#{cmd_regex}'").stdout.chomp
+  pid = @vm.execute_successfully("pgrep --uid #{user} --full --exact '#{cmd_regex}'").stdout.chomp
   assert(/\A\d+\z/.match(pid), "It seems like #{application} is not running")
   xul_app_shared_lib_check(pid, chroot)
 end
