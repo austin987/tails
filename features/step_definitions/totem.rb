@@ -43,3 +43,7 @@ When /^I(?:| try to) open "([^"]+)" with Totem$/ do |filename|
   next if @skip_steps_while_restoring_background
   step "I run \"totem #{filename}\" in GNOME Terminal"
 end
+
+When /^I close Totem$/ do
+  step 'I kill the process "totem"'
+end
