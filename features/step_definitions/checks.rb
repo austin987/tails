@@ -116,8 +116,7 @@ Then /^MAT can clean some sample PDF file$/ do
   for pdf_on_host in Dir.glob("#{$misc_files_dir}/*.pdf") do
     pdf_name = File.basename(pdf_on_host)
     pdf_on_guest = "/home/#{$live_user}/#{pdf_name}"
-    @vm.execute("cp #{shared_pdf_dir_on_guest}/#{pdf_name} #{pdf_on_guest}",
-                $live_user)
+    step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{$live_user}\""
     @vm.execute("mat --display '#{pdf_on_guest}'",
                 $live_user).stdout
     check_before = @vm.execute("mat --check '#{pdf_on_guest}'",
