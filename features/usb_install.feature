@@ -50,16 +50,9 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   @keep_volumes
   Scenario: Writing files to a read/write-enabled persistent partition
     Given a computer
-    And the computer is set to boot from USB drive "current"
-    And the network is unplugged
-    When I start the computer
-    And the computer boots Tails
-    And Tails is running from USB drive "current"
+    And I start Tails from USB drive "current" with network unplugged and I login with persistence password "asdf"
+    Then Tails is running from USB drive "current"
     And the boot device has safe access rights
-    And I enable persistence with password "asdf"
-    And I log in to a new session
-    And GNOME has started
-    And all notifications have disappeared
     And persistence is enabled
     And I write some files expected to persist
     And persistent filesystems have safe access rights
@@ -71,16 +64,9 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   @keep_volumes
   Scenario: Writing files to a read-only-enabled persistent partition
     Given a computer
-    And the computer is set to boot from USB drive "current"
-    And the network is unplugged
-    When I start the computer
-    And the computer boots Tails
-    And Tails is running from USB drive "current"
+    And I start Tails from USB drive "current" with network unplugged and I login with read-only persistence password "asdf"
+    Then Tails is running from USB drive "current"
     And the boot device has safe access rights
-    And I enable read-only persistence with password "asdf"
-    And I log in to a new session
-    And GNOME has started
-    And all notifications have disappeared
     And persistence is enabled
     And I write some files not expected to persist
     And I remove some files expected to persist
@@ -128,15 +114,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   @keep_volumes
   Scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
     Given a computer
-    And the computer is set to boot from USB drive "old"
-    And the network is unplugged
-    When I start the computer
-    And the computer boots Tails
-    And Tails is running from USB drive "old"
-    And I enable persistence with password "asdf"
-    And I log in to a new session
-    And GNOME has started
-    And all notifications have disappeared
+    And I start Tails from USB drive "old" with network unplugged and I login with persistence password "asdf"
+    Then Tails is running from USB drive "old"
     And persistence is enabled
     And I write some files expected to persist
     And persistent filesystems have safe access rights
@@ -158,14 +137,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   @keep_volumes
   Scenario: Booting Tails from a USB drive upgraded from DVD with persistence enabled
     Given a computer
-    And the computer is set to boot from USB drive "to_upgrade"
-    And the network is unplugged
-    When I start the computer
-    And the computer boots Tails
-    And I enable persistence with password "asdf"
-    And I log in to a new session
-    Then Tails seems to have booted normally
-    And Tails is running from USB drive "to_upgrade"
+    And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence password "asdf"
+    Then Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
     And the expected persistent files are present in the filesystem
     And persistent directories have safe access rights
@@ -186,14 +159,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   @keep_volumes
   Scenario: Booting Tails from a USB drive upgraded from USB with persistence enabled
     Given a computer
-    And the computer is set to boot from USB drive "to_upgrade"
-    And the network is unplugged
-    When I start the computer
-    And the computer boots Tails
-    And I enable persistence with password "asdf"
-    And I log in to a new session
-    Then Tails seems to have booted normally
-    And persistence is enabled
+    And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence password "asdf"
+    Then persistence is enabled
     And Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
     And the expected persistent files are present in the filesystem
@@ -223,14 +190,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
 
   Scenario: Booting a USB drive upgraded from ISO with persistence enabled
     Given a computer
-    And the computer is set to boot from USB drive "to_upgrade"
-    And the network is unplugged
-    When I start the computer
-    And the computer boots Tails
-    And I enable persistence with password "asdf"
-    And I log in to a new session
-    Then Tails seems to have booted normally
-    And persistence is enabled
+    And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence password "asdf"
+    Then persistence is enabled
     And Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
     And the expected persistent files are present in the filesystem
