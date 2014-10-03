@@ -545,5 +545,6 @@ end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
   next if @skip_steps_while_restoring_background
-  @vm.execute("cp \"#{source}\" \"#{destination}\"", $live_user)
+  c = @vm.execute("cp \"#{source}\" \"#{destination}\"", $live_user)
+  assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
