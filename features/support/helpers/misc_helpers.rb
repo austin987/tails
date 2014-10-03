@@ -1,9 +1,9 @@
 require 'date'
 require 'timeout'
+require 'test/unit'
 
-def assert(b, msg = "Assertion failed!")
-  raise RuntimeError, msg, caller if ! b
-end
+# Make all the assert_* methods easily accessible in any context.
+include Test::Unit::Assertions
 
 # Call block (ignoring any exceptions it may throw) repeatedly with one
 # second breaks until it returns true, or until `t` seconds have
@@ -77,7 +77,7 @@ def cmd_helper(cmd)
     out = p.readlines.join("\n")
     p.close
     ret = $?
-    assert(ret == 0, "Command failed (returned #{ret}): #{cmd}:\n#{out}")
+    assert_equal(0, ret, "Command failed (returned #{ret}): #{cmd}:\n#{out}")
     return out
   end
 end
