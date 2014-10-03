@@ -41,6 +41,5 @@ end
 
 When /^I(?:| try to) open "([^"]+)" with Totem$/ do |filename|
   next if @skip_steps_while_restoring_background
-  puts @vm.execute("ls -l /home/amnesia").stdout
   step "I run \"totem #{filename}\" in GNOME Terminal"
 end
