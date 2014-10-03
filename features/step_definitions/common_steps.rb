@@ -537,3 +537,13 @@ When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
   step "I start and focus GNOME Terminal"
   @screen.type(command + Sikuli::Key.ENTER)
 end
+
+When /^the file "([^"]+)" exists$/ do |file|
+  next if @skip_steps_while_restoring_background
+  assert(@vm.execute("test -e #{file}").success?)
+end
+
+When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
+  next if @skip_steps_while_restoring_background
+  @vm.execute("cp \"#{source}\" \"#{destination}\"", $live_user)
+end
