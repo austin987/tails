@@ -523,3 +523,17 @@ Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
     @vm.execute("nmcli --terse --fields NAME,STATE con status").stdout.chomp == "#{con_name}:activated"
   }
 end
+
+When /^I start and focus GNOME Terminal$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+  @screen.wait_and_click("GnomeApplicationsAccessories.png", 10)
+  @screen.wait_and_click("GnomeApplicationsTerminal.png", 20)
+  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+end
+
+When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
+  next if @skip_steps_while_restoring_background
+  step "I start and focus GNOME Terminal"
+  @screen.type(command + Sikuli::Key.ENTER)
+end
