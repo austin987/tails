@@ -26,3 +26,9 @@ Feature: Using Totem
     And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"
     When I try to open "/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
+
+  Scenario: I can watch a WebM video over HTTPS on the command-line
+    Given a computer
+    And I start Tails from DVD and I login
+    When I open "https://webm.html5.org/test.webm" with Totem
+    Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
