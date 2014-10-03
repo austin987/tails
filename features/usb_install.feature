@@ -8,13 +8,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   @keep_volumes
   Scenario: Installing Tails to a pristine USB drive
     Given a computer
-    And the computer is set to boot from the Tails DVD
-    And the network is unplugged
-    And I start the computer
-    When the computer boots Tails
-    And I log in to a new session
-    And GNOME has started
-    And all notifications have disappeared
+    And I start Tails from DVD with network unplugged and I login
     And I create a new 4 GiB USB drive named "current"
     And I plug USB drive "current"
     And I "Clone & Install" Tails to USB drive "current"
@@ -185,13 +179,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   Scenario: Upgrading an old Tails USB installation from a Tails DVD
     Given a computer
     And I clone USB drive "old" to a new USB drive "to_upgrade"
-    And the computer is set to boot from the Tails DVD
-    And the network is unplugged
-    When I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And GNOME has started
-    And all notifications have disappeared
+    And I start Tails from DVD with network unplugged and I login
     And I plug USB drive "to_upgrade"
     And I "Clone & Upgrade" Tails to USB drive "to_upgrade"
     Then the running Tails is installed on USB drive "to_upgrade"
@@ -268,14 +256,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   Scenario: Upgrading an old Tails USB installation from an ISO image, running on the new version
     Given a computer
     And I clone USB drive "old" to a new USB drive "to_upgrade"
-    And the computer is set to boot from the Tails DVD
-    And the network is unplugged
     And I setup a filesystem share containing the Tails ISO
-    When I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And GNOME has started
-    And all notifications have disappeared
+    And I start Tails from DVD with network unplugged and I login
     And I plug USB drive "to_upgrade"
     And I do a "Upgrade from ISO" on USB drive "to_upgrade"
     Then the ISO's Tails is installed on USB drive "to_upgrade"
@@ -301,13 +283,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     Given a computer
     And I create a 4 GiB disk named "mbr"
     And I create a msdos label on disk "mbr"
-    And the computer is set to boot from the Tails DVD
-    And the network is unplugged
-    And I start the computer
-    When the computer boots Tails
-    And I log in to a new session
-    And GNOME has started
-    And all notifications have disappeared
+    And I start Tails from DVD with network unplugged and I login
     And I plug USB drive "mbr"
     And I "Clone & Install" Tails to USB drive "mbr"
     Then the running Tails is installed on USB drive "mbr"
@@ -342,13 +318,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   @keep_volumes
   Scenario: Try upgrading but end up installing Tails to a USB drive containing a Tails isohybrid installation
     Given a computer
-    And the computer is set to boot from the Tails DVD
-    And the network is unplugged
-    And I start the computer
-    When the computer boots Tails
-    And I log in to a new session
-    And GNOME has started
-    And all notifications have disappeared
+    And I start Tails from DVD with network unplugged and I login
     And I plug USB drive "isohybrid"
     And I try a "Clone & Upgrade" Tails to USB drive "isohybrid"
     But I am suggested to do a "Clone & Install"

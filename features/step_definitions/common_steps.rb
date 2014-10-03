@@ -131,6 +131,19 @@ When /^I start the computer$/ do
   post_vm_start_hook
 end
 
+Given /^I start Tails from DVD with network unplugged and I login$/ do
+  # we don't @skip_steps_while_restoring_background as we're only running
+  # other steps, that are taking care of it *if* they have to
+  step "a computer"
+  step "the computer is set to boot from the Tails DVD"
+  step "the network is unplugged"
+  step "I start the computer"
+  step "the computer boots Tails"
+  step "I log in to a new session"
+  step "Tails seems to have booted normally"
+  step "all notifications have disappeared"
+end
+
 When /^I power off the computer$/ do
   next if @skip_steps_while_restoring_background
   assert(@vm.is_running?,
