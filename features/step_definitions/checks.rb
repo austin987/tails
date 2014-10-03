@@ -103,7 +103,7 @@ Then /^the VirtualBox guest modules are available$/ do
 end
 
 def shared_pdf_dir_on_guest
-  "/tmp/shared_dir"
+  "/tmp/shared_pdf_dir"
 end
 
 Given /^I setup a filesystem share containing a sample PDF$/ do

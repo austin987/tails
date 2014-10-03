@@ -110,7 +110,7 @@ When /^I am suggested to do a "Clone & Install"$/ do
 end
 
 def shared_iso_dir_on_guest
-  "/tmp/shared_dir"
+  "/tmp/shared_iso_dir"
 end
 
 Given /^I setup a filesystem share containing the Tails ISO$/ do
