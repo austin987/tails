@@ -131,16 +131,26 @@ When /^I start the computer$/ do
   post_vm_start_hook
 end
 
-Given /^I start Tails from DVD with network unplugged and I login$/ do
+Given /^I start Tails from DVD(| with network unplugged) and I login$/ do |network_unplugged|
   # we don't @skip_steps_while_restoring_background as we're only running
   # other steps, that are taking care of it *if* they have to
   step "the computer is set to boot from the Tails DVD"
-  step "the network is unplugged"
+  if network_unplugged.empty?
+    step "the network is plugged"
+  else
+    step "the network is unplugged"
+  end
   step "I start the computer"
   step "the computer boots Tails"
   step "I log in to a new session"
   step "Tails seems to have booted normally"
-  step "all notifications have disappeared"
+  if network_unplugged.empty?
+    step "Tor is ready"
+    step "all notifications have disappeared"
+    step "available upgrades have been checked"
+  else
+    step "all notifications have disappeared"
+  end
 end
 
 Given /^I start Tails from (.+?) drive "(.+?)" with network unplugged and I login(| with(| read-only) persistence password "([^"]+)")$/ do |drive_type, drive_name, persistence_on, persistence_ro, persistence_pwd|
