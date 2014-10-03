@@ -32,3 +32,10 @@ Feature: Using Totem
     And I start Tails from DVD and I login
     When I open "https://webm.html5.org/test.webm" with Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
+
+  Scenario: I can watch a WebM video over HTTPS without using the command-line
+    Given a computer
+    And I start Tails from DVD and I login
+    When I start Totem through the GNOME menu
+    When I load the "https://webm.html5.org/test.webm" URL in Totem
+    Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds

@@ -24,6 +24,21 @@ Given /^I copy the sample videos to "([^"]+)" as user "([^"]+)"$/ do |destinatio
   end
 end
 
+When /^I start Totem through the GNOME menu$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+  @screen.wait_and_click("GnomeApplicationsSoundVideo.png", 10)
+  @screen.wait_and_click("GnomeApplicationsTotem.png", 20)
+  @screen.wait_and_click("TotemMainWindow.png", 20)
+end
+
+When /^I load the "([^"]+)" URL in Totem$/ do |url|
+  next if @skip_steps_while_restoring_background
+  @screen.type("l", Sikuli::KeyModifier.CTRL)
+  @screen.wait("TotemOpenUrlDialog.png", 10)
+  @screen.type(url + Sikuli::Key.ENTER)
+end
+
 When /^I(?:| try to) open "([^"]+)" with Totem$/ do |filename|
   next if @skip_steps_while_restoring_background
   puts @vm.execute("ls -l /home/amnesia").stdout
