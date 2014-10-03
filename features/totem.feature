@@ -32,3 +32,34 @@ Feature: Using Totem
     And I start Totem through the GNOME menu
     When I load the "https://webm.html5.org/test.webm" URL in Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
+
+  @keep_volumes
+  Scenario: Installing Tails on a USB drive, creating a persistent partition, copying video files to it
+    Given a computer
+    And I start Tails from DVD with network unplugged and I login
+    And I create a new 4 GiB USB drive named "current"
+    And I plug USB drive "current"
+    When I "Clone & Install" Tails to USB drive "current"
+    Then there is no persistence partition on USB drive "current"
+    When I shutdown Tails and wait for the computer to power off
+    And I start Tails from USB drive "current" with network unplugged and I login
+    And I create a persistent partition with password "asdf"
+    Then a Tails persistence partition with password "asdf" exists on USB drive "current"
+    When I shutdown Tails and wait for the computer to power off
+    And I setup a filesystem share containing sample videos
+    And I start Tails from USB drive "current" with network unplugged and I login with persistence password "asdf"
+    And I copy the sample videos to "/home/amnesia/Persistent" as user "amnesia"
+    And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"
+    And I shutdown Tails and wait for the computer to power off
+
+  @keep_volumes
+  Scenario: Watching a MP4 video stored on the persistent volume
+    Given a computer
+    And I start Tails from USB drive "current" with network unplugged and I login with persistence password "asdf"
+    And the file "/home/amnesia/Persistent/video.mp4" exists
+    When I open "/home/amnesia/Persistent/video.mp4" with Totem
+    Then I see "SampleLocalMp4VideoFrame.png" after at most 10 seconds
+    Given I close Totem
+    And the file "/home/amnesia/.gnupg/video.mp4" exists
+    When I try to open "/home/amnesia/.gnupg/video.mp4" with Totem
+    Then I see "TotemUnableToOpen.png" after at most 10 seconds
