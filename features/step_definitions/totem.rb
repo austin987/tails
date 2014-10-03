@@ -19,8 +19,9 @@ Given /^I copy the sample videos to "([^"]+)" as user "([^"]+)"$/ do |destinatio
   next if @skip_steps_while_restoring_background
   for video_on_host in Dir.glob("#{$misc_files_dir}/*.mp4") do
     video_name = File.basename(video_on_host)
-    video_on_guest = "/home/#{$live_user}/#{video_name}"
-    step "I copy \"#{shared_video_dir_on_guest}/#{video_name}\" to \"#{video_on_guest}\" as user \"amnesia\""
+    src_on_guest = "#{shared_video_dir_on_guest}/#{video_name}"
+    dst_on_guest = "#{destination}/#{video_name}"
+    step "I copy \"#{src_on_guest}\" to \"#{dst_on_guest}\" as user \"amnesia\""
   end
 end
 
