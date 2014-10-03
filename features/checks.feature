@@ -52,11 +52,6 @@ Feature: Various checks
   # impossible to have after a snapshot restore.
   Scenario: MAT can clean a PDF file
     Given a computer
-    And the network is unplugged
     And I setup a filesystem share containing a sample PDF
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And GNOME has started
-    And all notifications have disappeared
+    And I start Tails from DVD with network unplugged and I login
     Then MAT can clean some sample PDF file
