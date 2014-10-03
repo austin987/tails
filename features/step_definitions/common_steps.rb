@@ -134,7 +134,6 @@ end
 Given /^I start Tails from DVD with network unplugged and I login$/ do
   # we don't @skip_steps_while_restoring_background as we're only running
   # other steps, that are taking care of it *if* they have to
-  step "a computer"
   step "the computer is set to boot from the Tails DVD"
   step "the network is unplugged"
   step "I start the computer"
@@ -147,7 +146,6 @@ end
 Given /^I start Tails from (.+?) drive "(.+?)" with network unplugged and I login(| with(| read-only) persistence password "([^"]+)")$/ do |drive_type, drive_name, persistence_on, persistence_ro, persistence_pwd|
   # we don't @skip_steps_while_restoring_background as we're only running
   # other steps, that are taking care of it *if* they have to
-  step "a computer"
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
   step "the network is unplugged"
   step "I start the computer"
