@@ -556,3 +556,18 @@ When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination
   c = @vm.execute("cp \"#{source}\" \"#{destination}\"", $live_user)
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
+
+Given /^the USB drive "([^"]+)" contains Tails with persistence configured and password "([^"]+)"$/ do |drive, password|
+    step "a computer"
+    step "I start Tails from DVD with network unplugged and I login"
+    step "I create a new 4 GiB USB drive named \"#{drive}\""
+    step "I plug USB drive \"#{drive}\""
+    step "I \"Clone & Install\" Tails to USB drive \"#{drive}\""
+    step "there is no persistence partition on USB drive \"#{drive}\""
+    step "I shutdown Tails and wait for the computer to power off"
+    step "a computer"
+    step "I start Tails from USB drive \"#{drive}\" with network unplugged and I login"
+    step "I create a persistent partition with password \"#{password}\""
+    step "a Tails persistence partition with password \"#{password}\" exists on USB drive \"#{drive}\""
+    step "I shutdown Tails and wait for the computer to power off"
+end

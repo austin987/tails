@@ -38,19 +38,8 @@ Feature: Using Totem
 
   @keep_volumes
   Scenario: Installing Tails on a USB drive, creating a persistent partition, copying video files to it
-    Given a computer
-    And I start Tails from DVD with network unplugged and I login
-    And I create a new 4 GiB USB drive named "current"
-    And I plug USB drive "current"
-    When I "Clone & Install" Tails to USB drive "current"
-    Then there is no persistence partition on USB drive "current"
-    And I shutdown Tails and wait for the computer to power off
-    Given a computer
-    And I start Tails from USB drive "current" with network unplugged and I login
-    And I create a persistent partition with password "asdf"
-    Then a Tails persistence partition with password "asdf" exists on USB drive "current"
-    And I shutdown Tails and wait for the computer to power off
-    Given a computer
+    Given the USB drive "current" contains Tails with persistence configured and password "asdf"
+    And a computer
     And I setup a filesystem share containing sample videos
     And I start Tails from USB drive "current" with network unplugged and I login with persistence password "asdf"
     And I copy the sample videos to "/home/amnesia/Persistent" as user "amnesia"
