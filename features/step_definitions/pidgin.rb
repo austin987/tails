@@ -5,31 +5,49 @@ When /^I start Pidgin through the GNOME menu$/ do
   @screen.wait_and_click("GnomeApplicationsPidgin.png", 20)
 end
 
-Given /^Pidgin has the expected accounts configured with random nicknames$/ do
-  next if @skip_steps_while_restoring_background
+def configured_pidgin_accounts
   accounts_cfg_file = '$HOME/.purple/accounts.xml'
   cmd = @vm.execute("cat \"#{accounts_cfg_file}\"", $live_user)
   assert(cmd.success?,
          "Could not read '#{accounts_cfg_file}':\n#{cmd.stdout}\n#{cmd.stderr}")
+
+  accounts = []
   xml = REXML::Document.new(cmd.stdout)
-  expected = [
-            ["irc.oftc.net", "prpl-irc", "6697"],
-            ["127.0.0.1",    "prpl-irc", "6668"],
-          ]
   xml.elements.each("account/account") do |e|
-    account = e.elements["name"].text
+    account   = e.elements["name"].text
     account_name, network = account.split("@")
     protocol  = e.elements["protocol"].text
     port      = e.elements["settings/setting[@name='port']"].text
     nickname  = e.elements["settings/setting[@name='username']"].text
     real_name = e.elements["settings/setting[@name='realname']"].text
-    STDOUT.puts "#{account_name} #{network} #{nickname} #{real_name}"
-    assert(nickname != "XXX_NICK_XXX", "Nickname was no randomised")
-    assert_equal(nickname, real_name, "Nickname and real name are not " +
-           "identical: '#{nickname}' vs. '#{real_name}'")
-    assert_equal(account_name, nickname, "Account name and nickname are not " +
-           "identical: '#{account_name}' vs. '#{real_name}'")
-    candidate = [network, protocol, port]
+    accounts.push({
+                    'name'      => account_name,
+                    'network'   => network,
+                    'protocol'  => protocol,
+                    'port'      => port,
+                    'nickname'  => nickname,
+                    'real_name' => real_name,
+                  })
+  end
+
+  return accounts
+end
+
+Given /^Pidgin has the expected accounts configured with random nicknames$/ do
+  next if @skip_steps_while_restoring_background
+  expected = [
+            ["irc.oftc.net", "prpl-irc", "6697"],
+            ["127.0.0.1",    "prpl-irc", "6668"],
+          ]
+  configured_pidgin_accounts.each() do |account|
+    assert(account['nickname'] != "XXX_NICK_XXX", "Nickname was no randomised")
+    assert_equal(account['nickname'], account['real_name'],
+                 "Nickname and real name are not identical: " +
+                 account['nickname'] + " vs. " + account['real_name'])
+    assert_equal(account['name'], account['nickname'],
+                 "Account name and nickname are not identical: " +
+                 account['name'] + " vs. " + account['nickname'])
+    candidate = [account['network'], account['protocol'], account['port']]
     assert(expected.include?(candidate), "Unexpected account: #{candidate}")
     expected.delete(candidate)
   end
