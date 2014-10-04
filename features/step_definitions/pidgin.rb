@@ -6,13 +6,9 @@ When /^I start Pidgin through the GNOME menu$/ do
 end
 
 def configured_pidgin_accounts
-  accounts_cfg_file = '$HOME/.purple/accounts.xml'
-  cmd = @vm.execute("cat \"#{accounts_cfg_file}\"", $live_user)
-  assert(cmd.success?,
-         "Could not read '#{accounts_cfg_file}':\n#{cmd.stdout}\n#{cmd.stderr}")
-
   accounts = []
-  xml = REXML::Document.new(cmd.stdout)
+  xml = REXML::Document.new(@vm.file_content('$HOME/.purple/accounts.xml',
+                                             $live_user))
   xml.elements.each("account/account") do |e|
     account   = e.elements["name"].text
     account_name, network = account.split("@")
