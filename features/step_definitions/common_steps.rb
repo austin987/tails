@@ -153,11 +153,15 @@ Given /^I start Tails from DVD(| with network unplugged) and I login$/ do |netwo
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)" with network unplugged and I login(| with(| read-only) persistence password "([^"]+)")$/ do |drive_type, drive_name, persistence_on, persistence_ro, persistence_pwd|
+Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged) and I login(| with(| read-only) persistence password "([^"]+)")$/ do |drive_type, drive_name, network_unplugged, persistence_on, persistence_ro, persistence_pwd|
   # we don't @skip_steps_while_restoring_background as we're only running
   # other steps, that are taking care of it *if* they have to
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
-  step "the network is unplugged"
+  if network_unplugged.empty?
+    step "the network is plugged"
+  else
+    step "the network is unplugged"
+  end
   step "I start the computer"
   step "the computer boots Tails"
   if ! persistence_on.empty?
@@ -170,7 +174,13 @@ Given /^I start Tails from (.+?) drive "(.+?)" with network unplugged and I logi
   end
   step "I log in to a new session"
   step "Tails seems to have booted normally"
-  step "all notifications have disappeared"
+  if network_unplugged.empty?
+    step "Tor is ready"
+    step "all notifications have disappeared"
+    step "available upgrades have been checked"
+  else
+    step "all notifications have disappeared"
+  end
 end
 
 When /^I power off the computer$/ do
