@@ -3,6 +3,7 @@ Feature: Using Totem
   As a Tails user
   I want to watch local and remote videos in Totem
   And AppArmor should prevent Totem from doing dangerous things
+  And all Internet traffic should flow only through Tor
 
   # We cannot use Background to save a snapshot of an already booted
   # Tails here, due to bugs with filesystem shares vs. snapshots, as
@@ -25,6 +26,7 @@ Feature: Using Totem
 
   Scenario: Watching a WebM video over HTTPS, with and without the command-line
     Given a computer
+    And I capture all network traffic
     And I start Tails from DVD and I login
     When I open "https://webm.html5.org/test.webm" with Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
@@ -32,6 +34,7 @@ Feature: Using Totem
     And I start Totem through the GNOME menu
     When I load the "https://webm.html5.org/test.webm" URL in Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
+    And all Internet traffic has only flowed through Tor
 
   @keep_volumes
   Scenario: Installing Tails on a USB drive, creating a persistent partition, copying video files to it
