@@ -201,15 +201,6 @@ def tails_is_installed_helper(name, tails_root, loader)
   assert(c.success?, "USB drive '#{name}' has differences in " +
          "'/syslinux/syslinux.cfg'")
 
-  # We have to account for the different path vs isolinux
-  old_exithelp = @vm.file_content("#{tails_root}/#{loader}/exithelp.cfg")
-  new_exithelp = @vm.file_content("#{target_root}/syslinux/exithelp.cfg")
-  new_exithelp_undiffed = new_exithelp.sub("kernel /syslinux/vesamenu.c32",
-                                           "kernel /#{loader}/vesamenu.c32")
-  assert_equal(old_exithelp, new_exithelp_undiffed,
-         "USB drive '#{name}' has unexpected differences in " +
-         "'/syslinux/exithelp.cfg'")
-
   @vm.execute("umount #{target_root}")
   @vm.execute("sync")
 end
