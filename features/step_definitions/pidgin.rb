@@ -42,6 +42,10 @@ def default_chan (account)
   return chans[account]
 end
 
+def pidgin_otr_keys
+  return @vm.file_content('$HOME/.purple/otr.private_key', $live_user)
+end
+
 Given /^Pidgin has the expected accounts configured with random nicknames$/ do
   next if @skip_steps_while_restoring_background
   expected = [
@@ -108,4 +112,29 @@ Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
   @screen.doubleClick(   chan_image(account, channel, 'roaster'))
   @screen.wait_and_click(chan_image(account, channel, 'conversation_tab'), 10)
   @screen.wait(          chan_image(account, channel, 'welcome'), 10)
+end
+
+Then /^I take note of the configured Pidgin accounts$/ do
+  next if @skip_steps_while_restoring_background
+  @persistent_pidgin_accounts = configured_pidgin_accounts
+end
+
+Then /^I take note of the OTR key for Pidgin's "([^"]+)" account$/ do |account_name|
+  next if @skip_steps_while_restoring_background
+  @persistent_pidgin_otr_keys = pidgin_otr_keys
+end
+
+Then /^Pidgin has the expected persistent accounts configured$/ do
+  next if @skip_steps_while_restoring_background
+  current_accounts = configured_pidgin_accounts
+  assert(current_accounts <=> @persistent_pidgin_accounts,
+         "Currently configured Pidgin accounts do not match the persistent ones:\n" +
+         "Current:\n#{current_accounts}\n" +
+         "Persistent:\n#{@persistent_pidgin_accounts}"
+         )
+end
+
+Then /^Pidgin has the expected persistent OTR keys$/ do
+  next if @skip_steps_while_restoring_background
+  assert_equal(pidgin_otr_keys, @persistent_pidgin_otr_keys)
 end
