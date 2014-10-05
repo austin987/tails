@@ -138,3 +138,51 @@ Then /^Pidgin has the expected persistent OTR keys$/ do
   next if @skip_steps_while_restoring_background
   assert_equal(pidgin_otr_keys, @persistent_pidgin_otr_keys)
 end
+
+def pidgin_add_certificate_from (cert_file)
+  # Here, we need a certificate that is not already in the NSS database
+  step "I copy \"/usr/share/ca-certificates/spi-inc.org/spi-cacert-2008.crt\" to \"#{cert_file}\" as user \"amnesia\""
+
+  @screen.wait_and_click('PidginToolsMenu.png', 10)
+  @screen.wait_and_click('PidginCertificatesMenuItem.png', 10)
+  @screen.wait('PidginCertificateManagerDialog.png', 10)
+  @screen.wait_and_click('PidginCertificateAddButton.png', 10)
+  begin
+    @screen.wait_and_click('GtkFileChooserDesktopButton.png', 10)
+  rescue FindFailed
+    # The first time we're run, the file chooser opens in the Recent
+    # view, so we have to browse a directory before we can use the
+    # "Type file name" button. But on subsequent runs, the file
+    # chooser is already in the Desktop directory, so we don't need to
+    # do anything. Hence, this noop exception handler.
+  end
+  @screen.wait_and_click('GtkFileTypeFileNameButton.png', 10)
+  @screen.type("l", Sikuli::KeyModifier.ALT) # "Location" field
+  @screen.type(cert_file + Sikuli::Key.ENTER)
+end
+
+Then /^I can add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert_dir|
+  next if @skip_steps_while_restoring_background
+  pidgin_add_certificate_from("#{cert_dir}/test.crt")
+  @screen.wait('PidginCertificateAddHostnameDialog.png', 10)
+  @screen.type("XXX test XXX" + Sikuli::Key.ENTER)
+  @screen.wait('PidginCertificateTestItem.png', 10)
+end
+
+Then /^I cannot add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert_dir|
+  next if @skip_steps_while_restoring_background
+  pidgin_add_certificate_from("#{cert_dir}/test.crt")
+  @screen.wait('PidginCertificateImportFailed.png', 10)
+end
+
+When /^I close Pidgin's certificate manager$/ do
+  @screen.type(Sikuli::Key.ESC)
+  # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
+  @screen.waitVanish('PidginCertificateManagerDialog.png', 10)
+end
+
+When /^I close Pidgin's certificate import failure dialog$/ do
+  @screen.type(Sikuli::Key.ESC)
+  # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
+  @screen.waitVanish('PidginCertificateImportFailed.png', 10)
+end

@@ -23,6 +23,18 @@ Feature: Chatting anonymously using Pidgin
     And I can join the "#tails" channel on "irc.oftc.net"
     And all Internet traffic has only flowed through Tor
 
+  Scenario: Adding a certificate to Pidgin
+    And I start Pidgin through the GNOME menu
+    And I see Pidgin's account manager window
+    And I close Pidgin's account manager window
+    Then I can add a certificate from the "/home/amnesia" directory to Pidgin
+
+  Scenario: Failing to add a certificate to Pidgin
+    And I start Pidgin through the GNOME menu
+    And I see Pidgin's account manager window
+    And I close Pidgin's account manager window
+    Then I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
+
   @keep_volumes
   Scenario: Using a persistent Pidgin configuration
     Given the USB drive "current" contains Tails with persistence configured and password "asdf"
@@ -46,3 +58,14 @@ Feature: Chatting anonymously using Pidgin
     Then Pidgin successfully connects to the "irc.oftc.net" account
     And I can join the "#tails" channel on "irc.oftc.net"
     And all Internet traffic has only flowed through Tor
+    # Exercise Pidgin AppArmor profile with persistence enabled.
+    # This should really be in dedicated scenarios, but it would be
+    # too costly to set up the virtual USB drive with persistence more
+    # than once in this feature.
+    And I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
+    When I close Pidgin's certificate import failure dialog
+    And I close Pidgin's certificate manager
+    Then I cannot add a certificate from the "/live/persistence/TailsData_unlocked/gnupg" directory to Pidgin
+    When I close Pidgin's certificate import failure dialog
+    And I close Pidgin's certificate manager
+    Then I can add a certificate from the "/home/amnesia" directory to Pidgin
