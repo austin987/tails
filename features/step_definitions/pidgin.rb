@@ -1,10 +1,3 @@
-When /^I start Pidgin through the GNOME menu$/ do
-  next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
-  @screen.wait_and_click("GnomeApplicationsPidgin.png", 20)
-end
-
 def configured_pidgin_accounts
   accounts = []
   xml = REXML::Document.new(@vm.file_content('$HOME/.purple/accounts.xml',
@@ -29,6 +22,26 @@ def configured_pidgin_accounts
   return accounts
 end
 
+def chan_image (account, channel, image)
+  images = {
+    'irc.oftc.net' => {
+      '#tails' => {
+        'roaster'          => 'PidginTailsChannelEntry',
+        'conversation_tab' => 'PidginTailsConversationTab',
+        'welcome'          => 'PidginTailsChannelWelcome',
+      }
+    }
+  }
+  return images[account][channel][image] + ".png"
+end
+
+def default_chan (account)
+  chans = {
+    'irc.oftc.net' => '#tails',
+  }
+  return chans[account]
+end
+
 Given /^Pidgin has the expected accounts configured with random nicknames$/ do
   next if @skip_steps_while_restoring_background
   expected = [
@@ -51,36 +64,37 @@ Given /^Pidgin has the expected accounts configured with random nicknames$/ do
          "#{expected}")
 end
 
+When /^I start Pidgin through the GNOME menu$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+  @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
+  @screen.wait_and_click("GnomeApplicationsPidgin.png", 20)
+end
+
+When /^I open Pidgin's account manager window$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.type("a", Sikuli::KeyModifier.CTRL) # shortcut for "manage accounts"
+  step "I see Pidgin's account manager window"
+end
+
 When /^I see Pidgin's account manager window$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("PidginAccountWindow.png", 20)
+end
+
+When /^I close Pidgin's account manager window$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("PidginAccountManagerCloseButton.png", 10)
 end
 
 When /^I activate the "([^"]+)" Pidgin account$/ do |account|
   next if @skip_steps_while_restoring_background
   @screen.click("PidginAccount_#{account}.png")
   @screen.type(Sikuli::Key.LEFT + Sikuli::Key.SPACE)
-  @screen.type(Sikuli::Key.ESC)
-end
-
-def chan_image (account, channel, image)
-  images = {
-    'irc.oftc.net' => {
-      '#tails' => {
-        'roaster'          => 'PidginTailsChannelEntry',
-        'conversation_tab' => 'PidginTailsConversationTab',
-        'welcome'          => 'PidginTailsChannelWelcome',
-      }
-    }
-  }
-  return images[account][channel][image] + ".png"
-end
-
-def default_chan (account)
-  chans = {
-    'irc.oftc.net' => '#tails',
-  }
-  return chans[account]
+  # wait for the Pidgin to be connecting, otherwise sometimes the step
+  # that closes the account management dialog happens before the account
+  # is actually enabled
+  @screen.wait("PidginConnecting.png", 5)
 end
 
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
