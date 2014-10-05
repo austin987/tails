@@ -38,6 +38,12 @@ Given /^the computer is set to boot from the old Tails DVD$/ do
   @vm.set_cdrom_boot($old_tails_iso)
 end
 
+Given /^the computer is set to boot in UEFI mode$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.set_os_loader('UEFI')
+  @os_loader = 'UEFI'
+end
+
 class ISOHybridUpgradeNotSupported < StandardError
 end
 
@@ -200,7 +206,7 @@ def tails_is_installed_helper(name, tails_root, loader)
   new_exithelp = @vm.execute("cat '#{target_root}/syslinux/exithelp.cfg'").stdout
   new_exithelp_undiffed = new_exithelp.sub("kernel /syslinux/vesamenu.c32",
                                            "kernel /#{loader}/vesamenu.c32")
-  assert(new_exithelp_undiffed == old_exithelp,
+  assert_equal(old_exithelp, new_exithelp_undiffed,
          "USB drive '#{name}' has unexpected differences in " +
          "'/syslinux/exithelp.cfg'")
 
@@ -331,8 +337,7 @@ end
 
 Then /^Tails is running from USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  assert(boot_device_type == "usb",
-         "Got device type '#{boot_device_type}' while expecting 'usb'")
+  assert_equal("usb", boot_device_type)
   actual_dev = boot_device
   # The boot partition differs between a "normal" install using the
   # USB installer and isohybrid installations
@@ -361,13 +366,11 @@ Then /^the boot device has safe access rights$/ do
     dev_owner = @vm.execute("stat -c %U #{dev}").stdout.chomp
     dev_group = @vm.execute("stat -c %G #{dev}").stdout.chomp
     dev_perms = @vm.execute("stat -c %a #{dev}").stdout.chomp
-    assert(dev_owner == "root",
-           "Boot device '#{dev}' owned by user '#{dev_owner}', expected 'root'")
+    assert_equal("root", dev_owner)
     assert(dev_group == "disk" || dev_group == "root",
            "Boot device '#{dev}' owned by group '#{dev_group}', expected " +
            "'disk' or 'root'.")
-    assert(dev_perms == "1660",
-           "Boot device '#{dev}' has permissions '#{dev_perms}', expected '660'")
+    assert_equal("1660", dev_perms)
     for user, groups in all_users_with_groups do
       next if user == "root"
       assert(!(groups.include?(dev_group)),
@@ -386,12 +389,9 @@ Then /^persistent filesystems have safe access rights$/ do
     fs_owner = @vm.execute("stat -c %U #{mountpoint}").stdout.chomp
     fs_group = @vm.execute("stat -c %G #{mountpoint}").stdout.chomp
     fs_perms = @vm.execute("stat -c %a #{mountpoint}").stdout.chomp
-    assert(fs_owner == "root",
-           "Persistent filesystem '#{mountpoint}' owned by user '#{fs_owner}', expected 'root'")
-    assert(fs_group == "root",
-           "Persistent filesystem '#{mountpoint}' owned by group '#{fs_group}', expected 'root'")
-    assert(fs_perms == '775',
-           "Persistent filesystem '#{mountpoint}' has permissions '#{fs_perms}', expected '775'")
+    assert_equal("root", fs_owner)
+    assert_equal("root", fs_group)
+    assert_equal('775', fs_perms)
   end
 end
 
@@ -407,12 +407,9 @@ Then /^persistence configuration files have safe access rights$/ do
       file_owner = @vm.execute("stat -c %U '#{f}'").stdout.chomp
       file_group = @vm.execute("stat -c %G '#{f}'").stdout.chomp
       file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
-      assert(file_owner == "tails-persistence-setup",
-             "'#{f}' is owned by user '#{file_owner}', expected 'tails-persistence-setup'")
-      assert(file_group == "tails-persistence-setup",
-             "'#{f}' is owned by group '#{file_group}', expected 'tails-persistence-setup'")
-      assert(file_perms == "600",
-             "'#{f}' has permissions '#{file_perms}', expected '600'")
+      assert_equal("tails-persistence-setup", file_owner)
+      assert_equal("tails-persistence-setup", file_group)
+      assert_equal("600", file_perms)
     end
   end
 end
@@ -429,8 +426,7 @@ Then /^persistent directories have safe access rights$/ do
       f = "#{mountpoint}/#{src}"
       next unless @vm.execute("test -d #{f}").success?
       file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
-      assert(file_perms == expected_perms,
-             "'#{f}' has permissions '#{file_perms}', expected '#{expected_perms}'")
+      assert_equal(expected_perms, file_perms)
     end
   end
 end
@@ -498,3 +494,8 @@ When /^I delete the persistent partition$/ do
   @screen.type(" ")
   @screen.wait("PersistenceWizardDone.png", 120)
 end
+
+Then /^Tails has started in UEFI mode$/ do
+  assert(@vm.execute("test -d /sys/firmware/efi").success?,
+         "/sys/firmware/efi does not exist")
+ end
