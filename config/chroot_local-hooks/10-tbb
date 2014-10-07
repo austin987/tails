@@ -6,23 +6,24 @@ echo "Install the Tor Browser"
 
 # Get the below with `grep "tor-browser-linux32-.*\.tar.xz" sha256sums.txt`
 BUNDLES="$(cat <<EOF
-a339274902d79d72ab864f49072d0737564e29db56ddd8009dcee33437e3a011  tor-browser-linux32-tbb-nightly_ar.tar.xz
-d2e3300869c272c92f3a84c4da24164f958f45af16c7aaabe3ee4f8e5573015f  tor-browser-linux32-tbb-nightly_en-US.tar.xz
-49a1b0777ee0a3836a7ed0f22cac5423d5dc5355dd3a6f3c1f1bb70aa7c7832f  tor-browser-linux32-tbb-nightly_ru.tar.xz
-5eddfbb6bc7c72828fc338d791f9aecf802c8f4ac2e7b103f6c21f86ffe6ce06  tor-browser-linux32-tbb-nightly_zh-CN.tar.xz
+4822ea4fa7624d59739c13998ee2d798de4223ce8d2b3061adada9d36d9a556d  tor-browser-linux32-tbb-nightly_ar.tar.xz
+ca099b5a9092d628475fd7932a1dcb430d6e2a5e78eb52a13562ef25d1f8d1cd  tor-browser-linux32-tbb-nightly_en-US.tar.xz
+e14cf067d1d3ba4387905742ad862bc24ca4ab41ad662edefb196e5662177d0d  tor-browser-linux32-tbb-nightly_ru.tar.xz
+b76d6f02bf69d8d1749e76a336421a794ec0611bbd2b99cb3c980519c82d4fcc  tor-browser-linux32-tbb-nightly_zh-CN.tar.xz
 EOF
 )"
 
 MAIN_BUNDLE="$(echo "${BUNDLES}" | grep -o "tor-browser-linux32-.*_en-US.tar.xz")"
 #VERSION="$(echo "${MAIN_BUNDLE}" | sed 's/tor-browser-linux32-\(.*\)_en-US.tar.xz/\1/')"
-VERSION=esr31-nightly
+VERSION=tbb-nightly-2014-10-06
 # Note that we cannot use https here since apt-cacher-ng (used by vagrant)
 # gets confused and throws a 403. It doesn't matter, though, since we verify
 # the checksums of each file downloaded.
 #TBB_DIST_URL="http://archive.torproject.org/tor-package-archive/torbrowser/${VERSION}"
 #TBB_DIST_URL="http://www.torproject.org/dist/torbrowser/${VERSION}/"
 #TBB_DIST_URL="http://people.torproject.org/~mikeperry/builds/${VERSION}/"
-TBB_DIST_URL="http://people.torproject.org/~gk/testbuilds/${VERSION}"
+#TBB_DIST_URL="http://people.torproject.org/~gk/testbuilds/${VERSION}"
+TBB_DIST_URL="http://people.torproject.org/~linus/builds/${VERSION}"
 
 # Import the TBB_INSTALL, TBB_PROFILE and TBB_EXT variables, which
 # contains the paths we will split TBB's actual browser (binaries
