@@ -103,7 +103,7 @@ Then /^the VirtualBox guest modules are available$/ do
 end
 
 def shared_pdf_dir_on_guest
-  "/tmp/shared_dir"
+  "/tmp/shared_pdf_dir"
 end
 
 Given /^I setup a filesystem share containing a sample PDF$/ do
@@ -116,8 +116,7 @@ Then /^MAT can clean some sample PDF file$/ do
   for pdf_on_host in Dir.glob("#{$misc_files_dir}/*.pdf") do
     pdf_name = File.basename(pdf_on_host)
     pdf_on_guest = "/home/#{$live_user}/#{pdf_name}"
-    @vm.execute("cp #{shared_pdf_dir_on_guest}/#{pdf_name} #{pdf_on_guest}",
-                $live_user)
+    step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{$live_user}\""
     @vm.execute("mat --display '#{pdf_on_guest}'",
                 $live_user).stdout
     check_before = @vm.execute("mat --check '#{pdf_on_guest}'",
@@ -132,4 +131,13 @@ Then /^MAT can clean some sample PDF file$/ do
     assert(check_after.include?("#{pdf_on_guest} is clean"),
            "MAT failed to clean '#{pdf_on_host}'")
   end
+end
+
+Then /^AppArmor is enabled$/ do
+  assert(@vm.execute("aa-status").success?, "AppArmor is not enabled")
+end
+
+Then /^some AppArmor profiles are enforced$/ do
+  assert(@vm.execute("aa-status --enforced").stdout.chomp.to_i > 0,
+         "No AppArmor profile is enforced")
 end
