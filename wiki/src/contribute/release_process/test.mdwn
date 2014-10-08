@@ -73,7 +73,7 @@ implemented, but it either hasn't been reviewed, had a confirmed pass
 by someone other than the test author, or has issues. The latter is
 tracked by tickets prefixed with `todo/test_suite:`.
 
-# Iceweasel
+# Tor Browser
 
 ## Security and fingerprinting
 
@@ -94,7 +94,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
     `ifconfig | grep inet | grep -v inet6 | cut -d" " -f2 | tail -n1`
 * One should be able to switch identities from the web browser.
 * Running `getTorBrowserUserAgent` should produce the User-Agent set by the
-  installed version of Torbutton, and used in Iceweasel.
+  installed version of Torbutton, and used in the Tor Browser.
 
 ## Functionality
 
@@ -260,11 +260,11 @@ the appropriate tcpdump or tshark filters.
 
         sudo watch -n 0.1 'netstat -taupen | grep perl'
 
-* Make sure iceweasel uses its dedicated `SocksPort`: quit Iceweasel
+* Make sure the Tor Browser uses its dedicated `SocksPort`: quit the Tor Browser
   then start it with the following command running in another
   terminal:
 
-      sudo watch -n 0.1 'netstat -taupen | grep iceweasel'
+      sudo watch -n 0.1 'netstat -taupen | grep firefox'
 
 * Make sure other applications use the default system-wide
   `SocksPort`:
@@ -411,14 +411,14 @@ correctly.
   security critical bugs were fixed.
 * Check that "Applications -> Internet -> I2P" works:
   - You get the "Starting I2P..." pop-up.
-  - The router console opens in Iceweasel upon success.
+  - The router console opens in the Tor Browser upon success.
   - You get the "I2P failed to start" pop-up on failure (e.g. no
     network so tordate failed).
 * Check that I2P connects to the network:
   - Go to <http://127.0.0.1:7657/i2ptunnelmgr>
   - You should get "Network: Hidden" in the "General" section.
   - The numbers in the "Peers" section of the sidebar should be non-zero.
-* Check that you can reach some eepsites within Iceweasel, like
+* Check that you can reach some eepsites within the Tor Browser, like
   <http://i2p-projekt.i2p> and <http://forum.i2p>.
 * Check that you can connect to the I2P IRC server through Pidgin and
   the preconfigured IRC account on 127.0.0.1.
@@ -514,7 +514,7 @@ correctly.
 Enable Windows camouflage via the Tails Greeter checkbox and:
 
 * Tails OpenPGP Applet's context menu should look readable
-* iceweasel should use a Internet Explorer theme
+* The Tor Browser should use a Internet Explorer theme
 * The Unsafe Browser has no scary red theme
 
 # Unsafe Web Browser
@@ -524,7 +524,7 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 * On start, if no DNS server was configured in NetworkManager
   (e.g. if there's no network connection), there must be an error.
 * Once started, check that:
-  - the iceweasel instance runs as the `clearnet` user.
+  - the Tor Browser instance runs as the `clearnet` user.
   - it has no proxy configured.
   - no extensions are installed.
   - there are no bookmarks.
@@ -562,7 +562,7 @@ language.
 * The Startpage search engine must be localized for the languages we ship a
   searchplug for:
 
-      find /usr/share/amnesia/iceweasel/searchplugins/locale/ -iname startpage-*.xml
+      find /usr/local/lib/tor-browser/Browser/distribution/searchplugins/locale -iname startpage-*.xml
 
 * The Wikipedia search engine must be localized for all languages.
   - Except for Farsi, see [[!tails_ticket 6884]]
