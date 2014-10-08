@@ -23,10 +23,6 @@ pref("extensions.adblockplus.showinaddonbar", false);
 pref("extensions.adblockplus.showintoolbar", false);
 pref("extensions.adblockplus.subscriptions_autoupdate", false);
 
-// FoxyProxy preferences
-pref("extensions.foxyproxy.last-version", "99999.99");
-pref("extensions.foxyproxy.socks_remote_dns", true);
-
 // Suppress prompt and always spoof useragent as English
 pref("extensions.torbutton.spoof_english", true);
 pref("extensions.torbutton.prompted_language", true);
