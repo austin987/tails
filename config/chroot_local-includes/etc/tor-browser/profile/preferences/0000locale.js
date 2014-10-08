@@ -1,0 +1,1 @@
+/var/lib/tails-user-session/browser-locale.js

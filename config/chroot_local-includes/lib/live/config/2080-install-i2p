@@ -7,14 +7,15 @@ SRC="/usr/share/tails/i2p-disabled"
 
 Install_I2P(){
     mv "$SRC/wrapper" /usr/sbin/wrapper
+    mv "$SRC/i2p-browser.desktop" /usr/share/applications
     mv "$SRC/i2p" /usr/share
     rmdir "$SRC"
 }
 
 Add_Sudo_Config(){
-    echo "amnesia   ALL = NOPASSWD: /etc/init.d/i2p" > /etc/sudoers.d/zzz_i2p
-    chown root:root /etc/sudoers.d/zzz_i2p
-    chmod 0440 /etc/sudoers.d/zzz_i2p
+    echo "amnesia   ALL = NOPASSWD: /usr/local/sbin/i2p-browser" > /etc/sudoers.d/zzz_i2pbrowser
+    chown root:root /etc/sudoers.d/zzz_i2pbrowser
+    chmod 0440 /etc/sudoers.d/zzz_i2pbrowser
 }
 
 if grep -qw "i2p" /proc/cmdline && [ -d "$SRC" ]; then

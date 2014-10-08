@@ -303,6 +303,21 @@ EOF
     update_domain(domain_xml.to_s)
   end
 
+  def set_os_loader(type)
+    if is_running?
+      raise "boot settings can only be set for inactice vms"
+    end
+    if type == 'UEFI'
+      domain_xml = REXML::Document.new(@domain.xml_desc)
+      domain_xml.elements['domain/os'].add_element(REXML::Document.new(
+        '<loader>/usr/share/ovmf/OVMF.fd</loader>'
+      ))
+      update_domain(domain_xml.to_s)
+    else
+      raise "unsupported OS loader type"
+    end
+  end
+
   def is_running?
     begin
       return @domain.active?
@@ -313,6 +328,12 @@ EOF
 
   def execute(cmd, user = "root")
     return VMCommand.new(self, cmd, { :user => user, :spawn => false })
+  end
+
+  def execute_successfully(cmd, user = "root")
+    p = execute(cmd, user)
+    assert_vmcommand_success(p)
+    return p
   end
 
   def spawn(cmd, user = "root")

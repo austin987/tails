@@ -149,12 +149,32 @@ When /^I destroy the computer$/ do
   @vm.destroy
 end
 
-Given /^the computer boots Tails$/ do
+Given /^the computer (re)?boots Tails$/ do |reboot|
   next if @skip_steps_while_restoring_background
-  @screen.wait('TailsBootSplash.png', 30)
-  @screen.wait('TailsBootSplashTabMsg.png', 10)
+
+  case @os_loader
+  when "UEFI"
+    assert(!reboot, "Testing of reboot with UEFI enabled is not implemented")
+    bootsplash = 'TailsBootSplashUEFI.png'
+    bootsplash_tab_msg = 'TailsBootSplashTabMsgUEFI.png'
+    boot_timeout = 30
+  else
+    if reboot
+      bootsplash = 'TailsBootSplashPostReset.png'
+      bootsplash_tab_msg = 'TailsBootSplashTabMsgPostReset.png'
+      boot_timeout = 120
+    else
+      bootsplash = 'TailsBootSplash.png'
+      bootsplash_tab_msg = 'TailsBootSplashTabMsg.png'
+      boot_timeout = 30
+    end
+  end
+
+  @screen.wait(bootsplash, boot_timeout)
+  @screen.wait(bootsplash_tab_msg, 10)
   @screen.type(Sikuli::Key.TAB)
-  @screen.waitVanish('TailsBootSplashTabMsg.png', 1)
+  @screen.waitVanish(bootsplash_tab_msg, 1)
+
   @screen.type(" autotest_never_use_this_option #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 30*60)
@@ -240,21 +260,43 @@ Given /^available upgrades have been checked$/ do
   }
 end
 
-Given /^Iceweasel has started and is not loading a web page$/ do
+Given /^the Tor Browser has started$/ do
   next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
-    iceweasel_picture = "WindowsIceweaselWindow.png"
+    tor_browser_picture = "WindowsTorBrowserWindow.png"
   else
-    iceweasel_picture = "IceweaselWindow.png"
+    tor_browser_picture = "TorBrowserWindow.png"
   end
 
-  # Stop iceweasel to load its home page. We do this to prevent Tor
-  # from getting confused in case we save and restore a snapshot in
-  # the middle of loading a page.
-  @screen.wait_and_click(iceweasel_picture, 120)
-  @screen.type("l", Sikuli::KeyModifier.CTRL)
-  @screen.type("about:blank" + Sikuli::Key.ENTER)
+  @screen.wait(tor_browser_picture, 60)
+end
+
+Given /^the Tor Browser has started and loaded the startup page$/ do
+  next if @skip_steps_while_restoring_background
+  step "the Tor Browser has started"
+  @screen.wait("TorBrowserStartupPage.png", 120)
+end
+
+Given /^the Tor Browser has started in offline mode$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("TorBrowserOffline.png", 60)
+end
+
+Given /^I add a bookmark to eff.org in the Tor Browser$/ do
+  next if @skip_steps_while_restoring_background
+  url = "https://www.eff.org"
+  step "I open the address \"#{url}\" in the Tor Browser"
+  @screen.wait("TorBrowserOffline.png", 5)
+  @screen.type("d", Sikuli::KeyModifier.CTRL)
+  @screen.wait("TorBrowserBookmarkPrompt.png", 10)
+  @screen.type(url + Sikuli::Key.ENTER)
+end
+
+Given /^the Tor Browser has a bookmark to eff.org$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.type("b", Sikuli::KeyModifier.ALT)
+  @screen.wait("TorBrowserEFFBookmark.png", 10)
 end
 
 Given /^all notifications have disappeared$/ do
@@ -411,6 +453,11 @@ When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
 end
 
+When /^I warm reboot the computer$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.execute("reboot")
+end
+
 When /^I request a reboot using the emergency shutdown applet$/ do
   next if @skip_steps_while_restoring_background
   @screen.hide_cursor
@@ -425,18 +472,89 @@ Given /^package "([^"]+)" is installed$/ do |package|
          "Package '#{package}' is not installed")
 end
 
-When /^I start Iceweasel$/ do
+When /^I start the Tor Browser$/ do
   next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
     step 'I click the start menu'
     @screen.wait_and_click("WindowsApplicationsInternet.png", 10)
-    @screen.wait_and_click("WindowsApplicationsIceweasel.png", 10)
+    @screen.wait_and_click("WindowsApplicationsTorBrowser.png", 10)
   else
     @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
     @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
-    @screen.wait_and_click("GnomeApplicationsIceweasel.png", 10)
+    @screen.wait_and_click("GnomeApplicationsTorBrowser.png", 10)
   end
+end
+
+When /^I start the Tor Browser in offline mode$/ do
+  next if @skip_steps_while_restoring_background
+  step "I start the Tor Browser"
+  case @theme
+  when "windows"
+    @screen.wait_and_click("WindowsTorBrowserOfflinePrompt.png", 10)
+    @screen.click("WindowsTorBrowserOfflinePromptStart.png")
+  else
+    @screen.wait_and_click("TorBrowserOfflinePrompt.png", 10)
+    @screen.click("TorBrowserOfflinePromptStart.png")
+  end
+end
+
+def xul_app_shared_lib_check(pid, chroot)
+  expected_absent_tbb_libs = ['libnssdbm3.so']
+  absent_tbb_libs = []
+  unwanted_native_libs = []
+  tbb_libs = @vm.execute_successfully(
+                 ". /usr/local/lib/tails-shell-library/tor-browser.sh; " +
+                 "ls -1 #{chroot}${TBB_INSTALL}/Browser/*.so"
+                                      ).stdout.split
+  firefox_pmap_info = @vm.execute("pmap #{pid}").stdout
+  for lib in tbb_libs do
+    lib_name = File.basename lib
+    if not /\W#{lib}$/.match firefox_pmap_info
+      absent_tbb_libs << lib_name
+    end
+    native_libs = @vm.execute_successfully(
+                       "find /usr/lib /lib -name \"#{lib_name}\""
+                                           ).stdout.split
+    for native_lib in native_libs do
+      if /\W#{native_lib}$"/.match firefox_pmap_info
+        unwanted_native_libs << lib_name
+      end
+    end
+  end
+  absent_tbb_libs -= expected_absent_tbb_libs
+  assert(absent_tbb_libs.empty? && unwanted_native_libs.empty?,
+         "The loaded shared libraries for the firefox process are not the " +
+         "way we expect them.\n" +
+         "Expected TBB libs that are absent: #{absent_tbb_libs}\n" +
+         "Native libs that we don't want: #{unwanted_native_libs}")
+end
+
+Then /^(.*) uses all expected TBB shared libraries$/ do |application|
+  next if @skip_steps_while_restoring_background
+  binary = @vm.execute_successfully(
+                '. /usr/local/lib/tails-shell-library/tor-browser.sh; ' +
+                'echo ${TBB_INSTALL}/Browser/firefox'
+                                    ).stdout.chomp
+  case application
+  when "the Tor Browser"
+    user = $live_user
+    cmd_regex = "^#{binary} .* -profile /home/#{user}/.tor-browser/profile.default$"
+    chroot = ""
+  when "the Unsafe Browser"
+    user = "clearnet"
+    cmd_regex = "^#{binary} .* -profile /home/#{user}/.tor-browser/profile.default$"
+    chroot = "/var/lib/unsafe-browser/chroot"
+  when "Tor Launcher"
+    user = "tor-launcher"
+    cmd_regex = "^#{binary} -app /home/#{user}/.tor-launcher/tor-launcher-standalone/application.ini"
+    chroot = ""
+  else
+    raise "Invalid browser or XUL application: #{application}"
+  end
+  pid = @vm.execute_successfully("pgrep -U #{user} -fx '#{cmd_regex}'").stdout.chomp
+  assert(/\A\d+\z/.match(pid), "It seems like #{application} is not running")
+  xul_app_shared_lib_check(pid, chroot)
 end
 
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|

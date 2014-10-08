@@ -2,7 +2,7 @@ One serious security issue is that we don't know what software will
 attempt to contact the network and whether their proxy settings are
 set up to use the Tor SOCKS proxy or polipo HTTP(s) proxy correctly.
 This is solved by blocking all outbound Internet traffic except Tor
-and I2P, and explicitly configure all applications to use either of
+(and I2P when enabled), and explicitly configure all applications to use either of
 these.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]]
@@ -37,6 +37,13 @@ applied if the user explicitly enables I2P at the boot prompt.  See
 The `clearnet` user used to run the
 [[contribute/design/Unsafe_Browser]] is granted full network access
 (but no loopback access) in order to deal with captive portals.
+
+#### I2P Browser and the `i2pbrowser` user
+
+The [[contribute/design/I2P_Browser]] is run by the `i2pbrowser` user. This
+account is granted access to ports 4444, 7657, and 7658 on the loopback device *if*
+I2P is enabled at the boot prompt. Sites outside of I2P cannot be reached by
+the `i2pbrowser` user.
 
 #### Local Area Network (LAN)
 
