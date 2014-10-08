@@ -82,7 +82,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   # First we open the proxy settings page to prepare it with the
   # correct open tabs for the loop below.
   @screen.type("e", Sikuli::KeyModifier.ALT)
-  @screen.type("n")
+  @screen.wait_and_click('UnsafeBrowserPreferencesMenuItem.png', 10)
   @screen.wait('UnsafeBrowserPreferences.png', 10)
   @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
   @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)

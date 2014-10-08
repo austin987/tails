@@ -51,6 +51,7 @@ def restore_background
   if @vm.has_network?
     if @vm.execute("service tor status").success?
       @vm.execute("service tor stop")
+      @vm.execute("rm -f /var/log/tor/log")
       @vm.execute("killall vidalia")
       @vm.host_to_guest_time_sync
       @vm.execute("service tor start")
@@ -129,6 +130,58 @@ When /^I start the computer$/ do
          "Trying to start a VM that is already running")
   @vm.start
   post_vm_start_hook
+end
+
+Given /^I start Tails from DVD(| with network unplugged) and I login$/ do |network_unplugged|
+  # we don't @skip_steps_while_restoring_background as we're only running
+  # other steps, that are taking care of it *if* they have to
+  step "the computer is set to boot from the Tails DVD"
+  if network_unplugged.empty?
+    step "the network is plugged"
+  else
+    step "the network is unplugged"
+  end
+  step "I start the computer"
+  step "the computer boots Tails"
+  step "I log in to a new session"
+  step "Tails seems to have booted normally"
+  if network_unplugged.empty?
+    step "Tor is ready"
+    step "all notifications have disappeared"
+    step "available upgrades have been checked"
+  else
+    step "all notifications have disappeared"
+  end
+end
+
+Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged) and I login(| with(| read-only) persistence password "([^"]+)")$/ do |drive_type, drive_name, network_unplugged, persistence_on, persistence_ro, persistence_pwd|
+  # we don't @skip_steps_while_restoring_background as we're only running
+  # other steps, that are taking care of it *if* they have to
+  step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
+  if network_unplugged.empty?
+    step "the network is plugged"
+  else
+    step "the network is unplugged"
+  end
+  step "I start the computer"
+  step "the computer boots Tails"
+  if ! persistence_on.empty?
+    assert(! persistence_pwd.empty?, "A password must be provided when enabling persistence")
+    if persistence_ro.empty?
+      step "I enable persistence with password \"#{persistence_pwd}\""
+    else
+      step "I enable read-only persistence with password \"#{persistence_pwd}\""
+    end
+  end
+  step "I log in to a new session"
+  step "Tails seems to have booted normally"
+  if network_unplugged.empty?
+    step "Tor is ready"
+    step "all notifications have disappeared"
+    step "available upgrades have been checked"
+  else
+    step "all notifications have disappeared"
+  end
 end
 
 When /^I power off the computer$/ do
@@ -488,4 +541,44 @@ Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
   try_for(60) {
     @vm.execute("nmcli --terse --fields NAME,STATE con status").stdout.chomp == "#{con_name}:activated"
   }
+end
+
+When /^I start and focus GNOME Terminal$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+  @screen.wait_and_click("GnomeApplicationsAccessories.png", 10)
+  @screen.wait_and_click("GnomeApplicationsTerminal.png", 20)
+  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+end
+
+When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
+  next if @skip_steps_while_restoring_background
+  step "I start and focus GNOME Terminal"
+  @screen.type(command + Sikuli::Key.ENTER)
+end
+
+When /^the file "([^"]+)" exists$/ do |file|
+  next if @skip_steps_while_restoring_background
+  assert(@vm.file_exist?(file))
+end
+
+When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
+  next if @skip_steps_while_restoring_background
+  c = @vm.execute("cp \"#{source}\" \"#{destination}\"", $live_user)
+  assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
+end
+
+Given /^the USB drive "([^"]+)" contains Tails with persistence configured and password "([^"]+)"$/ do |drive, password|
+    step "a computer"
+    step "I start Tails from DVD with network unplugged and I login"
+    step "I create a new 4 GiB USB drive named \"#{drive}\""
+    step "I plug USB drive \"#{drive}\""
+    step "I \"Clone & Install\" Tails to USB drive \"#{drive}\""
+    step "there is no persistence partition on USB drive \"#{drive}\""
+    step "I shutdown Tails and wait for the computer to power off"
+    step "a computer"
+    step "I start Tails from USB drive \"#{drive}\" with network unplugged and I login"
+    step "I create a persistent partition with password \"#{password}\""
+    step "a Tails persistence partition with password \"#{password}\" exists on USB drive \"#{drive}\""
+    step "I shutdown Tails and wait for the computer to power off"
 end
