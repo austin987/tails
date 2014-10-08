@@ -51,6 +51,7 @@ def restore_background
   if @vm.has_network?
     if @vm.execute("service tor status").success?
       @vm.execute("service tor stop")
+      @vm.execute("rm -f /var/log/tor/log")
       @vm.execute("killall vidalia")
       @vm.host_to_guest_time_sync
       @vm.execute("service tor start")
