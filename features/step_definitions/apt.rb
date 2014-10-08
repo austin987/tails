@@ -3,7 +3,7 @@ require 'uri'
 Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   next if @skip_steps_while_restoring_background
   hosts = hosts_str.split(',')
-  @vm.execute("cat /etc/apt/sources.list /etc/apt/sources.list.d/*").stdout.chomp.each_line { |line|
+  @vm.file_content("/etc/apt/sources.list /etc/apt/sources.list.d/*").chomp.each_line { |line|
     next if ! line.start_with? "deb"
     source_host = URI(line.split[1]).host
     if !hosts.include?(source_host)
@@ -68,4 +68,13 @@ Then /^I should be able to install a package using Synaptic$/ do
   @screen.type("a", Sikuli::KeyModifier.ALT)     # Verify apply
   @screen.wait('SynapticChangesAppliedPrompt.png', 120)
   step "package \"#{package}\" is installed"
+end
+
+When /^I start Synaptic$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+  @screen.wait_and_click("GnomeApplicationsSystem.png", 10)
+  @screen.wait_and_click("GnomeApplicationsAdministration.png", 10)
+  @screen.wait_and_click("GnomeApplicationsSynaptic.png", 20)
+  deal_with_polkit_prompt('SynapticPolicyKitAuthPrompt.png', @sudo_password)
 end

@@ -1,3 +1,116 @@
+tails (1.2) UNRELEASED; urgency=medium
+
+  * Dummy entry for next release.
+
+ -- Tails developers <tails@boum.org>  Mon, 14 Jul 2014 16:15:19 +0200
+
+tails (1.1.2) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade the web browser to 24.8.0esr-0+tails3~bpo70+1
+      (fixes Mozilla#1064636).
+    - Install Linux 3.16-1 from sid (Closes: #7886).
+    - Upgrade file to 5.11-2+deb7u5 (fixes CVE-2014-0207,
+      CVE-2014-0237, CVE-2014-0238, CVE-2014-3478, CVE-2014-3479,
+      CVE-2014-3480, CVE-2014-3487, CVE-2014-3538 and CVE-2014-3587).
+    - Upgrade curl to 7.26.0-1+wheezy10 (fixes CVE-2014-3613 and
+      CVE-2014-3620).
+    - Upgrade bind9-based packages to 1:9.8.4.dfsg.P1-6+nmu2+deb7u2
+      (fixes CVE-2014-0591).
+    - Upgrade gnupg to 1.4.12-7+deb7u6 (fixes CVE-2014-5270).
+    - Upgrade apt to 0.9.7.9+deb7u5 (fixes CVE-2014-0487,
+      CVE-2014-0488, CVE-2014-0489, CVE-2014-0490, and
+      CVE-2014-6273.).
+    - Upgrade dbus to 1.6.8-1+deb7u4 (fixes CVE-2014-3635,
+      CVE-2014-3636, CVE-2014-3637, CVE-2014-3638 and CVE-2014-3639).
+    - Upgrade libav-based pacakges to 6:0.8.16-1 (fixes
+      CVE-2013-7020).
+    - Upgrade bash to 4.2+dfsg-0.1+deb7u1 (fixes CVE-2014-6271).
+
+ -- Tails developers <tails@boum.org>  Tue, 23 Sep 2014 23:01:40 -0700
+
+tails (1.1.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade the web browser to 24.8.0esr-0+tails1~bpo70+1
+      (Firefox 24.8.0esr + Iceweasel patches + Torbrowser patches).
+      Also import the Tor Browser profile at commit
+      271b64b889e5c549196c3ee91c888de88148560f from
+      ttp/tor-browser-24.8.0esr-3.x-1.
+    - Upgrade Tor to 0.2.4.23-2~d70.wheezy+1 (fixes CVE-2014-5117).
+    - Upgrade I2P to 0.9.14.1-1~deb7u+1.
+    - Upgrade Linux to 3.14.15-2 (fixes CVE-2014-3534, CVE-2014-4667
+      and CVE-2014-4943).
+    - Upgrade CUPS-based packages to 1.5.3-5+deb7u4 (fixes
+      CVE-2014-3537, CVE-2014-5029, CVE-2014-5030 and CVE-2014-5031).
+    - Upgrade libnss3 to 2:3.14.5-1+deb7u1 (fixes CVE-2013-1741,
+      CVE-2013-5606, CVE-2014-1491 and CVE-2014-1492).
+    - Upgrade openssl to 1.0.1e-2+deb7u12 (fixes CVE-2014-3505,
+      CVE-2014-3506, CVE-2014-3507, CVE-2014-3508, CVE-2014-3509,
+      CVE-2014-3510, CVE-2014-3511, CVE-2014-3512 and CVE-2014-5139).
+    - Upgrade krb5-based packages to 1.10.1+dfsg-5+deb7u2 (fixes
+      CVE-2014-4341, CVE-2014-4342, CVE-2014-4343, CVE-2014-4344 and
+      CVE-2014-4345).
+    - Upgrade libav-based packages to 6:0.8.15-1 (fixes CVE-2011-3934,
+      CVE-2011-3935, CVE-2011-3946, CVE-2013-0848, CVE-2013-0851,
+      CVE-2013-0852, CVE-2013-0860, CVE-2013-0868, CVE-2013-3672,
+      CVE-2013-3674 and CVE-2014-2263.
+    - Upgrade libgpgme11 to 1.2.0-1.4+deb7u1 (fixes CVE-2014-5117).
+    - Upgrade python-imaging to 1.1.7-4+deb7u1 (fixes CVE-2014-3589).
+    - Prevent dhclient from sending the hostname over the network
+      (Closes: #7688).
+    - Override the hostname provided by the DHCP server (Closes: #7769).
+    - Add an I2P boot parameter. Without adding "i2p" to the kernel
+      command line, I2P will not be accessible for the Live user.
+    - Stricter I2P firewall rules:
+      * deny I2P from accessing the LAN
+      * deny I2P from accessing the loopback device, except for select
+        whitelisted services
+      * allow I2P access to the Internet
+      The ACCEPT rules will only be enabled when the string 'i2p' is
+      passed at the boot prompt. The rules which DENY or REJECT
+      access for the 'i2psvc' user will always be applied.
+    - Disable I2P plugins, since it doesn't make much sense without
+      persistence, and should eliminate some attack vectors.
+    - Disable I2P's BOB port. No maintained I2P application uses it.
+
+  * Bugfixes
+    - Fix condition clause in tails-security-check (Closes: #7657).
+    - Don't ship OpenJDK 6: I2P prefers v7, and we don't need both.
+    - Prevent Tails Installer from updating the system partition
+      properties on MBR partitions (Closes: #7716).
+
+  * Minor improvements
+    - Upgrade to Torbutton 1.6.12.1.
+    - Install gnome-user-guide (Closes: #7618).
+    - Install cups-pk-helper (Closes: #7636).
+    - Update the SquashFS sort file.
+    - Compress the SquashFS more aggressively (Closes: #7706).
+    - I2P: Keep POP3 email on server. The default in the I2P webmail
+      app was to keep mail on the server, but that setting was changed
+      recently. This configuration setting (susimail.config) will only
+      be copied over in I2P 0.9.14 and newer.
+    - Add a Close button to the Tails Installer launcher window.
+
+  * Build system
+    - Migrate Vagrant basebox to Debian Wheezy (Closes #7133, #6736).
+    - Consistently use the same Debian mirror.
+    - Disable runtime APT proxy configuration when using APT in
+      binary_local-hooks (Closes: #7691).
+
+  * Automated test suite
+    - Automatically test hostname leaks (Closes: #7712).
+    - Move autotest live-config hook to be run last. This way we'll
+      notice if some earlier live-config hook cancels all hooks by
+      running the automated test suite since the remote shell won't be
+      running in that case.
+    - Test that the I2P boot parameter does what it's supposed to do
+      (Closes: #7760).
+    - Start applications by using the GNOME Applications menu instead
+      of the GNOME Run Dialog (Closes: #5550, #7060).
+
+ -- Tails developers <tails@boum.org>  Sun, 31 Aug 2014 20:49:28 +0000
+
 tails (1.1) unstable; urgency=medium
 
   * Rebase on Debian Wheezy

@@ -17,8 +17,27 @@ if [ -d /home/vagrant/ikiwiki ]; then
 	rm -rf /home/vagrant/ikiwiki
 fi
 
+rm -f /etc/apt/preferences.d/* /etc/apt/sources.list.d/*
+
+# Add our builder-wheezy repository for live-build, and pin it low
+echo 'deb http://deb.tails.boum.org/ builder-wheezy main' > /etc/apt/sources.list.d/tails.list
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
+	Package: *
+	Pin: origin deb.tails.boum.org
+	Pin-Priority: 99
+EOF
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
+	Package: live-build
+	Pin: origin deb.tails.boum.org
+	Pin-Priority: 500
+EOF
+
+# We don't want to use apt-cacher-ng for gpg
+http_proxy="" gpg --keyserver hkps.pool.sks-keyservers.net --recv-key C7988EA7A358D82E
+gpg --export C7988EA7A358D82E | sudo apt-key add -
+
 # Add unstable repository for ikiwiki, and pin it low
-echo 'deb http://http.debian.net/debian unstable main' > /etc/apt/sources.list.d/unstable.list
+echo 'deb http://ftp.us.debian.org/debian unstable main' > /etc/apt/sources.list.d/unstable.list
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/unstable <<EOF
 	Package: *
 	Pin: release a=unstable
@@ -30,8 +49,12 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/ikiwiki <<EOF
 	Pin-Priority: 500
 EOF
 
+# Add wheezy-backports for apt-cacher-ng. The version in wheezy has problems
+# with redirects to https, which we need when fetching the TBB tarballs
+echo 'deb http://ftp.us.debian.org/debian wheezy-backports main' > /etc/apt/sources.list.d/wheezy-backports.list
+
 apt-get update
-apt-get -y install apt-cacher-ng
+apt-get -o Dpkg::Options::="--force-confold" -y -t wheezy-backports install apt-cacher-ng
 
 # Install custom configuration for apt-cacher-ng and restart
 install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
@@ -48,7 +71,7 @@ apt-get -y dist-upgrade
 # Those are needed to build Tails
 apt-get -y install \
 	live-build \
-	eatmydata/squeeze-backports \
+	eatmydata \
 	time whois \
 	dpkg-dev \
 	git \

@@ -27,15 +27,17 @@ end
 
 When /^I start the Unsafe Browser$/ do
   next if @skip_steps_while_restoring_background
-  unsafe_browser_cmd = nil
-  @vm.execute("cat /usr/share/applications/unsafe-browser.desktop").stdout.chomp.each_line { |line|
-    next if ! line.start_with? "Exec="
-    unsafe_browser_cmd = line[/^Exec=(.*)/,1]
-  }
-  assert(!unsafe_browser_cmd.nil?, "failed to extract the unsafe browser command")
-  step "I run \"#{unsafe_browser_cmd}\""
+  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
+  @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
+  @screen.wait_and_click("GnomeApplicationsUnsafeBrowser.png", 20)
+end
+
+When /^I successfully start the Unsafe Browser$/ do
+  next if @skip_steps_while_restoring_background
+  step "I start the Unsafe Browser"
   step "I see and accept the Unsafe Browser start verification"
   step "I see the Unsafe Browser start notification and wait for it to close"
+  step "the Unsafe Browser has started"
 end
 
 Then /^I see a warning about another instance already running$/ do
@@ -73,15 +75,24 @@ When /^I open the address "([^"]*)" in the Unsafe Browser$/ do |address|
   @screen.type(address + Sikuli::Key.ENTER)
 end
 
+# Workaround until the TBB shows the menu bar by default
+# https://lists.torproject.org/pipermail/tor-qa/2014-October/000478.html
+def show_unsafe_browser_menu_bar
+  try_for(15, :msg => "Failed to show the menu bar") do
+    @screen.type("h", Sikuli::KeyModifier.ALT)
+    @screen.find('UnsafeBrowserEditMenu.png')
+  end
+end
+
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
-  sleep 0.5
   # First we open the proxy settings page to prepare it with the
   # correct open tabs for the loop below.
-  @screen.type("e", Sikuli::KeyModifier.ALT)
-  @screen.type("n")
-  @screen.wait('UnsafeBrowserPreferences.png', 10)
+  show_unsafe_browser_menu_bar
+  @screen.hover('UnsafeBrowserEditMenu.png')
+  @screen.wait_and_click('UnsafeBrowserEditPreferences.png', 10)  
+  @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
   @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
   @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
   sleep 0.5
@@ -99,7 +110,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   proxies = [[socks_proxy, 9050],
              [socks_proxy, 9061],
              [socks_proxy, 9062],
-             [socks_proxy, 9151],
+             [socks_proxy, 9150],
              [http_proxy,  8118],
              [no_proxy,       0]]
 
@@ -107,10 +118,13 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     proxy_type = proxy[0]
     proxy_port = proxy[1]
 
+    @screen.hide_cursor
+
     # Open proxy settings and select manual proxy configuration
-    @screen.type("e", Sikuli::KeyModifier.ALT)
-    @screen.type("n")
-    @screen.wait('UnsafeBrowserPreferences.png', 10)
+    show_unsafe_browser_menu_bar
+    @screen.hover('UnsafeBrowserEditMenu.png')
+    @screen.wait_and_click('UnsafeBrowserEditPreferences.png', 10)  
+    @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
     @screen.type("e", Sikuli::KeyModifier.ALT)
     @screen.wait('UnsafeBrowserProxySettings.png', 10)
     @screen.type("m", Sikuli::KeyModifier.ALT)

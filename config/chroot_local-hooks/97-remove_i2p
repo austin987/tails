@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -u
+set -e
+
+# Everything moved by this hook script will be reversed in the event that
+# the string "i2p" is entered at a boot prompt
+
+DEST="/usr/share/tails/i2p-disabled"
+
+[ -d "/usr/share/i2p" ] || return 0
+
+mkdir "$DEST"
+mv -f /usr/share/i2p "$DEST"
+mv -f /usr/sbin/wrapper "$DEST"
+mv -f /usr/share/applications/i2p-browser.desktop "$DEST"
