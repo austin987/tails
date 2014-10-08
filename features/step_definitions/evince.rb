@@ -15,6 +15,6 @@ Then /^I can print the current document to "([^"]+)"$/ do |output_file|
   # so we type only the desired file's basename to replace it
   @screen.type(output_file.sub(/[.]pdf$/, '') + Sikuli::Key.ENTER)
   try_for(10, :msg => "The document was not printed to #{output_file}") {
-    step "the file \"#{output_file}\" exists"
+    @vm.file_exist?(output_file)
   }
 end

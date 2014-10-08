@@ -558,7 +558,7 @@ end
 
 When /^the file "([^"]+)" exists$/ do |file|
   next if @skip_steps_while_restoring_background
-  assert(@vm.execute("test -e #{file}").success?)
+  assert(@vm.file_exist?(file))
 end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
