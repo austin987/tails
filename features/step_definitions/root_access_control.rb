@@ -1,8 +1,8 @@
 Then /^I should be able to run administration commands as the live user$/ do
   next if @skip_steps_while_restoring_background
   stdout = @vm.execute("echo #{@sudo_password} | sudo -S whoami", $live_user).stdout
-  assert(stdout.sub(/^\[sudo\] password for #{$live_user}: /, "") == "root\n",
-         "Could not use sudo")
+  actual_user = stdout.sub(/^\[sudo\] password for #{$live_user}: /, "").chomp
+  assert_equal("root", actual_user, "Could not use sudo")
 end
 
 Then /^I should not be able to run administration commands as the live user with the "([^"]*)" password$/ do |password|
@@ -26,10 +26,8 @@ end
 
 Then /^I should be able to run a command as root with pkexec$/ do
   next if @skip_steps_while_restoring_background
-  step 'I run "gnome-terminal"'
-  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
-  @screen.type('pkexec touch /root/pkexec-test' + Sikuli::Key.ENTER)
-  step 'I enter the sudo password in the PolicyKit prompt'
+  step "I run \"pkexec touch /root/pkexec-test\" in GNOME Terminal"
+  step 'I enter the sudo password in the pkexec prompt'
   try_for(10, :msg => 'The /root/pkexec-test file was not created.') {
     @vm.execute('ls /root/pkexec-test').success?
   }
@@ -37,13 +35,11 @@ end
 
 Then /^I should not be able to run a command as root with pkexec and the standard passwords$/ do
   next if @skip_steps_while_restoring_background
-  step 'I run "gnome-terminal"'
-  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
-  @screen.type('pkexec touch /root/pkexec-test' + Sikuli::Key.ENTER)
+  step "I run \"pkexec touch /root/pkexec-test\" in GNOME Terminal"
   ['', 'live'].each do |password|
-    step "I enter the \"#{password}\" password in the PolicyKit prompt"
+    step "I enter the \"#{password}\" password in the pkexec prompt"
     @screen.wait('PolicyKitAuthFailure.png', 20)
   end
-  step "I enter the \"amnesia\" password in the PolicyKit prompt"
+  step "I enter the \"amnesia\" password in the pkexec prompt"
   @screen.wait('PolicyKitAuthCompleteFailure.png', 20)
 end

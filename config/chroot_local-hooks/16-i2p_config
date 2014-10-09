@@ -10,12 +10,15 @@ WRAPPER="/etc/i2p/wrapper.config"
 # This must be set in order for the i2p init script to work
 sed -i 's/^RUN_DAEMON=.*$/RUN_DAEMON="true"/' /etc/default/i2p
 
-# Remove the false.i2p outproxy from i2ptunnel
-sed -i '/^tunnel.0.proxyList/d' "$I2P/i2ptunnel.config"
+# Remove the outproxy from the tunnel on port 4444
+# This will remove the following lines:
+#      tunnel.0.proxyList=false.i2p
+#      tunnel.0.option.i2ptunnel.httpclient.SSLOutproxies=false.i2p
+# The SSLOutproxies option was first set in I2P 0.9.15
+sed -i '/^.*tunnel\.0\.\(proxyList\|option\.i2ptunnel\.httpclient\.SSLOutproxies\)/d' "$I2P/i2ptunnel.config"
 
-# Disable the https outproxy
-# We go out through Tor so this is redundant.
-sed -i 's|^.*\(tunnel.6.startOnLoad\).*|\1=false|' "$I2P/i2ptunnel.config"
+# Disable the https outproxy (port 4445)
+sed -i 's|^.*\(tunnel\.6\.startOnLoad\).*|\1=false|' "$I2P/i2ptunnel.config"
 
 # Don't serve the router console on IPv6
 sed -i 's|^clientApp\.0\.args=7657\s\+::1,127\.0\.0\.1|clientApp.0.args=7657 127.0.0.1|' "$I2P/clients.config"
@@ -30,6 +33,7 @@ sed -i 's|^.*\(wrapper\.java\.additional\.6=-Djava\.net\.preferIPv6Addresses=\).
 # * HiddenMode: Enabled
 # * In-I2P Network Updates: Disabled
 # * Inbound connections: Disabled (setting is "i2cp.ntcp.autoip")
+# * Disable I2P plugins
 cat > "$I2P/router.config" << EOF
 # NOTE: This I2P config file must use UTF-8 encoding
 i2cp.disableInterface=true
@@ -38,4 +42,9 @@ i2np.ntcp.autoip=false
 i2np.udp.ipv6=false
 router.isHidden=true
 router.updateDisabled=true
+router.enablePlugins=false
+EOF
+
+cat > "$I2P/susimail.config" << EOF
+susimail.pop3.leave.on.server=true
 EOF

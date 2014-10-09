@@ -16,8 +16,8 @@ the scripts snippets found on this page:
       export TAG=$(echo "$VERSION" | sed -e 's,~,-,')
       export PREVIOUS_VERSION=$(dpkg-parsechangelog --offset 1 --count 1 -SVersion)
 
-* `NEXT_VERSION`: set to the version number of the next Tails release
-  (e.g. 0.23 when releasing 0.22.1)
+* `NEXT_MAJOR_VERSION`: set to the version number of the next Tails release
+  (e.g. 0.23 when releasing 0.22.1, and 1.3 when releasing 1.2)
 * `MAJOR_RELEASE`: set to 1 if preparing a major release, to 0 else
 * `ISOS`: the directory where one stores `tails-i386-*`
   sub-directories like the ones downloaded with BitTorrent.
@@ -41,11 +41,11 @@ Pre-freeze
 The [[contribute/working_together/roles/release_manager]] role
 documentation has more tasks that should be done early enough.
 
-Update Iceweasel preferences
-----------------------------
+Update Tor Browser preferences
+------------------------------
 
 * update `extensions.adblockplus.currentVersion` in
-  `config/chroot_local-includes/etc/iceweasel/profile/user.js`
+  `config/chroot_local-includes/etc/tor-browser/profile/preferences/0000tails.js`
 
 Coordinate with Debian security updates
 ---------------------------------------
@@ -71,22 +71,22 @@ AdBlock patterns
 ----------------
 
 Patterns are stored in
-`config/chroot_local-includes/etc/iceweasel/profile/adblockplus/`.
+`config/chroot_local-includes/etc/tor-browser/profile.default/adblockplus/`.
 
 1. Boot Tails
-2. Open *Tools* → *Addons*
+2. Start the tor Browser and open *Tools* → *Addons*
 3. Select *Adblock Plus* in extensions
 4. Open *Preferences* → *Filter preferences…*
 5. For each filters, click *Actions* → *Update filters*
-6. Close Iceweasel
-7. Copy the `.mozilla/firefox/default/adblockplus/patterns.ini` from
-   this Iceweasel instance to the
-   `config/chroot_local-includes/etc/iceweasel/profile/adblockplus`
+6. Close the Tor Browser
+7. Copy the `.tor-browser/profile.default/adblockplus/patterns.ini` from
+   this Tor Browser instance to the
+   `config/chroot_local-includes/etc/tor-browser/profile/adblockplus`
    directory in the Tails Git checkout.
 8. Commit:
 
        git commit -m 'Update AdBlock Plus patterns.' \
-          config/chroot_local-includes/etc/iceweasel/profile/adblockplus/patterns.ini
+          config/chroot_local-includes/etc/tor-browser/profile/adblockplus/patterns.ini
 
 Upgrade bundled binary Debian packages
 --------------------------------------
@@ -116,7 +116,6 @@ Correct all the errors that are not in the ignored list of
 
 Then see the relevant release processes:
 
-* [[iceweasel]]
 * [[liveusb-creator]]
 * [[tails-greeter]]
 * [[perl5lib]]
@@ -126,6 +125,11 @@ Then see the relevant release processes:
   * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
   * build a Debian package
   * upload it to our [[APT repository]]
+
+Upgrade the Tor Browser
+-----------------------
+
+See the dedicated page: [[tor-browser]]
 
 Update PO files
 ---------------
@@ -174,8 +178,8 @@ Then, gather other useful information from:
 
 * every custom bundled package's own Changelog (Greeter, Persistent
   Volume Assistant, etc.);
-* the "Fix committed" section on the [Release Manager
-  View](https://labs.riseup.net/code/projects/tails/issues?query_id=130).
+* the "Fix committed" section on the *Release Manager View*
+  in Redmine.
 
 Finally, commit:
 
@@ -204,6 +208,7 @@ matches the date of the future signature.
 
 	echo "$VERSION"      > wiki/src/inc/stable_i386_version.html
 	echo "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
+	sed -ri "s%news/version_.*]]%news/version_$VERSION]]%" wiki/src/inc/stable_i386_release_notes.*
 	$EDITOR wiki/src/inc/*.html
 	./build-wiki
 	git commit wiki/src/inc/ -m "Update version and date for $VERSION."
@@ -244,12 +249,16 @@ If at freeze time:
    as detailed on the [[documentation for
    translators|contribute/how/translate]].
 
+   To get a list of changes on the website:
+
+       git diff --stat 1.1.. -- *.{mdwn,html}
+
 Import the signing key
 ======================
 
 You should never import the Tails signing key into your own keyring,
-and a good practice is to import it to a tmpfs so no key material is
-written to disk:
+and a good practice is to import it to a tmpfs to limit the risks that
+the private key material is written to disk:
 
     export GNUPGHOME=$(mktemp -d)
     sudo mount -t tmpfs tmpfs "$GNUPGHOME"
@@ -295,10 +304,17 @@ SquashFS file order
 1. Burn a DVD.
 1. Boot this DVD **on bare metal**.
 1. Add `profile` to the kernel command-line.
-1. Three minutes after `iceweasel` has been loaded, retrieve the new sort
-   file from `/var/log/boot-profile`.
+1. Login.
+1. Wait for the "Tor is ready" notification.
+1. Start the web browser.
+1. A few minutes later, once the `boot-profile` process has been
+   killed, retrieve the new sort file from `/var/log/boot-profile`.
 1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
-1. Cleanup a bit.
+1. Cleanup a bit:
+   - remove `var/log/live/config.pipe`: otherwise the boot is broken
+     or super-slow
+   - remove the bits about `kill-boot-profile` at the end: they're
+     only useful when profiling the boot
 1. Inspect the Git diff (including diff stat), apply common sense.
 1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
 
@@ -364,7 +380,7 @@ Use `tails-create-iuk` to build the following IUKs:
   1.0. This should be done even if there was no IUK generated from the
   previous stable release since it is a good way to test the iuk code
   that'll be used for the incremental upgrade paths to the
-  `$NEXT_VERSION`.
+  next version.
 
 Example (for RC, replace `$PREVIOUS_VERSION` with e.g. `$VERSION~rc1`
 below):
@@ -404,8 +420,10 @@ Prepare upgrade-description files
        ( cd $IUK_CHECKOUT && \
        ./bin/tails-iuk-generate-upgrade-description-files \
            --version "$VERSION" \
-           --next-version "$NEXT_VERSION" \
-           --next-version "${NEXT_VERSION}~rc1" \
+           --next-version "$NEXT_MAJOR_VERSION" \
+           --next-version "${NEXT_MAJOR_VERSION}~rc1" \
+           --next-version "${VERSION}.1" \
+           --next-version "${VERSION}.1~rc1" \
            --iso "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso" \
            --previous-version "$PREVIOUS_VERSION" \
            --previous-version "${VERSION}~rc1" \
@@ -424,8 +442,12 @@ Prepare upgrade-description files
      `--previous-version`, so that users who skipped a release or two
      are directly informed of the new one.
    * If preparing a release candidate, add `--channel alpha`
-   * If preparing a release candidate, do not pass
-     `--next-version "${NEXT_VERSION}~rc1"`
+   * If preparing a release candidate, drop all `--next-version`
+     arguments, and instead pass (**untested!**)
+     `--next-version $(echo $VERSION | sed -e 's,~rc*$,,')`
+   * If preparing a point-release, pass neither
+     `--next-version "${VERSION}.1"`,
+     nor `--next-version "${VERSION}.1~rc1"`
 
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
@@ -464,9 +486,14 @@ Upload images
 Sanity check
 ------------
 
-Verify that the current source for Firefox is still the same we've
-used when preparing our custom Iceweasel package: e.g. FF17.0.8 got
-re-tagged and re-uploaded at the last minute, due to a test failure.
+Verify that the TBB release used in Tails still is the most
+recent. Also look if there's a new `-buildX` tag for the targetted TBB
+and Tor Browser versions in their respective Git repos:
+
+* <https://gitweb.torproject.org/builders/tor-browser-bundle.git>
+* <https://gitweb.torproject.org/tor-browser.git>
+
+A new tag may indicate that a new TBB release is imminent.
 
 Better catch this before people spend time doing manual tests.
 
@@ -588,6 +615,8 @@ Write the announcement for the release in
   [[!tails_gitweb_commit 9925321]] breaks all existing persistent
   profiles).
 - Document known issues.
+- Update the link(s) to these release notes in
+  `wiki/src/doc/first_steps/upgrade.mdwn`.
 
 Write an announcement listing the security bugs affecting the previous
 version in `security/` in order to let the users of the old versions
@@ -602,7 +631,7 @@ image to be released was *built*. Including:
 - the list of BSA fixed in packages we ship since those that were in
   the previous release of Tails:
   <https://lists.debian.org/debian-backports-announce/>
-- the list of MFSA fixed by the iceweasel update:
+- the list of MFSA fixed by the Tor Browser update:
   <https://www.mozilla.org/security/announce/>
 
 If preparing a release candidate
@@ -662,8 +691,8 @@ Go wild!
 Sanity check
 ------------
 
-Verify once more that the current source for Firefox is still the same
-we've used when preparing our custom Iceweasel packages.
+Verify once more that the TBB we ship is still the most recent (see
+above).
 
 Push
 ----
@@ -782,18 +811,10 @@ this, and skip what does not make sense for a RC.
          done
 
    - `git push --force origin experimental`
-1. Push the release tag to lizard for Jenkins' consumption: `git push --tags lizard`
-1. Force-push all major branches to lizard:
-
-           for branch in stable testing devel experimental ; do
-              git push --force lizard $branch:$branch
-           done
-
-1. Make sure Jenkins manages to build all major branches fine:
+1. Make sure Jenkins manages to build all updated major branches fine:
    <https://jenkins.tails.boum.org/>.
-1. In the [Release Manager
-   View](https://labs.riseup.net/code/projects/tails/issues?query_id=130)
-   custom Redmine query, set *Target version* to the next release. Save.
+1. Delete the _Release Manager View for $VERSION_ Redmine custom query.
+1. Ensure the next few releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Broken
    windows* so that this section appears after the next release.
 
