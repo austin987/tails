@@ -15,10 +15,10 @@ i2p_is_enabled() {
 }
 
 i2p_eep_proxy_address() {
-    # We retrieve the host and port number from the I2P profile This
+    # We retrieve the host and port number from the I2P profile. This
     # shouldn't be anywhere other than 127.0.0.1:4444 but in case
     # someone modifies the hook scripts or the default changes in I2P,
-    # this check should still work
+    # this check should still work.
     local listen_host listen_port
     listen_host=$(awk -F= '/^tunnel\.0\.interface/{print $2}' \
                       "${I2P_TUNNEL_CONFIG}")
