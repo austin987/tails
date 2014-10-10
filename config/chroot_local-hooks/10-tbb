@@ -11,7 +11,7 @@ echo "Install the Tor Browser"
 # practical since when creating a new browser profile we can simply
 # copy the profile directory without duplicating all extensions.
 . /usr/local/lib/tails-shell-library/tor-browser.sh
-mkdir -p "${TBB_PROFILE}" "${TBB_EXT}"
+mkdir -p "${TBB_PROFILE}"
 
 download_and_verify_files() {
     local base_url bundles destination apt_proxy
@@ -81,6 +81,25 @@ install_tor_browser() {
     rm -r "${tmp}"
 }
 
+install_langpacks_from_bundles() {
+    local bundles_dir destination
+    bundles_dir="${1}"
+    destination="${2}"
+
+    for tarball in "${bundles_dir}"/tor-browser-*.tar.xz; do
+        locale="$(echo "${tarball}" | sed "s@^.*/tor-browser-.*_\(.*\)\.tar\.xz@\1@")"
+        if [ "${locale}" = en-US ]; then
+            continue
+        fi
+        xpi="tor-browser_${locale}/Browser/TorBrowser/Data/Browser/profile.default/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
+        (
+            cd "${bundles_dir}"
+            tar -xf "${tarball}" "${xpi}"
+            mv "${xpi}" "${destination}"
+        )
+    done
+}
+
 # Get the below with `grep "tor-browser-linux32-.*\.tar.xz" sha256sums.txt`
 BUNDLES="$(cat <<EOF
 473780a5145859a8d516e76cb27be25b0baf16007ba50cd8ba78a536bc806fc5  tor-browser-linux32-tbb-nightly_ar.tar.xz
@@ -107,21 +126,8 @@ download_and_verify_files "${TBB_DIST_URL}" "${BUNDLES}" "${TMP}"
 
 install_tor_browser "${TMP}/${MAIN_BUNDLE}" "${TBB_INSTALL}"
 
-# Only extract the localization addon from the other TBBs, which
-# we'll put in a global extensions directory that we'll symlink to so
-# we don't have to deal with wasteful copies.
-for tarball in "${TMP}"/tor-browser-*.tar.xz; do
-    locale="$(echo "${tarball}" | sed "s@^.*/tor-browser-.*_\(.*\)\.tar\.xz@\1@")"
-    if [ "${locale}" = en-US ]; then
-        continue
-    fi
-    xpi="tor-browser_${locale}/Browser/TorBrowser/Data/Browser/profile.default/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
-    (
-        cd "${TMP}"
-        tar -xf "${tarball}" "${xpi}"
-        mv "${xpi}" "${TBB_EXT}"
-    )
-done
+mkdir -p "${TBB_EXT}"
+install_langpacks_from_bundles "${TMP}" "${TBB_EXT}"
 
 # Let's put all the bundled extensions in the global extensions directory
 mv "${TBB_INSTALL}"/Browser/TorBrowser/Data/Browser/profile.default/extensions/* "${TBB_EXT}"
