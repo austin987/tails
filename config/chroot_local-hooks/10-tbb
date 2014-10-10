@@ -4,6 +4,44 @@ set -eu
 
 echo "Install the Tor Browser"
 
+# Import the TBB_INSTALL, TBB_PROFILE and TBB_EXT variables, which
+# contains the paths we will split TBB's actual browser (binaries
+# etc), user data and extension into. While this differs from how the
+# TBB organizes the files, the end result will be the same, and it's
+# practical since when creating a new browser profile we can simply
+# copy the profile directory without duplicating all extensions.
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+mkdir -p "${TBB_INSTALL}" "${TBB_PROFILE}" "${TBB_EXT}"
+
+download_and_verify_files() {
+    local base_url bundles destination apt_proxy
+    base_url="${1}"
+    bundles="${2}"
+    destination="${3}"
+
+    # Use the builder's caching APT proxy, if any
+    apt_proxy="$(apt-config --format '%v' dump Acquire::http::Proxy)"
+    if [ -n "${apt_proxy}" ]; then
+        export HTTP_PROXY="${apt_proxy}"
+        export http_proxy="${apt_proxy}"
+        export HTTPS_PROXY="${apt_proxy}"
+        export https_proxy="${apt_proxy}"
+    fi
+
+    echo "${bundles}" | while read expected_sha256 tarball; do
+        (
+            cd "${destination}"
+            echo "Fetching ${base_url}/${tarball} ..."
+            curl --remote-name "${base_url}/${tarball}"
+        )
+        actual_sha256="$(sha256sum "${destination}/${tarball}" | cut -d' ' -f1)"
+        if [ "${actual_sha256}" != "${expected_sha256}" ]; then
+            echo "SHA256 mismatch for ${tarball}" >&2
+            exit 1
+        fi
+    done
+}
+
 # Get the below with `grep "tor-browser-linux32-.*\.tar.xz" sha256sums.txt`
 BUNDLES="$(cat <<EOF
 473780a5145859a8d516e76cb27be25b0baf16007ba50cd8ba78a536bc806fc5  tor-browser-linux32-tbb-nightly_ar.tar.xz
@@ -25,38 +63,8 @@ VERSION=tbb-nightly-2014-10-07
 #TBB_DIST_URL="http://people.torproject.org/~gk/testbuilds/${VERSION}"
 TBB_DIST_URL="http://people.torproject.org/~linus/builds/${VERSION}"
 
-# Import the TBB_INSTALL, TBB_PROFILE and TBB_EXT variables, which
-# contains the paths we will split TBB's actual browser (binaries
-# etc), user data and extension into. While this differs from how the
-# TBB organizes the files, the end result will be the same, and it's
-# practical since when creating a new browser profile we can simply
-# copy the profile directory without duplicating all extensions.
-. /usr/local/lib/tails-shell-library/tor-browser.sh
-mkdir -p "${TBB_INSTALL}" "${TBB_PROFILE}" "${TBB_EXT}"
-
-# Use the builder's caching APT proxy, if any
-APT_PROXY="$(apt-config --format '%v' dump Acquire::http::Proxy)"
-if [ -n "${APT_PROXY}" ]; then
-    export HTTP_PROXY="${APT_PROXY}"
-    export http_proxy="${APT_PROXY}"
-    export HTTPS_PROXY="${APT_PROXY}"
-    export https_proxy="${APT_PROXY}"
-fi
-
 TMP="$(mktemp -d)"
-
-echo "${BUNDLES}" | while read expected_sha256 tarball; do
-    (
-        cd "${TMP}"
-        echo "Fetching ${TBB_DIST_URL}/${tarball} ..."
-        curl --remote-name "${TBB_DIST_URL}/${tarball}"
-    )
-    actual_sha256="$(sha256sum "${TMP}/${tarball}" | cut -d' ' -f1)"
-    if [ "${actual_sha256}" != "${expected_sha256}" ]; then
-        echo "SHA256 mismatch for ${tarball}" >&2
-        exit 1
-    fi
-done
+download_and_verify_files "${TBB_DIST_URL}" "${BUNDLES}" "${TMP}"
 
 # We'll use the en-US bundle as our basis...
 tar -xf "${TMP}/${MAIN_BUNDLE}" -C "${TMP}" tor-browser_en-US
