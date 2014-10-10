@@ -100,6 +100,52 @@ install_langpacks_from_bundles() {
     done
 }
 
+get_firefox_version() {
+    # The application.ini file
+    local appini
+    appini="${1}"
+    sed -n 's/^Version=\(.*\)$/\1/p' "${appini}"
+}
+
+# Create and install a fake iceweasel package so we can install our
+# desired Debian-packaged Iceweasel addons
+install_fake_iceweasel_pkg() {
+    local fake_version tmp
+    fake_version="${1}"
+    tmp="$(mktemp -d)"
+    apt-get install --yes equivs
+    cat > "${tmp}"/iceweasel.control << EOF
+Section: web
+Priority: optional
+Homepage: https://tails.boum.org/
+Standards-Version: 3.6.2
+
+Package: iceweasel
+Version: ${fake_version}
+Maintainer: Tails developers <amnesia@boum.org>
+Architecture: all
+Description: (Fake) Iceweasel
+ Make it possible to install Debian's Iceweasel addons without having to
+ install a real Iceweasel.
+EOF
+    (
+        cd "${tmp}"
+        equivs-build "${tmp}"/iceweasel.control
+        dpkg -i "${tmp}"/iceweasel_"${fake_version}"_all.deb
+    )
+    rm -R "${tmp}"
+}
+
+install_debian_extensions() {
+    local destination
+    destination="${1}"
+    apt-get install --yes xul-ext-adblock-plus xul-ext-torbutton
+    ln -s /usr/share/xul-ext/adblock-plus/ \
+          "${destination}"/'{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}'
+    ln -s /usr/share/xul-ext/torbutton/ \
+          "${destination}"/torbutton@torproject.org
+}
+
 # Get the below with `grep "tor-browser-linux32-.*\.tar.xz" sha256sums.txt`
 BUNDLES="$(cat <<EOF
 473780a5145859a8d516e76cb27be25b0baf16007ba50cd8ba78a536bc806fc5  tor-browser-linux32-tbb-nightly_ar.tar.xz
@@ -129,38 +175,17 @@ install_tor_browser "${TMP}/${MAIN_BUNDLE}" "${TBB_INSTALL}"
 mkdir -p "${TBB_EXT}"
 install_langpacks_from_bundles "${TMP}" "${TBB_EXT}"
 
-# Let's put all the bundled extensions in the global extensions directory
+# Let's put all the bundled extensions in the global extensions
+# directory...
 mv "${TBB_INSTALL}"/Browser/TorBrowser/Data/Browser/profile.default/extensions/* "${TBB_EXT}"
 rmdir "${TBB_INSTALL}"/Browser/TorBrowser/Data/Browser/profile.default/extensions
 
-# Create and install a fake iceweasel package so we can install our
-# desired Debian-packaged Iceweasel addons
-apt-get install --yes equivs
-FAKE_ICEWEASEL_VERSION=$(sed -n 's/^Version=\(.*\)$/\1/p' "${TBB_INSTALL}"/Browser/application.ini)+fake1
-cat > "${TMP}"/iceweasel.control << EOF
-Section: web
-Priority: optional
-Homepage: https://tails.boum.org/
-Standards-Version: 3.6.2
-
-Package: iceweasel
-Version: ${FAKE_ICEWEASEL_VERSION}
-Maintainer: Tails developers <amnesia@boum.org>
-Architecture: all
-Description: (Fake) Iceweasel
- Make it possible to install Debian's Iceweasel addons without having to
- install a real Iceweasel.
-EOF
-(
-    cd "${TMP}"
-    equivs-build "${TMP}"/iceweasel.control
-    dpkg -i "${TMP}"/iceweasel_"${FAKE_ICEWEASEL_VERSION}"_all.deb
-)
-
-apt-get install --yes xul-ext-adblock-plus xul-ext-torbutton
-
-ln -s /usr/share/xul-ext/adblock-plus/ "${TBB_EXT}"/'{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}'
-ln -s /usr/share/xul-ext/torbutton/ "${TBB_EXT}"/torbutton@torproject.org
+# ... and then install a few Iceweasel extension by using a fake
+# Iceweasel equivs package to satisfy the dependencies.
+FIREFOX_VERSION=$(get_firefox_version "${TBB_INSTALL}"/Browser/application.ini)
+FAKE_ICEWEASEL_VERSION=${FIREFOX_VERSION}+fake1
+install_fake_iceweasel_pkg "${FAKE_ICEWEASEL_VERSION}"
+install_debian_extensions "${TBB_EXT}"
 
 rsync -a --exclude bookmarks.html --exclude extensions \
     "${TBB_INSTALL}"/Browser/TorBrowser/Data/Browser/profile.default/ \
