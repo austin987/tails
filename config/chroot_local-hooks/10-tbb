@@ -11,7 +11,7 @@ echo "Install the Tor Browser"
 # practical since when creating a new browser profile we can simply
 # copy the profile directory without duplicating all extensions.
 . /usr/local/lib/tails-shell-library/tor-browser.sh
-mkdir -p "${TBB_INSTALL}" "${TBB_PROFILE}" "${TBB_EXT}"
+mkdir -p "${TBB_PROFILE}" "${TBB_EXT}"
 
 download_and_verify_files() {
     local base_url bundles destination apt_proxy
@@ -42,6 +42,45 @@ download_and_verify_files() {
     done
 }
 
+install_tor_browser() {
+    local bundle destination tmp prep
+    bundle="${1}"
+    destination="${2}"
+
+    tmp="$(mktemp -d)"
+    tar -xf "${bundle}" -C "${tmp}" tor-browser_en-US
+    prep="${tmp}"/tor-browser_en-US
+
+    # Enable our myspell/hunspell dictionaries. TBB only provides the
+    # one for en-US, but Debian's seems more comprehensive, so we'll
+    # only use Debian's dictionaries.
+    rm -f "${prep}"/Browser/dictionaries/*
+    for f in /usr/share/hunspell/*.aff /usr/share/hunspell/*.dic; do
+        name="$(basename "${f}")"
+        ln -s "${f}" "${prep}"/Browser/dictionaries/"${name}"
+    done
+
+    # We don't want tor-launcher to be part of the regular browser
+    # profile. Moreover, for the stand-alone tor-launcher we use, we
+    # need our patched version. So, the version shipped in the TB
+    # really is not useful for us.
+    rm "${prep}/Browser/TorBrowser/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi"
+
+    # Remove TBB's torbutton since the "Tor test" will fail and about:tor
+    # will report an error. We'll install our own Torbutton later, which
+    # has the extensions.torbutton.test_enabled boolean pref as a workaround.
+    rm "${prep}/Browser/TorBrowser/Data/Browser/profile.default/extensions/torbutton@torproject.org.xpi"
+
+    mv "${prep}/Browser" "${destination}"/Browser
+
+    # The Tor Browser will fail, complaining about an incomplete profile,
+    # unless there's a readable Browser/TorBrowser/Data/Browser/Caches
+    # in the directory where the firefox executable is located.
+    mkdir -p "${destination}"/Browser/TorBrowser/Data/Browser/Caches
+
+    rm -r "${tmp}"
+}
+
 # Get the below with `grep "tor-browser-linux32-.*\.tar.xz" sha256sums.txt`
 BUNDLES="$(cat <<EOF
 473780a5145859a8d516e76cb27be25b0baf16007ba50cd8ba78a536bc806fc5  tor-browser-linux32-tbb-nightly_ar.tar.xz
@@ -66,11 +105,9 @@ TBB_DIST_URL="http://people.torproject.org/~linus/builds/${VERSION}"
 TMP="$(mktemp -d)"
 download_and_verify_files "${TBB_DIST_URL}" "${BUNDLES}" "${TMP}"
 
-# We'll use the en-US bundle as our basis...
-tar -xf "${TMP}/${MAIN_BUNDLE}" -C "${TMP}" tor-browser_en-US
-TBB_PREP="${TMP}"/tor-browser_en-US
+install_tor_browser "${TMP}/${MAIN_BUNDLE}" "${TBB_INSTALL}"
 
-# ... only extracting the localization addon from the other ones, which
+# Only extract the localization addon from the other TBBs, which
 # we'll put in a global extensions directory that we'll symlink to so
 # we don't have to deal with wasteful copies.
 for tarball in "${TMP}"/tor-browser-*.tar.xz; do
@@ -85,34 +122,6 @@ for tarball in "${TMP}"/tor-browser-*.tar.xz; do
         mv "${xpi}" "${TBB_EXT}"
     )
 done
-
-# Enable our myspell/hunspell dictionaries. TBB only provides the one
-# for en-US, but Debian's seems more comprehensive, so we'll only use
-# Debian's dictionaries.
-rm -f "${TBB_PREP}"/Browser/dictionaries/*
-for f in /usr/share/hunspell/*.aff /usr/share/hunspell/*.dic; do
-    name="$(basename "${f}")"
-    ln -s "${f}" "${TBB_PREP}"/Browser/dictionaries/"${name}"
-done
-
-# We don't want tor-launcher to be part of the regular browser
-# profile. Moreover, for the stand-alone tor-launcher we use, we need
-# our patched version. So, the version shipped in the TB really is not
-# useful for us.
-rm "${TBB_PREP}/Browser/TorBrowser/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi"
-
-# Remove TBB's torbutton since the "Tor test" will fail and about:tor
-# will report an error. We'll install our own Torbutton later, which
-# has the extensions.torbutton.test_enabled boolean pref as a workaround.
-rm "${TBB_PREP}/Browser/TorBrowser/Data/Browser/profile.default/extensions/torbutton@torproject.org.xpi"
-
-# See comment below why we need the Browser sub-dir
-mv "${TBB_PREP}/Browser" "${TBB_INSTALL}"/Browser
-
-# The Tor Browser will fail, complaining about an incomplete profile,
-# unless there's a readable Browser/TorBrowser/Data/Browser/Caches
-# in the directory where the firefox executable is located.
-mkdir -p "${TBB_INSTALL}"/Browser/TorBrowser/Data/Browser/Caches
 
 # Let's put all the bundled extensions in the global extensions directory
 mv "${TBB_INSTALL}"/Browser/TorBrowser/Data/Browser/profile.default/extensions/* "${TBB_EXT}"
