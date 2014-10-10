@@ -108,6 +108,11 @@ After('@product') do |scenario|
     out = "#{$tmp_dir}/#{base}-#{DateTime.now}.png"
     FileUtils.mv(tmp, out)
     STDERR.puts("Took screenshot \"#{out}\"")
+    if $pause_on_fail
+      STDERR.puts ""
+      STDERR.puts "Press ENTER to continue running the test suite"
+      STDIN.gets
+    end
   end
   if @sniffer
     @sniffer.stop

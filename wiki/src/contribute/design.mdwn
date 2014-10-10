@@ -745,9 +745,9 @@ See [[doc/about/features]].
 ## 3.3 Internationalization
 
 Tails ships, as is, localization files provided by the installed
-Debian packages. All available iceweasel localization packages
+Debian packages. All available Tor Browser localization packages
 are installed. Spell checking software and data is installed for the
-set of best supported languages; it is usable at least is Iceweasel,
+set of best supported languages; it is usable at least is Tor Browser,
 LibreOffice and gedit.
 
 ### 3.3.1 Input methods
@@ -945,77 +945,62 @@ granting `sudo` privileges to the `amnesia` user by default.
 Unless an administrator password is set in tails-greeter,
 no root access is possible afterwards.
 
-### 3.6.13 Iceweasel
+### 3.6.13 Tor Browser
 
-(Note: Iceweasel is the name of the web browser, based on Mozilla
-Firefox, that is shipped by Debian and thus by Tails.)
+Tails ships with the Tor Browser, which is based on Mozilla Firefox
+and patched by the Tor Project for improved anonymity by reducing
+information leaks, decreasing attack surface and similar. The actual
+binaries etc. used in Tails are those distributed by the Tor Project,
+but the configuration differs slightly, which is described below.
 
-Tails ships custom Iceweasel ESR packages built with the Torbrowser
-patches to better blend in the Tor Browser Bundle's anonymity set.
-Some patches, that are not relevant for Tails, are not
-applied, though: see the Tails browser's
-[changelog](https://git-tails.immerda.ch/iceweasel/plain/debian/changelog?h=tails/master)
-for the current status.
+In Tails we diverge from the TBB's one-profile-only design, and
+install the Tor Browser in a globally accessible directory used by all
+browser profiles (and other XUL applications).
 
-Iceweasel uses the Torbutton extension in order to prevent attacks
-using JavaScript, plugins and other non-HTTP features like web
-bugs. It is configured to always be enabled on Iceweasel start and
-uses Tor as SOCKS5 proxy. SOCKS is configured to perform name
-resolution through this proxy. Iceweasel is also configured to not
-cache to disk (mainly to reduce memory usage for DVD users as disk
-writes will be stored there), history is disabled (just in case) and
-many other things. It is also set up not to automatically check for
-updates of its installed extensions. Java support is disabled.
+- [[!tails_gitweb config/chroot_local-hooks/10-tbb]]
 
-Iceweasel is shipped with some extensions to help users manage their
-browsing experience. The Torbutton settings treat all cookies as
-session cookies by default. This prevents the
-known leak of browsing information cookies can lead to. The [Adblock
-plus](https://addons.mozilla.org/fr/firefox/addon/1865/) extension
-protects against many tracking possibilities by removing most ads.
+The default profile is split from the binaries and application data:
 
-Tails ships the [HTTPS
-Everywhere](https://www.eff.org/https-everywhere) extension that
-forces HTTPS usage for requests to a number of major websites.
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-browser]]
 
-Tails also ships the
-[FoxyProxy](https://addons.mozilla.org/fr/firefox/addon/2464/)
-extension that:
+As for extensions we have the following differences:
 
-- allows using I2P instead of Tor to visit eepsites (I2P's own hidden
-  services look-alike); see [[the design document dedicated to Tails
-  use of I2P|I2P]] for details;
-- could help [[!tails_todo FTP_in_Iceweasel desc="fixing Iceweasel's FTP support"]].
+* Tails also installs the
+  [Adblock plus](https://addons.mozilla.org/fr/firefox/addon/1865/)
+  extension to protect against many tracking possibilities by removing
+  most ads.
 
-Thanks to Torbutton, to the Tor Browser patches, and to us importing
-(most of) the TBB preferences, Iceweasel is configured so that Tor browser
-fingerprint appears uniformly among Torbutton users. Tails enables
-Torbutton's EN-US locale spoofing to avoid partitioning Tails
-users into per-language anonymity sets.
+* Tails also ships the
+  [FoxyProxy](https://addons.mozilla.org/fr/firefox/addon/2464/)
+  extension that:
+  - allows using I2P instead of Tor to visit eepsites (I2P's own
+    hidden services look-alike); see
+    [[the design document dedicated to Tails use of I2P|I2P]] for
+    details;
+  - could help
+    [[!tails_todo FTP_in_Iceweasel desc="fixing web browser FTP support"]].
 
-Torbutton is also configured to spoof the timezone settings the same
-way as the Tor Browser Bundle does, i.e. to `UTC+00:00`.
+* Tails does not install the same Torbutton as in the TBB. We
+  installed a patched version.
 
-Thanks to the Tor Browser patches, the in-memory web cache is isolated
-to the url bar origin.
+* Tails does not install the Tor Launcher extension as part of the
+  browser. A patched Tor Launcher is installed for use as a
+  stand-alone XUL application, though.
 
-The Iceweasel config is poorly commented but the commit messages in
-Git history explains it all. In a nutshell, Iceweasel preferences are
-set in various ways:
+In Tails we do not use the `start-tor-browser` script, since it does a
+lot of stuff not needed in Tails (error checking mainly) and isn't
+flexible since it looks for the browser profile in a specific
+place. Our custom script makes use of the global installation and also
+makes sure the default profile is used as a basis. Any shared libraries
+shipped inside the TBB are also used (via `LD_LIBRARY_PATH`) since
+Debian stable often has too old versions to start the browser.
 
-* A Tor Browser patch called
-  `0022-Tor-Browser-s-Firefox-preference-overrides.patch` bundles
-  their prefs directly into `omni.ja`.
-* `/etc/iceweasel/*/*.js` contains:
-  - Torbutton preferences that the TBB also sets;
-  - some Tails-specific settings.
+Whenever the user tries to start the Tor Browser before Tor is
+ready, they are informed it won't work, and asked whether to start the
+browser anyway:
 
-Whenever the user tries to start Iceweasel before Tor is ready, they
-are informed it won't work, and asked whether to start the browser
-anyway:
-
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/iceweasel]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tor-browser]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/generate-tor-browser-profile]]- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
 - [[!tails_gitweb config/chroot_local-includes/etc/sudoers.d/zzz_tor-has-bootstrapped]]
 
 Once Tor is ready to be used, the user is informed they can now use
@@ -1023,16 +1008,18 @@ the Internet:
 
 - [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/60-tor-ready-notification.sh]]
 
-Source code, scripts and configuration:
+The remaining configuration differences can be found in:
 
-- [[!tails_gitweb_dir config/chroot_local-includes/etc/iceweasel]]
-- Tails' Iceweasel source [[lives in Git|contribute/git]]
-- [[!tails_gitweb config/chroot_local-hooks/12-remove_unwanted_iceweasel_searchplugins]]
-- [[!tails_gitweb config/chroot_local-hooks/13-iceweasel_sqlite]]
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-browser/preferences/0000tails.js]]
+- [[!tails_gitweb config/chroot_local-hooks/12-remove_unwanted_browser_searchplugins]]
 - [[!tails_gitweb config/chroot_local-hooks/13-override-tbb-branding]]
-- [[!tails_gitweb config/chroot_local-hooks/14-add_localized_iceweasel_searchplugins]]
-- [[!tails_gitweb config/chroot_local-hooks/14-generate-iceweasel-profile]]
+- [[!tails_gitweb config/chroot_local-hooks/14-add_localized_browser_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/14-generate-tor-browser-profile]]
 - [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
+
+It should also be noted that the global TBB installation is also used
+for the [[Unsafe Browser]], although with a separate, user-isolated
+profile with very different configuration.
 
 ### 3.6.14 Claws Mail
 
@@ -1270,20 +1257,22 @@ the [[contribute/build]] page and the [[contribute]] section on the wiki.
 
 ### 3.8.2 Testing process
 
-An automated build and test environment would be useful to avoid
+An automated build and test environment is useful to avoid
 regressions in Tails, especially anonymity and security related
-ones. It would also make it easier to work on Tails for developers
-who do not own modern powerful hardware.
+ones. It also makes it easier for developers to work on Tails with
+more confidence, and at release time to cut down the time needed for
+quality assurance work.
 
-Research and practical work to set up such an environment [[!tails_todo
-automated_builds_and_tests desc="has slowly started"]]. In the meantime, a [[manual
-test suite|contribute/release_process/test]] is "run" against Tails
-release candidates images before they are officially published.
+Tails' [[manual test suite|contribute/release_process/test]] is "run"
+against Tails release candidates images before they are officially
+published. Automating this test suite is [[partly
+done|contribute/release_process/test/automated_tests]], and a work
+in progress.
 
 ### 3.8.3 Upgrades
 
 Keeping Tor (stable releases only, unless the Tor core developers
-recommend otherwise) and Iceweasel up-to-date is a priority.
+recommend otherwise) and the Tor Browser up-to-date is a priority.
 
 Remaining applications, including the base system, will be upgraded
 using Debian standard upgrade process, and generally based on the
@@ -1320,7 +1309,8 @@ UDP and IPv6 are a problem. The Tor network does not support any of
 those yet. Outgoing UDP and IPv6 packets are dropped altogether by
 netfilter for this reason.
 
-Support of arbitrary DNS queries is only provided by ttdnsd listening
+Support of [[!tails_ticket 6070 desc="arbitrary DNS queries"]] is only
+provided by ttdnsd listening
 on 127.0.0.2. ttdnsd has proved too be far too buggy to be inserted in
 the default DNS resolution chain.
 
@@ -1338,11 +1328,11 @@ where Tails is heading to.
 Tails tries to make it as difficult as possible to distinguish Tails
 users from other Tor users.
 
-Iceweasel is configured to match the fingerprint of the Tor Browser
+The Tor Browser used in Tails is configured to match the fingerprint of the Tor Browser
 Bundle and the known differences, if any, are listed in the [[known
 issues|support/known_issues]] page.
 
-However the fact that different extensions are installed in Tails and in
+However the fact that different browser extensions are installed in Tails and in
 the TBB surely allows more sophisticated attacks that usual fingerprint
 as returned by tools such as <https://panopticlick.eff.org/> and
 <http://ip-check.info/>. For example, the fact that Adblock is removing

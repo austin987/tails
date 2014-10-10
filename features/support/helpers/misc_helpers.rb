@@ -5,6 +5,13 @@ require 'test/unit'
 # Make all the assert_* methods easily accessible in any context.
 include Test::Unit::Assertions
 
+def assert_vmcommand_success(p, msg = nil)
+  assert(p.success?, msg.nil? ? "Command failed: #{p.cmd}\n" + \
+                                "error code: #{p.returncode}\n" \
+                                "stderr: #{p.stderr}" : \
+                                msg)
+end
+
 # Call block (ignoring any exceptions it may throw) repeatedly with one
 # second breaks until it returns true, or until `t` seconds have
 # passed when we throw Timeout::Error. As a precondition, the code

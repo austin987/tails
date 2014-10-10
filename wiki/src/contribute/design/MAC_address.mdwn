@@ -412,7 +412,13 @@ leaks issue, in addition to other reasons for being discarded:
 
 * NetworkManager hook: NM doesn't trigger events equivalent to
   if-pre-up, so this isn't possible. See the commented parts in:
-  /etc/NetworkManager/dispatcher.d/01ifupdown
+  `/etc/NetworkManager/dispatcher.d/01ifupdown`. Note that
+  NetworkManager 0.9.10 introduces pre-up hooks, *but* they're used to
+  "allow scripts to execute before NetworkManager announces
+  connectivity to applications" (according to a [blog
+  post](http://blogs.gnome.org/dcbw/2014/06/20/well-build-a-dream-house-of-net/)
+  by Dan William), that is, after network activity (e.g.
+  DHCP requests) has already occurred.
 
 * systemd integration: We don't use this yet.
 

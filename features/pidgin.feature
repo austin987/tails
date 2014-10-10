@@ -4,7 +4,7 @@ Feature: Chatting anonymously using Pidgin
   when I chat using Pidgin
   I should be able to use OTR
   And I should be able to persist my Pidgin configuration
-  And AppArmor should prevent Totem from doing dangerous things
+  And AppArmor should prevent Pidgin from doing dangerous things
   And all Internet traffic should flow only through Tor
 
   Background:
