@@ -59,6 +59,10 @@ install_tor_browser() {
         ln -s "${f}" "${prep}"/dictionaries/"${name}"
     done
 
+    # We don't need the Tor binary (and shared libraries) and
+    # documentation shipped in the TBB.
+    rm -r "${prep}"/TorBrowser/Tor "${prep}"/TorBrowser/Docs
+
     # We don't want tor-launcher to be part of the regular browser
     # profile. Moreover, for the stand-alone tor-launcher we use, we
     # need our patched version. So, the version shipped in the TB
