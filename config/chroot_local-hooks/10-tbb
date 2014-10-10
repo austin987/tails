@@ -70,12 +70,12 @@ install_tor_browser() {
     # has the extensions.torbutton.test_enabled boolean pref as a workaround.
     rm "${prep}/TorBrowser/Data/Browser/profile.default/extensions/torbutton@torproject.org.xpi"
 
-    mv "${prep}" "${destination}"
-
     # The Tor Browser will fail, complaining about an incomplete profile,
-    # unless there's a readable Browser/TorBrowser/Data/Browser/Caches
+    # unless there's a readable TorBrowser/Data/Browser/Caches
     # in the directory where the firefox executable is located.
-    mkdir -p "${destination}"/TorBrowser/Data/Browser/Caches
+    mkdir -p "${prep}"/TorBrowser/Data/Browser/Caches
+
+    mv "${prep}" "${destination}"
 
     rm -r "${tmp}"
 }
