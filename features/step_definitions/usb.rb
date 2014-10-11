@@ -447,7 +447,7 @@ Then /^persistent directories(| from the old Tails version) have safe access rig
     expected_dirs.each do |src, dest|
       next unless dest.start_with?("/home/#{$live_user}/")
       full_src = "#{mountpoint}/#{src}"
-      next unless @vm.execute("test -d #{full_src}").success?
+      assert_vmcommand_success @vm.execute("test -d #{full_src}")
       file_perms = @vm.execute("stat -c %a '#{full_src}'").stdout.chomp
       assert_equal(expected_perms, file_perms)
     end
