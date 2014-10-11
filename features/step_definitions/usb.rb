@@ -110,7 +110,7 @@ When /^I am suggested to do a "Clone & Install"$/ do
 end
 
 def shared_iso_dir_on_guest
-  "/tmp/shared_dir"
+  "/tmp/shared_iso_dir"
 end
 
 Given /^I setup a filesystem share containing the Tails ISO$/ do
@@ -200,15 +200,6 @@ def tails_is_installed_helper(name, tails_root, loader)
                   "'#{target_root}/syslinux/syslinux.cfg'")
   assert(c.success?, "USB drive '#{name}' has differences in " +
          "'/syslinux/syslinux.cfg'")
-
-  # We have to account for the different path vs isolinux
-  old_exithelp = @vm.execute("cat '#{tails_root}/#{loader}/exithelp.cfg'").stdout
-  new_exithelp = @vm.execute("cat '#{target_root}/syslinux/exithelp.cfg'").stdout
-  new_exithelp_undiffed = new_exithelp.sub("kernel /syslinux/vesamenu.c32",
-                                           "kernel /#{loader}/vesamenu.c32")
-  assert_equal(old_exithelp, new_exithelp_undiffed,
-         "USB drive '#{name}' has unexpected differences in " +
-         "'/syslinux/exithelp.cfg'")
 
   @vm.execute("umount #{target_root}")
   @vm.execute("sync")

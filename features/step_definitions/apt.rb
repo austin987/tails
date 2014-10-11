@@ -3,7 +3,7 @@ require 'uri'
 Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   next if @skip_steps_while_restoring_background
   hosts = hosts_str.split(',')
-  @vm.execute("cat /etc/apt/sources.list /etc/apt/sources.list.d/*").stdout.chomp.each_line { |line|
+  @vm.file_content("/etc/apt/sources.list /etc/apt/sources.list.d/*").chomp.each_line { |line|
     next if ! line.start_with? "deb"
     source_host = URI(line.split[1]).host
     if !hosts.include?(source_host)

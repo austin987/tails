@@ -95,8 +95,6 @@ start_vnc_viewer() {
 }
 
 capture_session() {
-    check_dependency ffmpeg
-    check_dependency libvpx1
     echo "Capturing guest display into ${CAPTURE_FILE}"
     ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
@@ -168,8 +166,8 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-for dep in git libvirt-bin libvirt-dev virt-viewer libsikuli-script-java ovmf \
-           tcpdump xvfb; do
+for dep in ffmpeg git libvirt-bin libvirt-dev libavcodec-extra-53 libvpx1 \
+           virt-viewer libsikuli-script-java ovmf tcpdump xvfb; do
     check_dependency "${dep}"
 done
 

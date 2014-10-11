@@ -46,8 +46,7 @@ end
 
 def wait_until_tor_is_working
   try_for(240) { @vm.execute(
-    '. /usr/local/lib/tails-shell-library/tor.sh; ' +
-    'tor_control_getinfo status/circuit-established').stdout  == "1\n" }
+    '. /usr/local/lib/tails-shell-library/tor.sh; tor_is_working').success? }
 end
 
 def convert_bytes_mod(unit)
