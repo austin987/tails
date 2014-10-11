@@ -137,6 +137,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I start Tails from USB drive "old" with network unplugged and I login
     Then Tails is running from USB drive "old"
     And I create a persistent partition with password "asdf"
+    And I take note of which persistence presets are available
     Then a Tails persistence partition with password "asdf" exists on USB drive "old"
     And I shutdown Tails and wait for the computer to power off
 
@@ -149,7 +150,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I write some files expected to persist
     And persistent filesystems have safe access rights
     And persistence configuration files have safe access rights
-    And persistent directories have safe access rights
+    And persistent directories from the old Tails version have safe access rights
     And I shutdown Tails and wait for the computer to power off
     Then only the expected files should persist on USB drive "old"
 
@@ -167,10 +168,11 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   Scenario: Booting Tails from a USB drive upgraded from DVD with persistence enabled
     Given a computer
     And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence password "asdf"
+    Then persistence from the old Tails version is enabled
     Then Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
-    And the expected persistent files are present in the filesystem
-    And persistent directories have safe access rights
+    And the expected persistent files created with the old Tails version are present in the filesystem
+    And persistent directories from the old Tails version have safe access rights
 
   @keep_volumes
   Scenario: Upgrading an old Tails USB installation from another Tails USB drive
@@ -189,11 +191,11 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   Scenario: Booting Tails from a USB drive upgraded from USB with persistence enabled
     Given a computer
     And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence password "asdf"
-    Then persistence is enabled
+    Then persistence from the old Tails version is enabled
     And Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
-    And the expected persistent files are present in the filesystem
-    And persistent directories have safe access rights
+    And the expected persistent files created with the old Tails version are present in the filesystem
+    And persistent directories from the old Tails version have safe access rights
 
   @keep_volumes
   Scenario: Upgrading an old Tails USB installation from an ISO image, running on the old version
@@ -220,11 +222,11 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   Scenario: Booting a USB drive upgraded from ISO with persistence enabled
     Given a computer
     And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence password "asdf"
-    Then persistence is enabled
+    Then persistence from the old Tails version is enabled
     And Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
-    And the expected persistent files are present in the filesystem
-    And persistent directories have safe access rights
+    And the expected persistent files created with the old Tails version are present in the filesystem
+    And persistent directories from the old Tails version have safe access rights
 
   @keep_volumes
   Scenario: Installing Tails to a USB drive with an MBR partition table but no partitions

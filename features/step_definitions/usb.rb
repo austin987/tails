@@ -312,14 +312,19 @@ def tails_persistence_enabled?
                      'test "$TAILS_PERSISTENCE_ENABLED" = true').success?
 end
 
-Given /^persistence is enabled$/ do
+Given /^persistence(| from the old Tails version) is enabled$/ do |old_tails|
   next if @skip_steps_while_restoring_background
   try_for(120, :msg => "Persistence is disabled") do
     tails_persistence_enabled?
   end
   # Check that all persistent directories are mounted
+  if old_tails.empty?
+    expected_mounts = persistent_mounts
+  else
+    expected_mounts = $old_persistence_mounts
+  end
   mount = @vm.execute("mount").stdout.chomp
-  for _, dir in persistent_mounts do
+  for _, dir in expected_mounts do
     assert(mount.include?("on #{dir} "),
            "Persistent directory '#{dir}' is not mounted")
   end
@@ -431,11 +436,15 @@ Then /^persistence configuration files have safe access rights$/ do
   end
 end
 
-Then /^persistent directories have safe access rights$/ do
+Then /^persistent directories(| from the old Tails version) have safe access rights$/ do |old_tails|
   next if @skip_steps_while_restoring_background
-  expected_perms = "700"
+  if old_tails.empty?
+    expected_dirs = persistent_dirs
+  else
+    expected_dirs = $old_persistence_dirs
+  end
   persistent_volumes_mountpoints.each do |mountpoint|
-    persistent_dirs.each do |src, dest|
+    expected_dirs.each do |src, dest|
       next unless dest.start_with?("/home/#{$live_user}/")
       full_src = "#{mountpoint}/#{src}"
       next unless @vm.execute("test -d #{full_src}").success?
@@ -472,9 +481,20 @@ When /^I write some files not expected to persist$/ do
   end
 end
 
-Then /^the expected persistent files are present in the filesystem$/ do
+When /^I take note of which persistence presets are available$/ do
   next if @skip_steps_while_restoring_background
-  persistent_mounts.each do |_, dir|
+  $old_persistence_mounts = persistent_mounts
+  $old_persistence_dirs = persistent_dirs
+end
+
+Then /^the expected persistent files(| created with the old Tails version) are present in the filesystem$/ do |old_tails|
+  next if @skip_steps_while_restoring_background
+  if old_tails.empty?
+    expected_mounts = persistent_mounts
+  else
+    expected_mounts = $old_persistence_mounts
+  end
+  expected_mounts.each do |_, dir|
     assert(@vm.execute("test -e #{dir}/XXX_persist").success?,
            "Could not find expected file in persistent directory #{dir}")
     assert(!@vm.execute("test -e #{dir}/XXX_gone").success?,
