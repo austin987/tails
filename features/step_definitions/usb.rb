@@ -1,17 +1,43 @@
-def persistent_mounts
-  {
-    "cups-configuration" => "/etc/cups",
-    "nm-system-connections" => "/etc/NetworkManager/system-connections",
-    "claws-mail" => "/home/#{$live_user}/.claws-mail",
-    "gnome-keyrings" => "/home/#{$live_user}/.gnome2/keyrings",
-    "gnupg" => "/home/#{$live_user}/.gnupg",
-    "bookmarks" => "/home/#{$live_user}/.mozilla/firefox/bookmarks",
-    "pidgin" => "/home/#{$live_user}/.purple",
-    "openssh-client" => "/home/#{$live_user}/.ssh",
-    "Persistent" => "/home/#{$live_user}/Persistent",
-    "apt/cache" => "/var/cache/apt/archives",
-    "apt/lists" => "/var/lib/apt/lists",
+# Returns a hash that for each preset the running Tails is aware of
+# maps the source to the destination.
+def get_persistence_presets(skip_links = false)
+  # Perl script that prints all persistence presets (one per line) on
+  # the form: <mount_point>:<comma-separated-list-of-options>
+  script = <<-EOF
+  use strict;
+  use warnings FATAL => "all";
+  use Tails::Persistence::Configuration::Presets;
+  use feature qw(say);
+  foreach my $x (Tails::Persistence::Configuration::Presets->new()->all) {
+    say $x->destination, ":", join(",", @{$x->options});
   }
+EOF
+  # VMCommand:s cannot handle newlines, and they're irrelevant in the
+  # above perl script any way
+  script.delete!("\n")
+  presets = @vm.execute_successfully("perl -e '#{script}'").stdout.chomp.split("\n")
+  assert presets.size >= 10, "Got #{presets.size} persistence presets, " +
+                             "which is too few"
+  persistence_mapping = Hash.new
+  for line in presets
+    destination, options_str = line.split(":")
+    options = options_str.split(",")
+    is_link = options.include? "link"
+    next if is_link and skip_links
+    source_str = options.find { |option| /^source=/.match option }
+    assert_not_nil source_str
+    source = source_str.split("=")[1]
+    persistence_mapping[source] = destination
+  end
+  return persistence_mapping
+end
+
+def persistent_dirs
+  get_persistence_presets
+end
+
+def persistent_mounts
+  get_persistence_presets(true)
 end
 
 def persistent_volumes_mountpoints
