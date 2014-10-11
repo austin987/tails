@@ -558,7 +558,7 @@ def xul_app_shared_lib_check(pid, chroot)
   unwanted_native_libs = []
   tbb_libs = @vm.execute_successfully(
                  ". /usr/local/lib/tails-shell-library/tor-browser.sh; " +
-                 "ls -1 #{chroot}${TBB_INSTALL}/Browser/*.so"
+                 "ls -1 #{chroot}${TBB_INSTALL}/*.so"
                                       ).stdout.split
   firefox_pmap_info = @vm.execute("pmap #{pid}").stdout
   for lib in tbb_libs do
@@ -587,7 +587,7 @@ Then /^(.*) uses all expected TBB shared libraries$/ do |application|
   next if @skip_steps_while_restoring_background
   binary = @vm.execute_successfully(
                 '. /usr/local/lib/tails-shell-library/tor-browser.sh; ' +
-                'echo ${TBB_INSTALL}/Browser/firefox'
+                'echo ${TBB_INSTALL}/firefox'
                                     ).stdout.chomp
   case application
   when "the Tor Browser"
