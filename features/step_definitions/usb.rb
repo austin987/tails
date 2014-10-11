@@ -435,10 +435,7 @@ Then /^persistent directories have safe access rights$/ do
   next if @skip_steps_while_restoring_background
   expected_perms = "700"
   persistent_volumes_mountpoints.each do |mountpoint|
-    # We also want to check that dotfiles' source has safe permissions
-    all_persistent_dirs = persistent_mounts.clone
-    all_persistent_dirs["dotfiles"] = "/home/#{$live_user}/"
-    persistent_mounts.each do |src, dest|
+    persistent_dirs.each do |src, dest|
       next unless dest.start_with?("/home/#{$live_user}/")
       f = "#{mountpoint}/#{src}"
       next unless @vm.execute("test -d #{f}").success?
