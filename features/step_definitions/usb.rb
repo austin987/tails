@@ -437,9 +437,9 @@ Then /^persistent directories have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
     persistent_dirs.each do |src, dest|
       next unless dest.start_with?("/home/#{$live_user}/")
-      f = "#{mountpoint}/#{src}"
-      next unless @vm.execute("test -d #{f}").success?
-      file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
+      full_src = "#{mountpoint}/#{src}"
+      next unless @vm.execute("test -d #{full_src}").success?
+      file_perms = @vm.execute("stat -c %a '#{full_src}'").stdout.chomp
       assert_equal(expected_perms, file_perms)
     end
   end
