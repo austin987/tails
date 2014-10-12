@@ -3,34 +3,37 @@
 While it is possible to translate Tails custom programs using Transifex,
 the documentation, that is this website, is only translatable using [[Git]].
 
-## Tools
+[[!toc levels=2]]
 
-Tails contains all the tools you need to set up a working
-environment for translations. These tools are:
+## Setup your tools
 
-* Git
-* Poedit
-* OpenSSH client
-* tools to [[build the wiki locally|contribute/build/website/]].
+We recommend to use Tails to do your translations as it contains all the tools
+you need to set up a working environment. These tools are:
+
+* Git - manage source code
+* Poedit - translate files
+* OpenSSH client - publish your translations on the server
+* tools to [[build the wiki locally|contribute/build/website/]] - check your work
+
+You could also install and setup these tools on another operating system. In this case, please
+ensure that you use at least version 1.5 of Poedit, as this version handles line breaks of our
+files correctly.
 
 ## Where are the translatable files?
 
-Once you have downloaded the source code using Git, you can find the website source files
-in `wiki/src`.
+Once you have [[downloaded the source code using Git|translate/translate_with_git#workflow]],
+you can find the website source files in `wiki/src`.
 
-The original website files are written either in HTML or in markdown. They have either a
+The original website files are written in english, either in HTML or in markdown. They have either a
 .html or a .mdwn extension.
+
 These original files are not to be modified by translators. Instead, look for a file with the
 same name, but with the extension `.po`. Before this extension you will find the language code,
 for example `fr` for french.
 
 To edit these PO files, we recommend that you use <span
 class="application">[Poedit](http://www.poedit.net/screenshots.php)</span>, a
-cross-platform editor for PO
-files. <span class="application">Poedit</span> is included in Tails.
-
-Please ensure that you use at least version 1.5 of Poedit, as this version
-handles line breaks of our files correctly.
+cross-platform editor for PO files.
 
 When setting up Poedit, you might want to ensure to use "Tails translators"
 or "Tails developers" as translator name and "tails@boum.org" as translator
@@ -55,11 +58,17 @@ corresponding `.pot` file into a new `.po` file.
 
 See the exhaustive list of [[core pages|l10n_tricks/core_po_files.txt]].
 
+<a id="workflow"></a>
+
 ## Workflow
 
-You can take advantage of Git to send us your work by asking us to
-pull from your Git branch. Here is the typical workflow used by Tails
-translators teams:
+Git makes it possible to work together on the same files and to track each modification.
+
+If you don't know Git, you might want to [[learn it first|contribute/git#index1h1]].
+
+Here is the typical workflow used by Tails translators teams:
+
+### Set up your own copy of the source code
 
 1. Set up your personal Git repository: if you
    already know where to host it in a public place, this is great;
@@ -89,6 +98,8 @@ translators teams:
 
    `git fetch tails master`
 
+### Configure your credentials
+
 3. Now to setup Git, type:
 
    `git config user.name "Tails developers"
@@ -107,7 +118,7 @@ translators teams:
 
    Now typing `git branch` should show a star in front of the active branch.
 
-5. Translate whatever you can in your preferred PO file editor.
+5. Translate whatever you can in your preferred PO file editor, possibly Poedit.
 
 6. Commit the changes you made to `.po` files:
 
@@ -115,7 +126,9 @@ translators teams:
 
    `git commit <files>`
 
-7. Merge our main repository into yours.
+7. Build the wiki to test your modifications.
+
+8. Merge our main repository into yours.
    Regularly, pull from the master branch of the main repository to update
    your local files.
 
@@ -123,18 +136,18 @@ translators teams:
 
    `git pull tails master` fetches and merges the files.
 
-8. Push your changes to your online Git repository.
+9. Push your changes to your online Git repository.
 
    `git push origin <name of branch>`
 
    `git push origin translation-contribute`
 
-9. Ask other members of your translation team to review your work by writing
+10. Ask other members of your translation team to review your work by writing
    an email to [[the mailing list for
    translators|translate#follow-up]], containing in its subject
    "(Review)" and the short code for the translated language, for example "[fr]".
 
-10. The reviewer, once happy with the result, should ask on the
+11. The reviewer, once happy with the result, should ask on the
    [[mailing list for translators|translate#follow-up]] to pull from
    the branch that was worked on, writing an email with "(pull)" and the language
    short code in the subject. Ideally, such email would be OpenPGP-signed.
