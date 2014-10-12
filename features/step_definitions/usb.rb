@@ -445,11 +445,23 @@ Then /^persistent directories(| from the old Tails version) have safe access rig
   end
   persistent_volumes_mountpoints.each do |mountpoint|
     expected_dirs.each do |src, dest|
-      next unless dest.start_with?("/home/#{$live_user}/")
       full_src = "#{mountpoint}/#{src}"
       assert_vmcommand_success @vm.execute("test -d #{full_src}")
-      file_perms = @vm.execute("stat -c %a '#{full_src}'").stdout.chomp
-      assert_equal(expected_perms, file_perms)
+      dir_perms = @vm.execute_successfully("stat -c %a '#{full_src}'").stdout.chomp
+      dir_owner = @vm.execute_successfully("stat -c %U '#{full_src}'").stdout.chomp
+      if dest.start_with?("/home/#{$live_user}")
+        expected_perms = "700"
+        expected_owner = $live_user
+      else
+        expected_perms = "755"
+        expected_owner = "root"
+      end
+      assert_equal(expected_perms, dir_perms,
+                   "Persistent source #{full_src} has permission " \
+                   "#{dir_perms}, expected #{expected_perms}")
+      assert_equal(expected_owner, dir_owner,
+                   "Persistent source #{full_src} has owner " \
+                   "#{dir_owner}, expected #{expected_owner}")
     end
   end
 end
