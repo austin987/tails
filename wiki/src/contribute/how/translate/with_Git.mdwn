@@ -1,13 +1,14 @@
-[[!meta title="Translate Tails and the Tails website using Git"]]
+[[!meta title="Translate Tails and its website using Git"]]
 
 While it is possible to translate Tails custom programs using Transifex,
-the documentation, that is this website, is only translatable using Git.
+this website, which includes the Tails [[documentation|doc]], can only
+be translated using Git.
 
-This page will explain how to get it up and running.
+This page explains how to get it up and running.
 
 [[!toc levels=2]]
 
-## Setup your tools
+# Set up your tools
 
 We recommend to use Tails to do your translations as it contains all the tools
 you need to set up a working environment.
@@ -17,21 +18,21 @@ If you want to use another operating system, these tools are:
 * Git - manage source code
 * Poedit - translate files
 * OpenSSH client - publish your translations on the server
-* tools to [[build the wiki locally|contribute/build/website/]] - check your work
+* tools to [[build the wiki locally|contribute/build/website/]] in
+  order to check how it will look like
 
 If you do not use Tails, please ensure that you use at least version 1.5 of Poedit,
-as this version handles line breaks of our files correctly.
-Furthermore, you might want to use Git over Tor in order to stay anonymous.
+as this version handles line breaks correctly.
 
-The following instructions will assume that you are using Tails.
+The following instructions assume that you are using Tails.
 
-## How and what to translate?
+# How and what to translate?
 
-Once you have [[downloaded the source code using Git|translate/with_Git#workflow]],
+Once you have [[downloaded the Tails source code using Git|translate/with_Git#workflow]],
 you can find the website source files in `wiki/src`.
 
-The original website files are written in english, either in [[!wikipedia HTML]] or in [[!wikipedia markdown]]. They have either a
-.html or a .mdwn extension.
+The original website files are written in English, either in [[!wikipedia HTML]] or in [[!wikipedia Markdown]]. They have either a
+`.html` or a `.mdwn` extension.
 
 These original files are not to be modified by translators. Instead, look for a file with the
 same name, but with the extension `.po`. Before this extension you will find the language code,
@@ -52,26 +53,14 @@ do so, please refer to the [[localization tricks page|contribute/l10n_tricks]].
 If there is no existing PO file for your language, you can copy the
 corresponding `.pot` file into a new `.po` file.
 
-- Important parts of our website:
-
-	- [[/index]]
-	- [[/about]] page
-	- [[/getting_started]] page
-	- [[/support]] page
-	- [[/download]] page
-	- [[/doc/about]] section
-	- [[/doc/first_steps]] section
-
-See the exhaustive list of [[core pages|l10n_tricks/core_po_files.txt]].
-
 <a id="workflow"></a>
 
-## Workflow
+# Workflow
 
 Git makes it possible to work together on the same files and to track each modification.
 If you don't know Git yet, you might want to [[learn it first|contribute/git#learn_Git]].
 
-Here is the typical workflow used by Tails translators teams.
+Here is the typical workflow used by Tails translation teams.
 
 If there is any point which you don't understand, please do not hesitate to
 ask on the [[mailing list for translators|translate#follow-up]], we will be glad to help you.
@@ -89,71 +78,66 @@ ask on the [[mailing list for translators|translate#follow-up]], we will be glad
    You first need to setup a [[persistent volume|doc/first_steps/persistence]]
    to save the source code. Then navigate to the persistent folder, using the terminal:
 
-   `cd ~/Persistent`
+       cd ~/Persistent
 
    This example clones an empty repository into the "tails" folder:
 
-   `git clone http://repo.or.cz/r/tails/yourrepo.git tails`
+       git clone http://repo.or.cz/r/tails/yourrepo.git tails
 
 2. **Copy the source code from the main repository**
 
    Then setup the remote Tails main repository:
 
-   `cd tails`
-
-   `git remote add tails https://git-tails.immerda.ch/tails`
+       cd tails
+       git remote add tails https://git-tails.immerda.ch/tails
 
    Typing `git remote` should now show two entries:
 
-   `origin
-   tails`
+       origin
+       tails
 
    More specifically, if you type `git remote -v` and you'll see something like this:
 
-   `origin	ssh://yourrepo@repo.or.cz/srv/git/tails/yourrepo.git (fetch)
-   origin	ssh://yourrepo@repo.or.cz/srv/git/tails/yourrepo.git (push)
-   tails	https://git-tails.immerda.ch/tails (fetch)
-   tails	https://git-tails.immerda.ch/tails (push)
-   `
+       origin	ssh://yourrepo@repo.or.cz/srv/git/tails/yourrepo.git (fetch)
+       origin	ssh://yourrepo@repo.or.cz/srv/git/tails/yourrepo.git (push)
+       tails	https://git-tails.immerda.ch/tails (fetch)
+       tails	https://git-tails.immerda.ch/tails (push)
 
    "origin" is your own repository, "tails" contains the files of the
    main repository once we fetch them. This operation requires some time
    at setup, as it requires to pull the whole repository.
 
-   `git fetch tails master`
+       git fetch tails master
 
 3. **Configure your credentials**
 
    Now to setup Git, type:
 
-   `git config user.name "Tails developers"
-   git config user.email "tails@boum.org"`
+       git config user.name "Tails developers"
+       git config user.email "tails@boum.org"
 
    Verify this configuration by typing:
 
-   `git config --list`
+       git config --list
 
 4. **Translate!**
 
    Create a branch for every translation you make, for example, if you want to
    translate the "contribute" page, create a branch named "translation-contribute":
 
-   `git branch translation-contribute`
-
-   `git checkout translation-contribute`
+       git branch translation-contribute
+       git checkout translation-contribute
 
    Now typing `git branch` should show a star in front of the active branch.
 
 5. Translate whatever you can in your preferred PO file editor, possibly Poedit.
 
-
 6. **Save your translations**
 
    Commit the changes you made to `.po` files:
 
-   `git add <files>`
-
-   `git commit <files>`
+       git add <files>
+       git commit <files>
 
 7. **Test your work**
 
@@ -166,19 +150,18 @@ ask on the [[mailing list for translators|translate#follow-up]], we will be glad
    Regularly, pull from the master branch of the main repository to update
    your local files.
 
-   `git fetch tails master` only fetches new files,
-
+   `git fetch tails master` only fetches new files, while
    `git pull tails master` fetches and merges the files.
 
 9. **Publish your modifications**
 
    Push your changes to your online Git repository.
 
-   `git push origin <name of branch>`
+       git push origin <name of branch>
 
    For example,
 
-   `git push origin translation-contribute`
+       git push origin translation-contribute
 
 10. Ask other members of your translation team to review your work by writing
    an email to [[the mailing list for
@@ -193,13 +176,13 @@ ask on the [[mailing list for translators|translate#follow-up]], we will be glad
 Each [[language team|translate#language-teams]] keeps track of their contributors' repositories.
 To add one of these repositories as a `remote` in Git, use the following command line:
 
-   `git remote add [name] git://git.tails.boum.org/[name].git`
+       git remote add [name] git://git.tails.boum.org/[name].git
 
-For example,
+For example:
 
-   `git remote add matsa git://repo.or.cz/tails/matsa.git`
+       git remote add matsa git://repo.or.cz/tails/matsa.git
 
-## More informations and resources
+# More informations and resources
 
 The translation system used to translate Tails is called <span
 class="application">[[!wikipedia gettext]]</span>. Every sentence that
@@ -210,4 +193,4 @@ by [ikiwiki](https://ikiwiki.info).
 The `\[[!wikipedia ..]]` strings you can find in some files are ikiwiki [[shortcuts]].
 You might also need to understand [[ikiwiki directives|ikiwiki/directive]].
 
-See also [[localization tricks page|contribute/l10n_tricks]]
+See also [[localization tricks page|contribute/l10n_tricks]].
