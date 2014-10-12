@@ -151,6 +151,8 @@ If we are at freeze time for a major release:
 * Merge the `devel` Git branch into `testing`.
 * Reset the `testing` APT suite to the state of the `devel` one, as
   documented on [[contribute/APT_repository#workflow-freeze]].
+* If there is no Jenkins job building ISO images from the `testing`
+  branch, ask <tails-sysadmins@boum.org> to re-activate it.
 
 Else, if we are at freeze time for a point-release:
 
@@ -174,8 +176,8 @@ Then, gather other useful information from:
 
 * every custom bundled package's own Changelog (Greeter, Persistent
   Volume Assistant, etc.);
-* the "Fix committed" section on the [Release Manager
-  View](https://labs.riseup.net/code/projects/tails/issues?query_id=130).
+* the "Fix committed" section on the *Release Manager View*
+  in Redmine.
 
 Finally, commit:
 
@@ -253,8 +255,8 @@ Import the signing key
 ======================
 
 You should never import the Tails signing key into your own keyring,
-and a good practice is to import it to a tmpfs so no key material is
-written to disk:
+and a good practice is to import it to a tmpfs to limit the risks that
+the private key material is written to disk:
 
     export GNUPGHOME=$(mktemp -d)
     sudo mount -t tmpfs tmpfs "$GNUPGHOME"
@@ -808,6 +810,10 @@ this, and skip what does not make sense for a RC.
 1. Ensure the next few releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Broken
    windows* so that this section appears after the next release.
+* If the next release is a point-release, ask
+  <tails-sysadmins@boum.org> to disable the Jenkins job that's
+  building ISO images from the `testing` branch (since it basically
+  won't be used/maintained in the next 2.5 months).
 
 Related pages
 =============
