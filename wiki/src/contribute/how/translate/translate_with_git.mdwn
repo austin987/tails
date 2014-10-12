@@ -19,7 +19,7 @@ You could also install and setup these tools on another operating system. In thi
 ensure that you use at least version 1.5 of Poedit, as this version handles line breaks of our
 files correctly.
 
-## Where are the translatable files?
+## How and what to translate?
 
 Once you have [[downloaded the source code using Git|translate/translate_with_git#workflow]],
 you can find the website source files in `wiki/src`.
@@ -63,25 +63,32 @@ See the exhaustive list of [[core pages|l10n_tricks/core_po_files.txt]].
 ## Workflow
 
 Git makes it possible to work together on the same files and to track each modification.
-
-If you don't know Git, you might want to [[learn it first|contribute/git#index1h1]].
+If you don't know Git yet, you might want to [[learn it first|contribute/git#index1h1]].
 
 Here is the typical workflow used by Tails translators teams:
 
-### Set up your own copy of the source code
+1. **Set up your own repository**
 
-1. Set up your personal Git repository: if you
-   already know where to host it in a public place, this is great;
+   In order to set up your own repository, you need to host it on a publicly accessibly
+   Git server. There are a lot of websites providing you with such a possibility.
+
+   If you already know where to host it in a public place, this is great;
    else, [fork us on repo.or.cz](http://repo.or.cz/w/tails.git) or ask
    the Tails system administrators (<tails-sysadmins@boum.org>) to host
    your repository.
 
-   On your computer, set up the repository. This example clones
-   an empty repository into the "tails" folder:
+   On your computer, possibly using Tails, you need to have [[persistence|doc/first_steps/persistence]]
+   configured. Navigate to the persistent folder, using the terminal.
+
+   `cd ~/Persistent`
+
+   This example clones an empty repository into the "tails" folder:
 
    `git clone http://repo.or.cz/r/tails/yourrepo.git tails`
 
-2. Then setup the remote Tails main repository:
+2. **Copy the source code from the main repository**
+
+   Then setup the remote Tails main repository:
 
    `cd tails`
 
@@ -98,9 +105,9 @@ Here is the typical workflow used by Tails translators teams:
 
    `git fetch tails master`
 
-### Configure your credentials
+3. **Configure your credentials**
 
-3. Now to setup Git, type:
+   Now to setup Git, type:
 
    `git config user.name "Tails developers"
    git config user.email "tails@boum.org"`
@@ -109,7 +116,9 @@ Here is the typical workflow used by Tails translators teams:
 
    `git config --list`
 
-4. Create a branch for every translation you make, for example, if you want to
+4. **Translate!**
+
+   Create a branch for every translation you make, for example, if you want to
    translate the "contribute" page, create a branch named "translation-contribute":
 
    `git branch translation-contribute`
@@ -120,13 +129,21 @@ Here is the typical workflow used by Tails translators teams:
 
 5. Translate whatever you can in your preferred PO file editor, possibly Poedit.
 
-6. Commit the changes you made to `.po` files:
+
+6. **Save your translations**
+
+   Commit the changes you made to `.po` files:
 
    `git add <files>`
 
    `git commit <files>`
 
-7. Build the wiki to test your modifications.
+7. **Test your work**
+
+   [[Build the wiki locally|contribute/build/website/]] in order to verify
+   your modifications or to review the translations of somebody else.
+
+   If you need to rework something, go back to point 5, translate and test again.
 
 8. Merge our main repository into yours.
    Regularly, pull from the master branch of the main repository to update
@@ -136,7 +153,9 @@ Here is the typical workflow used by Tails translators teams:
 
    `git pull tails master` fetches and merges the files.
 
-9. Push your changes to your online Git repository.
+9. **Publish your modifications**
+
+   Push your changes to your online Git repository.
 
    `git push origin <name of branch>`
 
@@ -162,10 +181,6 @@ The translation system used to translate Tails is called <span
 class="application">[[!wikipedia gettext]]</span>. Every sentence that
 needs to be translated is written in a [PO
 file](https://www.gnu.org/software/gettext/manual/gettext.html#PO-Files).
-
-When working on the website translation, it is highly recommended that you
-[[build the wiki locally|contribute/build/website/]] in order to verify
-your modifications or to review the translations of somebody else.
 
 # Resources
 
