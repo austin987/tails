@@ -161,11 +161,12 @@ end
 Given /^I enable all persistence presets$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('PersistenceWizardPresets.png', 20)
-  # Mark first non-default persistence preset
-  @screen.type(Sikuli::Key.TAB*2)
-  # Check all non-default persistence presets
-  12.times do
-    @screen.type(Sikuli::Key.SPACE + Sikuli::Key.TAB)
+  # Select the "Persistent" folder preset, which is checked by default.
+  @screen.type(Sikuli::Key.TAB)
+  # Check all non-default persistence presets, i.e. all *after* the
+  # "Persistent" folder, which are unchecked by default.
+  (persistent_dirs.size - 1).times do
+    @screen.type(Sikuli::Key.TAB + Sikuli::Key.SPACE)
   end
   @screen.wait_and_click('PersistenceWizardSave.png', 10)
   @screen.wait('PersistenceWizardDone.png', 20)
