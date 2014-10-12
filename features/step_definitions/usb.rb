@@ -312,7 +312,7 @@ def tails_persistence_enabled?
                      'test "$TAILS_PERSISTENCE_ENABLED" = true').success?
 end
 
-Given /^persistence(| from the old Tails version) is enabled$/ do |old_tails|
+Given /^all persistence presets(| from the old Tails version) are enabled$/ do |old_tails|
   next if @skip_steps_while_restoring_background
   try_for(120, :msg => "Persistence is disabled") do
     tails_persistence_enabled?
@@ -406,7 +406,7 @@ Then /^the boot device has safe access rights$/ do
          "Boot device '#{super_boot_dev}' is not system internal for udisks")
 end
 
-Then /^persistent filesystems have safe access rights$/ do
+Then /^all persistent filesystems have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
     fs_owner = @vm.execute("stat -c %U #{mountpoint}").stdout.chomp
     fs_group = @vm.execute("stat -c %G #{mountpoint}").stdout.chomp
@@ -417,7 +417,7 @@ Then /^persistent filesystems have safe access rights$/ do
   end
 end
 
-Then /^persistence configuration files have safe access rights$/ do
+Then /^all persistence configuration files have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
     assert(@vm.execute("test -e #{mountpoint}/persistence.conf").success?,
            "#{mountpoint}/persistence.conf does not exist, while it should")
@@ -436,7 +436,7 @@ Then /^persistence configuration files have safe access rights$/ do
   end
 end
 
-Then /^persistent directories(| from the old Tails version) have safe access rights$/ do |old_tails|
+Then /^all persistent directories(| from the old Tails version) have safe access rights$/ do |old_tails|
   next if @skip_steps_while_restoring_background
   if old_tails.empty?
     expected_dirs = persistent_dirs
@@ -523,7 +523,7 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "the computer boots Tails"
   step "I enable read-only persistence with password \"asdf\""
   step "I log in to a new session"
-  step "persistence is enabled"
+  step "all persistence presets are enabled"
   step "GNOME has started"
   step "all notifications have disappeared"
   step "the expected persistent files are present in the filesystem"
