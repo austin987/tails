@@ -167,35 +167,23 @@ create_default_profile() {
     done
 }
 
-# Get the below with `grep "tor-browser-linux32-.*\.tar.xz" sha256sums.txt`
-BUNDLES="$(cat <<EOF
-473780a5145859a8d516e76cb27be25b0baf16007ba50cd8ba78a536bc806fc5  tor-browser-linux32-tbb-nightly_ar.tar.xz
-3e3d6fd1ea47067fc00625b8cd62d23079ef71dc91734bfb823542c26ce192cf  tor-browser-linux32-tbb-nightly_en-US.tar.xz
-df4745725e7b3fe99c218166ffbe38eef8e9d636c42b72c8a2b8229fc3bdd83b  tor-browser-linux32-tbb-nightly_ru.tar.xz
-b624b1f9a16e4ff4cffb3478f63249ed73ae902732b64fca0f183ad73ed1b5ac  tor-browser-linux32-tbb-nightly_zh-CN.tar.xz
-EOF
-)"
+TBB_SHA256SUMS=/usr/share/tails/tbb-sha256sums.txt
+TBB_BUNDLES="$(grep "\<tor-browser-linux32-.*\.tar.xz$" "${TBB_SHA256SUMS}")"
 
 # We'll use the en-US bundle as our basis; only langpacks will be
 # installed from the other bundles.
-MAIN_BUNDLE="$(echo "${BUNDLES}" | grep -o "tor-browser-linux32-.*_en-US.tar.xz")"
+MAIN_BUNDLE="$(echo "${TBB_BUNDLES}" | grep -o "tor-browser-linux32-.*_en-US.tar.xz")"
 #VERSION="$(echo "${MAIN_BUNDLE}" | sed 's/tor-browser-linux32-\(.*\)_en-US.tar.xz/\1/')"
 VERSION=tbb-nightly-2014-10-07
-# Note that we cannot use https here since apt-cacher-ng (used by vagrant)
-# gets confused and throws a 403. It doesn't matter, though, since we verify
-# the checksums of each file downloaded.
-#TBB_DIST_URL="http://archive.torproject.org/tor-package-archive/torbrowser/${VERSION}"
-#TBB_DIST_URL="http://www.torproject.org/dist/torbrowser/${VERSION}/"
-#TBB_DIST_URL="http://people.torproject.org/~mikeperry/builds/${VERSION}/"
-#TBB_DIST_URL="http://people.torproject.org/~gk/testbuilds/${VERSION}"
-TBB_DIST_URL="http://people.torproject.org/~linus/builds/${VERSION}"
+TBB_DIST_URL=/usr/share/tails/tbb-dist-url.txt
+TBB_BUNDLES_BASE_URL="$(cat "${TBB_DIST_URL}")/${VERSION}"
 
 # The Debian Iceweasel extensions we want to install and make
 # available in the Tor Browser.
 DEBIAN_EXT="xul-ext-adblock-plus xul-ext-torbutton"
 
 TMP="$(mktemp -d)"
-download_and_verify_files "${TBB_DIST_URL}" "${BUNDLES}" "${TMP}"
+download_and_verify_files "${TBB_BUNDLES_BASE_URL}" "${TBB_BUNDLES}" "${TMP}"
 
 install_tor_browser "${TMP}/${MAIN_BUNDLE}" "${TBB_INSTALL}"
 
