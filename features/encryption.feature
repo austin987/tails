@@ -6,12 +6,7 @@ Feature: Encryption and verification using GnuPG
 
   Background:
     Given a computer
-    And the network is unplugged
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And GNOME has started
-    And all notifications have disappeared
+    And I start Tails from DVD with network unplugged and I login
     And I generate an OpenPGP key named "test" with password "asdf"
     And I save the state so the background can be restored next scenario
 

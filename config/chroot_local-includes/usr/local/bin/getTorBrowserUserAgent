@@ -1,29 +1,17 @@
-#!/usr/bin/perl
+#!/bin/sh
 
-use warnings;
-use strict;
-use 5.10.0;
-use Fatal qw( open close );
+set -eu
 
-sub getTorBrowserUserAgent {
-    my $file = shift;
+# Import the TBB_INSTALL variable
+. /usr/local/lib/tails-shell-library/tor-browser.sh
 
-    my $ua;
-    open (my $in, "<", $file);
-    while (my $line = <$in>) {
-        chomp $line;
-        if (($ua) = ($line =~ m/^pref[(]"general[.]useragent[.]override", "(.*)"[)];$/)) {
-            last;
-        }
-    }
-    close $in;
-    return $ua;
-}
+ua="$(unzip -q -p "${TBB_INSTALL}"/browser/omni.ja \
+          defaults/preferences/000-tor-browser.js | \
+          sed -n 's@^pref("general\.useragent\.override", "\(.*\)");$@\1@p')"
 
-my $ua = getTorBrowserUserAgent('/etc/iceweasel/pref/000-tor-browser.js');
-if (defined $ua && $ua) {
-    say $ua;
-}
-else {
-    die "Unparseable file."
-}
+if [ -z "${ua}" ]; then
+    echo "Got empty user agent string" >&2
+    exit 1
+fi
+
+echo "${ua}"

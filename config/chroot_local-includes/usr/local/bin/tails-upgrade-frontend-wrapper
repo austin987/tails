@@ -74,9 +74,5 @@ check_free_memory "$MIN_MEMFREE" "$MIN_TOTAL_MEMFREE"
 cd /
 
 xhost +SI:localuser:"$RUN_AS_USER"
-if [ $# -gt 0 ] ; then
-   gksudo -u "$RUN_AS_USER" "/usr/bin/tails-upgrade-frontend $@"
-else
-   gksudo -u "$RUN_AS_USER" /usr/bin/tails-upgrade-frontend
-fi
+sudo -u "$RUN_AS_USER" /usr/bin/tails-upgrade-frontend $@
 xhost -SI:localuser:"$RUN_AS_USER"

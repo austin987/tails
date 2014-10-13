@@ -67,5 +67,9 @@ rm -r /var/lib/dkms/virtualbox-guest/
 # built binary module; let's delete it before the package gets purged.
 rm /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
 
+# Also copy the udev rules installed by virtualbox-guest-dkms to enable guest
+# additions by default.
+cp -a /lib/udev/rules.d/60-virtualbox-guest-dkms.rules /etc/udev/rules.d/
+
 # remove temporary workaround
 rm /usr/bin/gcc-${wanted_gcc_version}

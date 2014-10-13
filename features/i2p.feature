@@ -11,8 +11,8 @@ Feature: I2P
     And GNOME has started
     And Tor is ready
     And all notifications have disappeared
-    Then the I2P desktop file is not present
-    And the I2P sudo rules are not present
+    Then the I2P Browser desktop file is not present
+    And the I2P Browser sudo rules are not present
     And the I2P firewall rules are disabled
 
   Scenario: I2P is enabled when the "i2p" boot parameter is added
@@ -23,10 +23,11 @@ Feature: I2P
     And I log in to a new session
     And GNOME has started
     And Tor is ready
+    And I2P is running
+    And the I2P router console is ready
     And all notifications have disappeared
-    Then the I2P desktop file is present
-    And the I2P sudo rules are enabled
+    Then the I2P Browser desktop file is present
+    And the I2P Browser sudo rules are enabled
     And the I2P firewall rules are enabled
-    When I start I2P through the GNOME menu
-    Then I see "I2P_starting_notification.png" after at most 60 seconds
-    And I see "I2P_router_console.png" after at most 60 seconds
+    When I start the I2P Browser through the GNOME menu
+    Then I see "I2P_router_console.png" after at most 60 seconds

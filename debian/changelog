@@ -1,8 +1,109 @@
-tails (1.2) UNRELEASED; urgency=medium
+tails (1.2) UNRELEASED; urgency=low
 
   * Dummy entry for next release.
 
- -- Tails developers <tails@boum.org>  Mon, 14 Jul 2014 16:15:19 +0200
+ -- Tails developers <tails@boum.org>  Thu, 09 Oct 2014 20:47:28 +0200
+
+tails (1.2~rc1) unstable; urgency=medium
+
+  * Major new features
+    - Migrate from Iceweasel to the Tor Browser from the Tor Browser
+      Bundle 4.0 nightly build from 2014-10-07 (based on Firefox
+      esr31-pre). The installation in Tails is made global
+      (multi-profile), uses the system-wide Tor instance, does not use
+      the Tor Browser updater, and keeps the desired deviations
+      previously present in Iceweasel, e.g. we install the addon
+      AdBlock Plus but not Tor Launcher (since we run it as a
+      standalone XUL application), among other things.
+    - Install AppArmor's userspace tools and apparmor-profiles-extra
+      from Wheezy Backports, and enable the AppArmor Linux security
+      module. This adds Mandatory Access control for several critical
+      applications in Tails, including:
+      * Tor
+      * Vidalia
+      * Pidgin
+      * Evince
+      * Totem
+    - Isolate I2P traffic from the Tor Browser by adding a dedicated
+      I2P Browser, which can be reached via GNOME's menu -> Internet
+      -> I2P Browser. It is set up similarly to the Unsafe Browser,
+      but further disables features that are irrelevant for I2P, like
+      search plugins and the AdBlock Plus addon, and keeps Tor Browser
+      security features like the NoScript and Torbutton addons.
+
+  * Security fixes
+    - Disable TCP timestamps (Closes: #6579).
+
+  * Bugfixes
+    - Remove expired Pidgin certificates (Closes: #7730).
+    - Use sudo instead of gksudo for running tails-upgrade-frontend to
+      make stderr more easily accessible (Closes: #7431).
+    - Run tails-persistence-setup with sudo instead of gksudo to make
+      stderr more easily accessible, and allow the desktop user to
+      pass the --verbose parameter. (Closes: #7623)
+    - Disable cups in the Unsafe Browser. This will prevent the
+      browser from hanging for several minutes when accidentally
+      pressing CTRL+P or trying to go to File -> Print.
+
+  * Minor improvements
+    - Install Linux 3.16-2 from Debian unstable.
+    - Install cryptsetup and friends from wheezy-backports (Closes:
+      #5932).
+    - Install Monkeysign dependencies for qrcodes scanning.
+    - Upgrade syslinux to 3:6.03~pre20+dfsg-2~bpo70+1, and install
+      the new syslinux-efi package.
+    - Upgrade I2P to 0.9.15-1~deb7u+1
+    - Upgrade Tor to 0.2.5.8-rc-1~d70.wheezy+1.
+    - Enable Wheezy proposed-updates APT repository and setup APT
+      pinnings to install packages from it.
+    - Enable Tor's syscall sandbox. This feature (new in 0.2.5.x)
+      should make Tor a bit harder to exploit. It is only be enabled
+      when when no special Tor configuration is requested in Tails
+      Greeter due to incompatibility with Tor bridges.
+    - Start I2P automatically when the network connects via a
+      NetworkManager hook, and "i2p" is present on the kernel command
+      line. The router console is no longer opened automatically, but
+      can be accessed through the I2P Browser.
+    - Simplify the IPv6 ferm rules.
+    - Include persistence.conf in WhisperBack reports (Closes: #7461)
+    - Pin packages from testing to 500, so that they can be upgraded.
+    - Don't set Torbutton environment vars globally (Closes: #5648).
+    - Make it clear in the TrueCrypt wrapper that it'll be removed in
+      Tails 1.3 or earlier (Closes: #7739).
+    - Enable VirtualBox guest additions by default (Closes: #5730). In
+      particular this enables VirtualBox's display management service.
+    - In the Unsafe Browser, hide option for "Tor Browser Health
+      report", and the "Get Addons" section in the Addon manager
+      (Closes: #7952).
+    - Show Pidgin's formatting toolbar (Closes: #7356). Having the
+      formatting toolbar displayed in Pidgin makes the OTR status more
+      explicit by displaying it with words.
+
+  * Automated test suite
+    - Add --pause-on-fail to ease VM state debugging when tests
+      misbehave.
+    - Add execute_successfully() and assert_vmcommand_success() for
+      added robustness when executing some command in the testing VM.
+    - Use Test::Unit::Assertions instead of our home-made assert().
+    - Add test for persistent browser bookmarks.
+    - Add basic tests for Pidgin, Totem and Evince, including their
+      AppArmor enforcement.
+    - Factorize some common step pattern into single steps.
+    - Factorize running a command in GNOME Terminal.
+    - Add common steps to copy a file and test for its existence.
+    - Add a wait_and_double_click Sikuli helper method.
+    - Add a VM.file_content method, to avoid repeating ourselves, and
+      use it whenever easily doable.
+    - Drop test that diffs syslinux' exithelp.cfg: we don't ship this
+      file anymore.
+    - In the Unsafe Browser tests, rely on subtle timing less (Closes:
+      #8009).
+    - Use the same logic to determine when Tor is working in the test
+      suite as in Tails itself. The idea is to avoid spamming the Tor
+      control port during bootstrap, since we've seen problems with
+      that already.
+
+ -- Tails developers <tails@boum.org>  Wed, 08 Oct 2014 22:20:04 +0200
 
 tails (1.1.2) unstable; urgency=medium
 
