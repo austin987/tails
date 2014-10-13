@@ -58,8 +58,12 @@ install_tor_browser() {
         ln -s "${f}" "${prep}"/dictionaries/
     done
 
-    # We don't need the Tor binary (and shared libraries) and
-    # documentation shipped in the TBB.
+    # The libstdc++6 package in Wheezy is too old, so we need the
+    # bundled one.
+    cp "${prep}"/TorBrowser/Tor/libstdc++.so.6 "${prep}"
+
+    # We don't need the Tor binary, the shared libraries Tor needs
+    # (but Firefox doesn't) and documentation shipped in the TBB.
     rm -r "${prep}"/TorBrowser/Tor "${prep}"/TorBrowser/Docs
 
     # We don't want tor-launcher to be part of the regular browser
