@@ -168,24 +168,24 @@ create_default_profile() {
 }
 
 TBB_SHA256SUMS_FILE=/usr/share/tails/tbb-sha256sums.txt
-TBB_BUNDLES="$(grep "\<tor-browser-linux32-.*\.tar.xz$" "${TBB_SHA256SUMS_FILE}")"
+TBB_TARBALLS="$(grep "\<tor-browser-linux32-.*\.tar.xz$" "${TBB_SHA256SUMS_FILE}")"
 
 # We'll use the en-US bundle as our basis; only langpacks will be
 # installed from the other bundles.
-MAIN_BUNDLE="$(echo "${TBB_BUNDLES}" | grep -o "tor-browser-linux32-.*_en-US.tar.xz")"
-#VERSION="$(echo "${MAIN_BUNDLE}" | sed 's/tor-browser-linux32-\(.*\)_en-US.tar.xz/\1/')"
+MAIN_TARBALL="$(echo "${TBB_TARBALLS}" | grep -o "tor-browser-linux32-.*_en-US.tar.xz")"
+#VERSION="$(echo "${MAIN_TARBALL}" | sed 's/tor-browser-linux32-\(.*\)_en-US.tar.xz/\1/')"
 VERSION=tbb-nightly-2014-10-07
 TBB_DIST_URL_FILE=/usr/share/tails/tbb-dist-url.txt
-TBB_BUNDLES_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")/${VERSION}"
+TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")/${VERSION}"
 
 # The Debian Iceweasel extensions we want to install and make
 # available in the Tor Browser.
 DEBIAN_EXT_PKGS="xul-ext-adblock-plus xul-ext-torbutton"
 
 TMP="$(mktemp -d)"
-download_and_verify_files "${TBB_BUNDLES_BASE_URL}" "${TBB_BUNDLES}" "${TMP}"
+download_and_verify_files "${TBB_TARBALLS_BASE_URL}" "${TBB_TARBALLS}" "${TMP}"
 
-install_tor_browser "${TMP}/${MAIN_BUNDLE}" "${TBB_INSTALL}"
+install_tor_browser "${TMP}/${MAIN_TARBALL}" "${TBB_INSTALL}"
 
 mkdir -p "${TBB_EXT}"
 install_langpacks_from_bundles "${TMP}" "${TBB_EXT}"
