@@ -18,7 +18,9 @@ CLEARNET_USER=clearnet
 # Import tor_is_working()
 . /usr/local/lib/tails-shell-library/tor.sh
 
-# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables
+# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables, and
+# exec_firefox(), configure_xulrunner_app_locale() and
+# guess_best_tor_browser_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
@@ -165,7 +167,8 @@ configure_chroot () {
     mkdir -p "$(dirname "${CLEARNET_PREFS}")"
 
     # Localization
-    cat /var/lib/tails-user-session/browser-locale.js >> "${CLEARNET_PREFS}"
+    BEST_LOCALE="$(guess_best_tor_browser_locale)"
+    configure_xulrunner_app_locale "${CLEARNET_PROFILE}" "${BEST_LOCALE}"
 
     # Disable proxying in the chroot
     echo 'pref("network.proxy.type", 0);' >> "${CLEARNET_PREFS}"

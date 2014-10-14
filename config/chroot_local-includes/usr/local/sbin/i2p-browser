@@ -22,7 +22,9 @@ BROWSER_USER=i2pbrowser
 TBB_PREFS="/etc/tor-browser/profile/preferences"
 START_PAGE="http://127.0.0.1:7657"
 
-# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables
+# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables, and
+# exec_firefox(), configure_xulrunner_app_locale() and
+# guess_best_tor_browser_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 NOSCRIPT="${TBB_EXT}/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
@@ -174,8 +176,8 @@ configure_chroot () {
                     ${BROWSER_PREF_DIR}/extension-overrides.js
 
     # Localization
-    cat /var/lib/tails-user-session/browser-locale.js >> "${BROWSER_PREFS}"
-
+    BEST_LOCALE="$(guess_best_tor_browser_locale)"
+    configure_xulrunner_app_locale "${BROWSER_PROFILE}" "${BEST_LOCALE}"
 
     # Prevent File -> Print or CTRL+P from causing the browser to hang
     # for several minutes while trying to communicate with CUPS, since
