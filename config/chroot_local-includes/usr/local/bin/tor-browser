@@ -30,11 +30,29 @@ tor_has_bootstrapped() {
     sudo -n -u debian-tor /usr/local/sbin/tor-has-bootstrapped
 }
 
+# Workaround bug #8036 by copying any localized search plugins into
+# the profile.
+enable_localized_searchplugins() {
+    TBB_LOCALE=$(cat /var/lib/tails-user-session/browser-locale.js | \
+                 sed 's@^pref("general\.useragent\.locale", "\([^"]*\)");$@\1@')
+    if [ "${TBB_LOCALE}" = en-US ]; then
+        return
+    fi
+    PLUGIN_DIR="${TBB_INSTALL}"/distribution/searchplugins/locale/${TBB_LOCALE}
+    if [ ! -e "${PROFILE}"/searchplugins ] && [ -d "${PLUGIN_DIR}" ]; then
+        mkdir -p "${PROFILE}"/searchplugins
+        # The plugins do not load if they are symlinks
+        cp --dereference "${PLUGIN_DIR}"/*  "${PROFILE}"/searchplugins
+    fi
+}
 
 start_browser() {
     if [ ! -d "${PROFILE}" ]; then
         /usr/local/bin/generate-tor-browser-profile
     fi
+
+    # Workaround bug #8036
+    enable_localized_searchplugins
 
     if [ -z "$XAUTHORITY" ]; then
         XAUTHORITY=~/.Xauthority
