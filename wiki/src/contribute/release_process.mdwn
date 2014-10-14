@@ -436,9 +436,15 @@ Prepare upgrade-description files
    * At least the last stable release and the previous release
      candidates for the version being released must be passed to
      `--previous-version`.
-   * A few (say, 2 or 3) older versions must be passed with
-     `--previous-version`, so that users who skipped a release or two
-     are directly informed of the new one.
+   * Older versions for which there is no incremental upgrade path to
+     the new release must be passed with `--previous-version`, so that
+     users who skipped a release or two are informed of the new one.
+     Note that multi-steps incremental upgrade paths are valid and
+     supported: e.g. when releasing 1.1.2, 1.1 users should still be
+     able to incrementally upgrade to 1.1.1, and in turn to 1.1.2; to
+     make this work, one must _not_ pass `--previous-version 1.1`,
+     that would remove the existing incremental upgrade path from 1.1
+     to 1.1.1.
    * If preparing a release candidate, add `--channel alpha`
    * If preparing a release candidate, drop all `--next-version`
      arguments, and instead pass (**untested!**)
