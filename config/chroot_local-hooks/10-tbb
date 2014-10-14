@@ -167,16 +167,16 @@ create_default_profile() {
     done
 }
 
-TBB_SHA256SUMS=/usr/share/tails/tbb-sha256sums.txt
-TBB_BUNDLES="$(grep "\<tor-browser-linux32-.*\.tar.xz$" "${TBB_SHA256SUMS}")"
+TBB_SHA256SUMS_FILE=/usr/share/tails/tbb-sha256sums.txt
+TBB_BUNDLES="$(grep "\<tor-browser-linux32-.*\.tar.xz$" "${TBB_SHA256SUMS_FILE}")"
 
 # We'll use the en-US bundle as our basis; only langpacks will be
 # installed from the other bundles.
 MAIN_BUNDLE="$(echo "${TBB_BUNDLES}" | grep -o "tor-browser-linux32-.*_en-US.tar.xz")"
 #VERSION="$(echo "${MAIN_BUNDLE}" | sed 's/tor-browser-linux32-\(.*\)_en-US.tar.xz/\1/')"
 VERSION=tbb-nightly-2014-10-07
-TBB_DIST_URL=/usr/share/tails/tbb-dist-url.txt
-TBB_BUNDLES_BASE_URL="$(cat "${TBB_DIST_URL}")/${VERSION}"
+TBB_DIST_URL_FILE=/usr/share/tails/tbb-dist-url.txt
+TBB_BUNDLES_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")/${VERSION}"
 
 # The Debian Iceweasel extensions we want to install and make
 # available in the Tor Browser.
