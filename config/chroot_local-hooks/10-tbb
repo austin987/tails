@@ -58,8 +58,12 @@ install_tor_browser() {
         ln -s "${f}" "${prep}"/dictionaries/
     done
 
-    # We don't need the Tor binary (and shared libraries) and
-    # documentation shipped in the TBB.
+    # The libstdc++6 package in Wheezy is too old, so we need the
+    # bundled one.
+    cp "${prep}"/TorBrowser/Tor/libstdc++.so.6 "${prep}"
+
+    # We don't need the Tor binary, the shared libraries Tor needs
+    # (but Firefox doesn't) and documentation shipped in the TBB.
     rm -r "${prep}"/TorBrowser/Tor "${prep}"/TorBrowser/Docs
 
     # We don't want tor-launcher to be part of the regular browser
@@ -172,8 +176,7 @@ TBB_TARBALLS="$(grep "\<tor-browser-linux32-.*\.tar.xz$" "${TBB_SHA256SUMS_FILE}
 # We'll use the en-US bundle as our basis; only langpacks will be
 # installed from the other bundles.
 MAIN_TARBALL="$(echo "${TBB_TARBALLS}" | grep -o "tor-browser-linux32-.*_en-US.tar.xz")"
-#VERSION="$(echo "${MAIN_TARBALL}" | sed 's/tor-browser-linux32-\(.*\)_en-US.tar.xz/\1/')"
-VERSION=tbb-nightly-2014-10-07
+VERSION="$(echo "${MAIN_TARBALL}" | sed 's/tor-browser-linux32-\(.*\)_en-US.tar.xz/\1/')"
 TBB_DIST_URL_FILE=/usr/share/tails/tbb-dist-url.txt
 TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")/${VERSION}"
 
