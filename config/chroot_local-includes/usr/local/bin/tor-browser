@@ -36,11 +36,11 @@ enable_localized_searchplugins() {
     local locale
     locale=$(cat "${PROFILE}"/preferences/0000locale.js | \
                  sed 's@^pref("general\.useragent\.locale", "\([^"]*\)");$@\1@')
-    if [ "${locale}" = en-US ]; then
+    if [ "${locale}" = en-US ] || [ -e "${PROFILE}"/searchplugins ]; then
         return
     fi
     PLUGIN_DIR="${TBB_INSTALL}"/distribution/searchplugins/locale/${locale}
-    if [ ! -e "${PROFILE}"/searchplugins ] && [ -d "${PLUGIN_DIR}" ]; then
+    if [ -d "${PLUGIN_DIR}" ]; then
         mkdir -p "${PROFILE}"/searchplugins
         # The plugins do not load if they are symlinks
         cp --dereference "${PLUGIN_DIR}"/*  "${PROFILE}"/searchplugins
