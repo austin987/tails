@@ -11,7 +11,7 @@ export TEXTDOMAIN
 
 PROFILE="${HOME}/.tor-browser/profile.default"
 
-# Import exec_firefox()
+# Import exec_firefox() and configure_best_tor_browser_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 ask_for_confirmation() {
@@ -50,6 +50,8 @@ start_browser() {
     if [ ! -d "${PROFILE}" ]; then
         /usr/local/bin/generate-tor-browser-profile
     fi
+
+    configure_best_tor_browser_locale "${PROFILE}"
 
     # Workaround bug #8036
     enable_localized_searchplugins
