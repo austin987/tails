@@ -33,17 +33,18 @@ tor_has_bootstrapped() {
 # Workaround bug #8036 by copying any localized search plugins into
 # the profile.
 enable_localized_searchplugins() {
-    local locale
+    local locale plugin
     locale=$(cat "${PROFILE}"/preferences/0000locale.js | \
                  sed 's@^pref("general\.useragent\.locale", "\([^"]*\)");$@\1@')
     if [ "${locale}" = en-US ] || [ -e "${PROFILE}"/searchplugins ]; then
         return
     fi
-    PLUGIN_DIR="${TBB_INSTALL}"/distribution/searchplugins/locale/${locale}
-    if [ -d "${PLUGIN_DIR}" ]; then
+    # Fallback to a similar locale if there is no exact match
+    plugin="$(ls -1 "${TBB_INSTALL}"/distribution/searchplugins/locale/ | grep -m1 "^${locale}\(-[A-Z]\+\)\?$" || true)"
+    if [ -n "${plugin}" ]; then
         mkdir -p "${PROFILE}"/searchplugins
         # The plugins do not load if they are symlinks
-        cp --dereference "${PLUGIN_DIR}"/*  "${PROFILE}"/searchplugins
+        cp --dereference "${TBB_INSTALL}"/distribution/searchplugins/locale/"${plugin}"/*  "${PROFILE}"/searchplugins
     fi
 }
 
