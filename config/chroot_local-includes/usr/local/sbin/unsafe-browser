@@ -18,7 +18,9 @@ CLEARNET_USER=clearnet
 # Import tor_is_working()
 . /usr/local/lib/tails-shell-library/tor.sh
 
-# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables
+# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables, and
+# exec_firefox(), configure_xulrunner_app_locale() and
+# guess_best_tor_browser_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
@@ -109,18 +111,13 @@ setup_chroot () {
 
 set_chroot_browser_name () {
     NAME="${1}"
-    LONG=$(echo ${LANG} | grep -o "^[a-zA-Z_]*")
-    SHORT=${LONG%%_*}
+    LOCALE="${2}"
     EXT_DIR=${CHROOT}/"${TBB_EXT}"
     BRANDING=branding/brand.dtd
-    if [ -e "${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi" ]; then
-        PACK="${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi"
+    if [ "${LOCALE}" != en-US ]; then
+        PACK="${EXT_DIR}/langpack-${LOCALE}@firefox.mozilla.org.xpi"
         TOP=browser/chrome
-        REST=${LONG}/locale
-    elif [ -e "${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi" ]; then
-        PACK="${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi"
-        TOP=browser/chrome
-        REST=${SHORT}/locale
+        REST=${LOCALE}/locale
     else
         PACK="${CHROOT}/${TBB_INSTALL}/browser/omni.ja"
         TOP=chrome
@@ -165,7 +162,8 @@ configure_chroot () {
     mkdir -p "$(dirname "${CLEARNET_PREFS}")"
 
     # Localization
-    cat /var/lib/tails-user-session/browser-locale.js >> "${CLEARNET_PREFS}"
+    BEST_LOCALE="$(guess_best_tor_browser_locale)"
+    configure_xulrunner_app_locale "${CLEARNET_PROFILE}" "${BEST_LOCALE}"
 
     # Disable proxying in the chroot
     echo 'pref("network.proxy.type", 0);' >> "${CLEARNET_PREFS}"
@@ -179,7 +177,7 @@ configure_chroot () {
     echo 'user_pref("extensions.getAddons.showPane", false);' >> "${CLEARNET_PREFS}"
 
     # Set the name (e.g. window title) of the browser
-    set_chroot_browser_name "`gettext \"Unsafe Browser\"`"
+    set_chroot_browser_name "`gettext \"Unsafe Browser\"`" "${BEST_LOCALE}"
 
     # Set start page to something that explains what's going on
     echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
