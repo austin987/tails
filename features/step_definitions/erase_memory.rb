@@ -24,15 +24,13 @@ end
 Given /^the PAE kernel is running$/ do
   next if @skip_steps_while_restoring_background
   kernel = which_kernel
-  assert(kernel == "vmlinuz2",
-         "Kernel #{kernel} is running, expected 'vmlinuz2' (PAE)")
+  assert_equal("vmlinuz2", kernel)
 end
 
 Given /^the non-PAE kernel is running$/ do
   next if @skip_steps_while_restoring_background
   kernel = which_kernel
-  assert(kernel == "vmlinuz",
-         "Kernel #{kernel} is running, expected 'vmlinuz' (non-PAE)")
+  assert_equal("vmlinuz", kernel)
 end
 
 def used_ram_in_MiB

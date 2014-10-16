@@ -49,8 +49,12 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/ikiwiki <<EOF
 	Pin-Priority: 500
 EOF
 
+# Add wheezy-backports for apt-cacher-ng. The version in wheezy has problems
+# with redirects to https, which we need when fetching the TBB tarballs
+echo 'deb http://ftp.us.debian.org/debian wheezy-backports main' > /etc/apt/sources.list.d/wheezy-backports.list
+
 apt-get update
-apt-get -y install apt-cacher-ng
+apt-get -o Dpkg::Options::="--force-confold" -y -t wheezy-backports install apt-cacher-ng
 
 # Install custom configuration for apt-cacher-ng and restart
 install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
