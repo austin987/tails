@@ -11,7 +11,7 @@ export TEXTDOMAIN
 
 PROFILE="${HOME}/.tor-browser/profile.default"
 
-# Import exec_firefox()
+# Import exec_firefox() and configure_best_tor_browser_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 ask_for_confirmation() {
@@ -30,11 +30,33 @@ tor_has_bootstrapped() {
     sudo -n -u debian-tor /usr/local/sbin/tor-has-bootstrapped
 }
 
+# Workaround bug #8036 by copying any localized search plugins into
+# the profile.
+enable_localized_searchplugins() {
+    local locale plugin
+    locale=$(cat "${PROFILE}"/preferences/0000locale.js | \
+                 sed 's@^pref("general\.useragent\.locale", "\([^"]*\)");$@\1@')
+    if [ "${locale}" = en-US ] || [ -e "${PROFILE}"/searchplugins ]; then
+        return
+    fi
+    # Fallback to a similar locale if there is no exact match
+    plugin="$(ls -1 "${TBB_INSTALL}"/distribution/searchplugins/locale/ | grep -m1 "^${locale}\(-[A-Z]\+\)\?$" || true)"
+    if [ -n "${plugin}" ]; then
+        mkdir -p "${PROFILE}"/searchplugins
+        # The plugins do not load if they are symlinks
+        cp --dereference "${TBB_INSTALL}"/distribution/searchplugins/locale/"${plugin}"/*  "${PROFILE}"/searchplugins
+    fi
+}
 
 start_browser() {
     if [ ! -d "${PROFILE}" ]; then
         /usr/local/bin/generate-tor-browser-profile
     fi
+
+    configure_best_tor_browser_locale "${PROFILE}"
+
+    # Workaround bug #8036
+    enable_localized_searchplugins
 
     if [ -z "$XAUTHORITY" ]; then
         XAUTHORITY=~/.Xauthority

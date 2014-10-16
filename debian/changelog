@@ -1,35 +1,25 @@
-tails (1.2) UNRELEASED; urgency=low
-
-  * Dummy entry for next release.
-
- -- Tails developers <tails@boum.org>  Thu, 09 Oct 2014 20:47:28 +0200
-
-tails (1.2~rc1) unstable; urgency=medium
+tails (1.2) unstable; urgency=medium
 
   * Major new features
     - Migrate from Iceweasel to the Tor Browser from the Tor Browser
-      Bundle 4.0 nightly build from 2014-10-07 (based on Firefox
-      esr31-pre). The installation in Tails is made global
-      (multi-profile), uses the system-wide Tor instance, does not use
-      the Tor Browser updater, and keeps the desired deviations
-      previously present in Iceweasel, e.g. we install the addon
-      AdBlock Plus but not Tor Launcher (since we run it as a
-      standalone XUL application), among other things.
+      Bundle 4.0 (based on Firefox 31.2.0esr). This fixes the POODLE
+      vulnerability.
+      The installation in Tails is made global (multi-profile), uses
+      the system-wide Tor instance, disables the Tor Browser updater,
+      and keeps the desired deviations previously present in Iceweasel,
+      e.g. we install the AdBlock Plus add-on, but not Tor Launcher (since
+      we run it as a standalone XUL application), among other things.
     - Install AppArmor's userspace tools and apparmor-profiles-extra
-      from Wheezy Backports, and enable the AppArmor Linux security
-      module. This adds Mandatory Access control for several critical
-      applications in Tails, including:
-      * Tor
-      * Vidalia
-      * Pidgin
-      * Evince
-      * Totem
+      from Wheezy Backports, and enable the AppArmor Linux Security
+      Module. This adds Mandatory Access Control for several critical
+      applications in Tails, including Tor, Vidalia, Pidgin, Evince
+      and Totem.
     - Isolate I2P traffic from the Tor Browser by adding a dedicated
-      I2P Browser, which can be reached via GNOME's menu -> Internet
-      -> I2P Browser. It is set up similarly to the Unsafe Browser,
+      I2P Browser. It is set up similarly to the Unsafe Browser,
       but further disables features that are irrelevant for I2P, like
-      search plugins and the AdBlock Plus addon, and keeps Tor Browser
+      search plugins and the AdBlock Plus addon, while keeping Tor Browser
       security features like the NoScript and Torbutton addons.
+    - Upgrade Tor to 0.2.5.8-rc-1~d70.wheezy+1.
 
   * Security fixes
     - Disable TCP timestamps (Closes: #6579).
@@ -40,36 +30,35 @@ tails (1.2~rc1) unstable; urgency=medium
       make stderr more easily accessible (Closes: #7431).
     - Run tails-persistence-setup with sudo instead of gksudo to make
       stderr more easily accessible, and allow the desktop user to
-      pass the --verbose parameter. (Closes: #7623)
-    - Disable cups in the Unsafe Browser. This will prevent the
+      pass the --verbose parameter (Closes: #7623).
+    - Disable CUPS in the Unsafe Browser. This will prevent the
       browser from hanging for several minutes when accidentally
-      pressing CTRL+P or trying to go to File -> Print.
+      pressing CTRL+P or trying to go to File -> Print (Closes: #7771).
 
   * Minor improvements
-    - Install Linux 3.16-2 from Debian unstable.
-    - Install cryptsetup and friends from wheezy-backports (Closes:
-      #5932).
+    - Install Linux 3.16-3 (version 3.16.5-1) from Debian
+      unstable (Closes: #7886, #8100).
+    - Transition away from TrueCrypt: install cryptsetup and friends
+      from wheezy-backports (Closes: #5932), and make it clear that
+      TrueCrypt will be removed in Tails 1.2.1 (Closes: #7739).
     - Install Monkeysign dependencies for qrcodes scanning.
     - Upgrade syslinux to 3:6.03~pre20+dfsg-2~bpo70+1, and install
       the new syslinux-efi package.
     - Upgrade I2P to 0.9.15-1~deb7u+1
-    - Upgrade Tor to 0.2.5.8-rc-1~d70.wheezy+1.
     - Enable Wheezy proposed-updates APT repository and setup APT
       pinnings to install packages from it.
     - Enable Tor's syscall sandbox. This feature (new in 0.2.5.x)
       should make Tor a bit harder to exploit. It is only be enabled
       when when no special Tor configuration is requested in Tails
-      Greeter due to incompatibility with Tor bridges.
+      Greeter due to incompatibility with pluggable transports.
     - Start I2P automatically when the network connects via a
       NetworkManager hook, and "i2p" is present on the kernel command
       line. The router console is no longer opened automatically, but
-      can be accessed through the I2P Browser.
-    - Simplify the IPv6 ferm rules.
+      can be accessed through the I2P Browser (Closes: #7732).
+    - Simplify the IPv6 ferm rules (Closes: #7668).
     - Include persistence.conf in WhisperBack reports (Closes: #7461)
     - Pin packages from testing to 500, so that they can be upgraded.
     - Don't set Torbutton environment vars globally (Closes: #5648).
-    - Make it clear in the TrueCrypt wrapper that it'll be removed in
-      Tails 1.3 or earlier (Closes: #7739).
     - Enable VirtualBox guest additions by default (Closes: #5730). In
       particular this enables VirtualBox's display management service.
     - In the Unsafe Browser, hide option for "Tor Browser Health
@@ -103,7 +92,7 @@ tails (1.2~rc1) unstable; urgency=medium
       control port during bootstrap, since we've seen problems with
       that already.
 
- -- Tails developers <tails@boum.org>  Wed, 08 Oct 2014 22:20:04 +0200
+ -- Tails developers <tails@boum.org>  Wed, 15 Oct 2014 18:34:50 +0200
 
 tails (1.1.2) unstable; urgency=medium
 
