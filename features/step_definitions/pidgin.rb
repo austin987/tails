@@ -71,7 +71,7 @@ end
 When /^I start Pidgin through the GNOME menu$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
+  @screen.wait_and_hover("GnomeApplicationsInternet.png", 10)
   @screen.wait_and_click("GnomeApplicationsPidgin.png", 20)
 end
 

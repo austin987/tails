@@ -530,11 +530,11 @@ When /^I start the Tor Browser$/ do
   case @theme
   when "windows"
     step 'I click the start menu'
-    @screen.wait_and_click("WindowsApplicationsInternet.png", 10)
+    @screen.wait_and_hover("WindowsApplicationsInternet.png", 10)
     @screen.wait_and_click("WindowsApplicationsTorBrowser.png", 10)
   else
     @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-    @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
+    @screen.wait_and_hover("GnomeApplicationsInternet.png", 10)
     @screen.wait_and_click("GnomeApplicationsTorBrowser.png", 10)
   end
 end
@@ -649,7 +649,7 @@ end
 When /^I start and focus GNOME Terminal$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsAccessories.png", 10)
+  @screen.wait_and_hover("GnomeApplicationsAccessories.png", 10)
   @screen.wait_and_click("GnomeApplicationsTerminal.png", 20)
   @screen.wait_and_click('GnomeTerminalWindow.png', 20)
 end
