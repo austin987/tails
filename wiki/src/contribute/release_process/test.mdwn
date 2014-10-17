@@ -550,7 +550,7 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
   - the Tor Browser instance runs as the `clearnet` user.
   - it has no proxy configured.
   - no extensions are installed.
-  - there are no bookmarks.
+  - there are no bookmarks except the default Firefox ones.
 * On exit, check that:
   - make sure that its chroot gets properly teared down on exit (there
     should be nothing mounted inside `/var/lib/unsafe-browser`).
@@ -577,7 +577,7 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 # Internationalization
 
 Boot and check basic functionality is working for every supported
-language.
+language. You *really* have to reboot between each language.
 
 * The chosen keyboard layout must be applied.
 * The virtual keyboard must work and be auto-configured to use the same keyboard
@@ -588,7 +588,6 @@ language.
       find /usr/local/lib/tor-browser/distribution/searchplugins/locale -iname startpage-*.xml
 
 * The Wikipedia search engine must be localized for all languages.
-  - Except for Farsi, see [[!tails_ticket 6884]]
 
 ## Spellchecking
 
@@ -621,10 +620,3 @@ language.
 * One should be able to refresh the GnuPG keyring in Seahorse (with
   the workaround documented in comment 4 on [[!tails_ticket 7051]],
   until that ticket is fixed for real).
-* Test that the hostname is not leaked via DHCP requests (automate: [[!tails_ticket 7712]]):
-  1. Install Wireshark in the system under testing.
-  1. Monitor the network until a periodic DHCP refresh is done, or
-     manually trigger one.
-  1. Click on the "DHCP Request" packet going out to the local DHCP server.
-  1. Look for `Option: (12) Host Name`. There should *not* be `Host
-     Name: amnesia` in there.
