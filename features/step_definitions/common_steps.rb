@@ -687,3 +687,17 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, s
   @screen.wait_and_hover(prefix + "Applications" + submenu + ".png", 10)
   @screen.wait_and_click(prefix + "Applications" + app + ".png", 20)
 end
+
+Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
+  next if @skip_steps_while_restoring_background
+  case @theme
+  when "windows"
+    prefix = 'Windows'
+  else
+    prefix = 'Gnome'
+  end
+  @screen.wait_and_click(prefix + "ApplicationsMenu.png", 10)
+  @screen.wait_and_hover(prefix + "Applications" + submenu + ".png", 10)
+  @screen.wait_and_hover(prefix + "Applications" + subsubmenu + ".png", 10)
+  @screen.wait_and_click(prefix + "Applications" + app + ".png", 20)
+end
