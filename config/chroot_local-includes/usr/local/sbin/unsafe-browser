@@ -12,7 +12,7 @@ export TEXTDOMAIN
 CONF_DIR=/var/lib/unsafe-browser
 COW=${CONF_DIR}/cow
 CHROOT=${CONF_DIR}/chroot
-CLEARNET_USER=clearnet
+BROWSER_USER=clearnet
 
 # Import tor_is_working()
 . /usr/local/lib/tails-shell-library/tor.sh
@@ -37,7 +37,7 @@ if [ -e /var/lib/gdm3/tails.camouflage ]; then
 fi
 
 cleanup () {
-    try_cleanup_browser_chroot ${CHROOT} ${COW} ${CLEARNET_USER}
+    try_cleanup_browser_chroot ${CHROOT} ${COW} ${BROWSER_USER}
 }
 
 error () {
@@ -89,7 +89,7 @@ configure_chroot () {
         xargs chroot ${CHROOT} dpkg --remove
 
     # Create a fresh browser profile for the clearnet user
-    CLEARNET_PROFILE="${CHROOT}"/home/clearnet/.tor-browser/profile.default
+    CLEARNET_PROFILE="${CHROOT}"/home/${BROWSER_USER}/.tor-browser/profile.default
 
     CLEARNET_EXT="${CLEARNET_PROFILE}"/extensions
     mkdir -p "${CLEARNET_EXT}"
@@ -138,7 +138,7 @@ EOF
     rm -f ${CLEARNET_PROFILE}/bookmarks.html
     rm -f ${CLEARNET_PROFILE}/places.sqlite
 
-    chown -R clearnet:clearnet ${CHROOT}/home/clearnet/.tor-browser
+    chown -R ${BROWSER_USER}:${BROWSER_USER} ${CHROOT}/home/clearnet/.tor-browser
 
     # Set a scary theme (except if we're using Windows
     # camouflage). Note that the tails-activate-win8-theme script that
@@ -152,7 +152,7 @@ EOF
     else
         # The camouflage activation script requires a dbus server for
         # properly configuring GNOME, so we start one in the chroot
-        chroot ${CHROOT} sudo -H -u clearnet sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
+        chroot ${CHROOT} sudo -H -u ${BROWSER_USER} sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
     fi
 
 }
@@ -202,7 +202,7 @@ setup_browser_chroot ${CHROOT} ${COW} || \
     error "`gettext \"Failed to setup chroot.\"`"
 configure_chroot
 echo "* Starting Unsafe Browser"
-run_chroot_browser ${CHROOT} ${CLEARNET_USER} ${SUDO_USER}
+run_chroot_browser ${CHROOT} ${BROWSER_USER} ${SUDO_USER}
 show_shutdown_notification
 maybe_restart_tor
 
