@@ -90,3 +90,17 @@ set_chroot_browser_name () {
     chmod a+r "${pack}"
     rm -Rf "${tmp}"
 }
+
+# Start the browser in the chroot
+run_chroot_browser () {
+    local chroot="${1}"
+    local chroot_user="${2}"
+    local local_user="${3}"
+
+    sudo -u ${local_user} xhost +SI:localuser:${chroot_user} 2>/dev/null
+    chroot ${chroot} sudo -u ${chroot_user} /bin/sh -c \
+        '. /usr/local/lib/tails-shell-library/tor-browser.sh && \
+         exec_firefox -DISPLAY=:0.0 \
+                      -profile /home/'"${chroot_user}"'/.tor-browser/profile.default'
+    sudo -u ${local_user} xhost -SI:localuser:${chroot_user} 2>/dev/null
+}

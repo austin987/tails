@@ -279,18 +279,6 @@ EOF
 
 }
 
-run_browser_in_chroot () {
-    # Start Iceweasel in the chroot
-    echo "* Starting I2P Browser"
-
-    sudo -u ${SUDO_USER} xhost +SI:localuser:${BROWSER_USER} 2>/dev/null
-    chroot ${CHROOT} sudo -u ${BROWSER_USER} /bin/sh -c \
-        ". /usr/local/lib/tails-shell-library/tor-browser.sh && \
-         exec_firefox -DISPLAY=:0.0 \
-                      -profile /home/${BROWSER_USER}/.tor-browser/profile.default"
-    sudo -u ${SUDO_USER} xhost -SI:localuser:${BROWSER_USER} 2>/dev/null
-}
-
 show_shutdown_notification () {
     local title="`gettext \"Shutting down the I2P Browser...\"`"
     local body="`gettext \"This may take a while, and you may not restart the I2P Browser until it is properly shut down.\"`"
@@ -311,7 +299,8 @@ echo "* Setting up chroot"
 setup_browser_chroot ${CHROOT} ${COW} || \
     error "`gettext \"Failed to setup chroot.\"`"
 configure_chroot
-run_browser_in_chroot
+echo "* Starting I2P Browser"
+run_chroot_browser ${CHROOT} ${BROWSER_USER} ${SUDO_USER}
 show_shutdown_notification
 
 exit 0
