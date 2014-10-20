@@ -90,21 +90,11 @@ configure_chroot () {
 
     BROWSER_PREFS="${BROWSER_PROFILE}"/preferences/prefs.js
     mkdir -p "$(dirname "${BROWSER_PREFS}")"
+    cp /usr/share/tails/unsafe-browser/unsafe-browser.js "${BROWSER_PREFS}"
 
     # Localization
     BEST_LOCALE="$(guess_best_tor_browser_locale)"
     configure_xulrunner_app_locale "${BROWSER_PROFILE}" "${BEST_LOCALE}"
-
-    # Disable proxying in the chroot
-    echo 'pref("network.proxy.type", 0);' >> "${BROWSER_PREFS}"
-    echo 'pref("network.proxy.socks_remote_dns", false);' >>  "${BROWSER_PREFS}"
-
-    # Prevent File -> Print or CTRL+P from causing the browser to hang
-    # for several minutes while trying to communicate with CUPS, since
-    # access to port 631 isn't allowed through.
-    echo 'pref("print.postscript.cups.enabled", false);' >> "${BROWSER_PREFS}"
-    # Hide "Get Addons" in Add-ons manager
-    echo 'user_pref("extensions.getAddons.showPane", false);' >> "${BROWSER_PREFS}"
 
     # Set the name (e.g. window title) of the browser
     set_chroot_browser_name ${CHROOT} "`gettext \"Unsafe Browser\"`" "${BEST_LOCALE}"
@@ -114,17 +104,7 @@ configure_chroot () {
         "${BROWSER_PREFS}"
     BROWSER_CHROME="${BROWSER_PROFILE}/chrome/userChrome.css"
     mkdir -p "$(dirname "${BROWSER_CHROME}")"
-    cat > ${BROWSER_CHROME} << EOF
-/* Required, do not remove */
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-/* Hide TorBrowser Health Report and its configuration option */
-#appmenu_healthReport,
-#dataChoicesTab,
-#healthReport
-
-{display: none !important}
-EOF
+    cp /usr/share/tails/unsafe-browser/userChrome.css ${BROWSER_CHROME}
 
     # Remove all bookmarks
     rm -f ${CHROOT}/"${TBB_PROFILE}"/bookmarks.html
@@ -138,10 +118,7 @@ EOF
     # we may run below requires that the browser profile is writable
     # by the user running the script (i.e. clearnet).
     if [ -z "${CAMOUFLAGE}" ]; then
-        cat >> "${BROWSER_PREFS}" <<EOF
-pref("lightweightThemes.isThemeSelected", true);
-pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");
-EOF
+        cat /usr/share/tails/unsafe-browser/unsafe-browser-theme.js >> "${BROWSER_PREFS}"
     else
         # The camouflage activation script requires a dbus server for
         # properly configuring GNOME, so we start one in the chroot
