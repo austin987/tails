@@ -21,3 +21,11 @@ user_pref("network.proxy.http_port", 4444);
 user_pref("network.proxy.no_proxies_on", "127.0.0.1");
 user_pref("network.proxy.ssl", "127.0.0.1");
 user_pref("network.proxy.ssl_port", 4444);
+// Disable searching from the URL bar
+user_pref("keyword.enabled", false);
+// Hide "Get Addons" in Add-ons manager
+user_pref("extensions.getAddons.showPane", false);
+/* Prevent File -> Print or CTRL+P from causing the browser to hang
+   for several minutes while trying to communicate with CUPS, since
+   access to port 631 isn't allowed through. */
+user_pref("print.postscript.cups.enabled", false);

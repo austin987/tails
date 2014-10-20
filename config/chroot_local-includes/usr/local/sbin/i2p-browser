@@ -101,12 +101,6 @@ configure_chroot () {
     BEST_LOCALE="$(guess_best_tor_browser_locale)"
     configure_xulrunner_app_locale "${BROWSER_PROFILE}" "${BEST_LOCALE}"
 
-    # Prevent File -> Print or CTRL+P from causing the browser to hang
-    # for several minutes while trying to communicate with CUPS, since
-    # access to port 631 isn't allowed through.
-    echo 'user_pref("print.postscript.cups.enabled", false);' >> \
-        ${BROWSER_PREFS}
-
     # Set the name (e.g. window title) of the browser
     set_chroot_torbutton_browser_name "${CHROOT}" "${NAME}" "${BEST_LOCALE}"
 
@@ -114,13 +108,6 @@ configure_chroot () {
     echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
         ${BROWSER_PREFS}
 
-
-    # Disable searching from the URL bar
-    echo 'user_pref("keyword.enabled", false);' >> \
-        ${BROWSER_PREFS}
-    # Hide "Get Addons" in Add-ons manager
-    echo 'user_pref("extensions.getAddons.showPane", false);' >> \
-        ${BROWSER_PREFS}
     # add the I2P proxy to all protocols
     cp /usr/share/tails/i2p-browser/i2p-browser.js "${BROWSER_PREF_DIR}"
 
@@ -141,10 +128,7 @@ configure_chroot () {
 
     # Change the theme when not using Windows camouflage
     if [ -z "${CAMOUFLAGE}" ]; then
-        cat >> ${BROWSER_PREFS} <<EOF
-user_pref("lightweightThemes.isThemeSelected", true);
-user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"I2P Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#66ABEB\",\"updateDate\":0,\"installDate\":0}]");
-EOF
+        cat /usr/share/tails/i2p-browser/i2p-browser-theme.js >> "${BROWSER_PREFS}"
     else
         # The camouflage activation script requires a dbus server for
         # properly configuring GNOME, so we start one in the chroot
