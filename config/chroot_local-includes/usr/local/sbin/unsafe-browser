@@ -71,30 +71,6 @@ show_start_notification () {
     tails-notify-user "${title}" "${body}" 10000
 }
 
-set_chroot_browser_name () {
-    NAME="${1}"
-    LOCALE="${2}"
-    EXT_DIR=${CHROOT}/"${TBB_EXT}"
-    if [ "${LOCALE}" != en-US ]; then
-        PACK="${EXT_DIR}/langpack-${LOCALE}@firefox.mozilla.org.xpi"
-        TOP=browser/chrome
-        REST=${LOCALE}/locale
-    else
-        PACK="${CHROOT}/${TBB_INSTALL}/browser/omni.ja"
-        TOP=chrome
-        REST=en-US/locale
-    fi
-    TMP=$(mktemp -d)
-    BRANDING="${TOP}/${REST}/branding/brand.dtd"
-    # Non-zero exit code due to non-standard ZIP archive.
-    # The following steps will fail soon if the extraction failed anyway.
-    7z x -o"${TMP}" "${PACK}" "${BRANDING}" || true
-    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${NAME}\">/" "${TMP}/${BRANDING}"
-    (cd $TMP ; 7z u -tzip "${PACK}" .)
-    chmod a+r "${PACK}"
-    rm -Rf "${TMP}"
-}
-
 configure_chroot () {
     echo "* Configuring chroot"
 
@@ -138,7 +114,7 @@ configure_chroot () {
     echo 'user_pref("extensions.getAddons.showPane", false);' >> "${CLEARNET_PREFS}"
 
     # Set the name (e.g. window title) of the browser
-    set_chroot_browser_name "`gettext \"Unsafe Browser\"`" "${BEST_LOCALE}"
+    set_chroot_browser_name ${CHROOT} "`gettext \"Unsafe Browser\"`" "${BEST_LOCALE}"
 
     # Set start page to something that explains what's going on
     echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \

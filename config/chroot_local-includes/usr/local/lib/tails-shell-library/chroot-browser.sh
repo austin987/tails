@@ -64,3 +64,29 @@ setup_browser_chroot () {
     # Workaround for #6110
     chmod -t ${cow}
 }
+
+set_chroot_browser_name () {
+    local chroot="${1}"
+    local name="${2}"
+    local locale="${3}"
+    local ext_dir=${chroot}/"${TBB_EXT}"
+    local pack top rest
+    if [ "${locale}" != en-US ]; then
+        pack="${ext_dir}/langpack-${locale}@firefox.mozilla.org.xpi"
+        top=browser/chrome
+        rest=${locale}/locale
+    else
+        pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
+        top=chrome
+        rest=en-US/locale
+    fi
+    local tmp=$(mktemp -d)
+    local branding="${top}/${rest}/branding/brand.dtd"
+    # Non-zero exit code due to non-standard ZIP archive.
+    # The following steps will fail soon if the extraction failed anyway.
+    7z x -o"${tmp}" "${pack}" "${branding}" || true
+    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${name}\">/" "${tmp}/${branding}"
+    (cd ${tmp} ; 7z u -tzip "${pack}" .)
+    chmod a+r "${pack}"
+    rm -Rf "${tmp}"
+}
