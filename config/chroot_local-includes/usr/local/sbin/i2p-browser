@@ -78,7 +78,8 @@ configure_chroot () {
     echo "127.0.0.1 localhost amnesia" > ${CHROOT}/etc/hosts
 
     # Create a fresh Tor Browser profile for the i2pbrowser user
-    BROWSER_PROFILE="${CHROOT}/home/${BROWSER_USER}/.tor-browser/profile.default"
+    BROWSER_CONF="${CHROOT}/home/${BROWSER_USER}/.tor-browser"
+    BROWSER_PROFILE="${BROWSER_CONF}/profile.default"
     BROWSER_EXT="${BROWSER_PROFILE}/extensions"
     mkdir -p "${BROWSER_EXT}"
     ln -s "${NOSCRIPT}" "${BROWSER_EXT}"
@@ -124,7 +125,7 @@ configure_chroot () {
     rm -f ${BROWSER_PROFILE}/bookmarks.html
     rm -f ${BROWSER_PROFILE}/places.sqlite
 
-   chown -R ${BROWSER_USER}:${BROWSER_USER} "${CHROOT}/home/${BROWSER_USER}/.tor-browser"
+   chown -R ${BROWSER_USER}:${BROWSER_USER} "${BROWSER_CONF}"
 
     # Change the theme when not using Windows camouflage
     if [ -z "${CAMOUFLAGE}" ]; then

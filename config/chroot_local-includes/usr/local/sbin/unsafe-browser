@@ -82,8 +82,8 @@ configure_chroot () {
     chmod a+r ${CHROOT}/etc/resolv.conf
 
     # Create a fresh browser profile for the clearnet user
-    BROWSER_PROFILE="${CHROOT}"/home/${BROWSER_USER}/.tor-browser/profile.default
-
+    BROWSER_CONF="${CHROOT}/home/${BROWSER_USER}/.tor-browser"
+    BROWSER_PROFILE="${BROWSER_CONF}/profile.default"
     BROWSER_EXT="${BROWSER_PROFILE}"/extensions
     mkdir -p "${BROWSER_EXT}"
     cp -Pr "${TBB_PROFILE}"/extensions/langpack-*.xpi "${BROWSER_EXT}"
@@ -111,7 +111,7 @@ configure_chroot () {
     rm -f ${BROWSER_PROFILE}/bookmarks.html
     rm -f ${BROWSER_PROFILE}/places.sqlite
 
-    chown -R ${BROWSER_USER}:${BROWSER_USER} ${CHROOT}/home/clearnet/.tor-browser
+    chown -R ${BROWSER_USER}:${BROWSER_USER} "${BROWSER_CONF}"
 
     # Set a scary theme (except if we're using Windows
     # camouflage). Note that the tails-activate-win8-theme script that
