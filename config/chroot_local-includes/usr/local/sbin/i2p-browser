@@ -28,8 +28,8 @@ START_PAGE="http://127.0.0.1:7657"
 
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
 
-NOSCRIPT="${TBB_EXT}/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
-TORBUTTON="${TBB_EXT}/torbutton@torproject.org"
+NOSCRIPT_EXT_XPI="${TBB_EXT}/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
+TORBUTTON_EXT_DIR="${TBB_EXT}/torbutton@torproject.org"
 NAME="`gettext \"I2P Browser\"`"
 
 if [ -e /var/lib/gdm3/tails.camouflage ]; then
@@ -80,8 +80,8 @@ configure_chroot () {
     BROWSER_PROFILE="${BROWSER_CONF}/profile.default"
     BROWSER_EXT="${BROWSER_PROFILE}/extensions"
     mkdir -p "${BROWSER_EXT}"
-    ln -s "${NOSCRIPT}" "${BROWSER_EXT}"
-    ln -s "${TORBUTTON}" "${BROWSER_EXT}"
+    ln -s "${NOSCRIPT_EXT_XPI}" "${BROWSER_EXT}"
+    ln -s "${TORBUTTON_EXT_DIR}" "${BROWSER_EXT}"
     for LANGPACK in $(ls ${TBB_PROFILE}/extensions/langpack-*.xpi); do
         ln -s "${LANGPACK}" "${BROWSER_EXT}"
     done
