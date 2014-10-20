@@ -72,6 +72,9 @@ show_start_notification () {
 }
 
 configure_chroot () {
+    # Prevent sudo from complaining about failing to resolve the 'amnesia' host
+    echo "127.0.0.1 localhost amnesia" > ${CHROOT}/etc/hosts
+
     # Set the chroot's DNS servers to those obtained through DHCP
     rm -f ${CHROOT}/etc/resolv.conf
     for NS in ${IP4_NAMESERVERS}; do
