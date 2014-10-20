@@ -110,7 +110,11 @@ run_chroot_browser () {
 set_chroot_torbutton_browser_name () {
     local chroot="${1}"
     local name="${2}"
-    local torbutton_dir="${chroot}"/usr/share/xul-ext/torbutton
-    find "${torbutton_dir}" -name 'brand.dtd' -print0 | \
-       xargs -0 -r sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${name}\">/"
+    local locale="${3}"
+    local torbutton_locale_dir="${chroot}"/usr/share/xul-ext/torbutton/chrome/locale/${locale}
+    if [ ! -d "${torbutton_locale_dir}" ]; then
+        # Surprisingly, the default locale is en, not en-US
+        torbutton_locale_dir="${chroot}"/usr/share/xul-ext/torbutton/chrome/locale/en
+    fi
+    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${name}\">/" "${torbutton_locale_dir}/brand.dtd"
 }

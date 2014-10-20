@@ -91,8 +91,6 @@ configure_chroot () {
         ln -s "${LANGPACK}" "${BROWSER_EXT}"
     done
 
-    set_chroot_torbutton_browser_name "${CHROOT}" "${NAME}"
-
     BROWSER_PREF_DIR="${BROWSER_PROFILE}/preferences"
     BROWSER_PREFS="${BROWSER_PREF_DIR}/prefs.js"
     mkdir -p "${BROWSER_PREF_DIR}"
@@ -115,6 +113,7 @@ configure_chroot () {
 
     # Set the name (e.g. window title) of the browser
     set_chroot_browser_name ${CHROOT} "`gettext \"I2P Browser\"`" "${BEST_LOCALE}"
+    set_chroot_torbutton_browser_name "${CHROOT}" "${NAME}" "${BEST_LOCALE}"
 
     # Set start page to the router console
     echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
