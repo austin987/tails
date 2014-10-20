@@ -89,37 +89,37 @@ configure_chroot () {
         xargs chroot ${CHROOT} dpkg --remove
 
     # Create a fresh browser profile for the clearnet user
-    CLEARNET_PROFILE="${CHROOT}"/home/${BROWSER_USER}/.tor-browser/profile.default
+    BROWSER_PROFILE="${CHROOT}"/home/${BROWSER_USER}/.tor-browser/profile.default
 
-    CLEARNET_EXT="${CLEARNET_PROFILE}"/extensions
-    mkdir -p "${CLEARNET_EXT}"
-    cp -Pr "${TBB_PROFILE}"/extensions/langpack-*.xpi "${CLEARNET_EXT}"
+    BROWSER_EXT="${BROWSER_PROFILE}"/extensions
+    mkdir -p "${BROWSER_EXT}"
+    cp -Pr "${TBB_PROFILE}"/extensions/langpack-*.xpi "${BROWSER_EXT}"
 
-    CLEARNET_PREFS="${CLEARNET_PROFILE}"/preferences/prefs.js
-    mkdir -p "$(dirname "${CLEARNET_PREFS}")"
+    BROWSER_PREFS="${BROWSER_PROFILE}"/preferences/prefs.js
+    mkdir -p "$(dirname "${BROWSER_PREFS}")"
 
     # Localization
     BEST_LOCALE="$(guess_best_tor_browser_locale)"
-    configure_xulrunner_app_locale "${CLEARNET_PROFILE}" "${BEST_LOCALE}"
+    configure_xulrunner_app_locale "${BROWSER_PROFILE}" "${BEST_LOCALE}"
 
     # Disable proxying in the chroot
-    echo 'pref("network.proxy.type", 0);' >> "${CLEARNET_PREFS}"
-    echo 'pref("network.proxy.socks_remote_dns", false);' >>  "${CLEARNET_PREFS}"
+    echo 'pref("network.proxy.type", 0);' >> "${BROWSER_PREFS}"
+    echo 'pref("network.proxy.socks_remote_dns", false);' >>  "${BROWSER_PREFS}"
 
     # Prevent File -> Print or CTRL+P from causing the browser to hang
     # for several minutes while trying to communicate with CUPS, since
     # access to port 631 isn't allowed through.
-    echo 'pref("print.postscript.cups.enabled", false);' >> "${CLEARNET_PREFS}"
+    echo 'pref("print.postscript.cups.enabled", false);' >> "${BROWSER_PREFS}"
     # Hide "Get Addons" in Add-ons manager
-    echo 'user_pref("extensions.getAddons.showPane", false);' >> "${CLEARNET_PREFS}"
+    echo 'user_pref("extensions.getAddons.showPane", false);' >> "${BROWSER_PREFS}"
 
     # Set the name (e.g. window title) of the browser
     set_chroot_browser_name ${CHROOT} "`gettext \"Unsafe Browser\"`" "${BEST_LOCALE}"
 
     # Set start page to something that explains what's going on
     echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
-        "${CLEARNET_PREFS}"
-    BROWSER_CHROME="${CLEARNET_PROFILE}/chrome/userChrome.css"
+        "${BROWSER_PREFS}"
+    BROWSER_CHROME="${BROWSER_PROFILE}/chrome/userChrome.css"
     mkdir -p "$(dirname "${BROWSER_CHROME}")"
     cat > ${BROWSER_CHROME} << EOF
 /* Required, do not remove */
@@ -135,8 +135,8 @@ EOF
 
     # Remove all bookmarks
     rm -f ${CHROOT}/"${TBB_PROFILE}"/bookmarks.html
-    rm -f ${CLEARNET_PROFILE}/bookmarks.html
-    rm -f ${CLEARNET_PROFILE}/places.sqlite
+    rm -f ${BROWSER_PROFILE}/bookmarks.html
+    rm -f ${BROWSER_PROFILE}/places.sqlite
 
     chown -R ${BROWSER_USER}:${BROWSER_USER} ${CHROOT}/home/clearnet/.tor-browser
 
@@ -145,7 +145,7 @@ EOF
     # we may run below requires that the browser profile is writable
     # by the user running the script (i.e. clearnet).
     if [ -z "${CAMOUFLAGE}" ]; then
-        cat >> "${CLEARNET_PREFS}" <<EOF
+        cat >> "${BROWSER_PREFS}" <<EOF
 pref("lightweightThemes.isThemeSelected", true);
 pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");
 EOF
