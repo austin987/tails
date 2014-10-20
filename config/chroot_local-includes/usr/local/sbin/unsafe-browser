@@ -81,13 +81,6 @@ configure_chroot () {
     done
     chmod a+r ${CHROOT}/etc/resolv.conf
 
-    # Remove all addons: some adds proxying, which we don't
-    # want; some may change the fingerprint compared to a standard
-    # Firefox install. Note: We cannot use apt-get since we don't ship its
-    # lists (#6531). Too bad, APT supports globbing, while dkpg does not.
-    dpkg -l 'xul-ext-*' | /bin/grep '^ii' | awk '{print $2}' | \
-        xargs chroot ${CHROOT} dpkg --remove
-
     # Create a fresh browser profile for the clearnet user
     BROWSER_PROFILE="${CHROOT}"/home/${BROWSER_USER}/.tor-browser/profile.default
 

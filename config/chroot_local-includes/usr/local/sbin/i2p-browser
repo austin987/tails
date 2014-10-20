@@ -77,10 +77,6 @@ configure_chroot () {
     # Prevent sudo from complaining about failing to resolve the 'amnesia' host
     echo "127.0.0.1 localhost amnesia" > ${CHROOT}/etc/hosts
 
-    # Keep the NoScript and TorButton addons
-    chroot ${CHROOT} dpkg -l 'xul-ext*' |grep -v 'noscript\|torbutton' \
-            | awk '/^ii/{print $2}' | xargs -r chroot ${CHROOT} dpkg --remove
-
     # Create a fresh Tor Browser profile for the i2pbrowser user
     BROWSER_PROFILE="${CHROOT}/home/${BROWSER_USER}/.tor-browser/profile.default"
     BROWSER_EXT="${BROWSER_PROFILE}/extensions"
