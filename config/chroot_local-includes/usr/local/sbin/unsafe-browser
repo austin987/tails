@@ -71,42 +71,6 @@ show_start_notification () {
     tails-notify-user "${title}" "${body}" 10000
 }
 
-setup_chroot () {
-    # Setup a chroot on an aufs "fork" of the filesystem.
-    # FIXME: When LXC matures to the point where it becomes a viable option
-    # for creating isolated jails, the chroot can be used as its rootfs.
-    echo "* Setting up chroot"
-
-    trap cleanup INT
-    trap cleanup EXIT
-
-    local rootfs_dir
-    local rootfs_dirs_path=/lib/live/mount/rootfs
-    local tails_module_path=/lib/live/mount/medium/live/Tails.module
-    local aufs_dirs=
-
-    # We have to pay attention to the order we stack the filesystems;
-    # newest must be first, and remember that the .module file lists
-    # oldest first, newest last.
-    while read rootfs_dir; do
-        rootfs_dir="${rootfs_dirs_path}/${rootfs_dir}"
-        mountpoint -q "${rootfs_dir}" && \
-        aufs_dirs="${rootfs_dir}=rr+wh:${aufs_dirs}"
-    done < "${tails_module_path}"
-    # But our copy-on-write dir must be at the very top.
-    aufs_dirs="${COW}=rw:${aufs_dirs}"
-
-    mkdir -p ${COW} ${CHROOT} && \
-    mount -t tmpfs tmpfs ${COW} && \
-    mount -t aufs -o "noatime,noxino,dirs=${aufs_dirs}" aufs ${CHROOT} && \
-    mount -t proc proc ${CHROOT}/proc && \
-    mount --bind /dev ${CHROOT}/dev || \
-    error "`gettext \"Failed to setup chroot.\"`"
-
-    # Workaround for todo/buggy_aufs_vs_unsafe-browser
-    chmod -t ${COW}
-}
-
 set_chroot_browser_name () {
     NAME="${1}"
     LOCALE="${2}"
@@ -269,7 +233,9 @@ fi
 
 verify_start
 show_start_notification
-setup_chroot
+echo "* Setting up chroot"
+setup_browser_chroot ${CHROOT} ${COW} || \
+    error "`gettext \"Failed to setup chroot.\"`"
 configure_chroot
 run_browser_in_chroot
 show_shutdown_notification
