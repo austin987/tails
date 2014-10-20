@@ -72,8 +72,6 @@ show_start_notification () {
 }
 
 configure_chroot () {
-    echo "* Configuring chroot"
-
     # Set the chroot's DNS servers to those obtained through DHCP
     rm -f ${CHROOT}/etc/resolv.conf
     for NS in ${IP4_NAMESERVERS}; do
@@ -170,6 +168,7 @@ show_start_notification
 echo "* Setting up chroot"
 setup_browser_chroot ${CHROOT} ${COW} || \
     error "`gettext \"Failed to setup chroot.\"`"
+echo "* Configuring chroot"
 configure_chroot
 echo "* Starting Unsafe Browser"
 run_chroot_browser ${CHROOT} ${BROWSER_USER} ${SUDO_USER}

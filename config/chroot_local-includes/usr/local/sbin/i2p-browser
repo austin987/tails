@@ -72,8 +72,6 @@ show_start_notification () {
 }
 
 configure_chroot () {
-    echo "* Configuring chroot"
-
     # Prevent sudo from complaining about failing to resolve the 'amnesia' host
     echo "127.0.0.1 localhost amnesia" > ${CHROOT}/etc/hosts
 
@@ -157,6 +155,7 @@ show_start_notification
 echo "* Setting up chroot"
 setup_browser_chroot ${CHROOT} ${COW} || \
     error "`gettext \"Failed to setup chroot.\"`"
+echo "* Configuring chroot"
 configure_chroot
 echo "* Starting I2P Browser"
 run_chroot_browser ${CHROOT} ${BROWSER_USER} ${SUDO_USER}
