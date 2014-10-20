@@ -1,3 +1,5 @@
+/* Disable proxy settings. We also set the other settings that
+   Torbutton requires to be happy, i.e. its icon is green. */
 user_pref("extensions.torbutton.http_port", 4444);
 user_pref("extensions.torbutton.http_proxy", "127.0.0.1");
 user_pref("extensions.torbutton.https_port", 4444);
