@@ -7,4 +7,4 @@ pref("network.proxy.socks_remote_dns", false);
    access to port 631 isn't allowed through. */
 pref("print.postscript.cups.enabled", false);
 // Hide "Get Addons" in Add-ons manager
-user_pref("extensions.getAddons.showPane", false);
+pref("extensions.getAddons.showPane", false);
