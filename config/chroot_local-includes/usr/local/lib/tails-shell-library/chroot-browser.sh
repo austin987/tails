@@ -104,3 +104,13 @@ run_chroot_browser () {
                       -profile /home/'"${chroot_user}"'/.tor-browser/profile.default'
     sudo -u ${local_user} xhost -SI:localuser:${chroot_user} 2>/dev/null
 }
+
+# TorButton forces the Browser name to Tor Browser unless we alter its
+# branding files a bit.
+set_chroot_torbutton_browser_name () {
+    local chroot="${1}"
+    local name="${2}"
+    local torbutton_dir="${chroot}"/usr/share/xul-ext/torbutton
+    find "${torbutton_dir}" -name 'brand.dtd' -print0 | \
+       xargs -0 -r sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${name}\">/"
+}

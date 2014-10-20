@@ -86,17 +86,13 @@ configure_chroot () {
     BROWSER_EXT="${BROWSER_PROFILE}/extensions"
     mkdir -p "${BROWSER_EXT}"
     ln -s "${NOSCRIPT}" "${BROWSER_EXT}"
-    # TorButton forces the Browser name to Tor Browser. This hack is to undo that and set it to I2P Browser
-    # to try to prevent user confusion.
-    TMP=$(mktemp -d)
-    cp -a /usr/share/xul-ext/torbutton/ $TMP
+    ln -s "${TORBUTTON}" "${BROWSER_EXT}"
     for LANGPACK in $(ls ${TBB_PROFILE}/extensions/langpack-*.xpi); do
         ln -s "${LANGPACK}" "${BROWSER_EXT}"
     done
-    find $TMP/torbutton  -name 'brand.dtd' -print0 | \
-       xargs -0 -r sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${NAME}\">/"
-    cd $TMP/torbutton && 7z a -tzip "${BROWSER_EXT}/torbutton@torproject.org.xpi" .
-    rm -r $TMP
+
+    set_chroot_torbutton_browser_name "${CHROOT}" "${NAME}"
+
     BROWSER_PREF_DIR="${BROWSER_PROFILE}/preferences"
     BROWSER_PREFS="${BROWSER_PREF_DIR}/prefs.js"
     mkdir -p "${BROWSER_PREF_DIR}"
