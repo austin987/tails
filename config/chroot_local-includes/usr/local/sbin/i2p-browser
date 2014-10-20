@@ -27,6 +27,8 @@ START_PAGE="http://127.0.0.1:7657"
 # guess_best_tor_browser_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
+. /usr/local/lib/tails-shell-library/chroot-browser.sh
+
 NOSCRIPT="${TBB_EXT}/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
 TORBUTTON="${TBB_EXT}/torbutton@torproject.org"
 NAME="`gettext \"I2P Browser\"`"
@@ -36,26 +38,7 @@ if [ -e /var/lib/gdm3/tails.camouflage ]; then
 fi
 
 cleanup () {
-    # Break down the chroot and kill all of its processes
-    local counter=0
-    local ret=0
-    while [ "${counter}" -le 10 ] && \
-        pgrep -u ${BROWSER_USER} 1>/dev/null 2>&1; do
-        pkill -u ${BROWSER_USER} 1>/dev/null 2>&1
-        ret=${?}
-        sleep 1
-        counter=$((${counter}+1))
-    done
-    [ ${ret} -eq 0 ] || pkill -9 -u ${BROWSER_USER} 1>/dev/null 2>&1
-    for mnt in ${CHROOT}/dev ${CHROOT}/proc ${CHROOT} ${COW}; do
-        counter=0
-        while [ "${counter}" -le 10 ] && mountpoint -q ${mnt} 2>/dev/null; do
-            umount ${mnt} 2>/dev/null
-            sleep 1
-            counter=$((${counter}+1))
-        done
-    done
-    rmdir ${COW} ${CHROOT} 2>/dev/null
+    try_cleanup_browser_chroot ${CHROOT} ${COW} ${BROWSER_USER}
 }
 
 error () {
