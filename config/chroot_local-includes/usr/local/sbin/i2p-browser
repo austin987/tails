@@ -113,7 +113,6 @@ set_chroot_browser_name () {
     NAME="${1}"
     LOCALE="${2}"
     EXT_DIR=${CHROOT}/"${TBB_EXT}"
-    BRANDING=branding/brand.dtd
     if [ "${LOCALE}" != en-US ]; then
         PACK="${EXT_DIR}/langpack-${LOCALE}@firefox.mozilla.org.xpi"
         TOP=browser/chrome
@@ -124,12 +123,12 @@ set_chroot_browser_name () {
         REST=en-US/locale
     fi
     TMP=$(mktemp -d)
+    BRANDING="${TOP}/${REST}/branding/brand.dtd"
     # Non-zero exit code due to non-standard ZIP archive.
     # The following steps will fail soon if the extraction failed anyway.
-    7z x -o"${TMP}" "${PACK}" || true
-    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${NAME}\">/" "${TMP}/${TOP}/${REST}/${BRANDING}"
-    rm "${PACK}"
-    (cd $TMP ; 7z a -tzip "${PACK}" .)
+    7z x -o"${TMP}" "${PACK}" "${BRANDING}" || true
+    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${NAME}\">/" "${TMP}/${BRANDING}"
+    (cd $TMP ; 7z u -tzip "${PACK}" .)
     chmod a+r "${PACK}"
     rm -Rf "${TMP}"
 }
