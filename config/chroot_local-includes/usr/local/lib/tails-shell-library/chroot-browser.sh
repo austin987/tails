@@ -10,8 +10,7 @@ try_cleanup_browser_chroot () {
     local user="${3}"
     local counter=0
     local ret=0
-    while [ "${counter}" -le 10 ] && \
-        pgrep -u ${user} 1>/dev/null 2>&1; do
+    while [ "${counter}" -le 10 ] && pgrep -u ${user} 1>/dev/null 2>&1; do
         pkill -u ${user} 1>/dev/null 2>&1
         ret=${?}
         sleep 1
