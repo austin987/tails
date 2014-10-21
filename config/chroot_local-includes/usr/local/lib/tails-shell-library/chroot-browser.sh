@@ -174,8 +174,10 @@ configure_chroot_browser () {
     cp /usr/share/tails/"${browser_name}/prefs.js" "${browser_prefs}"
 
     # Set start page to something that explains what's going on
-    echo 'user_pref("browser.startup.homepage", "'"${startpage}"'");' >> \
-        "${browser_prefs}"
+    if [ -n "${startpage}" ]; then
+        echo 'user_pref("browser.startup.homepage", "'"${startpage}"'");' >> \
+            "${browser_prefs}"
+    fi
 
     # Customize the GUI
     local browser_chrome="${browser_profile}/chrome/userChrome.css"
