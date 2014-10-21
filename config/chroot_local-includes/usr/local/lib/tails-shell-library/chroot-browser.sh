@@ -16,7 +16,7 @@ try_cleanup_browser_chroot () {
     local cow="${2}"
     local user="${3}"
     try_for 10 "pkill -u ${user} 1>/dev/null 2>&1" 0.1 || \
-        pkill -9 -u "${user}" 1>/dev/null 2>&1
+        pkill -9 -u "${user}" 1>/dev/null 2>&1 || :
     for mnt in "${chroot}"/dev "${chroot}"/proc "${chroot}" "${cow}"; do
         try_for 10 "umount ${mnt} 2>/dev/null" 0.1
     done
