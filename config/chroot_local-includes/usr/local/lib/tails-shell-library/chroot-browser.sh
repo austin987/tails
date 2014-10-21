@@ -155,7 +155,8 @@ configure_chroot_browser () {
     local browser_name="${1}" ; shift
     local browser_user="${1}" ; shift
     local startpage="${1}" ; shift
-    # Now $@ is a list of extensions to enable
+    # Now $@ is a list of paths (that must be valid after chrooting)
+    # to extensions to enable.
 
     # Prevent sudo from complaining about failing to resolve the 'amnesia' host
     echo "127.0.0.1 localhost amnesia" > ${chroot}/etc/hosts
@@ -167,7 +168,11 @@ configure_chroot_browser () {
     mkdir -p "${browser_profile}" "${browser_ext}"
 
     # Select extensions to enable
-    cp --no-dereference "${@}" "${browser_ext}"
+    local extension
+    while [ -n "${*}" ]; do
+        extension="${1}" ; shift
+        ln -s "${extension}" "${browser_ext}"
+    done
 
     # Set preferences
     local browser_prefs="${browser_profile}"/preferences/prefs.js
