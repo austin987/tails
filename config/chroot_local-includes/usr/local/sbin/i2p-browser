@@ -55,10 +55,11 @@ show_start_notification () {
 
 copy_extra_tbb_prefs () {
     local chroot="${1}"
-    local browser_user="${2}"
+    local browser_name="${2}"
+    local browser_user="${3}"
 
     local tbb_prefs="/etc/tor-browser/profile/preferences"
-    local browser_prefs_dir="${chroot}/home/${browser_user}/.tor-browser"/profile.default/preferences
+    local browser_prefs_dir="${chroot}/home/${browser_user}/.${browser_name}"/profile.default/preferences
     mkdir -p "${browser_prefs_dir}"
     # Selectively copy the TBB prefs we want
     sed '/\(security\|update\|download\|spell\|noscript\|torbrowser\|torbutton\)/!d' "${tbb_prefs}"/0000tails.js > \
@@ -117,13 +118,13 @@ configure_chroot_dns_servers "${CHROOT}" "127.0.0.1"
 configure_chroot_browser "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
     "${START_PAGE}" "${TBB_EXT}"/langpack-*.xpi \
     "${NOSCRIPT_EXT_XPI}" "${TORBUTTON_EXT_DIR}"
-copy_extra_tbb_prefs "${CHROOT}" "${BROWSER_USER}"
-set_chroot_browser_locale "${CHROOT}" "${BROWSER_USER}" "${BEST_LOCALE}"
+copy_extra_tbb_prefs "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}"
+set_chroot_browser_locale "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" "${BEST_LOCALE}"
 set_chroot_torbutton_browser_name "${CHROOT}" "${HUMAN_READABLE_NAME}" "${BEST_LOCALE}"
-set_chroot_browser_permissions "${CHROOT}" "${BROWSER_USER}"
+set_chroot_browser_permissions "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}"
 
 echo "* Starting I2P Browser"
-run_chroot_browser ${CHROOT} ${BROWSER_USER} ${SUDO_USER}
+run_chroot_browser ${CHROOT} ${BROWSER_NAME} ${BROWSER_USER} ${SUDO_USER}
 
 echo "* Exiting the I2P Browser"
 show_shutdown_notification

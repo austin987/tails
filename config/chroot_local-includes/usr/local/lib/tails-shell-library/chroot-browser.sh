@@ -62,9 +62,10 @@ setup_browser_chroot () {
 
 set_chroot_browser_locale () {
     local chroot="${1}"
-    local browser_user="${2}"
-    local locale="${3}"
-    local browser_profile="${chroot}/home/${browser_user}/.tor-browser/profile.default"
+    local browser_name="${2}"
+    local browser_user="${3}"
+    local locale="${4}"
+    local browser_profile="${chroot}/home/${browser_user}/.${browser_name}/profile.default"
     configure_xulrunner_app_locale "${browser_profile}" "${locale}"
 }
 
@@ -97,14 +98,15 @@ set_chroot_browser_name () {
 # Start the browser in the chroot
 run_chroot_browser () {
     local chroot="${1}"
-    local chroot_user="${2}"
-    local local_user="${3}"
+    local browser_name="${2}"
+    local chroot_user="${3}"
+    local local_user="${4}"
 
     sudo -u ${local_user} xhost +SI:localuser:${chroot_user} 2>/dev/null
     chroot ${chroot} sudo -u ${chroot_user} /bin/sh -c \
         '. /usr/local/lib/tails-shell-library/tor-browser.sh && \
          exec_firefox -DISPLAY=:0.0 \
-                      -profile /home/'"${chroot_user}"'/.tor-browser/profile.default'
+                      -profile '"/home/${chroot_user}/.${browser_name}/profile.default"
     sudo -u ${local_user} xhost -SI:localuser:${chroot_user} 2>/dev/null
 }
 
@@ -136,8 +138,9 @@ configure_chroot_dns_servers () {
 
 set_chroot_browser_permissions () {
     local chroot="${1}"
-    local browser_user="${2}"
-    local browser_conf="${chroot}/home/${browser_user}/.tor-browser"
+    local browser_name="${2}"
+    local browser_user="${3}"
+    local browser_conf="${chroot}/home/${browser_user}/.${browser_name}"
     chown -R ${browser_user}:${browser_user} "${browser_conf}"
 }
 
@@ -153,7 +156,7 @@ configure_chroot_browser () {
     echo "127.0.0.1 localhost amnesia" > ${chroot}/etc/hosts
 
     # Create a fresh browser profile for the clearnet user
-    local browser_conf="${chroot}/home/${browser_user}/.tor-browser"
+    local browser_conf="${chroot}/home/${browser_user}/.${browser_name}"
     local browser_profile="${browser_conf}/profile.default"
     local browser_ext="${browser_profile}"/extensions
     mkdir -p "${browser_profile}" "${browser_ext}"
