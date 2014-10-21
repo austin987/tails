@@ -18,10 +18,6 @@ set -e
 # Import i2p_router_console_is_ready().
 . /usr/local/lib/tails-shell-library/i2p.sh
 
-cleanup () {
-    try_cleanup_browser_chroot "${CHROOT}" "${COW}" "${BROWSER_USER}"
-}
-
 error () {
     local cli_text="${CMD}: `gettext \"error:\"` ${@}"
     local dialog_text="<b><big>`gettext \"Error\"`</big></b>
@@ -110,7 +106,7 @@ fi
 show_start_notification
 
 echo "* Setting up chroot"
-setup_browser_chroot "${CHROOT}" "${COW}" || \
+setup_browser_chroot "${CHROOT}" "${COW}" "${BROWSER_USER}" || \
     error "`gettext \"Failed to setup chroot.\"`"
 
 echo "* Configuring chroot"

@@ -15,10 +15,6 @@ set -e
 # and run_chroot_browser().
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
 
-cleanup () {
-    try_cleanup_browser_chroot "${CHROOT}" "${COW}" "${BROWSER_USER}"
-}
-
 error () {
     local cli_text="${CMD}: `gettext \"error:\"` ${@}"
     local dialog_text="<b><big>`gettext \"Error\"`</big></b>
@@ -117,7 +113,7 @@ verify_start
 show_start_notification
 
 echo "* Setting up chroot"
-setup_browser_chroot "${CHROOT}" "${COW}" || \
+setup_browser_chroot "${CHROOT}" "${COW}" "${BROWSER_USER}" || \
     error "`gettext \"Failed to setup chroot.\"`"
 
 echo "* Configuring chroot"

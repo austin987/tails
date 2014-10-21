@@ -27,11 +27,13 @@ try_cleanup_browser_chroot () {
 setup_browser_chroot () {
     local chroot="${1}"
     local cow="${2}"
+    local user="${3}"
+
     # FIXME: When LXC matures to the point where it becomes a viable option
     # for creating isolated jails, the chroot can be used as its rootfs.
 
-    trap cleanup INT
-    trap cleanup EXIT
+    local cleanup_cmd="try_cleanup_browser_chroot \"${chroot}\" \"${cow}\" \"${user}\""
+    trap "${cleanup_cmd}" INT EXIT
 
     local rootfs_dir
     local rootfs_dirs_path="/lib/live/mount/rootfs"
