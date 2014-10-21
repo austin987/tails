@@ -1,5 +1,12 @@
 #!/bin/sh
 
+# Import set_key().
+. /usr/local/lib/tails-shell-library/common.sh
+
+# Import language_code_from_locale().
+. /usr/local/lib/tails-shell-library/localization.sh
+
+I2P_DEFAULT_CONFIG="/usr/share/i2p"
 I2P_CONFIG="/var/lib/i2p/i2p-config"
 I2P_TUNNEL_CONFIG="${I2P_CONFIG}/i2ptunnel.config"
 
@@ -30,4 +37,21 @@ i2p_router_console_address() {
 
 i2p_router_console_is_ready() {
     netstat -4nlp | grep -qwF "$(i2p_router_console_address)"
+}
+
+set_best_i2p_router_console_lang() {
+    # We will use the detected language even if I2P supports it; it
+    # will default to English in that case.
+    local lang="$(language_code_from_locale "${LANG}")"
+    # We first try to set it in an existing "live" config, even though
+    # the effect will only appear after a restart.
+    local config
+    for config in "${I2P_CONFIG}/router.config" \
+                  "${I2P_DEFAULT_CONFIG}/router.config"; do
+        if [ -e "${config}" ]; then
+            set_key "routerconsole.lang" "${lang}" "${config}"
+            return 0
+        fi
+    done
+    return 1
 }

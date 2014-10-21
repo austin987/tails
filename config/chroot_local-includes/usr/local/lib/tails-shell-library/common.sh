@@ -20,3 +20,15 @@ wait_until() {
 try_for() {
     wait_until "${@}"
 }
+
+set_key() {
+    local key="${1}"
+    local value="${2}"
+    local file="${3}"
+    local op="${4:-=}"
+    if grep -q "^${key}${op}" "${file}"; then
+        sed -i -n "s/^${key}${op}.*$/${key}${op}${value}/p" "${file}"
+    else
+        echo "${key}${op}${value}" >> "${file}"
+    fi
+}
