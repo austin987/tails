@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ "$(whoami)" != "root" ]; then
+    echo "This library is useless for non-root users. Exiting..." >&2
+    exit 1
+fi
+
 # Import the TBB_INSTALL, TBB_PROFILE and TBB_EXT variables, and
 # configure_xulrunner_app_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
