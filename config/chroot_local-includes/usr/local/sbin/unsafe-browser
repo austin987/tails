@@ -16,7 +16,7 @@ set -e
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
 
 cleanup () {
-    try_cleanup_browser_chroot ${CHROOT} ${COW} ${BROWSER_USER}
+    try_cleanup_browser_chroot "${CHROOT}" "${COW}" "${BROWSER_USER}"
 }
 
 error () {
@@ -25,7 +25,7 @@ error () {
 
 ${@}"
     echo "${cli_text}" >&2
-    sudo -u ${SUDO_USER} zenity --error --title "" --text "${dialog_text}"
+    sudo -u "${SUDO_USER}" zenity --error --title "" --text "${dialog_text}"
     exit 1
 }
 
@@ -38,7 +38,7 @@ verify_start () {
     local exit="`gettext \"_Exit\"`"
     # Since zenity can't set the default button to cancel, we switch the
     # labels and interpret the return value as its negation.
-    if sudo -u ${SUDO_USER} zenity --question --title "" --ok-label "${exit}" \
+    if sudo -u "${SUDO_USER}" zenity --question --title "" --ok-label "${exit}" \
        --cancel-label "${launch}" --text "${dialog_msg}"; then
         exit 0
     fi
@@ -71,19 +71,19 @@ maybe_restart_tor () {
 
 # Main script:
 
-CMD=$(basename ${0})
-LOCK=/var/lock/${CMD}
+CMD=$(basename "${0}")
+LOCK="/var/lock/${CMD}"
 
 . gettext.sh
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-CONF_DIR=/var/lib/unsafe-browser
-COW=${CONF_DIR}/cow
-CHROOT=${CONF_DIR}/chroot
-BROWSER_NAME=unsafe-browser
-BROWSER_USER=clearnet
-NM_ENV_FILE=/var/lib/NetworkManager/env
+CONF_DIR="/var/lib/unsafe-browser"
+COW="${CONF_DIR}/cow"
+CHROOT="${CONF_DIR}/chroot"
+BROWSER_NAME="unsafe-browser"
+BROWSER_USER="clearnet"
+NM_ENV_FILE="/var/lib/NetworkManager/env"
 BEST_LOCALE="$(guess_best_tor_browser_locale)"
 
 WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
@@ -95,7 +95,7 @@ else
 fi
 
 # Prevent multiple instances of the script.
-exec 9>${LOCK}
+exec 9>"${LOCK}"
 if ! flock -x -n 9; then
     error "`gettext \"Another Unsafe Browser is currently running, or being cleaned up. Please retry in a while.\"`"
 fi
@@ -117,7 +117,7 @@ verify_start
 show_start_notification
 
 echo "* Setting up chroot"
-setup_browser_chroot ${CHROOT} ${COW} || \
+setup_browser_chroot "${CHROOT}" "${COW}" || \
     error "`gettext \"Failed to setup chroot.\"`"
 
 echo "* Configuring chroot"
@@ -125,11 +125,11 @@ configure_chroot_dns_servers "${CHROOT}" "${IP4_NAMESERVERS}"
 configure_chroot_browser "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
     "${START_PAGE}" "${TBB_EXT}"/langpack-*.xpi
 set_chroot_browser_locale "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" "${BEST_LOCALE}"
-set_chroot_browser_name ${CHROOT} "`gettext \"Unsafe Browser\"`" "${BEST_LOCALE}"
+set_chroot_browser_name "${CHROOT}" "`gettext \"Unsafe Browser\"`" "${BEST_LOCALE}"
 set_chroot_browser_permissions "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}"
 
 echo "* Starting Unsafe Browser"
-run_chroot_browser ${CHROOT} ${BROWSER_NAME} ${BROWSER_USER} ${SUDO_USER}
+run_chroot_browser "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" "${SUDO_USER}"
 
 echo "* Exiting the Unsafe Browser"
 show_shutdown_notification

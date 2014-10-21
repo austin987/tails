@@ -19,7 +19,7 @@ set -e
 . /usr/local/lib/tails-shell-library/i2p.sh
 
 cleanup () {
-    try_cleanup_browser_chroot ${CHROOT} ${COW} ${BROWSER_USER}
+    try_cleanup_browser_chroot "${CHROOT}" "${COW}" "${BROWSER_USER}"
 }
 
 error () {
@@ -28,7 +28,7 @@ error () {
 
 ${@}"
     echo "${cli_text}" >&2
-    sudo -u ${SUDO_USER} zenity --error --title "" --text "${dialog_text}"
+    sudo -u "${SUDO_USER}" zenity --error --title "" --text "${dialog_text}"
     exit 1
 }
 
@@ -41,7 +41,7 @@ verify_start () {
     local exit="`gettext \"_Exit\"`"
     # Since zenity can't set the default button to cancel, we switch the
     # labels and interpret the return value as its negation.
-    if sudo -u ${SUDO_USER} zenity --question --title "" --ok-label "${exit}" \
+    if sudo -u "${SUDO_USER}" zenity --question --title "" --ok-label "${exit}" \
        --cancel-label "${launch}" --text "${dialog_msg}"; then
         exit 0
     fi
@@ -66,7 +66,7 @@ copy_extra_tbb_prefs () {
                     "${browser_prefs_dir}"/0000tails.js
     sed '/\(capability\|noscript\|torbutton\)/!d' "${tbb_prefs}"/extension-overrides.js > \
                     "${browser_prefs_dir}"/extension-overrides.js
-    chown -R ${browser_user}:${browser_user} "${browser_prefs_dir}"
+    chown -R "${browser_user}:${browser_user}" "${browser_prefs_dir}"
 }
 
 show_shutdown_notification () {
@@ -80,18 +80,18 @@ show_shutdown_notification () {
 # This isn't very useful without I2P...
 grep -qw "i2p" /proc/cmdline || exit 0
 
-CMD=$(basename ${0})
-LOCK=/var/lock/${CMD}
+CMD=$(basename "${0}")
+LOCK="/var/lock/${CMD}"
 
 . gettext.sh
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-CONF_DIR=/var/lib/i2p-browser
-COW=${CONF_DIR}/cow
-CHROOT=${CONF_DIR}/chroot
-BROWSER_NAME=i2p-browser
-BROWSER_USER=i2pbrowser
+CONF_DIR="/var/lib/i2p-browser"
+COW="${CONF_DIR}/cow"
+CHROOT="${CONF_DIR}/chroot"
+BROWSER_NAME="i2p-browser"
+BROWSER_USER="i2pbrowser"
 START_PAGE="http://127.0.0.1:7657"
 NOSCRIPT_EXT_XPI="${TBB_EXT}/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
 TORBUTTON_EXT_DIR="${TBB_EXT}/torbutton@torproject.org"
@@ -99,7 +99,7 @@ HUMAN_READABLE_NAME="`gettext \"I2P Browser\"`"
 BEST_LOCALE="$(guess_best_tor_browser_locale)"
 
 # Prevent multiple instances of the script.
-exec 9>${LOCK}
+exec 9>"${LOCK}"
 if ! flock -x -n 9; then
     error "`gettext \"Another I2P Browser is currently running, or being cleaned up. Please retry in a while.\"`"
 fi
@@ -110,7 +110,7 @@ fi
 show_start_notification
 
 echo "* Setting up chroot"
-setup_browser_chroot ${CHROOT} ${COW} || \
+setup_browser_chroot "${CHROOT}" "${COW}" || \
     error "`gettext \"Failed to setup chroot.\"`"
 
 echo "* Configuring chroot"
@@ -124,7 +124,7 @@ set_chroot_torbutton_browser_name "${CHROOT}" "${HUMAN_READABLE_NAME}" "${BEST_L
 set_chroot_browser_permissions "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}"
 
 echo "* Starting I2P Browser"
-run_chroot_browser ${CHROOT} ${BROWSER_NAME} ${BROWSER_USER} ${SUDO_USER}
+run_chroot_browser "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" "${SUDO_USER}"
 
 echo "* Exiting the I2P Browser"
 show_shutdown_notification
