@@ -15,7 +15,7 @@ set -e
 # and run_chroot_browser().
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
 
-# Import i2p_router_console_is_ready().
+# Import i2p_router_console_is_ready() and i2p_is_enabled().
 . /usr/local/lib/tails-shell-library/i2p.sh
 
 error () {
@@ -74,7 +74,7 @@ show_shutdown_notification () {
 # Main script:
 
 # This isn't very useful without I2P...
-grep -qw "i2p" /proc/cmdline || exit 0
+i2p_is_enabled || exit 0
 
 CMD=$(basename "${0}")
 LOCK="/var/lock/${CMD}"

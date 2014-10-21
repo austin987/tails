@@ -3,6 +3,10 @@
 I2P_CONFIG="/var/lib/i2p/i2p-config"
 I2P_TUNNEL_CONFIG="${I2P_CONFIG}/i2ptunnel.config"
 
+i2p_is_enabled() {
+    grep -qw "i2p" /proc/cmdline
+}
+
 i2p_eep_proxy_address() {
     # We retrieve the host and port number from the I2P profile This
     # shouldn't be anywhere other than 127.0.0.1:4444 but in case
