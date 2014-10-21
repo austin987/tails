@@ -8,6 +8,9 @@ set -e
 # Import the TBB_EXT variable, and guess_best_tor_browser_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
+# Import localize_tails_doc_page().
+. /usr/local/lib/tails-shell-library/localization.sh
+
 # Import try_cleanup_browser_chroot(), setup_browser_chroot(),
 # configure_chroot_dns_servers(), configure_chroot_browser(),
 # configure_chroot_browser(), set_chroot_browser_locale()
@@ -81,14 +84,8 @@ BROWSER_NAME="unsafe-browser"
 BROWSER_USER="clearnet"
 NM_ENV_FILE="/var/lib/NetworkManager/env"
 BEST_LOCALE="$(guess_best_tor_browser_locale)"
-
 WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
-LANG_CODE="$(echo ${LANG} | head -c 2)"
-if [ -r "${WARNING_PAGE}.${LANG_CODE}.html" ]; then
-   START_PAGE="${WARNING_PAGE}.${LANG_CODE}.html"
-else
-   START_PAGE="${WARNING_PAGE}.en.html"
-fi
+START_PAGE="$(localize_tails_doc_page "${WARNING_PAGE}")"
 
 # Prevent multiple instances of the script.
 exec 9>"${LOCK}"
