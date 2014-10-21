@@ -26,15 +26,14 @@ START_PAGE="http://127.0.0.1:7657"
 # guess_best_tor_browser_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
+# Import windows_camouflage_is_enabled()
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
 
 NOSCRIPT_EXT_XPI="${TBB_EXT}/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
 TORBUTTON_EXT_DIR="${TBB_EXT}/torbutton@torproject.org"
 NAME="`gettext \"I2P Browser\"`"
-
-if [ -e /var/lib/gdm3/tails.camouflage ]; then
-    CAMOUFLAGE=yes
-fi
 
 cleanup () {
     try_cleanup_browser_chroot ${CHROOT} ${COW} ${BROWSER_USER}
@@ -125,7 +124,7 @@ configure_chroot () {
     chown -R ${BROWSER_USER}:${BROWSER_USER} "${BROWSER_CONF}"
 
     # Change the theme when not using Windows camouflage
-    if [ -z "${CAMOUFLAGE}" ]; then
+    if ! windows_camouflage_is_enabled; then
         cat /usr/share/tails/i2p-browser/i2p-browser-theme.js >> "${BROWSER_PREFS}"
     else
         # The camouflage activation script requires a dbus server for

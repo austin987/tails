@@ -22,6 +22,9 @@ BROWSER_USER=clearnet
 # guess_best_tor_browser_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
+# Import windows_camouflage_is_enabled()
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
 
 WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
@@ -30,10 +33,6 @@ if [ -r "${WARNING_PAGE}.${LANG_CODE}.html" ]; then
    START_PAGE="${WARNING_PAGE}.${LANG_CODE}.html"
 else
    START_PAGE="${WARNING_PAGE}.en.html"
-fi
-
-if [ -e /var/lib/gdm3/tails.camouflage ]; then
-    CAMOUFLAGE=yes
 fi
 
 cleanup () {
@@ -118,7 +117,7 @@ configure_chroot () {
     # camouflage). Note that the tails-activate-win8-theme script that
     # we may run below requires that the browser profile is writable
     # by the user running the script (i.e. clearnet).
-    if [ -z "${CAMOUFLAGE}" ]; then
+    if ! windows_camouflage_is_enabled; then
         cat /usr/share/tails/unsafe-browser/unsafe-browser-theme.js >> "${BROWSER_PREFS}"
     else
         # The camouflage activation script requires a dbus server for
