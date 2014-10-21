@@ -113,14 +113,20 @@ echo "* Configuring chroot"
 configure_chroot_dns_servers "${CHROOT}" "0.0.0.0"
 configure_chroot_browser "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
     "${START_PAGE}" "${TBB_EXT}"/langpack-*.xpi \
-    "${NOSCRIPT_EXT_XPI}" "${TORBUTTON_EXT_DIR}"
-copy_extra_tbb_prefs "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}"
-set_chroot_browser_locale "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" "${BEST_LOCALE}"
-set_chroot_torbutton_browser_name "${CHROOT}" "${HUMAN_READABLE_NAME}" "${BEST_LOCALE}"
-set_chroot_browser_permissions "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}"
+    "${NOSCRIPT_EXT_XPI}" "${TORBUTTON_EXT_DIR}" && \
+copy_extra_tbb_prefs "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" && \
+set_chroot_browser_locale "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
+    "${BEST_LOCALE}" && \
+set_chroot_torbutton_browser_name "${CHROOT}" "${HUMAN_READABLE_NAME}" \
+    "${BEST_LOCALE}" && \
+set_chroot_browser_permissions "${CHROOT}" "${BROWSER_NAME}" \
+    "${BROWSER_USER}" || \
+    error "`gettext \"Failed to configure browser.\"`"
 
 echo "* Starting I2P Browser"
-run_chroot_browser "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" "${SUDO_USER}"
+run_chroot_browser "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
+    "${SUDO_USER}" || \
+    error "`gettext \"Failed to run browser.\"`"
 
 echo "* Exiting the I2P Browser"
 show_shutdown_notification
