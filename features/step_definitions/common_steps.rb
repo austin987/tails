@@ -596,7 +596,7 @@ Then /^(.*) uses all expected TBB shared libraries$/ do |application|
     chroot = ""
   when "the Unsafe Browser"
     user = "clearnet"
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
     chroot = "/var/lib/unsafe-browser/chroot"
   when "Tor Launcher"
     user = "tor-launcher"
