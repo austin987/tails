@@ -2,19 +2,6 @@
 
 set -e
 
-CMD=$(basename ${0})
-LOCK=/var/lock/${CMD}
-
-. gettext.sh
-TEXTDOMAIN="tails"
-export TEXTDOMAIN
-
-CONF_DIR=/var/lib/unsafe-browser
-COW=${CONF_DIR}/cow
-CHROOT=${CONF_DIR}/chroot
-BROWSER_NAME=unsafe-browser
-BROWSER_USER=clearnet
-
 # Import tor_is_working()
 . /usr/local/lib/tails-shell-library/tor.sh
 
@@ -22,14 +9,6 @@ BROWSER_USER=clearnet
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
-
-WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
-LANG_CODE="$(echo ${LANG} | head -c 2)"
-if [ -r "${WARNING_PAGE}.${LANG_CODE}.html" ]; then
-   START_PAGE="${WARNING_PAGE}.${LANG_CODE}.html"
-else
-   START_PAGE="${WARNING_PAGE}.en.html"
-fi
 
 cleanup () {
     try_cleanup_browser_chroot ${CHROOT} ${COW} ${BROWSER_USER}
@@ -85,6 +64,31 @@ maybe_restart_tor () {
     fi
 }
 
+# Main script:
+
+CMD=$(basename ${0})
+LOCK=/var/lock/${CMD}
+
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
+CONF_DIR=/var/lib/unsafe-browser
+COW=${CONF_DIR}/cow
+CHROOT=${CONF_DIR}/chroot
+BROWSER_NAME=unsafe-browser
+BROWSER_USER=clearnet
+NM_ENV=/var/lib/NetworkManager/env
+BEST_LOCALE="$(guess_best_tor_browser_locale)"
+
+WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
+LANG_CODE="$(echo ${LANG} | head -c 2)"
+if [ -r "${WARNING_PAGE}.${LANG_CODE}.html" ]; then
+   START_PAGE="${WARNING_PAGE}.${LANG_CODE}.html"
+else
+   START_PAGE="${WARNING_PAGE}.en.html"
+fi
+
 # Prevent multiple instances of the script.
 exec 9>${LOCK}
 if ! flock -x -n 9; then
@@ -92,7 +96,6 @@ if ! flock -x -n 9; then
 fi
 
 # Get the DNS servers that was obtained from NetworkManager, if any...
-NM_ENV=/var/lib/NetworkManager/env
 if [ -r "${NM_ENV}" ]; then
     . ${NM_ENV}
 fi
@@ -115,7 +118,6 @@ echo "* Configuring chroot"
 configure_chroot_dns_servers "${CHROOT}" "${IP4_NAMESERVERS}"
 configure_chroot_browser "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
     "${START_PAGE}" "${TBB_EXT}"/langpack-*.xpi
-BEST_LOCALE="$(guess_best_tor_browser_locale)"
 set_chroot_browser_locale "${CHROOT}" "${BROWSER_USER}" "${BEST_LOCALE}"
 set_chroot_browser_name ${CHROOT} "`gettext \"Unsafe Browser\"`" "${BEST_LOCALE}"
 set_chroot_browser_permissions "${CHROOT}" "${BROWSER_USER}"

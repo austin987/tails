@@ -2,25 +2,6 @@
 
 set -e
 
-# This isn't very useful without I2P...
-grep -qw "i2p" /proc/cmdline || exit 0
-
-CMD=$(basename ${0})
-LOCK=/var/lock/${CMD}
-
-. gettext.sh
-TEXTDOMAIN="tails"
-export TEXTDOMAIN
-
-. /usr/local/lib/tails-shell-library/i2p.sh
-
-CONF_DIR=/var/lib/i2p-browser
-COW=${CONF_DIR}/cow
-CHROOT=${CONF_DIR}/chroot
-BROWSER_NAME=i2p-browser
-BROWSER_USER=i2pbrowser
-START_PAGE="http://127.0.0.1:7657"
-
 # Import the TBB_EXT variable, and guess_best_tor_browser_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
@@ -28,10 +9,7 @@ START_PAGE="http://127.0.0.1:7657"
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
-
-NOSCRIPT_EXT_XPI="${TBB_EXT}/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
-TORBUTTON_EXT_DIR="${TBB_EXT}/torbutton@torproject.org"
-HUMAN_READABLE_NAME="`gettext \"I2P Browser\"`"
+. /usr/local/lib/tails-shell-library/i2p.sh
 
 cleanup () {
     try_cleanup_browser_chroot ${CHROOT} ${COW} ${BROWSER_USER}
@@ -89,6 +67,29 @@ show_shutdown_notification () {
     tails-notify-user "${title}" "${body}" 10000
 }
 
+# Main script:
+
+# This isn't very useful without I2P...
+grep -qw "i2p" /proc/cmdline || exit 0
+
+CMD=$(basename ${0})
+LOCK=/var/lock/${CMD}
+
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
+CONF_DIR=/var/lib/i2p-browser
+COW=${CONF_DIR}/cow
+CHROOT=${CONF_DIR}/chroot
+BROWSER_NAME=i2p-browser
+BROWSER_USER=i2pbrowser
+START_PAGE="http://127.0.0.1:7657"
+NOSCRIPT_EXT_XPI="${TBB_EXT}/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
+TORBUTTON_EXT_DIR="${TBB_EXT}/torbutton@torproject.org"
+HUMAN_READABLE_NAME="`gettext \"I2P Browser\"`"
+BEST_LOCALE="$(guess_best_tor_browser_locale)"
+
 # Prevent multiple instances of the script.
 exec 9>${LOCK}
 if ! flock -x -n 9; then
@@ -110,7 +111,6 @@ configure_chroot_browser "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
     "${START_PAGE}" "${TBB_EXT}"/langpack-*.xpi \
     "${NOSCRIPT_EXT_XPI}" "${TORBUTTON_EXT_DIR}"
 copy_extra_tbb_prefs "${CHROOT}" "${BROWSER_USER}"
-BEST_LOCALE="$(guess_best_tor_browser_locale)"
 set_chroot_browser_locale "${CHROOT}" "${BROWSER_USER}" "${BEST_LOCALE}"
 set_chroot_torbutton_browser_name "${CHROOT}" "${HUMAN_READABLE_NAME}" "${BEST_LOCALE}"
 set_chroot_browser_permissions "${CHROOT}" "${BROWSER_USER}"
