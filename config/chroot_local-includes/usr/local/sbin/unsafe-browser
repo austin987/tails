@@ -8,6 +8,11 @@ set -e
 # Import the TBB_EXT variable, and guess_best_tor_browser_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
+# Import try_cleanup_browser_chroot(), setup_browser_chroot(),
+# configure_chroot_dns_servers(), configure_chroot_browser(),
+# configure_chroot_browser(), set_chroot_browser_locale()
+# set_chroot_browser_name(), set_chroot_browser_permissions()
+# and run_chroot_browser().
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
 
 cleanup () {
@@ -97,6 +102,7 @@ fi
 
 # Get the DNS servers that was obtained from NetworkManager, if any...
 if [ -r "${NM_ENV_FILE}" ]; then
+    # Import the IP4_NAMESERVERS variable.
     . "${NM_ENV_FILE}"
 fi
 # ... otherwise fail.
