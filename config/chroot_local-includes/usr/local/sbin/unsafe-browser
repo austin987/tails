@@ -78,7 +78,7 @@ COW=${CONF_DIR}/cow
 CHROOT=${CONF_DIR}/chroot
 BROWSER_NAME=unsafe-browser
 BROWSER_USER=clearnet
-NM_ENV=/var/lib/NetworkManager/env
+NM_ENV_FILE=/var/lib/NetworkManager/env
 BEST_LOCALE="$(guess_best_tor_browser_locale)"
 
 WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
@@ -96,8 +96,8 @@ if ! flock -x -n 9; then
 fi
 
 # Get the DNS servers that was obtained from NetworkManager, if any...
-if [ -r "${NM_ENV}" ]; then
-    . ${NM_ENV}
+if [ -r "${NM_ENV_FILE}" ]; then
+    . "${NM_ENV_FILE}"
 fi
 # ... otherwise fail.
 # FIXME: Or would it make sense to fallback to Google's DNS or OpenDNS?
