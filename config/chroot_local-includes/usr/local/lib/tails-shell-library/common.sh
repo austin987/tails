@@ -14,3 +14,9 @@ wait_until() {
     done
     return 0
 }
+
+# Just an alias. The second argument (wait_until()'s check_expr) is
+# the "try code block".
+try_for() {
+    wait_until "${@}"
+}
