@@ -12,17 +12,13 @@ export TEXTDOMAIN
 CONF_DIR=/var/lib/unsafe-browser
 COW=${CONF_DIR}/cow
 CHROOT=${CONF_DIR}/chroot
+BROWSER_NAME=unsafe-browser
 BROWSER_USER=clearnet
 
 # Import tor_is_working()
 . /usr/local/lib/tails-shell-library/tor.sh
 
-# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables, and
-# exec_firefox(), configure_xulrunner_app_locale() and
-# guess_best_tor_browser_locale()
-. /usr/local/lib/tails-shell-library/tor-browser.sh
-
-# Import windows_camouflage_is_enabled()
+# Import the TBB_EXT variable, and guess_best_tor_browser_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
@@ -70,63 +66,6 @@ show_start_notification () {
     tails-notify-user "${title}" "${body}" 10000
 }
 
-configure_chroot () {
-    # Prevent sudo from complaining about failing to resolve the 'amnesia' host
-    echo "127.0.0.1 localhost amnesia" > ${CHROOT}/etc/hosts
-
-    # Set the chroot's DNS servers to those obtained through DHCP
-    rm -f ${CHROOT}/etc/resolv.conf
-    for NS in ${IP4_NAMESERVERS}; do
-        echo "nameserver ${NS}" >> ${CHROOT}/etc/resolv.conf
-    done
-    chmod a+r ${CHROOT}/etc/resolv.conf
-
-    # Create a fresh browser profile for the clearnet user
-    BROWSER_CONF="${CHROOT}/home/${BROWSER_USER}/.tor-browser"
-    BROWSER_PROFILE="${BROWSER_CONF}/profile.default"
-    BROWSER_EXT="${BROWSER_PROFILE}"/extensions
-    mkdir -p "${BROWSER_EXT}"
-    cp -Pr "${TBB_PROFILE}"/extensions/langpack-*.xpi "${BROWSER_EXT}"
-
-    BROWSER_PREFS="${BROWSER_PROFILE}"/preferences/prefs.js
-    mkdir -p "$(dirname "${BROWSER_PREFS}")"
-    cp /usr/share/tails/unsafe-browser/prefs.js "${BROWSER_PREFS}"
-
-    # Localization
-    BEST_LOCALE="$(guess_best_tor_browser_locale)"
-    configure_xulrunner_app_locale "${BROWSER_PROFILE}" "${BEST_LOCALE}"
-
-    # Set the name (e.g. window title) of the browser
-    set_chroot_browser_name ${CHROOT} "`gettext \"Unsafe Browser\"`" "${BEST_LOCALE}"
-
-    # Set start page to something that explains what's going on
-    echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
-        "${BROWSER_PREFS}"
-    BROWSER_CHROME="${BROWSER_PROFILE}/chrome/userChrome.css"
-    mkdir -p "$(dirname "${BROWSER_CHROME}")"
-    cp /usr/share/tails/unsafe-browser/userChrome.css ${BROWSER_CHROME}
-
-    # Remove all bookmarks
-    rm -f ${CHROOT}/"${TBB_PROFILE}"/bookmarks.html
-    rm -f ${BROWSER_PROFILE}/bookmarks.html
-    rm -f ${BROWSER_PROFILE}/places.sqlite
-
-    chown -R ${BROWSER_USER}:${BROWSER_USER} "${BROWSER_CONF}"
-
-    # Set a scary theme (except if we're using Windows
-    # camouflage). Note that the tails-activate-win8-theme script that
-    # we may run below requires that the browser profile is writable
-    # by the user running the script (i.e. clearnet).
-    if ! windows_camouflage_is_enabled; then
-        cat /usr/share/tails/unsafe-browser/theme.js >> "${BROWSER_PREFS}"
-    else
-        # The camouflage activation script requires a dbus server for
-        # properly configuring GNOME, so we start one in the chroot
-        chroot ${CHROOT} sudo -H -u ${BROWSER_USER} sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
-    fi
-
-}
-
 show_shutdown_notification () {
     local title="`gettext \"Shutting down the Unsafe Browser...\"`"
     local body="`gettext \"This may take a while, and you may not restart the Unsafe Browser until it is properly shut down.\"`"
@@ -167,11 +106,20 @@ fi
 
 verify_start
 show_start_notification
+
 echo "* Setting up chroot"
 setup_browser_chroot ${CHROOT} ${COW} || \
     error "`gettext \"Failed to setup chroot.\"`"
+
 echo "* Configuring chroot"
-configure_chroot
+configure_chroot_dns_servers "${CHROOT}" "${IP4_NAMESERVERS}"
+configure_chroot_browser "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
+    "${START_PAGE}" "${CHROOT}/${TBB_EXT}"/langpack-*.xpi
+BEST_LOCALE="$(guess_best_tor_browser_locale)"
+set_chroot_browser_locale "${CHROOT}" "${BROWSER_USER}" "${BEST_LOCALE}"
+set_chroot_browser_name ${CHROOT} "`gettext \"Unsafe Browser\"`" "${BEST_LOCALE}"
+set_chroot_browser_permissions "${CHROOT}" "${BROWSER_USER}"
+
 echo "* Starting Unsafe Browser"
 run_chroot_browser ${CHROOT} ${BROWSER_USER} ${SUDO_USER}
 show_shutdown_notification

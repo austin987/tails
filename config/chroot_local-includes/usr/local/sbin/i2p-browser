@@ -17,13 +17,11 @@ export TEXTDOMAIN
 CONF_DIR=/var/lib/i2p-browser
 COW=${CONF_DIR}/cow
 CHROOT=${CONF_DIR}/chroot
+BROWSER_NAME=i2p-browser
 BROWSER_USER=i2pbrowser
-TBB_PREFS="/etc/tor-browser/profile/preferences"
 START_PAGE="http://127.0.0.1:7657"
 
-# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables, and
-# exec_firefox(), configure_xulrunner_app_locale() and
-# guess_best_tor_browser_locale()
+# Import the TBB_EXT variable, and guess_best_tor_browser_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 # Import windows_camouflage_is_enabled()
@@ -33,7 +31,7 @@ START_PAGE="http://127.0.0.1:7657"
 
 NOSCRIPT_EXT_XPI="${TBB_EXT}/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
 TORBUTTON_EXT_DIR="${TBB_EXT}/torbutton@torproject.org"
-NAME="`gettext \"I2P Browser\"`"
+HUMAN_READABLE_NAME="`gettext \"I2P Browser\"`"
 
 cleanup () {
     try_cleanup_browser_chroot ${CHROOT} ${COW} ${BROWSER_USER}
@@ -70,68 +68,19 @@ show_start_notification () {
     tails-notify-user "${title}" "${body}" 10000
 }
 
-configure_chroot () {
-    # Prevent sudo from complaining about failing to resolve the 'amnesia' host
-    echo "127.0.0.1 localhost amnesia" > ${CHROOT}/etc/hosts
+copy_extra_tbb_prefs () {
+    local chroot="${1}"
+    local browser_user="${2}"
 
-    # Create a fresh Tor Browser profile for the i2pbrowser user
-    BROWSER_CONF="${CHROOT}/home/${BROWSER_USER}/.tor-browser"
-    BROWSER_PROFILE="${BROWSER_CONF}/profile.default"
-    BROWSER_EXT="${BROWSER_PROFILE}/extensions"
-    mkdir -p "${BROWSER_EXT}"
-    ln -s "${NOSCRIPT_EXT_XPI}" "${BROWSER_EXT}"
-    ln -s "${TORBUTTON_EXT_DIR}" "${BROWSER_EXT}"
-    for LANGPACK in $(ls ${TBB_PROFILE}/extensions/langpack-*.xpi); do
-        ln -s "${LANGPACK}" "${BROWSER_EXT}"
-    done
-
-    BROWSER_PREF_DIR="${BROWSER_PROFILE}/preferences"
-    BROWSER_PREFS="${BROWSER_PREF_DIR}/prefs.js"
-    mkdir -p "${BROWSER_PREF_DIR}"
-
+    local tbb_prefs="/etc/tor-browser/profile/preferences"
+    local browser_prefs_dir="${chroot}/home/${browser_user}/.tor-browser"/profile.default/preferences
+    mkdir -p "${browser_prefs_dir}"
     # Selectively copy the TBB prefs we want
-    sed '/\(security\|update\|download\|spell\|noscript\|torbrowser\|torbutton\)/!d' $TBB_PREFS/0000tails.js > \
-                    ${BROWSER_PREF_DIR}/0000tails.js
-    sed '/\(capability\|noscript\|torbutton\)/!d' ${TBB_PREFS}/extension-overrides.js > \
-                    ${BROWSER_PREF_DIR}/extension-overrides.js
-
-    # Localization
-    BEST_LOCALE="$(guess_best_tor_browser_locale)"
-    configure_xulrunner_app_locale "${BROWSER_PROFILE}" "${BEST_LOCALE}"
-
-    # Set the name (e.g. window title) of the browser
-    set_chroot_torbutton_browser_name "${CHROOT}" "${NAME}" "${BEST_LOCALE}"
-
-    # Set start page to the router console
-    echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
-        ${BROWSER_PREFS}
-
-    # add the I2P proxy to all protocols
-    cp /usr/share/tails/i2p-browser/prefs.js "${BROWSER_PREF_DIR}"
-
-    # Hide options in the I2P Browser.
-    # It would be good to implement the ability to persist the browser profile in the
-    # future. At that point, the Bookmark functionality could be restored.
-    BROWSER_CHROME="${BROWSER_PROFILE}/chrome/userChrome.css"
-    mkdir -p "$(dirname "${BROWSER_CHROME}")"
-    cp /usr/share/tails/i2p-browser/userChrome.css ${BROWSER_CHROME}
-
-    # Remove all bookmarks
-    rm -f "${CHROOT}/${TBB_PROFILE}/bookmarks.html"
-    rm -f ${BROWSER_PROFILE}/bookmarks.html
-    rm -f ${BROWSER_PROFILE}/places.sqlite
-
-    chown -R ${BROWSER_USER}:${BROWSER_USER} "${BROWSER_CONF}"
-
-    # Change the theme when not using Windows camouflage
-    if ! windows_camouflage_is_enabled; then
-        cat /usr/share/tails/i2p-browser/theme.js >> "${BROWSER_PREFS}"
-    else
-        # The camouflage activation script requires a dbus server for
-        # properly configuring GNOME, so we start one in the chroot
-        chroot ${CHROOT} sudo -H -u ${BROWSER_USER} sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
-    fi
-
+    sed '/\(security\|update\|download\|spell\|noscript\|torbrowser\|torbutton\)/!d' "${tbb_prefs}"/0000tails.js > \
+                    "${browser_prefs_dir}"/0000tails.js
+    sed '/\(capability\|noscript\|torbutton\)/!d' "${tbb_prefs}"/extension-overrides.js > \
+                    "${browser_prefs_dir}"/extension-overrides.js
+    chown -R ${browser_user}:${browser_user} "${browser_prefs_dir}"
 }
 
 show_shutdown_notification () {
@@ -150,11 +99,22 @@ if ! i2p_router_console_is_ready; then
     verify_start
 fi
 show_start_notification
+
 echo "* Setting up chroot"
 setup_browser_chroot ${CHROOT} ${COW} || \
     error "`gettext \"Failed to setup chroot.\"`"
+
 echo "* Configuring chroot"
-configure_chroot
+configure_chroot_dns_servers "${CHROOT}" "127.0.0.1"
+configure_chroot_browser "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
+    "${START_PAGE}" "${CHROOT}/${TBB_EXT}"/langpack-*.xpi \
+    "${NOSCRIPT_EXT_XPI}" "${TORBUTTON_EXT_DIR}"
+copy_extra_tbb_prefs "${CHROOT}" "${BROWSER_USER}"
+BEST_LOCALE="$(guess_best_tor_browser_locale)"
+set_chroot_browser_locale "${CHROOT}" "${BROWSER_USER}" "${BEST_LOCALE}"
+set_chroot_torbutton_browser_name "${CHROOT}" "${HUMAN_READABLE_NAME}" "${BEST_LOCALE}"
+set_chroot_browser_permissions "${CHROOT}" "${BROWSER_USER}"
+
 echo "* Starting I2P Browser"
 run_chroot_browser ${CHROOT} ${BROWSER_USER} ${SUDO_USER}
 show_shutdown_notification

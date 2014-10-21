@@ -1,7 +1,11 @@
 #!/bin/sh
 
-# Import the TBB_EXT variable.
+# Import the TBB_INSTALL, TBB_PROFILE and TBB_EXT variables, and
+# configure_xulrunner_app_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
+
+# Import windows_camouflage_is_enabled()
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
 
 # Break down the chroot and kill all of its processes
 try_cleanup_browser_chroot () {
@@ -64,6 +68,14 @@ setup_browser_chroot () {
     chmod -t ${cow}
 }
 
+set_chroot_browser_locale () {
+    local chroot="${1}"
+    local browser_user="${2}"
+    local locale="${3}"
+    local browser_profile="${chroot}/home/${browser_user}/.tor-browser/profile.default"
+    configure_xulrunner_app_locale "${browser_profile}" "${locale}"
+}
+
 set_chroot_browser_name () {
     local chroot="${1}"
     local name="${2}"
@@ -116,4 +128,75 @@ set_chroot_torbutton_browser_name () {
         torbutton_locale_dir="${chroot}"/usr/share/xul-ext/torbutton/chrome/locale/en
     fi
     sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${name}\">/" "${torbutton_locale_dir}/brand.dtd"
+}
+
+# Set the chroot's DNS servers (IPv4 only)
+configure_chroot_dns_servers () {
+    local chroot="${1}" ; shift
+    local ip4_nameservers="${@}"
+
+    rm -f ${chroot}/etc/resolv.conf
+    for ns in ${ip4_nameservers}; do
+        echo "nameserver ${ns}" >> ${chroot}/etc/resolv.conf
+    done
+    chmod a+r ${chroot}/etc/resolv.conf
+}
+
+set_chroot_browser_permissions () {
+    local chroot="${1}"
+    local browser_user="${2}"
+    local browser_conf="${chroot}/home/${browser_user}/.tor-browser"
+    chown -R ${browser_user}:${browser_user} "${browser_conf}"
+}
+
+configure_chroot_browser () {
+    local chroot="${1}" ; shift
+    local browser_name="${1}" ; shift
+    local browser_user="${1}" ; shift
+    local startpage="${1}" ; shift
+    # Now $@ is a list of extensions to enable
+
+    # Prevent sudo from complaining about failing to resolve the 'amnesia' host
+    echo "127.0.0.1 localhost amnesia" > ${chroot}/etc/hosts
+
+    # Create a fresh browser profile for the clearnet user
+    local browser_conf="${chroot}/home/${browser_user}/.tor-browser"
+    local browser_profile="${browser_conf}/profile.default"
+    local browser_ext="${browser_profile}"/extensions
+    mkdir -p "${browser_profile}" "${browser_ext}"
+
+    # Select extensions to enable
+    cp --no-dereference "${@}" "${browser_ext}"
+
+    # Set preferences
+    local browser_prefs="${browser_profile}"/preferences/prefs.js
+    mkdir -p "$(dirname "${browser_prefs}")"
+    cp /usr/share/tails/"${browser_name}"/prefs.js "${browser_prefs}"
+
+    # Set start page to something that explains what's going on
+    echo 'user_pref("browser.startup.homepage", "'${startpage}'");' >> \
+        "${browser_prefs}"
+
+    # Customize the GUI
+    local browser_chrome="${browser_profile}/chrome/userChrome.css"
+    mkdir -p "$(dirname "${browser_chrome}")"
+    cp /usr/share/tails/"${browser_name}"/userChrome.css ${browser_chrome}
+
+    # Remove all bookmarks
+    rm -f ${chroot}/"${TBB_PROFILE}"/bookmarks.html
+    rm -f ${browser_profile}/bookmarks.html
+    rm -f ${browser_profile}/places.sqlite
+
+    # Set an appropriate theme, except if we're using Windows
+    # camouflage.
+    if ! windows_camouflage_is_enabled; then
+        cat /usr/share/tails/"${browser_name}"/theme.js >> "${browser_prefs}"
+    else
+        # The tails-activate-win8-theme script requires that the
+        # browser profile is writable by the user running the script.
+        set_chroot_browser_permissions ${chroot} ${browser_user}
+        # The camouflage activation script requires a dbus server for
+        # properly configuring GNOME, so we start one in the chroot
+        chroot ${chroot} sudo -H -u ${browser_user} sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
+    fi
 }
