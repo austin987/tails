@@ -90,7 +90,7 @@ configure_chroot () {
 
     BROWSER_PREFS="${BROWSER_PROFILE}"/preferences/prefs.js
     mkdir -p "$(dirname "${BROWSER_PREFS}")"
-    cp /usr/share/tails/unsafe-browser/unsafe-browser.js "${BROWSER_PREFS}"
+    cp /usr/share/tails/unsafe-browser/prefs.js "${BROWSER_PREFS}"
 
     # Localization
     BEST_LOCALE="$(guess_best_tor_browser_locale)"
@@ -118,7 +118,7 @@ configure_chroot () {
     # we may run below requires that the browser profile is writable
     # by the user running the script (i.e. clearnet).
     if ! windows_camouflage_is_enabled; then
-        cat /usr/share/tails/unsafe-browser/unsafe-browser-theme.js >> "${BROWSER_PREFS}"
+        cat /usr/share/tails/unsafe-browser/theme.js >> "${BROWSER_PREFS}"
     else
         # The camouflage activation script requires a dbus server for
         # properly configuring GNOME, so we start one in the chroot
