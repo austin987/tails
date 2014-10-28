@@ -323,3 +323,19 @@ EOF
   @screen.wait('TorLauncherConnectingWindow.png', 10)
   @screen.waitVanish('TorLauncherConnectingWindow.png', 120)
 end
+
+When /^all Internet traffic has only flowed through the (\w+) bridges$/ do |bridge_type|
+  next if @skip_steps_while_restoring_background
+  bridge_hosts = []
+  for bridge in test_bridges(bridge_type) do
+    type, ipaddr_and_port, _ = bridge.split
+    assert_equal(bridge_type, type)
+    ipaddr, _ = ipaddr_and_port.split(":")
+    bridge_hosts << ipaddr
+  end
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, bridge_hosts)
+  if !leaks.empty?
+    leaks.save_pcap_file
+    raise "We connected to some non-bridge host!"
+  end
+end
