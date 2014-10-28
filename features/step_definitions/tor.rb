@@ -278,3 +278,48 @@ When /^I connect Gobby to "([^"]+)"$/ do |host|
   @screen.type(host + Sikuli::Key.ENTER)
   @screen.wait("GobbyConnectionComplete.png", 60)
 end
+
+When /^the Tor Launcher autostarts$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait('TorLauncherWindow.png', 30)
+end
+
+When /^I configure some (\w+) bridges in Tor Launcher$/ do |bridge_type|
+  next if @skip_steps_while_restoring_background
+  bridge_type.capitalize!
+  begin
+    bridges = $config["Tor"]["Transports"][bridge_type]
+    assert_not_nil(bridges)
+    assert(!bridges.empty?)
+  rescue NoMethodError, AssertionFailedError
+    raise(
+<<EOF
+It seems no #{bridge_type} bridges are defined in your local configuration file (#{LOCAL_CONFIG_FILE}). Example entry:
+Tor:
+  Transports:
+    #{bridge_type}:
+      - ipv4_address: 1.2.3.4
+        ipv4_port: 443
+        fingerprint: 01234567890abcdef01234567890abcdef012345
+EOF
+)
+  end
+  @screen.wait_and_click('TorLauncherConfigureButton.png', 10)
+  @screen.wait_and_click('TorLauncherNextButton.png', 10)
+  @screen.hide_cursor
+  @screen.wait_and_click('TorLauncherNextButton.png', 10)
+  @screen.wait('TorLauncherBridgePrompt.png', 10)
+  @screen.wait_and_click('TorLauncherYesRadioOption.png', 10)
+  @screen.wait_and_click('TorLauncherNextButton.png', 10)
+  @screen.wait_and_click('TorLauncherBridgeList.png', 10)
+  for bridge in bridges do
+    bridge_line = bridge_type.downcase   + " " +
+                  bridge["ipv4_address"] + ":" +
+                  bridge["ipv4_port"].to_s
+    bridge_line += " " + bridge["fingerprint"].to_s if bridge["fingerprint"]
+    @screen.type(bridge_line + Sikuli::Key.ENTER)
+  end
+  @screen.wait_and_click('TorLauncherFinishButton.png', 10)
+  @screen.wait('TorLauncherConnectingWindow.png', 10)
+  @screen.waitVanish('TorLauncherConnectingWindow.png', 120)
+end

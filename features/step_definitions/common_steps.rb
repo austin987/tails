@@ -248,6 +248,11 @@ Given /^I enable more Tails Greeter options$/ do
   @screen.wait('TailsGreeterLoginButton.png', 20)
 end
 
+Given /^I enable the specific Tor configuration option$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.click('TailsGreeterTorConf.png')
+end
+
 Given /^I set sudo password "([^"]*)"$/ do |password|
   @sudo_password = password
   next if @skip_steps_while_restoring_background
