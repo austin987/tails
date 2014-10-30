@@ -9,7 +9,6 @@ LOCK=/var/lock/${CMD}
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-ROFS=/lib/live/mount/rootfs/filesystem.squashfs
 CONF_DIR=/var/lib/unsafe-browser
 COW=${CONF_DIR}/cow
 CHROOT=${CONF_DIR}/chroot
@@ -98,9 +97,25 @@ setup_chroot () {
     trap cleanup INT
     trap cleanup EXIT
 
+    local rootfs_dir
+    local rootfs_dirs_path=/lib/live/mount/rootfs
+    local tails_module_path=/lib/live/mount/medium/live/Tails.module
+    local aufs_dirs=
+
+    # We have to pay attention to the order we stack the filesystems;
+    # newest must be first, and remember that the .module file lists
+    # oldest first, newest last.
+    while read rootfs_dir; do
+        rootfs_dir="${rootfs_dirs_path}/${rootfs_dir}"
+        mountpoint -q "${rootfs_dir}" && \
+        aufs_dirs="${rootfs_dir}=rr+wh:${aufs_dirs}"
+    done < "${tails_module_path}"
+    # But our copy-on-write dir must be at the very top.
+    aufs_dirs="${COW}=rw:${aufs_dirs}"
+
     mkdir -p ${COW} ${CHROOT} && \
     mount -t tmpfs tmpfs ${COW} && \
-    mount -t aufs -o noatime,noxino,dirs=${COW}=rw:${ROFS}=rr+wh aufs ${CHROOT} && \
+    mount -t aufs -o "noatime,noxino,dirs=${aufs_dirs}" aufs ${CHROOT} && \
     mount -t proc proc ${CHROOT}/proc && \
     mount --bind /dev ${CHROOT}/dev || \
     error "`gettext \"Failed to setup chroot.\"`"
