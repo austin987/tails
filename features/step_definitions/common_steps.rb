@@ -599,7 +599,7 @@ Then /^(.*) uses all expected TBB shared libraries$/ do |application|
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
     chroot = "/var/lib/unsafe-browser/chroot"
   when "the I2P Browser"
-    user = "i2pbrowesr"
+    user = "i2pbrowser"
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.i2p-browser/profile\.default"
     chroot = "/var/lib/i2p-browser/chroot"
   when "Tor Launcher"
