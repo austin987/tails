@@ -1222,6 +1222,20 @@ SOCKS port instead of going through Polipo.
 
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/wget]]
 
+### 3.6.27 APT
+
+During most of the ISO build process, APT uses the proxy configured
+through `live-build` (that is, usually a local `apt-cacher-ng`).
+
+However, at the end of the `chroot_local-hooks` stage, a hook does (a
+more elaborate version of) `s,http://,tor+http://` in APT sources.
+Then, APT will use the `tor+http` method, that is a simple torsocks
+wrapper for the good old `http` method.
+
+- [[!tails_gitweb config/chroot_local-hooks/99-zzz_runtime_apt_configuration]]
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/apt/methods/tor+http]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/lib/apt-toggle-tor-http]]
+
 ## 3.7 Running Tails in virtual machines
 
 ### 3.7.1 Current support
