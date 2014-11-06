@@ -70,9 +70,7 @@ end
 
 When /^I start Pidgin through the GNOME menu$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
-  @screen.wait_and_click("GnomeApplicationsPidgin.png", 20)
+  step 'I start "Pidgin" via the GNOME "Internet" applications menu'
 end
 
 When /^I open Pidgin's account manager window$/ do
