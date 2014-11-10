@@ -27,9 +27,7 @@ end
 
 When /^I start the Unsafe Browser$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
-  @screen.wait_and_click("GnomeApplicationsUnsafeBrowser.png", 20)
+  step 'I start "UnsafeBrowser" via the GNOME "Internet" applications menu'
 end
 
 When /^I successfully start the Unsafe Browser$/ do

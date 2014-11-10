@@ -1,8 +1,6 @@
 When /^I start TrueCrypt through the GNOME menu$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsAccessories.png", 10)
-  @screen.wait_and_click("GnomeApplicationsTrueCrypt.png", 20)
+  step 'I start "TrueCrypt" via the GNOME "Accessories" applications menu'
 end
 
 When /^I deal with the removal warning prompt$/ do
