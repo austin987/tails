@@ -639,7 +639,7 @@ end
 
 When /^I start and focus GNOME Terminal$/ do
   next if @skip_steps_while_restoring_background
-  step 'I start "Terminal" via the GNOME "Accessories" applications menu'
+  step 'I start "Terminal" via the GNOME "Utilities" applications menu'
   @screen.wait_and_click('GnomeTerminalWindow.png', 20)
 end
 
