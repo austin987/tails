@@ -46,3 +46,8 @@ insserv -r $PATCHED_INITSCRIPTS
 
 # Re-install overriden initscripts and install our custom ones.
 insserv $PATCHED_INITSCRIPTS $CUSTOM_INITSCRIPTS
+
+### Tweak systemd unit files
+
+# Workaround for https://bugs.debian.org/714957
+systemctl enable memlockd.service
