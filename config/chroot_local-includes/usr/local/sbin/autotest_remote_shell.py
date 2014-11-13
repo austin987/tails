@@ -41,7 +41,8 @@ def run_cmd_as_user(cmd, user):
 def main():
   dev = argv[1]
   port = serial.Serial(port = dev, baudrate = 4000000)
-  port.open()
+  if not port.isOpen():
+    port.open()
   while True:
     try:
       line = port.readline()
