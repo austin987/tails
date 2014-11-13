@@ -545,7 +545,7 @@ def xul_app_shared_lib_check(pid, chroot)
                  ". /usr/local/lib/tails-shell-library/tor-browser.sh; " +
                  "ls -1 #{chroot}${TBB_INSTALL}/*.so"
                                       ).stdout.split
-  firefox_pmap_info = @vm.execute("pmap #{pid}").stdout
+  firefox_pmap_info = @vm.execute("pmap --show-path #{pid}").stdout
   for lib in tbb_libs do
     lib_name = File.basename lib
     if not /\W#{lib}$/.match firefox_pmap_info
