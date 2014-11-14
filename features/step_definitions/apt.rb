@@ -73,5 +73,5 @@ end
 When /^I start Synaptic$/ do
   next if @skip_steps_while_restoring_background
   step 'I start "Synaptic" via the GNOME "System" applications menu'
-  deal_with_polkit_prompt('SynapticPolicyKitAuthPrompt.png', @sudo_password)
+  deal_with_polkit_prompt('PolicyKitAuthPrompt.png', @sudo_password)
 end
