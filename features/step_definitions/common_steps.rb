@@ -618,16 +618,16 @@ EOF
   end
   @vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '/etc/NetworkManager/system-connections/#{con_name}'")
   try_for(10) {
-    nm_con_list = @vm.execute("nmcli --terse --fields NAME con list").stdout
+    nm_con_list = @vm.execute("nmcli --terse --fields NAME connection show").stdout
     nm_con_list.split("\n").include? "#{con_name}"
   }
 end
 
 Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
   next if @skip_steps_while_restoring_background
-  @vm.execute("nmcli con up id #{con_name}")
+  @vm.execute("nmcli connection up id #{con_name}")
   try_for(60) {
-    @vm.execute("nmcli --terse --fields NAME,STATE con status").stdout.chomp == "#{con_name}:activated"
+    @vm.execute("nmcli --terse --fields NAME,STATE connection show").stdout.chomp.split("\n").include?("#{con_name}:activated")
   }
 end
 
