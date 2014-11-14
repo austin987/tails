@@ -616,7 +616,9 @@ EOF
   con_content.split("\n").each do |line|
     @vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
   end
-  @vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '/etc/NetworkManager/system-connections/#{con_name}'")
+  con_file = "/etc/NetworkManager/system-connections/#{con_name}"
+  @vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '#{con_file}'")
+  @vm.execute_successfully("nmcli connection load '#{con_file}'")
   try_for(10) {
     nm_con_list = @vm.execute("nmcli --terse --fields NAME connection show").stdout
     nm_con_list.split("\n").include? "#{con_name}"
