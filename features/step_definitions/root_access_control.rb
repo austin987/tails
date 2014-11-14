@@ -40,5 +40,6 @@ Then /^I should not be able to run a command as root with pkexec and the standar
     step "I enter the \"#{password}\" password in the pkexec prompt"
     @screen.wait('PolicyKitAuthFailure.png', 20)
   end
+  @screen.type(Sikuli::Key.ESC)
   @screen.wait('PolicyKitAuthCompleteFailure.png', 20)
 end
