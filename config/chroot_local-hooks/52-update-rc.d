@@ -7,8 +7,6 @@ tails-detect-virtualization
 tails-kexec
 tails-reconfigure-kexec
 tails-reconfigure-memlockd
-tails-sdmem-on-media-removal
-tails-set-wireless-devices-state
 tor-controlport-filter
 "
 
@@ -51,3 +49,7 @@ insserv $PATCHED_INITSCRIPTS $CUSTOM_INITSCRIPTS
 
 # Workaround for https://bugs.debian.org/714957
 systemctl enable memlockd.service
+
+# Enable our own systemd unit files
+systemctl enable tails-sdmem-on-media-removal.service
+systemctl enable tails-set-wireless-devices-state.service
