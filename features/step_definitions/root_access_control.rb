@@ -36,10 +36,9 @@ end
 Then /^I should not be able to run a command as root with pkexec and the standard passwords$/ do
   next if @skip_steps_while_restoring_background
   step "I run \"pkexec touch /root/pkexec-test\" in GNOME Terminal"
-  ['', 'live'].each do |password|
+  ['', 'live', 'amnesia'].each do |password|
     step "I enter the \"#{password}\" password in the pkexec prompt"
     @screen.wait('PolicyKitAuthFailure.png', 20)
   end
-  step "I enter the \"amnesia\" password in the pkexec prompt"
   @screen.wait('PolicyKitAuthCompleteFailure.png', 20)
 end
