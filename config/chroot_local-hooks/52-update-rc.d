@@ -53,3 +53,7 @@ systemctl enable memlockd.service
 # Enable our own systemd unit files
 systemctl enable tails-sdmem-on-media-removal.service
 systemctl enable tails-set-wireless-devices-state.service
+
+# Use socket activation only, to save a bit of memory and boot time
+systemctl disable cups.service
+systemctl enable  cups.socket
