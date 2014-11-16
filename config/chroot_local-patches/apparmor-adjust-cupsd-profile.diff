@@ -1,0 +1,39 @@
+--- a/etc/apparmor.d/usr.sbin.cupsd	2014-11-16 20:48:15.320000000 +0000
++++ b/etc/apparmor.d/usr.sbin.cupsd	2014-11-16 21:13:34.248000000 +0000
+@@ -4,7 +4,7 @@
+ 
+ #include <tunables/global>
+ 
+-/usr/sbin/cupsd {
++/usr/sbin/cupsd flags=(attach_disconnected) {
+   #include <abstractions/base>
+   #include <abstractions/bash>
+   #include <abstractions/authentication>
+@@ -113,12 +113,12 @@
+   /var/{cache,lib}/samba/printing/printers.tdb r,
+   /{,var/}run/cups/ rw,
+   /{,var/}run/cups/** rw,
+-  /var/cache/cups/ rw,
+-  /var/cache/cups/** rwk,
+-  /var/log/cups/ rw,
+-  /var/log/cups/* rw,
+-  /var/spool/cups/ rw,
+-  /var/spool/cups/** rw,
++  /{,lib/live/mount/overlay/}var/cache/cups/ rw,
++  /{,lib/live/mount/overlay/}var/cache/cups/** rwk,
++  /{,lib/live/mount/overlay/}var/log/cups/ rw,
++  /{,lib/live/mount/overlay/}var/log/cups/* rw,
++  /{,lib/live/mount/overlay/}var/spool/cups/ rw,
++  /{,lib/live/mount/overlay/}var/spool/cups/** rw,
+ 
+   # third-party printer drivers; no known structure here
+   /opt/** rix,
+@@ -186,6 +186,6 @@
+   /usr/lib/ghostscript/** mr,
+   /usr/share/** r,
+   /var/log/cups/cups-pdf_log w,
+-  /var/spool/cups/** r,
+-  /var/spool/cups-pdf/** rw,
++  /{,lib/live/mount/overlay/}var/spool/cups/** r,
++  /{,lib/live/mount/overlay/}var/spool/cups-pdf/** rw,
+ }
