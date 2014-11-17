@@ -43,7 +43,8 @@ class ProfileProcessor(ProcessEvent):
             self.add_file(event.pathname)
 
     def process_IN_ACCESS(self, event):
-        self.add_file(event.pathname)
+        if not event.dir:
+            self.add_file(event.pathname)
 
     def process_IN_CREATE(self, event):
         self.ignore_file(event.pathname)
