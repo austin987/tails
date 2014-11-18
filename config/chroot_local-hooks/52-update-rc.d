@@ -7,7 +7,6 @@ tails-detect-virtualization
 tails-kexec
 tails-reconfigure-kexec
 tails-reconfigure-memlockd
-tor-controlport-filter
 "
 
 PATCHED_INITSCRIPTS="
@@ -53,6 +52,7 @@ systemctl enable memlockd.service
 # Enable our own systemd unit files
 systemctl enable tails-sdmem-on-media-removal.service
 systemctl enable tails-set-wireless-devices-state.service
+systemctl enable tor-controlport-filter.service
 
 # Use socket activation only, to save a bit of memory and boot time
 systemctl disable cups.service
