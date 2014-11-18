@@ -135,12 +135,10 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
 
     # Close settings
     @screen.type(Sikuli::Key.ENTER)
-#    @screen.waitVanish('UnsafeBrowserProxySettings.png', 10)
-    sleep 0.5
+    @screen.waitVanish('UnsafeBrowserProxySettings.png', 10)
+    @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
     @screen.type(Sikuli::Key.ESC)
-#    @screen.waitVanish('UnsafeBrowserPreferences.png', 10)
-    sleep 0.5
-
+    @screen.waitVanish('UnsafeBrowserPreferencesWindow.png', 10)
     # Test that the proxy settings work as they should
     step "I open the address \"https://check.torproject.org\" in the Unsafe Browser"
     if proxy_type == no_proxy
