@@ -275,6 +275,14 @@ Given /^GNOME has started$/ do
     desktop_started_picture = 'GnomeApplicationsMenu.png'
   end
   @screen.wait(desktop_started_picture, 180)
+
+  # Workaround #8010. The floating icon is in the way for Sikuli in
+  # some instances, e.g. it blocks the upper left part of fullscreen
+  # windows, usually where some of the menues are located.
+  try_for(60) do
+    @vm.execute("pidof florence").success?
+  end
+  @vm.execute_successfully("pkill florence")
 end
 
 Then /^Tails seems to have booted normally$/ do
