@@ -3,7 +3,6 @@
 set -e
 
 CUSTOM_INITSCRIPTS="
-tails-detect-virtualization
 tails-kexec
 "
 
@@ -48,6 +47,7 @@ insserv $PATCHED_INITSCRIPTS $CUSTOM_INITSCRIPTS
 systemctl enable memlockd.service
 
 # Enable our own systemd unit files
+systemctl enable tails-detect-virtualization.service
 systemctl enable tails-reconfigure-kexec.service
 systemctl enable tails-reconfigure-memlockd.service
 systemctl enable tails-sdmem-on-media-removal.service
