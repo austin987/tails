@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -e
+set -u
+
+PATH="/usr/local/bin:${PATH}"
+MEMLOCKD_CONF=/etc/memlockd.cfg
+
+tails-boot-to-kexec kernel $(tails-get-bootinfo kernel) >> "$MEMLOCKD_CONF"
+tails-boot-to-kexec initrd $(tails-get-bootinfo initrd) >> "$MEMLOCKD_CONF"
+
+# Tell sendsigs to forget about memlockd. Together with
+# not calling 'memlockd stop' on shutdown, we have a
+# strong chance that what tails-kexec needs will be available.
+mkdir -p /lib/init/rw/sendsigs.omit.d
+rm -f /lib/init/rw/sendsigs.omit.d/memlockd
+ln -s /var/run/memlockd.pid /lib/init/rw/sendsigs.omit.d/memlockd
