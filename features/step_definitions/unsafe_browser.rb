@@ -61,7 +61,7 @@ end
 
 When /^I open a new tab in the Unsafe Browser$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
+  @screen.wait_and_click_gnome_window("UnsafeBrowserWindow.png", 10)
   @screen.type("t", Sikuli::KeyModifier.CTRL)
 end
 
@@ -84,13 +84,13 @@ end
 
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
+  @screen.wait_and_click_gnome_window("UnsafeBrowserWindow.png", 10)
   # First we open the proxy settings page to prepare it with the
   # correct open tabs for the loop below.
   show_unsafe_browser_menu_bar
   @screen.hover('UnsafeBrowserEditMenu.png')
   @screen.wait_and_click('UnsafeBrowserEditPreferences.png', 10)  
-  @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
+  @screen.wait_for_gnome_window('UnsafeBrowserPreferencesWindow.png', 10)
   @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
   @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
   sleep 0.5
@@ -122,7 +122,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     show_unsafe_browser_menu_bar
     @screen.hover('UnsafeBrowserEditMenu.png')
     @screen.wait_and_click('UnsafeBrowserEditPreferences.png', 10)  
-    @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
+    @screen.wait_for_gnome_window('UnsafeBrowserPreferencesWindow.png', 10)
     @screen.type("e", Sikuli::KeyModifier.ALT)
     @screen.wait('UnsafeBrowserProxySettings.png', 10)
     @screen.type("m", Sikuli::KeyModifier.ALT)
@@ -136,7 +136,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     # Close settings
     @screen.type(Sikuli::Key.ENTER)
     @screen.waitVanish('UnsafeBrowserProxySettings.png', 10)
-    @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
+    @screen.wait_for_gnome_window('UnsafeBrowserPreferencesWindow.png', 10)
     @screen.type(Sikuli::Key.ESC)
     @screen.waitVanish('UnsafeBrowserPreferencesWindow.png', 10)
     # Test that the proxy settings work as they should

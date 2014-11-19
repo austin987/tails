@@ -324,7 +324,7 @@ Given /^the Tor Browser has started$/ do
     tor_browser_picture = "TorBrowserWindow.png"
   end
 
-  @screen.wait(tor_browser_picture, 60)
+  @screen.wait_for_gnome_window(tor_browser_picture, 60)
 end
 
 Given /^the Tor Browser has started and loaded the startup page$/ do
@@ -644,7 +644,7 @@ end
 When /^I start and focus GNOME Terminal$/ do
   next if @skip_steps_while_restoring_background
   step 'I start "Terminal" via the GNOME "Utilities" applications menu'
-  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+  @screen.wait('GnomeTerminalWindow.png', 20)
 end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|

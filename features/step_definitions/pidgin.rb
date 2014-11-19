@@ -81,7 +81,7 @@ end
 
 When /^I see Pidgin's account manager window$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("PidginAccountWindow.png", 20)
+  @screen.wait_for_gnome_window("PidginAccountWindow.png", 20)
 end
 
 When /^I close Pidgin's account manager window$/ do
