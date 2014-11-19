@@ -32,7 +32,7 @@ end
 
 When /^I start Seahorse$/ do
   next if @skip_steps_while_restoring_background
-  step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
+  step 'I start "Seahorse" via the GNOME "Utilities" applications menu'
 end
 
 When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|
