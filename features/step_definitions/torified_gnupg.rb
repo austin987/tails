@@ -38,7 +38,7 @@ end
 When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|
   next if @skip_steps_while_restoring_background
   step "I start Seahorse"
-  @screen.wait("SeahorseWindow.png", 10)
+  @screen.wait_for_gnome_window("SeahorseWindow.png", 20)
   @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
   @screen.type("f")                  # "Find Remote Keys...".
   @screen.wait("SeahorseFindKeysWindow.png", 10)
