@@ -22,31 +22,27 @@ See https://tails.boum.org/.
 
 #}}}
 
-use Carp;
 use Desktop::Notify;
-use Fatal qw( open close );
+use IPC::System::Simple qw{runx};
 use Locale::gettext;
 use POSIX;
 
 ### initialization
 setlocale(LC_MESSAGES, "");
 textdomain("tails");
-my $detected_virt_file='/var/lib/live/detected-virtual-machine';
+my @detected_virt_command=qw{};
 
 ### main
 
-exit 0 unless -e $detected_virt_file;
-
 my @detected_virt;
 
-open my $detected_virt_file_h, '<', $detected_virt_file;
-while (my $detected_virt = <$detected_virt_file_h>) {
-    chomp $detected_virt;
-    push @detected_virt, $detected_virt;
-}
-close $detected_virt_file_h;
+# both 0 and 1 are acceptable exit values:
+#  - 0 means that we're running in a virtualized environment
+#  - 1 means that we're not running in a virtualized environment
+#  - anything else means there is a problem, and runx will throw an exception
+my $exit_value = runx([0, 1], qw{/usr/bin/systemd-detect-virt});
 
-exit 0 unless @detected_virt;
+exit 0 if $exit_value == 1;
 
 my $notify = Desktop::Notify->new();
 
