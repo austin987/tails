@@ -3,7 +3,6 @@
 set -e
 
 CUSTOM_INITSCRIPTS="
-tails-detect-virtualization
 tails-kexec
 "
 
