@@ -46,7 +46,7 @@ end
 Then /^I should be able to install a package using Synaptic$/ do
   next if @skip_steps_while_restoring_background
   package = "cowsay"
-  @screen.wait_and_click('SynapticSearchButton.png', 10)
+  @screen.wait_and_click(Sikuli::Pattern.new('SynapticSearchButton.png').exact, 10)
   @screen.wait('SynapticSearchWindow.png', 20)
   @screen.type(package + Sikuli::Key.ENTER)
   @screen.wait_and_double_click('SynapticCowsaySearchResult.png', 20)
