@@ -30,6 +30,10 @@ Feature: Using Totem
     And I start Tails from DVD and I login
     When I open "https://webm.html5.org/test.webm" with Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
+    When I close Totem
+    And I start Totem through the GNOME menu
+    When I load the "https://webm.html5.org/test.webm" URL in Totem
+    Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
     And all Internet traffic has only flowed through Tor
 
   @keep_volumes
