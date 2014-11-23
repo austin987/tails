@@ -268,7 +268,13 @@ end
 
 Given /^GNOME has started$/ do
   next if @skip_steps_while_restoring_background
-  step 'Tails seems to have booted normally'
+  case @theme
+  when "windows"
+    desktop_started_picture = 'WindowsStartButton.png'
+  else
+    desktop_started_picture = 'GnomeApplicationsMenu.png'
+  end
+  @screen.wait(desktop_started_picture, 180)
 
   # Workaround #8010. The floating icon is in the way for Sikuli in
   # some instances, e.g. it blocks the upper left part of fullscreen
@@ -281,13 +287,7 @@ end
 
 Then /^Tails seems to have booted normally$/ do
   next if @skip_steps_while_restoring_background
-  case @theme
-  when "windows"
-    desktop_started_picture = 'WindowsStartButton.png'
-  else
-    desktop_started_picture = 'GnomeApplicationsMenu.png'
-  end
-  @screen.wait(desktop_started_picture, 180)
+  step "GNOME has started"
 end
 
 Given /^Tor is ready$/ do
