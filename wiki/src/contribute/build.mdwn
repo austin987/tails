@@ -19,22 +19,30 @@ Set up the build environment on Debian Jessie:
 
 1. Add Debian unstable to your APT sources.
 2. Pin all packages from Debian unstable at 500 (`apt_preferences(5)`).
-3. Install the needed tools:
+3. Add a pin for vagrant (version 1.4.3+dfsg1-1) and ruby-net-ssh (version
+   2.6.8-2) at priority 550 to prevent these packages from being updated.
+4. Install the needed tools:
 
-       $ sudo apt-get install git virtualbox rake vagrant/unstable
+       $ sudo apt-get install git virtualbox rake ruby-childprocess \
+         ruby-erubis ruby-i18n ruby-log4r ruby-net-scp ruby bsdtar curl
 
 Or, on Debian Wheezy:
 
 1. Add Debian Jessie, unstable and wheezy-backports to your APT sources.
 2. Pin all packages from Debian Jessie and unstable at 500 (`apt_preferences(5)`).
-3. Install the needed tools:
+3. Add a pin for vagrant (version 1.4.3+dfsg1-3) and ruby-net-ssh (version
+   2.6.8-2) at priority 550 to prevent these packages from being updated.
+4. Install the needed tools:
 
-       $ sudo apt-get install git virtualbox rake vagrant/unstable \
-         ruby-childprocess/jessie ruby-net-scp/jessie ruby-net-ssh/jessie \
+       $ sudo apt-get install git virtualbox rake ruby-childprocess/jessie \
+         ruby-net-scp/jessie ruby-erubis ruby-i18n ruby-log4r bsdtar curl \
          gettext/wheezy-backports
 
 Then, please run:
 
+    $ curl -O http://snapshot.debian.org/archive/debian-ports/20141007T193909Z/pool/main/v/vagrant/vagrant_1.4.3%2Bdfsg1-3_all.deb
+    $ curl -O http://snapshot.debian.org/archive/debian-ports/20140411T072702Z/pool/main/r/ruby-net-ssh/ruby-net-ssh_2.6.8-2_all.deb
+    $ sudo dpkg -i vagrant_1.4.3%2Bdfsg1-3_all.deb ruby-net-ssh_2.6.8-2_all.deb
     $ git clone git://git.tails.boum.org/tails
     $ cd tails
     $ git checkout devel
