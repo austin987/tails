@@ -24,7 +24,7 @@ end
 When /^I type a message into gedit$/ do
   next if @skip_steps_while_restoring_background
   step 'I start "Gedit" via the GNOME "Accessories" applications menu'
-  @screen.wait_and_click_gnome_window("GeditWindow.png", 10)
+  @screen.wait_and_click("GeditWindow.png", 10)
   sleep 0.5
   @screen.type("ATTACK AT DAWN")
 end
@@ -41,17 +41,17 @@ def maybe_deal_with_pinentry
 end
 
 def encrypt_sign_helper
-  @screen.wait_and_click_gnome_window("GeditWindow.png", 10)
+  @screen.wait_and_click("GeditWindow.png", 10)
   @screen.type("a", Sikuli::KeyModifier.CTRL)
   sleep 0.5
   @screen.click("GpgAppletIconNormal.png")
   sleep 2
   @screen.type("k")
-  @screen.wait_and_click_gnome_window("GpgAppletChooseKeyWindow.png", 30)
+  @screen.wait_and_click("GpgAppletChooseKeyWindow.png", 30)
   sleep 0.5
   yield
   maybe_deal_with_pinentry
-  @screen.wait_and_click_gnome_window("GeditWindow.png", 10)
+  @screen.wait_and_click("GeditWindow.png", 10)
   sleep 0.5
   @screen.type("n", Sikuli::KeyModifier.CTRL)
   sleep 0.5
@@ -59,7 +59,7 @@ def encrypt_sign_helper
 end
 
 def decrypt_verify_helper(icon)
-  @screen.wait_and_click_gnome_window("GeditWindow.png", 10)
+  @screen.wait_and_click("GeditWindow.png", 10)
   @screen.type("a", Sikuli::KeyModifier.CTRL)
   sleep 0.5
   @screen.click(icon)
@@ -118,7 +118,7 @@ end
 When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
   @passphrase = pwd
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click_gnome_window("GeditWindow.png", 10)
+  @screen.wait_and_click("GeditWindow.png", 10)
   @screen.type("a", Sikuli::KeyModifier.CTRL)
   sleep 0.5
   @screen.click("GpgAppletIconNormal.png")
@@ -129,7 +129,7 @@ When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
   sleep 1
   @screen.wait("PinEntryPrompt.png", 10)
   @screen.type(@passphrase + Sikuli::Key.ENTER)
-  @screen.wait_and_click_gnome_window("GeditWindow.png", 10)
+  @screen.wait_and_click("GeditWindow.png", 10)
   sleep 0.5
   @screen.type("n", Sikuli::KeyModifier.CTRL)
   sleep 0.5
