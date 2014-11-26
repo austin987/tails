@@ -53,7 +53,6 @@ const Extension = new Lang.Class({
                 if (!open)
                     return;
                 this._altrestartAction.visible = true;
-                this._altlockScreenAction.visible = true;
                 this._altpowerOffAction.visible = true;
             }));
     },
@@ -69,9 +68,6 @@ const Extension = new Lang.Class({
     },
 
     _createActions: function() {
-        this._altlockScreenAction = this.systemMenu._createActionButton('changes-prevent-symbolic', _("Lock Screen"));
-        this._altlockScreenActionID = this._altlockScreenAction.connect('clicked', Lang.bind(this, this._onLockScreenClicked));
-
         this._altrestartAction = this.systemMenu._createActionButton('view-refresh-symbolic', _("Restart"));
         this._altrestartActionID = this._altrestartAction.connect('clicked', Lang.bind(this, this._onRestartClicked));
 
@@ -80,11 +76,6 @@ const Extension = new Lang.Class({
     },
 
     _destroyActions: function() {
-        if (this._altlockScreenActionId) {
-            this._altlockScreenAction.disconnect(this._altlockScreenActionId);
-            this._altlockScreenActionId = 0;
-        }
-
         if (this._altrestartActionId) {
             this._altrestartAction.disconnect(this._altrestartActionId);
             this._altrestartActionId = 0;
@@ -93,11 +84,6 @@ const Extension = new Lang.Class({
         if (this._altpowerOffActionId) {
             this._altpowerOffAction.disconnect(this._altpowerOffActionId);
             this._altpowerOffActionId = 0;
-        }
-
-        if (this._altlockScreenAction) {
-            this._altlockScreenAction.destroy();
-            this._altlockScreenAction = 0;
         }
 
         if (this._altrestartAction) {
@@ -116,7 +102,6 @@ const Extension = new Lang.Class({
     },
 
     _addSeparateButtons: function() {
-        this.systemMenu._actionsItem.actor.add(this._altlockScreenAction, { expand: true, x_fill: false });
         this.systemMenu._actionsItem.actor.add(this._altrestartAction, { expand: true, x_fill: false });
         this.systemMenu._actionsItem.actor.add(this._altpowerOffAction, { expand: true, x_fill: false });
     },
@@ -144,10 +129,6 @@ const Extension = new Lang.Class({
 
     _onRestartClicked: function() {
         Util.spawn(['sudo', '-n', 'reboot'])
-    },
-
-    _onLockScreenClicked: function() {
-        Util.spawn(['gnome-screensaver-command', '--lock'])
     }
 });
 
