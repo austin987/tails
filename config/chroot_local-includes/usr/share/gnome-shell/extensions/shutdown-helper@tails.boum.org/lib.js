@@ -1,5 +1,9 @@
 /* -*- mode: js2; js2-basic-offset: 4; indent-tabs-mode: nil -*- */
 /**
+    Copyright (C) 2014 Raphael Freudiger <laser_b@gmx.ch>
+    Copyright (C) 2014 Jonatan Zeidler <jonatan_zeidler@gmx.de>
+    Copyright (C) 2014 Tails Developers <tails@boum.org>
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 2 of the License, or
