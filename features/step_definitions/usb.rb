@@ -67,7 +67,7 @@ def usb_install_helper(name)
   if @screen.exists("USBSuggestsInstall.png")
     raise ISOHybridUpgradeNotSupported
   end
-  @screen.wait_for_gnome_window('USBCreateLiveUSBConfirmWindow.png', 10)
+  @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
   @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
   @screen.wait('USBInstallationComplete.png', 60*60)
 end
