@@ -502,7 +502,7 @@ end
 
 When /^I warm reboot the computer$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute("reboot")
+  @vm.spawn("reboot")
 end
 
 When /^I request a reboot using the emergency shutdown applet$/ do

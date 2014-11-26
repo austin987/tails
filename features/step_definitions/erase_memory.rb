@@ -161,7 +161,7 @@ end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute("halt")
+  @vm.spawn("halt")
   nr_gibs_of_ram = (@detected_ram_m.to_f/(2**10)).ceil
   try_for(nr_gibs_of_ram*5*60, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
     # We spam keypresses to prevent console blanking from hiding the
