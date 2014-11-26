@@ -32,7 +32,14 @@ prog_potfile () {
    prog=$1
 
    progpath="config/chroot_local-includes$prog"
-   domain=$(basename $prog)
+   case $prog in
+       /usr/share/gnome-shell/extensions/shutdown-helper@tails.boum.org/extension.js)
+           domain=shutdown-helper-extension.js
+           ;;
+       *)
+           domain=$(basename $prog)
+           ;;
+   esac
    echo "tmp/pot/${domain}.pot"
 }
 
