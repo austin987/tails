@@ -29,7 +29,7 @@ const StatusSystem = imports.ui.status.system;
 const PopupMenu = imports.ui.popupMenu;
 const ExtensionSystem = imports.ui.extensionSystem;
 
-const Gettext = imports.gettext.domain('gnome-shell-extension-shutdown-helper');
+const Gettext = imports.gettext.domain('tails');
 const _ = Gettext.gettext;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
