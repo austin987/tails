@@ -16,6 +16,9 @@ SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready-notification.sh \
    /usr/local/sbin/i2p-browser \
    /usr/local/bin/tor-browser \
    /usr/local/sbin/unsafe-browser /usr/share/tails/truecrypt-wrapper.disabled"
+JAVASCRIPT_PROGS=" \
+   /usr/share/gnome-shell/extensions/shutdown-helper@tails.boum.org/extension.js \
+"
 
 LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
 
@@ -102,6 +105,7 @@ mkdir -p tmp/pot
 for prog in $PERL_PROGS   ; do refresh_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do refresh_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
+for prog in $JAVASCRIPT_PROGS  ; do refresh_pot $prog JavaScript ; done
 intltool_update_pot
 
 # If left out files are detected, intltool-update --maintain writes
