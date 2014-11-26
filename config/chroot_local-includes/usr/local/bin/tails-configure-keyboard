@@ -11,7 +11,12 @@ else
 	XKBCONF="$XKBLAYOUT+$XKBVARIANT"
 fi
 
-SOURCES="('xkb', '$XKBCONF'), ('xkb', 'us')"
+# Choose the keyboard layout we'll use regardless of the IBus input methods
+if [ "$XKBLAYOUT" = 'us' ] ; then
+    SOURCES="('xkb', '$XKBCONF')"
+else
+    SOURCES="('xkb', '$XKBCONF'), ('xkb', 'us')"
+fi
 
 # Choose preferred IBus input methods
 LANGPREFIX=`echo "$LANG" | sed 's/_.*//'`
