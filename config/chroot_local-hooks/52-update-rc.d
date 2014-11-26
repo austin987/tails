@@ -14,6 +14,7 @@ i2p
 kexec-load
 laptop-mode
 memlockd
+network-manager
 plymouth
 polipo
 resolvconf
@@ -54,7 +55,3 @@ systemctl enable tor-controlport-filter.service
 # Use socket activation only, to save a bit of memory and boot time
 systemctl disable cups.service
 systemctl enable  cups.socket
-
-# We're starting NetworkManager ourselves
-systemctl disable NetworkManager.service
-systemctl disable NetworkManager-wait-online.service
