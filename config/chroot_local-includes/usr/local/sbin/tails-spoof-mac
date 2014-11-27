@@ -14,6 +14,14 @@ set -e
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
+stop_and_disable_NM() {
+   systemctl stop NetworkManager-wait-online.service
+   systemctl stop NetworkManager.service
+   systemctl stop NetworkManager-dispatcher.service
+   systemctl disable NetworkManager-wait-online.service
+   systemctl disable NetworkManager.service
+}
+
 show_notification() {
     until pgrep gnome-panel >/dev/null; do
         sleep 1
@@ -55,7 +63,7 @@ mac_spoof_panic() {
     echo "blacklist ${module}" >> /etc/modprobe.d/"${module}"-blacklist.conf
     unload_module_and_rev_deps "${module}" || :
     if nic_exists "${nic}"; then
-        service network-manager stop
+        stop_and_disable_NM
         log "Failed to unload module ${module} of NIC ${nic}. Stopping NetworkManager."
         notify_panic_failure "${nic}" "${nic_name}" &
     else
@@ -113,7 +121,7 @@ then
         # If mac_spoof_panic() fails we're quite screwed, so we kill
         # NetworkManager without notification to do our best to
         # prevent a MAC address leak.
-        service network-manager stop
+        stop_and_disable_NM
         log "Panic mode failed for NIC ${NIC}. Killing NetworkManager."
     fi
     exit 1
