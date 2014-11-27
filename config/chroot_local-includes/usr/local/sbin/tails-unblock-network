@@ -22,4 +22,12 @@ fi
 # if NM wins, the udev trigger's run of tails-spoof-mac will fail.
 /sbin/udevadm settle
 
-service network-manager start
+# Enable NetworkManager services
+# No need to manually enable NetworkManager-dispatcher.service,
+# as NetworkManager.service has "Also=NetworkManager-dispatcher.service"
+# in its [Install] section.
+systemctl enable NetworkManager.service
+systemctl enable NetworkManager-wait-online.service
+systemctl start NetworkManager-dispatcher.service
+systemctl start NetworkManager.service
+systemctl start NetworkManager-wait-online.service
