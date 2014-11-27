@@ -15,7 +15,6 @@ kexec-load
 laptop-mode
 memlockd
 network-manager
-plymouth
 polipo
 resolvconf
 saned
