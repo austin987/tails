@@ -23,12 +23,6 @@ tor
 ttdnsd
 "
 
-# Ensure that we are using dependency based boot
-if ! dpkg -s insserv >/dev/null 2>&1 || [ -f /etc/init.d/.legacy-bootordering ]; then
-	echo "Dependency based boot sequencing is not configured. Aborting." >&2
-	exit 1
-fi
-
 echo "Configuring boot sequence"
 
 # The patches to adjust the runlevels are applied to the chroot
