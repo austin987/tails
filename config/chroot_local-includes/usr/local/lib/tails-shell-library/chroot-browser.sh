@@ -69,12 +69,24 @@ setup_browser_chroot () {
     chmod -t "${cow}"
 }
 
+chroot_browser_conf_dir () {
+    local chroot="${1}"
+    local browser_name="${2}"
+    local browser_user="${3}"
+    echo "${chroot}/home/${browser_user}/.${browser_name}"
+}
+
+chroot_browser_profile_dir () {
+    local conf_dir="$(chroot_browser_conf_dir "${@}")"
+    echo "${conf_dir}/profile.default"
+}
+
 set_chroot_browser_locale () {
     local chroot="${1}"
     local browser_name="${2}"
     local browser_user="${3}"
     local locale="${4}"
-    local browser_profile="${chroot}/home/${browser_user}/.${browser_name}/profile.default"
+    local browser_profile="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")"
     configure_xulrunner_app_locale "${browser_profile}" "${locale}"
 }
 
@@ -149,7 +161,7 @@ set_chroot_browser_permissions () {
     local chroot="${1}"
     local browser_name="${2}"
     local browser_user="${3}"
-    local browser_conf="${chroot}/home/${browser_user}/.${browser_name}"
+    local browser_conf="$(chroot_browser_conf_dir "${chroot}" "${browser_name}" "${browser_user}")"
     chown -R "${browser_user}:${browser_user}" "${browser_conf}"
 }
 
@@ -165,8 +177,8 @@ configure_chroot_browser () {
     echo "127.0.0.1 localhost amnesia" > "${chroot}/etc/hosts"
 
     # Create a fresh browser profile for the clearnet user
-    local browser_conf="${chroot}/home/${browser_user}/.${browser_name}"
-    local browser_profile="${browser_conf}/profile.default"
+    local browser_conf="$(chroot_browser_conf_dir "${chroot}" "${browser_name}" "${browser_user}")"
+    local browser_profile="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")"
     local browser_ext="${browser_profile}/extensions"
     mkdir -p "${browser_profile}" "${browser_ext}"
 
