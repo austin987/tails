@@ -4,7 +4,7 @@ language_code_from_locale () {
     echo "${1}" | sed "s,\(_\|\.\).*$,,"
 }
 
-localize_tails_doc_page () {
+localized_tails_doc_page () {
     local page="${1}"
     local lang_code="$(language_code_from_locale "${LANG}")"
     local try_page
