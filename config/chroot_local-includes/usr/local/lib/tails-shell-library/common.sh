@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# Run `check_expr` until `timeout` seconds has passed, and sleep
+# `delay` (optional, defaults to 1) seconds in between the calls.
+# Note that execution isn't aborted exactly after `timeout`
+# seconds. In the worst case (the timeout happens right after we check
+# if the timeout has happened) we'll wait in total: `timeout` seconds +
+# `delay` seconds + the time needed for `check_expr`.
 wait_until() {
     local timeout check_expr delay timeout_at
     timeout="${1}"
@@ -16,7 +22,8 @@ wait_until() {
 }
 
 # Just an alias. The second argument (wait_until()'s check_expr) is
-# the "try code block".
+# the "try code block". Just like in `wait_until()`, the timeout isn't
+# very accurate.
 try_for() {
     wait_until "${@}"
 }
