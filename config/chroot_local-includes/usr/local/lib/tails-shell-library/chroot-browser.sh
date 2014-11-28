@@ -128,9 +128,7 @@ set_chroot_browser_name () {
     fi
     local tmp="$(mktemp -d)"
     local branding="${top}/${rest}/branding/brand.dtd"
-    # Non-zero exit code due to non-standard ZIP archive.
-    # The following steps will fail soon if the extraction failed anyway.
-    7z x -o"${tmp}" "${pack}" "${branding}" || true
+    7z x -o"${tmp}" "${pack}" "${branding}"
     sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${tmp}/${branding}"
     (cd ${tmp} ; 7z u -tzip "${pack}" .)
     chmod a+r "${pack}"
