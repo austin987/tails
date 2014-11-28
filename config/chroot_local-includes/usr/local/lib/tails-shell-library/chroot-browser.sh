@@ -176,7 +176,7 @@ configure_chroot_browser () {
     local chroot="${1}" ; shift
     local browser_name="${1}" ; shift
     local browser_user="${1}" ; shift
-    local startpage="${1}" ; shift
+    local home_page="${1}" ; shift
     # Now $@ is a list of paths (that must be valid after chrooting)
     # to extensions to enable.
 
@@ -201,9 +201,9 @@ configure_chroot_browser () {
     mkdir -p "$(dirname "${browser_prefs}")"
     cp /usr/share/tails/"${browser_name}/prefs.js" "${browser_prefs}"
 
-    # Set start page to something that explains what's going on
-    if [ -n "${startpage}" ]; then
-        echo 'user_pref("browser.startup.homepage", "'"${startpage}"'");' >> \
+    # Set browser home page to something that explains what's going on
+    if [ -n "${home_page}" ]; then
+        echo 'user_pref("browser.startup.homepage", "'"${home_page}"'");' >> \
             "${browser_prefs}"
     fi
 
