@@ -194,7 +194,7 @@ configure_chroot_browser () {
     cp /usr/share/tails/"${browser_name}"/userChrome.css "${browser_chrome}"
 
     # Remove all bookmarks
-    rm -f "${chroot}/${TBB_PROFILE}/bookmarks.html"
+    rm "${chroot}/${TBB_PROFILE}/bookmarks.html"
 
     # Set an appropriate theme, except if we're using Windows
     # camouflage.
