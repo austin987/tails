@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# This shell library is meant to be used with `set -e`.
+
 if [ "$(whoami)" != "root" ]; then
     echo "This library is useless for non-root users. Exiting..." >&2
     exit 1
