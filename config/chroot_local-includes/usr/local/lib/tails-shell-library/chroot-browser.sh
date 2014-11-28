@@ -105,7 +105,7 @@ set_chroot_browser_name () {
 }
 
 # Start the browser in the chroot
-run_chroot_browser () {
+run_browser_in_chroot () {
     local chroot="${1}"
     local browser_name="${2}"
     local chroot_user="${3}"
