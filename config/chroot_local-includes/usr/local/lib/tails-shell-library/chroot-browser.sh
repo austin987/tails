@@ -90,11 +90,32 @@ set_chroot_browser_locale () {
     configure_xulrunner_app_locale "${browser_profile}" "${locale}"
 }
 
+# Must be called after configure_chroot_browser(), since it depends on
+# which extensions are installed in the profile.
 set_chroot_browser_name () {
     local chroot="${1}"
-    local name="${2}"
-    local locale="${3}"
+    local human_readable_name="${2}"
+    local browser_name="${3}"
+    local browser_user="${4}"
+    local locale="${5}"
     local ext_dir="${chroot}/${TBB_EXT}"
+    local browser_profile_ext_dir="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")/extensions"
+
+    # If Torbutton is installed in the browser profile, it will decide
+    # the browser name.
+    if [ -e "${browser_profile_ext_dir}/torbutton@torproject.org" ]; then
+        local torbutton_locale_dir="${ext_dir}/torbutton/chrome/locale/${locale}"
+        if [ ! -d "${torbutton_locale_dir}" ]; then
+            # Surprisingly, the default locale is en, not en-US
+            torbutton_locale_dir="${chroot}"/usr/share/xul-ext/torbutton/chrome/locale/en
+        fi
+        sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${torbutton_locale_dir}/brand.dtd"
+        # Since Torbutton decides the name, we don't have to mess with
+        # with the browser's own branding, which will save time and
+        # memory.
+        return
+    fi
+
     local pack top rest
     if [ "${locale}" != "en-US" ]; then
         pack="${ext_dir}/langpack-${locale}@firefox.mozilla.org.xpi"
@@ -110,7 +131,7 @@ set_chroot_browser_name () {
     # Non-zero exit code due to non-standard ZIP archive.
     # The following steps will fail soon if the extraction failed anyway.
     7z x -o"${tmp}" "${pack}" "${branding}" || true
-    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${name}\">/" "${tmp}/${branding}"
+    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${tmp}/${branding}"
     (cd ${tmp} ; 7z u -tzip "${pack}" .)
     chmod a+r "${pack}"
     rm -Rf "${tmp}"
@@ -129,20 +150,6 @@ run_browser_in_chroot () {
          exec_firefox -DISPLAY=:0.0 \
                       -profile '"/home/${chroot_user}/.${browser_name}/profile.default"
     sudo -u ${local_user} xhost -SI:localuser:${chroot_user} 2>/dev/null
-}
-
-# TorButton forces the Browser name to Tor Browser unless we alter its
-# branding files a bit.
-set_chroot_torbutton_browser_name () {
-    local chroot="${1}"
-    local name="${2}"
-    local locale="${3}"
-    local torbutton_locale_dir="${chroot}"/usr/share/xul-ext/torbutton/chrome/locale/${locale}
-    if [ ! -d "${torbutton_locale_dir}" ]; then
-        # Surprisingly, the default locale is en, not en-US
-        torbutton_locale_dir="${chroot}"/usr/share/xul-ext/torbutton/chrome/locale/en
-    fi
-    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${name}\">/" "${torbutton_locale_dir}/brand.dtd"
 }
 
 # Set the chroot's DNS servers (IPv4 only)
