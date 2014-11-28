@@ -195,8 +195,6 @@ configure_chroot_browser () {
 
     # Remove all bookmarks
     rm -f "${chroot}/${TBB_PROFILE}/bookmarks.html"
-    rm -f "${browser_profile}/bookmarks.html"
-    rm -f "${browser_profile}/places.sqlite"
 
     # Set an appropriate theme, except if we're using Windows
     # camouflage.
