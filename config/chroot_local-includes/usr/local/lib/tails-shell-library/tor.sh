@@ -48,7 +48,10 @@ tor_bootstrap_progress() {
 #}
 
 tor_is_working() {
-	[ -e $TOR_DESCRIPTORS ] || [ -e $NEW_TOR_DESCRIPTORS ]
+	[ -e $TOR_DESCRIPTORS ] || [ -e $NEW_TOR_DESCRIPTORS ] || return 1
+
+	TOR_BOOTSTRAP_PROGRESS=$(tor_bootstrap_progress)
+	[ -n "$TOR_BOOTSTRAP_PROGRESS" ] && [ "$TOR_BOOTSTRAP_PROGRESS" -eq 100 ]
 }
 
 tor_append_to_torrc () {

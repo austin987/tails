@@ -1,0 +1,18 @@
+--- a/etc/apparmor.d/system_tor	2014-09-12 15:44:48.000000000 +0000
++++ b//etc/apparmor.d/system_tor	2014-09-17 04:41:35.591556000 +0000
+@@ -4,8 +4,12 @@
+ profile system_tor {
+   #include <abstractions/tor>
+
++  owner /etc/tor/torrc w,
++  owner /etc/tor/torrc.* w,
++  /lib/live/mount/overlay/etc/tor/* wl,
++
+-  owner /var/lib/tor/** rwk,
+-  owner /var/log/tor/* w,
++  owner /{,lib/live/mount/overlay/}var/lib/tor/** rwk,
++  owner /{,lib/live/mount/overlay/}var/log/tor/* w,
+ 
+   /{,var/}run/tor/control w,
+   /{,var/}run/tor/tor.pid w,
+

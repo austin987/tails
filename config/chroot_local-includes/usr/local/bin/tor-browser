@@ -1,0 +1,78 @@
+#!/bin/sh
+
+
+# Do not "set -u", else importing gettext.sh dies
+# with "ZSH_VERSION: parameter not set".
+set -e
+
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
+PROFILE="${HOME}/.tor-browser/profile.default"
+
+# Import exec_firefox() and configure_best_tor_browser_locale()
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
+ask_for_confirmation() {
+    local dialog_title="`gettext \"Tor is not ready\"`"
+    local dialog_text="`gettext \"Tor is not ready. Start Tor Browser anyway?\"`"
+    local dialog_start="`gettext \"Start Tor Browser\"`"
+    local dialog_cancel="`gettext \"Cancel\"`"
+    # zenity can't set the default button to cancel, so we switch the
+    # labels and interpret the return value as its negation.
+    ! zenity --question \
+        --title "$dialog_title" --text="$dialog_text" \
+        --cancel-label "$dialog_start" --ok-label "$dialog_cancel"
+}
+
+tor_has_bootstrapped() {
+    sudo -n -u debian-tor /usr/local/sbin/tor-has-bootstrapped
+}
+
+# Workaround bug #8036 by copying any localized search plugins into
+# the profile.
+enable_localized_searchplugins() {
+    local locale plugin
+    locale=$(cat "${PROFILE}"/preferences/0000locale.js | \
+                 sed 's@^pref("general\.useragent\.locale", "\([^"]*\)");$@\1@')
+    if [ "${locale}" = en-US ] || [ -e "${PROFILE}"/searchplugins ]; then
+        return
+    fi
+    # Fallback to a similar locale if there is no exact match
+    plugin="$(ls -1 "${TBB_INSTALL}"/distribution/searchplugins/locale/ | grep -m1 "^${locale}\(-[A-Z]\+\)\?$" || true)"
+    if [ -n "${plugin}" ]; then
+        mkdir -p "${PROFILE}"/searchplugins
+        # The plugins do not load if they are symlinks
+        cp --dereference "${TBB_INSTALL}"/distribution/searchplugins/locale/"${plugin}"/*  "${PROFILE}"/searchplugins
+    fi
+}
+
+start_browser() {
+    if [ ! -d "${PROFILE}" ]; then
+        /usr/local/bin/generate-tor-browser-profile
+    fi
+
+    configure_best_tor_browser_locale "${PROFILE}"
+
+    # Workaround bug #8036
+    enable_localized_searchplugins
+
+    if [ -z "$XAUTHORITY" ]; then
+        XAUTHORITY=~/.Xauthority
+        export XAUTHORITY
+    fi
+
+    unset SESSION_MANAGER
+
+    exec_firefox -allow-remote --class "Tor Browser" -profile "${PROFILE}" "${@}"
+}
+
+
+if tor_has_bootstrapped || ask_for_confirmation; then
+    # Torbutton 1.5.1+ uses those environment variables
+    export TOR_SOCKS_HOST='127.0.0.1'
+    export TOR_SOCKS_PORT='9150'
+
+    start_browser "${@}"
+fi
