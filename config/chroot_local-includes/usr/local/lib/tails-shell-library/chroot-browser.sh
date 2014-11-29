@@ -31,7 +31,7 @@ try_cleanup_browser_chroot () {
 }
 
 # Setup a chroot on a clean aufs "fork" of the root filesystem.
-setup_browser_chroot () {
+setup_chroot_for_browser () {
     local chroot="${1}"
     local cow="${2}"
     local user="${3}"
@@ -90,8 +90,8 @@ set_chroot_browser_locale () {
     configure_xulrunner_app_locale "${browser_profile}" "${locale}"
 }
 
-# Must be called after configure_chroot_browser(), since it depends on
-# which extensions are installed in the profile.
+# Must be called after configure_chroot_browser_profile(), since it
+# depends on which extensions are installed in the profile.
 set_chroot_browser_name () {
     local chroot="${1}"
     local human_readable_name="${2}"
@@ -170,7 +170,7 @@ set_chroot_browser_permissions () {
     chown -R "${browser_user}:${browser_user}" "${browser_conf}"
 }
 
-configure_chroot_browser () {
+configure_chroot_browser_profile () {
     local chroot="${1}" ; shift
     local browser_name="${1}" ; shift
     local browser_user="${1}" ; shift
@@ -225,4 +225,26 @@ configure_chroot_browser () {
         # properly configuring GNOME, so we start one in the chroot
         chroot "${chroot}" sudo -H -u "${browser_user}" sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
     fi
+}
+
+configure_chroot_browser () {
+    local chroot="${1}" ; shift
+    local browser_user="${1}" ; shift
+    local browser_name="${1}" ; shift
+    local human_readable_name="${1}" ; shift
+    local home_page="${1}" ; shift
+    local dns_servers="${1}" ; shift
+    # Now $@ is a list of paths (that must be valid after chrooting)
+    # to extensions to enable.
+    local best_locale="$(guess_best_tor_browser_locale)"
+
+    configure_chroot_dns_servers "${chroot}" "${dns_servers}"
+    configure_chroot_browser_profile "${chroot}" "${browser_name}" \
+        "${browser_user}" "${home_page}" "${@}"
+    set_chroot_browser_locale "${chroot}" "${browser_name}" "${browser_user}" \
+        "${best_locale}"
+    set_chroot_browser_name "${chroot}" "${human_readable_name}"  \
+        "${browser_name}" "${browser_user}" "${best_locale}"
+    set_chroot_browser_permissions "${chroot}" "${browser_name}" \
+        "${browser_user}"
 }

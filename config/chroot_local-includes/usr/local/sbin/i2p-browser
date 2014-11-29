@@ -92,7 +92,7 @@ HOME_PAGE="http://127.0.0.1:7657"
 NOSCRIPT_EXT_XPI="${TBB_EXT}/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
 TORBUTTON_EXT_DIR="${TBB_EXT}/torbutton@torproject.org"
 HUMAN_READABLE_NAME="`gettext \"I2P Browser\"`"
-BEST_LOCALE="$(guess_best_tor_browser_locale)"
+IP4_NAMESERVERS="0.0.0.0"
 
 # Prevent multiple instances of the script.
 exec 9>"${LOCK}"
@@ -106,22 +106,15 @@ fi
 show_start_notification
 
 echo "* Setting up chroot"
-setup_browser_chroot "${CHROOT}" "${COW}" "${BROWSER_USER}" || \
+setup_chroot_for_browser "${CHROOT}" "${COW}" "${BROWSER_USER}" || \
     error "`gettext \"Failed to setup chroot.\"`"
 
 echo "* Configuring chroot"
-configure_chroot_dns_servers "${CHROOT}" "0.0.0.0"
-configure_chroot_browser "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
-    "${HOME_PAGE}" "${TBB_EXT}"/langpack-*.xpi \
-    "${NOSCRIPT_EXT_XPI}" "${TORBUTTON_EXT_DIR}" && \
-copy_extra_tbb_prefs "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" && \
-set_chroot_browser_locale "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
-    "${BEST_LOCALE}" && \
-set_chroot_browser_name "${CHROOT}" "${HUMAN_READABLE_NAME}" "${BROWSER_NAME}" \
-    "${BROWSER_USER}" "${BEST_LOCALE}" && \
-set_chroot_browser_permissions "${CHROOT}" "${BROWSER_NAME}" \
-    "${BROWSER_USER}" || \
-    error "`gettext \"Failed to configure browser.\"`"
+configure_chroot_browser "${CHROOT}" "${BROWSER_USER}" "${BROWSER_NAME}" \
+    "${HUMAN_READABLE_NAME}" "${HOME_PAGE}" "${IP4_NAMESERVERS}" \
+    "${TBB_EXT}"/langpack-*.xpi "${NOSCRIPT_EXT_XPI}" "${TORBUTTON_EXT_DIR}" && \
+    copy_extra_tbb_prefs "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" || \
+        error "`gettext \"Failed to configure browser.\"`"
 
 echo "* Starting I2P Browser"
 run_browser_in_chroot "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
