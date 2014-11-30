@@ -24,7 +24,7 @@ try_cleanup_browser_chroot () {
     local user="${3}"
     try_for 10 "pkill -u ${user} 1>/dev/null 2>&1" 0.1 || \
         pkill -9 -u "${user}" || :
-    for mnt in "${chroot}"/dev "${chroot}"/proc "${chroot}" "${cow}"; do
+    for mnt in "${chroot}/dev" "${chroot}/proc" "${chroot}" "${cow}"; do
         try_for 10 "umount ${mnt} 2>/dev/null" 0.1
     done
     rmdir "${cow}" "${chroot}"
@@ -61,8 +61,8 @@ setup_chroot_for_browser () {
     mkdir -p "${cow}" "${chroot}" && \
     mount -t tmpfs tmpfs "${cow}" && \
     mount -t aufs -o "noatime,noxino,dirs=${aufs_dirs}" aufs "${chroot}" && \
-    mount -t proc proc "${chroot}"/proc && \
-    mount --bind /dev "${chroot}"/dev || \
+    mount -t proc proc "${chroot}/proc" && \
+    mount --bind "/dev" "${chroot}/dev" || \
         return 1
 
     # Workaround for #6110
@@ -95,11 +95,11 @@ configure_chroot_dns_servers () {
     local chroot="${1}" ; shift
     local ip4_nameservers="${@}"
 
-    rm -f ${chroot}/etc/resolv.conf
+    rm -f "${chroot}/etc/resolv.conf"
     for ns in ${ip4_nameservers}; do
         echo "nameserver ${ns}" >> "${chroot}/etc/resolv.conf"
     done
-    chmod a+r ${chroot}/etc/resolv.conf
+    chmod a+r "${chroot}/etc/resolv.conf"
 }
 
 set_chroot_browser_permissions () {
@@ -136,7 +136,7 @@ configure_chroot_browser_profile () {
     # Set preferences
     local browser_prefs="${browser_profile}/preferences/prefs.js"
     mkdir -p "$(dirname "${browser_prefs}")"
-    cp /usr/share/tails/"${browser_name}/prefs.js" "${browser_prefs}"
+    cp "/usr/share/tails/${browser_name}/prefs.js" "${browser_prefs}"
 
     # Set browser home page to something that explains what's going on
     if [ -n "${home_page}" ]; then
@@ -147,7 +147,7 @@ configure_chroot_browser_profile () {
     # Customize the GUI
     local browser_chrome="${browser_profile}/chrome/userChrome.css"
     mkdir -p "$(dirname "${browser_chrome}")"
-    cp /usr/share/tails/"${browser_name}"/userChrome.css "${browser_chrome}"
+    cp "/usr/share/tails/${browser_name}/userChrome.css" "${browser_chrome}"
 
     # Remove all bookmarks
     rm "${chroot}/${TBB_PROFILE}/bookmarks.html"
@@ -155,7 +155,7 @@ configure_chroot_browser_profile () {
     # Set an appropriate theme, except if we're using Windows
     # camouflage.
     if ! windows_camouflage_is_enabled; then
-        cat /usr/share/tails/"${browser_name}"/theme.js >> "${browser_prefs}"
+        cat "/usr/share/tails/${browser_name}/theme.js" >> "${browser_prefs}"
     else
         # The tails-activate-win8-theme script requires that the
         # browser profile is writable by the user running the script.
@@ -192,7 +192,7 @@ set_chroot_browser_name () {
         local torbutton_locale_dir="${ext_dir}/torbutton/chrome/locale/${locale}"
         if [ ! -d "${torbutton_locale_dir}" ]; then
             # Surprisingly, the default locale is en, not en-US
-            torbutton_locale_dir="${chroot}"/usr/share/xul-ext/torbutton/chrome/locale/en
+            torbutton_locale_dir="${chroot}/usr/share/xul-ext/torbutton/chrome/locale/en"
         fi
         sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${torbutton_locale_dir}/brand.dtd"
         # Since Torbutton decides the name, we don't have to mess with
@@ -249,10 +249,10 @@ run_browser_in_chroot () {
     local chroot_user="${3}"
     local local_user="${4}"
 
-    sudo -u ${local_user} xhost +SI:localuser:${chroot_user}
-    chroot ${chroot} sudo -u ${chroot_user} /bin/sh -c \
-        '. /usr/local/lib/tails-shell-library/tor-browser.sh && \
+    sudo -u "${local_user}" xhost +SI:localuser:"${chroot_user}"
+    chroot "${chroot}" sudo -u "${chroot_user}" /bin/sh -c \
+        ". /usr/local/lib/tails-shell-library/tor-browser.sh && \
          exec_firefox -DISPLAY=:0.0 \
-                      -profile '"$(browser_profile_dir ${browser_name} ${chroot_user})"
-    sudo -u ${local_user} xhost -SI:localuser:${chroot_user}
+                      -profile $(browser_profile_dir ${browser_name} ${chroot_user})"
+    sudo -u "${local_user}" xhost -SI:localuser:"${chroot_user}"
 }

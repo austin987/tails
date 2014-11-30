@@ -55,13 +55,13 @@ copy_extra_tbb_prefs () {
     local browser_user="${3}"
 
     local tbb_prefs="/etc/tor-browser/profile/preferences"
-    local browser_prefs_dir="${chroot}/home/${browser_user}/.${browser_name}"/profile.default/preferences
+    local browser_prefs_dir="${chroot}/home/${browser_user}/.${browser_name}/profile.default/preferences"
     mkdir -p "${browser_prefs_dir}"
     # Selectively copy the TBB prefs we want
-    sed '/\(security\|update\|download\|spell\|noscript\|torbrowser\|torbutton\)/!d' "${tbb_prefs}"/0000tails.js > \
-                    "${browser_prefs_dir}"/0000tails.js
-    sed '/\(capability\|noscript\|torbutton\)/!d' "${tbb_prefs}"/extension-overrides.js > \
-                    "${browser_prefs_dir}"/extension-overrides.js
+    sed '/\(security\|update\|download\|spell\|noscript\|torbrowser\|torbutton\)/!d' "${tbb_prefs}/0000tails.js" > \
+                    "${browser_prefs_dir}/0000tails.js"
+    sed '/\(capability\|noscript\|torbutton\)/!d' "${tbb_prefs}/extension-overrides.js" > \
+                    "${browser_prefs_dir}/extension-overrides.js"
     chown -R "${browser_user}:${browser_user}" "${browser_prefs_dir}"
 }
 
@@ -76,7 +76,7 @@ show_shutdown_notification () {
 # This isn't very useful without I2P...
 i2p_is_enabled || exit 0
 
-CMD=$(basename "${0}")
+CMD="$(basename "${0}")"
 LOCK="/var/lock/${CMD}"
 
 . gettext.sh
