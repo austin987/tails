@@ -23,11 +23,11 @@ try_cleanup_browser_chroot () {
     local cow="${2}"
     local user="${3}"
     try_for 10 "pkill -u ${user} 1>/dev/null 2>&1" 0.1 || \
-        pkill -9 -u "${user}" 1>/dev/null 2>&1 || :
+        pkill -9 -u "${user}" || :
     for mnt in "${chroot}"/dev "${chroot}"/proc "${chroot}" "${cow}"; do
         try_for 10 "umount ${mnt} 2>/dev/null" 0.1
     done
-    rmdir "${cow}" "${chroot}" 2>/dev/null
+    rmdir "${cow}" "${chroot}"
 }
 
 # Setup a chroot on a clean aufs "fork" of the root filesystem.
@@ -249,10 +249,10 @@ run_browser_in_chroot () {
     local chroot_user="${3}"
     local local_user="${4}"
 
-    sudo -u ${local_user} xhost +SI:localuser:${chroot_user} 2>/dev/null
+    sudo -u ${local_user} xhost +SI:localuser:${chroot_user}
     chroot ${chroot} sudo -u ${chroot_user} /bin/sh -c \
         '. /usr/local/lib/tails-shell-library/tor-browser.sh && \
          exec_firefox -DISPLAY=:0.0 \
                       -profile '"$(browser_profile_dir ${browser_name} ${chroot_user})"
-    sudo -u ${local_user} xhost -SI:localuser:${chroot_user} 2>/dev/null
+    sudo -u ${local_user} xhost -SI:localuser:${chroot_user}
 }
