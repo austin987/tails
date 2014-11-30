@@ -69,11 +69,20 @@ setup_chroot_for_browser () {
     chmod -t "${cow}"
 }
 
+browser_conf_dir () {
+    local browser_name="${1}"
+    local browser_user="${2}"
+    echo "/home/${browser_user}/.${browser_name}"
+}
+
+browser_profile_dir () {
+    local conf_dir="$(browser_conf_dir "${@}")"
+    echo "${conf_dir}/profile.default"
+}
+
 chroot_browser_conf_dir () {
-    local chroot="${1}"
-    local browser_name="${2}"
-    local browser_user="${3}"
-    echo "${chroot}/home/${browser_user}/.${browser_name}"
+    local chroot="${1}"; shift
+    echo "${chroot}/$(browser_conf_dir "${@}")"
 }
 
 chroot_browser_profile_dir () {
@@ -244,6 +253,6 @@ run_browser_in_chroot () {
     chroot ${chroot} sudo -u ${chroot_user} /bin/sh -c \
         '. /usr/local/lib/tails-shell-library/tor-browser.sh && \
          exec_firefox -DISPLAY=:0.0 \
-                      -profile '"/home/${chroot_user}/.${browser_name}/profile.default"
+                      -profile '"$(browser_profile_dir ${browser_name} ${chroot_user})"
     sudo -u ${local_user} xhost -SI:localuser:${chroot_user} 2>/dev/null
 }
