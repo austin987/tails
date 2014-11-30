@@ -113,7 +113,6 @@ configure_chroot_browser_profile () {
     echo "127.0.0.1 localhost amnesia" > "${chroot}/etc/hosts"
 
     # Create a fresh browser profile for the clearnet user
-    local browser_conf="$(chroot_browser_conf_dir "${chroot}" "${browser_name}" "${browser_user}")"
     local browser_profile="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")"
     local browser_ext="${browser_profile}/extensions"
     mkdir -p "${browser_profile}" "${browser_ext}"
