@@ -15,41 +15,91 @@ maximum of 10 GB of free storage.
 [Vagrant]: http://vagrantup.com/
 [VirtualBox]: http://www.virtualbox.org/
 
-Set up the build environment on Debian Jessie:
+## Installing the dependencies in Debian
 
-1. Add Debian unstable to your APT sources.
-2. Pin all packages from Debian unstable at 500 (`apt_preferences(5)`).
-3. Add a pin for vagrant (version 1.4.3+dfsg1-3) and ruby-net-ssh (version
-   2.6.8-2) at priority 550 to prevent these packages from being updated.
-4. Install the needed tools:
+### If you run Debian Jessie
+
+1. Add Debian unstable to your APT sources:
+
+       echo "deb http://ftp.us.debian.org/debian/ unstable main" | \
+           sudo tee /etc/apt/sources.list.d/unstable.list
+
+2. Pin all packages from Debian unstable at 500 (`apt_preferences(5)`):
+
+       sudo tee /etc/apt/preferences.d/unstable EOF<<
+       Package: *
+       Pin: release o=Debian,a=unstable
+       Pin-Priority: 500
+       EOF
+
+3. Install the needed tools:
 
        $ sudo apt-get install git virtualbox rake ruby-childprocess \
          ruby-erubis ruby-i18n ruby-log4r ruby-net-scp ruby bsdtar curl
 
-Or, on Debian Wheezy:
+### If you run Debian Wheezy
 
-1. Add Debian Jessie, unstable and wheezy-backports to your APT sources.
-2. Pin all packages from Debian Jessie and unstable at 500 (`apt_preferences(5)`).
-3. Add a pin for vagrant (version 1.4.3+dfsg1-3) and ruby-net-ssh (version
-   2.6.8-2) at priority 550 to prevent these packages from being updated.
-4. Install the needed tools:
+1. Add Debian Jessie, unstable and wheezy-backports to your APT sources:
+
+       echo "deb http://ftp.us.debian.org/debian/ jessie main" | \
+           sudo tee /etc/apt/sources.list.d/jessie.list
+       echo "deb http://ftp.us.debian.org/debian/ unstable main" | \
+           sudo tee /etc/apt/sources.list.d/unstable.list
+       echo "deb http://ftp.us.debian.org/debian/ wheezy-backports main" | \
+           sudo tee /etc/apt/sources.list.d/wheezy-backports.list
+
+2. Pin all packages from Debian Jessie and unstable at 500 (`apt_preferences(5)`):
+
+       sudo tee /etc/apt/preferences.d/jessie EOF<<
+       Package: *
+       Pin: release o=Debian,a=jessie
+       Pin-Priority: 500
+       EOF
+       sudo tee /etc/apt/preferences.d/unstable EOF<<
+       Package: *
+       Pin: release o=Debian,a=unstable
+       Pin-Priority: 500
+       EOF
+
+3. Install the needed tools:
 
        $ sudo apt-get install git virtualbox rake ruby-childprocess/jessie \
          ruby-net-scp/jessie ruby-erubis ruby-i18n ruby-log4r bsdtar curl \
          gettext/wheezy-backports
 
-Then, please run:
+### In both Debian Wheezy and Jessie
 
-    $ curl -O http://snapshot.debian.org/archive/debian-ports/20141007T193909Z/pool/main/v/vagrant/vagrant_1.4.3%2Bdfsg1-3_all.deb
-    $ curl -O http://snapshot.debian.org/archive/debian-ports/20140411T072702Z/pool/main/r/ruby-net-ssh/ruby-net-ssh_2.6.8-2_all.deb
-    $ sudo dpkg -i vagrant_1.4.3%2Bdfsg1-3_all.deb ruby-net-ssh_2.6.8-2_all.deb
+At the moment Tails relies on a version of Vagrant (the 1.4.x series)
+that is not packaged in Debian any more. Here's a workaround for both
+Debian Wheezy and Jessie:
 
-Once all dependencies are installed, get the Tails sources and proceed
-with building as follows:
+    sudo tee /etc/apt/preferences.d/vagrant-1.4.3 EOF<<
+    Package: vagrant
+    Pin: version 1.4.3+dfsg1-3
+    Pin-Priority: 550
+
+    Package: ruby-net-ssh
+    Pin: version 1:2.6.8-2
+    Pin-Priority: 550
+    EOF
+    echo "deb http://snapshot.debian.org/archive/debian/20141010T042049Z/ unstable main" | \
+        sudo tee /etc/apt/sources.list.d/20141010T042049Z.list
+    sudo apt-get -o Acquire::Check-Valid-Until=false update
+    sudo apt-get install vagrant ruby-net-ssh
+    sudo rm /etc/apt/sources.list.d/20141010T042049Z.list
+    sudo apt-get update
+
+## Building Tails using Vagrant
+
+Once all dependencies are installed, get the Tails sources and
+checkout the development branch:
 
     $ git clone git://git.tails.boum.org/tails
     $ cd tails
     $ git checkout devel
+
+Build Tails using Vagrant:
+
     $ export TAILS_BUILD_OPTIONS="noproxy"
     $ rake build
     $ unset TAILS_BUILD_OPTIONS
