@@ -1,13 +1,12 @@
---- a/etc/init.d/kexec-load	2014-11-21 09:52:51.744000000 +0000
-+++ b/etc/init.d/kexec-load	2014-11-21 09:53:08.384000000 +0000
-@@ -101,15 +101,6 @@
+--- a/etc/init.d/kexec-load	2014-12-01 20:23:12.826065938 +0100
++++ b/etc/init.d/kexec-load	2014-12-01 20:23:31.389572352 +0100
+@@ -101,14 +101,6 @@
  	exit 3
  	;;
    stop)
 -	# If running systemd, we want kexec reboot only if current
 -	# command is reboot
--	pidof systemd > /dev/null 2>&1
--	if [ $? -eq 0 ]; then
+-	if [ -d /run/systemd/system ]; then
 -		systemctl list-jobs systemd-reboot.service | grep -q systemd-reboot.service
 -		if [ $? -ne 0 ]; then
 -			exit 0
@@ -16,4 +15,3 @@
  	do_stop
  	;;
    *)
-
