@@ -46,4 +46,5 @@ find -iname "$FILE_GLOB" -print0 \
             --max-procs=$(egrep '^processor[[:space:]]+:' /proc/cpuinfo | wc -l) \
             --max-args=64 \
             i18nspector \
+    | grep -v --line-regexp '' \
     | grep -v -f $PATTERNS_FILE
