@@ -41,4 +41,9 @@ else
     FILE_GLOB="*.po"
 fi
 
-find -iname "$FILE_GLOB" -exec i18nspector '{}' \; | grep -v -f $PATTERNS_FILE
+find -iname "$FILE_GLOB" -print0 \
+    | xargs -0 \
+            --max-procs=$(egrep '^processor[[:space:]]+:' /proc/cpuinfo | wc -l) \
+            --max-args=64 \
+            i18nspector \
+    | grep -v -f $PATTERNS_FILE
