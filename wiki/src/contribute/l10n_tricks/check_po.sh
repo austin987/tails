@@ -41,10 +41,13 @@ else
     FILE_GLOB="*.po"
 fi
 
-find -iname "$FILE_GLOB" -print0 \
-    | xargs -0 \
-            --max-procs=$(egrep '^processor[[:space:]]+:' /proc/cpuinfo | wc -l) \
-            --max-args=64 \
-            i18nspector \
-    | grep -v --line-regexp '' \
-    | grep -v -f $PATTERNS_FILE
+CPUS=$(egrep '^processor[[:space:]]+:' /proc/cpuinfo | wc -l)
+OUTPUT=$(find -iname "$FILE_GLOB" -print0 \
+                | xargs -0 --max-procs="$CPUS" --max-args=64 i18nspector \
+                | grep -v --line-regexp '' \
+                | grep -v -f $PATTERNS_FILE)
+
+echo $OUTPUT
+
+# Exit code: 0 iff. the filtered i18nspector's output was empty
+[ $(echo "$OUTPUT" | wc -l) -eq 0 ]
