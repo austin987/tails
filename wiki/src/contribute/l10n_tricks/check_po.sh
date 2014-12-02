@@ -47,7 +47,7 @@ OUTPUT=$(find -iname "$FILE_GLOB" -print0 \
                 | grep -v --line-regexp '' \
                 | grep -v -f $PATTERNS_FILE)
 
-echo $OUTPUT
+echo "$OUTPUT"
 
 # Exit code: 0 iff. the filtered i18nspector's output was empty
 [ $(echo "$OUTPUT" | wc -l) -eq 0 ]
