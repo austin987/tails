@@ -4,13 +4,19 @@
 
 # Usage: check_po.sh [LANGUAGE]
 
+set -u
+
 if ! [ -x "`which i18nspector`" ] ; then
     echo "i18nspector: command not found"
     echo "You need to install i18nspector first. See /contribute/l10n_tricks."
     exit 2
 fi
 
-ONLY_LANG="$1"
+if [ $# -ge 1 ] ; then
+    FILE_GLOB="*.${1}.po"
+else
+    FILE_GLOB="*.po"
+fi
 
 PATTERNS_FILE="$(mktemp -t XXXXXX.patterns)"
 echo "
@@ -34,12 +40,6 @@ no-version-in-project-id-version
 unable-to-determine-language
 unknown-poedit-language
 " | grep -v '^$' > "$PATTERNS_FILE"
-
-if [ -n "$ONLY_LANG" ]; then
-    FILE_GLOB="*.${ONLY_LANG}.po"
-else
-    FILE_GLOB="*.po"
-fi
 
 CPUS=$(egrep '^processor[[:space:]]+:' /proc/cpuinfo | wc -l)
 OUTPUT=$(find -iname "$FILE_GLOB" -print0 \
