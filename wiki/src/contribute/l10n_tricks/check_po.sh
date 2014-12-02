@@ -15,7 +15,7 @@ fi
 if [ $# -ge 1 ] ; then
     FILE_GLOB="*.${1}.po"
 else
-    FILE_GLOB="*.po"
+    FILE_GLOB='*.po'
 fi
 
 PATTERNS_FILE="$(mktemp -t XXXXXX.patterns)"
