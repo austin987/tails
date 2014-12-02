@@ -33,7 +33,7 @@ no-report-msgid-bugs-to-header-field
 no-version-in-project-id-version
 unable-to-determine-language
 unknown-poedit-language
-" | grep -v '^$' > $PATTERNS_FILE
+" | grep -v '^$' > "$PATTERNS_FILE"
 
 if [ -n "$ONLY_LANG" ]; then
     FILE_GLOB="*.${ONLY_LANG}.po"
@@ -45,7 +45,7 @@ CPUS=$(egrep '^processor[[:space:]]+:' /proc/cpuinfo | wc -l)
 OUTPUT=$(find -iname "$FILE_GLOB" -print0 \
                 | xargs -0 --max-procs="$CPUS" --max-args=64 i18nspector \
                 | grep -v --line-regexp '' \
-                | grep -v -f $PATTERNS_FILE)
+                | grep -v -f "$PATTERNS_FILE")
 
 echo -n "$OUTPUT"
 
