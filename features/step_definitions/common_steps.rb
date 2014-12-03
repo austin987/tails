@@ -527,16 +527,7 @@ end
 
 When /^I start the Tor Browser$/ do
   next if @skip_steps_while_restoring_background
-  case @theme
-  when "windows"
-    step 'I click the start menu'
-    @screen.wait_and_click("WindowsApplicationsInternet.png", 10)
-    @screen.wait_and_click("WindowsApplicationsTorBrowser.png", 10)
-  else
-    @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-    @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
-    @screen.wait_and_click("GnomeApplicationsTorBrowser.png", 10)
-  end
+  step 'I start "TorBrowser" via the GNOME "Internet" applications menu'
 end
 
 When /^I start the Tor Browser in offline mode$/ do
@@ -648,9 +639,7 @@ end
 
 When /^I start and focus GNOME Terminal$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsAccessories.png", 10)
-  @screen.wait_and_click("GnomeApplicationsTerminal.png", 20)
+  step 'I start "Terminal" via the GNOME "Accessories" applications menu'
   @screen.wait_and_click('GnomeTerminalWindow.png', 20)
 end
 
@@ -684,4 +673,31 @@ Given /^the USB drive "([^"]+)" contains Tails with persistence configured and p
     step "I create a persistent partition with password \"#{password}\""
     step "a Tails persistence partition with password \"#{password}\" exists on USB drive \"#{drive}\""
     step "I shutdown Tails and wait for the computer to power off"
+end
+
+Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
+  next if @skip_steps_while_restoring_background
+  case @theme
+  when "windows"
+    prefix = 'Windows'
+  else
+    prefix = 'Gnome'
+  end
+  @screen.wait_and_click(prefix + "ApplicationsMenu.png", 10)
+  @screen.wait_and_hover(prefix + "Applications" + submenu + ".png", 20)
+  @screen.wait_and_click(prefix + "Applications" + app + ".png", 20)
+end
+
+Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
+  next if @skip_steps_while_restoring_background
+  case @theme
+  when "windows"
+    prefix = 'Windows'
+  else
+    prefix = 'Gnome'
+  end
+  @screen.wait_and_click(prefix + "ApplicationsMenu.png", 10)
+  @screen.wait_and_hover(prefix + "Applications" + submenu + ".png", 20)
+  @screen.wait_and_hover(prefix + "Applications" + subsubmenu + ".png", 20)
+  @screen.wait_and_click(prefix + "Applications" + app + ".png", 20)
 end
