@@ -50,15 +50,19 @@ if [ -n "$JENKINS_URL" ]; then
 
 	if [ -z "$WORKSPACE" ]; then
 		echo "WORKSPACE environment variable is not set. Aborting." >&2
+		exit 2
 	fi
 	if [ -z "$ARTIFACTS_ROOT_DIR" ] ; then
 		echo "ARTIFACTS_ROOT_DIR environment variable is not set. Aborting." >&2
+		exit 3
 	fi
 	if [ -z "$GIT_BRANCH" ]; then
 		echo "GIT_BRANCH environment variable is not set. Aborting." >&2
+		exit 4
 	fi
 	if [ -z "$GIT_COMMIT" ]; then
 		echo "GIT_COMMIT environment variable is not set. Aborting." >&2
+		exit 5
 	fi
 	REV="${GIT_BRANCH##origin/}"
 	COMMIT="$GIT_COMMIT"
