@@ -24,10 +24,7 @@ What we have
   one too. No idea about Ubuntu 14.04 LTS and upcoming 14.10, let
   alone other distros or non-Linux OS.
 
-* Our Vagrant setup does not work for building on-disk (as opposed as
-  building in RAM) ([[!tails_ticket 7133]]), and our basebox is still
-  based on Squeeze ([[!tails_ticket 7218]]).
-  Both are being addressed.
+* Our Vagrant setup has many problems: [[!tails_ticket 7527]].
 
 * What our Vagrant thing does:
   - downloads and checks a build basebox as needed
@@ -41,9 +38,7 @@ What we have
   - retrieve the build artifacts from the build VM onto the host system
 
 * Vagrant hasn't been actively maintained in Debian for a while.
-  It was removed from testing, and won't be in Jessie unless someone™
-  does something™ about it. It was just orphaned. It's unclear if
-  someone is going to adopt it.
+  It'll likely be part of Jessie, but that's by a very short margin.
 
 * VirtualBox vs. QEMU/KVM:
   - One can't run both VirtualBox and QEMU/KVM on the same system.
@@ -57,7 +52,7 @@ What we have
   - There's a vagrant-libvirt plugin available, not in Debian yet, see
     the corresponding blueprint for packaging and backporting
     challenges. That's irrelevant, though, if the vagrant package
-    itself is not maintained in Debian.
+    itself is not very well maintained in Debian.
   - There's a libvirt driver for VirtualBox too.
 
 * Vagrant's upstream provides a .deb, but no proper source package
@@ -69,10 +64,24 @@ What we have
 * Docker is seeing a lot of traction lately. It might be a better bet
   than Vagrant on the long-term.
 
+What others use
+===============
+
+* Ubuntu cloud images are built with vmbuilder, which works basically
+  at the same level as live-build. It might be useful to create and
+  maintain a builder basebox, but it doesn't provide the same glue as
+  Vagrant for downloading, managing, booting and file sharing.
+* Same for other building cloud images for other operating systems,
+  apparently:
+  <http://docs.openstack.org/image-guide/content/ch_creating_images_automatically.html>
+* [Vortex](https://github.com/websecurify/node-vortex/) is similar
+  to Vagrant. Only supports VirtualBox (and the Amazon cloud) as
+  of 20141130.
+
 Plan
 ====
 
 * Short-term: fix the Vagrant situation for the most important
-  usecases ([[!tails_ticket 7526]])
+  usecases ([[!tails_ticket 7527]])
 * Mid-term: fix the situation for real, starting with evaluating
-  Docker ([[!tails_ticket 7527]], [[blueprint/evaluate_Docker]])
+  Docker ([[!tails_ticket 7530]], [[blueprint/evaluate_Docker]])
