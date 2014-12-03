@@ -43,14 +43,16 @@ trap cleanup EXIT
 
 if [ -n "$JENKINS_URL" ]; then
 	# Build triggered by Jenkins
+	ENV_FILE=/etc/jenkins/environment
+	if [ -f "$ENV_FILE" ] && [ -r "$ENV_FILE" ] ; then
+		. "$ENV_FILE"
+	fi
+
 	if [ -z "$WORKSPACE" ]; then
 		echo "WORKSPACE environment variable is not set. Aborting." >&2
 	fi
-	if mountpoint -q /srv/www; then
-		ARTIFACTS_DIR=/srv/www/"$JOB_NAME"
-	else
-		echo "Shared directory is not available, saving artifacts in workspace." >&2
-		ARTIFACTS_DIR="$WORKSPACE"
+	if [ -z "$ARTIFACTS_ROOT_DIR" ] ; then
+		echo "ARTIFACTS_ROOT_DIR environment variable is not set. Aborting." >&2
 	fi
 	if [ -z "$GIT_BRANCH" ]; then
 		echo "GIT_BRANCH environment variable is not set. Aborting." >&2
@@ -60,6 +62,7 @@ if [ -n "$JENKINS_URL" ]; then
 	fi
 	REV="${GIT_BRANCH##origin/}"
 	COMMIT="$GIT_COMMIT"
+	ARTIFACTS_DIR="$ARTIFACTS_ROOT_DIR/$JOB_NAME"
 else
 	# Build triggered by Vagrant
 	WORKSPACE=/home/vagrant/amnesia
