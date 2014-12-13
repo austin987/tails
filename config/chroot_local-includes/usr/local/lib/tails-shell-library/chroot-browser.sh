@@ -250,10 +250,10 @@ run_browser_in_chroot () {
     local local_user="${4}"
     local profile="$(browser_profile_dir ${browser_name} ${chroot_user})"
 
-    sudo -u "${local_user}" xhost +SI:localuser:"${chroot_user}"
+    sudo -u "${local_user}" "xhost +SI:localuser:${chroot_user}"
     chroot "${chroot}" sudo -u "${chroot_user}" /bin/sh -c \
         ". /usr/local/lib/tails-shell-library/tor-browser.sh && \
          exec_firefox -DISPLAY=:0.0 \
                       -profile '${profile}'"
-    sudo -u "${local_user}" xhost -SI:localuser:"${chroot_user}"
+    sudo -u "${local_user}" xhost "-SI:localuser:${chroot_user}"
 }
