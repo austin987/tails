@@ -40,7 +40,7 @@ i2p_router_console_is_ready() {
 }
 
 set_best_i2p_router_console_lang() {
-    # We will use the detected language even if I2P doesn't supports it; it
+    # We will use the detected language even if I2P doesn't support it; it
     # will default to English in that case.
     local lang="$(language_code_from_locale "${LANG}")"
     # We first try to set it in an existing "live" config, even though
