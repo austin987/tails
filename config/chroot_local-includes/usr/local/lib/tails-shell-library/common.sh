@@ -28,6 +28,15 @@ try_for() {
     wait_until "${@}"
 }
 
+# Sets the `value` of a `key` in a simple configuration `file`. With
+# "simple" you should think something like a the shell environment as
+# output by the `env` command. Hence this is only useful for
+# configuration files that have no structure (e.g. sections with
+# semantic meaning, like the namespace secions in .gitconfig), allow
+# only one assignment per line, and a fixed/static assignment operator
+# (`op`, which defaults to '=', but other examples would be " = " or
+# torrc's " "). If the key already exists its value is updated in
+# place, otherwise it's added at the end.
 set_simple_config_key() {
     local key="${1}"
     local value="${2}"
