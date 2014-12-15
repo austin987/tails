@@ -28,7 +28,7 @@ try_for() {
     wait_until "${@}"
 }
 
-set_key() {
+set_simple_config_key() {
     local key="${1}"
     local value="${2}"
     local file="${3}"

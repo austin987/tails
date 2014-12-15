@@ -49,7 +49,7 @@ set_best_i2p_router_console_lang() {
     for config in "${I2P_CONFIG}/router.config" \
                   "${I2P_DEFAULT_CONFIG}/router.config"; do
         if [ -e "${config}" ]; then
-            set_key "routerconsole.lang" "${lang}" "${config}"
+            set_simple_config_key "routerconsole.lang" "${lang}" "${config}"
             return 0
         fi
     done
