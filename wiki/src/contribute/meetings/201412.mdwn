@@ -1,0 +1,86 @@
+[[!meta title="December 2014 meeting"]]
+
+[[!toc levels=1]]
+
+# [[!tails_ticket 5684 desc="Screen Locker"]]
+
+We could reuse the "admin password" (that is, really, user password +
+sudo), but we would need to convey the info that one needs to set one in
+order to be able to lock the screen. This seems complicated and implies
+that a user has to set the admin password at boot time. A second
+password makes sense.
+
+A suggestion was made to prompt the user for a password when she
+activates the screen locker for the first time, so she can set a new
+password. For persistence users, this password could maybe be made
+persistent.
+
+A warning could and should equally displayed at that first moment of
+activating the screen locker.
+
+How can we achieve this, ideas:
+
+1. use a different PAM config for the screensaver
+2. turn the admin password into the root one, and use the user
+   password's as the locker's one.
+
+intrigeri can give a hand on the PAM front. For the JS side of things,
+ask alan and anonym.
+
+Next steps:
+
+- investigate technical solutions to do that ([[!tails_ticket 8383]])
+- investigate how other distros do that ([[!tails_ticket 8384]])
+- investigate if other distros are interested in our solution (if so,
+  make it into a deb package?) ([[!tails_ticket 8385]])
+
+# Random vs. shared username and hostname
+
+Starting points:
+
+* [[!tails_ticket 7061]]
+* [[!tails_ticket 5655]]
+* <https://mailman.boum.org/pipermail/tails-dev/2014-August/006736.html>
+
+After discussing circuit isolation and fingerprinting through a possible
+list of hostnames (as first suggested Griffin) or random hostnames, we
+came again to the conclusion that anything but the single and shared
+username+hostname seems actively harmful for people who do mix
+activities and identities in a single Tails session.
+
+We agree that for now we want to keep one common user/hostname as this
+seems to provide most anonymity.
+It would provide a bigger anonymity set to share this name with other
+distros, this is reconfirmed.
+Most would then prefer "debian" as a hostname.
+
+Users still need to be aware that they should not mix identities.
+As a side note, when making decisions, we don't focus on usecases that
+mix identities, but still we take it into account.
+
+# [[!tails_ticket 7419 desc="Rename Tor Browser in camouflage mode?"]]
+
+Yes, this seems good to have, but has low priority.
+Would be good entry point for someone who wants to start hacking Tails.
+intrigeri volunteered to turn this into an Easy ticket.
+
+# [[!tails_ticket 8125 desc="Host the Tor Browser tarballs we need ourselves"]]
+
+Needs to be further discussed by those most involved in the issue.
+Skipping discussion.
+
+# [[!tails_ticket 8174 desc="Build Tor with seccomp"]]
+
+Yes, this should happen and has been answerered on the ticket itself.
+Skipping discussion.
+
+# [[!tails_ticket 8236 desc="Greeter revamp: Decide between 'play' and 'computer' logo for Start button"]]
+
+* play: [[blueprint/greeter_revamp_UI/greeter-1st-screen-persistence.png]]
+* computer: [[blueprint/greeter_revamp_UI/greeter-guided-context.png]]
+
+We concluded unanimously that the "Play" icon is more appropriate as it
+implies the idea of starting something whereas the computer implies the
+idea of modifying settings. Furthermore, the important thing is that the
+screen has a (translatable) string "Start" or similar, which explains
+the icon further to the user.
