@@ -31,12 +31,6 @@ Feature: Browsing the web using the Unsafe Browser
     And I start the Unsafe Browser
     Then I see a warning about another instance already running
 
-  Scenario: The Unsafe Browser cannot be restarted before the previous instance has been cleaned up.
-    When I successfully start the Unsafe Browser
-    And I close the Unsafe Browser
-    And I start the Unsafe Browser
-    Then I see a warning about another instance already running
-
   Scenario: Opening check.torproject.org in the Unsafe Browser shows the red onion and a warning message.
     When I successfully start the Unsafe Browser
     And I open the address "https://check.torproject.org" in the Unsafe Browser
