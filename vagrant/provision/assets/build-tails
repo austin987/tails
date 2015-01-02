@@ -129,6 +129,18 @@ if [ -n "$JENKINS_URL" ]; then
 		sha512sum "$file" >> "$ISO.shasum"
 	done
 	gpg --batch --detach-sign --armor "$ISO.shasum"
+
+	USER_ON_ACNG_HOST=jenkins
+	ACNG_HOST=apt-proxy.lizard
+	ACNG_REMOTE_LOG=/var/log/apt-cacher-ng/apt-cacher.log
+	ACNG_LOCAL_LOG=$(basename "$ACNG_REMOTE_LOG")
+	sftp "${USER_ON_ACNG_HOST}@${ACNG_HOST}:${ACNG_REMOTE_LOG}"
+	BUILD_IP=$(ip a show dev eth0 | grep '^\s\+inet\s' | awk '{print $2}' | sed -e 's,/.*,,')
+	START_TIME=$(cat "$ISO.start.timestamp")
+	END_TIME=$(cat "$ISO.end.timestamp")
+	./auto/scripts/packages-from-acng-log "$ACNG_LOCAL_LOG" "$BUILD_IP" \
+					      "$START_TIME" "$END_TIME" \
+					      "${ISO}.binpkgs" "${ISO}.srcpkgs"
 fi
 
 mv -f tails-* "$ARTIFACTS_DIR"
