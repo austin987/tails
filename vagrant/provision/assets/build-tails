@@ -141,10 +141,16 @@ if [ -n "$JENKINS_URL" ]; then
 	./auto/scripts/packages-from-acng-log "$ACNG_LOCAL_LOG" "$BUILD_IP" \
 					      "$START_TIME" "$END_TIME" \
 					      "${ISO}.binpkgs" "${ISO}.srcpkgs"
-	rm "$ISO".{start,end}.timestamp
+	rm "$ISO".*.timestamp
 fi
 
 mv -f tails-* "$ARTIFACTS_DIR"
+
+if [ -n "$JENKINS_URL" ]; then
+	for EXT in '' .binpkgs .srcpkgs .shasum .shasum.asc .packages .buildlog ; do
+		ln -sf "${ISO}${EXT}" "$ARTIFACTS_DIR/latest.iso${EXT}"
+	done
+fi
 
 if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
     ! sudo umount "$BUILD_DIR"/cache/stages_bootstrap 2>/dev/null; then
