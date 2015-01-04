@@ -139,7 +139,16 @@ enabled.
 
 Download a snapshot of the current Tails files:
 
-	rsync -rt --delete rsync.torproject.org::amnesia-archive \
+	rsync -rt --delete \
+	         rsync.torproject.org::amnesia-archive \
+	         /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
+
+If you have disk space limitations, you might want to exclude the
+`/tails/obsolete` folder (which contains old versions of Tails) from the
+download:
+
+	rsync -rt --delete --exclude=/tails/obsolete --delete-excluded \
+	         rsync.torproject.org::amnesia-archive \
 	         /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
 
 4. Schedule the pulling of the files
