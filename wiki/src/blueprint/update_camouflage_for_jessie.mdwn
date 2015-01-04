@@ -1,0 +1,82 @@
+# Introduction
+
+Our [[documentation|doc/first_steps/startup_options/windows_camouflage]] reads "if
+you are using a computer in public you may want to avoid attracting unwanted
+attention by changing the way Tails looks into something that resembles
+Microsoft Windows 8." This is what we call the "Windows camouflage".
+
+[[!img doc/first_steps/startup_options/windows_camouflage/windows_camouflage.jpg size=320x240 link=no]]
+
+The Windows camouflage will be [[!tails_ticket 8064 desc="broken in Debian Jessie based Tails"]]. This blueprint
+describes what should be done to update the Windows camouflage to Jessie.
+
+# Goals and non-Goals
+
+The goal of the Windows camouflage is to "avoid attracting unwanted attention" when
+"using a computer in public". To achieve this goal, the display of a Tails
+system with the Windows camouflage should look similar to the display of a computer
+running a common operating system such as Microsoft Windows for a person seeing
+the computer from a few meters distance.
+
+The goal of Windows camouflage is **not** to look exactly like Microsoft
+Windows. For example, it is acceptable for the icons not to be exactly the same.
+
+The goal of Windows camouflage update is **not** to cover more versions of
+windows nor to implement an OS X camouflage. Even if those would be nice bonuses.
+
+# Requirements
+
+Windows camouflage update MUST include:
+
+- a Gtk 3 theme that looks like Windows 8.1 desktop interface compatible with
+  the version of Gtk 3 shipped in Debian Jessie (3.14.5)
+- a Gtk 2 theme that looks like Windows 8.1 desktop interface compatible with
+  the version of Gtk 2 shipped in Debian Jessie (2.24.25)
+- a Mutter/Metacity theme that looks like Windows 8.1 desktop compatible with
+  the version of Mutter shipped in Debian Jessie (3.14.2)
+- an icon theme that looks like Windows 8.1 desktop icons compatible with the version
+  of GNOME shipped in Debian Jessie (3.14.2) and including all icons that might
+  be displayed on the Tails desktop at startup.
+- a GNOME Shell theme/extension that looks like Windows 8.1 desktop panel compatible with
+  the version on GNOME Shell shipped in Debian Jessie (3.14.2)
+- a way to enable all the required components to provide the camouflage mode
+  that can be triggered by [[Tails Greeter|/doc/first_steps/startup_options#greeter]]
+
+Windows camouflage MAY include:
+
+- a GNOME Shell theme/extension that makes GNOME Shell activity view looks like
+  the Windows 8.1 start screen, compatible with the version on GNOME Shell shipped
+  in Debian Jessie (3.14.2)
+
+# Implementation
+
+## Pieces needing update
+
+- [[!tails_gitweb_repo gnome-theme-windows8]] which
+  should mostly need an update. It contains:
+  - an icon theme based on [[Gnomeight GNOME Icon Theme by Ambiance
+    69|http://gnome-look.org/content/show.php/?content=163560]]
+  - a Gtk 2 and 3 theme based on [[Windows 8 modern UI (metro) Gtk3 (+Gtk2) by Maxime
+    D.|http://gnome-look.org/content/show.php/?content=158721]]
+  - [[Windows 8 modern UI (metro) Metacity Theme by Maxime D.|http://gnome-look.org/content/show.php/?content=157024]]
+  - [[Windows 8 cursors by David Farkas|http://gnome-look.org/content/show.php/?content=155025]]
+- activation scripts, one [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-prepare-win8-theme desc="run as root"]] and one run [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-activate-win8-theme desc="in the GNOME session"]] which should mostly need an update. They are [[!greeter_gitweb PostLogin.default desc="triggered by the greeter"]]
+
+## Pieces to drop
+
+- [[!tails_gitweb_repo gnome-panel-applet-window-picker desc="GNOME Panel's Window Picker Applet"]] which should not be used anymore as Debian Jessie based Tails don't use GNOME Panel anymore.
+
+## Missing pieces
+
+The biggest and most exciting task is probably to implement the missing part of
+the puzzle which is an GNOME Shell theme/extension that mimic the Windows 8.1
+desktop. This is probably about writing a custom shell theme and/or extension, inspired by
+GNOME's "classic" set of extensions.
+
+Resources:
+
+- the GNOME Shell's "Classic" set of extensions: [[windows
+  list|https://git.gnome.org/browse/gnome-shell-extensions/tree/extensions/window-list]];
+[[apps-menu|https://git.gnome.org/browse/gnome-shell-extensions/tree/extensions/apps-menu]]
+and [[places-menu|https://git.gnome.org/browse/gnome-shell-extensions/tree/extensions/places-menu]]
+- a [[relevant cinnamon theme|http://cinnamon-spices.linuxmint.com/themes/view/188]]
