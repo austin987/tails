@@ -95,7 +95,12 @@ OLD_MAC="$(get_current_mac_of_nic "${NIC}")"
 # real MAC address at each occasion but actually leaking the real MAC
 # address will be more serious in practice.
 for i in 1 2 3; do
-    spoof_mac "${NIC}" || :
+    if ! spoof_mac "${NIC}"; then
+        # If our MAC spoofing primitive fails, we fail safe by forcing
+        # us to enter into panic mode.
+        unset NEW_MAC
+        break
+    fi
     NEW_MAC="$(get_current_mac_of_nic "${NIC}")"
     if [ "${OLD_MAC}" != "${NEW_MAC}" ]; then
         break
