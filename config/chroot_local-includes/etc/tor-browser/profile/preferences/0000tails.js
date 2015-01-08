@@ -4,8 +4,6 @@ pref("extensions.torbutton.banned_ports", "631,6136,4444,4445,6668,7656,7657,765
 pref("extensions.torbutton.custom.socks_host", "127.0.0.1");
 pref("extensions.torbutton.custom.socks_port", 9150);
 pref("extensions.torbutton.launch_warning",  false);
-pref("extensions.torbutton.loglevel", 2);
-pref("extensions.torbutton.logmethod", 0);
 pref("extensions.torbutton.settings_method", "custom");
 pref("extensions.torbutton.socks_port", 9150);
 pref("extensions.torbutton.use_privoxy", false);

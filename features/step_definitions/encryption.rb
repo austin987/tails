@@ -23,9 +23,7 @@ end
 
 When /^I type a message into gedit$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsAccessories.png", 10)
-  @screen.wait_and_click("GnomeApplicationsGedit.png", 20)
+  step 'I start "Gedit" via the GNOME "Accessories" applications menu'
   @screen.wait_and_click("GeditWindow.png", 10)
   sleep 0.5
   @screen.type("ATTACK AT DAWN")

@@ -32,6 +32,7 @@ dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
 * SanDisk Cruzer USB 3.0 64GB
 * SanDisk Cruzer Blade 4GB, 8GB, and 32GB
 * SanDisk Cruzer Facet
+* SanDisk Cruzer Orbiter 32GB (hangs at installation time but boots fine afterwards)
 * SanDisk Ultra 32 GB
 
 SanDisk had begun the production of flash drives configured as fixed disk in
@@ -168,7 +169,7 @@ Mac
 * MacBook Air 3,2 (A1369 EMC 2392) freezes when booting Tails in
   UEFI mode.
 * MacBookPro (early 2011) fails to boot from DVD since Tails 1.1.
-* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) fail to boot from a USB stick created by
+* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) and MacBookPro late 2011 (8,2) fail to boot from a USB stick created by
   Tails Installer.
 
 <a id="chainloading"></a>
@@ -197,6 +198,10 @@ On rare systems (non-PAE with big amounts of memory),
 Tails does not consistently [[!tails_todo
 more_efficient_memory_wipe desc="erase all system memory as it
 should"]].
+
+If no [[cold boot attack|doc/advanced_topics/cold_boot_attacks]]
+happens directly after shutdown, the RAM empties itself in minutes,
+and all data disappears.
 
 After using Tails Installer, the "emergency shutdown" doesn't work
 ------------------------------------------------------------------
@@ -269,6 +274,24 @@ Fingerprint
 
 Other issues
 ============
+
+<a id="i2p_browser"></a>
+
+Hard to exchange files with the I2P Browser
+-------------------------------------------
+
+It is impossible to exchange files between the I2P Browser and the amnesia user.
+See [[!tails_ticket 8280]]. But you can do that with
+administration rights from the command line. The home directory of the I2P Browser is
+located in `/var/lib/i2p-browser/chroot/home/i2pbrowser/`.
+
+You might have to check the permissions of the files that you want to exchange
+with the I2P Browser:
+
+  - They need to belong to the `i2pbrowser` user to be accessible from inside
+    of the I2P browser.
+  - They need to belong to the `amnesia` user to be accessible from outside of
+    the I2P Browser.
 
 Boot menu has display issues
 ----------------------------

@@ -110,9 +110,11 @@ Transifex branches of `git://git.torproject.org/translation.git` (e.g.
 
 Add and commit.
 
-Then check the PO files [[using i18nspector|contribute/l10n_tricks]].
-Correct all the errors that are not in the ignored list of
-[[`check_po.sh`|contribute/l10n_tricks]]. Commit the changes if any.
+Then check the PO files:
+
+	./wiki/src/contribute/l10n_tricks/check_po.sh
+
+Correct any displayed error, then commit the changes if any.
 
 Then see the relevant release processes:
 
@@ -318,6 +320,14 @@ SquashFS file order
    - remove the bits about `kill-boot-profile` at the end: they're
      only useful when profiling the boot
 1. Inspect the Git diff (including diff stat), apply common sense.
+   The following command is also helpful but requires that you save a
+   copy of the old sort file into `/tmp/squashfs.sort.old`:
+
+       diff -NaurB \
+           <( cut -d' ' -f1 /tmp/squashfs.sort.old | sort ) \
+           <( cut -d' ' -f1 config/binary_rootfs/squashfs.sort | sort ) \
+           | less
+
 1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
 
 Build the final image
