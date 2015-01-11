@@ -3,7 +3,7 @@ require 'rexml/document'
 
 class VMNet
 
-  attr_reader :net_name, :net
+  attr_reader :net_name, :net, :host_real_mac
 
   def initialize(virt, xml_path)
     @virt = virt
@@ -28,6 +28,7 @@ class VMNet
   def update(xml)
     net_xml = REXML::Document.new(xml)
     @net_name = net_xml.elements['network/name'].text
+    @host_real_mac = net_xml.elements['network/ip/dhcp/host/'].attributes['mac']
     destroy_and_undefine
     @net = @virt.define_network_xml(xml)
     @net.create
@@ -80,6 +81,10 @@ class VM
       @display.stop if @display && @display.active?
     rescue
     end
+  end
+
+  def real_mac
+    @vmnet.host_real_mac
   end
 
   def set_network_link_state(state)
