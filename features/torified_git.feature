@@ -20,3 +20,8 @@ Feature: Cloning a git repository
     When I run "git clone https://git-tails.immerda.ch/myprivatekeyispublic/testing" in GNOME Terminal
     And process "git" has stopped running after at most 180 seconds
     Then the git repository "testing" has been cloned successfully
+
+  Scenario: Cloning a git repository over the Git protocol
+    When I run "git clone git://git.tails.boum.org/myprivatekeyispublic/testing" in GNOME Terminal
+    And process "git" has stopped running after at most 180 seconds
+    Then the git repository "testing" has been cloned successfully
