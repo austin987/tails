@@ -25,3 +25,10 @@ Feature: Cloning a git repository
     When I run "git clone git://git.tails.boum.org/myprivatekeyispublic/testing" in GNOME Terminal
     And process "git" has stopped running after at most 180 seconds
     Then the git repository "testing" has been cloned successfully
+
+  Scenario: Cloning git repository over SSH
+    Given I have the SSH key for a git repository
+    When I run "git clone tails@git.tails.boum.org:myprivatekeyispublic/testing" in GNOME Terminal
+    And I verify the SSH fingerprint for the git repository
+    And process "git" has stopped running after at most 180 seconds
+    Then the git repository "testing" has been cloned successfully
