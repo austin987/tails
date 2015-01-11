@@ -15,10 +15,7 @@ Feature: Various checks
     Then the VirtualBox guest modules are available
 
    Scenario: The shipped Tails signing key is up-to-date
-    Given the network is plugged
-    And Tor is ready
-    And all notifications have disappeared
-    Then the shipped Tails signing key is not outdated
+    Then the shipped Tails signing key will be valid for the next 3 months
 
   Scenario: The live user is setup correctly
     Then the live user has been setup by live-boot
