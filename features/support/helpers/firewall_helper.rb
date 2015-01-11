@@ -34,16 +34,23 @@ class IPAddr
 end
 
 class FirewallLeakCheck
-  attr_reader :ipv4_tcp_leaks, :ipv4_nontcp_leaks, :ipv6_leaks, :nonip_leaks
+  attr_reader :ipv4_tcp_leaks, :ipv4_nontcp_leaks, :ipv6_leaks, :nonip_leaks, :mac_leaks
 
   def initialize(pcap_file, hosts)
     @pcap_file = pcap_file
     packets = PacketFu::PcapFile.new.file_to_array(:filename => @pcap_file)
+    mac_leaks = []
     ipv4_tcp_packets = []
     ipv4_nontcp_packets = []
     ipv6_packets = []
     nonip_packets = []
     packets.each do |p|
+      if PacketFu::EthPacket.can_parse?(p)
+        packet = PacketFu::EthPacket.parse(p)
+        mac_leaks << packet.eth_saddr
+        mac_leaks << packet.eth_daddr
+      end
+
       if PacketFu::TCPPacket.can_parse?(p)
         ipv4_tcp_packets << PacketFu::TCPPacket.parse(p)
       elsif PacketFu::IPPacket.can_parse?(p)
@@ -57,6 +64,7 @@ class FirewallLeakCheck
         raise "Found something in the pcap file that cannot be parsed"
       end
     end
+    @mac_leaks = mac_leaks.uniq
     ipv4_tcp_hosts = get_public_hosts_from_ippackets ipv4_tcp_packets
     accepted = Set.new(hosts)
     @ipv4_tcp_leaks = ipv4_tcp_hosts.select { |host| !accepted.member?(host) }
