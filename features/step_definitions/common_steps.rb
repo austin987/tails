@@ -463,6 +463,14 @@ Given /^process "([^"]+)" is running within (\d+) seconds$/ do |process, time|
   end
 end
 
+Given /^process "([^"]+)" has stopped running after at most (\d+) seconds$/ do |process, time|
+  next if @skip_steps_while_restoring_background
+  try_for(time.to_i, :msg => "Process '#{process}' is still running after " +
+                             "waiting for #{time} seconds") do
+    not @vm.has_process?(process)
+  end
+end
+
 Given /^process "([^"]+)" is not running$/ do |process|
   next if @skip_steps_while_restoring_background
   assert(!@vm.has_process?(process),
