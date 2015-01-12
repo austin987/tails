@@ -57,12 +57,8 @@ end
 Given /^MAC spoofing will fail, and the module cannot be unloaded$/ do
   next if @skip_steps_while_restoring_background
   step "MAC spoofing will fail by not spoofing and always returns true"
-
-  # TODO: Make `modprove -r e1000` fail some how, perhaps by creating
-  # a wrapper that fails specifically for the "-r e1000" argument but
-  # operates normally for anything else. Or make tails-mac-spoof use
-  # rmmod instead, and symlink it to /bin/false.
-  STDERR.puts "NOT IMPLEMENTED"
+  @vm.execute_successfully("mv /sbin/rmmod /sbin/rmmod.orig")
+  @vm.execute_successfully("ln -s /bin/false /sbin/rmmod")
 end
 
 When /^see the "Network card disabled" notification$/ do
