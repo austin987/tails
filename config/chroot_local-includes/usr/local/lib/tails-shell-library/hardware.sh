@@ -74,5 +74,7 @@ mod_rev_dep() {
 # Unloads module $1, and all modules that (transatively) depends on
 # $1 (i.e. its reverse dependencies).
 unload_module_and_rev_deps() {
-  /sbin/modprobe -r $(mod_rev_dep ${1})
+  for mod in $(mod_rev_dep ${1}); do
+      /sbin/rmmod ${mod}
+  done
 }
