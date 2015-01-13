@@ -1,0 +1,21 @@
+--- a/usr/share/perl5/Tails/IUK.pm
++++ b/usr/share/perl5/Tails/IUK.pm
+@@ -255,6 +255,7 @@ method _build_squashfs_diff  {
+ 
+     run_as_root(
+         "rsync", "--archive", "--quiet", "--delete-after", "--acls",
++        "--checksum",
+         sprintf("%s/", dir($new_squashfs_mount)),
+         sprintf("%s/", dir($union)),
+     );
+--- a/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile/Download.pm
++++ b/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile/Download.pm
+@@ -105,7 +105,7 @@ method _build_curl_opts {
+     }
+     else {
+         my $cafile = $ENV{HTTPS_CA_FILE};
+-        $cafile  //= '/etc/ssl/certs/UTN_USERFirst_Hardware_Root_CA.pem';
++        $cafile  //= '/usr/local/etc/ssl/certs/tails.boum.org-CA.pem';
+         push @opts, CURLOPT_SSL_VERIFYHOST,  2;
+         push @opts, CURLOPT_SSL_VERIFYPEER,  1;
+         push @opts, CURLOPT_CAINFO,          $cafile;
