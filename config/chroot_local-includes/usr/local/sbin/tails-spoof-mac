@@ -15,7 +15,15 @@ TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
 show_notification() {
-    until pgrep gnome-panel >/dev/null; do
+    # We must wait until all the facilities necessary for showing the
+    # notification to the Live user is available to prevent it from
+    # getting lost.
+    # Note: We pgrep for notification-daemon's full command because
+    # otherwise pgrep will look at the process name, which seems to be
+    # cropped to 15 chars, i.e. "notification-da". Also, we probably
+    # do not want to get mixed up with "gdu-notification-daemon".
+    until pgrep gnome-panel >/dev/null && \
+          pgrep --full /usr/lib/notification-daemon/notification-daemon >/dev/null; do
         sleep 1
     done
     /usr/local/sbin/tails-notify-user "${1}" "${2}" 0
@@ -68,7 +76,7 @@ spoof_mac() {
     local msg
     if ! msg=$(macchanger -e "${1}" 2>&1); then
         log "macchanger failed for NIC ${1}, returned ${?} and said: ${msg}"
-        exit 1
+        return 1
     fi
 }
 
@@ -95,7 +103,12 @@ OLD_MAC="$(get_current_mac_of_nic "${NIC}")"
 # real MAC address at each occasion but actually leaking the real MAC
 # address will be more serious in practice.
 for i in 1 2 3; do
-    spoof_mac "${NIC}" || :
+    if ! spoof_mac "${NIC}"; then
+        # If our MAC spoofing primitive fails, we fail safe by forcing
+        # us to enter into panic mode.
+        unset NEW_MAC
+        break
+    fi
     NEW_MAC="$(get_current_mac_of_nic "${NIC}")"
     if [ "${OLD_MAC}" != "${NEW_MAC}" ]; then
         break
