@@ -63,8 +63,8 @@ mac_spoof_panic() {
     echo "blacklist ${module}" >> /etc/modprobe.d/"${module}"-blacklist.conf
     unload_module_and_rev_deps "${module}" || :
     if nic_exists "${nic}"; then
-        service network-manager stop
         log "Failed to unload module ${module} of NIC ${nic}. Stopping NetworkManager."
+        service network-manager stop
         notify_panic_failure "${nic}" "${nic_name}" &
     else
         log "Successfully unloaded module ${module} of NIC ${nic}."
@@ -126,8 +126,8 @@ then
         # If mac_spoof_panic() fails we're quite screwed, so we kill
         # NetworkManager without notification to do our best to
         # prevent a MAC address leak.
-        service network-manager stop
         log "Panic mode failed for NIC ${NIC}. Killing NetworkManager."
+        service network-manager stop
     fi
     exit 1
 fi
