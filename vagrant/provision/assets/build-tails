@@ -125,10 +125,6 @@ as_root_do lb build
 
 if [ -n "$JENKINS_URL" ]; then
 	ISO=$(ls *.iso)
-	for file in tails-*; do
-		sha512sum "$file" >> "$ISO.shasum"
-	done
-	gpg --batch --detach-sign --armor "$ISO.shasum"
 
 	USER_ON_ACNG_HOST=jenkins
 	ACNG_HOST=apt-proxy.lizard
@@ -142,6 +138,11 @@ if [ -n "$JENKINS_URL" ]; then
 					      "$START_TIME" "$END_TIME" \
 					      "${ISO}.binpkgs" "${ISO}.srcpkgs"
 	rm "$ISO".*.timestamp
+
+	for file in tails-*; do
+		sha512sum "$file" >> "$ISO.shasum"
+	done
+	gpg --batch --detach-sign --armor "$ISO.shasum"
 fi
 
 mv -f tails-* "$ARTIFACTS_DIR"
