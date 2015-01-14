@@ -1,8 +1,67 @@
-tails (1.2.3) UNRELEASED; urgency=medium
+tails (1.2.3) unstable; urgency=medium
 
-  * Dummy changelog entry for the next point release.
+  * Security fixes
+    - Upgrade linux-image-3.16.0-4-* to version 3.16.7-ckt2-1.
+    - Install Tor Browser 4.0.3 (based on Firefox 31.4.0esr) (Closes:
+      #8700).
+    - Fail safe by entering panic mode if macchanger exits with an
+      error, since in this situation we have to treat the
+      driver/device state as undefined. Also, we previously just
+      exited the script in this case, not triggering the panic mode
+      and potentially leaking the real MAC address (Closes: #8571).
+    - Disable upgrade checking in the Unsafe Browser. Until now the
+      Unsafe Browser has checked for upgrades of the Tor Browser in
+      the clear (Closes: #8694).
 
- -- Tails developers <tails@boum.org>  Tue, 16 Dec 2014 17:37:39 +0100
+  * Bugfixes
+    - Wait for notification-daemon to run before showing the MAC
+      spoofing panic mode notifications. Without this, the "Network
+      card disabled" notification is sometimes lost when MAC spoofing
+      fails. Unfortunately this only improves the situation, but
+      doesn't fix it completely (see #8685).
+    - Log that we're going to stop NetworkManager before trying to do
+      it in the MAC spoofing scripts. Without this we wouldn't get the
+      log message in case stopping NetworkManager fails (thanks to
+      `set -e`).
+    - Set gnome-screenshot preferences to save the screenshots in
+      /home/amnesia (Closes: #8087).
+    - Do not suspend to RAM when closing lid on battery power (Closes:
+      #8071).
+    - Properly update the Tails Installer's status when plugging in a
+      USB drive after it has started (Closes: #8353).
+    - Make rsync compare file contents by using --checksum for more
+      reliable generation of the squashfs filesystem in
+      IUKs. Previously it used the default, which is checking
+      timestamps and file size, but that doesn't play well with some
+      of the Tor browser files, which could result in updated files
+      not ending up in the IUK.
+
+  * Minor improvements
+    - Finish migrating tails-security-check and tails-iuk to our
+      website's new X.509 certificate authority (Closes: #8404).
+
+  * Build system
+    - Update to vagrant build box tails-builder-20141201. The only
+      change is the removal of a reference to an ISO image which
+      doesn't exist (except on the system that generated the build
+      box) which causes an error for some users (Closes: #7644).
+    - Generate the list of packages used during build, after building
+      with Jenkins (Closes: #8518).
+
+  * Automated test suite
+    - Check PO files (Closes: #8359).
+    - Fix the expected image of a check.tp.o failure. Previously we
+      looked for the "Sorry. You are not using Tor." text, but it
+      seems it recently changed enough for Sikuli to not find it. To
+      prevent future errors of the same kind we'll look for the
+      crossed-over onion icon instead (Closes: #8533).
+    - Bump timeout when waiting for Tor to re-bootstrap. We have a
+      dreaded issue with timeouts that are multiple of 2 minutes, and
+      then Tor succeeds soon after, so in order to allow for this
+      timeout to be reached twice, and then possibly succeed, let's
+      use N*2 minutes + 30 seconds, with N=2.
+
+ -- Tails developers <tails@boum.org>  Wed, 14 Jan 2015 16:12:26 +0100
 
 tails (1.2.2) unstable; urgency=medium
 
