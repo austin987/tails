@@ -1,9 +1,9 @@
 tails (1.2.3) unstable; urgency=medium
 
   * Security fixes
-    - Upgrade linux-image-3.16.0-4-* to version 3.16.7-ckt2-1.
-    - Install Tor Browser 4.0.3 (based on Firefox 31.4.0esr) (Closes:
-      #8700).
+    - Upgrade Linux to 3.16.7-ckt2-1.
+    - Upgrade Tor Browser to 4.0.3 (based on Firefox 31.4.0esr)
+      (Closes: #8700).
     - Fail safe by entering panic mode if macchanger exits with an
       error, since in this situation we have to treat the
       driver/device state as undefined. Also, we previously just
@@ -14,6 +14,7 @@ tails (1.2.3) unstable; urgency=medium
       the clear (Closes: #8694).
 
   * Bugfixes
+    - Fix startup of the Unsafe Browser in some locales (Closes: #8693).
     - Wait for notification-daemon to run before showing the MAC
       spoofing panic mode notifications. Without this, the "Network
       card disabled" notification is sometimes lost when MAC spoofing
@@ -23,33 +24,35 @@ tails (1.2.3) unstable; urgency=medium
       it in the MAC spoofing scripts. Without this we wouldn't get the
       log message in case stopping NetworkManager fails (thanks to
       `set -e`).
-    - Set gnome-screenshot preferences to save the screenshots in
+    - Set GNOME Screenshot preferences to save the screenshots in
       /home/amnesia (Closes: #8087).
-    - Do not suspend to RAM when closing lid on battery power (Closes:
-      #8071).
+    - Do not suspend to RAM when closing the lid on battery power
+      (Closes: #8071).
     - Properly update the Tails Installer's status when plugging in a
       USB drive after it has started (Closes: #8353).
     - Make rsync compare file contents by using --checksum for more
       reliable generation of the squashfs filesystem in
       IUKs. Previously it used the default, which is checking
-      timestamps and file size, but that doesn't play well with some
-      of the Tor browser files, which could result in updated files
-      not ending up in the IUK.
+      timestamps and file size, but that doesn't play well with the
+      Tor browser files, that have a fixed mtime, which could result
+      in updated files not ending up in the IUK.
 
   * Minor improvements
-    - Finish migrating tails-security-check and tails-iuk to our
-      website's new X.509 certificate authority (Closes: #8404).
+    - Finish migrating tails-security-check's and tails-iuk's pinning
+      to our website's new X.509 certificate authority (Closes: #8404).
 
   * Build system
-    - Update to vagrant build box tails-builder-20141201. The only
+    - Update to Vagrant build box tails-builder-20141201. The only
       change is the removal of a reference to an ISO image which
       doesn't exist (except on the system that generated the build
       box) which causes an error for some users (Closes: #7644).
     - Generate the list of packages used during build, after building
-      with Jenkins (Closes: #8518).
+      with Jenkins (Closes: #8518). This allows tracking their status
+      on the Debian reproducible build front:
+      https://reproducible.debian.net/index_pkg_sets.html#tails
 
   * Automated test suite
-    - Check PO files (Closes: #8359).
+    - Check PO files with i18nspector (Closes: #8359).
     - Fix the expected image of a check.tp.o failure. Previously we
       looked for the "Sorry. You are not using Tor." text, but it
       seems it recently changed enough for Sikuli to not find it. To
