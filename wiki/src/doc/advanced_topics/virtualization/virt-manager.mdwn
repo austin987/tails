@@ -115,6 +115,8 @@ Then do the following:
 You can keep the original ISO image connected as a virtual DVD to
 install Tails onto the USB stick or SD card if needed.
 
+<a id="disconnect"></a>
+
 You can also disconnect the original ISO image and boot directly from the
 USB stick once Tails is already installed on it. To do so:
 
@@ -136,11 +138,42 @@ USB stick once Tails is already installed on it. To do so:
 
 <a id="virtual_usb"></a>
 
-Running Tails from a virtual USB device
-=======================================
+Running Tails from a virtual USB storage
+========================================
 
-1. "View" → "Details"
-2. "Add Hardware" → "Storage"
-   - "Bus type": USB
-3. Click "USB Disk 1" in left pane
-   Check "Removable"
+You can also run Tails from a virtual USB storage, saved as a single
+file on the host operating system.
+
+To run Tails from a virtual USB device using *Virt-manager*, first
+create a virtual machine running from an ISO image as described
+[[above|virt-manager#iso]].
+
+Then do the following to create a virtual USB storage:
+
+  1. From the virtual machine window, choose
+     <span class="menuchoice">
+     <span class="guimenu">Virtual Machine</span>&nbsp;▸
+     <span class="guisubmenuitem">Shut Down</span>&nbsp;▸
+     <span class="guimenuitem">Force Off</span></span> to shut down the
+     virtual machine.
+  1. Choose
+     <span class="menuchoice">
+     <span class="guimenu">View</span>&nbsp;▸
+     <span class="guimenuitem">Details</span></span> to edit the
+     configuration of the virtual machine.
+  1. Click on the **Add Hardware** button on the bottom of the left
+     pane.
+  1. Select **Storage** in the left pane.
+  1. In the right pane, change the **Bus type** to USB and click
+     **Finish**.
+  1. Select **USB Disk 1** in the left pane.
+  1. In the right pane, select the **Removable** option and click
+     **Apply**.
+
+Then start the virtual machine from the virtual DVD to install Tails
+onto the virtual USB storage. The virtual USB storage appears in *Tails
+Installer* as **QEMU HARDDISK**.
+
+After that you can disconnect the original ISO image and boot directly
+from the virtual USB stick [[as described
+in the previous section|virt-manager#disconnect]].
