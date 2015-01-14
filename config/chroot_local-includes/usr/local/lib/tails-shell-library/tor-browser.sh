@@ -16,10 +16,10 @@ guess_best_tor_browser_locale() {
     long_locale="$(echo ${LANG} | sed -e 's/\..*$//' -e 's/_/-/')"
     short_locale="$(echo ${long_locale} | cut -d"-" -f1)"
     if [ -e "${TBB_EXT}/langpack-${long_locale}@firefox.mozilla.org.xpi" ]; then
-        echo ${long_locale}
+        echo "${long_locale}"
         return
     elif [ -e "${TBB_EXT}/langpack-${short_locale}@firefox.mozilla.org.xpi" ]; then
-        echo ${short_locale}
+        echo "${short_locale}"
         return
     fi
     # If we use locale xx-YY and there is no langpack for xx-YY nor xx
@@ -28,11 +28,11 @@ guess_best_tor_browser_locale() {
         sed -n "s,^langpack-\(${short_locale}-[A-Z]\+\)@firefox.mozilla.org.xpi$,\1,p" | \
         head -n 1)" || :
     if [ -n "${similar_locale}" ]; then
-        echo ${similar_locale}
+        echo "${similar_locale}"
         return
     fi
 
-    echo en-US
+    echo 'en-US'
 }
 
 guess_best_tor_launcher_locale() {
