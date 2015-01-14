@@ -801,6 +801,26 @@ this, and skip what does not make sense for a RC.
 1. Move the previous stable release to `obsolete` on the mirrors.
 1. Remove any remaining RC for the just-published release from
    the mirrors.
+1. Remove IUKs that are more than 6 months old from
+   `/{stable,alpha}/iuk` on the rsync server:
+   - first check that it's not going to remove anything we want to keep:
+     
+         ssh rsync.lizard /bin/sh -c \
+             \"find /srv/rsync/tails/tails/alpha  \
+                    /srv/rsync/tails/tails/stable \
+                    -type f -name '*.iuk' -mtime '+183' \
+                    -ls \
+             \"
+   
+   - then actually delete the files:
+     
+         ssh rsync.lizard /bin/sh -c \
+             \"find /srv/rsync/tails/tails/alpha  \
+                    /srv/rsync/tails/tails/stable \
+                    -type f -name '*.iuk' -mtime '+183' \
+                    -delete \
+             \"
+
 1. Pull `master` back and merge it into `devel`.
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT

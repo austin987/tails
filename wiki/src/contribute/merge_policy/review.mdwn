@@ -22,7 +22,7 @@
 
 ## Merge
 
-On the Git side, merge the branch with `--no-ff` :
+On the Git side, merge the branch with `--no-ff`:
 
 - for a new feature: into `devel`; then merge `devel` into
   `experimental`
@@ -31,6 +31,16 @@ On the Git side, merge the branch with `--no-ff` :
 - for a fix on top of the last stable: into `stable`; then merge
   `stable` into `devel`, and `devel` into `experimental`
 
+<a id="fix-committed"></a>
+
+Please consider including `fix-committed: #NNNN` in the commit
+message, _NNNN_ being the ticket number that is fixed by the branch
+you are merging. Then, Redmine will automatically flag the
+corresponding ticket as "Fix committed" once you push the results of
+your merge to our main [[Git repository|contribute/Git]]. For example:
+
+    Merge branch 'bugfix/8470-clean-up-apt-pinning' (Fix-committed: #8470)
+
 On the APT repository side,
 [[merge the suites|APT_repository#workflow-merge-topic-branch]].
 
@@ -38,7 +48,8 @@ On the APT repository side,
 
 1. Update the *QA Check* field on the ticket. If there is no remaining
    tasks listed on the ticket, then change its status to *Fix
-   committed*; else, ask the branch submitter to split the remaining tasks
+   committed* (unless you used the `fix-committed` keyword documented
+   above); else, ask the branch submitter to split the remaining tasks
    into other tickets.
 1. Push the updated branch to the master Git repository.
 1. Reply to the email that requested the review.
