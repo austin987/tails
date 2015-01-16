@@ -118,11 +118,11 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Check that Pidgin doesn't leak too much information when replying to
   CTCP requests:
   * Start Tails, launch Pidgin, and join #tails.
-  * Also join #tails from the webchat of OFTC on <https://webchat.oftc.net/>
-    using another nickname.
-  * Try to send `/ctcp <Tails_account_nick> COMMAND` from the webchat to pidgin:
-    - You should get no answer apart for the commands listed in [[!tails_ticket
-      5823]].
+  * Also join #tails from a client that supports CTCP commands
+    properly, e.g. Konversation.
+  * Try to send `/ctcp <Tails_account_nick> COMMAND` from the other client to Pidgin:
+    - You should get no answer apart for the PING and VERSION commands
+      ([[!tails_ticket 5823]]).
     - List of `/ctcp` commands, see [this page](http://www.wikkedwire.com/irccommands):
       - PING
       - VERSION
@@ -486,12 +486,18 @@ Start I2P by appending `i2p` to the kernel command line.
   * For upgrade paths that only propose a full upgrade: make sure the
     user is told to do a manual upgrade.
 
-  If the IUKs and update-description files have been published on the
-  *alpha* channel already (see
-  <https://archive.torproject.org/amnesia.boum.org/tails/alpha/>):
+  If:
+  
+  * the update-description files have been published on the
+    *alpha* channel already (see <https://tails.boum.org/upgrade/v1/Tails/>)
+  * and the IUK has been published already (see
+    <https://archive.torproject.org/amnesia.boum.org/tails/alpha/>
+    and <https://archive.torproject.org/amnesia.boum.org/tails/stable/>):
 
-      echo 'TAILS_CHANNEL="alpha"' | sudo tee --append /etc/os-release && \
-      tails-upgrade-frontend-wrapper
+  then:
+  
+        echo 'TAILS_CHANNEL="alpha"' | sudo tee --append /etc/os-release && \
+        tails-upgrade-frontend-wrapper
 
   Else, use a local test setup:
 
@@ -560,9 +566,6 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 
 # Documentation
 
-* Check that links to the online website (`Mirror:`) at the bottom of
-  bundled static web pages (`/usr/share/doc/tails/website/`) are working. Else, it probably means the
-  wiki was not built with a recent enough ikiwiki.
 * Browse around in the documentation shipped in the image. Internal
   links should be fine.
 
@@ -598,7 +601,8 @@ language. You *really* have to reboot between each language.
 # Misc
 
 * Check that Tails Greeter's "more options" screen displays properly
-  on a display with 600 px height.
+  on a display with 600 px height, preferably in a language that's
+  more verbose than English (e.g. French).
 * `sudo systemctl is-system-running` should print `running`
   (automate: [[!tails_ticket 8262]])
 * Check that all seems well during init (mostly that all services
