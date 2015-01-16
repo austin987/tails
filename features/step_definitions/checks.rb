@@ -16,6 +16,10 @@ Then /^the shipped Tails (signing|Debian repository) key will be valid for the n
   assert((expiration_date << max_months.to_i) > DateTime.now,
          "The shipped signing key will expire within the next #{max_months} months.")
 end
+Then /^I double-click the Report an Error launcher on the desktop$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_double_click('DesktopReportAnError.png', 30)
+end
 
 Then /^the live user has been setup by live\-boot$/ do
   next if @skip_steps_while_restoring_background
