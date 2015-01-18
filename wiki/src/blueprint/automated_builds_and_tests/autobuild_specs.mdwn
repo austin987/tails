@@ -1,33 +1,38 @@
 [[!meta title="Automated builds specification"]]
 
-[[!toc levels=2]]
 
-This blueprints helps to keep track of the discussion on the mailing list, and
-is attached to tickets #8655 to specify how to implement #6196 (Build all
+This blueprint helps to keep track of the discussion on the mailing list, and
+is attached to tickets **#8655** to specify how to implement **#6196** (Build all
 active branches).
 
+[[!toc levels=2]]
 
 # Question to discuss
 
 ## Which branches we want to build?
 
-We already build the base branches (_stables_, _testing_, _devel_ and
-_experimental_ + _feature/jessie_).
+We already build the base branches (_stable_, _testing_, _devel_ and
+_experimental_) + _feature/jessie_.
 
 The questions raised is mostly concern the _feature/*_ and _bugfix/*_ branches
 (so _topic branches_)
 
-The criterias to automatically select the branches to be build could be:
-
-* branches which are not merged to devel||stable||testing, maybe depending on
-  the targeted release version
-* but had new commits since a certain time as in:
- - the previous release?
- - N weeks time?
- - 15 days (arbitrary)?
-
 Some metrics about the number of branches merged per release could give hints
 that might help to decide of selection process.
+
+Proposal1:
+
+* branches which are not merged into devel, stable and testing
+* but had new commits since the previous release
+
+
+We should probably also let devs being able to trigger automated builds for a
+branch that would not be selected by the previous algo (eg. last commit too
+old).
+Devs could do so that by dropping a timestamp file in their branch. The
+branch would be added to the selection if this timestamp is smaller than a
+certain amount of to-be-defined time.
+
 
 ## When to build it
 
@@ -40,9 +45,14 @@ at least having an average number of branches per release.
 Note that we will have to plug that in automatic tests when they will be
 deployed.
 
+Proposal 1: A build a day.
+
+
 ## Notifications
 
 When to notify who? And how to notify them?
+
+Proposal 1: Notify by email the author of the offending commit on failure.
 
 
 # Scenarios
