@@ -15,9 +15,9 @@ Given /^I generate an OpenPGP key named "([^"]+)" with password "([^"]+)"$/ do |
      %commit
 EOF
   gpg_key_recipie.split("\n").each do |line|
-    @vm.execute("echo '#{line}' >> /tmp/gpg_key_recipie", $live_user)
+    @vm.execute("echo '#{line}' >> /tmp/gpg_key_recipie", LIVE_USER)
   end
-  c = @vm.execute("gpg --batch --gen-key < /tmp/gpg_key_recipie", $live_user)
+  c = @vm.execute("gpg --batch --gen-key < /tmp/gpg_key_recipie", LIVE_USER)
   assert(c.success?, "Failed to generate OpenPGP key:\n#{c.stderr}")
 end
 

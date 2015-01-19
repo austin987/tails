@@ -6,14 +6,14 @@ Then /^the shipped Tails signing key is not outdated$/ do
   tmp_keyring = "/tmp/tmp-keyring.gpg"
   key_url = "https://tails.boum.org/tails-signing.key"
   @vm.execute("curl --silent --socks5-hostname localhost:9062 " +
-              "#{key_url} -o #{fresh_sig_key}", $live_user)
+              "#{key_url} -o #{fresh_sig_key}", LIVE_USER)
   @vm.execute("gpg --batch --no-default-keyring --keyring #{tmp_keyring} " +
-              "--import #{fresh_sig_key}", $live_user)
+              "--import #{fresh_sig_key}", LIVE_USER)
   fresh_sig_key_info =
     @vm.execute("gpg --batch --no-default-keyring --keyring #{tmp_keyring} " +
-                "--list-key #{sig_key_fingerprint}", $live_user).stdout
+                "--list-key #{sig_key_fingerprint}", LIVE_USER).stdout
   shipped_sig_key_info = @vm.execute("gpg --batch --list-key #{sig_key_fingerprint}",
-                                     $live_user).stdout
+                                     LIVE_USER).stdout
   assert_equal(fresh_sig_key_info, shipped_sig_key_info,
          "The Tails signing key shipped inside Tails is outdated:\n" +
          "Shipped key:\n" +
@@ -28,13 +28,13 @@ Then /^the live user has been setup by live\-boot$/ do
          "live-boot failed its user-setup")
   actual_username = @vm.execute(". /etc/live/config/username.conf; " +
                                 "echo $LIVE_USERNAME").stdout.chomp
-  assert_equal($live_user, actual_username)
+  assert_equal(LIVE_USER, actual_username)
 end
 
 Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
   next if @skip_steps_while_restoring_background
-  expected_groups = groups.split(" ") << $live_user
-  actual_groups = @vm.execute("groups #{$live_user}").stdout.chomp.sub(/^#{$live_user} : /, "").split(" ")
+  expected_groups = groups.split(" ") << LIVE_USER
+  actual_groups = @vm.execute("groups #{LIVE_USER}").stdout.chomp.sub(/^#{LIVE_USER} : /, "").split(" ")
   unexpected = actual_groups - expected_groups
   missing = expected_groups - actual_groups
   assert_equal(0, unexpected.size,
@@ -45,12 +45,12 @@ end
 
 Then /^the live user owns its home dir and it has normal permissions$/ do
   next if @skip_steps_while_restoring_background
-  home = "/home/#{$live_user}"
+  home = "/home/#{LIVE_USER}"
   assert(@vm.execute("test -d #{home}").success?,
          "The live user's home doesn't exist or is not a directory")
   owner = @vm.execute("stat -c %U:%G #{home}").stdout.chomp
   perms = @vm.execute("stat -c %a #{home}").stdout.chomp
-  assert_equal("#{$live_user}:#{$live_user}", owner)
+  assert_equal("#{LIVE_USER}:#{LIVE_USER}", owner)
   assert_equal("700", perms)
 end
 
@@ -115,19 +115,19 @@ Then /^MAT can clean some sample PDF file$/ do
   next if @skip_steps_while_restoring_background
   for pdf_on_host in Dir.glob("#{MISC_FILES_DIR}/*.pdf") do
     pdf_name = File.basename(pdf_on_host)
-    pdf_on_guest = "/home/#{$live_user}/#{pdf_name}"
-    step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{$live_user}\""
+    pdf_on_guest = "/home/#{LIVE_USER}/#{pdf_name}"
+    step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
     @vm.execute("mat --display '#{pdf_on_guest}'",
-                $live_user).stdout
+                LIVE_USER).stdout
     check_before = @vm.execute("mat --check '#{pdf_on_guest}'",
-                               $live_user).stdout
+                               LIVE_USER).stdout
     if check_before.include?("#{pdf_on_guest} is clean")
       STDERR.puts "warning: '#{pdf_on_host}' is already clean so it is a " +
                   "bad candidate for testing MAT"
     end
-    @vm.execute("mat '#{pdf_on_guest}'", $live_user)
+    @vm.execute("mat '#{pdf_on_guest}'", LIVE_USER)
     check_after = @vm.execute("mat --check '#{pdf_on_guest}'",
-                              $live_user).stdout
+                              LIVE_USER).stdout
     assert(check_after.include?("#{pdf_on_guest} is clean"),
            "MAT failed to clean '#{pdf_on_host}'")
   end

@@ -582,7 +582,7 @@ Then /^(.*) uses all expected TBB shared libraries$/ do |application|
                                     ).stdout.chomp
   case application
   when "the Tor Browser"
-    user = $live_user
+    user = LIVE_USER
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
     chroot = ""
   when "the Unsafe Browser"
@@ -656,7 +656,7 @@ end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
   next if @skip_steps_while_restoring_background
-  c = @vm.execute("cp \"#{source}\" \"#{destination}\"", $live_user)
+  c = @vm.execute("cp \"#{source}\" \"#{destination}\"", LIVE_USER)
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
 

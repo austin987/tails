@@ -2,13 +2,13 @@ def persistent_mounts
   {
     "cups-configuration" => "/etc/cups",
     "nm-system-connections" => "/etc/NetworkManager/system-connections",
-    "claws-mail" => "/home/#{$live_user}/.claws-mail",
-    "gnome-keyrings" => "/home/#{$live_user}/.gnome2/keyrings",
-    "gnupg" => "/home/#{$live_user}/.gnupg",
-    "bookmarks" => "/home/#{$live_user}/.mozilla/firefox/bookmarks",
-    "pidgin" => "/home/#{$live_user}/.purple",
-    "openssh-client" => "/home/#{$live_user}/.ssh",
-    "Persistent" => "/home/#{$live_user}/Persistent",
+    "claws-mail" => "/home/#{LIVE_USER}/.claws-mail",
+    "gnome-keyrings" => "/home/#{LIVE_USER}/.gnome2/keyrings",
+    "gnupg" => "/home/#{LIVE_USER}/.gnupg",
+    "bookmarks" => "/home/#{LIVE_USER}/.mozilla/firefox/bookmarks",
+    "pidgin" => "/home/#{LIVE_USER}/.purple",
+    "openssh-client" => "/home/#{LIVE_USER}/.ssh",
+    "Persistent" => "/home/#{LIVE_USER}/Persistent",
     "apt/cache" => "/var/cache/apt/archives",
     "apt/lists" => "/var/lib/apt/lists",
   }
@@ -407,9 +407,9 @@ Then /^persistent directories have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
     # We also want to check that dotfiles' source has safe permissions
     all_persistent_dirs = persistent_mounts.clone
-    all_persistent_dirs["dotfiles"] = "/home/#{$live_user}/"
+    all_persistent_dirs["dotfiles"] = "/home/#{LIVE_USER}/"
     persistent_mounts.each do |src, dest|
-      next unless dest.start_with?("/home/#{$live_user}/")
+      next unless dest.start_with?("/home/#{LIVE_USER}/")
       f = "#{mountpoint}/#{src}"
       next unless @vm.execute("test -d #{f}").success?
       file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp

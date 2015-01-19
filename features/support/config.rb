@@ -25,7 +25,7 @@ MISC_FILES_DIR = "#{Dir.pwd}/features/misc_files"
 KEEP_SNAPSHOTS = !ENV['KEEP_SNAPSHOTS'].nil?
 DISPLAY = ENV['DISPLAY']
 TIME_AT_START = Time.now
-$live_user = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
+LIVE_USER = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
 $git_dir = ENV['PWD']
 
 # Static

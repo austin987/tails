@@ -1,6 +1,6 @@
 When /^the "([^"]*)" OpenPGP key is not in the live user's public keyring$/ do |keyid|
   next if @skip_steps_while_restoring_background
-  assert(!@vm.execute("gpg --batch --list-keys '#{keyid}'", $live_user).success?,
+  assert(!@vm.execute("gpg --batch --list-keys '#{keyid}'", LIVE_USER).success?,
          "The '#{keyid}' key is in the live user's public keyring.")
 end
 
@@ -8,7 +8,7 @@ When /^I fetch the "([^"]*)" OpenPGP key using the GnuPG CLI$/ do |keyid|
   next if @skip_steps_while_restoring_background
   @gnupg_recv_key_res = @vm.execute(
     "gpg --batch --recv-key '#{keyid}'",
-    $live_user)
+    LIVE_USER)
 end
 
 When /^the GnuPG fetch is successful$/ do
@@ -26,7 +26,7 @@ end
 When /^the "([^"]*)" key is in the live user's public keyring after at most (\d+) seconds$/ do |keyid, delay|
   next if @skip_steps_while_restoring_background
   try_for(delay.to_f, :msg => "The '#{keyid}' key is not in the live user's public keyring") {
-    @vm.execute("gpg --batch --list-keys '#{keyid}'", $live_user).success?
+    @vm.execute("gpg --batch --list-keys '#{keyid}'", LIVE_USER).success?
   }
 end
 
