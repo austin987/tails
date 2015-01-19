@@ -241,21 +241,16 @@ points translators to up-to-date PO files:
 Call for translation
 ====================
 
-If at freeze time:
+If at freeze time, send a call for translations to tails-l10n, making it clear what
+Git branch the translations must be based on, and what are the
+priorities. Also, add a few words to remember the translation teams
+using Git that they should regularly contact Transifex translators,
+as detailed on the [[documentation for
+translators|contribute/how/translate]].
 
-1. Ask on tails-l10n that someone checks the PO files of `po/` and of
-   the website [[using `check_po.sh`|contribute/l10n_tricks]], and
-   corrects all the errors.
-2. Send a call for translations to tails-l10n, making it clear what
-   Git branch the translations must be based on, and what are the
-   priorities. Also, add a few words to remember the translation teams
-   using Git that they should regularly contact Transifex translators,
-   as detailed on the [[documentation for
-   translators|contribute/how/translate]].
+To get a list of changes on the website:
 
-   To get a list of changes on the website:
-
-       git diff --stat 1.1.. -- *.{mdwn,html}
+    git diff --stat 1.1.. -- *.{mdwn,html}
 
 Import the signing key
 ======================
@@ -801,6 +796,26 @@ this, and skip what does not make sense for a RC.
 1. Move the previous stable release to `obsolete` on the mirrors.
 1. Remove any remaining RC for the just-published release from
    the mirrors.
+1. Remove IUKs that are more than 6 months old from
+   `/{stable,alpha}/iuk` on the rsync server:
+   - first check that it's not going to remove anything we want to keep:
+     
+         ssh rsync.lizard /bin/sh -c \
+             \"find /srv/rsync/tails/tails/alpha  \
+                    /srv/rsync/tails/tails/stable \
+                    -type f -name '*.iuk' -mtime '+183' \
+                    -ls \
+             \"
+   
+   - then actually delete the files:
+     
+         ssh rsync.lizard /bin/sh -c \
+             \"find /srv/rsync/tails/tails/alpha  \
+                    /srv/rsync/tails/tails/stable \
+                    -type f -name '*.iuk' -mtime '+183' \
+                    -delete \
+             \"
+
 1. Pull `master` back and merge it into `devel`.
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
