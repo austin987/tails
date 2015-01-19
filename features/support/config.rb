@@ -17,7 +17,9 @@ end
 # precedence.
 $config.merge!(ENV)
 
-# Dynamic
+# Dynamic constants initialized through the environment or similar,
+# e.g. options we do not want to be configurable through the YAML
+# configuration files.
 TAILS_ISO = ENV['ISO'] || raise "No ISO set with --iso"
 OLD_TAILS_ISO = ENV['OLD_ISO'] || raise "No old ISO set with --old-iso"
 VM_XML_PATH = "#{Dir.pwd}/features/domains"
@@ -28,7 +30,7 @@ TIME_AT_START = Time.now
 LIVE_USER = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
 GIT_DIR = ENV['PWD']
 
-# Static
+# Constants that are statically initialized.
 CONFIGURED_KEYSERVER_HOSTNAME = 'hkps.pool.sks-keyservers.net'
 SERVICES_EXPECTED_ON_ALL_IFACES =
   [
