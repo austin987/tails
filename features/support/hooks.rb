@@ -70,17 +70,17 @@ AfterFeature('@product') do
 end
 
 BeforeFeature('@product', '@old_iso') do
-  if $old_tails_iso.nil?
+  if OLD_TAILS_ISO.nil?
     raise "No old Tails ISO image specified, and none could be found in the " +
           "current directory"
   end
-  if !File.exist?($old_tails_iso)
-    raise "The specified old Tails ISO image '#{$old_tails_iso}' does not exist"
+  if !File.exist?(OLD_TAILS_ISO)
+    raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
   end
-  if TAILS_ISO == $old_tails_iso
+  if TAILS_ISO == OLD_TAILS_ISO
     raise "The old Tails ISO is the same as the Tails ISO we're testing"
   end
-  puts "Using old ISO image: #{File.basename($old_tails_iso)}"
+  puts "Using old ISO image: #{File.basename(OLD_TAILS_ISO)}"
 end
 
 # BeforeScenario

@@ -35,7 +35,7 @@ end
 
 Given /^the computer is set to boot from the old Tails DVD$/ do
   next if @skip_steps_while_restoring_background
-  @vm.set_cdrom_boot($old_tails_iso)
+  @vm.set_cdrom_boot(OLD_TAILS_ISO)
 end
 
 Given /^the computer is set to boot in UEFI mode$/ do

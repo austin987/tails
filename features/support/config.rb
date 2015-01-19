@@ -19,7 +19,7 @@ $config.merge!(ENV)
 
 # Dynamic
 TAILS_ISO = ENV['ISO'] || raise "No ISO set with --iso"
-$old_tails_iso = ENV['OLD_ISO'] || raise "No old ISO set with --old-iso"
+OLD_TAILS_ISO = ENV['OLD_ISO'] || raise "No old ISO set with --old-iso"
 $vm_xml_path = ENV['VM_XML_PATH'] || "#{Dir.pwd}/features/domains"
 $misc_files_dir = "#{Dir.pwd}/features/misc_files"
 $keep_snapshots = !ENV['KEEP_SNAPSHOTS'].nil?
