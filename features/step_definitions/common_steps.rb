@@ -63,7 +63,7 @@ end
 
 Given /^a computer$/ do
   @vm.destroy if @vm
-  @vm = VM.new($vm_xml_path, $x_display)
+  @vm = VM.new(VM_XML_PATH, $x_display)
 end
 
 Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
