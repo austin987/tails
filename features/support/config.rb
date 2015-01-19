@@ -35,7 +35,7 @@ SERVICES_EXPECTED_ON_ALL_IFACES =
    ["cupsd",    "0.0.0.0", "631"],
    ["dhclient", "0.0.0.0", "*"]
   ]
-$tor_authorities =
+TOR_AUTHORITIES =
   # List grabbed from Tor's sources, src/or/config.c:~750.
   [
    "128.31.0.39", "86.59.21.38", "194.109.206.212",
