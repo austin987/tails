@@ -108,12 +108,12 @@ end
 
 Given /^I setup a filesystem share containing a sample PDF$/ do
   next if @skip_steps_while_restoring_background
-  @vm.add_share($misc_files_dir, shared_pdf_dir_on_guest)
+  @vm.add_share(MISC_FILES_DIR, shared_pdf_dir_on_guest)
 end
 
 Then /^MAT can clean some sample PDF file$/ do
   next if @skip_steps_while_restoring_background
-  for pdf_on_host in Dir.glob("#{$misc_files_dir}/*.pdf") do
+  for pdf_on_host in Dir.glob("#{MISC_FILES_DIR}/*.pdf") do
     pdf_name = File.basename(pdf_on_host)
     pdf_on_guest = "/home/#{$live_user}/#{pdf_name}"
     step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{$live_user}\""
