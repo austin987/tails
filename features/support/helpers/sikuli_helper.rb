@@ -137,7 +137,7 @@ java.lang.System.setProperty("SIKULI_IMAGE_PATH", "#{Dir.pwd}/features/images/")
 # required, ruby's require method complains that the method for the
 # field accessor is missing.
 sikuli_settings = Sikuli::Settings.new
-sikuli_settings.OcrDataPath = $tmp_dir
+sikuli_settings.OcrDataPath = $config["TMP_DIR"]
 # sikuli_ruby, which we used before, defaulted to 0.9 minimum
 # similarity, so all our current images are adapted to that value.
 # Also, Sikuli's default of 0.7 is simply too low (many false

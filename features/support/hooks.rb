@@ -14,25 +14,25 @@ rescue Errno::EACCES => e
 end
 
 def delete_all_snapshots
-  Dir.glob("#{$tmp_dir}/*.state").each do |snapshot|
+  Dir.glob("#{$config["TMP_DIR"]}/*.state").each do |snapshot|
     delete_snapshot(snapshot)
   end
 end
 
 BeforeFeature('@product') do |feature|
-  if File.exist?($tmp_dir)
-    if !File.directory?($tmp_dir)
-      raise "Temporary directory '#{$tmp_dir}' exists but is not a " +
+  if File.exist?($config["TMP_DIR"])
+    if !File.directory?($config["TMP_DIR"])
+      raise "Temporary directory '#{$config["TMP_DIR"]}' exists but is not a " +
             "directory"
     end
-    if !File.owned?($tmp_dir)
-      raise "Temporary directory '#{$tmp_dir}' must be owned by the " +
+    if !File.owned?($config["TMP_DIR"])
+      raise "Temporary directory '#{$config["TMP_DIR"]}' must be owned by the " +
             "current user"
     end
-    FileUtils.chmod(0755, $tmp_dir)
+    FileUtils.chmod(0755, $config["TMP_DIR"])
   else
     begin
-      Dir.mkdir($tmp_dir)
+      Dir.mkdir($config["TMP_DIR"])
     rescue Errno::EACCES => e
       raise "Cannot create temporary directory: #{e.to_s}"
     end
@@ -61,7 +61,7 @@ BeforeFeature('@product') do |feature|
   end
   puts "Testing ISO image: #{File.basename($tails_iso)}"
   base = File.basename(feature.file, ".feature").to_s
-  $background_snapshot = "#{$tmp_dir}/#{base}_background.state"
+  $background_snapshot = "#{$config["TMP_DIR"]}/#{base}_background.state"
 end
 
 AfterFeature('@product') do
@@ -105,7 +105,7 @@ After('@product') do |scenario|
     STDERR.puts "Scenario failed at time #{hrs}:#{mins}:#{secs}"
     base = File.basename(scenario.feature.file, ".feature").to_s
     tmp = @screen.capture.getFilename
-    out = "#{$tmp_dir}/#{base}-#{DateTime.now}.png"
+    out = "#{$config["TMP_DIR"]}/#{base}-#{DateTime.now}.png"
     FileUtils.mv(tmp, out)
     STDERR.puts("Took screenshot \"#{out}\"")
     if $pause_on_fail

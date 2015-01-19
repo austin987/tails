@@ -26,7 +26,7 @@ class VMStorage
     else
       VMStorage.clear_storage_pool(@pool)
     end
-    @pool_path = "#{$tmp_dir}/#{pool_name}"
+    @pool_path = "#{$config["TMP_DIR"]}/#{pool_name}"
     pool_xml.elements['pool/target/path'].text = @pool_path
     @pool = @@virt.define_storage_pool_xml(pool_xml.to_s)
     @pool.build

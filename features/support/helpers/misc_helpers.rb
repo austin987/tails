@@ -96,7 +96,7 @@ def get_tor_relays
 end
 
 def save_pcap_file
-    pcap_copy = "#{$tmp_dir}/pcap_with_leaks-#{DateTime.now}"
+    pcap_copy = "#{$config["TMP_DIR"]}/pcap_with_leaks-#{DateTime.now}"
     FileUtils.cp(@sniffer.pcap_file, pcap_copy)
     puts "Full network capture available at: #{pcap_copy}"
 end
