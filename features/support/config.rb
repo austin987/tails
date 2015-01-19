@@ -22,8 +22,6 @@ $config.merge!(ENV)
 # configuration files.
 TAILS_ISO = ENV['ISO'] || raise "No ISO set with --iso"
 OLD_TAILS_ISO = ENV['OLD_ISO'] || raise "No old ISO set with --old-iso"
-VM_XML_PATH = "#{Dir.pwd}/features/domains"
-MISC_FILES_DIR = "#{Dir.pwd}/features/misc_files"
 KEEP_SNAPSHOTS = !ENV['KEEP_SNAPSHOTS'].nil?
 DISPLAY = ENV['DISPLAY']
 TIME_AT_START = Time.now
@@ -32,6 +30,7 @@ GIT_DIR = ENV['PWD']
 
 # Constants that are statically initialized.
 CONFIGURED_KEYSERVER_HOSTNAME = 'hkps.pool.sks-keyservers.net'
+MISC_FILES_DIR = "#{Dir.pwd}/features/misc_files"
 SERVICES_EXPECTED_ON_ALL_IFACES =
   [
    ["cupsd",    "0.0.0.0", "631"],
@@ -47,3 +46,4 @@ TOR_AUTHORITIES =
   ]
 # OpenDNS
 SOME_DNS_SERVER = "208.67.222.222"
+VM_XML_PATH = "#{Dir.pwd}/features/domains"
