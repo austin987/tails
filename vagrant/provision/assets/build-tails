@@ -20,15 +20,6 @@ usable_memory() {
 	free -b | awk '/cache:/ { print $4 }'
 }
 
-bootstrap_stage_is_ok() {
-	[ -d "$1" ] || return 1
-	[ "$(sudo du -sm $1 | cut -f1)" -ge 100 ] || return 1
-	for dir in bin dev etc lib proc root sbin sys usr var; do
-		[ -d "$1/$dir" ] || return 1
-	done
-	return 0
-}
-
 cleanup() {
 	[ -n "$BUILD_DIR" ] || return 0
 	cd /
@@ -95,7 +86,6 @@ install -m 0755 -d "$ARTIFACTS_DIR"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
-	sudo rm -rf /var/cache/stages_bootstrap
 fi
 ./build-wiki
 
@@ -110,16 +100,6 @@ fi
 
 cd "$BUILD_DIR"
 as_root_do lb config --cache-packages false
-
-if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
-    bootstrap_stage_is_ok /var/cache/stages_bootstrap; then
-	# restore bootstrap stage and make live-build use it
-	sudo mkdir -p "$BUILD_DIR"/cache/stages_bootstrap
-	sudo mount --bind /var/cache/stages_bootstrap \
-		"$BUILD_DIR"/cache/stages_bootstrap
-	sudo touch "$BUILD_DIR"/.stage/bootstrap
-	sudo touch "$BUILD_DIR"/.stage/bootstrap_cache.save
-fi
 
 as_root_do lb build
 
@@ -151,12 +131,4 @@ if [ -n "$JENKINS_URL" ]; then
 	for EXT in '' .binpkgs .srcpkgs .shasum .shasum.asc .packages .buildlog ; do
 		ln -sf "${ISO}${EXT}" "$ARTIFACTS_DIR/latest.iso${EXT}"
 	done
-fi
-
-if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
-    ! sudo umount "$BUILD_DIR"/cache/stages_bootstrap 2>/dev/null; then
-	# the cached bootstrap stage wasn't used (maybe it hadn't been
-	# cached yet?) so we save the good one from the current build.
-	sudo rsync -a --delete "$BUILD_DIR"/cache/stages_bootstrap/ \
-		/var/cache/stages_bootstrap
 fi
