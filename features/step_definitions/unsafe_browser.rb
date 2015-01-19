@@ -88,18 +88,13 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
 #  @screen.waitVanish('UnsafeBrowserPreferences.png', 10)
   sleep 0.5
 
-  http_proxy  = 'x' # Alt+x is the shortcut to select http proxy
   socks_proxy = 'c' # Alt+c for socks proxy
   no_proxy    = 'y' # Alt+y for no proxy
 
-  # Note: the loop below depends on that http_proxy is done after any
-  # other proxy types since it will set "Use this proxy server for all
-  # protocols", which will make the other proxy types unselectable.
   proxies = [[socks_proxy, 9050],
              [socks_proxy, 9061],
              [socks_proxy, 9062],
              [socks_proxy, 9150],
-             [http_proxy,  8118],
              [no_proxy,       0]]
 
   proxies.each do |proxy|
@@ -119,8 +114,6 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     # Configure the proxy
     @screen.type(proxy_type, Sikuli::KeyModifier.ALT)  # Select correct proxy type
     @screen.type("127.0.0.1" + Sikuli::Key.TAB + "#{proxy_port}") if proxy_type != no_proxy
-    # For http proxy we set "Use this proxy server for all protocols"
-    @screen.type("s", Sikuli::KeyModifier.ALT) if proxy_type == http_proxy
 
     # Close settings
     @screen.type(Sikuli::Key.ENTER)
