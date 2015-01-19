@@ -30,7 +30,7 @@ GIT_DIR = ENV['PWD']
 
 # Static
 CONFIGURED_KEYSERVER_HOSTNAME = 'hkps.pool.sks-keyservers.net'
-$services_expected_on_all_ifaces =
+SERVICES_EXPECTED_ON_ALL_IFACES =
   [
    ["cupsd",    "0.0.0.0", "631"],
    ["dhclient", "0.0.0.0", "*"]

@@ -79,8 +79,8 @@ Then /^no unexpected services are listening for network connections$/ do
     proc = splitted[proc_index].split("/")[1]
     # Services listening on loopback is not a threat
     if /127(\.[[:digit:]]{1,3}){3}/.match(laddr).nil?
-      if $services_expected_on_all_ifaces.include? [proc, laddr, lport] or
-         $services_expected_on_all_ifaces.include? [proc, laddr, "*"]
+      if SERVICES_EXPECTED_ON_ALL_IFACES.include? [proc, laddr, lport] or
+         SERVICES_EXPECTED_ON_ALL_IFACES.include? [proc, laddr, "*"]
         puts "Service '#{proc}' is listening on #{laddr}:#{lport} " +
              "but has an exception"
       else
