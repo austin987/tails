@@ -26,7 +26,7 @@ KEEP_SNAPSHOTS = !ENV['KEEP_SNAPSHOTS'].nil?
 DISPLAY = ENV['DISPLAY']
 TIME_AT_START = Time.now
 LIVE_USER = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
-$git_dir = ENV['PWD']
+GIT_DIR = ENV['PWD']
 
 # Static
 $configured_keyserver_hostname = 'hkps.pool.sks-keyservers.net'
