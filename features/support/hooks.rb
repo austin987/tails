@@ -37,7 +37,7 @@ BeforeFeature('@product') do |feature|
       raise "Cannot create temporary directory: #{e.to_s}"
     end
   end
-  delete_all_snapshots if !$keep_snapshots
+  delete_all_snapshots if !KEEP_SNAPSHOTS
   if TAILS_ISO.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
           "current directory"
@@ -65,7 +65,7 @@ BeforeFeature('@product') do |feature|
 end
 
 AfterFeature('@product') do
-  delete_snapshot($background_snapshot) if !$keep_snapshots
+  delete_snapshot($background_snapshot) if !KEEP_SNAPSHOTS
   VM.storage.clear_volumes if VM.storage
 end
 
@@ -151,6 +151,6 @@ BeforeFeature('@product', '@source') do |feature|
 end
 
 at_exit do
-  delete_all_snapshots if !$keep_snapshots
+  delete_all_snapshots if !KEEP_SNAPSHOTS
   VM.storage.clear_pool if VM.storage
 end
