@@ -108,7 +108,7 @@ After('@product') do |scenario|
     out = "#{$config["TMP_DIR"]}/#{base}-#{DateTime.now}.png"
     FileUtils.mv(tmp, out)
     STDERR.puts("Took screenshot \"#{out}\"")
-    if $pause_on_fail
+    if $config["PAUSE_ON_FAIL"]
       STDERR.puts ""
       STDERR.puts "Press ENTER to continue running the test suite"
       STDIN.gets

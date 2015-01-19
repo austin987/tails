@@ -24,7 +24,6 @@ $vm_xml_path = ENV['VM_XML_PATH'] || "#{Dir.pwd}/features/domains"
 $misc_files_dir = "#{Dir.pwd}/features/misc_files"
 $keep_snapshots = !ENV['KEEP_SNAPSHOTS'].nil?
 $x_display = ENV['DISPLAY']
-$pause_on_fail = !ENV['PAUSE_ON_FAIL'].nil?
 $time_at_start = Time.now
 $live_user = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
 $sikuli_retry_findfailed = !ENV['SIKULI_RETRY_FINDFAILED'].nil?
