@@ -20,13 +20,13 @@ $config.merge!(ENV)
 # Dynamic constants initialized through the environment or similar,
 # e.g. options we do not want to be configurable through the YAML
 # configuration files.
-TAILS_ISO = ENV['ISO'] || raise "No ISO set with --iso"
-OLD_TAILS_ISO = ENV['OLD_ISO'] || raise "No old ISO set with --old-iso"
-KEEP_SNAPSHOTS = !ENV['KEEP_SNAPSHOTS'].nil?
 DISPLAY = ENV['DISPLAY']
-TIME_AT_START = Time.now
-LIVE_USER = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
 GIT_DIR = ENV['PWD']
+KEEP_SNAPSHOTS = !ENV['KEEP_SNAPSHOTS'].nil?
+LIVE_USER = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
+OLD_TAILS_ISO = ENV['OLD_ISO'] || raise "No old ISO set with --old-iso"
+TAILS_ISO = ENV['ISO'] || raise "No ISO set with --iso"
+TIME_AT_START = Time.now
 
 # Constants that are statically initialized.
 CONFIGURED_KEYSERVER_HOSTNAME = 'hkps.pool.sks-keyservers.net'
@@ -36,6 +36,8 @@ SERVICES_EXPECTED_ON_ALL_IFACES =
    ["cupsd",    "0.0.0.0", "631"],
    ["dhclient", "0.0.0.0", "*"]
   ]
+# OpenDNS
+SOME_DNS_SERVER = "208.67.222.222"
 TOR_AUTHORITIES =
   # List grabbed from Tor's sources, src/or/config.c:~750.
   [
@@ -44,6 +46,4 @@ TOR_AUTHORITIES =
    "193.23.244.244", "208.83.223.34", "171.25.193.9",
    "154.35.32.5"
   ]
-# OpenDNS
-SOME_DNS_SERVER = "208.67.222.222"
 VM_XML_PATH = "#{Dir.pwd}/features/domains"
