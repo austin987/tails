@@ -98,7 +98,7 @@ end
 # AfterScenario
 After('@product') do |scenario|
   if (scenario.status != :passed)
-    time_of_fail = Time.now - $time_at_start
+    time_of_fail = Time.now - TIME_AT_START
     secs = "%02d" % (time_of_fail % 60)
     mins = "%02d" % ((time_of_fail / 60) % 60)
     hrs  = "%02d" % (time_of_fail / (60*60))

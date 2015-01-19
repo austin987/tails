@@ -24,7 +24,7 @@ VM_XML_PATH = "#{Dir.pwd}/features/domains"
 MISC_FILES_DIR = "#{Dir.pwd}/features/misc_files"
 KEEP_SNAPSHOTS = !ENV['KEEP_SNAPSHOTS'].nil?
 DISPLAY = ENV['DISPLAY']
-$time_at_start = Time.now
+TIME_AT_START = Time.now
 $live_user = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
 $git_dir = ENV['PWD']
 
