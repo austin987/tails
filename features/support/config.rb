@@ -44,4 +44,4 @@ TOR_AUTHORITIES =
    "154.35.32.5"
   ]
 # OpenDNS
-$some_dns_server = "208.67.222.222"
+SOME_DNS_SERVER = "208.67.222.222"
