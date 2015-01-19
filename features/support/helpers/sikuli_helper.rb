@@ -64,7 +64,7 @@ $_original_sikuli_screen_new ||= Sikuli::Screen.method :new
 def sikuli_script_proxy.new(*args)
   s = $_original_sikuli_screen_new.call(*args)
 
-  if $sikuli_retry_findfailed
+  if $config["SIKULI_RETRY_FINDFAILED"]
     # The usage of `_invoke()` below exemplifies how one can wrap
     # around Java objects' methods when they're imported using RJB. It
     # isn't pretty. The seconds argument is the parameter signature,
