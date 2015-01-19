@@ -143,7 +143,7 @@ sikuli_settings.OcrDataPath = $config["TMP_DIR"]
 # Also, Sikuli's default of 0.7 is simply too low (many false
 # positives).
 sikuli_settings.MinSimilarity = 0.9
-sikuli_settings.ActionLogs = $debug
-sikuli_settings.DebugLogs = $debug
-sikuli_settings.InfoLogs = $debug
-sikuli_settings.ProfileLogs = $debug
+sikuli_settings.ActionLogs = $config["DEBUG"]
+sikuli_settings.DebugLogs = $config["DEBUG"]
+sikuli_settings.InfoLogs = $config["DEBUG"]
+sikuli_settings.ProfileLogs = $config["DEBUG"]
