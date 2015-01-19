@@ -38,18 +38,18 @@ BeforeFeature('@product') do |feature|
     end
   end
   delete_all_snapshots if !$keep_snapshots
-  if $tails_iso.nil?
+  if TAILS_ISO.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
           "current directory"
   end
-  if File.exist?($tails_iso)
+  if File.exist?(TAILS_ISO)
     # Workaround: when libvirt takes ownership of the ISO image it may
     # become unreadable for the live user inside the guest in the
     # host-to-guest share used for some tests.
 
-    if !File.world_readable?($tails_iso)
-      if File.owned?($tails_iso)
-        File.chmod(0644, $tails_iso)
+    if !File.world_readable?(TAILS_ISO)
+      if File.owned?(TAILS_ISO)
+        File.chmod(0644, TAILS_ISO)
       else
         raise "warning: the Tails ISO image must be world readable or be " +
               "owned by the current user to be available inside the guest " +
@@ -57,9 +57,9 @@ BeforeFeature('@product') do |feature|
       end
     end
   else
-    raise "The specified Tails ISO image '#{$tails_iso}' does not exist"
+    raise "The specified Tails ISO image '#{TAILS_ISO}' does not exist"
   end
-  puts "Testing ISO image: #{File.basename($tails_iso)}"
+  puts "Testing ISO image: #{File.basename(TAILS_ISO)}"
   base = File.basename(feature.file, ".feature").to_s
   $background_snapshot = "#{$config["TMP_DIR"]}/#{base}_background.state"
 end
@@ -77,7 +77,7 @@ BeforeFeature('@product', '@old_iso') do
   if !File.exist?($old_tails_iso)
     raise "The specified old Tails ISO image '#{$old_tails_iso}' does not exist"
   end
-  if $tails_iso == $old_tails_iso
+  if TAILS_ISO == $old_tails_iso
     raise "The old Tails ISO is the same as the Tails ISO we're testing"
   end
   puts "Using old ISO image: #{File.basename($old_tails_iso)}"

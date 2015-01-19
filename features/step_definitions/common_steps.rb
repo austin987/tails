@@ -73,7 +73,7 @@ end
 
 Given /^the computer is set to boot from the Tails DVD$/ do
   next if @skip_steps_while_restoring_background
-  @vm.set_cdrom_boot($tails_iso)
+  @vm.set_cdrom_boot(TAILS_ISO)
 end
 
 Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|

@@ -17,9 +17,9 @@ end
 Given /^I cat an ISO hybrid of the Tails image to disk "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   disk_path = @vm.storage.disk_path(name)
-  tails_iso_hybrid = "#{$config["TMP_DIR"]}/#{File.basename($tails_iso)}"
+  tails_iso_hybrid = "#{$config["TMP_DIR"]}/#{File.basename(TAILS_ISO)}"
   begin
-    cmd_helper("cp '#{$tails_iso}' '#{tails_iso_hybrid}'")
+    cmd_helper("cp '#{TAILS_ISO}' '#{tails_iso_hybrid}'")
     cmd_helper("isohybrid '#{tails_iso_hybrid}' --entry 4 --type 0x1c")
     cmd_helper("dd if='#{tails_iso_hybrid}' of='#{disk_path}' conv=notrunc")
   ensure

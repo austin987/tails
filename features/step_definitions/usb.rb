@@ -113,7 +113,7 @@ end
 
 Given /^I setup a filesystem share containing the Tails ISO$/ do
   next if @skip_steps_while_restoring_background
-  @vm.add_share(File.dirname($tails_iso), shared_iso_dir_on_guest)
+  @vm.add_share(File.dirname(TAILS_ISO), shared_iso_dir_on_guest)
 end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
@@ -125,7 +125,7 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   @screen.click(match.getCenter.offset(0, match.h*2))
   @screen.wait('USBSelectISO.png', 10)
   @screen.wait_and_click('GnomeFileDiagTypeFilename.png', 10)
-  iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"
+  iso = "#{shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   @screen.type(iso + Sikuli::Key.ENTER)
   usb_install_helper(name)
 end
@@ -209,7 +209,7 @@ end
 
 Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
   next if @skip_steps_while_restoring_background
-  iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"
+  iso = "#{shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   iso_root = "/mnt/iso"
   @vm.execute("mkdir -p #{iso_root}")
   @vm.execute("mount -o loop #{iso} #{iso_root}")
