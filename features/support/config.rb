@@ -29,7 +29,7 @@ LIVE_USER = cmd_helper(". config/chroot_local-includes/etc/live/config.d/usernam
 GIT_DIR = ENV['PWD']
 
 # Static
-$configured_keyserver_hostname = 'hkps.pool.sks-keyservers.net'
+CONFIGURED_KEYSERVER_HOSTNAME = 'hkps.pool.sks-keyservers.net'
 $services_expected_on_all_ifaces =
   [
    ["cupsd",    "0.0.0.0", "631"],

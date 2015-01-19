@@ -19,8 +19,8 @@ end
 
 When /^GnuPG uses the configured keyserver$/ do
   next if @skip_steps_while_restoring_background
-  assert(@gnupg_recv_key_res.stderr[$configured_keyserver_hostname],
-         "GnuPG's stderr did not mention keyserver #{$configured_keyserver_hostname}")
+  assert(@gnupg_recv_key_res.stderr[CONFIGURED_KEYSERVER_HOSTNAME],
+         "GnuPG's stderr did not mention keyserver #{CONFIGURED_KEYSERVER_HOSTNAME}")
 end
 
 When /^the "([^"]*)" key is in the live user's public keyring after at most (\d+) seconds$/ do |keyid, delay|
