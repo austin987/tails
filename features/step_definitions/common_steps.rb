@@ -438,7 +438,7 @@ end
 
 def deal_with_polkit_prompt (image, password)
   @screen.wait(image, 60)
-  sleep 1 # wait for weird fade-in to unblock the "Ok" button
+  sleep 3 # wait for weird fade-in to unblock the "Ok" button
   @screen.type(password)
   @screen.type(Sikuli::Key.ENTER)
   @screen.waitVanish(image, 10)
