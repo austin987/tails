@@ -50,3 +50,22 @@ Random notes
 * overlayfs support was added in Docker 1.4.0; we'll need that when
   using Debian Stretch/sid once Linux 3.18 lands in there after
   Jessie is released.
+
+Test run
+========
+
+(20150120, Debian sid host, `feature/7530-docker` Git branch)
+
+	sudo apt --no-install-recommends install docker.io aufs-tools
+	sudo adduser "$(whoami)" docker
+
+Log out, log back in, then run `make`.
+
+* `TAILS_BUILD_OPTIONS="noproxy"` => run [apt-cacher-ng in a different
+  container](https://docs.docker.com/examples/apt-cacher-ng/)
+* Even with `--cache false`, some directories (`chroot`, `cache`) are
+  saved and retrieved from the container upon shutdown; same for
+  live-config -generated `config/*` files. That's because the current
+  directory is shared read-write with the container somehow.
+  This bind-mount should be read-only, but we still need to get the
+  build artifacts back on the host.
