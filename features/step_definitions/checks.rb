@@ -1,8 +1,17 @@
-Then /^the shipped Tails signing key will be valid for the next (\d+) months$/ do |max_months|
+Then /^the shipped Tails (signing|Debian repository) key will be valid for the next (\d+) months$/ do |key_type, max_months|
   next if @skip_steps_while_restoring_background
-  sig_key_fingerprint = "0D24B36AA9A2A651787876451202821CBE2CD9C1"
-  shipped_sig_key_info = @vm.execute_successfully("gpg --batch --list-key #{sig_key_fingerprint}",
-                                                  $live_user).stdout
+  if key_type == 'signing'
+    sig_key_fingerprint = "0D24B36AA9A2A651787876451202821CBE2CD9C1"
+    cmd = 'gpg'
+    user = $live_user
+  elsif key_type == 'Debian repository'
+    sig_key_fingerprint = "221F9A3C6FA3E09E182E060BC7988EA7A358D82E"
+    cmd = 'apt-key adv'
+    user = 'root'
+  else
+    raise 'Unknown key type #{key_type}'
+  end
+  shipped_sig_key_info = @vm.execute_successfully("#{cmd} --batch --list-key #{sig_key_fingerprint}", user).stdout
   expiration_date = Date.parse(/\[expires: ([0-9-]*)\]/.match(shipped_sig_key_info)[1])
   assert((expiration_date << max_months.to_i) > DateTime.now,
          "The shipped signing key will expire within the next #{max_months} months.")

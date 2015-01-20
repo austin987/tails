@@ -14,8 +14,11 @@ Feature: Various checks
     When Tails has booted a 64-bit kernel
     Then the VirtualBox guest modules are available
 
-   Scenario: The shipped Tails signing key is up-to-date
+  Scenario: The shipped Tails signing key is up-to-date
     Then the shipped Tails signing key will be valid for the next 3 months
+
+  Scenario: The Tails Debian repository key is up-to-date
+    Then the shipped Tails Debian repository key will be valid for the next 3 months
 
   Scenario: The live user is setup correctly
     Then the live user has been setup by live-boot
