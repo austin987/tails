@@ -95,9 +95,6 @@ Test run
   root access. Do we want to encourage contributors to do that, or
   to run `docker` commands with `sudo`, or to use Docker in
   a virtual machine?
-* Move our Dockerfile(s) to the `docker` directory in the Git tree.
-  Then we can pass the path to that directory, instead of `.`, to
-  `docker build`.
 * We currently pass `--privileged` to `docker run`. Should we remove
   it, and if yes, how?
   - According to
@@ -107,8 +104,6 @@ Test run
     the best practice is to publish _and regularly update_ a base
     image, so that the most common usecases can avoid the APT upgrade
     steps, and then run unprivileged.
-* Split the `RUN` command into several ones, so that cached intermediary
-  images are [reused](https://docs.docker.com/reference/builder/)?
 * Adding `.git` to the `.dockerignore` file would speed up the build,
   but some code in our build process wants to know what branch or
   commit we're building from => maybe we could pre-compute this
