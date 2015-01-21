@@ -17,9 +17,6 @@ When /^I update APT using apt-get$/ do
   Timeout::timeout(30*60) do
     cmd = @vm.execute_successfully("echo #{@sudo_password} | " +
                       "sudo -S apt-get update", $live_user)
-    if !cmd.success?
-      STDERR.puts cmd.stderr
-    end
   end
 end
 
@@ -29,9 +26,6 @@ Then /^I should be able to install a package using apt-get$/ do
   Timeout::timeout(120) do
     cmd = @vm.execute_successfully("echo #{@sudo_password} | " +
                       "sudo -S apt-get install #{package}", $live_user)
-    if !cmd.success?
-      STDERR.puts cmd.stderr
-    end
   end
   step "package \"#{package}\" is installed"
 end
