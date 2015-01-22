@@ -173,12 +173,6 @@ Given /^I enable all persistence presets$/ do
   @screen.wait_and_click('PersistenceWizardSave.png', 10)
   @screen.wait('PersistenceWizardDone.png', 20)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
-  # Make sure all presets were configured by being written to disk.
-  persistence_conf = @vm.file_content("/media/TailsData/persistence.conf")
-  for src, dest in persistent_dirs
-    assert(/^#{dest}\W+(.*,)?source=#{src}(,.*)?$/.match(persistence_conf),
-           "Persistence preset for #{dest} not configured")
-  end
 end
 
 Given /^I create a persistent partition with password "([^"]+)"$/ do |pwd|
