@@ -24,8 +24,13 @@ EOF
     is_link = options.include? "link"
     next if is_link and skip_links
     source_str = options.find { |option| /^source=/.match option }
-    assert_not_nil source_str
-    source = source_str.split("=")[1]
+    # If no source is given as an option, live-boot's persistence
+    # feature defaults to the destination minus the initial "/".
+    if source_str.nil?
+      source = destination.partition("/").last
+    else
+      source = source_str.split("=")[1]
+    end
     persistence_mapping[source] = destination
   end
   return persistence_mapping
