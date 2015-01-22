@@ -282,15 +282,15 @@ Then /^Tails seems to have booted normally$/ do
   step "GNOME has started"
 end
 
-Given /^Tor is ready$/ do
+When /^I see the 'Tor is ready' notification$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("GnomeTorIsReady.png", 300)
   @screen.waitVanish("GnomeTorIsReady.png", 15)
+end
 
-  # Having seen the "Tor is ready" notification implies that Tor has
-  # built a circuit, but let's check it directly to be on the safe side.
+Given /^Tor is ready$/ do
+  next if @skip_steps_while_restoring_background
   step "Tor has built a circuit"
-
   step "the time has synced"
 end
 
@@ -527,16 +527,7 @@ end
 
 When /^I start the Tor Browser$/ do
   next if @skip_steps_while_restoring_background
-  case @theme
-  when "windows"
-    step 'I click the start menu'
-    @screen.wait_and_click("WindowsApplicationsInternet.png", 10)
-    @screen.wait_and_click("WindowsApplicationsTorBrowser.png", 10)
-  else
-    @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-    @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
-    @screen.wait_and_click("GnomeApplicationsTorBrowser.png", 10)
-  end
+  step 'I start "TorBrowser" via the GNOME "Internet" applications menu'
 end
 
 When /^I start the Tor Browser in offline mode$/ do
@@ -558,7 +549,7 @@ def xul_app_shared_lib_check(pid, chroot)
   unwanted_native_libs = []
   tbb_libs = @vm.execute_successfully(
                  ". /usr/local/lib/tails-shell-library/tor-browser.sh; " +
-                 "ls -1 #{chroot}${TBB_INSTALL}/Browser/*.so"
+                 "ls -1 #{chroot}${TBB_INSTALL}/*.so"
                                       ).stdout.split
   firefox_pmap_info = @vm.execute("pmap #{pid}").stdout
   for lib in tbb_libs do
@@ -587,7 +578,7 @@ Then /^(.*) uses all expected TBB shared libraries$/ do |application|
   next if @skip_steps_while_restoring_background
   binary = @vm.execute_successfully(
                 '. /usr/local/lib/tails-shell-library/tor-browser.sh; ' +
-                'echo ${TBB_INSTALL}/Browser/firefox'
+                'echo ${TBB_INSTALL}/firefox'
                                     ).stdout.chomp
   case application
   when "the Tor Browser"
@@ -596,8 +587,12 @@ Then /^(.*) uses all expected TBB shared libraries$/ do |application|
     chroot = ""
   when "the Unsafe Browser"
     user = "clearnet"
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
     chroot = "/var/lib/unsafe-browser/chroot"
+  when "the I2P Browser"
+    user = "i2pbrowser"
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.i2p-browser/profile\.default"
+    chroot = "/var/lib/i2p-browser/chroot"
   when "Tor Launcher"
     user = "tor-launcher"
     cmd_regex = "#{binary} -app /home/#{user}/\.tor-launcher/tor-launcher-standalone/application\.ini"
@@ -648,9 +643,7 @@ end
 
 When /^I start and focus GNOME Terminal$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsAccessories.png", 10)
-  @screen.wait_and_click("GnomeApplicationsTerminal.png", 20)
+  step 'I start "Terminal" via the GNOME "Accessories" applications menu'
   @screen.wait_and_click('GnomeTerminalWindow.png', 20)
 end
 
@@ -684,4 +677,31 @@ Given /^the USB drive "([^"]+)" contains Tails with persistence configured and p
     step "I create a persistent partition with password \"#{password}\""
     step "a Tails persistence partition with password \"#{password}\" exists on USB drive \"#{drive}\""
     step "I shutdown Tails and wait for the computer to power off"
+end
+
+Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
+  next if @skip_steps_while_restoring_background
+  case @theme
+  when "windows"
+    prefix = 'Windows'
+  else
+    prefix = 'Gnome'
+  end
+  @screen.wait_and_click(prefix + "ApplicationsMenu.png", 10)
+  @screen.wait_and_hover(prefix + "Applications" + submenu + ".png", 40)
+  @screen.wait_and_click(prefix + "Applications" + app + ".png", 40)
+end
+
+Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
+  next if @skip_steps_while_restoring_background
+  case @theme
+  when "windows"
+    prefix = 'Windows'
+  else
+    prefix = 'Gnome'
+  end
+  @screen.wait_and_click(prefix + "ApplicationsMenu.png", 10)
+  @screen.wait_and_hover(prefix + "Applications" + submenu + ".png", 20)
+  @screen.wait_and_hover(prefix + "Applications" + subsubmenu + ".png", 20)
+  @screen.wait_and_click(prefix + "Applications" + app + ".png", 20)
 end

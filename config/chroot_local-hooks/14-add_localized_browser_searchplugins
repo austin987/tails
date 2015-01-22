@@ -24,12 +24,12 @@ for LANGUAGE in $(find /usr/share/amnesia/browser/searchplugins/locale -maxdepth
 	LOCALES="$(locales_for_lang "$LANGUAGE")"
 	if [ -z "$LOCALES" ]; then
 		echo "Unable to find a matching locale for $LANGUAGE." >&2
-		continue
+		exit 1
 	fi
 	for LOCALE in $LOCALES; do
-		mkdir -p "${TBB_INSTALL}"/Browser/distribution/searchplugins/locale/$LOCALE
+		mkdir -p "${TBB_INSTALL}"/distribution/searchplugins/locale/$LOCALE
 		for SEARCHPLUGIN in $(find "/usr/share/amnesia/browser/searchplugins/locale/$LANGUAGE" -maxdepth 1 -type f); do
-			ln -s "$SEARCHPLUGIN" "${TBB_INSTALL}"/Browser/distribution/searchplugins/locale/$LOCALE
+			ln -s "$SEARCHPLUGIN" "${TBB_INSTALL}"/distribution/searchplugins/locale/$LOCALE
 		done
 	done
 done

@@ -100,9 +100,7 @@ end
 
 When /^I start Tails Installer$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsTails.png", 10)
-  @screen.wait_and_click("GnomeApplicationsTailsInstaller.png", 20)
+  step 'I start "TailsInstaller" via the GNOME "Tails" applications menu'
 end
 
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
@@ -181,9 +179,7 @@ end
 
 Given /^I create a persistent partition with password "([^"]+)"$/ do |pwd|
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsTails.png", 10)
-  @screen.wait_and_click("GnomeApplicationsConfigurePersistentVolume.png", 20)
+  step 'I start "ConfigurePersistentVolume" via the GNOME "Tails" applications menu'
   @screen.wait('PersistenceWizardWindow.png', 40)
   @screen.wait('PersistenceWizardStart.png', 20)
   @screen.type(pwd + "\t" + pwd + Sikuli::Key.ENTER)
@@ -539,9 +535,7 @@ end
 
 When /^I delete the persistent partition$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsTails.png", 10)
-  @screen.wait_and_click("GnomeApplicationsDeletePersistentVolume.png", 20)
+  step 'I start "DeletePersistentVolume" via the GNOME "Tails" applications menu'
   @screen.wait("PersistenceWizardWindow.png", 40)
   @screen.wait("PersistenceWizardDeletionStart.png", 20)
   @screen.type(" ")

@@ -32,10 +32,7 @@ end
 
 When /^I start Seahorse$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsSystem.png", 10)
-  @screen.wait_and_click("GnomeApplicationsPreferences.png", 10)
-  @screen.wait_and_click("GnomeApplicationsSeahorse.png", 10)
+  step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
 end
 
 When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|

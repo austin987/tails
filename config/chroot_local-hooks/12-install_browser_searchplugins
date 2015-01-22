@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -e
+
+echo "Install extra browser search plugins"
+
+# Import the TBB_EXT variable
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
+LOCALIZED_PLUGINS_DIR=/usr/share/amnesia/browser/searchplugins/locale
+
+for langpack in "${TBB_EXT}"/langpack-*@firefox.mozilla.org.xpi; do
+    locale="$(basename "${langpack}" | sed 's,^langpack-\([^@]\+\)@.*$,\1,')"
+    pkg=iceweasel-l10n-"$(echo ${locale} | tr 'A-Z' 'a-z')"
+    tmp="$(mktemp -d)"
+    cd "${tmp}"
+    apt-get download "${pkg}"
+    ar x "${pkg}"*.deb
+    path_to_searchplugins=etc/iceweasel/searchplugins/locale/"${locale}"
+    tar xf data.tar.* ./"${path_to_searchplugins}"
+    rm -f "${path_to_searchplugins}"/amazon*.xml \
+          "${path_to_searchplugins}"/bing*.xml \
+          "${path_to_searchplugins}"/eBay*.xml \
+          "${path_to_searchplugins}"/yahoo*.xml
+    mkdir -p "${LOCALIZED_PLUGINS_DIR}"/"${locale}"
+    cp "${path_to_searchplugins}"/* "${LOCALIZED_PLUGINS_DIR}"/"${locale}"
+    cd /
+    rm -r "${tmp}"
+done

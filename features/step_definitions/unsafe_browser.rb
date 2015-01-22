@@ -27,9 +27,7 @@ end
 
 When /^I start the Unsafe Browser$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
-  @screen.wait_and_click("GnomeApplicationsUnsafeBrowser.png", 20)
+  step 'I start "UnsafeBrowser" via the GNOME "Internet" applications menu'
 end
 
 When /^I successfully start the Unsafe Browser$/ do
@@ -75,23 +73,13 @@ When /^I open the address "([^"]*)" in the Unsafe Browser$/ do |address|
   @screen.type(address + Sikuli::Key.ENTER)
 end
 
-# Workaround until the TBB shows the menu bar by default
-# https://lists.torproject.org/pipermail/tor-qa/2014-October/000478.html
-def show_unsafe_browser_menu_bar
-  try_for(15, :msg => "Failed to show the menu bar") do
-    @screen.type("h", Sikuli::KeyModifier.ALT)
-    @screen.find('UnsafeBrowserEditMenu.png')
-  end
-end
-
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
   # First we open the proxy settings page to prepare it with the
   # correct open tabs for the loop below.
-  show_unsafe_browser_menu_bar
-  @screen.hover('UnsafeBrowserEditMenu.png')
-  @screen.wait_and_click('UnsafeBrowserEditPreferences.png', 10)  
+  @screen.click('UnsafeBrowserMenuButton.png')
+  @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
   @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
   @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
   @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
@@ -100,18 +88,13 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
 #  @screen.waitVanish('UnsafeBrowserPreferences.png', 10)
   sleep 0.5
 
-  http_proxy  = 'x' # Alt+x is the shortcut to select http proxy
   socks_proxy = 'c' # Alt+c for socks proxy
   no_proxy    = 'y' # Alt+y for no proxy
 
-  # Note: the loop below depends on that http_proxy is done after any
-  # other proxy types since it will set "Use this proxy server for all
-  # protocols", which will make the other proxy types unselectable.
   proxies = [[socks_proxy, 9050],
              [socks_proxy, 9061],
              [socks_proxy, 9062],
              [socks_proxy, 9150],
-             [http_proxy,  8118],
              [no_proxy,       0]]
 
   proxies.each do |proxy|
@@ -121,9 +104,8 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     @screen.hide_cursor
 
     # Open proxy settings and select manual proxy configuration
-    show_unsafe_browser_menu_bar
-    @screen.hover('UnsafeBrowserEditMenu.png')
-    @screen.wait_and_click('UnsafeBrowserEditPreferences.png', 10)  
+    @screen.click('UnsafeBrowserMenuButton.png')
+    @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
     @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
     @screen.type("e", Sikuli::KeyModifier.ALT)
     @screen.wait('UnsafeBrowserProxySettings.png', 10)
@@ -132,8 +114,6 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     # Configure the proxy
     @screen.type(proxy_type, Sikuli::KeyModifier.ALT)  # Select correct proxy type
     @screen.type("127.0.0.1" + Sikuli::Key.TAB + "#{proxy_port}") if proxy_type != no_proxy
-    # For http proxy we set "Use this proxy server for all protocols"
-    @screen.type("s", Sikuli::KeyModifier.ALT) if proxy_type == http_proxy
 
     # Close settings
     @screen.type(Sikuli::Key.ENTER)

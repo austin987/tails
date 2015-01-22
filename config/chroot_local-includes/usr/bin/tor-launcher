@@ -2,7 +2,7 @@
 
 set -e
 
-# Import exec_firefox()
+# Import exec_firefox() and configure_best_tor_launcher_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 # The Tor Browser hardcodes the default profile dir to ../.. from the
@@ -24,7 +24,7 @@ IsRelative=1
 Path=profile.default
 EOF
     mkdir -p "${HOME}"/.tor-launcher/TorBrowser/Data/Browser/profile.default/preferences
-    ln -s /var/lib/tails-user-session/tor-launcher-locale.js \
-          "${HOME}"/.tor-launcher/TorBrowser/Data/Browser/profile.default/preferences/0000locale.js
+    configure_best_tor_launcher_locale "${HOME}"/.tor-launcher/TorBrowser/Data/Browser/profile.default
 fi
+
 exec_firefox -app "${HOME}"/.tor-launcher/tor-launcher-standalone/application.ini

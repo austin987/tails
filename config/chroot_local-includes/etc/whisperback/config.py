@@ -66,14 +66,13 @@ html_help = _(
 <p><strong>Do not include more personal information than
 needed!</strong></p>
 <h2>About giving us an email address</h2>
-<p>If you don't mind disclosing some bits of your identity
-to Tails developers, you can provide an email address to
-let us ask more details about the bug. Additionally entering
-a public PGP key enables us to encrypt such future
-communication.</p>
-<p>Anyone who can see this reply will probably infer you are
-a Tails user. Time to wonder how much you trust your
-Internet and mailbox providers?</p>
+<p>
+Giving us an email address allows us to contact you to clarify the problem. This
+is needed for the vast majority of the reports we receive as most reports
+without any contact information are useless. On the other hand it also provides
+an opportunity for eavesdroppers, like your email or Internet provider, to
+confirm that you are using Tails.
+</p>
 """) % __get_localised_doc_link()
 
 # ENCRYPTION

@@ -2,59 +2,21 @@
 
 set -e
 
-CMD=$(basename ${0})
-LOCK=/var/lock/${CMD}
-
-. gettext.sh
-TEXTDOMAIN="tails"
-export TEXTDOMAIN
-
-ROFS=/lib/live/mount/rootfs/filesystem.squashfs
-CONF_DIR=/var/lib/unsafe-browser
-COW=${CONF_DIR}/cow
-CHROOT=${CONF_DIR}/chroot
-CLEARNET_USER=clearnet
-
 # Import tor_is_working()
 . /usr/local/lib/tails-shell-library/tor.sh
 
-# Import the TBB_INSTALL, TBB_EXT and TBB_PROFILE variables
+# Import the TBB_EXT variable, and guess_best_tor_browser_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
-WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
-LANG_CODE="$(echo ${LANG} | head -c 2)"
-if [ -r "${WARNING_PAGE}.${LANG_CODE}.html" ]; then
-   START_PAGE="${WARNING_PAGE}.${LANG_CODE}.html"
-else
-   START_PAGE="${WARNING_PAGE}.en.html"
-fi
+# Import localized_tails_doc_page().
+. /usr/local/lib/tails-shell-library/localization.sh
 
-if [ -e /var/lib/gdm3/tails.camouflage ]; then
-    CAMOUFLAGE=yes
-fi
-
-cleanup () {
-    # Break down the chroot and kill all of its processes
-    local counter=0
-    local ret=0
-    while [ "${counter}" -le 10 ] && \
-        pgrep -u ${CLEARNET_USER} 1>/dev/null 2>&1; do
-        pkill -u ${CLEARNET_USER} 1>/dev/null 2>&1
-        ret=${?}
-        sleep 1
-        counter=$((${counter}+1))
-    done
-    [ ${ret} -eq 0 ] || pkill -9 -u ${CLEARNET_USER} 1>/dev/null 2>&1
-    for mnt in ${CHROOT}/dev ${CHROOT}/proc ${CHROOT} ${COW}; do
-        counter=0
-        while [ "${counter}" -le 10 ] && mountpoint -q ${mnt} 2>/dev/null; do
-            umount ${mnt} 2>/dev/null
-            sleep 1
-            counter=$((${counter}+1))
-        done
-    done
-    rmdir ${COW} ${CHROOT} 2>/dev/null
-}
+# Import try_cleanup_browser_chroot(), setup_browser_chroot(),
+# configure_chroot_dns_servers(), configure_chroot_browser(),
+# configure_chroot_browser(), set_chroot_browser_locale()
+# set_chroot_browser_name(), set_chroot_browser_permissions()
+# and run_browser_in_chroot().
+. /usr/local/lib/tails-shell-library/chroot-browser.sh
 
 error () {
     local cli_text="${CMD}: `gettext \"error:\"` ${@}"
@@ -62,7 +24,7 @@ error () {
 
 ${@}"
     echo "${cli_text}" >&2
-    sudo -u ${SUDO_USER} zenity --error --title "" --text "${dialog_text}"
+    sudo -u "${SUDO_USER}" zenity --error --title "" --text "${dialog_text}"
     exit 1
 }
 
@@ -75,7 +37,7 @@ verify_start () {
     local exit="`gettext \"_Exit\"`"
     # Since zenity can't set the default button to cancel, we switch the
     # labels and interpret the return value as its negation.
-    if sudo -u ${SUDO_USER} zenity --question --title "" --ok-label "${exit}" \
+    if sudo -u "${SUDO_USER}" zenity --question --title "" --ok-label "${exit}" \
        --cancel-label "${launch}" --text "${dialog_msg}"; then
         exit 0
     fi
@@ -85,155 +47,6 @@ show_start_notification () {
     local title="`gettext \"Starting the Unsafe Browser...\"`"
     local body="`gettext \"This may take a while, so please be patient.\"`"
     tails-notify-user "${title}" "${body}" 10000
-}
-
-setup_chroot () {
-    # Setup a chroot on an aufs "fork" of the filesystem.
-    # FIXME: When LXC matures to the point where it becomes a viable option
-    # for creating isolated jails, the chroot can be used as its rootfs.
-    echo "* Setting up chroot"
-
-    trap cleanup INT
-    trap cleanup EXIT
-
-    mkdir -p ${COW} ${CHROOT} && \
-    mount -t tmpfs tmpfs ${COW} && \
-    mount -t aufs -o noatime,noxino,dirs=${COW}=rw:${ROFS}=rr+wh aufs ${CHROOT} && \
-    mount -t proc proc ${CHROOT}/proc && \
-    mount --bind /dev ${CHROOT}/dev || \
-    error "`gettext \"Failed to setup chroot.\"`"
-
-    # Workaround for todo/buggy_aufs_vs_unsafe-browser
-    chmod -t ${COW}
-}
-
-set_chroot_browser_name () {
-    NAME="${1}"
-    LONG=$(echo ${LANG} | grep -o "^[a-zA-Z_]*")
-    SHORT=${LONG%%_*}
-    EXT_DIR=${CHROOT}/"${TBB_EXT}"
-    BRANDING=branding/brand.dtd
-    if [ -e "${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi" ]; then
-        PACK="${EXT_DIR}/langpack-${LONG}@firefox.mozilla.org.xpi"
-        TOP=browser/chrome
-        REST=${LONG}/locale
-    elif [ -e "${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi" ]; then
-        PACK="${EXT_DIR}/langpack-${SHORT}@firefox.mozilla.org.xpi"
-        TOP=browser/chrome
-        REST=${SHORT}/locale
-    else
-        PACK="${CHROOT}/${TBB_INSTALL}/Browser/browser/omni.ja"
-        TOP=chrome
-        REST=en-US/locale
-    fi
-    TMP=$(mktemp -d)
-    # Non-zero exit code due to non-standard ZIP archive.
-    # The following steps will fail soon if the extraction failed anyway.
-    unzip -d "${TMP}" "${PACK}" || true
-    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${NAME}\">/" "${TMP}/${TOP}/${REST}/${BRANDING}"
-    rm "${PACK}"
-    (cd $TMP ; 7z a -tzip "${PACK}" .)
-    chmod a+r "${PACK}"
-    rm -Rf "${TMP}"
-}
-
-configure_chroot () {
-    echo "* Configuring chroot"
-
-    # Set the chroot's DNS servers to those obtained through DHCP
-    rm -f ${CHROOT}/etc/resolv.conf
-    for NS in ${IP4_NAMESERVERS}; do
-        echo "nameserver ${NS}" >> ${CHROOT}/etc/resolv.conf
-    done
-    chmod a+r ${CHROOT}/etc/resolv.conf
-
-    # Remove all addons: some adds proxying, which we don't
-    # want; some may change the fingerprint compared to a standard
-    # Firefox install. Note: We cannot use apt-get since we don't ship its
-    # lists (#6531). Too bad, APT supports globbing, while dkpg does not.
-    dpkg -l 'xul-ext-*' | /bin/grep '^ii' | awk '{print $2}' | \
-        xargs chroot ${CHROOT} dpkg --remove
-
-    # Create a fresh browser profile for the clearnet user
-    CLEARNET_PROFILE="${CHROOT}"/home/clearnet/.tor-browser/profile.default
-
-    CLEARNET_EXT="${CLEARNET_PROFILE}"/extensions
-    mkdir -p "${CLEARNET_EXT}"
-    cp -Pr "${TBB_PROFILE}"/extensions/langpack-*.xpi \
-           "${TBB_PROFILE}"/extensions/branding@amnesia.boum.org \
-           "${CLEARNET_EXT}"
-
-    CLEARNET_PREFS="${CLEARNET_PROFILE}"/preferences/prefs.js
-    mkdir -p "$(dirname "${CLEARNET_PREFS}")"
-
-    # Localization
-    cat /var/lib/tails-user-session/browser-locale.js >> "${CLEARNET_PREFS}"
-
-    # Disable proxying in the chroot
-    echo 'pref("network.proxy.type", 0);' >> "${CLEARNET_PREFS}"
-    echo 'pref("network.proxy.socks_remote_dns", false);' >>  "${CLEARNET_PREFS}"
-
-    # Prevent File -> Print or CTRL+P from causing the browser to hang
-    # for several minutes while trying to communicate with CUPS, since
-    # access to port 631 isn't allowed through.
-    echo 'pref("print.postscript.cups.enabled", false);' >> "${CLEARNET_PREFS}"
-    # Hide "Get Addons" in Add-ons manager
-    echo 'user_pref("extensions.getAddons.showPane", false);' >> "${CLEARNET_PREFS}"
-
-    # Set the name (e.g. window title) of the browser
-    set_chroot_browser_name "`gettext \"Unsafe Browser\"`"
-
-    # Set start page to something that explains what's going on
-    echo 'user_pref("browser.startup.homepage", "'${START_PAGE}'");' >> \
-        "${CLEARNET_PREFS}"
-    BROWSER_CHROME="${CLEARNET_PROFILE}/chrome/userChrome.css"
-    mkdir -p "$(dirname "${BROWSER_CHROME}")"
-    cat > ${BROWSER_CHROME} << EOF
-/* Required, do not remove */
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-/* Hide TorBrowser Health Report and its configuration option */
-#appmenu_healthReport,
-#dataChoicesTab,
-#healthReport
-
-{display: none !important}
-EOF
-
-    # Remove all bookmarks
-    rm -f ${CHROOT}/"${TBB_PROFILE}"/bookmarks.html
-    rm -f ${CLEARNET_PROFILE}/bookmarks.html
-    rm -f ${CLEARNET_PROFILE}/places.sqlite
-
-    chown -R clearnet:clearnet ${CHROOT}/home/clearnet/.tor-browser
-
-    # Set a scary theme (except if we're using Windows
-    # camouflage). Note that the tails-activate-win8-theme script that
-    # we may run below requires that the browser profile is writable
-    # by the user running the script (i.e. clearnet).
-    if [ -z "${CAMOUFLAGE}" ]; then
-        cat >> "${CLEARNET_PREFS}" <<EOF
-pref("lightweightThemes.isThemeSelected", true);
-pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/red_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#CC0000\",\"updateDate\":0,\"installDate\":0}]");
-EOF
-    else
-        # The camouflage activation script requires a dbus server for
-        # properly configuring GNOME, so we start one in the chroot
-        chroot ${CHROOT} sudo -H -u clearnet sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
-    fi
-
-}
-
-run_browser_in_chroot () {
-    # Start the browser in the chroot
-    echo "* Starting Unsafe Browser"
-
-    sudo -u ${SUDO_USER} xhost +SI:localuser:${CLEARNET_USER} 2>/dev/null
-    chroot ${CHROOT} sudo -u ${CLEARNET_USER} /bin/sh -c \
-        '. /usr/local/lib/tails-shell-library/tor-browser.sh && \
-         exec_firefox -DISPLAY=:0.0 \
-                      -profile /home/clearnet/.tor-browser/profile.default'
-    sudo -u ${SUDO_USER} xhost -SI:localuser:${CLEARNET_USER} 2>/dev/null
 }
 
 show_shutdown_notification () {
@@ -249,22 +62,50 @@ maybe_restart_tor () {
     if ! tor_is_working; then
         echo "* Restarting Tor"
         restart-tor
-        if ! service tor status >/dev/null; then
+        if ! service tor status; then
             error "`gettext \"Failed to restart Tor.\"`"
         fi
     fi
 }
 
+# Main script:
+
+CMD="$(basename "${0}")"
+LOCK="/var/lock/${CMD}"
+
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
+CONF_DIR="/var/lib/unsafe-browser"
+COW="${CONF_DIR}/cow"
+CHROOT="${CONF_DIR}/chroot"
+BROWSER_NAME="unsafe-browser"
+BROWSER_USER="clearnet"
+HUMAN_READABLE_NAME="`gettext \"Unsafe Browser\"`"
+NM_ENV_FILE="/var/lib/NetworkManager/env"
+WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
+HOME_PAGE="$(localized_tails_doc_page "${WARNING_PAGE}")"
+
 # Prevent multiple instances of the script.
-exec 9>${LOCK}
+exec 9>"${LOCK}"
 if ! flock -x -n 9; then
     error "`gettext \"Another Unsafe Browser is currently running, or being cleaned up. Please retry in a while.\"`"
 fi
 
 # Get the DNS servers that was obtained from NetworkManager, if any...
-NM_ENV=/var/lib/NetworkManager/env
-if [ -r "${NM_ENV}" ]; then
-    . ${NM_ENV}
+if [ -r "${NM_ENV_FILE}" ]; then
+    # We also check that the file we are gonna *source* doesn't
+    # contain any unexpected data, like (potentially malicious) shell
+    # script. Note that while the regex used for deciding IP addresses
+    # is far from perfect, it serves our purpose here.
+    IP4_REGEX='[0-9]{1,3}(\.[0-9]{1,3}){3}'
+    NAMESERVERS_REGEX="^IP4_NAMESERVERS=\"${IP4_REGEX}\"$"
+    if grep --extended-regexp -qv "${NAMESERVERS_REGEX}" "${NM_ENV_FILE}"; then
+        error "`gettext \"NetworkManager passed us garbage data when trying to deduce the clearnet DNS server.\"`"
+    fi
+    # Import the IP4_NAMESERVERS variable.
+    eval "$(grep --extended-regexp "${NAMESERVERS_REGEX}" "${NM_ENV_FILE}")"
 fi
 # ... otherwise fail.
 # FIXME: Or would it make sense to fallback to Google's DNS or OpenDNS?
@@ -276,9 +117,23 @@ fi
 
 verify_start
 show_start_notification
-setup_chroot
-configure_chroot
-run_browser_in_chroot
+
+echo "* Setting up chroot"
+setup_chroot_for_browser "${CHROOT}" "${COW}" "${BROWSER_USER}" || \
+    error "`gettext \"Failed to setup chroot.\"`"
+
+echo "* Configuring chroot"
+configure_chroot_browser "${CHROOT}" "${BROWSER_USER}" "${BROWSER_NAME}" \
+    "${HUMAN_READABLE_NAME}" "${HOME_PAGE}" "${IP4_NAMESERVERS}" \
+    "${TBB_EXT}"/langpack-*.xpi || \
+        error "`gettext \"Failed to configure browser.\"`"
+
+echo "* Starting Unsafe Browser"
+run_browser_in_chroot "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
+    "${SUDO_USER}" || \
+    error "`gettext \"Failed to run browser.\"`"
+
+echo "* Exiting the Unsafe Browser"
 show_shutdown_notification
 maybe_restart_tor
 

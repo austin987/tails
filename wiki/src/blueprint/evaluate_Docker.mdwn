@@ -1,7 +1,30 @@
 For an overview of the more general problem, see [[blueprint/replace_vagrant]].
 For the detailed plans and things to evaluate in Docker, see [[!tails_ticket 7530]].
 
-Random notes:
+[[!toc levels=1]]
+
+Availability on target platforms
+================================
+
+(as of 20141130)
+
+Primary target platforms:
+
+* Debian Wheezy: no, even in backports; installation is [possible
+  using ugly methods](https://docs.docker.com/installation/debian/)
+* Debian Jessie: 1.3.1~dfsg1-2, and an unblock request has been filed
+  to let 1.3.2 in
+* Debian sid: 1.3.2~dfsg1-1
+* Ubuntu 14.04 LTS: 0.9.1, with 1.0.1 available in trusty-updates
+* Ubuntu 14.10: 1.2.0
+
+Bonus:
+
+* Arch: 1.3.2
+* Fedora: 1.3.0 flagged as stable, 1.3.2 in testing
+
+Random notes
+============
 
 * Since Docker 0.9, the default execution environment is libcontainer,
   instead of LXC. It now supports e.g. systemd-nspawn, libvirt-lxc,
@@ -20,3 +43,7 @@ Random notes:
 * As far as our build system is concerned, we don't care much to
   protect the host system from the build container. The main goal is
   to produce a reliable build environment.
+* For security info about Linux containers in general, see the
+  [[dedicated blueprint|blueprint/Linux_containers]].
+* [overclockix](https://github.com/mbentley/overclockix) uses
+  live-build and provides a Dockerfile for easier building.

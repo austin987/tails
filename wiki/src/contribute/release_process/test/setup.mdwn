@@ -15,24 +15,35 @@ wheezy-backports sources added:
 
     echo 'deb http://ftp.us.debian.org/debian/ testing main contrib non-free' \
         > /etc/apt/sources.list.d/testing.list && \
+    echo -e "Package: *\nPin: release o=Debian,a=stable\nPin-Priority: 990" \
+        > /etc/apt/preferences.d/Debian_stable && \
     echo -e "Package: *\nPin: release o=Debian,a=testing\nPin-Priority: 500" \
         > /etc/apt/preferences.d/Debian_testing && \
     apt-get update &&
-    apt-get install git xvfb virt-viewer libsikuli-script-java \
+    apt-get install git i18nspector xvfb virt-viewer libsikuli-script-java \
         libxslt1-dev tcpdump unclutter radvd x11-apps syslinux \
         libcap2-bin devscripts libvirt-ruby ruby-rspec gawk ntp ovmf/testing \
         ruby-json x11vnc xtightvncviewer ffmpeg libavcodec-extra-53 \
         libvpx1 dnsmasq-base openjdk-7-jre && \
     apt-get -t wheezy-backports install qemu-kvm qemu-system-x86 libvirt0 \
         libvirt-dev libvirt-bin seabios ruby-rjb ruby-packetfu cucumber && \
-    service libvirt-bin restart
+    service libvirtd restart
 
 Other requirements
 ==================
 
+Synchronized clock
+------------------
+
 The system running the test suite needs an accurate clock since we
 sync the clock from the host to the Tails guest after a background
 snapshot restore to appease Tor. This is why we installed ntp above.
+
+File permissions
+----------------
+
+The user that runs QEMU (via libvirt) needs read-access at least to
+the content of `features/misc_files/` in the Git checkout.
 
 Special use cases
 =================
@@ -50,6 +61,10 @@ where `$DISPLAY` is the display given to you by `run_test_suite` (often 0):
 
 Running the test suite as a non-root user
 -----------------------------------------
+
+<div class="note">
+This section may not be in tested and working shape.
+</div>
 
 This is entirely possible, but there's some additional configuration
 required. Run the following as `root`:

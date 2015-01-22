@@ -1,23 +1,43 @@
 [[!meta title="Releasing the Tor Browser"]]
 
-[[!toc levels=1]]
-
 Have a look at
 
-* https://archive.torproject.org/tor-package-archive/torbrowser/
-* http://www.torproject.org/dist/torbrowser/
-* http://people.torproject.org/~mikeperry/builds/
-* https://people.torproject.org/~linus/builds/
+* <https://archive.torproject.org/tor-package-archive/torbrowser/>
+* <https://www.torproject.org/dist/torbrowser/>
+* <https://people.torproject.org/~mikeperry/builds/>
+* <https://people.torproject.org/~linus/builds/>
 
 and see if the desired version is available. We prefer
 `archive.torproject.org` since the other sources periodically cleans
-up old releases.
+up old releases. Set `DIST_URL` to the chosen url, and set `VERSION`
+to the desired TBB version, for example:
 
-Fetch the version's `sha256sums.txt` (and verify it with
-`sha256sums.txt.asc`) and then update the variables in
-`config/chroot_local-hooks/10-tbb` as follows:
+    DIST_URL=https://people.torproject.org/~mikeperry/builds/
+    VERSION=4.0
 
-* set `TBB_DIST_URL` to the url chosen above.
-* set `BUNDLES` to the output of:
+Fetch the version's `sha256sums.txt` and `sha256sums.txt.asc` and
+verify with `gpg`:
 
-    grep "tor-browser-linux32-.*\.tar.xz" sha256sums.txt
+    wget ${DIST_URL}/${VERSION}/sha256sums.txt{,.asc} && \
+    gpg --verify sha256sums.txt.asc sha256sums.txt
+
+Filter the tarballs we want and make them available at build time,
+when the tarballs are fetched:
+
+    grep "\<tor-browser-linux32-.*\.tar.xz$" sha256sums.txt > \
+         config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
+
+Then update the url to the one chosen above:
+
+    echo "${DIST_URL}" | sed "s,^https://,http://," > \
+         config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt
+
+NOTE: We must use http (not http**s**) due to limitations/bugs in
+`apt-cacher-ng`, which often is used in Tails build
+environments. However, it is of no consequence since we verify the
+checksum file.
+
+Lastly, commit:
+
+    git commit config/chroot_local-includes/usr/share/tails/tbb-*.txt \
+        -m "Upgrade TBB to ${VERSION}."

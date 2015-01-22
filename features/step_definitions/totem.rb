@@ -27,9 +27,7 @@ end
 
 When /^I start Totem through the GNOME menu$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsSoundVideo.png", 10)
-  @screen.wait_and_click("GnomeApplicationsTotem.png", 20)
+  step 'I start "Totem" via the GNOME "SoundVideo" applications menu'
   @screen.wait_and_click("TotemMainWindow.png", 20)
 end
 
