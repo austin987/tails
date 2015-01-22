@@ -77,32 +77,31 @@ The documentation for the creation of the encrypted device [[is already written|
 
 * not that much things to code
 * grsync can be easily preconfigurated, eventually with multiple profiles
-* this solution separate backup and encryption work
+* this solution separates backup and encryption work
 * allows remote backups
 
-### Cons
+### Features to request
 
-* not possible to do incremental backups
-* needs a separate encrypted device for backups or reuse the "loopback LUKS"
-  solution
-* does not check if enough space is available on the destination before running
+* grsync should check if enough space is available on the destination before running
+* grsync should ask for confirmation when the option "Delete on the destination" is activated
+* when user double-click on a `.grsync` file, a window appears to confirm which file to open. This may be confusing.
 
 ### How to test?
 
 * create an encrypted device.
 * install the grsync package.
-* paste [those lines](http://dustri.org/p/38e76b) in a .grsync file, then double-click on it.
+* paste [those lines](http://dustri.org/p/38e76b) in a `.grsync` file, then double-click on it.
 (grsync ask you first to confirm the profile you want to use. Just click on "Open")
 * define the destination (i.e your encrypted device)
 * test wildly! and please report your results
 
-### Todo
+### Misc
 
 * some files are normally not readable by rsync (for example persistence.conf, apt/*)
   Grsync can bypass that with the option "Run as superuser", we should investigate the consequences of using such an option.
   We still have the possibility to ignore those files: we just have then to add `--exclude="apt"` in the preconfiguration file.
 * decide if we activate the option `--delete` by default.
-* test restoration (see File → Invert source and destination), then at least check files permissions.
+* test restoration (see File → Invert source and destination). Then, at least, check files permissions.
 * test backup + restoration with symlinks and hardlinks in the Persistent folder.
 * eventually test remote backups.
 
