@@ -7,7 +7,6 @@ def get_persistence_presets(skip_links = false)
   use strict;
   use warnings FATAL => "all";
   use Tails::Persistence::Configuration::Presets;
-  use feature qw(say);
   foreach my $x (Tails::Persistence::Configuration::Presets->new()->all) {
     say $x->destination, ":", join(",", @{$x->options});
   }
@@ -15,7 +14,7 @@ EOF
   # VMCommand:s cannot handle newlines, and they're irrelevant in the
   # above perl script any way
   script.delete!("\n")
-  presets = @vm.execute_successfully("perl -e '#{script}'").stdout.chomp.split("\n")
+  presets = @vm.execute_successfully("perl -E '#{script}'").stdout.chomp.split("\n")
   assert presets.size >= 10, "Got #{presets.size} persistence presets, " +
                              "which is too few"
   persistence_mapping = Hash.new
