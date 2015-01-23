@@ -14,6 +14,11 @@ Feature: Various checks
     When Tails has booted a 64-bit kernel
     Then the VirtualBox guest modules are available
 
+   Scenario: The 'Tor is ready' notification is shown when Tor has bootstrapped
+    Given the network is plugged
+    When I see the 'Tor is ready' notification
+    Then Tor is ready
+
    Scenario: The shipped Tails signing key is up-to-date
     Given the network is plugged
     And Tor is ready

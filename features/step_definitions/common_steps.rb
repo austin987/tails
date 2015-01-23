@@ -282,6 +282,12 @@ Then /^Tails seems to have booted normally$/ do
   step "GNOME has started"
 end
 
+When /^I see the 'Tor is ready' notification$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("GnomeTorIsReady.png", 300)
+  @screen.waitVanish("GnomeTorIsReady.png", 15)
+end
+
 Given /^Tor is ready$/ do
   next if @skip_steps_while_restoring_background
   step "Tor has built a circuit"

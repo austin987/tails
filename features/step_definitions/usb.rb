@@ -1,17 +1,47 @@
-def persistent_mounts
-  {
-    "cups-configuration" => "/etc/cups",
-    "nm-system-connections" => "/etc/NetworkManager/system-connections",
-    "claws-mail" => "/home/#{$live_user}/.claws-mail",
-    "gnome-keyrings" => "/home/#{$live_user}/.gnome2/keyrings",
-    "gnupg" => "/home/#{$live_user}/.gnupg",
-    "bookmarks" => "/home/#{$live_user}/.mozilla/firefox/bookmarks",
-    "pidgin" => "/home/#{$live_user}/.purple",
-    "openssh-client" => "/home/#{$live_user}/.ssh",
-    "Persistent" => "/home/#{$live_user}/Persistent",
-    "apt/cache" => "/var/cache/apt/archives",
-    "apt/lists" => "/var/lib/apt/lists",
+# Returns a hash that for each preset the running Tails is aware of
+# maps the source to the destination.
+def get_persistence_presets(skip_links = false)
+  # Perl script that prints all persistence presets (one per line) on
+  # the form: <mount_point>:<comma-separated-list-of-options>
+  script = <<-EOF
+  use strict;
+  use warnings FATAL => "all";
+  use Tails::Persistence::Configuration::Presets;
+  foreach my $preset (Tails::Persistence::Configuration::Presets->new()->all) {
+    say $preset->destination, ":", join(",", @{$preset->options});
   }
+EOF
+  # VMCommand:s cannot handle newlines, and they're irrelevant in the
+  # above perl script any way
+  script.delete!("\n")
+  presets = @vm.execute_successfully("perl -E '#{script}'").stdout.chomp.split("\n")
+  assert presets.size >= 10, "Got #{presets.size} persistence presets, " +
+                             "which is too few"
+  persistence_mapping = Hash.new
+  for line in presets
+    destination, options_str = line.split(":")
+    options = options_str.split(",")
+    is_link = options.include? "link"
+    next if is_link and skip_links
+    source_str = options.find { |option| /^source=/.match option }
+    # If no source is given as an option, live-boot's persistence
+    # feature defaults to the destination minus the initial "/".
+    if source_str.nil?
+      source = destination.partition("/").last
+    else
+      source = source_str.split("=")[1]
+    end
+    persistence_mapping[source] = destination
+  end
+  return persistence_mapping
+end
+
+def persistent_dirs
+  get_persistence_presets
+end
+
+def persistent_mounts
+  get_persistence_presets(true)
 end
 
 def persistent_volumes_mountpoints
@@ -133,11 +163,12 @@ end
 Given /^I enable all persistence presets$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('PersistenceWizardPresets.png', 20)
-  # Mark first non-default persistence preset
-  @screen.type(Sikuli::Key.TAB*2)
-  # Check all non-default persistence presets
-  12.times do
-    @screen.type(Sikuli::Key.SPACE + Sikuli::Key.TAB)
+  # Select the "Persistent" folder preset, which is checked by default.
+  @screen.type(Sikuli::Key.TAB)
+  # Check all non-default persistence presets, i.e. all *after* the
+  # "Persistent" folder, which are unchecked by default.
+  (persistent_dirs.size - 1).times do
+    @screen.type(Sikuli::Key.TAB + Sikuli::Key.SPACE)
   end
   @screen.wait_and_click('PersistenceWizardSave.png', 10)
   @screen.wait('PersistenceWizardDone.png', 20)
@@ -282,14 +313,19 @@ def tails_persistence_enabled?
                      'test "$TAILS_PERSISTENCE_ENABLED" = true').success?
 end
 
-Given /^persistence is enabled$/ do
+Given /^all persistence presets(| from the old Tails version) are enabled$/ do |old_tails|
   next if @skip_steps_while_restoring_background
   try_for(120, :msg => "Persistence is disabled") do
     tails_persistence_enabled?
   end
   # Check that all persistent directories are mounted
+  if old_tails.empty?
+    expected_mounts = persistent_mounts
+  else
+    expected_mounts = $old_persistence_mounts
+  end
   mount = @vm.execute("mount").stdout.chomp
-  for _, dir in persistent_mounts do
+  for _, dir in expected_mounts do
     assert(mount.include?("on #{dir} "),
            "Persistent directory '#{dir}' is not mounted")
   end
@@ -371,7 +407,7 @@ Then /^the boot device has safe access rights$/ do
          "Boot device '#{super_boot_dev}' is not system internal for udisks")
 end
 
-Then /^persistent filesystems have safe access rights$/ do
+Then /^all persistent filesystems have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
     fs_owner = @vm.execute("stat -c %U #{mountpoint}").stdout.chomp
     fs_group = @vm.execute("stat -c %G #{mountpoint}").stdout.chomp
@@ -382,7 +418,7 @@ Then /^persistent filesystems have safe access rights$/ do
   end
 end
 
-Then /^persistence configuration files have safe access rights$/ do
+Then /^all persistence configuration files have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
     assert(@vm.execute("test -e #{mountpoint}/persistence.conf").success?,
            "#{mountpoint}/persistence.conf does not exist, while it should")
@@ -401,19 +437,32 @@ Then /^persistence configuration files have safe access rights$/ do
   end
 end
 
-Then /^persistent directories have safe access rights$/ do
+Then /^all persistent directories(| from the old Tails version) have safe access rights$/ do |old_tails|
   next if @skip_steps_while_restoring_background
-  expected_perms = "700"
+  if old_tails.empty?
+    expected_dirs = persistent_dirs
+  else
+    expected_dirs = $old_persistence_dirs
+  end
   persistent_volumes_mountpoints.each do |mountpoint|
-    # We also want to check that dotfiles' source has safe permissions
-    all_persistent_dirs = persistent_mounts.clone
-    all_persistent_dirs["dotfiles"] = "/home/#{$live_user}/"
-    persistent_mounts.each do |src, dest|
-      next unless dest.start_with?("/home/#{$live_user}/")
-      f = "#{mountpoint}/#{src}"
-      next unless @vm.execute("test -d #{f}").success?
-      file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
-      assert_equal(expected_perms, file_perms)
+    expected_dirs.each do |src, dest|
+      full_src = "#{mountpoint}/#{src}"
+      assert_vmcommand_success @vm.execute("test -d #{full_src}")
+      dir_perms = @vm.execute_successfully("stat -c %a '#{full_src}'").stdout.chomp
+      dir_owner = @vm.execute_successfully("stat -c %U '#{full_src}'").stdout.chomp
+      if dest.start_with?("/home/#{$live_user}")
+        expected_perms = "700"
+        expected_owner = $live_user
+      else
+        expected_perms = "755"
+        expected_owner = "root"
+      end
+      assert_equal(expected_perms, dir_perms,
+                   "Persistent source #{full_src} has permission " \
+                   "#{dir_perms}, expected #{expected_perms}")
+      assert_equal(expected_owner, dir_owner,
+                   "Persistent source #{full_src} has owner " \
+                   "#{dir_owner}, expected #{expected_owner}")
     end
   end
 end
@@ -445,9 +494,20 @@ When /^I write some files not expected to persist$/ do
   end
 end
 
-Then /^the expected persistent files are present in the filesystem$/ do
+When /^I take note of which persistence presets are available$/ do
   next if @skip_steps_while_restoring_background
-  persistent_mounts.each do |_, dir|
+  $old_persistence_mounts = persistent_mounts
+  $old_persistence_dirs = persistent_dirs
+end
+
+Then /^the expected persistent files(| created with the old Tails version) are present in the filesystem$/ do |old_tails|
+  next if @skip_steps_while_restoring_background
+  if old_tails.empty?
+    expected_mounts = persistent_mounts
+  else
+    expected_mounts = $old_persistence_mounts
+  end
+  expected_mounts.each do |_, dir|
     assert(@vm.execute("test -e #{dir}/XXX_persist").success?,
            "Could not find expected file in persistent directory #{dir}")
     assert(!@vm.execute("test -e #{dir}/XXX_gone").success?,
@@ -464,7 +524,7 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "the computer boots Tails"
   step "I enable read-only persistence with password \"asdf\""
   step "I log in to a new session"
-  step "persistence is enabled"
+  step "all persistence presets are enabled"
   step "GNOME has started"
   step "all notifications have disappeared"
   step "the expected persistent files are present in the filesystem"
