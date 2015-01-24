@@ -766,3 +766,18 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/
   @screen.wait_and_hover(prefix + "Applications" + subsubmenu + ".png", 20)
   @screen.wait_and_click(prefix + "Applications" + app + ".png", 20)
 end
+
+When /^I type "([^"]+)"$/ do |string|
+  next if @skip_steps_while_restoring_background
+  @screen.type(string)
+end
+
+When /^I press the "([^"]+)" key$/ do |key|
+  next if @skip_steps_while_restoring_background
+  case key
+  when "ENTER"
+    @screen.type(Sikuli::Key.ENTER)
+  else
+      raise "unsupported key #{key}"
+  end
+end
