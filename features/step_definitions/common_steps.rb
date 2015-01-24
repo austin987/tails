@@ -325,10 +325,18 @@ Given /^the Tor Browser has started$/ do
   @screen.wait(tor_browser_picture, 60)
 end
 
-Given /^the Tor Browser has started and loaded the startup page$/ do
+Given /^the Tor Browser has started and loaded the (startup page|Tails roadmap)$/ do |page|
   next if @skip_steps_while_restoring_background
+  case page
+  when "startup page"
+    picture = "TorBrowserStartupPage.png"
+  when "Tails roadmap"
+    picture = "TorBrowserTailsRoadmap.png"
+  else
+    raise "Unsupported page: #{page}"
+  end
   step "the Tor Browser has started"
-  @screen.wait("TorBrowserStartupPage.png", 120)
+  @screen.wait(picture, 120)
 end
 
 Given /^the Tor Browser has started in offline mode$/ do
