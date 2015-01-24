@@ -1,0 +1,9 @@
+#!/bin/sh
+
+DIRECTORIES="${HOME}/Downloads ${HOME}/Persistent"
+
+for directory in $DIRECTORIES ; do
+   if mountpoint -q "$directory" 2>/dev/null ; then
+       echo "file://$directory" >> "${HOME}/.gtk-bookmarks"
+   fi
+done
