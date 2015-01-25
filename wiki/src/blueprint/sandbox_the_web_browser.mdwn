@@ -1,0 +1,90 @@
+[[!toc levels=2]]
+
+Related pages
+=============
+
+* [[!tails_ticket 5525]]
+* [[blueprint/Mandatory_Access_Control]]
+* [[contribute/design/application_isolation]]
+
+Status
+======
+
+## automated test passes
+
+(needs to be run again with current status of the branch at some point)
+
+* feature/i2p (unconfined)
+* feature/torified_browsing
+* feature/unsafe_browser (unconfined)
+* feature/windows_camouflage
+* open `https://` URL from Pidgin
+* relevant bits of feature/usb_install
+  - view persistent bookmarks, in read-only persistence mode ([[!tails_ticket 8787]])
+  - persistent bookmarks, RW
+
+## manual test OK
+
+(needs to be tested again with current status of the branch at some point)
+
+* add NoScript exception
+* change stuff in about:prefs
+* manually update AdBlock Plus lists
+* add a bookmark, with persistent bookmarks feature enabled, in
+  read-only persistence mode
+
+## manual test OK, maybe needs automated test
+
+* download to non-persistent ~/Downloads
+* YouTube audio and video playback
+* non-YouTube HTML5 video playback
+* "Tails documentation" link on the Desktop ([[!tails_ticket 8788]])
+
+## broken
+
+
+## needs testing
+
+* download to persistent ~/Downloads, in read-write persistence mode
+* download to persistent ~/Downloads, in read-only persistence mode
+* upload from non-persistent ~/Downloads
+* upload from persistent ~/Downloads, in read-write persistence mode
+* upload from persistent ~/Downloads, in read-only persistence mode
+* import OpenPGP key from website (if supported in 1.2.3)
+* click email address on a website (if supported in 1.2.3)
+* install a Firefox add-on (this does not mean we actively support that, right? :)
+
+User experience matters
+=======================
+
+Downloading files
+-----------------
+
+Tor Browser will be allowed to save files in
+`/home/amnesia/Downloads/` only.
+
+doc++: where to download, how to upload
+
+Usability issue: if not enough space in RAM for hosting ~/Downloads/
+
+* added a persistence setting for Downloads
+* added a GNOME bookmark called "Downloads" when the Downloads
+  persistence feature is enabled; remaining questions:
+  - Rename this bookmark "Persistent Downloads"? But then users may
+    lose data by mistake when they use read-only persistence option.
+    OTOH, we have had a "Persistent" bookmark for years, even in
+    read-only persistence mode, and nobody complains.
+  - Rename this persistent directory and the corresponding bookmark to
+    include the "Uploading files" use case? (see below)
+
+Uploading files
+---------------
+
+Basically the same problem as for downloading files. Is it better to
+share a common whitelisted directory, or to add a different one to
+the whitelist?
+
+Document that one should put files in the `/home/amnesia/Downloads`
+folder before uploading them, and make sure that it's the folder
+selected by default when clicking a "Browse" upload button on
+a website?

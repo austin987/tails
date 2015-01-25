@@ -61,8 +61,7 @@ In the folowing scenario:
 
 0. topic branches are named branch T
 0. base branches are named branch B
-0. Builds are ran on merges which don't raise a conflict, and this is the topic
-   branch's dev to take care of that.
+0. builds are ran on merges which don't raise a conflict. If the merge raises a conflict, then the topic branch's developpes should take care of resolving it.
 
 
 ## Scenario 1 : reviewer
@@ -76,9 +75,9 @@ In the folowing scenario:
       I might want to download the resulting ISO
       I might want to get the pkg list
       I want the redmine ticket to be notified (optional feature)
-    Otherwise if it fails I _need_ to see the build logs
-      And the developer who proposed the merge should be notified
-      And the ticket shouldn't be reassigned to the branch submitter
+    Otherwise if it fails the developer who proposed the merge should be notified
+      And the developper _need_ to see the build logs
+      And the ticket should be reassigned to the branch submitter
       And QA check should be set to `Dev needed`
 
 
@@ -88,15 +87,15 @@ In the folowing scenario:
     When I'm working on branch T
     Then I need to know if my branch builds after I've pushed
     And I need to know if my branch build is broken by something else
-       possibly weeks after my last commit by e.g Debian changes,
-       changes in branch B...
+       possibly weeks after my last commit (by e.g Debian changes,
+       changes in branch B, ...)
     And if the build succeeded
       I might want to download the resulting ISO
       I might want to get the pkg list
       I want the redmine ticket to be notified (optional feature)
     Otherwise if it fails I _need_ to see the build logs
       And the developer who proposed the merge should be notified
-      And the ticket shouldn't be reassigned to the branch submitter
+      And the ticket should be reassigned to the branch submitter
       And QA check should be set to `Dev needed`
 
 
@@ -115,7 +114,7 @@ might want to consider it in the future.
 
 ## Scenario 1
 
-    As a tails developer working on branch B
+    As a Tails developer working on branch B
     When I upload a package to APT suite B
     Then I want to know if it broke the build ASAP
 
@@ -126,7 +125,7 @@ might want to consider it in the future.
 ## Scenario 2
 
     As the current RM
-    When I push new tag T on branch 
+    When I push new tag T on branch B
     Then I want the APT suite for tag T to be created
     And I want the APT suite B to be copied into the APT suite T
     And once this is done, I want a build from the checkout of tag T to be
@@ -140,3 +139,9 @@ might want to consider it in the future.
     When the test suite is ran on the ISO build from my last commit
     I want to watch the TV and see the test video in HTML5 from a Torbrowser
 
+
+## Scenario 4
+
+    As a Tails developper
+    When an ISO is build from my last commit
+    I want to access it throught remote desktop (VNC/Spice/...) over Tor
