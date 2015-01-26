@@ -118,14 +118,23 @@ class VMStorage
   end
 
   def disk_mkpartfs(name, parttype, fstype)
+    guestfs_disk_helper(name) do |g|
+      g.part_disk(g.list_devices()[0], parttype)
+      g.mkfs(fstype, g.list_partitions()[0])
+    end
+  end
+
+  private
+
+  def guestfs_disk_helper(name)
+    assert(block_given?)
     assert(disk_format(name), "raw")
     path = disk_path(name)
     g = Guestfs::Guestfs.new()
     g.set_autosync(1)
     g.add_drive_opts(path, :format => "raw")
     g.launch()
-    g.part_disk(g.list_devices()[0], parttype)
-    g.mkfs(fstype, g.list_partitions()[0])
+    yield g
     g.close
   end
 
