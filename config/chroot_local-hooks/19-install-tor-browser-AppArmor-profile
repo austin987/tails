@@ -1,0 +1,47 @@
+#!/bin/sh
+
+set -e
+
+echo "Installing AppArmor profile for Tor Browser"
+
+PATCH='/usr/share/tails/torbrowser-AppArmor-profile.patch'
+
+### Functions
+
+toggle_src_APT_sources() {
+   MODE="$1"
+   TEMP_APT_SOURCES='/etc/apt/sources.list.d/tmp-deb-src.list'
+
+   case "$MODE" in
+      on)
+	 cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
+	     | sed --regexp-extended -e 's,^deb(\s+),deb-src\1,' \
+             > "$TEMP_APT_SOURCES"
+	 ;;
+      off)
+	 rm "$TEMP_APT_SOURCES"
+	 ;;
+   esac
+
+   apt-get --yes update
+}
+
+install_torbrowser_AppArmor_profile() {
+   tmpdir="$(mktemp -d)"
+   (
+      cd "$tmpdir"
+      apt-get source torbrowser-launcher/unstable
+      install -m 0644 \
+	      torbrowser-launcher-*/apparmor/torbrowser.Browser.firefox \
+	      /etc/apparmor.d/torbrowser
+   )
+   rm -r "$tmpdir"
+}
+
+### Main
+
+toggle_src_APT_sources on
+install_torbrowser_AppArmor_profile
+toggle_src_APT_sources off
+patch --forward --batch -p1 < "$PATCH"
+rm "$PATCH"
