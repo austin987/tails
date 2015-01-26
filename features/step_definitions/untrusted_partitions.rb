@@ -4,14 +4,9 @@ Given /^I create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |size, unit, n
                                      :type => "raw"})
 end
 
-Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
+Given /^I create an? ([[:alnum:]]+) partition with an? ([[:alnum:]]+) filesystem on disk "([^"]+)"$/ do |parttype, fstype, name|
   next if @skip_steps_while_restoring_background
-  @vm.storage.disk_mklabel(name, type)
-end
-
-Given /^I create a ([[:alnum:]]+) filesystem on disk "([^"]+)"$/ do |type, name|
-  next if @skip_steps_while_restoring_background
-  @vm.storage.disk_mkpartfs(name, type)
+  @vm.storage.disk_mkpartfs(name, parttype, fstype)
 end
 
 Given /^I cat an ISO hybrid of the Tails image to disk "([^"]+)"$/ do |name|
