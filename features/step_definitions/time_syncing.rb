@@ -1,11 +1,11 @@
 When /^I set the system time to "([^"]+)"$/ do |time|
   next if @skip_steps_while_restoring_background
-  @vm.execute("date -s '#{time}'")
+  @vm.execute_successfully("date -s '#{time}'")
 end
 
 When /^I bump the system time with "([^"]+)"$/ do |timediff|
   next if @skip_steps_while_restoring_background
-  @vm.execute("date -s 'now #{timediff}'")
+  @vm.execute_successfully("date -s 'now #{timediff}'")
 end
 
 Then /^Tails clock is less than (\d+) minutes incorrect$/ do |max_diff_mins|
