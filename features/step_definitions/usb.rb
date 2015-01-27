@@ -48,11 +48,6 @@ def persistent_volumes_mountpoints
   @vm.execute("ls -1 -d /live/persistence/*_unlocked/").stdout.chomp.split
 end
 
-Given /^I create a new (\d+) ([[:alpha:]]+) USB drive named "([^"]+)"$/ do |size, unit, name|
-  next if @skip_steps_while_restoring_background
-  @vm.storage.create_new_disk(name, {:size => size, :unit => unit})
-end
-
 Given /^I clone USB drive "([^"]+)" to a new USB drive "([^"]+)"$/ do |from, to|
   next if @skip_steps_while_restoring_background
   @vm.storage.clone_to_new_disk(from, to)

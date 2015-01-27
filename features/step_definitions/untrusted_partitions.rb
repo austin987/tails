@@ -1,9 +1,3 @@
-Given /^I create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |size, unit, name|
-  next if @skip_steps_while_restoring_background
-  @vm.storage.create_new_disk(name, {:size => size, :unit => unit,
-                                     :type => "qcow2"})
-end
-
 Given /^I create an? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:alnum:]]+) filesystem( encrypted with password "([^"]+)")? on disk "([^"]+)"$/ do |parttype, has_label, label, fstype, is_encrypted, luks_password, name|
   next if @skip_steps_while_restoring_background
   opts = {}

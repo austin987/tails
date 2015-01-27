@@ -9,7 +9,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   Scenario: Installing Tails to a pristine USB drive
     Given a computer
     And I start Tails from DVD with network unplugged and I login
-    And I create a new 4 GiB USB drive named "current"
+    And I create a 4 GiB disk named "current"
     And I plug USB drive "current"
     And I "Clone & Install" Tails to USB drive "current"
     Then the running Tails is installed on USB drive "current"
@@ -124,7 +124,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I log in to a new session
     And GNOME has started
     And all notifications have disappeared
-    And I create a new 4 GiB USB drive named "old"
+    And I create a 4 GiB disk named "old"
     And I plug USB drive "old"
     And I "Clone & Install" Tails to USB drive "old"
     Then the running Tails is installed on USB drive "old"

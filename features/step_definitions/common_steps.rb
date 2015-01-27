@@ -81,6 +81,12 @@ Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
   @vm.set_disk_boot(name, type.downcase)
 end
 
+Given /^I create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |size, unit, name|
+  next if @skip_steps_while_restoring_background
+  @vm.storage.create_new_disk(name, {:size => size, :unit => unit,
+                                     :type => "qcow2"})
+end
+
 Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
   next if @skip_steps_while_restoring_background
   @vm.plug_drive(name, bus.downcase)
@@ -667,7 +673,7 @@ end
 Given /^the USB drive "([^"]+)" contains Tails with persistence configured and password "([^"]+)"$/ do |drive, password|
     step "a computer"
     step "I start Tails from DVD with network unplugged and I login"
-    step "I create a new 4 GiB USB drive named \"#{drive}\""
+    step "I create a 4 GiB disk named \"#{drive}\""
     step "I plug USB drive \"#{drive}\""
     step "I \"Clone & Install\" Tails to USB drive \"#{drive}\""
     step "there is no persistence partition on USB drive \"#{drive}\""
