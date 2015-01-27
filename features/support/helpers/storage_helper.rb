@@ -120,12 +120,10 @@ class VMStorage
   def disk_mkpartfs(name, parttype, fstype, opts = {})
     opts[:label] ||= nil
     opts[:luks_password] ||= nil
-    opts[:readonly] ||= false
     disk = {
       :path => disk_path(name),
       :opts => {
-        :format => disk_format(name),
-        :readonly => opts[:readonly]
+        :format => disk_format(name)
       }
     }
     guestfs_disk_helper(disk) do |g, disk_handle|
