@@ -81,7 +81,7 @@ Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
   @vm.set_disk_boot(name, type.downcase)
 end
 
-Given /^I plug ([[:alpha:]]+) drive "([^"]+)"$/ do |bus, name|
+Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
   next if @skip_steps_while_restoring_background
   @vm.plug_drive(name, bus.downcase)
   if @vm.is_running?
