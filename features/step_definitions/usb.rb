@@ -358,9 +358,16 @@ def boot_device_type
   return boot_dev_type
 end
 
-Then /^Tails is running from USB drive "([^"]+)"$/ do |name|
+Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
   next if @skip_steps_while_restoring_background
-  assert_equal("usb", boot_device_type)
+  bus = bus.downcase
+  case bus
+  when "ide"
+    expected_bus = "ata"
+  else
+    expected_bus = bus
+  end
+  assert_equal(expected_bus, boot_device_type)
   actual_dev = boot_device
   # The boot partition differs between a "normal" install using the
   # USB installer and isohybrid installations
@@ -368,7 +375,7 @@ Then /^Tails is running from USB drive "([^"]+)"$/ do |name|
   expected_dev_isohybrid = @vm.disk_dev(name) + "4"
   assert(actual_dev == expected_dev_normal ||
          actual_dev == expected_dev_isohybrid,
-         "We are running from device #{actual_dev}, but for USB drive " +
+         "We are running from device #{actual_dev}, but for #{bus} drive " +
          "'#{name}' we expected to run from either device " +
          "#{expected_dev_normal} (when installed via the USB installer) " +
          "or #{expected_dev_normal} (when installed from an isohybrid)")

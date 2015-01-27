@@ -38,8 +38,9 @@ Feature: Untrusted partitions
     And I cat an ISO hybrid of the Tails image to disk "live_hd"
     And the computer is set to boot from ide drive "live_hd"
     And I set Tails to boot with options "live-media="
-    And I start Tails from DVD with network unplugged and I login
-    Then Tails seems to have booted normally
+    When I start Tails with network unplugged and I login
+    Then Tails is running from ide drive "live_hd"
+    And Tails seems to have booted normally
 
   Scenario: Tails booting from a DVD does not use live systems stored on hard drives
     Given a computer
