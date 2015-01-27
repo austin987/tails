@@ -4,10 +4,11 @@ Given /^I create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |size, unit, n
                                      :type => "qcow2"})
 end
 
-Given /^I create an? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:alnum:]]+) filesystem on disk "([^"]+)"$/ do |parttype, has_label, label, fstype, name|
+Given /^I create an? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:alnum:]]+) filesystem( encrypted with password "([^"]+)")? on disk "([^"]+)"$/ do |parttype, has_label, label, fstype, is_encrypted, luks_password, name|
   next if @skip_steps_while_restoring_background
   opts = {}
   opts.merge!(:label => label) if has_label
+  opts.merge!(:luks_password => luks_password) if is_encrypted
   @vm.storage.disk_mkpartfs(name, parttype, fstype, opts)
 end
 

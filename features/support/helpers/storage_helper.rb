@@ -119,13 +119,23 @@ class VMStorage
 
   def disk_mkpartfs(name, parttype, fstype, opts = {})
     opts[:label] ||= nil
+    opts[:luks_password] ||= nil
     opts[:readonly] ||= false
     opts[:format] ||= "qcow2"
     disk_opts = {:format => opts[:format], :readonly => opts[:readonly]}
     guestfs_disk_helper(name, disk_opts) do |g|
       g.part_disk(g.list_devices()[0], parttype)
       g.part_set_name(g.list_devices()[0], 1, opts[:label]) if opts[:label]
-      g.mkfs(fstype, g.list_partitions()[0])
+      if opts[:luks_password]
+        g.luks_format(g.list_partitions()[0], opts[:luks_password], 0)
+        luks_mapping = File.basename(g.list_partitions()[0]) + "_unlocked"
+        g.luks_open(g.list_partitions()[0], opts[:luks_password], luks_mapping)
+        luks_dev = "/dev/mapper/#{luks_mapping}"
+        g.mkfs(fstype, luks_dev)
+        g.luks_close(luks_dev)
+      else
+        g.mkfs(fstype, g.list_partitions()[0])
+      end
     end
   end
 
