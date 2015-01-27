@@ -121,11 +121,16 @@ class VMStorage
     opts[:label] ||= nil
     opts[:luks_password] ||= nil
     opts[:readonly] ||= false
-    opts[:format] ||= "qcow2"
-    disk_opts = {:format => opts[:format], :readonly => opts[:readonly]}
-    guestfs_disk_helper(name, disk_opts) do |g|
-      g.part_disk(g.list_devices()[0], parttype)
-      g.part_set_name(g.list_devices()[0], 1, opts[:label]) if opts[:label]
+    disk = {
+      :path => disk_path(name),
+      :opts => {
+        :format => disk_format(name),
+        :readonly => opts[:readonly]
+      }
+    }
+    guestfs_disk_helper(disk) do |g, disk_handle|
+      g.part_disk(disk_handle, parttype)
+      g.part_set_name(disk_handle, 1, opts[:label]) if opts[:label]
       if opts[:luks_password]
         g.luks_format(g.list_partitions()[0], opts[:luks_password], 0)
         luks_mapping = File.basename(g.list_partitions()[0]) + "_unlocked"
@@ -141,15 +146,16 @@ class VMStorage
 
   private
 
-  def guestfs_disk_helper(name, disk_opts)
+  def guestfs_disk_helper(*disks)
     assert(block_given?)
-    path = disk_path(name)
     g = Guestfs::Guestfs.new()
     g.set_trace(1) if $debug
     g.set_autosync(1)
-    g.add_drive_opts(path, disk_opts)
+    disks.each do |disk|
+      g.add_drive_opts(disk[:path], disk[:opts])
+    end
     g.launch()
-    yield g
+    yield(g, *g.list_devices())
     g.close
   end
 
