@@ -1,7 +1,7 @@
 Given /^I create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |size, unit, name|
   next if @skip_steps_while_restoring_background
   @vm.storage.create_new_disk(name, {:size => size, :unit => unit,
-                                     :type => "raw"})
+                                     :type => "qcow2"})
 end
 
 Given /^I create an? ([[:alnum:]]+) partition with an? ([[:alnum:]]+) filesystem on disk "([^"]+)"$/ do |parttype, fstype, name|

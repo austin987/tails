@@ -117,8 +117,11 @@ class VMStorage
     @pool.lookup_volume_by_name(name).path
   end
 
-  def disk_mkpartfs(name, parttype, fstype)
-    guestfs_disk_helper(name) do |g|
+  def disk_mkpartfs(name, parttype, fstype, opts = {})
+    opts[:readonly] ||= false
+    opts[:format] ||= "qcow2"
+    disk_opts = {:format => opts[:format], :readonly => opts[:readonly]}
+    guestfs_disk_helper(name, disk_opts) do |g|
       g.part_disk(g.list_devices()[0], parttype)
       g.mkfs(fstype, g.list_partitions()[0])
     end
@@ -126,14 +129,13 @@ class VMStorage
 
   private
 
-  def guestfs_disk_helper(name)
+  def guestfs_disk_helper(name, disk_opts)
     assert(block_given?)
-    assert(disk_format(name), "raw")
     path = disk_path(name)
     g = Guestfs::Guestfs.new()
     g.set_trace(1) if $debug
     g.set_autosync(1)
-    g.add_drive_opts(path, :format => "raw")
+    g.add_drive_opts(path, disk_opts)
     g.launch()
     yield g
     g.close
