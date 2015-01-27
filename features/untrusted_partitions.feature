@@ -3,6 +3,15 @@ Feature: Untrusted partitions
   As a Tails user
   I don't want to touch other media than the one Tails runs from
 
+  Scenario: Tails will not enable disk swap
+    Given a computer
+    And I create a 100 MiB disk named "swap"
+    And I create a gpt swap partition on disk "swap"
+    And I plug ide drive "swap"
+    When I start Tails with network unplugged and I login
+    Then a "linux-swap(v1)" partition was detected by Tails on drive "swap"
+    But Tails has no disk swap enabled
+
   @keep_volumes
   Scenario: Tails will detect LUKS-encrypted GPT partitions labeled "TailsData" stored on USB drives as persistence volumes when the removable flag is set
     Given a computer

@@ -155,6 +155,20 @@ class VMStorage
     end
   end
 
+  def disk_mkswap(name, parttype)
+    disk = {
+      :path => disk_path(name),
+      :opts => {
+        :format => disk_format(name)
+      }
+    }
+    guestfs_disk_helper(disk) do |g, disk_handle|
+      g.part_disk(disk_handle, parttype)
+      primary_partition = g.list_partitions()[0]
+      g.mkswap(primary_partition)
+    end
+  end
+
   def guestfs_disk_helper(*disks)
     assert(block_given?)
     g = Guestfs::Guestfs.new()

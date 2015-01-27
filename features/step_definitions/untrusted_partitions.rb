@@ -1,3 +1,28 @@
+Given /^I create an? ([[:alnum:]]+) swap partition on disk "([^"]+)"$/ do |parttype, name|
+  next if @skip_steps_while_restoring_background
+  @vm.storage.disk_mkswap(name, parttype)
+end
+
+Then /^an? "([^"]+)" partition was detected by Tails on drive "([^"]+)"$/ do |type, name|
+  next if @skip_steps_while_restoring_background
+  part_info = @vm.execute_successfully(
+      "parted -s '#{@vm.disk_dev(name)}' print 1").stdout.strip
+  assert(part_info.match("^File System:\s*#{Regexp.escape(type)}$"),
+         "No #{type} partition was detected by Tails on disk '#{name}'")
+end
+
+Then /^Tails has no disk swap enabled$/ do
+  next if @skip_steps_while_restoring_background
+  # Skip first line which contain column headers
+  swap_info = @vm.execute_successfully("tail -n+2 /proc/swaps").stdout
+  assert(swap_info.empty?,
+         "Disk swapping is enabled according to /proc/swaps:\n" + swap_info)
+  mem_info = @vm.execute_successfully("grep '^Swap' /proc/meminfo").stdout
+  assert(mem_info.match(/^SwapTotal:\s+0 kB$/),
+             "Disk swapping is enabled according to /proc/meminfo:\n" +
+             mem_info)
+end
+
 Given /^I create an? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:alnum:]]+) filesystem( encrypted with password "([^"]+)")? on disk "([^"]+)"$/ do |parttype, has_label, label, fstype, is_encrypted, luks_password, name|
   next if @skip_steps_while_restoring_background
   opts = {}
