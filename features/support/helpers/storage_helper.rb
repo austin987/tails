@@ -117,6 +117,18 @@ class VMStorage
     @pool.lookup_volume_by_name(name).path
   end
 
+  def disk_mklabel(name, parttype)
+    disk = {
+      :path => disk_path(name),
+      :opts => {
+        :format => disk_format(name)
+      }
+    }
+    guestfs_disk_helper(disk) do |g, disk_handle|
+      g.part_init(disk_handle, parttype)
+    end
+  end
+
   def disk_mkpartfs(name, parttype, fstype, opts = {})
     opts[:label] ||= nil
     opts[:luks_password] ||= nil

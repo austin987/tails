@@ -546,3 +546,8 @@ Then /^Tails has started in UEFI mode$/ do
   assert(@vm.execute("test -d /sys/firmware/efi").success?,
          "/sys/firmware/efi does not exist")
  end
+
+Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
+  next if @skip_steps_while_restoring_background
+  @vm.storage.disk_mklabel(name, type)
+end
