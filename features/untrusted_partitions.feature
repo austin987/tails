@@ -4,6 +4,34 @@ Feature: Untrusted partitions
   I don't want to touch other media than the one Tails runs from
 
   @keep_volumes
+  Scenario: Tails will detect LUKS-encrypted GPT partitions labeled "TailsData" stored on USB drives as persistence volumes when the removable flag is set
+    Given a computer
+    And I create a 100 MiB disk named "fake_TailsData"
+    And I create a gpt partition labeled "TailsData" with an ext4 filesystem encrypted with password "asdf" on disk "fake_TailsData"
+    And I plug removable usb drive "fake_TailsData"
+    When I start the computer
+    And the computer boots Tails
+    Then drive "fake_TailsData" is detected by Tails
+    And Tails Greeter has detected a persistence partition
+
+  @keep_volumes
+  Scenario: Tails will not detect LUKS-encrypted GPT partitions labeled "TailsData" stored on USB drives as persistence volumes when the removable flag is unset
+    Given a computer
+    And I plug non-removable usb drive "fake_TailsData"
+    When I start the computer
+    And the computer boots Tails
+    Then drive "fake_TailsData" is detected by Tails
+    And Tails Greeter has not detected a persistence partition
+
+  Scenario: Tails will not detect LUKS-encrypted GPT partitions labeled "TailsData" stored on local hard drives as persistence volumes
+    Given a computer
+    And I plug ide drive "fake_TailsData"
+    When I start the computer
+    And the computer boots Tails
+    Then drive "fake_TailsData" is detected by Tails
+    And Tails Greeter has not detected a persistence partition
+
+  @keep_volumes
   Scenario: Tails can boot from live systems stored on hard drives
     Given a computer
     And I create a 2 GiB disk named "live_hd"

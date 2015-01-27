@@ -31,3 +31,12 @@ Then /^drive "([^"]+)" is not mounted$/ do |name|
   assert(!@vm.execute("grep -qs '^#{dev}' /proc/mounts").success?,
          "an untrusted partition from drive '#{name}' was automounted")
 end
+
+Then /^Tails Greeter has( not)? detected a persistence partition$/ do |no_persistence|
+  next if @skip_steps_while_restoring_background
+  expecting_persistence = no_persistence.nil?
+  @screen.find('TailsGreeter.png')
+  found_persistence = ! @screen.exists('TailsGreeterPersistence.png').nil?
+  assert_equal(expecting_persistence, found_persistence,
+               "Persistence is unexpectedly#{no_persistence} enabled")
+end
