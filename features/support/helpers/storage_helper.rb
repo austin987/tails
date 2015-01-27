@@ -131,6 +131,7 @@ class VMStorage
     assert(disk_format(name), "raw")
     path = disk_path(name)
     g = Guestfs::Guestfs.new()
+    g.set_trace(1) if $debug
     g.set_autosync(1)
     g.add_drive_opts(path, :format => "raw")
     g.launch()
