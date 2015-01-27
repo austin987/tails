@@ -118,11 +118,13 @@ class VMStorage
   end
 
   def disk_mkpartfs(name, parttype, fstype, opts = {})
+    opts[:label] ||= nil
     opts[:readonly] ||= false
     opts[:format] ||= "qcow2"
     disk_opts = {:format => opts[:format], :readonly => opts[:readonly]}
     guestfs_disk_helper(name, disk_opts) do |g|
       g.part_disk(g.list_devices()[0], parttype)
+      g.part_set_name(g.list_devices()[0], 1, opts[:label]) if opts[:label]
       g.mkfs(fstype, g.list_partitions()[0])
     end
   end
