@@ -74,7 +74,7 @@ Other desirable features
 ========================
 
   - Be able to use that extension, once installed to verify ISO images
-    downloaded using BitTorrent for example.
+    downloaded using BitTorrent or nightly.tails.boum.org.
   - Be able to use that extension to verify other ISO images, testing images,
     older ISO images, etc. In that case the user would be warned about the
     deprectated or experimental status of the ISO image.
@@ -102,6 +102,31 @@ Open questions
       the OpenPGP verification to Tails Installer, when run in Debian
       for example. As we would have easier access to `gpg`, we could
       reuse the Debian keyring, etc.
+  - Do we want to have the same verification workflow for people doing
+    HTTP and Torrent downloads?
+    - If yes, then ISO verification needs to be separate from download
+      in the assistant.
+    - Otherwise, ISO verification could be merged with download in the
+      assistant and we need a special case for download through Torrent.
+  - How do we deal with failed or corrupted downloads?
+  - Link between the browser and the file system. Could that be
+    confusing? What is possible?
+  - Change the name of the ISO image once verified?
+    tails-1.2_UNVERIFIED.iso → tails-1.2_VERIFIED.iso
+    - If so, do we want to distinguish between checksum and OpenPGP
+      verification?  tails-1.2_UNVERIFIED.iso →
+      tails-1.2_OPENPGP_VERIFIED.iso / tails-1.2_TRUSTED.iso
+  - What are the technical solutions to integrate download and
+    verification? Can the extension watch the download and propose
+    verification once its over?
+  - Do we want the extension to have pinning on the boum.org
+    certificate?
+  - Do we want to push stronger for OpenPGP TOFU?
+    - If yes, then people on Windows will trust Mozilla and UUI once,
+      and then Tails developers each time.
+    - If no, then people on Windows will trust Mozilla and UUI once, and
+      then boum.org each time.
+  - What happen with the signing key changes or is revoked?
 
 Technical insight
 =================
