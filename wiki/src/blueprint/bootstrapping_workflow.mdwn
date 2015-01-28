@@ -31,8 +31,11 @@ workflow:
 
 [[Diagram of the detailed workflow as of January 2015|2015.fodg]] (work in progress)
 
-ISO verification: threat modelling
-==================================
+ISO verification
+================
+
+Who's who
+---------
 
 - Objective: installing a genuine Tails system
 
@@ -48,9 +51,9 @@ ISO verification: threat modelling
 
 - Possible defenses:
   - HTTPS
-  - HTTPS Pinning
-  - TOFU
-  - Download correlation
+  - HTTPS pinning
+  - OpenPGP TOFU
+  - OpenPGP download correlation
   - OpenPGP WoT
 
 - Tools involved:
@@ -68,14 +71,81 @@ ISO verification: threat modelling
   - Other Linux
 
 - Notes
-  - Global security level is as high as the lowest trust we can put in
-    the involved software.
 
-ISO verification: automation proposals
-======================================
+Automation proposals
+--------------------
 
-Proposal 0: Hivos, minimum requirements
----------------------------------------
+The idea behind this section is to understand better what to in 2015
+regarding the UX of ISO verification, and try to envision what can
+happen after we get the technical improvements described for
+[[2015|bootstrapping_workflow#index2h1]].
+
+### Questions we are trying to answer
+
+  - How far shall we go regarding ISO verification in the [[browser
+    extension|download extension]] over 2015? For example, do we add
+    OpenPGP support to the extension?
+  - What additional techniques do we still need to document on the
+    website?
+  - What do we need to integrate to the [[web assistant]]?
+  - Are there any technical improvements that could be done over 2015
+    and would make a big difference?
+  - What should come next? As this might influence what to do today.
+
+### Hypothesis
+
+  - We call "basic verification" techniques: HTTPS, HTTPS with pinning,
+    and OpenPGP with TOFU (by order of strength).
+  - We call "extended verification" techniques: OpenPGP with download
+    correlation, OpenPGP with WoT (by order of strength).
+  - We can't rely on people doing OpenPGP verification properly, even
+    "basic" (thinks about downgrade attacks). So both "basic" and
+    "extended" verification are currently broken for all operating
+    systems (maybe not that much on Debian, ok).
+  - We want to automate ISO verification as much as we can.
+  - We can automate OpenPGP download correlation and WoT, at least in
+    some environments.
+  - Global verification level is as high as the least verified tool
+    involved.
+
+### Proposals
+
+To further automate ISO verification we considered two options:
+
+  - Pushing more verification logic into the browser extension.
+  - Push some verification logic into Tails Installer (as it is getting
+    multiplatform). This goes along with having a multiplatform
+    installer, which would be a huge UX improvement of its own.
+
+We did a quick thread modelling on 5 scenarios:
+
+  - [[Proposal 0: Minimum improvements over 2015|bootstrapping_workflow#index6h3]]
+  - [[Proposal 1: Extended verification in extension|bootstrapping_workflow#index7h3]]
+  - [[Proposal 1bis: Extended verification in extension + multiplatform installer|bootstrapping_workflow#index8h3]]
+  - [[Proposal 2: Extended verification in installer|bootstrapping_workflow#index9h3]]
+  - [[Proposal 2bis: Extended verification in multiplatform installer|bootstrapping_workflow#index10h3]]
+
+### Graphical summary
+
+We [[summarized graphically|iso_verification_automation_proposals.ods]]
+the possible attacks on someone willing to install Tails on USB stick on
+Mac, Windows, and Debian (Stretch).
+
+According to this proposal 2bis would be the most secure.
+
+Below come the details for each proposal.
+
+### Open technical questions
+
+  - For all operating system, is it safer to build extended verification in the
+    host operating system or to rely on a first Tails to install others?
+  - How secure, widespread and reactive to upgrades are the Mozilla, Chrome,
+    Windows, and Apple app stores?
+    [[!tails_ticket #8815]] [[!tails_ticket #8816]] [[!tails_ticket #8817]]
+  - How technically feasible is it to push OpenPGP verification to browser
+    extensions or a multiplatform installer?
+
+### Proposal 0: Minimum improvements over 2015
 
 Description:
 
@@ -86,36 +156,35 @@ Description:
 Possible attacks:
 
   - Windows:
-    - SSL MitM:
+    - SSL MitM on:
       - Browser app store (#8815)
-      - boum.org
-    - USB: HTTP MitM: UUI
+      - boum.org (on each use)
+    - if USB, HTTP MitM on UUI
     - Targeted malware (easy)
 
   - Mac:
-    - SSL MitM:
+    - SSL MitM on:
       - Browser app store (#8815)
-      - boum.org
-    - USB: Depend on #8802
+      - boum.org (on each use)
+    - if USB, no graphical solution so far (#8802)
     - Targeted malware (harder)
 
   - Debian:
-    - SSL MitM:
+    - SSL MitM on:
       - Browser app store (#8815)
-      - boum.org
+      - boum.org (on each use)
     - Targeted malware (hard)
 
-UX:
+UX challenges:
 
   - How do we go beyond HTTPS pinning?
-  - What do we do with seahorse-nautilus? Gpg4win and GPGTools?
+  - What do we do with seahorse-nautilus, Gpg4win and GPGTools?
   - Do we do that in the assistant?
   - We need a multiplatform installer!
     - Controlled environment
     - No more bootstrapping medium
 
-Proposal 1: super secure extension
-----------------------------------
+### Proposal 1: Extended verification in extension
 
 Description (on top of proposal 0):
 
@@ -127,22 +196,23 @@ Possible attacks:
   - Windows:
     - SSL MitM:
       - Browser app store (#8815)
-    - HTTP MitM: UUI
+    - if USB, HTTP MitM on UUI
     - Targeted malware (easy)
 
   - Mac:
     - SSL MitM:
       - Browser app store (#8815)
-    - Depend on #8802
+    - if USB, no graphical solution so far (#8802)
     - Targeted malware (harder)
 
   - Debian:
-    - Debian store
+    - Debian app store :)
     - Targeted malware (hard)
 
 UX:
 
   - What happen if people are in TBB?
+  - Based on which keys do we do WoT on Windows and Mac?
   - How far do we want to automate?
   - What do we make transparent?
 
@@ -156,10 +226,9 @@ Pros (over proposal 2):
 Cons:
 
   - Put security code in browser.
-  - Less autonomy regarding development (we don't know how to do that).
+  - Less autonomy regarding development (we need external help).
 
-Proposal 1bis: super secure extension + multiplatform installer
----------------------------------------------------------------
+### Proposal 1bis: Extended verification in extension + multiplatform installer
 
 Description (on top of proposal 1):
 
@@ -168,58 +237,56 @@ Description (on top of proposal 1):
 Possible attacks:
 
   - Windows:
-    - SSL MitM:
+    - SSL MitM on:
       - Browser app store (#8815)
-      - boum.org or Windows store
+      - either boum.org or Windows store (#8817)
     - Targeted malware (easy)
 
   - Mac:
-    - SSL MitM:
+    - SSL MitM on:
       - Browser app store (#8815)
-      - Apple store
+      - Apple store (#8817)
     - Targeted malware (harder)
 
   - Debian:
-    - Debian store
+    - Debian app store :)
     - Targeted malware (hard)
 
 Pros (on top of proposal 1):
 
-  - Stronger to malware in UUI.
+  - Stronger to malware attack on UUI.
 
-Cons:
+Cons (over proposal 2bis):
 
-  - Put security code in browser.
-  - Less autonomy regarding development (we don't know how to do that).
-  - Rely on Browser app store AND Tails Installer.
+  - Rely on both Browser app store and Tails Installer.
 
-Proposal 2: verification in installer
--------------------------------------
+### Proposal 2: Extended verification in installer
 
 Description (on top of proposal 0):
 
   - Tails Installer does TOFU OpenPGP, OpenPGP correlation, and WoT.
   - Browser extension is packaged in Debian.
-  - People burning DVD can check their ISO with Tails Installer :)
+  - People burning DVD can check their ISO with Tails Installer if
+    available :)
 
 Possible attacks:
 
   - Windows:
-    - SSL MitM:
+    - SSL MitM on:
       - Browser app store (#8815)
       - boum.org
-    - USB: HTTP MitM: UUI
+    - if USB, HTTP MitM on UUI
     - Targeted malware (easy)
 
   - Mac:
     - SSL MitM:
       - Browser app store (#8815)
       - boum.org
-    - USB: Depend on #8802
+    - if USB, no graphical solution so far (#8802)
     - Targeted malware (harder)
 
   - Debian:
-    - Debian store
+    - Debian app store
     - Targeted malware (hard)
 
 UX:
@@ -238,8 +305,7 @@ Cons:
   - Verification logic is partly duplicated in browser extension and
     installer.
 
-Proposal 2bis: verification in multiplatform installer
-------------------------------------------------------
+### Proposal 2bis: Extended verification in multiplatform installer
 
 Description (on top of proposal 2):
 
@@ -249,7 +315,7 @@ Possible attacks:
 
   - Windows:
     - SSL MitM:
-      - boum.org or Windows store
+      - either boum.org or Windows store
     - Targeted malware (easy)
 
   - Mac:
@@ -258,7 +324,7 @@ Possible attacks:
     - Targeted malware (harder)
 
   - Debian:
-    - Debian store
+    - Debian app store
     - Targeted malware (hard)
 
 Pros (on top of proposal 2):
