@@ -143,8 +143,6 @@ class VMStorage
     end
   end
 
-  private
-
   def guestfs_disk_helper(*disks)
     assert(block_given?)
     g = Guestfs::Guestfs.new()
