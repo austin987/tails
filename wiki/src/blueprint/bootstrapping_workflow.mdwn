@@ -27,6 +27,244 @@ workflow:
   - [[Browser extensions|download_extension]] for automatic verification of the ISO
   - [[Web assistant|web_assistant]] to guide the user throughout this process
 
+ISO verification: threat modelling
+==================================
+
+- Objective: installing a genuine Tails system
+
+- Simplified workflow: WWW → Download/Torrent → ISO → Install/Burn → Tails
+
+- Possible attacks:
+  - Faulty download
+  - Rogue mirror
+  - Censorship
+  - Targeted malware on the OS
+  - Targeted malware download of third-party software
+  - SSL MitM
+
+- Possible defenses:
+  - HTTPS
+  - HTTPS Pinning
+  - TOFU
+  - Download correlation
+  - OpenPGP WoT
+
+- Tools involved:
+  - HTTPS on Tails website
+  - Browser app store
+  - Written documentation
+  - Third-party software
+  - Browser extension
+  - Tails Installer (future)
+
+- Scenarios
+  - Windows
+  - Mac
+  - Debian
+  - Other Linux
+
+- Notes
+  - Global security level is as high as the lowest trust we can put in
+    the involved software.
+
+ISO verification: automation proposals
+======================================
+
+Proposal 0: Hivos, minimum requirements
+---------------------------------------
+
+Description:
+
+  - Browser extension does HTTPS pinning.
+  - Tails Installer does no verification (as of now).
+  - Tails Installer is packaged in Debian.
+
+Possible attacks:
+
+  - Windows:
+    - SSL MitM:
+      - Browser app store (#8815)
+      - boum.org
+    - USB: HTTP MitM: UUI
+    - Targeted malware (easy)
+
+  - Mac:
+    - SSL MitM:
+      - Browser app store (#8815)
+      - boum.org
+    - USB: Depend on #8802
+    - Targeted malware (harder)
+
+  - Debian:
+    - SSL MitM:
+      - Browser app store (#8815)
+      - boum.org
+    - Targeted malware (hard)
+
+UX:
+
+  - How do we go beyond HTTPS pinning?
+  - What do we do with seahorse-nautilus? Gpg4win and GPGTools?
+  - Do we do that in the assistant?
+  - We need a multiplatform installer!
+    - Controlled environment
+    - No more bootstrapping medium
+
+Proposal 1: super secure extension
+----------------------------------
+
+Description (on top of proposal 0):
+
+  - Browser extension does TOFU OpenPGP, OpenPGP correlation, and WoT.
+  - Browser extension is packaged in Debian.
+
+Possible attacks:
+
+  - Windows:
+    - SSL MitM:
+      - Browser app store (#8815)
+    - HTTP MitM: UUI
+    - Targeted malware (easy)
+
+  - Mac:
+    - SSL MitM:
+      - Browser app store (#8815)
+    - Depend on #8802
+    - Targeted malware (harder)
+
+  - Debian:
+    - Debian store
+    - Targeted malware (hard)
+
+UX:
+
+  - What happen if people are in TBB?
+  - How far do we want to automate?
+  - What do we make transparent?
+
+Pros (over proposal 2):
+
+  - Verification logic is in one place and multiplatform.
+  - Verification logic can grow more complex and robust than HTTPS with
+    pinning.
+  - Stronger to SSL MitM on boum.org as we rely on OpenPGP WoT.
+
+Cons:
+
+  - Put security code in browser.
+  - Less autonomy regarding development (we don't know how to do that).
+
+Proposal 1bis: super secure extension + multiplatform installer
+---------------------------------------------------------------
+
+Description (on top of proposal 1):
+
+  - Tails Installer is available on Windows and Mac.
+
+Possible attacks:
+
+  - Windows:
+    - SSL MitM:
+      - Browser app store (#8815)
+      - boum.org or Windows store
+    - Targeted malware (easy)
+
+  - Mac:
+    - SSL MitM:
+      - Browser app store (#8815)
+      - Apple store
+    - Targeted malware (harder)
+
+  - Debian:
+    - Debian store
+    - Targeted malware (hard)
+
+Pros (on top of proposal 1):
+
+  - Stronger to malware in UUI.
+
+Cons:
+
+  - Put security code in browser.
+  - Less autonomy regarding development (we don't know how to do that).
+  - Rely on Browser app store AND Tails Installer.
+
+Proposal 2: verification in installer
+-------------------------------------
+
+Description (on top of proposal 0):
+
+  - Tails Installer does TOFU OpenPGP, OpenPGP correlation, and WoT.
+  - Browser extension is packaged in Debian.
+  - People burning DVD can check their ISO with Tails Installer :)
+
+Possible attacks:
+
+  - Windows:
+    - SSL MitM:
+      - Browser app store (#8815)
+      - boum.org
+    - USB: HTTP MitM: UUI
+    - Targeted malware (easy)
+
+  - Mac:
+    - SSL MitM:
+      - Browser app store (#8815)
+      - boum.org
+    - USB: Depend on #8802
+    - Targeted malware (harder)
+
+  - Debian:
+    - Debian store
+    - Targeted malware (hard)
+
+UX:
+
+  - People using DVD or virtualization need to download and run an
+    unrelated software to verify the ISO.
+
+Pros (over proposal 1):
+
+  - More autonomy regarding development (we know how to do that).
+  - Independent from browser vendor (except for DVD users).
+
+Cons:
+
+  - HTTPS pinning verification at best on Windows and Mac.
+  - Verification logic is partly duplicated in browser extension and
+    installer.
+
+Proposal 2bis: verification in multiplatform installer
+------------------------------------------------------
+
+Description (on top of proposal 2):
+
+  - Tails Installer is available on Windows and Mac.
+
+Possible attacks:
+
+  - Windows:
+    - SSL MitM:
+      - boum.org or Windows store
+    - Targeted malware (easy)
+
+  - Mac:
+    - SSL MitM:
+      - Apple store
+    - Targeted malware (harder)
+
+  - Debian:
+    - Debian store
+    - Targeted malware (hard)
+
+Pros (on top of proposal 2):
+
+  - Don't rely on UUI anymore.
+
+Cons:
+
+  - Harder to port to Windows and Mac than current Tails Installer.
+
 Use cases
 =========
 
