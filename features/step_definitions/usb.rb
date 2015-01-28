@@ -317,7 +317,7 @@ Given /^all persistence presets(| from the old Tails version) are enabled$/ do |
   if old_tails.empty?
     expected_mounts = persistent_mounts
   else
-    expected_mounts = $old_persistence_mounts
+    expected_mounts = $remembered_persistence_mounts
   end
   mount = @vm.execute("mount").stdout.chomp
   for _, dir in expected_mounts do
@@ -444,7 +444,7 @@ Then /^all persistent directories(| from the old Tails version) have safe access
   if old_tails.empty?
     expected_dirs = persistent_dirs
   else
-    expected_dirs = $old_persistence_dirs
+    expected_dirs = $remembered_persistence_dirs
   end
   persistent_volumes_mountpoints.each do |mountpoint|
     expected_dirs.each do |src, dest|
@@ -498,8 +498,8 @@ end
 
 When /^I take note of which persistence presets are available$/ do
   next if @skip_steps_while_restoring_background
-  $old_persistence_mounts = persistent_mounts
-  $old_persistence_dirs = persistent_dirs
+  $remembered_persistence_mounts = persistent_mounts
+  $remembered_persistence_dirs = persistent_dirs
 end
 
 Then /^the expected persistent files(| created with the old Tails version) are present in the filesystem$/ do |old_tails|
@@ -507,7 +507,7 @@ Then /^the expected persistent files(| created with the old Tails version) are p
   if old_tails.empty?
     expected_mounts = persistent_mounts
   else
-    expected_mounts = $old_persistence_mounts
+    expected_mounts = $remembered_persistence_mounts
   end
   expected_mounts.each do |_, dir|
     assert(@vm.execute("test -e #{dir}/XXX_persist").success?,
