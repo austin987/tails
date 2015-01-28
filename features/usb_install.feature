@@ -87,8 +87,9 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And all persistent filesystems have safe access rights
     And all persistence configuration files have safe access rights
     And all persistent directories have safe access rights
+    And I take note of which persistence presets are available
     And I shutdown Tails and wait for the computer to power off
-    Then only the expected files should persist on USB drive "current"
+    Then only the expected files are present on the persistence partition encrypted with password "asdf" on USB drive "current"
 
   @keep_volumes
   Scenario: Writing files to a read-only-enabled persistent partition
@@ -99,8 +100,9 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And all persistence presets are enabled
     And I write some files not expected to persist
     And I remove some files expected to persist
+    And I take note of which persistence presets are available
     And I shutdown Tails and wait for the computer to power off
-    Then only the expected files should persist on USB drive "current"
+    Then only the expected files are present on the persistence partition encrypted with password "asdf" on USB drive "current"
 
   @keep_volumes
   Scenario: Deleting a Tails persistent partition
@@ -151,8 +153,9 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And all persistent filesystems have safe access rights
     And all persistence configuration files have safe access rights
     And all persistent directories from the old Tails version have safe access rights
+    And I take note of which persistence presets are available
     And I shutdown Tails and wait for the computer to power off
-    Then only the expected files should persist on USB drive "old"
+    Then only the expected files are present on the persistence partition encrypted with password "asdf" on USB drive "old"
 
   @keep_volumes
   Scenario: Upgrading an old Tails USB installation from a Tails DVD

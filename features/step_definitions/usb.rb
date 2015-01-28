@@ -520,20 +520,43 @@ Then /^the expected persistent files(| created with the old Tails version) are p
   end
 end
 
-Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
+Then /^only the expected files are present on the persistence partition encrypted with password "([^"]+)" on USB drive "([^"]+)"$/ do |password, name|
   next if @skip_steps_while_restoring_background
-  step "a computer"
-  step "the computer is set to boot from USB drive \"#{name}\""
-  step "the network is unplugged"
-  step "I start the computer"
-  step "the computer boots Tails"
-  step "I enable read-only persistence with password \"asdf\""
-  step "I log in to a new session"
-  step "all persistence presets are enabled"
-  step "GNOME has started"
-  step "all notifications have disappeared"
-  step "the expected persistent files are present in the filesystem"
-  step "I shutdown Tails and wait for the computer to power off"
+  assert(!@vm.is_running?)
+  disk = {
+    :path => @vm.storage.disk_path(name),
+    :opts => {
+      :format => @vm.storage.disk_format(name),
+      :readonly => true
+    }
+  }
+  @vm.storage.guestfs_disk_helper(disk) do |g, disk_handle|
+    partitions = g.part_list(disk_handle).map do |part_desc|
+      disk_handle + part_desc["part_num"].to_s
+    end
+    partition = partitions.find do |part|
+      g.blkid(part)["PART_ENTRY_NAME"] == "TailsData"
+    end
+    assert_not_nil(partition, "Could not find the 'TailsData' partition " \
+                              "on disk '#{disk_handle}'")
+    luks_mapping = File.basename(partition) + "_unlocked"
+    g.luks_open(partition, password, luks_mapping)
+    luks_dev = "/dev/mapper/#{luks_mapping}"
+    mount_point = "/"
+    g.mount(luks_dev, mount_point)
+    assert_not_nil($remembered_persistence_mounts)
+    $remembered_persistence_mounts.each do |dir, _|
+      # Guestfs::exists may have a bug; if the file exists, 1 is
+      # returned, but if it doesn't exist false is returned. It seems
+      # the translation of C types into Ruby types is glitchy.
+      assert(g.exists("/#{dir}/XXX_persist") == 1,
+             "Could not find expected file in persistent directory #{dir}")
+      assert(g.exists("/#{dir}/XXX_gone") != 1,
+             "Found file that should not have persisted in persistent directory #{dir}")
+    end
+    g.umount(mount_point)
+    g.luks_close(luks_dev)
+  end
 end
 
 When /^I delete the persistent partition$/ do
