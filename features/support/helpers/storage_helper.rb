@@ -179,6 +179,7 @@ class VMStorage
     end
     g.launch()
     yield(g, *g.list_devices())
+  ensure
     g.close
   end
 
