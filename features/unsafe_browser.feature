@@ -39,3 +39,9 @@ Feature: Browsing the web using the Unsafe Browser
   Scenario: The Unsafe Browser cannot be configured to use Tor and other local proxies.
     When I successfully start the Unsafe Browser
     Then I cannot configure the Unsafe Browser to use any local proxies
+
+  Scenario: Starting the Unsafe Browser without a network connection results in a complaint about no DNS server being configured
+    Given a computer
+    And I start Tails from DVD with network unplugged and I login
+    When I start the Unsafe Browser
+    Then the Unsafe Browser complains that no DNS server is configured

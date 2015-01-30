@@ -132,3 +132,8 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     end
   end
 end
+
+Then /^the Unsafe Browser complains that no DNS server is configured$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("UnsafeBrowserDNSError.png", 30)
+end
