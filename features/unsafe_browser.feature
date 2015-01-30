@@ -23,6 +23,7 @@ Feature: Browsing the web using the Unsafe Browser
     And the Unsafe Browser has no plugins installed
     And the Unsafe Browser has no add-ons installed
     And the Unsafe Browser has only Firefox's default bookmarks configured
+    And the Unsafe Browser has no proxy configured
     And the Unsafe Browser uses all expected TBB shared libraries
 
   Scenario: Closing the Unsafe Browser shows a stop notification and properly tears down the chroot.

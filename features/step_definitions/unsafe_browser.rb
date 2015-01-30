@@ -174,6 +174,20 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   end
 end
 
+Then /^the Unsafe Browser has no proxy configured$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.click('UnsafeBrowserMenuButton.png')
+  @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
+  @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
+  @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
+  @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
+  @screen.type("e", Sikuli::KeyModifier.ALT)
+  @screen.wait('UnsafeBrowserProxySettings.png', 10)
+  @screen.wait('UnsafeBrowserNoProxySelected.png', 10)
+  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
+  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
+end
+
 Then /^the Unsafe Browser complains that no DNS server is configured$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserDNSError.png", 30)
