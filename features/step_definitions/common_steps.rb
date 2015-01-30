@@ -623,6 +623,17 @@ Then /^the (.*) chroot is torn down$/ do |browser|
   end
 end
 
+Then /^the (.*) runs as the expected user$/ do |browser|
+  next if @skip_steps_while_restoring_background
+  info = xul_application_info(browser)
+  assert_vmcommand_success(@vm.execute(
+    "pgrep --full --exact '#{info[:cmd_regex]}'"),
+    "The #{browser} is not running")
+  assert_vmcommand_success(@vm.execute(
+    "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"),
+    "The #{browser} is not running as the #{info[:user]} user")
+end
+
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
   next if @skip_steps_while_restoring_background
   con_content = <<EOF
