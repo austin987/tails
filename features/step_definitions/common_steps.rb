@@ -543,6 +543,38 @@ When /^I start the Tor Browser in offline mode$/ do
   end
 end
 
+def xul_application_info(application)
+  binary = @vm.execute_successfully(
+                '. /usr/local/lib/tails-shell-library/tor-browser.sh; ' +
+                'echo ${TBB_INSTALL}/firefox'
+                                    ).stdout.chomp
+  case application
+  when "Tor Browser"
+    user = $live_user
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
+    chroot = ""
+  when "Unsafe Browser"
+    user = "clearnet"
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
+    chroot = "/var/lib/unsafe-browser/chroot"
+  when "I2P Browser"
+    user = "i2pbrowser"
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.i2p-browser/profile\.default"
+    chroot = "/var/lib/i2p-browser/chroot"
+  when "Tor Launcher"
+    user = "tor-launcher"
+    cmd_regex = "#{binary} -app /home/#{user}/\.tor-launcher/tor-launcher-standalone/application\.ini"
+    chroot = ""
+  else
+    raise "Invalid browser or XUL application: #{application}"
+  end
+  return {
+    :user => user,
+    :cmd_regex => cmd_regex,
+    :chroot => chroot,
+  }
+end
+
 def xul_app_shared_lib_check(pid, chroot)
   expected_absent_tbb_libs = ['libnssdbm3.so']
   absent_tbb_libs = []
@@ -574,52 +606,20 @@ def xul_app_shared_lib_check(pid, chroot)
          "Native libs that we don't want: #{unwanted_native_libs}")
 end
 
-Then /^(.*) uses all expected TBB shared libraries$/ do |application|
+Then /^the (.*) uses all expected TBB shared libraries$/ do |application|
   next if @skip_steps_while_restoring_background
-  binary = @vm.execute_successfully(
-                '. /usr/local/lib/tails-shell-library/tor-browser.sh; ' +
-                'echo ${TBB_INSTALL}/firefox'
-                                    ).stdout.chomp
-  case application
-  when "the Tor Browser"
-    user = $live_user
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
-    chroot = ""
-  when "the Unsafe Browser"
-    user = "clearnet"
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
-    chroot = "/var/lib/unsafe-browser/chroot"
-  when "the I2P Browser"
-    user = "i2pbrowser"
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.i2p-browser/profile\.default"
-    chroot = "/var/lib/i2p-browser/chroot"
-  when "Tor Launcher"
-    user = "tor-launcher"
-    cmd_regex = "#{binary} -app /home/#{user}/\.tor-launcher/tor-launcher-standalone/application\.ini"
-    chroot = ""
-  else
-    raise "Invalid browser or XUL application: #{application}"
-  end
-  pid = @vm.execute_successfully("pgrep --uid #{user} --full --exact '#{cmd_regex}'").stdout.chomp
+  info = xul_application_info(application)
+  pid = @vm.execute_successfully("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").stdout.chomp
   assert(/\A\d+\z/.match(pid), "It seems like #{application} is not running")
-  xul_app_shared_lib_check(pid, chroot)
+  xul_app_shared_lib_check(pid, info[:chroot])
 end
 
 Then /^the (.*) chroot is torn down$/ do |browser|
   next if @skip_steps_while_restoring_background
-  case browser
-  when "Unsafe Browser"
-    user = "clearnet"
-    chroot = "/var/lib/unsafe-browser/chroot"
-  when "I2P Browser"
-    user = "i2pbrowser"
-    chroot = "/var/lib/i2p-browser/chroot"
-  else
-    raise "Invalid chroot browser: #{browser}"
-  end
-
-  try_for(30, :msg => "The #{browser} chroot '#{chroot}' was not removed") do
-    !@vm.execute("test -d '#{chroot}'").success?
+  info = xul_application_info(browser)
+  try_for(30, :msg => "The #{browser} chroot '#{info[:chroot]}' was " \
+                      "not removed") do
+    !@vm.execute("test -d '#{info[:chroot]}'").success?
   end
 end
 
