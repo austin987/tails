@@ -59,20 +59,6 @@ Then /^I can start the Unsafe Browser again$/ do
   step "I start the Unsafe Browser"
 end
 
-When /^I open a new tab in the Unsafe Browser$/ do
-  next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
-  @screen.type("t", Sikuli::KeyModifier.CTRL)
-end
-
-When /^I open the address "([^"]*)" in the Unsafe Browser$/ do |address|
-  next if @skip_steps_while_restoring_background
-  step "I open a new tab in the Unsafe Browser"
-  @screen.type("l", Sikuli::KeyModifier.CTRL)
-  sleep 0.5
-  @screen.type(address + Sikuli::Key.ENTER)
-end
-
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
