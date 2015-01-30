@@ -21,6 +21,55 @@ Then /^the Unsafe Browser has no add-ons installed$/ do
   step "I see \"UnsafeBrowserNoAddons.png\" after at most 30 seconds"
 end
 
+Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
+  next if @skip_steps_while_restoring_background
+  info = xul_application_info("Unsafe Browser")
+  # "Show all bookmarks"
+  @screen.type("o", Sikuli::KeyModifier.SHIFT + Sikuli::KeyModifier.CTRL)
+  @screen.wait_and_click("UnsafeBrowserExportBookmarksButton.png", 20)
+  @screen.wait_and_click("UnsafeBrowserExportBookmarksMenuEntry.png", 20)
+  @screen.wait("UnsafeBrowserExportBookmarksSavePrompt.png", 20)
+  path = "/home/#{info[:user]}/bookmarks"
+  @screen.type(path + Sikuli::Key.ENTER)
+  chroot_path = "#{info[:chroot]}/#{path}.json"
+  try_for(10) { @vm.file_exist?(chroot_path) }
+  dump = JSON.load(@vm.file_content(chroot_path))
+
+  def check_bookmarks_helper(a)
+    mozilla_uris_counter = 0
+    places_uris_counter = 0
+    a.each do |h|
+      h.each_pair do |k, v|
+        if k == "children"
+          m, p = check_bookmarks_helper(v)
+          mozilla_uris_counter += m
+          places_uris_counter += p
+        elsif k == "uri"
+          uri = v
+          if uri.match("^https://www\.mozilla\.org/")
+            mozilla_uris_counter += 1
+          elsif uri.match("^place:(sort|folder|type)=")
+            places_uris_counter += 1
+          else
+            raise "Unexpected Unsafe Browser bookmark for '#{uri}'"
+          end
+        end
+      end
+    end
+    return [mozilla_uris_counter, places_uris_counter]
+  end
+
+  mozilla_uris_counter, places_uris_counter =
+    check_bookmarks_helper(dump["children"])
+  assert_equal(5, mozilla_uris_counter,
+               "Unexpected number (#{mozilla_uris_counter}) of mozilla " \
+               "bookmarks")
+  assert_equal(3, places_uris_counter,
+               "Unexpected number (#{places_uris_counter}) of places " \
+               "bookmarks")
+  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
+end
+
 Then /^the Unsafe Browser has a red theme$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserRedTheme.png", 10)
