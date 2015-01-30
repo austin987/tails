@@ -605,6 +605,24 @@ Then /^(.*) uses all expected TBB shared libraries$/ do |application|
   xul_app_shared_lib_check(pid, chroot)
 end
 
+Then /^the (.*) chroot is torn down$/ do |browser|
+  next if @skip_steps_while_restoring_background
+  case browser
+  when "Unsafe Browser"
+    user = "clearnet"
+    chroot = "/var/lib/unsafe-browser/chroot"
+  when "I2P Browser"
+    user = "i2pbrowser"
+    chroot = "/var/lib/i2p-browser/chroot"
+  else
+    raise "Invalid chroot browser: #{browser}"
+  end
+
+  try_for(30, :msg => "The #{browser} chroot '#{chroot}' was not removed") do
+    !@vm.execute("test -d '#{chroot}'").success?
+  end
+end
+
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
   next if @skip_steps_while_restoring_background
   con_content = <<EOF

@@ -21,10 +21,11 @@ Feature: Browsing the web using the Unsafe Browser
     And the Unsafe Browser shows a warning as its start page
     And the Unsafe Browser uses all expected TBB shared libraries
 
-  Scenario: Closing the Unsafe Browser shows a stop notification.
+  Scenario: Closing the Unsafe Browser shows a stop notification and properly tears down the chroot.
     When I successfully start the Unsafe Browser
     And I close the Unsafe Browser
     Then I see the Unsafe Browser stop notification
+    And the Unsafe Browser chroot is torn down
 
   Scenario: Starting a second instance of the Unsafe Browser results in an error message being shown.
     When I successfully start the Unsafe Browser
