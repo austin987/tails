@@ -15,6 +15,12 @@ Then /^the Unsafe Browser has started$/ do
   @screen.wait("UnsafeBrowserHomepage.png", 360)
 end
 
+Then /^the Unsafe Browser has no add-ons installed$/ do
+  next if @skip_steps_while_restoring_background
+  step "I open the address \"about:addons\" in the Unsafe Browser"
+  step "I see \"UnsafeBrowserNoAddons.png\" after at most 30 seconds"
+end
+
 Then /^the Unsafe Browser has a red theme$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserRedTheme.png", 10)
