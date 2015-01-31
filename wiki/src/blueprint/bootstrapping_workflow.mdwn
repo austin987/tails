@@ -129,17 +129,22 @@ We [[summarized graphically|iso_verification_automation_proposals.ods]]
 the possible attacks on someone willing to install Tails on USB stick on
 Mac, Windows, and Debian (Stretch).
 
-According to this, proposal 2bis would be the most secure.
+According to this, proposal 1bis and 2bis are similarly secure.
 
 ### Open technical questions
 
   - For all operating systems, is it safer to build extended verification in the
     host operating system or to rely on a first Tails to install others?
+  - Is it easier or better to port code across browsers (in the case of
+    the extension) or across operating system (in the case of the
+    installer)?
   - How secure, widespread, and reactive to upgrades are the Mozilla, Chrome,
     Windows, and Apple app stores?
     [[!tails_ticket 8815]] [[!tails_ticket 8816]] [[!tails_ticket 8817]]
   - How technically feasible is it to push OpenPGP verification to browser
     extensions or a multiplatform installer?
+  - How easy and safe is it to do simple or complex OpenPGP operations in the
+    browser?
 
 Below come the details for each proposal.
 
@@ -220,6 +225,9 @@ Pros (over proposal 2):
   - Verification logic can grow more complex and robust than HTTPS with
     pinning.
   - Stronger to SSL MitM on boum.org as we rely on OpenPGP WoT.
+  - It might make more sense to reuse the verification mechanisms from the
+    extension to verify other downloads, for example of the installer if not
+    installed automatically from OS app store.
 
 Cons:
 
@@ -237,13 +245,13 @@ Possible attacks:
   - Windows:
     - SSL MitM on:
       - Browser app store (#8815)
-      - either boum.org or Windows store (#8817)
+      - boum.org
     - Targeted malware (easy)
 
   - Mac:
     - SSL MitM on:
       - Browser app store (#8815)
-      - Apple store (#8817)
+      - boum.org
     - Targeted malware (harder)
 
   - Debian:
@@ -313,12 +321,12 @@ Possible attacks:
 
   - Windows:
     - SSL MitM:
-      - either boum.org or Windows store
+      - boum.org
     - Targeted malware (easy)
 
   - Mac:
     - SSL MitM:
-      - Apple store
+      - boum.org
     - Targeted malware (harder)
 
   - Debian:
