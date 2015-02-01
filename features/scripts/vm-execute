@@ -2,9 +2,9 @@
 
 require 'optparse'
 begin
-  require "#{Dir.pwd}/features/support/helpers/exec_helper.rb"
+  require "#{`git rev-parse --show-toplevel`.chomp}/features/support/helpers/exec_helper.rb"
 rescue LoadError => e
-  raise "This script must be run from Tails' root directory."
+  raise "This script must be run from within Tails' Git directory."
 end
 $debug = false
 
@@ -23,7 +23,7 @@ opt_parser = OptionParser.new do |opts|
   opts.banner = "Usage: features/scripts/vm-execute [opts] COMMAND"
   opts.separator ""
   opts.separator "Runs commands in the VM guest being tested. This script " \
-                    "must be run from Tails' root directory."
+                    "must be run from within Tails' Git directory."
   opts.separator ""
   opts.separator "Options:"
 
