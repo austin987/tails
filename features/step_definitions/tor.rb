@@ -111,3 +111,29 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
          "Couldn't find rules allowing uids #{uids_not_found.to_a.to_s} " \
          "access to the network")
 end
+
+Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DNSPort$/ do
+  next if @skip_steps_while_restoring_background
+  iptables_nat_output = @vm.execute_successfully("iptables -t nat -L -n -v").stdout
+  chains = iptables_parse(iptables_nat_output)
+  chains.each_pair do |name, chain|
+    rules = chain["rules"]
+    if name == "OUTPUT"
+      good_rules = rules.find_all do |rule|
+        rule["target"] == "REDIRECT" &&
+          (
+           rule["extra"] == "redir ports 9040" ||
+           rule["extra"] == "udp dpt:53 redir ports 5353"
+          )
+      end
+      assert_equal(rules, good_rules,
+                   "The NAT table's OUTPUT chain contains some unexptected " \
+                   "rules:\n" +
+                   ((rules - good_rules).map { |r| r["rule"] }).join("\n"))
+    else
+      assert(rules.empty?,
+             "The NAT table contains unexpected rules for the #{name} " \
+             "chain:\n" + (rules.map { |r| r["rule"] }).join("\n"))
+    end
+  end
+end
