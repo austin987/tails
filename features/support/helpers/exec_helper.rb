@@ -58,4 +58,12 @@ class VMCommand
     return @returncode == 0
   end
 
+  def to_s
+    "Return status: #{@returncode}\n" +
+    "STDOUT:\n" +
+    @stdout +
+    "STDERR:\n" +
+    @stderr
+  end
+
 end

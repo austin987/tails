@@ -157,3 +157,13 @@ Then /^the firewall is configured to block all IPv6 traffic$/ do
            (bad_rules.map { |r| r["rule"] }).join("\n"))
   end
 end
+
+Then /^untorified network connections to (\S+) fails$/ do |host|
+  next if @skip_steps_while_restoring_background
+  expected_stderr = "curl: (7) couldn't connect to host"
+  cmd = "unset SOCKS_SERVER ; unset SOCKS5_SERVER ; " \
+        "curl --noproxy '*' 'http://#{host}'"
+  status = @vm.execute(cmd, $live_user)
+  assert(!status.success? && status.stderr[expected_stderr],
+         "The command `#{cmd}` didn't fail as expected:\n#{status.to_s}")
+end

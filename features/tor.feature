@@ -14,3 +14,8 @@ Feature: Tor is configured properly
     And the firewall is configured to only allow the clearnet and debian-tor users to connect directly to the Internet over IPv4
     And the firewall's NAT rules only redirect traffic for Tor's TransPort and DNSPort
     And the firewall is configured to block all IPv6 traffic
+
+  Scenario: The Tor enforcement is effective at blocking untorified connection attempts
+    Then untorified network connections to monip.org fails
+    And untorified network connections to 1.2.3.4 fails
+    And all Internet traffic has only flowed through Tor
