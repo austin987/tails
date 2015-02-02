@@ -11,3 +11,4 @@ Feature: Tor is configured properly
 
   Scenario: The firewall configuration is very restrictive
     Then the firewall's policy is to drop all IPv4 traffic
+    And the firewall is configured to only allow the clearnet and debian-tor users to connect directly to the Internet over IPv4

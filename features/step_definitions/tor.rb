@@ -65,3 +65,49 @@ Then /^the firewall's policy is to (.+) all IPv4 traffic$/ do |expected_policy|
                  "Chain #{chain_name} has unexpected policy #{policy}")
   end
 end
+
+Then /^the firewall is configured to only allow the (.+) users? to connect directly to the Internet over IPv4$/ do |users_str|
+  next if @skip_steps_while_restoring_background
+  users = users_str.split(/, | and /)
+  expected_uids = Set.new
+  users.each do |user|
+    expected_uids << @vm.execute_successfully("id -u #{user}").stdout.to_i
+  end
+  iptables_output = @vm.execute_successfully("iptables -L -n -v").stdout
+  chains = iptables_parse(iptables_output)
+  allowed_output = chains["OUTPUT"]["rules"].find_all do |rule|
+    !(["DROP", "REJECT", "LOG"].include? rule["target"]) &&
+      rule["out_iface"] != "lo"
+  end
+  uids = Set.new
+  allowed_output.each do |rule|
+    case rule["target"]
+    when "ACCEPT"
+      expected_destination = "0.0.0.0/0"
+      assert_equal(expected_destination, rule["destination"],
+                   "The following rule has an unexpected destination:\n" +
+                   rule["rule"])
+      next if rule["extra"] == "state RELATED,ESTABLISHED"
+      m = /owner UID match (\d+)/.match(rule["extra"])
+      assert_not_nil(m)
+      uid = m[1].to_i
+      uids << uid
+      assert(expected_uids.include?(uid),
+             "The following rule allows uid #{uid} to access the network, " \
+             "but we only expect uids #{expected_uids} (#{users_str}) to " \
+             "have such access:\n#{rule["rule"]}")
+    when "lan"
+      lan_subnets = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+      assert(lan_subnets.include?(rule["destination"]),
+             "The following lan-targeted rule's destination is " \
+             "#{rule["destination"]} which may not be a private subnet:\n" +
+             rule["rule"])
+    else
+      raise "Unexpected iptables OUTPUT chain rule:\n#{rule["rule"]}"
+    end
+  end
+  uids_not_found = expected_uids - uids
+  assert(uids_not_found.empty?,
+         "Couldn't find rules allowing uids #{uids_not_found.to_a.to_s} " \
+         "access to the network")
+end
