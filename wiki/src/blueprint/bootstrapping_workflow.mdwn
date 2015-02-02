@@ -29,6 +29,8 @@ workflow:
   - [[Browser extensions|download_extension]] for automatic verification of the ISO
   - [[Web assistant|web_assistant]] to guide the user throughout this process
 
+<a id="tools"></a>
+
 Involved tools
 --------------
 
@@ -55,6 +57,8 @@ Notes:
 - **DiskUtils** should be tested on Mac, see [[!tails_ticket 8802]].
 
 [[Diagram of the detailed workflow as of January 2015|2015.fodg]] (work in progress)
+
+<a id="verification"></a>
 
 ISO verification
 ================
@@ -94,6 +98,8 @@ Who's who
   - Mac
   - Debian
   - Other Linux
+
+<a id="automation"></a>
 
 Automation proposals
 --------------------
@@ -365,6 +371,45 @@ Pros (on top of proposal 2):
 Cons:
 
   - Harder to port to Windows and Mac than current Tails Installer.
+
+About the removal of Seahorse Nautilus
+--------------------------------------
+
+As of now, we are explaining how to [[verify ISO images using
+`seahorse-nautilus` for GNOME|doc/get/verify_the_iso_image_using_gnome]].
+While reworking the ISO verification scenarios, we pretty much settled on the
+idea of removing Seahorse Nautilus as a verification option, at least from the
+assistant. Here is why.
+
+Once we get the Firefox extension for ISO verification, Seahorse Nautilus will
+partly duplicate its work. We could then recommend one, the other, or both to
+people with GNOME.
+
+The idea behind Seahorse Nautilus was to allow an OpenPGP verification even for
+people with no or little understanding of OpenPGP. The advantages are:
+
+  - seahorse-nautilus runs from outside of the browser.
+  - seahorse-nautilus can be authenticated through APT even in Debian Jessie.
+  - If you get the right OpenPGP key, you rely on the developers and not on the
+    boum.org website.
+
+But documenting Seahorse Nautilus has we have been doing until now is only
+stronger than the Firefox extension if TOFU is done well. And we believe that
+this requires explaining much more that what is intended for a first-time Linux
+user:
+
+  - TOFU only work if trusted once :) While with Seahorse Nautilus, importing
+    the same key, or a different key for the same email address several times
+    produces the same notification: "Key Imported". In order to have our users do
+    TOFU for real, we would have to go through the list of existing keys and
+    check whether it's imported or not.
+  - What happen if we revoke our signing key? We'd have to explain how to
+    remove the old key and how to import the new key. Whereas the browser
+    extension (either through HTTPS or OpenPGP) could do that job on its own.
+
+So we think that this is too much for the assistant, and everybody should
+instead go through the browser extension. Still, Seahorse Nautilus might still
+fit in the advanced documentation for OpenPGP verification.
 
 Use cases
 =========
