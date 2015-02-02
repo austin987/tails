@@ -137,3 +137,23 @@ Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DN
     end
   end
 end
+
+Then /^the firewall is configured to block all IPv6 traffic$/ do
+  next if @skip_steps_while_restoring_background
+  expected_policy = "DROP"
+  ip6tables_output = @vm.execute_successfully("ip6tables -L -n -v").stdout
+  chains = iptables_parse(ip6tables_output)
+  chains.each_pair do |name, chain|
+    policy = chain["policy"]
+    assert_equal(expected_policy, policy,
+                 "The IPv6 #{name} chain has policy #{policy} but we " \
+                 "expected #{expected_policy}")
+    rules = chain["rules"]
+    bad_rules = rules.find_all do |rule|
+      !["DROP", "REJECT", "LOG"].include?(rule["target"])
+    end
+    assert(bad_rules.empty?,
+           "The NAT table's OUTPUT chain contains some unexptected rules:\n" +
+           (bad_rules.map { |r| r["rule"] }).join("\n"))
+  end
+end
