@@ -129,6 +129,21 @@ After('@product', '~@keep_volumes') do
   VM.storage.clear_volumes
 end
 
+Before('@product', '@check_tor_leaks') do |scenario|
+  feature_file_name = File.basename(scenario.feature.file, ".feature").to_s
+  @tor_leaks_sniffer = Sniffer.new(feature_file_name + "_sniffer", $vmnet)
+  @tor_leaks_sniffer.capture
+end
+
+After('@product', '@check_tor_leaks') do |scenario|
+  @tor_leaks_sniffer.stop
+  if (scenario.status == :passed)
+    leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file, get_tor_relays)
+    leaks.assert_no_leaks
+  end
+  @tor_leaks_sniffer.clear
+end
+
 # For @source tests
 ###################
 
