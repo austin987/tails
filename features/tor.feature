@@ -5,7 +5,6 @@ Feature: Tor is configured properly
 
   Background:
     Given a computer
-    And I capture all network traffic
     When I start Tails from DVD and I login
     And I save the state so the background can be restored next scenario
 
@@ -15,7 +14,7 @@ Feature: Tor is configured properly
     And the firewall's NAT rules only redirect traffic for Tor's TransPort and DNSPort
     And the firewall is configured to block all IPv6 traffic
 
+  @check_tor_leaks
   Scenario: The Tor enforcement is effective at blocking untorified connection attempts
     Then untorified network connections to monip.org fails
     And untorified network connections to 1.2.3.4 fails
-    And all Internet traffic has only flowed through Tor
