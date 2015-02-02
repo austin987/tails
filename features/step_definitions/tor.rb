@@ -167,3 +167,14 @@ Then /^untorified network connections to (\S+) fails$/ do |host|
   assert(!status.success? && status.stderr[expected_stderr],
          "The command `#{cmd}` didn't fail as expected:\n#{status.to_s}")
 end
+
+When /^the system DNS is( still)? using the local DNS resolver$/ do |_|
+  next if @skip_steps_while_restoring_background
+  resolvconf = @vm.file_content("/etc/resolv.conf")
+  bad_lines = resolvconf.split("\n").find_all do |line|
+    !line.start_with?("#") && !/^nameserver\s+127\.0\.0\.1$/.match(line)
+  end
+  assert_empty(bad_lines,
+               "The following bad lines were found in /etc/resolv.conf:\n" +
+               bad_lines.join("\n"))
+end

@@ -18,3 +18,15 @@ Feature: Tor is configured properly
   Scenario: The Tor enforcement is effective at blocking untorified connection attempts
     Then untorified network connections to monip.org fails
     And untorified network connections to 1.2.3.4 fails
+
+  Scenario: The system DNS is always set up to use Tor's DNSPort
+    Given a computer
+    And the network is unplugged
+    And I start the computer
+    And the computer boots Tails
+    And I log in to a new session
+    And GNOME has started
+    And the system DNS is using the local DNS resolver
+    And the network is plugged
+    And Tor is ready
+    Then the system DNS is still using the local DNS resolver
