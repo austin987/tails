@@ -1,33 +1,40 @@
 [[!meta title="Automated builds specification"]]
 
-[[!toc levels=2]]
 
-This blueprints helps to keep track of the discussion on the mailing list, and
-is attached to tickets #8655 to specify how to implement #6196 (Build all
+This blueprint helps to keep track of the discussion on the mailing list, and
+is attached to tickets **#8655** to specify how to implement **#6196** (Build all
 active branches).
 
+[[!toc levels=2]]
 
 # Question to discuss
 
 ## Which branches we want to build?
 
-We already build the base branches (_stables_, _testing_, _devel_ and
-_experimental_ + _feature/jessie_).
+We already build the base branches (_stable_, _testing_, _devel_ and
+_experimental_) + _feature/jessie_.
 
 The questions raised is mostly concern the _feature/*_ and _bugfix/*_ branches
 (so _topic branches_)
 
-The criterias to automatically select the branches to be build could be:
-
-* branches which are not merged to devel||stable||testing, maybe depending on
-  the targeted release version
-* but had new commits since a certain time as in:
- - the previous release?
- - N weeks time?
- - 15 days (arbitrary)?
-
 Some metrics about the number of branches merged per release could give hints
-that might help to decide of selection process.
+that might help to decide of selection process. See at the bottom of this
+page.
+
+Given a branch take around 45 minutes to be build on lizard (worth case),
+with two builders, lizard will be able to build something like 64 ISOs a
+day.
+
+Devs should be able to trigger automatic builds for a branch whose build
+was dropped (eg. last commit too old) by pushing a dumb commit on a
+timestamp file in their branch.
+
+
+Proposal1:
+
+* branches which are not merged into devel, stable and testing
+* but had new commits since the previous release
+
 
 ## When to build it
 
@@ -40,9 +47,14 @@ at least having an average number of branches per release.
 Note that we will have to plug that in automatic tests when they will be
 deployed.
 
+Proposal 1: A build a day.
+
+
 ## Notifications
 
 When to notify who? And how to notify them?
+
+Proposal 1: Notify by email the author of the offending commit on failure.
 
 
 # Scenarios
@@ -51,8 +63,7 @@ In the folowing scenario:
 
 0. topic branches are named branch T
 0. base branches are named branch B
-0. Builds are ran on merges which don't raise a conflict, and this is the topic
-   branch's dev to take care of that.
+0. builds are ran on merges which don't raise a conflict. If the merge raises a conflict, then the topic branch's developpes should take care of resolving it.
 
 
 ## Scenario 1 : reviewer
@@ -66,9 +77,9 @@ In the folowing scenario:
       I might want to download the resulting ISO
       I might want to get the pkg list
       I want the redmine ticket to be notified (optional feature)
-    Otherwise if it fails I _need_ to see the build logs
-      And the developer who proposed the merge should be notified
-      And the ticket shouldn't be reassigned to the branch submitter
+    Otherwise if it fails the developer who proposed the merge should be notified
+      And the developper _need_ to see the build logs
+      And the ticket should be reassigned to the branch submitter
       And QA check should be set to `Dev needed`
 
 
@@ -78,15 +89,15 @@ In the folowing scenario:
     When I'm working on branch T
     Then I need to know if my branch builds after I've pushed
     And I need to know if my branch build is broken by something else
-       possibly weeks after my last commit by e.g Debian changes,
-       changes in branch B...
+       possibly weeks after my last commit (by e.g Debian changes,
+       changes in branch B, ...)
     And if the build succeeded
       I might want to download the resulting ISO
       I might want to get the pkg list
       I want the redmine ticket to be notified (optional feature)
     Otherwise if it fails I _need_ to see the build logs
       And the developer who proposed the merge should be notified
-      And the ticket shouldn't be reassigned to the branch submitter
+      And the ticket should be reassigned to the branch submitter
       And QA check should be set to `Dev needed`
 
 
@@ -105,7 +116,7 @@ might want to consider it in the future.
 
 ## Scenario 1
 
-    As a tails developer working on branch B
+    As a Tails developer working on branch B
     When I upload a package to APT suite B
     Then I want to know if it broke the build ASAP
 
@@ -116,7 +127,7 @@ might want to consider it in the future.
 ## Scenario 2
 
     As the current RM
-    When I push new tag T on branch 
+    When I push new tag T on branch B
     Then I want the APT suite for tag T to be created
     And I want the APT suite B to be copied into the APT suite T
     And once this is done, I want a build from the checkout of tag T to be
@@ -130,3 +141,42 @@ might want to consider it in the future.
     When the test suite is ran on the ISO build from my last commit
     I want to watch the TV and see the test video in HTML5 from a Torbrowser
 
+
+## Scenario 4
+
+    As a Tails developper
+    When an ISO is build from my last commit
+    I want to access it throught remote desktop (VNC/Spice/...) over Tor
+
+# Statistics
+
+As of 2015-02-02, there are 26 branches that would be automatically
+build as part of the next 1.3 release, following the for now defined
+criterias (above in this bluepint):
+
+feature/7779-revisit-touchpad-settings
+feature/6992-whisperback-email-address
+bugfix/8714-tor-is-ready-robustness
+bugfix/8680-git-without-polipo
+feature/8719-mount-output-in-bug-reports
+feature/6241-gnupg2
+feature/8725-remove-vagrant-bootstrap-cache
+bugfix/8715-build-system-independent-APT-sources
+feature/7756-reintroduce-whisperback
+bugfix/8699-only-create-timestamps-in-Jenkins
+feature/8740-new-signing-key-phase-2
+feature/8665-remove-adblock
+bugfix/8756-repair-local-packages
+feature/7530-docker_anonym
+feature/7530-docker-with-apt-cacher-ng
+feature/7963-background-color
+feature/8491-live-additional-software-in-whisperback
+feature/7530-docker
+feature/linux-3.18
+feature/torbrowser-alpha
+bugfix/8747-update-tails-apt-repo-signing-key
+feature/8726-use-homogenous-Debian-mirrors-at-build-time
+feature/5525-sandbox-web-browser
+feature/7752-keyringer
+feature/6739-install-electrum
+bugfix/quote-wrappers-arguments
