@@ -178,3 +178,48 @@ When /^the system DNS is( still)? using the local DNS resolver$/ do |_|
                "The following bad lines were found in /etc/resolv.conf:\n" +
                bad_lines.join("\n"))
 end
+
+def stream_isolation_info(application)
+  case application
+  when "tails-security-check"
+    # We only grep connections with ESTABLISHED statate since `perl`
+    # is also used by monkeysphere's validation agent, which LISTENs
+    {
+      :grep_monitor_expr => '\<ESTABLISHED\>.\+/perl\>',
+      :socksport => 9062
+    }
+  else
+    raise "Unknown application '#{application}' for the stream isolation tests"
+  end
+end
+
+When /^I monitor the traffic of (.*)$/ do |application|
+  next if @skip_steps_while_restoring_background
+  @process_monitor_log = "/tmp/netstat.log"
+  info = stream_isolation_info(application)
+  @vm.spawn("while true; do " +
+            "  netstat -taupen | grep \"#{info[:grep_monitor_expr]}\"; " +
+            "  sleep 0.1; " +
+            "done > #{@process_monitor_log}")
+end
+
+Then /^I see that (.+) is properly stream isolated$/ do |application|
+  next if @skip_steps_while_restoring_background
+  expected_port = stream_isolation_info(application)[:socksport]
+  assert_not_nil(@process_monitor_log)
+  log_lines = @vm.file_content(@process_monitor_log).split("\n")
+  assert(log_lines.size > 0,
+         "Couldn't see any connection made by #{application} so " \
+         "something is wrong")
+  log_lines.each do |line|
+    addr_port = line.split(/\s+/)[4]
+    assert_equal("127.0.0.1:#{expected_port}", addr_port,
+                 "#{application} should use SocksPort #{expected_port} but " \
+                 "was seen connecting to #{addr_port}")
+  end
+end
+
+And /^I re-run tails-security-check$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.execute_successfully("LANG=en_US.UTF-8 /usr/local/bin/tails-security-check", $live_user)
+end

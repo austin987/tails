@@ -2,6 +2,7 @@
 Feature: Tor is configured properly
   As a Tails user
   I want all direct Internet connections I do by mistake to be blocked
+  And I want my Torified sessions to be sensibly isolated from each other to prevent identity correlation
 
   Background:
     Given a computer
@@ -18,6 +19,12 @@ Feature: Tor is configured properly
   Scenario: The Tor enforcement is effective at blocking untorified connection attempts
     Then untorified network connections to monip.org fails
     And untorified network connections to 1.2.3.4 fails
+
+  @check_tor_leaks
+  Scenario: tails-security-check is using the Tails-specific SocksPort
+    When I monitor the traffic of tails-security-check
+    And I re-run tails-security-check
+    Then I see that tails-security-check is properly stream isolated
 
   Scenario: The system DNS is always set up to use Tor's DNSPort
     Given a computer
