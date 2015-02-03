@@ -23,6 +23,8 @@ def try_for(t, options = {})
       loop do
         begin
           return true if yield
+        rescue NameError => e
+          raise e
         rescue Timeout::Error => e
           if options[:msg]
             raise RuntimeError, options[:msg], caller
