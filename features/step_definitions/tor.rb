@@ -186,7 +186,7 @@ def stream_isolation_info(application)
       :grep_monitor_expr => '/curl\>',
       :socksport => 9062
     }
-  when "tails-security-check"
+  when "tails-security-check", "tails-upgrade-frontend-wrapper"
     # We only grep connections with ESTABLISHED statate since `perl`
     # is also used by monkeysphere's validation agent, which LISTENs
     {
@@ -235,4 +235,9 @@ And /^I re-run htpdate$/ do
                            "rm -f /var/run/htpdate/* ; " \
                            "service htpdate start")
   step "the time has synced"
+end
+
+And /^I re-run tails-upgrade-frontend-wrapper$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.execute_successfully("/usr/local/bin/tails-upgrade-frontend-wrapper", $live_user)
 end

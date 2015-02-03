@@ -32,6 +32,12 @@ Feature: Tor is configured properly
     And I re-run htpdate
     Then I see that htpdate is properly stream isolated
 
+  @check_tor_leaks
+  Scenario: tails-upgrade-frontend-wrapper is using the Tails-specific SocksPort
+    When I monitor the traffic of tails-upgrade-frontend-wrapper
+    And I re-run tails-upgrade-frontend-wrapper
+    Then I see that tails-upgrade-frontend-wrapper is properly stream isolated
+
   Scenario: The system DNS is always set up to use Tor's DNSPort
     Given a computer
     And the network is unplugged
