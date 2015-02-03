@@ -203,6 +203,11 @@ def stream_isolation_info(application)
       :grep_monitor_expr => '/gobby\>',
       :socksport => 9050
     }
+  when "SSH"
+    {
+      :grep_monitor_expr => '/\(connect-proxy\|ssh\)\>',
+      :socksport => 9050
+    }
   else
     raise "Unknown application '#{application}' for the stream isolation tests"
   end

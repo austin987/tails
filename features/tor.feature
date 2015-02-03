@@ -52,6 +52,13 @@ Feature: Tor is configured properly
     And I connect Gobby to "gobby.debian.org"
     Then I see that Gobby is properly stream isolated
 
+  @check_tor_leaks
+  Scenario: SSH is using the default SocksPort
+    When I monitor the traffic of SSH
+    And I run "ssh lizard.tails.boum.org" in GNOME Terminal
+    And I see "SSHAuthVerification.png" after at most 60 seconds
+    Then I see that SSH is properly stream isolated
+
   Scenario: The system DNS is always set up to use Tor's DNSPort
     Given a computer
     And the network is unplugged
