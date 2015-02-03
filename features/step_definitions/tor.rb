@@ -193,6 +193,11 @@ def stream_isolation_info(application)
       :grep_monitor_expr => '\<ESTABLISHED\>.\+/perl\>',
       :socksport => 9062
     }
+  when "Tor Browser"
+    {
+      :grep_monitor_expr => '/firefox\>',
+      :socksport => 9150
+    }
   else
     raise "Unknown application '#{application}' for the stream isolation tests"
   end

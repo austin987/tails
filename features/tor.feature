@@ -38,6 +38,13 @@ Feature: Tor is configured properly
     And I re-run tails-upgrade-frontend-wrapper
     Then I see that tails-upgrade-frontend-wrapper is properly stream isolated
 
+  @check_tor_leaks
+  Scenario: The Tor Browser is using the web browser-specific SocksPort
+    When I monitor the traffic of Tor Browser
+    And I start the Tor Browser
+    And the Tor Browser has started and loaded the startup page
+    Then I see that Tor Browser is properly stream isolated
+
   Scenario: The system DNS is always set up to use Tor's DNSPort
     Given a computer
     And the network is unplugged
