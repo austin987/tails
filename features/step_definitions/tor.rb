@@ -181,6 +181,11 @@ end
 
 def stream_isolation_info(application)
   case application
+  when "htpdate"
+    {
+      :grep_monitor_expr => '/curl\>',
+      :socksport => 9062
+    }
   when "tails-security-check"
     # We only grep connections with ESTABLISHED statate since `perl`
     # is also used by monkeysphere's validation agent, which LISTENs
@@ -222,4 +227,12 @@ end
 And /^I re-run tails-security-check$/ do
   next if @skip_steps_while_restoring_background
   @vm.execute_successfully("LANG=en_US.UTF-8 /usr/local/bin/tails-security-check", $live_user)
+end
+
+And /^I re-run htpdate$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.execute_successfully("service htpdate stop ; " \
+                           "rm -f /var/run/htpdate/* ; " \
+                           "service htpdate start")
+  step "the time has synced"
 end

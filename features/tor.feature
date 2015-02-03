@@ -26,6 +26,12 @@ Feature: Tor is configured properly
     And I re-run tails-security-check
     Then I see that tails-security-check is properly stream isolated
 
+  @check_tor_leaks
+  Scenario: htpdate is using the Tails-specific SocksPort
+    When I monitor the traffic of htpdate
+    And I re-run htpdate
+    Then I see that htpdate is properly stream isolated
+
   Scenario: The system DNS is always set up to use Tor's DNSPort
     Given a computer
     And the network is unplugged
