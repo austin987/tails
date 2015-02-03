@@ -125,9 +125,9 @@ BUILD_END_FILENAME="${BUILD_DEST_FILENAME}.end.timestamp"
 
 echo "Building $LB_BINARY_IMAGES image ${BUILD_BASENAME}..."
 set -o pipefail
-date --utc '+%s' > "$BUILD_START_FILENAME"
+[ -z "$JENKINS_URL" ] || date --utc '+%s' > "$BUILD_START_FILENAME"
 if time eatmydata lb build noauto ${@} 2>&1 | tee "${BUILD_LOG}" ; then
-   date --utc '+%s' > "$BUILD_END_FILENAME"
+   [ -z "$JENKINS_URL" ] || date --utc '+%s' > "$BUILD_END_FILENAME"
    echo "Image was successfully created"
    echo "Renaming generated files..."
    mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"

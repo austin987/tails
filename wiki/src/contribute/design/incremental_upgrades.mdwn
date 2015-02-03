@@ -577,6 +577,15 @@ Both with the old and new Tails upgrade systems, mounting such an
 attack requires either to take control of the Tails website or to
 break the SSL/TLS connection between the client and the server.
 
+This attack is slightly mitigated by the fact that we are announcing
+new releases in other ways:
+
+* one that does not rely on our website at all (Twitter);
+* one that does not rely on our website to be safe at the time Tails
+  Upgrader checks for available upgrades, as long as it was safe at
+  the time the new release was published (<amnesia-news@boum.org>
+  announce mailing-list).
+
 The move to a secure upgrade system, such as TUF, would make this
 stronger, thanks to short-lived signatures on meta-data.
 
@@ -598,6 +607,10 @@ LWP::UserAgent]]'s `max_size` method).
 The upgrade-description files downloader and verifier could refuse to
 download upgrade-description files bigger than some reasonable
 constant, but this is not implemented yet.
+
+This attack, when performed against the upgrade-description files
+downloader and verifier is slightly mitigated in the same way as
+"Indefinite freeze attacks" are.
 
 ### Slow retrieval attacks
 

@@ -2,6 +2,13 @@
 
 [[!toc levels=2]]
 
+Git repository and branches
+===========================
+
+You will need to clone the Tails Git repository, and to checkout the
+branch that you want to build (most likely, _not_ `master`): learn
+more about [[our Git branches layout|contribute/git#main-repo]].
+
 <a id="vagrant"></a>
 
 Using Vagrant
@@ -166,26 +173,6 @@ The following flags can be used to force a specific behaviour:
    if a local HTTP proxy is set.
  * **noproxy**: do not use any HTTP proxy.
 
-### Bootstrap cache settings
-
-A Tails build starts with `debootstrap`:ing a minimal Debian system
-which then is modified into a full Tails system. This is a rather time
-consuming step that usually does not have to be done: the packages used
-in it rarely get updated and hence the result is exactly the same most
-of the time.
-
-The following flags can be used to force a specific behaviour:
-
- * **cache**: re-use a cached bootstrap stage (if available), and saves
-   the bootstrap stage to disk on successful build. This will also
-   reduce the amount of memory required for in-memory builds by around
-   150 MiB (see the **ram** option above). **Warning:** this option may
-   create subtle differences between builds from the exact same Tails
-   source which are hard to track to track and understand. Use this
-   option only if you know what you are doing, and if you are not
-   building an actual release.
- * **nocache**: do the bootstrap stage from scratch (default).
-
 ### SquashFS compression settings
 
 One of the most expensive operations when building Tails is the creation
@@ -204,7 +191,6 @@ Forcing a specific behaviour can be done using:
 Some operations are preserved accross builds. Currently they are:
 
 * The wiki (for documentation).
-* The bootstrap stage cache (see the **cache** option above).
 
 In case you want to delete all these, the following option is available:
 
