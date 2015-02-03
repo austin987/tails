@@ -45,6 +45,13 @@ Feature: Tor is configured properly
     And the Tor Browser has started and loaded the startup page
     Then I see that Tor Browser is properly stream isolated
 
+  @check_tor_leaks
+  Scenario: Gobby is using the default SocksPort
+    When I monitor the traffic of Gobby
+    And I start "Gobby" via the GNOME "Internet" applications menu
+    And I connect Gobby to "gobby.debian.org"
+    Then I see that Gobby is properly stream isolated
+
   Scenario: The system DNS is always set up to use Tor's DNSPort
     Given a computer
     And the network is unplugged

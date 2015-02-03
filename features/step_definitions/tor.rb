@@ -198,6 +198,11 @@ def stream_isolation_info(application)
       :grep_monitor_expr => '/firefox\>',
       :socksport => 9150
     }
+  when "Gobby"
+    {
+      :grep_monitor_expr => '/gobby\>',
+      :socksport => 9050
+    }
   else
     raise "Unknown application '#{application}' for the stream isolation tests"
   end
@@ -245,4 +250,16 @@ end
 And /^I re-run tails-upgrade-frontend-wrapper$/ do
   next if @skip_steps_while_restoring_background
   @vm.execute_successfully("/usr/local/bin/tails-upgrade-frontend-wrapper", $live_user)
+end
+
+When /^I connect Gobby to "([^"]+)"$/ do |host|
+  next if @skip_steps_while_restoring_background
+  @screen.wait("GobbyWindow.png", 30)
+  @screen.wait("GobbyWelcomePrompt.png", 10)
+  @screen.click("GnomeCloseButton.png")
+  @screen.wait("GobbyWindow.png", 10)
+  @screen.type("t", Sikuli::KeyModifier.CTRL)
+  @screen.wait("GobbyConnectPrompt.png", 10)
+  @screen.type(host + Sikuli::Key.ENTER)
+  @screen.wait("GobbyConnectionComplete.png", 60)
 end
