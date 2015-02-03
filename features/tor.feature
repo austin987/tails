@@ -65,6 +65,20 @@ Feature: Tor is configured properly
     And I do a whois-lookup of domain boum.org
     Then I see that whois is properly stream isolated
 
+  @check_tor_leaks
+  Scenario: Explicitly torify-wrapped applications are using the default SocksPort
+    When I monitor the traffic of Gobby
+    And I run "torify /usr/bin/gobby-0.5" in GNOME Terminal
+    And I connect Gobby to "gobby.debian.org"
+    Then I see that Gobby is properly stream isolated
+
+  @check_tor_leaks
+  Scenario: Explicitly torsocks-wrapped applications are using the default SocksPort
+    When I monitor the traffic of Gobby
+    And I run "torsocks /usr/bin/gobby-0.5" in GNOME Terminal
+    And I connect Gobby to "gobby.debian.org"
+    Then I see that Gobby is properly stream isolated
+
   Scenario: The system DNS is always set up to use Tor's DNSPort
     Given a computer
     And the network is unplugged
