@@ -1,0 +1,470 @@
+[[!meta title="Bootstrapping workflow"]]
+
+This blueprint analyses and proposes simplifications to the workflow of
+a new user discovering Tails until she gets a full-featured Tails USB
+stick with persistence.
+
+Big logical steps are:
+
+  - Learn what Tails is
+  - Download the ISO
+  - Verify the ISO
+  - Install medium (might require going through a bootstrapping medium)
+  - Create persistence
+
+[[!toc levels=3]]
+
+2014
+====
+
+[[Diagram of the detailed workflow as of January 2014|2014.fodg]]
+
+2015
+====
+
+Over 2015 we will work on several improvements to simplify greatly this
+workflow:
+
+  - Tails Installer in Debian
+  - [[Browser extensions|download_extension]] for automatic verification of the ISO
+  - [[Web assistant|web_assistant]] to guide the user throughout this process
+
+<a id="tools"></a>
+
+Involved tools
+--------------
+
+[[!img tools.png link=tools.fodg]]
+
+Notes:
+
+- **Debian Hacker** corresponds to a path on the command line only. This
+  main benefit is to go through the **Debian keyring** verification.
+- **Debian** is a path for Debian derivatives where Tails Installer is
+  available. That should be the case of Ubuntu starting from 15.10, and
+  Debian Stretch unless we backport it for Jessie ([[!tails_ticket 8805]]).
+- **Other OS** is Windows, Mac OS X, Fedora, etc.
+- **Debian keyring** are command line instructions for verifying the
+  Tails signing key against the Debian keyring.
+- **Extension from Debian** takes for granted that the ISO verification
+  extension will be available in Debian ([[!tails_ticket 8822]]. That
+  might not be the case and then people would fallback on "Extension
+  from browser".
+- **GNOME Disks** now has a "Restore Disk Image" feature which should do the
+  trick and is widely available, see [[!tails_ticket 8664]].
+- **UUI** has been our canonical installer for years, but we should also test
+  **Rufus**, see [[!tails_ticket 7034]].
+- **DiskUtils** should be tested on Mac, see [[!tails_ticket 8802]].
+
+[[Diagram of the detailed workflow as of January 2015|2015.fodg]] (work in progress)
+
+<a id="verification"></a>
+
+ISO verification
+================
+
+Who's who
+---------
+
+- Objective: installing a genuine Tails system
+
+- Simplified workflow: WWW → Download/Torrent → ISO → Install/Burn → Tails
+
+- Possible attacks:
+  - Faulty download
+  - Rogue mirror
+  - Censorship
+  - Targeted malware on the OS
+  - Targeted malware download of third-party software
+  - SSL MitM
+
+- Possible defenses:
+  - HTTPS
+  - HTTPS pinning
+  - OpenPGP TOFU
+  - OpenPGP download correlation
+  - OpenPGP WoT
+
+- Tools involved:
+  - HTTPS on Tails website
+  - Browser app store
+  - Written documentation
+  - Third-party software
+  - Browser extension
+  - Tails Installer (future)
+
+- Scenarios
+  - Windows
+  - Mac
+  - Debian
+  - Other Linux
+
+<a id="automation"></a>
+
+Automation proposals
+--------------------
+
+The idea behind this section is to understand better what to in 2015
+regarding the UX of ISO verification, and try to envision what can
+happen after we get the technical improvements described for
+[[2015|bootstrapping_workflow#index2h1]].
+
+### Questions we are trying to answer
+
+  - How far shall we go regarding ISO verification in the [[browser
+    extension|download extension]] over 2015? For example, do we add
+    OpenPGP support to the extension?
+  - What additional techniques do we still need to document on the
+    website?
+  - What do we need to integrate to the [[web assistant]]?
+  - Are there any technical improvements that could be done over 2015
+    and would make a big difference?
+  - What should come next? As this might influence what to do today.
+
+### Hypothesis
+
+  - We call "basic verification" techniques: HTTPS, HTTPS with pinning,
+    and OpenPGP with TOFU (by order of strength).
+  - We call "extended verification" techniques: OpenPGP with download
+    correlation, OpenPGP with WoT (by order of strength).
+  - We can't rely on people doing OpenPGP verification properly, even
+    "basic" (thinks about downgrade attacks). So both "basic" and
+    "extended" verification are currently broken for all operating
+    systems (maybe not that much on Debian, ok).
+  - We want to automate ISO verification as much as we can.
+  - We can automate OpenPGP download correlation and WoT, at least in
+    some environments.
+  - Global verification level is as high as the least verified tool
+    involved.
+
+### Proposals
+
+To further automate ISO verification we considered two options:
+
+  - Pushing more verification logic into the browser extension.
+  - Pushing some verification logic into Tails Installer (as it is getting
+    multiplatform). This goes along with having a multiplatform
+    installer, which would be a huge UX improvement of its own.
+
+We did a quick thread modelling on 5 scenarios:
+
+  - [[Proposal 0: Minimum improvements over 2015|bootstrapping_workflow#index6h3]]
+  - [[Proposal 1: Extended verification in extension|bootstrapping_workflow#index7h3]]
+  - [[Proposal 1bis: Extended verification in extension + multiplatform installer|bootstrapping_workflow#index8h3]]
+  - [[Proposal 2: Extended verification in installer|bootstrapping_workflow#index9h3]]
+  - [[Proposal 2bis: Extended verification in multiplatform installer|bootstrapping_workflow#index10h3]]
+
+### Graphical summary
+
+We [[summarized graphically|iso_verification_automation_proposals.ods]]
+the possible attacks on someone willing to install Tails on USB stick on
+Mac, Windows, and Debian (Stretch).
+
+According to this, proposal 1bis and 2bis are similarly secure.
+
+### Open technical questions
+
+  - For all operating systems, is it safer to build extended verification in the
+    host operating system or to rely on a first Tails to install others?
+  - Is it easier or better to port code across browsers (in the case of
+    the extension) or across operating system (in the case of the
+    installer)?
+  - How secure, widespread, and reactive to upgrades are the Mozilla, Chrome,
+    Windows, and Apple app stores?
+    [[!tails_ticket 8815]] [[!tails_ticket 8816]] [[!tails_ticket 8817]]
+  - How technically feasible is it to push OpenPGP verification to browser
+    extensions or a multiplatform installer?
+  - How easy and safe is it to do simple or complex OpenPGP operations in the
+    browser?
+
+Below come the details for each proposal.
+
+### Proposal 0: Minimum improvements over 2015
+
+Description:
+
+  - Browser extension does HTTPS pinning.
+  - Tails Installer does no verification (as of now).
+  - Tails Installer is packaged in Debian.
+
+Possible attacks:
+
+  - Windows:
+    - SSL MitM on:
+      - Browser app store (#8815)
+      - boum.org (on each use)
+    - if USB, HTTP MitM on UUI
+    - Targeted malware (easy)
+
+  - Mac:
+    - SSL MitM on:
+      - Browser app store (#8815)
+      - boum.org (on each use)
+    - if USB, no graphical solution so far (#8802)
+    - Targeted malware (harder)
+
+  - Debian:
+    - SSL MitM on:
+      - Browser app store (#8815)
+      - boum.org (on each use)
+    - Targeted malware (hard)
+
+UX questions:
+
+  - How do we go beyond HTTPS pinning?
+  - What do we do with seahorse-nautilus, Gpg4win and GPGTools?
+  - Do we do that in the assistant?
+  - We need a multiplatform installer!
+    - Controlled environment
+    - No more bootstrapping medium
+
+### Proposal 1: Extended verification in extension
+
+Description (on top of proposal 0):
+
+  - Browser extension does TOFU OpenPGP, OpenPGP correlation, and WoT.
+  - Browser extension is packaged in Debian.
+
+Possible attacks:
+
+  - Windows:
+    - SSL MitM:
+      - Browser app store (#8815)
+    - if USB, HTTP MitM on UUI
+    - Targeted malware (easy)
+
+  - Mac:
+    - SSL MitM:
+      - Browser app store (#8815)
+    - if USB, no graphical solution so far (#8802)
+    - Targeted malware (harder)
+
+  - Debian:
+    - Debian app store :)
+    - Targeted malware (hard)
+
+UX questions:
+
+  - What happen if people are in TBB?
+  - Based on which keys do we do WoT on Windows and Mac?
+  - How far do we want to automate?
+  - What do we make transparent?
+
+Pros (over proposal 2):
+
+  - Verification logic is in one place and multiplatform.
+  - Verification logic can grow more complex and robust than HTTPS with
+    pinning.
+  - Stronger to SSL MitM on boum.org as we rely on OpenPGP WoT.
+  - It might make more sense to reuse the verification mechanisms from the
+    extension to verify other downloads, for example of the installer if not
+    installed automatically from OS app store.
+
+Cons:
+
+  - Put security code in browser.
+  - Less autonomy regarding development (we need external help).
+
+### Proposal 1bis: Extended verification in extension + multiplatform installer
+
+Description (on top of proposal 1):
+
+  - Tails Installer is available on Windows and Mac.
+
+Possible attacks:
+
+  - Windows:
+    - SSL MitM on:
+      - Browser app store (#8815)
+      - boum.org
+    - Targeted malware (easy)
+
+  - Mac:
+    - SSL MitM on:
+      - Browser app store (#8815)
+      - boum.org
+    - Targeted malware (harder)
+
+  - Debian:
+    - Debian app store :)
+    - Targeted malware (hard)
+
+Pros (on top of proposal 1):
+
+  - Stronger to malware attack on UUI.
+
+Cons (over proposal 2bis):
+
+  - Rely on both Browser app store and Tails Installer.
+
+### Proposal 2: Extended verification in installer
+
+Description (on top of proposal 0):
+
+  - Tails Installer does TOFU OpenPGP, OpenPGP correlation, and WoT.
+  - Browser extension is packaged in Debian.
+  - People burning DVD can check their ISO with Tails Installer if
+    available :)
+
+Possible attacks:
+
+  - Windows:
+    - SSL MitM on:
+      - Browser app store (#8815)
+      - boum.org
+    - if USB, HTTP MitM on UUI
+    - Targeted malware (easy)
+
+  - Mac:
+    - SSL MitM:
+      - Browser app store (#8815)
+      - boum.org
+    - if USB, no graphical solution so far (#8802)
+    - Targeted malware (harder)
+
+  - Debian:
+    - Debian app store
+    - Targeted malware (hard)
+
+UX questions:
+
+  - People using DVD or virtualization need to download and run an
+    unrelated software to verify the ISO.
+
+Pros (over proposal 1):
+
+  - More autonomy regarding development (we know how to do that).
+  - Independent from browser vendor (except for DVD users).
+
+Cons:
+
+  - HTTPS pinning verification at best on Windows and Mac.
+  - Verification logic is partly duplicated in browser extension and
+    installer.
+
+### Proposal 2bis: Extended verification in multiplatform installer
+
+Description (on top of proposal 2):
+
+  - Tails Installer is available on Windows and Mac.
+
+Possible attacks:
+
+  - Windows:
+    - SSL MitM:
+      - boum.org
+    - Targeted malware (easy)
+
+  - Mac:
+    - SSL MitM:
+      - boum.org
+    - Targeted malware (harder)
+
+  - Debian:
+    - Debian app store
+    - Targeted malware (hard)
+
+Pros (on top of proposal 2):
+
+  - Don't rely on UUI anymore.
+
+Cons:
+
+  - Harder to port to Windows and Mac than current Tails Installer.
+
+<a id="seahorse"></a>
+
+About the removal of Seahorse Nautilus
+--------------------------------------
+
+As of now, we are explaining how to [[verify ISO images using
+`seahorse-nautilus` for GNOME|doc/get/verify_the_iso_image_using_gnome]].
+While reworking the ISO verification scenarios, we pretty much settled on the
+idea of removing Seahorse Nautilus as a verification option, at least from the
+assistant. Here is why.
+
+Once we get the Firefox extension for ISO verification, Seahorse Nautilus will
+partly duplicate its work. We could then recommend one, the other, or both to
+people with GNOME.
+
+The idea behind Seahorse Nautilus was to allow an OpenPGP verification even for
+people with no or little understanding of OpenPGP. The advantages are:
+
+  - seahorse-nautilus runs from outside of the browser.
+  - seahorse-nautilus can be authenticated through APT even in Debian Jessie.
+  - If you get the right OpenPGP key, you rely on the developers and not on the
+    boum.org website.
+
+But documenting Seahorse Nautilus has we have been doing until now is only
+stronger than the Firefox extension if TOFU is done well. And we believe that
+this requires explaining much more that what is intended for a first-time Linux
+user:
+
+  - TOFU only work if trusted once :) While with Seahorse Nautilus, importing
+    the same key, or a different key for the same email address several times
+    produces the same notification: "Key Imported". In order to have our users do
+    TOFU for real, we would have to go through the list of existing keys and
+    check whether it's imported or not.
+  - What happen if we revoke our signing key? We'd have to explain how to
+    remove the old key and how to import the new key. Whereas the browser
+    extension (either through HTTPS or OpenPGP) could do that job on its own.
+
+So we think that this is too much for the assistant, and everybody should
+instead go through the browser extension. Still, Seahorse Nautilus might still
+fit in the advanced documentation for OpenPGP verification.
+
+Use cases
+=========
+
+This is a brainstorming on the different use cases dealing with
+downloading, verifying, and installing (or upgrading) Tails from ISO.
+This list should be useful to check whether all scenarios are covered.
+The comments, placed after ':' correspond to our rough objectives for
+2015.
+
+- Download
+  - HTTP
+    - Successful: 15 to 60 minutes
+    - Failed: ?
+    - Corrupted: ?
+  - Torrent
+    - Corrupted: ?
+  - Nightly
+- Verify
+  - Checksum
+    - Firefox: extension, what's up with Torrents?
+    - Chrome: extension? #8803, #8531
+    - Other browsers:
+      - Windows: fallback on OpenPGP?
+      - Mac: fallback on OpenPGP?
+      - Linux: fallback on OpenPGP?
+  - OpenPGP
+    - GNOME: seahorse-nautilus
+    - Other Linux: command line
+    - Windows: Gpg4Win
+    - Mac: GPGTools #8807
+- Install
+  - DVD
+  - USB
+    - Tails: friend + Tails Installer
+    - Debian
+      - Jessie: Tails Installer backport? #8005
+      - Stretch: Tails Installer #8549
+    - Ubuntu
+      - Latest LTS, 14.04: Tails Installer? #8806
+      - Latest, 15.04: Tails Installer? #8806
+      - Next LTS, 16.04: Tails Installer? #8806
+      - Next, 15.10: Tails Installer? #8806
+  - Windows: UUI
+  - Mac OS X: command line or new graphical tool? #8802
+  - Virtualization: VirtualBox, GNOME Boxes, virt-manager
+- Upgrade from ISO (full upgrade or nightly)
+  - Tails Installer
+    - From Debian, Ubuntu if available
+    - From Tails otherwise: need bootstrapping device
+  - Virtualization: virt-manager
+- Misc
+  - Newsletter
+  - Donation: #7176?
+  - Backups: #8812?
+  - Signing key revocation or change
