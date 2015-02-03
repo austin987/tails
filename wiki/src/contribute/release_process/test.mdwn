@@ -118,11 +118,11 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Check that Pidgin doesn't leak too much information when replying to
   CTCP requests:
   * Start Tails, launch Pidgin, and join #tails.
-  * Also join #tails from the webchat of OFTC on <https://webchat.oftc.net/>
-    using another nickname.
-  * Try to send `/ctcp <Tails_account_nick> COMMAND` from the webchat to pidgin:
-    - You should get no answer apart for the commands listed in [[!tails_ticket
-      5823]].
+  * Also join #tails from a client that supports CTCP commands
+    properly, e.g. Konversation.
+  * Try to send `/ctcp <Tails_account_nick> COMMAND` from the other client to Pidgin:
+    - You should get no answer apart for the PING and VERSION commands
+      ([[!tails_ticket 5823]]).
     - List of `/ctcp` commands, see [this page](http://www.wikkedwire.com/irccommands):
       - PING
       - VERSION
@@ -140,12 +140,12 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Check that the firewall-level Tor enforcement is effective:
   - check output of `iptables -L -n -v`
   - check output of `iptables -t nat -L -n -v`
-  - try connecting to the Internet after unsetting `$http_proxy` and
-    `$HTTP_PROXY` using a piece of software that does not obey the
+  - try connecting to the Internet after unsetting `$SOCKS_SERVER` and
+    `$SOCKS5_SERVER` using a piece of software that does not obey the
     GNOME proxy settings, *and* is not explicitly torified in Tails:
     
-        	unset http_proxy ; unset HTTP_PROXY
-        	wget --no-proxy http://monip.org/
+        	unset SOCKS_SERVER ; unset SOCKS5_SERVER
+        	curl --noproxy '*' http://monip.org/
     
     ... should only give you "Connection refused" error message.
 * Check that IPv6 traffic is blocked:
@@ -268,14 +268,6 @@ the appropriate tcpdump or tshark filters.
 
 * Make sure other applications use the default system-wide
   `SocksPort`:
-  - Polipo — run:
-
-        wget https://tails.boum.org/
-
-    ... with the following command running in another terminal:
-
-        sudo watch -n 0.1 'netstat -taupen | grep polipo'
-
   - Gobby 0.5 — start Gobby 0.5 from the *Applications* menu and
     connect to a server (for example `gobby.debian.org`), with the following command running in
     another terminal:
@@ -494,12 +486,18 @@ Start I2P by appending `i2p` to the kernel command line.
   * For upgrade paths that only propose a full upgrade: make sure the
     user is told to do a manual upgrade.
 
-  If the IUKs and update-description files have been published on the
-  *alpha* channel already (see
-  <https://archive.torproject.org/amnesia.boum.org/tails/alpha/>):
+  If:
+  
+  * the update-description files have been published on the
+    *alpha* channel already (see <https://tails.boum.org/upgrade/v1/Tails/>)
+  * and the IUK has been published already (see
+    <https://archive.torproject.org/amnesia.boum.org/tails/alpha/>
+    and <https://archive.torproject.org/amnesia.boum.org/tails/stable/>):
 
-      echo 'TAILS_CHANNEL="alpha"' | sudo tee --append /etc/os-release && \
-      tails-upgrade-frontend-wrapper
+  then:
+  
+        echo 'TAILS_CHANNEL="alpha"' | sudo tee --append /etc/os-release && \
+        tails-upgrade-frontend-wrapper
 
   Else, use a local test setup:
 
@@ -568,9 +566,11 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 
 # Documentation
 
-* Check that links to the online website (`Mirror:`) at the bottom of
-  bundled static web pages (`/usr/share/doc/tails/website/`) are working. Else, it probably means the
-  wiki was not built with a recent enough ikiwiki.
+* The "Tails documentation" desktop launcher should open the
+  [[getting started]] page (automate: [[!tails_ticket 8788]]):
+  - in English
+  - in one language to which the website is translated
+  - in one language to which the website is not translated (=> English)
 * Browse around in the documentation shipped in the image. Internal
   links should be fine.
 
@@ -606,7 +606,8 @@ language. You *really* have to reboot between each language.
 # Misc
 
 * Check that Tails Greeter's "more options" screen displays properly
-  on a display with 600 px height.
+  on a display with 600 px height, preferably in a language that's
+  more verbose than English (e.g. French).
 * Check that all seems well during init (mostly that all services
   start without errors), and that `/var/log/syslog` seems OK.
 * MAT should be able to clean a PDF file, such as:

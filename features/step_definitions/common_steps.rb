@@ -282,15 +282,15 @@ Then /^Tails seems to have booted normally$/ do
   step "GNOME has started"
 end
 
-Given /^Tor is ready$/ do
+When /^I see the 'Tor is ready' notification$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("GnomeTorIsReady.png", 300)
   @screen.waitVanish("GnomeTorIsReady.png", 15)
+end
 
-  # Having seen the "Tor is ready" notification implies that Tor has
-  # built a circuit, but let's check it directly to be on the safe side.
+Given /^Tor is ready$/ do
+  next if @skip_steps_while_restoring_background
   step "Tor has built a circuit"
-
   step "the time has synced"
 end
 
@@ -587,8 +587,12 @@ Then /^(.*) uses all expected TBB shared libraries$/ do |application|
     chroot = ""
   when "the Unsafe Browser"
     user = "clearnet"
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
     chroot = "/var/lib/unsafe-browser/chroot"
+  when "the I2P Browser"
+    user = "i2pbrowser"
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.i2p-browser/profile\.default"
+    chroot = "/var/lib/i2p-browser/chroot"
   when "Tor Launcher"
     user = "tor-launcher"
     cmd_regex = "#{binary} -app /home/#{user}/\.tor-launcher/tor-launcher-standalone/application\.ini"
@@ -684,8 +688,8 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, s
     prefix = 'Gnome'
   end
   @screen.wait_and_click(prefix + "ApplicationsMenu.png", 10)
-  @screen.wait_and_hover(prefix + "Applications" + submenu + ".png", 20)
-  @screen.wait_and_click(prefix + "Applications" + app + ".png", 20)
+  @screen.wait_and_hover(prefix + "Applications" + submenu + ".png", 40)
+  @screen.wait_and_click(prefix + "Applications" + app + ".png", 40)
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
