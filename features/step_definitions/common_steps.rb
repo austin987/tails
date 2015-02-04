@@ -722,9 +722,30 @@ When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
   @screen.type(command + Sikuli::Key.ENTER)
 end
 
-When /^the file "([^"]+)" exists$/ do |file|
+When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, timeout|
   next if @skip_steps_while_restoring_background
-  assert(@vm.file_exist?(file))
+  timeout = 0 if timeout.nil?
+  try_for(
+    timeout.to_i,
+    :msg => "The file #{file} does not exist after #{timeout} seconds"
+  ) {
+    @vm.file_exist?(file)
+  }
+end
+
+When /^the file "([^"]+)" does not exist$/ do |file|
+  next if @skip_steps_while_restoring_background
+  assert(! (@vm.file_exist?(file)))
+end
+
+When /^the directory "([^"]+)" exists$/ do |directory|
+  next if @skip_steps_while_restoring_background
+  assert(@vm.directory_exist?(directory))
+end
+
+When /^the directory "([^"]+)" does not exist$/ do |directory|
+  next if @skip_steps_while_restoring_background
+  assert(! (@vm.directory_exist?(directory)))
 end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
@@ -788,4 +809,113 @@ When /^I press the "([^"]+)" key$/ do |key|
   else
       raise "unsupported key #{key}"
   end
+end
+
+Then /^the (amnesiac|persistent) Tor Browser directory (exists|does not exist)$/ do |persistent_or_not, mode|
+  case persistent_or_not
+  when "amnesiac"
+    dir = '/home/amnesia/Tor Browser'
+  when "persistent"
+    dir = '/home/amnesia/Persistent/Tor Browser'
+  end
+  step "the directory \"#{dir}\" #{mode}"
+end
+
+Then /^there is a GNOME bookmark for the (amnesiac|persistent) Tor Browser directory$/ do |persistent_or_not|
+  case persistent_or_not
+  when "amnesiac"
+    bookmark_image = 'TorBrowserAmnesicFilesBookmark.png'
+  when "persistent"
+    bookmark_image = 'TorBrowserPersistentFilesBookmark.png'
+  end
+  @screen.wait_and_click('GnomePlaces.png', 10)
+  @screen.wait(bookmark_image, 40)
+  @screen.type(Sikuli::Key.ESC)
+end
+
+def pulseaudio_sink_inputs
+  pa_info = @vm.execute_successfully('pacmd info', $live_user).stdout
+  sink_inputs_line = pa_info.match(/^\d+ sink input\(s\) available\.$/)[0]
+  return sink_inputs_line.match(/^\d+/)[0].to_i
+end
+
+When /^(no|\d+) application(?:s?) (?:is|are) playing audio(?:| after (\d+) seconds)$/ do |nb, wait_time|
+  next if @skip_steps_while_restoring_background
+  nb = 0 if nb == "no"
+  sleep wait_time.to_i if ! wait_time.nil?
+  assert_equal(nb.to_i, pulseaudio_sink_inputs)
+end
+
+When /^I double-click on the "Tails documentation" link on the Desktop$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_double_click("DesktopTailsDocumentationIcon.png", 10)
+end
+
+When /^I click the blocked video icon$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("TorBrowserBlockedVideo.png", 30)
+end
+
+When /^I accept to temporarily allow playing this video$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("TorBrowserOkButton.png", 10)
+end
+
+When /^I click the HTML5 play button$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("TorBrowserHtml5PlayButton.png", 30)
+end
+
+When /^I can save the current page as "([^"]+[.]html)" to the (default downloads|persistent Tor Browser) directory$/ do |output_file, output_dir|
+  next if @skip_steps_while_restoring_background
+  @screen.type("s", Sikuli::KeyModifier.CTRL)
+  if output_dir == "persistent Tor Browser"
+    output_dir = "/home/amnesia/Persistent/Tor Browser"
+    @screen.wait_and_click("GtkTorBrowserPersistentBookmark.png", 10)
+    @screen.wait("GtkTorBrowserPersistentBookmarkSelected.png", 10)
+    # The output filename (without its extension) is already selected,
+    # let's use the keyboard shortcut to focus its field
+    @screen.type("n", Sikuli::KeyModifier.ALT)
+    @screen.wait("TorBrowserSaveOutputFileSelected.png", 10)
+  else
+    output_dir = "/home/amnesia/Tor Browser"
+  end
+  # Only the part of the filename before the .html extension can be easily replaced
+  # so we have to remove it before typing it into the arget filename entry widget.
+  @screen.type(output_file.sub(/[.]html$/, ''))
+  @screen.type(Sikuli::Key.ENTER)
+  try_for(10, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
+    @vm.file_exist?("#{output_dir}/#{output_file}")
+  }
+end
+
+When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads|persistent Tor Browser) directory$/ do |output_file, output_dir|
+  next if @skip_steps_while_restoring_background
+  if output_dir == "persistent Tor Browser"
+    output_dir = "/home/amnesia/Persistent/Tor Browser"
+    output_dir_image = "TorBrowserPersistentBookmarkInDestinationFolderList.png"
+  else
+    output_dir = "/home/amnesia/Tor Browser"
+    output_dir_image = "TorBrowserBookmarkInDestinationFolderList.png"
+  end
+  @screen.type("p", Sikuli::KeyModifier.CTRL)
+  @screen.wait("TorBrowserPrintDialog.png", 10)
+  @screen.wait_and_click("PrintToFile.png", 10)
+  # Tor Browser is not allowed to read /home/amnesia, and I found no way
+  # to change the default destination directory for "Print to File",
+  # so let's click through the warning
+  @screen.wait("TorBrowserCouldNotReadTheContentsOfWarning.png", 10)
+  sleep 1 # Sometimes the ENTER key is not reactive immediately..
+  @screen.type(Sikuli::Key.ENTER)
+  @screen.wait_and_click("TorBrowserDestinationFolderList.png", 10)
+  @screen.wait_and_click(output_dir_image, 10)
+  @screen.wait_and_double_click("TorBrowserPrintOutputFile.png", 10)
+  @screen.hide_cursor
+  @screen.wait("TorBrowserPrintOutputFileSelected.png", 10)
+  # Only the file's basename is selected by double-clicking,
+  # so we type only the desired file's basename to replace it
+  @screen.type(output_file.sub(/[.]pdf$/, '') + Sikuli::Key.ENTER)
+  try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
+    @vm.file_exist?("#{output_dir}/#{output_file}")
+  }
 end

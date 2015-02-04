@@ -365,6 +365,10 @@ EOF
     execute("test -e '#{file}'").success?
   end
 
+  def directory_exist?(directory)
+    execute("test -d '#{directory}'").success?
+  end
+
   def file_content(file, user = 'root')
     # We don't quote #{file} on purpose: we sometimes pass environment variables
     # or globs that we want to be interpreted by the shell.
