@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+TOR_BROWSER_AMNESIAC_DIR='/home/amnesia/Tor Browser files'
+TOR_BROWSER_PERSISTENT_DIR='/home/amnesia/Persistent/Tor Browser files'
+
+install -d -o amnesia -g amnesia "$TOR_BROWSER_AMNESIAC_DIR"
+if mountpoint -q /home/amnesia/Persistent 2>/dev/null; then
+    install -g -o amnesia -g amnesia "$TOR_BROWSER_PERSISTENT_DIR"
+fi
