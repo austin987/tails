@@ -29,9 +29,12 @@ wheezy-backports sources added:
         libvirt-dev libvirt-bin seabios ruby-rjb ruby-packetfu cucumber && \
     service libvirtd restart
 
-In addition, `libguestfs` doesn't work by default, so you must run:
+In addition, if `libguestfs` doesn't work by default you probably have
+hit [[!debbug 741203]], which still may affect Wheezy systems but it's
+verified to have been fixed in Debian Jessie. Then you must run (as
+root):
 
-    echo "^openrc" >> /usr/lib/guestfs/excludelist
+    export excludes="--exclude ^openrc"
     update-guestfs-appliance
 
 Other requirements
