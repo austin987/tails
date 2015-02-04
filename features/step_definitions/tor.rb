@@ -218,7 +218,7 @@ def stream_isolation_info(application)
   end
 end
 
-When /^I monitor the traffic of (.*)$/ do |application|
+When /^I monitor the network connections of (.*)$/ do |application|
   next if @skip_steps_while_restoring_background
   @process_monitor_log = "/tmp/netstat.log"
   info = stream_isolation_info(application)

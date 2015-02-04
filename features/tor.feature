@@ -22,59 +22,59 @@ Feature: Tor is configured properly
 
   @check_tor_leaks
   Scenario: tails-security-check is using the Tails-specific SocksPort
-    When I monitor the traffic of tails-security-check
+    When I monitor the network connections of tails-security-check
     And I re-run tails-security-check
     Then I see that tails-security-check is properly stream isolated
 
   @check_tor_leaks
   Scenario: htpdate is using the Tails-specific SocksPort
-    When I monitor the traffic of htpdate
+    When I monitor the network connections of htpdate
     And I re-run htpdate
     Then I see that htpdate is properly stream isolated
 
   @check_tor_leaks
   Scenario: tails-upgrade-frontend-wrapper is using the Tails-specific SocksPort
-    When I monitor the traffic of tails-upgrade-frontend-wrapper
+    When I monitor the network connections of tails-upgrade-frontend-wrapper
     And I re-run tails-upgrade-frontend-wrapper
     Then I see that tails-upgrade-frontend-wrapper is properly stream isolated
 
   @check_tor_leaks
   Scenario: The Tor Browser is using the web browser-specific SocksPort
-    When I monitor the traffic of Tor Browser
+    When I monitor the network connections of Tor Browser
     And I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
     Then I see that Tor Browser is properly stream isolated
 
   @check_tor_leaks
   Scenario: Gobby is using the default SocksPort
-    When I monitor the traffic of Gobby
+    When I monitor the network connections of Gobby
     And I start "Gobby" via the GNOME "Internet" applications menu
     And I connect Gobby to "gobby.debian.org"
     Then I see that Gobby is properly stream isolated
 
   @check_tor_leaks
   Scenario: SSH is using the default SocksPort
-    When I monitor the traffic of SSH
+    When I monitor the network connections of SSH
     And I run "ssh lizard.tails.boum.org" in GNOME Terminal
     And I see "SSHAuthVerification.png" after at most 60 seconds
     Then I see that SSH is properly stream isolated
 
   @check_tor_leaks
   Scenario: whois lookups use the default SocksPort
-    When I monitor the traffic of whois
+    When I monitor the network connections of whois
     And I do a whois-lookup of domain boum.org
     Then I see that whois is properly stream isolated
 
   @check_tor_leaks
   Scenario: Explicitly torify-wrapped applications are using the default SocksPort
-    When I monitor the traffic of Gobby
+    When I monitor the network connections of Gobby
     And I run "torify /usr/bin/gobby-0.5" in GNOME Terminal
     And I connect Gobby to "gobby.debian.org"
     Then I see that Gobby is properly stream isolated
 
   @check_tor_leaks
   Scenario: Explicitly torsocks-wrapped applications are using the default SocksPort
-    When I monitor the traffic of Gobby
+    When I monitor the network connections of Gobby
     And I run "torsocks /usr/bin/gobby-0.5" in GNOME Terminal
     And I connect Gobby to "gobby.debian.org"
     Then I see that Gobby is properly stream isolated
