@@ -158,7 +158,7 @@ Then /^the firewall is configured to block all IPv6 traffic$/ do
   end
 end
 
-Then /^untorified network connections to (\S+) fails$/ do |host|
+Then /^untorified network connections to (\S+) fail$/ do |host|
   next if @skip_steps_while_restoring_background
   expected_stderr = "curl: (7) couldn't connect to host"
   cmd = "unset SOCKS_SERVER ; unset SOCKS5_SERVER ; " \

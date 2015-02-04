@@ -17,8 +17,8 @@ Feature: Tor is configured properly
 
   @check_tor_leaks
   Scenario: The Tor enforcement is effective at blocking untorified connection attempts
-    Then untorified network connections to monip.org fails
-    And untorified network connections to 1.2.3.4 fails
+    Then untorified network connections to monip.org fail
+    And untorified network connections to 1.2.3.4 fail
 
   @check_tor_leaks
   Scenario: tails-security-check is using the Tails-specific SocksPort
