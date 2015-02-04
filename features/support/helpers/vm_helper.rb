@@ -320,7 +320,7 @@ EOF
       domain_xml.elements['domain/os'].add_element(REXML::Document.new(
         '<loader>/usr/share/ovmf/OVMF.fd</loader>'
       ))
-      update_domain(domain_xml.to_s)
+      update(domain_xml.to_s)
     else
       raise "unsupported OS loader type"
     end
