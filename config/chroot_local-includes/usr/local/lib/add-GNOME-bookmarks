@@ -1,9 +1,28 @@
 #!/bin/sh
 
-DIRECTORIES="${HOME}/Downloads ${HOME}/Persistent"
+set -eu
 
-for directory in $DIRECTORIES ; do
-   if mountpoint -q "$directory" 2>/dev/null ; then
-       echo "file://$directory" >> "${HOME}/.gtk-bookmarks"
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
+
+add_gtk_bookmark_for() {
+   local target
+   target=$(echo "$1" | sed 's, ,%20,g')
+
+   if [ $# -ge 2 ]; then
+      title="$2"
+      echo "file://$target $title" >> "${HOME}/.gtk-bookmarks"
+   else
+       echo "file://$target" >> "${HOME}/.gtk-bookmarks"
    fi
-done
+}
+
+add_gtk_bookmark_for "${HOME}/Tor Browser files"
+
+if persistence_is_enabled_for "${HOME}/Persistent" ; then
+    add_gtk_bookmark_for "${HOME}/Persistent"
+
+    if persistence_is_enabled_read_write ; then
+	add_gtk_bookmark_for "${HOME}/Persistent/Tor Browser files" \
+                             "Tor Browser files (persistent)"
+    fi
+fi

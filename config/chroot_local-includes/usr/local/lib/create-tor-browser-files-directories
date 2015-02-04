@@ -5,7 +5,11 @@ set -eu
 TOR_BROWSER_AMNESIAC_DIR='/home/amnesia/Tor Browser files'
 TOR_BROWSER_PERSISTENT_DIR='/home/amnesia/Persistent/Tor Browser files'
 
-install -d -o amnesia -g amnesia "$TOR_BROWSER_AMNESIAC_DIR"
-if mountpoint -q /home/amnesia/Persistent 2>/dev/null; then
-    install -g -o amnesia -g amnesia "$TOR_BROWSER_PERSISTENT_DIR"
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
+
+install -d -o amnesia -g amnesia -m 0700 "$TOR_BROWSER_AMNESIAC_DIR"
+
+if persistence_is_enabled_for "${HOME}/Persistent" && \
+       persistence_is_enabled_read_write ; then
+    install -g -o amnesia -g amnesia -m 0700 "$TOR_BROWSER_PERSISTENT_DIR"
 fi
