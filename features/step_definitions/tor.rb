@@ -246,7 +246,7 @@ end
 
 And /^I re-run tails-security-check$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute_successfully("LANG=en_US.UTF-8 /usr/local/bin/tails-security-check", $live_user)
+  @vm.execute_successfully("/usr/local/bin/tails-security-check", $live_user)
 end
 
 And /^I re-run htpdate$/ do
