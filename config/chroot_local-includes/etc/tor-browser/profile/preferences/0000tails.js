@@ -59,6 +59,8 @@ pref("noscript.forbidPlugins", true);
 pref("noscript.untrusted", "google-analytics.com");
 
 // Other non-Torbutton, Tails-specific prefs
+pref("browser.download.dir", "/home/amnesia/Tor Browser files");
+pref("browser.download.folderList", 2);
 pref("browser.download.manager.closeWhenDone", true);
 pref("extensions.update.enabled", false);
 pref("layout.spellcheckDefault", 0);
