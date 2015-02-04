@@ -64,11 +64,12 @@ BeforeFeature('@product') do |feature|
   $background_snapshot = "#{$tmp_dir}/#{base}_background.state"
   $virt = Libvirt::open("qemu:///system")
   $vmnet = VMNet.new($virt, $vm_xml_path)
+  $vmstorage = VMStorage.new($virt, $vm_xml_path)
 end
 
 AfterFeature('@product') do
   delete_snapshot($background_snapshot) if !$keep_snapshots
-  VM.storage.clear_volumes if VM.storage
+  $vmstorage.clear_pool
   $vmnet.destroy
   $virt.close
 end
@@ -126,7 +127,7 @@ After('@product') do |scenario|
 end
 
 After('@product', '~@keep_volumes') do
-  VM.storage.clear_volumes
+  $vmstorage.clear_volumes
 end
 
 Before('@product', '@check_tor_leaks') do |scenario|
@@ -171,5 +172,4 @@ end
 
 at_exit do
   delete_all_snapshots if !$keep_snapshots
-  VM.storage.clear_pool if VM.storage
 end

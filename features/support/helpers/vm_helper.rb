@@ -46,26 +46,13 @@ end
 
 class VM
 
-  # These class attributes will be lazily initialized during the first
-  # instantiation:
-  # This is a storage helper that deals with volume manipulation. The
-  # storage it deals with persists across VMs, by necessity.
-  @@storage = nil
+  attr_reader :domain, :display, :ip, :mac, :vmnet, :storage
 
-  def VM.storage
-    return @@storage
-  end
-
-  def storage
-    return @@storage
-  end
-
-  attr_reader :domain, :display, :ip, :vmnet
-
-  def initialize(virt, xml_path, vmnet, x_display)
+  def initialize(virt, xml_path, vmnet, storage, x_display)
     @virt = virt
     @xml_path = xml_path
     @vmnet = vmnet
+    @storage = storage
     default_domain_xml = File.read("#{@xml_path}/default.xml")
     update(default_domain_xml)
 
@@ -76,10 +63,6 @@ class VM
     @display = Display.new(@domain_name, x_display)
     set_cdrom_boot($tails_iso)
     plug_network
-    # unlike the domain and net the storage pool should survive VM
-    # teardown (so a new instance can use e.g. a previously created
-    # USB drive), so we only create a new one if there is none.
-    @@storage ||= VMStorage.new(@virt, xml_path)
   rescue Exception => e
     clean_up
     raise e
@@ -196,8 +179,8 @@ class VM
     assert letter <= 'z'
 
     xml = REXML::Document.new(File.read("#{@xml_path}/disk.xml"))
-    xml.elements['disk/source'].attributes['file'] = @@storage.disk_path(name)
-    xml.elements['disk/driver'].attributes['type'] = @@storage.disk_format(name)
+    xml.elements['disk/source'].attributes['file'] = @storage.disk_path(name)
+    xml.elements['disk/driver'].attributes['type'] = @storage.disk_format(name)
     xml.elements['disk/target'].attributes['dev'] = dev
     xml.elements['disk/target'].attributes['bus'] = type
     if type == "usb"
@@ -217,7 +200,7 @@ class VM
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       begin
-        if e.elements['source'].attribute('file').to_s == @@storage.disk_path(name)
+        if e.elements['source'].attribute('file').to_s == @storage.disk_path(name)
           return e.to_s
         end
       rescue
