@@ -20,6 +20,10 @@ mac_spoof_is_enabled() {
     [ "$(_get_tg_setting "${PHYSICAL_SECURITY_SETTINGS}" TAILS_MACSPOOF_ENABLED)" != false ]
 }
 
+windows_camouflage_is_enabled() {
+    [ -e /var/lib/gdm3/tails.camouflage ]
+}
+
 tails_netconf() {
     _get_tg_setting "${PHYSICAL_SECURITY_SETTINGS}" TAILS_NETCONF
 }

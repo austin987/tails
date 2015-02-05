@@ -140,12 +140,12 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Check that the firewall-level Tor enforcement is effective:
   - check output of `iptables -L -n -v`
   - check output of `iptables -t nat -L -n -v`
-  - try connecting to the Internet after unsetting `$http_proxy` and
-    `$HTTP_PROXY` using a piece of software that does not obey the
+  - try connecting to the Internet after unsetting `$SOCKS_SERVER` and
+    `$SOCKS5_SERVER` using a piece of software that does not obey the
     GNOME proxy settings, *and* is not explicitly torified in Tails:
     
-        	unset http_proxy ; unset HTTP_PROXY
-        	wget --no-proxy http://monip.org/
+        	unset SOCKS_SERVER ; unset SOCKS5_SERVER
+        	curl --noproxy '*' http://monip.org/
     
     ... should only give you "Connection refused" error message.
 * Check that IPv6 traffic is blocked:
@@ -268,14 +268,6 @@ the appropriate tcpdump or tshark filters.
 
 * Make sure other applications use the default system-wide
   `SocksPort`:
-  - Polipo — run:
-
-        wget https://tails.boum.org/
-
-    ... with the following command running in another terminal:
-
-        sudo watch -n 0.1 'netstat -taupen | grep polipo'
-
   - Gobby 0.5 — start Gobby 0.5 from the *Applications* menu and
     connect to a server (for example `gobby.debian.org`), with the following command running in
     another terminal:
@@ -546,21 +538,6 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 * The Tor Browser should use a Internet Explorer theme
 * The Unsafe Browser has no scary red theme
 
-# Unsafe Web Browser
-
-(automate: [[!tails_ticket 7823]])
-
-* On start, if no DNS server was configured in NetworkManager
-  (e.g. if there's no network connection), there must be an error.
-* Once started, check that:
-  - the Tor Browser instance runs as the `clearnet` user.
-  - it has no proxy configured.
-  - no extensions are installed.
-  - there are no bookmarks except the default Firefox ones.
-* On exit, check that:
-  - make sure that its chroot gets properly teared down on exit (there
-    should be nothing mounted inside `/var/lib/unsafe-browser`).
-
 # Real (non-VM) hardware
 
 `[can't-automate]`
@@ -574,6 +551,11 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 
 # Documentation
 
+* The "Tails documentation" desktop launcher should open the
+  [[getting started]] page (automate: [[!tails_ticket 8788]]):
+  - in English
+  - in one language to which the website is translated
+  - in one language to which the website is not translated (=> English)
 * Browse around in the documentation shipped in the image. Internal
   links should be fine.
 
