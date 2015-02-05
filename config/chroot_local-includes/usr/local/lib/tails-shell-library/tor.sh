@@ -34,8 +34,12 @@ tor_control_setconf() {
 }
 
 tor_bootstrap_progress() {
-	grep -o "\[notice\] Bootstrapped [[:digit:]]\+%:" ${TOR_LOG} | \
-	    tail -n1 | sed "s|\[notice\] Bootstrapped \([[:digit:]]\+\)%:|\1|"
+	RES=$(grep -o "\[notice\] Bootstrapped [[:digit:]]\+%:" ${TOR_LOG} | \
+	    tail -n1 | sed "s|\[notice\] Bootstrapped \([[:digit:]]\+\)%:|\1|")
+	if [ -z "$RES" ] ; then
+		RES=0
+	fi
+	echo -n "$RES"
 }
 
 # Potential Tor bug: it seems like using this version makes Tor get
