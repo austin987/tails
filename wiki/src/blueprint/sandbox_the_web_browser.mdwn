@@ -12,18 +12,6 @@ Related pages
 Status
 ======
 
-## code
-
-* Create the persistent "Tor Browser files" when needed.
-* Adjust bookmarks creation:
-  * a GNOME bookmark pointing to `~/Tor Browser files/`,
-    that's *always* present
-  * a GNOME bookmark pointing to `~/Persistent/Tor Browser files`,
-    that's only added when `~/Persistent/` is persistent read-write
-* Adjust AppArmor profiles to support the new directory names.
-* Configure Tor Browser to download to / upload from `~/Tor Browser
-  files/` by default.
-
 ## documentation
 
 * Document where users can download files, e.g.
@@ -43,6 +31,7 @@ Status
 * relevant bits of feature/usb_install
   - view persistent bookmarks, in read-only persistence mode ([[!tails_ticket 8787]])
   - persistent bookmarks, RW
+* "Tails documentation" link on the Desktop ([[!tails_ticket 8788]])
 
 ## manual test OK
 
@@ -56,30 +45,39 @@ Status
 
 ## manual test OK, maybe needs automated test
 
-* YouTube audio and video playback
-* non-YouTube HTML5 video playback
-* "Tails documentation" link on the Desktop ([[!tails_ticket 8788]])
-* download to persistent `~/Downloads`, in read-write persistence mode
-* read from persistent `~/Downloads`, in read-write persistence mode
-* download to persistent `~/Downloads`, in read-only persistence mode
-* read from persistent `~/Downloads`, in read-only persistence mode
-* default download directory is `~/Downloads`
-* download to non-persistent `~/Downloads`
-* read from non-persistent `~/Downloads`
+* HTML5 video and audio playback
+* WebM video and audio playback
 
 ## known issues
 
-None currently.
+Currently none.
 
 ## needs testing
 
-* default upload directory is `~/Downloads`
+* download to persistent `~/Persistent/Tor Browser`, in
+  read-write persistence mode
+* read from persistent `~/Persistent/Tor Browser`, in read-write
+  persistence mode
+* download to persistent `~/Persistent/Tor Browser`, in
+  read-only persistence mode
+* read from persistent `~/Persistent/Tor Browser`, in read-only
+  persistence mode
+* default download directory is `~/Tor Browser`
+* download to amnesiac `~/Tor Browser`
+* read from amnesiac `~/Tor Browser`
+* default upload directory is `~/Tor Browser/`
+* `~/Tor Browser/` must always exist
+* there must always be a GTK bookmark to `~/Tor Browser/`
+* when `~/Persistent/` is persistent read-write, then
+  `~/Persistent/Tor Browser` must exist and there must be
+  a GNOME bookmark pointing to it
 * import OpenPGP key from website:
   - clicking on the "Tails signing key" link in Tails 1.2.3 leads in
     a dialog whose default is "Open with Import Key"
   - this is provided by `seahorse-pgp-keys.desktop`, that execs
     `seahorse-tool --import`
 * install a Firefox add-on (this does not mean we actively support that, right? :)
+* printing
 
 <a id="ux"></a>
 
@@ -142,8 +140,10 @@ it is the case now.
 
 So we give Tor Browser access to:
 
-* `~/Tor Browser files` (amnesiac)
-* `~/Persistent/Tor Browser files`
+* `~/Tor Browser` (that would be amnesiac, as everything else in
+  Tails by default)
+* `~/Persistent/Tor Browser` (that would be persistent, and only
+  created when `~/Persistent/` is made persistent)
 
 Note that we don't call them "Downloads", because e.g. if someone
 writes an ODT text and wants to upload it, having to move it to
@@ -157,7 +157,7 @@ Remaining questions:
    files/`, `~/I2P Browser files/` and `~/Unsafe Brower files/` (the
    latter may make sense now that we plan to move the LAN browsing
    support into the Unsafe Browser) — and equivalently,
-   `~/Persistent/Tor Browser files/`, etc.? or rather a single
+   `~/Persistent/Tor Browser/`, etc.? or rather a single
    shared namespace, with e.g. `~/Browser files/Tor Browser`,
    `~/Browser files/I2P Browser`, etc.?
    
