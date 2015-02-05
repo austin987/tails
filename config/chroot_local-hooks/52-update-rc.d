@@ -24,7 +24,6 @@ laptop-mode
 memlockd
 network-manager
 plymouth
-polipo
 pulseaudio
 resolvconf
 saned

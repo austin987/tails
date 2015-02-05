@@ -15,11 +15,8 @@ end
 When /^I update APT using apt-get$/ do
   next if @skip_steps_while_restoring_background
   Timeout::timeout(30*60) do
-    cmd = @vm.execute("echo #{@sudo_password} | " +
-                      "sudo -S apt-get update", LIVE_USER)
-    if !cmd.success?
-      STDERR.puts cmd.stderr
-    end
+    @vm.execute_successfully("echo #{@sudo_password} | " +
+                             "sudo -S apt-get update", LIVE_USER)
   end
 end
 
@@ -27,11 +24,8 @@ Then /^I should be able to install a package using apt-get$/ do
   next if @skip_steps_while_restoring_background
   package = "cowsay"
   Timeout::timeout(120) do
-    cmd = @vm.execute("echo #{@sudo_password} | " +
-                      "sudo -S apt-get install #{package}", LIVE_USER)
-    if !cmd.success?
-      STDERR.puts cmd.stderr
-    end
+    @vm.execute_successfully("echo #{@sudo_password} | " +
+                             "sudo -S apt-get install #{package}", LIVE_USER)
   end
   step "package \"#{package}\" is installed"
 end
