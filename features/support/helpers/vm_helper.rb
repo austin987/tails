@@ -3,7 +3,7 @@ require 'rexml/document'
 
 class VMNet
 
-  attr_reader :net_name, :net, :bridge_name
+  attr_reader :net_name, :net, :ip, :mac, :bridge_name
 
   def initialize(virt, xml_path)
     @virt = virt
@@ -29,6 +29,8 @@ class VMNet
     clean_up
     @net = @virt.define_network_xml(xml)
     @net.create
+    @ip  = net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
+    @mac = net_xml.elements['network/ip/dhcp/host/'].attributes['mac']
     @bridge_name = @net.bridge_name
   end
 
@@ -55,11 +57,6 @@ class VM
     @storage = storage
     default_domain_xml = File.read("#{@xml_path}/default.xml")
     update(default_domain_xml)
-
-    net_xml = REXML::Document.new(@vmnet.net.xml_desc)
-    @ip  = net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
-    @mac = net_xml.elements['network/ip/dhcp/host/'].attributes['mac']
-
     @display = Display.new(@domain_name, x_display)
     set_cdrom_boot($tails_iso)
     plug_network
