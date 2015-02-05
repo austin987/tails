@@ -5,6 +5,7 @@ set -e
 echo "Installing AppArmor profile for Tor Browser"
 
 PATCH='/usr/share/tails/torbrowser-AppArmor-profile.patch'
+PROFILE='/etc/apparmor.d/torbrowser'
 
 ### Functions
 
@@ -33,7 +34,7 @@ install_torbrowser_AppArmor_profile() {
       apt-get source torbrowser-launcher/testing
       install -m 0644 \
 	      torbrowser-launcher-*/apparmor/torbrowser.Browser.firefox \
-	      /etc/apparmor.d/torbrowser
+	      "$PROFILE"
    )
    rm -r "$tmpdir"
 }
@@ -43,5 +44,5 @@ install_torbrowser_AppArmor_profile() {
 toggle_src_APT_sources on
 install_torbrowser_AppArmor_profile
 toggle_src_APT_sources off
-patch --forward --batch /etc/apparmor.d/torbrowser < "$PATCH"
+patch --forward --batch "$PROFILE" < "$PATCH"
 rm "$PATCH"
