@@ -7,7 +7,7 @@ Feature: Untrusted partitions
   Scenario: Tails can boot from live systems stored on hard drives
     Given a computer
     And I create a 2 GiB disk named "live_hd"
-    And I cat an ISO hybrid of the Tails image to disk "live_hd"
+    And I cat an ISO of the Tails image to disk "live_hd"
     And the computer is set to boot from ide drive "live_hd"
     And I set Tails to boot with options "live-media="
     And I start Tails from DVD with network unplugged and I login
