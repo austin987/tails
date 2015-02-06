@@ -17,7 +17,7 @@ end
 Given /^I cat an ISO of the Tails image to disk "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   disk_path = @vm.storage.disk_path(name)
-  cmd_helper("dd if='#{tails_iso}' of='#{disk_path}' conv=notrunc")
+  cmd_helper("dd if='#{tails_iso}' of='#{disk_path}' conv=notrunc bs=16M")
 end
 
 Then /^drive "([^"]+)" is not mounted$/ do |name|
