@@ -1,77 +1,82 @@
 require 'libvirt'
 require 'rexml/document'
 
-class VM
+class VMNet
 
-  # These class attributes will be lazily initialized during the first
-  # instantiation:
-  # This is the libvirt connection, of which we only want one and
-  # which can persist for different VM instances (even in parallel)
-  @@virt = nil
-  # This is a storage helper that deals with volume manipulation. The
-  # storage it deals with persists across VMs, by necessity.
-  @@storage = nil
+  attr_reader :net_name, :net, :ip, :mac, :bridge_name
 
-  def VM.storage
-    return @@storage
-  end
-
-  def storage
-    return @@storage
-  end
-
-  attr_reader :domain, :display, :ip, :net
-
-  def initialize(xml_path, x_display)
-    @@virt ||= Libvirt::open("qemu:///system")
-    @xml_path = xml_path
-    default_domain_xml = File.read("#{@xml_path}/default.xml")
-    update_domain(default_domain_xml)
-    default_net_xml = File.read("#{@xml_path}/default_net.xml")
-    update_net(default_net_xml)
-    @display = Display.new(@domain_name, x_display)
-    set_cdrom_boot(TAILS_ISO)
-    plug_network
-    # unlike the domain and net the storage pool should survive VM
-    # teardown (so a new instance can use e.g. a previously created
-    # USB drive), so we only create a new one if there is none.
-    @@storage ||= VMStorage.new(@@virt, xml_path)
+  def initialize(virt, xml_path)
+    @virt = virt
+    net_xml = File.read("#{xml_path}/default_net.xml")
+    update(net_xml)
   rescue Exception => e
-    clean_up_net
-    clean_up_domain
+    clean_up
     raise e
   end
 
-  def update_domain(xml)
-    domain_xml = REXML::Document.new(xml)
-    @domain_name = domain_xml.elements['domain/name'].text
-    clean_up_domain
-    @domain = @@virt.define_domain_xml(xml)
-  end
-
-  def update_net(xml)
-    net_xml = REXML::Document.new(xml)
-    @net_name = net_xml.elements['network/name'].text
-    @ip  = net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
-    clean_up_net
-    @net = @@virt.define_network_xml(xml)
-    @net.create
-  end
-
-  def clean_up_domain
+  def clean_up
     begin
-      domain = @@virt.lookup_domain_by_name(@domain_name)
-      domain.destroy if domain.active?
-      domain.undefine
+      net = @virt.lookup_network_by_name(@net_name)
+      net.destroy if net.active?
+      net.undefine
     rescue
     end
   end
 
-  def clean_up_net
+  def update(xml)
+    net_xml = REXML::Document.new(xml)
+    @net_name = net_xml.elements['network/name'].text
+    clean_up
+    @net = @virt.define_network_xml(xml)
+    @net.create
+    @ip  = net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
+    @mac = net_xml.elements['network/ip/dhcp/host/'].attributes['mac']
+    @bridge_name = @net.bridge_name
+  end
+
+  def destroy
+    @net.destroy if net.active?
+    @net.undefine
+  end
+
+  def bridge_mac
+    File.open("/sys/class/net/#{@bridge_name}/address", "rb").read.chomp
+  end
+
+end
+
+
+class VM
+
+  attr_reader :domain, :display, :ip, :mac, :vmnet, :storage
+
+  def initialize(virt, xml_path, vmnet, storage, x_display)
+    @virt = virt
+    @xml_path = xml_path
+    @vmnet = vmnet
+    @storage = storage
+    default_domain_xml = File.read("#{@xml_path}/default.xml")
+    update(default_domain_xml)
+    @display = Display.new(@domain_name, x_display)
+    set_cdrom_boot(TAILS_ISO)
+    plug_network
+  rescue Exception => e
+    clean_up
+    raise e
+  end
+
+  def update(xml)
+    domain_xml = REXML::Document.new(xml)
+    @domain_name = domain_xml.elements['domain/name'].text
+    clean_up
+    @domain = @virt.define_domain_xml(xml)
+  end
+
+  def clean_up
     begin
-      net = @@virt.lookup_network_by_name(@net_name)
-      net.destroy if net.active?
-      net.undefine
+      domain = @virt.lookup_domain_by_name(@domain_name)
+      domain.destroy if domain.active?
+      domain.undefine
     rescue
     end
   end
@@ -82,7 +87,7 @@ class VM
     if is_running?
       @domain.update_device(domain_xml.elements['domain/devices/interface'].to_s)
     else
-      update_domain(domain_xml.to_s)
+      update(domain_xml.to_s)
     end
   end
 
@@ -102,7 +107,7 @@ class VM
         if is_running?
           @domain.update_device(e.to_s)
         else
-          update_domain(domain_xml.to_s)
+          update(domain_xml.to_s)
         end
       end
     end
@@ -122,7 +127,7 @@ class VM
     end
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/os/boot'].attributes['dev'] = dev
-    update_domain(domain_xml.to_s)
+    update(domain_xml.to_s)
   end
 
   def set_cdrom_image(image)
@@ -136,7 +141,7 @@ class VM
         if is_running?
           @domain.update_device(e.to_s, Libvirt::Domain::DEVICE_MODIFY_FORCE)
         else
-          update_domain(domain_xml.to_s)
+          update(domain_xml.to_s)
         end
       end
     end
@@ -171,8 +176,8 @@ class VM
     assert letter <= 'z'
 
     xml = REXML::Document.new(File.read("#{@xml_path}/disk.xml"))
-    xml.elements['disk/source'].attributes['file'] = @@storage.disk_path(name)
-    xml.elements['disk/driver'].attributes['type'] = @@storage.disk_format(name)
+    xml.elements['disk/source'].attributes['file'] = @storage.disk_path(name)
+    xml.elements['disk/driver'].attributes['type'] = @storage.disk_format(name)
     xml.elements['disk/target'].attributes['dev'] = dev
     xml.elements['disk/target'].attributes['bus'] = type
     if type == "usb"
@@ -184,7 +189,7 @@ class VM
     else
       domain_xml = REXML::Document.new(@domain.xml_desc)
       domain_xml.elements['domain/devices'].add_element(xml)
-      update_domain(domain_xml.to_s)
+      update(domain_xml.to_s)
     end
   end
 
@@ -192,7 +197,7 @@ class VM
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       begin
-        if e.elements['source'].attribute('file').to_s == @@storage.disk_path(name)
+        if e.elements['source'].attribute('file').to_s == @storage.disk_path(name)
           return e.to_s
         end
       rescue
@@ -238,7 +243,7 @@ class VM
     xml.elements['filesystem/target'].attributes['dir'] = tag
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/devices'].add_element(xml)
-    update_domain(domain_xml.to_s)
+    update(domain_xml.to_s)
   end
 
   def list_shares
@@ -257,7 +262,7 @@ class VM
     domain_xml.elements['domain/memory'].attributes['unit'] = unit
     domain_xml.elements['domain/currentMemory'].text = size
     domain_xml.elements['domain/currentMemory'].attributes['unit'] = unit
-    update_domain(domain_xml.to_s)
+    update(domain_xml.to_s)
   end
 
   def get_ram_size_in_bytes
@@ -271,21 +276,21 @@ class VM
     raise "System architecture can only be set to inactice vms" if is_running?
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/os/type'].attributes['arch'] = arch
-    update_domain(domain_xml.to_s)
+    update(domain_xml.to_s)
   end
 
   def add_hypervisor_feature(feature)
     raise "Hypervisor features can only be added to inactice vms" if is_running?
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/features'].add_element(feature)
-    update_domain(domain_xml.to_s)
+    update(domain_xml.to_s)
   end
 
   def drop_hypervisor_feature(feature)
     raise "Hypervisor features can only be fropped from inactice vms" if is_running?
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/features'].delete_element(feature)
-    update_domain(domain_xml.to_s)
+    update(domain_xml.to_s)
   end
 
   def disable_pae_workaround
@@ -300,7 +305,7 @@ class VM
 EOF
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain'].add_element(REXML::Document.new(xml))
-    update_domain(domain_xml.to_s)
+    update(domain_xml.to_s)
   end
 
   def set_os_loader(type)
@@ -312,7 +317,7 @@ EOF
       domain_xml.elements['domain/os'].add_element(REXML::Document.new(
         '<loader>/usr/share/ovmf/OVMF.fd</loader>'
       ))
-      update_domain(domain_xml.to_s)
+      update(domain_xml.to_s)
     else
       raise "unsupported OS loader type"
     end
@@ -381,9 +386,9 @@ EOF
 
   def restore_snapshot(path)
     # Clean up current domain so its snapshot can be restored
-    clean_up_domain
-    Libvirt::Domain::restore(@@virt, path)
-    @domain = @@virt.lookup_domain_by_name(@domain_name)
+    clean_up
+    Libvirt::Domain::restore(@virt, path)
+    @domain = @virt.lookup_domain_by_name(@domain_name)
     @display.start
   end
 
@@ -405,8 +410,7 @@ EOF
   end
 
   def destroy
-    clean_up_domain
-    clean_up_net
+    clean_up
     power_off
   end
 

@@ -62,11 +62,16 @@ BeforeFeature('@product') do |feature|
   puts "Testing ISO image: #{File.basename(TAILS_ISO)}"
   base = File.basename(feature.file, ".feature").to_s
   $background_snapshot = "#{$config["TMP_DIR"]}/#{base}_background.state"
+  $virt = Libvirt::open("qemu:///system")
+  $vmnet = VMNet.new($virt, VM_XML_PATH)
+  $vmstorage = VMStorage.new($virt, VM_XML_PATH)
 end
 
 AfterFeature('@product') do
   delete_snapshot($background_snapshot) if !KEEP_SNAPSHOTS
-  VM.storage.clear_volumes if VM.storage
+  $vmstorage.clear_pool
+  $vmnet.destroy
+  $virt.close
 end
 
 BeforeFeature('@product', '@old_iso') do
@@ -122,7 +127,22 @@ After('@product') do |scenario|
 end
 
 After('@product', '~@keep_volumes') do
-  VM.storage.clear_volumes
+  $vmstorage.clear_volumes
+end
+
+Before('@product', '@check_tor_leaks') do |scenario|
+  feature_file_name = File.basename(scenario.feature.file, ".feature").to_s
+  @tor_leaks_sniffer = Sniffer.new(feature_file_name + "_sniffer", $vmnet)
+  @tor_leaks_sniffer.capture
+end
+
+After('@product', '@check_tor_leaks') do |scenario|
+  @tor_leaks_sniffer.stop
+  if (scenario.status == :passed)
+    leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file, get_tor_relays)
+    leaks.assert_no_leaks
+  end
+  @tor_leaks_sniffer.clear
 end
 
 # For @source tests
@@ -152,5 +172,4 @@ end
 
 at_exit do
   delete_all_snapshots if !KEEP_SNAPSHOTS
-  VM.storage.clear_pool if VM.storage
 end

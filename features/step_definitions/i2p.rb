@@ -50,8 +50,10 @@ Then /^the I2P firewall rules are (enabled|disabled)$/ do |mode|
   accept_rules_count = accept_rules.lines.count
   if mode == 'enabled'
     assert_equal(13, accept_rules_count)
+    step 'the IPv4 firewall configuration only allows the clearnet, i2psvc and debian-tor users to connect directly to the Internet'
   elsif mode == 'disabled'
     assert_equal(0, accept_rules_count)
+    step 'the IPv4 firewall configuration only allows the clearnet and debian-tor users to connect directly to the Internet'
   else
     raise "Unsupported mode passed: '#{mode}'"
   end

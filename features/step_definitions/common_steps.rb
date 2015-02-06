@@ -63,7 +63,7 @@ end
 
 Given /^a computer$/ do
   @vm.destroy if @vm
-  @vm = VM.new(VM_XML_PATH, DISPLAY)
+  @vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
 Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
@@ -115,7 +115,7 @@ Given /^I capture all network traffic$/ do
   # Note: We don't want skip this particular stpe if
   # @skip_steps_while_restoring_background is set since it starts
   # something external to the VM state.
-  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name)
+  @sniffer = Sniffer.new("sniffer", $vmnet)
   @sniffer.capture
 end
 
@@ -398,28 +398,7 @@ end
 Then /^all Internet traffic has only flowed through Tor$/ do
   next if @skip_steps_while_restoring_background
   leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_tor_relays)
-  if !leaks.empty?
-    if !leaks.ipv4_tcp_leaks.empty?
-      puts "The following IPv4 TCP non-Tor Internet hosts were contacted:"
-      puts leaks.ipv4_tcp_leaks.join("\n")
-      puts
-    end
-    if !leaks.ipv4_nontcp_leaks.empty?
-      puts "The following IPv4 non-TCP Internet hosts were contacted:"
-      puts leaks.ipv4_nontcp_leaks.join("\n")
-      puts
-    end
-    if !leaks.ipv6_leaks.empty?
-      puts "The following IPv6 Internet hosts were contacted:"
-      puts leaks.ipv6_leaks.join("\n")
-      puts
-    end
-    if !leaks.nonip_leaks.empty?
-      puts "Some non-IP packets were sent\n"
-    end
-    save_pcap_file
-    raise "There were network leaks!"
-  end
+  leaks.assert_no_leaks
 end
 
 Given /^I enter the sudo password in the gksu prompt$/ do

@@ -7,7 +7,6 @@ Feature: Installing packages through APT
 
   Background:
     Given a computer
-    And I capture all network traffic
     And I start the computer
     And the computer boots Tails
     And I enable more Tails Greeter options
@@ -22,13 +21,13 @@ Feature: Installing packages through APT
   Scenario: APT sources are configured correctly
     Then the only hosts in APT sources are "ftp.us.debian.org,security.debian.org,backports.debian.org,deb.tails.boum.org,deb.torproject.org,mozilla.debian.net"
 
+  @check_tor_leaks
   Scenario: Install packages using apt-get
     When I update APT using apt-get
     Then I should be able to install a package using apt-get
-    And all Internet traffic has only flowed through Tor
 
+  @check_tor_leaks
   Scenario: Install packages using Synaptic
     When I start Synaptic
     And I update APT using Synaptic
     Then I should be able to install a package using Synaptic
-    And all Internet traffic has only flowed through Tor
