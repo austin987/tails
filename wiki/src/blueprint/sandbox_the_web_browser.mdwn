@@ -73,70 +73,11 @@ Status
 User experience matters
 =======================
 
-Downloading files
------------------
+Until the `feature/5525-sandbox-web-browser` branch is merged, see the
+"User experience matters" section on
+<https://git-tails.immerda.ch/tails/tree/wiki/src/contribute/design/application_isolation.mdwn?h=feature/5525-sandbox-web-browser>.
 
-No good way exists (yet) to let the user choose a specific file to
-upload, or download directory, each time they want to do that (this is
-work-in-progress in AppArmor upstream, with a mediation layer between
-applications, the GTK file chooser and the filesystem -- some day we
-can solve this problem in better ways, but we're not there yet).
-
-So, once we confine Tor Browser with AppArmor in Tails 1.3:
-
-* either we allow the Tor Browser to read and write everywhere in
-  the home and persistent directory: would entirely defeat the purpose
-  of confining it in the first place, so that's a no-no;
-* or, we allow the Tor Browser to read/write files from/to one
-  specific directory (e.g. `/home/amnesia/Downloads/`).
-
-I see no better solution than the latter, so the following assumes
-that we'll go with it. So, a first question is: what name should this
-directory have? (Wait, other constraints about this are exposed
-below).
-
-Now, let's say we have a downloads/uploads directory that's shared
-between the Tor Browser, the file browser, and all non-confined
-applications. We have a usability issue: the space available in that
-directory is limited by the free system memory (RAM). So in practice,
-if one starts downloading a large file in there, worst case the
-download will fail at some point during the download, best case the
-browser will tell the user that there's not enough space available
-there before they are allowed to confirm the destination directory for
-the download.
-
-[Side-note: I believe we have no simple mean to adjust the browser's
-behaviour in this area, at least not on the short term, so I've not
-checked how exactly it behaves right now — perhaps that would be
-a good research project on the long term, but on the other hand on the
-long term we'll have even better solutions showing up, as explained
-above, so IMO this shouldn't block confining the Tor Browser
-in Tails.]
-
-The obvious (and easiest to implement) solution to this would be to
-add a persistence setting for `~/Downloads/` (called "Browser
-Downloads", subtitled "Downloads from the Tor Browser", akin to the
-"Browser Bookmarks" we already have), and to add a GNOME bookmark
-called "Downloads" when the Downloads persistence feature is enabled.
-However, having downloads be either always amnesiac or always
-persistent (unless you restart or do stuff outside of the browser)
-seems like a regression, since it breaks one of the core Tails
-properties. And forcing it to be a persistent folder by default
-actually has security issues since secure deletion don't work as
-expected on flash memory. So, users should still have the option to
-download either to an amnesiac (by default) or persistent place, like
-it is the case now.
-
-So we give Tor Browser access to:
-
-* `~/Tor Browser` (that would be amnesiac, as everything else in
-  Tails by default)
-* `~/Persistent/Tor Browser` (that would be persistent, and only
-  created when `~/Persistent/` is made persistent)
-
-Note that we don't call them "Downloads", because e.g. if someone
-writes an ODT text and wants to upload it, having to move it to
-a folder called "Downloads" sounds really weird.
+Later, see [[contribute/design/application_isolation#ux]].
 
 Remaining questions:
 
