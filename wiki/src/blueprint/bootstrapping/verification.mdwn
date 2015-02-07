@@ -1,15 +1,65 @@
 [[!meta title="ISO verification"]]
 
+Vision
+======
 
+We have always pushed our users to verify our ISO images. But so far
+this has been a complicated tasks, as it mainly relies on OpenPGP. But
+we cannot ask newcomers to know OpenPGP before they get an ISO image
+they can trust. So we want to automated this verification as much as
+possible, while leaving the room for expert users to do more extensive
+verification if they want to.
 
+Over 2015, we will be working on a [[browser extension|extension]] to
+integrate ISO verification in the download process.
 
+In this blueprint, we propose to go even further and imagine what we
+could do next. We initially considered two scenarios:
 
   - Pushing more verification logic into the browser extension.
+  - Pushing some verification logic into Tails Installer. This goes
+    along with having a multiplatform installer, which would be a huge
+    UX improvement of its own.
+  - Automating inside Tails the download and verification of ISO images
+    for full upgrades.
+
+We're currently considering more seriously the option of pushing more
+verification logic into Tails Installer. It could then:
+
+  - Automate OpenPGP verification. That would be easy to achieve on
+    Linux and would need more research for other platforms. Note that
+    having a super secure verification process on Windows might not be
+    relevant.
+  - Do download correlation of our signing key, and check it against the
+    Debian keyring on Debian and derivatives.
+  - Allow people to burn DVDs from Tails Installer as well. If Tails
+    Installer becomes the recommended tool for verifying Tails, people
+    should be able to burn DVDs from it.
+  - Allow expert users to build more trust in our signing key through
+    the OpenPGP WoT.
+
+The advantages of going this way instead of pushing more verification
+logic into the browser extension are that:
+
+  - More people will be able to work on such code.
+  - We will no rely on browsers for serious cryptography.
+  - We will have less restrictions than inside browser extensions.
+
+The cons:
+
+  - The verification using OpenPGP might be harder to port to Windows
+    and OS X. But we are ready to provide lower standards of
+    verification for them.
+  - How would people verify Tails Installer on Windows and OS X? Maybe
+    the browser extension could do that by then.
+  - The browser extension will loose some of its relevance. It will
+    still be useful until we get there, and maybe to verify Tails
+    Installer.
 
 <a id="seahorse"></a>
 
 About the removal of Seahorse Nautilus
---------------------------------------
+======================================
 
 As of now, we are explaining how to [[verify ISO images using
 `seahorse-nautilus` for GNOME|doc/get/verify_the_iso_image_using_gnome]].
