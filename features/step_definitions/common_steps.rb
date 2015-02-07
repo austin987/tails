@@ -833,6 +833,13 @@ Then /^there is a GNOME bookmark for the (amnesiac|persistent) Tor Browser direc
   @screen.type(Sikuli::Key.ESC)
 end
 
+Then /^there is no GNOME bookmark for the persistent Tor Browser directory$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click('GnomePlaces.png', 10)
+  @screen.wait("GnomePlacesWithoutTorBrowserPersistent.png", 40)
+  @screen.type(Sikuli::Key.ESC)
+end
+
 def pulseaudio_sink_inputs
   pa_info = @vm.execute_successfully('pacmd info', $live_user).stdout
   sink_inputs_line = pa_info.match(/^\d+ sink input\(s\) available\.$/)[0]
