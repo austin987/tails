@@ -247,14 +247,11 @@ portable and able to run in as many environments as possible.
 
 ### 2.4.1 Platform
 
-XXX: update
-
 The binaries MUST all be executable on the most common computer
-hardware architecture(s). As of 2011, the x86 computer architecture
+hardware architecture(s). As of 2014, the x86 computer architecture
 seems to be the obvious choice as the vast majority of personal
-computers in use is compatible with it. Supporting the PowerPC
-architecture is a welcome bonus in order to support pre-Intel Apple
-computers. Supporting widespread hardware architectures used in mobile
+computers in use is compatible with it. The PELD SHOULD support UEFI.
+Supporting widespread hardware architectures used in mobile
 computers, such as phones, is also welcome.
 
 ### 2.4.2 Media
@@ -675,7 +672,7 @@ Critical parts of the configuration are based on the ones from
 well-known and trusted sources, namely Tails ancestor
 [Incognito](http://www.browseanonymouslyanywhere.com/incognito/)
 and the [Tor BrowserBundle](https://www.torproject.org/projects/torbrowser.html.en).
-This is for example the case for the firewall, polipo and Tor configurations.
+This is for example the case for the firewall and Tor configurations.
 
 **NOTICE**: this distribution is provided as-is with no warranty of
 fitness for a particular purpose, including total anonymity. Anonymity
@@ -715,8 +712,6 @@ extension).
   that the Debian distribution does not provide or endorse Tails.
 - [Tor](http://www.torproject.org/): anonymizing overlay network for
   TCP. Our intention is to always use the latest stable version.
-- [polipo](http://www.pps.jussieu.fr/%7Ejch/software/polipo/):
-  Caching web proxy.
 - [Vidalia](https://www.torproject.org/projects/vidalia) is used
   to control Tor's behavior.
 
@@ -970,16 +965,6 @@ As for extensions we have the following differences:
   extension to protect against many tracking possibilities by removing
   most ads.
 
-* Tails also ships the
-  [FoxyProxy](https://addons.mozilla.org/fr/firefox/addon/2464/)
-  extension that:
-  - allows using I2P instead of Tor to visit eepsites (I2P's own
-    hidden services look-alike); see
-    [[the design document dedicated to Tails use of I2P|I2P]] for
-    details;
-  - could help
-    [[!tails_todo FTP_in_Iceweasel desc="fixing web browser FTP support"]].
-
 * Tails does not install the same Torbutton as in the TBB. We
   installed a patched version.
 
@@ -1011,6 +996,7 @@ the Internet:
 The remaining configuration differences can be found in:
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-browser/preferences/0000tails.js]]
+- [[!tails_gitweb config/chroot_local-hooks/12-install_browser_searchplugins]]
 - [[!tails_gitweb config/chroot_local-hooks/12-remove_unwanted_browser_searchplugins]]
 - [[!tails_gitweb config/chroot_local-hooks/13-override-tbb-branding]]
 - [[!tails_gitweb config/chroot_local-hooks/14-add_localized_browser_searchplugins]]
@@ -1018,8 +1004,9 @@ The remaining configuration differences can be found in:
 - [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
 
 It should also be noted that the global TBB installation is also used
-for the [[Unsafe Browser]], although with a separate, user-isolated
-profile with very different configuration.
+for the [[Unsafe Browser]] and [[I2P Browser]], although they are
+user-isolated and use separate profiles with very different
+configurations.
 
 ### 3.6.14 Claws Mail
 
@@ -1074,8 +1061,10 @@ the other HKP keyservers pools, and reachable over `hkps://`.
 [[!tails_todo Monkeysphere]]'s `hkpms://` support will be used as soon as
 possible in place of the hierarchical X.509 certification model.
 
-GnuPG is configured to prefer non-outdated digest algorithms such as
-SHA256, to force exclusion of the version string in ASCII armored
+GnuPG is configured accordingly to the [OpenPGP Best
+Practices](https://help.riseup.net/en/security/message-security/openpgp/best-practices),
+e.g. to prefer non-outdated digest algorithms from the
+SHA-2 family, to force exclusion of the version string in ASCII armored
 output, to avoid automatically locating and retrieving keys, and to
 disregard the preferred keyserver assigned to specific keys.
 
@@ -1211,6 +1200,27 @@ needed for:
 Tails has some minimal [[contribute/design/application_isolation]] to
 mitigate a bit the consequences of security issues in individual
 applications being exploited by attackers.
+
+### 3.6.26 wget
+
+We wrap `wget` with `torsocks`, after unsetting the `http_proxy`
+environment variable and friends, so that it talks directly to the Tor
+SOCKS port.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/wget]]
+
+### 3.6.27 APT
+
+During most of the ISO build process, APT uses the proxy configured
+through `live-build` (that is, usually a local `apt-cacher-ng`).
+
+However, at boot time, a hook does (a more elaborate version of)
+`s,http://,tor+http://` in APT sources. Then, APT will use the
+`tor+http` method, that is a simple torsocks wrapper for the good old
+`http` method.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/apt/methods/tor+http]]
+- [[!tails_gitweb config/chroot_local-includes/lib/live/config/1500-reconfigure-APT]]
 
 ## 3.7 Running Tails in virtual machines
 

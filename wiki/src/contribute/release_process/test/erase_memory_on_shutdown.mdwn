@@ -35,12 +35,10 @@ Pick one of those:
 # 2. Test that you can get the pattern after rebooting, if no memory wiping takes place
 
 * Make sure your preferred memory scrapper toolkit is ready.
-* Reboot from Tails using `SysRq + b`; if testing in a VM, you'd
-  better be careful not rebooting your host system and proceed like
-  this:
-  
-      echo 1 > /proc/sys/kernel/sysrq ; echo b > /proc/sysrq-trigger
-  
+* Kill fillram processes and reboot with `SysRq + 1` when free memory is under a threshold by running:
+
+       while [ $(free -m -o | grep Mem | sed -e 's/  */ /g' | cut -d ' ' -f 4) -ge 256 ] ; do sleep 0.1 ; done ; killall fillram ; echo 1 > /proc/sys/kernel/sysrq ; echo b > /proc/sysrq-trigger
+
 * Dump memory and try to find the known pattern in it, e.g.:
 
       grep -c wipe_didnt_work tails.dump
@@ -57,7 +55,7 @@ Pick one of those:
   command-line if your memory scrapper toolkit needs it).
 * Kill fillram processes and reboot Tails when free memory is under a threshold by running:
 
-       while [ $(free -m -o | grep Mem | sed -e 's/  */ /g' | cut -d ' ' -f 4) -ge 128 ] ; do sleep 0.1 ; done ; killall fillram ; reboot
+       while [ $(free -m -o | grep Mem | sed -e 's/  */ /g' | cut -d ' ' -f 4) -ge 256 ] ; do sleep 0.1 ; done ; killall fillram ; reboot
 
   This is especially important on 486 kernels. The threshold might be fine tuned.
 

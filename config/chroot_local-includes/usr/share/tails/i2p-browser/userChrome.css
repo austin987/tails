@@ -1,0 +1,92 @@
+/* Required, do not remove */
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* Hide access to the bookmarks to try to prevent "data loss" due to users
+ * adding bookmarks even though the profile is destroyed at browser close.
+ * Keyboard shortcuts still work, but this makes it harder to 'accidentally'
+ * lose bookmarks.
+ *
+ * Note that any of the selectors that start with 'app' apply to the menu that
+ * is used if the main menu is hidden. Any that start with 'wrapper' are
+ * buttons that are normally visible within the 'customize toolbar' option. The
+ * others are probably self-explanatory.
+ */
+
+/* Remove the History and Bookmarks menus and buttons */
+#appmenu_bookmarks,
+#appmenu_history,
+#bookmarks,
+#bookmarks-menu-button,
+#bookmarksMenu,
+#history,
+#history-menu,
+#history-menu-button,
+#wrapper-history-button,
+#wrapper-bookmarks-button,
+
+/* Hide the sidebar menu (underneath View) since the default sidebars consist
+ * of history and bookmarks.  Also disable the bookmark toolbar.
+ */
+#toggle_PersonalToolbar,
+#viewSidebarMenuMenu,
+
+/* Remove the "Star button" and "History Dropdown arrow" from the URL bar
+ * since neither history nor bookmarks are saved.
+ */
+#star-button,
+[anonid="historydropmarker"],
+
+/* Remove bookmark options from the context menus */
+#context-bookmarkframe,
+#context-bookmarklink,
+#context-bookmarkpage,
+
+/* Hide the option for emailing links since it's doomed to failure
+ * without a configured email client.
+ */
+menuitem[command="Browser:SendLink"],
+
+/* Hide Print options */
+/*
+#menu_printSetup,
+#menu_printPreview,
+#menu_print,
+#menu_print + menuseparator,
+[command="cmd_print"],
+*/
+
+/* Hide the sync functionality which won't work with I2P */
+#BrowserPreferences radio[pane="paneSync"],
+#sync-button,
+#sync-menu-button,
+#sync-setup,
+#sync-setup-appmenu,
+#sync-status-button,
+#sync-syncnowitem-appmenu,
+#wrapper-sync-button,
+
+/* Without I2P search engines defined, the search bar is useless.
+ *  Since there are no I2P search engines added to Tails (yet),
+ *  let's hide it and the Update Pane in Firefox's Preferences.
+ */
+#search-container,
+#updateTab,
+
+/* Hide options in the Help menu that lead to disallowed resources on the
+ * Internet.
+ */
+#appmenu_feedbackPage,
+#appmenu_gettingStarted,
+#appmenu_openHelp,
+#feedbackPage,
+#gettingStarted,
+#menu_HelpPopup_reportPhishingtoolmenu,
+#menu_openHelp,
+
+/* Hide TorBrowser Health Report and its configuration option */
+#appmenu_healthReport,
+#dataChoicesTab,
+#healthReport
+
+/* Now the actual hiding */
+{display: none !important}

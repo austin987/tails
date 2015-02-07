@@ -1,0 +1,79 @@
+[[!meta title="Screen locker"]]
+
+See also [[!tails_ticket 5684]].
+
+Tails is currently lacking a screen locker and this has been a frequent
+feature request. For example, as Tails is been adopted more and more by
+journalists, they want to be able to leave their computer unattended in
+their office to go to the toilets for a minute and have their screen
+locked.
+
+[[!toc]]
+
+How do other live distributions do that?
+========================================
+
+  - [Knoppix](http://www.knoppix.org/)
+    - No password whatsoever → not possible to lock (or unlock!)
+    - http://www.linux-magazine.com/Online/Features/Getting-Started-with-Knoppix-7.3
+    - Base: Debian
+    - Desktop: KDE
+    - Might be interested in our solution.
+  - [Grml](http://grml.org/)
+    - Already have a custom script called
+      [grml-lock](https://github.com/grml/grml-scripts/blob/master/usr_bin/grml-lock)
+      which is a wrapper around vlock that asks for a password on first use.
+    - Base: Debian
+    - Desktop: fluxbox
+  - [Jondo Live](https://anonymous-proxy-servers.net/en/jondo-live-cd.html)
+    - Ask for user password on boot, then I didn't find a way of locking the
+      screen xlock. No xlock.
+    - Base: Debian
+    - Desktop: XFCE
+  - [Kali](http://www.kali.org/)
+    - Lock screen through GNOME and the default 'toor' password.
+    - Base: Debian
+    - Desktop: GNOME
+    - Low interest in our solution as Kali is not mainly used in live environment.
+  - [Tanglu](http://www.tanglu.org/)
+    - Lock screen through GNOME and the default 'live' password.
+    - Base: Debian
+    - Desktop: GNOME
+  - [Debian Live](https://www.debian.org/devel/debian-live/)
+    - Lock screen through GNOME and the default 'live' password.
+    - Base: Debian
+    - Desktop: GNOME
+
+Which password to use?
+======================
+
+It is already possible to set an administration password from Tails
+Greeter, and we could reuse it for unlocking the screen. But we also
+need a solution for when no administration password has been set.
+
+During the [[201412 monthly meeting|contribute/meeting/201412]] we
+proposed to prompt for a password before locking the screen for the
+first time, if there is no administration password.
+
+How to activate it?
+===================
+
+  - Through the better power off button (#5322).
+  - Through the usual GNOME shortcut: Meta+L
+  - If a password has been set already:
+    - Automatically after X minutes of idle.
+    - When closing the lid.
+
+Implementation
+==============
+
+An initial implementation was started in [[!tails_gitweb_branch
+feature/better_power_off_button]], and reverted since it turned out to be more
+complicated than originally thought. This implementation and the problems
+listed bellow were discussed on the tails-dev ML in November 2012.
+
+Ideas to implement the password prompt before the first locking:
+
+  - Use a different PAM config for the screensaver
+  - Turn the admin password into the root one, and use the user
+    password's as the locker's one.

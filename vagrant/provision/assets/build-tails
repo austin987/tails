@@ -20,15 +20,6 @@ usable_memory() {
 	free -b | awk '/cache:/ { print $4 }'
 }
 
-bootstrap_stage_is_ok() {
-	[ -d "$1" ] || return 1
-	[ "$(sudo du -sm $1 | cut -f1)" -ge 100 ] || return 1
-	for dir in bin dev etc lib proc root sbin sys usr var; do
-		[ -d "$1/$dir" ] || return 1
-	done
-	return 0
-}
-
 cleanup() {
 	[ -n "$BUILD_DIR" ] || return 0
 	cd /
@@ -43,23 +34,30 @@ trap cleanup EXIT
 
 if [ -n "$JENKINS_URL" ]; then
 	# Build triggered by Jenkins
+	ENV_FILE=/etc/jenkins/environment
+	if [ -f "$ENV_FILE" ] && [ -r "$ENV_FILE" ] ; then
+		. "$ENV_FILE"
+	fi
+
 	if [ -z "$WORKSPACE" ]; then
 		echo "WORKSPACE environment variable is not set. Aborting." >&2
+		exit 2
 	fi
-	if mountpoint -q /srv/www; then
-		ARTIFACTS_DIR=/srv/www/"$JOB_NAME"
-	else
-		echo "Shared directory is not available, saving artifacts in workspace." >&2
-		ARTIFACTS_DIR="$WORKSPACE"
+	if [ -z "$ARTIFACTS_ROOT_DIR" ] ; then
+		echo "ARTIFACTS_ROOT_DIR environment variable is not set. Aborting." >&2
+		exit 3
 	fi
 	if [ -z "$GIT_BRANCH" ]; then
 		echo "GIT_BRANCH environment variable is not set. Aborting." >&2
+		exit 4
 	fi
 	if [ -z "$GIT_COMMIT" ]; then
 		echo "GIT_COMMIT environment variable is not set. Aborting." >&2
+		exit 5
 	fi
 	REV="${GIT_BRANCH##origin/}"
 	COMMIT="$GIT_COMMIT"
+	ARTIFACTS_DIR="$ARTIFACTS_ROOT_DIR/$JOB_NAME"
 else
 	# Build triggered by Vagrant
 	WORKSPACE=/home/vagrant/amnesia
@@ -88,7 +86,6 @@ install -m 0755 -d "$ARTIFACTS_DIR"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
-	sudo rm -rf /var/cache/stages_bootstrap
 fi
 ./build-wiki
 
@@ -102,22 +99,26 @@ else
 fi
 
 cd "$BUILD_DIR"
-as_root_do lb config --cache-packages false
-
-if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
-    bootstrap_stage_is_ok /var/cache/stages_bootstrap; then
-	# restore bootstrap stage and make live-build use it
-	sudo mkdir -p "$BUILD_DIR"/cache/stages_bootstrap
-	sudo mount --bind /var/cache/stages_bootstrap \
-		"$BUILD_DIR"/cache/stages_bootstrap
-	sudo touch "$BUILD_DIR"/.stage/bootstrap
-	sudo touch "$BUILD_DIR"/.stage/bootstrap_cache.save
-fi
+as_root_do lb config --cache false
 
 as_root_do lb build
 
 if [ -n "$JENKINS_URL" ]; then
 	ISO=$(ls *.iso)
+
+	USER_ON_ACNG_HOST=jenkins
+	ACNG_HOST=apt-proxy.lizard
+	ACNG_REMOTE_LOG=/var/log/apt-cacher-ng/apt-cacher.log
+	ACNG_LOCAL_LOG=$(basename "$ACNG_REMOTE_LOG")
+	sftp "${USER_ON_ACNG_HOST}@${ACNG_HOST}:${ACNG_REMOTE_LOG}"
+	BUILD_IP=$(ip a show dev eth0 | grep '^\s\+inet\s' | awk '{print $2}' | sed -e 's,/.*,,')
+	START_TIME=$(cat "$ISO.start.timestamp")
+	END_TIME=$(cat "$ISO.end.timestamp")
+	./auto/scripts/packages-from-acng-log "$ACNG_LOCAL_LOG" "$BUILD_IP" \
+					      "$START_TIME" "$END_TIME" \
+					      "${ISO}.binpkgs" "${ISO}.srcpkgs"
+	rm "$ISO".*.timestamp
+
 	for file in tails-*; do
 		sha512sum "$file" >> "$ISO.shasum"
 	done
@@ -126,10 +127,8 @@ fi
 
 mv -f tails-* "$ARTIFACTS_DIR"
 
-if [ "$TAILS_BOOTSTRAP_CACHE" ] && \
-    ! sudo umount "$BUILD_DIR"/cache/stages_bootstrap 2>/dev/null; then
-	# the cached bootstrap stage wasn't used (maybe it hadn't been
-	# cached yet?) so we save the good one from the current build.
-	sudo rsync -a --delete "$BUILD_DIR"/cache/stages_bootstrap/ \
-		/var/cache/stages_bootstrap
+if [ -n "$JENKINS_URL" ]; then
+	for EXT in '' .binpkgs .srcpkgs .shasum .shasum.asc .packages .buildlog ; do
+		ln -sf "${ISO}${EXT}" "$ARTIFACTS_DIR/latest.iso${EXT}"
+	done
 fi

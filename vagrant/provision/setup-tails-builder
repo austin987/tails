@@ -77,7 +77,8 @@ apt-get -y install \
 	git \
 	aufs-tools \
 	ikiwiki \
-	intltool
+	intltool \
+	gettext/wheezy-backports
 
 # Be sure to get all the modules we need for our Ikiwiki
 apt-get -y --no-install-recommends install \
@@ -89,17 +90,25 @@ apt-get -y --no-install-recommends install \
 # Add build script
 install -o root -g root -m 755 /vagrant/provision/assets/build-tails /usr/local/bin
 
-update_live_build_conf()
+disable_live_build_conf()
 {
 	local var="$1"
-	local value="$2"
 
-	mkdir -p /etc/live
-	touch /etc/live/build.conf
+	[ -e /etc/live/build.conf ] || return 0
 	sed -e "/^[[:space:]]*$var=/d" -i /etc/live/build.conf
-	echo "$var='$value'" >> /etc/live/build.conf
 }
 
-# Force APT repositories to a fixed mirror
-update_live_build_conf LB_MIRROR_BINARY "http://ftp.us.debian.org/debian/"
-update_live_build_conf LB_PARENT_MIRROR_BINARY "http://ftp.us.debian.org/debian/"
+# Force live-build to use the mirrors configured in auto/config
+for prefix in MIRROR PARENT_MIRROR ; do
+	for target in BOOTSTRAP BINARY CHROOT ; do
+		for archive in '' BACKPORTS SECURITY UPDATES VOLATILE ; do
+			if [ -z "$archive" ] ; then
+				archive_suffix=''
+			else
+				archive_suffix="_${archive}"
+			fi
+			var="LB_${prefix}_${target}${archive_suffix}"
+			disable_live_build_conf "$var"
+		done
+	done
+done

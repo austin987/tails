@@ -19,7 +19,9 @@ Feature: Microsoft Windows Camouflage
   Scenario: I should be presented with a Microsoft Windows like desktop
     Then I see "WindowsDesktop.png" after at most 10 seconds
     And I see "WindowsStartButton.png" after at most 10 seconds
-    And I see "WindowsSysTray.png" after at most 10 seconds
+    And I see "WindowsSysTrayGpgApplet.png" after at most 10 seconds
+    And I see "WindowsSysTrayKeyboard.png" after at most 10 seconds
+    And I see "WindowsSysTraySound.png" after at most 10 seconds
 
   Scenario: Windows should appear like those in Microsoft Windows
     When the network is plugged

@@ -151,9 +151,9 @@ b) the "Artistic License" which comes with Perl.
         'wrap-license' => 1,
         'website'      => 'https://tails.boum.org/',
     )});
-    $menu->append($mexit);
-    $menu->append(Gtk2::SeparatorMenuItem->new);
     $menu->append($mabout);
+    $menu->append(Gtk2::SeparatorMenuItem->new);
+    $menu->append($mexit);
 
     $icon->signal_connect('popup-menu', sub {
         my $ticon = shift;
@@ -276,9 +276,10 @@ sub set_clipboards_text {
     # is supposed to need input encoded in UTF-8. But it seems like the Perl
     # bindings encode it, and we need to pass a string of chars instead of bytes.
     foreach (all_clipboards()) {
-        $_->set_text($encoded_text);
+        $_->set_text($text);
     }
     # GTK fails setting the primary selection above, so let's use xclip :/
+    # xclip needs encoded text.
     open(my $xclip, '| xclip') or die "Error opening pipe to xclip";
     print $xclip $encoded_text or die "Error copying data to X clipboard";
     close $xclip or die "Error closing pipe to xclip";

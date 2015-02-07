@@ -43,13 +43,10 @@ cp "$CHROOT_SYSLINUX_MBR" "$BINARY_MBR_DIR/mbr.bin"
 cat chroot/etc/apt/sources.list chroot/etc/apt/sources.list.d/*.list \
    | sed --regexp-extended -e 's,^deb(\s+),deb-src\1,' \
    > "$CHROOT_TEMP_APT_SOURCES"
-mv chroot/etc/apt/apt.conf.d/{,.}0000runtime-proxy
 Chroot chroot apt-get --yes update
 Chroot chroot apt-get --yes install dpkg-dev
 Chroot chroot apt-get source syslinux="$(syslinux_deb_version_in_chroot)"
 cp chroot/syslinux-*/bios/win32/syslinux.exe "$WIN32_BINARY_UTILS_DIR/"
 rm -r chroot/syslinux*
 rm "$CHROOT_TEMP_APT_SOURCES"
-mv chroot/etc/apt/apt.conf.d/{.,}0000runtime-proxy
-Chroot chroot apt-get --yes update
 Chroot chroot apt-get --yes purge dpkg-dev make # dpkg-dev depends on make

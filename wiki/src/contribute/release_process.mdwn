@@ -110,9 +110,11 @@ Transifex branches of `git://git.torproject.org/translation.git` (e.g.
 
 Add and commit.
 
-Then check the PO files [[using i18nspector|contribute/l10n_tricks]].
-Correct all the errors that are not in the ignored list of
-[[`check_po.sh`|contribute/l10n_tricks]]. Commit the changes if any.
+Then check the PO files:
+
+	./wiki/src/contribute/l10n_tricks/check_po.sh
+
+Correct any displayed error, then commit the changes if any.
 
 Then see the relevant release processes:
 
@@ -239,21 +241,16 @@ points translators to up-to-date PO files:
 Call for translation
 ====================
 
-If at freeze time:
+If at freeze time, send a call for translations to tails-l10n, making it clear what
+Git branch the translations must be based on, and what are the
+priorities. Also, add a few words to remember the translation teams
+using Git that they should regularly contact Transifex translators,
+as detailed on the [[documentation for
+translators|contribute/how/translate]].
 
-1. Ask on tails-l10n that someone checks the PO files of `po/` and of
-   the website [[using `check_po.sh`|contribute/l10n_tricks]], and
-   corrects all the errors.
-2. Send a call for translations to tails-l10n, making it clear what
-   Git branch the translations must be based on, and what are the
-   priorities. Also, add a few words to remember the translation teams
-   using Git that they should regularly contact Transifex translators,
-   as detailed on the [[documentation for
-   translators|contribute/how/translate]].
+To get a list of changes on the website:
 
-   To get a list of changes on the website:
-
-       git diff --stat 1.1.. -- *.{mdwn,html}
+    git diff --stat 1.1.. -- *.{mdwn,html}
 
 Import the signing key
 ======================
@@ -318,6 +315,14 @@ SquashFS file order
    - remove the bits about `kill-boot-profile` at the end: they're
      only useful when profiling the boot
 1. Inspect the Git diff (including diff stat), apply common sense.
+   The following command is also helpful but requires that you save a
+   copy of the old sort file into `/tmp/squashfs.sort.old`:
+
+       diff -NaurB \
+           <( cut -d' ' -f1 /tmp/squashfs.sort.old | sort ) \
+           <( cut -d' ' -f1 config/binary_rootfs/squashfs.sort | sort ) \
+           | less
+
 1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
 
 Build the final image
@@ -782,6 +787,15 @@ Tor weekly news
 Write a short announcement for the Tor weekly news, or find someone
 who's happy to do it.
 
+Amnesia news
+------------
+
+The release notes should have been automatically sent to
+`amensia-news@` (thanks to the `announce` flag) but it will be stuck
+in the moderation
+queue. [Log in](https://mailman.boum.org/admindb/amnesia-news) and
+accept it.
+
 Prepare for the next release
 ============================
 
@@ -791,6 +805,26 @@ this, and skip what does not make sense for a RC.
 1. Move the previous stable release to `obsolete` on the mirrors.
 1. Remove any remaining RC for the just-published release from
    the mirrors.
+1. Remove IUKs that are more than 6 months old from
+   `/{stable,alpha}/iuk` on the rsync server:
+   - first check that it's not going to remove anything we want to keep:
+     
+         ssh rsync.lizard /bin/sh -c \
+             \"find /srv/rsync/tails/tails/alpha  \
+                    /srv/rsync/tails/tails/stable \
+                    -type f -name '*.iuk' -mtime '+183' \
+                    -ls \
+             \"
+   
+   - then actually delete the files:
+     
+         ssh rsync.lizard /bin/sh -c \
+             \"find /srv/rsync/tails/tails/alpha  \
+                    /srv/rsync/tails/tails/stable \
+                    -type f -name '*.iuk' -mtime '+183' \
+                    -delete \
+             \"
+
 1. Pull `master` back and merge it into `devel`.
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
