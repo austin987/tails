@@ -902,10 +902,8 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   next if @skip_steps_while_restoring_background
   if output_dir == "persistent Tor Browser"
     output_dir = "/home/amnesia/Persistent/Tor Browser"
-    output_dir_image = "TorBrowserPersistentBookmarkInDestinationFolderList.png"
   else
     output_dir = "/home/amnesia/Tor Browser"
-    output_dir_image = "TorBrowserBookmarkInDestinationFolderList.png"
   end
   @screen.type("p", Sikuli::KeyModifier.CTRL)
   @screen.wait("TorBrowserPrintDialog.png", 10)
@@ -915,14 +913,12 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   # so let's click through the warning
   @screen.wait("TorBrowserCouldNotReadTheContentsOfWarning.png", 10)
   @screen.wait_and_click("TorBrowserWarningDialogOkButton.png", 10)
-  @screen.wait_and_click("TorBrowserDestinationFolderList.png", 10)
-  @screen.wait_and_click(output_dir_image, 10)
   @screen.wait_and_double_click("TorBrowserPrintOutputFile.png", 10)
   @screen.hide_cursor
   @screen.wait("TorBrowserPrintOutputFileSelected.png", 10)
   # Only the file's basename is selected by double-clicking,
   # so we type only the desired file's basename to replace it
-  @screen.type(output_file.sub(/[.]pdf$/, '') + Sikuli::Key.ENTER)
+  @screen.type(output_dir + output_file.sub(/[.]pdf$/, '') + Sikuli::Key.ENTER)
   try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
     @vm.file_exist?("#{output_dir}/#{output_file}")
   }
