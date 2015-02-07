@@ -251,7 +251,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   Scenario: Cat:ing a Tails isohybrid to a USB drive and booting it
     Given a computer
     And I create a 4 GiB disk named "isohybrid"
-    And I cat an ISO hybrid of the Tails image to disk "isohybrid"
+    And I cat an ISO of the Tails image to disk "isohybrid"
     And I start Tails from USB drive "isohybrid" with network unplugged and I login
     Then Tails is running from USB drive "isohybrid"
 
