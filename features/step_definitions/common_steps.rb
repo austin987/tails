@@ -812,6 +812,7 @@ When /^I press the "([^"]+)" key$/ do |key|
 end
 
 Then /^the (amnesiac|persistent) Tor Browser directory (exists|does not exist)$/ do |persistent_or_not, mode|
+  next if @skip_steps_while_restoring_background
   case persistent_or_not
   when "amnesiac"
     dir = '/home/amnesia/Tor Browser'
@@ -822,6 +823,7 @@ Then /^the (amnesiac|persistent) Tor Browser directory (exists|does not exist)$/
 end
 
 Then /^there is a GNOME bookmark for the (amnesiac|persistent) Tor Browser directory$/ do |persistent_or_not|
+  next if @skip_steps_while_restoring_background
   case persistent_or_not
   when "amnesiac"
     bookmark_image = 'TorBrowserAmnesicFilesBookmark.png'
