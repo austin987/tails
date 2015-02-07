@@ -905,8 +905,7 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   # to change the default destination directory for "Print to File",
   # so let's click through the warning
   @screen.wait("TorBrowserCouldNotReadTheContentsOfWarning.png", 10)
-  sleep 1 # Sometimes the ENTER key is not reactive immediately..
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.wait_and_click("TorBrowserWarningDialogOkButton.png", 10)
   @screen.wait_and_click("TorBrowserDestinationFolderList.png", 10)
   @screen.wait_and_click(output_dir_image, 10)
   @screen.wait_and_double_click("TorBrowserPrintOutputFile.png", 10)
