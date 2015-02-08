@@ -1,7 +1,7 @@
 Then /^the shipped Tails (signing|Debian repository) key will be valid for the next (\d+) months$/ do |key_type, max_months|
   next if @skip_steps_while_restoring_background
   if key_type == 'signing'
-    sig_key_fingerprint = "0D24B36AA9A2A651787876451202821CBE2CD9C1"
+    sig_key_fingerprint = "A490D0F4D311A4153E2BB7CADBB802B258ACD84F"
     cmd = 'gpg'
     user = $live_user
   elsif key_type == 'Debian repository'
