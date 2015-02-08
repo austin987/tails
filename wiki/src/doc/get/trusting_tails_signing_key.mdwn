@@ -102,66 +102,70 @@ To download the Debian keyring you can do:
 To get a list of the signatures made by other people on Tails signing key you
 can do:
 
-    gpg --keyid-format long --list-sigs 1202821CBE2CD9C1
+    gpg --keyid-format long --list-sigs A490D0F4D311A4153E2BB7CADBB802B258ACD84F
 
 You will get something like this:
 
-    pub   4096R/1202821CBE2CD9C1 2010-10-07 [expires: 2015-04-30]
-    uid                          Tails developers (signing key) <tails@boum.org>
-    sig 3        1202821CBE2CD9C1 2011-04-16  Tails developers (signing key) <tails@boum.org>
-    sig          BACE15D2A57498FF 2011-04-16  [User ID not found]
-    sig          CCD2ED94D21739E9 2011-06-12  [User ID not found]
-    uid                          T(A)ILS developers (signing key) <amnesia@boum.org>
-    sig 3        1202821CBE2CD9C1 2010-10-07  Tails developers (signing key) <tails@boum.org>
-    sig          BACE15D2A57498FF 2010-10-07  [User ID not found]
-    sig          8CBF9A322861A790 2010-12-24  [User ID not found]
-    sig          7EF27D76B2177E1F 2010-12-27  [User ID not found]
-    sig          CCD2ED94D21739E9 2010-12-29  [User ID not found]
-    sig          AC0EC35285821C42 2011-03-22  [User ID not found]
-    sig          C2DEE7F336042734 2010-10-24  [User ID not found]
+    pub   4096R/DBB802B258ACD84F 2015-01-18 [expires: 2016-01-11]
+          Key fingerprint = A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
+    uid               [ unknown] Tails developers (offline long-term identity key) <tails@boum.org>
+    sig 3        DBB802B258ACD84F 2015-01-18  Tails developers (offline long-term identity key) <tails@boum.org>
+    sig          1202821CBE2CD9C1 2015-01-19  Tails developers (signing key) <tails@boum.org>
+    sig          BACE15D2A57498FF 2015-01-19  [User ID not found]
+    sig          9C31503C6D866396 2015-02-03  [User ID not found]
+    sig          BB3A68018649AA06 2015-02-04  [User ID not found]
+    sig          091AB856069AAA1C 2015-02-05  [User ID not found]
+    sub   4096R/98FEC6BC752A3DB6 2015-01-18 [expires: 2016-01-11]
+    sig          DBB802B258ACD84F 2015-01-18  Tails developers (offline long-term identity key) <tails@boum.org>
+    sub   4096R/3C83DCB52F699C56 2015-01-18 [expires: 2016-01-11]
+    sig          DBB802B258ACD84F 2015-01-18  Tails developers (offline long-term identity key) <tails@boum.org>
 
 The lines ending with '[User ID not found]' are signatures made by keys you
 still don't have in your keyring. You could try to search for them in the Debian
 keyring by their key ID: the 16 digit code between the 'sig' tag and the date.
 You could for example do:
 
-    gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --list-key CCD2ED94D21739E9
+    gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --list-key 9C31503C6D866396
 
 If this signature corresponds to a key in the Debian keyring you will get
 something like this:
 
-    pub   4096R/CCD2ED94D21739E9 2007-06-02 [expires: 2015-02-26]
-    uid                          Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-    uid                          Daniel Kahn Gillmor <dkg@openflows.com>
-    uid                          [jpeg image of size 3515]
-    uid                          Daniel Kahn Gillmor <dkg@debian.org>
-    uid                          Daniel Kahn Gillmor <dkg@aclu.org>
-    sub   4096R/0xC61BD3EC21484CFF 2007-06-02 [expires: 2015-02-26]
-    sub   2048R/0x125868EA4BFA08E4 2008-06-19 [expires: 2015-02-26]
-    sub   4096R/0xA52401B11BFDFA5C 2013-03-12 [expires: 2015-03-12]
-    sub   2432R/0xDC104C4E0CA757FB 2013-09-11 [expires: 2014-09-11]
+    pub   4096R/0x9C31503C6D866396 2010-09-27
+          Key fingerprint = 4900 707D DC5C 07F2 DECB  0283 9C31 503C 6D86 6396
+    uid                 [ unknown] Stefano Zacchiroli <zack@upsilon.cc>
+    uid                 [ unknown] Stefano Zacchiroli <zack@debian.org>
+    uid                 [ unknown] Stefano Zacchiroli <zack@cs.unibo.it>
+    uid                 [ unknown] Stefano Zacchiroli <zack@pps.jussieu.fr>
+    uid                 [ unknown] Stefano Zacchiroli <zack@pps.univ-paris-diderot.fr>
+    sub   4096R/0x7DFA4FED02D0E74C 2010-09-27
 
 You can then import it in your own keyring by doing:
 
-    gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --export CCD2ED94D21739E9 | gpg --import
+    gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --export 9C31503C6D866396 | gpg --import
 
 Now you can try to verify the signature made by this new key on Tails signing
 key by doing:
 
-    gpg --keyid-format long --check-sigs 1202821CBE2CD9C1
+    gpg --keyid-format long --check-sigs A490D0F4D311A4153E2BB7CADBB802B258ACD84F
 
 On the output, the status of the verification is indicated by a flag directly
 following the "sig" tag. A "!" indicates that the signature has been
 successfully verified, a  "-" denotes a bad signature and a "%" is used if an
 error occurred while checking the signature (e.g. a non supported algorithm).
-For example, in the following output the signature of Daniel Kahn Gillmor on
+For example, in the following output the signature of Stefano Zacchiroli on
 Tails signing key has been successfully verified:
 
-    pub   4096R/1202821CBE2CD9C1 2010-10-07 [expires: 2015-04-30]
-    uid                          Tails developers (signing key) <tails@boum.org>
-    sig!3        1202821CBE2CD9C1 2011-04-16  Tails developers (signing key) <tails@boum.org>
-    sig!         CCD2ED94D21739E9 2013-05-05  Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-
+    pub   4096R/DBB802B258ACD84F 2015-01-18 [expires: 2016-01-11]
+          Key fingerprint = A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
+    uid               [ unknown] Tails developers (offline long-term identity key) <tails@boum.org>
+    sig!3        DBB802B258ACD84F 2015-01-18  Tails developers (offline long-term identity key) <tails@boum.org>
+    sig!         1202821CBE2CD9C1 2015-01-19  Tails developers (signing key) <tails@boum.org>
+    sig!         9C31503C6D866396 2015-02-03  Stefano Zacchiroli <zack@upsilon.cc>
+    sub   4096R/98FEC6BC752A3DB6 2015-01-18 [expires: 2016-01-11]
+    sig!         DBB802B258ACD84F 2015-01-18  Tails developers (offline long-term identity key) <tails@boum.org>
+    sub   4096R/3C83DCB52F699C56 2015-01-18 [expires: 2016-01-11]
+    sig!         DBB802B258ACD84F 2015-01-18  Tails developers (offline long-term identity key) <tails@boum.org>
+    
     3 signatures not checked due to missing keys
 
 # Get into the Web of Trust!
