@@ -22,17 +22,21 @@ directory on a USB stick. Then run the following command from a terminal to
 check whether all the keys are identical:
 
     cd [your download directory]
-    sha256sum tails-signing*.key
+    diff -qs --from-file tails-signing*.key
 
 This command would output something like this:
 
-    aa4ac9313d562c901ddeca1b32b4d539d1e3476c575da554a9b6ccaa3d8305eb  tails-signing-desktop.key
-    aa4ac9313d562c901ddeca1b32b4d539d1e3476c575da554a9b6ccaa3d8305eb  tails-signing-laptop.key
-    aa4ac9313d562c901ddeca1b32b4d539d1e3476c575da554a9b6ccaa3d8305eb  tails-signing-library.key
-    aa4ac9313d562c901ddeca1b32b4d539d1e3476c575da554a9b6ccaa3d8305eb  tails-signing-seattle.key
+    Files tails-signing-desktop.key and tails-signing-laptop.key are identical
+    Files tails-signing-desktop.key and tails-signing-library.key are identical
+    Files tails-signing-desktop.key and tails-signing-seattle.key are identical
 
-You would then need to visually check that all the checksums of the first column
-are the same, meaning that the keys are identical.
+You would then need to check that every line reports identical key files.
+
+If at least a key differs from the rest, the command would output accordingly:
+
+    Files tails-signing-desktop.key and tails-signing-laptop.key are identical
+    Files tails-signing-desktop.key and tails-signing-library.key are identical
+    Files tails-signing-desktop.key and tails-signing-seattle.key differ
 
 You could also use this technique to compare keys downloaded by your friends or
 other people you trust.
