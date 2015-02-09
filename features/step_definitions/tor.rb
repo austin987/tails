@@ -164,11 +164,11 @@ end
 
 Then /^untorified network connections to (\S+) fail$/ do |host|
   next if @skip_steps_while_restoring_background
-  expected_stderr = "curl: (7) couldn't connect to host"
+  expected_in_stderr = "curl: (7) couldn't connect to host"
   cmd = "unset SOCKS_SERVER ; unset SOCKS5_SERVER ; " \
         "curl --noproxy '*' 'http://#{host}'"
   status = @vm.execute(cmd, $live_user)
-  assert(!status.success? && status.stderr[expected_stderr],
+  assert(!status.success? && status.stderr[expected_in_stderr],
          "The command `#{cmd}` didn't fail as expected:\n#{status.to_s}")
 end
 
