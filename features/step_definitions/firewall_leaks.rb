@@ -1,6 +1,6 @@
 Then(/^the firewall leak detector has detected (.*?) leaks$/) do |type|
   next if @skip_steps_while_restoring_background
-  leaks = FirewallLeakCheck.new(@custom_sniffer.pcap_file, get_tor_relays)
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_tor_relays)
   case type.downcase
   when 'ipv4 tcp'
     if leaks.ipv4_tcp_leaks.empty?
