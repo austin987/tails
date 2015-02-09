@@ -162,35 +162,48 @@ Then /^the firewall is configured to block all IPv6 traffic$/ do
   end
 end
 
-def firewall_has_dropped_packet_to?(host, port)
-  regex = "Dropped outbound packet: .* DST=#{host} .* DPT=#{port} "
+def firewall_has_dropped_packet_to?(proto, host, port)
+  regex = "Dropped outbound packet: .* DST=#{host} .* PROTO=#{proto} .* DPT=#{port} "
   @vm.execute("grep -q '#{regex}' /var/log/syslog").success?
 end
 
-When /^I open an untorified TCP connections to (.*) on port (\d+) that is expected to fail$/ do |host, port|
+When /^I open an untorified (TCP|UDP) connections to (.*) on port (\d+) that is expected to fail$/ do |proto, host, port|
   next if @skip_steps_while_restoring_background
-  assert(!firewall_has_dropped_packet_to?(host, port),
-         "A TCP packet to #{host}:#{port} has already been dropped by " \
+  assert(!firewall_has_dropped_packet_to?(proto, host, port),
+         "A #{proto} packet to #{host}:#{port} has already been dropped by " \
          "the firewall")
+  @conn_proto = proto
   @conn_host = host
   @conn_port = port
-  @conn_res = @vm.execute("echo | netcat #{host} #{port}",
-                                     $live_user)
+  case proto
+  when "TCP"
+    cmd = "echo | netcat #{host} #{port}"
+  when "UDP"
+    cmd = "echo | netcat -u #{host} #{port}"
+  end
+  @conn_res = @vm.execute(cmd, $live_user)
 end
 
 Then /^the untorified connection fails$/ do
   next if @skip_steps_while_restoring_background
-  expected_in_stderr = "Connection refused"
-  assert(!@conn_res.success? && @conn_res.stderr.chomp.end_with?(expected_in_stderr),
-         "The untorified connection didn't fail as expected:\n" +
+  case @conn_proto
+  when "TCP"
+    expected_in_stderr = "Connection refused"
+    conn_failed = !@conn_res.success? &&
+      @conn_res.stderr.chomp.end_with?(expected_in_stderr)
+  when "UDP"
+    conn_failed = !@conn_res.success?
+  end
+  assert(conn_failed,
+         "The untorified #{@conn_proto} connection didn't fail as expected:\n" +
          @conn_res.to_s)
 end
 
 Then /^the untorified connection is logged as dropped by the firewall$/ do
   next if @skip_steps_while_restoring_background
-  assert(firewall_has_dropped_packet_to?(@conn_host, @conn_port),
-         "No packet to #{@conn_host}:#{@conn_port} was dropped by " \
-         "the firewall")
+  assert(firewall_has_dropped_packet_to?(@conn_proto, @conn_host, @conn_port),
+         "No #{@conn_proto} packet to #{@conn_host}:#{@conn_port} was " \
+         "dropped by the firewall")
 end
 
 When /^the system DNS is( still)? using the local DNS resolver$/ do |_|

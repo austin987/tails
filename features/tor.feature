@@ -16,8 +16,14 @@ Feature: Tor is configured properly
     And the firewall is configured to block all IPv6 traffic
 
   @check_tor_leaks
-  Scenario: The Tor enforcement is effective at blocking untorified connection attempts
+  Scenario: The Tor enforcement is effective at blocking untorified TCP connection attempts
     When I open an untorified TCP connections to 1.2.3.4 on port 42 that is expected to fail
+    Then the untorified connection fails
+    And the untorified connection is logged as dropped by the firewall
+
+  @check_tor_leaks
+  Scenario: The Tor enforcement is effective at blocking untorified UDP connection attempts
+    When I open an untorified UDP connections to 1.2.3.4 on port 42 that is expected to fail
     Then the untorified connection fails
     And the untorified connection is logged as dropped by the firewall
 
