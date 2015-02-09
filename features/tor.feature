@@ -17,8 +17,9 @@ Feature: Tor is configured properly
 
   @check_tor_leaks
   Scenario: The Tor enforcement is effective at blocking untorified connection attempts
-    Then untorified network connections to monip.org fail
-    And untorified network connections to 1.2.3.4 fail
+    When I open an untorified TCP connections to 1.2.3.4 on port 42 that is expected to fail
+    Then the untorified connection fails
+    And the untorified connection is logged as dropped by the firewall
 
   @check_tor_leaks
   Scenario: tails-security-check is using the Tails-specific SocksPort

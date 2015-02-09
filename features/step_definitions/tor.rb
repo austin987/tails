@@ -162,14 +162,35 @@ Then /^the firewall is configured to block all IPv6 traffic$/ do
   end
 end
 
-Then /^untorified network connections to (\S+) fail$/ do |host|
+def firewall_has_dropped_packet_to?(host, port)
+  regex = "Dropped outbound packet: .* DST=#{host} .* DPT=#{port} "
+  @vm.execute("grep -q '#{regex}' /var/log/syslog").success?
+end
+
+When /^I open an untorified TCP connections to (.*) on port (\d+) that is expected to fail$/ do |host, port|
   next if @skip_steps_while_restoring_background
-  expected_in_stderr = "curl: (7) couldn't connect to host"
-  cmd = "unset SOCKS_SERVER ; unset SOCKS5_SERVER ; " \
-        "curl --noproxy '*' 'http://#{host}'"
-  status = @vm.execute(cmd, $live_user)
-  assert(!status.success? && status.stderr[expected_in_stderr],
-         "The command `#{cmd}` didn't fail as expected:\n#{status.to_s}")
+  assert(!firewall_has_dropped_packet_to?(host, port),
+         "A TCP packet to #{host}:#{port} has already been dropped by " \
+         "the firewall")
+  @conn_host = host
+  @conn_port = port
+  @conn_res = @vm.execute("echo | netcat #{host} #{port}",
+                                     $live_user)
+end
+
+Then /^the untorified connection fails$/ do
+  next if @skip_steps_while_restoring_background
+  expected_in_stderr = "Connection refused"
+  assert(!@conn_res.success? && @conn_res.stderr.chomp.end_with?(expected_in_stderr),
+         "The untorified connection didn't fail as expected:\n" +
+         @conn_res.to_s)
+end
+
+Then /^the untorified connection is logged as dropped by the firewall$/ do
+  next if @skip_steps_while_restoring_background
+  assert(firewall_has_dropped_packet_to?(@conn_host, @conn_port),
+         "No packet to #{@conn_host}:#{@conn_port} was dropped by " \
+         "the firewall")
 end
 
 When /^the system DNS is( still)? using the local DNS resolver$/ do |_|
