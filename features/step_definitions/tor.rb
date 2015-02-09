@@ -157,7 +157,7 @@ Then /^the firewall is configured to block all IPv6 traffic$/ do
       !["DROP", "REJECT", "LOG"].include?(rule["target"])
     end
     assert(bad_rules.empty?,
-           "The NAT table's OUTPUT chain contains some unexptected rules:\n" +
+           "The IPv6 table's #{name} chain contains some unexptected rules:\n" +
            (bad_rules.map { |r| r["rule"] }).join("\n"))
   end
 end
