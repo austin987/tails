@@ -62,7 +62,8 @@ Feature: Tor is configured properly
   @check_tor_leaks
   Scenario: whois lookups use the default SocksPort
     When I monitor the network connections of whois
-    And I do a whois-lookup of domain boum.org
+    And I query the whois directory service for "boum.org"
+    And the whois command is successful
     Then I see that whois is properly stream isolated
 
   @check_tor_leaks

@@ -266,11 +266,6 @@ And /^I re-run tails-upgrade-frontend-wrapper$/ do
   @vm.execute_successfully("/usr/local/bin/tails-upgrade-frontend-wrapper", $live_user)
 end
 
-And /^I do a whois-lookup of domain (.+)$/ do |domain|
-  next if @skip_steps_while_restoring_background
-  @vm.execute_successfully("/usr/local/bin/whois '#{domain}'", $live_user)
-end
-
 When /^I connect Gobby to "([^"]+)"$/ do |host|
   next if @skip_steps_while_restoring_background
   @screen.wait("GobbyWindow.png", 30)
