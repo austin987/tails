@@ -20,9 +20,9 @@ class VMNet
   # (e.g. aborted).
   def clean_up
     begin
-      net = @virt.lookup_network_by_name(@net_name)
-      net.destroy if net.active?
-      net.undefine
+      old_net = @virt.lookup_network_by_name(@net_name)
+      old_net.destroy if old_net.active?
+      old_net.undefine
     rescue
     end
   end
@@ -84,9 +84,9 @@ class VM
   # (e.g. aborted).
   def clean_up
     begin
-      domain = @virt.lookup_domain_by_name(@domain_name)
-      domain.destroy if domain.active?
-      domain.undefine
+      old_domain = @virt.lookup_domain_by_name(@domain_name)
+      old_domain.destroy if old_domain.active?
+      old_domain.undefine
     rescue
     end
   end
