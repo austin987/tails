@@ -127,7 +127,7 @@ def sikuli_script_proxy.new(*args)
   def wait_for_gnome_window(window_title_img, timeout)
     try_for(timeout) do
       m = self.find(window_title_img)
-      # Respective to the matched window title, this is the regeion
+      # Respective to the matched window title, this is the region
       # from its right edge to the right edge of the screen, where we
       # would expect the GNOME window's X button.
       r = Sikuli::Region.new(m.x + m.w, m.y, self.w - m.x - m.w, m.h)
