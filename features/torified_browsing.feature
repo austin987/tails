@@ -30,5 +30,4 @@ Feature: Browsing the web using the Tor Browser
   Scenario: The Tor Browser should not have any plugins enabled
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
-    And I open the address "about:plugins" in the Tor Browser
-    Then I see "TorBrowserNoPlugins.png" after at most 60 seconds
+    Then the Tor Browser has no plugins installed

@@ -37,6 +37,7 @@ no-package-name-in-project-id-version
 no-plural-forms-header-field
 no-report-msgid-bugs-to-header-field
 no-version-in-project-id-version
+stray-previous-msgid
 unable-to-determine-language
 unknown-poedit-language
 " | grep -v '^$' > "$PATTERNS_FILE"
