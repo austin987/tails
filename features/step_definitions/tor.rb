@@ -191,7 +191,7 @@ def stream_isolation_info(application)
       :socksport => 9062
     }
   when "tails-security-check", "tails-upgrade-frontend-wrapper"
-    # We only grep connections with ESTABLISHED statate since `perl`
+    # We only grep connections with ESTABLISHED state since `perl`
     # is also used by monkeysphere's validation agent, which LISTENs
     {
       :grep_monitor_expr => '\<ESTABLISHED\>.\+/perl\>',
