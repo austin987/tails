@@ -81,7 +81,13 @@ Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
   @vm.set_disk_boot(name, type.downcase)
 end
 
-Given /^I plug ([[:alpha:]]+) drive "([^"]+)"$/ do |bus, name|
+Given /^I create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |size, unit, name|
+  next if @skip_steps_while_restoring_background
+  @vm.storage.create_new_disk(name, {:size => size, :unit => unit,
+                                     :type => "qcow2"})
+end
+
+Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
   next if @skip_steps_while_restoring_background
   @vm.plug_drive(name, bus.downcase)
   if @vm.is_running?
@@ -132,11 +138,11 @@ When /^I start the computer$/ do
   post_vm_start_hook
 end
 
-Given /^I start Tails from DVD(| with network unplugged) and I login$/ do |network_unplugged|
+Given /^I start Tails( from DVD)?( with network unplugged)? and I login$/ do |dvd_boot, network_unplugged|
   # we don't @skip_steps_while_restoring_background as we're only running
   # other steps, that are taking care of it *if* they have to
-  step "the computer is set to boot from the Tails DVD"
-  if network_unplugged.empty?
+  step "the computer is set to boot from the Tails DVD" if dvd_boot
+  if network_unplugged.nil?
     step "the network is plugged"
   else
     step "the network is unplugged"
@@ -145,7 +151,7 @@ Given /^I start Tails from DVD(| with network unplugged) and I login$/ do |netwo
   step "the computer boots Tails"
   step "I log in to a new session"
   step "Tails seems to have booted normally"
-  if network_unplugged.empty?
+  if network_unplugged.nil?
     step "Tor is ready"
     step "all notifications have disappeared"
     step "available upgrades have been checked"
@@ -757,7 +763,7 @@ end
 Given /^the USB drive "([^"]+)" contains Tails with persistence configured and password "([^"]+)"$/ do |drive, password|
     step "a computer"
     step "I start Tails from DVD with network unplugged and I login"
-    step "I create a new 4 GiB USB drive named \"#{drive}\""
+    step "I create a 4 GiB disk named \"#{drive}\""
     step "I plug USB drive \"#{drive}\""
     step "I \"Clone & Install\" Tails to USB drive \"#{drive}\""
     step "there is no persistence partition on USB drive \"#{drive}\""
