@@ -255,8 +255,8 @@ end
 
 And /^I re-run htpdate$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute_successfully("service htpdate stop ; " \
-                           "rm -f /var/run/htpdate/* ; " \
+  @vm.execute_successfully("service htpdate stop && " \
+                           "rm -f /var/run/htpdate/* && " \
                            "service htpdate start")
   step "the time has synced"
 end
