@@ -250,7 +250,7 @@ end
 
 And /^I re-run tails-security-check$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute_successfully("/usr/local/bin/tails-security-check", $live_user)
+  @vm.execute_successfully("tails-security-check", $live_user)
 end
 
 And /^I re-run htpdate$/ do
@@ -263,7 +263,7 @@ end
 
 And /^I re-run tails-upgrade-frontend-wrapper$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute_successfully("/usr/local/bin/tails-upgrade-frontend-wrapper", $live_user)
+  @vm.execute_successfully("tails-upgrade-frontend-wrapper", $live_user)
 end
 
 When /^I connect Gobby to "([^"]+)"$/ do |host|
