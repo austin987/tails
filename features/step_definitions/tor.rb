@@ -114,6 +114,7 @@ end
 
 Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DNSPort$/ do
   next if @skip_steps_while_restoring_background
+  tor_onion_addr_space = "127.192.0.0/10"
   iptables_nat_output = @vm.execute_successfully("iptables -t nat -L -n -v").stdout
   chains = iptables_parse(iptables_nat_output)
   chains.each_pair do |name, chain|
@@ -122,7 +123,10 @@ Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DN
       good_rules = rules.find_all do |rule|
         rule["target"] == "REDIRECT" &&
           (
-           rule["extra"] == "redir ports 9040" ||
+           (
+            rule["destination"] == tor_onion_addr_space &&
+            rule["extra"] == "redir ports 9040"
+           ) ||
            rule["extra"] == "udp dpt:53 redir ports 5353"
           )
       end
