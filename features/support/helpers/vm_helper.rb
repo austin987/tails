@@ -14,6 +14,10 @@ class VMNet
     raise e
   end
 
+  # Used internally to clean up previous created libvirt networks with
+  # same name. We lookup by name so we also catch networks from
+  # previous test suite runs that weren't properly cleaned up
+  # (e.g. aborted).
   def clean_up
     begin
       net = @virt.lookup_network_by_name(@net_name)
@@ -42,6 +46,8 @@ class VMNet
   def bridge_mac
     File.open("/sys/class/net/#{@bridge_name}/address", "rb").read.chomp
   end
+
+  private :clean_up
 
 end
 
@@ -72,6 +78,10 @@ class VM
     @domain = @virt.define_domain_xml(xml)
   end
 
+  # Used internally to clean up previous created libvirt domains with
+  # same name. We lookup by name so we also catch domains from
+  # previous test suite runs that weren't properly cleaned up
+  # (e.g. aborted).
   def clean_up
     begin
       domain = @virt.lookup_domain_by_name(@domain_name)
@@ -433,5 +443,7 @@ EOF
       end
     end
   end
+
+  private :clean_up
 
 end
