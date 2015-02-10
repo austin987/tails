@@ -809,8 +809,9 @@ end
 
 When /^I press the "([^"]+)" key$/ do |key|
   next if @skip_steps_while_restoring_background
-  if Sikuli::Key.method_defined?(key)
-    @screen.type(eval("Sikuli::Key.#{key}"))
+  case key
+  when "ENTER"
+    @screen.type(Sikuli::Key.ENTER)
   else
     raise "unsupported key #{key}"
   end
