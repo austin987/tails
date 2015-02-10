@@ -28,6 +28,12 @@ Feature: Tor is configured properly
     And the untorified connection is logged as dropped by the firewall
 
   @check_tor_leaks
+  Scenario: The Tor enforcement is effective at blocking untorified ICMP connection attempts
+    When I open an untorified ICMP connections to 1.2.3.4 that is expected to fail
+    Then the untorified connection fails
+    And the untorified connection is logged as dropped by the firewall
+
+  @check_tor_leaks
   Scenario: tails-security-check is using the Tails-specific SocksPort
     When I monitor the network connections of tails-security-check
     And I re-run tails-security-check

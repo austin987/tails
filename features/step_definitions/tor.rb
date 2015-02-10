@@ -163,11 +163,12 @@ Then /^the firewall is configured to block all IPv6 traffic$/ do
 end
 
 def firewall_has_dropped_packet_to?(proto, host, port)
-  regex = "Dropped outbound packet: .* DST=#{host} .* PROTO=#{proto} .* DPT=#{port} "
+  regex = "Dropped outbound packet: .* DST=#{host} .* PROTO=#{proto} "
+  regex += ".* DPT=#{port} " if port
   @vm.execute("grep -q '#{regex}' /var/log/syslog").success?
 end
 
-When /^I open an untorified (TCP|UDP) connections to (.*) on port (\d+) that is expected to fail$/ do |proto, host, port|
+When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+))? that is expected to fail$/ do |proto, host, port|
   next if @skip_steps_while_restoring_background
   assert(!firewall_has_dropped_packet_to?(proto, host, port),
          "A #{proto} packet to #{host}:#{port} has already been dropped by " \
@@ -177,9 +178,13 @@ When /^I open an untorified (TCP|UDP) connections to (.*) on port (\d+) that is 
   @conn_port = port
   case proto
   when "TCP"
+    assert_not_nil(port)
     cmd = "echo | netcat #{host} #{port}"
   when "UDP"
+    assert_not_nil(port)
     cmd = "echo | netcat -u #{host} #{port}"
+  when "ICMP"
+    cmd = "ping -c 5 #{host}"
   end
   @conn_res = @vm.execute(cmd, $live_user)
 end
@@ -191,7 +196,7 @@ Then /^the untorified connection fails$/ do
     expected_in_stderr = "Connection refused"
     conn_failed = !@conn_res.success? &&
       @conn_res.stderr.chomp.end_with?(expected_in_stderr)
-  when "UDP"
+  when "UDP", "ICMP"
     conn_failed = !@conn_res.success?
   end
   assert(conn_failed,
