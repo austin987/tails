@@ -48,6 +48,10 @@ use Net::SSLeay;
 BEGIN {
     my $cafile = $ENV{HTTPS_CA_FILE};
     $cafile  //= '/usr/local/etc/ssl/certs/tails.boum.org-CA.pem';
+    assert(-e $cafile);
+    assert(-f $cafile);
+    assert(-r $cafile);
+    assert(-s $cafile);
     IO::Socket::SSL::set_ctx_defaults(
         verify_mode => Net::SSLeay->VERIFY_PEER(),
         ca_file => $cafile,
