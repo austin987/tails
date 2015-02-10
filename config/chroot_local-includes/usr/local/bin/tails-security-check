@@ -46,9 +46,11 @@ use XML::Atom::Feed;
 use IO::Socket::SSL;
 use Net::SSLeay;
 BEGIN {
+    my $cafile = $ENV{HTTPS_CA_FILE};
+    $cafile  //= '/usr/local/etc/ssl/certs/tails.boum.org-CA.pem';
     IO::Socket::SSL::set_ctx_defaults(
         verify_mode => Net::SSLeay->VERIFY_PEER(),
-        ca_file => '/usr/local/etc/ssl/certs/tails.boum.org-CA.pem',
+        ca_file => $cafile,
     );
 }
 use LWP::UserAgent; # needs to be *after* IO::Socket::SSL's initialization
