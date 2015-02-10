@@ -812,7 +812,7 @@ When /^I press the "([^"]+)" key$/ do |key|
   if Sikuli::Key.method_defined?(key)
     @screen.type(eval("Sikuli::Key.#{key}"))
   else
-      raise "unsupported key #{key}"
+    raise "unsupported key #{key}"
   end
 end
 
