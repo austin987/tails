@@ -928,3 +928,8 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
     @vm.file_exist?("#{output_dir}/#{output_file}")
   }
 end
+
+When /^I accept to import the key with Seahorse$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("TorBrowserOkButton.png", 10)
+end

@@ -30,7 +30,7 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser has started and loaded the startup page
     And I open the address "https://tails.boum.org/tails-signing.key" in the Tor Browser
     Then I see "OpenWithImportKey.png" after at most 20 seconds
-    When I press the "ENTER" key
+    When I accept to import the key with Seahorse
     Then I see "KeyImportedNotification.png" after at most 10 seconds
 
   Scenario: Playing HTML5 audio
