@@ -28,13 +28,15 @@ to 1024.
 ## rngd
 
 `rngd` gets entropy from a hardware RNG, if available. Otherwise, it
-does not start. `rngd` feeds the `/dev/random` entropy pool until
-`fill-watermark` bits are available. The `fill-watermark` defaults to
-50% of the size of the entropy pool, which itself defaults to 4096
-bits on Linux 3.14, so basically `rngd` feeds the entropy pool unless
-there are already 2048 bits in it. The [[!debpts rng-tools
-desc="Debian package"]] does not override this default configuration,
-and neither does Tails.
+does not start.
+
+`rngd` fills up the pool using an `ioctl` on `/dev/random` to add
+entropy. It does that unless `fill-watermark` bits are available.
+The `fill-watermark` defaults to 50% of the size of the entropy pool,
+which itself defaults to 4096 bits on Linux 3.14, so basically `rngd`
+feeds the entropy pool unless there are already 2048 bits in it.
+The [[!debpts rng-tools desc="Debian package"]] does not override this
+default configuration, and neither does Tails.
 
 Note: `rngd` (2-unofficial-mt.14-1) does not modify any parameter in
 `/proc/sys/kernel/random/`.
