@@ -304,24 +304,6 @@ the appropriate tcpdump or tshark filters.
 
       torsocks /usr/bin/gobby-0.5
 
-# Use of untrusted partitions
-
-(automate: [[!tails_ticket 7822]])
-
-* Is any local hard-disk swap partition used as swap?
-  boot on a (possibly virtual) machine that has a cleartext swap
-  partition not managed by LVM. To verify that a local GTP partition is swap,
-  check its type code with `sgdisk -p`, Linux swap is code 8200.
-
-  This swap partition must not be used by Tails. Run `cat /proc/swaps`.
-
-* Is a persistence volume on a local hard-disk partition used?
-  (Hint: setup a libvirt USB disk with GPT and a partition labeled
-  `TailsData`, set the `removable` flag on it, check that
-  tails-greeter proposes to enable persistence. Then remove the
-  `removable` flag, and check that tails-greeter does not propose to
-  enable persistence anymore.)
-
 # Claws
 
 * Check mail over IMAP using:
@@ -538,21 +520,6 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 * The Tor Browser should use a Internet Explorer theme
 * The Unsafe Browser has no scary red theme
 
-# Unsafe Web Browser
-
-(automate: [[!tails_ticket 7823]])
-
-* On start, if no DNS server was configured in NetworkManager
-  (e.g. if there's no network connection), there must be an error.
-* Once started, check that:
-  - the Tor Browser instance runs as the `clearnet` user.
-  - it has no proxy configured.
-  - no extensions are installed.
-  - there are no bookmarks except the default Firefox ones.
-* On exit, check that:
-  - make sure that its chroot gets properly teared down on exit (there
-    should be nothing mounted inside `/var/lib/unsafe-browser`).
-
 # Real (non-VM) hardware
 
 `[can't-automate]`
@@ -566,6 +533,11 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 
 # Documentation
 
+* The "Tails documentation" desktop launcher should open the
+  [[getting started]] page (automate: [[!tails_ticket 8788]]):
+  - in English
+  - in one language to which the website is translated
+  - in one language to which the website is not translated (=> English)
 * Browse around in the documentation shipped in the image. Internal
   links should be fine.
 

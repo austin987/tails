@@ -1,25 +1,20 @@
-Then /^the shipped Tails signing key is not outdated$/ do
-  # "old" here is w.r.t. the one we fetch from Tails' website
+Then /^the shipped Tails (signing|Debian repository) key will be valid for the next (\d+) months$/ do |key_type, max_months|
   next if @skip_steps_while_restoring_background
-  sig_key_fingerprint = "0D24B36AA9A2A651787876451202821CBE2CD9C1"
-  fresh_sig_key = "/tmp/tails-signing.key"
-  tmp_keyring = "/tmp/tmp-keyring.gpg"
-  key_url = "https://tails.boum.org/tails-signing.key"
-  @vm.execute("curl --silent --socks5-hostname localhost:9062 " +
-              "#{key_url} -o #{fresh_sig_key}", $live_user)
-  @vm.execute("gpg --batch --no-default-keyring --keyring #{tmp_keyring} " +
-              "--import #{fresh_sig_key}", $live_user)
-  fresh_sig_key_info =
-    @vm.execute("gpg --batch --no-default-keyring --keyring #{tmp_keyring} " +
-                "--list-key #{sig_key_fingerprint}", $live_user).stdout
-  shipped_sig_key_info = @vm.execute("gpg --batch --list-key #{sig_key_fingerprint}",
-                                     $live_user).stdout
-  assert_equal(fresh_sig_key_info, shipped_sig_key_info,
-         "The Tails signing key shipped inside Tails is outdated:\n" +
-         "Shipped key:\n" +
-         shipped_sig_key_info +
-         "Newly fetched key from #{key_url}:\n" +
-         fresh_sig_key_info)
+  if key_type == 'signing'
+    sig_key_fingerprint = "0D24B36AA9A2A651787876451202821CBE2CD9C1"
+    cmd = 'gpg'
+    user = $live_user
+  elsif key_type == 'Debian repository'
+    sig_key_fingerprint = "221F9A3C6FA3E09E182E060BC7988EA7A358D82E"
+    cmd = 'apt-key adv'
+    user = 'root'
+  else
+    raise 'Unknown key type #{key_type}'
+  end
+  shipped_sig_key_info = @vm.execute_successfully("#{cmd} --batch --list-key #{sig_key_fingerprint}", user).stdout
+  expiration_date = Date.parse(/\[expires: ([0-9-]*)\]/.match(shipped_sig_key_info)[1])
+  assert((expiration_date << max_months.to_i) > DateTime.now,
+         "The shipped signing key will expire within the next #{max_months} months.")
 end
 
 Then /^the live user has been setup by live\-boot$/ do

@@ -81,7 +81,13 @@ Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
   @vm.set_disk_boot(name, type.downcase)
 end
 
-Given /^I plug ([[:alpha:]]+) drive "([^"]+)"$/ do |bus, name|
+Given /^I create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |size, unit, name|
+  next if @skip_steps_while_restoring_background
+  @vm.storage.create_new_disk(name, {:size => size, :unit => unit,
+                                     :type => "qcow2"})
+end
+
+Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
   next if @skip_steps_while_restoring_background
   @vm.plug_drive(name, bus.downcase)
   if @vm.is_running?
@@ -132,11 +138,11 @@ When /^I start the computer$/ do
   post_vm_start_hook
 end
 
-Given /^I start Tails from DVD(| with network unplugged) and I login$/ do |network_unplugged|
+Given /^I start Tails( from DVD)?( with network unplugged)? and I login$/ do |dvd_boot, network_unplugged|
   # we don't @skip_steps_while_restoring_background as we're only running
   # other steps, that are taking care of it *if* they have to
-  step "the computer is set to boot from the Tails DVD"
-  if network_unplugged.empty?
+  step "the computer is set to boot from the Tails DVD" if dvd_boot
+  if network_unplugged.nil?
     step "the network is plugged"
   else
     step "the network is unplugged"
@@ -145,7 +151,7 @@ Given /^I start Tails from DVD(| with network unplugged) and I login$/ do |netwo
   step "the computer boots Tails"
   step "I log in to a new session"
   step "Tails seems to have booted normally"
-  if network_unplugged.empty?
+  if network_unplugged.nil?
     step "Tor is ready"
     step "all notifications have disappeared"
     step "available upgrades have been checked"
@@ -543,6 +549,70 @@ When /^I start the Tor Browser in offline mode$/ do
   end
 end
 
+def xul_application_info(application)
+  binary = @vm.execute_successfully(
+                '. /usr/local/lib/tails-shell-library/tor-browser.sh; ' +
+                'echo ${TBB_INSTALL}/firefox'
+                                    ).stdout.chomp
+  case application
+  when "Tor Browser"
+    user = $live_user
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
+    chroot = ""
+    new_tab_button_image = "TorBrowserNewTabButton.png"
+    address_bar_image = "TorBrowserAddressBar.png"
+  when "Unsafe Browser"
+    user = "clearnet"
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
+    chroot = "/var/lib/unsafe-browser/chroot"
+    new_tab_button_image = "UnsafeBrowserNewTabButton.png"
+    address_bar_image = "UnsafeBrowserAddressBar.png"
+  when "I2P Browser"
+    user = "i2pbrowser"
+    cmd_regex = "#{binary} .* -profile /home/#{user}/\.i2p-browser/profile\.default"
+    chroot = "/var/lib/i2p-browser/chroot"
+    new_tab_button_image = nil
+    address_bar_image = nil
+  when "Tor Launcher"
+    user = "tor-launcher"
+    cmd_regex = "#{binary} -app /home/#{user}/\.tor-launcher/tor-launcher-standalone/application\.ini"
+    chroot = ""
+    new_tab_button_image = nil
+    address_bar_image = nil
+  else
+    raise "Invalid browser or XUL application: #{application}"
+  end
+  return {
+    :user => user,
+    :cmd_regex => cmd_regex,
+    :chroot => chroot,
+    :new_tab_button_image => new_tab_button_image,
+    :address_bar_image => address_bar_image,
+  }
+end
+
+When /^I open a new tab in the (.*)$/ do |browser|
+  next if @skip_steps_while_restoring_background
+  info = xul_application_info(browser)
+  @screen.click(info[:new_tab_button_image])
+  @screen.wait(info[:address_bar_image], 10)
+end
+
+When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
+  next if @skip_steps_while_restoring_background
+  step "I open a new tab in the #{browser}"
+  info = xul_application_info(browser)
+  @screen.click(info[:address_bar_image])
+  sleep 0.5
+  @screen.type(address + Sikuli::Key.ENTER)
+end
+
+Then /^the (.*) has no plugins installed$/ do |browser|
+  next if @skip_steps_while_restoring_background
+  step "I open the address \"about:plugins\" in the #{browser}"
+  step "I see \"TorBrowserNoPlugins.png\" after at most 30 seconds"
+end
+
 def xul_app_shared_lib_check(pid, chroot)
   expected_absent_tbb_libs = ['libnssdbm3.so']
   absent_tbb_libs = []
@@ -574,35 +644,32 @@ def xul_app_shared_lib_check(pid, chroot)
          "Native libs that we don't want: #{unwanted_native_libs}")
 end
 
-Then /^(.*) uses all expected TBB shared libraries$/ do |application|
+Then /^the (.*) uses all expected TBB shared libraries$/ do |application|
   next if @skip_steps_while_restoring_background
-  binary = @vm.execute_successfully(
-                '. /usr/local/lib/tails-shell-library/tor-browser.sh; ' +
-                'echo ${TBB_INSTALL}/firefox'
-                                    ).stdout.chomp
-  case application
-  when "the Tor Browser"
-    user = $live_user
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
-    chroot = ""
-  when "the Unsafe Browser"
-    user = "clearnet"
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
-    chroot = "/var/lib/unsafe-browser/chroot"
-  when "the I2P Browser"
-    user = "i2pbrowser"
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.i2p-browser/profile\.default"
-    chroot = "/var/lib/i2p-browser/chroot"
-  when "Tor Launcher"
-    user = "tor-launcher"
-    cmd_regex = "#{binary} -app /home/#{user}/\.tor-launcher/tor-launcher-standalone/application\.ini"
-    chroot = ""
-  else
-    raise "Invalid browser or XUL application: #{application}"
-  end
-  pid = @vm.execute_successfully("pgrep --uid #{user} --full --exact '#{cmd_regex}'").stdout.chomp
+  info = xul_application_info(application)
+  pid = @vm.execute_successfully("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").stdout.chomp
   assert(/\A\d+\z/.match(pid), "It seems like #{application} is not running")
-  xul_app_shared_lib_check(pid, chroot)
+  xul_app_shared_lib_check(pid, info[:chroot])
+end
+
+Then /^the (.*) chroot is torn down$/ do |browser|
+  next if @skip_steps_while_restoring_background
+  info = xul_application_info(browser)
+  try_for(30, :msg => "The #{browser} chroot '#{info[:chroot]}' was " \
+                      "not removed") do
+    !@vm.execute("test -d '#{info[:chroot]}'").success?
+  end
+end
+
+Then /^the (.*) runs as the expected user$/ do |browser|
+  next if @skip_steps_while_restoring_background
+  info = xul_application_info(browser)
+  assert_vmcommand_success(@vm.execute(
+    "pgrep --full --exact '#{info[:cmd_regex]}'"),
+    "The #{browser} is not running")
+  assert_vmcommand_success(@vm.execute(
+    "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"),
+    "The #{browser} is not running as the #{info[:user]} user")
 end
 
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
@@ -667,7 +734,7 @@ end
 Given /^the USB drive "([^"]+)" contains Tails with persistence configured and password "([^"]+)"$/ do |drive, password|
     step "a computer"
     step "I start Tails from DVD with network unplugged and I login"
-    step "I create a new 4 GiB USB drive named \"#{drive}\""
+    step "I create a 4 GiB disk named \"#{drive}\""
     step "I plug USB drive \"#{drive}\""
     step "I \"Clone & Install\" Tails to USB drive \"#{drive}\""
     step "there is no persistence partition on USB drive \"#{drive}\""
