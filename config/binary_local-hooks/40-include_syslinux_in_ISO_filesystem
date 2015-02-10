@@ -41,6 +41,8 @@ cp "$CHROOT_SYSLINUX_BIN" "$LINUX_BINARY_UTILS_DIR/"
 cp "$CHROOT_SYSLINUX_MBR" "$BINARY_MBR_DIR/mbr.bin"
 
 cat chroot/etc/apt/sources.list chroot/etc/apt/sources.list.d/*.list \
+   | grep --extended-regexp --line-regexp --invert-match \
+        'deb\s+file:/root/local-packages\s+\./' \
    | sed --regexp-extended -e 's,^deb(\s+),deb-src\1,' \
    > "$CHROOT_TEMP_APT_SOURCES"
 Chroot chroot apt-get --yes update
