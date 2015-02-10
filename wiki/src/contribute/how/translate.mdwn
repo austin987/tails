@@ -13,295 +13,67 @@ Welcome aboard!</p>
 
 Most of Tails developers are not native English speakers so you're
 more than welcome to correct or improve our English.
-For this, you can either follow the [[Git workflow|translate#git]] or
+For this, you can either follow the [[Git workflow|translate/with_Git]] or
 [[propose|contribute/talk]] another way that suits you better to share
 your improvements with us.
 
 <a id="translate"></a>
 
-# Translate Tails
+# Translate Tails custom programs
 
 You can help correct, improve, or complete the translations of Tails
-programs and documentation into your native language:
+programs into your native language:
 
-* **For French**, the existing translators
-  team uses Git. So, read [[translating with Git|translate#git]].
+* **For French**, the translation team uses Git. Read its [[dedicated
+  documentation|translate/team/fr]] for translators.
 * **For other languages**, read [[translating with
-  Transifex|translate#transifex]].
-* However, this website is [[translated with Git|translate#git]]
-  in **all languages**.
+  Transifex|translate/with_Transifex]].
+  Tails programs can be translated into more than 140 languages this way.
 
-<a id="transifex"></a>
+# Translate this website
 
-## With Transifex
+You can also translate this website, which includes the Tails
+[[documentation|doc]]. This is done [[translate/with_Git]].
 
-Most of Tails can be translated directly online after logging in with
-[Transifex](http://docs.transifex.com/):
+The translations are peer-reviewed and thus, you need to get into contact with
+a language team if you want to participate.
+In general, you can contact the translation teams via the
+[[mailing list for translators|translate#follow-up]].
 
-- [Tails
-Greeter](https://www.transifex.com/projects/p/torproject/resource/3-tails-tails-greeter-pot/)
-- [Tails Persistence
-Setup](https://www.transifex.com/projects/p/torproject/resource/3-tails-tails-persistence-setup-pot/)
-- [Tails Installer](https://www.transifex.com/projects/p/torproject/resource/3-tails-liveusb-creator-pot/)
-- [Tails Upgrader](https://www.transifex.com/projects/p/torproject/resource/tails-tails-iukpot/)
-- [Tails Perl library](https://www.transifex.com/projects/p/torproject/resource/tails-tails-perl5lib/)
-- [WhisperBack](https://www.transifex.com/projects/p/torproject/resource/3-whisperback-whisperback-pot/)
-- [A set of various translatable strings](https://www.transifex.com/projects/p/torproject/resource/tails-misc/)
+<a id="language-teams"></a>
 
-You are now doing translation work for Tails on Transifex. This is
-great, thanks!
+Currently, there are three active **language teams**:
 
-Beware, we don't host Transifex.com, they do have their own privacy policy.
+* [[French|translate/team/fr]]
+* [[German|translate/team/de]]
+* [[Portuguese|translate/team/pt]]
 
-Further:
+and three new language teams are being set up:
 
-- It would be awesome if you did [[follow-up on
-  translation needs|translate#follow-up]].
-- You might want to [[translate the Tails
-  website|translate#new-language]] too.
+* Italian
+* Spanish
+* Turkish
 
-<a id="git"></a>
-
-## Translation team using Git
-
-On the long run, translators team often decide to use [[Git]] to share and
-synchronize their work, and ask us to integrate it within the
-official repositories.
-
-### What can be translated
-
-Various bits of text can be translated:
-
-* **Custom programs** (Tails Greeter, Tails Persistence Setup, Tails
-  Installer, Tails Upgrader, Tails Perl library and WhisperBack): each
-  one has its own [[Git repository|contribute/git]], where PO files
-  live in the `po` directory. Some have a `README.translators` at the
-  root of their source tree: please read it.
-* **A set of various translatable strings** live in the `po`
-  directory, in the `devel`
-  branch of the [[main Tails Git repository|contribute/Git]].
-* **This website** must be translated in the `master` branch of the
-  [[main Tails Git repository|contribute/Git]]. Please note [[there
-  are requirements|translate#new-language]] to translate the website
-  into a new language.
-
-### gettext
-
-The translation system used to translate Tails is called <span
-class="application">[[!wikipedia gettext]]</span>. Every sentence that
-needs to be translated is written in a [PO
-file](https://www.gnu.org/software/gettext/manual/gettext.html#PO-Files).
-
-To edit these PO files, we recommend that you use <span
-class="application">[Poedit](http://www.poedit.net/screenshots.php)</span>, a
-cross-platform editor for PO
-files. <span class="application">Poedit</span> is included in Tails.
-
-Please ensure that you use at least version 1.5 of Poedit, as this version
-handles line breaks of our files correctly.
-
-When setting up Poedit, you might want to ensure to use "Tails translators"
-or "Tails developers" as translator name and "tails@boum.org" as translator
-contact email address.
-
-If you do not use Poedit, but for example Vim or Emacs with the po-plugin, please
-verify for each translation that the syntax of the files is not broken. In order to do
-do so, please refer to the [[localization tricks page|contribute/l10n_tricks]].
-
-If there is no existing PO file for your language, you can copy the
-corresponding `.pot` file into a new `.po` file.
-
-When working on the website translation, it is highly recommended that you
-[[build the wiki locally|contribute/build/website/]] in order to verify
-your modifications or to review the translations of somebody else.
-
-### Workflow
-
-You can take advantage of Git to send us your work by asking us to
-pull from your Git branch. Here is the typical workflow used by Tails
-translators teams:
-
-1. Set up your personal [[Git repository|contribute/git]]: if you
-   already know where to host it in a public place, this is great;
-   else, [fork us on repo.or.cz](http://repo.or.cz/w/tails.git) or ask
-   the Tails system administrators (<tails-sysadmins@boum.org>) to host
-   your repository.
-
-   On your computer, set up the repository. This example clones
-   an empty repository into the "tails" folder:
-
-   `git clone http://repo.or.cz/r/tails/yourrepo.git tails`
-
-2. Then setup the remote Tails main repository:
-
-   `cd tails`
-
-   `git remote add tails https://git-tails.immerda.ch/tails`
-
-   Typing `git remote` should now show two entries:
-
-   `origin
-   tails`
-
-   "origin" is your own repository, "tails" contains the files of the
-   main repository once we fetch them. This operation requires some time
-   at setup, as it requires to pull the whole repository.
-
-   `git fetch tails master`
-
-3. Now to setup Git, type:
-
-   `git config user.name "Tails developers"
-   git config user.email "tails@boum.org"`
-
-   Verify this configuration by typing:
-
-   `git config --list`
-
-4. Create a branch for every translation you make, for example, if you want to
-   translate the "contribute" page, create a branch named "translation-contribute":
-
-   `git branch translation-contribute`
-
-   `git checkout translation-contribute`
-
-   Now typing `git branch` should show a star in front of the active branch.
-
-5. Translate whatever you can in your preferred PO file editor.
-
-6. Commit the changes you made to `.po` files:
-
-   `git add <files>`
-
-   `git commit <files>`
-
-7. Merge our main repository into yours.
-   Regularly, pull from the master branch of the main repository to update
-   your local files.
-
-   `git fetch tails master` only fetches new files,
-
-   `git pull tails master` fetches and merges the files.
-
-8. Push your changes to your online Git repository.
-
-   `git push origin <name of branch>`
-
-   `git push origin translation-contribute`
-
-9. Ask other members of your translation team to review your work by writing
-   an email to [[the mailing list for
-   translators|translate#follow-up]], containing in its subject
-   "(Review)" and the short code for the translated language, for example "[fr]".
-
-10. The reviewer, once happy with the result, should ask on the
-   [[mailing list for translators|translate#follow-up]] to pull from
-   the branch that was worked on, writing an email with "(pull)" and the language
-   short code in the subject. Ideally, such email would be OpenPGP-signed.
-
-You might want to consider using Git over Tor, for example, by using a Tails device when you translate.
-
-Read more about the Tails [[Git|contribute/git]] setup.
-
-### Let's get organized
-
-You are now doing translation work for Tails using Git. This is great,
-thanks! It would be awesome if you did [[follow-up on translation
-needs|translate#follow-up]].
-
-### Team duties
-
-Our custom programs can be translated [[using
-Transifex|translate#transifex]]. Work done there is not automatically
-synchronized with the translations your team does in Git.
-
-It is nice to minimize time wasted by unknown people who work, with
-Transifex, on the same thing as your translation team.
-
-So, a translation team using Git should regularly contact Transifex
-translators (listed in the `Last-translator` field of the PO files one
-can download from Transifex), either over email or using the Transifex
-interface, to:
-
-1. Thank them for translating Tails stuff.
-2. Make it clear their work is not imported (and is therefore, well,
-   useless).
-3. Invite them to join the team and share the team's
-   preferred workflow.
-4. Invite them to subscribe to [[the mailing list for
-   translators|translate#follow-up]].
-
-<a id="new-language"></a>
-
-# Translate this website into a new language
-
-There are already some active website translation teams,
-coordinating via the [[mailing list for translators|translate#follow-up]].
-
-So, you want the Tails website to be available in a new language.
-Please keep in mind that it represents quite a lot of work.
-
-Therefore, here are a few things that would be required in order to start
-translating the Tails website to a new language:
-
-1. A team of translators, not just one person, is necessary. That also
-   allows for peer reviews between the team, more flexibility for
-   example when an important deadline arrives.
-
-2. At least part of the team should subscribe to the [[mailing list
-   for translators|translate#follow-up]].
-
-3. Since the content of the website is sensitive in terms of privacy
-   protection, Tails developers need to establish contacts with
-   trusted people to review the work from time to time.
-
-4. For translations to be useful, they need to be maintained in the
-   long run. This takes a few hours a month.
-
-Once those conditions are fulfilled, the new team can start working on a first
-batch of translations.
-
-  - The Tails custom programs, as [[documented earlier|translate#translate]]
-
-  - Important parts of our website:
-
-    - [[/index]]
-    - [[/about]] page
-    - [[/getting_started]] page
-    - [[/support]] page
-    - [[/download]] page
-    - [[/doc/about]] section
-    - [[/doc/first_steps]] section
-
-    See the exhaustive list of [[core pages|l10n_tricks/core_po_files.txt]].
-
-Do not hesitate to report the progress of your work on the [[mailing list for
-translators|translate#follow-up]].
+If your language is not listed here, read the documentation
+to [[add a new language|translate/team/new]].
 
 <a id="follow-up"></a>
 
-# Follow-up on translation needs
+# Mailing list for translators
 
-Translators coordinate on the tails-l10n mailing list (*l10n* stands
-for [[!wikipedia Software_localization desc="localization"]]).
-Important changes to translatable strings are announced there.
+Translators coordinate on the tails-l10n mailing
+list (*l10n* stands for [[!wikipedia Software_localization desc="localization"]]).
 
-Please <a href='https://mailman.boum.org/listinfo/tails-l10n/'>subscribe</a> to
-the list if you want to become a regular translator.
+This is where important changes to translatable strings are announced.
+So, please subscribe to the list if you want to become a regular
+translator:
+
+<form method="POST" action="https://mailman.boum.org/subscribe/tails-l10n">
+	<input class="text" name="email" value=""/>
+	<input class="button" type="submit" value="Subscribe"/>
+</form>
 
 Any message sent to this list is stored in a [public
 archive](https://mailman.boum.org/pipermail/tails-l10n/), so beware of
 what your email content and headers reveal about yourself: location,
 IP address, email subject and content, etc.
-
-You can consult this
-[archive](https://mailman.boum.org/pipermail/tails-l10n/) to search
-for recent translation requests.
-
-See also the [translation
-tickets](https://labs.riseup.net/code/projects/tails/issues?query_id=144)
-on Redmine.
-
-# Resources
-
-- The [[localization tricks page|contribute/l10n_tricks]]

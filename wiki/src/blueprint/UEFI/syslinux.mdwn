@@ -93,3 +93,48 @@ Miscellaneous test results
 * Boots fine from DVD on HP Pavilion dm4-1150ca.
 * Boots fine on Asus Z87 Pro motherboard (Tails 1.1~beta1) off a USB
   stick installed with Tails Installer.
+
+# Tests with syslinux 3:6.03~pre18+dfsg-1~bpo70+1
+
+* MacBookPro 13-inch Late 2011 8,1. All what follows is using a USB
+  device installed with Tails Installer, using an experimental ISO
+  (20140731) with syslinux 3:6.03~pre18+dfsg-1~bpo70+1. The same
+  computer boots Tails 1.1 just fine.
+  - boots just fine with the default configuration
+  - uncommenting `menu background splash.png` in
+    `EFI/BOOT/stdmenu.cfg` => stuck at the Mac boot menu
+  - same as above, and add `MENU RESOLUTION 1024 768` to
+    `EFI/BOOT/tails.cfg` => displayed *once* the syslinux boot menu
+    with the expected background image, can edit the kernel cmdline,
+    but does not boot (display stuck at the syslinux menu); and then
+    I can't reproduce it, and it's stuck at the Mac boot menu, like
+    when `MENU RESOLUTION 1024 768` wasn't here.
+  - same as above, but with `MENU RESOLUTION 640 480`
+    => stuck at the Mac boot menu
+* MacBookPro9,2: with an experimental ISO built from
+  c183ad91bce6c0fa4a95c387c8f5c8387acf9a0c, same results as with 1.1;
+  and same as above MacBookPro 8,1 results wrt. menu config tweaks.
+* TOSHIBA PORTEGE Z830: boots fine with `isohybrid --entry 4 --type
+  0x1c` and a <1GB ISO.
+* TOSHIBA PORTEGE Z930: boots fine from a stick installed with Tails
+  Installer (from DVD), while it did not boot with Tails 1.1.
+* ThinkPad X61, EeePC Seashell series, VirtualBox 4.3.14-dfsg-1 (MBR):
+  status quo, works just as fine as before
+* ASUSTeK UX31E: works fine, while it required manual selection in
+  BIOS in Tails 1.1.
+* Mid-2012 Mac Pro (6-core 3.33Ghz 32GB memory): boots fine from DVD
+* Mid-2010 15" MacBook Pro (MacBookPro 6,2): boots fine from DVD
+* Lenovo x61s: boots fine from manually installed USB stick
+* Macbook pro early 2008 (4,1): boots fine from DVD.
+* OVMF:
+  - Boots fine. Fails to shutdown (hangs at "Starting new kernel").
+  - with "menu background splash.png": boots fine. The syslinux menu is
+    as beautiful as when booting in MBR mode.
+  - with "MENU RESOLUTION 1024 768": boots fine. The menu is smaller.
+  - with "menu background splash.png" and "MENU RESOLUTION 1024 768":
+    boots fine. The menu is smaller and the background gets tiled
+    (repeated as 2x2 tiles) which is ugly.
+* MacBookPro 2.6GHZ Mid 2012 15" (A1286 / MD104LL), Tails 1.2:
+  - DVD: boots fine
+  - manual install method for mac: boots fine
+  - Tails Installer: doesn't boot

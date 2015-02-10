@@ -26,18 +26,19 @@ if [ -d "$HOME/.claws-mail" ]; then
     fi
 fi
 
-# Iceweasel
+# Tor Browser
 # Copy the file containing toolbars configurations
-if [ -d "$HOME/.mozilla/firefox/default" ]; then
+BROWSER_PROFILE="${HOME}/.tor-browser/profile.default"
+if [ -d "${BROWSER_PROFILE}" ]; then
     cp /usr/share/tails/firefox-localstore-win8.rdf \
-       ${HOME}/.mozilla/firefox/default/localstore.rdf
+       "${BROWSER_PROFILE}"/localstore.rdf
     # Setup a blue lightweight theme
-    cat >> ${HOME}/.mozilla/firefox/default/user.js <<EOF
-user_pref("lightweightThemes.isThemeSelected", true);
-user_pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Unsafe Browser\",\"headerURL\":\"file:///usr/share/pixmaps/blue_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/blue_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#3399FF\",\"updateDate\":0,\"installDate\":0}]");
+    cat >> "${BROWSER_PROFILE}"/preferences/0000camouflage.js <<EOF
+pref("lightweightThemes.isThemeSelected", true);
+pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Internet Explorer\",\"headerURL\":\"file:///usr/share/pixmaps/blue_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/blue_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#3399FF\",\"updateDate\":0,\"installDate\":0}]");
 EOF
 	# Tune chrome
-	cat >> ${HOME}/.mozilla/firefox/default/chrome/userChrome.css <<EOF
+	cat >> "${BROWSER_PROFILE}"/chrome/userChrome.css <<EOF
 
 /* Camouflage */
 .tab-close-button { list-style-image: url("moz-icon://stock/gtk-close-grey?size=menu") !important; }
@@ -83,7 +84,7 @@ gsettings set org.gnome.desktop.background picture-options stretched
 gsettings set org.gnome.desktop.wm.preferences num-workspaces 1
 
 # Panel
-gsettings set org.gnome.gnome-panel.layout object-id-list "['menu-button', 'iceweasel-launcher', 'claws-launcher', 'pidgin-launcher', 'keepassx-launcher', 'gnome-terminal-launcher', 'window-list', 'notification-area', 'shutdown-helper', 'clock']"
+gsettings set org.gnome.gnome-panel.layout object-id-list "['menu-button', 'tor-browser-launcher', 'claws-launcher', 'pidgin-launcher', 'keepassx-launcher', 'gnome-terminal-launcher', 'window-list', 'notification-area', 'shutdown-helper', 'clock']"
 gsettings set org.gnome.gnome-panel.layout toplevel-id-list "['bottom-panel']"
 gsettings set org.gnome.desktop.lockdown disable-log-out true
 

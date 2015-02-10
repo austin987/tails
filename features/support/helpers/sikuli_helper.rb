@@ -108,6 +108,14 @@ def sikuli_script_proxy.new(*args)
     self.click(self.wait(pic, time))
   end
 
+  def s.wait_and_double_click(pic, time)
+    self.doubleClick(self.wait(pic, time))
+  end
+
+  def s.wait_and_hover(pic, time)
+    self.hover(self.wait(pic, time))
+  end
+
   def s.hover_point(x, y)
     self.hover(Sikuli::Location.new(x, y))
   end

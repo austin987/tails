@@ -56,6 +56,14 @@ Else, new versions are announced on:
 HTTP
 ====
 
+<div class="note">
+
+<p>We cannot add more mirrors to our DNS pool at the moment because of a <a
+href="https://trac.torproject.org/projects/tor/ticket/11741">bug in the Tor
+resolver</a> that prevents us from having more than around 25 mirrors.</p>
+
+</div>
+
 To efficiently help Tails users downloading it over HTTP, one needs to
 have sufficiently privileged access to a web server with decent
 bandwidth: a domestic DSL connection won't help; neither will a shared
@@ -67,11 +75,13 @@ a normal day, and twice as much for a short period after each release.
 So, it is a must to be able to push at least 2 [[!wikipedia TiB]]
 a month, and preferably 3 or 4 TiB.
 
+You will also need around 5-10 GiB of disk space.
+
 If you satisfy these practical requirements, please read on!
 Else, please consider seeding Tails images over BitTorrent instead.
 
 Before starting doing any real work on this topic, please get in touch
-(<tails@boum.org>, [[OpenPGP key|doc/about/openpgp_keys]]) and send us
+(<tails@boum.org>, [[OpenPGP key|doc/about/openpgp_keys#private]]) and send us
 your OpenPGP public key, so that any further communication between us
 can be properly encrypted and authenticated.
 
@@ -129,7 +139,16 @@ enabled.
 
 Download a snapshot of the current Tails files:
 
-	rsync -rt --delete rsync.torproject.org::amnesia-archive \
+	rsync -rt --delete \
+	         rsync.torproject.org::amnesia-archive \
+	         /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
+
+If you have disk space limitations, you might want to exclude the
+`/tails/obsolete` folder (which contains old versions of Tails) from the
+download:
+
+	rsync -rt --delete --exclude=/tails/obsolete --delete-excluded \
+	         rsync.torproject.org::amnesia-archive \
 	         /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
 
 4. Schedule the pulling of the files

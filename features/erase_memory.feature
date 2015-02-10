@@ -9,10 +9,8 @@ Feature: System memory erasure on shutdown
     And the computer is a modern 64-bit system
     And the computer has 8 GiB of RAM
     And I set Tails to boot with options "debug=wipemem"
-    And the network is unplugged
-    And I start the computer
-    And the computer boots Tails
-    And the PAE kernel is running
+    And I start Tails from DVD with network unplugged and I login
+    Then the PAE kernel is running
     And at least 8 GiB of RAM was detected
     And process "memlockd" is running
     And process "udev-watchdog" is running
@@ -25,12 +23,8 @@ Feature: System memory erasure on shutdown
     And the computer is a modern 64-bit system
     And the computer has 8 GiB of RAM
     And I set Tails to boot with options "debug=wipemem"
-    And the network is unplugged
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And GNOME has started
-    And the PAE kernel is running
+    And I start Tails from DVD with network unplugged and I login
+    Then the PAE kernel is running
     And at least 8 GiB of RAM was detected
     And process "memlockd" is running
     And process "udev-watchdog" is running
@@ -43,10 +37,8 @@ Feature: System memory erasure on shutdown
     And the computer is an old pentium without the PAE extension
     And the computer has 8 GiB of RAM
     And I set Tails to boot with options "debug=wipemem"
-    And the network is unplugged
-    And I start the computer
-    And the computer boots Tails
-    And the non-PAE kernel is running
+    And I start Tails from DVD with network unplugged and I login
+    Then the non-PAE kernel is running
     And at least 3500 MiB of RAM was detected
     And process "memlockd" is running
     And process "udev-watchdog" is running
@@ -59,11 +51,7 @@ Feature: System memory erasure on shutdown
     And the computer is an old pentium without the PAE extension
     And the computer has 8 GiB of RAM
     And I set Tails to boot with options "debug=wipemem"
-    And the network is unplugged
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And GNOME has started
+    And I start Tails from DVD with network unplugged and I login
     And the non-PAE kernel is running
     And at least 3500 MiB of RAM was detected
     And process "memlockd" is running

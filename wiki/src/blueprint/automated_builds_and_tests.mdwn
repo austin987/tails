@@ -22,7 +22,9 @@ ensure a few facts:
 What we have
 ============
 
-* A Jenkins instance running on lizard.
+* A Jenkins instance running on lizard, that builds a few branches
+  whenever they are pushed. Results [are available
+  publicly](http://nightly.tails.boum.org/).
 * A partially automated test suite:
   - [[documentation|contribute/release_process/test/automated_tests]]
   - [[setup|contribute/release_process/test/setup]]
@@ -36,17 +38,13 @@ Roadmap
 0. Complete phase one (**build and publish ISOs automatically**):
    fix all child tickets of
    [[!tails_ticket 5324]].
+0. Run the test suite automatically on autobuilt ISOs:
+   [[!tails_ticket 5288]]
 0. See other tickets in the *Continuous Integration* category,
    and organize the next steps.
 
 What we need
 ============
-
-Automated builds
-----------------
-
-Ideally, every commit pushed to Git should result in an ISO being
-built, and made available online.
 
 Automated tests
 ---------------
@@ -65,8 +63,8 @@ fresh images can be tested without being transferred.
 In order to be able to build Tails in memory (which greatly speeds up builds)
 and to properly test HIGHMEM memory wipes, the test server should have at
 least 32 GB. Using KVM inside a KVM
-virtual machine is supported by the "nested KVM" feature available since
-Linux 3.1. VirtualBox (Vagrant) in KVM is not supported as of March 2013.
+virtual machine is supported by the "nested KVM" feature.
+VirtualBox (Vagrant) in KVM is not supported as of March 2013.
 
 We could set a threshold of tests that have to be successful before publishing
 one daily build image. This would prevent too-broken images to spread out and
@@ -75,53 +73,7 @@ potentially harm users.
 The setup of the automated build and test server should be done
 with public Puppet modules.
 
-Resources
-=========
+More specific pages
+===================
 
-## Jenkins
-
-See [[our wiki page|automated builds and tests/jenkins]] dedicated to Jenkins.
-
-## Testing tools and examples
-
-- <http://live.debian.net/gitweb/?p=live-autobuild.git> is currently
-  used to build "official" daily Debian Live images
-- [buildbot](http://buildbot.net) : a continous integration bot, able to
-  communicate over mail or IRC. Used by many projects.
-- Tor project's [buildbot configuration](https://gitweb.torproject.org/admin/buildbot-conf.git)
-- Martin Pitt
-  [announces](http://www.piware.de/2013/02/umockdev-record-and-mock-hardware-for-debugging-and-testing/)
-  umockdev ([source code](https://github.com/martinpitt/umockdev)),
-  a set of tools to record and mock hardware for debugging and testing
-
-<a id="resources-debian-pkg"></a>
-
-## Building Debian packages automatically
-
-- <http://jenkins-debian-glue.org/>
-- [debile](http://anonscm.debian.org/gitweb/?p=pkg-debile/debile.git)
-- [Jenkins configuration for Kamailio Debian
-  Packaging](https://github.com/sipwise/kamailio-deb-jenkins):
-  glueing Jenkins, pbuilder, reprepro, jjb, nginx,
-  jenkins-debian-glue, piuparts, DEP-8, and more together.
-
-## emulated boot from USB
-
-See [[the page that's dedicated to that|automated_builds_and_tests/USB]].
-
-## Buildbot
-
-We [[used to have a buildbot setup|todo/automated_builds_and_tests/buildbot]].
-
-Buildbot can be seen as a [framework](http://jacobian.org/writing/buildbot/) to
-deploy continuous integration. It has no real configuration file, but
-what deserves this role is a file that can be thought programatically.
-Thus it provide a very flexible environment that can be customize for
-most projects needs.
-
-Some interesting pages, might be worth reading for people willing to
-play with buildbot and understand its logic :
-
-* [Chromium's buildbot config](http://src.chromium.org/viewvc/chrome/trunk/tools/build),
-  which is the one driving their [builbot instance](http://build.chromium.org/)
-* [Buildbot's documentation](http://buildbot.net/buildbot/docs/latest/)
+[[!map pages="blueprint/automated_builds_and_tests/*"]]

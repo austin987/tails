@@ -1,38 +1,84 @@
-[[!meta title="TrueCrypt"]]
+[[!meta title="Opening TrueCrypt volumes using cryptsetup"]]
 
-Security considerations
-=======================
-Although *TrueCrypt* looks like free software, [concerns](http://www.happyassassin.net/2008/08/06/open-letter-to-the-developers-of-truecrypt/) over
-[its licence](http://www.truecrypt.org/legal/license) prevent its inclusion in Debian.
-Truecrypt is also *developed* in a closed
-fashion, so while the source code is freely available,
-it may receive less review than might a comparable openly developed project.
+On 28 May 2014, the [*TrueCrypt* website](http://truecrypt.sourceforge.net/) announced that the
+project was no longer maintained and recommended users to find
+alternate solutions. That website now reads:
 
-For the above reasons, *Tails* developers do not recommend *TrueCrypt*.
-We include *TrueCrypt* only to allow users of the (old
-and now unsupported) *Incognito* live system to access the data on
-previously created media.
+> WARNING: Using TrueCrypt is not secure as it may contain unfixed security issues.
 
-In the future, we would like to [[!tails_ticket 5373 desc="replace
-*TrueCrypt* with a compatible alternative"]]. However, there might be
-some time during which that is not possible, and [[!tails_ticket 5474
-desc="moving away from *TrueCrypt*"]] is the only sensible way we can
-go. This means that you should **not** create new TrueCrypt media if
-you intend to stay with Tails in the long run.
+*TrueCrypt* was removed in Tails 1.2.1.
 
-Using TrueCrypt in Tails
-==========================
+<div class="tip">
 
-*TrueCrypt* is not enabled by default when Tails starts. In order to use
-*TrueCrypt*, add the <span class="command">truecrypt</span> boot option
-to the <span class="application">boot menu</span>. For detailed
-instructions, see the documentation on [[using the <span
-class="application">boot
-menu</span>|first_steps/startup_options#boot_menu]].
+<p>We recommend that you use [[Tails encrypted persistence|doc/first_steps/persistence]] or [[LUKS encrypted
+volumes|/doc/encryption_and_privacy/encrypted_volumes]] instead of <span class="application">TrueCrypt</span>
+volumes.</p>
 
-Once Tails has started, to start <span
-class="application">TrueCrypt</span> choose
-<span class="menuchoice">
-  <span class="guimenu">Applications</span>&nbsp;▸
-  <span class="guisubmenu">Accessories</span>&nbsp;▸
-  <span class="guimenuitem">TrueCrypt</span></span>.
+</div>
+
+Still, you can open standard and hidden *TrueCrypt* volumes in Tails using the `cryptsetup`
+command line tool.
+
+<div class="note">
+
+<p>This technique might not work on volumes created with <em>TrueCrypt</em>
+version 4.1 to 4.3 (November 2005 to March 2007).</p>
+
+</div>
+
+1. [[Set up an administration
+   password|first_steps/startup_options/administration_password]].
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Accessories</span>&nbsp;▸
+     <span class="guimenuitem">Root Terminal</span>
+   </span>
+   to open a terminal with administration rights.
+
+1. **If you want to open a standard *TrueCrypt* volume**, execute the
+   following command. Replace `[volume]` with the path to your volume
+   (partition or file container) and `[name]` with a name of your choice.
+
+       cryptsetup open --type tcrypt [volume] [name]
+   
+   Here is an example of the command to execute to open a standard volume in a file container, yours is probably
+   different:
+
+       cryptsetup open --type tcrypt /media/mydisk/mycontainer myvolume
+
+   **Else, if you want to open a hidden *TrueCrypt* volume**, execute
+   the following command. Replace `[volume]` with the path to your volume
+   (partition or file container) and `[name]` with a name of your choice.
+
+       cryptsetup --tcrypt-hidden open --type tcrypt [volume] [name]
+   
+   Here is an example of the command to execute to open a hidden volume on a partition, yours is probably
+   different:
+
+       cryptsetup --tcrypt-hidden open --type tcrypt /dev/sdc1 myhidden
+
+1. After typing your password and once the command prompt reappears, execute the following commands to mount
+   the volume. Replace `[name]` with the name chosen in step&nbsp;3.
+
+       mkdir /media/[name]
+
+   a. And, if your volume contains a **NTFS or FAT file system** (default):
+
+          mount -o uid=1000 /dev/mapper/[name] /media/[name]
+
+   a. Else, if your volume contains an **Ext2, Ext3, or Ext4 file system**:
+
+          mount /dev/mapper/[name] /media/[name]
+
+1. If you don't see any error message, the volume is now available from the
+   <span class="guimenu">Places</span> menu.
+
+1. When you want to close your *TrueCrypt* volume, execute
+   the following commands to safely remove it.
+   Otherwise some of your files could be lost or damaged.
+   Replace `[name]`with the mapping name chosen in step&nbsp;3.
+
+       umount /media/[name]
+       cryptsetup close [name]

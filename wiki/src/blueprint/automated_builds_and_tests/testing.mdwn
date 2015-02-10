@@ -1,0 +1,67 @@
+[[!meta title="Automated testing tools"]]
+
+We already have [[an automated test suite|contribute/release_process/test/automated_tests]].
+This page is about tools that could allow us to improve it.
+
+[[!toc levels=2]]
+
+# Tools
+
+## behave
+
+* [homepage](https://github.com/behave/behave)
+* Cucumber-like, in Python
+* used by GNOME
+* examples from the eog source tree, that use *behave* and *dogtail*:
+  - [feature](https://git.gnome.org/browse/eog/tree/tests/actions.feature)
+  - [steps definition](https://git.gnome.org/browse/eog/tree/tests/steps/steps.py)
+* not in Debian (2014/08/05)
+* Python (with Jython) is now Sikuli's preferred scripting language;
+  it's also the language that has the best maintained bindings to
+  interact with libvirt, accessibility technologies, and more
+* does *behave* work fine under Jython?
+
+## dogtail
+
+* [homepage](https://fedorahosted.org/dogtail/)
+* GUI test tool and automation framework written in ​Python
+* uses Accessibility (a11y) technologies to communicate with
+  desktop applications
+* used by GNOME in combination with *behave*: see the section about
+  that one
+* in Debian Wheezy
+* how much do we still need Sikuli if we have dogtail?
+
+## LDTP
+
+LDTP is an open source testing tool that uses computer assistive
+technology (accessibility) to automate GUIs. It's used by GNOME,
+Mozilla and others:
+
+* [[!wikipedia Linux_Desktop_Testing_Project]]
+* [homepage](http://ldtp.freedesktop.org/wiki/)
+* [tutorial](http://download.freedesktop.org/ldtp/doc/ldtp-tutorial.pdf)
+* The main bindings are Python, but there also are a Ruby client and
+  Perl bindings in the [Git repo](http://cgit.freedesktop.org/ldtp/ldtp2/tree/ldtp)
+* The LDTP dev mailing-list is very quiet, and it's unclear whether
+  GNOME still uses it, or instead switched to dogtail.
+
+## misc
+
+- Martin Pitt
+  [announces](http://www.piware.de/2013/02/umockdev-record-and-mock-hardware-for-debugging-and-testing/)
+  umockdev ([source code](https://github.com/martinpitt/umockdev)),
+  a set of tools to record and mock hardware for debugging and testing
+
+# Open questions
+
+## Using accessibility technologies?
+
+In some cases, it could simplify some testing steps, such as anything
+about navigating menus, that we're currently mostly avoiding since
+it's hard to do in a robust way with Sikuli.
+
+A downside is that we're not exactly testing how most users interact
+with the software. Some upsides are that it would ensure that our
+stuff does support accessibility technologies, and that we would have
+to maintain less pictures.

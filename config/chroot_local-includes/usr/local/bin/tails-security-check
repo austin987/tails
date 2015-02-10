@@ -48,7 +48,7 @@ use Net::SSLeay;
 BEGIN {
     IO::Socket::SSL::set_ctx_defaults(
         verify_mode => Net::SSLeay->VERIFY_PEER(),
-        ca_file => '/etc/ssl/certs/UTN_USERFirst_Hardware_Root_CA.pem',
+        ca_file => '/usr/local/etc/ssl/certs/tails.boum.org-CA.pem',
     );
 }
 use LWP::UserAgent; # needs to be *after* IO::Socket::SSL's initialization
@@ -184,7 +184,7 @@ sub is_not_fixed {
     my $entry = shift;
     assert_isa($entry, 'XML::Atom::Entry');
 
-    ! grep { 'security/fixed' } categories($entry);
+    ! grep { $_ eq 'security/fixed' } categories($entry);
 }
 
 =head2 unfixed_entries

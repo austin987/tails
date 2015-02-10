@@ -1,0 +1,85 @@
+**Corresponding tickets**: [[!tails_ticket 6178]] and friends.
+
+[[!toc levels=2]]
+
+Background
+==========
+
+Tails currently [[uses only AppArmor for isolating
+applications|contribute/design/application_isolation]].
+
+User namespaces eventually made their way into the 3.8 kernel:
+<https://lwn.net/Articles/531114/>.
+
+Threat model
+============
+
+These are *potential* goals. It remains to be discussed which ones are
+MUST, SHOULD, etc., which can vary depending on the
+sandboxed application.
+
+* filesystem isolation?
+* X isolation? (e.g. key logging, taking pictures of the screen)
+* network isolation?
+* privilege escalation via holes in Linux?
+* privilege escalation via already running privileged daemons, or
+  setuid/setgid binaries?
+* isolation from hardware?
+  - sound: prevent sandboxed software from recording
+  - identifiers: prevent sandboxed software from learning hardware
+    identifiers, e.g. the MAC address; probably hard to achieve, since
+    containers share the host's kernel
+
+Security limitations
+====================
+
+* Until we can use Ubuntu's AppArmor profiles for LXC in Debian (most
+  notably, the mount mediation support is missing), privileged
+  containers still [seem to be
+  unsafe](https://www.stgraber.org/2014/01/01/lxc-1-0-security-features/).
+* [Unprivileged
+  containers](https://www.stgraber.org/2014/01/17/lxc-1-0-unprivileged-containers/)
+  should be enough for most of what we intend to contain. It's unclear
+  if they can be made to work on Debian Wheezy (seems to require quite
+  some backporting work). Note, however, that unprivileged containers
+  have had quite some security issues when they were introduced (and
+  for this reason, the grsec patchset disables unprivileged use of
+  user namespaces). Have things gotten better since?
+
+
+Tools to manage containers
+==========================
+
+* LXC
+* `unshare(1)`
+* [pflask](https://github.com/ghedo/pflask) automates the creation of
+  simple Linux containers based on them; it is e.g. used by
+  [pflask-debuild](https://github.com/ghedo/pflask/blob/master/tools/pflask-debuild)
+* systemd-nspawn
+* Docker, that we're [[evaluating|blueprint/evaluate_Docker]] as
+  a candidate to replace Vagrant in our easy build system
+
+Running GUI applications in containers
+======================================
+
+We're told that Subgraph OS will use LXC + xpra. In this vein:
+
+* <http://pleonasm.info/blog/2012/10/privilege-separation-with-xpra/>
+* [docker-desktop](https://github.com/rogaha/docker-desktop)
+* Stéphane Graber's [LXC 1.0 blog post
+  series](https://www.stgraber.org/2013/12/20/lxc-1-0-blog-post-series/),
+  and especially [GUI in
+  containers](https://www.stgraber.org/2014/02/09/lxc-1-0-gui-in-containers/)
+* <https://unix.stackexchange.com/questions/134939/x-and-xdotool-in-lxc-instead-of-kvm>
+* <https://stackoverflow.com/questions/16296753/can-you-run-gui-apps-in-a-docker>
+
+Other resources
+===============
+
+* <http://doger.io/> documents in details the current state of Linux
+  containers (namespaces) and of the various userspace implementations
+* [Docker, Linux Containers (LXC), and
+  security](http://www.slideshare.net/jpetazzo/docker-linux-containers-lxc-and-security):
+  good summary of the threats and solutions, as of August 2014
+* [Linux Container Security](http://mjg59.dreamwidth.org/33170.html),
+  by Matthew Garrett

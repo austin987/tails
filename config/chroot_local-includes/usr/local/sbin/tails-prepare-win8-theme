@@ -4,6 +4,9 @@
 # be run as the desktop user. It consists mainly of ugly workarounds. Running this
 # script will change the system until next reboot.
 
+# Import the TBB_INSTALL variable
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
 # Activate the camouflage for the next session
 install -m 0644 \
     /usr/share/applications/tails-activate-win8-theme.desktop \
@@ -16,8 +19,9 @@ for icon in /usr/share/icons/hicolor/*/apps/pidgin.png; do
     ln -s "/usr/share/icons/Windows8/apps/pidgin.png" "$icon"
 done
 
-# Set iceweasel application icon
-for icon in /usr/share/iceweasel/browser/chrome/icons/default/*; do
+# Set Tor Browser application icon
+for icon in "${TBB_INSTALL}"/browser/chrome/icons/default/*.png \
+    "${TBB_INSTALL}"/browser/icons/*.png; do
    rm "$icon"
    ln -s "/usr/share/icons/Windows8/apps/iceweasel.png" "$icon"
 done

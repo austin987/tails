@@ -1,14 +1,353 @@
-tails (1.2) UNRELEASED; urgency=medium
+tails (1.3) UNRELEASED; urgency=medium
 
-  * Dummy entry for next release.
+  * Placeholder for next major release.
 
- -- Tails developers <tails@boum.org>  Mon, 14 Jul 2014 16:15:19 +0200
+ -- Tails developers <tails@boum.org>  Wed, 15 Oct 2014 20:47:37 +0200
 
-tails (1.1.1) UNRELEASED; urgency=medium
+tails (1.2.3) unstable; urgency=medium
 
-  * Dummy entry for next release.
+  * Security fixes
+    - Upgrade Linux to 3.16.7-ckt2-1.
+    - Upgrade Tor Browser to 4.0.3 (based on Firefox 31.4.0esr)
+      (Closes: #8700).
+    - Fail safe by entering panic mode if macchanger exits with an
+      error, since in this situation we have to treat the
+      driver/device state as undefined. Also, we previously just
+      exited the script in this case, not triggering the panic mode
+      and potentially leaking the real MAC address (Closes: #8571).
+    - Disable upgrade checking in the Unsafe Browser. Until now the
+      Unsafe Browser has checked for upgrades of the Tor Browser in
+      the clear (Closes: #8694).
 
- -- Tails developers <tails@boum.org>  Wed, 23 Jul 2014 00:49:19 +0200
+  * Bugfixes
+    - Fix startup of the Unsafe Browser in some locales (Closes: #8693).
+    - Wait for notification-daemon to run before showing the MAC
+      spoofing panic mode notifications. Without this, the "Network
+      card disabled" notification is sometimes lost when MAC spoofing
+      fails. Unfortunately this only improves the situation, but
+      doesn't fix it completely (see #8685).
+    - Log that we're going to stop NetworkManager before trying to do
+      it in the MAC spoofing scripts. Without this we wouldn't get the
+      log message in case stopping NetworkManager fails (thanks to
+      `set -e`).
+    - Set GNOME Screenshot preferences to save the screenshots in
+      /home/amnesia (Closes: #8087).
+    - Do not suspend to RAM when closing the lid on battery power
+      (Closes: #8071).
+    - Properly update the Tails Installer's status when plugging in a
+      USB drive after it has started (Closes: #8353).
+    - Make rsync compare file contents by using --checksum for more
+      reliable generation of the squashfs filesystem in
+      IUKs. Previously it used the default, which is checking
+      timestamps and file size, but that doesn't play well with the
+      Tor browser files, that have a fixed mtime, which could result
+      in updated files not ending up in the IUK.
+
+  * Minor improvements
+    - Finish migrating tails-security-check's and tails-iuk's pinning
+      to our website's new X.509 certificate authority (Closes: #8404).
+
+  * Build system
+    - Update to Vagrant build box tails-builder-20141201. The only
+      change is the removal of a reference to an ISO image which
+      doesn't exist (except on the system that generated the build
+      box) which causes an error for some users (Closes: #7644).
+    - Generate the list of packages used during build, after building
+      with Jenkins (Closes: #8518). This allows tracking their status
+      on the Debian reproducible build front:
+      https://reproducible.debian.net/index_pkg_sets.html#tails
+
+  * Automated test suite
+    - Check PO files with i18nspector (Closes: #8359).
+    - Fix the expected image of a check.tp.o failure. Previously we
+      looked for the "Sorry. You are not using Tor." text, but it
+      seems it recently changed enough for Sikuli to not find it. To
+      prevent future errors of the same kind we'll look for the
+      crossed-over onion icon instead (Closes: #8533).
+    - Bump timeout when waiting for Tor to re-bootstrap. We have a
+      dreaded issue with timeouts that are multiple of 2 minutes, and
+      then Tor succeeds soon after, so in order to allow for this
+      timeout to be reached twice, and then possibly succeed, let's
+      use N*2 minutes + 30 seconds, with N=2.
+
+ -- Tails developers <tails@boum.org>  Wed, 14 Jan 2015 16:12:26 +0100
+
+tails (1.2.2) unstable; urgency=medium
+
+  * Bugfixes
+    - Create a CA bundle for Tails Upgrader at ISO build time, and
+      patch Tails Upgrader to use it. Specifically this will make it
+      possible to check for Tails upgrades after our website changes
+      certificate around the 2014 to 2015 transition (Partially fixes
+      #8404).
+
+ -- Tails developers <tails@boum.org>  Mon, 15 Dec 2014 10:05:17 +0100
+
+tails (1.2.1) unstable; urgency=low
+
+  * Security fixes
+    - Upgrade Linux to 3.16.0-4, i.e. 3.16.7-1.
+    - Install Tor Browser 4.0.2 (based on Firefox 31.3.0esr).
+
+  * Bugfixes
+    - Install syslinux-utils, to get isohybrid back (Closes: #8155).
+    - Update xserver-xorg-input-evdev to 1:2.7.0-1+tails1 which
+      includes a patch that restores mouse scrolling in KVM/Spice
+      (Closes: 7426).
+    - Set Torbutton logging preferences to the defaults (Closes:
+      #8160). With the default settings, no site-specific information is
+      logged.
+    - Use the correct stack of rootfs:s for the chroot browsers (Closes:
+      #8152, #8158). After installing incremental upgrades Tails' root
+      filesystem consists of a stack squashfs:s, not only
+      filesystem.squashfs. When not stacking them correct we may end up
+      using the Tor Browser (Firefox) from an older version of Tails, or
+      with no Tor Browser at all, as in the upgrade from Tails 1.1.2 to
+      1.2, when we migrated from Iceweasel to the Tor Browser. Based on
+      a patch contributed by sanic.
+    - Use the Tor Browser for MIME type that GNOME associates with
+      Iceweasel (Closes: #8153). Open URLs from Claws Mail, KeePassX
+      etc. should be possible again.
+    - Update patch to include all Intel CPU microcodes (Closes: #8189).
+    - AppArmor: allow Pidgin to run Tor Browser unconfined, with
+      scrubbed environment (Closes: #8186). Links opened in Pidgin are
+      now handled by the Tor Browser.
+    - Install all localized Iceweasel search plugins (Closes: #8139).
+    - When generating the boot profile, ignore directories in
+      process_IN_ACCESS as well (Closes: #7925). This allows ut to
+      update the squashfs-ordering again in Tails 1.2.1.
+    - gpgApplet: Don't pass already encoded data to GTK2 (Closes:
+      #7968). It's now possible to clearsign text including non-ASCII
+      characters.
+    - Do not run the PulseAudio initscript, neither at startup nor
+      shutdown (Closes: #8082).
+
+  * Minor improvements
+    - Upgrade I2P to 0.9.17-1~deb7u+1.
+    - Make GnuPG configuration closer to the best practices one
+      (Closes: #7512).
+    - Have GnuPG directly use the Tor SOCKS port (Closes: #7416).
+    - Remove TrueCrypt support and documentat how to open TrueCrypt
+      volumes using cryptsetup (Closes: #5373).
+    - Install hopenpgp-tools from Debian Jessie.
+
+  * Build system
+    - Add gettext >= 0.18.3 as a Tails build dependency. We need it for
+      xgettext JavaScript support in feature/jessie.
+
+  * Automated test suite
+    - Don't click to open a sub-menu in the GNOME applications menu
+      (Closes: #8140).
+    - When testing the Windows camouflage, look for individual systray
+      applets, to avoid relying on their ordering (Closes: #8059).
+    - Focus the Pidgin Buddy List before looking for something
+      happening in it (Closes: #8161).
+    - Remove workaround for showing the TBB's menu bar (Closes #8028).
+
+ -- Tails developers <tails@boum.org>  Tue, 02 Dec 2014 11:34:03 +0100
+
+tails (1.2) unstable; urgency=medium
+
+  * Major new features
+    - Migrate from Iceweasel to the Tor Browser from the Tor Browser
+      Bundle 4.0 (based on Firefox 31.2.0esr). This fixes the POODLE
+      vulnerability.
+      The installation in Tails is made global (multi-profile), uses
+      the system-wide Tor instance, disables the Tor Browser updater,
+      and keeps the desired deviations previously present in Iceweasel,
+      e.g. we install the AdBlock Plus add-on, but not Tor Launcher (since
+      we run it as a standalone XUL application), among other things.
+    - Install AppArmor's userspace tools and apparmor-profiles-extra
+      from Wheezy Backports, and enable the AppArmor Linux Security
+      Module. This adds Mandatory Access Control for several critical
+      applications in Tails, including Tor, Vidalia, Pidgin, Evince
+      and Totem.
+    - Isolate I2P traffic from the Tor Browser by adding a dedicated
+      I2P Browser. It is set up similarly to the Unsafe Browser,
+      but further disables features that are irrelevant for I2P, like
+      search plugins and the AdBlock Plus addon, while keeping Tor Browser
+      security features like the NoScript and Torbutton addons.
+    - Upgrade Tor to 0.2.5.8-rc-1~d70.wheezy+1.
+
+  * Security fixes
+    - Disable TCP timestamps (Closes: #6579).
+
+  * Bugfixes
+    - Remove expired Pidgin certificates (Closes: #7730).
+    - Use sudo instead of gksudo for running tails-upgrade-frontend to
+      make stderr more easily accessible (Closes: #7431).
+    - Run tails-persistence-setup with sudo instead of gksudo to make
+      stderr more easily accessible, and allow the desktop user to
+      pass the --verbose parameter (Closes: #7623).
+    - Disable CUPS in the Unsafe Browser. This will prevent the
+      browser from hanging for several minutes when accidentally
+      pressing CTRL+P or trying to go to File -> Print (Closes: #7771).
+
+  * Minor improvements
+    - Install Linux 3.16-3 (version 3.16.5-1) from Debian
+      unstable (Closes: #7886, #8100).
+    - Transition away from TrueCrypt: install cryptsetup and friends
+      from wheezy-backports (Closes: #5932), and make it clear that
+      TrueCrypt will be removed in Tails 1.2.1 (Closes: #7739).
+    - Install Monkeysign dependencies for qrcodes scanning.
+    - Upgrade syslinux to 3:6.03~pre20+dfsg-2~bpo70+1, and install
+      the new syslinux-efi package.
+    - Upgrade I2P to 0.9.15-1~deb7u+1
+    - Enable Wheezy proposed-updates APT repository and setup APT
+      pinnings to install packages from it.
+    - Enable Tor's syscall sandbox. This feature (new in 0.2.5.x)
+      should make Tor a bit harder to exploit. It is only be enabled
+      when when no special Tor configuration is requested in Tails
+      Greeter due to incompatibility with pluggable transports.
+    - Start I2P automatically when the network connects via a
+      NetworkManager hook, and "i2p" is present on the kernel command
+      line. The router console is no longer opened automatically, but
+      can be accessed through the I2P Browser (Closes: #7732).
+    - Simplify the IPv6 ferm rules (Closes: #7668).
+    - Include persistence.conf in WhisperBack reports (Closes: #7461)
+    - Pin packages from testing to 500, so that they can be upgraded.
+    - Don't set Torbutton environment vars globally (Closes: #5648).
+    - Enable VirtualBox guest additions by default (Closes: #5730). In
+      particular this enables VirtualBox's display management service.
+    - In the Unsafe Browser, hide option for "Tor Browser Health
+      report", and the "Get Addons" section in the Addon manager
+      (Closes: #7952).
+    - Show Pidgin's formatting toolbar (Closes: #7356). Having the
+      formatting toolbar displayed in Pidgin makes the OTR status more
+      explicit by displaying it with words.
+
+  * Automated test suite
+    - Add --pause-on-fail to ease VM state debugging when tests
+      misbehave.
+    - Add execute_successfully() and assert_vmcommand_success() for
+      added robustness when executing some command in the testing VM.
+    - Use Test::Unit::Assertions instead of our home-made assert().
+    - Add test for persistent browser bookmarks.
+    - Add basic tests for Pidgin, Totem and Evince, including their
+      AppArmor enforcement.
+    - Factorize some common step pattern into single steps.
+    - Factorize running a command in GNOME Terminal.
+    - Add common steps to copy a file and test for its existence.
+    - Add a wait_and_double_click Sikuli helper method.
+    - Add a VM.file_content method, to avoid repeating ourselves, and
+      use it whenever easily doable.
+    - Drop test that diffs syslinux' exithelp.cfg: we don't ship this
+      file anymore.
+    - In the Unsafe Browser tests, rely on subtle timing less (Closes:
+      #8009).
+    - Use the same logic to determine when Tor is working in the test
+      suite as in Tails itself. The idea is to avoid spamming the Tor
+      control port during bootstrap, since we've seen problems with
+      that already.
+
+ -- Tails developers <tails@boum.org>  Wed, 15 Oct 2014 18:34:50 +0200
+
+tails (1.1.2) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade the web browser to 24.8.0esr-0+tails3~bpo70+1
+      (fixes Mozilla#1064636).
+    - Install Linux 3.16-1 from sid (Closes: #7886).
+    - Upgrade file to 5.11-2+deb7u5 (fixes CVE-2014-0207,
+      CVE-2014-0237, CVE-2014-0238, CVE-2014-3478, CVE-2014-3479,
+      CVE-2014-3480, CVE-2014-3487, CVE-2014-3538 and CVE-2014-3587).
+    - Upgrade curl to 7.26.0-1+wheezy10 (fixes CVE-2014-3613 and
+      CVE-2014-3620).
+    - Upgrade bind9-based packages to 1:9.8.4.dfsg.P1-6+nmu2+deb7u2
+      (fixes CVE-2014-0591).
+    - Upgrade gnupg to 1.4.12-7+deb7u6 (fixes CVE-2014-5270).
+    - Upgrade apt to 0.9.7.9+deb7u5 (fixes CVE-2014-0487,
+      CVE-2014-0488, CVE-2014-0489, CVE-2014-0490, and
+      CVE-2014-6273.).
+    - Upgrade dbus to 1.6.8-1+deb7u4 (fixes CVE-2014-3635,
+      CVE-2014-3636, CVE-2014-3637, CVE-2014-3638 and CVE-2014-3639).
+    - Upgrade libav-based pacakges to 6:0.8.16-1 (fixes
+      CVE-2013-7020).
+    - Upgrade bash to 4.2+dfsg-0.1+deb7u1 (fixes CVE-2014-6271).
+
+ -- Tails developers <tails@boum.org>  Tue, 23 Sep 2014 23:01:40 -0700
+
+tails (1.1.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade the web browser to 24.8.0esr-0+tails1~bpo70+1
+      (Firefox 24.8.0esr + Iceweasel patches + Torbrowser patches).
+      Also import the Tor Browser profile at commit
+      271b64b889e5c549196c3ee91c888de88148560f from
+      ttp/tor-browser-24.8.0esr-3.x-1.
+    - Upgrade Tor to 0.2.4.23-2~d70.wheezy+1 (fixes CVE-2014-5117).
+    - Upgrade I2P to 0.9.14.1-1~deb7u+1.
+    - Upgrade Linux to 3.14.15-2 (fixes CVE-2014-3534, CVE-2014-4667
+      and CVE-2014-4943).
+    - Upgrade CUPS-based packages to 1.5.3-5+deb7u4 (fixes
+      CVE-2014-3537, CVE-2014-5029, CVE-2014-5030 and CVE-2014-5031).
+    - Upgrade libnss3 to 2:3.14.5-1+deb7u1 (fixes CVE-2013-1741,
+      CVE-2013-5606, CVE-2014-1491 and CVE-2014-1492).
+    - Upgrade openssl to 1.0.1e-2+deb7u12 (fixes CVE-2014-3505,
+      CVE-2014-3506, CVE-2014-3507, CVE-2014-3508, CVE-2014-3509,
+      CVE-2014-3510, CVE-2014-3511, CVE-2014-3512 and CVE-2014-5139).
+    - Upgrade krb5-based packages to 1.10.1+dfsg-5+deb7u2 (fixes
+      CVE-2014-4341, CVE-2014-4342, CVE-2014-4343, CVE-2014-4344 and
+      CVE-2014-4345).
+    - Upgrade libav-based packages to 6:0.8.15-1 (fixes CVE-2011-3934,
+      CVE-2011-3935, CVE-2011-3946, CVE-2013-0848, CVE-2013-0851,
+      CVE-2013-0852, CVE-2013-0860, CVE-2013-0868, CVE-2013-3672,
+      CVE-2013-3674 and CVE-2014-2263.
+    - Upgrade libgpgme11 to 1.2.0-1.4+deb7u1 (fixes CVE-2014-5117).
+    - Upgrade python-imaging to 1.1.7-4+deb7u1 (fixes CVE-2014-3589).
+    - Prevent dhclient from sending the hostname over the network
+      (Closes: #7688).
+    - Override the hostname provided by the DHCP server (Closes: #7769).
+    - Add an I2P boot parameter. Without adding "i2p" to the kernel
+      command line, I2P will not be accessible for the Live user.
+    - Stricter I2P firewall rules:
+      * deny I2P from accessing the LAN
+      * deny I2P from accessing the loopback device, except for select
+        whitelisted services
+      * allow I2P access to the Internet
+      The ACCEPT rules will only be enabled when the string 'i2p' is
+      passed at the boot prompt. The rules which DENY or REJECT
+      access for the 'i2psvc' user will always be applied.
+    - Disable I2P plugins, since it doesn't make much sense without
+      persistence, and should eliminate some attack vectors.
+    - Disable I2P's BOB port. No maintained I2P application uses it.
+
+  * Bugfixes
+    - Fix condition clause in tails-security-check (Closes: #7657).
+    - Don't ship OpenJDK 6: I2P prefers v7, and we don't need both.
+    - Prevent Tails Installer from updating the system partition
+      properties on MBR partitions (Closes: #7716).
+
+  * Minor improvements
+    - Upgrade to Torbutton 1.6.12.1.
+    - Install gnome-user-guide (Closes: #7618).
+    - Install cups-pk-helper (Closes: #7636).
+    - Update the SquashFS sort file.
+    - Compress the SquashFS more aggressively (Closes: #7706).
+    - I2P: Keep POP3 email on server. The default in the I2P webmail
+      app was to keep mail on the server, but that setting was changed
+      recently. This configuration setting (susimail.config) will only
+      be copied over in I2P 0.9.14 and newer.
+    - Add a Close button to the Tails Installer launcher window.
+
+  * Build system
+    - Migrate Vagrant basebox to Debian Wheezy (Closes #7133, #6736).
+    - Consistently use the same Debian mirror.
+    - Disable runtime APT proxy configuration when using APT in
+      binary_local-hooks (Closes: #7691).
+
+  * Automated test suite
+    - Automatically test hostname leaks (Closes: #7712).
+    - Move autotest live-config hook to be run last. This way we'll
+      notice if some earlier live-config hook cancels all hooks by
+      running the automated test suite since the remote shell won't be
+      running in that case.
+    - Test that the I2P boot parameter does what it's supposed to do
+      (Closes: #7760).
+    - Start applications by using the GNOME Applications menu instead
+      of the GNOME Run Dialog (Closes: #5550, #7060).
+
+ -- Tails developers <tails@boum.org>  Sun, 31 Aug 2014 20:49:28 +0000
 
 tails (1.1) unstable; urgency=medium
 

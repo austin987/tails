@@ -1,0 +1,51 @@
+**Corresponding ticket**: [[!tails_ticket 7036]]
+
+# Goals
+
+Tails is built from many sources: the main Git repository and our APT
+repository (that includes binary packages built from other Git
+repositories).
+
+* See the "Diversions of bundled packages due to Tails point-releases"
+  thread on tails-dev, in August and September 2013.
+* Make it easier to determine what status of every sub-repo was used
+  to build an existing ISO.
+* Make it easier to decide what status of every sub-repo shall be used
+  to build a new ISO.
+* Simplify merging of topic and release branches: right now, we often
+  have to merge things in two Git repositories (or more), and in the
+  APT repository.
+* Build most of our custom Debian packages at ISO build time, so that
+  at least for those, the state of our APT repository doesn't matter.
+* More continuous integration!
+
+# Candidates
+
+## mr
+
+A few teams, such as the debian-installer and Debian Perl ones, that
+use many Git repositories (thousands, in case of the latter), have
+been successfully using mr to make an initial checkout easier for new
+contributors, and generally making it easier to deal with a lot of
+repositories (mass-update, etc.). We could do the same, starting with
+maintaining and publishing a .mrconfig file. The problem with mr is
+that it doesn't support branches out-of-the-box: checking out a branch
+in the main repo doesn't do the same in sub-repos; *this* could be
+automatized, but merging is another story.
+
+Ressources:
+
+* [d-i help page](http://wiki.debian.org/DebianInstaller/CheckOut)
+* [pkg-perl help page](http://pkg-perl.alioth.debian.org/git.html)
+
+## Git submodules
+
+Git submodules allow to do basically the same thing, but also to make
+it clear what version of these other repositories a given Git branch
+(in the main repo) needs.
+
+## Plenty of other solutions
+
+When searching the web for well-known problems with Git submodules,
+it's easy to find many other similar solutions or wrappers that are
+meant to workaround these limitations.

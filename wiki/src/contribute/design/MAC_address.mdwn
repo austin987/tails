@@ -376,15 +376,15 @@ Scripts:
 
 ### Potential for blocking the desktop
 
-The call of `udev settle` may block for up to 120 seconds (the default
+The call of `udevadm settle` may block for up to 120 seconds (the default
 timeout) during Tails Greeter's PostLogin in case of some broken
 hardware and/or crappy udev rules. In other words, the Tails desktop
 may be blocked for this long, without any notification.
 
 If this turns out to be a problem (currently it's only guesswork) we
-could make two `udev settle`:s, one with a short timeout (10 seconds)
+could make two `udevadm settle`:s, one with a short timeout (10 seconds)
 and if it fails we show a notification and optimistically start
-another `udev settle` *in* *a* *sub-shell* so it doesn't block the
+another `udevadm settle` *in* *a* *sub-shell* so it doesn't block the
 Tails desktop from starting any more.
 
 For more, see this sub-thread on tails-dev:
@@ -412,7 +412,13 @@ leaks issue, in addition to other reasons for being discarded:
 
 * NetworkManager hook: NM doesn't trigger events equivalent to
   if-pre-up, so this isn't possible. See the commented parts in:
-  /etc/NetworkManager/dispatcher.d/01ifupdown
+  `/etc/NetworkManager/dispatcher.d/01ifupdown`. Note that
+  NetworkManager 0.9.10 introduces pre-up hooks, *but* they're used to
+  "allow scripts to execute before NetworkManager announces
+  connectivity to applications" (according to a [blog
+  post](http://blogs.gnome.org/dcbw/2014/06/20/well-build-a-dream-house-of-net/)
+  by Dan William), that is, after network activity (e.g.
+  DHCP requests) has already occurred.
 
 * systemd integration: We don't use this yet.
 

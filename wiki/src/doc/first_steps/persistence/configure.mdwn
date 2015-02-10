@@ -254,7 +254,7 @@ you to reuse them during future working sessions, even offline.
 <div class="text"><h2>Browser bookmarks</h2></div>
 </div>
 
-When this feature is activated, changes to the bookmarks in the
+When this feature is activated, changes to the bookmarks in
 <span class="application">Tor Browser</span> are saved in the persistent
 volume. This does not apply to the Unsafe web browser.
 
@@ -277,17 +277,41 @@ persistent volume.
 
 When this feature is activated, all the files in the <span
 class="filename">/live/persistence/TailsData_unlocked/dotfiles</span> folder
-are linked in the <span class="filename">Home Folder</span> (files in
+are linked in the <span class="filename">Home</span> folder. Files in
 subfolders of <span class="filename">dotfiles</span> are also linked
 in the corresponding subfolder of your <span class="filename">Home
-Folder</span>).
+</span> folder.
+
+For example, having the following files in <span
+class="filename">/live/persistence/TailsData_unlocked/dotfiles</span>:
+
+    /live/persistence/TailsData_unlocked/dotfiles
+    ├── file_a
+    ├── folder
+    │   ├── file_b
+    │   └── subfolder
+    │       └── file_c
+    └── emptyfolder
+
+Produces the following result in <span class="filename">/home/amnesia</span>:
+
+    /home/amnesia
+    ├── file_a → /live/persistence/TailsData_unlocked/dotfiles/file_a
+    └── folder
+        ├── file_b → /live/persistence/TailsData_unlocked/dotfiles/folder/file_b
+        └── subfolder
+            └── file_c → /live/persistence/TailsData_unlocked/dotfiles/folder/subfolder/file_c
 
 This option is useful if you want to make some specific files
 persistent, but not the folders they are stored in. A fine example are
 the so called "dotfiles" (and hence the name of this feature), the
 hidden configuration files in the root of your home directory, like
-<span class="filename">~/.git</span> and <span
+<span class="filename">~/.gitconfig</span> and <span
 class="filename">~/.bashrc</span>.
+
+As you can see in the previous example, empty folders are ignored. This feature
+only links files, and not folders, from the persistent volume into the <span
+class="filename">Home</span> folder.
 
 <a id="additional_software"></a>
 

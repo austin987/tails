@@ -4,7 +4,10 @@ set -e
 
 echo "Overriding TBB branding with our own"
 
+# Import the TBB_PROFILE variable.
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
 install --owner root --group root --mode 0755 --directory /etc/xul-ext
 install --owner root --group root --mode 0644 \
-   /etc/iceweasel/profile/extensions/branding@amnesia.boum.org/defaults/preferences/prefs.js \
+   "${TBB_PROFILE}"/extensions/branding@amnesia.boum.org/defaults/preferences/prefs.js \
    /etc/xul-ext/torbutton.js

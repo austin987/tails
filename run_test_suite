@@ -15,6 +15,9 @@ Options for '@product' features:
                      Requires ffmpeg and libvpx1.
   --debug            Display various debugging information while running the
                      test suite.
+  --pause-on-fail    On failure, pause test suite until pressing Enter. This is
+                     useful for investigating the state of the VM guest to see
+                     exactly why a test failed.
   --keep-snapshots   Don't ever delete the background snapshots. This can a big
                      time saver when debugging new features.
   --retry-find       Print a warning whenever Sikuli fails to find an image
@@ -92,8 +95,6 @@ start_vnc_viewer() {
 }
 
 capture_session() {
-    check_dependency ffmpeg
-    check_dependency libvpx1
     echo "Capturing guest display into ${CAPTURE_FILE}"
     ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
@@ -105,13 +106,14 @@ CAPTURE_FILE=
 VNC_VIEWER=
 VNC_SERVER=
 DEBUG=
+PAUSE_ON_FAIL=
 KEEP_SNAPSHOTS=
 SIKULI_RETRY_FINDFAILED=
 TEMP_DIR=
 ISO=
 OLD_ISO=
 
-LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,retry-find,iso:,old-iso:,debug"
+LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -130,6 +132,9 @@ while [ $# -gt 0 ]; do
             ;;
         --debug)
             export DEBUG="yes"
+            ;;
+        --pause-on-fail)
+            export PAUSE_ON_FAIL="yes"
             ;;
         --keep-snapshots)
             export KEEP_SNAPSHOTS="yes"
@@ -161,8 +166,8 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-for dep in git libvirt-bin libvirt-dev virt-viewer libsikuli-script-java \
-           tcpdump xvfb; do
+for dep in ffmpeg git libvirt-bin libvirt-dev libavcodec-extra-53 libvpx1 \
+           virt-viewer libsikuli-script-java ovmf tcpdump xvfb; do
     check_dependency "${dep}"
 done
 

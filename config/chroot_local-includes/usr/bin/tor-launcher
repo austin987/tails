@@ -2,4 +2,29 @@
 
 set -e
 
-/usr/bin/xulrunner-24.0 /usr/share/tor-launcher-standalone/application.ini
+# Import exec_firefox() and configure_best_tor_launcher_locale()
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
+# The Tor Browser hardcodes the default profile dir to ../.. from the
+# folder storing the application.ini file supplied via -app. Sadly,
+# -profile doesn't work together with -app. Therefore we copy the
+# whole Tor Launcher application (just ~350 KB) into the user's home
+# so we can get the profile directory in a sane place.
+if [ ! -e "${HOME}"/.tor-launcher ]; then
+    mkdir -p "${HOME}"/.tor-launcher
+    cp -r /usr/share/tor-launcher-standalone "${HOME}"/.tor-launcher/tor-launcher-standalone
+    mkdir -p "${HOME}"/.tor-launcher/TorBrowser/Data/Browser/
+    cat << EOF > "${HOME}"/.tor-launcher/TorBrowser/Data/Browser/profiles.ini
+[General]
+StartWithLastProfile=1
+
+[Profile0]
+Name=default
+IsRelative=1
+Path=profile.default
+EOF
+    mkdir -p "${HOME}"/.tor-launcher/TorBrowser/Data/Browser/profile.default/preferences
+    configure_best_tor_launcher_locale "${HOME}"/.tor-launcher/TorBrowser/Data/Browser/profile.default
+fi
+
+exec_firefox -app "${HOME}"/.tor-launcher/tor-launcher-standalone/application.ini

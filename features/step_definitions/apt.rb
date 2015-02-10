@@ -3,7 +3,7 @@ require 'uri'
 Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   next if @skip_steps_while_restoring_background
   hosts = hosts_str.split(',')
-  @vm.execute("cat /etc/apt/sources.list /etc/apt/sources.list.d/*").stdout.chomp.each_line { |line|
+  @vm.file_content("/etc/apt/sources.list /etc/apt/sources.list.d/*").chomp.each_line { |line|
     next if ! line.start_with? "deb"
     source_host = URI(line.split[1]).host
     if !hosts.include?(source_host)
@@ -15,11 +15,8 @@ end
 When /^I update APT using apt-get$/ do
   next if @skip_steps_while_restoring_background
   Timeout::timeout(30*60) do
-    cmd = @vm.execute("echo #{@sudo_password} | " +
-                      "sudo -S apt-get update", $live_user)
-    if !cmd.success?
-      STDERR.puts cmd.stderr
-    end
+    @vm.execute_successfully("echo #{@sudo_password} | " +
+                             "sudo -S apt-get update", $live_user)
   end
 end
 
@@ -27,11 +24,8 @@ Then /^I should be able to install a package using apt-get$/ do
   next if @skip_steps_while_restoring_background
   package = "cowsay"
   Timeout::timeout(120) do
-    cmd = @vm.execute("echo #{@sudo_password} | " +
-                      "sudo -S apt-get install #{package}", $live_user)
-    if !cmd.success?
-      STDERR.puts cmd.stderr
-    end
+    @vm.execute_successfully("echo #{@sudo_password} | " +
+                             "sudo -S apt-get install #{package}", $live_user)
   end
   step "package \"#{package}\" is installed"
 end
@@ -68,4 +62,10 @@ Then /^I should be able to install a package using Synaptic$/ do
   @screen.type("a", Sikuli::KeyModifier.ALT)     # Verify apply
   @screen.wait('SynapticChangesAppliedPrompt.png', 120)
   step "package \"#{package}\" is installed"
+end
+
+When /^I start Synaptic$/ do
+  next if @skip_steps_while_restoring_background
+  step 'I start "Synaptic" via the GNOME "System"/"Administration" applications menu'
+  deal_with_polkit_prompt('SynapticPolicyKitAuthPrompt.png', @sudo_password)
 end

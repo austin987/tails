@@ -247,14 +247,11 @@ portable and able to run in as many environments as possible.
 
 ### 2.4.1 Platform
 
-XXX: update
-
 The binaries MUST all be executable on the most common computer
-hardware architecture(s). As of 2011, the x86 computer architecture
+hardware architecture(s). As of 2014, the x86 computer architecture
 seems to be the obvious choice as the vast majority of personal
-computers in use is compatible with it. Supporting the PowerPC
-architecture is a welcome bonus in order to support pre-Intel Apple
-computers. Supporting widespread hardware architectures used in mobile
+computers in use is compatible with it. The PELD SHOULD support UEFI.
+Supporting widespread hardware architectures used in mobile
 computers, such as phones, is also welcome.
 
 ### 2.4.2 Media
@@ -677,14 +674,14 @@ Critical parts of the configuration are based on the ones from
 well-known and trusted sources, namely Tails ancestor
 [Incognito](http://www.browseanonymouslyanywhere.com/incognito/)
 and the [Tor BrowserBundle](https://www.torproject.org/projects/torbrowser.html.en).
-This is for example the case for the firewall, polipo and Tor configurations.
+This is for example the case for the firewall and Tor configurations.
 
 **NOTICE**: this distribution is provided as-is with no warranty of
 fitness for a particular purpose, including total anonymity. Anonymity
 depends not only on the software but also on the user understanding
 the risks involved and how to manage those risks.
 
-Other Tails design documents:
+## 3.0 Other Tails design documents
 
 [[!map pages="contribute/design/*"]]
 
@@ -717,8 +714,6 @@ extension).
   that the Debian distribution does not provide or endorse Tails.
 - [Tor](http://www.torproject.org/): anonymizing overlay network for
   TCP. Our intention is to always use the latest stable version.
-- [polipo](http://www.pps.jussieu.fr/%7Ejch/software/polipo/):
-  Caching web proxy.
 - [Vidalia](https://www.torproject.org/projects/vidalia) is used
   to control Tor's behavior.
 
@@ -747,9 +742,9 @@ See [[doc/about/features]].
 ## 3.3 Internationalization
 
 Tails ships, as is, localization files provided by the installed
-Debian packages. All available iceweasel localization packages
+Debian packages. All available Tor Browser localization packages
 are installed. Spell checking software and data is installed for the
-set of best supported languages; it is usable at least is Iceweasel,
+set of best supported languages; it is usable at least is Tor Browser,
 LibreOffice and gedit.
 
 ### 3.3.1 Input methods
@@ -947,77 +942,52 @@ granting `sudo` privileges to the `amnesia` user by default.
 Unless an administrator password is set in tails-greeter,
 no root access is possible afterwards.
 
-### 3.6.13 Iceweasel
+### 3.6.13 Tor Browser
 
-(Note: Iceweasel is the name of the web browser, based on Mozilla
-Firefox, that is shipped by Debian and thus by Tails.)
+Tails ships with the Tor Browser, which is based on Mozilla Firefox
+and patched by the Tor Project for improved anonymity by reducing
+information leaks, decreasing attack surface and similar. The actual
+binaries etc. used in Tails are those distributed by the Tor Project,
+but the configuration differs slightly, which is described below.
 
-Tails ships custom Iceweasel ESR packages built with the Torbrowser
-patches to better blend in the Tor Browser Bundle's anonymity set.
-Some patches, that are not relevant for Tails, are not
-applied, though: see the Tails browser's
-[changelog](https://git-tails.immerda.ch/iceweasel/plain/debian/changelog?h=tails/master)
-for the current status.
+In Tails we diverge from the TBB's one-profile-only design, and
+install the Tor Browser in a globally accessible directory used by all
+browser profiles (and other XUL applications).
 
-Iceweasel uses the Torbutton extension in order to prevent attacks
-using JavaScript, plugins and other non-HTTP features like web
-bugs. It is configured to always be enabled on Iceweasel start and
-uses Tor as SOCKS5 proxy. SOCKS is configured to perform name
-resolution through this proxy. Iceweasel is also configured to not
-cache to disk (mainly to reduce memory usage for DVD users as disk
-writes will be stored there), history is disabled (just in case) and
-many other things. It is also set up not to automatically check for
-updates of its installed extensions. Java support is disabled.
+- [[!tails_gitweb config/chroot_local-hooks/10-tbb]]
 
-Iceweasel is shipped with some extensions to help users manage their
-browsing experience. The Torbutton settings treat all cookies as
-session cookies by default. This prevents the
-known leak of browsing information cookies can lead to. The [Adblock
-plus](https://addons.mozilla.org/fr/firefox/addon/1865/) extension
-protects against many tracking possibilities by removing most ads.
+The default profile is split from the binaries and application data:
 
-Tails ships the [HTTPS
-Everywhere](https://www.eff.org/https-everywhere) extension that
-forces HTTPS usage for requests to a number of major websites.
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-browser]]
 
-Tails also ships the
-[FoxyProxy](https://addons.mozilla.org/fr/firefox/addon/2464/)
-extension that:
+As for extensions we have the following differences:
 
-- allows using I2P instead of Tor to visit eepsites (I2P's own hidden
-  services look-alike); see [[the design document dedicated to Tails
-  use of I2P|I2P]] for details;
-- could help [[!tails_todo FTP_in_Iceweasel desc="fixing Iceweasel's FTP support"]].
+* Tails also installs the
+  [Adblock plus](https://addons.mozilla.org/fr/firefox/addon/1865/)
+  extension to protect against many tracking possibilities by removing
+  most ads.
 
-Thanks to Torbutton, to the Tor Browser patches, and to us importing
-(most of) the TBB preferences, Iceweasel is configured so that Tor browser
-fingerprint appears uniformly among Torbutton users. Tails enables
-Torbutton's EN-US locale spoofing to avoid partitioning Tails
-users into per-language anonymity sets.
+* Tails does not install the same Torbutton as in the TBB. We
+  installed a patched version.
 
-Torbutton is also configured to spoof the timezone settings the same
-way as the Tor Browser Bundle does, i.e. to `UTC+00:00`.
+* Tails does not install the Tor Launcher extension as part of the
+  browser. A patched Tor Launcher is installed for use as a
+  stand-alone XUL application, though.
 
-Thanks to the Tor Browser patches, the in-memory web cache is isolated
-to the url bar origin.
+In Tails we do not use the `start-tor-browser` script, since it does a
+lot of stuff not needed in Tails (error checking mainly) and isn't
+flexible since it looks for the browser profile in a specific
+place. Our custom script makes use of the global installation and also
+makes sure the default profile is used as a basis. Any shared libraries
+shipped inside the TBB are also used (via `LD_LIBRARY_PATH`) since
+Debian stable often has too old versions to start the browser.
 
-The Iceweasel config is poorly commented but the commit messages in
-Git history explains it all. In a nutshell, Iceweasel preferences are
-set in various ways:
+Whenever the user tries to start the Tor Browser before Tor is
+ready, they are informed it won't work, and asked whether to start the
+browser anyway:
 
-* A Tor Browser patch called
-  `0022-Tor-Browser-s-Firefox-preference-overrides.patch` bundles
-  their prefs directly into `omni.ja`.
-* `/etc/iceweasel/*/*.js` contains:
-  - Torbutton preferences that the TBB also sets;
-  - some Tails-specific settings.
-
-Whenever the user tries to start Iceweasel before Tor is ready, they
-are informed it won't work, and asked whether to start the browser
-anyway:
-
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/iceweasel]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tor-browser]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/generate-tor-browser-profile]]- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
 - [[!tails_gitweb config/chroot_local-includes/etc/sudoers.d/zzz_tor-has-bootstrapped]]
 
 Once Tor is ready to be used, the user is informed they can now use
@@ -1025,16 +995,20 @@ the Internet:
 
 - [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/60-tor-ready-notification.sh]]
 
-Source code, scripts and configuration:
+The remaining configuration differences can be found in:
 
-- [[!tails_gitweb_dir config/chroot_local-includes/etc/iceweasel]]
-- Tails' Iceweasel source [[lives in Git|contribute/git]]
-- [[!tails_gitweb config/chroot_local-hooks/12-remove_unwanted_iceweasel_searchplugins]]
-- [[!tails_gitweb config/chroot_local-hooks/13-iceweasel_sqlite]]
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-browser/preferences/0000tails.js]]
+- [[!tails_gitweb config/chroot_local-hooks/12-install_browser_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/12-remove_unwanted_browser_searchplugins]]
 - [[!tails_gitweb config/chroot_local-hooks/13-override-tbb-branding]]
-- [[!tails_gitweb config/chroot_local-hooks/14-add_localized_iceweasel_searchplugins]]
-- [[!tails_gitweb config/chroot_local-hooks/14-generate-iceweasel-profile]]
+- [[!tails_gitweb config/chroot_local-hooks/14-add_localized_browser_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/14-generate-tor-browser-profile]]
 - [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
+
+It should also be noted that the global TBB installation is also used
+for the [[Unsafe Browser]] and [[I2P Browser]], although they are
+user-isolated and use separate profiles with very different
+configurations.
 
 ### 3.6.14 Claws Mail
 
@@ -1089,8 +1063,10 @@ the other HKP keyservers pools, and reachable over `hkps://`.
 [[!tails_todo Monkeysphere]]'s `hkpms://` support will be used as soon as
 possible in place of the hierarchical X.509 certification model.
 
-GnuPG is configured to prefer non-outdated digest algorithms such as
-SHA256, to force exclusion of the version string in ASCII armored
+GnuPG is configured accordingly to the [OpenPGP Best
+Practices](https://help.riseup.net/en/security/message-security/openpgp/best-practices),
+e.g. to prefer non-outdated digest algorithms from the
+SHA-2 family, to force exclusion of the version string in ASCII armored
 output, to avoid automatically locating and retrieving keys, and to
 disregard the preferred keyserver assigned to specific keys.
 
@@ -1156,6 +1132,98 @@ encrypt and decrypt text, and to verify OpenPGP signatures.
 
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/gpgApplet]]
 
+### 3.6.23 DHCP hostname leaks
+
+Tails prevents dhclient from sending the hostname over the network.
+
+First, only the `keyfile` NetworkManager plugin is used; that is, the
+`ifupdown` plugin is disabled:
+
+* this is needed, because the only the `keyfile` plugin supports
+  setting `dhcp-send-hostname` to false, while the `ifupdown` plugin
+  retrieves the hostname to send from `/etc/hostname`;
+* this is OK, because we actually don't use the functionality provided
+  by the `ifupdown` plugin (that is, reading from
+  `/etc/network/interfaces` -- that only configures the loopback
+  connection in Tails, which is itself ignored by NetworkManager
+  anyway).
+
+Second, the NetworkManager `keyfile` plugin is configured to *not*
+send the hostname over DHCP by default. Likely this can be overridden
+on a per-connection basis if one really needs to change this.
+
+Third, dhclient itself is told not to send the hostname. This is
+needed because on Wheezy, NetworkManager runs dhclient with the `-cf
+/var/run/nm-dhclient-eth0.conf` option, and generates that file by
+concatenating `/etc/dhcp/dhclient.conf` with its own settings.
+
+Fourth, dhclient is told to override any hostname provided by the DHCP
+server with `amnesia`. This is meant to prevent dhclient hooks,
+NetworkManager and others from setting the hostname to a value
+controlled by the DHCP server.
+
+* [[!tails_gitweb config/chroot_local-patches/dhcp-dont-send-hostname.diff]]
+
+### 3.6.24 TCP timestamps
+
+[[!rfc 1323 desc="TCP time stamps"]] allow for tracking clock
+information with millisecond resolution. This may or may not allow an
+attacker to learn information about the system clock at such
+a resolution, depending on various issues such as network lag.
+This information is available to anyone who monitors the network
+somewhere between the attacked Tails system and the Tor entry nodes
+being used. It may allow an attacker to find out how long a given
+Tails system has been running, and to distinguish several Tails
+systems running behind NAT and using the same IP address. It might
+also allow to look for clocks that match an expected value to find the
+public IP used by a user.
+
+Hence, Tails disables this feature.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/sysctl.d/tcp_timestamps.conf]]
+
+Note that TCP time stamps normally have some usefulness. They are
+needed for:
+
+* the TCP protection against wrapped sequence numbers; however, to
+  trigger a wrap, one needs to send roughly 2^32 packets in one
+  minute:  as said in [[!rfc 1700]], "The current recommended default
+  time to live (TTL) for the Internet Protocol (IP) [45,105] is 64".
+  So, we don't think this is a practical problem in the context
+  of Tails.
+
+* "Round-Trip Time Measurement", which is only useful when the user
+  manages to saturate their connection. When using Tails, we believe
+  that the limiting factor for transmission speed is rarely the
+  capacity of the user connection.
+
+### 3.6.25 Application isolation
+
+Tails has some minimal [[contribute/design/application_isolation]] to
+mitigate a bit the consequences of security issues in individual
+applications being exploited by attackers.
+
+### 3.6.26 wget
+
+We wrap `wget` with `torsocks`, after unsetting the `http_proxy`
+environment variable and friends, so that it talks directly to the Tor
+SOCKS port.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/wget]]
+
+### 3.6.27 APT
+
+During most of the ISO build process, APT uses the proxy configured
+through `live-build` (that is, usually a local `apt-cacher-ng`).
+
+However, at boot time, a hook does (a more elaborate version of)
+`s,http://,tor+http://` in APT sources. Then, APT will use the
+`tor+http` method, that is a simple torsocks wrapper for the good old
+`http` method.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/apt/methods/tor+http]]
+- [[!tails_gitweb config/chroot_local-includes/lib/live/config/1500-reconfigure-APT]]
+
 ## 3.7 Running Tails in virtual machines
 
 ### 3.7.1 Current support
@@ -1201,20 +1269,22 @@ the [[contribute/build]] page and the [[contribute]] section on the wiki.
 
 ### 3.8.2 Testing process
 
-An automated build and test environment would be useful to avoid
+An automated build and test environment is useful to avoid
 regressions in Tails, especially anonymity and security related
-ones. It would also make it easier to work on Tails for developers
-who do not own modern powerful hardware.
+ones. It also makes it easier for developers to work on Tails with
+more confidence, and at release time to cut down the time needed for
+quality assurance work.
 
-Research and practical work to set up such an environment [[!tails_todo
-automated_builds_and_tests desc="has slowly started"]]. In the meantime, a [[manual
-test suite|contribute/release_process/test]] is "run" against Tails
-release candidates images before they are officially published.
+Tails' [[manual test suite|contribute/release_process/test]] is "run"
+against Tails release candidates images before they are officially
+published. Automating this test suite is [[partly
+done|contribute/release_process/test/automated_tests]], and a work
+in progress.
 
 ### 3.8.3 Upgrades
 
 Keeping Tor (stable releases only, unless the Tor core developers
-recommend otherwise) and Iceweasel up-to-date is a priority.
+recommend otherwise) and the Tor Browser up-to-date is a priority.
 
 Remaining applications, including the base system, will be upgraded
 using Debian standard upgrade process, and generally based on the
@@ -1251,7 +1321,8 @@ UDP and IPv6 are a problem. The Tor network does not support any of
 those yet. Outgoing UDP and IPv6 packets are dropped altogether by
 netfilter for this reason.
 
-Support of arbitrary DNS queries is only provided by ttdnsd listening
+Support of [[!tails_ticket 6070 desc="arbitrary DNS queries"]] is only
+provided by ttdnsd listening
 on 127.0.0.2. ttdnsd has proved too be far too buggy to be inserted in
 the default DNS resolution chain.
 
@@ -1269,11 +1340,11 @@ where Tails is heading to.
 Tails tries to make it as difficult as possible to distinguish Tails
 users from other Tor users.
 
-Iceweasel is configured to match the fingerprint of the Tor Browser
+The Tor Browser used in Tails is configured to match the fingerprint of the Tor Browser
 Bundle and the known differences, if any, are listed in the [[known
 issues|support/known_issues]] page.
 
-However the fact that different extensions are installed in Tails and in
+However the fact that different browser extensions are installed in Tails and in
 the TBB surely allows more sophisticated attacks that usual fingerprint
 as returned by tools such as <https://panopticlick.eff.org/> and
 <http://ip-check.info/>. For example, the fact that Adblock is removing

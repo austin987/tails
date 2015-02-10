@@ -28,8 +28,7 @@ Feature: Installing packages through APT
     And all Internet traffic has only flowed through Tor
 
   Scenario: Install packages using Synaptic
-    When I run "gksu synaptic"
-    And I enter the sudo password in the gksu prompt
+    When I start Synaptic
     And I update APT using Synaptic
     Then I should be able to install a package using Synaptic
     And all Internet traffic has only flowed through Tor

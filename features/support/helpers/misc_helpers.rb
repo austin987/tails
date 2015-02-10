@@ -1,8 +1,15 @@
 require 'date'
 require 'timeout'
+require 'test/unit'
 
-def assert(b, msg = "Assertion failed!")
-  raise RuntimeError, msg, caller if ! b
+# Make all the assert_* methods easily accessible in any context.
+include Test::Unit::Assertions
+
+def assert_vmcommand_success(p, msg = nil)
+  assert(p.success?, msg.nil? ? "Command failed: #{p.cmd}\n" + \
+                                "error code: #{p.returncode}\n" \
+                                "stderr: #{p.stderr}" : \
+                                msg)
 end
 
 # Call block (ignoring any exceptions it may throw) repeatedly with one
@@ -38,9 +45,8 @@ def try_for(t, options = {})
 end
 
 def wait_until_tor_is_working
-  try_for(240) { @vm.execute(
-    '. /usr/local/lib/tails-shell-library/tor.sh; ' +
-    'tor_control_getinfo status/circuit-established').stdout  == "1\n" }
+  try_for(270) { @vm.execute(
+    '. /usr/local/lib/tails-shell-library/tor.sh; tor_is_working').success? }
 end
 
 def convert_bytes_mod(unit)
@@ -77,7 +83,7 @@ def cmd_helper(cmd)
     out = p.readlines.join("\n")
     p.close
     ret = $?
-    assert(ret == 0, "Command failed (returned #{ret}): #{cmd}:\n#{out}")
+    assert_equal(0, ret, "Command failed (returned #{ret}): #{cmd}:\n#{out}")
     return out
   end
 end

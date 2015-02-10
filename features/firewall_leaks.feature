@@ -16,8 +16,7 @@ Feature:
     And I save the state so the background can be restored next scenario
 
   Scenario: Detecting IPv4 TCP leaks from the Unsafe Browser
-    When I start the Unsafe Browser
-    And the Unsafe Browser has started
+    When I successfully start the Unsafe Browser
     And I open the address "https://check.torproject.org" in the Unsafe Browser
     And I see "UnsafeBrowserTorCheckFail.png" after at most 60 seconds
     Then the firewall leak detector has detected IPv4 TCP leaks

@@ -1,25 +1,20 @@
-Then /^the shipped Tails signing key is not outdated$/ do
-  # "old" here is w.r.t. the one we fetch from Tails' website
+Then /^the shipped Tails (signing|Debian repository) key will be valid for the next (\d+) months$/ do |key_type, max_months|
   next if @skip_steps_while_restoring_background
-  sig_key_fingerprint = "0D24B36AA9A2A651787876451202821CBE2CD9C1"
-  fresh_sig_key = "/tmp/tails-signing.key"
-  tmp_keyring = "/tmp/tmp-keyring.gpg"
-  key_url = "https://tails.boum.org/tails-signing.key"
-  @vm.execute("curl --silent --socks5-hostname localhost:9062 " +
-              "#{key_url} -o #{fresh_sig_key}", $live_user)
-  @vm.execute("gpg --batch --no-default-keyring --keyring #{tmp_keyring} " +
-              "--import #{fresh_sig_key}", $live_user)
-  fresh_sig_key_info =
-    @vm.execute("gpg --batch --no-default-keyring --keyring #{tmp_keyring} " +
-                "--list-key #{sig_key_fingerprint}", $live_user).stdout
-  shipped_sig_key_info = @vm.execute("gpg --batch --list-key #{sig_key_fingerprint}",
-                                     $live_user).stdout
-  assert(shipped_sig_key_info == fresh_sig_key_info,
-         "The Tails signing key shipped inside Tails is outdated:\n" +
-         "Shipped key:\n" +
-         shipped_sig_key_info +
-         "Newly fetched key from #{key_url}:\n" +
-         fresh_sig_key_info)
+  if key_type == 'signing'
+    sig_key_fingerprint = "0D24B36AA9A2A651787876451202821CBE2CD9C1"
+    cmd = 'gpg'
+    user = $live_user
+  elsif key_type == 'Debian repository'
+    sig_key_fingerprint = "221F9A3C6FA3E09E182E060BC7988EA7A358D82E"
+    cmd = 'apt-key adv'
+    user = 'root'
+  else
+    raise 'Unknown key type #{key_type}'
+  end
+  shipped_sig_key_info = @vm.execute_successfully("#{cmd} --batch --list-key #{sig_key_fingerprint}", user).stdout
+  expiration_date = Date.parse(/\[expires: ([0-9-]*)\]/.match(shipped_sig_key_info)[1])
+  assert((expiration_date << max_months.to_i) > DateTime.now,
+         "The shipped signing key will expire within the next #{max_months} months.")
 end
 
 Then /^the live user has been setup by live\-boot$/ do
@@ -28,8 +23,7 @@ Then /^the live user has been setup by live\-boot$/ do
          "live-boot failed its user-setup")
   actual_username = @vm.execute(". /etc/live/config/username.conf; " +
                                 "echo $LIVE_USERNAME").stdout.chomp
-  assert(actual_username == $live_user,
-         "The live username is '#{actual_username}', not '#{$live_user}'")
+  assert_equal($live_user, actual_username)
 end
 
 Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
@@ -38,9 +32,9 @@ Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
   actual_groups = @vm.execute("groups #{$live_user}").stdout.chomp.sub(/^#{$live_user} : /, "").split(" ")
   unexpected = actual_groups - expected_groups
   missing = expected_groups - actual_groups
-  assert(unexpected.size == 0,
+  assert_equal(0, unexpected.size,
          "live user in unexpected groups #{unexpected}")
-  assert(missing.size == 0,
+  assert_equal(0, missing.size,
          "live user not in expected groups #{missing}")
 end
 
@@ -51,10 +45,8 @@ Then /^the live user owns its home dir and it has normal permissions$/ do
          "The live user's home doesn't exist or is not a directory")
   owner = @vm.execute("stat -c %U:%G #{home}").stdout.chomp
   perms = @vm.execute("stat -c %a #{home}").stdout.chomp
-  assert(owner == "#{$live_user}:#{$live_user}",
-         "The live user's home has unexpected ownership '#{owner}'")
-  assert(perms == "700",
-         "The live user's home has unexpected permissions '#{perms}'")
+  assert_equal("#{$live_user}:#{$live_user}", owner)
+  assert_equal("700", perms)
 end
 
 Given /^I wait between (\d+) and (\d+) seconds$/ do |min, max|
@@ -106,7 +98,7 @@ Then /^the VirtualBox guest modules are available$/ do
 end
 
 def shared_pdf_dir_on_guest
-  "/tmp/shared_dir"
+  "/tmp/shared_pdf_dir"
 end
 
 Given /^I setup a filesystem share containing a sample PDF$/ do
@@ -119,8 +111,7 @@ Then /^MAT can clean some sample PDF file$/ do
   for pdf_on_host in Dir.glob("#{$misc_files_dir}/*.pdf") do
     pdf_name = File.basename(pdf_on_host)
     pdf_on_guest = "/home/#{$live_user}/#{pdf_name}"
-    @vm.execute("cp #{shared_pdf_dir_on_guest}/#{pdf_name} #{pdf_on_guest}",
-                $live_user)
+    step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{$live_user}\""
     @vm.execute("mat --display '#{pdf_on_guest}'",
                 $live_user).stdout
     check_before = @vm.execute("mat --check '#{pdf_on_guest}'",
@@ -135,4 +126,13 @@ Then /^MAT can clean some sample PDF file$/ do
     assert(check_after.include?("#{pdf_on_guest} is clean"),
            "MAT failed to clean '#{pdf_on_host}'")
   end
+end
+
+Then /^AppArmor is enabled$/ do
+  assert(@vm.execute("aa-status").success?, "AppArmor is not enabled")
+end
+
+Then /^some AppArmor profiles are enforced$/ do
+  assert(@vm.execute("aa-status --enforced").stdout.chomp.to_i > 0,
+         "No AppArmor profile is enforced")
 end

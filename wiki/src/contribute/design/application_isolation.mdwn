@@ -1,0 +1,267 @@
+[[!meta title="Application isolation"]]
+
+[[!toc levels=3]]
+
+Goals
+=====
+
+For now, we are only aiming at filesystem resources isolation: that
+is, making sure that e.g. Pidgin cannot read the GnuPG keyring.
+
+Other types of resources, such as signals, X, ptrace, sockets, D-Bus
+etc. are [[not part of the isolation goals
+yet|application_isolation#more-resources]].
+
+Tools and basic configuration
+=============================
+
+For now, we have decided to use AppArmor to isolate applications,
+mostly because:
+
+* it is simple: AppArmor policy is relatively easy to understand,
+  improve, and audit;
+* it is the best supported [[!wikipedia mandatory access control]]
+  framework in Debian; it wasn't too hard to reach this point, and
+  there is quite some room for improvement via collaboration with
+  other distributions, most notably Ubuntu.
+
+The [[!debpts apparmor]] package is installed, and AppArmor is
+[[!tails_gitweb config/amnesia desc="enabled on the kernel
+command-line"]].
+
+Confinement profiles
+====================
+
+The AppArmor confinement profiles included in Tails come from:
+
+* individual Debian packages that ship confinement profiles, e.g.
+  Tor and Vidalia;
+* the [[!debpts apparmor-profiles]] package;
+* the [[!debpts apparmor-profiles-extra]] package.
+
+To get the full and current list, run `aa-status` as `root`
+inside Tails.
+
+Hacks to support the Live system usecase
+========================================
+
+Most Live systems use a union filesystem to provide the operating
+system with a read-write filesystem, based on a read-only branch
+(typically, SquashFS) and a read-write one (most often, tmpfs).
+
+Unfortunately, AppArmor currently does not support union filesystems
+very well, because the LSM hooks do not allow it to distinguish
+between an access to the upper layer, and an access to the loop-backed
+underlying layer.
+
+So, we have to adjust profiles a bit to make them support the paths
+that are actually seen by AppArmor in the context of Tails:
+
+* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-home-tunable.diff]]
+* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-tor-profile.diff]]
+* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-totem-profile.diff]]
+* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-user-tmp-abstraction.diff]]
+
+Below, we discuss various leads that might avoid the need for coming
+up with such adjustments, and maintaining it.
+
+Future work
+===========
+
+More confinement profiles
+-------------------------
+
+As part of the [[!debwiki AppArmor desc="Debian AppArmor Team"]], we
+are working to get more well-tested and maintained profiles integrated
+into the distribution, and to improve cross-distribution collaboration
+in this area.
+
+<a id="more-resources"></a>
+
+Isolating more types of resources
+---------------------------------
+
+Once AppArmor 2.9 is released and the corresponding kernel patches are
+merged into Linux mainline, we will get support for mediating many
+more types of resources: D-Bus calls, sockets, signals and so on.
+
+[[Linux containers|application_isolation#linux-containers]] may also
+be a good way to isolate more types of resources.
+
+Using alias rules to avoid modifying profiles
+---------------------------------------------
+
+The most obvious trick to workaround AppArmor's lack of support for
+union filesystems is to use [alias
+rules](http://wiki.apparmor.net/index.php/AppArmor_Core_Policy_Reference#Alias_and_rewrite_rules),
+such as:
+
+      echo 'alias / -> /lib/live/mount/rootfs/filesystem.squashfs/,' \
+      >> /etc/apparmor.d/tunables/alias
+
+However, a number of problems prevent this seemingly simple solution
+from just working in the context of Tails. The following discusses
+these complications, and a few possible solutions.
+
+### Bugs in alias rules implementation
+
+The implementation of alias rules is affected by severe bugs, such as
+<https://bugs.launchpad.net/apparmor/+bug/888077>.
+
+There's preliminary work to fix this at
+<https://code.launchpad.net/~jjohansen/+junk/parser-alias-fix>.
+Note that this code can still revert to the previous behaviour by
+passing the `-O old-alias` option to `apparmor_parser`.
+
+### Overlapping rules
+
+Alias rules can generate rules that overlap (and conflict) with
+existing ones, which can cause the policy to fail to compile.
+
+E.g. the `sanitized_helper` profile (sourced by the Evince
+profile and many others) contains this rule:
+
+    /lib{,32,64}/**/ld{,32,64}-*.so     mrix,
+
+which, once combined with this alias:
+
+    alias / -> /lib/live/mount/rootfs/filesystem.squashfs/,
+
+will end up overlapping a lot of the rules generated for the alias.
+E.g.
+
+    /bin/* Pixr,
+
+results in a rule of:
+
+    /lib/live/mount/rootfs/filesystem.squashfs/bin/* Pixr,
+
+being generated, however since the alias command does not remove other
+rule sets, it only adds new rules. We end up with both:
+
+    /lib{,32,64}/**/ld{,32,64}-*.so     mrix,
+    /lib/live/mount/rootfs/filesystem.squashfs/bin/* Pixr,
+
+which causes a conflict between `ix` and `Pix`.
+
+To workaround this problem, we would need to change the
+`/lib{,32,64}/**/ld{,32,64}-*.so mrix,` rule into:
+
+    /lib{32,64}/**/ld{,32,64}-*.so     mrix,
+    /lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**/ld{,32,64}-*.so mrix,
+
+which allows the profile to compile, as the `x` conflict has
+been removed.
+
+Needless to say, this kind of regexp is painful to write, audit and
+maintain. Things could be nicer if AppArmor supported set operations;
+instead, we could do something like (syntax not finalized):
+
+    /lib/{^live**}/ld{,32,64}-*.so     mrix,
+
+Other problematic overlaps include e.g. this rule from the
+`sanitized_helper` profile:
+
+    audit deny owner /**/* m,
+
+... that will take away the executable mmap permission from _all_
+applications under `/lib/live/` path, if the root user (who owns the
+file) tries to launch an application.
+
+This can possibly be fixed using [[rewrite
+rules|application_isolation#rewrite-rules]] instead of aliases, or by
+an update to the AppArmor permission merging logic that would give us
+a way to define that the alias rules should have priority in
+the union.
+
+Fixing such problems one after the other may be doable, but
+regardless: the way alias rules affect the policy as a whole,
+especially once combined with globing, would make our policy harder to
+understand, reason about, and audit.
+
+### Persistence
+
+It may be that more aliases are needed to support the bind-mounts set
+up by `live-boot` when using the [[contribute/design/persistence]]
+feature. It may even be that these aliases need to be dynamically
+added, in function of the persistence configuration... that is, at
+login time. If that was the case, then the entire policy would need to
+be recompiled at login time, which could make the user experience very
+painful, especially considering that alias rules vastly increase
+policy compilation time.
+
+### Increased policy compilation time
+
+Alias rules dramatically increase the policy compile time (e.g.
+100 seconds for the Evince profile, that can be brought down to
+8 seconds with the aforementioned rule change in the
+`sanitized_helper` profile).
+
+To mitigate that problem, we could:
+
+- either look at the rules and see if we can optimize it... which kind
+  of defeats the purpose of using alias rules in the first place to
+  avoid the need for modifying profiles;
+- or ship a cached pre-compiled policy. As long as the parser and
+  kernel are in sync, the policy can be pulled straight from the
+  cache, without any compilation. If the parser detects that the
+  policy is out of date, then the cache will be ignored and
+  compilation will happen. This is what is done for the Ubuntu phone.
+  Potential problems:
+  * if alias rules need to be added at login time, then the cache must
+    be invalidated, and the policy entirely recompiled;
+  * it remains to be researched how well this would work, once
+    combined with the [[additional software
+    packages|doc/first_steps/persistence/configure]] persistence
+    feature.
+
+<a id="rewrite-rules"></a>
+
+Using rewrite rules to avoid modifying profiles
+-----------------------------------------------
+
+Other than alias rules, another option to avoid modifying profiles
+would be to use [rewrite
+rules](http://wiki.apparmor.net/index.php/AppArmor_Core_Policy_Reference#Alias_and_rewrite_rules).
+They're basically the same as alias rules, except that it doesn't
+duplicate rules, so no conflicting rules are generated.
+
+It remains to be researched if rewrite rules would work in our use
+case: e.g. it might be that some files are seen as read from the
+SquashFS initially, and written to the overlay. If that would be the
+case, then we would need to duplicate some rules in profiles to add
+back some paths that were rewritten.
+
+overlayfs
+---------
+
+[overlayfs](https://git.kernel.org/cgit/linux/kernel/git/mszeredi/vfs.git/tree/Documentation/filesystems/overlayfs.txt?h=overlayfs.current)
+is another kind of union filesystem, that seems to have much greater
+chances than aufs to be merged into Linux mainline some day.
+overlayfs works differently from aufs, in ways that give hope that it
+might be easier for AppArmor to support it natively.
+
+Once it's merged in Linux mainline, Debian Live could be made to
+support overlayfs as an alternative to aufs. One thing that should be
+checked is whether overlayfs supports stacking up more than one
+read-only branch, which we do need for the Tails
+[[contribute/design/incremental upgrades]] feature.
+
+Some ongoing work on AppArmor (labeling, extended conditionals) will
+help support overlayfs. Time will tell whether the result meets
+our needs.
+
+<a id="linux-containers"></a>
+
+Linux containers
+----------------
+
+Using Linux containers for application isolation is being [[researched
+separately|blueprint/Linux_containers]].
+
+Credits
+=======
+
+We owe a lot of thanks to John Johansen (<john.johansen@canonical.com>)
+for his patience and support. Substantial parts of this document were
+adapted from explanations he provided to us.

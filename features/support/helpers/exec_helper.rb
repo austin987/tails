@@ -3,9 +3,10 @@ require 'socket'
 
 class VMCommand
 
-  attr_reader :returncode, :stdout, :stderr
+  attr_reader :cmd, :returncode, :stdout, :stderr
 
   def initialize(vm, cmd, options = {})
+    @cmd = cmd
     @returncode, @stdout, @stderr = VMCommand.execute(vm, cmd, options)
   end
 

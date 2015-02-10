@@ -73,7 +73,7 @@ implemented, but it either hasn't been reviewed, had a confirmed pass
 by someone other than the test author, or has issues. The latter is
 tracked by tickets prefixed with `todo/test_suite:`.
 
-# Iceweasel
+# Tor Browser
 
 ## Security and fingerprinting
 
@@ -94,7 +94,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
     `ifconfig | grep inet | grep -v inet6 | cut -d" " -f2 | tail -n1`
 * One should be able to switch identities from the web browser.
 * Running `getTorBrowserUserAgent` should produce the User-Agent set by the
-  installed version of Torbutton, and used in Iceweasel.
+  installed version of Torbutton, and used in the Tor Browser.
 
 ## Functionality
 
@@ -103,21 +103,26 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 # Pidgin
 
-* Check that an IRC session is really torified:
- - if you are running an IRC server: check there
- - else: see if the connection to the IRC server appears in Vidalia
-   connections list
+(automate: [[!tails_ticket 7820]])
+
 * Check that you can initiate an OTR conversation.
-* Check that IRC is working with the default OFTC profile.
 * Check that XMPP is working with a new test profile.
+  For example using Riseup:
+  - Username: username
+  - Domain: riseup.net
+  - Connect server: 4cjw6cwpeaeppfqz.onion
+  - Then try to create and connect to a new room:
+    - Room: testing
+    - Server: conference.riseup.net
+    - Handle: username
 * Check that Pidgin doesn't leak too much information when replying to
   CTCP requests:
   * Start Tails, launch Pidgin, and join #tails.
-  * Also join #tails from the webchat of OFTC on <https://webchat.oftc.net/>
-    using another nickname.
-  * Try to send `/ctcp <Tails_account_nick> COMMAND` from the webchat to pidgin:
-    - You should get no answer apart for the commands listed in [[!tails_ticket
-      5823]].
+  * Also join #tails from a client that supports CTCP commands
+    properly, e.g. Konversation.
+  * Try to send `/ctcp <Tails_account_nick> COMMAND` from the other client to Pidgin:
+    - You should get no answer apart for the PING and VERSION commands
+      ([[!tails_ticket 5823]]).
     - List of `/ctcp` commands, see [this page](http://www.wikkedwire.com/irccommands):
       - PING
       - VERSION
@@ -128,17 +133,19 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 # Tor
 
+(automate: [[!tails_ticket 7821]])
+
 * The version of Tor should be the latest stable one, which is the highest version number
   before alpha releases on <http://deb.torproject.org/torproject.org/pool/main/t/tor/>.
 * Check that the firewall-level Tor enforcement is effective:
   - check output of `iptables -L -n -v`
   - check output of `iptables -t nat -L -n -v`
-  - try connecting to the Internet after unsetting `$http_proxy` and
-    `$HTTP_PROXY` using a piece of software that does not obey the
+  - try connecting to the Internet after unsetting `$SOCKS_SERVER` and
+    `$SOCKS5_SERVER` using a piece of software that does not obey the
     GNOME proxy settings, *and* is not explicitly torified in Tails:
     
-        	unset http_proxy ; unset HTTP_PROXY
-        	wget --no-proxy http://monip.org/
+        	unset SOCKS_SERVER ; unset SOCKS5_SERVER
+        	curl --noproxy '*' http://monip.org/
     
     ... should only give you "Connection refused" error message.
 * Check that IPv6 traffic is blocked:
@@ -253,22 +260,14 @@ the appropriate tcpdump or tshark filters.
 
         sudo watch -n 0.1 'netstat -taupen | grep perl'
 
-* Make sure iceweasel uses its dedicated `SocksPort`: quit Iceweasel
+* Make sure the Tor Browser uses its dedicated `SocksPort`: quit the Tor Browser
   then start it with the following command running in another
   terminal:
 
-      sudo watch -n 0.1 'netstat -taupen | grep iceweasel'
+      sudo watch -n 0.1 'netstat -taupen | grep firefox'
 
 * Make sure other applications use the default system-wide
   `SocksPort`:
-  - Polipo — run:
-
-        wget https://tails.boum.org/
-
-    ... with the following command running in another terminal:
-
-        sudo watch -n 0.1 'netstat -taupen | grep polipo'
-
   - Gobby 0.5 — start Gobby 0.5 from the *Applications* menu and
     connect to a server (for example `gobby.debian.org`), with the following command running in
     another terminal:
@@ -305,22 +304,6 @@ the appropriate tcpdump or tshark filters.
 
       torsocks /usr/bin/gobby-0.5
 
-# Use of untrusted partitions
-
-* Is any local hard-disk swap partition used as swap?
-  boot on a (possibly virtual) machine that has a cleartext swap
-  partition not managed by LVM. To verify that a local GTP partition is swap,
-  check its type code with `sgdisk -p`, Linux swap is code 8200.
-
-  This swap partition must not be used by Tails. Run `cat /proc/swaps`.
-
-* Is a persistence volume on a local hard-disk partition used?
-  (Hint: setup a libvirt USB disk with GPT and a partition labeled
-  `TailsData`, set the `removable` flag on it, check that
-  tails-greeter proposes to enable persistence. Then remove the
-  `removable` flag, and check that tails-greeter does not propose to
-  enable persistence anymore.)
-
 # Claws
 
 * Check mail over IMAP using:
@@ -356,6 +339,8 @@ the appropriate tcpdump or tshark filters.
   Schleuder tells us that it was sent encrypted.
 
 # Time
+
+(automate: [[!tails_ticket 5836]])
 
 1. Boot Tails without a network cable connected.
    (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 down`.)
@@ -395,27 +380,56 @@ correctly.
 
 # I2P
 
-* Make sure that I2P is up-to-date, at least if the
-  [changelogs](https://geti2p.net/en/blog/) mention that
-  security critical bugs were fixed.
-* Check that "Applications -> Internet -> I2P" works:
-  - You get the "Starting I2P..." pop-up.
-  - The router console opens in Iceweasel upon success.
-  - You get the "I2P failed to start" pop-up on failure (e.g. no
-    network so tordate failed).
-* Check that I2P connects to the network:
-  - Go to <http://127.0.0.1:7657/i2ptunnelmgr>
-  - You should get "Network: Hidden" in the "General" section.
-  - The numbers in the "Peers" section of the sidebar should be non-zero.
-* Check that you can reach some eepsites within Iceweasel, like
-  <http://i2p-projekt.i2p> and <http://forum.i2p>.
-* Check that you can connect to the I2P IRC server through Pidgin and
-  the preconfigured IRC account on 127.0.0.1.
+Make sure that I2P is up-to-date, at least if the
+[changelogs](https://geti2p.net/en/blog/) mention that
+security critical bugs were fixed.
+
+Start I2P by appending `i2p` to the kernel command line.
+
+* Check that I2P starts when a network interface is up:
+  - Within 30 seconds you should get the "I2P router console is ready"
+    pop-up
+  - Start the I2P Browser via "Applications -> Internet -> I2P Browser":
+    * You get the "Starting I2P Browser..." pop-up.
+    * The router console (<http://127.0.0.1:7657>) opens successfully
+      upon success.
+    * On exiting I2P Browser, check that its chroot gets properly torn
+      down on exit (there should be nothing mounted inside
+      `/var/lib/i2p-browser`).
+  - After a few minutes you should get the "I2P is ready" pop-up
+  - Go to <http://127.0.0.1:7657/i2ptunnelmgr> in the I2P Browser:
+    * You should get "Network: Hidden" in the "General" section.
+    * The numbers in the "Peers" section of the sidebar should be
+      non-zero.
+    * Check that you can reach some eepsites within Iceweasel, like
+      <http://i2p-projekt.i2p> and <http://forum.i2p>.
+  - Check that you can connect to the I2P IRC server through Pidgin
+    and the preconfigured IRC account on 127.0.0.1.
+* Check I2P failure modes:
+  - Router console failure:
+    * Boot without network so I2P doesn't start automatically.
+    * Block the router console port: `nc -l -p 7657 -t 127.0.0.1`
+    * Plug the network
+    * You should get the "I2P failed to start" pop-up, and I2P should
+      not be running (check with `service i2p status`)
+  - Bootstrap failure:
+    * Detach the network immediately after getting the "I2P router
+      console is ready" pop-up
+    * Wait for up to six minutes
+    * You should get the "I2P is not ready" pop-up
+    * The I2P router console should still be accessible on
+      <http://127.0.0.1:7657>
 
 # Git
 
 * clone a repository over `git://`
+
+  git clone git://git.tails.boum.org/htp
+
 * clone a repository over `https://`
+
+  git clone https://git-tails.immerda.ch/htp
+
 * clone a repository over SSH
 
 # SSH
@@ -454,24 +468,30 @@ correctly.
   * For upgrade paths that only propose a full upgrade: make sure the
     user is told to do a manual upgrade.
 
-  If the IUKs and update-description files have been published on the
-  *alpha* channel already (see
-  <https://archive.torproject.org/amnesia.boum.org/tails/alpha/>):
+  If:
+  
+  * the update-description files have been published on the
+    *alpha* channel already (see <https://tails.boum.org/upgrade/v1/Tails/>)
+  * and the IUK has been published already (see
+    <https://archive.torproject.org/amnesia.boum.org/tails/alpha/>
+    and <https://archive.torproject.org/amnesia.boum.org/tails/stable/>):
 
-      echo 'TAILS_CHANNEL="alpha"' | sudo tee --append /etc/os-release && \
-      tails-upgrade-frontend-wrapper
+  then:
+  
+        echo 'TAILS_CHANNEL="alpha"' | sudo tee --append /etc/os-release && \
+        tails-upgrade-frontend-wrapper
 
   Else, use a local test setup:
 
   * A web server on the LAN.
-  * A copy of `wiki/src/update` from the `stable` or `testing` branch,
-    for example in `/var/www/tails/update/v1/Tails/0.14~rc2/i386/stable/updates.yml`
+  * A copy of `wiki/src/upgrade` from the `stable` or `testing` branch,
+    for example in `/var/www/tails/upgrade/v1/Tails/0.14~rc2/i386/stable/updates.yml`
   * A copy of the `iuk` directory of our HTTP mirrors,
     for example in `/var/www/tails/stable/iuk/Tails_i386_0.14-rc2_to_0.14.iuk`.
 
     To synchronize your local copy:
 
-        torsocks rsync -rt --progress rsync.torproject.org::amnesia-archive/tails/stable/iuk/ /var/www/tails/stable/iuk/
+        torsocks rsync -rt --progress --delete rsync.torproject.org::amnesia-archive/tails/stable/iuk/ /var/www/tails/stable/iuk/
 
   * Patch `/etc/hosts` in Tails to point to your web server:
 
@@ -497,21 +517,8 @@ correctly.
 Enable Windows camouflage via the Tails Greeter checkbox and:
 
 * Tails OpenPGP Applet's context menu should look readable
-* iceweasel should use a Internet Explorer theme
-
-# Unsafe Web Browser
-
-* On start, if no DNS server was configured in NetworkManager
-  (e.g. if there's no network connection), there must be an error.
-* Once started, check that:
-  - it has no scary red theme when Windows Camouflage is activated.
-  - the iceweasel instance runs as the `clearnet` user.
-  - it has no proxy configured.
-  - no extensions are installed.
-  - there are no bookmarks.
-* On exit, check that:
-  - make sure that its chroot gets properly teared down on exit (there
-    should be nothing mounted inside `/var/lib/unsafe-browser`).
+* The Tor Browser should use a Internet Explorer theme
+* The Unsafe Browser has no scary red theme
 
 # Real (non-VM) hardware
 
@@ -526,24 +533,26 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 
 # Documentation
 
-* Check that links to the online website (`Mirror:`) at the bottom of
-  bundled static web pages (`/usr/share/doc/tails/website/`) are working. Else, it probably means the
-  wiki was not built with a recent enough ikiwiki.
+* The "Tails documentation" desktop launcher should open the
+  [[getting started]] page (automate: [[!tails_ticket 8788]]):
+  - in English
+  - in one language to which the website is translated
+  - in one language to which the website is not translated (=> English)
 * Browse around in the documentation shipped in the image. Internal
   links should be fine.
 
 # Internationalization
 
 Boot and check basic functionality is working for every supported
-language.
+language. You *really* have to reboot between each language.
 
 * The chosen keyboard layout must be applied.
 * The virtual keyboard must work and be auto-configured to use the same keyboard
   layout as the X session.
 * The Startpage search engine must be localized for the languages we ship a
-  searchplug for:
+  search plugin for:
 
-      find /usr/share/amnesia/iceweasel/searchplugins/locale/ -iname startpage-*.xml
+      find /usr/local/lib/tor-browser/distribution/searchplugins/locale -iname startpage-*.xml
 
 * The Wikipedia search engine must be localized for all languages.
 
@@ -564,7 +573,8 @@ language.
 # Misc
 
 * Check that Tails Greeter's "more options" screen displays properly
-  on a display with 600 px height.
+  on a display with 600 px height, preferably in a language that's
+  more verbose than English (e.g. French).
 * Check that all seems well during init (mostly that all services
   start without errors), and that `/var/log/syslog` seems OK.
 * MAT should be able to clean a PDF file, such as:

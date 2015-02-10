@@ -1,7 +1,45 @@
 For an overview of the more general problem, see [[blueprint/replace_vagrant]].
 For the detailed plans and things to evaluate in Docker, see [[!tails_ticket 7530]].
 
-Random notes:
+[[!toc levels=1]]
+
+Availability on target platforms
+================================
+
+(as of 20141130)
+
+Primary target platforms:
+
+* Debian Wheezy: no, even in backports; installation is [possible
+  using ugly methods](https://docs.docker.com/installation/debian/)
+* Debian Jessie: 1.3.1~dfsg1-2, and an unblock request has been filed
+  to let 1.3.2 in
+* Debian sid: 1.3.2~dfsg1-1
+* Ubuntu 14.04 LTS: 0.9.1, with 1.0.1 available in trusty-updates
+* Ubuntu 14.10: 1.2.0
+
+Bonus:
+
+* Arch: 1.3.2
+* Fedora: 1.3.0 flagged as stable, 1.3.2 in testing
+
+API stability and backwards-compatibility
+=========================================
+
+- "all [Docker] containers are backwards compatible, pretty much to
+  the first version. [...] In general backwards compatibility is a
+  big deal in the Docker project"
+  ([source](https://news.ycombinator.com/item?id=7985142), shykes
+  is a Docker developer)
+- Apparently the Docker 1.0 release broke older stuff, see e.g. the
+  0.6 release in
+  [the jenkins plugin changelog](https://wiki.jenkins-ci.org/display/JENKINS/Docker+Plugin).
+- Environment replacement was formalized in Docker 1.3, and the new
+  behavior ["will be
+  preserved"](https://docs.docker.com/reference/builder/#environment-replacement).
+
+Random notes
+============
 
 * Since Docker 0.9, the default execution environment is libcontainer,
   instead of LXC. It now supports e.g. systemd-nspawn, libvirt-lxc,
@@ -14,3 +52,65 @@ Random notes:
   <https://stackoverflow.com/questions/17989306/what-does-docker-add-to-just-plain-lxc>,
   Docker comes with tools to automatically build a container from
   source, version it, and upgrade it incrementally.
+* Michael Prokop [gives
+  pointers](http://michael-prokop.at/blog/2014/07/23/book-review-the-docker-book/)
+  about Docker integration with Jenkins.
+* As far as our build system is concerned, we don't care much to
+  protect the host system from the build container. The main goal is
+  to produce a reliable build environment.
+* For security info about Linux containers in general, see the
+  [[dedicated blueprint|blueprint/Linux_containers]].
+* [overclockix](https://github.com/mbentley/overclockix) uses
+  live-build and provides a Dockerfile for easier building.
+* overlayfs support was added in Docker 1.4.0; we'll need that when
+  using Debian Stretch/sid once Linux 3.18 lands in there after
+  Jessie is released.
+
+Test run
+========
+
+(20150120, Debian sid host, `feature/7530-docker` Git branch)
+
+	sudo apt --no-install-recommends install docker.io aufs-tools
+	sudo adduser "$(whoami)" docker
+	su - "$(whoami)"
+	make
+
+* `TAILS_BUILD_OPTIONS="noproxy"` => run [apt-cacher-ng in a different
+  container](https://docs.docker.com/examples/apt-cacher-ng/)
+* Even with `--cache false`, some directories (`chroot`, `cache`) are
+  saved and retrieved from the container upon shutdown; same for
+  live-config -generated `config/*` files. That's because the current
+  directory is shared read-write with the container somehow.
+  This bind-mount should be read-only, but we still need to get the
+  build artifacts back on the host:
+  - see [Managing data in
+    containers](https://docs.docker.com/userguide/dockervolumes/)
+  - use `VOLUME` to share (read-write) the place where the build
+    artifacts shall be copied
+* We're currently using the `debian:wheezy` template, that likely we
+  should not trust. How should we build, maintain, publish and use
+  our own?
+* Being in the `docker` group is basically equivalent to having full
+  root access. Do we want to encourage contributors to do that, or
+  to run `docker` commands with `sudo`, or to use Docker in
+  a virtual machine?
+* We currently pass `--privileged` to `docker run`. Should we remove
+  it, and if yes, how?
+  - According to
+    <https://docs.docker.com/articles/dockerfile_best-practices/>,
+    "many of the “essential” packages from the base images will fail
+    to upgrade inside an unprivileged container". It seems that
+    the best practice is to publish _and regularly update_ a base
+    image, so that the most common usecases can avoid the APT upgrade
+    steps, and then run unprivileged.
+* Adding `.git` to the `.dockerignore` file would speed up the build,
+  but some code in our build process wants to know what branch or
+  commit we're building from => maybe we could pre-compute this
+  information, and pass it to the build command in some way?
+* What execution environment do we want to support? Only LXC
+  via libcontainer? Any usecase for e.g. the systemd- or
+  libvirt-based ones?
+* Move more stuff from `Makefile` to `Dockerfile`? E.g. `DOCKER_MOUNT`
+  could be specified as `VOLUME`. Can we specify the build command as
+  `CMD`?

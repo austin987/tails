@@ -14,7 +14,11 @@ start|doc/first_steps/bug_reporting/tails_does_not_start]].
 Problematic USB sticks
 ----------------------
 
-The following USB sticks have issues starting Tails.  They are configured by the
+<a id="sandisk"></a>
+
+### SanDisk
+
+Many SanDisk USB sticks are configured by the
 manufacturer as a fixed disk, and not as a removable disk. As a consequence,
 they require removing the `live-media=removable` boot parameter, which [[is
 dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
@@ -26,24 +30,31 @@ dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
 * SanDisk Cruzer Glide 4GB, 8GB and 16GB
 * SanDisk Cruzer Switch USB 2.0 8GB and 32GB
 * SanDisk Cruzer USB 3.0 64GB
-* SanDisk Cruzer Blade 4GB and 8GB
+* SanDisk Cruzer Blade 4GB, 8GB, and 32GB
 * SanDisk Cruzer Facet
-* Staples Relay USB 2.0 16GB
+* SanDisk Cruzer Orbiter 32GB (hangs at installation time but boots fine afterwards)
+* SanDisk Ultra 32 GB
 
 SanDisk had begun the production of flash drives configured as fixed disk in
-2012 to meet new requirements for Windows 8 Certification. The flash drives that
+2012 to meet new requirements for Windows 8 Certification, and ended it in mid-2014. The flash drives that
 comply with this certification will have the Windows 8 logo on their packaging.
 If a flash drive does not have the Windows 8 logo on its packaging, then that
-drive will function as a removable disk about should work with Tails.
+drive will function as a removable disk and should work with Tails.
 
 See also [[!tails_ticket 6397]].
 
-Acer Chromebook C720
---------------------
+<a id="pny"></a>
 
-Booting fails with `Not enough memory to load specified image`. Work around by
-adding the `mem=1500m` [[boot
-option|/doc/first_steps/startup_options/#boot_menu]].
+### PNY
+
+When installing Tails, PNY USB sticks have problems with the constant write load
+and are prone to failure.
+
+### Other vendors
+
+* Staples Relay USB 2.0 16GB, suffers from the same problem as [[some SanDisk USB sticks|known_issues#sandisk]].
+
+<a id="isohybrid-options"></a>
 
 Acer Travelmate 8573T-254G50M
 -----------------------------
@@ -69,16 +80,16 @@ Compaq 615
 You need to update the firmware to its latest version in order to start from a
 device installed using Tails Installer.
 
-Dell Inc. Latitude E6430/0CPWYR
--------------------------------
+Dell Inc. Latitude E6430 and E6230
+----------------------------------
 
 Does not start on USB sticks created using Tails Installer.
 
-With BIOS versions A03 06/03/2012 (and A09 and A11)
+With BIOS versions A03 06/03/2012 (and A09, A11, and A12)
 
 Error message: `Invalid partition table!`
 
-Workaround (at least with BIOS versions A09 and A11): just hit enter
+Workaround (at least with BIOS versions A09, A11, and A12): just hit enter
 and it will continue with the boot.
 
 This problem might be corrected in Tails 1.1 and newer: please report
@@ -111,7 +122,7 @@ Dell Dimension 2400
 
 Cannot start neither from USB nor from DVD. System crashes with a blank
 screen and locked up keyboard. This problem might be corrected in
-Tails 1.1 and newer: please report your test results back to us.
+newer versions: please report your test results back to us.
 
 HP ProBook 4330s
 ----------------
@@ -119,8 +130,18 @@ HP ProBook 4330s
 With UEFI enabled, when chosing a boot device, select `Boot From EFI File` and
 then `Filesystem Tails` and `EFI/BOOT/bootx64.efi`.
 
-Clevo W258CU, ThinkPad X121e, T420i, T430, T410, T520, W520, T530, E325 and E530
---------------------------------------------------------------------------------
+Lenovo IdeaPad Y410p
+--------------------
+
+Cannot start Tails 1.1 from USB installed manually in Linux.
+
+Lenovo IdeaPad z585
+-------------------
+
+Goes back continuously to boot menu on Tails installed on DVD.
+
+Clevo W258CU, ThinkPad X121e, T420i, T410, T520, W520, T530, E325 and E530
+--------------------------------------------------------------------------
 
 These machines do not start on USB sticks created using Tails USB
 Installer, due to a firmware limitation.
@@ -140,23 +161,16 @@ Mac
 
 * Some Mac need [rEFInd](http://sourceforge.net/projects/refind/)
   installed to boot Tails from a USB stick.
+* Any Mac with 32-bit EFI won't succeed in booting Tails USB stick
+  created by Tails Installer. You can check if a given Mac is 32-bit
+  or 64-bit EFI on that list:
+  <http://www.everymac.com/mac-answers/snow-leopard-mac-os-x-faq/mac-os-x-snow-leopard-64-bit-macs-64-bit-efi-boot-in-64-bit-mode.html>
 * MacBookPro5,5 does not boot with Tails in UEFI mode.
 * MacBook Air 3,2 (A1369 EMC 2392) freezes when booting Tails in
   UEFI mode.
 * MacBookPro (early 2011) fails to boot from DVD since Tails 1.1.
-* Mac Pro Tower (early 2008) fails to boot from a USB stick created by
+* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) and MacBookPro late 2011 (8,2) fail to boot from a USB stick created by
   Tails Installer.
-
-<a id="problematic-virtual-machines"></a>
-
-Problematic virtual machines
-----------------------------
-
-Does not start in some virtualization environments, such as
-QEMU 0.11.1 and VirtualBox 4.2. This can be corrected by upgrading to
-QEMU 1.0 or VirtualBox 4.3, or newer.
-
-See also [[!tails_ticket 7232]] and [[!tails_ticket 7173]].
 
 <a id="chainloading"></a>
 
@@ -174,6 +188,26 @@ The following commands, run from the GRUB shell, might be helpful:
     chainloader +1
     boot
 
+Other hardware issues
+=====================
+
+<a id="bcm43224"></a>
+
+Broadcom BCM43224 802.11a/b/g/n wireless network adapter
+--------------------------------------------------------
+
+The Broadcom Corporation BCM43224 802.11a/b/g/n wireless network
+adapter is known to not be able to
+[[spoof its MAC address|doc/first_steps/startup_options/mac_spoofing]]. Tails
+enables MAC spoofing by default, and will disable any network adapter
+it fails to spoof. To make it work you must
+[[disable Tails' MAC spoofing feature|doc/first_steps/startup_options/mac_spoofing#disable]];
+please read the documentation carefully and make sure you understand
+the consequences before doing so.
+
+This network adapter can, for instance, be found in the MacBook Air
+4,1, 4,2, 5,1 and 5,2.
+
 Security issues
 ===============
 
@@ -184,6 +218,10 @@ On rare systems (non-PAE with big amounts of memory),
 Tails does not consistently [[!tails_todo
 more_efficient_memory_wipe desc="erase all system memory as it
 should"]].
+
+If no [[cold boot attack|doc/advanced_topics/cold_boot_attacks]]
+happens directly after shutdown, the RAM empties itself in minutes,
+and all data disappears.
 
 After using Tails Installer, the "emergency shutdown" doesn't work
 ------------------------------------------------------------------
@@ -226,9 +264,13 @@ When this happens, there is no guarantee that the memory is wiped entirely.
 
 This issue has been reported on the following hardware:
 
-  - Apple MacBookAir5,1, MacBook Pro 13-inch Mid 2012 9,2, MacBook Pro
-    13-inch Late 2011 8,1, MacBook Pro Retina 13-inch, and
-    MacBookPro10,2, when booting from a USB stick
+  - Apple when booting from a USB stick:
+    - MacBook Air 5,1
+    - MacBook Pro 7,1, 13-inch mid 2010
+    - MacBook Pro 9,2, 13-inch mid 2012
+    - MacBook Pro 8,1, 13-inch late 2011
+    - MacBook Pro 10,2
+    - MacBook Pro Retina 11,1, late 2013
   - Hewlett-Packard HP Pavilion dv6 Notebook PC
   - Lenovo ThinkPad X61, only on emergency shutdown when pulling out the
     USB stick
@@ -236,6 +278,7 @@ This issue has been reported on the following hardware:
   - Dell Inc. Studio 1458
   - Fujitsu Lifebook AH531/GFO, only on regular shutdown, emergency
     shutdown works
+  - Samsung N150P
 
 <a id="fingerprint"></a>
 
@@ -244,13 +287,31 @@ Fingerprint
 
 <!-- If this section is empty adjust the [[fingerprint documentation|doc/about/fingerprint]]. -->
 
-<!-- The fingerprints of the Tor browser and the TBB are different: -->
+<!-- The fingerprints of <span class="application">Tor Browser</span> in Tails and on other operating systems are different: -->
 
 * Browser window resizing is in not reliable: [[!tails_ticket 6377]]
   and [[!tor_bug 10095]].
 
 Other issues
 ============
+
+<a id="i2p_browser"></a>
+
+Hard to exchange files with the I2P Browser
+-------------------------------------------
+
+It is impossible to exchange files between the I2P Browser and the amnesia user.
+See [[!tails_ticket 8280]]. But you can do that with
+administration rights from the command line. The home directory of the I2P Browser is
+located in `/var/lib/i2p-browser/chroot/home/i2pbrowser/`.
+
+You might have to check the permissions of the files that you want to exchange
+with the I2P Browser:
+
+  - They need to belong to the `i2pbrowser` user to be accessible from inside
+    of the I2P browser.
+  - They need to belong to the `amnesia` user to be accessible from outside of
+    the I2P Browser.
 
 Boot menu has display issues
 ----------------------------
@@ -264,16 +325,6 @@ Connecting to FTP servers is not possible
 Public FTP servers on the Internet are not reachable using Tails.
 See [[!tails_todo fix_Internet_FTP_support desc="the corresponding
 task"]] for more details.
-
-YouTube videos are hard to get
-------------------------------
-
-[[!tails_todo easier_YouTube desc="HTML5 video are not easily seen on YouTube"]]. When the
-message *This video is currently unavailable* appears, the video can actually be viewed.
-Right-click on the page, select **NoScript** → **Blocked objects** and
-**Temporarily allow…** the video.
-
-Tails will never support videos which require Flash (those with ads).
 
 Tails fails to connect to certain Wi-Fi networks
 ------------------------------------------------
@@ -304,9 +355,26 @@ Touchpad configurations
     synclient FingerLow=1;
     synclient FingerHigh=1;
 
-TorBrowser takes too long to shutdown
--------------------------------------
+Bluetooth devices don't work
+----------------------------
+
+Bluetooth is not enabled in Tails for security reasons. To enable it
+anyway, see the documentation about
+[[wireless devices|doc/advanced_topics/wireless_devices]].
+
+Tor Browser takes too long to shutdown
+--------------------------------------
 
 Since Tails 0.22, the browser sometimes takes too long to shutdown
 ([[!tails_ticket 6480]]). Waiting a few more seconds is usually enough
 to let it close itself correctly.
+
+<a id="browser_languages"></a>
+
+Tor Browser is translated in a limited number of languages
+----------------------------------------------------------
+
+Since Tails 1.2, the web browser is based on Tor Browser which is
+translated in less languages than before. You can see the list of
+languages available in Tor Browser from the [Tor Browser
+homepage](https://www.torproject.org/projects/torbrowser.html.en).

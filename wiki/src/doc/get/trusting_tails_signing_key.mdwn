@@ -22,17 +22,21 @@ directory on a USB stick. Then run the following command from a terminal to
 check whether all the keys are identical:
 
     cd [your download directory]
-    sha256sum tails-signing*.key
+    diff -qs --from-file tails-signing*.key
 
 This command would output something like this:
 
-    c10cfc3a95a35baeaa59b2c17d4d244a217ad1fc22ff5b6aaf73cba48772d54a  tails-signing-desktop.key
-    c10cfc3a95a35baeaa59b2c17d4d244a217ad1fc22ff5b6aaf73cba48772d54a  tails-signing-laptop.key
-    c10cfc3a95a35baeaa59b2c17d4d244a217ad1fc22ff5b6aaf73cba48772d54a  tails-signing-library.key
-    c10cfc3a95a35baeaa59b2c17d4d244a217ad1fc22ff5b6aaf73cba48772d54a  tails-signing-seattle.key
+    Files tails-signing-desktop.key and tails-signing-laptop.key are identical
+    Files tails-signing-desktop.key and tails-signing-library.key are identical
+    Files tails-signing-desktop.key and tails-signing-seattle.key are identical
 
-You would then need to visually check that all the checksums of the first column
-are the same, meaning that the keys are identical.
+You would then need to check that every line reports identical key files.
+
+If at least a key differs from the rest, the command would output accordingly:
+
+    Files tails-signing-desktop.key and tails-signing-laptop.key are identical
+    Files tails-signing-desktop.key and tails-signing-library.key are identical
+    Files tails-signing-desktop.key and tails-signing-seattle.key differ
 
 You could also use this technique to compare keys downloaded by your friends or
 other people you trust.
@@ -102,7 +106,7 @@ can do:
 
 You will get something like this:
 
-    pub   4096R/1202821CBE2CD9C1 2010-10-07 [expires: 2012-10-06]
+    pub   4096R/1202821CBE2CD9C1 2010-10-07 [expires: 2015-04-30]
     uid                          Tails developers (signing key) <tails@boum.org>
     sig 3        1202821CBE2CD9C1 2011-04-16  Tails developers (signing key) <tails@boum.org>
     sig          BACE15D2A57498FF 2011-04-16  [User ID not found]
@@ -126,13 +130,16 @@ You could for example do:
 If this signature corresponds to a key in the Debian keyring you will get
 something like this:
 
-    pub   4096R/CCD2ED94D21739E9 2007-06-02 [expires: 2012-05-31]
+    pub   4096R/CCD2ED94D21739E9 2007-06-02 [expires: 2015-02-26]
     uid                          Daniel Kahn Gillmor <dkg@fifthhorseman.net>
     uid                          Daniel Kahn Gillmor <dkg@openflows.com>
     uid                          [jpeg image of size 3515]
     uid                          Daniel Kahn Gillmor <dkg@debian.org>
-    sub   4096R/C61BD3EC21484CFF 2007-06-02 [expires: 2012-05-31]
-    sub   2048R/125868EA4BFA08E4 2008-06-19 [expires: 2011-05-31]
+    uid                          Daniel Kahn Gillmor <dkg@aclu.org>
+    sub   4096R/0xC61BD3EC21484CFF 2007-06-02 [expires: 2015-02-26]
+    sub   2048R/0x125868EA4BFA08E4 2008-06-19 [expires: 2015-02-26]
+    sub   4096R/0xA52401B11BFDFA5C 2013-03-12 [expires: 2015-03-12]
+    sub   2432R/0xDC104C4E0CA757FB 2013-09-11 [expires: 2014-09-11]
 
 You can then import it in your own keyring by doing:
 
@@ -153,15 +160,7 @@ Tails signing key has been successfully verified:
     pub   4096R/1202821CBE2CD9C1 2010-10-07 [expires: 2015-04-30]
     uid                          Tails developers (signing key) <tails@boum.org>
     sig!3        1202821CBE2CD9C1 2011-04-16  Tails developers (signing key) <tails@boum.org>
-    sig!         CCD2ED94D21739E9 2011-06-12  Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-    uid                          T(A)ILS developers (signing key) <amnesia@boum.org>
-    sig!3        1202821CBE2CD9C1 2010-10-07  Tails developers (signing key) <tails@boum.org>
-    sig!         CCD2ED94D21739E9 2010-12-29  Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-
-    pub   4096R/1202821CBE2CD9C1 2010-10-07 [expires: 2012-10-06]
-    uid                          T(A)ILS developers (signing key) <amnesia@boum.org>
-    sig!3        1202821CBE2CD9C1 2010-10-07  T(A)ILS developers (signing key) <amnesia@boum.org>
-    sig!         CCD2ED94D21739E9 2010-12-29  Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+    sig!         CCD2ED94D21739E9 2013-05-05  Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 
     3 signatures not checked due to missing keys
 

@@ -1,0 +1,127 @@
+#!/bin/sh
+
+set -e
+
+# Import the TBB_EXT variable, and guess_best_tor_browser_locale().
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
+# Import windows_camouflage_is_enabled()
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
+# Import try_cleanup_browser_chroot(), setup_browser_chroot(),
+# configure_chroot_dns_servers(), configure_chroot_browser(),
+# configure_chroot_browser(), set_chroot_browser_locale()
+# set_chroot_torbutton_browser_name(), set_chroot_browser_permissions()
+# and run_browser_in_chroot().
+. /usr/local/lib/tails-shell-library/chroot-browser.sh
+
+# Import i2p_router_console_is_ready() and i2p_is_enabled().
+. /usr/local/lib/tails-shell-library/i2p.sh
+
+error () {
+    local cli_text="${CMD}: `gettext \"error:\"` ${@}"
+    local dialog_text="<b><big>`gettext \"Error\"`</big></b>
+
+${@}"
+    echo "${cli_text}" >&2
+    sudo -u "${SUDO_USER}" zenity --error --title "" --text "${dialog_text}"
+    exit 1
+}
+
+verify_start () {
+    # Make sure the user really wants to start the browser in case the router console isn't available
+    local dialog_msg="<b><big>`gettext \"Do you still want to launch I2P Browser?\"`</big></b>
+
+`gettext \"The I2P router console is not ready.\"`"
+    local launch="`gettext \"_Launch\"`"
+    local exit="`gettext \"_Exit\"`"
+    # Since zenity can't set the default button to cancel, we switch the
+    # labels and interpret the return value as its negation.
+    if sudo -u "${SUDO_USER}" zenity --question --title "" --ok-label "${exit}" \
+       --cancel-label "${launch}" --text "${dialog_msg}"; then
+        exit 0
+    fi
+}
+
+show_start_notification () {
+    local title="`gettext \"Starting the I2P Browser...\"`"
+    local body="`gettext \"This may take a while, so please be patient.\"`"
+    tails-notify-user "${title}" "${body}" 10000
+}
+
+copy_extra_tbb_prefs () {
+    local chroot="${1}"
+    local browser_name="${2}"
+    local browser_user="${3}"
+
+    local tbb_prefs="/etc/tor-browser/profile/preferences"
+    local browser_prefs_dir="${chroot}/home/${browser_user}/.${browser_name}/profile.default/preferences"
+    mkdir -p "${browser_prefs_dir}"
+    # Selectively copy the TBB prefs we want
+    sed '/\(security\|update\|download\|spell\|noscript\|torbrowser\|torbutton\)/!d' "${tbb_prefs}/0000tails.js" > \
+                    "${browser_prefs_dir}/0000tails.js"
+    sed '/\(capability\|noscript\|torbutton\)/!d' "${tbb_prefs}/extension-overrides.js" > \
+                    "${browser_prefs_dir}/extension-overrides.js"
+    chown -R "${browser_user}:${browser_user}" "${browser_prefs_dir}"
+}
+
+show_shutdown_notification () {
+    local title="`gettext \"Shutting down the I2P Browser...\"`"
+    local body="`gettext \"This may take a while, and you may not restart the I2P Browser until it is properly shut down.\"`"
+    tails-notify-user "${title}" "${body}" 10000
+}
+
+# Main script:
+
+# This isn't very useful without I2P...
+i2p_is_enabled || exit 0
+
+CMD="$(basename "${0}")"
+LOCK="/var/lock/${CMD}"
+
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
+CONF_DIR="/var/lib/i2p-browser"
+COW="${CONF_DIR}/cow"
+CHROOT="${CONF_DIR}/chroot"
+BROWSER_NAME="i2p-browser"
+BROWSER_USER="i2pbrowser"
+HOME_PAGE="http://127.0.0.1:7657"
+NOSCRIPT_EXT_XPI="${TBB_EXT}/{73a6fe31-595d-460b-a920-fcc0f8843232}.xpi"
+TORBUTTON_EXT_DIR="${TBB_EXT}/torbutton@torproject.org"
+HUMAN_READABLE_NAME="`gettext \"I2P Browser\"`"
+IP4_NAMESERVERS="0.0.0.0"
+
+# Prevent multiple instances of the script.
+exec 9>"${LOCK}"
+if ! flock -x -n 9; then
+    error "`gettext \"Another I2P Browser is currently running, or being cleaned up. Please retry in a while.\"`"
+fi
+
+if ! i2p_router_console_is_ready; then
+    verify_start
+fi
+show_start_notification
+
+echo "* Setting up chroot"
+setup_chroot_for_browser "${CHROOT}" "${COW}" "${BROWSER_USER}" || \
+    error "`gettext \"Failed to setup chroot.\"`"
+
+echo "* Configuring chroot"
+configure_chroot_browser "${CHROOT}" "${BROWSER_USER}" "${BROWSER_NAME}" \
+    "${HUMAN_READABLE_NAME}" "${HOME_PAGE}" "${IP4_NAMESERVERS}" \
+    "${TBB_EXT}"/langpack-*.xpi "${NOSCRIPT_EXT_XPI}" "${TORBUTTON_EXT_DIR}" && \
+    copy_extra_tbb_prefs "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" || \
+        error "`gettext \"Failed to configure browser.\"`"
+
+echo "* Starting I2P Browser"
+run_browser_in_chroot "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
+    "${SUDO_USER}" || \
+    error "`gettext \"Failed to run browser.\"`"
+
+echo "* Exiting the I2P Browser"
+show_shutdown_notification
+
+exit 0

@@ -73,39 +73,40 @@ Grsync is [packaged for debian](https://packages.debian.org/squeeze/grsync).
 
 The documentation for the creation of the encrypted device [[is already written|doc/encryption_and_privacy/encrypted_volumes]].
 
-### Pros
-
-* not that much things to code
-* grsync can be easily preconfigurated, eventually with multiple profiles
-* this solution separate backup and encryption work
-* allows remote backups
-
-### Cons
-
-* seems not really actively developped
-* not possible to do incremental backups
-* needs a separate encrypted device for backups or reuse the "loopback LUKS"
-  solution
-* does not check if enough space is available on the destination before running
-
 ### How to test?
 
 * create an encrypted device.
 * install the grsync package.
-* paste [those lines](http://dustri.org/p/38e76b) in a .grsync file, then double-click on it.
+* paste [those lines](https://paste.debian-facile.org/view/raw/a7a7fe3c) in a `.grsync` file, then double-click on it.
 (grsync ask you first to confirm the profile you want to use. Just click on "Open")
 * define the destination (i.e your encrypted device)
 * test wildly! and please report your results
 
-### Todo
+### Pros
+
+* not that much things to code
+* grsync can be easily preconfigurated, eventually with multiple profiles
+* this solution separates backup and encryption work
+* allows remote backups
+
+### Features to request
+
+* grsync should check if enough space is available on the destination before running.
+  Update: rsync 3.1.0 [introduces](https://rsync.samba.org/ftp/rsync/src/rsync-3.1.0-NEWS) a `--preallocate` option.
+  (Tails actually ships rsync 3.0.9)
+* grsync should ask for confirmation when the option "Delete on the destination" is activated
+* when user double-click on a `.grsync` file, a window appears to confirm which file to open. This may be confusing.
+
+### Misc
 
 * some files are normally not readable by rsync (for example persistence.conf, apt/*)
   Grsync can bypass that with the option "Run as superuser", we should investigate the consequences of using such an option.
   We still have the possibility to ignore those files: we just have then to add `--exclude="apt"` in the preconfiguration file.
 * decide if we activate the option `--delete` by default.
-* test restoration (see File → Invert source and destination), then at least check files permissions.
+* test restoration (see File → Invert source and destination). Then, at least, check files permissions.
 * test backup + restoration with symlinks and hardlinks in the Persistent folder.
 * eventually test remote backups.
+* see the [thread on tails-dev](https://mailman.boum.org/pipermail/tails-dev/2015-January/007931.html)
 
 rdup
 ----
@@ -129,6 +130,31 @@ well as incremental backups.
 
 * still requires a script of some sort to drive it
 * probably requires a gui to make it simple to use
+
+Clone everything
+----------------
+
+We could add to *Tails Installer* an option to **Clone everything**
+(Tails partition and persistent volume). This would clone the original
+USB stick and also backup all the persistent data.
+
+We could encourage people to submit patches for this even if it's not a
+perfect solution. The back end could be quite simple and use rsync
+between the two persistent volumes.
+
+A possible improvement would be to skip the cloning of the Tails
+partition if the destination USB is already a Tails USB stick.
+
+### Pros
+
+* That's a very simple user interface: it's only possible to do full
+  backups. If you loose your data, use the backup USB stick. We don't
+  have to provide an option to restore.
+
+### Cons
+
+* No option to do incremental backups.
+* People need a dedicated USB stick.
 
 Other solutions
 ---------------

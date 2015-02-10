@@ -1,0 +1,58 @@
+
+Allowed Access
+==============
+
+The HTTP Proxy is set to 127.0.0.1 on port 4444 with an exception made for
+http://127.0.0.1 which does not go through the proxy. With this set-up, only eepsites (`.i2p`
+TLD), offline Tails documentation, and the router console are acessible from I2P Browser.
+
+Also, do note that Tails' [[netfilter-based
+blocking|Tor_enforcement/Network_filter]] ensures that no Internet
+traffic can escape I2P (and thus be non-anonymous), even if something is
+wrong in the above filters (or a future revision).
+
+Ports allowed through the firewall
+==================================
+
+I2P is shipped with several preconfigured tunnels, and the ports used have had
+exceptions added to ferm. The ports accessible by the i2pbrowser user include:
+
+* 4444, I2P HTTP Proxy: Used to access sites with the `.i2p` TLD
+* 7657, I2P router console: The router console is accessible in the web browser at <http://127.0.0.1:7657>
+* 7658, local 'eepsite': Each I2P installation is configured out of the box
+  with the possibility to host one's own website (or *eepsite*) on the I2P
+  network. The eepsite will not be acessible remotely unless its
+  [tunnel](http://127.0.0.1:7657/i2ptunnel#localServerTunnelList) is started.
+
+Note: These ports will only be opened if the user explicitly requests I2P at the boot prompt.
+See [[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]] for details.
+
+Security
+========
+
+The I2P Browser is run by a separate `i2pbrowser` user, which is only allowed
+to make TCP connections to the ports explicitly mentioned above.  DNS lookups
+are prohibited.
+
+The I2P Browser is run inside a chroot consisting of a throw away
+aufs union between a read-only version of the pre-boot Tails
+filesystem, and a tmpfs as the rw branch. Hence, the post-boot
+filesystem (which contains all user data) isn't available to the
+I2P Browser within the chroot. The chroot and aufs union is created
+upon I2P Browser start, and is torn down after it exits, forcefully
+killing any remaining processes run from inside it.
+
+It should be noted that chroots are pretty weak jails, so an exploit
+could easily escape it and have access to the complete filesystem (as
+restricted for the `i2pbrowser` user). Hence, the reason for using a
+chroot is not for that purpose, but for separating its configuration from the rest of the Tails system.
+
+Code
+----
+
+* [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/i2p-browser]]
+* [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tails-shell-library/chroot-browser.sh]]
+* [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tails-shell-library/i2p.sh]]
+* [[!tails_gitweb config/chroot_local-includes/usr/share/applications/i2p.desktop.in]]
+* [[!tails_gitweb chroot_local-includes/lib/live/config/2080-install-i2p]
+* [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-activate-win8-theme]]

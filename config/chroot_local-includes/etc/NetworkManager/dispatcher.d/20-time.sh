@@ -14,7 +14,7 @@
 . /usr/local/lib/tails-shell-library/tor.sh
 
 # Import tails_netconf()
-. /usr/local/lib/tails-shell-library/tails_greeter.sh
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
 
 ### Init variables
 
@@ -100,9 +100,17 @@ wait_for_tor_consensus() {
 }
 
 wait_for_working_tor() {
-	log "Waiting for Tor to be working (i.e. cached descriptors exist)..."
+	local waited=0
+
+	log "Waiting for Tor to be working..."
 	while ! tor_is_working; do
-		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to ${TOR_DIR} || log "timeout"
+		if [ "$waited" -lt ${INOTIFY_TIMEOUT} ]; then
+			sleep 2
+			waited=$(($waited + 2))
+		else
+			log "Timed out waiting for Tor to be working"
+			return 1
+		fi
 	done
 	log "Tor is now working."
 }

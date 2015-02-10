@@ -1,0 +1,88 @@
+#!/bin/sh
+
+set -e
+
+# Get LANG
+. /etc/default/locale
+export LANG
+
+# Initialize gettext support
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
+# Must be set after gettext initialization
+set -u
+
+# Import wait_until()
+. /usr/local/lib/tails-shell-library/common.sh
+# Import i2p_has_bootstrapped(), i2p_router_console_is_ready() and
+# set_best_i2p_router_console_lang().
+. /usr/local/lib/tails-shell-library/i2p.sh
+
+I2P_STARTUP_TIMEOUT=60
+# We'll give up once 6 minutes have passed. Even with ridiculously
+# subpar network conditions I've not seen bootstrapping take longer
+# than this.
+I2P_BOOTSTRAP_TIMEOUT=360
+
+startup_failure() {
+    /usr/local/sbin/tails-notify-user \
+        "`gettext \"I2P failed to start\"`" \
+        "`gettext \"Something went wrong when I2P was starting. Check the logs in /var/log/i2p for more information.\"`"
+    service i2p stop # clean up, just in case
+    exit 1
+}
+
+wait_until_i2p_router_console_is_ready() {
+    wait_until ${I2P_STARTUP_TIMEOUT} i2p_router_console_is_ready
+}
+
+notify_router_console_success() {
+    /usr/local/sbin/tails-notify-user \
+        "`gettext \"I2P's router console is ready\"`" \
+        "`gettext \"You can now access I2P's router console on http://127.0.0.1:7657.\"`"
+}
+
+bootstrap_failure() {
+    /usr/local/sbin/tails-notify-user \
+        "`gettext \"I2P is not ready\"`" \
+        "`gettext \"Eepsite tunnel not built within six minutes. Check the router console at http://127.0.0.1:7657/logs or the logs in /var/log/i2p for more information. Reconnect to the network to try again.\"`"
+    exit 1
+}
+
+wait_until_i2p_has_bootstrapped() {
+    wait_until ${I2P_BOOTSTRAP_TIMEOUT} i2p_has_bootstrapped
+}
+
+notify_bootstrap_success() {
+    /usr/local/sbin/tails-notify-user \
+        "`gettext \"I2P is ready\"`" \
+        "`gettext \"You can now access services on I2P.\"`"
+}
+
+case "${1}" in
+    start|restart)
+        # Stop I2P before setting the router console language in case
+        # it pushes any updated options on quit.
+        if service i2p status; then
+            service i2p stop
+        fi
+        # Get LANG, since we may run this from an environment that
+        # doesn't have it set.
+        . /etc/default/locale
+        set_best_i2p_router_console_lang
+        service i2p start
+        wait_until_i2p_router_console_is_ready || startup_failure
+        notify_router_console_success
+        wait_until_i2p_has_bootstrapped || bootstrap_failure
+        notify_bootstrap_success
+        ;;
+    stop)
+        exec service i2p stop
+        ;;
+    *)
+        echo "invalid argument '${1}'" >&2
+        exit 1
+        ;;
+esac

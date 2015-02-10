@@ -4,9 +4,11 @@
 
 ## In the beginning of your shift
 
+- Check the Mozilla release calendars:
+  * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
+  * [Release schedule](https://wiki.mozilla.org/RapidRelease/Calendar)
 - Send the release schedule to <tails-dev@boum.org> and
-  <tails-l10n@boum.org>. Use the [Mozilla release
-  calendar](https://wiki.mozilla.org/RapidRelease/Calendar).
+  <tails-l10n@boum.org>.
   Ask the core team and contributors for availability at the
   dates designated for testing the RC and final image.
 - Update [[contribute/calendar]] accordingly.
@@ -15,35 +17,25 @@
   if needed.
 - Make sure you have access to the various systems used to do
   the release.
+- Check when the SSL certificate for https://tails.boum.org/ expires.
+  If that's before, or soon after, the scheduled date for the release
+  _after_ the one your shift is about, then:
+  * Get in touch with <root@boum.org> to know about their plans.
+  * Create a ticket for the release your shift is about, so that we
+    update the CA bundle that's used by Tails Upgrader and the
+    security check.
+- Check when our OpenPGP signing key expires.
+  If that's before, or soon after, the scheduled date for the release
+  _after_ the one your shift is about, then shout.
 
 ## Around two weeks before the freeze
 
-- Have a look at recent changes in:
-  * the [TBB](https://gitweb.torproject.org/torbrowser.git)'s prefs
-    (e.g. `git log -p build-scripts/config/*.js`)
-  * the [Tor Browser](https://git.torproject.org/tor-browser.git)
-    patch that creates `browser/app/profile/000-tor-browser.js`:
-
-        git diff $LAST_IMPORT_COMMIT..$CURRENT_WIP_BRANCH \
-           browser/app/profile/000-tor-browser.js
-
-    - `$LAST_IMPORT_COMMIT` is the commit from which we imported the
-      Tor Browser patches last time: see our iceweasel's
-      `debian/changelog`
-    - `$CURRENT_WIP_BRANCH` is the name of the branch the Tor Browser
-      folks are working on these days, or the most recent one (for the
-      relevant version of Firefox) that can be found in
-      their repository, e.g. *tor-browser-24.3.0esr-2*
-
-- Import the relevant changes into our Iceweasel configuration,
-  following the normal review'n'merge process.
-- In particular, make sure the `general.*` and
-  `browser.startup.homepage_override.*` prefs are in sync', in our
-  `/etc/iceweasel/pref/iceweasel.js`, with TBB's `pound_tor.js`.
 - Have a look at recent changes
   in [Torbutton](https://gitweb.torproject.org/torbutton.git), and
   do whatever is needed to get the fixes we need in the release.
 - Have Kill Your TV upgrade I2P if needed. See [[contribute/design/I2P]].
+- If needed, update the list of Tor authorities in the test
+  suite configuration.
 
 ## Continuously
 

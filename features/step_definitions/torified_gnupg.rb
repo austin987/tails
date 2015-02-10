@@ -30,9 +30,14 @@ When /^the "([^"]*)" key is in the live user's public keyring after at most (\d+
   }
 end
 
+When /^I start Seahorse$/ do
+  next if @skip_steps_while_restoring_background
+  step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
+end
+
 When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|
   next if @skip_steps_while_restoring_background
-  step "I run \"torsocks seahorse\""
+  step "I start Seahorse"
   @screen.wait("SeahorseWindow.png", 10)
   @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
   @screen.type("f")                  # "Find Remote Keys...".

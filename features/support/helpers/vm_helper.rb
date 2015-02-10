@@ -156,6 +156,15 @@ class VM
   end
 
   def plug_drive(name, type)
+    removable_usb = nil
+    case type
+    when "removable usb", "usb"
+      type = "usb"
+      removable_usb = "on"
+    when "non-removable usb"
+      type = "usb"
+      removable_usb = "off"
+    end
     # Get the next free /dev/sdX on guest
     used_devs = []
     domain_xml = REXML::Document.new(@domain.xml_desc)
@@ -175,9 +184,7 @@ class VM
     xml.elements['disk/driver'].attributes['type'] = @@storage.disk_format(name)
     xml.elements['disk/target'].attributes['dev'] = dev
     xml.elements['disk/target'].attributes['bus'] = type
-    if type == "usb"
-      xml.elements['disk/target'].attributes['removable'] = 'on'
-    end
+    xml.elements['disk/target'].attributes['removable'] = removable_usb if removable_usb
 
     if is_running?
       @domain.attach_device(xml.to_s)
@@ -303,6 +310,21 @@ EOF
     update_domain(domain_xml.to_s)
   end
 
+  def set_os_loader(type)
+    if is_running?
+      raise "boot settings can only be set for inactice vms"
+    end
+    if type == 'UEFI'
+      domain_xml = REXML::Document.new(@domain.xml_desc)
+      domain_xml.elements['domain/os'].add_element(REXML::Document.new(
+        '<loader>/usr/share/ovmf/OVMF.fd</loader>'
+      ))
+      update_domain(domain_xml.to_s)
+    else
+      raise "unsupported OS loader type"
+    end
+  end
+
   def is_running?
     begin
       return @domain.active?
@@ -313,6 +335,12 @@ EOF
 
   def execute(cmd, user = "root")
     return VMCommand.new(self, cmd, { :user => user, :spawn => false })
+  end
+
+  def execute_successfully(cmd, user = "root")
+    p = execute(cmd, user)
+    assert_vmcommand_success(p)
+    return p
   end
 
   def spawn(cmd, user = "root")
@@ -338,6 +366,19 @@ EOF
 
   def pidof(process)
     return execute("pidof -x -o '%PPID' " + process).stdout.chomp.split
+  end
+
+  def file_exist?(file)
+    execute("test -e #{file}").success?
+  end
+
+  def file_content(file, user = 'root')
+    # We don't quote #{file} on purpose: we sometimes pass environment variables
+    # or globs that we want to be interpreted by the shell.
+    cmd = execute("cat #{file}", user)
+    assert(cmd.success?,
+           "Could not cat '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
+    return cmd.stdout
   end
 
   def save_snapshot(path)

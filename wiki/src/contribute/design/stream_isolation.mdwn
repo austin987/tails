@@ -26,8 +26,8 @@ Tails:
 Web Browser
 -----------
 
-Until Torbrowser implements clever fine-grained stream isolation
-([[!tor_bug 3455]]), Iceweasel is merely directed to a dedicated SOCKS port.
+Until the Tor Browser implements clever fine-grained stream isolation
+([[!tor_bug 3455]]) it is merely directed to a dedicated SOCKS port.
 
 Destination address/port -based circuit isolation
 -------------------------------------------------
@@ -46,7 +46,7 @@ However:
   before we ship it to the masses.
 
 For performance reasons, we will start with *not* using
-`IsolateDestAddr`/`IsolateDestPort` for iceweasel we ship: nowadays,
+`IsolateDestAddr`/`IsolateDestPort` for the Tor Browser: nowadays,
 loading a mere web page often requires fetching resources from a dozen
 or more remote sources. (Also, it looks like the use of
 `IsolateDestAddr` in a modern web browser may create very uncommon
@@ -77,7 +77,7 @@ Implementation
 ==============
 
 A few SOCKS ports are configured
-in [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]:
+in [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]:
 
 * default system-wide `SocksPort` (9050): `IsolateDestAddr` and
   `IsolateDestPort` enabled
@@ -85,15 +85,13 @@ in [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]:
   enabled
 * dedicated `SocksPort` for Tails-specific applications (9062):
   `IsolateDestAddr` and `IsolateDestPort` enabled
-* dedicated `SocksPort` for web browser (9151): no stream
+* dedicated `SocksPort` for web browser (9150): no stream
   isolation options
 * no specific isolation options for the `TransPort` ([[!tails_ticket 6378]])
 
 Applications are configured to use the right SOCKS port:
 
-- [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/pref/iceweasel.js]]
-- [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/profile/foxyproxy.xml]]
-- [[!tails_gitweb config/chroot_local-includes/etc/iceweasel/profile/user.js]]
+- [[!tails_gitweb config/chroot_local-includes/etc/tor-browser/profile/preferences/0000tails.js]]
 - [[!tails_gitweb config/chroot_local-includes/etc/init.d/htpdate]]
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/tor-tsocks-mua.conf]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check]]

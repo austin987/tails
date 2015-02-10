@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+USER_PROFILE="${HOME}/.tor-browser"
+
+if [ -e "${USER_PROFILE}" ]; then
+    echo "A tor-browser profile already exists at: ${USER_PROFILE}" >&2
+    exit 1
+fi
+
+mkdir -p "${USER_PROFILE}"
+cp -a /etc/tor-browser/profile "${USER_PROFILE}"/profile.default

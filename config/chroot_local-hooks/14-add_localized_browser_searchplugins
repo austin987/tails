@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -e
+
+echo "Setting up localized browser search plugins"
+
+# Link localized Tails searchplugins to the proper localization directories:
+# e.g. files in '/usr/share/amnesia/browser/searchplugins/locale/es' will be
+# linked in '/etc/tor-browser/profile/searchplugins/locale/es-AR',
+# '/etc/tor-browser/profile/searchplugins/locale/es-ES', etc.
+
+# Import the TBB_INSTALL and TBB_EXT variables
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
+locales_for_lang() {
+	local locale="$1"
+	local langpacks
+
+	find "${TBB_EXT}" -maxdepth 1 -type f -name 'langpack-*@firefox.mozilla.org.xpi' -printf "%P\n" |
+		sed -n -e "s/^langpack-\($locale\)\(-[A-Z]\+\)\?@firefox.mozilla.org.xpi/\1\2/p"
+}
+
+for LANGUAGE in $(find /usr/share/amnesia/browser/searchplugins/locale -maxdepth 1 -type d -printf "%P\n"); do
+	LOCALES="$(locales_for_lang "$LANGUAGE")"
+	if [ -z "$LOCALES" ]; then
+		echo "Unable to find a matching locale for $LANGUAGE." >&2
+		exit 1
+	fi
+	for LOCALE in $LOCALES; do
+		mkdir -p "${TBB_INSTALL}"/distribution/searchplugins/locale/$LOCALE
+		for SEARCHPLUGIN in $(find "/usr/share/amnesia/browser/searchplugins/locale/$LANGUAGE" -maxdepth 1 -type f); do
+			ln -s "$SEARCHPLUGIN" "${TBB_INSTALL}"/distribution/searchplugins/locale/$LOCALE
+		done
+	done
+done
