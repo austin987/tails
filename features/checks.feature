@@ -45,6 +45,11 @@ Feature: Various checks
    When I see the 'Tor is ready' notification
    Then Tor is ready
 
+  Scenario: The tor process should be confined with Seccomp
+    Given the network is plugged
+    And Tor is ready
+    Then the running process "tor" is confined with Seccomp
+
   Scenario: No unexpected network services
     When the network is plugged
     And Tor is ready
