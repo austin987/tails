@@ -13,6 +13,10 @@ Feature: Various checks
   Scenario: GNOME Screenshot has a sane default save directory
     Then GNOME Screenshot is configured to save files to the live user's home directory
 
+  Scenario: GNOME Screenshot will take a screenshot when the PRINTSCREEN key is pressed
+    When I press the "PRINTSCREEN" key
+    Then a screenshot will be saved to the live user's home directory
+
   Scenario: VirtualBox guest modules are available
     When Tails has booted a 64-bit kernel
     Then the VirtualBox guest modules are available

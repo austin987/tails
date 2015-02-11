@@ -103,6 +103,14 @@ Then /^GNOME Screenshot is configured to save files to the live user's home dire
   assert_equal(expected, save_path, "The GNOME screenshot auto-save-directory is not set correctly.")
 end
 
+Then /^a screenshot will be saved to the live user's home directory$/ do
+  next if @skip_steps_while_restoring_background
+  home = "/home/#{$live_user}"
+  try_for(3, :msg=> "Screenshot not created in #{home}") {
+    !@vm.execute("find #{home} -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
+  }
+end
+
 Then /^the VirtualBox guest modules are available$/ do
   next if @skip_steps_while_restoring_background
   assert(@vm.execute("modinfo vboxguest").success?,
