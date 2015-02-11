@@ -141,8 +141,21 @@ Then /^some AppArmor profiles are enforced$/ do
          "No AppArmor profile is enforced")
 end
 
-Then /^the running process "(.+)" is confined with Seccomp$/ do |process|
+def get_seccomp_status(process)
+  assert(@vm.has_process?(process), "Process #{process} not running.")
+  pid = @vm.pidof(process)[0]
+  status = @vm.file_content("/proc/#{pid}/status")
+  return status.match(/^Seccomp:\s+([0-9])/)[1].chomp.to_i
+end
+
+Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mode$/ do |process,mode|
   next if @skip_steps_while_restoring_background
-  status = @vm.execute("awk '/^Seccomp:/{print $2}' /proc/$(pidof #{process})/status").stdout.chomp.to_i
-  assert_equal(2, status, "#{process} not confined with Seccomp")
+  status = get_seccomp_status(process)
+  if mode == 'strict'
+    assert_equal(1, status, "#{process} not confined with Seccomp in strict mode")
+  elsif mode == 'filter'
+    assert_equal(2, status, "#{process} not confined with Seccomp in filter mode")
+  else
+    raise "Unsupported mode #{mode} passed"
+  end
 end

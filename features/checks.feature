@@ -48,7 +48,7 @@ Feature: Various checks
   Scenario: The tor process should be confined with Seccomp
     Given the network is plugged
     And Tor is ready
-    Then the running process "tor" is confined with Seccomp
+    Then the running process "tor" is confined with Seccomp in filter mode
 
   Scenario: No unexpected network services
     When the network is plugged
