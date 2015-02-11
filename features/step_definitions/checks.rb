@@ -140,3 +140,9 @@ Then /^some AppArmor profiles are enforced$/ do
   assert(@vm.execute("aa-status --enforced").stdout.chomp.to_i > 0,
          "No AppArmor profile is enforced")
 end
+
+Then /^the running process "(.+)" is confined with Seccomp$/ do |process|
+  next if @skip_steps_while_restoring_background
+  status = @vm.execute("awk '/^Seccomp:/{print $2}' /proc/$(pidof #{process})/status").stdout.chomp.to_i
+  assert_equal(2, status, "#{process} not confined with Seccomp")
+end
