@@ -1,7 +1,14 @@
 When /^I see and accept the Unsafe Browser start verification$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserStartVerification.png", 30)
-  @screen.type("l", Sikuli::KeyModifier.ALT)
+  @screen.type(Sikuli::Key.ESC)
+end
+
+Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
+  next if @skip_steps_while_restoring_background
+  step "I run \"LANG=#{loc}.UTF-8 LC_ALL=#{loc}.UTF-8 sudo unsafe-browser\" in GNOME Terminal"
+  step "I see and accept the Unsafe Browser start verification"
+  #@screen.wait("UnsafeBrowserHomepage.png", 120)
 end
 
 Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
