@@ -41,9 +41,9 @@ Feature: Various checks
     And process "vidalia" is running within 30 seconds
 
   Scenario: The 'Tor is ready' notification is shown when Tor has bootstrapped
-   Given the network is plugged
-   When I see the 'Tor is ready' notification
-   Then Tor is ready
+    Given the network is plugged
+    When I see the 'Tor is ready' notification
+    Then Tor is ready
 
   Scenario: The tor process should be confined with Seccomp
     Given the network is plugged
