@@ -10,6 +10,9 @@ Feature: Various checks
     Then AppArmor is enabled
     And some AppArmor profiles are enforced
 
+  Scenario: GNOME Screenshot has a sane default save directory
+    Then GNOME Screenshot is configured to save files to the live user's home directory
+
   Scenario: VirtualBox guest modules are available
     When Tails has booted a 64-bit kernel
     Then the VirtualBox guest modules are available
