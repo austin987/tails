@@ -2,6 +2,13 @@
 
 [[!toc levels=2]]
 
+Git repository and branches
+===========================
+
+You will need to clone the Tails Git repository, and to checkout the
+branch that you want to build (most likely, _not_ `master`): learn
+more about [[our Git branches layout|contribute/git#main-repo]].
+
 <a id="vagrant"></a>
 
 Using Vagrant
@@ -15,31 +22,92 @@ maximum of 10 GB of free storage.
 [Vagrant]: http://vagrantup.com/
 [VirtualBox]: http://www.virtualbox.org/
 
-Set up the build environment on Debian Jessie:
+## Installing the dependencies in Debian
 
-1. Add Debian unstable to your APT sources.
-2. Pin all packages from Debian unstable at 500 (`apt_preferences(5)`).
+### If you run Debian Jessie
+
+1. Add Debian unstable to your APT sources:
+
+       echo "deb http://ftp.us.debian.org/debian/ unstable main" | \
+           sudo tee /etc/apt/sources.list.d/unstable.list
+
+2. Pin all packages from Debian unstable at 500 (`apt_preferences(5)`):
+
+       sudo tee /etc/apt/preferences.d/unstable <<EOF
+       Package: *
+       Pin: release o=Debian,a=unstable
+       Pin-Priority: 500
+       EOF
+
 3. Install the needed tools:
 
-       $ sudo apt-get install git virtualbox rake vagrant/unstable
+       sudo apt-get install git virtualbox rake ruby-childprocess \
+           ruby-erubis ruby-i18n ruby-log4r ruby-net-scp ruby bsdtar curl
 
-Or, on Debian Wheezy:
+### If you run Debian Wheezy
 
-1. Add Debian Jessie and unstable to your APT sources.
-2. Pin all packages from Debian Jessie and unstable at 500 (`apt_preferences(5)`).
+1. Add Debian Jessie, unstable and wheezy-backports to your APT sources:
+
+       echo "deb http://ftp.us.debian.org/debian/ jessie main" | \
+           sudo tee /etc/apt/sources.list.d/jessie.list
+       echo "deb http://ftp.us.debian.org/debian/ unstable main" | \
+           sudo tee /etc/apt/sources.list.d/unstable.list
+       echo "deb http://ftp.us.debian.org/debian/ wheezy-backports main" | \
+           sudo tee /etc/apt/sources.list.d/wheezy-backports.list
+
+2. Pin all packages from Debian Jessie and unstable at 500 (`apt_preferences(5)`):
+
+       sudo tee /etc/apt/preferences.d/jessie <<EOF
+       Package: *
+       Pin: release o=Debian,a=jessie
+       Pin-Priority: 500
+       EOF
+       sudo tee /etc/apt/preferences.d/unstable <<EOF
+       Package: *
+       Pin: release o=Debian,a=unstable
+       Pin-Priority: 500
+       EOF
+
 3. Install the needed tools:
 
-       $ sudo apt-get install git virtualbox rake vagrant/unstable \
-         ruby-childprocess/jessie ruby-net-scp/jessie ruby-net-ssh/jessie
+       sudo apt-get install git virtualbox rake ruby-childprocess/jessie \
+           ruby-net-scp/jessie ruby-erubis ruby-i18n ruby-log4r bsdtar curl \
+           gettext/wheezy-backports
 
-Then, please run:
+### In both Debian Wheezy and Jessie
 
-    $ git clone git://git.tails.boum.org/tails
-    $ cd tails
-    $ git checkout devel
-    $ export TAILS_BUILD_OPTIONS="noproxy"
-    $ rake build
-    $ unset TAILS_BUILD_OPTIONS
+At the moment Tails relies on a version of Vagrant (the 1.4.x series)
+that is not packaged in Debian any more. Here's a workaround for both
+Debian Wheezy and Jessie:
+
+    sudo tee /etc/apt/preferences.d/tails-build-vagrant <<EOF
+    Package: vagrant
+    Pin: version 1.4.3+dfsg1-3
+    Pin-Priority: 550
+
+    Package: ruby-net-ssh
+    Pin: version 1:2.6.8-2
+    Pin-Priority: 550
+    EOF
+    echo "deb http://snapshot.debian.org/archive/debian/20141010T042049Z/ unstable main" | \
+        sudo tee /etc/apt/sources.list.d/20141010T042049Z.list
+    sudo apt-get -o Acquire::Check-Valid-Until=false update
+    sudo apt-get install vagrant ruby-net-ssh
+    sudo rm /etc/apt/sources.list.d/20141010T042049Z.list
+    sudo apt-get update
+
+## Building Tails using Vagrant
+
+Once all dependencies are installed, get the Tails sources and
+checkout the development branch:
+
+    git clone git://git.tails.boum.org/tails
+    cd tails
+    git checkout devel
+
+Build Tails using Vagrant:
+
+    rake build
 
 The first time, this can take a little while to download the base virtual
 machine from Tails mirror (around 300 MB). It will then boot the machine,
@@ -49,7 +117,7 @@ should appear in the current directory.
 After you are done working on Tails, do not forget to shut the virtual
 machine down:
 
-    $ rake vm:halt
+    rake vm:halt
 
 One may also want to [[contribute/customize]] their image before building.
 
@@ -62,7 +130,7 @@ If you have a local HTTP proxy, the build system will use it as long as
 you properly set the `http_proxy` environment variable. The easiest way to
 do so is to run:
 
-    $ export http_proxy=http://proxy.lan:3142
+    export http_proxy=http://proxy.lan:3142
 
 This needs to be done before any other operations.
 
@@ -78,16 +146,16 @@ The following options are available:
 ### Memory build settings
 
 Tails builds way faster when everything is done in memory. If your computer
-runs Linux and happens to have more than 6.5 GB of free memory before you
+runs Linux and happens to have more than 7 GB of free memory before you
 start the virtual machine, it will automatically switch to 'build in RAM'
 mode.
 
 To force a specific behaviour please set:
 
- * **ram**: start the virtual machine with 6.5GB of memory, build Tails
+ * **ram**: start the virtual machine with 7 GB of memory, build Tails
    inside a `tmpfs`. Build fails if the system is not in a proper state to
    do so.
- * **noram**: start the virtual machine with 1GB of memory if not already
+ * **noram**: start the virtual machine with 512 MB of memory if not already
    done, build Tails using the virtual machine hard disk.
 
 ### HTTP proxy settings
@@ -104,26 +172,6 @@ The following flags can be used to force a specific behaviour:
  * **vmproxy**: use the local proxy configured in the virtual machine even
    if a local HTTP proxy is set.
  * **noproxy**: do not use any HTTP proxy.
-
-### Bootstrap cache settings
-
-A Tails build starts with `debootstrap`:ing a minimal Debian system
-which then is modified into a full Tails system. This is a rather time
-consuming step that usually does not have to be done: the packages used
-in it rarely get updated and hence the result is exactly the same most
-of the time.
-
-The following flags can be used to force a specific behaviour:
-
- * **cache**: re-use a cached bootstrap stage (if available), and saves
-   the bootstrap stage to disk on successful build. This will also
-   reduce the amount of memory required for in-memory builds by around
-   150 MiB (see the **ram** option above). **Warning:** this option may
-   create subtle differences between builds from the exact same Tails
-   source which are hard to track to track and understand. Use this
-   option only if you know what you are doing, and if you are not
-   building an actual release.
- * **nocache**: do the bootstrap stage from scratch (default).
 
 ### SquashFS compression settings
 
@@ -143,7 +191,6 @@ Forcing a specific behaviour can be done using:
 Some operations are preserved accross builds. Currently they are:
 
 * The wiki (for documentation).
-* The bootstrap stage cache (see the **cache** option above).
 
 In case you want to delete all these, the following option is available:
 
@@ -207,21 +254,21 @@ The following Debian packages need to be installed:
 
       221F 9A3C 6FA3 E09E 182E  060B C798 8EA7 A358 D82E
 
-* `syslinux`
+* `syslinux-utils` 6.03, e.g. from our `builder-wheezy` repository
+  just like `live-build`
 * `eatmydata`, `time` and `whois` (for `/usr/bin/mkpasswd`)
 * `ikiwiki` 3.20120725 or newer, available in wheezy-backports.
 * `apt-get install libyaml-perl libyaml-libyaml-perl po4a perlmagick
   libyaml-syck-perl` so that the wiki builds smoothly.
 * `dpkg-dev`
 * `intltool`
+* `gettext` 0.18.3 or newer, available in wheezy-backports
 
 Configure live-build
 --------------------
 
-Add these lines to `/etc/live/build.conf`:
-
-	LB_PARENT_MIRROR_BINARY="http://ftp.us.debian.org/debian/"
-	LB_MIRROR_BINARY="http://ftp.us.debian.org/debian/"
+Remove any line matching `/^[[:space:]]*LB.*MIRROR.*=/` in
+`/etc/live/build.conf`.
 
 Build process
 -------------
@@ -231,7 +278,7 @@ Every build command must be run as `root`, at the root of a clone of the
 
 In short, a build shall be done using:
 
-    # lb clean --all && lb config && lb build
+    lb clean --all && lb config && lb build
 
 Running `lb config` or `lb build` in an environment that wasn't full
 cleaned first is not supported.

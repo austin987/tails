@@ -32,6 +32,7 @@ dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
 * SanDisk Cruzer USB 3.0 64GB
 * SanDisk Cruzer Blade 4GB, 8GB, and 32GB
 * SanDisk Cruzer Facet
+* SanDisk Cruzer Orbiter 32GB (hangs at installation time but boots fine afterwards)
 * SanDisk Ultra 32 GB
 
 SanDisk had begun the production of flash drives configured as fixed disk in
@@ -52,8 +53,6 @@ and are prone to failure.
 ### Other vendors
 
 * Staples Relay USB 2.0 16GB, suffers from the same problem as [[some SanDisk USB sticks|known_issues#sandisk]].
-
-<a id="isohybrid-options"></a>
 
 Acer Travelmate 8573T-254G50M
 -----------------------------
@@ -79,16 +78,16 @@ Compaq 615
 You need to update the firmware to its latest version in order to start from a
 device installed using Tails Installer.
 
-Dell Inc. Latitude E6430/0CPWYR
--------------------------------
+Dell Inc. Latitude E6430 and E6230
+----------------------------------
 
 Does not start on USB sticks created using Tails Installer.
 
-With BIOS versions A03 06/03/2012 (and A09 and A11)
+With BIOS versions A03 06/03/2012 (and A09, A11, and A12)
 
 Error message: `Invalid partition table!`
 
-Workaround (at least with BIOS versions A09 and A11): just hit enter
+Workaround (at least with BIOS versions A09, A11, and A12): just hit enter
 and it will continue with the boot.
 
 This problem might be corrected in Tails 1.1 and newer: please report
@@ -168,19 +167,8 @@ Mac
 * MacBook Air 3,2 (A1369 EMC 2392) freezes when booting Tails in
   UEFI mode.
 * MacBookPro (early 2011) fails to boot from DVD since Tails 1.1.
-* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) fail to boot from a USB stick created by
+* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) and MacBookPro late 2011 (8,2) fail to boot from a USB stick created by
   Tails Installer.
-
-<a id="problematic-virtual-machines"></a>
-
-Problematic virtual machines
-----------------------------
-
-Does not start in some virtualization environments, such as
-QEMU 0.11.1 and VirtualBox 4.2. This can be corrected by upgrading to
-QEMU 1.0 or VirtualBox 4.3, or newer.
-
-See also [[!tails_ticket 7232]] and [[!tails_ticket 7173]].
 
 <a id="chainloading"></a>
 
@@ -198,6 +186,26 @@ The following commands, run from the GRUB shell, might be helpful:
     chainloader +1
     boot
 
+Other hardware issues
+=====================
+
+<a id="bcm43224"></a>
+
+Broadcom BCM43224 802.11a/b/g/n wireless network adapter
+--------------------------------------------------------
+
+The Broadcom Corporation BCM43224 802.11a/b/g/n wireless network
+adapter is known to not be able to
+[[spoof its MAC address|doc/first_steps/startup_options/mac_spoofing]]. Tails
+enables MAC spoofing by default, and will disable any network adapter
+it fails to spoof. To make it work you must
+[[disable Tails' MAC spoofing feature|doc/first_steps/startup_options/mac_spoofing#disable]];
+please read the documentation carefully and make sure you understand
+the consequences before doing so.
+
+This network adapter can, for instance, be found in the MacBook Air
+4,1, 4,2, 5,1 and 5,2.
+
 Security issues
 ===============
 
@@ -208,6 +216,10 @@ On rare systems (non-PAE with big amounts of memory),
 Tails does not consistently [[!tails_todo
 more_efficient_memory_wipe desc="erase all system memory as it
 should"]].
+
+If no [[cold boot attack|doc/advanced_topics/cold_boot_attacks]]
+happens directly after shutdown, the RAM empties itself in minutes,
+and all data disappears.
 
 After using Tails Installer, the "emergency shutdown" doesn't work
 ------------------------------------------------------------------
@@ -264,7 +276,7 @@ This issue has been reported on the following hardware:
   - Dell Inc. Studio 1458
   - Fujitsu Lifebook AH531/GFO, only on regular shutdown, emergency
     shutdown works
-  - Apple MacBookPro 10,2
+  - Samsung N150P
 
 <a id="fingerprint"></a>
 
@@ -281,6 +293,24 @@ Fingerprint
 Other issues
 ============
 
+<a id="i2p_browser"></a>
+
+Hard to exchange files with the I2P Browser
+-------------------------------------------
+
+It is impossible to exchange files between the I2P Browser and the amnesia user.
+See [[!tails_ticket 8280]]. But you can do that with
+administration rights from the command line. The home directory of the I2P Browser is
+located in `/var/lib/i2p-browser/chroot/home/i2pbrowser/`.
+
+You might have to check the permissions of the files that you want to exchange
+with the I2P Browser:
+
+  - They need to belong to the `i2pbrowser` user to be accessible from inside
+    of the I2P browser.
+  - They need to belong to the `amnesia` user to be accessible from outside of
+    the I2P Browser.
+
 Boot menu has display issues
 ----------------------------
 
@@ -293,16 +323,6 @@ Connecting to FTP servers is not possible
 Public FTP servers on the Internet are not reachable using Tails.
 See [[!tails_todo fix_Internet_FTP_support desc="the corresponding
 task"]] for more details.
-
-YouTube videos are hard to get
-------------------------------
-
-[[!tails_todo easier_YouTube desc="HTML5 video are not easily seen on YouTube"]]. When the
-message *This video is currently unavailable* appears, the video can actually be viewed.
-Right-click on the page, select **NoScript** → **Blocked objects** and
-**Temporarily allow…** the video.
-
-Tails will never support videos which require Flash (those with ads).
 
 Tails fails to connect to certain Wi-Fi networks
 ------------------------------------------------
@@ -332,6 +352,13 @@ Touchpad configurations
     synclient VertTwoFingerScroll=1;
     synclient FingerLow=1;
     synclient FingerHigh=1;
+
+Bluetooth devices don't work
+----------------------------
+
+Bluetooth is not enabled in Tails for security reasons. To enable it
+anyway, see the documentation about
+[[wireless devices|doc/advanced_topics/wireless_devices]].
 
 Tor Browser takes too long to shutdown
 --------------------------------------

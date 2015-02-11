@@ -14,7 +14,7 @@
 . /usr/local/lib/tails-shell-library/tor.sh
 
 # Import tails_netconf()
-. /usr/local/lib/tails-shell-library/tails_greeter.sh
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
 
 ### Init variables
 

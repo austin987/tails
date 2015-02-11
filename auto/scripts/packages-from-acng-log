@@ -1,0 +1,111 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings FATAL => 'all';
+use 5.10.1;
+
+use autodie;
+use Carp::Assert;
+use Carp::Assert::More;
+use IO::All;
+use List::MoreUtils qw{uniq};
+
+my $usage = "Usage: $0 ACNG_LOG IP EPOCH_START EPOCH_END [OUTPUT_BIN_PKGS OUTPUT_SRC_PKGS]";
+
+my $logline_re = qr{
+                       \A
+                       (\d+)   [|]
+                       ([^|]+) [|]
+                       (\d+)   [|]
+                       ([^|]+) [|]
+                       ([^\n]+)
+                       \z
+}xms;
+
+### Subs
+
+sub logline_timestamp_is_between {
+    my $logline     = shift;
+    my $epoch_start = shift;
+    my $epoch_end   = shift;
+
+    if (my ($timestamp) = ($logline =~ m{\A (\d+) [|]}xms)) {
+        return $timestamp >= $epoch_start && $timestamp <= $epoch_end;
+    }
+
+    return;
+}
+
+sub logline_is_from_ip {
+    my $logline   = shift;
+    my $client_ip = shift;
+
+    if (my ($time, $whatever, $size, $ip, $url) = ($logline =~ m{$logline_re}xms)) {
+        return $ip eq $client_ip;
+    }
+
+    return;
+}
+
+sub interesting_loglines {
+    my $logfile     = shift;
+    my $client_ip   = shift;
+    my $epoch_start = shift;
+    my $epoch_end   = shift;
+
+    my @content = grep {
+        logline_timestamp_is_between($_, $epoch_start, $epoch_end)
+            and
+        logline_is_from_ip($_, $client_ip)
+    } io->file($logfile)->chomp->slurp;
+}
+
+sub url_in_logline {
+    my $logline = shift;
+
+    if (my ($time, $whatever, $size, $ip, $url) = ($logline =~ m{$logline_re}xms)) {
+        return $url;
+    }
+
+    return;
+}
+
+### Extract and validate arguments
+
+@ARGV == 4 or @ARGV == 6 or die $usage;
+my ($logfile, $client_ip, $epoch_start, $epoch_end, $output_binpkgs,
+    $output_srcpkgs) = @ARGV;
+assert(-e $logfile);
+assert(-f $logfile);
+assert(-r $logfile);
+for my $epoch ($epoch_start, $epoch_end) {
+    assert_integer($epoch);
+    assert_positive($epoch);
+}
+
+### Extract urls from loglines within the build time range
+
+my @urls = map {
+    url_in_logline($_)
+} interesting_loglines(
+    $logfile, $client_ip, $epoch_start, $epoch_end
+);
+
+my @deb_urls = uniq grep { /[.]deb\z/ } @urls;
+my @dsc_urls = uniq grep { /[.]dsc\z/ } @urls;
+
+my @bin_pkgs = map { s{\A .*/ ([^/_]+) [_] .* [.]deb \z}{$1}xms; $_; } @deb_urls;
+my @src_pkgs = map { s{\A .*/ ([^/_]+) [_] .* [.]dsc \z}{$1}xms; $_; } @dsc_urls;
+
+if (defined $output_binpkgs && defined $output_srcpkgs) {
+    open(my $bin_fh, '>', $output_binpkgs);
+    print $bin_fh join("\n", sort @bin_pkgs), "\n";
+
+    open(my $src_fh, '>', $output_srcpkgs);
+    print $src_fh join("\n", sort @src_pkgs), "\n";
+}
+else {
+    use Data::Dumper;
+    say Dumper \@bin_pkgs;
+    say Dumper \@src_pkgs;
+}

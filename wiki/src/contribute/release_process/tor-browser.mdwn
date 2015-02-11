@@ -1,13 +1,11 @@
 [[!meta title="Releasing the Tor Browser"]]
 
-[[!toc levels=1]]
-
 Have a look at
 
-* https://archive.torproject.org/tor-package-archive/torbrowser/
-* https://www.torproject.org/dist/torbrowser/
-* https://people.torproject.org/~mikeperry/builds/
-* https://people.torproject.org/~linus/builds/
+* <https://archive.torproject.org/tor-package-archive/torbrowser/>
+* <https://www.torproject.org/dist/torbrowser/>
+* <https://people.torproject.org/~mikeperry/builds/>
+* <https://people.torproject.org/~linus/builds/>
 
 and see if the desired version is available. We prefer
 `archive.torproject.org` since the other sources periodically cleans
@@ -21,12 +19,12 @@ Fetch the version's `sha256sums.txt` and `sha256sums.txt.asc` and
 verify with `gpg`:
 
     wget ${DIST_URL}/${VERSION}/sha256sums.txt{,.asc} && \
-    gpg --verify sha256sums.txt.asc
+    gpg --verify sha256sums.txt.asc sha256sums.txt
 
 Filter the tarballs we want and make them available at build time,
 when the tarballs are fetched:
 
-    grep "\<tor-browser-linux32-.*\.tar.xz$" sha256sums.txt > \
+    grep --color=never "\<tor-browser-linux32-.*\.tar.xz$" sha256sums.txt > \
          config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
 
 Then update the url to the one chosen above:

@@ -15,11 +15,8 @@ end
 When /^I update APT using apt-get$/ do
   next if @skip_steps_while_restoring_background
   Timeout::timeout(30*60) do
-    cmd = @vm.execute("echo #{@sudo_password} | " +
-                      "sudo -S apt-get update", $live_user)
-    if !cmd.success?
-      STDERR.puts cmd.stderr
-    end
+    @vm.execute_successfully("echo #{@sudo_password} | " +
+                             "sudo -S apt-get update", $live_user)
   end
 end
 
@@ -27,11 +24,8 @@ Then /^I should be able to install a package using apt-get$/ do
   next if @skip_steps_while_restoring_background
   package = "cowsay"
   Timeout::timeout(120) do
-    cmd = @vm.execute("echo #{@sudo_password} | " +
-                      "sudo -S apt-get install #{package}", $live_user)
-    if !cmd.success?
-      STDERR.puts cmd.stderr
-    end
+    @vm.execute_successfully("echo #{@sudo_password} | " +
+                             "sudo -S apt-get install #{package}", $live_user)
   end
   step "package \"#{package}\" is installed"
 end
@@ -72,9 +66,6 @@ end
 
 When /^I start Synaptic$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsSystem.png", 10)
-  @screen.wait_and_click("GnomeApplicationsAdministration.png", 10)
-  @screen.wait_and_click("GnomeApplicationsSynaptic.png", 20)
+  step 'I start "Synaptic" via the GNOME "System"/"Administration" applications menu'
   deal_with_polkit_prompt('SynapticPolicyKitAuthPrompt.png', @sudo_password)
 end

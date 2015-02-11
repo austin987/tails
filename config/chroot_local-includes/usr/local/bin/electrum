@@ -1,0 +1,35 @@
+#!/bin/sh
+
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
+CONF_DIR="${HOME}"/.electrum
+
+electrum_config_is_persistent() {
+    [ "$(findmnt --noheadings --output SOURCE --target "${CONF_DIR}")" = "/dev/mapper/TailsData_unlocked[/electrum]" ]
+}
+
+verify_start () {
+    local dialog_msg="<b><big>`gettext \"Persistence is disabled for Electrum\"`</big></b>
+
+`gettext \"When you reboot Tails, all of Electrum's data will be lost, including your Bitcoin wallet. It is strongly recommended to only run Electrum when its persistence feature is activated.\"`
+
+`gettext \"Do you want to start Electrum any way?\"`
+"
+    local launch="`gettext \"_Launch\"`"
+    local exit="`gettext \"_Exit\"`"
+    # Since zenity can't set the default button to cancel, we switch the
+    # labels and interpret the return value as its negation.
+    if zenity --question --title "" --ok-label "${exit}" \
+       --cancel-label "${launch}" --text "${dialog_msg}"; then
+        return 1
+    fi
+}
+
+if ! electrum_config_is_persistent; then
+    verify_start || exit 0
+fi
+
+exec /usr/bin/electrum "${@}"
+

@@ -37,7 +37,10 @@ The AppArmor confinement profiles included in Tails come from:
 * individual Debian packages that ship confinement profiles, e.g.
   Tor and Vidalia;
 * the [[!debpts apparmor-profiles]] package;
-* the [[!debpts apparmor-profiles-extra]] package.
+* the [[!debpts apparmor-profiles-extra]] package;
+* the [[!debpts torbrowser-launcher]] package:
+  - [[!tails_gitweb config/chroot_local-includes/usr/share/tails/torbrowser-AppArmor-profile.patch]]
+  - [[!tails_gitweb config/chroot_local-hooks/19-install-tor-browser-AppArmor-profile]]
 
 To get the full and current list, run `aa-status` as `root`
 inside Tails.
@@ -59,10 +62,84 @@ that are actually seen by AppArmor in the context of Tails:
 
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-home-tunable.diff]]
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-tor-profile.diff]]
+* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-totem-profile.diff]]
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-user-tmp-abstraction.diff]]
 
 Below, we discuss various leads that might avoid the need for coming
 up with such adjustments, and maintaining it.
+
+<a id="ux"></a>
+
+User experience matters
+=======================
+
+Currently, no good way exists to let the user choose an arbitrary file
+each time they want to open or save one, without leaving the AppArmor
+profiles wide-open and then much less useful.
+
+Solutions to this problem are work-in-progress in various upstream
+places (e.g. AppArmor and GNOME sandboxed applications). The idea is
+generally to introduce a privileged mediation layer between
+applications, the GTK file chooser and the filesystem. So, some day we
+can solve this problem in better ways, but we're not there yet.
+
+Tor Browser
+-----------
+
+As of Tails 1.3, the Tor Browser is somewhat confined with AppArmor.
+
+Given we cannot seriously allow the Tor Browser to read and write
+everywhere in the home and persistent directory, we had to allow it to
+read/write files from/to one specific directory, and make it so the
+user experience is not hurt too much.
+
+Now, let's say we have a downloads/uploads directory that's shared
+between the Tor Browser, the file browser, and all non-confined
+applications. That directory is called `~/Tor Browser/`, and a GTK
+bookmark pointing to it is created at login time:
+
+* [[!tails_gitweb config/chroot_local-includes/etc/xdg/autostart/create-tor-browser-directories.desktop]]
+* [[!tails_gitweb config/chroot_local-includes/usr/local/lib/create-tor-browser-directories]]
+* [[!tails_gitweb config/chroot_local-includes/etc/xdg/autostart/add-GNOME-bookmarks.desktop]]
+* [[!tails_gitweb config/chroot_local-includes/usr/local/lib/add-GNOME-bookmarks]]
+
+Then, we have a usability issue: the space available in that directory
+is limited by the free system memory (RAM). So large file downloads
+may fail. Note that Firefox doesn't mind letting users start
+downloading a file to a directory that hasn't enough room available to
+store it entirely, so this problem is not specific to downloading to
+an amnesiac directory.
+
+Still, we thought it would be good to allow users to download large
+files from Tor Browser to their persistent volume, so we have
+introduced a second downloads/uploads directory: `~/Persistent/Tor
+Browser/`, that is created whenever the "Personal data" (aka.
+`~/Persistent/`) persistence feature is activated. In that case, if
+persistence was activated read-write, another GTK bookmark pointing to
+that directory is created at login time.
+
+This seemed to be better than introducing yet another persistence
+feature (e.g. for `~/Tor Browser/`): having downloads be either always
+amnesiac or always persistent (unless you restart or do stuff outside
+of the browser) would seem like a regression, since it breaks one of
+the core Tails properties. And forcing it to be a persistent folder by
+default actually has security issues since secure deletion does not
+work as expected on Flash memory. So, we decided that users need to
+have the option to download either to an amnesiac (`~/Tor Browser/`)
+or persistent (`~/Persistent/Tor Browser/`) place, like it was the
+case previously.
+
+So, in a nutshell we give Tor Browser access to:
+
+* `~/Tor Browser/`, which is amnesiac, as everything else in Tails by
+  default; this is set to be the default download directory
+  ([[!tails_gitweb config/chroot_local-includes/etc/tor-browser/profile/preferences/0000tails.js]]);
+* `~/Persistent/Tor Browser/`, that is persistent, and only created
+  when `~/Persistent/` is itself persistent and read-write.
+
+Note that we don't call these folders "Downloads", because e.g.
+if someone creates an ODT file and wants to upload it, having to move
+it to a folder called "Downloads" sounds really weird.
 
 Future work
 ===========
@@ -87,8 +164,8 @@ more types of resources: D-Bus calls, sockets, signals and so on.
 [[Linux containers|application_isolation#linux-containers]] may also
 be a good way to isolate more types of resources.
 
-Using aliases rules to avoid modifying profiles
------------------------------------------------
+Using alias rules to avoid modifying profiles
+---------------------------------------------
 
 The most obvious trick to workaround AppArmor's lack of support for
 union filesystems is to use [alias
@@ -261,6 +338,6 @@ separately|blueprint/Linux_containers]].
 Credits
 =======
 
-We owe a lot of thanks to John Johansen <john.johansen@canonical.com>
+We owe a lot of thanks to John Johansen (<john.johansen@canonical.com>)
 for his patience and support. Substantial parts of this document were
 adapted from explanations he provided to us.

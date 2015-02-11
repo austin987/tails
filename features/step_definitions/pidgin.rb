@@ -70,9 +70,7 @@ end
 
 When /^I start Pidgin through the GNOME menu$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
-  @screen.wait_and_click("GnomeApplicationsPidgin.png", 20)
+  step 'I start "Pidgin" via the GNOME "Internet" applications menu'
 end
 
 When /^I open Pidgin's account manager window$/ do
@@ -101,9 +99,17 @@ When /^I activate the "([^"]+)" Pidgin account$/ do |account|
   @screen.wait("PidginConnecting.png", 5)
 end
 
+def focus_pidgin_buddy_list
+  @vm.execute_successfully(
+    "xdotool search --name 'Buddy List' windowactivate --sync", $live_user
+  )
+end
+
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   next if @skip_steps_while_restoring_background
   expected_channel_entry = chan_image(account, default_chan(account), 'roaster')
+  # Sometimes the OFTC welcome notice window pops up over the buddy list one...
+  focus_pidgin_buddy_list
   @screen.wait(expected_channel_entry, 60)
 end
 
@@ -185,4 +191,12 @@ When /^I close Pidgin's certificate import failure dialog$/ do
   @screen.type(Sikuli::Key.ESC)
   # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
   @screen.waitVanish('PidginCertificateImportFailed.png', 10)
+end
+
+When /^I see the Tails roadmap URL$/ do
+  @screen.wait('PidginTailsRoadmapUrl.png', 10)
+end
+
+When /^I click on the Tails roadmap URL$/ do
+  @screen.click('PidginTailsRoadmapUrl.png')
 end

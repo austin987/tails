@@ -7,7 +7,7 @@ end
 
 Given /^the I2P router console is ready$/ do
   next if @skip_steps_while_restoring_background
-  try_for(60) do
+  try_for(120) do
     @vm.execute('. /usr/local/lib/tails-shell-library/i2p.sh; ' +
                 'i2p_router_console_is_ready').success?
   end
@@ -15,9 +15,7 @@ end
 
 When /^I start the I2P Browser through the GNOME menu$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GnomeApplicationsMenu.png", 10)
-  @screen.wait_and_click("GnomeApplicationsInternet.png", 10)
-  @screen.wait_and_click("GnomeApplicationsI2PBrowser.png", 20)
+  step 'I start "I2PBrowser" via the GNOME "Internet" applications menu'
 end
 
 Then /^the I2P Browser desktop file is (|not )present$/ do |mode|
