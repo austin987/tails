@@ -31,7 +31,7 @@ Feature: Cloning a Git repository
     And all Internet traffic has only flowed through Tor
 
   Scenario: Cloning git repository over SSH
-    Given I have the SSH key for a Git repository
+    Given I have the SSH key pair for a Git repository
     When I run "git clone tails@git.tails.boum.org:myprivatekeyispublic/testing" in GNOME Terminal
     Then process "git" is running within 10 seconds
     When I verify the SSH fingerprint for the Git repository
