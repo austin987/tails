@@ -14,7 +14,7 @@ Given /^I have the SSH key for a Git repository$/ do
   assert(!public_key.nil? && public_key.length > 0)
   @vm.execute_successfully("echo '#{secret_key}' > /home/#{$live_user}/.ssh/id_rsa", $live_user)
   @vm.execute_successfully("echo '#{public_key}' > /home/#{$live_user}/.ssh/id_rsa.pub", $live_user)
-  @vm.execute_successfully("chmod 600 '/home/#{$live_user}/.ssh/'id*", $live_user)
+  @vm.execute_successfully("chmod 0600 '/home/#{$live_user}/.ssh/'id*", $live_user)
 end
 
 Given /^I verify the SSH fingerprint for the Git repository$/ do
