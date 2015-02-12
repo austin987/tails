@@ -98,7 +98,7 @@ end
 Then /^GNOME Screenshot is configured to save files to the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
   home = "/home/#{$live_user}"
-  save_path = @vm.execute_successfully("gsettings get org.gnome.gnome-screenshot auto-save-directory").stdout.chomp.tr("'","")
+  save_path = @vm.execute_successfully("gsettings get org.gnome.gnome-screenshot auto-save-directory", $live_user).stdout.chomp.tr("'","")
   expected = "file://#{home}"
   assert_equal(expected, save_path, "The GNOME screenshot auto-save-directory is not set correctly.")
 end
