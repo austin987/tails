@@ -5,7 +5,7 @@ Then /^the Git repository "([\S]+)" has been cloned successfully$/ do |repo|
   @vm.execute_successfully("cd '/home/#{$live_user}/#{repo}/' && git status", $live_user)
 end
 
-Given /^I have the SSH key for a git repository$/ do
+Given /^I have the SSH key for a Git repository$/ do
   next if @skip_steps_while_restoring_background
   @vm.execute_successfully("mkdir -p /home/#{$live_user}/.ssh/", $live_user)
   secret_key=ENV['TAILS_TEST_SECRET_KEY']
@@ -18,7 +18,7 @@ Given /^I have the SSH key for a git repository$/ do
   @vm.execute_successfully("chmod 600 /home/#{$live_user}/.ssh/id*", $live_user)
 end
 
-Given /^I verify the SSH fingerprint for the git repository$/ do
+Given /^I verify the SSH fingerprint for the Git repository$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("GitSSHFingerprint.png", 60)
   @screen.type('yes' + Sikuli::Key.ENTER)
