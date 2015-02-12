@@ -1,0 +1,114 @@
+[[!meta title="VirtualBox"]]
+
+It is possible to run Tails in a virtual machine using [<span
+class="application">VirtualBox</span>](https://www.virtualbox.org/) from a
+Windows, Linux, or Mac OS&nbsp;X host operating system.
+
+[[!inline pages="doc/advanced_topics/virtualization.caution" raw="yes"]]
+
+<span class="application">VirtualBox</span> has a free software version,
+called <span class="application">VirtualBox Open Source Edition</span>
+and some proprietary components, for example to add support for USB
+devices.
+
+<div class="caution">
+
+For security reasons, we recommend you to use only the <span class="application">Open Source Edition</span>,
+though it does not allow to use a persistent volume.
+
+</div>
+
+<div class="tip">
+
+<p>With the <a href="https://www.virtualbox.org/manual/ch04.html#sharedfolders">
+<span class="guilabel">shared folders</span></a> feature of
+<span class="application">VirtualBox</span> you can access files of your
+host system from within the guest system.</p>
+
+<p>Make sure to understand the security implications of [[accessing
+internal hard disks|encryption_and_privacy/your_data_wont_be_saved_unless_explicitly_asked]]
+from Tails before using this feature.</p>
+
+</div>
+
+Security considerations for Windows and Mac OS X
+================================================
+
+In our [[security warnings about
+virtualization|virtualization#security]] we recommend to run Tails in
+a virtual machine only if the host operating system is trustworthy.
+
+<div class="caution">
+
+Microsoft Windows and Mac OS X being proprietary software, they cannot be considered
+trustworthy. Only run Tails in a virtual machine on Windows or OS X for testing
+purposes and do not rely on it for security.
+
+</div>
+
+Installation
+============
+
+To install *VirtualBox* in Debian or Ubuntu, execute the following
+command:
+
+    sudo apt-get install virtualbox
+
+For instructions on how to install *VirtualBox* on other operating
+systems, refer to the [VirtualBox documentation](https://www.virtualbox.org/wiki/End-user_documentation).
+
+Running Tails from an ISO image
+===============================
+
+First, start *VirtualBox*.
+
+To create a new virtual machine:
+
+  1. Choose
+     <span class="menuchoice">
+     <span class="guimenu">Machine</span>&nbsp;▸
+     <span class="guimenuitem">New...</span></span>.
+  1. In the **Name and operating system** screen, specify:
+     - A name of your choice.
+     - **Type**: **Linux**.
+     - **Version**: **Other Linux (32 bit)**.
+     - Click **Next**.
+
+     <div class="bug"><p><span class="application">VirtualBox</span> guest
+     modules allow for additional features when using Tails in a virtual
+     machine: shared folders, resizable display, shared clipboard, etc.</p>
+
+     <p>But due to <a hreg="https://www.virtualbox.org/ticket/11037">a bug in
+     <span class="application">VirtualBox</span></a>, the resizable display
+     and shared clipboard only work in Tails if the virtual machine is configured to
+     have a 32-bit processor. The shared folders work both on 32-bit and
+     64-bit guests.</p></div>
+
+  1. In the **Memory size screen**:
+     - Allocate at least 1024 MB of RAM.
+     - Click **Next**.
+  1. In the **Hard drive** screen:
+     - Choose **Do not add a virtual hard drive**.
+     - Click **Create**.
+     - Click **Continue** in the warning dialog about creating a virtual
+       machine without a hard drive.
+
+To configure the virtual machine to start from an ISO image:
+
+  1. Select the new virtual machine in the left pane.
+  1. Choose <span class="menuchoice">
+     <span class="guimenu">Machine</span>&nbsp;▸
+     <span class="guimenuitem">Settings...</span></span>.
+  1. Select **Storage** in left pane.
+  1. Select **Empty** below **Contoller IDE** in the **Storage Tree**
+     selection list in the right pane.
+  1. Click on the **CD** icon on the left of the window and select
+  **Choose a virtual CD/DVD disk file...** to browse for the ISO image
+  you want to start Tails from.
+  1. Select the **Check Live CD/DVD** option.
+  1. Click **OK**.
+
+To start the new virtual machine:
+
+  1. Select the virtual machine in the left pane.
+  1. Click **Start**.
