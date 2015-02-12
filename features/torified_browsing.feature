@@ -17,12 +17,12 @@ Feature: Browsing the web using the Tor Browser
     And I save the state so the background can be restored next scenario
 
   Scenario: The Tor Browser directory is usable
-    When I start the Tor Browser
-    And the Tor Browser has started and loaded the startup page
     Then the amnesiac Tor Browser directory exists
     And there is a GNOME bookmark for the amnesiac Tor Browser directory
     And the persistent Tor Browser directory does not exist
-    And I can save the current page as "index.html" to the default downloads directory
+    When I start the Tor Browser
+    And the Tor Browser has started and loaded the startup page
+    Then I can save the current page as "index.html" to the default downloads directory
     And I can print the current page as "output.pdf" to the default downloads directory
 
   Scenario: Importing an OpenPGP key from a website
