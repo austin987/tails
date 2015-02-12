@@ -20,8 +20,10 @@ Feature: Cloning a Git repository
     When I run "git clone https://git-tails.immerda.ch/myprivatekeyispublic/testing" in GNOME Terminal
     And process "git" has stopped running after at most 180 seconds
     Then the Git repository "testing" has been cloned successfully
+    And all Internet traffic has only flowed through Tor
 
   Scenario: Cloning a Git repository anonymously over the Git protocol
     When I run "git clone git://git.tails.boum.org/myprivatekeyispublic/testing" in GNOME Terminal
     And process "git" has stopped running after at most 180 seconds
     Then the Git repository "testing" has been cloned successfully
+    And all Internet traffic has only flowed through Tor
