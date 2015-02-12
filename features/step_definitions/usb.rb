@@ -1,26 +1,51 @@
-def persistent_mounts
-  {
-    "cups-configuration" => "/etc/cups",
-    "nm-system-connections" => "/etc/NetworkManager/system-connections",
-    "claws-mail" => "/home/#{$live_user}/.claws-mail",
-    "gnome-keyrings" => "/home/#{$live_user}/.gnome2/keyrings",
-    "gnupg" => "/home/#{$live_user}/.gnupg",
-    "bookmarks" => "/home/#{$live_user}/.mozilla/firefox/bookmarks",
-    "pidgin" => "/home/#{$live_user}/.purple",
-    "openssh-client" => "/home/#{$live_user}/.ssh",
-    "Persistent" => "/home/#{$live_user}/Persistent",
-    "apt/cache" => "/var/cache/apt/archives",
-    "apt/lists" => "/var/lib/apt/lists",
+# Returns a hash that for each preset the running Tails is aware of
+# maps the source to the destination.
+def get_persistence_presets(skip_links = false)
+  # Perl script that prints all persistence presets (one per line) on
+  # the form: <mount_point>:<comma-separated-list-of-options>
+  script = <<-EOF
+  use strict;
+  use warnings FATAL => "all";
+  use Tails::Persistence::Configuration::Presets;
+  foreach my $preset (Tails::Persistence::Configuration::Presets->new()->all) {
+    say $preset->destination, ":", join(",", @{$preset->options});
   }
+EOF
+  # VMCommand:s cannot handle newlines, and they're irrelevant in the
+  # above perl script any way
+  script.delete!("\n")
+  presets = @vm.execute_successfully("perl -E '#{script}'").stdout.chomp.split("\n")
+  assert presets.size >= 10, "Got #{presets.size} persistence presets, " +
+                             "which is too few"
+  persistence_mapping = Hash.new
+  for line in presets
+    destination, options_str = line.split(":")
+    options = options_str.split(",")
+    is_link = options.include? "link"
+    next if is_link and skip_links
+    source_str = options.find { |option| /^source=/.match option }
+    # If no source is given as an option, live-boot's persistence
+    # feature defaults to the destination minus the initial "/".
+    if source_str.nil?
+      source = destination.partition("/").last
+    else
+      source = source_str.split("=")[1]
+    end
+    persistence_mapping[source] = destination
+  end
+  return persistence_mapping
+end
+
+def persistent_dirs
+  get_persistence_presets
+end
+
+def persistent_mounts
+  get_persistence_presets(true)
 end
 
 def persistent_volumes_mountpoints
   @vm.execute("ls -1 -d /live/persistence/*_unlocked/").stdout.chomp.split
-end
-
-Given /^I create a new (\d+) ([[:alpha:]]+) USB drive named "([^"]+)"$/ do |size, unit, name|
-  next if @skip_steps_while_restoring_background
-  @vm.storage.create_new_disk(name, {:size => size, :unit => unit})
 end
 
 Given /^I clone USB drive "([^"]+)" to a new USB drive "([^"]+)"$/ do |from, to|
@@ -133,11 +158,12 @@ end
 Given /^I enable all persistence presets$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('PersistenceWizardPresets.png', 20)
-  # Mark first non-default persistence preset
-  @screen.type(Sikuli::Key.TAB*2)
-  # Check all non-default persistence presets
-  12.times do
-    @screen.type(Sikuli::Key.SPACE + Sikuli::Key.TAB)
+  # Select the "Persistent" folder preset, which is checked by default.
+  @screen.type(Sikuli::Key.TAB)
+  # Check all non-default persistence presets, i.e. all *after* the
+  # "Persistent" folder, which are unchecked by default.
+  (persistent_dirs.size - 1).times do
+    @screen.type(Sikuli::Key.TAB + Sikuli::Key.SPACE)
   end
   @screen.wait_and_click('PersistenceWizardSave.png', 10)
   @screen.wait('PersistenceWizardDone.png', 20)
@@ -282,14 +308,20 @@ def tails_persistence_enabled?
                      'test "$TAILS_PERSISTENCE_ENABLED" = true').success?
 end
 
-Given /^persistence is enabled$/ do
+Given /^all persistence presets(| from the old Tails version) are enabled$/ do |old_tails|
   next if @skip_steps_while_restoring_background
   try_for(120, :msg => "Persistence is disabled") do
     tails_persistence_enabled?
   end
   # Check that all persistent directories are mounted
+  if old_tails.empty?
+    expected_mounts = persistent_mounts
+  else
+    assert_not_nil($remembered_persistence_mounts)
+    expected_mounts = $remembered_persistence_mounts
+  end
   mount = @vm.execute("mount").stdout.chomp
-  for _, dir in persistent_mounts do
+  for _, dir in expected_mounts do
     assert(mount.include?("on #{dir} "),
            "Persistent directory '#{dir}' is not mounted")
   end
@@ -322,9 +354,16 @@ def boot_device_type
   return boot_dev_type
 end
 
-Then /^Tails is running from USB drive "([^"]+)"$/ do |name|
+Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
   next if @skip_steps_while_restoring_background
-  assert_equal("usb", boot_device_type)
+  bus = bus.downcase
+  case bus
+  when "ide"
+    expected_bus = "ata"
+  else
+    expected_bus = bus
+  end
+  assert_equal(expected_bus, boot_device_type)
   actual_dev = boot_device
   # The boot partition differs between a "normal" install using the
   # USB installer and isohybrid installations
@@ -332,7 +371,7 @@ Then /^Tails is running from USB drive "([^"]+)"$/ do |name|
   expected_dev_isohybrid = @vm.disk_dev(name) + "4"
   assert(actual_dev == expected_dev_normal ||
          actual_dev == expected_dev_isohybrid,
-         "We are running from device #{actual_dev}, but for USB drive " +
+         "We are running from device #{actual_dev}, but for #{bus} drive " +
          "'#{name}' we expected to run from either device " +
          "#{expected_dev_normal} (when installed via the USB installer) " +
          "or #{expected_dev_normal} (when installed from an isohybrid)")
@@ -371,7 +410,7 @@ Then /^the boot device has safe access rights$/ do
          "Boot device '#{super_boot_dev}' is not system internal for udisks")
 end
 
-Then /^persistent filesystems have safe access rights$/ do
+Then /^all persistent filesystems have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
     fs_owner = @vm.execute("stat -c %U #{mountpoint}").stdout.chomp
     fs_group = @vm.execute("stat -c %G #{mountpoint}").stdout.chomp
@@ -382,7 +421,7 @@ Then /^persistent filesystems have safe access rights$/ do
   end
 end
 
-Then /^persistence configuration files have safe access rights$/ do
+Then /^all persistence configuration files have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
     assert(@vm.execute("test -e #{mountpoint}/persistence.conf").success?,
            "#{mountpoint}/persistence.conf does not exist, while it should")
@@ -401,19 +440,33 @@ Then /^persistence configuration files have safe access rights$/ do
   end
 end
 
-Then /^persistent directories have safe access rights$/ do
+Then /^all persistent directories(| from the old Tails version) have safe access rights$/ do |old_tails|
   next if @skip_steps_while_restoring_background
-  expected_perms = "700"
+  if old_tails.empty?
+    expected_dirs = persistent_dirs
+  else
+    assert_not_nil($remembered_persistence_dirs)
+    expected_dirs = $remembered_persistence_dirs
+  end
   persistent_volumes_mountpoints.each do |mountpoint|
-    # We also want to check that dotfiles' source has safe permissions
-    all_persistent_dirs = persistent_mounts.clone
-    all_persistent_dirs["dotfiles"] = "/home/#{$live_user}/"
-    persistent_mounts.each do |src, dest|
-      next unless dest.start_with?("/home/#{$live_user}/")
-      f = "#{mountpoint}/#{src}"
-      next unless @vm.execute("test -d #{f}").success?
-      file_perms = @vm.execute("stat -c %a '#{f}'").stdout.chomp
-      assert_equal(expected_perms, file_perms)
+    expected_dirs.each do |src, dest|
+      full_src = "#{mountpoint}/#{src}"
+      assert_vmcommand_success @vm.execute("test -d #{full_src}")
+      dir_perms = @vm.execute_successfully("stat -c %a '#{full_src}'").stdout.chomp
+      dir_owner = @vm.execute_successfully("stat -c %U '#{full_src}'").stdout.chomp
+      if dest.start_with?("/home/#{$live_user}")
+        expected_perms = "700"
+        expected_owner = $live_user
+      else
+        expected_perms = "755"
+        expected_owner = "root"
+      end
+      assert_equal(expected_perms, dir_perms,
+                   "Persistent source #{full_src} has permission " \
+                   "#{dir_perms}, expected #{expected_perms}")
+      assert_equal(expected_owner, dir_owner,
+                   "Persistent source #{full_src} has owner " \
+                   "#{dir_owner}, expected #{expected_owner}")
     end
   end
 end
@@ -445,9 +498,21 @@ When /^I write some files not expected to persist$/ do
   end
 end
 
-Then /^the expected persistent files are present in the filesystem$/ do
+When /^I take note of which persistence presets are available$/ do
   next if @skip_steps_while_restoring_background
-  persistent_mounts.each do |_, dir|
+  $remembered_persistence_mounts = persistent_mounts
+  $remembered_persistence_dirs = persistent_dirs
+end
+
+Then /^the expected persistent files(| created with the old Tails version) are present in the filesystem$/ do |old_tails|
+  next if @skip_steps_while_restoring_background
+  if old_tails.empty?
+    expected_mounts = persistent_mounts
+  else
+    assert_not_nil($remembered_persistence_mounts)
+    expected_mounts = $remembered_persistence_mounts
+  end
+  expected_mounts.each do |_, dir|
     assert(@vm.execute("test -e #{dir}/XXX_persist").success?,
            "Could not find expected file in persistent directory #{dir}")
     assert(!@vm.execute("test -e #{dir}/XXX_gone").success?,
@@ -455,20 +520,43 @@ Then /^the expected persistent files are present in the filesystem$/ do
   end
 end
 
-Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
+Then /^only the expected files are present on the persistence partition encrypted with password "([^"]+)" on USB drive "([^"]+)"$/ do |password, name|
   next if @skip_steps_while_restoring_background
-  step "a computer"
-  step "the computer is set to boot from USB drive \"#{name}\""
-  step "the network is unplugged"
-  step "I start the computer"
-  step "the computer boots Tails"
-  step "I enable read-only persistence with password \"asdf\""
-  step "I log in to a new session"
-  step "persistence is enabled"
-  step "GNOME has started"
-  step "all notifications have disappeared"
-  step "the expected persistent files are present in the filesystem"
-  step "I shutdown Tails and wait for the computer to power off"
+  assert(!@vm.is_running?)
+  disk = {
+    :path => @vm.storage.disk_path(name),
+    :opts => {
+      :format => @vm.storage.disk_format(name),
+      :readonly => true
+    }
+  }
+  @vm.storage.guestfs_disk_helper(disk) do |g, disk_handle|
+    partitions = g.part_list(disk_handle).map do |part_desc|
+      disk_handle + part_desc["part_num"].to_s
+    end
+    partition = partitions.find do |part|
+      g.blkid(part)["PART_ENTRY_NAME"] == "TailsData"
+    end
+    assert_not_nil(partition, "Could not find the 'TailsData' partition " \
+                              "on disk '#{disk_handle}'")
+    luks_mapping = File.basename(partition) + "_unlocked"
+    g.luks_open(partition, password, luks_mapping)
+    luks_dev = "/dev/mapper/#{luks_mapping}"
+    mount_point = "/"
+    g.mount(luks_dev, mount_point)
+    assert_not_nil($remembered_persistence_mounts)
+    $remembered_persistence_mounts.each do |dir, _|
+      # Guestfs::exists may have a bug; if the file exists, 1 is
+      # returned, but if it doesn't exist false is returned. It seems
+      # the translation of C types into Ruby types is glitchy.
+      assert(g.exists("/#{dir}/XXX_persist") == 1,
+             "Could not find expected file in persistent directory #{dir}")
+      assert(g.exists("/#{dir}/XXX_gone") != 1,
+             "Found file that should not have persisted in persistent directory #{dir}")
+    end
+    g.umount(mount_point)
+    g.luks_close(luks_dev)
+  end
 end
 
 When /^I delete the persistent partition$/ do
@@ -484,3 +572,8 @@ Then /^Tails has started in UEFI mode$/ do
   assert(@vm.execute("test -d /sys/firmware/efi").success?,
          "/sys/firmware/efi does not exist")
  end
+
+Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
+  next if @skip_steps_while_restoring_background
+  @vm.storage.disk_mklabel(name, type)
+end

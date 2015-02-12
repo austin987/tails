@@ -1,0 +1,131 @@
+[[!meta title="Bootstrapping workflow"]]
+
+This blueprint analyses and proposes simplifications to the workflow of
+a new user discovering Tails until she gets a full-featured Tails USB
+stick with persistence.
+
+Big logical steps are:
+
+  - Learn what Tails is
+  - Download the ISO
+  - Verify the ISO
+  - Install medium (might require going through a bootstrapping medium)
+  - Create persistence
+
+Subpages
+========
+
+Check the following subpages to see the improvements that we proposed in
+different area of that process:
+
+  - [[ISO verification|verification]]
+  - [[Browser extension|extension]]
+  - [[Tails Installer|installer]]
+  - [[Booting|booting]]
+  - [[Upgrades|upgrade]]
+
+Table of content
+================
+
+[[!toc levels=3]]
+
+2014
+====
+
+[[Diagram of the detailed workflow as of December 2014|2014.fodg]]
+
+2015
+====
+
+Over 2015 we will work on several improvements to simplify greatly this
+workflow:
+
+  - Tails Installer in Debian
+  - [[Browser extensions|download_extension]] for automatic verification of the ISO
+  - [[Web assistant|web_assistant]] to guide the user throughout this process
+
+[[Diagram of the detailed workflow as of December 2015|2015.fodg]] (work in progress)
+
+<a id="tools"></a>
+
+Involved tools
+--------------
+
+[[!img tools.png link=tools.fodg]]
+
+Notes:
+
+- **Debian Hacker** corresponds to a path on the command line only. This
+  main benefit is to go through the **Debian keyring** verification.
+- **Debian** is a path for Debian derivatives where Tails Installer is
+  available. That should be the case of Ubuntu starting from 15.10, and
+  Debian Stretch unless we backport it for Jessie ([[!tails_ticket 8805]]).
+- **Other OS** is Windows, Mac OS X, Fedora, etc.
+- **Debian keyring** are command line instructions for verifying the
+  Tails signing key against the Debian keyring.
+- **Extension from Debian** takes for granted that the ISO verification
+  extension will be available in Debian ([[!tails_ticket 8822]]. That
+  might not be the case and then people would fallback on "Extension
+  from browser".
+- **GNOME Disks** now has a "Restore Disk Image" feature which should do the
+  trick and is widely available, see [[!tails_ticket 8664]].
+- **UUI** has been our canonical installer for years, but we should also test
+  **Rufus**, see [[!tails_ticket 7034]].
+- **DiskUtils** should be tested on Mac, see [[!tails_ticket 8802]].
+
+Use cases
+=========
+
+This is a brainstorming on the different use cases dealing with
+downloading, verifying, installing, and upgrading Tails.
+This list should be useful to check whether all scenarios are covered.
+The comments, placed after ':' correspond to our rough objectives for
+2015.
+
+- Download
+  - HTTP
+    - Successful: 15 to 60 minutes
+    - Failed: ?
+    - Corrupted: ?
+  - Torrent
+    - Corrupted: ?
+  - Nightly
+- Verify
+  - Checksum
+    - Firefox: extension, what's up with Torrents?
+    - Chrome: extension? [[!tails_ticket 8803]], [[!tails_ticket 8531]]
+    - Other browsers:
+      - Windows: fallback on OpenPGP?
+      - Mac: fallback on OpenPGP?
+      - Linux: fallback on OpenPGP?
+  - OpenPGP
+    - GNOME: seahorse-nautilus
+    - Other Linux: command line
+    - Windows: Gpg4Win
+    - Mac: GPGTools [[!tails_ticket 8807]]
+- Install
+  - DVD
+  - USB
+    - Tails: friend + Tails Installer
+    - Debian
+      - Jessie: Tails Installer backport? [[!tails_ticket 8005]]
+      - Stretch: Tails Installer [[!tails_ticket 8549]]
+    - Ubuntu
+      - Latest LTS, 14.04: Tails Installer? [[!tails_ticket 8806]]
+      - Latest, 15.04: Tails Installer? [[!tails_ticket 8806]]
+      - Next LTS, 16.04: Tails Installer? [[!tails_ticket 8806]]
+      - Next, 15.10: Tails Installer? [[!tails_ticket 8806]]
+  - Windows: UUI
+  - Mac OS X: command line or new graphical tool? [[!tails_ticket 8802]]
+  - Virtualization: VirtualBox, GNOME Boxes, virt-manager
+- Upgrade from ISO (full upgrade or nightly)
+  - Full upgrade
+    - From Debian, Ubuntu if available
+    - From Tails otherwise: need bootstrapping device
+  - Incremental upgrade
+  - Virtualization: virt-manager
+- Misc
+  - Newsletter
+  - Donation: [[!tails_ticket 7176]]?
+  - Backups: [[!tails_ticket 8812]]?
+  - Signing key revocation or change

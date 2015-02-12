@@ -1,0 +1,124 @@
+diff --git a/apparmor/torbrowser.Browser.firefox b/apparmor/torbrowser.Browser.firefox
+index 0df7ad9..ae26e61 100644
+--- a/apparmor/torbrowser.Browser.firefox
++++ b/apparmor/torbrowser.Browser.firefox
+@@ -1,13 +1,15 @@
+ # Last modified
+ #include <tunables/global>
+ 
+-/home/*/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/firefox {
++/usr/local/lib/tor-browser/firefox {
+   #include <abstractions/gnome>
++  #include <abstractions/gstreamer>
++  #include <abstractions/ibus>
+ 
+   # Uncomment the following line if you don't want the Tor Browser
+   # to have direct access to your sound hardware. Note that this is not
+   # enough to have working sound support in Tor Browser.
+-  # #include <abstractions/audio>
++  #include <abstractions/audio>
+ 
+   # Uncomment the following lines if you want to give the Tor Browser read-write
+   # access to most of your personal files.
+@@ -17,40 +19,52 @@
+   #dbus,
+   network tcp,
+ 
++  /etc/asound.conf r,
+   deny /etc/host.conf r,
+-  deny /etc/hosts r,
+-  deny /etc/nsswitch.conf r,
++  /etc/hosts r,
++  /etc/nsswitch.conf r,
+   deny /etc/resolv.conf r,
+-  deny /etc/passwd r,
+-  deny /etc/group r,
++  /etc/passwd r,
++  /etc/group r,
+   deny /etc/mailcap r,
++  deny @{HOME}/.local/share/gvfs-metadata/home r,
++  deny /run/resolvconf/resolv.conf r,
+ 
+-  deny /etc/machine-id r,
+-  deny /var/lib/dbus/machine-id r,
++  /etc/machine-id r,
++  /var/lib/dbus/machine-id r,
+ 
+   @{PROC}/[0-9]*/mountinfo r,
+   @{PROC}/[0-9]*/stat r,
+   @{PROC}/[0-9]*/task/*/stat r,
+   @{PROC}/sys/kernel/random/uuid r,
+ 
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/ r,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/* r,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/.** rwk,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/.** rwk,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/ r,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/** r,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/*.so mr,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/components/*.so mr,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/browser/components/*.so mr,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/firefox rix,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/{Browser/TorBrowser/,}Data/Browser/profiles.ini r,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/{Browser/TorBrowser/,}Data/Browser/profile.default/ r,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/{Browser/TorBrowser/,}Data/Browser/profile.default/** rwk,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/{Browser/TorBrowser/,}Tor/tor Px,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/{Browser/,}Desktop/ rw,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/{Browser/,}Desktop/** rwk,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/{Browser/,}Downloads/ rw,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/{Browser/,}Downloads/** rwk,
++  /usr/local/lib/tor-browser/ r,
++  /usr/local/lib/tor-browser/** r,
++  /usr/local/lib/tor-browser/*.so{,.6} mr,
++  /usr/local/lib/tor-browser/**/*.so mr,
++  /usr/local/lib/tor-browser/browser/* r,
++  /usr/local/lib/tor-browser/TorBrowser/Data/Browser/profiles.ini r,
++
++  owner "@{HOME}/Tor Browser/" rw,
++  owner "@{HOME}/Tor Browser/**" rwk,
++  owner "@{HOME}/Persistent/Tor Browser/" rw,
++  owner "@{HOME}/Persistent/Tor Browser/**" rwk,
++  owner "/live/persistence/TailsData_unlocked/Persistent/Tor Browser/" rw,
++  owner "/live/persistence/TailsData_unlocked/Persistent/Tor Browser/**" rwk,
++  owner @{HOME}/.mozilla/firefox/bookmarks/places.sqlite rwk,
++  owner /live/persistence/TailsData_unlocked/bookmarks/places.sqlite rwk,
++  owner @{HOME}/.tor-browser/profile.default/ r,
++  owner @{HOME}/.tor-browser/profile.default/** rwk,
++
++  /etc/xul-ext/ r,
++  /etc/xul-ext/** r,
++  /usr/local/share/tor-browser-extensions/ r,
++  /usr/local/share/tor-browser-extensions/** rk,
++  /usr/share/xul-ext/ r,
++  /usr/share/xul-ext/** r,
++
++  /usr/share/doc/tails/website/ r,
++  /usr/share/doc/tails/website/** r,
+ 
+   /etc/mailcap r,
+   /etc/mime.types r,
+@@ -65,6 +79,7 @@
+ 
+   /sys/devices/system/cpu/ r,
+   /sys/devices/system/cpu/present r,
++  deny /sys/devices/virtual/block/*/uevent r,
+ 
+   # Should use abstractions/gstreamer instead once merged upstream
+   /etc/udev/udev.conf r,
+@@ -72,6 +87,16 @@
+   /sys/devices/pci[0-9]*/**/uevent r,
+   owner /{dev,run}/shm/shmfd-* rw,
+ 
++  /usr/lib/@{multiarch}/gstreamer[0-9]*.[0-9]*/gstreamer-[0-9]*.[0-9]*/gst-plugin-scanner Cix -> gst_plugin_scanner,
++  owner @{HOME}/.gstreamer*/ rw,
++  owner @{HOME}/.gstreamer*/** rw,
++  owner @{PROC}/[0-9]*/fd/ r,
++
++  deny /usr/bin/pulseaudio x,
++
++  /usr/local/lib/tor-browser/firefox Pix,
++  /usr/bin/seahorse-tool Ux,
++
+   # KDE 4
+   owner @{HOME}/.kde/share/config/* r,
+ 
