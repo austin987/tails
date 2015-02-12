@@ -52,3 +52,8 @@ Then /^the I2P firewall rules are (enabled|disabled)$/ do |mode|
     raise "Unsupported mode passed: '#{mode}'"
   end
 end
+
+Then /^I2P is running in hidden mode$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("I2PNetworkHidden.png", 10)
+end

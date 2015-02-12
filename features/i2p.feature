@@ -31,4 +31,5 @@ Feature: I2P
     And the I2P firewall rules are enabled
     When I start the I2P Browser through the GNOME menu
     Then I see "I2P_router_console.png" after at most 120 seconds
+    And I2P is running in hidden mode
     And the I2P Browser uses all expected TBB shared libraries
