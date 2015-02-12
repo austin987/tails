@@ -16,23 +16,28 @@
 
 
 # Deside order in which input methods are preferred
-# (chinese needs pinyin, japanese needs anthy, korean needs hangul)
+# (chinese needs pinyin, japanese needs anthy, korean needs hangul,
+# vietnamese needs Unikey)
 # (bopomofo is an alternative input method for chinese)
 LANGPREFIX=`echo "$LANG" | sed 's/_.*//'`
-PREFLIST='[pinyin,anthy,hangul,bopomofo]'
+PREFLIST='[pinyin,anthy,hangul,Unikey,bopomofo]'
 NEEDIBUS='n'
 
 case "$LANGPREFIX" in
    ja)
-      PREFLIST='[anthy,pinyin,hangul,bopomofo]'
+      PREFLIST='[anthy,pinyin,hangul,Unikey,bopomofo]'
       NEEDIBUS='y'
       ;;
    ko)
-      PREFLIST='[hangul,pinyin,anthy,bopomofo]'
+      PREFLIST='[hangul,pinyin,anthy,Unikey,bopomofo]'
+      NEEDIBUS='y'
+      ;;
+   vi)
+      PREFLIST='[Unikey,pinyin,anthy,hangul,bopomofo]'
       NEEDIBUS='y'
       ;;
    zh)
-      PREFLIST='[pinyin,bopomofo,anthy,hangul]'
+      PREFLIST='[pinyin,bopomofo,anthy,hangul,Unikey]'
       NEEDIBUS='y'
       ;;
 esac

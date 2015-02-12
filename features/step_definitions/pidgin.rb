@@ -192,3 +192,11 @@ When /^I close Pidgin's certificate import failure dialog$/ do
   # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
   @screen.waitVanish('PidginCertificateImportFailed.png', 10)
 end
+
+When /^I see the Tails roadmap URL$/ do
+  @screen.wait('PidginTailsRoadmapUrl.png', 10)
+end
+
+When /^I click on the Tails roadmap URL$/ do
+  @screen.click('PidginTailsRoadmapUrl.png')
+end
