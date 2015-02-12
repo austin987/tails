@@ -15,7 +15,7 @@ Feature: Various checks
 
   Scenario: GNOME Screenshot will take a screenshot when the PRINTSCREEN key is pressed
     When I press the "PRINTSCREEN" key
-    Then a screenshot will be saved to the live user's home directory
+    Then a screenshot is saved to the live user's home directory
 
   Scenario: VirtualBox guest modules are available
     When Tails has booted a 64-bit kernel

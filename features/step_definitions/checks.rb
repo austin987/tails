@@ -105,7 +105,7 @@ Then /^GNOME Screenshot is configured to save files to the live user's home dire
                "The GNOME screenshot auto-save-directory is not set correctly.")
 end
 
-Then /^a screenshot will be saved to the live user's home directory$/ do
+Then /^a screenshot is saved to the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
   home = "/home/#{$live_user}"
   try_for(3, :msg=> "Screenshot not created in #{home}") {
