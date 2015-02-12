@@ -14,6 +14,7 @@ Feature: Various checks
     Then GNOME Screenshot is configured to save files to the live user's home directory
 
   Scenario: GNOME Screenshot will take a screenshot when the PRINTSCREEN key is pressed
+    Given there is no screenshot in the live user's home directory
     When I press the "PRINTSCREEN" key
     Then a screenshot is saved to the live user's home directory
 
