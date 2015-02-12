@@ -40,31 +40,32 @@ def maybe_deal_with_pinentry
   end
 end
 
+def paste_into_a_new_tab
+  @screen.click("GeditNewDocument.png")
+  @screen.click("GeditPaste.png")
+end
+
 def encrypt_sign_helper
-  @screen.wait_and_click("GeditWindow.png", 10)
-  @screen.type("a", Sikuli::KeyModifier.CTRL)
-  sleep 0.5
+  gedit_copy_all_text
   @screen.click("GpgAppletIconNormal.png")
-  sleep 2
-  @screen.type("k")
+  @screen.wait_and_click("GpgAppletSignEncrypt.png", 10)
   @screen.wait_and_click("GpgAppletChooseKeyWindow.png", 30)
   sleep 0.5
   yield
   maybe_deal_with_pinentry
-  @screen.wait_and_click("GeditWindow.png", 10)
-  sleep 0.5
-  @screen.type("n", Sikuli::KeyModifier.CTRL)
-  sleep 0.5
-  @screen.type("v", Sikuli::KeyModifier.CTRL)
+  paste_into_a_new_tab
+end
+
+def gedit_copy_all_text
+  @screen.click("GeditEdit.png")
+  @screen.wait_and_click("GeditSelectAll.png", 10)
+  @screen.click("GeditCopy.png")
 end
 
 def decrypt_verify_helper(icon)
-  @screen.wait_and_click("GeditWindow.png", 10)
-  @screen.type("a", Sikuli::KeyModifier.CTRL)
-  sleep 0.5
+  gedit_copy_all_text
   @screen.click(icon)
-  sleep 2
-  @screen.type("d")
+  @screen.wait_and_click("GpgAppletDecryptVerify.png", 10)
   maybe_deal_with_pinentry
   @screen.wait("GpgAppletResults.png", 10)
   @screen.wait("GpgAppletResultsMsg.png", 10)
@@ -118,20 +119,10 @@ end
 When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
   @passphrase = pwd
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GeditWindow.png", 10)
-  @screen.type("a", Sikuli::KeyModifier.CTRL)
-  sleep 0.5
+  gedit_copy_all_text
   @screen.click("GpgAppletIconNormal.png")
-  sleep 2
-  @screen.type("p")
-  @screen.wait("PinEntryPrompt.png", 10)
-  @screen.type(@passphrase + Sikuli::Key.ENTER)
-  sleep 1
-  @screen.wait("PinEntryPrompt.png", 10)
-  @screen.type(@passphrase + Sikuli::Key.ENTER)
-  @screen.wait_and_click("GeditWindow.png", 10)
-  sleep 0.5
-  @screen.type("n", Sikuli::KeyModifier.CTRL)
-  sleep 0.5
-  @screen.type("v", Sikuli::KeyModifier.CTRL)
+  @screen.wait_and_click("GpgAppletEncryptPassphrase.png", 10)
+  maybe_deal_with_pinentry # enter password
+  maybe_deal_with_pinentry # confirm password
+  paste_into_a_new_tab
 end
