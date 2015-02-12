@@ -108,14 +108,14 @@ end
 Then /^there is no screenshot in the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
   home = "/home/#{$live_user}"
-  @vm.execute("find #{home} -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
+  @vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
 end
 
 Then /^a screenshot is saved to the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
   home = "/home/#{$live_user}"
   try_for(3, :msg=> "No screenshot was created in #{home}") {
-    !@vm.execute("find #{home} -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
+    !@vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
   }
 end
 
