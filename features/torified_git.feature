@@ -16,12 +16,12 @@ Feature: Cloning a Git repository
     And all notifications have disappeared
     And I save the state so the background can be restored next scenario
 
-  Scenario: Cloning a Git repository over HTTPS
+  Scenario: Cloning a Git repository anonymously over HTTPS
     When I run "git clone https://git-tails.immerda.ch/myprivatekeyispublic/testing" in GNOME Terminal
     And process "git" has stopped running after at most 180 seconds
     Then the Git repository "testing" has been cloned successfully
 
-  Scenario: Cloning a Git repository over the Git protocol
+  Scenario: Cloning a Git repository anonymously over the Git protocol
     When I run "git clone git://git.tails.boum.org/myprivatekeyispublic/testing" in GNOME Terminal
     And process "git" has stopped running after at most 180 seconds
     Then the Git repository "testing" has been cloned successfully
