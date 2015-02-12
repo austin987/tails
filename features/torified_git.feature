@@ -1,7 +1,7 @@
 @product
-Feature: Cloning a git repository
+Feature: Cloning a Git repository
   As a Tails user
-  when I clone a git repository
+  when I clone a Git repository
   all Internet traffic should flow only through Tor
 
   Background:
@@ -16,12 +16,12 @@ Feature: Cloning a git repository
     And all notifications have disappeared
     And I save the state so the background can be restored next scenario
 
-  Scenario: Cloning a git repository over HTTPS
+  Scenario: Cloning a Git repository over HTTPS
     When I run "git clone https://git-tails.immerda.ch/myprivatekeyispublic/testing" in GNOME Terminal
     And process "git" has stopped running after at most 180 seconds
-    Then the git repository "testing" has been cloned successfully
+    Then the Git repository "testing" has been cloned successfully
 
-  Scenario: Cloning a git repository over the Git protocol
+  Scenario: Cloning a Git repository over the Git protocol
     When I run "git clone git://git.tails.boum.org/myprivatekeyispublic/testing" in GNOME Terminal
     And process "git" has stopped running after at most 180 seconds
-    Then the git repository "testing" has been cloned successfully
+    Then the Git repository "testing" has been cloned successfully
