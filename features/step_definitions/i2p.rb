@@ -57,3 +57,15 @@ Then /^I2P is running in hidden mode$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("I2PNetworkHidden.png", 10)
 end
+
+Then /^I block the I2P router console port$/ do
+  next if @skip_steps_while_restoring_background
+  step 'process "nc" is not running'
+  @vm.spawn("nc -l -p 7657 -t 127.0.0.1")
+  step 'process "nc" is running within 5 seconds'
+end
+
+Then /^I see a notification that I2P failed to start$/ do
+  next if @skip_steps_while_restoring_background
+  notification_helper('I2PFailedToStart.png', 60)
+end

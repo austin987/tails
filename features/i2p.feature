@@ -33,3 +33,17 @@ Feature: I2P
     Then I see "I2P_router_console.png" after at most 120 seconds
     And I2P is running in hidden mode
     And the I2P Browser uses all expected TBB shared libraries
+
+  Scenario: I2P displays a notice when it fails to start
+    Given a computer
+    And the network is unplugged
+    And I set Tails to boot with options "i2p"
+    And I start the computer
+    And the computer boots Tails
+    And I log in to a new session
+    And I block the I2P router console port
+    And the network is plugged
+    And the Tails desktop is ready
+    And Tor is ready
+    And I2P is running
+    Then I see a notification that I2P failed to start
