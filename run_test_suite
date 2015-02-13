@@ -101,6 +101,24 @@ capture_session() {
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
 }
 
+remove_control_chars_from() {
+    local file="$1"
+    local tmpfile
+
+    # Sanity checks
+    [ -n "$file" ] || return 11
+    [ -r "$file" ] || return 13
+    [ -w "$(dirname "$file")" ] || return 17
+
+    # Remove control chars with `perl` and backspaces with `col`
+    tmpfile=$(mktemp)
+    cat "$file" \
+	| perl -pe 's/\e([^\[\]]|\[.*?[a-zA-Z]|\].*?\a)//g' \
+	| col -b \
+	> "$tmpfile"
+    mv "$tmpfile" "$file"
+}
+
 # main script
 
 CAPTURE_FILE=
@@ -209,4 +227,7 @@ if [ -z "$LOG_FILE" ]; then
     $CUCUMBER_COMMAND
 else
     script --quiet --flush --return --command "$CUCUMBER_COMMAND" "$LOG_FILE" | cat
+    RET="$?"
+    remove_control_chars_from "$LOG_FILE"
+    exit "$RET"
 fi
