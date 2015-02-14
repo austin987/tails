@@ -33,6 +33,7 @@ Feature: I2P
     Then I see "I2P_router_console.png" after at most 120 seconds
     And I2P is running in hidden mode
     And the I2P Browser uses all expected TBB shared libraries
+    And I2P successfully built a tunnel
 
   Scenario: I2P displays a notice when it fails to start
     Given a computer

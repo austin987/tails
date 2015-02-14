@@ -69,3 +69,11 @@ Then /^I see a notification that I2P failed to start$/ do
   next if @skip_steps_while_restoring_background
   notification_helper('I2PFailedToStart.png', 60)
 end
+
+Then /^I2P successfully built a tunnel$/ do
+  next if @skip_steps_while_restoring_background
+  try_for(7 * 60) do
+    @vm.execute('. /usr/local/lib/tails-shell-library/i2p.sh; ' +
+                'i2p_has_bootstrapped').success?
+  end
+end
