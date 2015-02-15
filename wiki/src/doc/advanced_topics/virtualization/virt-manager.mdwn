@@ -1,0 +1,195 @@
+[[!meta title="virt-manager"]]
+
+[<span class="application">virt-manager</span>](http://virt-manager.org/) is a free software
+virtualization solution for Linux. *virt-manager* has a more complex
+interface than *VirtualBox* or *GNOME Boxes* but it also has a more
+complete set of features.
+
+[[!inline pages="doc/advanced_topics/virtualization.caution" raw="yes"]]
+
+<div class="tip">
+
+<span class="application">virt-manager</span> is the only virtualization
+solution that we present that allows the use of a persistent
+volume.</span>
+
+</div>
+
+[[!toc]]
+
+Terminology
+===========
+
+*virt-manager* is based on a set of lower level virtualization tools,
+going from the user interface to the hardware interactions with the
+processor. This terminology is a bit confusing and other documentation
+might mention the following tools:
+
+  - *KVM* is the module of the Linux kernel that interacts with the
+    virtualization features of the processor.
+  - *QEMU* is the virtualization software that emulates virtual
+    processors and peripherals based on *KVM* and that starts and stops
+    virtual machines.
+  - *libvirt* is a library that allows *virt-manager* to interact with
+    the virtualization capabilities provides by *QEMU*.
+  - *SPICE* is a protocol that allows to visualize the desktop of
+    virtual machines.
+  - *virt-manager* is the graphical interface that allows to create,
+    configure, and run virtual machines.
+
+<a id="iso"></a>
+
+Installation
+============
+
+To install *virt-manager* in Debian or Ubuntu, execute the following
+command:
+
+    sudo apt-get install virt-manager libvirt-daemon-system
+
+Running Tails from an ISO image
+===============================
+
+  1. Start *virt-manager*.
+  1. Double-click on **localhost (QEMU)** to connect to the *QEMU*
+     system of your host.
+  1. To create a new virtual machine, choose
+     <span class="menuchoice"> <span
+     class="guimenu">File</span>&nbsp;▸ <span
+     class="guimenuitem">New Virtual Machine</span></span>.
+  1. In *step 1*, choose **Local install media (ISO image or CDROM)**.
+  1. In *step 2*, choose:
+     - **Use ISO image**, then **Browse...**, and **Browse Local** to
+       browse for the ISO image that you want to start from.
+     - **OS type**: **Linux**.
+     - **Version**: **Debian Wheezy**.
+  1. In *step 3*, allocate at least 1024 MB of RAM.
+  1. In *step 4*, disable storage for this virtual machine.
+  1. In *step 5*:
+     - Type a name for the new virtual machine.
+     - Click **Finish** to start the virtual machine.
+
+<div class="tip">
+
+If you get the error message "<span class="guilabel">Error starting
+domain: Requested operation is not valid: network 'default' is not
+active</span>", then try to start the default virtual network:
+
+<ol>
+<li>Click on <span class="guilabel">localhost (QEMU)</span>.</li>
+<li>Choose <span class="menuchoice">
+    <span class="guimenu">Edit</span>&nbsp;▸
+    <span class="guimenuitem">Connection details</span></span> to
+    administer the connection to your local
+    <span class="application">QEMU</span> system.</li>
+<li>Click on <span class="guilabel">Virtual Networks</span> tab, then
+    select the <span class="guilabel">default</span> virtual network in
+    the left pane.</li>
+<li>Click on the [[!img media-playback-start.png alt="Start Network"
+    link=no class=symbolic]] icon on the bottom of the left pane to
+    start the default virtual network.</li>
+</ol>
+
+</div>
+
+<a id="usb"></a>
+
+Running Tails from a USB stick or SD card
+=========================================
+
+To run Tails from a USB stick or SD card using *virt-manager*, first
+create a virtual machine running from an ISO image as described
+[[above|virt-manager#iso]].
+
+Then do the following:
+
+  1. From the virtual machine window, choose
+     <span class="menuchoice">
+     <span class="guimenu">Virtual Machine</span>&nbsp;▸
+     <span class="guisubmenuitem">Shut Down</span>&nbsp;▸
+     <span class="guimenuitem">Force Off</span></span> to shut down the
+     virtual machine.
+  1. Plug in the USB stick or insert the SD card from which you want to
+     run Tails.
+  1. Choose
+     <span class="menuchoice">
+     <span class="guimenu">View</span>&nbsp;▸
+     <span class="guimenuitem">Details</span></span> to edit the
+     configuration of the virtual machine.
+  1. Click on the **Add Hardware** button on the bottom of the left
+     pane.
+  1. Select **USB Host Device** in the left pane.
+  1. In the right pane, click on the device from which you want to run
+     Tails, and click **Finish**.
+
+You can keep the original ISO image connected as a virtual DVD to
+install Tails onto the USB stick or SD card if needed.
+
+<a id="disconnect"></a>
+
+You can also disconnect the original ISO image and start directly from the
+USB stick once Tails is already installed on it. To do so:
+
+  1. Shut down the virtual machine.
+  1. In the configuration of the virtual machine, click on **IDE CDROM
+     1** in the left pane.
+  1. Click on the **Disconnect** button in the right pane.
+  1. To enable the USB stick or SD card as a boot option:
+     1. Click on **Boot Options** in the left pane.
+     1. Select the **USB** boot option corresponding to your USB device.
+     1. Click **Apply**.
+  1. To start the virtual machine choose
+     <span class="menuchoice">
+     <span class="guimenu">View</span>&nbsp;▸
+     <span class="guimenuitem">Console</span></span> and then
+     <span class="menuchoice">
+     <span class="guimenu">Virtual Machine</span>&nbsp;▸
+     <span class="guimenuitem">Run</span></span>.
+
+Once you started from the USB device you can [[create a persistent
+volume|first_steps/persistence/configure]] on it.
+
+<a id="virtual_usb"></a>
+
+Running Tails from a virtual USB storage
+========================================
+
+You can also run Tails from a virtual USB storage, saved as a single
+file on the host operating system.
+
+To run Tails from a virtual USB device using *virt-manager*, first
+create a virtual machine running from an ISO image as described
+[[above|virt-manager#iso]].
+
+Then do the following to create a virtual USB storage:
+
+  1. From the virtual machine window, choose
+     <span class="menuchoice">
+     <span class="guimenu">Virtual Machine</span>&nbsp;▸
+     <span class="guisubmenuitem">Shut Down</span>&nbsp;▸
+     <span class="guimenuitem">Force Off</span></span> to shut down the
+     virtual machine.
+  1. Choose
+     <span class="menuchoice">
+     <span class="guimenu">View</span>&nbsp;▸
+     <span class="guimenuitem">Details</span></span> to edit the
+     configuration of the virtual machine.
+  1. Click on the **Add Hardware** button on the bottom of the left
+     pane.
+  1. Select **Storage** in the left pane.
+  1. In the right pane, change the **Bus type** to USB and click
+     **Finish**.
+  1. Select **USB Disk 1** in the left pane.
+  1. In the right pane, select the **Removable** option and click
+     **Apply**.
+
+Then start the virtual machine from the virtual DVD to install Tails
+onto the virtual USB storage. The virtual USB storage appears in *Tails
+Installer* as **QEMU HARDDISK**.
+
+After that you can disconnect the original ISO image and start directly
+from the virtual USB stick [[as described
+in the previous section|virt-manager#disconnect]].
+
+Once you started from the virtual USB device you can [[create a persistent
+volume|first_steps/persistence/configure]] on it.
