@@ -14,8 +14,8 @@ example:
     DIST_URL=https://people.torproject.org/~mikeperry/builds/
     VERSION=4.0
 
-Fetch the version's `sha256sums.txt` and `sha256sums.txt.asc` and
-verify with `gpg`:
+Fetch the version's hash file and its detached signature, and verify
+with GnuPG:
 
     wget ${DIST_URL}/${VERSION}/sha256sums.txt{,.asc} && \
     gpg --verify sha256sums.txt.asc sha256sums.txt
@@ -31,10 +31,14 @@ Then update the URL to the one chosen above:
     echo "${DIST_URL}" | sed "s,^https://,http://," > \
          config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt
 
-NOTE: We must use http (not http**s**) due to limitations/bugs in
-`apt-cacher-ng`, which often is used in Tails build
+<div class="note">
+<p>
+We cannot use HTTPS due to limitations/bugs in
+<code>apt-cacher-ng</code>, which often is used in Tails build
 environments. However, it is of no consequence since we verify the
 checksum file.
+</p>
+</div>
 
 Lastly, commit:
 
