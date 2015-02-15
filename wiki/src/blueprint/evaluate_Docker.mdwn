@@ -97,7 +97,17 @@ Test run
 	make
 
 * `TAILS_BUILD_OPTIONS="noproxy"` => run [apt-cacher-ng in a different
-  container](https://docs.docker.com/examples/apt-cacher-ng/)
+  container](https://docs.docker.com/examples/apt-cacher-ng/);
+  - [Linking these containers
+    together](https://docs.docker.com/userguide/dockerlinks/) would
+    allow to expose apt-cacher-ng's port only to our build container;
+    OTOH some of us will want to use the same apt-cacher-ng instance for
+    other use cases
+  - Docker will [have container
+    groups](https://github.com/docker/docker/issues/9694) at some
+    point, but we're not there yet; in the meantime, there are
+    [crane](https://github.com/michaelsauter/crane) and
+    [Fig](http://www.fig.sh/)
 * Even with `--cache false`, some directories (`chroot`, `cache`) are
   saved and retrieved from the container upon shutdown; same for
   live-config -generated `config/*` files. That's because the current
