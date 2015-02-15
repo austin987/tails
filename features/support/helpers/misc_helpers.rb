@@ -119,3 +119,18 @@ def save_pcap_file
     FileUtils.cp(@sniffer.pcap_file, pcap_copy)
     puts "Full network capture available at: #{pcap_copy}"
 end
+
+def get_free_space(machine, path)
+  case machine
+  when 'host'
+    assert(File.exists?(path), "Path '#{path}' not found on #{machine}.")
+    free = `df "#{path}"`
+  when 'guest'
+    assert(@vm.file_exist?(path), "Path '#{path}' not found on #{machine}.")
+    free = @vm.execute_successfully("df '#{path}'")
+  else
+    raise 'Unsupported machine type #{machine} passed.'
+  end
+  output = free.split("\n").last
+  return output.match(/[^\s]\s+[0-9]+\s+[0-9]+\s+([0-9]+)\s+.*/)[1].chomp.to_i
+end
