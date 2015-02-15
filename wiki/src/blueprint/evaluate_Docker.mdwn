@@ -38,10 +38,11 @@ API stability and backwards-compatibility
   behavior ["will be
   preserved"](https://docs.docker.com/reference/builder/#environment-replacement).
 
-"basebox" creation and maintenance
-==================================
+Image creation and maintenance
+==============================
 
-This is about [[!tails_ticket 7533]].
+This is about [[!tails_ticket 7533]]. That's Docker's equivalent of
+Vagrant's basebox.
 
 The Debian images' creation process has been [described by Joey
 Hess](http://joeyh.name/blog/entry/docker_run_debian/). They are built
@@ -54,9 +55,35 @@ The [[!debwiki Cloud/CreateDockerImage]] Debian wiki page documents
 how to use only stuff shipped in Debian to create a Debian image with
 a single command. That's presumably what we should do.
 
-Do we want to produce these images automatically on a server, e.g.
-daily or weekly, or do we want to build them locally and then upload?
-If the latter: who would do it, and when?
+See also <https://docs.docker.com/articles/baseimages/>.
+
+Do we want to:
+
+1. Let the build system build and maintain its own images on the
+   developer's system, the same way we would do it if we were
+   publishing our images?
+1. Produce and publish these images automatically, e.g.
+   daily or weekly?
+1. Build them locally and then upload? If so, who would do it,
+   and when?
+
+Do something different for our base images (e.g. Debian Wheezy)
+from we do for the specialized containers (e.g. ISO builder)?
+
+Image publication
+=================
+
+By default, Docker downloads images from the [Docker Hub
+Registry](https://registry.hub.docker.com/). If we want to publish our
+images, of course we want to self-host them somehow.
+
+One can [run their own
+registry](https://github.com/docker/docker-registry):
+
+ * [specs](https://docs.docker.com/reference/api/hub_registry_spec/)
+
+Or, one can use `docker save` an image or `docker export` a container,
+and then use `docker load` or `docker import`.
 
 Random notes
 ============
