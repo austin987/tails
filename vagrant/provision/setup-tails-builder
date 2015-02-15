@@ -31,6 +31,11 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
 	Pin: origin deb.tails.boum.org
 	Pin-Priority: 500
 EOF
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/syslinux-utils <<EOF
+	Package: syslinux-utils
+	Pin: origin deb.tails.boum.org
+	Pin-Priority: 500
+EOF
 
 # We don't want to use apt-cacher-ng for gpg
 http_proxy="" gpg --keyserver hkps.pool.sks-keyservers.net --recv-key C7988EA7A358D82E
@@ -71,6 +76,7 @@ apt-get -y dist-upgrade
 # Those are needed to build Tails
 apt-get -y install \
 	live-build \
+	syslinux-utils \
 	eatmydata \
 	time whois \
 	dpkg-dev \
@@ -90,17 +96,25 @@ apt-get -y --no-install-recommends install \
 # Add build script
 install -o root -g root -m 755 /vagrant/provision/assets/build-tails /usr/local/bin
 
-update_live_build_conf()
+disable_live_build_conf()
 {
 	local var="$1"
-	local value="$2"
 
-	mkdir -p /etc/live
-	touch /etc/live/build.conf
+	[ -e /etc/live/build.conf ] || return 0
 	sed -e "/^[[:space:]]*$var=/d" -i /etc/live/build.conf
-	echo "$var='$value'" >> /etc/live/build.conf
 }
 
-# Force APT repositories to a fixed mirror
-update_live_build_conf LB_MIRROR_BINARY "http://ftp.us.debian.org/debian/"
-update_live_build_conf LB_PARENT_MIRROR_BINARY "http://ftp.us.debian.org/debian/"
+# Force live-build to use the mirrors configured in auto/config
+for prefix in MIRROR PARENT_MIRROR ; do
+	for target in BOOTSTRAP BINARY CHROOT ; do
+		for archive in '' BACKPORTS SECURITY UPDATES VOLATILE ; do
+			if [ -z "$archive" ] ; then
+				archive_suffix=''
+			else
+				archive_suffix="_${archive}"
+			fi
+			var="LB_${prefix}_${target}${archive_suffix}"
+			disable_live_build_conf "$var"
+		done
+	done
+done

@@ -11,6 +11,12 @@ exec_firefox() {
     exec "${TBB_INSTALL}"/firefox "${@}"
 }
 
+exec_unconfined_firefox() {
+    LD_LIBRARY_PATH="${TBB_INSTALL}"
+    export LD_LIBRARY_PATH
+    exec "${TBB_INSTALL}"/firefox-unconfined "${@}"
+}
+
 guess_best_tor_browser_locale() {
     local long_locale short_locale similar_locale
     long_locale="$(echo ${LANG} | sed -e 's/\..*$//' -e 's/_/-/')"

@@ -14,16 +14,18 @@ Feature: Various checks
     When Tails has booted a 64-bit kernel
     Then the VirtualBox guest modules are available
 
-   Scenario: The 'Tor is ready' notification is shown when Tor has bootstrapped
-    Given the network is plugged
-    When I see the 'Tor is ready' notification
-    Then Tor is ready
+  Scenario: The shipped Tails signing key is up-to-date
+    Then the shipped Tails signing key will be valid for the next 3 months
 
-   Scenario: The shipped Tails signing key is up-to-date
+  Scenario: The Tails Debian repository key is up-to-date
+    Then the shipped Tails Debian repository key will be valid for the next 3 months
+
+  Scenario: The "Report an Error" launcher will open the support documentation
     Given the network is plugged
     And Tor is ready
     And all notifications have disappeared
-    Then the shipped Tails signing key is not outdated
+    When I double-click the Report an Error launcher on the desktop
+    Then I see "SupportDocumentation.png" after at most 90 seconds
 
   Scenario: The live user is setup correctly
     Then the live user has been setup by live-boot
@@ -37,6 +39,16 @@ Feature: Various checks
     And all notifications have disappeared
     And the time has synced
     And process "vidalia" is running within 30 seconds
+
+  Scenario: The 'Tor is ready' notification is shown when Tor has bootstrapped
+    Given the network is plugged
+    When I see the 'Tor is ready' notification
+    Then Tor is ready
+
+  Scenario: The tor process should be confined with Seccomp
+    Given the network is plugged
+    And Tor is ready
+    Then the running process "tor" is confined with Seccomp in filter mode
 
   Scenario: No unexpected network services
     When the network is plugged
