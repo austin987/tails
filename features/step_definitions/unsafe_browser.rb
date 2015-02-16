@@ -206,3 +206,9 @@ Then /^I configure the Unsafe Browser to check for updates more frequently$/ do
   @vm.file_append(prefs, 'pref("app.update.promptWaitTime", 1);')
   @vm.file_append(prefs, 'pref("app.update.interval", 5);')
 end
+
+But /^checking for updates is disabled in the Unsafe Browser's configuration$/ do
+  next if @skip_steps_while_restoring_background
+  prefs = '/usr/share/tails/unsafe-browser/prefs.js'
+  assert(@vm.file_content(prefs).include?('pref("app.update.enabled", false)'))
+end
