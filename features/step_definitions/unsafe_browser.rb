@@ -198,3 +198,11 @@ Then /^the Unsafe Browser complains that no DNS server is configured$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserDNSError.png", 30)
 end
+
+Then /^I configure the Unsafe Browser to check for updates more frequently$/ do
+  next if @skip_steps_while_restoring_background
+  prefs = '/usr/share/tails/unsafe-browser/prefs.js'
+  @vm.file_append(prefs, 'pref("app.update.idletime", 1);')
+  @vm.file_append(prefs, 'pref("app.update.promptWaitTime", 1);')
+  @vm.file_append(prefs, 'pref("app.update.interval", 5);')
+end
