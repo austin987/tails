@@ -128,13 +128,28 @@ We are considering here an attacker who can:
   - (B) Do man-in-the-middle attacks by providing rogue HTTPS
     certificates signed by a single certificate authority trusted by the
     browser but under the control of the attacker.
-  - (C) Insert malicious content on https://tails.boum.org/ through an
-    exploit on our website.
-  - (D) Insert malicious information for a few days in our main Git
-    repository and its mirrors.
+    Note that if the MitM attack is conducted against tails.boum.org,
+    then the attacker could trick the user to skip ISO verification all
+    the way. This would work in the vast majority of cases since we are
+    trying to help new user with this extension. Still, to mitigate such
+    an attack in some cases we could both:
+    - Encourage external documentation (screencasts on YouTube, printed
+      forms, etc.). But those would be vulnerable to other kind of
+      attacks...
+    - Not rely on the website to perform the ISO verification (use the
+      add-ons menu for example). But the UX will suffer from this...
 
 We are not considering an attacker who can:
 
+  - (C) Insert malicious content on https://tails.boum.org/ through an
+    exploit on our website as this could trick new users to skip the ISO
+    verification all the way. To prevent this kind of attack we should
+    instead:
+    - Monitor externally the most relevant parts of our website.
+    - Work on integrating full upgrades in Tails Upgrader
+      [[!tails_ticket 7499]].
+  - (D) Insert malicious information in our main Git repository as such
+    an attacker could do attack (C) as well.
   - (E) Insert targeted malware on the user's computer as this could
     defeat any possible verification mechanism that such an extension
     could do.
@@ -178,26 +193,16 @@ Security properties:
   - This technique would defeat attack A (malicious ISO) and still allow
     our users to verify their ISO images after using an alternative
     download technique.
-  - Attack B (single MitM), C (website exploit), or D (Git exploit)
-    would prevent users from verifying their ISO images (DoS attack).
-  - This technique would not defeat attack A combined with either attack
-    B, C, or D if the user is provided with an old ISO image and an old
-    ISO description document (downgrade attack). Still, if such a
-    downgrade attack could be performed, the user would be prompted for
-    upgrade (or impossibility to upgrade) when starting Tails.
+  - This technique would not defeat attack B (single MitM against
+    tails.boum.org) in general but could be detected
+    under certain circumstances (if experienced user or following
+    external documentation and extension not relying on website).
 
 Other considerations:
 
   - In case we need to rotate the Tails signing key, we can upload in
     advance a new version of the extension that includes both the old
     and the new key and the transition will be smooth.
-  - In case we need to revoke the Tails signing key, our users will be
-    vulnerable, until the extension is upgraded, to an attacker who can
-    do simultaneously attack A (malicious ISO), attack B (single MitM),
-    and use the revoked Tails signing key. If such an attacker exist,
-    then all verification techniques based on OpenPGP, not only in the
-    extension, would be vulnerable until users upgrade to the new Tails
-    signing key.
 
 Checksum correlation
 --------------------
@@ -228,11 +233,15 @@ When verifying an ISO image, the extension:
 
 Security properties:
 
-  - This technique would defeat attack A (malicious ISO), B (single
-    MitM), and C (website exploit) and still allow our users to verify
-    their ISO images possibly after using an alternative download
-    technique.
-  - This technique would not defeat attack D (Git exploit).
+  - This technique would defeat attack A (malicious ISO) and still allow
+    our users to verify their ISO images possibly after using an
+    alternative download technique.
+  - This technique would defeat attack B (single MitM) against a server
+    in the pool different from tails.boum.org.
+  - This technique would not defeat attack B (single MitM against
+    tails.boum.org) in general but could be detected under certain
+    circumstances (if experienced user or following external
+    documentation and extension not relying on website).
 
 Other considerations:
 
@@ -240,9 +249,6 @@ Other considerations:
     pool changes its certificate authority and we will not always be
     able to know this in advance (for example if we rely on Github). So
     having a bigger pool has some cost.
-  - In case one of the website in the pool changes its certificate
-    authority, our users would be vulnerable to DoS by attack B or C if
-    *N=P-1* until they get an upgrade of the extension.
   - Reporting errors in case *N* but not all versions of the ISO
     description document are identical might be interesting for us but
     complicated to communicate to the user.
@@ -267,14 +273,11 @@ When verifying an ISO image, the extension:
 Security properties:
 
   - This technique would defeat attack A (malicious ISO).
-  - This technique would not defeat attacks B (single MitM), C (website
-    exploit), or D (Git exploit).
+  - This technique would not defeat attack B (single MitM against
+    tails.boum.org).
 
 Other considerations:
 
   - We would have to upgrade the extension if the certificate authority
     of https://tails.boum.org/ changes but we should know this in
     advance.
-  - It is not possible for the extension to distinguish between attack B
-    (single MitM) and an outdated extension in case of change in the
-    certificate authority of https://tails.boum.org/.
