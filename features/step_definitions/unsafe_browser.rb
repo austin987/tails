@@ -23,8 +23,19 @@ end
 
 Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
   next if @skip_steps_while_restoring_background
-  step "I run \"LANG=#{loc}.UTF-8 LC_ALL=#{loc}.UTF-8 sudo unsafe-browser\" in GNOME Terminal"
+  step "I run \"LANG=#{loc} LC_ALL=#{loc} sudo unsafe-browser\" in GNOME Terminal"
   step "I see and accept the Unsafe Browser start verification"
+end
+
+Then /^the Unsafe Browser works in all supported languages$/ do
+  next if @skip_steps_while_restoring_background
+  langs = supported_torbrowser_languages
+  langs.each do |lang|
+    step "I start the Unsafe Browser in the \"#{lang}\" locale"
+    step "the Unsafe Browser has started"
+    step "I close the Unsafe Browser"
+    step "the Unsafe Browser chroot is torn down"
+  end
 end
 
 Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
