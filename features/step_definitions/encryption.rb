@@ -88,8 +88,6 @@ When /^I sign the message using my OpenPGP key$/ do
   next if @skip_steps_while_restoring_background
   encrypt_sign_helper do
     @screen.type(Sikuli::Key.TAB + Sikuli::Key.DOWN + Sikuli::Key.ENTER)
-    @screen.wait("PinEntryPrompt.png", 10)
-    @screen.type(@passphrase + Sikuli::Key.ENTER)
   end
 end
 
@@ -104,8 +102,6 @@ When /^I both encrypt and sign the message using my OpenPGP key$/ do
   encrypt_sign_helper do
     @screen.type(@key_name + Sikuli::Key.ENTER)
     @screen.type(Sikuli::Key.TAB + Sikuli::Key.DOWN + Sikuli::Key.ENTER)
-    @screen.wait("PinEntryPrompt.png", 10)
-    @screen.type(@passphrase + Sikuli::Key.ENTER)
   end
 end
 
