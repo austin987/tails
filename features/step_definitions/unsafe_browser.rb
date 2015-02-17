@@ -4,6 +4,23 @@ When /^I see and accept the Unsafe Browser start verification$/ do
   @screen.type(Sikuli::Key.ESC)
 end
 
+def supported_torbrowser_languages
+  langs = []
+  exts = @vm.execute_successfully(
+    "find /usr/local/share/tor-browser-extensions -maxdepth 1 -name 'langpack*.xpi' -printf \"%f\n\"").stdout
+  supported_langs = exts.scan(/langpack-([a-zA-Z_-]+).*/)
+  locales = @vm.execute_successfully(
+    "find /usr/lib/locale -maxdepth 1 -name '*.utf8' -printf \"%f\n\"").stdout
+  locales = locales.scan(/.+/)
+
+  # Determine a valid locale for each language that we want to test.
+  supported_langs.each do |lang|
+    nomatch = proc { "#{lang[0]}_#{lang[0].upcase}.utf8" }
+    langs << locales.find(nomatch) { |l| l.match(/^#{lang[0].gsub('-','_')}/) }
+  end
+  return langs
+end
+
 Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
   next if @skip_steps_while_restoring_background
   step "I run \"LANG=#{loc}.UTF-8 LC_ALL=#{loc}.UTF-8 sudo unsafe-browser\" in GNOME Terminal"
