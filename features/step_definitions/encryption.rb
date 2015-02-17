@@ -40,6 +40,12 @@ def maybe_deal_with_pinentry
   end
 end
 
+def gedit_copy_all_text
+  @screen.click("GeditEdit.png")
+  @screen.wait_and_click("GeditSelectAll.png", 10)
+  @screen.click("GeditCopy.png")
+end
+
 def paste_into_a_new_tab
   @screen.click("GeditNewDocument.png")
   @screen.click("GeditPaste.png")
@@ -54,12 +60,6 @@ def encrypt_sign_helper
   yield
   maybe_deal_with_pinentry
   paste_into_a_new_tab
-end
-
-def gedit_copy_all_text
-  @screen.click("GeditEdit.png")
-  @screen.wait_and_click("GeditSelectAll.png", 10)
-  @screen.click("GeditCopy.png")
 end
 
 def decrypt_verify_helper(icon)
