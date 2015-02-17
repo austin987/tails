@@ -100,7 +100,7 @@ if [ -r "${NM_ENV_FILE}" ]; then
     # script. Note that while the regex used for deciding IP addresses
     # is far from perfect, it serves our purpose here.
     IP4_REGEX='[0-9]{1,3}(\.[0-9]{1,3}){3}'
-    NAMESERVERS_REGEX="^IP4_NAMESERVERS=\"${IP4_REGEX}\"$"
+    NAMESERVERS_REGEX="^IP4_NAMESERVERS=\"(${IP4_REGEX}( ${IP4_REGEX})*)?\"$"
     if grep --extended-regexp -qv "${NAMESERVERS_REGEX}" "${NM_ENV_FILE}"; then
         error "`gettext \"NetworkManager passed us garbage data when trying to deduce the clearnet DNS server.\"`"
     fi
