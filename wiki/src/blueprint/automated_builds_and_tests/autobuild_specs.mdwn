@@ -1,9 +1,10 @@
 [[!meta title="Automated builds specification"]]
 
 
-This blueprint helps to keep track of the discussion on the mailing list, and
-is attached to tickets **#8655** to specify how to implement **#6196** (Build all
-active branches).
+This blueprint helps to keep track of the discussion on the mailing
+list, and is attached to [[!tails_ticket 8655]]
+to specify how to implement [[!tails_ticket 6196]] ("Build all active
+branches").
 
 [[!toc levels=2]]
 
@@ -21,13 +22,13 @@ Some metrics about the number of branches merged per release could give hints
 that might help to decide of selection process. See at the bottom of this
 page.
 
-Given a branch take around 45 minutes to be build on lizard (worth case),
-with two builders, lizard will be able to build something like 64 ISOs a
+Given an ISO build takes around 45 minutes on lizard (worst case),
+given two builders lizard will be able to build something like 64 ISOs a
 day.
 
-Devs should be able to trigger automatic builds for a branch whose build
+Developers should be able to trigger automatic builds for a branch whose build
 was dropped (eg. last commit too old) by pushing a dumb commit on a
-timestamp file in their branch.
+timestamp file in that branch.
 
 
 Proposal1:
@@ -39,7 +40,7 @@ Proposal1:
 ## When to build it
 
 Define the regularity we want to build topic branches, apart from being build
-on git pushes.
+on Git push.
 
 As with the first question, some metrics could help the discussion,
 at least having an average number of branches per release.
@@ -59,11 +60,11 @@ Proposal 1: Notify by email the author of the offending commit on failure.
 
 # Scenarios
 
-In the folowing scenario:
+In the following scenario:
 
 0. topic branches are named branch T
 0. base branches are named branch B
-0. builds are ran on merges which don't raise a conflict. If the merge raises a conflict, then the topic branch's developpes should take care of resolving it.
+0. builds are ran on merges which don't raise a conflict. If the merge raises a conflict, then the topic branch's developer should take care of resolving it.
 
 
 ## Scenario 1 : reviewer
@@ -76,16 +77,16 @@ In the folowing scenario:
     And if the build succeeded
       I might want to download the resulting ISO
       I might want to get the pkg list
-      I want the redmine ticket to be notified (optional feature)
+      I want the Redmine ticket to be notified (optional)
     Otherwise if it fails the developer who proposed the merge should be notified
-      And the developper _need_ to see the build logs
+      And the developer *needs* to see the build logs
       And the ticket should be reassigned to the branch submitter
-      And QA check should be set to `Dev needed`
+      And QA check should be set to "Dev needed"
 
 
 ## Scenario 2 : developer
 
-    As a developper who has the commit bit
+    As a developer who has the commit bit
     When I'm working on branch T
     Then I need to know if my branch builds after I've pushed
     And I need to know if my branch build is broken by something else
@@ -94,11 +95,11 @@ In the folowing scenario:
     And if the build succeeded
       I might want to download the resulting ISO
       I might want to get the pkg list
-      I want the redmine ticket to be notified (optional feature)
+      I want the Redmine ticket to be notified (optional)
     Otherwise if it fails I _need_ to see the build logs
       And the developer who proposed the merge should be notified
       And the ticket should be reassigned to the branch submitter
-      And QA check should be set to `Dev needed`
+      And QA check should be set to "Dev needed"
 
 
 ## Scenario 3 : RM
@@ -137,46 +138,46 @@ might want to consider it in the future.
 
 ## Scenario 3
 
-    As a Tails developper
+    As a Tails developer
     When the test suite is ran on the ISO build from my last commit
-    I want to watch the TV and see the test video in HTML5 from a Torbrowser
+    I want to watch TV and see the test video in HTML5 from Tor Browser
 
 
 ## Scenario 4
 
-    As a Tails developper
+    As a Tails developer
     When an ISO is build from my last commit
-    I want to access it throught remote desktop (VNC/Spice/...) over Tor
+    I want to access it through remote desktop (VNC/Spice/...) over Tor
 
 # Statistics
 
 As of 2015-02-02, there are 26 branches that would be automatically
 build as part of the next 1.3 release, following the for now defined
-criterias (above in this bluepint):
+criterias (above in this blueprint):
 
-feature/7779-revisit-touchpad-settings
-feature/6992-whisperback-email-address
-bugfix/8714-tor-is-ready-robustness
-bugfix/8680-git-without-polipo
-feature/8719-mount-output-in-bug-reports
-feature/6241-gnupg2
-feature/8725-remove-vagrant-bootstrap-cache
-bugfix/8715-build-system-independent-APT-sources
-feature/7756-reintroduce-whisperback
-bugfix/8699-only-create-timestamps-in-Jenkins
-feature/8740-new-signing-key-phase-2
-feature/8665-remove-adblock
-bugfix/8756-repair-local-packages
-feature/7530-docker_anonym
-feature/7530-docker-with-apt-cacher-ng
-feature/7963-background-color
-feature/8491-live-additional-software-in-whisperback
-feature/7530-docker
-feature/linux-3.18
-feature/torbrowser-alpha
-bugfix/8747-update-tails-apt-repo-signing-key
-feature/8726-use-homogenous-Debian-mirrors-at-build-time
-feature/5525-sandbox-web-browser
-feature/7752-keyringer
-feature/6739-install-electrum
-bugfix/quote-wrappers-arguments
+* feature/7779-revisit-touchpad-settings
+* feature/6992-whisperback-email-address
+* bugfix/8714-tor-is-ready-robustness
+* bugfix/8680-git-without-polipo
+* feature/8719-mount-output-in-bug-reports
+* feature/6241-gnupg2
+* feature/8725-remove-vagrant-bootstrap-cache
+* bugfix/8715-build-system-independent-APT-sources
+* feature/7756-reintroduce-whisperback
+* bugfix/8699-only-create-timestamps-in-Jenkins
+* feature/8740-new-signing-key-phase-2
+* feature/8665-remove-adblock
+* bugfix/8756-repair-local-packages
+* feature/7530-docker_anonym
+* feature/7530-docker-with-apt-cacher-ng
+* feature/7963-background-color
+* feature/8491-live-additional-software-in-whisperback
+* feature/7530-docker
+* feature/linux-3.18
+* feature/torbrowser-alpha
+* bugfix/8747-update-tails-apt-repo-signing-key
+* feature/8726-use-homogenous-Debian-mirrors-at-build-time
+* feature/5525-sandbox-web-browser
+* feature/7752-keyringer
+* feature/6739-install-electrum
+* bugfix/quote-wrappers-arguments

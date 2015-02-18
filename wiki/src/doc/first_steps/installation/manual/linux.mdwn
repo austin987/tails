@@ -6,23 +6,9 @@ This technique uses the command line.
 
 [[!toc levels=1]]
 
-<h2 class="bullet-number-one">Install isohybrid</h2>
+<a id="step_1"></a>
 
-In **Debian Wheezy**, **Ubuntu 14.04**, and earlier the `isohybrid` utility is
-included in the `syslinux` package. To install it, execute the following
-command:
-
-    sudo apt-get install syslinux
-
-In **Debian Jessie**, **Ubuntu 14.10**, and later the `isohybrid` utility is
-included in the `syslinux-utils` package. To install it, execute the following
-command:
-
-    sudo apt-get install syslinux-utils
-
-<a id="step_2"></a>
-
-<h2 class="bullet-number-two">Find out the device name of the device</h2>
+<h2 class="bullet-number-one">Find out the device name of the device</h2>
 
 The device name should be something like `/dev/sdb`, `/dev/sdc`, etc.
 
@@ -62,9 +48,9 @@ system</strong>.
 
 </div>
 
-<a id="step_3"></a>
+<a id="step_2"></a>
 
-<h2 class="bullet-number-three">Do the copy</h2>
+<h2 class="bullet-number-two">Do the copy</h2>
 
 <div class="caution">
 
@@ -74,24 +60,13 @@ system</strong>.
 
 Execute the following commands, replacing `[tails.iso]` with the path
 to the ISO image that you want to copy and `[device]` with the device
-name found in step 2.
+name found in step 1.
 
-<div class="note">
-
-<p>Note that the <code>isohybrid</code> command modifies the ISO image. As a
-consequence, you won't be able to [[verify|download/#verify]] it again
-afterwards. We recommend you to execute those commands on a copy of the
-original ISO image that you downloaded.</p>
-
-</div>
-
-    isohybrid [tails-isohybrid.iso] -h 255 -s 63
-    dd if=[tails-isohybrid.iso] of=[device] bs=16M
+    dd if=[tails.iso] of=[device] bs=16M
 
 Here is an example of the commands to execute, yours are probably different:
 
-    isohybrid '/home/amnesia/Desktop/tails-0.6.2-isohybrid.iso' -h 255 -s 63
-    dd if='/home/amnesia/Desktop/tails-0.6.2-isohybrid.iso' of=/dev/sdc bs=16M
+    dd if='/home/amnesia/Desktop/tails-0.6.2.iso' of=/dev/sdc bs=16M
 
 <div class="tip">
 
@@ -122,7 +97,7 @@ Troubleshooting
 ### dd: /dev/sdx: No such file or directory
 
 Then double-check the name of the device you found in [[step
-2|linux#step_2]].
+1|linux#step_1]].
 
 ### dd: /dev/sdx: Permission denied
 
@@ -131,10 +106,9 @@ double-check it. If you are sure about the device name, this could be a
 permission problem and you could need to gain administration privileges before running the
 commands in the terminal. That could be:
 
-    isohybrid [tails.iso] -h 255 -s 63
     sudo dd if=[tails.iso] of=[device] bs=16M
 
 ### dd: tails.iso: No such file or directory
 
 Then you surely have committed a mistake on the path to the ISO image in [[step
-3|linux#step_3]].
+2|linux#step_2]].

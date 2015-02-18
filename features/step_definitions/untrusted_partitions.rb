@@ -1,29 +1,53 @@
-Given /^I create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |size, unit, name|
+Given /^I create an? ([[:alnum:]]+) swap partition on disk "([^"]+)"$/ do |parttype, name|
   next if @skip_steps_while_restoring_background
-  @vm.storage.create_new_disk(name, {:size => size, :unit => unit,
-                                     :type => "raw"})
+  @vm.storage.disk_mkswap(name, parttype)
 end
 
-Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
+Then /^an? "([^"]+)" partition was detected by Tails on drive "([^"]+)"$/ do |type, name|
   next if @skip_steps_while_restoring_background
-  @vm.storage.disk_mklabel(name, type)
+  part_info = @vm.execute_successfully(
+      "parted -s '#{@vm.disk_dev(name)}' print 1").stdout.strip
+  assert(part_info.match("^File System:\s*#{Regexp.escape(type)}$"),
+         "No #{type} partition was detected by Tails on disk '#{name}'")
 end
 
-Given /^I create a ([[:alnum:]]+) filesystem on disk "([^"]+)"$/ do |type, name|
+Then /^Tails has no disk swap enabled$/ do
   next if @skip_steps_while_restoring_background
-  @vm.storage.disk_mkpartfs(name, type)
+  # Skip first line which contain column headers
+  swap_info = @vm.execute_successfully("tail -n+2 /proc/swaps").stdout
+  assert(swap_info.empty?,
+         "Disk swapping is enabled according to /proc/swaps:\n" + swap_info)
+  mem_info = @vm.execute_successfully("grep '^Swap' /proc/meminfo").stdout
+  assert(mem_info.match(/^SwapTotal:\s+0 kB$/),
+             "Disk swapping is enabled according to /proc/meminfo:\n" +
+             mem_info)
 end
 
-Given /^I cat an ISO hybrid of the Tails image to disk "([^"]+)"$/ do |name|
+Given /^I create an? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:alnum:]]+) filesystem( encrypted with password "([^"]+)")? on disk "([^"]+)"$/ do |parttype, has_label, label, fstype, is_encrypted, luks_password, name|
   next if @skip_steps_while_restoring_background
-  disk_path = @vm.storage.disk_path(name)
-  tails_iso_hybrid = "#{$config["TMP_DIR"]}/#{File.basename(TAILS_ISO)}"
-  begin
-    cmd_helper("cp '#{TAILS_ISO}' '#{tails_iso_hybrid}'")
-    cmd_helper("isohybrid '#{tails_iso_hybrid}' --entry 4 --type 0x1c")
-    cmd_helper("dd if='#{tails_iso_hybrid}' of='#{disk_path}' conv=notrunc")
-  ensure
-    cmd_helper("rm -f '#{tails_iso_hybrid}'")
+  opts = {}
+  opts.merge!(:label => label) if has_label
+  opts.merge!(:luks_password => luks_password) if is_encrypted
+  @vm.storage.disk_mkpartfs(name, parttype, fstype, opts)
+end
+
+Given /^I cat an ISO of the Tails image to disk "([^"]+)"$/ do |name|
+  next if @skip_steps_while_restoring_background
+  src_disk = {
+    :path => TAILS_ISO,
+    :opts => {
+      :format => "raw",
+      :readonly => true
+    }
+  }
+  dest_disk = {
+    :path => @vm.storage.disk_path(name),
+    :opts => {
+      :format => @vm.storage.disk_format(name)
+    }
+  }
+  @vm.storage.guestfs_disk_helper(src_disk, dest_disk) do |g, src_disk_handle, dest_disk_handle|
+    g.copy_device_to_device(src_disk_handle, dest_disk_handle, {})
   end
 end
 
@@ -32,4 +56,13 @@ Then /^drive "([^"]+)" is not mounted$/ do |name|
   dev = @vm.disk_dev(name)
   assert(!@vm.execute("grep -qs '^#{dev}' /proc/mounts").success?,
          "an untrusted partition from drive '#{name}' was automounted")
+end
+
+Then /^Tails Greeter has( not)? detected a persistence partition$/ do |no_persistence|
+  next if @skip_steps_while_restoring_background
+  expecting_persistence = no_persistence.nil?
+  @screen.find('TailsGreeter.png')
+  found_persistence = ! @screen.exists('TailsGreeterPersistence.png').nil?
+  assert_equal(expecting_persistence, found_persistence,
+               "Persistence is unexpectedly#{no_persistence} enabled")
 end

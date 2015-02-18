@@ -16,6 +16,10 @@ Then /^the shipped Tails (signing|Debian repository) key will be valid for the n
   assert((expiration_date << max_months.to_i) > DateTime.now,
          "The shipped signing key will expire within the next #{max_months} months.")
 end
+Then /^I double-click the Report an Error launcher on the desktop$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_double_click('DesktopReportAnError.png', 30)
+end
 
 Then /^the live user has been setup by live\-boot$/ do
   next if @skip_steps_while_restoring_background
@@ -91,6 +95,31 @@ When /^Tails has booted a 64-bit kernel$/ do
          "Tails has not booted a 64-bit kernel.")
 end
 
+Then /^GNOME Screenshot is configured to save files to the live user's home directory$/ do
+  next if @skip_steps_while_restoring_background
+  home = "/home/#{LIVE_USER}"
+  save_path = @vm.execute_successfully(
+    "gsettings get org.gnome.gnome-screenshot auto-save-directory",
+    LIVE_USER).stdout.chomp.tr("'","")
+  assert_equal("file://#{home}", save_path,
+               "The GNOME screenshot auto-save-directory is not set correctly.")
+end
+
+Then /^there is no screenshot in the live user's home directory$/ do
+  next if @skip_steps_while_restoring_background
+  home = "/home/#{LIVE_USER}"
+  assert(@vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?,
+         "Existing screenshots were found in the live user's home directory.")
+end
+
+Then /^a screenshot is saved to the live user's home directory$/ do
+  next if @skip_steps_while_restoring_background
+  home = "/home/#{LIVE_USER}"
+  try_for(3, :msg=> "No screenshot was created in #{home}") {
+    !@vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
+  }
+end
+
 Then /^the VirtualBox guest modules are available$/ do
   next if @skip_steps_while_restoring_background
   assert(@vm.execute("modinfo vboxguest").success?,
@@ -135,4 +164,23 @@ end
 Then /^some AppArmor profiles are enforced$/ do
   assert(@vm.execute("aa-status --enforced").stdout.chomp.to_i > 0,
          "No AppArmor profile is enforced")
+end
+
+def get_seccomp_status(process)
+  assert(@vm.has_process?(process), "Process #{process} not running.")
+  pid = @vm.pidof(process)[0]
+  status = @vm.file_content("/proc/#{pid}/status")
+  return status.match(/^Seccomp:\s+([0-9])/)[1].chomp.to_i
+end
+
+Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mode$/ do |process,mode|
+  next if @skip_steps_while_restoring_background
+  status = get_seccomp_status(process)
+  if mode == 'strict'
+    assert_equal(1, status, "#{process} not confined with Seccomp in strict mode")
+  elsif mode == 'filter'
+    assert_equal(2, status, "#{process} not confined with Seccomp in filter mode")
+  else
+    raise "Unsupported mode #{mode} passed"
+  end
 end

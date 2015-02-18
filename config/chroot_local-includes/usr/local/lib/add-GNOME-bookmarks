@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -eu
+
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
+
+add_gtk_bookmark_for() {
+   local target
+   target=$(echo "$1" | sed 's, ,%20,g')
+
+   if [ $# -ge 2 ]; then
+      title="$2"
+      echo "file://$target $title" >> "${HOME}/.gtk-bookmarks"
+   else
+       echo "file://$target" >> "${HOME}/.gtk-bookmarks"
+   fi
+}
+
+add_gtk_bookmark_for "${HOME}/Tor Browser"
+
+if persistence_is_enabled_for "${HOME}/Persistent" ; then
+    add_gtk_bookmark_for "${HOME}/Persistent"
+
+    if persistence_is_enabled_read_write ; then
+	add_gtk_bookmark_for "${HOME}/Persistent/Tor Browser" \
+                             "Tor Browser (persistent)"
+    fi
+fi
