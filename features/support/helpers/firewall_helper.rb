@@ -106,22 +106,22 @@ class FirewallLeakCheck
 
   def assert_no_leaks
     if !empty?
-      if !ipv4_tcp_leaks.empty?
+      if !@ipv4_tcp_leaks.empty?
         puts "The following IPv4 TCP non-Tor Internet hosts were contacted:"
         puts ipv4_tcp_leaks.join("\n")
         puts
       end
-      if !ipv4_nontcp_leaks.empty?
+      if !@ipv4_nontcp_leaks.empty?
         puts "The following IPv4 non-TCP Internet hosts were contacted:"
         puts ipv4_nontcp_leaks.join("\n")
         puts
       end
-      if !ipv6_leaks.empty?
+      if !@ipv6_leaks.empty?
         puts "The following IPv6 Internet hosts were contacted:"
         puts ipv6_leaks.join("\n")
         puts
       end
-      if !nonip_leaks.empty?
+      if !@nonip_leaks.empty?
         puts "Some non-IP packets were sent\n"
       end
       save_pcap_file
