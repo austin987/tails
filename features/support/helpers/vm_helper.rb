@@ -3,7 +3,7 @@ require 'rexml/document'
 
 class VMNet
 
-  attr_reader :net_name, :net, :bridge_name
+  attr_reader :net_name, :net
 
   def initialize(virt, xml_path)
     @virt = virt
@@ -33,7 +33,6 @@ class VMNet
     clean_up
     @net = @virt.define_network_xml(xml)
     @net.create
-    @bridge_name = @net.bridge_name
   end
 
   def destroy
@@ -41,8 +40,12 @@ class VMNet
     @net.undefine
   end
 
+  def bridge_name
+    @net.bridge_name
+  end
+
   def bridge_mac
-    File.open("/sys/class/net/#{@bridge_name}/address", "rb").read.chomp
+    File.open("/sys/class/net/#{bridge_name}/address", "rb").read.chomp
   end
 
   private :clean_up
