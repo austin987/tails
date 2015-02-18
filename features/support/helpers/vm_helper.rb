@@ -10,15 +10,13 @@ class VMNet
     net_xml = File.read("#{xml_path}/default_net.xml")
     update(net_xml)
   rescue Exception => e
-    clean_up
+    destroy_and_undefine
     raise e
   end
 
-  # Used internally to clean up previous created libvirt networks with
-  # same name. We lookup by name so we also catch networks from
-  # previous test suite runs that weren't properly cleaned up
-  # (e.g. aborted).
-  def clean_up
+  # We lookup by name so we also catch networks from previous test
+  # suite runs that weren't properly cleaned up (e.g. aborted).
+  def destroy_and_undefine
     begin
       old_net = @virt.lookup_network_by_name(@net_name)
       old_net.destroy if old_net.active?
@@ -30,14 +28,9 @@ class VMNet
   def update(xml)
     net_xml = REXML::Document.new(xml)
     @net_name = net_xml.elements['network/name'].text
-    clean_up
+    destroy_and_undefine
     @net = @virt.define_network_xml(xml)
     @net.create
-  end
-
-  def destroy
-    @net.destroy if net.active?
-    @net.undefine
   end
 
   def bridge_name
@@ -47,8 +40,6 @@ class VMNet
   def bridge_mac
     File.open("/sys/class/net/#{bridge_name}/address", "rb").read.chomp
   end
-
-  private :clean_up
 
 end
 
@@ -68,26 +59,25 @@ class VM
     set_cdrom_boot($tails_iso)
     plug_network
   rescue Exception => e
-    clean_up
+    destroy_and_undefine
     raise e
   end
 
   def update(xml)
     domain_xml = REXML::Document.new(xml)
     @domain_name = domain_xml.elements['domain/name'].text
-    clean_up
+    destroy_and_undefine
     @domain = @virt.define_domain_xml(xml)
   end
 
-  # Used internally to clean up previous created libvirt domains with
-  # same name. We lookup by name so we also catch domains from
-  # previous test suite runs that weren't properly cleaned up
-  # (e.g. aborted).
-  def clean_up
+  # We lookup by name so we also catch domains from previous test
+  # suite runs that weren't properly cleaned up (e.g. aborted).
+  def destroy_and_undefine
     begin
       old_domain = @virt.lookup_domain_by_name(@domain_name)
       old_domain.destroy if old_domain.active?
       old_domain.undefine
+      @display.stop if @display && @display.active?
     rescue
     end
   end
@@ -408,7 +398,7 @@ EOF
 
   def restore_snapshot(path)
     # Clean up current domain so its snapshot can be restored
-    clean_up
+    destroy_and_undefine
     Libvirt::Domain::restore(@virt, path)
     @domain = @virt.lookup_domain_by_name(@domain_name)
     @display.start
@@ -431,11 +421,6 @@ EOF
     @display.stop
   end
 
-  def destroy
-    clean_up
-    power_off
-  end
-
   def take_screenshot(description)
     @display.take_screenshot(description)
   end
@@ -448,7 +433,5 @@ EOF
       end
     end
   end
-
-  private :clean_up
 
 end

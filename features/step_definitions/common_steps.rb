@@ -62,7 +62,7 @@ def restore_background
 end
 
 Given /^a computer$/ do
-  @vm.destroy if @vm
+  @vm.destroy_and_undefine if @vm
   @vm = VM.new($virt, $vm_xml_path, $vmnet, $vmstorage, $x_display)
 end
 
@@ -207,7 +207,7 @@ end
 
 When /^I destroy the computer$/ do
   next if @skip_steps_while_restoring_background
-  @vm.destroy
+  @vm.destroy_and_undefine
 end
 
 Given /^the computer (re)?boots Tails$/ do |reboot|
