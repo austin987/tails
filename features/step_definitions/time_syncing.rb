@@ -7,7 +7,7 @@ When /^I set the system time to "([^"]+)"$/ do |time|
   expected_time_upper_bound = expected_time_lower_bound + 1
   assert(expected_time_lower_bound >= new_time &&
                     new_time <= expected_time_upper_bound,
-         "The guest's time was suppsed to be set to " \
+         "The guest's time was supposed to be set to " \
          "'#{expected_time_lower_bound}' but is '#{new_time}'")
 end
 
@@ -22,7 +22,7 @@ When /^I bump the system time with "([^"]+)"$/ do |timediff|
   expected_time_upper_bound = expected_time_lower_bound + 1
   assert(expected_time_lower_bound >= new_time &&
                     new_time <= expected_time_upper_bound,
-         "The guest's time was suppsed to be bumped to " \
+         "The guest's time was supposed to be bumped to " \
          "'#{expected_time_lower_bound}' but is '#{new_time}'")
 end
 
