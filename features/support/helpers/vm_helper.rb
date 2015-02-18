@@ -52,7 +52,7 @@ end
 
 class VM
 
-  attr_reader :domain, :display, :ip, :mac, :vmnet, :storage
+  attr_reader :domain, :display, :vmnet, :storage
 
   def initialize(virt, xml_path, vmnet, storage, x_display)
     @virt = virt
