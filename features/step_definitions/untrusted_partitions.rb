@@ -31,30 +31,23 @@ Given /^I create an? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:
   @vm.storage.disk_mkpartfs(name, parttype, fstype, opts)
 end
 
-Given /^I cat an ISO hybrid of the Tails image to disk "([^"]+)"$/ do |name|
+Given /^I cat an ISO of the Tails image to disk "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  tails_iso_hybrid = "#{$tmp_dir}/#{File.basename($tails_iso)}"
-  begin
-    cmd_helper("cp '#{$tails_iso}' '#{tails_iso_hybrid}'")
-    cmd_helper("isohybrid '#{tails_iso_hybrid}' --entry 4 --type 0x1c")
-    src_disk = {
-      :path => tails_iso_hybrid,
-      :opts => {
-        :format => "raw",
-        :readonly => true
-      }
+  src_disk = {
+    :path => $tails_iso,
+    :opts => {
+      :format => "raw",
+      :readonly => true
     }
-    dest_disk = {
-      :path => @vm.storage.disk_path(name),
-      :opts => {
-        :format => @vm.storage.disk_format(name)
-      }
+  }
+  dest_disk = {
+    :path => @vm.storage.disk_path(name),
+    :opts => {
+      :format => @vm.storage.disk_format(name)
     }
-    @vm.storage.guestfs_disk_helper(src_disk, dest_disk) do |g, src_disk_handle, dest_disk_handle|
-      g.copy_device_to_device(src_disk_handle, dest_disk_handle, {})
-    end
-  ensure
-    cmd_helper("rm -f '#{tails_iso_hybrid}'")
+  }
+  @vm.storage.guestfs_disk_helper(src_disk, dest_disk) do |g, src_disk_handle, dest_disk_handle|
+    g.copy_device_to_device(src_disk_handle, dest_disk_handle, {})
   end
 end
 

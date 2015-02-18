@@ -14,6 +14,15 @@ persistence_is_enabled() {
     [ "$(_get_tg_setting "${PERSISTENCE_STATE}" TAILS_PERSISTENCE_ENABLED)" = true ]
 }
 
+persistence_is_enabled_for() {
+    persistence_is_enabled && mountpoint -q "$1" 2>/dev/null
+}
+
+persistence_is_enabled_read_write() {
+    persistence_is_enabled && \
+    [ "$(_get_tg_setting "${PERSISTENCE_STATE}" TAILS_PERSISTENCE_READONLY)" != true ]
+}
+
 mac_spoof_is_enabled() {
     # Only return false when explicitly told so to increase failure
     # safety.

@@ -7,7 +7,7 @@ end
 
 Given /^the I2P router console is ready$/ do
   next if @skip_steps_while_restoring_background
-  try_for(60) do
+  try_for(120) do
     @vm.execute('. /usr/local/lib/tails-shell-library/i2p.sh; ' +
                 'i2p_router_console_is_ready').success?
   end

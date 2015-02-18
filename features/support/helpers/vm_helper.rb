@@ -382,7 +382,11 @@ EOF
   end
 
   def file_exist?(file)
-    execute("test -e #{file}").success?
+    execute("test -e '#{file}'").success?
+  end
+
+  def directory_exist?(directory)
+    execute("test -d '#{directory}'").success?
   end
 
   def file_content(file, user = 'root')
