@@ -161,6 +161,15 @@ class VM
   end
 
   def plug_drive(name, type)
+    removable_usb = nil
+    case type
+    when "removable usb", "usb"
+      type = "usb"
+      removable_usb = "on"
+    when "non-removable usb"
+      type = "usb"
+      removable_usb = "off"
+    end
     # Get the next free /dev/sdX on guest
     used_devs = []
     domain_xml = REXML::Document.new(@domain.xml_desc)
@@ -180,9 +189,7 @@ class VM
     xml.elements['disk/driver'].attributes['type'] = @storage.disk_format(name)
     xml.elements['disk/target'].attributes['dev'] = dev
     xml.elements['disk/target'].attributes['bus'] = type
-    if type == "usb"
-      xml.elements['disk/target'].attributes['removable'] = 'on'
-    end
+    xml.elements['disk/target'].attributes['removable'] = removable_usb if removable_usb
 
     if is_running?
       @domain.attach_device(xml.to_s)
@@ -367,7 +374,11 @@ EOF
   end
 
   def file_exist?(file)
-    execute("test -e #{file}").success?
+    execute("test -e '#{file}'").success?
+  end
+
+  def directory_exist?(directory)
+    execute("test -d '#{directory}'").success?
   end
 
   def file_content(file, user = 'root')

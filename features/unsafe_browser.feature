@@ -26,6 +26,62 @@ Feature: Browsing the web using the Unsafe Browser
     And the Unsafe Browser has no proxy configured
     And the Unsafe Browser uses all expected TBB shared libraries
 
+  Scenario: Starting the Unsafe Browser works in Arabic
+    When I start the Unsafe Browser in the "ar_EG" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in Brazilian Portuguese
+    When I start the Unsafe Browser in the "pt_BR" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in Chinese
+    When I start the Unsafe Browser in the "zh_CN" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in Dutch
+    When I start the Unsafe Browser in the "nl_NL" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in Farsi
+    When I start the Unsafe Browser in the "fa_IR" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in French
+    When I start the Unsafe Browser in the "fr_FR" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in German
+    When I start the Unsafe Browser in the "de_DE" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in Italian
+    When I start the Unsafe Browser in the "it_IT" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in Korean
+    When I start the Unsafe Browser in the "kr_KR" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in Polish
+    When I start the Unsafe Browser in the "pl_PL" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in Portuguese
+    When I start the Unsafe Browser in the "pt_PT" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in Russian
+    When I start the Unsafe Browser in the "ru_RU" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in Turkish
+    When I start the Unsafe Browser in the "tr_TR" locale
+    Then the Unsafe Browser has started
+
+  Scenario: Starting the Unsafe Browser works in Vietnamese
+    When I start the Unsafe Browser in the "vi_VN" locale
+    Then the Unsafe Browser has started
+
   Scenario: Closing the Unsafe Browser shows a stop notification and properly tears down the chroot.
     When I successfully start the Unsafe Browser
     And I close the Unsafe Browser

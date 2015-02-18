@@ -21,6 +21,12 @@ Feature: Chatting anonymously using Pidgin
     And I close Pidgin's account manager window
     Then Pidgin successfully connects to the "irc.oftc.net" account
     And I can join the "#tails" channel on "irc.oftc.net"
+    When I type "/topic"
+    And I press the "ENTER" key
+    Then I see the Tails roadmap URL
+    When I click on the Tails roadmap URL
+    Then the Tor Browser has started and loaded the Tails roadmap
+    And all Internet traffic has only flowed through Tor
 
   Scenario: Adding a certificate to Pidgin
     And I start Pidgin through the GNOME menu

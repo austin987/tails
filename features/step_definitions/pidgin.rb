@@ -81,7 +81,7 @@ end
 
 When /^I see Pidgin's account manager window$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("PidginAccountWindow.png", 20)
+  @screen.wait("PidginAccountWindow.png", 40)
 end
 
 When /^I close Pidgin's account manager window$/ do
@@ -191,4 +191,12 @@ When /^I close Pidgin's certificate import failure dialog$/ do
   @screen.type(Sikuli::Key.ESC)
   # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
   @screen.waitVanish('PidginCertificateImportFailed.png', 10)
+end
+
+When /^I see the Tails roadmap URL$/ do
+  @screen.wait('PidginTailsRoadmapUrl.png', 10)
+end
+
+When /^I click on the Tails roadmap URL$/ do
+  @screen.click('PidginTailsRoadmapUrl.png')
 end
