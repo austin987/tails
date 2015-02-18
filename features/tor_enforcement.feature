@@ -2,6 +2,8 @@
 Feature: The Tor enforcement is effective
   As a Tails user
   I want all direct Internet connections I do by mistake or applications do by misconfiguration or buggy leaks to be blocked
+  And as a Tails developer
+  I want to ensure that the automated test suite detects firewall leaks reliably
 
   Background:
     Given a computer
@@ -13,6 +15,31 @@ Feature: The Tor enforcement is effective
     And the firewall is configured to only allow the clearnet and debian-tor users to connect directly to the Internet over IPv4
     And the firewall's NAT rules only redirect traffic for Tor's TransPort and DNSPort
     And the firewall is configured to block all IPv6 traffic
+
+  Scenario: Anti test: Detecting IPv4 TCP leaks from the Unsafe Browser with the firewall leak detector
+    Given I capture all network traffic
+    When I successfully start the Unsafe Browser
+    And I open the address "https://check.torproject.org" in the Unsafe Browser
+    And I see "UnsafeBrowserTorCheckFail.png" after at most 60 seconds
+    Then the firewall leak detector has detected IPv4 TCP leaks
+
+  Scenario: Anti test: Detecting IPv4 TCP leaks of TCP DNS lookups with the firewall leak detector
+    Given I capture all network traffic
+    And I disable Tails' firewall
+    When I do a TCP DNS lookup of "torproject.org"
+    Then the firewall leak detector has detected IPv4 TCP leaks
+
+  Scenario: Anti test: Detecting IPv4 non-TCP leaks (UDP) of UDP DNS lookups with the firewall leak detector
+    Given I capture all network traffic
+    And I disable Tails' firewall
+    When I do a UDP DNS lookup of "torproject.org"
+    Then the firewall leak detector has detected IPv4 non-TCP leaks
+
+  Scenario: Anti test: Detecting IPv4 non-TCP (ICMP) leaks of ping with the firewall leak detector
+    Given I capture all network traffic
+    And I disable Tails' firewall
+    When I send some ICMP pings
+    Then the firewall leak detector has detected IPv4 non-TCP leaks
 
   @check_tor_leaks
   Scenario: The Tor enforcement is effective at blocking untorified TCP connection attempts
