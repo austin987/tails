@@ -36,10 +36,9 @@ end
 class FirewallLeakCheck
   attr_reader :ipv4_tcp_leaks, :ipv4_nontcp_leaks, :ipv6_leaks, :nonip_leaks
 
-  def initialize(pcap_file, tor_relays)
+  def initialize(pcap_file, hosts)
     @pcap_file = pcap_file
     packets = PacketFu::PcapFile.new.file_to_array(:filename => @pcap_file)
-    @tor_relays = tor_relays
     ipv4_tcp_packets = []
     ipv4_nontcp_packets = []
     ipv6_packets = []
@@ -59,8 +58,8 @@ class FirewallLeakCheck
       end
     end
     ipv4_tcp_hosts = get_public_hosts_from_ippackets ipv4_tcp_packets
-    tor_nodes = Set.new(get_all_tor_contacts)
-    @ipv4_tcp_leaks = ipv4_tcp_hosts.select{|host| !tor_nodes.member?(host)}
+    accepted = Set.new(hosts)
+    @ipv4_tcp_leaks = ipv4_tcp_hosts.select { |host| !accepted.member?(host) }
     @ipv4_nontcp_leaks = get_public_hosts_from_ippackets ipv4_nontcp_packets
     @ipv6_leaks = get_public_hosts_from_ippackets ipv6_packets
     @nonip_leaks = nonip_packets
@@ -92,12 +91,6 @@ class FirewallLeakCheck
       end
     end
     hosts.uniq
-  end
-
-  # Returns an array of all Tor relays and authorities, i.e. all
-  # Internet hosts Tails ever should contact.
-  def get_all_tor_contacts
-    @tor_relays + TOR_AUTHORITIES
   end
 
   def empty?

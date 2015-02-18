@@ -416,7 +416,7 @@ end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
   next if @skip_steps_while_restoring_background
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_tor_relays)
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_all_tor_nodes)
   leaks.assert_no_leaks
 end
 

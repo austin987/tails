@@ -334,8 +334,5 @@ When /^all Internet traffic has only flowed through the (\w+) bridges$/ do |brid
     bridge_hosts << ipaddr
   end
   leaks = FirewallLeakCheck.new(@sniffer.pcap_file, bridge_hosts)
-  if !leaks.empty?
-    leaks.save_pcap_file
-    raise "We connected to some non-bridge host!"
-  end
+  leaks.assert_no_leaks
 end

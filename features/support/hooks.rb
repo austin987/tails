@@ -139,7 +139,8 @@ end
 After('@product', '@check_tor_leaks') do |scenario|
   @tor_leaks_sniffer.stop
   if (scenario.status == :passed)
-    leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file, get_tor_relays)
+    leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file,
+                                  get_all_tor_nodes)
     leaks.assert_no_leaks
   end
   @tor_leaks_sniffer.clear

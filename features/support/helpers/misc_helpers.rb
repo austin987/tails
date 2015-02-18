@@ -91,8 +91,8 @@ def cmd_helper(cmd)
 end
 
 # This command will grab all router IP addresses from the Tor
-# consensus in the VM.
-def get_tor_relays
+# consensus in the VM + the hardcoded TOR_AUTHORITIES.
+def get_all_tor_nodes
   cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
-  @vm.execute(cmd).stdout.chomp.split("\n")
+  @vm.execute(cmd).stdout.chomp.split("\n") + TOR_AUTHORITIES
 end
