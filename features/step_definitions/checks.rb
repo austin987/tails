@@ -95,6 +95,31 @@ When /^Tails has booted a 64-bit kernel$/ do
          "Tails has not booted a 64-bit kernel.")
 end
 
+Then /^GNOME Screenshot is configured to save files to the live user's home directory$/ do
+  next if @skip_steps_while_restoring_background
+  home = "/home/#{$live_user}"
+  save_path = @vm.execute_successfully(
+    "gsettings get org.gnome.gnome-screenshot auto-save-directory",
+    $live_user).stdout.chomp.tr("'","")
+  assert_equal("file://#{home}", save_path,
+               "The GNOME screenshot auto-save-directory is not set correctly.")
+end
+
+Then /^there is no screenshot in the live user's home directory$/ do
+  next if @skip_steps_while_restoring_background
+  home = "/home/#{$live_user}"
+  assert(@vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?,
+         "Existing screenshots were found in the live user's home directory.")
+end
+
+Then /^a screenshot is saved to the live user's home directory$/ do
+  next if @skip_steps_while_restoring_background
+  home = "/home/#{$live_user}"
+  try_for(3, :msg=> "No screenshot was created in #{home}") {
+    !@vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
+  }
+end
+
 Then /^the VirtualBox guest modules are available$/ do
   next if @skip_steps_while_restoring_background
   assert(@vm.execute("modinfo vboxguest").success?,
