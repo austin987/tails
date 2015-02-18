@@ -160,8 +160,9 @@ tracked by tickets prefixed with `todo/test_suite:`.
   1. Configure a few bridges in Tor Launcher:
      
          	bridge 198.252.153.59:9001
-         	obfs2 198.252.153.59:16492
+        	obfs2 198.252.153.59:16492
         	obfs3 198.252.153.59:16493
+        	obfs4 198.252.153.59:16495 962B3D8917F442802E43AF31E8D6F7375403ED9B cert=aPO5lTNAVQlB6JdK6b7NBGuUhcvhnXxbZibX2lEceeC3ZBbbXLneeC0+RFXbIw07D4LYDA iat-mode=0
      
   1. Use the Internet.
   1. Check that the only outgoing direct network connections go to the
@@ -304,24 +305,6 @@ the appropriate tcpdump or tshark filters.
 
       torsocks /usr/bin/gobby-0.5
 
-# Use of untrusted partitions
-
-(automate: [[!tails_ticket 7822]])
-
-* Is any local hard-disk swap partition used as swap?
-  boot on a (possibly virtual) machine that has a cleartext swap
-  partition not managed by LVM. To verify that a local GTP partition is swap,
-  check its type code with `sgdisk -p`, Linux swap is code 8200.
-
-  This swap partition must not be used by Tails. Run `cat /proc/swaps`.
-
-* Is a persistence volume on a local hard-disk partition used?
-  (Hint: setup a libvirt USB disk with GPT and a partition labeled
-  `TailsData`, set the `removable` flag on it, check that
-  tails-greeter proposes to enable persistence. Then remove the
-  `removable` flag, and check that tails-greeter does not propose to
-  enable persistence anymore.)
-
 # Claws
 
 * Check mail over IMAP using:
@@ -438,18 +421,6 @@ Start I2P by appending `i2p` to the kernel command line.
     * The I2P router console should still be accessible on
       <http://127.0.0.1:7657>
 
-# Git
-
-* clone a repository over `git://`
-
-  git clone git://git.tails.boum.org/htp
-
-* clone a repository over `https://`
-
-  git clone https://git-tails.immerda.ch/htp
-
-* clone a repository over SSH
-
 # SSH
 
 * Connecting over SSH to a server on the Internet should work (and
@@ -538,21 +509,6 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 * The Tor Browser should use a Internet Explorer theme
 * The Unsafe Browser has no scary red theme
 
-# Unsafe Web Browser
-
-(automate: [[!tails_ticket 7823]])
-
-* On start, if no DNS server was configured in NetworkManager
-  (e.g. if there's no network connection), there must be an error.
-* Once started, check that:
-  - the Tor Browser instance runs as the `clearnet` user.
-  - it has no proxy configured.
-  - no extensions are installed.
-  - there are no bookmarks except the default Firefox ones.
-* On exit, check that:
-  - make sure that its chroot gets properly teared down on exit (there
-    should be nothing mounted inside `/var/lib/unsafe-browser`).
-
 # Real (non-VM) hardware
 
 `[can't-automate]`
@@ -566,6 +522,10 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 
 # Documentation
 
+* The "Tails documentation" desktop launcher should open the
+  [[getting started]] page (automate: [[!tails_ticket 8788]]):
+  - in one language to which the website is translated
+  - in one language to which the website is not translated (=> English)
 * Browse around in the documentation shipped in the image. Internal
   links should be fine.
 
@@ -607,9 +567,6 @@ language. You *really* have to reboot between each language.
   start without errors), and that `/var/log/syslog` seems OK.
 * MAT should be able to clean a PDF file, such as:
   <http://examples.itextpdf.com/results/part3/chapter12/pdf_metadata.pdf>
-* The Tails signing key shipped should be up-to-date (that is, neither it nor
-  one its subkeys must have expired, or be about to expire any time soon).
-  - `gpg --list-keys --with-colons 1202821CBE2CD9C1`
 * The "Report an error" desktop launcher should open the [[support]]
   page, both in English and in one language to which the website is
   translated (automate: [[!tails_ticket 6904]]).

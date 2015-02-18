@@ -112,6 +112,10 @@ def sikuli_script_proxy.new(*args)
     self.doubleClick(self.wait(pic, time))
   end
 
+  def s.wait_and_right_click(pic, time)
+    self.rightClick(self.wait(pic, time))
+  end
+
   def s.wait_and_hover(pic, time)
     self.hover(self.wait(pic, time))
   end
