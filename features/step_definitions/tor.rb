@@ -211,7 +211,7 @@ Then /^the untorified connection is logged as dropped by the firewall$/ do
          "dropped by the firewall")
 end
 
-When /^the system DNS is( still)? using the local DNS resolver$/ do |_|
+When /^the system DNS is(?: still)? using the local DNS resolver$/ do
   next if @skip_steps_while_restoring_background
   resolvconf = @vm.file_content("/etc/resolv.conf")
   bad_lines = resolvconf.split("\n").find_all do |line|
