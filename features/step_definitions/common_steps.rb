@@ -836,9 +836,9 @@ Then /^the (amnesiac|persistent) Tor Browser directory (exists|does not exist)$/
   next if @skip_steps_while_restoring_background
   case persistent_or_not
   when "amnesiac"
-    dir = '/home/amnesia/Tor Browser'
+    dir = "/home/#{LIVE_USER}/Tor Browser"
   when "persistent"
-    dir = '/home/amnesia/Persistent/Tor Browser'
+    dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
   end
   step "the directory \"#{dir}\" #{mode}"
 end
@@ -900,7 +900,7 @@ When /^I can save the current page as "([^"]+[.]html)" to the (default downloads
   next if @skip_steps_while_restoring_background
   @screen.type("s", Sikuli::KeyModifier.CTRL)
   if output_dir == "persistent Tor Browser"
-    output_dir = "/home/amnesia/Persistent/Tor Browser"
+    output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
     @screen.wait_and_click("GtkTorBrowserPersistentBookmark.png", 10)
     @screen.wait("GtkTorBrowserPersistentBookmarkSelected.png", 10)
     # The output filename (without its extension) is already selected,
@@ -908,7 +908,7 @@ When /^I can save the current page as "([^"]+[.]html)" to the (default downloads
     @screen.type("n", Sikuli::KeyModifier.ALT)
     @screen.wait("TorBrowserSaveOutputFileSelected.png", 10)
   else
-    output_dir = "/home/amnesia/Tor Browser"
+    output_dir = "/home/#{LIVE_USER}/Tor Browser"
   end
   # Only the part of the filename before the .html extension can be easily replaced
   # so we have to remove it before typing it into the arget filename entry widget.
@@ -922,14 +922,14 @@ end
 When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads|persistent Tor Browser) directory$/ do |output_file, output_dir|
   next if @skip_steps_while_restoring_background
   if output_dir == "persistent Tor Browser"
-    output_dir = "/home/amnesia/Persistent/Tor Browser"
+    output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
   else
-    output_dir = "/home/amnesia/Tor Browser"
+    output_dir = "/home/#{LIVE_USER}/Tor Browser"
   end
   @screen.type("p", Sikuli::KeyModifier.CTRL)
   @screen.wait("TorBrowserPrintDialog.png", 10)
   @screen.wait_and_click("PrintToFile.png", 10)
-  # Tor Browser is not allowed to read /home/amnesia, and I found no way
+  # Tor Browser is not allowed to read /home/#{LIVE_USER}, and I found no way
   # to change the default destination directory for "Print to File",
   # so let's click through the warning
   @screen.wait("TorBrowserCouldNotReadTheContentsOfWarning.png", 10)
