@@ -171,8 +171,9 @@ end
 When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+))? that is expected to fail$/ do |proto, host, port|
   next if @skip_steps_while_restoring_background
   assert(!firewall_has_dropped_packet_to?(proto, host, port),
-         "A #{proto} packet to #{host}:#{port} has already been dropped by " \
-         "the firewall")
+         "A #{proto} packet to #{host}" +
+         (port.nil? ? "" : ":#{port}") +
+         " has already been dropped by the firewall")
   @conn_proto = proto
   @conn_host = host
   @conn_port = port
@@ -207,8 +208,9 @@ end
 Then /^the untorified connection is logged as dropped by the firewall$/ do
   next if @skip_steps_while_restoring_background
   assert(firewall_has_dropped_packet_to?(@conn_proto, @conn_host, @conn_port),
-         "No #{@conn_proto} packet to #{@conn_host}:#{@conn_port} was " \
-         "dropped by the firewall")
+         "No #{@conn_proto} packet to #{@conn_host}" +
+         (@conn_port.nil? ? "" : ":#{@conn_port}") +
+         " was dropped by the firewall")
 end
 
 When /^the system DNS is(?: still)? using the local DNS resolver$/ do
