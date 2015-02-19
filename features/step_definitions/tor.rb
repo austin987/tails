@@ -305,6 +305,11 @@ Tor:
 EOF
 )
   end
+  @bridge_hosts = []
+  for bridge in @bridges do
+    @bridge_hosts << bridge["ipv4_address"]
+  end
+
   @screen.wait_and_click('TorLauncherConfigureButton.png', 10)
   @screen.wait_and_click('TorLauncherNextButton.png', 10)
   @screen.hide_cursor
@@ -328,12 +333,8 @@ end
 
 When /^all Internet traffic has only flowed through the configured pluggable transports$/ do
   next if @skip_steps_while_restoring_background
-  assert_not_nil(@bridges, "No bridges has been configured via the " +
+  assert_not_nil(@bridge_hosts, "No bridges has been configured via the " +
                  "'I configure some ... bridges in Tor Launcher' step")
-  bridge_hosts = []
-  for bridge in @bridges do
-    bridge_hosts << bridge["ipv4_address"]
-  end
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, bridge_hosts)
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, @bridge_hosts)
   leaks.assert_no_leaks
 end
