@@ -14,7 +14,9 @@ if File.exists?(LOCAL_CONFIG_FILE)
   $config.merge!(YAML.load(File.read(LOCAL_CONFIG_FILE)))
 end
 # Options passed to the `run_test_suite` script will always take
-# precedence.
+# precedence. The way we import these keys is only safe for values
+# with types boolean or string. If we need more, we'll have to invoke
+# YAML's type autodetection on ENV some how.
 $config.merge!(ENV)
 
 # Dynamic constants initialized through the environment or similar,
