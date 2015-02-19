@@ -30,7 +30,7 @@ class VM
     default_net_xml = File.read("#{@xml_path}/default_net.xml")
     update_net(default_net_xml)
     @display = Display.new(@domain_name, x_display)
-    set_cdrom_boot($tails_iso)
+    set_cdrom_boot(TAILS_ISO)
     plug_network
     # unlike the domain and net the storage pool should survive VM
     # teardown (so a new instance can use e.g. a previously created

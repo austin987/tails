@@ -18,7 +18,7 @@ class Sniffer
     @name = name
     @bridge_name = bridge_name
     @bridge_mac = File.open("/sys/class/net/#{@bridge_name}/address", "rb").read.chomp
-    @pcap_file = "#{$tmp_dir}/#{name}.pcap"
+    @pcap_file = "#{$config["TMP_DIR"]}/#{name}.pcap"
   end
 
   def capture(filter="not ether src host #{@bridge_mac} and not ether proto \\arp and not ether proto \\rarp")

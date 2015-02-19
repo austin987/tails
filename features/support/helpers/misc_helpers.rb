@@ -88,25 +88,6 @@ def cmd_helper(cmd)
   end
 end
 
-def tails_iso_creation_date(path)
-  label = cmd_helper("/sbin/blkid -p -s LABEL -o value #{path}")
-  assert(label[/^TAILS \d+(\.\d+)+(~rc\d+)? - \d+$/],
-         "Got invalid label '#{label}' from Tails image '#{path}'")
-  return label[/\d+$/]
-end
-
-def sort_isos_by_creation_date
-  Dir.glob("#{Dir.pwd}/*.iso").sort_by {|f| tails_iso_creation_date(f)}
-end
-
-def get_newest_iso
-  return sort_isos_by_creation_date.last
-end
-
-def get_oldest_iso
-  return sort_isos_by_creation_date.first
-end
-
 # This command will grab all router IP addresses from the Tor
 # consensus in the VM.
 def get_tor_relays
@@ -115,7 +96,7 @@ def get_tor_relays
 end
 
 def save_pcap_file
-    pcap_copy = "#{$tmp_dir}/pcap_with_leaks-#{DateTime.now}"
+    pcap_copy = "#{$config["TMP_DIR"]}/pcap_with_leaks-#{DateTime.now}"
     FileUtils.cp(@sniffer.pcap_file, pcap_copy)
     puts "Full network capture available at: #{pcap_copy}"
 end
