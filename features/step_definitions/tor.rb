@@ -335,13 +335,7 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
   rescue NoMethodError, AssertionFailedError
     raise(
 <<EOF
-It seems no #{bridge_type} pluggable transports are defined in your local configuration file (#{LOCAL_CONFIG_FILE}). Example entry:
-Tor:
-  Transports:
-    #{bridge_type}:
-      - ipv4_address: 1.2.3.4
-        ipv4_port: 443
-        fingerprint: 01234567890abcdef01234567890abcdef012345
+It seems no '#{bridge_type}' pluggable transports are defined in your local configuration file (#{LOCAL_CONFIG_FILE}). See wiki/src/contribute/release_process/test/usage.mdwn for the format.
 EOF
 )
   end
