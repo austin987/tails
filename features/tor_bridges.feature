@@ -22,4 +22,4 @@ Feature: Using Tails with Tor bridges
     And I configure some obfs3 bridges in Tor Launcher
     Then Tor is ready
     And available upgrades have been checked
-    And all Internet traffic has only flowed through the obfs3 bridges
+    And all Internet traffic has only flowed through the configured bridges

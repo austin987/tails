@@ -288,9 +288,9 @@ When /^I configure some (\w+) bridges in Tor Launcher$/ do |bridge_type|
   next if @skip_steps_while_restoring_background
   bridge_type.capitalize!
   begin
-    bridges = $config["Tor"]["Transports"][bridge_type]
-    assert_not_nil(bridges)
-    assert(!bridges.empty?)
+    @bridges = $config["Tor"]["Transports"][bridge_type]
+    assert_not_nil(@bridges)
+    assert(!@bridges.empty?)
   rescue NoMethodError, AssertionFailedError
     raise(
 <<EOF
@@ -312,7 +312,7 @@ EOF
   @screen.wait_and_click('TorLauncherYesRadioOption.png', 10)
   @screen.wait_and_click('TorLauncherNextButton.png', 10)
   @screen.wait_and_click('TorLauncherBridgeList.png', 10)
-  for bridge in bridges do
+  for bridge in @bridges do
     bridge_line = bridge_type.downcase   + " " +
                   bridge["ipv4_address"] + ":" +
                   bridge["ipv4_port"].to_s
@@ -324,14 +324,13 @@ EOF
   @screen.waitVanish('TorLauncherConnectingWindow.png', 120)
 end
 
-When /^all Internet traffic has only flowed through the (\w+) bridges$/ do |bridge_type|
+When /^all Internet traffic has only flowed through the configured bridges$/ do
   next if @skip_steps_while_restoring_background
+  assert_not_nil(@bridges, "No bridges has been configured via the " +
+                 "'I configure some ... bridges in Tor Launcher' step")
   bridge_hosts = []
-  for bridge in test_bridges(bridge_type) do
-    type, ipaddr_and_port, _ = bridge.split
-    assert_equal(bridge_type, type)
-    ipaddr, _ = ipaddr_and_port.split(":")
-    bridge_hosts << ipaddr
+  for bridge in @bridges do
+    bridge_hosts << bridge["ipv4_address"]
   end
   leaks = FirewallLeakCheck.new(@sniffer.pcap_file, bridge_hosts)
   leaks.assert_no_leaks
