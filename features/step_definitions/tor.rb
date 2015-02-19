@@ -286,6 +286,7 @@ end
 
 When /^I configure some (\w+) bridges in Tor Launcher$/ do |bridge_type|
   next if @skip_steps_while_restoring_background
+  bridge_type.downcase!
   bridge_type.capitalize!
   begin
     @bridges = $config["Tor"]["Transports"][bridge_type]
