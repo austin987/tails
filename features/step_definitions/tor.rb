@@ -318,6 +318,7 @@ EOF
                   bridge["ipv4_address"] + ":" +
                   bridge["ipv4_port"].to_s
     bridge_line += " " + bridge["fingerprint"].to_s if bridge["fingerprint"]
+    bridge_line += " " + bridge["extra"].to_s if bridge["extra"]
     @screen.type(bridge_line + Sikuli::Key.ENTER)
   end
   @screen.wait_and_click('TorLauncherFinishButton.png', 10)
