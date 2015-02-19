@@ -110,8 +110,10 @@ class FirewallLeakCheck
     if !@nonip_leaks.empty?
       err += "Some non-IP packets were sent\n"
     end
-    save_pcap_file
-    raise err if !err.empty?
+    if !err.empty?
+      save_pcap_file
+      raise err
+    end
   end
 
 end
