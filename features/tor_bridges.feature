@@ -15,6 +15,15 @@ Feature: Using Tails with Tor pluggable transports
     And GNOME has started
     And I save the state so the background can be restored next scenario
 
+  Scenario: Using bridges
+    Given I capture all network traffic
+    When the network is plugged
+    And the Tor Launcher autostarts
+    And I configure some Bridge pluggable transports in Tor Launcher
+    Then Tor is ready
+    And available upgrades have been checked
+    And all Internet traffic has only flowed through the configured pluggable transports
+
   Scenario: Using obfs3 pluggable transports
     Given I capture all network traffic
     When the network is plugged
