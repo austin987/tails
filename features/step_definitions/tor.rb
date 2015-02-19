@@ -284,7 +284,7 @@ When /^the Tor Launcher autostarts$/ do
   @screen.wait('TorLauncherWindow.png', 30)
 end
 
-When /^I configure some (\w+) bridges in Tor Launcher$/ do |bridge_type|
+When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
   next if @skip_steps_while_restoring_background
   bridge_type.downcase!
   bridge_type.capitalize!
@@ -295,7 +295,7 @@ When /^I configure some (\w+) bridges in Tor Launcher$/ do |bridge_type|
   rescue NoMethodError, AssertionFailedError
     raise(
 <<EOF
-It seems no #{bridge_type} bridges are defined in your local configuration file (#{LOCAL_CONFIG_FILE}). Example entry:
+It seems no #{bridge_type} pluggable transports are defined in your local configuration file (#{LOCAL_CONFIG_FILE}). Example entry:
 Tor:
   Transports:
     #{bridge_type}:
@@ -325,7 +325,7 @@ EOF
   @screen.waitVanish('TorLauncherConnectingWindow.png', 120)
 end
 
-When /^all Internet traffic has only flowed through the configured bridges$/ do
+When /^all Internet traffic has only flowed through the configured pluggable transports$/ do
   next if @skip_steps_while_restoring_background
   assert_not_nil(@bridges, "No bridges has been configured via the " +
                  "'I configure some ... bridges in Tor Launcher' step")
