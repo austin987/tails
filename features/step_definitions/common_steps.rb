@@ -58,6 +58,8 @@ def restore_background
       wait_until_tor_is_working
       @vm.spawn("/usr/local/sbin/restart-vidalia")
     end
+  else
+    @vm.host_to_guest_time_sync
   end
 end
 
