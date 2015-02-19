@@ -822,9 +822,9 @@ Then /^the (amnesiac|persistent) Tor Browser directory (exists|does not exist)$/
   next if @skip_steps_while_restoring_background
   case persistent_or_not
   when "amnesiac"
-    dir = '/home/#{LIVE_USER}/Tor Browser'
+    dir = "/home/#{LIVE_USER}/Tor Browser"
   when "persistent"
-    dir = '/home/#{LIVE_USER}/Persistent/Tor Browser'
+    dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
   end
   step "the directory \"#{dir}\" #{mode}"
 end

@@ -14,7 +14,9 @@ if File.exists?(LOCAL_CONFIG_FILE)
   $config.merge!(YAML.load(File.read(LOCAL_CONFIG_FILE)))
 end
 # Options passed to the `run_test_suite` script will always take
-# precedence.
+# precedence. The way we import these keys is only safe for values
+# with types boolean or string. If we need more, we'll have to invoke
+# YAML's type autodetection on ENV some how.
 $config.merge!(ENV)
 
 # Dynamic constants initialized through the environment or similar,
@@ -24,8 +26,8 @@ DISPLAY = ENV['DISPLAY']
 GIT_DIR = ENV['PWD']
 KEEP_SNAPSHOTS = !ENV['KEEP_SNAPSHOTS'].nil?
 LIVE_USER = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
-OLD_TAILS_ISO = ENV['OLD_TAILS_ISO'] || raise("No old ISO set with --old-iso")
-TAILS_ISO = ENV['TAILS_ISO'] || raise("No ISO set with --iso")
+OLD_TAILS_ISO = ENV['OLD_TAILS_ISO']
+TAILS_ISO = ENV['TAILS_ISO']
 TIME_AT_START = Time.now
 
 # Constants that are statically initialized.

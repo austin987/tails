@@ -205,7 +205,7 @@ def tails_is_installed_helper(name, tails_root, loader)
 
   c = @vm.execute("diff -qr '#{tails_root}/live' '#{target_root}/live'")
   assert(c.success?,
-         "USB drive '#{name}' has differences in /live:\n#{c.stdout}")
+         "USB drive '#{name}' has differences in /live:\n#{c.stdout}\n#{c.stderr}")
 
   syslinux_files = @vm.execute("ls -1 #{target_root}/syslinux").stdout.chomp.split
   # We deal with these files separately
