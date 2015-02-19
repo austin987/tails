@@ -13,7 +13,7 @@ When /^I set the system time to "([^"]+)"$/ do |time|
   expected_time_lower_bound = DateTime.parse(time).to_time
   expected_time_upper_bound = expected_time_lower_bound + max_time_drift
   assert(expected_time_lower_bound <= new_time &&
-                    new_time <= expected_time_upper_bound,
+         new_time <= expected_time_upper_bound,
          "The guest's time was supposed to be set to " \
          "'#{expected_time_lower_bound}' but is '#{new_time}'")
 end
@@ -27,7 +27,7 @@ When /^I bump the system time with "([^"]+)"$/ do |timediff|
       cmd_helper("date -d '#{old_time} #{timediff}'")).to_time
   expected_time_upper_bound = expected_time_lower_bound + max_time_drift
   assert(expected_time_lower_bound <= new_time &&
-                    new_time <= expected_time_upper_bound,
+         new_time <= expected_time_upper_bound,
          "The guest's time was supposed to be bumped to " \
          "'#{expected_time_lower_bound}' but is '#{new_time}'")
 end
