@@ -25,7 +25,7 @@ class VMStorage
     else
       VMStorage.clear_storage_pool(@pool)
     end
-    @pool_path = "#{$tmp_dir}/#{pool_name}"
+    @pool_path = "#{$config["TMP_DIR"]}/#{pool_name}"
     pool_xml.elements['pool/target/path'].text = @pool_path
     @pool = @virt.define_storage_pool_xml(pool_xml.to_s)
     @pool.build
@@ -170,7 +170,7 @@ class VMStorage
   def guestfs_disk_helper(*disks)
     assert(block_given?)
     g = Guestfs::Guestfs.new()
-    g.set_trace(1) if $debug
+    g.set_trace(1) if $config["DEBUG"]
     g.set_autosync(1)
     disks.each do |disk|
       g.add_drive_opts(disk[:path], disk[:opts])

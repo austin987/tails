@@ -42,19 +42,19 @@ end
 
 When(/^I do a TCP DNS lookup of "(.*?)"$/) do |host|
   next if @skip_steps_while_restoring_background
-  lookup = @vm.execute("host -T #{host} #{$some_dns_server}", $live_user)
+  lookup = @vm.execute("host -T #{host} #{SOME_DNS_SERVER}", LIVE_USER)
   assert(lookup.success?, "Failed to resolve #{host}:\n#{lookup.stdout}")
 end
 
 When(/^I do a UDP DNS lookup of "(.*?)"$/) do |host|
   next if @skip_steps_while_restoring_background
-  lookup = @vm.execute("host #{host} #{$some_dns_server}", $live_user)
+  lookup = @vm.execute("host #{host} #{SOME_DNS_SERVER}", LIVE_USER)
   assert(lookup.success?, "Failed to resolve #{host}:\n#{lookup.stdout}")
 end
 
 When(/^I send some ICMP pings$/) do
   next if @skip_steps_while_restoring_background
   # We ping an IP address to avoid a DNS lookup
-  ping = @vm.execute("ping -c 5 #{$some_dns_server}", $live_user)
-  assert(ping.success?, "Failed to ping #{$some_dns_server}:\n#{ping.stderr}")
+  ping = @vm.execute("ping -c 5 #{SOME_DNS_SERVER}", LIVE_USER)
+  assert(ping.success?, "Failed to ping #{SOME_DNS_SERVER}:\n#{ping.stderr}")
 end

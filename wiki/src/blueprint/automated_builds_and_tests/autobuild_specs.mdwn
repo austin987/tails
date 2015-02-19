@@ -6,6 +6,9 @@ list, and is attached to [[!tails_ticket 8655]]
 to specify how to implement [[!tails_ticket 6196]] ("Build all active
 branches").
 
+Some metrics about the number of branches merged per releases are
+available on the [[dedicated statistics page|autobuild_stats]].
+
 [[!toc levels=2]]
 
 # Question to discuss
@@ -17,10 +20,6 @@ _experimental_) + _feature/jessie_.
 
 The questions raised is mostly concern the _feature/*_ and _bugfix/*_ branches
 (so _topic branches_)
-
-Some metrics about the number of branches merged per release could give hints
-that might help to decide of selection process. See at the bottom of this
-page.
 
 Given an ISO build takes around 45 minutes on lizard (worst case),
 given two builders lizard will be able to build something like 64 ISOs a
@@ -42,9 +41,6 @@ Proposal1:
 Define the regularity we want to build topic branches, apart from being build
 on Git push.
 
-As with the first question, some metrics could help the discussion,
-at least having an average number of branches per release.
-
 Note that we will have to plug that in automatic tests when they will be
 deployed.
 
@@ -62,7 +58,7 @@ Proposal 1: Notify by email the author of the offending commit on failure.
 
 In the following scenario:
 
-0. topic branches are named branch T
+0. topic branches are named branch F
 0. base branches are named branch B
 0. builds are ran on merges which don't raise a conflict. If the merge raises a conflict, then the topic branch's developer should take care of resolving it.
 
@@ -70,8 +66,8 @@ In the following scenario:
 ## Scenario 1 : reviewer
 
     As a reviewer
-    When I'm asked to review branch T into branch B
-    Then I need to know if branch T builds fine
+    When I'm asked to review branch F into branch B
+    Then I need to know if branch F builds fine
       once merged into branch B (fresh results!)
     And I should be notified of the results
     And if the build succeeded
@@ -87,7 +83,7 @@ In the following scenario:
 ## Scenario 2 : developer
 
     As a developer who has the commit bit
-    When I'm working on branch T
+    When I'm working on branch F
     Then I need to know if my branch builds after I've pushed
     And I need to know if my branch build is broken by something else
        possibly weeks after my last commit (by e.g Debian changes,
@@ -96,7 +92,7 @@ In the following scenario:
       I might want to download the resulting ISO
       I might want to get the pkg list
       I want the Redmine ticket to be notified (optional)
-    Otherwise if it fails I _need_ to see the build logs
+    Otherwise if it fails I *need* to see the build logs
       And the developer who proposed the merge should be notified
       And the ticket should be reassigned to the branch submitter
       And QA check should be set to "Dev needed"
@@ -115,7 +111,7 @@ In the following scenario:
 This list other scenarios not part of the first deployement iteration, but we
 might want to consider it in the future.
 
-## Scenario 1
+## Scenario 10
 
     As a Tails developer working on branch B
     When I upload a package to APT suite B
@@ -125,7 +121,7 @@ might want to consider it in the future.
 (acceptable workaround: being able to manually trigger a build.)
 
 
-## Scenario 2
+## Scenario 11
 
     As the current RM
     When I push new tag T on branch B
@@ -136,14 +132,14 @@ might want to consider it in the future.
     And I want the squashfs sort file to be generated, and the diff sent to me
 
 
-## Scenario 3
+## Scenario 12
 
     As a Tails developer
     When the test suite is ran on the ISO build from my last commit
     I want to watch TV and see the test video in HTML5 from Tor Browser
 
 
-## Scenario 4
+## Scenario 13
 
     As a Tails developer
     When an ISO is build from my last commit

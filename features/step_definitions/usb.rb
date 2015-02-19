@@ -60,7 +60,7 @@ end
 
 Given /^the computer is set to boot from the old Tails DVD$/ do
   next if @skip_steps_while_restoring_background
-  @vm.set_cdrom_boot($old_tails_iso)
+  @vm.set_cdrom_boot(OLD_TAILS_ISO)
 end
 
 Given /^the computer is set to boot in UEFI mode$/ do
@@ -138,7 +138,7 @@ end
 
 Given /^I setup a filesystem share containing the Tails ISO$/ do
   next if @skip_steps_while_restoring_background
-  @vm.add_share(File.dirname($tails_iso), shared_iso_dir_on_guest)
+  @vm.add_share(File.dirname(TAILS_ISO), shared_iso_dir_on_guest)
 end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
@@ -150,7 +150,7 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   @screen.click(match.getCenter.offset(0, match.h*2))
   @screen.wait('USBSelectISO.png', 10)
   @screen.wait_and_click('GnomeFileDiagTypeFilename.png', 10)
-  iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"
+  iso = "#{shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   @screen.type(iso + Sikuli::Key.ENTER)
   usb_install_helper(name)
 end
@@ -205,7 +205,7 @@ def tails_is_installed_helper(name, tails_root, loader)
 
   c = @vm.execute("diff -qr '#{tails_root}/live' '#{target_root}/live'")
   assert(c.success?,
-         "USB drive '#{name}' has differences in /live:\n#{c.stdout}")
+         "USB drive '#{name}' has differences in /live:\n#{c.stdout}\n#{c.stderr}")
 
   syslinux_files = @vm.execute("ls -1 #{target_root}/syslinux").stdout.chomp.split
   # We deal with these files separately
@@ -235,7 +235,7 @@ end
 
 Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
   next if @skip_steps_while_restoring_background
-  iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"
+  iso = "#{shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   iso_root = "/mnt/iso"
   @vm.execute("mkdir -p #{iso_root}")
   @vm.execute("mount -o loop #{iso} #{iso_root}")
@@ -454,9 +454,9 @@ Then /^all persistent directories(| from the old Tails version) have safe access
       assert_vmcommand_success @vm.execute("test -d #{full_src}")
       dir_perms = @vm.execute_successfully("stat -c %a '#{full_src}'").stdout.chomp
       dir_owner = @vm.execute_successfully("stat -c %U '#{full_src}'").stdout.chomp
-      if dest.start_with?("/home/#{$live_user}")
+      if dest.start_with?("/home/#{LIVE_USER}")
         expected_perms = "700"
-        expected_owner = $live_user
+        expected_owner = LIVE_USER
       else
         expected_perms = "755"
         expected_owner = "root"

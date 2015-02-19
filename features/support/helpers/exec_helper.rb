@@ -34,14 +34,14 @@ class VMCommand
     options[:spawn] ||= false
     type = options[:spawn] ? "spawn" : "call"
     socket = TCPSocket.new("127.0.0.1", vm.get_remote_shell_port)
-    STDERR.puts "#{type}ing as #{options[:user]}: #{cmd}" if $debug
+    STDERR.puts "#{type}ing as #{options[:user]}: #{cmd}" if $config["DEBUG"]
     begin
       socket.puts(JSON.dump([type, options[:user], cmd]))
       s = socket.readline(sep = "\0").chomp("\0")
     ensure
       socket.close
     end
-    STDERR.puts "#{type} returned: #{s}" if $debug
+    STDERR.puts "#{type} returned: #{s}" if $config["DEBUG"]
     begin
       return JSON.load(s)
     rescue JSON::ParserError

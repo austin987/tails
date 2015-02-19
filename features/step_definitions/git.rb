@@ -1,18 +1,20 @@
 Then /^the Git repository "([\S]+)" has been cloned successfully$/ do |repo|
   next if @skip_steps_while_restoring_background
-  assert(@vm.directory_exist?("/home/#{$live_user}/#{repo}/.git"))
-  assert(@vm.file_exist?("/home/#{$live_user}/#{repo}/.git/config"))
-  @vm.execute_successfully("cd '/home/#{$live_user}/#{repo}/' && git status", $live_user)
+  assert(@vm.directory_exist?("/home/#{LIVE_USER}/#{repo}/.git"))
+  assert(@vm.file_exist?("/home/#{LIVE_USER}/#{repo}/.git/config"))
+  @vm.execute_successfully("cd '/home/#{LIVE_USER}/#{repo}/' && git status", LIVE_USER)
 end
 
 Given /^I have the SSH key pair for a Git repository$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute_successfully("install -m 0700 -d '/home/#{$live_user}/.ssh/'", $live_user)
-  assert(!$tails_test_secret_ssh_key.nil? && $tails_test_secret_ssh_key.length > 0)
-  assert(!$tails_test_public_ssh_key.nil? && $tails_test_public_ssh_key.length > 0)
-  @vm.execute_successfully("echo '#{$tails_test_secret_ssh_key}' > '/home/#{$live_user}/.ssh/id_rsa'", $live_user)
-  @vm.execute_successfully("echo '#{$tails_test_public_ssh_key}' > '/home/#{$live_user}/.ssh/id_rsa.pub'", $live_user)
-  @vm.execute_successfully("chmod 0600 '/home/#{$live_user}/.ssh/'id*", $live_user)
+  @vm.execute_successfully("install -m 0700 -d '/home/#{LIVE_USER}/.ssh/'", LIVE_USER)
+  secret_ssh_key = $config["Unsafe_SSH_private_key"]
+  public_ssh_key = $config["Unsafe_SSH_public_key"]
+  assert(!secret_ssh_key.nil? && secret_ssh_key.length > 0)
+  assert(!public_ssh_key.nil? && public_ssh_key.length > 0)
+  @vm.execute_successfully("echo '#{secret_ssh_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa'", LIVE_USER)
+  @vm.execute_successfully("echo '#{public_ssh_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa.pub'", LIVE_USER)
+  @vm.execute_successfully("chmod 0600 '/home/#{LIVE_USER}/.ssh/'id*", LIVE_USER)
 end
 
 Given /^I verify the SSH fingerprint for the Git repository$/ do

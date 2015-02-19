@@ -56,7 +56,7 @@ class VM
     default_domain_xml = File.read("#{@xml_path}/default.xml")
     update(default_domain_xml)
     @display = Display.new(@domain_name, x_display)
-    set_cdrom_boot($tails_iso)
+    set_cdrom_boot(TAILS_ISO)
     plug_network
   rescue Exception => e
     destroy_and_undefine

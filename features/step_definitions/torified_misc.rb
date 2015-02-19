@@ -2,7 +2,7 @@ When /^I query the whois directory service for "([^"]+)"$/ do |domain|
   next if @skip_steps_while_restoring_background
   @vm_execute_res = @vm.execute(
     "whois '#{domain}'",
-    $live_user)
+    LIVE_USER)
 end
 
 When /^I wget "([^"]+)" to stdout(?:| with the '([^']+)' options)$/ do |url, options|
@@ -11,7 +11,7 @@ When /^I wget "([^"]+)" to stdout(?:| with the '([^']+)' options)$/ do |url, opt
   arguments = "#{options} #{arguments}" if options
   @vm_execute_res = @vm.execute(
     "wget #{arguments}",
-    $live_user)
+    LIVE_USER)
 end
 
 Then /^the (wget|whois) command is successful$/ do |command|
