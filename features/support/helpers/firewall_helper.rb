@@ -93,31 +93,25 @@ class FirewallLeakCheck
     hosts.uniq
   end
 
-  def empty?
-    @ipv4_tcp_leaks.empty? and @ipv4_nontcp_leaks.empty? and @ipv6_leaks.empty? and @nonip_leaks.empty?
-  end
-
   def assert_no_leaks
     err = ""
-    if !empty?
-      if !@ipv4_tcp_leaks.empty?
-        err += "The following IPv4 TCP non-Tor Internet hosts were " +
-          "contacted:\n" + ipv4_tcp_leaks.join("\n")
-      end
-      if !@ipv4_nontcp_leaks.empty?
-        err += "The following IPv4 non-TCP Internet hosts were contacted:\n" +
-          ipv4_nontcp_leaks.join("\n")
-      end
-      if !@ipv6_leaks.empty?
-        err += "The following IPv6 Internet hosts were contacted:\n" +
-          ipv6_leaks.join("\n")
-      end
-      if !@nonip_leaks.empty?
-        err += "Some non-IP packets were sent\n"
-      end
-      save_pcap_file
-      raise err
+    if !@ipv4_tcp_leaks.empty?
+      err += "The following IPv4 TCP non-Tor Internet hosts were " +
+        "contacted:\n" + ipv4_tcp_leaks.join("\n")
     end
+    if !@ipv4_nontcp_leaks.empty?
+      err += "The following IPv4 non-TCP Internet hosts were contacted:\n" +
+        ipv4_nontcp_leaks.join("\n")
+    end
+    if !@ipv6_leaks.empty?
+      err += "The following IPv6 Internet hosts were contacted:\n" +
+        ipv6_leaks.join("\n")
+    end
+    if !@nonip_leaks.empty?
+      err += "Some non-IP packets were sent\n"
+    end
+    save_pcap_file
+    raise err if !err.empty?
   end
 
 end
