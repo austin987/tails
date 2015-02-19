@@ -1,5 +1,5 @@
 Given /^I am in the Git branch being tested$/ do
-  File.exists?("GIT_DIR/wiki/src/contribute/l10n_tricks/check_po.sh")
+  File.exists?("#{GIT_DIR}/wiki/src/contribute/l10n_tricks/check_po.sh")
 end
 
 Given /^all the PO files should be correct$/ do
