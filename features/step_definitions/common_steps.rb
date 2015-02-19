@@ -770,6 +770,21 @@ When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
 
+def is_persistent?(app)
+  conf = get_persistence_presets(true)["#{app}"]
+  @vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'").success?
+end
+
+Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
+  next if @skip_steps_while_restoring_background
+  case enabled
+  when ''
+    assert(is_persistent?(app), "Persistence should be enabled.")
+  when 'not '
+    assert(!is_persistent?(app), "Persistence should not be enabled.")
+  end
+end
+
 Given /^the USB drive "([^"]+)" contains Tails with persistence configured and password "([^"]+)"$/ do |drive, password|
     step "a computer"
     step "I start Tails from DVD with network unplugged and I login"
