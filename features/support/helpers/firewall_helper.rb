@@ -90,7 +90,7 @@ class FirewallLeakCheck
   # Returns an array of all Tor relays and authorities, i.e. all
   # Internet hosts Tails ever should contact.
   def get_all_tor_contacts
-    @tor_relays + $tor_authorities
+    @tor_relays + TOR_AUTHORITIES
   end
 
   def empty?

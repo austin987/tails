@@ -52,7 +52,7 @@ Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
 end
 
 def pattern_coverage_in_guest_ram
-  dump = "#{$tmp_dir}/memdump"
+  dump = "#{$config["TMP_DIR"]}/memdump"
   # Workaround: when dumping the guest's memory via core_dump(), libvirt
   # will create files that only root can read. We therefore pre-create
   # them with more permissible permissions, which libvirt will preserve

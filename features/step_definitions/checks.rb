@@ -3,7 +3,7 @@ Then /^the shipped Tails (signing|Debian repository) key will be valid for the n
   if key_type == 'signing'
     sig_key_fingerprint = "0D24B36AA9A2A651787876451202821CBE2CD9C1"
     cmd = 'gpg'
-    user = $live_user
+    user = LIVE_USER
   elsif key_type == 'Debian repository'
     sig_key_fingerprint = "221F9A3C6FA3E09E182E060BC7988EA7A358D82E"
     cmd = 'apt-key adv'
@@ -27,13 +27,13 @@ Then /^the live user has been setup by live\-boot$/ do
          "live-boot failed its user-setup")
   actual_username = @vm.execute(". /etc/live/config/username.conf; " +
                                 "echo $LIVE_USERNAME").stdout.chomp
-  assert_equal($live_user, actual_username)
+  assert_equal(LIVE_USER, actual_username)
 end
 
 Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
   next if @skip_steps_while_restoring_background
-  expected_groups = groups.split(" ") << $live_user
-  actual_groups = @vm.execute("groups #{$live_user}").stdout.chomp.sub(/^#{$live_user} : /, "").split(" ")
+  expected_groups = groups.split(" ") << LIVE_USER
+  actual_groups = @vm.execute("groups #{LIVE_USER}").stdout.chomp.sub(/^#{LIVE_USER} : /, "").split(" ")
   unexpected = actual_groups - expected_groups
   missing = expected_groups - actual_groups
   assert_equal(0, unexpected.size,
@@ -44,12 +44,12 @@ end
 
 Then /^the live user owns its home dir and it has normal permissions$/ do
   next if @skip_steps_while_restoring_background
-  home = "/home/#{$live_user}"
+  home = "/home/#{LIVE_USER}"
   assert(@vm.execute("test -d #{home}").success?,
          "The live user's home doesn't exist or is not a directory")
   owner = @vm.execute("stat -c %U:%G #{home}").stdout.chomp
   perms = @vm.execute("stat -c %a #{home}").stdout.chomp
-  assert_equal("#{$live_user}:#{$live_user}", owner)
+  assert_equal("#{LIVE_USER}:#{LIVE_USER}", owner)
   assert_equal("700", perms)
 end
 
@@ -78,8 +78,8 @@ Then /^no unexpected services are listening for network connections$/ do
     proc = splitted[proc_index].split("/")[1]
     # Services listening on loopback is not a threat
     if /127(\.[[:digit:]]{1,3}){3}/.match(laddr).nil?
-      if $services_expected_on_all_ifaces.include? [proc, laddr, lport] or
-         $services_expected_on_all_ifaces.include? [proc, laddr, "*"]
+      if SERVICES_EXPECTED_ON_ALL_IFACES.include? [proc, laddr, lport] or
+         SERVICES_EXPECTED_ON_ALL_IFACES.include? [proc, laddr, "*"]
         puts "Service '#{proc}' is listening on #{laddr}:#{lport} " +
              "but has an exception"
       else
@@ -97,24 +97,24 @@ end
 
 Then /^GNOME Screenshot is configured to save files to the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
-  home = "/home/#{$live_user}"
+  home = "/home/#{LIVE_USER}"
   save_path = @vm.execute_successfully(
     "gsettings get org.gnome.gnome-screenshot auto-save-directory",
-    $live_user).stdout.chomp.tr("'","")
+    LIVE_USER).stdout.chomp.tr("'","")
   assert_equal("file://#{home}", save_path,
                "The GNOME screenshot auto-save-directory is not set correctly.")
 end
 
 Then /^there is no screenshot in the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
-  home = "/home/#{$live_user}"
+  home = "/home/#{LIVE_USER}"
   assert(@vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?,
          "Existing screenshots were found in the live user's home directory.")
 end
 
 Then /^a screenshot is saved to the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
-  home = "/home/#{$live_user}"
+  home = "/home/#{LIVE_USER}"
   try_for(3, :msg=> "No screenshot was created in #{home}") {
     !@vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
   }
@@ -132,26 +132,26 @@ end
 
 Given /^I setup a filesystem share containing a sample PDF$/ do
   next if @skip_steps_while_restoring_background
-  @vm.add_share($misc_files_dir, shared_pdf_dir_on_guest)
+  @vm.add_share(MISC_FILES_DIR, shared_pdf_dir_on_guest)
 end
 
 Then /^MAT can clean some sample PDF file$/ do
   next if @skip_steps_while_restoring_background
-  for pdf_on_host in Dir.glob("#{$misc_files_dir}/*.pdf") do
+  for pdf_on_host in Dir.glob("#{MISC_FILES_DIR}/*.pdf") do
     pdf_name = File.basename(pdf_on_host)
-    pdf_on_guest = "/home/#{$live_user}/#{pdf_name}"
-    step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{$live_user}\""
+    pdf_on_guest = "/home/#{LIVE_USER}/#{pdf_name}"
+    step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
     @vm.execute("mat --display '#{pdf_on_guest}'",
-                $live_user).stdout
+                LIVE_USER).stdout
     check_before = @vm.execute("mat --check '#{pdf_on_guest}'",
-                               $live_user).stdout
+                               LIVE_USER).stdout
     if check_before.include?("#{pdf_on_guest} is clean")
       STDERR.puts "warning: '#{pdf_on_host}' is already clean so it is a " +
                   "bad candidate for testing MAT"
     end
-    @vm.execute("mat '#{pdf_on_guest}'", $live_user)
+    @vm.execute("mat '#{pdf_on_guest}'", LIVE_USER)
     check_after = @vm.execute("mat --check '#{pdf_on_guest}'",
-                              $live_user).stdout
+                              LIVE_USER).stdout
     assert(check_after.include?("#{pdf_on_guest} is clean"),
            "MAT failed to clean '#{pdf_on_host}'")
   end
