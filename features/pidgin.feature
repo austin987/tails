@@ -26,7 +26,6 @@ Feature: Chatting anonymously using Pidgin
     Then I see the Tails roadmap URL
     When I click on the Tails roadmap URL
     Then the Tor Browser has started and loaded the Tails roadmap
-    And all Internet traffic has only flowed through Tor
 
   Scenario: Adding a certificate to Pidgin
     And I start Pidgin through the GNOME menu

@@ -56,7 +56,7 @@ def restore_background
       @vm.host_to_guest_time_sync
       @vm.execute("service tor start")
       wait_until_tor_is_working
-      @vm.spawn("/usr/local/sbin/restart-vidalia")
+      @vm.spawn("restart-vidalia")
     end
   else
     @vm.host_to_guest_time_sync
@@ -64,7 +64,7 @@ def restore_background
 end
 
 Given /^a computer$/ do
-  @vm.destroy if @vm
+  @vm.destroy_and_undefine if @vm
   @vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
@@ -110,12 +110,14 @@ Then /^drive "([^"]+)" is detected by Tails$/ do |name|
 end
 
 Given /^the network is plugged$/ do
-  next if @skip_steps_while_restoring_background
+  # We don't skip this step when restoring the background to ensure
+  # that the network state is actually the same after restoring as
+  # when the snapshot was made.
   @vm.plug_network
 end
 
 Given /^the network is unplugged$/ do
-  next if @skip_steps_while_restoring_background
+  # See comment in the step "the network is plugged".
   @vm.unplug_network
 end
 
@@ -207,7 +209,7 @@ end
 
 When /^I destroy the computer$/ do
   next if @skip_steps_while_restoring_background
-  @vm.destroy
+  @vm.destroy_and_undefine
 end
 
 Given /^the computer (re)?boots Tails$/ do |reboot|

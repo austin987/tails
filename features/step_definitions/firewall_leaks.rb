@@ -1,6 +1,6 @@
 Then(/^the firewall leak detector has detected (.*?) leaks$/) do |type|
   next if @skip_steps_while_restoring_background
-  leaks = FirewallLeakCheck.new(@custom_sniffer.pcap_file, get_tor_relays)
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_tor_relays)
   case type.downcase
   when 'ipv4 tcp'
     if leaks.ipv4_tcp_leaks.empty?
@@ -29,7 +29,7 @@ end
 
 Given(/^I disable Tails' firewall$/) do
   next if @skip_steps_while_restoring_background
-  @vm.execute("/usr/local/sbin/do_not_ever_run_me")
+  @vm.execute("do_not_ever_run_me")
   iptables = @vm.execute("iptables -L -n -v").stdout.chomp.split("\n")
   for line in iptables do
     if !line[/Chain (INPUT|OUTPUT|FORWARD) \(policy ACCEPT/] and

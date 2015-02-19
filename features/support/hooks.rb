@@ -70,7 +70,7 @@ end
 AfterFeature('@product') do
   delete_snapshot($background_snapshot) if !KEEP_SNAPSHOTS
   $vmstorage.clear_pool
-  $vmnet.destroy
+  $vmnet.destroy_and_undefine
   $virt.close
 end
 
@@ -123,7 +123,7 @@ After('@product') do |scenario|
     @sniffer.stop
     @sniffer.clear
   end
-  @vm.destroy if @vm
+  @vm.destroy_and_undefine if @vm
 end
 
 After('@product', '~@keep_volumes') do

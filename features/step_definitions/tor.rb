@@ -114,6 +114,7 @@ end
 
 Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DNSPort$/ do
   next if @skip_steps_while_restoring_background
+  tor_onion_addr_space = "127.192.0.0/10"
   iptables_nat_output = @vm.execute_successfully("iptables -t nat -L -n -v").stdout
   chains = iptables_parse(iptables_nat_output)
   chains.each_pair do |name, chain|
@@ -122,7 +123,10 @@ Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DN
       good_rules = rules.find_all do |rule|
         rule["target"] == "REDIRECT" &&
           (
-           rule["extra"] == "redir ports 9040" ||
+           (
+            rule["destination"] == tor_onion_addr_space &&
+            rule["extra"] == "redir ports 9040"
+           ) ||
            rule["extra"] == "udp dpt:53 redir ports 5353"
           )
       end
@@ -153,22 +157,63 @@ Then /^the firewall is configured to block all IPv6 traffic$/ do
       !["DROP", "REJECT", "LOG"].include?(rule["target"])
     end
     assert(bad_rules.empty?,
-           "The NAT table's OUTPUT chain contains some unexptected rules:\n" +
+           "The IPv6 table's #{name} chain contains some unexptected rules:\n" +
            (bad_rules.map { |r| r["rule"] }).join("\n"))
   end
 end
 
-Then /^untorified network connections to (\S+) fail$/ do |host|
-  next if @skip_steps_while_restoring_background
-  expected_stderr = "curl: (7) couldn't connect to host"
-  cmd = "unset SOCKS_SERVER ; unset SOCKS5_SERVER ; " \
-        "curl --noproxy '*' 'http://#{host}'"
-  status = @vm.execute(cmd, LIVE_USER)
-  assert(!status.success? && status.stderr[expected_stderr],
-         "The command `#{cmd}` didn't fail as expected:\n#{status.to_s}")
+def firewall_has_dropped_packet_to?(proto, host, port)
+  regex = "Dropped outbound packet: .* DST=#{host} .* PROTO=#{proto} "
+  regex += ".* DPT=#{port} " if port
+  @vm.execute("grep -q '#{regex}' /var/log/syslog").success?
 end
 
-When /^the system DNS is( still)? using the local DNS resolver$/ do |_|
+When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+))? that is expected to fail$/ do |proto, host, port|
+  next if @skip_steps_while_restoring_background
+  assert(!firewall_has_dropped_packet_to?(proto, host, port),
+         "A #{proto} packet to #{host}" +
+         (port.nil? ? "" : ":#{port}") +
+         " has already been dropped by the firewall")
+  @conn_proto = proto
+  @conn_host = host
+  @conn_port = port
+  case proto
+  when "TCP"
+    assert_not_nil(port)
+    cmd = "echo | netcat #{host} #{port}"
+  when "UDP"
+    assert_not_nil(port)
+    cmd = "echo | netcat -u #{host} #{port}"
+  when "ICMP"
+    cmd = "ping -c 5 #{host}"
+  end
+  @conn_res = @vm.execute(cmd, LIVE_USER)
+end
+
+Then /^the untorified connection fails$/ do
+  next if @skip_steps_while_restoring_background
+  case @conn_proto
+  when "TCP"
+    expected_in_stderr = "Connection refused"
+    conn_failed = !@conn_res.success? &&
+      @conn_res.stderr.chomp.end_with?(expected_in_stderr)
+  when "UDP", "ICMP"
+    conn_failed = !@conn_res.success?
+  end
+  assert(conn_failed,
+         "The untorified #{@conn_proto} connection didn't fail as expected:\n" +
+         @conn_res.to_s)
+end
+
+Then /^the untorified connection is logged as dropped by the firewall$/ do
+  next if @skip_steps_while_restoring_background
+  assert(firewall_has_dropped_packet_to?(@conn_proto, @conn_host, @conn_port),
+         "No #{@conn_proto} packet to #{@conn_host}" +
+         (@conn_port.nil? ? "" : ":#{@conn_port}") +
+         " was dropped by the firewall")
+end
+
+When /^the system DNS is(?: still)? using the local DNS resolver$/ do
   next if @skip_steps_while_restoring_background
   resolvconf = @vm.file_content("/etc/resolv.conf")
   bad_lines = resolvconf.split("\n").find_all do |line|
@@ -187,7 +232,7 @@ def stream_isolation_info(application)
       :socksport => 9062
     }
   when "tails-security-check", "tails-upgrade-frontend-wrapper"
-    # We only grep connections with ESTABLISHED statate since `perl`
+    # We only grep connections with ESTABLISHED state since `perl`
     # is also used by monkeysphere's validation agent, which LISTENs
     {
       :grep_monitor_expr => '\<ESTABLISHED\>.\+/perl\>',
@@ -246,25 +291,20 @@ end
 
 And /^I re-run tails-security-check$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute_successfully("/usr/local/bin/tails-security-check", LIVE_USER)
+  @vm.execute_successfully("tails-security-check", LIVE_USER)
 end
 
 And /^I re-run htpdate$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute_successfully("service htpdate stop ; " \
-                           "rm -f /var/run/htpdate/* ; " \
+  @vm.execute_successfully("service htpdate stop && " \
+                           "rm -f /var/run/htpdate/* && " \
                            "service htpdate start")
   step "the time has synced"
 end
 
 And /^I re-run tails-upgrade-frontend-wrapper$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute_successfully("/usr/local/bin/tails-upgrade-frontend-wrapper", LIVE_USER)
-end
-
-And /^I do a whois-lookup of domain (.+)$/ do |domain|
-  next if @skip_steps_while_restoring_background
-  @vm.execute_successfully("/usr/local/bin/whois '#{domain}'", LIVE_USER)
+  @vm.execute_successfully("tails-upgrade-frontend-wrapper", LIVE_USER)
 end
 
 When /^I connect Gobby to "([^"]+)"$/ do |host|
