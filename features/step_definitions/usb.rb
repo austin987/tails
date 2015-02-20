@@ -304,7 +304,7 @@ end
 def tails_persistence_enabled?
   persistence_state_file = "/var/lib/live/config/tails.persistence"
   return @vm.execute("test -e '#{persistence_state_file}'").success? &&
-         @vm.execute('. #{persistence_state_file} && ' +
+         @vm.execute(". #{persistence_state_file} && " +
                      'test "$TAILS_PERSISTENCE_ENABLED" = true').success?
 end
 
