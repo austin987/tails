@@ -1,102 +1,40 @@
 [[!meta title="Automatic ISO verification extension for Firefox"]]
 
-We are planning to create a custom Firefox add-on to download and verify Tails
-using SHA-256 checksum.
+As part of our effort to simplify the workflow of a new user getting
+started with Tails, we are working on a custom browser extension to
+automate some verification of the ISO image after it has been
+downloaded.
+
+This has to be considered as part of a bigger plan to:
+
+  - Further automate ISO verification. See the blueprint on [[ISO
+    verification|verification]].
+  - Guide the user through the whole process. See the blueprint on the
+    [[web assistant]].
+
+The extension will be used as well by people doing full upgrades until
+we automate the download and verification steps of a full upgrade in
+Tails Upgrader. See the blueprint on [[upgrades|upgrade]].
 
 [[!toc]]
 
-Objectives
-==========
+Goals
+=====
 
-  - To fix the ISO verification method using Windows. It has been broken since
-    Firefox 20.
-  - To simplify the installation process by automating some ISO verification
-    during the download process.
-
-This would fix the main stumbling block for Tails verification (and thus
-installation) for the vast majority of users.
-
-No objectives
-=============
-
-  - Download ISO images not for the latest release version.
-  - Verify ISO images downloaded from nightly.tails.boum.org.
-
-Security considerations
-=======================
-
-  - People are downloading their ISO image from one of our mirrors. Those
-    mirrors are run by volunteers and the content of what they serve is not
-    authenticated.
-  - On the other hand, the information served on tails.boum.org is
-    authenticated through HTTPS.
-  - Downloading Firefox and installing add-ons is also done through HTTPS on
-    mozilla.org.
-  - Forcing Firefox users who are downloading the ISO image through HTTP to
-    verify its checksum can only increase the average level of verification
-    that people do on Windows and Mac OS systems.
-  - But HTTPS does not provide strong authentication. So our documentation
-    should make that clear and keep providing instructions for authentication
-    using OpenPGP but as an additional check.
-
-<a id="scenario"></a>
-
-Scenario
-========
-
-ISO download
-------------
-
-  - When the user clicks on the direct download button from the [[download
-    page|download#index2h1]], Firefox proposes to install the extension.
-  - The user allows the installation of the extension.
-  - The extension starts the download and the user decides where to save it.
-  - The webpage is modified and displays a progress bar of the download.
-  - The user might or might not close the webpage.
-  - The download also appears in the usual list of downloads of Firefox.
-
-Torrent download
-----------------
-
-  - If a user has downloaded the ISO using BitTorrent, she can verify
-    it through the website using the extension.
-
-ISO verification
-----------------
-
-  - When the download finishes, the ISO verification starts.
-  - The extension checks the size of the download to verify that the download
-    was complete.
-  - The extension compares the checksum of the ISO image to a checksum found on
-    the website through HTTPS.
-  - The extension displays the result to the user:
-    - If the original webpage is still open, it now either:
-      - Points the user to the installation documentation.
-      - Proposes troubleshooting strategies.
-    - Otherwise it shows the result in a popup message and points to the
-      appropriate page.
-
-ISO verification mechanisms
-===========================
-
-We're considering three possible verification mechanisms, each of those
-have to be checked against feasibility. By order of preference:
-
-  A. OpenPGP signature verification, against our signing key included in
-     the extension.
-  B. Checksum correlation against boum.org and an other site.
-  C. Checksum against boum.org
-
-Other desirable features
-========================
-
-  - Be able to use that extension, once installed to verify ISO images
-    downloaded using BitTorrent.
-  - Be able to use that extension to verify other ISO images, testing images,
-    older ISO images, etc. In that case the user would be warned about the
-    deprectated or experimental status of the ISO image.
-  - Port that extension to Chrome. Usage share of web browsers are
-    currently on [Wikimedia](https://en.wikipedia.org/wiki/Usage_share_of_web_browsers):
+  - Fix the ISO verification method using Windows which has been broken
+    for years.
+  - Simplify the installation process by automating *some* verification
+    of the ISO image inside the browser as part of the download process.
+  - Allow users who are downloading using BitTorrent to do the same
+    level of verification as people downloading through their browser.
+  - In case of a bad ISO image, help the user diagnose whether the
+    download has been interrupted or the ISO has been corrupted.
+  - Allow users to install the extension without restarting the browser.
+  - Have the extension available in Firefox first, then Chrome. Firefox
+    makes sense as a first target because it is the base for Tor Browser
+    and is installed by default in Debian and Ubuntu. But Chrome is much
+    more popular. Usage share of web browsers are currently on
+    [Wikimedia](https://en.wikipedia.org/wiki/Usage_share_of_web_browsers):
     - Chrome: 48.1%
     - Internet Explorer: 17.5%
     - Firefox: 16.7%
@@ -104,62 +42,239 @@ Other desirable features
     - Opera: 1.5%
     - Other: 11.4%
 
-    Still, Firefox make sense as a first target because it's the base
-    browser for Tor Browser both in Tails and outside.
+Non goals
+=========
+
+  - Verify deprecated ISO images.
+  - Verify ISO images downloaded from nightly.tails.boum.org.
+
+<a id="scenario"></a>
+
+User scenario
+=============
+
+This scenario represents the UX side of things. It has to be refined
+depending on the technical limitations of a browser extension, and the
+broader wireframe of the web assistant. This should be clarified by the
+beginning of April but not before. See [[!tails_ticket 8584]] and
+[[!tails_ticket 8564]].
+
+HTTP download
+-------------
+
+  - When the user clicks on the HTTP download button from the [[download
+    page|download#index2h1]], we propose to install the extension.
+  - The user allows the installation of the extension.
+  - The extension starts the download and the user decides where to save
+    the ISO.
+  - The webpage is modified and displays a progress bar of the download.
+  - The user might or might not close the webpage.
+  - The download also appears in the usual list of downloads of the
+    browser.
+
+Torrent download
+----------------
+
+  - If a user has downloaded the ISO using BitTorrent, she can verify it
+    as well as using the extension as part of the web assistant.
+
+ISO verification
+----------------
+
+  - After the image has been downloaded, the web assistant leads the
+    user through the ISO verification process.
+  - The extension checks the size of the download to verify that the download
+    was complete.
+  - If the download was complete, the extension verifies the ISO image.
+  - The extension renames the ISO image from tails-i386-x.x.x-UNVERIFIED.iso to:
+    - `tails-i386-x.x.x-INCOMPLETE.iso` if the download was incomplete.
+    - `tails-i386-x.x.x-VERIFIED.iso` if the verification is successfully.
+    - `tails-i386-x.x.x-CORRUPTED.iso` if the verification fails.
+  - The extension displays the result to the user.
+  - According to the result, the web assistant proposes to either:
+      - Continue with the installation (if VERIFIED).
+      - Download the ISO again (if INCOMPLETE).
+      - Proposes troubleshooting strategies (if CORRUPTED).
 
 Open questions
-==============
+--------------
 
-  - Do we want to use that extension to also check the GPG signature?
-    - On top of verifying the checksum, this would provide TOFU
-      authentication. Then, if the user downloads a genuine app and a
-      genuine key on first use, then she will be protected from a later
-      compromission of the HTTPS certificate of tails.boum.org.
-    - On the other hand, it might be easier and make more sense to push
-      the OpenPGP verification to Tails Installer, when run in Debian
-      for example. As we would have easier access to `gpg`, we could
-      reuse the Debian keyring, etc.
-  - Do we want to have the same verification workflow for people doing
-    HTTP and Torrent downloads?
-    - If yes, then ISO verification needs to be separate from download
-      in the assistant.
-    - Otherwise, ISO verification could be merged with download in the
-      assistant and we need a special case for download through Torrent.
-  - How do we deal with failed or corrupted downloads?
-  - Link between the browser and the file system. Could that be
-    confusing? What is possible?
-  - Change the name of the ISO image once verified?
-    tails-1.2_UNVERIFIED.iso → tails-1.2_VERIFIED.iso
-    - If so, do we want to distinguish between checksum and OpenPGP
-      verification?  tails-1.2_UNVERIFIED.iso →
-      tails-1.2_OPENPGP_VERIFIED.iso / tails-1.2_TRUSTED.iso
-  - What are the technical solutions to integrate download and
-    verification? Can the extension watch the download and propose
-    verification once its over?
-  - Do we want the extension to have pinning on the boum.org
-    certificate?
-  - Do we want to push stronger for OpenPGP TOFU?
-    - If yes, then people on Windows will trust Mozilla and UUI once,
-      and then Tails developers each time.
-    - If no, then people on Windows will trust Mozilla and UUI once, and
-      then boum.org each time.
-  - What happen with the signing key changes or is revoked?
+  - Will the extension be able to read and possibly rename an ISO image
+    downloaded by the user not through the extension itself? For example
+    if it is a Torrent download, or if it is downloaded first, then the
+    browser is closed and reopen, or downloaded using a different
+    method?
   - If the extension is installed, are we sure to be able to detect it
-    automatically?
-  - Can we know if an extension has been installed through Mozilla store
-    or Debian APT?
-  - Can we protect from downgrade attacks?
-  - The extension should distinguish between an interrupted download
-    (the propose to download again) and a corrupted ISO (then point to
-    archive.torproject.org, maybe report a more serious problem).
+    automatically? For example in Tor Browser of if JavaScript is
+    disabled?
 
-Technical insight
-=================
+<a id="verification"></a>
 
-  - That technique should be multiplatform and work from TBB as well.
-  - The extension can get the checksum and the URL of the ISO image from the
-    `<div id="content">` in following static pages:
-    - <https://tails.boum.org/inc/stable_i386_iso_url/>
-    - <https://tails.boum.org/inc/stable_i386_hash/>
-  - The same tricks should be used to get the file size.
-    See [[!tails_ticket 7417]].
+ISO verification mechanisms
+===========================
+
+We are considering three possible verification mechanisms, each of those
+have to be checked against feasibility and overall security. By order of
+preference:
+
+  1. [[OpenPGP signature verification|extension#openpgp]].
+  2. [[Checksum correlation|extension#correlation]].
+  3. [[Single checksum|extension#checksum]].
+
+We are considering here an attacker who can:
+
+  - (A) Provide a malicious ISO image to the user for example by
+    operating a rogue Tails mirror or BitTorrent tracker.
+  - (B) Do man-in-the-middle attacks by providing rogue HTTPS
+    certificates signed by a single certificate authority trusted by the
+    browser but under the control of the attacker.
+  - (C) Insert malicious content on https://tails.boum.org/ through an
+    exploit on our website.
+  - (D) Insert malicious information for a few days in our main Git
+    repository and its mirrors.
+
+We are not considering an attacker who can:
+
+  - (E) Insert targeted malware on the user's computer as this could
+    defeat any possible verification mechanism that such an extension
+    could do.
+  - (F) Provide a rogue extension to the user as this could defeat any
+    possible verification mechanism that such an extension could do.
+  - (G) Do man-in-the-middle attacks by providing rogue HTTPS
+    certificates signed by any certificate authority as such an attacker
+    could probably do attack (F) as well.
+
+We should also keep in mind how would the extension upgrade in case of
+change in either the Tails signing key (rotation or revocation) or the
+certificates it relies upon. If we need to upgrade the extension:
+
+  - In Firefox, it has to go through a manual review process that can
+    take several days.
+  - In Chrome, it can be uploaded directly to the store by us.
+
+<a id="openpgp"></a>
+
+OpenPGP signature verification
+------------------------------
+
+The code of the extension includes:
+
+  - The [OpenPGP.js](http://openpgpjs.org) library.
+  - A keyring with the public Tails signing key.
+
+When verifying an ISO image, the extension:
+
+  - Downloads from https://tails.boum.org/ an ISO description document
+    (size, checksum) signed by the Tails signing key.
+  - Verifies the document against the Tails signing key included in the
+    extension.
+  - If the document cannot be verified, then the user is informed that
+    the verification process failed.
+  - Else the ISO image is verified against the document (first its size,
+    then its checksum).
+
+Security properties:
+
+  - This technique would defeat attack A (malicious ISO) and still allow
+    our users to verify their ISO images after using an alternative
+    download technique.
+  - Attack B (single MitM), C (website exploit), or D (Git exploit)
+    would prevent users from verifying their ISO images (DoS attack).
+  - This technique would not defeat attack A combined with either attack
+    B, C, or D if the user is provided with an old ISO image and an old
+    ISO description document (downgrade attack). Still, if such a
+    downgrade attack could be performed, the user would be prompted for
+    upgrade (or impossibility to upgrade) when starting Tails.
+
+Other considerations:
+
+  - In case we need to rotate the Tails signing key, we can upload in
+    advance a new version of the extension that includes both the old
+    and the new key and the transition will be smooth.
+  - In case we need to revoke the Tails signing key, our users will be
+    vulnerable, until the extension is upgraded, to an attacker who can
+    do simultaneously attack A (malicious ISO), attack B (single MitM),
+    and use the revoked Tails signing key. If such an attacker exist,
+    then all verification techniques based on OpenPGP, not only in the
+    extension, would be vulnerable until users upgrade to the new Tails
+    signing key.
+
+Checksum correlation
+--------------------
+
+The code of the extension includes:
+
+  - The description of a pool of *P* HTTPS websites. For example,
+    tails.boum.org, immerda.ch, and github.com that we can all update
+    automatically through Git.
+  - The root certificate of the authorities expected to sign the
+    certificate of each website in this pool.
+
+When verifying an ISO image, the extension:
+
+  - Connects to each website in the pool and verifies its certificate
+    against its expected authority.
+  - If the certificate is trusted, then it downloads from each website
+    an ISO description document (size, checksum).
+  - Compares those documents.
+  - If all versions of the document are identical, then the ISO image is
+    verified against the document (first its size, then its checksum).
+  - If only *N* versions of the document are identical, then a problem
+    with the corrupted websites is reported and the ISO image is
+    verified against the ones who are identical (first its size, then
+    its checksum).
+  - If less than *N* versions of the document are identical, then the
+    user is informed that the verification process failed.
+
+Security properties:
+
+  - This technique would defeat attack A (malicious ISO), B (single
+    MitM), and C (website exploit) and still allow our users to verify
+    their ISO images possibly after using an alternative download
+    technique.
+  - This technique would not defeat attack D (Git exploit).
+
+Other considerations:
+
+  - We would have to upgrade the extension every time a website in the
+    pool changes its certificate authority and we will not always be
+    able to know this in advance (for example if we rely on Github). So
+    having a bigger pool has some cost.
+  - In case one of the website in the pool changes its certificate
+    authority, our users would be vulnerable to DoS by attack B or C if
+    *N=P-1* until they get an upgrade of the extension.
+  - Reporting errors in case *N* but not all versions of the ISO
+    description document are identical might be interesting for us but
+    complicated to communicate to the user.
+
+Single checksum
+---------------
+
+The code of the extension includes:
+
+  - The root certificate of the authority expected to sign the
+    certificate of https://tails.boum.org/.
+
+When verifying an ISO image, the extension:
+
+  - Connects to https://tails.boum.org/ and verifies its certificate
+    against its expected authority.
+  - If the certificate is trusted, then it downloads an ISO description
+    document (size, checksum).
+  - Verifies the ISO image against the document (first its size, then
+    its checksum).
+
+Security properties:
+
+  - This technique would defeat attack A (malicious ISO).
+  - This technique would not defeat attacks B (single MitM), C (website
+    exploit), or D (Git exploit).
+
+Other considerations:
+
+  - We would have to upgrade the extension if the certificate authority
+    of https://tails.boum.org/ changes but we should know this in
+    advance.
+  - It is not possible for the extension to distinguish between attack B
+    (single MitM) and an outdated extension in case of change in the
+    certificate authority of https://tails.boum.org/.
