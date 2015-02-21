@@ -212,3 +212,24 @@ But /^checking for updates is disabled in the Unsafe Browser's configuration$/ d
   prefs = '/usr/share/tails/unsafe-browser/prefs.js'
   assert(@vm.file_content(prefs).include?('pref("app.update.enabled", false)'))
 end
+
+Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
+  next if @skip_steps_while_restoring_background
+  pkts = 0
+  uid = @vm.execute_successfully("id -u clearnet").stdout.chomp.to_i
+  iptables_output = @vm.execute_successfully("iptables -vnL").stdout.chomp
+  output_chain = iptables_parse(iptables_output)["OUTPUT"]
+  output_chain["rules"].each do |rule|
+    m = /owner UID match \b#{uid}\b/.match(rule["extra"])
+    if !m.nil?
+      pkts = pkts + rule["pkts"]
+    end
+  end
+
+  case sent
+  when ''
+    assert(pkts > 0, "Packets have not gone out to the internet.")
+  when 'not'
+    assert_equal(pkts, 0, "Packets have gone out to the internet.")
+  end
+end
