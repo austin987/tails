@@ -222,7 +222,7 @@ Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
   output_chain["rules"].each do |rule|
     m = /owner UID match \b#{uid}\b/.match(rule["extra"])
     if !m.nil?
-      pkts = pkts + rule["pkts"]
+      pkts += rule["pkts"]
     end
   end
 
