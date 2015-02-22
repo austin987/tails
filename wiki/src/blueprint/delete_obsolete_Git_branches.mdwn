@@ -17,10 +17,393 @@ After a Git branch has been merged and we discover that it introduces a regressi
 
 ## Who does delete these Git branches?
 
-Ideally, the one who deletes them has access to push to the official Git repository. If we would chose for having the release manager do this, it can be done post-merge and it wouldn't require people from the sysadmin team to step in and issue a command.
+Ideally, the one who deletes them has access to push to the official Git repository. If we would chose for having the release manager do this, it can be done post-release and it wouldn't require people from the sysadmin team to step in and issue a command.
 
 ## What kind of privileges are required to do that?
 
 Push access to the official main Git repository.
 
 So far, only humans have write access there and we would like to not replace them with robots yet. That is for the future (e.g. the system that hosts our APT repository already has privileges akin to Git commit rights).
+
+Documentation of [[!tails_ticket 7221]]
+=======================================
+
+## Clarifications
+
+This work has been done on an up-to-date Debian Wheezy LXC, it is advised to run it in a controlled environment, the code we use hasn't been audited. Please scrutinize carefully. I had to install the following packages:
+
+* git
+* openjdk-6-jre
+
+## Reproduce results
+
+Create a working directory and in the working directory a *clean* and *dirty* directory.
+
+Inside the clean directory one should *git clone -mirror https://git-tails.immerda.ch/tails*. Make a full copy of the tails directory and place it in the dirty directory.
+
+To rewrite Git history we use the following software: BFG Repo-Cleaner, it currently isn't bundled in Debian, we therefor download the jar file which can be found here: 
+
+    https://repo1.maven.org/maven2/com/madgag/bfg/1.12.3/bfg-1.12.3.jar
+    sha256sum(2e237631235cfb8cc2d49dabb986389851dca8a28a07083345274b443dfa4911)
+
+Now we go inside the dirty directory's Tails repository and run the following command to delete all the merged branches: 
+
+    git branch --merged master | grep -v "\* master" | xargs -n 1 git branch -d (1.25 mins)
+
+After we've done that, we're ready for the next step and that deleting a bunch of big files inside the repository we would like to get out: 
+    
+    java -jar bfg-1.12.3.jar --delete-folders '{forum,deb-src}' -D     '{*.deb,*.gz,truecrypt*.gz,*.diff.gz,*.debian.tar.*,*.orig.tar.*,*.comment,tails_wal    king_cat.zip,tails_hiding_cat.zip,FINISHED_WORK.7z,forum.mdwn}' dirty/tails.git
+
+After this has ran, we can go inside the dirty directory's Tails repository again and run the following command to rewrite history:
+    
+    git reflog expire --expire=now --all && git gc --prune=now --aggressive 
+
+The entire operation takes around 10 minutes.
+
+Deleted files after running BFG repo-cleaner
+============================================
+
+	e387051cd8686f45ab596f6012ec828cf16eb1e1 1594950 aircrack-ng_1.1-1.1_i386.deb
+	39064b9159d00785a233775703e9d0d9c09e66b0 1550846 aircrack-ng_1.1-1.1~bpo60+1~tails1_i386.deb
+	b04ee97cd7ac79f39ede8b43d721b825a95fe6fe 2148 aufs-modules-2.6-686_1.0_all.deb
+	988d6ddfb3c66bd8e4433be88b275dfac8d9b037 182266 barry-util_0.15-1.1~bpo60+1~tails0_i386.deb
+	f9ce3bfb5c563872d542a1efc0a3fb1411733557 182394 barry-util_0.15-1.2~bpo60+1_i386.deb
+	e37c18d3330b22ff556f2de9533fa3a3fb7e648b 12436 bootchart_0.90.2-5~~amnesia1_amd64.deb
+	91a277ba16d5c13e4f6cb4727e5a5d5c506fd07f 11952 bootchart_0.90.2-5~~amnesia1_i386.deb
+	6f97995fd66d268c6ace0c1e110be1ad30e88a06 462 forum.mdwn
+	2301d1d78c80572409f11e51f3575a1471b38623 1066 forum.mdwn
+	6b01b88c3865530fc3ce75337875e5fd3e7cdeda 1068 forum.mdwn
+	cf50b95bca89a22d80132bdd3052d14adabf81b8 1529 forum.mdwn
+	166d32a25ceafbcc9841334c85aa901a555dda0d 1148 forum.mdwn
+	320b3a313b3fed903eba0ac885ce32a9475e11ee 555 forum.mdwn
+	17eee94709d2729e7b7c4e17ecb248459ab14c82 1066 forum.mdwn
+	865159f240ef8f49e9fa42c287778daad6f9a0ac 1437 forum.mdwn
+	3abe83958acd29dff5d2d55ea019290d0247370a 1582 forum.mdwn
+	ab7c54d318698d91c236b0355c32b97fd32bcc06 1162 forum.mdwn
+	fc5b46d6fcc9b9080e51b57ce9b832dc4acc25c5 431 forum.mdwn
+	2ad8c921e1ff3f36c4ede2d41a6a2a6916315372 1060 forum.mdwn
+	f83a36c3e5bd1731ed561025db7983ddbdae4324 548 forum.mdwn
+	8fd6d1578c9e08b7463a69b68f00dfcf938ab90f 1423 forum.mdwn
+	9fbf1d3f6160da06326198f8fd8c0f35b600eacd 518 forum.mdwn
+	e70d2e98558fafee8d89690fc02819ba305a3969 416 forum.mdwn
+	3ca1117bcb5a7b4694998cc2eada9953fa1d8228 556 forum.mdwn
+	345905a9890c18bfcaed781526bc13700a8249bf 1060 forum.mdwn
+	fb700b09d1536244b79fa024f64adeab61327a06 415 forum.mdwn
+	1c0b629cb294d16a5500d0018891a966b847facd 1446 forum.mdwn
+	60a5669435527632fdb6a3495bc0903087908a68 1425 forum.mdwn
+	0437ae04d6ec227ad8f011b257716c3ca46751c3 1099 forum.mdwn
+	21562b675a4952a418f831f8bce847fa2d3e35b2 1073 forum.mdwn
+	966241725e90213227af003b4ab712f42f892891 584526 foxyproxy_2.19.1-1_all.deb
+	370a407b9ae5acd91d91c388d62e36ce91f24f5b 2084 gcc-4.5_1.0_all.deb
+	d1a67cfc9a9d7355540784266e35a50ea175b90f 2082 gcc-4.6_1.0_all.deb
+	5a744a04daf0d1e4fdc264cab76bc6a63626ec23 2142 gcc-4.8_1.0_all.deb
+	1b3004c13666d1d09e2865ce26ee6d82e218a896 87862 gnome-theme-xpluna_1.2-1_all.deb
+	a94d1c215ad7ce23488400942278338f4d9ca6c5 958234 gnome-xp-icon-theme_1.0-1_all.deb
+	4262df8cee1847ca6025ab815656ee2041fdc734 22224 haveged_0.9-2~amnesia+lenny1_i386.deb
+	e1bbc4ff9fb54a3309dcaf59970a0300b71ee36a 22672 haveged_0.9-2~amnesia+lenny1_powerpc.deb
+	b050bd7f1ca0394abd729f4a262484b4e37d1ba0 22362 haveged_0.9-3~amnesia+lenny1_i386.deb
+	213c4bbbb56feb25408f349eab9b1563a7e736b6 22786 haveged_0.9-3~amnesia+lenny1_powerpc.deb
+	eb31746a3fcea8b513853ff147e2c4eb3db53335 22368 haveged_0.9-3~amnesia+squeeze1_i386.deb
+	13623a43c0d31381f16c7fce9d30d4ccd0a9f5c4 22600 haveged_0.9-3~amnesia+squeeze1_powerpc.deb
+	fe287002b8512dcae086449297c8871538ae98aa 24050 haveged_1.1-1~bpo60+1_i386.deb
+	4062e62196470c9f9474607094d581dd7361f993 7976442 i2p-router_0.8.11+repack-3~1.gbp00ff06_all.deb
+	d1ee2285d2947efa5c39b04c1b9234f08cd4a2aa 8110394 i2p-router_0.8.13-1_all.deb
+	78b768640d84acfd71a40eca85980a8f77abd49e 7852626 i2p-router_0.8.8+repack-1ppa1_all.deb
+	f887ddf50762eb14d9b7ba5b4b190cc0d996e98c 7260118 i2p-router_0.9-1squeeze1_all.deb
+	d748749e4dcb308bff3773a7029efbf0fcbbaec4 8972690 i2p-router_0.9.1+repack-1squeeze1_all.deb
+	d40ebc091fcaed5232de96275e70f43c997e87dd 9069638 i2p-router_0.9.2+repack-2squeeze1_all.deb
+	68a999debc3a6cfe47e64889fd2dc1748b1de07d 7524492 i2p_0.8.0.1_i386.deb
+	38aaba8603ff19689730b9e2a727022b626f1c08 22542 i2p_0.8.11+repack-3~1.gbp00ff06_all.deb
+	1710ddf3b8109e7d1789e4b69b0d4fb5c7da63c6 23596 i2p_0.8.13-1_all.deb
+	1bcd4322d56836846670c74a1dae94ca7cdb2278 13094 i2p_0.8.8+repack-1ppa1_all.deb
+	78a178353694ce942f391e0dd5f76f67e7662c1b 23480 i2p_0.9-1squeeze1_all.deb
+	4bf45648aa847d2f1ae71296b2d6383b43d513cc 25504 i2p_0.9.1+repack-1squeeze1_all.deb
+	bee06305954e6654a94cbf967909e8824a88a107 25490 i2p_0.9.2+repack-2squeeze1_all.deb
+	f593c61b1ab5fd35d4a2d0811660f66a087a7efe 20792 libarchive-tar-wrapper-perl_0.16-1~bpo60+1_all.deb
+	d05cd1f03d88b7238ec6f1bac08e4afbc935a18f 250960 libbarry0_0.15-1.1~bpo60+1~tails0_i386.deb
+	32724f579d8897b5c8d200204b75c9393f6d8dc2 251050 libbarry0_0.15-1.2~bpo60+1_i386.deb
+	a398eb380c7d0fe26d0c38aaa186ab19f73cb4e8 3826 libjbigi-jni_0.8.11+repack-3~1.gbp00ff06_i386.deb
+	10ae0b6c1e443d94737d1f288231cc39828d573f 4050 libjbigi-jni_0.8.13-1_i386.deb
+	3c6f03355fd357c70cf78cde36f894832e77b983 3972 libjbigi-jni_0.8.8+repack-1ppa1_i386.deb
+	c251b7ee6a021c55388c8bf993225005e2bfd96c 4060 libjbigi-jni_0.9-1squeeze1_i386.deb
+	28ed1d6ae49be5e82fa9b10cd1a617326fbb0fe3 4050 libjbigi-jni_0.9.1+repack-1squeeze1_i386.deb
+	260cbba998c1c66a9e57f2183f3e3f849cc3f1cf 4066 libjbigi-jni_0.9.2+repack-2squeeze1_i386.deb
+	5c42be02612f8fc0e67f422003de1275ee197f68 272828 libmetacity-private0_2.30.1-3.0~squeeze+tails1_i386.deb
+	be82aac448eebc5c317d5672cbb39149f6a52fad 277740 libmetacity-private0_2.30.1-3.0~squeeze+tails1_powerpc.deb
+	ee8b2b5204d535488be12136cce693e6de0dc36c 250064 libmetacity0_2.22.0-2.0~lenny+amnesia1_i386.deb
+	38366211e1cd343825dbafc5f2517d32c1cfc5f1 256948 libmetacity0_2.22.0-2.0~lenny+amnesia1_powerpc.deb
+	a92ea66a43839c243370c6a591747781c0623a55 11842 libstring-errf-perl_0.006-3~bpo60+1_all.deb
+	d309ddc8240610a09da006d92f8075d2eeb8f8ee 22222 libstring-formatter-perl_0.102082-1~bpo60+1_all.deb
+	8f4b0c33f34bd7535b552f95c54b1fff58396bee 30118 live-boot-initramfs-tools_2.0.15-1+tails1.35f1a14_all.deb
+	c871cfe183343ff5a761661bc45356f54843c0b2 29014 live-boot-initramfs-tools_2.0.5-1+tails1.f1a9bd_all.deb
+	4731de662f33bbbce5effe3ce704e3104758c7d1 29076 live-boot-initramfs-tools_2.0.5-1+tails2.6797e8_all.deb
+	dba7c65984d206134fc1e5e3840e13c94b25a49b 29070 live-boot-initramfs-tools_2.0.6-1+tails1.6797e8_all.deb
+	0a2aaa3aaa9a8beddd0c96240962f88868bd9ae9 29362 live-boot-initramfs-tools_2.0.8-1+tails1.13926a_all.deb
+	b7eae259c9f02e24c73381bc5b20e3c54407c1bc 29398 live-boot-initramfs-tools_2.0.8-1+tails1.a20548_all.deb
+	fa8870b88651228a4f25ceeb0ee3dfdd4d2a5267 28116 live-boot-initramfs-tools_2.0~a16-1+tails1.cb5e34_all.deb
+	60dd8f70eb608f89088079b71fc84fb079588c82 31592 live-boot-initramfs-tools_3.0~a13-1+tails1.gbp671cfa_all.deb
+	6a35da27dba1f22abaa91082f0d722f2a83aa894 31598 live-boot-initramfs-tools_3.0~a13-1+tails1.gbp7690c6_all.deb
+	2ea8d5fc49eb7d31ba2e4cc0b14dc9edf3173c03 31652 live-boot-initramfs-tools_3.0~a13-1+tails2.gbpf73454_all.deb
+	d32e90fbc2d72cf5ce7e59d49d674b1b0c7b2fbf 31678 live-boot-initramfs-tools_3.0~a13-1+tails3.gbpde8eab_all.deb
+	faad0df0e38bd0f21f231630f62f5a2cc0dd68b1 30718 live-boot-initramfs-tools_3.0~a13-2~1.gbp669d44_all.deb
+	d86bfdd622f3f2d24913cee3fd76664866c3e75d 34790 live-boot-initramfs-tools_3.0~a22-2~1.gbpf88546_all.deb
+	fc10221bb5ec6f65dbfa04f4f6860c10a9f971b6 39150 live-boot-initramfs-tools_3.0~a25-1+tails1~1.gbp8ce17c_all.deb
+	de26fa20813559ebf5982a85aa33c0182d982c4d 39376 live-boot-initramfs-tools_3.0~a25-1+tails1~2.gbp4cf30a_all.deb
+	857e9c2e43930e87cc1feadb9f7170ae3320388e 39404 live-boot-initramfs-tools_3.0~a25-1+tails1~2.gbpe029d2_all.deb
+	07e05d34044a203b6351ad758a47e79d6b395b98 40076 live-boot-initramfs-tools_3.0~a25-1+tails1~3.gbpb0a275_all.deb
+	f703724c82e58d735495df47aedf6042d487841b 40224 live-boot-initramfs-tools_3.0~a25-1+tails1~4.gbp732866_all.deb
+	ef52fc8a64ebd8431dc20352aae902433a80b071 40280 live-boot-initramfs-tools_3.0~a25-1+tails1~5.gbp48d06c_all.deb
+	77bac27f975a3e4f2868333d6f0d33b5fd392298 49990 live-boot-initramfs-tools_3.0~a27-1+tails2~1.gbp319fe6_all.deb
+	220861363e675abfb31066df2401a26a744ec81a 23770 live-boot-initramfs-tools_3.0~a35-1_all.deb
+	4b08cfc2776b6f29a02cece3bfc0023a1e5b715c 25348 live-boot-initramfs-tools_3.0~b6-1_all.deb
+	e0c4b7458e9340a0c64883db2ae5d60b8d6717ef 25534 live-boot-initramfs-tools_3.0~b7-1_all.deb
+	556effd0667a6062f283aba813e15c4107bd3233 76806 live-boot_2.0.15-1+tails1.35f1a14_all.deb
+	541901f4281e0c3ac704b2467527304a6f671390 77596 live-boot_2.0.5-1+tails1.f1a9bd_all.deb
+	a64ecfdd94875599ad05a9d7115fa8bbfc8cf780 77690 live-boot_2.0.5-1+tails2.6797e8_all.deb
+	3bfb26f17684241edeea114be3e5faf334abad69 77700 live-boot_2.0.6-1+tails1.6797e8_all.deb
+	a32f6c5fc52566f578e4bc2693de4e5a35c97ec5 78476 live-boot_2.0.8-1+tails1.13926a_all.deb
+	bfb8bf8f9ad436b046151e858ff9a85abe8689f0 78484 live-boot_2.0.8-1+tails1.a20548_all.deb
+	3a9b62a469e3181c2b2572dd047f50bea87fbca0 76136 live-boot_2.0~a16-1+tails1.cb5e34_all.deb
+	860c08069373eae8c90874ddb739502da4fd3903 78630 live-boot_3.0~a13-1+tails1.gbp671cfa_all.deb
+	fa2c124292f80db2f4a1cfa93f2213855e77c892 78628 live-boot_3.0~a13-1+tails1.gbp7690c6_all.deb
+	0bbc5fbe3b5f82767bdef8b34689ed43e00a0964 78898 live-boot_3.0~a13-1+tails2.gbpf73454_all.deb
+	0448d8d54f4b63c4eddd94d71195e5e7d7b609d5 78932 live-boot_3.0~a13-1+tails3.gbpde8eab_all.deb
+	45d3d008f992bb640793ae51d75b008d001fb069 76886 live-boot_3.0~a13-2~1.gbp669d44_all.deb
+	88dd4f985bef110c92c98652b4663a8e9ee485fb 20948 live-boot_3.0~a22-2~1.gbpf88546_all.deb
+	d362d7daaaddd6923a3f8fb6e8ab9d9991ea0568 21902 live-boot_3.0~a25-1+tails1~1.gbp8ce17c_all.deb
+	6d1b35286ded212a4ce47840b5ff423af3993324 22018 live-boot_3.0~a25-1+tails1~2.gbp4cf30a_all.deb
+	d656a854a5987815da090d798a73b46d48992908 22044 live-boot_3.0~a25-1+tails1~2.gbpe029d2_all.deb
+	08dafd37a19a999f2d12b52b6f03c6614ca138d8 22224 live-boot_3.0~a25-1+tails1~3.gbpb0a275_all.deb
+	2a22d7ab44828cf2a3212a3d5b5eaf7b4c973488 22264 live-boot_3.0~a25-1+tails1~4.gbp732866_all.deb
+	3af92bdf5beb80d44f32495ceaadb1b2dbeb3ce7 22354 live-boot_3.0~a25-1+tails1~5.gbp48d06c_all.deb
+	a27b7be9669d9feb5579fbc2f437a2f9e2b52e1e 30782 live-boot_3.0~a27-1+tails2~1.gbp319fe6_all.deb
+	e3698c7463de984b099453ded6f12ab8413613e7 46176 live-boot_3.0~a35-1_all.deb
+	c3194020234646ed2bfcae5801c4b646466db63a 47272 live-boot_3.0~b6-1_all.deb
+	2f8249b1f20b685845dde5ea77051c6f223f4145 47482 live-boot_3.0~b7-1_all.deb
+	785a0d1f5e1fa3cf4b8ea9d131d359e343e5f03c 1168620 live-build_2.0~a21-1_all.deb
+	fa44005fbc5c339b68d320ec17a717956bac6418 6268 live-config-sysvinit_2.0.0-1_all.deb
+	3cc409326d5f6a23f144a8fbfe85f506cad14f12 6260 live-config-sysvinit_2.0.0-1_all.deb
+	da0ef20a46c023bff3b97445b3e176ece65c6566 13030 live-config-sysvinit_3.0.3-1_all.deb
+	6a4702b62bfefbd138513649024b3e38a596fd2b 13376 live-config-sysvinit_3.0.8-1_all.deb
+	7945a606d2c868ecf5515198a3306cccc62e8a4c 39472 live-config_2.0.0-1_all.deb
+	8d164ca48e06f05c3856d09222fd9d44811d6f94 39402 live-config_2.0.0-1_all.deb
+	bb6b2ec4d721e6d6a5ee31be6e6c0c389a815b4f 22902 live-config_3.0.3-1_all.deb
+	2d5fbc9e408afdc4044d631249f8bfd01494d48c 23256 live-config_3.0.8-1_all.deb
+	5aa7258f114fc01ed6f8e5f64694b1645f10f6c7 53286 live-helper_2.0~a21-1_all.deb
+	fd65c70b3e42da8de08b867e7b1e8ac28d1c78e6 94652 live-initramfs_1.157.3-1_all.deb
+	b37726ee7bad759241d4c035ab28102dad6dc647 99710 live-initramfs_1.157.4-1_all.deb
+	25b5328ea28cd1e5bd9bc13bac571edd89ee8a56 99708 live-initramfs_1.157.4-1_all.deb
+	8970d6815f2578271c0d7df2e72e8471144093aa 98826 live-initramfs_1.157.4-1_all.deb
+	d9774b9d99ef582555c91ad22d847672a931149b 101092 live-initramfs_1.173.1-1_all.deb
+	340d9038abf5b5b471bf533e2ef7dcfebd8540e6 100642 live-initramfs_1.173.1-1_all.deb
+	d47c086b1d9562b2c7cee09b45b9389854929ecc 100626 live-initramfs_1.173.1-1_all.deb
+	43ab493e59bc53d1bf4ba8c9d736768192d39529 101606 live-initramfs_1.173.1-1_all.deb
+	ead42c0292471a8c75d5a09fc25cb05e543c11e1 104390 live-initramfs_1.177.2-1_all.deb
+	edaf9f77168eb84db20813248c426625b2b0c622 104396 live-initramfs_1.177.2-1_all.deb
+	161838fad48d9dafeacf1015202cccc6ad6bf9f9 104364 live-initramfs_1.177.2-1_all.deb
+	3eecea0e0364281b47839683c16a073739f39f1d 4650 live-initramfs_2.0.5-1+tails1.f1a9bd_all.deb
+	0cd20b32e974912cb97854b213cd52e2371a7a39 4698 live-initramfs_2.0.5-1+tails2.6797e8_all.deb
+	a1d327216b8f787b257dfa502e9bf39dbb3a2689 4690 live-initramfs_2.0.6-1+tails1.6797e8_all.deb
+	e01a56d3c5d82bc4863834b1773c936b41ebc63d 4848 live-initramfs_2.0.8-1+tails1.13926a_all.deb
+	e4ee37ca67ed0cedc31a747be1d56a0441eadcab 4870 live-initramfs_2.0.8-1+tails1.a20548_all.deb
+	464688b86aac46e6f65f7103721e9c7bf064dd43 3814 live-initramfs_2.0~a16-1+tails1.cb5e34_all.deb
+	e72f53f90b445424a1ea93882ba66d976637b60c 187386 liveusb-creator_3.11.4-10_all.deb
+	ab4f1d270450d448763facc5456962ace165f33d 206672 liveusb-creator_3.11.4-1_all.deb
+	d0765cd0d0d82ca8f1e6e8f02af4a05776f57cfb 171696 liveusb-creator_3.11.4-2_all.deb
+	e121d11636c2aec3742bef98ac0fbde00851ea4b 206964 liveusb-creator_3.11.4-2~1.gbp6e1d0a_all.deb
+	1fb4d887249de30bd150182870b5f9691a9e90f6 176804 liveusb-creator_3.11.4-2~2.gbp3f493d_all.deb
+	675d37f646f80acda679a2606af39e728a312c01 177288 liveusb-creator_3.11.4-2~3.gbpf9e5da_all.deb
+	d2df0a01bce5c362d5fa11e19687fcd7243a5277 177606 liveusb-creator_3.11.4-2~4.gbp9e95fa_all.deb
+	3b479c314d50197d681c3e9477e5e4b5973d48e8 171066 liveusb-creator_3.11.4-2~7.gbp288bb8_all.deb
+	2255862ac2d04ae4967d67d0dcd23eadfa38f2ea 183404 liveusb-creator_3.11.4-3_all.deb
+	c63338f155a9499cf880eb6bccb0a45066ce453f 183472 liveusb-creator_3.11.4-4_all.deb
+	ef36047ce685fceb4d483928364405cbe963e356 184086 liveusb-creator_3.11.4-6_all.deb
+	e5519e4a148038eedc60bdb405989684060b4956 186222 liveusb-creator_3.11.4-7_all.deb
+	3c8ffde8c7328beaf4c895036b972e744a567837 186246 liveusb-creator_3.11.4-8_all.deb
+	4e88edad7694168b2604e1ea29a5643c2e64d20c 187182 liveusb-creator_3.11.4-9_all.deb
+	81d50d68d4101b5fc4166f9222aa621d22423d8d 187948 liveusb-creator_3.11.6-1_all.deb
+	f602464df02e11cd92a865202555516c291fd690 189104 liveusb-creator_3.11.6-2_all.deb
+	61376b0e4cd704375bfa4272c295a744d3f50df0 189170 liveusb-creator_3.11.6-2_all.deb
+	5c3ea064ef8b400838aa0608b6778f6631007f79 192894 liveusb-creator_3.11.6-3_all.deb
+	e6c6068b203a6a4a0c33d06864d6806e83ad8823 54510 mat_0.1-1~4.gbp70ebf7~bpo60+1_all.deb
+	97086eefab10d4676844ebb8ad36b827b2f25fe1 55266 mat_0.2-1~bpo60+1_all.deb
+	d2083d8fb227af684c12074092e77005bb0b4b10 55908 mat_0.2.2-1~bpo60+1_all.deb
+	2d8ff3fea9f3da79107244f9431327036e9d20ef 56100 mat_0.2.2-2_all.deb
+	afe0289a6b51ba0c142ea1cd589b18f82c0dd99a 56032 mat_0.2.2-2~bpo60+1_all.deb
+	81358adbadf381963aeb90d790f668e344feb265 87536 mat_0.3.2-1~bpo60+1_all.deb
+	072c278e6d30e612729bb4b2cf09dc95cf46fdbf 2174738 metacity-common_2.22.0-2.0~lenny+amnesia1_all.deb
+	aec5fcd027bdc5c991732050d6db3e1ec7185f67 2387382 metacity-common_2.30.1-1.0~squeeze+amnesia1_all.deb
+	e0a5f423ac20b9e0fd9a86761dde5157d4a53138 2387602 metacity-common_2.30.1-3.0~squeeze+tails1_all.deb
+	6e37c77a58436517729af06c8036ab8e62743bfd 13080 metacity_2.22.0-2.0~lenny+amnesia1.diff.gz
+	ee3adb83e6ed6795c7adb61207a3c1ec38a5365e 436190 metacity_2.22.0-2.0~lenny+amnesia1_i386.deb
+	f5dc28012ac9c0047be64eece7c6026810d82756 467788 metacity_2.22.0-2.0~lenny+amnesia1_powerpc.deb
+	34d21c8df54e17f799dc57cd79a1629f8c56453a 265566 metacity_2.30.1-1.0~squeeze+amnesia1.diff.gz
+	92eef11f7a6a385cdda8b97798f9b7940352a391 452396 metacity_2.30.1-1.0~squeeze+amnesia1_i386.deb
+	c32ffe6d7f2320da4f5147ed74b34283d097393e 277721 metacity_2.30.1-3.0~squeeze+tails1.debian.tar.gz
+	b7e182c235bdb96cd87ac2a491b178a03bf967b7 453682 metacity_2.30.1-3.0~squeeze+tails1_i386.deb
+	9ee791a13a824f22a40ba3d23bf7e1974a4360a6 467788 metacity_2.30.1-3.0~squeeze+tails1_powerpc.deb
+	fc9aa22dc9c40bf0d5c2001afcfb3f1d42e3289c 236008 msn-pecan_0.1.3-1~bpo60+1_i386.deb
+	313f0e059ebdc1d3e0e9924b1c3d550263339e02 4624 onboard_0.92.0-0ubuntu4~~amnesia1.diff.gz
+	84df4433354e734c70cdea26da0fd158fffda369 334038 onboard_0.92.0-0ubuntu4~~amnesia1_all.deb
+	e71ba6b80a34429782a69af7c4f35e2fe4608586 1118 onboard_0.93.0-0ubuntu3~~amnesia1.diff.gz
+	46a8a9e32f635ac79830be45786c19aff16f6fc5 332954 onboard_0.93.0-0ubuntu3~~amnesia1_all.deb
+	971c74b59769bad275ed3f6aacd8951611270db1 333596 onboard_0.93.0-0ubuntu4~amnesia1_all.deb
+	409f94aa010b40545ff3dd686b61cfe77be875da 3909 onboard_0.94.0-ubuntu1+tails1.diff.gz
+	fd44080dc74db08f0ca58591dcb03f643320843c 409998 onboard_0.94.0-ubuntu1+tails1_all.deb
+	b836a8c05563db7f4d1f755d8bfc49d4f2bbd0a1 409892 onboard_0.94.0-ubuntu1+tails2_all.deb
+	4bbb126ec1decc8e49af9e43a37c2b211f722833 141126 plymouth_0.8.3-20_i386.deb
+	e3f01352e32130763181d08d7a3e1cc68c6af173 127456 plymouth_0.8.3-20~bpo60+1_i386.deb
+	c0d9ef1d63ebc8568030cef1dd94214967179a74 223338 python-dbus_0.83.1-1+tails1_i386.deb
+	c24f71691f92e6ea7b06983ea8562e49b7895068 26362 python-pdfrw_0+svn136-3~bpo60+1_all.deb
+	abdf691b327ae42c76a139cf5429f887e0554554 18166 python-virtkey_0.50ubuntu2~bpo50+1_amd64.deb
+	9a2b1855cc2d3f372ca6bd32ae5d8273b915ded3 16572 python-virtkey_0.50ubuntu2~bpo50+1_i386.deb
+	9fc09d4e6407211bd925726adcd90a61195d133c 20668 python-virtkey_0.50ubuntu2~bpo50+1_powerpc.deb
+	da0ed99399571e185a774761db843b4c0d498db1 14518 python-virtkey_0.50ubuntu3~squeeze+amnesia1_i386.deb
+	53bc74d6c2a13b3ddb58b629ab390dd1e1e0af2a 18376 python-virtkey_0.60.0-0ubuntu2~squeeze+tails1_i386.deb
+	2050e6356aff777d69109ad5dc8f2802b257c135 17714 python-virtkey_0.60.0-0ubuntu2~squeeze+tails1_powerpc.deb
+	3b1047e4ead26988470b6f3270a7c944a0d4e1ab 2146 squashfs-modules-2.6-686_1.0_all.deb
+	4dcd4785a146f0e3d271bbbae0ddf2f8b606a97d 138988 squashfs-tools_4.2-1~squeeze+tails1_i386.deb
+	bb1bb035865ac984429967843c3e03854ac0a45f 153126 tails-greeter_0.0.3_all.deb
+	f9b7c1a2c944f0bd46146aa00a2317b15573a674 153100 tails-greeter_0.0.3_all.deb
+	b13ef1b02bbe94a4f409b21a43dd426aa417106f 154100 tails-greeter_0.0.3~1.gbp97e581_all.deb
+	ff0c9fd738a5438fb7464e6d7164f71cc794c5d1 154108 tails-greeter_0.0.3~1.gbp97e581_all.deb
+	f58056707059bd9a397529574f494b6fa3b4d7cd 155784 tails-greeter_0.0.5_all.deb
+	c7f2d1590cead297e0ab38e2c4f6faaa35e4cead 156150 tails-greeter_0.0.6_all.deb
+	394c4ea717015cdd0675243c54e2a75ae3ee784e 156750 tails-greeter_0.0.7~2.gbpe5cc53_all.deb
+	1074fdbd72aa2be93dde15bcd2d0dcead30c44e7 156782 tails-greeter_0.0.7~2.gbpe5cc53_all.deb
+	2bb6efa9825cf70b944fafcfc516eb136414d46b 156436 tails-greeter_0.0.7~3.gbp8b5174_all.deb
+	b6d26999261ff150c8c488c1f2b04ca020f3834c 156632 tails-greeter_0.0.7~4.gbp3bb483_all.deb
+	33935a0dd61b9733a3d5a821cc1f71b40df923fe 156422 tails-greeter_0.0.7~5.gbped2b66_all.deb
+	d20449fc8fb6c3c1502f5014d77396baa6ee4969 157542 tails-greeter_0.0.8_all.deb
+	624a1114a4ee298aaa805f9e27d91b5e397e8543 157296 tails-greeter_0.0.8~3.gbp8776b9_all.deb
+	0c701d25375a563272b7b99f00cacca05ddad6a2 157798 tails-greeter_0.0.8~4.gbp70d39c_all.deb
+	9b486e9ed0838e73690c3df3b1208bfcfbf8474b 157848 tails-greeter_0.0.8~5.gbpdaa850_all.deb
+	a7c362ef4ba4c9e775686fcbb75304b2ae414408 157882 tails-greeter_0.0.8~6.gbpc6a32d_all.deb
+	40eee0bedd3f67f1a7f91389a9fbef5fa64e269b 157184 tails-greeter_0.0.8~9.gbp8941ba_all.deb
+	7511268ea1b04eafabde43129f1b5f036dece5d4 158812 tails-greeter_0.1.0_all.deb
+	ee266283901bfe4511050a694cdcf87608e409be 158938 tails-greeter_0.1.1~2.gbpad6da2_all.deb
+	86288f4424e9995d1f3951fd086f495a978fd8b6 149454 tails-greeter_0.1.1~3+nogtkme_all.deb
+	8ba954faad0b8802ad621bd52efe4ded6979c217 141942 tails-greeter_0.1.1~3.gbp7da38b_all.deb
+	fcdc2b57c8e816bdeef527d32945b0c14a2d3465 158942 tails-greeter_0.1.1~3.gbpddf9a1_all.deb
+	fad72a205120b1b9be22d12fe0bfcc8f7eab1082 143004 tails-greeter_0.1.1~5.gbp40e870_all.deb
+	824f41ee59e2338d4a74e169e872437b619d89fa 143274 tails-greeter_0.1.1~6.gbpd3f7ca_all.deb
+	5b37693c17ce073cf39c7652953fa7c76ecb6760 143412 tails-greeter_0.1.1~7.gbp53bb13_all.deb
+	072129e5b7b4911b373c4cfb72fb5fca40404249 143722 tails-greeter_0.2.0_all.deb
+	af67e4c596ee2fba6341e2bcb0205620ffd92070 147154 tails-greeter_0.3.0_all.deb
+	081ee41d43b78bfd6cc1bfb300f614445c988792 147140 tails-greeter_0.3.1_all.deb
+	3783060e7bb20e0083f4c6a9914d7171b1a6c343 148298 tails-greeter_0.4_all.deb
+	f406f5ac3df21901be8c02a4c4667c3ea42cfc89 147502 tails-greeter_0.5_all.deb
+	65bfff3c26e2c13eb29979de25dfa328c96437e7 148298 tails-greeter_0.6.1_all.deb
+	58eefda4f9f55e5ee18a41f5ddca43443256165b 148726 tails-greeter_0.6.2_all.deb
+	2a11cef27f7d94d91cf2c5ba799e7f17a120cb64 148870 tails-greeter_0.6.3_all.deb
+	5833a9b80fb9a56e87e768347bc1eab295136959 149004 tails-greeter_0.6.3_all.deb
+	10311ab6271ed820ad0cfc3c73339caadb635a20 148198 tails-greeter_0.6_all.deb
+	5bc13ab35c11090fc98f772b8dddd7138ff32831 151620 tails-greeter_0.7.1_all.deb
+	5804efe5abac6d836870b5b55499f226f76f3f23 153066 tails-greeter_0.7.2.1~~wheezy1_all.deb
+	399bfabd350e5c79ff60111da80fceef7d8de606 152002 tails-greeter_0.7.2_all.deb
+	f4653a5e170c6debf3c54e1de68a9e3fdebdd912 152236 tails-greeter_0.7.3_all.deb
+	18e09c9f39b740bfe8e1c73a5f7e4d8388961a45 153884 tails-greeter_0.7.3~1.gbp1d3cae_all.deb
+	ada734a31f63e37b7abacd1bb445cf8a0ed77684 159682 tails-greeter_0.7.4_all.deb
+	74f086cc7bd8486ab4b57a1110fa811292af4f29 151406 tails-greeter_0.7_all.deb
+	e1e2329d381e1fb2ae49f39cb4e40dd9ed36d6e2 153978 tails-greeter_0.7~2.gbpd0c421_all.deb
+	40fe064e8e8f8920514347a08ed47f27568eda84 151398 tails-greeter_0.7~3.gbp4db078_all.deb
+	ed236d4d18b1b85d7416fdd00c79f512b63c5d16 39864 tails-iuk_0.2-1_all.deb
+	72ea8b226a8c005a7992b2cfa72dc14d6e31d1be 49276 tails-iuk_0.3.1-1_all.deb
+	603f6dac85cf8389475e423d7897d5871fa957a6 50572 tails-iuk_0.3.3-1_all.deb
+	e43ba5f65d8d149a844142d4c860f3fbe5f190e9 50436 tails-iuk_0.3.4-1_all.deb
+	89792e1b689851309371e24a52037c09c2ca5c01 55116 tails-iuk_0.3.5-1_all.deb
+	b83e70585f5ea3122f77c91951042d2023fb2f30 55462 tails-iuk_0.3.6-1_all.deb
+	2cb313fd8609b1c31cf1d347c99b93239c14c8f7 57882 tails-persistence-setup_0.10-1_all.deb
+	41542dc88821414b04c33b4ef202a712c4f96d81 59836 tails-persistence-setup_0.11-1_all.deb
+	e77a8721eab70c25f1e3f84e995f520bb1c41d63 59928 tails-persistence-setup_0.12-1_all.deb
+	817da0bfa22766ec2106693065e2917f964f1f75 59852 tails-persistence-setup_0.13-1_all.deb
+	019731bdc7969d05c5e02bf57e1c960ba9ced49e 59250 tails-persistence-setup_0.14-1_all.deb
+	4e808a08e3585e376949595979e77e1eb854f937 59120 tails-persistence-setup_0.15-1_all.deb
+	50c1914d0a1b12ecde9d4d8e5af127616a9f5010 60190 tails-persistence-setup_0.16-1_all.deb
+	10b4ae113c51ad4d661c953cf536bccbf3a7bba6 62360 tails-persistence-setup_0.17-1_all.deb
+	b8d37ca9a583891695ff1cfccef9acde3914d8cb 63720 tails-persistence-setup_0.18-1_all.deb
+	b1ed776eefcc7cc35c0146cc81b2d9a3d77c4db6 72656 tails-persistence-setup_0.20-1_all.deb
+	746b7ed1d7795b688b35a21066f1bb1f1499f634 70580 tails-persistence-setup_0.21-1_all.deb
+	22bf648b645845b56c99b762021bcd69da92f31a 34578 tails-persistence-setup_0.5-1_all.deb
+	d047d983408048ef02e3b6f625f540fac182fc97 35312 tails-persistence-setup_0.6-1_all.deb
+	400d8d0170865c824bf7666b88177bd6c124ea29 55592 tails-persistence-setup_0.7-1_all.deb
+	a4a01cf9fbfdb9a1a30ade2a611fcae7920031a9 57020 tails-persistence-setup_0.8-2_all.deb
+	be60323fdbe68efe378aaac29cf972afb94bc493 56446 tails-persistence-setup_0.8.1-1_all.deb
+	0a81bcebda9f8e51d99c7099576c79bd8fee76c1 56640 tails-persistence-setup_0.8.2-1_all.deb
+	1d3203afa9d1edc9869611bc9614ecce16637239 56950 tails-persistence-setup_0.8.3-1_all.deb
+	fbd4522137f1fb685b5e51a4c02319e8406187f6 59072 tails-persistence-setup_0.9-1_all.deb
+	c2c31ceaf6b4973dbb5f38c486d5d997466c21d9 1412400 tor-geoipdb_0.2.2.37-1~~squeeze+1_all.deb
+	2c93a093b5a9d2fbc9b28b3095e135c0abb34af3 1407870 tor_0.2.1.20-1~~lenny+1_powerpc.deb
+	f1e283403dec52ca1a9873bcad4f073176a25a48 1400938 tor_0.2.1.22-1~~lenny+1_powerpc.deb
+	2350ea53d7cedd8b35985918704386120d32cbcf 1398372 tor_0.2.1.25-2~~lenny+1_powerpc.deb
+	78bcef9fd65bd8bad95f308b9924b11f4693213b 1242392 tor_0.2.1.30-1~squeeze+1_powerpc.deb
+	b30f5ee1ccaca4b75de2e54140f75560c4a68d37 969706 tor_0.2.2.37-1~~squeeze+1_i386.deb
+	dbc676cd494a2f06f3f00a6d8a36d8fe57902921 162744 torchat-0.9.9.553.deb
+	052da86db77db506478b644e3bb66d201b0affc6 2604446 vidalia_0.2.10-1+tails1_i386.deb
+	4021cf9e724e6f1066b03a17dd43957b1a900ae3 2355150 vidalia_0.2.10-1+tails1~lenny1_i386.deb
+	5b76e72786ce9cf792a008fdad77f8e6e6f7b466 2616338 vidalia_0.2.10-3+tails2_i386.deb
+	19317fc1f087d65dc09e9f2c86595fec4eb1cfac 2616386 vidalia_0.2.10-3+tails3_i386.deb
+	1869d3f0bcc961f38fb4f00c107ec8f11ee72dfa 2616562 vidalia_0.2.10-3+tails4_i386.deb
+	b0370c05ec0f75be72d390b8a362e8bb16374753 2637818 vidalia_0.2.10-3+tails4_powerpc.deb
+	f37842a0b8d0569d2e9122f3a5b0f1f976dcf219 2614452 vidalia_0.2.10-3+tails5_i386.deb
+	684f1e8de01ea2a89fbe424be8e1a90531f6b23b 2635118 vidalia_0.2.10-3+tails5_powerpc.deb
+	f90f4a2135bc2c242b7bd677a3f0a88026dc104e 2649330 vidalia_0.2.12-2+tails1_i386.deb
+	bcf0b5fb509ee980cd764ca9c89359e2c3754c41 2708940 vidalia_0.2.14-1+tails1_i386.deb
+	04479009001826857257231a6ebb969472d4792f 2706182 vidalia_0.2.15-1+tails1_i386.deb
+	672343f6c0bf9b224d99ce896e1e5e155836ae6a 2915958 vidalia_0.2.17-1+tails1_i386.deb
+	9287c8bee25346908ca546c060c1c805abaf9505 3117694 vidalia_0.2.20-1+tails1_i386.deb
+	187c33733e39df628365fc3f143b873192fe0d7a 17875 vidalia_0.2.6-1~~amnesia1.debian.tar.gz
+	ae852668619b736b05e1634c651d99c54d6401ce 2271786 vidalia_0.2.6-1~~amnesia1_amd64.deb
+	bd807cc1c16ddebd5713cdbbcaf71d005ab939f1 2253418 vidalia_0.2.6-1~~amnesia1_i386.deb
+	5997a4a2073dd1f59b741f7790accdb844741c27 2692028 vidalia_0.2.6.orig.tar.gz
+	e7a0e5a5f599c7afec81bd2f7979771a8e3a35b9 18540 vidalia_0.2.7-1~lenny+amnesia1.debian.tar.gz
+	2705002bbb3b125d1a9e4b90107d4918f5577f56 2291040 vidalia_0.2.7-1~lenny+amnesia1_amd64.deb
+	361c18e47bfd7308f22a1416b177ef48de078700 2272854 vidalia_0.2.7-1~lenny+amnesia1_i386.deb
+	1199d3a5fe0843e30b39698b266111784ad0cb18 2477386 vidalia_0.2.7-1~squeeze+amnesia1_i386.deb
+	54fff75a2cc59455e1af49e070ea0a3dac24f0cd 2695858 vidalia_0.2.7.orig.tar.gz
+	54c7a5b9ee813a65e8288f4c23c678e6897c51c7 47371 vidalia_0.2.8-1~lenny+amnesia1.diff.gz
+	e31a08b4a5c90f4663889321597102f4892ad1f2 2329686 vidalia_0.2.8-1~lenny+amnesia1_i386.deb
+	78030bd9e70ffc0631350ad79ffa16999e928a67 2989387 vidalia_0.2.8.orig.tar.gz
+	2c303c3b3f33f2334ca0b9b9f7b269fbf06a3474 2625814 vidalia_0.2.9-1+tails1_i386.deb
+	f9b916be224497d82d4488f8206d769bd4ad6407 2381332 vidalia_0.2.9-1+tails1~lenny1_i386.deb
+	5c47fd77087bec44a2e5fa10b1f90af222fe6fb2 687828 virtualbox-dkms_4.1.10-dfsg-1~bpo60+1_all.deb
+	fa586b77943f1d6a077a29bf596fa3da93e90acf 609016 virtualbox-guest-dkms_4.1.10-dfsg-1~bpo60+1_all.deb
+	4387dbddc6a3db8103f0209417613be175ed275a 601068 virtualbox-guest-dkms_4.1.6-dfsg-2~bpo60+1_all.deb
+	588d914b4727b0d73f0ef438d0134856e9a54b4f 544760 virtualbox-guest-utils_4.1.10-dfsg-1~bpo60+1_i386.deb
+	841937bc3eeb5dae596a32b0691835721101260b 533172 virtualbox-guest-utils_4.1.6-dfsg-2~bpo60+1_i386.deb
+	39d423518c57d9c96f4bfd32f01d5f57692a74d5 1424334 virtualbox-guest-x11_4.1.10-dfsg-1~bpo60+1_i386.deb
+	b71607ecfa410adb348b5c5ec3340c7260fee002 1397844 virtualbox-guest-x11_4.1.6-dfsg-2~bpo60+1_i386.deb
+	35dfabc9ca3dfcaf485d326278739fa48d66515f 523746 virtualbox-ose-guest-dkms_4.0.4-dfsg-1~squeeze+tails1_all.deb
+	01f6d01641a33b9516122aac235fbb654155c03c 455316 virtualbox-ose-guest-source_4.0.4-dfsg-1~squeeze+tails1_all.deb
+	8251856dbe5c85f40d6263d0808a9c530c90c297 498298 virtualbox-ose-guest-utils_4.0.4-dfsg-1~squeeze+tails1_i386.deb
+	c9b0747beca960dd1189184e4ce881a9095877fa 1576854 virtualbox-ose-guest-x11_4.0.4-dfsg-1~squeeze+tails1_i386.deb
+	a47cfc912f5d39e8ea20d850cefc948e49090a84 6488490 virtualbox-qt_4.1.10-dfsg-1~bpo60+1_i386.deb
+	6cf679d607b2ed651678fe79e24a1a5ca19e588f 15585808 virtualbox_4.1.10-dfsg-1~bpo60+1_i386.deb
+	88c8bacbd0dc044c0d5ae798b3eee5c2dbd5c280 23024 whisperback_1.2-1_all.deb
+	92424a0034ec53cacc5707a2bc7c2956949b80ff 23362 whisperback_1.2.1-1_all.deb
+	73d32afd14cadbf9be0d07622d74a3d33c3ea801 21680 whisperback_1.2~beta3-1_all.deb
+	3f2d8820de2e0061b89d4fe76aca9b0806a1c8ee 29562 whisperback_1.3.1-1_all.deb
+	2b6e5f39f5586d0d246a2f908fbdf1b84aea4477 23974 whisperback_1.3~beta1_all.deb
+	56690a5458c1b9dc66c12fc47d2edaa08f6a449d 24048 whisperback_1.3~beta2_all.deb
+	f3580a53368fad53b1e44f506371139eac017e42 24324 whisperback_1.3~beta3_all.deb
+	910e82f40e702ee2f4751513019fb31b09e6eedc 28458 whisperback_1.4.1_all.deb
+	cd35e8ac44ab35d3f4b7fcb0eba1a35b7a9a706b 27696 whisperback_1.4.2_all.deb
+	dad41ab94ddf392205df2746de572d9cb89e9a3a 27922 whisperback_1.4_all.deb
+	1fdab923b035b44707b855c0617ab7b257605908 43684 whisperback_1.5.1+1.gita7a363b_all.deb
+	dccc1d648c719a996a5315ff97a8e779cfa17ab2 29554 whisperback_1.5.1_all.deb
+	9e571016de1701d591e53f55b9a43023c3c7e19b 30238 whisperback_1.5_all.deb
+	07be2924029fe459aee9d8196cfae453e598bcfb 29148 whisperback_1.5~rc1_all.deb
+	4f9d81c0ea089a58d792e23806460aa638171d43 45468 whisperback_1.6.1_all.deb
+	e30d0339a7494ce68acd6ba2837deaeb945e875f 55052 whisperback_1.6.2_all.deb
+	f87138c367250f6c448fddbf40356ae45983d598 45500 whisperback_1.6_all.deb
+	a8756fa68a74b1aaae734729fc97c084e06099f0 43404 whisperback_1.6~rc2_all.deb
+	7f4d6f4ca38a6702687327b43ffbf3161d7993e9 4622 xp-cursor-theme_0.1-1_all.deb
+	4bf2ec62c6a5de1fd79a6988ae6e8e1fed90c5d4 98324 xul-ext-cookie-monster_1.1.0-3+tails0_all.deb
+	e1d985eeb4c6bd076f3e778d2a6ca54b81bbb08d 809746 xul-ext-firegpg_0.8-1+tails2_i386.deb
+	69dd999081251f2827f6e43193abcbc373eb6ce9 807570 xul-ext-firegpg_0.8-1+tails3_i386.deb
+	d2f94ccd4972ab6ef5fb7e235b58c0a4e174a5d0 807876 xul-ext-firegpg_0.8-1+tails4_i386.deb
+	a2c32d44d837b53405b7febd659b58a12b430987 808152 xul-ext-firegpg_0.8-1+tails5_i386.deb
+	e1a2ffb4c490ebe9e198fe266181fd539b68e8f6 707418 xul-ext-foxyproxy-standard_3.4-1+tails1_all.deb
+	2cd515b703590d8753b07ba7080c920638b5a2bd 274278 xul-ext-torbutton_1.2.5-1+tails1~lenny_all.deb
+	1e999b00d7bde58563905d2f0276402182a33b00 274284 xul-ext-torbutton_1.2.5-1+tails1~squeeze_all.deb
+	be359633dd8163eb3c1d9f03e25065f42d9b289e 1038604 yelp_2.30.1+webkit-1+tails1_i386.deb
