@@ -77,7 +77,7 @@ class VMStorage
     avail = convert_to_MiB(get_free_space('host', @pool_path), "KiB")
     assert(avail - reserved >= needed,
            "Error creating disk \"#{name}\" in \"#{@pool_path}\". " \
-           "Need #{needed} MiB but only #{avail} MiB is available of, " \
+           "Need #{needed} MiB but only #{avail} MiB is available of " \
            "which #{reserved} MiB is reserved for other temporary files.")
     begin
       old_vol = @pool.lookup_volume_by_name(name)
