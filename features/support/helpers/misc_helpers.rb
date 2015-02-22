@@ -23,6 +23,8 @@ def try_for(t, options = {})
       loop do
         begin
           return true if yield
+        rescue NameError => e
+          raise e
         rescue Timeout::Error => e
           if options[:msg]
             raise RuntimeError, options[:msg], caller
@@ -93,12 +95,6 @@ end
 def get_tor_relays
   cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
   @vm.execute(cmd).stdout.chomp.split("\n")
-end
-
-def save_pcap_file
-    pcap_copy = "#{$config["TMP_DIR"]}/pcap_with_leaks-#{DateTime.now}"
-    FileUtils.cp(@sniffer.pcap_file, pcap_copy)
-    puts "Full network capture available at: #{pcap_copy}"
 end
 
 def get_free_space(machine, path)

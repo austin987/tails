@@ -37,7 +37,8 @@ class FirewallLeakCheck
   attr_reader :ipv4_tcp_leaks, :ipv4_nontcp_leaks, :ipv6_leaks, :nonip_leaks
 
   def initialize(pcap_file, tor_relays)
-    packets = PacketFu::PcapFile.new.file_to_array(:filename => pcap_file)
+    @pcap_file = pcap_file
+    packets = PacketFu::PcapFile.new.file_to_array(:filename => @pcap_file)
     @tor_relays = tor_relays
     ipv4_tcp_packets = []
     ipv4_nontcp_packets = []
@@ -63,6 +64,12 @@ class FirewallLeakCheck
     @ipv4_nontcp_leaks = get_public_hosts_from_ippackets ipv4_nontcp_packets
     @ipv6_leaks = get_public_hosts_from_ippackets ipv6_packets
     @nonip_leaks = nonip_packets
+  end
+
+  def save_pcap_file
+    pcap_copy = "#{@pcap_file}-#{DateTime.now}"
+    FileUtils.cp(@pcap_file, pcap_copy)
+    puts "Full network capture available at: #{pcap_copy}"
   end
 
   # Returns a list of all unique non-LAN destination IP addresses
@@ -95,6 +102,31 @@ class FirewallLeakCheck
 
   def empty?
     @ipv4_tcp_leaks.empty? and @ipv4_nontcp_leaks.empty? and @ipv6_leaks.empty? and @nonip_leaks.empty?
+  end
+
+  def assert_no_leaks
+    if !empty?
+      if !ipv4_tcp_leaks.empty?
+        puts "The following IPv4 TCP non-Tor Internet hosts were contacted:"
+        puts ipv4_tcp_leaks.join("\n")
+        puts
+      end
+      if !ipv4_nontcp_leaks.empty?
+        puts "The following IPv4 non-TCP Internet hosts were contacted:"
+        puts ipv4_nontcp_leaks.join("\n")
+        puts
+      end
+      if !ipv6_leaks.empty?
+        puts "The following IPv6 Internet hosts were contacted:"
+        puts ipv6_leaks.join("\n")
+        puts
+      end
+      if !nonip_leaks.empty?
+        puts "Some non-IP packets were sent\n"
+      end
+      save_pcap_file
+      raise "There were network leaks!"
+    end
   end
 
 end

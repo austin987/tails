@@ -9,11 +9,11 @@ Feature: Chatting anonymously using Pidgin
 
   Background:
     Given a computer
-    And I capture all network traffic
     When I start Tails from DVD and I login
     Then Pidgin has the expected accounts configured with random nicknames
     And I save the state so the background can be restored next scenario
 
+  @check_tor_leaks
   Scenario: Connecting to the #tails IRC channel with the pre-configured account
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
@@ -26,7 +26,6 @@ Feature: Chatting anonymously using Pidgin
     Then I see the Tails roadmap URL
     When I click on the Tails roadmap URL
     Then the Tor Browser has started and loaded the Tails roadmap
-    And all Internet traffic has only flowed through Tor
 
   Scenario: Adding a certificate to Pidgin
     And I start Pidgin through the GNOME menu
@@ -40,7 +39,7 @@ Feature: Chatting anonymously using Pidgin
     And I close Pidgin's account manager window
     Then I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
 
-  @keep_volumes
+  @keep_volumes @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
     Given the USB drive "current" contains Tails with persistence configured and password "asdf"
     And a computer
@@ -52,7 +51,6 @@ Feature: Chatting anonymously using Pidgin
     # And I take note of the OTR key for Pidgin's "irc.oftc.net" account
     And I shutdown Tails and wait for the computer to power off
     Given a computer
-    And I capture all network traffic
     And I start Tails from USB drive "current" and I login with persistence password "asdf"
     And Pidgin has the expected persistent accounts configured
     # And Pidgin has the expected persistent OTR keys
@@ -62,7 +60,6 @@ Feature: Chatting anonymously using Pidgin
     And I close Pidgin's account manager window
     Then Pidgin successfully connects to the "irc.oftc.net" account
     And I can join the "#tails" channel on "irc.oftc.net"
-    And all Internet traffic has only flowed through Tor
     # Exercise Pidgin AppArmor profile with persistence enabled.
     # This should really be in dedicated scenarios, but it would be
     # too costly to set up the virtual USB drive with persistence more
