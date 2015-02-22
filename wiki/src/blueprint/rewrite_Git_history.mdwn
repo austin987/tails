@@ -145,3 +145,162 @@ Can be deleted
 * test/pidgin-wip
 * test/reorg
 * test/xxx-tor-bootstrap-tests
+
+What must I do now that the Git repository's history has been rewritten?
+========================================================================
+
+<div class="caution">
+
+This is a draft documentation. It is not meant to be used yet.
+
+</div>
+
+<div class="note">
+
+This is about the main Tails Git repository. Other repositories, such
+as the ones for the Greeter and other custom software, are not affected.
+
+</div>
+
+Back up your local Git directory
+--------------------------------
+
+<div class="caution">
+
+If you make a mistake, some of the operations below will destroy your
+great carefully hand-crafted Tails work. I may also make kittens
+suffer in awful ways that you can't possibly imagine (well, if you
+have designed the Git user interface, possibly you can imagine even
+worse ways, but AFAIK you're not contributing to Tails yet).
+
+</div>
+
+Therefore, first backup the directory where your local Git working
+directory lives.
+
+Store the name of the official Git remote
+-----------------------------------------
+
+Find out how you have named the Git remote that points to the official
+repository:
+
+	OFFICIAL_REMOTE=$(git remote -v \
+	   | grep --color=never -E \
+	      '[a-zA-Z0-9_-]+\s+(https://git-tails.immerda.ch/tails(?:.git)?\s+|(ssh://)?boum_org_amnesia@webmasters\.boum\.org(:wiki\.git|/~/wiki.git)).*\(fetch\)$' \
+	   | awk '{print $1}')
+	[ -n "$OFFICIAL_REMOTE" ] || echo "No official remote found."
+
+If you see "No official remote found", then you are probably using
+a deprecated or unsafe URL for your official remote. You'll need to
+fix that first: [[find out what the correct URL
+is|contribute/git#main-repo]], and then fix it in `.git/config` and
+run the commands above again.
+
+<div class="caution">
+
+All commands that follow must be run _in the same terminal_ as the
+previous ones: they are going to reuse the
+<code>$OFFICIAL_REMOTE</code> shell variable and may do pretty ugly
+things if it is not properly defined.
+
+</div>
+
+Fetch the rewritten history
+---------------------------
+
+Fetch the content of the updated official repository:
+
+	git fetch --prune "$OFFICIAL_REMOTE" && \
+	   git fetch "$OFFICIAL_REMOTE" --tags
+
+Back up your existing local branches
+------------------------------------
+
+Rename every local branch so that their name starts with the
+`old-` prefix:
+
+	for b in $(git branch --no-color) ; do
+	   [ "$b" != '*' ] || continue
+	   git branch -m "$b" "old-$b"
+	done
+
+This is needed for two reasons:
+
+ * This makes sure that any work you may have started in the past, and
+   that was not merged yet, is saved somewhere and can be retrieved
+   if needed.
+
+ * The `old-` prefix is meant to be a warning sign, so that you don't
+   mistakenly base future work on the old, non-rewritten Git history
+   (such work *cannot* be merged, as it would re-import all the data
+   we just managed to get rid of).
+
+Clean up your personal Git repository
+-------------------------------------
+
+If you have a personal online Git repository, please consider
+following these instructions.
+
+This is not compulsory, but if you don't do that, then any new
+contributor who adds your personal Git repository as a Git remote will
+need to download hundreds of megabytes of useless data, which is not
+very welcoming. In particular, new translators on your team would be
+negatively affected... and you want new teammates, right? :)
+
+So, right now your personal Git repository contains _both_ the old
+(non-rewritten) and the new (rewritten) Git history. Here is how to
+get rid of the old one.
+
+### Delete remote branches based on the old history
+
+List branches that are in your personal online Git repository (replace
+`MY_REMOTE` with the name of the remote that points to your personal
+online Git repository):
+
+	git branch -r --list 'MY_REMOTE/*'
+
+For each such branch, check if you have work in there that can still
+be useful. If it's the case, then export it outside of Git, e.g.
+using `git format-patch`.
+
+Delete all remote branches in your personal Git repository (replace
+`MY_REMOTE` everywhere with the name of the remote that points to your
+personal online Git repository):
+
+	for b in $(git branch --no-color -r --list 'MY_REMOTE/*') ; do
+	   git push --force MY_REMOTE ":$b"
+	done
+
+### Make sure you have only up-to-date tags
+
+Delete all local tags:
+
+	git tag | xargs git tag -d
+
+Fetch fresh tags from the official remote:
+
+	git fetch "$OFFICIAL_REMOTE" --tags
+
+### Force-push up-to-date tags
+
+Force-push the updated tags so that they replace the old ones in your
+personal online Git repository (replace `MY_REMOTE` with the name of
+the remote that points to your personal online Git repository):
+
+	git push --force MY_REMOTE --tags
+
+Start working again
+-------------------
+
+You may use `git checkout` as usual to create:
+
+ * a new local branch, for work you are starting right now;
+ * a new local branch tracking one that exists in the official
+   repository already, for work you are following-up on.
+
+Later, when you push a branch to your personal Git repository, if that
+branch did previously exist there, then you may need to pass the
+`--force` option to `git push`: to avoid losing data, Git refuses to
+rewrite history on the remote by default, so in the rare cases when we
+want to do that (which is precisely the case here), one has to
+override this protection.
