@@ -1,6 +1,6 @@
 [[!meta title="Running the automated test suite"]]
 
-[[!toc levels=1]]
+[[!toc levels=2]]
 
 Basic usage
 ===========
@@ -55,6 +55,8 @@ to be used in certain features, like host, port and credentials --
 stuff we don't want to make public. These must be set explicitly in
 order for those features to run.
 
+## Non-secret configuration
+
 Here's a list of all non-secret key-value pairs that can be supported
 by the local configuration file:
 
@@ -75,3 +77,38 @@ by the local configuration file:
   are written during a test, e.g. VM snapshots and memory dumps,
   failure screenshots, pcap files and disk images. Defaults to
   `"/tmp/TailsToaster"`.
+
+## "Secret" configuration
+
+This section describes the formats for all secret configurations that
+must be configured in the local configuration file for certain
+features or scenarios to work. If any of these are omitted, parts of
+the test suite will fail.
+
+### Tor pluggable transports
+
+The format is:
+
+    Tor:
+      Transports:
+        $TYPE:
+          - ipv4_address: "1.2.3.4"
+            ipv4_port: 443
+            fingerprint: "01234567890abcdef01234567890abcdef012345"
+            extra:
+          - ipv4_address: "5.6.7.8"
+          [...]
+        $ANOTHER_TYPE:
+          - ipv4_address: "1.2.3.4"
+          [...]
+
+where the type `$TYPE` (and `$ANOTHER_TYPE`) should be something like
+`Obfs4` or `Bridge` (the first type) or whatever Tor calls them. Both
+`fingerprint` and `extra` are optional and can be left empty (or
+skipped completely), but e.g. `extra` is necessary for `Obfs4` type
+bridges, for the `cert=... iat-mode=...` stuff, and the same for
+`Scramblesuite`'s `password=...`.
+
+This setting is required for `tor_bridges.feature` (requires types
+`Bridge`, `Obfs2`, `Obfs3` and `Obfs4`) and `time_syncing.feature`
+(requires type `Bridge` only).

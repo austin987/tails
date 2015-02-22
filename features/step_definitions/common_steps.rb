@@ -58,6 +58,8 @@ def restore_background
       wait_until_tor_is_working
       @vm.spawn("restart-vidalia")
     end
+  else
+    @vm.host_to_guest_time_sync
   end
 end
 
@@ -256,6 +258,11 @@ Given /^I enable more Tails Greeter options$/ do
   @screen.wait('TailsGreeterLoginButton.png', 20)
 end
 
+Given /^I enable the specific Tor configuration option$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.click('TailsGreeterTorConf.png')
+end
+
 Given /^I set sudo password "([^"]*)"$/ do |password|
   @sudo_password = password
   next if @skip_steps_while_restoring_background
@@ -413,7 +420,7 @@ end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
   next if @skip_steps_while_restoring_background
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_tor_relays)
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_all_tor_nodes)
   leaks.assert_no_leaks
 end
 

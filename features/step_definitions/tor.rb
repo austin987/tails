@@ -318,3 +318,57 @@ When /^I connect Gobby to "([^"]+)"$/ do |host|
   @screen.type(host + Sikuli::Key.ENTER)
   @screen.wait("GobbyConnectionComplete.png", 60)
 end
+
+When /^the Tor Launcher autostarts$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait('TorLauncherWindow.png', 30)
+end
+
+When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
+  next if @skip_steps_while_restoring_background
+  bridge_type.downcase!
+  bridge_type.capitalize!
+  begin
+    @bridges = $config["Tor"]["Transports"][bridge_type]
+    assert_not_nil(@bridges)
+    assert(!@bridges.empty?)
+  rescue NoMethodError, Test::Unit::AssertionFailedError
+    raise(
+<<EOF
+It seems no '#{bridge_type}' pluggable transports are defined in your local configuration file (#{LOCAL_CONFIG_FILE}). See wiki/src/contribute/release_process/test/usage.mdwn for the format.
+EOF
+)
+  end
+  @bridge_hosts = []
+  for bridge in @bridges do
+    @bridge_hosts << bridge["ipv4_address"]
+  end
+
+  @screen.wait_and_click('TorLauncherConfigureButton.png', 10)
+  @screen.wait_and_click('TorLauncherNextButton.png', 10)
+  @screen.hide_cursor
+  @screen.wait_and_click('TorLauncherNextButton.png', 10)
+  @screen.wait('TorLauncherBridgePrompt.png', 10)
+  @screen.wait_and_click('TorLauncherYesRadioOption.png', 10)
+  @screen.wait_and_click('TorLauncherNextButton.png', 10)
+  @screen.wait_and_click('TorLauncherBridgeList.png', 10)
+  for bridge in @bridges do
+    bridge_line = bridge_type.downcase   + " " +
+                  bridge["ipv4_address"] + ":" +
+                  bridge["ipv4_port"].to_s
+    bridge_line += " " + bridge["fingerprint"].to_s if bridge["fingerprint"]
+    bridge_line += " " + bridge["extra"].to_s if bridge["extra"]
+    @screen.type(bridge_line + Sikuli::Key.ENTER)
+  end
+  @screen.wait_and_click('TorLauncherFinishButton.png', 10)
+  @screen.wait('TorLauncherConnectingWindow.png', 10)
+  @screen.waitVanish('TorLauncherConnectingWindow.png', 120)
+end
+
+When /^all Internet traffic has only flowed through the configured pluggable transports$/ do
+  next if @skip_steps_while_restoring_background
+  assert_not_nil(@bridge_hosts, "No bridges has been configured via the " +
+                 "'I configure some ... bridges in Tor Launcher' step")
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, @bridge_hosts)
+  leaks.assert_no_leaks
+end
