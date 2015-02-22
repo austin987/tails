@@ -96,3 +96,18 @@ def get_tor_relays
   cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
   @vm.execute(cmd).stdout.chomp.split("\n")
 end
+
+def get_free_space(machine, path)
+  case machine
+  when 'host'
+    assert(File.exists?(path), "Path '#{path}' not found on #{machine}.")
+    free = cmd_helper("df '#{path}'")
+  when 'guest'
+    assert(@vm.file_exist?(path), "Path '#{path}' not found on #{machine}.")
+    free = @vm.execute_successfully("df '#{path}'")
+  else
+    raise 'Unsupported machine type #{machine} passed.'
+  end
+  output = free.split("\n").last
+  return output.match(/[^\s]\s+[0-9]+\s+[0-9]+\s+([0-9]+)\s+.*/)[1].chomp.to_i
+end
