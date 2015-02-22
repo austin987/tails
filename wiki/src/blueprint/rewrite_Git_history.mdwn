@@ -2,8 +2,8 @@ This is about [[!tails_ticket 6277]].
 
 [[!toc levels=3]]
 
-Documentation
-=======================================
+Rewrite process
+===============
 
 ## Clarifications
 
@@ -16,24 +16,32 @@ This work has been done on an up-to-date Debian Wheezy LXC, it is advised to run
 
 Create a working directory and in the working directory a *clean* and *dirty* directory.
 
-Inside the clean directory one should *git clone -mirror https://git-tails.immerda.ch/tails*. Make a full copy of the tails directory and place it in the dirty directory.
+Inside the clean directory one should `git clone --mirror https://git-tails.immerda.ch/tails`. Make a full copy of the tails directory and place it in the dirty directory.
 
-To rewrite Git history we use the following software: BFG Repo-Cleaner, it currently isn't bundled in Debian, we therefor download the jar file which can be found here: 
+To rewrite Git history we use [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/). It is currently not part of in Debian, we therefore download the jar file which can be found there:
 
     https://repo1.maven.org/maven2/com/madgag/bfg/1.12.3/bfg-1.12.3.jar
     sha256sum(2e237631235cfb8cc2d49dabb986389851dca8a28a07083345274b443dfa4911)
 
 Now we go inside the dirty directory's Tails repository and run the following command to delete all the merged branches: 
 
-    git branch --merged master | grep -v "\* master" | xargs -n 1 git branch -d (1.25 mins)
+    git branch --merged master \
+       | grep -v "\* master" \
+       | xargs -n 1 git branch -d
+
+(1.25 mins)
 
 After we've done that, we're ready for the next step and that deleting a bunch of big files inside the repository we would like to get out: 
     
-    java -jar bfg-1.12.3.jar --delete-folders '{forum,deb-src}' -D     '{*.deb,*.gz,truecrypt*.gz,*.diff.gz,*.debian.tar.*,*.orig.tar.*,*.comment,tails_wal    king_cat.zip,tails_hiding_cat.zip,FINISHED_WORK.7z,forum.mdwn}' dirty/tails.git
+    java -jar bfg-1.12.3.jar \
+       --delete-folders '{forum,deb-src}' \
+       -D '{*.deb,*.gz,truecrypt*.gz,*.diff.gz,*.debian.tar.*,*.orig.tar.*,*.comment,tails_walking_cat.zip,tails_hiding_cat.zip,FINISHED_WORK.7z,forum.mdwn}' \
+       dirty/tails.git
 
 After this has ran, we can go inside the dirty directory's Tails repository again and run the following command to rewrite history:
     
-    git reflog expire --expire=now --all && git gc --prune=now --aggressive 
+    git reflog expire --expire=now --all \
+       && git gc --prune=now --aggressive
 
 The entire operation takes around 10 minutes.
 
