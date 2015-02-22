@@ -332,7 +332,7 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
     @bridges = $config["Tor"]["Transports"][bridge_type]
     assert_not_nil(@bridges)
     assert(!@bridges.empty?)
-  rescue NoMethodError, AssertionFailedError
+  rescue NoMethodError, Test::Unit::AssertionFailedError
     raise(
 <<EOF
 It seems no '#{bridge_type}' pluggable transports are defined in your local configuration file (#{LOCAL_CONFIG_FILE}). See wiki/src/contribute/release_process/test/usage.mdwn for the format.
