@@ -23,6 +23,8 @@ def try_for(t, options = {})
       loop do
         begin
           return true if yield
+        rescue NameError => e
+          raise e
         rescue Timeout::Error => e
           if options[:msg]
             raise RuntimeError, options[:msg], caller
@@ -89,14 +91,23 @@ def cmd_helper(cmd)
 end
 
 # This command will grab all router IP addresses from the Tor
-# consensus in the VM.
-def get_tor_relays
+# consensus in the VM + the hardcoded TOR_AUTHORITIES.
+def get_all_tor_nodes
   cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
-  @vm.execute(cmd).stdout.chomp.split("\n")
+  @vm.execute(cmd).stdout.chomp.split("\n") + TOR_AUTHORITIES
 end
 
-def save_pcap_file
-    pcap_copy = "#{$config["TMP_DIR"]}/pcap_with_leaks-#{DateTime.now}"
-    FileUtils.cp(@sniffer.pcap_file, pcap_copy)
-    puts "Full network capture available at: #{pcap_copy}"
+def get_free_space(machine, path)
+  case machine
+  when 'host'
+    assert(File.exists?(path), "Path '#{path}' not found on #{machine}.")
+    free = cmd_helper("df '#{path}'")
+  when 'guest'
+    assert(@vm.file_exist?(path), "Path '#{path}' not found on #{machine}.")
+    free = @vm.execute_successfully("df '#{path}'")
+  else
+    raise 'Unsupported machine type #{machine} passed.'
+  end
+  output = free.split("\n").last
+  return output.match(/[^\s]\s+[0-9]+\s+[0-9]+\s+([0-9]+)\s+.*/)[1].chomp.to_i
 end

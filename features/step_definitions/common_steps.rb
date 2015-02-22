@@ -56,14 +56,16 @@ def restore_background
       @vm.host_to_guest_time_sync
       @vm.execute("service tor start")
       wait_until_tor_is_working
-      @vm.spawn("/usr/local/sbin/restart-vidalia")
+      @vm.spawn("restart-vidalia")
     end
+  else
+    @vm.host_to_guest_time_sync
   end
 end
 
 Given /^a computer$/ do
-  @vm.destroy if @vm
-  @vm = VM.new(VM_XML_PATH, DISPLAY)
+  @vm.destroy_and_undefine if @vm
+  @vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
 Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
@@ -108,12 +110,14 @@ Then /^drive "([^"]+)" is detected by Tails$/ do |name|
 end
 
 Given /^the network is plugged$/ do
-  next if @skip_steps_while_restoring_background
+  # We don't skip this step when restoring the background to ensure
+  # that the network state is actually the same after restoring as
+  # when the snapshot was made.
   @vm.plug_network
 end
 
 Given /^the network is unplugged$/ do
-  next if @skip_steps_while_restoring_background
+  # See comment in the step "the network is plugged".
   @vm.unplug_network
 end
 
@@ -121,7 +125,7 @@ Given /^I capture all network traffic$/ do
   # Note: We don't want skip this particular stpe if
   # @skip_steps_while_restoring_background is set since it starts
   # something external to the VM state.
-  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name)
+  @sniffer = Sniffer.new("sniffer", $vmnet)
   @sniffer.capture
 end
 
@@ -205,7 +209,7 @@ end
 
 When /^I destroy the computer$/ do
   next if @skip_steps_while_restoring_background
-  @vm.destroy
+  @vm.destroy_and_undefine
 end
 
 Given /^the computer (re)?boots Tails$/ do |reboot|
@@ -252,6 +256,11 @@ Given /^I enable more Tails Greeter options$/ do
   @screen.click(match.getCenter.offset(match.w/2, match.h*2))
   @screen.wait_and_click('TailsGreeterForward.png', 10)
   @screen.wait('TailsGreeterLoginButton.png', 20)
+end
+
+Given /^I enable the specific Tor configuration option$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.click('TailsGreeterTorConf.png')
 end
 
 Given /^I set sudo password "([^"]*)"$/ do |password|
@@ -411,29 +420,8 @@ end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
   next if @skip_steps_while_restoring_background
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_tor_relays)
-  if !leaks.empty?
-    if !leaks.ipv4_tcp_leaks.empty?
-      puts "The following IPv4 TCP non-Tor Internet hosts were contacted:"
-      puts leaks.ipv4_tcp_leaks.join("\n")
-      puts
-    end
-    if !leaks.ipv4_nontcp_leaks.empty?
-      puts "The following IPv4 non-TCP Internet hosts were contacted:"
-      puts leaks.ipv4_nontcp_leaks.join("\n")
-      puts
-    end
-    if !leaks.ipv6_leaks.empty?
-      puts "The following IPv6 Internet hosts were contacted:"
-      puts leaks.ipv6_leaks.join("\n")
-      puts
-    end
-    if !leaks.nonip_leaks.empty?
-      puts "Some non-IP packets were sent\n"
-    end
-    save_pcap_file
-    raise "There were network leaks!"
-  end
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_all_tor_nodes)
+  leaks.assert_no_leaks
 end
 
 Given /^I enter the sudo password in the gksu prompt$/ do

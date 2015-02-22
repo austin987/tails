@@ -6,7 +6,6 @@ Feature: Browsing the web using the Tor Browser
 
   Background:
     Given a computer
-    And I capture all network traffic
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
@@ -25,6 +24,7 @@ Feature: Browsing the web using the Tor Browser
     Then I can save the current page as "index.html" to the default downloads directory
     And I can print the current page as "output.pdf" to the default downloads directory
 
+  @check_tor_leaks
   Scenario: Importing an OpenPGP key from a website
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
@@ -33,6 +33,7 @@ Feature: Browsing the web using the Tor Browser
     When I accept to import the key with Seahorse
     Then I see "KeyImportedNotification.png" after at most 10 seconds
 
+  @check_tor_leaks
   Scenario: Playing HTML5 audio
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
@@ -40,8 +41,8 @@ Feature: Browsing the web using the Tor Browser
     And I open the address "http://www.terrillthompson.com/tests/html5-audio.html" in the Tor Browser
     And I click the HTML5 play button
     And 1 application is playing audio after 10 seconds
-    And all Internet traffic has only flowed through Tor
 
+  @check_tor_leaks
   Scenario: Watching a WebM video
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
@@ -50,7 +51,6 @@ Feature: Browsing the web using the Tor Browser
     And I see "TorBrowserNoScriptTemporarilyAllowDialog.png" after at most 10 seconds
     And I accept to temporarily allow playing this video
     Then I see "TorBrowserSampleRemoteWebMVideoFrame.png" after at most 180 seconds
-    And all Internet traffic has only flowed through Tor
 
   Scenario: I can view a file stored in "~/Tor Browser" but not in ~/.gnupg
     Given I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/Tor Browser/synaptic.html" as user "amnesia"
@@ -72,12 +72,12 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser has started
     Then the Tor Browser uses all expected TBB shared libraries
 
+  @check_tor_leaks
   Scenario: Opening check.torproject.org in the Tor Browser shows the green onion and the congratulations message
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
     And I open the address "https://check.torproject.org" in the Tor Browser
     Then I see "TorBrowserTorCheck.png" after at most 180 seconds
-    And all Internet traffic has only flowed through Tor
 
   Scenario: The Tor Browser should not have any plugins enabled
     When I start the Tor Browser

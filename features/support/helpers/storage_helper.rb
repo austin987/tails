@@ -13,15 +13,13 @@ require 'etc'
 
 class VMStorage
 
-  @@virt = nil
-
   def initialize(virt, xml_path)
-    @@virt ||= virt
+    @virt = virt
     @xml_path = xml_path
     pool_xml = REXML::Document.new(File.read("#{@xml_path}/storage_pool.xml"))
     pool_name = pool_xml.elements['pool/name'].text
     begin
-      @pool = @@virt.lookup_storage_pool_by_name(pool_name)
+      @pool = @virt.lookup_storage_pool_by_name(pool_name)
     rescue Libvirt::RetrieveError
       # There's no pool with that name, so we don't have to clear it
     else
@@ -29,7 +27,7 @@ class VMStorage
     end
     @pool_path = "#{$config["TMP_DIR"]}/#{pool_name}"
     pool_xml.elements['pool/target/path'].text = @pool_path
-    @pool = @@virt.define_storage_pool_xml(pool_xml.to_s)
+    @pool = @virt.define_storage_pool_xml(pool_xml.to_s)
     @pool.build
     @pool.create
     @pool.refresh
@@ -70,6 +68,15 @@ class VMStorage
     options[:size] ||= 2
     options[:unit] ||= "GiB"
     options[:type] ||= "qcow2"
+    # Require 'slightly' more space to be available to give a bit more leeway
+    # with rounding, temp file creation, etc.
+    reserved = 500
+    needed = convert_to_MiB(options[:size].to_i, options[:unit])
+    avail = convert_to_MiB(get_free_space('host', @pool_path), "KiB")
+    assert(avail - reserved >= needed,
+           "Error creating disk \"#{name}\" in \"#{@pool_path}\". " \
+           "Need #{needed} MiB but only #{avail} MiB is available of " \
+           "which #{reserved} MiB is reserved for other temporary files.")
     begin
       old_vol = @pool.lookup_volume_by_name(name)
     rescue Libvirt::RetrieveError

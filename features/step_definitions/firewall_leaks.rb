@@ -4,22 +4,22 @@ Then(/^the firewall leak detector has detected (.*?) leaks$/) do |type|
   case type.downcase
   when 'ipv4 tcp'
     if leaks.ipv4_tcp_leaks.empty?
-      save_pcap_file
+      leaks.save_pcap_file
       raise "Couldn't detect any IPv4 TCP leaks"
     end
   when 'ipv4 non-tcp'
     if leaks.ipv4_nontcp_leaks.empty?
-      save_pcap_file
+      leaks.save_pcap_file
       raise "Couldn't detect any IPv4 non-TCP leaks"
     end
   when 'ipv6'
     if leaks.ipv6_leaks.empty?
-      save_pcap_file
+      leaks.save_pcap_file
       raise "Couldn't detect any IPv6 leaks"
     end
   when 'non-ip'
     if leaks.nonip_leaks.empty?
-      save_pcap_file
+      leaks.save_pcap_file
       raise "Couldn't detect any non-IP leaks"
     end
   else
@@ -29,7 +29,7 @@ end
 
 Given(/^I disable Tails' firewall$/) do
   next if @skip_steps_while_restoring_background
-  @vm.execute("/usr/local/sbin/do_not_ever_run_me")
+  @vm.execute("do_not_ever_run_me")
   iptables = @vm.execute("iptables -L -n -v").stdout.chomp.split("\n")
   for line in iptables do
     if !line[/Chain (INPUT|OUTPUT|FORWARD) \(policy ACCEPT/] and
