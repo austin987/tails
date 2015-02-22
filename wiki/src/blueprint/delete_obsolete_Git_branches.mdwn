@@ -1,30 +1,26 @@
 Corresponding ticket: [[!tails_ticket 8616]], that's a blocker for [[!tails_ticket 8617]].
 
-Questions that we have before we actually implement what we want to do are.
+[[!toc levels=2]]
 
-The requirements are:
+Initial design
+==============
 
-* At which point do we remove merged Git branches?
-* Removing obsolete Git branches
-* Who removes these Git branches?
-* What kind of privileges are required to do that?
-
-#### At which point do we remove merged Git branches
+## When do we delete merged Git branches?
 
 After a new Tails release has been shipped, we should review which Git branches has been merged in the release and remove them accordingly. This will make sure that we keep a clean-ish Git repository for a new release cycle.
 
-#### Removing obsolete Git Branches
+## Deleting obsolete Git branches
 
-There is a distinction between merged Git brances and obsolete one's. Obsolete one's may be branches that haven't been merged, they could've been around for longer then 6 months or even a year, the work might never be done but we will consider it a WIP branch and will thus not be deleted.
+There is a distinction between merged Git brances and obsolete ones. Obsolete ones may be branches that haven't been merged, they could've been around for longer then 6 months or even a year, the work might never be done but we will consider it a WIP branch and will thus not be deleted.
 
-After a Git branch has been merged and we discover a regression, the cleanest way would be to open a new Git branch from master in order to fix the issue and not reuse the old Git branch.
+After a Git branch has been merged and we discover that it introduces a regression, the cleanest way would be to work on a resolution in a *new* Git branch, and not reuse the old Git branch.
 
-#### Who removes these Git Branches
+## Who does delete these Git branches?
 
-Ideally, the one who deletes upstream has access to push to tails.git. If we would chose for having the release manager do this, it can be done post-merge and it wouldn't require people from the sysadmin team to step in and issue a command.
+Ideally, the one who deletes them has access to push to the official Git repository. If we would chose for having the release manager do this, it can be done post-release and it wouldn't require people from the sysadmin team to step in and issue a command.
 
-#### What kind of privileges are required to do that?
+## What kind of privileges are required to do that?
 
-Push access to tails.git.
+Push access to the official main Git repository.
 
-So far, humans had write access there and we would like to not replace them yet with robots. That is for the future. The system that runs out APT repo can run on its own and if it would have code access.
+So far, only humans have write access there and we would like to not replace them with robots yet. That is for the future (e.g. the system that hosts our APT repository already has privileges akin to Git commit rights).
