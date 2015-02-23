@@ -34,8 +34,8 @@ Now we go inside the dirty directory's Tails repository and run the following co
 After we've done that, we're ready for the next step and that deleting a bunch of big files inside the repository we would like to get out: 
     
     java -jar bfg-1.12.3.jar \
-       --delete-folders '{forum,deb-src}' \
-       -D '{*.deb,*.gz,*.debian.tar.*,*.orig.tar.*,*.comment,tails_walking_cat.zip,tails_hiding_cat.zip,FINISHED_WORK.7z,forum.mdwn}' \
+       --delete-folders '{promote,forum,deb-src}' \
+       -D '{*.deb,*.gz,*.debian.tar.*,*.orig.tar.*,*.comment,tails_walking_cat.zip,tails_hiding_cat.zip,FINISHED_WORK.7z,forum.mdwn,XUL.mfasl,XPC.mfasl,firegpg.jar,noscript.jar,adblockplus.jar,WinXPDesktop.png,Desktop_en.png,Nautilus_en.png,Vidalia_menu_en.png,Vidalia_Netmap_en.png}' \
        dirty/tails.git
 
 After this has ran, we can go inside the dirty directory's Tails repository again and run the following command to rewrite history:
@@ -47,38 +47,35 @@ The entire operation takes around 10 minutes.
 
 <a id="todo-process"></a>
 
-## Remaining questions
-
-* Some files that supposedly are deleted by BFG repo-cleaner are _not_ in the
-  following list (e.g. `tails_walking_cat.zip`), so it's hard to gain confidence
-  in that list. Please check that these files really entirely removed from
-  the history.
-* The `wiki/src/promote/` directory is still part of the resulting Git history
-  => please update the instructions above in a way that fixes that, *without
-  deleting* e.g. `wiki/src/contribute/how/promote` (Maybe its `--delete-folders`
-  option can take a full path instead of just the basename?)
-* In the resulting repo, `.git` still takes about 60MB. I've found these
-  remaining files larger than 1MB in that Git history, that IMO we can delete:
-  - all occurrences of `XUL.mfasl`, `XPC.mfasl`, `firegpg.jar`, `noscript.jar`
-    and `adblockplus.jar`
-  - `features/images/WinXPDesktop.png`
-  - `wiki/src/support/walkthrough/Desktop_en.png`
-  - `wiki/src/support/walkthrough/Nautilus_en.png`
-  - `wiki/src/support/walkthrough/Vidalia_menu_en.png`
-  - `wiki/src/support/walkthrough/Vidalia_Netmap_en.png`
-
 <a id="post-rewrite-contributors-doc"></a>
 
 Deleted files after running BFG repo-cleaner
 ============================================
 
+	c8fa3c85c7a7cf08389d61c18d2c03f92d420479 1154432 Desktop_en.png
+	170631f621052cc54df9a3423bcb3916e66232d0 7397653 FINISHED_WORK.7z
+	1ff60b7438e68339eabe49dc2b9a54970ff554ce 1154432 Nautilus_en.png
+	5b910f8dd0352aee6d1593e593ceecd234294680 1154432 Vidalia_Netmap_en.png
+	382aff8df93aacfa67af235532f289b086a7de99 1154432 Vidalia_menu_en.png
+	083eaa84240a125a61a2222cdf48b3e896ba4fa3 965042 WinXPDesktop.png
+	0ce3213337eb54e81561c9fae0f8a019999cf62d 1326432 XPC.mfasl
+	0d2e62267378fa192a834effb6f91754b565d0e6 2752032 XPC.mfasl
+	6b6a5964931337482b2b6d8594358cc2de101b05 1709261 XUL.mfasl
+	e44d906dc3fcd54a73515843b980519b0c5e49ec 153785 XUL.mfasl
+	2c690793d7bea449e5c22af446aa981311a45bcb 1367870 adblockplus.jar
+	3f2d1f4fc666d01786a7b95e4ebd26a49da51f80 1338611 adblockplus.jar
 	e387051cd8686f45ab596f6012ec828cf16eb1e1 1594950 aircrack-ng_1.1-1.1_i386.deb
 	39064b9159d00785a233775703e9d0d9c09e66b0 1550846 aircrack-ng_1.1-1.1~bpo60+1~tails1_i386.deb
 	b04ee97cd7ac79f39ede8b43d721b825a95fe6fe 2148 aufs-modules-2.6-686_1.0_all.deb
 	988d6ddfb3c66bd8e4433be88b275dfac8d9b037 182266 barry-util_0.15-1.1~bpo60+1~tails0_i386.deb
 	f9ce3bfb5c563872d542a1efc0a3fb1411733557 182394 barry-util_0.15-1.2~bpo60+1_i386.deb
+	36c726c9a1fe3b9f713584fda22a78bf9cd73396 23148 bootchart_0.90.2-5~~amnesia1.tar.gz
 	e37c18d3330b22ff556f2de9533fa3a3fb7e648b 12436 bootchart_0.90.2-5~~amnesia1_amd64.deb
 	91a277ba16d5c13e4f6cb4727e5a5d5c506fd07f 11952 bootchart_0.90.2-5~~amnesia1_i386.deb
+	f89be3d1b274edc80d3cab835792cc05e6b9a1f6 288585 cd_label.pdf.gz
+	f9d852c8fdf75b9027cff8b081397d2785d91937 1467267 firegpg.jar
+	5d2f71871d067a5990e973fa2edc1dedff8bf952 1939511 firegpg.jar
+	23baecf72553f7ab2aa6e00a2b8cbcc62ca71eb2 1403725 firegpg.jar
 	6f97995fd66d268c6ace0c1e110be1ad30e88a06 462 forum.mdwn
 	2301d1d78c80572409f11e51f3575a1471b38623 1066 forum.mdwn
 	6b01b88c3865530fc3ce75337875e5fd3e7cdeda 1068 forum.mdwn
@@ -128,6 +125,7 @@ Deleted files after running BFG repo-cleaner
 	78a178353694ce942f391e0dd5f76f67e7662c1b 23480 i2p_0.9-1squeeze1_all.deb
 	4bf45648aa847d2f1ae71296b2d6383b43d513cc 25504 i2p_0.9.1+repack-1squeeze1_all.deb
 	bee06305954e6654a94cbf967909e8824a88a107 25490 i2p_0.9.2+repack-2squeeze1_all.deb
+	214d3fda8b2a3a2d30f66e8a302458697dfe8c6f 65753 ipc-latest.tar.gz
 	f593c61b1ab5fd35d4a2d0811660f66a087a7efe 20792 libarchive-tar-wrapper-perl_0.16-1~bpo60+1_all.deb
 	d05cd1f03d88b7238ec6f1bac08e4afbc935a18f 250960 libbarry0_0.15-1.1~bpo60+1~tails0_i386.deb
 	32724f579d8897b5c8d200204b75c9393f6d8dc2 251050 libbarry0_0.15-1.2~bpo60+1_i386.deb
@@ -252,6 +250,8 @@ Deleted files after running BFG repo-cleaner
 	b7e182c235bdb96cd87ac2a491b178a03bf967b7 453682 metacity_2.30.1-3.0~squeeze+tails1_i386.deb
 	9ee791a13a824f22a40ba3d23bf7e1974a4360a6 467788 metacity_2.30.1-3.0~squeeze+tails1_powerpc.deb
 	fc9aa22dc9c40bf0d5c2001afcfb3f1d42e3289c 236008 msn-pecan_0.1.3-1~bpo60+1_i386.deb
+	67a60cebdc1fbb265cb25f00b53ea2e0baa836e6 1278312 noscript.jar
+	e24ab5901d1e6393df628cb12dda725d4822436c 1052710 noscript.jar
 	313f0e059ebdc1d3e0e9924b1c3d550263339e02 4624 onboard_0.92.0-0ubuntu4~~amnesia1.diff.gz
 	84df4433354e734c70cdea26da0fd158fffda369 334038 onboard_0.92.0-0ubuntu4~~amnesia1_all.deb
 	e71ba6b80a34429782a69af7c4f35e2fe4608586 1118 onboard_0.93.0-0ubuntu3~~amnesia1.diff.gz
@@ -322,6 +322,7 @@ Deleted files after running BFG repo-cleaner
 	e43ba5f65d8d149a844142d4c860f3fbe5f190e9 50436 tails-iuk_0.3.4-1_all.deb
 	89792e1b689851309371e24a52037c09c2ca5c01 55116 tails-iuk_0.3.5-1_all.deb
 	b83e70585f5ea3122f77c91951042d2023fb2f30 55462 tails-iuk_0.3.6-1_all.deb
+	e5fb3722a1cd15cfd01e998ef8b9eed2bcda707c 2477 tails-keysigning.txt.gz
 	2cb313fd8609b1c31cf1d347c99b93239c14c8f7 57882 tails-persistence-setup_0.10-1_all.deb
 	41542dc88821414b04c33b4ef202a712c4f96d81 59836 tails-persistence-setup_0.11-1_all.deb
 	e77a8721eab70c25f1e3f84e995f520bb1c41d63 59928 tails-persistence-setup_0.12-1_all.deb
@@ -341,6 +342,8 @@ Deleted files after running BFG repo-cleaner
 	0a81bcebda9f8e51d99c7099576c79bd8fee76c1 56640 tails-persistence-setup_0.8.2-1_all.deb
 	1d3203afa9d1edc9869611bc9614ecce16637239 56950 tails-persistence-setup_0.8.3-1_all.deb
 	fbd4522137f1fb685b5e51a4c02319e8406187f6 59072 tails-persistence-setup_0.9-1_all.deb
+	b787bc08bfda761f46c31ca3306536dfd6e37da2 521562 tails_hiding_cat.zip
+	261eb833fdd82de1dd85bc61b62edcd57595acca 178421 tails_walking_cat.zip
 	c2c31ceaf6b4973dbb5f38c486d5d997466c21d9 1412400 tor-geoipdb_0.2.2.37-1~~squeeze+1_all.deb
 	2c93a093b5a9d2fbc9b28b3095e135c0abb34af3 1407870 tor_0.2.1.20-1~~lenny+1_powerpc.deb
 	f1e283403dec52ca1a9873bcad4f073176a25a48 1400938 tor_0.2.1.22-1~~lenny+1_powerpc.deb
@@ -348,6 +351,9 @@ Deleted files after running BFG repo-cleaner
 	78bcef9fd65bd8bad95f308b9924b11f4693213b 1242392 tor_0.2.1.30-1~squeeze+1_powerpc.deb
 	b30f5ee1ccaca4b75de2e54140f75560c4a68d37 969706 tor_0.2.2.37-1~~squeeze+1_i386.deb
 	dbc676cd494a2f06f3f00a6d8a36d8fe57902921 162744 torchat-0.9.9.553.deb
+	41e3b81c08eeb161831bd60edba7bdd363859ede 2692802 truecrypt-7.0a-linux-x86.tar.gz
+	a216c44c7e555e3ea603c991f23cebb2df4a023f 2646236 truecrypt-7.1-linux-x86.tar.gz
+	4e234e5b86ae7a5d5d1668113aeb9cf3016b315c 2644819 truecrypt-7.1a-linux-x86.tar.gz
 	052da86db77db506478b644e3bb66d201b0affc6 2604446 vidalia_0.2.10-1+tails1_i386.deb
 	4021cf9e724e6f1066b03a17dd43957b1a900ae3 2355150 vidalia_0.2.10-1+tails1~lenny1_i386.deb
 	5b76e72786ce9cf792a008fdad77f8e6e6f7b466 2616338 vidalia_0.2.10-3+tails2_i386.deb
@@ -388,6 +394,13 @@ Deleted files after running BFG repo-cleaner
 	c9b0747beca960dd1189184e4ce881a9095877fa 1576854 virtualbox-ose-guest-x11_4.0.4-dfsg-1~squeeze+tails1_i386.deb
 	a47cfc912f5d39e8ea20d850cefc948e49090a84 6488490 virtualbox-qt_4.1.10-dfsg-1~bpo60+1_i386.deb
 	6cf679d607b2ed651678fe79e24a1a5ca19e588f 15585808 virtualbox_4.1.10-dfsg-1~bpo60+1_i386.deb
+	d4d70e83605e2f36f8c294a1db0ffe326a5f9633 17981 whisperback-1.1-beta.tar.gz
+	c21338260bbffe589807c51f4d96406ed14bd1a9 18902 whisperback-1.1-beta.tar.gz
+	e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0 whisperback-1.1-beta.tar.gz
+	ed70890d1b6f9cca1d62691e558906a8b04c1c1a 18051 whisperback-1.1-beta2.tar.gz
+	58c08431deb51ad73b05e7955c73a260295750f3 19797 whisperback-1.2-beta.tar.gz
+	e4b18a8fa8aa4f1c1205bd64641d96d0ecb0fc58 19834 whisperback-1.2-beta2.tar.gz
+	37a4cc386e17d71105cea15da746d86ae3a25eb8 33437 whisperback-1.2-beta3.tar.gz
 	88c8bacbd0dc044c0d5ae798b3eee5c2dbd5c280 23024 whisperback_1.2-1_all.deb
 	92424a0034ec53cacc5707a2bc7c2956949b80ff 23362 whisperback_1.2.1-1_all.deb
 	73d32afd14cadbf9be0d07622d74a3d33c3ea801 21680 whisperback_1.2~beta3-1_all.deb
