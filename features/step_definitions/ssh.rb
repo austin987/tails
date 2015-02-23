@@ -85,3 +85,40 @@ Then /^I have sucessfully logged into the SSH server$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('SSHLoggedInPrompt.png', 60)
 end
+
+Then /^I connect to an SFTP server(?: on the| on a)?\s?(|LAN|Internet)$/ do |loc|
+  next if @skip_steps_while_restoring_background
+  step "I have the SSH key pair for an SSH server on the #{loc}"
+
+  prefix = get_ssh_prefix(loc)
+  read_and_validate_ssh_config(prefix)
+
+  @screen.wait_and_click("GnomePlaces.png", 20)
+  @screen.wait_and_click("GnomePlacesConnectToServer.png", 20)
+  @screen.wait("GnomeSSHConnect.png", 20)
+  @screen.click("GnomeSSHFTP.png")
+  @screen.click("GnomeSSHServerSSH.png")
+  @screen.type(Sikuli::Key.TAB, Sikuli::KeyModifier.SHIFT) # port
+  @screen.type(Sikuli::Key.TAB, Sikuli::KeyModifier.SHIFT) # host
+  @screen.type(@ssh_host + Sikuli::Key.TAB)
+
+  if @ssh_port
+    @screen.type("#{@ssh_port}" + Sikuli::Key.TAB)
+  else
+    @screen.type("22" + Sikuli::Key.TAB)
+  end
+  @screen.type(Sikuli::Key.TAB) # type
+  @screen.type(Sikuli::Key.TAB) # folder
+  @screen.type(@ssh_username + Sikuli::Key.TAB)
+  @screen.wait_and_click("GnomeSSHConnectButton.png", 60)
+end
+
+Then /^I verify the SSH fingerprint for the SFTP server$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click("GnomeSSHVerificationConfirm.png", 60)
+end
+
+Then /^I successfully connect to the SFTP server$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("GnomeSSHSuccess.png", 60)
+end
