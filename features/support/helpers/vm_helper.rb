@@ -391,6 +391,13 @@ EOF
     return cmd.stdout
   end
 
+  def file_append(file, line, user = 'root')
+    cmd = execute("echo '#{line}' >> '#{file}'", user)
+    assert(cmd.success?,
+           "Could not append to '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
+    return cmd.stdout
+  end
+
   def save_snapshot(path)
     @domain.save(path)
     @display.stop

@@ -31,14 +31,15 @@ def iptables_parse(iptables_output)
       parser_state = :expecting_chain_def
     else
       assert_equal(:expecting_rule_or_empty, parser_state)
-      _, _, target, prot, opt, in_iface, out_iface, source, destination, extra =
+      pkts, _, target, prot, opt, in_iface, out_iface, source, destination, extra =
         line.split(/\s+/, 10)
-      [target, prot, opt, in_iface, out_iface, source, destination].each do |var|
+      [pkts, target, prot, opt, in_iface, out_iface, source, destination].each do |var|
         assert_not_empty(var)
         assert_not_nil(var)
       end
       chains[cur_chain]["rules"] << {
         "rule" => line,
+        "pkts" => pkts.to_i,
         "target" => target,
         "protocol" => prot,
         "opt" => opt,
