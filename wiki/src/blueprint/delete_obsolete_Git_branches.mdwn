@@ -1,0 +1,26 @@
+Corresponding ticket: [[!tails_ticket 8616]], that's a blocker for [[!tails_ticket 8617]].
+
+[[!toc levels=2]]
+
+Initial design
+==============
+
+## When do we delete merged Git branches?
+
+After a new Tails release has been shipped, we should review which Git branches has been merged in the release and remove them accordingly. This will make sure that we keep a clean-ish Git repository for a new release cycle.
+
+## Deleting obsolete Git branches
+
+There is a distinction between merged Git brances and obsolete ones. Obsolete ones may be branches that haven't been merged, they could've been around for longer then 6 months or even a year, the work might never be done but we will consider it a WIP branch and will thus not be deleted.
+
+After a Git branch has been merged and we discover that it introduces a regression, the cleanest way would be to work on a resolution in a *new* Git branch, and not reuse the old Git branch.
+
+## Who does delete these Git branches?
+
+Ideally, the one who deletes them has access to push to the official Git repository. If we would chose for having the release manager do this, it can be done post-release and it wouldn't require people from the sysadmin team to step in and issue a command.
+
+## What kind of privileges are required to do that?
+
+Push access to the official main Git repository.
+
+So far, only humans have write access there and we would like to not replace them with robots yet. That is for the future (e.g. the system that hosts our APT repository already has privileges akin to Git commit rights).

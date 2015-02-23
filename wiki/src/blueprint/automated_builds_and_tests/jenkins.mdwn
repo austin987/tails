@@ -82,6 +82,30 @@ Notifications
   messages from Jenkins [Notification
   plugin](https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin).
 
+### Notifying different people depending on what triggered the build
+
+At least the obvious candidate (Email-ext plugin) doesn't seem able to
+email different recipients depending on what triggered the build
+out-of-the-box. But apparently, one can set up two 'Script - After
+Build' email triggers in the Email-ext configuration: one emails the
+culprit, the other emails the RM. And then, they do something or not
+depending on a variable we set during the build, based on what
+triggered the build. Likely the cleaner and simpler solution.
+
+Otherwise, we could have Jenkins email some pipe script that will
+forward to the right person depending on 1. whether it's a base
+branch; and 2. whether the build was triggered by a push or by
+something else. This should work if we can get the email notification
+to pass the needed info in it. E.g. the full console output currently
+has "Started by timer" or "Started by an SCM change", but this is not
+part of the email notification. Could work, but a bit hackish and all
+kinds of things can go wrong.
+
+Also, I've seen lots of people documenting crazy similar things with
+some of these plugins: "Run Condition", "Conditional BuildStep",
+"Flexible Publish" and "Any Build step". But then it gets too
+complicated for me to dive into it right now.
+
 How others use Jenkins
 ----------------------
 
