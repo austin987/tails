@@ -220,8 +220,7 @@ Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
   iptables_output = @vm.execute_successfully("iptables -vnL").stdout.chomp
   output_chain = iptables_parse(iptables_output)["OUTPUT"]
   output_chain["rules"].each do |rule|
-    m = /owner UID match \b#{uid}\b/.match(rule["extra"])
-    if !m.nil?
+    if /owner UID match \b#{uid}\b/.match(rule["extra"])
       pkts += rule["pkts"]
     end
   end
