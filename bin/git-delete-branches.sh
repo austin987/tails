@@ -57,7 +57,13 @@ else
     case $answer in
         y|Y|Yes|yes)
             for BRANCH in $REMOTE_BR; do
-                git push $(echo $BRANCH | sed 's/\([^/]\+\)\/\(.\+\)/\1 :\2/')
+                echo -n "Remove branch '$BRANCH'? (Y/n): "
+                read answer
+                case "$answer" in
+                    ''|y|Y|Yes|yes)
+                        git push $(echo $BRANCH | sed 's/\([^/]\+\)\/\(.\+\)/\1 :\2/')
+                        ;;
+                esac
             done
         if [ -n "$LOCAL_BR" ]; then
             git branch --merged | grep -Ev "\s+($(generate "$BRANCHES_TO_KEEP"))$" | xargs -n30 git branch -d
