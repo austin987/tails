@@ -33,7 +33,7 @@ if [ "$CURRENT" != 'master' ]; then
     exit 1
 fi
 
-echo "Fetching remote(s)"
+echo "Fetching from remote ${MANAGED_REMOTE}..."
 git fetch --prune "$MANAGED_REMOTE"
 
 [ $REMOVE_FROM_REMOTE -eq 1 ] && \
@@ -52,7 +52,7 @@ else
     [ -n "$LOCAL_BR" ] && \
          echo "The following merged local branches will be removed:" && \
          echo "$LOCAL_BR"
-    echo -n "Remove branches? (Y/N): "
+    echo -n "Remove these branches? (y/N): "
     read answer
     case $answer in
         y|Y|Yes|yes)
