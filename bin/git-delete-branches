@@ -11,7 +11,7 @@ REMOVE_FROM_REMOTE=1
 MANAGED_REMOTE="origin"
 
 # These branches will never be removed
-BRANCHES_TO_KEEP="master head devel experimental testing"
+BRANCHES_TO_KEEP="master head devel experimental testing feature/8617-delete-obsolete-Git-branches"
 
 ######################################################
 #  Nothing below this point should need to be edited #
@@ -28,7 +28,8 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 fi
 
 CURRENT=$(git rev-parse --abbrev-ref HEAD)
-if [ "$CURRENT" != 'master' ]; then
+if [ "$CURRENT" != 'master' ] && \
+        [ "$CURRENT" != 'feature/8617-delete-obsolete-Git-branches' ] ; then
     echo "Switch to the master branch before running this script." >&2
     exit 1
 fi
