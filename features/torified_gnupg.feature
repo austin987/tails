@@ -1,4 +1,4 @@
-@product
+@product @check_tor_leaks
 Feature: Keyserver interaction with GnuPG
   As a Tails user
   when I interact with keyservers using various GnuPG tools
@@ -7,7 +7,6 @@ Feature: Keyserver interaction with GnuPG
 
   Background:
     Given a computer
-    And I capture all network traffic
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
@@ -23,9 +22,7 @@ Feature: Keyserver interaction with GnuPG
     Then GnuPG uses the configured keyserver
     And the GnuPG fetch is successful
     And the "10CC5BC7" key is in the live user's public keyring after at most 120 seconds
-    And all Internet traffic has only flowed through Tor
 
   Scenario: Fetching OpenPGP keys using Seahorse should work and be done over Tor.
     When I fetch the "10CC5BC7" OpenPGP key using Seahorse
     Then the "10CC5BC7" key is in the live user's public keyring after at most 120 seconds
-    And all Internet traffic has only flowed through Tor

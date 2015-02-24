@@ -2,52 +2,124 @@
 
 [[!toc levels=2]]
 
-Certain users might not want to restart the computer every time they
-wish to use the Internet anonymously with Tails. For those, a so
-called [virtual machine](http://en.wikipedia.org/wiki/Virtual_machine)
-can be used to run Tails inside the "host" operating system
-installed on the computer (e.g. Microsoft Windows, Mac OS X, etc.).
-Essentially these programs emulate real computers that you can run
-"guest" operating systems (in this case Tails) in so they appear in
-a window within the host operating system. Using one of these
-technologies allows for convenient access to Tails's features in a
-protected environment while you at the same time have access to your
-normal operation system.
+It is sometimes convenient to be able to run Tails without having to
+restart your computer every time. This is possible using
+[[!wikipedia Virtual_machine desc="virtual machines"]].
 
-Security issues
-===============
+With virtual machines, it is possible to run Tails inside a *host*
+operating system (Linux, Windows, or Mac OS&nbsp;X). A virtual machine
+emulates a real computer and its operating system, called *guest* which
+appears in a window on the *host* operating system.
 
-There are a few security issues with this approach though. 
+When running Tails in a virtual machine, you can use most features of
+Tails from your usual operating system and use both in parallel
+without the need to restart the computer.
 
-When running Tails inside a virtual machine, both the host operating system
-and the virtualization software are able to monitor what you are doing in
-Tails.
+This is how Tails looks like when run in a virtual machine on Debian using *VirtualBox*:
 
-The main issue is if the host operating system is compromised with a software
-keylogger or other malware, which Tails does not provide any protection against
-– in fact, that is impossible.
+[[!img tails-in-jessie.png alt="Tails running in a VirtuaBox window inside a Debian desktop with GNOME 3" link=no]]
 
-Moreover traces are likely to be left on the local hard disk.
+<div class="note">
 
-As such, this is only recommended when the other alternative is not an option
-or when you are absolutely sure that your host system is clean.
+<p>We do not currently provide a solution for running a virtual machine
+inside a Tails host. See [[!tails_ticket 5606]].</p>
 
-That's why Tails warns you when you are running it inside a virtual
-machine. Do not expect Tails to protect you if you run it in a virtual
-machine if you do not trust the host computer, Tails is not magical!
+</div>
 
-If you read this warning while you are not aware to be using a virtual
-machine: there could be a [[bug|support/found_a_problem]] in the
-virtualization detection software Tails uses... or something really
-weird is happening.
+<a id="security"></a>
 
-If you are unsure, and if you can afford it, run Tails from a DVD,
-USB stick or SD card instead.
+Security considerations
+=======================
 
-Tips and tricks
-===============
+<div class="caution">
 
-Some [[tips]] can help making the host
-operating system and virtualization software a tiny bit more secure.
+Running Tails inside a virtual machine has various security
+implications. Depending on the host operating system and your security
+needs, running Tails in a virtual machine might be dangerous.
 
-In the future, it will be possible to easily start [[Tails within Windows]].
+</div>
+
+<a id="trustworthy"></a>
+
+  - Both the host operating system and the [[virtualization
+    software|virtualization#software]] are able to monitor what you are
+    doing in Tails.
+
+    If the host operating system is compromised with a software
+    keylogger or other malware, then it can break the security features
+    of Tails.
+
+    <div class="caution">
+    
+    Only run Tails in a virtual machine if the host operating system is
+    trustworthy.
+    
+    </div>
+
+<a id="traces"></a>
+
+  - Traces of your Tails session are likely to be left on the local hard
+    disk. For example, host operating systems usually use swapping (or *paging*) which
+    copies part of the RAM to the hard disk.
+
+    <div class="caution">
+    
+    Only run Tails in a virtual machine if leaving traces on the hard disk
+    is not a concern for you.
+    
+    </div>
+
+This is why Tails warns you when it is running inside a virtual machine.
+
+<div class="note">
+
+The Tails virtual machine does not modify the behaviour of the host
+operating system and the network traffic of the host is not anonymized. The MAC
+address of the computer is not modified by the [[MAC address
+spoofing|first_steps/startup_options/mac_spoofing]] feature of Tails
+when run in a virtual machine.
+
+</div>
+
+<a id="software"></a>
+
+Virtualization solutions
+========================
+
+To run Tails inside a virtual machine, you need to have
+virtualization software installed on the host operating system.
+Different virtualization software exist for Linux, Windows, and Mac OS&nbsp;X.
+
+<div class="note">
+
+<p>The following list includes only free software as we believe that
+this is a necessary condition for it to be trustworthy. See the
+[[previous warning|virtualization#trustworthy]] and our statement about
+[[free software and public scrutiny|about/trust#free_software]].</p>
+
+<p>Proprietary virtualization software solutions exist such as <span
+class="application">VMWare</span> but are not listed here on
+purpose.</p>
+
+</div>
+
+  - *VirtualBox* is available for Linux, Windows, and Mac. Its
+    free software version does not include support for USB devices and
+    does not allow to use a persistent volume.
+
+    [[See the corresponding documentation.|virtualbox]]
+
+  - *GNOME Boxes* is available for Linux. It has a simple user
+    interface but does not allow to use a persistent volume.
+
+    [[See the corresponding documentation.|boxes]]
+
+  - *virt-manager* is available for Linux. It has a more
+    complex user interface and allows to use a persistent volume, either
+    by:
+
+    - Starting Tails from a USB stick or SD card.
+    - Creating a virtual USB storage volume saved as a single file on the host
+      operating system.
+
+    [[See the corresponding documentation.|virt-manager]]

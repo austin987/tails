@@ -101,7 +101,7 @@ Debian Wheezy and Jessie:
 Once all dependencies are installed, get the Tails sources and
 checkout the development branch:
 
-    git clone git://git.tails.boum.org/tails
+    git clone https://git-tails.immerda.ch/tails
     cd tails
     git checkout devel
 
@@ -173,26 +173,6 @@ The following flags can be used to force a specific behaviour:
    if a local HTTP proxy is set.
  * **noproxy**: do not use any HTTP proxy.
 
-### Bootstrap cache settings
-
-A Tails build starts with `debootstrap`:ing a minimal Debian system
-which then is modified into a full Tails system. This is a rather time
-consuming step that usually does not have to be done: the packages used
-in it rarely get updated and hence the result is exactly the same most
-of the time.
-
-The following flags can be used to force a specific behaviour:
-
- * **cache**: re-use a cached bootstrap stage (if available), and saves
-   the bootstrap stage to disk on successful build. This will also
-   reduce the amount of memory required for in-memory builds by around
-   150 MiB (see the **ram** option above). **Warning:** this option may
-   create subtle differences between builds from the exact same Tails
-   source which are hard to track to track and understand. Use this
-   option only if you know what you are doing, and if you are not
-   building an actual release.
- * **nocache**: do the bootstrap stage from scratch (default).
-
 ### SquashFS compression settings
 
 One of the most expensive operations when building Tails is the creation
@@ -211,7 +191,6 @@ Forcing a specific behaviour can be done using:
 Some operations are preserved accross builds. Currently they are:
 
 * The wiki (for documentation).
-* The bootstrap stage cache (see the **cache** option above).
 
 In case you want to delete all these, the following option is available:
 
@@ -275,7 +254,8 @@ The following Debian packages need to be installed:
 
       221F 9A3C 6FA3 E09E 182E  060B C798 8EA7 A358 D82E
 
-* `syslinux`
+* `syslinux-utils` 6.03, e.g. from our `builder-wheezy` repository
+  just like `live-build`
 * `eatmydata`, `time` and `whois` (for `/usr/bin/mkpasswd`)
 * `ikiwiki` 3.20120725 or newer, available in wheezy-backports.
 * `apt-get install libyaml-perl libyaml-libyaml-perl po4a perlmagick

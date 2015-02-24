@@ -34,7 +34,7 @@ VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 # Environment variables that will be exported to the build script
-EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD', 'TAILS_BOOTSTRAP_CACHE']
+EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD']
 
 # Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
@@ -167,10 +167,6 @@ task :parse_build_options do
     when 'noram'
       ENV['TAILS_RAM_BUILD'] = nil
     # Bootstrap cache settings
-    when 'cache'
-      ENV['TAILS_BOOTSTRAP_CACHE'] = '1'
-    when 'nocache'
-      ENV['TAILS_BOOTSTRAP_CACHE'] = nil
     # HTTP proxy settings
     when 'extproxy'
       abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY

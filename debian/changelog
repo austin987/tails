@@ -1,8 +1,183 @@
-tails (1.2.4) UNRELEASED; urgency=medium
+tails (1.3) unstable; urgency=medium
 
-  * Dummy changelog entry for the next point release.
+  * Major new features
+    - Produce the Tails image in hybrid mode (again) so that the same
+      image can be installed both on DVD *and* "hard disks" like USB
+      storage and similar. (Closes: #8510)
+    - Confine the Tor Browser using AppArmor. (Closes: #5525)
+    - Install the Electrum bitcoin client from wheezy-backports, and
+      add a persistence preset for the Live user's bitcoin wallet. If
+      electrum is started without the persistence preset enabled, a
+      warning is shown. (Closes: #6739)
 
- -- Tails developers <amnesia@boum.org>  Thu, 15 Jan 2015 05:33:09 +0100
+  * Security fixes
+    - Upgrade Tor Browser to 4.0.4 (based on Firefox 31.5.0esr)
+      (Closes: #8938).
+
+  * Bugfixes
+    - Have tor_bootstrap_progress echo 0 if no matching log line is
+      found. (Closes: #8257)
+    - Always pass arguments through wrappers (connect-socks, totem,
+      wget, whois) with "$@". $* doesn't handle arguments with
+      e.g. embedded spaces correctly. (Closes: #8603, #8830)
+    - Upgrade Linux to 3.16.7-ckt4-3.
+
+  * Minor improvements
+    - Install a custom-built Tor package with Seccomp enabled;
+      enable the Seccomp sandbox when no pluggable transport is used.
+      (Closes: #8174)
+    - Install obfs4proxy instead of obfsproxy, which adds support for
+      the obfs4 Tor pluggable transport. (Closes: #7980)
+    - Install GnuPG v2 and associated tools from wheezy-backports,
+      primarily for its improved support for OpenPGP smartcards. It
+      lives side-by-side with GnuPG v1, which still is the
+      default. (Closes: #6241)
+    - Install ibus-unikey, a Vietnamese input method for IBus. (Closes:
+      #7999)
+    - Install torsocks (2.x) from wheezy-backports. (Closes: #8220)
+    - Install keyringer from Debian Jessie. (Closes: #7752)
+    - Install pulseaudio-utils.
+    - Remove all traces of Polipo: we don't use it anymore. This
+      closes #5379 and #6115 because:
+      * Have APT directly use the Tor SOCKS proxy. (Closes: #8194)
+      * Wrap wget with torsocks. (Closes: #6623)
+      * Wrap Totem to torify it with torsocks. (Closes: #8219)
+      * Torify Git with tsocks, instead of setting GIT_PROXY_COMMAND.
+        (Closes: #8680)
+    - Use torsocks for whois and Gobby, instead of torify.
+    - Upgrade I2P to 0.9.18-1~deb7u+1.
+    - Refactor the Unsafe and I2P browser code into a common shell
+      library. A lot of duplicated code is now shared, and the code
+      has been cleaned up and made more reliable. Several
+      optimizations of memory usage and startup time were also
+      implemented. (Closes: #7951)
+    - Invert Exit and About in gpgApplet context menu. This is a
+      short-term workaround for making it harder to exit the
+      application by mistake (e.g. a double right-click). (Closes:
+      #7450)
+    - Implement new touchpad settings. This enables tap-to-click,
+      2-fingers scrolling, and disable while typing. We don't enable
+      reverse scrolling nor horizontal scrolling. (Closes: #7779)
+    - Include the mount(8) output and live-additional-software.conf in
+      WhisperBack bug reports (Closes: #8719, #8491).
+    - Reduce brightness and saturation of background color. (Closes:
+      #7963)
+    - Have ALSA output sound via PulseAudio by default. This gives us
+      centralized sound volume controls, and... allows to easily, and
+      automatically, test that audio output works from Tor Browser,
+      thanks to the PulseAudio integration into the GNOME sound
+      control center.
+    - Import the new Tails signing key, which we will use for Tails
+      1.3.1, and have Tails Upgrader trust both it and the "old"
+      (current) Tails signing key. (Closes: #8732)
+    - tails-security-check: error out when passed an invalid CA file.
+      Unfortunately, the underlying HTTPS stack we use here fails open
+      in those case, so we have to check it ourselves. Currently, we
+      check that the file exists, is readable, is a plain file and is
+      not empty. Also support specifying the CA file via an
+      environment variable. This will ease development and bug-fixing
+      quite a bit.
+    - Fix racy code in Tails Installer that sometimes made the
+      automated test suite stall for scenarios installing Tails
+      to USB disks. (Closes: #6092)
+    - Make it possible to use Tails Upgrader to upgrade a Tails
+      installation that has cruft files on the system partition.
+      (Closes: #7678)
+
+  * Build system
+    - Install syslinux-utils from our builder-wheezy APT repository in
+      Vagrant. We need version 6.03~pre20 to make the Tails ISO image
+      in hybrid mode
+    - Update deb.tails.boum.org apt repo signing key. (Closes: #8747)
+	- Revert "Workaround build failure in lb_source, after creating
+      the ISO." This is not needed anymore given the move to the Tor
+      SOCKS proxy. (Closes: #5307)
+    - Remove the bootstrap stage usage option and disable all
+      live-build caching in Vagrant. It introduces complexity and
+      potential for strange build inconsistencies for a meager
+      reduction in build time. (Closes: #8725)
+    - Hardcode the mirrors used at build and boot time in auto/config.
+      Our stuff will be more consistent, easier to reproduce, and our
+      QA process will be more reliable if we all use the same mirrors
+      at build time as the ones we configure in the ISO. E.g. we won't
+      have issues such as #8715 again. (Closes: #8726)
+    - Don't attempt to retrieve source packages from local-packages so
+      local packages can be installed via
+      config/chroot_local-packages. (Closes: #8756)
+    - Use our own Tor Browser archive when building an ISO. (Closes:
+      #8125)
+
+  * Test suite
+    - Use libguestfs instead of parted when creating partitions and
+      filsystems, and to check that only the expected files
+      persist. We also switch to qcow2 as the default disk image
+      format everywhere to reduce disk usage, enable us to use
+      snapshots that includes the disks (in the future), and to use
+      the same steps for creating disks in all tests. (Closes: #8673)
+    - Automatically test that Tails ignores persistence volumes stored
+      on non-removable media, and doesn't enable swaps. (Closes:
+      #7822)
+    - Actually make sure that Tails can boot from live systems stored
+      on a hard drive. Running the 'I start Tails from DVD ...' step
+      will override the earlier 'the computer is set to boot from ide
+      drive "live_hd"' step, so let's make the "from DVD" part
+      optional; it will be the default any way.
+    - Make it possible to use an old iso with different persistence
+      presets. (Closes: #8091)
+    - Hide the cursor between steps when navigating the GNOME
+      applications menu. This makes it a bit more robust, again:
+      sometimes the cursor is partially hiding the menu entry we're
+      looking for, hence preventing Sikuli from finding it (in
+      particular when it's "Accessories", since we've just clicked on
+      "Applications" which is nearby). (Closes: #8875)
+    - Ensure that the test will fail if "apt-get X" commands fail.
+    - Test 'Tor is ready' notification in a separate scenario. (Closes:
+      #8714)
+    - Add automated tests for torified wget and whois. This should
+      help us identify future regressions such as #8603 in their
+      torifying wrappers.
+    - Add automated test for opening an URL from Pidgin.
+    - And add automated tests for the Tor Browser's AppArmor
+      sandboxing.
+    - Test that "Report an Error Launcher" opens the support
+      documentation.
+    - Test that the Unsafe Browser:
+      * starts in various locales.
+      * complains when DNS isn't configured.
+      * tears down its chroot on shutdown.
+      * runs as the correct user.
+      * has no plugins or add-ons installed.
+      * has no unexpected bookmarks.
+      * has no proxy configured.
+    - Bump the "I2P router console is ready" timeout in its test to
+      deal with slow Internet connections.
+    - Make the automatic tests of gpgApplet more robust by relying
+      more on graphical elements instead of keyboard shortcuts and
+      static sleep():s. (Closes: #5632)
+    - Make sure that enough disk space is available when creating
+      virtual storage media. (Closes: #8907)
+    - Test that the Unsafe Browser doesn't generate any non-user
+      initiated traffic, and in particular that it doesn't check for
+      upgrades, which is a regression test for #8694. (Closes: #8702)
+    - Various robustness improvements to the Synaptic tests. (Closes:
+      #8742)
+    - Automatically test Git. (Closes: #6307)
+    - Automatically test GNOME Screenshot, which is a regression test
+      for #8087. (Closes: #8688)
+    - Fix a quoting issue with `tails_persistence_enabled?`. (Closes:
+      #8919)
+    - Introduce an improved configuration system that also can store
+      local secrets, like user credentials needed for some
+      tests. (Closes: #6301, #8188)
+    - Actually verify that we successfully set the time in our time
+      syncing tests. (Closes: #5836)
+    - Automatically test Tor. This includes normal functionality and
+      the use pluggable transports, that our Tor enforcement is
+      effective (e.g. only the Tor network or configured bridges are
+      contacted) and that our stream isolation configuration is
+      working. (Closes: #5644, #6305, #7821)
+
+ -- Tails developers <tails@boum.org>  Mon, 23 Feb 2015 17:14:00 +0100
 
 tails (1.2.3) unstable; urgency=medium
 
