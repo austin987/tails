@@ -4,11 +4,11 @@
 #    Configure as needed    #
 #############################
 # Set to 1 to remove merged branches from remotes
-REMOVE_FROM_REMOTES=1
+REMOVE_FROM_REMOTE=1
 
-# If REMOVE_FROM_REMOTES was set to 1 above, set this to the remotes for which
-# you have push privileges
-MANAGED_REMOTES="origin"
+# If REMOVE_FROM_REMOTE was set to 1 above, set this to the remote
+# where branches shall be removed
+MANAGED_REMOTE="origin"
 
 # These branches will never be removed
 BRANCHES_TO_KEEP="master head devel experimental testing"
@@ -34,12 +34,12 @@ if [ "$CURRENT" != 'master' ]; then
 fi
 
 echo "Fetching remote(s)"
-git remote update --prune
+git fetch --prune "$MANAGED_REMOTE"
 
-[ $REMOVE_FROM_REMOTES -eq 1 ] && \
+[ $REMOVE_FROM_REMOTE -eq 1 ] && \
    REMOTE_BR=$(git branch -r --merged | grep -v '\->' |\
     grep -vE "\s+([^/]+)/($(generate "$BRANCHES_TO_KEEP"))$" |\
-    grep -E "($(generate "$MANAGED_REMOTES"))/")
+    grep -E "$MANAGED_REMOTE/")
 LOCAL_BR=$(git branch --merged | grep -Ev "\s+($(generate "$BRANCHES_TO_KEEP"))$")
 
 if [ -z "$REMOTE_BR" ] && [ -z "$LOCAL_BR" ]; then
