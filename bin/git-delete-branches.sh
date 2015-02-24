@@ -8,7 +8,7 @@ REMOVE_FROM_REMOTES=1
 
 # If REMOVE_FROM_REMOTES was set to 1 above, set this to the remotes for which
 # you have push privileges
-MANAGED_REMOTES="tails"
+MANAGED_REMOTES="origin"
 
 # These branches will never be removed
 BRANCHES_TO_KEEP="master head devel experimental testing"
