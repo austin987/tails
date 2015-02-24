@@ -7,7 +7,7 @@ end
 
 Given /^the I2P router console is ready$/ do
   next if @skip_steps_while_restoring_background
-  try_for(60) do
+  try_for(120) do
     @vm.execute('. /usr/local/lib/tails-shell-library/i2p.sh; ' +
                 'i2p_router_console_is_ready').success?
   end
@@ -50,8 +50,10 @@ Then /^the I2P firewall rules are (enabled|disabled)$/ do |mode|
   accept_rules_count = accept_rules.lines.count
   if mode == 'enabled'
     assert_equal(13, accept_rules_count)
+    step 'the firewall is configured to only allow the clearnet, i2psvc and debian-tor users to connect directly to the Internet over IPv4'
   elsif mode == 'disabled'
     assert_equal(0, accept_rules_count)
+    step 'the firewall is configured to only allow the clearnet and debian-tor users to connect directly to the Internet over IPv4'
   else
     raise "Unsupported mode passed: '#{mode}'"
   end

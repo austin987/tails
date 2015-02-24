@@ -24,9 +24,9 @@ Feature: Using Totem
     When I try to open "/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
 
+  @check_tor_leaks
   Scenario: Watching a WebM video over HTTPS, with and without the command-line
     Given a computer
-    And I capture all network traffic
     And I start Tails from DVD and I login
     When I open "https://webm.html5.org/test.webm" with Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
@@ -34,7 +34,6 @@ Feature: Using Totem
     And I start Totem through the GNOME menu
     When I load the "https://webm.html5.org/test.webm" URL in Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
-    And all Internet traffic has only flowed through Tor
 
   @keep_volumes
   Scenario: Installing Tails on a USB drive, creating a persistent partition, copying video files to it
