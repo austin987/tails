@@ -56,15 +56,17 @@ else
     read answer
     case $answer in
         y|Y|Yes|yes)
+	    REFS=''
             for BRANCH in $REMOTE_BR; do
                 echo -n "Remove branch '$BRANCH'? (Y/n): "
                 read answer
                 case "$answer" in
                     ''|y|Y|Yes|yes)
-                        git push $(echo $BRANCH | sed 's/^\([^/]\+\)\/\(.\+\)/\1 :\2/')
+                        REFS="$REFS $(echo $BRANCH | sed 's/^[^/]\+\/\(.\+\)/:\1/')"
                         ;;
                 esac
             done
+	    echo "$REFS" | xargs -n30 git push "$MANAGED_REMOTE"
         if [ -n "$LOCAL_BR" ]; then
             git branch --merged | grep -Ev "^\s+($(generate "$BRANCHES_TO_KEEP"))$" | xargs -n30 git branch -d
             fi
