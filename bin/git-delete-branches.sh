@@ -38,9 +38,9 @@ git fetch --prune "$MANAGED_REMOTE"
 
 [ $REMOVE_FROM_REMOTE -eq 1 ] && \
    REMOTE_BR=$(git branch -r --merged | grep -v '\->' |\
-    grep -vE "\s+([^/]+)/($(generate "$BRANCHES_TO_KEEP"))$" |\
-    grep -E "$MANAGED_REMOTE/")
-LOCAL_BR=$(git branch --merged | grep -Ev "\s+($(generate "$BRANCHES_TO_KEEP"))$")
+    grep -vE "^\s+([^/]+)/($(generate "$BRANCHES_TO_KEEP"))$" |\
+    grep -E "^\s+$MANAGED_REMOTE/")
+LOCAL_BR=$(git branch --merged | grep -Ev "^\s+($(generate "$BRANCHES_TO_KEEP"))$")
 
 if [ -z "$REMOTE_BR" ] && [ -z "$LOCAL_BR" ]; then
     echo "Woohoo! No unmerged branches!" >&2
@@ -61,12 +61,12 @@ else
                 read answer
                 case "$answer" in
                     ''|y|Y|Yes|yes)
-                        git push $(echo $BRANCH | sed 's/\([^/]\+\)\/\(.\+\)/\1 :\2/')
+                        git push $(echo $BRANCH | sed 's/^\([^/]\+\)\/\(.\+\)/\1 :\2/')
                         ;;
                 esac
             done
         if [ -n "$LOCAL_BR" ]; then
-            git branch --merged | grep -Ev "\s+($(generate "$BRANCHES_TO_KEEP"))$" | xargs -n30 git branch -d
+            git branch --merged | grep -Ev "^\s+($(generate "$BRANCHES_TO_KEEP"))$" | xargs -n30 git branch -d
             fi
             ;;
         *)
