@@ -26,6 +26,42 @@ a regression, the cleanest way would be to work on a resolution in a *new* Git
 branch, and not reuse the old Git branch. Hence, we consider it safe to delete
 branches that were already merged.
 
+### Exception: branches created just to get an APT suite
+
+Given how our [[contribute/APT_repository]] currently works, we sometimes push
+Git branches merely to have an APT suite created, and be able to upload Debian
+packages to it. Such a branch will look like it has been merged (it has no
+commit on top of current `master`), but still it should not be deleted:
+otherwise, our reprepro will remove the corresponding APT suite from its
+configuration; the APT suite indices and packages will stay around, but when one
+resumes work on this branch and pushes it again, then reprepro will most
+probably either bail out (and cause additional work for our sysadmins), or just
+create an empty APT suite (and then the packages previously uploaded to this APT
+suite won't be part of it anymore, causing additional work for the developer).
+
+So, on the short-term, the person who deletes Git branches should manually scan
+the list of candidates for deletion, and avoid deleting branches that 1.
+were created merely to get an APT branch; and 2. were actually not merged yet.
+Of course that's a bit painful and error-prone.
+
+Longer term, if/once we have each branch contain a config file with the list of
+APT suites that shall be used (as mentioned on [[!tails_ticket 8654]]), then for
+each branch that is a candidate for deletion we can:
+
+1. Check if that APT suite list file, in that branch, contains anything but
+   a base branch's APT suite. If it doesn't then it can be deleted. Otherwise,
+   go on:
+2. Check each listed non-base APT suite for packages that either are not in some
+   base branch (XXX: which one?) at all, or are newer than the version in some
+   base branch (XXX: which one?). If such packages are found, then drop this
+   branch from the list of candidates for deletion, on the grounds that its APT
+   suite has work that hasn't been merged.
+
+Mid-term, we could do the check from step 2 above on the APT suite that
+corresponds to each branch we're going to delete. It's going to be sub-optimal,
+as most branches don't introduce Debian packages, but it would probably be good
+enough, and the code will be reusable for the long-term solution anyway.
+
 ## Who does delete these Git branches?
 
 Ideally, the one who deletes them has access to push to the official Git
