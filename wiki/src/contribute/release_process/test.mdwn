@@ -133,202 +133,8 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 # Tor
 
-(automate: [[!tails_ticket 7821]])
-
 * The version of Tor should be the latest stable one, which is the highest version number
   before alpha releases on <http://deb.torproject.org/torproject.org/pool/main/t/tor/>.
-* Check that the firewall-level Tor enforcement is effective:
-  - check output of `iptables -L -n -v`
-  - check output of `iptables -t nat -L -n -v`
-  - try connecting to the Internet after unsetting `$http_proxy` and
-    `$HTTP_PROXY` using a piece of software that does not obey the
-    GNOME proxy settings, *and* is not explicitly torified in Tails:
-    
-        	unset http_proxy ; unset HTTP_PROXY
-        	wget --no-proxy http://monip.org/
-    
-    ... should only give you "Connection refused" error message.
-* Check that IPv6 traffic is blocked:
-  - check output of `ip6tables -L -n`
-  - at a place with working IPv6: try connecting to a known-working
-    IPv6-enabled server on its IPv6 address over TCP and icmp6.
-* After DHCP has been set up, `/etc/resolv.conf` must read `nameserver 127.0.0.1`.
-* Before DHCP has been set up, `/etc/resolv.conf` must read `nameserver 127.0.0.1`.
-* [[doc/first_steps/startup_options/bridge_mode]] should work:
-  1. Set up an administrator password.
-  1. Enable network configuration in Tails Greeter.
-  1. Configure a few bridges in Tor Launcher:
-     
-         	bridge 198.252.153.59:9001
-         	obfs2 198.252.153.59:16492
-        	obfs3 198.252.153.59:16493
-     
-  1. Use the Internet.
-  1. Check that the only outgoing direct network connections go to the
-     configured bridges:
-     
-         	sudo watch "netstat -taupen | grep ESTABLISHED"
-
-* Verify that all destinations reached from an intensive Tails session
-  are tor routers or
-  authorities:
-  1. Boot Tails without the network in.
-  1. Set up an administration password.
-  1. Start dumping your whole session's network activity with `sudo
-     tcpdump -n -i any -w dump` (or better, do the dump on another machine,
-     or on the host OS if Tails is running in a VM).
-  1. Plug the network.
-  1. Wait for Tor to be functional.
-  1. Save `/var/lib/tor/cached-microdesc-consensus` out of the VM (it's needed
-     to analyze the network dump later on).
-  1. Do *a lot* of network stuff (why not run do this while doing all
-     the other tests **but** I2P and the unsafe browser, which would
-     show many false positives?)
-  1. Then check all destinations, e.g. by using tshark and the script below:
-
-         # set DUMP to the output of tcpdump above
-         DUMP=dump
-         # set CONSENSUS to Tor's consensus from the Tails session
-         CONSENSUS=cached-microdesc-consensus
-         NODES=$(mktemp)
-         awk '/^r / { print $6 }' ${CONSENSUS} > ${NODES}
-         # Note that these default directory authorities may change! To be
-         # sure, check in Tor's source, src/or/config.c:~900
-         DIR_AUTHS="
-         128.31.0.39
-         86.59.21.38
-         194.109.206.212
-         82.94.251.203
-         76.73.17.194
-         212.112.245.170
-         193.23.244.244
-         208.83.223.34
-         171.25.193.9
-         154.35.32.5
-         "
-         tshark -r ${DUMP} -T fields -e ip.dst | sort | uniq | \
-         while read x; do
-             ip_expr=$(echo ${x} | sed -e "s@\.@\\\.@g")
-             if echo ${DIR_AUTHS} | grep -qe "${ip_expr}"; then
-                 continue
-             fi
-             if ! grep -qe "^${ip_expr}$" ${NODES}; then
-                 echo "${x} is bad"
-             fi
-         done
-         rm ${NODES}
-
-     Note that this script will produce some false positives, like your
-     gateway, broadcasts, etc.
-
-## Stream isolation
-
-See our [[stream isolation design
-page|contribute/design/stream_isolation]] for details such as port
-numbers, that are not duplicated here to avoid desynchronization.
-
-Assumptions for the following tests: first, Tor stream isolation
-features properly do their work; second, our `torrc` sets the right
-`SocksPort` options to implement what we want.
-
-**Note**: the following commands would advantageously be replaced with
-the appropriate tcpdump or tshark filters.
-
-* Make sure Claws Mail use its dedicated `SocksPort` when connecting
-  to IMAP / POP3 / SMTP servers:
-
-      sudo watch -n 0.1 'netstat -taupen | grep claws'
-
-* Make sure these use the `SocksPort` dedicated for Tails-specific applications:
-  - htpdate — as root, run:
-
-        service htpdate stop \
-           && rm -f /var/run/htpdate/{done,success} \
-           && service htpdate start
-
-    ... with the following command running in another terminal:
-
-        sudo watch -n 0.1 'netstat -taupen | grep curl'
-
-  - security check — run `tails-security-check` with the following
-    command running in another terminal:
-
-        sudo watch -n 0.1 'netstat -taupen | grep perl'
-
-  - incremental upgrades — run `tails-upgrade-frontend-wrapper` with
-    the following command running in another terminal:
-
-        sudo watch -n 0.1 'netstat -taupen | grep perl'
-
-* Make sure the Tor Browser uses its dedicated `SocksPort`: quit the Tor Browser
-  then start it with the following command running in another
-  terminal:
-
-      sudo watch -n 0.1 'netstat -taupen | grep firefox'
-
-* Make sure other applications use the default system-wide
-  `SocksPort`:
-  - Polipo — run:
-
-        wget https://tails.boum.org/
-
-    ... with the following command running in another terminal:
-
-        sudo watch -n 0.1 'netstat -taupen | grep polipo'
-
-  - Gobby 0.5 — start Gobby 0.5 from the *Applications* menu and
-    connect to a server (for example `gobby.debian.org`), with the following command running in
-    another terminal:
-
-        sudo watch -n 0.1 'netstat -taupen | grep gobby'
-
-  - SSH — run (no need to authenticate the server or to login):
-
-        ssh lizard.tails.boum.org
-
-    ... with the following command running in another terminal:
-
-        sudo watch -n 0.1 'netstat -taupen | grep -E "connect-proxy|ssh"'
-
-  - whois — run:
-
-        whois example.com
-
-    ... with the following command running in another terminal:
-
-        sudo watch -n 0.1 'netstat -taupen | grep whois'
-
-* Make sure a random application run using `torify` and `torsocks`
-  uses the default system-wide `SocksPort`. Run:
-
-      torify /usr/bin/gobby-0.5
-
-    ... and connect to a server (for example `gobby.debian.org`), with the following command running
-    in another terminal:
-
-        sudo watch -n 0.1 'netstat -taupen | grep gobby'
-
-    Then do the same test for:
-
-      torsocks /usr/bin/gobby-0.5
-
-# Use of untrusted partitions
-
-(automate: [[!tails_ticket 7822]])
-
-* Is any local hard-disk swap partition used as swap?
-  boot on a (possibly virtual) machine that has a cleartext swap
-  partition not managed by LVM. To verify that a local GTP partition is swap,
-  check its type code with `sgdisk -p`, Linux swap is code 8200.
-
-  This swap partition must not be used by Tails. Run `cat /proc/swaps`.
-
-* Is a persistence volume on a local hard-disk partition used?
-  (Hint: setup a libvirt USB disk with GPT and a partition labeled
-  `TailsData`, set the `removable` flag on it, check that
-  tails-greeter proposes to enable persistence. Then remove the
-  `removable` flag, and check that tails-greeter does not propose to
-  enable persistence anymore.)
 
 # Claws
 
@@ -357,29 +163,17 @@ the appropriate tcpdump or tshark filters.
      verify that it only contains `localhost`: `tcpdump -A -r dump`
   5. Check the `Received:` and `Message-Id` fields in the received
      message: it must not leak the hostname, nor the local IP.
+* Make sure Claws Mail use its dedicated `SocksPort` when connecting
+  to IMAP / POP3 / SMTP servers by monitoring the output of this
+  command:
+
+      sudo watch -n 0.1 'netstat -taupen | grep claws'
 
 # WhisperBack
 
 * I should be able to send a bug report with WhisperBack.
 * When we receive this bug report on the tails-bugs mailing-list,
   Schleuder tells us that it was sent encrypted.
-
-# Time
-
-(automate: [[!tails_ticket 5836]])
-
-1. Boot Tails without a network cable connected.
-   (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 down`.)
-2. Set an administration password.
-3. set the time to an obviously wrong one:
-
-           date --set="Mon, 01 Mar 2000 15:45:34 - 0800"
-
-4. Connect the network cable.
-   (e.g. `virsh domif-setlink tails-dev 52:54:00:05:17:62 up`)
-
-=> the date should be corrected and Tor/Vidalia should start
-correctly.
 
 # Erase memory on shutdown
 
@@ -445,18 +239,6 @@ Start I2P by appending `i2p` to the kernel command line.
     * You should get the "I2P is not ready" pop-up
     * The I2P router console should still be accessible on
       <http://127.0.0.1:7657>
-
-# Git
-
-* clone a repository over `git://`
-
-  git clone git://git.tails.boum.org/htp
-
-* clone a repository over `https://`
-
-  git clone https://git-tails.immerda.ch/htp
-
-* clone a repository over SSH
 
 # SSH
 
@@ -546,21 +328,6 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 * The Tor Browser should use a Internet Explorer theme
 * The Unsafe Browser has no scary red theme
 
-# Unsafe Web Browser
-
-(automate: [[!tails_ticket 7823]])
-
-* On start, if no DNS server was configured in NetworkManager
-  (e.g. if there's no network connection), there must be an error.
-* Once started, check that:
-  - the Tor Browser instance runs as the `clearnet` user.
-  - it has no proxy configured.
-  - no extensions are installed.
-  - there are no bookmarks except the default Firefox ones.
-* On exit, check that:
-  - make sure that its chroot gets properly teared down on exit (there
-    should be nothing mounted inside `/var/lib/unsafe-browser`).
-
 # Real (non-VM) hardware
 
 `[can't-automate]`
@@ -576,7 +343,6 @@ Enable Windows camouflage via the Tails Greeter checkbox and:
 
 * The "Tails documentation" desktop launcher should open the
   [[getting started]] page (automate: [[!tails_ticket 8788]]):
-  - in English
   - in one language to which the website is translated
   - in one language to which the website is not translated (=> English)
 * Browse around in the documentation shipped in the image. Internal
@@ -620,9 +386,6 @@ language. You *really* have to reboot between each language.
   start without errors), and that `/var/log/syslog` seems OK.
 * MAT should be able to clean a PDF file, such as:
   <http://examples.itextpdf.com/results/part3/chapter12/pdf_metadata.pdf>
-* The Tails signing key shipped should be up-to-date (that is, neither it nor
-  one its subkeys must have expired, or be about to expire any time soon).
-  - `gpg --list-keys --with-colons 1202821CBE2CD9C1`
 * The "Report an error" desktop launcher should open the [[support]]
   page, both in English and in one language to which the website is
   translated (automate: [[!tails_ticket 6904]]).

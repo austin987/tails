@@ -1,5 +1,10 @@
 [[!meta title="Running the automated test suite"]]
 
+[[!toc levels=2]]
+
+Basic usage
+===========
+
 Use the `run_test_suite` script found in the Tails source root to run
 all automated Cucumber test features. See the [[setup
 documentation|test/setup]] in case you don't have a testing
@@ -31,3 +36,79 @@ For full instructions, see its `--help`.
 Note: since the test suite itself uses `virt-viewer` to interact with
 the Tails guest you cannot use it as that will steal the session from
 the test suite, leaving it with a blank screen.
+
+Configuration
+=============
+
+The test suite can be configured in the following ways:
+
+1. `run_test_suite` parameters, which takes precedence over
+
+2. the local configuration file `features/config/local.yml`, which
+takes precedence over
+
+3. the default configuration file `features/config/defaults.yml`.
+
+However, some values are treated as secrets and have no
+defaults. These secrets are generally information about online sevices
+to be used in certain features, like host, port and credentials --
+stuff we don't want to make public. These must be set explicitly in
+order for those features to run.
+
+## Non-secret configuration
+
+Here's a list of all non-secret key-value pairs that can be supported
+by the local configuration file:
+
+* `DEBUG`: Boolean value. If set to `true`, various debugging info
+  will be printed. Defaults to `false`.
+
+* `PAUSE_ON_FAIL`: Boolean value. If set to `true`, the test suite run
+  is suspended on failure until ENTER is pressed. This is useful for
+  investigating the state of the VM guest to see exactly why a test
+  failed. Defaults to `false`.
+
+* `SIKULI_RETRY_FINDFAILED`: Boolean value. If set to `true`, print a
+  warning whenever Sikuli fails to find an image and allow *one* retry
+  after pressing ENTER. This is useful for updating outdated images,
+  or when extracting new images. Defaults to `false`.
+
+* `TEMP_DIR`: String value. Directory where various temporary files
+  are written during a test, e.g. VM snapshots and memory dumps,
+  failure screenshots, pcap files and disk images. Defaults to
+  `"/tmp/TailsToaster"`.
+
+## "Secret" configuration
+
+This section describes the formats for all secret configurations that
+must be configured in the local configuration file for certain
+features or scenarios to work. If any of these are omitted, parts of
+the test suite will fail.
+
+### Tor pluggable transports
+
+The format is:
+
+    Tor:
+      Transports:
+        $TYPE:
+          - ipv4_address: "1.2.3.4"
+            ipv4_port: 443
+            fingerprint: "01234567890abcdef01234567890abcdef012345"
+            extra:
+          - ipv4_address: "5.6.7.8"
+          [...]
+        $ANOTHER_TYPE:
+          - ipv4_address: "1.2.3.4"
+          [...]
+
+where the type `$TYPE` (and `$ANOTHER_TYPE`) should be something like
+`Obfs4` or `Bridge` (the first type) or whatever Tor calls them. Both
+`fingerprint` and `extra` are optional and can be left empty (or
+skipped completely), but e.g. `extra` is necessary for `Obfs4` type
+bridges, for the `cert=... iat-mode=...` stuff, and the same for
+`Scramblesuite`'s `password=...`.
+
+This setting is required for `tor_bridges.feature` (requires types
+`Bridge`, `Obfs2`, `Obfs3` and `Obfs4`) and `time_syncing.feature`
+(requires type `Bridge` only).

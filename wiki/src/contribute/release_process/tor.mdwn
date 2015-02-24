@@ -1,0 +1,51 @@
+[[!meta title="Releasing liveusb-creator"]]
+
+[[!toc levels=1]]
+
+Note: we're _not_ using Git, as weasel's script do lots of clever
+things between the Git tree and the source package. So let's simply
+take whatever he has uploaded to Debian and build it against
+wheezy-backports, to get seccomp support.
+
+1. Make sure you have Debian unstable APT deb-src sources configured.
+
+2. Make sure you have an up-to-date wheezy-backports i386 pbuider chroot.
+
+3. Download the source package from Debian unstable, extract it, cd
+   into the directory:
+
+   	WORKDIR=$(mktemp -d)
+   	cd "$WORKDIR" && \
+   	apt-get source tor/unstable && \
+   	cd tor-*
+
+4. Set `$DISTRIBUTION` to the name of the Tails APT suite you'll want
+   to upload to, e.g.:
+
+   	DISTRIBUTION=feature-tor-custom-build
+
+5. Update `debian/changelog`:
+
+   	UNSTABLE_VERSION=$(dpkg-parsechangelog  --count 1 -SVersion)
+   	WHEEZY_TPO_VERSION="${UNSTABLE_VERSION}~d70.wheezy+1"
+   	TAILS_VERSION="${WHEEZY_TPO_VERSION}+tails1"
+   	dch --newversion "$TAILS_VERSION" --force-bad-version  \
+   	   --distribution "$DISTRIBUTION" --force-distribution \
+   	   "Rebuild on wheezy-backports to get seccomp support"
+   
+   Check the resulting `debian/changelog` entry.
+
+6. Build in your wheezy-backports i386 chroot.
+
+7. Tweak the resulting `.changes` file so that it includes the
+   upstream tarball:
+
+   	changestool *.changes includeallsources
+
+8. Sign the resulting package:
+
+   	debsign $CHANGES_FILE
+
+9. Upload the resulting package:
+
+   	dupload --to tails $CHANGES_FILE
