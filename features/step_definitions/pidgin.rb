@@ -1,3 +1,86 @@
+def xmpp_account_extract(type)
+  begin
+    account = $config["Pidgin"]["Accounts"]["XMPP"][type]
+    username = account["username"]
+    domain = account["domain"]
+    password = account["password"]
+    otr_key = nil
+    check_vars = [username, domain, password]
+    if account.has_key?("otr_key")
+      otr_key = account["otr_key"]
+      check_vars << otr_key
+    end
+    for var in check_vars do
+      assert_not_nil(var)
+      assert(!var.empty?)
+    end
+  rescue NoMethodError, Test::Unit::AssertionFailedError
+    raise(
+<<EOF
+Your Pidgin:Accounts:XMPP:#{type} is incorrect or missing from your local configuration file (#{LOCAL_CONFIG_FILE}). See wiki/src/contribute/release_process/test/usage.mdwn for the format.
+EOF
+)
+  end
+  return [username, domain, password, otr_key]
+end
+
+When /^I create my XMPP account$/ do
+  next if @skip_steps_while_restoring_background
+  username, domain, password, otr_key = xmpp_account_extract("Tails_account")
+  @screen.click("PidginAccountManagerAddButton.png")
+  @screen.wait("PidginAddAccountWindow.png", 20)
+  @screen.click_mid_right_edge("PidginAddAccountProtocolLabel.png")
+  @screen.click("PidginAddAccountProtocolXMPP.png")
+  @screen.click_mid_right_edge("PidginAddAccountXMPPUsername.png")
+  @screen.type(username)
+  @screen.click_mid_right_edge("PidginAddAccountXMPPDomain.png")
+  @screen.type(domain)
+  @screen.click_mid_right_edge("PidginAddAccountXMPPPassword.png")
+  @screen.type(password)
+  @screen.click("PidginAddAccountXMPPRememberPassword.png")
+  @screen.click("PidginAddAccountXMPPAddButton.png")
+end
+
+Then /^Pidgin automatically enables my XMPP account$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("PidginAvailableStatus.png", 60)
+end
+
+Given /^my XMPP friend is online$/ do
+  next if @skip_steps_while_restoring_background
+  username, domain, password, otr_key = xmpp_account_extract("Friend_account")
+  @chatbot = ChatBot.new("#{username}@#{domain}", password, otr_key)
+  @chatbot.start
+  add_after_scenario_hook(@chatbot.method(:stop))
+  @screen.wait("PidginFriendOnline.png", 60)
+end
+
+When /^I start a conversation with my friend$/ do
+  next if @skip_steps_while_restoring_background
+  # Clicking the middle, bottom of this immage should querry our
+  # friend, given it's the only subscribed user that's online, which
+  # we assume.
+  r = @screen.find("PidginFriendOnline.png")
+  bottom_left = r.getBottomLeft()
+  x = bottom_left.getX + r.getW/2
+  y = bottom_left.getY
+  @screen.doubleClick_point(x, y)
+  # Since pidgin set's the window name to the contact, we have no good
+  # way to identify the conversation window. Let's just look for the
+  # expected menu bar.
+  @screen.wait("PidginConversationWindowMenuBar.png", 10)
+end
+
+And /^I say something to my friend$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.type("ping" + Sikuli::Key.ENTER)
+end
+
+Then /^I can receive a response from my friend$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("PidginFriendExpectedAnswer.png", 20)
+end
+
 def configured_pidgin_accounts
   accounts = []
   xml = REXML::Document.new(@vm.file_content('$HOME/.purple/accounts.xml',
