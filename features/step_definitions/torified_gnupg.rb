@@ -49,9 +49,17 @@ When /^the "([^"]*)" key is in the live user's public keyring after at most (\d+
   }
 end
 
-When /^I start Seahorse$/ do
+When /^I start Seahorse\s?(|via the GpgApplet)$/ do |startmethod|
   next if @skip_steps_while_restoring_background
-  step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
+  case startmethod
+  when ''
+    step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
+  when 'via the GpgApplet'
+    @screen.wait_and_click("GpgAppletIconNormal.png", 10)
+    @screen.wait_and_click("GpgAppletManageKeys.png", 10)
+  else
+    raise "Undefined way to start Seahorse: #{startmethod}"
+  end
 end
 
 Then /^Seahorse has opened$/ do
@@ -61,6 +69,8 @@ end
 
 Then /^I enable key synchronization in Seahorse$/ do
   next if @skip_steps_while_restoring_background
+  step "process \"seahorse\" is running"
+  @screen.wait_and_click("SeahorseWindow.png", 10)
   @screen.type("e", Sikuli::KeyModifier.ALT) # Menu: "Edit" ->
   @screen.type("n") # Menu: "Preferences " ->
   @screen.wait("SeahorsePreferences.png", 10)
@@ -72,6 +82,7 @@ end
 Then /^I synchronize keys in Seahorse$/ do
   next if @skip_steps_while_restoring_background
   step "process \"seahorse\" is running"
+  @screen.wait_and_click("SeahorseWindow.png", 10)
   @screen.wait("SeahorseWindow.png", 10)
   @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
   @screen.type("s")                  # "Sync...".
@@ -81,10 +92,11 @@ Then /^I synchronize keys in Seahorse$/ do
   @screen.wait("SeahorseWindow.png", 120)
 end
 
-When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|
+When /^I fetch the "([^"]*)" OpenPGP key using Seahorse\s?(|via the GpgApplet)$/ do |keyid, startmethod|
   next if @skip_steps_while_restoring_background
-  step "I start Seahorse"
+  step "I start Seahorse #{startmethod}"
   step "Seahorse has opened"
+  @screen.wait_and_click("SeahorseWindow.png", 10)
   @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
   @screen.type("f")                  # "Find Remote Keys...".
   @screen.wait("SeahorseFindKeysWindow.png", 10)
