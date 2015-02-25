@@ -104,6 +104,18 @@ def sikuli_script_proxy.new(*args)
     self.click(Sikuli::Location.new(x, y))
   end
 
+  def s.doubleClick_point(x, y)
+    self.doubleClick(Sikuli::Location.new(x, y))
+  end
+
+  def s.click_mid_right_edge(pic)
+    r = self.find(pic)
+    top_right = r.getTopRight()
+    x = top_right.getX
+    y = top_right.getY + r.getH/2
+    self.click_point(x, y)
+  end
+
   def s.wait_and_click(pic, time)
     self.click(self.wait(pic, time))
   end
