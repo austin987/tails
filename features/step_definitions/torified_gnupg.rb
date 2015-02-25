@@ -59,6 +59,16 @@ Then /^Seahorse has opened$/ do
   @screen.wait("SeahorseWindow.png", 10)
 end
 
+Then /^I enable key synchronization in Seahorse$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.type("e", Sikuli::KeyModifier.ALT) # Menu: "Edit" ->
+  @screen.type("n") # Menu: "Preferences " ->
+  @screen.wait("SeahorsePreferences.png", 10)
+  @screen.type("p", Sikuli::KeyModifier.ALT) # Option: "Publish keys to...".
+  @screen.type(Sikuli::Key.DOWN) # select HKP server
+  @screen.type("c", Sikuli::KeyModifier.ALT) # Button: "Close"
+end
+
 When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|
   next if @skip_steps_while_restoring_background
   step "I start Seahorse"
