@@ -26,3 +26,7 @@ Feature: Keyserver interaction with GnuPG
   Scenario: Fetching OpenPGP keys using Seahorse should work and be done over Tor.
     When I fetch the "10CC5BC7" OpenPGP key using Seahorse
     Then the "10CC5BC7" key is in the live user's public keyring after at most 120 seconds
+
+  Scenario: Fetching OpenPGP keys using Seahorse via the GpgApplet should work and be done over Tor.
+    When I fetch the "10CC5BC7" OpenPGP key using Seahorse via the GpgApplet
+    Then the "10CC5BC7" key is in the live user's public keyring after at most 120 seconds
