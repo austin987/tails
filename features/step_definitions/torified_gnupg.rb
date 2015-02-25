@@ -17,13 +17,13 @@ Then /^the key "([^"]+)" has (only|more than) (\d+) signatures$/ do |key, qualif
   end
 end
 
-When /^the "([^"]*)" OpenPGP key is not in the live user's public keyring$/ do |keyid|
+When /^the "([^"]+)" OpenPGP key is not in the live user's public keyring$/ do |keyid|
   next if @skip_steps_while_restoring_background
   assert(!@vm.execute("gpg --batch --list-keys '#{keyid}'", LIVE_USER).success?,
          "The '#{keyid}' key is in the live user's public keyring.")
 end
 
-When /^I fetch the "([^"]*)" OpenPGP key using the GnuPG CLI$/ do |keyid|
+When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI$/ do |keyid|
   next if @skip_steps_while_restoring_background
   @gnupg_recv_key_res = @vm.execute_successfully(
     "gpg --batch --keyserver-options import-clean --recv-key '#{keyid}'",
@@ -42,7 +42,7 @@ When /^GnuPG uses the configured keyserver$/ do
          "GnuPG's stderr did not mention keyserver #{CONFIGURED_KEYSERVER_HOSTNAME}")
 end
 
-When /^the "([^"]*)" key is in the live user's public keyring after at most (\d+) seconds$/ do |keyid, delay|
+When /^the "([^"]+)" key is in the live user's public keyring after at most (\d+) seconds$/ do |keyid, delay|
   next if @skip_steps_while_restoring_background
   try_for(delay.to_f, :msg => "The '#{keyid}' key is not in the live user's public keyring") {
     @vm.execute("gpg --batch --list-keys '#{keyid}'", LIVE_USER).success?
@@ -92,7 +92,7 @@ Then /^I synchronize keys in Seahorse$/ do
   @screen.wait("SeahorseWindow.png", 120)
 end
 
-When /^I fetch the "([^"]*)" OpenPGP key using Seahorse\s?(|via the GpgApplet)$/ do |keyid, startmethod|
+When /^I fetch the "([^"]+)" OpenPGP key using Seahorse\s?(|via the GpgApplet)$/ do |keyid, startmethod|
   next if @skip_steps_while_restoring_background
   step "I start Seahorse #{startmethod}"
   step "Seahorse has opened"
