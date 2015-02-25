@@ -54,10 +54,15 @@ When /^I start Seahorse$/ do
   step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
 end
 
+Then /^Seahorse has opened$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("SeahorseWindow.png", 10)
+end
+
 When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|
   next if @skip_steps_while_restoring_background
   step "I start Seahorse"
-  @screen.wait("SeahorseWindow.png", 10)
+  step "Seahorse has opened"
   @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
   @screen.type("f")                  # "Find Remote Keys...".
   @screen.wait("SeahorseFindKeysWindow.png", 10)
