@@ -1,3 +1,22 @@
+def count_signatures(key)
+  output = @vm.execute_successfully("gpg --batch --list-sigs #{key}",
+                                    LIVE_USER).stdout
+  return output.scan(/^sig/).count
+end
+
+Then /^the key "([^"]+)" has (only|more than) (\d+) signatures$/ do |key, qualifier, num|
+  next if @skip_steps_while_restoring_background
+  count = count_signatures(key)
+  case qualifier
+  when 'only'
+  assert_equal(count, num.to_i)
+  when 'more than'
+    assert(count > num.to_i)
+  else
+    raise "Unknown operator #{qualifier} passed"
+  end
+end
+
 When /^the "([^"]*)" OpenPGP key is not in the live user's public keyring$/ do |keyid|
   next if @skip_steps_while_restoring_background
   assert(!@vm.execute("gpg --batch --list-keys '#{keyid}'", LIVE_USER).success?,
