@@ -81,6 +81,24 @@ Then /^I can receive a response from my friend$/ do
   @screen.wait("PidginFriendExpectedAnswer.png", 20)
 end
 
+When /^I start an OTR session with my friend$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.click("PidginConversationOTRMenu.png")
+  @screen.hide_cursor
+  @screen.click("PidginOTRMenuStartSession.png")
+end
+
+Then /^Piding automatically generates and OTR key$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("PidginOTRKeyGenPrompt.png", 30)
+  @screen.wait_and_click("PidginOTRKeyGenPromptDoneButton.png", 30)
+end
+
+Then /^an OTR session was successfully started with my friend$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("PidginConversationOTRUnverifiedSessionStarted.png", 10)
+end
+
 def configured_pidgin_accounts
   accounts = []
   xml = REXML::Document.new(@vm.file_content('$HOME/.purple/accounts.xml',
