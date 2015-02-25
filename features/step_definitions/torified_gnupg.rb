@@ -7,7 +7,7 @@ end
 When /^I fetch the "([^"]*)" OpenPGP key using the GnuPG CLI$/ do |keyid|
   next if @skip_steps_while_restoring_background
   @gnupg_recv_key_res = @vm.execute_successfully(
-    "gpg --batch --recv-key '#{keyid}'",
+    "gpg --batch --keyserver-options import-clean --recv-key '#{keyid}'",
     LIVE_USER)
 end
 
