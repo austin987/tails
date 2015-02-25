@@ -69,6 +69,18 @@ Then /^I enable key synchronization in Seahorse$/ do
   @screen.type("c", Sikuli::KeyModifier.ALT) # Button: "Close"
 end
 
+Then /^I synchronize keys in Seahorse$/ do
+  next if @skip_steps_while_restoring_background
+  step "process \"seahorse\" is running"
+  @screen.wait("SeahorseWindow.png", 10)
+  @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
+  @screen.type("s")                  # "Sync...".
+  @screen.wait("SeahorseSyncKeys.png", 10)
+  @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
+  @screen.wait("SeahorseSynchronizing.png", 20)
+  @screen.wait("SeahorseWindow.png", 120)
+end
+
 When /^I fetch the "([^"]*)" OpenPGP key using Seahorse$/ do |keyid|
   next if @skip_steps_while_restoring_background
   step "I start Seahorse"
