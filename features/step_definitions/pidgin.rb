@@ -1,5 +1,5 @@
 def configured_pidgin_accounts
-  accounts = []
+  accounts = Hash.new
   xml = REXML::Document.new(@vm.file_content('$HOME/.purple/accounts.xml',
                                              LIVE_USER))
   xml.elements.each("account/account") do |e|
@@ -9,14 +9,14 @@ def configured_pidgin_accounts
     port      = e.elements["settings/setting[@name='port']"].text
     nickname  = e.elements["settings/setting[@name='username']"].text
     real_name = e.elements["settings/setting[@name='realname']"].text
-    accounts.push({
-                    'name'      => account_name,
-                    'network'   => network,
-                    'protocol'  => protocol,
-                    'port'      => port,
-                    'nickname'  => nickname,
-                    'real_name' => real_name,
-                  })
+    accounts[network] = {
+      'name'      => account_name,
+      'network'   => network,
+      'protocol'  => protocol,
+      'port'      => port,
+      'nickname'  => nickname,
+      'real_name' => real_name,
+    }
   end
 
   return accounts
@@ -52,7 +52,7 @@ Given /^Pidgin has the expected accounts configured with random nicknames$/ do
             ["irc.oftc.net", "prpl-irc", "6697"],
             ["127.0.0.1",    "prpl-irc", "6668"],
           ]
-  configured_pidgin_accounts.each() do |account|
+  configured_pidgin_accounts.values.each() do |account|
     assert(account['nickname'] != "XXX_NICK_XXX", "Nickname was no randomised")
     assert_equal(account['nickname'], account['real_name'],
                  "Nickname and real name are not identical: " +
@@ -111,6 +111,40 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   # Sometimes the OFTC welcome notice window pops up over the buddy list one...
   focus_pidgin_buddy_list
   @screen.wait(expected_channel_entry, 60)
+end
+
+Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ do |irc_server|
+  next if @skip_steps_while_restoring_background
+  # Generate a random IRC nickname, in this case an alpha-numeric
+  # string with length 10 to 15. To make it legal, the first character
+  # is forced to be alpha.
+  alpha_set = ('A'..'Z').to_a + ('a'..'z').to_a
+  alnum_set = alpha_set + (0..9).to_a.map { |n| n.to_s }
+  nick_length = (10..15).to_a.sample
+  bot_nick = alpha_set.sample
+  bot_nick += (0..nick_length-2).map { |n| alnum_set.sample }.join
+  bot_opts = {
+    :nick => bot_nick,
+    :user => bot_nick,
+    :real => bot_nick,
+    :spam_target => configured_pidgin_accounts[irc_server]["nickname"]
+  }
+  bot_opts[:logger] = Logger.new("/dev/null") if !$config["DEBUG"]
+  bot = CtcpSpammer.new(irc_server, 6667, bot_opts)
+  # Give the bot an extra 60 seconds for connecting to the server and
+  # other overhead beyond the expected time to spam all CTCP commands.
+  expected_ctcp_spam_time = CtcpSpammer::KNOWN_CTCP_COMMANDS.length *
+                            CtcpSpammer::CTCP_SPAM_DELAY
+  timeout = expected_ctcp_spam_time + 60
+
+  begin
+    Timeout::timeout(timeout) do
+      bot.start
+    end
+  rescue Timeout::Error
+    raise "The #{bot.class} bot failed to spam all CTCP commands within " \
+          "#{timeout} seconds"
+  end
 end
 
 Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
