@@ -663,13 +663,20 @@ So, right now your personal Git repository contains _both_ the old
 (non-rewritten) and the new (rewritten) Git history. Here is how to
 get rid of the old one.
 
+### Set the `MY_REMOTE` variable
+
+In the following command, replace `XXX_REPLACE_ME` with the name of the remote
+that points to your personal online Git repository:
+
+	MY_REMOTE=XXX_REPLACE_ME
+
 ### Delete all remote branches
 
 List branches that are in your personal online Git repository (in the
-following commands, replace `MY_REMOTE` with the name of the remote
-that points to your personal online Git repository):
+following commands, ):
 
-	git branch -r --list 'MY_REMOTE/*'
+	git branch --no-color -r --list "${MY_REMOTE}/*" \
+	   | grep -vE "^\s+${MY_REMOTE}/HEAD\s+"
 
 For each such branch, check if you have work in there that can still
 be useful. If it's the case, then export it outside of Git, e.g.
@@ -678,8 +685,10 @@ using `git format-patch`.
 Then, delete all remote branches in your personal online Git
 repository:
 
-	for b in $(git branch --no-color -r --list 'MY_REMOTE/*') ; do
-	   git push --force MY_REMOTE ":$b"
+	for remote_branch in $(git branch --no-color -r --list "${MY_REMOTE}/*" \
+	           | grep -vE "^\s+${MY_REMOTE}/HEAD\s+") ; do
+	   branch=$(echo "$remote_branch" | sed -r -e "s,^${MY_REMOTE}/,,")
+	   git push --force "$MY_REMOTE" ":$branch"
 	done
 
 ### Make sure you have only up-to-date tags
@@ -693,10 +702,9 @@ Fetch fresh tags from the official remote:
 	git fetch "$OFFICIAL_REMOTE" --tags
 
 Force-push the updated tags so that they replace the old ones in your
-personal online Git repository (replace `MY_REMOTE` with the name of
-the remote that points to your personal online Git repository):
+personal online Git repository:
 
-	git push --force MY_REMOTE --tags
+	git push --force "$MY_REMOTE" --tags
 
 Start working again
 -------------------
