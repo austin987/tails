@@ -35,6 +35,34 @@ Proposal1:
 * branches which are not merged into master, devel, stable and testing
 * but had new commits since the previous release
 
+## How to build it
+
+A topic branch may be lagging behind the base branch it's based upon.
+What we're interested in is generally *not* whether a (possibly
+outdated) topic branch builds fine, but whether it would build fine
+**once merged into its base branch**:
+
+* that's critical from a reviewer's perspective: what they have to
+  evaluate is the result of the merge, not the state of a topic branch
+  forked N weeks ago from its base branch, that possibly has diverged
+  since then;
+* that's important from a developer's perspective: this is how they
+  will notice if incompatible changes have landed into the base branch
+  since last time they worked on their topic branch.
+
+Hence, when building topic branch F, we need to build from branch F
+*once merged into* branch B. However, this merge must only be done
+*locally*, at least because Jenkins doesn't have push access to our
+Git repo.
+
+Here, *locally* means: in Jenkins own temporary Git checkout.
+
+The exact direction of the merge (B->F vs. F->B) should not matter
+given how Git merge works, if we got it clearly. We'll see.
+
+This locally-merge-before-building process requires [[!tails_ticket
+8654]] to be implemented, otherwise we can't easily merge branches
+*locally* without affecting the state of our production APT repo.
 
 ## When to build it
 
