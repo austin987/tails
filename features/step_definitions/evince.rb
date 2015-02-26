@@ -7,7 +7,7 @@ Then /^I can print the current document to "([^"]+)"$/ do |output_file|
   next if @skip_steps_while_restoring_background
   @screen.type("p", Sikuli::KeyModifier.CTRL)
   @screen.wait("EvincePrintDialog.png", 10)
-  @screen.wait_and_click("EvincePrintToFile.png", 10)
+  @screen.wait_and_click("PrintToFile.png", 10)
   @screen.wait_and_click("EvincePrintOutputFileButton.png", 10)
   @screen.wait("EvincePrintFileDialog.png", 10)
   # Only the file's basename is selected by double-clicking,

@@ -6,7 +6,8 @@ begin
 rescue LoadError => e
   raise "This script must be run from within Tails' Git directory."
 end
-$debug = false
+$config = Hash.new
+$config["DEBUG"] = false
 
 class FakeVM
   def get_remote_shell_port
@@ -14,7 +15,7 @@ class FakeVM
   end
 end
 
-config = {
+cmd_opts = {
   :spawn => false,
   :user  => "root"
 }
@@ -33,18 +34,18 @@ opt_parser = OptionParser.new do |opts|
   end
 
   opts.on("-u", "--user USER", "Run command as USER") do |user|
-    config[:user] = user
+    cmd_opts[:user] = user
   end
 
   opts.on("-t", "--type TYPE",
           "Run command as blocking with 'call' (default) or " \
           "non-blocking with 'spawn'") do |type|
-    config[:type] = (type == "spawn")
+    cmd_opts[:type] = (type == "spawn")
   end
 end
 opt_parser.parse!(ARGV)
 cmd = ARGV.join(" ")
-c = VMCommand.new(FakeVM.new, cmd, config)
+c = VMCommand.new(FakeVM.new, cmd, cmd_opts)
 puts "Return status: #{c.returncode}"
 puts "STDOUT:\n#{c.stdout}"
 puts "STDERR:\n#{c.stderr}"

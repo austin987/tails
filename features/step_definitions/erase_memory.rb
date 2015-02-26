@@ -17,7 +17,7 @@ Given /^the computer is an old pentium without the PAE extension$/ do
 end
 
 def which_kernel
-  kernel_path = @vm.execute("/usr/local/bin/tails-get-bootinfo kernel").stdout.chomp
+  kernel_path = @vm.execute("tails-get-bootinfo kernel").stdout.chomp
   return File.basename(kernel_path)
 end
 
@@ -52,7 +52,7 @@ Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
 end
 
 def pattern_coverage_in_guest_ram
-  dump = "#{$tmp_dir}/memdump"
+  dump = "#{$config["TMP_DIR"]}/memdump"
   # Workaround: when dumping the guest's memory via core_dump(), libvirt
   # will create files that only root can read. We therefore pre-create
   # them with more permissible permissions, which libvirt will preserve
@@ -105,7 +105,7 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   # since the others otherwise may continue re-filling the same memory
   # unnecessarily.
   instances = (@detected_ram_m.to_f/(2**10)).ceil
-  instances.times { @vm.spawn('/usr/local/sbin/fillram; killall fillram') }
+  instances.times { @vm.spawn('fillram; killall fillram') }
   # We make sure that the filling has started...
   try_for(10, { :msg => "fillram didn't start" }) {
     @vm.has_process?("fillram")

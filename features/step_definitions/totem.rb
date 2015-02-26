@@ -7,17 +7,17 @@ Given /^I create sample videos$/ do
   fatal_system("ffmpeg -loop 1 -t 30 -f image2 " +
                "-i 'features/images/TailsBootSplash.png' " +
                "-an -vcodec libx264 -y " +
-               "'#{$misc_files_dir}/video.mp4' >/dev/null 2>&1")
+               "'#{MISC_FILES_DIR}/video.mp4' >/dev/null 2>&1")
 end
 
 Given /^I setup a filesystem share containing sample videos$/ do
   next if @skip_steps_while_restoring_background
-  @vm.add_share($misc_files_dir, shared_video_dir_on_guest)
+  @vm.add_share(MISC_FILES_DIR, shared_video_dir_on_guest)
 end
 
 Given /^I copy the sample videos to "([^"]+)" as user "([^"]+)"$/ do |destination, user|
   next if @skip_steps_while_restoring_background
-  for video_on_host in Dir.glob("#{$misc_files_dir}/*.mp4") do
+  for video_on_host in Dir.glob("#{MISC_FILES_DIR}/*.mp4") do
     video_name = File.basename(video_on_host)
     src_on_guest = "#{shared_video_dir_on_guest}/#{video_name}"
     dst_on_guest = "#{destination}/#{video_name}"

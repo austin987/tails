@@ -19,16 +19,15 @@ def mk_switch_user_fn(uid, gid):
     return switch_user
 
 def run_cmd_as_user(cmd, user):
-  env = environ.copy()
   pwd_user = getpwnam(user)
   switch_user_fn = mk_switch_user_fn(pwd_user.pw_uid,
                                      pwd_user.pw_gid)
-  env['USER'] = user
-  env['LOGNAME'] = user
-  env['USERNAME'] = user
-  env['HOME'] = pwd_user.pw_dir
-  env['MAIL'] = "/var/mail/" + user
-  env['PWD'] = env['HOME']
+  # We try to create an environment identical to what's expected
+  # inside Tails for the user by logging in (via `su`) as the user and
+  # extracting the environment.
+  pipe = Popen('su -c env ' + user, stdout=PIPE, shell=True)
+  env_data = pipe.communicate()[0]
+  env = dict((line.split('=', 1) for line in env_data.splitlines()))
   env['DISPLAY'] = ':0.0'
   try:
     env['XAUTHORITY'] = glob("/var/run/gdm3/auth-for-amnesia-*/database")[0]

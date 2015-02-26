@@ -1,5 +1,42 @@
 [[!meta title="Releasing the Tor Browser"]]
 
+[[!toc levels=2]]
+
+The big picture
+===============
+
+The Tails ISO build system [[!tails_gitweb
+config/chroot_local-hooks/10-tbb desc="downloads"]] a set of Tor
+Browser tarballs from a location specified in [[!tails_gitweb
+config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt]], and
+compares their hash with previously verified ones found in
+[[!tails_gitweb
+config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt]].
+
+Once released officially, Tor Browser tarballs can be found in
+a [permanent (?)
+location](http://archive.torproject.org/tor-package-archive/torbrowser/).
+However, when upgrading Tor Browser for an imminent Tails release, we
+generally have to use Tor Browser tarballs that are under QA and not
+officially released yet. So, we have to retrieve them from another,
+temporary location, such as
+<http://people.torproject.org/~mikeperry/builds/>. If we hard-coded
+this temporary URL in `tbb-dist-url.txt`, then our release tag would
+only be buildable for as long the tarballs stay in that place, which
+at best is a few months.
+
+To solve this, we host ourselves the Tor Browser tarballs we need, and
+point to [this permanent
+location](http://torbrowser-archive.tails.boum.org/) for anything that
+we tag.
+
+Still, one can set an arbitrary download location in
+`tbb-dist-url.txt`, which should provide all the flexibility needed
+for development purposes.
+
+Upgrade Tor Browser in Tails
+============================
+
 Have a look at
 
 * <https://archive.torproject.org/tor-package-archive/torbrowser/>
@@ -7,16 +44,15 @@ Have a look at
 * <https://people.torproject.org/~mikeperry/builds/>
 * <https://people.torproject.org/~linus/builds/>
 
-and see if the desired version is available. We prefer
-`archive.torproject.org` since the other sources periodically cleans
-up old releases. Set `DIST_URL` to the chosen url, and set `VERSION`
-to the desired TBB version, for example:
+and see if the desired version is available. Set `DIST_URL` to the
+chosen URL, and set `VERSION` to the desired Tor Browser version, for
+example:
 
     DIST_URL=https://people.torproject.org/~mikeperry/builds/
     VERSION=4.0
 
-Fetch the version's `sha256sums.txt` and `sha256sums.txt.asc` and
-verify with `gpg`:
+Fetch the version's hash file and its detached signature, and verify
+with GnuPG:
 
     wget ${DIST_URL}/${VERSION}/sha256sums.txt{,.asc} && \
     gpg --verify sha256sums.txt.asc sha256sums.txt
@@ -27,17 +63,95 @@ when the tarballs are fetched:
     grep --color=never "\<tor-browser-linux32-.*\.tar.xz$" sha256sums.txt > \
          config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
 
-Then update the url to the one chosen above:
+Then update the URL to the one chosen above:
 
     echo "${DIST_URL}" | sed "s,^https://,http://," > \
          config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt
 
-NOTE: We must use http (not http**s**) due to limitations/bugs in
-`apt-cacher-ng`, which often is used in Tails build
+<div class="note">
+<p>
+We cannot use HTTPS due to limitations/bugs in
+<code>apt-cacher-ng</code>, which often is used in Tails build
 environments. However, it is of no consequence since we verify the
 checksum file.
+</p>
+</div>
 
 Lastly, commit:
 
     git commit config/chroot_local-includes/usr/share/tails/tbb-*.txt \
-        -m "Upgrade TBB to ${VERSION}."
+        -m "Upgrade Tor Browser to ${VERSION}."
+
+<div class="caution">
+<p>
+If this new Tor Browser is meant to be included in a Tails
+release, then that's not enough: as explained above, we need to host
+the corresponding tarballs ourselves, so read on the next section.
+</p>
+</div>
+
+Self-hosted Tor Browser tarballs archive
+========================================
+
+Initial setup
+-------------
+
+First, install git-annex from wheezy-backports or newer.
+
+Then, make sure you have an entry for `git.puppet.tails.boum.org` in
+your `~/.ssh/config`. See systems/ISO_history in the internal Git repo
+for details.
+
+Then, clone the metadata repository and initialize git-annex:
+
+	git clone gitolite@git.puppet.tails.boum.org:torbrowser-archive.git && \
+	cd torbrowser-archive && \
+	git annex init 
+
+You now have a lot of (broken) symlinks in place of the files that are
+available in this git-annex repo.
+
+To synchronize your git-annex metadata with the remote, run:
+
+	git annex sync
+
+Import a new set of Tor Browser tarballs
+----------------------------------------
+
+1. Make `TAILS_GIT_REPO` point to the main Tails Git repository
+   checkout where `tbb-dist-url.txt` is being worked on, for example:
+
+       TAILS_GIT_REPO="$HOME/tails/git"
+
+2. Tell git-annex to record each tarball's URL into Git:
+
+       cat "${TAILS_GIT_REPO}/config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt" | \
+       while read expected_sha256 tarball; do
+          git annex addurl --fast --pathdepth=-2 \
+              "$(cat "${TAILS_GIT_REPO}/config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt")/${VERSION}/${tarball}"
+       done
+
+Commit and push your changes
+----------------------------
+
+	git commit -m "Add Tor Browser ${VERSION}." && \
+	git annex sync && \
+	git annex copy --to origin
+
+Adjust the URL in the main Git repository
+-----------------------------------------
+
+    cd "$TAILS_GIT_REPO" && \
+    echo 'http://torbrowser-archive.tails.boum.org/' > \
+         config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt && \
+    git commit config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt \
+        -m "Fetch Tor Browser from our own archive."
+
+Wait for the synchronization
+----------------------------
+
+Once you've gone through these steps, a cronjob that runs every
+5 minutes will download the tarballs and make them available on
+<http://torbrowser-archive.tails.boum.org/>.
+
+Wait for this to happen before you can build Tails using the new URL.

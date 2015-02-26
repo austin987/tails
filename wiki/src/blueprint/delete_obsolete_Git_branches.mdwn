@@ -1,0 +1,84 @@
+Corresponding ticket: [[!tails_ticket 8616]], that's a blocker for [[!tails_ticket 8617]].
+
+[[!toc levels=2]]
+
+Initial design
+==============
+
+## When do we delete merged Git branches?
+
+After a new Tails release has been shipped, we should review which Git branches
+has been merged in the release and remove them accordingly. This will make sure
+that we keep a clean-ish Git repository for a new release cycle.
+
+## Deleting obsolete Git branches
+
+What we call an *obsolete* Git branch here is one that has been merged into
+`master` already.
+
+It's _not_ the same as an old, stalled branch: an old branch may not have been
+merged, it could've been around for longer then 6 months or even a year, the
+work might never be done but we will consider it a WIP branch and will thus not
+be deleted.
+
+After a Git branch has been merged and we discover that it introduces
+a regression, the cleanest way would be to work on a resolution in a *new* Git
+branch, and not reuse the old Git branch. Hence, we consider it safe to delete
+branches that were already merged.
+
+<a id="apt-only-branches"></a>
+
+### Exception: branches created just to get an APT suite
+
+Given how our [[contribute/APT_repository]] currently works, we sometimes push
+Git branches merely to have an APT suite created, and be able to upload Debian
+packages to it. Such a branch will look like it has been merged (it has no
+commit on top of current `master`), but still it should not be deleted:
+otherwise, our reprepro will remove the corresponding APT suite from its
+configuration; the APT suite indices and packages will stay around, but when one
+resumes work on this branch and pushes it again, then reprepro will most
+probably either bail out (and cause additional work for our sysadmins), or just
+create an empty APT suite (and then the packages previously uploaded to this APT
+suite won't be part of it anymore, causing additional work for the developer).
+
+So, on the short-term, the person who deletes Git branches should manually scan
+the list of candidates for deletion, and avoid deleting branches that 1.
+were created merely to get an APT branch; and 2. were actually not merged yet.
+Of course that's a bit painful and error-prone.
+
+Longer term, if/once we have each branch contain a config file with the list of
+APT suites that shall be used (as mentioned on [[!tails_ticket 8654]]), then for
+each branch that is a candidate for deletion we can:
+
+1. Check if that APT suite list file, in that branch, contains anything but
+   a base branch's APT suite. If it doesn't then it can be deleted. Otherwise,
+   go on:
+2. Check each listed non-base APT suite for packages that either are not in some
+   base branch (XXX: which one?) at all, or are newer than the version in some
+   base branch (XXX: which one?). If such packages are found, then drop this
+   branch from the list of candidates for deletion, on the grounds that its APT
+   suite has work that hasn't been merged.
+
+Mid-term, we could do the check from step 2 above on the APT suite that
+corresponds to each branch we're going to delete. It's going to be sub-optimal,
+as most branches don't introduce Debian packages, but it would probably be good
+enough, and the code will be reusable for the long-term solution anyway.
+
+Another mid-term solution would be to piggy-back on [[!tails_ticket 8689]]:
+a branch that 1. has no commit on top of master; and 2. has no such change file;
+probably was created only to get an APT suite, and should not be deleted.
+
+## Who does delete these Git branches?
+
+Ideally, the one who deletes them has access to push to the official Git
+repository. If we would chose for having the release manager do this, it can be
+done post-release and it wouldn't require people from the sysadmin team to step
+in and issue a command.
+
+## What kind of privileges are required to do that?
+
+Push access to the official main Git repository.
+
+So far, only humans have write access there and we would like to not replace
+them with robots yet. That is for the future (e.g. the system that hosts our APT
+repository already has privileges akin to Git commit rights).

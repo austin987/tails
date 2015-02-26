@@ -1,9 +1,13 @@
 [[!meta title="Automated builds specification"]]
 
 
-This blueprint helps to keep track of the discussion on the mailing list, and
-is attached to tickets **#8655** to specify how to implement **#6196** (Build all
-active branches).
+This blueprint helps to keep track of the discussion on the mailing
+list, and is attached to [[!tails_ticket 8655]]
+to specify how to implement [[!tails_ticket 6196]] ("Build all active
+branches").
+
+Some metrics about the number of branches merged per releases are
+available on the [[dedicated statistics page|autobuild_stats]].
 
 [[!toc levels=2]]
 
@@ -15,34 +19,27 @@ We already build the base branches (_stable_, _testing_, _devel_ and
 _experimental_) + _feature/jessie_.
 
 The questions raised is mostly concern the _feature/*_ and _bugfix/*_ branches
-(so _topic branches_)
+(so _topic branches_), as well as the _doc/*_ and _test/*_ branches.
 
-Some metrics about the number of branches merged per release could give hints
-that might help to decide of selection process. See at the bottom of this
-page.
+Given an ISO build takes around 30-45 minutes on lizard (worst case),
+given two builders lizard will be able to build something like 64-96
+ISOs a day.
 
-Given a branch take around 45 minutes to be build on lizard (worth case),
-with two builders, lizard will be able to build something like 64 ISOs a
-day.
-
-Devs should be able to trigger automatic builds for a branch whose build
+Developers should be able to trigger automatic builds for a branch whose build
 was dropped (eg. last commit too old) by pushing a dumb commit on a
-timestamp file in their branch.
+timestamp file in that branch.
 
 
 Proposal1:
 
-* branches which are not merged into devel, stable and testing
+* branches which are not merged into master, devel, stable and testing
 * but had new commits since the previous release
 
 
 ## When to build it
 
 Define the regularity we want to build topic branches, apart from being build
-on git pushes.
-
-As with the first question, some metrics could help the discussion,
-at least having an average number of branches per release.
+on Git push.
 
 Note that we will have to plug that in automatic tests when they will be
 deployed.
@@ -54,51 +51,61 @@ Proposal 1: A build a day.
 
 When to notify who? And how to notify them?
 
-Proposal 1: Notify by email the author of the offending commit on failure.
+Proposal 1:
+
+Email will be the main interface.
+
+For base branches:
+
+* When failing after a git push, notify the last commit author.
+* When failing after the daily trigger, notify the RM.
+
+For topic branches, notify the author of the last commit.
 
 
 # Scenarios
 
-In the folowing scenario:
+In the following scenario:
 
-0. topic branches are named branch T
+0. topic branches are named branch F
 0. base branches are named branch B
-0. builds are ran on merges which don't raise a conflict. If the merge raises a conflict, then the topic branch's developpes should take care of resolving it.
+0. builds are ran on merges which don't raise a conflict. If the merge raises a conflict, then the topic branch's developer should take care of resolving it.
 
 
 ## Scenario 1 : reviewer
 
     As a reviewer
-    When I'm asked to review branch T into branch B
-    Then I need to know if branch T builds fine
-      once merged into branch B (fresh results!)
+    When I'm asked to review branch F into branch B
+    Then I need to know if branch F builds fine
+      once locally merged into branch B (fresh results!)
     And I should be notified of the results
     And if the build succeeded
       I might want to download the resulting ISO
       I might want to get the pkg list
-      I want the redmine ticket to be notified (optional feature)
+      I want the Redmine ticket to be notified (optional)
     Otherwise if it fails the developer who proposed the merge should be notified
-      And the developper _need_ to see the build logs
+      And the developer *needs* to see the build logs
       And the ticket should be reassigned to the branch submitter
-      And QA check should be set to `Dev needed`
+      And QA check should be set to "Dev needed"
 
 
 ## Scenario 2 : developer
 
-    As a developper who has the commit bit
-    When I'm working on branch T
-    Then I need to know if my branch builds after I've pushed
+    As a developer who has the commit bit
+    When I'm working on branch F
+    Then I need to know if my branch builds after I've pushed and it
+        is has been locally merged in base branch B
     And I need to know if my branch build is broken by something else
        possibly weeks after my last commit (by e.g Debian changes,
        changes in branch B, ...)
     And if the build succeeded
       I might want to download the resulting ISO
       I might want to get the pkg list
-      I want the redmine ticket to be notified (optional feature)
-    Otherwise if it fails I _need_ to see the build logs
+      I want the Redmine ticket to be notified (optional)
+    Otherwise if it fails I *need* to see the build logs
       And the developer who proposed the merge should be notified
       And the ticket should be reassigned to the branch submitter
-      And QA check should be set to `Dev needed`
+      And QA check should be set to "Dev needed"
 
 
 ## Scenario 3 : RM
@@ -114,7 +121,7 @@ In the folowing scenario:
 This list other scenarios not part of the first deployement iteration, but we
 might want to consider it in the future.
 
-## Scenario 1
+## Scenario 10
 
     As a Tails developer working on branch B
     When I upload a package to APT suite B
@@ -124,7 +131,7 @@ might want to consider it in the future.
 (acceptable workaround: being able to manually trigger a build.)
 
 
-## Scenario 2
+## Scenario 11
 
     As the current RM
     When I push new tag T on branch B
@@ -135,48 +142,48 @@ might want to consider it in the future.
     And I want the squashfs sort file to be generated, and the diff sent to me
 
 
-## Scenario 3
+## Scenario 12
 
-    As a Tails developper
+    As a Tails developer
     When the test suite is ran on the ISO build from my last commit
-    I want to watch the TV and see the test video in HTML5 from a Torbrowser
+    I want to watch TV and see the test video in HTML5 from Tor Browser
 
 
-## Scenario 4
+## Scenario 13
 
-    As a Tails developper
+    As a Tails developer
     When an ISO is build from my last commit
-    I want to access it throught remote desktop (VNC/Spice/...) over Tor
+    I want to access it through remote desktop (VNC/Spice/...) over Tor
 
 # Statistics
 
 As of 2015-02-02, there are 26 branches that would be automatically
 build as part of the next 1.3 release, following the for now defined
-criterias (above in this bluepint):
+criterias (above in this blueprint):
 
-feature/7779-revisit-touchpad-settings
-feature/6992-whisperback-email-address
-bugfix/8714-tor-is-ready-robustness
-bugfix/8680-git-without-polipo
-feature/8719-mount-output-in-bug-reports
-feature/6241-gnupg2
-feature/8725-remove-vagrant-bootstrap-cache
-bugfix/8715-build-system-independent-APT-sources
-feature/7756-reintroduce-whisperback
-bugfix/8699-only-create-timestamps-in-Jenkins
-feature/8740-new-signing-key-phase-2
-feature/8665-remove-adblock
-bugfix/8756-repair-local-packages
-feature/7530-docker_anonym
-feature/7530-docker-with-apt-cacher-ng
-feature/7963-background-color
-feature/8491-live-additional-software-in-whisperback
-feature/7530-docker
-feature/linux-3.18
-feature/torbrowser-alpha
-bugfix/8747-update-tails-apt-repo-signing-key
-feature/8726-use-homogenous-Debian-mirrors-at-build-time
-feature/5525-sandbox-web-browser
-feature/7752-keyringer
-feature/6739-install-electrum
-bugfix/quote-wrappers-arguments
+* feature/7779-revisit-touchpad-settings
+* feature/6992-whisperback-email-address
+* bugfix/8714-tor-is-ready-robustness
+* bugfix/8680-git-without-polipo
+* feature/8719-mount-output-in-bug-reports
+* feature/6241-gnupg2
+* feature/8725-remove-vagrant-bootstrap-cache
+* bugfix/8715-build-system-independent-APT-sources
+* feature/7756-reintroduce-whisperback
+* bugfix/8699-only-create-timestamps-in-Jenkins
+* feature/8740-new-signing-key-phase-2
+* feature/8665-remove-adblock
+* bugfix/8756-repair-local-packages
+* feature/7530-docker_anonym
+* feature/7530-docker-with-apt-cacher-ng
+* feature/7963-background-color
+* feature/8491-live-additional-software-in-whisperback
+* feature/7530-docker
+* feature/linux-3.18
+* feature/torbrowser-alpha
+* bugfix/8747-update-tails-apt-repo-signing-key
+* feature/8726-use-homogenous-Debian-mirrors-at-build-time
+* feature/5525-sandbox-web-browser
+* feature/7752-keyringer
+* feature/6739-install-electrum
+* bugfix/quote-wrappers-arguments
