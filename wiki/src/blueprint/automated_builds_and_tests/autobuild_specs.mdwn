@@ -73,12 +73,13 @@ In the following scenario:
     When I'm asked to review branch F into branch B
     Then I need to know if branch F builds fine
       once locally merged into branch B (fresh results!)
-    And I should be notified of the results
+    So, if there is no such fresh build available
+       Then I manually trigger a build of branch F
     And if the build succeeded
-      I might want to download the resulting ISO
-      I might want to get the pkg list
-      I want the Redmine ticket to be notified (optional)
-    Otherwise if it fails the developer who proposed the merge should be notified
+      The resulting ISO must be made available to me
+      The pkg list must be made available to me
+      The Redmine ticket should be notified
+    Otherwise if it fails the developer who proposed the merge must be notified
       And the developer *needs* to see the build logs
       And the ticket should be reassigned to the branch submitter
       And QA check should be set to "Dev needed"
@@ -94,11 +95,11 @@ In the following scenario:
        possibly weeks after my last commit (by e.g Debian changes,
        changes in branch B, ...)
     And if the build succeeded
-      I might want to download the resulting ISO
-      I might want to get the pkg list
-      I want the Redmine ticket to be notified (optional)
+      The resulting ISO must be made available to me
+      The pkg list must be made available to me
+      The Redmine ticket should be notified
     Otherwise if it fails I *need* to see the build logs
-      And the developer who proposed the merge should be notified
+      And the developer who proposed the merge must be notified
       And the ticket should be reassigned to the branch submitter
       And QA check should be set to "Dev needed"
 
@@ -107,8 +108,8 @@ In the following scenario:
 
     As the current RM
     When working the full dev release cycle
-    Then I need to know when a branch FTBFS
-    And when this happens I need to see the build logs.
+    Then I need to know when a base branch fails to build
+    And when this happens the build logs must be made available to me.
 
 
 # Future ideas
