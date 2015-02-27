@@ -35,7 +35,7 @@ Feature: Chatting anonymously using Pidgin
     Given my XMPP friend is online
     When I start a conversation with my friend
     And I start an OTR session with my friend
-    Then Piding automatically generates and OTR key
+    Then Pidgin automatically generates an OTR key
     And an OTR session was successfully started with my friend
     When I say something to my friend
     Then I can receive a response from my friend
