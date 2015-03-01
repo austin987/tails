@@ -1,0 +1,38 @@
+[[!meta title="Running the automated test suite on Lizard."]]
+
+[[!toc levels=2]]
+
+Core developers have access to the isotester1 VM on lizard which is
+configured to run our automated test suite. They can run it there on the
+ISOs build by Jenkins.
+
+
+# Accessing isotester1
+
+Developers have ssh access to Lizard and can `ssh isotester1.lizard`
+from there. They can also access it with ssh directly using its Tor
+hidden service. They have privileges to run the test suite using sudo.
+
+A Tails git repo is already cloned in `/srv/git/`.
+
+
+# Fetching the ISOs
+
+The automated build ISOs can be quickly retrieved from within the
+isotester by using wget to download them from their
+http://nightly.tails.boum.org/ URL.
+
+
+# Running the test suite
+
+Snapshots and captured images are stored in /tmp/TailsToaster.
+
+Developers that want to use the --capture option to have a webm video of
+the tests should store them in that directory too for it has more
+storage space than the system partition, e.g by using:
+
+    ./run_test_suite --capture /tmp/TailsToaster/capture.webm [...]
+
+The vnc display of the tested Tails ISO can be accessed using a ssh
+tunnel.
+
