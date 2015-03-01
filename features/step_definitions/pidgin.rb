@@ -88,7 +88,7 @@ When /^I start an OTR session with my friend$/ do
   @screen.click("PidginOTRMenuStartSession.png")
 end
 
-Then /^Piding automatically generates and OTR key$/ do
+Then /^Pidgin automatically generates an OTR key$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("PidginOTRKeyGenPrompt.png", 30)
   @screen.wait_and_click("PidginOTRKeyGenPromptDoneButton.png", 30)

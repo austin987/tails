@@ -112,7 +112,7 @@ class OtrBot(jabberbot.JabberBot):
 
     @jabberbot.botcmd
     def clear_say(self, mess, args):
-        """Make me to speak in the clear even if we're in an OTR chat"""
+        """Make me speak in the clear even if we're in an OTR chat"""
         self.__opdata["send_raw_message_fn"](mess.buildReply(args))
         return ""
 
