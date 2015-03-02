@@ -56,14 +56,16 @@ def restore_background
       @vm.host_to_guest_time_sync
       @vm.execute("service tor start")
       wait_until_tor_is_working
-      @vm.spawn("/usr/local/sbin/restart-vidalia")
+      @vm.spawn("restart-vidalia")
     end
+  else
+    @vm.host_to_guest_time_sync
   end
 end
 
 Given /^a computer$/ do
-  @vm.destroy if @vm
-  @vm = VM.new($vm_xml_path, $x_display)
+  @vm.destroy_and_undefine if @vm
+  @vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
 Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
@@ -73,7 +75,7 @@ end
 
 Given /^the computer is set to boot from the Tails DVD$/ do
   next if @skip_steps_while_restoring_background
-  @vm.set_cdrom_boot($tails_iso)
+  @vm.set_cdrom_boot(TAILS_ISO)
 end
 
 Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
@@ -108,12 +110,14 @@ Then /^drive "([^"]+)" is detected by Tails$/ do |name|
 end
 
 Given /^the network is plugged$/ do
-  next if @skip_steps_while_restoring_background
+  # We don't skip this step when restoring the background to ensure
+  # that the network state is actually the same after restoring as
+  # when the snapshot was made.
   @vm.plug_network
 end
 
 Given /^the network is unplugged$/ do
-  next if @skip_steps_while_restoring_background
+  # See comment in the step "the network is plugged".
   @vm.unplug_network
 end
 
@@ -121,7 +125,7 @@ Given /^I capture all network traffic$/ do
   # Note: We don't want skip this particular stpe if
   # @skip_steps_while_restoring_background is set since it starts
   # something external to the VM state.
-  @sniffer = Sniffer.new("TestSniffer", @vm.net.bridge_name)
+  @sniffer = Sniffer.new("sniffer", $vmnet)
   @sniffer.capture
 end
 
@@ -205,7 +209,7 @@ end
 
 When /^I destroy the computer$/ do
   next if @skip_steps_while_restoring_background
-  @vm.destroy
+  @vm.destroy_and_undefine
 end
 
 Given /^the computer (re)?boots Tails$/ do |reboot|
@@ -252,6 +256,11 @@ Given /^I enable more Tails Greeter options$/ do
   @screen.click(match.getCenter.offset(match.w/2, match.h*2))
   @screen.wait_and_click('TailsGreeterForward.png', 10)
   @screen.wait('TailsGreeterLoginButton.png', 20)
+end
+
+Given /^I enable the specific Tor configuration option$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.click('TailsGreeterTorConf.png')
 end
 
 Given /^I set sudo password "([^"]*)"$/ do |password|
@@ -411,29 +420,8 @@ end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
   next if @skip_steps_while_restoring_background
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_tor_relays)
-  if !leaks.empty?
-    if !leaks.ipv4_tcp_leaks.empty?
-      puts "The following IPv4 TCP non-Tor Internet hosts were contacted:"
-      puts leaks.ipv4_tcp_leaks.join("\n")
-      puts
-    end
-    if !leaks.ipv4_nontcp_leaks.empty?
-      puts "The following IPv4 non-TCP Internet hosts were contacted:"
-      puts leaks.ipv4_nontcp_leaks.join("\n")
-      puts
-    end
-    if !leaks.ipv6_leaks.empty?
-      puts "The following IPv6 Internet hosts were contacted:"
-      puts leaks.ipv6_leaks.join("\n")
-      puts
-    end
-    if !leaks.nonip_leaks.empty?
-      puts "Some non-IP packets were sent\n"
-    end
-    save_pcap_file
-    raise "There were network leaks!"
-  end
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_all_tor_nodes)
+  leaks.assert_no_leaks
 end
 
 Given /^I enter the sudo password in the gksu prompt$/ do
@@ -452,7 +440,6 @@ end
 
 def deal_with_polkit_prompt (image, password)
   @screen.wait(image, 60)
-  sleep 1 # wait for weird fade-in to unblock the "Ok" button
   @screen.type(password)
   @screen.type(Sikuli::Key.ENTER)
   @screen.waitVanish(image, 10)
@@ -572,7 +559,7 @@ def xul_application_info(application)
                                     ).stdout.chomp
   case application
   when "Tor Browser"
-    user = $live_user
+    user = LIVE_USER
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
     chroot = ""
     new_tab_button_image = "TorBrowserNewTabButton.png"
@@ -764,7 +751,7 @@ end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
   next if @skip_steps_while_restoring_background
-  c = @vm.execute("cp \"#{source}\" \"#{destination}\"", $live_user)
+  c = @vm.execute("cp \"#{source}\" \"#{destination}\"", LIVE_USER)
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
 
@@ -826,10 +813,9 @@ end
 
 When /^I press the "([^"]+)" key$/ do |key|
   next if @skip_steps_while_restoring_background
-  case key
-  when "ENTER"
-    @screen.type(Sikuli::Key.ENTER)
-  else
+  begin
+    @screen.type(eval("Sikuli::Key.#{key}"))
+  rescue RuntimeError
     raise "unsupported key #{key}"
   end
 end
@@ -838,9 +824,9 @@ Then /^the (amnesiac|persistent) Tor Browser directory (exists|does not exist)$/
   next if @skip_steps_while_restoring_background
   case persistent_or_not
   when "amnesiac"
-    dir = '/home/amnesia/Tor Browser'
+    dir = "/home/#{LIVE_USER}/Tor Browser"
   when "persistent"
-    dir = '/home/amnesia/Persistent/Tor Browser'
+    dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
   end
   step "the directory \"#{dir}\" #{mode}"
 end
@@ -866,7 +852,7 @@ Then /^there is no GNOME bookmark for the persistent Tor Browser directory$/ do
 end
 
 def pulseaudio_sink_inputs
-  pa_info = @vm.execute_successfully('pacmd info', $live_user).stdout
+  pa_info = @vm.execute_successfully('pacmd info', LIVE_USER).stdout
   sink_inputs_line = pa_info.match(/^\d+ sink input\(s\) available\.$/)[0]
   return sink_inputs_line.match(/^\d+/)[0].to_i
 end
@@ -902,7 +888,7 @@ When /^I can save the current page as "([^"]+[.]html)" to the (default downloads
   next if @skip_steps_while_restoring_background
   @screen.type("s", Sikuli::KeyModifier.CTRL)
   if output_dir == "persistent Tor Browser"
-    output_dir = "/home/amnesia/Persistent/Tor Browser"
+    output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
     @screen.wait_and_click("GtkTorBrowserPersistentBookmark.png", 10)
     @screen.wait("GtkTorBrowserPersistentBookmarkSelected.png", 10)
     # The output filename (without its extension) is already selected,
@@ -910,7 +896,7 @@ When /^I can save the current page as "([^"]+[.]html)" to the (default downloads
     @screen.type("n", Sikuli::KeyModifier.ALT)
     @screen.wait("TorBrowserSaveOutputFileSelected.png", 10)
   else
-    output_dir = "/home/amnesia/Tor Browser"
+    output_dir = "/home/#{LIVE_USER}/Tor Browser"
   end
   # Only the part of the filename before the .html extension can be easily replaced
   # so we have to remove it before typing it into the arget filename entry widget.
@@ -924,14 +910,14 @@ end
 When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads|persistent Tor Browser) directory$/ do |output_file, output_dir|
   next if @skip_steps_while_restoring_background
   if output_dir == "persistent Tor Browser"
-    output_dir = "/home/amnesia/Persistent/Tor Browser"
+    output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
   else
-    output_dir = "/home/amnesia/Tor Browser"
+    output_dir = "/home/#{LIVE_USER}/Tor Browser"
   end
   @screen.type("p", Sikuli::KeyModifier.CTRL)
   @screen.wait("TorBrowserPrintDialog.png", 10)
   @screen.wait_and_click("PrintToFile.png", 10)
-  # Tor Browser is not allowed to read /home/amnesia, and I found no way
+  # Tor Browser is not allowed to read /home/#{LIVE_USER}, and I found no way
   # to change the default destination directory for "Print to File",
   # so let's click through the warning
   @screen.wait("TorBrowserCouldNotReadTheContentsOfWarning.png", 10)
