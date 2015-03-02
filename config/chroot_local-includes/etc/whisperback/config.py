@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
 #
-# Tails configuration file for Whisperback
+# Tails configuration file for WhisperBack
 # ==========================================
 #
-# This is a python script that will be read at startup. Any python
+# This is a Python script that will be read at startup. Any Python
 # syntax is valid.
 
 # IMPORTS
@@ -20,8 +20,8 @@ import gettext
 def __get_localised_doc_link():
     """Return the link to the localised documentation
 
-    @returns  the link to the localised documentation if available, or to the
-            english version
+    @returns  the link to the localised documentation if available, or fallback
+              to the English version
     """
 
     # Try to get the list of supported languages codes supported by the
@@ -130,7 +130,7 @@ mail_subject = "Bug report: %x" % random.randrange(16**32)
 def mail_prepended_info():
     """Returns the version of the running amnesia system
     
-    @return The output of tails-version, if any, or an english string 
+    @return The output of tails-version, if any, or an English string
             explaining the error
     """
   
@@ -148,14 +148,14 @@ def mail_prepended_info():
 
 # A callback function to get information to append to the email
 # (this information will be encrypted). This is useful to add
-# configuration files usebul for debugging.
+# configuration files useful for debugging.
 # 
 # It should not take any parameter, and should return a string to be
 # appended to the email
 def mail_appended_info():
-    """Returns debugging informations on the running amnesia system
+    """Returns debugging information on the running amnesia system
     
-    @return a long string containing debugging informations
+    @return a long string containing debugging information
     """
     debugging_info = ""
 
