@@ -128,23 +128,23 @@ mail_subject = "Bug report: %x" % random.randrange(16**32)
 # It should not take any parameter, and should return a string to be
 # preprended to the email
 def mail_prepended_info():
-    """Returns the version of the running amnesia system
+    """Returns the version of the running Tails system
     
     @return The output of tails-version, if any, or an English string
             explaining the error
     """
   
     try:
-      amnesia_version_process = subprocess.Popen ("tails-version", 
+      tails_version_process = subprocess.Popen ("tails-version",
                                                  stdout=subprocess.PIPE)
-      amnesia_version_process.wait()
-      amnesia_version = amnesia_version_process.stdout.read()
+      tails_version_process.wait()
+      tails_version = tails_version_process.stdout.read()
     except OSError:
-      amnesia_version = "tails-version command not found"
+      tails_version = "tails-version command not found"
     except subprocess.CalledProcessError:
-      amnesia_version = "tails-version returned an error"
+      tails_version = "tails-version returned an error"
     
-    return "Tails-Version: %s\n" % amnesia_version
+    return "Tails-Version: %s\n" % tails_version
 
 # A callback function to get information to append to the email
 # (this information will be encrypted). This is useful to add
@@ -153,7 +153,7 @@ def mail_prepended_info():
 # It should not take any parameter, and should return a string to be
 # appended to the email
 def mail_appended_info():
-    """Returns debugging information on the running amnesia system
+    """Returns debugging information on the running Tails system
     
     @return a long string containing debugging information
     """
