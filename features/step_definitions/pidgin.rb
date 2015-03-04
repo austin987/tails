@@ -58,7 +58,7 @@ end
 
 When /^I start a conversation with my friend$/ do
   next if @skip_steps_while_restoring_background
-  # Clicking the middle, bottom of this immage should querry our
+  # Clicking the middle, bottom of this image should query our
   # friend, given it's the only subscribed user that's online, which
   # we assume.
   r = @screen.find("PidginFriendOnline.png")
@@ -66,7 +66,7 @@ When /^I start a conversation with my friend$/ do
   x = bottom_left.getX + r.getW/2
   y = bottom_left.getY
   @screen.doubleClick_point(x, y)
-  # Since pidgin set's the window name to the contact, we have no good
+  # Since Pidgin sets the window name to the contact, we have no good
   # way to identify the conversation window. Let's just look for the
   # expected menu bar.
   @screen.wait("PidginConversationWindowMenuBar.png", 10)
