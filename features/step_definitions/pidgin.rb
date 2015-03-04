@@ -1,6 +1,7 @@
-def xmpp_account_extract(type)
+# Extracts the secrets for the XMMP account 'account'.
+def xmpp_account_extract(account)
   begin
-    account = $config["Pidgin"]["Accounts"]["XMPP"][type]
+    account = $config["Pidgin"]["Accounts"]["XMPP"][account]
     username = account["username"]
     domain = account["domain"]
     password = account["password"]
@@ -17,7 +18,7 @@ def xmpp_account_extract(type)
   rescue NoMethodError, Test::Unit::AssertionFailedError
     raise(
 <<EOF
-Your Pidgin:Accounts:XMPP:#{type} is incorrect or missing from your local configuration file (#{LOCAL_CONFIG_FILE}). See wiki/src/contribute/release_process/test/usage.mdwn for the format.
+Your Pidgin:Accounts:XMPP:#{account} is incorrect or missing from your local configuration file (#{LOCAL_CONFIG_FILE}). See wiki/src/contribute/release_process/test/usage.mdwn for the format.
 EOF
 )
   end
