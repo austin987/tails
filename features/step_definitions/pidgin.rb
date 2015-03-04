@@ -4,6 +4,7 @@ def xmpp_account_extract(account)
     account = $config["Pidgin"]["Accounts"]["XMPP"][account]
     username = account["username"]
     domain = account["domain"]
+    connect_server = account["connect_server"]
     password = account["password"]
     otr_key = nil
     check_vars = [username, domain, password]
@@ -22,12 +23,13 @@ Your Pidgin:Accounts:XMPP:#{account} is incorrect or missing from your local con
 EOF
 )
   end
-  return [username, domain, password, otr_key]
+  return [username, domain, connect_server, password, otr_key]
 end
 
 When /^I create my XMPP account$/ do
   next if @skip_steps_while_restoring_background
-  username, domain, password, otr_key = xmpp_account_extract("Tails_account")
+  username, domain, connect_server, password, otr_key =
+    xmpp_account_extract("Tails_account")
   @screen.click("PidginAccountManagerAddButton.png")
   @screen.wait("PidginAddAccountWindow.png", 20)
   @screen.click_mid_right_edge("PidginAddAccountProtocolLabel.png")
@@ -39,6 +41,11 @@ When /^I create my XMPP account$/ do
   @screen.click_mid_right_edge("PidginAddAccountXMPPPassword.png")
   @screen.type(password)
   @screen.click("PidginAddAccountXMPPRememberPassword.png")
+  if connect_server
+    @screen.click("PidginAddAccountXMPPAdvancedTab.png")
+    @screen.click_mid_right_edge("PidginAddAccountXMPPConnectServer.png")
+    @screen.type(connect_server)
+  end
   @screen.click("PidginAddAccountXMPPAddButton.png")
 end
 
