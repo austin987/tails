@@ -23,7 +23,7 @@ Feature: Chatting anonymously using Pidgin
     Given my XMPP friend is online
     When I start a conversation with my friend
     And I say something to my friend
-    Then I can receive a response from my friend
+    Then I receive a response from my friend
 
   @check_tor_leaks
   Scenario: Chatting with some friend over XMPP and with OTR
@@ -38,7 +38,7 @@ Feature: Chatting anonymously using Pidgin
     Then Pidgin automatically generates an OTR key
     And an OTR session was successfully started with my friend
     When I say something to my friend
-    Then I can receive a response from my friend
+    Then I receive a response from my friend
 
   @check_tor_leaks
   Scenario: Connecting to the #tails IRC channel with the pre-configured account

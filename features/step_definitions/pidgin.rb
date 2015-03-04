@@ -76,7 +76,7 @@ And /^I say something to my friend$/ do
   @screen.type("ping" + Sikuli::Key.ENTER)
 end
 
-Then /^I can receive a response from my friend$/ do
+Then /^I receive a response from my friend$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("PidginFriendExpectedAnswer.png", 20)
 end
