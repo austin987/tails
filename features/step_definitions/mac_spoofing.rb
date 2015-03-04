@@ -38,12 +38,14 @@ Then /^the real MAC address was (not )?leaked$/ do |mode|
   if is_leaking
     if !mac_leaks.include?(@vm.real_mac)
       save_pcap_file
-      raise "The real MAC address was expected to leak but didn't"
+      raise "The real MAC address was expected to leak but didn't. We " +
+            "observed the following MAC addresses: #{mac_leaks}"
     end
   else
     if mac_leaks.include?(@vm.real_mac)
       save_pcap_file
-      raise "The real MAC address was leaked but was expected not to"
+      raise "The real MAC address was leaked but was expected not to. We " +
+            "observed the following MAC addresses: #{mac_leaks}"
     end
   end
 end
