@@ -147,10 +147,14 @@ class OtrBot(jabberbot.JabberBot):
         return ""
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
+    if len(sys.argv) < 4:
         print >> sys.stderr, \
-            "Usage: %s <user@domain> <password> <otr_key_file>" % sys.argv[0]
+            "Usage: %s <user@domain> <password> <otr_key_file> [rooms...]" \
+            % sys.argv[0]
         sys.exit(1)
-    username, password, otr_key_path = sys.argv[1:]
+    username, password, otr_key_path = sys.argv[1:4]
+    rooms = sys.argv[4:]
     otr_bot = OtrBot(username, password, otr_key_path)
+    for room in rooms:
+        otr_bot.join_room(room)
     otr_bot.serve_forever()
