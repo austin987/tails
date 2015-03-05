@@ -55,7 +55,7 @@ Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_c
   next if @skip_steps_while_restoring_background
   rooms = nil
   if join_chat
-    rooms = [@chat_room]
+    rooms = [@chat_room_jid]
   end
   account = xmpp_account("Friend_account", ["otr_key"])
   @friend_name = account["username"]
@@ -86,7 +86,7 @@ And /^I say something to my friend( in the group chat)?$/ do |group_chat|
   next if @skip_steps_while_restoring_background
   msg = "ping" + Sikuli::Key.ENTER
   if group_chat
-    focus_pidgin_window(@chat_room.split("@").first)
+    focus_pidgin_window(@chat_room_jid.split("@").first)
     msg = @friend_name + ": " + msg
   else
     focus_pidgin_window(@friend_name)
@@ -134,7 +134,7 @@ When /^I join the empty "([^"]*)" multi-user chat$/ do |chat_room|
   @screen.type("c", Sikuli::KeyModifier.CTRL)
   conference_server =
     @vm.execute_successfully("xclip -o", LIVE_USER).stdout.chomp
-  @chat_room = chat_room + "@" + conference_server
+  @chat_room_jid = chat_room + "@" + conference_server
 
   @screen.click("PidginJoinChatButton.png")
   # This will both make sure that the we joined the chat since the
