@@ -5,14 +5,12 @@ def focus_pidgin_window(name)
 end
 
 # Extracts the secrets for the XMMP account `account_name`.
-def xmpp_account(account_name)
+def xmpp_account(account_name, required_options = [])
   begin
     account = $config["Pidgin"]["Accounts"]["XMPP"][account_name]
-    check_keys = ["username", "domain", "password"]
-    if account.has_key?("otr_key")
-      check_keys << "otr_key"
-    end
+    check_keys = ["username", "domain", "password"] + required_options
     for key in check_keys do
+      assert(account.has_key?(key))
       assert_not_nil(account[key])
       assert(!account[key].empty?)
     end
@@ -59,7 +57,7 @@ Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_c
   if join_chat
     rooms = [@chat_room]
   end
-  account = xmpp_account("Friend_account")
+  account = xmpp_account("Friend_account", ["otr_key"])
   @friend_name = account["username"]
   @chatbot = ChatBot.new(account["username"] + "@" + account["domain"],
                          account["password"], account["otr_key"], rooms)
