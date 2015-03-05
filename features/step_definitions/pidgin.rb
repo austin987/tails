@@ -120,12 +120,14 @@ end
 # The reason the chat must be empty is to guarantee that we don't mix
 # up messages/events from other users with the ones we expect from the
 # bot.
-When /^I join the empty "([^"]*)" multi-user chat$/ do |chat_room|
+When /^I join some empty multi-user chat$/ do
   next if @skip_steps_while_restoring_background
   @screen.click("PidginBuddiesMenu.png")
   @screen.wait_and_click("PidginBuddiesMenuJoinChat.png", 10)
   @screen.wait_and_click("PidginJoinChatWindow.png", 10)
   @screen.click_mid_right_edge("PidginJoinChatRoomLabel.png")
+  account = xmpp_account("Tails_account", ["chat_room"])
+  chat_room = account["chat_room"]
   @screen.type(chat_room)
 
   # We will need the conference server later, when starting the bot.
