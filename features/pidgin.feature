@@ -33,6 +33,7 @@ Feature: Chatting anonymously using Pidgin
     And I close Pidgin's account manager window
     Then Pidgin automatically enables my XMPP account
     When I join the empty "tails-testing" multi-user chat
+    And I clear the multi-user chat's scrollback
     And my XMPP friend goes online and joins the multi-user chat
     Then I can see that my friend joined the multi-user chat
     And I say something to my friend in the group chat

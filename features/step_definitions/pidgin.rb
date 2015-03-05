@@ -144,6 +144,15 @@ When /^I join the empty "([^"]*)" multi-user chat$/ do |chat_room|
   @screen.wait("PidginChat1UserInRoom.png", 10)
 end
 
+# Since some servers save the scrollback, and sends it when joining,
+# it's safer to clear it so we do not get false positives from old
+# messages when looking for a particular response, or similar.
+When /^I clear the multi-user chat's scrollback$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.click("PidginConversationMenu.png")
+  @screen.click("PidginConversationMenuClearScrollback.png")
+end
+
 Then /^I can see that my friend joined the multi-user chat$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("PidginChat2UsersInRoom.png", 60)
