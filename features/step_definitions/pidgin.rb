@@ -53,11 +53,16 @@ Then /^Pidgin automatically enables my XMPP account$/ do
   @screen.wait("PidginAvailableStatus.png", 120)
 end
 
-Given /^my XMPP friend is online$/ do
+Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_chat|
   next if @skip_steps_while_restoring_background
+  rooms = nil
+  if join_chat
+    rooms = [@chat_room]
+  end
   account = xmpp_account("Friend_account")
+  @friend_name = account["username"]
   @chatbot = ChatBot.new(account["username"] + "@" + account["domain"],
-                         account["password"], account["otr_key"])
+                         account["password"], account["otr_key"], rooms)
   @chatbot.start
   add_after_scenario_hook(@chatbot.method(:stop))
   @screen.wait("PidginFriendOnline.png", 60)
@@ -79,9 +84,16 @@ When /^I start a conversation with my friend$/ do
   @screen.wait("PidginConversationWindowMenuBar.png", 10)
 end
 
-And /^I say something to my friend$/ do
+And /^I say something to my friend( in the group chat)?$/ do |group_chat|
   next if @skip_steps_while_restoring_background
-  @screen.type("ping" + Sikuli::Key.ENTER)
+  msg = "ping" + Sikuli::Key.ENTER
+  if group_chat
+    focus_pidgin_window(@chat_room.split("@").first)
+    msg = @friend_name + ": " + msg
+  else
+    focus_pidgin_window(@friend_name)
+  end
+  @screen.type(msg)
 end
 
 Then /^I receive a response from my friend$/ do
@@ -105,6 +117,36 @@ end
 Then /^an OTR session was successfully started with my friend$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("PidginConversationOTRUnverifiedSessionStarted.png", 10)
+end
+
+# The reason the chat must be empty is to guarantee that we don't mix
+# up messages/events from other users with the ones we expect from the
+# bot.
+When /^I join the empty "([^"]*)" multi-user chat$/ do |chat_room|
+  next if @skip_steps_while_restoring_background
+  @screen.click("PidginBuddiesMenu.png")
+  @screen.wait_and_click("PidginBuddiesMenuJoinChat.png", 10)
+  @screen.wait_and_click("PidginJoinChatWindow.png", 10)
+  @screen.click_mid_right_edge("PidginJoinChatRoomLabel.png")
+  @screen.type(chat_room)
+
+  # We will need the conference server later, when starting the bot.
+  @screen.click_mid_right_edge("PidginJoinChatServerLabel.png")
+  @screen.type("a", Sikuli::KeyModifier.CTRL)
+  @screen.type("c", Sikuli::KeyModifier.CTRL)
+  conference_server =
+    @vm.execute_successfully("xclip -o", LIVE_USER).stdout.chomp
+  @chat_room = chat_room + "@" + conference_server
+
+  @screen.click("PidginJoinChatButton.png")
+  # This will both make sure that the we joined the chat since the
+  # chat window openend, and that it is empty.
+  @screen.wait("PidginChat1UserInRoom.png", 10)
+end
+
+Then /^I can see that my friend joined the multi-user chat$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("PidginChat2UsersInRoom.png", 60)
 end
 
 def configured_pidgin_accounts

@@ -13,16 +13,29 @@ Feature: Chatting anonymously using Pidgin
     Then Pidgin has the expected accounts configured with random nicknames
     And I save the state so the background can be restored next scenario
 
+ @check_tor_leaks
+ Scenario: Chatting with some friend over XMPP
+   When I start Pidgin through the GNOME menu
+   Then I see Pidgin's account manager window
+   When I create my XMPP account
+   And I close Pidgin's account manager window
+   Then Pidgin automatically enables my XMPP account
+   Given my XMPP friend goes online
+   When I start a conversation with my friend
+   And I say something to my friend
+   Then I receive a response from my friend
+
   @check_tor_leaks
-  Scenario: Chatting with some friend over XMPP
+  Scenario: Chatting with some friend over XMPP in a multi-user chat
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     When I create my XMPP account
     And I close Pidgin's account manager window
     Then Pidgin automatically enables my XMPP account
-    Given my XMPP friend is online
-    When I start a conversation with my friend
-    And I say something to my friend
+    When I join the empty "tails-testing" multi-user chat
+    And my XMPP friend goes online and joins the multi-user chat
+    Then I can see that my friend joined the multi-user chat
+    And I say something to my friend in the group chat
     Then I receive a response from my friend
 
   @check_tor_leaks
@@ -32,7 +45,7 @@ Feature: Chatting anonymously using Pidgin
     When I create my XMPP account
     And I close Pidgin's account manager window
     Then Pidgin automatically enables my XMPP account
-    Given my XMPP friend is online
+    Given my XMPP friend goes online
     When I start a conversation with my friend
     And I start an OTR session with my friend
     Then Pidgin automatically generates an OTR key
