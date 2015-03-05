@@ -131,11 +131,15 @@ class OtrBot(jabberbot.JabberBot):
     @jabberbot.botcmd
     def start_otr(self, mess, args):
         """Make me *initiate* (but not refresh) an OTR session"""
+        if mess.getType() == "groupchat":
+            return
         return "?OTRv2?"
 
     @jabberbot.botcmd
     def end_otr(self, mess, args):
         """Make me gracefully end the OTR session if there is one"""
+        if mess.getType() == "groupchat":
+            return
         user = str(mess.getFrom().getStripped())
         otr.otrl_message_disconnect(
             self.__otr_ustate, self.__otr_callbacks({"message": mess}),
