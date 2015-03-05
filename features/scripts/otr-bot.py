@@ -9,7 +9,9 @@ import otr
 class OtrCallbackStore():
 
     def inject_message(self, opdata, accountname, protocol, recipient, message):
-        mess = xmpp.protocol.Message(to = recipient, body = message)
+        mess = opdata["message"]
+        mess.setTo(recipient)
+        mess.setBody(message)
         opdata["send_raw_message_fn"](mess)
 
     def policy(self, opdata, context):
@@ -61,8 +63,11 @@ class OtrBot(jabberbot.JabberBot):
             }
         self.__otr_callback_store = OtrCallbackStore()
 
-    def __otr_callbacks(self):
-        return (self.__otr_callback_store, self.__opdata)
+    def __otr_callbacks(self, more_data = None):
+        opdata = self.__opdata.copy()
+        if more_data:
+            opdata.update(more_data)
+        return (self.__otr_callback_store, opdata)
 
     def __get_otr_user_context(self, user):
         context, _ = otr.otrl_context_find(
@@ -78,16 +83,17 @@ class OtrBot(jabberbot.JabberBot):
             self.__otr_ustate, self.__otr_callbacks(), self.__account,
             self.__protocol, user, body, None)
         otr.otrl_message_fragment_and_send(
-            self.__otr_callbacks(), self.__get_otr_user_context(user),
-            encrypted_body, otr.OTRL_FRAGMENT_SEND_ALL)
+            self.__otr_callbacks({"message": mess}),
+            self.__get_otr_user_context(user), encrypted_body,
+            otr.OTRL_FRAGMENT_SEND_ALL)
 
     # Wrap OTR decryption around Jabberbot's callback mechanism.
     def callback_message(self, conn, mess):
         body = str(mess.getBody())
         user = str(mess.getFrom().getStripped())
         is_internal, decrypted_body, _ = otr.otrl_message_receiving(
-            self.__otr_ustate, self.__otr_callbacks(), self.__account,
-            self.__protocol, user, body)
+            self.__otr_ustate, self.__otr_callbacks({"message": mess}),
+            self.__account, self.__protocol, user, body)
         context = self.__get_otr_user_context(user)
         if context.msgstate == otr.OTRL_MSGSTATE_FINISHED:
             otr.otrl_context_force_plaintext(context)
@@ -126,8 +132,8 @@ class OtrBot(jabberbot.JabberBot):
         """Make me gracefully end the OTR session if there is one"""
         user = str(mess.getFrom().getStripped())
         otr.otrl_message_disconnect(
-            self.__otr_ustate, self.__otr_callbacks(), self.__account,
-            self.__protocol, user)
+            self.__otr_ustate, self.__otr_callbacks({"message": mess}),
+            self.__account, self.__protocol, user)
         return ""
 
 if __name__ == '__main__':
