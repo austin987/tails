@@ -99,6 +99,12 @@ class OtrBot(jabberbot.JabberBot):
             otr.otrl_context_force_plaintext(context)
         if is_internal:
             return
+        if mess.getType() == "groupchat":
+            bot_prefix = self.__account + ": "
+            if decrypted_body.startswith(bot_prefix):
+                decrypted_body = decrypted_body[len(bot_prefix):]
+            else:
+                return
         mess.setBody(decrypted_body)
         super(OtrBot, self).callback_message(conn, mess)
 
