@@ -1,20 +1,14 @@
-# Extracts the secrets for the XMMP account 'account'.
-def xmpp_account_extract(account)
+# Extracts the secrets for the XMMP account `account_name`.
+def xmpp_account(account_name)
   begin
-    account = $config["Pidgin"]["Accounts"]["XMPP"][account]
-    username = account["username"]
-    domain = account["domain"]
-    connect_server = account["connect_server"]
-    password = account["password"]
-    otr_key = nil
-    check_vars = [username, domain, password]
+    account = $config["Pidgin"]["Accounts"]["XMPP"][account_name]
+    check_keys = ["username", "domain", "password"]
     if account.has_key?("otr_key")
-      otr_key = account["otr_key"]
-      check_vars << otr_key
+      check_keys << "otr_key"
     end
-    for var in check_vars do
-      assert_not_nil(var)
-      assert(!var.empty?)
+    for key in check_keys do
+      assert_not_nil(account[key])
+      assert(!account[key].empty?)
     end
   rescue NoMethodError, Test::Unit::AssertionFailedError
     raise(
@@ -23,28 +17,27 @@ Your Pidgin:Accounts:XMPP:#{account} is incorrect or missing from your local con
 EOF
 )
   end
-  return [username, domain, connect_server, password, otr_key]
+  return account
 end
 
 When /^I create my XMPP account$/ do
   next if @skip_steps_while_restoring_background
-  username, domain, connect_server, password, otr_key =
-    xmpp_account_extract("Tails_account")
+  account = xmpp_account("Tails_account")
   @screen.click("PidginAccountManagerAddButton.png")
   @screen.wait("PidginAddAccountWindow.png", 20)
   @screen.click_mid_right_edge("PidginAddAccountProtocolLabel.png")
   @screen.click("PidginAddAccountProtocolXMPP.png")
   @screen.click_mid_right_edge("PidginAddAccountXMPPUsername.png")
-  @screen.type(username)
+  @screen.type(account["username"])
   @screen.click_mid_right_edge("PidginAddAccountXMPPDomain.png")
-  @screen.type(domain)
+  @screen.type(account["domain"])
   @screen.click_mid_right_edge("PidginAddAccountXMPPPassword.png")
-  @screen.type(password)
+  @screen.type(account["password"])
   @screen.click("PidginAddAccountXMPPRememberPassword.png")
-  if connect_server
+  if account["connect_server"]
     @screen.click("PidginAddAccountXMPPAdvancedTab.png")
     @screen.click_mid_right_edge("PidginAddAccountXMPPConnectServer.png")
-    @screen.type(connect_server)
+    @screen.type(account["connect_server"])
   end
   @screen.click("PidginAddAccountXMPPAddButton.png")
 end
@@ -56,9 +49,9 @@ end
 
 Given /^my XMPP friend is online$/ do
   next if @skip_steps_while_restoring_background
-  username, domain, _, password, otr_key =
-    xmpp_account_extract("Friend_account")
-  @chatbot = ChatBot.new("#{username}@#{domain}", password, otr_key)
+  account = xmpp_account("Friend_account")
+  @chatbot = ChatBot.new(account["username"] + "@" + account["domain"],
+                         account["password"], account["otr_key"])
   @chatbot.start
   add_after_scenario_hook(@chatbot.method(:stop))
   @screen.wait("PidginFriendOnline.png", 60)
