@@ -56,7 +56,8 @@ end
 
 Given /^my XMPP friend is online$/ do
   next if @skip_steps_while_restoring_background
-  username, domain, password, otr_key = xmpp_account_extract("Friend_account")
+  username, domain, _, password, otr_key =
+    xmpp_account_extract("Friend_account")
   @chatbot = ChatBot.new("#{username}@#{domain}", password, otr_key)
   @chatbot.start
   add_after_scenario_hook(@chatbot.method(:stop))
