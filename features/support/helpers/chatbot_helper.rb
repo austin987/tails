@@ -2,10 +2,11 @@ require 'tempfile'
 
 class ChatBot
 
-  def initialize(account, password, otr_key)
+  def initialize(account, password, otr_key, rooms = nil)
     @account = account
     @password = password
     @otr_key = otr_key
+    @rooms = rooms
     @pid = nil
     @otr_key_file = nil
   end
@@ -15,12 +16,15 @@ class ChatBot
     @otr_key_file << @otr_key
     @otr_key_file.close
 
-    job = IO.popen([
-                    "#{GIT_DIR}/features/scripts/otr-bot.py",
-                    @account,
-                    @password,
-                    @otr_key_file.path
-                   ])
+    cmd = [
+           "#{GIT_DIR}/features/scripts/otr-bot.py",
+           @account,
+           @password,
+           @otr_key_file.path
+          ]
+    cmd += @rooms if @rooms
+
+    job = IO.popen(cmd)
     @pid = job.pid
   end
 
