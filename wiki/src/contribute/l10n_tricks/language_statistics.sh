@@ -16,7 +16,7 @@ count_original_words () {
 }
 
 count_translated_words () {
-    cat | grep ^msgstr | sed 's/^msgstr "//g;s/"$//g' | wc -w
+    cat | grep ^msgid | sed 's/^msgid "//g;s/"$//g' | wc -w
 }
 
 statistics () {
