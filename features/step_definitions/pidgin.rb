@@ -44,7 +44,7 @@ end
 
 Then /^Pidgin automatically enables my XMPP account$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("PidginAvailableStatus.png", 60)
+  @screen.wait("PidginAvailableStatus.png", 120)
 end
 
 Given /^my XMPP friend is online$/ do
