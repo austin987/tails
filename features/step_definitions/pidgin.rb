@@ -150,7 +150,7 @@ end
 When /^I clear the multi-user chat's scrollback$/ do
   next if @skip_steps_while_restoring_background
   @screen.click("PidginConversationMenu.png")
-  @screen.click("PidginConversationMenuClearScrollback.png")
+  @screen.wait_and_click("PidginConversationMenuClearScrollback.png", 10)
 end
 
 Then /^I can see that my friend joined the multi-user chat$/ do
