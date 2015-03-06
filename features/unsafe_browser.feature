@@ -97,10 +97,22 @@ Feature: Browsing the web using the Unsafe Browser
     When I successfully start the Unsafe Browser
     And I open the address "https://check.torproject.org" in the Unsafe Browser
     Then I see "UnsafeBrowserTorCheckFail.png" after at most 60 seconds
+    And the clearnet user has sent packets out to the Internet
 
   Scenario: The Unsafe Browser cannot be configured to use Tor and other local proxies.
     When I successfully start the Unsafe Browser
     Then I cannot configure the Unsafe Browser to use any local proxies
+
+  Scenario: The Unsafe Browser will not make any connections to the Internet which are not user initiated
+    Given I capture all network traffic
+    And Tor is ready
+    And I configure the Unsafe Browser to check for updates more frequently
+    But checking for updates is disabled in the Unsafe Browser's configuration
+    When I successfully start the Unsafe Browser
+    Then the Unsafe Browser has started
+    And I wait between 60 and 120 seconds
+    And the clearnet user has not sent packets out to the Internet
+    And all Internet traffic has only flowed through Tor
 
   Scenario: Starting the Unsafe Browser without a network connection results in a complaint about no DNS server being configured
     Given a computer

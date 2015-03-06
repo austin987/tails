@@ -93,13 +93,20 @@ physically removed.
 
 #### Making sure needed files are available
 
-The memlockd daemon, appropriately configured, ensures every file
+The `memlockd` daemon, appropriately configured, ensures every file
 needed by the memory erasure process is locked into memory from boot
 to memory erasure time.
+
+Care have to be taken during the shutdown sequence, as `memlockd` is normally
+unloaded before the `kexec` happens. This is done by preventing `memlockd` to
+be stopped, and also by adding memlockd PID to the list of process that are
+omitted by the `sendsigs` script (responsible for sending TERM and KILL signals
+to remaining processes).
 
 - [[!debpts memlockd]]
 - [[!tails_gitweb config/chroot_local-includes/etc/memlockd.cfg]]
 - [[!tails_gitweb config/chroot_local-patches/keep_memlockd_on_shutdown.diff]]
+- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-reconfigure-memlockd]]
 
 #### User interface
 

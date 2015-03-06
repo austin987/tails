@@ -1,5 +1,5 @@
 diff --git a/apparmor/torbrowser.Browser.firefox b/apparmor/torbrowser.Browser.firefox
-index 0df7ad9..ae26e61 100644
+index 0df7ad9..6d1346c 100644
 --- a/apparmor/torbrowser.Browser.firefox
 +++ b/apparmor/torbrowser.Browser.firefox
 @@ -1,13 +1,15 @@
@@ -105,7 +105,7 @@ index 0df7ad9..ae26e61 100644
  
    # Should use abstractions/gstreamer instead once merged upstream
    /etc/udev/udev.conf r,
-@@ -72,6 +87,16 @@
+@@ -72,6 +87,21 @@
    /sys/devices/pci[0-9]*/**/uevent r,
    owner /{dev,run}/shm/shmfd-* rw,
  
@@ -118,6 +118,11 @@ index 0df7ad9..ae26e61 100644
 +
 +  /usr/local/lib/tor-browser/firefox Pix,
 +  /usr/bin/seahorse-tool Ux,
++
++  # Spell checking (the "enchant" abstraction includes these rules
++  # too, but it allows way more stuff than what we need)
++  /usr/share/hunspell/                             r,
++  /usr/share/hunspell/*                            r,
 +
    # KDE 4
    owner @{HOME}/.kde/share/config/* r,

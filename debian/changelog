@@ -1,10 +1,10 @@
-tails (1.3) UNRELEASED; urgency=medium
+tails (1.4) UNRELEASED; urgency=medium
 
-  * Dummy changelog entry.
+  * Dummy entry.
 
- -- Tails developers <tails@boum.org>  Thu, 12 Feb 2015 18:17:11 +0100
+ -- Tails developers <tails@boum.org>  Tue, 24 Feb 2015 21:39:38 +0100
 
-tails (1.3~rc1) unstable; urgency=medium
+tails (1.3) unstable; urgency=medium
 
   * Major new features
     - Produce the Tails image in hybrid mode (again) so that the same
@@ -15,6 +15,10 @@ tails (1.3~rc1) unstable; urgency=medium
       add a persistence preset for the Live user's bitcoin wallet. If
       electrum is started without the persistence preset enabled, a
       warning is shown. (Closes: #6739)
+
+  * Security fixes
+    - Upgrade Tor Browser to 4.0.4 (based on Firefox 31.5.0esr)
+      (Closes: #8938).
 
   * Bugfixes
     - Have tor_bootstrap_progress echo 0 if no matching log line is
@@ -47,6 +51,7 @@ tails (1.3~rc1) unstable; urgency=medium
       * Torify Git with tsocks, instead of setting GIT_PROXY_COMMAND.
         (Closes: #8680)
     - Use torsocks for whois and Gobby, instead of torify.
+    - Upgrade I2P to 0.9.18-1~deb7u+1.
     - Refactor the Unsafe and I2P browser code into a common shell
       library. A lot of duplicated code is now shared, and the code
       has been cleaned up and made more reliable. Several
@@ -105,6 +110,8 @@ tails (1.3~rc1) unstable; urgency=medium
     - Don't attempt to retrieve source packages from local-packages so
       local packages can be installed via
       config/chroot_local-packages. (Closes: #8756)
+    - Use our own Tor Browser archive when building an ISO. (Closes:
+      #8125)
 
   * Test suite
     - Use libguestfs instead of parted when creating partitions and
@@ -150,8 +157,33 @@ tails (1.3~rc1) unstable; urgency=medium
       * has no proxy configured.
     - Bump the "I2P router console is ready" timeout in its test to
       deal with slow Internet connections.
+    - Make the automatic tests of gpgApplet more robust by relying
+      more on graphical elements instead of keyboard shortcuts and
+      static sleep():s. (Closes: #5632)
+    - Make sure that enough disk space is available when creating
+      virtual storage media. (Closes: #8907)
+    - Test that the Unsafe Browser doesn't generate any non-user
+      initiated traffic, and in particular that it doesn't check for
+      upgrades, which is a regression test for #8694. (Closes: #8702)
+    - Various robustness improvements to the Synaptic tests. (Closes:
+      #8742)
+    - Automatically test Git. (Closes: #6307)
+    - Automatically test GNOME Screenshot, which is a regression test
+      for #8087. (Closes: #8688)
+    - Fix a quoting issue with `tails_persistence_enabled?`. (Closes:
+      #8919)
+    - Introduce an improved configuration system that also can store
+      local secrets, like user credentials needed for some
+      tests. (Closes: #6301, #8188)
+    - Actually verify that we successfully set the time in our time
+      syncing tests. (Closes: #5836)
+    - Automatically test Tor. This includes normal functionality and
+      the use pluggable transports, that our Tor enforcement is
+      effective (e.g. only the Tor network or configured bridges are
+      contacted) and that our stream isolation configuration is
+      working. (Closes: #5644, #6305, #7821)
 
- -- Tails developers <tails@boum.org>  Wed, 11 Feb 2015 22:41:08 +0100
+ -- Tails developers <tails@boum.org>  Mon, 23 Feb 2015 17:14:00 +0100
 
 tails (1.2.3) unstable; urgency=medium
 
