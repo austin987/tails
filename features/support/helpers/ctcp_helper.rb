@@ -48,7 +48,8 @@ class CtcpSpammer < Net::IRC::Client
     if m.ctcp?
       m.ctcps.each do |ctcp_ret|
         reply_type, _, reply_args = ctcp_ret.partition(" ")
-        if EXPECTED_CTCP_REPLIES[reply_type].match(reply_args)
+        if EXPECTED_CTCP_REPLIES.has_key?(reply_type) && \
+           EXPECTED_CTCP_REPLIES[reply_type].match(reply_args)
           @ctcp_replies << reply_type
         else
           raise "It looks like Pidgin responded to some CTCP command other " \
