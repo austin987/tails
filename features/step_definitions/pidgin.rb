@@ -120,8 +120,14 @@ When /^I join some empty multi-user chat$/ do
   @screen.wait_and_click("PidginBuddiesMenuJoinChat.png", 10)
   @screen.wait_and_click("PidginJoinChatWindow.png", 10)
   @screen.click_mid_right_edge("PidginJoinChatRoomLabel.png")
-  account = xmpp_account("Tails_account", ["chat_room"])
-  chat_room = account["chat_room"]
+  account = xmpp_account("Tails_account")
+  if account.has_key?("chat_room") && \
+     !account["chat_room"].nil? && \
+     !account["chat_room"].empty?
+    chat_room = account["chat_room"]
+  else
+    chat_room = generate_random_alnum_string(10,15)
+  end
   @screen.type(chat_room)
 
   # We will need the conference server later, when starting the bot.
