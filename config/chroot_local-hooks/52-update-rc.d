@@ -3,7 +3,6 @@
 set -e
 
 CUSTOM_INITSCRIPTS="
-tails-kexec
 "
 
 PATCHED_INITSCRIPTS="
