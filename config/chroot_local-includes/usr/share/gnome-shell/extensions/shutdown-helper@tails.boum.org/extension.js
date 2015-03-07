@@ -124,7 +124,7 @@ const Extension = new Lang.Class({
     },
 
     _onPowerOffClicked: function() {
-        Util.spawn(['sudo', '-n', 'halt'])
+        Util.spawn(['sudo', '-n', 'poweroff'])
     },
 
     _onRestartClicked: function() {
