@@ -374,7 +374,7 @@ EOF
     return execute("pidof -x -o '%PPID' " + process).stdout.chomp.split
   end
 
-  def focus_xorg_window(window_title, user = LIVE_USER)
+  def focus_window(window_title, user = LIVE_USER)
     execute_successfully(
        "xdotool search --name '#{window_title}' windowactivate --sync", user
     )

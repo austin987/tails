@@ -80,10 +80,10 @@ And /^I say something to my friend( in the group chat)?$/ do |group_chat|
   next if @skip_steps_while_restoring_background
   msg = "ping" + Sikuli::Key.ENTER
   if group_chat
-    @vm.focus_xorg_window(@chat_room_jid.split("@").first)
+    @vm.focus_window(@chat_room_jid.split("@").first)
     msg = @friend_name + ": " + msg
   else
-    @vm.focus_xorg_window(@friend_name)
+    @vm.focus_window(@friend_name)
   end
   @screen.type(msg)
 end
@@ -263,7 +263,7 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   next if @skip_steps_while_restoring_background
   expected_channel_entry = chan_image(account, default_chan(account), 'roaster')
   # Sometimes the OFTC welcome notice window pops up over the buddy list one...
-  @vm.focus_xorg_window('Buddy List')
+  @vm.focus_window('Buddy List')
   @screen.wait(expected_channel_entry, 60)
 end
 
