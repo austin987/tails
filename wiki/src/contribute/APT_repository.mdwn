@@ -16,7 +16,7 @@ We use one single APT repository hosting multiple *suites*:
 * We have a suite for each *topic* branch: `bugfix/*`, `feature/*`.
   **Important note**: the APT suite corresponding to a given Git topic
   branch contains *only* the packages this branch adds to the tag or
-  *main* branch it diverged from.
+  *main* branch it diverged from. Think of it as an overlay.
 * We also have a less formal `unstable` suite, that should not be used
   by any Tails git branch; it can be used as hosting space for other
   packaging work we might do, e.g. acting as upstream or
@@ -55,8 +55,9 @@ The build system adds the relevant APT sources:
   a matching tag exists), then add the suite corresponding to this
   release (e.g. `0.10` or `0.10.1`);
 * else, if building from the `testing` branch, add the `testing` suite
+* else, if building from the `devel` branch, add the `devel` suite
 * else, if building from the `experimental` branch, add the `experimental` suite
-* else, if building from the `devel` branch, add its own suite
+* else, add the `devel` suite
 
 Also, if we're building from a bugfix or feature branch, add its
 own suite.
@@ -299,6 +300,6 @@ Contributing without privileged access
 
 Non-core developers without access to the "private" APT infrastructure
 would add the .deb they want to their Git branch as we have been
-doing until now, push the result on repo.or.cz or whatever... and at
+doing until now, push the result on GitLab or whatever... and at
 merge time, we would rewrite their history to remove the .deb, and
 import it into our APT repo.
