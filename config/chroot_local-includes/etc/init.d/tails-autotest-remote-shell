@@ -39,6 +39,16 @@ fi
 # and status_of_proc is working.
 . /lib/lsb/init-functions
 
+wait_until_remote_shell_is_listening()
+{
+	REMOTE_SHELL_STATE_FILE=/var/lib/live/autotest-remote-shell-running
+	if grep -qw "autotest_never_use_this_option" /proc/cmdline; then
+		until [ -e "${REMOTE_SHELL_STATE_FILE}" ]; do
+			sleep 1
+		done
+	fi
+}
+
 do_start()
 {
 	start-stop-daemon \
@@ -46,6 +56,7 @@ do_start()
 		--quiet \
 		--background \
 		--exec ${DAEMON} -- ${DAEMON_ARGS}
+	wait_until_remote_shell_is_listening
 }
 
 case "${1}" in
