@@ -22,8 +22,6 @@ See https://tails.boum.org/.
 
 #}}}
 
-use File::Tail;
-use Parse::Syslog;
 use IPC::System::Simple qw(runx);
 use Locale::gettext;
 use I18N::Langinfo qw{langinfo CODESET};
@@ -42,6 +40,8 @@ sub notify_maybe_blocked {
         '<a href=\"file:///usr/share/doc/tails/website/doc/first_steps/' .
         'startup_options/mac_spoofing.en.html#blocked\">MAC spoofing ' .
         'documentation</a>.'));
+    # XXX: this script could now be run as a dedicated user whose only special
+    # privilege would be to run tails-notify-user.
     # We can't use Desktop::Notify since this script is supposed to be run
     # as root (for access to syslog), started in an env without DESKTOP etc,
     # which also causes issues with opening links in the text body.
@@ -50,13 +50,7 @@ sub notify_maybe_blocked {
 }
 
 my %state;
-my $syslog = File::Tail->new(name => "/var/log/syslog",
-                             maxinterval => 1,
-                             interval => 1);
-my $parser = Parse::Syslog->new($syslog, allow_future => 1);
-while(my $sl = $parser->next) {
-    next if !($sl->{program} eq "NetworkManager");
-    my $text = $sl->{text};
+while(my $text = <STDIN>) {
     if ($text =~ /Activation \(([^)]+)\) starting connection/) {
         # The beginning of *all* (not only wireless) new
         # connections. We drop any previous state so it won't
