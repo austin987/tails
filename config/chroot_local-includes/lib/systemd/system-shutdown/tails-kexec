@@ -20,69 +20,67 @@ print_empty_line () {
    print_text ''
 }
 
-do_stop () {
-   test "x`/bin/cat /sys/kernel/kexec_loaded`y" = "x1y" || exit 0
+### Main
 
-   /bin/stty sane < /dev/console
+test "x`/bin/cat /sys/kernel/kexec_loaded`y" = "x1y" || exit 0
 
-   print_empty_line
-   print_empty_line
-   print_text "--------------------------------------------------------------------------------"
+/bin/stty sane < /dev/console
 
-   # $LANG was set there by the FIXME live-config upstream script
-   . /etc/default/locale
+print_empty_line
+print_empty_line
+print_text "--------------------------------------------------------------------------------"
 
-   # Note to translators: any text line must fit on a 80 characters wide screen
-   case "${LANG}" in
-      es_ES.UTF-8)
-	 print_text "              Puede ahora retirar el DVD o el USB de arranque."
-	 print_empty_line
-	 print_text "       Se borrará dentro de pocos segundos la memoria RAM del sistema..."
-	 print_empty_line
-	 print_text "Pueden aparecer problemas de visualización en el monitor durante esta operación."
-	 print_empty_line
-	 print_text "      If the system does not power off automatically in a few seconds,"
-	 print_text "                  it may mean the memory wiping has failed."
-	 ;;
-      fr_FR.UTF-8)
-	 print_text "            Vous pouvez maintenant retirer le DVD / clé USB de boot."
-	 print_empty_line
-	 print_text "           La mémoire vive va être effacée dans quelques secondes..."
-	 print_empty_line
-	 print_text "   Il est possible que l'affichage soit corrompu au cours de cette opération."
-	 print_empty_line
-	 print_text "    Si l'ordinateur ne s'éteint pas automatiquement après quelques secondes,"
-	 print_text "           il est possible que l'effacement de la mémoire ait échoué."
-	 ;;
-      it*)
-	 print_text "              Adesso puoi rimuovere il cd o la penna USB."
-	 print_empty_line
-	 print_text "       La memoria del computer verra' cancellata tra pochi secondi..."
-	 print_empty_line
-	 print_text "        Il display potra' essere corrotto durante questa operazione."
-	 print_empty_line
-	 print_text "      Se vostro PC non si spegnera' automaticamente in pochi secondi"
-	 print_text "        la cancellazione della memoria potrebbe essere incompleta."
+# $LANG was set there by the FIXME live-config upstream script
+. /etc/default/locale
 
-	 ;;
-      *)
-	 print_text "               You can now remove the boot DVD or USB stick."
-	 print_empty_line
-	 print_text "         The system memory is going to be wiped in a few seconds..."
-	 print_empty_line
-	 print_text "             Display might be corrupted during this operation."
-	 print_empty_line
-	 print_text "      If the system does not power off automatically in a few seconds,"
-	 print_text "                  it may mean the memory wiping has failed."
-	 ;;
-   esac
+# Note to translators: any text line must fit on a 80 characters wide screen
+case "${LANG}" in
+   es_ES.UTF-8)
+      print_text "              Puede ahora retirar el DVD o el USB de arranque."
+      print_empty_line
+      print_text "       Se borrará dentro de pocos segundos la memoria RAM del sistema..."
+      print_empty_line
+      print_text "Pueden aparecer problemas de visualización en el monitor durante esta operación."
+      print_empty_line
+      print_text "      If the system does not power off automatically in a few seconds,"
+      print_text "                  it may mean the memory wiping has failed."
+      ;;
+   fr_FR.UTF-8)
+      print_text "            Vous pouvez maintenant retirer le DVD / clé USB de boot."
+      print_empty_line
+      print_text "           La mémoire vive va être effacée dans quelques secondes..."
+      print_empty_line
+      print_text "   Il est possible que l'affichage soit corrompu au cours de cette opération."
+      print_empty_line
+      print_text "    Si l'ordinateur ne s'éteint pas automatiquement après quelques secondes,"
+      print_text "           il est possible que l'effacement de la mémoire ait échoué."
+      ;;
+   it*)
+      print_text "              Adesso puoi rimuovere il cd o la penna USB."
+      print_empty_line
+      print_text "       La memoria del computer verra' cancellata tra pochi secondi..."
+      print_empty_line
+      print_text "        Il display potra' essere corrotto durante questa operazione."
+      print_empty_line
+      print_text "      Se vostro PC non si spegnera' automaticamente in pochi secondi"
+      print_text "        la cancellazione della memoria potrebbe essere incompleta."
 
-   print_text "--------------------------------------------------------------------------------"
-   print_empty_line
-   print_empty_line
+      ;;
+   *)
+      print_text "               You can now remove the boot DVD or USB stick."
+      print_empty_line
+      print_text "         The system memory is going to be wiped in a few seconds..."
+      print_empty_line
+      print_text "             Display might be corrupted during this operation."
+      print_empty_line
+      print_text "      If the system does not power off automatically in a few seconds,"
+      print_text "                  it may mean the memory wiping has failed."
+      ;;
+esac
 
-   /bin/sleep 5
-   /sbin/kexec -e --reset-vga
-}
+print_text "--------------------------------------------------------------------------------"
+print_empty_line
+print_empty_line
 
-do_stop
+/bin/sleep 5
+/sbin/kexec -e --reset-vga
