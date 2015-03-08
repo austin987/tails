@@ -10,6 +10,9 @@ set -e
 . /usr/local/lib/tails-shell-library/log.sh
 . /usr/local/lib/tails-shell-library/tails-greeter.sh
 
+# Get LIVE_USERNAME
+. /etc/live/config.d/username.conf
+
 . /usr/bin/gettext.sh
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
@@ -30,7 +33,7 @@ show_notification() {
     # otherwise pgrep will look at the process name, which seems to be
     # cropped to 15 chars, i.e. "notification-da". Also, we probably
     # do not want to get mixed up with "gdu-notification-daemon".
-    until pgrep gnome-shell >/dev/null ; do
+    until pgrep -u "${LIVE_USERNAME}" '^ibus-daemon' >/dev/null ; do
         sleep 1
     done
     /usr/local/sbin/tails-notify-user "${1}" "${2}" 0
