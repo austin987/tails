@@ -29,6 +29,9 @@ Goals
     level of verification as people downloading through their browser.
   - In case of a bad ISO image, help the user diagnose whether the
     download has been interrupted or the ISO has been corrupted.
+  - In case of an interrupted download, help the user resume it. This
+    requires us to have our mirrors stop sending HTTP ETag headers. See
+    [[!tails_ticket 9022]].
   - Allow users to install the extension without restarting the browser.
   - Have the extension available in Firefox first, then Chrome. Firefox
     makes sense as a first target because it is the base for Tor Browser
@@ -94,7 +97,7 @@ ISO verification
   - According to the result, the web assistant proposes to either:
       - if VERIFIED: continue with the installation.
       - if INCOMPLETE: explain calmly that the download has been
-        interrupted and propose to download the ISO again.
+        interrupted and propose to resume the download.
       - if CORRUPTED: proposes troubleshooting strategies.
 
 Open questions
@@ -108,10 +111,6 @@ Open questions
   - If the extension is installed, are we sure to be able to detect it
     automatically? For example in Tor Browser of if JavaScript is
     disabled?
-  - It would be nice to have the extension able to handle interrupted or
-    paused downloads. If so, how do we integrate this in the workflow?
-    Shall we propose to download what's missing from the ISO if the
-    verification fails?
 
 <a id="verification"></a>
 
