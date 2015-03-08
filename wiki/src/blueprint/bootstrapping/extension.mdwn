@@ -159,6 +159,20 @@ We are not considering an attacker who can:
   - (F) Provide a rogue extension to the user as this could defeat any
     possible verification mechanism that such an extension could do.
 
+  - (G) Insert malicious content on https://tails.boum.org/ after taking
+    control of the web server, or entire system, behind it. Such an
+    attacker could do attack (C) as well but in such a way that could be
+    much harder to detect (for example by serving malicious content to
+    some users).
+
+    To mitigate such an attack in some cases we could both:
+
+    - Encourage external documentation (screencasts on YouTube, printed
+      forms, etc.). But those would be vulnerable to other kind of
+      attacks.
+    - Not rely on the website to perform the ISO verification and rely
+      on a native interface accessible from the add-ons menu.
+
 We should also keep in mind how would the extension upgrade in case of
 change in the certificates it relies upon. If we need to upgrade the
 extension:
@@ -195,7 +209,8 @@ Other considerations:
     advance.
   - We need to decide if we want to integrate the verification process
     done by the extension directly in the website or give instructions
-    to do it from the add-ons menu.
+    to do it from the add-ons menu for exemple to mitigate attack G
+    (server in control) [[!tails_ticket 8931]].
   - More complex verification mechanisms should be gradually [[built into
     Tails Installer|blueprint/bootstrapping/installer]] where we can
-    defeat attacks B, C, D, and F.
+    defeat attacks B, C, D, F, and G.
