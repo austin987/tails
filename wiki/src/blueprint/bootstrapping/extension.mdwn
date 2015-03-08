@@ -134,14 +134,11 @@ We are not considering an attacker who can:
     our website could defeat any verification technique by providing
     simplified instructions or by faking ISO verification.
 
-    To mitigate such
-    an attack in some cases we could both:
-
-    - Encourage external documentation (screencasts on YouTube, printed
-      forms, etc.). But those would be vulnerable to other kind of
-      attacks...
-    - Not rely on the website to perform the ISO verification (use the
-      add-ons menu for example). But the UX will suffer from this...
+    To mitigate such an attack we should work on deploying HPKP (HTTP
+    Public Key Pinning) which provides TOFU on our SSL certificate
+    ([[!tails_ticket 9026]]). But our certificate could also probably be
+    integrated in the Firefox preload list shipped with the browser
+    ([[!tails_ticket 9027]]).
 
   - (C) Insert malicious content on https://tails.boum.org/ through an
     exploit on our website as this could trick new users to skip the ISO
@@ -176,7 +173,7 @@ Checksum verification
 The code of the extension includes:
 
   - The root certificate of the authority expected to sign the
-    certificate of https://tails.boum.org/.
+    certificate of https://tails.boum.org/ (until we get [[!tails_ticket 9027]]).
 
 When verifying an ISO image, the extension:
 
@@ -198,8 +195,7 @@ Other considerations:
     advance.
   - We need to decide if we want to integrate the verification process
     done by the extension directly in the website or give instructions
-    to do it from the add-ons menu for exemple to mitigate attack B
-    (MitM on https://tails.boum.org/) [[!tails_ticket 8931]].
+    to do it from the add-ons menu.
   - More complex verification mechanisms should be gradually [[built into
     Tails Installer|blueprint/bootstrapping/installer]] where we can
     defeat attacks B, C, D, and F.
