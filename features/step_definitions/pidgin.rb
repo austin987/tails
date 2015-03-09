@@ -126,7 +126,7 @@ When /^I join some empty multi-user chat$/ do
      !account["chat_room"].empty?
     chat_room = account["chat_room"]
   else
-    chat_room = generate_random_alnum_string(10,15)
+    chat_room = random_alnum_string(10,15)
   end
   @screen.type(chat_room)
 

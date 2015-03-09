@@ -115,16 +115,16 @@ end
 ALPHA_SET = ('A'..'Z').to_a + ('a'..'z').to_a
 ALNUM_SET = ALPHA_SET + (0..9).to_a.map { |n| n.to_s }
 
-def generate_random_string_from_set(set, min_len, max_len)
+def random_string_from_set(set, min_len, max_len)
   len = (min_len..max_len).to_a.sample
   len ||= min_len
   (0..len-1).map { |n| set.sample }.join
 end
 
-def generate_random_alpha_string(min_len, max_len = 0)
-  generate_random_string_from_set(ALPHA_SET, min_len, max_len)
+def random_alpha_string(min_len, max_len = 0)
+  random_string_from_set(ALPHA_SET, min_len, max_len)
 end
 
-def generate_random_alnum_string(min_len, max_len = 0)
-  generate_random_string_from_set(ALNUM_SET, min_len, max_len)
+def random_alnum_string(min_len, max_len = 0)
+  random_string_from_set(ALNUM_SET, min_len, max_len)
 end
