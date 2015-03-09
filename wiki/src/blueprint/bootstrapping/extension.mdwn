@@ -10,7 +10,7 @@ This has to be considered as part of a bigger plan to:
   - Further automate ISO verification. See the blueprint on [[ISO
     verification|verification]].
   - Guide the user through the whole process. See the blueprint on the
-    [[web assistant]].
+    [[web assistant|assistant]].
 
 The extension will be used as well by people doing full upgrades until
 we automate the download and verification steps of a full upgrade in
@@ -92,9 +92,10 @@ ISO verification
     - `tails-i386-x.x.x-CORRUPTED.iso` if the verification fails.
   - The extension displays the result to the user.
   - According to the result, the web assistant proposes to either:
-      - Continue with the installation (if VERIFIED).
-      - Download the ISO again (if INCOMPLETE).
-      - Proposes troubleshooting strategies (if CORRUPTED).
+      - if VERIFIED: continue with the installation.
+      - if INCOMPLETE: explain calmly that the download has been
+        interrupted and propose to download the ISO again.
+      - if CORRUPTED: proposes troubleshooting strategies.
 
 Open questions
 --------------
@@ -107,6 +108,10 @@ Open questions
   - If the extension is installed, are we sure to be able to detect it
     automatically? For example in Tor Browser of if JavaScript is
     disabled?
+  - It would be nice to have the extension able to handle interrupted or
+    paused downloads. If so, how do we integrate this in the workflow?
+    Shall we propose to download what's missing from the ISO if the
+    verification fails?
 
 <a id="verification"></a>
 
@@ -116,7 +121,7 @@ ISO verification mechanism
 We are considering here an attacker who can:
 
   - (A) Provide a malicious ISO image to the user for example by
-    operating a rogue Tails mirror or BitTorrent tracker.
+    operating a rogue Tails mirror or BitTorrent file.
 
 We are not considering an attacker who can:
 

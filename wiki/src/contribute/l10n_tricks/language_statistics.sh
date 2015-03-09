@@ -15,10 +15,6 @@ count_original_words () {
     cat | grep ^msgid | sed 's/^msgid "//g;s/"$//g' | wc -w
 }
 
-count_translated_words () {
-    cat | grep ^msgstr | sed 's/^msgstr "//g;s/"$//g' | wc -w
-}
-
 statistics () {
     PO_MESSAGES="$(mktemp -t XXXXXX.$lang.po)"
     msgcat --files-from=$PO_FILES --output=$PO_MESSAGES
@@ -33,7 +29,7 @@ statistics () {
     )
     TRANSLATED_WC=$(
         msgattrib --translated --no-fuzzy --no-obsolete --no-wrap $PO_MESSAGES \
-	    | count_translated_words
+	    | count_original_words
     )
     echo "  - $lang: $(($TRANSLATED*100/$TOTAL))% ($TRANSLATED) strings translated, $(($FUZZY*100/$TOTAL))% strings fuzzy, $(($TRANSLATED_WC*100/$TOTAL_WC))% words translated"
     rm -f $PO_FILES $PO_MESSAGES
