@@ -121,16 +121,16 @@ Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ d
   alpha_set = ('A'..'Z').to_a + ('a'..'z').to_a
   alnum_set = alpha_set + (0..9).to_a.map { |n| n.to_s }
   nick_length = (10..15).to_a.sample
-  bot_nick = alpha_set.sample
-  bot_nick += (0..nick_length-2).map { |n| alnum_set.sample }.join
-  bot_opts = {
-    :nick => bot_nick,
-    :user => bot_nick,
-    :real => bot_nick,
+  ctcp_check_nick = alpha_set.sample
+  ctcp_check_nick += (0..nick_length-2).map { |n| alnum_set.sample }.join
+  ctcp_check_opts = {
+    :nick => ctcp_check_nick,
+    :user => ctcp_check_nick,
+    :real => ctcp_check_nick,
     :spam_target => configured_pidgin_accounts[irc_server]["nickname"]
   }
-  bot_opts[:logger] = Logger.new("/dev/null") if !$config["DEBUG"]
-  bot = CtcpChecker.new(irc_server, 6667, bot_opts)
+  ctcp_check_opts[:logger] = Logger.new("/dev/null") if !$config["DEBUG"]
+  ctcp_check = CtcpChecker.new(irc_server, 6667, ctcp_check_opts)
   # Give the bot an extra 60 seconds for connecting to the server and
   # other overhead beyond the expected time to spam all CTCP commands.
   expected_ctcp_spam_time = CtcpChecker::KNOWN_CTCP_COMMANDS.length *
@@ -139,11 +139,11 @@ Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ d
 
   begin
     Timeout::timeout(timeout) do
-      bot.spam_and_check_responses
+      ctcp_check.spam_and_check_responses
     end
   rescue Timeout::Error
-    raise "The #{bot.class} bot failed to spam all CTCP commands within " \
-          "#{timeout} seconds"
+    raise "The #{ctcp_check.class} bot failed to spam all CTCP commands " \
+          "within #{timeout} seconds"
   end
 end
 
