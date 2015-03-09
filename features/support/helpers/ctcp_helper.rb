@@ -48,7 +48,7 @@ class CtcpChecker < Net::IRC::Client
   end
 
   def on_message(m)
-    if m.ctcp?
+    if m.ctcp? and /^:#{@spam_target}!/.match(m)
       m.ctcps.each do |ctcp_ret|
         reply_type, _, reply_args = ctcp_ret.partition(" ")
         if EXPECTED_CTCP_REPLIES.has_key?(reply_type) && \
