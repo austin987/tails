@@ -12,20 +12,20 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   }
 end
 
-When /^I update APT using apt-get$/ do
+When /^I update APT using apt$/ do
   next if @skip_steps_while_restoring_background
   Timeout::timeout(30*60) do
     @vm.execute_successfully("echo #{@sudo_password} | " +
-                             "sudo -S apt-get update", LIVE_USER)
+                             "sudo -S apt update", LIVE_USER)
   end
 end
 
-Then /^I should be able to install a package using apt-get$/ do
+Then /^I should be able to install a package using apt$/ do
   next if @skip_steps_while_restoring_background
   package = "cowsay"
   Timeout::timeout(120) do
     @vm.execute_successfully("echo #{@sudo_password} | " +
-                             "sudo -S apt-get install #{package}", LIVE_USER)
+                             "sudo -S apt install #{package}", LIVE_USER)
   end
   step "package \"#{package}\" is installed"
 end
