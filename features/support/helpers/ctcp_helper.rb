@@ -15,7 +15,7 @@ class CtcpChecker < Net::IRC::Client
     "VERSION" => "Purple IRC",
     "PING" => /^\d+$/
   }
-  CTCP_SPAM_DELAY = 2
+  CTCP_SPAM_DELAY = 5
 
   # Define an alias which clarifies what the bot does on start
   alias_method :spam_and_check_responses, :start
