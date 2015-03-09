@@ -1,6 +1,6 @@
 require 'net/irc'
 
-class CtcpSpammer < Net::IRC::Client
+class CtcpChecker < Net::IRC::Client
 
   # PING and VERSION must be last so they are tried last below. It's
   # ugly, but the bot will exit once it has received the expected

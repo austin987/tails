@@ -130,11 +130,11 @@ Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ d
     :spam_target => configured_pidgin_accounts[irc_server]["nickname"]
   }
   bot_opts[:logger] = Logger.new("/dev/null") if !$config["DEBUG"]
-  bot = CtcpSpammer.new(irc_server, 6667, bot_opts)
+  bot = CtcpChecker.new(irc_server, 6667, bot_opts)
   # Give the bot an extra 60 seconds for connecting to the server and
   # other overhead beyond the expected time to spam all CTCP commands.
-  expected_ctcp_spam_time = CtcpSpammer::KNOWN_CTCP_COMMANDS.length *
-                            CtcpSpammer::CTCP_SPAM_DELAY
+  expected_ctcp_spam_time = CtcpChecker::KNOWN_CTCP_COMMANDS.length *
+                            CtcpChecker::CTCP_SPAM_DELAY
   timeout = expected_ctcp_spam_time + 60
 
   begin
