@@ -56,7 +56,8 @@ class CtcpChecker < Net::IRC::Client
           @ctcp_replies << reply_type
         else
           raise "It looks like Pidgin responded to some CTCP command other " \
-                "than PING or VERSION. We got the response:\n#{m.to_s}"
+                "than #{EXPECTED_CTCP_REPLIES.keys}. We got the response:\n" +
+                m.to_s
         end
       end
     end
