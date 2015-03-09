@@ -3,7 +3,6 @@
 set -e
 
 CUSTOM_INITSCRIPTS="
-tails-autotest-remote-shell
 "
 
 PATCHED_INITSCRIPTS="
@@ -37,6 +36,7 @@ insserv $PATCHED_INITSCRIPTS $CUSTOM_INITSCRIPTS
 systemctl enable memlockd.service
 
 # Enable our own systemd unit files
+systemctl enable tails-autotest-remote-shell.service
 systemctl enable tails-reconfigure-kexec.service
 systemctl enable tails-reconfigure-memlockd.service
 systemctl enable tails-sdmem-on-media-removal.service

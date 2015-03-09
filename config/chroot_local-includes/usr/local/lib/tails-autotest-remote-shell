@@ -11,6 +11,7 @@ from pwd import getpwnam
 from os import setgid, setuid, environ
 from glob import glob
 import serial
+from systemd.daemon import notify as sd_notify
 
 def mk_switch_user_fn(uid, gid):
     def switch_user():
@@ -43,10 +44,9 @@ def main():
   if not port.isOpen():
     port.open()
 
-  # Create a state file so other applications can know that the remote
-  # shell is operational.
-  state_file_path = "/var/lib/live/autotest-remote-shell-running"
-  open(state_file_path, "w").close()
+  # Notify systemd that we're ready
+  sd_notify('READY=1')
+  sd_notify('STATUS=Processing requests...\n')
 
   while True:
     try:
