@@ -139,7 +139,7 @@ Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ d
 
   begin
     Timeout::timeout(timeout) do
-      bot.start
+      bot.spam_and_check_responses
     end
   rescue Timeout::Error
     raise "The #{bot.class} bot failed to spam all CTCP commands within " \

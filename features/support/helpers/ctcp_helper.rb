@@ -17,6 +17,9 @@ class CtcpSpammer < Net::IRC::Client
   }
   CTCP_SPAM_DELAY = 2
 
+  # Define an alias which clarifies what the bot does on start
+  alias_method :spam_and_check_responses, :start
+
   def initialize(host, port, opts)
     @spam_target = opts[:spam_target]
     @ctcp_replies = Set.new
