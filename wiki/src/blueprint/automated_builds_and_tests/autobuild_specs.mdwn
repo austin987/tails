@@ -25,16 +25,43 @@ Given an ISO build takes around 30-45 minutes on lizard (worst case),
 given two builders lizard will be able to build something like 64-96
 ISOs a day.
 
-Developers should be able to trigger automatic builds for a branch whose build
-was dropped (eg. last commit too old) by pushing a dumb commit on a
-timestamp file in that branch.
-
+Developers can easily add a branch back to the automated builds
+whenever it has been removed from the list (for example after
+a release) by merging its base branch into it.
 
 Proposal1:
 
 * branches which are not merged into master, devel, stable and testing
 * but had new commits since the previous release
 
+## How to build it
+
+A topic branch may be lagging behind the base branch it's based upon.
+What we're interested in is generally *not* whether a (possibly
+outdated) topic branch builds fine, but whether it would build fine
+**once merged into its base branch**:
+
+* that's critical from a reviewer's perspective: what they have to
+  evaluate is the result of the merge, not the state of a topic branch
+  forked N weeks ago from its base branch, that possibly has diverged
+  since then;
+* that's important from a developer's perspective: this is how they
+  will notice if incompatible changes have landed into the base branch
+  since last time they worked on their topic branch.
+
+Hence, when building topic branch F, we need to build from branch F
+*once merged into* branch B. However, this merge must only be done
+*locally*, at least because Jenkins doesn't have push access to our
+Git repo.
+
+Here, *locally* means: in Jenkins own temporary Git checkout.
+
+The exact direction of the merge (B->F vs. F->B) should not matter
+given how Git merge works, if we got it clearly. We'll see.
+
+This locally-merge-before-building process requires [[!tails_ticket
+8654]] to be implemented, otherwise we can't easily merge branches
+*locally* without affecting the state of our production APT repo.
 
 ## When to build it
 
@@ -55,13 +82,8 @@ Proposal 1:
 
 Email will be the main interface.
 
-For base branches:
-
-* When failing after a git push, notify the last commit author.
-* When failing after the daily trigger, notify the RM.
-
-For topic branches, notify the author of the last commit.
-
+* For base branches, notify the RM.
+* For topic branches, notify the author of the last commit.
 
 # Scenarios
 
@@ -78,16 +100,29 @@ In the following scenario:
     When I'm asked to review branch F into branch B
     Then I need to know if branch F builds fine
       once locally merged into branch B (fresh results!)
-    And I should be notified of the results
+    So, if there is no such fresh build available
+       Then I manually trigger a build of branch F
     And if the build succeeded
-      I might want to download the resulting ISO
-      I might want to get the pkg list
-      I want the Redmine ticket to be notified (optional)
-    Otherwise if it fails the developer who proposed the merge should be notified
+      The resulting ISO must be made available to me
+      The pkg list must be made available to me
+      The Redmine ticket should be notified
+    Otherwise if it fails the developer who proposed the merge must be notified
       And the developer *needs* to see the build logs
       And the ticket should be reassigned to the branch submitter
       And QA check should be set to "Dev needed"
 
+Bonus:
+
+* Notify the manual build requester of the build results. Depends on
+  using Jenkins internal authentication system, and may be complicated
+  if it doesn't attach email address info to each user (apparently the
+  Email-ext plugin just builds the email address by concatenating
+  login, `@` and a fixed domain name -- this could be worked around
+  with email aliases hosted somewhere on our infrastructure).
+* Make it easy for the reviewer to know whether the last build of
+  branch F is current. Or, better (?), trigger rebuilds of all topic
+  branches upon modifications (possibly == rebuild) on their
+  base branch.
 
 ## Scenario 2 : developer
 
@@ -99,11 +134,11 @@ In the following scenario:
        possibly weeks after my last commit (by e.g Debian changes,
        changes in branch B, ...)
     And if the build succeeded
-      I might want to download the resulting ISO
-      I might want to get the pkg list
-      I want the Redmine ticket to be notified (optional)
+      The resulting ISO must be made available to me
+      The pkg list must be made available to me
+      The Redmine ticket should be notified
     Otherwise if it fails I *need* to see the build logs
-      And the developer who proposed the merge should be notified
+      And the developer who proposed the merge must be notified
       And the ticket should be reassigned to the branch submitter
       And QA check should be set to "Dev needed"
 
@@ -112,8 +147,8 @@ In the following scenario:
 
     As the current RM
     When working the full dev release cycle
-    Then I need to know when a branch FTBFS
-    And when this happens I need to see the build logs.
+    Then I need to know when a base branch fails to build
+    And when this happens the build logs must be made available to me.
 
 
 # Future ideas
