@@ -100,19 +100,33 @@ end
 When /^I start Tails Installer$/ do
   next if @skip_steps_while_restoring_background
   step 'I start "TailsInstaller" via the GNOME "Tails" applications menu'
+  @screen.wait('USBCloneAndInstall.png', 30)
+end
+
+When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
+  next if @skip_steps_while_restoring_background
+  step 'I start Tails Installer'
+  case mode
+  when 'Clone & Install'
+    @screen.wait_and_click('USBCloneAndInstall.png', 10)
+  when 'Clone & Upgrade'
+    @screen.wait_and_click('USBCloneAndUpgrade.png', 10)
+  when 'Upgrade from ISO'
+    @screen.wait_and_click('USBUpgradeFromISO.png', 10)
+  else
+    raise "Unsupported mode '#{mode}'"
+  end
 end
 
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I start Tails Installer"
-  @screen.wait_and_click('USBCloneAndInstall.png', 30)
+  step 'I start Tails Installer in "Clone & Install" mode'
   usb_install_helper(name)
 end
 
 When /^I "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I start Tails Installer"
-  @screen.wait_and_click('USBCloneAndUpgrade.png', 30)
+  step 'I start Tails Installer in "Clone & Upgrade" mode'
   usb_install_helper(name)
 end
 
@@ -143,8 +157,7 @@ end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I start Tails Installer"
-  @screen.wait_and_click('USBUpgradeFromISO.png', 10)
+  step 'I start Tails Installer in "Upgrade from ISO" mode'
   @screen.wait('USBUseLiveSystemISO.png', 10)
   match = @screen.find('USBUseLiveSystemISO.png')
   @screen.click(match.getCenter.offset(0, match.h*2))
