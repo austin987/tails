@@ -4,4 +4,10 @@ Documentation=https://tails.boum.org/contribute/design/MAC_address/
 
 [Service]
 Type=simple
-ExecStart=/usr/local/lib/tails-restricted-network-detector-wrapper
+ExecStart=/bin/sh -c 'journalctl                                          \
+                          --unit=NetworkManager.service                   \
+                          --output=json-pretty --follow                   \
+                      | jq                                                \
+                          --monochrome-output --unbuffered --raw-output   \
+                          .MESSAGE                                        \
+                      | /usr/local/sbin/tails-restricted-network-detector'
