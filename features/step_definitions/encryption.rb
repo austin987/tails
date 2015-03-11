@@ -51,20 +51,21 @@ def maybe_deal_with_pinentry
 end
 
 def gedit_copy_all_text
-  @screen.click("GeditEdit.png")
-  @screen.wait_and_click("GeditSelectAll.png", 10)
-  @screen.click("GeditCopy.png")
+  @screen.type("a", Sikuli::KeyModifier.CTRL)
+  @screen.type("c", Sikuli::KeyModifier.CTRL)
 end
 
 def paste_into_a_new_tab
-  @screen.click("GeditNewDocument.png")
-  @screen.click("GeditPaste.png")
+  @screen.type("t", Sikuli::KeyModifier.CTRL)
+  @screen.type("v", Sikuli::KeyModifier.CTRL)
 end
 
 def encrypt_sign_helper
   gedit_copy_all_text
   seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletSignEncrypt.png')
-  @screen.wait_and_click("GpgAppletChooseKeyWindow.png", 30)
+  # Without the double-click here I consistently have a problem with the mouse pointer
+  # *grabbing* the window so that moving the mouse will move the window.
+  @screen.wait_and_double_click("GpgAppletChooseKeyWindow.png", 30)
   sleep 0.5
   yield
   maybe_deal_with_pinentry
