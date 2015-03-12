@@ -37,7 +37,7 @@ Feature: Chatting anonymously using Pidgin
     And my XMPP friend goes online and joins the multi-user chat
     Then I can see that my friend joined the multi-user chat
     And I say something to my friend in the multi-user chat
-    Then I receive a response from my friend
+    Then I receive a response from my friend in the multi-user chat
 
   @check_tor_leaks
   Scenario: Chatting with some friend over XMPP and with OTR
