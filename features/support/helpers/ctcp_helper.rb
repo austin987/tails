@@ -94,6 +94,18 @@ class CtcpChecker < Net::IRC::Client
   end
 
   def on_message(m)
+    if m.command == ERR_NICKNAMEINUSE
+      finish
+      new_nick = self.class.random_irc_nickname
+      @opts.marshal_load({
+                           :nick => new_nick,
+                           :user => new_nick,
+                           :real => new_nick,
+                         })
+      start
+      return
+    end
+
     if m.ctcp? and /^:#{@spam_target}!/.match(m)
       m.ctcps.each do |ctcp_reply|
         reply_type, _, reply_data = ctcp_reply.partition(" ")
