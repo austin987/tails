@@ -132,6 +132,35 @@ def sikuli_script_proxy.new(*args)
     self.hover(self.wait(pic, time))
   end
 
+  def s.findAny(images)
+    images.each do |image|
+      begin
+        return [image, self.find(image)]
+      rescue FindFailed
+        # Ignore. We deal we'll throw an appropriate exception after
+        # having looped through all images and found none of them.
+      end
+    end
+    # If we've reached this point, none of the images could be found.
+    Rjb::throw('org.sikuli.script.FindFailed',
+               "can not find any of the images #{images} on the screen")
+  end
+
+  def s.waitAny(images, time)
+    Timeout::timeout(time) do
+      loop do
+        begin
+          return self.findAny(images)
+        rescue FindFailed
+          # Ignore. We want to retry until we timeout.
+        end
+      end
+    end
+  rescue Timeout::Error
+    Rjb::throw('org.sikuli.script.FindFailed',
+               "can not find any of the images #{images} on the screen")
+  end
+
   def s.hover_point(x, y)
     self.hover(Sikuli::Location.new(x, y))
   end
