@@ -150,8 +150,33 @@ When /^I join some empty multi-user chat$/ do
   @chat_room_jid = chat_room + "@" + conference_server
 
   @screen.click("PidginJoinChatButton.png")
-  # This will both make sure that the we joined the chat since the
-  # chat window openend, and that it is empty.
+  # The following will both make sure that the we joined the chat, and
+  # that it is empty. We'll also deal with the *potential* "Create New
+  # Room" prompt that Pidgin shows for some server configurations.
+  images = ["PidginCreateNewRoomPrompt.png",
+            "PidginChat1UserInRoom.png"]
+  image_found = nil
+  try_for(30, :msg => "Expected either the chatroom window or a prompt " +
+                      "for creating a new chat room, but got neither") do
+    for image in images
+      begin
+        @screen.find(image)
+        image_found = image
+        break
+      rescue
+        # Ignore, since try_for otherwise will start the block from
+        # the beginning, so we don't loop beyond the first element.
+      end
+    end
+    # For-loops return nil, which would make the try_for always try
+    # until it fails, so we have to do a "check" here to determine if
+    # we've found the image.
+    image_found != nil
+  end
+  if image_found == "PidginCreateNewRoomPrompt.png"
+    @screen.click("PidginCreateNewRoomAcceptDefaultsButton.png")
+  end
+  @vm.focus_window(@chat_room_jid)
   @screen.wait("PidginChat1UserInRoom.png", 10)
 end
 
