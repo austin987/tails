@@ -414,8 +414,8 @@ Then /^the boot device has safe access rights$/ do
     end
   end
 
-  info = @vm.execute("udisks --show-info #{super_boot_dev}").stdout
-  assert(info.match("^  system internal: +1$"),
+  info = @vm.execute("udisksctl info --block-device '#{super_boot_dev}'").stdout
+  assert(info.match("^    HintSystem:: +true$"),
          "Boot device '#{super_boot_dev}' is not system internal for udisks")
 end
 
