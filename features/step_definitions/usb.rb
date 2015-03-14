@@ -218,7 +218,7 @@ def tails_is_installed_helper(name, tails_root, loader)
 
   syslinux_files = @vm.execute("ls -1 #{target_root}/syslinux").stdout.chomp.split
   # We deal with these files separately
-  ignores = ["syslinux.cfg", "exithelp.cfg", "ldlinux.sys"]
+  ignores = ["syslinux.cfg", "exithelp.cfg", "ldlinux.c32", "ldlinux.sys"]
   for f in syslinux_files - ignores do
     c = @vm.execute("diff -q '#{tails_root}/#{loader}/#{f}' " +
                     "'#{target_root}/syslinux/#{f}'")
