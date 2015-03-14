@@ -180,28 +180,37 @@ Given /^I create a persistent partition with password "([^"]+)"$/ do |pwd|
   step "I enable all persistence presets"
 end
 
-def check_part_integrity(name, dev, usage, type, scheme, label)
-  info = @vm.execute("udisks --show-info #{dev}").stdout
-  info_split = info.split("\n  partition:\n")
+def check_disk_integrity(name, dev, scheme)
+  info = @vm.execute("udisksctl info --block-device '#{dev}'").stdout
+  info_split = info.split("\n  org\.freedesktop\.UDisks2\.PartitionTable:\n")
+  dev_info = info_split[0]
+  part_table_info = info_split[1]
+  assert(part_table_info.match("^    Type: +#{scheme}$"),
+         "Unexpected partition scheme on USB drive '#{name}', '#{dev}'")
+end
+
+def check_part_integrity(name, dev, usage, type, label)
+  info = @vm.execute("udisksctl info --block-device '#{dev}'").stdout
+  info_split = info.split("\n  org\.freedesktop\.UDisks2\.Partition:\n")
   dev_info = info_split[0]
   part_info = info_split[1]
-  assert(dev_info.match("^  usage: +#{usage}$"),
+  assert(dev_info.match("^    IdUsage: +#{usage}$"),
          "Unexpected device field 'usage' on USB drive '#{name}', '#{dev}'")
-  assert(dev_info.match("^  type: +#{type}$"),
+  assert(dev_info.match("^    IdType: +#{type}$"),
          "Unexpected device field 'type' on USB drive '#{name}', '#{dev}'")
-  assert(part_info.match("^    scheme: +#{scheme}$"),
-         "Unexpected partition scheme on USB drive '#{name}', '#{dev}'")
-  assert(part_info.match("^    label: +#{label}$"),
+  assert(part_info.match("^    Name: +#{label}$"),
          "Unexpected partition label on USB drive '#{name}', '#{dev}'")
 end
 
 def tails_is_installed_helper(name, tails_root, loader)
-  dev = @vm.disk_dev(name) + "1"
-  check_part_integrity(name, dev, "filesystem", "vfat", "gpt", "Tails")
+  disk_dev = @vm.disk_dev(name)
+  part_dev = disk_dev + "1"
+  check_disk_integrity(name, disk_dev, "gpt")
+  check_part_integrity(name, part_dev, "filesystem", "vfat", "Tails")
 
   target_root = "/mnt/new"
   @vm.execute("mkdir -p #{target_root}")
-  @vm.execute("mount #{dev} #{target_root}")
+  @vm.execute("mount #{part_dev} #{target_root}")
 
   c = @vm.execute("diff -qr '#{tails_root}/live' '#{target_root}/live'")
   assert(c.success?,
@@ -274,11 +283,11 @@ Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive
   end
 
   # Adapting check_part_integrity() seems like a bad idea so here goes
-  info = @vm.execute("udisks --show-info #{luks_dev}").stdout
-  assert info.match("^  cleartext luks device:$")
-  assert info.match("^  usage: +filesystem$")
-  assert info.match("^  type: +ext[34]$")
-  assert info.match("^  label: +TailsData$")
+  info = @vm.execute("udisksctl info --block-device '#{luks_dev}'").stdout
+  assert info.match("^    CryptoBackingDevice: +'/[a-zA-Z0-9_/]+'$")
+  assert info.match("^    IdUsage: +filesystem$")
+  assert info.match("^    IdType: +ext[34]$")
+  assert info.match("^    IdLabel: +TailsData$")
 
   mount_dir = "/mnt/#{name}"
   @vm.execute("mkdir -p #{mount_dir}")
