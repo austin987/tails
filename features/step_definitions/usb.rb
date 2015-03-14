@@ -405,7 +405,7 @@ Then /^the boot device has safe access rights$/ do
     assert(dev_group == "disk" || dev_group == "root",
            "Boot device '#{dev}' owned by group '#{dev_group}', expected " +
            "'disk' or 'root'.")
-    assert_equal("1660", dev_perms)
+    assert_equal("660", dev_perms)
     for user, groups in all_users_with_groups do
       next if user == "root"
       assert(!(groups.include?(dev_group)),
