@@ -43,6 +43,15 @@ systemctl enable tails-sdmem-on-media-removal.service
 systemctl enable tails-set-wireless-devices-state.service
 systemctl enable tor-controlport-filter.service
 
+# Enable our own systemd user unit files
+systemctl --global enable tails-add-GNOME-bookmarks.service
+systemctl --global enable tails-configure-keyboard.service
+systemctl --global enable tails-create-tor-browser-directories.service
+systemctl --global enable tails-security-check.service
+systemctl --global enable tails-upgrade-frontend.service
+systemctl --global enable tails-virt-notify-user.service
+systemctl --global enable tails-warn-about-disabled-persistence.service
+
 # Use socket activation only, to save a bit of memory and boot time
 systemctl disable cups.service
 systemctl enable  cups.socket
