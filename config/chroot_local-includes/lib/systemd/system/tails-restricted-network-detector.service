@@ -4,6 +4,8 @@ Documentation=https://tails.boum.org/contribute/design/MAC_address/
 
 [Service]
 Type=simple
+EnvironmentFile=/var/lib/gdm3/tails.physical_security
+ExecStartPre=/bin/sh -c '[ "${TAILS_MACSPOOF_ENABLED}" = true ]'
 ExecStart=/bin/sh -c 'journalctl                                          \
                           --unit=NetworkManager.service                   \
                           --output=json-pretty --follow                   \
