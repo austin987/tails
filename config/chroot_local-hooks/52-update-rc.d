@@ -3,6 +3,7 @@
 set -e
 
 CUSTOM_INITSCRIPTS="
+tails-autotest-remote-shell
 "
 
 PATCHED_INITSCRIPTS="
