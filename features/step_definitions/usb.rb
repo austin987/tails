@@ -189,7 +189,7 @@ def check_disk_integrity(name, dev, scheme)
          "Unexpected partition scheme on USB drive '#{name}', '#{dev}'")
 end
 
-def check_part_integrity(name, dev, usage, fs_type, part_label)
+def check_part_integrity(name, dev, usage, fs_type, part_label, part_type = nil)
   info = @vm.execute("udisksctl info --block-device '#{dev}'").stdout
   info_split = info.split("\n  org\.freedesktop\.UDisks2\.Partition:\n")
   dev_info = info_split[0]
@@ -200,13 +200,19 @@ def check_part_integrity(name, dev, usage, fs_type, part_label)
          "Unexpected device field 'IdType' on USB drive '#{name}', '#{dev}'")
   assert(part_info.match("^    Name: +#{part_label}$"),
          "Unexpected partition label on USB drive '#{name}', '#{dev}'")
+  if part_type
+    assert(part_info.match("^    Type: +#{part_type}$"),
+           "Unexpected partition type on USB drive '#{name}', '#{dev}'")
+  end
 end
 
 def tails_is_installed_helper(name, tails_root, loader)
   disk_dev = @vm.disk_dev(name)
   part_dev = disk_dev + "1"
   check_disk_integrity(name, disk_dev, "gpt")
-  check_part_integrity(name, part_dev, "filesystem", "vfat", "Tails")
+  check_part_integrity(name, part_dev, "filesystem", "vfat", "Tails",
+                       # EFI System Partition
+                       'c12a7328-f81f-11d2-ba4b-00a0c93ec93b')
 
   target_root = "/mnt/new"
   @vm.execute("mkdir -p #{target_root}")
