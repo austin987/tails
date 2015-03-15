@@ -262,7 +262,7 @@ end
 Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive "([^"]+)"$/ do |pwd, name|
   next if @skip_steps_while_restoring_background
   dev = @vm.disk_dev(name) + "2"
-  check_part_integrity(name, dev, "crypto", "crypto_LUKS", "gpt", "TailsData")
+  check_part_integrity(name, dev, "crypto", "crypto_LUKS", "TailsData")
 
   # The LUKS container may already be opened, e.g. by udisks after
   # we've run tails-persistence-setup.
