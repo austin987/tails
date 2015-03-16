@@ -1,4 +1,4 @@
-def count_signatures(key)
+def count_gpg_signatures(key)
   output = @vm.execute_successfully("gpg --batch --list-sigs #{key}",
                                     LIVE_USER).stdout
   return output.scan(/^sig/).count
@@ -6,7 +6,7 @@ end
 
 Then /^the key "([^"]+)" has (only|more than) (\d+) signatures$/ do |key, qualifier, num|
   next if @skip_steps_while_restoring_background
-  count = count_signatures(key)
+  count = count_gpg_signatures(key)
   case qualifier
   when 'only'
   assert_equal(count, num.to_i)
