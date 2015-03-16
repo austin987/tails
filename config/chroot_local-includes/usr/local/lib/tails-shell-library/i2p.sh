@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Import set_key().
+# Import set_simple_config_key().
 . /usr/local/lib/tails-shell-library/common.sh
 
 # Import language_code_from_locale().

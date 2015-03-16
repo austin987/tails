@@ -1,0 +1,149 @@
+This is about [[!tails_ticket 8471]].
+
+[[!toc levels=2]]
+
+Misc. notes
+===========
+
+Regarding the success seen with `bootia32.efi`: why would a 32-bit
+GRUB2 EFI boot loader automatically chainload to our syslinux?
+
+Or is it that `bootia32.efi` is actually from another El Torito image,
+that ships syslinux?
+
+Debian's relevant code lives in the debian-cd, grub2 and
+debian-installer Git repositories. Look for `bootia32.efi`.
+
+Maybe also copy to `EFI/BOOT/boot.efi`: grub2's changelog says that
+`grub-install` copies `bootia32.efi` to `boot.efi`, to better support
+old Macs.
+
+Risk of regressions
+-------------------
+
+Here we discuss the risk of regressions, for hardware that previously
+booted Tails just fine, if we shipped a 32-bit UEFI boot loader in our
+hybrid ISO image.
+
+XXX: I (intrigeri) am waiting for answers by an expert in this domain.
+
+What we know so far:
+
+* Early Intel Macs cannot boot from a DVD with more than one El Torito
+  boot record. But we're not considering supporting EFI boot off DVD
+  yet, so for now it's a non-issue. And when we'll have to consider
+  supporting this feature, chances are that most such machines are
+  dead anyway.
+
+<a id="hardware"></a>
+
+Potential hardware
+==================
+
+Current selection
+-----------------
+
+* in the cheapest range: WinBook TW700
+* with 2GB of RAM:
+  - Dell Venue 8 Pro 5000
+  - Toshiba Encore 2
+  - perhaps ASUS VivoTab 8, once it's confirmed to be 32-bit UEFI that
+    can boot GNU/Linux
+
+Boots GNU/Linux from USB
+------------------------
+
+All of the following tablets are based on the Intel Bay Trail platform
+with 32-bit UEFI firmware and ship with Windows 8.1 except where
+noted. LCD resolutions are generally 1,280x800 pixels, except
+where noted.
+
+They have all been reported to run GNU/Linux from USB with the right
+boot code, but device drivers are sometimes a problem.
+
+There are significant variations in specific firmware features among
+these devices. For example, it's unclear if all of these models can
+cold-boot from USB, or if some may need to start Windows and then use
+the "boot from USB" feature. Most have Secure Boot enabled by default,
+but this feature can usually be disabled.
+
+ * Acer Aspire Switch 10
+   - $300
+   - 2 GB RAM, 10", hybrid
+
+ * Asus T100
+   - $290
+   - 2 GB RAM, 10", hybrid
+   - hardware support on Linux was not entirely awful a year ago, but
+     requires proprietary firmware; not sure where things are at now
+
+ * Asus T100TA
+   - $300
+   - 2 GB RAM, 10", hybrid
+   - 1 USB + 1 micro USB
+   - does the T100's hardware support status apply here too?
+
+ * Dell Venue 8 Pro 3000
+   - $170
+   - 1 GB RAM, 8"
+
+ * Dell Venue 8 Pro 5000
+   - $210
+   - 2 GB RAM, 8"
+
+ * Dell Venue 8 7000
+   - Ships with Android KitKat; Lollipop due later in 2015
+   - $400
+   - 2 GB RAM/16 GB flash
+   - Notable for high-res 8.4" 2,560x1,600 OLED display
+   - Also includes Intel RealSense multiple-camera subsystem
+
+ * HP Stream 7
+   - $100
+   - 1 GB RAM/16 GB flash, 7"
+   - hardware support on Linux seems not entirely awful, but requires
+     a few out-of-tree drivers:
+     <https://ubuntuforums.org/showthread.php?t=2261294>
+
+* HP Stream 8
+   - $150
+   - 1 GB RAM, 7"
+   - Includes 4G WWAN modem with limited free T-Mobile Internet service
+   - Believed to be generally similar to the HP Stream 7 otherwise
+
+ * Lenovo Miix 2
+   - $220
+   - 2 GB RAM
+
+ * Toshiba Encore 2
+   - $100 with 1 GB RAM/16 GB flash, 8"
+   - $140 with 2 GB RAM/32 GB flash, 8"
+   - 10" LCD models also available
+
+* Toshiba Encore 2 Write
+   - Includes Wacom Feel pen/touch digitizer; unusual among low-cost
+     x86 tablets, enables good handwriting recognition and artistic
+     drawing
+   - Otherwise apparently similar to Encore 2
+   - 8-inch version retails for $350
+   - 10.1-inch model priced at $400
+
+ * WinBook TW700:
+   - $60
+   - 1 GB RAM/16GB flash, 7"
+
+Needs more research
+-------------------
+
+ * ASUS VivoTab 8
+   - $190
+   - Bay Trail, 2 GB RAM, 8"
+   - 32-bit UEFI?
+
+
+Boots current Tails and thus uninteresting here
+-----------------------------------------------
+
+ * HP Slate 500
+ * Samsung Series 7 Slate
+ * Microsoft Surface Pro

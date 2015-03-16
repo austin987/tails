@@ -24,16 +24,14 @@ using Tor so we can make Tor usable.
 In short this is how time syncing is performed when Tails starts:
 
 0. Start Tor. If Tor is already working, skip to HTP step.
-0. Let Tor fetch a consensus (wait 150 seconds twice, restarting Tor
+0. Let Tor fetch a consensus (wait up to 150 seconds twice, restarting Tor
    in between).
 0. If the time is too badly off, the authority certificate may not be
-   valid any more, so we set the system time to the Tails release date, which
-   will guarantee that the certificates are valid. Then we SIGHUP Tor
-   and wait for a new consensus again.
-0. Set the system time to an initial "guess" based on the Tor
-   consensus validity period, no matter if the consensus was verifiable
-   or not.
-0. Restart Tor, which now should be working.
+   valid, so we set the system time to the `valid-after` of the unverified
+   consensus Tor fetched for us, which will guarantee that the certificate
+   and consensus are all valid. Then we restart Tor (since it behaves badly
+   with time jumps during the early bootstrap stages) and wait until it
+   accepts the consensus and finishes the bootstrap.
 0. Run HTP (see below) through Tor to get a more correct system time.
 
 A notification is shown while the whole process is running,
@@ -127,7 +125,7 @@ custom version of the Perl HTP client into
 [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/htpdate]].
 The repository we copied this script from can be found there:
 
-    git://git.tails.boum.org/htp
+    https://git-tails.immerda.ch/htp
 
 For reasons detailed bellow, this version of htpdate uses curl for all
 of its HTTP operations.

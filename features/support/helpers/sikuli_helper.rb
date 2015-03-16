@@ -64,7 +64,7 @@ $_original_sikuli_screen_new ||= Sikuli::Screen.method :new
 def sikuli_script_proxy.new(*args)
   s = $_original_sikuli_screen_new.call(*args)
 
-  if $sikuli_retry_findfailed
+  if $config["SIKULI_RETRY_FINDFAILED"]
     # The usage of `_invoke()` below exemplifies how one can wrap
     # around Java objects' methods when they're imported using RJB. It
     # isn't pretty. The seconds argument is the parameter signature,
@@ -112,6 +112,10 @@ def sikuli_script_proxy.new(*args)
     self.doubleClick(self.wait(pic, time))
   end
 
+  def s.wait_and_right_click(pic, time)
+    self.rightClick(self.wait(pic, time))
+  end
+
   def s.wait_and_hover(pic, time)
     self.hover(self.wait(pic, time))
   end
@@ -137,13 +141,13 @@ java.lang.System.setProperty("SIKULI_IMAGE_PATH", "#{Dir.pwd}/features/images/")
 # required, ruby's require method complains that the method for the
 # field accessor is missing.
 sikuli_settings = Sikuli::Settings.new
-sikuli_settings.OcrDataPath = $tmp_dir
+sikuli_settings.OcrDataPath = $config["TMP_DIR"]
 # sikuli_ruby, which we used before, defaulted to 0.9 minimum
 # similarity, so all our current images are adapted to that value.
 # Also, Sikuli's default of 0.7 is simply too low (many false
 # positives).
 sikuli_settings.MinSimilarity = 0.9
-sikuli_settings.ActionLogs = $debug
-sikuli_settings.DebugLogs = $debug
-sikuli_settings.InfoLogs = $debug
-sikuli_settings.ProfileLogs = $debug
+sikuli_settings.ActionLogs = $config["DEBUG"]
+sikuli_settings.DebugLogs = $config["DEBUG"]
+sikuli_settings.InfoLogs = $config["DEBUG"]
+sikuli_settings.ProfileLogs = $config["DEBUG"]
