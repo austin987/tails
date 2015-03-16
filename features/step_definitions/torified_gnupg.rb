@@ -54,7 +54,7 @@ When /^the "([^"]+)" key is in the live user's public keyring after at most (\d+
   }
 end
 
-When /^I start Seahorse( via the GpgApplet)?$/ do |withgpgapplet|
+When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
   next if @skip_steps_while_restoring_background
   if withgpgapplet
     @screen.wait_and_click("GpgAppletIconNormal.png", 10)
@@ -94,10 +94,10 @@ Then /^I synchronize keys in Seahorse$/ do
   @screen.wait("SeahorseWindow.png", 120)
 end
 
-When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the GpgApplet)?$/ do |keyid, withgpgapplet|
+When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP Applet)?$/ do |keyid, withgpgapplet|
   next if @skip_steps_while_restoring_background
   if withgpgapplet
-    step "I start Seahorse via the GpgApplet"
+    step "I start Seahorse via the Tails OpenPGP Applet"
   else
     step "I start Seahorse"
   end
