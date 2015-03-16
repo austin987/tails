@@ -52,7 +52,7 @@ if [ "$(tails_netconf)" = "obstacle" ]; then
    tor_control_setconf "Log=\"info file ${TOR_LOG}\""
 
    # Enable the transports we support. We cannot do this in general,
-   # when bridge mode is no enabled, since we then use seccomp
+   # when bridge mode is not enabled, since we then use seccomp
    # sandboxing.
    tor_control_setconf 'ClientTransportPlugin="obfs2,obfs3,obfs4 exec /usr/bin/obfs4proxy managed"'
 
