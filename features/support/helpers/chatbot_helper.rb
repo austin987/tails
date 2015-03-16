@@ -22,7 +22,7 @@ class ChatBot
            @password,
            @otr_key_file.path
           ]
-    cmd += @rooms if @rooms
+    cmd += ["--auto-join"] + @rooms if @rooms
 
     job = IO.popen(cmd)
     @pid = job.pid

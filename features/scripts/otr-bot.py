@@ -3,6 +3,7 @@ import sys
 import jabberbot
 import xmpp
 import otr
+from argparse import ArgumentParser
 
 # Minimal implementation of the OTR callback store that only does what
 # we absolutely need.
@@ -147,14 +148,18 @@ class OtrBot(jabberbot.JabberBot):
         return ""
 
 if __name__ == '__main__':
-    if len(sys.argv) < 4:
-        print >> sys.stderr, \
-            "Usage: %s <user@domain> <password> <otr_key_file> [rooms...]" \
-            % sys.argv[0]
-        sys.exit(1)
-    username, password, otr_key_path = sys.argv[1:4]
-    rooms = sys.argv[4:]
-    otr_bot = OtrBot(username, password, otr_key_path)
-    for room in rooms:
-        otr_bot.join_room(room)
+    parser = ArgumentParser()
+    parser.add_argument("account",
+                        help = "the user account, given as user@domain")
+    parser.add_argument("password",
+                        help = "the user account's password")
+    parser.add_argument("otr_key_path",
+                        help = "the path to the account's OTR key file")
+    parser.add_argument("-j", "--auto-join", nargs = '+', metavar = 'ROOMS',
+                        help = "auto-join multi-user chatrooms on start")
+    args = parser.parse_args()
+    otr_bot = OtrBot(args.account, args.password, args.otr_key_path)
+    if args.auto_join:
+        for room in args.auto_join:
+            otr_bot.join_room(room)
     otr_bot.serve_forever()
