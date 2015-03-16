@@ -80,22 +80,27 @@ Policy
 The secret key material will never be stored on an online server or on
 systems managed by anyone else than Tails core developers.
 
-### Master key
+### Primary key
 
-* No single individual has permanent access to the full master key.
-* Used only offline, in an airgapped Tails, with only interfaces:
+* Is not owned in a usable format by any single individual. It is
+  split cryptographically using
+  [gfshare](http://www.digital-scurf.org/software/libgfshare).
+* Is only used offline, in an air-gapped Tails with only interfaces:
   - plugging removable storage to send to the outside world whatever
     is needed (public key, secret key stubs, parts of the secret
     master key, etc.)
   - plugging removable storage to receive from the outside world
     whatever is needed (Debian packages, public keys, etc.)
   - plugging into another running operating system to install Tails
-* The expiration date is in no more than one year, and may be bumped
-  as many times as we find it reasonable.
+* Expires in less than one year. We will extent its validity as many
+  times as we find reasonable.
 
 ### Signing subkeys
 
 * Stored on OpenPGP smartcards owned by those who need it.
+  Smartcards ensure that the cryptographic operations are done on the
+  smartcard itself and that the secret cryptographic material is not
+  directly available to the operating system using it.
 * Expiration date: same as the subkey.
 
 Key details
