@@ -54,16 +54,13 @@ When /^the "([^"]+)" key is in the live user's public keyring after at most (\d+
   }
 end
 
-When /^I start Seahorse\s?(|via the GpgApplet)$/ do |startmethod|
+When /^I start Seahorse( via the GpgApplet)?$/ do |withgpgapplet|
   next if @skip_steps_while_restoring_background
-  case startmethod
-  when ''
-    step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
-  when 'via the GpgApplet'
+  if withgpgapplet
     @screen.wait_and_click("GpgAppletIconNormal.png", 10)
     @screen.wait_and_click("GpgAppletManageKeys.png", 10)
   else
-    raise "Undefined way to start Seahorse: #{startmethod}"
+    step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
   end
 end
 
@@ -97,9 +94,13 @@ Then /^I synchronize keys in Seahorse$/ do
   @screen.wait("SeahorseWindow.png", 120)
 end
 
-When /^I fetch the "([^"]+)" OpenPGP key using Seahorse\s?(|via the GpgApplet)$/ do |keyid, startmethod|
+When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the GpgApplet)?$/ do |keyid, withgpgapplet|
   next if @skip_steps_while_restoring_background
-  step "I start Seahorse #{startmethod}"
+  if withgpgapplet
+    step "I start Seahorse via the GpgApplet"
+  else
+    step "I start Seahorse"
+  end
   step "Seahorse has opened"
   @screen.wait_and_click("SeahorseWindow.png", 10)
   @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
