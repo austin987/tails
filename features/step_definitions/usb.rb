@@ -48,11 +48,6 @@ def persistent_volumes_mountpoints
   @vm.execute("ls -1 -d /live/persistence/*_unlocked/").stdout.chomp.split
 end
 
-Given /^I create a new (\d+) ([[:alpha:]]+) USB drive named "([^"]+)"$/ do |size, unit, name|
-  next if @skip_steps_while_restoring_background
-  @vm.storage.create_new_disk(name, {:size => size, :unit => unit})
-end
-
 Given /^I clone USB drive "([^"]+)" to a new USB drive "([^"]+)"$/ do |from, to|
   next if @skip_steps_while_restoring_background
   @vm.storage.clone_to_new_disk(from, to)
@@ -65,7 +60,7 @@ end
 
 Given /^the computer is set to boot from the old Tails DVD$/ do
   next if @skip_steps_while_restoring_background
-  @vm.set_cdrom_boot($old_tails_iso)
+  @vm.set_cdrom_boot(OLD_TAILS_ISO)
 end
 
 Given /^the computer is set to boot in UEFI mode$/ do
@@ -143,7 +138,7 @@ end
 
 Given /^I setup a filesystem share containing the Tails ISO$/ do
   next if @skip_steps_while_restoring_background
-  @vm.add_share(File.dirname($tails_iso), shared_iso_dir_on_guest)
+  @vm.add_share(File.dirname(TAILS_ISO), shared_iso_dir_on_guest)
 end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
@@ -155,7 +150,7 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   @screen.click(match.getCenter.offset(0, match.h*2))
   @screen.wait('USBSelectISO.png', 10)
   @screen.wait_and_click('GnomeFileDiagTypeFilename.png', 10)
-  iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"
+  iso = "#{shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   @screen.type(iso + Sikuli::Key.ENTER)
   usb_install_helper(name)
 end
@@ -210,7 +205,7 @@ def tails_is_installed_helper(name, tails_root, loader)
 
   c = @vm.execute("diff -qr '#{tails_root}/live' '#{target_root}/live'")
   assert(c.success?,
-         "USB drive '#{name}' has differences in /live:\n#{c.stdout}")
+         "USB drive '#{name}' has differences in /live:\n#{c.stdout}\n#{c.stderr}")
 
   syslinux_files = @vm.execute("ls -1 #{target_root}/syslinux").stdout.chomp.split
   # We deal with these files separately
@@ -240,7 +235,7 @@ end
 
 Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
   next if @skip_steps_while_restoring_background
-  iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"
+  iso = "#{shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   iso_root = "/mnt/iso"
   @vm.execute("mkdir -p #{iso_root}")
   @vm.execute("mount -o loop #{iso} #{iso_root}")
@@ -309,7 +304,7 @@ end
 def tails_persistence_enabled?
   persistence_state_file = "/var/lib/live/config/tails.persistence"
   return @vm.execute("test -e '#{persistence_state_file}'").success? &&
-         @vm.execute('. #{persistence_state_file} && ' +
+         @vm.execute(". '#{persistence_state_file}' && " +
                      'test "$TAILS_PERSISTENCE_ENABLED" = true').success?
 end
 
@@ -322,7 +317,8 @@ Given /^all persistence presets(| from the old Tails version) are enabled$/ do |
   if old_tails.empty?
     expected_mounts = persistent_mounts
   else
-    expected_mounts = $old_persistence_mounts
+    assert_not_nil($remembered_persistence_mounts)
+    expected_mounts = $remembered_persistence_mounts
   end
   mount = @vm.execute("mount").stdout.chomp
   for _, dir in expected_mounts do
@@ -358,9 +354,16 @@ def boot_device_type
   return boot_dev_type
 end
 
-Then /^Tails is running from USB drive "([^"]+)"$/ do |name|
+Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
   next if @skip_steps_while_restoring_background
-  assert_equal("usb", boot_device_type)
+  bus = bus.downcase
+  case bus
+  when "ide"
+    expected_bus = "ata"
+  else
+    expected_bus = bus
+  end
+  assert_equal(expected_bus, boot_device_type)
   actual_dev = boot_device
   # The boot partition differs between a "normal" install using the
   # USB installer and isohybrid installations
@@ -368,7 +371,7 @@ Then /^Tails is running from USB drive "([^"]+)"$/ do |name|
   expected_dev_isohybrid = @vm.disk_dev(name) + "4"
   assert(actual_dev == expected_dev_normal ||
          actual_dev == expected_dev_isohybrid,
-         "We are running from device #{actual_dev}, but for USB drive " +
+         "We are running from device #{actual_dev}, but for #{bus} drive " +
          "'#{name}' we expected to run from either device " +
          "#{expected_dev_normal} (when installed via the USB installer) " +
          "or #{expected_dev_normal} (when installed from an isohybrid)")
@@ -442,7 +445,8 @@ Then /^all persistent directories(| from the old Tails version) have safe access
   if old_tails.empty?
     expected_dirs = persistent_dirs
   else
-    expected_dirs = $old_persistence_dirs
+    assert_not_nil($remembered_persistence_dirs)
+    expected_dirs = $remembered_persistence_dirs
   end
   persistent_volumes_mountpoints.each do |mountpoint|
     expected_dirs.each do |src, dest|
@@ -450,9 +454,9 @@ Then /^all persistent directories(| from the old Tails version) have safe access
       assert_vmcommand_success @vm.execute("test -d #{full_src}")
       dir_perms = @vm.execute_successfully("stat -c %a '#{full_src}'").stdout.chomp
       dir_owner = @vm.execute_successfully("stat -c %U '#{full_src}'").stdout.chomp
-      if dest.start_with?("/home/#{$live_user}")
+      if dest.start_with?("/home/#{LIVE_USER}")
         expected_perms = "700"
-        expected_owner = $live_user
+        expected_owner = LIVE_USER
       else
         expected_perms = "755"
         expected_owner = "root"
@@ -496,8 +500,8 @@ end
 
 When /^I take note of which persistence presets are available$/ do
   next if @skip_steps_while_restoring_background
-  $old_persistence_mounts = persistent_mounts
-  $old_persistence_dirs = persistent_dirs
+  $remembered_persistence_mounts = persistent_mounts
+  $remembered_persistence_dirs = persistent_dirs
 end
 
 Then /^the expected persistent files(| created with the old Tails version) are present in the filesystem$/ do |old_tails|
@@ -505,7 +509,8 @@ Then /^the expected persistent files(| created with the old Tails version) are p
   if old_tails.empty?
     expected_mounts = persistent_mounts
   else
-    expected_mounts = $old_persistence_mounts
+    assert_not_nil($remembered_persistence_mounts)
+    expected_mounts = $remembered_persistence_mounts
   end
   expected_mounts.each do |_, dir|
     assert(@vm.execute("test -e #{dir}/XXX_persist").success?,
@@ -515,20 +520,43 @@ Then /^the expected persistent files(| created with the old Tails version) are p
   end
 end
 
-Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
+Then /^only the expected files are present on the persistence partition encrypted with password "([^"]+)" on USB drive "([^"]+)"$/ do |password, name|
   next if @skip_steps_while_restoring_background
-  step "a computer"
-  step "the computer is set to boot from USB drive \"#{name}\""
-  step "the network is unplugged"
-  step "I start the computer"
-  step "the computer boots Tails"
-  step "I enable read-only persistence with password \"asdf\""
-  step "I log in to a new session"
-  step "all persistence presets are enabled"
-  step "GNOME has started"
-  step "all notifications have disappeared"
-  step "the expected persistent files are present in the filesystem"
-  step "I shutdown Tails and wait for the computer to power off"
+  assert(!@vm.is_running?)
+  disk = {
+    :path => @vm.storage.disk_path(name),
+    :opts => {
+      :format => @vm.storage.disk_format(name),
+      :readonly => true
+    }
+  }
+  @vm.storage.guestfs_disk_helper(disk) do |g, disk_handle|
+    partitions = g.part_list(disk_handle).map do |part_desc|
+      disk_handle + part_desc["part_num"].to_s
+    end
+    partition = partitions.find do |part|
+      g.blkid(part)["PART_ENTRY_NAME"] == "TailsData"
+    end
+    assert_not_nil(partition, "Could not find the 'TailsData' partition " \
+                              "on disk '#{disk_handle}'")
+    luks_mapping = File.basename(partition) + "_unlocked"
+    g.luks_open(partition, password, luks_mapping)
+    luks_dev = "/dev/mapper/#{luks_mapping}"
+    mount_point = "/"
+    g.mount(luks_dev, mount_point)
+    assert_not_nil($remembered_persistence_mounts)
+    $remembered_persistence_mounts.each do |dir, _|
+      # Guestfs::exists may have a bug; if the file exists, 1 is
+      # returned, but if it doesn't exist false is returned. It seems
+      # the translation of C types into Ruby types is glitchy.
+      assert(g.exists("/#{dir}/XXX_persist") == 1,
+             "Could not find expected file in persistent directory #{dir}")
+      assert(g.exists("/#{dir}/XXX_gone") != 1,
+             "Found file that should not have persisted in persistent directory #{dir}")
+    end
+    g.umount(mount_point)
+    g.luks_close(luks_dev)
+  end
 end
 
 When /^I delete the persistent partition$/ do
@@ -544,3 +572,8 @@ Then /^Tails has started in UEFI mode$/ do
   assert(@vm.execute("test -d /sys/firmware/efi").success?,
          "/sys/firmware/efi does not exist")
  end
+
+Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
+  next if @skip_steps_while_restoring_background
+  @vm.storage.disk_mklabel(name, type)
+end
