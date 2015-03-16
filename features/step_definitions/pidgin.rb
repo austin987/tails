@@ -48,14 +48,14 @@ end
 
 Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_chat|
   next if @skip_steps_while_restoring_background
-  rooms = nil
-  if join_chat
-    rooms = [@chat_room_jid]
-  end
   account = xmpp_account("Friend_account", ["otr_key"])
+  bot_opts = account.select { |k, v| ["connect_server"].include?(k) }
+  if join_chat
+    bot_opts["auto_join"] = [@chat_room_jid]
+  end
   @friend_name = account["username"]
   @chatbot = ChatBot.new(account["username"] + "@" + account["domain"],
-                         account["password"], account["otr_key"], rooms)
+                         account["password"], account["otr_key"], bot_opts)
   @chatbot.start
   add_after_scenario_hook(@chatbot.method(:stop))
   @vm.focus_window('Buddy List')

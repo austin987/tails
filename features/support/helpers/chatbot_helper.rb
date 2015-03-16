@@ -2,11 +2,11 @@ require 'tempfile'
 
 class ChatBot
 
-  def initialize(account, password, otr_key, rooms = nil)
+  def initialize(account, password, otr_key, opts = Hash.new)
     @account = account
     @password = password
     @otr_key = otr_key
-    @rooms = rooms
+    @opts = opts
     @pid = nil
     @otr_key_file = nil
   end
@@ -22,7 +22,8 @@ class ChatBot
            @password,
            @otr_key_file.path
           ]
-    cmd += ["--auto-join"] + @rooms if @rooms
+    cmd += ["--connect-server", @opts["connect_server"]] if @opts["connect_server"]
+    cmd += ["--auto-join"] + @opts["auto_join"] if @opts["auto_join"]
 
     job = IO.popen(cmd)
     @pid = job.pid

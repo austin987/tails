@@ -52,7 +52,9 @@ class OtrBot(jabberbot.JabberBot):
 
     PING_FREQUENCY = 60
 
-    def __init__(self, username, password, otr_key_path):
+    def __init__(self, username, password, otr_key_path, connect_server = None):
+        self.__connect_server = connect_server
+        self.__password = password
         super(OtrBot, self).__init__(username, password)
         self.__account = self.jid.getNode()
         self.__protocol = "xmpp"
@@ -63,6 +65,34 @@ class OtrBot(jabberbot.JabberBot):
             "default_policy": otr.OTRL_POLICY_MANUAL
             }
         self.__otr_callback_store = OtrCallbackStore()
+
+    # Unfortunately Jabberbot's connect() is not very friendly to
+    # overriding in subclasses so we have to re-implement it
+    # completely (copy-paste mostly) in order to add support for using
+    # an XMPP "Connect Server".
+    def connect(self):
+        if not self.conn:
+            conn = xmpp.Client(self.jid.getDomain(), debug=[])
+            if self.__connect_server:
+                try:
+                    conn_server, conn_port = self.__connect_server.split(":", 1)
+                except ValueError:
+                    conn_server = self.__connect_server
+                    conn_port = 5222
+                conres = conn.connect((conn_server, int(conn_port)))
+            else:
+                conres = conn.connect()
+            if not conres:
+                return None
+            authres = conn.auth(self.jid.getNode(), self.__password, self.res)
+            if not authres:
+                return None
+            self.conn = conn
+            self.conn.sendInitPresence()
+            self.roster = self.conn.Roster.getRoster()
+            for (handler, callback) in self.handlers:
+                self.conn.RegisterHandler(handler, callback)
+        return self.conn
 
     def __otr_callbacks(self, more_data = None):
         opdata = self.__opdata.copy()
@@ -155,10 +185,17 @@ if __name__ == '__main__':
                         help = "the user account's password")
     parser.add_argument("otr_key_path",
                         help = "the path to the account's OTR key file")
+    parser.add_argument("-c", "--connect-server", metavar = 'ADDRESS',
+                        help = "use a Connect Server, given as host[:port] " +
+                        "(port defaults to 5222)")
     parser.add_argument("-j", "--auto-join", nargs = '+', metavar = 'ROOMS',
                         help = "auto-join multi-user chatrooms on start")
     args = parser.parse_args()
-    otr_bot = OtrBot(args.account, args.password, args.otr_key_path)
+    otr_bot_opt_args = dict()
+    if args.connect_server:
+        otr_bot_opt_args["connect_server"] = args.connect_server
+    otr_bot = OtrBot(args.account, args.password, args.otr_key_path,
+                     **otr_bot_opt_args)
     if args.auto_join:
         for room in args.auto_join:
             otr_bot.join_room(room)
