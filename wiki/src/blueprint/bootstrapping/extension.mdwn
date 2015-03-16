@@ -25,10 +25,13 @@ Goals
     for years.
   - Simplify the installation process by automating *some* verification
     of the ISO image inside the browser as part of the download process.
-  - Allow users who are downloading using BitTorrent to do the same
+  - Allow users who want to verify an ISO image downloaded previously or downloaded using BitTorrent to do the same
     level of verification as people downloading through their browser.
   - In case of a bad ISO image, help the user diagnose whether the
     download has been interrupted or the ISO has been corrupted.
+  - In case of an interrupted download, help the user resume it. This
+    requires us to have our mirrors stop sending HTTP ETag headers. See
+    [[!tails_ticket 9022]].
   - Allow users to install the extension without restarting the browser.
   - Have the extension available in Firefox first, then Chrome. Firefox
     makes sense as a first target because it is the base for Tor Browser
@@ -86,32 +89,14 @@ ISO verification
   - The extension checks the size of the download to verify that the download
     was complete.
   - If the download was complete, the extension verifies the ISO image.
-  - The extension renames the ISO image from tails-i386-x.x.x-UNVERIFIED.iso to:
-    - `tails-i386-x.x.x-INCOMPLETE.iso` if the download was incomplete.
-    - `tails-i386-x.x.x-VERIFIED.iso` if the verification is successfully.
-    - `tails-i386-x.x.x-CORRUPTED.iso` if the verification fails.
   - The extension displays the result to the user.
   - According to the result, the web assistant proposes to either:
       - if VERIFIED: continue with the installation.
       - if INCOMPLETE: explain calmly that the download has been
-        interrupted and propose to download the ISO again.
-      - if CORRUPTED: proposes troubleshooting strategies.
-
-Open questions
---------------
-
-  - Will the extension be able to read and possibly rename an ISO image
-    downloaded by the user not through the extension itself? For example
-    if it is a Torrent download, or if it is downloaded first, then the
-    browser is closed and reopen, or downloaded using a different
-    method?
-  - If the extension is installed, are we sure to be able to detect it
-    automatically? For example in Tor Browser of if JavaScript is
-    disabled?
-  - It would be nice to have the extension able to handle interrupted or
-    paused downloads. If so, how do we integrate this in the workflow?
-    Shall we propose to download what's missing from the ISO if the
-    verification fails?
+        interrupted and propose to resume the download.
+      - if CORRUPTED: explain to the user that the download has been
+	corrupted (to which extend?) and propose to download from another
+	mirror (maybe https://archive.torproject.org/).
 
 <a id="verification"></a>
 
@@ -134,14 +119,11 @@ We are not considering an attacker who can:
     our website could defeat any verification technique by providing
     simplified instructions or by faking ISO verification.
 
-    To mitigate such
-    an attack in some cases we could both:
-
-    - Encourage external documentation (screencasts on YouTube, printed
-      forms, etc.). But those would be vulnerable to other kind of
-      attacks...
-    - Not rely on the website to perform the ISO verification (use the
-      add-ons menu for example). But the UX will suffer from this...
+    To mitigate such an attack we should work on deploying HPKP (HTTP
+    Public Key Pinning) which provides TOFU on our SSL certificate
+    ([[!tails_ticket 9026]]). But our certificate could also probably be
+    integrated in the Firefox preload list shipped with the browser
+    ([[!tails_ticket 9027]]).
 
   - (C) Insert malicious content on https://tails.boum.org/ through an
     exploit on our website as this could trick new users to skip the ISO
@@ -149,7 +131,7 @@ We are not considering an attacker who can:
     instead:
 
     - Monitor externally the most relevant parts of our website.
-    - Work on integrating full upgrades in Tails Upgrader
+    - Work on integrating full upgrades in Tails Upgrader. See
       [[!tails_ticket 7499]].
 
   - (D) Insert malicious information in our main Git repository as such
@@ -162,13 +144,19 @@ We are not considering an attacker who can:
   - (F) Provide a rogue extension to the user as this could defeat any
     possible verification mechanism that such an extension could do.
 
-We should also keep in mind how would the extension upgrade in case of
-change in the certificates it relies upon. If we need to upgrade the
-extension:
+  - (G) Insert malicious content on https://tails.boum.org/ after taking
+    control of the web server, or entire system, behind it. Such an
+    attacker could do attack (C) as well but in such a way that could be
+    much harder to detect (for example by serving malicious content to
+    some users).
 
-  - In Firefox, it has to go through a manual review process that can
-    take several days.
-  - In Chrome, it can be uploaded directly to the store by us.
+    To mitigate such an attack in some cases we could both:
+
+    - Encourage external documentation (screencasts on YouTube, printed
+      forms, etc.). But those would be vulnerable to other kind of
+      attacks.
+    - Not rely on the website to perform the ISO verification and rely
+      on a native interface accessible from the add-ons menu.
 
 Checksum verification
 ---------------------
@@ -176,7 +164,7 @@ Checksum verification
 The code of the extension includes:
 
   - The root certificate of the authority expected to sign the
-    certificate of https://tails.boum.org/.
+    certificate of https://tails.boum.org/ (until we get [[!tails_ticket 9027]]).
 
 When verifying an ISO image, the extension:
 
@@ -198,8 +186,28 @@ Other considerations:
     advance.
   - We need to decide if we want to integrate the verification process
     done by the extension directly in the website or give instructions
-    to do it from the add-ons menu for exemple to mitigate attack B
-    (MitM on https://tails.boum.org/) [[!tails_ticket 8931]].
+    to do it from the add-ons menu for exemple to mitigate attack G
+    (server in control) [[!tails_ticket 8931]].
   - More complex verification mechanisms should be gradually [[built into
     Tails Installer|blueprint/bootstrapping/installer]] where we can
-    defeat attacks B, C, D, and F.
+    defeat attacks B, C, D, F, and G.
+
+Updates mechanism
+=================
+
+We should also keep in mind how would the extension upgrade (change in
+the code, change in the certificates it relies upon). If we need to
+upgrade the extension:
+
+  - In Firefox, it has to go through a manual review process that can
+    take several days.
+  - In Chrome, it can be uploaded directly to the store by us.
+
+Firefox checks for updates of the extension once per day on a secure
+channel (the update pings are also used to generate add-ons usage
+stats).
+
+Open questions
+--------------
+
+- Does Tor Browser disables addons updates? See [[!tails_ticket 9028]].
