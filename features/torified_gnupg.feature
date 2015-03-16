@@ -32,7 +32,7 @@ Feature: Keyserver interaction with GnuPG
     Then the "10CC5BC7" key is in the live user's public keyring after at most 120 seconds
 
   Scenario: Syncing OpenPGP keys using Seahorse should work and be done over Tor.
-    Given I fetch the "10CC5BC7" OpenPGP key using the GnuPG CLI
+    Given I fetch the "10CC5BC7" OpenPGP key using the GnuPG CLI without any signatures
     And the GnuPG fetch is successful
     And the "10CC5BC7" key is in the live user's public keyring after at most 120 seconds
     But the key "10CC5BC7" has only 2 signatures
@@ -43,7 +43,7 @@ Feature: Keyserver interaction with GnuPG
     Then the key "10CC5BC7" has more than 2 signatures
 
   Scenario: Syncing OpenPGP keys using Seahorse started from the GpgApplet should work and be done over Tor.
-    Given I fetch the "10CC5BC7" OpenPGP key using the GnuPG CLI
+    Given I fetch the "10CC5BC7" OpenPGP key using the GnuPG CLI without any signatures
     And the GnuPG fetch is successful
     And the "10CC5BC7" key is in the live user's public keyring after at most 120 seconds
     But the key "10CC5BC7" has only 2 signatures

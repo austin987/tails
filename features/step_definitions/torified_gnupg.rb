@@ -23,10 +23,15 @@ When /^the "([^"]+)" OpenPGP key is not in the live user's public keyring$/ do |
          "The '#{keyid}' key is in the live user's public keyring.")
 end
 
-When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI$/ do |keyid|
+When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signatures)?$/ do |keyid, without|
   next if @skip_steps_while_restoring_background
+  if without
+    importopts = '--keyserver-options import-clean'
+  else
+    importopts = ''
+  end
   @gnupg_recv_key_res = @vm.execute_successfully(
-    "gpg --batch --keyserver-options import-clean --recv-key '#{keyid}'",
+    "gpg --batch #{importopts} --recv-key '#{keyid}'",
     LIVE_USER)
 end
 
