@@ -9,9 +9,9 @@ Then /^the key "([^"]+)" has (only|more than) (\d+) signatures$/ do |key, qualif
   count = count_gpg_signatures(key)
   case qualifier
   when 'only'
-    assert_equal(count, num.to_i)
+    assert_equal(count, num.to_i, "Expected #{num} signatures but instead found #{count}")
   when 'more than'
-    assert(count > num.to_i)
+    assert(count > num.to_i, "Expected more than #{num} signatures but found #{count}")
   else
     raise "Unknown operator #{qualifier} passed"
   end
