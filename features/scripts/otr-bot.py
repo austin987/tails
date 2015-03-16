@@ -52,11 +52,10 @@ class OtrBot(jabberbot.JabberBot):
 
     PING_FREQUENCY = 60
 
-    def __init__(self, username, password, otr_key_path, connect_server = None):
+    def __init__(self, account, password, otr_key_path, connect_server = None):
         self.__connect_server = connect_server
         self.__password = password
-        super(OtrBot, self).__init__(username, password)
-        self.__account = self.jid.getNode()
+        super(OtrBot, self).__init__(account, password)
         self.__protocol = "xmpp"
         self.__otr_ustate = otr.otrl_userstate_create()
         otr.otrl_privkey_read(self.__otr_ustate, otr_key_path)
@@ -102,7 +101,7 @@ class OtrBot(jabberbot.JabberBot):
 
     def __get_otr_user_context(self, user):
         context, _ = otr.otrl_context_find(
-            self.__otr_ustate, user, self.__account, self.__protocol, 1)
+            self.__otr_ustate, user, self.jid.getNode(), self.__protocol, 1)
         return context
 
     # Wrap OTR encryption around Jabberbot's most low-level method for
@@ -111,7 +110,7 @@ class OtrBot(jabberbot.JabberBot):
         body = str(mess.getBody())
         user = str(mess.getTo().getStripped())
         encrypted_body = otr.otrl_message_sending(
-            self.__otr_ustate, self.__otr_callbacks(), self.__account,
+            self.__otr_ustate, self.__otr_callbacks(), self.jid.getNode(),
             self.__protocol, user, body, None)
         otr.otrl_message_fragment_and_send(
             self.__otr_callbacks({"message": mess}),
@@ -124,14 +123,14 @@ class OtrBot(jabberbot.JabberBot):
         user = str(mess.getFrom().getStripped())
         is_internal, decrypted_body, _ = otr.otrl_message_receiving(
             self.__otr_ustate, self.__otr_callbacks({"message": mess}),
-            self.__account, self.__protocol, user, body)
+            self.jid.getNode(), self.__protocol, user, body)
         context = self.__get_otr_user_context(user)
         if context.msgstate == otr.OTRL_MSGSTATE_FINISHED:
             otr.otrl_context_force_plaintext(context)
         if is_internal:
             return
         if mess.getType() == "groupchat":
-            bot_prefix = self.__account + ": "
+            bot_prefix = self.jid.getNode() + ": "
             if decrypted_body.startswith(bot_prefix):
                 decrypted_body = decrypted_body[len(bot_prefix):]
             else:
@@ -174,7 +173,7 @@ class OtrBot(jabberbot.JabberBot):
         user = str(mess.getFrom().getStripped())
         otr.otrl_message_disconnect(
             self.__otr_ustate, self.__otr_callbacks({"message": mess}),
-            self.__account, self.__protocol, user)
+            self.jid.getNode(), self.__protocol, user)
         return ""
 
 if __name__ == '__main__':
