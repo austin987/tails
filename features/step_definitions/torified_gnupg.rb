@@ -69,7 +69,7 @@ end
 
 Then /^I enable key synchronization in Seahorse$/ do
   next if @skip_steps_while_restoring_background
-  step "process \"seahorse\" is running"
+  step 'process "seahorse" is running'
   @screen.wait_and_click("SeahorseWindow.png", 10)
   @screen.type("e", Sikuli::KeyModifier.ALT) # Menu: "Edit" ->
   @screen.type("n") # Menu: "Preferences " ->
