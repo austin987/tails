@@ -9,7 +9,7 @@ Then /^the key "([^"]+)" has (only|more than) (\d+) signatures$/ do |key, qualif
   count = count_gpg_signatures(key)
   case qualifier
   when 'only'
-  assert_equal(count, num.to_i)
+    assert_equal(count, num.to_i)
   when 'more than'
     assert(count > num.to_i)
   else
