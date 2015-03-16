@@ -42,7 +42,7 @@ download_and_verify_files() {
 }
 
 install_tor_browser() {
-    local bundle destination tmp prep
+    local bundle destination tmp prep torbutton_xpi_path
     bundle="${1}"
     destination="${2}"
 
@@ -75,7 +75,14 @@ install_tor_browser() {
     # Remove TBB's torbutton since the "Tor test" will fail and about:tor
     # will report an error. We'll install our own Torbutton later, which
     # has the extensions.torbutton.test_enabled boolean pref as a workaround.
-    rm "${prep}/TorBrowser/Data/Browser/profile.default/extensions/torbutton@torproject.org.xpi"
+    torbutton_xpi_path="${prep}/TorBrowser/Data/Browser/profile.default/extensions/torbutton@torproject.org.xpi"
+    TORBUTTON_BUNDLED_VERSION="$(7z e -so ${torbutton_xpi_path} install.rdf | \
+        sed -n 's,^        <em:version>\([0-9\.]\+\)</em:version>,\1,p')"
+    if [ -z "${TORBUTTON_BUNDLED_VERSION}" ]; then
+        echo "Couldn't extract Torbutton's bundled version" >&2
+        exit 1
+    fi
+    rm "${torbutton_xpi_path}"
 
     # The Tor Browser will fail, complaining about an incomplete profile,
     # unless there's a readable TorBrowser/Data/Browser/Caches
@@ -206,6 +213,15 @@ FIREFOX_VERSION=$(get_firefox_version "${TBB_INSTALL}"/application.ini)
 FAKE_ICEWEASEL_VERSION=${FIREFOX_VERSION}+fake1
 install_fake_iceweasel_pkg "${FAKE_ICEWEASEL_VERSION}"
 install_debian_extensions "${TBB_EXT}" ${DEBIAN_EXT_PKGS}
+
+# Make sure that we have installed a Torbutton based on the same
+# version as the one bundled with the Tor Browser
+TORBUTTON_VERSION="$(dpkg -s xul-ext-torbutton | \
+    sed -n 's/^Version: \(.*\)-[0-9]\+$/\1/p')"
+if [ "${TORBUTTON_VERSION}" != "${TORBUTTON_BUNDLED_VERSION}" ]; then
+    echo "We have installed a Torbutton based on version '${TORBUTTON_VERSION}' but the version bundled with the Tor Browser is version '${TORBUTTON_BUNDLED_VERSION}'" >&2
+    exit 1
+fi
 
 mkdir -p "${TBB_PROFILE}"
 create_default_profile "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default "${TBB_EXT}" "${TBB_PROFILE}"

@@ -11,12 +11,10 @@ class VMCommand
   end
 
   def VMCommand.wait_until_remote_shell_is_up(vm, timeout = 30)
-    begin
-      Timeout::timeout(timeout) do
-        VMCommand.execute(vm, "true", { :user => "root", :spawn => false })
+    try_for(30, :msg => "Remote shell seems to be down") do
+      Timeout::timeout(3) do
+        VMCommand.execute(vm, "echo 'hello?'")
       end
-    rescue Timeout::Error
-      raise "Remote shell seems to be down"
     end
   end
 
@@ -56,6 +54,14 @@ class VMCommand
 
   def success?
     return @returncode == 0
+  end
+
+  def to_s
+    "Return status: #{@returncode}\n" +
+    "STDOUT:\n" +
+    @stdout +
+    "STDERR:\n" +
+    @stderr
   end
 
 end

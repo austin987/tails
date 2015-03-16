@@ -108,32 +108,57 @@ Then, clone the metadata repository and initialize git-annex:
 	cd torbrowser-archive && \
 	git annex init 
 
-You now have a lot of (broken) symlinks in place of the files that are
+You now have a lot of (dangling) symlinks in place of the files that are
 available in this git-annex repo.
 
-To synchronize your git-annex metadata with the remote, run:
+To synchronize your local git-annex metadata with the remote, run:
 
 	git annex sync
 
-Import a new set of Tor Browser tarballs
-----------------------------------------
+Set up environment variables
+----------------------------
 
-1. Make `TAILS_GIT_REPO` point to the main Tails Git repository
+1. Make sure you still have the environment variables defined in the
+   previous section set.
+
+2. Make `TAILS_GIT_REPO` point to the main Tails Git repository
    checkout where `tbb-dist-url.txt` is being worked on, for example:
 
        TAILS_GIT_REPO="$HOME/tails/git"
 
-2. Tell git-annex to record each tarball's URL into Git:
+3. Make `TORBROWSER_ARCHIVE` point to your local git annex working
+   copy of our Tor Browser archive, for example:
 
-       cat "${TAILS_GIT_REPO}/config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt" | \
-       while read expected_sha256 tarball; do
-          git annex addurl --fast --pathdepth=-2 \
-              "$(cat "${TAILS_GIT_REPO}/config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt")/${VERSION}/${tarball}"
+       TORBROWSER_ARCHIVE="$HOME/tails/torbrowser-archive"
+
+Import a new set of Tor Browser tarballs
+----------------------------------------
+
+1. Download and verify all the tarballs we need:
+
+       TMPDIR=$(mktemp -d)
+       CHROOT_INCLUDES="${TAILS_GIT_REPO}/config/chroot_local-includes"
+       TBB_SHA256SUMS_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-sha256sums.txt"
+       TBB_DIST_URL_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-dist-url.txt"
+       TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")/${VERSION}"
+       cat "$TBB_SHA256SUMS_FILE" | while read expected_sha256 tarball; do
+          (
+             cd "$TMPDIR"
+             curl --remote-name "${TBB_TARBALLS_BASE_URL}/${tarball}"
+          )
        done
+       (cd "$TMPDIR" && sha256sum -c "$TBB_SHA256SUMS_FILE")
+
+3. Move the tarballs into your local Git annex:
+
+       cd "$TORBROWSER_ARCHIVE" && \
+       mkdir "$VERSION" && cd "$VERSION" && \
+       git annex add "$TMPDIR/"*
 
 Commit and push your changes
 ----------------------------
 
+        cd "$TORBROWSER_ARCHIVE" && \
 	git commit -m "Add Tor Browser ${VERSION}." && \
 	git annex sync && \
 	git annex copy --to origin
@@ -155,3 +180,6 @@ Once you've gone through these steps, a cronjob that runs every
 <http://torbrowser-archive.tails.boum.org/>.
 
 Wait for this to happen before you can build Tails using the new URL.
+
+In the meantime, you might want to import the new Tor Browser tarballs
+into your `apt-cacher-ng` local cache.
