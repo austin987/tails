@@ -112,3 +112,53 @@ bridges, for the `cert=... iat-mode=...` stuff, and the same for
 This setting is required for `tor_bridges.feature` (requires types
 `Bridge`, `Obfs2`, `Obfs3` and `Obfs4`) and `time_syncing.feature`
 (requires type `Bridge` only).
+
+### Pidgin
+
+These secrets are required for some scenarios in
+`pidgin.feature`. Here's an example which explains the format:
+
+    Pidgin:
+      Accounts:
+        XMPP:
+          Tails_account:
+            username: "test"
+            domain: "jabber.org"
+            password: "opensesame"
+          Friend_account:
+            username: "friend"
+            domain: "jabber.org"
+            password: "trustno1"
+            otr_key: |
+              (privkeys
+               (account
+              (name friend)
+              (protocol xmpp)
+              (private-key
+               (dsa
+              [...]
+
+Note that the fields used in the above example show the *mandatory*
+fields.
+
+The XMPP account described by `Tails_account` (to be used in Tails'
+Pidgin) and `Friend_account` (run via a bot from the tester host) must
+be subscribed to each other but to no other XMPP account. Also, for the
+`Friend_account`, it's important that the `otr_key`'s `name` field is
+the same as `username`, and that the `protocol` field is `xmpp`.
+
+If a "Connect Server" is needed for any of the accounts, it can be set
+in the *optional* `connect_server` field.
+
+In case the `Tails_account`'s conference server doesn't allow creating
+arbitrary chat rooms, a specific one that is known to work can be set
+in the *optional* `chat_room` field. It should still be a room with a
+strange name that is highly likely to always be empty; otherwise the
+test will fail.
+
+XMPP services known to work well both for `Tails_account` and
+`Friend_account` are:
+* riseup.net (use `connect_server: xmpp.riseup.net`)
+* jabber.org (doesn't allow creating arbitrary chatrooms, so setting
+  `chat_room` may be needed)
+* jabber.ccc.de
