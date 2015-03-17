@@ -2,51 +2,50 @@
 import sys
 import jabberbot
 import xmpp
-import otr
+import potr
 from argparse import ArgumentParser
 
-# Minimal implementation of the OTR callback store that only does what
-# we absolutely need.
-class OtrCallbackStore():
+class OtrContext(potr.context.Context):
 
-    def inject_message(self, opdata, accountname, protocol, recipient, message):
-        mess = opdata["message"]
-        mess.setTo(recipient)
-        mess.setBody(message)
-        opdata["send_raw_message_fn"](mess)
+    def __init__(self, account, peer):
+        super(OtrContext, self).__init__(account, peer)
 
-    def policy(self, opdata, context):
-        return opdata["default_policy"]
+    def getPolicy(self, key):
+        return True
 
-    def create_privkey(self, **kwargs):
-        raise Exception(
-            "We should have loaded a key already! Most likely the 'name' " +
-            "and/or 'protocol' fields are wrong in the key you provided.")
+    def inject(self, msg, appdata = None):
+        mess = appdata["base_reply"]
+        mess.setBody(msg)
+        appdata["send_raw_message_fn"](mess)
 
-    def account_name(self, opdata, account, protocol):
-        return account
 
-    def protocol_name(self, opdata, protocol):
-        return protocol
+class BotAccount(potr.context.Account):
 
-    def is_logged_in(self, **kwargs):
-        return 1
+    def __init__(self, jid, keyFilePath):
+        protocol = 'xmpp'
+        max_message_size = 10*1024
+        super(BotAccount, self).__init__(jid, protocol, max_message_size)
+        self.keyFilePath = keyFilePath
 
-    def max_message_size(self, **kwargs):
-        return 0
+    def loadPrivkey(self):
+        with open(self.keyFilePath, 'rb') as keyFile:
+            return potr.crypt.PK.parsePrivateKey(keyFile.read())[0]
 
-    def display_otr_message(self, **kwargs):
-        return 0
 
-    # The rest we don't care at all about
-    def write_fingerprints(self, **kwargs): pass
-    def notify(self, **kwargs): pass
-    def update_context_list(self, **kwargs): pass
-    def new_fingerprint(self, **kwargs): pass
-    def gone_secure(self, **kwargs): pass
-    def gone_insecure(self, **kwargs): pass
-    def still_secure(self, **kwargs): pass
-    def log_message(self, **kwargs): pass
+class OtrContextManager:
+
+    def __init__(self, jid, keyFilePath):
+        self.account = BotAccount(jid, keyFilePath)
+        self.contexts = {}
+
+    def start_context(self, other):
+        if not other in self.contexts:
+            self.contexts[other] = OtrContext(self.account, other)
+        return self.contexts[other]
+
+    def get_context_for_user(self, other):
+        return self.start_context(other)
+
 
 class OtrBot(jabberbot.JabberBot):
 
@@ -56,14 +55,16 @@ class OtrBot(jabberbot.JabberBot):
         self.__connect_server = connect_server
         self.__password = password
         super(OtrBot, self).__init__(account, password)
-        self.__protocol = "xmpp"
-        self.__otr_ustate = otr.otrl_userstate_create()
-        otr.otrl_privkey_read(self.__otr_ustate, otr_key_path)
-        self.__opdata = {
-            "send_raw_message_fn": super(OtrBot, self).send_message,
-            "default_policy": otr.OTRL_POLICY_MANUAL
+        self.__otr_manager = OtrContextManager(account, otr_key_path)
+        self.send_raw_message_fn = super(OtrBot, self).send_message
+        self.__default_otr_appdata = {
+            "send_raw_message_fn": self.send_raw_message_fn
             }
-        self.__otr_callback_store = OtrCallbackStore()
+
+    def __otr_appdata_for_mess(self, mess):
+        appdata = self.__default_otr_appdata.copy()
+        appdata["base_reply"] = mess
+        return appdata
 
     # Unfortunately Jabberbot's connect() is not very friendly to
     # overriding in subclasses so we have to re-implement it
@@ -93,41 +94,37 @@ class OtrBot(jabberbot.JabberBot):
                 self.conn.RegisterHandler(handler, callback)
         return self.conn
 
-    def __otr_callbacks(self, more_data = None):
-        opdata = self.__opdata.copy()
-        if more_data:
-            opdata.update(more_data)
-        return (self.__otr_callback_store, opdata)
-
-    def __get_otr_user_context(self, user):
-        context, _ = otr.otrl_context_find(
-            self.__otr_ustate, user, self.jid.getNode(), self.__protocol, 1)
-        return context
-
     # Wrap OTR encryption around Jabberbot's most low-level method for
     # sending messages.
     def send_message(self, mess):
         body = str(mess.getBody())
         user = str(mess.getTo().getStripped())
-        encrypted_body = otr.otrl_message_sending(
-            self.__otr_ustate, self.__otr_callbacks(), self.jid.getNode(),
-            self.__protocol, user, body, None)
-        otr.otrl_message_fragment_and_send(
-            self.__otr_callbacks({"message": mess}),
-            self.__get_otr_user_context(user), encrypted_body,
-            otr.OTRL_FRAGMENT_SEND_ALL)
+        otrctx = self.__otr_manager.get_context_for_user(user)
+        if otrctx.state == potr.context.STATE_ENCRYPTED:
+            otrctx.sendMessage(potr.context.FRAGMENT_SEND_ALL, body,
+                               appdata = self.__otr_appdata_for_mess(mess))
+        else:
+            self.send_raw_message_fn(mess)
 
     # Wrap OTR decryption around Jabberbot's callback mechanism.
     def callback_message(self, conn, mess):
         body = str(mess.getBody())
         user = str(mess.getFrom().getStripped())
-        is_internal, decrypted_body, _ = otr.otrl_message_receiving(
-            self.__otr_ustate, self.__otr_callbacks({"message": mess}),
-            self.jid.getNode(), self.__protocol, user, body)
-        context = self.__get_otr_user_context(user)
-        if context.msgstate == otr.OTRL_MSGSTATE_FINISHED:
-            otr.otrl_context_force_plaintext(context)
-        if is_internal:
+        otrctx = self.__otr_manager.get_context_for_user(user)
+        if mess.getType() == "chat":
+            try:
+                appdata = self.__otr_appdata_for_mess(mess.buildReply())
+                decrypted_body, tlvs = otrctx.receiveMessage(body,
+                                                             appdata = appdata)
+                otrctx.processTLVs(tlvs)
+            except potr.context.NotEncryptedError:
+                otrctx.authStartV2(appdata = appdata)
+                return
+            except (potr.context.UnencryptedMessage, potr.context.NotOTRMessage):
+                decrypted_body = body
+        else:
+            decrypted_body = body
+        if decrypted_body == None:
             return
         if mess.getType() == "groupchat":
             bot_prefix = self.jid.getNode() + ": "
@@ -155,7 +152,7 @@ class OtrBot(jabberbot.JabberBot):
     @jabberbot.botcmd
     def clear_say(self, mess, args):
         """Make me speak in the clear even if we're in an OTR chat"""
-        self.__opdata["send_raw_message_fn"](mess.buildReply(args))
+        self.send_raw_message_fn(mess.buildReply(args))
         return ""
 
     @jabberbot.botcmd
@@ -171,9 +168,8 @@ class OtrBot(jabberbot.JabberBot):
         if mess.getType() == "groupchat":
             return
         user = str(mess.getFrom().getStripped())
-        otr.otrl_message_disconnect(
-            self.__otr_ustate, self.__otr_callbacks({"message": mess}),
-            self.jid.getNode(), self.__protocol, user)
+        self.__otr_manager.get_context_for_user(user).disconnect(appdata =
+            self.__otr_appdata_for_mess(mess.buildReply()))
         return ""
 
 if __name__ == '__main__':
