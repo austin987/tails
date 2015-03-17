@@ -62,12 +62,7 @@ class CtcpChecker < Net::IRC::Client
   # string with length 10 to 15. To make it legal, the first character
   # is forced to be alpha.
   def self.random_irc_nickname
-    alpha_set = ('A'..'Z').to_a + ('a'..'z').to_a
-    alnum_set = alpha_set + (0..9).to_a.map { |n| n.to_s }
-    length = (10..15).to_a.sample
-    nickname = alpha_set.sample
-    nickname += (0..length-2).map { |n| alnum_set.sample }.join
-    return nickname
+    random_alpha_string(1) + random_alnum_string(9, 14)
   end
 
   def spam(spam_target)
