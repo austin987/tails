@@ -49,3 +49,6 @@ TOR_AUTHORITIES =
    "154.35.32.5"
   ]
 VM_XML_PATH = "#{Dir.pwd}/features/domains"
+
+TAILS_SIGNING_KEY = cmd_helper(". #{Dir.pwd}/config/amnesia; echo ${AMNESIA_DEV_KEYID}").tr(' ', '').chomp
+TAILS_DEBIAN_REPO_KEY = "221F9A3C6FA3E09E182E060BC7988EA7A358D82E"
