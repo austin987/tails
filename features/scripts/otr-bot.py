@@ -12,10 +12,6 @@ class OtrContext(potr.context.Context):
 
     def getPolicy(self, key):
         return True
-        if key in DEFAULT_POLICY_FLAGS:
-            return DEFAULT_POLICY_FLAGS[key]
-        else:
-            return False
 
     def inject(self, msg, appdata = None):
         mess = appdata["base_reply"]
