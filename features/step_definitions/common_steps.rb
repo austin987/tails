@@ -217,22 +217,17 @@ end
 Given /^the computer (re)?boots Tails$/ do |reboot|
   next if @skip_steps_while_restoring_background
 
+  boot_timeout = 30
+  # We need some extra time for memory wiping if rebooting
+  boot_timeout += 90 if reboot
+
   case @os_loader
   when "UEFI"
-    assert(!reboot, "Testing of reboot with UEFI enabled is not implemented")
     bootsplash = 'TailsBootSplashUEFI.png'
     bootsplash_tab_msg = 'TailsBootSplashTabMsgUEFI.png'
-    boot_timeout = 30
   else
-    if reboot
-      bootsplash = 'TailsBootSplashPostReset.png'
-      bootsplash_tab_msg = 'TailsBootSplashTabMsgPostReset.png'
-      boot_timeout = 120
-    else
-      bootsplash = 'TailsBootSplash.png'
-      bootsplash_tab_msg = 'TailsBootSplashTabMsg.png'
-      boot_timeout = 30
-    end
+    bootsplash = 'TailsBootSplash.png'
+    bootsplash_tab_msg = 'TailsBootSplashTabMsg.png'
   end
 
   @screen.wait(bootsplash, boot_timeout)
