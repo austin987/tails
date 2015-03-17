@@ -67,6 +67,7 @@ Feature: Chatting anonymously using Pidgin
     Then I see the Tails roadmap URL
     When I click on the Tails roadmap URL
     Then the Tor Browser has started and loaded the Tails roadmap
+    And the "irc.oftc.net" account only responds to PING and VERSION CTCP requests
 
   Scenario: Adding a certificate to Pidgin
     And I start Pidgin through the GNOME menu

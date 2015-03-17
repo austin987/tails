@@ -180,7 +180,7 @@ Then /^I can see that my friend joined the multi-user chat$/ do
 end
 
 def configured_pidgin_accounts
-  accounts = []
+  accounts = Hash.new
   xml = REXML::Document.new(@vm.file_content('$HOME/.purple/accounts.xml',
                                              LIVE_USER))
   xml.elements.each("account/account") do |e|
@@ -190,14 +190,14 @@ def configured_pidgin_accounts
     port      = e.elements["settings/setting[@name='port']"].text
     nickname  = e.elements["settings/setting[@name='username']"].text
     real_name = e.elements["settings/setting[@name='realname']"].text
-    accounts.push({
-                    'name'      => account_name,
-                    'network'   => network,
-                    'protocol'  => protocol,
-                    'port'      => port,
-                    'nickname'  => nickname,
-                    'real_name' => real_name,
-                  })
+    accounts[network] = {
+      'name'      => account_name,
+      'network'   => network,
+      'protocol'  => protocol,
+      'port'      => port,
+      'nickname'  => nickname,
+      'real_name' => real_name,
+    }
   end
 
   return accounts
@@ -233,7 +233,7 @@ Given /^Pidgin has the expected accounts configured with random nicknames$/ do
             ["irc.oftc.net", "prpl-irc", "6697"],
             ["127.0.0.1",    "prpl-irc", "6668"],
           ]
-  configured_pidgin_accounts.each() do |account|
+  configured_pidgin_accounts.values.each() do |account|
     assert(account['nickname'] != "XXX_NICK_XXX", "Nickname was no randomised")
     assert_equal(account['nickname'], account['real_name'],
                  "Nickname and real name are not identical: " +
@@ -286,6 +286,22 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   # Sometimes the OFTC welcome notice window pops up over the buddy list one...
   @vm.focus_window('Buddy List')
   @screen.wait(expected_channel_entry, 60)
+end
+
+Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ do |irc_server|
+  next if @skip_steps_while_restoring_background
+  ctcp_cmds = [
+    "CLIENTINFO", "DATE", "ERRMSG", "FINGER", "PING", "SOURCE", "TIME",
+    "USERINFO", "VERSION"
+  ]
+  expected_ctcp_replies = {
+    "PING" => /^\d+$/,
+    "VERSION" => /^Purple IRC$/
+  }
+  spam_target = configured_pidgin_accounts[irc_server]["nickname"]
+  ctcp_check = CtcpChecker.new(irc_server, 6667, spam_target, ctcp_cmds,
+                               expected_ctcp_replies)
+  ctcp_check.verify_ctcp_responses
 end
 
 Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
