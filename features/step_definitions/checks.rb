@@ -1,11 +1,12 @@
 Then /^the shipped Tails (signing|Debian repository) key will be valid for the next (\d+) months$/ do |key_type, max_months|
   next if @skip_steps_while_restoring_background
-  if key_type == 'signing'
-    sig_key_fingerprint = "A490D0F4D311A4153E2BB7CADBB802B258ACD84F"
+  case key_type
+  when 'signing'
+    sig_key_fingerprint = TAILS_SIGNING_KEY
     cmd = 'gpg'
     user = LIVE_USER
-  elsif key_type == 'Debian repository'
-    sig_key_fingerprint = "221F9A3C6FA3E09E182E060BC7988EA7A358D82E"
+  when 'Debian repository'
+    sig_key_fingerprint = TAILS_DEBIAN_REPO_KEY
     cmd = 'apt-key adv'
     user = 'root'
   else
@@ -116,7 +117,7 @@ end
 Then /^a screenshot is saved to the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
   home = "/home/#{LIVE_USER}"
-  try_for(3, :msg=> "No screenshot was created in #{home}") {
+  try_for(10, :msg=> "No screenshot was created in #{home}") {
     !@vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
   }
 end

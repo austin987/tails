@@ -41,6 +41,12 @@ def main():
   dev = argv[1]
   port = serial.Serial(port = dev, baudrate = 4000000)
   port.open()
+
+  # Create a state file so other applications can know that the remote
+  # shell is operational.
+  state_file_path = "/var/lib/live/autotest-remote-shell-running"
+  open(state_file_path, "w").close()
+
   while True:
     try:
       line = port.readline()
