@@ -11,7 +11,7 @@ class Display
                  "-name '#{@domain} (1) - Virt Viewer' 2>/dev/null")
     Process.wait(p.pid)
     p.close
-    $? == 0
+    $?.success?
   end
 
   def start
