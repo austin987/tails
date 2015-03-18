@@ -7,6 +7,7 @@ Given /^I create sample videos$/ do
   fatal_system("avconv -loop 1 -t 30 -f image2 " +
                "-i 'features/images/TailsBootSplash.png' " +
                "-an -vcodec libx264 -y " +
+               '-filter:v "crop=in_w-mod(in_w\,2):in_h-mod(in_h\,2)" ' +
                "'#{MISC_FILES_DIR}/video.mp4' >/dev/null 2>&1")
 end
 
