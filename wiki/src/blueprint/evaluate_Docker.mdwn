@@ -38,6 +38,58 @@ API stability and backwards-compatibility
   behavior ["will be
   preserved"](https://docs.docker.com/reference/builder/#environment-replacement).
 
+Image creation and maintenance
+==============================
+
+This is about [[!tails_ticket 7533]]. That's Docker's equivalent of
+Vagrant's basebox.
+
+The semi-official Debian images' creation process has been [described by Joey
+Hess](http://joeyh.name/blog/entry/docker_run_debian/). They are built
+with <https://github.com/tianon/docker-brew-debian.git>, which itself
+uses
+[`mkimage.sh`](https://github.com/docker/docker/blob/master/contrib/mkimage.sh).
+There are `rootfs.tar.xz` files in the former repository.
+
+But there are other solutions around there that feel saner:
+
+* Jonathan Dowland has [documented](http://jmtd.net/log/debian_docker/)
+  and [published](https://github.com/jmtd/debian-docker/) the scripts he
+  uses to build his own Debian images from scratch, which feels saner.
+* The [[!debwiki Cloud/CreateDockerImage]] Debian wiki page documents
+  how to use only stuff shipped in Debian to create a Debian image with
+  a single command.
+
+See also <https://docs.docker.com/articles/baseimages/>.
+
+Do we want to:
+
+1. Let the build system build and maintain its own images on the
+   developer's system, the same way we would do it if we were
+   publishing our images?
+1. Produce and publish these images automatically, e.g.
+   daily or weekly?
+1. Build them locally and then upload? If so, who would do it,
+   and when?
+
+Do something different for our base images (e.g. Debian Wheezy)
+from we do for the specialized containers (e.g. ISO builder)?
+
+Image publication
+=================
+
+By default, Docker downloads images from the [Docker Hub
+Registry](https://registry.hub.docker.com/). If we want to publish our
+images, of course we want to self-host them somehow.
+
+One can [run their own
+registry](https://github.com/docker/docker-registry):
+
+ * [specs](https://docs.docker.com/reference/api/hub_registry_spec/)
+
+Or, one can use `docker save` an image or `docker export` a container,
+and then use `docker load` or `docker import`.
+
 Random notes
 ============
 
@@ -77,7 +129,17 @@ Test run
 	make
 
 * `TAILS_BUILD_OPTIONS="noproxy"` => run [apt-cacher-ng in a different
-  container](https://docs.docker.com/examples/apt-cacher-ng/)
+  container](https://docs.docker.com/examples/apt-cacher-ng/);
+  - [Linking these containers
+    together](https://docs.docker.com/userguide/dockerlinks/) would
+    allow to expose apt-cacher-ng's port only to our build container;
+    OTOH some of us will want to use the same apt-cacher-ng instance for
+    other use cases
+  - Docker will [have container
+    groups](https://github.com/docker/docker/issues/9694) at some
+    point, but we're not there yet; in the meantime, there are
+    [crane](https://github.com/michaelsauter/crane) and
+    [Fig](http://www.fig.sh/)
 * Even with `--cache false`, some directories (`chroot`, `cache`) are
   saved and retrieved from the container upon shutdown; same for
   live-config -generated `config/*` files. That's because the current
@@ -90,7 +152,7 @@ Test run
     artifacts shall be copied
 * We're currently using the `debian:wheezy` template, that likely we
   should not trust. How should we build, maintain, publish and use
-  our own?
+  our own? That's [[!tails_ticket 7533]].
 * Being in the `docker` group is basically equivalent to having full
   root access. Do we want to encourage contributors to do that, or
   to run `docker` commands with `sudo`, or to use Docker in

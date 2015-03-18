@@ -1,7 +1,7 @@
 def configured_pidgin_accounts
   accounts = []
   xml = REXML::Document.new(@vm.file_content('$HOME/.purple/accounts.xml',
-                                             $live_user))
+                                             LIVE_USER))
   xml.elements.each("account/account") do |e|
     account   = e.elements["name"].text
     account_name, network = account.split("@")
@@ -43,7 +43,7 @@ def default_chan (account)
 end
 
 def pidgin_otr_keys
-  return @vm.file_content('$HOME/.purple/otr.private_key', $live_user)
+  return @vm.file_content('$HOME/.purple/otr.private_key', LIVE_USER)
 end
 
 Given /^Pidgin has the expected accounts configured with random nicknames$/ do
@@ -81,7 +81,7 @@ end
 
 When /^I see Pidgin's account manager window$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("PidginAccountWindow.png", 20)
+  @screen.wait("PidginAccountWindow.png", 40)
 end
 
 When /^I close Pidgin's account manager window$/ do
@@ -101,7 +101,7 @@ end
 
 def focus_pidgin_buddy_list
   @vm.execute_successfully(
-    "xdotool search --name 'Buddy List' windowactivate --sync", $live_user
+    "xdotool search --name 'Buddy List' windowactivate --sync", LIVE_USER
   )
 end
 
@@ -191,4 +191,12 @@ When /^I close Pidgin's certificate import failure dialog$/ do
   @screen.type(Sikuli::Key.ESC)
   # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
   @screen.waitVanish('PidginCertificateImportFailed.png', 10)
+end
+
+When /^I see the Tails roadmap URL$/ do
+  @screen.wait('PidginTailsRoadmapUrl.png', 10)
+end
+
+When /^I click on the Tails roadmap URL$/ do
+  @screen.click('PidginTailsRoadmapUrl.png')
 end
