@@ -26,15 +26,12 @@ class Display
   end
 
   def start_virtviewer(domain)
-    # virt-viewer forks, so we cannot (easily) get the child pid
-    # and use it in active? and stop_virtviewer below...
-    IO.popen(["virt-viewer", "-d",
-                             "-f",
-                             "-r",
-                             "-c", "qemu:///system",
-                             ["--display=", @x_display].join(''),
-                             domain,
-                             "&"].join(' '))
+    @virtviewer = IO.popen(["virt-viewer", "-d",
+                                           "-f",
+                                           "-r",
+                                           "-c", "qemu:///system",
+                                           ["--display=", @x_display].join(''),
+                                           domain].join(' '))
   end
 
   def active?
@@ -46,6 +43,6 @@ class Display
   end
 
   def stop_virtviewer
-    system("killall virt-viewer")
+    Process.kill("INT", @virtviewer.pid)
   end
 end
