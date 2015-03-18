@@ -4,7 +4,7 @@ end
 
 Given /^I create sample videos$/ do
   next if @skip_steps_while_restoring_background
-  fatal_system("ffmpeg -loop 1 -t 30 -f image2 " +
+  fatal_system("avconv -loop 1 -t 30 -f image2 " +
                "-i 'features/images/TailsBootSplash.png' " +
                "-an -vcodec libx264 -y " +
                "'#{MISC_FILES_DIR}/video.mp4' >/dev/null 2>&1")
