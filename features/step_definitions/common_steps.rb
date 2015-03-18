@@ -495,7 +495,7 @@ end
 Then /^Tails eventually restarts$/ do
   next if @skip_steps_while_restoring_background
   nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
-  @screen.wait('TailsBootSplashPostReset.png', nr_gibs_of_ram*5*60)
+  @screen.wait('TailsBootSplash.png', nr_gibs_of_ram*5*60)
 end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
