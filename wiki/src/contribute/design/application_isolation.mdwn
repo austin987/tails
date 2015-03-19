@@ -78,7 +78,9 @@ each time they want to open or save one, without leaving the AppArmor
 profiles wide-open and then much less useful.
 
 Solutions to this problem are work-in-progress in various upstream
-places (e.g. AppArmor and GNOME sandboxed applications). The idea is
+places (e.g. [for AppArmor](https://lists.ubuntu.com/archives/apparmor/2015-March/007415.html) and [for GNOME sandboxed
+applications](https://mail.gnome.org/archives/gnome-os-list/2015-March/msg00010.html)).
+The idea is
 generally to introduce a privileged mediation layer between
 applications, the GTK file chooser and the filesystem. So, some day we
 can solve this problem in better ways, but we're not there yet.
@@ -308,6 +310,8 @@ SquashFS initially, and written to the overlay. If that would be the
 case, then we would need to duplicate some rules in profiles to add
 back some paths that were rewritten.
 
+<a id="overlayfs"></a>
+
 overlayfs
 ---------
 
@@ -318,14 +322,13 @@ overlayfs works differently from aufs, in ways that give hope that it
 might be easier for AppArmor to support it natively.
 
 Once it's merged in Linux mainline, Debian Live could be made to
-support overlayfs as an alternative to aufs. One thing that should be
-checked is whether overlayfs supports stacking up more than one
-read-only branch, which we do need for the Tails
-[[contribute/design/incremental upgrades]] feature.
+support overlayfs as an alternative to aufs.
 
 Some ongoing work on AppArmor (labeling, extended conditionals) will
 help support overlayfs. Time will tell whether the result meets
 our needs.
+
+See [[!tails_ticket 9045]] for more up-to-date information.
 
 <a id="linux-containers"></a>
 

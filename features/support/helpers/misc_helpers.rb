@@ -111,3 +111,19 @@ def get_free_space(machine, path)
   output = free.split("\n").last
   return output.match(/[^\s]\s+[0-9]+\s+[0-9]+\s+([0-9]+)\s+.*/)[1].chomp.to_i
 end
+
+def random_string_from_set(set, min_len, max_len)
+  len = (min_len..max_len).to_a.sample
+  len ||= min_len
+  (0..len-1).map { |n| set.sample }.join
+end
+
+def random_alpha_string(min_len, max_len = 0)
+  alpha_set = ('A'..'Z').to_a + ('a'..'z').to_a
+  random_string_from_set(alpha_set, min_len, max_len)
+end
+
+def random_alnum_string(min_len, max_len = 0)
+  alnum_set = ('A'..'Z').to_a + ('a'..'z').to_a + (0..9).to_a.map { |n| n.to_s }
+  random_string_from_set(alnum_set, min_len, max_len)
+end

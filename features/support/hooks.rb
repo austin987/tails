@@ -19,6 +19,11 @@ def delete_all_snapshots
   end
 end
 
+def add_after_scenario_hook(fn, args = [])
+  @after_scenario_hook ||= Array.new
+  @after_scenario_hook << [fn, args]
+end
+
 BeforeFeature('@product') do |feature|
   if File.exist?($config["TMP_DIR"])
     if !File.directory?($config["TMP_DIR"])
@@ -119,10 +124,6 @@ After('@product') do |scenario|
       STDIN.gets
     end
   end
-  if @sniffer
-    @sniffer.stop
-    @sniffer.clear
-  end
   @vm.destroy_and_undefine if @vm
 end
 
@@ -167,9 +168,15 @@ After('@source') do
   FileUtils.remove_entry_secure @git_clone
 end
 
-
 # Common
 ########
+
+After do
+  if @after_scenario_hook
+    @after_scenario_hook.each { |fn, args| fn.call(*args) }
+  end
+  @after_scenario_hook = Array.new
+end
 
 BeforeFeature('@product', '@source') do |feature|
   raise "Feature #{feature.file} is tagged both @product and @source, " +

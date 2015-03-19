@@ -1,7 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 set -u
+set -o pipefail
 
 NAME=$(basename ${0})
 
@@ -34,6 +35,8 @@ Options for '@product' features:
   --old-iso IMAGE    For some '@product' features (e.g. usb_install) we need
                      an older version of Tails, which this options sets to
                      IMAGE.
+  --log-to-file FILE Save the output to the specified file, in addition to
+                     sending it to stdout and stderr.
 
 Note that '@source' features has no relevant options.
 "
@@ -97,9 +100,28 @@ capture_session() {
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
 }
 
+remove_control_chars_from() {
+    local file="$1"
+    local tmpfile
+
+    # Sanity checks
+    [ -n "$file" ] || return 11
+    [ -r "$file" ] || return 13
+    [ -w "$(dirname "$file")" ] || return 17
+
+    # Remove control chars with `perl` and backspaces with `col`
+    tmpfile=$(mktemp)
+    cat "$file" \
+	| perl -pe 's/\e([^\[\]]|\[.*?[a-zA-Z]|\].*?\a)//g' \
+	| col -b \
+	> "$tmpfile"
+    mv "$tmpfile" "$file"
+}
+
 # main script
 
 CAPTURE_FILE=
+LOG_FILE=
 VNC_VIEWER=
 VNC_SERVER=
 DEBUG=
@@ -110,7 +132,7 @@ TEMP_DIR=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail"
+LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail,log-to-file:"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -126,6 +148,10 @@ while [ $# -gt 0 ]; do
         --capture)
             shift
             CAPTURE_FILE="$1"
+            ;;
+        --log-to-file)
+            shift
+            LOG_FILE="$1"
             ;;
         --debug)
             export DEBUG="yes"
@@ -186,8 +212,21 @@ export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
 check_dependency cucumber
-if [ -z "${*}" ]; then
-    cucumber --format ExtraHooks::Pretty features
+
+if [ -z "$@" ]; then
+    FEATURES="features"
 else
-    cucumber --format ExtraHooks::Pretty features/step_definitions features/support ${*}
+    FEATURES="$@"
+fi
+
+CUCUMBER_COMMAND="cucumber --format ExtraHooks::Pretty \
+features/step_definitions features/support ${FEATURES}"
+
+if [ -z "$LOG_FILE" ]; then
+    $CUCUMBER_COMMAND
+else
+    script --quiet --flush --return --command "$CUCUMBER_COMMAND" "$LOG_FILE" | cat
+    RET="$?"
+    remove_control_chars_from "$LOG_FILE"
+    exit "$RET"
 fi
