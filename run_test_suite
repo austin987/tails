@@ -24,10 +24,11 @@ Options for '@product' features:
   --retry-find       Print a warning whenever Sikuli fails to find an image
                      and allow *one* retry after pressing ENTER. This is useful
                      for updating outdated images.
-  --temp-dir         Directory where various temporary files are written
+  --tmpdir           Directory where various temporary files are written
                      during a test, e.g. VM snapshots and memory dumps,
                      failure screenshots, pcap files and disk images
-                     (default is /tmp/TailsToaster).
+                     (default is TMPDIR in the environment, and if unset,
+                     /tmp/TailsToaster).
   --view             Shows the test session in a windows. Requires x11vnc
                      and xtightvncviewer.
   --vnc-server-only  Starts a VNC server for the test session. Requires x11vnc.
@@ -120,6 +121,9 @@ remove_control_chars_from() {
 
 # main script
 
+# Unset all environment variables used by this script to pass options
+# to cucumber, except TMPDIR since we explicitly want to support
+# setting it that way.
 CAPTURE_FILE=
 LOG_FILE=
 VNC_VIEWER=
@@ -128,11 +132,10 @@ DEBUG=
 PAUSE_ON_FAIL=
 KEEP_SNAPSHOTS=
 SIKULI_RETRY_FINDFAILED=
-TEMP_DIR=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail,log-to-file:"
+LONGOPTS="view,vnc-server-only,capture:,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail,log-to-file:"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -165,9 +168,9 @@ while [ $# -gt 0 ]; do
         --retry-find)
             export SIKULI_RETRY_FINDFAILED="yes"
             ;;
-        --temp-dir)
+        --tmpdir)
             shift
-            export TEMP_DIR="$(readlink -f $1)"
+            export TMPDIR="$(readlink -f $1)"
             ;;
         --iso)
             shift
