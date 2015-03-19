@@ -34,6 +34,7 @@ class Display
                              "-c", "qemu:///system",
                              ["--display=", @x_display].join(''),
                              domain,
+                             ">/dev/null 2>&1",
                              "&"].join(' '))
   end
 
