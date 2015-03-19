@@ -373,3 +373,22 @@ When /^all Internet traffic has only flowed through the configured pluggable tra
   leaks = FirewallLeakCheck.new(@sniffer.pcap_file, @bridge_hosts)
   leaks.assert_no_leaks
 end
+
+Then /^the Tor binary is configured to use the expected Tor authorities$/ do
+  next if @skip_steps_while_restoring_background
+  tor_auths = Set.new
+  tor_binary_orport_strings = @vm.execute_successfully(
+    "strings /usr/bin/tor | grep -E 'orport=[0-9]+'").stdout.chomp.split("\n")
+  tor_binary_orport_strings.each do |potential_auth_string|
+    auth_regex = /^\S+ orport=\d+( bridge)?( no-v2)?( v3ident=[A-Z0-9]{40})? ([0-9\.]+):\d+( [A-Z0-9]{4}){10}$/
+    m = auth_regex.match(potential_auth_string)
+    if m
+      auth_ipv4_addr = m[4]
+      tor_auths << auth_ipv4_addr
+    end
+  end
+  expected_tor_auths = Set.new(TOR_AUTHORITIES)
+  assert_equal(expected_tor_auths, tor_auths,
+               "The Tor binary does not have the expected Tor authorities " +
+               "configured")
+end
