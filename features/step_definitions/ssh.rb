@@ -21,6 +21,7 @@ def read_and_validate_ssh_config(prefix)
   assert(!@public_ssh_key.nil? && @public_ssh_key.length > 0, "Mandatory variable  #{prefix}SSH_public_key not been set.")
 
   unless prefix.include?('Unsafe')
+    # This block will be skipped during the Git over SSH test
     assert(!@ssh_username.nil? && @ssh_username.length > 0, "Mandatory variable " +
            "#{prefix}SSH_username not set.")
     assert(!@ssh_host.nil? && @ssh_host.length > 0, "Mandatory variable " +
@@ -45,6 +46,7 @@ Given /^I have the SSH key pair for an? (Git repository|SSH server)(?: on the| o
   when "SSH server"
     prefix = ''
   when "Git repository"
+    # Stored in `config/defaults.yml`
     prefix = "Unsafe_"
   else
     raise "Unknown server type #{server_type}"
