@@ -136,7 +136,7 @@ var gObserver = {
     {
       // TODO: provide a way to access tor log e.g., leave this dialog open
       //       and display the open settings button.
-      onCancel();
+      cleanup();
       window.close();
     }
     else if (kBootstrapStatusTopic == aTopic)
