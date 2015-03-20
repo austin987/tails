@@ -17,14 +17,14 @@ def read_and_validate_ssh_config(prefix)
   @ssh_host       = $config["#{prefix}SSH_host"]
   @ssh_port       = $config["#{prefix}SSH_port"] if $config["#{prefix}SSH_port"]
 
-  assert(!@secret_ssh_key.nil? && @secret_ssh_key.length > 0, "Mandatory variable #{prefix}SSH_private_key not been set.")
-  assert(!@public_ssh_key.nil? && @public_ssh_key.length > 0, "Mandatory variable  #{prefix}SSH_public_key not been set.")
+  assert(@secret_ssh_key && @secret_ssh_key.length > 0, "Mandatory variable #{prefix}SSH_private_key not been set.")
+  assert(@public_ssh_key && @public_ssh_key.length > 0, "Mandatory variable  #{prefix}SSH_public_key not been set.")
 
   unless prefix.include?('Unsafe')
     # This block will be skipped during the Git over SSH test
-    assert(!@ssh_username.nil? && @ssh_username.length > 0, "Mandatory variable " +
+    assert(@ssh_username && @ssh_username.length > 0, "Mandatory variable " +
            "#{prefix}SSH_username not set.")
-    assert(!@ssh_host.nil? && @ssh_host.length > 0, "Mandatory variable " +
+    assert(@ssh_host && @ssh_host.length > 0, "Mandatory variable " +
            "#{prefix}SSH_host not set.")
     if prefix == 'LAN_'
       assert(@ssh_host.match(/^(10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))/), "#{@ssh_host} " +
