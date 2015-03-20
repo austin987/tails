@@ -346,9 +346,6 @@ EOF
   end
 
   @screen.wait_and_click('TorLauncherConfigureButton.png', 10)
-  @screen.wait_and_click('TorLauncherNextButton.png', 10)
-  @screen.hide_cursor
-  @screen.wait_and_click('TorLauncherNextButton.png', 10)
   @screen.wait('TorLauncherBridgePrompt.png', 10)
   @screen.wait_and_click('TorLauncherYesRadioOption.png', 10)
   @screen.wait_and_click('TorLauncherNextButton.png', 10)
@@ -361,6 +358,8 @@ EOF
     bridge_line += " " + bridge["extra"].to_s if bridge["extra"]
     @screen.type(bridge_line + Sikuli::Key.ENTER)
   end
+  @screen.wait_and_click('TorLauncherNextButton.png', 10)
+  @screen.hide_cursor
   @screen.wait_and_click('TorLauncherFinishButton.png', 10)
   @screen.wait('TorLauncherConnectingWindow.png', 10)
   @screen.waitVanish('TorLauncherConnectingWindow.png', 120)
