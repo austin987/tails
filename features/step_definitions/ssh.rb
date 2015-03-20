@@ -90,7 +90,6 @@ end
 
 Then /^I connect to an SFTP server(?: on the| on a)?\s?(|LAN|Internet)$/ do |loc|
   next if @skip_steps_while_restoring_background
-  step "I have the SSH key pair for an SSH server on the #{loc}"
 
   prefix = get_ssh_prefix(loc)
   read_and_validate_ssh_config(prefix)
