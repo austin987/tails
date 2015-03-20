@@ -76,9 +76,9 @@ When /^I connect to an SSH server(?: on the| on a)?\s?(|LAN|Internet)$/ do |loc|
 
   cmd = "ssh #{@ssh_username}@#{@ssh_host} #{ssh_port_suffix}"
 
-  step "process \"ssh\" is not running"
+  step 'process "ssh" is not running'
   step "I run \"#{cmd}\" in GNOME Terminal"
-  step "process \"ssh\" is running within 10 seconds"
+  step 'process "ssh" is running within 10 seconds'
 end
 
 Then /^I have sucessfully logged into the SSH server$/ do
