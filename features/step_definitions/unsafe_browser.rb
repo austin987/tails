@@ -10,8 +10,7 @@ def supported_torbrowser_languages
     "find /usr/local/share/tor-browser-extensions -maxdepth 1 -name 'langpack*.xpi' -printf \"%f\n\"").stdout
   supported_langs = exts.scan(/langpack-([a-zA-Z_-]+).*/).flatten
   locales = @vm.execute_successfully(
-    "find /usr/lib/locale -maxdepth 1 -name '*.utf8' -printf \"%f\n\"").stdout
-  locales = locales.scan(/.+/)
+    "find /usr/lib/locale -maxdepth 1 -name '*.utf8' -printf \"%f\n\"").stdout.split
 
   # Determine a valid locale for each language that we want to test.
   supported_langs.each do |lang|
@@ -29,8 +28,7 @@ end
 
 Then /^the Unsafe Browser works in all supported languages$/ do
   next if @skip_steps_while_restoring_background
-  langs = supported_torbrowser_languages
-  langs.each do |lang|
+  supported_torbrowser_languages.each do |lang|
     step "I start the Unsafe Browser in the \"#{lang}\" locale"
     step "the Unsafe Browser has started"
     step "I close the Unsafe Browser"
