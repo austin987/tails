@@ -1,59 +1,31 @@
-def get_ssh_prefix(location)
-  case location
-  when 'Internet', ''
-    prefix = ''
-  when 'LAN'
-    prefix = 'LAN_'
-  else
-    raise "Unknown location #{location} specified."
-  end
-  return prefix
+def read_and_validate_ssh_config
+  @secret_ssh_key = $config["SSH"]["private_key"]
+  @public_ssh_key = $config["SSH"]["public_key"]
+  @ssh_username   = $config["SSH"]["username"]
+  @ssh_host       = $config["SSH"]["hostname"]
+  @ssh_port       = $config["SSH"]["port"].to_i if $config["SSH"]["port"]
+
+  assert(@secret_ssh_key && @secret_ssh_key.length > 0, "private_key must be set.")
+  assert(@public_ssh_key && @public_ssh_key.length > 0, "public_key must be set.")
+
+  assert(@ssh_username && @ssh_username.length > 0, "username not set.")
+  assert(@ssh_host && @ssh_host.length > 0, "hostname not set.")
+  assert(!@ssh_host.match(/^(10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))/), "#{@ssh_host} " +
+       "looks like a LAN IP address.")
 end
 
-def read_and_validate_ssh_config(prefix)
-  @secret_ssh_key = $config[prefix + "SSH_private_key"]
-  @public_ssh_key = $config[prefix + "SSH_public_key"]
-  @ssh_username   = $config["#{prefix}SSH_username"]
-  @ssh_host       = $config["#{prefix}SSH_host"]
-  @ssh_port       = $config["#{prefix}SSH_port"] if $config["#{prefix}SSH_port"]
-
-  assert(@secret_ssh_key && @secret_ssh_key.length > 0, "Mandatory variable #{prefix}SSH_private_key not been set.")
-  assert(@public_ssh_key && @public_ssh_key.length > 0, "Mandatory variable  #{prefix}SSH_public_key not been set.")
-
-  unless prefix.include?('Unsafe')
-    # This block will be skipped during the Git over SSH test
-    assert(@ssh_username && @ssh_username.length > 0, "Mandatory variable " +
-           "#{prefix}SSH_username not set.")
-    assert(@ssh_host && @ssh_host.length > 0, "Mandatory variable " +
-           "#{prefix}SSH_host not set.")
-    if prefix == 'LAN_'
-      assert(@ssh_host.match(/^(10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))/), "#{@ssh_host} " +
-             "does not look like a LAN IP address.")
-    else
-      assert(!@ssh_host.match(/^(10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))/), "#{@ssh_host} " +
-             "looks like a LAN IP address.")
-    end
-    if @ssh_port
-      assert(@ssh_port.is_a?(Integer), "#{prefix}SSH_port must be an integer.")
-    end
-  end
-end
-
-Given /^I have the SSH key pair for an? (Git repository|SSH server)(?: on the| on a)?\s?(|LAN|Internet)$/ do |server_type, loc|
+Given /^I have the SSH key pair for an? (Git repository|SSH server) on the Internet$/ do |server_type|
   next if @skip_steps_while_restoring_background
   @vm.execute_successfully("install -m 0700 -d '/home/#{LIVE_USER}/.ssh/'", LIVE_USER)
   case server_type
   when "SSH server"
-    prefix = ''
+    read_and_validate_ssh_config
   when "Git repository"
-    # Stored in `config/defaults.yml`
-    prefix = "Unsafe_"
+    @secret_ssh_key = $config["Unsafe_SSH_private_key"]
+    @public_ssh_key = $config["Unsafe_SSH_public_key"]
   else
     raise "Unknown server type #{server_type}"
   end
-
-  prefix = get_ssh_prefix(loc) + prefix
-  read_and_validate_ssh_config(prefix)
 
   @vm.execute_successfully("echo '#{@secret_ssh_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa'", LIVE_USER)
   @vm.execute_successfully("echo '#{@public_ssh_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa.pub'", LIVE_USER)
@@ -68,11 +40,10 @@ Given /^I verify the SSH fingerprint for the (Git repository|SSH server)$/ do |s
   @screen.type('yes' + Sikuli::Key.ENTER)
 end
 
-When /^I connect to an SSH server(?: on the| on a)?\s?(|LAN|Internet)$/ do |loc|
+When /^I connect to an SSH server on the Internet$/ do
   next if @skip_steps_while_restoring_background
 
-  prefix = get_ssh_prefix(loc)
-  read_and_validate_ssh_config(prefix)
+  read_and_validate_ssh_config
 
   ssh_port_suffix = "-p #{@ssh_port}" if @ssh_port
 
@@ -88,11 +59,10 @@ Then /^I have sucessfully logged into the SSH server$/ do
   @screen.wait('SSHLoggedInPrompt.png', 60)
 end
 
-Then /^I connect to an SFTP server(?: on the| on a)?\s?(|LAN|Internet)$/ do |loc|
+Then /^I connect to an SFTP server on the Internet$/ do
   next if @skip_steps_while_restoring_background
 
-  prefix = get_ssh_prefix(loc)
-  read_and_validate_ssh_config(prefix)
+  read_and_validate_ssh_config
 
   @screen.wait_and_click("GnomePlaces.png", 20)
   @screen.wait_and_click("GnomePlacesConnectToServer.png", 20)

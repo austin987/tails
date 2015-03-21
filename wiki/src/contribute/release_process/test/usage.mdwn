@@ -115,18 +115,20 @@ This setting is required for `tor_bridges.feature` (requires types
 
 ### SSH
 
-These settings are required for `features/ssh.feature`. `*SSH_port` is the only
-optional configuration variable for this feature..
 
-* `SSH_hostname`: A hostname, an IPv4 IP address, or Tor Hidden Service.
+The format is:
 
-* `SSH_private_key`, `SSH_public_key`: Keys used to authenticate with the
-  server using the same format as `Unsafe_SSH_*` in `features/config/defaults.yml`
+    SSH:
+      hostname: 1.2.3.4
+      private_key: |
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIJKAIBAAKCAgEAwJJK8LFxTWVnKUeOBdw+w69fDMmJugJmCx1TF/QS7kPfVPRl
+        lz3hNOpdgZ0BkvC2Fd+mHAUKDWU5SHfCtYl2XyUkJ0p00844rphX+Bl0kVM7ISXt
+        [...]
+        -----END RSA PRIVATE KEY-----
+      public_key: "ssh-rsa AAAAB3NzaC1yc2EA..."
+      port: 22
+      username: "someuser"
 
-* `SSH_port`: Optional. If not specified port `22` will be used.
-
-* `SSH_username`: The username to use when authenticating with the SSH server.
-
-The LAN tests use the same options prefixed with `LAN_`, e.g.
-`LAN_SSH_hostname`, `LAN_SSH_private_key`, `LAN_SSH_public_key`,
-`LAN_SSH_port`, `LAN_SSH_username`.
+These settings are required for `ssh.feature`. If `port` is not specified,
+`22`will be used.
