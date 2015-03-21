@@ -14,7 +14,7 @@ def read_and_validate_ssh_config
        "looks like a LAN IP address.")
 end
 
-Given /^I have the SSH key pair for an? (Git repository|SSH server) on the Internet$/ do |server_type|
+Given /^I have the SSH key pair for an? (Git repository|SSH server)$/ do |server_type|
   next if @skip_steps_while_restoring_background
   @vm.execute_successfully("install -m 0700 -d '/home/#{LIVE_USER}/.ssh/'", LIVE_USER)
   case server_type
