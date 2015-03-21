@@ -8,15 +8,15 @@ def supported_torbrowser_languages
   langs = []
   exts = @vm.execute_successfully(
     "find /usr/local/share/tor-browser-extensions -maxdepth 1 -name 'langpack*.xpi' -printf \"%f\n\"").stdout
-  supported_langs = exts.scan(/langpack-([a-zA-Z_-]+).*/)
+  supported_langs = exts.scan(/langpack-([a-zA-Z_-]+).*/).flatten
   locales = @vm.execute_successfully(
     "find /usr/lib/locale -maxdepth 1 -name '*.utf8' -printf \"%f\n\"").stdout
   locales = locales.scan(/.+/)
 
   # Determine a valid locale for each language that we want to test.
   supported_langs.each do |lang|
-    nomatch = proc { "#{lang[0]}_#{lang[0].upcase}.utf8" }
-    langs << locales.find(nomatch) { |l| l.match(/^#{lang[0].gsub('-','_')}/) }
+    nomatch = proc { "#{lang}_#{lang.upcase}.utf8" }
+    langs << locales.find(nomatch) { |l| l.match(/^#{lang.gsub('-','_')}/) }
   end
   return langs
 end
