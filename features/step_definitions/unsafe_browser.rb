@@ -8,14 +8,18 @@ def supported_torbrowser_languages
   langs = []
   exts = @vm.execute_successfully(
     "find /usr/local/share/tor-browser-extensions -maxdepth 1 -name 'langpack*.xpi' -printf \"%f\n\"").stdout
-  supported_langs = exts.scan(/langpack-([a-zA-Z_-]+).*/).flatten
+
+  # Some of the TBB languages are shipped with both a language and country code, e.g. es-ES.
+  # We'll only keep track of the language code and let `guess_best_tor_browser_locale`
+  # try to get by with our approximated locales.
+  supported_langs = exts.scan(/langpack-([a-z]+).*/).flatten
   locales = @vm.execute_successfully(
     "find /usr/lib/locale -maxdepth 1 -name '*.utf8' -printf \"%f\n\"").stdout.split
 
   # Determine a valid locale for each language that we want to test.
   supported_langs.each do |lang|
     nomatch = proc { "#{lang}_#{lang.upcase}.utf8" }
-    langs << locales.find(nomatch) { |l| l.match(/^#{lang.gsub('-','_')}/) }
+    langs << locales.find(nomatch) { |l| l.match(/^#{lang}/) }
   end
   return langs
 end
