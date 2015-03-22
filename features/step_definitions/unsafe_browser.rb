@@ -18,6 +18,8 @@ def supported_torbrowser_languages
 
   # Determine a valid locale for each language that we want to test.
   supported_langs.each do |lang|
+    # If a language shipped by TBB is not a supported system locale (e.g. 'vi'),
+    # 'find(nomatch)' will use the locale xx_XX for language 'xx'.
     nomatch = proc { "#{lang}_#{lang.upcase}.utf8" }
     langs << locales.find(nomatch) { |l| l.match(/^#{lang}/) }
   end
