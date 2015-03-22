@@ -5,7 +5,7 @@ When /^I see and accept the Unsafe Browser start verification$/ do
 end
 
 def supported_torbrowser_languages
-  langs = []
+  langs = Array.new
   exts = @vm.execute_successfully(
     "find /usr/local/share/tor-browser-extensions -maxdepth 1 -name 'langpack*.xpi' -printf \"%f\n\"").stdout
 
@@ -34,12 +34,19 @@ end
 
 Then /^the Unsafe Browser works in all supported languages$/ do
   next if @skip_steps_while_restoring_background
+  failed = Array.new
   supported_torbrowser_languages.each do |lang|
     step "I start the Unsafe Browser in the \"#{lang}\" locale"
-    step "the Unsafe Browser has started"
+    begin
+      step "the Unsafe Browser has started"
+    rescue RuntimeError
+      failed << lang
+      next
+    end
     step "I close the Unsafe Browser"
     step "the Unsafe Browser chroot is torn down"
   end
+  assert(failed.empty?, "Unsafe Browser failed to launch in the following locale(s): #{failed.join(', ')}")
 end
 
 Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
