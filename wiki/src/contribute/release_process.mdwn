@@ -757,7 +757,7 @@ this release.
         ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
         while read ticket; do
             url="https://labs.riseup.net/code/issues/${ticket}"
-            url_content=$(curl --silent ${url})
+            url_content=$(curl --fail --silent ${url})
             if [ "${?}" -ne 0 ]; then
                 echo "Failed to fetch ${url} so manually investigate #${ticket}" >&2
                 continue
