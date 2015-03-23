@@ -1,8 +1,103 @@
 tails (1.4) UNRELEASED; urgency=medium
 
-  * Dummy entry.
+  * Dummy changelog entry for next major release.
 
- -- Tails developers <tails@boum.org>  Tue, 24 Feb 2015 21:39:38 +0100
+ -- Tails developers <tails@boum.org>  Tue, 12 May 2015 12:34:56 +0000
+
+tails (1.3.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 4.0.5, based on Firefox 31.5.3 ESR. This addresses:
+      · https://www.mozilla.org/en-US/security/advisories/mfsa2015-28/
+      · https://www.mozilla.org/en-US/security/advisories/mfsa2015-29/
+    - Upgrade Linux to 3.16.7-ckt7-1.
+    - Upgrade libxfont to 1:1.4.5-5.
+    - Upgrade OpenSSL to 1.0.1e-2+deb7u15.
+    - Upgrade tcpdump to 4.3.0-1+deb7u2.
+    - Upgrade bsdtar to 3.0.4-3+wheezy1.
+    - Upgrade CUPS to 1.5.3-5+deb7u5.
+    - Upgrade file and libmagic to 5.11-2+deb7u8.
+    - Upgrade GnuPG to 1.4.12-7+deb7u7.
+    - Upgrade libarchive to 3.0.4-3+wheezy1.
+    - Upgrade libav to 6:0.8.17-1.
+    - Upgrade FreeType 2 to 2.4.9-1.1+deb7u1.
+    - Upgrade libgcrypt11 1.5.0-5+deb7u3.
+    - Upgrade libgnutls26 to 2.12.20-8+deb7u3.
+    - Upgrade libgtk2-perl to 2:1.244-1+deb7u1.
+    - Upgrade ICU to 4.8.1.1-12+deb7u2.
+    - Upgrade NSS to 2:3.14.5-1+deb7u4.
+    - Upgrade libssh2 to 1.4.2-1.1+deb7u1.
+
+  * Bugfixes
+    - Upgrade Tor to 0.2.5.11-1~d70.wheezy+1+tails1. Changes include:
+      · Directory authority changes.
+      · Fix assertion errors that may trigger under high DNS load.
+      · No longer break on HUP with seccomp2 enabled.
+      · and more - please consult the upstream changelog.
+    - Upgrade Tor Launcher to 0.2.7.2, and update the test suite accordingly
+      (Closes: #8964, #6985). Changes include:
+      · Ask about bridges before proxy in wizard.
+      · Hide logo if TOR_HIDE_BROWSER_LOGO set.
+      · Remove firewall prompt from wizard.
+      · Feedback when “Copy Tor Log” is clicked.
+      · Improve behavior if tor exits.
+      · Add option to hide TBB's logo
+      · Change "Tor Browser Bundle" to "Tor Browser"
+      · Update translations from Transifex.
+    - Fix the Tor Launcher killer. (Closes: #9067)
+    - Allow Seahorse to communicate with keyservers when run from Tails
+      OpenPGP Applet. (Closes: #6394)
+    - SSH client: don't proxy connections to 172.17.* to 172.31.*.
+      (Closes: #6558)
+    - Repair config/chroot_local-packages feature, that was broken in Tails 1.3
+      by 19-install-tor-browser-AppArmor-profile. (Closes: #8910)
+    - language_statistics.sh: count original words instead of translated words.
+      Otherwise we get >100% translation if translated strings are longer than
+      original strings. (Closes: #9016)
+
+  * Minor improvements
+    - Only ship the new Tails signing key, and have Tails Upgrader stop trusting
+      the old one. Update the documentation and test suite accordingly.
+      (Closes: #8735, #8736, #8882, #8769, #8951)
+    - Polish and harden a bit the WhisperBack configuration (Closes: #8991):
+      · Only allow the `amnesia' user to run tails-debugging info as root
+        with no arguments.
+      · Fix spelling and grammar mistakes, improve phrasing a bit.
+      · Quote variables consistently.
+
+  * Test suite
+    - New tests:
+      · Chatting over XMPP in Pidgin, both peer-to-peer and in a multi-user
+        chatroom. (Closes: #8002)
+      · Chatting with OTR enabled over XMPP in Pidgin. (Closes: #8001)
+      · Check that Pidgin only responds to the expected CTCP requests.
+        (Closes: #8966)
+      · Fetching keys using Seahorse started via the OpenPGP Applet.
+      · Sync'ing keys using Seahorse.
+    - Bugfixes:
+      · Fix a race condition between the remote shell's and Tails Greeter's
+        startup, by making sure the remote shell is ready before we start
+        GDM. (Closes: #8941)
+      · Kill virt-viewer properly. (Closes: #9070)
+      · Make sure the display is stopped on destroy_and_undefine().
+        Where we had it earlier, it could be skipped if anything else in the
+        block threw an exception.
+      · Fix wrong use of "$@". (Closes: #9071)
+      · Enable the pipefail option in run_test_suite.
+      · Improve the GNOME screenshot test's robustness. (Closes: #8952)
+    - Refactoring:
+      · turn the focus_pidgin_window() helper into a more generic
+        VM.focus_xorg_window() one.
+      · Reorganize the Display class.
+      · Use clearer method to check process status in the Display class.
+    - New developer-oriented features:
+      · Add a --log-to-file option to run_test_suite. (Closes: #8894)
+      · Add helpers for generating random strings.
+      · Make it possible to hook arbitrary calls on scenario end. This is useful
+        for dynamically adding cleanup functions, instead of having
+        to explicitly deal with them in some After hook.
+
+ -- Tails developers <tails@boum.org>  Mon, 23 Mar 2015 12:34:56 +0000
 
 tails (1.3) unstable; urgency=medium
 
@@ -95,7 +190,7 @@ tails (1.3) unstable; urgency=medium
       Vagrant. We need version 6.03~pre20 to make the Tails ISO image
       in hybrid mode
     - Update deb.tails.boum.org apt repo signing key. (Closes: #8747)
-	- Revert "Workaround build failure in lb_source, after creating
+    - Revert "Workaround build failure in lb_source, after creating
       the ISO." This is not needed anymore given the move to the Tor
       SOCKS proxy. (Closes: #5307)
     - Remove the bootstrap stage usage option and disable all
