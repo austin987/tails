@@ -187,7 +187,9 @@ Then, gather other useful information from:
 
 * every custom bundled package's own Changelog (Greeter, Persistent
   Volume Assistant, etc.);
-* the "Fix committed" section on the *Release Manager View*
+* the diff between the previous version's `.packages` file and the one
+  from the to-be-released ISO;
+* the "Fix committed" section on the *Release Manager View for $VERSION*
   in Redmine.
 
 Finally, commit:
@@ -366,7 +368,7 @@ First, create a directory with a suitable name and go there:
 Second, copy the built image to this brand new directory.
 Then, rename it:
 
-	mv "$ARTIFACTS/tails-i386-*-$VERSION-*.iso" "tails-i386-$VERSION.iso"
+	mv "$ARTIFACTS/tails-i386-${RELEASE_BRANCH}-$VERSION-"*".iso" "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
@@ -600,7 +602,7 @@ In order to get any new documentation into the website, merge either
 Rename the `.packages` file to remove the `.iso` and build date parts
 of its name:
 
-	mv "$ARTIFACTS"/tails-i386-*-"$VERSION"-*.iso.packages \
+	mv "$ARTIFACTS"/tails-i386-"${RELEASE_BRANCH}-$VERSION"-*.iso.packages \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages"
 
 Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
@@ -639,8 +641,6 @@ Write the announcement for the release in
   [[!tails_gitweb_commit 9925321]] breaks all existing persistent
   profiles).
 - Document known issues.
-- Update the link(s) to these release notes in
-  `wiki/src/doc/first_steps/upgrade.mdwn`.
 
 Write an announcement listing the security bugs affecting the previous
 version in `security/` in order to let the users of the old versions
@@ -741,8 +741,8 @@ tracker. For a list of candidates, see:
 
 * the [issues in *Fix committed*
   status](https://labs.riseup.net/code/projects/tails/issues?query_id=111);
-* the "Fix committed" section on the [Release Manager
-  View](https://labs.riseup.net/code/projects/tails/issues?query_id=130).
+* the "Fix committed" section on the *Release Manager View for $VERSION*
+  in Redmine.
 
 Then, mark the just-released Redmine milestone as done: go to the
 target version page, click *Edit*, and set *Status* to *Closed*.
@@ -750,7 +750,7 @@ target version page, click *Edit*, and set *Status* to *Closed*.
 ### Tickets linked from the website
 
 Go through the tickets linked from the documentation and support sections of the
-website and point documentation writers to the ticket that might be resolved in
+website and point documentation writers to the tickets that might be resolved in
 this release.
 
     git grep tails_ticket -- "wiki/src/[ds]*/*.mdwn"
@@ -868,8 +868,8 @@ this, and skip what does not make sense for a RC.
    <https://jenkins.tails.boum.org/>.
 1. Delete the _Release Manager View for $VERSION_ Redmine custom query.
 1. Ensure the next few releases have their own _Release Manager View_.
-1. On the [[!tails_roadmap]], update the *Due date* for the *Broken
-   windows* so that this section appears after the next release.
+1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
+   in the Roof* so that this section appears after the next release.
 * If the next release is a point-release, ask
   <tails-sysadmins@boum.org> to disable the Jenkins job that's
   building ISO images from the `testing` branch (since it basically
