@@ -753,9 +753,8 @@ Go through the tickets linked from the documentation and support sections of the
 website and point documentation writers to the tickets that might be resolved in
 this release.
 
-    find wiki/src/{doc,support} -name "*.mdwn" -o -name "*.html" | \
-        xargs -l grep -o "\[\[\!tails_ticket [0-9]\+[^]]*\]\]" | \
-        sed "s,^\[\[\!tails_ticket \([0-9]\+\)[^]]*\]\]$,\1," | \
+    find wiki/src/{doc,support} -name "*.mdwn" -o -name "*.html" | xargs cat | \
+        ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
         while read ticket; do
             url="https://labs.riseup.net/code/issues/${ticket}"
             url_content=$(curl --silent ${url})
@@ -768,12 +767,13 @@ this release.
             if [ "${status}" != "New" ] && \
                [ "${status}" != "Confirmed" ] && \
                [ "${status}" != "In Progress" ]; then
-                echo "It seems ticket #${ticket} has been fixed (Status: ${status}), see: ${url}"
-                echo "Remove these instances:"
-                GIT_PAGER='' git grep "\[\[\!tails_ticket ${ticket}[^]]*\]\]" -- "wiki/src/[ds]*/*.mdwn"
-                echo
+                echo "It seems ticket #${ticket} has been fixed (Status: ${status}) so please find all instances in the wiki and fix them. Ticket URL: ${url}"
             fi
         done
+
+Remember that ticket expressions, e.g. `[[!tails_ticket 1234]]`, can
+span several lines, so finding the ones reported by the above code
+*might* be harder than `git grep "tails_ticket 1234"`.
 
 Test suite
 ----------
