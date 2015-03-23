@@ -753,7 +753,27 @@ Go through the tickets linked from the documentation and support sections of the
 website and point documentation writers to the tickets that might be resolved in
 this release.
 
-    git grep tails_ticket -- "wiki/src/[ds]*/*.mdwn"
+    find wiki/src/{doc,support} -name "*.mdwn" -o -name "*.html" | \
+        xargs -l grep -o "\[\[\!tails_ticket [0-9]\+[^]]*\]\]" | \
+        sed "s,^\[\[\!tails_ticket \([0-9]\+\)[^]]*\]\]$,\1," | \
+        while read ticket; do
+            url="https://labs.riseup.net/code/issues/${ticket}"
+            url_content=$(curl --silent ${url})
+            if [ "${?}" -ne 0 ]; then
+                echo "Failed to fetch ${url} so manually investigate #${ticket}" >&2
+                continue
+            fi
+            status=$(echo "${url_content}" | \
+                sed -n 's,^.*<th class="status">Status:</th><td class="status">\([^<]\+\)</td>.*$,\1,p')
+            if [ "${status}" != "New" ] && \
+               [ "${status}" != "Confirmed" ] && \
+               [ "${status}" != "In Progress" ]; then
+                echo "It seems ticket #${ticket} has been fixed (Status: ${status}), see: ${url}"
+                echo "Remove these instances:"
+                GIT_PAGER='' git grep "\[\[\!tails_ticket ${ticket}[^]]*\]\]" -- "wiki/src/[ds]*/*.mdwn"
+                echo
+            fi
+        done
 
 Test suite
 ----------
