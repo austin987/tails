@@ -4,10 +4,49 @@ When /^I see and accept the Unsafe Browser start verification$/ do
   @screen.type(Sikuli::Key.ESC)
 end
 
+def supported_torbrowser_languages
+  langs = Array.new
+  exts = @vm.execute_successfully(
+    "find /usr/local/share/tor-browser-extensions -maxdepth 1 -name 'langpack*.xpi' -printf \"%f\n\"").stdout
+
+  # Some of the TBB languages are shipped with both a language and country code, e.g. es-ES.
+  # We'll only keep track of the language code and let `guess_best_tor_browser_locale`
+  # try to get by with our approximated locales.
+  supported_langs = exts.scan(/langpack-([a-z]+).*/).flatten
+  locales = @vm.execute_successfully(
+    "find /usr/lib/locale -maxdepth 1 -name '*.utf8' -printf \"%f\n\"").stdout.split
+
+  # Determine a valid locale for each language that we want to test.
+  supported_langs.each do |lang|
+    # If a language shipped by TBB is not a supported system locale (e.g. 'vi'),
+    # 'find(nomatch)' will use the locale xx_XX for language 'xx'.
+    nomatch = proc { "#{lang}_#{lang.upcase}.utf8" }
+    langs << locales.find(nomatch) { |l| l.match(/^#{lang}/) }
+  end
+  return langs
+end
+
 Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
   next if @skip_steps_while_restoring_background
-  step "I run \"LANG=#{loc}.UTF-8 LC_ALL=#{loc}.UTF-8 sudo unsafe-browser\" in GNOME Terminal"
+  step "I run \"LANG=#{loc} LC_ALL=#{loc} sudo unsafe-browser\" in GNOME Terminal"
   step "I see and accept the Unsafe Browser start verification"
+end
+
+Then /^the Unsafe Browser works in all supported languages$/ do
+  next if @skip_steps_while_restoring_background
+  failed = Array.new
+  supported_torbrowser_languages.each do |lang|
+    step "I start the Unsafe Browser in the \"#{lang}\" locale"
+    begin
+      step "the Unsafe Browser has started"
+    rescue RuntimeError
+      failed << lang
+      next
+    end
+    step "I close the Unsafe Browser"
+    step "the Unsafe Browser chroot is torn down"
+  end
+  assert(failed.empty?, "Unsafe Browser failed to launch in the following locale(s): #{failed.join(', ')}")
 end
 
 Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
