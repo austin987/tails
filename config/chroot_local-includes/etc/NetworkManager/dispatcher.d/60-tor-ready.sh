@@ -31,8 +31,9 @@ done
 # Launcher is still running, we can just kill it and make sure it
 # won't start next network reconnect. A reason for this happening is
 # if Tor was restarted by tordate, e.g. if the clock was to incorrect.
-if pgrep -f "firefox --app.*tor-launcher-standalone"; then
-   pkill -f "firefox --app.*tor-launcher-standalone"
+TOR_LAUNCHER_PROCESS_REGEX="firefox-unconfined -?-app.*tor-launcher-standalone"
+if pgrep -f "${TOR_LAUNCHER_PROCESS_REGEX}"; then
+   pkill -f "${TOR_LAUNCHER_PROCESS_REGEX}"
    pref=/user/Data/Browser/profile.default/prefs.js
    sed -i '/^user_pref("extensions\.torlauncher\.prompt_at_startup"/d' "${pref}"
    echo 'user_pref("extensions.torlauncher.prompt_at_startup", false);' >> "${pref}"
