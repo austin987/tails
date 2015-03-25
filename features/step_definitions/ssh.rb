@@ -1,15 +1,25 @@
 def read_and_validate_ssh_config
-  @secret_ssh_key = $config["SSH"]["private_key"]
-  @public_ssh_key = $config["SSH"]["public_key"]
-  @ssh_username   = $config["SSH"]["username"]
-  @ssh_host       = $config["SSH"]["hostname"]
-  @ssh_port       = $config["SSH"]["port"].to_i if $config["SSH"]["port"]
+  begin
+    ssh = $config["SSH"]
+    required_settings = ["private_key", "public_key", "username", "hostname"]
+    required_settings.each do |key|
+      assert(ssh.has_key?(key))
+      assert_not_nil(ssh[key])
+      assert(!ssh[key].empty?)
+    end
+  rescue NoMethodError
+    raise(
+<<EOF
+Your SSH config is incorrect or missing from your local configuration file (#{LOCAL_CONFIG_FILE}). See wiki/src/contribute/release_process/test/usage.mdwn for the format.
+EOF
+)
+  end
 
-  assert(@secret_ssh_key && @secret_ssh_key.length > 0, "private_key must be set.")
-  assert(@public_ssh_key && @public_ssh_key.length > 0, "public_key must be set.")
-
-  assert(@ssh_username && @ssh_username.length > 0, "username not set.")
-  assert(@ssh_host && @ssh_host.length > 0, "hostname not set.")
+  @secret_ssh_key = ssh["private_key"]
+  @public_ssh_key = ssh["public_key"]
+  @ssh_username   = ssh["username"]
+  @ssh_host       = ssh["hostname"]
+  @ssh_port       = ssh["port"].to_i if ssh["port"]
   assert(!@ssh_host.match(/^(10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))/), "#{@ssh_host} " +
        "looks like a LAN IP address.")
 end
