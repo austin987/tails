@@ -42,10 +42,8 @@ Given /^I have the SSH key pair for an? (Git repository|SSH server)$/ do |server
   @vm.execute_successfully("chmod 0600 '/home/#{LIVE_USER}/.ssh/'id*", LIVE_USER)
 end
 
-Given /^I verify the SSH fingerprint for the (Git repository|SSH server)$/ do |server_type|
+Given /^I verify the SSH fingerprint for the (?:Git repository|SSH server)$/ do
   next if @skip_steps_while_restoring_background
-  assert(server_type = 'Git repository' || server_type = 'SSH server',
-         "Unknown server type #{server_type} specified.")
   @screen.wait("SSHFingerprint.png", 60)
   @screen.type('yes' + Sikuli::Key.ENTER)
 end
