@@ -6,6 +6,46 @@ set -o pipefail
 
 NAME=$(basename ${0})
 
+GENERAL_DEPENDENCIES="
+cucumber
+devscripts
+dnsmasq-base
+ffmpeg
+gawk
+git
+i18nspector
+libavcodec-extra-53
+libcap2-bin
+libsikuli-script-java
+libvirt-bin
+libvirt-dev
+libvirt-ruby
+libvirt0
+libxslt1-dev
+ntp
+openjdk-7-jre
+ovmf
+python-jabberbot
+python-potr
+qemu-kvm
+qemu-system-x86
+radvd
+ruby-guestfs
+ruby-json
+ruby-net-irc
+ruby-packetfu
+ruby-rjb
+ruby-rspec
+ruby-test-unit
+seabios
+syslinux
+tcpdump
+unclutter
+virt-viewer
+x11-apps
+xvfb
+"
+
 usage() {
     echo "Usage: $NAME [OPTION]... [FEATURE]...
 Sets up an appropriate environment and tests FEATUREs (all by default). Note
@@ -96,6 +136,8 @@ start_vnc_viewer() {
 }
 
 capture_session() {
+    check_dependency ffmpeg
+    check_dependency libvpx1
     echo "Capturing guest display into ${CAPTURE_FILE}"
     ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
@@ -192,8 +234,7 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-for dep in ffmpeg git libvirt-bin libvirt-dev libavcodec-extra-53 libvpx1 \
-           virt-viewer libsikuli-script-java ovmf tcpdump xvfb; do
+for dep in ${GENERAL_DEPENDENCIES}; do
     check_dependency "${dep}"
 done
 
@@ -214,7 +255,6 @@ fi
 export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
-check_dependency cucumber
 
 if [ -z "$*" ]; then
     FEATURES="features"
