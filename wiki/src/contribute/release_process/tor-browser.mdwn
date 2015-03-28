@@ -49,13 +49,13 @@ and see if the desired version is available. Set `DIST_URL` to the
 chosen URL, and set `VERSION` to the desired Tor Browser version, for
 example:
 
-    DIST_URL=https://people.torproject.org/~mikeperry/builds/
+    TBB_TARBALLS_BASE_URL=https://people.torproject.org/~mikeperry/builds/
     VERSION=4.0
 
 Fetch the version's hash file and its detached signature, and verify
 with GnuPG:
 
-    wget ${DIST_URL}/${VERSION}/sha256sums.txt{,.asc} && \
+    wget ${TBB_TARBALLS_BASE_URL}/${VERSION}/sha256sums.txt{,.asc} && \
     gpg --verify sha256sums.txt.asc sha256sums.txt
 
 Filter the tarballs we want and make them available at build time,
@@ -63,11 +63,6 @@ when the tarballs are fetched:
 
     grep --color=never "\<tor-browser-linux32-.*\.tar.xz$" sha256sums.txt > \
          config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
-
-Then update the URL to the one chosen above:
-
-    echo "${DIST_URL}" | sed "s,^https://,http://," > \
-         config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt
 
 <div class="note">
 <p>
@@ -140,8 +135,6 @@ Import a new set of Tor Browser tarballs
        TMPDIR=$(mktemp -d)
        CHROOT_INCLUDES="${TAILS_GIT_REPO}/config/chroot_local-includes"
        TBB_SHA256SUMS_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-sha256sums.txt"
-       TBB_DIST_URL_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-dist-url.txt"
-       TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}" | sed "s,^http://,https://,")/${VERSION}"
        cat "$TBB_SHA256SUMS_FILE" | while read expected_sha256 tarball; do
           (
              cd "$TMPDIR"
@@ -163,15 +156,6 @@ Commit and push your changes
 	git commit -m "Add Tor Browser ${VERSION}." && \
 	git annex sync && \
 	git annex copy --to origin
-
-Adjust the URL in the main Git repository
------------------------------------------
-
-    cd "$TAILS_GIT_REPO" && \
-    echo 'http://torbrowser-archive.tails.boum.org/' > \
-         config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt && \
-    git commit config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt \
-        -m "Fetch Tor Browser from our own archive."
 
 Wait for the synchronization
 ----------------------------
