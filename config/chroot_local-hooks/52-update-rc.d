@@ -41,6 +41,7 @@ systemctl enable tails-reconfigure-kexec.service
 systemctl enable tails-reconfigure-memlockd.service
 systemctl enable tails-sdmem-on-media-removal.service
 systemctl enable tails-set-wireless-devices-state.service
+systemctl enable tails-wait-until-tor-has-bootstrapped.service
 systemctl enable tor-controlport-filter.service
 
 # Enable our own systemd user unit files
