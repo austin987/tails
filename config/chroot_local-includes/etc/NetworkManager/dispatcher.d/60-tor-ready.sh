@@ -19,11 +19,7 @@ export LANG
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-tor_has_bootstrapped() {
-   sudo -n -u debian-tor /usr/local/sbin/tor-has-bootstrapped
-}
-
-while ! tor_has_bootstrapped; do
+while ! /usr/local/sbin/tor-has-bootstrapped; do
    sleep 10
 done
 
