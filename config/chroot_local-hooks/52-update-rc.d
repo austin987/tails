@@ -51,6 +51,7 @@ systemctl --global enable tails-create-tor-browser-directories.service
 systemctl --global enable tails-security-check.service
 systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
+systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
 systemctl --global enable tails-warn-about-disabled-persistence.service
 
 # Use socket activation only, to save a bit of memory and boot time
