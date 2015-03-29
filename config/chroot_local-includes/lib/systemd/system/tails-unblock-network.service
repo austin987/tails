@@ -34,7 +34,8 @@ ExecStart=/bin/sync
 # Now we'll load any present network device previously blocked by
 # the blacklist. In particular, the MAC spoofing udev rule should trigger
 # for each network device added.
-ExecStart=/sbin/udevadm trigger --action=add
+ExecStart=/bin/udevadm trigger --type=subsystems --action=add
+ExecStart=/bin/udevadm trigger --type=devices    --action=add
 
 # Block until all triggers have been run. We normally
 # start NetworkManager immediately after this script, and without the
