@@ -37,10 +37,9 @@ ExecStart=/bin/sync
 ExecStart=/bin/udevadm trigger --type=subsystems --action=add
 ExecStart=/bin/udevadm trigger --type=devices    --action=add
 
-# Block until all triggers have been run. We normally
-# start NetworkManager immediately after this script, and without the
-# blocking behaviour there's a race between NM and the MAC spoof udev
-# triggers. When NM takes control of some network device, some
-# operations are not possible on the device, like MAC spoofing. Hence,
-# if NM wins, the udev trigger's run of tails-spoof-mac will fail.
+# Block until all triggers have been run. NetworkManager is started immediately
+# after this unit, and without the blocking behaviour there's a race between NM
+# and the MAC spoof udev triggers. When NM takes control of some network device,
+# some operations are not possible on the device, like MAC spoofing. Hence,
+# if NM wins, the udev-triggered run of tails-spoof-mac will fail.
 ExecStart=/sbin/udevadm settle
