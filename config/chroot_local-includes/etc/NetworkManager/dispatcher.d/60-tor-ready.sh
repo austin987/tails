@@ -20,7 +20,7 @@ TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
 while ! /usr/local/sbin/tor-has-bootstrapped; do
-   sleep 10
+   sleep 1
 done
 
 # We now know that whatever Tor settings we are using works, so if Tor
