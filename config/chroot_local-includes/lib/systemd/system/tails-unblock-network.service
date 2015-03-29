@@ -28,6 +28,9 @@ ExecStartPre=/bin/sh -c 'if [ "${TAILS_NETCONF}" = "obstacle" ]; then     \
 # Let's remove the blacklist
 ExecStart=/bin/rm -f /etc/modprobe.d/all-net-blacklist.conf
 
+# Make sure the blacklist has disappeared from the filesystem
+ExecStart=/bin/sync
+
 # Now we'll load any present network device previously blocked by
 # the blacklist. In particular, the MAC spoofing udev rule should trigger
 # for each network device added.
