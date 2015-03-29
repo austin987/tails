@@ -22,7 +22,23 @@ ExecStartPre=/bin/sh -c 'if [ "${TAILS_NETCONF}" = "obstacle" ]; then     \
                             . /usr/local/lib/tails-shell-library/tor.sh ; \
                             tor_set_in_torrc "DisableNetwork" "1"       ; \
                          fi'
-ExecStart=/usr/local/sbin/tails-unblock-network
+
+# Let's remove the blacklist
+ExecStart=/bin/rm -f /etc/modprobe.d/all-net-blacklist.conf
+
+# Now we'll load any present network device previously blocked by
+# the blacklist. In particular, the MAC spoofing udev rule should trigger
+# for each network device added.
+ExecStart=/sbin/udevadm trigger --action=add
+
+# Block until all triggers have been run. We normally
+# start NetworkManager immediately after this script, and without the
+# blocking behaviour there's a race between NM and the MAC spoof udev
+# triggers. When NM takes control of some network device, some
+# operations are not possible on the device, like MAC spoofing. Hence,
+# if NM wins, the udev trigger's run of tails-spoof-mac will fail.
+ExecStart=/sbin/udevadm settle
+
 RemainAfterExit=yes
 CapabilityBoundingSet=~CAP_SYS_ADMIN
 PrivateDevices=yes
