@@ -9,7 +9,9 @@ Before=NetworkManager.service NetworkManager-dispatcher.service NetworkManager-w
 
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 EnvironmentFile=/var/lib/gdm3/tails.physical_security
+
 # It's important we "export" the settings from tails.physical_security
 # before unblocking the network; doing so will make the user-set MAC spoofing
 # option apply (via the custom udev rule) when loading the modules for the
@@ -39,7 +41,6 @@ ExecStart=/sbin/udevadm trigger --action=add
 # if NM wins, the udev trigger's run of tails-spoof-mac will fail.
 ExecStart=/sbin/udevadm settle
 
-RemainAfterExit=yes
 CapabilityBoundingSet=~CAP_SYS_ADMIN
 PrivateDevices=yes
 PrivateNetwork=yes
