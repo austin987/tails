@@ -30,17 +30,3 @@ ExecStart=/bin/rm -f /etc/modprobe.d/all-net-blacklist.conf
 
 # Make sure the blacklist has disappeared from the filesystem
 ExecStart=/bin/sync
-
-# Now we'll load any present network device previously blocked by
-# the blacklist. In particular, the MAC spoofing udev rule should trigger
-# for each network device added.
-ExecStart=/bin/udevadm trigger --type=subsystems --action=add
-ExecStart=/sbin/udevadm settle
-ExecStart=/bin/udevadm trigger --type=devices    --action=add
-
-# Block until all triggers have been run. NetworkManager is started immediately
-# after this unit, and without the blocking behaviour there's a race between NM
-# and the MAC spoof udev triggers. When NM takes control of some network device,
-# some operations are not possible on the device, like MAC spoofing. Hence,
-# if NM wins, the udev-triggered run of tails-spoof-mac will fail.
-ExecStart=/sbin/udevadm settle
