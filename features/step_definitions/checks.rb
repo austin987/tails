@@ -154,6 +154,7 @@ Then /^MAT can clean some sample PDF file$/ do
                                            LIVE_USER).stdout
     assert(check_after.include?("#{pdf_on_guest} is clean"),
            "MAT failed to clean '#{pdf_on_host}'")
+    @vm.execute_successfully("rm '#{pdf_on_guest}'")
   end
 end
 
