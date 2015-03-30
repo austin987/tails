@@ -43,7 +43,7 @@ set_simple_config_key() {
     local file="${3}"
     local op="${4:-=}"
     if grep -q "^${key}${op}" "${file}"; then
-        sed -i -n "s/^${key}${op}.*$/${key}${op}${value}/p" "${file}"
+        sed -i "s/^${key}${op}.*$/${key}${op}${value}/" "${file}"
     else
         echo "${key}${op}${value}" >> "${file}"
     fi
