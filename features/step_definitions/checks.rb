@@ -97,16 +97,6 @@ When /^Tails has booted a 64-bit kernel$/ do
          "Tails has not booted a 64-bit kernel.")
 end
 
-Then /^GNOME Screenshot is configured to save files to the live user's home directory$/ do
-  next if @skip_steps_while_restoring_background
-  home = "/home/#{LIVE_USER}"
-  save_path = @vm.execute_successfully(
-    "gsettings get org.gnome.gnome-screenshot auto-save-directory",
-    LIVE_USER).stdout.chomp.tr("'","")
-  assert_equal("file://#{home}", save_path,
-               "The GNOME screenshot auto-save-directory is not set correctly.")
-end
-
 Then /^there is no screenshot in the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
   home = "/home/#{LIVE_USER}"

@@ -10,9 +10,6 @@ Feature: Various checks
     Then AppArmor is enabled
     And some AppArmor profiles are enforced
 
-  Scenario: GNOME Screenshot has a sane default save directory
-    Then GNOME Screenshot is configured to save files to the live user's home directory
-
   Scenario: GNOME Screenshot takes a screenshot when the PRINTSCREEN key is pressed
     Given there is no screenshot in the live user's home directory
     When I press the "PRINTSCREEN" key
