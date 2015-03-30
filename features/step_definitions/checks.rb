@@ -145,10 +145,8 @@ Then /^MAT can clean some sample PDF file$/ do
     step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
     check_before = @vm.execute_successfully("mat --check '#{pdf_on_guest}'",
                                             LIVE_USER).stdout
-    if check_before.include?("#{pdf_on_guest} is clean")
-      STDERR.puts "warning: '#{pdf_on_host}' is already clean so it is a " +
-                  "bad candidate for testing MAT"
-    end
+    assert(check_before.include?("#{pdf_on_guest} is not clean"),
+           "MAT failed to see that '#{pdf_on_host}' is dirty")
     @vm.execute_successfully("mat '#{pdf_on_guest}'", LIVE_USER)
     check_after = @vm.execute_successfully("mat --check '#{pdf_on_guest}'",
                                            LIVE_USER).stdout
