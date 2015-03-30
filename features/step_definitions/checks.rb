@@ -143,8 +143,6 @@ Then /^MAT can clean some sample PDF file$/ do
     pdf_name = File.basename(pdf_on_host)
     pdf_on_guest = "/home/#{LIVE_USER}/#{pdf_name}"
     step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
-    @vm.execute("mat --display '#{pdf_on_guest}'",
-                LIVE_USER).stdout
     check_before = @vm.execute("mat --check '#{pdf_on_guest}'",
                                LIVE_USER).stdout
     if check_before.include?("#{pdf_on_guest} is clean")
