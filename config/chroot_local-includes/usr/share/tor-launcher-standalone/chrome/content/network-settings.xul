@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-   - Copyright (c) 2013, The Tor Project, Inc.
+   - Copyright (c) 2015, The Tor Project, Inc.
    - See LICENSE for licensing information.
    - vim: set sw=2 sts=2 ts=8 et syntax=xml:
   -->
@@ -24,13 +24,21 @@
         ondialogcancel="return onCancel();"
         ondialogextra2="onCopyLog();"
         ondialoghelp="onOpenHelp();"
-        onload="initDialog();">
+        onload="initDialog();"
+        onunload="deinitDialog();">
 
   <script type="application/x-javascript"
           src="chrome://torlauncher/content/network-settings.js"/>
 
   <deck id="deck">
     <vbox id="settings">
+      <vbox>
+        <checkbox id="useBridges" groupboxID="bridgeSpecificSettings"
+                  label="&torsettings.useBridges.checkbox;"
+                  oncommand="toggleElemUI(this);" />
+        <groupbox id="bridgeSpecificSettings" />
+      </vbox>
+
       <vbox>
         <separator orient="horizontal" class="thin" />
         <checkbox id="useProxy" groupboxID="proxySpecificSettings"
@@ -45,34 +53,37 @@
                   oncommand="toggleElemUI(this)"/>
         <groupbox id="firewallSpecificSettings" />
       </vbox>
-
-      <vbox>
-        <checkbox id="useBridges" groupboxID="bridgeSpecificSettings"
-                  label="&torsettings.useBridges.checkbox;"
-                  oncommand="toggleElemUI(this);" />
-        <groupbox id="bridgeSpecificSettings" />
-      </vbox>
     </vbox>
     <vbox id="startingTor">
       <spring flex="1" />
       <hbox>
         <spring flex="1" />
-        <description id="startingTorMessage">&torsettings.startingTor;</description>
-        <spring flex="1" />
-      </hbox>
-      <hbox>
-        <spring flex="1" />
-        <button id="restartButton" label="&torsettings.restart;" hidden="true"
-                oncommand="onRestartApp()" />
+        <description>&torsettings.startingTor;</description>
         <spring flex="1" />
       </hbox>
       <spring flex="1" />
     </vbox>
-    <vbox id="errorPanel"/>
+    <vbox id="errorPanel">
+      <spring flex="1" />
+      <hbox>
+        <spring flex="1" />
+        <description id="errorPanelMessage" flex="1" />
+        <spring flex="1" />
+      </hbox>
+      <separator/>
+      <hbox>
+        <spring flex="1" />
+        <button id="restartTorButton" label="&torsettings.restartTor;" hidden="true"
+                oncommand="onRestartTor()" />
+        <spring flex="1" />
+      </hbox>
+      <spring flex="1" />
+    </vbox>
     <vbox id="bridgeHelp" class="help">
       <vbox id="bridgeHelpContent" />
     </vbox>
   </deck>
   <spring flex="1" />
   <label id="forAssistance" />
+  <panel id="copyLogFeedbackPanel" />
 </dialog>
