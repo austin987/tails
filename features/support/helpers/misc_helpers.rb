@@ -47,8 +47,7 @@ def try_for(t, options = {})
 end
 
 def wait_until_tor_is_working
-  try_for(270) { @vm.execute(
-    '. /usr/local/lib/tails-shell-library/tor.sh; tor_is_working').success? }
+  try_for(270) { @vm.execute('/usr/local/sbin/tor-has-bootstrapped').success? }
 end
 
 def convert_bytes_mod(unit)
