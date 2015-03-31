@@ -30,20 +30,12 @@ fi
 # Copy the file containing toolbars configurations
 BROWSER_PROFILE="${HOME}/.tor-browser/profile.default"
 if [ -d "${BROWSER_PROFILE}" ]; then
-    cp /usr/share/tails/firefox-localstore-win8.rdf \
+    cp /usr/share/tails/tor-browser-win8-theme/localstore.rdf \
        "${BROWSER_PROFILE}"/localstore.rdf
-    # Setup a blue lightweight theme
-    cat >> "${BROWSER_PROFILE}"/preferences/0000camouflage.js <<EOF
-pref("lightweightThemes.isThemeSelected", true);
-pref("lightweightThemes.usedThemes", "[{\"id\":\"1\",\"name\":\"Internet Explorer\",\"headerURL\":\"file:///usr/share/pixmaps/blue_dot.png\",\"footerURL\":\"file:///usr/share/pixmaps/blue_dot.png\",\"textcolor\":\"#FFFFFF\",\"accentcolor\":\"#3399FF\",\"updateDate\":0,\"installDate\":0}]");
-EOF
-	# Tune chrome
-	cat >> "${BROWSER_PROFILE}"/chrome/userChrome.css <<EOF
-
-/* Camouflage */
-.tab-close-button { list-style-image: url("moz-icon://stock/gtk-close-grey?size=menu") !important; }
-#navigator-toolbox { background-color: #6badf6 !important; }
-EOF
+    cp /usr/share/tails/tor-browser-win8-theme/theme.js \
+        "${BROWSER_PROFILE}"/preferences/0000camouflage.js
+    cp /usr/share/tails/tor-browser-win8-theme/userChrome.css \
+        "${BROWSER_PROFILE}"/chrome/userChrome.css
 fi
 
 # Remove Tails-specific desktop icons
