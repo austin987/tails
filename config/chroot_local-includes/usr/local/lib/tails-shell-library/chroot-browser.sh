@@ -154,7 +154,7 @@ configure_chroot_browser_profile () {
     else
         # The tails-activate-win8-theme script requires that the
         # browser profile is writable by the user running the script.
-        set_chroot_browser_permissions "${chroot}" "${browser_user}"
+        set_chroot_browser_permissions "${chroot}" "${browser_name}" "${browser_user}"
         # The camouflage activation script requires a dbus server for
         # properly configuring GNOME, so we start one in the chroot
         chroot "${chroot}" sudo -H -u "${browser_user}" sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
