@@ -17,7 +17,7 @@ class Sniffer
   def initialize(name, vmnet)
     @name = name
     @vmnet = vmnet
-    @pcap_file = "#{$config["TMP_DIR"]}/#{name}.pcap"
+    @pcap_file = "#{$config["TMPDIR"]}/#{name}.pcap"
   end
 
   def capture(filter="not ether src host #{@vmnet.bridge_mac} and not ether proto \\arp and not ether proto \\rarp")
