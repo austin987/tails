@@ -28,15 +28,17 @@ fi
 
 # Tor Browser
 # Copy the file containing toolbars configurations
-BROWSER_PROFILE="${HOME}/.tor-browser/profile.default"
-if [ -d "${BROWSER_PROFILE}" ]; then
-    cp /usr/share/tails/tor-browser-win8-theme/localstore.rdf \
-       "${BROWSER_PROFILE}"/localstore.rdf
-    cp /usr/share/tails/tor-browser-win8-theme/theme.js \
-        "${BROWSER_PROFILE}"/preferences/0000camouflage.js
-    cp /usr/share/tails/tor-browser-win8-theme/userChrome.css \
-        "${BROWSER_PROFILE}"/chrome/userChrome.css
-fi
+for browser in tor-browser unsafe-browser i2p-browser; do
+    profile="${HOME}/.${browser}/profile.default"
+    if [ -d "${profile}" ]; then
+        cp /usr/share/tails/tor-browser-win8-theme/localstore.rdf \
+            "${profile}"/localstore.rdf
+        cp /usr/share/tails/tor-browser-win8-theme/theme.js \
+            "${profile}"/preferences/0000camouflage.js
+        cp /usr/share/tails/tor-browser-win8-theme/userChrome.css \
+            "${profile}"/chrome/userChrome.css
+    fi
+done
 
 # Remove Tails-specific desktop icons
 rm --interactive=never -f ${HOME}/Desktop/*.desktop 2> /dev/null || true
