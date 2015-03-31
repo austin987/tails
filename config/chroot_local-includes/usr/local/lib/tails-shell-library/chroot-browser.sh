@@ -166,6 +166,8 @@ configure_chroot_browser_profile () {
     local browser_chrome="${browser_profile}/chrome/userChrome.css"
     mkdir -p "$(dirname "${browser_chrome}")"
     cat "/usr/share/tails/${browser_name}/userChrome.css" >> "${browser_chrome}"
+
+    set_chroot_browser_permissions "${chroot}" "${browser_name}" "${browser_user}"
 }
 
 set_chroot_browser_locale () {
