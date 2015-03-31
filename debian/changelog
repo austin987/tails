@@ -4,11 +4,53 @@ tails (1.4) UNRELEASED; urgency=medium
 
  -- Tails developers <tails@boum.org>  Tue, 12 May 2015 12:34:56 +0000
 
-tails (1.3.2) UNRELEASED; urgency=medium
+tails (1.3.2) unstable; urgency=medium
 
-  * Dummy entry for next release.
+  * Security fixes
+    - Upgrade Tor Browser to 4.0.6, based on Firefox 31.6.0 ESR.
+    - Upgrade OpenSSL to 1.0.1e-2+deb7u16.
 
- -- Tails developers <tails@boum.org>  Tue, 31 Mar 2015 11:34:13 +0100
+  * Bugfixes
+    - Make Florence usable with touchpads by forcing syndaemon to
+      always use the `-t` option, which only disables tapping and
+      scrolling and not mouse movements (Closes: #9011).
+    - Make tails-spoof-mac log the correct macchanger exit code on
+      failure (Closes: #8687).
+    - Tails Installer:
+      · Ignore devices with less than 3.5 GB of storage since they
+        do not fit a Tails installation (Closes: #6538).
+      · Remove devices from the device list as they are unplugged
+        (Closes: #8691).
+
+  * Minor improvements
+    - Install obfs4proxy 0.0.4-1~tpo1, which adds support for
+      client-mode ScrambleSuit.
+    - Don't start Vidalia if Windows Camouflage is enabled. (Closes:
+      #7400)
+    - I2P Browser:
+      · Remove "Add-ons" from the Tools menu, and hide "Keyboard
+        Shortcuts" and "Take a Tour" since they point to resources on
+        the open Internet (Closes: #7970).
+      · Hide TorButton button from the customize toolbar options, and
+        remove configs whose only purpose was to make Torbutton "green"
+        (Closes: #8893).
+
+  * Test suite
+    - New tests:
+      · Test non-LAN SSH, and SFTP via GNOME's "Connect to Server"
+        (Closes: #6308).
+      · Verify that Tails' Tor binary has the expected Tor authorities
+        hard coded (Closes: #8960).
+    - Improvements:
+      · Programmatically determine the supported languages when testing
+        the Unsafe Browser (Closes: #8918).
+      · Rename --temp-dir to --tmpdir and make it behave more like
+        mktemp, and honour TMPDIR if set in the environment. (Closes:
+        #8709).
+    - Bugfixes:
+      · Make --temp-dir (now --tmpdir) actually work.
+
+ -- Tails developers <tails@boum.org>  Mon, 30 Mar 2015 16:54:20 +0200
 
 tails (1.3.1) unstable; urgency=medium
 
