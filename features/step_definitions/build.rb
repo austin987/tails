@@ -33,7 +33,7 @@ Given /^Tails ([[:alnum:].]+) has not been released yet$/ do |version|
   !File.exists? ".git/refs/tags/#{version}"
 end
 
-Given /^last released version mentioned in debian\/changelog is ([[:alnum:]~.]+)$/ do |version|
+Given /^the last version mentioned in debian\/changelog is ([[:alnum:]~.]+)$/ do |version|
   last = `dpkg-parsechangelog | awk '/^Version: / { print $2 }'`.strip
   raise StandardError.new('dpkg-parsechangelog failed.') if $? != 0
 
@@ -42,11 +42,15 @@ Given /^last released version mentioned in debian\/changelog is ([[:alnum:]~.]+)
   end
 end
 
-Given %r{I am working on the ([[:alnum:]./_-]+) branch$} do |branch|
+Given %r{I am working on the ([[:alnum:]./_-]+) base branch$} do |branch|
   create_git unless git_exists?
 
   if current_branch != branch
     fatal_system "git checkout --quiet '#{branch}'"
+  end
+
+  File.open('config/base_branch', 'w+') do |base_branch_file|
+    base_branch_file.write("#{branch}\n")
   end
 end
 
@@ -56,17 +60,53 @@ Given %r{I am working on the ([[:alnum:]./_-]+) branch based on ([[:alnum:]./_-]
   if current_branch != branch
     fatal_system "git checkout --quiet -b '#{branch}' '#{base}'"
   end
+
+  File.open('config/base_branch', 'w+') do |base_branch_file|
+    base_branch_file.write("#{base}\n")
+  end
+end
+
+When /^I successfully run ([[:alnum:]-]+)$/ do |command|
+  @output = `#{File.expand_path("../../../auto/scripts/#{command}", __FILE__)}`
+  raise StandardError.new("#{command} failed. Exit code: #{$?}") if $? != 0
 end
 
 When /^I run ([[:alnum:]-]+)$/ do |command|
   @output = `#{File.expand_path("../../../auto/scripts/#{command}", __FILE__)}`
-  raise StandardError.new("#{command} failed. Exit code: #{$?}") if $? != 0
+  @exit_code = $?
 end
 
 Then /^I should see the ['"]?([[:alnum:].-]+)['"]? suite$/ do |suite|
   @output.should have_suite(suite)
 end
 
+Then /^I should see only the ['"]?([[:alnum:].-]+)['"]? suite$/ do |suite|
+  assert_equal(1, @output.lines.count)
+  @output.should have_suite(suite)
+end
+
 Then /^I should not see the ['"]?([[:alnum:].-]+)['"]? suite$/ do |suite|
   @output.should_not have_suite(suite)
+end
+
+Given(/^config\/APT_overlays is empty$/) do
+  assert_equal(0, File.new('config/APT_overlays').size)
+end
+
+Given(/^config\/APT_overlays contains ['"]?([[:alnum:].-]+)['"]?$/) do |suite|
+  File.open('config/APT_overlays', 'a') do |overlays|
+    overlays.write("#{suite}\n")
+  end
+end
+
+Then(/^it should fail$/) do
+  assert_not_equal(0, @exit_code)
+end
+
+Given(/^(config\/(?:APT_overlays|base_branch)) does not exist$/) do |file|
+  File.delete(file)
+end
+
+Given(/^config\/base_branch is empty$/) do
+  File.open('config/base_branch', 'w+') { }
 end
