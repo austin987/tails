@@ -121,6 +121,13 @@ if [ -n "$JENKINS_URL" ] && [ -z "$GIT_TAG" ] \
     echo "(at commit ${GIT_BASE_BRANCH_COMMIT})..."
     git merge --no-edit "origin/${GIT_BASE_BRANCH}" \
 	|| fatal "Failed to merge base branch."
+
+    # Adjust BUILD_BASENAME to embed the base branch name and its top commit
+    CLEAN_GIT_BASE_BRANCH=$(echo "$GIT_BASE_BRANCH" | sed 's,/,_,g')
+    GIT_BASE_BRANCH_SHORT_ID=$(git rev-parse --short "origin/${GIT_BASE_BRANCH}") \
+	|| fatal "Base branch's top commit short ID could not be guessed."
+    BUILD_BASENAME="${BUILD_BASENAME}+${CLEAN_GIT_BASE_BRANCH}"
+    BUILD_BASENAME="${BUILD_BASENAME}@${GIT_BASE_BRANCH_SHORT_ID}"
 fi
 
 case "$LB_BINARY_IMAGES" in
