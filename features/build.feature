@@ -10,7 +10,7 @@ Feature: custom APT sources to build branches
     And Tails 1.0 has not been released yet
     When I run tails-custom-apt-sources
     Then I should see the 'stable' suite
-    Then I should not see the '1.0' suite
+    And I should not see the '1.0' suite
 
   Scenario: build from a tagged stable branch
     Given Tails 0.10 has been released
