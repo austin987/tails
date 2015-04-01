@@ -36,6 +36,13 @@ END_OF_CHANGELOG
   fatal_system "git branch experimental devel"
 end
 
+def current_branch
+  branch = `git branch | awk '/^\*/ { print $2 }'`.strip
+  raise StandardError.new('git-branch failed.') if $? != 0
+
+  return branch
+end
+
 RSpec::Matchers.define :have_suite do |suite|
   match do |string|
     # e.g.: `deb http://deb.tails.boum.org/ 0.10 main contrib non-free`

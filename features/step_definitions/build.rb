@@ -1,6 +1,8 @@
 Given /^Tails ([[:alnum:].]+) has been released$/ do |version|
   create_git unless git_exists?
 
+  old_branch = current_branch
+
   fatal_system "git checkout --quiet stable"
   old_entries = File.open('debian/changelog') { |f| f.read }
   File.open('debian/changelog', 'w') do |changelog|
@@ -16,6 +18,11 @@ END_OF_CHANGELOG
   end
   fatal_system "git commit --quiet debian/changelog -m 'Release #{version}'"
   fatal_system "git tag '#{version}'"
+
+  if old_branch != 'stable'
+    fatal_system "git checkout --quiet '#{old_branch}'"
+    fatal_system "git merge    --quiet 'stable'"
+  end
 end
 
 Given /^Tails ([[:alnum:].-]+) has been tagged$/ do |version|
