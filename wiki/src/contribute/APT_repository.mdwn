@@ -54,15 +54,17 @@ Build system
 The Tails ISO build system dynamically adds APT sources that will be
 used during the build, and inside the resulting ISO itself.
 
-If the version in `debian/changelog` was released already (i.e.
+If the last version in `debian/changelog` was released already (i.e.
 a matching tag exists), then the build system adds the suite
-corresponding to this release (e.g. `1.5` or `3.0`). Else, it adds one
-APT source for the base branch of the one being built, as found in
-`config/base_branch`.
+corresponding to this release (e.g. `1.5` or `3.0`), and that's all.
 
-On top of that, the build system adds one APT source for each suite
-listed in `config/APT_overlays`. In practice, this configuration file
-contains:
+Else, it adds:
+
+* one APT source for the base branch of the one being built, as found
+  in `config/base_branch`;
+* one APT source for each suite listed in `config/APT_overlays`.
+
+In practice, `config/APT_overlays` contains:
 
 * for a topic branch:
   - if needed, the branch's own overlay APT suite;
