@@ -20,14 +20,14 @@ TODO
 
 * Regardless of the exact implementation we go for,
   `tails-diff-suites` will need to take into account whatever is in
-  `config/APT_suites`; the current behavior should still be supported
+  `config/APT_overlays`; the current behavior should still be supported
   with a command-line switch.
 
 * Quite some checks should be added in various places to avoid
   mistakes, e.g.:
-  - non-empty `config/APT_suites` when building a release (last entry
+  - non-empty `config/APT_overlays` when building a release (last entry
     in `debian/changelog` has a matching tag)
-  - duplicate lines in `config/APT_suites`
+  - duplicate lines in `config/APT_overlays`
   - too many or too few lines in `config/base_branch` (it should have 1)
   - and probably more!
 
@@ -38,7 +38,7 @@ Storing the base branch's name elsewhere
 ----------------------------------------
 
 ... e.g. in `config/base_branch`, as opposed to recording the
-corresponding base APT suite in `config/APT_suites`?
+corresponding base APT suite in `config/APT_overlays`?
 
 This may be useful for other purposes: how CI infrastructure will soon
 need to know what's the base branch for a given topic branch.
@@ -47,7 +47,7 @@ need to know what's the base branch for a given topic branch.
 `feature/8654-encode-apt-suite-in-git` assumes we'll be doing that.
 
 Also, it could be needed if/once we use the union merge driver for
-`config/APT_suites` (when merging a base branch into another one, the
+`config/APT_overlays` (when merging a base branch into another one, the
 union merge driver wouldn't DTRT, and surely another merge driver
 would be more suitable for `config/base_branch`; that merge driver
 should ensure that the current version of the file is left as is,
@@ -115,16 +115,16 @@ are merged when a file-level merge is necessary during git merge".
 It's not going to be used at all if only one side of the merge has
 modified the file that has a merge driver defined.
 
-Merge driver for `config/APT_suites`
-------------------------------------
+Merge driver for `config/APT_overlays`
+--------------------------------------
 
-What merge driver should we use for `config/APT_suites`?
+What merge driver should we use for `config/APT_overlays`?
 
 What follows assumes that we're *not* storing the base branch's APT
 suite in that file.
 
 * When doing base-branch-into-topic-branch merges in Jenkins, we'll
-  probably want to use the union merge driver for `config/APT_suites`,
+  probably want to use the union merge driver for `config/APT_overlays`,
   in order to resolve trivial merge conflicts by including the lines
   from *both* sides. Ideally, we should use the union merge driver
   only when the Git merge strategy being used would leave a conflict
@@ -135,25 +135,25 @@ suite in that file.
 
 * When manually merging a base branch into another one, the union
   merge driver is not very good: it'll introduce duplicated lines in
-  `config/APT_suites`, e.g. when merging e.g. `stable` into `devel`.
+  `config/APT_overlays`, e.g. when merging e.g. `stable` into `devel`.
   A `clean` filter defined in `.gitattributes` might be enough to
   de-duplicate these lines.
 
 * When manually merging a base branch into a topic branch, there are
   several sub-cases:
-  - the base branch's `config/APT_suites` has had new suites added:
+  - the base branch's `config/APT_overlays` has had new suites added:
     then we want to add them in the topic branch too; in this case the
     union merge driver could work, except if the base branch's
-    `config/APT_suites` also had lines removed during the last
+    `config/APT_overlays` also had lines removed during the last
     release;
-  - the base branch's `config/APT_suites` has had suites removed, e.g.
+  - the base branch's `config/APT_overlays` has had suites removed, e.g.
     during a release: then, ideally we want to remove them from the
     topic branch as well.
   It's no big deal in practice if lines that were deleted from
-  `config/APT_suites` in the base branch are still in the topic branch
+  `config/APT_overlays` in the base branch are still in the topic branch
   post-merge (the same packages are in the base branch's APT suite
   anyway), but it's a bit ugly and there are chances that we end up
-  mistakenly re-adding the deleted lines in `config/APT_suites` in the
+  mistakenly re-adding the deleted lines in `config/APT_overlays` in the
   base branch when merging the topic branch in it, and then the
   release manager would merge these APT suites into the corresponding
   base APT suite at release time, potentially downgrading packages
@@ -165,7 +165,7 @@ thing in all cases of merges we do manually.
 
 **Current conclusion**:
 
-* human contributors will handle `config/APT_suites` the good old way,
+* human contributors will handle `config/APT_overlays` the good old way,
   as any other file in our Git tree;
 * we'll use the union merge driver in Jenkins.
 
@@ -173,7 +173,7 @@ And later, we can reconsider if we need something more clever, e.g.:
 
 * We might have to use a custom merge driver to force a manual
   conflict resolution for every manual merge that involves
-  `config/APT_suites`, to avoid the case when Git tries to be clever
+  `config/APT_overlays`, to avoid the case when Git tries to be clever
   and makes the wrong decision.
 * For Jenkins merges, we may need to investigate using the union merge
   driver only when it's really needed.
