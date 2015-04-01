@@ -45,9 +45,6 @@ end
 Given %r{I am working on the ([[:alnum:]./_-]+) branch$} do |branch|
   create_git unless git_exists?
 
-  current_branch = `git branch | awk '/^\*/ { print $2 }'`.strip
-  raise StandardError.new('git-branch failed.') if $? != 0
-
   if current_branch != branch
     fatal_system "git checkout --quiet '#{branch}'"
   end
@@ -55,9 +52,6 @@ end
 
 Given %r{I am working on the ([[:alnum:]./_-]+) branch based on ([[:alnum:]./_-]+)$} do |branch, base|
   create_git unless git_exists?
-
-  current_branch = `git branch | awk '/^\*/ { print $2 }'`.strip
-  raise StandardError.new('git-branch failed.') if $? != 0
 
   if current_branch != branch
     fatal_system "git checkout --quiet -b '#{branch}' '#{base}'"
