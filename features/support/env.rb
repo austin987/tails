@@ -14,6 +14,9 @@ def git_exists?
 end
 
 def create_git
+  Dir.mkdir 'config'
+  FileUtils.touch('config/base_branch')
+  FileUtils.touch('config/APT_overlays')
   Dir.mkdir 'debian'
   File.open('debian/changelog', 'w') do |changelog|
     changelog.write(<<END_OF_CHANGELOG)
