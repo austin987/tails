@@ -4,6 +4,12 @@ set -e
 
 APT_MIRROR_URL="http://deb.tails.boum.org/"
 DEFAULT_COMPONENTS="main"
+BASE_BRANCHES="stable testing devel feature/jessie"
+
+fatal() {
+	echo "$*" >&2
+	exit 1
+}
 
 git_tag_exists() {
 	local tag="$1"
@@ -29,12 +35,30 @@ output_apt_binary_source() {
 	echo "deb $APT_MIRROR_URL $suite $components"
 }
 
+output_overlay_apt_binary_sources() {
+	for suite in $(cat config/APT_overlays) ; do
+		output_apt_binary_source "$suite"
+	done
+}
+
 current_branch() {
 	git branch | awk '/^\* / { print $2 }'
 }
 
-on_topic_branch() {
-	current_branch | grep -qE '^(feature|bug|bugfix)/'
+on_base_branch() {
+	local current_branch=$(current_branch)
+
+	for base_branch in $BASE_BRANCHES ; do
+		if [ "$current_branch" = "$base_branch" ] ; then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+base_branch() {
+	cat config/base_branch | head -n1
 }
 
 branch_name_to_suite() {
@@ -43,19 +67,29 @@ branch_name_to_suite() {
 	echo "$branch" | sed -e 's,[^.a-z0-9-],-,ig'  | tr '[A-Z]' '[a-z]'
 }
 
+### Sanity checks
+
+[ -e config/APT_overlays ] || fatal 'config/APT_overlays does not exist'
+[ -e config/base_branch  ] || fatal 'config/base_branch does not exist'
+
+[ "$(cat config/base_branch | wc -l)" -eq 1 ] \
+    || fatal 'config/base_branch must contain exactly one line'
+
+if on_base_branch && ! [ "$(base_branch)" = "$(current_branch)" ] ; then
+	echo "base_branch: $(base_branch)" >&2
+	echo "current_branch: $(current_branch)" >&2
+	fatal "In a base branch, config/base_branch must match the current branch."
+fi
+
+### Main
 
 if version_was_released "$(version_in_changelog)"; then
+	if [ -s config/APT_overlays ]; then
+		fatal 'config/APT_overlays must be empty while releasing'
+	fi
 	output_apt_binary_source "$(branch_name_to_suite "$(version_in_changelog)")"
-elif [ "$(current_branch)" = "stable" ]; then
-	output_apt_binary_source stable
-elif [ "$(current_branch)" = "testing" ]; then
-	output_apt_binary_source testing
-elif [ "$(current_branch)" = "experimental" ]; then
-	output_apt_binary_source experimental
 else
-	output_apt_binary_source devel
+	output_apt_binary_source "$(branch_name_to_suite "$(base_branch)")"
+	output_overlay_apt_binary_sources
 fi
 
-if on_topic_branch; then
-       output_apt_binary_source "$(branch_name_to_suite $(current_branch))"
-fi

@@ -49,9 +49,12 @@ error() {
     exit 1
 }
 
+package_installed() {
+   dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"
+}
+
 check_dependency() {
-    if ! which "${1}" >/dev/null && \
-       ! dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"; then
+    if ! which "${1}" >/dev/null && ! package_installed "${1}" ; then
         error "'${1}' is missing, please install it and run again. Aborting..."
     fi
 }
@@ -192,10 +195,15 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-for dep in ffmpeg git libvirt-bin libvirt-dev libavcodec-extra-53 libvpx1 \
+for dep in ffmpeg git libvirt-bin libvirt-dev libvpx1 \
            virt-viewer libsikuli-script-java ovmf tcpdump xvfb; do
     check_dependency "${dep}"
 done
+
+package_installed libavcodec-extra-53 \
+    || package_installed libav-tools \
+    || error "Both libavcodec-extra-53 and libav-tools, are missing, " \
+	     "please install one of those and run again. Aborting..."
 
 TARGET_DISPLAY=$(next_free_display)
 
