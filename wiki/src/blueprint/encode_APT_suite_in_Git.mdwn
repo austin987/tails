@@ -18,10 +18,37 @@ Rationale
 TODO
 ====
 
-* Regardless of the exact implementation we go for,
-  `tails-diff-suites` will need to take into account whatever is in
-  `config/APT_overlays`; the current behavior should still be supported
-  with a command-line switch.
+`tails-diff-suite`
+------------------
+
+Regardless of the exact implementation we go for, `tails-diff-suites`
+will need to take into account whatever is in `config/APT_overlays`;
+the current behavior should still be supported. Whatever the default
+is depends on actual use-cases and existing user habits.
+
+Use-cases:
+
+ * Compare the list of packages available in the suites used by the
+   to-be-released stable or testing branch (including overlays), with
+   the list of packages available in the suite corresponding to the
+   previous release's tag. This requires access both to an up-to-date
+   `tails.git`, and to the VM that hosts our APT repo. Given there's
+   a `tails.git` clone that's refreshed every minute on that system,
+   it would makes sense to run the script that compares said lists of
+   packages there too.
+
+ * In `feature/8654-encode-apt-suite-in-git`,
+   [[contribute/APT_repository#workflow-merge-main-branch]] is the
+   only documented use-case for `tails-diff-suites`. It needs to
+   ignore overlays, just like current `tails-diff-suites`.
+
+Implementation notes:
+
+	git show $branch:config/base_branch
+	git show $branch:config/APT_overlays
+
+Misc.
+-----
 
 * Look for other scripts, code or processes that need to be adjusted,
   i.e. in `puppet-tails.git`.
