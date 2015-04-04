@@ -156,7 +156,7 @@ end
 When /^I reboot without wiping the memory$/ do
   next if @skip_steps_while_restoring_background
   @vm.reset
-  @screen.wait('TailsBootSplashPostReset.png', 30)
+  @screen.wait('TailsBootSplash.png', 30)
 end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
