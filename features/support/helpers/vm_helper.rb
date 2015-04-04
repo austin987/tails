@@ -424,9 +424,7 @@ EOF
   end
 
   def reset
-    # ruby-libvirt 0.4 does not support the reset method.
-    # XXX: Once we use Jessie, use @domain.reset instead.
-    system("virsh -c qemu:///system reset " + @domain_name) if is_running?
+    @domain.reset if is_running?
   end
 
   def power_off
