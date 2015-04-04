@@ -223,14 +223,27 @@ Security issues
 Tails might not erase all the system memory on shutdown
 -------------------------------------------------------
 
-On rare systems (non-PAE with big amounts of memory),
-Tails does not consistently [[!tails_todo
-more_efficient_memory_wipe desc="erase all system memory as it
-should"]].
+On rare systems (non-PAE with big amounts of memory), Tails does not
+consistently erase all system memory as it should.
 
 If no [[cold boot attack|doc/advanced_topics/cold_boot_attacks]]
 happens directly after shutdown, the RAM empties itself in minutes,
 and all data disappears.
+
+See [[!tails_ticket 6006 desc="More efficient memory wipe"]].
+
+Tails does not erase video memory
+---------------------------------
+
+Tails doesn't erase the [[!wikipedia VRAM desc="video memory"]] yet.
+When one uses Tails, then restarts the computer into another operating
+system, that other operating system can see what has been displayed on
+the screen within Tails.
+
+Shutting down the computer completely, instead of restarting it,
+might allow the video memory to empty itself.
+
+See [[!tails_ticket 5356 desc="Erase video memory on shutdown"]].
 
 After using Tails Installer, the "emergency shutdown" doesn't work
 ------------------------------------------------------------------
@@ -240,6 +253,9 @@ Tails Installer messes a bit too much with the USB devices for the
 it. If you believe this feature is critical for the session you're running, we
 advice you to reboot Tails.
 
+See
+[[!tails_ticket 5677 desc="liveusb-creator should not break emergency shutdown"]].
+
 Tails DVD eject failure
 -----------------------
 
@@ -247,7 +263,7 @@ Pressing the DVD eject button does not trigger emergency shutdown.
 Also, the "normal" (non-emergency) shutdown procedure does not eject
 the DVD anymore.
 
-(Ticket: [[!tails_todo fix_DVD_eject_at_shutdown]])
+See [[!tails_ticket 5447 desc="Fix DVD eject at shutdown"]].
 
 Stream isolation inconsistency in Claws Mail
 --------------------------------------------
@@ -333,8 +349,7 @@ Connecting to FTP servers is not possible
 -----------------------------------------
 
 Public FTP servers on the Internet are not reachable using Tails.
-See [[!tails_todo fix_Internet_FTP_support desc="the corresponding
-task"]] for more details.
+See [[!tails_ticket 6096 desc="Fix FTP support"]] for more details.
 
 Tails fails to connect to certain Wi-Fi networks
 ------------------------------------------------
