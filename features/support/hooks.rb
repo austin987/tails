@@ -14,25 +14,30 @@ rescue Errno::EACCES => e
 end
 
 def delete_all_snapshots
-  Dir.glob("#{$config["TMP_DIR"]}/*.state").each do |snapshot|
+  Dir.glob("#{$config["TMPDIR"]}/*.state").each do |snapshot|
     delete_snapshot(snapshot)
   end
 end
 
+def add_after_scenario_hook(fn, args = [])
+  @after_scenario_hook ||= Array.new
+  @after_scenario_hook << [fn, args]
+end
+
 BeforeFeature('@product') do |feature|
-  if File.exist?($config["TMP_DIR"])
-    if !File.directory?($config["TMP_DIR"])
-      raise "Temporary directory '#{$config["TMP_DIR"]}' exists but is not a " +
+  if File.exist?($config["TMPDIR"])
+    if !File.directory?($config["TMPDIR"])
+      raise "Temporary directory '#{$config["TMPDIR"]}' exists but is not a " +
             "directory"
     end
-    if !File.owned?($config["TMP_DIR"])
-      raise "Temporary directory '#{$config["TMP_DIR"]}' must be owned by the " +
+    if !File.owned?($config["TMPDIR"])
+      raise "Temporary directory '#{$config["TMPDIR"]}' must be owned by the " +
             "current user"
     end
-    FileUtils.chmod(0755, $config["TMP_DIR"])
+    FileUtils.chmod(0755, $config["TMPDIR"])
   else
     begin
-      Dir.mkdir($config["TMP_DIR"])
+      Dir.mkdir($config["TMPDIR"])
     rescue Errno::EACCES => e
       raise "Cannot create temporary directory: #{e.to_s}"
     end
@@ -61,7 +66,7 @@ BeforeFeature('@product') do |feature|
   end
   puts "Testing ISO image: #{File.basename(TAILS_ISO)}"
   base = File.basename(feature.file, ".feature").to_s
-  $background_snapshot = "#{$config["TMP_DIR"]}/#{base}_background.state"
+  $background_snapshot = "#{$config["TMPDIR"]}/#{base}_background.state"
   $virt = Libvirt::open("qemu:///system")
   $vmnet = VMNet.new($virt, VM_XML_PATH)
   $vmstorage = VMStorage.new($virt, VM_XML_PATH)
@@ -110,7 +115,7 @@ After('@product') do |scenario|
     STDERR.puts "Scenario failed at time #{hrs}:#{mins}:#{secs}"
     base = File.basename(scenario.feature.file, ".feature").to_s
     tmp = @screen.capture.getFilename
-    out = "#{$config["TMP_DIR"]}/#{base}-#{DateTime.now}.png"
+    out = "#{$config["TMPDIR"]}/#{base}-#{DateTime.now}.png"
     FileUtils.mv(tmp, out)
     STDERR.puts("Took screenshot \"#{out}\"")
     if $config["PAUSE_ON_FAIL"]
@@ -118,10 +123,6 @@ After('@product') do |scenario|
       STDERR.puts "Press ENTER to continue running the test suite"
       STDIN.gets
     end
-  end
-  if @sniffer
-    @sniffer.stop
-    @sniffer.clear
   end
   @vm.destroy_and_undefine if @vm
 end
@@ -167,9 +168,15 @@ After('@source') do
   FileUtils.remove_entry_secure @git_clone
 end
 
-
 # Common
 ########
+
+After do
+  if @after_scenario_hook
+    @after_scenario_hook.each { |fn, args| fn.call(*args) }
+  end
+  @after_scenario_hook = Array.new
+end
 
 BeforeFeature('@product', '@source') do |feature|
   raise "Feature #{feature.file} is tagged both @product and @source, " +

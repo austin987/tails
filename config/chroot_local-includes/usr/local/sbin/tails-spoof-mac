@@ -74,9 +74,13 @@ mac_spoof_panic() {
 
 spoof_mac() {
     local msg
-    if ! msg=$(macchanger -e "${1}" 2>&1); then
-        log "macchanger failed for NIC ${1}, returned ${?} and said: ${msg}"
-        return 1
+    set +e
+    msg="$(macchanger -e "${1}" 2>&1)"
+    ret="${?}"
+    set -e
+    if [ "${ret}" != 0 ]; then
+        log "macchanger failed for NIC ${1}, returned ${ret} and said: ${msg}"
+        exit 1
     fi
 }
 

@@ -127,6 +127,8 @@ Given /^I capture all network traffic$/ do
   # something external to the VM state.
   @sniffer = Sniffer.new("sniffer", $vmnet)
   @sniffer.capture
+  add_after_scenario_hook(@sniffer.method(:stop))
+  add_after_scenario_hook(@sniffer.method(:clear))
 end
 
 Given /^I set Tails to boot with options "([^"]*)"$/ do |options|
@@ -719,7 +721,11 @@ end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
   next if @skip_steps_while_restoring_background
-  step "I start and focus GNOME Terminal"
+  if !@vm.has_process?("gnome-terminal")
+    step "I start and focus GNOME Terminal"
+  else
+    @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+  end
   @screen.type(command + Sikuli::Key.ENTER)
 end
 
