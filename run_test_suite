@@ -13,7 +13,7 @@ that this script must be run from the Tails source directory root.
 
 Options for '@product' features:
   --capture FILE     Captures the test session into FILE using VP8 encoding.
-                     Requires ffmpeg and libvpx1.
+                     Requires libav-tools and libvpx1.
   --debug            Display various debugging information while running the
                      test suite.
   --pause-on-fail    On failure, pause test suite until pressing Enter. This is
@@ -100,7 +100,7 @@ start_vnc_viewer() {
 
 capture_session() {
     echo "Capturing guest display into ${CAPTURE_FILE}"
-    ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
+    avconv -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
 }
 
@@ -195,7 +195,7 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-for dep in ffmpeg git libvirt-bin libvirt-dev libvpx1 \
+for dep in git libvirt-daemon-system libvirt-clients libvirt-dev libav-tools libvpx1 \
            virt-viewer libsikuli-script-java ovmf tcpdump xvfb; do
     check_dependency "${dep}"
 done
