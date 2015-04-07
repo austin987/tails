@@ -155,20 +155,86 @@ Commit the result, including new PO files:
 	git add po && git commit -m 'Update PO files.'
 
 Freeze
-------
+======
+
+Major release
+-------------
 
 If we are at freeze time for a major release:
 
-* Merge the `master` Git branch into `devel`.
-* Merge the `devel` Git branch into `testing`.
-* Reset the `testing` APT suite to the state of the `devel` one, as
-  documented on [[contribute/APT_repository#workflow-freeze]].
-* If there is no Jenkins job building ISO images from the `testing`
-  branch, ask <tails-sysadmins@boum.org> to re-activate it.
+1. Merge the `master` Git branch into `devel`.
 
-Else, if we are at freeze time for a point-release:
+2. [[Merge each APT overlay
+   suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+   the `devel` branch's `config/APT_overlays` into the `devel`
+   APT suite.
 
-* Merge the `master` Git branch into `stable`.
+3. Merge the `devel` Git branch into the `testing` one:
+
+        git checkout testing && git merge devel
+
+   ... and check that the resulting `config/APT_overlays` in the
+   `testing` branch is empty.
+
+4. [[Hard reset|APT_repository#workflow-reset]] the `testing` APT
+   suite to the current state of the `devel` one.
+
+5. Push the `testing` branch to Git:
+
+        git push origin testing
+
+6. If there is no Jenkins job building ISO images from the `testing`
+   branch, ask <tails-sysadmins@boum.org> to re-activate it.
+
+Point-release
+-------------
+
+If we are at freeze time for a point-release:
+
+1. Merge the `master` Git branch into `stable`.
+
+2. [[Merge each APT overlay
+   suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+   the `stable` branch's `config/APT_overlays` into the `stable`
+   APT suite.
+
+APT repository
+==============
+
+Major release
+-------------
+
+[[Merge each APT overlay
+suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+the `testing` branch's `config/APT_overlays` into the `testing`
+APT suite.
+
+Point-release
+-------------
+
+[[Merge each APT overlay
+suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+the `stable` branch's `config/APT_overlays` into the `stable` APT suite.
+
+Update other base branches
+--------------------------
+
+Now that you have emptied `config/APT_overlays` in the branch used for
+the release, get this change into every *newer* base branch:
+
+* if preparing a major release, merge `testing` into `devel`, and then
+  `devel` into `feature/jessie`;
+* if preparing a point-release, merge `stable` into `devel`, and then
+  `devel` into `feature/jessie`;
+
+Then, ensure that every branch you just merged the release branch into
+has the expected content in `config/APT_overlays`: e.g. it must not
+list any overlay APT suite that has been merged already.
+
+Finally, push all branches you just merged the release branch into.
+
+Update more included files
+==========================
 
 Changelog
 ---------
@@ -881,17 +947,10 @@ this, and skip what does not make sense for a RC.
            | sed -e 's,^[a-f0-9]\+\s\+,,' | sort -u
 
    - `git checkout experimental && git reset --hard devel`
-   - [[hard reset|contribute/APT_repository#workflow-reset]] the `experimental`
-     APT suite to the state of the `devel` one.
-   - merge additional branches into experimental (both at the Git and
-     APT levels)
+   - merge additional Git branches into experimental
 
          for branch in $UNMERGED_BRANCHES ; do
             git merge $branch
-            suite=$(echo $branch | sed -e 's,[/_],-,g')
-            if [ $(ssh reprepro@incoming.deb.tails.boum.org reprepro list $suite | wc -l) -gt 0 ] ; then
-               ssh reprepro@incoming.deb.tails.boum.org tails-merge-suite $suite experimental
-            fi
          done
 
    - `git push --force origin experimental`

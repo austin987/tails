@@ -14,6 +14,9 @@ def git_exists?
 end
 
 def create_git
+  Dir.mkdir 'config'
+  FileUtils.touch('config/base_branch')
+  FileUtils.touch('config/APT_overlays')
   Dir.mkdir 'debian'
   File.open('debian/changelog', 'w') do |changelog|
     changelog.write(<<END_OF_CHANGELOG)
@@ -33,7 +36,14 @@ END_OF_CHANGELOG
   fatal_system "git branch -M stable"
   fatal_system "git branch testing stable"
   fatal_system "git branch devel stable"
-  fatal_system "git branch experimental devel"
+  fatal_system "git branch feature/jessie devel"
+end
+
+def current_branch
+  branch = `git branch | awk '/^\*/ { print $2 }'`.strip
+  raise StandardError.new('git-branch failed.') if $? != 0
+
+  return branch
 end
 
 RSpec::Matchers.define :have_suite do |suite|
