@@ -14,7 +14,8 @@ We use one single APT repository hosting multiple *suites*:
   `0.10.1`, etc.
 * We have a suite for each *main* branch: `stable`, `testing`,
   `devel`, `feature-jessie`
-* We have an overlay suite for each *topic* branch: `bugfix/*`, `feature/*`.
+* We have an overlay suite for each *topic* branch: `bugfix/*`,
+  `feature/*`, etc.
   **Note**: the APT suite corresponding to a given Git topic
   branch contains *only* the packages this branch adds to the tag or
   *main* branch it diverged from. Think of it as an overlay.
@@ -32,7 +33,7 @@ We use one single APT repository hosting multiple *suites*:
 
 The suite(s) to use as sources for APT, during the build and inside
 the resulting system, are determined by the content of the
-`config/base_branch` and `config/APT_overlays` files. See details in
+`config/base_branch` and `config/APT_overlays.d/*` files. See details in
 the *Build system* section below.
 
 We manage our APT repository with
@@ -62,16 +63,20 @@ Else, it adds:
 
 * one APT source for the base branch of the one being built, as found
   in `config/base_branch`;
-* one APT source for each suite listed in `config/APT_overlays`.
+* one APT source for each suite listed in
+  `config/APT_overlays.d/*`; note that only the name of such
+  files matters, and their content is ignored.
 
-In practice, `config/APT_overlays` contains:
+In practice, `config/APT_overlays.d/` contains:
 
 * for a topic branch:
-  - if needed, the branch's own overlay APT suite;
-  - any APT suite that came from merging its base branch into this
-    topic branch;
+  - if needed, a file that is named like the branch's own overlay APT
+    suite; e.g. for the `bugfix/12345-whatever` branch, it would be
+    called `config/APT_overlays.d/bugfix-12345-whatever.suite`
+  - any file representing APT suites that came from merging its base
+    branch into this topic branch, that is:
 * for a base branch (`stable`, `testing`, `devel` or
-  `feature/jessie`): the list of additional, overlay APT suites that
+  `feature/jessie`): a file for each additional, overlay APT suite that
   came from topic branches that ship Debian packages and were merged
   into this base branch since last time it was used to prepare
   a release.
@@ -83,14 +88,14 @@ features/build.feature desc="automated tests"]].
 At release time, the release manager:
 
 1. merges into the release branch's APT suite all APT overlay
-   suites found in `config/APT_overlays`;
-2. empties `config/APT_overlays` in the release branch;
+   suites found in `config/APT_overlays.d/`;
+2. empties `config/APT_overlays.d/` in the release branch;
 3. merges the release branch into other base branches as needed, and
-   ensures that all resulting `config/APT_overlays`:s make sense.
+   ensures that all resulting `config/APT_overlays.d/`:s make sense.
 
 Given this, the `experimental` branch doesn't need to be seen as
 a base branch anymore; instead, it can be seen as an integration
-branch of overlays on top of the `devel` one: its `config/APT_overlays`
+branch of overlays on top of the `devel` one: its `config/APT_overlays.d/`
 will merely add top `devel`'s one the list of APT suites that WIP
 branches merged into `experimental` have introduced. On the other
 hand, `feature/jessie` does need to be a base branch: we want to be
@@ -257,8 +262,8 @@ Merging APT overlays
 --------------------
 
 This operation merges all APT overlays listed in the given branch's
-`config/APT_overlays` into its own APT suite, empties
-`config/APT_overlays` accordingly, then commits and pushes to Git.
+`config/APT_overlays.d/` into its own APT suite, empties
+`config/APT_overlays.d/` accordingly, then commits and pushes to Git.
 
 1. Set some environment variables:
 
@@ -268,7 +273,7 @@ This operation merges all APT overlays listed in the given branch's
 2. Merge the APT overlays in reprepro:
 
         git checkout "$BRANCH" && \
-        for overlay in $(cat config/APT_overlays) ; do
+        for overlay in $(ls config/APT_overlays.d/) ; do
            if ! ssh reprepro@incoming.deb.tails.boum.org \
                    tails-merge-suite "$overlay" "$BRANCH" ; then
               echo "Failed to merge '$overlay' into '$BRANCH': $?" >&2
@@ -276,11 +281,11 @@ This operation merges all APT overlays listed in the given branch's
            fi
         done
 
-3. Empty `config/APT_overlays`:
+3. Empty `config/APT_overlays.d/`:
 
         git checkout "$BRANCH" && \
-        echo -n > config/APT_overlays && \
-        git commit config/APT_overlays \
+        git rm config/APT_overlays.d/* && \
+        git commit config/APT_overlays.d/ \
            -m "Empty the list of APT overlays: they were merged"
 
 4. Push the Git branch:
@@ -344,11 +349,11 @@ If the release was a major one, then:
 1. [[Hard reset the stable APT suite to
    the state of the testing one|APT_repository#workflow-reset]].
 
-2. Empty `config/APT_overlays` in the `stable` branch:
+2. Empty `config/APT_overlays.d` in the `stable` branch:
 
         git checkout stable && \
-        echo -n > config/APT_overlays && \
-        git commit config/APT_overlays \
+        git rm config/APT_overlays.d/* && \
+        git commit config/APT_overlays.d/ \
            -m "Empty the list of APT overlays: they were merged"
 
 Giving access to a core developer

@@ -89,24 +89,27 @@ Then /^I should not see the ['"]?([[:alnum:].-]+)['"]? suite$/ do |suite|
   @output.should_not have_suite(suite)
 end
 
-Given(/^config\/APT_overlays is empty$/) do
-  assert_equal(0, File.new('config/APT_overlays').size)
+Given(/^the config\/APT_overlays\.d directory is empty$/) do
+  Dir.glob('config/APT_overlays.d/*').empty? \
+  or raise "config/APT_overlays.d/ is not empty"
 end
 
-Given(/^config\/APT_overlays contains ['"]?([[:alnum:].-]+)['"]?$/) do |suite|
-  File.open('config/APT_overlays', 'a') do |overlays|
-    overlays.write("#{suite}\n")
-  end
+Given(/^config\/APT_overlays\.d contains ['"]?([[:alnum:].-]+)['"]?$/) do |suite|
+  FileUtils.touch("config/APT_overlays.d/#{suite}")
 end
 
 Then(/^it should fail$/) do
   assert_not_equal(0, @exit_code)
 end
 
-Given(/^(config\/(?:APT_overlays|base_branch)) does not exist$/) do |file|
+Given(/^the (config\/base_branch) file does not exist$/) do |file|
   File.delete(file)
 end
 
-Given(/^config\/base_branch is empty$/) do
+Given(/^the (config\/APT_overlays\.d) directory does not exist$/) do |dir|
+  Dir.rmdir(dir)
+end
+
+Given(/^the config\/base_branch file is empty$/) do
   File.open('config/base_branch', 'w+') { }
 end

@@ -113,10 +113,6 @@ if [ -n "$JENKINS_URL" ] && [ -z "$GIT_TAG" ] \
     GIT_BASE_BRANCH_COMMIT=$(git rev-parse "origin/${GIT_BASE_BRANCH}") \
 	|| fatal "Base branch's top commit could not be guessed."
 
-    cat > .git/info/attributes <<-EOF
-	config/APT_overlays merge=union
-	EOF
-
     echo "Merging base branch origin/${GIT_BASE_BRANCH}"
     echo "(at commit ${GIT_BASE_BRANCH_COMMIT})..."
     git merge --no-edit "origin/${GIT_BASE_BRANCH}" \
