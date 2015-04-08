@@ -202,6 +202,11 @@ for dep in git libvirt-daemon-system libvirt-clients libvirt-dev libav-tools lib
     check_dependency "${dep}"
 done
 
+package_installed libavcodec-extra-53 \
+    || package_installed libav-tools \
+    || error "Both libavcodec-extra-53 and libav-tools, are missing, " \
+	     "please install one of those and run again. Aborting..."
+
 TARGET_DISPLAY=$(next_free_display)
 
 start_xvfb
