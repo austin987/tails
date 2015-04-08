@@ -26,14 +26,8 @@ def try_for(t, options = {})
       loop do
         begin
           return true if yield
-        rescue NameError => e
+        rescue NameError, TryForTimeoutError => e
           raise e
-        rescue TryForTimeoutError => e
-          if options[:msg]
-            raise RuntimeError, options[:msg], caller
-          else
-            raise e
-          end
         rescue Exception
           # noop
         end
