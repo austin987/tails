@@ -73,7 +73,7 @@ end
 
 When /^I run ([[:alnum:]-]+)$/ do |command|
   @output = `#{File.expand_path("../../../auto/scripts/#{command}", __FILE__)}`
-  @exit_code = $?
+  @exit_code = $?.exitstatus
 end
 
 Then /^I should see the ['"]?([[:alnum:].-]+)['"]? suite$/ do |suite|
@@ -111,5 +111,5 @@ Given(/^the (config\/APT_overlays\.d) directory does not exist$/) do |dir|
 end
 
 Given(/^the config\/base_branch file is empty$/) do
-  File.open('config/base_branch', 'w+') { }
+  File.truncate('config/base_branch', 0)
 end
