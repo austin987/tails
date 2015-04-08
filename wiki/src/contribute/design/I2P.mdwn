@@ -184,8 +184,15 @@ scripts in each binary package.
    `feature-i2p-0.n.m`)
 1. use `reprepro includedeb` to import the binary package(s) into the
    same dedicated APT suite
-1. add the `feature-i2p-0.n.m` APT suite to `config/APT_overlays` on the
-   `feature/i2p-0.n.m` Git branch
+1. add the `feature-i2p-0.n.m` APT suite to `config/APT_overlays.d/` on the
+   `feature/i2p-0.n.m` Git branch:
+
+        VERSION=0.n.m
+        touch "config/APT_overlays.d/feature-i2p-${VERSION}"   && \
+        git add "config/APT_overlays.d/feature-i2p-${VERSION}" && \
+        git commit "config/APT_overlays.d/feature-i2p-${VERSION}" \
+           -m "Add the feature-i2p-${VERSION} overlay APT suite."
+
 1. build an ISO from the `feature/i2p-0.n.m` Git branch
 1. test this ISO
 1. merge the `feature/i2p-0.n.m` branch into the appropriate base branch

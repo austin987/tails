@@ -166,14 +166,14 @@ If we are at freeze time for a major release:
 
 2. [[Merge each APT overlay
    suite|contribute/APT_repository#workflow-merge-overlays]] listed in
-   the `devel` branch's `config/APT_overlays` into the `devel`
+   the `devel` branch's `config/APT_overlays.d/` into the `devel`
    APT suite.
 
 3. Merge the `devel` Git branch into the `testing` one:
 
         git checkout testing && git merge devel
 
-   ... and check that the resulting `config/APT_overlays` in the
+   ... and check that the resulting `config/APT_overlays.d/` in the
    `testing` branch is empty.
 
 4. [[Hard reset|APT_repository#workflow-reset]] the `testing` APT
@@ -195,7 +195,7 @@ If we are at freeze time for a point-release:
 
 2. [[Merge each APT overlay
    suite|contribute/APT_repository#workflow-merge-overlays]] listed in
-   the `stable` branch's `config/APT_overlays` into the `stable`
+   the `stable` branch's `config/APT_overlays.d/` into the `stable`
    APT suite.
 
 APT repository
@@ -206,7 +206,7 @@ Major release
 
 [[Merge each APT overlay
 suite|contribute/APT_repository#workflow-merge-overlays]] listed in
-the `testing` branch's `config/APT_overlays` into the `testing`
+the `testing` branch's `config/APT_overlays.d/` into the `testing`
 APT suite.
 
 Point-release
@@ -214,12 +214,12 @@ Point-release
 
 [[Merge each APT overlay
 suite|contribute/APT_repository#workflow-merge-overlays]] listed in
-the `stable` branch's `config/APT_overlays` into the `stable` APT suite.
+the `stable` branch's `config/APT_overlays.d/` into the `stable` APT suite.
 
 Update other base branches
 --------------------------
 
-Now that you have emptied `config/APT_overlays` in the branch used for
+Now that you have emptied `config/APT_overlays.d/` in the branch used for
 the release, get this change into every *newer* base branch:
 
 * if preparing a major release, merge `testing` into `devel`, and then
@@ -228,7 +228,7 @@ the release, get this change into every *newer* base branch:
   `devel` into `feature/jessie`;
 
 Then, ensure that every branch you just merged the release branch into
-has the expected content in `config/APT_overlays`: e.g. it must not
+has the expected content in `config/APT_overlays.d/`: e.g. it must not
 list any overlay APT suite that has been merged already.
 
 Finally, push all branches you just merged the release branch into.
