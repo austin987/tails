@@ -111,5 +111,5 @@ Given(/^the (config\/APT_overlays\.d) directory does not exist$/) do |dir|
 end
 
 Given(/^the config\/base_branch file is empty$/) do
-  File.open('config/base_branch', 'w+') { }
+  File.truncate('config/base_branch', 0)
 end
