@@ -19,9 +19,9 @@ end
 # one second breaks until it returns true, or until `t` seconds have
 # passed when we throw a TryForTimeoutError exception. Nested try_for
 # is forbidden, so the block cannot itself call try_for.
-def try_for(t, options = {})
+def try_for(timeout, options = {})
   options[:delay] ||= 1
-  Timeout::timeout(t, TryForTimeoutError) do
+  Timeout::timeout(timeout, TryForTimeoutError) do
     loop do
       begin
         return true if yield
