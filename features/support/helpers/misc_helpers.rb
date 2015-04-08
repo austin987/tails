@@ -24,7 +24,7 @@ def try_for(timeout, options = {})
   Timeout::timeout(timeout, TryForTimeoutError) do
     loop do
       begin
-        return true if yield
+        return if yield
       rescue NameError, TryForTimeoutError => e
         raise e
       rescue Exception
