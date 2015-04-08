@@ -39,11 +39,8 @@ def try_for(timeout, options = {})
     end
   end
 rescue TryForTimeoutError => e
-  if options[:msg]
-    raise RuntimeError, options[:msg], caller
-  else
-    raise e
-  end
+  msg = options[:msg] || 'try_for() timeout expired'
+  raise TryForTimeoutError.new(msg)
 end
 
 def wait_until_tor_is_working
