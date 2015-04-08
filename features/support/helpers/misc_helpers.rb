@@ -12,20 +12,23 @@ def assert_vmcommand_success(p, msg = nil)
                                 msg)
 end
 
-# Call block (ignoring any exceptions it may throw) repeatedly with one
-# second breaks until it returns true, or until `t` seconds have
-# passed when we throw Timeout::Error. As a precondition, the code
-# block cannot throw Timeout::Error.
+class TryForTimeoutError < Timeout::Error
+end
+
+# Call block (ignoring any exceptions it may throw) repeatedly with
+# one second breaks until it returns true, or until `t` seconds have
+# passed when we throw a TryForTimeoutError exception. Nested try_for
+# is forbidden, so the block cannot itself call try_for.
 def try_for(t, options = {})
   options[:delay] ||= 1
   begin
-    Timeout::timeout(t) do
+    Timeout::timeout(t, TryForTimeoutError) do
       loop do
         begin
           return true if yield
         rescue NameError => e
           raise e
-        rescue Timeout::Error => e
+        rescue TryForTimeoutError => e
           if options[:msg]
             raise RuntimeError, options[:msg], caller
           else
@@ -37,7 +40,7 @@ def try_for(t, options = {})
         sleep options[:delay]
       end
     end
-  rescue Timeout::Error => e
+  rescue TryForTimeoutError => e
     if options[:msg]
       raise RuntimeError, options[:msg], caller
     else
