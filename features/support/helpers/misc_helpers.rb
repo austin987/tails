@@ -26,9 +26,14 @@ def try_for(timeout, options = {})
       begin
         return if yield
       rescue NameError, TryForTimeoutError => e
+        # Let's not catch our own timeout (note that if we'd have a
+        # nested try_for we might catch another try_for's
+        # TryForTimeoutError exception here, and that's why such
+        # nesting is forbidden). Also, let's not catch what most
+        # likely is a typo.
         raise e
       rescue Exception
-        # noop
+        # All other exceptions are ignored while trying the block.
       end
       sleep options[:delay]
     end
