@@ -73,7 +73,7 @@ end
 
 When /^I run ([[:alnum:]-]+)$/ do |command|
   @output = `#{File.expand_path("../../../auto/scripts/#{command}", __FILE__)}`
-  @exit_code = $?
+  @exit_code = $?.exitstatus
 end
 
 Then /^I should see the ['"]?([[:alnum:].-]+)['"]? suite$/ do |suite|
