@@ -21,25 +21,23 @@ end
 # is forbidden, so the block cannot itself call try_for.
 def try_for(t, options = {})
   options[:delay] ||= 1
-  begin
-    Timeout::timeout(t, TryForTimeoutError) do
-      loop do
-        begin
-          return true if yield
-        rescue NameError, TryForTimeoutError => e
-          raise e
-        rescue Exception
-          # noop
-        end
-        sleep options[:delay]
+  Timeout::timeout(t, TryForTimeoutError) do
+    loop do
+      begin
+        return true if yield
+      rescue NameError, TryForTimeoutError => e
+        raise e
+      rescue Exception
+        # noop
       end
+      sleep options[:delay]
     end
-  rescue TryForTimeoutError => e
-    if options[:msg]
-      raise RuntimeError, options[:msg], caller
-    else
-      raise e
-    end
+  end
+rescue TryForTimeoutError => e
+  if options[:msg]
+    raise RuntimeError, options[:msg], caller
+  else
+    raise e
   end
 end
 
