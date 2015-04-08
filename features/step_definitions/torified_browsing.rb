@@ -1,10 +1,9 @@
-When /^I open some LAN resource in the Tor Browser$/ do
+When /^I open the LAN web server in the Tor Browser$/ do
   next if @skip_steps_while_restoring_background
-  @lan_host = "192.168.0.1"
-  step "I open the address \"#{@lan_host}\" in the Tor Browser"
+  step "I open the address \"#{@lan_web_server_url}\" in the Tor Browser"
 end
 
-When /^no traffic has flowed to the LAN resource$/ do
+When /^no traffic has flowed to the LAN web server$/ do
   next if @skip_steps_while_restoring_background
   leaks = FirewallLeakCheck.new(@sniffer.pcap_file, :ignore_lan => false)
   STDERR.puts "#{leaks.ipv4_tcp_leaks}"

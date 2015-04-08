@@ -16,12 +16,13 @@ Feature: Browsing the web using the Tor Browser
     And I save the state so the background can be restored next scenario
 
   Scenario: The Tor Browser cannot access the LAN
-    Given I capture all network traffic
+    Given a web server is running on the LAN
+    And I capture all network traffic
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
-    And I open some LAN resource in the Tor Browser
+    And I open the LAN web server in the Tor Browser
     Then I see "TorBrowserUnableToConnect.png" after at most 20 seconds
-    And no traffic has flowed to the LAN resource
+    And no traffic has flowed to the LAN web server
 
   Scenario: The Tor Browser directory is usable
     Then the amnesiac Tor Browser directory exists
