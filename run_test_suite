@@ -49,9 +49,14 @@ error() {
     exit 1
 }
 
+package_installed() {
+   set +o pipefail
+   dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"
+   set -o pipefail
+}
+
 check_dependency() {
-    if ! which "${1}" >/dev/null && \
-       ! dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"; then
+    if ! which "${1}" >/dev/null && ! package_installed "${1}" ; then
         error "'${1}' is missing, please install it and run again. Aborting..."
     fi
 }
@@ -196,6 +201,11 @@ for dep in git libvirt-daemon-system libvirt-clients libvirt-dev libav-tools lib
            virt-viewer libsikuli-script-java ovmf tcpdump xvfb; do
     check_dependency "${dep}"
 done
+
+package_installed libavcodec-extra-53 \
+    || package_installed libav-tools \
+    || error "Both libavcodec-extra-53 and libav-tools, are missing, " \
+	     "please install one of those and run again. Aborting..."
 
 TARGET_DISPLAY=$(next_free_display)
 
