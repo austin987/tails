@@ -5,24 +5,32 @@ Corresponding ticket: [[!tails_ticket 8007]]
 Things to check
 ===============
 
+* Ux rules don't sanitize `$PATH`
+  (https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1045986) =>
+  they must only be used to run software that does *not* rely on
+  `$PATH` for executing other stuff; in particular, many shell scripts
+  do rely on `$PATH`; this should be checked particularly for the
+  profiles we ship that don't come from AppArmor upstream, most
+  notably the Tor Browser one.
+* use of `sanitized_helper` [isn't very
+  safe](http://blog.azimuthsecurity.com/2012/09/poking-holes-in-apparmor-profiles.html),
+  especially given it [doesn't transition properly with
+  Pix](https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1042771)
+  => let's check if we add occurrences thereof in our own profiles
 * the kludges needed to make them work with aufs
 * access to files via alternate paths specific to Debian Live systems,
   e.g. `/live/persistence/TailsData_unlocked/`
 * access to webcam
 * access to microphone (can we easily block that while still allowing
   sound output?)
+* wide-open access to `$HOME`
+* wide-open access to `$HOME` except blacklist -- is that good enough?
+  shall we add to the blacklist?
 
-Resources
-=========
+Things to keep in mind
+======================
 
-These should be looked at, and added to the list of things to check
-if relevant.
-
-* <http://blog.azimuthsecurity.com/2012/09/poking-holes-in-apparmor-profiles.html>
-* <https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1045986>
-* <https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/851986>
-* <https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1045985>
-* <https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1042771>
+* Beware not to break assistive technologies (accessibility).
 
 Profiles
 ========
