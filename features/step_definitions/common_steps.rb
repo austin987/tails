@@ -217,22 +217,17 @@ end
 Given /^the computer (re)?boots Tails$/ do |reboot|
   next if @skip_steps_while_restoring_background
 
+  boot_timeout = 30
+  # We need some extra time for memory wiping if rebooting
+  boot_timeout += 90 if reboot
+
   case @os_loader
   when "UEFI"
-    assert(!reboot, "Testing of reboot with UEFI enabled is not implemented")
     bootsplash = 'TailsBootSplashUEFI.png'
     bootsplash_tab_msg = 'TailsBootSplashTabMsgUEFI.png'
-    boot_timeout = 30
   else
-    if reboot
-      bootsplash = 'TailsBootSplashPostReset.png'
-      bootsplash_tab_msg = 'TailsBootSplashTabMsgPostReset.png'
-      boot_timeout = 120
-    else
-      bootsplash = 'TailsBootSplash.png'
-      bootsplash_tab_msg = 'TailsBootSplashTabMsg.png'
-      boot_timeout = 30
-    end
+    bootsplash = 'TailsBootSplash.png'
+    bootsplash_tab_msg = 'TailsBootSplashTabMsg.png'
   end
 
   @screen.wait(bootsplash, boot_timeout)
@@ -500,7 +495,7 @@ end
 Then /^Tails eventually restarts$/ do
   next if @skip_steps_while_restoring_background
   nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
-  @screen.wait('TailsBootSplashPostReset.png', nr_gibs_of_ram*5*60)
+  @screen.wait('TailsBootSplash.png', nr_gibs_of_ram*5*60)
 end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
@@ -721,7 +716,11 @@ end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
   next if @skip_steps_while_restoring_background
-  step "I start and focus GNOME Terminal"
+  if !@vm.has_process?("gnome-terminal")
+    step "I start and focus GNOME Terminal"
+  else
+    @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+  end
   @screen.type(command + Sikuli::Key.ENTER)
 end
 

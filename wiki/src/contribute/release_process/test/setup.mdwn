@@ -10,34 +10,23 @@ Once you have a working environment, see [[test/usage]].
 Install dependencies
 ====================
 
-The following packages are necessary on Debian Wheezy, with
-wheezy-backports sources added:
+First of all, one needs a Debian Jessie system with the `non-free` APT
+components enabled.
 
-    echo 'deb http://ftp.us.debian.org/debian/ testing main contrib non-free' \
-        > /etc/apt/sources.list.d/testing.list && \
-    echo -e "Package: *\nPin: release o=Debian,a=stable\nPin-Priority: 990" \
-        > /etc/apt/preferences.d/Debian_stable && \
-    echo -e "Package: *\nPin: release o=Debian,a=testing\nPin-Priority: 500" \
-        > /etc/apt/preferences.d/Debian_testing && \
-    apt-get update &&
-    apt-get install git i18nspector xvfb virt-viewer libsikuli-script-java \
-        libxslt1-dev tcpdump unclutter radvd x11-apps syslinux \
-        libcap2-bin devscripts libvirt-ruby ruby-rspec gawk ntp ovmf/testing \
-        ruby-json x11vnc xtightvncviewer ffmpeg libavcodec-extra-53 \
+The following packages are necessary on Debian Jessie:
+
+    echo -e "Package: *\nPin: release o=Debian,n=jessie\nPin-Priority: 990" \
+        > /etc/apt/preferences.d/Debian_jessie && \
+    apt update && \
+    apt install git i18nspector xvfb virt-viewer libsikuli-script-java \
+        libxslt1-dev tcpdump unclutter radvd x11-apps syslinux-utils \
+        libcap2-bin devscripts ruby-libvirt ruby-rspec gawk ntp ovmf \
+        ruby-json x11vnc xtightvncviewer libav-tools \
         libvpx1 dnsmasq-base openjdk-7-jre ruby-guestfs ruby-net-irc \
-        ruby-test-unit python-jabberbot && \
-    apt-get -t wheezy-backports install qemu-kvm qemu-system-x86 libvirt0 \
-        libvirt-dev libvirt-bin seabios ruby-rjb ruby-packetfu cucumber \
-        python-potr && \
+        ruby-test-unit qemu-kvm qemu-system-x86 libvirt0 libvirt-dev \
+        libvirt-daemon-system libvirt-clients seabios ruby-rjb \
+        ruby-packetfu cucumber python-potr python-jabberbot && \
     service libvirtd restart
-
-In addition, if `libguestfs` doesn't work by default you probably have
-hit [[!debbug 741203]], which still may affect Wheezy systems but it's
-verified to have been fixed in Debian Jessie. Then you must run (as
-root):
-
-    export excludes="--exclude ^openrc"
-    update-guestfs-appliance
 
 Other requirements
 ==================

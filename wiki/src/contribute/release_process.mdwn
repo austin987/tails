@@ -123,6 +123,7 @@ Then see the relevant release processes:
 * [[perl5lib]]
 * [[persistence-setup]]
 * [[tails-iuk]]
+* [[Torbutton]]
 * whisperback:
   * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
   * build a Debian package
@@ -154,20 +155,86 @@ Commit the result, including new PO files:
 	git add po && git commit -m 'Update PO files.'
 
 Freeze
-------
+======
+
+Major release
+-------------
 
 If we are at freeze time for a major release:
 
-* Merge the `master` Git branch into `devel`.
-* Merge the `devel` Git branch into `testing`.
-* Reset the `testing` APT suite to the state of the `devel` one, as
-  documented on [[contribute/APT_repository#workflow-freeze]].
-* If there is no Jenkins job building ISO images from the `testing`
-  branch, ask <tails-sysadmins@boum.org> to re-activate it.
+1. Merge the `master` Git branch into `devel`.
 
-Else, if we are at freeze time for a point-release:
+2. [[Merge each APT overlay
+   suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+   the `devel` branch's `config/APT_overlays.d/` into the `devel`
+   APT suite.
 
-* Merge the `master` Git branch into `stable`.
+3. Merge the `devel` Git branch into the `testing` one:
+
+        git checkout testing && git merge devel
+
+   ... and check that the resulting `config/APT_overlays.d/` in the
+   `testing` branch is empty.
+
+4. [[Hard reset|APT_repository#workflow-reset]] the `testing` APT
+   suite to the current state of the `devel` one.
+
+5. Push the `testing` branch to Git:
+
+        git push origin testing
+
+6. If there is no Jenkins job building ISO images from the `testing`
+   branch, ask <tails-sysadmins@boum.org> to re-activate it.
+
+Point-release
+-------------
+
+If we are at freeze time for a point-release:
+
+1. Merge the `master` Git branch into `stable`.
+
+2. [[Merge each APT overlay
+   suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+   the `stable` branch's `config/APT_overlays.d/` into the `stable`
+   APT suite.
+
+APT repository
+==============
+
+Major release
+-------------
+
+[[Merge each APT overlay
+suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+the `testing` branch's `config/APT_overlays.d/` into the `testing`
+APT suite.
+
+Point-release
+-------------
+
+[[Merge each APT overlay
+suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+the `stable` branch's `config/APT_overlays.d/` into the `stable` APT suite.
+
+Update other base branches
+--------------------------
+
+Now that you have emptied `config/APT_overlays.d/` in the branch used for
+the release, get this change into every *newer* base branch:
+
+* if preparing a major release, merge `testing` into `devel`, and then
+  `devel` into `feature/jessie`;
+* if preparing a point-release, merge `stable` into `devel`, and then
+  `devel` into `feature/jessie`;
+
+Then, ensure that every branch you just merged the release branch into
+has the expected content in `config/APT_overlays.d/`: e.g. it must not
+list any overlay APT suite that has been merged already.
+
+Finally, push all branches you just merged the release branch into.
+
+Update more included files
+==========================
 
 Changelog
 ---------
@@ -262,12 +329,20 @@ To get a list of changes on the website:
 Import the signing key
 ======================
 
+Skip this part if you have a Tails signing subkey on an OpenPGPG
+smartcard, i.e. if you are one of the usual release managers. This is
+only relevant when the master key has been reassembled, e.g. for
+signing a Tails emergency release where none of the usual release
+managers are available.
+
 You should never import the Tails signing key into your own keyring,
 and a good practice is to import it to a tmpfs to limit the risks that
 the private key material is written to disk:
 
     export GNUPGHOME=$(mktemp -d)
-    sudo mount -t tmpfs tmpfs "$GNUPGHOME"
+    sudo mount -t ramfs ramfs "$GNUPGHOME"
+    sudo chown $(id -u):$(id -g) "$GNUPGHOME"
+    sudo chmod 0700 "$GNUPGHOME"
     gpg --homedir $HOME/.gnupg --export $TAILS_SIGNATURE_KEY | gpg --import
     gpg --import path/to/private-key
 
@@ -696,6 +771,7 @@ Then, record the last commit before putting the release out for real:
 Testing
 =======
 
+1. Email <tails-testers@boum.org> to ask them to test the tentative ISO.
 1. Set up a Gobby document and copy the [[manual test
    suite|contribute/release_process/test]] in it.
 1. Email to <tails@boum.org> and potential contributors that tests may start:
@@ -703,7 +779,6 @@ Testing
    - make it clear where and how you expect to get feedback
    - attach the Torrent
    - attach the `.packages` file
-1. Email <tails-testers@boum.org> to ask them to test the tentative ISO.
 1. Make sure someone is committed to run the automated test suite.
 1. Make sure that enough people are here to run the tests, that they
    report their results in due time, and that they make it clear when
@@ -753,7 +828,27 @@ Go through the tickets linked from the documentation and support sections of the
 website and point documentation writers to the tickets that might be resolved in
 this release.
 
-    git grep tails_ticket -- "wiki/src/[ds]*/*.mdwn"
+    find wiki/src/{doc,support} -name "*.mdwn" -o -name "*.html" | xargs cat | \
+        ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
+        while read ticket; do
+            url="https://labs.riseup.net/code/issues/${ticket}"
+            url_content=$(curl --fail --silent ${url})
+            if [ "${?}" -ne 0 ]; then
+                echo "Failed to fetch ${url} so manually investigate #${ticket}" >&2
+                continue
+            fi
+            status=$(echo "${url_content}" | \
+                sed -n 's,^.*<th class="status">Status:</th><td class="status">\([^<]\+\)</td>.*$,\1,p')
+            if [ "${status}" != "New" ] && \
+               [ "${status}" != "Confirmed" ] && \
+               [ "${status}" != "In Progress" ]; then
+                echo "It seems ticket #${ticket} has been fixed (Status: ${status}) so please find all instances in the wiki and fix them. Ticket URL: ${url}"
+            fi
+        done
+
+Remember that ticket expressions, e.g. `[[!tails_ticket 1234]]`, can
+span several lines, so finding the ones reported by the above code
+*might* be harder than `git grep "tails_ticket 1234"`.
 
 Test suite
 ----------
@@ -795,8 +890,10 @@ We announce *major* releases on the Tor blog:
 Tor weekly news
 ---------------
 
-Write a short announcement for the Tor weekly news, or find someone
-who's happy to do it.
+Write a short announcement for the [Tor weekly
+news](https://trac.torproject.org/projects/tor/wiki/TorWeeklyNews)'s
+next issue (follow the *Next steps* link), or find someone who's happy
+to do it.
 
 Amnesia news
 ------------
@@ -850,17 +947,10 @@ this, and skip what does not make sense for a RC.
            | sed -e 's,^[a-f0-9]\+\s\+,,' | sort -u
 
    - `git checkout experimental && git reset --hard devel`
-   - [[hard reset|contribute/APT_repository#workflow-reset]] the `experimental`
-     APT suite to the state of the `devel` one.
-   - merge additional branches into experimental (both at the Git and
-     APT levels)
+   - merge additional Git branches into experimental
 
          for branch in $UNMERGED_BRANCHES ; do
             git merge $branch
-            suite=$(echo $branch | sed -e 's,[/_],-,g')
-            if [ $(ssh reprepro@incoming.deb.tails.boum.org reprepro list $suite | wc -l) -gt 0 ] ; then
-               ssh reprepro@incoming.deb.tails.boum.org tails-merge-suite $suite experimental
-            fi
          done
 
    - `git push --force origin experimental`

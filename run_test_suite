@@ -13,7 +13,7 @@ that this script must be run from the Tails source directory root.
 
 Options for '@product' features:
   --capture FILE     Captures the test session into FILE using VP8 encoding.
-                     Requires ffmpeg and libvpx1.
+                     Requires libav-tools and libvpx1.
   --debug            Display various debugging information while running the
                      test suite.
   --pause-on-fail    On failure, pause test suite until pressing Enter. This is
@@ -24,10 +24,11 @@ Options for '@product' features:
   --retry-find       Print a warning whenever Sikuli fails to find an image
                      and allow *one* retry after pressing ENTER. This is useful
                      for updating outdated images.
-  --temp-dir         Directory where various temporary files are written
+  --tmpdir           Directory where various temporary files are written
                      during a test, e.g. VM snapshots and memory dumps,
                      failure screenshots, pcap files and disk images
-                     (default is /tmp/TailsToaster).
+                     (default is TMPDIR in the environment, and if unset,
+                     /tmp/TailsToaster).
   --view             Shows the test session in a windows. Requires x11vnc
                      and xtightvncviewer.
   --vnc-server-only  Starts a VNC server for the test session. Requires x11vnc.
@@ -48,9 +49,14 @@ error() {
     exit 1
 }
 
+package_installed() {
+   set +o pipefail
+   dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"
+   set -o pipefail
+}
+
 check_dependency() {
-    if ! which "${1}" >/dev/null && \
-       ! dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"; then
+    if ! which "${1}" >/dev/null && ! package_installed "${1}" ; then
         error "'${1}' is missing, please install it and run again. Aborting..."
     fi
 }
@@ -96,7 +102,7 @@ start_vnc_viewer() {
 
 capture_session() {
     echo "Capturing guest display into ${CAPTURE_FILE}"
-    ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
+    avconv -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
 }
 
@@ -120,6 +126,9 @@ remove_control_chars_from() {
 
 # main script
 
+# Unset all environment variables used by this script to pass options
+# to cucumber, except TMPDIR since we explicitly want to support
+# setting it that way.
 CAPTURE_FILE=
 LOG_FILE=
 VNC_VIEWER=
@@ -128,11 +137,10 @@ DEBUG=
 PAUSE_ON_FAIL=
 KEEP_SNAPSHOTS=
 SIKULI_RETRY_FINDFAILED=
-TEMP_DIR=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail,log-to-file:"
+LONGOPTS="view,vnc-server-only,capture:,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail,log-to-file:"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -165,9 +173,9 @@ while [ $# -gt 0 ]; do
         --retry-find)
             export SIKULI_RETRY_FINDFAILED="yes"
             ;;
-        --temp-dir)
+        --tmpdir)
             shift
-            export TEMP_DIR="$(readlink -f $1)"
+            export TMPDIR="$(readlink -f $1)"
             ;;
         --iso)
             shift
@@ -189,10 +197,15 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-for dep in ffmpeg git libvirt-bin libvirt-dev libavcodec-extra-53 libvpx1 \
+for dep in git libvirt-daemon-system libvirt-clients libvirt-dev libav-tools libvpx1 \
            virt-viewer libsikuli-script-java ovmf tcpdump xvfb; do
     check_dependency "${dep}"
 done
+
+package_installed libavcodec-extra-53 \
+    || package_installed libav-tools \
+    || error "Both libavcodec-extra-53 and libav-tools, are missing, " \
+	     "please install one of those and run again. Aborting..."
 
 TARGET_DISPLAY=$(next_free_display)
 

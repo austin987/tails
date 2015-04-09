@@ -9,6 +9,10 @@ branches").
 Some metrics about the number of branches merged per releases are
 available on the [[dedicated statistics page|autobuild_stats]].
 
+Our Jenkins now has the Global Build Stats plugin live, Tails developers
+[[have access to the metrics|
+https://jenkins.tails.boum.org/plugin/global-build-stats/]]
+
 [[!toc levels=2]]
 
 # Question to discuss
@@ -29,10 +33,25 @@ Developers can easily add a branch back to the automated builds
 whenever it has been removed from the list (for example after
 a release) by merging its base branch into it.
 
+They also can at the moment manually trigger a build if they uploaded to
+a APT suite:
+
+1. if anyone really want to trigger an immediate rebuild, they can do
+   it manually in the Jenkins interface (people who have upload
+   rights to our APT repo also have powerful-enough access to Jenkins
+   to trigger builds);
+2. the proposal says that all active branches are built daily, in
+   addition to post-Git-push => worst case, the branch will be
+   rebuilt within 24h;
+3. if in a hurry, or for whatever reason, you can still force
+   a rebuild by pushing a dummy commit (ugly, but it works).
+
 Proposal1:
 
 * branches which are not merged into master, devel, stable and testing
-* but had new commits since the previous release
+* but had new commits or Debian package uploaded since the previous release
+
+<a id="how-to-build-it"></a>
 
 ## How to build it
 
@@ -66,7 +85,7 @@ This locally-merge-before-building process requires [[!tails_ticket
 ## When to build it
 
 Define the regularity we want to build topic branches, apart from being build
-on Git push.
+on Git push or new Debian package upload.
 
 Note that we will have to plug that in automatic tests when they will be
 deployed.
@@ -85,13 +104,17 @@ Email will be the main interface.
 * For base branches, notify the RM.
 * For topic branches, notify the author of the last commit.
 
+Note that this proposal doesn't take into consideration how to notify
+when the branch is build because of a Debian package upload.
+
 # Scenarios
 
 In the following scenario:
 
 0. topic branches are named branch F
 0. base branches are named branch B
-0. builds are ran on merges which don't raise a conflict. If the merge raises a conflict, then the topic branch's developer should take care of resolving it.
+0. builds are ran on merges which don't raise a conflict. If the merge raises a
+conflict, then the topic branch's developer should take care of resolving it.
 
 
 ## Scenario 1 : reviewer
@@ -189,6 +212,19 @@ might want to consider it in the future.
     As a Tails developer
     When an ISO is build from my last commit
     I want to access it through remote desktop (VNC/Spice/...) over Tor
+
+## Scenario 14
+
+    As a Tails developer
+    When I push a new commit or a new Debian package to a feature branch
+    I want the affected base branches to be rebuilt with that package
+
+## Scenario 15
+
+    As a Tails developer
+    When I push a new commit or a new Debian package to a base branch
+    I want the affected feature branches to be rebuilt with that change
+
 
 # Statistics
 
