@@ -11,7 +11,7 @@ LOCAL_CONFIGS_DIR = "#{Dir.pwd}/features/config/local.d"
 
 assert File.exists?(DEFAULTS_CONFIG_FILE)
 $config = YAML.load(File.read(DEFAULTS_CONFIG_FILE))
-Dir.glob("#{LOCAL_CONFIGS_DIR}/*").sort.each do |config|
+Dir.glob("#{LOCAL_CONFIGS_DIR}/*.yml").sort.each do |config|
   $config.merge!(YAML.load(File.read(config)))
 end
 if File.exists?(LOCAL_CONFIG_FILE)
