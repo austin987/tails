@@ -591,7 +591,7 @@ Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
   @vm.storage.disk_mklabel(name, type)
 end
 
-Then /^a suitable USB device is not found$/ do
+Then /^a suitable USB device is (?:still )?not found$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("TailsInstallerNoDevice.png", 60)
 end
