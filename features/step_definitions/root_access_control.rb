@@ -1,13 +1,13 @@
 Then /^I should be able to run administration commands as the live user$/ do
   next if @skip_steps_while_restoring_background
-  stdout = @vm.execute("echo #{@sudo_password} | sudo -S whoami", LIVE_USER).stdout
+  stdout = $vm.execute("echo #{@sudo_password} | sudo -S whoami", LIVE_USER).stdout
   actual_user = stdout.sub(/^\[sudo\] password for #{LIVE_USER}: /, "").chomp
   assert_equal("root", actual_user, "Could not use sudo")
 end
 
 Then /^I should not be able to run administration commands as the live user with the "([^"]*)" password$/ do |password|
   next if @skip_steps_while_restoring_background
-  stderr = @vm.execute("echo #{password} | sudo -S whoami", LIVE_USER).stderr
+  stderr = $vm.execute("echo #{password} | sudo -S whoami", LIVE_USER).stderr
   sudo_failed = stderr.include?("The administration password is disabled") || stderr.include?("is not allowed to execute")
   assert(sudo_failed, "The administration password is not disabled:" + stderr)
 end
@@ -15,7 +15,7 @@ end
 When /^running a command as root with pkexec requires PolicyKit administrator privileges$/ do
   next if @skip_steps_while_restoring_background
   action = 'org.freedesktop.policykit.exec'
-  action_details = @vm.execute("pkaction --verbose --action-id #{action}").stdout
+  action_details = $vm.execute("pkaction --verbose --action-id #{action}").stdout
   assert(action_details[/\s+implicit any:\s+auth_admin$/],
          "Expected 'auth_admin' for 'any':\n#{action_details}")
   assert(action_details[/\s+implicit inactive:\s+auth_admin$/],
@@ -29,7 +29,7 @@ Then /^I should be able to run a command as root with pkexec$/ do
   step "I run \"pkexec touch /root/pkexec-test\" in GNOME Terminal"
   step 'I enter the sudo password in the pkexec prompt'
   try_for(10, :msg => 'The /root/pkexec-test file was not created.') {
-    @vm.execute('ls /root/pkexec-test').success?
+    $vm.execute('ls /root/pkexec-test').success?
   }
 end
 

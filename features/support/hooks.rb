@@ -124,7 +124,7 @@ After('@product') do |scenario|
       STDIN.gets
     end
   end
-  @vm.destroy_and_undefine if @vm
+  $vm.destroy_and_undefine if $vm
 end
 
 After('@product', '~@keep_volumes') do

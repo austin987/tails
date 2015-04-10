@@ -3,7 +3,7 @@ require 'uri'
 Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   next if @skip_steps_while_restoring_background
   hosts = hosts_str.split(',')
-  @vm.file_content("/etc/apt/sources.list /etc/apt/sources.list.d/*").chomp.each_line { |line|
+  $vm.file_content("/etc/apt/sources.list /etc/apt/sources.list.d/*").chomp.each_line { |line|
     next if ! line.start_with? "deb"
     source_host = URI(line.split[1]).host
     if !hosts.include?(source_host)
@@ -15,7 +15,7 @@ end
 When /^I update APT using apt-get$/ do
   next if @skip_steps_while_restoring_background
   Timeout::timeout(30*60) do
-    @vm.execute_successfully("echo #{@sudo_password} | " +
+    $vm.execute_successfully("echo #{@sudo_password} | " +
                              "sudo -S apt-get update", LIVE_USER)
   end
 end
@@ -24,7 +24,7 @@ Then /^I should be able to install a package using apt-get$/ do
   next if @skip_steps_while_restoring_background
   package = "cowsay"
   Timeout::timeout(120) do
-    @vm.execute_successfully("echo #{@sudo_password} | " +
+    $vm.execute_successfully("echo #{@sudo_password} | " +
                              "sudo -S apt-get install #{package}", LIVE_USER)
   end
   step "package \"#{package}\" is installed"

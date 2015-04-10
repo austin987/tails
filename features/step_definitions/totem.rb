@@ -13,7 +13,7 @@ end
 
 Given /^I setup a filesystem share containing sample videos$/ do
   next if @skip_steps_while_restoring_background
-  @vm.add_share(MISC_FILES_DIR, shared_video_dir_on_guest)
+  $vm.add_share(MISC_FILES_DIR, shared_video_dir_on_guest)
 end
 
 Given /^I copy the sample videos to "([^"]+)" as user "([^"]+)"$/ do |destination, user|

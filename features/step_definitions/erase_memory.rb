@@ -1,23 +1,23 @@
 Given /^the computer is a modern 64-bit system$/ do
   next if @skip_steps_while_restoring_background
-  @vm.set_arch("x86_64")
-  @vm.drop_hypervisor_feature("nonpae")
-  @vm.add_hypervisor_feature("pae")
+  $vm.set_arch("x86_64")
+  $vm.drop_hypervisor_feature("nonpae")
+  $vm.add_hypervisor_feature("pae")
 end
 
 Given /^the computer is an old pentium without the PAE extension$/ do
   next if @skip_steps_while_restoring_background
-  @vm.set_arch("i686")
-  @vm.drop_hypervisor_feature("pae")
+  $vm.set_arch("i686")
+  $vm.drop_hypervisor_feature("pae")
   # libvirt claim the following feature doesn't exit even though
   # it's listed in the hvm i686 capabilities...
-#  @vm.add_hypervisor_feature("nonpae")
+#  $vm.add_hypervisor_feature("nonpae")
   # ... so we use a workaround until we can figure this one out.
-  @vm.disable_pae_workaround
+  $vm.disable_pae_workaround
 end
 
 def which_kernel
-  kernel_path = @vm.execute("tails-get-bootinfo kernel").stdout.chomp
+  kernel_path = $vm.execute("tails-get-bootinfo kernel").stdout.chomp
   return File.basename(kernel_path)
 end
 
@@ -34,11 +34,11 @@ Given /^the non-PAE kernel is running$/ do
 end
 
 def used_ram_in_MiB
-  return @vm.execute("free -m | awk '/^-\\/\\+ buffers\\/cache:/ { print $3 }'").stdout.chomp.to_i
+  return $vm.execute("free -m | awk '/^-\\/\\+ buffers\\/cache:/ { print $3 }'").stdout.chomp.to_i
 end
 
 def detected_ram_in_MiB
-  return @vm.execute("free -m | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
+  return $vm.execute("free -m | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
 end
 
 Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
@@ -63,7 +63,7 @@ def pattern_coverage_in_guest_ram
   end
   FileUtils.touch(dump)
   FileUtils.chmod(0666, dump)
-  @vm.domain.core_dump(dump)
+  $vm.domain.core_dump(dump)
   patterns = IO.popen("grep -c 'wipe_didnt_work' #{dump}").gets.to_i
   File.delete dump
   # Pattern is 16 bytes long
@@ -79,7 +79,7 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   next if @skip_steps_while_restoring_background
 
   # Free some more memory by dropping the caches etc.
-  @vm.execute("echo 3 > /proc/sys/vm/drop_caches")
+  $vm.execute("echo 3 > /proc/sys/vm/drop_caches")
 
   # The (guest) kernel may freeze when approaching full memory without
   # adjusting the OOM killer and memory overcommitment limitations.
@@ -89,13 +89,13 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
    "echo 97  > /proc/sys/vm/overcommit_ratio",
    "echo 1   > /proc/sys/vm/oom_kill_allocating_task",
    "echo 0   > /proc/sys/vm/oom_dump_tasks"
-  ].each { |c| @vm.execute(c) }
+  ].each { |c| $vm.execute(c) }
 
   # The remote shell is sometimes OOM killed when we fill the memory,
   # and since we depend on it after the memory fill we try to prevent
   # that from happening.
-  pid = @vm.pidof("autotest_remote_shell.py")[0]
-  @vm.execute("echo -17 > /proc/#{pid}/oom_adj")
+  pid = $vm.pidof("autotest_remote_shell.py")[0]
+  $vm.execute("echo -17 > /proc/#{pid}/oom_adj")
 
   used_mem_before_fill = used_ram_in_MiB
 
@@ -105,10 +105,10 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   # since the others otherwise may continue re-filling the same memory
   # unnecessarily.
   instances = (@detected_ram_m.to_f/(2**10)).ceil
-  instances.times { @vm.spawn('fillram; killall fillram') }
+  instances.times { $vm.spawn('fillram; killall fillram') }
   # We make sure that the filling has started...
   try_for(10, { :msg => "fillram didn't start" }) {
-    @vm.has_process?("fillram")
+    $vm.has_process?("fillram")
   }
   STDERR.print "Memory fill progress: "
   ram_usage = ""
@@ -119,7 +119,7 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
     remove_chars = ram_usage.size
     ram_usage = "%3d%% " % ((used_ram.to_f/@detected_ram_m)*100)
     STDERR.print "\b"*remove_chars + ram_usage
-    ! @vm.has_process?("fillram")
+    ! $vm.has_process?("fillram")
   end
   STDERR.print "\b"*remove_chars + "finished.\n"
   if verify
@@ -155,13 +155,13 @@ end
 
 When /^I reboot without wiping the memory$/ do
   next if @skip_steps_while_restoring_background
-  @vm.reset
+  $vm.reset
   @screen.wait('TailsBootSplash.png', 30)
 end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute("halt")
+  $vm.execute("halt")
   nr_gibs_of_ram = (@detected_ram_m.to_f/(2**10)).ceil
   try_for(nr_gibs_of_ram*5*60, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
     # We spam keypresses to prevent console blanking from hiding the

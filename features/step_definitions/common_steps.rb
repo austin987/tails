@@ -17,29 +17,29 @@ def activate_filesystem_shares
   # "probe of virtio2 failed with error -2" (in dmesg) which makes the
   # shares unavailable. Hence we leave this code commented for now.
   #for mod in ["9pnet_virtio", "9p"] do
-  #  @vm.execute("modprobe #{mod}")
+  #  $vm.execute("modprobe #{mod}")
   #end
 
-  @vm.list_shares.each do |share|
-    @vm.execute("mkdir -p #{share}")
-    @vm.execute("mount -t 9p -o trans=virtio #{share} #{share}")
+  $vm.list_shares.each do |share|
+    $vm.execute("mkdir -p #{share}")
+    $vm.execute("mount -t 9p -o trans=virtio #{share} #{share}")
   end
 end
 
 def deactivate_filesystem_shares
-  @vm.list_shares.each do |share|
-    @vm.execute("umount #{share}")
+  $vm.list_shares.each do |share|
+    $vm.execute("umount #{share}")
   end
 
   # XXX-9p: See XXX-9p above
   #for mod in ["9p", "9pnet_virtio"] do
-  #  @vm.execute("modprobe -r #{mod}")
+  #  $vm.execute("modprobe -r #{mod}")
   #end
 end
 
 def restore_background
-  @vm.restore_snapshot($background_snapshot)
-  @vm.wait_until_remote_shell_is_up
+  $vm.restore_snapshot($background_snapshot)
+  $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
 
   # XXX-9p: See XXX-9p above
@@ -48,60 +48,60 @@ def restore_background
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
-  if @vm.has_network?
-    if @vm.execute("service tor status").success?
-      @vm.execute("service tor stop")
-      @vm.execute("rm -f /var/log/tor/log")
-      @vm.execute("killall vidalia")
-      @vm.host_to_guest_time_sync
-      @vm.execute("service tor start")
+  if $vm.has_network?
+    if $vm.execute("service tor status").success?
+      $vm.execute("service tor stop")
+      $vm.execute("rm -f /var/log/tor/log")
+      $vm.execute("killall vidalia")
+      $vm.host_to_guest_time_sync
+      $vm.execute("service tor start")
       wait_until_tor_is_working
-      @vm.spawn("restart-vidalia")
+      $vm.spawn("restart-vidalia")
     end
   else
-    @vm.host_to_guest_time_sync
+    $vm.host_to_guest_time_sync
   end
 end
 
 Given /^a computer$/ do
-  @vm.destroy_and_undefine if @vm
-  @vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
+  $vm.destroy_and_undefine if $vm
+  $vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
 Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
   next if @skip_steps_while_restoring_background
-  @vm.set_ram_size(size, unit)
+  $vm.set_ram_size(size, unit)
 end
 
 Given /^the computer is set to boot from the Tails DVD$/ do
   next if @skip_steps_while_restoring_background
-  @vm.set_cdrom_boot(TAILS_ISO)
+  $vm.set_cdrom_boot(TAILS_ISO)
 end
 
 Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
   next if @skip_steps_while_restoring_background
-  @vm.set_disk_boot(name, type.downcase)
+  $vm.set_disk_boot(name, type.downcase)
 end
 
 Given /^I create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |size, unit, name|
   next if @skip_steps_while_restoring_background
-  @vm.storage.create_new_disk(name, {:size => size, :unit => unit,
+  $vm.storage.create_new_disk(name, {:size => size, :unit => unit,
                                      :type => "qcow2"})
 end
 
 Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
   next if @skip_steps_while_restoring_background
-  @vm.plug_drive(name, bus.downcase)
-  if @vm.is_running?
+  $vm.plug_drive(name, bus.downcase)
+  if $vm.is_running?
     step "drive \"#{name}\" is detected by Tails"
   end
 end
 
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
   next if @skip_steps_while_restoring_background
-  if @vm.is_running?
+  if $vm.is_running?
     try_for(10, :msg => "Drive '#{name}' is not detected by Tails") {
-      @vm.disk_detected?(name)
+      $vm.disk_detected?(name)
     }
   else
     STDERR.puts "Cannot tell if drive '#{name}' is detected by Tails: " +
@@ -113,12 +113,12 @@ Given /^the network is plugged$/ do
   # We don't skip this step when restoring the background to ensure
   # that the network state is actually the same after restoring as
   # when the snapshot was made.
-  @vm.plug_network
+  $vm.plug_network
 end
 
 Given /^the network is unplugged$/ do
   # See comment in the step "the network is plugged".
-  @vm.unplug_network
+  $vm.unplug_network
 end
 
 Given /^I capture all network traffic$/ do
@@ -138,9 +138,9 @@ end
 
 When /^I start the computer$/ do
   next if @skip_steps_while_restoring_background
-  assert(!@vm.is_running?,
+  assert(!$vm.is_running?,
          "Trying to start a VM that is already running")
-  @vm.start
+  $vm.start
   post_vm_start_hook
 end
 
@@ -198,9 +198,9 @@ end
 
 When /^I power off the computer$/ do
   next if @skip_steps_while_restoring_background
-  assert(@vm.is_running?,
+  assert($vm.is_running?,
          "Trying to power off an already powered off VM")
-  @vm.power_off
+  $vm.power_off
 end
 
 When /^I cold reboot the computer$/ do
@@ -211,7 +211,7 @@ end
 
 When /^I destroy the computer$/ do
   next if @skip_steps_while_restoring_background
-  @vm.destroy_and_undefine
+  $vm.destroy_and_undefine
 end
 
 Given /^the computer (re)?boots Tails$/ do |reboot|
@@ -238,7 +238,7 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
   @screen.type(" autotest_never_use_this_option #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 30*60)
-  @vm.wait_until_remote_shell_is_up
+  $vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
 end
 
@@ -274,7 +274,7 @@ Given /^Tails Greeter has dealt with the sudo password$/ do
   f1 = "/etc/sudoers.d/tails-greeter"
   f2 = "#{f1}-no-password-lecture"
   try_for(20) {
-    @vm.execute("test -e '#{f1}' -o -e '#{f2}'").success?
+    $vm.execute("test -e '#{f1}' -o -e '#{f2}'").success?
   }
 end
 
@@ -314,14 +314,14 @@ end
 Given /^the time has synced$/ do
   next if @skip_steps_while_restoring_background
   ["/var/run/tordate/done", "/var/run/htpdate/success"].each do |file|
-    try_for(300) { @vm.execute("test -e #{file}").success? }
+    try_for(300) { $vm.execute("test -e #{file}").success? }
   end
 end
 
 Given /^available upgrades have been checked$/ do
   next if @skip_steps_while_restoring_background
   try_for(300) {
-    @vm.execute("test -e '/var/run/tails-upgrader/checked_upgrades'").success?
+    $vm.execute("test -e '/var/run/tails-upgrader/checked_upgrades'").success?
   }
 end
 
@@ -403,7 +403,7 @@ Given /^I save the state so the background can be restored next scenario$/ do
     # XXX-9p: See XXX-9p above.
     #deactivate_filesystem_shares
 
-    @vm.save_snapshot($background_snapshot)
+    $vm.save_snapshot($background_snapshot)
   end
   restore_background
   # Now we stop skipping steps from the snapshot restore.
@@ -449,7 +449,7 @@ end
 
 Given /^process "([^"]+)" is running$/ do |process|
   next if @skip_steps_while_restoring_background
-  assert(@vm.has_process?(process),
+  assert($vm.has_process?(process),
          "Process '#{process}' is not running")
 end
 
@@ -457,7 +457,7 @@ Given /^process "([^"]+)" is running within (\d+) seconds$/ do |process, time|
   next if @skip_steps_while_restoring_background
   try_for(time.to_i, :msg => "Process '#{process}' is not running after " +
                              "waiting for #{time} seconds") do
-    @vm.has_process?(process)
+    $vm.has_process?(process)
   end
 end
 
@@ -465,21 +465,21 @@ Given /^process "([^"]+)" has stopped running after at most (\d+) seconds$/ do |
   next if @skip_steps_while_restoring_background
   try_for(time.to_i, :msg => "Process '#{process}' is still running after " +
                              "waiting for #{time} seconds") do
-    not @vm.has_process?(process)
+    not $vm.has_process?(process)
   end
 end
 
 Given /^process "([^"]+)" is not running$/ do |process|
   next if @skip_steps_while_restoring_background
-  assert(!@vm.has_process?(process),
+  assert(!$vm.has_process?(process),
          "Process '#{process}' is running")
 end
 
 Given /^I kill the process "([^"]+)"$/ do |process|
   next if @skip_steps_while_restoring_background
-  @vm.execute("killall #{process}")
+  $vm.execute("killall #{process}")
   try_for(10, :msg => "Process '#{process}' could not be killed") {
-    !@vm.has_process?(process)
+    !$vm.has_process?(process)
   }
 end
 
@@ -488,7 +488,7 @@ Then /^Tails eventually shuts down$/ do
   nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
   timeout = nr_gibs_of_ram*5*60
   try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
-    ! @vm.is_running?
+    ! $vm.is_running?
   end
 end
 
@@ -500,7 +500,7 @@ end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute("poweroff")
+  $vm.execute("poweroff")
   step 'Tails eventually shuts down'
 end
 
@@ -514,7 +514,7 @@ end
 
 When /^I warm reboot the computer$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute("reboot")
+  $vm.execute("reboot")
 end
 
 When /^I request a reboot using the emergency shutdown applet$/ do
@@ -527,7 +527,7 @@ end
 
 Given /^package "([^"]+)" is installed$/ do |package|
   next if @skip_steps_while_restoring_background
-  assert(@vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
+  assert($vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
          "Package '#{package}' is not installed")
 end
 
@@ -550,7 +550,7 @@ When /^I start the Tor Browser in offline mode$/ do
 end
 
 def xul_application_info(application)
-  binary = @vm.execute_successfully(
+  binary = $vm.execute_successfully(
                 '. /usr/local/lib/tails-shell-library/tor-browser.sh; ' +
                 'echo ${TBB_INSTALL}/firefox'
                                     ).stdout.chomp
@@ -617,17 +617,17 @@ def xul_app_shared_lib_check(pid, chroot)
   expected_absent_tbb_libs = ['libnssdbm3.so']
   absent_tbb_libs = []
   unwanted_native_libs = []
-  tbb_libs = @vm.execute_successfully(
+  tbb_libs = $vm.execute_successfully(
                  ". /usr/local/lib/tails-shell-library/tor-browser.sh; " +
                  "ls -1 #{chroot}${TBB_INSTALL}/*.so"
                                       ).stdout.split
-  firefox_pmap_info = @vm.execute("pmap #{pid}").stdout
+  firefox_pmap_info = $vm.execute("pmap #{pid}").stdout
   for lib in tbb_libs do
     lib_name = File.basename lib
     if not /\W#{lib}$/.match firefox_pmap_info
       absent_tbb_libs << lib_name
     end
-    native_libs = @vm.execute_successfully(
+    native_libs = $vm.execute_successfully(
                        "find /usr/lib /lib -name \"#{lib_name}\""
                                            ).stdout.split
     for native_lib in native_libs do
@@ -647,7 +647,7 @@ end
 Then /^the (.*) uses all expected TBB shared libraries$/ do |application|
   next if @skip_steps_while_restoring_background
   info = xul_application_info(application)
-  pid = @vm.execute_successfully("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").stdout.chomp
+  pid = $vm.execute_successfully("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").stdout.chomp
   assert(/\A\d+\z/.match(pid), "It seems like #{application} is not running")
   xul_app_shared_lib_check(pid, info[:chroot])
 end
@@ -657,17 +657,17 @@ Then /^the (.*) chroot is torn down$/ do |browser|
   info = xul_application_info(browser)
   try_for(30, :msg => "The #{browser} chroot '#{info[:chroot]}' was " \
                       "not removed") do
-    !@vm.execute("test -d '#{info[:chroot]}'").success?
+    !$vm.execute("test -d '#{info[:chroot]}'").success?
   end
 end
 
 Then /^the (.*) runs as the expected user$/ do |browser|
   next if @skip_steps_while_restoring_background
   info = xul_application_info(browser)
-  assert_vmcommand_success(@vm.execute(
+  assert_vmcommand_success($vm.execute(
     "pgrep --full --exact '#{info[:cmd_regex]}'"),
     "The #{browser} is not running")
-  assert_vmcommand_success(@vm.execute(
+  assert_vmcommand_success($vm.execute(
     "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"),
     "The #{browser} is not running as the #{info[:user]} user")
 end
@@ -691,20 +691,20 @@ method=auto
 method=auto
 EOF
   con_content.split("\n").each do |line|
-    @vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
+    $vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
   end
-  @vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '/etc/NetworkManager/system-connections/#{con_name}'")
+  $vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '/etc/NetworkManager/system-connections/#{con_name}'")
   try_for(10) {
-    nm_con_list = @vm.execute("nmcli --terse --fields NAME con list").stdout
+    nm_con_list = $vm.execute("nmcli --terse --fields NAME con list").stdout
     nm_con_list.split("\n").include? "#{con_name}"
   }
 end
 
 Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
   next if @skip_steps_while_restoring_background
-  @vm.execute("nmcli con up id #{con_name}")
+  $vm.execute("nmcli con up id #{con_name}")
   try_for(60) {
-    @vm.execute("nmcli --terse --fields NAME,STATE con status").stdout.chomp == "#{con_name}:activated"
+    $vm.execute("nmcli --terse --fields NAME,STATE con status").stdout.chomp == "#{con_name}:activated"
   }
 end
 
@@ -716,7 +716,7 @@ end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
   next if @skip_steps_while_restoring_background
-  if !@vm.has_process?("gnome-terminal")
+  if !$vm.has_process?("gnome-terminal")
     step "I start and focus GNOME Terminal"
   else
     @screen.wait_and_click('GnomeTerminalWindow.png', 20)
@@ -731,28 +731,28 @@ When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, ti
     timeout.to_i,
     :msg => "The file #{file} does not exist after #{timeout} seconds"
   ) {
-    @vm.file_exist?(file)
+    $vm.file_exist?(file)
   }
 end
 
 When /^the file "([^"]+)" does not exist$/ do |file|
   next if @skip_steps_while_restoring_background
-  assert(! (@vm.file_exist?(file)))
+  assert(! ($vm.file_exist?(file)))
 end
 
 When /^the directory "([^"]+)" exists$/ do |directory|
   next if @skip_steps_while_restoring_background
-  assert(@vm.directory_exist?(directory))
+  assert($vm.directory_exist?(directory))
 end
 
 When /^the directory "([^"]+)" does not exist$/ do |directory|
   next if @skip_steps_while_restoring_background
-  assert(! (@vm.directory_exist?(directory)))
+  assert(! ($vm.directory_exist?(directory)))
 end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
   next if @skip_steps_while_restoring_background
-  c = @vm.execute("cp \"#{source}\" \"#{destination}\"", LIVE_USER)
+  c = $vm.execute("cp \"#{source}\" \"#{destination}\"", LIVE_USER)
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
 
@@ -853,7 +853,7 @@ Then /^there is no GNOME bookmark for the persistent Tor Browser directory$/ do
 end
 
 def pulseaudio_sink_inputs
-  pa_info = @vm.execute_successfully('pacmd info', LIVE_USER).stdout
+  pa_info = $vm.execute_successfully('pacmd info', LIVE_USER).stdout
   sink_inputs_line = pa_info.match(/^\d+ sink input\(s\) available\.$/)[0]
   return sink_inputs_line.match(/^\d+/)[0].to_i
 end
@@ -904,7 +904,7 @@ When /^I can save the current page as "([^"]+[.]html)" to the (default downloads
   @screen.type(output_file.sub(/[.]html$/, ''))
   @screen.type(Sikuli::Key.ENTER)
   try_for(10, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
-    @vm.file_exist?("#{output_dir}/#{output_file}")
+    $vm.file_exist?("#{output_dir}/#{output_file}")
   }
 end
 
@@ -930,7 +930,7 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   # so we type only the desired file's basename to replace it
   @screen.type(output_dir + '/' + output_file.sub(/[.]pdf$/, '') + Sikuli::Key.ENTER)
   try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
-    @vm.file_exist?("#{output_dir}/#{output_file}")
+    $vm.file_exist?("#{output_dir}/#{output_file}")
   }
 end
 

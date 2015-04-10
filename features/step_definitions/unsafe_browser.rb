@@ -6,14 +6,14 @@ end
 
 def supported_torbrowser_languages
   langs = Array.new
-  exts = @vm.execute_successfully(
+  exts = $vm.execute_successfully(
     "find /usr/local/share/tor-browser-extensions -maxdepth 1 -name 'langpack*.xpi' -printf \"%f\n\"").stdout
 
   # Some of the TBB languages are shipped with both a language and country code, e.g. es-ES.
   # We'll only keep track of the language code and let `guess_best_tor_browser_locale`
   # try to get by with our approximated locales.
   supported_langs = exts.scan(/langpack-([a-z]+).*/).flatten
-  locales = @vm.execute_successfully(
+  locales = $vm.execute_successfully(
     "find /usr/lib/locale -maxdepth 1 -name '*.utf8' -printf \"%f\n\"").stdout.split
 
   # Determine a valid locale for each language that we want to test.
@@ -77,8 +77,8 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
   path = "/home/#{info[:user]}/bookmarks"
   @screen.type(path + Sikuli::Key.ENTER)
   chroot_path = "#{info[:chroot]}/#{path}.json"
-  try_for(10) { @vm.file_exist?(chroot_path) }
-  dump = JSON.load(@vm.file_content(chroot_path))
+  try_for(10) { $vm.file_exist?(chroot_path) }
+  dump = JSON.load($vm.file_content(chroot_path))
 
   def check_bookmarks_helper(a)
     mozilla_uris_counter = 0
@@ -241,22 +241,22 @@ end
 Then /^I configure the Unsafe Browser to check for updates more frequently$/ do
   next if @skip_steps_while_restoring_background
   prefs = '/usr/share/tails/unsafe-browser/prefs.js'
-  @vm.file_append(prefs, 'pref("app.update.idletime", 1);')
-  @vm.file_append(prefs, 'pref("app.update.promptWaitTime", 1);')
-  @vm.file_append(prefs, 'pref("app.update.interval", 5);')
+  $vm.file_append(prefs, 'pref("app.update.idletime", 1);')
+  $vm.file_append(prefs, 'pref("app.update.promptWaitTime", 1);')
+  $vm.file_append(prefs, 'pref("app.update.interval", 5);')
 end
 
 But /^checking for updates is disabled in the Unsafe Browser's configuration$/ do
   next if @skip_steps_while_restoring_background
   prefs = '/usr/share/tails/unsafe-browser/prefs.js'
-  assert(@vm.file_content(prefs).include?('pref("app.update.enabled", false)'))
+  assert($vm.file_content(prefs).include?('pref("app.update.enabled", false)'))
 end
 
 Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
   next if @skip_steps_while_restoring_background
   pkts = 0
-  uid = @vm.execute_successfully("id -u clearnet").stdout.chomp.to_i
-  iptables_output = @vm.execute_successfully("iptables -vnL").stdout.chomp
+  uid = $vm.execute_successfully("id -u clearnet").stdout.chomp.to_i
+  iptables_output = $vm.execute_successfully("iptables -vnL").stdout.chomp
   output_chain = iptables_parse(iptables_output)["OUTPUT"]
   output_chain["rules"].each do |rule|
     if /owner UID match \b#{uid}\b/.match(rule["extra"])

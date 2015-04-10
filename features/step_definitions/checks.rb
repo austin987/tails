@@ -12,7 +12,7 @@ Then /^the shipped Tails (signing|Debian repository) key will be valid for the n
   else
     raise 'Unknown key type #{key_type}'
   end
-  shipped_sig_key_info = @vm.execute_successfully("#{cmd} --batch --list-key #{sig_key_fingerprint}", user).stdout
+  shipped_sig_key_info = $vm.execute_successfully("#{cmd} --batch --list-key #{sig_key_fingerprint}", user).stdout
   expiration_date = Date.parse(/\[expires: ([0-9-]*)\]/.match(shipped_sig_key_info)[1])
   assert((expiration_date << max_months.to_i) > DateTime.now,
          "The shipped signing key will expire within the next #{max_months} months.")
@@ -25,9 +25,9 @@ end
 
 Then /^the live user has been setup by live\-boot$/ do
   next if @skip_steps_while_restoring_background
-  assert(@vm.execute("test -e /var/lib/live/config/user-setup").success?,
+  assert($vm.execute("test -e /var/lib/live/config/user-setup").success?,
          "live-boot failed its user-setup")
-  actual_username = @vm.execute(". /etc/live/config/username.conf; " +
+  actual_username = $vm.execute(". /etc/live/config/username.conf; " +
                                 "echo $LIVE_USERNAME").stdout.chomp
   assert_equal(LIVE_USER, actual_username)
 end
@@ -35,7 +35,7 @@ end
 Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
   next if @skip_steps_while_restoring_background
   expected_groups = groups.split(" ") << LIVE_USER
-  actual_groups = @vm.execute("groups #{LIVE_USER}").stdout.chomp.sub(/^#{LIVE_USER} : /, "").split(" ")
+  actual_groups = $vm.execute("groups #{LIVE_USER}").stdout.chomp.sub(/^#{LIVE_USER} : /, "").split(" ")
   unexpected = actual_groups - expected_groups
   missing = expected_groups - actual_groups
   assert_equal(0, unexpected.size,
@@ -47,10 +47,10 @@ end
 Then /^the live user owns its home dir and it has normal permissions$/ do
   next if @skip_steps_while_restoring_background
   home = "/home/#{LIVE_USER}"
-  assert(@vm.execute("test -d #{home}").success?,
+  assert($vm.execute("test -d #{home}").success?,
          "The live user's home doesn't exist or is not a directory")
-  owner = @vm.execute("stat -c %U:%G #{home}").stdout.chomp
-  perms = @vm.execute("stat -c %a #{home}").stdout.chomp
+  owner = $vm.execute("stat -c %U:%G #{home}").stdout.chomp
+  perms = $vm.execute("stat -c %a #{home}").stdout.chomp
   assert_equal("#{LIVE_USER}:#{LIVE_USER}", owner)
   assert_equal("700", perms)
 end
@@ -64,7 +64,7 @@ end
 
 Then /^no unexpected services are listening for network connections$/ do
   next if @skip_steps_while_restoring_background
-  netstat_cmd = @vm.execute("netstat -ltupn")
+  netstat_cmd = $vm.execute("netstat -ltupn")
   assert netstat_cmd.success?
   for line in netstat_cmd.stdout.chomp.split("\n") do
     splitted = line.split(/[[:blank:]]+/)
@@ -93,14 +93,14 @@ end
 
 When /^Tails has booted a 64-bit kernel$/ do
   next if @skip_steps_while_restoring_background
-  assert(@vm.execute("uname -r | grep -qs 'amd64$'").success?,
+  assert($vm.execute("uname -r | grep -qs 'amd64$'").success?,
          "Tails has not booted a 64-bit kernel.")
 end
 
 Then /^GNOME Screenshot is configured to save files to the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
   home = "/home/#{LIVE_USER}"
-  save_path = @vm.execute_successfully(
+  save_path = $vm.execute_successfully(
     "gsettings get org.gnome.gnome-screenshot auto-save-directory",
     LIVE_USER).stdout.chomp.tr("'","")
   assert_equal("file://#{home}", save_path,
@@ -110,7 +110,7 @@ end
 Then /^there is no screenshot in the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
   home = "/home/#{LIVE_USER}"
-  assert(@vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?,
+  assert($vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?,
          "Existing screenshots were found in the live user's home directory.")
 end
 
@@ -118,13 +118,13 @@ Then /^a screenshot is saved to the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
   home = "/home/#{LIVE_USER}"
   try_for(10, :msg=> "No screenshot was created in #{home}") {
-    !@vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
+    !$vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
   }
 end
 
 Then /^the VirtualBox guest modules are available$/ do
   next if @skip_steps_while_restoring_background
-  assert(@vm.execute("modinfo vboxguest").success?,
+  assert($vm.execute("modinfo vboxguest").success?,
          "The vboxguest module is not available.")
 end
 
@@ -134,7 +134,7 @@ end
 
 Given /^I setup a filesystem share containing a sample PDF$/ do
   next if @skip_steps_while_restoring_background
-  @vm.add_share(MISC_FILES_DIR, shared_pdf_dir_on_guest)
+  $vm.add_share(MISC_FILES_DIR, shared_pdf_dir_on_guest)
 end
 
 Then /^MAT can clean some sample PDF file$/ do
@@ -143,16 +143,16 @@ Then /^MAT can clean some sample PDF file$/ do
     pdf_name = File.basename(pdf_on_host)
     pdf_on_guest = "/home/#{LIVE_USER}/#{pdf_name}"
     step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
-    @vm.execute("mat --display '#{pdf_on_guest}'",
+    $vm.execute("mat --display '#{pdf_on_guest}'",
                 LIVE_USER).stdout
-    check_before = @vm.execute("mat --check '#{pdf_on_guest}'",
+    check_before = $vm.execute("mat --check '#{pdf_on_guest}'",
                                LIVE_USER).stdout
     if check_before.include?("#{pdf_on_guest} is clean")
       STDERR.puts "warning: '#{pdf_on_host}' is already clean so it is a " +
                   "bad candidate for testing MAT"
     end
-    @vm.execute("mat '#{pdf_on_guest}'", LIVE_USER)
-    check_after = @vm.execute("mat --check '#{pdf_on_guest}'",
+    $vm.execute("mat '#{pdf_on_guest}'", LIVE_USER)
+    check_after = $vm.execute("mat --check '#{pdf_on_guest}'",
                               LIVE_USER).stdout
     assert(check_after.include?("#{pdf_on_guest} is clean"),
            "MAT failed to clean '#{pdf_on_host}'")
@@ -160,18 +160,18 @@ Then /^MAT can clean some sample PDF file$/ do
 end
 
 Then /^AppArmor is enabled$/ do
-  assert(@vm.execute("aa-status").success?, "AppArmor is not enabled")
+  assert($vm.execute("aa-status").success?, "AppArmor is not enabled")
 end
 
 Then /^some AppArmor profiles are enforced$/ do
-  assert(@vm.execute("aa-status --enforced").stdout.chomp.to_i > 0,
+  assert($vm.execute("aa-status --enforced").stdout.chomp.to_i > 0,
          "No AppArmor profile is enforced")
 end
 
 def get_seccomp_status(process)
-  assert(@vm.has_process?(process), "Process #{process} not running.")
-  pid = @vm.pidof(process)[0]
-  status = @vm.file_content("/proc/#{pid}/status")
+  assert($vm.has_process?(process), "Process #{process} not running.")
+  pid = $vm.pidof(process)[0]
+  status = $vm.file_content("/proc/#{pid}/status")
   return status.match(/^Seccomp:\s+([0-9])/)[1].chomp.to_i
 end
 

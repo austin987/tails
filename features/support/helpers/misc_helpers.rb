@@ -47,7 +47,7 @@ def try_for(t, options = {})
 end
 
 def wait_until_tor_is_working
-  try_for(270) { @vm.execute(
+  try_for(270) { $vm.execute(
     '. /usr/local/lib/tails-shell-library/tor.sh; tor_is_working').success? }
 end
 
@@ -94,7 +94,7 @@ end
 # consensus in the VM + the hardcoded TOR_AUTHORITIES.
 def get_all_tor_nodes
   cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
-  @vm.execute(cmd).stdout.chomp.split("\n") + TOR_AUTHORITIES
+  $vm.execute(cmd).stdout.chomp.split("\n") + TOR_AUTHORITIES
 end
 
 def get_free_space(machine, path)
@@ -103,8 +103,8 @@ def get_free_space(machine, path)
     assert(File.exists?(path), "Path '#{path}' not found on #{machine}.")
     free = cmd_helper("df '#{path}'")
   when 'guest'
-    assert(@vm.file_exist?(path), "Path '#{path}' not found on #{machine}.")
-    free = @vm.execute_successfully("df '#{path}'")
+    assert($vm.file_exist?(path), "Path '#{path}' not found on #{machine}.")
+    free = $vm.execute_successfully("df '#{path}'")
   else
     raise 'Unsupported machine type #{machine} passed.'
   end

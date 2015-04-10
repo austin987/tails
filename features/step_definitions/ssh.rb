@@ -26,7 +26,7 @@ end
 
 Given /^I have the SSH key pair for an? (Git repository|SSH server)$/ do |server_type|
   next if @skip_steps_while_restoring_background
-  @vm.execute_successfully("install -m 0700 -d '/home/#{LIVE_USER}/.ssh/'", LIVE_USER)
+  $vm.execute_successfully("install -m 0700 -d '/home/#{LIVE_USER}/.ssh/'", LIVE_USER)
   case server_type
   when "SSH server"
     read_and_validate_ssh_config
@@ -37,9 +37,9 @@ Given /^I have the SSH key pair for an? (Git repository|SSH server)$/ do |server
     raise "Unknown server type #{server_type}"
   end
 
-  @vm.execute_successfully("echo '#{@secret_ssh_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa'", LIVE_USER)
-  @vm.execute_successfully("echo '#{@public_ssh_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa.pub'", LIVE_USER)
-  @vm.execute_successfully("chmod 0600 '/home/#{LIVE_USER}/.ssh/'id*", LIVE_USER)
+  $vm.execute_successfully("echo '#{@secret_ssh_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa'", LIVE_USER)
+  $vm.execute_successfully("echo '#{@public_ssh_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa.pub'", LIVE_USER)
+  $vm.execute_successfully("chmod 0600 '/home/#{LIVE_USER}/.ssh/'id*", LIVE_USER)
 end
 
 Given /^I verify the SSH fingerprint for the (?:Git repository|SSH server)$/ do
