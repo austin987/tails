@@ -987,7 +987,7 @@ EOF
   try_for(30, :msg => "Something is wrong with the LAN web server") do
     msg = @vm.execute_successfully("curl #{@web_server_url}",
                                    LIVE_USER).stdout.chomp
-    assert_equal(web_server_hello_msg, msg)
+    web_server_hello_msg == msg
   end
 end
 
