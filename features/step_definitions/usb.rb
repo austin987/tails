@@ -590,3 +590,18 @@ Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
   next if @skip_steps_while_restoring_background
   @vm.storage.disk_mklabel(name, type)
 end
+
+Then /^a suitable USB device is not found$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("TailsInstallerNoDevice.png", 60)
+end
+
+Then /^the "(?:[[:alpha:]]+)" USB drive is selected$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("TailsInstallerQEMUHardDisk.png", 30)
+end
+
+Then /^no USB drive is selected$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
+end
