@@ -113,6 +113,69 @@ Third iteration
   - Mention virtual machines as a minor option on OS page or destination media page.
   - Consider improving navigation.
 
+
+
+## For the router's Apple page : maintain a Tails compatibility list
+
+Seeing that :
+
+- a lot of current and potential users are Apple users
+- Tails is running more or less on this devices
+- There are a limite number of different models
+
+We suggest to maintain a list with the state of the tails compatibility on this hardware. So in the web assistant router a potential user could know if Tails works on his computer and wich way (dvd/usb...) before he tries to install it (and maybe wich computer to buy).
+
+### Data type
+The data could be stored in a yaml file, in the git repo.
+
+### Data content
+
+Something like :
+
+    model / part of the serial number
+    tails version | working ? | boot on usb ? | boot on dvd ? | comments
+
+* In we way to keep history off compatibilty (with olders Tails versions) in this file, maybe we will have to show to the user the last relevant informations. We have the "Tails version" to :
+
+ - know globaly how evolves the support for Apple computers
+ - aware the user or the support teams where compatibilty has broken
+
+* "comment" are raw informations on wifi support, retina..
+ 
+### Who maintain ?
+- call to heavily test sometimes
+- ask to people doing Tails trainings
+- report to frontdesk
+- mayby something editable by users
+
+### In the router
+In the Apple page of the router, we could implement it in two steps, or in two ways.
+
+#### all information (without form)
+
+- data is transformed server-side (with https://ikiwiki.info/plugins/contrib/ymlfront/ ?) in html in a table, with links to the working scenarios for each models.
+- everything is one the html
+- some information is displayed to know easily what kind of mac is working (simplifing https://fr.ifixit.com/Info/ID-your-Mac ?)
+- the user can toggle to display content (a list by computer type : iMac, Macbook Air...)
+- toggle is in JS, as a fallback : display all information (no toggle)
+
+#### relevant information (with form)
+
+- some information is displayed to know easily what kind of mac is working
+- the user type in a form the serial number or click in a dedicades tiny wizard like https://fr.ifixit.com/Info/ID-your-Mac
+- some server-side (ruby) or client-side(JS) get the revelant model and display the links. so the user see information for his computer
+- if it's in JS, as a non-js fallback :
+ - the "without form" version
+ - or no fallback, just the default instructions
+
+
+
+
+### Redmine
+This tickets wants to fix the same problem : [[!tails_ticket 9150]]
+
+
+
 <a id="overview"></a>
 
 Overview
