@@ -168,7 +168,3 @@ BeforeFeature('@product', '@source') do |feature|
   raise "Feature #{feature.file} is tagged both @product and @source, " +
         "which is an impossible combination"
 end
-
-at_exit do
-  delete_all_snapshots if !KEEP_SNAPSHOTS
-end
