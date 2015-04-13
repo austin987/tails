@@ -2,6 +2,13 @@ require 'fileutils'
 require 'time'
 require 'tmpdir'
 
+# Run once, before any feature
+AfterConfiguration do |config|
+  # Used to keep track of when we start our first @product feature, when
+  # we'll do some special things.
+  $started_first_product_feature = false
+end
+
 # For @product tests
 ####################
 
@@ -52,17 +59,13 @@ BeforeFeature('@product') do |feature|
   puts "Testing ISO image: #{File.basename(TAILS_ISO)}"
   base = File.basename(feature.file, ".feature").to_s
   $background_snapshot = "#{base}_background"
-  $virt = Libvirt::open("qemu:///system")
-  VM.remove_all_snapshots if !KEEP_SNAPSHOTS
-  $vmnet = VMNet.new($virt, VM_XML_PATH)
-  $vmstorage = VMStorage.new($virt, VM_XML_PATH)
-end
-
-AfterFeature('@product') do
-  VM.remove_all_snapshots if !KEEP_SNAPSHOTS
-  $vmstorage.clear_pool
-  $vmnet.destroy_and_undefine
-  $virt.close
+  if not($started_first_product_feature)
+    $virt = Libvirt::open("qemu:///system")
+    VM.remove_all_snapshots if !KEEP_SNAPSHOTS
+    $vmnet = VMNet.new($virt, VM_XML_PATH)
+    $vmstorage = VMStorage.new($virt, VM_XML_PATH)
+    $started_first_product_feature = true
+  end
 end
 
 BeforeFeature('@product', '@old_iso') do
@@ -111,10 +114,6 @@ After('@product') do |scenario|
     end
   end
   $vm.destroy_and_undefine if $vm
-end
-
-After('@product', '~@keep_volumes') do
-  $vmstorage.clear_volumes
 end
 
 Before('@product', '@check_tor_leaks') do |scenario|
@@ -167,4 +166,13 @@ end
 BeforeFeature('@product', '@source') do |feature|
   raise "Feature #{feature.file} is tagged both @product and @source, " +
         "which is an impossible combination"
+end
+
+at_exit do
+  if $virt
+    VM.remove_all_snapshots if !KEEP_SNAPSHOTS
+    $vmstorage.clear_pool
+    $vmnet.destroy_and_undefine
+    $virt.close
+  end
 end

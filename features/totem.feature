@@ -35,7 +35,6 @@ Feature: Using Totem
     When I load the "https://webm.html5.org/test.webm" URL in Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
 
-  @keep_volumes
   Scenario: Installing Tails on a USB drive, creating a persistent partition, copying video files to it
     Given the USB drive "current" contains Tails with persistence configured and password "asdf"
     And a computer
@@ -45,7 +44,6 @@ Feature: Using Totem
     And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"
     And I shutdown Tails and wait for the computer to power off
 
-  @keep_volumes
   Scenario: Watching a MP4 video stored on the persistent volume
     Given a computer
     And I start Tails from USB drive "current" with network unplugged and I login with persistence password "asdf"

@@ -81,7 +81,7 @@ Feature: Chatting anonymously using Pidgin
     And I close Pidgin's account manager window
     Then I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
 
-  @keep_volumes @check_tor_leaks
+  @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
     Given the USB drive "current" contains Tails with persistence configured and password "asdf"
     And a computer

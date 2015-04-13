@@ -25,7 +25,6 @@ Feature: Using Evince
     When I try to open "/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
 
-  @keep_volumes
   Scenario: Installing Tails on a USB drive, creating a persistent partition, copying PDF files to it
     Given the USB drive "current" contains Tails with persistence configured and password "asdf"
     And a computer
@@ -36,7 +35,6 @@ Feature: Using Evince
     Then the file "/home/amnesia/.gnupg/default-testpage.pdf" exists
     And I shutdown Tails and wait for the computer to power off
 
-  @keep_volumes
   Scenario: I can view and print a PDF file stored in persistent /home/amnesia/Persistent
     Given a computer
     And I start Tails from USB drive "current" with network unplugged and I login with persistence password "asdf"
@@ -44,7 +42,6 @@ Feature: Using Evince
     Then I see "CupsTestPage.png" after at most 10 seconds
     And I can print the current document to "/home/amnesia/Persistent/output.pdf"
 
-  @keep_volumes
   Scenario: I cannot view a PDF file stored in persistent /home/amnesia/.gnupg
     Given a computer
     When I start Tails from USB drive "current" with network unplugged and I login with persistence password "asdf"
