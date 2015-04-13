@@ -5,20 +5,6 @@ require 'tmpdir'
 # For @product tests
 ####################
 
-def delete_snapshot(snapshot)
-  if snapshot and File.exist?(snapshot)
-    File.delete(snapshot)
-  end
-rescue Errno::EACCES => e
-  STDERR.puts "Couldn't delete background snapshot: #{e.to_s}"
-end
-
-def delete_all_snapshots
-  Dir.glob("#{$config["TMPDIR"]}/*.state").each do |snapshot|
-    delete_snapshot(snapshot)
-  end
-end
-
 def add_after_scenario_hook(fn, args = [])
   @after_scenario_hook ||= Array.new
   @after_scenario_hook << [fn, args]
@@ -42,7 +28,6 @@ BeforeFeature('@product') do |feature|
       raise "Cannot create temporary directory: #{e.to_s}"
     end
   end
-  delete_all_snapshots if !KEEP_SNAPSHOTS
   if TAILS_ISO.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
           "current directory"
@@ -66,14 +51,15 @@ BeforeFeature('@product') do |feature|
   end
   puts "Testing ISO image: #{File.basename(TAILS_ISO)}"
   base = File.basename(feature.file, ".feature").to_s
-  $background_snapshot = "#{$config["TMPDIR"]}/#{base}_background.state"
+  $background_snapshot = "#{base}_background"
   $virt = Libvirt::open("qemu:///system")
+  VM.remove_all_snapshots if !KEEP_SNAPSHOTS
   $vmnet = VMNet.new($virt, VM_XML_PATH)
   $vmstorage = VMStorage.new($virt, VM_XML_PATH)
 end
 
 AfterFeature('@product') do
-  delete_snapshot($background_snapshot) if !KEEP_SNAPSHOTS
+  VM.remove_all_snapshots if !KEEP_SNAPSHOTS
   $vmstorage.clear_pool
   $vmnet.destroy_and_undefine
   $virt.close
@@ -96,7 +82,7 @@ end
 # BeforeScenario
 Before('@product') do
   @screen = Sikuli::Screen.new
-  if File.size?($background_snapshot)
+  if VM.snapshot_exists?($background_snapshot)
     @skip_steps_while_restoring_background = true
   else
     @skip_steps_while_restoring_background = false

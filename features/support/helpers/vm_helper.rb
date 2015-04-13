@@ -161,6 +161,15 @@ class VM
     close_cdrom
   end
 
+  def list_disk_devs
+    ret = []
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements.each('domain/devices/disk') do |e|
+      ret << e.elements['target'].attribute('dev').to_s
+    end
+    return ret
+  end
+
   def plug_drive(name, type)
     removable_usb = nil
     case type
@@ -172,14 +181,9 @@ class VM
       removable_usb = "off"
     end
     # Get the next free /dev/sdX on guest
-    used_devs = []
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements.each('domain/devices/disk/target') do |e|
-      used_devs <<= e.attribute('dev').to_s
-    end
     letter = 'a'
     dev = "sd" + letter
-    while used_devs.include? dev
+    while list_disk_devs.include?(dev)
       letter = (letter[0].ord + 1).chr
       dev = "sd" + letter
     end
@@ -218,6 +222,16 @@ class VM
   def unplug_drive(name)
     xml = disk_xml_desc(name)
     @domain.detach_device(xml)
+  end
+
+  def disk_type(dev)
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements.each('domain/devices/disk') do |e|
+      if e.elements['target'].attribute('dev').to_s == dev
+        return e.elements['driver'].attribute('type').to_s
+      end
+    end
+    raise "No such disk device '#{dev}'"
   end
 
   def disk_dev(name)
@@ -404,17 +418,121 @@ EOF
     return cmd.stdout
   end
 
-  def save_snapshot(path)
-    @domain.save(path)
-    @display.stop
+  def internal_snapshot_xml(name)
+    disk_devs = list_disk_devs
+    disks_xml = "    <disks>\n"
+    for dev in disk_devs
+      snapshot_type = disk_type(dev) == "qcow2" ? 'internal' : 'no'
+      snapshot_path = "#{$config["TMPDIR"]}/#{name}-#{dev}.qcow2"
+      disks_xml +=
+        "      <disk name='#{dev}' snapshot='#{snapshot_type}'></disk>\n"
+    end
+    disks_xml += "    </disks>"
+    return <<-EOF
+<domainsnapshot>
+  <name>#{name}</name>
+  <description>Snapshot for #{name}</description>
+#{disks_xml}
+  </domainsnapshot>
+EOF
   end
 
-  def restore_snapshot(path)
-    # Clean up current domain so its snapshot can be restored
-    destroy_and_undefine
-    Libvirt::Domain::restore(@virt, path)
-    @domain = @virt.lookup_domain_by_name(@domain_name)
+  def save_snapshot2(name)
+    xml = internal_snapshot_xml(name)
+    STDERR.puts "-"*80
+    STDERR.puts xml
+    STDERR.puts "-"*80
+    @domain.snapshot_create_xml(xml)
+  end
+
+  def restore_snapshot2(name)
+    @domain.destroy if is_running?
+    snapshot = @domain.lookup_snapshot_by_name(name)
+    @domain.revert_to_snapshot(snapshot)
+  end
+
+  def external_snapshot_path(name)
+    return "#{$config["TMPDIR"]}/#{name}-snapshot.qcow2"
+  end
+
+  def save_snapshot(name)
+    # If we have no qcow2 disk device, we'll use "memory state"
+    # snapshots, and if we have at least one qcow2 disk device, we'll
+    # use internal "system checkpoint" (memory + disks) snapshots. We
+    # have to do this since internal snapshots doesn't work when no
+    # such disk is available. We can do this with external snapshots,
+    # which better in many ways, but libvirt doesn't know how to
+    # restore (revert back to) them yet.
+    # WARNING: If only transient disks, i.e. disks that were plugged
+    # after starting the domain, are used then the memory state will
+    # be dropped. External snapshots would also fix this.
+    internal_snapshot = false
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements.each('domain/devices/disk') do |e|
+      if e.elements['driver'].attribute('type').to_s == "qcow2"
+        internal_snapshot = true
+        break
+      end
+    end
+
+    if internal_snapshot
+      xml = internal_snapshot_xml(name)
+      @domain.snapshot_create_xml(xml)
+    else
+      snapshot_path = external_snapshot_path(name)
+      @domain.save(snapshot_path)
+      # For consistency with the internal snapshot case (which is
+      # "live", so the domain doesn't go down) we immediately restore
+      # the snapshot.
+      # Assumption: that *immediate* save + restore doesn't mess up
+      # with network state and similar, and is fast enough to not make
+      # the clock drift too much.
+      restore_snapshot(name)
+    end
+  end
+
+  def restore_snapshot(name)
+    @domain.destroy if is_running?
+    @display.stop if @display.active?
+    # See comment in save_snapshot() for details on why we use two
+    # different type of snapshots.
+    potential_external_snapshot_path = external_snapshot_path(name)
+    if File.exist?(potential_external_snapshot_path)
+      Libvirt::Domain::restore(@virt, potential_external_snapshot_path)
+      @domain = @virt.lookup_domain_by_name(@domain_name)
+    else
+      begin
+        potential_internal_snapshot = @domain.lookup_snapshot_by_name(name)
+        @domain.revert_to_snapshot(potential_internal_snapshot)
+      rescue Libvirt::RetrieveError
+        raise "No such (internal nor external) snapshot #{name}"
+      end
+    end
     @display.start
+  end
+
+  def remove_snapshot(name)
+    snapshot = @domain.lookup_snapshot_by_name(name)
+    snapshot.delete
+  end
+
+  def VM.snapshot_exists?(name)
+    return true if File.exist?("#{$config["TMPDIR"]}/#{name}-snapshot.qcow2")
+    old_domain = $virt.lookup_domain_by_name("TailsToaster")
+    snapshot = old_domain.lookup_snapshot_by_name(name)
+    return snapshot != nil
+  rescue Libvirt::RetrieveError
+    return false
+  end
+
+  def VM.remove_all_snapshots
+    Dir.glob("#{$config["TMPDIR"]}/*-snapshot.qcow2").each do |file|
+      File.delete(file)
+    end
+    old_domain = $virt.lookup_domain_by_name("TailsToaster")
+    old_domain.list_all_snapshots.each { |snapshot| snapshot.delete }
+  rescue Libvirt::RetrieveError
+    # No such domain, so no snapshots either.
   end
 
   def start

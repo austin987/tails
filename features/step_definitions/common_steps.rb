@@ -37,8 +37,7 @@ def deactivate_filesystem_shares
   #end
 end
 
-def restore_background
-  $vm.restore_snapshot($background_snapshot)
+def post_snapshot_restore_hook
   $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
 
@@ -384,20 +383,14 @@ Given /^all notifications have disappeared$/ do
 end
 
 Given /^I save the state so the background can be restored next scenario$/ do
-  if @skip_steps_while_restoring_background
-    assert(File.size?($background_snapshot),
-           "We have been skipping steps but there is no snapshot to restore")
-  else
+  if ! @skip_steps_while_restoring_background
     # To be sure we run the feature from scratch we remove any
     # leftover snapshot that wasn't removed.
-    if File.exist?($background_snapshot)
-      File.delete($background_snapshot)
+    begin
+      $vm.remove_snapshot($background_snapshot)
+    rescue Libvirt::RetrieveError
+      # Good, no one existed.
     end
-    # Workaround: when libvirt takes ownership of the snapshot it may
-    # become unwritable for the user running this script so it cannot
-    # be removed during clean up.
-    FileUtils.touch($background_snapshot)
-    FileUtils.chmod(0666, $background_snapshot)
 
     # Snapshots cannot be saved while filesystem shares are mounted
     # XXX-9p: See XXX-9p above.
@@ -405,9 +398,19 @@ Given /^I save the state so the background can be restored next scenario$/ do
 
     $vm.save_snapshot($background_snapshot)
   end
-  restore_background
+  $vm.restore_snapshot($background_snapshot)
+  post_snapshot_restore_hook
   # Now we stop skipping steps from the snapshot restore.
   @skip_steps_while_restoring_background = false
+ end
+
+When /^I save the snapshot "([^"]*)"$/ do |snapshot_name|
+  $vm.save_snapshot(snapshot_name)
+end
+
+When /^I restore the snapshot "([^"]*)"$/ do |snapshot_name|
+  $vm.restore_snapshot(snapshot_name)
+  post_snapshot_restore_hook
 end
 
 Then /^I see "([^"]*)" after at most (\d+) seconds$/ do |image, time|
