@@ -29,15 +29,19 @@ end
 module ExtraHooks
   class Pretty < Cucumber::Formatter::Pretty
     def before_feature(feature)
-      for hook in $before_feature_hooks do
-        hook.invoke(feature) if feature.accept_hook?(hook)
+      if $before_feature_hooks
+        for hook in $before_feature_hooks do
+          hook.invoke(feature) if feature.accept_hook?(hook)
+        end
       end
       super if defined?(super)
     end
 
     def after_feature(feature)
-      for hook in $after_feature_hooks do
-        hook.invoke(feature) if feature.accept_hook?(hook)
+      if $after_feature_hooks
+        for hook in $after_feature_hooks do
+          hook.invoke(feature) if feature.accept_hook?(hook)
+        end
       end
       super if defined?(super)
     end
