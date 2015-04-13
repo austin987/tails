@@ -7,8 +7,14 @@ class VMNet
 
   def initialize(virt, xml_path)
     @virt = virt
+    @net_name = $config["LIBVIRT_NETWORK_NAME"]
     net_xml = File.read("#{xml_path}/default_net.xml")
-    update(net_xml)
+    rexml = REXML::Document.new(net_xml)
+    rexml.elements['network'].add_element('name')
+    rexml.elements['network/name'].text = @net_name
+    rexml.elements['network'].add_element('uuid')
+    rexml.elements['network/uuid'].text = $config["LIBVIRT_NETWORK_UUID"]
+    update(rexml.to_s)
   rescue Exception => e
     destroy_and_undefine
     raise e
@@ -26,8 +32,6 @@ class VMNet
   end
 
   def update(xml)
-    net_xml = REXML::Document.new(xml)
-    @net_name = net_xml.elements['network/name'].text
     destroy_and_undefine
     @net = @virt.define_network_xml(xml)
     @net.create
@@ -53,8 +57,14 @@ class VM
     @xml_path = xml_path
     @vmnet = vmnet
     @storage = storage
+    @domain_name = $config["LIBVIRT_DOMAIN_NAME"]
     default_domain_xml = File.read("#{@xml_path}/default.xml")
-    update(default_domain_xml)
+    rexml = REXML::Document.new(default_domain_xml)
+    rexml.elements['domain'].add_element('name')
+    rexml.elements['domain/name'].text = @domain_name
+    rexml.elements['domain'].add_element('uuid')
+    rexml.elements['domain/uuid'].text = $config["LIBVIRT_DOMAIN_UUID"]
+    update(rexml.to_s)
     @display = Display.new(@domain_name, x_display)
     set_cdrom_boot(TAILS_ISO)
     plug_network
@@ -64,8 +74,6 @@ class VM
   end
 
   def update(xml)
-    domain_xml = REXML::Document.new(xml)
-    @domain_name = domain_xml.elements['domain/name'].text
     destroy_and_undefine
     @domain = @virt.define_domain_xml(xml)
   end
@@ -518,7 +526,7 @@ EOF
 
   def VM.snapshot_exists?(name)
     return true if File.exist?("#{$config["TMPDIR"]}/#{name}-snapshot.qcow2")
-    old_domain = $virt.lookup_domain_by_name("TailsToaster")
+    old_domain = $virt.lookup_domain_by_name($config["LIBVIRT_DOMAIN_NAME"])
     snapshot = old_domain.lookup_snapshot_by_name(name)
     return snapshot != nil
   rescue Libvirt::RetrieveError
@@ -529,7 +537,7 @@ EOF
     Dir.glob("#{$config["TMPDIR"]}/*-snapshot.qcow2").each do |file|
       File.delete(file)
     end
-    old_domain = $virt.lookup_domain_by_name("TailsToaster")
+    old_domain = $virt.lookup_domain_by_name($config["LIBVIRT_DOMAIN_NAME"])
     old_domain.list_all_snapshots.each { |snapshot| snapshot.delete }
   rescue Libvirt::RetrieveError
     # No such domain, so no snapshots either.
