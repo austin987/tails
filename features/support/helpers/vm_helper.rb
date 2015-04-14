@@ -462,7 +462,7 @@ EOF
 EOF
   end
 
-  def external_snapshot_path(name)
+  def ram_only_snapshot_path(name)
     return "#{$config["TMPDIR"]}/#{name}-snapshot.qcow2"
   end
 
@@ -490,7 +490,7 @@ EOF
       xml = internal_snapshot_xml(name)
       @domain.snapshot_create_xml(xml)
     else
-      snapshot_path = external_snapshot_path(name)
+      snapshot_path = ram_only_snapshot_path(name)
       @domain.save(snapshot_path)
       # For consistency with the internal snapshot case (which is
       # "live", so the domain doesn't go down) we immediately restore
@@ -507,9 +507,9 @@ EOF
     @display.stop if @display.active?
     # See comment in save_snapshot() for details on why we use two
     # different type of snapshots.
-    potential_external_snapshot_path = external_snapshot_path(name)
-    if File.exist?(potential_external_snapshot_path)
-      Libvirt::Domain::restore(@virt, potential_external_snapshot_path)
+    potential_ram_only_snapshot_path = ram_only_snapshot_path(name)
+    if File.exist?(potential_ram_only_snapshot_path)
+      Libvirt::Domain::restore(@virt, potential_ram_only_snapshot_path)
       @domain = @virt.lookup_domain_by_name(@domain_name)
     else
       begin
