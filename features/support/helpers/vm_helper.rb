@@ -462,20 +462,6 @@ EOF
 EOF
   end
 
-  def save_snapshot2(name)
-    xml = internal_snapshot_xml(name)
-    STDERR.puts "-"*80
-    STDERR.puts xml
-    STDERR.puts "-"*80
-    @domain.snapshot_create_xml(xml)
-  end
-
-  def restore_snapshot2(name)
-    @domain.destroy if is_running?
-    snapshot = @domain.lookup_snapshot_by_name(name)
-    @domain.revert_to_snapshot(snapshot)
-  end
-
   def external_snapshot_path(name)
     return "#{$config["TMPDIR"]}/#{name}-snapshot.qcow2"
   end
