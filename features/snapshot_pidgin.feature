@@ -7,14 +7,9 @@ Feature: Chatting anonymously using Pidgin
   And AppArmor should prevent Pidgin from doing dangerous things
   And all Internet traffic should flow only through Tor
 
-  Background:
-    Given a computer
-    When I start Tails from DVD and I login
-    Then Pidgin has the expected accounts configured with random nicknames
-    And I save the state so the background can be restored next scenario
-
  @check_tor_leaks
  Scenario: Chatting with some friend over XMPP
+   Given I reach the "with-network-logged-in" checkpoint
    When I start Pidgin through the GNOME menu
    Then I see Pidgin's account manager window
    When I create my XMPP account
@@ -27,8 +22,7 @@ Feature: Chatting anonymously using Pidgin
 
   @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
-    Given a computer
-    When I restore the snapshot "usb-install-with-persistence"
+    Given I reach the "usb-install-with-persistence" checkpoint
     And I enable persistence with password "asdf"
     And I log in to a new session
     When I start Pidgin through the GNOME menu
