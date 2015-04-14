@@ -30,6 +30,7 @@ class Display
 
   def stop
     Process.kill("TERM", @virtviewer.pid)
+    @virtviewer.close
   end
 
   def restart
