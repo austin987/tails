@@ -179,6 +179,9 @@ class VM
   end
 
   def plug_drive(name, type)
+    if disk_plugged?(name)
+      raise "disk '#{name}' already plugged"
+    end
     removable_usb = nil
     case type
     when "removable usb", "usb"
@@ -251,11 +254,15 @@ class VM
     return execute("test -b #{disk_dev(name)}").success?
   end
 
+  def disk_plugged?(name)
+    return not(disk_xml_desc(name).nil?)
+  end
+
   def set_disk_boot(name, type)
     if is_running?
       raise "boot settings can only be set for inactive vms"
     end
-    plug_drive(name, type)
+    plug_drive(name, type) if not(disk_plugged?(name))
     set_boot_device('hd')
     # For some reason setting the boot device doesn't prevent cdrom
     # boot unless it's empty
