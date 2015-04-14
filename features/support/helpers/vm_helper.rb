@@ -230,6 +230,15 @@ class VM
     return nil
   end
 
+  def disk_rexml_desc(name)
+    xml = disk_xml_desc(name)
+    if xml
+      return REXML::Document.new(xml)
+    else
+      return nil
+    end
+  end
+
   def unplug_drive(name)
     xml = disk_xml_desc(name)
     @domain.detach_device(xml)
@@ -246,12 +255,13 @@ class VM
   end
 
   def disk_dev(name)
-    xml = REXML::Document.new(disk_xml_desc(name))
-    return "/dev/" + xml.elements['disk/target'].attribute('dev').to_s
+    rexml = disk_rexml_desc(name) or return nil
+    return "/dev/" + rexml.elements['disk/target'].attribute('dev').to_s
   end
 
   def disk_detected?(name)
-    return execute("test -b #{disk_dev(name)}").success?
+    dev = disk_dev(name) or return false
+    return execute("test -b #{dev}").success?
   end
 
   def disk_plugged?(name)
