@@ -143,7 +143,7 @@ When /^I start the computer$/ do
   post_vm_start_hook
 end
 
-Given /^I start Tails( from DVD)?( with network unplugged)? and I login$/ do |dvd_boot, network_unplugged|
+Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do |dvd_boot, network_unplugged, do_login|
   # we don't @skip_steps_while_restoring_background as we're only running
   # other steps, that are taking care of it *if* they have to
   step "the computer is set to boot from the Tails DVD" if dvd_boot
@@ -154,18 +154,20 @@ Given /^I start Tails( from DVD)?( with network unplugged)? and I login$/ do |dv
   end
   step "I start the computer"
   step "the computer boots Tails"
-  step "I log in to a new session"
-  step "Tails seems to have booted normally"
-  if network_unplugged.nil?
-    step "Tor is ready"
-    step "all notifications have disappeared"
-    step "available upgrades have been checked"
-  else
-    step "all notifications have disappeared"
+  if do_login
+    step "I log in to a new session"
+    step "Tails seems to have booted normally"
+    if network_unplugged.nil?
+      step "Tor is ready"
+      step "all notifications have disappeared"
+      step "available upgrades have been checked"
+    else
+      step "all notifications have disappeared"
+    end
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged) and I login(| with(| read-only) persistence password "([^"]+)")$/ do |drive_type, drive_name, network_unplugged, persistence_on, persistence_ro, persistence_pwd|
+Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I login(| with(| read-only) persistence password "([^"]+)"))?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, persistence_ro, persistence_pwd|
   # we don't @skip_steps_while_restoring_background as we're only running
   # other steps, that are taking care of it *if* they have to
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
@@ -176,22 +178,24 @@ Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged) and I l
   end
   step "I start the computer"
   step "the computer boots Tails"
-  if ! persistence_on.empty?
-    assert(! persistence_pwd.empty?, "A password must be provided when enabling persistence")
-    if persistence_ro.empty?
-      step "I enable persistence with password \"#{persistence_pwd}\""
-    else
-      step "I enable read-only persistence with password \"#{persistence_pwd}\""
+  if do_login
+    if ! persistence_on.empty?
+      assert(! persistence_pwd.empty?, "A password must be provided when enabling persistence")
+      if persistence_ro.empty?
+        step "I enable persistence with password \"#{persistence_pwd}\""
+      else
+        step "I enable read-only persistence with password \"#{persistence_pwd}\""
+      end
     end
-  end
-  step "I log in to a new session"
-  step "Tails seems to have booted normally"
-  if network_unplugged.empty?
-    step "Tor is ready"
-    step "all notifications have disappeared"
-    step "available upgrades have been checked"
-  else
-    step "all notifications have disappeared"
+    step "I log in to a new session"
+    step "Tails seems to have booted normally"
+    if network_unplugged.empty?
+      step "Tor is ready"
+      step "all notifications have disappeared"
+      step "available upgrades have been checked"
+    else
+      step "all notifications have disappeared"
+    end
   end
 end
 
