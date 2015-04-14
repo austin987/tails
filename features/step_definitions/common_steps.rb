@@ -408,15 +408,6 @@ Given /^I save the state so the background can be restored next scenario$/ do
   @skip_steps_while_restoring_background = false
  end
 
-When /^I save the snapshot "([^"]*)"$/ do |snapshot_name|
-  $vm.save_snapshot(snapshot_name)
-end
-
-When /^I restore the snapshot "([^"]*)"$/ do |snapshot_name|
-  $vm.restore_snapshot(snapshot_name)
-  post_snapshot_restore_hook
-end
-
 Then /^I see "([^"]*)" after at most (\d+) seconds$/ do |image, time|
   next if @skip_steps_while_restoring_background
   @screen.wait(image, time.to_i)
