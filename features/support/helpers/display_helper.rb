@@ -29,7 +29,7 @@ class Display
   end
 
   def stop
-    Process.kill("INT", @virtviewer.pid)
+    Process.kill("TERM", @virtviewer.pid)
   end
 
   def restart
