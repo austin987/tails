@@ -73,8 +73,8 @@ Then /^I enable key synchronization in Seahorse$/ do
   next if @skip_steps_while_restoring_background
   step 'process "seahorse" is running'
   @screen.wait_and_click("SeahorseWindow.png", 10)
-  @screen.type("e", Sikuli::KeyModifier.ALT) # Menu: "Edit" ->
-  @screen.type("n") # Menu: "Preferences " ->
+  @screen.wait_and_click("SeahorseEdit.png", 10)
+  @screen.wait_and_click("SeahorseEditPreferences.png", 10)
   @screen.wait("SeahorsePreferences.png", 10)
   @screen.type("p", Sikuli::KeyModifier.ALT) # Option: "Publish keys to...".
   @screen.type(Sikuli::Key.DOWN) # select HKP server
