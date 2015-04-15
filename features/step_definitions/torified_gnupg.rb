@@ -86,8 +86,8 @@ Then /^I synchronize keys in Seahorse$/ do
   step "process \"seahorse\" is running"
   @screen.wait_and_click("SeahorseWindow.png", 10)
   @screen.wait("SeahorseWindow.png", 10)
-  @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
-  @screen.type("s")                  # "Sync...".
+  @screen.wait_and_click("SeahorseRemoteMenu.png", 10)
+  @screen.wait_and_click("SeahorseRemoteMenuSync.png", 10)
   @screen.wait("SeahorseSyncKeys.png", 10)
   @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
   @screen.wait("SeahorseSynchronizing.png", 20)
@@ -103,8 +103,8 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
   end
   step "Seahorse has opened"
   @screen.wait_and_click("SeahorseWindow.png", 10)
-  @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
-  @screen.type("f")                  # "Find Remote Keys...".
+  @screen.wait_and_click("SeahorseRemoteMenu.png", 10)
+  @screen.wait_and_click("SeahorseRemoteMenuFind.png", 10)
   @screen.wait("SeahorseFindKeysWindow.png", 10)
   # Seahorse doesn't seem to support searching for fingerprints
   @screen.type(keyid + Sikuli::Key.ENTER)
