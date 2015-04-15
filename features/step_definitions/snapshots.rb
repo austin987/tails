@@ -1,16 +1,18 @@
-def reach_checkpoint(checkpoint_name)
-  checkpoint_descs = {
+def checkpoints
+  {
     'no-network' => {
-      :description => "Tails has booted from DVD, stopped at Tails Greeter's login screen",
-      :restore_checkpoint => nil,
+      :description => "Tails has booted from DVD without network and stopped at Tails Greeter's login screen",
+      :parent_checkpoint => nil,
       :steps => [
-        'I start Tails from DVD with network unplugged',
+        'the network is unplugged',
+        'I start the computer',
+        'the computer boots Tails'
       ],
     },
     
     'no-network-logged-in' => {
       :description => "Tails has booted from DVD without network and logged in",
-      :restore_checkpoint => "no-network",
+      :parent_checkpoint => "no-network",
       :steps => [
         'I log in to a new session',
         'Tails seems to have booted normally',
@@ -18,8 +20,8 @@ def reach_checkpoint(checkpoint_name)
     },
     
     'with-network-logged-in' => {
-      :description => "Tails has booted from DVD with network and logged in",
-      :restore_checkpoint => "no-network",
+      :description => "Tails has booted from DVD and logged in and the network is connected",
+      :parent_checkpoint => "no-network",
       :steps => [
         'the network is plugged',
         'I log in to a new session',
@@ -31,8 +33,8 @@ def reach_checkpoint(checkpoint_name)
     },
     
     'usb-install' => {
-      :description => "Tails has booted from a USB drive without a persistent partition, stopped at Tails Greeter's login screen" ,
-      :restore_checkpoint => 'no-network-logged-in',
+      :description => "Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen" ,
+      :parent_checkpoint => 'no-network-logged-in',
       :steps => [
         'I create a 4 GiB disk named "current"',
         'I plug USB drive "current"',
@@ -48,8 +50,8 @@ def reach_checkpoint(checkpoint_name)
     },
     
     'usb-install-with-persistence' => {
-      :description => "Tails has booted from a USB drive with a persistent partition, stopped at Tails Greeter's login screen",
-      :restore_checkpoint => 'usb-install',
+      :description => "Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen",
+      :parent_checkpoint => 'usb-install',
       :steps => [
         'I log in to a new session',
         'Tails seems to have booted normally',
@@ -62,41 +64,63 @@ def reach_checkpoint(checkpoint_name)
       ],
     },
   }
+end
+
+def reach_checkpoint(name)
+  scenario_indent = " "*4
+  step_indent = " "*6
+  red = 31
+  green = 32
+  def colorize(color_code, s)
+    "\e[#{color_code}m#{s}\e[0m"
+  end
+
   step "a computer"
-  if VM.snapshot_exists?(checkpoint_name)
-    $vm.restore_snapshot(checkpoint_name)
+  if VM.snapshot_exists?(name)
+    $vm.restore_snapshot(name)
     post_snapshot_restore_hook
   else
-    checkpoint_desc = checkpoint_descs[checkpoint_name]
-    description = checkpoint_desc[:description]
-    restore_checkpoint = checkpoint_desc[:restore_checkpoint]
-    steps = checkpoint_desc[:steps]
-    if restore_checkpoint
-      if not(VM.snapshot_exists?(restore_checkpoint))
-        reach_checkpoint(restore_checkpoint)
+    checkpoint = checkpoints[name]
+    checkpoint_description = checkpoint[:description]
+    parent_checkpoint = checkpoint[:parent_checkpoint]
+    steps = checkpoint[:steps]
+    if parent_checkpoint
+      if VM.snapshot_exists?(parent_checkpoint)
+        $vm.restore_snapshot(parent_checkpoint)
+      else
+        reach_checkpoint(parent_checkpoint)
       end
-      $vm.restore_snapshot(restore_checkpoint)
       post_snapshot_restore_hook
     end
-    STDERR.puts " "*4 + "Creating checkpoint '#{checkpoint_name}': " +
-                description
-    if restore_checkpoint
-      STDERR.puts " "*6 + "I reach the \"#{restore_checkpoint}\" checkpoint"
+    STDERR.puts(scenario_indent + "Checkpoint: #{checkpoint_description}")
+    step_action = "Given"
+    if parent_checkpoint
+      parent_description = checkpoints[parent_checkpoint][:description]
+      STDERR.puts(
+        step_indent +
+        colorize(green, "#{step_action} #{parent_description}"))
+      step_action = "And"
     end
     steps.each do |s|
       begin
         step(s)
       rescue Exception => e
-        STDERR.puts " "*4 + "Step failed while creating checkpoint " +
-                    "'#{checkpoint_name}': #{s}"
+        STDERR.puts(
+          scenario_indent +
+          colorize(red, "Step failed while creating checkpoint: #{s}"))
         raise e
       end
-      STDERR.puts " "*6 + s
+      STDERR.puts(step_indent + colorize(green, "#{step_action} #{s}"))
+      step_action = "And"
     end
-    $vm.save_snapshot(checkpoint_name)
+    $vm.save_snapshot(name)
   end
 end
 
-When /^I reach the "(.*)" checkpoint$/ do |checkpoint_name|
-  reach_checkpoint(checkpoint_name)
+# For each checkpoint we generate a step to reach it.
+checkpoints.each do |name, desc|
+  step_regex = Regexp.new("^#{desc[:description]}$")
+  Given step_regex do
+    reach_checkpoint(name)
+  end
 end

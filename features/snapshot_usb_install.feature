@@ -6,7 +6,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   and use persistence
 
   Scenario: Booting Tails from a USB drive without a persistent partition
-    Given I reach the "usb-install" checkpoint
+    Given Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
     Then Tails seems to have booted normally
     And Tails is running from USB drive "current"
@@ -14,7 +14,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And there is no persistence partition on USB drive "current"
 
   Scenario: Booting Tails from a USB drive with a disabled persistent partition
-    Given I reach the "usb-install-with-persistence" checkpoint
+    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
     Then Tails seems to have booted normally
     And Tails is running from USB drive "current"
@@ -22,7 +22,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     But a Tails persistence partition with password "asdf" exists on USB drive "current"
 
   Scenario: Booting Tails from a USB drive with an enabled persistent partition
-    Given I reach the "usb-install-with-persistence" checkpoint
+    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     When I enable persistence with password "asdf"
     And I log in to a new session
     Then Tails seems to have booted normally

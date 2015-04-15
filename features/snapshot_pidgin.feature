@@ -9,7 +9,7 @@ Feature: Chatting anonymously using Pidgin
 
  @check_tor_leaks
  Scenario: Chatting with some friend over XMPP
-   Given I reach the "with-network-logged-in" checkpoint
+   Given Tails has booted from DVD and logged in and the network is connected
    When I start Pidgin through the GNOME menu
    Then I see Pidgin's account manager window
    When I create my XMPP account
@@ -22,7 +22,7 @@ Feature: Chatting anonymously using Pidgin
 
   @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
-    Given I reach the "usb-install-with-persistence" checkpoint
+    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     And I enable persistence with password "asdf"
     And I log in to a new session
     When I start Pidgin through the GNOME menu
