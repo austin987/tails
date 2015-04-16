@@ -26,13 +26,13 @@ Merge `upstream` branch to `master` branch:
 
 Update `debian/changelog`:
 
-    git-dch -v <version>-1
+    git-dch -N <version>-1
 
 (Do not forget to set the appropriate release.)
 
 Commit the changelog:
 
-    git commit debian/changelog
+    git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
 Build a new Debian package:
 

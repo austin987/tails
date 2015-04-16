@@ -25,6 +25,12 @@ function TorProtocolService()
 
   try
   {
+    this.mConsoleSvc = Cc["@mozilla.org/consoleservice;1"]
+                         .getService(Ci.nsIConsoleService);
+  } catch (e) {}
+
+  try
+  {
     var env = Cc["@mozilla.org/process/environment;1"]
                 .getService(Ci.nsIEnvironment);
 
@@ -405,8 +411,7 @@ TorProtocolService.prototype =
   TorCleanupConnection: function()
   {
     this._closeConnection();
-    this._closeConnection(this.mEventMonitorConnection);
-    this.mEventMonitorConnection = null;
+    this._shutDownEventMonitor();
   },
 
   TorStartEventMonitor: function()
@@ -453,7 +458,8 @@ TorProtocolService.prototype =
   },
 
   // Returns captured log message as a text string (one message per line).
-  TorGetLog: function()
+  // If aCountObj is passed, aCountObj.value is set to the message count.
+  TorGetLog: function(aCountObj)
   {
     let s = "";
     if (this.mTorLog)
@@ -463,7 +469,10 @@ TorProtocolService.prototype =
       let dateFormat = dateFmtSvc.dateFormatShort;
       let timeFormat = dateFmtSvc.timeFormatSecondsForce24Hour;
       let eol = (TorLauncherUtil.isWindows) ? "\r\n" : "\n";
-      for (let i = 0; i < this.mTorLog.length; ++i)
+      let count = this.mTorLog.length;
+      if (aCountObj)
+        aCountObj.value = count;
+      for (let i = 0; i < count; ++i)
       {
         let logObj = this.mTorLog[i];
         let secs = logObj.date.getSeconds();
@@ -497,6 +506,7 @@ TorProtocolService.prototype =
 
 
   // Private Member Variables ////////////////////////////////////////////////
+  mConsoleSvc: null,
   mControlPort: null,
   mControlHost: null,
   mControlPassword: null,     // JS string that contains hex-encoded password.
@@ -1163,6 +1173,17 @@ TorProtocolService.prototype =
     return this.mRNGService;
   },
 
+  _shutDownEventMonitor: function()
+  {
+    if (this.mEventMonitorConnection)
+    {
+      this._closeConnection(this.mEventMonitorConnection);
+      this.mEventMonitorConnection = null;
+      this.mEventMonitorBuffer = null;
+      this.mEventMonitorInProgressReply = null;
+    }
+  },
+
   _waitForEventData: function()
   {
     if (!this.mEventMonitorConnection)
@@ -1179,15 +1200,25 @@ TorProtocolService.prototype =
           return;
         }
 
-        var binStream = _this.mEventMonitorConnection.binInStream;
-        var bytes = binStream.readBytes(binStream.available());
-        if (!_this.mEventMonitorBuffer)
-          _this.mEventMonitorBuffer = bytes;
-        else
-          _this.mEventMonitorBuffer += bytes;
-        _this._processEventData();
+        try
+        {
+          var binStream = _this.mEventMonitorConnection.binInStream;
+          var bytes = binStream.readBytes(binStream.available());
+          if (!_this.mEventMonitorBuffer)
+            _this.mEventMonitorBuffer = bytes;
+          else
+            _this.mEventMonitorBuffer += bytes;
+          _this._processEventData();
 
-        _this._waitForEventData();
+          _this._waitForEventData();
+        }
+        catch (e)
+        {
+          // Probably we got here because tor exited.  If tor is restarted by
+          // Tor Launcher, the event monitor will be restarted too.
+          TorLauncherLogger.safelog(4, "Event monitor read error", e);
+          _this._shutDownEventMonitor();
+        }
       }
     };
 
@@ -1275,6 +1306,15 @@ TorProtocolService.prototype =
               this.mTorLog.splice(0, 1);
           }
           this.mTorLog.push(logObj);
+
+          // We could use console.info(), console.error(), and console.warn()
+          // but when those functions are used the console output includes
+          // extraneous double quotes.  See Mozilla bug # 977586.
+          if (this.mConsoleSvc)
+          {
+            let s = "Tor " + logObj.type + ": " + logObj.msg;
+            this.mConsoleSvc.logStringMessage(s);
+          }
           break;
         case "STATUS_CLIENT":
           this._parseBootstrapStatus(msg);
