@@ -81,7 +81,12 @@ def convert_from_bytes(size, unit)
 end
 
 def cmd_helper(cmd)
-  IO.popen(cmd + " 2>&1") do |p|
+  if cmd.instance_of?(Array)
+    cmd << {:err => [:child, :out]}
+  elsif cmd.instance_of?(String)
+    cmd += " 2>&1"
+  end
+  IO.popen(cmd) do |p|
     out = p.readlines.join("\n")
     p.close
     ret = $?
