@@ -18,8 +18,8 @@ class Display
                                            "-f",
                                            "-r",
                                            "-c", "qemu:///system",
-                                           ["--display=", @x_display].join(''),
-                                           @domain].join(' '))
+                                           "--display", @x_display,
+                                           @domain])
     # We wait for the display to be active to not lose actions
     # (e.g. key presses via sikuli) that come immediately after
     # starting (or restoring) a vm
