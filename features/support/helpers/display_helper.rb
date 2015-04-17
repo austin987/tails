@@ -14,10 +14,10 @@ class Display
   end
 
   def start
-    @virtviewer = IO.popen(["virt-viewer", "-d",
-                                           "-f",
-                                           "-r",
-                                           "-c", "qemu:///system",
+    @virtviewer = IO.popen(["virt-viewer", "--direct",
+                                           "--full-screen",
+                                           "--reconnect",
+                                           "--connect", "qemu:///system",
                                            "--display", @x_display,
                                            @domain])
     # We wait for the display to be active to not lose actions
