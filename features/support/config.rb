@@ -2,14 +2,18 @@ require 'fileutils'
 require 'yaml'
 require "#{Dir.pwd}/features/support/helpers/misc_helpers.rb"
 
-# These two files deal with options like some of the settings passed
+# These files deal with options like some of the settings passed
 # to the `run_test_suite` script, and "secrets" like credentials
 # (passwords, SSH keys) to be used in tests.
 DEFAULTS_CONFIG_FILE = "#{Dir.pwd}/features/config/defaults.yml"
 LOCAL_CONFIG_FILE = "#{Dir.pwd}/features/config/local.yml"
+LOCAL_CONFIGS_DIR = "#{Dir.pwd}/features/config/local.d"
 
 assert File.exists?(DEFAULTS_CONFIG_FILE)
 $config = YAML.load(File.read(DEFAULTS_CONFIG_FILE))
+Dir.glob("#{LOCAL_CONFIGS_DIR}/*.yml").sort.each do |config|
+  $config.merge!(YAML.load(File.read(config)))
+end
 if File.exists?(LOCAL_CONFIG_FILE)
   $config.merge!(YAML.load(File.read(LOCAL_CONFIG_FILE)))
 end
