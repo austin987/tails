@@ -7,8 +7,9 @@ class Display
   end
 
   def active?
-    p = IO.popen("xprop -display #{@x_display} " +
-                 "-name '#{@domain} (1) - Virt Viewer' 2>/dev/null")
+    p = IO.popen(["xprop", "-display", @x_display,
+                  "-name", "#{@domain} (1) - Virt Viewer",
+                  :err => ["/dev/null", "w"]])
     Process.wait(p.pid)
     $?.success?
   end
