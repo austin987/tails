@@ -106,7 +106,7 @@ def get_free_space(machine, path)
   case machine
   when 'host'
     assert(File.exists?(path), "Path '#{path}' not found on #{machine}.")
-    free = cmd_helper("df '#{path}'")
+    free = cmd_helper(["df", path])
   when 'guest'
     assert(@vm.file_exist?(path), "Path '#{path}' not found on #{machine}.")
     free = @vm.execute_successfully("df '#{path}'")
