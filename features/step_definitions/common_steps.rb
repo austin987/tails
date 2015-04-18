@@ -285,6 +285,10 @@ Given /^the Tails desktop is ready$/ do
     desktop_started_picture = 'WindowsStartButton.png'
   else
     desktop_started_picture = 'GnomeApplicationsMenu.png'
+    # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
+    # By this point the only icon left is Vidalia and it will not cause the other systray
+    # icons to shift positions.
+    @screen.wait("GnomeSystrayFlorence.png", 60)
   end
   @screen.wait(desktop_started_picture, 180)
 end
