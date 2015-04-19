@@ -44,8 +44,6 @@ Goals
     for years.
   - Simplify the installation process by automating *some* verification
     of the ISO image inside the browser as part of the download process.
-  - Allow users who want to verify an ISO image downloaded previously or downloaded using BitTorrent to do the same
-    level of verification as people downloading through their browser.
   - In case of a bad ISO image, help the user diagnose whether the
     download has been interrupted or the ISO has been corrupted.
   - In case of an interrupted download, help the user resume it. This
@@ -69,6 +67,11 @@ Non goals
 
   - Verify deprecated ISO images.
   - Verify ISO images downloaded from nightly.tails.boum.org.
+  - Verify ISO images downloaded through BitTorrent. If we can rely on
+    our website to provide a correct cryptographic description of the
+    ISO image then we can rely on it as well to provide a correct
+    BitTorrent file. Then BitTorrent clients verify the integrity of
+    their downloads and we're good (#9043).
 
 <a id="scenario"></a>
 
@@ -81,9 +84,6 @@ broader wireframe of the web assistant. This should be clarified by the
 beginning of April but not before. See [[!tails_ticket 8584]] and
 [[!tails_ticket 8564]].
 
-HTTP download
--------------
-
   - When the user clicks on the HTTP download button from the [[download
     page|download#index2h1]], we propose to install the extension.
   - The user allows the installation of the extension.
@@ -93,16 +93,6 @@ HTTP download
   - The user might or might not close the webpage.
   - The download also appears in the usual list of downloads of the
     browser.
-
-Torrent download
-----------------
-
-  - If a user has downloaded the ISO using BitTorrent, she can verify it
-    as well as using the extension as part of the web assistant.
-
-ISO verification
-----------------
-
   - After the image has been downloaded, the web assistant leads the
     user through the ISO verification process.
   - The extension checks the size of the download to verify that the download
@@ -125,7 +115,7 @@ ISO verification mechanism
 We are considering here an attacker who can:
 
   - (A) Provide a malicious ISO image to the user for example by
-    operating a rogue Tails mirror or BitTorrent file.
+    operating a rogue Tails mirror.
 
 We are not considering an attacker who can:
 
