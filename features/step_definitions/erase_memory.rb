@@ -64,7 +64,7 @@ def pattern_coverage_in_guest_ram
   FileUtils.touch(dump)
   FileUtils.chmod(0666, dump)
   @vm.domain.core_dump(dump)
-  patterns = IO.popen("grep -c 'wipe_didnt_work' #{dump}").gets.to_i
+  patterns = IO.popen(['grep', '-c', 'wipe_didnt_work', dump]).gets.to_i
   File.delete dump
   # Pattern is 16 bytes long
   patterns_b = patterns*16

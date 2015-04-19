@@ -80,7 +80,12 @@ def convert_from_bytes(size, unit)
 end
 
 def cmd_helper(cmd)
-  IO.popen(cmd + " 2>&1") do |p|
+  if cmd.instance_of?(Array)
+    cmd << {:err => [:child, :out]}
+  elsif cmd.instance_of?(String)
+    cmd += " 2>&1"
+  end
+  IO.popen(cmd) do |p|
     out = p.readlines.join("\n")
     p.close
     ret = $?
@@ -100,7 +105,7 @@ def get_free_space(machine, path)
   case machine
   when 'host'
     assert(File.exists?(path), "Path '#{path}' not found on #{machine}.")
-    free = cmd_helper("df '#{path}'")
+    free = cmd_helper(["df", path])
   when 'guest'
     assert(@vm.file_exist?(path), "Path '#{path}' not found on #{machine}.")
     free = @vm.execute_successfully("df '#{path}'")
