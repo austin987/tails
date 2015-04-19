@@ -24,7 +24,7 @@ Feature: Logging in via SSH
 
   @check_tor_leaks
   Scenario: Connecting to an SFTP server on the Internet using the GNOME "Connect to a Server" feature
-    Given I have the SSH key pair for an SSH server
+    Given I have the SSH key pair for an SFTP server
     When I connect to an SFTP server on the Internet
     And I verify the SSH fingerprint for the SFTP server
     Then I successfully connect to the SFTP server
