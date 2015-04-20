@@ -294,7 +294,12 @@ Given /^GNOME has started$/ do
   when "windows"
     desktop_started_picture = 'WindowsStartButton.png'
   else
-    desktop_started_picture = 'GnomeApplicationsMenu.png'
+    case @language
+    when "German"
+      desktop_started_picture = 'GnomeAnwendungenMenu.png'
+    else
+      desktop_started_picture = 'GnomeApplicationsMenu.png'
+    end
   end
   @screen.wait(desktop_started_picture, 180)
 end
