@@ -11,11 +11,10 @@ LOCAL_CONFIGS_DIR = "#{Dir.pwd}/features/config/local.d"
 
 assert File.exists?(DEFAULTS_CONFIG_FILE)
 $config = YAML.load(File.read(DEFAULTS_CONFIG_FILE))
-Dir.glob("#{LOCAL_CONFIGS_DIR}/*.yml").sort.each do |config|
+config_files = Dir.glob("#{LOCAL_CONFIGS_DIR}/*.yml").sort
+config_files.insert(0, LOCAL_CONFIG_FILE) if File.exists?(LOCAL_CONFIG_FILE)
+config_files.each do |config|
   $config.merge!(YAML.load(File.read(config)))
-end
-if File.exists?(LOCAL_CONFIG_FILE)
-  $config.merge!(YAML.load(File.read(LOCAL_CONFIG_FILE)))
 end
 # Options passed to the `run_test_suite` script will always take
 # precedence. The way we import these keys is only safe for values
