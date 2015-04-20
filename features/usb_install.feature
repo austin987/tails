@@ -17,7 +17,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I unplug USB drive "current"
 
   @keep_volumes
-  Scenario: Unplugging the target USB drive
+  Scenario: Test that Tails installer can detect when a target USB drive is inserted or removed
     Given a computer
     And I start Tails from DVD with network unplugged and I login
     And I start Tails Installer in "Clone & Install" mode
