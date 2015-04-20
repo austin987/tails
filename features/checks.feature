@@ -33,7 +33,7 @@ Feature: Various checks
     And Tor is ready
     And all notifications have disappeared
     When I double-click the Report an Error launcher on the desktop
-    Then I see "SupportDocumentation.png" after at most 90 seconds
+    Then the support documentation page opens in Tor Browser
 
   Scenario: The live user is setup correctly
     Then the live user has been setup by live-boot
