@@ -102,6 +102,7 @@ Before('@product') do
     @skip_steps_while_restoring_background = false
   end
   @theme = "gnome"
+  @language = "English"
   @os_loader = "MBR"
 end
 
