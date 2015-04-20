@@ -242,9 +242,19 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
   activate_filesystem_shares
 end
 
-Given /^I log in to a new session$/ do
+Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
+  case lang
+  when 'German'
+    @language = "German"
+    @screen.wait_and_click('TailsGreeterLanguageEnglish.png', 10)
+    @screen.wait_and_click('TailsGreeterLanguageDeutsch.png', 10)
+    @screen.wait_and_click('TailsGreeterAnmeldenButton.png', 10)
+  when ''
+    @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
+  else
+    raise "Unsupported language: #{lang}"
+  end
 end
 
 Given /^I enable more Tails Greeter options$/ do
