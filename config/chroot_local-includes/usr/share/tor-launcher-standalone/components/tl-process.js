@@ -140,14 +140,33 @@ TorProcessService.prototype =
 
       this.mTorProcess = null;
       this.mTorProcessStatus = this.kStatusExited;
+      this.mIsBootstrapDone = false;
 
       this.mObsSvc.notifyObservers(null, "TorProcessExited", null);
 
       if (!this.mIsQuitting)
       {
-        var s = TorLauncherUtil.getLocalizedString("tor_exited");
-        TorLauncherUtil.showAlert(null, s);
+        this.mProtocolSvc.TorCleanupConnection();
+
+        var s = TorLauncherUtil.getLocalizedString("tor_exited") + "\n\n"
+                + TorLauncherUtil.getLocalizedString("tor_exited2");
         TorLauncherLogger.log(4, s);
+        var defaultBtnLabel = TorLauncherUtil.getLocalizedString("restart_tor");
+        var cancelBtnLabel = "OK";
+        try
+        {
+          const kSysBundleURI = "chrome://global/locale/commonDialogs.properties";
+          var sysBundle = Cc["@mozilla.org/intl/stringbundle;1"]
+             .getService(Ci.nsIStringBundleService).createBundle(kSysBundleURI);
+          cancelBtnLabel = sysBundle.GetStringFromName(cancelBtnLabel);
+        } catch(e) {}
+
+        if (TorLauncherUtil.showConfirm(null, s, defaultBtnLabel, cancelBtnLabel)
+            && !this.mIsQuitting)
+        {
+          this._startTor();
+          this._controlTor();
+        }
       }
     }
     else if ("timer-callback" == aTopic)
@@ -176,8 +195,8 @@ TorProcessService.prototype =
         else if ((Date.now() - this.mTorProcessStartTime)
                  > this.kControlConnTimeoutMS)
         {
-          this.mObsSvc.notifyObservers(null, "TorProcessDidNotStart", null);
           var s = TorLauncherUtil.getLocalizedString("tor_controlconn_failed");
+          this.mObsSvc.notifyObservers(null, "TorProcessDidNotStart", s);
           TorLauncherUtil.showAlert(null, s);
           TorLauncherLogger.log(4, s);
         }
@@ -318,6 +337,9 @@ TorProcessService.prototype =
       var geoipFile = dataDir.clone();
       geoipFile.append("geoip");
 
+      var geoip6File = dataDir.clone();
+      geoip6File.append("geoip6");
+
       var args = [];
       if (torrcDefaultsFile)
       {
@@ -330,6 +352,8 @@ TorProcessService.prototype =
       args.push(dataDir.path);
       args.push("GeoIPFile");
       args.push(geoipFile.path);
+      args.push("GeoIPv6File");
+      args.push(geoip6File.path);
       args.push("HashedControlPassword");
       args.push(hashedPassword);
 
@@ -360,6 +384,19 @@ TorProcessService.prototype =
       {
         args.push("DisableNetwork");
         args.push("1");
+      }
+
+      // On Windows, prepend the Tor program directory to PATH.  This is
+      // needed so that pluggable transports can find OpenSSL DLLs, etc.
+      // See https://trac.torproject.org/projects/tor/ticket/10845
+      if (TorLauncherUtil.isWindows)
+      {
+        var env = Cc["@mozilla.org/process/environment;1"]
+                    .getService(Ci.nsIEnvironment);
+        var path = exeFile.parent.path;
+        if (env.exists("PATH"))
+          path += ";" + env.get("PATH");
+        env.set("PATH", path);
       }
 
       this.mTorProcessStatus = this.kStatusStarting;
@@ -401,6 +438,12 @@ TorProcessService.prototype =
           var panelID = (bridgeConfigIsBad) ? "bridgeSettings" : undefined;
           this._openNetworkSettings(true, panelID);
         }
+      }
+      else if (this._networkSettingsWindow != null)
+      {
+        // If network settings is open, open progress dialog via notification.
+        if (this.mObsSvc)
+          this.mObsSvc.notifyObservers(null, "TorOpenProgressDialog", null);
       }
       else
       {
@@ -529,9 +572,19 @@ TorProcessService.prototype =
       TorLauncherUtil.showSaveSettingsAlert(null, errObj.details);
   },
 
-  // Blocks until network settings dialog is closed.
+  // If this window is already open, put up "starting tor" panel, focus it and return.
+  // Otherwise, open the network settings dialog and block until it is closed.
   _openNetworkSettings: function(aIsInitialBootstrap, aStartAtWizardPanel)
   {
+    var win = this._networkSettingsWindow;
+    if (win)
+    {
+      // Return to "Starting tor" panel if being asked to open & dlog already exists.
+      win.showStartingTorPanel();
+      win.focus();
+      return;
+    }
+
     const kSettingsURL = "chrome://torlauncher/content/network-settings.xul";
     const kWizardURL = "chrome://torlauncher/content/network-settings-wizard.xul";
 
@@ -542,6 +595,13 @@ TorProcessService.prototype =
                                                     aStartAtWizardPanel);
     var url = (aIsInitialBootstrap) ? kWizardURL : kSettingsURL;
     wwSvc.openWindow(null, url, "_blank", winFeatures, argsArray);
+  },
+
+  get _networkSettingsWindow()
+  {
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+               .getService(Ci.nsIWindowMediator);
+    return wm.getMostRecentWindow("TorLauncher:NetworkSettings");
   },
 
   _openProgressDialog: function()
@@ -641,7 +701,7 @@ TorProcessService.prototype =
           else
           {
             // For Firefox, paths are relative to the top of the TBB install.
-            var tbbBrowserDepth = 1; // Windows and Linux
+            var tbbBrowserDepth = 0; // Windows and Linux
             if (TorLauncherUtil.isAppVersionAtLeast("21.0"))
             {
               // In FF21+, CurProcD is the "browser" directory that is next to
@@ -649,7 +709,7 @@ TorProcessService.prototype =
               ++tbbBrowserDepth;
             }
             if (TorLauncherUtil.isMac)
-              tbbBrowserDepth += 4;
+              tbbBrowserDepth += 2;
 
             topDir = Cc["@mozilla.org/file/directory_service;1"]
                     .getService(Ci.nsIProperties).get("CurProcD", Ci.nsIFile);
@@ -662,6 +722,7 @@ TorProcessService.prototype =
             }
           }
 
+          topDir.append("TorBrowser");
           this.mTorFileBaseDir = topDir;
         }
 
