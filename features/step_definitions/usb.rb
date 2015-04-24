@@ -103,9 +103,14 @@ When /^I start Tails Installer$/ do
   @screen.wait('USBCloneAndInstall.png', 30)
 end
 
-When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
+When /^I start Tails Installer in "([^"]+)" mode(?: with the )?(verbose)?(?: flag)?$/ do |mode, vbose|
   next if @skip_steps_while_restoring_background
-  step 'I start Tails Installer'
+  if vbose
+    step 'I run "liveusb-creator-launcher --verbose > /tmp/tails-installer.log 2>&1" in GNOME Terminal'
+  else
+    step 'I start Tails Installer'
+  end
+
   case mode
   when 'Clone & Install'
     @screen.wait_and_click('USBCloneAndInstall.png', 10)
