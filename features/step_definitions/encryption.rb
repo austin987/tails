@@ -41,7 +41,7 @@ end
 
 def maybe_deal_with_pinentry
   begin
-    @screen.wait_and_click("PinEntryPrompt.png", 3)
+    @screen.wait_and_click("PinEntryPrompt.png", 10)
     sleep 1
     @screen.type(@passphrase + Sikuli::Key.ENTER)
   rescue FindFailed
