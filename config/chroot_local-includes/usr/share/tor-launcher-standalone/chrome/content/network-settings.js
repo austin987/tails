@@ -1,4 +1,4 @@
-// Copyright (c) 2014, The Tor Project, Inc.
+// Copyright (c) 2015, The Tor Project, Inc.
 // See LICENSE for licensing information.
 //
 // vim: set sw=2 sts=2 ts=8 et syntax=javascript:
@@ -24,11 +24,11 @@ const kSupportAddr = "help@rt.torproject.org";
 const kTorProcessReadyTopic = "TorProcessIsReady";
 const kTorProcessExitedTopic = "TorProcessExited";
 const kTorProcessDidNotStartTopic = "TorProcessDidNotStart";
+const kTorOpenProgressTopic = "TorOpenProgressDialog";
 const kTorBootstrapErrorTopic = "TorBootstrapError";
 const kTorLogHasWarnOrErrTopic = "TorLogHasWarnOrErr";
 
 const kWizardProxyRadioGroup = "proxyRadioGroup";
-const kWizardFirewallRadioGroup = "firewallRadioGroup";
 const kWizardUseBridgesRadioGroup = "useBridgesRadioGroup";
 
 const kUseProxyCheckbox = "useProxy";
@@ -62,6 +62,7 @@ var gObsService = null;
 var gIsInitialBootstrap = false;
 var gIsBootstrapComplete = false;
 var gRestoreAfterHelpPanelID = null;
+var gActiveTopics = [];  // Topics for which an observer is currently installed.
 
 
 function initDialog()
@@ -120,6 +121,13 @@ function initDialog()
   var haveWizard = (wizardElem != null);
   if (haveWizard)
   {
+    // Hide the Tor Browser logo and associated separator element if the
+    // TOR_HIDE_BROWSER_LOGO environment variable is set.
+    let env = Cc["@mozilla.org/process/environment;1"]
+                .getService(Ci.nsIEnvironment);
+    if (env.exists("TOR_HIDE_BROWSER_LOGO"))
+      wizardElem.setAttribute("tor_hide_browser_logo", true);
+
     // Set "Copy Tor Log" label and move it after the Quit (cancel) button.
     var copyLogBtn = document.documentElement.getButton("extra2");
     if (copyLogBtn)
@@ -159,17 +167,21 @@ function initDialog()
 
   initDefaultBridgeTypeMenu();
 
-  gObsService.addObserver(gObserver, kTorBootstrapErrorTopic, false);
-  gObsService.addObserver(gObserver, kTorLogHasWarnOrErrTopic, false);
-  gObsService.addObserver(gObserver, kTorProcessExitedTopic, false);
+  addObserver(kTorBootstrapErrorTopic);
+  addObserver(kTorLogHasWarnOrErrTopic);
+  addObserver(kTorProcessExitedTopic);
+  addObserver(kTorOpenProgressTopic);
 
   var status = gTorProcessService.TorProcessStatus;
   if (TorLauncherUtil.shouldStartAndOwnTor &&
      (status != gTorProcessService.kStatusRunning))
   {
-    showStartingTorPanel(status == gTorProcessService.kStatusExited);
-    gObsService.addObserver(gObserver, kTorProcessReadyTopic, false);
-    gObsService.addObserver(gObserver, kTorProcessDidNotStartTopic, false);
+    if (status == gTorProcessService.kStatusExited)
+      showErrorMessage(true, null);
+    else
+      showStartingTorPanel();
+    addObserver(kTorProcessReadyTopic);
+    addObserver(kTorProcessDidNotStartTopic);
   }
   else
   {
@@ -181,7 +193,53 @@ function initDialog()
       showPanel();
   }
 
+  // Resize this window to fit content.  sizeToContent() alone will not do
+  // the job (it has many limitations and it is buggy).
+  sizeToContent();
+  let w = maxWidthOfContent();
+  if (w)
+  {
+    let windowFrameWidth = window.outerWidth - window.innerWidth;
+    w += windowFrameWidth;
+
+    if (w > window.outerWidth)
+      window.resizeTo(w, window.outerHeight);
+  }
+
   TorLauncherLogger.log(2, "initDialog done");
+}
+
+
+function deinitDialog()
+{
+  removeAllObservers();
+}
+
+
+// For now, we assume that the wizard buttons are the widest portion.
+// TODO: return a value for the settings dialog (non-wizard case).
+function maxWidthOfContent()
+{
+  let haveWizard = (getWizard() != null);
+  if (!haveWizard)
+    return undefined;
+
+  // Show all buttons so we can get an accurate width measurement.
+  // They will be hidden, as necessary, by the wizard.
+  let buttons = "back,next,cancel,extra2,help".split(',');
+  for (let i = 0; i < buttons.length; ++i)
+    showOrHideButton(buttons[i], true, false);
+
+  let btn = document.documentElement.getButton("cancel");
+  let btnContainer = btn.parentElement;
+
+  const kWarningIconWidth = 20; // skin/warning.png is 16 plus some margin
+  let r = btnContainer.getBoundingClientRect();
+
+  // Hide copy log button if appropriate.
+  restoreCopyLogVisibility();
+
+  return Math.ceil((2 * r.left) + r.width + kWarningIconWidth);
 }
 
 
@@ -194,7 +252,7 @@ function getWizard()
 
 function onWizardConfigure()
 {
-  getWizard().advance("proxy");
+  getWizard().advance("bridges");
 }
 
 
@@ -203,46 +261,51 @@ function onWizardProxyNext(aWizPage)
   if (aWizPage)
   {
     var hasProxy = getElemValue("proxyRadioYes", false);
-    aWizPage.next = (hasProxy) ? "proxyYES" : "firewall";
+    aWizPage.next = (hasProxy) ? "proxyYES" : "";
   }
 
   return true;
 }
 
 
-function onWizardFirewallNext(aWizPage)
-{
-  if (aWizPage)
-  {
-    var hasFirewall = getElemValue("firewallRadioYes", false);
-    aWizPage.next = (hasFirewall) ? "firewallYES" : "bridges";
-  }
-
-  return true;
-}
-
-
-function onWizardUseBridgesRadioChange(aWizPage)
+function onWizardUseProxyRadioChange()
 {
   var wizard = getWizard();
-  if (!aWizPage)
-    aWizPage = wizard.currentPage;
-  if (aWizPage)
+  if (wizard && wizard.currentPage)
   {
-    var useBridges = getElemValue("bridgesRadioYes", false);
-    aWizPage.next = (useBridges) ? "bridgeSettings" : "";
-    wizard.setAttribute("lastpage", !useBridges);
+    var hasProxy = getElemValue("proxyRadioYes", false);
+    wizard.setAttribute("lastpage", !hasProxy);
     wizard._wizardButtons.onPageChange();
   }
 }
 
 
-function onWizardBridgeSettingsShow()
+function onWizardProxySettingsShow()
 {
   var wizard = getWizard();
-  wizard.setAttribute("lastpage", true);
-  wizard._wizardButtons.onPageChange();
-  var btn = document.documentElement.getButton("finish");
+  if (wizard)
+  {
+    wizard.setAttribute("lastpage", true);
+    wizard._wizardButtons.onPageChange();
+  }
+}
+
+
+function onWizardUseBridgesNext(aWizPage)
+{
+  if (aWizPage)
+  {
+    var useBridges = getElemValue("bridgesRadioYes", false);
+    aWizPage.next = (useBridges) ? "bridgeSettings" : "proxy";
+  }
+
+  return true;
+}
+
+
+function onWizardBridgeSettingsShow()
+{
+  var btn = document.documentElement.getButton("next");
   if (btn)
     btn.focus();
 }
@@ -269,13 +332,10 @@ function onBridgeTypeRadioChange()
 }
 
 
-function showWizardNavButtons()
+function showWizardNavButtons(aShowBtns)
 {
-  var curPage = getWizard().currentPage;
-  var isFirstPage = ("first" == curPage.pageid);
-
-  showOrHideButton("back", !isFirstPage, false);
-  showOrHideButton("next", !isFirstPage && curPage.next, false);
+  showOrHideButton("back", aShowBtns, false);
+  showOrHideButton("next", aShowBtns, false);
 }
 
 
@@ -291,28 +351,62 @@ var gObserver = {
 
     if (kTorProcessReadyTopic == aTopic)
     {
-      gObsService.removeObserver(gObserver, kTorProcessReadyTopic);
+      removeObserver(kTorProcessReadyTopic);
+      removeObserver(kTorProcessDidNotStartTopic);
       var haveWizard = (getWizard() != null);
       showPanel();
       if (haveWizard)
-      {
-        showOrHideButton("back", true, false);
-        showOrHideButton("next", true, false);
-      }
+        showWizardNavButtons(true);
       readTorSettings();
     }
     else if (kTorProcessDidNotStartTopic == aTopic)
     {
-      gObsService.removeObserver(gObserver, kTorProcessDidNotStartTopic);
-      showErrorPanel();
+      removeObserver(kTorProcessReadyTopic);
+      removeObserver(kTorProcessDidNotStartTopic);
+      showErrorMessage(false, aData);
     }
     else if (kTorProcessExitedTopic == aTopic)
     {
-      gObsService.removeObserver(gObserver, kTorProcessExitedTopic);
-      showStartingTorPanel(true);
+      removeObserver(kTorProcessExitedTopic);
+      showErrorMessage(true, null);
+    }
+    else if (kTorOpenProgressTopic == aTopic)
+    {
+      openProgressDialog();
     }
   }
 };
+
+
+// addObserver() will not add two observers for the same topic.
+function addObserver(aTopic)
+{
+  if (gActiveTopics.indexOf(aTopic) < 0)
+  {
+    gObsService.addObserver(gObserver, aTopic, false);
+    gActiveTopics.push(aTopic);
+  }
+}
+
+
+function removeObserver(aTopic)
+{
+  let idx = gActiveTopics.indexOf(aTopic);
+  if (idx >= 0)
+  {
+    gObsService.removeObserver(gObserver, aTopic);
+    gActiveTopics.splice(idx, 1);
+  }
+}
+
+
+function removeAllObservers()
+{
+  for (let i = gActiveTopics.length - 1; i >= 0; --i)
+    gObsService.removeObserver(gObserver, gActiveTopics[i]);
+
+  gActiveTopics = [];
+}
 
 
 function readTorSettings()
@@ -324,15 +418,15 @@ function readTorSettings()
   try
   {
     // TODO: retrieve > 1 key at one time inside initProxySettings() et al.
-    didSucceed = initProxySettings() && initFirewallSettings() &&
-                 initBridgeSettings();
+    didSucceed = initBridgeSettings() &&
+                 initProxySettings() && initFirewallSettings();
   }
   catch (e) { TorLauncherLogger.safelog(4, "Error in readTorSettings: ", e); }
 
   if (!didSucceed)
   {
     // Unable to communicate with tor.  Hide settings and display an error.
-    showErrorPanel();
+    showErrorMessage(false, null);
 
     setTimeout(function()
         {
@@ -357,12 +451,12 @@ function showPanel(aPanelID)
 
   var deckElem = document.getElementById("deck");
   if (deckElem)
-  {
     deckElem.selectedPanel = document.getElementById(aPanelID);
-    showOrHideButton("extra2", (aPanelID != "bridgeHelp"), false);
-  }
   else if (wizard.currentPage.pageid != aPanelID)
     wizard.goTo(aPanelID);
+
+  if (wizard && (aPanelID == "first"))
+    setTimeout( function() { showWizardNavButtons(false); }, 0);
 
   showOrHideButton("accept", (aPanelID == "settings"), true);
 }
@@ -389,36 +483,48 @@ function advanceToWizardPanel(aPanelID)
 }
 
 
-function showStartingTorPanel(aTorExited)
+function showStartingTorPanel()
 {
-  if (aTorExited)
-  {
-    // Show "Tor exited; please restart" message and Restart button.
-    var elem = document.getElementById("startingTorMessage");
-    if (elem)
-    {
-      var s1 = TorLauncherUtil.getLocalizedString("tor_exited");
-      var s2 = TorLauncherUtil.getLocalizedString("please_restart_app");
-      elem.textContent = s1 + "\n\n" + s2;
-    }
-    var btn = document.getElementById("restartButton");
-    if (btn)
-      btn.removeAttribute("hidden");
-  }
-
-  showPanel("startingTor");
   var haveWizard = (getWizard() != null);
   if (haveWizard)
-  {
-    showOrHideButton("back", false, false);
-    showOrHideButton("next", false, false);
-  }
+    showWizardNavButtons(false);
+
+  showPanel("startingTor");
 }
 
 
-function showErrorPanel()
+function showErrorMessage(aTorExited, aErrorMsg)
 {
+  var elem = document.getElementById("errorPanelMessage");
+  var btn = document.getElementById("restartTorButton");
+  if (aTorExited)
+  {
+    // Show "Tor exited" message and "Restart Tor" button.
+    aErrorMsg = TorLauncherUtil.getLocalizedString("tor_exited")
+                + "\n\n" + TorLauncherUtil.getLocalizedString("tor_exited2");
+
+    if (btn)
+      btn.removeAttribute("hidden");
+    if (elem)
+      elem.style.textAlign = "start";
+  }
+  else
+  {
+    if (btn)
+      btn.setAttribute("hidden", true);
+    if (elem)
+      elem.style.textAlign = "center";
+  }
+
+  if (elem)
+    elem.textContent = (aErrorMsg) ? aErrorMsg : "";
+
   showPanel("errorPanel");
+
+  var haveWizard = (getWizard() != null);
+  if (haveWizard)
+    showWizardNavButtons(false);
+
   var haveErrorOrWarning = (gTorProcessService.TorBootstrapErrorOccurred ||
                             gProtocolSvc.TorLogHasWarnOrErr)
   showCopyLogButton(haveErrorOrWarning);
@@ -427,21 +533,39 @@ function showErrorPanel()
 
 function showCopyLogButton(aHaveErrorOrWarning)
 {
-  var copyLogBtn = document.documentElement.getButton("extra2");
+  let copyLogBtn = document.documentElement.getButton("extra2");
   if (copyLogBtn)
   {
-    if (getWizard())
+    let haveWizard = (getWizard() != null);
+    if (haveWizard)
       copyLogBtn.setAttribute("wizardCanCopyLog", true);
 
-    copyLogBtn.removeAttribute("hidden");
+    if (!gRestoreAfterHelpPanelID)
+      copyLogBtn.removeAttribute("hidden"); // Show button if help is not open.
 
     if (aHaveErrorOrWarning)
     {
-      var clz = copyLogBtn.getAttribute("class");
-      copyLogBtn.setAttribute("class", clz ? clz + " torWarning"
-                                           : "torWarning");
+      let clz = copyLogBtn.getAttribute("class");
+      if (!clz)
+        copyLogBtn.setAttribute("class", "torWarning");
+      else if (clz.indexOf("torWarning") < 0)
+        copyLogBtn.setAttribute("class", clz + " torWarning");
     }
   }
+}
+
+
+function restoreCopyLogVisibility()
+{
+  let copyLogBtn = document.documentElement.getButton("extra2");
+  if (!copyLogBtn)
+    return;
+
+  // Always show button in non-wizard case; conditionally in wizard.
+  if (!getWizard() || copyLogBtn.hasAttribute("wizardCanCopyLog"))
+    copyLogBtn.removeAttribute("hidden");
+  else
+    copyLogBtn.setAttribute("hidden", true);
 }
 
 
@@ -564,28 +688,16 @@ function onProxyTypeChange()
 }
 
 
-function onRestartApp()
+// Called when user clicks "Restart Tor" button after tor unexpectedly quits.
+function onRestartTor()
 {
-  if (gIsInitialBootstrap)
-  {
-    // If the browser has not fully started yet, we cannot use the app startup
-    // service to restart it... so we use a delayed approach.
-    try
-    {
-      var obsSvc = Cc["@mozilla.org/observer-service;1"]
-                     .getService(Ci.nsIObserverService);
-      obsSvc.notifyObservers(null, "TorUserRequestedQuit", "restart");
+  // Re-add these observers in case they have been removed.
+  addObserver(kTorProcessReadyTopic);
+  addObserver(kTorProcessDidNotStartTopic);
+  addObserver(kTorProcessExitedTopic);
 
-      window.close();
-    } catch (e) {}
-  }
-  else
-  {
-    // Restart now.
-    var asSvc = Cc["@mozilla.org/toolkit/app-startup;1"]
-                  .getService(Ci.nsIAppStartup);
-    asSvc.quit(asSvc.eAttemptQuit | asSvc.eRestart);
-  }
+  gTorProcessService._startTor();
+  gTorProcessService._controlTor();
 }
 
 
@@ -610,9 +722,30 @@ function onCancel()
 
 function onCopyLog()
 {
+  // Copy tor log messages to the system clipboard.
   var chSvc = Cc["@mozilla.org/widget/clipboardhelper;1"]
                              .getService(Ci.nsIClipboardHelper);
-  chSvc.copyString(gProtocolSvc.TorGetLog());
+  let countObj = { value: 0 };
+  chSvc.copyString(gProtocolSvc.TorGetLog(countObj));
+
+  // Display a feedback popup that fades away after a few seconds.
+  let forAssistance = document.getElementById("forAssistance");
+  let panel = document.getElementById("copyLogFeedbackPanel");
+  if (forAssistance && panel)
+  {
+    panel.firstChild.textContent = TorLauncherUtil.getFormattedLocalizedString(
+                                     "copiedNLogMessages", [countObj.value], 1);
+    let rectObj = forAssistance.getBoundingClientRect();
+    panel.openPopup(null, null, rectObj.left, rectObj.top, false, false);
+  }
+}
+
+
+function closeCopyLogFeedbackPanel()
+{
+  let panel = document.getElementById("copyLogFeedbackPanel");
+  if (panel && (panel.state =="open"))
+    panel.hidePopup();
 }
 
 
@@ -629,11 +762,12 @@ function onOpenHelp()
 
   showPanel("bridgeHelp");
 
+  showOrHideButton("extra2", false, false); // Hide "Copy Tor Log To Clipboard"
+
   if (getWizard())
   {
     showOrHideButton("cancel", false, false);
     showOrHideButton("back", false, false);
-    showOrHideButton("extra2", false, false);
     overrideButtonLabel("next", "done");
     var forAssistance = document.getElementById("forAssistance");
     if (forAssistance)
@@ -649,13 +783,12 @@ function closeHelp()
   if (!gRestoreAfterHelpPanelID)  // Already closed?
     return;
 
+  restoreCopyLogVisibility();
+
   if (getWizard())
   {
     showOrHideButton("cancel", true, false);
     showOrHideButton("back", true, false);
-    var copyLogBtn = document.documentElement.getButton("extra2");
-    if (copyLogBtn && copyLogBtn.hasAttribute("wizardCanCopyLog"))
-      copyLogBtn.removeAttribute("hidden");
     restoreButtonLabel("next");
     var forAssistance = document.getElementById("forAssistance");
     if (forAssistance)
@@ -753,6 +886,9 @@ function initProxySettings()
 // Returns true if successful.
 function initFirewallSettings()
 {
+  if (getWizard())
+    return true;  // The wizard does not directly expose firewall settings.
+
   var allowedPorts;
   var reply = gProtocolSvc.TorGetConfStr(kTorConfKeyReachableAddresses, null);
   if (!gProtocolSvc.TorCommandSucceeded(reply))
@@ -775,7 +911,6 @@ function initFirewallSettings()
   }
 
   var haveFirewall = (allowedPorts != undefined);
-  setYesNoRadioValue(kWizardFirewallRadioGroup, haveFirewall);
   setElemValue(kUseFirewallPortsCheckbox, haveFirewall);
   if (allowedPorts)
     setElemValue(kFirewallAllowedPorts, allowedPorts);
@@ -849,8 +984,8 @@ function applySettings()
   var didSucceed = false;
   try
   {
-    didSucceed = applyProxySettings() && applyFirewallSettings() &&
-                 applyBridgeSettings();
+    didSucceed = applyBridgeSettings() &&
+                 applyProxySettings() && applyFirewallSettings();
   }
   catch (e) { TorLauncherLogger.safelog(4, "Error in applySettings: ", e); }
 
@@ -867,7 +1002,7 @@ function useSettings()
 {
   var settings = {};
   settings[kTorConfKeyDisableNetwork] = false;
-  this.setConfAndReportErrors(settings, null);
+  setConfAndReportErrors(settings, null);
 
   gProtocolSvc.TorSendCommand("SAVECONF");
   gTorProcessService.TorClearBootstrapError();
@@ -902,7 +1037,7 @@ function applyProxySettings()
   if (!settings)
     return false;
 
-  return this.setConfAndReportErrors(settings, "proxyYES");
+  return setConfAndReportErrors(settings, "proxyYES");
 }
 
 
@@ -920,9 +1055,7 @@ function getAndValidateProxySettings()
   settings[kTorConfKeyHTTPSProxyAuthenticator] = null;
 
   var proxyType, proxyAddrPort, proxyUsername, proxyPassword;
-  var useProxy = (getWizard()) ? getYesNoRadioValue(kWizardProxyRadioGroup)
-                               : getElemValue(kUseProxyCheckbox, false);
-  if (useProxy)
+  if (isProxyConfigured())
   {
     proxyAddrPort = createColonStr(getElemValue(kProxyAddr, null),
                                    getElemValue(kProxyPort, null));
@@ -970,7 +1103,14 @@ function getAndValidateProxySettings()
   }
 
   return settings;
-} // applyProxySettings
+} // getAndValidateProxySettings
+
+
+function isProxyConfigured()
+{
+  return (getWizard()) ? getYesNoRadioValue(kWizardProxyRadioGroup)
+                       : getElemValue(kUseProxyCheckbox, false);
+}
 
 
 function reportValidationError(aStrKey)
@@ -982,15 +1122,17 @@ function reportValidationError(aStrKey)
 // Returns true if settings were successfully applied.
 function applyFirewallSettings()
 {
-  var settings = getAndValidateFirewallSettings();
+  var settings = (getWizard()) ? getAutoFirewallSettings()
+                               : getAndValidateFirewallSettings();
   if (!settings)
     return false;
 
-  return this.setConfAndReportErrors(settings, "firewallYES");
+  return setConfAndReportErrors(settings, null);
 }
 
 
 // Return a settings object if successful and null if not.
+// Not used for the wizard.
 function getAndValidateFirewallSettings()
 {
   // TODO: validate user-entered data.  See Vidalia's NetworkPage::save()
@@ -998,14 +1140,47 @@ function getAndValidateFirewallSettings()
   var settings = {};
   settings[kTorConfKeyReachableAddresses] = null;
 
-  var useFirewallPorts = (getWizard())
-                            ? getYesNoRadioValue(kWizardFirewallRadioGroup)
-                            : getElemValue(kUseFirewallPortsCheckbox, false);
-  var allowedPorts = getElemValue(kFirewallAllowedPorts, null);
-  if (useFirewallPorts && allowedPorts)
+  var allowedPorts = null;
+  if (getElemValue(kUseFirewallPortsCheckbox, false))
+    allowedPorts = getElemValue(kFirewallAllowedPorts, null);
+
+  return constructFirewallSettings(allowedPorts);
+}
+
+
+// Return a settings object if successful and null if not.
+// Only used for the wizard.
+function getAutoFirewallSettings()
+{
+  // In the wizard, we automatically set firewall ports (ReachableAddresses) to
+  // 80 and 443 if and only if the user has configured a proxy but no bridges.
+  // Rationale (from ticket #11405):
+  //   - Many proxies restrict which ports they will proxy for, so we want to
+  //     use a small set of ports in that case.
+  //
+  //   - In most other situations, tor will quickly find a bridge or guard on
+  //     port 443, so there is no need to limit which port may be used.
+  //
+  //   - People whose set of reachable ports are really esoteric will need to
+  //     be very patient or they will need to edit torrc manually... but that
+  //     is OK since we expect that situation to be very rare.
+  var allowedPorts = null;
+  if (isProxyConfigured() && !isBridgeConfigured())
+    allowedPorts = "80,443";
+
+  return constructFirewallSettings(allowedPorts);
+}
+
+
+function constructFirewallSettings(aAllowedPorts)
+{
+  var settings = {};
+  settings[kTorConfKeyReachableAddresses] = null;
+
+  if (aAllowedPorts)
   {
     var portsConfStr;
-    var portsArray = allowedPorts.split(',');
+    var portsArray = aAllowedPorts.split(',');
     for (var i = 0; i < portsArray.length; ++i)
     {
       var s = portsArray[i].trim();
@@ -1069,7 +1244,7 @@ function applyBridgeSettings()
   if (!settings)
     return false;
 
-  return this.setConfAndReportErrors(settings, "bridgeSettings");
+  return setConfAndReportErrors(settings, "bridgeSettings");
 }
 
 function extractTransportPlugins(bridgeList) {
@@ -1098,9 +1273,7 @@ function getAndValidateBridgeSettings()
   settings[kTorConfKeyBridgeList] = null;
   settings[kTorConfKeyClientTransportPlugin] = null;
 
-  var useBridges = (getWizard()) ? getElemValue("bridgesRadioYes", false)
-                                 : getElemValue(kUseBridgesCheckbox, false);
-
+  var useBridges = isBridgeConfigured();
   var defaultBridgeType;
   var bridgeList;
   if (useBridges)
@@ -1153,6 +1326,13 @@ function getAndValidateBridgeSettings()
 }
 
 
+function isBridgeConfigured()
+{
+  return (getWizard()) ? getElemValue("bridgesRadioYes", false)
+                       : getElemValue(kUseBridgesCheckbox, false);
+}
+
+
 // Returns an array or null.
 function parseAndValidateBridges(aStr)
 {
@@ -1178,6 +1358,7 @@ function parseAndValidateBridges(aStr)
 
 
 // Returns true if successful.
+// aShowOnErrorPanelID is only used when displaying the wizard.
 function setConfAndReportErrors(aSettingsObj, aShowOnErrorPanelID)
 {
   var errObj = {};
