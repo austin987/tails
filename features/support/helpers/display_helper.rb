@@ -10,7 +10,6 @@ class Display
     p = IO.popen("xprop -display #{@x_display} " +
                  "-name '#{@domain} (1) - Virt Viewer' 2>/dev/null")
     Process.wait(p.pid)
-    p.close
     $?.success?
   end
 
