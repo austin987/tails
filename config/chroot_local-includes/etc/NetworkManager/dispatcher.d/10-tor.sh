@@ -17,7 +17,7 @@ fi
 . /usr/local/lib/tails-shell-library/tor.sh
 
 # Import tails_netconf()
-. /usr/local/lib/tails-shell-library/tails_greeter.sh
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
 
 # It's safest that Tor is not running when messing with its logs.
 service tor stop
@@ -28,7 +28,7 @@ rm -f "${TOR_LOG}"
 
 # The Tor syscall sandbox is not compatible with managed proxies.
 # We could possibly detect whether the user has configured any such
-# thing via Tor Launcher later (e.g. in 60-tor-ready-notification.sh),
+# thing via Tor Launcher later (e.g. in 60-tor-ready.sh),
 # but then we would have to restart Tor again to enable the sandbox.
 # Let's avoid doing that, and enable the Sandbox only if no special Tor
 # configuration is needed. Too bad users who simply need to configure

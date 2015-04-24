@@ -64,7 +64,7 @@ $_original_sikuli_screen_new ||= Sikuli::Screen.method :new
 def sikuli_script_proxy.new(*args)
   s = $_original_sikuli_screen_new.call(*args)
 
-  if $sikuli_retry_findfailed
+  if $config["SIKULI_RETRY_FINDFAILED"]
     # The usage of `_invoke()` below exemplifies how one can wrap
     # around Java objects' methods when they're imported using RJB. It
     # isn't pretty. The seconds argument is the parameter signature,
@@ -104,6 +104,18 @@ def sikuli_script_proxy.new(*args)
     self.click(Sikuli::Location.new(x, y))
   end
 
+  def s.doubleClick_point(x, y)
+    self.doubleClick(Sikuli::Location.new(x, y))
+  end
+
+  def s.click_mid_right_edge(pic)
+    r = self.find(pic)
+    top_right = r.getTopRight()
+    x = top_right.getX
+    y = top_right.getY + r.getH/2
+    self.click_point(x, y)
+  end
+
   def s.wait_and_click(pic, time)
     self.click(self.wait(pic, time))
   end
@@ -112,8 +124,41 @@ def sikuli_script_proxy.new(*args)
     self.doubleClick(self.wait(pic, time))
   end
 
+  def s.wait_and_right_click(pic, time)
+    self.rightClick(self.wait(pic, time))
+  end
+
   def s.wait_and_hover(pic, time)
     self.hover(self.wait(pic, time))
+  end
+
+  def s.findAny(images)
+    images.each do |image|
+      begin
+        return [image, self.find(image)]
+      rescue FindFailed
+        # Ignore. We deal we'll throw an appropriate exception after
+        # having looped through all images and found none of them.
+      end
+    end
+    # If we've reached this point, none of the images could be found.
+    Rjb::throw('org.sikuli.script.FindFailed',
+               "can not find any of the images #{images} on the screen")
+  end
+
+  def s.waitAny(images, time)
+    Timeout::timeout(time) do
+      loop do
+        begin
+          return self.findAny(images)
+        rescue FindFailed
+          # Ignore. We want to retry until we timeout.
+        end
+      end
+    end
+  rescue Timeout::Error
+    Rjb::throw('org.sikuli.script.FindFailed',
+               "can not find any of the images #{images} on the screen")
   end
 
   def s.hover_point(x, y)
@@ -137,13 +182,13 @@ java.lang.System.setProperty("SIKULI_IMAGE_PATH", "#{Dir.pwd}/features/images/")
 # required, ruby's require method complains that the method for the
 # field accessor is missing.
 sikuli_settings = Sikuli::Settings.new
-sikuli_settings.OcrDataPath = $tmp_dir
+sikuli_settings.OcrDataPath = $config["TMPDIR"]
 # sikuli_ruby, which we used before, defaulted to 0.9 minimum
 # similarity, so all our current images are adapted to that value.
 # Also, Sikuli's default of 0.7 is simply too low (many false
 # positives).
 sikuli_settings.MinSimilarity = 0.9
-sikuli_settings.ActionLogs = $debug
-sikuli_settings.DebugLogs = $debug
-sikuli_settings.InfoLogs = $debug
-sikuli_settings.ProfileLogs = $debug
+sikuli_settings.ActionLogs = $config["DEBUG"]
+sikuli_settings.DebugLogs = $config["DEBUG"]
+sikuli_settings.InfoLogs = $config["DEBUG"]
+sikuli_settings.ProfileLogs = $config["DEBUG"]

@@ -50,11 +50,21 @@ See also [[!tails_ticket 6397]].
 When installing Tails, PNY USB sticks have problems with the constant write load
 and are prone to failure.
 
+<a id="aegis"></a>
+
+### Aegis
+
+* Aegis Secure Key USB 2.0
+
+During the boot process, USB is briefly powered off, that causes Aegis hardware-encrypted USB sticks to lock down, and the PIN must be entered again (fast) in order to complete the boot.
+
+* Aegis Secure Key USB 3.0
+
+This USB stick doesn't start Tails at all, the USB 2.0 workaround is not working for that hardware.
+
 ### Other vendors
 
 * Staples Relay USB 2.0 16GB, suffers from the same problem as [[some SanDisk USB sticks|known_issues#sandisk]].
-
-<a id="isohybrid-options"></a>
 
 Acer Travelmate 8573T-254G50M
 -----------------------------
@@ -64,6 +74,11 @@ using Tails Installer.
 
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
+
+Acer Aspire 5315-ICL50
+----------------------
+
+Does not start on USB sticks created using Tails Installer.
 
 ASUS VivoBook X202E
 -------------------
@@ -123,6 +138,16 @@ Dell Dimension 2400
 Cannot start neither from USB nor from DVD. System crashes with a blank
 screen and locked up keyboard. This problem might be corrected in
 newer versions: please report your test results back to us.
+
+Fujitsu Siemens Amilo A 1667G
+-----------------------------
+
+Does not start on USB sticks created using Tails Installer.
+
+HP Compaq dc5750 Microtower
+---------------------------
+
+Cannot start Tails 1.2.3 created using Tails Installer.
 
 HP ProBook 4330s
 ----------------
@@ -188,20 +213,55 @@ The following commands, run from the GRUB shell, might be helpful:
     chainloader +1
     boot
 
+Other hardware issues
+=====================
+
+<a id="bcm43224"></a>
+
+Broadcom BCM43224 802.11a/b/g/n wireless network adapter
+--------------------------------------------------------
+
+The Broadcom Corporation BCM43224 802.11a/b/g/n wireless network
+adapter is known to not be able to
+[[spoof its MAC address|doc/first_steps/startup_options/mac_spoofing]]. Tails
+enables MAC spoofing by default, and will disable any network adapter
+it fails to spoof. To make it work you must
+[[disable Tails' MAC spoofing feature|doc/first_steps/startup_options/mac_spoofing#disable]];
+please read the documentation carefully and make sure you understand
+the consequences before doing so.
+
+This network adapter can, for instance, be found in the MacBook Air
+4,1, 4,2, 5,1 and 5,2.
+
 Security issues
 ===============
 
 Tails might not erase all the system memory on shutdown
 -------------------------------------------------------
 
-On rare systems (non-PAE with big amounts of memory),
-Tails does not consistently [[!tails_todo
-more_efficient_memory_wipe desc="erase all system memory as it
-should"]].
+On rare systems (non-PAE with big amounts of memory), Tails does not
+consistently erase all system memory as it should.
 
 If no [[cold boot attack|doc/advanced_topics/cold_boot_attacks]]
 happens directly after shutdown, the RAM empties itself in minutes,
 and all data disappears.
+
+See [[!tails_ticket 6006 desc="More efficient memory wipe"]].
+
+<a id="video-memory"></a>
+
+Tails does not erase video memory
+---------------------------------
+
+Tails doesn't erase the [[!wikipedia VRAM desc="video memory"]] yet.
+When one uses Tails, then restarts the computer into another operating
+system, that other operating system can see what has been displayed on
+the screen within Tails.
+
+Shutting down the computer completely, instead of restarting it,
+might allow the video memory to empty itself.
+
+See [[!tails_ticket 5356 desc="Erase video memory on shutdown"]].
 
 After using Tails Installer, the "emergency shutdown" doesn't work
 ------------------------------------------------------------------
@@ -211,6 +271,9 @@ Tails Installer messes a bit too much with the USB devices for the
 it. If you believe this feature is critical for the session you're running, we
 advice you to reboot Tails.
 
+See
+[[!tails_ticket 5677 desc="liveusb-creator should not break emergency shutdown"]].
+
 Tails DVD eject failure
 -----------------------
 
@@ -218,7 +281,7 @@ Pressing the DVD eject button does not trigger emergency shutdown.
 Also, the "normal" (non-emergency) shutdown procedure does not eject
 the DVD anymore.
 
-(Ticket: [[!tails_todo fix_DVD_eject_at_shutdown]])
+See [[!tails_ticket 5447 desc="Fix DVD eject at shutdown"]].
 
 Stream isolation inconsistency in Claws Mail
 --------------------------------------------
@@ -246,6 +309,7 @@ This issue has been reported on the following hardware:
 
   - Apple when booting from a USB stick:
     - MacBook Air 5,1
+    - MacBook Air 5,2 (using a device installed with Tails Installer)
     - MacBook Pro 7,1, 13-inch mid 2010
     - MacBook Pro 9,2, 13-inch mid 2012
     - MacBook Pro 8,1, 13-inch late 2011
@@ -254,11 +318,13 @@ This issue has been reported on the following hardware:
   - Hewlett-Packard HP Pavilion dv6 Notebook PC
   - Lenovo ThinkPad X61, only on emergency shutdown when pulling out the
     USB stick
+  - Lenovo ThinkPad X220
   - Toshiba Satellite C855D
   - Dell Inc. Studio 1458
   - Fujitsu Lifebook AH531/GFO, only on regular shutdown, emergency
     shutdown works
   - Samsung N150P
+  - Acer Aspire e1-572
 
 <a id="fingerprint"></a>
 
@@ -269,8 +335,7 @@ Fingerprint
 
 <!-- The fingerprints of <span class="application">Tor Browser</span> in Tails and on other operating systems are different: -->
 
-* Browser window resizing is in not reliable: [[!tails_ticket 6377]]
-  and [[!tor_bug 10095]].
+None currently known.
 
 Other issues
 ============
@@ -303,25 +368,13 @@ Connecting to FTP servers is not possible
 -----------------------------------------
 
 Public FTP servers on the Internet are not reachable using Tails.
-See [[!tails_todo fix_Internet_FTP_support desc="the corresponding
-task"]] for more details.
+See [[!tails_ticket 6096 desc="Fix FTP support"]] for more details.
 
 Tails fails to connect to certain Wi-Fi networks
 ------------------------------------------------
 
 This might be related to the introduction of wireless regulation support
 in Tails 0.13.
-
-VirtualBox guest modules are broken for 64-bit guests
------------------------------------------------------
-
-VirtualBox guest modules allow for additional features when using Tails as a
-VirtualBox guest: shared folders, resizable display, shared clipboard, etc.
-
-But due to [a bug in VirtualBox](https://www.virtualbox.org/ticket/11037), the
-resizable display and shared clipboard
-only work in Tails if the VirtualBox guest is configured to have a 32-bit
-processor. The shared folders work both on 32-bit and 64-bit guests.
 
 Touchpad configurations
 -----------------------
@@ -335,12 +388,12 @@ Touchpad configurations
     synclient FingerLow=1;
     synclient FingerHigh=1;
 
-Tor Browser takes too long to shutdown
---------------------------------------
+Bluetooth devices don't work
+----------------------------
 
-Since Tails 0.22, the browser sometimes takes too long to shutdown
-([[!tails_ticket 6480]]). Waiting a few more seconds is usually enough
-to let it close itself correctly.
+Bluetooth is not enabled in Tails for security reasons. To enable it
+anyway, see the documentation about
+[[wireless devices|doc/advanced_topics/wireless_devices]].
 
 <a id="browser_languages"></a>
 

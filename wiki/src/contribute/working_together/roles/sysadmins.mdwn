@@ -45,6 +45,15 @@ The [[principles used by the broader Tails
 project|contribute/relationship_with_upstream]] also apply for
 system administration.
 
+<a id="duties"></a>
+
+# Duties during sysadmin shifts
+
+* keep systems up-to-date, reboot them as needed
+* keep backups up-to-date
+* keep Puppet modules up-to-date wrt. upstream changes
+* keep Jenkins plugins up-to-date
+
 <a id="tools"></a>
 
 # Tools
@@ -119,11 +128,15 @@ We use Redmine tickets for public discussion and tasks management:
 
 ## git-annex
 
-* purpose: host the full history of Tails released images
+* purpose: host the full history of Tails released images and Tor
+  Browser tarballs
 * access: Tails core developers only
 * tools: [[!debpts git-annex]]
-* configuration: `tails::gitolite` class in [[!tails_gitweb_repo
-  puppet-tails]]
+* configuration:
+  - `tails::git_annex` and `tails::gitolite` classes in
+    [[!tails_gitweb_repo puppet-tails]]
+  - `tails::git_annex::mirror` defined resource in
+    [[!tails_gitweb_repo puppet-tails]]
 
 ## Jenkins
 
@@ -165,7 +178,7 @@ We use Redmine tickets for public discussion and tasks management:
   for testing
 * access: anyone who gets it from
   [BridgeDB](https://bridges.torproject.org/)
-* tools: [[!debpts tor]], [[!debpts obfsproxy]]
+* tools: [[!debpts tor]], [[!debpts obfs4proxy]]
 * configuration:
   - `tails::apt::repository::torproject` in
     [[!tails_gitweb_repo puppet-tails]]

@@ -15,11 +15,8 @@ end
 When /^I update APT using apt-get$/ do
   next if @skip_steps_while_restoring_background
   Timeout::timeout(30*60) do
-    cmd = @vm.execute("echo #{@sudo_password} | " +
-                      "sudo -S apt-get update", $live_user)
-    if !cmd.success?
-      STDERR.puts cmd.stderr
-    end
+    @vm.execute_successfully("echo #{@sudo_password} | " +
+                             "sudo -S apt-get update", LIVE_USER)
   end
 end
 
@@ -27,11 +24,8 @@ Then /^I should be able to install a package using apt-get$/ do
   next if @skip_steps_while_restoring_background
   package = "cowsay"
   Timeout::timeout(120) do
-    cmd = @vm.execute("echo #{@sudo_password} | " +
-                      "sudo -S apt-get install #{package}", $live_user)
-    if !cmd.success?
-      STDERR.puts cmd.stderr
-    end
+    @vm.execute_successfully("echo #{@sudo_password} | " +
+                             "sudo -S apt-get install #{package}", LIVE_USER)
   end
   step "package \"#{package}\" is installed"
 end
@@ -47,23 +41,21 @@ When /^I update APT using Synaptic$/ do
     @screen.find('SynapticReloadPrompt.png')
   }
   @screen.waitVanish('SynapticReloadPrompt.png', 30*60)
+  # After this next image is displayed, the GUI should be responsive.
+  @screen.wait('SynapticPackageList.png', 30)
 end
 
 Then /^I should be able to install a package using Synaptic$/ do
   next if @skip_steps_while_restoring_background
   package = "cowsay"
-  # We do this after a Reload, so the interface will be frozen until
-  # the package list has been loaded
-  try_for(60, :msg => "Failed to open the Synaptic 'Find' window") {
-    @screen.type("f", Sikuli::KeyModifier.CTRL)  # Find key
-    @screen.find('SynapticSearch.png')
-  }
+  @screen.type("f", Sikuli::KeyModifier.CTRL)  # Find key
+  @screen.wait_and_click('SynapticSearch.png', 10)
   @screen.type(package + Sikuli::Key.ENTER)
   @screen.wait_and_click('SynapticCowsaySearchResult.png', 20)
-  sleep 5
+  @screen.wait('SynapticCowsaySearchResultSelected.png', 20)
   @screen.type("i", Sikuli::KeyModifier.CTRL)    # Mark for installation
-  sleep 5
-  @screen.type("p", Sikuli::KeyModifier.CTRL)    # Apply
+  @screen.wait('SynapticCowsayMarked.png', 10)
+  @screen.wait_and_click('SynapticApply.png', 10)
   @screen.wait('SynapticApplyPrompt.png', 60)
   @screen.type("a", Sikuli::KeyModifier.ALT)     # Verify apply
   @screen.wait('SynapticChangesAppliedPrompt.png', 120)

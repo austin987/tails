@@ -1,6 +1,8 @@
 #! /bin/sh
 # automatically run by "lb config"
 
+set -x
+
 # we require building from git
 if ! git rev-parse --is-inside-work-tree; then
     echo "${PWD} is not a Git tree. Exiting."
@@ -33,6 +35,9 @@ $RUN_LB_CONFIG \
    --iso-publisher="https://tails.boum.org/" \
    --iso-volume="TAILS ${AMNESIA_FULL_VERSION}" \
    --memtest none \
+   --mirror-binary "http://ftp.us.debian.org/debian/" \
+   --mirror-bootstrap "http://ftp.us.debian.org/debian/" \
+   --mirror-chroot "http://ftp.us.debian.org/debian/" \
    --packages-lists="standard" \
    --tasks="standard" \
    --linux-packages="linux-image-3.16.0-4" \
