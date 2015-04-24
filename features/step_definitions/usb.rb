@@ -123,6 +123,14 @@ When /^I start Tails Installer in "([^"]+)" mode(?: with the )?(verbose)?(?: fla
   end
 end
 
+Then /^Tails Installer detects that the device is too small$/ do
+  next if @skip_steps_while_restoring_background
+  assert(@vm.file_exist?('/tmp/tails-installer.log'))
+  try_for(15, :msg => "Tails Installer did not reject the USB device as being too small")  {
+    @vm.file_content('/tmp/tails-installer.log').include?('Skipping too small device')
+  }
+end
+
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   step 'I start Tails Installer in "Clone & Install" mode'
