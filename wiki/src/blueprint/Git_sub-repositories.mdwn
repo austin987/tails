@@ -44,6 +44,13 @@ Git submodules allow to do basically the same thing, but also to make
 it clear what version of these other repositories a given Git branch
 (in the main repo) needs.
 
+One problem with submodules is that the URL to every submodule's
+repository is encoded in `.gitmodules`. So, either we encode read-only
+URLs in there (and then, core developers need to use `pushInsteadOf`
+or `insteadOf` in their Git configuration to rewrite these URLs
+on-the-fly), or we encode read-write URLs in `.gitmodules` (and then,
+non-core developers have to use `insteadOf`).
+
 ## Plenty of other solutions
 
 When searching the web for well-known problems with Git submodules,
