@@ -5,15 +5,6 @@ Corresponding ticket: [[!tails_ticket 8007]]
 Things to check
 ===============
 
-* Ux rules don't sanitize `$PATH`
-  (<https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1045986>) =>
-  they must only be used to run software that does *not* rely on
-  `$PATH` for executing other stuff; in particular, many shell scripts
-  do rely on `$PATH`; this should be checked particularly for the
-  profiles we ship that don't come from AppArmor upstream, most
-  notably:
-  - the Tor Browser one
-  - `/usr/local/bin/tor-browser`
 * use of `sanitized_helper` [isn't very
   safe](http://blog.azimuthsecurity.com/2012/09/poking-holes-in-apparmor-profiles.html),
   especially given it [doesn't transition properly with
@@ -47,3 +38,20 @@ Profiles
 * `config/chroot_local-patches/apparmor-adjust-totem-profile.diff`
 * `config/chroot_local-patches/apparmor-adjust-user-tmp-abstraction.diff`
 * `config/chroot_local-includes/usr/share/tails/torbrowser-AppArmor-profile.patch`
+
+Checked already
+===============
+
+* Ux rules don't sanitize `$PATH`
+  (<https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1045986>) =>
+  they must only be used to run software that does *not* rely on
+  `$PATH` for executing other stuff; in particular, many shell scripts
+  do rely on `$PATH`; this should be checked particularly for the
+  profiles we ship that don't come from AppArmor upstream, most
+  notably:
+  - the Tor Browser one: **OK**, the only `Ux` rule it has is about an
+    ELF executable
+  - Pidgin profile: was vulnerable via `/usr/local/bin/tor-browser`,
+    fixed in `bugfix/8007-AppArmor-hardening`
+  - `abstractions/tor`: only `Ux` rules are about ELF executables
+  - no other relevant `Ux` rule are present in the profiles we ship
