@@ -12,9 +12,11 @@ We use one single APT repository hosting multiple *suites*:
 
 * We have a (read-only) suite for every past release: `0.9`,
   `0.10.1`, etc.
-* We have a suite for each *main* branch: `stable`, `testing`, `devel`
-* We have a suite for each *topic* branch: `bugfix/*`, `feature/*`.
-  **Important note**: the APT suite corresponding to a given Git topic
+* We have a suite for each *main* branch: `stable`, `testing`,
+  `devel`, `feature-jessie`
+* We have an overlay suite for each *topic* branch: `bugfix/*`,
+  `feature/*`, etc.
+  **Note**: the APT suite corresponding to a given Git topic
   branch contains *only* the packages this branch adds to the tag or
   *main* branch it diverged from. Think of it as an overlay.
 * We also have a less formal `unstable` suite, that should not be used
@@ -30,8 +32,9 @@ We use one single APT repository hosting multiple *suites*:
   packages needed on a Wheezy system to build Tails.
 
 The suite(s) to use as sources for APT, during the build and inside
-the resulting system, are determined at Tails build time
-(`auto/config`). See details in the *Build system* section bellow.
+the resulting system, are determined by the content of the
+`config/base_branch` and `config/APT_overlays.d/*` files. See details in
+the *Build system* section below.
 
 We manage our APT repository with
 [reprepro](http://mirrorer.alioth.debian.org/).
@@ -49,18 +52,54 @@ few minutes, detects new branches, and accordingly:
 Build system
 ============
 
-The build system adds the relevant APT sources:
+The Tails ISO build system dynamically adds APT sources that will be
+used during the build, and inside the resulting ISO itself.
 
-* if the version in `debian/changelog` was released already (i.e.
-  a matching tag exists), then add the suite corresponding to this
-  release (e.g. `0.10` or `0.10.1`);
-* else, if building from the `testing` branch, add the `testing` suite
-* else, if building from the `devel` branch, add the `devel` suite
-* else, if building from the `experimental` branch, add the `experimental` suite
-* else, add the `devel` suite
+If the last version in `debian/changelog` was released already (i.e.
+a matching tag exists), then the build system adds the suite
+corresponding to this release (e.g. `1.5` or `3.0`), and that's all.
 
-Also, if we're building from a bugfix or feature branch, add its
-own suite.
+Else, it adds:
+
+* one APT source for the base branch of the one being built, as found
+  in `config/base_branch`;
+* one APT source for each suite listed in
+  `config/APT_overlays.d/*`; note that only the name of such
+  files matters, and their content is ignored.
+
+In practice, `config/APT_overlays.d/` contains:
+
+* for a topic branch:
+  - if needed, a file that is named like the branch's own overlay APT
+    suite; e.g. for the `bugfix/12345-whatever` branch, it would be
+    called `config/APT_overlays.d/bugfix-12345-whatever.suite`
+  - any file representing APT suites that came from merging its base
+    branch into this topic branch, that is:
+* for a base branch (`stable`, `testing`, `devel` or
+  `feature/jessie`): a file for each additional, overlay APT suite that
+  came from topic branches that ship Debian packages and were merged
+  into this base branch since last time it was used to prepare
+  a release.
+
+The code that implements this is [[!tails_gitweb
+auto/scripts/tails-custom-apt-sources]]. It has [[!tails_gitweb
+features/build.feature desc="automated tests"]].
+
+At release time, the release manager:
+
+1. merges into the release branch's APT suite all APT overlay
+   suites found in `config/APT_overlays.d/`;
+2. empties `config/APT_overlays.d/` in the release branch;
+3. merges the release branch into other base branches as needed, and
+   ensures that all resulting `config/APT_overlays.d/`:s make sense.
+
+Given this, the `experimental` branch doesn't need to be seen as
+a base branch anymore; instead, it can be seen as an integration
+branch of overlays on top of the `devel` one: its `config/APT_overlays.d/`
+will merely add, on top of `devel`'s one, the list of APT suites that WIP
+branches merged into `experimental` have introduced. On the other
+hand, `feature/jessie` does need to be a base branch: we want to be
+able to work on topic branches forked off `feature/jessie`.
 
 SSH access
 ==========
@@ -151,52 +190,48 @@ Check the result:
 
 	$ ssh reprepro@incoming.deb.tails.boum.org reprepro list $SUITE $PACKAGENAME
 
-<a id="workflow-merge-topic-branch"></a>
-
-Merging a topic branch
-----------------------
-
-When a Git *topic* branch is merged into a *main* branch, the
-corresponding operation must be done on the APT suites.
-
-Example:
-
-	$ git checkout devel
-	$ git merge feature/icedove
-	$ ssh reprepro@incoming.deb.tails.boum.org \
-	     tails-merge-suite feature-icedove devel
-	$ git push
-
-(Note that unfortunately, contrary to what whoever with a Git
-background would guess, the reprepro operation called *pull* is not
-what we want: it pulls from *all* other suites into the ones specified
-on the command-line.)
-
 <a id="workflow-merge-main-branch"></a>
 
 Merging a main branch
 ----------------------
 
-When a Git *main* branch (`devel`, `experimental`, `testing`,
-`stable`) is merged into another *main* branch, the corresponding
+When a Git *main* branch (`devel`, `testing`, `stable`,
+`feature/jessie`) is merged into another *main* branch, the corresponding
 operation must be done on the APT suites.
 
 1. Save the list of packages currently present in the APT suite we
-   want to merge *into*, e.g. `reprepro list experimental`.
+   want to merge *into*, e.g. `reprepro list devel`.
+
 2. Make sure you are not going to overwrite newer packages with
-   older ones.
-3. Merge the APT suites [[the same way as when we merge a topic
-   branch|APT_repository#workflow-merge-topic-branch]].
+   older ones (hint: use the `tails-diff-suites` script).
+
+3. Merge the APT suites:
+
+   1. Set some environment variables:
+
+        # the branch you want to merge
+        SRC=stable
+        # the branch you want to merge _into_
+        DST=devel
+
+   2. Merge in Git and APT, and then push:
+
+        git checkout "$DST" && \
+        git merge "$SRC" && \
+        ssh reprepro@incoming.deb.tails.boum.org \
+             tails-merge-suite "$SRC" "$DST" && \
+        git push origin "$DST"
+
 4. Make sure not to re-add, into the branch we merge into, any package
    that was removed from it, but still is in the branch we merge from:
-   e.g. when merging `devel` into `experimental`, it may be that
-   `experimental` had some packages removed (e.g. due to previously
+   e.g. when merging `stable` into `devel`, it may be that
+   `devel` had some packages removed (e.g. due to previously
    merging a topic branch into it, whose purpose is to *remove* custom
    packages). To this end, compare the resulting list of (package,
-   version) in the `experimental` APT suite with the one saved before
-   the merge (hint: use the `tails-diff-suites` script), check Git
+   version) in the `devel` APT suite with the one saved before
+   the merge, check Git
    merges history if needed, apply common sense, and remove from
-   `experimental` the packages that were removed from it a while ago,
+   `devel` the packages that were removed from it a while ago,
    and were just erroneously re-added by the merge operation.
 
 <a id="workflow-reset"></a>
@@ -221,21 +256,48 @@ Resetting a suite to the state of another one
       	ssh reprepro@incoming.deb.tails.boum.org \
       	      tails-merge-suite $NEW $OLD
 
-<a id="workflow-freeze"></a>
+<a id="workflow-merge-overlays"></a>
 
-Freezing devel into testing
----------------------------
+Merging APT overlays
+--------------------
 
-1. Merge `devel` branch into `testing` in Git
-2. (Manually) [[hard reset|APT_repository#workflow-reset]] the
-   `testing` suite to the current state of the `devel` one.
+This operation merges all APT overlays listed in the given branch's
+`config/APT_overlays.d/` into its own APT suite, empties
+`config/APT_overlays.d/` accordingly, then commits and pushes to Git.
+
+1. Set some environment variables:
+
+        # The branch that should have its overlays merged
+        BRANCH=devel
+
+2. Merge the APT overlays in reprepro:
+
+        git checkout "$BRANCH" && \
+        for overlay in $(ls config/APT_overlays.d/) ; do
+           if ! ssh reprepro@incoming.deb.tails.boum.org \
+                   tails-merge-suite "$overlay" "$BRANCH" ; then
+              echo "Failed to merge '$overlay' into '$BRANCH': $?" >&2
+              break
+           fi
+        done
+
+3. Empty `config/APT_overlays.d/`:
+
+        git checkout "$BRANCH" && \
+        git rm config/APT_overlays.d/* && \
+        git commit config/APT_overlays.d/ \
+           -m "Empty the list of APT overlays: they were merged"
+
+4. Push the Git branch:
+
+        git push origin "$BRANCH"
 
 <a id="workflow-post-tag"></a>
 
 Tagging a new Tails release
 ---------------------------
 
-Once the new release's Git tag is pushed, a cronjob should create
+Once the new release's Git tag is pushed, a cronjob creates
 a new APT suite on the APT repository's side within a few minutes.
 This new APT suite is called the same as the new release version.
 One may check it has appeared in `~reprepro/conf/distributions`.
@@ -282,8 +344,17 @@ If you just released a RC:
   `testing`), so that the next builds from it do not use the APT suite
   meant for the RC
 
-If the release was a major one, then [[reset the stable APT suite to
-the state of the testing one|APT_repository#workflow-reset]].
+If the release was a major one, then:
+
+1. [[Hard reset the stable APT suite to
+   the state of the testing one|APT_repository#workflow-reset]].
+
+2. Empty `config/APT_overlays.d` in the `stable` branch:
+
+        git checkout stable && \
+        git rm config/APT_overlays.d/* && \
+        git commit config/APT_overlays.d/ \
+           -m "Empty the list of APT overlays: they were merged"
 
 Giving access to a core developer
 ---------------------------------

@@ -10,17 +10,17 @@ GENERAL_DEPENDENCIES="
 cucumber
 devscripts
 dnsmasq-base
-ffmpeg
 gawk
 git
 i18nspector
-libavcodec-extra-53
+libav-tools
 libcap2-bin
 libsikuli-script-java
-libvirt-bin
+libvirt-clients
+libvirt-daemon-system
 libvirt-dev
-libvirt-ruby
 libvirt0
+libvpx1
 libxslt1-dev
 ntp
 openjdk-7-jre
@@ -32,6 +32,7 @@ qemu-system-x86
 radvd
 ruby-guestfs
 ruby-json
+ruby-libvirt
 ruby-net-irc
 ruby-packetfu
 ruby-rjb
@@ -52,7 +53,7 @@ that this script must be run from the Tails source directory root.
 
 Options for '@product' features:
   --capture FILE     Captures the test session into FILE using VP8 encoding.
-                     Requires ffmpeg and libvpx1.
+                     Requires libav-tools and libvpx1.
   --debug            Display various debugging information while running the
                      test suite.
   --pause-on-fail    On failure, pause test suite until pressing Enter. This is
@@ -88,10 +89,15 @@ error() {
     exit 1
 }
 
+package_installed() {
+   set +o pipefail
+   dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"
+   set -o pipefail
+}
+
 check_dependencies() {
     while [ -n "${1:-}" ]; do
-        if ! which "${1}" >/dev/null && \
-           ! dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"; then
+        if ! which "${1}" >/dev/null && ! package_installed "${1}" ; then
             error "'${1}' is missing, please install it and run again."
         fi
         shift
@@ -113,8 +119,7 @@ next_free_display() {
 start_xvfb() {
     Xvfb $TARGET_DISPLAY -screen 0 1024x768x24+32 >/dev/null 2>&1 &
     XVFB_PID=$!
-    trap "kill -0 ${XVFB_PID} 2>/dev/null && kill -9 ${XVFB_PID}; \
-          rm -f /tmp/.X${TARGET_DISPLAY#:}-lock" EXIT
+    trap "kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}" EXIT
     # Wait for Xvfb to run on TARGET_DISPLAY
     until display_in_use $TARGET_DISPLAY; do
 	sleep 1
@@ -138,9 +143,9 @@ start_vnc_viewer() {
 }
 
 capture_session() {
-    check_dependencies ffmpeg libvpx1
+    check_dependencies libav-tools libvpx1
     echo "Capturing guest display into ${CAPTURE_FILE}"
-    ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
+    avconv -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
 }
 
@@ -236,6 +241,11 @@ while [ $# -gt 0 ]; do
 done
 
 check_dependencies ${GENERAL_DEPENDENCIES}
+
+package_installed libavcodec-extra-53 \
+    || package_installed libav-tools \
+    || error "Both libavcodec-extra-53 and libav-tools, are missing, " \
+	     "please install one of those and run again. Aborting..."
 
 TARGET_DISPLAY=$(next_free_display)
 

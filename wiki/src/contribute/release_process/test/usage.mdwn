@@ -47,7 +47,11 @@ The test suite can be configured in the following ways:
 2. the local configuration file `features/config/local.yml`, which
 takes precedence over
 
-3. the default configuration file `features/config/defaults.yml`.
+2. the local configuration files in `features/config/local.d` (with
+   internal precedence according to lexical order), which takes
+   precedence over
+
+4. the default configuration file `features/config/defaults.yml`.
 
 However, some values are treated as secrets and have no
 defaults. These secrets are generally information about online sevices
@@ -165,9 +169,9 @@ XMPP services known to work well both for `Tails_account` and
 
 ### SSH
 
-The format is:
+These settings are required for `ssh.feature`.  The format is:
 
-    SSH:
+    $TYPE:
       hostname: 1.2.3.4
       private_key: |
         -----BEGIN RSA PRIVATE KEY-----
@@ -179,6 +183,6 @@ The format is:
       port: 22
       username: "someuser"
 
-These settings are required for `ssh.feature`. If `port` is not specified,
-`22`will be used.
+where `$TYPE` is `SSH` or `SFTP`. Secrets must be specified for both `SSH` and
+`SFTP`.  If `port` is not specified, `22`will be used.
 

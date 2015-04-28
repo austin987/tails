@@ -16,7 +16,9 @@ debian-installer Git repositories. Look for `bootia32.efi`.
 
 Maybe also copy to `EFI/BOOT/boot.efi`: grub2's changelog says that
 `grub-install` copies `bootia32.efi` to `boot.efi`, to better support
-old Macs.
+old Macs:
+
+ * doesn't work for me on a MacBook Air original 1.8 GHz A1237
 
 Risk of regressions
 -------------------
@@ -86,10 +88,19 @@ but this feature can usually be disabled.
  * Dell Venue 8 Pro 3000
    - $170
    - 1 GB RAM, 8"
+   - cold-boot from USB: [seems
+     possible](https://www.happyassassin.net/2013/11/24/the-fedlet-revived-or-fedora-linux-on-a-dell-venue-8-pro-bay-trail/)
+     1. Requires a USB OTG converter (full-size USB female port on one end,
+        micro-USB male connector on the other end)
+     2. "press the power button and hold down the 'volume down' key
+        for a couple of seconds (this is how you get into the
+        firmware), go to the Boot tab, disable Secure Boot, and
+        promote the USB stick to #1 in the boot order"
 
  * Dell Venue 8 Pro 5000
    - $210
    - 2 GB RAM, 8"
+   - cold-boot from USB: likely the same as the Dell Venue 8 Pro 3000
 
  * Dell Venue 8 7000
    - Ships with Android KitKat; Lollipop due later in 2015
@@ -97,6 +108,9 @@ but this feature can usually be disabled.
    - 2 GB RAM/16 GB flash
    - Notable for high-res 8.4" 2,560x1,600 OLED display
    - Also includes Intel RealSense multiple-camera subsystem
+   - No cold-boot nor warm-boot from USB, according to png.
+     Perhaps it's possible after [unlocking its
+     bootloader](http://unlock-bootloader.info/mp3-0/dell-venue-8-7000-6714.html)
 
  * HP Stream 7
    - $100
@@ -105,11 +119,29 @@ but this feature can usually be disabled.
      a few out-of-tree drivers:
      <https://ubuntuforums.org/showthread.php?t=2261294>
 
-* HP Stream 8
+ * HP Stream 8
    - $150
    - 1 GB RAM, 7"
    - Includes 4G WWAN modem with limited free T-Mobile Internet service
    - Believed to be generally similar to the HP Stream 7 otherwise
+   - Can cold-boot from USB:
+     1. Hold down Vol-, press Power for about a second, and release
+        Vol- when the boot options screen comes up.
+     2. That screen gives access to a Boot Device Options menu, BIOS
+        Setup, and other functions including an on-screen keyboard.
+     3. In the Boot Options Menu, one can select Boot from EFI File
+        and push the soft Enter key… and then, with a Tails boot
+        drive, it goes to a File Explorer screen to allow the user to
+        choose between booting from the Tails volume and the NO VOLUME
+        LABEL volume on the USB thumb drive. Sadly, there's no way to
+        press Enter! The Stream 8 has a capacitive Windows button on
+        the bezel, and that just isn’t active at this point.
+        There isn’t a timeout autoselect for the first (presumably
+        correct) option, either.
+     4. This should all work fine by plugging an OTG-Type A adapter
+        cable, a USB hub, a USB thumb drive, and a keyboard.
+        This should be good enough for development, but not for
+        actual users.
 
  * Lenovo Miix 2
    - $220
@@ -119,6 +151,9 @@ but this feature can usually be disabled.
    - $100 with 1 GB RAM/16 GB flash, 8"
    - $140 with 2 GB RAM/32 GB flash, 8"
    - 10" LCD models also available
+   - can cold-boot from USB: hold down the Vol+ button, then hold down
+     the Power button, until the boot selection menu appears.
+     Select the desired boot device and press the Windows key.
 
 * Toshiba Encore 2 Write
    - Includes Wacom Feel pen/touch digitizer; unusual among low-cost
@@ -131,6 +166,14 @@ but this feature can usually be disabled.
  * WinBook TW700:
    - $60
    - 1 GB RAM/16GB flash, 7"
+   - To cold-boot from USB:
+     1. Configure the UEFI BIOS to put "USB HD"
+        above the Windows Boot Manager or the internal eMMC storage.
+     2. Plug the USB device in the Type A port, not the Micro
+        USB OTG port.
+     3. Then the tablet will boot from USB without pushing any
+        buttons, and one can still use the OTG port to power the
+        tablet while running from Tails.
 
 Needs more research
 -------------------

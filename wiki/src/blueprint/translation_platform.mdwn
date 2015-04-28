@@ -3,24 +3,47 @@
 Our (website) translation infrastructure has a pretty high barrier for
 new translators, especially those who are not familiar with Git and/or
 the command line.
+Furthermore, the current process makes it hard to add new languages, as often a team cannot be built easily over a long period of time and a web interface could nevertheless help keep translations until a new person arrives.
 
-https://labs.riseup.net/code/issues/9049
+Corresponding ticket: [[!tails_ticket 9049]]
 
 MUST
 ====
-* integrate with Git (push and pull)
+
 * provide a usable easy web interface
+* be usable from Tor Browser
+* automatic pull from main Git repo
+* provide a common glossary for each language, easy to use and improve
+* allow translators to view, in the correct order, all strings that
+  come from the entire page being translated, both in English and in
+  the target language
+* provide user roles (admin, reviewer, translator)
 
 SHOULD
 ======
-* provide support for Git branches (we could also agree upon translation
-only master through this interface)
-* should provide checks for inconsistent translations
-* provide user roles (admin, reviewer, translator)
+
+* be "privacy sensitive", i.e. be operated by a non-profit
+* allow translators to push translations through Git (so that core
+  developers only have to fetch reviewed translations from there)
+* provide support for Git standard development branches (devel, stable,
+  and testing) but we could also agree upon translation only master
+  through this interface
+* provide some kind of bug reporting feature for missing strings, missing pages, wrong or outdated translations
+* provide checks for inconsistent translations
+* provide feature to write/read comments between translators
 
 MAY
 ===
-* provide context of the translation
-* provide glossary feature
+
+* allow translating topic branches without confusing translators,
+  causing duplicate/premature work, fragmentation or merge conflicts
+  -- e.g. present only new or updated strings in topic branches;
+  see <https://mailman.boum.org/pipermail/tails-l10n/2015-March/002102.html>
+  for details
+* provide a feature to easily see what is new, what needs updating, what are translation priorities
+* provide possibility to set up new languages easily
 * send email notifications
+  - to reviewers whenever new strings have been translated or updated
+  - to translators whenever a resource is updated
 * respect authorship (different committers?)
+* provide statistics about the percentage of translated and fuzzy strings
