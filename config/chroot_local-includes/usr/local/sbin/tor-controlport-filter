@@ -92,7 +92,9 @@ def handle_connection(sock):
 		if not line: break
 
                 def line_matches_command(cmd):
-                        return re.match(r"^%s\b" % cmd, line)
+                        # The control port language does not care about case
+                        # for commands.
+                        return re.match(r"^%s\b" % cmd, line, re.IGNORECASE)
 
 		# Check what it is
 		if line_matches_command("AUTHENTICATE"):
