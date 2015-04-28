@@ -50,9 +50,15 @@ error() {
 }
 
 package_installed() {
-   set +o pipefail
-   dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"
-   set -o pipefail
+    local ret
+    set +o pipefail
+    if dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"; then
+        ret=0
+    else
+        ret=1
+    fi
+    set -o pipefail
+    return ${ret}
 }
 
 check_dependency() {
