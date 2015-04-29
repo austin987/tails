@@ -8,9 +8,14 @@ Things to check
 * the kludges needed to make them work with aufs
 * access to files via alternate paths specific to Debian Live systems,
   e.g.
+  - check `private-files` and `private-files-strict` abstractions, in
+    particular wrt. whatever can be accessed via the following paths
   - `/live/persistence/TailsData_unlocked/`
   - `/lib/live/mount/rootfs/`
   - `/lib/live/mount/overlay/`
+    * `apparmor-adjust-home-tunable.diff` adds
+      `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at least
+      `$HOME` is OK
 * access to webcam
 * access to microphone (can we easily block that while still allowing
   sound output?)
