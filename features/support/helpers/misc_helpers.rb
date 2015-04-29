@@ -16,7 +16,7 @@ class TryForTimeoutError < Timeout::Error
 end
 
 # Call block (ignoring any exceptions it may throw) repeatedly with
-# one second breaks until it returns true, or until `t` seconds have
+# one second breaks until it returns true, or until `timeout` seconds have
 # passed when we throw a TryForTimeoutError exception. Nested try_for
 # is forbidden, so the block cannot itself call try_for.
 def try_for(timeout, options = {})
