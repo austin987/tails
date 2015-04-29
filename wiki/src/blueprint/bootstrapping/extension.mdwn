@@ -81,6 +81,53 @@ User scenario and wireframe
   - [[Simplified wireframe|wireframe.pdf]]
   - For the full wireframe, refer to the latest wireframe uploaded on [[!tails_ticket 8564]].
 
+Open questions
+--------------
+
+  - Maybe we will display educational material, such as our warnings,
+    while the ISO image downloads.
+
+<a id="integration">
+
+Integration in the web assistant
+================================
+
+The extension will interact with a single web page that it will modify
+to display the relevant content. This page will be the first step of one
+of the scenarios of the [[web assistant|assistant]].
+
+As we need a way of knowing where people are in the assistant, the
+extension will potentially interact with several web pages on our
+website, depending on the scenario, for example:
+
+  - `/install/windows/usb/1-download/v1.en.html` for the Windows USB scenario in English.
+  - `/install/debian/dvd/1-download/v1.de.html` for the Debian DVD scenario in German.
+
+The `v1` part of the URL corresponds to the version of the extension.
+
+Initial browser detection
+-------------------------
+
+On this page, the initial screen as seen by the user will have to depend
+on the browser to propose only the relevant options. We also have to
+provide a fallback for people who disable JavaScript. So we'll have
+three potential versions of this initial script:
+
+  A. If we cannot detect the browser (no JavaScript).
+  B. If we detect a supported browser (Firefox and Tor Browser to start
+     with, Chrome after the extension get ported to Chrome, etc.).
+  C. If we detect an unsupported browser.
+
+We need some JavaScript code to display option B or C, and otherwise
+display option A if there is no JavaScript.
+
+Localization
+------------
+
+The web page manipulated by the extension will be translated using our
+usual infrastructure (ikiwiki and PO files). The extension must not
+embed any user-visible string in its code.
+
 <a id="verification"></a>
 
 ISO verification mechanism
