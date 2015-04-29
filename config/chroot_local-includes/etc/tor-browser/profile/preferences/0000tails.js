@@ -18,6 +18,10 @@ pref("extensions.torbutton.use_privoxy", false);
 // why we introduced the control port filter in the first place.
 pref("extensions.torbutton.display_circuit", false);
 
+// Since the slider notification will be shown everytime at each Tails
+// boot, which is bad (nagging) UX, we disable it.
+pref("extensions.torbutton.show_slider_notification", false);
+
 // Disable the Tor Browser's automatic update checking
 pref("app.update.enabled", false);
 
