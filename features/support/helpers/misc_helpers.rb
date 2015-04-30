@@ -12,38 +12,35 @@ def assert_vmcommand_success(p, msg = nil)
                                 msg)
 end
 
-# Call block (ignoring any exceptions it may throw) repeatedly with one
-# second breaks until it returns true, or until `t` seconds have
-# passed when we throw Timeout::Error. As a precondition, the code
-# block cannot throw Timeout::Error.
-def try_for(t, options = {})
+class TryForTimeoutError < Timeout::Error
+end
+
+# Call block (ignoring any exceptions it may throw) repeatedly with
+# one second breaks until it returns true, or until `timeout` seconds have
+# passed when we throw a TryForTimeoutError exception. Nested try_for
+# is forbidden, so the block cannot itself call try_for.
+def try_for(timeout, options = {})
   options[:delay] ||= 1
-  begin
-    Timeout::timeout(t) do
-      loop do
-        begin
-          return true if yield
-        rescue NameError => e
-          raise e
-        rescue Timeout::Error => e
-          if options[:msg]
-            raise RuntimeError, options[:msg], caller
-          else
-            raise e
-          end
-        rescue Exception
-          # noop
-        end
-        sleep options[:delay]
+  Timeout::timeout(timeout, TryForTimeoutError) do
+    loop do
+      begin
+        return if yield
+      rescue NameError, TryForTimeoutError => e
+        # Let's not catch our own timeout (note that if we'd have a
+        # nested try_for we might catch another try_for's
+        # TryForTimeoutError exception here, and that's why such
+        # nesting is forbidden). Also, let's not catch what most
+        # likely is a typo.
+        raise e
+      rescue Exception
+        # All other exceptions are ignored while trying the block.
       end
-    end
-  rescue Timeout::Error => e
-    if options[:msg]
-      raise RuntimeError, options[:msg], caller
-    else
-      raise e
+      sleep options[:delay]
     end
   end
+rescue TryForTimeoutError => e
+  msg = options[:msg] || 'try_for() timeout expired'
+  raise TryForTimeoutError.new(msg)
 end
 
 def wait_until_tor_is_working
@@ -81,7 +78,12 @@ def convert_from_bytes(size, unit)
 end
 
 def cmd_helper(cmd)
-  IO.popen(cmd + " 2>&1") do |p|
+  if cmd.instance_of?(Array)
+    cmd << {:err => [:child, :out]}
+  elsif cmd.instance_of?(String)
+    cmd += " 2>&1"
+  end
+  IO.popen(cmd) do |p|
     out = p.readlines.join("\n")
     p.close
     ret = $?
@@ -101,7 +103,7 @@ def get_free_space(machine, path)
   case machine
   when 'host'
     assert(File.exists?(path), "Path '#{path}' not found on #{machine}.")
-    free = cmd_helper("df '#{path}'")
+    free = cmd_helper(["df", path])
   when 'guest'
     assert(@vm.file_exist?(path), "Path '#{path}' not found on #{machine}.")
     free = @vm.execute_successfully("df '#{path}'")
