@@ -42,7 +42,7 @@ download_and_verify_files() {
 }
 
 install_tor_browser() {
-    local bundle destination tmp prep torbutton_xpi_path
+    local bundle destination tmp prep torbutton_xpi_path torlauncher_xpi_path torlauncher_version
     bundle="${1}"
     destination="${2}"
 
@@ -67,10 +67,30 @@ install_tor_browser() {
     rm -r "${prep}"/TorBrowser/Tor "${prep}"/TorBrowser/Docs
 
     # We don't want tor-launcher to be part of the regular browser
-    # profile. Moreover, for the stand-alone tor-launcher we use, we
-    # need our patched version. So, the version shipped in the TB
-    # really is not useful for us.
-    rm "${prep}/TorBrowser/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi"
+    # profile but we want to keep it as a standalone application
+    # when Tails is started in "bridge mode".
+    torlauncher_xpi_path="${prep}/TorBrowser/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi"
+    7z x -o'/usr/share/tor-launcher-standalone' "${torlauncher_xpi_path}"
+    torlauncher_version="$(sed -n \
+        's,^        <em:version>\([0-9\.]\+\)</em:version>,\1,p' \
+        '/usr/share/tor-launcher-standalone/install.rdf')"
+    cat > '/usr/share/tor-launcher-standalone/application.ini' << EOF
+[App]
+Vendor=TorProject
+Name=TorLauncher
+Version=${torlauncher_version}
+BuildID=$(date +%Y%m%d)
+ID=tor-launcher@torproject.org
+
+[Gecko]
+MinVersion=$(get_firefox_version "${prep}/application.ini")
+MaxVersion=*.*.*
+
+[Shell]
+Icon=icon.png
+EOF
+    chmod -R a+rX '/usr/share/tor-launcher-standalone'
+    rm "${torlauncher_xpi_path}"
 
     # Remove TBB's torbutton since the "Tor test" will fail and about:tor
     # will report an error. We'll install our own Torbutton later, which
