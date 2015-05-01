@@ -13,15 +13,40 @@ Things to check
   - `/live/persistence/TailsData_unlocked/`
   - `/lib/live/mount/rootfs/`
   - `/lib/live/mount/overlay/`
-    * `apparmor-adjust-home-tunable.diff` adds
-      `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at least
-      `$HOME` is OK
+    * we add `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at
+      least `$HOME` is OK
 * access to webcam
 * access to microphone (can we easily block that while still allowing
   sound output?)
-* wide-open access to `$HOME`
-* wide-open access to `$HOME` except blacklist -- is that good enough?
-  shall we add to the blacklist?
+* wide-open access to `$HOME` -- everything checked, potential issues
+   and remaining todo items follow:
+  - what uses the `gnupg` abstraction?
+  - `abstractions/ubuntu-browsers.d/{java,user-files}` give read-write
+    access to `$HOME` and its content: where are they used?
+  - the `user-download` abstraction gives read-write access to large
+    parts of `$HOME`: where is it used?
+  - the `user-write` abstraction gives read-write access to large
+    parts of `$HOME`: where is it used?
+  - the `user-mail` abstraction gives read-write access to mail
+    folders; where is it used?
+* wide-open access to `$HOME` except blacklist -- everything checked,
+  potential issues and remaining todo items follow:
+  - Evince, Totem and their previewers have read-write access to
+    `@{HOME}/**`: perhaps we can make it a bit tighter, e.g.
+    using a regexp that doesn't include dotfiles (see `user-write`),
+    and read-only everywhere except for specific directories? Or is
+    the blacklist used by these profiles tight enough?
+  - What else uses `private-files` and
+    `private-files-strict` abstractions?
+  - Shall we add stuff to these blacklist?
+* wide-open access to `/lib/**` or similar, that might grant access to
+  persistent files -- everything checked, potential issues and
+  remaining todo items follow:
+  - the `base` abstraction has things like `/lib{,32,64}/** r`
+  - the `launchpad-integration` abstraction has
+    `/{,usr/}lib*/{,**/}*.so{,.*} m`
+  - the `ubuntu-helpers` abstraction has
+    `/{,usr/,usr/local/}lib{,32,64}/{,**/}*.so{,.*} m`
 * jvoisin's profile hardening
   - Pidgin
     * drop `bash` abstraction: has been here since the first version
@@ -91,3 +116,9 @@ Checked already
   especially given it [doesn't transition properly with
   Pix](https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1042771)
   => we don't add occurrences thereof in our own profiles
+* wide-open access to `$HOME`:
+  - `bash` abstraction (included by many profiles) gives read access
+    to `$HOME` via `@{HOMEDIRS}`, but merely listing its content
+    shouldn't be a problem in practice in Tails: users tend to store
+    their documents on the Desktop, or in persistence. Worst case
+    we'll leak filenames.
