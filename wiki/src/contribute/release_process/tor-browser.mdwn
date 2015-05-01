@@ -49,13 +49,13 @@ and see if the desired version is available. Set `DIST_URL` to the
 chosen URL, and set `VERSION` to the desired Tor Browser version, for
 example:
 
-    DIST_URL=https://people.torproject.org/~mikeperry/builds/
-    VERSION=4.0
+    DIST_URL=https://people.torproject.org/~mikeperry/builds/4.5-build5/
+    VERSION=4.5
 
 Fetch the version's hash file and its detached signature, and verify
 with GnuPG:
 
-    wget ${DIST_URL}/${VERSION}/sha256sums.txt{,.asc} && \
+    wget ${DIST_URL}/sha256sums.txt{,.asc} && \
     gpg --verify sha256sums.txt.asc sha256sums.txt
 
 Filter the tarballs we want and make them available at build time,
@@ -141,7 +141,7 @@ Import a new set of Tor Browser tarballs
        CHROOT_INCLUDES="${TAILS_GIT_REPO}/config/chroot_local-includes"
        TBB_SHA256SUMS_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-sha256sums.txt"
        TBB_DIST_URL_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-dist-url.txt"
-       TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}" | sed "s,^http://,https://,")/${VERSION}"
+       TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}" | sed "s,^http://,https://,")"
        cat "$TBB_SHA256SUMS_FILE" | while read expected_sha256 tarball; do
           (
              cd "$TMPDIR"
