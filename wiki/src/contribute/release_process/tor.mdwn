@@ -35,6 +35,12 @@ wheezy-backports, to get seccomp support.
    
    Check the resulting `debian/changelog` entry.
 
+6. Add a build dependency on `linux-libc-dev` >= 3.16 (which is in
+   wheezy-backports):
+
+       sed --regexp-extended -i 's/^(Build-Depends:[^\[]*)\s+(\[.*\])?$/\1, linux-libc-dev (>= 3.16) \2/' debian/control
+       dch --append "Build depend on linux-libc-dev (>= 3.16) to fix build error from undefined IP6T_SO_ORIGINAL_DST"
+
 6. Build in your wheezy-backports i386 chroot.
 
 7. Tweak the resulting `.changes` file so that it includes the
