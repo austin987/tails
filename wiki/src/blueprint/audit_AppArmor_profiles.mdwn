@@ -22,6 +22,37 @@ Things to check
 * wide-open access to `$HOME`
 * wide-open access to `$HOME` except blacklist -- is that good enough?
   shall we add to the blacklist?
+* jvoisin's profile hardening
+  - Pidgin
+    * drop `bash` abstraction: has been here since the first version
+      of the profile; that abstraction is not too scary, but... what
+      is it useful for?
+    * disable video and audio visualization capabilities: if it
+      doesn't break e.g. accessibility or sound notifications, why not
+  - `/usr/bin/evince`
+    * drop `bash` abstraction: same as Pidgin
+    * drop `audio` and `ubuntu-media-players` abstraction:  note that
+      PDF can embed videos; do we care?
+    * drop `ubuntu-console-browsers`, `ubuntu-console-email` and
+      `ubuntu-gnome-terminal` abstractions: I doubt it's useful to
+      anyone in Tails, indeed
+    * disallow `/usr/bin/yelp`: if it breaks displaying Evince help,
+      we don't want that
+    * disallow `/usr/bin/bug-buddy`: Ubuntu-specific, we don't care
+    * disallow `/usr/bin/exo-open` and a bunch of file managers that
+      are not shipped in Tails:  not worth maintaining a delta
+    * disallow `/usr/bin/gedit`: a comment in the profile says it's
+      useful "for text attachments", and given it's inheriting the
+      current profile it's not scary enough to be worth potentially
+      breaking things
+  - `/usr/bin/evince-previewer`
+    * same changes as in `/usr/bin/evince` profile, same comments
+    * drop `ubuntu-browsers` abstraction: it doesn't cover Tor Browser
+      anyway, so why not
+    * drop `ubuntu-email` abstraction: do we care about Evince
+      previewer being able to start Claws Mail? What is it useful for?
+    * disallow networking access: the Debian kernel doesn't support
+      such rules anyway, so that would be a no-op
 
 Things to keep in mind
 ======================
