@@ -28,7 +28,7 @@ i2p_eep_proxy_address() {
 }
 
 i2p_has_bootstrapped() {
-    netstat -4nlp | grep -qwF "$(i2p_eep_proxy_address)"
+    netstat -nlp | grep -qwF "$(i2p_eep_proxy_address)"
 }
 
 i2p_router_console_address() {
@@ -36,7 +36,7 @@ i2p_router_console_address() {
 }
 
 i2p_router_console_is_ready() {
-    netstat -4nlp | grep -qwF "$(i2p_router_console_address)"
+    netstat -nlp | grep -qwF "$(i2p_router_console_address)"
 }
 
 set_best_i2p_router_console_lang() {
