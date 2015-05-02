@@ -59,6 +59,9 @@ for lang in $LANGUAGES ; do
     statistics $PO_FILES
 done
 
+echo ""
+echo "Total original words: $TOTAL_WC"
+
 # core PO files
 echo ""
 echo "[[Core PO files|contribute/l10n_tricks/core_po_files.txt]]"
@@ -73,3 +76,6 @@ for lang in $LANGUAGES ; do
         > $PO_FILES
     statistics $PO_FILES
 done
+
+echo ""
+echo "Total original words: $TOTAL_WC"
