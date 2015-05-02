@@ -20,15 +20,8 @@ Things to check
   sound output?)
 * wide-open access to `$HOME` -- everything checked, potential issues
    and remaining todo items follow:
-  - what uses the `gnupg` abstraction?
   - `abstractions/ubuntu-browsers.d/{java,user-files}` give read-write
     access to `$HOME` and its content: where are they used?
-  - the `user-download` abstraction gives read-write access to large
-    parts of `$HOME`: where is it used?
-  - the `user-write` abstraction gives read-write access to large
-    parts of `$HOME`: where is it used?
-  - the `user-mail` abstraction gives read-write access to mail
-    folders; where is it used?
 * wide-open access to `$HOME` except blacklist -- everything checked,
   potential issues and remaining todo items follow:
   - Evince, Totem and their previewers have read-write access to
@@ -118,3 +111,13 @@ Checked already
     shouldn't be a problem in practice in Tails: users tend to store
     their documents on the Desktop, or in persistence. Worst case
     we'll leak filenames.
+  - no profile we ship includes the `gnupg` abstraction
+  - no profile we ship includes the `user-mail` abstraction, that
+    gives read-write access to mail folders
+  - no profile we ship includes the `user-write` abstraction, that
+    gives read-write access to large parts of `$HOME`
+  - the `user-download` abstraction, that's included in the Pidgin
+    profile, gives read-write access non-hidden files at the root of
+    the `$HOME`, Desktop and download directories; combined with the
+    `private-files-strict` abstraction, it is probably as tight as we
+    can do without substantially harming UX
