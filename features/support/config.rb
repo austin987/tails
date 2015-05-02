@@ -2,16 +2,23 @@ require 'fileutils'
 require 'yaml'
 require "#{Dir.pwd}/features/support/helpers/misc_helpers.rb"
 
-# These two files deal with options like some of the settings passed
+# These files deal with options like some of the settings passed
 # to the `run_test_suite` script, and "secrets" like credentials
 # (passwords, SSH keys) to be used in tests.
 DEFAULTS_CONFIG_FILE = "#{Dir.pwd}/features/config/defaults.yml"
 LOCAL_CONFIG_FILE = "#{Dir.pwd}/features/config/local.yml"
+LOCAL_CONFIGS_DIR = "#{Dir.pwd}/features/config/local.d"
 
 assert File.exists?(DEFAULTS_CONFIG_FILE)
 $config = YAML.load(File.read(DEFAULTS_CONFIG_FILE))
-if File.exists?(LOCAL_CONFIG_FILE)
-  $config.merge!(YAML.load(File.read(LOCAL_CONFIG_FILE)))
+config_files = Dir.glob("#{LOCAL_CONFIGS_DIR}/*.yml").sort
+config_files.insert(0, LOCAL_CONFIG_FILE) if File.exists?(LOCAL_CONFIG_FILE)
+config_files.each do |config_file|
+  yaml_struct = YAML.load(File.read(config_file)) || Hash.new
+  if not(yaml_struct.instance_of?(Hash))
+    raise "Local configuration file '#{config_file}' is malformed"
+  end
+  $config.merge!(yaml_struct)
 end
 # Options passed to the `run_test_suite` script will always take
 # precedence. The way we import these keys is only safe for values
@@ -43,9 +50,18 @@ SOME_DNS_SERVER = "208.67.222.222"
 TOR_AUTHORITIES =
   # List grabbed from Tor's sources, src/or/config.c:~750.
   [
-   "128.31.0.39", "86.59.21.38", "194.109.206.212",
-   "82.94.251.203", "76.73.17.194", "212.112.245.170",
-   "193.23.244.244", "208.83.223.34", "171.25.193.9",
-   "154.35.32.5"
+   "86.59.21.38",
+   "128.31.0.39",
+   "194.109.206.212",
+   "82.94.251.203",
+   "199.254.238.52",
+   "131.188.40.189",
+   "193.23.244.244",
+   "208.83.223.34",
+   "171.25.193.9",
+   "154.35.175.225",
   ]
 VM_XML_PATH = "#{Dir.pwd}/features/domains"
+
+TAILS_SIGNING_KEY = cmd_helper(". #{Dir.pwd}/config/amnesia; echo ${AMNESIA_DEV_KEYID}").tr(' ', '').chomp
+TAILS_DEBIAN_REPO_KEY = "221F9A3C6FA3E09E182E060BC7988EA7A358D82E"

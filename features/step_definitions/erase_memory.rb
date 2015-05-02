@@ -52,7 +52,7 @@ Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
 end
 
 def pattern_coverage_in_guest_ram
-  dump = "#{$config["TMP_DIR"]}/memdump"
+  dump = "#{$config["TMPDIR"]}/memdump"
   # Workaround: when dumping the guest's memory via core_dump(), libvirt
   # will create files that only root can read. We therefore pre-create
   # them with more permissible permissions, which libvirt will preserve
@@ -64,7 +64,7 @@ def pattern_coverage_in_guest_ram
   FileUtils.touch(dump)
   FileUtils.chmod(0666, dump)
   @vm.domain.core_dump(dump)
-  patterns = IO.popen("grep -c 'wipe_didnt_work' #{dump}").gets.to_i
+  patterns = IO.popen(['grep', '-c', 'wipe_didnt_work', dump]).gets.to_i
   File.delete dump
   # Pattern is 16 bytes long
   patterns_b = patterns*16
@@ -156,7 +156,7 @@ end
 When /^I reboot without wiping the memory$/ do
   next if @skip_steps_while_restoring_background
   @vm.reset
-  @screen.wait('TailsBootSplashPostReset.png', 30)
+  @screen.wait('TailsBootSplash.png', 30)
 end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do

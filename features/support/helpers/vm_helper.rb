@@ -73,11 +73,11 @@ class VM
   # We lookup by name so we also catch domains from previous test
   # suite runs that weren't properly cleaned up (e.g. aborted).
   def destroy_and_undefine
+    @display.stop if @display && @display.active?
     begin
       old_domain = @virt.lookup_domain_by_name(@domain_name)
       old_domain.destroy if old_domain.active?
       old_domain.undefine
-      @display.stop if @display && @display.active?
     rescue
     end
   end
@@ -374,6 +374,12 @@ EOF
     return execute("pidof -x -o '%PPID' " + process).stdout.chomp.split
   end
 
+  def focus_window(window_title, user = LIVE_USER)
+    execute_successfully(
+       "xdotool search --name '#{window_title}' windowactivate --sync", user
+    )
+  end
+
   def file_exist?(file)
     execute("test -e '#{file}'").success?
   end
@@ -418,9 +424,7 @@ EOF
   end
 
   def reset
-    # ruby-libvirt 0.4 does not support the reset method.
-    # XXX: Once we use Jessie, use @domain.reset instead.
-    system("virsh -c qemu:///system reset " + @domain_name) if is_running?
+    @domain.reset if is_running?
   end
 
   def power_off

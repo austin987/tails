@@ -1,11 +1,12 @@
 Then /^the shipped Tails (signing|Debian repository) key will be valid for the next (\d+) months$/ do |key_type, max_months|
   next if @skip_steps_while_restoring_background
-  if key_type == 'signing'
-    sig_key_fingerprint = "0D24B36AA9A2A651787876451202821CBE2CD9C1"
+  case key_type
+  when 'signing'
+    sig_key_fingerprint = TAILS_SIGNING_KEY
     cmd = 'gpg'
     user = LIVE_USER
-  elsif key_type == 'Debian repository'
-    sig_key_fingerprint = "221F9A3C6FA3E09E182E060BC7988EA7A358D82E"
+  when 'Debian repository'
+    sig_key_fingerprint = TAILS_DEBIAN_REPO_KEY
     cmd = 'apt-key adv'
     user = 'root'
   else
@@ -116,7 +117,7 @@ end
 Then /^a screenshot is saved to the live user's home directory$/ do
   next if @skip_steps_while_restoring_background
   home = "/home/#{LIVE_USER}"
-  try_for(3, :msg=> "No screenshot was created in #{home}") {
+  try_for(10, :msg=> "No screenshot was created in #{home}") {
     !@vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
   }
 end
@@ -142,19 +143,16 @@ Then /^MAT can clean some sample PDF file$/ do
     pdf_name = File.basename(pdf_on_host)
     pdf_on_guest = "/home/#{LIVE_USER}/#{pdf_name}"
     step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
-    @vm.execute("mat --display '#{pdf_on_guest}'",
-                LIVE_USER).stdout
-    check_before = @vm.execute("mat --check '#{pdf_on_guest}'",
-                               LIVE_USER).stdout
-    if check_before.include?("#{pdf_on_guest} is clean")
-      STDERR.puts "warning: '#{pdf_on_host}' is already clean so it is a " +
-                  "bad candidate for testing MAT"
-    end
-    @vm.execute("mat '#{pdf_on_guest}'", LIVE_USER)
-    check_after = @vm.execute("mat --check '#{pdf_on_guest}'",
-                              LIVE_USER).stdout
+    check_before = @vm.execute_successfully("mat --check '#{pdf_on_guest}'",
+                                            LIVE_USER).stdout
+    assert(check_before.include?("#{pdf_on_guest} is not clean"),
+           "MAT failed to see that '#{pdf_on_host}' is dirty")
+    @vm.execute_successfully("mat '#{pdf_on_guest}'", LIVE_USER)
+    check_after = @vm.execute_successfully("mat --check '#{pdf_on_guest}'",
+                                           LIVE_USER).stdout
     assert(check_after.include?("#{pdf_on_guest} is clean"),
            "MAT failed to clean '#{pdf_on_host}'")
+    @vm.execute_successfully("rm '#{pdf_on_guest}'")
   end
 end
 
