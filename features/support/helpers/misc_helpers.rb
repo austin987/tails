@@ -12,25 +12,29 @@ def assert_vmcommand_success(p, msg = nil)
                                 msg)
 end
 
-class TryForTimeoutError < Timeout::Error
+# It's forbidden to throw this exception (or subclasses) in anything
+# but try_for() below. Just don't use it anywhere else!
+class UniqueTryForTimeoutError < Exception
 end
 
 # Call block (ignoring any exceptions it may throw) repeatedly with
 # one second breaks until it returns true, or until `timeout` seconds have
-# passed when we throw a TryForTimeoutError exception. Nested try_for
-# is forbidden, so the block cannot itself call try_for.
+# passed when we throw a Timeout::Error exception.
 def try_for(timeout, options = {})
   options[:delay] ||= 1
-  Timeout::timeout(timeout, TryForTimeoutError) do
+  # Create a unique exception used only for this particular try_for
+  # call's Timeout to allow nested try_for:s. If we used the same one,
+  # the innermost try_for would catch all outer ones', creating a
+  # really strange situation.
+  unique_timeout_exception = Class.new(UniqueTryForTimeoutError)
+  Timeout::timeout(timeout, unique_timeout_exception) do
     loop do
       begin
         return if yield
-      rescue NameError, TryForTimeoutError => e
-        # Let's not catch our own timeout (note that if we'd have a
-        # nested try_for we might catch another try_for's
-        # TryForTimeoutError exception here, and that's why such
-        # nesting is forbidden). Also, let's not catch what most
-        # likely is a typo.
+      rescue NameError, UniqueTryForTimeoutError => e
+        # NameError most likely means typos, and hiding that is rarely
+        # (never?) a good idea, so we rethrow them. See below why we
+        # also rethrow *all* the unique exceptions.
         raise e
       rescue Exception
         # All other exceptions are ignored while trying the block.
@@ -38,9 +42,28 @@ def try_for(timeout, options = {})
       sleep options[:delay]
     end
   end
-rescue TryForTimeoutError => e
+  # At this point the block above either succeeded and we'll return,
+  # or we are throwing an exception. If the latter, we either have a
+  # NameError that we'll not catch (and will any try_for below us in
+  # the stack), or we have a unique exception. That can mean one of
+  # two things:
+  # 1. it's the one unique to this try_for, and in that case we'll
+  #    catch it, rethrowing it as something that will be ignored by
+  #    inside the blocks of all try_for:s below us in the stack.
+  # 2. it's an exception unique to another try_for. Assuming that we
+  #    do not throw the unique exceptions in any other place or way
+  #    than we do it in this function, this means that there is a
+  #    try_for below us in the stack to which this exception must be
+  #    unique to.
+  # Let 1 be the base step, and 2 the inductive step, and we sort of
+  # an inductive proof for the correctness of try_for when it's
+  # nested. It shows that for an infinite stack of try_for:s, any of
+  # the unique exceptions will be caught only by the try_for instance
+  # it is unique to, and all try_for:s in between will ignore it so it
+  # ends up there immediately.
+rescue unique_timeout_exception => e
   msg = options[:msg] || 'try_for() timeout expired'
-  raise TryForTimeoutError.new(msg)
+  raise Timeout::Error.new(msg)
 end
 
 def wait_until_tor_is_working
