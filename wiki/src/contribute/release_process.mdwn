@@ -193,11 +193,21 @@ If we are at freeze time for a major release:
         echo 'devel' > config/base_branch && \
         git commit config/base_branch -m "Restore devel's base branch."
 
-7. Push the modified branches to Git:
+7. Merge `devel` into `feature/jessie`:
 
-        git push origin testing && git push origin devel
+        git checkout feature/jessie && git merge --no-ff devel
 
-8. If there is no Jenkins job building ISO images from the `testing`
+8. Ensure that the `testing`, `devel` and `feature/jessie` branches
+   have the expected content in `config/APT_overlays.d/`: e.g. it must
+   not list any overlay APT suite that has been merged already.
+
+9. Push the modified branches to Git:
+
+        git push origin testing && \
+        git push origin devel && \
+        git push origin feature/jessie
+
+10. If there is no Jenkins job building ISO images from the `testing`
    branch, ask <tails-sysadmins@boum.org> to re-activate it.
 
 Point-release
@@ -227,29 +237,19 @@ If we are at freeze time for a point-release:
         echo 'devel' > config/base_branch && \
         git commit config/base_branch -m "Restore devel's base branch."
 
-5. Push the `stable` branch to Git:
+5. Merge `devel` into `feature/jessie`:
 
-        git push origin stable && git push origin devel
+        git checkout feature/jessie && git merge --no-ff devel
 
-APT repository
-==============
+6. Ensure that the `stable`, `devel` and `feature/jessie` branches
+   have the expected content in `config/APT_overlays.d/`: e.g. it must
+   not list any overlay APT suite that has been merged already.
 
-Update other base branches
---------------------------
+7. Push the modified branches to Git:
 
-Now that you have emptied `config/APT_overlays.d/` in the branch used for
-the release, get this change into every *newer* base branch:
-
-* if preparing a major release, merge `testing` into `devel`, and then
-  `devel` into `feature/jessie`;
-* if preparing a point-release, merge `stable` into `devel`, and then
-  `devel` into `feature/jessie`;
-
-Then, ensure that every branch you just merged the release branch into
-has the expected content in `config/APT_overlays.d/`: e.g. it must not
-list any overlay APT suite that has been merged already.
-
-Finally, push all branches you just merged the release branch into.
+        git push origin stable && \
+        git push origin devel && \
+        git push origin feature/jessie
 
 Update more included files
 ==========================
