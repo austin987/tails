@@ -214,9 +214,12 @@ After either above section's steps, continue with:
         echo 'devel' > config/base_branch && \
         git commit config/base_branch -m "Restore devel's base branch."
 
-3. Merge `devel` into `feature/jessie`:
+3. Merge `devel` into `feature/jessie` and restore its `config/base_branch`:
 
-        git checkout feature/jessie && git merge --no-ff devel
+        git checkout feature/jessie && \
+        git merge --no-ff devel && \
+        echo 'feature/jessie' > config/base_branch && \
+        git commit config/base_branch -m "Restore 'feature/jessie's base branch."
 
 4. Ensure that the release, `devel` and `feature/jessie` branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
