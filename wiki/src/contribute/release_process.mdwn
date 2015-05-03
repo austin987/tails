@@ -177,37 +177,10 @@ If we are at freeze time for a major release:
    ... and check that the resulting `config/APT_overlays.d/` in the
    `testing` branch is empty.
 
-4. Set the `testing` branch's `config/base_branch`:
-
-        echo 'testing' > config/base_branch && \
-        git commit config/base_branch -m "Restore testing's base branch."
-
-5. [[Hard reset|APT_repository#workflow-reset]] the `testing` APT
+4. [[Hard reset|APT_repository#workflow-reset]] the `testing` APT
    suite to the current state of the `devel` one.
 
-6. Merge the `testing` into `devel`, restore its `config/base_branch`,
-   and push:
-
-        git checkout devel && \
-        git merge --no-ff testing && \
-        echo 'devel' > config/base_branch && \
-        git commit config/base_branch -m "Restore devel's base branch."
-
-7. Merge `devel` into `feature/jessie`:
-
-        git checkout feature/jessie && git merge --no-ff devel
-
-8. Ensure that the `testing`, `devel` and `feature/jessie` branches
-   have the expected content in `config/APT_overlays.d/`: e.g. it must
-   not list any overlay APT suite that has been merged already.
-
-9. Push the modified branches to Git:
-
-        git push origin testing && \
-        git push origin devel && \
-        git push origin feature/jessie
-
-10. If there is no Jenkins job building ISO images from the `testing`
+5. If there is no Jenkins job building ISO images from the `testing`
    branch, ask <tails-sysadmins@boum.org> to re-activate it.
 
 Point-release
@@ -219,35 +192,40 @@ If we are at freeze time for a point-release:
 
         git checkout stable && git merge --no-ff origin/master
 
-2. Set the `stable` branch's `config/base_branch`:
-
-        echo 'stable' > config/base_branch && \
-        git commit config/base_branch -m "Restore stable's base branch."
-
-3. [[Merge each APT overlay
+2. [[Merge each APT overlay
    suite|contribute/APT_repository#workflow-merge-overlays]] listed in
    the `stable` branch's `config/APT_overlays.d/` into the `stable`
    APT suite.
 
-4. Merge the `stable` into `devel`, restore its `config/base_branch`,
+Common steps for point and major releases
+-----------------------------------------
+
+After either above section's steps, continue with:
+
+1. Set the release branch's `config/base_branch`:
+
+        echo "${RELEASE_BRANCH}" > config/base_branch && \
+        git commit config/base_branch -m "Restore ${RELEASE_BRANCH}'s base branch."
+
+2. Merge the release branch into `devel`, restore its `config/base_branch`,
    and push:
 
         git checkout devel && \
-        git merge --no-ff stable && \
+        git merge --no-ff ${RELEASE_BRANCH} && \
         echo 'devel' > config/base_branch && \
         git commit config/base_branch -m "Restore devel's base branch."
 
-5. Merge `devel` into `feature/jessie`:
+3. Merge `devel` into `feature/jessie`:
 
         git checkout feature/jessie && git merge --no-ff devel
 
-6. Ensure that the `stable`, `devel` and `feature/jessie` branches
+4. Ensure that the release, `devel` and `feature/jessie` branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
    not list any overlay APT suite that has been merged already.
 
-7. Push the modified branches to Git:
+5. Push the modified branches to Git:
 
-        git push origin stable && \
+        git push origin ${RELEASE_BRANCH} && \
         git push origin devel && \
         git push origin feature/jessie
 
