@@ -4,7 +4,7 @@ tails (1.4~rc1) unstable; urgency=medium
     - Upgrade Tor Browser to 4.5, which introduces many major new
       features for usability, security and privacy. Unfortunately its
       per-tab circuit view did not make it into Tails yet since it
-      requires exposing mor Tor state to the user running the Tor
+      requires exposing more Tor state to the user running the Tor
       Browser than we are currently comfortable with.
     - Upgrade Tor to 0.2.6.7-1~d70.wheezy+1+tails2. Like in the Tor
       bundled with the Tor Browser, we patch it so that circuits used
@@ -31,11 +31,8 @@ tails (1.4~rc1) unstable; urgency=medium
     - Upgrade ppp to 2.4.5-5.1+deb7u2.
 
   * Bugfixes
-    - Fix set_simple_config_key(). If the key already existed in the
-      config file before the call, all other lines would be removed
-      due to the sed option -n and p combo. (Closes: #9122)
-    - Make the win8 browser theme compatible with the chroot browsers.
-      (Closes: #9138)
+    - Make the Windows 8 browser theme compatible with the Unsafe and I2P
+      browsers. (Closes: #9138)
     - Hide Torbutton's "Tor Network Settings..." context menu entry.
       (Closes: #7647)
     - Upgrade the syslinux packages to support booting Tails on
@@ -48,18 +45,20 @@ tails (1.4~rc1) unstable; urgency=medium
     - Set GNOME's OpenPGP keys via desktop.gnome.crypto.pgp to prevent
       us from getting GNOME's default keyserver in addition to our
       own. (Closes: #9233)
-    - Prevent Firefox from crashing when Orca is enabled by granting
-      if access to assistive technologies in its Apparmor
+    - Prevent Firefox from crashing when Orca is enabled: grant
+      it access to assistive technologies in its Apparmor
       profile. (Closes: #9261)
-    - Add Jessie APT source. "jessie" will still be working once
-      Jessie is out. "testing" won't. (Closes: #9278)
+    - Add Jessie APT source. (Closes: #9278)
+    - Fix set_simple_config_key(). If the key already existed in the
+      config file before the call, all other lines would be removed
+      due to the sed option -n and p combo. (Closes: #9122)
 
   * Minor improvements
     - Upgrade I2P to 0.9.19-3~deb7u+1.
     - Install Tor Browser's bundled Torbutton instead of custom .deb.
       As of Torbutton 1.9.1.0 everything we need has been upstreamed.
     - Install Tor Browser's bundled Tor Launcher instead of our
-      in-tree version. As of Tor 0.2.6.x our custom patches for the
+      in-tree version. With Tor 0.2.6.x our custom patches for the
       ClientTransportPlugin hacks are not needed any more. (Closes:
       #7283)
     - Don't install msmtp and mutt. (Closes: #8727)
@@ -71,7 +70,7 @@ tails (1.4~rc1) unstable; urgency=medium
       Bliminse for the patch. (Closes: #9069).
     - Install printer-driver-gutenprint to support more printer
       models. (Closes: #8994).
-    - Install paperkey for off-line PGP key backup. (Closes: #8957)
+    - Install paperkey for off-line OpenPGP key backup. (Closes: #8957)
     - Hide the Tor logo in Tor Launcher. (Closes: #8696)
     - Remove useless log() instance in tails-unblock-network. (Closes:
       #9034)
@@ -88,12 +87,12 @@ tails (1.4~rc1) unstable; urgency=medium
     - Adapt test suite to be run on Debian Jessie, which includes
       removing various Wheezy-specific workarounds, adding a few
       specific to Jessie, migrating from ffmpeg to libav, and
-      similar. (Closes: #8165)
+      more. (Closes: #8165)
     - Test that MAT can see that a PDF is dirty (Closes: #9136).
     - Allow throwing Timeout::Error in try_for() blocks, as well as
-      nested try_fort() (Closes: #9189, #9290).
-    - Read test suite configuration files from the local.d
-      dir. (Closes: #9220)
+      nested try_for() (Closes: #9189, #9290).
+    - Read test suite configuration files from the features/config/local.d
+      directory. (Closes: #9220)
     - Kill virt-viewer with SIGTERM, not SIGINT, to prevent hordes of
       zombie processes from appearing. (Closes: #9139)
     - Kill Xvfb with SIGTERM, not SIGKILL, on test suite exit to allow
