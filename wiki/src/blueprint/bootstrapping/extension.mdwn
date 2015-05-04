@@ -18,6 +18,25 @@ Tails Upgrader. See the blueprint on [[upgrades|upgrade]].
 
 [[!toc]]
 
+Vision
+======
+
+Software verification is a critical step in the use of secure
+applications but it has traditionally been hard to provide, especially
+from a user perspective. Usual solutions are:
+
+  - Using HTTPS to download. But in the case of Tails, we are serving so
+    many downloads that we have to rely on mirrors hosted by third
+    parties.
+  - Providing OpenPGP signatures. But this really works only for the few
+    of us who know how to verify an OpenPGP signature and use the
+    OpenPGP Web-of-Trust correctly.
+
+We are trying here to provide a usable solution to verify a download
+done through HTTP, while relying on cryptographic information fetched
+elsewhere through HTTPS (and possibly with stronger authentication
+mechanisms such as public key pinning from browser vendors).
+
 Goals
 =====
 
@@ -25,8 +44,6 @@ Goals
     for years.
   - Simplify the installation process by automating *some* verification
     of the ISO image inside the browser as part of the download process.
-  - Allow users who want to verify an ISO image downloaded previously or downloaded using BitTorrent to do the same
-    level of verification as people downloading through their browser.
   - In case of a bad ISO image, help the user diagnose whether the
     download has been interrupted or the ISO has been corrupted.
   - In case of an interrupted download, help the user resume it. This
@@ -50,53 +67,66 @@ Non goals
 
   - Verify deprecated ISO images.
   - Verify ISO images downloaded from nightly.tails.boum.org.
+  - Verify ISO images downloaded through BitTorrent. If we can rely on
+    our website to provide a correct cryptographic description of the
+    ISO image then we can rely on it as well to provide a correct
+    BitTorrent file. Then BitTorrent clients verify the integrity of
+    their downloads and we're good ([[!tails_ticket 9043]]).
 
-<a id="scenario"></a>
+<a id="wireframe"></a>
 
-User scenario
-=============
+User scenario and wireframe
+===========================
 
-This scenario represents the UX side of things. It has to be refined
-depending on the technical limitations of a browser extension, and the
-broader wireframe of the web assistant. This should be clarified by the
-beginning of April but not before. See [[!tails_ticket 8584]] and
-[[!tails_ticket 8564]].
+  - [[Simplified wireframe|wireframe.pdf]]
+  - For the full wireframe, refer to the latest wireframe uploaded on [[!tails_ticket 8564]].
 
-HTTP download
--------------
+Open questions
+--------------
 
-  - When the user clicks on the HTTP download button from the [[download
-    page|download#index2h1]], we propose to install the extension.
-  - The user allows the installation of the extension.
-  - The extension starts the download and the user decides where to save
-    the ISO.
-  - The webpage is modified and displays a progress bar of the download.
-  - The user might or might not close the webpage.
-  - The download also appears in the usual list of downloads of the
-    browser.
+  - Maybe we will display educational material, such as our warnings,
+    while the ISO image downloads.
 
-Torrent download
-----------------
+<a id="integration">
 
-  - If a user has downloaded the ISO using BitTorrent, she can verify it
-    as well as using the extension as part of the web assistant.
+Integration in the web assistant
+================================
 
-ISO verification
-----------------
+The extension will interact with a single web page that it will modify
+to display the relevant content. This page will be the first step of one
+of the scenarios of the [[web assistant|assistant]].
 
-  - After the image has been downloaded, the web assistant leads the
-    user through the ISO verification process.
-  - The extension checks the size of the download to verify that the download
-    was complete.
-  - If the download was complete, the extension verifies the ISO image.
-  - The extension displays the result to the user.
-  - According to the result, the web assistant proposes to either:
-      - if VERIFIED: continue with the installation.
-      - if INCOMPLETE: explain calmly that the download has been
-        interrupted and propose to resume the download.
-      - if CORRUPTED: explain to the user that the download has been
-	corrupted (to which extend?) and propose to download from another
-	mirror (maybe https://archive.torproject.org/).
+As we need a way of knowing where people are in the assistant, the
+extension will potentially interact with several web pages on our
+website, depending on the scenario, for example:
+
+  - `/install/windows/usb/1-download/v1.en.html` for the Windows USB scenario in English.
+  - `/install/debian/dvd/1-download/v1.de.html` for the Debian DVD scenario in German.
+
+The `v1` part of the URL corresponds to the version of the extension.
+
+Initial browser detection
+-------------------------
+
+On this page, the initial screen as seen by the user will have to depend
+on the browser to propose only the relevant options. We also have to
+provide a fallback for people who disable JavaScript. So we'll have
+three potential versions of this initial script:
+
+  A. If we cannot detect the browser (no JavaScript).
+  B. If we detect a supported browser (Firefox and Tor Browser to start
+     with, Chrome after the extension get ported to Chrome, etc.).
+  C. If we detect an unsupported browser.
+
+We need some JavaScript code to display option B or C, and otherwise
+display option A if there is no JavaScript.
+
+Localization
+------------
+
+The web page manipulated by the extension will be translated using our
+usual infrastructure (ikiwiki and PO files). The extension must not
+embed any user-visible string in its code.
 
 <a id="verification"></a>
 
@@ -106,7 +136,7 @@ ISO verification mechanism
 We are considering here an attacker who can:
 
   - (A) Provide a malicious ISO image to the user for example by
-    operating a rogue Tails mirror or BitTorrent file.
+    operating a rogue Tails mirror.
 
 We are not considering an attacker who can:
 
@@ -184,13 +214,50 @@ Other considerations:
   - We would have to upgrade the extension if the certificate authority
     of https://tails.boum.org/ changes but we should know this in
     advance.
-  - We need to decide if we want to integrate the verification process
-    done by the extension directly in the website or give instructions
-    to do it from the add-ons menu for exemple to mitigate attack G
-    (server in control) [[!tails_ticket 8931]].
   - More complex verification mechanisms should be gradually [[built into
     Tails Installer|blueprint/bootstrapping/installer]] where we can
     defeat attacks B, C, D, F, and G.
+
+<a id="data_source">
+
+Data source
+===========
+
+Building up on the format specified for [[upgrade description
+files|contribute/design/incremental_upgrades#upgrade-description-files]],
+the verification extension fetches an ISO description file from our
+server to retrieve all the information it needs about the ISO image
+(URL, size, checksum, etc.). As a beginning, this ISO description file
+is not signed using OpenPGP.
+
+### URL
+
+For each release of Tails:
+
+  - https://tails.boum.org/install/v1/Tails/i386/stable/0.23.yml
+
+With a copy or a symlink to the latest version on:
+
+  - https://tails.boum.org/install/v1/Tails/i386/stable/latest.yml
+
+### ISO description file
+
+    ---
+    build-target: i386
+    channel: stable
+    product-name: Tails
+    version: '0.23'
+    target-files:
+    - sha256: 359d104737f1a448375d2030f938dea3d529468b8218485998ab893c1f7509eb
+      size: 939571200
+      url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.23/tails-i386-0.23.iso
+
+Open questions
+--------------
+
+  - It will be easier for us to provide a YAML file as we do that
+    already for automatic upgrades. But maybe we have to provide JSON
+    which is more widely available in JavaScript.
 
 Updates mechanism
 =================
@@ -205,9 +272,27 @@ upgrade the extension:
 
 Firefox checks for updates of the extension once per day on a secure
 channel (the update pings are also used to generate add-ons usage
-stats).
+stats). Tor Browser doesn't prevent those updates [except for Torbutton
+and Tor Launcher](https://lists.torproject.org/pipermail/tbb-dev/2015-April/000258.html).
 
-Open questions
---------------
+<a id="satori"></a>
 
-- Does Tor Browser disables addons updates? See [[!tails_ticket 9028]].
+Satori
+======
+
+[Satori](https://chrome.google.com/webstore/detail/satori/oncomejlklhkbffpdhpmhldlfambmjlf)
+has been suggested as an alternative to verify our downloads.
+
+Pros:
+
+- Already exists in beta.
+- Knows how to calculate checksums.
+- Probably more isolated from the browser than our current design.
+- Not specific to Tails: reusable by the user for other software.
+
+Cons:
+
+- Checksum hardcoded (needs to be updated on each release).
+- Current UI calculates the checksum but doesn't compare it.
+- Not specific to Tails: more complex if you only want Tails.
+- Doesn't work from Tor Browser.
