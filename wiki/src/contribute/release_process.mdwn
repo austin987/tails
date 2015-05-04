@@ -200,34 +200,63 @@ If we are at freeze time for a point-release:
 Common steps for point and major releases
 -----------------------------------------
 
-After either of the above sections' steps, continue with:
+After either of the above sections' steps, reset the release branch's
+`config/base_branch`:
 
-1. Set the release branch's `config/base_branch`:
+    echo "${RELEASE_BRANCH}" > config/base_branch && \
+    git commit config/base_branch -m "Restore ${RELEASE_BRANCH}'s base branch."
 
-        echo "${RELEASE_BRANCH}" > config/base_branch && \
-        git commit config/base_branch -m "Restore ${RELEASE_BRANCH}'s base branch."
+When preparing an actual release
+================================
 
-2. Merge the release branch into `devel` following the instructions for
+If we're about to prepare an image for a final (non-RC) release, then
+follow these instructions:
+
+Major release
+-------------
+
+[[Merge each APT overlay
+suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+the `testing` branch's `config/APT_overlays.d/` into the `testing`
+APT suite.
+
+Point-release
+-------------
+
+Note that since we generally prepare the actual point-release at
+freeze time (since we don't release any RCs) we have just done what's
+listed below, and if so this section is a noop.
+
+[[Merge each APT overlay
+suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+the `stable` branch's `config/APT_overlays.d/` into the `stable` APT suite.
+
+Common steps for Freeze and actual releases
+===========================================
+
+No matter what, follow these steps:
+
+1. Merge the release branch into `devel` following the instructions for
    [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
 
-3. Restore `devel`'s `config/base_branch`:
+2. Restore `devel`'s `config/base_branch`:
 
         echo 'devel' > config/base_branch && \
         git commit config/base_branch -m "Restore devel's base branch."
 
-4. Merge `devel` into `feature/jessie` following the instructions for
+3. Merge `devel` into `feature/jessie` following the instructions for
    [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
 
-5. Restore `feature/jessie`'s `config/base_branch`:
+4. Restore `feature/jessie`'s `config/base_branch`:
 
         echo 'feature/jessie' > config/base_branch && \
         git commit config/base_branch -m "Restore 'feature/jessie's base branch."
 
-6. Ensure that the release, `devel` and `feature/jessie` branches
+5. Ensure that the release, `devel` and `feature/jessie` branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
    not list any overlay APT suite that has been merged already.
 
-7. Push the modified branches to Git:
+6. Push the modified branches to Git:
 
         git push origin "${RELEASE_BRANCH}:${RELEASE_BRANCH}" \
                         devel:devel \
