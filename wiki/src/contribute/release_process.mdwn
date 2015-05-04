@@ -207,25 +207,27 @@ After either above section's steps, continue with:
         echo "${RELEASE_BRANCH}" > config/base_branch && \
         git commit config/base_branch -m "Restore ${RELEASE_BRANCH}'s base branch."
 
-2. Merge the release branch into `devel` and restore its `config/base_branch`:
+2. Merge the release branch into `devel` following the instructions for
+   [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
 
-        git checkout devel && \
-        git merge --no-ff ${RELEASE_BRANCH} && \
+3. Restore `devel`'s `config/base_branch`:
+
         echo 'devel' > config/base_branch && \
         git commit config/base_branch -m "Restore devel's base branch."
 
-3. Merge `devel` into `feature/jessie` and restore its `config/base_branch`:
+4. Merge `devel` into `feature/jessie` following the instructions for
+   [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
 
-        git checkout feature/jessie && \
-        git merge --no-ff devel && \
+5. Restore `feature/jessie`'s `config/base_branch`:
+
         echo 'feature/jessie' > config/base_branch && \
         git commit config/base_branch -m "Restore 'feature/jessie's base branch."
 
-4. Ensure that the release, `devel` and `feature/jessie` branches
+6. Ensure that the release, `devel` and `feature/jessie` branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
    not list any overlay APT suite that has been merged already.
 
-5. Push the modified branches to Git:
+7. Push the modified branches to Git:
 
         git push origin "${RELEASE_BRANCH}:${RELEASE_BRANCH}" \
                         devel:devel \
