@@ -13,6 +13,7 @@ dnsmasq-base
 gawk
 git
 i18nspector
+libav-tools
 libcap2-bin
 libsikuli-script-java
 libvirt-clients
@@ -51,7 +52,7 @@ that this script must be run from the Tails source directory root.
 
 Options for '@product' features:
   --capture FILE     Captures the test session into FILE using VP8 encoding.
-                     Requires libav-tools and libvpx1.
+                     Requires libvpx1.
   --debug            Display various debugging information while running the
                      test suite.
   --pause-on-fail    On failure, pause test suite until pressing Enter. This is
@@ -147,7 +148,7 @@ start_vnc_viewer() {
 }
 
 capture_session() {
-    check_dependencies libav-tools libvpx1
+    check_dependencies libvpx1
     echo "Capturing guest display into ${CAPTURE_FILE}"
     avconv -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
