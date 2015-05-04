@@ -227,9 +227,9 @@ After either above section's steps, continue with:
 
 5. Push the modified branches to Git:
 
-        git push origin ${RELEASE_BRANCH} && \
-        git push origin devel && \
-        git push origin feature/jessie
+        git push origin "${RELEASE_BRANCH}:${RELEASE_BRANCH}" \
+                        devel:devel \
+                        feature/jessie:feature/jessie
 
 Update more included files
 ==========================
@@ -804,16 +804,19 @@ Push
 
 If preparing a release candidate, just push the `master` branch:
 
-    git push origin master
+    git push origin master:master
 
 If preparing an actual release, push the last commits to our Git
 repository like this:
 
-    ( cd "$RELEASE_CHECKOUT" && git push ) && \
+    ( cd "$RELEASE_CHECKOUT" && \
+      git push origin "$RELEASE_BRANCH:$RELEASE_BRANCH" \
+                      devel:devel \
+    ) && \
     ( cd "$MASTER_CHECKOUT" && \
       git fetch && \
       git merge "$RELEASE_BRANCH" && \
-      git push \
+      git push origin master:master \
     )
 
 ... and ask <root@boum.org> to refresh the ikiwiki wrappers for
@@ -966,7 +969,7 @@ this, and skip what does not make sense for a RC.
             git merge $branch
          done
 
-   - `git push --force origin experimental`
+   - `git push --force origin experimental:experimental`
 1. Make sure Jenkins manages to build all updated major branches fine:
    <https://jenkins.tails.boum.org/>.
 1. Delete the _Release Manager View for $VERSION_ Redmine custom query.
