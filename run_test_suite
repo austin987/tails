@@ -6,6 +6,45 @@ set -o pipefail
 
 NAME=$(basename ${0})
 
+GENERAL_DEPENDENCIES="
+cucumber
+devscripts
+dnsmasq-base
+gawk
+git
+i18nspector
+libav-tools
+libcap2-bin
+libsikuli-script-java
+libvirt-clients
+libvirt-daemon-system
+libvirt-dev
+libvirt0
+libxslt1-dev
+ntp
+openjdk-7-jre
+ovmf
+python-jabberbot
+python-potr
+qemu-kvm
+qemu-system-x86
+radvd
+ruby-guestfs
+ruby-json
+ruby-libvirt
+ruby-net-irc
+ruby-packetfu
+ruby-rjb
+ruby-rspec
+ruby-test-unit
+seabios
+tcpdump
+unclutter
+virt-viewer
+x11-apps
+xvfb
+"
+
 usage() {
     echo "Usage: $NAME [OPTION]... [FEATURE]...
 Sets up an appropriate environment and tests FEATUREs (all by default). Note
@@ -13,7 +52,7 @@ that this script must be run from the Tails source directory root.
 
 Options for '@product' features:
   --capture FILE     Captures the test session into FILE using VP8 encoding.
-                     Requires libav-tools and libvpx1.
+                     Requires libvpx1.
   --debug            Display various debugging information while running the
                      test suite.
   --pause-on-fail    On failure, pause test suite until pressing Enter. This is
@@ -50,15 +89,24 @@ error() {
 }
 
 package_installed() {
-   set +o pipefail
-   dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"
-   set -o pipefail
+    local ret
+    set +o pipefail
+    if dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"; then
+        ret=0
+    else
+        ret=1
+    fi
+    set -o pipefail
+    return ${ret}
 }
 
-check_dependency() {
-    if ! which "${1}" >/dev/null && ! package_installed "${1}" ; then
-        error "'${1}' is missing, please install it and run again. Aborting..."
-    fi
+check_dependencies() {
+    while [ -n "${1:-}" ]; do
+        if ! which "${1}" >/dev/null && ! package_installed "${1}" ; then
+            error "'${1}' is missing, please install it and run again."
+        fi
+        shift
+    done
 }
 
 display_in_use() {
@@ -87,7 +135,7 @@ start_xvfb() {
 }
 
 start_vnc_server() {
-    check_dependency x11vnc
+    check_dependencies x11vnc
     VNC_SERVER_PORT="$(x11vnc -listen localhost -display ${TARGET_DISPLAY} \
                               -bg -nopw 2>&1 | \
                                   grep -m 1 "^PORT=[0-9]\+" | sed 's/^PORT=//')"
@@ -95,11 +143,12 @@ start_vnc_server() {
 }
 
 start_vnc_viewer() {
-    check_dependency xtightvncviewer
+    check_dependencies xtightvncviewer
     xtightvncviewer -viewonly localhost:${VNC_SERVER_PORT} 1>/dev/null 2>&1 &
 }
 
 capture_session() {
+    check_dependencies libvpx1
     echo "Capturing guest display into ${CAPTURE_FILE}"
     avconv -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
@@ -196,15 +245,7 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-for dep in git libvirt-daemon-system libvirt-clients libvirt-dev libav-tools libvpx1 \
-           virt-viewer libsikuli-script-java ovmf tcpdump xvfb; do
-    check_dependency "${dep}"
-done
-
-package_installed libavcodec-extra-53 \
-    || package_installed libav-tools \
-    || error "Both libavcodec-extra-53 and libav-tools, are missing, " \
-	     "please install one of those and run again. Aborting..."
+check_dependencies ${GENERAL_DEPENDENCIES}
 
 TARGET_DISPLAY=$(next_free_display)
 
@@ -223,7 +264,6 @@ fi
 export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
-check_dependency cucumber
 
 if [ -z "$*" ]; then
     FEATURES="features"

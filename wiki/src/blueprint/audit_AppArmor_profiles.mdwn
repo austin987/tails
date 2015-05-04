@@ -1,0 +1,123 @@
+Corresponding ticket: [[!tails_ticket 8007]]
+
+[[!toc levels=2]]
+
+Things to check
+===============
+
+* the kludges needed to make them work with aufs
+* access to files via alternate paths specific to Debian Live systems,
+  e.g.
+  - check `private-files` and `private-files-strict` abstractions, in
+    particular wrt. whatever can be accessed via the following paths
+  - `/live/persistence/TailsData_unlocked/`
+  - `/lib/live/mount/rootfs/`
+  - `/lib/live/mount/overlay/`
+    * we add `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at
+      least `$HOME` is OK
+* access to webcam
+* access to microphone (can we easily block that while still allowing
+  sound output?)
+* wide-open access to `$HOME` -- everything checked, potential issues
+   and remaining todo items follow:
+  - `abstractions/ubuntu-browsers.d/{java,user-files}` give read-write
+    access to `$HOME` and its content: where are they used?
+* wide-open access to `$HOME` except blacklist -- everything checked,
+  potential issues and remaining todo items follow:
+  - Evince, Totem and their previewers have read-write access to
+    `@{HOME}/**`: perhaps we can make it a bit tighter, e.g.
+    using a regexp that doesn't include dotfiles (see `user-write`),
+    and read-only everywhere except for specific directories? Or is
+    the blacklist used by these profiles tight enough?
+  - What else uses `private-files` and
+    `private-files-strict` abstractions?
+  - Shall we add stuff to these blacklist?
+* wide-open access to `/lib/**` or similar, that might grant access to
+  persistent files -- everything checked, potential issues and
+  remaining todo items follow:
+  - the `base` abstraction has things like `/lib{,32,64}/** r`
+  - the `launchpad-integration` abstraction has
+    `/{,usr/}lib*/{,**/}*.so{,.*} m`
+  - the `ubuntu-helpers` abstraction has
+    `/{,usr/,usr/local/}lib{,32,64}/{,**/}*.so{,.*} m`
+* jvoisin's profile hardening
+  - Pidgin
+    * drop `bash` abstraction: has been here since the first version
+      of the profile; that abstraction is not too scary, but... what
+      is it useful for?
+    * disable video and audio visualization capabilities: if it
+      doesn't break e.g. accessibility or sound notifications, why not
+  - `/usr/bin/evince`
+    * drop `bash` abstraction: same as Pidgin
+    * drop `audio` and `ubuntu-media-players` abstraction:  note that
+      PDF can embed videos; do we care?
+    * drop `ubuntu-console-browsers`, `ubuntu-console-email` and
+      `ubuntu-gnome-terminal` abstractions: I doubt it's useful to
+      anyone in Tails, indeed
+    * disallow `/usr/bin/yelp`: if it breaks displaying Evince help,
+      we don't want that
+    * disallow `/usr/bin/bug-buddy`: Ubuntu-specific, we don't care
+    * disallow `/usr/bin/exo-open` and a bunch of file managers that
+      are not shipped in Tails:  not worth maintaining a delta
+    * disallow `/usr/bin/gedit`: a comment in the profile says it's
+      useful "for text attachments", and given it's inheriting the
+      current profile it's not scary enough to be worth potentially
+      breaking things
+  - `/usr/bin/evince-previewer`
+    * same changes as in `/usr/bin/evince` profile, same comments
+    * drop `ubuntu-browsers` abstraction: it doesn't cover Tor Browser
+      anyway, so why not
+    * drop `ubuntu-email` abstraction: do we care about Evince
+      previewer being able to start Claws Mail? What is it useful for?
+    * disallow networking access: the Debian kernel doesn't support
+      such rules anyway, so that would be a no-op
+* `config/chroot_local-includes/usr/share/tails/torbrowser-AppArmor-profile.patch`
+
+Things to keep in mind
+======================
+
+* Beware not to break assistive technologies (accessibility).
+
+Checked already
+===============
+
+* Ux rules don't sanitize `$PATH`
+  (<https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1045986>) =>
+  they must only be used to run software that does *not* rely on
+  `$PATH` for executing other stuff; in particular, many shell scripts
+  do rely on `$PATH`; this should be checked particularly for the
+  profiles we ship that don't come from AppArmor upstream, most
+  notably:
+  - the Tor Browser one: **OK**, the only `Ux` rule it has is about an
+    ELF executable
+  - Pidgin profile: was vulnerable via `/usr/local/bin/tor-browser`,
+    fixed in `bugfix/8007-AppArmor-hardening`
+  - `abstractions/tor`: only `Ux` rules are about ELF executables
+  - no other relevant `Ux` rule are present in the profiles we ship
+* use of `sanitized_helper` [isn't very
+  safe](http://blog.azimuthsecurity.com/2012/09/poking-holes-in-apparmor-profiles.html),
+  especially given it [doesn't transition properly with
+  Pix](https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1042771)
+  => we don't add occurrences thereof in our own profiles
+* Tails-specific modifications to profiles:
+  - `config/chroot_local-patches/apparmor-adjust-pidgin-profile.diff`
+  - `config/chroot_local-patches/apparmor-adjust-tor-abstraction.diff`
+  - `config/chroot_local-patches/apparmor-adjust-tor-profile.diff`
+  - `config/chroot_local-patches/apparmor-adjust-totem-profile.diff`
+  - `config/chroot_local-patches/apparmor-adjust-user-tmp-abstraction.diff`
+* wide-open access to `$HOME`:
+  - `bash` abstraction (included by many profiles) gives read access
+    to `$HOME` via `@{HOMEDIRS}`, but merely listing its content
+    shouldn't be a problem in practice in Tails: users tend to store
+    their documents on the Desktop, or in persistence. Worst case
+    we'll leak filenames.
+  - no profile we ship includes the `gnupg` abstraction
+  - no profile we ship includes the `user-mail` abstraction, that
+    gives read-write access to mail folders
+  - no profile we ship includes the `user-write` abstraction, that
+    gives read-write access to large parts of `$HOME`
+  - the `user-download` abstraction, that's included in the Pidgin
+    profile, gives read-write access non-hidden files at the root of
+    the `$HOME`, Desktop and download directories; combined with the
+    `private-files-strict` abstraction, it is probably as tight as we
+    can do without substantially harming UX
