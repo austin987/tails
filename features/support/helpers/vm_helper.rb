@@ -225,6 +225,10 @@ class VM
     return "/dev/" + xml.elements['disk/target'].attribute('dev').to_s
   end
 
+  def udisks_disk_dev(name)
+    return disk_dev(name).gsub('/dev/', '/org/freedesktop/UDisks/devices/')
+  end
+
   def disk_detected?(name)
     return execute("test -b #{disk_dev(name)}").success?
   end
