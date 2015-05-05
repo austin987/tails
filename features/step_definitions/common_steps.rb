@@ -278,7 +278,7 @@ Given /^Tails Greeter has dealt with the sudo password$/ do
   }
 end
 
-Given /^GNOME has started$/ do
+Given /^the Tails desktop is ready$/ do
   next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
@@ -291,7 +291,7 @@ end
 
 Then /^Tails seems to have booted normally$/ do
   next if @skip_steps_while_restoring_background
-  step "GNOME has started"
+  step "the Tails desktop is ready"
 end
 
 When /^I see the 'Tor is ready' notification$/ do

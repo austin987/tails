@@ -48,7 +48,7 @@ Feature: Time syncing
     And I enable more Tails Greeter options
     And I enable the specific Tor configuration option
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And I save the state so the background can be restored next scenario
 
   Scenario: Clock with host's time in bridge mode
