@@ -1,0 +1,202 @@
+[[!meta title="Claws Mail leaks plaintext of encrypted emails to IMAP server"]]
+
+We discovered that *Claws Mail*, the email client in Tails, stores
+plaintext copies of all emails that are meant to be encrypted on the
+remote IMAP server.
+
+  - When sending an email, *Claws Mail* copies the email in plaintext to
+    the sending queue of the IMAP server before encrypting the email.
+    *Claws Mail* deletes this plaintext copy after sending the email.
+  - If an email is saved as draft, *Claws Mail* saves the email in
+    plaintext on the server. By default in Tails, drafts are not stored
+    automatically on the server.
+
+**All users of *Claws Mail* using IMAP and its OpenPGP plug-in are affected.**
+
+Users of *Claws Mail* using POP are not affected.
+
+<div class="tip">
+
+To know if you are using IMAP or POP, choose <span class="menuchoice">
+<span class="guimenu">Configuration</span>&nbsp;▸
+<span class="guimenuitem">Edit accounts&hellip;</span></span> and refer
+to the <span class="guilabel">Protocol</span> column in the list of
+accounts.
+
+</div>
+
+Unfortunately, we were not yet able to fix the problem automatically and
+everybody. This would likely require to either modify *Claws Mail* or to
+migrate to a different application. Refer to the workarounds section to
+solve this problem in your setup and please warn others around you.
+
+[[!toc]]
+
+Technical details
+=================
+
+Leak through the sending queue
+--------------------------
+
+When sending an email through IMAP, *Claws Mail* does the following:
+
+  1. It connects to the IMAP server and stores a plaintext copy of the
+  email in the **Queue** folder on the server.
+
+  1. It encrypts the email locally.
+
+  1. It sends the encrypted email through the SMTP server.
+
+  1. It connects to the IMAP server and stores an encrypted copy of the
+  email in the **Sent** folder on the server.
+
+  1. It connects to the IMAP server and deletes the plaintext email
+  saved in step 1 from the **Queue** folder.
+
+Leak of drafts
+--------------
+
+When saving a draft, either manually, either by the autosaving feature,
+the draft is saved in plaintext on the IMAP server. The autosaving
+feature is disabled by default in Tails.
+
+Workarounds
+===========
+
+Delete drafts
+-------------
+
+Make sure that no drafts are saved on the server, either through *Claws
+Mail* directly or, better, through the web interface of your email
+provider.
+
+Use POP instead of IMAP
+-----------------------
+
+*Claws Mail* can connect to the email server using either the IMAP or POP
+protocol.
+
+  - With IMAP, *Claws Mail* constantly synchronizes with the server and
+    displays the emails and folders that are currently stored on the
+    server. IMAP is better suited if you access your emails from
+    different operating systems.
+  - With POP, *Claws Mail* downloads the emails that are in the inbox
+    on the server and possibly removes them from the server. POP is
+    better suited if you access emails from Tails only and store them in
+    the persistent volume.
+
+To know more, see also this Yahoo! Help page on [comparing the
+differences between POP and
+IMAP](https://help.yahoo.com/kb/mail-for-desktop/compare-differences-pop-imap-sln3769.html).
+
+POP is not affected at all by this security problem. When using POP,
+only encrypted emails are sent to the server. So consider switching to
+POP if you have an email account dedicated to your activities on Tails.
+To do so:
+
+1. Choose **File**&nbsp;▸ **Add mailbox**&nbsp;▸ **MH&hellip;** to
+create a local mailbox where to download your emails.
+
+1. To store the mailbox in the persistent volume, specify
+`~/.claws-mail/Mail` as location.
+
+1. Choose **Configuration**&nbsp;▸ **Edit accounts&hellip;**, select
+your IMAP account in the list of accounts, and click **Delete** to
+delete it. Doing so does not delete any email stored on the server.
+
+1. Click **New** and configure this new account as specified by your
+email provider.
+
+   - In the **Basic** tab, make sure that the **Protocol** option is set
+     to **POP3**.
+   - In the **Receive** tab, click on the **Browse** button of the
+     **Default Inbox** option and select the **Inbox** folder of the
+     mailbox that you created in step 2.
+   - If you want to keep a copy of the received emails on the server,
+     verify the preferences in the **Receive** tab. We recommend you to
+     disable the **Remove messages on server when received** option
+     until you make sure that the emails are stored in the persistent
+     volume.
+
+1. Close the preferences dialog and the list of accounts to go back to
+the main window of *Claws Mail*.
+
+1. Click on the **Get Mail** button to download all emails from the
+inbox on the server. Emails in other folders are not downloaded.
+
+Use the OpenPGP Applet
+----------------------
+
+If you want to continue using IMAP, you can write your emails in the
+*gEdit* text editor and encrypt them using *Tails OpenPGP Applet* as
+explained in our documentation on [[OpenPGP public-key
+cryptography|doc/encryption_and_privacy/gpgapplet/public-key_cryptography]].
+
+### Disable autosaving of drafts
+
+1. Choose **Configuration**&nbsp;▸ **Preferences&hellip;**.
+
+1. Select **Writing** in the left pane.
+
+1. Make sure that the **Automatically save messages to Draft folder**
+option is deselected. Click **OK**.
+
+### When writing a new email
+
+1. Write your email in *gEdit*.
+
+1. Encrypt your email using *Tails OpenPGP Applet*.
+
+1. Paste the encrypted version of your email in *Claws Mail*.
+
+### When replying to an email
+
+1. *Claws Mail* decrypts your email automatically.
+
+1. Copy and paste the decrypted version of your email in *gEdit*.
+
+1. Write your reply in *gEdit*.
+
+1. Encrypt your reply using *Tails OpenPGP Applet*.
+
+1. Paste the encrypted version of your email in *Claws Mail*.
+
+Use local **Drafts** and **Queue** folders
+------------------------------------------
+
+Instead of using *Tails OpenPGP Applet*, you can configure your IMAP
+account to use **Drafts** and **Queue** folders stored in Tails instead
+of on the server. To do so:
+
+1. Choose **Add mailbox**&nbsp;▸ **MH&hellip;** to create a local
+mailbox where to save your drafts and queued emails.
+
+1. To store the mailbox in the persistent volume, specify
+`~/.claws-mail/Mail` as location.
+
+1. Choose **Configuration**&nbsp;▸ **Edit accounts&hellip;**, select
+your IMAP account in the list of accounts, and click **Edit** to edit
+its preferences.
+
+1. Select **Advanced** in the left pane.
+
+1. Select the **Put queued messages in** option, click **Browse**, and
+select the **Queue** folder of the **MH** mailbox.
+
+1. Select the **Put draft messages in** option, click **Browse**, and
+select the **Drafts** folder of the **MH** mailbox.
+
+Long term solution
+==================
+
+As for the possible long term solutions to this problem, we are
+considering:
+
+- Getting the development team of *Claws Mail* to fix the problem upstream
+  and release a security update for Debian. We contacted them about this
+  problem already but don't hesitate to get involved in the technical
+  solution or to ask them for further information.
+
+- Replacing *Claws Mail* with Icedove (the name of Mozilla Thunderbird in
+  Debian). We have been willing to do so for years and this problem
+  might motivate us to move faster.
