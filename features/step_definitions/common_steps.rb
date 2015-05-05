@@ -771,6 +771,15 @@ Given /^the USB drive "([^"]+)" contains Tails with persistence configured and p
     step "I shutdown Tails and wait for the computer to power off"
 end
 
+def gnome_app_menu_click_helper(click_me, verify_me = nil)
+  try_for(60) do
+    @screen.hide_cursor
+    @screen.wait_and_click(click_me, 10)
+    @screen.wait(verify_me, 10) if verify_me
+    return
+  end
+end
+
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
   next if @skip_steps_while_restoring_background
   case @theme
@@ -779,13 +788,12 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, s
   else
     prefix = 'Gnome'
   end
-  @screen.wait_and_click(prefix + "ApplicationsMenu.png", 10)
-  @screen.hide_cursor
-  # Wait for the menu to be displayed, by waiting for one of its last entries
-  @screen.wait(prefix + "ApplicationsTails.png", 40)
-  @screen.wait_and_hover(prefix + "Applications" + submenu + ".png", 40)
-  @screen.hide_cursor
-  @screen.wait_and_click(prefix + "Applications" + app + ".png", 40)
+  menu_button = prefix + "ApplicationsMenu.png"
+  sub_menu_entry = prefix + "Applications" + submenu + ".png"
+  application_entry = prefix + "Applications" + app + ".png"
+  gnome_app_menu_click_helper(menu_button, sub_menu_entry)
+  gnome_app_menu_click_helper(sub_menu_entry, application_entry)
+  gnome_app_menu_click_helper(application_entry)
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
@@ -796,15 +804,14 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/
   else
     prefix = 'Gnome'
   end
-  @screen.wait_and_click(prefix + "ApplicationsMenu.png", 10)
-  @screen.hide_cursor
-  # Wait for the menu to be displayed, by waiting for one of its last entries
-  @screen.wait(prefix + "ApplicationsTails.png", 40)
-  @screen.wait_and_hover(prefix + "Applications" + submenu + ".png", 20)
-  @screen.hide_cursor
-  @screen.wait_and_hover(prefix + "Applications" + subsubmenu + ".png", 20)
-  @screen.hide_cursor
-  @screen.wait_and_click(prefix + "Applications" + app + ".png", 20)
+  menu_button = prefix + "ApplicationsMenu.png"
+  sub_menu_entry = prefix + "Applications" + submenu + ".png"
+  sub_sub_menu_entry = prefix + "Applications" + subsubmenu + ".png"
+  application_entry = prefix + "Applications" + app + ".png"
+  gnome_app_menu_click_helper(menu_button, sub_menu_entry)
+  gnome_app_menu_click_helper(sub_menu_entry, sub_sub_menu_entry)
+  gnome_app_menu_click_helper(sub_sub_menu_entry, application_entry)
+  gnome_app_menu_click_helper(application_entry)
 end
 
 When /^I type "([^"]+)"$/ do |string|
