@@ -123,11 +123,13 @@ When /^I start Tails Installer in "([^"]+)" mode(?: with the )?(verbose)?(?: fla
   end
 end
 
-Then /^Tails Installer detects that the device is too small$/ do
+Then /^Tails Installer detects that the device "([^"]+)" is too small$/ do |name|
   next if @skip_steps_while_restoring_background
   assert(@vm.file_exist?('/tmp/tails-installer.log'), "Cannot find logfile containing output from Tails Installer")
+  device = @vm.udisks_disk_dev(name)
   try_for(15, :msg => "Tails Installer did not reject the USB device as being too small")  {
-    @vm.file_content('/tmp/tails-installer.log').include?('Skipping too small device')
+    log = @vm.file_content('/tmp/tails-installer.log')
+    Regexp.new("Skipping too small device: #{device}$").match(log)
   }
 end
 

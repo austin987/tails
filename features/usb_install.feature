@@ -12,7 +12,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I start Tails Installer in "Clone & Install" mode with the verbose flag
     But a suitable USB device is not found
     When I plug USB drive "current"
-    Then Tails Installer detects that the device is too small
+    Then Tails Installer detects that the device "current" is too small
     And a suitable USB device is not found
 
   @keep_volumes
