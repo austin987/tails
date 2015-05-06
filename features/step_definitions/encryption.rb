@@ -51,8 +51,8 @@ def maybe_deal_with_pinentry
 end
 
 def gedit_copy_all_text
-  @screen.type("a", Sikuli::KeyModifier.CTRL)
-  @screen.type("c", Sikuli::KeyModifier.CTRL)
+  context_menu_helper('GeditWindow.png', 'GeditStatusBar.png', 'GeditSelectAll.png')
+  context_menu_helper('GeditWindow.png', 'GeditStatusBar.png', 'GeditCopy.png')
 end
 
 def paste_into_a_new_tab
