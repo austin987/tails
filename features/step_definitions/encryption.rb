@@ -109,8 +109,11 @@ end
 When /^I both encrypt and sign the message using my OpenPGP key$/ do
   next if @skip_steps_while_restoring_background
   encrypt_sign_helper do
-    @screen.type(@key_name + Sikuli::Key.ENTER)
+    @screen.wait_and_click('GpgAppletEncryptionKey.png', 20)
+    @screen.type(Sikuli::Key.SPACE)
+    @screen.wait('GpgAppletKeySelected.png', 10)
     @screen.type(Sikuli::Key.TAB + Sikuli::Key.DOWN + Sikuli::Key.ENTER)
+    @screen.type(Sikuli::Key.ENTER)
   end
 end
 
