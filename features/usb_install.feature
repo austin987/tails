@@ -17,6 +17,17 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I unplug USB drive "current"
 
   @keep_volumes
+  Scenario: Test that Tails installer can detect when a target USB drive is inserted or removed
+    Given a computer
+    And I start Tails from DVD with network unplugged and I login
+    And I start Tails Installer in "Clone & Install" mode
+    When I plug USB drive "current"
+    Then the "current" USB drive is selected
+    When I unplug USB drive "current"
+    Then no USB drive is selected
+    And a suitable USB device is not found
+
+  @keep_volumes
   Scenario: Booting Tails from a USB drive in UEFI mode
     Given a computer
     And the computer is set to boot in UEFI mode
