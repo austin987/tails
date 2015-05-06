@@ -56,8 +56,8 @@ def gedit_copy_all_text
 end
 
 def paste_into_a_new_tab
-  @screen.type("t", Sikuli::KeyModifier.CTRL)
-  @screen.type("v", Sikuli::KeyModifier.CTRL)
+  @screen.wait_and_click("GeditNewTab.png", 20)
+  context_menu_helper('GeditWindow.png', 'GeditStatusBar.png', 'GeditPaste.png')
 end
 
 def encrypt_sign_helper
