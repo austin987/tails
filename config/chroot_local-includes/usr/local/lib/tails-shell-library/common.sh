@@ -43,6 +43,9 @@ set_simple_config_key() {
     local value="${3}"
     local op="${4:-=}"
     if grep -q "^${key}${op}" "${file}"; then
+        # Escape / in input so it can be used as the sed separator
+        key="$(echo "${key}" | sed 's,/,\\/,g')"
+        value="$(echo "${value}" | sed 's,/,\\/,g')"
         sed -i "s/^${key}${op}.*$/${key}${op}${value}/" "${file}"
     else
         echo "${key}${op}${value}" >> "${file}"
