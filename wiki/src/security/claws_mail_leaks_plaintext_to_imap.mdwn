@@ -33,34 +33,6 @@ solve this problem in your setup and please warn others around you.
 
 [[!toc levels=2]]
 
-Technical details
-=================
-
-Leak through the sending queue
---------------------------
-
-When sending an email through IMAP, *Claws Mail* does the following:
-
-  1. It connects to the IMAP server and stores a plaintext copy of the
-  email in the **Queue** folder on the server.
-
-  1. It encrypts the email locally.
-
-  1. It sends the encrypted email through the SMTP server.
-
-  1. It connects to the IMAP server and stores an encrypted copy of the
-  email in the **Sent** folder on the server.
-
-  1. It connects to the IMAP server and deletes the plaintext email
-  saved in step 1 from the **Queue** folder.
-
-Leak of drafts
---------------
-
-When saving a draft, either manually, either by the autosaving feature,
-the draft is saved in plaintext on the IMAP server. The autosaving
-feature is disabled by default in Tails.
-
 Workarounds
 ===========
 
@@ -210,3 +182,31 @@ considering:
 - Replacing *Claws Mail* with *Icedove* (the name of *Mozilla Thunderbird* in
   Debian). We have been willing to do so for years and this problem
   motivates us to move faster.
+
+Technical details
+=================
+
+Leak through the sending queue
+------------------------------
+
+When sending an email through IMAP, *Claws Mail* does the following:
+
+  1. It connects to the IMAP server and stores a plaintext copy of the
+  email in the **Queue** folder on the server.
+
+  1. It encrypts the email locally.
+
+  1. It sends the encrypted email through the SMTP server.
+
+  1. It connects to the IMAP server and stores an encrypted copy of the
+  email in the **Sent** folder on the server.
+
+  1. It connects to the IMAP server and deletes the plaintext email
+  saved in step 1 from the **Queue** folder.
+
+Leak of drafts
+--------------
+
+When saving a draft, either manually, either by the autosaving feature,
+the draft is saved in plaintext on the IMAP server. The autosaving
+feature is disabled by default in Tails.
