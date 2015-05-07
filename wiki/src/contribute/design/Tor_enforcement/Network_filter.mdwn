@@ -86,3 +86,11 @@ Tor does not support IPv6 yet so IPv6 communication is blocked.
 Tor only supports TCP. Non-TCP traffic to the Internet, such as UDP
 datagrams and ICMP packets, is dropped unless it's going through I2P,
 which supports UDP.
+
+An unfortunate consequence of fully blocking ICMP is that [[!wikipedia
+Path MTU Discovery]] is broken. We workaround this problem by enabling
+[[!rfc 4821 desc="Packetization Layer Path MTU Discovery"]].
+For details, see:
+
+* [[!tails_gitweb_commit 1d1c83d]]
+* [[!tails_gitweb config/chroot_local-includes/etc/sysctl.d/pmtud.conf]]
