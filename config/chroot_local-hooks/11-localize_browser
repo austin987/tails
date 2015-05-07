@@ -117,6 +117,28 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
     fi
     set_simple_config_key "${TARGET_BRANDING_FILE}" \
                           "browser.startup.homepage" "${HOMEPAGE}"
+
+    # We also want the localized search plugins from Debian's
+    # Iceweasel packages. Note that en-US doesn't have one; the
+    # en-US search plugins are in the iceweasel package, but it
+    # would only add search engines that we have decided to
+    # exclude so let's skip it.
+    if [ "${MOZILLA_LOCALE}" != en-US ]; then
+        PKG="iceweasel-l10n-$(echo "${MOZILLA_LOCALE}" | tr 'A-Z' 'a-z')"
+        DEB_PATH_TO_SEARCHPLUGINS="etc/iceweasel/searchplugins/locale/${MOZILLA_LOCALE}"
+        TMP="$(mktemp -d)"
+        cd "${TMP}"
+        apt-get download "${PKG}"
+        ar x "${PKG}"*.deb
+        tar xf data.tar.* ./"${DEB_PATH_TO_SEARCHPLUGINS}"
+        rm -f "${DEB_PATH_TO_SEARCHPLUGINS}"/amazon*.xml \
+              "${DEB_PATH_TO_SEARCHPLUGINS}"/bing*.xml \
+              "${DEB_PATH_TO_SEARCHPLUGINS}"/eBay*.xml \
+              "${DEB_PATH_TO_SEARCHPLUGINS}"/yahoo*.xml
+        cp "${DEB_PATH_TO_SEARCHPLUGINS}"/* "${TARGET_SEARCHPLUGINS_DIR}"
+        cd /
+        rm -r "${TMP}"
+    fi
 done < "${DESCRIPTIONS_FILE}"
 
 # This directory is not needed after build time.
