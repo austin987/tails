@@ -171,10 +171,16 @@ BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
 BUILD_START_FILENAME="${BUILD_DEST_FILENAME}.start.timestamp"
 BUILD_END_FILENAME="${BUILD_DEST_FILENAME}.end.timestamp"
 
+# Clone all output, from this point on, to the log file
+exec >  >(tee -a "$BUILD_LOG")
+trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
+exec 2> >(tee -a "$BUILD_LOG" >&2)
+trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
+
 echo "Building $LB_BINARY_IMAGES image ${BUILD_BASENAME}..."
 set -o pipefail
 [ -z "$JENKINS_URL" ] || date --utc '+%s' > "$BUILD_START_FILENAME"
-time eatmydata lb build noauto ${@} 2>&1 | tee "${BUILD_LOG}"
+time eatmydata lb build noauto ${@}
 RET=$?
 if [ -e "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" ]; then
    if [ "$RET" -eq 0 ]; then
