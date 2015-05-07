@@ -1,15 +1,19 @@
+[[!meta date="Thu May 7 12:34:56 2015"]]
 [[!meta title="Claws Mail leaks plaintext of encrypted emails to IMAP server"]]
 
 We discovered that *Claws Mail*, the email client in Tails, stores
-plaintext copies of all emails that are meant to be encrypted on the
-remote IMAP server.
+plaintext copies of all emails on the remote IMAP server, including
+those that are meant to be encrypted.
 
   - When sending an email, *Claws Mail* copies the email in plaintext to
     the sending queue of the IMAP server before encrypting the email.
     *Claws Mail* deletes this plaintext copy after sending the email.
-  - If an email is saved as draft, *Claws Mail* saves the email in
-    plaintext on the server. By default in Tails, drafts are not stored
-    automatically on the server.
+  - *Claws Mail* drafts in plaintext on the server. An email can be
+    saved as draft either:
+    - Manually by clicking on the **Draft** button when composing an email.
+    - Automatically if you selected the **automatically save message to
+      Draft folder** option in the writing preferences. This option is
+      deselected by default in Tails.
 
 **All users of *Claws Mail* using IMAP and its OpenPGP plug-in are affected.**
 
@@ -26,49 +30,24 @@ accounts.
 </div>
 
 Unfortunately, we were not yet able to fix the problem automatically and
-everybody. This would likely require to either modify *Claws Mail* or to
+for everybody. This would require to either modify *Claws Mail* or to
 migrate to a different application. Refer to the workarounds section to
 solve this problem in your setup and please warn others around you.
 
 [[!toc levels=2]]
 
-Technical details
-=================
-
-Leak through the sending queue
---------------------------
-
-When sending an email through IMAP, *Claws Mail* does the following:
-
-  1. It connects to the IMAP server and stores a plaintext copy of the
-  email in the **Queue** folder on the server.
-
-  1. It encrypts the email locally.
-
-  1. It sends the encrypted email through the SMTP server.
-
-  1. It connects to the IMAP server and stores an encrypted copy of the
-  email in the **Sent** folder on the server.
-
-  1. It connects to the IMAP server and deletes the plaintext email
-  saved in step 1 from the **Queue** folder.
-
-Leak of drafts
---------------
-
-When saving a draft, either manually, either by the autosaving feature,
-the draft is saved in plaintext on the IMAP server. The autosaving
-feature is disabled by default in Tails.
-
 Workarounds
 ===========
 
-Delete drafts
--------------
+Verify the content of your **Drafts** folder
+--------------------------------------------
 
-Make sure that no drafts are saved on the server, either through *Claws
-Mail* directly or, better, through the web interface of your email
-provider.
+First of all, verify the content of the **Drafts** folder on the server,
+either through *Claws Mail* or through the web
+interface of your email provider. Delete any plaintext email that might
+have been stored against your will in this folder until now.
+
+Then apply one of the other two workarounds to prevent more leaks in the future.
 
 Use POP instead of IMAP
 -----------------------
@@ -129,47 +108,10 @@ the main window of *Claws Mail*.
 1. Click on the **Get Mail** button to download all emails from the
 inbox on the server. Emails in other folders are not downloaded.
 
-Use the OpenPGP Applet
-----------------------
-
-If you want to continue using IMAP, you can write your emails in the
-*gEdit* text editor and encrypt them using *Tails OpenPGP Applet* as
-explained in our documentation on [[OpenPGP public-key
-cryptography|doc/encryption_and_privacy/gpgapplet/public-key_cryptography]].
-
-### Disable autosaving of drafts
-
-1. Choose **Configuration**&nbsp;▸ **Preferences&hellip;**.
-
-1. Select **Writing** in the left pane.
-
-1. Make sure that the **Automatically save messages to Draft folder**
-option is deselected. Click **OK**.
-
-### When writing a new email
-
-1. Write your email in *gEdit*.
-
-1. Encrypt your email using *Tails OpenPGP Applet*.
-
-1. Paste the encrypted version of your email in *Claws Mail*.
-
-### When replying to an email
-
-1. *Claws Mail* decrypts your email automatically.
-
-1. Copy and paste the decrypted version of your email in *gEdit*.
-
-1. Write your reply in *gEdit*.
-
-1. Encrypt your reply using *Tails OpenPGP Applet*.
-
-1. Paste the encrypted version of your email in *Claws Mail*.
-
 Use local **Drafts** and **Queue** folders
 ------------------------------------------
 
-Instead of using *Tails OpenPGP Applet*, you can configure your IMAP
+If you want to continue using IMAP, you should configure your IMAP
 account to use **Drafts** and **Queue** folders stored in Tails instead
 of on the server. To do so:
 
@@ -201,11 +143,32 @@ Long term solution
 As for the possible long term solutions to this problem, we are
 considering:
 
-- Getting the development team of *Claws Mail* to [fix the problem upstream](http://www.thewildbeast.co.uk/claws-mail/bugzilla/show_bug.cgi?id=2965)
-  and release a security update for Debian. We contacted them about this
-  problem already but please help them provide a technical
+- Getting the development team of *Claws Mail* to [fix the problem upstream](http://www.thewildbeast.co.uk/claws-mail/bugzilla/show_bug.cgi?id=2965).
+  We contacted them about this
+  problem already. Please help them provide a technical
   solution if you can.
 
 - Replacing *Claws Mail* with *Icedove* (the name of *Mozilla Thunderbird* in
   Debian). We have been willing to do so for years and this problem
   motivates us to move faster.
+
+Technical details
+=================
+
+Leak through the sending queue
+------------------------------
+
+When sending an email from an IMAP account, *Claws Mail* does the following:
+
+  1. It connects to the IMAP server and stores a plaintext copy of the
+  email in the **Queue** folder on the server.
+
+  1. It encrypts the email locally.
+
+  1. It sends the encrypted email through the SMTP server.
+
+  1. It connects to the IMAP server and stores an encrypted copy of the
+  email in the **Sent** folder on the server.
+
+  1. It connects to the IMAP server and deletes the plaintext email
+  saved in step 1 from the **Queue** folder.
