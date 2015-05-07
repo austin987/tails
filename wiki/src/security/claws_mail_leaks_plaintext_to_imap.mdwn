@@ -2,8 +2,8 @@
 [[!meta title="Claws Mail leaks plaintext of encrypted emails to IMAP server"]]
 
 We discovered that *Claws Mail*, the email client in Tails, stores
-plaintext copies of all emails that are meant to be encrypted on the
-remote IMAP server.
+plaintext copies of all emails on the remote IMAP server, including
+those that are meant to be encrypted.
 
   - When sending an email, *Claws Mail* copies the email in plaintext to
     the sending queue of the IMAP server before encrypting the email.
@@ -30,7 +30,7 @@ accounts.
 </div>
 
 Unfortunately, we were not yet able to fix the problem automatically and
-everybody. This would likely require to either modify *Claws Mail* or to
+for everybody. This would require to either modify *Claws Mail* or to
 migrate to a different application. Refer to the workarounds section to
 solve this problem in your setup and please warn others around you.
 
@@ -43,7 +43,7 @@ Verify the content of your **Drafts** folder
 --------------------------------------------
 
 First of all, verify the content of the **Drafts** folder on the server,
-either through *Claws Mail* directly or, better, through the web
+either through *Claws Mail* or through the web
 interface of your email provider. Delete any plaintext email that might
 have been stored against your will in this folder until now.
 
@@ -143,9 +143,9 @@ Long term solution
 As for the possible long term solutions to this problem, we are
 considering:
 
-- Getting the development team of *Claws Mail* to [fix the problem upstream](http://www.thewildbeast.co.uk/claws-mail/bugzilla/show_bug.cgi?id=2965)
-  and release a security update for Debian. We contacted them about this
-  problem already but please help them provide a technical
+- Getting the development team of *Claws Mail* to [fix the problem upstream](http://www.thewildbeast.co.uk/claws-mail/bugzilla/show_bug.cgi?id=2965).
+  We contacted them about this
+  problem already. Please help them provide a technical
   solution if you can.
 
 - Replacing *Claws Mail* with *Icedove* (the name of *Mozilla Thunderbird* in
@@ -158,7 +158,7 @@ Technical details
 Leak through the sending queue
 ------------------------------
 
-When sending an email through IMAP, *Claws Mail* does the following:
+When sending an email from an IMAP account, *Claws Mail* does the following:
 
   1. It connects to the IMAP server and stores a plaintext copy of the
   email in the **Queue** folder on the server.
