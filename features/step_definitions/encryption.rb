@@ -15,9 +15,9 @@ Given /^I generate an OpenPGP key named "([^"]+)" with password "([^"]+)"$/ do |
      %commit
 EOF
   gpg_key_recipie.split("\n").each do |line|
-    @vm.execute("echo '#{line}' >> /tmp/gpg_key_recipie", $live_user)
+    @vm.execute("echo '#{line}' >> /tmp/gpg_key_recipie", LIVE_USER)
   end
-  c = @vm.execute("gpg --batch --gen-key < /tmp/gpg_key_recipie", $live_user)
+  c = @vm.execute("gpg --batch --gen-key < /tmp/gpg_key_recipie", LIVE_USER)
   assert(c.success?, "Failed to generate OpenPGP key:\n#{c.stderr}")
 end
 
@@ -40,31 +40,32 @@ def maybe_deal_with_pinentry
   end
 end
 
+def gedit_copy_all_text
+  @screen.click("GeditEdit.png")
+  @screen.wait_and_click("GeditSelectAll.png", 10)
+  @screen.click("GeditCopy.png")
+end
+
+def paste_into_a_new_tab
+  @screen.click("GeditNewDocument.png")
+  @screen.click("GeditPaste.png")
+end
+
 def encrypt_sign_helper
-  @screen.wait_and_click("GeditWindow.png", 10)
-  @screen.type("a", Sikuli::KeyModifier.CTRL)
-  sleep 0.5
+  gedit_copy_all_text
   @screen.click("GpgAppletIconNormal.png")
-  sleep 2
-  @screen.type("k")
+  @screen.wait_and_click("GpgAppletSignEncrypt.png", 10)
   @screen.wait_and_click("GpgAppletChooseKeyWindow.png", 30)
   sleep 0.5
   yield
   maybe_deal_with_pinentry
-  @screen.wait_and_click("GeditWindow.png", 10)
-  sleep 0.5
-  @screen.type("n", Sikuli::KeyModifier.CTRL)
-  sleep 0.5
-  @screen.type("v", Sikuli::KeyModifier.CTRL)
+  paste_into_a_new_tab
 end
 
 def decrypt_verify_helper(icon)
-  @screen.wait_and_click("GeditWindow.png", 10)
-  @screen.type("a", Sikuli::KeyModifier.CTRL)
-  sleep 0.5
+  gedit_copy_all_text
   @screen.click(icon)
-  sleep 2
-  @screen.type("d")
+  @screen.wait_and_click("GpgAppletDecryptVerify.png", 10)
   maybe_deal_with_pinentry
   @screen.wait("GpgAppletResults.png", 10)
   @screen.wait("GpgAppletResultsMsg.png", 10)
@@ -87,8 +88,6 @@ When /^I sign the message using my OpenPGP key$/ do
   next if @skip_steps_while_restoring_background
   encrypt_sign_helper do
     @screen.type(Sikuli::Key.TAB + Sikuli::Key.DOWN + Sikuli::Key.ENTER)
-    @screen.wait("PinEntryPrompt.png", 10)
-    @screen.type(@passphrase + Sikuli::Key.ENTER)
   end
 end
 
@@ -103,8 +102,6 @@ When /^I both encrypt and sign the message using my OpenPGP key$/ do
   encrypt_sign_helper do
     @screen.type(@key_name + Sikuli::Key.ENTER)
     @screen.type(Sikuli::Key.TAB + Sikuli::Key.DOWN + Sikuli::Key.ENTER)
-    @screen.wait("PinEntryPrompt.png", 10)
-    @screen.type(@passphrase + Sikuli::Key.ENTER)
   end
 end
 
@@ -118,20 +115,10 @@ end
 When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
   @passphrase = pwd
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("GeditWindow.png", 10)
-  @screen.type("a", Sikuli::KeyModifier.CTRL)
-  sleep 0.5
+  gedit_copy_all_text
   @screen.click("GpgAppletIconNormal.png")
-  sleep 2
-  @screen.type("p")
-  @screen.wait("PinEntryPrompt.png", 10)
-  @screen.type(@passphrase + Sikuli::Key.ENTER)
-  sleep 1
-  @screen.wait("PinEntryPrompt.png", 10)
-  @screen.type(@passphrase + Sikuli::Key.ENTER)
-  @screen.wait_and_click("GeditWindow.png", 10)
-  sleep 0.5
-  @screen.type("n", Sikuli::KeyModifier.CTRL)
-  sleep 0.5
-  @screen.type("v", Sikuli::KeyModifier.CTRL)
+  @screen.wait_and_click("GpgAppletEncryptPassphrase.png", 10)
+  maybe_deal_with_pinentry # enter password
+  maybe_deal_with_pinentry # confirm password
+  paste_into_a_new_tab
 end

@@ -60,7 +60,7 @@ end
 
 Given /^the computer is set to boot from the old Tails DVD$/ do
   next if @skip_steps_while_restoring_background
-  @vm.set_cdrom_boot($old_tails_iso)
+  @vm.set_cdrom_boot(OLD_TAILS_ISO)
 end
 
 Given /^the computer is set to boot in UEFI mode$/ do
@@ -100,19 +100,33 @@ end
 When /^I start Tails Installer$/ do
   next if @skip_steps_while_restoring_background
   step 'I start "TailsInstaller" via the GNOME "Tails" applications menu'
+  @screen.wait('USBCloneAndInstall.png', 30)
+end
+
+When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
+  next if @skip_steps_while_restoring_background
+  step 'I start Tails Installer'
+  case mode
+  when 'Clone & Install'
+    @screen.wait_and_click('USBCloneAndInstall.png', 10)
+  when 'Clone & Upgrade'
+    @screen.wait_and_click('USBCloneAndUpgrade.png', 10)
+  when 'Upgrade from ISO'
+    @screen.wait_and_click('USBUpgradeFromISO.png', 10)
+  else
+    raise "Unsupported mode '#{mode}'"
+  end
 end
 
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I start Tails Installer"
-  @screen.wait_and_click('USBCloneAndInstall.png', 30)
+  step 'I start Tails Installer in "Clone & Install" mode'
   usb_install_helper(name)
 end
 
 When /^I "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I start Tails Installer"
-  @screen.wait_and_click('USBCloneAndUpgrade.png', 30)
+  step 'I start Tails Installer in "Clone & Upgrade" mode'
   usb_install_helper(name)
 end
 
@@ -138,19 +152,18 @@ end
 
 Given /^I setup a filesystem share containing the Tails ISO$/ do
   next if @skip_steps_while_restoring_background
-  @vm.add_share(File.dirname($tails_iso), shared_iso_dir_on_guest)
+  @vm.add_share(File.dirname(TAILS_ISO), shared_iso_dir_on_guest)
 end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I start Tails Installer"
-  @screen.wait_and_click('USBUpgradeFromISO.png', 10)
+  step 'I start Tails Installer in "Upgrade from ISO" mode'
   @screen.wait('USBUseLiveSystemISO.png', 10)
   match = @screen.find('USBUseLiveSystemISO.png')
   @screen.click(match.getCenter.offset(0, match.h*2))
   @screen.wait('USBSelectISO.png', 10)
   @screen.wait_and_click('GnomeFileDiagTypeFilename.png', 10)
-  iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"
+  iso = "#{shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   @screen.type(iso + Sikuli::Key.ENTER)
   usb_install_helper(name)
 end
@@ -205,7 +218,7 @@ def tails_is_installed_helper(name, tails_root, loader)
 
   c = @vm.execute("diff -qr '#{tails_root}/live' '#{target_root}/live'")
   assert(c.success?,
-         "USB drive '#{name}' has differences in /live:\n#{c.stdout}")
+         "USB drive '#{name}' has differences in /live:\n#{c.stdout}\n#{c.stderr}")
 
   syslinux_files = @vm.execute("ls -1 #{target_root}/syslinux").stdout.chomp.split
   # We deal with these files separately
@@ -235,7 +248,7 @@ end
 
 Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
   next if @skip_steps_while_restoring_background
-  iso = "#{shared_iso_dir_on_guest}/#{File.basename($tails_iso)}"
+  iso = "#{shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   iso_root = "/mnt/iso"
   @vm.execute("mkdir -p #{iso_root}")
   @vm.execute("mount -o loop #{iso} #{iso_root}")
@@ -304,7 +317,7 @@ end
 def tails_persistence_enabled?
   persistence_state_file = "/var/lib/live/config/tails.persistence"
   return @vm.execute("test -e '#{persistence_state_file}'").success? &&
-         @vm.execute('. #{persistence_state_file} && ' +
+         @vm.execute(". '#{persistence_state_file}' && " +
                      'test "$TAILS_PERSISTENCE_ENABLED" = true').success?
 end
 
@@ -454,9 +467,9 @@ Then /^all persistent directories(| from the old Tails version) have safe access
       assert_vmcommand_success @vm.execute("test -d #{full_src}")
       dir_perms = @vm.execute_successfully("stat -c %a '#{full_src}'").stdout.chomp
       dir_owner = @vm.execute_successfully("stat -c %U '#{full_src}'").stdout.chomp
-      if dest.start_with?("/home/#{$live_user}")
+      if dest.start_with?("/home/#{LIVE_USER}")
         expected_perms = "700"
-        expected_owner = $live_user
+        expected_owner = LIVE_USER
       else
         expected_perms = "755"
         expected_owner = "root"
@@ -576,4 +589,19 @@ Then /^Tails has started in UEFI mode$/ do
 Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
   next if @skip_steps_while_restoring_background
   @vm.storage.disk_mklabel(name, type)
+end
+
+Then /^a suitable USB device is not found$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("TailsInstallerNoDevice.png", 60)
+end
+
+Then /^the "(?:[[:alpha:]]+)" USB drive is selected$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("TailsInstallerQEMUHardDisk.png", 30)
+end
+
+Then /^no USB drive is selected$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
 end

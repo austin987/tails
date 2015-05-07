@@ -4,11 +4,49 @@ When /^I see and accept the Unsafe Browser start verification$/ do
   @screen.type(Sikuli::Key.ESC)
 end
 
+def supported_torbrowser_languages
+  langs = Array.new
+  exts = @vm.execute_successfully(
+    "find /usr/local/share/tor-browser-extensions -maxdepth 1 -name 'langpack*.xpi' -printf \"%f\n\"").stdout
+
+  # Some of the TBB languages are shipped with both a language and country code, e.g. es-ES.
+  # We'll only keep track of the language code and let `guess_best_tor_browser_locale`
+  # try to get by with our approximated locales.
+  supported_langs = exts.scan(/langpack-([a-z]+).*/).flatten
+  locales = @vm.execute_successfully(
+    "find /usr/lib/locale -maxdepth 1 -name '*.utf8' -printf \"%f\n\"").stdout.split
+
+  # Determine a valid locale for each language that we want to test.
+  supported_langs.each do |lang|
+    # If a language shipped by TBB is not a supported system locale (e.g. 'vi'),
+    # 'find(nomatch)' will use the locale xx_XX for language 'xx'.
+    nomatch = proc { "#{lang}_#{lang.upcase}.utf8" }
+    langs << locales.find(nomatch) { |l| l.match(/^#{lang}/) }
+  end
+  return langs
+end
+
 Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
   next if @skip_steps_while_restoring_background
-  step "I run \"LANG=#{loc}.UTF-8 LC_ALL=#{loc}.UTF-8 sudo unsafe-browser\" in GNOME Terminal"
+  step "I run \"LANG=#{loc} LC_ALL=#{loc} sudo unsafe-browser\" in GNOME Terminal"
   step "I see and accept the Unsafe Browser start verification"
-  #@screen.wait("UnsafeBrowserHomepage.png", 120)
+end
+
+Then /^the Unsafe Browser works in all supported languages$/ do
+  next if @skip_steps_while_restoring_background
+  failed = Array.new
+  supported_torbrowser_languages.each do |lang|
+    step "I start the Unsafe Browser in the \"#{lang}\" locale"
+    begin
+      step "the Unsafe Browser has started"
+    rescue RuntimeError
+      failed << lang
+      next
+    end
+    step "I close the Unsafe Browser"
+    step "the Unsafe Browser chroot is torn down"
+  end
+  assert(failed.empty?, "Unsafe Browser failed to launch in the following locale(s): #{failed.join(', ')}")
 end
 
 Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
@@ -24,8 +62,15 @@ end
 
 Then /^the Unsafe Browser has no add-ons installed$/ do
   next if @skip_steps_while_restoring_background
-  step "I open the address \"about:addons\" in the Unsafe Browser"
-  step "I see \"UnsafeBrowserNoAddons.png\" after at most 30 seconds"
+  step "I open the address \"about:support\" in the Unsafe Browser"
+  try_for(60) do
+    begin
+      @screen.find('UnsafeBrowserNoAddons.png')
+    rescue FindFailed => e
+      @screen.type(Sikuli::Key.PAGE_DOWN)
+      raise e
+    end
+  end
 end
 
 Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
@@ -198,4 +243,38 @@ end
 Then /^the Unsafe Browser complains that no DNS server is configured$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserDNSError.png", 30)
+end
+
+Then /^I configure the Unsafe Browser to check for updates more frequently$/ do
+  next if @skip_steps_while_restoring_background
+  prefs = '/usr/share/tails/unsafe-browser/prefs.js'
+  @vm.file_append(prefs, 'pref("app.update.idletime", 1);')
+  @vm.file_append(prefs, 'pref("app.update.promptWaitTime", 1);')
+  @vm.file_append(prefs, 'pref("app.update.interval", 5);')
+end
+
+But /^checking for updates is disabled in the Unsafe Browser's configuration$/ do
+  next if @skip_steps_while_restoring_background
+  prefs = '/usr/share/tails/unsafe-browser/prefs.js'
+  assert(@vm.file_content(prefs).include?('pref("app.update.enabled", false)'))
+end
+
+Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
+  next if @skip_steps_while_restoring_background
+  pkts = 0
+  uid = @vm.execute_successfully("id -u clearnet").stdout.chomp.to_i
+  iptables_output = @vm.execute_successfully("iptables -vnL").stdout.chomp
+  output_chain = iptables_parse(iptables_output)["OUTPUT"]
+  output_chain["rules"].each do |rule|
+    if /owner UID match \b#{uid}\b/.match(rule["extra"])
+      pkts += rule["pkts"]
+    end
+  end
+
+  case sent
+  when ''
+    assert(pkts > 0, "Packets have not gone out to the internet.")
+  when 'not'
+    assert_equal(pkts, 0, "Packets have gone out to the internet.")
+  end
 end

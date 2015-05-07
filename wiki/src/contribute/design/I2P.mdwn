@@ -42,7 +42,7 @@ started automatically. Some reasons behind this decision include:
 3. some level of system compromise through 0-day exploits in the I2P
    client
 
-Users that want to use I2P must enable it by addinng the <span class="command">i2p</span> boot option
+Users that want to use I2P must enable it by adding the <span class="command">i2p</span> boot option
 to the <span class="application">boot menu</span>. Once enabled, I2P will be started automatically by a NetworkManager hook
 (see [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/30-i2p.sh]]).
 
@@ -164,7 +164,7 @@ shall eventually be imported into, and called e.g.
        grep -v -E '^\./($|usr/(share/doc/i2p-router/|share/i2p/|share/$|share/doc/$|bin/eepget|bin/i2prouter-nowrapper|share/man/man1/eepget\.1\.gz$|share/man/$|share/man/man1/$|bin/$|$))'
 
     dpkg-deb --contents i2p_*.deb | awk '{print $6}' | \
-       grep -v -E '^\./($|etc/$|etc/i2p/|etc/init\.d/i2p$|etc/init\.d/$|usr/$|usr/share/$|usr/share/man/$|usr/share/man/man1/$|usr/share/man/man1/i2prouter\.1\.gz$|usr/share/doc/$|usr/share/doc/i2p$|usr/bin/$|usr/bin/i2prouter$)'
+       grep -v -E '^\./($|etc/(apparmor.d/(abstractions/)?)?$|etc/apparmor.d/(system_i2p|usr.bin.i2prouter|abstractions/i2p)$|etc/i2p/|etc/init\.d/i2p$|etc/init\.d/$|usr/$|usr/share/$|usr/share/man/$|usr/share/man/man1/$|usr/share/man/man1/i2prouter\.1\.gz$|usr/share/doc/$|usr/share/doc/i2p$|usr/bin/$|usr/bin/i2prouter$)'
 
     dpkg-deb --contents libjbigi-jni_*.deb | awk '{print $6}' | \
        grep -v -E '^\./($|usr/$|usr/lib/$|usr/lib/jni/|usr/share/$|usr/share/doc/$|usr/share/doc/libjbigi-jni$)'
@@ -184,9 +184,18 @@ scripts in each binary package.
    `feature-i2p-0.n.m`)
 1. use `reprepro includedeb` to import the binary package(s) into the
    same dedicated APT suite
-1. build an ISO from the Git branch created above
+1. add the `feature-i2p-0.n.m` APT suite to `config/APT_overlays.d/` on the
+   `feature/i2p-0.n.m` Git branch:
+
+        VERSION=0.n.m
+        touch "config/APT_overlays.d/feature-i2p-${VERSION}"   && \
+        git add "config/APT_overlays.d/feature-i2p-${VERSION}" && \
+        git commit "config/APT_overlays.d/feature-i2p-${VERSION}" \
+           -m "Add the feature-i2p-${VERSION} overlay APT suite."
+
+1. build an ISO from the `feature/i2p-0.n.m` Git branch
 1. test this ISO
-1. merge the Git branch and APT suite as appropriate
+1. merge the `feature/i2p-0.n.m` branch into the appropriate base branch
 
 Things to meditate upon
 =======================
