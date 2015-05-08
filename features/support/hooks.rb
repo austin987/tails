@@ -19,9 +19,9 @@ def delete_all_snapshots
   end
 end
 
-def add_after_scenario_hook(fn, args = [])
+def add_after_scenario_hook(&block)
   @after_scenario_hook ||= Array.new
-  @after_scenario_hook << [fn, args]
+  @after_scenario_hook << block
 end
 
 BeforeFeature('@product') do |feature|
@@ -175,7 +175,7 @@ end
 
 After do
   if @after_scenario_hook
-    @after_scenario_hook.each { |fn, args| fn.call(*args) }
+    @after_scenario_hook.each { |block| block.call }
   end
   @after_scenario_hook = Array.new
 end

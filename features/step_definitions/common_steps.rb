@@ -127,8 +127,10 @@ Given /^I capture all network traffic$/ do
   # something external to the VM state.
   @sniffer = Sniffer.new("sniffer", $vmnet)
   @sniffer.capture
-  add_after_scenario_hook(@sniffer.method(:stop))
-  add_after_scenario_hook(@sniffer.method(:clear))
+  add_after_scenario_hook do
+    @sniffer.stop
+    @sniffer.clear
+  end
 end
 
 Given /^I set Tails to boot with options "([^"]*)"$/ do |options|
