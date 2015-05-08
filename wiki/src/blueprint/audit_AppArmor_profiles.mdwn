@@ -15,6 +15,15 @@ Things to check
   - `/lib/live/mount/overlay/`
     * we add `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at
       least `$HOME` is OK
+* wide-open access to `/lib/**` or similar, that might grant access to
+  persistent files -- everything checked, potential issues and
+  remaining todo items follow:
+  - the `base` abstraction (used e.g. by Pidgin and Evince) has things
+    like `/lib{,32,64}/** r`
+  - the `launchpad-integration` abstraction has
+    `/{,usr/}lib*/{,**/}*.so{,.*} m`
+  - the `ubuntu-helpers` abstraction has
+    `/{,usr/,usr/local/}lib{,32,64}/{,**/}*.so{,.*} m`
 * access to microphone (can we easily block that while still allowing
   sound output?)
   - `abstractions/audio` gives full access to PulseAudio, which
@@ -53,15 +62,6 @@ Things to check
   - What else uses `private-files` and
     `private-files-strict` abstractions?
   - Shall we add stuff to these blacklist?
-* wide-open access to `/lib/**` or similar, that might grant access to
-  persistent files -- everything checked, potential issues and
-  remaining todo items follow:
-  - the `base` abstraction (used e.g. by Pidgin and Evince) has things
-    like `/lib{,32,64}/** r`
-  - the `launchpad-integration` abstraction has
-    `/{,usr/}lib*/{,**/}*.so{,.*} m`
-  - the `ubuntu-helpers` abstraction has
-    `/{,usr/,usr/local/}lib{,32,64}/{,**/}*.so{,.*} m`
 * jvoisin's profile hardening
   - Pidgin
     * drop `bash` abstraction: has been here since the first version
