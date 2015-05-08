@@ -73,8 +73,8 @@ Then /^I enable key synchronization in Seahorse$/ do
   next if @skip_steps_while_restoring_background
   step 'process "seahorse" is running'
   @screen.wait_and_click("SeahorseWindow.png", 10)
-  @screen.type("e", Sikuli::KeyModifier.ALT) # Menu: "Edit" ->
-  @screen.type("n") # Menu: "Preferences " ->
+  @screen.wait_and_click("SeahorseEdit.png", 10)
+  @screen.wait_and_click("SeahorseEditPreferences.png", 10)
   @screen.wait("SeahorsePreferences.png", 10)
   @screen.type("p", Sikuli::KeyModifier.ALT) # Option: "Publish keys to...".
   @screen.type(Sikuli::Key.DOWN) # select HKP server
@@ -86,8 +86,8 @@ Then /^I synchronize keys in Seahorse$/ do
   step "process \"seahorse\" is running"
   @screen.wait_and_click("SeahorseWindow.png", 10)
   @screen.wait("SeahorseWindow.png", 10)
-  @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
-  @screen.type("s")                  # "Sync...".
+  @screen.wait_and_click("SeahorseRemoteMenu.png", 10)
+  @screen.wait_and_click("SeahorseRemoteMenuSync.png", 10)
   @screen.wait("SeahorseSyncKeys.png", 10)
   @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
   @screen.wait("SeahorseSynchronizing.png", 20)
@@ -103,13 +103,21 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
   end
   step "Seahorse has opened"
   @screen.wait_and_click("SeahorseWindow.png", 10)
-  @screen.type("r", Sikuli::KeyModifier.ALT) # Menu: "Remote" ->
-  @screen.type("f")                  # "Find Remote Keys...".
+  @screen.wait_and_click("SeahorseRemoteMenu.png", 10)
+  @screen.wait_and_click("SeahorseRemoteMenuFind.png", 10)
   @screen.wait("SeahorseFindKeysWindow.png", 10)
   # Seahorse doesn't seem to support searching for fingerprints
   @screen.type(keyid + Sikuli::Key.ENTER)
-  @screen.wait("SeahorseFoundKeyResult.png", 5*60)
-  @screen.type(Sikuli::Key.DOWN)   # Select first item in result menu
-  @screen.type("f", Sikuli::KeyModifier.ALT) # Menu: "File" ->
-  @screen.type("i")                  # "Import"
+  begin
+    @screen.wait("SeahorseFoundKeyResult.png", 5*60)
+  rescue FindFailed
+    # We may end up here if Seahorse appears to be "frozen".
+    # Sometimes--but not always--if we click another window
+    # the main Seahorse window will unfreeze, allowing us
+    # to continue normally.
+    @screen.click("SeahorseSearch.png")
+  end
+  @screen.click("SeahorseKeyResultWindow.png")
+  @screen.click("SeahorseFoundKeyResult.png")
+  @screen.click("SeahorseImport.png")
 end

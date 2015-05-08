@@ -137,6 +137,11 @@ Given /^I setup a filesystem share containing a sample PDF$/ do
   @vm.add_share(MISC_FILES_DIR, shared_pdf_dir_on_guest)
 end
 
+Then /^the support documentation page opens in Tor Browser$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("SupportDocumentation#{@language}.png", 120)
+end
+
 Then /^MAT can clean some sample PDF file$/ do
   next if @skip_steps_while_restoring_background
   for pdf_on_host in Dir.glob("#{MISC_FILES_DIR}/*.pdf") do

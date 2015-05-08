@@ -42,7 +42,7 @@ download_and_verify_files() {
 }
 
 install_tor_browser() {
-    local bundle destination tmp prep torbutton_xpi_path
+    local bundle destination tmp prep torlauncher_xpi_path torlauncher_version
     bundle="${1}"
     destination="${2}"
 
@@ -67,22 +67,30 @@ install_tor_browser() {
     rm -r "${prep}"/TorBrowser/Tor "${prep}"/TorBrowser/Docs
 
     # We don't want tor-launcher to be part of the regular browser
-    # profile. Moreover, for the stand-alone tor-launcher we use, we
-    # need our patched version. So, the version shipped in the TB
-    # really is not useful for us.
-    rm "${prep}/TorBrowser/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi"
+    # profile but we want to keep it as a standalone application
+    # when Tails is started in "bridge mode".
+    torlauncher_xpi_path="${prep}/TorBrowser/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi"
+    7z x -o'/usr/share/tor-launcher-standalone' "${torlauncher_xpi_path}"
+    torlauncher_version="$(sed -n \
+        's,^        <em:version>\([0-9\.]\+\)</em:version>,\1,p' \
+        '/usr/share/tor-launcher-standalone/install.rdf')"
+    cat > '/usr/share/tor-launcher-standalone/application.ini' << EOF
+[App]
+Vendor=TorProject
+Name=TorLauncher
+Version=${torlauncher_version}
+BuildID=$(date +%Y%m%d)
+ID=tor-launcher@torproject.org
 
-    # Remove TBB's torbutton since the "Tor test" will fail and about:tor
-    # will report an error. We'll install our own Torbutton later, which
-    # has the extensions.torbutton.test_enabled boolean pref as a workaround.
-    torbutton_xpi_path="${prep}/TorBrowser/Data/Browser/profile.default/extensions/torbutton@torproject.org.xpi"
-    TORBUTTON_BUNDLED_VERSION="$(7z e -so ${torbutton_xpi_path} install.rdf | \
-        sed -n 's,^        <em:version>\([0-9\.]\+\)</em:version>,\1,p')"
-    if [ -z "${TORBUTTON_BUNDLED_VERSION}" ]; then
-        echo "Couldn't extract Torbutton's bundled version" >&2
-        exit 1
-    fi
-    rm "${torbutton_xpi_path}"
+[Gecko]
+MinVersion=$(get_firefox_version "${prep}/application.ini")
+MaxVersion=*.*.*
+
+[Shell]
+Icon=icon.png
+EOF
+    chmod -R a+rX '/usr/share/tor-launcher-standalone'
+    rm "${torlauncher_xpi_path}"
 
     # The Tor Browser will fail, complaining about an incomplete profile,
     # unless there's a readable TorBrowser/Data/Browser/Caches
@@ -156,8 +164,6 @@ install_debian_extensions() {
     apt-get install --yes "${@}"
     ln -s /usr/share/xul-ext/adblock-plus/ \
           "${destination}"/'{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}'
-    ln -s /usr/share/xul-ext/torbutton/ \
-          "${destination}"/torbutton@torproject.org
 }
 
 create_default_profile() {
@@ -184,13 +190,12 @@ TBB_TARBALLS="$(grep "\<tor-browser-linux32-.*\.tar.xz$" "${TBB_SHA256SUMS_FILE}
 # We'll use the en-US bundle as our basis; only langpacks will be
 # installed from the other bundles.
 MAIN_TARBALL="$(echo "${TBB_TARBALLS}" | grep -o "tor-browser-linux32-.*_en-US.tar.xz")"
-VERSION="$(echo "${MAIN_TARBALL}" | sed 's/tor-browser-linux32-\(.*\)_en-US.tar.xz/\1/')"
 TBB_DIST_URL_FILE=/usr/share/tails/tbb-dist-url.txt
-TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")/${VERSION}"
+TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")"
 
 # The Debian Iceweasel extensions we want to install and make
 # available in the Tor Browser.
-DEBIAN_EXT_PKGS="xul-ext-adblock-plus xul-ext-torbutton"
+DEBIAN_EXT_PKGS="xul-ext-adblock-plus"
 
 TMP="$(mktemp -d)"
 download_and_verify_files "${TBB_TARBALLS_BASE_URL}" "${TBB_TARBALLS}" "${TMP}"
@@ -213,15 +218,6 @@ FIREFOX_VERSION=$(get_firefox_version "${TBB_INSTALL}"/application.ini)
 FAKE_ICEWEASEL_VERSION=${FIREFOX_VERSION}+fake1
 install_fake_iceweasel_pkg "${FAKE_ICEWEASEL_VERSION}"
 install_debian_extensions "${TBB_EXT}" ${DEBIAN_EXT_PKGS}
-
-# Make sure that we have installed a Torbutton based on the same
-# version as the one bundled with the Tor Browser
-TORBUTTON_VERSION="$(dpkg -s xul-ext-torbutton | \
-    sed -n 's/^Version: \(.*\)-[0-9]\+$/\1/p')"
-if [ "${TORBUTTON_VERSION}" != "${TORBUTTON_BUNDLED_VERSION}" ]; then
-    echo "We have installed a Torbutton based on version '${TORBUTTON_VERSION}' but the version bundled with the Tor Browser is version '${TORBUTTON_BUNDLED_VERSION}'" >&2
-    exit 1
-fi
 
 mkdir -p "${TBB_PROFILE}"
 create_default_profile "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default "${TBB_EXT}" "${TBB_PROFILE}"
