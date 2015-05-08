@@ -128,13 +128,16 @@ Then /^the VirtualBox guest modules are available$/ do
          "The vboxguest module is not available.")
 end
 
-def shared_pdf_dir_on_guest
-  "/tmp/shared_pdf_dir"
-end
-
 Given /^I setup a filesystem share containing a sample PDF$/ do
   next if @skip_steps_while_restoring_background
-  @vm.add_share(MISC_FILES_DIR, shared_pdf_dir_on_guest)
+  shared_pdf_dir_on_host = "#{$config["TMPDIR"]}/shared_pdf_dir"
+  @shared_pdf_dir_on_guest = "/tmp/shared_pdf_dir"
+  FileUtils.mkdir_p(shared_pdf_dir_on_host)
+  Dir.glob("#{MISC_FILES_DIR}/*.pdf") do |pdf_file|
+    FileUtils.cp(pdf_file, shared_pdf_dir_on_host)
+  end
+  add_after_scenario_hook { FileUtils.rm_r(shared_pdf_dir_on_host) }
+  @vm.add_share(shared_pdf_dir_on_host, @shared_pdf_dir_on_guest)
 end
 
 Then /^the support documentation page opens in Tor Browser$/ do
@@ -147,7 +150,7 @@ Then /^MAT can clean some sample PDF file$/ do
   for pdf_on_host in Dir.glob("#{MISC_FILES_DIR}/*.pdf") do
     pdf_name = File.basename(pdf_on_host)
     pdf_on_guest = "/home/#{LIVE_USER}/#{pdf_name}"
-    step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
+    step "I copy \"#{@shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
     check_before = @vm.execute_successfully("mat --check '#{pdf_on_guest}'",
                                             LIVE_USER).stdout
     assert(check_before.include?("#{pdf_on_guest} is not clean"),
