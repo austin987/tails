@@ -7,11 +7,11 @@ require "#{Dir.pwd}/features/support/helpers/misc_helpers.rb"
 # (passwords, SSH keys) to be used in tests.
 DEFAULTS_CONFIG_FILE = "#{Dir.pwd}/features/config/defaults.yml"
 LOCAL_CONFIG_FILE = "#{Dir.pwd}/features/config/local.yml"
-LOCAL_CONFIGS_DIR = "#{Dir.pwd}/features/config/local.d"
+LOCAL_CONFIG_DIRS_FILES_GLOB = "#{Dir.pwd}/features/config/*.d/*.yml"
 
 assert File.exists?(DEFAULTS_CONFIG_FILE)
 $config = YAML.load(File.read(DEFAULTS_CONFIG_FILE))
-config_files = Dir.glob("#{LOCAL_CONFIGS_DIR}/*.yml").sort
+config_files = Dir.glob(LOCAL_CONFIG_DIRS_FILES_GLOB).sort
 config_files.insert(0, LOCAL_CONFIG_FILE) if File.exists?(LOCAL_CONFIG_FILE)
 config_files.each do |config_file|
   yaml_struct = YAML.load(File.read(config_file)) || Hash.new
