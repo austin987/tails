@@ -10,7 +10,8 @@ Things to check
   e.g.
   - check `private-files` and `private-files-strict` abstractions, in
     particular wrt. whatever can be accessed via the following paths
-  - `/live/persistence/TailsData_unlocked/`
+  - is there any alternate path to `/live/persistence`?
+  - check if we still have symlinks between `/live` and `/lib/live`
   - `/lib/live/mount/rootfs/`
   - `/lib/live/mount/overlay/`
     * we add `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at
@@ -150,3 +151,9 @@ Checked already
     some devices; it's not used in any profile we ship
   - most webcams appear as `/dev/video0` or similar; `rgrep -i video`
     shows that no profile we ship gives access to such files
+* access to files via alternate paths specific to Debian Live systems:
+  - `/live/persistence/TailsData_unlocked/`: we have one automatic
+    test for this in `pidgin.feature`; the tested access is denied
+    because that path is not explicitly allowed, rather than because
+    it's explicitly denied, but that's how AppArmor works and that's
+    good enough.
