@@ -103,9 +103,14 @@ When /^I start Tails Installer$/ do
   @screen.wait('USBCloneAndInstall.png', 30)
 end
 
-When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
+When /^I start Tails Installer in "([^"]+)" mode(?: with the )?(verbose)?(?: flag)?$/ do |mode, vbose|
   next if @skip_steps_while_restoring_background
-  step 'I start Tails Installer'
+  if vbose
+    step 'I run "liveusb-creator-launcher --verbose > /tmp/tails-installer.log 2>&1" in GNOME Terminal'
+  else
+    step 'I start Tails Installer'
+  end
+
   case mode
   when 'Clone & Install'
     @screen.wait_and_click('USBCloneAndInstall.png', 10)
@@ -116,6 +121,16 @@ When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
   else
     raise "Unsupported mode '#{mode}'"
   end
+end
+
+Then /^Tails Installer detects that the device "([^"]+)" is too small$/ do |name|
+  next if @skip_steps_while_restoring_background
+  assert(@vm.file_exist?('/tmp/tails-installer.log'), "Cannot find logfile containing output from Tails Installer")
+  device = @vm.udisks_disk_dev(name)
+  try_for(15, :msg => "Tails Installer did not reject the USB device as being too small")  {
+    log = @vm.file_content('/tmp/tails-installer.log')
+    Regexp.new("Skipping too small device: #{device}$").match(log)
+  }
 end
 
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
@@ -591,7 +606,7 @@ Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
   @vm.storage.disk_mklabel(name, type)
 end
 
-Then /^a suitable USB device is not found$/ do
+Then /^a suitable USB device is (?:still )?not found$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("TailsInstallerNoDevice.png", 60)
 end
