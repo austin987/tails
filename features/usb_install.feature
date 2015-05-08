@@ -17,6 +17,17 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I unplug USB drive "current"
 
   @keep_volumes
+  Scenario: Test that Tails installer can detect when a target USB drive is inserted or removed
+    Given a computer
+    And I start Tails from DVD with network unplugged and I login
+    And I start Tails Installer in "Clone & Install" mode
+    When I plug USB drive "current"
+    Then the "current" USB drive is selected
+    When I unplug USB drive "current"
+    Then no USB drive is selected
+    And a suitable USB device is not found
+
+  @keep_volumes
   Scenario: Booting Tails from a USB drive in UEFI mode
     Given a computer
     And the computer is set to boot in UEFI mode
@@ -76,7 +87,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the boot device has safe access rights
     And I enable persistence with password "asdf"
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And all notifications have disappeared
     And all persistence presets are enabled
     And all persistent filesystems have safe access rights
@@ -89,7 +100,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the computer reboots Tails
     And I enable read-only persistence with password "asdf"
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And I start the Tor Browser in offline mode
     And the Tor Browser has started in offline mode
     Then the Tor Browser has a bookmark to eff.org
@@ -143,7 +154,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I start the computer
     When the computer boots Tails
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And all notifications have disappeared
     And I create a 4 GiB disk named "old"
     And I plug USB drive "old"

@@ -137,25 +137,27 @@ Given /^I setup a filesystem share containing a sample PDF$/ do
   @vm.add_share(MISC_FILES_DIR, shared_pdf_dir_on_guest)
 end
 
+Then /^the support documentation page opens in Tor Browser$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("SupportDocumentation#{@language}.png", 120)
+end
+
 Then /^MAT can clean some sample PDF file$/ do
   next if @skip_steps_while_restoring_background
   for pdf_on_host in Dir.glob("#{MISC_FILES_DIR}/*.pdf") do
     pdf_name = File.basename(pdf_on_host)
     pdf_on_guest = "/home/#{LIVE_USER}/#{pdf_name}"
     step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
-    @vm.execute("mat --display '#{pdf_on_guest}'",
-                LIVE_USER).stdout
-    check_before = @vm.execute("mat --check '#{pdf_on_guest}'",
-                               LIVE_USER).stdout
-    if check_before.include?("#{pdf_on_guest} is clean")
-      STDERR.puts "warning: '#{pdf_on_host}' is already clean so it is a " +
-                  "bad candidate for testing MAT"
-    end
-    @vm.execute("mat '#{pdf_on_guest}'", LIVE_USER)
-    check_after = @vm.execute("mat --check '#{pdf_on_guest}'",
-                              LIVE_USER).stdout
+    check_before = @vm.execute_successfully("mat --check '#{pdf_on_guest}'",
+                                            LIVE_USER).stdout
+    assert(check_before.include?("#{pdf_on_guest} is not clean"),
+           "MAT failed to see that '#{pdf_on_host}' is dirty")
+    @vm.execute_successfully("mat '#{pdf_on_guest}'", LIVE_USER)
+    check_after = @vm.execute_successfully("mat --check '#{pdf_on_guest}'",
+                                           LIVE_USER).stdout
     assert(check_after.include?("#{pdf_on_guest} is clean"),
            "MAT failed to clean '#{pdf_on_host}'")
+    @vm.execute_successfully("rm '#{pdf_on_guest}'")
   end
 end
 

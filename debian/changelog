@@ -1,8 +1,114 @@
-tails (1.3.3) UNRELEASED; urgency=medium
+tails (1.4) UNRELEASED; urgency=medium
 
-  * Dummy entry.
+  * Dummy changelog entry.
 
- -- Tails developers <tails@boum.org>  Tue, 31 Mar 2015 21:56:58 +0200
+ -- Tails developers <tails@boum.org>  Mon, 04 May 2015 14:22:41 +0200
+
+tails (1.4~rc1) unstable; urgency=medium
+
+  * Major new features
+    - Upgrade Tor Browser to 4.5, which introduces many major new
+      features for usability, security and privacy. Unfortunately its
+      per-tab circuit view did not make it into Tails yet since it
+      requires exposing more Tor state to the user running the Tor
+      Browser than we are currently comfortable with.
+    - Upgrade Tor to 0.2.6.7-1~d70.wheezy+1+tails2. Like in the Tor
+      bundled with the Tor Browser, we patch it so that circuits used
+      for SOCKSAuth streams have their lifetime increased indefinitely
+      while in active use. This currently only affects the Tor Browser
+      in Tails, and should improve the experience on certain web sites
+      that otherwise would switch language or log you out every ten
+      minutes or so when Tor switches circuit.
+
+  * Security fixes
+    - Upgrade Linux to 3.16.7-ckt9-3.
+    - Upgrade curl to 7.26.0-1+wheezy13.
+    - Upgrade dpkg to 1.16.16.
+    - Upgrade gstreamer0.10-plugins-bad to 0.10.23-7.1+deb7u2.
+    - Upgrade libgd2-xpm to 2.0.36~rc1~dfsg-6.1+deb7u1.
+    - Upgrade openldap to 2.4.31-2.
+    - Upgrade LibreOffice to 1:3.5.4+dfsg2-0+deb7u4.
+    - Upgrade libruby1.9.1 to 1.9.3.194-8.1+deb7u5.
+    - Upgrade libtasn1-3 to 2.13-2+deb7u2.
+    - Upgrade libx11 to 2:1.5.0-1+deb7u2.
+    - Upgrade libxml-libxml-perl to 2.0001+dfsg-1+deb7u1.
+    - Upgrade libxml2 to 2.8.0+dfsg1-7+wheezy4.
+    - Upgrade OpenJDK to 7u79-2.5.5-1~deb7u1.
+    - Upgrade ppp to 2.4.5-5.1+deb7u2.
+
+  * Bugfixes
+    - Make the Windows 8 browser theme compatible with the Unsafe and I2P
+      browsers. (Closes: #9138)
+    - Hide Torbutton's "Tor Network Settings..." context menu entry.
+      (Closes: #7647)
+    - Upgrade the syslinux packages to support booting Tails on
+      Chromebook C720-2800. (Closes: #9044)
+    - Enable localization in Tails Upgrader. (Closes: #9190)
+    - Make sure the system clock isn't before the build date during
+      early boot. Our live-config hook that imports our signing keys
+      depend on that the system clock isn't before the date when the
+      keys where created. (Closes: #9149)
+    - Set GNOME's OpenPGP keys via desktop.gnome.crypto.pgp to prevent
+      us from getting GNOME's default keyserver in addition to our
+      own. (Closes: #9233)
+    - Prevent Firefox from crashing when Orca is enabled: grant
+      it access to assistive technologies in its Apparmor
+      profile. (Closes: #9261)
+    - Add Jessie APT source. (Closes: #9278)
+    - Fix set_simple_config_key(). If the key already existed in the
+      config file before the call, all other lines would be removed
+      due to the sed option -n and p combo. (Closes: #9122)
+
+  * Minor improvements
+    - Upgrade I2P to 0.9.19-3~deb7u+1.
+    - Install Tor Browser's bundled Torbutton instead of custom .deb.
+      As of Torbutton 1.9.1.0 everything we need has been upstreamed.
+    - Install Tor Browser's bundled Tor Launcher instead of our
+      in-tree version. With Tor 0.2.6.x our custom patches for the
+      ClientTransportPlugin hacks are not needed any more. (Closes:
+      #7283)
+    - Don't install msmtp and mutt. (Closes: #8727)
+    - Install fonts-linuxlibertine for improved Vietnamese support in
+      LibreOffice. (Closes: #8996)
+    - Remove obsoletete #i2p-help IRC channel from the Pidgin
+      configuration (Closes: #9137)
+    - Add Gedit shortcut to gpgApplet's context menu. Thanks to Ivan
+      Bliminse for the patch. (Closes: #9069).
+    - Install printer-driver-gutenprint to support more printer
+      models. (Closes: #8994).
+    - Install paperkey for off-line OpenPGP key backup. (Closes: #8957)
+    - Hide the Tor logo in Tor Launcher. (Closes: #8696)
+    - Remove useless log() instance in tails-unblock-network. (Closes:
+      #9034)
+
+  * Build system
+    - Encode in Git which APT suites to include when building Tails.
+      (Closes: #8654)
+    - Clean up the list of packages we install. (Closes: #6073)
+    - Run auto/{build,clean,config} under `set -x' for improved
+      debugging.
+
+  * Test suite
+    - Bring dependency checks up-to-date (Closes: #8988).
+    - Adapt test suite to be run on Debian Jessie, which includes
+      removing various Wheezy-specific workarounds, adding a few
+      specific to Jessie, migrating from ffmpeg to libav, and
+      more. (Closes: #8165)
+    - Test that MAT can see that a PDF is dirty (Closes: #9136).
+    - Allow throwing Timeout::Error in try_for() blocks, as well as
+      nested try_for() (Closes: #9189, #9290).
+    - Read test suite configuration files from the features/config/local.d
+      directory. (Closes: #9220)
+    - Kill virt-viewer with SIGTERM, not SIGINT, to prevent hordes of
+      zombie processes from appearing. (Closes: #9139)
+    - Kill Xvfb with SIGTERM, not SIGKILL, on test suite exit to allow
+      it to properly clean up. (Closes: #8707)
+    - Split SSH & SFTP configs in the test suite. (Closes: #9257)
+    - Improve how we start subprocesses in the test suite, mostly by
+      bypassing the shell for greater security and robustness (Closes:
+      #9253)
+
+ -- Tails developers <tails@boum.org>  Sat, 02 May 2015 23:55:26 +0200
 
 tails (1.3.2) unstable; urgency=medium
 
