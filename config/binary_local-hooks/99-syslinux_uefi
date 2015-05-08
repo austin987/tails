@@ -31,31 +31,10 @@ case "${LB_BINARY_IMAGES}" in
 		;;
 esac
 
-### Main
-
-## 64-bit
-for bit in 32 64 ; do
-	case "$bit" in
-		32)
-			TARGET_SUBDIR=TAILS32
-			BOOTLOADER_NAME=bootia32
-			SYSLINUX_SUBDIR=efi32
-			;;
-		64)
-			TARGET_SUBDIR=BOOT
-			BOOTLOADER_NAME=bootx64
-			SYSLINUX_SUBDIR=efi64
-			;;
-	esac
-	TARGET_DIR="binary/EFI/${TARGET_SUBDIR}"
-	mkdir -p "${TARGET_DIR}"
-	cp "chroot/usr/lib/SYSLINUX.EFI/${SYSLINUX_SUBDIR}/syslinux.efi" \
-		"${TARGET_DIR}/${BOOTLOADER_NAME}.efi"
-	cp chroot/usr/share/tails/bootx64.png \
-		"${TARGET_DIR}/${BOOTLOADER_NAME}.png"
-	cp "$SYSLINUX_PATH"/* "${TARGET_DIR}"
-	cp -f "chroot/usr/lib/syslinux/modules/${SYSLINUX_SUBDIR}/"* \
-		"${TARGET_DIR}"
-	sed -r -i -e 's,^(menu background splash\.png)$,\#\1,' \
-	    "${TARGET_DIR}/stdmenu.cfg"
-done
+# Main
+mkdir -p binary/EFI/BOOT
+cp chroot/usr/lib/SYSLINUX.EFI/efi64/syslinux.efi binary/EFI/BOOT/bootx64.efi
+cp chroot/usr/share/tails/bootx64.png binary/EFI/BOOT/
+cp "$SYSLINUX_PATH"/* binary/EFI/BOOT/
+cp -f chroot/usr/lib/syslinux/modules/efi64/* binary/EFI/BOOT/
+sed -r -i -e 's,^(menu background splash\.png)$,\#\1,' binary/EFI/BOOT/stdmenu.cfg
