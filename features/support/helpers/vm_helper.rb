@@ -250,6 +250,10 @@ class VM
     if is_running?
       raise "shares can only be added to inactice vms"
     end
+    # The complete source directory must be group readable by the user
+    # running the virtual machine.
+    FileUtils.chown_R(nil, "libvirt-qemu", source)
+    FileUtils.chmod_R("g+rX", source)
     xml = REXML::Document.new(File.read("#{@xml_path}/fs_share.xml"))
     xml.elements['filesystem/source'].attributes['dir'] = source
     xml.elements['filesystem/target'].attributes['dir'] = tag
