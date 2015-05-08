@@ -42,7 +42,7 @@ grub_cpmodules () {
 		# Some of these exclusions are based on knowledge of module
 		# dependencies.
 		case $(basename "$x" .mod) in
-			configfile|search|search_fs_file|search_fs_uuid|search_label|tar|part_gpt|linux|all_video|efi_gop|efi_uga|video_bochs|video_cirrus|gzio)
+			configfile|search|search_fs_file|search_fs_uuid|search_label|tar|part_gpt|linux|gzio)
 			# included in boot image
 			;;
 		    affs|afs|afs_be|befs|befs_be|minix|nilfs2|sfs|zfs|zfsinfo)
@@ -80,7 +80,7 @@ Echo_message 'including GRUB EFI for ia32 in the ISO filesystem'
 Chroot chroot grub-mkimage -O "$platform" \
 	-o "/tmp/boot$efi_name.efi" -p "/efi/boot/grub" \
 	search configfile normal tar fat part_gpt linux \
-	all_video gzio
+	gzio
 mv "chroot/tmp/boot$efi_name.efi" "binary/EFI/BOOT/boot$efi_name.efi"
 
 mkdir -p "$outdir"
