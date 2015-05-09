@@ -207,7 +207,7 @@ def chan_image (account, channel, image)
   images = {
     'irc.oftc.net' => {
       '#tails' => {
-        'roaster'          => 'PidginTailsChannelEntry',
+        'roster'           => 'PidginTailsChannelEntry',
         'conversation_tab' => 'PidginTailsConversationTab',
         'welcome'          => 'PidginTailsChannelWelcome',
       }
@@ -282,7 +282,7 @@ end
 
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   next if @skip_steps_while_restoring_background
-  expected_channel_entry = chan_image(account, default_chan(account), 'roaster')
+  expected_channel_entry = chan_image(account, default_chan(account), 'roster')
   # Sometimes the OFTC welcome notice window pops up over the buddy list one...
   @vm.focus_window('Buddy List')
   @screen.wait(expected_channel_entry, 60)
@@ -306,7 +306,7 @@ end
 
 Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
   next if @skip_steps_while_restoring_background
-  @screen.doubleClick(   chan_image(account, channel, 'roaster'))
+  @screen.doubleClick(   chan_image(account, channel, 'roster'))
   @screen.hide_cursor
   @screen.wait_and_click(chan_image(account, channel, 'conversation_tab'), 10)
   @screen.hide_cursor
