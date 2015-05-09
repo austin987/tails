@@ -198,6 +198,35 @@ Mac
   MacBookPro late 2011 (8,2) fail to boot from a USB stick created by
   Tails Installer.
 
+<a id="switchable_graphics"></a>
+
+Switchable graphics computers
+-----------------------------
+
+Computers with switchable graphics (such as Optimus) fail to choose a
+video card and end up on a black screen. This has been reported for
+MacBook Pro 6,2, MacBookPro10,1 Retina, MacBook Pro 15-inch early 2011
+and might affect many others.
+
+There are two possible workarounds for this issue:
+
+* It is possible to force the computer to start with the integrated
+  GPU only, for example using a third party application,
+  http://gfx.io/, to force integrated only through OS X, and then
+  reboot in that special mode that works with Tails.
+
+* It is also possible to make it work by booting with `i915.modeset=0
+  rootpw=pass` (and then changing the root password once the computer
+  is started) and drop a file containing:
+
+	Section "Device"
+		Identifier "Device0"
+		Driver "nouveau"
+		BusID "1:0:0"
+	EndSection
+
+  and restart X with `service gdm3 restart`
+
 <a id="chainloading"></a>
 
 Chainloading Tails from GRUB
