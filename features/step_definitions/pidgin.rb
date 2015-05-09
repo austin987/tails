@@ -385,7 +385,14 @@ When /^I close Pidgin's certificate import failure dialog$/ do
 end
 
 When /^I see the Tails roadmap URL$/ do
-  @screen.wait('PidginTailsRoadmapUrl.png', 10)
+  try_for(60) do
+    begin
+      @screen.find('PidginTailsRoadmapUrl.png')
+    rescue FindFailed => e
+      @screen.click('PidginScrollArrowUp.png')
+      raise e
+    end
+  end
 end
 
 When /^I click on the Tails roadmap URL$/ do
