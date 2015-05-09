@@ -11,11 +11,25 @@ Things to check
   - check `private-files` and `private-files-strict` abstractions, in
     particular wrt. whatever can be accessed via the following paths
   - is there any alternate path to `/live/persistence`?
-  - check if we still have symlinks between `/live` and `/lib/live`
-  - `/lib/live/mount/rootfs/`
-  - `/lib/live/mount/overlay/`
+  - `/lib/live/mount/overlay/` -- until Tails 1.4~rc1, we have _two_
+    `tmpfs` mounted there, including an empty one that hides the
+    other's content (but we should not rely on this for security).
+    Fixed on the `bugfix/8007-AppArmor-hardening` branch with
+    [[!tails_gitweb_commit bc491c9]], and then:
+    * test that this doesn't break persistence in read-write mode
+    * test that this doesn't break persistence in read-only mode
+    * test that this doesn't break booting an upgraded Tails with
+      more that one SquashFS
+    * test how AppArmor confinement behaves wrt. `/live/overlay`
+      (that's a symlink to `/lib/live/mount/overlay`, created in
+      [[!tails_gitweb_commit 3233da6]]; maybe it's not needed
+      anymore given the )
+    * test how AppArmor confinement behaves wrt.
+      `/lib/live/mount/overlay` (at least it blocks access for Evince
+      to `/lib/live/mount/overlay/home/amnesia/.gnupg/default.pdf`)
     * we add `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at
-      least `$HOME` is OK
+      least `$HOME` is OK -- isn't it?
+  - recheck all these things with persistence in read-only mode
 * wide-open access to `/lib/**` or similar, that might grant access to
   persistent files -- everything checked, potential issues and
   remaining todo items follow:
@@ -157,3 +171,8 @@ Checked already
     because that path is not explicitly allowed, rather than because
     it's explicitly denied, but that's how AppArmor works and that's
     good enough.
+  - we don't have have any symlink between `/live` and `/lib/live`
+    anymore
+  - `/lib/live/mount/rootfs/` and `/lib/live/mount/medium/` should be
+    OK: they only contain stuff that's publicly available in our ISO
+    anyway, and DAC still applies.
