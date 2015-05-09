@@ -242,9 +242,19 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
   activate_filesystem_shares
 end
 
-Given /^I log in to a new session$/ do
+Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
+  case lang
+  when 'German'
+    @language = "German"
+    @screen.wait_and_click('TailsGreeterLanguage.png', 10)
+    @screen.wait_and_click("TailsGreeterLanguage#{@language}.png", 10)
+    @screen.wait_and_click("TailsGreeterLoginButton#{@language}.png", 10)
+  when ''
+    @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
+  else
+    raise "Unsupported language: #{lang}"
+  end
 end
 
 Given /^I enable more Tails Greeter options$/ do
@@ -278,20 +288,24 @@ Given /^Tails Greeter has dealt with the sudo password$/ do
   }
 end
 
-Given /^GNOME has started$/ do
+Given /^the Tails desktop is ready$/ do
   next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
     desktop_started_picture = 'WindowsStartButton.png'
   else
-    desktop_started_picture = 'GnomeApplicationsMenu.png'
+    desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
+    # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
+    # By this point the only icon left is Vidalia and it will not cause the other systray
+    # icons to shift positions.
+    @screen.wait("GnomeSystrayFlorence.png", 60)
   end
   @screen.wait(desktop_started_picture, 180)
 end
 
 Then /^Tails seems to have booted normally$/ do
   next if @skip_steps_while_restoring_background
-  step "GNOME has started"
+  step "the Tails desktop is ready"
 end
 
 When /^I see the 'Tor is ready' notification$/ do
