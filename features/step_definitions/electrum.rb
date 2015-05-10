@@ -46,3 +46,8 @@ Then /^I am prompted to create a new wallet$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('ElectrumNoWallet.png', 60)
 end
+
+Then /^I see the main Electrum client window$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait('ElectrumPreferencesButton.png', 20)
+end
