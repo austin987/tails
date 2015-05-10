@@ -51,3 +51,8 @@ Then /^I see the main Electrum client window$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('ElectrumPreferencesButton.png', 20)
 end
+
+Then /^Electrum successfully connects to the network$/ do
+  next if @skip_steps_while_restoring_background
+ @screen.wait('ElectrumStatus.png', 180)
+end
