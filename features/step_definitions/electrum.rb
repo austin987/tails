@@ -36,3 +36,8 @@ When /^I create a new bitcoin wallet$/ do
   @screen.wait_and_click("ElectrumNextButton.png", 10)
   @screen.wait("ElectrumPreferencesButton.png", 30)
 end
+
+Then /^I see a warning that Electrum is not persistent$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait('ElectrumStartVerification.png', 30)
+end
