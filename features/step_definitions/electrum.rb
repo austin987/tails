@@ -41,3 +41,8 @@ Then /^I see a warning that Electrum is not persistent$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('ElectrumStartVerification.png', 30)
 end
+
+Then /^I am prompted to create a new wallet$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait('ElectrumNoWallet.png', 60)
+end
