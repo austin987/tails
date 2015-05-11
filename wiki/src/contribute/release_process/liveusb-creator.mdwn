@@ -53,9 +53,17 @@ new Fedora release's version number, and reset the right side to
 `+tails1`.
 
     export NEW_UPSTREAM_VERSION=XXX
-    git archive --prefix=git/ \
-       --output=../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION.orig.tar.xz \
+    git archive \
+       --output=../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION.tar.xz \
        master
+
+Create a DFSG free tarball from the Git archive an reimport it into the 
+source tree. Note that this creates a commit on the debian-branch 
+specified in gbp.conf.
+
+	mk-origtargz --copy ../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION.tar.gz
+	gbp import-orig \
+	  ../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION+dfsg.orig.tar.gz
 
 Update the Debian package
 =========================
