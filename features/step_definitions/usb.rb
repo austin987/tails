@@ -163,8 +163,8 @@ end
 
 Given /^I setup a filesystem share containing the Tails ISO$/ do
   next if @skip_steps_while_restoring_background
-  shared_iso_dir_on_host = "#{$config["TMPDIR"]}/shared_pdf_dir"
-  @shared_iso_dir_on_guest = "/tmp/shared_pdf_dir"
+  shared_iso_dir_on_host = "#{$config["TMPDIR"]}/shared_iso_dir"
+  @shared_iso_dir_on_guest = "/tmp/shared_iso_dir"
   FileUtils.mkdir_p(shared_iso_dir_on_host)
   FileUtils.cp(TAILS_ISO, shared_iso_dir_on_host)
   add_after_scenario_hook { FileUtils.rm_r(shared_iso_dir_on_host) }
