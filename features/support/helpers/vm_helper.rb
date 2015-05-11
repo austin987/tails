@@ -225,6 +225,10 @@ class VM
     return "/dev/" + xml.elements['disk/target'].attribute('dev').to_s
   end
 
+  def udisks_disk_dev(name)
+    return disk_dev(name).gsub('/dev/', '/org/freedesktop/UDisks/devices/')
+  end
+
   def disk_detected?(name)
     return execute("test -b #{disk_dev(name)}").success?
   end
@@ -246,6 +250,11 @@ class VM
     if is_running?
       raise "shares can only be added to inactice vms"
     end
+    # The complete source directory must be group readable by the user
+    # running the virtual machine, and world readable so the user inside
+    # the VM can access it (since we use the passthrough security model).
+    FileUtils.chown_R(nil, "libvirt-qemu", source)
+    FileUtils.chmod_R("go+rX", source)
     xml = REXML::Document.new(File.read("#{@xml_path}/fs_share.xml"))
     xml.elements['filesystem/source'].attributes['dir'] = source
     xml.elements['filesystem/target'].attributes['dir'] = tag
