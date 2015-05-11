@@ -235,12 +235,7 @@ Update other base branches
 1. Merge the release branch into `devel` following the instructions for
    [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
 
-2. Restore `devel`'s `config/base_branch`:
-
-        echo 'devel' > config/base_branch && \
-        git commit config/base_branch -m "Restore devel's base branch."
-
-3. Merge `devel` into `feature/jessie` following the instructions for
+2. Merge `devel` into `feature/jessie` following the instructions for
    [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
    Given that these two branches' APT suites have diverged a lot, and
    that `tails-merge-suite` currently happily overwrites newer
@@ -250,16 +245,11 @@ Update other base branches
    suite. Also, most of our just upgraded bundled packages
    (e.g. `tails-greeter`) may need to be rebuilt for Jessie.
 
-4. Restore `feature/jessie`'s `config/base_branch`:
-
-        echo 'feature/jessie' > config/base_branch && \
-        git commit config/base_branch -m "Restore feature/jessie's base branch."
-
-5. Ensure that the release, `devel` and `feature/jessie` branches
+3. Ensure that the release, `devel` and `feature/jessie` branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
    not list any overlay APT suite that has been merged already.
 
-6. Push the modified branches to Git:
+4. Push the modified branches to Git:
 
         git push origin "${RELEASE_BRANCH}:${RELEASE_BRANCH}" \
                         devel:devel \
