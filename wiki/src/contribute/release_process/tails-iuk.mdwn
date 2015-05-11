@@ -99,9 +99,17 @@ Build a Debian package (use a Wheezy chroot with the right version of
 `tails-perl5lib` installed), add a signed tag to the repository and
 push the changes:
 
-    git-buildpackage && \
-       git-buildpackage --git-tag-only --git-sign-tags && \
-       git push && git push --tags
+    git-buildpackage
+
+If everything is fine, add a signed tag to the repository and push the
+changes:
+
+    git-buildpackage --git-tag-only --git-sign-tags && \
+    git push origin master:master \
+                    debian:debian \
+                    pristine-tar:pristine-tar \
+                    upstream:upstream && \
+    git push --tags
 
 Add the Debian package to Tails
 ===============================
