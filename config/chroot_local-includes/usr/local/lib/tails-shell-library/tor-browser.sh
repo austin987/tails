@@ -71,3 +71,11 @@ configure_best_tor_browser_locale() {
 configure_best_tor_launcher_locale() {
     configure_xulrunner_app_locale "${1}" "$(guess_best_tor_launcher_locale)"
 }
+
+supported_tor_browser_locales() {
+    # The default is always supported
+    echo en-US
+    for langpack in "${TBB_EXT}"/langpack-*@firefox.mozilla.org.xpi; do
+        basename "${langpack}" | sed 's,^langpack-\([^@]\+\)@.*$,\1,'
+    done
+}
