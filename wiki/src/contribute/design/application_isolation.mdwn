@@ -61,6 +61,8 @@ So, we have to adjust profiles a bit to make them support the paths
 that are actually seen by AppArmor in the context of Tails:
 
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-home-tunable.diff]]
+* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-pidgin-profile.diff]]
+* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-tor-abstraction.diff]]
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-tor-profile.diff]]
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-totem-profile.diff]]
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-user-tmp-abstraction.diff]]
@@ -159,7 +161,7 @@ in this area.
 Isolating more types of resources
 ---------------------------------
 
-Once AppArmor 2.9 is released and the corresponding kernel patches are
+With AppArmor 2.9, once the corresponding kernel patches are
 merged into Linux mainline, we will get support for mediating many
 more types of resources: D-Bus calls, sockets, signals and so on.
 
@@ -316,13 +318,10 @@ overlayfs
 ---------
 
 [overlayfs](https://git.kernel.org/cgit/linux/kernel/git/mszeredi/vfs.git/tree/Documentation/filesystems/overlayfs.txt?h=overlayfs.current)
-is another kind of union filesystem, that seems to have much greater
-chances than aufs to be merged into Linux mainline some day.
+is another kind of union filesystem. It has been merged in
+Linux mainline, and is supported by live-boot 5.
 overlayfs works differently from aufs, in ways that give hope that it
 might be easier for AppArmor to support it natively.
-
-Once it's merged in Linux mainline, Debian Live could be made to
-support overlayfs as an alternative to aufs.
 
 Some ongoing work on AppArmor (labeling, extended conditionals) will
 help support overlayfs. Time will tell whether the result meets

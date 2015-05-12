@@ -12,7 +12,7 @@ class ChatBot
   end
 
   def start
-    @otr_key_file = Tempfile.new("otr_key.", $config["TMP_DIR"])
+    @otr_key_file = Tempfile.new("otr_key.", $config["TMPDIR"])
     @otr_key_file << @otr_key
     @otr_key_file.close
 

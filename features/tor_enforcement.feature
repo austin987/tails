@@ -10,6 +10,9 @@ Feature: The Tor enforcement is effective
     When I start Tails from DVD and I login
     And I save the state so the background can be restored next scenario
 
+  Scenario: Tails' Tor binary is configured to use the expected Tor authorities
+    Then the Tor binary is configured to use the expected Tor authorities
+
   Scenario: The firewall configuration is very restrictive
     Then the firewall's policy is to drop all IPv4 traffic
     And the firewall is configured to only allow the clearnet and debian-tor users to connect directly to the Internet over IPv4
