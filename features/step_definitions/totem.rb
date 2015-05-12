@@ -18,7 +18,7 @@ end
 
 Given /^I copy the sample videos to "([^"]+)" as user "([^"]+)"$/ do |destination, user|
   next if @skip_steps_while_restoring_background
-  for video_on_host in Dir.glob("#{MISC_FILES_DIR}/*.mp4") do
+  for video_on_host in Dir.glob("#{@shared_video_dir_on_host}/*.mp4") do
     video_name = File.basename(video_on_host)
     src_on_guest = "#{@shared_video_dir_on_guest}/#{video_name}"
     dst_on_guest = "#{destination}/#{video_name}"
