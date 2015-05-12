@@ -31,6 +31,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     Given a computer
     And I start Tails from DVD with network unplugged and I login
     And I start Tails Installer in "Clone & Install" mode
+    But a suitable USB device is not found
     When I plug USB drive "current"
     Then the "current" USB drive is selected
     When I unplug USB drive "current"
