@@ -12,7 +12,7 @@ Feature: Microsoft Windows Camouflage
     And I enable more Tails Greeter options
     And I enable Microsoft Windows camouflage
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And all notifications have disappeared
     And I save the state so the background can be restored next scenario
 
