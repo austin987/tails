@@ -66,7 +66,7 @@ class VMStorage
 
   def delete_volume(name)
     assert(@pool.list_volumes.member?(name))
-    @pool.lookup_volume_by_name(vol_name).delete
+    @pool.lookup_volume_by_name(name).delete
   end
 
   def create_new_disk(name, options = {})
