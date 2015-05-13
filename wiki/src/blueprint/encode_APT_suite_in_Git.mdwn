@@ -15,44 +15,6 @@ Rationale
   support that, so we cannot add Jessie-based topic branches to our
   automatic ISO build setup yet.
 
-TODO
-====
-
-`tails-diff-suite`
-------------------
-
-Regardless of the exact implementation we go for, `tails-diff-suites`
-will need to take into account whatever is in `config/APT_overlays`;
-the current behavior should still be supported. Whatever the default
-is depends on actual use-cases and existing user habits.
-
-Use-cases:
-
- * Compare the list of packages available in the suites used by the
-   to-be-released stable or testing branch (including overlays), with
-   the list of packages available in the suite corresponding to the
-   previous release's tag. This requires access both to an up-to-date
-   `tails.git`, and to the VM that hosts our APT repo. Given there's
-   a `tails.git` clone that's refreshed every minute on that system,
-   it would makes sense to run the script that compares said lists of
-   packages there too.
-
- * In `feature/8654-encode-apt-suite-in-git`,
-   [[contribute/APT_repository#workflow-merge-main-branch]] is the
-   only documented use-case for `tails-diff-suites`. It needs to
-   ignore overlays, just like current `tails-diff-suites`.
-
-Implementation notes:
-
-	git show $branch:config/base_branch
-	git show $branch:config/APT_overlays
-
-Misc.
------
-
-* Look for other scripts, code or processes that need to be adjusted,
-  e.g. in `puppet-tails.git`.
-
 Random ideas and notes
 ======================
 
@@ -67,6 +29,8 @@ need to know what's the base branch for a given topic branch.
 
 **Current conclusion**: Yes. The work done in
 `feature/8654-encode-apt-suite-in-git` assumes we'll be doing that.
+(Update: we finally went for `config/APT_overlays.d/*`, implemented in
+`feature/8654-encode-apt-suite-in-git-with-APT-overlays-dot-d`.)
 
 Also, it could be needed if/once we use the union merge driver for
 `config/APT_overlays` (when merging a base branch into another one, the
@@ -190,6 +154,10 @@ thing in all cases of merges we do manually.
 * human contributors will handle `config/APT_overlays` the good old way,
   as any other file in our Git tree;
 * we'll use the union merge driver in Jenkins.
+
+**Update**: all this reasoning is moot since we've moved to
+`config/APT_overlays.d/*`, so we don't need the union merge
+driver anymore.
 
 And later, we can reconsider if we need something more clever, e.g.:
 

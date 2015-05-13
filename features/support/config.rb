@@ -2,16 +2,24 @@ require 'fileutils'
 require 'yaml'
 require "#{Dir.pwd}/features/support/helpers/misc_helpers.rb"
 
-# These two files deal with options like some of the settings passed
+# These files deal with options like some of the settings passed
 # to the `run_test_suite` script, and "secrets" like credentials
 # (passwords, SSH keys) to be used in tests.
-DEFAULTS_CONFIG_FILE = "#{Dir.pwd}/features/config/defaults.yml"
-LOCAL_CONFIG_FILE = "#{Dir.pwd}/features/config/local.yml"
+CONFIG_DIR = "#{Dir.pwd}/features/config"
+DEFAULTS_CONFIG_FILE = "#{CONFIG_DIR}/defaults.yml"
+LOCAL_CONFIG_FILE = "#{CONFIG_DIR}/local.yml"
+LOCAL_CONFIG_DIRS_FILES_GLOB = "#{CONFIG_DIR}/*.d/*.yml"
 
 assert File.exists?(DEFAULTS_CONFIG_FILE)
 $config = YAML.load(File.read(DEFAULTS_CONFIG_FILE))
-if File.exists?(LOCAL_CONFIG_FILE)
-  $config.merge!(YAML.load(File.read(LOCAL_CONFIG_FILE)))
+config_files = Dir.glob(LOCAL_CONFIG_DIRS_FILES_GLOB).sort
+config_files.insert(0, LOCAL_CONFIG_FILE) if File.exists?(LOCAL_CONFIG_FILE)
+config_files.each do |config_file|
+  yaml_struct = YAML.load(File.read(config_file)) || Hash.new
+  if not(yaml_struct.instance_of?(Hash))
+    raise "Local configuration file '#{config_file}' is malformed"
+  end
+  $config.merge!(yaml_struct)
 end
 # Options passed to the `run_test_suite` script will always take
 # precedence. The way we import these keys is only safe for values

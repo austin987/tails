@@ -100,19 +100,48 @@ end
 When /^I start Tails Installer$/ do
   next if @skip_steps_while_restoring_background
   step 'I start "TailsInstaller" via the GNOME "Tails" applications menu'
+  @screen.wait('USBCloneAndInstall.png', 30)
+end
+
+When /^I start Tails Installer in "([^"]+)" mode(?: with the )?(verbose)?(?: flag)?$/ do |mode, vbose|
+  next if @skip_steps_while_restoring_background
+  if vbose
+    step 'I run "liveusb-creator-launcher --verbose > /tmp/tails-installer.log 2>&1" in GNOME Terminal'
+  else
+    step 'I start Tails Installer'
+  end
+
+  case mode
+  when 'Clone & Install'
+    @screen.wait_and_click('USBCloneAndInstall.png', 10)
+  when 'Clone & Upgrade'
+    @screen.wait_and_click('USBCloneAndUpgrade.png', 10)
+  when 'Upgrade from ISO'
+    @screen.wait_and_click('USBUpgradeFromISO.png', 10)
+  else
+    raise "Unsupported mode '#{mode}'"
+  end
+end
+
+Then /^Tails Installer detects that the device "([^"]+)" is too small$/ do |name|
+  next if @skip_steps_while_restoring_background
+  assert($vm.file_exist?('/tmp/tails-installer.log'), "Cannot find logfile containing output from Tails Installer")
+  device = $vm.udisks_disk_dev(name)
+  try_for(15, :msg => "Tails Installer did not reject the USB device as being too small")  {
+    log = $vm.file_content('/tmp/tails-installer.log')
+    Regexp.new("Skipping too small device: #{device}$").match(log)
+  }
 end
 
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I start Tails Installer"
-  @screen.wait_and_click('USBCloneAndInstall.png', 30)
+  step 'I start Tails Installer in "Clone & Install" mode'
   usb_install_helper(name)
 end
 
 When /^I "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I start Tails Installer"
-  @screen.wait_and_click('USBCloneAndUpgrade.png', 30)
+  step 'I start Tails Installer in "Clone & Upgrade" mode'
   usb_install_helper(name)
 end
 
@@ -132,25 +161,25 @@ When /^I am suggested to do a "Clone & Install"$/ do
   @screen.find("USBSuggestsInstall.png")
 end
 
-def shared_iso_dir_on_guest
-  "/tmp/shared_iso_dir"
-end
-
 Given /^I setup a filesystem share containing the Tails ISO$/ do
   next if @skip_steps_while_restoring_background
-  $vm.add_share(File.dirname(TAILS_ISO), shared_iso_dir_on_guest)
+  shared_iso_dir_on_host = "#{$config["TMPDIR"]}/shared_iso_dir"
+  @shared_iso_dir_on_guest = "/tmp/shared_iso_dir"
+  FileUtils.mkdir_p(shared_iso_dir_on_host)
+  FileUtils.cp(TAILS_ISO, shared_iso_dir_on_host)
+  add_after_scenario_hook { FileUtils.rm_r(shared_iso_dir_on_host) }
+  $vm.add_share(shared_iso_dir_on_host, @shared_iso_dir_on_guest)
 end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
-  step "I start Tails Installer"
-  @screen.wait_and_click('USBUpgradeFromISO.png', 10)
+  step 'I start Tails Installer in "Upgrade from ISO" mode'
   @screen.wait('USBUseLiveSystemISO.png', 10)
   match = @screen.find('USBUseLiveSystemISO.png')
   @screen.click(match.getCenter.offset(0, match.h*2))
   @screen.wait('USBSelectISO.png', 10)
   @screen.wait_and_click('GnomeFileDiagTypeFilename.png', 10)
-  iso = "#{shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
+  iso = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   @screen.type(iso + Sikuli::Key.ENTER)
   usb_install_helper(name)
 end
@@ -235,7 +264,7 @@ end
 
 Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
   next if @skip_steps_while_restoring_background
-  iso = "#{shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
+  iso = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   iso_root = "/mnt/iso"
   $vm.execute("mkdir -p #{iso_root}")
   $vm.execute("mount -o loop #{iso} #{iso_root}")
@@ -576,4 +605,19 @@ Then /^Tails has started in UEFI mode$/ do
 Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
   next if @skip_steps_while_restoring_background
   $vm.storage.disk_mklabel(name, type)
+end
+
+Then /^a suitable USB device is (?:still )?not found$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("TailsInstallerNoDevice.png", 60)
+end
+
+Then /^the "(?:[[:alpha:]]+)" USB drive is selected$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("TailsInstallerQEMUHardDisk.png", 30)
+end
+
+Then /^no USB drive is selected$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
 end

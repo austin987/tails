@@ -62,8 +62,15 @@ end
 
 Then /^the Unsafe Browser has no add-ons installed$/ do
   next if @skip_steps_while_restoring_background
-  step "I open the address \"about:addons\" in the Unsafe Browser"
-  step "I see \"UnsafeBrowserNoAddons.png\" after at most 30 seconds"
+  step "I open the address \"about:support\" in the Unsafe Browser"
+  try_for(60) do
+    begin
+      @screen.find('UnsafeBrowserNoAddons.png')
+    rescue FindFailed => e
+      @screen.type(Sikuli::Key.PAGE_DOWN)
+      raise e
+    end
+  end
 end
 
 Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do

@@ -12,9 +12,9 @@ end
 # For @product tests
 ####################
 
-def add_after_scenario_hook(fn, args = [])
-  @after_scenario_hook ||= Array.new
-  @after_scenario_hook << [fn, args]
+def add_after_scenario_hook(&block)
+  @after_scenario_hooks ||= Array.new
+  @after_scenario_hooks << block
 end
 
 BeforeFeature('@product') do |feature|
@@ -91,6 +91,8 @@ Before('@product') do
     @skip_steps_while_restoring_background = false
   end
   @theme = "gnome"
+  # English will be assumed if this is not overridden
+  @language = ""
   @os_loader = "MBR"
 end
 
@@ -157,10 +159,10 @@ end
 ########
 
 After do
-  if @after_scenario_hook
-    @after_scenario_hook.each { |fn, args| fn.call(*args) }
+  if @after_scenario_hooks
+    @after_scenario_hooks.each { |block| block.call }
   end
-  @after_scenario_hook = Array.new
+  @after_scenario_hooks = Array.new
 end
 
 BeforeFeature('@product', '@source') do |feature|
