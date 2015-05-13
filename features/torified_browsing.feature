@@ -83,3 +83,45 @@ Feature: Browsing the web using the Tor Browser
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
     Then the Tor Browser has no plugins installed
+
+  Scenario: The persistent Tor Browser directory is usable
+    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
+    And the network is plugged
+    When I enable persistence with password "asdf"
+    And I log in to a new session
+    And Tails is running from USB drive "current"
+    And Tor is ready
+    And available upgrades have been checked
+    And all notifications have disappeared
+    Then the persistent Tor Browser directory exists
+    And there is a GNOME bookmark for the persistent Tor Browser directory
+    When I start the Tor Browser
+    And the Tor Browser has started and loaded the startup page
+    And I can save the current page as "index.html" to the persistent Tor Browser directory
+    When I open the address "file:///home/amnesia/Persistent/Tor Browser/index.html" in the Tor Browser
+    Then I see "TorBrowserSavedStartupPage.png" after at most 10 seconds
+    And I can print the current page as "output.pdf" to the persistent Tor Browser directory
+
+  Scenario: Persistent browser bookmarks
+    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
+    And Tails is running from USB drive "current"
+    And the boot device has safe access rights
+    And I enable persistence with password "asdf"
+    And I log in to a new session
+    And the Tails desktop is ready
+    And all notifications have disappeared
+    And all persistence presets are enabled
+    And all persistent filesystems have safe access rights
+    And all persistence configuration files have safe access rights
+    And all persistent directories have safe access rights
+    And I start the Tor Browser in offline mode
+    And the Tor Browser has started in offline mode
+    And I add a bookmark to eff.org in the Tor Browser
+    And I warm reboot the computer
+    And the computer reboots Tails
+    And I enable read-only persistence with password "asdf"
+    And I log in to a new session
+    And the Tails desktop is ready
+    And I start the Tor Browser in offline mode
+    And the Tor Browser has started in offline mode
+    Then the Tor Browser has a bookmark to eff.org
