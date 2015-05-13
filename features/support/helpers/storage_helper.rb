@@ -64,6 +64,11 @@ class VMStorage
     VMStorage.clear_storage_pool_volumes(@pool)
   end
 
+  def delete_volume(name)
+    assert(@pool.list_volumes.member?(name))
+    @pool.lookup_volume_by_name(vol_name).delete
+  end
+
   def create_new_disk(name, options = {})
     options[:size] ||= 2
     options[:unit] ||= "GiB"
