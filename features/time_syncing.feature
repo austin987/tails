@@ -5,9 +5,7 @@ Feature: Time syncing
   And for that I need a reasonably accurate system clock
 
   Background:
-    Given a computer
-    And I start Tails from DVD with network unplugged and I login
-    And I save the state so the background can be restored next scenario
+    Given Tails has booted from DVD without network and logged in
 
   Scenario: Clock with host's time
     When the network is plugged

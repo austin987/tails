@@ -5,15 +5,11 @@ Feature: Time syncing with Tor pluggable transports
   And for that I need a reasonably accurate system clock
 
   Background:
-    Given a computer
-    And the network is unplugged
-    And I start the computer
-    And the computer boots Tails
+    Given Tails has booted from DVD without network and stopped at Tails Greeter's login screen
     And I enable more Tails Greeter options
     And I enable the specific Tor configuration option
     And I log in to a new session
     And the Tails desktop is ready
-    And I save the state so the background can be restored next scenario
 
   Scenario: Clock with host's time in bridge mode
     When the network is plugged
