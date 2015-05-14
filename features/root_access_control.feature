@@ -7,11 +7,7 @@ Feature: Root access control enforcement
   I should not be able to attain administration privileges at all.
 
   Background:
-    Given a computer
-    And the network is unplugged
-    And I start the computer
-    And the computer boots Tails
-    And I save the state so the background can be restored next scenario
+    Given Tails has booted from DVD without network and stopped at Tails Greeter's login screen
 
   Scenario: If an administrative password is set in Tails Greeter the live user should be able to run arbitrary commands with administrative privileges.
     Given I enable more Tails Greeter options
