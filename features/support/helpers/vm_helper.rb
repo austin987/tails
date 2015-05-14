@@ -513,7 +513,7 @@ EOF
 
   def restore_snapshot(name)
     @domain.destroy if is_running?
-    @display.stop if @display.active?
+    @display.stop if @display and @display.active?
     # See comment in save_snapshot() for details on why we use two
     # different type of snapshots.
     potential_ram_only_snapshot_path = ram_only_snapshot_path(name)
