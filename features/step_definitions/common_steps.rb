@@ -802,7 +802,7 @@ Given /^the USB drive "([^"]+)" contains Tails with persistence configured and p
 end
 
 def gnome_app_menu_click_helper(click_me, verify_me = nil)
-  try_for(60) do
+  try_for(30) do
     @screen.hide_cursor
     @screen.wait_and_click(click_me, 10)
     @screen.wait(verify_me, 10) if verify_me
@@ -821,9 +821,18 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, s
   menu_button = prefix + "ApplicationsMenu.png"
   sub_menu_entry = prefix + "Applications" + submenu + ".png"
   application_entry = prefix + "Applications" + app + ".png"
-  gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-  gnome_app_menu_click_helper(sub_menu_entry, application_entry)
-  gnome_app_menu_click_helper(application_entry)
+  try_for(120) do
+    begin
+      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
+      gnome_app_menu_click_helper(sub_menu_entry, application_entry)
+      gnome_app_menu_click_helper(application_entry)
+    rescue Exception => e
+      # Close menu, if still open
+      @screen.type(Sikuli::Key.ESC)
+      raise e
+    end
+    true
+  end
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
@@ -838,10 +847,19 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/
   sub_menu_entry = prefix + "Applications" + submenu + ".png"
   sub_sub_menu_entry = prefix + "Applications" + subsubmenu + ".png"
   application_entry = prefix + "Applications" + app + ".png"
-  gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-  gnome_app_menu_click_helper(sub_menu_entry, sub_sub_menu_entry)
-  gnome_app_menu_click_helper(sub_sub_menu_entry, application_entry)
-  gnome_app_menu_click_helper(application_entry)
+  try_for(120) do
+    begin
+      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
+      gnome_app_menu_click_helper(sub_menu_entry, sub_sub_menu_entry)
+      gnome_app_menu_click_helper(sub_sub_menu_entry, application_entry)
+      gnome_app_menu_click_helper(application_entry)
+    rescue Exception => e
+      # Close menu, if still open
+      @screen.type(Sikuli::Key.ESC)
+      raise e
+    end
+    true
+  end
 end
 
 When /^I type "([^"]+)"$/ do |string|
