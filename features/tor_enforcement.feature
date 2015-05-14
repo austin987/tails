@@ -6,9 +6,7 @@ Feature: The Tor enforcement is effective
   I want to ensure that the automated test suite detects firewall leaks reliably
 
   Background:
-    Given a computer
-    When I start Tails from DVD and I login
-    And I save the state so the background can be restored next scenario
+    Given Tails has booted from DVD and logged in and the network is connected
 
   Scenario: Tails' Tor binary is configured to use the expected Tor authorities
     Then the Tor binary is configured to use the expected Tor authorities
