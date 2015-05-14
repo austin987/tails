@@ -72,8 +72,7 @@ Then /^I enable key synchronization in Seahorse$/ do
   next if @skip_steps_while_restoring_background
   step 'process "seahorse" is running'
   @screen.wait_and_click("SeahorseWindow.png", 10)
-  @screen.wait_and_click("SeahorseEdit.png", 10)
-  @screen.wait_and_click("SeahorseEditPreferences.png", 10)
+  seahorse_menu_click_helper('SeahorseEdit.png', 'SeahorseEditPreferences.png', 'seahorse')
   @screen.wait("SeahorsePreferences.png", 10)
   @screen.type("p", Sikuli::KeyModifier.ALT) # Option: "Publish keys to...".
   @screen.type(Sikuli::Key.DOWN) # select HKP server
@@ -84,9 +83,7 @@ Then /^I synchronize keys in Seahorse$/ do
   next if @skip_steps_while_restoring_background
   step "process \"seahorse\" is running"
   @screen.wait_and_click("SeahorseWindow.png", 10)
-  @screen.wait("SeahorseWindow.png", 10)
-  @screen.wait_and_click("SeahorseRemoteMenu.png", 10)
-  @screen.wait_and_click("SeahorseRemoteMenuSync.png", 10)
+  seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuSync.png', 'seahorse')
   @screen.wait("SeahorseSyncKeys.png", 10)
   @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
   @screen.wait("SeahorseSynchronizing.png", 20)
@@ -102,8 +99,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
   end
   step "Seahorse has opened"
   @screen.wait_and_click("SeahorseWindow.png", 10)
-  @screen.wait_and_click("SeahorseRemoteMenu.png", 10)
-  @screen.wait_and_click("SeahorseRemoteMenuFind.png", 10)
+  seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuFind.png', 'seahorse')
   @screen.wait("SeahorseFindKeysWindow.png", 10)
   # Seahorse doesn't seem to support searching for fingerprints
   @screen.type(keyid + Sikuli::Key.ENTER)
