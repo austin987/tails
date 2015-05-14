@@ -105,7 +105,8 @@ registry](https://github.com/docker/docker-registry):
  * [specs](https://docs.docker.com/reference/api/hub_registry_spec/)
 
 Or, one can use `docker save` an image or `docker export` a container,
-and then use `docker load` or `docker import`.
+and then use `docker load` or `docker import`. `save/load` are about
+images, while `export/import` are about containers.
 
 XXX: how to verify downloaded images?
 
@@ -167,6 +168,18 @@ Test run
   - We can run both `apt-cacher-ng` and the build system in the same
     container, using some init system and happily violating Docker's
     preferred one-app-per-container philosophy.
+    * Running Jessie's systemd inside an _unprivileged_ Docker
+      container is doable too: it simply requires passing `-v
+      /sys/fs/cgroup:/sys/fs/cgroup:ro` to `docker run`. However, our
+      build system can't do what it needs inside an unprivileged
+      container (see below) => we'll have to run
+      a privileged container.
+    * Jessie's systemd works fine inside a _privileged_ Docker
+      container -- the list of units needs to be cleaned up a lot
+      though, since otherwise it e.g. changes the host system's
+      keyboard layout etc.
+    * There are alternatives, like `supervisord`. Pros: likely less
+      tweaking to do. Cons: yet another tool to learn.
 * Even with `--cache false`, some directories (`chroot`, `cache`) are
   saved and retrieved from the container upon shutdown; same for
   live-config -generated `config/*` files. That's because the current
@@ -184,20 +197,14 @@ Test run
   root access. We should instead encourage contributors
   to run `docker` commands with `sudo`, or to use Docker in
   a virtual machine.
-* We currently pass `--privileged` to `docker run`. Should we remove
-  it, and if yes, how?
-  - According to
-    <https://docs.docker.com/articles/dockerfile_best-practices/>,
-    "many of the “essential” packages from the base images will fail
-    to upgrade inside an unprivileged container". It seems that
-    the best practice is to publish _and regularly update_ a base
-    image, so that the most common usecases can avoid the APT upgrade
-    steps, and then run unprivileged.
-  - We'll move package installation and upgrade steps from the
-    `Dockerfile` used to build ISOs to the `Dockerfile` used to build
-    our base image(s), so we won't be affected by that problem.
-    However, it may be that `debootstrap` (used by our build system)
-    itself needs to run privileged, e.g. to create device nodes.
+* We currently pass `--privileged` to `docker run`. We can't remove
+  it, since `debootstrap` (used by our build system) itself needs to
+  run privileged. So we need to:
+  1. make it extra clear to potential users of our build system that
+     we are _not_ using Docker for security; if they want more
+     isolation, then they must run Docker inside a dedicated VM;
+  2. ensure that our build system doesn't affect the host system,
+     as much as possible.
 * Adding `.git` to the `.dockerignore` file would speed up the build,
   but some code in our build process wants to know what branch or
   commit we're building from => maybe we could pre-compute this
