@@ -1,21 +1,42 @@
-Then /^the shipped Tails (signing|Debian repository) key will be valid for the next (\d+) months$/ do |key_type, max_months|
+def shipped_openpgp_keys
+  shipped_gpg_keys = @vm.execute_successfully('gpg --batch --with-colons --fingerprint --list-key', LIVE_USER).stdout
+  openpgp_fingerprints = shipped_gpg_keys.scan(/^fpr:::::::::([A-Z0-9]+):$/).flatten
+  return openpgp_fingerprints
+end
+
+Then /^the OpenPGP keys shipped with Tails will be valid for the next (\d+) months$/ do |months|
   next if @skip_steps_while_restoring_background
-  case key_type
-  when 'signing'
-    sig_key_fingerprint = TAILS_SIGNING_KEY
+  invalid = Array.new
+  shipped_openpgp_keys.each do |key|
+    begin
+      step "the shipped Tails key #{key} will be valid for the next #{months} months"
+    rescue Test::Unit::AssertionFailedError
+      invalid << key
+      next
+    end
+  end
+  assert(invalid.empty?, "The following key(s) will not be valid in #{months} months: #{invalid.join(', ')}")
+end
+
+Then /^the shipped Tails( Debian repository)? key( [A-Z0-9]+)? will be valid for the next (\d+) months$/ do |debian, fingerprint, max_months|
+  next if @skip_steps_while_restoring_background
+  if fingerprint
+    sig_key_fingerprint = fingerprint
     cmd = 'gpg'
     user = LIVE_USER
-  when 'Debian repository'
+  end
+  if debian
     sig_key_fingerprint = TAILS_DEBIAN_REPO_KEY
     cmd = 'apt-key adv'
     user = 'root'
-  else
-    raise 'Unknown key type #{key_type}'
   end
   shipped_sig_key_info = @vm.execute_successfully("#{cmd} --batch --list-key #{sig_key_fingerprint}", user).stdout
-  expiration_date = Date.parse(/\[expires: ([0-9-]*)\]/.match(shipped_sig_key_info)[1])
-  assert((expiration_date << max_months.to_i) > DateTime.now,
-         "The shipped signing key will expire within the next #{max_months} months.")
+  m = /\[expire[ds]: ([0-9-]*)\]/.match(shipped_sig_key_info)
+  if m
+    expiration_date = Date.parse(m[1])
+    assert((expiration_date << max_months.to_i) > DateTime.now,
+           "The shipped key #{sig_key_fingerprint} will not be valid #{max_months} months from now.")
+  end
 end
 
 Then /^I double-click the Report an Error launcher on the desktop$/ do
