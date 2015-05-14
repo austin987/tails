@@ -43,7 +43,7 @@ end
 Then /^Pidgin automatically enables my XMPP account$/ do
   next if @skip_steps_while_restoring_background
   $vm.focus_window('Buddy List')
-  @screen.wait("PidginAvailableStatus.png", 120)
+  @screen.wait("PidginAvailableStatus.png", 60*3)
 end
 
 Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_chat|
