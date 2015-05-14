@@ -5,7 +5,7 @@ Feature: Using Totem
   And AppArmor should prevent Totem from doing dangerous things
   And all Internet traffic should flow only through Tor
 
-  # We cannot use Background to save a snapshot of an already booted
+  # We cannot use snapshots of an already booted
   # Tails here, due to bugs with filesystem shares vs. snapshots, as
   # explained in checks.feature.
 
