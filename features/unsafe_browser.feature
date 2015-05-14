@@ -5,15 +5,7 @@ Feature: Browsing the web using the Unsafe Browser
   I should have direct access to the web
 
   Background:
-    Given a computer
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And the Tails desktop is ready
-    And Tor is ready
-    And all notifications have disappeared
-    And available upgrades have been checked
-    And I save the state so the background can be restored next scenario
+    Given Tails has booted from DVD and logged in and the network is connected
 
   Scenario: Starting the Unsafe Browser works as it should.
     When I successfully start the Unsafe Browser
