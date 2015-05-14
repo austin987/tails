@@ -20,7 +20,7 @@ Feature: Tails persistence
     And all persistence presets are enabled
     And all persistent directories have safe access rights
 
-  Scenario: Writing files to a read/write-enabled persistent partition
+  Scenario: Writing files first to a read/write-enabled persistent partition, and then to a read-only-enabled persistent partition
     Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     When I enable persistence with password "asdf"
     And I log in to a new session
@@ -35,11 +35,7 @@ Feature: Tails persistence
     And I shutdown Tails and wait for the computer to power off
     # XXX: how does guestfs work vs snapshots?
     Then only the expected files are present on the persistence partition encrypted with password "asdf" on USB drive "current"
-
-  Scenario: Writing files to a read-only-enabled persistent partition
-    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
-    When I enable read-only persistence with password "asdf"
-    And I log in to a new session
+    Given I start Tails from USB drive "current" with network unplugged and I login with read-only persistence password "asdf"
     Then Tails is running from USB drive "current"
     And the boot device has safe access rights
     And all persistence presets are enabled
