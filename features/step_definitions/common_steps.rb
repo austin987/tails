@@ -902,9 +902,11 @@ end
 
 Then /^there is no GNOME bookmark for the persistent Tor Browser directory$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click('GnomePlaces.png', 10)
-  @screen.wait("GnomePlacesWithoutTorBrowserPersistent.png", 40)
-  @screen.type(Sikuli::Key.ESC)
+  try_for(65) do
+    @screen.wait_and_click('GnomePlaces.png', 10)
+    @screen.wait("GnomePlacesWithoutTorBrowserPersistent.png", 10)
+    @screen.type(Sikuli::Key.ESC)
+  end
 end
 
 def pulseaudio_sink_inputs
