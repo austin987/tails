@@ -6,9 +6,8 @@ Feature: Installing packages through APT
   and all Internet traffic should flow only through Tor.
 
   Background:
-    Given a computer
-    And I start the computer
-    And the computer boots Tails
+    Given Tails has booted from DVD without network and stopped at Tails Greeter's login screen
+    And the network is plugged
     And I enable more Tails Greeter options
     And I set sudo password "asdf"
     And I log in to a new session
