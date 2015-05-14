@@ -67,14 +67,30 @@ Do we want to:
 
 1. Let the build system build and maintain its own images on the
    developer's system, the same way we would do it if we were
-   publishing our images?
-1. Produce and publish these images automatically, e.g.
-   daily or weekly?
-1. Build them locally and then upload? If so, who would do it,
-   and when?
+   publishing our images? => no, because it may introduce subtle
+   discrepancies and at the very least, it'll make reproducible builds
+   harder
+1. Produce and publish these images automatically
+   * e.g. daily or weekly? => no
+   * once or twice per release?
+1. Build them locally and then upload? If so, who would do it, and
+   when? => we'll start with building locally (RM to start with)
+   and upload.
 
 Do something different for our base images (e.g. Debian Wheezy)
 from we do for the specialized containers (e.g. ISO builder)?
+
+Update frequency: OK to force devs to d/l ~300MB every ~3 weeks, not
+OK if every week.
+
+To start with, let's keep things as simple as possible: e.g.
+no incremental upgrades.
+
+The build system must by default abort if the base image being used is
+not the exact version that shall be used during this release cycle, at
+least when building an ISO meant to be published (or trying to rebuild
+an already published ISO). One must be enabled to override that check,
+e.g. for offline building.
 
 Image publication
 =================
@@ -90,6 +106,10 @@ registry](https://github.com/docker/docker-registry):
 
 Or, one can use `docker save` an image or `docker export` a container,
 and then use `docker load` or `docker import`.
+
+XXX: how to verify downloaded images?
+
+We'll just serve our images over HTTP from lizard's web server.
 
 Random notes
 ============
@@ -136,11 +156,17 @@ Test run
     allow to expose apt-cacher-ng's port only to our build container;
     OTOH some of us will want to use the same apt-cacher-ng instance for
     other use cases
-  - Docker will [have container
-    groups](https://github.com/docker/docker/issues/9694) at some
-    point, but we're not there yet; in the meantime, there are
-    [crane](https://github.com/michaelsauter/crane) and
-    [Fig](http://www.fig.sh/)
+  - Docker now has [container
+    groups](https://github.com/docker/docker/issues/9694), called
+    [Docker compose](https://docs.docker.com/compose/) ([[!debbug
+    782170 desc="Debian RFP"]] -- seems that some build-deps are not
+    in Debian), that is apparently [Fig](http://www.fig.sh/) rebranded
+    and better integrated; there's also
+    [crane](https://github.com/michaelsauter/crane)
+  - We can build our own similar thing in our own `Makefile`.
+  - We can run both `apt-cacher-ng` and the build system in the same
+    container, using some init system and happily violating Docker's
+    preferred one-app-per-container philosophy.
 * Even with `--cache false`, some directories (`chroot`, `cache`) are
   saved and retrieved from the container upon shutdown; same for
   live-config -generated `config/*` files. That's because the current
@@ -155,9 +181,9 @@ Test run
   should not trust. How should we build, maintain, publish and use
   our own? That's [[!tails_ticket 7533]].
 * Being in the `docker` group is basically equivalent to having full
-  root access. Do we want to encourage contributors to do that, or
+  root access. We should instead encourage contributors
   to run `docker` commands with `sudo`, or to use Docker in
-  a virtual machine?
+  a virtual machine.
 * We currently pass `--privileged` to `docker run`. Should we remove
   it, and if yes, how?
   - According to
@@ -167,6 +193,11 @@ Test run
     the best practice is to publish _and regularly update_ a base
     image, so that the most common usecases can avoid the APT upgrade
     steps, and then run unprivileged.
+  - We'll move package installation and upgrade steps from the
+    `Dockerfile` used to build ISOs to the `Dockerfile` used to build
+    our base image(s), so we won't be affected by that problem.
+    However, it may be that `debootstrap` (used by our build system)
+    itself needs to run privileged, e.g. to create device nodes.
 * Adding `.git` to the `.dockerignore` file would speed up the build,
   but some code in our build process wants to know what branch or
   commit we're building from => maybe we could pre-compute this
@@ -177,3 +208,4 @@ Test run
 * Move more stuff from `Makefile` to `Dockerfile`? E.g. `DOCKER_MOUNT`
   could be specified as `VOLUME`. Can we specify the build command as
   `CMD`?
+* aufs vs. overlayfs
