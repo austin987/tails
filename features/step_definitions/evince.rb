@@ -1,10 +1,8 @@
 When /^I(?:| try to) open "([^"]+)" with Evince$/ do |filename|
-  next if @skip_steps_while_restoring_background
   step "I run \"evince #{filename}\" in GNOME Terminal"
 end
 
 Then /^I can print the current document to "([^"]+)"$/ do |output_file|
-  next if @skip_steps_while_restoring_background
   @screen.type("p", Sikuli::KeyModifier.CTRL)
   @screen.wait("EvincePrintDialog.png", 10)
   @screen.wait_and_click("PrintToFile.png", 10)

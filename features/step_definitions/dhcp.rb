@@ -1,5 +1,4 @@
 Then /^the hostname should not have been leaked on the network$/ do
-  next if @skip_steps_while_restoring_background
   hostname = $vm.execute("hostname").stdout.chomp
   packets = PacketFu::PcapFile.new.file_to_array(:filename => @sniffer.pcap_file)
   packets.each do |p|

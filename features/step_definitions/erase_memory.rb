@@ -1,12 +1,10 @@
 Given /^the computer is a modern 64-bit system$/ do
-  next if @skip_steps_while_restoring_background
   $vm.set_arch("x86_64")
   $vm.drop_hypervisor_feature("nonpae")
   $vm.add_hypervisor_feature("pae")
 end
 
 Given /^the computer is an old pentium without the PAE extension$/ do
-  next if @skip_steps_while_restoring_background
   $vm.set_arch("i686")
   $vm.drop_hypervisor_feature("pae")
   # libvirt claim the following feature doesn't exit even though
@@ -22,13 +20,11 @@ def which_kernel
 end
 
 Given /^the PAE kernel is running$/ do
-  next if @skip_steps_while_restoring_background
   kernel = which_kernel
   assert_equal("vmlinuz2", kernel)
 end
 
 Given /^the non-PAE kernel is running$/ do
-  next if @skip_steps_while_restoring_background
   kernel = which_kernel
   assert_equal("vmlinuz", kernel)
 end
@@ -43,7 +39,6 @@ end
 
 Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
   @detected_ram_m = detected_ram_in_MiB
-  next if @skip_steps_while_restoring_background
   puts "Detected #{@detected_ram_m} MiB of RAM"
   min_ram_m = convert_to_MiB(min_ram.to_i, unit)
   # All RAM will not be reported by `free`, so we allow a 196 MB gap
@@ -76,7 +71,6 @@ end
 
 Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do |dont_verify|
   verify = dont_verify.empty?
-  next if @skip_steps_while_restoring_background
 
   # Free some more memory by dropping the caches etc.
   $vm.execute("echo 3 > /proc/sys/vm/drop_caches")
@@ -136,7 +130,6 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
 end
 
 Then /^I find very few patterns in the guest's memory$/ do
-  next if @skip_steps_while_restoring_background
   coverage = pattern_coverage_in_guest_ram()
   max_coverage = 0.005
   assert(coverage < max_coverage,
@@ -145,7 +138,6 @@ Then /^I find very few patterns in the guest's memory$/ do
 end
 
 Then /^I find many patterns in the guest's memory$/ do
-  next if @skip_steps_while_restoring_background
   coverage = pattern_coverage_in_guest_ram()
   min_coverage = 0.7
   assert(coverage > min_coverage,
@@ -154,13 +146,11 @@ Then /^I find many patterns in the guest's memory$/ do
 end
 
 When /^I reboot without wiping the memory$/ do
-  next if @skip_steps_while_restoring_background
   $vm.reset
   @screen.wait('TailsBootSplash.png', 30)
 end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
-  next if @skip_steps_while_restoring_background
   $vm.execute("halt")
   nr_gibs_of_ram = (@detected_ram_m.to_f/(2**10)).ceil
   try_for(nr_gibs_of_ram*5*60, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do

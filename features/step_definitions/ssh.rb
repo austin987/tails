@@ -34,7 +34,6 @@ EOF
 end
 
 Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)$/ do |server_type|
-  next if @skip_steps_while_restoring_background
   $vm.execute_successfully("install -m 0700 -d '/home/#{LIVE_USER}/.ssh/'", LIVE_USER)
   unless server_type == 'Git'
     read_and_validate_ssh_config server_type
@@ -51,13 +50,11 @@ Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)$/ d
 end
 
 Given /^I verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("SSHFingerprint.png", 60)
   @screen.type('yes' + Sikuli::Key.ENTER)
 end
 
 When /^I connect to an SSH server on the Internet$/ do
-  next if @skip_steps_while_restoring_background
 
   read_and_validate_ssh_config "SSH"
 
@@ -71,12 +68,10 @@ When /^I connect to an SSH server on the Internet$/ do
 end
 
 Then /^I have sucessfully logged into the SSH server$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait('SSHLoggedInPrompt.png', 60)
 end
 
 Then /^I connect to an SFTP server on the Internet$/ do
-  next if @skip_steps_while_restoring_background
 
   read_and_validate_ssh_config "SFTP"
 
@@ -101,11 +96,9 @@ Then /^I connect to an SFTP server on the Internet$/ do
 end
 
 Then /^I verify the SSH fingerprint for the SFTP server$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait_and_click("GnomeSSHVerificationConfirm.png", 60)
 end
 
 Then /^I successfully connect to the SFTP server$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("GnomeSSHSuccess.png", 60)
 end

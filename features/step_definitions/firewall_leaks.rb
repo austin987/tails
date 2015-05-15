@@ -1,5 +1,4 @@
 Then(/^the firewall leak detector has detected (.*?) leaks$/) do |type|
-  next if @skip_steps_while_restoring_background
   leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_all_tor_nodes)
   case type.downcase
   when 'ipv4 tcp'
@@ -28,7 +27,6 @@ Then(/^the firewall leak detector has detected (.*?) leaks$/) do |type|
 end
 
 Given(/^I disable Tails' firewall$/) do
-  next if @skip_steps_while_restoring_background
   $vm.execute("do_not_ever_run_me")
   iptables = $vm.execute("iptables -L -n -v").stdout.chomp.split("\n")
   for line in iptables do
@@ -41,19 +39,16 @@ Given(/^I disable Tails' firewall$/) do
 end
 
 When(/^I do a TCP DNS lookup of "(.*?)"$/) do |host|
-  next if @skip_steps_while_restoring_background
   lookup = $vm.execute("host -T #{host} #{SOME_DNS_SERVER}", LIVE_USER)
   assert(lookup.success?, "Failed to resolve #{host}:\n#{lookup.stdout}")
 end
 
 When(/^I do a UDP DNS lookup of "(.*?)"$/) do |host|
-  next if @skip_steps_while_restoring_background
   lookup = $vm.execute("host #{host} #{SOME_DNS_SERVER}", LIVE_USER)
   assert(lookup.success?, "Failed to resolve #{host}:\n#{lookup.stdout}")
 end
 
 When(/^I send some ICMP pings$/) do
-  next if @skip_steps_while_restoring_background
   # We ping an IP address to avoid a DNS lookup
   ping = $vm.execute("ping -c 5 #{SOME_DNS_SERVER}", LIVE_USER)
   assert(ping.success?, "Failed to ping #{SOME_DNS_SERVER}:\n#{ping.stderr}")

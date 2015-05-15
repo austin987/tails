@@ -56,7 +56,6 @@ def iptables_parse(iptables_output)
 end
 
 Then /^the firewall's policy is to (.+) all IPv4 traffic$/ do |expected_policy|
-  next if @skip_steps_while_restoring_background
   expected_policy.upcase!
   iptables_output = $vm.execute_successfully("iptables -L -n -v").stdout
   chains = iptables_parse(iptables_output)
@@ -68,7 +67,6 @@ Then /^the firewall's policy is to (.+) all IPv4 traffic$/ do |expected_policy|
 end
 
 Then /^the firewall is configured to only allow the (.+) users? to connect directly to the Internet over IPv4$/ do |users_str|
-  next if @skip_steps_while_restoring_background
   users = users_str.split(/, | and /)
   expected_uids = Set.new
   users.each do |user|
@@ -114,7 +112,6 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
 end
 
 Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DNSPort$/ do
-  next if @skip_steps_while_restoring_background
   tor_onion_addr_space = "127.192.0.0/10"
   iptables_nat_output = $vm.execute_successfully("iptables -t nat -L -n -v").stdout
   chains = iptables_parse(iptables_nat_output)
@@ -144,7 +141,6 @@ Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DN
 end
 
 Then /^the firewall is configured to block all IPv6 traffic$/ do
-  next if @skip_steps_while_restoring_background
   expected_policy = "DROP"
   ip6tables_output = $vm.execute_successfully("ip6tables -L -n -v").stdout
   chains = iptables_parse(ip6tables_output)
@@ -170,7 +166,6 @@ def firewall_has_dropped_packet_to?(proto, host, port)
 end
 
 When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+))? that is expected to fail$/ do |proto, host, port|
-  next if @skip_steps_while_restoring_background
   assert(!firewall_has_dropped_packet_to?(proto, host, port),
          "A #{proto} packet to #{host}" +
          (port.nil? ? "" : ":#{port}") +
@@ -192,7 +187,6 @@ When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+)
 end
 
 Then /^the untorified connection fails$/ do
-  next if @skip_steps_while_restoring_background
   case @conn_proto
   when "TCP"
     expected_in_stderr = "Connection refused"
@@ -207,7 +201,6 @@ Then /^the untorified connection fails$/ do
 end
 
 Then /^the untorified connection is logged as dropped by the firewall$/ do
-  next if @skip_steps_while_restoring_background
   assert(firewall_has_dropped_packet_to?(@conn_proto, @conn_host, @conn_port),
          "No #{@conn_proto} packet to #{@conn_host}" +
          (@conn_port.nil? ? "" : ":#{@conn_port}") +
@@ -215,7 +208,6 @@ Then /^the untorified connection is logged as dropped by the firewall$/ do
 end
 
 When /^the system DNS is(?: still)? using the local DNS resolver$/ do
-  next if @skip_steps_while_restoring_background
   resolvconf = $vm.file_content("/etc/resolv.conf")
   bad_lines = resolvconf.split("\n").find_all do |line|
     !line.start_with?("#") && !/^nameserver\s+127\.0\.0\.1$/.match(line)
@@ -265,7 +257,6 @@ def stream_isolation_info(application)
 end
 
 When /^I monitor the network connections of (.*)$/ do |application|
-  next if @skip_steps_while_restoring_background
   @process_monitor_log = "/tmp/netstat.log"
   info = stream_isolation_info(application)
   $vm.spawn("while true; do " +
@@ -275,7 +266,6 @@ When /^I monitor the network connections of (.*)$/ do |application|
 end
 
 Then /^I see that (.+) is properly stream isolated$/ do |application|
-  next if @skip_steps_while_restoring_background
   expected_port = stream_isolation_info(application)[:socksport]
   assert_not_nil(@process_monitor_log)
   log_lines = $vm.file_content(@process_monitor_log).split("\n")
@@ -291,12 +281,10 @@ Then /^I see that (.+) is properly stream isolated$/ do |application|
 end
 
 And /^I re-run tails-security-check$/ do
-  next if @skip_steps_while_restoring_background
   $vm.execute_successfully("tails-security-check", LIVE_USER)
 end
 
 And /^I re-run htpdate$/ do
-  next if @skip_steps_while_restoring_background
   $vm.execute_successfully("service htpdate stop && " \
                            "rm -f /var/run/htpdate/* && " \
                            "service htpdate start")
@@ -304,12 +292,10 @@ And /^I re-run htpdate$/ do
 end
 
 And /^I re-run tails-upgrade-frontend-wrapper$/ do
-  next if @skip_steps_while_restoring_background
   $vm.execute_successfully("tails-upgrade-frontend-wrapper", LIVE_USER)
 end
 
 When /^I connect Gobby to "([^"]+)"$/ do |host|
-  next if @skip_steps_while_restoring_background
   @screen.wait("GobbyWindow.png", 30)
   @screen.wait("GobbyWelcomePrompt.png", 10)
   @screen.click("GnomeCloseButton.png")
@@ -321,12 +307,10 @@ When /^I connect Gobby to "([^"]+)"$/ do |host|
 end
 
 When /^the Tor Launcher autostarts$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait('TorLauncherWindow.png', 30)
 end
 
 When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
-  next if @skip_steps_while_restoring_background
   bridge_type.downcase!
   bridge_type.capitalize!
   begin
@@ -366,7 +350,6 @@ EOF
 end
 
 When /^all Internet traffic has only flowed through the configured pluggable transports$/ do
-  next if @skip_steps_while_restoring_background
   assert_not_nil(@bridge_hosts, "No bridges has been configured via the " +
                  "'I configure some ... bridges in Tor Launcher' step")
   leaks = FirewallLeakCheck.new(@sniffer.pcap_file, @bridge_hosts)
@@ -374,7 +357,6 @@ When /^all Internet traffic has only flowed through the configured pluggable tra
 end
 
 Then /^the Tor binary is configured to use the expected Tor authorities$/ do
-  next if @skip_steps_while_restoring_background
   tor_auths = Set.new
   tor_binary_orport_strings = $vm.execute_successfully(
     "strings /usr/bin/tor | grep -E 'orport=[0-9]+'").stdout.chomp.split("\n")

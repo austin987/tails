@@ -49,22 +49,18 @@ def persistent_volumes_mountpoints
 end
 
 Given /^I clone USB drive "([^"]+)" to a new USB drive "([^"]+)"$/ do |from, to|
-  next if @skip_steps_while_restoring_background
   $vm.storage.clone_to_new_disk(from, to)
 end
 
 Given /^I unplug USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
   $vm.unplug_drive(name)
 end
 
 Given /^the computer is set to boot from the old Tails DVD$/ do
-  next if @skip_steps_while_restoring_background
   $vm.set_cdrom_boot(OLD_TAILS_ISO)
 end
 
 Given /^the computer is set to boot in UEFI mode$/ do
-  next if @skip_steps_while_restoring_background
   $vm.set_os_loader('UEFI')
   @os_loader = 'UEFI'
 end
@@ -98,13 +94,11 @@ def usb_install_helper(name)
 end
 
 When /^I start Tails Installer$/ do
-  next if @skip_steps_while_restoring_background
   step 'I start "TailsInstaller" via the GNOME "Tails" applications menu'
   @screen.wait('USBCloneAndInstall.png', 30)
 end
 
 When /^I start Tails Installer in "([^"]+)" mode(?: with the )?(verbose)?(?: flag)?$/ do |mode, vbose|
-  next if @skip_steps_while_restoring_background
   if vbose
     step 'I run "liveusb-creator-launcher --verbose > /tmp/tails-installer.log 2>&1" in GNOME Terminal'
   else
@@ -124,7 +118,6 @@ When /^I start Tails Installer in "([^"]+)" mode(?: with the )?(verbose)?(?: fla
 end
 
 Then /^Tails Installer detects that the device "([^"]+)" is too small$/ do |name|
-  next if @skip_steps_while_restoring_background
   assert($vm.file_exist?('/tmp/tails-installer.log'), "Cannot find logfile containing output from Tails Installer")
   device = $vm.udisks_disk_dev(name)
   try_for(15, :msg => "Tails Installer did not reject the USB device as being too small")  {
@@ -134,19 +127,16 @@ Then /^Tails Installer detects that the device "([^"]+)" is too small$/ do |name
 end
 
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
   step 'I start Tails Installer in "Clone & Install" mode'
   usb_install_helper(name)
 end
 
 When /^I "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
   step 'I start Tails Installer in "Clone & Upgrade" mode'
   usb_install_helper(name)
 end
 
 When /^I try a "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
   begin
     step "I \"Clone & Upgrade\" Tails to USB drive \"#{name}\""
   rescue ISOHybridUpgradeNotSupported
@@ -157,12 +147,10 @@ When /^I try a "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
 end
 
 When /^I am suggested to do a "Clone & Install"$/ do
-  next if @skip_steps_while_restoring_background
   @screen.find("USBSuggestsInstall.png")
 end
 
 Given /^I setup a filesystem share containing the Tails ISO$/ do
-  next if @skip_steps_while_restoring_background
   shared_iso_dir_on_host = "#{$config["TMPDIR"]}/shared_iso_dir"
   @shared_iso_dir_on_guest = "/tmp/shared_iso_dir"
   FileUtils.mkdir_p(shared_iso_dir_on_host)
@@ -172,7 +160,6 @@ Given /^I setup a filesystem share containing the Tails ISO$/ do
 end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
   step 'I start Tails Installer in "Upgrade from ISO" mode'
   @screen.wait('USBUseLiveSystemISO.png', 10)
   match = @screen.find('USBUseLiveSystemISO.png')
@@ -185,7 +172,6 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
 end
 
 Given /^I enable all persistence presets$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait('PersistenceWizardPresets.png', 20)
   # Select the "Persistent" folder preset, which is checked by default.
   @screen.type(Sikuli::Key.TAB)
@@ -200,7 +186,6 @@ Given /^I enable all persistence presets$/ do
 end
 
 Given /^I create a persistent partition$/ do
-  next if @skip_steps_while_restoring_background
   step 'I start "ConfigurePersistentVolume" via the GNOME "Tails" applications menu'
   @screen.wait('PersistenceWizardWindow.png', 40)
   @screen.wait('PersistenceWizardStart.png', 20)
@@ -257,13 +242,11 @@ def tails_is_installed_helper(name, tails_root, loader)
 end
 
 Then /^the running Tails is installed on USB drive "([^"]+)"$/ do |target_name|
-  next if @skip_steps_while_restoring_background
   loader = boot_device_type == "usb" ? "syslinux" : "isolinux"
   tails_is_installed_helper(target_name, "/lib/live/mount/medium", loader)
 end
 
 Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
-  next if @skip_steps_while_restoring_background
   iso = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   iso_root = "/mnt/iso"
   $vm.execute("mkdir -p #{iso_root}")
@@ -273,14 +256,12 @@ Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
 end
 
 Then /^there is no persistence partition on USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
   data_part_dev = $vm.disk_dev(name) + "2"
   assert(!$vm.execute("test -b #{data_part_dev}").success?,
          "USB drive #{name} has a partition '#{data_part_dev}'")
 end
 
 Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
   dev = $vm.disk_dev(name) + "2"
   check_part_integrity(name, dev, "crypto", "crypto_LUKS", "gpt", "TailsData")
 
@@ -322,7 +303,6 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
 end
 
 Given /^I enable persistence$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait('TailsGreeterPersistence.png', 10)
   @screen.type(Sikuli::Key.SPACE)
   @screen.wait('TailsGreeterPersistencePassphrase.png', 10)
@@ -339,7 +319,6 @@ def tails_persistence_enabled?
 end
 
 Given /^all persistence presets(| from the old Tails version) are enabled$/ do |old_tails|
-  next if @skip_steps_while_restoring_background
   try_for(120, :msg => "Persistence is disabled") do
     tails_persistence_enabled?
   end
@@ -358,13 +337,11 @@ Given /^all persistence presets(| from the old Tails version) are enabled$/ do |
 end
 
 Given /^persistence is disabled$/ do
-  next if @skip_steps_while_restoring_background
   assert(!tails_persistence_enabled?, "Persistence is enabled")
 end
 
 Given /^I enable read-only persistence$/ do
   step "I enable persistence"
-  next if @skip_steps_while_restoring_background
   @screen.wait_and_click('TailsGreeterPersistenceReadOnly.png', 10)
 end
 
@@ -385,7 +362,6 @@ def boot_device_type
 end
 
 Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
-  next if @skip_steps_while_restoring_background
   bus = bus.downcase
   case bus
   when "ide"
@@ -408,7 +384,6 @@ Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
 end
 
 Then /^the boot device has safe access rights$/ do
-  next if @skip_steps_while_restoring_background
 
   super_boot_dev = boot_device.sub(/[[:digit:]]+$/, "")
   devs = $vm.execute("ls -1 #{super_boot_dev}*").stdout.chomp.split
@@ -471,7 +446,6 @@ Then /^all persistence configuration files have safe access rights$/ do
 end
 
 Then /^all persistent directories(| from the old Tails version) have safe access rights$/ do |old_tails|
-  next if @skip_steps_while_restoring_background
   if old_tails.empty?
     expected_dirs = persistent_dirs
   else
@@ -502,7 +476,6 @@ Then /^all persistent directories(| from the old Tails version) have safe access
 end
 
 When /^I write some files expected to persist$/ do
-  next if @skip_steps_while_restoring_background
   persistent_mounts.each do |_, dir|
     owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
     assert($vm.execute("touch #{dir}/XXX_persist", user=owner).success?,
@@ -511,7 +484,6 @@ When /^I write some files expected to persist$/ do
 end
 
 When /^I remove some files expected to persist$/ do
-  next if @skip_steps_while_restoring_background
   persistent_mounts.each do |_, dir|
     owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
     assert($vm.execute("rm #{dir}/XXX_persist", user=owner).success?,
@@ -520,7 +492,6 @@ When /^I remove some files expected to persist$/ do
 end
 
 When /^I write some files not expected to persist$/ do
-  next if @skip_steps_while_restoring_background
   persistent_mounts.each do |_, dir|
     owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
     assert($vm.execute("touch #{dir}/XXX_gone", user=owner).success?,
@@ -529,13 +500,11 @@ When /^I write some files not expected to persist$/ do
 end
 
 When /^I take note of which persistence presets are available$/ do
-  next if @skip_steps_while_restoring_background
   $remembered_persistence_mounts = persistent_mounts
   $remembered_persistence_dirs = persistent_dirs
 end
 
 Then /^the expected persistent files(| created with the old Tails version) are present in the filesystem$/ do |old_tails|
-  next if @skip_steps_while_restoring_background
   if old_tails.empty?
     expected_mounts = persistent_mounts
   else
@@ -551,7 +520,6 @@ Then /^the expected persistent files(| created with the old Tails version) are p
 end
 
 Then /^only the expected files are present on the persistence partition on USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
   assert(!$vm.is_running?)
   disk = {
     :path => $vm.storage.disk_path(name),
@@ -590,7 +558,6 @@ Then /^only the expected files are present on the persistence partition on USB d
 end
 
 When /^I delete the persistent partition$/ do
-  next if @skip_steps_while_restoring_background
   step 'I start "DeletePersistentVolume" via the GNOME "Tails" applications menu'
   @screen.wait("PersistenceWizardWindow.png", 40)
   @screen.wait("PersistenceWizardDeletionStart.png", 20)
@@ -604,21 +571,17 @@ Then /^Tails has started in UEFI mode$/ do
  end
 
 Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
-  next if @skip_steps_while_restoring_background
   $vm.storage.disk_mklabel(name, type)
 end
 
 Then /^a suitable USB device is (?:still )?not found$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("TailsInstallerNoDevice.png", 60)
 end
 
 Then /^the "(?:[[:alpha:]]+)" USB drive is selected$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("TailsInstallerQEMUHardDisk.png", 30)
 end
 
 Then /^no USB drive is selected$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
 end

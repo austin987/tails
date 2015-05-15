@@ -7,7 +7,6 @@ def max_time_drift
 end
 
 When /^I set the system time to "([^"]+)"$/ do |time|
-  next if @skip_steps_while_restoring_background
   $vm.execute_successfully("date -s '#{time}'")
   new_time = DateTime.parse($vm.execute_successfully("date").stdout).to_time
   expected_time_lower_bound = DateTime.parse(time).to_time
@@ -19,7 +18,6 @@ When /^I set the system time to "([^"]+)"$/ do |time|
 end
 
 When /^I bump the system time with "([^"]+)"$/ do |timediff|
-  next if @skip_steps_while_restoring_background
   old_time = DateTime.parse($vm.execute_successfully("date").stdout).to_time
   $vm.execute_successfully("date -s 'now #{timediff}'")
   new_time = DateTime.parse($vm.execute_successfully("date").stdout).to_time
@@ -33,7 +31,6 @@ When /^I bump the system time with "([^"]+)"$/ do |timediff|
 end
 
 Then /^Tails clock is less than (\d+) minutes incorrect$/ do |max_diff_mins|
-  next if @skip_steps_while_restoring_background
   guest_time_str = $vm.execute("date --rfc-2822").stdout.chomp
   guest_time = Time.rfc2822(guest_time_str)
   host_time = Time.now

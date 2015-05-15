@@ -5,7 +5,6 @@ def count_gpg_signatures(key)
 end
 
 Then /^the key "([^"]+)" has (only|more than) (\d+) signatures$/ do |key, qualifier, num|
-  next if @skip_steps_while_restoring_background
   count = count_gpg_signatures(key)
   case qualifier
   when 'only'
@@ -18,13 +17,11 @@ Then /^the key "([^"]+)" has (only|more than) (\d+) signatures$/ do |key, qualif
 end
 
 When /^the "([^"]+)" OpenPGP key is not in the live user's public keyring$/ do |keyid|
-  next if @skip_steps_while_restoring_background
   assert(!$vm.execute("gpg --batch --list-keys '#{keyid}'", LIVE_USER).success?,
          "The '#{keyid}' key is in the live user's public keyring.")
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signatures)?$/ do |keyid, without|
-  next if @skip_steps_while_restoring_background
   if without
     importopts = '--keyserver-options import-clean'
   else
@@ -36,26 +33,22 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
 end
 
 When /^the GnuPG fetch is successful$/ do
-  next if @skip_steps_while_restoring_background
   assert(@gnupg_recv_key_res.success?,
          "gpg keyserver fetch failed:\n#{@gnupg_recv_key_res.stderr}")
 end
 
 When /^GnuPG uses the configured keyserver$/ do
-  next if @skip_steps_while_restoring_background
   assert(@gnupg_recv_key_res.stderr[CONFIGURED_KEYSERVER_HOSTNAME],
          "GnuPG's stderr did not mention keyserver #{CONFIGURED_KEYSERVER_HOSTNAME}")
 end
 
 When /^the "([^"]+)" key is in the live user's public keyring after at most (\d+) seconds$/ do |keyid, delay|
-  next if @skip_steps_while_restoring_background
   try_for(delay.to_f, :msg => "The '#{keyid}' key is not in the live user's public keyring") {
     $vm.execute("gpg --batch --list-keys '#{keyid}'", LIVE_USER).success?
   }
 end
 
 When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
-  next if @skip_steps_while_restoring_background
   if withgpgapplet
     @screen.wait_and_click("GpgAppletIconNormal.png", 10)
     @screen.wait_and_click("GpgAppletManageKeys.png", 10)
@@ -65,12 +58,10 @@ When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
 end
 
 Then /^Seahorse has opened$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("SeahorseWindow.png", 10)
 end
 
 Then /^I enable key synchronization in Seahorse$/ do
-  next if @skip_steps_while_restoring_background
   step 'process "seahorse" is running'
   @screen.wait_and_click("SeahorseWindow.png", 10)
   @screen.wait_and_click("SeahorseEdit.png", 10)
@@ -82,7 +73,6 @@ Then /^I enable key synchronization in Seahorse$/ do
 end
 
 Then /^I synchronize keys in Seahorse$/ do
-  next if @skip_steps_while_restoring_background
   step "process \"seahorse\" is running"
   @screen.wait_and_click("SeahorseWindow.png", 10)
   @screen.wait("SeahorseWindow.png", 10)
@@ -95,7 +85,6 @@ Then /^I synchronize keys in Seahorse$/ do
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP Applet)?$/ do |keyid, withgpgapplet|
-  next if @skip_steps_while_restoring_background
   if withgpgapplet
     step "I start Seahorse via the Tails OpenPGP Applet"
   else

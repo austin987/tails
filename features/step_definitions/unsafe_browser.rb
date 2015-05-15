@@ -1,5 +1,4 @@
 When /^I see and accept the Unsafe Browser start verification$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserStartVerification.png", 30)
   @screen.type(Sikuli::Key.ESC)
 end
@@ -27,13 +26,11 @@ def supported_torbrowser_languages
 end
 
 Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
-  next if @skip_steps_while_restoring_background
   step "I run \"LANG=#{loc} LC_ALL=#{loc} sudo unsafe-browser\" in GNOME Terminal"
   step "I see and accept the Unsafe Browser start verification"
 end
 
 Then /^the Unsafe Browser works in all supported languages$/ do
-  next if @skip_steps_while_restoring_background
   failed = Array.new
   supported_torbrowser_languages.each do |lang|
     step "I start the Unsafe Browser in the \"#{lang}\" locale"
@@ -50,18 +47,15 @@ Then /^the Unsafe Browser works in all supported languages$/ do
 end
 
 Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserStartNotification.png", 30)
   @screen.waitVanish("UnsafeBrowserStartNotification.png", 10)
 end
 
 Then /^the Unsafe Browser has started$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserHomepage.png", 360)
 end
 
 Then /^the Unsafe Browser has no add-ons installed$/ do
-  next if @skip_steps_while_restoring_background
   step "I open the address \"about:support\" in the Unsafe Browser"
   try_for(60) do
     begin
@@ -74,7 +68,6 @@ Then /^the Unsafe Browser has no add-ons installed$/ do
 end
 
 Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
-  next if @skip_steps_while_restoring_background
   info = xul_application_info("Unsafe Browser")
   # "Show all bookmarks"
   @screen.type("o", Sikuli::KeyModifier.SHIFT + Sikuli::KeyModifier.CTRL)
@@ -123,22 +116,18 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
 end
 
 Then /^the Unsafe Browser has a red theme$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserRedTheme.png", 10)
 end
 
 Then /^the Unsafe Browser shows a warning as its start page$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserStartPage.png", 10)
 end
 
 When /^I start the Unsafe Browser$/ do
-  next if @skip_steps_while_restoring_background
   step 'I start "UnsafeBrowser" via the GNOME "Internet" applications menu'
 end
 
 When /^I successfully start the Unsafe Browser$/ do
-  next if @skip_steps_while_restoring_background
   step "I start the Unsafe Browser"
   step "I see and accept the Unsafe Browser start verification"
   step "I see the Unsafe Browser start notification and wait for it to close"
@@ -146,28 +135,23 @@ When /^I successfully start the Unsafe Browser$/ do
 end
 
 Then /^I see a warning about another instance already running$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait('UnsafeBrowserWarnAlreadyRunning.png', 10)
 end
 
 When /^I close the Unsafe Browser$/ do
-  next if @skip_steps_while_restoring_background
   @screen.type("q", Sikuli::KeyModifier.CTRL)
 end
 
 Then /^I see the Unsafe Browser stop notification$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait('UnsafeBrowserStopNotification.png', 20)
   @screen.waitVanish('UnsafeBrowserStopNotification.png', 10)
 end
 
 Then /^I can start the Unsafe Browser again$/ do
-  next if @skip_steps_while_restoring_background
   step "I start the Unsafe Browser"
 end
 
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
   # First we open the proxy settings page to prepare it with the
   # correct open tabs for the loop below.
@@ -227,7 +211,6 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
 end
 
 Then /^the Unsafe Browser has no proxy configured$/ do
-  next if @skip_steps_while_restoring_background
   @screen.click('UnsafeBrowserMenuButton.png')
   @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
   @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
@@ -241,12 +224,10 @@ Then /^the Unsafe Browser has no proxy configured$/ do
 end
 
 Then /^the Unsafe Browser complains that no DNS server is configured$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("UnsafeBrowserDNSError.png", 30)
 end
 
 Then /^I configure the Unsafe Browser to check for updates more frequently$/ do
-  next if @skip_steps_while_restoring_background
   prefs = '/usr/share/tails/unsafe-browser/prefs.js'
   $vm.file_append(prefs, 'pref("app.update.idletime", 1);')
   $vm.file_append(prefs, 'pref("app.update.promptWaitTime", 1);')
@@ -254,13 +235,11 @@ Then /^I configure the Unsafe Browser to check for updates more frequently$/ do
 end
 
 But /^checking for updates is disabled in the Unsafe Browser's configuration$/ do
-  next if @skip_steps_while_restoring_background
   prefs = '/usr/share/tails/unsafe-browser/prefs.js'
   assert($vm.file_content(prefs).include?('pref("app.update.enabled", false)'))
 end
 
 Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
-  next if @skip_steps_while_restoring_background
   pkts = 0
   uid = $vm.execute_successfully("id -u clearnet").stdout.chomp.to_i
   iptables_output = $vm.execute_successfully("iptables -vnL").stdout.chomp

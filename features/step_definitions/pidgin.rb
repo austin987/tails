@@ -19,7 +19,6 @@ EOF
 end
 
 When /^I create my XMPP account$/ do
-  next if @skip_steps_while_restoring_background
   account = xmpp_account("Tails_account")
   @screen.click("PidginAccountManagerAddButton.png")
   @screen.wait("PidginAddAccountWindow.png", 20)
@@ -41,13 +40,11 @@ When /^I create my XMPP account$/ do
 end
 
 Then /^Pidgin automatically enables my XMPP account$/ do
-  next if @skip_steps_while_restoring_background
   $vm.focus_window('Buddy List')
   @screen.wait("PidginAvailableStatus.png", 60*3)
 end
 
 Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_chat|
-  next if @skip_steps_while_restoring_background
   account = xmpp_account("Friend_account", ["otr_key"])
   bot_opts = account.select { |k, v| ["connect_server"].include?(k) }
   if join_chat
@@ -63,7 +60,6 @@ Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_c
 end
 
 When /^I start a conversation with my friend$/ do
-  next if @skip_steps_while_restoring_background
   $vm.focus_window('Buddy List')
   # Clicking the middle, bottom of this image should query our
   # friend, given it's the only subscribed user that's online, which
@@ -80,7 +76,6 @@ When /^I start a conversation with my friend$/ do
 end
 
 And /^I say something to my friend( in the multi-user chat)?$/ do |multi_chat|
-  next if @skip_steps_while_restoring_background
   msg = "ping" + Sikuli::Key.ENTER
   if multi_chat
     $vm.focus_window(@chat_room_jid.split("@").first)
@@ -92,7 +87,6 @@ And /^I say something to my friend( in the multi-user chat)?$/ do |multi_chat|
 end
 
 Then /^I receive a response from my friend( in the multi-user chat)?$/ do |multi_chat|
-  next if @skip_steps_while_restoring_background
   if multi_chat
     $vm.focus_window(@chat_room_jid.split("@").first)
   else
@@ -102,7 +96,6 @@ Then /^I receive a response from my friend( in the multi-user chat)?$/ do |multi
 end
 
 When /^I start an OTR session with my friend$/ do
-  next if @skip_steps_while_restoring_background
   $vm.focus_window(@friend_name)
   @screen.click("PidginConversationOTRMenu.png")
   @screen.hide_cursor
@@ -110,13 +103,11 @@ When /^I start an OTR session with my friend$/ do
 end
 
 Then /^Pidgin automatically generates an OTR key$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("PidginOTRKeyGenPrompt.png", 30)
   @screen.wait_and_click("PidginOTRKeyGenPromptDoneButton.png", 30)
 end
 
 Then /^an OTR session was successfully started with my friend$/ do
-  next if @skip_steps_while_restoring_background
   $vm.focus_window(@friend_name)
   @screen.wait("PidginConversationOTRUnverifiedSessionStarted.png", 10)
 end
@@ -125,7 +116,6 @@ end
 # up messages/events from other users with the ones we expect from the
 # bot.
 When /^I join some empty multi-user chat$/ do
-  next if @skip_steps_while_restoring_background
   $vm.focus_window('Buddy List')
   @screen.click("PidginBuddiesMenu.png")
   @screen.wait_and_click("PidginBuddiesMenuJoinChat.png", 10)
@@ -167,14 +157,12 @@ end
 # it's safer to clear it so we do not get false positives from old
 # messages when looking for a particular response, or similar.
 When /^I clear the multi-user chat's scrollback$/ do
-  next if @skip_steps_while_restoring_background
   $vm.focus_window(@chat_room_jid)
   @screen.click("PidginConversationMenu.png")
   @screen.wait_and_click("PidginConversationMenuClearScrollback.png", 10)
 end
 
 Then /^I can see that my friend joined the multi-user chat$/ do
-  next if @skip_steps_while_restoring_background
   $vm.focus_window(@chat_room_jid)
   @screen.wait("PidginChat2UsersInRoom.png", 60)
 end
@@ -228,7 +216,6 @@ def pidgin_otr_keys
 end
 
 Given /^Pidgin has the expected accounts configured with random nicknames$/ do
-  next if @skip_steps_while_restoring_background
   expected = [
             ["irc.oftc.net", "prpl-irc", "6697"],
             ["127.0.0.1",    "prpl-irc", "6668"],
@@ -250,28 +237,23 @@ Given /^Pidgin has the expected accounts configured with random nicknames$/ do
 end
 
 When /^I start Pidgin through the GNOME menu$/ do
-  next if @skip_steps_while_restoring_background
   step 'I start "Pidgin" via the GNOME "Internet" applications menu'
 end
 
 When /^I open Pidgin's account manager window$/ do
-  next if @skip_steps_while_restoring_background
   @screen.type("a", Sikuli::KeyModifier.CTRL) # shortcut for "manage accounts"
   step "I see Pidgin's account manager window"
 end
 
 When /^I see Pidgin's account manager window$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("PidginAccountWindow.png", 40)
 end
 
 When /^I close Pidgin's account manager window$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait_and_click("PidginAccountManagerCloseButton.png", 10)
 end
 
 When /^I activate the "([^"]+)" Pidgin account$/ do |account|
-  next if @skip_steps_while_restoring_background
   @screen.click("PidginAccount_#{account}.png")
   @screen.type(Sikuli::Key.LEFT + Sikuli::Key.SPACE)
   # wait for the Pidgin to be connecting, otherwise sometimes the step
@@ -281,7 +263,6 @@ When /^I activate the "([^"]+)" Pidgin account$/ do |account|
 end
 
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
-  next if @skip_steps_while_restoring_background
   expected_channel_entry = chan_image(account, default_chan(account), 'roaster')
   # Sometimes the OFTC welcome notice window pops up over the buddy list one...
   $vm.focus_window('Buddy List')
@@ -289,7 +270,6 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
 end
 
 Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ do |irc_server|
-  next if @skip_steps_while_restoring_background
   ctcp_cmds = [
     "CLIENTINFO", "DATE", "ERRMSG", "FINGER", "PING", "SOURCE", "TIME",
     "USERINFO", "VERSION"
@@ -305,24 +285,20 @@ Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ d
 end
 
 Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
-  next if @skip_steps_while_restoring_background
   @screen.doubleClick(   chan_image(account, channel, 'roaster'))
   @screen.wait_and_click(chan_image(account, channel, 'conversation_tab'), 10)
   @screen.wait(          chan_image(account, channel, 'welcome'), 10)
 end
 
 Then /^I take note of the configured Pidgin accounts$/ do
-  next if @skip_steps_while_restoring_background
   @persistent_pidgin_accounts = configured_pidgin_accounts
 end
 
 Then /^I take note of the OTR key for Pidgin's "([^"]+)" account$/ do |account_name|
-  next if @skip_steps_while_restoring_background
   @persistent_pidgin_otr_keys = pidgin_otr_keys
 end
 
 Then /^Pidgin has the expected persistent accounts configured$/ do
-  next if @skip_steps_while_restoring_background
   current_accounts = configured_pidgin_accounts
   assert(current_accounts <=> @persistent_pidgin_accounts,
          "Currently configured Pidgin accounts do not match the persistent ones:\n" +
@@ -332,7 +308,6 @@ Then /^Pidgin has the expected persistent accounts configured$/ do
 end
 
 Then /^Pidgin has the expected persistent OTR keys$/ do
-  next if @skip_steps_while_restoring_background
   assert_equal(pidgin_otr_keys, @persistent_pidgin_otr_keys)
 end
 
@@ -359,7 +334,6 @@ def pidgin_add_certificate_from (cert_file)
 end
 
 Then /^I can add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert_dir|
-  next if @skip_steps_while_restoring_background
   pidgin_add_certificate_from("#{cert_dir}/test.crt")
   @screen.wait('PidginCertificateAddHostnameDialog.png', 10)
   @screen.type("XXX test XXX" + Sikuli::Key.ENTER)
@@ -367,7 +341,6 @@ Then /^I can add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert
 end
 
 Then /^I cannot add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert_dir|
-  next if @skip_steps_while_restoring_background
   pidgin_add_certificate_from("#{cert_dir}/test.crt")
   @screen.wait('PidginCertificateImportFailed.png', 10)
 end

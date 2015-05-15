@@ -1,5 +1,4 @@
 Then /^the shipped Tails (signing|Debian repository) key will be valid for the next (\d+) months$/ do |key_type, max_months|
-  next if @skip_steps_while_restoring_background
   case key_type
   when 'signing'
     sig_key_fingerprint = TAILS_SIGNING_KEY
@@ -19,12 +18,10 @@ Then /^the shipped Tails (signing|Debian repository) key will be valid for the n
 end
 
 Then /^I double-click the Report an Error launcher on the desktop$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait_and_double_click('DesktopReportAnError.png', 30)
 end
 
 Then /^the live user has been setup by live\-boot$/ do
-  next if @skip_steps_while_restoring_background
   assert($vm.execute("test -e /var/lib/live/config/user-setup").success?,
          "live-boot failed its user-setup")
   actual_username = $vm.execute(". /etc/live/config/username.conf; " +
@@ -33,7 +30,6 @@ Then /^the live user has been setup by live\-boot$/ do
 end
 
 Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
-  next if @skip_steps_while_restoring_background
   expected_groups = groups.split(" ") << LIVE_USER
   actual_groups = $vm.execute("groups #{LIVE_USER}").stdout.chomp.sub(/^#{LIVE_USER} : /, "").split(" ")
   unexpected = actual_groups - expected_groups
@@ -45,7 +41,6 @@ Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
 end
 
 Then /^the live user owns its home dir and it has normal permissions$/ do
-  next if @skip_steps_while_restoring_background
   home = "/home/#{LIVE_USER}"
   assert($vm.execute("test -d #{home}").success?,
          "The live user's home doesn't exist or is not a directory")
@@ -56,14 +51,12 @@ Then /^the live user owns its home dir and it has normal permissions$/ do
 end
 
 Given /^I wait between (\d+) and (\d+) seconds$/ do |min, max|
-  next if @skip_steps_while_restoring_background
   time = rand(max.to_i - min.to_i + 1) + min.to_i
   puts "Slept for #{time} seconds"
   sleep(time)
 end
 
 Then /^no unexpected services are listening for network connections$/ do
-  next if @skip_steps_while_restoring_background
   netstat_cmd = $vm.execute("netstat -ltupn")
   assert netstat_cmd.success?
   for line in netstat_cmd.stdout.chomp.split("\n") do
@@ -92,13 +85,11 @@ Then /^no unexpected services are listening for network connections$/ do
 end
 
 When /^Tails has booted a 64-bit kernel$/ do
-  next if @skip_steps_while_restoring_background
   assert($vm.execute("uname -r | grep -qs 'amd64$'").success?,
          "Tails has not booted a 64-bit kernel.")
 end
 
 Then /^GNOME Screenshot is configured to save files to the live user's home directory$/ do
-  next if @skip_steps_while_restoring_background
   home = "/home/#{LIVE_USER}"
   save_path = $vm.execute_successfully(
     "gsettings get org.gnome.gnome-screenshot auto-save-directory",
@@ -108,14 +99,12 @@ Then /^GNOME Screenshot is configured to save files to the live user's home dire
 end
 
 Then /^there is no screenshot in the live user's home directory$/ do
-  next if @skip_steps_while_restoring_background
   home = "/home/#{LIVE_USER}"
   assert($vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?,
          "Existing screenshots were found in the live user's home directory.")
 end
 
 Then /^a screenshot is saved to the live user's home directory$/ do
-  next if @skip_steps_while_restoring_background
   home = "/home/#{LIVE_USER}"
   try_for(10, :msg=> "No screenshot was created in #{home}") {
     !$vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
@@ -123,13 +112,11 @@ Then /^a screenshot is saved to the live user's home directory$/ do
 end
 
 Then /^the VirtualBox guest modules are available$/ do
-  next if @skip_steps_while_restoring_background
   assert($vm.execute("modinfo vboxguest").success?,
          "The vboxguest module is not available.")
 end
 
 Given /^I setup a filesystem share containing a sample PDF$/ do
-  next if @skip_steps_while_restoring_background
   shared_pdf_dir_on_host = "#{$config["TMPDIR"]}/shared_pdf_dir"
   @shared_pdf_dir_on_guest = "/tmp/shared_pdf_dir"
   FileUtils.mkdir_p(shared_pdf_dir_on_host)
@@ -141,12 +128,10 @@ Given /^I setup a filesystem share containing a sample PDF$/ do
 end
 
 Then /^the support documentation page opens in Tor Browser$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("SupportDocumentation#{@language}.png", 120)
 end
 
 Then /^MAT can clean some sample PDF file$/ do
-  next if @skip_steps_while_restoring_background
   for pdf_on_host in Dir.glob("#{MISC_FILES_DIR}/*.pdf") do
     pdf_name = File.basename(pdf_on_host)
     pdf_on_guest = "/home/#{LIVE_USER}/#{pdf_name}"
@@ -181,7 +166,6 @@ def get_seccomp_status(process)
 end
 
 Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mode$/ do |process,mode|
-  next if @skip_steps_while_restoring_background
   status = get_seccomp_status(process)
   if mode == 'strict'
     assert_equal(1, status, "#{process} not confined with Seccomp in strict mode")

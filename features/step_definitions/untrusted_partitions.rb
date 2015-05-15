@@ -1,10 +1,8 @@
 Given /^I create an? ([[:alnum:]]+) swap partition on disk "([^"]+)"$/ do |parttype, name|
-  next if @skip_steps_while_restoring_background
   $vm.storage.disk_mkswap(name, parttype)
 end
 
 Then /^an? "([^"]+)" partition was detected by Tails on drive "([^"]+)"$/ do |type, name|
-  next if @skip_steps_while_restoring_background
   part_info = $vm.execute_successfully(
       "parted -s '#{$vm.disk_dev(name)}' print 1").stdout.strip
   assert(part_info.match("^File System:\s*#{Regexp.escape(type)}$"),
@@ -12,7 +10,6 @@ Then /^an? "([^"]+)" partition was detected by Tails on drive "([^"]+)"$/ do |ty
 end
 
 Then /^Tails has no disk swap enabled$/ do
-  next if @skip_steps_while_restoring_background
   # Skip first line which contain column headers
   swap_info = $vm.execute_successfully("tail -n+2 /proc/swaps").stdout
   assert(swap_info.empty?,
@@ -24,7 +21,6 @@ Then /^Tails has no disk swap enabled$/ do
 end
 
 Given /^I create an? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:alnum:]]+) filesystem( encrypted with password "([^"]+)")? on disk "([^"]+)"$/ do |parttype, has_label, label, fstype, is_encrypted, luks_password, name|
-  next if @skip_steps_while_restoring_background
   opts = {}
   opts.merge!(:label => label) if has_label
   opts.merge!(:luks_password => luks_password) if is_encrypted
@@ -32,7 +28,6 @@ Given /^I create an? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:
 end
 
 Given /^I cat an ISO of the Tails image to disk "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
   src_disk = {
     :path => TAILS_ISO,
     :opts => {
@@ -52,14 +47,12 @@ Given /^I cat an ISO of the Tails image to disk "([^"]+)"$/ do |name|
 end
 
 Then /^drive "([^"]+)" is not mounted$/ do |name|
-  next if @skip_steps_while_restoring_background
   dev = $vm.disk_dev(name)
   assert(!$vm.execute("grep -qs '^#{dev}' /proc/mounts").success?,
          "an untrusted partition from drive '#{name}' was automounted")
 end
 
 Then /^Tails Greeter has( not)? detected a persistence partition$/ do |no_persistence|
-  next if @skip_steps_while_restoring_background
   expecting_persistence = no_persistence.nil?
   @screen.find('TailsGreeter.png')
   found_persistence = ! @screen.exists('TailsGreeterPersistence.png').nil?
