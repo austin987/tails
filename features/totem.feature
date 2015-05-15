@@ -35,18 +35,16 @@ Feature: Using Totem
     When I load the "https://webm.html5.org/test.webm" URL in Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
 
-  Scenario: Installing Tails on a USB drive, creating a persistent partition, copying video files to it
-    Given the USB drive "current" contains Tails with persistence configured and password "asdf"
-    And a computer
+  Scenario: Installing Tails on a USB drive, creating a persistent partition, copying video files to it, and making sure that they persist
+    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     And I setup a filesystem share containing sample videos
-    And I start Tails from USB drive "current" with network unplugged and I login with persistence password "asdf"
+    And I enable persistence
+    And I login
+    And Tails seems to have booted normally
     And I copy the sample videos to "/home/amnesia/Persistent" as user "amnesia"
     And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"
     And I shutdown Tails and wait for the computer to power off
-
-  Scenario: Watching a MP4 video stored on the persistent volume
-    Given a computer
-    And I start Tails from USB drive "current" with network unplugged and I login with persistence password "asdf"
+    And I start Tails from USB drive "current" with network unplugged and I login with persistence enabled
     And the file "/home/amnesia/Persistent/video.mp4" exists
     When I open "/home/amnesia/Persistent/video.mp4" with Totem
     Then I see "SampleLocalMp4VideoFrame.png" after at most 10 seconds
