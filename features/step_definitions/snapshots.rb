@@ -54,7 +54,7 @@ def checkpoints
       ],
     },
 
-    'usb-install' => {
+    'usb-install-tails-greeter' => {
       :description => "Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen" ,
       :parent_checkpoint => 'no-network-logged-in',
       :steps => [
@@ -71,9 +71,9 @@ def checkpoints
       ],
     },
     
-    'usb-install-with-persistence' => {
+    'usb-install-with-persistence-tails-greeter' => {
       :description => "Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen",
-      :parent_checkpoint => 'usb-install',
+      :parent_checkpoint => 'usb-install-tails-greeter',
       :steps => [
         'I log in to a new session',
         'Tails seems to have booted normally',
