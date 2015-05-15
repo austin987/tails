@@ -77,8 +77,8 @@ def checkpoints
       :steps => [
         'I log in to a new session',
         'Tails seems to have booted normally',
-        'I create a persistent partition with password "asdf"',
-        'a Tails persistence partition with password "asdf" exists on USB drive "current"',
+        'I create a persistent partition',
+        'a Tails persistence partition exists on USB drive "current"',
         'I shutdown Tails and wait for the computer to power off',
         'I start Tails from USB drive "current" with network unplugged',
         'the boot device has safe access rights',

@@ -170,7 +170,7 @@ Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do 
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I login(| with(| read-only) persistence password "([^"]+)"))?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, persistence_ro, persistence_pwd|
+Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I login(| with(| read-only) persistence enabled))?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, persistence_ro|
   # we don't @skip_steps_while_restoring_background as we're only running
   # other steps, that are taking care of it *if* they have to
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
@@ -183,11 +183,10 @@ Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I 
   step "the computer boots Tails"
   if do_login
     if ! persistence_on.empty?
-      assert(! persistence_pwd.empty?, "A password must be provided when enabling persistence")
       if persistence_ro.empty?
-        step "I enable persistence with password \"#{persistence_pwd}\""
+        step "I enable persistence"
       else
-        step "I enable read-only persistence with password \"#{persistence_pwd}\""
+        step "I enable read-only persistence"
       end
     end
     step "I log in to a new session"
@@ -276,7 +275,7 @@ Given /^I enable the specific Tor configuration option$/ do
   @screen.click('TailsGreeterTorConf.png')
 end
 
-Given /^I set an administration password$/ do |password|
+Given /^I set an administration password$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait("TailsGreeterAdminPassword.png", 20)
   @screen.type(@sudo_password)

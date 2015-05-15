@@ -199,12 +199,12 @@ Given /^I enable all persistence presets$/ do
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
 
-Given /^I create a persistent partition with password "([^"]+)"$/ do |pwd|
+Given /^I create a persistent partition$/ do
   next if @skip_steps_while_restoring_background
   step 'I start "ConfigurePersistentVolume" via the GNOME "Tails" applications menu'
   @screen.wait('PersistenceWizardWindow.png', 40)
   @screen.wait('PersistenceWizardStart.png', 20)
-  @screen.type(pwd + "\t" + pwd + Sikuli::Key.ENTER)
+  @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)
   step "I enable all persistence presets"
 end
@@ -279,7 +279,7 @@ Then /^there is no persistence partition on USB drive "([^"]+)"$/ do |name|
          "USB drive #{name} has a partition '#{data_part_dev}'")
 end
 
-Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive "([^"]+)"$/ do |pwd, name|
+Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   dev = $vm.disk_dev(name) + "2"
   check_part_integrity(name, dev, "crypto", "crypto_LUKS", "gpt", "TailsData")
@@ -297,7 +297,8 @@ Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive
     end
   end
   if luks_dev.nil?
-    c = $vm.execute("echo #{pwd} | cryptsetup luksOpen #{dev} #{name}")
+    c = $vm.execute("echo #{@persistence_password} | " +
+                    "cryptsetup luksOpen #{dev} #{name}")
     assert(c.success?, "Couldn't open LUKS device '#{dev}' on  drive '#{name}'")
     luks_dev = "/dev/mapper/#{name}"
   end
@@ -320,14 +321,14 @@ Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive
   $vm.execute("cryptsetup luksClose #{name}")
 end
 
-Given /^I enable persistence with password "([^"]+)"$/ do |pwd|
+Given /^I enable persistence$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('TailsGreeterPersistence.png', 10)
   @screen.type(Sikuli::Key.SPACE)
   @screen.wait('TailsGreeterPersistencePassphrase.png', 10)
   match = @screen.find('TailsGreeterPersistencePassphrase.png')
   @screen.click(match.getCenter.offset(match.w*2, match.h/2))
-  @screen.type(pwd)
+  @screen.type(@persistence_password)
 end
 
 def tails_persistence_enabled?
@@ -361,8 +362,8 @@ Given /^persistence is disabled$/ do
   assert(!tails_persistence_enabled?, "Persistence is enabled")
 end
 
-Given /^I enable read-only persistence with password "([^"]+)"$/ do |pwd|
-  step "I enable persistence with password \"#{pwd}\""
+Given /^I enable read-only persistence$/ do
+  step "I enable persistence"
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click('TailsGreeterPersistenceReadOnly.png', 10)
 end
@@ -549,7 +550,7 @@ Then /^the expected persistent files(| created with the old Tails version) are p
   end
 end
 
-Then /^only the expected files are present on the persistence partition encrypted with password "([^"]+)" on USB drive "([^"]+)"$/ do |password, name|
+Then /^only the expected files are present on the persistence partition on USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   assert(!$vm.is_running?)
   disk = {
@@ -569,7 +570,7 @@ Then /^only the expected files are present on the persistence partition encrypte
     assert_not_nil(partition, "Could not find the 'TailsData' partition " \
                               "on disk '#{disk_handle}'")
     luks_mapping = File.basename(partition) + "_unlocked"
-    g.luks_open(partition, password, luks_mapping)
+    g.luks_open(partition, @persistence_password, luks_mapping)
     luks_dev = "/dev/mapper/#{luks_mapping}"
     mount_point = "/"
     g.mount(luks_dev, mount_point)

@@ -85,7 +85,7 @@ Feature: Browsing the web using the Tor Browser
   Scenario: The persistent Tor Browser directory is usable
     Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     And the network is plugged
-    When I enable persistence with password "asdf"
+    When I enable persistence
     And I log in to a new session
     And Tails is running from USB drive "current"
     And Tor is ready
@@ -104,7 +104,7 @@ Feature: Browsing the web using the Tor Browser
     Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     And Tails is running from USB drive "current"
     And the boot device has safe access rights
-    And I enable persistence with password "asdf"
+    And I enable persistence
     And I log in to a new session
     And the Tails desktop is ready
     And all notifications have disappeared
@@ -117,7 +117,7 @@ Feature: Browsing the web using the Tor Browser
     And I add a bookmark to eff.org in the Tor Browser
     And I warm reboot the computer
     And the computer reboots Tails
-    And I enable read-only persistence with password "asdf"
+    And I enable read-only persistence
     And I log in to a new session
     And the Tails desktop is ready
     And I start the Tor Browser in offline mode

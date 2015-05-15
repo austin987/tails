@@ -95,6 +95,7 @@ Before('@product') do
   @language = ""
   @os_loader = "MBR"
   @sudo_password = "asdf"
+  @persistence_password = "asdf"
 end
 
 # AfterScenario

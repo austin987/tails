@@ -13,7 +13,7 @@ Feature: Electrum Bitcoin client
   Scenario: Using a persistent Electrum configuration
     Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     And the network is plugged
-    When I enable persistence with password "asdf"
+    When I enable persistence
     And I log in to a new session
     And Tor is ready
     And available upgrades have been checked
@@ -26,7 +26,7 @@ Feature: Electrum Bitcoin client
     Then a bitcoin wallet is present
     And I see the main Electrum client window
     And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "current" and I login with persistence password "asdf"
+    And I start Tails from USB drive "current" and I login with persistence enabled
     When I start Electrum through the GNOME menu
     And a bitcoin wallet is present
     And I see the main Electrum client window
