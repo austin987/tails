@@ -24,7 +24,7 @@ When /^I bump the system time with "([^"]+)"$/ do |timediff|
   @vm.execute_successfully("date -s 'now #{timediff}'")
   new_time = DateTime.parse(@vm.execute_successfully("date").stdout).to_time
   expected_time_lower_bound = DateTime.parse(
-      cmd_helper("date -d '#{old_time} #{timediff}'")).to_time
+      cmd_helper(["date", "-d", "#{old_time} #{timediff}"])).to_time
   expected_time_upper_bound = expected_time_lower_bound + max_time_drift
   assert(expected_time_lower_bound <= new_time &&
          new_time <= expected_time_upper_bound,

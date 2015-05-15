@@ -38,12 +38,15 @@ try_for() {
 # torrc's " "). If the key already exists its value is updated in
 # place, otherwise it's added at the end.
 set_simple_config_key() {
-    local key="${1}"
-    local value="${2}"
-    local file="${3}"
+    local file="${1}"
+    local key="${2}"
+    local value="${3}"
     local op="${4:-=}"
     if grep -q "^${key}${op}" "${file}"; then
-        sed -i -n "s/^${key}${op}.*$/${key}${op}${value}/p" "${file}"
+        # Escape / in input so it can be used as the sed separator
+        key="$(echo "${key}" | sed 's,/,\\/,g')"
+        value="$(echo "${value}" | sed 's,/,\\/,g')"
+        sed -i "s/^${key}${op}.*$/${key}${op}${value}/" "${file}"
     else
         echo "${key}${op}${value}" >> "${file}"
     fi
