@@ -276,8 +276,7 @@ Given /^I enable the specific Tor configuration option$/ do
   @screen.click('TailsGreeterTorConf.png')
 end
 
-Given /^I set sudo password "([^"]*)"$/ do |password|
-  @sudo_password = password
+Given /^I set an administration password$/ do |password|
   next if @skip_steps_while_restoring_background
   @screen.wait("TailsGreeterAdminPassword.png", 20)
   @screen.type(@sudo_password)

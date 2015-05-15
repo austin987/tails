@@ -94,6 +94,7 @@ Before('@product') do
   # English will be assumed if this is not overridden
   @language = ""
   @os_loader = "MBR"
+  @sudo_password = "asdf"
 end
 
 # AfterScenario

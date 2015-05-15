@@ -36,7 +36,7 @@ def checkpoints
       :parent_checkpoint => "tails-greeter",
       :steps => [
         'I enable more Tails Greeter options',
-        'I set sudo password "asdf"',
+        'I set an administration password',
         'I log in to a new session',
         'Tails Greeter has dealt with the sudo password',
         'Tails seems to have booted normally',
