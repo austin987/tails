@@ -46,11 +46,10 @@ Feature: Installing Tails to a USB drive
     Then only the expected files are present on the persistence partition on USB drive "old"
 
   Scenario: Upgrading an old Tails USB installation from a Tails DVD
-    Given a computer
+    Given Tails has booted from DVD without network and logged in
     And I clone USB drive "old" to a new USB drive "to_upgrade"
-    And I start Tails from DVD with network unplugged and I login
     And I plug USB drive "to_upgrade"
-    And I "Clone & Upgrade" Tails to USB drive "to_upgrade"
+    When I "Clone & Upgrade" Tails to USB drive "to_upgrade"
     Then the running Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
 
@@ -64,13 +63,12 @@ Feature: Installing Tails to a USB drive
     And all persistent directories from the old Tails version have safe access rights
 
   Scenario: Upgrading an old Tails USB installation from another Tails USB drive
-    Given a computer
+    Given Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
+    And I log in to a new session',
+    And Tails seems to have booted normally',
     And I clone USB drive "old" to a new USB drive "to_upgrade"
-    And I start Tails from USB drive "current" with network unplugged and I login
-    Then Tails is running from USB drive "current"
-    And the boot device has safe access rights
     And I plug USB drive "to_upgrade"
-    And I "Clone & Upgrade" Tails to USB drive "to_upgrade"
+    When I "Clone & Upgrade" Tails to USB drive "to_upgrade"
     Then the running Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
     And I unplug USB drive "current"
