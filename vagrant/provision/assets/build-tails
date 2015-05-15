@@ -82,6 +82,10 @@ cd "$WORKSPACE"
 git checkout --force "$REV"
 git reset --hard "$COMMIT"
 
+if [ -n "$JENKINS_URL" ]; then
+	git clean --force -d -x
+fi
+
 install -m 0755 -d "$ARTIFACTS_DIR"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
