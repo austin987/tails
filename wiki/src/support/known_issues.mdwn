@@ -24,7 +24,7 @@ they require removing the `live-media=removable` boot parameter, which [[is
 dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
 
 * SanDisk Cruzer Edge 8GB
-* SanDisk Cruzer Extreme USB 3.0 16GB and 32GB
+* SanDisk Cruzer Extreme USB 3.0 16GB, 32GB and 64GB
 * SanDisk Cruzer Fit USB 2.0 8GB, 16GB, and 32G
 * SanDisk Cruzer Force 8GB
 * SanDisk Cruzer Glide 4GB, 8GB and 16GB
@@ -50,11 +50,21 @@ See also [[!tails_ticket 6397]].
 When installing Tails, PNY USB sticks have problems with the constant write load
 and are prone to failure.
 
+<a id="aegis"></a>
+
+### Aegis
+
+* Aegis Secure Key USB 2.0
+
+During the boot process, USB is briefly powered off, that causes Aegis hardware-encrypted USB sticks to lock down, and the PIN must be entered again (fast) in order to complete the boot.
+
+* Aegis Secure Key USB 3.0
+
+This USB stick doesn't start Tails at all, the USB 2.0 workaround is not working for that hardware.
+
 ### Other vendors
 
 * Staples Relay USB 2.0 16GB, suffers from the same problem as [[some SanDisk USB sticks|known_issues#sandisk]].
-
-<a id="isohybrid-options"></a>
 
 Acer Travelmate 8573T-254G50M
 -----------------------------
@@ -64,6 +74,11 @@ using Tails Installer.
 
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
+
+Acer Aspire 5315-ICL50
+----------------------
+
+Does not start on USB sticks created using Tails Installer.
 
 ASUS VivoBook X202E
 -------------------
@@ -120,9 +135,19 @@ to us.
 Dell Dimension 2400
 -------------------
 
-Cannot start neither from USB nor from DVD. System crashes with a blank
+Does not start neither from USB nor from DVD. System crashes with a blank
 screen and locked up keyboard. This problem might be corrected in
 newer versions: please report your test results back to us.
+
+Fujitsu Siemens Amilo A 1667G
+-----------------------------
+
+Does not start on USB sticks created using Tails Installer.
+
+HP Compaq dc5750 Microtower
+---------------------------
+
+Does not start Tails 1.2.3 created using Tails Installer.
 
 HP ProBook 4330s
 ----------------
@@ -133,7 +158,7 @@ then `Filesystem Tails` and `EFI/BOOT/bootx64.efi`.
 Lenovo IdeaPad Y410p
 --------------------
 
-Cannot start Tails 1.1 from USB installed manually in Linux.
+Does not start Tails 1.1 from USB installed manually in Linux.
 
 Lenovo IdeaPad z585
 -------------------
@@ -211,17 +236,42 @@ This network adapter can, for instance, be found in the MacBook Air
 Security issues
 ===============
 
+Claws Mail leaks plaintext of encrypted emails to IMAP server
+-------------------------------------------------------------
+
+Claws Mail stores plaintext copies of all emails on the remote IMAP
+server, including those that are meant to be encrypted.
+
+If you send OpenPGP encrypted emails using *Claws Mail* and IMAP, make
+sure to apply one of the workarounds documented in our [[security
+announcement|security/claws_mail_leaks_plaintext_to_imap]].
+
 Tails might not erase all the system memory on shutdown
 -------------------------------------------------------
 
-On rare systems (non-PAE with big amounts of memory),
-Tails does not consistently [[!tails_todo
-more_efficient_memory_wipe desc="erase all system memory as it
-should"]].
+On rare systems (non-PAE with big amounts of memory), Tails does not
+consistently erase all system memory as it should.
 
 If no [[cold boot attack|doc/advanced_topics/cold_boot_attacks]]
 happens directly after shutdown, the RAM empties itself in minutes,
 and all data disappears.
+
+See [[!tails_ticket 6006 desc="More efficient memory wipe"]].
+
+<a id="video-memory"></a>
+
+Tails does not erase video memory
+---------------------------------
+
+Tails doesn't erase the [[!wikipedia VRAM desc="video memory"]] yet.
+When one uses Tails, then restarts the computer into another operating
+system, that other operating system can see what has been displayed on
+the screen within Tails.
+
+Shutting down the computer completely, instead of restarting it,
+might allow the video memory to empty itself.
+
+See [[!tails_ticket 5356 desc="Erase video memory on shutdown"]].
 
 After using Tails Installer, the "emergency shutdown" doesn't work
 ------------------------------------------------------------------
@@ -231,6 +281,9 @@ Tails Installer messes a bit too much with the USB devices for the
 it. If you believe this feature is critical for the session you're running, we
 advice you to reboot Tails.
 
+See
+[[!tails_ticket 5677 desc="liveusb-creator should not break emergency shutdown"]].
+
 Tails DVD eject failure
 -----------------------
 
@@ -238,7 +291,7 @@ Pressing the DVD eject button does not trigger emergency shutdown.
 Also, the "normal" (non-emergency) shutdown procedure does not eject
 the DVD anymore.
 
-(Ticket: [[!tails_todo fix_DVD_eject_at_shutdown]])
+See [[!tails_ticket 5447 desc="Fix DVD eject at shutdown"]].
 
 Stream isolation inconsistency in Claws Mail
 --------------------------------------------
@@ -266,11 +319,13 @@ This issue has been reported on the following hardware:
 
   - Apple when booting from a USB stick:
     - MacBook Air 5,1
+    - MacBook Air 5,2 (using a device installed with Tails Installer)
     - MacBook Pro 7,1, 13-inch mid 2010
     - MacBook Pro 9,2, 13-inch mid 2012
     - MacBook Pro 8,1, 13-inch late 2011
     - MacBook Pro 10,2
     - MacBook Pro Retina 11,1, late 2013
+    - MacBook Pro Retina 13-inch Early 2015
   - Hewlett-Packard HP Pavilion dv6 Notebook PC
   - Lenovo ThinkPad X61, only on emergency shutdown when pulling out the
     USB stick
@@ -280,6 +335,7 @@ This issue has been reported on the following hardware:
   - Fujitsu Lifebook AH531/GFO, only on regular shutdown, emergency
     shutdown works
   - Samsung N150P
+  - Acer Aspire e1-572
 
 <a id="fingerprint"></a>
 
@@ -290,8 +346,7 @@ Fingerprint
 
 <!-- The fingerprints of <span class="application">Tor Browser</span> in Tails and on other operating systems are different: -->
 
-* Browser window resizing is in not reliable: [[!tails_ticket 6377]]
-  and [[!tor_bug 10095]].
+None currently known.
 
 Other issues
 ============
@@ -324,25 +379,13 @@ Connecting to FTP servers is not possible
 -----------------------------------------
 
 Public FTP servers on the Internet are not reachable using Tails.
-See [[!tails_todo fix_Internet_FTP_support desc="the corresponding
-task"]] for more details.
+See [[!tails_ticket 6096 desc="Fix FTP support"]] for more details.
 
 Tails fails to connect to certain Wi-Fi networks
 ------------------------------------------------
 
 This might be related to the introduction of wireless regulation support
 in Tails 0.13.
-
-VirtualBox guest modules are broken for 64-bit guests
------------------------------------------------------
-
-VirtualBox guest modules allow for additional features when using Tails as a
-VirtualBox guest: shared folders, resizable display, shared clipboard, etc.
-
-But due to [a bug in VirtualBox](https://www.virtualbox.org/ticket/11037), the
-resizable display and shared clipboard
-only work in Tails if the VirtualBox guest is configured to have a 32-bit
-processor. The shared folders work both on 32-bit and 64-bit guests.
 
 Touchpad configurations
 -----------------------
@@ -363,13 +406,6 @@ Bluetooth is not enabled in Tails for security reasons. To enable it
 anyway, see the documentation about
 [[wireless devices|doc/advanced_topics/wireless_devices]].
 
-Tor Browser takes too long to shutdown
---------------------------------------
-
-Since Tails 0.22, the browser sometimes takes too long to shutdown
-([[!tails_ticket 6480]]). Waiting a few more seconds is usually enough
-to let it close itself correctly.
-
 <a id="browser_languages"></a>
 
 Tor Browser is translated in a limited number of languages
@@ -379,3 +415,25 @@ Since Tails 1.2, the web browser is based on Tor Browser which is
 translated in less languages than before. You can see the list of
 languages available in Tor Browser from the [Tor Browser
 homepage](https://www.torproject.org/projects/torbrowser.html.en).
+
+The Windows 8 Browser theme doesn't look like Internet Explorer 10
+------------------------------------------------------------------
+
+When the Windows 8 camouflage is enabled, the Internet Explorer 10
+theme for the Tor Browser, Unsafe Browser and I2P Browser is incorrect
+([[!tails_ticket 9326]]). Specifically,
+
+* the default Firefox tab bar is used (it should be positioned above
+  the URL bar, and use a "square" style), and
+* the search bar is enabled (it should be disabled).
+
+<a id="keyboard_layout"></a>
+
+Keyboard layout is sometimes not applied
+----------------------------------------
+
+The keyboard layout selected in *Tails Greeter* is sometimes not
+applied if different from **English (US)**. Click on the
+[[keyboard layout|doc/first_steps/introduction_to_gnome_and_the_tails_desktop#keyboard_layout]] icon
+in the notification area to switch between English and the layout
+selected in *Tails Greeter*.

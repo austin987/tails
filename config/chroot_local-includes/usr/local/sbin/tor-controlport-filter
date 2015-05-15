@@ -17,6 +17,7 @@
 
 import socket
 import binascii
+import re
 
 # Limit the length of a line, to prevent DoS attacks trying to
 # crash this filter proxy by sending infinitely long lines.
@@ -90,18 +91,23 @@ def handle_connection(sock):
 		line = readh.readline(MAX_LINESIZE)
 		if not line: break
 
+                def line_matches_command(cmd):
+                        # The control port language does not care about case
+                        # for commands.
+                        return re.match(r"^%s\b" % cmd, line, re.IGNORECASE)
+
 		# Check what it is
-		if line.startswith("AUTHENTICATE"):
+		if line_matches_command("AUTHENTICATE"):
 			# Don't check authentication, since only
 			# safe commands are allowed
 			writeh.write("250 OK\n")
-		elif line.startswith("SIGNAL NEWNYM"):
+		elif line_matches_command("SIGNAL NEWNYM"):
 			# Perform a real SIGNAL NEWNYM (new Tor circuit)
 			if do_newnym():
 				writeh.write("250 OK\n")
 			else:
 				writeh.write("510 Newnym signal failed\n")
-		elif line.startswith("QUIT"):
+		elif line_matches_command("QUIT"):
 			# Quit session
 			writeh.write("250 Closing connection\n")
 			break

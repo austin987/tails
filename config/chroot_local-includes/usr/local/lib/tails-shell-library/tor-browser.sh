@@ -11,6 +11,12 @@ exec_firefox() {
     exec "${TBB_INSTALL}"/firefox "${@}"
 }
 
+exec_unconfined_firefox() {
+    LD_LIBRARY_PATH="${TBB_INSTALL}"
+    export LD_LIBRARY_PATH
+    exec "${TBB_INSTALL}"/firefox-unconfined "${@}"
+}
+
 guess_best_tor_browser_locale() {
     local long_locale short_locale similar_locale
     long_locale="$(echo ${LANG} | sed -e 's/\..*$//' -e 's/_/-/')"
@@ -64,4 +70,12 @@ configure_best_tor_browser_locale() {
 
 configure_best_tor_launcher_locale() {
     configure_xulrunner_app_locale "${1}" "$(guess_best_tor_launcher_locale)"
+}
+
+supported_tor_browser_locales() {
+    # The default is always supported
+    echo en-US
+    for langpack in "${TBB_EXT}"/langpack-*@firefox.mozilla.org.xpi; do
+        basename "${langpack}" | sed 's,^langpack-\([^@]\+\)@.*$,\1,'
+    done
 }

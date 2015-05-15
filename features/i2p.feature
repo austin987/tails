@@ -8,7 +8,7 @@ Feature: I2P
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And Tor is ready
     And all notifications have disappeared
     Then the I2P Browser desktop file is not present
@@ -21,7 +21,7 @@ Feature: I2P
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And Tor is ready
     And I2P is running
     And the I2P router console is ready
@@ -31,3 +31,4 @@ Feature: I2P
     And the I2P firewall rules are enabled
     When I start the I2P Browser through the GNOME menu
     Then I see "I2P_router_console.png" after at most 120 seconds
+    And the I2P Browser uses all expected TBB shared libraries
