@@ -39,7 +39,7 @@ Feature: Using Totem
     Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     And I setup a filesystem share containing sample videos
     And I enable persistence
-    And I login
+    And I log in to a new session
     And Tails seems to have booted normally
     And I copy the sample videos to "/home/amnesia/Persistent" as user "amnesia"
     And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"
