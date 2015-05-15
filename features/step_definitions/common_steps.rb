@@ -121,6 +121,11 @@ Given /^the network is unplugged$/ do
   @vm.unplug_network
 end
 
+Given /^the hardware clock is set to "([^"]*)"$/ do |time|
+  next if @skip_steps_while_restoring_background
+  @vm.set_hardware_clock(DateTime.parse(time).to_time)
+end
+
 Given /^I capture all network traffic$/ do
   # Note: We don't want skip this particular stpe if
   # @skip_steps_while_restoring_background is set since it starts
