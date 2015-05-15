@@ -1,6 +1,6 @@
 def checkpoints
   {
-    'no-network' => {
+    'tails-greeter' => {
       :description => "Tails has booted from DVD without network and stopped at Tails Greeter's login screen",
       :parent_checkpoint => nil,
       :steps => [
@@ -12,26 +12,48 @@ def checkpoints
     
     'no-network-logged-in' => {
       :description => "Tails has booted from DVD without network and logged in",
-      :parent_checkpoint => "no-network",
+      :parent_checkpoint => "tails-greeter",
       :steps => [
         'I log in to a new session',
+        'Tails Greeter has dealt with the sudo password',
         'Tails seems to have booted normally',
       ],
     },
     
     'with-network-logged-in' => {
       :description => "Tails has booted from DVD and logged in and the network is connected",
-      :parent_checkpoint => "no-network",
+      :parent_checkpoint => "no-network-logged-in",
       :steps => [
         'the network is plugged',
-        'I log in to a new session',
-        'Tails seems to have booted normally',
         'Tor is ready',
         'all notifications have disappeared',
         'available upgrades have been checked',
       ],
     },
-    
+
+    'no-network-logged-in-sudo-passwd' => {
+      :description => "Tails has booted from DVD without network and logged in with an administration password",
+      :parent_checkpoint => "tails-greeter",
+      :steps => [
+        'I enable more Tails Greeter options',
+        'I set sudo password "asdf"',
+        'I log in to a new session',
+        'Tails Greeter has dealt with the sudo password',
+        'Tails seems to have booted normally',
+      ],
+    },
+
+    'with-network-logged-in-sudo-passwd' => {
+      :description => "Tails has booted from DVD and logged in with an administration password and the network is connected",
+      :parent_checkpoint => "no-network-logged-in-sudo-passwd",
+      :steps => [
+        'the network is plugged',
+        'Tor is ready',
+        'all notifications have disappeared',
+        'available upgrades have been checked',
+      ],
+    },
+
     'usb-install' => {
       :description => "Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen" ,
       :parent_checkpoint => 'no-network-logged-in',
