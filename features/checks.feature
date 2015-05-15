@@ -79,22 +79,3 @@ Feature: Various checks
     Given Tails has booted from DVD without network and logged in
     When I request a reboot using the emergency shutdown applet
     Then Tails eventually restarts
-
-  # We cannot restore from a snapshot for this scenario since we cannot
-  # add a filesystem share to a live VM so it would have to be in the
-  # background above. However, there's a bug that seems to make shares
-  # impossible to have after a snapshot restore.
-  Scenario: MAT can clean a PDF file
-    Given a computer
-    And I setup a filesystem share containing a sample PDF
-    And I start Tails from DVD with network unplugged and I login
-    Then MAT can clean some sample PDF file
-
-  Scenario: The Report an Error launcher will open the support documentation in supported non-English locales
-    Given Tails has booted from DVD without network and stopped at Tails Greeter's login screen
-    And the network is plugged
-    And I log in to a new session in German
-    And Tails seems to have booted normally
-    And Tor is ready
-    When I double-click the Report an Error launcher on the desktop
-    Then the support documentation page opens in Tor Browser
