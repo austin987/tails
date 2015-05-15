@@ -28,7 +28,7 @@ Feature: Installing Tails to a USB drive
     Then Tails is running from USB drive "old"
     And I create a persistent partition
     And I take note of which persistence presets are available
-    Then a Tails persistence partition on exists USB drive "old"
+    Then a Tails persistence partition exists on USB drive "old"
     And I shutdown Tails and wait for the computer to power off
 
   Scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
