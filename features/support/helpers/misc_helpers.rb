@@ -22,6 +22,7 @@ end
 # passed when we throw a Timeout::Error exception.
 def try_for(timeout, options = {})
   options[:delay] ||= 1
+  last_exception = nil
   # Create a unique exception used only for this particular try_for
   # call's Timeout to allow nested try_for:s. If we used the same one,
   # the innermost try_for would catch all outer ones', creating a
@@ -36,8 +37,11 @@ def try_for(timeout, options = {})
         # (never?) a good idea, so we rethrow them. See below why we
         # also rethrow *all* the unique exceptions.
         raise e
-      rescue Exception
-        # All other exceptions are ignored while trying the block.
+      rescue Exception => e
+        # All other exceptions are ignored while trying the
+        # block. Well we save the last exception so we can print it in
+        # case of a timeout.
+        last_exception = e
       end
       sleep options[:delay]
     end
@@ -63,6 +67,10 @@ def try_for(timeout, options = {})
   # ends up there immediately.
 rescue unique_timeout_exception => e
   msg = options[:msg] || 'try_for() timeout expired'
+  if last_exception
+    msg += "\nLast ignored exception was: " +
+           "#{last_exception.class}: #{last_exception}"
+  end
   raise Timeout::Error.new(msg)
 end
 
