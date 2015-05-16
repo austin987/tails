@@ -936,9 +936,9 @@ to do it.
 Amnesia news
 ------------
 
-The release notes should have been automatically sent to
-`amensia-news@` (thanks to the `announce` flag) but it will be stuck
-in the moderation
+The release announcement are automatically sent to `amensia-news@`
+(thanks to the `announce` flag) on an hourly basis, but it will be
+stuck in the moderation
 queue. [Log in](https://mailman.boum.org/admindb/amnesia-news) and
 accept it.
 
@@ -970,6 +970,17 @@ this, and skip what does not make sense for a RC.
                     -type f -name '*.iuk' -mtime '+183' \
                     -delete \
              \"
+
+1. Delete Git branches that were merged:
+
+        bare_repo=$(mktemp -d)
+        (cd "$MASTER_CHECKOUT" && git fetch) && \
+        git clone --bare --reference "$MASTER_CHECKOUT" \
+           boum_org_amnesia@webmasters.boum.org:wiki.git \
+           "$bare_repo" && \
+        PYTHONPATH=lib/python3 ./bin/delete-merged-git-branches \
+           --repo "$bare_repo" && \
+        rm -rf "$bare_repo"
 
 1. Pull `master` back and merge it into `devel`.
 1. Follow the

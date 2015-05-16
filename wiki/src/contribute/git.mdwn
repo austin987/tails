@@ -85,8 +85,22 @@ Developers with write access to the repositories should instead:
 
 	git clone boum_org_amnesia@webmasters.boum.org:wiki.git
 
+And then, in any case, in your new Git clone's directory:
+
+	git submodule update --init
+
+For more information about our usage of Git submodules, see
+[[the dedicated section|git#submodules]].
+
 We have a [web interface](https://git-tails.immerda.ch/tails/)
 available for the main repository.
+
+### Configuration
+
+Developers with write access to the repositories should:
+
+	git config --global url.tails@git.tails.boum.org:.insteadOf \
+	   https://git-tails.immerda.ch/
 
 ### Branches
 
@@ -241,3 +255,25 @@ Unauthenticated access is of the form:
 Developers with write access to the repositories should instead:
 
 	git clone tails@git.tails.boum.org:$REPOSITORY
+
+<a id="submodules"></a>
+
+Submodules
+==========
+
+We use Git submodules to track external repositories from the main
+Tails source tree.
+
+The main practical consequence thereof so far, for most Tails
+contributors, is that one should generally run the following command
+after checking out a branch:
+
+	git submodule update --init
+
+For more information, see:
+
+* the [chapter about
+  submodules](https://git-scm.herokuapp.com/book/en/v2/Git-Tools-Submodules)
+  in the *Pro Git* book;
+* the [`git-submodule(1)`](http://manpages.debian.org/git-submodule)
+  man page.
