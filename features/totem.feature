@@ -37,10 +37,9 @@ Feature: Using Totem
 
   Scenario: Copying video files to a persistence and making sure that they persist
     Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
+    And I shutdown Tails and wait for the computer to power off
     And I setup a filesystem share containing sample videos
-    And I enable persistence
-    And I log in to a new session
-    And Tails seems to have booted normally
+    And I start Tails from USB drive "current" with network unplugged and I login with persistence enabled
     And I copy the sample videos to "/home/amnesia/Persistent" as user "amnesia"
     And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"
     And I shutdown Tails and wait for the computer to power off
