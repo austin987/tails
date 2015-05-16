@@ -1,7 +1,27 @@
+class OpenPGPKeyserverCommunicationError < StandardError
+end
+
 def count_gpg_signatures(key)
   output = @vm.execute_successfully("gpg --batch --list-sigs #{key}",
                                     LIVE_USER).stdout
   return output.scan(/^sig/).count
+end
+
+def seahorse_wait_helper(img, time = 20)
+  begin
+    @screen.wait(img, time)
+  rescue FindFailed => e
+    if @screen.exists('SeahorseKeyserverError.png')
+      raise OpenPGPKeyserverCommunicationError
+    else
+      # Seahorse has been known to segfault during tests
+      syslog = @vm.file_content('/var/log/syslog')
+      m = /seahorse\[[0-9]+\]: segfault/.match(syslog)
+      assert(!m, 'Seahorse aborted with a segmentation fault')
+    end
+    # Neither keyserver error nor segfault
+    raise e
+  end
 end
 
 Then /^the key "([^"]+)" has (only|more than) (\d+) signatures$/ do |key, qualifier, num|
@@ -65,7 +85,7 @@ end
 
 Then /^Seahorse has opened$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("SeahorseWindow.png", 10)
+  seahorse_wait_helper('SeahorseWindow.png')
 end
 
 Then /^I enable key synchronization in Seahorse$/ do
@@ -73,7 +93,7 @@ Then /^I enable key synchronization in Seahorse$/ do
   step 'process "seahorse" is running'
   @screen.wait_and_click("SeahorseWindow.png", 10)
   seahorse_menu_click_helper('SeahorseEdit.png', 'SeahorseEditPreferences.png', 'seahorse')
-  @screen.wait("SeahorsePreferences.png", 10)
+  seahorse_wait_helper('SeahorsePreferences.png')
   @screen.type("p", Sikuli::KeyModifier.ALT) # Option: "Publish keys to...".
   @screen.type(Sikuli::Key.DOWN) # select HKP server
   @screen.type("c", Sikuli::KeyModifier.ALT) # Button: "Close"
@@ -84,10 +104,10 @@ Then /^I synchronize keys in Seahorse$/ do
   step "process \"seahorse\" is running"
   @screen.wait_and_click("SeahorseWindow.png", 10)
   seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuSync.png', 'seahorse')
-  @screen.wait("SeahorseSyncKeys.png", 10)
+  seahorse_wait_helper('SeahorseSyncKeys.png')
   @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
-  @screen.wait("SeahorseSynchronizing.png", 20)
-  @screen.wait("SeahorseWindow.png", 120)
+  seahorse_wait_helper('SeahorseSynchronizing.png')
+  seahorse_wait_helper('SeahorseWindow.png', 5*60)
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP Applet)?$/ do |keyid, withgpgapplet|
@@ -100,11 +120,11 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
   step "Seahorse has opened"
   @screen.wait_and_click("SeahorseWindow.png", 10)
   seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuFind.png', 'seahorse')
-  @screen.wait("SeahorseFindKeysWindow.png", 10)
+  seahorse_wait_helper('SeahorseFindKeysWindow.png', 10)
   # Seahorse doesn't seem to support searching for fingerprints
   @screen.type(keyid + Sikuli::Key.ENTER)
   begin
-    @screen.wait("SeahorseFoundKeyResult.png", 5*60)
+    seahorse_wait_helper('SeahorseFoundKeyResult.png', 5*60)
   rescue FindFailed
     # We may end up here if Seahorse appears to be "frozen".
     # Sometimes--but not always--if we click another window
