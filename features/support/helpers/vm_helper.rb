@@ -82,6 +82,19 @@ class VM
     end
   end
 
+  def set_hardware_clock(time)
+    assert(not(is_running?), 'The hardware clock cannot be set when the ' +
+                             'VM is running')
+    assert(time.instance_of?(Time), "Argument must be of type 'Time'")
+    adjustment = (time - Time.now).to_i
+    domain_rexml = REXML::Document.new(@domain.xml_desc)
+    clock_rexml_element = domain_rexml.elements['domain'].add_element('clock')
+    clock_rexml_element.add_attributes('offset' => 'variable',
+                                       'basis' => 'utc',
+                                       'adjustment' => adjustment.to_s)
+    update(domain_rexml.to_s)
+  end
+
   def set_network_link_state(state)
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/devices/interface/link'].attributes['state'] = state
@@ -250,6 +263,11 @@ class VM
     if is_running?
       raise "shares can only be added to inactice vms"
     end
+    # The complete source directory must be group readable by the user
+    # running the virtual machine, and world readable so the user inside
+    # the VM can access it (since we use the passthrough security model).
+    FileUtils.chown_R(nil, "libvirt-qemu", source)
+    FileUtils.chmod_R("go+rX", source)
     xml = REXML::Document.new(File.read("#{@xml_path}/fs_share.xml"))
     xml.elements['filesystem/source'].attributes['dir'] = source
     xml.elements['filesystem/target'].attributes['dir'] = tag

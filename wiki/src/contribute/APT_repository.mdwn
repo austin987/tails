@@ -209,13 +209,21 @@ operation must be done on the APT suites.
         # the branch you want to merge _into_
         DST=devel
 
-   2. Merge in Git and APT, and then push:
+   2. Merge in Git and APT:
 
         git checkout "$DST" && \
         git merge "$SRC" && \
         ssh reprepro@incoming.deb.tails.boum.org \
              tails-merge-suite "$SRC" "$DST" && \
-        git push origin "$DST"
+
+   3. Restore the `config/base_branch` if needed:
+
+        echo "${DST}" > config/base_branch && \
+        git commit config/base_branch -m "Restore ${DST}'s base branch." || :
+
+   4. Push:
+
+        git push origin "${DST}:${DST}"
 
 4. Make sure not to re-add, into the branch we merge into, any package
    that was removed from it, but still is in the branch we merge from:
@@ -285,7 +293,7 @@ This operation merges all APT overlays listed in the given branch's
 
 4. Push the Git branch:
 
-        git push origin "$BRANCH"
+        git push origin "${BRANCH}:${BRANCH}"
 
 <a id="workflow-post-tag"></a>
 

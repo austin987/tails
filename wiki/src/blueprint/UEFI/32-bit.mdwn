@@ -37,6 +37,45 @@ What we know so far:
   supporting this feature, chances are that most such machines are
   dead anyway.
 
+Test results and ideas
+----------------------
+
+### 32-bit GRUB2 EFI chainloading 32-bit syslinux EFI
+
+* syslinux 32-bit EFI installed in `EFI/TAILS32`
+* GRUB 32-bit EFI installed in `EFI/BOOT/bootia32.efi`
+
+=> did not manage to chainload 32-bit syslinux EFI from GRUB.
+On Tails/Jessie (GRUB 2.02~beta2-22), I get `error: unknown error.`
+after typing `boot`. This likely comes from
+`grub-core/loader/efi/chainloader.c`.
+
+### 32-bit GRUB2 EFI reading the syslinux configuration at runtime
+
+With current `feature/8471-32-bit-UEFI`, one can choose the *syslinux:
+liveamd64.cfg* menu entry, that basically load syslinux'
+`/efi/boot/liveamd64.cfg`, converting it to GRUB on the fly.
+
+Then, add `nomodeset` if needed, and Tails boots.
+
+Note that:
+
+* Support for `{vesa,}menu.c32` was added in GRUB upstream, but didn't
+  make it into Debian yet as of 2.02~beta2-22. intrigeri has a
+  2.02~beta2-22tails1~bpo70+1 package with that new code in it,
+  and indeed it successfully loads our syslinux configuration.
+* We'll need to load the `cpuid` module to make our `ifcpu64`
+  directives work.
+
+### 32-bit GRUB2 EFI with native configuration
+
+If `syslinux_configfile` is not good enough, should not be too hard to
+write/generate and maintain a GRUB2 configuration, either
+automatically (e.g. with `grub-syslinux2cfg`) or by hand.
+
+That's what `feature/8471-32-bit-UEFI` currently does, as a way to
+quickly get things going.
+
 <a id="hardware"></a>
 
 Potential hardware

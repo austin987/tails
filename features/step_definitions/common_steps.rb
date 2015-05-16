@@ -121,14 +121,21 @@ Given /^the network is unplugged$/ do
   @vm.unplug_network
 end
 
+Given /^the hardware clock is set to "([^"]*)"$/ do |time|
+  next if @skip_steps_while_restoring_background
+  @vm.set_hardware_clock(DateTime.parse(time).to_time)
+end
+
 Given /^I capture all network traffic$/ do
   # Note: We don't want skip this particular stpe if
   # @skip_steps_while_restoring_background is set since it starts
   # something external to the VM state.
   @sniffer = Sniffer.new("sniffer", $vmnet)
   @sniffer.capture
-  add_after_scenario_hook(@sniffer.method(:stop))
-  add_after_scenario_hook(@sniffer.method(:clear))
+  add_after_scenario_hook do
+    @sniffer.stop
+    @sniffer.clear
+  end
 end
 
 Given /^I set Tails to boot with options "([^"]*)"$/ do |options|
@@ -298,7 +305,7 @@ Given /^the Tails desktop is ready$/ do
     # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
     # By this point the only icon left is Vidalia and it will not cause the other systray
     # icons to shift positions.
-    @screen.wait("GnomeSystrayFlorence.png", 60)
+    @screen.wait("GnomeSystrayFlorence.png", 180)
   end
   @screen.wait(desktop_started_picture, 180)
 end
@@ -768,6 +775,21 @@ When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination
   next if @skip_steps_while_restoring_background
   c = @vm.execute("cp \"#{source}\" \"#{destination}\"", LIVE_USER)
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
+end
+
+def is_persistent?(app)
+  conf = get_persistence_presets(true)["#{app}"]
+  @vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'").success?
+end
+
+Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
+  next if @skip_steps_while_restoring_background
+  case enabled
+  when ''
+    assert(is_persistent?(app), "Persistence should be enabled.")
+  when 'not '
+    assert(!is_persistent?(app), "Persistence should not be enabled.")
+  end
 end
 
 Given /^the USB drive "([^"]+)" contains Tails with persistence configured and password "([^"]+)"$/ do |drive, password|
