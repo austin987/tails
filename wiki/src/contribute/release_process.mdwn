@@ -968,6 +968,17 @@ this, and skip what does not make sense for a RC.
                     -delete \
              \"
 
+1. Delete Git branches that were merged:
+
+        bare_repo=$(mktemp -d)
+        (cd "$MASTER_CHECKOUT" && git fetch) && \
+        git clone --bare --reference "$MASTER_CHECKOUT" \
+           boum_org_amnesia@webmasters.boum.org:wiki.git \
+           "$bare_repo" && \
+        PYTHONPATH=lib/python3 ./bin/delete-merged-git-branches \
+           --repo "$bare_repo" && \
+        rm -rf "$bare_repo"
+
 1. Pull `master` back and merge it into `devel`.
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
