@@ -532,8 +532,13 @@ EOF
   end
 
   def remove_snapshot(name)
-    snapshot = @domain.lookup_snapshot_by_name(name)
-    snapshot.delete
+    potential_ram_only_snapshot_path = ram_only_snapshot_path(name)
+    if File.exist?(potential_ram_only_snapshot_path)
+      File.delete(potential_ram_only_snapshot_path)
+    else
+      snapshot = @domain.lookup_snapshot_by_name(name)
+      snapshot.delete
+    end
   end
 
   def VM.snapshot_exists?(name)
