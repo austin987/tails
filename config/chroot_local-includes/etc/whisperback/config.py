@@ -138,7 +138,7 @@ def mail_prepended_info():
       tails_version_process = subprocess.Popen ("tails-version",
                                                  stdout=subprocess.PIPE)
       tails_version_process.wait()
-      tails_version = tails_version_process.stdout.read()
+      tails_version = tails_version_process.stdout.read().decode('utf-8')
     except OSError:
       tails_version = "tails-version command not found"
     except subprocess.CalledProcessError:
@@ -163,7 +163,7 @@ def mail_appended_info():
         process = subprocess.Popen (["sudo", "/usr/local/sbin/tails-debugging-info"], 
                                     stdout=subprocess.PIPE)
         for line in process.stdout:
-            debugging_info += line
+            debugging_info += line.decode('utf-8')
         process.wait()
     except OSError:
         debugging_info += "sudo command not found\n"
