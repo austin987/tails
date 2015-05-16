@@ -471,7 +471,7 @@ EOF
 EOF
   end
 
-  def ram_only_snapshot_path(name)
+  def VM.ram_only_snapshot_path(name)
     return "#{$config["TMPDIR"]}/#{name}-snapshot.memstate"
   end
 
@@ -499,7 +499,7 @@ EOF
       xml = internal_snapshot_xml(name)
       @domain.snapshot_create_xml(xml)
     else
-      snapshot_path = ram_only_snapshot_path(name)
+      snapshot_path = VM.ram_only_snapshot_path(name)
       @domain.save(snapshot_path)
       # For consistency with the internal snapshot case (which is
       # "live", so the domain doesn't go down) we immediately restore
@@ -516,7 +516,7 @@ EOF
     @display.stop if @display and @display.active?
     # See comment in save_snapshot() for details on why we use two
     # different type of snapshots.
-    potential_ram_only_snapshot_path = ram_only_snapshot_path(name)
+    potential_ram_only_snapshot_path = VM.ram_only_snapshot_path(name)
     if File.exist?(potential_ram_only_snapshot_path)
       Libvirt::Domain::restore(@virt, potential_ram_only_snapshot_path)
       @domain = @virt.lookup_domain_by_name(@domain_name)
@@ -532,7 +532,7 @@ EOF
   end
 
   def remove_snapshot(name)
-    potential_ram_only_snapshot_path = ram_only_snapshot_path(name)
+    potential_ram_only_snapshot_path = VM.ram_only_snapshot_path(name)
     if File.exist?(potential_ram_only_snapshot_path)
       File.delete(potential_ram_only_snapshot_path)
     else
@@ -542,7 +542,7 @@ EOF
   end
 
   def VM.snapshot_exists?(name)
-    return true if File.exist?(ram_only_snapshot_path(name))
+    return true if File.exist?(VM.ram_only_snapshot_path(name))
     old_domain = $virt.lookup_domain_by_name($config["LIBVIRT_DOMAIN_NAME"])
     snapshot = old_domain.lookup_snapshot_by_name(name)
     return snapshot != nil
