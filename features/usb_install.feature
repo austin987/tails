@@ -5,6 +5,23 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   and upgrade it to new Tails versions
   and use persistence
 
+  Scenario: Try to "Upgrade from ISO" Tails to a pristine USB drive
+    Given a computer
+    And I setup a filesystem share containing the Tails ISO
+    And I start Tails from DVD with network unplugged and I login
+    And I create a 4 GiB disk named "pristine"
+    And I plug USB drive "pristine"
+    And I try to "Upgrade from ISO" USB drive "pristine"
+    But I am told that the destination device cannot be upgraded
+
+  Scenario: Try to "Clone & Upgrade" Tails to a pristine USB drive
+    Given a computer
+    And I start Tails from DVD with network unplugged and I login
+    And I create a 4 GiB disk named "pristine"
+    And I plug USB drive "pristine"
+    And I try a "Clone & Upgrade" Tails to USB drive "pristine"
+    But I am told that the destination device cannot be upgraded
+
   Scenario: Try installing Tails to a too small USB drive
     Given a computer
     And I start Tails from DVD with network unplugged and I login

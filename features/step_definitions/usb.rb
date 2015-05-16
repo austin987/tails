@@ -72,6 +72,9 @@ end
 class ISOHybridUpgradeNotSupported < StandardError
 end
 
+class EmptyDeviceUpgradeNotSupported < StandardError
+end
+
 def usb_install_helper(name)
   @screen.wait('USBCreateLiveUSB.png', 10)
 
@@ -91,6 +94,8 @@ def usb_install_helper(name)
   @screen.wait_and_click('USBCreateLiveUSB.png', 10)
   if @screen.exists("USBSuggestsInstall.png")
     raise ISOHybridUpgradeNotSupported
+  elsif @screen.exists("USBCannotUpgrade.png")
+    raise EmptyDeviceUpgradeNotSupported
   end
   @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
   @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
@@ -151,6 +156,21 @@ When /^I try a "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
     step "I \"Clone & Upgrade\" Tails to USB drive \"#{name}\""
   rescue ISOHybridUpgradeNotSupported
     # this is what we expect
+  rescue EmptyDeviceUpgradeNotSupported
+    # this is what we expect
+  else
+    raise "The USB installer should not succeed"
+  end
+end
+
+When /^I try to "Upgrade from ISO" USB drive "([^"]+)"$/ do |name|
+  next if @skip_steps_while_restoring_background
+  begin
+    step "I do a \"Upgrade from ISO\" on USB drive \"#{name}\""
+  rescue ISOHybridUpgradeNotSupported
+    # this is what we expect
+  rescue EmptyDeviceUpgradeNotSupported
+    # this is what we expect
   else
     raise "The USB installer should not succeed"
   end
@@ -159,6 +179,11 @@ end
 When /^I am suggested to do a "Clone & Install"$/ do
   next if @skip_steps_while_restoring_background
   @screen.find("USBSuggestsInstall.png")
+end
+
+When /^I am told that the destination device cannot be upgraded$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.find("USBCannotUpgrade.png")
 end
 
 Given /^I setup a filesystem share containing the Tails ISO$/ do
