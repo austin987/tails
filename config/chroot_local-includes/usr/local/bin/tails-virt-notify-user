@@ -25,16 +25,25 @@ See https://tails.boum.org/.
 use Desktop::Notify;
 use IPC::System::Simple qw{runx};
 use Locale::gettext;
+use Net::DBus::Reactor;
 use POSIX;
 
 ### initialization
 setlocale(LC_MESSAGES, "");
 textdomain("tails");
-my @detected_virt_command=qw{};
+
+### callbacks
+
+sub action_cb {
+    my $reactor = shift;
+    system(
+        '/usr/local/bin/tor-browser',
+        'file:///usr/share/doc/tails/website/doc/advanced_topics/virtualization.en.html#security'
+    );
+    $reactor->shutdown;
+}
 
 ### main
-
-my @detected_virt;
 
 # both 0 and 1 are acceptable exit values:
 #  - 0 means that we're running in a virtualized environment
@@ -44,15 +53,20 @@ my $exit_value = runx([0, 1], qw{/usr/bin/systemd-detect-virt});
 
 exit 0 if $exit_value == 1;
 
-my $notify = Desktop::Notify->new();
+my $reactor = Net::DBus::Reactor->main;
+
+my $notify  = Desktop::Notify->new();
+$notify->action_callback(sub { action_cb($reactor, @_) });
+$notify->close_callback(sub { $reactor->shutdown; });
 
 my $summary = gettext("Warning: virtual machine detected!");
 my $body    =
-    gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails.")
-    . " "
-    . gettext("<a href='file:///usr/share/doc/tails/website/doc/advanced_topics/virtualization.en.html'>Learn more...</a>")
-    . " "; # Workaround: else the last line of the notification is not displayed
+    gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails.");
 
 $notify->create(summary => $summary,
-                body => $body,
+                body    => $body,
+                actions => { 'moreinfo'  => gettext('Learn more'), },
+                hints   => { 'transient' => 1, },
                 timeout => 0)->show();
+
+$reactor->run;

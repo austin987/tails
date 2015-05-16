@@ -26,10 +26,6 @@ ask_for_confirmation() {
         --cancel-label "$dialog_start" --ok-label "$dialog_cancel"
 }
 
-tor_has_bootstrapped() {
-    sudo -n -u debian-tor /usr/local/sbin/tor-has-bootstrapped
-}
-
 # Workaround bug #8036 by copying any localized search plugins into
 # the profile.
 enable_localized_searchplugins() {
@@ -69,7 +65,7 @@ start_browser() {
 }
 
 
-if tor_has_bootstrapped || ask_for_confirmation; then
+if /usr/local/sbin/tor-has-bootstrapped || ask_for_confirmation; then
     # Torbutton 1.5.1+ uses those environment variables
     export TOR_SOCKS_HOST='127.0.0.1'
     export TOR_SOCKS_PORT='9150'

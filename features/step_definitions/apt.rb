@@ -12,26 +12,20 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   }
 end
 
-When /^I update APT using apt-get$/ do
+When /^I update APT using apt$/ do
   next if @skip_steps_while_restoring_background
   Timeout::timeout(30*60) do
-    cmd = @vm.execute("echo #{@sudo_password} | " +
-                      "sudo -S apt-get update", $live_user)
-    if !cmd.success?
-      STDERR.puts cmd.stderr
-    end
+    @vm.execute_successfully("echo #{@sudo_password} | " +
+                             "sudo -S apt update", LIVE_USER)
   end
 end
 
-Then /^I should be able to install a package using apt-get$/ do
+Then /^I should be able to install a package using apt$/ do
   next if @skip_steps_while_restoring_background
   package = "cowsay"
   Timeout::timeout(120) do
-    cmd = @vm.execute("echo #{@sudo_password} | " +
-                      "sudo -S apt-get install #{package}", $live_user)
-    if !cmd.success?
-      STDERR.puts cmd.stderr
-    end
+    @vm.execute_successfully("echo #{@sudo_password} | " +
+                             "sudo -S apt install #{package}", LIVE_USER)
   end
   step "package \"#{package}\" is installed"
 end
@@ -41,6 +35,8 @@ When /^I update APT using Synaptic$/ do
   @screen.click('SynapticReloadButton.png')
   @screen.wait('SynapticReloadPrompt.png', 20)
   @screen.waitVanish('SynapticReloadPrompt.png', 30*60)
+  # After this next image is displayed, the GUI should be responsive.
+  @screen.wait('SynapticPackageList.png', 30)
 end
 
 Then /^I should be able to install a package using Synaptic$/ do

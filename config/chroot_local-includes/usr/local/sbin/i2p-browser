@@ -58,9 +58,9 @@ copy_extra_tbb_prefs () {
     local browser_prefs_dir="${chroot}/home/${browser_user}/.${browser_name}/profile.default/preferences"
     mkdir -p "${browser_prefs_dir}"
     # Selectively copy the TBB prefs we want
-    sed '/\(security\|update\|download\|spell\|noscript\|torbrowser\|torbutton\)/!d' "${tbb_prefs}/0000tails.js" > \
+    sed '/\(security\|update\|download\|spell\|noscript\|torbrowser\)/!d' "${tbb_prefs}/0000tails.js" > \
                     "${browser_prefs_dir}/0000tails.js"
-    sed '/\(capability\|noscript\|torbutton\)/!d' "${tbb_prefs}/extension-overrides.js" > \
+    sed '/\(capability\|noscript\)/!d' "${tbb_prefs}/extension-overrides.js" > \
                     "${browser_prefs_dir}/extension-overrides.js"
     chown -R "${browser_user}:${browser_user}" "${browser_prefs_dir}"
 }

@@ -144,11 +144,6 @@ configure_chroot_browser_profile () {
             "${browser_prefs}"
     fi
 
-    # Customize the GUI
-    local browser_chrome="${browser_profile}/chrome/userChrome.css"
-    mkdir -p "$(dirname "${browser_chrome}")"
-    cp "/usr/share/tails/${browser_name}/userChrome.css" "${browser_chrome}"
-
     # Remove all bookmarks
     rm "${chroot}/${TBB_PROFILE}/bookmarks.html"
 
@@ -159,11 +154,20 @@ configure_chroot_browser_profile () {
     else
         # The tails-activate-win8-theme script requires that the
         # browser profile is writable by the user running the script.
-        set_chroot_browser_permissions "${chroot}" "${browser_user}"
+        set_chroot_browser_permissions "${chroot}" "${browser_name}" "${browser_user}"
         # The camouflage activation script requires a dbus server for
         # properly configuring GNOME, so we start one in the chroot
         chroot "${chroot}" sudo -H -u "${browser_user}" sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
     fi
+
+    # Customize the GUI. This must be done after (potentially)
+    # applying the camouflage theme since we in that case will be
+    # appending to the camouflage config.
+    local browser_chrome="${browser_profile}/chrome/userChrome.css"
+    mkdir -p "$(dirname "${browser_chrome}")"
+    cat "/usr/share/tails/${browser_name}/userChrome.css" >> "${browser_chrome}"
+
+    set_chroot_browser_permissions "${chroot}" "${browser_name}" "${browser_user}"
 }
 
 set_chroot_browser_locale () {

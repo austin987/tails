@@ -37,11 +37,11 @@ fine tuning the options passed to the `sdmem` program.
 
 These `sdmem` and `sdmemopts` are appended to the fresh kernel command
 line parameters, when memory erasure is triggered, by the
-`tails-kexec` initscript that is itself parameterized by the usual,
+`tails-kexec` shutdown script that is itself parameterized by the usual,
 slightly customized, kexec-tools configuration file.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/default/kexec]]
-- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-kexec]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system-shutdown/tails-kexec]]
 
 #### Actual memory erasure process
 
@@ -57,29 +57,30 @@ protect against every memory forensics attack we know of.
 #### Triggers
 
 Different kinds of events trigger the memory erasure process. All lead
-to run the `tails-kexec` initscript.
+to run the `tails-kexec` shutdown script.
 
 **First, the memory erasure process is triggered at the end of a normal
 shutdown/reboot sequence.** This is implemented by slightly modifying
 the System V initscripts shipped by the `kexec-tools` Debian package:
 the `kexec-load` initscript, that normally only runs at reboot time,
 is enabled to run at shutdown time as well. A custom `tails-kexec`
-initscript replaces the `kexec` one in order to support the case when
+shutdown script replaces the `kexec` initscript, in order to support the case when
 the boot medium is not available anymore at the time this script runs;
 it also provides an improved user interface more suitable for Tails
-target users needs. Finally, the standard Debian `halt` and `reboot`
-initscripts are taken over by having the `tails-kexec` initscript run
-before they have a chance to be run (implemented with `Required-Stop`
-in the LSB headers).
+target users needs. Finally, the standard systemd `halt`, `poweroff`,
+`reboot`, `kexec` and `shutdown`
+actions are taken over by having the `tails-kexec` script, that is run
+just before they have a chance to be triggered (thanks to systemd's
+`/lib/systemd/system-shutdown/` facility, documented in
+`systemd-kexec.service(8)`).
 
 - [[!tails_gitweb config/chroot_local-patches/run_kexec-load_on_halt.diff]]
-- [[!tails_gitweb config/chroot_local-patches/disable_kexec_initscript.diff]]
-- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-kexec]]
 - [[!tails_gitweb config/chroot_local-hooks/52-update-rc.d]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system-shutdown/tails-kexec]]
 
 **Second, the memory erasure process is triggered when the boot medium
 is physically removed during runtime (USB boot medium is unplugged or
-boot CD is ejected).** This is implemented by a custom `udev-watchdog`
+boot DVD is ejected).** This is implemented by a custom `udev-watchdog`
 program monitors the boot medium; it's run by a wrapper, started at
 boot time, that brutally invokes the memory erasure process, bypassing
 other system shutdown scripts, when this medium happens to be
@@ -95,9 +96,15 @@ physically removed.
 
 #### Making sure needed files are available
 
-The memlockd daemon, appropriately configured, ensures every file
+The `memlockd` daemon, appropriately configured, ensures every file
 needed by the memory erasure process is locked into memory from boot
 to memory erasure time.
+
+Care have to be taken during the shutdown sequence, as `memlockd` is normally
+unloaded before the `kexec` happens. This is done by preventing `memlockd` to
+be stopped, and also by adding memlockd PID to the list of process that are
+omitted by the `sendsigs` script (responsible for sending TERM and KILL signals
+to remaining processes).
 
 - [[!debpts memlockd]]
 - [[!tails_gitweb config/chroot_local-includes/etc/memlockd.cfg]]
@@ -113,11 +120,13 @@ to memory erasure time.
 Since this process can take a while the user can leave the computer
 and let it finish on its own after removing the boot medium, or simply
 turn it off if he or she is not worried about this attack: if Tails
-was booted from a CD it is ejected before the memory wiping is
+was booted from a DVD it is ejected before the memory wiping is
 started, and if it was booted from a USB drive it can be removed as
 soon as the memory wiping has been started.
 
 A short but visible message, displayed for a few seconds, explains the
-user what is going to happen.
+user what is going to happen. To make this possible, we mask the
+`plymouth-{halt,kexec,poweroff,reboot,shutdown}` services.
 
-- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-kexec]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system-shutdown/tails-kexec]]
+- [[!tails_gitweb config/chroot_local-hooks/52-update-rc.d]]

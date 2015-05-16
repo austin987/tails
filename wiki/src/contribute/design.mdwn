@@ -761,6 +761,7 @@ supported input engines pre-loaded.
 
 IBus' environment variables are always exported on login to make this work.
 
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-configure-keyboard.service]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-configure-keyboard]]
 
 ## 3.4 Notification of security issues and new Tails releases
@@ -779,8 +780,8 @@ environment variable.
 This script is run after the user has logged-in and Tor is
 in known-working state.
 
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-security-check.service]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check-wrapper]]
 
 Security issues that were fixed in a newer version of Tails are taken
 care of by [[Tails Upgrader|contribute/design/incremental_upgrades]]
@@ -967,9 +968,6 @@ As for extensions we have the following differences:
   extension to protect against many tracking possibilities by removing
   most ads.
 
-* Tails does not install the same Torbutton as in the TBB. We
-  installed a patched version.
-
 * Tails does not install the Tor Launcher extension as part of the
   browser. A patched Tor Launcher is installed for use as a
   stand-alone XUL application, though.
@@ -987,13 +985,15 @@ ready, they are informed it won't work, and asked whether to start the
 browser anyway:
 
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tor-browser]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/generate-tor-browser-profile]]- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
-- [[!tails_gitweb config/chroot_local-includes/etc/sudoers.d/zzz_tor-has-bootstrapped]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/generate-tor-browser-profile]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-wait-until-tor-has-bootstrapped.service]]
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-wait-until-tor-has-bootstrapped.service]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
 
 Once Tor is ready to be used, the user is informed they can now use
 the Internet:
 
-- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/60-tor-ready-notification.sh]]
+- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/60-tor-ready.sh]]
 
 The remaining configuration differences can be found in:
 
@@ -1096,7 +1096,7 @@ Bluetooth radio (so that it can be dealt another way:
 [[todo/protect_against_external_bus_memory_forensics]]), and
 soft-blocks all other kinds of wireless devices (e.g. UWB, GPS, FM).
 
-- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-set-wireless-devices-state]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-set-wireless-devices-state.service]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-set-wireless-devices-state]]
 
 ### 3.6.20 OpenSSH
@@ -1214,14 +1214,24 @@ SOCKS port.
 During most of the ISO build process, APT uses the proxy configured
 through `live-build` (that is, usually a local `apt-cacher-ng`).
 
-However, at the end of the `chroot_local-hooks` stage, a hook does (a
-more elaborate version of) `s,http://,tor+http://` in APT sources.
-Then, APT will use the `tor+http` method, that is a simple torsocks
-wrapper for the good old `http` method.
+However, at boot time, a hook does (a more elaborate version of)
+`s,http://,tor+http://` in APT sources. Then, APT will use the
+`tor+http` method, that is provided by [[!debpkg apt-transport-tor]].
 
-- [[!tails_gitweb config/chroot_local-hooks/99-zzz_runtime_apt_configuration]]
-- [[!tails_gitweb config/chroot_local-includes/usr/lib/apt/methods/tor+http]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/lib/apt-toggle-tor-http]]
+- [[!tails_gitweb config/chroot_local-includes/lib/live/config/1500-reconfigure-APT]]
+
+### 3.6.28 Electrum
+
+We install the [Electrum](https://electrum.org) Bitcoin client and the
+default configuration tells it to use the default of Tor's
+SOCKSPort:s, and sync the necessary parts of the Bitcoin blockchain
+(as a lightweight client) from the default server pool using SSL.
+
+There is also a persistence preset for the live user's `.electrum`
+configuration folder, which stores the Bitcoin wallet, application
+preferences and the cached Bitcoin blockchain.
+
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.electrum]]
 
 ## 3.7 Running Tails in virtual machines
 

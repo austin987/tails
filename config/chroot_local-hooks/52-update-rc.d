@@ -3,7 +3,6 @@
 set -e
 
 CUSTOM_INITSCRIPTS="
-tails-kexec
 "
 
 PATCHED_INITSCRIPTS="
@@ -37,11 +36,23 @@ insserv $PATCHED_INITSCRIPTS $CUSTOM_INITSCRIPTS
 systemctl enable memlockd.service
 
 # Enable our own systemd unit files
+systemctl enable tails-autotest-remote-shell.service
 systemctl enable tails-reconfigure-kexec.service
 systemctl enable tails-reconfigure-memlockd.service
 systemctl enable tails-sdmem-on-media-removal.service
 systemctl enable tails-set-wireless-devices-state.service
+systemctl enable tails-wait-until-tor-has-bootstrapped.service
 systemctl enable tor-controlport-filter.service
+
+# Enable our own systemd user unit files
+systemctl --global enable tails-add-GNOME-bookmarks.service
+systemctl --global enable tails-configure-keyboard.service
+systemctl --global enable tails-create-tor-browser-directories.service
+systemctl --global enable tails-security-check.service
+systemctl --global enable tails-upgrade-frontend.service
+systemctl --global enable tails-virt-notify-user.service
+systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
+systemctl --global enable tails-warn-about-disabled-persistence.service
 
 # Use socket activation only, to save a bit of memory and boot time
 systemctl disable cups.service
@@ -50,3 +61,8 @@ systemctl enable  cups.socket
 # We're starting NetworkManager ourselves
 systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service
+
+# Don't hide tails-kexec's shutdown messages with an empty splash screen
+for suffix in halt kexec poweroff reboot shutdown ; do
+   systemctl mask "plymouth-${suffix}.service"
+done

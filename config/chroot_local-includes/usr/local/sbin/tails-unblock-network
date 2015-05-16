@@ -1,33 +1,25 @@
 #!/bin/sh
 
-set -e
+systemctl --no-block start tails-restricted-network-detector.service
 
-BLACKLIST=/etc/modprobe.d/all-net-blacklist.conf
-
-rm -f "${BLACKLIST}"
-if [ -e "${BLACKLIST}" ]; then
-    log "${BLACKLIST} wasn't removed so the network will still be blocked"
-fi
+systemctl start tails-unblock-network.service
 
 # Now we'll load any present network device previously blocked by
-# BLACKLIST. In particular, the MAC spoofing udev rule should trigger
+# the blacklist. In particular, the MAC spoofing udev rule should trigger
 # for each network device added.
-/sbin/udevadm trigger --action=add
+systemctl restart systemd-udev-trigger.service
 
-# Make this script block until all triggers have been run. We normally
-# start NetworkManager immediately after this script, and without the
-# blocking behaviour there's a race between NM and the MAC spoof udev
-# triggers. When NM takes control of some network device, some
-# operations are not possible on the device, like MAC spoofing. Hence,
-# if NM wins, the udev trigger's run of tails-spoof-mac will fail.
-/sbin/udevadm settle
+# Block until all triggers have been run. NetworkManager is started immediately
+# after, and without the blocking behaviour there's a race between NM
+# and the MAC spoof udev triggers. When NM takes control of some network device,
+# some operations are not possible on the device, like MAC spoofing. Hence,
+# if NM wins, the udev-triggered run of tails-spoof-mac will fail.
+systemctl restart systemd-udev-settle.service
 
-# Enable NetworkManager services
+# Enable and start NetworkManager services
 # No need to manually enable NetworkManager-dispatcher.service,
 # as NetworkManager.service has "Also=NetworkManager-dispatcher.service"
 # in its [Install] section.
-systemctl enable NetworkManager.service
-systemctl enable NetworkManager-wait-online.service
-systemctl start NetworkManager-dispatcher.service
-systemctl start NetworkManager.service
-systemctl start NetworkManager-wait-online.service
+systemctl enable NetworkManager.service NetworkManager-wait-online.service
+systemctl start NetworkManager.service NetworkManager-dispatcher.service
+systemctl --no-block start NetworkManager-wait-online.service

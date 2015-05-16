@@ -6,6 +6,7 @@ use 5.10.1;
 use autodie qw{:all};
 use Desktop::Notify;
 use Locale::gettext;
+use Net::DBus::Reactor;
 use POSIX;
 use Path::Class;
 use String::Errf qw{errf};
@@ -48,16 +49,23 @@ sub doc_url {
     return;
 }
 
-sub notify {
-    my $summary = shift;
-    my $body    = shift;
 
-    my $notify = Desktop::Notify->new();
-    $notify->create(
-        summary => $summary,
-        body    => $body,
-        timeout => 0
-    )->show();
+=head1 Callbacks
+
+=cut
+
+sub action_cb {
+    my $reactor = shift;
+
+    my $website_root = '/usr/share/doc/tails/website';
+
+    my $doc_insecure_disabled_resource = 'doc/first_steps/persistence/recover_insecure';
+    my $doc_insecure_disabled_url = doc_url($website_root, $doc_insecure_disabled_resource)
+        or die "Could not find best URL for '$doc_insecure_disabled_resource' at '$website_root'";
+
+    system('/usr/local/bin/tor-browser', $doc_insecure_disabled_url);
+
+    $reactor->shutdown;
 }
 
 
@@ -65,62 +73,35 @@ sub notify {
 
 =cut
 
-my @files_disabled_by_0_21_upgrade = (
-    glob('/live/persistence/*_unlocked/live-additional-software.conf.disabled'),
-    glob('/live/persistence/*_unlocked/live-persistence.conf.old'),
-);
-
-my @files_never_migrated = (
-    glob('/live/persistence/*_unlocked/live-persistence.conf'),
-);
-
 my @files_disabled_for_wrong_access_rights = (
     glob('/live/persistence/*_unlocked/persistence.conf.insecure_disabled'),
     glob('/live/persistence/*_unlocked/live-additional-software.conf.insecure_disabled'),
 );
 
-my $website_root = '/usr/share/doc/tails/website';
+@files_disabled_for_wrong_access_rights || exit 0;
 
-my $doc_upgrade_resource = 'doc/first_steps/persistence/upgrade';
-my $doc_upgrade_url = doc_url($website_root, $doc_upgrade_resource)
-    or die "Could not find best URL for '$doc_upgrade_resource' at '$website_root'";
+my $reactor = Net::DBus::Reactor->main;
 
-my $doc_insecure_disabled_resource = 'doc/first_steps/persistence/recover_insecure';
-my $doc_insecure_disabled_url = doc_url($website_root, $doc_insecure_disabled_resource)
-    or die "Could not find best URL for '$doc_insecure_disabled_resource' at '$website_root'";
+my $notify = Desktop::Notify->new();
+$notify->action_callback(sub { action_cb($reactor, @_) });
+$notify->close_callback(sub { $reactor->shutdown; });
 
-my @notifications;
-
-if (@files_disabled_by_0_21_upgrade + @files_never_migrated) {
-    push @notifications, {
-        disabled_conf_files => join(
-            ', ',
-            @files_disabled_by_0_21_upgrade,
-            @files_never_migrated
-        ),
-        doc_url             => $doc_upgrade_url,
-    };
-}
-
-if (@files_disabled_for_wrong_access_rights) {
-    push @notifications, {
+my $summary = gettext(q{Some persistence settings were temporarily disabled});
+my $body    = errf(
+    gettext("%{disabled_conf_files}s\n"),
+    {
         disabled_conf_files => join(
             ', ',
             @files_disabled_for_wrong_access_rights
         ),
-        doc_url             => $doc_insecure_disabled_url,
-    };
-}
+    }
+);
 
-foreach my $notification_params (@notifications) {
-    notify(
-        gettext(q{Some persistence settings were temporarily disabled}),
-        errf(
-            gettext(
-                "%{disabled_conf_files}s\n"
-                . "<a href='%{doc_url}s'>Learn how to enable them again.</a>"
-            ),
-            $notification_params,
-        )
-    );
-}
+$notify->create(
+    summary => $summary,
+    body    => $body,
+    actions => { 'moreinfo'  => gettext('Learn how to enable them again'), },
+    hints   => { 'transient' => 1, },
+    timeout => 0)->show();
+
+$reactor->run;

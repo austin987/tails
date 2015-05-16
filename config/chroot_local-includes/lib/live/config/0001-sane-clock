@@ -1,0 +1,12 @@
+#!/bin/sh
+
+echo "- making sure the system clock is sane"
+
+# If the system clock is before the build date, then we know it's
+# incorrect and set it too the build date. However, to account for
+# potential issues due to timezone differences etc we ignore clocks
+# that are up to 1 day before the build date.
+BUILD_DATE="$(sed -n -e '1s/^.* - \([0-9]\+\)$/\1/p;q' /etc/amnesia/version)"
+if [ "$(date +%s)" -lt "$(date -d "${BUILD_DATE} - 1 day" +%s)" ]; then
+    date --set "${BUILD_DATE}"
+fi

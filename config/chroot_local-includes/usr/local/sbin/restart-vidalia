@@ -8,6 +8,9 @@ set -e
 # Get LANG
 . /etc/default/locale
 
+# Get windows_camouflage_is_enabled
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
+
 for i in $(seq 10); do
    killall -SIGKILL vidalia || :
    sleep 1
@@ -16,7 +19,10 @@ for i in $(seq 10); do
    fi
 done
 
-until pgrep -u "${LIVE_USERNAME}" "^nm-applet$" >/dev/null ; do
+# We don't want to start Vidalia if Windows Camouflage is enabled (ticket #7400)
+windows_camouflage_is_enabled && exit 0
+
+until pgrep -u "${LIVE_USERNAME}" "^ibus-daemon" >/dev/null ; do
    sleep 5
 done
 
