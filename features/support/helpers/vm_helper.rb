@@ -472,7 +472,7 @@ EOF
   end
 
   def ram_only_snapshot_path(name)
-    return "#{$config["TMPDIR"]}/#{name}-snapshot.qcow2"
+    return "#{$config["TMPDIR"]}/#{name}-snapshot.memstate"
   end
 
   def save_snapshot(name)
@@ -537,7 +537,7 @@ EOF
   end
 
   def VM.snapshot_exists?(name)
-    return true if File.exist?("#{$config["TMPDIR"]}/#{name}-snapshot.qcow2")
+    return true if File.exist?(ram_only_snapshot_path(name))
     old_domain = $virt.lookup_domain_by_name($config["LIBVIRT_DOMAIN_NAME"])
     snapshot = old_domain.lookup_snapshot_by_name(name)
     return snapshot != nil
@@ -546,7 +546,7 @@ EOF
   end
 
   def VM.remove_all_snapshots
-    Dir.glob("#{$config["TMPDIR"]}/*-snapshot.qcow2").each do |file|
+    Dir.glob("#{$config["TMPDIR"]}/*-snapshot.memstate").each do |file|
       File.delete(file)
     end
     old_domain = $virt.lookup_domain_by_name($config["LIBVIRT_DOMAIN_NAME"])
