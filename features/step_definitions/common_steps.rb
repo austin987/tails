@@ -304,6 +304,8 @@ Given /^Tor is ready$/ do
   next if @skip_steps_while_restoring_background
   step "Tor has built a circuit"
   step "the time has synced"
+  assert(@vm.execute('systemctl is-system-running').success?,
+         'At least one system service failed to start.')
 end
 
 Given /^Tor has built a circuit$/ do
