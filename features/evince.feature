@@ -37,6 +37,7 @@ Feature: Using Evince
     When I open "/home/amnesia/Persistent/default-testpage.pdf" with Evince
     Then I see "CupsTestPage.png" after at most 10 seconds
     And I can print the current document to "/home/amnesia/Persistent/output.pdf"
-    When I try to open "/home/amnesia/.gnupg/default-testpage.pdf" with Evince
+    When I kill the process "evince"
+    And I try to open "/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
 
