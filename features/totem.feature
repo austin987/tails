@@ -35,7 +35,7 @@ Feature: Using Totem
     When I load the "https://webm.html5.org/test.webm" URL in Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 60 seconds
 
-  Scenario: Installing Tails on a USB drive, creating a persistent partition, copying video files to it, and making sure that they persist
+  Scenario: Copying video files to a persistence and making sure that they persist
     Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     And I setup a filesystem share containing sample videos
     And I enable persistence
