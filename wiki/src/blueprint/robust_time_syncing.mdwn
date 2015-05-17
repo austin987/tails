@@ -96,6 +96,72 @@ That's what ChromeOS does when the time is too wrong:
   understand why they did what. Still, the resulting code is there:
   <https://src.chromium.org/viewvc/chrome?revision=266431&view=revision>
 
+### User story
+
+	When I start Tails
+	And I log into the Tails desktop with the default options
+	And Tor fails to bootstrap for time-related reasons
+	Then I am asked for the correct time
+	And the corresponding UI lets me choose my preferred timezone
+	And then, Tails Clock displays the current time with the chosen timezone
+	And Tor bootstrap is attempted again
+
+### Roadmap
+
+#### First iteration
+
+* From current tordate, we keep only the mechanism that detects if Tor
+  fails to bootstrap due to time-related reasons. Whenever this
+  happens, we open a GUI that lets the user set the correct time and
+  choose their preferred timezone, and then we restart Tor.
+* We keep htpdate as-is for now, in order to keep failing closed on
+  replayed Tor consensus.
+* We need Tails Clock: otherwise, we would let the user set the
+  correct time in their preferred timezone, but then the feedback we
+  would give them (in the GNOME clock applet) would let them think the
+  operation has failed, since it would still display time in UTC.
+  We have to avoid making the UX worse this way, hence the need for
+  Tails Clock (and then, for porting it to GNOME Shell for
+  Tails/Jessie). The config source for the timezone used by Tails
+  Clock must be shared with the time input GUI, to provide
+  a consistent UX. The interface used by Tails Clock and by the
+  upcoming time input GUI could perhaps be shared; this raises
+  privilege separation issues that need to be thought through.
+
+#### Second iteration
+
+We stop using htpdate to set the system clock, but we keep it around
+as a way to detect a replayed Tor consensus: if the time delta
+detected by htpdate is too big:
+
+* we warn the user that something fishy may be going on, and try to
+  make as actionable as realistically possible;
+* we stop Tor, in order to keep failing closed in this situation.
+
+And then, perhaps htpdate could be configured to query fewer servers,
+because we maybe don't need to trust the info we get from htpdate as
+much once we're there.
+
+#### Integration with the new Greeter
+
+Once [[!tails_ticket 5464]] is done, the user will have the
+opportunity to choose their preferred timezone in the Greeter.
+And then, most likely we'll want to provide them feedback about what
+Tails thinks the resulting local time is. And in turn, the UI that
+provides that feedback can as well allow users to set the system time
+if it's wrong.
+
+The chosen timezone information should be re-used both by Tails Clock
+and by the time input GUI that lets users correct the system time if
+Tor has failed to bootstrap for time-related reasons.
+
+	When I start Tails
+	And I choose my preferred timezone in the Greeter
+	Then I see the resulting system time in the chosen timezone
+	And I am enabled to correct the system time
+	And then, Tails Clock displays the current time with the chosen timezone
+	And Tor has greater chances to bootstrap successfully on first try
+
 Extend Tor some how
 -------------------
 
