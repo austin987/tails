@@ -70,11 +70,28 @@ Some other random requirements about this mechanism:
 Possible solutions
 ==================
 
-
-Ask the user
-------------
+Ask the user what time it is
+----------------------------
 
 ... when Tor fails to bootstrap for time-related reasons.
+
+That's what ChromeOS does when the time is too wrong:
+
+* <https://code.google.com/p/chromium/issues/detail?id=232066#c105>
+* <https://codereview.chromium.org/247663003/>
+* Sadly, most of their design docs, UI mockups etc. are apparently not
+  accessible to non-Google employees or something, so it's not easy to
+  understand why they did what. Still, the resulting code is there:
+  <https://src.chromium.org/viewvc/chrome?revision=266431&view=revision>
+
+Extend Tor some how
+-------------------
+
+E.g.:
+
+* like [Roger
+  suggested](https://lists.torproject.org/pipermail/tor-talk/2011-January/008551.html)
+* [[!tor_bug 6894 desc="answer network time requests"]]
 
 Misc. resources
 ===============
@@ -92,17 +109,3 @@ Misc. resources
     * their [upstart job](http://git.chromium.org/gitweb/?p=chromiumos/platform/init.git;a=blob;f=tlsdated.conf;h=d72d780c1f1d432bb7b7a06e787a745dbf5cdd46;hb=HEAD)
     * They query `clients3.google.com` only currently, but intend to
       use the multi-host feature some day.
-
-* Extend Tor some how, e.g.
-  - like [arma
-    suggested](https://lists.torproject.org/pipermail/tor-talk/2011-January/008551.html)
-  - [[!tor_bug 6894 desc="answer network time requests"]]
-
-* ChromeOS does ask for user input when the time is too wrong:
-  - <https://code.google.com/p/chromium/issues/detail?id=232066#c105>
-  - <https://codereview.chromium.org/247663003/>
-  - Sadly, most of their design docs, UI mockups etc. are apparently
-    not accessible to non-Google employees or something, so it's not
-    easy to understand why they did what. Still, the resulting code is
-    there:
-    <https://src.chromium.org/viewvc/chrome?revision=266431&view=revision>
