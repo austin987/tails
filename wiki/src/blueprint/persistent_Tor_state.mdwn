@@ -1,4 +1,93 @@
 This is about [[!tails_ticket 5462]].
 
-[[!toc levels=2]]
+[[!toc levels=3]]
 
+# Big picture
+
+There are a few good reasons for making Tor's data directory
+persistent:
+
+1. Faster and less wasteful (in terms of bandwidth) bootstrap.
+2. Stronger resistance to certain attacks against anonymity via stable
+   Entry Guard(s).
+3. Using stable Entry Guard(s) makes it harder to detect that you're
+   using Tails.
+
+Making `/var/lib/tor` persistent is enough for this. We should
+probably add a persistent preset for it.
+
+XXX: Should it be enabled by default?
+
+# Issues
+
+## Persistent entry guards vs. mobile users
+
+using persistent Entry Guards may be problem for mobile users (https://lists.torproject.org/pipermail/tor-talk/2012-October/025975.html).
+
+Potential solutions:
+
+### Subgraph's [torshiftchange](https://bitbucket.org/mckinney_subgraph/torshiftchange)
+
+It detects network based solely on NetworkManager's connection uuid.
+While that approach will work fine do wireless networks (since they
+always generate a new connection => new uuid), I don't see how we can
+get around treating all wired networks as the same one and hence
+getting the same entry guards for all wired connections.
+
+Hmm. And actually, I guess it would be a problem for eduraom network
+and similar "global" networks where one normally would configure one
+NM connection without a BSSID but only an SSID. OTOH, with eduroam
+specifically one uses a certificate that's unique per user, but I've
+seen other (generally unencrypted) networks of this type, e.g.
+for chains of some company that provide free wifi.
+
+Perhaps they sometimes deliberately use the same BSSID (i.e. spoof the
+AP's MAC address to all be the same) in addition to the same SSID?
+We believe that it's unlikely: doing that has a cost (the default AP's
+configuration needs to be changed) and no practical benefit that we
+were able to think of so far.
+
+### [tordyguards](https://github.com/leewoboo/tordyguards)
+
+It identifies network based on BSSID, so for a wireless network it'd
+be the AP's MAC address. For a wired network there's no BSSID concept,
+so I'm not sure what it means in that case. That seems to be specific
+for wicd; tordyguards is written as a wicd pre-connect script, and
+those are supplied with these positional parameters:
+
+* the connection type (wireless/wired).
+* the ESSID (network name).
+* the BSSID (gateway MAC).
+
+... where the third argument (the BSSID) is the only one used.
+Unfortunately, NetworkManager doesn't provide the BSSID, so add
+support for it one would have to take a detour with `nm-tool` or
+`nmcli` or something to get the BSSID. Also, something we don't like
+about it is that it's designed to also start and stop the Tor service,
+instead of just fixing `/var/lib/tor/state`.
+
+## Custom scripts relying on non-persistence
+
+Some of our scripts depend on that certain files in `/var/lib/tor` are
+not persistent, which has to be resolved before adding the preset:
+
+* Our time syncing script uses the existence of `cached-descriptors`
+  as a test for wheter Tor is working, and a similar assumption is
+  made for the `*-consensus` files. This will be fixed by
+  [[!tails_ticket 5774]].
+* The Unsafe Browser uses `cached-descriptors` in the same way as the
+  time syncing script.
+
+At least "`cached-descriptors` existence checking" can be replaced
+with checking `GETINFO status/circuit-established` via the
+ControlPort. For tordate's `*-consensus` magic `GETINFO
+status/enough-dir-info` seems interesting, but isn't a replacement.
+
+Shell function which is useful for the above:
+
+	tor_control_getinfo() {
+	  COOKIE=/var/run/tor/control.authcookie
+	  HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
+	  echo -e "AUTHENTICATE $HEXCOOKIE\nGETINFO ${1}\nQUIT" | \
+	  nc 127.0.0.1 9051 | grep "^250-${1}=" | sed "s@^250-${1}=@@"
+	}
