@@ -91,3 +91,25 @@ Shell function which is useful for the above:
 	  echo -e "AUTHENTICATE $HEXCOOKIE\nGETINFO ${1}\nQUIT" | \
 	  nc 127.0.0.1 9051 | grep "^250-${1}=" | sed "s@^250-${1}=@@"
 	}
+
+# What to do?
+
+Any way, the good idea in `tordyguards` is to identify the network
+based on something that is a persistent property of the network
+itself, like its BSSID. Like I said, I don't know what the BSSID
+concept means for wired networks, but the take home lesson is that we
+should do something based on MAC addresses, IMHO. I quickly hacked
+together a PoC that uses the gateway's MAC address (if any, otherwise
+a new Tor state file is used => random entry guards). See the
+`feature/5462-PoC-per-network-entry-guards` branch.
+
+Still, to not reinvent the wheel and go completely NIH, perhaps we
+should ask the Subgraph people if they want to consider switching
+@torshiftchange@ from identifying networks based on the NM connection
+uuid to looking at the gateway MAC address. I suppose we should also
+carefully analyze if there's any problem with that (for instance, do
+"global" network spoof the gateway MAC addresses to be the same
+everywhere? I doubt it, but it's worth considering). Also, we need to
+come up with what to do when multiple NICs are connected at the same
+time (how that works in Tails is a bit messy at the moment, and my PoC
+messes it up a bit more I think).
