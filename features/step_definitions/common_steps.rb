@@ -117,7 +117,7 @@ end
 
 Given /^the hardware clock is set to "([^"]*)"$/ do |time|
   next if @skip_steps_while_restoring_background
-  @vm.set_hardware_clock(DateTime.parse(time).to_time)
+  $vm.set_hardware_clock(DateTime.parse(time).to_time)
 end
 
 Given /^I capture all network traffic$/ do

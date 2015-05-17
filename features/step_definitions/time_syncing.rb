@@ -42,11 +42,11 @@ end
 
 Then /^the system clock is just past Tails' build date$/ do
   next if @skip_steps_while_restoring_background
-  system_time_str = @vm.execute_successfully('date').to_s
+  system_time_str = $vm.execute_successfully('date').to_s
   system_time = DateTime.parse(system_time_str).to_time
   build_time_cmd = 'sed -n -e "1s/^.* - \([0-9]\+\)$/\1/p;q" ' +
                    '/etc/amnesia/version'
-  build_time_str = @vm.execute_successfully(build_time_cmd).to_s
+  build_time_str = $vm.execute_successfully(build_time_cmd).to_s
   build_time = DateTime.parse(build_time_str).to_time
   diff = system_time - build_time  # => in seconds
   # Half an hour should be enough to boot Tails on any reasonable
