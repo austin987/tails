@@ -58,15 +58,26 @@ fingerprint becomes indistinguishable from a "normal" Tor bootstrap.
 That would be a very handy fact when reasoning about how Tails users
 can be fingerprinted.
 
-Some other random requirements about this mechanism:
+Some other requirements about this mechanism:
 
+* it has to avoid the security issues that current tordate has wrt.
+  replayed Tor consensus;
+* it has to be more robust that the current tordate;
+* it has to be as safe as the current tordate + htpdate combination,
+  e.g. wrt. failing closed when facing a replayed consensus and the
+  time set by htpdate is out of the `valid-before`/`valid-until`
+  interval (admitedly, the corresponding UX is totally miserable as of
+  Tails 1.4, but at least we're failing closed);
 * it has to work with pluggable transports;
 * it has to work when not doing a full bootstrap, e.g.
   when `/var/lib/tor` is persistent;
 * Tor is a bit fragile when it comes to time jumps when it's at the
   early bootstrap stages. For instance, in tordate have to restart Tor
   after setting the time according to the fetched consensus, otherwise
-  it just idles, at least sometimes. This will have to be solved too.
+  it just idles, at least sometimes. This will have to be solved too;
+* it should help improve the UX we provide while Tor is boostrapping
+  and the time is being sync'ed, both on success and on various kinds
+  of failures.
 
 Possible solutions
 ==================
