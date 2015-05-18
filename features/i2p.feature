@@ -8,7 +8,7 @@ Feature: I2P
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And Tor is ready
     And all notifications have disappeared
     Then the I2P Browser desktop file is not present
@@ -21,7 +21,7 @@ Feature: I2P
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And Tor is ready
     And I2P is running
     And the I2P router console is ready

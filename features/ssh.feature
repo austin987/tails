@@ -9,7 +9,7 @@ Feature: Logging in via SSH
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And Tor is ready
     And available upgrades have been checked
     And all notifications have disappeared
@@ -24,7 +24,7 @@ Feature: Logging in via SSH
 
   @check_tor_leaks
   Scenario: Connecting to an SFTP server on the Internet using the GNOME "Connect to a Server" feature
-    Given I have the SSH key pair for an SSH server
+    Given I have the SSH key pair for an SFTP server
     When I connect to an SFTP server on the Internet
     And I verify the SSH fingerprint for the SFTP server
     Then I successfully connect to the SFTP server
