@@ -1010,9 +1010,7 @@ Given /^a web server is running on the LAN$/ do
   end
   server.start
 EOF
-  # Run with `exec` since the above is opened in a shell, and we want
-  # to capture the ruby process to get its pid.
-  proc = IO.popen("exec ruby -e '#{code}'")
+  proc = IO.popen(['ruby', '-e', code])
   try_for(10, :msg => "It seems the LAN web server failed to start") do
     Process.kill(0, proc.pid) == 1
   end
