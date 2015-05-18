@@ -242,7 +242,7 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
   @screen.type(Sikuli::Key.TAB)
   @screen.waitVanish(bootsplash_tab_msg, 1)
 
-  @screen.type(" autotest_never_use_this_option #{@boot_options}" +
+  @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 30*60)
   @vm.wait_until_remote_shell_is_up
