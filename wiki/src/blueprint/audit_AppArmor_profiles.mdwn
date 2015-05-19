@@ -10,18 +10,63 @@ Things to check
   e.g.
   - check `private-files` and `private-files-strict` abstractions, in
     particular wrt. whatever can be accessed via the following paths
-  - `/live/persistence/TailsData_unlocked/`
-  - `/lib/live/mount/rootfs/`
-  - `/lib/live/mount/overlay/`
+  - is there any alternate path to `/live/persistence`?
+  - `/lib/live/mount/overlay/` -- until Tails 1.4~rc1, we have _two_
+    `tmpfs` mounted there, including an empty one that hides the
+    other's content (but we should not rely on this for security).
+    Fixed on the `bugfix/8007-AppArmor-hardening` branch with
+    [[!tails_gitweb_commit bc491c9]], and then:
+    * test that this doesn't break persistence in read-write mode
+    * test that this doesn't break persistence in read-only mode
+    * test that this doesn't break booting an upgraded Tails with
+      more that one SquashFS
+    * test how AppArmor confinement behaves wrt. `/live/overlay`
+      (that's a symlink to `/lib/live/mount/overlay`, created in
+      [[!tails_gitweb_commit 3233da6]]; maybe it's not needed
+      anymore?)
+    * test how AppArmor confinement behaves wrt.
+      `/lib/live/mount/overlay` (at least it blocks access for Evince
+      to `/lib/live/mount/overlay/home/amnesia/.gnupg/default.pdf`)
     * we add `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at
-      least `$HOME` is OK
-* access to webcam
+      least `$HOME` is OK -- isn't it?
+  - recheck all these things with persistence in read-only mode
+* wide-open access to `/lib/**` or similar, that might grant access to
+  persistent files -- everything checked, potential issues and
+  remaining todo items follow:
+  - the `base` abstraction (used e.g. by Pidgin and Evince) has things
+    like `/lib{,32,64}/** r`
+  - the `launchpad-integration` abstraction has
+    `/{,usr/}lib*/{,**/}*.so{,.*} m`
+  - the `ubuntu-helpers` abstraction has
+    `/{,usr/,usr/local/}lib{,32,64}/{,**/}*.so{,.*} m`
 * access to microphone (can we easily block that while still allowing
   sound output?)
-* wide-open access to `$HOME` -- everything checked, potential issues
-   and remaining todo items follow:
-  - `abstractions/ubuntu-browsers.d/{java,user-files}` give read-write
-    access to `$HOME` and its content: where are they used?
+  - `abstractions/audio` gives full access to PulseAudio, which
+     no doubt gives access to the microphone; we use that abstraction
+     for Totem, Tor Browser, Evince and Pidgin. The Ubuntu phone
+     mediates access to PulseAudio at the D-Bus level. As of
+     2015-05-04:
+     * this is only done at the AppArmor level. There is WIP to [make
+       PulseAudio a trusted helper for microphone
+       access](https://bugs.launchpad.net/ubuntu/+source/pulseaudio/+bug/1224756).
+       The "trust-store" is a library (external to AppArmor) that
+       services can use. it can prompt, remember the answer, etc.
+       It's currently limited to mir. It can also be preseeded.
+       jdstrand is not sure if there is a CLI for that, but that could
+       be another option. The broader picture is described in
+       <https://wiki.ubuntu.com/SecurityTeam/Specifications/ApplicationConfinement>
+       and in the phone-specific bits at
+       <https://wiki.ubuntu.com/AccountPrivileges>.
+     * AppArmor support for D-Bus mediation has made it into D-Bus
+       upstream, but the kernel bits have not been upstreamed yet.
+  - regarding Alsa:
+    * `/dev/snd/pcmC[0-9]D[0-9]c` raw audio devices seem to be capture,
+      while `/dev/snd/pcmC[0-9]D[0-9]p` devices seem to be playback
+      devices
+    * do `/dev/snd/hwC[0-9]D[0-9]` give access to the microphone?
+    * do `/dev/controlC[0-9]` give access to the microphone?
+    * does `/dev/snd/seq` give access to the microphone?
+    * does `/dev/snd/timer` give access to the microphone?
 * wide-open access to `$HOME` except blacklist -- everything checked,
   potential issues and remaining todo items follow:
   - Evince, Totem and their previewers have read-write access to
@@ -32,14 +77,6 @@ Things to check
   - What else uses `private-files` and
     `private-files-strict` abstractions?
   - Shall we add stuff to these blacklist?
-* wide-open access to `/lib/**` or similar, that might grant access to
-  persistent files -- everything checked, potential issues and
-  remaining todo items follow:
-  - the `base` abstraction has things like `/lib{,32,64}/** r`
-  - the `launchpad-integration` abstraction has
-    `/{,usr/}lib*/{,**/}*.so{,.*} m`
-  - the `ubuntu-helpers` abstraction has
-    `/{,usr/,usr/local/}lib{,32,64}/{,**/}*.so{,.*} m`
 * jvoisin's profile hardening
   - Pidgin
     * drop `bash` abstraction: has been here since the first version
@@ -121,3 +158,21 @@ Checked already
     the `$HOME`, Desktop and download directories; combined with the
     `private-files-strict` abstraction, it is probably as tight as we
     can do without substantially harming UX
+  - `abstractions/ubuntu-browsers.d/{java,user-files}` give read-write
+    access to `$HOME` and its content, but they're not used anywhere
+* access to webcam:
+  - `abstractions/video` gives access via `/sys/class/video4linux/` so
+    some devices; it's not used in any profile we ship
+  - most webcams appear as `/dev/video0` or similar; `rgrep -i video`
+    shows that no profile we ship gives access to such files
+* access to files via alternate paths specific to Debian Live systems:
+  - `/live/persistence/TailsData_unlocked/`: we have one automatic
+    test for this in `pidgin.feature`; the tested access is denied
+    because that path is not explicitly allowed, rather than because
+    it's explicitly denied, but that's how AppArmor works and that's
+    good enough.
+  - we don't have have any symlink between `/live` and `/lib/live`
+    anymore
+  - `/lib/live/mount/rootfs/` and `/lib/live/mount/medium/` should be
+    OK: they only contain stuff that's publicly available in our ISO
+    anyway, and DAC still applies.

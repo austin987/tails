@@ -55,14 +55,65 @@ See [[release_process/Debian_security_updates]].
 Select the right branch
 =======================
 
-For a major release, the `devel` branch should be merged into the `testing`
-branch and changes should be made from there.
-
-From minor releases, work should happen in `stable`.
+What we refer to as the "release branch" (and `RELEASE_BRANCH`) should
+be `testing` for major releases, and `stable` for point-releases.
 
 <div class="caution">
-Then, read this document from the branch used to prepare the release.
+Read the remainder of this document from the branch used to prepare the release!
 </div>
+
+Freeze
+======
+
+Major release
+-------------
+
+If we are at freeze time for a major release:
+
+1. Merge the `master` Git branch into `devel`:
+
+        git checkout devel && git merge --no-ff origin/master
+
+2. [[Merge each APT overlay
+   suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+   the `devel` branch's `config/APT_overlays.d/` into the `devel`
+   APT suite.
+
+3. Merge the `devel` Git branch into the `testing` one:
+
+        git checkout testing && git merge devel
+
+   ... and check that the resulting `config/APT_overlays.d/` in the
+   `testing` branch is empty.
+
+4. [[Hard reset|APT_repository#workflow-reset]] the `testing` APT
+   suite to the current state of the `devel` one.
+
+5. If there is no Jenkins job building ISO images from the `testing`
+   branch, ask <tails-sysadmins@boum.org> to re-activate it.
+
+Point-release
+-------------
+
+If we are at freeze time for a point-release:
+
+1. Merge the `master` Git branch into `stable`:
+
+        git checkout stable && git merge --no-ff origin/master
+
+2. [[Merge each APT overlay
+   suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+   the `stable` branch's `config/APT_overlays.d/` into the `stable`
+   APT suite.
+
+Common steps for point and major releases
+-----------------------------------------
+
+After either of the above sections' steps, reset the release branch's
+`config/base_branch`:
+
+    echo "${RELEASE_BRANCH}" > config/base_branch && \
+    git commit config/base_branch -m "Restore ${RELEASE_BRANCH}'s base branch."
 
 Update included files
 =====================
@@ -116,7 +167,8 @@ Then check the PO files:
 
 Correct any displayed error, then commit the changes if any.
 
-Then see the relevant release processes:
+Then see the relevant release processes, and upload the packages to
+the release branch's APT suite:
 
 * [[liveusb-creator]]
 * [[tails-greeter]]
@@ -126,7 +178,6 @@ Then see the relevant release processes:
 * whisperback:
   * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
   * build a Debian package
-  * upload it to our [[APT repository]]
 
 Upgrade Tor Browser
 -------------------
@@ -148,52 +199,11 @@ Commit the result, including new PO files:
 
 	git add po && git commit -m 'Update PO files.'
 
-Freeze
-======
+When preparing an actual release
+================================
 
-Major release
--------------
-
-If we are at freeze time for a major release:
-
-1. Merge the `master` Git branch into `devel`.
-
-2. [[Merge each APT overlay
-   suite|contribute/APT_repository#workflow-merge-overlays]] listed in
-   the `devel` branch's `config/APT_overlays.d/` into the `devel`
-   APT suite.
-
-3. Merge the `devel` Git branch into the `testing` one:
-
-        git checkout testing && git merge devel
-
-   ... and check that the resulting `config/APT_overlays.d/` in the
-   `testing` branch is empty.
-
-4. [[Hard reset|APT_repository#workflow-reset]] the `testing` APT
-   suite to the current state of the `devel` one.
-
-5. Push the `testing` branch to Git:
-
-        git push origin testing
-
-6. If there is no Jenkins job building ISO images from the `testing`
-   branch, ask <tails-sysadmins@boum.org> to re-activate it.
-
-Point-release
--------------
-
-If we are at freeze time for a point-release:
-
-1. Merge the `master` Git branch into `stable`.
-
-2. [[Merge each APT overlay
-   suite|contribute/APT_repository#workflow-merge-overlays]] listed in
-   the `stable` branch's `config/APT_overlays.d/` into the `stable`
-   APT suite.
-
-APT repository
-==============
+If we're about to prepare an image for a final (non-RC) release, then
+follow these instructions:
 
 Major release
 -------------
@@ -206,26 +216,42 @@ APT suite.
 Point-release
 -------------
 
+<div class="note">
+For point-releases, we generally do not put any RC out, so freeze time
+is the same as preparing the actual release. Hence, the following
+steps have already been done above, and this section is a noop in the
+general case.
+</div>
+
 [[Merge each APT overlay
 suite|contribute/APT_repository#workflow-merge-overlays]] listed in
 the `stable` branch's `config/APT_overlays.d/` into the `stable` APT suite.
 
 Update other base branches
---------------------------
+==========================
 
-Now that you have emptied `config/APT_overlays.d/` in the branch used for
-the release, get this change into every *newer* base branch:
+1. Merge the release branch into `devel` following the instructions for
+   [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
 
-* if preparing a major release, merge `testing` into `devel`, and then
-  `devel` into `feature/jessie`;
-* if preparing a point-release, merge `stable` into `devel`, and then
-  `devel` into `feature/jessie`;
+2. Merge `devel` into `feature/jessie` following the instructions for
+   [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
+   Given that these two branches' APT suites have diverged a lot, and
+   that `tails-merge-suite` currently happily overwrites newer
+   packages in the target with older packages from the source, it's
+   probably easier to just merge each individual APT overlay that was
+   just merged into the release branch into `feautre/jessie`'s APT
+   suite. Also, most of our just upgraded bundled packages
+   (e.g. `tails-greeter`) may need to be rebuilt for Jessie.
 
-Then, ensure that every branch you just merged the release branch into
-has the expected content in `config/APT_overlays.d/`: e.g. it must not
-list any overlay APT suite that has been merged already.
+3. Ensure that the release, `devel` and `feature/jessie` branches
+   have the expected content in `config/APT_overlays.d/`: e.g. it must
+   not list any overlay APT suite that has been merged already.
 
-Finally, push all branches you just merged the release branch into.
+4. Push the modified branches to Git:
+
+        git push origin "${RELEASE_BRANCH}:${RELEASE_BRANCH}" \
+                        devel:devel \
+                        feature/jessie:feature/jessie
 
 Update more included files
 ==========================
@@ -800,13 +826,20 @@ Push
 
 If preparing a release candidate, just push the `master` branch:
 
-    git push origin master
+    git push origin master:master
 
 If preparing an actual release, push the last commits to our Git
 repository like this:
 
-	( cd "$RELEASE_CHECKOUT" && git push ) && \
-	( cd "$MASTER_CHECKOUT" && git fetch && git merge "$RELEASE_BRANCH" && git push )
+    ( cd "$RELEASE_CHECKOUT" && \
+      git push origin "$RELEASE_BRANCH:$RELEASE_BRANCH" \
+                      devel:devel \
+    ) && \
+    ( cd "$MASTER_CHECKOUT" && \
+      git fetch && \
+      git merge "$RELEASE_BRANCH" && \
+      git push origin master:master \
+    )
 
 ... and ask <root@boum.org> to refresh the ikiwiki wrappers for
 our website.
@@ -903,9 +936,9 @@ to do it.
 Amnesia news
 ------------
 
-The release notes should have been automatically sent to
-`amensia-news@` (thanks to the `announce` flag) but it will be stuck
-in the moderation
+The release announcement are automatically sent to `amensia-news@`
+(thanks to the `announce` flag) on an hourly basis, but it will be
+stuck in the moderation
 queue. [Log in](https://mailman.boum.org/admindb/amnesia-news) and
 accept it.
 
@@ -938,6 +971,17 @@ this, and skip what does not make sense for a RC.
                     -delete \
              \"
 
+1. Delete Git branches that were merged:
+
+        bare_repo=$(mktemp -d)
+        (cd "$MASTER_CHECKOUT" && git fetch) && \
+        git clone --bare --reference "$MASTER_CHECKOUT" \
+           boum_org_amnesia@webmasters.boum.org:wiki.git \
+           "$bare_repo" && \
+        PYTHONPATH=lib/python3 ./bin/delete-merged-git-branches \
+           --repo "$bare_repo" && \
+        rm -rf "$bare_repo"
+
 1. Pull `master` back and merge it into `devel`.
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
@@ -958,7 +1002,7 @@ this, and skip what does not make sense for a RC.
             git merge $branch
          done
 
-   - `git push --force origin experimental`
+   - `git push --force origin experimental:experimental`
 1. Make sure Jenkins manages to build all updated major branches fine:
    <https://jenkins.tails.boum.org/>.
 1. Delete the _Release Manager View for $VERSION_ Redmine custom query.

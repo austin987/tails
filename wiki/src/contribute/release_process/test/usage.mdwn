@@ -8,7 +8,8 @@ Basic usage
 Use the `run_test_suite` script found in the Tails source root to run
 all automated Cucumber test features. See the [[setup
 documentation|test/setup]] in case you don't have a testing
-environment yet.
+environment yet. Note that the full Tails source tree must be readable
+by the user running the test suite.
 
 It's important to note that some features only depend on the Tails
 sources, and some on the actual product of the sources, i.e. a Tails
@@ -47,7 +48,7 @@ The test suite can be configured in the following ways:
 2. the local configuration file `features/config/local.yml`, which
 takes precedence over
 
-2. the local configuration files in `features/config/local.d` (with
+2. the local configuration files in `features/config/*.d` (with
    internal precedence according to lexical order), which takes
    precedence over
 
@@ -58,6 +59,13 @@ defaults. These secrets are generally information about online sevices
 to be used in certain features, like host, port and credentials --
 stuff we don't want to make public. These must be set explicitly in
 order for those features to run.
+
+A Git repository, shared among a bunch of core Tails contributors,
+includes _some_ of the needed secrets (more specifically, those that
+can be use by concurrent test suite runs):
+
+	git clone tails@git.tails.boum.org:test-suite-shared-secrets \
+	   features/config/shared-secrets.d
 
 ## Non-secret configuration
 

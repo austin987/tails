@@ -30,7 +30,7 @@ Feature: Various checks
     And Tor is ready
     And all notifications have disappeared
     When I double-click the Report an Error launcher on the desktop
-    Then I see "SupportDocumentation.png" after at most 90 seconds
+    Then the support documentation page opens in Tor Browser
 
   Scenario: The live user is setup correctly
     Then the live user has been setup by live-boot
@@ -77,3 +77,14 @@ Feature: Various checks
     And I setup a filesystem share containing a sample PDF
     And I start Tails from DVD with network unplugged and I login
     Then MAT can clean some sample PDF file
+
+  Scenario: The Report an Error launcher will open the support documentation in supported non-English locales
+    Given a computer
+    And the network is plugged
+    And I start the computer
+    And the computer boots Tails
+    And I log in to a new session in German
+    And Tails seems to have booted normally
+    And Tor is ready
+    When I double-click the Report an Error launcher on the desktop
+    Then the support documentation page opens in Tor Browser

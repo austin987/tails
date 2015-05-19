@@ -4,29 +4,37 @@ tails (1.5) UNRELEASED; urgency=medium
 
  -- Tails developers <tails@boum.org>  Mon, 04 May 2015 14:48:25 +0200
 
-tails (1.4) UNRELEASED; urgency=medium
+tails (1.4.1) UNRELEASED; urgency=medium
 
-  * Dummy changelog entry.
+  * Dummy entry.
 
- -- Tails developers <tails@boum.org>  Mon, 04 May 2015 14:22:41 +0200
+ -- Tails developers <tails@boum.org>  Tue, 12 May 2015 17:19:13 +0200
 
-tails (1.4~rc1) unstable; urgency=medium
+tails (1.4) unstable; urgency=medium
 
   * Major new features
-    - Upgrade Tor Browser to 4.5, which introduces many major new
-      features for usability, security and privacy. Unfortunately its
-      per-tab circuit view did not make it into Tails yet since it
-      requires exposing more Tor state to the user running the Tor
-      Browser than we are currently comfortable with.
+    - Upgrade Tor Browser to 4.5.1, based on Firefox 31.7.0 ESR, which
+      introduces many major new features for usability, security and
+      privacy. Unfortunately its per-tab circuit view did not make it
+      into Tails yet since it requires exposing more Tor state to the
+      user running the Tor Browser than we are currently comfortable
+      with. (Closes: #9031, #9369)
     - Upgrade Tor to 0.2.6.7-1~d70.wheezy+1+tails2. Like in the Tor
       bundled with the Tor Browser, we patch it so that circuits used
       for SOCKSAuth streams have their lifetime increased indefinitely
       while in active use. This currently only affects the Tor Browser
       in Tails, and should improve the experience on certain web sites
       that otherwise would switch language or log you out every ten
-      minutes or so when Tor switches circuit.
+      minutes or so when Tor switches circuit. (Closes: #7934)
 
   * Security fixes
+    - tor-browser wrapper script: avoid offering avenues to arbitrary
+      code execution to e.g. an exploited Pidgin. AppArmor Ux rules
+      don't sanitize $PATH, which can lead to an exploited application
+      (that's allowed to run this script unconfined, e.g. Pidgin)
+      having this script run arbitrary code, violating that
+      application's confinement. Let's prevent that by setting PATH to
+      a list of directories where only root can write. (Closes: #9370)
     - Upgrade Linux to 3.16.7-ckt9-3.
     - Upgrade curl to 7.26.0-1+wheezy13.
     - Upgrade dpkg to 1.16.16.
@@ -43,6 +51,8 @@ tails (1.4~rc1) unstable; urgency=medium
     - Upgrade ppp to 2.4.5-5.1+deb7u2.
 
   * Bugfixes
+    - Disable security warnings when connecting to POP3 and IMAP ports.
+      (Closes: #9327)
     - Make the Windows 8 browser theme compatible with the Unsafe and I2P
       browsers. (Closes: #9138)
     - Hide Torbutton's "Tor Network Settings..." context menu entry.
@@ -64,6 +74,9 @@ tails (1.4~rc1) unstable; urgency=medium
     - Fix set_simple_config_key(). If the key already existed in the
       config file before the call, all other lines would be removed
       due to the sed option -n and p combo. (Closes: #9122)
+    - Remove illegal instance of local outside of function definition.
+      Together with `set -e` that error has prevented this script from
+      restarting Vidalia, like it should. (Closes: #9328)
 
   * Minor improvements
     - Upgrade I2P to 0.9.19-3~deb7u+1.
@@ -86,6 +99,25 @@ tails (1.4~rc1) unstable; urgency=medium
     - Hide the Tor logo in Tor Launcher. (Closes: #8696)
     - Remove useless log() instance in tails-unblock-network. (Closes:
       #9034)
+    - Install cdrdao: this enables Brasero to burn combined data/audio
+      CDs and to do byte-to-byte disc copy.
+    - Hide access to the Add-ons manager in the Unsafe Browser. It's
+      currently broken (#9307) but we any way do not want users to
+      install add-ons in the Unsafe Browser. (Closes: #9305)
+    - Disable warnings on StartTLS for POP3 and IMAP (Will-fix: #9327)
+      The default value of this option activates warnings on ports
+      23,109,110,143. This commit disables the warnings for POP3 and
+      IMAP as these could be equally used in encrypted StartTLS
+      connections. (Closes: #9327)
+    - Completely rework how we localize our browser by generating our
+      branding add-on, and search plugins programatically. This
+      improves the localization for the ar, es, fa, ko, nl, pl, ru,
+      tr, vi and zh_CN locales by localizing the Startpage and
+      Disconnect.me search plugins. Following Tor Browser 4.5's recent
+      switch, we now use Disconnect.me as the default search
+      engine. (Closes: #9309)
+    * Actively set Google as the Unsafe Browser's default search
+      engine.
 
   * Build system
     - Encode in Git which APT suites to include when building Tails.
@@ -93,6 +125,21 @@ tails (1.4~rc1) unstable; urgency=medium
     - Clean up the list of packages we install. (Closes: #6073)
     - Run auto/{build,clean,config} under `set -x' for improved
       debugging.
+    - Zero-pad our ISO images so their size is divisible by 2048.
+      The data part of an ISO image's sectors is 2048 bytes, which
+      implies that ISO images should always have a size divisible
+      by 2048. Some applications, e.g. VirtualBox, use this as a sanity
+      check, treating ISO images for which this isn't true as garbage.
+      Our isohybrid post-processing does not ensure this,
+      however. Also Output ISO size before/after isohybrid'ing and
+      truncate'ing it. This will help detect if/when truncate is
+      needed at all, so that we can report back to syslinux
+      maintainers more useful information. (Closes: #8891)
+    - Vagrant: raise apt-cacher-ng's ExTreshold preference to 50. The
+      goal here is to avoid Tor Browser tarballs being deleted by
+      apt-cacher-ng's daily expiration cronjob: they're not listed in
+      any APT repo's index file, so acng will be quite eager to clean
+      them up.
 
   * Test suite
     - Bring dependency checks up-to-date (Closes: #8988).
@@ -113,8 +160,41 @@ tails (1.4~rc1) unstable; urgency=medium
     - Improve how we start subprocesses in the test suite, mostly by
       bypassing the shell for greater security and robustness (Closes:
       #9253)
+    - Add Electrum test feature. (Closes #8963)
+    - Test that Tails Installer detects when USB devices are
+      removed. (Closes: #9131)
+    - Test Tails Installer with devices which are too small. (Closes:
+      #9129)
+    - Test that the Report an Error launcher works in German. (Closes:
+      #9143)
+    - Verify that no extensions are installed in the Unsafe Browser
+      using about:support instead of about:addons, which is broken
+      (#9307). (Closes: #9306)
+    - Retry GNOME application menu actions when they glitch. The
+      GNOME application menus seem to have issues with clicks or
+      hovering actions not registering, and hence sometimes submenus
+      are not opened when they should, and sometimes clicks on the
+      final application shortcut are lost. There seems to be a
+      correlation between this and CPU load on the host running the
+      test suite. We workaround this by simply re-trying the last
+      action when it seems to fail. (Closes: #8928)
+    - Work around Seahorse GUI glitchiness (Closes: #9343):
+      * When Seahorse appears to be frozen--apparently due to network
+        issues--it can often be worked around by refreshing the screen
+        or activating a new window.
+      * Open Seahorse's preferences dialog using the mouse.
+      * Access menu entries with the mouse.
+    - Wait for systray icons to finish loading before interacting with
+      the systray. (Closes: #9258)
+    - Test suite configuration: generalize local.d support to *.d. We
+      now load features/config/*.d/*.yml.
+    - Use code blocks in "After Scenario" hooks. This is much simpler
+      to use (and more readable!) compared to hooking functions and
+      arguments like we used to do.
+    - Create filesystem share sources in the temporary directory and
+      make them world-readable. (Closes: #8950)
 
- -- Tails developers <tails@boum.org>  Sat, 02 May 2015 23:55:26 +0200
+ -- Tails developers <tails@boum.org>  Mon, 11 May 2015 16:45:04 +0200
 
 tails (1.3.2) unstable; urgency=medium
 
