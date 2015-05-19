@@ -60,7 +60,7 @@ When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
     @screen.wait_and_click("GpgAppletIconNormal.png", 10)
     @screen.wait_and_click("GpgAppletManageKeys.png", 10)
   else
-    step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
+    step 'I start "Seahorse" via the GNOME "Utilities" applications menu'
   end
 end
 
