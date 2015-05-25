@@ -46,9 +46,9 @@ xvfb
 "
 
 usage() {
-    echo "Usage: $NAME [OPTION]... [FEATURE]...
-Sets up an appropriate environment and tests FEATUREs (all by default). Note
-that this script must be run from the Tails source directory root.
+    echo "Usage: $NAME [OPTION]... [--] [CUCUMBER_ARGS]...
+Sets up an appropriate environment and invokes cucumber. Note that this script
+must be run from the Tails source directory root.
 
 Options for '@product' features:
   --capture FILE     Captures the test session into FILE using VP8 encoding.
@@ -75,10 +75,16 @@ Options for '@product' features:
   --old-iso IMAGE    For some '@product' features (e.g. usb_install) we need
                      an older version of Tails, which this options sets to
                      IMAGE.
-  --log-to-file FILE Save the output to the specified file, in addition to
-                     sending it to stdout and stderr.
+  --log-to-file FILE Clone stdout and stderr to the specified file.
 
 Note that '@source' features has no relevant options.
+
+CUCUMBER_ARGS can be used to specify which features to be run, but also any
+cucumber option, although then you must pass `--` first to let this wrapper
+script know that we're done with *its* options. When it comes to formatters
+there are some interesting things to consider, in particular that any debugging
+output that we write to stderr will not be cloned to any file pointed to by
+cucumbers --out.
 "
 }
 
@@ -265,14 +271,7 @@ export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
 
-if [ -z "$*" ]; then
-    FEATURES="features"
-else
-    FEATURES="$@"
-fi
-
-CUCUMBER_COMMAND="cucumber --format ExtraHooks::Pretty \
-features/step_definitions features/support ${FEATURES}"
+CUCUMBER_COMMAND="cucumber ${@}"
 
 if [ -z "$LOG_FILE" ]; then
     $CUCUMBER_COMMAND
