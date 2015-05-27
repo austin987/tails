@@ -568,6 +568,18 @@ When /^I start the Tor Browser$/ do
   step 'I start "TorBrowser" via the GNOME "Internet" applications menu'
 end
 
+When /^I request a new identity using Torbutton$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click('TorButtonIcon.png', 30)
+  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
+end
+
+When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait('TorButtonNewIdentityConfirmation.png', 30)
+  step 'I type "y"'
+end
+
 When /^I start the Tor Browser in offline mode$/ do
   next if @skip_steps_while_restoring_background
   step "I start the Tor Browser"
