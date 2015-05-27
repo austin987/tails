@@ -26,7 +26,7 @@ Feature: Various checks
     Then the OpenPGP keys shipped with Tails will be valid for the next 3 months
 
   Scenario: The Tails Debian repository key is up-to-date
-    Then the shipped Tails Debian repository key will be valid for the next 3 months
+    Then the shipped Debian repository key will be valid for the next 3 months
 
   Scenario: The "Report an Error" launcher will open the support documentation
     Given the network is plugged

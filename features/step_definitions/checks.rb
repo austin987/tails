@@ -9,7 +9,7 @@ Then /^the OpenPGP keys shipped with Tails will be valid for the next (\d+) mont
   invalid = Array.new
   shipped_openpgp_keys.each do |key|
     begin
-      step "the shipped Tails key #{key} will be valid for the next #{months} months"
+      step "the shipped OpenPGP key #{key} will be valid for the next #{months} months"
     rescue Test::Unit::AssertionFailedError
       invalid << key
       next
@@ -18,14 +18,13 @@ Then /^the OpenPGP keys shipped with Tails will be valid for the next (\d+) mont
   assert(invalid.empty?, "The following key(s) will not be valid in #{months} months: #{invalid.join(', ')}")
 end
 
-Then /^the shipped Tails( Debian repository)? key( [A-Z0-9]+)? will be valid for the next (\d+) months$/ do |debian, fingerprint, max_months|
+Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be valid for the next (\d+) months$/ do |fingerprint, max_months|
   next if @skip_steps_while_restoring_background
   if fingerprint
     sig_key_fingerprint = fingerprint
     cmd = 'gpg'
     user = LIVE_USER
-  end
-  if debian
+  else
     sig_key_fingerprint = TAILS_DEBIAN_REPO_KEY
     cmd = 'apt-key adv'
     user = 'root'
