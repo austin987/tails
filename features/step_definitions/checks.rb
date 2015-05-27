@@ -21,20 +21,19 @@ end
 Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be valid for the next (\d+) months$/ do |fingerprint, max_months|
   next if @skip_steps_while_restoring_background
   if fingerprint
-    sig_key_fingerprint = fingerprint
     cmd = 'gpg'
     user = LIVE_USER
   else
-    sig_key_fingerprint = TAILS_DEBIAN_REPO_KEY
+    fingerprint = TAILS_DEBIAN_REPO_KEY
     cmd = 'apt-key adv'
     user = 'root'
   end
-  shipped_sig_key_info = @vm.execute_successfully("#{cmd} --batch --list-key #{sig_key_fingerprint}", user).stdout
+  shipped_sig_key_info = @vm.execute_successfully("#{cmd} --batch --list-key #{fingerprint}", user).stdout
   m = /\[expire[ds]: ([0-9-]*)\]/.match(shipped_sig_key_info)
   if m
     expiration_date = Date.parse(m[1])
     assert((expiration_date << max_months.to_i) > DateTime.now,
-           "The shipped key #{sig_key_fingerprint} will not be valid #{max_months} months from now.")
+           "The shipped key #{fingerprint} will not be valid #{max_months} months from now.")
   end
 end
 
