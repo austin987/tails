@@ -37,6 +37,17 @@ def deactivate_filesystem_shares
   #end
 end
 
+def notification_helper(notification_image, time_to_wait)
+  # notifiction-daemon may abort during start-up, causing the tests that look for
+  # desktop notifications to fail (ticket #8686)
+  begin
+    @screen.wait(notification_image, time_to_wait)
+  rescue FindFailed => e
+    step 'process "notification-daemon" is running'
+    raise e
+  end
+end
+
 def restore_background
   @vm.restore_snapshot($background_snapshot)
   @vm.wait_until_remote_shell_is_up
@@ -317,7 +328,7 @@ end
 
 When /^I see the 'Tor is ready' notification$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("GnomeTorIsReady.png", 300)
+  notification_helper('GnomeTorIsReady.png', 300)
   @screen.waitVanish("GnomeTorIsReady.png", 15)
 end
 
