@@ -369,7 +369,7 @@ Given /^the Tor Browser has started$/ do
   @screen.wait(tor_browser_picture, 60)
 end
 
-Given /^the Tor Browser (?:has started and )?load(?:ed|s)? the (startup page|Tails roadmap)$/ do |page|
+Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
   next if @skip_steps_while_restoring_background
   case page
   when "startup page"
