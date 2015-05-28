@@ -15,6 +15,7 @@ Feature: Browsing the web using the Tor Browser
     And all notifications have disappeared
     And I save the state so the background can be restored next scenario
 
+  @check_tor_leaks
   Scenario: The Tor Browser directory is usable
     Then the amnesiac Tor Browser directory exists
     And there is a GNOME bookmark for the amnesiac Tor Browser directory
