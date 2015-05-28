@@ -576,7 +576,7 @@ end
 
 When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait('TorButtonNewIdentityConfirmation.png', 30)
+  @screen.wait('GnomeQuestionDialogIcon.png', 30)
   step 'I type "y"'
 end
 
