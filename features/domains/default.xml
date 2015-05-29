@@ -35,6 +35,9 @@
     <controller type='ide' index='0'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
     </controller>
+    <controller type='virtio-serial' index='0'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
+    </controller>
     <interface type='network'>
       <mac address='52:54:00:ac:dd:ee'/>
       <source network='TailsToasterNet'/>
@@ -47,8 +50,13 @@
       <target port='0'/>
     </serial>
     <input type='tablet' bus='usb'/>
-    <input type='mouse' bus='ps2'/>
-    <graphics type='vnc' port='-1' autoport='yes'/>
+    <channel type='spicevmc'>
+      <target type='virtio' name='com.redhat.spice.0'/>
+      <address type='virtio-serial' controller='0' bus='0' port='1'/>
+    </channel>
+    <graphics type='spice' port='-1' tlsPort='-1' autoport='yes'>
+      <mouse mode='client'/>
+    </graphics>
     <sound model='ich6'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
     </sound>
