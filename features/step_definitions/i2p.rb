@@ -67,7 +67,7 @@ end
 
 Then /^I see a notification that I2P failed to start$/ do
   next if @skip_steps_while_restoring_background
-  notification_helper('I2PFailedToStart.png', 60)
+  notification_helper('I2PFailedToStart.png', 2 * 60)
 end
 
 Then /^I2P successfully built a tunnel$/ do
