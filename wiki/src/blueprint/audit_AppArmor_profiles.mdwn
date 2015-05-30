@@ -28,7 +28,13 @@ Things to check
       `/lib/live/mount/overlay` (at least it allows Tor Browser to access
       stuff in `/lib/live/mount/overlay/home/amnesia/.gnupg/`);
     * add `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at
-      least `$HOME` is OK -- isn't it?
+      least `$HOME` is OK -- isn't it? but really,
+      `rgrep -E '^\s*/lib.*\*\*' /etc/apparmor.d/` outputs only
+      5 lines, so `alias / -> /lib/live/mount/overlay/,` plus
+      applying the ugly hack to avoid overlapping rules (see
+      [[contribute/design/application_isolation]]) at ISO build time
+      might be acceptable; note that profiles shipped by packages
+      installed by the user won't have the hack and may be broken.
   - recheck all these things with persistence in read-only mode
 * wide-open access to `/lib/**` or similar, that might grant access to
   persistent files -- everything checked, potential issues and
