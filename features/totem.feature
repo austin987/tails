@@ -25,6 +25,14 @@ Feature: Using Totem
     And the file "/home/amnesia/.gnupg/video.mp4" exists
     When I try to open "/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
+    Given I close Totem
+    And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4" exists
+    When I try to open "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4" with Totem
+    Then I see "TotemUnableToOpen.png" after at most 10 seconds
+    Given I close Totem
+    And the file "/live/overlay/home/amnesia/.gnupg/video.mp4" exists
+    When I try to open "/live/overlay/home/amnesia/.gnupg/video.mp4" with Totem
+    Then I see "TotemUnableToOpen.png" after at most 10 seconds
 
   @check_tor_leaks
   Scenario: Watching a WebM video over HTTPS, with and without the command-line
