@@ -22,7 +22,16 @@ Feature: Using Evince
 
   Scenario: I cannot view a PDF file stored in non-persistent /home/amnesia/.gnupg
     Given I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/.gnupg" as user "amnesia"
+    Then the file "/home/amnesia/.gnupg/default-testpage.pdf" exists
+    And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf" exists
+    And the file "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" exists
     When I try to open "/home/amnesia/.gnupg/default-testpage.pdf" with Evince
+    Then I see "EvinceUnableToOpen.png" after at most 10 seconds
+    When I close Evince
+    And I try to open "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
+    Then I see "EvinceUnableToOpen.png" after at most 10 seconds
+    When I close Evince
+    And I try to open "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
 
   @keep_volumes
@@ -50,4 +59,3 @@ Feature: Using Evince
     When I start Tails from USB drive "current" with network unplugged and I login with persistence password "asdf"
     And I try to open "/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
-
