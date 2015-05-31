@@ -121,3 +121,13 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
   @screen.click("SeahorseFoundKeyResult.png")
   @screen.click("SeahorseImport.png")
 end
+
+Then /^Seahorse is configured to use the correct keyserver$/ do
+  next if @skip_steps_while_restoring_background
+  @gnome_keyservers = YAML.load(@vm.execute_successfully('gsettings get org.gnome.crypto.pgp keyservers',
+                                                         LIVE_USER).stdout)
+  assert_equal(1, @gnome_keyservers.count, 'Seahorse should only have one keyserver configured.')
+  # Seahorse doesn't support hkps so that part of the domain is stripped out.
+  # We also insert hkp:// to the beginning of the domain.
+  assert_equal(CONFIGURED_KEYSERVER_HOSTNAME.gsub('hkps.', 'hkp://'), @gnome_keyservers[0])
+end
