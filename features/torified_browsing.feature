@@ -61,6 +61,10 @@ Feature: Browsing the web using the Tor Browser
     Then I see "TorBrowserSynapticManual.png" after at most 10 seconds
     When I open the address "file:///home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I see "TorBrowserUnableToOpen.png" after at most 10 seconds
+    When I open the address "file:///lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
+    Then I see "TorBrowserUnableToOpen.png" after at most 10 seconds
+    When I open the address "file:///live/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
+    Then I see "TorBrowserUnableToOpen.png" after at most 10 seconds
 
   Scenario: The "Tails documentation" link on the Desktop works
     When I double-click on the "Tails documentation" link on the Desktop
