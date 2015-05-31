@@ -17,10 +17,12 @@ Feature: Using Totem
     And I setup a filesystem share containing sample videos
     And I start Tails from DVD with network unplugged and I login
     And I copy the sample videos to "/home/amnesia" as user "amnesia"
+    And the file "/home/amnesia/video.mp4" exists
     When I open "/home/amnesia/video.mp4" with Totem
     Then I see "SampleLocalMp4VideoFrame.png" after at most 10 seconds
     Given I close Totem
     And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"
+    And the file "/home/amnesia/.gnupg/video.mp4" exists
     When I try to open "/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
 
