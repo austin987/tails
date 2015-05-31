@@ -939,8 +939,9 @@ When /^I click the HTML5 play button$/ do
   @screen.wait_and_click("TorBrowserHtml5PlayButton.png", 30)
 end
 
-When /^I can save the current page as "([^"]+[.]html)" to the (.*) directory$/ do |output_file, output_dir|
+When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) directory$/ do |should_work, output_file, output_dir|
   next if @skip_steps_while_restoring_background
+  should_work = should_work == 'can' ? true : false
   @screen.type("s", Sikuli::KeyModifier.CTRL)
   @screen.wait("TorBrowserSaveDialog.png", 10)
   if output_dir == "persistent Tor Browser"
@@ -960,9 +961,13 @@ When /^I can save the current page as "([^"]+[.]html)" to the (.*) directory$/ d
   # so we have to remove it before typing it into the arget filename entry widget.
   @screen.type(output_file.sub(/[.]html$/, ''))
   @screen.type(Sikuli::Key.ENTER)
-  try_for(10, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
-    @vm.file_exist?("#{output_dir}/#{output_file}")
-  }
+  if should_work
+    try_for(10, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
+      @vm.file_exist?("#{output_dir}/#{output_file}")
+    }
+  else
+    @screen.wait("TorBrowserCannotSavePage.png", 10)
+  end
 end
 
 When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads|persistent Tor Browser) directory$/ do |output_file, output_dir|
