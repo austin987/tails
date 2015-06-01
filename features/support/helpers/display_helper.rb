@@ -7,19 +7,21 @@ class Display
   end
 
   def active?
-    p = IO.popen("xprop -display #{@x_display} " +
-                 "-name '#{@domain} (1) - Virt Viewer' 2>/dev/null")
+    p = IO.popen(["xprop", "-display", @x_display,
+                  "-name", "#{@domain} (1) - Virt Viewer",
+                  :err => ["/dev/null", "w"]])
     Process.wait(p.pid)
     $?.success?
   end
 
   def start
-    @virtviewer = IO.popen(["virt-viewer", "-d",
-                                           "-f",
-                                           "-r",
-                                           "-c", "qemu:///system",
-                                           ["--display=", @x_display].join(''),
-                                           @domain].join(' '))
+    @virtviewer = IO.popen(["virt-viewer", "--direct",
+                                           "--full-screen",
+                                           "--reconnect",
+                                           "--connect", "qemu:///system",
+                                           "--display", @x_display,
+                                           @domain,
+                                           :err => ["/dev/null", "w"]])
     # We wait for the display to be active to not lose actions
     # (e.g. key presses via sikuli) that come immediately after
     # starting (or restoring) a vm
@@ -29,7 +31,8 @@ class Display
   end
 
   def stop
-    Process.kill("INT", @virtviewer.pid)
+    Process.kill("TERM", @virtviewer.pid)
+    @virtviewer.close
   end
 
   def restart

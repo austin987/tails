@@ -12,3 +12,8 @@ pref("extensions.update.enabled", false);
 pref("print.postscript.cups.enabled", false);
 // Hide "Get Addons" in Add-ons manager
 pref("extensions.getAddons.showPane", false);
+
+/* Google seems like the least suspicious choice of default search
+   engine for the Unsafe Browser's in-the-clear traffic. */
+user_pref("browser.search.defaultenginename", "Google");
+user_pref("browser.search.selectedEngine", "Google");

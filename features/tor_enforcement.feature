@@ -68,7 +68,7 @@ Feature: The Tor enforcement is effective
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And the system DNS is using the local DNS resolver
     And the network is plugged
     And Tor is ready
