@@ -1,6 +1,6 @@
 When /^I see and accept the Unsafe Browser start verification$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("UnsafeBrowserStartVerification.png", 30)
+  @screen.wait('GnomeQuestionDialogIcon.png', 30)
   @screen.type(Sikuli::Key.ESC)
 end
 

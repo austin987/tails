@@ -15,6 +15,7 @@ Feature: Browsing the web using the Tor Browser
     And all notifications have disappeared
     And I save the state so the background can be restored next scenario
 
+  @check_tor_leaks
   Scenario: The Tor Browser directory is usable
     Then the amnesiac Tor Browser directory exists
     And there is a GNOME bookmark for the amnesiac Tor Browser directory
@@ -78,6 +79,16 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser has started and loaded the startup page
     And I open the address "https://check.torproject.org" in the Tor Browser
     Then I see "TorBrowserTorCheck.png" after at most 180 seconds
+
+  @check_tor_leaks
+  Scenario: The Tor Browser's "New identity" feature works as expected
+    When I start the Tor Browser
+    And the Tor Browser has started and loaded the startup page
+    And I open the address "https://check.torproject.org" in the Tor Browser
+    Then I see "TorBrowserTorCheck.png" after at most 180 seconds
+    When I request a new identity using Torbutton
+    And I acknowledge Torbutton's New Identity confirmation prompt
+    Then the Tor Browser loads the startup page
 
   Scenario: The Tor Browser should not have any plugins enabled
     When I start the Tor Browser
