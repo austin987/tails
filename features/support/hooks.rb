@@ -85,11 +85,6 @@ end
 # BeforeScenario
 Before('@product') do
   @screen = Sikuli::Screen.new
-  if VM.snapshot_exists?($background_snapshot)
-    @skip_steps_while_restoring_background = true
-  else
-    @skip_steps_while_restoring_background = false
-  end
   @theme = "gnome"
   # English will be assumed if this is not overridden
   @language = ""
