@@ -57,8 +57,7 @@ end
 When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
   next if @skip_steps_while_restoring_background
   if withgpgapplet
-    @screen.wait_and_click("GpgAppletIconNormal.png", 10)
-    @screen.wait_and_click("GpgAppletManageKeys.png", 10)
+    seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
   else
     step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
   end
