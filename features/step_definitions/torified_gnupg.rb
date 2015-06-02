@@ -15,7 +15,7 @@ def seahorse_wait_helper(img, time = 20)
       raise OpenPGPKeyserverCommunicationError
     else
       # Seahorse has been known to segfault during tests
-      syslog = @vm.file_content('/var/log/syslog')
+      syslog = $vm.file_content('/var/log/syslog')
       m = /seahorse\[[0-9]+\]: segfault/.match(syslog)
       assert(!m, 'Seahorse aborted with a segmentation fault')
     end
@@ -127,7 +127,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
 end
 
 Then /^Seahorse is configured to use the correct keyserver$/ do
-  @gnome_keyservers = YAML.load(@vm.execute_successfully('gsettings get org.gnome.crypto.pgp keyservers',
+  @gnome_keyservers = YAML.load($vm.execute_successfully('gsettings get org.gnome.crypto.pgp keyservers',
                                                          LIVE_USER).stdout)
   assert_equal(1, @gnome_keyservers.count, 'Seahorse should only have one keyserver configured.')
   # Seahorse doesn't support hkps so that part of the domain is stripped out.

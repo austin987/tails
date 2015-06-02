@@ -1,5 +1,5 @@
 def shipped_openpgp_keys
-  shipped_gpg_keys = @vm.execute_successfully('gpg --batch --with-colons --fingerprint --list-key', LIVE_USER).stdout
+  shipped_gpg_keys = $vm.execute_successfully('gpg --batch --with-colons --fingerprint --list-key', LIVE_USER).stdout
   openpgp_fingerprints = shipped_gpg_keys.scan(/^fpr:::::::::([A-Z0-9]+):$/).flatten
   return openpgp_fingerprints
 end
@@ -26,7 +26,7 @@ Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be val
     cmd = 'apt-key adv'
     user = 'root'
   end
-  shipped_sig_key_info = @vm.execute_successfully("#{cmd} --batch --list-key #{fingerprint}", user).stdout
+  shipped_sig_key_info = $vm.execute_successfully("#{cmd} --batch --list-key #{fingerprint}", user).stdout
   m = /\[expire[ds]: ([0-9-]*)\]/.match(shipped_sig_key_info)
   if m
     expiration_date = Date.parse(m[1])
