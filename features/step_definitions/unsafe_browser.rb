@@ -1,5 +1,5 @@
 When /^I see and accept the Unsafe Browser start verification$/ do
-  @screen.wait("UnsafeBrowserStartVerification.png", 30)
+  @screen.wait('GnomeQuestionDialogIcon.png', 30)
   @screen.type(Sikuli::Key.ESC)
 end
 
@@ -47,7 +47,7 @@ Then /^the Unsafe Browser works in all supported languages$/ do
 end
 
 Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
-  @screen.wait("UnsafeBrowserStartNotification.png", 30)
+  notification_helper('UnsafeBrowserStartNotification.png', 30)
   @screen.waitVanish("UnsafeBrowserStartNotification.png", 10)
 end
 
@@ -143,7 +143,7 @@ When /^I close the Unsafe Browser$/ do
 end
 
 Then /^I see the Unsafe Browser stop notification$/ do
-  @screen.wait('UnsafeBrowserStopNotification.png', 20)
+  notification_helper('UnsafeBrowserStopNotification.png', 20)
   @screen.waitVanish('UnsafeBrowserStopNotification.png', 10)
 end
 

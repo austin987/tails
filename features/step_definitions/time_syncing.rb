@@ -41,7 +41,6 @@ Then /^Tails clock is less than (\d+) minutes incorrect$/ do |max_diff_mins|
 end
 
 Then /^the system clock is just past Tails' build date$/ do
-  next if @skip_steps_while_restoring_background
   system_time_str = $vm.execute_successfully('date').to_s
   system_time = DateTime.parse(system_time_str).to_time
   build_time_cmd = 'sed -n -e "1s/^.* - \([0-9]\+\)$/\1/p;q" ' +

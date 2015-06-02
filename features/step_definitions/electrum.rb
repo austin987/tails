@@ -35,7 +35,7 @@ When /^I create a new bitcoin wallet$/ do
 end
 
 Then /^I see a warning that Electrum is not persistent$/ do
-  @screen.wait('ElectrumStartVerification.png', 30)
+  @screen.wait('GnomeQuestionDialogIcon.png', 30)
 end
 
 Then /^I am prompted to create a new wallet$/ do

@@ -37,6 +37,17 @@ def deactivate_filesystem_shares
   #end
 end
 
+def notification_helper(notification_image, time_to_wait)
+  # notifiction-daemon may abort during start-up, causing the tests that look for
+  # desktop notifications to fail (ticket #8686)
+  begin
+    @screen.wait(notification_image, time_to_wait)
+  rescue FindFailed => e
+    step 'process "notification-daemon" is running'
+    raise e
+  end
+end
+
 def post_snapshot_restore_hook
   $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
@@ -116,7 +127,6 @@ Given /^the network is unplugged$/ do
 end
 
 Given /^the hardware clock is set to "([^"]*)"$/ do |time|
-  next if @skip_steps_while_restoring_background
   $vm.set_hardware_clock(DateTime.parse(time).to_time)
 end
 
@@ -299,7 +309,7 @@ Then /^Tails seems to have booted normally$/ do
 end
 
 When /^I see the 'Tor is ready' notification$/ do
-  @screen.wait("GnomeTorIsReady.png", 300)
+  notification_helper('GnomeTorIsReady.png', 300)
   @screen.waitVanish("GnomeTorIsReady.png", 15)
 end
 
@@ -335,7 +345,7 @@ Given /^the Tor Browser has started$/ do
   @screen.wait(tor_browser_picture, 60)
 end
 
-Given /^the Tor Browser has started and loaded the (startup page|Tails roadmap)$/ do |page|
+Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
     picture = "TorBrowserStartupPage.png"
@@ -482,6 +492,16 @@ end
 
 When /^I start the Tor Browser$/ do
   step 'I start "TorBrowser" via the GNOME "Internet" applications menu'
+end
+
+When /^I request a new identity using Torbutton$/ do
+  @screen.wait_and_click('TorButtonIcon.png', 30)
+  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
+end
+
+When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
+  @screen.wait('GnomeQuestionDialogIcon.png', 30)
+  step 'I type "y"'
 end
 
 When /^I start the Tor Browser in offline mode$/ do
