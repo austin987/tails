@@ -131,9 +131,6 @@ Given /^the hardware clock is set to "([^"]*)"$/ do |time|
 end
 
 Given /^I capture all network traffic$/ do
-  # Note: We don't want skip this particular stpe if
-  # @skip_steps_while_restoring_background is set since it starts
-  # something external to the VM state.
   @sniffer = Sniffer.new("sniffer", $vmnet)
   @sniffer.capture
   add_after_scenario_hook do
@@ -154,8 +151,6 @@ When /^I start the computer$/ do
 end
 
 Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do |dvd_boot, network_unplugged, do_login|
-  # we don't @skip_steps_while_restoring_background as we're only running
-  # other steps, that are taking care of it *if* they have to
   step "the computer is set to boot from the Tails DVD" if dvd_boot
   if network_unplugged.nil?
     step "the network is plugged"
@@ -178,8 +173,6 @@ Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do 
 end
 
 Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I login(| with(| read-only) persistence enabled))?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, persistence_ro|
-  # we don't @skip_steps_while_restoring_background as we're only running
-  # other steps, that are taking care of it *if* they have to
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
   if network_unplugged.empty?
     step "the network is plugged"
