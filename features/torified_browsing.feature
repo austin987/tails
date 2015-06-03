@@ -65,11 +65,17 @@ Feature: Browsing the web using the Tor Browser
     Then I see "TorBrowserSynapticManual.png" after at most 10 seconds
     And I don't see "TorBrowserUnableToOpen.png"
     When I open the address "file:///home/amnesia/.gnupg/synaptic.html" in the Tor Browser
-    Then I see "TorBrowserUnableToOpen.png" after at most 10 seconds
+    And I wait between 4 and 5 seconds
+    Then I don't see "TorBrowserSynapticManual.png"
+    And I see "TorBrowserUnableToOpen.png" after at most 1 seconds
     When I open the address "file:///lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
-    Then I see "TorBrowserUnableToOpen.png" after at most 10 seconds
+    And I wait between 4 and 5 seconds
+    Then I don't see "TorBrowserSynapticManual.png"
+    And I see "TorBrowserUnableToOpen.png" after at most 1 seconds
     When I open the address "file:///live/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
-    Then I see "TorBrowserUnableToOpen.png" after at most 10 seconds
+    And I wait between 4 and 5 seconds
+    Then I don't see "TorBrowserSynapticManual.png"
+    And I see "TorBrowserUnableToOpen.png" after at most 1 seconds
 
   Scenario: The "Tails documentation" link on the Desktop works
     When I double-click on the "Tails documentation" link on the Desktop
