@@ -63,6 +63,7 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser has started and loaded the startup page
     When I open the address "file:///home/amnesia/Tor Browser/synaptic.html" in the Tor Browser
     Then I see "TorBrowserSynapticManual.png" after at most 10 seconds
+    And I don't see "TorBrowserUnableToOpen.png"
     When I open the address "file:///home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I see "TorBrowserUnableToOpen.png" after at most 10 seconds
     When I open the address "file:///lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
