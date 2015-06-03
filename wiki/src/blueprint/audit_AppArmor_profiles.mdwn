@@ -10,7 +10,6 @@ Things to check
   e.g.
   - check `private-files` and `private-files-strict` abstractions, in
     particular wrt. whatever can be accessed via the following paths
-  - is there any alternate path to `/live/persistence`?
   - `/lib/live/mount/overlay/` -- until Tails 1.4, we have _two_
     `tmpfs` mounted there, including an empty one that hides the
     other's content (but we should not rely on this for security).
@@ -25,28 +24,30 @@ Things to check
       to `/lib/live/mount/overlay`, created in [[!tails_gitweb_commit
       3233da6]]; maybe it's not needed anymore?); new automatic tests
       added on `bugfix/8007-AppArmor-hardening`, and then:
-      - (manually testing) it allows Tor Browser to access stuff in
-        `/lib/live/mount/overlay/home/amnesia/.gnupg/`)
-      - `torified_browsing.feature` passes, which means the test is
-        broken; likely `features/images/TorBrowserUnableToOpen.png`
-        is matched even on success
+      - `torified_browsing.feature` fails: Tor Browser can access
+        stuff in `/lib/live/mount/overlay/home/amnesia/.gnupg/`
       - `pidgin.feature` fails in awful ways, likely the new tests
         don't play well with the way the old steps are written
-      - `evince.feature` passes -- should now be validated by manual
-        testing
-      - `totem.feature` passes -- should now be validated by manual
-        testing
-    * add `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at
-      least `$HOME` is OK -- isn't it? but really,
-      `rgrep -E '^\s*/lib.*\*\*' /etc/apparmor.d/` outputs only
-      5 lines, so `alias / -> /lib/live/mount/overlay/,` plus
-      applying the ugly hack to avoid overlapping rules (see
+      - `evince.feature` and `totem.feature` both pass, validated by
+        manual testing: that's because they include the
+        `private-files-strict` abstraction, combined with the fact we
+        add `/lib/live/mount/overlay/home/` to `HOMEDIRS`
+      - `totem.feature` passes -- validated by manual testing
+    * `rgrep -E '^\s*/lib.*\*\*' /etc/apparmor.d/` outputs only
+      5 lines (add to that the `/{,usr/}lib*/{,**/}*.so{,.*} m` and
+      similar spotted below, though), so `alias / ->
+      /lib/live/mount/overlay/,` plus applying the ugly hack to avoid
+      overlapping rules (see
       [[contribute/design/application_isolation]]) at ISO build time
       might be acceptable; note that profiles shipped by packages
       installed by the user won't have the hack and may be broken.
+    * We can't simply deny all access to `/lib/live/mount/overlay/**`
+      and add overrides for needed exceptions, because of a
+      [missing feature in
+      AppArmor](https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/451422).
   - recheck all these things with persistence in read-only mode
 * wide-open access to `/lib/**` or similar, that might grant access to
-  persistent files -- everything checked, potential issues and
+  files via alternate paths -- everything checked, potential issues and
   remaining todo items follow:
   - the `base` abstraction (used e.g. by Pidgin and Evince) has things
     like `/lib{,32,64}/** r`
@@ -198,3 +199,4 @@ Currently OK
   - `/lib/live/mount/rootfs/` and `/lib/live/mount/medium/` should be
     OK: they only contain stuff that's publicly available in our ISO
     anyway, and DAC still applies.
+  - there's no alternate path to `/live/persistence`
