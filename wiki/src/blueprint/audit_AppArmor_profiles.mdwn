@@ -20,13 +20,22 @@ Things to check
     * test that this doesn't break persistence in read-only mode
     * test that this doesn't break booting an upgraded Tails with
       more that one SquashFS
-    * test how AppArmor confinement behaves wrt. `/live/overlay`
-      (that's a symlink to `/lib/live/mount/overlay`, created in
-      [[!tails_gitweb_commit 3233da6]]; maybe it's not needed
-      anymore?)
-    * test result: indeed, AppArmor confinement is now broken wrt.
-      `/lib/live/mount/overlay` (at least it allows Tor Browser to access
-      stuff in `/lib/live/mount/overlay/home/amnesia/.gnupg/`);
+    * test how AppArmor confinement behaves wrt.
+      `/lib/live/mount/overlay` and `/live/overlay` (that's a symlink
+      to `/lib/live/mount/overlay`, created in [[!tails_gitweb_commit
+      3233da6]]; maybe it's not needed anymore?); new automatic tests
+      added on `bugfix/8007-AppArmor-hardening`, and then:
+      - (manually testing) it allows Tor Browser to access stuff in
+        `/lib/live/mount/overlay/home/amnesia/.gnupg/`)
+      - `torified_browsing.feature` passes, which means the test is
+        broken; likely `features/images/TorBrowserUnableToOpen.png`
+        is matched even on success
+      - `pidgin.feature` fails in awful ways, likely the new tests
+        don't play well with the way the old steps are written
+      - `evince.feature` passes -- should now be validated by manual
+        testing
+      - `totem.feature` passes -- should now be validated by manual
+        testing
     * add `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at
       least `$HOME` is OK -- isn't it? but really,
       `rgrep -E '^\s*/lib.*\*\*' /etc/apparmor.d/` outputs only
