@@ -5,66 +5,27 @@ Corresponding ticket: [[!tails_ticket 8007]]
 Things to check
 ===============
 
-* the kludges needed to make them work with aufs
 * access to files via alternate paths specific to Debian Live systems,
   e.g.
   - check `private-files` and `private-files-strict` abstractions, in
     particular wrt. whatever can be accessed via the following paths
-  - `/lib/live/mount/overlay/` -- until Tails 1.4, we have _two_
-    `tmpfs` mounted there, including an empty one that hides the
-    other's content (but we should not rely on this for security).
-    Fixed on the `bugfix/8007-AppArmor-hardening` branch with
-    [[!tails_gitweb_commit bc491c9]], and then:
-    * test that this doesn't break persistence in read-write mode
-    * test that this doesn't break persistence in read-only mode
-    * test that this doesn't break booting an upgraded Tails with
-      more that one SquashFS
-    * test how AppArmor confinement behaves wrt.
-      `/lib/live/mount/overlay` and `/live/overlay` (that's a symlink
-      to `/lib/live/mount/overlay`, created in [[!tails_gitweb_commit
-      3233da6]]; maybe it's not needed anymore?); new automatic tests
-      added on `bugfix/8007-AppArmor-hardening`, and then:
-      - `torified_browsing.feature` fails: Tor Browser can access
-        stuff in `/lib/live/mount/overlay/home/amnesia/.gnupg/`
-      - `pidgin.feature` fails in awful ways, likely the new tests
-        don't play well with the way the old steps are written
-      - `evince.feature` and `totem.feature` both pass, validated by
-        manual testing: that's because they include the
-        `private-files-strict` abstraction, combined with the fact we
-        add `/lib/live/mount/overlay/home/` to `HOMEDIRS`
-      - `totem.feature` passes -- validated by manual testing
-    * `rgrep -E '^\s*/lib.*\*\*' /etc/apparmor.d/` outputs only
-      5 lines (add to that the `/{,usr/}lib*/{,**/}*.so{,.*} m` and
-      similar spotted below, though), so `alias / ->
-      /lib/live/mount/overlay/,` plus applying the ugly hack to avoid
-      overlapping rules (see
-      [[contribute/design/application_isolation]]) at ISO build time
-      might be acceptable; note that profiles shipped by packages
-      installed by the user won't have the hack and may be broken.
-    * We can't simply deny all access to `/lib/live/mount/overlay/**`
-      and add overrides for needed exceptions, because of a
-      [missing feature in
-      AppArmor](https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/451422).
-  - recheck all these things with persistence in read-only mode
-* wide-open access to `/lib/**` or similar, that might grant access to
-  files via alternate paths -- everything checked, potential issues and
-  remaining todo items follow:
-  - the `base` abstraction (used e.g. by Pidgin and Evince) has things
-    like `/lib{,32,64}/** r`
-  - the `launchpad-integration` abstraction has
-    `/{,usr/}lib*/{,**/}*.so{,.*} m`
-  - the `ubuntu-helpers` abstraction has
-    `/{,usr/,usr/local/}lib{,32,64}/{,**/}*.so{,.*} m`
+  - recheck all these things with an IUK installed (things like
+    `/lib/live/mount/rootfs/1.4.squashfs` might need to be added as
+    alternate paths via aliases as well)
 * wide-open access to `$HOME` except blacklist -- everything checked,
   potential issues and remaining todo items follow:
   - Evince, Totem and their previewers have read-write access to
     `@{HOME}/**`: perhaps we can make it a bit tighter, e.g.
-    using a regexp that doesn't include dotfiles (see `user-write`),
+    using a regexp that doesn't include dotfiles (see the
+    `user-write` abstraction),
     and read-only everywhere except for specific directories? Or is
-    the blacklist used by these profiles tight enough?
+    the blacklist used by these profiles tight enough? => suggested
+    a new approach on <tails-ux@boum.org>, we'll see what they think
+    about it.
   - What else uses `private-files` and
     `private-files-strict` abstractions?
   - Shall we add stuff to these blacklist?
+* `config/chroot_local-includes/usr/share/tails/torbrowser-AppArmor-profile.patch`
 * jvoisin's profile hardening
   - Pidgin
     * drop `bash` abstraction: has been here since the first version
@@ -96,7 +57,6 @@ Things to check
       previewer being able to start Claws Mail? What is it useful for?
     * disallow networking access: the Debian kernel doesn't support
       such rules anyway, so that would be a no-op
-* `config/chroot_local-includes/usr/share/tails/torbrowser-AppArmor-profile.patch`
 
 Things to keep in mind
 ======================
@@ -200,3 +160,29 @@ Currently OK
     OK: they only contain stuff that's publicly available in our ISO
     anyway, and DAC still applies.
   - there's no alternate path to `/live/persistence`
+  - `/lib/live/mount/overlay/` -- until Tails 1.4, we have _two_
+    `tmpfs` mounted there, including an empty one that hides the
+    other's content (but we should not rely on this for security).
+    Fixed on the `bugfix/8007-AppArmor-hardening` branch with
+    [[!tails_gitweb_commit bc491c9]]. Note that there's also
+    `/live/overlay` (that's a symlink to `/lib/live/mount/overlay`,
+    created in [[!tails_gitweb_commit 3233da6]]). Follow-up fixes and
+    corresponding new automatic tests (in `torified_browsing.feature`,
+    `pidgin.feature`, `evince.feature` and `totem.feature`) were added
+    on `bugfix/8007-AppArmor-hardening`; the full test suite passes,
+    and the new bits were validated by manual testing.
+  - persistence in read-only mode doesn't bring any additional
+    alternate path
+* wide-open access to `/lib/**` or similar, that might grant access to
+  files via alternate paths -- everything checked, potential issues were:
+  - the `base` and `ubuntu-helpers` abstraction have things
+    like `/lib{,32,64}/** r`: this was patched when introducing
+    aliases ([[!tails_gitweb_commit 6e48b6d]])
+  - the `launchpad-integration` abstraction has things like `/** rwlk`
+    and `/{,usr/}lib*/{,**/}*.so{,.*} m`; it's harmless since it only
+    gives such rights to an executable we don't ship, and it's
+    included by the Pidgin profile only, which for good measure we
+    disabled with [[!tails_gitweb_commit 551d372]] on
+    `bugfix/8007-AppArmor-hardening`
+* the kludges needed to make them work with aufs: everything replaced
+  with aliases (and other kludges) in [[!tails_gitweb_commit 6e48b6d]]
