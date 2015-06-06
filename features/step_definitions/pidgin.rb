@@ -57,7 +57,7 @@ Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_c
   @chatbot = ChatBot.new(account["username"] + "@" + account["domain"],
                          account["password"], account["otr_key"], bot_opts)
   @chatbot.start
-  add_after_scenario_hook(@chatbot.method(:stop))
+  add_after_scenario_hook { @chatbot.stop }
   @vm.focus_window('Buddy List')
   @screen.wait("PidginFriendOnline.png", 60)
 end
