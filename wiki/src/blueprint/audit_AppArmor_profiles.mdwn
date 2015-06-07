@@ -2,90 +2,10 @@ Corresponding ticket: [[!tails_ticket 8007]]
 
 [[!toc levels=2]]
 
-Things to check
+Remaining to do
 ===============
 
-* the kludges needed to make them work with aufs
-* access to files via alternate paths specific to Debian Live systems,
-  e.g.
-  - check `private-files` and `private-files-strict` abstractions, in
-    particular wrt. whatever can be accessed via the following paths
-  - is there any alternate path to `/live/persistence`?
-  - `/lib/live/mount/overlay/` -- until Tails 1.4~rc1, we have _two_
-    `tmpfs` mounted there, including an empty one that hides the
-    other's content (but we should not rely on this for security).
-    Fixed on the `bugfix/8007-AppArmor-hardening` branch with
-    [[!tails_gitweb_commit bc491c9]], and then:
-    * test that this doesn't break persistence in read-write mode
-    * test that this doesn't break persistence in read-only mode
-    * test that this doesn't break booting an upgraded Tails with
-      more that one SquashFS
-    * test how AppArmor confinement behaves wrt. `/live/overlay`
-      (that's a symlink to `/lib/live/mount/overlay`, created in
-      [[!tails_gitweb_commit 3233da6]]; maybe it's not needed
-      anymore?)
-    * test how AppArmor confinement behaves wrt.
-      `/lib/live/mount/overlay` (at least it blocks access for Evince
-      to `/lib/live/mount/overlay/home/amnesia/.gnupg/default.pdf`)
-    * we add `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at
-      least `$HOME` is OK -- isn't it?
-  - recheck all these things with persistence in read-only mode
-* wide-open access to `/lib/**` or similar, that might grant access to
-  persistent files -- everything checked, potential issues and
-  remaining todo items follow:
-  - the `base` abstraction (used e.g. by Pidgin and Evince) has things
-    like `/lib{,32,64}/** r`
-  - the `launchpad-integration` abstraction has
-    `/{,usr/}lib*/{,**/}*.so{,.*} m`
-  - the `ubuntu-helpers` abstraction has
-    `/{,usr/,usr/local/}lib{,32,64}/{,**/}*.so{,.*} m`
-* wide-open access to `$HOME` except blacklist -- everything checked,
-  potential issues and remaining todo items follow:
-  - Evince, Totem and their previewers have read-write access to
-    `@{HOME}/**`: perhaps we can make it a bit tighter, e.g.
-    using a regexp that doesn't include dotfiles (see `user-write`),
-    and read-only everywhere except for specific directories? Or is
-    the blacklist used by these profiles tight enough?
-  - What else uses `private-files` and
-    `private-files-strict` abstractions?
-  - Shall we add stuff to these blacklist?
-* jvoisin's profile hardening
-  - Pidgin
-    * drop `bash` abstraction: has been here since the first version
-      of the profile; that abstraction is not too scary, but... what
-      is it useful for?
-    * disable video and audio visualization capabilities: if it
-      doesn't break e.g. accessibility or sound notifications, why not
-  - `/usr/bin/evince`
-    * drop `bash` abstraction: same as Pidgin
-    * drop `audio` and `ubuntu-media-players` abstraction:  note that
-      PDF can embed videos; do we care?
-    * drop `ubuntu-console-browsers`, `ubuntu-console-email` and
-      `ubuntu-gnome-terminal` abstractions: I doubt it's useful to
-      anyone in Tails, indeed
-    * disallow `/usr/bin/yelp`: if it breaks displaying Evince help,
-      we don't want that
-    * disallow `/usr/bin/bug-buddy`: Ubuntu-specific, we don't care
-    * disallow `/usr/bin/exo-open` and a bunch of file managers that
-      are not shipped in Tails:  not worth maintaining a delta
-    * disallow `/usr/bin/gedit`: a comment in the profile says it's
-      useful "for text attachments", and given it's inheriting the
-      current profile it's not scary enough to be worth potentially
-      breaking things
-  - `/usr/bin/evince-previewer`
-    * same changes as in `/usr/bin/evince` profile, same comments
-    * drop `ubuntu-browsers` abstraction: it doesn't cover Tor Browser
-      anyway, so why not
-    * drop `ubuntu-email` abstraction: do we care about Evince
-      previewer being able to start Claws Mail? What is it useful for?
-    * disallow networking access: the Debian kernel doesn't support
-      such rules anyway, so that would be a no-op
-* `config/chroot_local-includes/usr/share/tails/torbrowser-AppArmor-profile.patch`
-
-Things to keep in mind
-======================
-
-* Beware not to break assistive technologies (accessibility).
+See [[blueprint/harden_AppArmor_profiles]].
 
 Checked already
 ===============
@@ -93,37 +13,15 @@ Checked already
 Could be improved later
 -----------------------
 
-* access to microphone (can we easily block that while still allowing
-  sound output?)
-  - `abstractions/audio` gives full access to PulseAudio, which
-     no doubt gives access to the microphone; we use that abstraction
-     for Totem, Tor Browser, Evince and Pidgin. The Ubuntu phone
-     mediates access to PulseAudio at the D-Bus level. As of
-     2015-05-04:
-     * this is only done at the AppArmor level. There is WIP to [make
-       PulseAudio a trusted helper for microphone
-       access](https://bugs.launchpad.net/ubuntu/+source/pulseaudio/+bug/1224756).
-       The "trust-store" is a library (external to AppArmor) that
-       services can use. it can prompt, remember the answer, etc.
-       It's currently limited to mir. It can also be preseeded.
-       jdstrand is not sure if there is a CLI for that, but that could
-       be another option. The broader picture is described in
-       <https://wiki.ubuntu.com/SecurityTeam/Specifications/ApplicationConfinement>
-       and in the phone-specific bits at
-       <https://wiki.ubuntu.com/AccountPrivileges>.
-     * AppArmor support for D-Bus mediation has made it into D-Bus
-       upstream, but the kernel bits have not been upstreamed yet.
-  - regarding Alsa:
-    * `/dev/snd/pcmC[0-9]D[0-9]c` raw audio devices seem to be capture,
-      while `/dev/snd/pcmC[0-9]D[0-9]p` devices seem to be playback
-      devices
-    * do `/dev/snd/hwC[0-9]D[0-9]` give access to the microphone?
-    * do `/dev/controlC[0-9]` give access to the microphone?
-    * does `/dev/snd/seq` give access to the microphone?
-    * does `/dev/snd/timer` give access to the microphone?
+See [[blueprint/harden_AppArmor_profiles]].
 
 Currently OK
 ------------
+
+As of 20150604, some of those are OK in
+`bugfix/8007-AppArmor-hardening`, but not in current `stable`.
+Unless they're worth special treatment, all changes made as a result
+of this audit should land together into Tails 1.5.
 
 * Ux rules don't sanitize `$PATH`
   (<https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1045986>) =>
@@ -183,3 +81,52 @@ Currently OK
   - `/lib/live/mount/rootfs/` and `/lib/live/mount/medium/` should be
     OK: they only contain stuff that's publicly available in our ISO
     anyway, and DAC still applies.
+  - there's no alternate path to `/live/persistence`
+  - `/lib/live/mount/overlay/` -- until Tails 1.4, we have _two_
+    `tmpfs` mounted there, including an empty one that hides the
+    other's content (but we should not rely on this for security).
+    Fixed on the `bugfix/8007-AppArmor-hardening` branch with
+    [[!tails_gitweb_commit bc491c9]]. Note that there's also
+    `/live/overlay` (that's a symlink to `/lib/live/mount/overlay`,
+    created in [[!tails_gitweb_commit 3233da6]]). Follow-up fixes and
+    corresponding new automatic tests (in `torified_browsing.feature`,
+    `pidgin.feature`, `evince.feature` and `totem.feature`) were added
+    on `bugfix/8007-AppArmor-hardening`; the full test suite passes,
+    and the new bits were validated by manual testing.
+  - persistence in read-only mode doesn't bring any additional
+    alternate path
+  - `private-files` and `private-files-strict` abstractions do the
+    right thing wrt. `/lib/live/mount/overlay/home/`, since we add it
+    to @{HOMEDIRS}
+* wide-open access to `/lib/**` or similar, that might grant access to
+  files via alternate paths -- everything checked, potential issues were:
+  - the `base` and `ubuntu-helpers` abstraction have things
+    like `/lib{,32,64}/** r`: this was patched when introducing
+    aliases ([[!tails_gitweb_commit 6e48b6d]])
+  - the `launchpad-integration` abstraction has things like `/** rwlk`
+    and `/{,usr/}lib*/{,**/}*.so{,.*} m`; it's harmless since it only
+    gives such rights to an executable we don't ship, and it's
+    included by the Pidgin profile only, which for good measure we
+    disabled with [[!tails_gitweb_commit 551d372]] on
+    `bugfix/8007-AppArmor-hardening`
+* the kludges needed to make them work with aufs: everything replaced
+  with aliases (and other kludges) in [[!tails_gitweb_commit 6e48b6d]]
+* wide-open access to `$HOME` except blacklist -- everything checked,
+  in particular:
+  - Apart of Evince and Totem profiles (discussed elsewhere), only
+    Pidgin uses one of the `private-files` and `private-files-strict`
+    abstractions, but it doesn't have any wide-open access rules like
+    Evince or Totem have.
+* `config/chroot_local-includes/usr/share/tails/torbrowser-AppArmor-profile.patch`
+  - can tell that it's running in Tails: unavoidable in the current
+    state of things
+  - quite some avenues for fingerprinting of the hardware being used:
+    unavoidable without adding virtualization to the mix
+  - gives access to `machine-id`: in the current state of things, that
+    tells what exact version of Tails is running; depending on how
+    [[!tails_ticket 7100]] is addressed, this may become worse; such
+    access was allowed so that the browser can play sound with
+    PulseAudio (commit 371ba40 in our torbrowser-launcher Git repo);
+    if such access is denied, then Tor Browser plays sound directly
+    with Alsa, which makes UX worse... and breaks our automated tests.
+    We'll deal with that as part of [[!tails_ticket 7100]].
