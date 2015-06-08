@@ -329,8 +329,15 @@ list on the bottom left of the screen.
 
    [[!img desktop.png size=640x480 link=no]]
 
-Configure persistence (optional)
-================================
+Use the encrypted persistent storage (optional)
+===============================================
+
+<div class="note">
+
+If you don't want to store any data in Tails you can stop following
+these instructions and enjoy Tails right now.
+
+</div>
 
 You can create a *persistent volume* in the remaining free space on the
 device to store:
@@ -348,16 +355,121 @@ The files in the persistent volume:
 Once the persistent volume is created, you can choose to activate it or not
 each time you start Tails.
 
-How to use the persistent volume
---------------------------------
+Warnings about persistence
+--------------------------
 
-  - [[Warnings about persistence|doc/first_steps/persistence/warnings]]
-  - [[Create & configure the persistent volume|doc/first_steps/persistence/configure]]
-  - [[Enable & use the persistent volume|doc/first_steps/persistence/use]]
-  - [[Change the passphrase of the persistent volume|doc/first_steps/persistence/change_passphrase]]
-  - [[Manually copy your persistent data to a new device|doc/first_steps/persistence/copy]]
-  - [[Check the file system of the persistent volume|doc/first_steps/persistence/check_file_system]]
-  - [[Delete the persistent volume|doc/first_steps/persistence/delete]]
+<a id="sensitive_documents"></a>
 
-Restart on second USB stick
-===========================
+### Storing sensitive documents
+
+**The persistent volume is not hidden.** An attacker in possession of
+the device can know that there is a persistent volume on it. Take into consideration
+that you can be forced or tricked to give out its passphrase.
+
+<a id="overwriting_configurations"></a>
+
+### Overwriting configurations
+
+The programs included in Tails are carefully configured with security in
+mind. If you use the persistence volume to overwrite the configuration
+of the programs included in Tails, it can break this security or render
+these programs unusable.
+
+Furthermore, the anonymity of Tor and Tails relies on making it harder to
+distinguish one Tails user from another. <strong>Changing the default
+configurations can break your anonymity.</strong>
+
+<a id="minimum"></a>
+
+### Use to the minimum
+
+**Use the persistent volume only when necessary and to the minimum.** It is
+always possible to start Tails without activating the persistent volume. All the
+features of the persistent volume are optional and need to be explicitly
+activated. Only the files and folders that you specify are saved.
+
+<a id="open_other_systems"></a>
+
+### Opening the persistent volume from other operating systems
+
+**It is possible to
+open the persistent volume from other operating systems, but it might break
+your security.**
+Other operating systems should probably not be trusted to handle
+sensitive information or leave no trace.
+To start the persistent volume assistant, choose
+<span class="menuchoice">
+  <span class="guimenu">Applications</span>&nbsp;▸
+  <span class="guisubmenu">Tails</span>&nbsp;▸
+  <span class="guimenuitem">Configure persistent volume</span></span>.
+
+Create the encrypted persistent storage
+---------------------------------------
+
+To start the persistent volume assistant, choose
+<span class="menuchoice">
+  <span class="guimenu">Applications</span>&nbsp;▸
+  <span class="guisubmenu">Tails</span>&nbsp;▸
+  <span class="guimenuitem">Configure persistent volume</span></span>.
+
+The assistant proposes to create a new persistent volume on
+the device from which Tails is running.
+
+1. The persistent volume is an encrypted partition protected by a passphrase.
+Specify a passphrase of your choice in both the
+<span class="guilabel">Passphrase</span> and <span class="guilabel">Verify
+Passphrase</span> text boxes.
+
+2. Click on the <span class="guilabel">Create</span> button.
+
+3. Wait for the creation to finish.
+
+<div class="bug">
+
+<strong>If the creation is interrupted before it finishes</strong>, you may not
+be able to start Tails from this device any more. This can happen if you
+close the window of the wizard or unplug the USB stick or SD card during the creation of
+the persistent volume. [[Delete|first_steps/reset]] and
+[[reinstall|first_steps/installation]] Tails to fix this issue.
+
+</div>
+
+The assistant shows a list of the possible persistence features. Each
+feature corresponds to a set a files to be saved in the persistent
+volume.
+
+For the time being, we recommend you to only activate the **Personal
+Data** persistence feature. You can modify the configuration of the
+encrypted persistent storage later according to your needs.
+
+Refer to our documentation [[configuring the encrypted persistent
+storage|doc/first_steps/persistence/configure]] to learn about about the
+other options.
+
+Enable the encrypted persistence storage
+----------------------------------------
+
+1. Shut down your computer and restart on the second USB stick.
+
+1. In *Tails Greeter*, select your preferred language in the drop-down
+list on the bottom left of the screen.
+
+1. In the
+<span class="guilabel">Use persistence?</span> dialog of [[Tails
+Greeter|startup_options#tails_greeter]], choose <span class="guilabel">Yes</span> to
+enable the persistent volume for the current working session.
+
+2. Enter the passphrase of the persistent volume in the
+<span class="guilabel">Passphrase</span> text box.</span>
+
+3. If you select the <span class="guilabel">Read-Only</span> check box, the
+content of persistent volume will be available and you will be able to modify
+it but the changes will not be saved.
+
+1. Click **Login**.
+
+You can now save your personal files and working documents in the
+**Persistent** folder. To open the **Persistent** folder choose
+<span class="menuchoice">
+  <span class="guimenu">Places</span>&nbsp;▸
+  <span class="guimenuitem">Persistent</span></span>.
