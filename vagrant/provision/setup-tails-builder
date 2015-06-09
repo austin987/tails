@@ -33,25 +33,14 @@ EOF
 http_proxy="" gpg --keyserver hkps.pool.sks-keyservers.net --recv-key C7988EA7A358D82E
 gpg --export C7988EA7A358D82E | sudo apt-key add -
 
-# Add unstable repository for ikiwiki, and pin it low
-echo 'deb http://ftp.us.debian.org/debian unstable main' > /etc/apt/sources.list.d/unstable.list
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/unstable <<EOF
-	Package: *
-	Pin: release a=unstable
-	Pin-Priority: 99
-EOF
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/ikiwiki <<EOF
-	Package: ikiwiki
-	Pin: release a=unstable
-	Pin-Priority: 500
-EOF
-
-# Add wheezy-backports for apt-cacher-ng. The version in wheezy has problems
-# with redirects to https, which we need when fetching the TBB tarballs
-echo 'deb http://ftp.us.debian.org/debian wheezy-backports main' > /etc/apt/sources.list.d/wheezy-backports.list
+# Add jessie-backports for apt-cacher-ng. The version in jessie is older
+# than the one in wheezy-backports that we used to install (because the
+# one in Wheezy had problems with redirects to https, which we need when
+# fetching the TBB tarballs.
+echo 'deb http://ftp.us.debian.org/debian jessie-backports main' > /etc/apt/sources.list.d/jessie-backports.list
 
 apt-get update
-apt-get -o Dpkg::Options::="--force-confold" -y -t wheezy-backports install apt-cacher-ng
+apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng/jessie-backports
 
 # Install custom configuration for apt-cacher-ng and restart
 install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
@@ -77,7 +66,7 @@ apt-get -y install \
 	aufs-tools \
 	ikiwiki \
 	intltool \
-	gettext/wheezy-backports
+	gettext
 
 # Be sure to get all the modules we need for our Ikiwiki
 apt-get -y --no-install-recommends install \

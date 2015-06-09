@@ -41,11 +41,11 @@ sed -e '/http::Proxy/d' -i /etc/apt/apt.conf
 # Remove installation logs
 rm -rf /var/log/installer
 
-# Clean up veewee's vbox additions iso since we're done with it by now
+# Clean up veewee's vbox additions iso. We don't use it, actually.
 rm -f /home/vagrant/VBoxGuestAdditions_*.iso
 
 # Clean up some APT stuff that will be recreated after the first
-# apt-get update during provision
+# apt-get update during provision.
 rm -rf /var/lib/apt/lists
 rm -f /var/cache/apt/*pkgcache.bin
 
