@@ -41,6 +41,14 @@ sed -e '/http::Proxy/d' -i /etc/apt/apt.conf
 # Remove installation logs
 rm -rf /var/log/installer
 
+# Clean up veewee's vbox additions iso since we're done with it by now
+rm -f /home/vagrant/VBoxGuestAdditions_*.iso
+
+# Clean up some APT stuff that will be recreated after the first
+# apt-get update during provision
+rm -rf /var/lib/apt/lists
+rm -f /var/cache/apt/*pkgcache.bin
+
 # Zero out the free space to save space in the final image:
 dd if=/dev/zero of=/EMPTY bs=1M
 rm -f /EMPTY
