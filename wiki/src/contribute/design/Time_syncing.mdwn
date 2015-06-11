@@ -40,6 +40,8 @@ Tor may not function properly before it has finished (e.g. hidden
 services running Tor prior to version 0.2.3.7-alpha requires clients
 to have a time that is no more than 30 minutes incorrect).
 
+The hardware clock is not affected.
+
 # Guessing time based on Tor consensus
 
 This idea originates from Liberte Linux' `tordate` script which uses
@@ -186,3 +188,11 @@ efforts and compromise should be made to prevent these?
 
 A Network Manager hook runs the whole thing:
 [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/20-time.sh]].
+
+The `hwclock.sh` initscript is disabled at reboot/shutdown time,
+otherwise it would set the hardware clock to the system time,
+violating (a strict interpretation of) our "don't leave traces on the
+hardware being used" design goal:
+
+* [[!tails_gitweb config/chroot_local-patches/do-not-modify-hardware-clock.diff]]
+* [[!tails_gitweb config/chroot_local-hooks/52-update-rc.d]]
