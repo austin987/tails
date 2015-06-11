@@ -80,39 +80,38 @@ the computer, we recommend you to either:
    - If the computer starts on Tails, the **Boot Tails** screen
      appears. Choose **Live** and press **Enter**.
 
-     [[!img boot-menu.png link=no alt="Black screen with Tails artwork. 'Boot menu' with two options 'Live' and 'Live (failsafe)'."]]
+     [[!img tails_boot_menu.png link=no alt="Black screen with Tails artwork. 'Boot menu' with two options 'Live' and 'Live (failsafe)'."]]
 
    - If the computer starts on the usual operating system, refer to
-     the troubleshooting section [[Tails does not start at all|windows#at_all]].
+     the troubleshooting section about [[Tails not starting at all|windows#not_at_all]].
 
-1. After 30 seconds to 60 seconds, another screen, called *Tails
-Greeter* appears.
+1. After 30&ndash;60 seconds, another screen called *Tails Greeter*, appears.
 
    [[!img doc/first_steps/startup_options/tails-greeter-welcome-to-tails.png link=no]]
 
    - If the computer stops responding or displays error messages before
      getting to *Tails Greeter*, refer to the troubleshooting section
-     [[Tails does not start entirely|windows#not_entirely]].
+     about [[Tails not starting entirely|windows#not_entirely]].
 
 1. In *Tails Greeter*, select your preferred language in the drop-down
 list on the bottom left of the screen.
 
 1. Click **Login**.
 
-1. After 15 seconds to 30 seconds, the Tails desktop appears.
+1. After 15&ndash;30 seconds, the Tails desktop appears.
 
    [[!img desktop.png size=640x480 link=no]]
 
-<a id="at_all"></a>
+<a id="not_at_all"></a>
 
 Troubleshooting: Tails does not start at all
 --------------------------------------------
 
 The following section applies if the **Boot Tails** menu does not
-appears when starting Tails.
+appear when starting on the flash memory.
 
 It is quite common for computers not to start automatically on a
-flash memory with Tails installed. Here are few troubleshooting techniques. You should try them
+flash memory with Tails installed. Here are two troubleshooting techniques. You should try them
 one after the other.
 
 ### Getting to the boot menu
@@ -121,10 +120,10 @@ On most computer, you can press a *boot menu key* to display a list of possible
 devices to start from. The following screenshot is an example of such boot
 menu:
 
-[[!img boot_menu.png link=no]]
+[[!img bios_boot_menu.png link=no]]
 
-This section explains how to identify the correct boot menu key on the
-computer and how to use it to start Tails.
+The following instructions explain how to display the boot menu key and
+start on the flash memory.
 
 1. Identify the potential boot menu keys for the computer depending on
 the computer manufacturer in the following list:
@@ -173,7 +172,7 @@ the computer manufacturer in the following list:
    <tr><td>Toshiba</td><td>*</td><td>Equium</td><td>F12</td></tr>
    </table>
 
-1. Make sure the first flash memory is plugged into the computer.
+1. Make sure that the first flash memory is plugged into the computer.
 
 1. Shut down the computer.
 
@@ -181,26 +180,28 @@ the computer manufacturer in the following list:
 while you switch on the computer.
 
    - If a boot menu with a list of possible devices to start from
-     appears, then select your first flash memory.
+     appears, select your first flash memory in the list and press **Enter**.
 
    - If the computer starts on the usual operating system, repeat steps
      2 and 3 for all the potential boot menu keys identified in step 1.
 
+If none of the potential boot menu keys identified in step 1 work or if
+your flash memory does not appear in the list, then try the second
+troubleshooting technique described below.
+
 ### Edit the BIOS settings
 
-If you cannot get to the boot menu, you might need to edit the BIOS
-settings. Consult the manual of the computer on how to enter the BIOS
-settings.
+You might need to edit the BIOS settings of the computer. Consult the
+manual of the computer to know how to enter the BIOS settings.
 
 In the BIOS settings, try to apply the following changes one by one and
-restart between each one of them. Some changes might not apply to this
-computer model.
+restart the computer after each change. Some changes might not
+apply to certain computer models.
 
-1. Edit the **Boot Order**. Depending on the computer model you should
-see an entry for **removable drive** or **USB media**. Move this entry
-to the top of the list to force the computer to attempt to start from
-the first flash memory before starting from the internal hard disk. Save your
-changes and restart.
+1. Edit the **Boot Order**. Depending on the computer model you might
+see an entry for **removable devices** or **USB media**. Move this entry
+to the top of the list to force the computer to try to start from
+the first flash memory before starting from the internal hard disk.
 
 1. Disable **Fast boot**.
 
@@ -216,41 +217,52 @@ BIOS**. To do so, try any of the following options if available:
 
 1. Try to upgrade the BIOS to the latest version provided by the manufacturer.
 
+If none of these options work, please [[report the problem to our
+support team|doc/first_steps/bug_reporting/tails_does_not_start]].
+
 <a id="not_entirely"></a>
 
 Troubleshooting: Tails does not start entirely
 ----------------------------------------------
 
-The following section applies if the **Boot Tails** appears but not
+The following section applies if the **Boot Tails** menu appears but not
 *Tails Greeter* when starting Tails.
 
-1. In the graphical boot menu, press `TAB`.
+1. Restart the computer on the first flash memory.
 
-2. Remove the `quiet` option from the boot command line.
+1. In the **Boot Tails** menu, press `TAB`. A command line with a list
+of boot options appears at the bottom of the screen.
 
-3. Add the `debug` and `nosplash` option.
+   [[!img doc/first_steps/startup_options/boot-menu-with-options.png link=no]]
 
-4. Hopefully, this displays useful messages while starting Tails. You can
-   [[send them to us by email|/support/talk]].
+1. Remove the `quiet` option from the command line.
 
-5. If the error message is `/bin/sh: can't access tty; job control
+1. Add the `debug` and `nosplash` options to the command line.
+
+1. Press **Enter**.
+
+1. Hopefully, error messages now appear when starting Tails. You can
+   [[send them to our support team by email|/support/talk]], for example by taking a
+   picture of the last screen and error messages.
+
+1. If the error message is `/bin/sh: can't access tty; job control
    turned off` followed by `(initramfs)`, then try removing the
-   `live-media=removable` option.
+   `live-media=removable` option from the boot command line.
 
    <div class="caution">
 
    <strong>When removing this option, if an adversary installed a fake
-   Tails on an internal hard disk, then you will likely be starting
+   Tails on an internal hard disk, then you will likely start
    this dangerous operating system instead of the genuine Tails that
-   you intended to use.</strong>
+   you installed on the flash memory.</strong>
 
    </div>
 
    If removing `live-media=removable` allows you to start Tails, please
-   report a bug as documented above: this allows us to improve the [[list
+   report the problem to our [[support team|support/talk]].
+   This contributes to improving the [[list
    of problematic USB sticks|support/known_issues#problematic-usb-sticks]].
-   In this case, you should install Tails on another, better supported
-   USB stick.
+   Then try installing Tails on another flash memory.
 
 Plug second flash memory
 ========================
@@ -304,26 +316,26 @@ Restart on second flash memory
    - If the computer starts on Tails, the **Boot Tails** screen
      appears. Choose **Live** and press **Enter**.
 
-     [[!img boot-menu.png link=no alt="Black screen with Tails artwork. 'Boot menu' with two options 'Live' and 'Live (failsafe)'."]]
+     [[!img tails_boot_menu.png link=no alt="Black screen with Tails artwork. 'Boot menu' with two options 'Live' and 'Live (failsafe)'."]]
 
    - If the computer starts on the usual operating system, refer to
-     the troubleshooting section [[Tails does not start at all|windows#at_all]].
+     the troubleshooting section about [[Tails not starting at all|windows#not_at_all]].
 
-1. After 30 seconds to 60 seconds, another screen, called *Tails
+1. After 30&ndash;60 seconds, another screen, called *Tails
 Greeter* appears.
 
    [[!img doc/first_steps/startup_options/tails-greeter-welcome-to-tails.png link=no]]
 
    - If the computer stops responding or displays error messages before
      getting to *Tails Greeter*, refer to the troubleshooting section
-     [[Tails does not start entirely|windows#not_entirely]].
+     about [[Tails not starting entirely|windows#not_entirely]].
 
 1. In *Tails Greeter*, select your preferred language in the drop-down
 list on the bottom left of the screen.
 
 1. Click **Login**.
 
-1. After 15 seconds to 30 seconds, the Tails desktop appears.
+1. After 15&ndash;30 seconds, the Tails desktop appears.
 
    [[!img desktop.png size=640x480 link=no]]
 
