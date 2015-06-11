@@ -33,14 +33,8 @@ EOF
 http_proxy="" gpg --keyserver hkps.pool.sks-keyservers.net --recv-key C7988EA7A358D82E
 gpg --export C7988EA7A358D82E | sudo apt-key add -
 
-# Add jessie-backports for apt-cacher-ng. The version in jessie is older
-# than the one in wheezy-backports that we used to install (because the
-# one in Wheezy had problems with redirects to https, which we need when
-# fetching the TBB tarballs.
-echo 'deb http://ftp.us.debian.org/debian jessie-backports main' > /etc/apt/sources.list.d/jessie-backports.list
-
 apt-get update
-apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng/jessie-backports
+apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
 
 # Install custom configuration for apt-cacher-ng and restart
 install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
