@@ -105,7 +105,9 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   # since the others otherwise may continue re-filling the same memory
   # unnecessarily.
   instances = (@detected_ram_m.to_f/(2**10)).ceil
-  instances.times { @vm.spawn('fillram; killall fillram') }
+  instances.times do
+    @vm.spawn('/usr/local/sbin/fillram; killall fillram', LIVE_USER)
+  end
   # We make sure that all fillram processes have started...
   try_for(10, :msg => "all fillram processes didn't start", :delay => 0.1) do
     nr_fillram_procs = @vm.pidof("fillram").size
