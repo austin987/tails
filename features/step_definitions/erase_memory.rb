@@ -94,7 +94,7 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   # The remote shell is sometimes OOM killed when we fill the memory,
   # and since we depend on it after the memory fill we try to prevent
   # that from happening.
-  pid = @vm.pidof("autotest_remote_shell.py")[0]
+  pid = @vm.pidof("tails-autotest-remote-shell")[0]
   @vm.execute_successfully("echo -17 > /proc/#{pid}/oom_adj")
 
   used_mem_before_fill = used_ram_in_MiB
