@@ -87,7 +87,7 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
    "echo 1024 > /proc/sys/vm/min_free_kbytes",
    "echo 2   > /proc/sys/vm/overcommit_memory",
    "echo 97  > /proc/sys/vm/overcommit_ratio",
-   "echo 1   > /proc/sys/vm/oom_kill_allocating_task",
+   "echo 0   > /proc/sys/vm/oom_kill_allocating_task",
    "echo 0   > /proc/sys/vm/oom_dump_tasks"
   ].each { |c| @vm.execute_successfully(c) }
 
@@ -106,10 +106,15 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   # unnecessarily.
   instances = (@detected_ram_m.to_f/(2**10)).ceil
   instances.times { @vm.spawn('fillram; killall fillram') }
-  # We make sure that the filling has started...
-  try_for(10, { :msg => "fillram didn't start" }) {
-    @vm.has_process?("fillram")
-  }
+  # We make sure that all fillram processes have started...
+  try_for(10, :msg => "all fillram processes didn't start", :delay => 0.1) do
+    nr_fillram_procs = @vm.pidof("fillram").size
+    instances == nr_fillram_procs
+  end
+  # ... and prioritize OOM killing them.
+  @vm.pidof("fillram").each do |pid|
+    @vm.execute_successfully("echo 15 > /proc/#{pid}/oom_adj")
+  end
   STDERR.print "Memory fill progress: "
   ram_usage = ""
   remove_chars = 0
