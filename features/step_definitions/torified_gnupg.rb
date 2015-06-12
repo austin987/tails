@@ -101,8 +101,6 @@ end
 
 Then /^I synchronize keys in Seahorse$/ do
   next if @skip_steps_while_restoring_background
-  step "I start Seahorse"
-  step "Seahorse has opened"
   step "process \"seahorse\" is running"
   @screen.wait_and_click("SeahorseWindow.png", 10)
   seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuSync.png', 'seahorse')
