@@ -84,7 +84,7 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   # The (guest) kernel may freeze when approaching full memory without
   # adjusting the OOM killer and memory overcommitment limitations.
   [
-   "echo 256 > /proc/sys/vm/min_free_kbytes",
+   "echo 1024 > /proc/sys/vm/min_free_kbytes",
    "echo 2   > /proc/sys/vm/overcommit_memory",
    "echo 97  > /proc/sys/vm/overcommit_ratio",
    "echo 1   > /proc/sys/vm/oom_kill_allocating_task",
