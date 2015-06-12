@@ -5,6 +5,13 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   hosts = hosts_str.split(',')
   @vm.file_content("/etc/apt/sources.list /etc/apt/sources.list.d/*").chomp.each_line { |line|
     next if ! line.start_with? "deb"
+    line.sub!(
+      /^
+       (?<type>deb\s+)                   # source type
+       (?: \[ \s* arch=i386 \s* \] \s*)? # architecture specifier
+      /x,
+      '\k<type>'
+    )
     source_host = URI(line.split[1]).host
     if !hosts.include?(source_host)
       raise "Bad APT source '#{line}'"
