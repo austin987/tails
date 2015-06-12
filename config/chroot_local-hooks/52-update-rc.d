@@ -9,6 +9,7 @@ PATCHED_INITSCRIPTS="
 gdomap
 haveged
 hdparm
+hwclock.sh
 i2p
 kexec-load
 laptop-mode
