@@ -175,7 +175,7 @@ maybe_set_time_from_tor_consensus() {
 	date -us "${vmid}" 1>/dev/null
 
 	# Tor is unreliable with picking a circuit after time change
-	restart-tor
+	service tor restart
 }
 
 tor_cert_valid_after() {
