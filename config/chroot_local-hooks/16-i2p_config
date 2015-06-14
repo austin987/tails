@@ -11,21 +11,22 @@ WRAPPER="/etc/i2p/wrapper.config"
 # This must be set in order for the i2p init script to work
 sed -i 's/^RUN_DAEMON=.*$/RUN_DAEMON="true"/' /etc/default/i2p
 
-echo "Removing $I2PROUTER"
-dpkg-divert --rename --add "$I2PROUTER"
-
 # Remove the "i2prouter" script, its man page, and its apparmor profile
 # since these are not used by Tails:
 rm /etc/apparmor.d/usr.bin.i2prouter /usr/share/man/man1/i2prouter.1.gz
 
-# Install custom i2prouter stub script
-cat > "$I2PROUTER" << EOF
+# Install custom i2prouter stub scripts
+for script in ${I2PROUTER} ${I2PROUTER}-nowrapper; do
+    echo "Removing $script"
+    dpkg-divert --rename --add "${script}"
+    cat > "$script" << EOF
 #!/bin/sh
 echo "This script is not used by Tails."
 echo "See https://tails.boum.org/doc/anonymous_internet/i2p/ for more information."
 exit 0
 EOF
-chmod 755 "$I2PROUTER"
+    chmod 755 "$script"
+done
 
 # Remove the outproxy from the tunnel on port 4444
 # This will remove the following lines:
