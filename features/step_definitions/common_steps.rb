@@ -65,7 +65,7 @@ def restore_background
       @vm.execute("rm -f /var/log/tor/log")
       @vm.execute("killall vidalia")
       @vm.host_to_guest_time_sync
-      @vm.execute("service tor start")
+      @vm.spawn("restart-tor")
       wait_until_tor_is_working
       @vm.spawn("restart-vidalia")
     end
