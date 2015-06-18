@@ -101,13 +101,31 @@ end
 
 Then /^I synchronize keys in Seahorse$/ do
   next if @skip_steps_while_restoring_background
-  step "process \"seahorse\" is running"
-  @screen.wait_and_click("SeahorseWindow.png", 10)
-  seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuSync.png', 'seahorse')
-  seahorse_wait_helper('SeahorseSyncKeys.png')
-  @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
-  seahorse_wait_helper('SeahorseSynchronizing.png')
-  seahorse_wait_helper('SeahorseWindow.png', 5*60)
+  tries = 0
+  until tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+    begin
+      step 'process "seahorse" is running'
+      @screen.wait_and_click("SeahorseWindow.png", 10)
+      seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuSync.png', 'seahorse')
+      seahorse_wait_helper('SeahorseSyncKeys.png')
+      @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
+      seahorse_wait_helper('SeahorseSynchronizing.png')
+      seahorse_wait_helper('SeahorseWindow.png', 5*60)
+      break
+    rescue OpenPGPKeyserverCommunicationError
+      tries += 1
+      @screen.wait_and_click('GnomeCloseButton.png', 20)
+      if @screen.exists('SeahorseSynchronizing.png')
+        # Seahorse is likely to segfault if we end up here.
+        @screen.click('SeahorseSynchronizing.png')
+        @screen.type(Sikuli::Key.ESC)
+      end
+      seahorse_wait_helper('SeahorseWindow.png')
+      STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
+      step 'in Vidalia I force Tor to use a new circuit'
+    end
+  end
+  assert(tries <= $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Syncing keys in Seahorse did not succeed after retrying #{tries} times")
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP Applet)?$/ do |keyid, withgpgapplet|
@@ -118,23 +136,37 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
     step "I start Seahorse"
   end
   step "Seahorse has opened"
-  @screen.wait_and_click("SeahorseWindow.png", 10)
-  seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuFind.png', 'seahorse')
-  seahorse_wait_helper('SeahorseFindKeysWindow.png', 10)
-  # Seahorse doesn't seem to support searching for fingerprints
-  @screen.type(keyid + Sikuli::Key.ENTER)
-  begin
-    seahorse_wait_helper('SeahorseFoundKeyResult.png', 5*60)
-  rescue FindFailed
-    # We may end up here if Seahorse appears to be "frozen".
-    # Sometimes--but not always--if we click another window
-    # the main Seahorse window will unfreeze, allowing us
-    # to continue normally.
-    @screen.click("SeahorseSearch.png")
+  tries = 0
+  until tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+    begin
+      @screen.wait_and_click("SeahorseWindow.png", 10)
+      seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuFind.png', 'seahorse')
+      seahorse_wait_helper('SeahorseFindKeysWindow.png', 10)
+      # Seahorse doesn't seem to support searching for fingerprints
+      @screen.type(keyid + Sikuli::Key.ENTER)
+      begin
+        seahorse_wait_helper('SeahorseFoundKeyResult.png', 5*60)
+      rescue FindFailed
+        # We may end up here if Seahorse appears to be "frozen".
+        # Sometimes--but not always--if we click another window
+        # the main Seahorse window will unfreeze, allowing us
+        # to continue normally.
+        @screen.click("SeahorseSearch.png")
+      end
+      @screen.click("SeahorseKeyResultWindow.png")
+      @screen.click("SeahorseFoundKeyResult.png")
+      @screen.click("SeahorseImport.png")
+      break
+    rescue OpenPGPKeyserverCommunicationError
+      tries += 1
+      @screen.wait_and_click('GnomeCloseButton.png', 20)
+      @screen.type(Sikuli::Key.ESC)
+      @screen.type("w", Sikuli::KeyModifier.CTRL)
+      STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
+      step 'in Vidalia I force Tor to use a new circuit'
+    end
   end
-  @screen.click("SeahorseKeyResultWindow.png")
-  @screen.click("SeahorseFoundKeyResult.png")
-  @screen.click("SeahorseImport.png")
+  assert(tries <= $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Fetching keys in Seahorse did not succeed after retrying #{tries} times")
 end
 
 Then /^Seahorse is configured to use the correct keyserver$/ do
