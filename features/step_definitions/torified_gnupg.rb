@@ -50,9 +50,19 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
   else
     importopts = ''
   end
-  @gnupg_recv_key_res = @vm.execute_successfully(
-    "gpg --batch #{importopts} --recv-key '#{keyid}'",
-    LIVE_USER)
+  tries = 0
+  until tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+    begin
+      @gnupg_recv_key_res = @vm.execute_successfully(
+      "gpg --batch #{importopts} --recv-key '#{keyid}'",
+      LIVE_USER)
+      break
+    rescue Test::Unit::AssertionFailedError
+      tries += 1
+      STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
+      step 'in Vidalia I force Tor to use a new circuit'
+    end
+  end
 end
 
 When /^the GnuPG fetch is successful$/ do
