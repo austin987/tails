@@ -67,3 +67,10 @@ systemctl disable NetworkManager-wait-online.service
 for suffix in halt kexec poweroff reboot shutdown ; do
    systemctl mask "plymouth-${suffix}.service"
 done
+
+# systemd-networkd fallbacks to Google's nameservers when no other nameserver
+# is provided by the network configuration. In Jessie, this service is disabled
+# by default, but it feels safer to make this explicit. Besides, it might be
+# that systemd-networkd vs. firewall setup ordering is suboptimal in this respect,
+# so let's avoid any risk of DNS leaks here.
+systemctl mask systemd-networkd.service
