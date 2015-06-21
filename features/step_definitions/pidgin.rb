@@ -285,7 +285,20 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   expected_channel_entry = chan_image(account, default_chan(account), 'roster')
   # Sometimes the OFTC welcome notice window pops up over the buddy list one...
   @vm.focus_window('Buddy List')
-  @screen.wait(expected_channel_entry, 60)
+  tries = 0
+  until tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+    # FIXME This should be modified to use waitAny once #9633 is addressed
+    begin
+      @screen.wait(expected_channel_entry, 60)
+      break
+    rescue FindFailed
+      tries += 1
+      STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
+      step "in Vidalia I force Tor to use a new circuit"
+      @screen.wait_and_click('PidginReconnect.png', 20)
+    end
+  end
+  @screen.wait(expected_channel_entry, 10)
 end
 
 Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ do |irc_server|
