@@ -43,10 +43,6 @@ if [ -n "$JENKINS_URL" ]; then
 		echo "WORKSPACE environment variable is not set. Aborting." >&2
 		exit 2
 	fi
-	if [ -z "$ARTIFACTS_ROOT_DIR" ] ; then
-		echo "ARTIFACTS_ROOT_DIR environment variable is not set. Aborting." >&2
-		exit 3
-	fi
 	if [ -z "$GIT_BRANCH" ]; then
 		echo "GIT_BRANCH environment variable is not set. Aborting." >&2
 		exit 4
@@ -57,7 +53,7 @@ if [ -n "$JENKINS_URL" ]; then
 	fi
 	REV="${GIT_BRANCH##origin/}"
 	COMMIT="$GIT_COMMIT"
-	ARTIFACTS_DIR="$ARTIFACTS_ROOT_DIR/$JOB_NAME"
+	ARTIFACTS_DIR="$WORKSPACE"
 else
 	# Build triggered by Vagrant
 	WORKSPACE=/home/vagrant/amnesia
@@ -74,6 +70,7 @@ else
 		fi
 	fi
 	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
+	test -d "$ARTIFACTS_DIR" || install -m 0755 -d "$ARTIFACTS_DIR"
 	cd "$WORKSPACE"
 	git fetch origin
 fi
@@ -85,8 +82,6 @@ git reset --hard "$COMMIT"
 if [ -n "$JENKINS_URL" ]; then
 	git clean --force -d -x
 fi
-
-install -m 0755 -d "$ARTIFACTS_DIR"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
