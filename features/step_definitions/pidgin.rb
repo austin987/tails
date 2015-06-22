@@ -344,7 +344,7 @@ Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
   next if @skip_steps_while_restoring_background
   @screen.doubleClick(   chan_image(account, channel, 'roster'))
   @screen.hide_cursor
-  @vm.focus_window(".*\.oftc\.net$")
+  focus_pidgin_conversation_window(account)
   @screen.wait_and_click(chan_image(account, channel, 'conversation_tab'), 10)
   @screen.hide_cursor
   @screen.wait(          chan_image(account, channel, 'welcome'), 10)
