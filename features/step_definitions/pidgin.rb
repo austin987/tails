@@ -18,6 +18,21 @@ EOF
   return account
 end
 
+def focus_pidgin_conversation_window(account)
+  case account
+  when /.*\.oftc\.net$/
+    @vm.focus_window(".*\.oftc\.net$")
+  end
+end
+
+def close_pidgin_conversation_window(account)
+  focus_pidgin_conversation_window(account)
+  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
+  if @screen.exists('PidginConfirmationIcon.png')
+    @screen.click('GnomeCloseButton.png')
+  end
+end
+
 When /^I create my XMPP account$/ do
   next if @skip_steps_while_restoring_background
   account = xmpp_account("Tails_account")
@@ -283,10 +298,18 @@ end
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   next if @skip_steps_while_restoring_background
   expected_channel_entry = chan_image(account, default_chan(account), 'roster')
-  # Sometimes the OFTC welcome notice window pops up over the buddy list one...
-  @vm.focus_window('Buddy List')
   tries = 0
   until tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+    # Sometimes the OFTC welcome notice window pops up over the buddy list one...
+    begin
+      @vm.focus_window('Buddy List')
+    rescue Test::Unit::AssertionFailedError
+      # Sometimes focusing the window with xdotool will fail with the
+      # conversation window right on top of it. We'll try to close the
+      # conversation window. At worst, the test will still fail...
+      close_pidgin_conversation_window(account)
+    end
+
     # FIXME This should be modified to use waitAny once #9633 is addressed
     begin
       @screen.wait(expected_channel_entry, 60)
