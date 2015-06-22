@@ -345,7 +345,17 @@ Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
   @screen.doubleClick(   chan_image(account, channel, 'roster'))
   @screen.hide_cursor
   focus_pidgin_conversation_window(account)
-  @screen.wait_and_click(chan_image(account, channel, 'conversation_tab'), 10)
+  try_for(60) do
+    begin
+      @screen.wait_and_click(chan_image(account, channel, 'conversation_tab'), 5)
+    rescue FindFailed => e
+      # If the channel tab can't be found it could be because there were
+      # multiple connection attempts and the channel tab we want is off the
+      # screen. We'll try closing tabs until the one we want can be found.
+      @screen.type("w", Sikuli::KeyModifier.CTRL)
+      raise e
+    end
+  end
   @screen.hide_cursor
   @screen.wait(          chan_image(account, channel, 'welcome'), 10)
 end
