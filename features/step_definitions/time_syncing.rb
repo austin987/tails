@@ -62,3 +62,12 @@ Then /^the system clock is just past Tails' build date$/ do
          "The system time (#{system_time}) is more than #{max_diff} seconds " +
          "past the build date (#{build_time})")
 end
+
+Then /^the hardware clock was not updated when Tails shut down$/ do
+  host_time_str = cmd_helper(["date", "--rfc-2822"]).to_s
+  host_time = Time.rfc2822(host_time_str).to_time
+  hwclock_time_str = @vm.execute('hwclock -r').stdout.chomp
+  hwclock_time = DateTime.parse(hwclock_time_str).to_time
+  diff = (hwclock_time - host_time).abs
+  assert(diff <= max_time_drift)
+end
