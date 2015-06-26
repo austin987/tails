@@ -38,6 +38,12 @@ Feature: Time syncing
     And the computer reboots Tails
     Then the hardware clock was not updated when Tails shut down
 
+  Scenario: Anti-test: Changes to the hardware clock are kept when rebooting
+    When I bump the hardware clock's time with "-15 days"
+    And I warm reboot the computer
+    And the computer reboots Tails
+    Then the hardware clock is still off by "-15 days"
+
 #  Scenario: Clock vs Tor consensus' valid-{after,until} etc.
 
   Scenario: Create a new snapshot to the same state (w.r.t. Sikuli steps) as the Background except we're now in bridge mode
