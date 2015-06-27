@@ -1023,7 +1023,6 @@ Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
       # three minutes waiting for an icon that isn't there because Vidalia, for
       # whatever reason, is no longer running...
       step 'process "vidalia" is running'
-      @screen.type(Sikuli::Key.ESC)
       @screen.wait_and_right_click('VidaliaSystrayReady.png', 10)
       @screen.wait_and_click('VidaliaMenuNewIdentity.png', 10)
       @screen.wait('VidaliaNewIdentityNotification.png', 20)
