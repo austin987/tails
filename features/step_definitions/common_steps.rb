@@ -1033,6 +1033,6 @@ Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
     @screen.wait('VidaliaNewIdentityNotification.png', 20)
     @screen.waitVanish('VidaliaNewIdentityNotification.png', 60)
   else
-    @vm.execute_successfully('restart-tor')
+    @vm.execute_successfully('. /usr/local/lib/tails-shell-library/tor.sh; tor_control_send "signal NEWNYM"')
   end
 end
