@@ -1005,7 +1005,7 @@ When /^I accept to import the key with Seahorse$/ do
   @screen.wait_and_click("TorBrowserOkButton.png", 10)
 end
 
-Then /^(in Vidalia )?I force Tor to use a new circuit$/ do |with_vidalia|
+Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
   if with_vidalia
     assert_equal('gnome', @theme, "Vidalia is not available in the #{@theme} theme.")
     begin

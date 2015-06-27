@@ -317,7 +317,7 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
     rescue FindFailed
       tries += 1
       STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
-      step "in Vidalia I force Tor to use a new circuit"
+      step "I force Tor to use a new circuit in Vidalia"
       @screen.wait_and_click('PidginReconnect.png', 20)
     end
   end
