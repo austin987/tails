@@ -1018,6 +1018,10 @@ Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
     # Sometimes Sikuli gets confused and recognizes the yellow-colored vidalia systray
     # icon as the green one. This has been seen when Vidalia needed to be
     # restarted in the above 'begin' block.
+    #
+    # try_for is used here for that reason, otherwise this step may fail
+    # because sikuli presumaturely right-clicked the Vidalia icon and the 'New
+    # Identity' option isn't clickable yet..
     try_for(3 * 60) do
       # Let's be *sure* that vidalia is still running. I'd hate to spend up to
       # three minutes waiting for an icon that isn't there because Vidalia, for
