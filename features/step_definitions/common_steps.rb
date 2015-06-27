@@ -1029,7 +1029,6 @@ Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
       step 'process "vidalia" is running'
       @screen.wait_and_right_click('VidaliaSystrayReady.png', 10)
       @screen.wait_and_click('VidaliaMenuNewIdentity.png', 10)
-      @screen.wait('VidaliaNewIdentityNotification.png', 20)
     end
     @screen.wait('VidaliaNewIdentityNotification.png', 20)
     @screen.waitVanish('VidaliaNewIdentityNotification.png', 60)
