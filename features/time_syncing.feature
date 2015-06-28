@@ -36,7 +36,7 @@ Feature: Time syncing
     When I bump the system time with "-15 days"
     And I warm reboot the computer
     And the computer reboots Tails
-    Then the hardware clock was not updated when Tails shut down
+    Then Tails' hardware clock is close to the host system's time
 
   Scenario: Anti-test: Changes to the hardware clock are kept when rebooting
     When I bump the hardware clock's time with "-15 days"

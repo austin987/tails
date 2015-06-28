@@ -70,7 +70,7 @@ Then /^the system clock is just past Tails' build date$/ do
          "past the build date (#{build_time})")
 end
 
-Then /^the hardware clock was not updated when Tails shut down$/ do
+Then /^Tails' hardware clock is close to the host system's time$/ do
   host_time_str = cmd_helper(["date", "--rfc-2822"]).to_s
   host_time = Time.rfc2822(host_time_str).to_time
   hwclock_time_str = @vm.execute('hwclock -r').stdout.chomp
