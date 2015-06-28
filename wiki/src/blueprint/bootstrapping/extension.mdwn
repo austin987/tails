@@ -100,10 +100,8 @@ As we need a way of knowing where people are in the assistant, the
 extension will potentially interact with several web pages on our
 website, depending on the scenario, for example:
 
-  - `/install/windows/usb/1-download/v1.en.html` for the Windows USB scenario in English.
-  - `/install/debian/dvd/1-download/v1.de.html` for the Debian DVD scenario in German.
-
-The `v1` part of the URL corresponds to the version of the extension.
+  - `/install/windows/usb/1-download/` for the Windows USB scenario in the default language.
+  - `/install/debian/dvd/1-download/index.de.html` for the Debian DVD scenario in German.
 
 Initial browser detection
 -------------------------
@@ -188,6 +186,17 @@ We are not considering an attacker who can:
     - Not rely on the website to perform the ISO verification and rely
       on a native interface accessible from the add-ons menu.
 
+Open questions
+--------------
+
+As the verification mechanism totally depends on the integrity of web
+pages retrieved from our website and displayed to the user in their
+browser, it would also be vulnerable to an attacker who could manage to
+corrupt the verification mechanism or manipulate what is displayed to
+the user **from inside the browser**. We are [still
+investigating](https://mailman.boum.org/pipermail/tails-dev/2015-April/008648.html)
+whether such attacks are possible.
+
 Checksum verification
 ---------------------
 
@@ -217,6 +226,27 @@ Other considerations:
   - More complex verification mechanisms should be gradually [[built into
     Tails Installer|blueprint/bootstrapping/installer]] where we can
     defeat attacks B, C, D, F, and G.
+
+<a id="html">
+
+HTML code
+=========
+
+The extension will manipulate the HTML code of the download page. Here
+are some important parts of this code.
+
+### Extension version
+
+The HTML code will include a tag to force a version of the extension.
+For example:
+
+<pre>
+&lt;div id="extension-version"&gt;1.0&lt;/div&gt;
+</pre>
+
+We will provide only one version of the download page at a time. So the
+extension must check the value of this tag and ask for an upgrade if its
+version is lower than the request version number.
 
 <a id="data_source">
 
@@ -251,13 +281,6 @@ With a copy or a symlink to the latest version on:
     - sha256: 359d104737f1a448375d2030f938dea3d529468b8218485998ab893c1f7509eb
       size: 939571200
       url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.23/tails-i386-0.23.iso
-
-Open questions
---------------
-
-  - It will be easier for us to provide a YAML file as we do that
-    already for automatic upgrades. But maybe we have to provide JSON
-    which is more widely available in JavaScript.
 
 Updates mechanism
 =================
