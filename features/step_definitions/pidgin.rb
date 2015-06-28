@@ -18,15 +18,13 @@ EOF
   return account
 end
 
-def focus_pidgin_conversation_window(account)
-  case account
-  when /.*\.oftc\.net$/
-    @vm.focus_window(".*\.oftc\.net$")
-  end
+def focus_pidgin_irc_conversation_window(account)
+  account = account.sub(/^irc\./, '')
+  @vm.focus_window(".*#{Regexp.escape(account)}$")
 end
 
 def close_pidgin_conversation_window(account)
-  focus_pidgin_conversation_window(account)
+  focus_pidgin_irc_conversation_window(account)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
   if @screen.exists('PidginConfirmationIcon.png')
     @screen.click('GnomeCloseButton.png')
@@ -344,7 +342,7 @@ Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
   next if @skip_steps_while_restoring_background
   @screen.doubleClick(   chan_image(account, channel, 'roster'))
   @screen.hide_cursor
-  focus_pidgin_conversation_window(account)
+  focus_pidgin_irc_conversation_window(account)
   try_for(60) do
     begin
       @screen.wait_and_click(chan_image(account, channel, 'conversation_tab'), 5)
