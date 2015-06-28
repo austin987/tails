@@ -71,8 +71,7 @@ Then /^the system clock is just past Tails' build date$/ do
 end
 
 Then /^Tails' hardware clock is close to the host system's time$/ do
-  host_time_str = cmd_helper(["date", "--rfc-2822"]).to_s
-  host_time = Time.rfc2822(host_time_str).to_time
+  host_time = Time.now
   hwclock_time_str = @vm.execute('hwclock -r').stdout.chomp
   hwclock_time = DateTime.parse(hwclock_time_str).to_time
   diff = (hwclock_time - host_time).abs
