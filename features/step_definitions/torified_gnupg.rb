@@ -60,7 +60,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
     rescue Test::Unit::AssertionFailedError
       tries += 1
       STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
-      step 'in Vidalia I force Tor to use a new circuit'
+      step 'I force Tor to use a new circuit'
     end
   end
 end
@@ -132,7 +132,7 @@ Then /^I synchronize keys in Seahorse$/ do
       end
       seahorse_wait_helper('SeahorseWindow.png')
       STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
-      step 'in Vidalia I force Tor to use a new circuit'
+      step 'I force Tor to use a new circuit'
     end
   end
   assert(tries <= $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Syncing keys in Seahorse did not succeed after retrying #{tries} times")
@@ -173,7 +173,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
       @screen.type(Sikuli::Key.ESC)
       @screen.type("w", Sikuli::KeyModifier.CTRL)
       STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
-      step 'in Vidalia I force Tor to use a new circuit'
+      step 'I force Tor to use a new circuit'
     end
   end
   assert(tries <= $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Fetching keys in Seahorse did not succeed after retrying #{tries} times")
