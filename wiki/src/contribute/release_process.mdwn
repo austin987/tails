@@ -151,7 +151,7 @@ and then run the `import-translations` script that is in the
 main Tails repository. For example:
 
 	cd whisperback
-	../tails/import-translations
+	"$RELEASE_CHECKOUT"/import-translations
 
 If the `import-translations` script fails to import translations for
 the current package, manually copy updated PO files from the
@@ -163,7 +163,7 @@ Add and commit.
 
 Then check the PO files:
 
-	./wiki/src/contribute/l10n_tricks/check_po.sh
+	"$RELEASE_CHECKOUT"/wiki/src/contribute/l10n_tricks/check_po.sh
 
 Correct any displayed error, then commit the changes if any.
 
@@ -191,6 +191,7 @@ Pull updated translations for languages translated in Transifex,
 refresh the code PO files,
 and commit the result, including new PO files:
 
+	cd "$RELEASE_CHECKOUT" && \
 	./import-translations  && \
 	./refresh-translations && \
 	git add po && git commit -m 'Update PO files.'
