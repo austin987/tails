@@ -17,3 +17,9 @@ pref("extensions.getAddons.showPane", false);
    engine for the Unsafe Browser's in-the-clear traffic. */
 user_pref("browser.search.defaultenginename", "Google");
 user_pref("browser.search.selectedEngine", "Google");
+
+// Disable fetching of the new tab page's Tiles links/ads
+pref("browser.newtabpage.directory.source", "");
+pref("browser.newtabpage.directory.ping", "");
+// ... and disable the explanation shown the first time
+pref("browser.newtabpage.introShown", true);
