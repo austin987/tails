@@ -1054,7 +1054,7 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at m
   audit_line = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' %
                [profile, file]
   block = Proc.new do
-    cmd = @vm.execute("grep -q '#{audit_line}' /var/log/syslog")
+    cmd = @vm.execute("grep -qF '#{audit_line}' /var/log/syslog")
     assert_equal(expected_cmd_status, cmd.success?)
     true
   end
