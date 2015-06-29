@@ -23,3 +23,7 @@ pref("browser.newtabpage.directory.source", "");
 pref("browser.newtabpage.directory.ping", "");
 // ... and disable the explanation shown the first time
 pref("browser.newtabpage.introShown", true);
+
+// Don't use geographically specific search prefs, like
+// browser.search.*.US for US locales.
+pref("browser.search.geoSpecificDefaults", false);
