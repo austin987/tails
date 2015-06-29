@@ -1047,3 +1047,24 @@ Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
   puts "Slept for #{time} seconds"
   sleep(time)
 end
+
+When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at most (\d+) seconds)?$/ do |anti_test, profile, file, time|
+  next if @skip_steps_while_restoring_background
+  expected_cmd_status = anti_test ? false : true
+  block = Proc.new do
+    audit_line = 'apparmor="DENIED" operation="open" profile="' + profile +
+                 '" name="' + file + '"'
+    cmd = @vm.execute("grep -q '#{audit_line}' /var/log/syslog")
+    assert_equal(expected_cmd_status, cmd.success?)
+    true
+  end
+  begin
+    if time
+      try_for(time.to_i) { block.call }
+    else
+      block.call
+    end
+  rescue Timeout::Error, Test::Unit::AssertionFailedError => e
+    raise e, "apparmor has #{anti_test ? "" : "not "}denied the operation"
+  end
+end

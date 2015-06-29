@@ -60,8 +60,10 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser has started and loaded the startup page
     When I open the address "file:///home/amnesia/Tor Browser/synaptic.html" in the Tor Browser
     Then I see "TorBrowserSynapticManual.png" after at most 10 seconds
+    And AppArmor has not denied "/usr/local/lib/tor-browser/firefox" from opening "/home/amnesia/Tor Browser/synaptic.html"
+    Given AppArmor has not denied "/usr/local/lib/tor-browser/firefox" from opening "/home/amnesia/.gnupg/synaptic.html"
     When I open the address "file:///home/amnesia/.gnupg/synaptic.html" in the Tor Browser
-    Then I see "TorBrowserUnableToOpen.png" after at most 10 seconds
+    Then AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/home/amnesia/.gnupg/synaptic.html" after at most 10 seconds
 
   Scenario: The "Tails documentation" link on the Desktop works
     When I double-click on the "Tails documentation" link on the Desktop
