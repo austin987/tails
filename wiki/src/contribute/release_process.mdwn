@@ -476,7 +476,10 @@ Fourth, go up to the parent directory, create a `.torrent` file and
 check the generated `.torrent` files metainfo:
 
 	cd .. && \
-	mktorrent -a 'http://torrent.gresille.org/announce' "tails-i386-${VERSION}" && \
+	mktorrent \
+	  -a 'http://torrent.gresille.org/announce' \
+	  -a 'udp://tracker.coppersurfer.tk:6969'   \
+	  "tails-i386-${VERSION}" && \
 	btshowmetainfo tails-i386-$VERSION.torrent
 
 Fifth, generate detached OpenPGP signatures for every published
