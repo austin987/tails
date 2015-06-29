@@ -1036,3 +1036,14 @@ Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
     @vm.execute_successfully('. /usr/local/lib/tails-shell-library/tor.sh; tor_control_send "signal NEWNYM"')
   end
 end
+
+Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
+  next if @skip_steps_while_restoring_background
+  if min
+    time = rand(max.to_i - min.to_i + 1) + min.to_i
+  else
+    time = max.to_i
+  end
+  puts "Slept for #{time} seconds"
+  sleep(time)
+end

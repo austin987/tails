@@ -57,7 +57,7 @@ Feature: Browsing the web using the Unsafe Browser
     But checking for updates is disabled in the Unsafe Browser's configuration
     When I successfully start the Unsafe Browser
     Then the Unsafe Browser has started
-    And I wait between 60 and 120 seconds
+    And I wait 120 seconds
     And the clearnet user has not sent packets out to the Internet
     And all Internet traffic has only flowed through Tor
 
