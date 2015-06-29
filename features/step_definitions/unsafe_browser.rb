@@ -168,22 +168,8 @@ end
 
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
-  # First we open the proxy settings page to prepare it with the
-  # correct open tabs for the loop below.
-  @screen.click('UnsafeBrowserMenuButton.png')
-  @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
-  @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
-  @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
-  @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
-  sleep 0.5
-  @screen.type(Sikuli::Key.ESC)
-#  @screen.waitVanish('UnsafeBrowserPreferences.png', 10)
-  sleep 0.5
-
   socks_proxy = 'c' # Alt+c for socks proxy
   no_proxy    = 'y' # Alt+y for no proxy
-
   proxies = [[socks_proxy, 9050],
              [socks_proxy, 9061],
              [socks_proxy, 9062],
@@ -199,8 +185,12 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     # Open proxy settings and select manual proxy configuration
     @screen.click('UnsafeBrowserMenuButton.png')
     @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
-    @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
-    @screen.type("e", Sikuli::KeyModifier.ALT)
+    @screen.wait_and_click('UnsafeBrowserAdvancedSettingsButton.png', 10)
+    # Beyond the first iteration, the network tab will already be selected
+    hit, _ = @screen.waitAny(['UnsafeBrowserNetworkTabAlreadySelected.png',
+                              'UnsafeBrowserNetworkTab.png'], 10)
+    @screen.click(hit) if hit == 'UnsafeBrowserNetworkTab.png'
+    @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
     @screen.wait('UnsafeBrowserProxySettings.png', 10)
     @screen.type("m", Sikuli::KeyModifier.ALT)
 
@@ -211,9 +201,6 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     # Close settings
     @screen.type(Sikuli::Key.ENTER)
 #    @screen.waitVanish('UnsafeBrowserProxySettings.png', 10)
-    sleep 0.5
-    @screen.type(Sikuli::Key.ESC)
-#    @screen.waitVanish('UnsafeBrowserPreferences.png', 10)
     sleep 0.5
 
     # Test that the proxy settings work as they should
@@ -230,14 +217,13 @@ Then /^the Unsafe Browser has no proxy configured$/ do
   next if @skip_steps_while_restoring_background
   @screen.click('UnsafeBrowserMenuButton.png')
   @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
-  @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
-  @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
+  @screen.wait_and_click('UnsafeBrowserAdvancedSettingsButton.png', 10)
   @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
-  @screen.type("e", Sikuli::KeyModifier.ALT)
+  @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)    
   @screen.wait('UnsafeBrowserProxySettings.png', 10)
   @screen.wait('UnsafeBrowserNoProxySelected.png', 10)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
-  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
+  @screen.type("w", Sikuli::KeyModifier.CTRL)
 end
 
 Then /^the Unsafe Browser complains that no DNS server is configured$/ do
