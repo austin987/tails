@@ -163,16 +163,14 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   next if @skip_steps_while_restoring_background
   socks_proxy = 'c' # Alt+c for socks proxy
   no_proxy    = 'y' # Alt+y for no proxy
-  proxies = [[socks_proxy, 9050],
-             [socks_proxy, 9061],
-             [socks_proxy, 9062],
-             [socks_proxy, 9150],
-             [no_proxy,       0]]
+  proxies = [[no_proxy, nil, nil]]
+  socksport_lines =
+    @vm.execute_successfully('grep -w "^SocksPort" /etc/tor/torrc').stdout
+  assert(socksport_lines.size >= 4, "We got fewer than four Tor SocksPorts")
+  socksports = socksport_lines.scan(/^SocksPort\s([^:]+):(\d+)/)
+  proxies += socksports.map { |host, port| [socks_proxy, host, port] }
 
-  proxies.each do |proxy|
-    proxy_type = proxy[0]
-    proxy_port = proxy[1]
-
+  proxies.each do |proxy_type, proxy_host, proxy_port|
     @screen.hide_cursor
 
     # Open proxy settings and select manual proxy configuration
@@ -189,7 +187,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
 
     # Configure the proxy
     @screen.type(proxy_type, Sikuli::KeyModifier.ALT)  # Select correct proxy type
-    @screen.type("127.0.0.1" + Sikuli::Key.TAB + "#{proxy_port}") if proxy_type != no_proxy
+    @screen.type(proxy_host + Sikuli::Key.TAB + proxy_port) if proxy_type != no_proxy
 
     # Close settings
     @screen.type(Sikuli::Key.ENTER)
