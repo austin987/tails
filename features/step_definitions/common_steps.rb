@@ -1051,9 +1051,9 @@ end
 When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at most (\d+) seconds)?$/ do |anti_test, profile, file, time|
   next if @skip_steps_while_restoring_background
   expected_cmd_status = anti_test ? false : true
+  audit_line = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' %
+               [profile, file]
   block = Proc.new do
-    audit_line = 'apparmor="DENIED" operation="open" profile="' + profile +
-                 '" name="' + file + '"'
     cmd = @vm.execute("grep -q '#{audit_line}' /var/log/syslog")
     assert_equal(expected_cmd_status, cmd.success?)
     true
