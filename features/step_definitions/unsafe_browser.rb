@@ -177,7 +177,6 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     @screen.click('UnsafeBrowserMenuButton.png')
     @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
     @screen.wait_and_click('UnsafeBrowserAdvancedSettingsButton.png', 10)
-    # Beyond the first iteration, the network tab will already be selected
     hit, _ = @screen.waitAny(['UnsafeBrowserNetworkTabAlreadySelected.png',
                               'UnsafeBrowserNetworkTab.png'], 10)
     @screen.click(hit) if hit == 'UnsafeBrowserNetworkTab.png'
