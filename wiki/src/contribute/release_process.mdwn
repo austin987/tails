@@ -445,9 +445,13 @@ Build the final image
 Then all included files should be up-to-date and the versioned APT
 suite should be ready, so it is time to:
 
-* tag the release *again*, with all included files in
-* `git push --tags`
-*  build the final image!
+* tag the release *again*, with all included files in:
+  
+          git tag -f -u "$TAILS_SIGNATURE_KEY" \
+  	    -m "tagging version ${VERSION}" "${TAG}" && \
+          git push --tags -f
+  
+* build the final image!
 
 <a id="prepare-iuk"></a>
 
@@ -631,10 +635,14 @@ Test them with a BitTorrent client running in a different place.
 
     scp "$ISOS/tails-i386-$VERSION.torrent" \
        bittorrent.lizard: && \
-       ssh bittorrent.lizard transmission-remote --add tails-i386-$VERSION.torrent
+       ssh bittorrent.lizard \
+         transmission-remote --add tails-i386-$VERSION.torrent \
+           --find /var/lib/transmission-daemon/downloads/
 
-Publish the ISO over HTTP
--------------------------
+<a id="publish-iuk"></a>
+
+Publish the ISO and IUK over HTTP
+---------------------------------
 
 Upload the images to the primary rsync mirror. Best practice is to first
 let bittorrent.lizard download the image, and then copy it from there to
@@ -646,9 +654,16 @@ rsync.lizard:
             rsync.lizard:
     # set DIST to either 'alpha' (for RC:s) or 'stable' (for actual releases)
     ssh rsync.lizard << EOF
-      chown -R root:rsync_tails tails-i386-$VERSION
-      chmod -R u=rwX,go=rX tails-i386-$VERSION
-      sudo mv tails-i386-$VERSION /srv/rsync/tails/tails/$DIST/
+      chown -R root:rsync_tails \
+         tails-i386-$VERSION \
+         Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk && \
+      chmod -R u=rwX,go=rX \
+         tails-i386-$VERSION \
+         Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk && \
+      sudo mv tails-i386-$VERSION \
+              /srv/rsync/tails/tails/$DIST/ && \
+      sudo mv Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk \
+              /srv/rsync/tails/tails/$DIST/iuk/
     EOF
 
 Update the time in `project/trace` file on the primary rsync mirror
@@ -660,16 +675,10 @@ and on the live wiki (even for a release candidate):
 	echo $TRACE_TIME > "$MASTER_CHECKOUT/wiki/src/inc/trace" &&
 	(
 	   cd "$MASTER_CHECKOUT" && \
-	   git commit wiki/src/inc/trace -m "Updating trace file after uploading $VERSION."
+	   git commit wiki/src/inc/trace \
+	      -m "Updating trace file after uploading $VERSION." && \
+	   git push origin master
 	)
-
-<a id="publish-iuk"></a>
-
-Publish the IUKs
-----------------
-
-Same as for the ISO, but the IUKs should land into
-`/srv/rsync/tails/tails/$DIST/iuk/`.
 
 Wait for the HTTP mirrors to catch up
 -------------------------------------
@@ -734,9 +743,10 @@ Update the [[support/known_issues]] page:
 - Remove older known issues that are fixed by the new release.
 
 Write the announcement for the release in
-`news/version_$TAG.mdwn`, including:
+`wiki/src/news/version_$TAG.mdwn`, including:
 
-- The content of the "Changes" section must live in `inc/release_notes/$TAG.mdwn`.
+- The content of the "Changes" section must live in
+  `wiki/src/inc/release_notes/$TAG.mdwn`.
 - Update the `meta title` directive.
 - Update the `meta date` directive.
 - Make sure there's an `announce` tag to have an email sent to the
@@ -748,7 +758,9 @@ Write the announcement for the release in
 - Document known issues.
 
 Write an announcement listing the security bugs affecting the previous
-version in `security/` in order to let the users of the old versions
+version in
+`wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION}.mdwn`
+in order to let the users of the old versions
 know that they have to upgrade. Date it a few days before the ISO
 image to be released was *built*. Including:
 
