@@ -371,7 +371,8 @@ signatures, like the defaults we set in Tails:
 Tag the release in Git
 ======================
 
-	git tag -u "$TAILS_SIGNATURE_KEY" -m "tagging version ${VERSION}" "${TAG}"
+	git tag -u "$TAILS_SIGNATURE_KEY" \
+	  -m "tagging version ${VERSION}" "${TAG}" && \
 	git push --tags
 
 (Pushing the tag is needed so that the APT repository is updated, and
@@ -455,12 +456,14 @@ Generate the OpenPGP signatures and Torrents
 
 First, create a directory with a suitable name and go there:
 
-	mkdir "$ISOS/tails-i386-$VERSION" && cd "$ISOS/tails-i386-$VERSION"
+	mkdir "$ISOS/tails-i386-$VERSION" && \
+	cd "$ISOS/tails-i386-$VERSION"
 
 Second, copy the built image to this brand new directory.
 Then, rename it:
 
-	mv "$ARTIFACTS/tails-i386-${RELEASE_BRANCH}-$VERSION-"*".iso" "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso"
+	mv "$ARTIFACTS/tails-i386-${RELEASE_BRANCH}-$VERSION-"*".iso" \
+	   "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
