@@ -276,8 +276,6 @@ CUCUMBER_COMMAND="cucumber ${@}"
 if [ -z "$LOG_FILE" ]; then
     $CUCUMBER_COMMAND
 else
+    trap "remove_control_chars_from '$LOG_FILE'" EXIT HUP INT QUIT TERM
     script --quiet --flush --return --command "$CUCUMBER_COMMAND" "$LOG_FILE" | cat
-    RET="$?"
-    remove_control_chars_from "$LOG_FILE"
-    exit "$RET"
 fi

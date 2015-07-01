@@ -476,7 +476,10 @@ Fourth, go up to the parent directory, create a `.torrent` file and
 check the generated `.torrent` files metainfo:
 
 	cd .. && \
-	mktorrent -a 'http://torrent.gresille.org/announce' "tails-i386-${VERSION}" && \
+	mktorrent \
+	  -a 'http://torrent.gresille.org/announce' \
+	  -a 'udp://tracker.coppersurfer.tk:6969'   \
+	  "tails-i386-${VERSION}" && \
 	btshowmetainfo tails-i386-$VERSION.torrent
 
 Fifth, generate detached OpenPGP signatures for every published
@@ -733,6 +736,7 @@ Update the [[support/known_issues]] page:
 Write the announcement for the release in
 `news/version_$TAG.mdwn`, including:
 
+- The content of the "Changes" section must live in `inc/release_notes/$TAG.mdwn`.
 - Update the `meta title` directive.
 - Update the `meta date` directive.
 - Make sure there's an `announce` tag to have an email sent to the
@@ -800,7 +804,9 @@ Testing
 1. Email <tails-testers@boum.org> to ask them to test the tentative ISO.
 1. Set up a Gobby document and copy the [[manual test
    suite|contribute/release_process/test]] in it.
-1. Email to <tails@boum.org> and potential contributors that tests may start:
+1. Email to <tails@boum.org> and potential contributors (see
+   `manual_testers.mdwn` in the internal Git repository) that tests
+   may start:
    - make it clear what's the deadline
    - make it clear where and how you expect to get feedback
    - attach the Torrent
@@ -840,9 +846,6 @@ repository like this:
       git merge "$RELEASE_BRANCH" && \
       git push origin master:master \
     )
-
-... and ask <root@boum.org> to refresh the ikiwiki wrappers for
-our website.
 
 Bug tracker
 -----------
