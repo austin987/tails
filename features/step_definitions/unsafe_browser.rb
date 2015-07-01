@@ -209,7 +209,7 @@ Then /^the Unsafe Browser has no proxy configured$/ do
   @screen.wait_and_click('UnsafeBrowserAdvancedSettingsButton.png', 10)
   @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
   @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)    
-  @screen.wait('UnsafeBrowserProxySettings.png', 10)
+  @screen.wait('UnsafeBrowserProxySettingsWindow.png', 10)
   @screen.wait('UnsafeBrowserNoProxySelected.png', 10)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
   @screen.type("w", Sikuli::KeyModifier.CTRL)
