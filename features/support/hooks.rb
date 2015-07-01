@@ -109,7 +109,7 @@ end
 
 # AfterScenario
 After('@product') do |scenario|
-  if (scenario.status != :passed)
+  if scenario.failed?
     time_of_fail = Time.now - TIME_AT_START
     secs = "%02d" % (time_of_fail % 60)
     mins = "%02d" % ((time_of_fail / 60) % 60)
