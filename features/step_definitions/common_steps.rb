@@ -1004,3 +1004,35 @@ When /^I accept to import the key with Seahorse$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("TorBrowserOkButton.png", 10)
 end
+
+Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
+  if with_vidalia
+    assert_equal('gnome', @theme, "Vidalia is not available in the #{@theme} theme.")
+    begin
+      step 'process "vidalia" is running'
+    rescue Test::Unit::AssertionFailedError
+      STDERR.puts "Vidalia was not running. Attempting to start Vidalia..." if $config["DEBUG"]
+      @vm.spawn('restart-vidalia')
+      step 'process "vidalia" is running within 15 seconds'
+    end
+    # Sometimes Sikuli gets confused and recognizes the yellow-colored vidalia systray
+    # icon as the green one. This has been seen when Vidalia needed to be
+    # restarted in the above 'begin' block.
+    #
+    # try_for is used here for that reason, otherwise this step may fail
+    # because sikuli presumaturely right-clicked the Vidalia icon and the 'New
+    # Identity' option isn't clickable yet..
+    try_for(3 * 60) do
+      # Let's be *sure* that vidalia is still running. I'd hate to spend up to
+      # three minutes waiting for an icon that isn't there because Vidalia, for
+      # whatever reason, is no longer running...
+      step 'process "vidalia" is running'
+      @screen.wait_and_right_click('VidaliaSystrayReady.png', 10)
+      @screen.wait_and_click('VidaliaMenuNewIdentity.png', 10)
+    end
+    @screen.wait('VidaliaNewIdentityNotification.png', 20)
+    @screen.waitVanish('VidaliaNewIdentityNotification.png', 60)
+  else
+    @vm.execute_successfully('. /usr/local/lib/tails-shell-library/tor.sh; tor_control_send "signal NEWNYM"')
+  end
+end
