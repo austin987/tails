@@ -141,7 +141,7 @@ end
 
 After('@product', '@check_tor_leaks') do |scenario|
   @tor_leaks_sniffer.stop
-  if (scenario.status == :passed)
+  if scenario.passed?
     if @bridge_hosts.nil?
       expected_tor_nodes = get_all_tor_nodes
     else
