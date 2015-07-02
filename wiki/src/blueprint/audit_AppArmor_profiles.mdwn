@@ -2,84 +2,26 @@ Corresponding ticket: [[!tails_ticket 8007]]
 
 [[!toc levels=2]]
 
-Things to check
+Remaining to do
 ===============
 
-* the kludges needed to make them work with aufs
-* access to files via alternate paths specific to Debian Live systems,
-  e.g.
-  - check `private-files` and `private-files-strict` abstractions, in
-    particular wrt. whatever can be accessed via the following paths
-  - `/live/persistence/TailsData_unlocked/`
-  - `/lib/live/mount/rootfs/`
-  - `/lib/live/mount/overlay/`
-    * we add `/lib/live/mount/overlay/home/` to `HOMEDIRS`, so at
-      least `$HOME` is OK
-* access to webcam
-* access to microphone (can we easily block that while still allowing
-  sound output?)
-* wide-open access to `$HOME` -- everything checked, potential issues
-   and remaining todo items follow:
-  - `abstractions/ubuntu-browsers.d/{java,user-files}` give read-write
-    access to `$HOME` and its content: where are they used?
-* wide-open access to `$HOME` except blacklist -- everything checked,
-  potential issues and remaining todo items follow:
-  - Evince, Totem and their previewers have read-write access to
-    `@{HOME}/**`: perhaps we can make it a bit tighter, e.g.
-    using a regexp that doesn't include dotfiles (see `user-write`),
-    and read-only everywhere except for specific directories? Or is
-    the blacklist used by these profiles tight enough?
-  - What else uses `private-files` and
-    `private-files-strict` abstractions?
-  - Shall we add stuff to these blacklist?
-* wide-open access to `/lib/**` or similar, that might grant access to
-  persistent files -- everything checked, potential issues and
-  remaining todo items follow:
-  - the `base` abstraction has things like `/lib{,32,64}/** r`
-  - the `launchpad-integration` abstraction has
-    `/{,usr/}lib*/{,**/}*.so{,.*} m`
-  - the `ubuntu-helpers` abstraction has
-    `/{,usr/,usr/local/}lib{,32,64}/{,**/}*.so{,.*} m`
-* jvoisin's profile hardening
-  - Pidgin
-    * drop `bash` abstraction: has been here since the first version
-      of the profile; that abstraction is not too scary, but... what
-      is it useful for?
-    * disable video and audio visualization capabilities: if it
-      doesn't break e.g. accessibility or sound notifications, why not
-  - `/usr/bin/evince`
-    * drop `bash` abstraction: same as Pidgin
-    * drop `audio` and `ubuntu-media-players` abstraction:  note that
-      PDF can embed videos; do we care?
-    * drop `ubuntu-console-browsers`, `ubuntu-console-email` and
-      `ubuntu-gnome-terminal` abstractions: I doubt it's useful to
-      anyone in Tails, indeed
-    * disallow `/usr/bin/yelp`: if it breaks displaying Evince help,
-      we don't want that
-    * disallow `/usr/bin/bug-buddy`: Ubuntu-specific, we don't care
-    * disallow `/usr/bin/exo-open` and a bunch of file managers that
-      are not shipped in Tails:  not worth maintaining a delta
-    * disallow `/usr/bin/gedit`: a comment in the profile says it's
-      useful "for text attachments", and given it's inheriting the
-      current profile it's not scary enough to be worth potentially
-      breaking things
-  - `/usr/bin/evince-previewer`
-    * same changes as in `/usr/bin/evince` profile, same comments
-    * drop `ubuntu-browsers` abstraction: it doesn't cover Tor Browser
-      anyway, so why not
-    * drop `ubuntu-email` abstraction: do we care about Evince
-      previewer being able to start Claws Mail? What is it useful for?
-    * disallow networking access: the Debian kernel doesn't support
-      such rules anyway, so that would be a no-op
-* `config/chroot_local-includes/usr/share/tails/torbrowser-AppArmor-profile.patch`
-
-Things to keep in mind
-======================
-
-* Beware not to break assistive technologies (accessibility).
+See [[blueprint/harden_AppArmor_profiles]].
 
 Checked already
 ===============
+
+Could be improved later
+-----------------------
+
+See [[blueprint/harden_AppArmor_profiles]].
+
+Currently OK
+------------
+
+As of 20150604, some of those are OK in
+`bugfix/8007-AppArmor-hardening`, but not in current `stable`.
+Unless they're worth special treatment, all changes made as a result
+of this audit should land together into Tails 1.5.
 
 * Ux rules don't sanitize `$PATH`
   (<https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1045986>) =>
@@ -91,7 +33,7 @@ Checked already
   - the Tor Browser one: **OK**, the only `Ux` rule it has is about an
     ELF executable
   - Pidgin profile: was vulnerable via `/usr/local/bin/tor-browser`,
-    fixed in `bugfix/8007-AppArmor-hardening`
+    fixed in Tails 1.4
   - `abstractions/tor`: only `Ux` rules are about ELF executables
   - no other relevant `Ux` rule are present in the profiles we ship
 * use of `sanitized_helper` [isn't very
@@ -121,3 +63,70 @@ Checked already
     the `$HOME`, Desktop and download directories; combined with the
     `private-files-strict` abstraction, it is probably as tight as we
     can do without substantially harming UX
+  - `abstractions/ubuntu-browsers.d/{java,user-files}` give read-write
+    access to `$HOME` and its content, but they're not used anywhere
+* access to webcam:
+  - `abstractions/video` gives access via `/sys/class/video4linux/` so
+    some devices; it's not used in any profile we ship
+  - most webcams appear as `/dev/video0` or similar; `rgrep -i video`
+    shows that no profile we ship gives access to such files
+* access to files via alternate paths specific to Debian Live systems:
+  - `/live/persistence/TailsData_unlocked/`: we have one automatic
+    test for this in `pidgin.feature`; the tested access is denied
+    because that path is not explicitly allowed, rather than because
+    it's explicitly denied, but that's how AppArmor works and that's
+    good enough.
+  - we don't have have any symlink between `/live` and `/lib/live`
+    anymore
+  - `/lib/live/mount/rootfs/` and `/lib/live/mount/medium/` should be
+    OK: they only contain stuff that's publicly available in our ISO
+    anyway, and DAC still applies.
+  - there's no alternate path to `/live/persistence`
+  - `/lib/live/mount/overlay/` -- until Tails 1.4, we have _two_
+    `tmpfs` mounted there, including an empty one that hides the
+    other's content (but we should not rely on this for security).
+    Fixed on the `bugfix/8007-AppArmor-hardening` branch with
+    [[!tails_gitweb_commit bc491c9]]. Note that there's also
+    `/live/overlay` (that's a symlink to `/lib/live/mount/overlay`,
+    created in [[!tails_gitweb_commit 3233da6]]). Follow-up fixes and
+    corresponding new automatic tests (in `torified_browsing.feature`,
+    `pidgin.feature`, `evince.feature` and `totem.feature`) were added
+    on `bugfix/8007-AppArmor-hardening`; the full test suite passes,
+    and the new bits were validated by manual testing.
+  - persistence in read-only mode doesn't bring any additional
+    alternate path
+  - `private-files` and `private-files-strict` abstractions do the
+    right thing wrt. `/lib/live/mount/overlay/home/`, since we add it
+    to @{HOMEDIRS}
+* wide-open access to `/lib/**` or similar, that might grant access to
+  files via alternate paths -- everything checked, potential issues were:
+  - the `base` and `ubuntu-helpers` abstraction have things
+    like `/lib{,32,64}/** r`: this was patched when introducing
+    aliases ([[!tails_gitweb_commit 6e48b6d]])
+  - the `launchpad-integration` abstraction has things like `/** rwlk`
+    and `/{,usr/}lib*/{,**/}*.so{,.*} m`; it's harmless since it only
+    gives such rights to an executable we don't ship, and it's
+    included by the Pidgin profile only, which for good measure we
+    disabled with [[!tails_gitweb_commit 551d372]] on
+    `bugfix/8007-AppArmor-hardening`
+* the kludges needed to make them work with aufs: everything replaced
+  with aliases (and other kludges) in [[!tails_gitweb_commit 6e48b6d]]
+* wide-open access to `$HOME` except blacklist -- everything checked,
+  in particular:
+  - Apart of Evince and Totem profiles (discussed elsewhere), only
+    Pidgin uses one of the `private-files` and `private-files-strict`
+    abstractions, but it doesn't have any wide-open access rules like
+    Evince or Totem have.
+* `config/chroot_local-includes/usr/share/tails/torbrowser-AppArmor-profile.patch`
+  - can tell that it's running in Tails: unavoidable in the current
+    state of things
+  - quite some avenues for fingerprinting of the hardware being used:
+    unavoidable without adding virtualization to the mix
+  - gives access to `machine-id`: in the current state of things, that
+    tells what exact version of Tails is running; depending on how
+    [[!tails_ticket 7100]] is addressed, this may become worse; such
+    access was allowed so that the browser can play sound with
+    PulseAudio (commit 371ba40 in our torbrowser-launcher Git repo);
+    if such access is denied, then Tor Browser plays sound directly
+    with Alsa, which makes UX worse... and breaks our automated tests.
+    We'll deal with that as part of [[!tails_ticket 7100]].

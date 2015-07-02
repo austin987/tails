@@ -80,12 +80,20 @@ each time they want to open or save one, without leaving the AppArmor
 profiles wide-open and then much less useful.
 
 Solutions to this problem are work-in-progress in various upstream
-places (e.g. [for AppArmor](https://lists.ubuntu.com/archives/apparmor/2015-March/007415.html) and [for GNOME sandboxed
-applications](https://mail.gnome.org/archives/gnome-os-list/2015-March/msg00010.html)).
-The idea is
-generally to introduce a privileged mediation layer between
-applications, the GTK file chooser and the filesystem. So, some day we
-can solve this problem in better ways, but we're not there yet.
+places, e.g.:
+
+* [for
+  AppArmor](https://lists.ubuntu.com/archives/apparmor/2015-March/007415.html)
+* for GNOME sandboxed applications:
+  - [Initial ideas on portals for file
+    access](https://mail.gnome.org/archives/gnome-os-list/2015-March/msg00010.html)
+    thread on gnome-os-list
+  - <https://wiki.gnome.org/Design/OS/Sharing>
+
+The idea is generally to introduce a privileged mediation layer
+between applications, the GTK file chooser and the filesystem. So,
+some day we can solve this problem in better ways, but we're not
+there yet.
 
 Tor Browser
 -----------
@@ -161,7 +169,7 @@ in this area.
 Isolating more types of resources
 ---------------------------------
 
-Once AppArmor 2.9 is released and the corresponding kernel patches are
+With AppArmor 2.9, once the corresponding kernel patches are
 merged into Linux mainline, we will get support for mediating many
 more types of resources: D-Bus calls, sockets, signals and so on.
 
@@ -318,13 +326,10 @@ overlayfs
 ---------
 
 [overlayfs](https://git.kernel.org/cgit/linux/kernel/git/mszeredi/vfs.git/tree/Documentation/filesystems/overlayfs.txt?h=overlayfs.current)
-is another kind of union filesystem, that seems to have much greater
-chances than aufs to be merged into Linux mainline some day.
+is another kind of union filesystem. It has been merged in
+Linux mainline, and is supported by live-boot 5.
 overlayfs works differently from aufs, in ways that give hope that it
 might be easier for AppArmor to support it natively.
-
-Once it's merged in Linux mainline, Debian Live could be made to
-support overlayfs as an alternative to aufs.
 
 Some ongoing work on AppArmor (labeling, extended conditionals) will
 help support overlayfs. Time will tell whether the result meets

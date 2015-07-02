@@ -1,21 +1,40 @@
-Then /^the shipped Tails (signing|Debian repository) key will be valid for the next (\d+) months$/ do |key_type, max_months|
+def shipped_openpgp_keys
+  shipped_gpg_keys = @vm.execute_successfully('gpg --batch --with-colons --fingerprint --list-key', LIVE_USER).stdout
+  openpgp_fingerprints = shipped_gpg_keys.scan(/^fpr:::::::::([A-Z0-9]+):$/).flatten
+  return openpgp_fingerprints
+end
+
+Then /^the OpenPGP keys shipped with Tails will be valid for the next (\d+) months$/ do |months|
   next if @skip_steps_while_restoring_background
-  case key_type
-  when 'signing'
-    sig_key_fingerprint = TAILS_SIGNING_KEY
+  invalid = Array.new
+  shipped_openpgp_keys.each do |key|
+    begin
+      step "the shipped OpenPGP key #{key} will be valid for the next #{months} months"
+    rescue Test::Unit::AssertionFailedError
+      invalid << key
+      next
+    end
+  end
+  assert(invalid.empty?, "The following key(s) will not be valid in #{months} months: #{invalid.join(', ')}")
+end
+
+Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be valid for the next (\d+) months$/ do |fingerprint, max_months|
+  next if @skip_steps_while_restoring_background
+  if fingerprint
     cmd = 'gpg'
     user = LIVE_USER
-  when 'Debian repository'
-    sig_key_fingerprint = TAILS_DEBIAN_REPO_KEY
+  else
+    fingerprint = TAILS_DEBIAN_REPO_KEY
     cmd = 'apt-key adv'
     user = 'root'
-  else
-    raise 'Unknown key type #{key_type}'
   end
-  shipped_sig_key_info = @vm.execute_successfully("#{cmd} --batch --list-key #{sig_key_fingerprint}", user).stdout
-  expiration_date = Date.parse(/\[expires: ([0-9-]*)\]/.match(shipped_sig_key_info)[1])
-  assert((expiration_date << max_months.to_i) > DateTime.now,
-         "The shipped signing key will expire within the next #{max_months} months.")
+  shipped_sig_key_info = @vm.execute_successfully("#{cmd} --batch --list-key #{fingerprint}", user).stdout
+  m = /\[expire[ds]: ([0-9-]*)\]/.match(shipped_sig_key_info)
+  if m
+    expiration_date = Date.parse(m[1])
+    assert((expiration_date << max_months.to_i) > DateTime.now,
+           "The shipped key #{fingerprint} will not be valid #{max_months} months from now.")
+  end
 end
 
 Then /^I double-click the Report an Error launcher on the desktop$/ do
@@ -128,13 +147,16 @@ Then /^the VirtualBox guest modules are available$/ do
          "The vboxguest module is not available.")
 end
 
-def shared_pdf_dir_on_guest
-  "/tmp/shared_pdf_dir"
-end
-
 Given /^I setup a filesystem share containing a sample PDF$/ do
   next if @skip_steps_while_restoring_background
-  @vm.add_share(MISC_FILES_DIR, shared_pdf_dir_on_guest)
+  shared_pdf_dir_on_host = "#{$config["TMPDIR"]}/shared_pdf_dir"
+  @shared_pdf_dir_on_guest = "/tmp/shared_pdf_dir"
+  FileUtils.mkdir_p(shared_pdf_dir_on_host)
+  Dir.glob("#{MISC_FILES_DIR}/*.pdf") do |pdf_file|
+    FileUtils.cp(pdf_file, shared_pdf_dir_on_host)
+  end
+  add_after_scenario_hook { FileUtils.rm_r(shared_pdf_dir_on_host) }
+  @vm.add_share(shared_pdf_dir_on_host, @shared_pdf_dir_on_guest)
 end
 
 Then /^the support documentation page opens in Tor Browser$/ do
@@ -147,7 +169,7 @@ Then /^MAT can clean some sample PDF file$/ do
   for pdf_on_host in Dir.glob("#{MISC_FILES_DIR}/*.pdf") do
     pdf_name = File.basename(pdf_on_host)
     pdf_on_guest = "/home/#{LIVE_USER}/#{pdf_name}"
-    step "I copy \"#{shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
+    step "I copy \"#{@shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
     check_before = @vm.execute_successfully("mat --check '#{pdf_on_guest}'",
                                             LIVE_USER).stdout
     assert(check_before.include?("#{pdf_on_guest} is not clean"),
