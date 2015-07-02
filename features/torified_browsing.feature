@@ -20,9 +20,9 @@ Feature: Browsing the web using the Tor Browser
     And I capture all network traffic
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
-    And I open the LAN web server in the Tor Browser
+    And I open a page on the LAN web server in the Tor Browser
     Then I see "TorBrowserUnableToConnect.png" after at most 20 seconds
-    And no traffic has flowed to the LAN web server
+    And no traffic has flowed to the LAN
 
   @check_tor_leaks
   Scenario: The Tor Browser directory is usable

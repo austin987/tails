@@ -1055,7 +1055,7 @@ EOF
   end
 end
 
-When /^I open the LAN web server in the (.*)$/ do |browser|
+When /^I open a page on the LAN web server in the (.*)$/ do |browser|
   next if @skip_steps_while_restoring_background
   step "I open the address \"#{@web_server_url}\" in the #{browser}"
 end
