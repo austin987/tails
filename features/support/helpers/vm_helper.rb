@@ -1,6 +1,9 @@
 require 'libvirt'
 require 'rexml/document'
 
+class ExecutionFailed < StandardError
+end
+
 class VMNet
 
   attr_reader :net_name, :net
@@ -367,7 +370,12 @@ EOF
 
   def execute_successfully(cmd, user = "root")
     p = execute(cmd, user)
-    assert_vmcommand_success(p)
+    begin
+      assert_vmcommand_success(p)
+    rescue Test::Unit::AssertionFailedError => e
+      puts e
+      raise ExecutionFailed
+    end
     return p
   end
 

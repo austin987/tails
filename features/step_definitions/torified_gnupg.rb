@@ -57,7 +57,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
       "gpg --batch #{importopts} --recv-key '#{keyid}'",
       LIVE_USER)
       break
-    rescue Test::Unit::AssertionFailedError
+    rescue ExecutionFailed
       tries += 1
       STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
       step 'I force Tor to use a new circuit'
