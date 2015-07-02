@@ -63,6 +63,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
       step 'I force Tor to use a new circuit'
     end
   end
+  assert(tries <= $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Fetching keys with the GnuPG CLI did not succeed after retrying #{tries} times")
 end
 
 When /^the GnuPG fetch is successful$/ do
