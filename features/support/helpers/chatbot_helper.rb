@@ -16,10 +16,7 @@ class ChatBot
     @otr_key_file << @otr_key
     @otr_key_file.close
 
-    # XXX: Once #9066 we should remove the convertkey.py script from
-    # our tree and use the one bundled in python-potr instead.
-    cmd_helper(["#{GIT_DIR}/features/scripts/convertkey.py",
-                @otr_key_file.path])
+    cmd_helper(['/usr/bin/convertkey', @otr_key_file.path])
     cmd_helper(["mv", "#{@otr_key_file.path}3", @otr_key_file.path])
 
     cmd = [

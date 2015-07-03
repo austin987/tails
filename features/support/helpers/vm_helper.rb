@@ -82,6 +82,19 @@ class VM
     end
   end
 
+  def set_hardware_clock(time)
+    assert(not(is_running?), 'The hardware clock cannot be set when the ' +
+                             'VM is running')
+    assert(time.instance_of?(Time), "Argument must be of type 'Time'")
+    adjustment = (time - Time.now).to_i
+    domain_rexml = REXML::Document.new(@domain.xml_desc)
+    clock_rexml_element = domain_rexml.elements['domain'].add_element('clock')
+    clock_rexml_element.add_attributes('offset' => 'variable',
+                                       'basis' => 'utc',
+                                       'adjustment' => adjustment.to_s)
+    update(domain_rexml.to_s)
+  end
+
   def set_network_link_state(state)
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/devices/interface/link'].attributes['state'] = state
