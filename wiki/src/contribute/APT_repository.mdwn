@@ -214,7 +214,7 @@ operation must be done on the APT suites.
         git checkout "$DST" && \
         git merge "$SRC" && \
         ssh reprepro@incoming.deb.tails.boum.org \
-             tails-merge-suite "$SRC" "$DST" && \
+             tails-merge-suite "$SRC" "$DST"
 
    3. Restore the `config/base_branch` if needed:
 
@@ -309,15 +309,8 @@ Then, the APT suite corresponding to the branch that was used to
 prepare the release must be copied to the new empty APT suite that
 just appeared:
 
-If this is a major release:
-
 	$ ssh reprepro@incoming.deb.tails.boum.org \
-	     tails-merge-suite testing $TAG
-
-Else, if this is a point-release:
-
-	$ ssh reprepro@incoming.deb.tails.boum.org \
-	     tails-merge-suite stable $TAG
+	     tails-merge-suite "$RELEASE_BRANCH" "$TAG"
 
 <a id="workflow-post-release"></a>
 
