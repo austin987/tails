@@ -991,6 +991,7 @@ this, and skip what does not make sense for a RC.
 
         bare_repo=$(mktemp -d)
         (cd "$MASTER_CHECKOUT" && git fetch) && \
+        (cd "$MASTER_CHECKOUT" && git submodule update) && \
         git clone --bare --reference "$MASTER_CHECKOUT" \
            boum_org_amnesia@webmasters.boum.org:wiki.git \
            "$bare_repo" && \
@@ -998,11 +999,12 @@ this, and skip what does not make sense for a RC.
            --repo "$bare_repo" && \
         rm -rf "$bare_repo"
 
-1. Pull `master` back and merge it into `devel`.
+1. Pull `master` back and merge it into `stable`, and in turn into
+   `devel`, `experimental` and `feature/jessie`.
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
    repository documentation.
-1. Push the resulting `devel` branch.
+1. Push the resulting branches.
 1. If this was a major release, then reset experimental:
    - take note of branches merged into `experimental`, but not into
      `devel`:
