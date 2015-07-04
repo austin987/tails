@@ -15,6 +15,12 @@ Feature: Browsing the web using the Unsafe Browser
     And available upgrades have been checked
     And I save the state so the background can be restored next scenario
 
+  Scenario: The Unsafe Browser can access the LAN
+    Given a web server is running on the LAN
+    When I successfully start the Unsafe Browser
+    And I open a page on the LAN web server in the Unsafe Browser
+    Then I see "UnsafeBrowserHelloLANWebServer.png" after at most 20 seconds
+
   Scenario: Starting the Unsafe Browser works as it should.
     When I successfully start the Unsafe Browser
     Then the Unsafe Browser runs as the expected user
