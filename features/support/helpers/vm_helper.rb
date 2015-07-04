@@ -37,6 +37,11 @@ class VMNet
     @net.bridge_name
   end
 
+  def bridge_ip_addr
+    net_xml = REXML::Document.new(@net.xml_desc)
+    net_xml.elements['network/ip'].attributes['address']
+  end
+
   def bridge_mac
     File.open("/sys/class/net/#{bridge_name}/address", "rb").read.chomp
   end
