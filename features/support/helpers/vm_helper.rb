@@ -1,7 +1,7 @@
 require 'libvirt'
 require 'rexml/document'
 
-class ExecutionFailed < StandardError
+class ExecutionFailedInVM < StandardError
 end
 
 class VMNet
@@ -374,7 +374,7 @@ EOF
       assert_vmcommand_success(p)
     rescue Test::Unit::AssertionFailedError => e
       puts e
-      raise ExecutionFailed
+      raise ExecutionFailedInVM
     end
     return p
   end
