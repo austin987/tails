@@ -69,10 +69,7 @@ Given /^the computer is set to boot in UEFI mode$/ do
   @os_loader = 'UEFI'
 end
 
-class ISOHybridUpgradeNotSupported < StandardError
-end
-
-class EmptyDeviceUpgradeNotSupported < StandardError
+class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
@@ -92,10 +89,8 @@ def usb_install_helper(name)
 #  # when it should be /dev/sda1
 
   @screen.wait_and_click('USBCreateLiveUSB.png', 10)
-  if @screen.exists("USBSuggestsInstall.png")
-    raise ISOHybridUpgradeNotSupported
-  elsif @screen.exists("USBCannotUpgrade.png")
-    raise EmptyDeviceUpgradeNotSupported
+  if @screen.exists("USBCannotUpgrade.png")
+    raise UpgradeNotSupported
   end
   @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
   @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
@@ -154,9 +149,7 @@ When /^I try a "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   begin
     step "I \"Clone & Upgrade\" Tails to USB drive \"#{name}\""
-  rescue ISOHybridUpgradeNotSupported
-    # this is what we expect
-  rescue EmptyDeviceUpgradeNotSupported
+  rescue UpgradeNotSupported
     # this is what we expect
   else
     raise "The USB installer should not succeed"
@@ -167,9 +160,7 @@ When /^I try to "Upgrade from ISO" USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   begin
     step "I do a \"Upgrade from ISO\" on USB drive \"#{name}\""
-  rescue ISOHybridUpgradeNotSupported
-    # this is what we expect
-  rescue EmptyDeviceUpgradeNotSupported
+  rescue UpgradeNotSupported
     # this is what we expect
   else
     raise "The USB installer should not succeed"
@@ -178,7 +169,7 @@ end
 
 When /^I am suggested to do a "Clone & Install"$/ do
   next if @skip_steps_while_restoring_background
-  @screen.find("USBSuggestsInstall.png")
+  @screen.find("USBCannotUpgrade.png")
 end
 
 When /^I am told that the destination device cannot be upgraded$/ do
