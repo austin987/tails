@@ -4,9 +4,9 @@ When /^I query the whois directory service for "([^"]+)"$/ do |domain|
   until tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
     begin
       @vm_execute_res = @vm.execute_successfully("whois '#{domain}'", LIVE_USER)
-      assert(@vm_execute_res.stdout.downcase[domain])
+      assert(!@vm_execute_res.stdout['LIMIT EXCEEDED'])
       break
-    rescue ExecutionFailedInVM, Test::Unit::AssertionFailedError
+    rescue Test::Unit::AssertionFailedError
       tries += 1
       STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
       step 'I force Tor to use a new circuit'
