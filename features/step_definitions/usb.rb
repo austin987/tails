@@ -202,7 +202,6 @@ end
 Given /^I create a persistent partition with password "([^"]+)"$/ do |pwd|
   next if @skip_steps_while_restoring_background
   step 'I start "ConfigurePersistentVolume" via the GNOME "Tails" applications menu'
-  @screen.wait_for_gnome_window('PersistenceWizardWindow.png', 40)
   @screen.wait('PersistenceWizardStart.png', 20)
   @screen.type(pwd + "\t" + pwd + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)
@@ -606,7 +605,6 @@ end
 When /^I delete the persistent partition$/ do
   next if @skip_steps_while_restoring_background
   step 'I start "DeletePersistentVolume" via the GNOME "Tails" applications menu'
-  @screen.wait_for_gnome_window("PersistenceWizardWindow.png", 40)
   @screen.wait("PersistenceWizardDeletionStart.png", 20)
   @screen.type(" ")
   @screen.wait("PersistenceWizardDone.png", 120)
