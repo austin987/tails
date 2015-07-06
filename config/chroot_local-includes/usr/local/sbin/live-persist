@@ -82,22 +82,6 @@ dbus_udisks_get_attribute ()
 		grep -e "${re}" | sed "s|${re}|\1|"
 }
 
-# We override the following two functions from live-helpers since old
-# blkid (i.e. util-linux and libblkid1) doesn't support GPT. We use dbus
-# instead (which should be available in user-space).
-get_gpt_name ()
-{
-	local dev="${1}"
-	dbus_udisks_get_attribute ${dev} partition-label
-}
-
-is_gpt_device ()
-{
-	local dev="${1}"
-	[ "$(dbus_udisks_get_attribute ${dev} partition-scheme)" = "gpt" ]
-}
-
-
 # We override live-boot's logging facilities to get more useful error messages
 log_warning_msg ()
 {
