@@ -10,6 +10,29 @@ point-of-view, the state of our master branch. Let's not pretend we
 have not forked liveusb-creator, and admit we are now upstream for our
 own version.
 
+The master branch must always be the one that targets current Tails
+ (in order to avoid confusing Tails contributors who don't need to 
+ learn a new Git workflow). That's what we have always done, and right 
+ now master is indeed targeting Wheezy.
+
+But that's not enough, since we also need to put releases out with code 
+that works on current Debian testing/sid. So, we'll be maintaining 
+several upstream release branches in parallel, each with their own major 
+version number:
+
+ * for releases that target Wheezy:
+   * version = 3.x
+   * tag = tails-installer_3.x 
+ * for work and releases that target Jessie (and, as long as compatible,\
+   that target testing/sid as well):
+   * branch = feature/jessie (that's what we've been doing so far)
+   * version = 4.x
+   * tag = tails-installer_4.x
+    
+Once we can't anymore support both Jessie and testing/sid with the same 
+codebase, we'll fork a new upstream release branch that target Stretch, 
+it'll be called feature/stretch, use version 5.x, etc.
+
 Still, most of the time, we will be releasing -N "Debian"-specific
 packages, that really are packaged Git snapshots, rather than new
 "upstream" releases. Only when we really need it, we will update the
@@ -17,6 +40,12 @@ packages, that really are packaged Git snapshots, rather than new
 
 Topic branches
 ==============
+
+In practice, it's expected that Tails contributors submit bugfix and 
+feature branches forked off master, because they want them part of next 
+Tails release. Hence, it will happen that code lands into master first, 
+and in turn into a new 3.x upstream release, before it lands into 
+feature/jessie and in turn into a new 4.x upstream release. 
 
 For how to package `bugfix` and `feature`, see
 [[the dedicated page|topic_branch]].
@@ -26,8 +55,8 @@ Generate a new upstream tarball
 
 **If needed** (that is, basically if dpkg-source complains, when
 running gbp buildpackage below, that it cannot represent changes in
-binary files), generate a new upstream tarball from the tip of our
-master branch.
+binary files), generate a new upstream tarball from the tip of the
+upstream branch.
 
 The new upstream version should be something like `3.11.6+tails1`:
 only increment the number after `+tails` if the new release is still
