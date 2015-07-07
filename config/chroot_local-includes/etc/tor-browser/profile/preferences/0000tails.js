@@ -78,4 +78,3 @@ pref("extensions.update.enabled", false);
 pref("layout.spellcheckDefault", 0);
 pref("network.dns.disableIPv6", true);
 pref("security.warn_submit_insecure", true);
-pref("network.proxy.no_proxies_on", "10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16");
