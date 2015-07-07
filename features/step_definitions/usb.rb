@@ -172,7 +172,8 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   @screen.type("l", Sikuli::KeyModifier.CTRL)
   @screen.wait('GnomeFileDiagTypeFilename.png', 10)
   iso = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
-  @screen.type(iso + Sikuli::Key.ENTER)
+  @screen.type(iso)
+  @screen.wait_and_click('GnomeFileDiagOpenButton.png', 10)
   usb_install_helper(name)
 end
 
