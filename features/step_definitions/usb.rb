@@ -168,6 +168,7 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   match = @screen.find('USBUseLiveSystemISO.png')
   @screen.click(match.getCenter.offset(0, match.h*2))
   @screen.wait('USBSelectISO.png', 10)
+  @screen.wait_and_click('GnomeFileDiagHome.png', 10)
   @screen.type("l", Sikuli::KeyModifier.CTRL)
   @screen.wait('GnomeFileDiagTypeFilename.png', 10)
   iso = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
