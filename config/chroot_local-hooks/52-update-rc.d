@@ -14,7 +14,6 @@ i2p
 kexec-load
 laptop-mode
 memlockd
-resolvconf
 saned
 spice-vdagent
 tor
