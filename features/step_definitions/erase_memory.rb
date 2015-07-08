@@ -34,7 +34,7 @@ Given /^the non-PAE kernel is running$/ do
 end
 
 def used_ram_in_MiB
-  return @vm.execute_successfully("free -m | awk '/^-\\/\\+ buffers\\/cache:/ { print $3 }'").stdout.chomp.to_i
+  return @vm.execute_successfully("free -m | awk '/^Mem:/ { print $3 }'").stdout.chomp.to_i
 end
 
 def detected_ram_in_MiB

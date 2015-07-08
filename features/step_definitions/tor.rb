@@ -314,6 +314,10 @@ When /^I connect Gobby to "([^"]+)"$/ do |host|
   @screen.wait("GobbyWelcomePrompt.png", 10)
   @screen.click("GnomeCloseButton.png")
   @screen.wait("GobbyWindow.png", 10)
+  # This indicates that Gobby has finished initializing itself
+  # (generating DH parameters, etc.) -- before, the UI is not responsive
+  # and our CTRL-t is lost.
+  @screen.wait("GobbyFailedToShareDocuments.png", 30)
   @screen.type("t", Sikuli::KeyModifier.CTRL)
   @screen.wait("GobbyConnectPrompt.png", 10)
   @screen.type(host + Sikuli::Key.ENTER)

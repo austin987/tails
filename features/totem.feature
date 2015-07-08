@@ -18,7 +18,7 @@ Feature: Using Totem
     And I start Tails from DVD with network unplugged and I login
     And I copy the sample videos to "/home/amnesia" as user "amnesia"
     When I open "/home/amnesia/video.mp4" with Totem
-    Then I see "SampleLocalMp4VideoFrame.png" after at most 10 seconds
+    Then I see "SampleLocalMp4VideoFrame.png" after at most 20 seconds
     Given I close Totem
     And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"
     When I try to open "/home/amnesia/.gnupg/video.mp4" with Totem
