@@ -188,7 +188,7 @@ When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+)
   when "ICMP"
     cmd = "ping -c 5 #{host}"
   end
-  @conn_res = @vm.execute(cmd, LIVE_USER)
+  @conn_res = @vm.execute(cmd)
 end
 
 Then /^the untorified connection fails$/ do

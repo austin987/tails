@@ -56,6 +56,6 @@ end
 When(/^I send some ICMP pings$/) do
   next if @skip_steps_while_restoring_background
   # We ping an IP address to avoid a DNS lookup
-  ping = @vm.execute("ping -c 5 #{SOME_DNS_SERVER}", LIVE_USER)
+  ping = @vm.execute("ping -c 5 #{SOME_DNS_SERVER}")
   assert(ping.success?, "Failed to ping #{SOME_DNS_SERVER}:\n#{ping.stderr}")
 end
