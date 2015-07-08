@@ -76,4 +76,4 @@ done
 systemctl mask systemd-networkd.service
 
 # Do not sync the system clock to the hardware clock on shutdown
-systemctl disable hwclock-save.service
+systemctl mask hwclock-save.service
