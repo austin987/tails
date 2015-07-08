@@ -7,14 +7,18 @@ systemctl start tails-unblock-network.service
 # Now we'll load any present network device previously blocked by
 # the blacklist. In particular, the MAC spoofing udev rule should trigger
 # for each network device added.
+echo "Restarting systemd-udev-trigger.service..." >&2
 systemctl restart systemd-udev-trigger.service
+echo "systemd-udev-trigger.service restarted." >&2
 
 # Block until all triggers have been run. NetworkManager is started immediately
 # after, and without the blocking behaviour there's a race between NM
 # and the MAC spoof udev triggers. When NM takes control of some network device,
 # some operations are not possible on the device, like MAC spoofing. Hence,
 # if NM wins, the udev-triggered run of tails-spoof-mac will fail.
+echo "Restarting systemd-udev-settle.service..." >&2
 systemctl restart systemd-udev-settle.service
+echo "systemd-udev-settle.service restarted." >&2
 
 # Enable and start NetworkManager services
 # No need to manually enable NetworkManager-dispatcher.service,
