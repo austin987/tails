@@ -26,6 +26,24 @@ def activate_filesystem_shares
   end
 end
 
+def get_center_of_region(top, bottom)
+  top_r = @screen.wait(top, 10)
+  top_y = top_r.getCenter.getY
+  bottom_r = @screen.wait(bottom, 10)
+  bottom_y = bottom_r.getCenter.getY
+  center_y = (bottom_y + top_y) / 2
+  return Sikuli::Location.new(top_r.getCenter.getX, center_y)
+end
+
+def context_menu_helper(top, bottom, menu_item)
+  try_for(60) do
+    @screen.right_click(get_center_of_region(top, bottom))
+    @screen.hide_cursor
+    @screen.wait_and_click(menu_item, 10)
+    return
+  end
+end
+
 def deactivate_filesystem_shares
   @vm.list_shares.each do |share|
     @vm.execute("umount #{share}")
