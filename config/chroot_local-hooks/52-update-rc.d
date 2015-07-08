@@ -74,3 +74,6 @@ done
 # that systemd-networkd vs. firewall setup ordering is suboptimal in this respect,
 # so let's avoid any risk of DNS leaks here.
 systemctl mask systemd-networkd.service
+
+# Do not sync the system clock to the hardware clock on shutdown
+systemctl disable hwclock-save.service
