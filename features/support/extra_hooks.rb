@@ -1,6 +1,28 @@
-# Sort of inspired by Cucumber::RbSupport::RbHook, but really we just
-# want an object with a 'tag_expressions' attribute to make
-# accept_hook?() (used below) happy.
+# Make the code below work with cucumber >= 2.0. Once we stop
+# supporting <2.0 we should probably do this differently, but this way
+# we can easily support both at the same time.
+begin
+  if not(Cucumber::Core::Ast::Feature.instance_methods.include?(:accept_hook?))
+    require 'gherkin/tag_expression'
+    class Cucumber::Core::Ast::Feature
+      # Code inspired by Cucumber::Core::Test::Case.match_tags?() in
+      # cucumber-ruby-core 1.1.3, lib/cucumber/core/test/case.rb:~59.
+      def accept_hook?(hook)
+        tag_expr = Gherkin::TagExpression.new(hook.tag_expressions.flatten)
+        tags = @tags.map do |t|
+          Gherkin::Formatter::Model::Tag.new(t.name, t.line)
+        end
+        tag_expr.evaluate(tags)
+      end
+    end
+  end
+rescue NameError => e
+  raise e if e.to_s != "uninitialized constant Cucumber::Core"
+end
+
+# Sort of inspired by Cucumber::RbSupport::RbHook (from cucumber
+# < 2.0) but really we just want an object with a 'tag_expressions'
+# attribute to make accept_hook?() (used below) happy.
 class SimpleHook
   attr_reader :tag_expressions
 
