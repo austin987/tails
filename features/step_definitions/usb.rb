@@ -625,7 +625,7 @@ end
 
 Then /^a suitable USB device is (?:still )?not found$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("TailsInstallerNoDevice.png", 60)
+  @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
 end
 
 Then /^the "(?:[[:alpha:]]+)" USB drive is selected$/ do
