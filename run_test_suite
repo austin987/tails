@@ -128,7 +128,7 @@ next_free_display() {
 }
 
 test_suite_cleanup() {
-    kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}
+    (kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}) || /bin/true
     if [ ! -z $LOG_FILE ]; then
        remove_control_chars_from "$LOG_FILE"
     fi
