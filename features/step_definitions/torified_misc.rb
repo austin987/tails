@@ -7,13 +7,14 @@ When /^I successfully query the whois directory service for "([^"]+)"$/ do |doma
   until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
     begin
       @vm_execute_res = @vm.execute("whois '#{domain}'", LIVE_USER)
-      assert(!@vm_execute_res.stdout['LIMIT EXCEEDED'])
-      raise WhoisLookupFailure unless @vm_execute_res.success?
+      if !@vm_execute_res.success? || @vm_execute_res.stdout['LIMIT EXCEEDED']
+        raise WhoisLookupFailure
+      end
       break
-    rescue Test::Unit::AssertionFailedError
-      force_new_tor_circuit
     rescue WhoisLookupFailure => e
-      if @vm_execute_res.stderr['Timeout'] || @vm_execute_res.stderr['Unable to resolve']
+      if @vm_execute_res.stderr['Timeout'] || \
+         @vm_execute_res.stderr['Unable to resolve'] || \
+         @vm_execute_res.stdout['LIMIT EXCEEDED']
         force_new_tor_circuit
       else
         raise e
