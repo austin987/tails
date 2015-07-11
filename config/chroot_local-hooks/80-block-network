@@ -4,8 +4,7 @@ set -e
 
 echo "Generating blocklist for all network devices"
 
-( echo 'blacklist wl' ;
-  find /lib/modules/*/kernel/drivers/net \
-       -name "*.ko" -printf "blacklist %f\n" | \
-      sed 's/\.ko$//'
-) | sort -u > /etc/modprobe.d/all-net-blacklist.conf
+find /lib/modules/*/kernel/drivers/net \
+     -name "*.ko" -printf "blacklist %f\n" | \
+  sed 's/\.ko$//' | \
+  sort -u > /etc/modprobe.d/all-net-blacklist.conf
