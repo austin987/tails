@@ -123,16 +123,6 @@ When /^I start Tails Installer in "([^"]+)" mode(?: with the )?(verbose)?(?: fla
   end
 end
 
-Then /^Tails Installer detects that the device "([^"]+)" is too small$/ do |name|
-  next if @skip_steps_while_restoring_background
-  assert(@vm.file_exist?('/tmp/tails-installer.log'), "Cannot find logfile containing output from Tails Installer")
-  device = @vm.udisks_disk_dev(name)
-  try_for(15, :msg => "Tails Installer did not reject the USB device as being too small")  {
-    log = @vm.file_content('/tmp/tails-installer.log')
-    Regexp.new("Skipping too small device: #{device}$").match(log)
-  }
-end
-
 When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
   next if @skip_steps_while_restoring_background
   step 'I start Tails Installer in "Clone & Install" mode'
@@ -178,9 +168,12 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   match = @screen.find('USBUseLiveSystemISO.png')
   @screen.click(match.getCenter.offset(0, match.h*2))
   @screen.wait('USBSelectISO.png', 10)
-  @screen.wait_and_click('GnomeFileDiagTypeFilename.png', 10)
+  @screen.wait_and_click('GnomeFileDiagHome.png', 10)
+  @screen.type("l", Sikuli::KeyModifier.CTRL)
+  @screen.wait('GnomeFileDiagTypeFilename.png', 10)
   iso = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
-  @screen.type(iso + Sikuli::Key.ENTER)
+  @screen.type(iso)
+  @screen.wait_and_click('GnomeFileDiagOpenButton.png', 10)
   usb_install_helper(name)
 end
 
