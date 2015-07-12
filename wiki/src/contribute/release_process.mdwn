@@ -734,9 +734,11 @@ to be released in `inc/*`:
 
 Update the size of the ISO image in `inc/*`:
 
-	LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
+	MB=$(LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' | tr -d '\n')
+	MiB=$(LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' | tr -d '\n')
+	echo "($MB/$MiB)" > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
 
 Update the [[support/known_issues]] page:
 
@@ -991,6 +993,7 @@ this, and skip what does not make sense for a RC.
 
         bare_repo=$(mktemp -d)
         (cd "$MASTER_CHECKOUT" && git fetch) && \
+        (cd "$MASTER_CHECKOUT" && git submodule update) && \
         git clone --bare --reference "$MASTER_CHECKOUT" \
            boum_org_amnesia@webmasters.boum.org:wiki.git \
            "$bare_repo" && \
@@ -998,11 +1001,12 @@ this, and skip what does not make sense for a RC.
            --repo "$bare_repo" && \
         rm -rf "$bare_repo"
 
-1. Pull `master` back and merge it into `devel`.
+1. Pull `master` back and merge it into `stable`, and in turn into
+   `devel`, `experimental` and `feature/jessie`.
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
    repository documentation.
-1. Push the resulting `devel` branch.
+1. Push the resulting branches.
 1. If this was a major release, then reset experimental:
    - take note of branches merged into `experimental`, but not into
      `devel`:
