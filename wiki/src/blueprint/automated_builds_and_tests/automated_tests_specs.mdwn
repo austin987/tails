@@ -6,7 +6,7 @@ This blueprint helps to keep track of the discussions and decisions
 about the specification of automated tests ran in Tails' Jenkins on
 the [[automatically build ISOs|autobuild_specs]] ([[!tails_ticket 5288]]).
 
-[[!toc levels=2]]
+[[!toc levels=3]]
 
 # Facts
 
@@ -55,25 +55,19 @@ We __need to lessen the number of tests per day__. Probably even in
 the second iteration, with the expected growth of the number of
 automated builds.
 
-Some ideas that could help:
+### Current proposal
 
-We can maybe split the design between the type of branches being built
-and tested:
-
-* for base branches, we could envisage to run the full test suite on
-  every automatically built ISO (every git push and daily builds) if
-  we think that is relevant;
-* for feature branches, we could run the full test suite only on the
-  daily builds, and either only the automated tests related to the
-  branch on every git push, and/or a subset of the whole test suite.
-
-We can also consider testing only the feature branches that are marked
-as *Ready for QA* as a beginning, even if that doesn't cover Scenario 2
-(developers).
-
-We can also maybe find more ways to split the automated test suite in
-faster subsets of features depending on the context, define priorities
-for built ISO and/or tests.
+    For branch stable:
+      Must test ISOs built daily and on every Git push;
+        so that we're always ready to put out an emergency release;
+    For the next scheduled release branch (either stable, testing, or devel):
+      Must test ISOs built daily and on every Git push;
+        so that we always know the state of the next release;
+    For other branches:
+      For branches with a `Ready for QA` ticket:
+        Must test ISO built daily and on every Git push;
+      Must test ISOs built on every Git push,
+        with some rate-limiting if necessary;
 
 <a id="how-to-run-the-tests"></a>
 
@@ -81,30 +75,25 @@ for built ISO and/or tests.
 
 This section heavily depends on the discussion about the previous one.
 
-The automated test suite MUST have access to the artifacts of a given
-automated build corresponding to a given commit, as well as to the
-ISOs of the previous Tails releases.
+To test a specific ISO, the automated test suite MUST have access to:
 
-The automated test suite MUST be run in a clean environment.
+ * the corresponding build artifacts;
+ * the commit ID of that build;
+ * if applicable, the commit at which the base branch was at, when it
+   was merged into the branch being built;
+ * the ISO of the previous Tails release.
+
+The automated test suite MUST be run in a clean environment, using a
+fresh _--tmpdir_ for each run.
 
 The automated test suite MUST be run on a freshly built ISO,
 corresponding to the commit it tests.
 
-The automated test suite MUST be able to run features in parallel
-for a single automated build ISO. This way, if more than one isotester
-are idle, it can use several of them to test an ISO faster.
-
-The automated suite SHOULD be able when there are more than one ISO
-queued for testing to fairly distribute the parallelizing of their
-features.
-
-The automated test suite MUST not allocate all the isotesters for one
-ISO when others are waiting to be tested.
-
-The automated test suite MUST be able to accept a treshold of failures
-for some features before sending notifications. This can help if a
-scenario fails because of a network congestion, but other use cases
-will probably raise.
+When [[!tails_ticket 9515]] and friends will be resolved and a first
+deployment of the automated test suite will clarify its need, we'll see
+if it should be able to accept a treshold of failures for some features
+before sending notifications. This could help if a scenario fails
+e.g. because of a network congestion.
 
 ## Notifications
 
@@ -169,11 +158,34 @@ builds specification.
 
 # Future ideas
 
-This list other scenarios that we have also envisaged for the second
-iteration of the automated builds deployment, as they are really
-tightened.
+## Cutting the number of run per day
 
-## Scenario 10
+For feature branches, we could run the full test suite only on the
+daily builds, and either only the automated tests related to the
+branch on every git push, and/or a subset of the whole test suite.
+
+We can also maybe find more ways to split the automated test suite in
+faster subsets of features depending on the context, define priorities
+for built ISO and/or tests.
+
+The automated test suite could be able to run features in parallel
+for a single automated build ISO. This way, if more than one isotester
+are idle, it can use several of them to test an ISO faster.
+
+The automated suite then should be able when there are more than one ISO
+queued for testing to fairly distribute the parallelizing of their
+features.
+
+The automated test suite also should not allocate all the isotesters for
+one ISO when others are waiting to be tested.
+
+## Scenarios
+
+Folowing is a list of other scenarios that we have also envisaged for
+the second iteration of the automated builds deployment, as they are
+really tightened.
+
+### Scenario 10
 
     As a Tails developer working on branch B
     When I upload a package to APT suite B
@@ -183,7 +195,7 @@ tightened.
 (acceptable workaround: being able to manually trigger a test suite.)
 
 
-## Scenario 11
+### Scenario 11
 
     As the current RM
     When I push new tag T on branch B
@@ -193,14 +205,14 @@ tightened.
       on the ISO build from the checkout of tag T
 
 
-## Scenario 12
+### Scenario 12
 
     As a Tails developer
     When the test suite is ran on the ISO build from my last commit
     I want to watch TV and see the test video in HTML5 from the Tor Browser
 
 
-## Scenario 14
+### Scenario 14
 
     As a Tails developer
     When I push a new commit or a new Debian package to a base branch

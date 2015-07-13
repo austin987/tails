@@ -50,20 +50,18 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
   else
     importopts = ''
   end
-  tries = 0
-  until tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+  @new_circuit_tries = 0
+  until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
     begin
       @gnupg_recv_key_res = @vm.execute_successfully(
       "gpg --batch #{importopts} --recv-key '#{keyid}'",
       LIVE_USER)
       break
     rescue ExecutionFailedInVM
-      tries += 1
-      STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
-      step 'I force Tor to use a new circuit'
+      force_new_tor_circuit
     end
   end
-  assert(tries <= $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Fetching keys with the GnuPG CLI did not succeed after retrying #{tries} times")
+  assert(@new_circuit_tries < $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Fetching keys with the GnuPG CLI did not succeed after retrying #{@new_circuit_tries} times")
 end
 
 When /^the GnuPG fetch is successful$/ do
@@ -112,8 +110,8 @@ end
 
 Then /^I synchronize keys in Seahorse$/ do
   next if @skip_steps_while_restoring_background
-  tries = 0
-  until tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+  @new_circuit_tries = 0
+  until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
     begin
       step 'process "seahorse" is running'
       @screen.wait_and_click("SeahorseWindow.png", 10)
@@ -124,7 +122,7 @@ Then /^I synchronize keys in Seahorse$/ do
       seahorse_wait_helper('SeahorseWindow.png', 5*60)
       break
     rescue OpenPGPKeyserverCommunicationError
-      tries += 1
+      force_new_tor_circuit
       @screen.wait_and_click('GnomeCloseButton.png', 20)
       if @screen.exists('SeahorseSynchronizing.png')
         # Seahorse is likely to segfault if we end up here.
@@ -132,11 +130,9 @@ Then /^I synchronize keys in Seahorse$/ do
         @screen.type(Sikuli::Key.ESC)
       end
       seahorse_wait_helper('SeahorseWindow.png')
-      STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
-      step 'I force Tor to use a new circuit'
     end
   end
-  assert(tries <= $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Syncing keys in Seahorse did not succeed after retrying #{tries} times")
+  assert(@new_circuit_tries < $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Syncing keys in Seahorse did not succeed after retrying #{@new_circuit_tries} times")
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP Applet)?$/ do |keyid, withgpgapplet|
@@ -147,8 +143,8 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
     step "I start Seahorse"
   end
   step "Seahorse has opened"
-  tries = 0
-  until tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+  @new_circuit_tries = 0
+  until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
     begin
       @screen.wait_and_click("SeahorseWindow.png", 10)
       seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuFind.png', 'seahorse')
@@ -169,15 +165,13 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
       @screen.click("SeahorseImport.png")
       break
     rescue OpenPGPKeyserverCommunicationError
-      tries += 1
+      force_new_tor_circuit
       @screen.wait_and_click('GnomeCloseButton.png', 20)
       @screen.type(Sikuli::Key.ESC)
       @screen.type("w", Sikuli::KeyModifier.CTRL)
-      STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
-      step 'I force Tor to use a new circuit'
     end
   end
-  assert(tries <= $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Fetching keys in Seahorse did not succeed after retrying #{tries} times")
+  assert(@new_circuit_tries < $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Fetching keys in Seahorse did not succeed after retrying #{@new_circuit_tries} times")
 end
 
 Then /^Seahorse is configured to use the correct keyserver$/ do
