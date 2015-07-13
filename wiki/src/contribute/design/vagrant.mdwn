@@ -65,28 +65,26 @@ image, drive the debian-installer using
 and run `postinstall.sh` to take care of seting up the environment
 expected by Vagrant.
 
+    cd vagrant
     ORIG_BOXNAME=tails-builder
     DATE="$(date +%Y%m%d)"
     BOXNAME="${ORIG_BOXNAME}-${DATE}"
-    sed -i "s/tails-builder-[0-9]\{8\}/${BOXNAME}/" vagrant/Vagrantfile
-    mkdir -p "${VEEWEE_SRC}"/definitions
-    cp -a vagrant/definitions/${ORIG_BOXNAME}" vagrant/definitions/${BOXNAME}"
+    sed -i "s/tails-builder-[0-9]\{8\}/${BOXNAME}/" Vagrantfile
+    cp -a definitions/"${ORIG_BOXNAME}" definitions/"${BOXNAME}"
     veewee vbox build "${BOXNAME}"
-    vboxmanage controlvm "${BOXNAME}" acpipowerbutton
-
-Wait until VM shuts down, then:
-
     veewee vbox export "${BOXNAME}"
-    vboxmanage unregistervm "${BOXNAME}" --delete
     rm -rf definitions/"${BOXNAME}"
-    CHECKSUM="$(sha256sum ${BOXNAME}.box | grep -o '^\w\+')"
+    vboxmanage unregistervm "${BOXNAME}" --delete
+    CHECKSUM="$(sha256sum "${BOXNAME}.box" | grep -o '^\w\+')"
     sed -i -e "s/^BOX_CHECKSUM = .*$/BOX_CHECKSUM = '${CHECKSUM}'/" \
-           vagrant/lib/tails_build_settings.rb
+           lib/tails_build_settings.rb
     sed -i "s/tails-builder-[0-9]\{8\}/${BOXNAME}/" \
-           vagrant/lib/tails_build_settings.rb vagrant/Vagrantfile
+           lib/tails_build_settings.rb Vagrantfile
+    mv "${BOXNAME}.box" ..
+    cd ..
     git commit vagrant -m "Updated Vagrant basebox."
 
-Then `$BOXNAME.box` will be placed in tails source root,
+Then `$BOXNAME.box` will be placed in tails' source root,
 and all needed changes committed to the current checked out branch in
 Tails sources. The basebox should be uploaded to the Tails mirrors at
 `http://dl.amnesia.boum.org/tails/project/vagrant/$BOXNAME.box`, as
