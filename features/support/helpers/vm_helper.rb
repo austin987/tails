@@ -483,7 +483,6 @@ EOF
     disks_xml = "    <disks>\n"
     for dev in disk_devs
       snapshot_type = disk_type(dev) == "qcow2" ? 'internal' : 'no'
-      snapshot_path = "#{$config["TMPDIR"]}/#{name}-#{dev}.qcow2"
       disks_xml +=
         "      <disk name='#{dev}' snapshot='#{snapshot_type}'></disk>\n"
     end
