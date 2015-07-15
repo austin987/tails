@@ -61,7 +61,7 @@ BeforeFeature('@product') do |feature|
   $background_snapshot = "#{base}_background"
   if not($started_first_product_feature)
     $virt = Libvirt::open("qemu:///system")
-    VM.remove_all_snapshots
+    VM.remove_all_snapshots if !KEEP_SNAPSHOTS
     $vmnet = VMNet.new($virt, VM_XML_PATH)
     $vmstorage = VMStorage.new($virt, VM_XML_PATH)
     $started_first_product_feature = true
@@ -169,8 +169,10 @@ end
 
 at_exit do
   if $virt
-    VM.remove_all_snapshots
-    $vmstorage.clear_pool
+    unless KEEP_SNAPSHOTS
+      VM.remove_all_snapshots
+      $vmstorage.clear_pool
+    end
     $vmnet.destroy_and_undefine
     $virt.close
   end
