@@ -1,5 +1,6 @@
 Then(/^the firewall leak detector has detected (.*?) leaks$/) do |type|
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_all_tor_nodes)
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
+                                :accepted_hosts => get_all_tor_nodes)
   case type.downcase
   when 'ipv4 tcp'
     if leaks.ipv4_tcp_leaks.empty?

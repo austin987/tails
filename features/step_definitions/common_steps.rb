@@ -384,7 +384,8 @@ Then /^I see "([^"]*)" after at most (\d+) seconds$/ do |image, time|
 end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_all_tor_nodes)
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
+                                :accepted_hosts => get_all_tor_nodes)
   leaks.assert_no_leaks
 end
 
@@ -893,4 +894,97 @@ end
 
 When /^I accept to import the key with Seahorse$/ do
   @screen.wait_and_click("TorBrowserOkButton.png", 10)
+end
+
+Given /^a web server is running on the LAN$/ do
+  web_server_ip_addr = $vmnet.bridge_ip_addr
+  web_server_port = 8000
+  @web_server_url = "http://#{web_server_ip_addr}:#{web_server_port}"
+  web_server_hello_msg = "Welcome to the LAN web server!"
+
+  # I've tested ruby Thread:s, fork(), etc. but nothing works due to
+  # various strange limitations in the ruby interpreter. For instance,
+  # apparently concurrent IO has serious limits in the thread
+  # scheduler (e.g. sikuli's wait() would block WEBrick from reading
+  # from its socket), and fork():ing results in a lot of complex
+  # cucumber stuff (like our hooks!) ending up in the child process,
+  # breaking stuff in the parent process. After asking some supposed
+  # ruby pros, I've settled on the following.
+  code = <<-EOF
+  require "webrick"
+  STDOUT.reopen("/dev/null", "w")
+  STDERR.reopen("/dev/null", "w")
+  server = WEBrick::HTTPServer.new(:BindAddress => "#{web_server_ip_addr}",
+                                   :Port => #{web_server_port},
+                                   :DocumentRoot => "/dev/null")
+  server.mount_proc("/") do |req, res|
+    res.body = "#{web_server_hello_msg}"
+  end
+  server.start
+EOF
+  proc = IO.popen(['ruby', '-e', code])
+  try_for(10, :msg => "It seems the LAN web server failed to start") do
+    Process.kill(0, proc.pid) == 1
+  end
+
+  add_after_scenario_hook { Process.kill("TERM", proc.pid) }
+
+  # It seems necessary to actually check that the LAN server is
+  # serving, possibly because it isn't doing so reliably when setting
+  # up. If e.g. the Unsafe Browser (which *should* be able to access
+  # the web server) tries to access it too early, Firefox seems to
+  # take some random amount of time to retry fetching. Curl gives a
+  # more consistent result, so let's rely on that instead. Note that
+  # this forces us to capture traffic *after* this step in case
+  # accessing this server matters, like when testing the Tor Browser..
+  try_for(30, :msg => "Something is wrong with the LAN web server") do
+    msg = $vm.execute_successfully("curl #{@web_server_url}",
+                                   LIVE_USER).stdout.chomp
+    web_server_hello_msg == msg
+  end
+end
+
+When /^I open a page on the LAN web server in the (.*)$/ do |browser|
+  step "I open the address \"#{@web_server_url}\" in the #{browser}"
+end
+
+def force_new_tor_circuit(with_vidalia=nil)
+  assert(!@new_circuit_tries.nil? && @new_circuit_tries >= 0,
+         '@new_circuit_tries was not initialized before it was used')
+  @new_circuit_tries += 1
+  STDERR.puts "Forcing new Tor circuit... (attempt ##{@new_circuit_tries})" if $config["DEBUG"]
+  if with_vidalia
+    assert_equal('gnome', @theme, "Vidalia is not available in the #{@theme} theme.")
+    begin
+      step 'process "vidalia" is running'
+    rescue Test::Unit::AssertionFailedError
+      STDERR.puts "Vidalia was not running. Attempting to start Vidalia..." if $config["DEBUG"]
+      $vm.spawn('restart-vidalia')
+      step 'process "vidalia" is running within 15 seconds'
+    end
+    # Sometimes Sikuli gets confused and recognizes the yellow-colored vidalia systray
+    # icon as the green one. This has been seen when Vidalia needed to be
+    # restarted in the above 'begin' block.
+    #
+    # try_for is used here for that reason, otherwise this step may fail
+    # because sikuli presumaturely right-clicked the Vidalia icon and the 'New
+    # Identity' option isn't clickable yet..
+    try_for(3 * 60) do
+      # Let's be *sure* that vidalia is still running. I'd hate to spend up to
+      # three minutes waiting for an icon that isn't there because Vidalia, for
+      # whatever reason, is no longer running...
+      step 'process "vidalia" is running'
+      @screen.wait_and_right_click('VidaliaSystrayReady.png', 10)
+      @screen.wait_and_click('VidaliaMenuNewIdentity.png', 10)
+    end
+    @screen.wait('VidaliaNewIdentityNotification.png', 20)
+    @screen.waitVanish('VidaliaNewIdentityNotification.png', 60)
+  else
+    $vm.execute_successfully('. /usr/local/lib/tails-shell-library/tor.sh; tor_control_send "signal NEWNYM"')
+  end
+end
+
+Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
+  @new_circuit_tries = 1 if @new_circuit_tries.nil?
+  force_new_tor_circuit(with_vidalia)
 end

@@ -4,6 +4,16 @@ Feature: Browsing the web using the Tor Browser
   when I browse the web using the Tor Browser
   all Internet traffic should flow only through Tor
 
+  Scenario: The Tor Browser cannot access the LAN
+    Given Tails has booted from DVD and logged in and the network is connected
+    And a web server is running on the LAN
+    And I capture all network traffic
+    When I start the Tor Browser
+    And the Tor Browser has started and loaded the startup page
+    And I open a page on the LAN web server in the Tor Browser
+    Then I see "TorBrowserUnableToConnect.png" after at most 20 seconds
+    And no traffic has flowed to the LAN
+
   @check_tor_leaks
   Scenario: The Tor Browser directory is usable
     Given Tails has booted from DVD and logged in and the network is connected
