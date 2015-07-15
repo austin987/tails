@@ -115,14 +115,10 @@ Then /^drive "([^"]+)" is detected by Tails$/ do |name|
 end
 
 Given /^the network is plugged$/ do
-  # We don't skip this step when restoring the background to ensure
-  # that the network state is actually the same after restoring as
-  # when the snapshot was made.
   $vm.plug_network
 end
 
 Given /^the network is unplugged$/ do
-  # See comment in the step "the network is plugged".
   $vm.unplug_network
 end
 
