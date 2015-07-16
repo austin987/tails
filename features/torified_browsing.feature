@@ -65,9 +65,11 @@ Feature: Browsing the web using the Tor Browser
   Scenario: I can view a file stored in "~/Tor Browser" but not in ~/.gnupg
     Given I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/Tor Browser/synaptic.html" as user "amnesia"
     And I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/.gnupg/synaptic.html" as user "amnesia"
+    And I copy "/usr/share/synaptic/html/index.html" to "/tmp/synaptic.html" as user "amnesia"
     Then the file "/home/amnesia/.gnupg/synaptic.html" exists
     And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html" exists
     And the file "/live/overlay/home/amnesia/.gnupg/synaptic.html" exists
+    And the file "/tmp/synaptic.html" exists
     And I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
     When I open the address "file:///home/amnesia/Tor Browser/synaptic.html" in the Tor Browser
@@ -85,6 +87,10 @@ Feature: Browsing the web using the Tor Browser
     And I wait between 4 and 5 seconds
     Then I don't see "TorBrowserSynapticManual.png"
     And I see "TorBrowserUnableToOpen.png" after at most 1 seconds
+    When I open the address "file:///tmp/synaptic.html" in the Tor Browser
+    And I wait between 4 and 5 seconds
+    Then I don't see "TorBrowserSynapticManual.png"
+    Then I see "TorBrowserUnableToOpen.png" after at most 1 seconds
 
   Scenario: The "Tails documentation" link on the Desktop works
     When I double-click on the "Tails documentation" link on the Desktop
