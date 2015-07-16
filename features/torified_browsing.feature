@@ -60,11 +60,14 @@ Feature: Browsing the web using the Tor Browser
     Given Tails has booted from DVD and logged in and the network is connected
     Given I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/Tor Browser/synaptic.html" as user "amnesia"
     And I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/.gnupg/synaptic.html" as user "amnesia"
+    And I copy "/usr/share/synaptic/html/index.html" to "/tmp/synaptic.html" as user "amnesia"
     And I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
     When I open the address "file:///home/amnesia/Tor Browser/synaptic.html" in the Tor Browser
     Then I see "TorBrowserSynapticManual.png" after at most 10 seconds
     When I open the address "file:///home/amnesia/.gnupg/synaptic.html" in the Tor Browser
+    Then I see "TorBrowserUnableToOpen.png" after at most 10 seconds
+    When I open the address "file:///tmp/synaptic.html" in the Tor Browser
     Then I see "TorBrowserUnableToOpen.png" after at most 10 seconds
 
   Scenario: The "Tails documentation" link on the Desktop works
