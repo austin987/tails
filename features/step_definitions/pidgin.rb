@@ -18,6 +18,19 @@ EOF
   return account
 end
 
+def focus_pidgin_irc_conversation_window(account)
+  account = account.sub(/^irc\./, '')
+  @vm.focus_window(".*#{Regexp.escape(account)}$")
+end
+
+def close_pidgin_conversation_window(account)
+  focus_pidgin_irc_conversation_window(account)
+  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
+  if @screen.exists('PidginConfirmationIcon.png')
+    @screen.click('GnomeCloseButton.png')
+  end
+end
+
 When /^I create my XMPP account$/ do
   next if @skip_steps_while_restoring_background
   account = xmpp_account("Tails_account")
@@ -207,7 +220,7 @@ def chan_image (account, channel, image)
   images = {
     'irc.oftc.net' => {
       '#tails' => {
-        'roaster'          => 'PidginTailsChannelEntry',
+        'roster'           => 'PidginTailsChannelEntry',
         'conversation_tab' => 'PidginTailsConversationTab',
         'welcome'          => 'PidginTailsChannelWelcome',
       }
@@ -282,10 +295,29 @@ end
 
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   next if @skip_steps_while_restoring_background
-  expected_channel_entry = chan_image(account, default_chan(account), 'roaster')
-  # Sometimes the OFTC welcome notice window pops up over the buddy list one...
-  @vm.focus_window('Buddy List')
-  @screen.wait(expected_channel_entry, 60)
+  expected_channel_entry = chan_image(account, default_chan(account), 'roster')
+  @new_circuit_tries = 0
+  until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+    # Sometimes the OFTC welcome notice window pops up over the buddy list one...
+    begin
+      @vm.focus_window('Buddy List')
+    rescue ExecutionFailedInVM
+      # Sometimes focusing the window with xdotool will fail with the
+      # conversation window right on top of it. We'll try to close the
+      # conversation window. At worst, the test will still fail...
+      close_pidgin_conversation_window(account)
+    end
+
+    # FIXME This should be modified to use waitAny once #9633 is addressed
+    begin
+      @screen.wait(expected_channel_entry, 60)
+      break
+    rescue FindFailed
+      force_new_tor_circuit
+      @screen.wait_and_click('PidginReconnect.png', 20)
+    end
+  end
+  @screen.wait(expected_channel_entry, 10)
 end
 
 Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ do |irc_server|
@@ -306,8 +338,21 @@ end
 
 Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
   next if @skip_steps_while_restoring_background
-  @screen.doubleClick(   chan_image(account, channel, 'roaster'))
-  @screen.wait_and_click(chan_image(account, channel, 'conversation_tab'), 10)
+  @screen.doubleClick(   chan_image(account, channel, 'roster'))
+  @screen.hide_cursor
+  focus_pidgin_irc_conversation_window(account)
+  try_for(60) do
+    begin
+      @screen.wait_and_click(chan_image(account, channel, 'conversation_tab'), 5)
+    rescue FindFailed => e
+      # If the channel tab can't be found it could be because there were
+      # multiple connection attempts and the channel tab we want is off the
+      # screen. We'll try closing tabs until the one we want can be found.
+      @screen.type("w", Sikuli::KeyModifier.CTRL)
+      raise e
+    end
+  end
+  @screen.hide_cursor
   @screen.wait(          chan_image(account, channel, 'welcome'), 10)
 end
 
@@ -385,7 +430,14 @@ When /^I close Pidgin's certificate import failure dialog$/ do
 end
 
 When /^I see the Tails roadmap URL$/ do
-  @screen.wait('PidginTailsRoadmapUrl.png', 10)
+  try_for(60) do
+    begin
+      @screen.find('PidginTailsRoadmapUrl.png')
+    rescue FindFailed => e
+      @screen.click('PidginScrollArrowUp.png')
+      raise e
+    end
+  end
 end
 
 When /^I click on the Tails roadmap URL$/ do
