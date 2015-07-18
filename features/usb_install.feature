@@ -9,10 +9,11 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     Given a computer
     And I start Tails from DVD with network unplugged and I login
     And I create a 2 GiB disk named "current"
-    And I start Tails Installer in "Clone & Install" mode with the verbose flag
+    And I start Tails Installer in "Clone & Install" mode
     But a suitable USB device is not found
     When I plug USB drive "current"
-    Then a suitable USB device is not found
+    Then Tails Installer detects that a device is too small
+    And a suitable USB device is not found
     When I unplug USB drive "current"
     And I create a 4 GiB disk named "current"
     And I plug USB drive "current"
