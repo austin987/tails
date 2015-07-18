@@ -22,11 +22,11 @@ Feature: Various checks
     When Tails has booted a 64-bit kernel
     Then the VirtualBox guest modules are available
 
-  Scenario: The shipped Tails signing key is up-to-date
-    Then the shipped Tails signing key will be valid for the next 3 months
+  Scenario: The shipped Tails OpenPGP keys are up-to-date
+    Then the OpenPGP keys shipped with Tails will be valid for the next 3 months
 
   Scenario: The Tails Debian repository key is up-to-date
-    Then the shipped Tails Debian repository key will be valid for the next 3 months
+    Then the shipped Debian repository key will be valid for the next 3 months
 
   Scenario: The "Report an Error" launcher will open the support documentation
     Given the network is plugged
