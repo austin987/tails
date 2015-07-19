@@ -127,10 +127,16 @@ next_free_display() {
     echo ":${display_nr}"
 }
 
+test_suite_cleanup() {
+    (kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}) || /bin/true
+    if [ ! -z $LOG_FILE ]; then
+       remove_control_chars_from "$LOG_FILE"
+    fi
+}
+
 start_xvfb() {
     Xvfb $TARGET_DISPLAY -screen 0 1024x768x24+32 >/dev/null 2>&1 &
     XVFB_PID=$!
-    trap "kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}" EXIT
     # Wait for Xvfb to run on TARGET_DISPLAY
     until display_in_use $TARGET_DISPLAY; do
 	sleep 1
@@ -251,6 +257,8 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+trap "test_suite_cleanup" EXIT HUP INT QUIT TERM
+
 check_dependencies ${GENERAL_DEPENDENCIES}
 
 TARGET_DISPLAY=$(next_free_display)
@@ -276,6 +284,5 @@ CUCUMBER_COMMAND="cucumber ${@}"
 if [ -z "$LOG_FILE" ]; then
     $CUCUMBER_COMMAND
 else
-    trap "remove_control_chars_from '$LOG_FILE'" EXIT HUP INT QUIT TERM
     script --quiet --flush --return --command "$CUCUMBER_COMMAND" "$LOG_FILE" | cat
 fi

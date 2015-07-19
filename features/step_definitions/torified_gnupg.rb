@@ -50,9 +50,18 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
   else
     importopts = ''
   end
-  @gnupg_recv_key_res = @vm.execute_successfully(
-    "gpg --batch #{importopts} --recv-key '#{keyid}'",
-    LIVE_USER)
+  @new_circuit_tries = 0
+  until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+    begin
+      @gnupg_recv_key_res = @vm.execute_successfully(
+      "gpg --batch #{importopts} --recv-key '#{keyid}'",
+      LIVE_USER)
+      break
+    rescue ExecutionFailedInVM
+      force_new_tor_circuit
+    end
+  end
+  assert(@new_circuit_tries < $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Fetching keys with the GnuPG CLI did not succeed after retrying #{@new_circuit_tries} times")
 end
 
 When /^the GnuPG fetch is successful$/ do
@@ -101,13 +110,29 @@ end
 
 Then /^I synchronize keys in Seahorse$/ do
   next if @skip_steps_while_restoring_background
-  step "process \"seahorse\" is running"
-  @screen.wait_and_click("SeahorseWindow.png", 10)
-  seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuSync.png', 'seahorse')
-  seahorse_wait_helper('SeahorseSyncKeys.png')
-  @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
-  seahorse_wait_helper('SeahorseSynchronizing.png')
-  seahorse_wait_helper('SeahorseWindow.png', 5*60)
+  @new_circuit_tries = 0
+  until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+    begin
+      step 'process "seahorse" is running'
+      @screen.wait_and_click("SeahorseWindow.png", 10)
+      seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuSync.png', 'seahorse')
+      seahorse_wait_helper('SeahorseSyncKeys.png')
+      @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
+      seahorse_wait_helper('SeahorseSynchronizing.png')
+      seahorse_wait_helper('SeahorseWindow.png', 5*60)
+      break
+    rescue OpenPGPKeyserverCommunicationError
+      force_new_tor_circuit
+      @screen.wait_and_click('GnomeCloseButton.png', 20)
+      if @screen.exists('SeahorseSynchronizing.png')
+        # Seahorse is likely to segfault if we end up here.
+        @screen.click('SeahorseSynchronizing.png')
+        @screen.type(Sikuli::Key.ESC)
+      end
+      seahorse_wait_helper('SeahorseWindow.png')
+    end
+  end
+  assert(@new_circuit_tries < $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Syncing keys in Seahorse did not succeed after retrying #{@new_circuit_tries} times")
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP Applet)?$/ do |keyid, withgpgapplet|
@@ -118,23 +143,35 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
     step "I start Seahorse"
   end
   step "Seahorse has opened"
-  @screen.wait_and_click("SeahorseWindow.png", 10)
-  seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuFind.png', 'seahorse')
-  seahorse_wait_helper('SeahorseFindKeysWindow.png', 10)
-  # Seahorse doesn't seem to support searching for fingerprints
-  @screen.type(keyid + Sikuli::Key.ENTER)
-  begin
-    seahorse_wait_helper('SeahorseFoundKeyResult.png', 5*60)
-  rescue FindFailed
-    # We may end up here if Seahorse appears to be "frozen".
-    # Sometimes--but not always--if we click another window
-    # the main Seahorse window will unfreeze, allowing us
-    # to continue normally.
-    @screen.click("SeahorseSearch.png")
+  @new_circuit_tries = 0
+  until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+    begin
+      @screen.wait_and_click("SeahorseWindow.png", 10)
+      seahorse_menu_click_helper('SeahorseRemoteMenu.png', 'SeahorseRemoteMenuFind.png', 'seahorse')
+      seahorse_wait_helper('SeahorseFindKeysWindow.png', 10)
+      # Seahorse doesn't seem to support searching for fingerprints
+      @screen.type(keyid + Sikuli::Key.ENTER)
+      begin
+        seahorse_wait_helper('SeahorseFoundKeyResult.png', 5*60)
+      rescue FindFailed
+        # We may end up here if Seahorse appears to be "frozen".
+        # Sometimes--but not always--if we click another window
+        # the main Seahorse window will unfreeze, allowing us
+        # to continue normally.
+        @screen.click("SeahorseSearch.png")
+      end
+      @screen.click("SeahorseKeyResultWindow.png")
+      @screen.click("SeahorseFoundKeyResult.png")
+      @screen.click("SeahorseImport.png")
+      break
+    rescue OpenPGPKeyserverCommunicationError
+      force_new_tor_circuit
+      @screen.wait_and_click('GnomeCloseButton.png', 20)
+      @screen.type(Sikuli::Key.ESC)
+      @screen.type("w", Sikuli::KeyModifier.CTRL)
+    end
   end
-  @screen.click("SeahorseKeyResultWindow.png")
-  @screen.click("SeahorseFoundKeyResult.png")
-  @screen.click("SeahorseImport.png")
+  assert(@new_circuit_tries < $config["MAX_NEW_TOR_CIRCUIT_RETRIES"], "Fetching keys in Seahorse did not succeed after retrying #{@new_circuit_tries} times")
 end
 
 Then /^Seahorse is configured to use the correct keyserver$/ do
