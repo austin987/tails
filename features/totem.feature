@@ -29,11 +29,11 @@ Feature: Using Totem
     Given a computer
     And I start Tails from DVD and I login
     When I open "https://webm.html5.org/test.webm" with Totem
-    Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
+    Then I see "SampleRemoteWebMVideoFrame.png" after at most 30 seconds
     When I close Totem
     And I start Totem through the GNOME menu
     When I load the "https://webm.html5.org/test.webm" URL in Totem
-    Then I see "SampleRemoteWebMVideoFrame.png" after at most 10 seconds
+    Then I see "SampleRemoteWebMVideoFrame.png" after at most 30 seconds
 
   @keep_volumes
   Scenario: Installing Tails on a USB drive, creating a persistent partition, copying video files to it
