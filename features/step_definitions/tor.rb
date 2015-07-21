@@ -369,7 +369,8 @@ When /^all Internet traffic has only flowed through the configured pluggable tra
   next if @skip_steps_while_restoring_background
   assert_not_nil(@bridge_hosts, "No bridges has been configured via the " +
                  "'I configure some ... bridges in Tor Launcher' step")
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, @bridge_hosts)
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
+                                :accepted_hosts => @bridge_hosts)
   leaks.assert_no_leaks
 end
 

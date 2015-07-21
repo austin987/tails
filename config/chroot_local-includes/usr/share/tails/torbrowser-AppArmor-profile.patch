@@ -1,5 +1,5 @@
 diff --git a/apparmor/torbrowser.Browser.firefox b/apparmor/torbrowser.Browser.firefox
-index 7e68a08..c7db6da 100644
+index 7e68a08..2f40271 100644
 --- a/apparmor/torbrowser.Browser.firefox
 +++ b/apparmor/torbrowser.Browser.firefox
 @@ -1,13 +1,15 @@
@@ -97,7 +97,7 @@ index 7e68a08..c7db6da 100644
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -73,6 +87,31 @@
+@@ -73,10 +87,42 @@
    /sys/devices/pci[0-9]*/**/uevent r,
    owner /{dev,run}/shm/shmfd-* rw,
  
@@ -129,3 +129,14 @@ index 7e68a08..c7db6da 100644
    # KDE 4
    owner @{HOME}/.kde/share/config/* r,
  
+   # Xfce4
+   /etc/xfce4/defaults.list r,
+   /usr/share/xfce4/applications/ r,
++
++  # Deny access to global tmp directories, that's granted by the user-tmp
++  # abstraction, which is sourced by the gnome abstraction, that we include.
++  deny owner /var/tmp/**     rwklx,
++  deny /var/tmp/             rwklx,
++  deny owner /tmp/**         rwklx,
++  deny /tmp/                 rwklx,
+ }

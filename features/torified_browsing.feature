@@ -15,6 +15,15 @@ Feature: Browsing the web using the Tor Browser
     And all notifications have disappeared
     And I save the state so the background can be restored next scenario
 
+  Scenario: The Tor Browser cannot access the LAN
+    Given a web server is running on the LAN
+    And I capture all network traffic
+    When I start the Tor Browser
+    And the Tor Browser has started and loaded the startup page
+    And I open a page on the LAN web server in the Tor Browser
+    Then I see "TorBrowserUnableToConnect.png" after at most 20 seconds
+    And no traffic has flowed to the LAN
+
   @check_tor_leaks
   Scenario: The Tor Browser directory is usable
     Then the amnesiac Tor Browser directory exists
@@ -56,6 +65,7 @@ Feature: Browsing the web using the Tor Browser
   Scenario: I can view a file stored in "~/Tor Browser" but not in ~/.gnupg
     Given I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/Tor Browser/synaptic.html" as user "amnesia"
     And I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/.gnupg/synaptic.html" as user "amnesia"
+    And I copy "/usr/share/synaptic/html/index.html" to "/tmp/synaptic.html" as user "amnesia"
     And I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
     When I open the address "file:///home/amnesia/Tor Browser/synaptic.html" in the Tor Browser
@@ -64,6 +74,9 @@ Feature: Browsing the web using the Tor Browser
     Given AppArmor has not denied "/usr/local/lib/tor-browser/firefox" from opening "/home/amnesia/.gnupg/synaptic.html"
     When I open the address "file:///home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/home/amnesia/.gnupg/synaptic.html" after at most 10 seconds
+    Given AppArmor has not denied "/usr/local/lib/tor-browser/firefox" from opening "/tmp/synaptic.html"
+    When I open the address "file:///tmp/synaptic.html" in the Tor Browser
+    Then AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/tmp/synaptic.html" after at most 10 seconds
 
   Scenario: The "Tails documentation" link on the Desktop works
     When I double-click on the "Tails documentation" link on the Desktop
