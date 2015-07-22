@@ -93,7 +93,7 @@ end
 Then /^I enable key synchronization in Seahorse$/ do
   step 'process "seahorse" is running'
   @screen.wait_and_click("SeahorseWindow.png", 10)
-  seahorse_menu_click_helper('SeahorseEdit.png', 'SeahorseEditPreferences.png', 'seahorse')
+  seahorse_menu_click_helper('GnomeEditMenu.png', 'SeahorseEditPreferences.png', 'seahorse')
   seahorse_wait_helper('SeahorsePreferences.png')
   @screen.type("p", Sikuli::KeyModifier.ALT) # Option: "Publish keys to...".
   @screen.type(Sikuli::Key.DOWN) # select HKP server
