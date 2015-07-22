@@ -1,15 +1,11 @@
-[[!meta title="Build the wiki offline"]]
+[[!meta title="Build the website offline"]]
 
-Here is how to build the wiki offline.
+Here is how to build the website offline in a Linux environment or [[within Tails|contribute/build/website#tails]].
 
-<div class="bug">
+Build the website offline in a Linux environment
+==================================================
 
-<p>The following instructions don't work as such in Tails. See
-[[!tails_ticket 9018]] for a possible solution.</p>
-
-</div>
-
-If you have not done it before, update the list of packages known to Tails:
+If you have not done it before, update the list of packages:
 
     sudo apt-get update
 
@@ -29,6 +25,43 @@ Then run the following command, at the root of the Git folder:
 You can now browse the files in
 
     ./config/chroot_local-includes/usr/share/doc/tails/website/
+
+To accelerate the build, you can disable some languages by editing the
+parameter `po_slave_languages` in ikiwiki.setup.
+
+<a id="tails"></a>
+
+Build the website within Tails
+============================
+
+[[Create and configure|doc/first_steps/persistence/configure]] a persistent volume and activate the following features:
+
+  - Personal Data
+  - APT Packages
+  - APT Lists
+
+Restart Tails, [[enable the persistence|doc/first_steps/persistence/use]], and [[install additional packages|doc/advanced_topics/additional_software]] by running the following command line, as root:
+
+    apt-get update && apt-get install libyaml-perl libyaml-libyaml-perl po4a \
+    perlmagick libyaml-syck-perl ikiwiki && exit
+
+Clone the Git repository in the Persistent folder:
+
+    cd ~/Persistent/
+    git clone https://git-tails.immerda.ch/tails
+
+Build the wiki:
+
+    cd tails
+    ./build-wiki --set destdir="/home/amnesia/Persistent/Tor Browser/tails" "$@"
+
+You can now browse the offline website:
+
+    file:///home/amnesia/Persistent/Tor Browser/tails/index.en.html
+
+For an easy access to this page, you can create a shortcut with the following command line:
+
+    ln -s "/home/amnesia/Persistent/Tor Browser/tails/index.en.html"  offline-website
 
 To accelerate the build, you can disable some languages by editing the
 parameter `po_slave_languages` in ikiwiki.setup.
