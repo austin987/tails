@@ -6,10 +6,10 @@ Feature: Installing Tails to a USB drive
   Scenario: Try installing Tails to a too small USB drive
     Given Tails has booted from DVD without network and logged in
     And I temporarily create a 2 GiB disk named "too-small-device"
-    And I start Tails Installer in "Clone & Install" mode with the verbose flag
+    And I start Tails Installer in "Clone & Install" mode
     But a suitable USB device is not found
     When I plug USB drive "too-small-device"
-    Then Tails Installer detects that the device "too-small-device" is too small
+    Then Tails Installer detects that a device is too small
     And a suitable USB device is not found
 
   Scenario: Test that Tails installer can detect when a target USB drive is inserted or removed
