@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -e
+set -u
+
+ZSH_VERSION="${ZSH_VERSION:-}"
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
+PROFILE="${HOME}/.icedove/profile.default"
+
+start_icedove() {
+    TMPDIR="${PROFILE}/tmp"
+    mkdir --mode=0700 -p "$TMPDIR"
+    export TMPDIR
+
+    if [ -z "$XAUTHORITY" ]; then
+        XAUTHORITY=~/.Xauthority
+        export XAUTHORITY
+    fi
+
+    unset SESSION_MANAGER
+
+    /usr/bin/icedove --class "Icedove" -profile "${PROFILE}" "${@}"
+}
+
+start_icedove "${@}"
