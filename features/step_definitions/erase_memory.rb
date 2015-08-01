@@ -1,3 +1,22 @@
+def udev_watchdog_monitored_device
+  ps_output =
+    @vm.execute_successfully('ps -wweo cmd | grep udev-watchdog | grep -v grep').stdout.chomp
+  # This will return a string such as
+  # /devices/pci0000:00/0000:00:05.7/usb4/4-1/4-1:1.0/host2/target2:0:0/2:0:0:0/block/sda/sda1
+  monitored_out = /.*\/usr\/local\/sbin\/udev-watchdog\s(\S+)\s\w+/.match(ps_output)[1]
+  assert(!monitored_out.nil?)
+  monitored_device_id = @vm.file_content('/sys' + monitored_out + '/dev').chomp
+  monitored_device =
+    @vm.execute_successfully(
+      "readlink -f /dev/block/'#{monitored_device_id}'").stdout.chomp
+  return monitored_device
+end
+
+Given /^udev-watchdog is monitoring the correct device$/ do
+  next if @skip_steps_while_restoring_background
+  assert_equal(udev_watchdog_monitored_device, boot_device)
+end
+
 Given /^the computer is a modern 64-bit system$/ do
   next if @skip_steps_while_restoring_background
   @vm.set_arch("x86_64")
