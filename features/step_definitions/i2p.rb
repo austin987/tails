@@ -11,6 +11,11 @@ Given /^the I2P router console is ready$/ do
   end
 end
 
+Then /^the I2P router console is displayed in I2P Browser$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait('I2PRouterConsole.png', 2 * 60)
+end
+
 When /^I start the I2P Browser through the GNOME menu$/ do
   step 'I start "I2PBrowser" via the GNOME "Internet" applications menu'
 end

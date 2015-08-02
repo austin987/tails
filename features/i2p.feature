@@ -30,7 +30,7 @@ Feature: I2P
     And the I2P Browser sudo rules are enabled
     And the I2P firewall rules are enabled
     When I start the I2P Browser through the GNOME menu
-    Then I see "I2P_router_console.png" after at most 120 seconds
+    Then the I2P router console is displayed in I2P Browser
     And I2P is running in hidden mode
     And the I2P Browser uses all expected TBB shared libraries
     And I2P successfully built a tunnel
