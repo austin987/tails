@@ -1,9 +1,7 @@
 def udev_watchdog_monitored_device
-  ps_output =
-    @vm.execute_successfully('ps -wweo cmd | grep udev-watchdog | grep -v grep').stdout.chomp
-  # This will return a string such as
-  # /devices/pci0000:00/0000:00:05.7/usb4/4-1/4-1:1.0/host2/target2:0:0/2:0:0:0/block/sda/sda1
-  monitored_out = /.*\/usr\/local\/sbin\/udev-watchdog\s(\S+)\s\w+/.match(ps_output)[1]
+  ps_output = @vm.execute_successfully('ps -wweo cmd').stdout
+  ps_output_scan = ps_output.scan(/.*udev-watchdog\s(\S+)\s\w+/)
+  monitored_out = ps_output_scan.flatten[0]
   assert(!monitored_out.nil?)
   monitored_device_id = @vm.file_content('/sys' + monitored_out + '/dev').chomp
   monitored_device =
