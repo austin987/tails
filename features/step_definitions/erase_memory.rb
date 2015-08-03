@@ -1,6 +1,7 @@
 def udev_watchdog_monitored_device
   ps_output = @vm.execute_successfully('ps -wweo cmd').stdout
-  ps_output_scan = ps_output.scan(/.*udev-watchdog\s(\S+)\s\w+/)
+  udev_watchdog_cmd = '/usr/local/sbin/udev-watchdog'
+  ps_output_scan = ps_output.scan(/^#{Regexp.escape(udev_watchdog_cmd)}\s(\S+)\s(?:cd|disk)$/)
   assert_equal(ps_output_scan.count, 1, "There should be one udev-watchdog running.")
   monitored_out = ps_output_scan.flatten[0]
   assert(!monitored_out.nil?)
