@@ -378,8 +378,7 @@ EOF
     begin
       assert_vmcommand_success(p)
     rescue Test::Unit::AssertionFailedError => e
-      puts e
-      raise ExecutionFailedInVM
+      raise ExecutionFailedInVM.new(e)
     end
     return p
   end
