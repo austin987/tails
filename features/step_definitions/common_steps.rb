@@ -442,9 +442,14 @@ Given /^I save the state so the background can be restored next scenario$/ do
   @skip_steps_while_restoring_background = false
 end
 
-Then /^I see "([^"]*)" after at most (\d+) seconds$/ do |image, time|
+Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
   next if @skip_steps_while_restoring_background
-  @screen.wait(image, time.to_i)
+  begin
+    @screen.wait(image, time.to_i)
+    raise "found '#{image}' while expecting not to" if negation
+  rescue FindFailed => e
+    raise e if not(negation)
+  end
 end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
