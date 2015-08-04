@@ -22,6 +22,101 @@ qualche informazione sui file po:
 
 <http://tp.linux.it/guida-po/index.html>
 
+Come configurare il workflow sul vostro pc:
+1) creata una cartella con TRADUZIONI:$ mkdir TRADUZIONI
+2) entrata nella cartella:$ cd TRADUZIONI
+3) clonato i file per il mio uso locale nella cartella mytails (indicata
+in fondo):
+$ git clone  https://git-tails.immerda.ch/l10n-italian/tails/ mytails
+Cloning into 'mytails'...
+remote: Counting objects: 184366, done.
+remote: Compressing objects: 100% (48007/48007), done.
+remote: Total 184366 (delta 121678), reused 184279 (delta 121629)
+Ricezione degli oggetti: 100% (184366/184366), 49.13 MiB | 892.00 KiB/s,
+done.
+Risoluzione dei delta: 100% (121678/121678), done.
+Checking connectivity... fatto.
+
+4)Entro nell cartella e controllo che mi dice git:
+[cri@localhost mytails]$ git status
+Sul branch master
+Your branch is up-to-date with 'origin/master'.
+nothing to commit, working directory clean
+
+5)Aggiungo il repository remoto:
+[cri@localhost mytails]$ git remote add l10n-italian tails@git.tails.boum.org:l10n-italian/tails
+
+6)controllo che funzioni:
+[cri@localhost mytails]$ git remote -v
+l10n-italian	tails@git.tails.boum.org:l10n-italian/tails (fetch)
+l10n-italian	tails@git.tails.boum.org:l10n-italian/tails (push)
+tails	https://git-tails.immerda.ch/l10n-italian/tails/ (fetch)
+tails	https://git-tails.immerda.ch/l10n-italian/tails/ (push)
+
+7)modifico dei file, aggiungo traduzioni, etc..
+
+8)Aggiungo due file che ho creato e modificato:
+[cri@localhost mytails]$ git add wiki/src/doc/about/license.it.po
+[cri@localhost mytails]$ git add wiki/src/doc/about/requirements.it.po
+[cri@localhost mytails]$ git status
+Sul branch master
+Your branch is up-to-date with 'origin/master'.
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+    new file:   wiki/src/doc/about/license.it.po
+    new file:   wiki/src/doc/about/requirements.it.po
+
+9) faccio il commit locale
+
+[cri@localhost mytails]$ git commit -m "primi file tradotti"
+[master c149e1b] primi file tradotti
+ Committer: cri <cri@localhost.lan>
+Il tuo nome e l'indirizzo email sono stati configurati automaticamente
+usando
+il tuo nome utente ed il nome host. Per favore, verifica che siano esatti.
+È possibile eliminare questo messaggio impostandoli esplicitamente:
+
+    git config --global user.name "Tuo Nome"
+    git config --global user.email tu@esempio.com
+
+Dopo questa operazione, puoi ripristinare l'identità usata in questo
+commit con:
+
+    git commit --amend --reset-author
+
+ 2 files changed, 203 insertions(+)
+ create mode 100644 wiki/src/doc/about/license.it.po
+ create mode 100644 wiki/src/doc/about/requirements.it.po
+
+10)Configuro la mia identità:
+[cri@localhost mytails]$ git config --global user.name "ignifugo"
+[cri@localhost mytails]$ git config --global user.email
+"ignifugo@blablabla.net"
+
+11)Genero la chiave ssh, la invio agli sviluppatori TAILS(il file.pub) e l'associo per essere autenticato sul server:
+ssh-keygen -t rsa -b 4096 -C "ignifugo@blablabla.net"
+
+[cri@localhost ITATAILS]$ eval "$(ssh-agent -s)"
+Agent pid 12534
+[cri@localhost mytails]$ ssh-add /home/cri/ignissh
+Enter passphrase for /home/cri/ignissh:
+Identity added: /home/cri/ignissh (/home/cri/ignissh)
+ 
+12) metto i file sul server:
+[cri@localhost mytails]$ git push l10n-italian master
+The authenticity of host 'git.tails.boum.org (77.109.139.10)' can't be established.
+RSA key fingerprint is ed:1b:5b:45:e4:9c:d6:8f:55:f3:5f:b7:44:30:42:17.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added 'git.tails.boum.org,77.109.139.10' (RSA) to the list of known hosts.
+Counting objects: 8, done.
+Delta compression using up to 2 threads.
+Compressing objects: 100% (8/8), done.
+Writing objects: 100% (8/8), 4.04 KiB | 0 bytes/s, done.
+Total 8 (delta 4), reused 0 (delta 0)
+To tails@git.tails.boum.org:l10n-italian/tails
+   42f6936..c149e1b  master -> master
+
 # Lavoro svolto
 
 [[file in elaborazione]]
