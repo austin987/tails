@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# set -x
+set -x
 
 umask 022
 
@@ -17,6 +17,13 @@ syslinux_utils_upstream_version () {
        sed -e 's,.*:,,' | \
        # drop +dfsg and everything that follows
        sed -e 's,\+dfsg.*,,'
+}
+
+print_iso_size () {
+   local isofile="$1"
+   [ -f "$isofile" ] || return 23
+   size=$(stat --printf='%s' "$isofile")
+   echo "The ISO is ${size} bytes large."
 }
 
 ### Main
@@ -38,12 +45,6 @@ rm -rf cache/stages_rootfs
 
 # get LB_ARCHITECTURE and LB_DISTRIBUTION
 . config/bootstrap
-
-# build the doc wiki
-./build-wiki
-
-# refresh translations of our programs
-./refresh-translations || fatal "refresh-translations failed ($?)."
 
 # save variables that are needed by chroot_local-hooks
 echo "LB_DISTRIBUTION=${LB_DISTRIBUTION}" >> config/chroot_local-includes/usr/share/amnesia/build/variables
@@ -102,6 +103,36 @@ else
     fi
 fi
 
+GIT_BASE_BRANCH=$(head -n1 config/base_branch) \
+    || fatal "GIT_BASE_BRANCH could not be guessed."
+
+# Merge base branch into the branch being built, iff. we're building
+# in Jenkins, and not building from a tag, and not building the base
+# branch itself
+if [ -n "$JENKINS_URL" ] && [ -z "$GIT_TAG" ] \
+       && [ "$GIT_BRANCH" != "$GIT_BASE_BRANCH" ] ; then
+    GIT_BASE_BRANCH_COMMIT=$(git rev-parse "origin/${GIT_BASE_BRANCH}") \
+	|| fatal "Base branch's top commit could not be guessed."
+
+    echo "Merging base branch origin/${GIT_BASE_BRANCH}"
+    echo "(at commit ${GIT_BASE_BRANCH_COMMIT})..."
+    git merge --no-edit "origin/${GIT_BASE_BRANCH}" \
+	|| fatal "Failed to merge base branch."
+
+    # Adjust BUILD_BASENAME to embed the base branch name and its top commit
+    CLEAN_GIT_BASE_BRANCH=$(echo "$GIT_BASE_BRANCH" | sed 's,/,_,g')
+    GIT_BASE_BRANCH_SHORT_ID=$(git rev-parse --short "origin/${GIT_BASE_BRANCH}") \
+	|| fatal "Base branch's top commit short ID could not be guessed."
+    BUILD_BASENAME="${BUILD_BASENAME}+${CLEAN_GIT_BASE_BRANCH}"
+    BUILD_BASENAME="${BUILD_BASENAME}@${GIT_BASE_BRANCH_SHORT_ID}"
+fi
+
+# build the doc wiki
+./build-wiki
+
+# refresh translations of our programs
+./refresh-translations || fatal "refresh-translations failed ($?)."
+
 case "$LB_BINARY_IMAGES" in
    iso)
       BUILD_FILENAME_EXT=iso
@@ -140,19 +171,29 @@ BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
 BUILD_START_FILENAME="${BUILD_DEST_FILENAME}.start.timestamp"
 BUILD_END_FILENAME="${BUILD_DEST_FILENAME}.end.timestamp"
 
+# Clone all output, from this point on, to the log file
+exec >  >(tee -a "$BUILD_LOG")
+trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
+exec 2> >(tee -a "$BUILD_LOG" >&2)
+trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
+
 echo "Building $LB_BINARY_IMAGES image ${BUILD_BASENAME}..."
 set -o pipefail
 [ -z "$JENKINS_URL" ] || date --utc '+%s' > "$BUILD_START_FILENAME"
-time eatmydata lb build noauto ${@} 2>&1 | tee "${BUILD_LOG}"
+time eatmydata lb build noauto ${@}
 RET=$?
 if [ -e "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" ]; then
    if [ "$RET" -eq 0 ]; then
       [ -z "$JENKINS_URL" ] || date --utc '+%s' > "$BUILD_END_FILENAME"
       echo "Image was successfully created"
       if [ "$LB_BINARY_IMAGES" = iso ]; then
+	  ISO_FILE="${BUILD_FILENAME}.${BUILD_FILENAME_EXT}"
+	  print_iso_size "$ISO_FILE"
 	  echo "Hybriding it..."
-	  isohybrid $AMNESIA_ISOHYBRID_OPTS \
-		    "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}"
+	  isohybrid $AMNESIA_ISOHYBRID_OPTS "$ISO_FILE"
+	  print_iso_size "$ISO_FILE"
+	  truncate -s %2048 "$ISO_FILE"
+	  print_iso_size "$ISO_FILE"
       fi
    else
       echo "Warning: image created, but lb build exited with code $RET"

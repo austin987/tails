@@ -21,7 +21,8 @@ class Sniffer
   end
 
   def capture(filter="not ether src host #{@vmnet.bridge_mac} and not ether proto \\arp and not ether proto \\rarp")
-    job = IO.popen("/usr/sbin/tcpdump -n -i #{@vmnet.bridge_name} -w #{@pcap_file} -U '#{filter}' >/dev/null 2>&1")
+    job = IO.popen(["/usr/sbin/tcpdump", "-n", "-i", @vmnet.bridge_name, "-w",
+                    @pcap_file, "-U", filter, :err => ["/dev/null", "w"]])
     @pid = job.pid
   end
 

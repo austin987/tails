@@ -18,6 +18,7 @@ alsa-utils
 gdomap
 haveged
 hdparm
+hwclock.sh
 i2p
 kexec
 kexec-load

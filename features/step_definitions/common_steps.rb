@@ -37,6 +37,17 @@ def deactivate_filesystem_shares
   #end
 end
 
+def notification_helper(notification_image, time_to_wait)
+  # notifiction-daemon may abort during start-up, causing the tests that look for
+  # desktop notifications to fail (ticket #8686)
+  begin
+    @screen.wait(notification_image, time_to_wait)
+  rescue FindFailed => e
+    step 'process "notification-daemon" is running'
+    raise e
+  end
+end
+
 def restore_background
   @vm.restore_snapshot($background_snapshot)
   @vm.wait_until_remote_shell_is_up
@@ -121,14 +132,21 @@ Given /^the network is unplugged$/ do
   @vm.unplug_network
 end
 
+Given /^the hardware clock is set to "([^"]*)"$/ do |time|
+  next if @skip_steps_while_restoring_background
+  @vm.set_hardware_clock(DateTime.parse(time).to_time)
+end
+
 Given /^I capture all network traffic$/ do
   # Note: We don't want skip this particular stpe if
   # @skip_steps_while_restoring_background is set since it starts
   # something external to the VM state.
   @sniffer = Sniffer.new("sniffer", $vmnet)
   @sniffer.capture
-  add_after_scenario_hook(@sniffer.method(:stop))
-  add_after_scenario_hook(@sniffer.method(:clear))
+  add_after_scenario_hook do
+    @sniffer.stop
+    @sniffer.clear
+  end
 end
 
 Given /^I set Tails to boot with options "([^"]*)"$/ do |options|
@@ -235,16 +253,26 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
   @screen.type(Sikuli::Key.TAB)
   @screen.waitVanish(bootsplash_tab_msg, 1)
 
-  @screen.type(" autotest_never_use_this_option #{@boot_options}" +
+  @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 30*60)
   @vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
 end
 
-Given /^I log in to a new session$/ do
+Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
+  case lang
+  when 'German'
+    @language = "German"
+    @screen.wait_and_click('TailsGreeterLanguage.png', 10)
+    @screen.wait_and_click("TailsGreeterLanguage#{@language}.png", 10)
+    @screen.wait_and_click("TailsGreeterLoginButton#{@language}.png", 10)
+  when ''
+    @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
+  else
+    raise "Unsupported language: #{lang}"
+  end
 end
 
 Given /^I enable more Tails Greeter options$/ do
@@ -278,25 +306,29 @@ Given /^Tails Greeter has dealt with the sudo password$/ do
   }
 end
 
-Given /^GNOME has started$/ do
+Given /^the Tails desktop is ready$/ do
   next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
     desktop_started_picture = 'WindowsStartButton.png'
   else
-    desktop_started_picture = 'GnomeApplicationsMenu.png'
+    desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
+    # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
+    # By this point the only icon left is Vidalia and it will not cause the other systray
+    # icons to shift positions.
+    @screen.wait("GnomeSystrayFlorence.png", 180)
   end
   @screen.wait(desktop_started_picture, 180)
 end
 
 Then /^Tails seems to have booted normally$/ do
   next if @skip_steps_while_restoring_background
-  step "GNOME has started"
+  step "the Tails desktop is ready"
 end
 
 When /^I see the 'Tor is ready' notification$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("GnomeTorIsReady.png", 300)
+  notification_helper('GnomeTorIsReady.png', 300)
   @screen.waitVanish("GnomeTorIsReady.png", 15)
 end
 
@@ -337,7 +369,7 @@ Given /^the Tor Browser has started$/ do
   @screen.wait(tor_browser_picture, 60)
 end
 
-Given /^the Tor Browser has started and loaded the (startup page|Tails roadmap)$/ do |page|
+Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
   next if @skip_steps_while_restoring_background
   case page
   when "startup page"
@@ -534,6 +566,18 @@ end
 When /^I start the Tor Browser$/ do
   next if @skip_steps_while_restoring_background
   step 'I start "TorBrowser" via the GNOME "Internet" applications menu'
+end
+
+When /^I request a new identity using Torbutton$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait_and_click('TorButtonIcon.png', 30)
+  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
+end
+
+When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait('GnomeQuestionDialogIcon.png', 30)
+  step 'I type "y"'
 end
 
 When /^I start the Tor Browser in offline mode$/ do
@@ -756,6 +800,21 @@ When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
 
+def is_persistent?(app)
+  conf = get_persistence_presets(true)["#{app}"]
+  @vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'").success?
+end
+
+Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
+  next if @skip_steps_while_restoring_background
+  case enabled
+  when ''
+    assert(is_persistent?(app), "Persistence should be enabled.")
+  when 'not '
+    assert(!is_persistent?(app), "Persistence should not be enabled.")
+  end
+end
+
 Given /^the USB drive "([^"]+)" contains Tails with persistence configured and password "([^"]+)"$/ do |drive, password|
     step "a computer"
     step "I start Tails from DVD with network unplugged and I login"
@@ -771,6 +830,15 @@ Given /^the USB drive "([^"]+)" contains Tails with persistence configured and p
     step "I shutdown Tails and wait for the computer to power off"
 end
 
+def gnome_app_menu_click_helper(click_me, verify_me = nil)
+  try_for(60) do
+    @screen.hide_cursor
+    @screen.wait_and_click(click_me, 10)
+    @screen.wait(verify_me, 10) if verify_me
+    return
+  end
+end
+
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
   next if @skip_steps_while_restoring_background
   case @theme
@@ -779,13 +847,12 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, s
   else
     prefix = 'Gnome'
   end
-  @screen.wait_and_click(prefix + "ApplicationsMenu.png", 10)
-  @screen.hide_cursor
-  # Wait for the menu to be displayed, by waiting for one of its last entries
-  @screen.wait(prefix + "ApplicationsTails.png", 40)
-  @screen.wait_and_hover(prefix + "Applications" + submenu + ".png", 40)
-  @screen.hide_cursor
-  @screen.wait_and_click(prefix + "Applications" + app + ".png", 40)
+  menu_button = prefix + "ApplicationsMenu.png"
+  sub_menu_entry = prefix + "Applications" + submenu + ".png"
+  application_entry = prefix + "Applications" + app + ".png"
+  gnome_app_menu_click_helper(menu_button, sub_menu_entry)
+  gnome_app_menu_click_helper(sub_menu_entry, application_entry)
+  gnome_app_menu_click_helper(application_entry)
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
@@ -796,15 +863,14 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/
   else
     prefix = 'Gnome'
   end
-  @screen.wait_and_click(prefix + "ApplicationsMenu.png", 10)
-  @screen.hide_cursor
-  # Wait for the menu to be displayed, by waiting for one of its last entries
-  @screen.wait(prefix + "ApplicationsTails.png", 40)
-  @screen.wait_and_hover(prefix + "Applications" + submenu + ".png", 20)
-  @screen.hide_cursor
-  @screen.wait_and_hover(prefix + "Applications" + subsubmenu + ".png", 20)
-  @screen.hide_cursor
-  @screen.wait_and_click(prefix + "Applications" + app + ".png", 20)
+  menu_button = prefix + "ApplicationsMenu.png"
+  sub_menu_entry = prefix + "Applications" + submenu + ".png"
+  sub_sub_menu_entry = prefix + "Applications" + subsubmenu + ".png"
+  application_entry = prefix + "Applications" + app + ".png"
+  gnome_app_menu_click_helper(menu_button, sub_menu_entry)
+  gnome_app_menu_click_helper(sub_menu_entry, sub_sub_menu_entry)
+  gnome_app_menu_click_helper(sub_sub_menu_entry, application_entry)
+  gnome_app_menu_click_helper(application_entry)
 end
 
 When /^I type "([^"]+)"$/ do |string|
@@ -937,4 +1003,36 @@ end
 When /^I accept to import the key with Seahorse$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("TorBrowserOkButton.png", 10)
+end
+
+Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
+  if with_vidalia
+    assert_equal('gnome', @theme, "Vidalia is not available in the #{@theme} theme.")
+    begin
+      step 'process "vidalia" is running'
+    rescue Test::Unit::AssertionFailedError
+      STDERR.puts "Vidalia was not running. Attempting to start Vidalia..." if $config["DEBUG"]
+      @vm.spawn('restart-vidalia')
+      step 'process "vidalia" is running within 15 seconds'
+    end
+    # Sometimes Sikuli gets confused and recognizes the yellow-colored vidalia systray
+    # icon as the green one. This has been seen when Vidalia needed to be
+    # restarted in the above 'begin' block.
+    #
+    # try_for is used here for that reason, otherwise this step may fail
+    # because sikuli presumaturely right-clicked the Vidalia icon and the 'New
+    # Identity' option isn't clickable yet..
+    try_for(3 * 60) do
+      # Let's be *sure* that vidalia is still running. I'd hate to spend up to
+      # three minutes waiting for an icon that isn't there because Vidalia, for
+      # whatever reason, is no longer running...
+      step 'process "vidalia" is running'
+      @screen.wait_and_right_click('VidaliaSystrayReady.png', 10)
+      @screen.wait_and_click('VidaliaMenuNewIdentity.png', 10)
+    end
+    @screen.wait('VidaliaNewIdentityNotification.png', 20)
+    @screen.waitVanish('VidaliaNewIdentityNotification.png', 60)
+  else
+    @vm.execute_successfully('. /usr/local/lib/tails-shell-library/tor.sh; tor_control_send "signal NEWNYM"')
+  end
 end

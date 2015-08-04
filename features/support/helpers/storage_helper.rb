@@ -28,7 +28,7 @@ class VMStorage
     @pool_path = "#{$config["TMPDIR"]}/#{pool_name}"
     pool_xml.elements['pool/target/path'].text = @pool_path
     @pool = @virt.define_storage_pool_xml(pool_xml.to_s)
-    @pool.build
+    @pool.build unless Dir.exists?(@pool_path)
     @pool.create
     @pool.refresh
   end
