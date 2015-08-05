@@ -79,11 +79,11 @@ Feature: Browsing the web using the Tor Browser
     When I open the address "file:///home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
     And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/home/amnesia/.gnupg/synaptic.html"
-    Given AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
+    Given AppArmor has not denied "/usr/local/lib/tor-browser/firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
     When I open the address "file:///lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
     And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
-    Given AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/live/overlay/home/amnesia/.gnupg/synaptic.html"
+    Given AppArmor has not denied "/usr/local/lib/tor-browser/firefox" from opening "/live/overlay/home/amnesia/.gnupg/synaptic.html"
     When I open the address "file:///live/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
     And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/live/overlay/home/amnesia/.gnupg/synaptic.html"
