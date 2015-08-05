@@ -1129,7 +1129,7 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at m
       block.call
     end
   rescue Timeout::Error, Test::Unit::AssertionFailedError => e
-    raise e, "apparmor has #{anti_test ? "" : "not "}denied the operation"
+    raise e, "AppArmor has #{anti_test ? "" : "not "}denied the operation"
   end
 end
 
