@@ -25,14 +25,20 @@ Feature: Using Evince
     Then the file "/home/amnesia/.gnupg/default-testpage.pdf" exists
     And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf" exists
     And the file "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" exists
+    Given AppArmor has not denied "/usr/bin/evince" from opening "/home/amnesia/.gnupg/default-testpage.pdf"
     When I try to open "/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
+    And AppArmor has denied "/usr/bin/evince" from opening "/home/amnesia/.gnupg/default-testpage.pdf"
+    Given AppArmor has not denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
     When I close Evince
     And I try to open "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
+    And AppArmor has denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
+    Given AppArmor has not denied "/usr/bin/evince" from opening "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf"
     When I close Evince
     And I try to open "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
+    And AppArmor has denied "/usr/bin/evince" from opening "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf"
 
   @keep_volumes
   Scenario: Installing Tails on a USB drive, creating a persistent partition, copying PDF files to it
@@ -57,5 +63,8 @@ Feature: Using Evince
   Scenario: I cannot view a PDF file stored in persistent /home/amnesia/.gnupg
     Given a computer
     When I start Tails from USB drive "current" with network unplugged and I login with persistence password "asdf"
+    Then the file "/home/amnesia/Persistent/default-testpage.pdf" exists
+    Given AppArmor has not denied "/usr/bin/evince" from opening "/home/amnesia/.gnupg/default-testpage.pdf"
     And I try to open "/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
+    And AppArmor has denied "/usr/bin/evince" from opening "/home/amnesia/.gnupg/default-testpage.pdf"

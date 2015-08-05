@@ -442,9 +442,14 @@ Given /^I save the state so the background can be restored next scenario$/ do
   @skip_steps_while_restoring_background = false
 end
 
-Then /^I see "([^"]*)" after at most (\d+) seconds$/ do |image, time|
+Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
   next if @skip_steps_while_restoring_background
-  @screen.wait(image, time.to_i)
+  begin
+    @screen.wait(image, time.to_i)
+    raise "found '#{image}' while expecting not to" if negation
+  rescue FindFailed => e
+    raise e if not(negation)
+  end
 end
 
 Then /^I don't see "([^"]*)"$/ do |image|
@@ -1108,6 +1113,38 @@ def force_new_tor_circuit(with_vidalia=nil)
     @screen.waitVanish('VidaliaNewIdentityNotification.png', 60)
   else
     @vm.execute_successfully('. /usr/local/lib/tails-shell-library/tor.sh; tor_control_send "signal NEWNYM"')
+  end
+end
+
+Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
+  next if @skip_steps_while_restoring_background
+  if min
+    time = rand(max.to_i - min.to_i + 1) + min.to_i
+  else
+    time = max.to_i
+  end
+  puts "Slept for #{time} seconds"
+  sleep(time)
+end
+
+When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at most (\d+) seconds)?$/ do |anti_test, profile, file, time|
+  next if @skip_steps_while_restoring_background
+  expected_cmd_status = anti_test ? false : true
+  audit_line = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' %
+               [profile, file]
+  block = Proc.new do
+    cmd = @vm.execute("grep -qF '#{audit_line}' /var/log/syslog")
+    assert_equal(expected_cmd_status, cmd.success?)
+    true
+  end
+  begin
+    if time
+      try_for(time.to_i) { block.call }
+    else
+      block.call
+    end
+  rescue Timeout::Error, Test::Unit::AssertionFailedError => e
+    raise e, "AppArmor has #{anti_test ? "" : "not "}denied the operation"
   end
 end
 
