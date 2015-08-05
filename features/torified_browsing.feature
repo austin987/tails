@@ -75,7 +75,11 @@ Feature: Browsing the web using the Tor Browser
     When I open the address "file:///home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/home/amnesia/.gnupg/synaptic.html" after at most 10 seconds
     # We do not get any AppArmor log for when access to files in /tmp is denied
-    # since we use user-tmp abstration.
+    # since we explictly override (commit 51c0060) the rules (from the user-tmp
+    # abstration) that would otherwise allow it, and we do so with "deny", which
+    # also specifies "noaudit". We could explicitly specify "audit deny" and
+    # then have logs, but it could be a problem when we set up desktop
+    # notifications for AppArmor denials (#9337).
     When I open the address "file:///tmp/synaptic.html" in the Tor Browser
     And I do not see "TorBrowserSynapticManual.png" after at most 10 seconds
 
