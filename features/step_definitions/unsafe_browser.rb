@@ -163,7 +163,7 @@ end
 # the text in the preferences sometimes pushes certain elements we
 # need outside of the visible part of the page. In those cases this
 # workaround is useful.
-def scroll_page_to_extreme_right
+def unsafe_browser_scroll_page_to_extreme_right
   right = 'UnsafeBrowserScrollRightButton.png'
   done = 'UnsafeBrowserScrollRightButtonDone.png'
   cur = nil
@@ -197,7 +197,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     hit, _ = @screen.waitAny(['UnsafeBrowserNetworkTabAlreadySelected.png',
                               'UnsafeBrowserNetworkTab.png'], 10)
     @screen.click(hit) if hit == 'UnsafeBrowserNetworkTab.png'
-    scroll_page_to_extreme_right
+    unsafe_browser_scroll_page_to_extreme_right
     @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
     @screen.wait('UnsafeBrowserProxySettingsWindow.png', 10)
     @screen.type("m", Sikuli::KeyModifier.ALT)
@@ -226,7 +226,7 @@ Then /^the Unsafe Browser has no proxy configured$/ do
   @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
   @screen.wait_and_click('UnsafeBrowserAdvancedSettingsButton.png', 10)
   @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
-  scroll_page_to_extreme_right
+  unsafe_browser_scroll_page_to_extreme_right
   @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
   @screen.wait('UnsafeBrowserProxySettingsWindow.png', 10)
   @screen.wait('UnsafeBrowserNoProxySelected.png', 10)
