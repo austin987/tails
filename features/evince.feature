@@ -29,14 +29,14 @@ Feature: Using Evince
     When I try to open "/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/evince" from opening "/home/amnesia/.gnupg/default-testpage.pdf"
-    Given AppArmor has not denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
     When I close Evince
-    And I try to open "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
+    Given AppArmor has not denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
+    When I try to open "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
-    Given AppArmor has not denied "/usr/bin/evince" from opening "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf"
     When I close Evince
-    And I try to open "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
+    Given AppArmor has not denied "/usr/bin/evince" from opening "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf"
+    When I try to open "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/evince" from opening "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf"
 
