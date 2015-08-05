@@ -74,13 +74,6 @@ Then /^the live user owns its home dir and it has normal permissions$/ do
   assert_equal("700", perms)
 end
 
-Given /^I wait between (\d+) and (\d+) seconds$/ do |min, max|
-  next if @skip_steps_while_restoring_background
-  time = rand(max.to_i - min.to_i + 1) + min.to_i
-  puts "Slept for #{time} seconds"
-  sleep(time)
-end
-
 Then /^no unexpected services are listening for network connections$/ do
   next if @skip_steps_while_restoring_background
   netstat_cmd = @vm.execute("netstat -ltupn")

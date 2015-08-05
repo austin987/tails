@@ -21,8 +21,10 @@ Feature: Using Totem
     Then I see "SampleLocalMp4VideoFrame.png" after at most 20 seconds
     Given I close Totem
     And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"
+    And AppArmor has not denied "/usr/bin/totem" from opening "/home/amnesia/.gnupg/video.mp4"
     When I try to open "/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
+    And AppArmor has denied "/usr/bin/totem" from opening "/home/amnesia/.gnupg/video.mp4"
 
   @check_tor_leaks
   Scenario: Watching a WebM video over HTTPS, with and without the command-line
@@ -54,5 +56,7 @@ Feature: Using Totem
     Then I see "SampleLocalMp4VideoFrame.png" after at most 10 seconds
     Given I close Totem
     And the file "/home/amnesia/.gnupg/video.mp4" exists
+    And AppArmor has not denied "/usr/bin/totem" from opening "/home/amnesia/.gnupg/video.mp4"
     When I try to open "/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
+    And AppArmor has denied "/usr/bin/totem" from opening "/home/amnesia/.gnupg/video.mp4"
