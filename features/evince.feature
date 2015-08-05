@@ -35,10 +35,14 @@ Feature: Using Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
     When I close Evince
-    Given AppArmor has not denied "/usr/bin/evince" from opening "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf"
+    # Due to our AppArmor rewriting rules, /live/overlay will be treated
+    # as /lib/live/mount/overlay. We have to clear syslog we'll look for
+    # the same entry as above again.
+    Given I clear syslog
+    And AppArmor has not denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
     When I try to open "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
-    And AppArmor has denied "/usr/bin/evince" from opening "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf"
+    And AppArmor has denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
 
   @keep_volumes
   Scenario: Installing Tails on a USB drive, creating a persistent partition, copying PDF files to it

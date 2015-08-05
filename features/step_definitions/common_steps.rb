@@ -1120,6 +1120,11 @@ Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
   sleep(time)
 end
 
+Given /^I clear syslog$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.execute_successfully('echo > /var/log/syslog')
+end
+
 When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at most (\d+) seconds)?$/ do |anti_test, profile, file, time|
   next if @skip_steps_while_restoring_background
   expected_cmd_status = anti_test ? false : true

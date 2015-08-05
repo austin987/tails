@@ -83,10 +83,14 @@ Feature: Browsing the web using the Tor Browser
     When I open the address "file:///lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
     And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
-    Given AppArmor has not denied "/usr/local/lib/tor-browser/firefox" from opening "/live/overlay/home/amnesia/.gnupg/synaptic.html"
+    # Due to our AppArmor rewriting rules, /live/overlay will be treated
+    # as /lib/live/mount/overlay. We have to clear syslog we'll look for
+    # the same entry as above again.
+    And I clear syslog
+    Given AppArmor has not denied "/usr/local/lib/tor-browser/firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
     When I open the address "file:///live/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
-    And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/live/overlay/home/amnesia/.gnupg/synaptic.html"
+    And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
     # We do not get any AppArmor log for when access to files in /tmp is denied
     # since we explictly override (commit 51c0060) the rules (from the user-tmp
     # abstration) that would otherwise allow it, and we do so with "deny", which

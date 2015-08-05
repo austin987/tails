@@ -36,10 +36,14 @@ Feature: Using Totem
     And AppArmor has denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
     Given I close Totem
     And the file "/live/overlay/home/amnesia/.gnupg/video.mp4" exists
-    And AppArmor has not denied "/usr/bin/totem" from opening "/live/overlay/home/amnesia/.gnupg/video.mp4"
+    # Due to our AppArmor rewriting rules, /live/overlay will be treated
+    # as /lib/live/mount/overlay. We have to clear syslog we'll look for
+    # the same entry as above again.
+    And I clear syslog
+    And AppArmor has not denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
     When I try to open "/live/overlay/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
-    And AppArmor has denied "/usr/bin/totem" from opening "/live/overlay/home/amnesia/.gnupg/video.mp4"
+    And AppArmor has denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
 
   @check_tor_leaks
   Scenario: Watching a WebM video over HTTPS, with and without the command-line
