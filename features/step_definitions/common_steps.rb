@@ -452,13 +452,6 @@ Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, ima
   end
 end
 
-Then /^I don't see "([^"]*)"$/ do |image|
-  next if @skip_steps_while_restoring_background
-  if @screen.exists(image)
-    raise "Found #{image}"
-  end
-end
-
 Then /^all Internet traffic has only flowed through Tor$/ do
   next if @skip_steps_while_restoring_background
   leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
