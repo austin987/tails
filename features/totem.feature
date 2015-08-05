@@ -36,9 +36,9 @@ Feature: Using Totem
     And AppArmor has denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
     Given I close Totem
     And the file "/live/overlay/home/amnesia/.gnupg/video.mp4" exists
-    # Due to our AppArmor rewriting rules, /live/overlay will be treated
-    # as /lib/live/mount/overlay. We have to clear syslog we'll look for
-    # the same entry as above again.
+    # Due to our AppArmor aliases, /live/overlay will be treated
+    # as /lib/live/mount/overlay. We have to clear syslog first,
+    # otherwise we'll look for the same entry as above again.
     And I clear syslog
     And AppArmor has not denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
     When I try to open "/live/overlay/home/amnesia/.gnupg/video.mp4" with Totem

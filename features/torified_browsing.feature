@@ -83,9 +83,9 @@ Feature: Browsing the web using the Tor Browser
     When I open the address "file:///lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
     And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
-    # Due to our AppArmor rewriting rules, /live/overlay will be treated
-    # as /lib/live/mount/overlay. We have to clear syslog we'll look for
-    # the same entry as above again.
+    # Due to our AppArmor aliases, /live/overlay will be treated
+    # as /lib/live/mount/overlay. We have to clear syslog first,
+    # otherwise we'll look for the same entry as above again.
     And I clear syslog
     Given AppArmor has not denied "/usr/local/lib/tor-browser/firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
     When I open the address "file:///live/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
