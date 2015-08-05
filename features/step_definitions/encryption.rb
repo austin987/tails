@@ -1,3 +1,13 @@
+def seahorse_menu_click_helper(main, sub, verify = nil)
+  try_for(60) do
+    step "process \"#{verify}\" is running" if verify
+    @screen.hide_cursor
+    @screen.wait_and_click(main, 10)
+    @screen.wait_and_click(sub, 10)
+    return
+  end
+end
+
 Given /^I generate an OpenPGP key named "([^"]+)" with password "([^"]+)"$/ do |name, pwd|
   @passphrase = pwd
   @key_name = name
@@ -53,8 +63,7 @@ end
 
 def encrypt_sign_helper
   gedit_copy_all_text
-  @screen.click("GpgAppletIconNormal.png")
-  @screen.wait_and_click("GpgAppletSignEncrypt.png", 10)
+  seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletSignEncrypt.png')
   @screen.wait_and_click("GpgAppletChooseKeyWindow.png", 30)
   sleep 0.5
   yield
@@ -64,8 +73,7 @@ end
 
 def decrypt_verify_helper(icon)
   gedit_copy_all_text
-  @screen.click(icon)
-  @screen.wait_and_click("GpgAppletDecryptVerify.png", 10)
+  seahorse_menu_click_helper(icon, 'GpgAppletDecryptVerify.png')
   maybe_deal_with_pinentry
   @screen.wait("GpgAppletResults.png", 10)
   @screen.wait("GpgAppletResultsMsg.png", 10)
@@ -116,8 +124,7 @@ When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
   @passphrase = pwd
   next if @skip_steps_while_restoring_background
   gedit_copy_all_text
-  @screen.click("GpgAppletIconNormal.png")
-  @screen.wait_and_click("GpgAppletEncryptPassphrase.png", 10)
+  seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletEncryptPassphrase.png')
   maybe_deal_with_pinentry # enter password
   maybe_deal_with_pinentry # confirm password
   paste_into_a_new_tab

@@ -82,12 +82,19 @@ cd "$WORKSPACE"
 git checkout --force "$REV"
 git reset --hard "$COMMIT"
 
+if [ -n "$JENKINS_URL" ]; then
+	git clean --force -d -x
+fi
+
 install -m 0755 -d "$ARTIFACTS_DIR"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
 fi
-./build-wiki
+
+if [ -z "$JENKINS_URL" ]; then
+	./build-wiki
+fi
 
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
 if [ "$TAILS_RAM_BUILD" ]; then
