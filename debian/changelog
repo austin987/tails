@@ -3,9 +3,15 @@ tails (1.5~rc1) UNRELEASED; urgency=medium
   * Major new features and changes
     - Move LAN web browsing from Tor Browser to the Unsafe Browser,
       and forbid access to the LAN from the former. (Closes: #7976)
+    - Install a 32-bit GRUB EFI boot loader. This at least works
+      on some Intel Baytrail systems. (Closes: #8471)
 
   * Security fixes
-    - XXX: Tor Browser 5.0
+    - Upgrade Tor Browser to 5.0a4-build3, and integrate it:
+      · Disable Tiles in all browsers' new tab page.
+      · Don't use geo-specific search engine prefs in our browsers.
+      · Hide Tools -> Set Up Sync, Tools -> Apps (that links to the Firefox
+        Marketplace, and the "Share this page" button in the Tool bar.
     - XXX: update list of Debian packages that were upgraded for security
       reasons.
     - Fix panic mode on MAC spoofing failure, bis repetita. (Closes: #9531)
@@ -23,7 +29,7 @@ tails (1.5~rc1) UNRELEASED; urgency=medium
     - Upgrade openjdk-7 to 7u79-2.5.6-1~deb7u1.
 
   * Bugfixes
-    - XXX: Tor 0.2.6.10
+    - Upgrade Tor to 0.2.6.10-1~d70.wheezy+1+tails1.
 
   * Minor improvements
     - Tails Installer: let the user know when it has rejected a candidate
@@ -72,8 +78,16 @@ tails (1.5~rc1) UNRELEASED; urgency=medium
     - Test that udev-watchdog is actually monitoring the correct device.
       (Closes: #5560)
     - IUK: workaround weird Archive::Tar behaviour on current sid.
+    - Test the SocksPort:s given in torrc in the Unsafe Browser.
+      This way we don't get any sneaky errors in case we change them and
+      forget to update this test.
+    - Directly verify AppArmor blocking of the Tor Browser by looking in
+      the audit log: Firefox 38 does no longer provide any graphical feedback
+      when the kernel blocks its access to files the user wants to access.
+    - Update browser-related automated test suite images, and workaround
+      weirdness introduced by the new Tor Browser fonts.
 
- -- Tails developers <tails@boum.org>  Tue, 04 Aug 2015 17:51:56 +0200
+ -- Tails developers <amnesia@boum.org>  Wed, 05 Aug 2015 20:29:03 +0200
 
 tails (1.4.1) unstable; urgency=medium
 
