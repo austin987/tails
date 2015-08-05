@@ -36,8 +36,8 @@ Feature: Using Evince
     And AppArmor has denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
     When I close Evince
     # Due to our AppArmor aliases, /live/overlay will be treated
-    # as /lib/live/mount/overlay. We have to clear syslog we'll look for
-    # the same entry as above again.
+    # as /lib/live/mount/overlay. We have to clear syslog first,
+    # otherwise we'll look for the same entry as above again.
     Given I clear syslog
     And AppArmor has not denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
     When I try to open "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
