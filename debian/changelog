@@ -19,6 +19,21 @@ tails (1.5~rc1) UNRELEASED; urgency=medium
       and give it its own $TMPDIR. (Closes: #9558)
     - Tails Installer: don't use a predictable file name for the subprocess
       error log. (Closes: #9349)
+    - Pidgin AppArmor profile: disable the launchpad-integration abstraction,
+      which is too wide-open.
+    - Use aliases so that our AppArmor policy applies to
+      /lib/live/mount/overlay/ and /lib/live/mount/rootfs/*.squashfs/ as well as
+      it applies to /. And accordingly:
+      · Upgrade AppArmor packages to 2.9.0-3~bpo70+1.
+      · Install rsyslog from wheezy-backports, since the version from Wheezy
+        conflicts with AppArmor 2.9.
+      · Stop installing systemd for now: the migration work is being done in
+        the feature/jessie branch, and it conflicts with rsyslog from
+        wheezy-backports.
+      · Drop apparmor-adjust-user-tmp-abstraction.diff: obsoleted.
+      · apparmor-adjust-tor-profile.diff: simplify and de-duplicate rules.
+      · Take into account aufs whiteouts in the system_tor profile.
+      · Adjust the Vidalia profile to take into account Live-specific paths.
     - Upgrade Linux to 3.16.7-ckt11-1+deb8u2.
     - Upgrade bind9-host, dnsutils and friends to 1:9.8.4.dfsg.P1-6+nmu2+deb7u6.
     - Upgrade cups-filters to 1.0.18-2.1+deb7u2.
@@ -43,6 +58,20 @@ tails (1.5~rc1) UNRELEASED; urgency=medium
     - Skip warning dialog when starting Tor Browser while being offline,
       in case it is already running. Thanks to Austin English for the patch!
       (Closes: #7525)
+    - Install the apparmor-profiles package (Closes: #9539), but don't ship
+      a bunch of AppArmor profiles we don't use, to avoid increasing
+      boot time. (Closes: #9757)
+    - Ship a /etc/apparmor.d/tunables/home.d/tails snippet, instead
+      of patching /etc/apparmor.d/tunables/home.
+    - live-boot: don't mount tmpfs twice on /live/overlay, so that the one which
+      is actually used as the read-write branch of the root filesystem's union
+      mount, is visible. As a consequence:
+      · One can now inspect how much space is used, at a given time, in the
+        read-write branch of the root filesystem's union mount.
+      · We can make sure our AppArmor policy works fine when that filesystem
+        is visible, which is safer in case e.g. live-boot's behavior change
+        under our feet in the future... or in case these "hidden" files are
+        actually accessible somehow already.
 
   * Build system
     - Add our jenkins-tools repository as a Git submodule, and replace
@@ -86,8 +115,11 @@ tails (1.5~rc1) UNRELEASED; urgency=medium
       when the kernel blocks its access to files the user wants to access.
     - Update browser-related automated test suite images, and workaround
       weirdness introduced by the new Tor Browser fonts.
+    - Test that Pidgin, Tor Browser, Totem and Evince cannot access ~/.gnupg
+      via alternate, live-boot generated paths.
+    - Adjust tests to cope with our new AppArmor aliases.
 
- -- Tails developers <amnesia@boum.org>  Wed, 05 Aug 2015 20:29:03 +0200
+ -- Tails developers <tails@boum.org>  Wed, 05 Aug 2015 22:36:48 +0200
 
 tails (1.4.1) unstable; urgency=medium
 
