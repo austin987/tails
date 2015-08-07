@@ -326,7 +326,7 @@ end
 
 When /^the Tor Launcher autostarts$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait('TorLauncherWindow.png', 30)
+  @screen.wait('TorLauncherWindow.png', 60)
 end
 
 When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|

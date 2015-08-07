@@ -979,9 +979,11 @@ When /^I click the HTML5 play button$/ do
   @screen.wait_and_click("TorBrowserHtml5PlayButton.png", 30)
 end
 
-When /^I can save the current page as "([^"]+[.]html)" to the (default downloads|persistent Tor Browser) directory$/ do |output_file, output_dir|
+When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) directory$/ do |should_work, output_file, output_dir|
   next if @skip_steps_while_restoring_background
+  should_work = should_work == 'can' ? true : false
   @screen.type("s", Sikuli::KeyModifier.CTRL)
+  @screen.wait("TorBrowserSaveDialog.png", 10)
   if output_dir == "persistent Tor Browser"
     output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
     @screen.wait_and_click("GtkTorBrowserPersistentBookmark.png", 10)
@@ -990,16 +992,22 @@ When /^I can save the current page as "([^"]+[.]html)" to the (default downloads
     # let's use the keyboard shortcut to focus its field
     @screen.type("n", Sikuli::KeyModifier.ALT)
     @screen.wait("TorBrowserSaveOutputFileSelected.png", 10)
-  else
+  elsif output_dir == "default downloads"
     output_dir = "/home/#{LIVE_USER}/Tor Browser"
+  else
+    @screen.type(output_dir + '/')
   end
   # Only the part of the filename before the .html extension can be easily replaced
   # so we have to remove it before typing it into the arget filename entry widget.
   @screen.type(output_file.sub(/[.]html$/, ''))
   @screen.type(Sikuli::Key.ENTER)
-  try_for(10, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
-    @vm.file_exist?("#{output_dir}/#{output_file}")
-  }
+  if should_work
+    try_for(10, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
+      @vm.file_exist?("#{output_dir}/#{output_file}")
+    }
+  else
+    @screen.wait("TorBrowserCannotSavePage.png", 10)
+  end
 end
 
 When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads|persistent Tor Browser) directory$/ do |output_file, output_dir|
@@ -1132,6 +1140,11 @@ Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
   end
   puts "Slept for #{time} seconds"
   sleep(time)
+end
+
+Given /^I clear syslog$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.execute_successfully('echo > /var/log/syslog')
 end
 
 When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at most (\d+) seconds)?$/ do |anti_test, profile, file, time|
