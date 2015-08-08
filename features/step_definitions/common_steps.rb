@@ -1122,6 +1122,9 @@ end
 
 Given /^I (?:re)?start monitoring the AppArmor log of "([^"]+)"$/ do |profile|
   next if @skip_steps_while_restoring_background
+  # AppArmor log entries may be dropped if printk rate limiting is
+  # enabled.
+  @vm.execute_successfully('sysctl -w kernel.printk_ratelimit=0')
   # We will only care about entries for this profile from this time
   # and on.
   guest_time = DateTime.parse(@vm.execute_successfully('date').stdout)
