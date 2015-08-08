@@ -18,31 +18,30 @@ Feature: Using Totem
     And I start Tails from DVD with network unplugged and I login
     And I copy the sample videos to "/home/amnesia" as user "amnesia"
     And the file "/home/amnesia/video.mp4" exists
+    Given I start monitoring the AppArmor log of "/usr/bin/totem"
     When I open "/home/amnesia/video.mp4" with Totem
     Then I see "SampleLocalMp4VideoFrame.png" after at most 20 seconds
     And AppArmor has not denied "/usr/bin/totem" from opening "/home/amnesia/video.mp4"
     Given I close Totem
     And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"
     And the file "/home/amnesia/.gnupg/video.mp4" exists
-    And AppArmor has not denied "/usr/bin/totem" from opening "/home/amnesia/.gnupg/video.mp4"
+    Given I restart monitoring the AppArmor log of "/usr/bin/totem"
     When I try to open "/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/totem" from opening "/home/amnesia/.gnupg/video.mp4"
     Given I close Totem
     And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4" exists
-    And AppArmor has not denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
+    Given I restart monitoring the AppArmor log of "/usr/bin/totem"
     When I try to open "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
     Given I close Totem
     And the file "/live/overlay/home/amnesia/.gnupg/video.mp4" exists
-    # Due to our AppArmor aliases, /live/overlay will be treated
-    # as /lib/live/mount/overlay. We have to clear syslog first,
-    # otherwise we'll look for the same entry as above again.
-    And I clear syslog
-    And AppArmor has not denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
+    And I restart monitoring the AppArmor log of "/usr/bin/totem"
     When I try to open "/live/overlay/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
+    # Due to our AppArmor aliases, /live/overlay will be treated
+    # as /lib/live/mount/overlay.
     And AppArmor has denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
 
   @check_tor_leaks
@@ -75,7 +74,7 @@ Feature: Using Totem
     Then I see "SampleLocalMp4VideoFrame.png" after at most 10 seconds
     Given I close Totem
     And the file "/home/amnesia/.gnupg/video.mp4" exists
-    And AppArmor has not denied "/usr/bin/totem" from opening "/home/amnesia/.gnupg/video.mp4"
+    And I start monitoring the AppArmor log of "/usr/bin/totem"
     When I try to open "/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/totem" from opening "/home/amnesia/.gnupg/video.mp4"
