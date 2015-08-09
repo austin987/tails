@@ -58,9 +58,16 @@ systemctl --global enable tails-warn-about-disabled-persistence.service
 systemctl disable cups.service
 systemctl enable  cups.socket
 
-# We're starting NetworkManager ourselves
+# We're starting NetworkManager and Tor ourselves
+systemctl disable tor.service
 systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service
+
+# We don't run these services by default
+systemctl disable gdomap.service
+systemctl disable hdparm.service
+systemctl disable i2p.service
+systemctl disable ttdnsd.service
 
 # Don't hide tails-kexec's shutdown messages with an empty splash screen
 for suffix in halt kexec poweroff reboot shutdown ; do
