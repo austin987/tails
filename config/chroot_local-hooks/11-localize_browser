@@ -17,12 +17,14 @@ echo "Localize each supported browser locale"
 . /etc/amnesia/environment
 
 TBB_DEFAULT_SEARCHPLUGINS_DIR="${TBB_INSTALL}/browser/searchplugins"
-TBB_LOCALIZED_SEACHPLUGINS_DIR="${TBB_INSTALL}/distribution/searchplugins/locale/"
+TBB_LOCALIZED_SEARCHPLUGINS_DIR="${TBB_INSTALL}/distribution/searchplugins/locale/"
 BROWSER_LOCALIZATION_DIR="/usr/share/tails/browser-localization"
 DESCRIPTIONS_FILE="${BROWSER_LOCALIZATION_DIR}/descriptions"
 BRANDING_TEMPLATE_FILE="${BROWSER_LOCALIZATION_DIR}/amnesia.properties-template"
 BRANDING_DIR="/usr/local/share/tor-browser-extensions/branding@amnesia.boum.org/"
 NO_SPELLCHECKER_LOCALES="ko nl pl tr zh"
+
+apt-get install imagemagick
 
 # Sanity check that each supported Tor Browser locale has a
 # description for how to localize it further.
@@ -59,7 +61,7 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
     # locale format, since Firefox isn't very consistent in it.
     NORMAL_LOCALE="$(echo "${MOZILLA_LOCALE}" | tr - _)"
     LANG_CODE="$(language_code_from_locale "${NORMAL_LOCALE}")"
-    TARGET_SEARCHPLUGINS_DIR="${TBB_LOCALIZED_SEACHPLUGINS_DIR}/${MOZILLA_LOCALE}"
+    TARGET_SEARCHPLUGINS_DIR="${TBB_LOCALIZED_SEARCHPLUGINS_DIR}/${MOZILLA_LOCALE}"
     mkdir -p "${TARGET_SEARCHPLUGINS_DIR}"
 
     if [ -z "${STARTPAGE_LANG_UI}" ]; then
@@ -76,6 +78,30 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
         -e "s/\${LOCATION}/${LOCATION}/" \
         "${BROWSER_LOCALIZATION_DIR}/disconnect.xml-template" > \
         "${DISCONNECT_PLUGIN}"
+
+    # We generate a Wikipedia plugin with localized icons since we
+    # want to provide both English and the locale's plugin, and
+    # Firefox' new search bar only shows icons; the description (which
+    # is localized) is only shown in a pop-up nowdays, so it's easy to
+    # mix them up.
+    CAPITALIZED_LANG_CODE="$(echo "${LANG_CODE}" | tr 'a-z' 'A-Z')"
+    LOCALIZED_WIKIPEDIA_ICON_PATH="/tmp/wikipedia-icon-${LANG_CODE}.png"
+    WIKIPEDIA_SEARCH_ICON_BASE64_PATH="#{LOCALIZED_WIKIPEDIA_ICON_PATH}.base64"
+    WIKIPEDIA_ICON_TEMPLATE="${BROWSER_LOCALIZATION_DIR}/Wikipedia-icon.png"
+    convert "${WIKIPEDIA_ICON_TEMPLATE}" \
+            -gravity SouthEast -pointsize 130 -font Liberation-Sans-Bold \
+            -fill black -annotate 0 "${CAPITALIZED_LANG_CODE}" \
+            +set date:create +set date:modify -define png:exclude-chunk=time \
+            -resize 16x16 "${LOCALIZED_WIKIPEDIA_ICON_PATH}"
+    base64 "${LOCALIZED_WIKIPEDIA_ICON_PATH}" | tr -d "\n" > \
+           "${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}"
+    sed -e "s/\${LANG_CODE}/${LANG_CODE}/" \
+        -e "/\${BASE64_PNG_16x16}/ r ${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}" \
+        -e "/\${BASE64_PNG_16x16}/d" \
+        "${BROWSER_LOCALIZATION_DIR}/wikipedia.xml-template" > \
+        "${TARGET_SEARCHPLUGINS_DIR}/wikipedia-${MOZILLA_LOCALE}.xml"
+    rm "${LOCALIZED_WIKIPEDIA_ICON_PATH}" \
+       "${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}"
 
     # We use the branding@amnesia.org extension to set some per-locale
     # default prefs that set the appropriate localization options.
@@ -134,7 +160,8 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
         rm -f "${DEB_PATH_TO_SEARCHPLUGINS}"/amazon*.xml \
               "${DEB_PATH_TO_SEARCHPLUGINS}"/bing*.xml \
               "${DEB_PATH_TO_SEARCHPLUGINS}"/eBay*.xml \
-              "${DEB_PATH_TO_SEARCHPLUGINS}"/yahoo*.xml
+              "${DEB_PATH_TO_SEARCHPLUGINS}"/yahoo*.xml \
+              "${DEB_PATH_TO_SEARCHPLUGINS}"/wikipedia*.xml
         cp "${DEB_PATH_TO_SEARCHPLUGINS}"/* "${TARGET_SEARCHPLUGINS_DIR}"
         cd /
         rm -r "${TMP}"
@@ -144,11 +171,21 @@ done < "${DESCRIPTIONS_FILE}"
 # This directory is not needed after build time.
 rm -r "${BROWSER_LOCALIZATION_DIR}"
 
-# All generated files must be world-readable.
-chmod -R a+rX "${TBB_LOCALIZED_SEACHPLUGINS_DIR}" "${BRANDING_DIR}"
-
 # Remove unwanted browser search plugins bundled in the Tor Browser.
 rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/yahoo*.xml
 # We generate localized versions of the following:
 rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/disconnect*.xml
 rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/startpage*.xml
+rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/wikipedia*.xml
+
+# We want our localized English Wikipedia plugin to be available in
+# all locales.
+mv "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}/en-US/wikipedia-en-US.xml" \
+   "${TBB_DEFAULT_SEARCHPLUGINS_DIR}/"
+
+# All generated files must be world-readable.
+chmod -R a+rX "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}" \
+              "${TBB_DEFAULT_SEARCHPLUGINS_DIR}" \
+              "${BRANDING_DIR}"
+
+apt-get --yes purge imagemagick
