@@ -214,19 +214,28 @@ There are two possible workarounds for this issue:
   application, <http://gfx.io/>, to force integrated graphics only through OS X.
   Then restart in that special mode that works with Tails.
 
-* Expert Linux users can also make it work by adding the `i915.modeset=0
-  rootpw=pass` option in the [[boot menu|doc/first_steps/startup_options#boot_menu]]
-  and creating a file `/etc/X11/xorg.conf.d/switchable.conf` with the
-  following content:
+* Expert Linux users can also do the following:
 
-      Section "Device"
-          Identifier "Device0"
-          Driver "nouveau"
-          BusID "1:0:0"
-      EndSection
+  1. Add the `i915.modeset=0 rootpw=pass` option in the
+     [[boot menu|doc/first_steps/startup_options#boot_menu]].
 
-  and restart X with `service gdm3 restart`. Remember to change the
-  root password once the computer is started.
+  2. Create a file `/etc/X11/xorg.conf.d/switchable.conf` with the
+     following content:
+
+         Section "Device"
+             Identifier "Device0"
+             Driver "nouveau"
+             BusID "1:0:0"
+         EndSection
+
+  4. Restart X with the command:
+
+         service gdm3 restart
+
+  5. Once the computer is started, change again the root password with
+     the command:
+
+         passwd
 
 For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken on dual-graphics-card apple hardware"]].
 
