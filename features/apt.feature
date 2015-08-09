@@ -12,7 +12,7 @@ Feature: Installing packages through APT
     And I enable more Tails Greeter options
     And I set sudo password "asdf"
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And Tor is ready
     And all notifications have disappeared
     And available upgrades have been checked
