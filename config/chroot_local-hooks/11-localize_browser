@@ -91,6 +91,7 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
     convert "${WIKIPEDIA_ICON_TEMPLATE}" \
             -gravity SouthEast -pointsize 130 -font Liberation-Sans-Bold \
             -fill black -annotate 0 "${CAPITALIZED_LANG_CODE}" \
+            +set date:create +set date:modify -define png:exclude-chunk=time \
             -resize 16x16 "${LOCALIZED_WIKIPEDIA_ICON_PATH}"
     base64 "${LOCALIZED_WIKIPEDIA_ICON_PATH}" | tr -d "\n" > \
            "${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}"
