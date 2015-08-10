@@ -29,7 +29,7 @@ wheezy-backports, to get seccomp support.
        TAILS_VERSION="${WHEEZY_TPO_VERSION}+tails1"
        dch --newversion "$TAILS_VERSION" --force-bad-version  \
            --distribution "$DISTRIBUTION" --force-distribution \
-           "Rebuild on wheezy-backports to get seccomp support"
+           "Rebuild on wheezy-backports to get seccomp support."
    
    Check the resulting `debian/changelog` entry.
 
@@ -37,7 +37,7 @@ wheezy-backports, to get seccomp support.
    wheezy-backports):
 
        sed --regexp-extended -i 's/^(Build-Depends:.*)$/\1, linux-libc-dev (>= 3.16)/' debian/control
-       dch --append "Build depend on linux-libc-dev (>= 3.16) to fix build error from undefined IP6T_SO_ORIGINAL_DST"
+       dch --append "Build depend on linux-libc-dev (>= 3.16) to fix build error from undefined IP6T_SO_ORIGINAL_DST."
 
 7. Disable systemd support (depends on stuff that is not in Wheezy):
 
@@ -45,7 +45,7 @@ wheezy-backports, to get seccomp support.
           debian/control                                                   && \
        dch --append "Remove dh-systemd build dependency for backport."     && \
        sed -i -e '/--with systemd/ d' debian/rules                         && \
-       dch --append "Remove --with systemd from debian/rules"              && \
+       dch --append "Remove --with systemd from debian/rules."             && \
        sed -i -e '/^Build-Depends/ s/, *libsystemd-dev\( *\[[^]]*\]\)\?//'    \
           debian/control                                                   && \
        dch --append "Remove libsystemd-dev build dependency for backport." && \
@@ -53,10 +53,10 @@ wheezy-backports, to get seccomp support.
           debian/control                                                   && \
        dch --append "Remove pkg-config build dependency for backport."     && \
        sed -i -e '/--enable-systemd/ d' debian/rules                       && \
-       dch --append "Remove --enable-systemd from debian/rules"
+       dch --append "Remove --enable-systemd from debian/rules."
 
 8. Apply `bug15482.patch` like the Tor Browser does to its Tor.
-   It lives as `git/gitian/patches/bug15482.patch` in the
+   It lives as `gitian/patches/bug15482.patch` in the
    <https://git.torproject.org/builders/tor-browser-bundle.git> repository.
    Use `quilt import` and then `dch --append`.
 
