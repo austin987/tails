@@ -1,3 +1,26 @@
+def udev_watchdog_monitored_device
+  ps_output = @vm.execute_successfully('ps -wweo cmd').stdout
+  udev_watchdog_cmd = '/usr/local/sbin/udev-watchdog'
+
+  # The regex below looks for a line like the following:
+  # /usr/local/sbin/udev-watchdog /devices/pci0000:00/0000:00:01.1/ata2/host1/target1:0:0/1:0:0:0/block/sr0 cd
+  # We're only interested in the device itself, not in the type
+  ps_output_scan = ps_output.scan(/^#{Regexp.escape(udev_watchdog_cmd)}\s(\S+)\s(?:cd|disk)$/)
+  assert_equal(ps_output_scan.count, 1, "There should be one udev-watchdog running.")
+  monitored_out = ps_output_scan.flatten[0]
+  assert(!monitored_out.nil?)
+  monitored_device_id = @vm.file_content('/sys' + monitored_out + '/dev').chomp
+  monitored_device =
+    @vm.execute_successfully(
+      "readlink -f /dev/block/'#{monitored_device_id}'").stdout.chomp
+  return monitored_device
+end
+
+Given /^udev-watchdog is monitoring the correct device$/ do
+  next if @skip_steps_while_restoring_background
+  assert_equal(udev_watchdog_monitored_device, boot_device)
+end
+
 Given /^the computer is a modern 64-bit system$/ do
   next if @skip_steps_while_restoring_background
   @vm.set_arch("x86_64")
@@ -64,7 +87,7 @@ def pattern_coverage_in_guest_ram
   FileUtils.touch(dump)
   FileUtils.chmod(0666, dump)
   @vm.domain.core_dump(dump)
-  patterns = IO.popen(['grep', '-c', 'wipe_didnt_work', dump]).gets.to_i
+  patterns = IO.popen(['grep', '--text', '-c', 'wipe_didnt_work', dump]).gets.to_i
   File.delete dump
   # Pattern is 16 bytes long
   patterns_b = patterns*16
