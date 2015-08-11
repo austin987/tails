@@ -21,7 +21,7 @@ Set_defaults
 # Seems like we'll have work to do
 Echo_message 'including syslinux in the ISO filesystem'
 
-# Variables
+### Variables
 LINUX_BINARY_UTILS_DIR='binary/utils/linux'
 WIN32_BINARY_UTILS_DIR='binary/utils/win32'
 BINARY_MBR_DIR='binary/utils/mbr'
@@ -29,13 +29,13 @@ CHROOT_SYSLINUX_BIN='chroot/usr/bin/syslinux'
 CHROOT_SYSLINUX_MBR='chroot/usr/lib/SYSLINUX/gptmbr.bin'
 CHROOT_TEMP_APT_SOURCES='chroot/etc/apt/sources.list.d/tmp-deb-src.list'
 
-# Functions
+### Functions
 
 syslinux_deb_version_in_chroot () {
    chroot chroot dpkg-query -W -f='${Version}\n' syslinux
 }
 
-# Main
+### Main
 mkdir -p "$LINUX_BINARY_UTILS_DIR" "$WIN32_BINARY_UTILS_DIR" "$BINARY_MBR_DIR"
 cp "$CHROOT_SYSLINUX_BIN" "$LINUX_BINARY_UTILS_DIR/"
 cp "$CHROOT_SYSLINUX_MBR" "$BINARY_MBR_DIR/mbr.bin"

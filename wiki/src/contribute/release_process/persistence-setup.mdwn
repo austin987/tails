@@ -63,11 +63,11 @@ Update the Debian package
 Checkout the Debian packaging branch and import the new upstream tarball:
 
     git checkout debian && \
-       git-import-orig --upstream-vcs-tag=$VERSION ../Tails-Persistence-$VERSION.tar.gz
+       gbp import-orig --upstream-vcs-tag=$VERSION ../Tails-Persistence-$VERSION.tar.gz
 
 Update `debian/changelog`:
 
-    git-dch && dch -e
+    gbp dch && dch -e
 
 (Do not forget to set the appropriate release.)
 
@@ -79,12 +79,12 @@ Build a Debian package (use a Wheezy/i386 chroot, that
 has either tails-perl5lib installed, or the Tails APT repository
 configured):
 
-    git-buildpackage
+    gbp buildpackage
 
 If everything is fine, add a signed tag to the repository and push the
 changes:
 
-    git-buildpackage --git-tag-only --git-sign-tags && \
+    gbp buildpackage --git-tag-only --git-sign-tags && \
     git push origin master:master \
                    debian:debian \
                    pristine-tar:pristine-tar \
