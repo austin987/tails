@@ -5,16 +5,12 @@ Feature: Microsoft Windows Camouflage
   I should be presented with a Microsoft Windows like environment
 
   Background:
-    Given a computer
-    And the network is unplugged
-    And I start the computer
-    And the computer boots Tails
+    Given Tails has booted from DVD without network and stopped at Tails Greeter's login screen
     And I enable more Tails Greeter options
     And I enable Microsoft Windows camouflage
     And I log in to a new session
     And the Tails desktop is ready
     And all notifications have disappeared
-    And I save the state so the background can be restored next scenario
 
   Scenario: I should be presented with a Microsoft Windows like desktop
     Then I see "WindowsDesktop.png" after at most 10 seconds

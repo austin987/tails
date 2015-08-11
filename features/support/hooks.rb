@@ -2,22 +2,15 @@ require 'fileutils'
 require 'time'
 require 'tmpdir'
 
+# Run once, before any feature
+AfterConfiguration do |config|
+  # Used to keep track of when we start our first @product feature, when
+  # we'll do some special things.
+  $started_first_product_feature = false
+end
+
 # For @product tests
 ####################
-
-def delete_snapshot(snapshot)
-  if snapshot and File.exist?(snapshot)
-    File.delete(snapshot)
-  end
-rescue Errno::EACCES => e
-  STDERR.puts "Couldn't delete background snapshot: #{e.to_s}"
-end
-
-def delete_all_snapshots
-  Dir.glob("#{$config["TMPDIR"]}/*.state").each do |snapshot|
-    delete_snapshot(snapshot)
-  end
-end
 
 def add_after_scenario_hook(&block)
   @after_scenario_hooks ||= Array.new
@@ -42,7 +35,6 @@ BeforeFeature('@product') do |feature|
       raise "Cannot create temporary directory: #{e.to_s}"
     end
   end
-  delete_all_snapshots if !KEEP_SNAPSHOTS
   if TAILS_ISO.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
           "current directory"
@@ -66,17 +58,14 @@ BeforeFeature('@product') do |feature|
   end
   puts "Testing ISO image: #{File.basename(TAILS_ISO)}"
   base = File.basename(feature.file, ".feature").to_s
-  $background_snapshot = "#{$config["TMPDIR"]}/#{base}_background.state"
-  $virt = Libvirt::open("qemu:///system")
-  $vmnet = VMNet.new($virt, VM_XML_PATH)
-  $vmstorage = VMStorage.new($virt, VM_XML_PATH)
-end
-
-AfterFeature('@product') do
-  delete_snapshot($background_snapshot) if !KEEP_SNAPSHOTS
-  $vmstorage.clear_pool
-  $vmnet.destroy_and_undefine
-  $virt.close
+  $background_snapshot = "#{base}_background"
+  if not($started_first_product_feature)
+    $virt = Libvirt::open("qemu:///system")
+    VM.remove_all_snapshots if !KEEP_SNAPSHOTS
+    $vmnet = VMNet.new($virt, VM_XML_PATH)
+    $vmstorage = VMStorage.new($virt, VM_XML_PATH)
+    $started_first_product_feature = true
+  end
 end
 
 BeforeFeature('@product', '@old_iso') do
@@ -96,15 +85,12 @@ end
 # BeforeScenario
 Before('@product') do
   @screen = Sikuli::Screen.new
-  if File.size?($background_snapshot)
-    @skip_steps_while_restoring_background = true
-  else
-    @skip_steps_while_restoring_background = false
-  end
   @theme = "gnome"
   # English will be assumed if this is not overridden
   @language = ""
   @os_loader = "MBR"
+  @sudo_password = "asdf"
+  @persistence_password = "asdf"
 end
 
 # AfterScenario
@@ -126,11 +112,7 @@ After('@product') do |scenario|
       STDIN.gets
     end
   end
-  @vm.destroy_and_undefine if @vm
-end
-
-After('@product', '~@keep_volumes') do
-  $vmstorage.clear_volumes
+  $vm.destroy_and_undefine if $vm
 end
 
 Before('@product', '@check_tor_leaks') do |scenario|
@@ -186,5 +168,12 @@ BeforeFeature('@product', '@source') do |feature|
 end
 
 at_exit do
-  delete_all_snapshots if !KEEP_SNAPSHOTS
+  if $virt
+    unless KEEP_SNAPSHOTS
+      VM.remove_all_snapshots
+      $vmstorage.clear_pool
+    end
+    $vmnet.destroy_and_undefine
+    $virt.close
+  end
 end

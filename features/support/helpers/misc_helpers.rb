@@ -22,6 +22,7 @@ end
 # passed when we throw a Timeout::Error exception.
 def try_for(timeout, options = {})
   options[:delay] ||= 1
+  last_exception = nil
   # Create a unique exception used only for this particular try_for
   # call's Timeout to allow nested try_for:s. If we used the same one,
   # the innermost try_for would catch all outer ones', creating a
@@ -36,8 +37,11 @@ def try_for(timeout, options = {})
         # (never?) a good idea, so we rethrow them. See below why we
         # also rethrow *all* the unique exceptions.
         raise e
-      rescue Exception
-        # All other exceptions are ignored while trying the block.
+      rescue Exception => e
+        # All other exceptions are ignored while trying the
+        # block. Well we save the last exception so we can print it in
+        # case of a timeout.
+        last_exception = e
       end
       sleep options[:delay]
     end
@@ -63,11 +67,15 @@ def try_for(timeout, options = {})
   # ends up there immediately.
 rescue unique_timeout_exception => e
   msg = options[:msg] || 'try_for() timeout expired'
+  if last_exception
+    msg += "\nLast ignored exception was: " +
+           "#{last_exception.class}: #{last_exception}"
+  end
   raise Timeout::Error.new(msg)
 end
 
 def wait_until_tor_is_working
-  try_for(270) { @vm.execute(
+  try_for(270) { $vm.execute(
     '. /usr/local/lib/tails-shell-library/tor.sh; tor_is_working').success? }
 end
 
@@ -119,7 +127,7 @@ end
 # consensus in the VM + the hardcoded TOR_AUTHORITIES.
 def get_all_tor_nodes
   cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
-  @vm.execute(cmd).stdout.chomp.split("\n") + TOR_AUTHORITIES
+  $vm.execute(cmd).stdout.chomp.split("\n") + TOR_AUTHORITIES
 end
 
 def get_free_space(machine, path)
@@ -128,8 +136,8 @@ def get_free_space(machine, path)
     assert(File.exists?(path), "Path '#{path}' not found on #{machine}.")
     free = cmd_helper(["df", path])
   when 'guest'
-    assert(@vm.file_exist?(path), "Path '#{path}' not found on #{machine}.")
-    free = @vm.execute_successfully("df '#{path}'")
+    assert($vm.file_exist?(path), "Path '#{path}' not found on #{machine}.")
+    free = $vm.execute_successfully("df '#{path}'")
   else
     raise 'Unsupported machine type #{machine} passed.'
   end
