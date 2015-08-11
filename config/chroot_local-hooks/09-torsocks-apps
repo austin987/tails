@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+echo "Wrapping some applications with torsocks"
+
+APPS="gobby-0.5 liferea seahorse whisperback"
+
+for app in $APPS; do
+   sed -i'' --regexp-extended 's,Exec=(.*),Exec=torsocks \1,' \
+       "/usr/share/applications/${app}.desktop"
+done
