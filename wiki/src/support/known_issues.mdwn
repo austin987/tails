@@ -196,15 +196,57 @@ Mac
   created by Tails Installer. You can check if a given Mac is 32-bit
   or 64-bit EFI on that list:
   <http://www.everymac.com/mac-answers/snow-leopard-mac-os-x-faq/mac-os-x-snow-leopard-64-bit-macs-64-bit-efi-boot-in-64-bit-mode.html>
-* MacBookPro5,5 does not boot with Tails in UEFI mode.
+* MacBook Pro 5,5 does not boot with Tails in UEFI mode.
 * MacBook Pro 5,1 17" (Nvidia GeForce 9400M): one must add the
   `nouveau.noaccel=1` boot parameters so that the display
   works properly.
 * MacBook Air 3,2 (A1369 EMC 2392) freezes when booting Tails in
   UEFI mode.
-* MacBookPro (early 2011) fails to boot from DVD since Tails 1.1.
-* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) and MacBookPro late 2011 (8,2) fail to boot from a USB stick created by
+* MacBook Pro (early 2011) fails to boot from DVD since Tails 1.1.
+* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) and
+  MacBook Pro 8,2 (late 2011) fail to boot from a USB stick created by
   Tails Installer.
+
+<a id="switchable_graphics"></a>
+
+Switchable graphics computers
+-----------------------------
+
+Some computers with switchable graphics (such as Optimus) fail to
+choose a video card and end up on a black screen. This has been
+reported for MacBook Pro 6,2, MacBook Pro 10,1 Retina, MacBook Pro
+15-inch (early 2011) and might affect many others.
+
+There are two possible workarounds for this issue:
+
+* For the Mac computers, it is possible to use a third-party
+  application, <http://gfx.io/>, to force integrated graphics only through OS X.
+  Then restart in that special mode that works with Tails.
+
+* Expert Linux users can also do the following:
+
+  1. Add the `i915.modeset=0 rootpw=pass` option in the
+     [[boot menu|doc/first_steps/startup_options#boot_menu]].
+
+  2. Create a file `/etc/X11/xorg.conf.d/switchable.conf` with the
+     following content:
+
+         Section "Device"
+             Identifier "Device0"
+             Driver "nouveau"
+             BusID "1:0:0"
+         EndSection
+
+  4. Restart X with the command:
+
+         service gdm3 restart
+
+  5. After the GNOME session has started, change again the root password with
+     the command:
+
+         passwd
+
+For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken on dual-graphics-card apple hardware"]].
 
 <a id="chainloading"></a>
 
@@ -288,7 +330,7 @@ After using Tails Installer, the "emergency shutdown" doesn't work
 Tails Installer messes a bit too much with the USB devices for the
 "emergency shutdown on media removal" feature to continue working after using
 it. If you believe this feature is critical for the session you're running, we
-advice you to reboot Tails.
+advice you to restart Tails.
 
 See
 [[!tails_ticket 5677 desc="liveusb-creator should not break emergency shutdown"]].
@@ -329,12 +371,12 @@ This issue has been reported on the following hardware:
   - Apple when booting from a USB stick:
     - MacBook Air 5,1
     - MacBook Air 5,2 (using a device installed with Tails Installer)
-    - MacBook Pro 7,1, 13-inch mid 2010
-    - MacBook Pro 9,2, 13-inch mid 2012
-    - MacBook Pro 8,1, 13-inch late 2011
+    - MacBook Pro 7,1 13-inch (mid 2010)
+    - MacBook Pro 9,2 13-inch (mid 2012)
+    - MacBook Pro 8,1 13-inch (late 2011)
     - MacBook Pro 10,2
-    - MacBook Pro Retina 11,1, late 2013
-    - MacBook Pro Retina 13-inch Early 2015
+    - MacBook Pro Retina 11,1 (late 2013)
+    - MacBook Pro Retina 13-inch (early 2015)
   - Hewlett-Packard HP Pavilion dv6 Notebook PC
   - Lenovo ThinkPad X61, only on emergency shutdown when pulling out the
     USB stick
@@ -381,7 +423,7 @@ with the I2P Browser:
 Boot menu has display issues
 ----------------------------
 
-Since Tails 1.1, one some hardware (ThinkPad X230, MacBookPro8,1),
+Since Tails 1.1, one some hardware (ThinkPad X230, MacBook Pro 8,1),
 the boot menu is not displayed properly. Tails starts fine, though.
 
 Connecting to FTP servers is not possible
