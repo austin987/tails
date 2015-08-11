@@ -19,9 +19,9 @@ def delete_all_snapshots
   end
 end
 
-def add_after_scenario_hook(fn, args = [])
-  @after_scenario_hook ||= Array.new
-  @after_scenario_hook << [fn, args]
+def add_after_scenario_hook(&block)
+  @after_scenario_hooks ||= Array.new
+  @after_scenario_hooks << block
 end
 
 BeforeFeature('@product') do |feature|
@@ -102,12 +102,14 @@ Before('@product') do
     @skip_steps_while_restoring_background = false
   end
   @theme = "gnome"
+  # English will be assumed if this is not overridden
+  @language = ""
   @os_loader = "MBR"
 end
 
 # AfterScenario
 After('@product') do |scenario|
-  if (scenario.status != :passed)
+  if scenario.failed?
     time_of_fail = Time.now - TIME_AT_START
     secs = "%02d" % (time_of_fail % 60)
     mins = "%02d" % ((time_of_fail / 60) % 60)
@@ -139,7 +141,7 @@ end
 
 After('@product', '@check_tor_leaks') do |scenario|
   @tor_leaks_sniffer.stop
-  if (scenario.status == :passed)
+  if scenario.passed?
     if @bridge_hosts.nil?
       expected_tor_nodes = get_all_tor_nodes
     else
@@ -172,10 +174,10 @@ end
 ########
 
 After do
-  if @after_scenario_hook
-    @after_scenario_hook.each { |fn, args| fn.call(*args) }
+  if @after_scenario_hooks
+    @after_scenario_hooks.each { |block| block.call }
   end
-  @after_scenario_hook = Array.new
+  @after_scenario_hooks = Array.new
 end
 
 BeforeFeature('@product', '@source') do |feature|

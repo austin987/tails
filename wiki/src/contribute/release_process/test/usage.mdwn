@@ -8,7 +8,8 @@ Basic usage
 Use the `run_test_suite` script found in the Tails source root to run
 all automated Cucumber test features. See the [[setup
 documentation|test/setup]] in case you don't have a testing
-environment yet.
+environment yet. Note that the full Tails source tree must be readable
+by the user running the test suite.
 
 It's important to note that some features only depend on the Tails
 sources, and some on the actual product of the sources, i.e. a Tails
@@ -47,13 +48,24 @@ The test suite can be configured in the following ways:
 2. the local configuration file `features/config/local.yml`, which
 takes precedence over
 
-3. the default configuration file `features/config/defaults.yml`.
+2. the local configuration files in `features/config/*.d` (with
+   internal precedence according to lexical order), which takes
+   precedence over
+
+4. the default configuration file `features/config/defaults.yml`.
 
 However, some values are treated as secrets and have no
 defaults. These secrets are generally information about online sevices
 to be used in certain features, like host, port and credentials --
 stuff we don't want to make public. These must be set explicitly in
 order for those features to run.
+
+A Git repository, shared among a bunch of core Tails contributors,
+includes _some_ of the needed secrets (more specifically, those that
+can be use by concurrent test suite runs):
+
+	git clone tails@git.tails.boum.org:test-suite-shared-secrets \
+	   features/config/shared-secrets.d
 
 ## Non-secret configuration
 
@@ -62,6 +74,11 @@ by the local configuration file:
 
 * `DEBUG`: Boolean value. If set to `true`, various debugging info
   will be printed. Defaults to `false`.
+
+* `MAX_NEW_TOR_CIRCUIT_RETRIES`: Integer. Upon failure, some test steps may be
+  run again after requesting that connections are made using new Tor circuits. This
+  configuration variable limits how many times forcing a circuit will be
+  attempted.  Defaults to `5`.
 
 * `PAUSE_ON_FAIL`: Boolean value. If set to `true`, the test suite run
   is suspended on failure until ENTER is pressed. This is useful for
@@ -158,6 +175,7 @@ test will fail.
 
 XMPP services known to work well both for `Tails_account` and
 `Friend_account` are:
+
 * riseup.net (use `connect_server: xmpp.riseup.net`)
 * jabber.org (doesn't allow creating arbitrary chatrooms, so setting
   `chat_room` may be needed)
@@ -165,9 +183,9 @@ XMPP services known to work well both for `Tails_account` and
 
 ### SSH
 
-The format is:
+These settings are required for `ssh.feature`.  The format is:
 
-    SSH:
+    $TYPE:
       hostname: 1.2.3.4
       private_key: |
         -----BEGIN RSA PRIVATE KEY-----
@@ -179,6 +197,7 @@ The format is:
       port: 22
       username: "someuser"
 
-These settings are required for `ssh.feature`. If `port` is not specified,
-`22`will be used.
+where `$TYPE` is `SSH` or `SFTP`. Secrets must be specified for both `SSH` and
+`SFTP`.  If `port` is not specified, `22`will be used.
 
+The SSH test expects the remote system to have a default `bash` shell prompt.

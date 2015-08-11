@@ -17,7 +17,7 @@ Given /^the computer is an old pentium without the PAE extension$/ do
 end
 
 def which_kernel
-  kernel_path = @vm.execute("tails-get-bootinfo kernel").stdout.chomp
+  kernel_path = @vm.execute_successfully("tails-get-bootinfo kernel").stdout.chomp
   return File.basename(kernel_path)
 end
 
@@ -34,11 +34,11 @@ Given /^the non-PAE kernel is running$/ do
 end
 
 def used_ram_in_MiB
-  return @vm.execute("free -m | awk '/^-\\/\\+ buffers\\/cache:/ { print $3 }'").stdout.chomp.to_i
+  return @vm.execute_successfully("free -m | awk '/^-\\/\\+ buffers\\/cache:/ { print $3 }'").stdout.chomp.to_i
 end
 
 def detected_ram_in_MiB
-  return @vm.execute("free -m | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
+  return @vm.execute_successfully("free -m | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
 end
 
 Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
@@ -64,7 +64,7 @@ def pattern_coverage_in_guest_ram
   FileUtils.touch(dump)
   FileUtils.chmod(0666, dump)
   @vm.domain.core_dump(dump)
-  patterns = IO.popen("grep -c 'wipe_didnt_work' #{dump}").gets.to_i
+  patterns = IO.popen(['grep', '-c', 'wipe_didnt_work', dump]).gets.to_i
   File.delete dump
   # Pattern is 16 bytes long
   patterns_b = patterns*16
@@ -79,23 +79,23 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   next if @skip_steps_while_restoring_background
 
   # Free some more memory by dropping the caches etc.
-  @vm.execute("echo 3 > /proc/sys/vm/drop_caches")
+  @vm.execute_successfully("echo 3 > /proc/sys/vm/drop_caches")
 
   # The (guest) kernel may freeze when approaching full memory without
   # adjusting the OOM killer and memory overcommitment limitations.
   [
-   "echo 256 > /proc/sys/vm/min_free_kbytes",
+   "echo 1024 > /proc/sys/vm/min_free_kbytes",
    "echo 2   > /proc/sys/vm/overcommit_memory",
    "echo 97  > /proc/sys/vm/overcommit_ratio",
-   "echo 1   > /proc/sys/vm/oom_kill_allocating_task",
+   "echo 0   > /proc/sys/vm/oom_kill_allocating_task",
    "echo 0   > /proc/sys/vm/oom_dump_tasks"
-  ].each { |c| @vm.execute(c) }
+  ].each { |c| @vm.execute_successfully(c) }
 
   # The remote shell is sometimes OOM killed when we fill the memory,
   # and since we depend on it after the memory fill we try to prevent
   # that from happening.
-  pid = @vm.pidof("autotest_remote_shell.py")[0]
-  @vm.execute("echo -17 > /proc/#{pid}/oom_adj")
+  pid = @vm.pidof("tails-autotest-remote-shell")[0]
+  @vm.execute_successfully("echo -17 > /proc/#{pid}/oom_adj")
 
   used_mem_before_fill = used_ram_in_MiB
 
@@ -105,11 +105,18 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   # since the others otherwise may continue re-filling the same memory
   # unnecessarily.
   instances = (@detected_ram_m.to_f/(2**10)).ceil
-  instances.times { @vm.spawn('fillram; killall fillram') }
-  # We make sure that the filling has started...
-  try_for(10, { :msg => "fillram didn't start" }) {
-    @vm.has_process?("fillram")
-  }
+  instances.times do
+    @vm.spawn('/usr/local/sbin/fillram; killall fillram', LIVE_USER)
+  end
+  # We make sure that all fillram processes have started...
+  try_for(10, :msg => "all fillram processes didn't start", :delay => 0.1) do
+    nr_fillram_procs = @vm.pidof("fillram").size
+    instances == nr_fillram_procs
+  end
+  # ... and prioritize OOM killing them.
+  @vm.pidof("fillram").each do |pid|
+    @vm.execute_successfully("echo 15 > /proc/#{pid}/oom_adj")
+  end
   STDERR.print "Memory fill progress: "
   ram_usage = ""
   remove_chars = 0
@@ -161,7 +168,7 @@ end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   next if @skip_steps_while_restoring_background
-  @vm.execute("halt")
+  @vm.execute_successfully("halt")
   nr_gibs_of_ram = (@detected_ram_m.to_f/(2**10)).ceil
   try_for(nr_gibs_of_ram*5*60, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
     # We spam keypresses to prevent console blanking from hiding the
