@@ -80,6 +80,12 @@ Feature: Chatting anonymously using Pidgin
     And I see Pidgin's account manager window
     And I close Pidgin's account manager window
     Then I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
+    When I close Pidgin's certificate import failure dialog
+    And I close Pidgin's certificate manager
+    Then I cannot add a certificate from the "/lib/live/mount/overlay/home/amnesia/.gnupg" directory to Pidgin
+    When I close Pidgin's certificate import failure dialog
+    And I close Pidgin's certificate manager
+    Then I cannot add a certificate from the "/live/overlay/home/amnesia/.gnupg" directory to Pidgin
 
   @keep_volumes @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
@@ -106,10 +112,14 @@ Feature: Chatting anonymously using Pidgin
     # This should really be in dedicated scenarios, but it would be
     # too costly to set up the virtual USB drive with persistence more
     # than once in this feature.
-    And I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
+    Given I start monitoring the AppArmor log of "/usr/bin/pidgin"
+    Then I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
+    And AppArmor has denied "/usr/bin/pidgin" from opening "/home/amnesia/.gnupg/test.crt"
     When I close Pidgin's certificate import failure dialog
     And I close Pidgin's certificate manager
+    Given I restart monitoring the AppArmor log of "/usr/bin/pidgin"
     Then I cannot add a certificate from the "/live/persistence/TailsData_unlocked/gnupg" directory to Pidgin
+    And AppArmor has denied "/usr/bin/pidgin" from opening "/live/persistence/TailsData_unlocked/gnupg/test.crt"
     When I close Pidgin's certificate import failure dialog
     And I close Pidgin's certificate manager
     Then I can add a certificate from the "/home/amnesia" directory to Pidgin

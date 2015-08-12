@@ -21,7 +21,6 @@ libvirt-daemon-system
 libvirt-dev
 libvirt0
 libxslt1-dev
-ntp
 openjdk-7-jre
 ovmf
 python-jabberbot
@@ -46,9 +45,9 @@ xvfb
 "
 
 usage() {
-    echo "Usage: $NAME [OPTION]... [FEATURE]...
-Sets up an appropriate environment and tests FEATUREs (all by default). Note
-that this script must be run from the Tails source directory root.
+    echo "Usage: $NAME [OPTION]... [--] [CUCUMBER_ARGS]...
+Sets up an appropriate environment and invokes cucumber. Note that this script
+must be run from the Tails source directory root.
 
 Options for '@product' features:
   --capture FILE     Captures the test session into FILE using VP8 encoding.
@@ -75,10 +74,16 @@ Options for '@product' features:
   --old-iso IMAGE    For some '@product' features (e.g. usb_install) we need
                      an older version of Tails, which this options sets to
                      IMAGE.
-  --log-to-file FILE Save the output to the specified file, in addition to
-                     sending it to stdout and stderr.
+  --log-to-file FILE Clone stdout and stderr to the specified file.
 
 Note that '@source' features has no relevant options.
+
+CUCUMBER_ARGS can be used to specify which features to be run, but also any
+cucumber option, although then you must pass `--` first to let this wrapper
+script know that we're done with *its* options. When it comes to formatters
+there are some interesting things to consider, in particular that any debugging
+output that we write to stderr will not be cloned to any file pointed to by
+cucumbers --out.
 "
 }
 
@@ -121,10 +126,16 @@ next_free_display() {
     echo ":${display_nr}"
 }
 
+test_suite_cleanup() {
+    (kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}) || /bin/true
+    if [ ! -z $LOG_FILE ]; then
+       remove_control_chars_from "$LOG_FILE"
+    fi
+}
+
 start_xvfb() {
     Xvfb $TARGET_DISPLAY -screen 0 1024x768x24+32 >/dev/null 2>&1 &
     XVFB_PID=$!
-    trap "kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}" EXIT
     # Wait for Xvfb to run on TARGET_DISPLAY
     until display_in_use $TARGET_DISPLAY; do
 	sleep 1
@@ -245,6 +256,8 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+trap "test_suite_cleanup" EXIT HUP INT QUIT TERM
+
 check_dependencies ${GENERAL_DEPENDENCIES}
 
 TARGET_DISPLAY=$(next_free_display)
@@ -265,20 +278,10 @@ export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
 
-if [ -z "$*" ]; then
-    FEATURES="features"
-else
-    FEATURES="$@"
-fi
-
-CUCUMBER_COMMAND="cucumber --format ExtraHooks::Pretty \
-features/step_definitions features/support ${FEATURES}"
+CUCUMBER_COMMAND="cucumber ${@}"
 
 if [ -z "$LOG_FILE" ]; then
     $CUCUMBER_COMMAND
 else
     script --quiet --flush --return --command "$CUCUMBER_COMMAND" "$LOG_FILE" | cat
-    RET="$?"
-    remove_control_chars_from "$LOG_FILE"
-    exit "$RET"
 fi

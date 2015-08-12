@@ -14,6 +14,7 @@ Goals
   that only supports UEFI boot for GPT devices (e.g. ThinkPad X220)
 * Legacy BIOS boot support should be left unaffected (modulo a tiny
   amount of really crazy firmware bugs, probably)
+* minimal support for 32-bit UEFI boot
 
 <a id="non-goals"></a>
 
@@ -30,8 +31,6 @@ Non-goals
   in Legacy BIOS boot mode from hybrid ISO cat'd on a USB device.
   If the firmware supports it, this can be done on the same computer;
   else, from another computer.
-* 32-bit UEFI boot: this hardware is rare; we have [[!tails_ticket
-  8471 desc="plans to reconsider this decision"]], though.
 * [[blueprint/UEFI Secure boot]] is not part of this plan.
   Picking technical solutions that leave room for it would be a great
   bonus, though.
@@ -299,6 +298,56 @@ in the `EFI/BOOT` directory.
 ### syslinux backport
 
 A backport of syslinux 6.x is installed from our APT repository.
+
+32-bit UEFI
+===========
+
+Chosen path
+-----------
+
+A 32-bit UEFI GRUB2 bootloader is installed in the fallback location.
+It is configured to load our existing syslinux configuration, and
+to convert it on the fly to GRUB's format:
+
+* [[!tails_gitweb config/binary_local-hooks/50-grub-efi-ia32]]
+* [[!tails_gitweb config/binary_local-includes/EFI/BOOT/grub/grub.cfg]]]
+
+Support for `{vesa,}menu.c32` was added in GRUB upstream, but didn't
+make it into Debian yet as of 2.02~beta2-22, so we have backported
+these patches and are shipping a custom GRUB2 package. Note that this
+source package doesn't build on Wheezy, so the binary package we're
+including was built with pbuilder in a Debian sid chroot.
+
+Discarded implementation ideas
+------------------------------
+
+### syslinux
+
+It's currently
+[impossible](http://www.syslinux.org/archives/2015-May/023469.html)
+with upstream syslinux to have both 32-bit and 64-bit UEFI boot
+loaders installed in the fallback path, without forcing the user to
+manually choose between them, which would degrade UX substantially for
+users who have 64-bit UEFI working fine already.
+
+Once the proposed patches have been merged upstream, we may want to
+replace our current implementation with a syslinux-based one, for
+greater UX consistency.
+
+### 32-bit GRUB2 EFI chainloading 32-bit syslinux EFI
+
+* syslinux 32-bit EFI installed in `EFI/TAILS32`
+* GRUB 32-bit EFI installed in `EFI/BOOT/bootia32.efi`
+
+=> did not manage to chainload 32-bit syslinux EFI from GRUB.
+On Tails/Jessie (GRUB 2.02~beta2-22), I get `error: unknown error.`
+after typing `boot`. This likely comes from
+`grub-core/loader/efi/chainloader.c`.
+
+### 32-bit GRUB2 EFI with native configuration
+
+This requires to write/generate and maintain a GRUB2 configuration,
+either semi-automatically (e.g. with `grub-syslinux2cfg`) or by hand.
 
 Future work
 ===========

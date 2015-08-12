@@ -15,6 +15,12 @@ Feature: Browsing the web using the Unsafe Browser
     And available upgrades have been checked
     And I save the state so the background can be restored next scenario
 
+  Scenario: The Unsafe Browser can access the LAN
+    Given a web server is running on the LAN
+    When I successfully start the Unsafe Browser
+    And I open a page on the LAN web server in the Unsafe Browser
+    Then I see "UnsafeBrowserHelloLANWebServer.png" after at most 20 seconds
+
   Scenario: Starting the Unsafe Browser works as it should.
     When I successfully start the Unsafe Browser
     Then the Unsafe Browser runs as the expected user
@@ -26,7 +32,7 @@ Feature: Browsing the web using the Unsafe Browser
     And the Unsafe Browser has no proxy configured
     And the Unsafe Browser uses all expected TBB shared libraries
 
-  Scenario: The Unsafe Browser can be used in all languges supported in Tails
+  Scenario: The Unsafe Browser can be used in all languages supported in Tails
     Then the Unsafe Browser works in all supported languages
 
   Scenario: Closing the Unsafe Browser shows a stop notification and properly tears down the chroot.
@@ -57,7 +63,7 @@ Feature: Browsing the web using the Unsafe Browser
     But checking for updates is disabled in the Unsafe Browser's configuration
     When I successfully start the Unsafe Browser
     Then the Unsafe Browser has started
-    And I wait between 60 and 120 seconds
+    And I wait 120 seconds
     And the clearnet user has not sent packets out to the Internet
     And all Internet traffic has only flowed through Tor
 
