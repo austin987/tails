@@ -89,7 +89,7 @@ Feature: Chatting anonymously using Pidgin
 
   @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
-    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
+    Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
     And the network is plugged
     And I enable persistence
     And I log in to a new session

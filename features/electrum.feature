@@ -11,10 +11,8 @@ Feature: Electrum Bitcoin client
     Then I see a warning that Electrum is not persistent
 
   Scenario: Using a persistent Electrum configuration
-    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
+    Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
     And the network is plugged
-    When I enable persistence
-    And I log in to a new session
     And Tor is ready
     And available upgrades have been checked
     And all notifications have disappeared

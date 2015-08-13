@@ -12,26 +12,15 @@ Feature: Tails persistence
     But a Tails persistence partition exists on USB drive "current"
 
   Scenario: Booting Tails from a USB drive with an enabled persistent partition
-    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
-    When I enable persistence
-    And I log in to a new session
-    Then Tails seems to have booted normally
+    Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
     And Tails is running from USB drive "current"
     And all persistence presets are enabled
     And all persistent directories have safe access rights
 
   Scenario: Writing files first to a read/write-enabled persistent partition, and then to a read-only-enabled persistent partition
-    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
-    When I enable persistence
-    And I log in to a new session
-    Then Tails is running from USB drive "current"
-    And the boot device has safe access rights
-    And all persistence presets are enabled
-    And I write some files expected to persist
-    And all persistent filesystems have safe access rights
-    And all persistence configuration files have safe access rights
-    And all persistent directories have safe access rights
+    Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
     And I take note of which persistence presets are available
+    When I write some files expected to persist
     And I shutdown Tails and wait for the computer to power off
     # XXX: how does guestfs work vs snapshots?
     Then only the expected files are present on the persistence partition on USB drive "current"

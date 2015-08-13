@@ -85,6 +85,20 @@ def checkpoints
         'Tails is running from USB drive "current"',
       ],
     },
+
+    'usb-install-with-persistence-logged-in' => {
+      :description => "Tails has booted without network from a USB drive with a persistent partition enbled and logged in",
+      :parent_checkpoint => 'usb-install-with-persistence-tails-greeter',
+      :steps => [
+        'I enable persistence',
+        'I log in to a new session',
+        'the Tails desktop is ready',
+        'all persistence presets are enabled',
+        'all persistent filesystems have safe access rights',
+        'all persistence configuration files have safe access rights',
+        'all persistent directories have safe access rights',
+      ],
+    },
   }
 end
 
