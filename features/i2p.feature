@@ -31,11 +31,12 @@ Feature: I2P
     Then the I2P Browser desktop file is present
     And the I2P Browser sudo rules are enabled
     And the I2P firewall rules are enabled
+
+  Scenario: The I2P Browser works as it should
+    Given the I2P router console is ready
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
-    And I2P is running in hidden mode
     And the I2P Browser uses all expected TBB shared libraries
-    And I2P successfully built a tunnel
 
   Scenario: I2P displays a notice when it fails to start
     Given a computer
