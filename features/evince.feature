@@ -54,7 +54,8 @@ Feature: Using Evince
 
   Scenario: I cannot view a PDF file stored in persistent /home/amnesia/.gnupg
     Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
-    Then the file "/home/amnesia/Persistent/default-testpage.pdf" exists
+    And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/.gnupg" as user "amnesia"
+    Then the file "/home/amnesia/.gnupg/default-testpage.pdf" exists
     Given I start monitoring the AppArmor log of "/usr/bin/evince"
     And I try to open "/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
