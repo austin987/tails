@@ -38,6 +38,12 @@ Feature: I2P
     Then the I2P router console is displayed in I2P Browser
     And the I2P Browser uses all expected TBB shared libraries
 
+ Scenario: I2P is configured to run in Hidden mode
+    Given the I2P router console is ready
+    When I start the I2P Browser through the GNOME menu
+    Then the I2P router console is displayed in I2P Browser
+    And I2P is running in hidden mode
+
   Scenario: I2P displays a notice when it fails to start
     Given a computer
     And the network is unplugged
