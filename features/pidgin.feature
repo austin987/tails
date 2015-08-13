@@ -91,8 +91,9 @@ Feature: Chatting anonymously using Pidgin
   Scenario: Using a persistent Pidgin configuration
     Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
     And the network is plugged
-    And I enable persistence
-    And I log in to a new session
+    And Tor is ready
+    And available upgrades have been checked
+    And all notifications have disappeared
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     # And I generate an OTR key for the default Pidgin account
