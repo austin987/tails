@@ -3,6 +3,18 @@ Feature: I2P
   As a Tails user
   I *might* want to use I2P
 
+  Background:
+    Given a computer
+    And I set Tails to boot with options "i2p"
+    And I start the computer
+    And the computer boots Tails
+    And I log in to a new session
+    And the Tails desktop is ready
+    And Tor is ready
+    And I2P is running
+    And all notifications have disappeared
+    And I save the state so the background can be restored next scenario
+
   Scenario: I2P is disabled by default
     Given a computer
     And I start the computer
@@ -16,16 +28,6 @@ Feature: I2P
     And the I2P firewall rules are disabled
 
   Scenario: I2P is enabled when the "i2p" boot parameter is added
-    Given a computer
-    And I set Tails to boot with options "i2p"
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And the Tails desktop is ready
-    And Tor is ready
-    And I2P is running
-    And the I2P router console is ready
-    And all notifications have disappeared
     Then the I2P Browser desktop file is present
     And the I2P Browser sudo rules are enabled
     And the I2P firewall rules are enabled
