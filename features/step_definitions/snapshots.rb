@@ -70,7 +70,7 @@ def checkpoints
         'there is no persistence partition on USB drive "current"',
       ],
     },
-    
+
     'usb-install-with-persistence-tails-greeter' => {
       :description => "Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen",
       :parent_checkpoint => 'usb-install-tails-greeter',
