@@ -32,6 +32,7 @@ def checkpoints
     },
 
     'no-network-logged-in-sudo-passwd' => {
+      :temporary => true,
       :description => "Tails has booted from DVD without network and logged in with an administration password",
       :parent_checkpoint => "tails-greeter",
       :steps => [
@@ -44,6 +45,7 @@ def checkpoints
     },
 
     'with-network-logged-in-sudo-passwd' => {
+      :temporary => true,
       :description => "Tails has booted from DVD and logged in with an administration password and the network is connected",
       :parent_checkpoint => "no-network-logged-in-sudo-passwd",
       :steps => [
