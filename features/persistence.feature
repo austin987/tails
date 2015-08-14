@@ -12,13 +12,13 @@ Feature: Tails persistence
     But a Tails persistence partition exists on USB drive "current"
 
   Scenario: Booting Tails from a USB drive with an enabled persistent partition
-    Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
+    Given Tails has booted without network from a USB drive with a persistent partition enabled and logged in
     And Tails is running from USB drive "current"
     And all persistence presets are enabled
     And all persistent directories have safe access rights
 
   Scenario: Writing files first to a read/write-enabled persistent partition, and then to a read-only-enabled persistent partition
-    Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
+    Given Tails has booted without network from a USB drive with a persistent partition enabled and logged in
     And I take note of which persistence presets are available
     When I write some files expected to persist
     And I shutdown Tails and wait for the computer to power off

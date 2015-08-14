@@ -132,7 +132,7 @@ Feature: Browsing the web using the Tor Browser
     Then the Tor Browser has no plugins installed
 
   Scenario: The persistent Tor Browser directory is usable
-    Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
+    Given Tails has booted without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged
     And Tor is ready
     And available upgrades have been checked
@@ -147,7 +147,7 @@ Feature: Browsing the web using the Tor Browser
     And I can print the current page as "output.pdf" to the persistent Tor Browser directory
 
   Scenario: Persistent browser bookmarks
-    Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
+    Given Tails has booted without network from a USB drive with a persistent partition enabled and logged in
     And all persistence presets are enabled
     And all persistent filesystems have safe access rights
     And all persistence configuration files have safe access rights

@@ -87,7 +87,7 @@ def checkpoints
     },
 
     'usb-install-with-persistence-logged-in' => {
-      :description => "Tails has booted without network from a USB drive with a persistent partition enbled and logged in",
+      :description => "Tails has booted without network from a USB drive with a persistent partition enabled and logged in",
       :parent_checkpoint => 'usb-install-with-persistence-tails-greeter',
       :steps => [
         'I enable persistence',

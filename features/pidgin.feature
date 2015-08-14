@@ -89,7 +89,7 @@ Feature: Chatting anonymously using Pidgin
 
   @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
-    Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
+    Given Tails has booted without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged
     And Tor is ready
     And available upgrades have been checked

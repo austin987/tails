@@ -41,7 +41,7 @@ Feature: Using Evince
     And AppArmor has denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
 
   Scenario: I can view and print a PDF file stored in persistent /home/amnesia/Persistent but not /home/amnesia/.gnupg
-    Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
+    Given Tails has booted without network from a USB drive with a persistent partition enabled and logged in
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/Persistent" as user "amnesia"
     Then the file "/home/amnesia/Persistent/default-testpage.pdf" exists
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/.gnupg" as user "amnesia"
@@ -53,7 +53,7 @@ Feature: Using Evince
     And I can print the current document to "/home/amnesia/Persistent/output.pdf"
 
   Scenario: I cannot view a PDF file stored in persistent /home/amnesia/.gnupg
-    Given Tails has booted without network from a USB drive with a persistent partition enbled and logged in
+    Given Tails has booted without network from a USB drive with a persistent partition enabled and logged in
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/.gnupg" as user "amnesia"
     Then the file "/home/amnesia/.gnupg/default-testpage.pdf" exists
     Given I start monitoring the AppArmor log of "/usr/bin/evince"
