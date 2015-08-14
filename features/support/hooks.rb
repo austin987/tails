@@ -110,7 +110,6 @@ After('@product') do |scenario|
       STDIN.gets
     end
   end
-  $vm.destroy_and_undefine if $vm
 end
 
 Before('@product', '@check_tor_leaks') do |scenario|
@@ -166,6 +165,7 @@ BeforeFeature('@product', '@source') do |feature|
 end
 
 at_exit do
+  $vm.destroy_and_undefine if $vm
   if $virt
     unless KEEP_SNAPSHOTS
       VM.remove_all_snapshots
