@@ -5,14 +5,54 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   and upgrade it to new Tails versions
   and use persistence
 
+  Scenario: Try to "Upgrade from ISO" Tails to a pristine USB drive
+    Given a computer
+    And I setup a filesystem share containing the Tails ISO
+    And I start Tails from DVD with network unplugged and I login
+    And I create a 4 GiB disk named "pristine"
+    And I plug USB drive "pristine"
+    And I start Tails Installer in "Upgrade from ISO" mode
+    Then a suitable USB device is not found
+    And I am told that the destination device cannot be upgraded
+
+  Scenario: Try to "Clone & Upgrade" Tails to a pristine USB drive
+    Given a computer
+    And I start Tails from DVD with network unplugged and I login
+    And I create a 4 GiB disk named "pristine"
+    And I plug USB drive "pristine"
+    And I start Tails Installer in "Upgrade from ISO" mode
+    Then a suitable USB device is not found
+    And I am told that the destination device cannot be upgraded
+
+  Scenario: Try to "Upgrade from ISO" Tails to a USB drive with GPT and a FAT partition
+    Given a computer
+    And I setup a filesystem share containing the Tails ISO
+    And I start Tails from DVD with network unplugged and I login
+    And I create a 4 GiB disk named "gptfat"
+    And I create a gpt partition with a vfat filesystem on disk "gptfat"
+    And I plug USB drive "gptfat"
+    And I start Tails Installer in "Upgrade from ISO" mode
+    Then a suitable USB device is not found
+    And I am told that the destination device cannot be upgraded
+
+  Scenario: Try to "Clone & Upgrade" Tails to a USB drive with GPT and a FAT partition
+    Given a computer
+    And I start Tails from DVD with network unplugged and I login
+    And I create a 4 GiB disk named "gptfat"
+    And I create a gpt partition with a vfat filesystem on disk "gptfat"
+    And I plug USB drive "gptfat"
+    And I start Tails Installer in "Upgrade from ISO" mode
+    Then a suitable USB device is not found
+    And I am told that the destination device cannot be upgraded
+
   Scenario: Try installing Tails to a too small USB drive
     Given a computer
     And I start Tails from DVD with network unplugged and I login
     And I create a 2 GiB disk named "current"
-    And I start Tails Installer in "Clone & Install" mode with the verbose flag
+    And I start Tails Installer in "Clone & Install" mode
     But a suitable USB device is not found
     When I plug USB drive "current"
-    Then Tails Installer detects that the device "current" is too small
+    Then Tails Installer detects that a device is too small
     And a suitable USB device is not found
 
   @keep_volumes

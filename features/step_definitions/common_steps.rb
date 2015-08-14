@@ -442,14 +442,20 @@ Given /^I save the state so the background can be restored next scenario$/ do
   @skip_steps_while_restoring_background = false
 end
 
-Then /^I see "([^"]*)" after at most (\d+) seconds$/ do |image, time|
+Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
   next if @skip_steps_while_restoring_background
-  @screen.wait(image, time.to_i)
+  begin
+    @screen.wait(image, time.to_i)
+    raise "found '#{image}' while expecting not to" if negation
+  rescue FindFailed => e
+    raise e if not(negation)
+  end
 end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
   next if @skip_steps_while_restoring_background
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_all_tor_nodes)
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
+                                :accepted_hosts => get_all_tor_nodes)
   leaks.assert_no_leaks
 end
 
@@ -951,9 +957,11 @@ When /^I click the HTML5 play button$/ do
   @screen.wait_and_click("TorBrowserHtml5PlayButton.png", 30)
 end
 
-When /^I can save the current page as "([^"]+[.]html)" to the (default downloads|persistent Tor Browser) directory$/ do |output_file, output_dir|
+When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) directory$/ do |should_work, output_file, output_dir|
   next if @skip_steps_while_restoring_background
+  should_work = should_work == 'can' ? true : false
   @screen.type("s", Sikuli::KeyModifier.CTRL)
+  @screen.wait("TorBrowserSaveDialog.png", 10)
   if output_dir == "persistent Tor Browser"
     output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
     @screen.wait_and_click("GtkTorBrowserPersistentBookmark.png", 10)
@@ -962,16 +970,22 @@ When /^I can save the current page as "([^"]+[.]html)" to the (default downloads
     # let's use the keyboard shortcut to focus its field
     @screen.type("n", Sikuli::KeyModifier.ALT)
     @screen.wait("TorBrowserSaveOutputFileSelected.png", 10)
-  else
+  elsif output_dir == "default downloads"
     output_dir = "/home/#{LIVE_USER}/Tor Browser"
+  else
+    @screen.type(output_dir + '/')
   end
   # Only the part of the filename before the .html extension can be easily replaced
   # so we have to remove it before typing it into the arget filename entry widget.
   @screen.type(output_file.sub(/[.]html$/, ''))
   @screen.type(Sikuli::Key.ENTER)
-  try_for(10, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
-    @vm.file_exist?("#{output_dir}/#{output_file}")
-  }
+  if should_work
+    try_for(10, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
+      @vm.file_exist?("#{output_dir}/#{output_file}")
+    }
+  else
+    @screen.wait("TorBrowserCannotSavePage.png", 10)
+  end
 end
 
 When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads|persistent Tor Browser) directory$/ do |output_file, output_dir|
@@ -1005,7 +1019,65 @@ When /^I accept to import the key with Seahorse$/ do
   @screen.wait_and_click("TorBrowserOkButton.png", 10)
 end
 
-Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
+Given /^a web server is running on the LAN$/ do
+  next if @skip_steps_while_restoring_background
+  web_server_ip_addr = $vmnet.bridge_ip_addr
+  web_server_port = 8000
+  @web_server_url = "http://#{web_server_ip_addr}:#{web_server_port}"
+  web_server_hello_msg = "Welcome to the LAN web server!"
+
+  # I've tested ruby Thread:s, fork(), etc. but nothing works due to
+  # various strange limitations in the ruby interpreter. For instance,
+  # apparently concurrent IO has serious limits in the thread
+  # scheduler (e.g. sikuli's wait() would block WEBrick from reading
+  # from its socket), and fork():ing results in a lot of complex
+  # cucumber stuff (like our hooks!) ending up in the child process,
+  # breaking stuff in the parent process. After asking some supposed
+  # ruby pros, I've settled on the following.
+  code = <<-EOF
+  require "webrick"
+  STDOUT.reopen("/dev/null", "w")
+  STDERR.reopen("/dev/null", "w")
+  server = WEBrick::HTTPServer.new(:BindAddress => "#{web_server_ip_addr}",
+                                   :Port => #{web_server_port},
+                                   :DocumentRoot => "/dev/null")
+  server.mount_proc("/") do |req, res|
+    res.body = "#{web_server_hello_msg}"
+  end
+  server.start
+EOF
+  proc = IO.popen(['ruby', '-e', code])
+  try_for(10, :msg => "It seems the LAN web server failed to start") do
+    Process.kill(0, proc.pid) == 1
+  end
+
+  add_after_scenario_hook { Process.kill("TERM", proc.pid) }
+
+  # It seems necessary to actually check that the LAN server is
+  # serving, possibly because it isn't doing so reliably when setting
+  # up. If e.g. the Unsafe Browser (which *should* be able to access
+  # the web server) tries to access it too early, Firefox seems to
+  # take some random amount of time to retry fetching. Curl gives a
+  # more consistent result, so let's rely on that instead. Note that
+  # this forces us to capture traffic *after* this step in case
+  # accessing this server matters, like when testing the Tor Browser..
+  try_for(30, :msg => "Something is wrong with the LAN web server") do
+    msg = @vm.execute_successfully("curl #{@web_server_url}",
+                                   LIVE_USER).stdout.chomp
+    web_server_hello_msg == msg
+  end
+end
+
+When /^I open a page on the LAN web server in the (.*)$/ do |browser|
+  next if @skip_steps_while_restoring_background
+  step "I open the address \"#{@web_server_url}\" in the #{browser}"
+end
+
+def force_new_tor_circuit(with_vidalia=nil)
+  assert(!@new_circuit_tries.nil? && @new_circuit_tries >= 0,
+         '@new_circuit_tries was not initialized before it was used')
+  @new_circuit_tries += 1
+  STDERR.puts "Forcing new Tor circuit... (attempt ##{@new_circuit_tries})" if $config["DEBUG"]
   if with_vidalia
     assert_equal('gnome', @theme, "Vidalia is not available in the #{@theme} theme.")
     begin
@@ -1035,4 +1107,59 @@ Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
   else
     @vm.execute_successfully('. /usr/local/lib/tails-shell-library/tor.sh; tor_control_send "signal NEWNYM"')
   end
+end
+
+Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
+  next if @skip_steps_while_restoring_background
+  if min
+    time = rand(max.to_i - min.to_i + 1) + min.to_i
+  else
+    time = max.to_i
+  end
+  puts "Slept for #{time} seconds"
+  sleep(time)
+end
+
+Given /^I (?:re)?start monitoring the AppArmor log of "([^"]+)"$/ do |profile|
+  next if @skip_steps_while_restoring_background
+  # AppArmor log entries may be dropped if printk rate limiting is
+  # enabled.
+  @vm.execute_successfully('sysctl -w kernel.printk_ratelimit=0')
+  # We will only care about entries for this profile from this time
+  # and on.
+  guest_time = DateTime.parse(@vm.execute_successfully('date').stdout)
+  @apparmor_profile_monitoring_start ||= Hash.new
+  @apparmor_profile_monitoring_start[profile] = guest_time
+end
+
+When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at most (\d+) seconds)?$/ do |anti_test, profile, file, time|
+  next if @skip_steps_while_restoring_background
+  assert(@apparmor_profile_monitoring_start &&
+         @apparmor_profile_monitoring_start[profile],
+         "It seems the profile '#{profile}' isn't being monitored by the " +
+         "'I monitor the AppArmor log of ...' step")
+  audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' % [profile, file]
+  block = Proc.new do
+    audit_lines = @vm.execute("grep -F '#{audit_line_regex}' /var/log/syslog").stdout.split("\n")
+    audit_lines.select! do |line|
+      DateTime.parse(line) >= @apparmor_profile_monitoring_start[profile]
+    end
+    assert(audit_lines.empty? == (anti_test ? true : false))
+    true
+  end
+  begin
+    if time
+      try_for(time.to_i) { block.call }
+    else
+      block.call
+    end
+  rescue Timeout::Error, Test::Unit::AssertionFailedError => e
+    raise e, "AppArmor has #{anti_test ? "" : "not "}denied the operation"
+  end
+end
+
+Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
+  next if @skip_steps_while_restoring_background
+  @new_circuit_tries = 1 if @new_circuit_tries.nil?
+  force_new_tor_circuit(with_vidalia)
 end

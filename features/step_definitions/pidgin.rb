@@ -296,12 +296,12 @@ end
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   next if @skip_steps_while_restoring_background
   expected_channel_entry = chan_image(account, default_chan(account), 'roster')
-  tries = 0
-  until tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
+  @new_circuit_tries = 0
+  until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
     # Sometimes the OFTC welcome notice window pops up over the buddy list one...
     begin
       @vm.focus_window('Buddy List')
-    rescue Test::Unit::AssertionFailedError
+    rescue ExecutionFailedInVM
       # Sometimes focusing the window with xdotool will fail with the
       # conversation window right on top of it. We'll try to close the
       # conversation window. At worst, the test will still fail...
@@ -313,9 +313,7 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
       @screen.wait(expected_channel_entry, 60)
       break
     rescue FindFailed
-      tries += 1
-      STDERR.puts "Forcing new Tor circuit... (attempt ##{tries})" if $config["DEBUG"]
-      step "I force Tor to use a new circuit"
+      force_new_tor_circuit
       @screen.wait_and_click('PidginReconnect.png', 20)
     end
   end
