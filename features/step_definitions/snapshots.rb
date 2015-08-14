@@ -31,6 +31,20 @@ def checkpoints
       ],
     },
 
+    'no-network-bridge-mode' => {
+      :temporary => true,
+      :description => "Tails has booted from DVD without network and logged in with bridge mode enabled",
+      :parent_checkpoint => "tails-greeter",
+      :steps => [
+        'I enable more Tails Greeter options',
+        'I enable the specific Tor configuration option',
+        'I log in to a new session',
+        'Tails Greeter has dealt with the sudo password',
+        'the Tails desktop is ready',
+        'all notifications have disappeared',
+      ],
+    },
+
     'no-network-logged-in-sudo-passwd' => {
       :temporary => true,
       :description => "Tails has booted from DVD without network and logged in with an administration password",
