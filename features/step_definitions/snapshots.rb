@@ -16,7 +16,7 @@ def checkpoints
       :steps => [
         'I log in to a new session',
         'Tails Greeter has dealt with the sudo password',
-        'Tails seems to have booted normally',
+        'the Tails desktop is ready',
       ],
     },
     
@@ -39,7 +39,7 @@ def checkpoints
         'I set an administration password',
         'I log in to a new session',
         'Tails Greeter has dealt with the sudo password',
-        'Tails seems to have booted normally',
+        'the Tails desktop is ready',
       ],
     },
 
@@ -76,7 +76,7 @@ def checkpoints
       :parent_checkpoint => 'usb-install-tails-greeter',
       :steps => [
         'I log in to a new session',
-        'Tails seems to have booted normally',
+        'the Tails desktop is ready',
         'I create a persistent partition',
         'a Tails persistence partition exists on USB drive "current"',
         'I shutdown Tails and wait for the computer to power off',
