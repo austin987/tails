@@ -80,6 +80,16 @@ BeforeFeature('@product', '@old_iso') do
   puts "Using old ISO image: #{File.basename(OLD_TAILS_ISO)}"
 end
 
+AfterFeature('@product') do
+  unless KEEP_SNAPSHOTS
+    checkpoints.each do |name, vals|
+      if vals[:temporary] and VM.snapshot_exists?(name)
+        VM.remove_snapshot(name)
+      end
+    end
+  end
+end
+
 # BeforeScenario
 Before('@product') do
   @screen = Sikuli::Screen.new
