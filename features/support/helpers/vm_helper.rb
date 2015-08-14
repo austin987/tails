@@ -555,12 +555,13 @@ EOF
     @display.start
   end
 
-  def remove_snapshot(name)
+  def VM.remove_snapshot(name)
+    old_domain = $virt.lookup_domain_by_name($config["LIBVIRT_DOMAIN_NAME"])
     potential_ram_only_snapshot_path = VM.ram_only_snapshot_path(name)
     if File.exist?(potential_ram_only_snapshot_path)
       File.delete(potential_ram_only_snapshot_path)
     else
-      snapshot = @domain.lookup_snapshot_by_name(name)
+      snapshot = old_domain.lookup_snapshot_by_name(name)
       snapshot.delete
     end
   end
