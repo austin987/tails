@@ -45,4 +45,3 @@ Feature: Tails persistence
     And all notifications have disappeared
     When I delete the persistent partition
     Then there is no persistence partition on USB drive "current"
-
