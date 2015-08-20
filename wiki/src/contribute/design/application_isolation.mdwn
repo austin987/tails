@@ -58,14 +58,26 @@ between an access to the upper layer, and an access to the loop-backed
 underlying layer.
 
 So, we have to adjust profiles a bit to make them support the paths
-that are actually seen by AppArmor in the context of Tails:
+that are actually seen by AppArmor in the context of Tails.
 
-* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-home-tunable.diff]]
+First, we are using a couple of
+[aliases](http://wiki.apparmor.net/index.php/AppArmor_Core_Policy_Reference#Alias_and_rewrite_rules)
+so that rules applying to "normal" paths (e.g.
+`/home/amnesia/.gnupg/`) also apply to Debian Live -specific paths,
+such as `/lib/live/mount/overlay/home/amnesia/.gnupg/`. And, to avoid
+subsequent problems with overlapping rules, and to mitigate the
+increased policy compilation time (see details below), we also patch
+some some very broad rules to make them _not_ apply to `/lib/live/*`.
+All these changes live in
+[[!tails_gitweb config/chroot_local-patches/apparmor-aliases.diff]].
+
+Second, few more targeted adjustments are also applied:
+
+* [[!tails_gitweb config/chroot_local-includes/etc/apparmor.d/tunables/home.d/tails]]
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-pidgin-profile.diff]]
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-tor-abstraction.diff]]
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-tor-profile.diff]]
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-totem-profile.diff]]
-* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-user-tmp-abstraction.diff]]
 
 Below, we discuss various leads that might avoid the need for coming
 up with such adjustments, and maintaining it.
