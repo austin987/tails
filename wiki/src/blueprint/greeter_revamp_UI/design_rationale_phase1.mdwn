@@ -8,17 +8,17 @@ This document serves as an explanation of the rationale behind the proposed Gree
 
 This document is the result of a process that took more than one year:
 
-- spring 2014: discussion on the greeter with NUMA people
-- summer 2014: mockups implementing the results of these discussions
-- winter 2014: test of these mockups and changes proposals by 2 designers
-- spring to summer 2015: redesign of the 1st screen
+- Spring 2014: discussion on the greeter with NUMA people
+- Summer 2014: mockups implementing the results of these discussions
+- Winter 2014: test of these mockups and changes proposals by 2 designers
+- Spring to Summer 2015: redesign of the 1st screen and flow
 
-Please take this into account when you'll comment curret proposals. Improvements are more than welcome, but yet another complete redesign is not unless you have a very strong point.
+Please take this into account when you comment on current proposals. Improvements are more than welcome but yet another complete redesign is not, unless you have a very strong point.
 
 # Flow
 
-After working on a prototype and do UX testing with Numa people, we arrived to
-the idea of two main flows:
+After working on a prototype and doing UX testing with some folks at NUMA, we arrived at
+the idea of having two main experience flows:
 
 - a quick setup for regular users, in which the every option is easy to access in a few secreens;
 - a wizard to guide newcomers.
@@ -27,36 +27,34 @@ The result of this step can be found in [[NUMA_flow]].
 
 # Implementation phases
 
-The implementation and release of all this is scheduled in three
-phases, so that we make actual progress we can deliver to user as
-soon as it becomes reality:
+The implementation and release of this is scheduled in three
+phases, so that we make actual progress we can deliver to users as
+soon as things become reality:
 
-- phase 1: redesign the greeter and the 1st screen. We then have
-  similar functionality than the current greeter, but better
-  presented.
+- Phase 1: redesign the Greeter's 1st screen. We then have
+  similar functionality to the current Greeter, but more clearly presented.
 
-- phase 2: add an wizard to guide beginners ("Discover: guided
-  configuration")
+- Phase 2: add a Wizard to guide beginners ("Discover: Guided Configuration")
 
-- phase 3: merge the persistence creation/configuration into the
+- Phase 3: merge the persistence creation/configuration into the
   greeter
 
 We are proposing this because we have been debating a lot on
-the first screen(s) and that we have reached something that is worth
-being tested and implemented. On the other hand, there is quite more
-work needed on the wizard.
+the first screen(s) and we have reached something that is worth
+being tested and implemented. On the other hand, there is more
+work needed on the Guided Configuration wizard.
 
 # Proposed design for the 1st screen
 
-We refined this on the *tails-ux* mailing list to arrive to the following concrete proposal
-for the 1st screen. Below in this document we explain every design decision we made.
+We refined this on the *tails-ux* mailing list to arrive at the following concrete proposal
+for the 1st screen. Below in this document we explain every designation.
 
 ## Intention
 
 Design a greeter dialog that:
 
-- accomodates for one-click access to persistence, localization and privacy options
-- has simple and easy to understand interface for both new and advanced users
+- accommodates for one-click access to persistence, localization, and privacy options
+- has a simple and easy to understand interface for both new and advanced users
 - uses as much tested data from previous design iterations as possible
 - is up to date with GNOME 3.14 standards
 
@@ -64,11 +62,13 @@ Design a greeter dialog that:
 
 [[!img Greeter.Welcome.png link="Greeter.Welcome.svg"]]
 
-There is a single welcome and settings screen, which is always displayed and acts as a "Check and Go" screen as well as a hub for editing settings. 
+There is a single welcome and settings screen which is always displayed and acts as a "Check and Go" screen, as well as a hub for editing settings. 
 
 When a line is clicked, a popover ([[https://developer.gnome.org/hig/stable/popovers.html.en]]) opens with an explanation of the option and the controls to change its value.
 
-If the user saved some settings, their value will be filled in the right place (it is clear that the "Language" section can be saved, but not yet weather the "Settings" section should can be saved or not).
+As the values change their new value will replace the previous value in each respective location.
+
+It is clear that the "Language" section can/should be saved, but not yet weather the "Settings" section can/should be saved.
 
 ## Explanation of this design
 
@@ -92,7 +92,7 @@ themselves.
 With this said, it seems appropriate to educate people of 
 varying technical levels of understanding what options are available to 
 them and what importance these options hold in regard to the intended 
-funtion.
+function.
 
 In our situation, this is most effectively accomplished by 
 displaying everything upfront
@@ -128,8 +128,8 @@ How should the settings section be ordered?
 - Importance: Storage, Language, Settings
 - **Logical: Language, Storage, Settings**
 
-An arbitrary order such as alphabetical is much less relevant than ordering by importance or logical steps. On top of that, oo setup storage, one should select the right language first to be
-able to type their passphrase. Thus the choice of the Language, Storage then Settings order.
+An arbitrary order such as alphabetical is much less relevant than ordering by importance or logical steps. On top of that, to setup storage, one should select the right language first to be
+able to type their passphrase. Thus the choice of the Language, Storage, then Settings order.
 
 Should the settings sections be labeled with either two or three labels?
 
@@ -171,7 +171,7 @@ The language section is always visible. When a language is saved (in cleartext),
 Clicking on a language line will open a Popover with the
 available options and a search bar.
 
-UI when "save language changes" is checked:
+UI when "Save Language Changes" is checked:
 
   - On a new Tails installation the check box is unchecked by default.
   - When the user switches the box is checked, then display the warning.
