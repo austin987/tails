@@ -1,0 +1,215 @@
+[[!meta title="Tails Greeter Design Rationale"]]
+
+# What is This?
+
+This document serves as an explanation of the rationale behind the proposed Greeter design related to [[!tails_ticket 8230]]. This document will grow over time, so please feel free to agree with, object to, or request anything.
+
+# History of this document
+
+This document is the result of a process that took more than one year:
+
+- Spring 2014: discussion on the greeter with NUMA people
+- Summer 2014: mockups implementing the results of these discussions
+- Winter 2014: test of these mockups and changes proposals by 2 designers
+- Spring to Summer 2015: redesign of the 1st screen and flow
+
+Please take this into account when you comment on current proposals. Improvements are more than welcome but yet another complete redesign is not, unless you have a very strong point.
+
+# Flow
+
+After working on a prototype and doing UX testing with some folks at NUMA, we arrived at
+the idea of having two main experience flows:
+
+- a quick setup for regular users, in which the every option is easy to access in a few secreens;
+- a wizard to guide newcomers.
+
+The result of this step can be found in [[NUMA_flow]].
+
+# Implementation phases
+
+The implementation and release of this is scheduled in three
+phases, so that we make actual progress we can deliver to users as
+soon as things become reality:
+
+- Phase 1: redesign the Greeter's 1st screen. We then have
+  similar functionality to the current Greeter, but more clearly presented.
+
+- Phase 2: add a Wizard to guide beginners ("Discover: Guided Configuration")
+
+- Phase 3: merge the persistence creation/configuration into the
+  greeter
+
+We are proposing this because we have been debating a lot on
+the first screen(s) and we have reached something that is worth
+being tested and implemented. On the other hand, there is more
+work needed on the Guided Configuration wizard.
+
+# Proposed design for the 1st screen
+
+We refined this on the *tails-ux* mailing list to arrive at the following concrete proposal
+for the 1st screen. Below in this document we explain every designation.
+
+## Intention
+
+Design a greeter dialog that:
+
+- accommodates for one-click access to persistence, localization, and privacy options
+- has a simple and easy to understand interface for both new and advanced users
+- uses as much tested data from previous design iterations as possible
+- is up to date with GNOME 3.14 standards
+
+## Proposed design
+
+[[!img Greeter.Welcome.png link="Greeter.Welcome.svg"]]
+
+There is a single welcome and settings screen which is always displayed and acts as a "Check and Go" screen, as well as a hub for editing settings. 
+
+When a line is clicked, a popover ([[https://developer.gnome.org/hig/stable/popovers.html.en]]) opens with an explanation of the option and the controls to change its value.
+
+As the values change their new value will replace the previous value in each respective location.
+
+It is clear that the "Language" section can/should be saved, but not yet weather the "Settings" section can/should be saved.
+
+## Explanation of this design
+
+### Content Structure Types
+
+Which content structure type is most appropriate for the Greeter?
+
+[[!img Greeter.Decision.00-Structure.png link="Greeter.Decision.00-Structure.svg" size="800x"]]
+
+- Step-by-step - Guided walkthrough
+- Show/Hide - Hidden off-screen or behind on-screen element
+- **Openface - Full display**
+
+With the Step-by-step flow already established as the most appropriate guided configuration structure, the designation made was that, although the Show/Hide structure most appropriately accommodates the two end-of-spectrum use cases (noob vs veteran), the Openface structure is the most appropriate for the Greeter’s first screen, as it most closely aligns with GNOME HIG and ensures there is no hidden or undiscoverable information.
+
+### Options Available On The 1st Screen
+
+The hypothesis is that is that a good design should allow people to teach 
+themselves.
+
+With this said, it seems appropriate to educate people of 
+varying technical levels of understanding what options are available to 
+them and what importance these options hold in regard to the intended 
+function.
+
+In our situation, this is most effectively accomplished by 
+displaying everything upfront
+
+### Start Tails Button Location
+
+Where should the ‘Start Tails’ button be located?
+
+[[!img Greeter.Decision.01-Start.png link="Greeter.Decision.01-Start.svg"  size="800x"]]
+
+Height:
+
+- **Top of Greeter**
+- Bottom of Greeter
+
+Framing:
+
+- **Greeter Frame**
+- Greeter Canvas
+
+Bar:
+
+- **Button in an Action Bar**
+- Button Isolated
+
+This is really a few things, but the designation was made that the most appropriate location for the ‘Start Tails’ button is above the Greeter canvas as part of an Action Bar.  Although placing the ‘Start Tails’ button at the bottom of the Greeter follows the flow logic of configuring the session settings and then starting Tails, the most occurrent use cases are 1) using Tails with default settings, and 2) using Tails with saved custom settings, therefore, it seems most appropriate to have the ‘Start Tails’ button ordered before the settings.  Placing the ‘Start Tails’ button in the Greeter frame instead of the canvas is an attempt to lessen the number of elements on the canvas.  Using an Action Bar aligns with GNOME HIG and provides a place for other buttons.
+
+### Section order and labels
+
+How should the settings section be ordered?
+
+- Alphabetical: Language, Settings, Storage
+- Importance: Storage, Language, Settings
+- **Logical: Language, Storage, Settings**
+
+An arbitrary order such as alphabetical is much less relevant than ordering by importance or logical steps. On top of that, to setup storage, one should select the right language first to be
+able to type their passphrase. Thus the choice of the Language, Storage, then Settings order.
+
+Should the settings sections be labeled with either two or three labels?
+
+[[!img Greeter.Decision.03-Labels.png link="Greeter.Decision.03-Labels.svg" size="800x"]]
+
+- Two
+- **Three**
+
+The designation was made that having three sections with three labels was the most appropriate approach given the high need for conceptual clarity, especially for new users.  Three sections with two labels (grouping all of the settings together under ‘Settings’), although more minimal, became too ambiguous and didn’t emphasize/isolate the ‘Language’ section enough.
+
+### Label Icons
+
+Should icons accompany the Section or Line-item labels, none, or both?
+
+[[!img Greeter.Decision.04-Icons.png link="Greeter.Decision.04-Icons.svg" size="800x"]]
+
+- Section
+- **Line Item**
+
+Given the context of the settings list, the designation was made that icons should only accompany the labels of the line-items.  Aside from the visual conflict that arises between the Section and Line-item label icons when placed so close together, Tails, as well as many other operating systems, currently uses colored and monochromatic icons to accompany line items for almost every list, and displays no icon for section labels.
+
+### Close Greeter
+
+Should the Greeter have the option to be closed/restarted?
+
+[[!img Greeter.Decision.05-Close.png link="Greeter.Decision.05-Close.svg" size="800x"]]
+
+- **Close/Restart**
+- No Close/Restart
+
+Since there are multiple boot modes to choose from for Tails, the designation was made that a ‘Restart’ button located in the Action Bar of the Greeter would accommodate a user’s preference to go back and boot into failsafe mode.
+
+## UX for specific options
+
+### Language
+
+The language section is always visible. When a language is saved (in cleartext), it is automatically filled in with saved options.
+
+Clicking on a language line will open a Popover with the
+available options and a search bar.
+
+UI when "Save Language Changes" is checked:
+
+  - On a new Tails installation the check box is unchecked by default.
+  - When the user switches the box is checked, then display the warning.
+  - Next time Tails starts, the options that were saved unencrypted are
+    detected and the box should be checked automatically.
+  - When the user switches the box to unchecked to delete those options,
+    then display a notification saying that they were safely deleted.
+
+### Storage
+
+Initial state:
+
+    Storage [more info]
+    [Type your passphrase...................] [icon: pad closed] [enable]
+
+A context menu enables to "show passphrase", "copy" and "paste" as in
+GNOME OpenPGP agent
+
+After clicking on enable:
+
+    Storage [more info]
+    [ooooooooooooooooo......................] [icon: spinner] [enable]
+
+If the password is correct:
+
+    Storage [more info]
+    [xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx] [icon: pad open] [disable]
+
+If the password is wrong:
+
+    Storage [more info]
+    [ooooooooooooooooo......................] [icon: pad closed] [enable]
+
+# Upcoming settings
+
+The following new settings are planned or discussed:
+
+ * Offline mode ([[!tails_ticket 6811]])
+ * Opt-in for I2P in the Greeter ([[!tails_ticket 7723]])
+ * Bluetooth
+ * LAN access
