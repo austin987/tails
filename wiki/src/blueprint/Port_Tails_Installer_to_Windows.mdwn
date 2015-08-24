@@ -4,20 +4,21 @@ I managed to create a native windows executable for a test Python/GI program und
 
 ## Downloads
 
-    Python: https://www.python.org/downloads/windows/
-    PyGI: http://sourceforge.net/projects/pygobjectwin32/files/
-    cx_freeze: https://pypi.python.org/packages/3.4/c/cx_Freeze/cx_Freeze-4.3.4.win32-py3.4.exe#md5=bd087416c69ced533768a22e5d3414b8
-    listdlls: https://technet.microsoft.com/sk-sk/sysinternals/bb896656.aspx
+* Python: <https://www.python.org/downloads/windows/>
+* PyGI: <http://sourceforge.net/projects/pygobjectwin32/files/>
+* cx_freeze: <https://pypi.python.org/packages/3.4/c/cx_Freeze/cx_Freeze-4.3.4.win32-py3.4.exe#md5=bd087416c69ced533768a22e5d3414b8>
+* listdlls: <https://technet.microsoft.com/sk-sk/sysinternals/bb896656.aspx>
 
 ## Prepare
 
-    you need a Windows 8 (virtual) machine, with the files downloaded above
-    in Windows double-click python-3.4.3 and accept default choices but select "Install entire feature"
-    in Windows double-click pygi-aio-3.14.0-rev18-setup and choose to install only
-        GNOME libraries: GI, GTK, Pango (needed?)
-        non-GNOME libraraies: none
-        developpment files: GIR (needed?)
-    in Windows double-click cx_freeze-4.3.4.win32-py34 anc accept default choices
+You need a Windows 8 (virtual) machine, with the files downloaded above
+
+* in Windows double-click `python-3.4.3` and accept default choices but select "Install entire feature"
+* in Windows double-click `pygi-aio-3.14.0-rev18-setup` and choose to install only
+  * GNOME libraries: GI, GTK, Pango (needed?)
+  * non-GNOME libraraies: none
+  * developpment files: GIR (needed?)
+* in Windows double-click `cx_freeze-4.3.4.win32-py34` and accept default choices
 
 ## Test Program
 
@@ -34,12 +35,12 @@ I managed to create a native windows executable for a test Python/GI program und
 
 ### setup.py
 
-* base: https://wiki.gnome.org/Projects/PyGObject?action=AttachFile&do=view&target=setup.py
+* base: <https://wiki.gnome.org/Projects/PyGObject?action=AttachFile&do=view&target=setup.py>
 * update the DLL directory to gnome
-* update the DLL list in setup.py with the output of ListDLLs.exe
-  * run main.py
-  * run Listdlls python
-  * add all DLLs that are in the gnome directory to the missing_dll list in setup.py
+* update the DLL list in `setup.py with the output of ListDLLs.exe`
+  * run `main.py`
+  * run `Listdlls python`
+  * add all DLLs that are in the gnome directory to the `missing_dll` list in `setup.py`
 
 Result:
 
@@ -134,27 +135,27 @@ Result:
 
 * start "Command Prompt"
 * `cd Documents/test/`
-* `python setup.py bdist`. The resulting ZIP file lives in dist/. It is 37M big!
-* `python setyp.py bdist_msi` created a windows installer in dist/.
+* `python setup.py bdist`. The resulting ZIP file lives in `dist/`. It is 37M big!
+* `python setyp.py bdist_msi` created a windows installer in `dist/`.
 
 ## Test
 
 In another fresh windows 8.1VM
 
-* Install "Microsoft Visual C++ 2010 SP1 Redistributable Package (x86)" (https://www.microsoft.com/en-US/download/details.aspx?id=8328).
+* Install "Microsoft Visual C++ 2010 SP1 Redistributable Package (x86)" (<https://www.microsoft.com/en-US/download/details.aspx?id=8328>).
 * extract the ZIP file
 * run main.exe
 * it works
 
 ## Next steps
 
-* make a single executable file: https://cx-freeze.readthedocs.org/en/latest/faq.html#single-file-executables
-* bundle `msvcr100.dll`: https://msdn.microsoft.com/en-us/library/8kche8ah.aspx
+* make a single executable file: <https://cx-freeze.readthedocs.org/en/latest/faq.html#single-file-executables>
+* bundle `msvcr100.dll`: <https://msdn.microsoft.com/en-us/library/8kche8ah.aspx
 * shring the ZIP:
-  * https://stackoverflow.com/questions/20067856/python3-pygobject-gtk3-and-cx-freeze-missing-dlls
-  * https://bitbucket.org/anthony_tuininga/cx_freeze/issue/92/pygi-and-cx_freeze-error
+  * <https://stackoverflow.com/questions/20067856/python3-pygobject-gtk3-and-cx-freeze-missing-dlls>
+  * <https://bitbucket.org/anthony_tuininga/cx_freeze/issue/92/pygi-and-cx_freeze-error>
 
 ## Other tools
 
-* py2exe: https://gmigdos.wordpress.com/2014/06/29/how-to-bundle-python-gtk3-apps-on-windows-with-py2exe/
+* py2exe: <https://gmigdos.wordpress.com/2014/06/29/how-to-bundle-python-gtk3-apps-on-windows-with-py2exe/>
 
