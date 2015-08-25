@@ -99,7 +99,7 @@ sub-directories (such as
 -------------------------
 
 You need to set up a virtual host for dl.amnesia.boum.org, with indexing
-enabled.
+enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 
 ### Apache configuration example
 
@@ -110,6 +110,7 @@ enabled.
 	   DocumentRoot /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
 	   <Directory /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/>
 	      Options Indexes
+	      FileETag None
 	      AllowOverride None
 	      IndexIgnore README.html
 	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
@@ -119,6 +120,7 @@ enabled.
 
 ### Lighttpd configuration example
 
+	static-file.etags = "disable"
 	$HTTP["host"] =~ "^dl\.amnesia\.boum\.org$" {
 		server.document-root = "/var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/"
 		server.dir-listing = "enable"
@@ -128,6 +130,7 @@ enabled.
 
 	server {
 		server_name dl.amnesia.boum.org;
+		etag off;
 		root /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE;
 		location / {
 			autoindex on;
