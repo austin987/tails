@@ -14,22 +14,33 @@ Install build-dependencies listed in `debian/control`:
 
 Install build-dependencies from Debian:
 
+    dosfstools \
+    faketime \
+    gdisk \
+    genisoimage \
+    gnutls-bin \
+    kpartx \
     libdist-zilla-perl libdist-zilla-plugins-cjm-perl \
     libdist-zilla-plugin-changelogfromgit-perl \
     libdist-zilla-plugin-installguide-perl \
+    libdist-zilla-plugin-localemsgfmt-perl \
     libdist-zilla-plugin-test-perl-critic-perl \
     libdist-zilla-plugin-test-notabs-perl \
     libdist-zilla-plugin-git-perl \
+    libfindbin-libs-perl \
+    libhttp-server-simple-static-perl \
     liblocale-msgfmt-perl libmoosex-has-sugar-perl \
-    dh-make-perl
-
-If running something older than Jessie:
-
-    apt-get install libtest-bdd-cucumber/wheezy-backports
-
-Install build-dependencies that are not in Debian yet:
-
-    DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::LocaleMsgfmt
+    libsys-filesystem-perl \
+    libtest-bdd-cucumber-perl \
+    libtest-eol-perl \
+    libtest-fatal-perl \
+    libtest-most-perl \
+    libtest-notabs-perl \
+    libtest-perl-critic-perl \
+    libtest-pod-perl \
+    libtest-spec-perl \
+    dh-make-perl \
+    syslinux
 
 Update POT and PO files
 =======================
@@ -81,9 +92,9 @@ Checkout the branch with Debian package specifics and import the new
 upstream tarball, update `debian/changelog`:
 
     git checkout debian && \
-       git-import-orig --upstream-vcs-tag=$VERSION \
+       gbp import-orig --upstream-vcs-tag=$VERSION \
           ../Tails-IUK-$VERSION.tar.gz && \
-       git-dch --auto && \
+       gbp dch --auto && \
        dch -e
 
 (Do not forget to set the appropriate release.)
@@ -99,9 +110,13 @@ Build a Debian package (use a Wheezy chroot with the right version of
 `tails-perl5lib` installed), add a signed tag to the repository and
 push the changes:
 
-    git-buildpackage && \
-       git-buildpackage --git-tag-only --git-sign-tags && \
-       git push && git push --tags
+    gbp buildpackage && \
+    gbp buildpackage --git-tag-only --git-sign-tags && \
+    git push origin master:master \
+                    debian:debian \
+                    pristine-tar:pristine-tar \
+                    upstream:upstream && \
+    git push --tags
 
 Add the Debian package to Tails
 ===============================

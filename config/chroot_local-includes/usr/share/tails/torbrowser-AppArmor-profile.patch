@@ -1,5 +1,5 @@
 diff --git a/apparmor/torbrowser.Browser.firefox b/apparmor/torbrowser.Browser.firefox
-index 0df7ad9..6d1346c 100644
+index 7e68a08..2f40271 100644
 --- a/apparmor/torbrowser.Browser.firefox
 +++ b/apparmor/torbrowser.Browser.firefox
 @@ -1,13 +1,15 @@
@@ -97,15 +97,7 @@ index 0df7ad9..6d1346c 100644
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -65,6 +79,7 @@
- 
-   /sys/devices/system/cpu/ r,
-   /sys/devices/system/cpu/present r,
-+  deny /sys/devices/virtual/block/*/uevent r,
- 
-   # Should use abstractions/gstreamer instead once merged upstream
-   /etc/udev/udev.conf r,
-@@ -72,6 +87,21 @@
+@@ -73,10 +87,42 @@
    /sys/devices/pci[0-9]*/**/uevent r,
    owner /{dev,run}/shm/shmfd-* rw,
  
@@ -119,11 +111,32 @@ index 0df7ad9..6d1346c 100644
 +  /usr/local/lib/tor-browser/firefox Pix,
 +  /usr/bin/seahorse-tool Ux,
 +
++  # Grant access to assistive technologies
++  # (otherwise, Firefox crashes when Orca is enabled:
++  # https://labs.riseup.net/code/issues/9261)
++  owner @{HOME}/.cache/at-spi2-*/ rw,
++  owner @{HOME}/.cache/at-spi2-*/socket rw,
++
 +  # Spell checking (the "enchant" abstraction includes these rules
 +  # too, but it allows way more stuff than what we need)
 +  /usr/share/hunspell/                             r,
 +  /usr/share/hunspell/*                            r,
 +
++  # Deny access to the list of recently used files. This overrides the
++  # access to it that's granted by the freedesktop.org abstraction.
++  deny @{HOME}/.local/share/recently-used.xbel* rw,
++
    # KDE 4
    owner @{HOME}/.kde/share/config/* r,
  
+   # Xfce4
+   /etc/xfce4/defaults.list r,
+   /usr/share/xfce4/applications/ r,
++
++  # Deny access to global tmp directories, that's granted by the user-tmp
++  # abstraction, which is sourced by the gnome abstraction, that we include.
++  deny owner /var/tmp/**     rwklx,
++  deny /var/tmp/             rwklx,
++  deny owner /tmp/**         rwklx,
++  deny /tmp/                 rwklx,
+ }

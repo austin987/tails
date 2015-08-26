@@ -1,6 +1,6 @@
 [[!meta title="Building a Tails image"]]
 
-[[!toc levels=2]]
+[[!toc levels=3]]
 
 Git repository and branches
 ===========================
@@ -243,20 +243,28 @@ Dependencies
 The following Debian packages need to be installed:
 
 * our `live-build` 2.x package, adapted for Wheezy. Its version is
-  something like *3.0.5+really+is+2.0.12-0.tails1*. One can install it
+  something like *3.0.5+really+is+2.0.12-0.tails2*. One can install it
   from:
 
       deb http://deb.tails.boum.org/ builder-wheezy main
 
-  This APT repository's signing key can be found on the keyservers.
-  It is certified by the [[!tails_website tails-signing.key
-  desc="Tails signing key"]], and its fingerprint is:
+  This APT repository's signing key can be found:
+
+  - in our Git tree (that you have cloned already, right?):
+    `config/chroot_sources/tails.chroot.gpg`
+  - at <http://deb.tails.boum.org/key.asc>
+  - on the keyservers.
+
+  It is certified by the
+  [[Tails signing key|doc/about/openpgp_keys#signing]], and its
+  fingerprint is:
 
       221F 9A3C 6FA3 E09E 182E  060B C798 8EA7 A358 D82E
 
 * `syslinux-utils` 6.03, e.g. from our `builder-wheezy` repository
   just like `live-build`
-* `eatmydata`, `time` and `whois` (for `/usr/bin/mkpasswd`)
+* `eatmydata` 82 or newer, available in wheezy-backports.
+* `time` and `whois` (for `/usr/bin/mkpasswd`)
 * `ikiwiki` 3.20120725 or newer, available in wheezy-backports.
 * `apt-get install libyaml-perl libyaml-libyaml-perl po4a perlmagick
   libyaml-syck-perl` so that the wiki builds smoothly.

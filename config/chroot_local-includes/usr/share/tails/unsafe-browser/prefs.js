@@ -12,3 +12,23 @@ pref("extensions.update.enabled", false);
 pref("print.postscript.cups.enabled", false);
 // Hide "Get Addons" in Add-ons manager
 pref("extensions.getAddons.showPane", false);
+
+/* Google seems like the least suspicious choice of default search
+   engine for the Unsafe Browser's in-the-clear traffic. */
+user_pref("browser.search.defaultenginename", "Google");
+user_pref("browser.search.selectedEngine", "Google");
+
+// Disable fetching of the new tab page's Tiles links/ads. Ads are
+// generally unwanted, and also the fetching is a "phone home" type of
+// feature that generates traffic at least the first time the browser
+// is started.
+pref("browser.newtabpage.directory.source", "");
+pref("browser.newtabpage.directory.ping", "");
+// ... and disable the explanation shown the first time
+pref("browser.newtabpage.introShown", true);
+
+// Don't use geographically specific search prefs, like
+// browser.search.*.US for US locales. Our generated amnesia branding
+// add-on localizes search-engines in an incompatible but equivalent
+// way.
+pref("browser.search.geoSpecificDefaults", false);

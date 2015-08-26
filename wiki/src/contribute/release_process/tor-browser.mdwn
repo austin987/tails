@@ -42,25 +42,26 @@ Have a look at
 * <https://archive.torproject.org/tor-package-archive/torbrowser/>
 * <https://www.torproject.org/dist/torbrowser/>
 * <https://people.torproject.org/~mikeperry/builds/>
+* <https://people.torproject.org/~gk/builds/>
 * <https://people.torproject.org/~linus/builds/>
 
 and see if the desired version is available. Set `DIST_URL` to the
 chosen URL, and set `VERSION` to the desired Tor Browser version, for
 example:
 
-    DIST_URL=https://people.torproject.org/~mikeperry/builds/
-    VERSION=4.0
+    DIST_URL=https://people.torproject.org/~mikeperry/builds/4.5-build5/
+    VERSION=4.5
 
 Fetch the version's hash file and its detached signature, and verify
 with GnuPG:
 
-    wget ${DIST_URL}/${VERSION}/sha256sums.txt{,.asc} && \
-    gpg --verify sha256sums.txt.asc sha256sums.txt
+    wget ${DIST_URL}/sha256sums-unsigned-build.txt{.asc,} && \
+    gpg --verify sha256sums-unsigned-build.txt{.asc,}
 
 Filter the tarballs we want and make them available at build time,
 when the tarballs are fetched:
 
-    grep --color=never "\<tor-browser-linux32-.*\.tar.xz$" sha256sums.txt > \
+    grep --color=never "\<tor-browser-linux32-.*\.tar.xz$" sha256sums-unsigned-build.txt > \
          config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
 
 Then update the URL to the one chosen above:
@@ -140,7 +141,7 @@ Import a new set of Tor Browser tarballs
        CHROOT_INCLUDES="${TAILS_GIT_REPO}/config/chroot_local-includes"
        TBB_SHA256SUMS_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-sha256sums.txt"
        TBB_DIST_URL_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-dist-url.txt"
-       TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")/${VERSION}"
+       TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}" | sed "s,^http://,https://,")"
        cat "$TBB_SHA256SUMS_FILE" | while read expected_sha256 tarball; do
           (
              cd "$TMPDIR"
@@ -153,7 +154,7 @@ Import a new set of Tor Browser tarballs
 
        cd "$TORBROWSER_ARCHIVE" && \
        mkdir "$VERSION" && cd "$VERSION" && \
-       git annex add "$TMPDIR/"*
+       git annex import --duplicate "$TMPDIR/"*
 
 Commit and push your changes
 ----------------------------
@@ -167,7 +168,7 @@ Adjust the URL in the main Git repository
 -----------------------------------------
 
     cd "$TAILS_GIT_REPO" && \
-    echo 'http://torbrowser-archive.tails.boum.org/' > \
+    echo "http://torbrowser-archive.tails.boum.org/${VERSION}/" > \
          config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt && \
     git commit config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt \
         -m "Fetch Tor Browser from our own archive."

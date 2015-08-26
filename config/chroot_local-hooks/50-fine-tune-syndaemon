@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# XXX: This hook is only needed in Wheezy-based Tails to fix #9011 and
+# should be removed once Tails is based on Jessie.
+
+set -e
+
+echo "Fune-tuning syndaemon"
+
+SYNDAEMON_PATH="/usr/bin/syndaemon"
+SYNDAEMON_ORIG_PATH="${SYNDAEMON_PATH}.distrib"
+
+dpkg-divert --rename --add "${SYNDAEMON_PATH}"
+[ -x "${SYNDAEMON_ORIG_PATH}" ] || exit 1
+
+cat > "${SYNDAEMON_PATH}" <<EOF
+#!/bin/sh
+
+# Temporary workaround for #9011 while Tails is based on Wheezy.
+if ! echo "\${@}" | grep -qw -- "-t"; then
+    set -- "\${@}" -t
+fi
+exec ${SYNDAEMON_ORIG_PATH} "\${@}"
+EOF
+
+chmod a+rx "${SYNDAEMON_PATH}"

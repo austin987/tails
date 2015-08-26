@@ -1,3 +1,543 @@
+tails (1.5) unstable; urgency=medium
+
+  * Major new features and changes
+    - Move LAN web browsing from Tor Browser to the Unsafe Browser,
+      and forbid access to the LAN from the former. (Closes: #7976)
+    - Install a 32-bit GRUB EFI boot loader. This at least works
+      on some Intel Baytrail systems. (Closes: #8471)
+
+  * Security fixes
+    - Upgrade Tor Browser to 5.0, and integrate it:
+      · Disable Tiles in all browsers' new tab page.
+      · Don't use geo-specific search engine prefs in our browsers.
+      · Hide Tools -> Set Up Sync, Tools -> Apps (that links to the Firefox
+        Marketplace), and the "Share this page" button in the Tool bar.
+      · Generate localized Wikipedia search engine plugin icons so the
+        English and localized versions can be distinguished in the new
+        search bar. (Closes: #9955)
+    - Fix panic mode on MAC spoofing failure. (Closes: #9531)
+    - Deny Tor Browser access to global tmp directories with AppArmor,
+      and give it its own $TMPDIR. (Closes: #9558)
+    - Tails Installer: don't use a predictable file name for the subprocess
+      error log. (Closes: #9349)
+    - Pidgin AppArmor profile: disable the launchpad-integration abstraction,
+      which is too wide-open.
+    - Use aliases so that our AppArmor policy applies to
+      /lib/live/mount/overlay/ and /lib/live/mount/rootfs/*.squashfs/ as well as
+      it applies to /. And accordingly:
+      · Upgrade AppArmor packages to 2.9.0-3~bpo70+1.
+      · Install rsyslog from wheezy-backports, since the version from Wheezy
+        conflicts with AppArmor 2.9.
+      · Stop installing systemd for now: the migration work is being done in
+        the feature/jessie branch, and it conflicts with rsyslog from
+        wheezy-backports.
+      · Drop apparmor-adjust-user-tmp-abstraction.diff: obsoleted.
+      · apparmor-adjust-tor-profile.diff: simplify and de-duplicate rules.
+      · Take into account aufs whiteouts in the system_tor profile.
+      · Adjust the Vidalia profile to take into account Live-specific paths.
+    - Upgrade Linux to 3.16.7-ckt11-1+deb8u3.
+    - Upgrade bind9-host, dnsutils and friends to 1:9.8.4.dfsg.P1-6+nmu2+deb7u6.
+    - Upgrade cups-filters to 1.0.18-2.1+deb7u2.
+    - Upgrade ghostscript to 9.05~dfsg-6.3+deb7u2.
+    - Upgrade libexpat1 to 2.1.0-1+deb7u2.
+    - Upgrade libicu48 to 4.8.1.1-12+deb7u3.
+    - Upgrade libwmf0.2-7 to 0.2.8.4-10.3+deb7u1.
+    - Upgrade openjdk-7 to 7u79-2.5.6-1~deb7u1.
+
+  * Bugfixes
+    - Upgrade Tor to 0.2.6.10-1~d70.wheezy+1+tails1.
+
+  * Minor improvements
+    - Tails Installer: let the user know when it has rejected a candidate
+      destination device because it is too small. (Closes: #9130)
+    - Tails Installer: prevent users from trying to "upgrade" a device
+      that contains no Tails, or that was not installed with Tails Installer.
+      (Closes: #5623)
+    - Install libotr5 and pidgin-otr 4.x from wheezy-backports. This adds
+      support for the OTRv3 protocol and for multiple concurrent connections
+      to the same account. (Closes: #9513)
+    - Skip warning dialog when starting Tor Browser while being offline,
+      in case it is already running. Thanks to Austin English for the patch!
+      (Closes: #7525)
+    - Install the apparmor-profiles package (Closes: #9539), but don't ship
+      a bunch of AppArmor profiles we don't use, to avoid increasing
+      boot time. (Closes: #9757)
+    - Ship a /etc/apparmor.d/tunables/home.d/tails snippet, instead
+      of patching /etc/apparmor.d/tunables/home.
+    - live-boot: don't mount tmpfs twice on /live/overlay, so that the one which
+      is actually used as the read-write branch of the root filesystem's union
+      mount, is visible. As a consequence:
+      · One can now inspect how much space is used, at a given time, in the
+        read-write branch of the root filesystem's union mount.
+      · We can make sure our AppArmor policy works fine when that filesystem
+        is visible, which is safer in case e.g. live-boot's behavior changes
+        under our feet in the future... or in case these "hidden" files are
+        actually accessible somehow already.
+
+  * Build system
+    - Add our jenkins-tools repository as a Git submodule, and replace
+      check_po.sh with a symlink pointing to the same script in that submodule.
+      Adjust the automated test suite accordingly. (Closes: #9567)
+    - Bump amount of RAM needed for Vagrant RAM builds to 7.5 GiB. In
+      particular the inclusion of the Tor Browser 5.0 series has recently
+      increased the amount of space needed to build Tails. (Closes: #9901)
+
+  * Test suite
+    - Test that the Tor Browser cannot access LAN resources.
+    - Test that the Unsafe Browser can access the LAN.
+    - Installer: test new behavior when trying to upgrade an empty device, and
+      when attempting to upgrade a non-Tails FAT partition on GPT; also, take
+      into account that all unsupported upgrade scenarios now trigger
+      the same behavior.
+    - Request a new Tor circuit and re-run the Seahorse and GnuPG CLI tests
+      on failure. (Closes: #9518, #9709)
+    - run_test_suite: remove control chars from log file even when cucumber
+      exits with non-zero. (Closes: #9376)
+    - Add compatibility with cucumber 2.0 and Debian Stretch. (Closes: #9667)
+    - Use custom exception when 'execute_successfully' fails.
+    - Retry looking up whois info on transient failure. (Closes: #9668)
+    - Retry wget on transient failure. (Closes: #9715)
+    - Test that Tor Browser cannot access files in /tmp.
+    - Allow running the test suite without ntp installed. There are other means
+      to have an accurate host system clock, e.g. systemd-timesyncd and tlsdate.
+      (Closes: #9651)
+    - Bump timeout in the Totem feature.
+    - Grep memory dump using the --text option. This is necessary with recent
+      versions of grep, such as the one in current Debian sid, otherwise it
+      will count only one occurrence of the pattern we're looking for.
+      (Closes: #9759)
+    - Include execute_successfully's error in the exception, instead
+      of writing it to stdout via puts. (Closes: #9795)
+    - Test that udev-watchdog is actually monitoring the correct device.
+      (Closes: #5560)
+    - IUK: workaround weird Archive::Tar behaviour on current sid.
+    - Test the SocksPort:s given in torrc in the Unsafe Browser.
+      This way we don't get any sneaky errors in case we change them and
+      forget to update this test.
+    - Directly verify AppArmor blocking of the Tor Browser by looking in
+      the audit log: Firefox 38 does no longer provide any graphical feedback
+      when the kernel blocks its access to files the user wants to access.
+    - Update browser-related automated test suite images, and workaround
+      weirdness introduced by the new Tor Browser fonts.
+    - Test that Pidgin, Tor Browser, Totem and Evince cannot access ~/.gnupg
+      via alternate, live-boot generated paths.
+    - Adjust tests to cope with our new AppArmor aliases.
+    - Bump memory allocated to the system under test to 2 GB. (Closes: #9883)
+
+ -- Tails developers <tails@boum.org>  Mon, 10 Aug 2015 19:12:58 +0200
+
+tails (1.4.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 4.5.3, based on Firefox 31.8.0 ESR. (Closes: #9649)
+    - Upgrade Tor to 0.2.6.9-1~d70.wheezy+1+tails2, which includes a circuit
+      isolation bugfix. (Closes: #9560)
+    - AppArmor: deny Tor Browser access to the list of recently used files.
+      (Closes: #9126)
+    - Upgrade OpenSSL to 1.0.1e-2+deb7u17.
+    - Upgrade Linux to 3.16.7-ckt11-1.
+    - Upgrade CUPS to 1.5.3-5+deb7u6.
+    - Upgrade FUSE to 2.9.0-2+deb7u2.
+    - Upgrade libsqlite3-0 to 3.7.13-1+deb7u2.
+    - Upgrade ntfs-3g and ntfsprogs to 1:2012.1.15AR.5-2.1+deb7u2.
+    - Upgrade p7zip-full to 9.20.1~dfsg.1-4+deb7u1.
+
+  * Bugfixes
+    - Fix automatic upgrades in Windows Camouflage mode. (Closes: #9413)
+    - Don't ship the snakeoil SSL key pair generated by ssl-cert in the ISO.
+      (Closes: #9416)
+    - Partially fix the truncated notifications issue. (#7249)
+
+  * Minor improvements
+    - Disable the hwclock.sh initscript at reboot/shutdown time.
+      This is an additional safety measure to ensure that the hardware clock
+      is not modified. (Closes: #9364)
+    - Stop shipping /var/cache/man/*, to make ISOs and IUKs smaller.
+      (Closes: #9417)
+    - Update torbrowser-AppArmor-profile.patch to apply cleanly on top of the
+      profile shipped with torbrowser-launcher 0.2.0-1.
+    - Add the jessie/updates APT repo and set appropriate pinning.
+    - Upgrade Electrum to 1.9.8-4~bpo70+1.
+    - Upgrade kernel firmware packages to 0.44.
+
+  * Build system
+    - Install the Linux kernel from Debian Jessie. (Closes: #9341)
+    - Remove files that are not under version control when building in Jenkins.
+      (Closes: #9406)
+    - Don't modify files in the source tree before having possibly merged
+      the base branch into it. (Closes: #9406)
+    - Make it so eatmydata is actually used during a greater part of the build
+      process. This includes using eatmydata from wheezy-backports.
+      (Closes: #9419, #9523)
+    - release script: adjust to support current Debian sid.
+
+  * Test suite
+    - Test the system clock sanity check we do at boot. (Closes: #9377)
+    - Remove the impossible "Clock way in the past" scenarios.
+      Thanks to config/chroot_local-includes/lib/live/config/0001-sane-clock,
+      these scenarios cannot happen, and since we test that it works they
+      can be safely removed.
+    - Test that the hardware clock is not modified at shutdown. (Closes: #9557)
+    - Pidgin: retry looking for the roadmap URL in the topic.
+    - Avoid showing Pidgin's tooltips during test, potentially confusing Sikuli.
+      (Closes: #9317)
+    - Test all OpenPGP keys shipped with Tails. (Closes: #9402)
+    - Check that notification-daemon is running when looking for notifications
+      fails. (Closes: #9332)
+    - Allow using the cucumber formatters however we want. (Closes: #9424)
+    - Enable Spice in the guest, and blacklist the psmouse kernel module,
+      to help with lost mouse events. (Closes: #9425)
+    - Automate testing Torbutton's 'New Identity' feature. (Closes: #9286)
+    - Test that Seahorse is configured to use the correct keyserver.
+      (Closes: #9339)
+    - Always export TMPDIR back to the test suite's shell environment.
+      (Closes: #9479)
+    - Make OpenPGP tests more reliable:
+      · Retry accessing the OpenPGP applet menus on failure. (Closes: #9355)
+      · Retry accessing menus in Seahorse on failure. (Closes: #9344)
+    - Focus the Pidgin conversation window before any attempt to interact
+      with it. (Closes: #9317)
+    - Use convertkey from the (backported to Jessie) Debian package,
+      instead of our own copy of that script. (Closes: #9066)
+    - Make the memory erasure tests more robust (Closes: #9329):
+      · Bump /proc/sys/vm/min_free_kbytes when running fillram.
+      · Actually set oom_adj for the remote shell when running fillram.
+      · Try to be more sure that we OOM kill fillram.
+      · Run fillram as non-root.
+    - Only try to build the storage pool if TailsToasterStorage isn't found.
+      (Closes: #9568)
+
+ -- Tails developers <tails@boum.org>  Sun, 28 Jun 2015 19:46:25 +0200
+
+tails (1.4) unstable; urgency=medium
+
+  * Major new features
+    - Upgrade Tor Browser to 4.5.1, based on Firefox 31.7.0 ESR, which
+      introduces many major new features for usability, security and
+      privacy. Unfortunately its per-tab circuit view did not make it
+      into Tails yet since it requires exposing more Tor state to the
+      user running the Tor Browser than we are currently comfortable
+      with. (Closes: #9031, #9369)
+    - Upgrade Tor to 0.2.6.7-1~d70.wheezy+1+tails2. Like in the Tor
+      bundled with the Tor Browser, we patch it so that circuits used
+      for SOCKSAuth streams have their lifetime increased indefinitely
+      while in active use. This currently only affects the Tor Browser
+      in Tails, and should improve the experience on certain web sites
+      that otherwise would switch language or log you out every ten
+      minutes or so when Tor switches circuit. (Closes: #7934)
+
+  * Security fixes
+    - tor-browser wrapper script: avoid offering avenues to arbitrary
+      code execution to e.g. an exploited Pidgin. AppArmor Ux rules
+      don't sanitize $PATH, which can lead to an exploited application
+      (that's allowed to run this script unconfined, e.g. Pidgin)
+      having this script run arbitrary code, violating that
+      application's confinement. Let's prevent that by setting PATH to
+      a list of directories where only root can write. (Closes: #9370)
+    - Upgrade Linux to 3.16.7-ckt9-3.
+    - Upgrade curl to 7.26.0-1+wheezy13.
+    - Upgrade dpkg to 1.16.16.
+    - Upgrade gstreamer0.10-plugins-bad to 0.10.23-7.1+deb7u2.
+    - Upgrade libgd2-xpm to 2.0.36~rc1~dfsg-6.1+deb7u1.
+    - Upgrade openldap to 2.4.31-2.
+    - Upgrade LibreOffice to 1:3.5.4+dfsg2-0+deb7u4.
+    - Upgrade libruby1.9.1 to 1.9.3.194-8.1+deb7u5.
+    - Upgrade libtasn1-3 to 2.13-2+deb7u2.
+    - Upgrade libx11 to 2:1.5.0-1+deb7u2.
+    - Upgrade libxml-libxml-perl to 2.0001+dfsg-1+deb7u1.
+    - Upgrade libxml2 to 2.8.0+dfsg1-7+wheezy4.
+    - Upgrade OpenJDK to 7u79-2.5.5-1~deb7u1.
+    - Upgrade ppp to 2.4.5-5.1+deb7u2.
+
+  * Bugfixes
+    - Disable security warnings when connecting to POP3 and IMAP ports.
+      (Closes: #9327)
+    - Make the Windows 8 browser theme compatible with the Unsafe and I2P
+      browsers. (Closes: #9138)
+    - Hide Torbutton's "Tor Network Settings..." context menu entry.
+      (Closes: #7647)
+    - Upgrade the syslinux packages to support booting Tails on
+      Chromebook C720-2800. (Closes: #9044)
+    - Enable localization in Tails Upgrader. (Closes: #9190)
+    - Make sure the system clock isn't before the build date during
+      early boot. Our live-config hook that imports our signing keys
+      depend on that the system clock isn't before the date when the
+      keys where created. (Closes: #9149)
+    - Set GNOME's OpenPGP keys via desktop.gnome.crypto.pgp to prevent
+      us from getting GNOME's default keyserver in addition to our
+      own. (Closes: #9233)
+    - Prevent Firefox from crashing when Orca is enabled: grant
+      it access to assistive technologies in its Apparmor
+      profile. (Closes: #9261)
+    - Add Jessie APT source. (Closes: #9278)
+    - Fix set_simple_config_key(). If the key already existed in the
+      config file before the call, all other lines would be removed
+      due to the sed option -n and p combo. (Closes: #9122)
+    - Remove illegal instance of local outside of function definition.
+      Together with `set -e` that error has prevented this script from
+      restarting Vidalia, like it should. (Closes: #9328)
+
+  * Minor improvements
+    - Upgrade I2P to 0.9.19-3~deb7u+1.
+    - Install Tor Browser's bundled Torbutton instead of custom .deb.
+      As of Torbutton 1.9.1.0 everything we need has been upstreamed.
+    - Install Tor Browser's bundled Tor Launcher instead of our
+      in-tree version. With Tor 0.2.6.x our custom patches for the
+      ClientTransportPlugin hacks are not needed any more. (Closes:
+      #7283)
+    - Don't install msmtp and mutt. (Closes: #8727)
+    - Install fonts-linuxlibertine for improved Vietnamese support in
+      LibreOffice. (Closes: #8996)
+    - Remove obsoletete #i2p-help IRC channel from the Pidgin
+      configuration (Closes: #9137)
+    - Add Gedit shortcut to gpgApplet's context menu. Thanks to Ivan
+      Bliminse for the patch. (Closes: #9069).
+    - Install printer-driver-gutenprint to support more printer
+      models. (Closes: #8994).
+    - Install paperkey for off-line OpenPGP key backup. (Closes: #8957)
+    - Hide the Tor logo in Tor Launcher. (Closes: #8696)
+    - Remove useless log() instance in tails-unblock-network. (Closes:
+      #9034)
+    - Install cdrdao: this enables Brasero to burn combined data/audio
+      CDs and to do byte-to-byte disc copy.
+    - Hide access to the Add-ons manager in the Unsafe Browser. It's
+      currently broken (#9307) but we any way do not want users to
+      install add-ons in the Unsafe Browser. (Closes: #9305)
+    - Disable warnings on StartTLS for POP3 and IMAP (Will-fix: #9327)
+      The default value of this option activates warnings on ports
+      23,109,110,143. This commit disables the warnings for POP3 and
+      IMAP as these could be equally used in encrypted StartTLS
+      connections. (Closes: #9327)
+    - Completely rework how we localize our browser by generating our
+      branding add-on, and search plugins programatically. This
+      improves the localization for the ar, es, fa, ko, nl, pl, ru,
+      tr, vi and zh_CN locales by localizing the Startpage and
+      Disconnect.me search plugins. Following Tor Browser 4.5's recent
+      switch, we now use Disconnect.me as the default search
+      engine. (Closes: #9309)
+    * Actively set Google as the Unsafe Browser's default search
+      engine.
+
+  * Build system
+    - Encode in Git which APT suites to include when building Tails.
+      (Closes: #8654)
+    - Clean up the list of packages we install. (Closes: #6073)
+    - Run auto/{build,clean,config} under `set -x' for improved
+      debugging.
+    - Zero-pad our ISO images so their size is divisible by 2048.
+      The data part of an ISO image's sectors is 2048 bytes, which
+      implies that ISO images should always have a size divisible
+      by 2048. Some applications, e.g. VirtualBox, use this as a sanity
+      check, treating ISO images for which this isn't true as garbage.
+      Our isohybrid post-processing does not ensure this,
+      however. Also Output ISO size before/after isohybrid'ing and
+      truncate'ing it. This will help detect if/when truncate is
+      needed at all, so that we can report back to syslinux
+      maintainers more useful information. (Closes: #8891)
+    - Vagrant: raise apt-cacher-ng's ExTreshold preference to 50. The
+      goal here is to avoid Tor Browser tarballs being deleted by
+      apt-cacher-ng's daily expiration cronjob: they're not listed in
+      any APT repo's index file, so acng will be quite eager to clean
+      them up.
+
+  * Test suite
+    - Bring dependency checks up-to-date (Closes: #8988).
+    - Adapt test suite to be run on Debian Jessie, which includes
+      removing various Wheezy-specific workarounds, adding a few
+      specific to Jessie, migrating from ffmpeg to libav, and
+      more. (Closes: #8165)
+    - Test that MAT can see that a PDF is dirty (Closes: #9136).
+    - Allow throwing Timeout::Error in try_for() blocks, as well as
+      nested try_for() (Closes: #9189, #9290).
+    - Read test suite configuration files from the features/config/local.d
+      directory. (Closes: #9220)
+    - Kill virt-viewer with SIGTERM, not SIGINT, to prevent hordes of
+      zombie processes from appearing. (Closes: #9139)
+    - Kill Xvfb with SIGTERM, not SIGKILL, on test suite exit to allow
+      it to properly clean up. (Closes: #8707)
+    - Split SSH & SFTP configs in the test suite. (Closes: #9257)
+    - Improve how we start subprocesses in the test suite, mostly by
+      bypassing the shell for greater security and robustness (Closes:
+      #9253)
+    - Add Electrum test feature. (Closes #8963)
+    - Test that Tails Installer detects when USB devices are
+      removed. (Closes: #9131)
+    - Test Tails Installer with devices which are too small. (Closes:
+      #9129)
+    - Test that the Report an Error launcher works in German. (Closes:
+      #9143)
+    - Verify that no extensions are installed in the Unsafe Browser
+      using about:support instead of about:addons, which is broken
+      (#9307). (Closes: #9306)
+    - Retry GNOME application menu actions when they glitch. The
+      GNOME application menus seem to have issues with clicks or
+      hovering actions not registering, and hence sometimes submenus
+      are not opened when they should, and sometimes clicks on the
+      final application shortcut are lost. There seems to be a
+      correlation between this and CPU load on the host running the
+      test suite. We workaround this by simply re-trying the last
+      action when it seems to fail. (Closes: #8928)
+    - Work around Seahorse GUI glitchiness (Closes: #9343):
+      * When Seahorse appears to be frozen--apparently due to network
+        issues--it can often be worked around by refreshing the screen
+        or activating a new window.
+      * Open Seahorse's preferences dialog using the mouse.
+      * Access menu entries with the mouse.
+    - Wait for systray icons to finish loading before interacting with
+      the systray. (Closes: #9258)
+    - Test suite configuration: generalize local.d support to *.d. We
+      now load features/config/*.d/*.yml.
+    - Use code blocks in "After Scenario" hooks. This is much simpler
+      to use (and more readable!) compared to hooking functions and
+      arguments like we used to do.
+    - Create filesystem share sources in the temporary directory and
+      make them world-readable. (Closes: #8950)
+
+ -- Tails developers <tails@boum.org>  Mon, 11 May 2015 16:45:04 +0200
+
+tails (1.3.2) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 4.0.6, based on Firefox 31.6.0 ESR.
+    - Upgrade OpenSSL to 1.0.1e-2+deb7u16.
+
+  * Bugfixes
+    - Make Florence usable with touchpads by forcing syndaemon to
+      always use the `-t` option, which only disables tapping and
+      scrolling and not mouse movements (Closes: #9011).
+    - Make tails-spoof-mac log the correct macchanger exit code on
+      failure (Closes: #8687).
+    - Tails Installer:
+      · Ignore devices with less than 3.5 GB of storage since they
+        do not fit a Tails installation (Closes: #6538).
+      · Remove devices from the device list as they are unplugged
+        (Closes: #8691).
+
+  * Minor improvements
+    - Install obfs4proxy 0.0.4-1~tpo1, which adds support for
+      client-mode ScrambleSuit.
+    - Don't start Vidalia if Windows Camouflage is enabled. (Closes:
+      #7400)
+    - I2P Browser:
+      · Remove "Add-ons" from the Tools menu, and hide "Keyboard
+        Shortcuts" and "Take a Tour" since they point to resources on
+        the open Internet (Closes: #7970).
+      · Hide TorButton button from the customize toolbar options, and
+        remove configs whose only purpose was to make Torbutton "green"
+        (Closes: #8893).
+
+  * Test suite
+    - New tests:
+      · Test non-LAN SSH, and SFTP via GNOME's "Connect to Server"
+        (Closes: #6308).
+      · Verify that Tails' Tor binary has the expected Tor authorities
+        hard coded (Closes: #8960).
+    - Improvements:
+      · Programmatically determine the supported languages when testing
+        the Unsafe Browser (Closes: #8918).
+      · Rename --temp-dir to --tmpdir and make it behave more like
+        mktemp, and honour TMPDIR if set in the environment. (Closes:
+        #8709).
+    - Bugfixes:
+      · Make --temp-dir (now --tmpdir) actually work.
+
+ -- Tails developers <tails@boum.org>  Mon, 30 Mar 2015 16:54:20 +0200
+
+tails (1.3.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 4.0.5, based on Firefox 31.5.3 ESR. This addresses:
+      · https://www.mozilla.org/en-US/security/advisories/mfsa2015-28/
+      · https://www.mozilla.org/en-US/security/advisories/mfsa2015-29/
+    - Upgrade Linux to 3.16.7-ckt7-1.
+    - Upgrade libxfont to 1:1.4.5-5.
+    - Upgrade OpenSSL to 1.0.1e-2+deb7u15.
+    - Upgrade tcpdump to 4.3.0-1+deb7u2.
+    - Upgrade bsdtar to 3.0.4-3+wheezy1.
+    - Upgrade CUPS to 1.5.3-5+deb7u5.
+    - Upgrade file and libmagic to 5.11-2+deb7u8.
+    - Upgrade GnuPG to 1.4.12-7+deb7u7.
+    - Upgrade libarchive to 3.0.4-3+wheezy1.
+    - Upgrade libav to 6:0.8.17-1.
+    - Upgrade FreeType 2 to 2.4.9-1.1+deb7u1.
+    - Upgrade libgcrypt11 1.5.0-5+deb7u3.
+    - Upgrade libgnutls26 to 2.12.20-8+deb7u3.
+    - Upgrade libgtk2-perl to 2:1.244-1+deb7u1.
+    - Upgrade ICU to 4.8.1.1-12+deb7u2.
+    - Upgrade NSS to 2:3.14.5-1+deb7u4.
+    - Upgrade libssh2 to 1.4.2-1.1+deb7u1.
+
+  * Bugfixes
+    - Upgrade Tor to 0.2.5.11-1~d70.wheezy+1+tails1. Changes include:
+      · Directory authority changes.
+      · Fix assertion errors that may trigger under high DNS load.
+      · No longer break on HUP with seccomp2 enabled.
+      · and more - please consult the upstream changelog.
+    - Upgrade Tor Launcher to 0.2.7.2, and update the test suite accordingly
+      (Closes: #8964, #6985). Changes include:
+      · Ask about bridges before proxy in wizard.
+      · Hide logo if TOR_HIDE_BROWSER_LOGO set.
+      · Remove firewall prompt from wizard.
+      · Feedback when “Copy Tor Log” is clicked.
+      · Improve behavior if tor exits.
+      · Add option to hide TBB's logo
+      · Change "Tor Browser Bundle" to "Tor Browser"
+      · Update translations from Transifex.
+    - Fix the Tor Launcher killer. (Closes: #9067)
+    - Allow Seahorse to communicate with keyservers when run from Tails
+      OpenPGP Applet. (Closes: #6394)
+    - SSH client: don't proxy connections to 172.17.* to 172.31.*.
+      (Closes: #6558)
+    - Repair config/chroot_local-packages feature, that was broken in Tails 1.3
+      by 19-install-tor-browser-AppArmor-profile. (Closes: #8910)
+    - language_statistics.sh: count original words instead of translated words.
+      Otherwise we get >100% translation if translated strings are longer than
+      original strings. (Closes: #9016)
+
+  * Minor improvements
+    - Only ship the new Tails signing key, and have Tails Upgrader stop trusting
+      the old one. Update the documentation and test suite accordingly.
+      (Closes: #8735, #8736, #8882, #8769, #8951)
+    - Polish and harden a bit the WhisperBack configuration (Closes: #8991):
+      · Only allow the `amnesia' user to run tails-debugging info as root
+        with no arguments.
+      · Fix spelling and grammar mistakes, improve phrasing a bit.
+      · Quote variables consistently.
+
+  * Test suite
+    - New tests:
+      · Chatting over XMPP in Pidgin, both peer-to-peer and in a multi-user
+        chatroom. (Closes: #8002)
+      · Chatting with OTR enabled over XMPP in Pidgin. (Closes: #8001)
+      · Check that Pidgin only responds to the expected CTCP requests.
+        (Closes: #8966)
+      · Fetching keys using Seahorse started via the OpenPGP Applet.
+      · Sync'ing keys using Seahorse.
+    - Bugfixes:
+      · Fix a race condition between the remote shell's and Tails Greeter's
+        startup, by making sure the remote shell is ready before we start
+        GDM. (Closes: #8941)
+      · Kill virt-viewer properly. (Closes: #9070)
+      · Make sure the display is stopped on destroy_and_undefine().
+        Where we had it earlier, it could be skipped if anything else in the
+        block threw an exception.
+      · Fix wrong use of "$@". (Closes: #9071)
+      · Enable the pipefail option in run_test_suite.
+      · Improve the GNOME screenshot test's robustness. (Closes: #8952)
+    - Refactoring:
+      · turn the focus_pidgin_window() helper into a more generic
+        VM.focus_xorg_window() one.
+      · Reorganize the Display class.
+      · Use clearer method to check process status in the Display class.
+    - New developer-oriented features:
+      · Add a --log-to-file option to run_test_suite. (Closes: #8894)
+      · Add helpers for generating random strings.
+      · Make it possible to hook arbitrary calls on scenario end. This is useful
+        for dynamically adding cleanup functions, instead of having
+        to explicitly deal with them in some After hook.
+
+ -- Tails developers <tails@boum.org>  Mon, 23 Mar 2015 12:34:56 +0000
+
 tails (1.3) unstable; urgency=medium
 
   * Major new features
@@ -89,7 +629,7 @@ tails (1.3) unstable; urgency=medium
       Vagrant. We need version 6.03~pre20 to make the Tails ISO image
       in hybrid mode
     - Update deb.tails.boum.org apt repo signing key. (Closes: #8747)
-	- Revert "Workaround build failure in lb_source, after creating
+    - Revert "Workaround build failure in lb_source, after creating
       the ISO." This is not needed anymore given the move to the Tor
       SOCKS proxy. (Closes: #5307)
     - Remove the bootstrap stage usage option and disable all

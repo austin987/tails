@@ -1,9 +1,5 @@
-<TMPL_IF HTML5><!DOCTYPE html>
-<html>
-<TMPL_ELSE><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
- "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-</TMPL_IF>
 <head>
 <TMPL_IF DYNAMIC>
 <TMPL_IF FORCEBASEURL><base href="<TMPL_VAR FORCEBASEURL>" /><TMPL_ELSE>
@@ -12,6 +8,7 @@
 </TMPL_IF>
 <TMPL_IF HTML5><meta charset="utf-8" /><TMPL_ELSE><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></TMPL_IF>
 <title>Tails - <TMPL_VAR TITLE></title>
+<TMPL_IF RESPONSIVE_LAYOUT><meta name="viewport" content="width=device-width, initial-scale=1" /></TMPL_IF>
 <TMPL_IF FAVICON>
 <link rel="icon" href="<TMPL_VAR BASEURL><TMPL_VAR FAVICON>" type="image/x-icon" />
 </TMPL_IF>
@@ -21,12 +18,25 @@
 <TMPL_ELSE>
 <link rel="stylesheet" href="<TMPL_VAR BASEURL>local.css" type="text/css" />
 </TMPL_IF>
+
+<TMPL_UNLESS DYNAMIC>
 <TMPL_IF EDITURL>
 <link rel="alternate" type="application/x-wiki" title="Edit this page" href="<TMPL_VAR EDITURL>" />
 </TMPL_IF>
 <TMPL_IF FEEDLINKS><TMPL_VAR FEEDLINKS></TMPL_IF>
 <TMPL_IF RELVCS><TMPL_VAR RELVCS></TMPL_IF>
 <TMPL_IF META><TMPL_VAR META></TMPL_IF>
+<TMPL_LOOP TRAILLOOP>
+<TMPL_IF PREVPAGE>
+<link rel="prev" href="<TMPL_VAR PREVURL>" title="<TMPL_VAR PREVTITLE>" />
+</TMPL_IF>
+<link rel="up" href="<TMPL_VAR TRAILURL>" title="<TMPL_VAR TRAILTITLE>" />
+<TMPL_IF NEXTPAGE>
+<link rel="next" href="<TMPL_VAR NEXTURL>" title="<TMPL_VAR NEXTTITLE>" />
+</TMPL_IF>
+</TMPL_LOOP>
+</TMPL_UNLESS>
+
 </head>
 <body>
 
@@ -42,12 +52,11 @@
 <TMPL_IF HTML5><section class="pageheader"><TMPL_ELSE><div class="pageheader"></TMPL_IF>
 <TMPL_IF HTML5><header class="header"><TMPL_ELSE><div class="header"></TMPL_IF>
 <span>
-
 <span class="parentlinks">
 <ul id="crumbs">
 <li><a href="<TMPL_VAR HOMEPAGEURL>"><img src="<TMPL_VAR BASEURL>lib/home.jpeg"></a></li>
 
-<TMPL_LOOP NAME="PARENTLINKS">
+<TMPL_LOOP PARENTLINKS>
 <TMPL_IF DEPTH_0>
 <TMPL_ELSE>
 
@@ -60,26 +69,25 @@
 
 </ul>
 </span>
-
-
-
 <span class="title">
 <TMPL_VAR TITLE>
 </span>
 </span>
+<TMPL_UNLESS DYNAMIC>
 <TMPL_IF SEARCHFORM>
 <TMPL_VAR SEARCHFORM>
 </TMPL_IF>
+</TMPL_UNLESS>
 <TMPL_IF HTML5></header><TMPL_ELSE></div></TMPL_IF>
 
 <TMPL_IF HAVE_ACTIONS>
 <TMPL_IF HTML5><nav class="actions"><TMPL_ELSE><div class="actions"></TMPL_IF>
 <ul>
 <TMPL_IF EDITURL>
-  <TMPL_IF NAME="ISTRANSLATION">
-  <TMPL_ELSE>
-    <li><a href="<TMPL_VAR EDITURL>" rel="nofollow">Edit</a></li>
-  </TMPL_IF>
+<TMPL_IF NAME="ISTRANSLATION">
+<TMPL_ELSE>
+<li><a href="<TMPL_VAR EDITURL>" rel="nofollow">Edit</a></li>
+</TMPL_IF>
 </TMPL_IF>
 <TMPL_IF RECENTCHANGESURL>
 <li><a href="<TMPL_VAR RECENTCHANGESURL>">RecentChanges</a></li>
@@ -109,66 +117,73 @@
 <TMPL_IF HTML5></nav><TMPL_ELSE></div></TMPL_IF>
 </TMPL_IF>
 
-<TMPL_IF OTHERLANGUAGES><TMPL_IF HTML5><nav id="otherlanguages">
-<TMPL_ELSE><div id="otherlanguages"></TMPL_IF>
+<TMPL_IF OTHERLANGUAGES>
+<TMPL_IF HTML5><nav id="otherlanguages"><TMPL_ELSE><div id="otherlanguages"></TMPL_IF>
+<ul>
+   <TMPL_IF ISTRANSLATABLE>
+   <li class="current master">
+   <span ><TMPL_VAR LANG_NAME>
+   </span>
+   </li>
 
-	<ul>
-
-
-	<TMPL_IF ISTRANSLATABLE>
-	<li class="current master">
-	<span ><TMPL_VAR LANG_NAME>
-	</span>
-	</li>
-
-	<TMPL_ELSE>
-	<li class="current">
-	<span class="visible"><TMPL_VAR LANG_NAME>
+   <TMPL_ELSE>
+   <li class="current">
+   <span class="visible"><TMPL_VAR LANG_NAME>
 (<TMPL_VAR NAME="PERCENTTRANSLATED">&nbsp;%)
-	</span>
-	<span class="hidden"><TMPL_VAR LANG_NAME>
+   </span>
+   <span class="hidden"><TMPL_VAR LANG_NAME>
 (<TMPL_VAR NAME="PERCENTTRANSLATED">&nbsp;%<TMPL_IF HAVE_ACTIONS> ⊷ <a href="<TMPL_VAR BASEURL>contribute/how/translate/" rel="nofollow">improve translation</a></TMPL_IF>)
-	</span>
-	</li>
+   </span>
+   </li>
 
-	</TMPL_IF>
+   </TMPL_IF>
 
 
-	<TMPL_LOOP OTHERLANGUAGES>
-	
-	<li <TMPL_IF MASTER> class="master"<TMPL_ELSE></TMPL_IF>>
-	
-	<span class="visible"><a href="<TMPL_VAR URL>"><TMPL_VAR CODE></a></span>
-	<span class="hidden"><a href="<TMPL_VAR URL>"><TMPL_VAR LANGUAGE>
-	<TMPL_IF MASTER> : master <TMPL_ELSE>(<TMPL_VAR PERCENT>%)</TMPL_IF>
-	</a>
-	</span>
+   <TMPL_LOOP OTHERLANGUAGES>
 
-	</li>	
-	</TMPL_LOOP>
+   <li <TMPL_IF MASTER> class="master"<TMPL_ELSE></TMPL_IF>>
+
+   <span class="visible"><a href="<TMPL_VAR URL>"><TMPL_VAR CODE></a></span>
+   <span class="hidden"><a href="<TMPL_VAR URL>"><TMPL_VAR LANGUAGE>
+   <TMPL_IF MASTER> : master <TMPL_ELSE>(<TMPL_VAR PERCENT>%)</TMPL_IF>
+   </a>
+   </span>
+
+   </li>
+   </TMPL_LOOP>
 </ul>
-
-
 <TMPL_IF HTML5></nav><TMPL_ELSE></div></TMPL_IF>
 </TMPL_IF>
 
+<TMPL_UNLESS DYNAMIC>
+<TMPL_VAR TRAILS>
+</TMPL_UNLESS>
+
 <TMPL_IF HTML5></section><TMPL_ELSE></div></TMPL_IF>
 
+<TMPL_UNLESS DYNAMIC>
 <TMPL_IF SIDEBAR>
 <TMPL_IF HTML5><aside class="sidebar" role="navigation"><TMPL_ELSE><div class="sidebar" role="navigation"></TMPL_IF>
 <TMPL_VAR SIDEBAR>
 <TMPL_IF HTML5></aside><TMPL_ELSE></div></TMPL_IF>
 </TMPL_IF>
+</TMPL_UNLESS>
 
 <div id="pagebody">
 
-<TMPL_IF HTML5><section id="content" role="main"><TMPL_ELSE><div id="content" role="main"></TMPL_IF>
+<TMPL_IF HTML5><section<TMPL_ELSE><div</TMPL_IF> id="content" role="main">
 <TMPL_VAR CONTENT>
 <TMPL_IF HTML5></section><TMPL_ELSE></div></TMPL_IF>
 
+<TMPL_IF ENCLOSURE>
+<TMPL_IF HTML5><section id="enclosure"><TMPL_ELSE><div id="enclosure"></TMPL_IF>
+<a href="<TMPL_VAR ENCLOSURE>">Download</a>
+<TMPL_IF HTML5></section><TMPL_ELSE></div></TMPL_IF>
+</TMPL_IF>
+
 <TMPL_UNLESS DYNAMIC>
 <TMPL_IF COMMENTS>
-<TMPL_IF HTML5><section id="comments" role="complementary"><TMPL_ELSE><div id="comments" role="complementary"></TMPL_IF>
+<TMPL_IF HTML5><section<TMPL_ELSE><div</TMPL_IF> id="comments" role="complementary">
 <TMPL_VAR COMMENTS>
 <TMPL_IF ADDCOMMENTURL>
 <div class="addcomment">
@@ -183,7 +198,7 @@
 
 </div>
 
-<TMPL_IF HTML5><footer id="footer" class="pagefooter" role="contentinfo"><TMPL_ELSE><div id="footer" class="pagefooter" role="contentinfo"></TMPL_IF>
+<TMPL_IF HTML5><footer<TMPL_ELSE><div</TMPL_IF> id="footer" class="pagefooter" role="contentinfo">
 <TMPL_UNLESS DYNAMIC>
 <TMPL_IF HTML5><nav id="pageinfo"><TMPL_ELSE><div id="pageinfo"></TMPL_IF>
 
@@ -218,14 +233,14 @@ Pages linking to this one:
 
 <TMPL_IF COPYRIGHT>
 <div class="pagecopyright">
-<a id="pagecopyright"></a>
+<a name="pagecopyright"></a>
 <TMPL_VAR COPYRIGHT>
 </div>
 </TMPL_IF>
 
 <TMPL_IF LICENSE>
 <div class="pagelicense">
-<a id="pagelicense"></a>
+<a name="pagelicense"></a>
 License: <TMPL_VAR LICENSE>
 </div>
 </TMPL_IF>

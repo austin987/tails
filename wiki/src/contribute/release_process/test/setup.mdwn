@@ -1,7 +1,8 @@
 [[!meta title="Test suite installation and setup"]]
 
-Until we have a Puppet module to manage this in automated fashion,
-here's how to setup an environment to run our automated test suite.
+Here's how to set up an environment to run our automated test suite.
+Alternatively, you way want to use the `tails::tester` class from the
+[[!tails_gitweb_repo puppet-tails]] Puppet module.
 
 Once you have a working environment, see [[test/usage]].
 
@@ -10,32 +11,25 @@ Once you have a working environment, see [[test/usage]].
 Install dependencies
 ====================
 
-The following packages are necessary on Debian Wheezy, with
-wheezy-backports sources added:
+First of all, one needs a Debian Jessie system with:
 
-    echo 'deb http://ftp.us.debian.org/debian/ testing main contrib non-free' \
-        > /etc/apt/sources.list.d/testing.list && \
-    echo -e "Package: *\nPin: release o=Debian,a=stable\nPin-Priority: 990" \
-        > /etc/apt/preferences.d/Debian_stable && \
-    echo -e "Package: *\nPin: release o=Debian,a=testing\nPin-Priority: 500" \
-        > /etc/apt/preferences.d/Debian_testing && \
-    apt-get update &&
-    apt-get install git i18nspector xvfb virt-viewer libsikuli-script-java \
-        libxslt1-dev tcpdump unclutter radvd x11-apps syslinux \
-        libcap2-bin devscripts libvirt-ruby ruby-rspec gawk ntp ovmf/testing \
-        ruby-json x11vnc xtightvncviewer ffmpeg libavcodec-extra-53 \
-        libvpx1 dnsmasq-base openjdk-7-jre ruby-guestfs ruby-test-unit && \
-    apt-get -t wheezy-backports install qemu-kvm qemu-system-x86 libvirt0 \
-        libvirt-dev libvirt-bin seabios ruby-rjb ruby-packetfu cucumber && \
+ * the `non-free` APT component enabled;
+ * the official backports repository configured.
+
+The following packages are necessary on Debian Jessie:
+
+    echo -e "Package: *\nPin: release o=Debian,n=jessie\nPin-Priority: 990" \
+        > /etc/apt/preferences.d/Debian_jessie && \
+    apt update && \
+    apt install git i18nspector xvfb virt-viewer libsikuli-script-java \
+        libxslt1-dev tcpdump unclutter radvd x11-apps \
+        libcap2-bin devscripts ruby-libvirt ruby-rspec gawk ntp ovmf \
+        ruby-json x11vnc xtightvncviewer libav-tools \
+        libvpx1 dnsmasq-base openjdk-7-jre ruby-guestfs ruby-net-irc \
+        ruby-test-unit qemu-kvm qemu-system-x86 libvirt0 libvirt-dev \
+        libvirt-daemon-system libvirt-clients seabios ruby-rjb \
+        ruby-packetfu cucumber python-potr/jessie-backports python-jabberbot && \
     service libvirtd restart
-
-In addition, if `libguestfs` doesn't work by default you probably have
-hit [[!debbug 741203]], which still may affect Wheezy systems but it's
-verified to have been fixed in Debian Jessie. Then you must run (as
-root):
-
-    export excludes="--exclude ^openrc"
-    update-guestfs-appliance
 
 Other requirements
 ==================
@@ -45,13 +39,28 @@ Synchronized clock
 
 The system running the test suite needs an accurate clock since we
 sync the clock from the host to the Tails guest after a background
-snapshot restore to appease Tor. This is why we installed ntp above.
+snapshot restore to appease Tor. This is why we installed ntp above,
+but if you prefer you can use whatever time synchronization
+tool instead.
 
 File permissions
 ----------------
 
 The user that runs QEMU (via libvirt) needs read-access at least to
 the content of `features/misc_files/` in the Git checkout.
+
+AppArmor tweaks
+---------------
+
+If libvirt has the `apparmor` security driver enabled:
+
+* you may need to add the `/tmp/TailsToaster/TailsToasterStorage/*
+  rw,` line to `/etc/apparmor.d/libvirt/TEMPLATE.qemu`, in the
+  `profile LIBVIRT_TEMPLATE` section;
+* you may hit various problems, such as denied access to
+  `/usr/share/ovmf/OVMF.fd`; all such known problems are (as of
+  2015-08-12) on their way for being fixed upstream in libvirt.
+  Running a recent libvirt may help.
 
 Special use cases
 =================

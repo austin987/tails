@@ -15,13 +15,15 @@ toggle_src_APT_sources() {
 
    case "$MODE" in
       on)
-	 cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
-	     | sed --regexp-extended -e 's,^deb(\s+),deb-src\1,' \
-             > "$TEMP_APT_SOURCES"
-	 ;;
+         cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
+            | grep --extended-regexp --line-regexp --invert-match \
+                 'deb\s+file:/root/local-packages\s+\./' \
+            | sed --regexp-extended -e 's,^deb(\s+),deb-src\1,' \
+            > "$TEMP_APT_SOURCES"
+         ;;
       off)
-	 rm "$TEMP_APT_SOURCES"
-	 ;;
+         rm "$TEMP_APT_SOURCES"
+         ;;
    esac
 
    apt-get --yes update
@@ -33,8 +35,8 @@ install_torbrowser_AppArmor_profile() {
       cd "$tmpdir"
       apt-get source torbrowser-launcher/testing
       install -m 0644 \
-	      torbrowser-launcher-*/apparmor/torbrowser.Browser.firefox \
-	      "$PROFILE"
+              torbrowser-launcher-*/apparmor/torbrowser.Browser.firefox \
+              "$PROFILE"
    )
    rm -r "$tmpdir"
 }

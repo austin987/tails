@@ -845,6 +845,13 @@ granted to the vidalia user, who is running Vidalia.
 A filtering proxy to the control port exists, so
 Torbutton still can perform safe commands like `SIGNAL NEWNYM`.
 
+We disabled the default warning messages of Tor (`WarnPlaintextPorts`)
+when connecting to ports 110 (POP3) and 143 (IMAP). These ports are used
+for both plaintext and StartTLS connections. As more and more email
+providers recommend and even enforce StartTLS on these ports, the effect
+of these warnings were most of the time counterproductive as people had
+to click through needlessly scary security warnings.
+
 - [[!tails_gitweb chroot_local-hooks/06-adduser_vidalia]]
 - [[!tails_gitweb chroot_local-includes/usr/local/sbin/restart-vidalia]]
 - [[!tails_gitweb chroot_local-includes/usr/local/sbin/tor-controlport-filter]]
@@ -965,9 +972,6 @@ As for extensions we have the following differences:
   extension to protect against many tracking possibilities by removing
   most ads.
 
-* Tails does not install the same Torbutton as in the TBB. We
-  installed a patched version.
-
 * Tails does not install the Tor Launcher extension as part of the
   browser. A patched Tor Launcher is installed for use as a
   stand-alone XUL application, though.
@@ -991,7 +995,7 @@ browser anyway:
 Once Tor is ready to be used, the user is informed they can now use
 the Internet:
 
-- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/60-tor-ready-notification.sh]]
+- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/60-tor-ready.sh]]
 
 The remaining configuration differences can be found in:
 
@@ -1322,6 +1326,23 @@ supported one is used.
 
 * [[!tails_gitweb auto/config]]
 * [[!tails_gitweb config/binary_local-hooks/20-syslinux_detect_cpu]]
+
+Binary firmware blobs from the Debian `non-free` archive are installed
+when no good Free Software alternative exists. Our reasoning behind
+this choice is:
+
+* If Tails does not work out-of-the-box on the computer(s) they have
+  available, most potential users will simply use something else, that
+  will:
+  1. just work ("thanks" to the inclusion of binary firmware);
+  2. be less safe in the vast majority of real-world cases.
+* Much hardware that does not require proprietary firmware to be
+  injected into it at runtime is simply embedding such proprietary
+  blobs, often on read-only memory. Not only this does not provide
+  much more security than injecting proprietary firmware at runtime,
+  but it prevents hardware vendors from fixing (potentially
+  security-relevant) bugs in the firmware once it's been shipped
+  to users.
 
 ## 3.10 Caveats
 

@@ -13,7 +13,7 @@ if pgrep "\<vidalia\>" >/dev/null; then
     killall -SIGKILL vidalia
     # Since Tor just restarted we wait for a while until the
     # ControlPort hopefully is up.
-    local counter=0
+    counter=0
     until [ "${counter}" -ge 10 ] || nc -z localhost 9051 2>/dev/null; do
         sleep 1
         counter=$((${counter}+1))

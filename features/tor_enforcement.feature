@@ -10,6 +10,9 @@ Feature: The Tor enforcement is effective
     When I start Tails from DVD and I login
     And I save the state so the background can be restored next scenario
 
+  Scenario: Tails' Tor binary is configured to use the expected Tor authorities
+    Then the Tor binary is configured to use the expected Tor authorities
+
   Scenario: The firewall configuration is very restrictive
     Then the firewall's policy is to drop all IPv4 traffic
     And the firewall is configured to only allow the clearnet and debian-tor users to connect directly to the Internet over IPv4
@@ -65,7 +68,7 @@ Feature: The Tor enforcement is effective
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And the system DNS is using the local DNS resolver
     And the network is plugged
     And Tor is ready

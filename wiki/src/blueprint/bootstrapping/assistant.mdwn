@@ -1,46 +1,444 @@
-[[!meta title="Web assistant for getting started with Tails"]]
+[[!meta title="Installation Assistant"]]
 
-The web assistant will:
+[[!toc levels=3]]
 
-  - Merge download and install instructions into a single tool.
-  - Integrate relevant parts of the documentation while preserving the
-    documentation in its conventional format (for example for more
-    advanced users or corner cases).
-  - Integrate warnings.
-  - Insist on the most frequent and recommended scenarios, and point to
-    the documentation for corner cases or more advanced users (how to
-    download using BitTorrent, how to start Tails as a VM, how to
-    install using the Linux terminal, etc.)
-  - Try to identify the OS of the user, and ask for confirmation.
-  - Give an overview of the process before getting into it. So that
-    people understand better what's going on, get an incentive to buy a
-    DVD if they have a DVD drive, etc.
+<a id="introduction"></a>
 
-Open problems:
+Introduction
+============
+
+The web assistant is a set of web pages that will merge our download and
+install instructions into a single web tool. It will put emphasis on the
+most frequent and recommended scenarios, and point to the rest of the
+documentation for corner cases or more advanced usage.
+
+<a id="phases"></a>
+
+The assistant will be composed of three main phases:
+
+  1. The "[[router|assistant#router]]" which is a set of introductory
+     questions that lead the user to choose one of the possible
+     installation processes.
+  2. The "[[overview|assistant#overview]]" which presents the
+     installation process to the user, what hardware is needed, how long
+     it will take, what are the steps, etc.
+  3. The "scenario" which are the detailed instructions step by step.
+
+Both the "overview" and the "scenario" will use the same
+[[infography|assistant#infography]] to explain the steps
+graphically.
+
+Scenarios
+---------
+
+Here is a list of possible installation scenarios that will be proposed
+via the assistant:
+
+  - With USB as destination media
+    - Windows to USB (via USB)
+    - Mac to USB via DVD
+    - Mac to USB via USB
+    - Debian to USB
+    - Debian hacker to USB
+    - Linux to USB
+    - Clone from a friend
+  - With DVD as destination media
+    - Windows to DVD
+    - Mac to DVD
+    - Linux to DVD (same for Debian)
+    - Debian hacker to DVD
+  - Other possible scenarios
+    - Contact or training
+    - Virtualization (pointing to the traditional doc)
+
+And the possible upgrade scenarios (see [[!tails_ticket 9319]]):
+
+  - Upgrade from friend
+  - Upgrade from Tails (graphical)
+  - Upgrade from Tails (command line)
+  - Upgrade from Debian (graphical)
+  - Upgrade from Debian (command line)
+  - Upgrade from Linux
+  - Upgrade from Windows
+  - Upgrade from Mac
+
+The router for upgrades should also point to DVD and virtualization
+scenarios (which in this case would be the same than installing).
+
+Latest designs
+--------------
+
+The rest of this blueprint presents the various iterations that we are
+going through to get to a final design, the latest documents that you
+should look at if you want to know where we are at the moment:
+
+  - [[router, third iteration|assistant#router_3rd_iteration]]
+  - [[overview, second iteration|assistant#overview_2nd_iteration]]
+  - [[infography|assistant#infography]]
+
+<a id="1st_iteration"></a>
+
+First iteration
+===============
+
+For the first iteration we did some parallel designs of a possible
+wireframe for the web assistant:
+
+  - [[wireframe by sajolida|1st_iteration/wireframe-sajolida-20150323.odg]]
+  - [wireframe by tchou](https://labs.riseup.net/code/attachments/download/722/wireframe-tchou-20150323.pdf)
+
+Conclusion
+----------
+
+We decided to split the assistant into [[three main phases|assistant#phases]].
+
+<a id="router"></a>
+
+Router
+======
+
+<a id="router_2nd_iteration"></a>
+
+Second iteration
+----------------
+
+We refined the first iteration still with parallel designs:
+
+  - [[presentation by sajolida|router/2nd_iteration/router-sajolida-20150325.odp]]
+  - [[presentation by tchou|router/2nd_iteration/router-tchou-20150325.odp]]
+
+And conducted some user testing on both designs:
+
+  - [[spreadsheet of summarized outcomings|router/2nd_iteration/router-testing-20150325.ods]]
+
+<a id="router_3rd_iteration"></a>
+
+Third iteration
+---------------
+
+[[!map pages="blueprint/bootstrapping/assistant/router/3rd_iteration*" show=title]]
+
+### Objectives
+
+  - Rework the alternative between USB and DVD:
+    - Merge slide 11 & 13 from [[router/2nd_iteration/router-sajolida-20150325.odp]].
+    - Make USB more preeminent major, and DVD less
+  - Guide better Mac users:
+    - Build a list of Mac hardware and their possible scenarios.
+    - Explain where to find Mac hardware version.
+    - Present clone (1/3) as an alternative to installation from scratch (2/3).
+  - Add a welcoming screen.
+  - Mention virtual machines as a minor option on OS page or destination media page.
+  - Consider improving navigation.
+
+### Mock-ups
+
+  - [[presentation|router/3rd_iteration/router-3rd-iteration.fodp]]
+  - [[flowchart|router/3rd_iteration/router-3rd-iteration.fodg]]
+
+<a id="mac"></a>
+
+List of compatibility with Mac
+------------------------------
+
+Seeing that:
+
+- A lot of current and potential users are Mac users.
+- Tails is running more or less on this devices.
+- There are a limited number of different models.
+
+We want to maintain a list of the state of Tails compatibility on
+these computers. [[More details here.|mac]]
+
+<a id="overview"></a>
+
+Overview
+========
+
+<a id="overview_2nd_iteration"></a>
+
+Second iteration
+----------------
+
+  - [[wireframe of the overview|overview/2nd_iteration/overview-20150324.odg]]
+
+  - Drawings of the overview with 2 more steps (plug the keys) [one](https://labs.riseup.net/code/attachments/download/732/tchou-overview.jpg) / [two](https://labs.riseup.net/code/attachments/download/733/tchou-overview2.jpg)
+
+<a id="infography"></a>
+
+Infography
+----------
+
+We brainstormed a bit more on the possible infography to explain the
+installation steps graphically:
+
+  - [drawings by sajolida](infography/2nd_iteration/infography-sajolida-20150327.svg)
+
+<a id="url"></a>
+
+URL scheme
+==========
+
+The assistant will be implemented as a (huge) set of ikiwiki pages. It
+will have its own navigation tools (sidebar, back button, maybe
+breadcrumbs, etc). Even if two pages are going to be very similar (for
+example "Choose your media, for Windows" and "Choose your media, for
+Debian", we need different pages and thus different URLs).
+
+We will sometimes tell the user to write down the URL of one page or
+open it on a smartphone (for example, before shutting down the
+computer).
+
+So they need to be short and meaningful (as an URL) both for the people
+working on the code and the user.
+
+Those URLs might also be given by internal tools, if we want to point
+the user back to the assistant after start a media installed using UUI
+for example.
+
+Those URLs might be:
+
+  - Written down on a sheet of paper.
+  - Opened in a smartphone.
+  - Clicked or copied from a tool inside Tails.
+  - Given by frontdesk as an answer to a support request.
+  - Listed on a sitemap (for frontdesk for example).
+
+Proposed scheme. Those are just examples, not an exhaustive list:
+
+  - router
+    - `/install` (*Intro*)
+    - `/install/os` (*Choose your OS*)
+    - `/install/debian` (*Debian user*)
+    - `/install/debian/path` (*Graphical vs Command line*)
+    - `/install/linux` (*Linux user*)
+    - `/install/mac` (*Mac user*)
+    - `/install/win` (*Windows user*)
+    - `/install/help` (*I need external help*)
+  - overview
+    - `/install/copy` (*Clone from a friend*)
+    - `/install/debian/usb` (*Debian USB*)
+    - `/install/debian/dvd` (*Debian DVD*)
+    - `/install/expert/usb` (*Debian hacker USB*)
+    - `/install/expert/dvd` (*Debian hacker DVD*)
+    - `/install/linux/usb` (*Linux USB*)
+    - `/install/linux/dvd` (*Linux DVD*)
+    - `/install/mac/usb` (*Mac USB via USB*)
+    - `/install/mac/dvd` (*Mac DVD*)
+    - `/install/mac/dvd-usb` (*Mac USB via DVD*)
+    - `/install/win/usb` (*Windows USB*)
+    - `/install/win/dvd` (*Windows DVD*)
+  - steps (example for Windows USB scenario)
+    - `/install/win/usb/1-download` (Choose download method)
+    - `/install/win/usb/1-download/v1` (if we can use the same page for all browser extensions)
+    - `/install/win/usb/1-download/firefox/v1` (otherwise for Firefox extension)
+    - `/install/win/usb/1-download/chrome/v1` (otherwise for Chrome extension)
+    - `/install/win/usb/2-plug-first`
+    - `/install/win/usb/3-copy-iso`
+    - `/install/win/usb/4-restart-temporary`
+    - `/install/win/usb/5-plug-second`
+    - `/install/win/usb/6-install-tails`
+    - `/install/win/usb/7-restart-tails`
+    - `/install/win/usb/8-configure-persistence`
+    - `/install/win/usb/9-restart-persistence`
+
+Steps by scenario
+=================
+
+Reminder on lexicon :
+
+* Temporary Tails: a Tails with no automatic upgrade and no possible persistence
+* Minimal Tails: a Tails with automatic upgrade, but no persistence
+* Full-featured Tails: a Tails with automatic upgrade and persistence
+
+### With USB as destination media
+
+#### Windows to USB (via USB)
+
+1. Download and verify 
+2. Copy to temporary Tails with UUI
+3. Reboot on temporary Tails
+4. Install minimal Tails
+5. Reboot on minimal Tails
+6. Install persistence (optional)
+7. Reboot on full-featured Tails (optional)
+
+#### Mac to USB via DVD
+
+1. Download and verify
+2. Copy to temporary Tails with Burn
+3. Reboot on temporary Tails
+4. Install minimal Tails
+5. Reboot on minimal Tails
+6. Install persistence (optional)
+7. Reboot on full-featured Tails (optional)
+
+#### Mac to USB via USB
+
+1. Download and verify
+2. Copy to temporary Tails with command line
+3. Reboot on temporary Tails
+4. Install minimal Tails
+5. Reboot on minimal Tails
+6. Install persistence (optional)
+7. Reboot on full-featured Tails (optional)
+
+#### Debian to USB
+
+1. Download and verify
+2. Copy to minimal Tails with Tails Installer
+3. Install persistence (optional)
+4. Reboot on full-featured Tails (optional)
+
+#### Debian hacker to USB
+
+1. Download with `wget`
+2. Verify with OpenPGP and `debian-keyring`
+3. Install minimal Tails with Tails Installer on the command line
+4. Reboot minimal Tails
+5. Install persistence (optional)
+6. Reboot on full-featured Tails (optional)
+
+#### Linux to USB
+
+1. Download and verify
+2. Copy to temporary Tails with Gnome Disks
+3. Reboot on temporary Tails
+4. Install minimal Tails
+5. Reboot on minimal Tails
+6. Install persistence (optional)
+7. Reboot on full-featured Tails (optional)
+
+#### Clone from a friend
+
+1. Get USB stick from a friend
+2. Boot on Tails USB stick
+3. Install minimal Tails
+4. Reboot on minimal Tails
+5. Install persistence (optional)
+6. Reboot on full-featured Tails (optional)
+
+### With DVD as destination media
+
+#### Windows to DVD
+
+1. Download and verify
+2. Copy to temporary Tails with a DVD burner
+3. Reboot with temporary Tails
+
+#### Mac to DVD
+
+1. Download and verify
+2. Copy to temporary Tails with Burn
+3. Reboot on temporary Tails
+
+#### Linux to DVD (same for Debian)
+
+1. Download and verify
+2. Copy to minimal Tails with Brasero
+3. Reboot on temporary Tails
+
+#### Debian hacker to DVD
+
+1. Download with `wget`
+2. Verify with OpenPGP and `debian-keyring`
+3. Copy to minimal Tails with Brasero
+4. Reboot on temporary Tails
+
+### Other possible scenarios
+
+#### Contact or training
+
+#### Virtualization
+
+<a id="javascript"></a>
+
+About JavaScript
+================
+
+During the monthly meeting of [[April
+2014|contribute/meetings/201404#index3h1]] ([[!tails_ticket 7023]]) we
+mentioned the idea of not having any JavaScript on our homepage, and by
+extension, the fact that we should try to limit the amount of JavaScript
+on our website in general. But this discussion was not fully concluded.
+Here are a few elements to try to summarize our position, in particular
+while working on the assistant:
+
+Cons:
+
+  - JavaScript can be dangerous for security and privacy. Tor Browser is
+    supposed to block dangerous JavaScript and allow only the innocuous
+    kind. But it's still better to be safe than sorry.
+  - An important part of our audience want to be careful about
+    JavaScript, for the reason mentioned above, and might disable it
+    fully. To support this use case, we include the NoScript extension.
+    So, to be coherent with this, every part of our website must be
+    functional without JavaScript. This also ensures compatibility with
+    all the levels of the security slider of Tor Browser ([[!tor_bug
+    9387]]).
+  - We don't know much about JavaScript ourselves, and even less about
+    JavaScript security. So writing JavaScript seems complicated,
+    costly, and error prone. Reusing JavaScript libraries like jQuery
+    looks more feasible without taking much risks.
+
+Pros:
+
+  - We are already using JavaScript on our website (see the toggle on
+    the [[download#index3h1]] page).
+  - JavaScript might allow us to present better our information to the
+    user and improve the quality of our website in terms of user
+    experience. But using it to save us a bit of work or look cool might
+    not be a good enough reason.
+
+Conclusion:
+
+  - We will use JavaScript to the minimum while ensure graceful
+    degradation.
+
+<a id="questions"></a>
+
+Open problems
+=============
+
+Going in and out
+----------------
 
   - How to handle entry and exit points? What happen when someone in
     pointed to a documentation page for a corner case?
-  - How to we deal with people leaving the assistant to restart their
+  - How do we deal with people leaving the assistant to restart their
     system? Do we want to propose them to print a page for the remaining
     steps?
+  - When people leave, do we want to give them some warning,
+    explanation, good bye message?
+  - Recommend people to open the website from their smartphone before
+    restarting their computer.
+
+Instructions
+------------
+
   - How do we help better people with boot? Shall we want suggest the
     most likely keys based on the brand of the computer?
-  - Decide when to ask questions about the scenario of the user: OS, DVD
-    drive. Shall we ask them all at the beginning? Shall we ask them
-    when needed?
   - How to explain the installation of tails-installer in Debian
     derivatives. Ubuntu has
     [AptURL](https://help.ubuntu.com/community/AptURL) in its Firefox.
   - How to make it easier to locate the ISO image once downloaded, for
     example to feed it into Tails Installer?
-  - If we ask the user for its OS type, version, desired medium, does
-    this have privacy implications? Do we want to do statistics on that?
-  - Investigate how we could monitor the usage of the assistant: most
-    common path, failures, people leaving, etc. But this can have
-    privacy issues.
-  - When people leave, do we want to give them some warning,
-    explanation, good bye message?
   - Suggest human strategies for avoiding targeted malware:
     - Clone from a friend
     - Use a different computer than yours
     - Use Linux if available around you
+
+Infrastructure
+--------------
+
+  - Investigate how we could monitor the usage of the assistant: most
+    common path, failures, people leaving, etc. But this can have
+    privacy issues.
+
+Troubleshooting
+---------------
+
+  - Integrate system requirements.
+  - Integrate information about organization doing training.
+  - How do we connect all this with support, in case people are lost or
+    having specific problems?
