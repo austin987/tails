@@ -72,8 +72,8 @@ web hosting setup that provides FTP access only.
 To give you an idea, a few dedicated Mb/s is a must; you must expect
 pushing at least 50-100GB [[!wikipedia GiB]] (bytes, not bits) on
 a normal day, and twice as much for a short period after each release.
-So, it is a must to be able to push at least 2 [[!wikipedia TiB]]
-a month, and preferably 3 or 4 TiB.
+So, it is a must to be able to push at least 5 [[!wikipedia TiB]]
+a month, and preferably 6 or 8 TiB.
 
 You will also need around 5-10 GiB of disk space.
 
@@ -99,7 +99,7 @@ sub-directories (such as
 -------------------------
 
 You need to set up a virtual host for dl.amnesia.boum.org, with indexing
-enabled.
+enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 
 ### Apache configuration example
 
@@ -110,6 +110,7 @@ enabled.
 	   DocumentRoot /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
 	   <Directory /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/>
 	      Options Indexes
+	      FileETag None
 	      AllowOverride None
 	      IndexIgnore README.html
 	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
@@ -119,6 +120,7 @@ enabled.
 
 ### Lighttpd configuration example
 
+	static-file.etags = "disable"
 	$HTTP["host"] =~ "^dl\.amnesia\.boum\.org$" {
 		server.document-root = "/var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/"
 		server.dir-listing = "enable"
@@ -128,6 +130,7 @@ enabled.
 
 	server {
 		server_name dl.amnesia.boum.org;
+		etag off;
 		root /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE;
 		location / {
 			autoindex on;

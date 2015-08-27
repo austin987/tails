@@ -148,7 +148,7 @@ After('@product', '@check_tor_leaks') do |scenario|
       expected_tor_nodes = @bridge_hosts
     end
     leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file,
-                                  expected_tor_nodes)
+                                  :accepted_hosts => expected_tor_nodes)
     leaks.assert_no_leaks
   end
   @tor_leaks_sniffer.clear
