@@ -1,0 +1,36 @@
+#!/bin/sh
+set -e
+set -u
+
+echo "Installing libdvd-pkg"
+
+apt-get --yes install libdvd-pkg
+
+# Workaround for https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=797113
+# We put a torsocks wrapper in /usr/local/bin/wget, which fails to retrieve
+# libdvdcss*.tar.bz2. Giving /usr/bin/wget precedence in $PATH works around it:
+export PATH="/usr/bin:$PATH"
+
+dpkg-reconfigure libdvd-pkg
+
+# Create and install fake libdvd-pkg package
+apt-get install --yes equivs
+
+LIBDVD_PKG_VERSION=$(dpkg-query -s libdvd-pkg | grep Version | cut -d ' ' -f2 )
+
+cat > /root/libdvd-pkg-${LIBDVD_PKG_VERSION}.control << EOF
+Section: multimedia
+Priority: optional
+Homepage: https://tails.boum.org/
+Standards-Version: 3.6.2
+
+Package: libdvd-pkg-${LIBDVD_PKG_VERSION}
+Maintainer: Tails developers <amnesia@boum.org>
+Provides: libdvd-pkg
+Architecture: all
+Description: (Fake) libdvd-pkg package
+ Provide placeholder to keep libdvdcss2 happy.
+EOF
+cd /root ; equivs-build /root/libdvd-pkg-${LIBDVD_PKG_VERSION}.control
+dpkg -i libdvd-pkg-${LIBDVD_PKG_VERSION}_1.0_all.deb
+rm /root/libdvd-pkg-${LIBDVD_PKG_VERSION}.control /root/libdvd-pkg-${LIBDVD_PKG_VERSION}_1.0_all.deb
