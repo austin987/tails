@@ -55,6 +55,17 @@ We __need to lessen the number of tests per day__. Probably even in
 the second iteration, with the expected growth of the number of
 automated builds.
 
+At first, we'll try to run the full test suite on all of them. If our
+infra can't cope with that, we have ideas written below to help in that.
+The one that everyone seem to agree on is to run the full test suite for
+base branches and features branches that are in ReadyForQA status in
+Redmine.
+
+We might want to play with job priorities, the same way we'll do with
+the automated builds (see [[!tails_ticket 9760]]). Luckily, configuring
+that for the builds will probably also work by itself for their automated
+tests, as this jobs will be chained together.
+
 ### Current proposal
 
     For branch stable:
@@ -102,6 +113,12 @@ automated builds:
 
 * For base branches, notify the RM.
 * For topic branches, notify the author of the last commit.
+
+When notifying Redmine, the use of the ReadyForQA custom field is not so
+semantically correct, and may overlap with the dev usage of it. We will
+probably have to add a new one for Jenkins to decide to test the branch
+if we choose to test only the feature branch that are ready to be
+reviewed.
 
 # Scenarios
 
@@ -160,9 +177,10 @@ builds specification.
 
 ## Cutting the number of run per day
 
-For feature branches, we could run the full test suite only on the
-daily builds, and either only the automated tests related to the
-branch on every git push, and/or a subset of the whole test suite.
+For feature branches, we could run the full test suite only on the daily
+builds or on ReadyForQA ones, and either only the automated tests
+related to the branch on every git push, and/or a subset of the whole
+test suite.
 
 We can also maybe find more ways to split the automated test suite in
 faster subsets of features depending on the context, define priorities
