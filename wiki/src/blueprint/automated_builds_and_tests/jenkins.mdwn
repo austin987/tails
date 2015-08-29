@@ -161,3 +161,48 @@ This was discussed at least there:
 
 * <http://jenkins-ci.361315.n4.nabble.com/How-to-reboot-a-slave-during-a-build-td4628820.html>
 * <https://stackoverflow.com/questions/5543413/reconfigure-and-reboot-a-hudson-jenkins-slave-as-part-of-a-build>
+
+Another option is to use the Jenkins [PostBuildScript
+plugin](https://wiki.jenkins-ci.org/display/JENKINS/PostBuildScript%20Plugin)
+to issue a `shutdown -r` command at the end of the job. There are
+indications that [people are using it like
+this](https://stackoverflow.com/questions/11160363/execute-shell-script-after-post-build-in-jenkins)
+already. It's supported by JJB.
+
+Chaining jobs
+-------------
+
+There are several plugins that allow to chain jobs that we might use to
+run the test suite job following a build job of a branch.
+
+ * Jenkins native way: it's very simple, and cannot take arguments.
+ * [BuildPipelinePlugin](https://wiki.jenkins-ci.org/display/JENKINS/Build+Pipeline+Plugin):
+   More a visualization tool, uses the native Jenkins way of triggering
+   a downstream job if one wants this trigger to be automatic.
+ * [ParameterizedTriggerPlugin](https://wiki.jenkins-ci.org/display/JENKINS/Parameterized+Trigger+Plugin):
+   a more complete solution than the Jenkins Native way. Can pass
+   arguments from one job to another, using parameters to the call of
+   the downstream job, or taking them from a file from the upstream job.
+   The downstream job can also be manually triggered, and in this case
+   the parameters are entered through a form in the Web interface.
+ * [MultiJobPlugin](https://wiki.jenkins-ci.org/display/JENKINS/Multijob+Plugin):
+   Seems to be a complete solution too, build on the previous plugin and
+   the EnvInject one. Seems a bit less deployed than the
+   ParameterizedTriggerPlugin.
+
+These are all supported by JJB v0.9+.
+
+Passing parameters through jobs
+------------------------------
+
+We already specified what kind of informations we want to pass from the
+build job to the test job.
+
+The ParameterizedTiggerPlugin is the one usually used for that kind of
+work.
+
+An other way that seem to be possible/used with the Jenkins native job
+chaining ability is to put the wanted parameters in a file that is
+archived with the artifacts of the upstream job. Then the downstream job
+can be configured with then EnvInject plugin we already use to set the
+necessary variables in the job environment.
