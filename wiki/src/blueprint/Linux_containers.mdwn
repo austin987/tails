@@ -72,13 +72,17 @@ Running GUI applications in containers
   Sandboxed applications can optionally be given access to:
   - files passed on their command line, which makes them work just
     fine when started e.g. from a file manager or a web browser;
-    however, when one has already started e.g. LibreOffice and needs
-    to open a new file, they need to first use the GNOME Shell
-    extension to add it to the sandbox; in this respect, the resulting
-    UX seems to be inferior to the one the designs the AppArmor and
-    `xdg-app` folks mean to implement (file chooser with a privileged
-    backend).
   - the microphone and/or speaker, thanks to Xpra.
+  Potential functionality limitations and UX issues:
+  - It's not clear to me how things such as printing, Orca and IBus
+    input methods are handled. For the two latter ones, access to the
+    session D-Bus is needed, so presumably that'll need D-Bus calls
+    mediation such as the one implemented in AppArmor, no?
+  - When one has already started e.g. LibreOffice and needs to open
+    a new file, they need to first use the GNOME Shell extension to
+    add it to the sandbox; in this respect, the resulting UX seems to
+    be inferior to the one the designs the AppArmor and `xdg-app`
+    folks mean to implement (file chooser with a privileged backend).
 * <http://pleonasm.info/blog/2012/10/privilege-separation-with-xpra/>
 * [docker-desktop](https://github.com/rogaha/docker-desktop)
 * Stéphane Graber's [LXC 1.0 blog post
