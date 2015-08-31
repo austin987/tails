@@ -57,8 +57,6 @@ BeforeFeature('@product') do |feature|
     raise "The specified Tails ISO image '#{TAILS_ISO}' does not exist"
   end
   puts "Testing ISO image: #{File.basename(TAILS_ISO)}"
-  base = File.basename(feature.file, ".feature").to_s
-  $background_snapshot = "#{base}_background"
   if not($started_first_product_feature)
     $virt = Libvirt::open("qemu:///system")
     VM.remove_all_snapshots if !KEEP_SNAPSHOTS
