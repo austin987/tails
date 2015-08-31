@@ -38,6 +38,14 @@ Feature: I2P
     Then the I2P router console is displayed in I2P Browser
     And the I2P Browser uses all expected TBB shared libraries
 
+  Scenario: The I2P internal websites can be viewed in I2P Browser
+    Given the I2P router console is ready
+    When I start the I2P Browser through the GNOME menu
+    Then the I2P router console is displayed in I2P Browser
+    And I2P successfully built a tunnel
+    When I open the address "http://i2p-projekt.i2p" in the I2P Browser
+    Then the I2P homepage loads in I2P Browser
+
  Scenario: I2P is configured to run in Hidden mode
     Given the I2P router console is ready
     When I start the I2P Browser through the GNOME menu
