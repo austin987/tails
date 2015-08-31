@@ -70,6 +70,12 @@ Then /^I block the I2P router console port$/ do
   step 'process "nc" is running within 5 seconds'
 end
 
+Then /^the I2P homepage loads in I2P Browser$/ do
+  next if @skip_steps_while_restoring_background
+  @vm.focus_window('I2P Browser')
+  @screen.wait('I2PBrowserProjectHomepage.png', 80)
+end
+
 Then /^I see a notification that I2P failed to start$/ do
   next if @skip_steps_while_restoring_background
   notification_helper('I2PFailedToStart.png', 2 * 60)
