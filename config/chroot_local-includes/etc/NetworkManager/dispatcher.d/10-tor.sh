@@ -38,12 +38,20 @@ if [ "$(tails_netconf)" = "direct" ]; then
    tor_set_in_torrc Sandbox 1
 fi
 
-# A SIGHUP should be enough but there's a bug in Tor. Details:
+# We would like Tor to be started during init time, even before the
+# network is up, and then send it a SIGHUP here to make it start
+# bootstrapping swiftly, but it doesn't work because of a bug in
+# Tor. Details:
 # * https://trac.torproject.org/projects/tor/ticket/1247
 # * https://tails.boum.org/bugs/tor_vs_networkmanager/
-restart-tor
-
+# To work around this we restart Tor, in various ways, not matter the
+# case below.
 if [ "$(tails_netconf)" = "obstacle" ]; then
+   # We do not use retart-tor since it validates that bootstraping
+   # succeeds. That cannot happen until Tor Launcher has started
+   # (below) and the user is done configuring it.
+   service tor restart
+
    # When using a bridge Tor reports TLS cert lifetime errors
    # (e.g. when the system clock is way off) with severity "info", but
    # when no bridge is used the severity is "warn". tordate/20-time.sh
@@ -57,4 +65,11 @@ if [ "$(tails_netconf)" = "obstacle" ]; then
    tor_control_setconf 'ClientTransportPlugin="obfs2,obfs3,obfs4 exec /usr/bin/obfs4proxy managed"'
 
    /usr/local/sbin/tails-tor-launcher &
+
+   # Wait until the user has done the Tor Launcher configuration.
+   until [ "$(tor_control_getconf DisableNetwork)" = 0 ]; do
+       sleep 1
+   done
+else
+    ( restart-tor ) &
 fi
