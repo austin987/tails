@@ -28,22 +28,22 @@ bootstrap_progress=0
 last_bootstrap_change=$(date +%s)
 
 maybe_restart_tor() {
-  local new_bootstrap_progress=$(tor_bootstrap_progress)
-  if [ $new_bootstrap_progress -eq 100 ]; then
-      return 0
-  elif [ $new_bootstrap_progress -gt $bootstrap_progress ]; then
-     bootstrap_progress=$new_bootstrap_progress
-     last_bootstrap_change=$(date +%s)
-     return 1
-  elif [ $(expr $(date +%s) - $last_bootstrap_change) -ge 20 ]; then
-     clear_tor_log
-     service tor restart
-     bootstrap_progress=0
-     last_bootstrap_change=$(date +%s)
-     return 1
-  else
-     return 1
-  fi
+    local new_bootstrap_progress=$(tor_bootstrap_progress)
+    if [ $new_bootstrap_progress -eq 100 ]; then
+        return 0
+    elif [ $new_bootstrap_progress -gt $bootstrap_progress ]; then
+        bootstrap_progress=$new_bootstrap_progress
+        last_bootstrap_change=$(date +%s)
+        return 1
+    elif [ $(expr $(date +%s) - $last_bootstrap_change) -ge 20 ]; then
+        clear_tor_log
+        service tor restart
+        bootstrap_progress=0
+        last_bootstrap_change=$(date +%s)
+        return 1
+    else
+        return 1
+    fi
 }
 
 try_for 270 maybe_restart_tor
