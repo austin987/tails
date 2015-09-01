@@ -199,6 +199,31 @@ run the test suite job following a build job of a branch.
 
 These are all supported by JJB v0.9+.
 
+One solution that could work and won't require more additionnal plugins
+to manage could be to make an extensive use of the EnvInject plugin in
+the same way we already use it to configure the notification. Then we
+would be able to simply use Jenkins' native way of chaining jobs:
+
+ * At the beginning of the build job, a script (in our jenkins-tools
+   repo) is collecting every necessary parameters defined in the
+   automated test blueprin and outputing them in a file in the
+   /build-artifacts/ directory.
+ * This file is the one used by the build job, to setup the variables it
+   needs (currently only $NOTIFY_TO).
+ * At the end of the build job, this file is archived with the other
+   artifacts.
+ * At the beginning of the chained test job, this file is imported in
+   the workspace along with the build artifacts. The EnvInject pre-build
+   step uses it to setup the necessary variables.
+
+Where I'm not sure is that the Jenkins's native way can collaborate
+smoothly with the EnvInject plugin. Maybe the different steps we are
+talking about don't happen in an order that would fit this scenario.
+Might be that we'll have to use the ParameterizedTrigger plugin. Might
+also be that we don't need the EnvInject plugin in the test job, but
+just import the variables in the environment in the test suite wrapper
+script.
+
 Passing parameters through jobs
 ------------------------------
 
