@@ -169,6 +169,8 @@ indications that [people are using it like
 this](https://stackoverflow.com/questions/11160363/execute-shell-script-after-post-build-in-jenkins)
 already. It's supported by JJB.
 
+<a id="chain"></a>
+
 Chaining jobs
 -------------
 
@@ -176,21 +178,51 @@ There are several plugins that allow to chain jobs that we might use to
 run the test suite job following a build job of a branch.
 
  * Jenkins native way: it's very simple, and cannot take arguments.
- * [BuildPipelinePlugin](https://wiki.jenkins-ci.org/display/JENKINS/Build+Pipeline+Plugin):
+   That's what weasel
+   [uses](https://gitweb.torproject.org/project/jenkins/jobs.git/tree/jobs.yaml)
+   for his Tor CI stuff.
+ * [BuildPipeline plugin](https://wiki.jenkins-ci.org/display/JENKINS/Build+Pipeline+Plugin):
    More a visualization tool, uses the native Jenkins way of triggering
    a downstream job if one wants this trigger to be automatic.
- * [ParameterizedTriggerPlugin](https://wiki.jenkins-ci.org/display/JENKINS/Parameterized+Trigger+Plugin):
+ * [ParameterizedTrigger plugin](https://wiki.jenkins-ci.org/display/JENKINS/Parameterized+Trigger+Plugin):
    a more complete solution than the Jenkins Native way. Can pass
    arguments from one job to another, using parameters to the call of
    the downstream job, or taking them from a file from the upstream job.
    The downstream job can also be manually triggered, and in this case
    the parameters are entered through a form in the Web interface.
- * [MultiJobPlugin](https://wiki.jenkins-ci.org/display/JENKINS/Multijob+Plugin):
-   Seems to be a complete solution too, build on the previous plugin and
+   Note that the latest release as of 2015-09-01 (2.28) requires
+   Jenkins 1.580.1 ([[!tails_ticket 10068]])
+ * [MultiJob plugin](https://wiki.jenkins-ci.org/display/JENKINS/Multijob+Plugin):
+   Seems to be a complete solution too, build on the ParameterizedTrigger plugin and
    the EnvInject one. Seems a bit less deployed than the
-   ParameterizedTriggerPlugin.
+   ParameterizedTrigger plugin.
 
 These are all supported by JJB v0.9+.
+
+One solution that could work and won't require more additionnal plugins
+to manage could be to make an extensive use of the EnvInject plugin in
+the same way we already use it to configure the notification. Then we
+would be able to simply use Jenkins' native way of chaining jobs:
+
+ * At the beginning of the build job, a script (in our jenkins-tools
+   repo) is collecting every necessary parameters defined in the
+   automated test blueprin and outputing them in a file in the
+   /build-artifacts/ directory.
+ * This file is the one used by the build job, to setup the variables it
+   needs (currently only $NOTIFY_TO).
+ * At the end of the build job, this file is archived with the other
+   artifacts.
+ * At the beginning of the chained test job, this file is imported in
+   the workspace along with the build artifacts. The EnvInject pre-build
+   step uses it to setup the necessary variables.
+
+Where I'm not sure is that the Jenkins's native way can collaborate
+smoothly with the EnvInject plugin. Maybe the different steps we are
+talking about don't happen in an order that would fit this scenario.
+Might be that we'll have to use the ParameterizedTrigger plugin. Might
+also be that we don't need the EnvInject plugin in the test job, but
+just import the variables in the environment in the test suite wrapper
+script.
 
 Passing parameters through jobs
 ------------------------------
