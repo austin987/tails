@@ -53,7 +53,7 @@ if [ -n "$JENKINS_URL" ]; then
 	fi
 	REV="${GIT_BRANCH##origin/}"
 	COMMIT="$GIT_COMMIT"
-	ARTIFACTS_DIR="$WORKSPACE"
+	ARTIFACTS_DIR="$WORKSPACE/build-artifacts"
 else
 	# Build triggered by Vagrant
 	WORKSPACE=/home/vagrant/amnesia
@@ -70,7 +70,6 @@ else
 		fi
 	fi
 	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
-	test -d "$ARTIFACTS_DIR" || install -m 0755 -d "$ARTIFACTS_DIR"
 	cd "$WORKSPACE"
 	git fetch origin
 fi
@@ -82,6 +81,8 @@ git reset --hard "$COMMIT"
 if [ -n "$JENKINS_URL" ]; then
 	git clean --force -d -x
 fi
+
+test -d "$ARTIFACTS_DIR" || install -m 0755 -d "$ARTIFACTS_DIR"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
