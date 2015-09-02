@@ -147,6 +147,10 @@ After('@product') do |scenario|
       STDERR.puts "Press ENTER to continue running the test suite"
       STDIN.gets
     end
+  else
+    if File.exist?(@video_path) && not($config['CAPTURE_ALL'])
+      FileUtils.rm(@video_path)
+    end
   end
   @vm.destroy_and_undefine if @vm
 end

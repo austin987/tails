@@ -50,9 +50,11 @@ Sets up an appropriate environment and invokes cucumber. Note that this script
 must be run from the Tails source directory root.
 
 Options for '@product' features:
-  --capture          Captures the test session into per-scenario videos stored
-                     in the temporary directory (see --tmpdir below) using VP8
+  --capture          Captures failed scenarios into videos stored in the
+                     temporary directory (see --tmpdir below) using VP8
                      encoding. Requires libvpx1.
+  --capture-all      Keep videos for all scenarios, including those that
+                     succeed (implied --capture).
   --debug            Display various debugging information while running the
                      test suite.
   --pause-on-fail    On failure, pause test suite until pressing Enter. This is
@@ -183,6 +185,7 @@ remove_control_chars_from() {
 # to cucumber, except TMPDIR since we explicitly want to support
 # setting it that way.
 CAPTURE=
+CAPTURE_ALL=
 LOG_FILE=
 VNC_VIEWER=
 VNC_SERVER=
@@ -193,7 +196,7 @@ SIKULI_RETRY_FINDFAILED=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="view,vnc-server-only,capture,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail,log-to-file:"
+LONGOPTS="view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail,log-to-file:"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -209,6 +212,11 @@ while [ $# -gt 0 ]; do
         --capture)
             check_dependencies libvpx1
             export CAPTURE="yes"
+            ;;
+        --capture-all)
+            check_dependencies libvpx1
+            export CAPTURE="yes"
+            export CAPTURE_ALL="yes"
             ;;
         --log-to-file)
             shift
