@@ -1,6 +1,10 @@
-Given /^I2P is running$/ do
-  try_for(30) do
-    $vm.execute('service i2p status').success?
+Given /^I2P is (not )?running$/ do |notrunning|
+  if notrunning
+    !$vm.execute('service i2p status').success?
+  else
+    try_for(30) do
+      $vm.execute('service i2p status').success?
+    end
   end
 end
 
