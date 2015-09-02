@@ -187,18 +187,21 @@ Before('@product', '@check_tor_leaks') do |scenario|
 end
 
 After('@product', '@check_tor_leaks') do |scenario|
-  @tor_leaks_sniffer.stop
-  if scenario.passed?
-    if @bridge_hosts.nil?
-      expected_tor_nodes = get_all_tor_nodes
-    else
-      expected_tor_nodes = @bridge_hosts
+  begin
+    @tor_leaks_sniffer.stop
+    if scenario.passed?
+      if @bridge_hosts.nil?
+        expected_tor_nodes = get_all_tor_nodes
+      else
+        expected_tor_nodes = @bridge_hosts
+      end
+      leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file,
+                                    :accepted_hosts => expected_tor_nodes)
+      leaks.assert_no_leaks
     end
-    leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file,
-                                  :accepted_hosts => expected_tor_nodes)
-    leaks.assert_no_leaks
+  ensure
+    @tor_leaks_sniffer.clear
   end
-  @tor_leaks_sniffer.clear
 end
 
 # For @source tests
