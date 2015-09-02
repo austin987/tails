@@ -237,4 +237,9 @@ end
 
 at_exit do
   delete_all_snapshots if !KEEP_SNAPSHOTS
+  # The artifacts directory is empty (and useless) if it contains
+  # nothing but the mandatory . and ..
+  if Dir.entries(ARTIFACTS_DIR).size <= 2
+    FileUtils.rmdir(ARTIFACTS_DIR)
+  end
 end
