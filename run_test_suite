@@ -50,8 +50,9 @@ Sets up an appropriate environment and invokes cucumber. Note that this script
 must be run from the Tails source directory root.
 
 Options for '@product' features:
-  --capture FILE     Captures the test session into FILE using VP8 encoding.
-                     Requires libvpx1.
+  --capture          Captures the test session into per-scenario videos stored
+                     in the temporary directory (see --tmpdir below) using VP8
+                     encoding. Requires libvpx1.
   --debug            Display various debugging information while running the
                      test suite.
   --pause-on-fail    On failure, pause test suite until pressing Enter. This is
@@ -158,13 +159,6 @@ start_vnc_viewer() {
     xtightvncviewer -viewonly localhost:${VNC_SERVER_PORT} 1>/dev/null 2>&1 &
 }
 
-capture_session() {
-    check_dependencies libvpx1
-    echo "Capturing guest display into ${CAPTURE_FILE}"
-    avconv -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
-        -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
-}
-
 remove_control_chars_from() {
     local file="$1"
     local tmpfile
@@ -188,7 +182,7 @@ remove_control_chars_from() {
 # Unset all environment variables used by this script to pass options
 # to cucumber, except TMPDIR since we explicitly want to support
 # setting it that way.
-CAPTURE_FILE=
+CAPTURE=
 LOG_FILE=
 VNC_VIEWER=
 VNC_SERVER=
@@ -199,7 +193,7 @@ SIKULI_RETRY_FINDFAILED=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="view,vnc-server-only,capture:,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail,log-to-file:"
+LONGOPTS="view,vnc-server-only,capture,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail,log-to-file:"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -213,8 +207,8 @@ while [ $# -gt 0 ]; do
             VNC_SERVER=yes
             ;;
         --capture)
-            shift
-            CAPTURE_FILE="$1"
+            check_dependencies libvpx1
+            export CAPTURE="yes"
             ;;
         --log-to-file)
             shift
@@ -264,9 +258,6 @@ TARGET_DISPLAY=$(next_free_display)
 
 start_xvfb
 
-if [ -n "${CAPTURE_FILE}" ]; then
-    capture_session
-fi
 if [ -n "${VNC_SERVER}" ]; then
     start_vnc_server
 fi

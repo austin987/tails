@@ -94,8 +94,27 @@ BeforeFeature('@product', '@old_iso') do
 end
 
 # BeforeScenario
-Before('@product') do
+Before('@product') do |scenario|
   @screen = Sikuli::Screen.new
+  if $config["CAPTURE"]
+    video_name = "capture-" + "#{scenario.name}-#{TIME_AT_START}.webm"
+    # Sanitize the filename from unix-hostile filename characters
+    bad_unix_filename_chars = Regexp.new("[\s/]")
+    video_name.gsub!(bad_unix_filename_chars, '_')
+    @video_path = "#{$config['TMPDIR']}/#{video_name}"
+    capture = IO.popen(['avconv',
+                        '-f', 'x11grab',
+                        '-s', '1024x768',
+                        '-r', '15',
+                        '-i', "#{$config['DISPLAY']}.0",
+                        '-an',
+                        '-vcodec', 'libvpx',
+                        '-y',
+                        @video_path,
+                        :err => ['/dev/null', 'w'],
+                       ])
+    @video_capture_pid = capture.pid
+  end
   if File.size?($background_snapshot)
     @skip_steps_while_restoring_background = true
   else
@@ -109,6 +128,9 @@ end
 
 # AfterScenario
 After('@product') do |scenario|
+  if @video_capture_pid
+    Process.kill("INT", @video_capture_pid)
+  end
   if scenario.failed?
     time_of_fail = Time.now - TIME_AT_START
     secs = "%02d" % (time_of_fail % 60)
