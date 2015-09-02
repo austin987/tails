@@ -114,11 +114,8 @@ end
 Before('@product') do |scenario|
   @screen = Sikuli::Screen.new
   if $config["CAPTURE"]
-    video_name = "capture-" + "#{scenario.name}-#{TIME_AT_START}.mkv"
-    # Sanitize the filename from unix-hostile filename characters
-    bad_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
-    video_name.gsub!(bad_filename_chars, '_')
-    @video_path = "#{$config['TMPDIR']}/#{video_name}"
+    video_name = sanitize_filename("#{scenario.name}.mkv")
+    @video_path = "#{ARTIFACTS_DIR}/#{video_name}"
     capture = IO.popen(['avconv',
                         '-f', 'x11grab',
                         '-s', '1024x768',
@@ -159,11 +156,14 @@ After('@product') do |scenario|
     mins = "%02d" % ((time_of_fail / 60) % 60)
     hrs  = "%02d" % (time_of_fail / (60*60))
     STDERR.puts "Scenario failed at time #{hrs}:#{mins}:#{secs}"
-    base = File.basename(scenario.feature.file, ".feature").to_s
     tmp = @screen.capture.getFilename
-    out = "#{$config["TMPDIR"]}/#{base}-#{DateTime.now}.png"
-    FileUtils.mv(tmp, out)
-    STDERR.puts("Took screenshot \"#{out}\"")
+    screenshot_name = sanitize_filename("#{scenario.name}.png")
+    screenshot_path = "#{ARTIFACTS_DIR}/#{screenshot_name}"
+    FileUtils.mv(tmp, screenshot_path)
+    STDERR.puts("Screenshot: #{screenshot_path}")
+    if File.exist?(@video_path)
+      STDERR.puts("Video: #{@video_path}")
+    end
     if $config["PAUSE_ON_FAIL"]
       STDERR.puts ""
       STDERR.puts "Press ENTER to continue running the test suite"
@@ -182,8 +182,7 @@ After('@product', '~@keep_volumes') do
 end
 
 Before('@product', '@check_tor_leaks') do |scenario|
-  feature_file_name = File.basename(scenario.feature.file, ".feature").to_s
-  @tor_leaks_sniffer = Sniffer.new(feature_file_name + "_sniffer", $vmnet)
+  @tor_leaks_sniffer = Sniffer.new(sanitize_filename(scenario.name), $vmnet)
   @tor_leaks_sniffer.capture
 end
 

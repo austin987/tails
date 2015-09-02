@@ -194,3 +194,9 @@ def random_alnum_string(min_len, max_len = 0)
   alnum_set = ('A'..'Z').to_a + ('a'..'z').to_a + (0..9).to_a.map { |n| n.to_s }
   random_string_from_set(alnum_set, min_len, max_len)
 end
+
+# Sanitize the filename from unix-hostile filename characters
+def sanitize_filename(filename)
+  bad_unix_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
+  filename.gsub(bad_unix_filename_chars, '_')
+end
