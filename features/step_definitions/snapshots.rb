@@ -19,7 +19,17 @@ def checkpoints
         'the Tails desktop is ready',
       ],
     },
-    
+
+    'no-network-with-i2p' => {
+      :temporary => true,
+      :description => 'Tails has booted from DVD with I2P enabled',
+      :steps => [
+        'I set Tails to boot with options "i2p"',
+        'I start the computer',
+        'the computer boots Tails',
+      ],
+    },
+
     'with-network-logged-in' => {
       :description => "Tails has booted from DVD and logged in and the network is connected",
       :parent_checkpoint => "no-network-logged-in",
