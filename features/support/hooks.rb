@@ -97,7 +97,7 @@ end
 Before('@product') do |scenario|
   @screen = Sikuli::Screen.new
   if $config["CAPTURE"]
-    video_name = "capture-" + "#{scenario.name}-#{TIME_AT_START}.webm"
+    video_name = "capture-" + "#{scenario.name}-#{TIME_AT_START}.mkv"
     # Sanitize the filename from unix-hostile filename characters
     bad_unix_filename_chars = Regexp.new("[\s/]")
     video_name.gsub!(bad_unix_filename_chars, '_')
@@ -108,7 +108,7 @@ Before('@product') do |scenario|
                         '-r', '15',
                         '-i', "#{$config['DISPLAY']}.0",
                         '-an',
-                        '-vcodec', 'libvpx',
+                        '-c:v', 'libx264',
                         '-y',
                         @video_path,
                         :err => ['/dev/null', 'w'],
