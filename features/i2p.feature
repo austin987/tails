@@ -4,25 +4,17 @@ Feature: I2P
   I *might* want to use I2P
 
   Background:
-    Given a computer
-    And I set Tails to boot with options "i2p"
-    And I start the computer
-    And the computer boots Tails
+    Given Tails has booted from DVD with I2P enabled
+    And the network is plugged
     And I log in to a new session
     And the Tails desktop is ready
     And Tor is ready
     And I2P is running
     And all notifications have disappeared
-    And I save the state so the background can be restored next scenario
+    And available upgrades have been checked
 
   Scenario: I2P is disabled by default
-    Given a computer
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And the Tails desktop is ready
-    And Tor is ready
-    And all notifications have disappeared
+    Given Tails has booted from DVD and logged in and the network is connected
     Then the I2P Browser desktop file is not present
     And the I2P Browser sudo rules are not present
     And the I2P firewall rules are disabled
@@ -53,15 +45,11 @@ Feature: I2P
     And I2P is running in hidden mode
 
   Scenario: I2P displays a notice when it fails to start
-    Given a computer
-    And the network is unplugged
-    And I set Tails to boot with options "i2p"
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
+    Given Tails has booted from DVD with I2P enabled
     And I block the I2P router console port
-    And the network is plugged
-    And the Tails desktop is ready
+    And I log in to a new session
+    Then I2P is not running
+    When the network is plugged
     And Tor is ready
-    And I2P is running
-    Then I see a notification that I2P failed to start
+    Then I2P is running
+    But I see a notification that I2P failed to start
