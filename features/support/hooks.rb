@@ -152,10 +152,6 @@ After('@product') do |scenario|
   end
   if scenario.failed?
     time_of_fail = Time.now - TIME_AT_START
-    secs = "%02d" % (time_of_fail % 60)
-    mins = "%02d" % ((time_of_fail / 60) % 60)
-    hrs  = "%02d" % (time_of_fail / (60*60))
-    STDERR.puts "Scenario failed at time #{hrs}:#{mins}:#{secs}"
     tmp = @screen.capture.getFilename
     screenshot_name = sanitize_filename("#{scenario.name}.png")
     screenshot_path = "#{ARTIFACTS_DIR}/#{screenshot_name}"
@@ -164,6 +160,10 @@ After('@product') do |scenario|
     if File.exist?(@video_path)
       STDERR.puts("Video: #{@video_path}")
     end
+    secs = "%02d" % (time_of_fail % 60)
+    mins = "%02d" % ((time_of_fail / 60) % 60)
+    hrs  = "%02d" % (time_of_fail / (60*60))
+    STDERR.puts "Scenario failed at time #{hrs}:#{mins}:#{secs}"
     if $config["PAUSE_ON_FAIL"]
       STDERR.puts ""
       STDERR.puts "Press ENTER to continue running the test suite"
