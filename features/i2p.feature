@@ -46,6 +46,17 @@ Feature: I2P
     Then the I2P router console is displayed in I2P Browser
     And I2P is running in hidden mode
 
+  Scenario: Connecting to the #i2p IRC channel with the pre-configured account
+    Given Tails has booted from DVD with I2P enabled and logged in and the network is connected
+    And the I2P router console is ready
+    And I2P successfully built a tunnel
+    When I start Pidgin through the GNOME menu
+    Then I see Pidgin's account manager window
+    When I activate the "I2P" Pidgin account
+    And I close Pidgin's account manager window
+    Then Pidgin successfully connects to the "I2P" account
+    And I can join the "#i2p" channel on "I2P"
+
   Scenario: I2P displays a notice when it fails to start
     Given a computer
     And the network is unplugged
