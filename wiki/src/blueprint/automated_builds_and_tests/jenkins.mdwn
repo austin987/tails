@@ -144,6 +144,8 @@ Jenkins for Perl projects
 Restarting slave VMs between jobs
 ---------------------------------
 
+This question is tracked in [[!tails_ticket 9486]].
+
 When we tackle [[!tails_ticket 5288]], if the test suite doesn't
 _always_ clean between itself properly (e.g. when tests simply hang
 and timeout), we might want to restart `isotesterN.lizard` between
@@ -162,7 +164,25 @@ This was discussed at least there:
 * <http://jenkins-ci.361315.n4.nabble.com/How-to-reboot-a-slave-during-a-build-td4628820.html>
 * <https://stackoverflow.com/questions/5543413/reconfigure-and-reboot-a-hudson-jenkins-slave-as-part-of-a-build>
 
-Another option is to use the Jenkins [PostBuildScript
+That would maybe be the way to go, with 3 chained jobs:
+
+* First one is executed on the isotester the test job is supposed to be
+  assigned to. It starts the second job and blocks waiting for it to
+  complete. This way this isotester is left reserved for the test job,
+  and the isotester name can be passed as a build parameter to the
+  second job.
+* The second job is executed on the master (which has two build
+  executors). This job ssh into the said isotester and issue the
+  reboot. It waits for it to come back up.
+* The third job is the test job, run on the freshly started isotester.
+
+What is unclear is how this whole chain will behave. Will it be
+considered as failing due to the first one being stopped by the reboot?
+Maybe there's another way to gather the name of the isotester, which is
+in the end the sole role of the first job. This scenario will probably
+need some adjustements.
+
+Another tested but non-working option was to use the Jenkins [PostBuildScript
 plugin](https://wiki.jenkins-ci.org/display/JENKINS/PostBuildScript%20Plugin)
 to issue a `shutdown -r` command at the end of the job. There are
 indications that [people are using it like
