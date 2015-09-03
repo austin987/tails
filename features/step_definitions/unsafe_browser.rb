@@ -1,18 +1,57 @@
 When /^I see and accept the Unsafe Browser start verification$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("UnsafeBrowserStartVerification.png", 30)
+  @screen.wait('GnomeQuestionDialogIcon.png', 30)
   @screen.type(Sikuli::Key.ESC)
+end
+
+def supported_torbrowser_languages
+  langs = Array.new
+  exts = @vm.execute_successfully(
+    "find /usr/local/share/tor-browser-extensions -maxdepth 1 -name 'langpack*.xpi' -printf \"%f\n\"").stdout
+
+  # Some of the TBB languages are shipped with both a language and country code, e.g. es-ES.
+  # We'll only keep track of the language code and let `guess_best_tor_browser_locale`
+  # try to get by with our approximated locales.
+  supported_langs = exts.scan(/langpack-([a-z]+).*/).flatten
+  locales = @vm.execute_successfully(
+    "find /usr/lib/locale -maxdepth 1 -name '*.utf8' -printf \"%f\n\"").stdout.split
+
+  # Determine a valid locale for each language that we want to test.
+  supported_langs.each do |lang|
+    # If a language shipped by TBB is not a supported system locale (e.g. 'vi'),
+    # 'find(nomatch)' will use the locale xx_XX for language 'xx'.
+    nomatch = proc { "#{lang}_#{lang.upcase}.utf8" }
+    langs << locales.find(nomatch) { |l| l.match(/^#{lang}/) }
+  end
+  return langs
 end
 
 Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
   next if @skip_steps_while_restoring_background
-  step "I run \"LANG=#{loc}.UTF-8 LC_ALL=#{loc}.UTF-8 sudo unsafe-browser\" in GNOME Terminal"
+  step "I run \"LANG=#{loc} LC_ALL=#{loc} sudo unsafe-browser\" in GNOME Terminal"
   step "I see and accept the Unsafe Browser start verification"
+end
+
+Then /^the Unsafe Browser works in all supported languages$/ do
+  next if @skip_steps_while_restoring_background
+  failed = Array.new
+  supported_torbrowser_languages.each do |lang|
+    step "I start the Unsafe Browser in the \"#{lang}\" locale"
+    begin
+      step "the Unsafe Browser has started"
+    rescue RuntimeError
+      failed << lang
+      next
+    end
+    step "I close the Unsafe Browser"
+    step "the Unsafe Browser chroot is torn down"
+  end
+  assert(failed.empty?, "Unsafe Browser failed to launch in the following locale(s): #{failed.join(', ')}")
 end
 
 Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait("UnsafeBrowserStartNotification.png", 30)
+  notification_helper('UnsafeBrowserStartNotification.png', 30)
   @screen.waitVanish("UnsafeBrowserStartNotification.png", 10)
 end
 
@@ -111,7 +150,7 @@ end
 
 Then /^I see the Unsafe Browser stop notification$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait('UnsafeBrowserStopNotification.png', 20)
+  notification_helper('UnsafeBrowserStopNotification.png', 20)
   @screen.waitVanish('UnsafeBrowserStopNotification.png', 10)
 end
 
@@ -122,53 +161,36 @@ end
 
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("UnsafeBrowserWindow.png", 10)
-  # First we open the proxy settings page to prepare it with the
-  # correct open tabs for the loop below.
-  @screen.click('UnsafeBrowserMenuButton.png')
-  @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
-  @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
-  @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
-  @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
-  sleep 0.5
-  @screen.type(Sikuli::Key.ESC)
-#  @screen.waitVanish('UnsafeBrowserPreferences.png', 10)
-  sleep 0.5
-
   socks_proxy = 'c' # Alt+c for socks proxy
   no_proxy    = 'y' # Alt+y for no proxy
+  proxies = [[no_proxy, nil, nil]]
+  socksport_lines =
+    @vm.execute_successfully('grep -w "^SocksPort" /etc/tor/torrc').stdout
+  assert(socksport_lines.size >= 4, "We got fewer than four Tor SocksPorts")
+  socksports = socksport_lines.scan(/^SocksPort\s([^:]+):(\d+)/)
+  proxies += socksports.map { |host, port| [socks_proxy, host, port] }
 
-  proxies = [[socks_proxy, 9050],
-             [socks_proxy, 9061],
-             [socks_proxy, 9062],
-             [socks_proxy, 9150],
-             [no_proxy,       0]]
-
-  proxies.each do |proxy|
-    proxy_type = proxy[0]
-    proxy_port = proxy[1]
-
+  proxies.each do |proxy_type, proxy_host, proxy_port|
     @screen.hide_cursor
 
     # Open proxy settings and select manual proxy configuration
     @screen.click('UnsafeBrowserMenuButton.png')
     @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
-    @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
-    @screen.type("e", Sikuli::KeyModifier.ALT)
-    @screen.wait('UnsafeBrowserProxySettings.png', 10)
+    @screen.wait_and_click('UnsafeBrowserAdvancedSettingsButton.png', 10)
+    hit, _ = @screen.waitAny(['UnsafeBrowserNetworkTabAlreadySelected.png',
+                              'UnsafeBrowserNetworkTab.png'], 10)
+    @screen.click(hit) if hit == 'UnsafeBrowserNetworkTab.png'
+    @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
+    @screen.wait('UnsafeBrowserProxySettingsWindow.png', 10)
     @screen.type("m", Sikuli::KeyModifier.ALT)
 
     # Configure the proxy
     @screen.type(proxy_type, Sikuli::KeyModifier.ALT)  # Select correct proxy type
-    @screen.type("127.0.0.1" + Sikuli::Key.TAB + "#{proxy_port}") if proxy_type != no_proxy
+    @screen.type(proxy_host + Sikuli::Key.TAB + proxy_port) if proxy_type != no_proxy
 
     # Close settings
     @screen.type(Sikuli::Key.ENTER)
-#    @screen.waitVanish('UnsafeBrowserProxySettings.png', 10)
-    sleep 0.5
-    @screen.type(Sikuli::Key.ESC)
-#    @screen.waitVanish('UnsafeBrowserPreferences.png', 10)
-    sleep 0.5
+    @screen.waitVanish('UnsafeBrowserProxySettingsWindow.png', 10)
 
     # Test that the proxy settings work as they should
     step "I open the address \"https://check.torproject.org\" in the Unsafe Browser"
@@ -184,14 +206,13 @@ Then /^the Unsafe Browser has no proxy configured$/ do
   next if @skip_steps_while_restoring_background
   @screen.click('UnsafeBrowserMenuButton.png')
   @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
-  @screen.wait('UnsafeBrowserPreferencesWindow.png', 10)
-  @screen.wait_and_click('UnsafeBrowserAdvancedSettings.png', 10)
+  @screen.wait_and_click('UnsafeBrowserAdvancedSettingsButton.png', 10)
   @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
-  @screen.type("e", Sikuli::KeyModifier.ALT)
-  @screen.wait('UnsafeBrowserProxySettings.png', 10)
+  @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
+  @screen.wait('UnsafeBrowserProxySettingsWindow.png', 10)
   @screen.wait('UnsafeBrowserNoProxySelected.png', 10)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
-  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
+  @screen.type("w", Sikuli::KeyModifier.CTRL)
 end
 
 Then /^the Unsafe Browser complains that no DNS server is configured$/ do

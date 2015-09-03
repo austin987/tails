@@ -28,7 +28,7 @@ i2p_eep_proxy_address() {
 }
 
 i2p_has_bootstrapped() {
-    netstat -4nlp | grep -qwF "$(i2p_eep_proxy_address)"
+    netstat -nlp | grep -qwF "$(i2p_eep_proxy_address)"
 }
 
 i2p_router_console_address() {
@@ -36,7 +36,7 @@ i2p_router_console_address() {
 }
 
 i2p_router_console_is_ready() {
-    netstat -4nlp | grep -qwF "$(i2p_router_console_address)"
+    netstat -nlp | grep -qwF "$(i2p_router_console_address)"
 }
 
 set_best_i2p_router_console_lang() {
@@ -49,7 +49,7 @@ set_best_i2p_router_console_lang() {
     for config in "${I2P_CONFIG}/router.config" \
                   "${I2P_DEFAULT_CONFIG}/router.config"; do
         if [ -e "${config}" ]; then
-            set_simple_config_key "routerconsole.lang" "${lang}" "${config}"
+            set_simple_config_key "${config}" "routerconsole.lang" "${lang}"
             return 0
         fi
     done

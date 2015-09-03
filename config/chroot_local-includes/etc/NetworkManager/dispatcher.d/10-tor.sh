@@ -28,7 +28,7 @@ rm -f "${TOR_LOG}"
 
 # The Tor syscall sandbox is not compatible with managed proxies.
 # We could possibly detect whether the user has configured any such
-# thing via Tor Launcher later (e.g. in 60-tor-ready-notification.sh),
+# thing via Tor Launcher later (e.g. in 60-tor-ready.sh),
 # but then we would have to restart Tor again to enable the sandbox.
 # Let's avoid doing that, and enable the Sandbox only if no special Tor
 # configuration is needed. Too bad users who simply need to configure
@@ -50,6 +50,11 @@ if [ "$(tails_netconf)" = "obstacle" ]; then
    # depends on grepping these error messages, so we temporarily
    # increase Tor's logging severity.
    tor_control_setconf "Log=\"info file ${TOR_LOG}\""
+
+   # Enable the transports we support. We cannot do this in general,
+   # when bridge mode is not enabled, since we then use seccomp
+   # sandboxing.
+   tor_control_setconf 'ClientTransportPlugin="obfs2,obfs3,obfs4 exec /usr/bin/obfs4proxy managed"'
 
    /usr/local/sbin/tails-tor-launcher &
 fi

@@ -24,16 +24,14 @@ using Tor so we can make Tor usable.
 In short this is how time syncing is performed when Tails starts:
 
 0. Start Tor. If Tor is already working, skip to HTP step.
-0. Let Tor fetch a consensus (wait 150 seconds twice, restarting Tor
+0. Let Tor fetch a consensus (wait up to 150 seconds twice, restarting Tor
    in between).
 0. If the time is too badly off, the authority certificate may not be
-   valid any more, so we set the system time to the Tails release date, which
-   will guarantee that the certificates are valid. Then we SIGHUP Tor
-   and wait for a new consensus again.
-0. Set the system time to an initial "guess" based on the Tor
-   consensus validity period, no matter if the consensus was verifiable
-   or not.
-0. Restart Tor, which now should be working.
+   valid, so we set the system time to the `valid-after` of the unverified
+   consensus Tor fetched for us, which will guarantee that the certificate
+   and consensus are all valid. Then we restart Tor (since it behaves badly
+   with time jumps during the early bootstrap stages) and wait until it
+   accepts the consensus and finishes the bootstrap.
 0. Run HTP (see below) through Tor to get a more correct system time.
 
 A notification is shown while the whole process is running,
@@ -41,6 +39,8 @@ informing the user that
 Tor may not function properly before it has finished (e.g. hidden
 services running Tor prior to version 0.2.3.7-alpha requires clients
 to have a time that is no more than 30 minutes incorrect).
+
+The hardware clock is not affected.
 
 # Guessing time based on Tor consensus
 
@@ -129,7 +129,7 @@ The repository we copied this script from can be found there:
 
     https://git-tails.immerda.ch/htp
 
-For reasons detailed bellow, this version of htpdate uses curl for all
+For reasons detailed below, this version of htpdate uses curl for all
 of its HTTP operations.
 
 ## Authentication of servers
@@ -188,3 +188,11 @@ efforts and compromise should be made to prevent these?
 
 A Network Manager hook runs the whole thing:
 [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/20-time.sh]].
+
+The `hwclock.sh` initscript is disabled at reboot/shutdown time,
+otherwise it would set the hardware clock to the system time,
+violating (a strict interpretation of) our "don't leave traces on the
+hardware being used" design goal:
+
+* [[!tails_gitweb config/chroot_local-patches/do-not-modify-hardware-clock.diff]]
+* [[!tails_gitweb config/chroot_local-hooks/52-update-rc.d]]

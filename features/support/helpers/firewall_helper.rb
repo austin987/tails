@@ -36,7 +36,9 @@ end
 class FirewallLeakCheck
   attr_reader :ipv4_tcp_leaks, :ipv4_nontcp_leaks, :ipv6_leaks, :nonip_leaks, :mac_leaks
 
-  def initialize(pcap_file, hosts)
+  def initialize(pcap_file, options = {})
+    options[:accepted_hosts] ||= []
+    options[:ignore_lan] ||= true
     @pcap_file = pcap_file
     packets = PacketFu::PcapFile.new.file_to_array(:filename => @pcap_file)
     mac_leaks = []
@@ -65,11 +67,14 @@ class FirewallLeakCheck
       end
     end
     @mac_leaks = mac_leaks.uniq
-    ipv4_tcp_hosts = get_public_hosts_from_ippackets ipv4_tcp_packets
-    accepted = Set.new(hosts)
+    ipv4_tcp_hosts = filter_hosts_from_ippackets(ipv4_tcp_packets,
+                                                 options[:ignore_lan])
+    accepted = Set.new(options[:accepted_hosts])
     @ipv4_tcp_leaks = ipv4_tcp_hosts.select { |host| !accepted.member?(host) }
-    @ipv4_nontcp_leaks = get_public_hosts_from_ippackets ipv4_nontcp_packets
-    @ipv6_leaks = get_public_hosts_from_ippackets ipv6_packets
+    @ipv4_nontcp_leaks = filter_hosts_from_ippackets(ipv4_nontcp_packets,
+                                                     options[:ignore_lan])
+    @ipv6_leaks = filter_hosts_from_ippackets(ipv6_packets,
+                                              options[:ignore_lan])
     @nonip_leaks = nonip_packets
   end
 
@@ -79,9 +84,9 @@ class FirewallLeakCheck
     puts "Full network capture available at: #{pcap_copy}"
   end
 
-  # Returns a list of all unique non-LAN destination IP addresses
-  # found in `packets`.
-  def get_public_hosts_from_ippackets(packets)
+  # Returns a list of all unique destination IP addresses found in
+  # `packets`. Exclude LAN hosts if ignore_lan is set.
+  def filter_hosts_from_ippackets(packets, ignore_lan)
     hosts = []
     packets.each do |p|
       candidate = nil
@@ -94,7 +99,7 @@ class FirewallLeakCheck
         raise "Expected an IP{v4,v6} packet, but got something else:\n" +
               p.peek_format
       end
-      if candidate != nil and IPAddr.new(candidate).public?
+      if candidate != nil and (not(ignore_lan) or IPAddr.new(candidate).public?)
         hosts << candidate
       end
     end

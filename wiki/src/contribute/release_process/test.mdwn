@@ -23,9 +23,9 @@ Boot the candidate ISO and find the commit it was build from with the
 
 Then, from the source tree, see the diff:
 
-	git diff --find-renames <old tag>..<ISO commit>
+	git diff --find-renames <old ISO commit>..<ISO commit>
 
-e.g. `git diff 0.17..06fa1ab80d55c9f29274b7459bd198edb1a8d53d`
+e.g. `git diff --find-renames 334e1c485a3a79be9fff899d4dc9d2db89cdc9e1..cfbde80925fdd0af008f10bc90c8a91a578c58e3`
 
 ## Result
 
@@ -33,8 +33,8 @@ Compare the list of bundled packages and versions with the one shipped last
 time. `.packages` are usually attached to the email announcing the ISO is ready.
 
 	/usr/bin/diff -u \
-	    wiki/src/torrents/files/tails-i386-0.16.packages \
-	    tails-i386-0.17.packages \
+	    wiki/src/torrents/files/tails-i386-1.3.1.packages \
+	    tails-i386-1.3.2.packages \
 	    | wdiff --diff-input  --terminal
 
 Check the output for:
@@ -96,41 +96,6 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Running `getTorBrowserUserAgent` should produce the User-Agent set by the
   installed version of Torbutton, and used in the Tor Browser.
 
-## Functionality
-
-* Browsing (by IP) a HTTP or HTTPS server on the LAN should be possible.
-* Browsing (by IP) a FTP server on the LAN should be possible.
-
-# Pidgin
-
-(automate: [[!tails_ticket 7820]])
-
-* Check that you can initiate an OTR conversation.
-* Check that XMPP is working with a new test profile.
-  For example using Riseup:
-  - Username: username
-  - Domain: riseup.net
-  - Connect server: 4cjw6cwpeaeppfqz.onion
-  - Then try to create and connect to a new room:
-    - Room: testing
-    - Server: conference.riseup.net
-    - Handle: username
-* Check that Pidgin doesn't leak too much information when replying to
-  CTCP requests:
-  * Start Tails, launch Pidgin, and join #tails.
-  * Also join #tails from a client that supports CTCP commands
-    properly, e.g. Konversation.
-  * Try to send `/ctcp <Tails_account_nick> COMMAND` from the other client to Pidgin:
-    - You should get no answer apart for the PING and VERSION commands
-      ([[!tails_ticket 5823]]).
-    - List of `/ctcp` commands, see [this page](http://www.wikkedwire.com/irccommands):
-      - PING
-      - VERSION
-      - FINGER
-      - USERINFO
-      - CLIENTINFO
-      - TIME
-
 # Tor
 
 * The version of Tor should be the latest stable one, which is the highest version number
@@ -178,8 +143,6 @@ tracked by tickets prefixed with `todo/test_suite:`.
 # Erase memory on shutdown
 
 - `memlockd` must be running
-- `udev-watchdog` must monitor the right device when booted off USB (automate: [[!tails_ticket 5560]])
-- `udev-watchdog` must monitor the right device when booted off DVD (automate: [[!tails_ticket 5560]])
 - After booting from DVD, remove Tails boot medium and check that the
   memory erasure process is started (`Loading new kernel`, at least).
   (automate: [[!tails_ticket 5472]])
@@ -242,11 +205,7 @@ Start I2P by appending `i2p` to the kernel command line.
 
 # SSH
 
-* Connecting over SSH to a server on the Internet should work (and
-  appear in Vidalia's connections list).
 * Connecting (by IP) over SSH to a server on the LAN should work.
-* Connecting to a sftp server on the Internet using GNOME's "Connect
-  to a server" should work.
 
 # APT
 
@@ -322,11 +281,19 @@ Start I2P by appending `i2p` to the kernel command line.
 
 # Windows Camouflage
 
-Enable Windows camouflage via the Tails Greeter checkbox and:
+Enable I2P in the boot loader menu, and enable Windows camouflage via
+the Tails Greeter checkbox, and then:
 
 * Tails OpenPGP Applet's context menu should look readable
-* The Tor Browser should use a Internet Explorer theme
-* The Unsafe Browser has no scary red theme
+* The Tor Browser, Unsafe Browser and I2P Browser should all use the
+  Internet Explorer theme.
+* Vidalia should not start.
+
+# Unsafe Web Browser
+
+* Browsing (by IP) a FTP server on the LAN should be possible.
+
+* Google must be the default, pre-selected search plugin.
 
 # Real (non-VM) hardware
 
@@ -356,12 +323,13 @@ language. You *really* have to reboot between each language.
 * The chosen keyboard layout must be applied.
 * The virtual keyboard must work and be auto-configured to use the same keyboard
   layout as the X session.
-* The Startpage search engine must be localized for the languages we ship a
-  search plugin for:
+* In the Tor Browser:
+  - Disconnect.me must be the default, pre-selected search plugin.
+  - the Disconnect.me, Startpage and Wikipedia search plugins must be
+    localized for the supported locales:
 
-      find /usr/local/lib/tor-browser/distribution/searchplugins/locale -iname startpage-*.xml
-
-* The Wikipedia search engine must be localized for all languages.
+        . /usr/local/lib/tails-shell-library/tor-browser.sh
+        supported_tor_browser_locales
 
 ## Spellchecking
 
@@ -384,11 +352,3 @@ language. You *really* have to reboot between each language.
   more verbose than English (e.g. French).
 * Check that all seems well during init (mostly that all services
   start without errors), and that `/var/log/syslog` seems OK.
-* MAT should be able to clean a PDF file, such as:
-  <http://examples.itextpdf.com/results/part3/chapter12/pdf_metadata.pdf>
-* The "Report an error" desktop launcher should open the [[support]]
-  page, both in English and in one language to which the website is
-  translated (automate: [[!tails_ticket 6904]]).
-* One should be able to refresh the GnuPG keyring in Seahorse (with
-  the workaround documented in comment 4 on [[!tails_ticket 7051]],
-  until that ticket is fixed for real).

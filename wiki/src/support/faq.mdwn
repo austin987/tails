@@ -63,6 +63,30 @@ First, see the answer to the [[previous question|faq#debian]].
    packages included in Tails; another security feature that Ubuntu already
    provides.
 
+<a id="gnome"></a>
+
+Why does Tails ship the GNOME Desktop?
+--------------------------------------
+
+We had users ask for LXDE, XFCE, MATE, KDE, and so on, but we are not going to
+change desktop. According to us, the main drawback of GNOME is that it
+requires quite a lot of resources to work properly, but it has many advantages.
+The GNOME Desktop is:
+
+  - Well integrated, especially for new Linux users.
+  - Very well translated and documented.
+  - Doing relatively good regarding accessibility features.
+  - Actively developed.
+  - Well maintained in [[Debian|faq#debian]], where it is the default
+    desktop environment.
+
+We invested quite some time in acquiring GNOME
+knowledge, and switching our desktop environment would require going through that
+process again.
+
+We are not proposing several desktop environments to choose from because
+we want to [[limit the amount of software included in Tails|faq#new_software]].
+
 <a id="website"></a>
 
 Tails website
@@ -138,6 +162,46 @@ This is a conscious decision as this mode of operation is better for what we
 want to provide to Tails users: amnesia, the fact that Tails leaves no traces on
 the computer after a session is closed.
 
+<a id="unetbootin_etc"></a>
+
+Can I install Tails with UNetbootin, YUMI or my other favorite tool?
+--------------------------------------------------------------------
+
+No. Those installation methods are unsupported. They might not work at
+all, or worse: they might seem to work, but produce a Tails device
+that does *not* behave like Tails should. Follow the
+[[download and installation documentation|download]] instead.
+
+<a id="upgrade"></a>
+
+Should I update Tails using `apt-get` or <span class="application">Synaptic</span>?
+-----------------------------------------------------------------------------------
+
+No. Tails provides upgrades every six weeks, that are thoroughly tested
+to make sure that no security feature or configuration gets broken.
+If you upgrade the system yourself using `apt-get` or <span class="application">Synaptic</span>,
+you might break things. Upgrading when you get a notification from
+<span class="application">[[Tails Upgrader|doc/first_steps/upgrade]]</span> is enough.
+
+<a id="preinstalled"></a>
+
+Can I buy a preinstalled Tails device?
+--------------------------------------
+
+No, we don't sell preinstalled Tails devices.
+
+Selling preinstalled devices would in fact be a pretty bad idea:
+
+* If burned on a DVD, then this DVD would be outdated on the next
+  release. This means after 6 weeks at most.
+* If installed onto a USB stick, then it would be impossible to verify
+  that the Tails on the USB stick is genuine. Trusting that a Tails device
+  is genuine should be based either on cryptographic verification or
+  on personal trust (if you know someone of trust who can clone a Tails device for you). But
+  once Tails is installed on a USB stick it is not possible to use our
+  cryptographic verification techniques anymore. Being able to trust
+  your Tails device is something that we really care about.
+
 <a id="browser"></a>
 
 Web browser
@@ -153,7 +217,7 @@ JavaScript is enabled by default in Tails to avoid confusing many users. But
 the [[Torbutton|doc/anonymous_internet/Tor_browser#torbutton]] extension,
 included in Tails, takes care of blocking dangerous JavaScript functionalities.
 
-Tails also includes the [[NoScript|doc/anonymous_internet/Tor_browser#noscript]]
+Tor Browser also includes a [[security_slider|doc/anonymous_internet/Tor_browser#security_slider]] and the [[NoScript|doc/anonymous_internet/Tor_browser#noscript]]
 extension to optionally disable more JavaScript. This might improve
 security in some cases. However, if you disable JavaScript, then the
 [[fingerprint|doc/about/fingerprint]] of your browser will
@@ -201,6 +265,16 @@ considered safe to use in this context.
 XXX: Push that information to the browser documentation?
 XXX: Check https://www.torproject.org/torbutton/torbutton-faq.html.en#recommendedextensions
 -->
+
+<a id="add-ons_update"></a>
+
+Should I manually update add-ons included in <span class="application">Tor Browser</span>?
+------------------------------------------------------------------------------------------
+
+No. Tails provides upgrades every six weeks, that are thoroughly tested
+to make sure that no security feature or configuration gets broken.
+Updating add-ons in <span class="application">Tor Browser</span> might
+break the security built in Tails.
 
 <a id="flash"></a>
 
@@ -339,7 +413,7 @@ and the destination of a connection.
 ### Using a VPN to connect to Tor (VPN before Tor)
 
 In some situations, you might be forced to use a VPN to connect to the Internet,
-for example by your ISP. This is currenlty not possible using Tails. See
+for example by your ISP. This is currently not possible using Tails. See
 [[!tails_ticket 5858]].
 
 [[Tor bridges|doc/first_steps/startup_options/bridge_mode]] can also be useful
@@ -353,7 +427,22 @@ In some situtations, it can be useful to connect to a VPN through Tor:
   - To access ressources only available inside a VPN, for example at your
     company or University.
 
-This is currenlty not possible easily using Tails.
+This is currently not possible easily using Tails.
+
+<a id="torrc"></a>
+
+Can I choose the country of my exit nodes or further edit the `torrc`?
+----------------------------------------------------------------------
+
+It is possible to edit the Tor configuration file (`torrc`) with
+administration rights but you should not do so as it might break your
+anonymity.
+
+For example, as mentioned in the <span class="application">Tor Browser</span>
+[FAQ](https://www.torproject.org/docs/faq.html.en#ChooseEntryExit),
+using `ExcludeExitNodes` is not recommended because "overriding the
+exit nodes can mess up your anonymity in ways we don't
+understand".
 
 <a id="mac_address"></a>
 
@@ -393,6 +482,17 @@ Can I help the Tor network by running a relay or a bridge in Tails?
 
 It is currently impossible to run a Tor relay or bridge in Tails. See
 [[!tails_ticket 5418]].
+
+<a id="hidden_service"></a>
+
+Can I run a Tor hidden service on Tails?
+----------------------------------------
+
+It is technically possible to use Tails to provide a hidden service
+but it is complicated and not documented yet.
+
+For example, some people have been working on how to run a web server
+behind a hidden service on Tails. See [[!tails_ticket 7879]].
 
 <a id="software"></a>
 
@@ -515,8 +615,13 @@ to use Tails. This is true as long as Tails itself has been installed
 using a trusted system.
 
 If the computer has been compromised by someone having physical access to it and
-who installed untrusted pieces of hardware, then it might not be safe to use
+who installed untrusted pieces of hardware, then it might be unsafe to use
 Tails.
+
+If the BIOS of the computer has been compromised, then it might
+also be unsafe to use Tails.
+
+See our [[warning page|doc/about/warning]] for more details.
 
 <a id="integrity"></a>
 
@@ -553,27 +658,19 @@ corresponding [[design documentation|contribute/design/memory_erasure]].
 
 <a id="new_identity"></a>
 
-Is it safe to use the new identity feature of Vidalia?
-------------------------------------------------------
+Is it safe to use the <span class="guilabel">New Identity</span> feature of <span class="application">Vidalia</span> or <span class="application">Tor Browser</span>?
+---------------------------------------------------------------------
 
-In our [[warning page|doc/about/warning#identities]] we advice to restart Tails
-every time that you want to use a different contextual identity. The <span
-class="guilabel">New Identity</span> feature of <span
-class="application">Vidalia</span> forces Tor to use new circuits but only for
-new connections. The two main drawbacks of this technique are:
-
-- The circuits used by connections that remain open might not be changed: for
-example, a circuit used to connect to an open webpage or to an instant
-messaging server.
-
-- Each application might contain information that can identify you,
-independently of the Tor circuit that are used. For example, the browser might
-contain cookies from previous websites, <span
-class="application">[[Pidgin|doc/anonymous_internet/pidgin]]</span> will reuse the
-same nickname by default, etc.
+In our [[warning page|doc/about/warning#identities]] we advice to
+restart Tails every time that you want to use a different contextual
+identity. The
+[[<span class="guilabel">New Identity</span> feature of <span class="application">Vidalia</span>|doc/anonymous_internet/vidalia#new_identity]]
+forces Tor to use new circuits but only for new connections and the
+[[<span class="guilabel">New Identity</span> of <span class="application">Tor Browser</span>|doc/anonymous_internet/Tor_Browser#new_identity]]
+is limited to the browser.
 
 Tails is a full operating system, so a *new identity* should be thought on a
-broader level than only switching Tor circuits.
+broader level. **Restart Tails instead**.
 
 <a id="truecrypt"></a>
 

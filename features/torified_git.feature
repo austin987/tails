@@ -9,7 +9,7 @@ Feature: Cloning a Git repository
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And Tor is ready
     And available upgrades have been checked
     And all notifications have disappeared

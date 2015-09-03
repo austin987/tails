@@ -5,6 +5,56 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   and upgrade it to new Tails versions
   and use persistence
 
+  Scenario: Try to "Upgrade from ISO" Tails to a pristine USB drive
+    Given a computer
+    And I setup a filesystem share containing the Tails ISO
+    And I start Tails from DVD with network unplugged and I login
+    And I create a 4 GiB disk named "pristine"
+    And I plug USB drive "pristine"
+    And I start Tails Installer in "Upgrade from ISO" mode
+    Then a suitable USB device is not found
+    And I am told that the destination device cannot be upgraded
+
+  Scenario: Try to "Clone & Upgrade" Tails to a pristine USB drive
+    Given a computer
+    And I start Tails from DVD with network unplugged and I login
+    And I create a 4 GiB disk named "pristine"
+    And I plug USB drive "pristine"
+    And I start Tails Installer in "Upgrade from ISO" mode
+    Then a suitable USB device is not found
+    And I am told that the destination device cannot be upgraded
+
+  Scenario: Try to "Upgrade from ISO" Tails to a USB drive with GPT and a FAT partition
+    Given a computer
+    And I setup a filesystem share containing the Tails ISO
+    And I start Tails from DVD with network unplugged and I login
+    And I create a 4 GiB disk named "gptfat"
+    And I create a gpt partition with a vfat filesystem on disk "gptfat"
+    And I plug USB drive "gptfat"
+    And I start Tails Installer in "Upgrade from ISO" mode
+    Then a suitable USB device is not found
+    And I am told that the destination device cannot be upgraded
+
+  Scenario: Try to "Clone & Upgrade" Tails to a USB drive with GPT and a FAT partition
+    Given a computer
+    And I start Tails from DVD with network unplugged and I login
+    And I create a 4 GiB disk named "gptfat"
+    And I create a gpt partition with a vfat filesystem on disk "gptfat"
+    And I plug USB drive "gptfat"
+    And I start Tails Installer in "Upgrade from ISO" mode
+    Then a suitable USB device is not found
+    And I am told that the destination device cannot be upgraded
+
+  Scenario: Try installing Tails to a too small USB drive
+    Given a computer
+    And I start Tails from DVD with network unplugged and I login
+    And I create a 2 GiB disk named "current"
+    And I start Tails Installer in "Clone & Install" mode
+    But a suitable USB device is not found
+    When I plug USB drive "current"
+    Then Tails Installer detects that a device is too small
+    And a suitable USB device is not found
+
   @keep_volumes
   Scenario: Installing Tails to a pristine USB drive
     Given a computer
@@ -15,6 +65,18 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     Then the running Tails is installed on USB drive "current"
     But there is no persistence partition on USB drive "current"
     And I unplug USB drive "current"
+
+  @keep_volumes
+  Scenario: Test that Tails installer can detect when a target USB drive is inserted or removed
+    Given a computer
+    And I start Tails from DVD with network unplugged and I login
+    And I start Tails Installer in "Clone & Install" mode
+    But a suitable USB device is not found
+    When I plug USB drive "current"
+    Then the "current" USB drive is selected
+    When I unplug USB drive "current"
+    Then no USB drive is selected
+    And a suitable USB device is not found
 
   @keep_volumes
   Scenario: Booting Tails from a USB drive in UEFI mode
@@ -31,6 +93,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     Given a computer
     And I start Tails from USB drive "current" with network unplugged and I login
     Then the boot device has safe access rights
+    And process "udev-watchdog" is running
+    And udev-watchdog is monitoring the correct device
     And Tails is running from USB drive "current"
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "current"
@@ -76,7 +140,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the boot device has safe access rights
     And I enable persistence with password "asdf"
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And all notifications have disappeared
     And all persistence presets are enabled
     And all persistent filesystems have safe access rights
@@ -89,7 +153,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And the computer reboots Tails
     And I enable read-only persistence with password "asdf"
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And I start the Tor Browser in offline mode
     And the Tor Browser has started in offline mode
     Then the Tor Browser has a bookmark to eff.org
@@ -143,7 +207,7 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     And I start the computer
     When the computer boots Tails
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And all notifications have disappeared
     And I create a 4 GiB disk named "old"
     And I plug USB drive "old"

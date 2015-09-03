@@ -57,23 +57,15 @@ See our [[contribute/merge_policy]].
 Caution!
 --------
 
-If you want to commit patches that may be published later, you might
-want to anonymize them a bit; to do so, run the following commands
-in every of your local clones' directories:
-
-	git config user.name 'Tails developers'
-	git config user.email tails@boum.org
-
-If you intend to prepare Tails releases, you'll also need to make
+If you intend to prepare Tails releases, you'll need to make
 the development team signing key the default one for Git tags:
 
-	git config user.signingkey 1202821CBE2CD9C1
+	git config user.signingkey A490D0F4D311A4153E2BB7CADBB802B258ACD84F
 
 Creating a new repository
 -------------------------
 
-1. Create a new repository at immerda.
-2. Create a pull-style mirror at repo.or.cz.
+Create a new repository at immerda.
 
 Repositories
 ============
@@ -93,20 +85,44 @@ Developers with write access to the repositories should instead:
 
 	git clone boum_org_amnesia@webmasters.boum.org:wiki.git
 
+And then, in any case, in your new Git clone's directory:
+
+	git submodule update --init
+
+For more information about our usage of Git submodules, see
+[[the dedicated section|git#submodules]].
+
 We have a [web interface](https://git-tails.immerda.ch/tails/)
 available for the main repository.
+
+### Configuration
+
+Developers with write access to the repositories should:
+
+	git config --global url.tails@git.tails.boum.org:.insteadOf \
+	   https://git-tails.immerda.ch/
+
+<a id="branches"></a>
 
 ### Branches
 
 Tails development uses several branches modeled a bit like the
 Debian development process. Here they are.
 
+<a id="master_branch"></a>
+
 #### master
 
-The `master` branch is used by the online wiki.
+The `master` branch is mostly used to build the website. It is
+merged into `devel` and `stable` from time to time.
+We merge into `master`:
 
-**FIXME**: document what should go in there, when other branches are
-merged into it, etc.
+- [[Documentation improvements|contribute/how/documentation]] that
+  affect current Tails (e.g. not the next Tails release).
+- Other changes to the website ([[news]], [[security advisories|security/]], layout, and so on).
+- [[Translations|contribute/how/translate#website]] of the website.
+- When [[releasing a new Tails|contribute/release_process/]], the branch
+  the release was built from (`stable` or `testing`).
 
 #### stable
 
@@ -154,7 +170,7 @@ rewritten, e.g. it may be rebased on top of `devel`.
 
 Unless there are good reasons to do otherwise, bugfix branches must be
 forked off the latest stable release tag, while feature branches
-should are forked off the devel branch.
+should be forked off the devel branch.
 
 #### experimental
 
@@ -249,3 +265,25 @@ Unauthenticated access is of the form:
 Developers with write access to the repositories should instead:
 
 	git clone tails@git.tails.boum.org:$REPOSITORY
+
+<a id="submodules"></a>
+
+Submodules
+==========
+
+We use Git submodules to track external repositories from the main
+Tails source tree.
+
+The main practical consequence thereof so far, for most Tails
+contributors, is that one should generally run the following command
+after checking out a branch:
+
+	git submodule update --init
+
+For more information, see:
+
+* the [chapter about
+  submodules](https://git-scm.herokuapp.com/book/en/v2/Git-Tools-Submodules)
+  in the *Pro Git* book;
+* the [`git-submodule(1)`](http://manpages.debian.org/git-submodule)
+  man page.

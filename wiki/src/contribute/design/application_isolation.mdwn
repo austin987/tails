@@ -58,12 +58,26 @@ between an access to the upper layer, and an access to the loop-backed
 underlying layer.
 
 So, we have to adjust profiles a bit to make them support the paths
-that are actually seen by AppArmor in the context of Tails:
+that are actually seen by AppArmor in the context of Tails.
 
-* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-home-tunable.diff]]
+First, we are using a couple of
+[aliases](http://wiki.apparmor.net/index.php/AppArmor_Core_Policy_Reference#Alias_and_rewrite_rules)
+so that rules applying to "normal" paths (e.g.
+`/home/amnesia/.gnupg/`) also apply to Debian Live -specific paths,
+such as `/lib/live/mount/overlay/home/amnesia/.gnupg/`. And, to avoid
+subsequent problems with overlapping rules, and to mitigate the
+increased policy compilation time (see details below), we also patch
+some some very broad rules to make them _not_ apply to `/lib/live/*`.
+All these changes live in
+[[!tails_gitweb config/chroot_local-patches/apparmor-aliases.diff]].
+
+Second, few more targeted adjustments are also applied:
+
+* [[!tails_gitweb config/chroot_local-includes/etc/apparmor.d/tunables/home.d/tails]]
+* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-pidgin-profile.diff]]
+* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-tor-abstraction.diff]]
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-tor-profile.diff]]
 * [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-totem-profile.diff]]
-* [[!tails_gitweb config/chroot_local-patches/apparmor-adjust-user-tmp-abstraction.diff]]
 
 Below, we discuss various leads that might avoid the need for coming
 up with such adjustments, and maintaining it.
@@ -78,10 +92,20 @@ each time they want to open or save one, without leaving the AppArmor
 profiles wide-open and then much less useful.
 
 Solutions to this problem are work-in-progress in various upstream
-places (e.g. AppArmor and GNOME sandboxed applications). The idea is
-generally to introduce a privileged mediation layer between
-applications, the GTK file chooser and the filesystem. So, some day we
-can solve this problem in better ways, but we're not there yet.
+places, e.g.:
+
+* [for
+  AppArmor](https://lists.ubuntu.com/archives/apparmor/2015-March/007415.html)
+* for GNOME sandboxed applications:
+  - [Initial ideas on portals for file
+    access](https://mail.gnome.org/archives/gnome-os-list/2015-March/msg00010.html)
+    thread on gnome-os-list
+  - <https://wiki.gnome.org/Design/OS/Sharing>
+
+The idea is generally to introduce a privileged mediation layer
+between applications, the GTK file chooser and the filesystem. So,
+some day we can solve this problem in better ways, but we're not
+there yet.
 
 Tor Browser
 -----------
@@ -157,7 +181,7 @@ in this area.
 Isolating more types of resources
 ---------------------------------
 
-Once AppArmor 2.9 is released and the corresponding kernel patches are
+With AppArmor 2.9, once the corresponding kernel patches are
 merged into Linux mainline, we will get support for mediating many
 more types of resources: D-Bus calls, sockets, signals and so on.
 
@@ -283,6 +307,12 @@ To mitigate that problem, we could:
   cache, without any compilation. If the parser detects that the
   policy is out of date, then the cache will be ignored and
   compilation will happen. This is what is done for the Ubuntu phone.
+  Note that the "exact same kernel" requirement has been relaxed,
+  either `--match-string` or `--features-file` or both ought to let
+  a new-enough parser generate "correct" policy for a given target
+  kernel using any other kernel. This could allow precompiling on the
+  build hosts. See `apparmor_parser(8)`, `apparmor_parser --help`,
+  examples in `parser/tst/features_files/*`, and `parser.conf`.
   Potential problems:
   * if alias rules need to be added at login time, then the cache must
     be invalidated, and the policy entirely recompiled;
@@ -308,24 +338,22 @@ SquashFS initially, and written to the overlay. If that would be the
 case, then we would need to duplicate some rules in profiles to add
 back some paths that were rewritten.
 
+<a id="overlayfs"></a>
+
 overlayfs
 ---------
 
 [overlayfs](https://git.kernel.org/cgit/linux/kernel/git/mszeredi/vfs.git/tree/Documentation/filesystems/overlayfs.txt?h=overlayfs.current)
-is another kind of union filesystem, that seems to have much greater
-chances than aufs to be merged into Linux mainline some day.
+is another kind of union filesystem. It has been merged in
+Linux mainline, and is supported by live-boot 5.
 overlayfs works differently from aufs, in ways that give hope that it
 might be easier for AppArmor to support it natively.
-
-Once it's merged in Linux mainline, Debian Live could be made to
-support overlayfs as an alternative to aufs. One thing that should be
-checked is whether overlayfs supports stacking up more than one
-read-only branch, which we do need for the Tails
-[[contribute/design/incremental upgrades]] feature.
 
 Some ongoing work on AppArmor (labeling, extended conditionals) will
 help support overlayfs. Time will tell whether the result meets
 our needs.
+
+See [[!tails_ticket 9045]] for more up-to-date information.
 
 <a id="linux-containers"></a>
 

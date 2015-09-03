@@ -1,5 +1,7 @@
 [[!meta title="Verify the ISO image using the command line"]]
 
+[[!inline pages="doc/get/signing_key_transition.inline" raw="yes"]]
+
 <p>You need to have GnuPG installed. GnuPG is the common OpenPGP
 implementation for Linux: it is installed by default under Debian,
 Ubuntu, Tails and many other distributions.</p>
@@ -21,7 +23,7 @@ gpg --keyid-format long --import tails-signing.key
 <p>The output should tell you that the key was imported:</p>
 
 <pre>
-gpg: key 1202821CBE2CD9C1: public key "Tails developers (signing key) &lt;tails@boum.org&gt;" imported
+gpg: key DBB802B258ACD84F: public key "Tails developers (offline long-term identity key) &lt;tails@boum.org&gt;" imported
 gpg: Total number processed: 1
 gpg:               imported: 1  (RSA: 1)
 </pre>
@@ -31,7 +33,7 @@ past</strong>, the output
 should tell you that the key was not changed:</p>
 
 <pre>
-gpg: key 1202821CBE2CD9C1: "Tails developers (signing key) &lt;tails@boum.org&gt;" not changed
+gpg: key DBB802B258ACD84F: "Tails developers (offline long-term identity key) &lt;tails@boum.org&gt;" not changed
 gpg: Total number processed: 1
 gpg:              unchanged: 1
 </pre>
@@ -68,9 +70,21 @@ cd [the ISO image directory]<br />
 that the signature is good:</p>
 
 <pre>
-gpg: Signature made Sat 30 Apr 2011 10:53:23 AM CEST
-gpg:                using RSA key 1202821CBE2CD9C1
-gpg: Good signature from "Tails developers (signing key) &lt;tails@boum.org&gt;"
+pg: Signature made Sun 08 Feb 2015 08:17:03 PM UTC
+gpg:                using RSA key 3C83DCB52F699C56
+gpg: Good signature from "Tails developers (offline long-term identity key) &lt;tails@boum.org&gt;" [unknown]
+Primary key fingerprint: A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
+     Subkey fingerprint: BA2C 222F 44AC 00ED 9899  3893 98FE C6BC 752A 3DB6
+</pre>
+
+<p>or:</p>
+
+<pre>
+pg: Signature made Sun 08 Feb 2015 08:17:03 PM UTC
+gpg:                using RSA key 98FEC6BC752A3DB6
+gpg: Good signature from "Tails developers (offline long-term identity key) &lt;tails@boum.org&gt;" [unknown]
+Primary key fingerprint: A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
+     Subkey fingerprint: A509 1F72 C746 BA6B 163D  1C18 3C83 DCB5 2F69 9C56
 </pre>
 
 <p>If you see the following warning:</p>
@@ -78,7 +92,7 @@ gpg: Good signature from "Tails developers (signing key) &lt;tails@boum.org&gt;"
 <pre>
 gpg: WARNING: This key is not certified with a trusted signature!
 gpg:          There is no indication that the signature belongs to the owner.
-Primary key fingerprint: 0D24 B36A A9A2 A651 7878  7645 1202 821C BE2C D9C1
+Primary key fingerprint: A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
 </pre>
 
 <p>Then the ISO image is still correct, and valid according to the Tails signing
@@ -92,7 +106,7 @@ desc="sign"]]</span> the Tails signing key with your own key.</p>
 you that the signature is bad:</p>
 
 <pre>
-gpg: Signature made Sat 30 Apr 2011 10:53:23 AM CEST
-gpg:                using RSA key 1202821CBE2CD9C1
-gpg: BAD signature from "Tails developers (signing key) &lt;tails@boum.org&gt;"
+gpg: Signature made Sat 30 Apr 2015 10:53:23 AM CEST
+gpg:                using RSA key DBB802B258ACD84F
+gpg: BAD signature from "Tails developers (offline long-term identity key) &lt;tails@boum.org&gt;"
 </pre>

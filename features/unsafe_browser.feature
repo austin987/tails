@@ -9,11 +9,17 @@ Feature: Browsing the web using the Unsafe Browser
     And I start the computer
     And the computer boots Tails
     And I log in to a new session
-    And GNOME has started
+    And the Tails desktop is ready
     And Tor is ready
     And all notifications have disappeared
     And available upgrades have been checked
     And I save the state so the background can be restored next scenario
+
+  Scenario: The Unsafe Browser can access the LAN
+    Given a web server is running on the LAN
+    When I successfully start the Unsafe Browser
+    And I open a page on the LAN web server in the Unsafe Browser
+    Then I see "UnsafeBrowserHelloLANWebServer.png" after at most 20 seconds
 
   Scenario: Starting the Unsafe Browser works as it should.
     When I successfully start the Unsafe Browser
@@ -26,61 +32,8 @@ Feature: Browsing the web using the Unsafe Browser
     And the Unsafe Browser has no proxy configured
     And the Unsafe Browser uses all expected TBB shared libraries
 
-  Scenario: Starting the Unsafe Browser works in Arabic
-    When I start the Unsafe Browser in the "ar_EG" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in Brazilian Portuguese
-    When I start the Unsafe Browser in the "pt_BR" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in Chinese
-    When I start the Unsafe Browser in the "zh_CN" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in Dutch
-    When I start the Unsafe Browser in the "nl_NL" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in Farsi
-    When I start the Unsafe Browser in the "fa_IR" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in French
-    When I start the Unsafe Browser in the "fr_FR" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in German
-    When I start the Unsafe Browser in the "de_DE" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in Italian
-    When I start the Unsafe Browser in the "it_IT" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in Korean
-    When I start the Unsafe Browser in the "kr_KR" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in Polish
-    When I start the Unsafe Browser in the "pl_PL" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in Portuguese
-    When I start the Unsafe Browser in the "pt_PT" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in Russian
-    When I start the Unsafe Browser in the "ru_RU" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in Turkish
-    When I start the Unsafe Browser in the "tr_TR" locale
-    Then the Unsafe Browser has started
-
-  Scenario: Starting the Unsafe Browser works in Vietnamese
-    When I start the Unsafe Browser in the "vi_VN" locale
-    Then the Unsafe Browser has started
+  Scenario: The Unsafe Browser can be used in all languages supported in Tails
+    Then the Unsafe Browser works in all supported languages
 
   Scenario: Closing the Unsafe Browser shows a stop notification and properly tears down the chroot.
     When I successfully start the Unsafe Browser
@@ -110,7 +63,7 @@ Feature: Browsing the web using the Unsafe Browser
     But checking for updates is disabled in the Unsafe Browser's configuration
     When I successfully start the Unsafe Browser
     Then the Unsafe Browser has started
-    And I wait between 60 and 120 seconds
+    And I wait 120 seconds
     And the clearnet user has not sent packets out to the Internet
     And all Internet traffic has only flowed through Tor
 

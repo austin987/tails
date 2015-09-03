@@ -297,7 +297,7 @@ NetworkManager when MAC spoofing is enabled: [[!tails_ticket 6453]].
 [[Limitation: Only spoof the NIC part of the MAC address|MAC_address#limitation-only-spoof-nic-part]]
 section below.**
 
-The first six bytes of a MAC address determine the Organizationally Unique Identifier
+The first three bytes of a MAC address determine the Organizationally Unique Identifier
 (OUI) which in practice determines the chipset's manufacturer, who
 generally owns several OUIs. Spoofing the OUI part in a way that
 satisfies our threat model is not straightforward because of
@@ -333,7 +333,7 @@ common, consumer oriented hardware.
 
 ## Spoofing the NIC part of the MAC address
 
-The last six bytes of the MAC address are meant to distinguish
+The last three bytes of the MAC address are meant to distinguish
 individual devices among those with the same OUI. These should simply
 be selected at random, with the exception that we never allow it to
 stay the same, even if done in a fair, random way. Theoretically
@@ -345,7 +345,7 @@ much worse.
 # Implementation
 
 The current implementation leaves the OUI part unchanged, and only spoofs the
-last six bytes of any network device's MAC address immediately after
+last three bytes of any network device's MAC address immediately after
 it is added by udev. Furthermore, to deal with potential network leaks
 before the user has chosen whether to enable MAC spoofing or not, the
 addition of network devices is delayed until after Tails Greeter knows
@@ -475,7 +475,7 @@ well-understood. This is probably the main blocker for Tails to switch
 to `macchiato` and dare saying we satisfy the "Spoofing the OUI part
 of the MAC address" requirement from above.
 
-What remains is to only spoof the latter six bytes, the NIC part. We
+What remains is to only spoof the latter three bytes, the NIC part. We
 know it isn't a perfect strategy. The more uncommon the OUI of a
 user's device is, the more it can be used for tracking the user, i.e.
 the more it violates the `AvoidTracking` user goal. At least this

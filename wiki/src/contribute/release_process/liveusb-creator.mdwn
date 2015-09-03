@@ -70,7 +70,7 @@ Merge upstream changes:
 
 Update `debian/changelog`:
 
-    git-dch && dch -e
+    gbp dch && dch -e
 
 (Do not forget to set the appropriate release.)
 
@@ -80,17 +80,19 @@ Commit:
 
 Build a new Debian package (use a Wheezy/i386 chroot):
 
-    git-buildpackage
+    gbp buildpackage
 
-If `git-buildpackage` complains about a missing `upstream/$VERSION`,
+If `gbp buildpackage` complains about a missing `upstream/$VERSION`,
 then manually download the corresponding tarball (which can be found
 in our Debian repo unless upstream just had a new release) and place
 it in `..`, and then re-run the command with `--git-no-pristine-tar`.
 
 Add a signed tag to the Git repository and push the changes:
 
-    git-buildpackage --git-tag-only --git-sign-tags && \
-       git push && git push --tags
+    gbp buildpackage --git-tag-only --git-sign-tags && \
+    git push origin master:master \
+                    debian:debian && \
+    git push --tags
 
 (Make sure both `master` and `debian` are pushed.)
 

@@ -1,0 +1,132 @@
+Corresponding ticket: [[!tails_ticket 8007]]
+
+[[!toc levels=2]]
+
+Remaining to do
+===============
+
+See [[blueprint/harden_AppArmor_profiles]].
+
+Checked already
+===============
+
+Could be improved later
+-----------------------
+
+See [[blueprint/harden_AppArmor_profiles]].
+
+Currently OK
+------------
+
+As of 20150604, some of those are OK in
+`bugfix/8007-AppArmor-hardening`, but not in current `stable`.
+Unless they're worth special treatment, all changes made as a result
+of this audit should land together into Tails 1.5.
+
+* Ux rules don't sanitize `$PATH`
+  (<https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1045986>) =>
+  they must only be used to run software that does *not* rely on
+  `$PATH` for executing other stuff; in particular, many shell scripts
+  do rely on `$PATH`; this should be checked particularly for the
+  profiles we ship that don't come from AppArmor upstream, most
+  notably:
+  - the Tor Browser one: **OK**, the only `Ux` rule it has is about an
+    ELF executable
+  - Pidgin profile: was vulnerable via `/usr/local/bin/tor-browser`,
+    fixed in Tails 1.4
+  - `abstractions/tor`: only `Ux` rules are about ELF executables
+  - no other relevant `Ux` rule are present in the profiles we ship
+* use of `sanitized_helper` [isn't very
+  safe](http://blog.azimuthsecurity.com/2012/09/poking-holes-in-apparmor-profiles.html),
+  especially given it [doesn't transition properly with
+  Pix](https://bugs.launchpad.net/ubuntu/+source/apparmor/+bug/1042771)
+  => we don't add occurrences thereof in our own profiles
+* Tails-specific modifications to profiles:
+  - `config/chroot_local-patches/apparmor-adjust-pidgin-profile.diff`
+  - `config/chroot_local-patches/apparmor-adjust-tor-abstraction.diff`
+  - `config/chroot_local-patches/apparmor-adjust-tor-profile.diff`
+  - `config/chroot_local-patches/apparmor-adjust-totem-profile.diff`
+  - `config/chroot_local-patches/apparmor-adjust-user-tmp-abstraction.diff`
+* wide-open access to `$HOME`:
+  - `bash` abstraction (included by many profiles) gives read access
+    to `$HOME` via `@{HOMEDIRS}`, but merely listing its content
+    shouldn't be a problem in practice in Tails: users tend to store
+    their documents on the Desktop, or in persistence. Worst case
+    we'll leak filenames.
+  - no profile we ship includes the `gnupg` abstraction
+  - no profile we ship includes the `user-mail` abstraction, that
+    gives read-write access to mail folders
+  - no profile we ship includes the `user-write` abstraction, that
+    gives read-write access to large parts of `$HOME`
+  - the `user-download` abstraction, that's included in the Pidgin
+    profile, gives read-write access non-hidden files at the root of
+    the `$HOME`, Desktop and download directories; combined with the
+    `private-files-strict` abstraction, it is probably as tight as we
+    can do without substantially harming UX
+  - `abstractions/ubuntu-browsers.d/{java,user-files}` give read-write
+    access to `$HOME` and its content, but they're not used anywhere
+* access to webcam:
+  - `abstractions/video` gives access via `/sys/class/video4linux/` so
+    some devices; it's not used in any profile we ship
+  - most webcams appear as `/dev/video0` or similar; `rgrep -i video`
+    shows that no profile we ship gives access to such files
+* access to files via alternate paths specific to Debian Live systems:
+  - `/live/persistence/TailsData_unlocked/`: we have one automatic
+    test for this in `pidgin.feature`; the tested access is denied
+    because that path is not explicitly allowed, rather than because
+    it's explicitly denied, but that's how AppArmor works and that's
+    good enough.
+  - we don't have have any symlink between `/live` and `/lib/live`
+    anymore
+  - `/lib/live/mount/rootfs/` and `/lib/live/mount/medium/` should be
+    OK: they only contain stuff that's publicly available in our ISO
+    anyway, and DAC still applies.
+  - there's no alternate path to `/live/persistence`
+  - `/lib/live/mount/overlay/` -- until Tails 1.4, we have _two_
+    `tmpfs` mounted there, including an empty one that hides the
+    other's content (but we should not rely on this for security).
+    Fixed on the `bugfix/8007-AppArmor-hardening` branch with
+    [[!tails_gitweb_commit bc491c9]]. Note that there's also
+    `/live/overlay` (that's a symlink to `/lib/live/mount/overlay`,
+    created in [[!tails_gitweb_commit 3233da6]]). Follow-up fixes and
+    corresponding new automatic tests (in `torified_browsing.feature`,
+    `pidgin.feature`, `evince.feature` and `totem.feature`) were added
+    on `bugfix/8007-AppArmor-hardening`; the full test suite passes,
+    and the new bits were validated by manual testing.
+  - persistence in read-only mode doesn't bring any additional
+    alternate path
+  - `private-files` and `private-files-strict` abstractions do the
+    right thing wrt. `/lib/live/mount/overlay/home/`, since we add it
+    to @{HOMEDIRS}
+* wide-open access to `/lib/**` or similar, that might grant access to
+  files via alternate paths -- everything checked, potential issues were:
+  - the `base` and `ubuntu-helpers` abstraction have things
+    like `/lib{,32,64}/** r`: this was patched when introducing
+    aliases ([[!tails_gitweb_commit 6e48b6d]])
+  - the `launchpad-integration` abstraction has things like `/** rwlk`
+    and `/{,usr/}lib*/{,**/}*.so{,.*} m`; it's harmless since it only
+    gives such rights to an executable we don't ship, and it's
+    included by the Pidgin profile only, which for good measure we
+    disabled with [[!tails_gitweb_commit 551d372]] on
+    `bugfix/8007-AppArmor-hardening`
+* the kludges needed to make them work with aufs: everything replaced
+  with aliases (and other kludges) in [[!tails_gitweb_commit 6e48b6d]]
+* wide-open access to `$HOME` except blacklist -- everything checked,
+  in particular:
+  - Apart of Evince and Totem profiles (discussed elsewhere), only
+    Pidgin uses one of the `private-files` and `private-files-strict`
+    abstractions, but it doesn't have any wide-open access rules like
+    Evince or Totem have.
+* `config/chroot_local-includes/usr/share/tails/torbrowser-AppArmor-profile.patch`
+  - can tell that it's running in Tails: unavoidable in the current
+    state of things
+  - quite some avenues for fingerprinting of the hardware being used:
+    unavoidable without adding virtualization to the mix
+  - gives access to `machine-id`: in the current state of things, that
+    tells what exact version of Tails is running; depending on how
+    [[!tails_ticket 7100]] is addressed, this may become worse; such
+    access was allowed so that the browser can play sound with
+    PulseAudio (commit 371ba40 in our torbrowser-launcher Git repo);
+    if such access is denied, then Tor Browser plays sound directly
+    with Alsa, which makes UX worse... and breaks our automated tests.
+    We'll deal with that as part of [[!tails_ticket 7100]].

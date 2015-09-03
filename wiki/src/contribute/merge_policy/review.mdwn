@@ -4,9 +4,12 @@
 
 - When you start doing a review'n'merge, assign the relevant ticket to
   you, in order to avoid duplicated work.
-- Build the branch (or experimental) and test the feature.
+- Merge the base branch (the one you're supposed to merge the reviewed
+  topic branch into, as specified in `config/base_branch` and in the
+  pull request -- they must match) into the topic branch.
+- Build the topic branch and test the feature.
 - Check the diff e.g. with `git log -p`. Beware of changes introduced
-  by merge commits: either add the `-cc` option to `git log`, or use
+  by merge commits: either add the `--cc` option to `git log`, or use
   `git diff` after reviewing the individual patches.
 - Check the APT suite with 
   `ssh reprepro@incoming.deb.tails.boum.org reprepro list [bugfix|feature]-<name-with-dashes>`
@@ -19,10 +22,15 @@
   maintenance includes: polishing the proposed changes to make them fit
   for release; writing and updating the design and end-user
   documentations; fixing bugs.
+- Remember that it's hard to receive negative feedback. Don't forget
+  to note the good parts, be constructive and precise in your
+  comments, and never use reviews to make personal attacks. You can
+  read this
+  [blog post on how to do a good review](https://www.kateheddleston.com/blog/criticism-and-ineffective-feedback).
 
 ## Merge
 
-On the Git side, merge the branch with `--no-ff`:
+Merge the branch with `--no-ff`:
 
 - for a new feature: into `devel`; then merge `devel` into
   `experimental`
@@ -41,9 +49,6 @@ your merge to our main [[Git repository|contribute/Git]]. For example:
 
     Merge branch 'bugfix/8470-clean-up-apt-pinning' (Fix-committed: #8470)
 
-On the APT repository side,
-[[merge the suites|APT_repository#workflow-merge-topic-branch]].
-
 ## Book keeping
 
 1. Update the *QA Check* field on the ticket. If there is no remaining
@@ -52,4 +57,4 @@ On the APT repository side,
    above); else, ask the branch submitter to split the remaining tasks
    into other tickets.
 1. Push the updated branch to the master Git repository.
-1. Reply to the email that requested the review.
+1. Reply to the email that requested the review, if any.
