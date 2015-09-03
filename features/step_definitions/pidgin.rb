@@ -19,8 +19,20 @@ EOF
 end
 
 def focus_pidgin_irc_conversation_window(account)
-  account = account.sub(/^irc\./, '')
-  $vm.focus_window(".*#{Regexp.escape(account)}$")
+  if account == 'I2P'
+    # After connecting to Irc2P messages are sent from services. Most of the
+    # time the services will send their messages right away. If there's lag we
+    # may in fact join the channel _before_ the message is received. We'll look
+    # for a message from InfoServ first then default to looking for '#i2p'
+    begin
+      $vm.focus_window('InfoServ')
+    rescue ExecutionFailedInVM
+      $vm.focus_window('#i2p')
+    end
+  else
+    account = account.sub(/^irc\./, '')
+    $vm.focus_window(".*#{Regexp.escape(account)}$")
+  end
 end
 
 def close_pidgin_conversation_window(account)
@@ -212,6 +224,13 @@ def chan_image (account, channel, image)
         'conversation_tab' => 'PidginTailsConversationTab',
         'welcome'          => 'PidginTailsChannelWelcome',
       }
+    },
+    'I2P' => {
+      '#i2p'    => {
+        'roster'           => 'PidginI2PChannelEntry',
+        'conversation_tab' => 'PidginI2PConversationTab',
+        'welcome'          => 'PidginI2PChannelWelcome',
+      }
     }
   }
   return images[account][channel][image] + ".png"
@@ -220,6 +239,7 @@ end
 def default_chan (account)
   chans = {
     'irc.oftc.net' => '#tails',
+    'I2P'          => '#i2p',
   }
   return chans[account]
 end
