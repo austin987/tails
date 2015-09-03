@@ -1,6 +1,9 @@
 require 'libvirt'
 require 'rexml/document'
 
+class ExecutionFailedInVM < StandardError
+end
+
 class VMNet
 
   attr_reader :net_name, :net
@@ -35,6 +38,11 @@ class VMNet
 
   def bridge_name
     @net.bridge_name
+  end
+
+  def bridge_ip_addr
+    net_xml = REXML::Document.new(@net.xml_desc)
+    net_xml.elements['network/ip'].attributes['address']
   end
 
   def bridge_mac
@@ -80,6 +88,19 @@ class VM
       old_domain.undefine
     rescue
     end
+  end
+
+  def set_hardware_clock(time)
+    assert(not(is_running?), 'The hardware clock cannot be set when the ' +
+                             'VM is running')
+    assert(time.instance_of?(Time), "Argument must be of type 'Time'")
+    adjustment = (time - Time.now).to_i
+    domain_rexml = REXML::Document.new(@domain.xml_desc)
+    clock_rexml_element = domain_rexml.elements['domain'].add_element('clock')
+    clock_rexml_element.add_attributes('offset' => 'variable',
+                                       'basis' => 'utc',
+                                       'adjustment' => adjustment.to_s)
+    update(domain_rexml.to_s)
   end
 
   def set_network_link_state(state)
@@ -354,7 +375,11 @@ EOF
 
   def execute_successfully(cmd, user = "root")
     p = execute(cmd, user)
-    assert_vmcommand_success(p)
+    begin
+      assert_vmcommand_success(p)
+    rescue Test::Unit::AssertionFailedError => e
+      raise ExecutionFailedInVM.new(e)
+    end
     return p
   end
 

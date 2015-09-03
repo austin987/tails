@@ -27,6 +27,12 @@ end
 # YAML's type autodetection on ENV some how.
 $config.merge!(ENV)
 
+# Export TMPDIR back to the environment for subprocesses that we start
+# (e.g. guestfs). Note that this export will only make a difference if
+# TMPDIR wasn't already set and --tmpdir wasn't passed, i.e. only when
+# we use the default.
+ENV['TMPDIR'] = $config['TMPDIR']
+
 # Dynamic constants initialized through the environment or similar,
 # e.g. options we do not want to be configurable through the YAML
 # configuration files.

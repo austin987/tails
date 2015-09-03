@@ -14,10 +14,10 @@ Corresponding parent ticket: [[!tails_ticket 5734]]
   - users (if the APT repository is down, the "additional software
     packages" persistence feature is broken)
 
-* We want to avoid contributors getting used to ignore alerts send by
+* We want to avoid contributors getting used to ignore alerts sent by
   our CI system. The more false positives there are, the more they
   will "learn" to do so. Here we want to diminish the rate of false
-  positives caused by malfunctioning  infrastructure.
+  positives caused by malfunctioning infrastructure.
 
 * We want to shorten the dev/feedback loop for sysadmins when they
   deploy changes, and also when changes are automatically applied
@@ -62,7 +62,7 @@ The monitoring system:
   interface that works within Tor Browser with the security slider set
   to Medium-High.
 * MAY additionally offer a read-only version of this overview, that we
-  might want to make available to selected contributors, or anonymous
+  MAY want to make available to selected contributors, or anonymous
   users. Needless to say, this must be carefully balanced with the
   security implications of such a system (in other words, a set of
   exported static HTML pages is totally fine, but a huge dynamic web
@@ -80,8 +80,8 @@ The monitoring system:
 ### Compromised monitored machine
 
 * We do not try to avoid the fact that it can report wrong information
-  (this includes missing information) about iself.
-* It MUST NOT result in a compromise of the monitoning machine.
+  (this includes missing information) about itself.
+* It MUST NOT result in a compromise of the monitoring machine.
 * It MUST NOT be able to DoS the sysadmin(s) in charge, e.g.
   by flooding them with alerts.
 * It MUST NOT result in a compromise of the network traffic between
@@ -99,7 +99,7 @@ The monitoring system:
   about the monitored machines.
 * It MUST NOT be able to run arbitrary code as root on any of the
   monitored machines.
-* It SHOULD NOT be able to run arbitrary code as a non-privileged used
+* It SHOULD NOT be able to run arbitrary code as a non-privileged user
   on any of the monitored machines.
 
 ### Network attacker
@@ -165,17 +165,19 @@ anything needed for basic usage (plugins, checks, etc.).
   have patches merged into the upstream codebase of the
   involved software.
 
-* All the involved software MUST have a not-too-scary security
+* All the involved softwares MUST have a not-too-scary security
   track record.
 
 ## Configuration
 
 Here, we have two major desires. One is the ability for humans to
 easily review the monitoring system's configuration, or changes
-proposed to it. The other is the ability to include monitoring aspects
-within the description of the services we run, in a self-contained
-way. Note that a system that satisfies the second requirement has
-great chances to also mostly satisfy the first one as well.
+proposed to it, so that contributions are made easier. The other is
+the ability to include monitoring aspects within the description of
+the services we run, in a self-contained way, so that describing them
+in puppet is easier. Note that a system that satisfies the second
+requirement has great chances to also mostly satisfy the first one as
+well.
 
 The chosen monitoring system:
 
@@ -217,7 +219,8 @@ scale up to 50 hosts.
   monitoring system MUST allow using a configured SOCKS proxy for
   specific checks (worst case, for _all_ checks, but it prevents us
   from). Wrapping checks with `torsocks` might be an acceptable
-  option, depending on how involved and hackish this would be.
+  option, depending on how involved and hackish this would be. Ability
+  to retry and not notify on first error is interesting here.
 
 ## Hosting of the monitoring machine
 

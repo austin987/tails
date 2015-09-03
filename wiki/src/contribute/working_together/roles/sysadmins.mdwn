@@ -47,12 +47,33 @@ system administration.
 
 <a id="duties"></a>
 
-# Duties during sysadmin shifts
+# Duties
 
+## In general
+
+As said above, "set up and maintain the infrastructure". This implies
+for example:
+
+* dealing with hardware purchase, upgrades and failures;
+* upgrading our systems to a new version of Debian.
+
+## During sysadmin shifts
+
+* create Git repositories when requested
+* update access control lists to resources we manage, as requested by
+  the corresponding teams
 * keep systems up-to-date, reboot them as needed
 * keep backups up-to-date
 * keep Puppet modules up-to-date wrt. upstream changes
-* keep Jenkins plugins up-to-date
+* keep Jenkins plugins up-to-date, by upgrading any plugin that satisfies
+  at least one of these conditions:
+   - only brings security fixes
+   - fixes bugs we're affected by
+   - brings new feature we are interested in, without breaking the ones we rely on
+   - is needed to upgrade another plugin that we want to upgrade
+   - is required by a system upgrade (e.g. of the Jenkins packages)
+* report bugs identified in Jenkins plugins after they have been upgraded (both
+  on the upstream bug tracker and on our own one)
 
 <a id="tools"></a>
 
@@ -157,7 +178,7 @@ We use Redmine tickets for public discussion and tasks management:
       uses it to configure Jenkins
   - slaves:
     * `tails::builder`, `tails::jenkins::slave`,
-      `tails::jenkins::slave::iso_builder` classes in
+      `tails::jenkins::slave::iso_builder` and `tails::tester` classes in
       [[!tails_gitweb_repo puppet-tails]]
     * some configuration in the manifest ([[!tails_ticket 7106]])
   - web server:

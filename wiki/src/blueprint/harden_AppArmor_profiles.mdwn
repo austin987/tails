@@ -29,21 +29,45 @@ Wide-open access to `$HOME` except blacklist
 Everything was checked in [[blueprint/audit_AppArmor_profiles]],
 potential issues and remaining todo items follow.
 
-- Evince, Totem and their previewers have read-write access to
-  `@{HOME}/**`: perhaps we can make it a bit tighter, e.g.
-  using a regexp that doesn't include dotfiles (see the
-  `user-write` abstraction),
-  and read-only everywhere except for specific directories? Or is
-  the blacklist used by these profiles tight enough? => suggested
-  a new approach on <tails-ux@boum.org>, we'll see what they think
-  about it.
+### whitelist approach
+
+Evince, Totem and their previewers have read-write access to
+`@{HOME}/**`: perhaps we can make it a bit tighter, e.g.
+using a regexp that doesn't include dotfiles (see the `user-write`
+abstraction), and read-only everywhere except for specific
+directories? Or is the blacklist used by these profiles tight enough?
+=> being discussed on <tails-ux@boum.org>. The current proposal is to
+let Evince and Totem read and write any file if, and only if, *all*
+the following conditions are met:
+
+- the file has a supported extension;
+- the file lives in one of:
+  * at the root of `~/`
+  * anywhere below the Desktop directory
+  * anywhere below `~/Persistent/`, including when accessed directly
+    via `/live/persistence/TailsData_unlocked/Persistent/`
+  * anywhere below `~/Tor Browser/`
+  * at the root of `/tmp/`
+  * at the root of `/var/tmp/`
+  * at the root of `/run/shm/keyringer.amnesia/`, to avoid breaking
+    `keyringer open`
+  * anywhere below `/media/` (removable storage, and internal storage
+    manually mounted by the user)
+  * anywhere below `/usr/`
+  * XXX: anywhere below `/mnt/` too?
+- unless the file lives in `/media/` or `/usr/`, it must be owned by
+  the users who runs the application.
+
+### blacklist approach
+
+If the whitelist approach doesn't work:
+
 - Shall we add stuff to these blacklist? Let's see first if the
   proposed whitelist approach is acceptable => if so, adding to the
   blacklist won't be needed.
 - `private-files` and `private-files-strict` are not safe wrt.
   `/live/persistence/TailsData_unlocked/`; we could quickly fix that
-  with the following patch, but let's postpone that because it will
-  be useless if we go for a whitelist approach instead:
+  with the following patch:
     
     	--- /etc/apparmor.d/abstractions/private-files-strict.orig	2015-06-04 15:13:25.426658000 +0000
     	+++ /etc/apparmor.d/abstractions/private-files-strict	2015-06-04 15:18:02.402658000 +0000
@@ -67,6 +91,8 @@ potential issues and remaining todo items follow.
 
 Long-term
 =========
+
+<a id="microphone"></a>
 
 Access to microphone
 --------------------
@@ -100,6 +126,11 @@ sound output?
   * do `/dev/controlC[0-9]` give access to the microphone?
   * does `/dev/snd/seq` give access to the microphone?
   * does `/dev/snd/timer` give access to the microphone?
+- The [Oz technical details
+  page](https://github.com/subgraph/oz/wiki/Oz-Technical-Details)
+  reads: "Access to audio and video recording hardware can also be
+  controlled through the Oz policy"; this is implemented with `xpra`'s
+  `--microphone`, `--speaker` and `--pulseaudio` options.
 
 jvoisin's profile hardening
 ---------------------------

@@ -194,7 +194,26 @@ less fingerprintable.
   persisted, and possibly proposing to enable this setting for them).
 * Persist the Tor `state` file only (not the consensus etc.)
 * Name of the persistent Tor state file to be used:
-  `hash(per-Tails device secret, N bits of location-based information)`
+  `hash(per-Tails device secret, N bits of location-based information, SSID)`.
+  By adding the SSID, we prevent attackers from being able to spoof only
+  the MAC address of the router to reuse a given Tor state; they also
+  have to spoof the SSID which is visible to the user and might be
+  detected as malicious.
+  **FIXME**: shall we truncate the resulting hash? so that there are
+  collisions and the total number of different state file names is
+  caped, which implies that a given Tails persistent media will use
+  a limited amount of different Entry Guards over its lifetime,
+  regardless of the user's movements. But:
+  - does it make it easier to bruteforce the per-Tails device secret?
+  - does it allow to fingerprint a user by changing the MAC address of
+    the AP and observing which ones result in the same Entry Guard
+    being used (due to collisions) -- and then, when the user comes
+    back to the same place, re-playing the MAC addresses that
+    triggered the collision allows the attacker to know that it's the
+    same Tails device, with more certainty than when deducing that
+    from the mere fact that they are re-using the same Entry Guard in
+    the place?
+  **FIXME** do we want to use a HMAC instead?
 * `tordate` remains unchanged for now
 * Add a NetworkManager hook that generates a random per-Tails device
   secret, and stores it into persistence, if the Tor state persistence
