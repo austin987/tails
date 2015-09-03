@@ -1,0 +1,161 @@
+# PyGI windows executable
+
+I managed to create a native windows executable for a test Python/GI program under Windows 8.1
+
+## Downloads
+
+* Python: <https://www.python.org/downloads/windows/>
+* PyGI: <http://sourceforge.net/projects/pygobjectwin32/files/>
+* cx_freeze: <https://pypi.python.org/packages/3.4/c/cx_Freeze/cx_Freeze-4.3.4.win32-py3.4.exe#md5=bd087416c69ced533768a22e5d3414b8>
+* listdlls: <https://technet.microsoft.com/sk-sk/sysinternals/bb896656.aspx>
+
+## Prepare
+
+You need a Windows 8 (virtual) machine, with the files downloaded above
+
+* in Windows double-click `python-3.4.3` and accept default choices but select "Install entire feature"
+* in Windows double-click `pygi-aio-3.14.0-rev18-setup` and choose to install only
+  * GNOME libraries: GI, GTK, Pango (needed?)
+  * non-GNOME libraraies: none
+  * developpment files: GIR (needed?)
+* in Windows double-click `cx_freeze-4.3.4.win32-py34` and accept default choices
+
+## Test Program
+
+### main.py
+    
+    import gi
+    from gi.repository import Gtk
+    
+    dialog = Gtk.MessageDialog(None, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.INFO, Gtk.ButtonsType.CLOSE, "Hello!")
+    dialog.run()
+    dialog.destroy()
+    
+    Gtk.main()
+
+### setup.py
+
+* base: <https://wiki.gnome.org/Projects/PyGObject?action=AttachFile&do=view&target=setup.py>
+* update the DLL directory to gnome
+* update the DLL list in `setup.py with the output of ListDLLs.exe`
+  * run `main.py`
+  * run `Listdlls python`
+  * add all DLLs that are in the gnome directory to the `missing_dll` list in `setup.py`
+
+Result:
+
+    import os, site, sys
+    from cx_Freeze import setup, Executable
+    
+    ## Get the site-package folder, not everybody will install
+    ## Python into C:\PythonXX
+    site_dir = site.getsitepackages()[1]
+    include_dll_path = os.path.join(site_dir, "gnome")
+    
+    ## Collect the list of missing dll when cx_freeze builds the app
+    ## This list should be updated with the output of ListDLLs.exe
+    missing_dll = ['libffi-6.dll',
+                   'libgirepository-1.0-1.dll',
+                   'libglib-2.0-0.dll',
+                   'libgobject-2.0-0.dll',
+                   'libgio-2.0-0.dll',
+                   'libgmodule-2.0-0.dll',
+                   'libintl-8.dll',
+                   'libzzz.dll',
+                   'libwinpthread-1.dll',
+                   'libgtk-3-0.dll',
+                   'libgdk-3-0.dll',
+                   'libatk-1.0-0.dll',
+                   'libcairo-gobject-2.dll',
+                   'libgdk_pixbuf-2.0-0.dll',
+                   'libpango-1.0-0.dll',
+                   'libpangocairo-1.0-0.dll',
+                   'libpangowin32-1.0-0.dll',
+                   'libfontconfig-1.dll',
+                   'libfreetype-6.dll',
+                   'libpng16-16.dll',
+                   'libjasper-1.dll',
+                   'libjpeg-8.dll',
+                   'librsvg-2-2.dll',
+                   'libpangoft2-1.0-0.dll',
+                   'libwebp-5.dll',
+                   'libpangoft2-1.0-0.dll',
+                   'libxmlxpat.dll',
+                   'libharfbuzz-gobject-0.dll'
+    ]
+    
+    ## We also need to add the glade folder, cx_freeze will walk
+    ## into it and copy all the necessary files
+    glade_folder = 'glade'
+    
+    ## We need to add all the libraries too (for themes, etc..)
+    gtk_libs = ['etc', 'lib', 'share']
+    
+    ## Create the list of includes as cx_freeze likes
+    include_files = []
+    for dll in missing_dll:
+        include_files.append((os.path.join(include_dll_path, dll), dll))
+    
+    ## Let's add glade folder and files
+    include_files.append((glade_folder, glade_folder))
+    
+    ## Let's add gtk libraries folders and files
+    for lib in gtk_libs:
+        include_files.append((os.path.join(include_dll_path, lib), lib))
+    
+    base = None
+    
+    ## Lets not open the console while running the app
+    if sys.platform == "win32":
+        base = "Win32GUI" 
+    
+    executables = [
+        Executable("main.py",
+                   base=base
+        )
+    ]
+    
+    buildOptions = dict(
+        compressed = True,
+        includes = ["gi"],
+        packages = ["gi"],
+        include_files = include_files
+        )
+    
+    setup(
+        name = "test_gtk3_app",
+        author = "Alan",
+        version = "1.0",
+        description = "GTK 3 test",
+        options = dict(build_exe = buildOptions),
+        executables = executables
+    )
+
+## Build
+
+* start "Command Prompt"
+* `cd Documents/test/`
+* `python setup.py bdist`. The resulting ZIP file lives in `dist/`. It is 37M big!
+* `python setyp.py bdist_msi` created a windows installer in `dist/`.
+
+## Test
+
+In another fresh windows 8.1VM
+
+* Install "Microsoft Visual C++ 2010 SP1 Redistributable Package (x86)" (<https://www.microsoft.com/en-US/download/details.aspx?id=8328>).
+* extract the ZIP file
+* run main.exe
+* it works
+
+## Next steps
+
+* make a single executable file: <https://cx-freeze.readthedocs.org/en/latest/faq.html#single-file-executables>
+* bundle `msvcr100.dll`: <https://msdn.microsoft.com/en-us/library/8kche8ah.aspx
+* shring the ZIP:
+  * <https://stackoverflow.com/questions/20067856/python3-pygobject-gtk3-and-cx-freeze-missing-dlls>
+  * <https://bitbucket.org/anthony_tuininga/cx_freeze/issue/92/pygi-and-cx_freeze-error>
+
+## Other tools
+
+* py2exe: <https://gmigdos.wordpress.com/2014/06/29/how-to-bundle-python-gtk3-apps-on-windows-with-py2exe/>
+

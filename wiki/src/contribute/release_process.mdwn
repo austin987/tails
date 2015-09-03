@@ -10,7 +10,7 @@ Environment
 Export the following environment variables to be able to copy'n'paste
 the scripts snippets found on this page:
 
-* version numbers:
+* version numbers (see [[contribute/release_schedule#versioning]]):
 
       export VERSION=$(dpkg-parsechangelog -SVersion)
       export TAG=$(echo "$VERSION" | sed -e 's,~,-,')
@@ -122,7 +122,7 @@ AdBlock patterns
 ----------------
 
 Patterns are stored in
-`config/chroot_local-includes/etc/tor-browser/profile.default/adblockplus/`.
+`config/chroot_local-includes/etc/tor-browser/profile/adblockplus/`.
 
 1. Boot Tails
 2. Start the tor Browser and open *Tools* → *Addons*
@@ -151,7 +151,7 @@ and then run the `import-translations` script that is in the
 main Tails repository. For example:
 
 	cd whisperback
-	../tails/import-translations
+	"$RELEASE_CHECKOUT"/import-translations
 
 If the `import-translations` script fails to import translations for
 the current package, manually copy updated PO files from the
@@ -163,7 +163,7 @@ Add and commit.
 
 Then check the PO files:
 
-	./wiki/src/contribute/l10n_tricks/check_po.sh
+	"$RELEASE_CHECKOUT"/submodules/jenkins-tools/slaves/check_po
 
 Correct any displayed error, then commit the changes if any.
 
@@ -175,6 +175,7 @@ the release branch's APT suite:
 * [[perl5lib]]
 * [[persistence-setup]]
 * [[tails-iuk]]
+* [[tor]]
 * whisperback:
   * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
   * build a Debian package
@@ -187,16 +188,13 @@ See the dedicated page: [[tor-browser]]
 Update PO files
 ---------------
 
-Pull updated translations for languages translated in Transifex:
+Pull updated translations for languages translated in Transifex,
+refresh the code PO files,
+and commit the result, including new PO files:
 
-	./import-translations
-
-Refresh the code PO files:
-
-	./refresh-translations
-
-Commit the result, including new PO files:
-
+	cd "$RELEASE_CHECKOUT" && \
+	./import-translations  && \
+	./refresh-translations && \
 	git add po && git commit -m 'Update PO files.'
 
 When preparing an actual release
@@ -374,7 +372,8 @@ signatures, like the defaults we set in Tails:
 Tag the release in Git
 ======================
 
-	git tag -u "$TAILS_SIGNATURE_KEY" -m "tagging version ${VERSION}" "${TAG}"
+	git tag -u "$TAILS_SIGNATURE_KEY" \
+	  -m "tagging version ${VERSION}" "${TAG}" && \
 	git push --tags
 
 (Pushing the tag is needed so that the APT repository is updated, and
@@ -447,9 +446,13 @@ Build the final image
 Then all included files should be up-to-date and the versioned APT
 suite should be ready, so it is time to:
 
-* tag the release *again*, with all included files in
-* `git push --tags`
-*  build the final image!
+* tag the release *again*, with all included files in:
+  
+          git tag -f -u "$TAILS_SIGNATURE_KEY" \
+  	    -m "tagging version ${VERSION}" "${TAG}" && \
+          git push --tags -f
+  
+* build the final image!
 
 <a id="prepare-iuk"></a>
 
@@ -458,12 +461,14 @@ Generate the OpenPGP signatures and Torrents
 
 First, create a directory with a suitable name and go there:
 
-	mkdir "$ISOS/tails-i386-$VERSION" && cd "$ISOS/tails-i386-$VERSION"
+	mkdir "$ISOS/tails-i386-$VERSION" && \
+	cd "$ISOS/tails-i386-$VERSION"
 
 Second, copy the built image to this brand new directory.
 Then, rename it:
 
-	mv "$ARTIFACTS/tails-i386-${RELEASE_BRANCH}-$VERSION-"*".iso" "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso"
+	mv "$ARTIFACTS/tails-i386-${RELEASE_BRANCH}-$VERSION-"*".iso" \
+	   "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
@@ -476,7 +481,10 @@ Fourth, go up to the parent directory, create a `.torrent` file and
 check the generated `.torrent` files metainfo:
 
 	cd .. && \
-	mktorrent -a 'http://torrent.gresille.org/announce' "tails-i386-${VERSION}" && \
+	mktorrent \
+	  -a 'udp://tracker.torrent.eu.org:451' \
+	  -a 'udp://tracker.coppersurfer.tk:6969'   \
+	  "tails-i386-${VERSION}" && \
 	btshowmetainfo tails-i386-$VERSION.torrent
 
 Fifth, generate detached OpenPGP signatures for every published
@@ -628,10 +636,14 @@ Test them with a BitTorrent client running in a different place.
 
     scp "$ISOS/tails-i386-$VERSION.torrent" \
        bittorrent.lizard: && \
-       ssh bittorrent.lizard transmission-remote --add tails-i386-$VERSION.torrent
+       ssh bittorrent.lizard \
+         transmission-remote --add tails-i386-$VERSION.torrent \
+           --find /var/lib/transmission-daemon/downloads/
 
-Publish the ISO over HTTP
--------------------------
+<a id="publish-iuk"></a>
+
+Publish the ISO and IUK over HTTP
+---------------------------------
 
 Upload the images to the primary rsync mirror. Best practice is to first
 let bittorrent.lizard download the image, and then copy it from there to
@@ -643,9 +655,16 @@ rsync.lizard:
             rsync.lizard:
     # set DIST to either 'alpha' (for RC:s) or 'stable' (for actual releases)
     ssh rsync.lizard << EOF
-      chown -R root:rsync_tails tails-i386-$VERSION
-      chmod -R u=rwX,go=rX tails-i386-$VERSION
-      sudo mv tails-i386-$VERSION /srv/rsync/tails/tails/$DIST/
+      chown -R root:rsync_tails \
+         tails-i386-$VERSION \
+         Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk && \
+      chmod -R u=rwX,go=rX \
+         tails-i386-$VERSION \
+         Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk && \
+      sudo mv tails-i386-$VERSION \
+              /srv/rsync/tails/tails/$DIST/ && \
+      sudo mv Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk \
+              /srv/rsync/tails/tails/$DIST/iuk/
     EOF
 
 Update the time in `project/trace` file on the primary rsync mirror
@@ -657,27 +676,21 @@ and on the live wiki (even for a release candidate):
 	echo $TRACE_TIME > "$MASTER_CHECKOUT/wiki/src/inc/trace" &&
 	(
 	   cd "$MASTER_CHECKOUT" && \
-	   git commit wiki/src/inc/trace -m "Updating trace file after uploading $VERSION."
+	   git commit wiki/src/inc/trace \
+	      -m "Updating trace file after uploading $VERSION." && \
+	   git push origin master
 	)
-
-<a id="publish-iuk"></a>
-
-Publish the IUKs
-----------------
-
-Same as for the ISO, but the IUKs should land into
-`/srv/rsync/tails/tails/$DIST/iuk/`.
 
 Wait for the HTTP mirrors to catch up
 -------------------------------------
 
 Wait for the next rsync pull.
 
+Test downloading the ISO and IUK over HTTP.
+
 Make sure every webserver listed in the `dl.amnesia.boum.org` round
 robin pool has the new version. Drop those that are lagging behind and
 notify their administrators.
-
-Test downloading the ISO and IUK over HTTP.
 
 Update the website and Git repository
 =====================================
@@ -722,8 +735,17 @@ to be released in `inc/*`:
 Update the size of the ISO image in `inc/*`:
 
 	LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1/' | tr -d '\n' \
+	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mb.mdwn"
+	LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\2B/' | tr -d '\n' \
+	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mb_unit.mdwn"
+	LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1/' | tr -d '\n' \
+	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib.mdwn"
+	LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\2iB/' | tr -d '\n' \
+	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib_unit.mdwn"
 
 Update the [[support/known_issues]] page:
 
@@ -731,8 +753,10 @@ Update the [[support/known_issues]] page:
 - Remove older known issues that are fixed by the new release.
 
 Write the announcement for the release in
-`news/version_$TAG.mdwn`, including:
+`wiki/src/news/version_$TAG.mdwn`, including:
 
+- The content of the "Changes" section must live in
+  `wiki/src/inc/release_notes/$TAG.mdwn`.
 - Update the `meta title` directive.
 - Update the `meta date` directive.
 - Make sure there's an `announce` tag to have an email sent to the
@@ -744,15 +768,17 @@ Write the announcement for the release in
 - Document known issues.
 
 Write an announcement listing the security bugs affecting the previous
-version in `security/` in order to let the users of the old versions
+version in
+`wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION}.mdwn`
+in order to let the users of the old versions
 know that they have to upgrade. Date it a few days before the ISO
 image to be released was *built*. Including:
 
 - the list of CVE fixed in Linux since the one shipped in the previous
   release of Tails:
-  <http://ftp-master.metadata.debian.org/changelogs/main/l/linux/unstable_changelog>
+  <http://metadata.ftp-master.debian.org/changelogs/main/l/linux/stable_changelog>
 - the list of DSA fixed in packages we ship since those that were in
-  the previous release of Tails: <http://security.debian.org/>
+  the previous release of Tails: <https://www.debian.org/security/#DSAS>
 - the list of BSA fixed in packages we ship since those that were in
   the previous release of Tails:
   <https://lists.debian.org/debian-backports-announce/>
@@ -800,7 +826,9 @@ Testing
 1. Email <tails-testers@boum.org> to ask them to test the tentative ISO.
 1. Set up a Gobby document and copy the [[manual test
    suite|contribute/release_process/test]] in it.
-1. Email to <tails@boum.org> and potential contributors that tests may start:
+1. Email to <tails@boum.org> and potential contributors (see
+   `manual_testers.mdwn` in the internal Git repository) that tests
+   may start:
    - make it clear what's the deadline
    - make it clear where and how you expect to get feedback
    - attach the Torrent
@@ -840,9 +868,6 @@ repository like this:
       git merge "$RELEASE_BRANCH" && \
       git push origin master:master \
     )
-
-... and ask <root@boum.org> to refresh the ikiwiki wrappers for
-our website.
 
 Bug tracker
 -----------
@@ -936,7 +961,7 @@ to do it.
 Amnesia news
 ------------
 
-The release announcement are automatically sent to `amensia-news@`
+The release announcement are automatically sent to `amnesia-news@`
 (thanks to the `announce` flag) on an hourly basis, but it will be
 stuck in the moderation
 queue. [Log in](https://mailman.boum.org/admindb/amnesia-news) and
@@ -975,6 +1000,7 @@ this, and skip what does not make sense for a RC.
 
         bare_repo=$(mktemp -d)
         (cd "$MASTER_CHECKOUT" && git fetch) && \
+        (cd "$MASTER_CHECKOUT" && git submodule update) && \
         git clone --bare --reference "$MASTER_CHECKOUT" \
            boum_org_amnesia@webmasters.boum.org:wiki.git \
            "$bare_repo" && \
@@ -982,11 +1008,12 @@ this, and skip what does not make sense for a RC.
            --repo "$bare_repo" && \
         rm -rf "$bare_repo"
 
-1. Pull `master` back and merge it into `devel`.
+1. Pull `master` back and merge it into `stable`, and in turn into
+   `devel`, `experimental` and `feature/jessie`.
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
    repository documentation.
-1. Push the resulting `devel` branch.
+1. Push the resulting branches.
 1. If this was a major release, then reset experimental:
    - take note of branches merged into `experimental`, but not into
      `devel`:

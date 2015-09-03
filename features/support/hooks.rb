@@ -109,7 +109,7 @@ end
 
 # AfterScenario
 After('@product') do |scenario|
-  if (scenario.status != :passed)
+  if scenario.failed?
     time_of_fail = Time.now - TIME_AT_START
     secs = "%02d" % (time_of_fail % 60)
     mins = "%02d" % ((time_of_fail / 60) % 60)
@@ -141,14 +141,14 @@ end
 
 After('@product', '@check_tor_leaks') do |scenario|
   @tor_leaks_sniffer.stop
-  if (scenario.status == :passed)
+  if scenario.passed?
     if @bridge_hosts.nil?
       expected_tor_nodes = get_all_tor_nodes
     else
       expected_tor_nodes = @bridge_hosts
     end
     leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file,
-                                  expected_tor_nodes)
+                                  :accepted_hosts => expected_tor_nodes)
     leaks.assert_no_leaks
   end
   @tor_leaks_sniffer.clear

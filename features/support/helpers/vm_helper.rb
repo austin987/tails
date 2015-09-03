@@ -1,6 +1,9 @@
 require 'libvirt'
 require 'rexml/document'
 
+class ExecutionFailedInVM < StandardError
+end
+
 class VMNet
 
   attr_reader :net_name, :net
@@ -35,6 +38,11 @@ class VMNet
 
   def bridge_name
     @net.bridge_name
+  end
+
+  def bridge_ip_addr
+    net_xml = REXML::Document.new(@net.xml_desc)
+    net_xml.elements['network/ip'].attributes['address']
   end
 
   def bridge_mac
@@ -367,7 +375,11 @@ EOF
 
   def execute_successfully(cmd, user = "root")
     p = execute(cmd, user)
-    assert_vmcommand_success(p)
+    begin
+      assert_vmcommand_success(p)
+    rescue Test::Unit::AssertionFailedError => e
+      raise ExecutionFailedInVM.new(e)
+    end
     return p
   end
 
