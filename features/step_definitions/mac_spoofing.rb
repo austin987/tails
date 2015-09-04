@@ -13,11 +13,9 @@ Then /^the network device has (its default|a spoofed) MAC address configured$/ d
   next if @skip_steps_while_restoring_background
   is_spoofed = (mode == "a spoofed")
   nic = "eth0"
-  nic_exists = @vm.execute(
-    ". /usr/local/lib/tails-shell-library/hardware.sh && " +
-    "nic_exists #{nic}"
-  ).success?
-  assert(nic_exists, "NIC #{nic} is not present")
+  assert_equal([nic], all_ethernet_nics,
+               "We only expected NIC #{nic} but these are present: " +
+               all_ethernet_nics.join(", "))
   nic_real_mac = @vm.real_mac
   nic_current_mac = @vm.execute_successfully(
     ". /usr/local/lib/tails-shell-library/hardware.sh && " +
