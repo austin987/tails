@@ -88,4 +88,12 @@ Then /^networking was disabled$/ do
   next if @skip_steps_while_restoring_background
   networking_enabled = @vm.execute("service network-manager status").success?
   assert(!networking_enabled)
+  nic = "eth0"
+  for addr_type in ["nic_ipv4_addr", "nic_ipv6_addr"] do
+    addr = @vm.execute_successfully(
+      ". /usr/local/lib/tails-shell-library/hardware.sh && " +
+      "#{addr_type} #{nic}"
+    ).stdout.chomp
+    assert_equal("", addr, "NIC #{nic} was assigned address #{addr}")
+  end
 end
