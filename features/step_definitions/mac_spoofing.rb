@@ -1,6 +1,6 @@
 def all_ethernet_nics
   @vm.execute_successfully(
-    ". /usr/local/lib/tails-shell-library/hardware.sh && get_all_ethernet_nics"
+    "get_all_ethernet_nics", :libs => 'hardware'
   ).stdout.split
 end
 
@@ -18,8 +18,7 @@ Then /^the network device has (its default|a spoofed) MAC address configured$/ d
                all_ethernet_nics.join(", "))
   nic_real_mac = @vm.real_mac
   nic_current_mac = @vm.execute_successfully(
-    ". /usr/local/lib/tails-shell-library/hardware.sh && " +
-    "get_current_mac_of_nic #{nic}"
+    "get_current_mac_of_nic #{nic}", :libs => 'hardware'
   ).stdout.chomp
   if is_spoofed
     if nic_real_mac == nic_current_mac
@@ -93,8 +92,7 @@ Then /^the MAC spoofing panic mode disabled networking$/ do
   all_ethernet_nics.each do |nic|
     for addr_type in ["nic_ipv4_addr", "nic_ipv6_addr"] do
       addr = @vm.execute_successfully(
-        ". /usr/local/lib/tails-shell-library/hardware.sh && " +
-        "#{addr_type} #{nic}"
+        "#{addr_type} #{nic}", :libs => 'hardware'
       ).stdout.chomp
       assert_equal("", addr, "NIC #{nic} was assigned address #{addr}")
     end

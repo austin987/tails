@@ -592,9 +592,8 @@ end
 
 def xul_application_info(application)
   binary = @vm.execute_successfully(
-                '. /usr/local/lib/tails-shell-library/tor-browser.sh; ' +
-                'echo ${TBB_INSTALL}/firefox'
-                                    ).stdout.chomp
+    'echo ${TBB_INSTALL}/firefox', :libs => 'tor-browser'
+  ).stdout.chomp
   case application
   when "Tor Browser"
     user = LIVE_USER
@@ -659,9 +658,8 @@ def xul_app_shared_lib_check(pid, chroot)
   absent_tbb_libs = []
   unwanted_native_libs = []
   tbb_libs = @vm.execute_successfully(
-                 ". /usr/local/lib/tails-shell-library/tor-browser.sh; " +
-                 "ls -1 #{chroot}${TBB_INSTALL}/*.so"
-                                      ).stdout.split
+    "ls -1 #{chroot}${TBB_INSTALL}/*.so", :libs => 'tor-browser'
+  ).stdout.split
   firefox_pmap_info = @vm.execute("pmap #{pid}").stdout
   for lib in tbb_libs do
     lib_name = File.basename lib
@@ -1096,7 +1094,7 @@ def force_new_tor_circuit(with_vidalia=nil)
     @screen.wait('VidaliaNewIdentityNotification.png', 20)
     @screen.waitVanish('VidaliaNewIdentityNotification.png', 60)
   else
-    @vm.execute_successfully('. /usr/local/lib/tails-shell-library/tor.sh; tor_control_send "signal NEWNYM"')
+    @vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
   end
 end
 
