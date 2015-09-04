@@ -30,6 +30,12 @@ Feature: I2P
     Then the I2P router console is displayed in I2P Browser
     And the I2P Browser uses all expected TBB shared libraries
 
+  Scenario: Closing the I2P Browser shows a stop notification and properly tears down the chroot.
+    When I successfully start the I2P Browser
+    And I close the I2P Browser
+    Then I see the I2P Browser stop notification
+    And the I2P Browser chroot is torn down
+
   Scenario: The I2P internal websites can be viewed in I2P Browser
     Given the I2P router console is ready
     When I start the I2P Browser through the GNOME menu
