@@ -479,15 +479,6 @@ Then /^all Internet traffic has only flowed through Tor$/ do
   leaks.assert_no_leaks
 end
 
-Given /^I enter the sudo password in the gksu prompt$/ do
-  next if @skip_steps_while_restoring_background
-  @screen.wait('GksuAuthPrompt.png', 60)
-  sleep 1 # wait for weird fade-in to unblock the "Ok" button
-  @screen.type(@sudo_password)
-  @screen.type(Sikuli::Key.ENTER)
-  @screen.waitVanish('GksuAuthPrompt.png', 10)
-end
-
 Given /^I enter the sudo password in the pkexec prompt$/ do
   next if @skip_steps_while_restoring_background
   step "I enter the \"#{@sudo_password}\" password in the pkexec prompt"
