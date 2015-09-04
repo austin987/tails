@@ -19,14 +19,12 @@ Then /^the I2P router console is displayed in I2P Browser$/ do
   @screen.wait('I2PRouterConsole.png', 2 * 60)
 end
 
-Then /^the I2P Browser desktop file is (|not )present$/ do |mode|
+Then /^the I2P Browser desktop file is (not )?present$/ do |notpresent|
   file = '/usr/share/applications/i2p-browser.desktop'
-  if mode == ''
-    assert($vm.execute("test -e #{file}").success?)
-  elsif mode == 'not '
+  if notpresent
     assert($vm.execute("! test -e #{file}").success?)
   else
-    raise "Unsupported mode passed: '#{mode}'"
+    assert($vm.execute("test -e #{file}").success?)
   end
 end
 
@@ -34,10 +32,8 @@ Then /^the I2P Browser sudo rules are (enabled|not present)$/ do |mode|
   file = '/etc/sudoers.d/zzz_i2pbrowser'
   if mode == 'enabled'
     assert($vm.execute("test -e #{file}").success?)
-  elsif mode == 'not present'
-    assert($vm.execute("! test -e #{file}").success?)
   else
-    raise "Unsupported mode passed: '#{mode}'"
+    assert($vm.execute("! test -e #{file}").success?)
   end
 end
 
@@ -49,11 +45,9 @@ Then /^the I2P firewall rules are (enabled|disabled)$/ do |mode|
   if mode == 'enabled'
     assert_equal(13, accept_rules_count)
     step 'the firewall is configured to only allow the clearnet, i2psvc and debian-tor users to connect directly to the Internet over IPv4'
-  elsif mode == 'disabled'
+  else
     assert_equal(0, accept_rules_count)
     step 'the firewall is configured to only allow the clearnet and debian-tor users to connect directly to the Internet over IPv4'
-  else
-    raise "Unsupported mode passed: '#{mode}'"
   end
 end
 
