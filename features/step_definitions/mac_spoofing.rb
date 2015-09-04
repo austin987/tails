@@ -86,8 +86,9 @@ end
 
 Then /^networking was disabled$/ do
   next if @skip_steps_while_restoring_background
-  networking_enabled = @vm.execute("service network-manager status").success?
-  assert(!networking_enabled)
+  nm_is_disabled = not(@vm.file_exist?("/etc/init.d/network-manager")) &&
+                   not(@vm.file_exist?("/usr/sbin/NetworkManager"))
+  assert(nm_is_disabled, "NetworkManager was not disabled")
   nic = "eth0"
   for addr_type in ["nic_ipv4_addr", "nic_ipv6_addr"] do
     addr = @vm.execute_successfully(
