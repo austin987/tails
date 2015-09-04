@@ -41,7 +41,6 @@ Feature: Spoofing MAC addresses
 #    Given MAC spoofing will fail, and the module cannot be unloaded
 #    When I log in to a new session
 #    And see the "All networking disabled" notification
-#    And Tor is ready
 #    Then the network device was not removed
 #    Then networking was disabled
 #    And the real MAC address was not leaked
