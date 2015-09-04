@@ -1,3 +1,9 @@
+def all_ethernet_nics
+  @vm.execute_successfully(
+    ". /usr/local/lib/tails-shell-library/hardware.sh && get_all_ethernet_nics"
+  ).stdout.split
+end
+
 When /^disable MAC spoofing in Tails Greeter$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("TailsGreeterMACSpoofing.png", 30)
@@ -77,9 +83,7 @@ Then /^(\d+|no) network device(?:s)? (?:is|are) present$/ do |expected_nr_nics|
   next if @skip_steps_while_restoring_background
   # note that "no".to_i => 0 in Ruby.
   expected_nr_nics = expected_nr_nics.to_i
-  nr_nics = @vm.execute_successfully(
-    ". /usr/local/lib/tails-shell-library/hardware.sh && get_all_ethernet_nics"
-  ).stdout.split.size
+  nr_nics = all_ethernet_nics.size
   assert_equal(expected_nr_nics, nr_nics)
 end
 
@@ -88,12 +92,13 @@ Then /^the MAC spoofing panic mode disabled networking$/ do
   nm_is_disabled = not(@vm.file_exist?("/etc/init.d/network-manager")) &&
                    not(@vm.file_exist?("/usr/sbin/NetworkManager"))
   assert(nm_is_disabled, "NetworkManager was not disabled")
-  nic = "eth0"
-  for addr_type in ["nic_ipv4_addr", "nic_ipv6_addr"] do
-    addr = @vm.execute_successfully(
-      ". /usr/local/lib/tails-shell-library/hardware.sh && " +
-      "#{addr_type} #{nic}"
-    ).stdout.chomp
-    assert_equal("", addr, "NIC #{nic} was assigned address #{addr}")
+  all_ethernet_nics.each do |nic|
+    for addr_type in ["nic_ipv4_addr", "nic_ipv6_addr"] do
+      addr = @vm.execute_successfully(
+        ". /usr/local/lib/tails-shell-library/hardware.sh && " +
+        "#{addr_type} #{nic}"
+      ).stdout.chomp
+      assert_equal("", addr, "NIC #{nic} was assigned address #{addr}")
+    end
   end
 end
