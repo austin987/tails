@@ -50,5 +50,5 @@ Feature: Spoofing MAC addresses
     And see the "All networking disabled" notification
     And the Tails desktop is ready
     Then 1 network device is present
-    But networking was disabled
+    But the MAC spoofing panic mode disabled networking
     And the real MAC address was not leaked

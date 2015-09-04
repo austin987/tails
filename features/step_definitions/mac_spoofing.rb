@@ -83,7 +83,7 @@ Then /^(\d+|no) network device(?:s)? (?:is|are) present$/ do |expected_nr_nics|
   assert_equal(expected_nr_nics, nr_nics)
 end
 
-Then /^networking was disabled$/ do
+Then /^the MAC spoofing panic mode disabled networking$/ do
   next if @skip_steps_while_restoring_background
   nm_is_disabled = not(@vm.file_exist?("/etc/init.d/network-manager")) &&
                    not(@vm.file_exist?("/usr/sbin/NetworkManager"))
