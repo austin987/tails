@@ -24,14 +24,14 @@ Feature: Spoofing MAC addresses
     And the real MAC address was not leaked
 
   Scenario: MAC address spoofing fails and macchanger returns false
-    Given MAC spoofing will fail by not spoofing and always returns false
+    Given macchanger will fail by not spoofing and always returns false
     When I log in to a new session
     And see the "Network card disabled" notification
     Then the network device was removed
     And the real MAC address was not leaked
 
   Scenario: MAC address spoofing fails and macchanger returns true
-    Given MAC spoofing will fail by not spoofing and always returns true
+    Given macchanger will fail by not spoofing and always returns true
     When I log in to a new session
     And see the "Network card disabled" notification
     Then the network device was removed

@@ -50,7 +50,7 @@ Then /^the real MAC address was (not )?leaked$/ do |mode|
   end
 end
 
-Given /^MAC spoofing will fail by not spoofing and always returns ([\S]+)$/ do |mode|
+Given /^macchanger will fail by not spoofing and always returns ([\S]+)$/ do |mode|
   next if @skip_steps_while_restoring_background
   @vm.execute_successfully("mv /usr/bin/macchanger /usr/bin/macchanger.orig")
   @vm.execute_successfully("ln -s /bin/#{mode} /usr/bin/macchanger")
@@ -58,7 +58,7 @@ end
 
 Given /^MAC spoofing will fail, and the module cannot be unloaded$/ do
   next if @skip_steps_while_restoring_background
-  step "MAC spoofing will fail by not spoofing and always returns true"
+  step "macchanger will fail by not spoofing and always returns true"
   @vm.execute_successfully("mv /sbin/rmmod /sbin/rmmod.orig")
   @vm.execute_successfully("ln -s /bin/false /sbin/rmmod")
 end
