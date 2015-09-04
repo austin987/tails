@@ -73,15 +73,14 @@ When /^see the "All networking disabled" notification$/ do
   @screen.wait("MACSpoofNetworkingDisabled.png", 60)
 end
 
-Then /^the network device was (not )?removed$/ do |mode|
+Then /^(\d+|no) network device(?:s)? (?:is|are) present$/ do |expected_nr_nics|
   next if @skip_steps_while_restoring_background
-  nic = "eth0"
-  nic_expected_to_exist = (mode == "not ")
-  nic_exists = @vm.execute(
-    ". /usr/local/lib/tails-shell-library/hardware.sh && " +
-    "nic_exists #{nic}"
-  ).success?
-  assert_equal(nic_expected_to_exist, nic_exists)
+  # note that "no".to_i => 0 in Ruby.
+  expected_nr_nics = expected_nr_nics.to_i
+  nr_nics = @vm.execute_successfully(
+    ". /usr/local/lib/tails-shell-library/hardware.sh && get_all_ethernet_nics"
+  ).stdout.split.size
+  assert_equal(expected_nr_nics, nr_nics)
 end
 
 Then /^networking was disabled$/ do
