@@ -12,7 +12,7 @@ Feature: Spoofing MAC addresses
   Scenario: MAC address spoofing is disabled
     When I enable more Tails Greeter options
     And disable MAC spoofing in Tails Greeter
-    When I log in to a new session
+    And I log in to a new session
     And Tor is ready
     Then the network device has its default MAC address configured
     And the real MAC address was leaked
