@@ -11,7 +11,7 @@ Then /^the network device has (its default|a spoofed) MAC address configured$/ d
     ". /usr/local/lib/tails-shell-library/hardware.sh && " +
     "nic_exists #{nic}"
   ).success?
-  next if !nic_exists
+  assert(nic_exists, "NIC #{nic} is not present")
   nic_real_mac = @vm.real_mac
   nic_current_mac = @vm.execute_successfully(
     ". /usr/local/lib/tails-shell-library/hardware.sh && " +
