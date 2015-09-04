@@ -377,6 +377,16 @@ EOF
   def execute(cmd, options = {})
     options[:user] ||= "root"
     options[:spawn] ||= false
+    if options[:libs]
+      libs = options[:libs]
+      options.delete(:libs)
+      libs = [libs] if libs.class != Array
+      cmds = libs.map do |lib_name|
+        ". /usr/local/lib/tails-shell-library/#{lib_name}.sh"
+      end
+      cmds << cmd
+      cmd = cmds.join(" && ")
+    end
     return VMCommand.new(self, cmd, options)
   end
 
