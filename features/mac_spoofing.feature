@@ -42,5 +42,5 @@ Feature: Spoofing MAC addresses
 #    When I log in to a new session
 #    And see the "All networking disabled" notification
 #    Then the network device was not removed
-#    Then networking was disabled
+#    And networking was disabled
 #    And the real MAC address was not leaked
