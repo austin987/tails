@@ -67,6 +67,8 @@ Feature: I2P
     And I log in to a new session
     Then I2P is not running
     When the network is plugged
-    And Tor is ready
+    And Tor has built a circuit
     Then I2P is running
-    But I see a notification that I2P failed to start
+    But the network is unplugged
+    Then I see a notification that I2P failed to start
+    And I2P is not running
