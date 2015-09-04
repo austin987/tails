@@ -9,7 +9,7 @@ When /^I query the whois directory service for "([^"]+)"$/ do |domain|
   @new_circuit_tries = 0
   until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
     begin
-      @vm_execute_res = @vm.execute("whois '#{domain}'", LIVE_USER)
+      @vm_execute_res = @vm.execute("whois '#{domain}'", :user => LIVE_USER)
       if !@vm_execute_res.success? || @vm_execute_res.stdout['LIMIT EXCEEDED']
         raise WhoisLookupFailure
       end
@@ -36,7 +36,7 @@ When /^I wget "([^"]+)" to stdout(?:| with the '([^']+)' options)$/ do |url, opt
   @new_circuit_tries = 0
   until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
     begin
-      @vm_execute_res = @vm.execute("wget #{arguments}", LIVE_USER)
+      @vm_execute_res = @vm.execute("wget #{arguments}", :user => LIVE_USER)
       raise WgetFailure unless @vm_execute_res.success?
       break
     rescue WgetFailure

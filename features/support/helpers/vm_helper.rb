@@ -374,12 +374,14 @@ EOF
     end
   end
 
-  def execute(cmd, user = "root")
-    return VMCommand.new(self, cmd, { :user => user, :spawn => false })
+  def execute(cmd, options = {})
+    options[:user] ||= "root"
+    options[:spawn] ||= false
+    return VMCommand.new(self, cmd, options)
   end
 
-  def execute_successfully(cmd, user = "root")
-    p = execute(cmd, user)
+  def execute_successfully(*args)
+    p = execute(*args)
     begin
       assert_vmcommand_success(p)
     rescue Test::Unit::AssertionFailedError => e
@@ -388,8 +390,9 @@ EOF
     return p
   end
 
-  def spawn(cmd, user = "root")
-    return VMCommand.new(self, cmd, { :user => user, :spawn => true })
+  def spawn(cmd, options = {})
+    options[:spawn] = true
+    return execute(cmd, options)
   end
 
   def wait_until_remote_shell_is_up(timeout = 30)
@@ -415,7 +418,8 @@ EOF
 
   def focus_window(window_title, user = LIVE_USER)
     execute_successfully(
-       "xdotool search --name '#{window_title}' windowactivate --sync", user
+      "xdotool search --name '#{window_title}' windowactivate --sync",
+      :user => user
     )
   end
 
@@ -430,14 +434,14 @@ EOF
   def file_content(file, user = 'root')
     # We don't quote #{file} on purpose: we sometimes pass environment variables
     # or globs that we want to be interpreted by the shell.
-    cmd = execute("cat #{file}", user)
+    cmd = execute("cat #{file}", :user => user)
     assert(cmd.success?,
            "Could not cat '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
     return cmd.stdout
   end
 
   def file_append(file, line, user = 'root')
-    cmd = execute("echo '#{line}' >> '#{file}'", user)
+    cmd = execute("echo '#{line}' >> '#{file}'", :user => user)
     assert(cmd.success?,
            "Could not append to '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
     return cmd.stdout

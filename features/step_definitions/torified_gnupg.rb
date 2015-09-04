@@ -3,7 +3,7 @@ end
 
 def count_gpg_signatures(key)
   output = @vm.execute_successfully("gpg --batch --list-sigs #{key}",
-                                    LIVE_USER).stdout
+                                    :user => LIVE_USER).stdout
   return output.scan(/^sig/).count
 end
 
@@ -39,7 +39,8 @@ end
 
 When /^the "([^"]+)" OpenPGP key is not in the live user's public keyring$/ do |keyid|
   next if @skip_steps_while_restoring_background
-  assert(!@vm.execute("gpg --batch --list-keys '#{keyid}'", LIVE_USER).success?,
+  assert(!@vm.execute("gpg --batch --list-keys '#{keyid}'",
+                      :user => LIVE_USER).success?,
          "The '#{keyid}' key is in the live user's public keyring.")
 end
 
@@ -55,7 +56,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
     begin
       @gnupg_recv_key_res = @vm.execute_successfully(
       "gpg --batch #{importopts} --recv-key '#{keyid}'",
-      LIVE_USER)
+      :user => LIVE_USER)
       break
     rescue ExecutionFailedInVM
       force_new_tor_circuit
@@ -79,7 +80,8 @@ end
 When /^the "([^"]+)" key is in the live user's public keyring after at most (\d+) seconds$/ do |keyid, delay|
   next if @skip_steps_while_restoring_background
   try_for(delay.to_f, :msg => "The '#{keyid}' key is not in the live user's public keyring") {
-    @vm.execute("gpg --batch --list-keys '#{keyid}'", LIVE_USER).success?
+    @vm.execute("gpg --batch --list-keys '#{keyid}'",
+                :user => LIVE_USER).success?
   }
 end
 
@@ -177,7 +179,7 @@ end
 Then /^Seahorse is configured to use the correct keyserver$/ do
   next if @skip_steps_while_restoring_background
   @gnome_keyservers = YAML.load(@vm.execute_successfully('gsettings get org.gnome.crypto.pgp keyservers',
-                                                         LIVE_USER).stdout)
+                                                         :user => LIVE_USER).stdout)
   assert_equal(1, @gnome_keyservers.count, 'Seahorse should only have one keyserver configured.')
   # Seahorse doesn't support hkps so that part of the domain is stripped out.
   # We also insert hkp:// to the beginning of the domain.

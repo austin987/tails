@@ -793,7 +793,7 @@ end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
   next if @skip_steps_while_restoring_background
-  c = @vm.execute("cp \"#{source}\" \"#{destination}\"", LIVE_USER)
+  c = @vm.execute("cp \"#{source}\" \"#{destination}\"", :user => LIVE_USER)
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
 
@@ -916,7 +916,7 @@ Then /^there is no GNOME bookmark for the persistent Tor Browser directory$/ do
 end
 
 def pulseaudio_sink_inputs
-  pa_info = @vm.execute_successfully('pacmd info', LIVE_USER).stdout
+  pa_info = @vm.execute_successfully('pacmd info', :user => LIVE_USER).stdout
   sink_inputs_line = pa_info.match(/^\d+ sink input\(s\) available\.$/)[0]
   return sink_inputs_line.match(/^\d+/)[0].to_i
 end
@@ -1054,7 +1054,7 @@ EOF
   # accessing this server matters, like when testing the Tor Browser..
   try_for(30, :msg => "Something is wrong with the LAN web server") do
     msg = @vm.execute_successfully("curl #{@web_server_url}",
-                                   LIVE_USER).stdout.chomp
+                                   :user => LIVE_USER).stdout.chomp
     web_server_hello_msg == msg
   end
 end
