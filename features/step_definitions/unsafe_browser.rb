@@ -46,13 +46,18 @@ Then /^the Unsafe Browser works in all supported languages$/ do
   assert(failed.empty?, "Unsafe Browser failed to launch in the following locale(s): #{failed.join(', ')}")
 end
 
-Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
-  notification_helper('UnsafeBrowserStartNotification.png', 30)
-  @screen.waitVanish("UnsafeBrowserStartNotification.png", 10)
+Then /^I see the (Unsafe|I2P) Browser start notification and wait for it to close$/ do |browser_type|
+  notification_helper("#{browser_type}BrowserStartNotification.png", 30)
+  @screen.waitVanish("#{browser_type}BrowserStartNotification.png", 10)
 end
 
-Then /^the Unsafe Browser has started$/ do
-  @screen.wait("UnsafeBrowserHomepage.png", 360)
+Then /^the (Unsafe|I2P) Browser has started$/ do |browser_type|
+  case browser_type
+  when 'Unsafe'
+    @screen.wait("UnsafeBrowserHomepage.png", 360)
+  when 'I2P'
+    step 'the I2P router console is displayed in I2P Browser'
+  end
 end
 
 Then /^the Unsafe Browser has no add-ons installed$/ do
@@ -116,28 +121,28 @@ Then /^the Unsafe Browser shows a warning as its start page$/ do
   @screen.wait("UnsafeBrowserStartPage.png", 10)
 end
 
-When /^I start the Unsafe Browser$/ do
-  step 'I start "UnsafeBrowser" via the GNOME "Internet" applications menu'
+When /^I start the (Unsafe|I2P) Browser(?: through the GNOME menu)?$/ do |browser_type|
+  step "I start \"#{browser_type}Browser\" via the GNOME \"Internet\" applications menu"
 end
 
-When /^I successfully start the Unsafe Browser$/ do
-  step "I start the Unsafe Browser"
-  step "I see and accept the Unsafe Browser start verification"
-  step "I see the Unsafe Browser start notification and wait for it to close"
-  step "the Unsafe Browser has started"
+When /^I successfully start the (Unsafe|I2P) Browser$/ do |browser_type|
+  step "I start the #{browser_type} Browser"
+  step "I see and accept the Unsafe Browser start verification" unless browser_type == 'I2P'
+  step "I see the #{browser_type} Browser start notification and wait for it to close"
+  step "the #{browser_type} Browser has started"
 end
 
 Then /^I see a warning about another instance already running$/ do
   @screen.wait('UnsafeBrowserWarnAlreadyRunning.png', 10)
 end
 
-When /^I close the Unsafe Browser$/ do
+When /^I close the (?:Unsafe|I2P) Browser$/ do
   @screen.type("q", Sikuli::KeyModifier.CTRL)
 end
 
-Then /^I see the Unsafe Browser stop notification$/ do
-  notification_helper('UnsafeBrowserStopNotification.png', 20)
-  @screen.waitVanish('UnsafeBrowserStopNotification.png', 10)
+Then /^I see the (Unsafe|I2P) Browser stop notification$/ do |browser_type|
+  notification_helper("#{browser_type}BrowserStopNotification.png", 20)
+  @screen.waitVanish("#{browser_type}BrowserStopNotification.png", 10)
 end
 
 Then /^I can start the Unsafe Browser again$/ do
