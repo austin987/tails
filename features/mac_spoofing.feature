@@ -37,10 +37,10 @@ Feature: Spoofing MAC addresses
     Then the network device was removed
     And the real MAC address was not leaked
 
-#  Scenario: MAC address spoofing fails and the module is not removed
-#    Given MAC spoofing will fail, and the module cannot be unloaded
-#    When I log in to a new session
-#    And see the "All networking disabled" notification
-#    Then the network device was not removed
-#    And networking was disabled
-#    And the real MAC address was not leaked
+  Scenario: MAC address spoofing fails and the module is not removed
+    Given MAC spoofing will fail, and the module cannot be unloaded
+    When I log in to a new session
+    And see the "All networking disabled" notification
+    Then the network device was not removed
+    And networking was disabled
+    And the real MAC address was not leaked
