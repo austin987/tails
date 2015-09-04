@@ -33,12 +33,6 @@ cleanup() {
 trap cleanup EXIT
 
 if [ -n "$JENKINS_URL" ]; then
-	# Build triggered by Jenkins
-	ENV_FILE=/etc/jenkins/environment
-	if [ -f "$ENV_FILE" ] && [ -r "$ENV_FILE" ] ; then
-		. "$ENV_FILE"
-	fi
-
 	if [ -z "$WORKSPACE" ]; then
 		echo "WORKSPACE environment variable is not set. Aborting." >&2
 		exit 2
