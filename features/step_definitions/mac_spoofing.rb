@@ -33,7 +33,7 @@ end
 Then /^the real MAC address was (not )?leaked$/ do |mode|
   next if @skip_steps_while_restoring_background
   is_leaking = mode.nil?
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, [])
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file)
   mac_leaks = leaks.mac_leaks
   if is_leaking
     if !mac_leaks.include?(@vm.real_mac)
