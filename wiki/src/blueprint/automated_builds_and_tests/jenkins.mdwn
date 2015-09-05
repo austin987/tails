@@ -171,24 +171,25 @@ That would maybe be the way to go, with 3 chained jobs:
   isotester in offline mode and starts the second job, blocking while
   waiting for it to complete. This way this isotester is left reserved
   for the second job, and the isotester name can be passed as a build
-  parameter to the second job.
+  parameter to the second job. This job is low prio so it waits for
+  other second and third type of jobs to be completed before starting its
+  own.
 * The second job is executed on the master (which has two build
   executors). This job ssh into the said isotester and issue the
-  reboot. It waits a bit and put it online again.
+  reboot. It waits a bit and put the node back online again. This jobs
+  is higher prio so that it is not lagging behind other wrapper jobs in
+  the queue.
 * The third job is the test job, run on the freshly started isotester.
+  This one is high prio too to get executed before any other wrapper
+  jobs.
 
-After some testing, this seems to work. At least on one tester with one
-such job. When there are several of them, then things start to be messy.
-The second and third jobs of the first wrapper one that has been started
-are queued, but to be executed **after** the other queued wrapper jobs.
-So they don't get executed in the right order.
-Using some kind of queue sorting may help here. Unfortunately, the
+Using some kind of queue sorting is necessary. Unfortunately, the
 [PrioritySorter
 plugin](https://wiki.jenkins-ci.org/display/JENKINS/Priority+Sorter+Plugin)
-does not seem to work. The [BuildBlocker
-plugin](https://wiki.jenkins-ci.org/display/JENKINS/Build+Blocker+Plugin)
-is of no help here, since it only check for the running jobs, not the
-one in the queue.
+is not well supported by the current version of JJB in Debian. We'll
+have to push upstream a fix, and meanwhile use the `raw` option trick in
+the yaml files (which itself isn't supported by JJB in Debian yet,
+hopefully the new one will leave the NEW queue soon).
 
 Another tested but non-working option was to use the Jenkins [PostBuildScript
 plugin](https://wiki.jenkins-ci.org/display/JENKINS/PostBuildScript%20Plugin)
