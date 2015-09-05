@@ -57,6 +57,25 @@ Feature: I2P
     Then Pidgin successfully connects to the "I2P" account
     And I can join the "#i2p" channel on "I2P"
 
+  Scenario: I2P displays a notice when bootstrapping fails
+    Given a computer
+    And the network is unplugged
+    And I set Tails to boot with options "i2p"
+    And I start the computer
+    And the computer boots Tails
+    And I log in to a new session
+    Then I2P is not running
+    When the network is plugged
+    And Tor has built a circuit
+    And I2P is running
+    And I2P's reseeding started
+    And the network is unplugged
+    Then I see a notification that I2P is not ready
+    And I2P's reseeding failed
+    But I2P is still running
+    When I start the I2P Browser through the GNOME menu
+    Then the I2P router console is displayed in I2P Browser
+
   Scenario: I2P displays a notice when it fails to start
     Given a computer
     And the network is unplugged

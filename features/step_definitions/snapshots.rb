@@ -34,6 +34,7 @@ def checkpoints
         'I2P is running',
         'all notifications have disappeared',
         'available upgrades have been checked',
+        "I2P's reseeding completed",
       ],
     },
 

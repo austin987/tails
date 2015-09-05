@@ -1,10 +1,17 @@
-Given /^I2P is (not )?running$/ do |notrunning|
+Given /^I2P is (?:still )?(not )?running$/ do |notrunning|
   if notrunning
     !$vm.execute('service i2p status').success?
   else
     try_for(30) do
       $vm.execute('service i2p status').success?
     end
+  end
+end
+
+Given /^I2P's reseeding (completed|started|failed)$/ do |progress|
+  try_for(220) do
+    $vm.execute('. /usr/local/lib/tails-shell-library/i2p.sh; ' +
+                "i2p_reseed_#{progress}").success?
   end
 end
 
@@ -73,6 +80,10 @@ end
 Then /^I2P successfully built a tunnel$/ do
   try_for(7 * 60) do
     $vm.execute('. /usr/local/lib/tails-shell-library/i2p.sh; ' +
-                'i2p_has_bootstrapped').success?
+                'i2p_has_built_a_tunnel').success?
   end
+end
+
+Then /^I see a notification that I2P is not ready$/ do
+  notification_helper('I2PBootstrapFailure.png', 4 * 60)
 end
