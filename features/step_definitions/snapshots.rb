@@ -20,13 +20,20 @@ def checkpoints
       ],
     },
 
-    'no-network-with-i2p' => {
+    'with-network-and-i2p' => {
       :temporary => true,
-      :description => 'Tails has booted from DVD with I2P enabled',
+      :description => 'Tails has booted from DVD with I2P enabled and logged in and the network is connected',
       :steps => [
         'I set Tails to boot with options "i2p"',
+        'the network is plugged',
         'I start the computer',
         'the computer boots Tails',
+        'I log in to a new session',
+        'the Tails desktop is ready',
+        'Tor is ready',
+        'I2P is running',
+        'all notifications have disappeared',
+        'available upgrades have been checked',
       ],
     },
 
