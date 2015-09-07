@@ -48,6 +48,41 @@ def notification_popup_wait(notification_image, time_to_wait)
   end
 end
 
+# This helper requires that the notification image is the one shown in
+# the notification applet's list, not the notification pop-up.
+def robust_notification_wait(notification_image, time_to_wait)
+  error_msg = "Didn't not see notification '#{notification_image}'"
+  try_for(time_to_wait, :delay => 0, :msg => error_msg) do
+    @screen.hide_cursor
+    @screen.click('GnomeNotificationApplet.png')
+    # Sanity check that the applet's list of notifications were
+    # opened. Sometimes the applet is moved when other systray
+    # elements are added, causing a race between Sikuli's mouse
+    # movement and the appearance of the new element.
+    @screen.wait('GnomeNotificationAppletClearAllButton.png', 5)
+    begin
+      return @screen.find(notification_image)
+    rescue FindFailed => e
+      # It could be that too many notifications are in the list, so
+      # the one we're looking for is not visible. Let's clear one
+      # notification and retry by re-raising the exception we just
+      # caught. This should not interfere with anything except if we
+      # later are interested in any of these older notifications that
+      # we may close.
+      # It's worth noting that the "close button" picture below has
+      # carefully been sized to include more than just the close
+      # button, so much that it ensures that the notification header
+      # must also be shown. That way we won't close any half-seen
+      # notification that may be the one we're looking for.
+      @screen.click('GnomeNotificationAppletCloseButton.png')
+      raise e
+    end
+  end
+rescue Timeout::Error => e
+  step 'process "notification-daemon" is running'
+  raise e
+end
+
 def restore_background
   @vm.restore_snapshot($background_snapshot)
   @vm.wait_until_remote_shell_is_up
