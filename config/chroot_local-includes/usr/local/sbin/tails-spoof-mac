@@ -32,6 +32,11 @@ show_notification() {
           pgrep --full /usr/lib/notification-daemon/notification-daemon >/dev/null; do
         sleep 1
     done
+    # The above doesn't seem to be enough. The best we can do seems to
+    # be to statically wait a bit longer. The amount chosen is just
+    # arbitrarily picked, and may not work on slow hardware or even
+    # DVD boot, but should at least work in our automated test suite.
+    sleep 10
     /usr/local/sbin/tails-notify-user "${1}" "${2}" 0
 }
 
