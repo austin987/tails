@@ -37,7 +37,7 @@ def deactivate_filesystem_shares
   #end
 end
 
-def notification_helper(notification_image, time_to_wait)
+def notification_popup_wait(notification_image, time_to_wait)
   # notifiction-daemon may abort during start-up, causing the tests that look for
   # desktop notifications to fail (ticket #8686)
   begin
@@ -328,7 +328,7 @@ end
 
 When /^I see the 'Tor is ready' notification$/ do
   next if @skip_steps_while_restoring_background
-  notification_helper('GnomeTorIsReady.png', 300)
+  notification_popup_wait('GnomeTorIsReady.png', 300)
   @screen.waitVanish("GnomeTorIsReady.png", 15)
 end
 

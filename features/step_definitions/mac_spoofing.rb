@@ -68,12 +68,12 @@ end
 
 When /^see the "Network card disabled" notification$/ do
   next if @skip_steps_while_restoring_background
-  notification_helper("MACSpoofNetworkCardDisabled.png", 60)
+  notification_popup_wait("MACSpoofNetworkCardDisabled.png", 60)
 end
 
 When /^see the "All networking disabled" notification$/ do
   next if @skip_steps_while_restoring_background
-  notification_helper("MACSpoofNetworkingDisabled.png", 60)
+  notification_popup_wait("MACSpoofNetworkingDisabled.png", 60)
 end
 
 Then /^(\d+|no) network device(?:s)? (?:is|are) present$/ do |expected_nr_nics|

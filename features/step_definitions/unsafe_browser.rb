@@ -51,7 +51,7 @@ end
 
 Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
   next if @skip_steps_while_restoring_background
-  notification_helper('UnsafeBrowserStartNotification.png', 30)
+  notification_popup_wait('UnsafeBrowserStartNotification.png', 30)
   @screen.waitVanish("UnsafeBrowserStartNotification.png", 10)
 end
 
@@ -150,7 +150,7 @@ end
 
 Then /^I see the Unsafe Browser stop notification$/ do
   next if @skip_steps_while_restoring_background
-  notification_helper('UnsafeBrowserStopNotification.png', 20)
+  notification_popup_wait('UnsafeBrowserStopNotification.png', 20)
   @screen.waitVanish('UnsafeBrowserStopNotification.png', 10)
 end
 
