@@ -129,6 +129,11 @@ end
 # AfterScenario
 After('@product') do |scenario|
   if @video_capture_pid
+    # We can be incredibly fast at detecting errors sometimes, so the
+    # screen barely "settles" when we end up here and kill the video
+    # capture. Let's wait a few seconds more to make it easier to see
+    # what the error was.
+    sleep 3 if scenario.failed?
     Process.kill("INT", @video_capture_pid)
   end
   if scenario.failed?
