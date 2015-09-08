@@ -43,7 +43,7 @@ rm /root/gcc-${wanted_gcc_version}.control /root/gcc-${wanted_gcc_version}_1.0_a
 
 # Versions of the module prior to 4.2 do not built on 3.8 and later [Debian #704130].
 # Install version from Wheezy backports.
-apt-get install --yes virtualbox-guest-utils virtualbox-guest-dkms virtualbox-guest-x11
+apt-get install --yes virtualbox virtualbox-dkms virtualbox-guest-dkms virtualbox-guest-utils virtualbox-guest-x11 virtualbox-qt
 
 # Have the modules built for every installed kernel
 for KERNEL in /boot/vmlinuz-* ; do
@@ -58,18 +58,25 @@ for KERNEL in /boot/vmlinuz-* ; do
       dkms install -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
    fi
 
+   if [ ! "$(dkms status -k $KERNEL_VERSION -m virtualbox -v $MODULES_VERSION)" ]; then
+      dkms build -k $KERNEL_VERSION -m virtualbox -v $MODULES_VERSION
+      dkms install -k $KERNEL_VERSION -m virtualbox -v $MODULES_VERSION
+   fi
 done
 
-# clean the build directory
+# clean the build directories
 rm -r /var/lib/dkms/virtualbox-guest/
+rm -r /var/lib/dkms/virtualbox/
 
-# virtualbox-guest-dkms's postrm script deletes any previously
-# built binary module; let's delete it before the package gets purged.
+# virtualbox-{,guest-}dkms's prerm script deletes any previously
+# built binary modules; let's delete them before the packages are purged.
 rm /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
+rm /var/lib/dpkg/info/virtualbox-dkms.prerm
 
-# Also copy the udev rules installed by virtualbox-guest-dkms to enable guest
-# additions by default.
+# Also copy the udev rules installed by virtualbox-{,guest-}dkms to enable
+# guest additions / kernel modules by default.
 cp -a /lib/udev/rules.d/60-virtualbox-guest-dkms.rules /etc/udev/rules.d/
+cp -a /lib/udev/rules.d/60-virtualbox-dkms.rules /etc/udev/rules.d/
 
 # remove temporary workaround
 rm /usr/bin/gcc-${wanted_gcc_version}
