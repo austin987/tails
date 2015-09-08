@@ -69,7 +69,7 @@ const Extension = new Lang.Class({
 
     _createActions: function() {
         this._altrestartAction = this.systemMenu._createActionButton('view-refresh-symbolic', _("Restart"));
-        this._altrestartActionID = this._altrestartAction.connect('clicked', Lang.bind(this, this._onRestartClicked));
+        this._altrestartActionId = this._altrestartAction.connect('clicked', Lang.bind(this, this._onRestartClicked));
 
         this._altpowerOffAction = this.systemMenu._createActionButton('system-shutdown-symbolic', _("Power Off"));
         this._altpowerOffActionId = this._altpowerOffAction.connect('clicked', Lang.bind(this, this._onPowerOffClicked));
