@@ -50,6 +50,9 @@ start_browser() {
     mkdir --mode=0700 -p "$TMPDIR"
     export TMPDIR
 
+    # We need to set general.useragent.locale properly to get
+    # localized search plugins (and perhaps other things too). It is
+    # not enough to simply set intl.locale.matchOS to true.
     configure_best_tor_browser_locale "${PROFILE}"
 
     if [ -z "$XAUTHORITY" ]; then
