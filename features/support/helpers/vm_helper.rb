@@ -503,9 +503,9 @@ EOF
     # If we have no qcow2 disk device, we'll use "memory state"
     # snapshots, and if we have at least one qcow2 disk device, we'll
     # use internal "system checkpoint" (memory + disks) snapshots. We
-    # have to do this since internal snapshots doesn't work when no
+    # have to do this since internal snapshots don't work when no
     # such disk is available. We can do this with external snapshots,
-    # which better in many ways, but libvirt doesn't know how to
+    # which are better in many ways, but libvirt doesn't know how to
     # restore (revert back to) them yet.
     # WARNING: If only transient disks, i.e. disks that were plugged
     # after starting the domain, are used then the memory state will
