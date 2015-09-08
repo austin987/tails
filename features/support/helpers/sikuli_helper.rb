@@ -132,6 +132,14 @@ def sikuli_script_proxy.new(*args)
     self.hover(self.wait(pic, time))
   end
 
+  def s.existsAny(images)
+    images.each do |image|
+      region = self.exists(image)
+      return [image, region] if region
+    end
+    return nil
+  end
+
   def s.findAny(images)
     images.each do |image|
       begin
@@ -149,11 +157,8 @@ def sikuli_script_proxy.new(*args)
   def s.waitAny(images, time)
     Timeout::timeout(time) do
       loop do
-        begin
-          return self.findAny(images)
-        rescue FindFailed
-          # Ignore. We want to retry until we timeout.
-        end
+        result = self.existsAny(images)
+        return result if result
       end
     end
   rescue Timeout::Error
