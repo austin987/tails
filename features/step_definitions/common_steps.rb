@@ -1065,10 +1065,6 @@ When /^I open a page on the LAN web server in the (.*)$/ do |browser|
 end
 
 def force_new_tor_circuit(with_vidalia=nil)
-  assert(!@new_circuit_tries.nil? && @new_circuit_tries >= 0,
-         '@new_circuit_tries was not initialized before it was used')
-  @new_circuit_tries += 1
-  STDERR.puts "Forcing new Tor circuit... (attempt ##{@new_circuit_tries})" if $config["DEBUG"]
   if with_vidalia
     assert_equal('gnome', @theme, "Vidalia is not available in the #{@theme} theme.")
     begin
@@ -1151,6 +1147,5 @@ end
 
 Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
   next if @skip_steps_while_restoring_background
-  @new_circuit_tries = 1 if @new_circuit_tries.nil?
   force_new_tor_circuit(with_vidalia)
 end

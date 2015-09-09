@@ -296,9 +296,10 @@ end
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   next if @skip_steps_while_restoring_background
   expected_channel_entry = chan_image(account, default_chan(account), 'roster')
-  @new_circuit_tries = 0
-  until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
-    # Sometimes the OFTC welcome notice window pops up over the buddy list one...
+  recovery_on_failure = Proc.new do
+    @screen.wait_and_click('PidginReconnect.png', 20)
+  end
+  retry_tor(recovery_on_failure) do
     begin
       @vm.focus_window('Buddy List')
     rescue ExecutionFailedInVM
@@ -307,17 +308,9 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
       # conversation window. At worst, the test will still fail...
       close_pidgin_conversation_window(account)
     end
-
     # FIXME This should be modified to use waitAny once #9633 is addressed
-    begin
-      @screen.wait(expected_channel_entry, 60)
-      break
-    rescue FindFailed
-      force_new_tor_circuit
-      @screen.wait_and_click('PidginReconnect.png', 20)
-    end
+    @screen.wait(expected_channel_entry, 60)
   end
-  @screen.wait(expected_channel_entry, 10)
 end
 
 Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ do |irc_server|
