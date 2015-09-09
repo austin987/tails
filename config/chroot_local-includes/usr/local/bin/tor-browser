@@ -21,6 +21,11 @@ PROFILE="${HOME}/.tor-browser/profile.default"
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 ask_for_confirmation() {
+    # Skip dialog if user is already running Tor Browser:
+    if pgrep -u amnesia -f "${TBB_INSTALL}/firefox" ; then
+        return
+    fi
+
     local dialog_title="`gettext \"Tor is not ready\"`"
     local dialog_text="`gettext \"Tor is not ready. Start Tor Browser anyway?\"`"
     local dialog_start="`gettext \"Start Tor Browser\"`"
@@ -58,6 +63,10 @@ start_browser() {
     if [ ! -d "${PROFILE}" ]; then
         /usr/local/bin/generate-tor-browser-profile
     fi
+
+    TMPDIR="${PROFILE}/tmp"
+    mkdir --mode=0700 -p "$TMPDIR"
+    export TMPDIR
 
     configure_best_tor_browser_locale "${PROFILE}"
 

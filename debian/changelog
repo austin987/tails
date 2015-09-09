@@ -1,3 +1,148 @@
+tails (1.5.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 5.0.2. (Closes: #10112)
+    - Upgrade gdk-pixbuf packages to 2.26.1-1+deb7u1.
+    - Upgrade libnss3 to 2:3.14.5-1+deb7u5.
+
+  * Bugfixes
+    - Refresh Tor Browser AppArmor profile patch. The old one doesn't
+      apply on top of testing's torbrowser-launcher anymore.
+
+  * Build system
+    - Make sure Jenkins creates new jobs to build the testing branch
+      after freezes. (Closes: #9925)
+
+ -- Tails developers <tails@boum.org>  Fri, 28 Aug 2015 01:52:14 +0200
+
+tails (1.5) unstable; urgency=medium
+
+  * Major new features and changes
+    - Move LAN web browsing from Tor Browser to the Unsafe Browser,
+      and forbid access to the LAN from the former. (Closes: #7976)
+    - Install a 32-bit GRUB EFI boot loader. This at least works
+      on some Intel Baytrail systems. (Closes: #8471)
+
+  * Security fixes
+    - Upgrade Tor Browser to 5.0, and integrate it:
+      · Disable Tiles in all browsers' new tab page.
+      · Don't use geo-specific search engine prefs in our browsers.
+      · Hide Tools -> Set Up Sync, Tools -> Apps (that links to the Firefox
+        Marketplace), and the "Share this page" button in the Tool bar.
+      · Generate localized Wikipedia search engine plugin icons so the
+        English and localized versions can be distinguished in the new
+        search bar. (Closes: #9955)
+    - Fix panic mode on MAC spoofing failure. (Closes: #9531)
+    - Deny Tor Browser access to global tmp directories with AppArmor,
+      and give it its own $TMPDIR. (Closes: #9558)
+    - Tails Installer: don't use a predictable file name for the subprocess
+      error log. (Closes: #9349)
+    - Pidgin AppArmor profile: disable the launchpad-integration abstraction,
+      which is too wide-open.
+    - Use aliases so that our AppArmor policy applies to
+      /lib/live/mount/overlay/ and /lib/live/mount/rootfs/*.squashfs/ as well as
+      it applies to /. And accordingly:
+      · Upgrade AppArmor packages to 2.9.0-3~bpo70+1.
+      · Install rsyslog from wheezy-backports, since the version from Wheezy
+        conflicts with AppArmor 2.9.
+      · Stop installing systemd for now: the migration work is being done in
+        the feature/jessie branch, and it conflicts with rsyslog from
+        wheezy-backports.
+      · Drop apparmor-adjust-user-tmp-abstraction.diff: obsoleted.
+      · apparmor-adjust-tor-profile.diff: simplify and de-duplicate rules.
+      · Take into account aufs whiteouts in the system_tor profile.
+      · Adjust the Vidalia profile to take into account Live-specific paths.
+    - Upgrade Linux to 3.16.7-ckt11-1+deb8u3.
+    - Upgrade bind9-host, dnsutils and friends to 1:9.8.4.dfsg.P1-6+nmu2+deb7u6.
+    - Upgrade cups-filters to 1.0.18-2.1+deb7u2.
+    - Upgrade ghostscript to 9.05~dfsg-6.3+deb7u2.
+    - Upgrade libexpat1 to 2.1.0-1+deb7u2.
+    - Upgrade libicu48 to 4.8.1.1-12+deb7u3.
+    - Upgrade libwmf0.2-7 to 0.2.8.4-10.3+deb7u1.
+    - Upgrade openjdk-7 to 7u79-2.5.6-1~deb7u1.
+
+  * Bugfixes
+    - Upgrade Tor to 0.2.6.10-1~d70.wheezy+1+tails1.
+
+  * Minor improvements
+    - Tails Installer: let the user know when it has rejected a candidate
+      destination device because it is too small. (Closes: #9130)
+    - Tails Installer: prevent users from trying to "upgrade" a device
+      that contains no Tails, or that was not installed with Tails Installer.
+      (Closes: #5623)
+    - Install libotr5 and pidgin-otr 4.x from wheezy-backports. This adds
+      support for the OTRv3 protocol and for multiple concurrent connections
+      to the same account. (Closes: #9513)
+    - Skip warning dialog when starting Tor Browser while being offline,
+      in case it is already running. Thanks to Austin English for the patch!
+      (Closes: #7525)
+    - Install the apparmor-profiles package (Closes: #9539), but don't ship
+      a bunch of AppArmor profiles we don't use, to avoid increasing
+      boot time. (Closes: #9757)
+    - Ship a /etc/apparmor.d/tunables/home.d/tails snippet, instead
+      of patching /etc/apparmor.d/tunables/home.
+    - live-boot: don't mount tmpfs twice on /live/overlay, so that the one which
+      is actually used as the read-write branch of the root filesystem's union
+      mount, is visible. As a consequence:
+      · One can now inspect how much space is used, at a given time, in the
+        read-write branch of the root filesystem's union mount.
+      · We can make sure our AppArmor policy works fine when that filesystem
+        is visible, which is safer in case e.g. live-boot's behavior changes
+        under our feet in the future... or in case these "hidden" files are
+        actually accessible somehow already.
+
+  * Build system
+    - Add our jenkins-tools repository as a Git submodule, and replace
+      check_po.sh with a symlink pointing to the same script in that submodule.
+      Adjust the automated test suite accordingly. (Closes: #9567)
+    - Bump amount of RAM needed for Vagrant RAM builds to 7.5 GiB. In
+      particular the inclusion of the Tor Browser 5.0 series has recently
+      increased the amount of space needed to build Tails. (Closes: #9901)
+
+  * Test suite
+    - Test that the Tor Browser cannot access LAN resources.
+    - Test that the Unsafe Browser can access the LAN.
+    - Installer: test new behavior when trying to upgrade an empty device, and
+      when attempting to upgrade a non-Tails FAT partition on GPT; also, take
+      into account that all unsupported upgrade scenarios now trigger
+      the same behavior.
+    - Request a new Tor circuit and re-run the Seahorse and GnuPG CLI tests
+      on failure. (Closes: #9518, #9709)
+    - run_test_suite: remove control chars from log file even when cucumber
+      exits with non-zero. (Closes: #9376)
+    - Add compatibility with cucumber 2.0 and Debian Stretch. (Closes: #9667)
+    - Use custom exception when 'execute_successfully' fails.
+    - Retry looking up whois info on transient failure. (Closes: #9668)
+    - Retry wget on transient failure. (Closes: #9715)
+    - Test that Tor Browser cannot access files in /tmp.
+    - Allow running the test suite without ntp installed. There are other means
+      to have an accurate host system clock, e.g. systemd-timesyncd and tlsdate.
+      (Closes: #9651)
+    - Bump timeout in the Totem feature.
+    - Grep memory dump using the --text option. This is necessary with recent
+      versions of grep, such as the one in current Debian sid, otherwise it
+      will count only one occurrence of the pattern we're looking for.
+      (Closes: #9759)
+    - Include execute_successfully's error in the exception, instead
+      of writing it to stdout via puts. (Closes: #9795)
+    - Test that udev-watchdog is actually monitoring the correct device.
+      (Closes: #5560)
+    - IUK: workaround weird Archive::Tar behaviour on current sid.
+    - Test the SocksPort:s given in torrc in the Unsafe Browser.
+      This way we don't get any sneaky errors in case we change them and
+      forget to update this test.
+    - Directly verify AppArmor blocking of the Tor Browser by looking in
+      the audit log: Firefox 38 does no longer provide any graphical feedback
+      when the kernel blocks its access to files the user wants to access.
+    - Update browser-related automated test suite images, and workaround
+      weirdness introduced by the new Tor Browser fonts.
+    - Test that Pidgin, Tor Browser, Totem and Evince cannot access ~/.gnupg
+      via alternate, live-boot generated paths.
+    - Adjust tests to cope with our new AppArmor aliases.
+    - Bump memory allocated to the system under test to 2 GB. (Closes: #9883)
+
+ -- Tails developers <tails@boum.org>  Mon, 10 Aug 2015 19:12:58 +0200
+
 tails (1.4.1) unstable; urgency=medium
 
   * Security fixes

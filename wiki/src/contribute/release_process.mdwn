@@ -122,7 +122,7 @@ AdBlock patterns
 ----------------
 
 Patterns are stored in
-`config/chroot_local-includes/etc/tor-browser/profile.default/adblockplus/`.
+`config/chroot_local-includes/etc/tor-browser/profile/adblockplus/`.
 
 1. Boot Tails
 2. Start the tor Browser and open *Tools* → *Addons*
@@ -482,7 +482,7 @@ check the generated `.torrent` files metainfo:
 
 	cd .. && \
 	mktorrent \
-	  -a 'http://torrent.gresille.org/announce' \
+	  -a 'udp://tracker.torrent.eu.org:451' \
 	  -a 'udp://tracker.coppersurfer.tk:6969'   \
 	  "tails-i386-${VERSION}" && \
 	btshowmetainfo tails-i386-$VERSION.torrent
@@ -734,11 +734,18 @@ to be released in `inc/*`:
 
 Update the size of the ISO image in `inc/*`:
 
-	MB=$(LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' | tr -d '\n')
-	MiB=$(LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' | tr -d '\n')
-	echo "($MB/$MiB)" > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
+	LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1/' | tr -d '\n' \
+	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mb.mdwn"
+	LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\2B/' | tr -d '\n' \
+	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mb_unit.mdwn"
+	LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1/' | tr -d '\n' \
+	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib.mdwn"
+	LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\2iB/' | tr -d '\n' \
+	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib_unit.mdwn"
 
 Update the [[support/known_issues]] page:
 
