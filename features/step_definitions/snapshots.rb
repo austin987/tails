@@ -99,6 +99,8 @@ def checkpoints
         'the boot device has safe access rights',
         'Tails is running from USB drive "current"',
         'there is no persistence partition on USB drive "current"',
+        'process "udev-watchdog" is running',
+        'udev-watchdog is monitoring the correct device',
       ],
     },
 
@@ -114,6 +116,8 @@ def checkpoints
         'I start Tails from USB drive "current" with network unplugged',
         'the boot device has safe access rights',
         'Tails is running from USB drive "current"',
+        'process "udev-watchdog" is running',
+        'udev-watchdog is monitoring the correct device',
       ],
     },
 
