@@ -100,6 +100,7 @@ module Cucumber
           'ExtraFormatters::PrettyDebug',
           'Prints the feature with debugging information - in colours.'
         ]
+      BUILTIN_FORMATS['debug'] = BUILTIN_FORMATS['pretty_debug']
     end
   end
 end
