@@ -39,7 +39,7 @@ class VMCommand
     ensure
       socket.close
     end
-    debug_log("#{type} returned: #{s}")
+    debug_log("#{type} returned: #{s}") if not(options[:spawn])
     begin
       return JSON.load(s)
     rescue JSON::ParserError
