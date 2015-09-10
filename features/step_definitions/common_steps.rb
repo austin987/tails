@@ -110,13 +110,9 @@ end
 
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
   next if @skip_steps_while_restoring_background
-  if @vm.is_running?
-    try_for(10, :msg => "Drive '#{name}' is not detected by Tails") {
-      @vm.disk_detected?(name)
-    }
-  else
-    STDERR.puts "Cannot tell if drive '#{name}' is detected by Tails: " +
-                "Tails is not running"
+  raise "Tails is not running" if @vm.is_running?
+  try_for(10, :msg => "Drive '#{name}' is not detected by Tails") do
+    @vm.disk_detected?(name)
   end
 end
 
