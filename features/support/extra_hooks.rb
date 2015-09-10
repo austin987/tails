@@ -46,6 +46,11 @@ def AfterFeature(*tag_expressions, &block)
   $after_feature_hooks << SimpleHook.new(tag_expressions, block)
 end
 
+def debug_log(message)
+  $debug_log_fns.each { |fn| fn.call(message) } if $debug_log_fns
+end
+
+require 'cucumber/formatter/pretty'
 module ExtraFormatters
   # This is a null formatter in the sense that it doesn't ever output
   # anything. We only use it do hook into the correct events so we can
@@ -72,6 +77,31 @@ module ExtraFormatters
     end
   end
 
+  # The pretty formatter with debug logging mixed into its output.
+  class PrettyDebug < Cucumber::Formatter::Pretty
+    def initialize(*args)
+      super(*args)
+      $debug_log_fns ||= []
+      $debug_log_fns << self.method(:debug_log)
+    end
+
+    def debug_log(message)
+      @io.puts(format_string(message, :blue))
+    end
+  end
+
+end
+
+module Cucumber
+  module Cli
+    class Options
+      BUILTIN_FORMATS['pretty_debug'] =
+        [
+          'ExtraFormatters::PrettyDebug',
+          'Prints the feature with debugging information - in colours.'
+        ]
+    end
+  end
 end
 
 AfterConfiguration do |config|
