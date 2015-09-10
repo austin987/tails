@@ -76,7 +76,7 @@ end
 # expected by the block, so it can be retries.
 def retry_tor(recovery_proc = nil, &block)
   max_retries = $config["MAX_NEW_TOR_CIRCUIT_RETRIES"]
-  retries = 0
+  retries = 1
   loop do
     begin
       block.call
