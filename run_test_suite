@@ -53,8 +53,6 @@ must be run from the Tails source directory root.
 Options for '@product' features:
   --capture FILE     Captures the test session into FILE using VP8 encoding.
                      Requires libvpx1.
-  --debug            Display various debugging information while running the
-                     test suite.
   --pause-on-fail    On failure, pause test suite until pressing Enter. This is
                      useful for investigating the state of the VM guest to see
                      exactly why a test failed.
@@ -75,7 +73,6 @@ Options for '@product' features:
   --old-iso IMAGE    For some '@product' features (e.g. usb_install) we need
                      an older version of Tails, which this options sets to
                      IMAGE.
-  --log-to-file FILE Clone stdout and stderr to the specified file.
 
 Note that '@source' features has no relevant options.
 
@@ -129,9 +126,6 @@ next_free_display() {
 
 test_suite_cleanup() {
     (kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}) || /bin/true
-    if [ ! -z $LOG_FILE ]; then
-       remove_control_chars_from "$LOG_FILE"
-    fi
 }
 
 start_xvfb() {
@@ -166,24 +160,6 @@ capture_session() {
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
 }
 
-remove_control_chars_from() {
-    local file="$1"
-    local tmpfile
-
-    # Sanity checks
-    [ -n "$file" ] || return 11
-    [ -r "$file" ] || return 13
-    [ -w "$(dirname "$file")" ] || return 17
-
-    # Remove control chars with `perl` and backspaces with `col`
-    tmpfile=$(mktemp)
-    cat "$file" \
-	| perl -pe 's/\e([^\[\]]|\[.*?[a-zA-Z]|\].*?\a)//g' \
-	| col -b \
-	> "$tmpfile"
-    mv "$tmpfile" "$file"
-}
-
 # main script
 
 # Unset all environment variables used by this script to pass options
@@ -200,7 +176,7 @@ SIKULI_RETRY_FINDFAILED=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="view,vnc-server-only,capture:,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail,log-to-file:"
+LONGOPTS="view,vnc-server-only,capture:,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,pause-on-fail"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -216,13 +192,6 @@ while [ $# -gt 0 ]; do
         --capture)
             shift
             CAPTURE_FILE="$1"
-            ;;
-        --log-to-file)
-            shift
-            LOG_FILE="$1"
-            ;;
-        --debug)
-            export DEBUG="yes"
             ;;
         --pause-on-fail)
             export PAUSE_ON_FAIL="yes"
@@ -279,10 +248,4 @@ export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
 
-CUCUMBER_COMMAND="cucumber ${@}"
-
-if [ -z "$LOG_FILE" ]; then
-    $CUCUMBER_COMMAND
-else
-    script --quiet --flush --return --command "$CUCUMBER_COMMAND" "$LOG_FILE" | cat
-fi
+cucumber ${@}
