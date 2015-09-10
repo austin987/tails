@@ -10,8 +10,11 @@ AfterConfiguration do |config|
   # detects it). We're forced to a convoluted solution like this
   # because CRuby's thread support is horribly as soon as IO is mixed
   # in (other threads get blocked).
+  FileUtils.rm(DEBUG_LOG_PSEUDO_FIFO) if File.exist?(DEBUG_LOG_PSEUDO_FIFO)
   FileUtils.touch(DEBUG_LOG_PSEUDO_FIFO)
-  at_exit { FileUtils.rm(DEBUG_LOG_PSEUDO_FIFO) }
+  at_exit do
+    FileUtils.rm(DEBUG_LOG_PSEUDO_FIFO) if File.exist?(DEBUG_LOG_PSEUDO_FIFO)
+  end
   Thread.new do
     File.open(DEBUG_LOG_PSEUDO_FIFO) do |fd|
       watcher = INotify::Notifier.new
