@@ -1,6 +1,28 @@
 require 'fileutils'
+require 'rb-inotify'
 require 'time'
 require 'tmpdir'
+
+# Run once, before any feature
+AfterConfiguration do |config|
+  # Start a thread that monitors a pseudo fifo file and debug_log():s
+  # anything written to it "immediately" (well, as fast as inotify
+  # detects it). We're forced to a convoluted solution like this
+  # because CRuby's thread support is horribly as soon as IO is mixed
+  # in (other threads get blocked).
+  FileUtils.touch(DEBUG_LOG_PSEUDO_FIFO)
+  at_exit { FileUtils.rm(DEBUG_LOG_PSEUDO_FIFO) }
+  Thread.new do
+    File.open(DEBUG_LOG_PSEUDO_FIFO) do |fd|
+      watcher = INotify::Notifier.new
+      watcher.watch(DEBUG_LOG_PSEUDO_FIFO, :modify) do
+        line = fd.read.chomp
+        debug_log(line) if line and line.length > 0
+      end
+      watcher.run
+    end
+  end
+end
 
 # For @product tests
 ####################
