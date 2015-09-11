@@ -3,7 +3,8 @@
 TBB_INSTALL=/usr/local/lib/tor-browser
 TBB_PROFILE=/etc/tor-browser/profile
 TBB_EXT=/usr/local/share/tor-browser-extensions
-TOR_LAUNCHER_LOCALES_DIR=/usr/local/lib/tor-launcher-standalone/chrome/locale
+TOR_LAUNCHER_INSTALL=/usr/local/lib/tor-launcher-standalone
+TOR_LAUNCHER_LOCALES_DIR="${TOR_LAUNCHER_INSTALL}/chrome/locale"
 
 exec_firefox() {
     LD_LIBRARY_PATH="${TBB_INSTALL}"

@@ -2,7 +2,8 @@
 
 set -e
 
-# Import exec_unconfined_firefox() and configure_best_tor_launcher_locale()
+# Import the TOR_LAUNCHER_INSTALL variable, and exec_unconfined_firefox()
+# and configure_best_tor_launcher_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 PROFILE="${HOME}/.tor-launcher/profile.default"
@@ -12,5 +13,5 @@ if [ ! -d "${PROFILE}" ]; then
 fi
 
 exec_unconfined_firefox \
-    -app /usr/local/lib/tor-launcher-standalone/application.ini \
+    -app "${TOR_LAUNCHER_INSTALL}/application.ini" \
     -profile "${PROFILE}"
