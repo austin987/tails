@@ -53,7 +53,7 @@ def xul_application_info(application)
     new_tab_button_image = "I2PBrowserNewTabButton.png"
   when "Tor Launcher"
     user = "tor-launcher"
-    cmd_regex = "#{binary} -app /home/#{user}/\.tor-launcher/tor-launcher-standalone/application\.ini"
+    cmd_regex = "#{binary} -app /usr/share/tor-launcher-standalone/application\.ini"
     chroot = ""
     new_tab_button_image = nil
     address_bar_image = nil
