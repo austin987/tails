@@ -643,9 +643,22 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   next if @skip_steps_while_restoring_background
   step "I open a new tab in the #{browser}"
   info = xul_application_info(browser)
-  @screen.click(info[:address_bar_image])
-  sleep 0.5
-  @screen.type(address + Sikuli::Key.ENTER)
+  open_address = Proc.new do
+    @screen.click(info[:address_bar_image])
+    sleep 0.5
+    @screen.type(address + Sikuli::Key.ENTER)
+  end
+  open_address.call
+  if browser == "Tor Browser"
+    recovery_on_failure = Proc.new do
+      @screen.type(Sikuli::Key.ESC)
+      @screen.waitVanish('BrowserReloadButton.png', 3)
+      open_address.call
+    end
+    retry_tor(recovery_on_failure) do
+      @screen.wait('BrowserReloadButton.png', 120)
+    end
+  end
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
