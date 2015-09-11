@@ -3,6 +3,7 @@ import sys
 import jabberbot
 import xmpp
 import potr
+import logging
 from argparse import ArgumentParser
 
 class OtrContext(potr.context.Context):
@@ -71,6 +72,7 @@ class OtrBot(jabberbot.JabberBot):
     # completely (copy-paste mostly) in order to add support for using
     # an XMPP "Connect Server".
     def connect(self):
+        logging.basicConfig(level=logging.CRITICAL)
         if not self.conn:
             conn = xmpp.Client(self.jid.getDomain(), debug=[])
             if self.__connect_server:
