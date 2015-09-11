@@ -113,6 +113,15 @@ smtp_port = 25
 # certificate or the certificate of the SMTP server itself
 smtp_tlscafile = "/etc/whisperback/4mvq3pnvid3awjln.onion.pem"
 
+# SOCKS
+#
+# This section defines the SOCKS proxy parameters
+#
+# The SOCKS proxy to use to send the mail
+socks_host = "127.0.0.1"
+# The port to connect to on that SOCKS proxy
+socks_port = 9500
+
 # MESSAGE
 #
 # This section defines the message parameters
