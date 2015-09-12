@@ -12,7 +12,6 @@ Given /^the I2P router console is ready$/ do
 end
 
 Then /^the I2P router console is displayed in I2P Browser$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait('I2PRouterConsole.png', 2 * 60)
 end
 
@@ -59,32 +58,27 @@ Then /^the I2P firewall rules are (enabled|disabled)$/ do |mode|
 end
 
 Then /^I2P is running in hidden mode$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("I2PNetworkHidden.png", 10)
 end
 
 Then /^I block the I2P router console port$/ do
-  next if @skip_steps_while_restoring_background
   step 'process "nc" is not running'
-  @vm.spawn("nc -l -p 7657 -t 127.0.0.1")
+  $vm.spawn("nc -l -p 7657 -t 127.0.0.1")
   step 'process "nc" is running within 5 seconds'
 end
 
 Then /^the I2P homepage loads in I2P Browser$/ do
-  next if @skip_steps_while_restoring_background
-  @vm.focus_window('I2P Browser')
+  $vm.focus_window('I2P Browser')
   @screen.wait('I2PBrowserProjectHomepage.png', 80)
 end
 
 Then /^I see a notification that I2P failed to start$/ do
-  next if @skip_steps_while_restoring_background
   notification_helper('I2PFailedToStart.png', 2 * 60)
 end
 
 Then /^I2P successfully built a tunnel$/ do
-  next if @skip_steps_while_restoring_background
   try_for(7 * 60) do
-    @vm.execute('. /usr/local/lib/tails-shell-library/i2p.sh; ' +
+    $vm.execute('. /usr/local/lib/tails-shell-library/i2p.sh; ' +
                 'i2p_has_bootstrapped').success?
   end
 end
