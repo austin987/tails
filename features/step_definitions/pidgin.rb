@@ -290,13 +290,17 @@ When /^I close Pidgin's account manager window$/ do
   @screen.wait_and_click("PidginAccountManagerCloseButton.png", 10)
 end
 
-When /^I activate the "([^"]+)" Pidgin account$/ do |account|
+When /^I (de)?activate the "([^"]+)" Pidgin account$/ do |deactivate, account|
   @screen.click("PidginAccount_#{account}.png")
   @screen.type(Sikuli::Key.LEFT + Sikuli::Key.SPACE)
-  # wait for the Pidgin to be connecting, otherwise sometimes the step
-  # that closes the account management dialog happens before the account
-  # is actually enabled
-  @screen.wait("PidginConnecting.png", 5)
+  if deactivate
+    @screen.waitVanish('PidginAccountEnabledCheckbox.png', 5)
+  else
+    # wait for the Pidgin to be connecting, otherwise sometimes the step
+    # that closes the account management dialog happens before the account
+    # is actually enabled
+    @screen.wait("PidginConnecting.png", 5)
+  end
 end
 
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
