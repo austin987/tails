@@ -4,6 +4,10 @@
 
 This document serves as an explanation of the rationale behind the proposed Greeter design related to [[!tails_ticket 8230]]. This document will grow over time, so please feel free to agree with, object to, or request anything.
 
+# Contents
+
+[[!toc levels=3]]
+
 # History of this document
 
 This document is the result of a process that took more than one year:
@@ -61,7 +65,10 @@ Design a greeter dialog that:
 
 ## Proposed design
 
-[[!img Greeter.Welcome.png link="Greeter.Welcome.svg"]]
+<img src="https://labs.riseup.net/code/attachments/download/937/Tails.Greeter.Explained.png" width="900px" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/937/Tails.Greeter.Explained.png)
+[source](https://labs.riseup.net/code/attachments/download/936/Tails.Greeter.Explained.svgz)
 
 There is a single welcome and settings screen which is always displayed and acts as a "Check & Go" screen, as well as a hub for editing settings. 
 
@@ -83,7 +90,11 @@ Which content structure type is most appropriate for the Greeter?
 - Show/Hide - Hidden off-screen or behind on-screen element
 - **Openface - Full display**
 
-With the Step-by-step flow already established as the most appropriate guided configuration structure, the designation made was that, although the Show/Hide structure most appropriately accommodates the two end-of-spectrum use cases (noob vs veteran), the Openface structure is the most appropriate for the Greeter’s first screen, as it most closely aligns with GNOME HIG and ensures there is no hidden or undiscoverable information.
+With the Step-by-step flow already established as the most appropriate guided configuration structure, the designation made was that, the Show/Hide structure most appropriately accommodates the two end-of-spectrum use cases (noob vs veteran). However, it doesn't align GNOME HIG and doesn't feedback to the user which options are selected (when diverging from defaults). We thus choosed to:
+
+- add a + button to add setting, as commonly found in GNOME lists
+- display settings that diverge from defaults
+
 
 ### Options Available On The 1st Screen
 
@@ -91,8 +102,7 @@ The hypothesis is that a good design should allow people to teach themselves.
 
 With this said, it seems appropriate to educate people of varying technical levels of understanding what options are available to them and what importance these options hold in regard to the intended function.
 
-In our situation, this is most effectively accomplished by 
-displaying everything upfront (Openface).
+In our situation, this is most effectively accomplished by displaying all settings groups upfront. However, in order not lose the beginners, the privacy settings are hidden when they doesn't diverge from defaults.
 
 ### Start Tails Button Location
 
