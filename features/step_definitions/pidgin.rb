@@ -303,10 +303,28 @@ When /^I (de)?activate the "([^"]+)" Pidgin account$/ do |deactivate, account|
   end
 end
 
+def deactivate_and_activate_pidgin_account(account)
+  if $config['DEBUG']
+    STDERR.puts "Deactivating and reactivating Pidgin account #{account}"
+  end
+  step "I open Pidgin's account manager window"
+  step "I deactivate the \"#{account}\" Pidgin account"
+  step "I close Pidgin's account manager window"
+  step "I open Pidgin's account manager window"
+  step "I activate the \"#{account}\" Pidgin account"
+  step "I close Pidgin's account manager window"
+end
+
+
+
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   expected_channel_entry = chan_image(account, default_chan(account), 'roster')
   recovery_on_failure = Proc.new do
-    @screen.wait_and_click('PidginReconnect.png', 20)
+    if @screen.exists('PidginReconnect.png')
+      @screen.click('PidginReconnect.png')
+    else
+      deactivate_and_activate_pidgin_account(account)
+    end
   end
   retry_tor(recovery_on_failure) do
     begin
