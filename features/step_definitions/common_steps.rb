@@ -104,13 +104,9 @@ Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
 end
 
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
-  if $vm.is_running?
-    try_for(10, :msg => "Drive '#{name}' is not detected by Tails") {
-      $vm.disk_detected?(name)
-    }
-  else
-    STDERR.puts "Cannot tell if drive '#{name}' is detected by Tails: " +
-                "Tails is not running"
+  raise "Tails is not running" if $vm.is_running?
+  try_for(10, :msg => "Drive '#{name}' is not detected by Tails") do
+    $vm.disk_detected?(name)
   end
 end
 
@@ -953,13 +949,13 @@ def force_new_tor_circuit(with_vidalia=nil)
   assert(!@new_circuit_tries.nil? && @new_circuit_tries >= 0,
          '@new_circuit_tries was not initialized before it was used')
   @new_circuit_tries += 1
-  STDERR.puts "Forcing new Tor circuit... (attempt ##{@new_circuit_tries})" if $config["DEBUG"]
+  debug_log("Forcing new Tor circuit... (attempt ##{@new_circuit_tries})")
   if with_vidalia
     assert_equal('gnome', @theme, "Vidalia is not available in the #{@theme} theme.")
     begin
       step 'process "vidalia" is running'
     rescue Test::Unit::AssertionFailedError
-      STDERR.puts "Vidalia was not running. Attempting to start Vidalia..." if $config["DEBUG"]
+      debug_log("Vidalia was not running. Attempting to start Vidalia...")
       $vm.spawn('restart-vidalia')
       step 'process "vidalia" is running within 15 seconds'
     end
