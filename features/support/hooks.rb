@@ -90,6 +90,10 @@ BeforeFeature('@product') do |feature|
     raise "The specified Tails ISO image '#{TAILS_ISO}' does not exist"
   end
   puts "Testing ISO image: #{File.basename(TAILS_ISO)}"
+  if !File.exist?(OLD_TAILS_ISO)
+    raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
+  end
+  puts "Using old ISO image: #{File.basename(OLD_TAILS_ISO)}"
   base = File.basename(feature.file, ".feature").to_s
   $background_snapshot = "#{$config["TMPDIR"]}/#{base}_background.state"
   $virt = Libvirt::open("qemu:///system")
@@ -102,20 +106,6 @@ AfterFeature('@product') do
   $vmstorage.clear_pool
   $vmnet.destroy_and_undefine
   $virt.close
-end
-
-BeforeFeature('@product', '@old_iso') do
-  if OLD_TAILS_ISO.nil?
-    raise "No old Tails ISO image specified, and none could be found in the " +
-          "current directory"
-  end
-  if !File.exist?(OLD_TAILS_ISO)
-    raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
-  end
-  if TAILS_ISO == OLD_TAILS_ISO
-    raise "The old Tails ISO is the same as the Tails ISO we're testing"
-  end
-  puts "Using old ISO image: #{File.basename(OLD_TAILS_ISO)}"
 end
 
 # BeforeScenario
