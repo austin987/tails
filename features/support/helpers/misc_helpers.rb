@@ -77,13 +77,25 @@ end
 class TorFailure < StandardError
 end
 
+class MaxRetriesFailure < StandardError
+end
+
 # This will retry the block up to MAX_NEW_TOR_CIRCUIT_RETRIES
 # times. The block must raise an exception for a run to be considered
 # as a failure. After a failure recovery_proc will be called (if
 # given) and the intention with it is to bring us back to the state
 # expected by the block, so it can be retries.
+#
 def retry_tor(recovery_proc = nil, &block)
-  max_retries = $config["MAX_NEW_TOR_CIRCUIT_RETRIES"]
+  retry_action(recovery_proc, tor = true, &block)
+end
+
+def retry_action(recovery_proc = nil, tor = nil, &block)
+  if tor
+    max_retries = $config["MAX_NEW_TOR_CIRCUIT_RETRIES"]
+  else
+    max_retries = 10
+  end
   retries = 1
   loop do
     begin
@@ -92,17 +104,29 @@ def retry_tor(recovery_proc = nil, &block)
     rescue Exception => e
       if retries <= max_retries
         if $config["DEBUG"]
-          STDERR.puts "Tor operation failed (Tor circuit try #{retries} of " +
-                      "#{max_retries}) with:\n" +
-                      "#{e.class}: #{e.message}"
+          if tor
+            STDERR.puts "Tor operation failed (Tor circuit try #{retries} of " +
+                        "#{max_retries}) with:\n" +
+                        "#{e.class}: #{e.message}"
+          else
+            STDERR.puts "Operation failed (Try #{retries} of " +
+                        "#{max_retries}) with:\n" +
+                        "#{e.class}: #{e.message}"
+          end
         end
         recovery_proc.call if recovery_proc
-        force_new_tor_circuit
+        force_new_tor_circuit if tor
         retries += 1
       else
-        raise TorFailure.new("The operation failed (despite forcing " +
-                             "#{max_retries} new Tor circuits) with\n" +
-                             "#{e.class}: #{e.message}")
+        if tor
+          raise TorFailure.new("The operation failed (despite forcing " +
+                               "#{max_retries} new Tor circuits) with\n" +
+                               "#{e.class}: #{e.message}")
+        else
+          raise MaxRetriesFailure.new("The operation failed (despite retrying " +
+                                      "#{max_retries} times) with\n" +
+                                      "#{e.class}: #{e.message}")
+        end
       end
     end
   end
