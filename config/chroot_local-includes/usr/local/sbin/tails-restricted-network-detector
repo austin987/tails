@@ -62,8 +62,9 @@ while(my $sl = $parser->next) {
         # connections. We drop any previous state so it won't
         # interfere.
         $state{$1} = "";
-    } elsif ($text =~ /\(([^)]+)\): supplicant connection state:.*-> (.*)$/) {
-        # Wireless connection state transition.
+    } elsif ($text =~ /\(([^)]+)\): supplicant (?:connection|interface) state: \S+ -> (\S+)/ ||
+             $text =~ /\(([^)]+)\): device state change: \S+ -> (\S+)/) {
+        # State transition.
         $state{$1} = $2;
     } elsif ($text =~ /Activation \(([^)]+)\/[^)]*\): association took too long/) {
         # Wireless connection failure. If it happens during
