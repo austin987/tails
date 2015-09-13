@@ -15,6 +15,11 @@ Feature: I2P
     And the I2P Browser sudo rules are enabled
     And the I2P firewall rules are enabled
 
+  Scenario: I2P's AppArmor profile is in enforce mode
+    Given Tails has booted from DVD with I2P enabled and logged in and the network is connected
+    When I2P is running
+    Then the running process "i2p" is confined with AppArmor in enforce mode
+
   Scenario: The I2P Browser works as it should
     Given Tails has booted from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
