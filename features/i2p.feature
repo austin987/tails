@@ -58,13 +58,8 @@ Feature: I2P
     And I can join the "#i2p" channel on "I2P"
 
   Scenario: I2P displays a notice when bootstrapping fails
-    Given a computer
-    And the network is unplugged
-    And I set Tails to boot with options "i2p"
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    Then I2P is not running
+    Given Tails has booted from DVD with I2P enabled and logged in
+    And I2P is not running
     When the network is plugged
     And Tor has built a circuit
     And I2P is running
@@ -77,13 +72,9 @@ Feature: I2P
     Then the I2P router console is displayed in I2P Browser
 
   Scenario: I2P displays a notice when it fails to start
-    Given a computer
-    And the network is unplugged
-    And I set Tails to boot with options "i2p"
-    And I start the computer
-    And the computer boots Tails
+    Given Tails has booted from DVD with I2P enabled and logged in
+    And I2P is not running
     And I block the I2P router console port
-    And I log in to a new session
     Then I2P is not running
     When the network is plugged
     And Tor has built a circuit
