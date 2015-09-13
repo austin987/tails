@@ -16,7 +16,9 @@ export TEXTDOMAIN
 
 disable_networking() {
     service network-manager stop || :
-    rm -f /etc/init.d/network-manager /usr/sbin/NetworkManager
+    for f in /etc/init.d/network-manager /usr/sbin/NetworkManager; do
+        [ -e "${f}" ] && mv "${f}" "${f}.disabled"
+    done
     log "Networking disabled"
 }
 

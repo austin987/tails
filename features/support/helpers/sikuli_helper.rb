@@ -5,6 +5,9 @@ require 'sikuli-script.jar'
 Rjb::load
 
 package_members = [
+                   "java.io.FileOutputStream",
+                   "java.io.PrintStream",
+                   "java.lang.System",
                    "org.sikuli.script.Finder",
                    "org.sikuli.script.Key",
                    "org.sikuli.script.KeyModifier",
@@ -18,6 +21,8 @@ package_members = [
 
 translations = Hash[
                     "org.sikuli.script", "Sikuli",
+                    "java.lang", "Java::Lang",
+                    "java.io", "Java::Io",
                    ]
 
 for p in package_members
@@ -35,6 +40,12 @@ for p in package_members
   end
   mod.const_set(class_name, imported_class)
 end
+
+# Bind Java's stdout to debug_log() via our magical pseudo fifo
+# logger.
+file_output_stream = Java::Io::FileOutputStream.new(DEBUG_LOG_PSEUDO_FIFO)
+print_stream = Java::Io::PrintStream.new(file_output_stream)
+Java::Lang::System.setOut(print_stream)
 
 def findfailed_hook(pic)
   STDERR.puts ""
@@ -188,7 +199,7 @@ sikuli_settings.OcrDataPath = $config["TMPDIR"]
 # Also, Sikuli's default of 0.7 is simply too low (many false
 # positives).
 sikuli_settings.MinSimilarity = 0.9
-sikuli_settings.ActionLogs = $config["DEBUG"]
-sikuli_settings.DebugLogs = $config["DEBUG"]
-sikuli_settings.InfoLogs = $config["DEBUG"]
-sikuli_settings.ProfileLogs = $config["DEBUG"]
+sikuli_settings.ActionLogs = true
+sikuli_settings.DebugLogs = true
+sikuli_settings.InfoLogs = true
+sikuli_settings.ProfileLogs = true
