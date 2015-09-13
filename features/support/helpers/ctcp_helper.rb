@@ -19,7 +19,7 @@ class CtcpChecker < Net::IRC::Client
       :user => nickname,
       :real => nickname,
     }
-    opts[:logger] = Logger.new("/dev/null") if !$config["DEBUG"]
+    opts[:logger] = Logger.new(DEBUG_LOG_PSEUDO_FIFO)
     super(host, port, opts)
   end
 
