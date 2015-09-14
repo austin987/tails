@@ -16,15 +16,20 @@ set -u
 
 # Import wait_until()
 . /usr/local/lib/tails-shell-library/common.sh
-# Import i2p_has_bootstrapped(), i2p_router_console_is_ready() and
-# set_best_i2p_router_console_lang().
+# Import i2p_has_bootstrapped, i2p_reseed_failed, i2p_router_console_is_ready(),
+# and set_best_i2p_router_console_lang().
 . /usr/local/lib/tails-shell-library/i2p.sh
 
 I2P_STARTUP_TIMEOUT=60
-# We'll give up once 6 minutes have passed. Even with ridiculously
-# subpar network conditions I've not seen bootstrapping take longer
-# than this.
-I2P_BOOTSTRAP_TIMEOUT=360
+
+# When there are network problems (either local or remote), it can take up to 3
+# minutes for all of the current reseed servers to be tried.
+I2P_BOOTSTRAP_TIMEOUT=210
+
+# After the router infos (RIs) are downloaded from the reseed servers
+# it can take 3-5 minutes for a tunnel to be built, e.g.
+# once we get to this point I2P should be ready to be used.
+I2P_TUNNEL_BUILD_TIMEOUT=120
 
 startup_failure() {
     /usr/local/sbin/tails-notify-user \
@@ -36,6 +41,10 @@ startup_failure() {
 
 wait_until_i2p_router_console_is_ready() {
     wait_until ${I2P_STARTUP_TIMEOUT} i2p_router_console_is_ready
+}
+
+wait_and_see_if_i2p_fails_to_bootstrap() {
+    wait_until ${I2P_BOOTSTRAP_TIMEOUT} i2p_reseed_failed
 }
 
 notify_router_console_success() {
@@ -52,10 +61,19 @@ bootstrap_failure() {
 }
 
 wait_until_i2p_has_bootstrapped() {
-    wait_until ${I2P_BOOTSTRAP_TIMEOUT} i2p_has_bootstrapped
+    # XXX workaround upstream bug
+    # The old check of seeing whether port 4444 is open isn't currently
+    # reliable. Although a tunnel may not be built yet the port may still be
+    # open.
+
+    # There's nearly zero chance that there'll be a tunnel ready before three
+    # minutes have elapsed.
+    sleep ${I2P_TUNNEL_BUILD_TIMEOUT} # initial 3 minute wait
+    wait_until ${I2P_TUNNEL_BUILD_TIMEOUT} i2p_has_bootstrapped # potentially 3 additional minutes
 }
 
 notify_bootstrap_success() {
+    touch /run/i2p/i2p_has_bootstrapped
     /usr/local/sbin/tails-notify-user \
         "`gettext \"I2P is ready\"`" \
         "`gettext \"You can now access services on I2P.\"`"
@@ -75,11 +93,13 @@ case "${1}" in
         service i2p start
         wait_until_i2p_router_console_is_ready || startup_failure
         notify_router_console_success
+        wait_and_see_if_i2p_fails_to_bootstrap && bootstrap_failure
         wait_until_i2p_has_bootstrapped || bootstrap_failure
         notify_bootstrap_success
         ;;
     stop)
         exec service i2p stop
+        rm -f /run/i2p/i2p_has_bootstrapped
         ;;
     *)
         echo "invalid argument '${1}'" >&2
