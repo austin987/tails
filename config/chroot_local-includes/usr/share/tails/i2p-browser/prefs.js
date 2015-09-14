@@ -7,21 +7,9 @@ pref("network.proxy.http_port", 4444);
 pref("network.proxy.no_proxies_on", "127.0.0.1");
 pref("network.proxy.ssl", "127.0.0.1");
 pref("network.proxy.ssl_port", 4444);
+
 // Disable searching from the URL bar
 pref("keyword.enabled", false);
-// Hide "Get Addons" in Add-ons manager
-pref("extensions.getAddons.showPane", false);
-/* Prevent File -> Print or CTRL+P from causing the browser to hang
-   for several minutes while trying to communicate with CUPS, since
-   access to port 631 isn't allowed through. */
-pref("print.postscript.cups.enabled", false);
-
-// Disable fetching of the new tab page's Tiles links/ads. It will not
-// work in the I2P Browser.
-pref("browser.newtabpage.directory.source", "");
-pref("browser.newtabpage.directory.ping", "");
-// ... and disable the explanation shown the first time
-pref("browser.newtabpage.introShown", true);
 
 // Never  add 'www' or '.com' to hostnames in I2P Browser.
 pref("browser.fixup.alternate.enabled", false);

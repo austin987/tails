@@ -136,7 +136,8 @@ configure_chroot_browser_profile () {
     # Set preferences
     local browser_prefs="${browser_profile}/preferences/prefs.js"
     mkdir -p "$(dirname "${browser_prefs}")"
-    cp "/usr/share/tails/${browser_name}/prefs.js" "${browser_prefs}"
+    cat "/usr/share/tails/chroot-browser/prefs.js" \
+        "/usr/share/tails/${browser_name}/prefs.js" > "${browser_prefs}"
 
     # Set browser home page to something that explains what's going on
     if [ -n "${home_page}" ]; then
