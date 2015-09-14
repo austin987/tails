@@ -166,7 +166,8 @@ configure_chroot_browser_profile () {
     # appending to the camouflage config.
     local browser_chrome="${browser_profile}/chrome/userChrome.css"
     mkdir -p "$(dirname "${browser_chrome}")"
-    cat "/usr/share/tails/${browser_name}/userChrome.css" >> "${browser_chrome}"
+    cat "/usr/share/tails/chroot-browser/userChrome.css" \
+        "/usr/share/tails/${browser_name}/userChrome.css" >> "${browser_chrome}"
 
     set_chroot_browser_permissions "${chroot}" "${browser_name}" "${browser_user}"
 }
