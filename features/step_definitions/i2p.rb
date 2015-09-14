@@ -69,8 +69,15 @@ Then /^I block the I2P router console port$/ do
 end
 
 Then /^the I2P homepage loads in I2P Browser$/ do
-  $vm.focus_window('I2P Browser')
-  @screen.wait('I2PBrowserProjectHomepage.png', 80)
+  recovery_on_failure = Proc.new do
+    $vm.focus_window('I2P Browser')
+    @screen.type(Sikuli::Key.ESC)
+    @screen.click('BrowserReloadButton.png')
+  end
+  retry_action(recovery_on_failure) do
+    $vm.focus_window('I2P Browser')
+    @screen.wait('I2PBrowserProjectHomepage.png', 80)
+  end
 end
 
 Then /^I see a notification that I2P failed to start$/ do
