@@ -304,9 +304,7 @@ When /^I (de)?activate the "([^"]+)" Pidgin account$/ do |deactivate, account|
 end
 
 def deactivate_and_activate_pidgin_account(account)
-  if $config['DEBUG']
-    STDERR.puts "Deactivating and reactivating Pidgin account #{account}"
-  end
+  debug_log("Deactivating and reactivating Pidgin account #{account}")
   step "I open Pidgin's account manager window"
   step "I deactivate the \"#{account}\" Pidgin account"
   step "I close Pidgin's account manager window"
