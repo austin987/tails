@@ -35,6 +35,8 @@ startup_failure() {
     /usr/local/sbin/tails-notify-user \
         "`gettext \"I2P failed to start\"`" \
         "`gettext \"Something went wrong when I2P was starting. Check the logs in /var/log/i2p for more information.\"`"
+    service i2p dump # generate a thread dump
+    sleep 5 # Give thread dump ample time to complete
     service i2p stop # clean up, just in case
     exit 1
 }
