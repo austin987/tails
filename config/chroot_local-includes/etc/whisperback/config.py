@@ -120,7 +120,7 @@ smtp_tlscafile = "/etc/whisperback/4mvq3pnvid3awjln.onion.pem"
 # The SOCKS proxy to use to send the mail
 socks_host = "127.0.0.1"
 # The port to connect to on that SOCKS proxy
-socks_port = 9500
+socks_port = 9062
 
 # MESSAGE
 #
