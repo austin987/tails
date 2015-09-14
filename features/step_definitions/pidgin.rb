@@ -326,7 +326,8 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
       deactivate_and_activate_pidgin_account(account)
     end
   end
-  retry_tor(recovery_on_failure) do
+  account == 'I2P' ? tor = nil : tor = true
+  retry_action(recovery_on_failure, tor) do
     begin
       $vm.focus_window('Buddy List')
     rescue ExecutionFailedInVM
