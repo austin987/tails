@@ -86,8 +86,7 @@ end
 
 Then /^I2P successfully built a tunnel$/ do
   try_for(7 * 60) do
-    $vm.execute('. /usr/local/lib/tails-shell-library/i2p.sh; ' +
-                'i2p_has_built_a_tunnel').success?
+    $vm.execute("test -e /run/i2p/i2p_has_bootstrapped").success?
   end
 end
 
