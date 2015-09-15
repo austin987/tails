@@ -24,7 +24,7 @@ The following packages are necessary on Debian Jessie:
     apt install git i18nspector xvfb virt-viewer libsikuli-script-java \
         libxslt1-dev tcpdump unclutter radvd x11-apps \
         libcap2-bin devscripts ruby-libvirt ruby-rspec gawk ntp ovmf \
-        ruby-json x11vnc xtightvncviewer libav-tools \
+        ruby-json ruby-rb-inotify x11vnc xtightvncviewer libav-tools \
         libvpx1 dnsmasq-base openjdk-7-jre ruby-guestfs ruby-net-irc \
         ruby-test-unit qemu-kvm qemu-system-x86 libvirt0 libvirt-dev \
         libvirt-daemon-system libvirt-clients seabios ruby-rjb \
@@ -48,6 +48,19 @@ File permissions
 
 The user that runs QEMU (via libvirt) needs read-access at least to
 the content of `features/misc_files/` in the Git checkout.
+
+AppArmor tweaks
+---------------
+
+If libvirt has the `apparmor` security driver enabled:
+
+* you may need to add the `/tmp/TailsToaster/TailsToasterStorage/*
+  rw,` line to `/etc/apparmor.d/libvirt/TEMPLATE.qemu`, in the
+  `profile LIBVIRT_TEMPLATE` section;
+* you may hit various problems, such as denied access to
+  `/usr/share/ovmf/OVMF.fd`; all such known problems are (as of
+  2015-08-12) on their way for being fixed upstream in libvirt.
+  Running a recent libvirt may help.
 
 Special use cases
 =================
