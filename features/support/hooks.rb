@@ -17,7 +17,7 @@ AfterConfiguration do |config|
     FileUtils.chmod(0755, $config["TMPDIR"])
   else
     begin
-      Dir.mkdir($config["TMPDIR"])
+      FileUtils.mkdir_p($config["TMPDIR"])
     rescue Errno::EACCES => e
       raise "Cannot create temporary directory: #{e.to_s}"
     end
