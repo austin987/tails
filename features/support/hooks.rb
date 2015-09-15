@@ -42,6 +42,8 @@ AfterConfiguration do |config|
       watcher.run
     end
   end
+  # Fix Sikuli's debug_log():ing.
+  bind_java_to_pseudo_fifo_logger
 end
 
 # For @product tests

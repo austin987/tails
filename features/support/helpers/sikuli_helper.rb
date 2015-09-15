@@ -43,9 +43,11 @@ end
 
 # Bind Java's stdout to debug_log() via our magical pseudo fifo
 # logger.
-file_output_stream = Java::Io::FileOutputStream.new(DEBUG_LOG_PSEUDO_FIFO)
-print_stream = Java::Io::PrintStream.new(file_output_stream)
-Java::Lang::System.setOut(print_stream)
+def bind_java_to_pseudo_fifo_logger
+  file_output_stream = Java::Io::FileOutputStream.new(DEBUG_LOG_PSEUDO_FIFO)
+  print_stream = Java::Io::PrintStream.new(file_output_stream)
+  Java::Lang::System.setOut(print_stream)
+end
 
 def findfailed_hook(pic)
   STDERR.puts ""
