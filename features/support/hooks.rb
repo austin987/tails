@@ -9,6 +9,24 @@ AfterConfiguration do |config|
   # we'll do some special things.
   $started_first_product_feature = false
 
+  if File.exist?($config["TMPDIR"])
+    if !File.directory?($config["TMPDIR"])
+      raise "Temporary directory '#{$config["TMPDIR"]}' exists but is not a " +
+            "directory"
+    end
+    if !File.owned?($config["TMPDIR"])
+      raise "Temporary directory '#{$config["TMPDIR"]}' must be owned by the " +
+            "current user"
+    end
+    FileUtils.chmod(0755, $config["TMPDIR"])
+  else
+    begin
+      FileUtils.mkdir_p($config["TMPDIR"])
+    rescue Errno::EACCES => e
+      raise "Cannot create temporary directory: #{e.to_s}"
+    end
+  end
+
   # Start a thread that monitors a pseudo fifo file and debug_log():s
   # anything written to it "immediately" (well, as fast as inotify
   # detects it). We're forced to a convoluted solution like this
@@ -29,6 +47,8 @@ AfterConfiguration do |config|
       watcher.run
     end
   end
+  # Fix Sikuli's debug_log():ing.
+  bind_java_to_pseudo_fifo_logger
 end
 
 # For @product tests
@@ -40,23 +60,6 @@ def add_after_scenario_hook(&block)
 end
 
 BeforeFeature('@product') do |feature|
-  if File.exist?($config["TMPDIR"])
-    if !File.directory?($config["TMPDIR"])
-      raise "Temporary directory '#{$config["TMPDIR"]}' exists but is not a " +
-            "directory"
-    end
-    if !File.owned?($config["TMPDIR"])
-      raise "Temporary directory '#{$config["TMPDIR"]}' must be owned by the " +
-            "current user"
-    end
-    FileUtils.chmod(0755, $config["TMPDIR"])
-  else
-    begin
-      Dir.mkdir($config["TMPDIR"])
-    rescue Errno::EACCES => e
-      raise "Cannot create temporary directory: #{e.to_s}"
-    end
-  end
   if TAILS_ISO.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
           "current directory"
