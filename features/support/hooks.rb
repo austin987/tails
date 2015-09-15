@@ -114,8 +114,8 @@ Before('@product') do |scenario|
   if $config["CAPTURE"]
     video_name = "capture-" + "#{scenario.name}-#{TIME_AT_START}.mkv"
     # Sanitize the filename from unix-hostile filename characters
-    bad_unix_filename_chars = Regexp.new("[\s/]")
-    video_name.gsub!(bad_unix_filename_chars, '_')
+    bad_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,]")
+    video_name.gsub!(bad_filename_chars, '_')
     @video_path = "#{$config['TMPDIR']}/#{video_name}"
     capture = IO.popen(['avconv',
                         '-f', 'x11grab',
