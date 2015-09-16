@@ -74,6 +74,12 @@ end
 sikuli_script_proxy = Sikuli::Screen
 $_original_sikuli_screen_new ||= Sikuli::Screen.method :new
 
+# For waitAny()/findAny() we are forced to throw this exception since
+# Rjb::throw doesn't block until the Java exception has been received
+# by Ruby, so strange things can happen.
+class FindAnyFailed < StandardError
+end
+
 def sikuli_script_proxy.new(*args)
   s = $_original_sikuli_screen_new.call(*args)
 
@@ -163,8 +169,8 @@ def sikuli_script_proxy.new(*args)
       end
     end
     # If we've reached this point, none of the images could be found.
-    Rjb::throw('org.sikuli.script.FindFailed',
-               "can not find any of the images #{images} on the screen")
+    raise FindAnyFailed.new("can not find any of the images #{images} on the " +
+                            "screen")
   end
 
   def s.waitAny(images, time)
@@ -175,8 +181,8 @@ def sikuli_script_proxy.new(*args)
       end
     end
   rescue Timeout::Error
-    Rjb::throw('org.sikuli.script.FindFailed',
-               "can not find any of the images #{images} on the screen")
+    raise FindAnyFailed.new("can not find any of the images #{images} on the " +
+                            "screen")
   end
 
   def s.hover_point(x, y)
