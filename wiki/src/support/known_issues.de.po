@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2015-05-12 19:32+0300\n"
+"POT-Creation-Date: 2015-09-03 12:56+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -309,6 +309,17 @@ msgstr ""
 
 #. type: Title -
 #, no-wrap
+msgid "HP Pavilion dv7\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Since Tails 1.3, gets stuck at the boot menu, whether Tails is installed "
+"manually or using Tails Installer."
+msgstr ""
+
+#. type: Title -
+#, no-wrap
 msgid "HP ProBook 4330s\n"
 msgstr ""
 
@@ -338,7 +349,7 @@ msgstr ""
 
 #. type: Title -
 #, no-wrap
-msgid "Clevo W258CU, ThinkPad X121e, T420i, T410, T520, W520, T530, E325 and E530\n"
+msgid "Clevo W258CU, ThinkPad X220, X121e, T420i, T410, T520, W520, T530, E325, and E530\n"
 msgstr ""
 
 #. type: Plain text
@@ -374,14 +385,20 @@ msgstr ""
 
 #. type: Bullet: '* '
 msgid ""
-"Any Mac with 32-bit EFI won't succeed in booting Tails USB stick created by "
-"Tails Installer. You can check if a given Mac is 32-bit or 64-bit EFI on "
+"Any Mac with 32-bit EFI may not succeed in booting Tails USB stick created "
+"by Tails Installer. You can check if a given Mac is 32-bit or 64-bit EFI on "
 "that list: <http://www.everymac.com/mac-answers/snow-leopard-mac-os-x-faq/"
 "mac-os-x-snow-leopard-64-bit-macs-64-bit-efi-boot-in-64-bit-mode.html>"
 msgstr ""
 
 #. type: Bullet: '* '
-msgid "MacBookPro5,5 does not boot with Tails in UEFI mode."
+msgid "MacBook Pro 5,5 does not boot with Tails in UEFI mode."
+msgstr ""
+
+#. type: Bullet: '* '
+msgid ""
+"MacBook Pro 5,1 17\" (Nvidia GeForce 9400M): one must add the `nouveau."
+"noaccel=1` boot parameters so that the display works properly."
 msgstr ""
 
 #. type: Bullet: '* '
@@ -390,13 +407,94 @@ msgid ""
 msgstr ""
 
 #. type: Bullet: '* '
-msgid "MacBookPro (early 2011) fails to boot from DVD since Tails 1.1."
+msgid "MacBook Pro (early 2011) fails to boot from DVD since Tails 1.1."
 msgstr ""
 
 #. type: Bullet: '* '
 msgid ""
-"Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) and MacBookPro late "
-"2011 (8,2) fail to boot from a USB stick created by Tails Installer."
+"Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) and MacBook Pro 8,2 "
+"(late 2011) fail to boot from a USB stick created by Tails Installer."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "<a id=\"switchable_graphics\"></a>\n"
+msgstr ""
+
+#. type: Title -
+#, no-wrap
+msgid "Switchable graphics computers\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Some computers with switchable graphics (such as Optimus) fail to choose a "
+"video card and end up on a black screen. This has been reported for MacBook "
+"Pro 6,2, MacBook Pro 10,1 Retina, MacBook Pro 15-inch (early 2011) and might "
+"affect many others."
+msgstr ""
+
+#. type: Plain text
+msgid "There are two possible workarounds for this issue:"
+msgstr ""
+
+#. type: Bullet: '* '
+msgid ""
+"For the Mac computers, it is possible to use a third-party application, "
+"<http://gfx.io/>, to force integrated graphics only through OS X.  Then "
+"restart in that special mode that works with Tails."
+msgstr ""
+
+#. type: Bullet: '* '
+msgid "Expert Linux users can also do the following:"
+msgstr ""
+
+#. type: Bullet: '  1. '
+msgid ""
+"Add the `i915.modeset=0 rootpw=pass` option in the [[boot menu|doc/"
+"first_steps/startup_options#boot_menu]]."
+msgstr ""
+
+#. type: Bullet: '  2. '
+msgid ""
+"Create a file `/etc/X11/xorg.conf.d/switchable.conf` with the following "
+"content:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"         Section \"Device\"\n"
+"             Identifier \"Device0\"\n"
+"             Driver \"nouveau\"\n"
+"             BusID \"1:0:0\"\n"
+"         EndSection\n"
+msgstr ""
+
+#. type: Bullet: '  4. '
+msgid "Restart X with the command:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "         service gdm3 restart\n"
+msgstr ""
+
+#. type: Bullet: '  5. '
+msgid ""
+"After the GNOME session has started, change again the root password with the "
+"command:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "         sudo passwd\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"For more details, see our ticket on [[!tails_ticket 7505 desc=\"Video is "
+"broken on dual-graphics-card apple hardware\"]]."
 msgstr ""
 
 #. type: Plain text
@@ -429,9 +527,54 @@ msgid ""
 "    boot\n"
 msgstr ""
 
+#. type: Plain text
+#, no-wrap
+msgid "<a id=\"wi-fi\"></a>\n"
+msgstr ""
+
 #. type: Title =
 #, no-wrap
-msgid "Other hardware issues\n"
+msgid "Wi-Fi issues\n"
+msgstr ""
+
+#. type: Title -
+#, no-wrap
+msgid "Broadcom Wi-Fi network interface needing `broadcom-sta-dkms`\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"Some Broadcom Wi-Fi interfaces require the [`wl`](https://wiki.debian.org/"
+"wl) driver, provided by the `broadcom-sta-dkms` Debian package, to work in "
+"Tails."
+msgstr ""
+
+#. type: Plain text
+msgid "The `wl` driver is not included in Tails because it is proprietary."
+msgstr ""
+
+#. type: Plain text
+msgid "To find out if your Wi-Fi interface requires the `wl` driver:"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid ""
+"Execute the following command in a [[terminal|doc/first_steps/"
+"introduction_to_gnome_and_the_tails_desktop#index3h2]]:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "       lspci -nn | grep Network\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"2. Verify if your device is in the list of devices supported by the `broadcom-sta-dkms`\n"
+"package on the corresponding [Debian wiki page](https://wiki.debian.org/wl).\n"
+"If you find your device in the list of supported devices, then it is\n"
+"impossible to use your Wi-Fi card in Tails.\n"
 msgstr ""
 
 #. type: Plain text
@@ -441,23 +584,23 @@ msgstr ""
 
 #. type: Title -
 #, no-wrap
-msgid "Broadcom BCM43224 802.11a/b/g/n wireless network adapter\n"
+msgid "Broadcom BCM43224 802.11a/b/g/n Wi-Fi network interface\n"
 msgstr ""
 
 #. type: Plain text
 msgid ""
-"The Broadcom Corporation BCM43224 802.11a/b/g/n wireless network adapter is "
+"The Broadcom Corporation BCM43224 802.11a/b/g/n Wi-Fi network interface is "
 "known to not be able to [[spoof its MAC address|doc/first_steps/"
 "startup_options/mac_spoofing]]. Tails enables MAC spoofing by default, and "
-"will disable any network adapter it fails to spoof. To make it work you must "
-"[[disable Tails' MAC spoofing feature|doc/first_steps/startup_options/"
+"will disable any network interface it fails to spoof. To make it work you "
+"must [[disable Tails' MAC spoofing feature|doc/first_steps/startup_options/"
 "mac_spoofing#disable]]; please read the documentation carefully and make "
 "sure you understand the consequences before doing so."
 msgstr ""
 
 #. type: Plain text
 msgid ""
-"This network adapter can, for instance, be found in the MacBook Air 4,1, "
+"This network interface can, for instance, be found in the MacBook Air 4,1, "
 "4,2, 5,1 and 5,2."
 msgstr ""
 
@@ -544,7 +687,7 @@ msgid ""
 "Tails Installer messes a bit too much with the USB devices for the "
 "\"emergency shutdown on media removal\" feature to continue working after "
 "using it. If you believe this feature is critical for the session you're "
-"running, we advice you to reboot Tails."
+"running, we advice you to restart Tails."
 msgstr ""
 
 #. type: Plain text
@@ -620,12 +763,13 @@ msgid ""
 "  - Apple when booting from a USB stick:\n"
 "    - MacBook Air 5,1\n"
 "    - MacBook Air 5,2 (using a device installed with Tails Installer)\n"
-"    - MacBook Pro 7,1, 13-inch mid 2010\n"
-"    - MacBook Pro 9,2, 13-inch mid 2012\n"
-"    - MacBook Pro 8,1, 13-inch late 2011\n"
+"    - MacBook Air 6,2\n"
+"    - MacBook Pro 7,1 13-inch (mid 2010)\n"
+"    - MacBook Pro 9,2 13-inch (mid 2012)\n"
+"    - MacBook Pro 8,1 13-inch (late 2011)\n"
 "    - MacBook Pro 10,2\n"
-"    - MacBook Pro Retina 11,1, late 2013\n"
-"    - MacBook Pro Retina 13-inch Early 2015\n"
+"    - MacBook Pro Retina 11,1 (late 2013)\n"
+"    - MacBook Pro Retina 13-inch (early 2015)\n"
 "  - Hewlett-Packard HP Pavilion dv6 Notebook PC\n"
 "  - Lenovo ThinkPad X61, only on emergency shutdown when pulling out the\n"
 "    USB stick\n"
@@ -636,6 +780,7 @@ msgid ""
 "    shutdown works\n"
 "  - Samsung N150P\n"
 "  - Acer Aspire e1-572\n"
+"  - Dell Latitude E6230\n"
 msgstr ""
 
 #. type: Plain text
@@ -710,8 +855,8 @@ msgstr ""
 
 #. type: Plain text
 msgid ""
-"Since Tails 1.1, one some hardware (ThinkPad X230, MacBookPro8,1), the boot "
-"menu is not displayed properly. Tails starts fine, though."
+"Since Tails 1.1, one some hardware (ThinkPad X230, MacBook Pro 8,1), the "
+"boot menu is not displayed properly. Tails starts fine, though."
 msgstr ""
 
 #. type: Title -

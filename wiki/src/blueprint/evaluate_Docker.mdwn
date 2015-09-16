@@ -12,7 +12,8 @@ Primary target platforms:
 
 * Debian Wheezy: no, even in backports; installation is [possible
   using ugly methods](https://docs.docker.com/installation/debian/)
-* Debian Jessie: will be maintained in jessie-backports ([[!debbug 781554]])
+* Debian Jessie: will be maintained in jessie-backports ([[!debbug 781554]]);
+  1.6.2~dfsg1-1~bpo8+1 was uploaded on 2015-06-03
 * Debian sid: 1.6.1+dfsg1-2
 * Ubuntu 14.04 LTS: 0.9.1, with 1.0.1 available in trusty-updates
 * Ubuntu 14.10: 1.2.0
@@ -159,9 +160,8 @@ Test run
     other use cases
   - Docker now has [container
     groups](https://github.com/docker/docker/issues/9694), called
-    [Docker compose](https://docs.docker.com/compose/) ([[!debbug
-    782170 desc="Debian RFP"]] -- seems that some build-deps are not
-    in Debian), that is apparently [Fig](http://www.fig.sh/) rebranded
+    [Docker compose](https://docs.docker.com/compose/) (now in Debian sid),
+    that is apparently [Fig](http://www.fig.sh/) rebranded
     and better integrated; there's also
     [crane](https://github.com/michaelsauter/crane)
   - We can build our own similar thing in our own `Makefile`.
@@ -205,7 +205,9 @@ Test run
      we are _not_ using Docker for security; if they want more
      isolation, then they must run Docker inside a dedicated VM;
   2. ensure that our build system doesn't affect the host system,
-     as much as possible.
+     as much as possible; e.g. we could try dropping as many Linux
+     capabilities as we can, or run unprivileged and add only the
+     capabilities we need.
 * Adding `.git` to the `.dockerignore` file would speed up the build,
   but some code in our build process wants to know what branch or
   commit we're building from => maybe we could pre-compute this

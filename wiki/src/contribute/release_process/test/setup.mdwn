@@ -11,8 +11,10 @@ Once you have a working environment, see [[test/usage]].
 Install dependencies
 ====================
 
-First of all, one needs a Debian Jessie system with the `non-free` APT
-components enabled.
+First of all, one needs a Debian Jessie system with:
+
+ * the `non-free` APT component enabled;
+ * the official backports repository configured.
 
 The following packages are necessary on Debian Jessie:
 
@@ -26,7 +28,7 @@ The following packages are necessary on Debian Jessie:
         libvpx1 dnsmasq-base openjdk-7-jre ruby-guestfs ruby-net-irc \
         ruby-test-unit qemu-kvm qemu-system-x86 libvirt0 libvirt-dev \
         libvirt-daemon-system libvirt-clients seabios ruby-rjb \
-        ruby-packetfu cucumber python-potr python-jabberbot && \
+        ruby-packetfu cucumber python-potr/jessie-backports python-jabberbot && \
     service libvirtd restart
 
 Other requirements
@@ -37,13 +39,28 @@ Synchronized clock
 
 The system running the test suite needs an accurate clock since we
 sync the clock from the host to the Tails guest after a background
-snapshot restore to appease Tor. This is why we installed ntp above.
+snapshot restore to appease Tor. This is why we installed ntp above,
+but if you prefer you can use whatever time synchronization
+tool instead.
 
 File permissions
 ----------------
 
 The user that runs QEMU (via libvirt) needs read-access at least to
 the content of `features/misc_files/` in the Git checkout.
+
+AppArmor tweaks
+---------------
+
+If libvirt has the `apparmor` security driver enabled:
+
+* you may need to add the `/tmp/TailsToaster/TailsToasterStorage/*
+  rw,` line to `/etc/apparmor.d/libvirt/TEMPLATE.qemu`, in the
+  `profile LIBVIRT_TEMPLATE` section;
+* you may hit various problems, such as denied access to
+  `/usr/share/ovmf/OVMF.fd`; all such known problems are (as of
+  2015-08-12) on their way for being fixed upstream in libvirt.
+  Running a recent libvirt may help.
 
 Special use cases
 =================
