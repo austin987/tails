@@ -19,4 +19,10 @@ rm -f "${BLACKLIST}"
 # if NM wins, the udev trigger's run of tails-spoof-mac will fail.
 /sbin/udevadm settle
 
-service network-manager start
+# If tails-spoof-mac goes into panic mode but fails to disable the
+# problematic device, networking will be disabled by having these
+# removed.
+if [ -e "/etc/init.d/network-manager" ] && \
+   [ -e "/usr/sbin/NetworkManager" ]; then
+    service network-manager start
+fi

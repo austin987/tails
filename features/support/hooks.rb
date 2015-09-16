@@ -1,6 +1,50 @@
 require 'fileutils'
+require 'rb-inotify'
 require 'time'
 require 'tmpdir'
+
+# Run once, before any feature
+AfterConfiguration do |config|
+  if File.exist?($config["TMPDIR"])
+    if !File.directory?($config["TMPDIR"])
+      raise "Temporary directory '#{$config["TMPDIR"]}' exists but is not a " +
+            "directory"
+    end
+    if !File.owned?($config["TMPDIR"])
+      raise "Temporary directory '#{$config["TMPDIR"]}' must be owned by the " +
+            "current user"
+    end
+    FileUtils.chmod(0755, $config["TMPDIR"])
+  else
+    begin
+      FileUtils.mkdir_p($config["TMPDIR"])
+    rescue Errno::EACCES => e
+      raise "Cannot create temporary directory: #{e.to_s}"
+    end
+  end
+  # Start a thread that monitors a pseudo fifo file and debug_log():s
+  # anything written to it "immediately" (well, as fast as inotify
+  # detects it). We're forced to a convoluted solution like this
+  # because CRuby's thread support is horribly as soon as IO is mixed
+  # in (other threads get blocked).
+  FileUtils.rm(DEBUG_LOG_PSEUDO_FIFO) if File.exist?(DEBUG_LOG_PSEUDO_FIFO)
+  FileUtils.touch(DEBUG_LOG_PSEUDO_FIFO)
+  at_exit do
+    FileUtils.rm(DEBUG_LOG_PSEUDO_FIFO) if File.exist?(DEBUG_LOG_PSEUDO_FIFO)
+  end
+  Thread.new do
+    File.open(DEBUG_LOG_PSEUDO_FIFO) do |fd|
+      watcher = INotify::Notifier.new
+      watcher.watch(DEBUG_LOG_PSEUDO_FIFO, :modify) do
+        line = fd.read.chomp
+        debug_log(line) if line and line.length > 0
+      end
+      watcher.run
+    end
+  end
+  # Fix Sikuli's debug_log():ing.
+  bind_java_to_pseudo_fifo_logger
+end
 
 # For @product tests
 ####################
@@ -25,23 +69,6 @@ def add_after_scenario_hook(&block)
 end
 
 BeforeFeature('@product') do |feature|
-  if File.exist?($config["TMPDIR"])
-    if !File.directory?($config["TMPDIR"])
-      raise "Temporary directory '#{$config["TMPDIR"]}' exists but is not a " +
-            "directory"
-    end
-    if !File.owned?($config["TMPDIR"])
-      raise "Temporary directory '#{$config["TMPDIR"]}' must be owned by the " +
-            "current user"
-    end
-    FileUtils.chmod(0755, $config["TMPDIR"])
-  else
-    begin
-      Dir.mkdir($config["TMPDIR"])
-    rescue Errno::EACCES => e
-      raise "Cannot create temporary directory: #{e.to_s}"
-    end
-  end
   delete_all_snapshots if !KEEP_SNAPSHOTS
   if TAILS_ISO.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
@@ -65,6 +92,10 @@ BeforeFeature('@product') do |feature|
     raise "The specified Tails ISO image '#{TAILS_ISO}' does not exist"
   end
   puts "Testing ISO image: #{File.basename(TAILS_ISO)}"
+  if !File.exist?(OLD_TAILS_ISO)
+    raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
+  end
+  puts "Using old ISO image: #{File.basename(OLD_TAILS_ISO)}"
   base = File.basename(feature.file, ".feature").to_s
   $background_snapshot = "#{$config["TMPDIR"]}/#{base}_background.state"
   $virt = Libvirt::open("qemu:///system")
@@ -77,20 +108,6 @@ AfterFeature('@product') do
   $vmstorage.clear_pool
   $vmnet.destroy_and_undefine
   $virt.close
-end
-
-BeforeFeature('@product', '@old_iso') do
-  if OLD_TAILS_ISO.nil?
-    raise "No old Tails ISO image specified, and none could be found in the " +
-          "current directory"
-  end
-  if !File.exist?(OLD_TAILS_ISO)
-    raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
-  end
-  if TAILS_ISO == OLD_TAILS_ISO
-    raise "The old Tails ISO is the same as the Tails ISO we're testing"
-  end
-  puts "Using old ISO image: #{File.basename(OLD_TAILS_ISO)}"
 end
 
 # BeforeScenario
