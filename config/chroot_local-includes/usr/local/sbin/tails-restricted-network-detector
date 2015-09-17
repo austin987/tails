@@ -64,7 +64,12 @@ while(my $sl = $parser->next) {
         $state{$1} = "";
     } elsif ($text =~ /\(([^)]+)\): supplicant (?:connection|interface) state: \S+ -> (\S+)/ ||
              $text =~ /\(([^)]+)\): device state change: \S+ -> (\S+)/) {
-        # State transition.
+        # NetworkManager logs state transitions with the above
+        # messages, but the really important part is that we
+        # accurately log the state changes *to* and *from*
+        # "associating" (for the next case). Hence the safest bet
+        # seems to be to deal with all observed types of transitions
+        # that NetworkManager logs.
         $state{$1} = $2;
     } elsif ($text =~ /Activation \(([^)]+)\/[^)]*\): association took too long/) {
         # Wireless connection failure. If it happens during
