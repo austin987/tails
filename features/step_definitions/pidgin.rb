@@ -385,6 +385,7 @@ def pidgin_add_certificate_from (cert_file)
   # Here, we need a certificate that is not already in the NSS database
   step "I copy \"/usr/share/ca-certificates/spi-inc.org/spi-cacert-2008.crt\" to \"#{cert_file}\" as user \"amnesia\""
 
+  @vm.focus_window('Buddy List')
   @screen.wait_and_click('PidginToolsMenu.png', 10)
   @screen.wait_and_click('PidginCertificatesMenuItem.png', 10)
   @screen.wait('PidginCertificateManagerDialog.png', 10)
