@@ -106,7 +106,26 @@ AfterFeature('@product') do
 end
 
 # BeforeScenario
-Before('@product') do
+Before('@product') do |scenario|
+  if $config["CAPTURE"]
+    video_name = "capture-" + "#{scenario.name}-#{TIME_AT_START}.mkv"
+    # Sanitize the filename from unix-hostile filename characters
+    bad_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
+    video_name.gsub!(bad_filename_chars, '_')
+    @video_path = "#{$config['TMPDIR']}/#{video_name}"
+    capture = IO.popen(['avconv',
+                        '-f', 'x11grab',
+                        '-s', '1024x768',
+                        '-r', '15',
+                        '-i', "#{$config['DISPLAY']}.0",
+                        '-an',
+                        '-c:v', 'libx264',
+                        '-y',
+                        @video_path,
+                        :err => ['/dev/null', 'w'],
+                       ])
+    @video_capture_pid = capture.pid
+  end
   @screen = Sikuli::Screen.new
   @theme = "gnome"
   # English will be assumed if this is not overridden
@@ -118,6 +137,14 @@ end
 
 # AfterScenario
 After('@product') do |scenario|
+  if @video_capture_pid
+    # We can be incredibly fast at detecting errors sometimes, so the
+    # screen barely "settles" when we end up here and kill the video
+    # capture. Let's wait a few seconds more to make it easier to see
+    # what the error was.
+    sleep 3 if scenario.failed?
+    Process.kill("INT", @video_capture_pid)
+  end
   if scenario.failed?
     time_of_fail = Time.now - TIME_AT_START
     secs = "%02d" % (time_of_fail % 60)
@@ -133,6 +160,10 @@ After('@product') do |scenario|
       STDERR.puts ""
       STDERR.puts "Press ENTER to continue running the test suite"
       STDIN.gets
+    end
+  else
+    if @video_path && File.exist?(@video_path) && not($config['CAPTURE_ALL'])
+      FileUtils.rm(@video_path)
     end
   end
 end
