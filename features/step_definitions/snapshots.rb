@@ -52,7 +52,6 @@ def checkpoints
       :steps => [
         'I enable more Tails Greeter options',
         'I enable Microsoft Windows camouflage',
-        'I enable the specific Tor configuration option',
         'I log in to a new session',
         'Tails Greeter has dealt with the sudo password',
         'the Tails desktop is ready',
