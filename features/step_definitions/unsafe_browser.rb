@@ -5,7 +5,6 @@ When /^I see and accept the Unsafe Browser start verification$/ do
 end
 
 def supported_torbrowser_languages
-  langs = Array.new
   localization_descriptions = "#{Dir.pwd}/config/chroot_local-includes/usr/share/tails/browser-localization/descriptions"
   File.read(localization_descriptions).split("\n").map do |line|
     # The line will be of the form "xx:YY:..." or "xx-YY:YY:..."
