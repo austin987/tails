@@ -139,6 +139,7 @@ end
 def reach_checkpoint(name)
   scenario_indent = " "*4
   step_indent = " "*6
+  white = 37
   red = 31
   green = 32
   def colorize(color_code, s)
@@ -162,11 +163,12 @@ def reach_checkpoint(name)
       end
       post_snapshot_restore_hook
     end
-    STDERR.puts(scenario_indent + "Checkpoint: #{checkpoint_description}")
+    debug_log(scenario_indent +
+              colorize(white, "Checkpoint: #{checkpoint_description}"))
     step_action = "Given"
     if parent_checkpoint
       parent_description = checkpoints[parent_checkpoint][:description]
-      STDERR.puts(
+      debug_log(
         step_indent +
         colorize(green, "#{step_action} #{parent_description}"))
       step_action = "And"
@@ -175,12 +177,12 @@ def reach_checkpoint(name)
       begin
         step(s)
       rescue Exception => e
-        STDERR.puts(
+        debug_log(
           scenario_indent +
           colorize(red, "Step failed while creating checkpoint: #{s}"))
         raise e
       end
-      STDERR.puts(step_indent + colorize(green, "#{step_action} #{s}"))
+      debug_log(step_indent + colorize(green, "#{step_action} #{s}"))
       step_action = "And"
     end
     $vm.save_snapshot(name)
