@@ -175,7 +175,7 @@ class VM
 
   def set_cdrom_boot(image)
     if is_running?
-      raise "boot settings can only be set for inactice vms"
+      raise "boot settings can only be set for inactive vms"
     end
     set_boot_device('cdrom')
     set_cdrom_image(image)
@@ -269,7 +269,7 @@ class VM
   # XXX-9p in common_steps.rb for more information.
   def add_share(source, tag)
     if is_running?
-      raise "shares can only be added to inactice vms"
+      raise "shares can only be added to inactive vms"
     end
     # The complete source directory must be group readable by the user
     # running the virtual machine, and world readable so the user inside
@@ -294,7 +294,7 @@ class VM
   end
 
   def set_ram_size(size, unit = "KiB")
-    raise "System memory can only be added to inactice vms" if is_running?
+    raise "System memory can only be added to inactive vms" if is_running?
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/memory'].text = size
     domain_xml.elements['domain/memory'].attributes['unit'] = unit
@@ -311,21 +311,21 @@ class VM
   end
 
   def set_arch(arch)
-    raise "System architecture can only be set to inactice vms" if is_running?
+    raise "System architecture can only be set to inactive vms" if is_running?
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/os/type'].attributes['arch'] = arch
     update(domain_xml.to_s)
   end
 
   def add_hypervisor_feature(feature)
-    raise "Hypervisor features can only be added to inactice vms" if is_running?
+    raise "Hypervisor features can only be added to inactive vms" if is_running?
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/features'].add_element(feature)
     update(domain_xml.to_s)
   end
 
   def drop_hypervisor_feature(feature)
-    raise "Hypervisor features can only be fropped from inactice vms" if is_running?
+    raise "Hypervisor features can only be fropped from inactive vms" if is_running?
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/features'].delete_element(feature)
     update(domain_xml.to_s)
@@ -348,7 +348,7 @@ EOF
 
   def set_os_loader(type)
     if is_running?
-      raise "boot settings can only be set for inactice vms"
+      raise "boot settings can only be set for inactive vms"
     end
     if type == 'UEFI'
       domain_xml = REXML::Document.new(@domain.xml_desc)
