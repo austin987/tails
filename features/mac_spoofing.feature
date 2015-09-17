@@ -20,7 +20,7 @@ Feature: Spoofing MAC addresses
     And the network device has its default MAC address configured
     And the real MAC address was leaked
 
-  Scenario: MAC address spoofing is successfull
+  Scenario: MAC address spoofing is successful
     When I log in to a new session
     And the Tails desktop is ready
     And Tor is ready
