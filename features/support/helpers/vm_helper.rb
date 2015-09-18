@@ -417,9 +417,23 @@ EOF
   end
 
   def focus_window(window_title, user = LIVE_USER)
-    execute_successfully(
-       "xdotool search --name '#{window_title}' windowactivate --sync", user
-    )
+    def do_focus(window_title, user)
+      execute_successfully(
+        "xdotool search --name '#{window_title}' windowactivate --sync", user
+      )
+    end
+
+    begin
+      do_focus(window_title, user)
+    rescue ExecutionFailedInVM
+      # Often when vdotool fails to focus a window it'll work when retried
+      # after redrawing the screen.  Switching to a new virtual desktop then
+      # back seems to be a reliable way to handle this.
+      select_virtual_desktop(3)
+      select_virtual_desktop(0)
+      sleep 1
+      do_focus(window_title, user)
+    end
   end
 
   def file_exist?(file)
