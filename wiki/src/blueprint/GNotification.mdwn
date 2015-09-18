@@ -31,59 +31,59 @@
   must have a lifetime close to zero, otherwise when clicking on
   multiple notifications buttons in a row, some actions won't be
   triggered (i.e. URLs won't be opened).
-
-	#!/usr/bin/perl
-	
-	use strict;
-	use warnings FATAL => 'all';
-	use 5.10.1;
-	
-	use Gtk3;
-	use Glib::Object::Introspection;
-	use Try::Tiny;
-	
-	Glib::Object::Introspection->setup(
-	    basename => 'Gio',
-	    version  => '2.0',
-	    package  => 'Gio'
-	);
-	
-	my $app_id = 'org.gnome.gedit';
-	my $app = Gtk3::Application->new($app_id, []);
-	$app->register() || die "Could not register app";
-	
-	my $notification = Gio::Notification->new('My notification title');
-	$notification->set_body("My notification body");
-	$notification->add_button("OK", 'app.new-document');
-	# If gedit is already running, this fails with:
-	#   GLib-GIO-CRITICAL **: g_application_send_notification:
-	#   assertion '!g_application_get_is_remote (application)' failed
-	$app->send_notification("my-notification-id", $notification)
-	    or die "Could not send notification";
+  
+          #!/usr/bin/perl
+          
+          use strict;
+          use warnings FATAL => 'all';
+          use 5.10.1;
+          
+          use Gtk3;
+          use Glib::Object::Introspection;
+          use Try::Tiny;
+          
+          Glib::Object::Introspection->setup(
+              basename => 'Gio',
+              version  => '2.0',
+              package  => 'Gio'
+          );
+          
+          my $app_id = 'org.gnome.gedit';
+          my $app = Gtk3::Application->new($app_id, []);
+          $app->register() || die "Could not register app";
+          
+          my $notification = Gio::Notification->new('My notification title');
+          $notification->set_body("My notification body");
+          $notification->add_button("OK", 'app.new-document');
+          # If gedit is already running, this fails with:
+          #   GLib-GIO-CRITICAL **: g_application_send_notification:
+          #   assertion '!g_application_get_is_remote (application)' failed
+          $app->send_notification("my-notification-id", $notification)
+              or die "Could not send notification";
 
 * private D-Bus API (`org.gtk.Notifications`):
   <https://wiki.gnome.org/Projects/GLib/GNotification> ... maybe an
   option whenever language bindings are not good enough, but so far
   I (intrigeri) was not able to add buttons to it:
 
-	#!/usr/bin/perl
-	use strict;
-	use warnings FATAL => 'all';
-	use 5.10.1;
-	use Net::DBus;
-	Net::DBus
-	    ->session
-	    ->get_service("org.gtk.Notifications")
-	    ->get_object("/org/gtk/Notifications")
-	    ->as_interface("org.gtk.Notifications")
-	    ->AddNotification('org.gnome.gedit', 'whatever-notification-id', {
-	        title            => 'my notification title',
-	        body             => 'my notification body',
-	        # Works... when 'buttons' is not passed
-	        'default-action' => 'app.new-window',
-	        # Does not work, for some reason
-	        buttons => [
-	            { label => "New window",   action => "app.new-window"},
-	            { label => "New document", action => "app.new-document"},
-	        ],
-	    });
+          #!/usr/bin/perl
+          use strict;
+          use warnings FATAL => 'all';
+          use 5.10.1;
+          use Net::DBus;
+          Net::DBus
+              ->session
+              ->get_service("org.gtk.Notifications")
+              ->get_object("/org/gtk/Notifications")
+              ->as_interface("org.gtk.Notifications")
+              ->AddNotification('org.gnome.gedit', 'whatever-notification-id', {
+                  title            => 'my notification title',
+                  body             => 'my notification body',
+                  # Works... when 'buttons' is not passed
+                  'default-action' => 'app.new-window',
+                  # Does not work, for some reason
+                  buttons => [
+                      { label => "New window",   action => "app.new-window"},
+                      { label => "New document", action => "app.new-document"},
+                  ],
+              });
