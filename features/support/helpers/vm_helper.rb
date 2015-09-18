@@ -408,6 +408,14 @@ EOF
     return execute("pidof -x -o '%PPID' " + process).stdout.chomp.split
   end
 
+  def select_virtual_desktop(desktop_number, user = LIVE_USER)
+    assert(desktop_number >= 0 && desktop_number <=3,
+           "Only values between 0 and 3 are valid virtual desktop numbers")
+    execute_successfully(
+       "xdotool set_desktop '#{desktop_number}'", user
+    )
+  end
+
   def focus_window(window_title, user = LIVE_USER)
     execute_successfully(
        "xdotool search --name '#{window_title}' windowactivate --sync", user
