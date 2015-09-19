@@ -18,6 +18,15 @@ EOF
   return account
 end
 
+def wait_and_focus(img, time = 10, window)
+  begin
+    @screen.wait(img, time)
+  rescue FindFailed
+    @vm.focus_window(window)
+    @screen.wait(img, time)
+  end
+end
+
 def focus_pidgin_irc_conversation_window(account)
   account = account.sub(/^irc\./, '')
   @vm.focus_window(".*#{Regexp.escape(account)}$")
