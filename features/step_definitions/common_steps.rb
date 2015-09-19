@@ -110,13 +110,9 @@ end
 
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
   next if @skip_steps_while_restoring_background
-  if @vm.is_running?
-    try_for(10, :msg => "Drive '#{name}' is not detected by Tails") {
-      @vm.disk_detected?(name)
-    }
-  else
-    STDERR.puts "Cannot tell if drive '#{name}' is detected by Tails: " +
-                "Tails is not running"
+  raise "Tails is not running" unless @vm.is_running?
+  try_for(10, :msg => "Drive '#{name}' is not detected by Tails") do
+    @vm.disk_detected?(name)
   end
 end
 
@@ -1078,12 +1074,13 @@ When /^I open a page on the LAN web server in the (.*)$/ do |browser|
 end
 
 def force_new_tor_circuit(with_vidalia=nil)
+  debug_log("Forcing new Tor circuit...")
   if with_vidalia
     assert_equal('gnome', @theme, "Vidalia is not available in the #{@theme} theme.")
     begin
       step 'process "vidalia" is running'
     rescue Test::Unit::AssertionFailedError
-      STDERR.puts "Vidalia was not running. Attempting to start Vidalia..." if $config["DEBUG"]
+      debug_log("Vidalia was not running. Attempting to start Vidalia...")
       @vm.spawn('restart-vidalia')
       step 'process "vidalia" is running within 15 seconds'
     end
