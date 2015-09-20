@@ -18,6 +18,15 @@ EOF
   return account
 end
 
+def wait_and_focus(img, time = 10, window)
+  begin
+    @screen.wait(img, time)
+  rescue FindFailed
+    @vm.focus_window(window)
+    @screen.wait(img, time)
+  end
+end
+
 def focus_pidgin_irc_conversation_window(account)
   account = account.sub(/^irc\./, '')
   @vm.focus_window(".*#{Regexp.escape(account)}$")
@@ -395,18 +404,19 @@ end
 Then /^I can add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert_dir|
   next if @skip_steps_while_restoring_background
   pidgin_add_certificate_from("#{cert_dir}/test.crt")
-  @screen.wait('PidginCertificateAddHostnameDialog.png', 10)
+  wait_and_focus('PidginCertificateAddHostnameDialog.png', 10, 'Certificate Import')
   @screen.type("XXX test XXX" + Sikuli::Key.ENTER)
-  @screen.wait('PidginCertificateTestItem.png', 10)
+  wait_and_focus('PidginCertificateTestItem.png', 10, 'Certificate Manager')
 end
 
 Then /^I cannot add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert_dir|
   next if @skip_steps_while_restoring_background
   pidgin_add_certificate_from("#{cert_dir}/test.crt")
-  @screen.wait('PidginCertificateImportFailed.png', 10)
+  wait_and_focus('PidginCertificateImportFailed.png', 10, 'Import Error')
 end
 
 When /^I close Pidgin's certificate manager$/ do
+  wait_and_focus('PidginCertificateManagerDialog.png', 10, 'Certificate Manager')
   @screen.type(Sikuli::Key.ESC)
   # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
   @screen.waitVanish('PidginCertificateManagerDialog.png', 10)
