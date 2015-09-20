@@ -639,9 +639,22 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   next if @skip_steps_while_restoring_background
   step "I open a new tab in the #{browser}"
   info = xul_application_info(browser)
-  @screen.click(info[:address_bar_image])
-  sleep 0.5
-  @screen.type(address + Sikuli::Key.ENTER)
+  open_address = Proc.new do
+    @screen.click(info[:address_bar_image])
+    sleep 0.5
+    @screen.type(address + Sikuli::Key.ENTER)
+  end
+  open_address.call
+  if browser == "Tor Browser"
+    recovery_on_failure = Proc.new do
+      @screen.type(Sikuli::Key.ESC)
+      @screen.waitVanish('BrowserReloadButton.png', 3)
+      open_address.call
+    end
+    retry_tor(recovery_on_failure) do
+      @screen.wait('BrowserReloadButton.png', 120)
+    end
+  end
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
@@ -1061,10 +1074,7 @@ When /^I open a page on the LAN web server in the (.*)$/ do |browser|
 end
 
 def force_new_tor_circuit(with_vidalia=nil)
-  assert(!@new_circuit_tries.nil? && @new_circuit_tries >= 0,
-         '@new_circuit_tries was not initialized before it was used')
-  @new_circuit_tries += 1
-  debug_log("Forcing new Tor circuit... (attempt ##{@new_circuit_tries})")
+  debug_log("Forcing new Tor circuit...")
   if with_vidalia
     assert_equal('gnome', @theme, "Vidalia is not available in the #{@theme} theme.")
     begin
@@ -1147,6 +1157,5 @@ end
 
 Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
   next if @skip_steps_while_restoring_background
-  @new_circuit_tries = 1 if @new_circuit_tries.nil?
   force_new_tor_circuit(with_vidalia)
 end
