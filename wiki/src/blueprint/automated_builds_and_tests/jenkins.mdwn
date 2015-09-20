@@ -144,6 +144,8 @@ Jenkins for Perl projects
 Restarting slave VMs between jobs
 ---------------------------------
 
+This question is tracked in [[!tails_ticket 9486]].
+
 When we tackle [[!tails_ticket 5288]], if the test suite doesn't
 _always_ clean between itself properly (e.g. when tests simply hang
 and timeout), we might want to restart `isotesterN.lizard` between
@@ -162,12 +164,41 @@ This was discussed at least there:
 * <http://jenkins-ci.361315.n4.nabble.com/How-to-reboot-a-slave-during-a-build-td4628820.html>
 * <https://stackoverflow.com/questions/5543413/reconfigure-and-reboot-a-hudson-jenkins-slave-as-part-of-a-build>
 
-Another option is to use the Jenkins [PostBuildScript
+That would maybe be the way to go, with 3 chained jobs:
+
+* First one is a wrapper and trigger 2 other jobs. It is executed on the
+  isotester the test job is supposed to be assigned to. It puts the
+  isotester in offline mode and starts the second job, blocking while
+  waiting for it to complete. This way this isotester is left reserved
+  for the second job, and the isotester name can be passed as a build
+  parameter to the second job. This job is low prio so it waits for
+  other second and third type of jobs to be completed before starting its
+  own.
+* The second job is executed on the master (which has two build
+  executors). This job ssh into the said isotester and issue the
+  reboot. It waits a bit and put the node back online again. This jobs
+  is higher prio so that it is not lagging behind other wrapper jobs in
+  the queue.
+* The third job is the test job, run on the freshly started isotester.
+  This one is high prio too to get executed before any other wrapper
+  jobs.
+
+Using some kind of queue sorting is necessary. Unfortunately, the
+[PrioritySorter
+plugin](https://wiki.jenkins-ci.org/display/JENKINS/Priority+Sorter+Plugin)
+is not well supported by the current version of JJB in Debian. We'll
+have to push upstream a fix, and meanwhile use the `raw` option trick in
+the yaml files (which itself isn't supported by JJB in Debian yet,
+hopefully the new one will leave the NEW queue soon).
+
+Another tested but non-working option was to use the Jenkins [PostBuildScript
 plugin](https://wiki.jenkins-ci.org/display/JENKINS/PostBuildScript%20Plugin)
 to issue a `shutdown -r` command at the end of the job. There are
 indications that [people are using it like
 this](https://stackoverflow.com/questions/11160363/execute-shell-script-after-post-build-in-jenkins)
 already. It's supported by JJB.
+
+<a id="chain"></a>
 
 Chaining jobs
 -------------
@@ -176,24 +207,54 @@ There are several plugins that allow to chain jobs that we might use to
 run the test suite job following a build job of a branch.
 
  * Jenkins native way: it's very simple, and cannot take arguments.
- * [BuildPipelinePlugin](https://wiki.jenkins-ci.org/display/JENKINS/Build+Pipeline+Plugin):
+   That's what weasel
+   [uses](https://gitweb.torproject.org/project/jenkins/jobs.git/tree/jobs.yaml)
+   for his Tor CI stuff.
+ * [BuildPipeline plugin](https://wiki.jenkins-ci.org/display/JENKINS/Build+Pipeline+Plugin):
    More a visualization tool, uses the native Jenkins way of triggering
    a downstream job if one wants this trigger to be automatic.
- * [ParameterizedTriggerPlugin](https://wiki.jenkins-ci.org/display/JENKINS/Parameterized+Trigger+Plugin):
+ * [ParameterizedTrigger plugin](https://wiki.jenkins-ci.org/display/JENKINS/Parameterized+Trigger+Plugin):
    a more complete solution than the Jenkins Native way. Can pass
    arguments from one job to another, using parameters to the call of
    the downstream job, or taking them from a file from the upstream job.
    The downstream job can also be manually triggered, and in this case
    the parameters are entered through a form in the Web interface.
- * [MultiJobPlugin](https://wiki.jenkins-ci.org/display/JENKINS/Multijob+Plugin):
-   Seems to be a complete solution too, build on the previous plugin and
+   Note that the latest release as of 2015-09-01 (2.28) requires
+   Jenkins 1.580.1 ([[!tails_ticket 10068]])
+ * [MultiJob plugin](https://wiki.jenkins-ci.org/display/JENKINS/Multijob+Plugin):
+   Seems to be a complete solution too, build on the ParameterizedTrigger plugin and
    the EnvInject one. Seems a bit less deployed than the
-   ParameterizedTriggerPlugin.
+   ParameterizedTrigger plugin.
 
 These are all supported by JJB v0.9+.
 
+One solution that could work and won't require more additionnal plugins
+to manage could be to make an extensive use of the EnvInject plugin in
+the same way we already use it to configure the notification. Then we
+would be able to simply use Jenkins' native way of chaining jobs:
+
+ * At the beginning of the build job, a script (in our jenkins-tools
+   repo) is collecting every necessary parameters defined in the
+   automated test blueprin and outputing them in a file in the
+   /build-artifacts/ directory.
+ * This file is the one used by the build job, to setup the variables it
+   needs (currently only $NOTIFY_TO).
+ * At the end of the build job, this file is archived with the other
+   artifacts.
+ * At the beginning of the chained test job, this file is imported in
+   the workspace along with the build artifacts. The EnvInject pre-build
+   step uses it to setup the necessary variables.
+
+Where I'm not sure is that the Jenkins's native way can collaborate
+smoothly with the EnvInject plugin. Maybe the different steps we are
+talking about don't happen in an order that would fit this scenario.
+Might be that we'll have to use the ParameterizedTrigger plugin. Might
+also be that we don't need the EnvInject plugin in the test job, but
+just import the variables in the environment in the test suite wrapper
+script.
+
 Passing parameters through jobs
-------------------------------
+-------------------------------
 
 We already specified what kind of informations we want to pass from the
 build job to the test job.
@@ -206,3 +267,21 @@ chaining ability is to put the wanted parameters in a file that is
 archived with the artifacts of the upstream job. Then the downstream job
 can be configured with then EnvInject plugin we already use to set the
 necessary variables in the job environment.
+
+Retrieving the ISOs for the test
+--------------------------------
+
+We'll need a way to retrieve the different ISO needed for the test.
+
+For the ISO related to the upstream build job, this shouln't be a
+problem with #9597. We can get it with either wget, or a python script
+using python-jenkins. That was the point of this ticket.
+
+For the last release ISO, we have several means:
+
+* Using wget to get them from http://iso-history.tails.boum.org. This
+  website is password protected, but we could set up another private
+  vhost for the isotesters.
+* Using the git-annex repo directly.
+
+The former is probably the most simple to use.
