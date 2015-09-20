@@ -288,8 +288,9 @@ end
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   next if @skip_steps_while_restoring_background
   expected_channel_entry = chan_image(account, default_chan(account), 'roster')
+  reconnect_button = 'PidginReconnect.png'
   recovery_on_failure = Proc.new do
-    @screen.wait_and_click('PidginReconnect.png', 20)
+    @screen.wait_and_click(reconnect_button, 20)
   end
   retry_tor(recovery_on_failure) do
     begin
@@ -300,8 +301,10 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
       # conversation window. At worst, the test will still fail...
       close_pidgin_conversation_window(account)
     end
-    # FIXME This should be modified to use waitAny once #9633 is addressed
-    @screen.wait(expected_channel_entry, 60)
+    on_screen, _ = @screen.waitAny([expected_channel_entry, reconnect_button], 60)
+    unless on_screen == expected_channel_entry
+      raise "Connecting to account #{account} failed."
+    end
   end
 end
 
