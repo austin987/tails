@@ -23,14 +23,6 @@ def focus_pidgin_irc_conversation_window(account)
   @vm.focus_window(".*#{Regexp.escape(account)}$")
 end
 
-def close_pidgin_conversation_window(account)
-  focus_pidgin_irc_conversation_window(account)
-  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
-  if @screen.exists('PidginConfirmationIcon.png')
-    @screen.click('GnomeCloseButton.png')
-  end
-end
-
 When /^I create my XMPP account$/ do
   next if @skip_steps_while_restoring_background
   account = xmpp_account("Tails_account")
@@ -299,14 +291,7 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   @new_circuit_tries = 0
   until @new_circuit_tries == $config["MAX_NEW_TOR_CIRCUIT_RETRIES"] do
     # Sometimes the OFTC welcome notice window pops up over the buddy list one...
-    begin
-      @vm.focus_window('Buddy List')
-    rescue ExecutionFailedInVM
-      # Sometimes focusing the window with xdotool will fail with the
-      # conversation window right on top of it. We'll try to close the
-      # conversation window. At worst, the test will still fail...
-      close_pidgin_conversation_window(account)
-    end
+    @vm.focus_window('Buddy List')
 
     # FIXME This should be modified to use waitAny once #9633 is addressed
     begin
