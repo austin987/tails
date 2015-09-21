@@ -72,21 +72,6 @@ def checkpoints
       ],
     },
 
-    'no-network-windows-camouflage' => {
-      :temporary => true,
-      :description => "Tails has booted from DVD without network and logged in with windows camouflage enabled",
-      :parent_checkpoint => "tails-greeter",
-      :steps => [
-        'I enable more Tails Greeter options',
-        'I enable Microsoft Windows camouflage',
-        'I enable the specific Tor configuration option',
-        'I log in to a new session',
-        'Tails Greeter has dealt with the sudo password',
-        'the Tails desktop is ready',
-        'all notifications have disappeared',
-      ],
-    },
-
     'no-network-logged-in-sudo-passwd' => {
       :temporary => true,
       :description => "Tails has booted from DVD without network and logged in with an administration password",
@@ -167,11 +152,6 @@ end
 def reach_checkpoint(name)
   scenario_indent = " "*4
   step_indent = " "*6
-  red = 31
-  green = 32
-  def colorize(color_code, s)
-    "\e[#{color_code}m#{s}\e[0m"
-  end
 
   step "a computer"
   if VM.snapshot_exists?(name)
@@ -190,25 +170,25 @@ def reach_checkpoint(name)
       end
       post_snapshot_restore_hook
     end
-    STDERR.puts(scenario_indent + "Checkpoint: #{checkpoint_description}")
+    debug_log(scenario_indent + "Checkpoint: #{checkpoint_description}",
+              :color => :white)
     step_action = "Given"
     if parent_checkpoint
       parent_description = checkpoints[parent_checkpoint][:description]
-      STDERR.puts(
-        step_indent +
-        colorize(green, "#{step_action} #{parent_description}"))
+      debug_log(step_indent + "#{step_action} #{parent_description}",
+                :color => :green)
       step_action = "And"
     end
     steps.each do |s|
       begin
         step(s)
       rescue Exception => e
-        STDERR.puts(
-          scenario_indent +
-          colorize(red, "Step failed while creating checkpoint: #{s}"))
+        debug_log(scenario_indent +
+                  "Step failed while creating checkpoint: #{s}",
+                  :color => :red)
         raise e
       end
-      STDERR.puts(step_indent + colorize(green, "#{step_action} #{s}"))
+      debug_log(step_indent + "#{step_action} #{s}", :color => :green)
       step_action = "And"
     end
     $vm.save_snapshot(name)

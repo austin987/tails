@@ -84,8 +84,7 @@ end
 # times. The block must raise an exception for a run to be considered
 # as a failure. After a failure recovery_proc will be called (if
 # given) and the intention with it is to bring us back to the state
-# expected by the block, so it can be retries.
-#
+# expected by the block, so it can be retried.
 def retry_tor(recovery_proc = nil, &block)
   retry_action(recovery_proc, tor = true, &block)
 end

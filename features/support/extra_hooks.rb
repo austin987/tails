@@ -46,20 +46,18 @@ def AfterFeature(*tag_expressions, &block)
   $after_feature_hooks << SimpleHook.new(tag_expressions, block)
 end
 
-AfterConfiguration do |config|
-  # Cucumber may read this file multiple times, and hence run this
-  # AfterConfiguration hook multiple times. Patching the formatter
-  # more than once will lead to problems, so let's ensure we only do
-  # it once.
-  next if $formatters_are_patched
-  # Multiple formatters can be registered, but we only patch one of
-  # them, since we only want our hooks to run once in total, not once
-  # for each formatter.
-  formatter_name, _ = config.formats.first
-  formatter = config.formatter_class(formatter_name)
-  formatter.class_exec do
-    if method_defined?(:before_feature)
-      alias old_before_feature before_feature
+def debug_log(message, options = {})
+  $debug_log_fns.each { |fn| fn.call(message, options) } if $debug_log_fns
+end
+
+require 'cucumber/formatter/pretty'
+module ExtraFormatters
+  # This is a null formatter in the sense that it doesn't ever output
+  # anything. We only use it do hook into the correct events so we can
+  # add our extra hooks.
+  class ExtraHooks
+    def initialize(*args)
+      # We do not care about any of the arguments.
     end
 
     def before_feature(feature)
@@ -68,19 +66,9 @@ AfterConfiguration do |config|
           hook.invoke(feature) if feature.accept_hook?(hook)
         end
       end
-      if self.class.method_defined?(:old_before_feature)
-        old_before_feature(feature)
-      end
-    end
-
-    if method_defined?(:after_feature)
-      alias old_after_feature after_feature
     end
 
     def after_feature(feature)
-      if self.class.method_defined?(:old_after_feature)
-        old_after_feature(feature)
-      end
       if $after_feature_hooks
         $after_feature_hooks.each do |hook|
           hook.invoke(feature) if feature.accept_hook?(hook)
@@ -88,5 +76,41 @@ AfterConfiguration do |config|
       end
     end
   end
-  $formatters_are_patched = true
+
+  # The pretty formatter with debug logging mixed into its output.
+  class PrettyDebug < Cucumber::Formatter::Pretty
+    def initialize(*args)
+      super(*args)
+      $debug_log_fns ||= []
+      $debug_log_fns << self.method(:debug_log)
+    end
+
+    def debug_log(message, options)
+      options[:color] ||= :blue
+      @io.puts(format_string(message, options[:color]))
+    end
+  end
+
+end
+
+module Cucumber
+  module Cli
+    class Options
+      BUILTIN_FORMATS['pretty_debug'] =
+        [
+          'ExtraFormatters::PrettyDebug',
+          'Prints the feature with debugging information - in colours.'
+        ]
+      BUILTIN_FORMATS['debug'] = BUILTIN_FORMATS['pretty_debug']
+    end
+  end
+end
+
+AfterConfiguration do |config|
+  # Cucumber may read this file multiple times, and hence run this
+  # AfterConfiguration hook multiple times. We only want our
+  # ExtraHooks formatter to be loaded once, otherwise the hooks would
+  # be run miltiple times.
+  extra_hooks = ['ExtraFormatters::ExtraHooks', '/dev/null']
+  config.formats << extra_hooks if not(config.formats.include?(extra_hooks))
 end

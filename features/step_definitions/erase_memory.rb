@@ -133,18 +133,19 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   $vm.pidof("fillram").each do |pid|
     $vm.execute_successfully("echo 15 > /proc/#{pid}/oom_adj")
   end
-  STDERR.print "Memory fill progress: "
-  ram_usage = ""
-  remove_chars = 0
+  prev_used_ram_ratio = -1
   # ... and that it finishes
   try_for(instances*2*60, { :msg => "fillram didn't complete, probably the VM crashed" }) do
-    used_ram = used_ram_in_MiB
-    remove_chars = ram_usage.size
-    ram_usage = "%3d%% " % ((used_ram.to_f/@detected_ram_m)*100)
-    STDERR.print "\b"*remove_chars + ram_usage
+    used_ram_ratio = (used_ram_in_MiB.to_f/@detected_ram_m)*100
+    # Round down to closest multiple of 10 to limit the logging a bit.
+    used_ram_ratio = (used_ram_ratio/10).round*10
+    if used_ram_ratio - prev_used_ram_ratio >= 10
+      debug_log("Memory fill progress: %3d%%" % used_ram_ratio)
+      prev_used_ram_ratio = used_ram_ratio
+    end
     ! $vm.has_process?("fillram")
   end
-  STDERR.print "\b"*remove_chars + "finished.\n"
+  debug_log("Memory fill progress: finished")
   if verify
     coverage = pattern_coverage_in_guest_ram()
     # Let's aim for having the pattern cover at least 80% of the free RAM.

@@ -4,6 +4,10 @@
 
 This document serves as an explanation of the rationale behind the proposed Greeter design related to [[!tails_ticket 8230]]. This document will grow over time, so please feel free to agree with, object to, or request anything.
 
+# Contents
+
+[[!toc levels=3]]
+
 # History of this document
 
 This document is the result of a process that took more than one year:
@@ -20,7 +24,7 @@ Please take this into account when you comment on current proposals. Improvement
 After working on a prototype and doing UX testing with some folks at NUMA, we arrived at
 the idea of having two main experience flows:
 
-- A quick setup for regular users, in which the every option is easy to access in a few secreens;
+- A quick setup for regular users, in which every option is easy to access in a few screens;
 - A wizard to guide newcomers.
 
 The result of this step can be found in [[NUMA_flow]].
@@ -31,7 +35,7 @@ The implementation and release of this is scheduled in three
 phases, so that we make actual progress we can deliver to users as
 soon as things become reality:
 
-- Phase 1: redesign the Greeter's 1st screen. We then have
+- Phase 1: redesign the Greeter's 1st and 2nd screen. We then have
   similar functionality to the current Greeter, but more clearly presented.
 
 - Phase 2: add a Wizard to guide beginners ("Discover: Guided Configuration")
@@ -53,14 +57,23 @@ for the 1st screen. Below in this document we explain every designation.
 
 Design a greeter dialog that:
 
-- Accommodates for one-click access to persistence, localization, and privacy options
+- Accommodates for one-click access to localization and persistence options
+- Accommodates for fast access to other advanced options
 - Has a simple and easy to understand interface for both new and advanced users
 - Uses as much tested data from previous design iterations as possible
-- Is up to date with GNOME 3.14 standards
+- Is up-to-date with GNOME 3.14 standards
 
 ## Proposed design
 
-[[!img Greeter.Welcome.png link="Greeter.Welcome.svg"]]
+<img src="https://labs.riseup.net/code/attachments/download/937/Tails.Greeter.Explained.png" width="900px" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/937/Tails.Greeter.Explained.png)
+[source](https://labs.riseup.net/code/attachments/download/936/Tails.Greeter.Explained.svgz)
+
+<img src="https://mailman.boum.org/pipermail/tails-ux/attachments/20150910/550fa30e/attachment-0001.png" width="900px" />
+
+[full size bitmap](https://mailman.boum.org/pipermail/tails-ux/attachments/20150910/550fa30e/attachment-0001.png)
+[source](https://mailman.boum.org/pipermail/tails-ux/attachments/20150910/550fa30e/attachment-0001.bin)
 
 There is a single welcome and settings screen which is always displayed and acts as a "Check & Go" screen, as well as a hub for editing settings. 
 
@@ -82,7 +95,11 @@ Which content structure type is most appropriate for the Greeter?
 - Show/Hide - Hidden off-screen or behind on-screen element
 - **Openface - Full display**
 
-With the Step-by-step flow already established as the most appropriate guided configuration structure, the designation made was that, although the Show/Hide structure most appropriately accommodates the two end-of-spectrum use cases (noob vs veteran), the Openface structure is the most appropriate for the Greeter’s first screen, as it most closely aligns with GNOME HIG and ensures there is no hidden or undiscoverable information.
+With the Step-by-step flow already established as the most appropriate guided configuration structure, the designation made was that, the Show/Hide structure most appropriately accommodates the two end-of-spectrum use cases (noob vs veteran). However, it doesn't align GNOME HIG and doesn't feedback to the user which options are selected (when diverging from defaults). We thus choosed to:
+
+- add a + button to add setting, as commonly found in GNOME lists
+- display settings that diverge from defaults
+
 
 ### Options Available On The 1st Screen
 
@@ -90,8 +107,7 @@ The hypothesis is that a good design should allow people to teach themselves.
 
 With this said, it seems appropriate to educate people of varying technical levels of understanding what options are available to them and what importance these options hold in regard to the intended function.
 
-In our situation, this is most effectively accomplished by 
-displaying everything upfront (Openface).
+In our situation, this is most effectively accomplished by displaying all settings groups upfront. However, in order not lose the beginners, the privacy settings are hidden when they doesn't diverge from defaults.
 
 ### Start Tails Button Location
 
@@ -187,28 +203,18 @@ UI when "Save Language Changes" is checked:
 
 ### Storage
 
-Initial state:
+<img src="https://labs.riseup.net/code/attachments/download/954/EncryptedStorage.png" width="400px"/>
 
-    Storage [more info]
-    [Type your passphrase...................] [icon: pad closed] [enable]
+[full size bitmap](https://labs.riseup.net/code/attachments/download/954/EncryptedStorage.png)
 
-A context menu enables to "show passphrase", "copy" and "paste" as in
-GNOME OpenPGP agent
 
-After clicking on enable:
+1. Initial state
+2. While typing
+3. After clicking on enable
+4. Unlocked storage
+5. If the password is wrong
 
-    Storage [more info]
-    [ooooooooooooooooo......................] [icon: spinner] [enable]
-
-If the password is correct:
-
-    Storage [more info]
-    [xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx] [icon: pad open] [disable]
-
-If the password is wrong:
-
-    Storage [more info]
-    [ooooooooooooooooo......................] [icon: pad closed] [enable]
+A context menu enables to "show passphrase", "copy" and "paste" as in GNOME OpenPGP agent
 
 # Upcoming settings
 
