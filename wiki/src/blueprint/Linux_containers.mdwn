@@ -62,8 +62,55 @@ Tools to manage containers
 Running GUI applications in containers
 ======================================
 
-We're told that Subgraph OS will use LXC + xpra. In this vein:
+<a id="oz"></a>
 
+## Subgraph's Oz
+
+* [Oz](https://github.com/subgraph/oz) is a sandboxing system targeting
+  everyday workstation applications. It relies mainly on Xpra and
+  Linux namespaces.
+* See its [technical
+  documentation](https://github.com/subgraph/oz/wiki/Oz-Technical-Details)
+  for details.
+* It has a [GNOME Shell
+  extension](https://github.com/subgraph/ozshell-gnome-extension) that
+  e.g. allows one to add files (read-only or read-write) to a running sandbox.
+* Sandboxed applications can optionally be given access to:
+  - files passed on their command line (in a read-only manner), which
+    makes them work just fine when started e.g. from a file manager or
+    a web browser;
+  - the microphone and/or speaker, thanks to Xpra.
+* Potential functionality limitations and UX issues:
+  - It's not clear to me how things such as copy'n'pasting between
+    applications, printing, Orca and IBus input methods are handled.
+    Some of those need access to the session D-Bus, so
+    presumably making these work will require mediating D-Bus calls,
+    as done e.g. in AppArmor on Ubuntu.
+    * Xpra 0.14+ can be set up to configure IBus, but how does this
+      integrate with the IBus configuration changes applied via the
+      desktop environment?
+    * Xpra 0.15+ provides a CUPS forwarder backend
+  - When one has already started e.g. LibreOffice and needs to open
+    a new file, they need to first use the GNOME Shell extension to
+    add it to the sandbox; in this respect, the resulting UX seems to
+    be inferior to the one the designs the AppArmor and `xdg-app`
+    folks mean to implement (file chooser with a privileged backend).
+    Creating new files might be problematic as well.
+  - Most host OS directories are bind-mounted (read-only) inside the
+    sandbox, and a blacklist is applied on top. This means that
+    arbitrary code execution is possible, but confined within the
+    sandbox, while with AppArmor we restrict a bit more what external
+    programs can be executed, but the equivalent of the sandbox is
+    arguably weaker.
+  - Xpra doesn't support Wayland yet, and Wayland will make some of
+    Xpra's current advantages obsolete.
+
+## Other GUI in containers leads
+
+* [Subuser](http://subuser.org/): essentially Docker + Xpra
+* [GNOME sandboxed
+  applications](https://wiki.gnome.org/Projects/SandboxedApps), aka.
+  `xdg-app`; their concept of "portals" is very interesting.
 * <http://pleonasm.info/blog/2012/10/privilege-separation-with-xpra/>
 * [docker-desktop](https://github.com/rogaha/docker-desktop)
 * Stéphane Graber's [LXC 1.0 blog post
@@ -83,5 +130,3 @@ Other resources
   good summary of the threats and solutions, as of August 2014
 * [Linux Container Security](http://mjg59.dreamwidth.org/33170.html),
   by Matthew Garrett
-* [Oz](https://github.com/subgraph/oz) is a sandboxing system targeting 
-  everyday workstation applications. By Subgraph.
