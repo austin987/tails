@@ -426,7 +426,7 @@ EOF
     begin
       do_focus(window_title, user)
     rescue ExecutionFailedInVM
-      # Often when vdotool fails to focus a window it'll work when retried
+      # Often when xdotool fails to focus a window it'll work when retried
       # after redrawing the screen.  Switching to a new virtual desktop then
       # back seems to be a reliable way to handle this.
       select_virtual_desktop(3)
