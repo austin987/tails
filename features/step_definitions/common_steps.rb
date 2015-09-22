@@ -38,7 +38,7 @@ def deactivate_filesystem_shares
 end
 
 def notification_popup_wait(notification_image, time_to_wait)
-  # notifiction-daemon may abort during start-up, causing the tests that look for
+  # notification-daemon may abort during start-up, causing the tests that look for
   # desktop notifications to fail (ticket #8686)
   begin
     @screen.wait(notification_image, time_to_wait)
