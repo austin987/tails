@@ -1,4 +1,4 @@
-@product @old_iso
+@product
 Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   As a Tails user
   I may want to install Tails to a USB drive
