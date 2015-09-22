@@ -19,7 +19,7 @@ class CtcpChecker < Net::IRC::Client
       :user => nickname,
       :real => nickname,
     }
-    opts[:logger] = Logger.new("/dev/null") if !$config["DEBUG"]
+    opts[:logger] = Logger.new(DEBUG_LOG_PSEUDO_FIFO)
     super(host, port, opts)
   end
 
@@ -46,6 +46,7 @@ class CtcpChecker < Net::IRC::Client
     ctcp_cmds_not_sent = @ctcp_cmds - @sent_ctcp_cmds.to_a
     expected_ctcp_replies_not_received =
       @expected_ctcp_replies.keys - @received_ctcp_replies.to_a
+
     if !ctcp_cmds_not_sent.empty? || !expected_ctcp_replies_not_received.empty?
       raise "Failed to spam all CTCP commands and receive the expected " +
             "replies within #{timeout} seconds.\n" +
@@ -101,7 +102,7 @@ class CtcpChecker < Net::IRC::Client
       return
     end
 
-    if m.ctcp? and /^:#{@spam_target}!/.match(m)
+    if m.ctcp? and /^:#{Regexp.escape(@spam_target)}!/.match(m)
       m.ctcps.each do |ctcp_reply|
         reply_type, _, reply_data = ctcp_reply.partition(" ")
         if @expected_ctcp_replies.has_key?(reply_type)
