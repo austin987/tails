@@ -78,4 +78,18 @@ pref("extensions.update.enabled", false);
 pref("layout.spellcheckDefault", 0);
 pref("network.dns.disableIPv6", true);
 pref("security.warn_submit_insecure", true);
-pref("network.proxy.no_proxies_on", "10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16");
+
+// Disable fetching of the new tab page's Tiles links/ads. Ads are
+// generally unwanted, and also the fetching is a "phone home" type of
+// feature that generates traffic at least the first time the browser
+// is started.
+pref("browser.newtabpage.directory.source", "");
+pref("browser.newtabpage.directory.ping", "");
+// ... and disable the explanation shown the first time
+pref("browser.newtabpage.introShown", true);
+
+// Don't use geographically specific search prefs, like
+// browser.search.*.US for US locales. Our generated amnesia branding
+// add-on localizes search-engines in an incompatible but equivalent
+// way.
+pref("browser.search.geoSpecificDefaults", false);

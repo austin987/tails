@@ -55,13 +55,13 @@ example:
 Fetch the version's hash file and its detached signature, and verify
 with GnuPG:
 
-    wget ${DIST_URL}/sha256sums.txt{,.asc} && \
-    gpg --verify sha256sums.txt.asc sha256sums.txt
+    wget ${DIST_URL}/sha256sums-unsigned-build.txt{.asc,} && \
+    gpg --verify sha256sums-unsigned-build.txt{.asc,}
 
 Filter the tarballs we want and make them available at build time,
 when the tarballs are fetched:
 
-    grep --color=never "\<tor-browser-linux32-.*\.tar.xz$" sha256sums.txt > \
+    grep --color=never "\<tor-browser-linux32-.*\.tar.xz$" sha256sums-unsigned-build.txt > \
          config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
 
 Then update the URL to the one chosen above:

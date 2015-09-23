@@ -1,5 +1,66 @@
+Global process:
+
+  - First step (simple solution):
+    - Generic instructions that would work in most of the case.
+  - Second step (difficult solution):
+    - Maintain a list of Macs and their compatibility
+
+
+Generic instructions that would work in most of the case
+========================================================
+Implementation is happening there : [[!tails_ticket 9316]] 
+
+Truths about Mac:
+
+  - DVD
+    - No DVD on some model
+    - DVD works on 32-bit UEFI
+    - Reported to fail very rarely (cf. known issues)
+    - MacBookPro (early 2011) fails to boot from DVD since Tails 1.1
+  - dd
+    - Not working on:
+      - Macbook Air 1.1: 32-bit UEFI
+      - Macbook Air 3.1: 64-bit UEFI
+    - 32-bit might work with next version (#8471)
+    - Test Tails 1.5 with dd :mercedes:tchou:
+  - Tails Installer
+    - 32-bit doesn't work with Tails Installer
+    - 64-bit work sometimes yes and sometimes no
+    - Test Tails 1.5 with Installer on Macbook Air 1.1 :mercedes:
+  - rEFInd
+    - Don't ask people to do that
+  - Bootcamp
+    - No good
+
+Algorithm:
+
+  - if have a friend
+    - clone
+    - if works → happy
+    - if fails
+      - DVD
+      - dd
+      - if works → stay on DVD or dd
+      - if fails → sad
+  - else
+    - DVD
+    - dd
+    - another computer (different Mac, different OS)
+    - if fails → sad
+    - if DVD or dd works
+      - clone
+        - if works → happy
+        - else → stay on DVD or dd
+    - if another computer works until full-feature Tails
+      - if works → happy
+      - else → try temporary Tails
+
+
+
+
+
 List of compatibility with Mac
-------------------------------
+==============================
 
 Seeing that:
 
@@ -11,7 +72,7 @@ We will maintain the state of Tails compatibility on these computers.
 
 
 Roadmap
-=======
+-------
 
 1 Bootstrap
 -----------
