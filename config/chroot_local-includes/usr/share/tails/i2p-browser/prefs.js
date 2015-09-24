@@ -22,3 +22,10 @@ pref("browser.newtabpage.directory.source", "");
 pref("browser.newtabpage.directory.ping", "");
 // ... and disable the explanation shown the first time
 pref("browser.newtabpage.introShown", true);
+
+// Without setting this, the Download Management page will not update
+// the progress being made.
+pref("browser.download.panel.shown", true);
+
+// Never  add 'www' or '.com' to hostnames in I2P Browser.
+pref("browser.fixup.alternate.enabled", false);

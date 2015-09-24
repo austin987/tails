@@ -166,21 +166,30 @@ This was discussed at least there:
 
 That would maybe be the way to go, with 3 chained jobs:
 
-* First one is executed on the isotester the test job is supposed to be
-  assigned to. It starts the second job and blocks waiting for it to
-  complete. This way this isotester is left reserved for the test job,
-  and the isotester name can be passed as a build parameter to the
-  second job.
+* First one is a wrapper and trigger 2 other jobs. It is executed on the
+  isotester the test job is supposed to be assigned to. It puts the
+  isotester in offline mode and starts the second job, blocking while
+  waiting for it to complete. This way this isotester is left reserved
+  for the second job, and the isotester name can be passed as a build
+  parameter to the second job. This job is low prio so it waits for
+  other second and third type of jobs to be completed before starting its
+  own.
 * The second job is executed on the master (which has two build
   executors). This job ssh into the said isotester and issue the
-  reboot. It waits for it to come back up.
+  reboot. It waits a bit and put the node back online again. This jobs
+  is higher prio so that it is not lagging behind other wrapper jobs in
+  the queue.
 * The third job is the test job, run on the freshly started isotester.
+  This one is high prio too to get executed before any other wrapper
+  jobs.
 
-What is unclear is how this whole chain will behave. Will it be
-considered as failing due to the first one being stopped by the reboot?
-Maybe there's another way to gather the name of the isotester, which is
-in the end the sole role of the first job. This scenario will probably
-need some adjustements.
+Using some kind of queue sorting is necessary. Unfortunately, the
+[PrioritySorter
+plugin](https://wiki.jenkins-ci.org/display/JENKINS/Priority+Sorter+Plugin)
+is not well supported by the current version of JJB in Debian. We'll
+have to push upstream a fix, and meanwhile use the `raw` option trick in
+the yaml files (which itself isn't supported by JJB in Debian yet,
+hopefully the new one will leave the NEW queue soon).
 
 Another tested but non-working option was to use the Jenkins [PostBuildScript
 plugin](https://wiki.jenkins-ci.org/display/JENKINS/PostBuildScript%20Plugin)
@@ -245,7 +254,7 @@ just import the variables in the environment in the test suite wrapper
 script.
 
 Passing parameters through jobs
-------------------------------
+-------------------------------
 
 We already specified what kind of informations we want to pass from the
 build job to the test job.
@@ -258,3 +267,21 @@ chaining ability is to put the wanted parameters in a file that is
 archived with the artifacts of the upstream job. Then the downstream job
 can be configured with then EnvInject plugin we already use to set the
 necessary variables in the job environment.
+
+Retrieving the ISOs for the test
+--------------------------------
+
+We'll need a way to retrieve the different ISO needed for the test.
+
+For the ISO related to the upstream build job, this shouln't be a
+problem with #9597. We can get it with either wget, or a python script
+using python-jenkins. That was the point of this ticket.
+
+For the last release ISO, we have several means:
+
+* Using wget to get them from http://iso-history.tails.boum.org. This
+  website is password protected, but we could set up another private
+  vhost for the isotesters.
+* Using the git-annex repo directly.
+
+The former is probably the most simple to use.
