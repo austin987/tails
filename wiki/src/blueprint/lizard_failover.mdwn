@@ -21,17 +21,40 @@ monitoring|blueprint/monitor_servers#services]].
 - rsync server
 - WhisperBack relay
 
+<a id="system-specs"></a>
+
 # System requirements
 
 This is about [[!tails_ticket 10243]].
 
-Two years ago we wrote:
+The goal is to specify what we'll likely need mid-2016.
+We also need datacenter-class bandwidth.
 
-* 20GB of disk space, and growing (will jump to a few dozens GB once
-  we distribute source packages ([[!tails_ticket 5987]]) and get
-  ourselves a freezable APT repo ([[!tails_ticket 5926]])).
-* low CPU usage
-* 1GB of RAM should be enough
-* datacenter-class bandwidth
+- APT repository:
+  * CPU: reprepro can already be hungry; and once we have the
+    freezable APT repo, depending on the chosen tools it may grow
+    a lot (e.g. no idea how aptly behaves)
+  * RAM: currently low, but might grow for the same reason as CPU usage
+  * storage: 425 GB
+- bittorrent:
+  * CPU: low
+  * RAM: low
+  * storage: 3 GB
+- Tor Browser archive:
+  * CPU: low
+  * RAM: low
+  * storage: 60 GB
+- rsync server:
+  * CPU: low
+  * RAM: low
+  * storage: 5 GB (excluding `obsolete`; 20 GB including it)
+- WhisperBack relay:
+  * CPU: low
+  * RAM: low
+  * storage: low
 
-XXX: update this list
+**Total**:
+
+  * CPU: currently low but must be easily upgradable
+  * RAM: 2 GB should be enough for now, but must be easily upgradable
+  * storage: 500 GB
