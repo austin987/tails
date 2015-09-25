@@ -86,15 +86,26 @@ end
 # given) and the intention with it is to bring us back to the state
 # expected by the block, so it can be retried.
 def retry_tor(recovery_proc = nil, &block)
-  retry_action(recovery_proc, tor = true, &block)
+  tor_recovery_proc = Proc.new do
+    force_new_tor_circuit
+    recovery_proc.call if recovery_proc
+  end
+
+  retry_action($config['MAX_NEW_TOR_CIRCUIT_RETRIES'],
+               :recovery_proc => tor_recovery_proc,
+               :operation_name => 'Tor operation', &block)
 end
 
-def retry_action(recovery_proc = nil, tor = nil, &block)
-  if tor
-    max_retries = $config["MAX_NEW_TOR_CIRCUIT_RETRIES"]
-  else
-    max_retries = 10
-  end
+def retry_i2p(recovery_proc = nil, &block)
+  retry_action(10, :recovery_proc => recovery_proc,
+               :operation_name => 'I2P operation', &block)
+end
+
+def retry_action(max_retries, options = {}, &block)
+  assert(max_retries.is_a?(Integer), "max_retries must be an integer")
+  options[:recovery_proc] ||= nil
+  options[:operation_name] ||= 'Operation'
+
   retries = 1
   loop do
     begin
@@ -102,28 +113,15 @@ def retry_action(recovery_proc = nil, tor = nil, &block)
       return
     rescue Exception => e
       if retries <= max_retries
-        if tor
-          debug_log("Tor operation failed (Tor circuit try #{retries} of " +
-                    "#{max_retries}) with:\n" +
-                    "#{e.class}: #{e.message}")
-        else
-          debug_log("Operation failed (Try #{retries} of " +
-                    "#{max_retries}) with:\n" +
-                    "#{e.class}: #{e.message}")
-        end
-        recovery_proc.call if recovery_proc
-        force_new_tor_circuit if tor
+        debug_log("#{options[:operation_name]} failed (Try #{retries} of " +
+                  "#{max_retries}) with:\n" +
+                  "#{e.class}: #{e.message}")
+        options[:recovery_proc].call if options[:recovery_proc]
         retries += 1
       else
-        if tor
-          raise TorFailure.new("The operation failed (despite forcing " +
-                               "#{max_retries} new Tor circuits) with\n" +
-                               "#{e.class}: #{e.message}")
-        else
-          raise MaxRetriesFailure.new("The operation failed (despite retrying " +
-                                      "#{max_retries} times) with\n" +
-                                      "#{e.class}: #{e.message}")
-        end
+        raise MaxRetriesFailure.new("#{options[:operation_name]} failed (despite retrying " +
+                                    "#{max_retries} times) with\n" +
+                                    "#{e.class}: #{e.message}")
       end
     end
   end

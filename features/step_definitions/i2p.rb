@@ -74,7 +74,7 @@ Then /^the I2P homepage loads in I2P Browser$/ do
     @screen.type(Sikuli::Key.ESC)
     @screen.click('BrowserReloadButton.png')
   end
-  retry_action(recovery_on_failure) do
+  retry_i2p(recovery_on_failure) do
     $vm.focus_window('I2P Browser')
     @screen.wait('I2PBrowserProjectHomepage.png', 80)
   end
