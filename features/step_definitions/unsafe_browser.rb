@@ -4,25 +4,17 @@ When /^I see and accept the Unsafe Browser start verification$/ do
 end
 
 def supported_torbrowser_languages
-  langs = Array.new
-  exts = $vm.execute_successfully(
-    "find /usr/local/share/tor-browser-extensions -maxdepth 1 -name 'langpack*.xpi' -printf \"%f\n\"").stdout
-
-  # Some of the TBB languages are shipped with both a language and country code, e.g. es-ES.
-  # We'll only keep track of the language code and let `guess_best_tor_browser_locale`
-  # try to get by with our approximated locales.
-  supported_langs = exts.scan(/langpack-([a-z]+).*/).flatten
-  locales = $vm.execute_successfully(
-    "find /usr/lib/locale -maxdepth 1 -name '*.utf8' -printf \"%f\n\"").stdout.split
-
-  # Determine a valid locale for each language that we want to test.
-  supported_langs.each do |lang|
-    # If a language shipped by TBB is not a supported system locale (e.g. 'vi'),
-    # 'find(nomatch)' will use the locale xx_XX for language 'xx'.
-    nomatch = proc { "#{lang}_#{lang.upcase}.utf8" }
-    langs << locales.find(nomatch) { |l| l.match(/^#{lang}/) }
+  localization_descriptions = "#{Dir.pwd}/config/chroot_local-includes/usr/share/tails/browser-localization/descriptions"
+  File.read(localization_descriptions).split("\n").map do |line|
+    # The line will be of the form "xx:YY:..." or "xx-YY:YY:..."
+    first, second = line.sub('-', '_').split(':')
+    candidates = ["#{first}_#{second}.utf8", "#{first}.utf8",
+                  "#{first}_#{second}", first]
+    when_not_found = Proc.new { raise "Could not find a locale for '#{line}'" }
+    candidates.find(when_not_found) do |candidate|
+      $vm.directory_exist?("/usr/lib/locale/#{candidate}")
+    end
   end
-  return langs
 end
 
 Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
