@@ -69,7 +69,6 @@ class VMStorage
   end
 
   def delete_volume(name)
-    assert(@pool.list_volumes.member?(name))
     @pool.lookup_volume_by_name(name).delete
   end
 
