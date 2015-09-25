@@ -268,6 +268,44 @@ archived with the artifacts of the upstream job. Then the downstream job
 can be configured with then EnvInject plugin we already use to set the
 necessary variables in the job environment.
 
+Define which $OLD_ISO to test against
+-------------------------------------
+
+It appeared in [[!tails_ticket 10117]] that this question is not so
+obvious and easy to address.
+
+The most obvious answer would be to use the previous release for all the
+branches **but** feature/jessie, which would use the previously built
+ISO of the same branch.
+
+But in some occasions, an ISO can't be tested this way, because it
+contains changes that affects the "set up an old Tails", like changes in
+the Persistence Assistant, the Greeter, the Tails Installer or in
+syslinux.
+
+So we may need a way to encode in the Git repo that a given branch needs
+to use the same value than $ISO rather than the last release as $OLD_ISO.
+We could use the same kind of trick than for the APT_overlay feature:
+having a file in `config/ci.d/` that if present shows that this is the
+case. OTOH, we may need something a bit more complex than a simple
+boolean flag. So we may rather want to check the content of a file.
+
+But this brings concerns about the merge of the base branch in the
+feature branch and how to handle conflicts. Note that at testing time,
+we'll have to merge the base branch before we look at that config
+setting (because for some reason the base branch might itself require
+old ISO = same).
+
+So let use a simpler solution using existing code in the repo: use the
+`OLD_TAILS_ISO` flag present in `config/default.yml`: when we release we
+set its value to the released ISO, and for some branch that need it we
+empty this variable so that the test use the same ISO for both
+`--old-iso` and `--iso`.
+
+As a first baby step, we can still by default use the same ISO for both
+`--old-iso` and `--iso`, but for the devel and stable branch so that we
+know if the upgrades are broken long before the next release.
+
 Retrieving the ISOs for the test
 --------------------------------
 
