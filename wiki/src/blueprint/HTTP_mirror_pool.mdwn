@@ -196,6 +196,98 @@ For this to work and to be flexible, mirrors need to respond to \*.amnesia.boum.
 
 <http://freiwuppertal.de/tails-mirror-example-named.htm>
 
+## Vanilla JavaScript POC and JSON
+
+        <a href="http://dl.amnesia.boum.org/tails/stable/tails-i386-1.6/tails-i386-1.6.iso" id="dllink">download link</a>
+
+        <script type="text/javascript">
+        function fetchJSONdata(path, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200 || xhr.status === 0) {
+                        var data = JSON.parse(xhr.responseText);
+                        if (callback) callback(data);
+                    } else {
+						console.log( "Error: " + xhr.statusText);
+					}
+				}
+			};
+            xhr.open('GET', path, true);
+            xhr.send();
+        }
+
+		function getRandomInt(min, max) {
+  			return Math.floor(Math.random() * (max - min +1)) + min;
+		}
+
+		function isJSON(str) {
+			try {
+				JSON.parse(str);
+			} catch (e) {
+				return false;
+			}
+			return true;
+		}
+
+		function replaceDownloadURL(updatedURL) {
+			var URLMarker = "/tails/stable";
+			// todo check that url is a correct url
+			var linkDOMElem = document.getElementById('dllink');
+			var linkHREF = linkDOMElem.href.split( '//' );
+			var linkToISO = linkHREF[1].split( URLMarker );
+			// fixme http or https
+			linkDOMElem.href = '//' + updatedURL + URLMarker + linkToISO[1];
+			return true;
+		}
+
+        fetchJSONdata('./mirrors.json', function(data){
+            //console.log(data);
+			if( data == "undefined" ) {
+				console.log( "Error: mirror data not loaded.");
+			} else if( !isJSON( JSON.stringify(data) ) ) {
+				console.log( "Error: mirror data is not JSON.");
+			} else {
+				//console.log(data.mirrors);
+				// todo delete all mirrors with weight 0 before choosing one
+				if(data.mirrors.length > 0 ) {
+					var activeMirrors = new Array();
+					for ( i = 0; i < data.mirrors.length; i++ ) {
+						if ( data.mirrors[i].weight != 0 ) {
+							// add mirror as many times as its weight, max weight is 5
+							if ( parseInt(data.mirrors[i].weight ) > 5) {
+								var max_weight = 5;
+							} else {
+								var max_weight = parseInt( data.mirrors[i].weight );
+							}
+							for ( w = 0; w < max_weight; w++ ) {
+								activeMirrors.push( data.mirrors[i] );
+							}
+						}
+					}
+					console.log(activeMirrors);
+
+					var randomMirror = getRandomInt(0, activeMirrors.length-1);
+					//console.log(randomMirror);
+					//console.log(data.mirrors[randomMirror]);
+					replaceDownloadURL(activeMirrors[randomMirror].url);
+				}
+			}
+        });
+    </script>
+
+The JSON:
+
+   {
+	"mirrors": [
+		{ "url": "1.dl.amnesia.boum.org", "weight": "10" },
+		{ "url": "5.dl.amnesia.boum.org", "weight": "5" },
+		{ "url": "6.dl.amnesia.boum.org", "weight": "6" },
+		{ "url": "3.dl.amnesia.boum.org", "weight": "0" }
+	]
+    }
+
+
 ### Giving mirrors higher or lower weight
 
 Using this approach, giving one mirror more weight than others is very easy: Simply add it's name multiple times to the array of mirrors. :D
