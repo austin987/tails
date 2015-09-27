@@ -27,3 +27,7 @@ pref("mailnews.database.global.indexer.enabled", false);
 
 // Disable chat
 pref("mail.chat.enabled", false);
+
+// Disable system addons
+pref("extensions.autoDisableScopes", 3);
+pref("extensions.enabledScopes", 4);
