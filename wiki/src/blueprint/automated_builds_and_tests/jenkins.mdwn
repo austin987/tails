@@ -296,15 +296,16 @@ we'll have to merge the base branch before we look at that config
 setting (because for some reason the base branch might itself require
 old ISO = same).
 
-So let use a simpler solution using existing code in the repo: use the
+As a first baby step, we will by default use the same ISO for both
+`--old-iso` and `--iso`, except for the branches used to prepare
+releases (`devel` and `stable`), so that we
+know if the upgrades are broken long before the next release.
+
+Another option that could be considered, using existing code in the repo: use the
 `OLD_TAILS_ISO` flag present in `config/default.yml`: when we release we
 set its value to the released ISO, and for some branch that need it we
 empty this variable so that the test use the same ISO for both
 `--old-iso` and `--iso`.
-
-As a first baby step, we can still by default use the same ISO for both
-`--old-iso` and `--iso`, but for the devel and stable branch so that we
-know if the upgrades are broken long before the next release.
 
 Retrieving the ISOs for the test
 --------------------------------
