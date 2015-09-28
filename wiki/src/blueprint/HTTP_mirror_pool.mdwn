@@ -11,6 +11,26 @@ also for maintainability.
 
 [[!toc levels=3]]
 
+# The plan
+
+## Big picture
+
+We decided to implement a two-way strategy for this feature:
+
+* Keep DNS as is, serving 3 highly reliable mirrors only. This will be
+  the fallback for people who do not use JS.
+* Use JavaScript to modify the link on the download page, so that it
+  points to a random mirror.
+  - Vanilla JS (no frameworks)
+  - Store the JS code and its configuration file in two dedicated
+    ikiwiki overlays, for finer-grained access control possibilities
+    to it (e.g. we may want to let people who don't have commit access
+    to Git maintain the mirrors pool).
+  - Configuration for the JS is loaded from JSON file. It attaches
+    a weight to each mirror. Weight 0 means that the mirror is
+    currently disabled, and will never be redirected to. We're using
+    JSON and not YAML to avoid the need for third-party parsers.
+
 # Initial research
 
 ## Using DNS
