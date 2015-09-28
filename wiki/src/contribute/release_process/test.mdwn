@@ -65,6 +65,8 @@ documented on a [[dedicated page|test/automated_tests]].
 
 See [[test/setup]] and [[test/usage]].
 
+Do point `--old-iso` to the ISO of the previous stable release.
+
 ## Automated test suite migration progress
 
 The manual test suite below either contains tests that cannot be
@@ -143,7 +145,6 @@ tracked by tickets prefixed with `todo/test_suite:`.
 # Erase memory on shutdown
 
 - `memlockd` must be running
-- `udev-watchdog` must monitor the right device when booted off USB (automate: [[!tails_ticket 9890]])
 - After booting from DVD, remove Tails boot medium and check that the
   memory erasure process is started (`Loading new kernel`, at least).
   (automate: [[!tails_ticket 5472]])
@@ -206,9 +207,9 @@ Start I2P by appending `i2p` to the kernel command line.
 
 # SSH
 
-* Connecting (by IP) over SSH to a server on the LAN should work.
+* Connecting (by IP) over SSH to a server on the LAN should work. (automate: [[!tails_ticket 9087 desc="#9087"]])
 
-# APT
+# APT (automate: [[!tails_ticket 8164 desc="#8164"]])
 
      grep -r deb.tails.boum.org /etc/apt/sources.list*
 
@@ -216,10 +217,6 @@ Start I2P by appending `i2p` to the kernel command line.
   the release version number) is in APT sources.
 * Make sure the Tails repository unversioned suites (e.g. `testing`,
   `stable` and `devel`) are *not* in APT sources.
-
-# Unsafe Web Browser
-
-* Browsing (by IP) a FTP server on the LAN should be possible.
 
 <a id="incremental-upgrades"></a>
 
@@ -294,9 +291,11 @@ the Tails Greeter checkbox, and then:
   Internet Explorer theme.
 * Vidalia should not start.
 
-# Unsafe Browser
+# Unsafe Web Browser
 
-Google must be the default, pre-selected search plugin.
+* Browsing (by IP) a FTP server on the LAN should be possible.
+
+* Google must be the default, pre-selected search plugin.
 
 # Real (non-VM) hardware
 

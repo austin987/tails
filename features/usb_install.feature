@@ -1,4 +1,4 @@
-@product @old_iso
+@product
 Feature: Installing Tails to a USB drive, upgrading it, and using persistence
   As a Tails user
   I may want to install Tails to a USB drive
@@ -93,6 +93,8 @@ Feature: Installing Tails to a USB drive, upgrading it, and using persistence
     Given a computer
     And I start Tails from USB drive "current" with network unplugged and I login
     Then the boot device has safe access rights
+    And process "udev-watchdog" is running
+    And udev-watchdog is monitoring the correct device
     And Tails is running from USB drive "current"
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "current"

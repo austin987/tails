@@ -46,6 +46,10 @@ service tor reload
 inotifywait -e create ${ONION}
 HOSTNAME=$(cat ${ONION}/hostname)
 
+# Allow local connections
+
+iptables -I OUTPUT --out-interface lo --protocol tcp --dport 64738 --jump ACCEPT
+
 # Output connection information
 
 echo "Hostname:	${HOSTNAME}"
