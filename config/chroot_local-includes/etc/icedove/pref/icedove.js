@@ -24,3 +24,6 @@ pref("vendor.name", "Tails");
 
 // Disable mail indexing
 pref("mailnews.database.global.indexer.enabled", false);
+
+// Disable chat
+pref("mail.chat.enabled", false);
