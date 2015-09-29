@@ -21,37 +21,30 @@ Please take this into account when you comment on current proposals. Improvement
 
 # Flow
 
-After working on a prototype and doing UX testing with some folks at NUMA, we arrived at
-the idea of having two main experience flows:
+After working on a prototype and doing UX testing with some folks at NUMA, we arrived at the idea of having two main experience flows:
 
-- A quick setup for regular users, in which every option is easy to access in a few screens;
-- A wizard to guide newcomers.
+- Guided Configuration: A wizard to guide new users
+- Self-guided Configuration: A quick setup for veteran users
 
-The result of this step can be found in [[NUMA_flow]].
+The result of this step can be found in this [[NUMA_flow]].
 
 # Implementation phases
 
-The implementation and release of this is scheduled in three
-phases, so that we make actual progress we can deliver to users as
-soon as things become reality:
+The implementation and release of this is scheduled in three phases.  The intention is to make progress that can be delivered as soon as things become reality:
 
-- Phase 1: redesign the Greeter's 1st and 2nd screen. We then have
-  similar functionality to the current Greeter, but more clearly presented.
+- PHASE 1: Redesign the Greeter's 1st screen. We then have similar functionality to the current Greeter but more clearly presented.
 
-- Phase 2: add a Wizard to guide beginners ("Discover: Guided Configuration")
+- PHASE 2: Add a wizard to guide beginners ("Discover: Guided Configuration")
 
-- Phase 3: merge the persistence creation/configuration into the
-  greeter
+- PHASE 3: Merge the persistence creation/configuration into the Greeter
 
-We are proposing this because we have been debating a lot on
-the first screen(s) and we have reached something that is worth
-being tested and implemented. On the other hand, there is more
-work needed on the Guided Configuration wizard.
+We are proposing this because we have been debating a lot on the first screen(s) and we have reached something that is worth being tested and implemented. There is still work needed on the Guided Configuration wizard.
+
 
 # Proposed design for the 1st screen
 
-We refined this on the *tails-ux* mailing list to arrive at the following concrete proposal
-for the 1st screen. Below in this document we explain every designation.
+We refined this on the *tails-ux* mailing list to arrive at the following concrete proposal for the 1st screen. Below in this document we explain every designation.
+
 
 ## Intention
 
@@ -61,27 +54,22 @@ Design a greeter dialog that:
 - Accommodates for fast access to other advanced options
 - Has a simple and easy to understand interface for both new and advanced users
 - Uses as much tested data from previous design iterations as possible
-- Is up-to-date with GNOME 3.14 standards
+- Is up-to-date with GNOME 3.14 guidelines
+
 
 ## Proposed design
 
-<img src="https://labs.riseup.net/code/attachments/download/937/Tails.Greeter.Explained.png" width="900px" />
+A single welcome and settings screen, which is always displayed, that acts as a "Check & Go" screen, as well as a hub for editing settings.
 
-[full size bitmap](https://labs.riseup.net/code/attachments/download/937/Tails.Greeter.Explained.png)
-[source](https://labs.riseup.net/code/attachments/download/936/Tails.Greeter.Explained.svgz)
+<img src="https://labs.riseup.net/code/attachments/download/984/Greeter.Explained.png" style='width:100%; max-width: 900px; />
 
-<img src="https://mailman.boum.org/pipermail/tails-ux/attachments/20150910/550fa30e/attachment-0001.png" width="900px" />
+[full size bitmap](https://labs.riseup.net/code/attachments/download/984/Greeter.Explained.png)
+[source](https://labs.riseup.net/code/attachments/download/985/Greeter.Explained.svgz)
 
-[full size bitmap](https://mailman.boum.org/pipermail/tails-ux/attachments/20150910/550fa30e/attachment-0001.png)
-[source](https://mailman.boum.org/pipermail/tails-ux/attachments/20150910/550fa30e/attachment-0001.bin)
+<img src="https://labs.riseup.net/code/attachments/download/979/Greeter.States.png" width="900px" />
 
-There is a single welcome and settings screen which is always displayed and acts as a "Check & Go" screen, as well as a hub for editing settings. 
-
-When a line is clicked, a popover ([[https://developer.gnome.org/hig/stable/popovers.html.en]]) opens with an explanation of the option and the controls to change its value.
-
-As the values change their new value will replace the previous value in each respective location.
-
-It is clear that the "Language" section can/should be saved, but not yet weather the "Settings" section can/should be saved.
+[full size bitmap](https://labs.riseup.net/code/attachments/download/979/Greeter.States.png)
+[source](https://labs.riseup.net/code/attachments/download/980/Greeter.States.svgz) 
 
 ## Explanation of this design
 
@@ -89,17 +77,19 @@ It is clear that the "Language" section can/should be saved, but not yet weather
 
 Which content structure type is most appropriate for the Greeter?
 
-[[!img Greeter.Decision.00-Structure.png link="Greeter.Decision.00-Structure.svg" size="800x"]]
+<img src="https://labs.riseup.net/code/attachments/download/987/Content.Structure.Types.png" width="900px" />
 
-- Step-by-step - Guided walkthrough
-- Show/Hide - Hidden off-screen or behind on-screen element
-- **Openface - Full display**
+[full size bitmap](https://labs.riseup.net/code/attachments/download/987/Content.Structure.Types.png)
+[source](https://labs.riseup.net/code/attachments/download/988/Content.Structure.Types.svgz)
 
-With the Step-by-step flow already established as the most appropriate guided configuration structure, the designation made was that, the Show/Hide structure most appropriately accommodates the two end-of-spectrum use cases (noob vs veteran). However, it doesn't align GNOME HIG and doesn't feedback to the user which options are selected (when diverging from defaults). We thus choosed to:
+- Step-by-step: Guided walkthrough
+- Show/Hide: Hidden off-screen or behind on-screen element
+- **Openface: Full display**
 
-- add a + button to add setting, as commonly found in GNOME lists
-- display settings that diverge from defaults
+With the Step-by-step flow already established as the most appropriate guided configuration structure, the designation made was that the Show/Hide structure most appropriately accommodates the two end-of-spectrum use cases (noob and veteran). However, this does not align with the GNOME HIG or provide feedback to the user which options are selected (when diverging from defaults). We thus chose to:
 
+- Add a "+" button to add a customizable setting, as commonly found in GNOME lists
+- Only display privacy settings that diverge from defaults
 
 ### Options Available On The 1st Screen
 
@@ -188,7 +178,11 @@ Since there are multiple boot modes to choose from for Tails, the designation wa
 
 The language section is always visible. When a language is saved (in cleartext), it is automatically filled in with saved options.
 
-Clicking on a language line will open a Popover with the available options and a search bar.
+When a line is clicked, a popover ([[https://developer.gnome.org/hig/stable/popovers.html.en]]) opens with an explanation of the option and the controls to change its value.
+
+As the values change their new value will replace the previous value in each respective location.
+
+It is clear that the "Language" section can/should be saved, but not yet weather the "Settings" section can/should be saved.
 
 UI when "Save Language Changes" is checked:
 
@@ -203,10 +197,9 @@ UI when "Save Language Changes" is checked:
 
 ### Storage
 
-<img src="https://labs.riseup.net/code/attachments/download/954/EncryptedStorage.png" width="400px"/>
+<img src="https://labs.riseup.net/code/attachments/download/973/Encrypted.Storage.png" width="700px" />
 
-[full size bitmap](https://labs.riseup.net/code/attachments/download/954/EncryptedStorage.png)
-
+[full size bitmap](https://labs.riseup.net/code/attachments/download/973/Encrypted.Storage.png) [source](https://labs.riseup.net/code/attachments/download/974/Encrypted.Storage.svgz)
 
 1. Initial state
 2. While typing
