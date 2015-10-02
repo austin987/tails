@@ -22,17 +22,17 @@ that works on current Debian testing/sid. Thus, we maintain several upstream
 release branches in parallel, each with their own major version number:
 
  * for releases that target Wheezy:
-   * version = `3.x`
-   * tag = `tails-installer_3.x`
+   * version = `3.*`
+   * tag = `tails-installer_3.*`
  * for work and releases that target Jessie (and, as long as compatible,
    that target testing/sid as well):
    * branch = feature/jessie (that's what we've been doing so far)
-   * version = `4.x`
-   * tag = `tails-installer_4.x`
+   * version = `4.*`
+   * tag = `tails-installer_4.*`
 
 Once we can't support both Jessie and testing/sid with the same
 codebase anymore, we'll fork a new upstream release branch that targets Stretch,
-it'll be called feature/stretch, use version 5.x, etc.
+it'll be called feature/stretch, use version `5.*`, etc.
 
 Packaging
 ---------
@@ -56,7 +56,7 @@ targetted at current Tails, as said above. More specifically:
   `debian/$package_version`. In practice this is something like
   `debian/4.0+dfsg-1~bpo8+1`.
 * The `tails/$codename` branch is used to prepare packages that we upload
-  to the Tails APT repo, but not to Debian -- e.g. 3.x as currently used on
+  to the Tails APT repo, but not to Debian -- e.g. `3.*` as currently used on
   Tails/Wheezy will never be uploaded to Debian.
 * Additionally, we use `tails/$feature` branches for other Tails-specific packaging branches.
 * The `upstream/3.x+dfsg`, `upstream/4.x+dfsg`, etc. branches are what we tell `gbp`
@@ -68,8 +68,8 @@ Topic branches
 In practice, it's expected that Tails contributors submit bugfix and
 feature branches forked off master, because they want them part of next
 Tails release. Hence, it will happen that code lands into master first,
-and in turn into a new 3.x upstream release, before it lands into
-`feature/jessie` and in turn into a new 4.x upstream release.
+and in turn into a new `3.*` upstream release, before it lands into
+`feature/jessie` and in turn into a new `4.*` upstream release.
 
 For how to package topic branches (`bugfix/*` and `feature/*`), see
 [[the dedicated page|topic_branch]].
@@ -84,11 +84,11 @@ Release a new upstream version
 
 ### Prepare the environment
 
-The new upstream version should be something like `3.x`, based on the
+The new upstream version should be something like `3.14`, based on the
 upstream branch you are building the Debian package for. Adjust and
 export:
 
-    export NEW_UPSTREAM_VERSION=3.x
+    export NEW_UPSTREAM_VERSION=3.replace_me
     export UPSTREAM_DEV_BRANCH=master
 
 <a id="upstream-tag"></a>
