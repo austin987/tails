@@ -36,7 +36,7 @@ elif [ -f 'po/tails-perl5lib.pot' ]; then
 	AFTER_IMPORT='make -C po pot && make -C po update-po'
 elif [ -f 'po/liveusb-creator.pot' ]; then
 	BRANCH='liveusb-creator_completed'
-	AFTER_IMPORT='make pot && rename -f "s,\.new\$,," po/*.new'
+	AFTER_IMPORT='./setup.py build && cd po && for po in *.po ; do msgmerge --update "$po" liveusb-creator.pot ; done'
 elif [ -f 'po/tails-persistence-setup.pot' ]; then
 	BRANCH='tails-persistence-setup_completed'
 	AFTER_IMPORT='make -C po pot && make -C po update-po'
