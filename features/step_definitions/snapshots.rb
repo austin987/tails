@@ -9,7 +9,7 @@ def checkpoints
         'the computer boots Tails'
       ],
     },
-    
+
     'no-network-logged-in' => {
       :description => "Tails has booted from DVD without network and logged in",
       :parent_checkpoint => "tails-greeter",
@@ -19,7 +19,7 @@ def checkpoints
         'the Tails desktop is ready',
       ],
     },
-    
+
     'with-network-logged-in' => {
       :description => "Tails has booted from DVD and logged in and the network is connected",
       :parent_checkpoint => "no-network-logged-in",
