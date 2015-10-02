@@ -34,9 +34,16 @@ Feature: Time syncing
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
+  Scenario: Clock is way in the past
+    Given Tails has booted from DVD without network and logged in
+    When I bump the system time with "-6 weeks"
+    And the network is plugged
+    And Tor is ready
+    Then Tails clock is less than 5 minutes incorrect
+
   Scenario: Clock way in the past in bridge mode
     Given Tails has booted from DVD without network and logged in with bridge mode enabled
-    When I set the system time to "01 Jan 2000 12:34:56"
+    When I bump the system time with "-6 weeks"
     And the network is plugged
     And the Tor Launcher autostarts
     And I configure some Bridge pluggable transports in Tor Launcher
