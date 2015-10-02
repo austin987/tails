@@ -78,6 +78,16 @@ For how to package `bugfix` and `feature`, see
 Workflow
 ========
 
+Update POT and PO files
+-----------------------
+
+    ./setup.py build_i18n && \
+       (cd po && \
+           for po in *.po ; do msgmerge --update "$po" \
+           liveusb-creator.pot ; done \
+       ) && \
+       git commit po -m 'Update POT and PO files.'
+
 Generate a new upstream tarball
 -------------------------------
 
