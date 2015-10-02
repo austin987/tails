@@ -13,20 +13,39 @@ be different.
 
 </div>
 
-1. `export TARGET_DIST="tails/wheezy"`
-2. `export TOPIC="bugfix/12345-blah"`
-3. `git checkout -b "tails/$TOPIC" "$TARGET_DIST"`
-4. `git diff "master..$TOPIC" > "$TOPIC.diff"` 
-5. Now, import the patch into the current packaging branch as a `quilt`
-   patch: `quilt import "$TOPIC.diff"`
-6. Use `gbp dch --auto --snapshot --ignore-branch` to fill `debian/changelog`, and
-   insert something like "+bugfix.12345.blah" (with all special
-   characters changed to full stops, i.e. ".") between the version
-   last packaged in the TARGET_DIST branch, and the gbp snapshot number
-   (that looks like "~1.gbpNNNNNN"). In our example, it should look something like:
-   3.11.6+tails1-4+bugfix.12345.blah~1.gbp4a0c9c in the end.
-7. Verify the changelog manually then commit:
-   
-       git commit debian/changelog
-   
-8. Build with `gbp buildpackage --git-ignore-branch`.
+Prepare the environment:
+
+	export TARGET_DIST="tails/wheezy
+	export TOPIC="bugfix/12345-blah"
+
+Fork the appropriate packaging branch into a new one that's dedicated
+to packaging the work that your topic branch introduces:
+
+	git checkout -b "tails/$TOPIC" "$TARGET_DIST"
+
+Create a patch representing the delta you want to add to the package,
+and import it into the current packaging branch as a quilt patch:
+
+	PATCH="$(mktemp).diff"
+	git diff "master..$TOPIC" > "$PATCH" && \
+	   quilt import "$PATCH"
+
+Fill `debian/changelog`:
+
+	gbp dch --auto --snapshot --ignore-branch
+
+Insert something like "+bugfix.12345.blah" (with all special
+characters changed to full stops, i.e. ".") between the version last
+packaged in the TARGET_DIST branch, and the gbp snapshot number (that
+looks like "~1.gbpNNNNNN"). In our example, it should look something
+like `3.11.6+tails1-4+bugfix.12345.blah~1.gbp4a0c9c` in the end.
+
+Verify the changelog manually.
+
+Commit:
+
+	git commit debian/changelog
+
+Build in a suitable chroot with:
+
+	gbp buildpackage --git-ignore-branch
