@@ -13,12 +13,12 @@ point-of-view, the state of our upstream branches. Let's not pretend we
 have not forked liveusb-creator, and admit we are now upstream for our
 own version.
 
-The master branch must always be the one that targets current Tails.
+The `master` branch must always be the one that targets current Tails.
 That's what we have always done, and right
-now master is indeed targeting Wheezy.
+now `master` is indeed targeting Wheezy.
 
 But that's not enough, since we also need to put releases out with code
-that works on current Debian testing/sid. We maintain several upstream
+that works on current Debian testing/sid. Thus, we maintain several upstream
 release branches in parallel, each with their own major version number:
 
  * for releases that target Wheezy:
@@ -30,8 +30,8 @@ release branches in parallel, each with their own major version number:
    * version = `4.x`
    * tag = `tails-installer_4.x`
 
-Once we can't anymore support both Jessie and testing/sid with the same
-codebase, we'll fork a new upstream release branch that target Stretch,
+Once we can't support both Jessie and testing/sid with the same
+codebase anymore, we'll fork a new upstream release branch that targets Stretch,
 it'll be called feature/stretch, use version 5.x, etc.
 
 Packaging
@@ -39,7 +39,7 @@ Packaging
 
 We're using [DEP-14 conventions](http://dep.debian.net/deps/dep14/),
 except for our `master` branch which is used for upstream development
-targetted at current Tails, as said above.
+targetted at current Tails, as said above. More specifically:
 
 * The `pristine-tar` branch contains the binary delta between DFSG-freed
   tarballs and the corresponding tag. It's automatically maintained by
@@ -48,12 +48,12 @@ targetted at current Tails, as said above.
   Debian unstable. The tags on this branch are called `debian/$package_version`,
   which is the default when creating them with
   `gbp buildpackage --git-sign-tags --git-tag-only`;
-  in practice this will be something like `debian/4.0+dfsg-1`.
+  in practice this is something like `debian/4.0+dfsg-1`.
 * The `debian/$codename-backports` branch is used to prepare packages
   that we upload to the official backports repository for Debian `$codename`.
   E.g. here we want to have `debian/jessie-backports` soon after the initially
   uploaded package reaches Debian testing. The tags on this branch are also called
-  `debian/$package_version`. In practice this will be something like
+  `debian/$package_version`. In practice this is something like
   `debian/4.0+dfsg-1~bpo8+1`.
 * The `tails/$codename` branch is used to prepare packages that we upload
   to the Tails APT repo, but not to Debian -- e.g. 3.x as currently used on
@@ -120,8 +120,8 @@ export:
 
 <a id="tails-package"></a>
 
-Update the Tails package
-------------------------
+Update the Debian package for Tails
+-----------------------------------
 
 Checkout the packaging branch, that would be `tails/wheezy` or `tails/jessie`,
 for example:
@@ -141,10 +141,11 @@ Extract the upstream and packaging branch from gbp.conf:
 
 	export UPSTREAM_BRANCH=`gbp config buildpackage.upstream-branch | sed -r -e 's,.*=,,'`
 
-Create a DFSG-compatible tarball from the previously created Git archive and
-reimport it into the source tree. Note that this creates a commit on the
-`debian-branch` specified in gbp.conf, merging the specified upstream release
-_and_ the corresponding Git history into it.
+Create a DFSG-compatible tarball from the previously created Git
+archive and reimport it into the source tree. This merges, into the
+`debian-branch` specified in `gbp.conf`, not only the commit that
+imported the current DFSG free upstream tarball into the
+`upstream-branch`, but also the corresponding upstream Git history:
 
 	mk-origtargz \
 	   -C ../tarballs \
@@ -171,7 +172,7 @@ Commit the changelog:
 
     git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
-Build a new Tails package (use a i386 chroot that matches the target release):
+Build a new Tails package (use a i386 chroot that matches the target distribution):
 
     gbp buildpackage
 
