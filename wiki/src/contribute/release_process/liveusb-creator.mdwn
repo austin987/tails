@@ -106,7 +106,7 @@ export:
        -s "tails-installer_$NEW_UPSTREAM_VERSION" \
        -m "Releasing Tails Installer $NEW_UPSTREAM_VERSION" && \
     git push origin "$UPSTREAM_DEV_BRANCH" && \
-    git push --tags
+    git push origin --tags
 
 <a id="upstream-tarball"></a>
 
@@ -159,7 +159,13 @@ Update `debian/changelog`:
 
     gbp dch && dch -e
 
-(Do not forget to set the appropriate version number and target release name.)
+In there, set the appropriate:
+
+* version number, such as `4.3+dfsg-0tails1`; in particular, note that
+  the Debian revision starts with `-0` for any package meant for the
+  Tails APT repository, while the first package that will be uploaded
+  to Debian will have `-1`;
+* target release name.
 
 Commit the changelog:
 
@@ -172,10 +178,10 @@ Build a new Tails package (use a i386 chroot that matches the target release):
 Add a signed tag to the Git repository and push the changes:
 
     gbp buildpackage --git-tag-only --git-sign-tags && \
-    git push origin "$UPSTREAM_PKG_BRANCH" \
+    git push origin "$UPSTREAM_BRANCH" \
                     "$PACKAGING_BRANCH" \
                     pristine-tar && \
-    git push --tags
+    git push origin --tags
 
 Add the Debian package to Tails
 -------------------------------
