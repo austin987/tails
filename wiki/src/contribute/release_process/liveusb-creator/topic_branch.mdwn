@@ -1,6 +1,6 @@
 [[!meta title="Packaging liveusb-creator topic branches"]]
 
-Let's say your branch is `bugfix/12345-blah`, then you package it as
+Let's say your topic branch is `bugfix/12345-blah`, then you package it as
 follows: 
 
 1. `export TARGET_DIST="tails/wheezy"`
@@ -9,13 +9,13 @@ follows:
 3. `git checkout -b "tails/$TOPIC" "$TARGET_DIST"`
 4. `git diff "master..$TOPIC" > "$TOPIC.diff"` 
    In the case where your topic branch has been forked off `master`.
-5. Now, import the patch into the current packaging branch as a `quilt`-
+5. Now, import the patch into the current packaging branch as a `quilt`
    patch: `quilt import "$TOPIC.diff"`
 6. Use `gbp dch --auto --snapshot --ignore-branch` to fill `debian/changelog`, and
    insert something like "+bugfix.12345.blah" (with all special
    characters changed to full stops, i.e. ".") between the version
    last packaged in the TARGET_DIST branch, and the gbp snapshot number
-   (that looks like "~1.gbpNNNNNN"). In ouu example, it should look something like:
+   (that looks like "~1.gbpNNNNNN"). In our example, it should look something like:
    3.11.6+tails1-4+bugfix.12345.blah~1.gbp4a0c9c in the end.
 7. Verify the changelog manually then commit:
    
