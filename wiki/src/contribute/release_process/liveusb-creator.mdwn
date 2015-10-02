@@ -171,71 +171,28 @@ Upload:
 
     dupload --to tails $CHANGES_FILE
 
-Preparing a package for Debian sid
-----------------------------------
+Update the Debian package
+-------------------------
 
-XXX: make it clear what exact case we're in, that is, whether the new
-upstream release was already imported into the Tails packaging
-branches, or not. IIRC the ticket explained a bit the different cases.
+<div class="note">
 
-A maintainer of tails-installer in Debian updates the package in sid accordingly:
+This assumes that the latest upstream release has been imported into
+the Tails packaging branch (<code>tails/jessie</code>) already.
 
-* checks out the debian branch
-* merges the tails/jessie branch
-* bumps version to 4.03+dfsg-1
-* builds and uploads to sid
-* has gbp create a debian/4.03+dfsg-1 tag
+If it's not the case, then one has to do a hybrid of the process that
+follows, and the "Update the Tails package" one.
 
-XXX: is it worth duplicating the entire process doc? Or just sum up
-the general process, and point out the differences between this one
-and the one used when packaging for Tails.
+A good understanding of the big picture is required to do this
+without headaches.
 
-Run `git checkout debian/sid` to switch to the debian packaging branch.
+</div>
 
-Merge changes from the Tails packaging branch, that would be `tails/jessie`.
+A maintainer of `tails-installer` in Debian updates the package in sid
+accordingly, for example:
 
-Verify that `gbp.conf` contains the correct upstream and Debian (packaging) branches,
-and that `pristine-tar` usage is enabled, i.e.:
-
-	[DEFAULT]
-	upstream-branch = upstream/4.x+dfsg
-	debian-branch = debian/sid
-	pristine-tar = True
-
-Extract the upstream and packaging branch from gbp.com:
-
-	export UPSTREAM_BRANCH=`gbp config buildpackage.upstream-branch | sed -r -e 's,.*=,,'` && \
-	export PACKAGING_BRANCH=`gbp config buildpackage.debian-branch | sed -r -e 's,.*=,,'`
-
-Update `debian/changelog`:
-
-    git-dch && dch -e
-
-(Do not forget to set the appropriate release, that is bump version to 4.03+dfsg-1).
-
-Commit the changelog:
-
-    git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
-
-Build a new Debian package (use a i386 chroot):
-
-    gbp buildpackage
-
-	XXXX.........................
-mk-origtargz -C ../tarballs \
-	--copy ../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION.tar.gz
-gbp import-orig \
-	--upstream-vcs-tag="tails-installer_$NEW_UPSTREAM_VERSION" \
-	   ../liveusb-creator_$NEW_UPSTREAM_VERSION+dfsg.orig.tar.gz
-	   .........................
-
-	gbp buildpackage --git-tag-only --git-sign-tags && \
-
-Sign and upload the  package to Debian Sid.
-
-Create a tag and push it to our repository.
-
-	git push origin "$UPSTREAM_PKG_BRANCH" \
-                    "$PACKAGING_BRANCH" \
-					pristine-tar && \
-    git push --tags
+* check out the `debian/sid` branch
+* merge the `tails/jessie` branch
+* bump version to `4.3+dfsg-1`
+* build, test and upload to sid
+* have gbp create a `debian/4.3+dfsg-1` tag
+* push the Debian packaging branch (`debian/sid`) and the new tag
