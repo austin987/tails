@@ -17,10 +17,6 @@ also for maintainability.
 
 We decided to implement a two-way strategy for this feature:
 
-* Keep using DNS to point to 3-5 fast and reliable mirrors. This will
-  be the fallback for people who do not use JS. So we still need a DNS
-  dynamic update system; we can simply re-purpose the one we already
-  have.
 * Use JavaScript to modify the link on the download page, so that each
   user is pointed to random mirror.
   - Vanilla JS (no frameworks)
@@ -31,7 +27,13 @@ We decided to implement a two-way strategy for this feature:
   - Configuration for the JS is loaded from JSON file. It attaches
     a weight to each mirror. Weight 0 means that the mirror is
     currently disabled, and will never be redirected to. We're using
-    JSON and not YAML to avoid the need for third-party parsers.
+    JSON and not YAML to avoid the need to use a third-party parser.
+
+* Keep using DNS to point to 3-5 fast and reliable mirrors. This will
+  be the fallback for people who do not use JS. So we still need a DNS
+  dynamic update system; we can simply re-purpose the one we already
+  have (`dl.amnesia.boum.org`).
+
 * The ISO verification extension also needs to use mirrors. So, we'll
   be providing library code for it to do the same, internally, as
   a web browser would do when visiting the Tails download page, that
