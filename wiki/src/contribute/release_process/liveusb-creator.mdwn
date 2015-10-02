@@ -95,8 +95,9 @@ The new upstream version should be something like `3.x`, based on the
 upstream branch you are building the debian package for:
 
     export NEW_UPSTREAM_VERSION=3.x
-	export UPSTREAM_DEV_BRANCH=master
-	git checkout "$UPSTREAM_DEV_BRANCH" && git tag -s "tails-installer_$NEW_UPSTREAM_VERSION"
+    export UPSTREAM_DEV_BRANCH=master
+    git checkout "$UPSTREAM_DEV_BRANCH" && \
+    git tag -s "tails-installer_$NEW_UPSTREAM_VERSION" && \
     git archive \
        --prefix="liveusb-creator-$NEW_UPSTREAM_VERSION/" \
        --output="../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION.tar.gz" \
@@ -104,17 +105,17 @@ upstream branch you are building the debian package for:
 
 Push branch and tag:
 
-	git push origin "$UPSTREAM_DEV_BRANCH" && \
-	git push --tags
+    git push origin "$UPSTREAM_DEV_BRANCH" && \
+    git push --tags
 
-Update the Debian package
--------------------------
+Update the Tails package
+------------------------
 
-git checkout the packaging branch, that would be `tails/wheezy` or `tails/jessie` 
+Checkout the packaging branch, that would be `tails/wheezy` or `tails/jessie`
 for example.
 
-Verify that `gbp.conf` contains the correct upstream and Debian (packaging) branches,
-and that `pristine-tar` usage is enabled, i.e.:
+Verify that `gbp.conf` references the correct upstream and Debian (packaging) branches,
+and that `pristine-tar` usage is enabled, e.g.:
 
 	[DEFAULT]
 	upstream-branch = upstream/4.x+dfsg
@@ -126,15 +127,15 @@ Extract the upstream and packaging branch from gbp.conf:
 	export UPSTREAM_BRANCH=`gbp config buildpackage.upstream-branch | sed -r -e 's,.*=,,'` && \
 	export PACKAGING_BRANCH=`gbp config buildpackage.debian-branch | sed -r -e 's,.*=,,'`
 
-Create a DFSG free tarball from the previously created Git archive and
+Create a DFSG-compatible tarball from the previously created Git archive and
 reimport it into the source tree. Note that this creates a commit on the
-debian-branch specified in gbp.conf, merging the current upstream version
-into it.
+`debian-branch` specified in gbp.conf, merging the specified upstream release
+_and_ the corresponding Git history into it.
 
 	mk-origtargz -C ../tarballs \
-	 --copy ../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION.tar.gz
+	   --copy ../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION.tar.gz && \
 	gbp import-orig \
-	 --upstream-vcs-tag="tails-installer_$NEW_UPSTREAM_VERSION" \
+	   --upstream-vcs-tag="tails-installer_$NEW_UPSTREAM_VERSION" \
 	   ../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION+dfsg.orig.tar.gz
 
 Update `debian/changelog`:
@@ -147,7 +148,7 @@ Commit the changelog:
 
     git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
-Build a new Debian package (use a i386 chroot):
+Build a new Tails package (use a i386 chroot):
 
     gbp buildpackage
 
@@ -156,7 +157,7 @@ Add a signed tag to the Git repository and push the changes:
     gbp buildpackage --git-tag-only --git-sign-tags && \
     git push origin "$UPSTREAM_PKG_BRANCH" \
                     "$PACKAGING_BRANCH" \
-					pristine-tar && \
+                    pristine-tar && \
     git push --tags
 
 Add the Debian package to Tails
