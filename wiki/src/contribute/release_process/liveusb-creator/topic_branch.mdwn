@@ -28,7 +28,9 @@ and import it into the current packaging branch as a quilt patch:
 
 	PATCH="$(mktemp).diff"
 	git diff "master..$TOPIC" > "$PATCH" && \
-	   quilt import "$PATCH"
+	   quilt import "$PATCH"   && \
+	   git add debian/patches/ && \
+	   git commit -m "Import diff for $TOPIC as a quilt patch."
 
 Fill `debian/changelog`:
 
