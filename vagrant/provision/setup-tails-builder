@@ -17,8 +17,32 @@ if [ -d /home/vagrant/ikiwiki ]; then
 	rm -rf /home/vagrant/ikiwiki
 fi
 
+rm -f /etc/apt/preferences.d/* /etc/apt/sources.list.d/*
+
+# Add our builder-wheezy repository for live-build, and pin it low
+echo 'deb http://deb.tails.boum.org/ builder-wheezy main' > /etc/apt/sources.list.d/tails.list
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
+	Package: *
+	Pin: origin deb.tails.boum.org
+	Pin-Priority: 99
+EOF
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
+	Package: live-build
+	Pin: origin deb.tails.boum.org
+	Pin-Priority: 500
+EOF
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/syslinux-utils <<EOF
+	Package: syslinux-utils
+	Pin: origin deb.tails.boum.org
+	Pin-Priority: 500
+EOF
+
+# We don't want to use apt-cacher-ng for gpg
+http_proxy="" gpg --keyserver hkps.pool.sks-keyservers.net --recv-key C7988EA7A358D82E
+gpg --export C7988EA7A358D82E | sudo apt-key add -
+
 # Add unstable repository for ikiwiki, and pin it low
-echo 'deb http://cdn.debian.net/debian unstable main' > /etc/apt/sources.list.d/unstable.list
+echo 'deb http://ftp.us.debian.org/debian unstable main' > /etc/apt/sources.list.d/unstable.list
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/unstable <<EOF
 	Package: *
 	Pin: release a=unstable
@@ -30,8 +54,12 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/ikiwiki <<EOF
 	Pin-Priority: 500
 EOF
 
+# Add wheezy-backports for apt-cacher-ng. The version in wheezy has problems
+# with redirects to https, which we need when fetching the TBB tarballs
+echo 'deb http://ftp.us.debian.org/debian wheezy-backports main' > /etc/apt/sources.list.d/wheezy-backports.list
+
 apt-get update
-apt-get -y install apt-cacher-ng
+apt-get -o Dpkg::Options::="--force-confold" -y -t wheezy-backports install apt-cacher-ng
 
 # Install custom configuration for apt-cacher-ng and restart
 install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
@@ -48,12 +76,15 @@ apt-get -y dist-upgrade
 # Those are needed to build Tails
 apt-get -y install \
 	live-build \
-	eatmydata/squeeze-backports \
+	syslinux-utils \
+	eatmydata/wheezy-backports \
 	time whois \
 	dpkg-dev \
 	git \
 	aufs-tools \
-	ikiwiki
+	ikiwiki \
+	intltool \
+	gettext/wheezy-backports
 
 # Be sure to get all the modules we need for our Ikiwiki
 apt-get -y --no-install-recommends install \
@@ -65,17 +96,25 @@ apt-get -y --no-install-recommends install \
 # Add build script
 install -o root -g root -m 755 /vagrant/provision/assets/build-tails /usr/local/bin
 
-update_live_build_conf()
+disable_live_build_conf()
 {
 	local var="$1"
-	local value="$2"
 
-	mkdir -p /etc/live
-	touch /etc/live/build.conf
+	[ -e /etc/live/build.conf ] || return 0
 	sed -e "/^[[:space:]]*$var=/d" -i /etc/live/build.conf
-	echo "$var='$value'" >> /etc/live/build.conf
 }
 
-# Force APT repositories to a fixed mirror
-update_live_build_conf LB_MIRROR_BINARY "http://ftp.us.debian.org/debian/"
-update_live_build_conf LB_PARENT_MIRROR_BINARY "http://ftp.us.debian.org/debian/"
+# Force live-build to use the mirrors configured in auto/config
+for prefix in MIRROR PARENT_MIRROR ; do
+	for target in BOOTSTRAP BINARY CHROOT ; do
+		for archive in '' BACKPORTS SECURITY UPDATES VOLATILE ; do
+			if [ -z "$archive" ] ; then
+				archive_suffix=''
+			else
+				archive_suffix="_${archive}"
+			fi
+			var="LB_${prefix}_${target}${archive_suffix}"
+			disable_live_build_conf "$var"
+		done
+	done
+done

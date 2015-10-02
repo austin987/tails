@@ -20,7 +20,7 @@ SocksPort 127.0.0.1:9061 IsolateDestAddr
 ## SocksPort for Tails-specific applications
 SocksPort 127.0.0.1:9062 IsolateDestAddr IsolateDestPort
 ## SocksPort for the default web browser
-SocksPort 127.0.0.1:9063
+SocksPort 127.0.0.1:9150
 
 ## Entry policies to allow/deny SOCKS requests based on IP address.
 ## First entry that matches wins. If no SocksPolicy is set, we accept
@@ -156,7 +156,7 @@ ControlListenAddress 127.0.0.1
 ################ Local settings ########################################
 
 ## Torified DNS
-DNSPort 53
+DNSPort 5353
 AutomapHostsOnResolve 1
 AutomapHostsSuffixes .exit,.onion
 
@@ -171,5 +171,6 @@ AvoidDiskWrites 1
 ## enforcement will handle it safely.
 WarnUnsafeSocks 0
 
-## Add support for obfsproxy
-ClientTransportPlugin obfs2 exec /usr/bin/obfsproxy --managed
+## Disable default warnings on StartTLS for email. Let's not train our
+## users to click through security warnings.
+WarnPlaintextPorts 23,109

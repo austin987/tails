@@ -16,10 +16,17 @@ Tails does not start at all
 ---------------------------
 
 The following section applies if the [[boot
-menu|/doc/first_steps/startup_options#boot_menu]] does not appears when
+menu|/doc/first_steps/startup_options#boot_menu]] does not appear when
 starting Tails.
 
-[[Send us an email|/support/talk]] including the following information:
+Refer to the instructions on how to [[start Tails|doc/first_steps/start_tails]], especially the
+section about BIOS settings.
+
+If none of this works, [[send us an email|/support/talk]] including the following information:
+
+0. Which version of Tails are you trying to start?
+
+0. Did you [[verify the ISO image|download#verify]]?
 
 1. Which is the brand, and model of the computer?
 
@@ -27,9 +34,9 @@ starting Tails.
    message that appears on the screen, if any.
 
 3. From which media are you trying to start Tails: DVD, USB stick
-   [[installed manually|/doc/first_steps/manual_usb_installation]], USB
-   stick [[installed with Tails USB
-   installer|/doc/first_steps/manual_usb_installation]]?  Keep in mind
+   [[installed manually|doc/first_steps/installation/manual]], USB
+   stick [[installed with Tails
+   Installer|doc/first_steps/installation]], SD card?  Keep in mind
    that, we do not support any other installation method than the ones
    listed above.
 
@@ -43,15 +50,7 @@ starting Tails.
    using different installation methods? For example, it might start from a
    DVD but not from a USB stick.
 
-7. What installation method did you use to setup Tails?
-
-If you are knowledgeable about BIOS configuration, you can also try the
-following:
-
-1. Make sure the computer is configured to start with legacy BIOS
-   support first, and not UEFI.
-
-2. Try to upgrade your BIOS version.
+7. What installation method did you use to set up Tails?
 
 <a id="entirely"></a>
 
@@ -65,13 +64,32 @@ starting Tails.
 
 1. In the graphical boot menu, press `TAB`.
 
-2. Add the `debug` parameter to the boot command line.
+2. Remove the `quiet` option from the boot command line.
 
-3. Remove the `quiet` parameter.
+3. Add the `debug` and `nosplash` option.
 
-Hopefully, this displays useful messages while starting Tails. You can
-then include them in a bug report to be sent:
+4. Hopefully, this displays useful messages while starting Tails. You can
+   then include them in a bug report to be sent:
 
-  - either using [[Whisperback|/doc/first_steps/bug_reporting]] if you
-    are able to start Tails from another media,
-  - either by [[sending us an email|/support/talk]]
+   - either using [[WhisperBack|/doc/first_steps/bug_reporting]] if you
+     are able to start Tails from another media,
+   - either by [[sending us an email|/support/talk]]
+
+5. If the error message is `/bin/sh: can't access tty; job control
+   turned off` followed by `(initramfs)`, then try removing the
+   `live-media=removable` option.
+
+   <div class="caution">
+
+   <strong>When removing this option, if an adversary installed a fake
+   Tails on an internal hard disk, then you will likely be starting
+   this dangerous operating system instead of the genuine Tails that
+   you intended to use.</strong>
+
+   </div>
+
+   If removing `live-media=removable` allows you to start Tails, please
+   report a bug as documented above: this allows us to improve the [[list
+   of problematic USB sticks|support/known_issues#problematic-usb-sticks]].
+   In this case, you should install Tails on another, better supported
+   USB stick.

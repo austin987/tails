@@ -1,35 +1,75 @@
 [[!meta title="Verify the ISO image using Linux with Gnome"]]
 
-<p>You need to have the <code>seahorse-plugins</code> package
-installed. If you're not sure or want to install it, under Debian,
-Ubuntu or Tails you can issue the following commands:</p>
+[[!inline pages="doc/get/signing_key_transition.inline" raw="yes"]]
+
+<h3>Install <code>seahorse-nautilus</code> and <code>shared-mime-info</code></h3>
+
+<p>You need to have recent enough versions of the <code>seahorse-nautilus</code>
+and <code>shared-mime-info</code> packages installed.</p>
+
+<p>These packages are already installed in Tails.</p>
+
+<div class="note">
+
+<p>The needed packages are available starting from:
+  <ul>
+    <li>Debian version 7 (Wheezy)</li>
+    <li>Ubuntu version 15.04 (Vivid)</li>
+  </ul>
+</p>
+
+</div>
+
+In Debian Wheezy, the needed packages are
+only available as
+<a href="http://backports.debian.org/">backports</a>. See the
+<a href="http://backports.debian.org/Instructions/">setup instructions</a>
+on the Debian Backports website to add them to your list of repositories. Then, to
+install the necessary packages, you can execute the following
+commands:
 
 <pre>
 sudo apt-get update
-sudo apt-get install seahorse-plugins
+sudo apt-get install seahorse-nautilus/wheezy-backports shared-mime-info/wheezy-backports
 </pre>
 
-<p><strong>The development of seahorse-plugins [[!debbug 644656 desc="has
-stopped"]]</strong>. It hasn't been ported to Gnome 3. It is no more available
-on Debian starting from Wheezy and Ubuntu starting from version 11.10, Oneiric
-Ocelot. If you can't install it please try [[verifying the ISO using the command
-line|verify_the_iso_image_using_the_command_line]].</p>
+In Debian 8 (Jessie), Ubuntu 15.04 (Vivid), or later, to
+install the necessary packages, you can execute the following
+commands:
 
-<p>First, download Tails signing key:</p>
+<pre>
+sudo apt update
+sudo apt install seahorse-nautilus
+</pre>
+
+<div class="note">
+
+<p>If you are unable to install the necessary packages, try [[verifying the ISO using the
+command line|verify_the_iso_image_using_the_command_line]].</p>
+
+</div>
+
+
+<h3>Get the Tails signing key</h3>
+
+<p>If you are using Tails, you already have the signing
+key. Otherwise, first download Tails signing key:</p>
 
 [[!inline pages="lib/download_tails_signing_key" raw="yes"]]
 
-<p>Your browser should propose you to open it with "Import Key". Choose
-this action. It will add Tails signing key to your keyring, the
-collection of OpenPGP keys you already imported:</p>
+<p>Your browser should propose you to open it with "Import
+Key". Choose this action. It will add Tails signing key to your
+keyring, the collection of OpenPGP keys you already imported:</p>
 
-<p>[[!img import_key.png alt="What should Iceweasel do with this file? Open
-with: Import Key (default)" link="no"]]</p>
+<p>[[!img import_key.png alt="What should the web browser do with this
+file? Open with: Import Key (default)" link="no"]]</p>
 
 <p>You will get notified will the following message:</p>
 
 <p>[[!img key_imported.png alt="Key Imported. Imported a key for Tails
-developers (signing key) &lt;tails@boum.org&gt;" link="no"]]</p>
+developers (offline long-term identity key) &lt;tails@boum.org&gt;" link="no"]]</p>
+
+<h3>Verify the ISO image</h3>
 
 <p>Now, download the cryptographic signature corresponding to the ISO
 image you want to verify:</p>
@@ -39,8 +79,9 @@ image you want to verify:</p>
 <p>Your browser should propose you to open it with "Verify Signature".
 Choose this action to start the cryptographic verification:</p>
 
-<p>[[!img verify_signature.png alt="What should Iceweasel do with this file?
-Open with: Verify Signature (default)" link="no"]]</p>
+<p>[[!img verify_signature.png alt="What should the web browser do
+with this file?  Open with: Verify Signature (default)"
+link="no"]]</p>
 
 <p>Browse your files to select the Tails ISO image you want to verify.
 Then, the verification will start. It can take several minutes:</p>
@@ -51,6 +92,13 @@ Then, the verification will start. It can take several minutes:</p>
 notification telling you that the signature is good:</p>
 
 <p>[[!img good_signature.png alt="Goog Signature" link="no"]]</p>
+
+<div class="bug">
+
+<p>The GNOME notifications appear truncated on Tails 1.1 and later.<br/>
+See&nbsp;[[!tails_ticket 7249]].</p>
+
+</div>
 
 <p><strong>If the ISO image is not correct</strong> you will get a
 notification telling you that the signature is bad:</p>

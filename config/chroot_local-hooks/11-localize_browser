@@ -1,0 +1,191 @@
+#!/bin/sh
+
+set -e
+
+echo "Localize each supported browser locale"
+
+# Import the TBB_INSTALL variable and supported_tor_browser_locales()
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
+# Import set_simple_config_key()
+. /usr/local/lib/tails-shell-library/common.sh
+
+# Import language_code_from_locale()
+. /usr/local/lib/tails-shell-library/localization.sh
+
+# Import TAILS_WIKI_SUPPORTED_LANGUAGES
+. /etc/amnesia/environment
+
+TBB_DEFAULT_SEARCHPLUGINS_DIR="${TBB_INSTALL}/browser/searchplugins"
+TBB_LOCALIZED_SEARCHPLUGINS_DIR="${TBB_INSTALL}/distribution/searchplugins/locale/"
+BROWSER_LOCALIZATION_DIR="/usr/share/tails/browser-localization"
+DESCRIPTIONS_FILE="${BROWSER_LOCALIZATION_DIR}/descriptions"
+BRANDING_TEMPLATE_FILE="${BROWSER_LOCALIZATION_DIR}/amnesia.properties-template"
+BRANDING_DIR="/usr/local/share/tor-browser-extensions/branding@amnesia.boum.org/"
+NO_SPELLCHECKER_LOCALES="ko nl pl tr zh"
+
+apt-get install imagemagick
+
+# Sanity check that each supported Tor Browser locale has a
+# description for how to localize it further.
+BROKEN_LOCALES=""
+for LOCALE in $(supported_tor_browser_locales); do
+    if ! grep -q "^${LOCALE}:" "${DESCRIPTIONS_FILE}" 2>/dev/null; then
+        BROKEN_LOCALES="${BROKEN_LOCALES} ${LOCALE}"
+    fi
+done
+if [ -n "${BROKEN_LOCALES}" ]; then
+    echo "The following supported browser locales lack search plugin descriptions in ${DESCRIPTIONS_FILE}:${BROKEN_LOCALES}" >&2
+    exit 1
+fi
+
+# This very long while-loop is fed the DESCRIPTIONS_FILE (IO
+# redirection at the bottom), which describes how we will localize
+# each supported Tor Browser locale. The format is:
+#   MOZILLA_LOCALE:LOCATION:LOCALIZED_LANG:STARTPAGE_LANG:STARTPAGE_LANG_UI
+# Note that we're forced to pick some representative location for the
+# language-only locales, like Egypt (EG) for Arabic (ar).
+while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE_LANG_UI; do
+    if [ -z "${MOZILLA_LOCALE}" ] || [ -z "${LOCATION}" ] || \
+       [ -z "${LOCALIZED_LANG}" ] || [ -z "${STARTPAGE_LANG}" ]; then
+        echo "Something is wrong with ${DESCRIPTIONS_FILE}" >&2
+        echo "Description: ${MOZILLA_LOCALE}:${LOCATION}:${LOCALIZED_LANG}:${STARTPAGE_LANG}:${STARTPAGE_LANG_UI}" >&2
+       exit 1
+    fi
+
+    echo "- Localizing ${MOZILLA_LOCALE} for browsers..."
+
+    # In some places we'll need the locale in xx_YY format instead of
+    # Mozilla's xx-YY fromat. Over all, the greatest difficulty in
+    # this whole script is really to know when to use the correct
+    # locale format, since Firefox isn't very consistent in it.
+    NORMAL_LOCALE="$(echo "${MOZILLA_LOCALE}" | tr - _)"
+    LANG_CODE="$(language_code_from_locale "${NORMAL_LOCALE}")"
+    TARGET_SEARCHPLUGINS_DIR="${TBB_LOCALIZED_SEARCHPLUGINS_DIR}/${MOZILLA_LOCALE}"
+    mkdir -p "${TARGET_SEARCHPLUGINS_DIR}"
+
+    if [ -z "${STARTPAGE_LANG_UI}" ]; then
+        STARTPAGE_LANG_UI=english
+    fi
+    sed -e "s/\${LOCALIZED_LANG}/${LOCALIZED_LANG}/" \
+        -e "s/\${LANG}/${STARTPAGE_LANG}/" \
+        -e "s/\${LANG_UI}/${STARTPAGE_LANG}/" \
+        "${BROWSER_LOCALIZATION_DIR}/startpage.xml-template" > \
+        "${TARGET_SEARCHPLUGINS_DIR}/startpage-${MOZILLA_LOCALE}.xml"
+
+    DISCONNECT_PLUGIN="${TARGET_SEARCHPLUGINS_DIR}/disconnect-${MOZILLA_LOCALE}.xml"
+    sed -e "s/\${LOCALIZED_LANG}/${LOCALIZED_LANG}/" \
+        -e "s/\${LOCATION}/${LOCATION}/" \
+        "${BROWSER_LOCALIZATION_DIR}/disconnect.xml-template" > \
+        "${DISCONNECT_PLUGIN}"
+
+    # We generate a Wikipedia plugin with localized icons since we
+    # want to provide both English and the locale's plugin, and
+    # Firefox' new search bar only shows icons; the description (which
+    # is localized) is only shown in a pop-up nowdays, so it's easy to
+    # mix them up.
+    CAPITALIZED_LANG_CODE="$(echo "${LANG_CODE}" | tr 'a-z' 'A-Z')"
+    LOCALIZED_WIKIPEDIA_ICON_PATH="/tmp/wikipedia-icon-${LANG_CODE}.png"
+    WIKIPEDIA_SEARCH_ICON_BASE64_PATH="#{LOCALIZED_WIKIPEDIA_ICON_PATH}.base64"
+    WIKIPEDIA_ICON_TEMPLATE="${BROWSER_LOCALIZATION_DIR}/Wikipedia-icon.png"
+    convert "${WIKIPEDIA_ICON_TEMPLATE}" \
+            -gravity SouthEast -pointsize 130 -font Liberation-Sans-Bold \
+            -fill black -annotate 0 "${CAPITALIZED_LANG_CODE}" \
+            +set date:create +set date:modify -define png:exclude-chunk=time \
+            -resize 16x16 "${LOCALIZED_WIKIPEDIA_ICON_PATH}"
+    base64 "${LOCALIZED_WIKIPEDIA_ICON_PATH}" | tr -d "\n" > \
+           "${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}"
+    sed -e "s/\${LANG_CODE}/${LANG_CODE}/" \
+        -e "/\${BASE64_PNG_16x16}/ r ${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}" \
+        -e "/\${BASE64_PNG_16x16}/d" \
+        "${BROWSER_LOCALIZATION_DIR}/wikipedia.xml-template" > \
+        "${TARGET_SEARCHPLUGINS_DIR}/wikipedia-${MOZILLA_LOCALE}.xml"
+    rm "${LOCALIZED_WIKIPEDIA_ICON_PATH}" \
+       "${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}"
+
+    # We use the branding@amnesia.org extension to set some per-locale
+    # default prefs that set the appropriate localization options.
+    TARGET_BRANDING_DIR="${BRANDING_DIR}/chrome/locale/${MOZILLA_LOCALE}"
+    echo "locale amnesiabranding ${MOZILLA_LOCALE} chrome/locale/${MOZILLA_LOCALE}/" >> "${BRANDING_DIR}/chrome.manifest"
+    mkdir -p "${TARGET_BRANDING_DIR}"
+    TARGET_BRANDING_FILE="${TARGET_BRANDING_DIR}/amnesia.properties"
+    cp "${BRANDING_TEMPLATE_FILE}" "${TARGET_BRANDING_FILE}"
+    for KEY in browser.search.defaultenginename \
+               browser.search.selectedEngine; do
+        PLUGIN="Disconnect.me - ${LOCALIZED_LANG}"
+        if ! grep -q "<ShortName>${PLUGIN}</ShortName>" "${DISCONNECT_PLUGIN}"; then
+            echo "Trying to make search plugin '${PLUGIN}' the default for ${TARGET_LOCALE} but it unexpectedly wasn't the one we generated earlier" >&2
+            exit 1
+        fi
+        set_simple_config_key "${TARGET_BRANDING_FILE}" "${KEY}" "${PLUGIN}"
+    done
+    TBB_DICTIONARIES_DIR="${TBB_INSTALL}/dictionaries"
+    unset SPELLCHECKER_LOCALE
+    for LOCALE in "${LANG_CODE}_${LOCATION}" "${LANG_CODE}"; do
+        if [ -e "${TBB_DICTIONARIES_DIR}/${LOCALE}.dic" ]; then
+            SPELLCHECKER_LOCALE="${LOCALE}"
+        fi
+    done
+    if [ -z "${SPELLCHECKER_LOCALE}" ]; then
+        if echo "${NO_SPELLCHECKER_LOCALES}" | grep -qw "${LANG_CODE}"; then
+            SPELLCHECKER_LOCALE="en_US"
+        else
+            echo "No spellchecker found for ${MOZILLA_LOCALE}" >&2
+            exit 1
+        fi
+    fi
+    set_simple_config_key "${TARGET_BRANDING_FILE}" \
+                          "spellchecker.dictionary" \
+                          "${SPELLCHECKER_LOCALE}"
+    HOMEPAGE="https://tails.boum.org/news/"
+    if echo "${TAILS_WIKI_SUPPORTED_LANGUAGES}" | grep -qw "${LANG_CODE}"; then
+        HOMEPAGE="${HOMEPAGE}index.${LANG_CODE}.html"
+    fi
+    set_simple_config_key "${TARGET_BRANDING_FILE}" \
+                          "browser.startup.homepage" "${HOMEPAGE}"
+
+    # We also want the localized search plugins from Debian's
+    # Iceweasel packages. Note that en-US doesn't have one; the
+    # en-US search plugins are in the iceweasel package, but it
+    # would only add search engines that we have decided to
+    # exclude so let's skip it.
+    if [ "${MOZILLA_LOCALE}" != en-US ]; then
+        PKG="iceweasel-l10n-$(echo "${MOZILLA_LOCALE}" | tr 'A-Z' 'a-z')"
+        DEB_PATH_TO_SEARCHPLUGINS="etc/iceweasel/searchplugins/locale/${MOZILLA_LOCALE}"
+        TMP="$(mktemp -d)"
+        cd "${TMP}"
+        apt-get download "${PKG}"
+        ar x "${PKG}"*.deb
+        tar xf data.tar.* ./"${DEB_PATH_TO_SEARCHPLUGINS}"
+        rm -f "${DEB_PATH_TO_SEARCHPLUGINS}"/amazon*.xml \
+              "${DEB_PATH_TO_SEARCHPLUGINS}"/bing*.xml \
+              "${DEB_PATH_TO_SEARCHPLUGINS}"/eBay*.xml \
+              "${DEB_PATH_TO_SEARCHPLUGINS}"/yahoo*.xml \
+              "${DEB_PATH_TO_SEARCHPLUGINS}"/wikipedia*.xml
+        cp "${DEB_PATH_TO_SEARCHPLUGINS}"/* "${TARGET_SEARCHPLUGINS_DIR}"
+        cd /
+        rm -r "${TMP}"
+    fi
+done < "${DESCRIPTIONS_FILE}"
+
+# This directory is not needed after build time.
+rm -r "${BROWSER_LOCALIZATION_DIR}"
+
+# Remove unwanted browser search plugins bundled in the Tor Browser.
+rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/yahoo*.xml
+# We generate localized versions of the following:
+rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/disconnect*.xml
+rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/startpage*.xml
+rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/wikipedia*.xml
+
+# We want our localized English Wikipedia plugin to be available in
+# all locales.
+mv "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}/en-US/wikipedia-en-US.xml" \
+   "${TBB_DEFAULT_SEARCHPLUGINS_DIR}/"
+
+# All generated files must be world-readable.
+chmod -R a+rX "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}" \
+              "${TBB_DEFAULT_SEARCHPLUGINS_DIR}" \
+              "${BRANDING_DIR}"
+
+apt-get --yes purge imagemagick

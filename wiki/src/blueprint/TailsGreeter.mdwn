@@ -1,0 +1,86 @@
+[[!meta title="tails-greeter"]]
+
+tails-greeter is shipped in Tails 0.11 and later.
+Remaining action items and bugs are split into individual pages in
+[[!tails_todo "" desc="todo"]] and [[!tails_bug "" desc="bugs"]].
+
+Archive
+=======
+
+This started as an implementation of custom [[todo/boot_menu]] for GDM3 as part of GSoC2011 project.
+
+This page is the entry point to [[design
+description|TailsGreeter/design]] and relevant
+[[useful information|TailsGreeter/refs]].
+
+The [[project status
+updates|TailsGreeter/blog]] and [[timeline|TailsGreeter/timeline]] pages were actively used during GSoC.
+
+[[!toc levels=2]]
+
+How it should look like
+-----------------------
+
+0. After GDM is started user is presented with language-chooser-widget
+   and "Enable persistence?" checkbox. If the user enables
+   persistence, they are asked their encryption passphrase(s).
+0. Choosing language and layout is immediately applied: if
+   corresponding .po file is available then TailsGreeter is
+   immediately translated.
+0. One can choose to either login directly, or to go to an
+   options screen.
+0. In the options screen:
+   - admin-password-widget: typing password and confirming makes the
+     user sudoer with the chosen password; if no password is entered,
+     the user is not given any admin rights.
+0. After logon, desktop must be shown with proper locale and layout.
+
+Requested options details
+-------------------------
+
+Developers are encouraged to provide input for various options to be
+asked via boot-menu.
+
+### Language
+
+1. name: Language
+2. default value: English
+3. effects: 
+   - setup locale for the TailsGreeter so that the user can understand the other
+     choices;
+   - generate the chosen locale;
+   - setup locale for the session to be started;
+   - maybe more: have a look at
+     `config/binary_local-hooks/20-syslinux_i18n` in Tails main Git
+     repository to see what parameters it passes to live-config
+     (locales, keyboard-layouts) then grep the relevant variable names
+     (`KEYBOARD_LAYOUT`, `LIVE_LOCALES`, `LIVE_TIMEZONE`) in
+     live-config source to see what is currently done depending on the
+     chosen language, and might thus need to be triggered by
+     tails-greeter as well; while appealing, installing `locales-all`
+     is not an option: it avoids the need to compile locales at
+     runtime, but it increases the ISO size by 130MB+, which seems
+     overkill since compiling one given locale takes roughly 3s on
+     a quite old laptop.
+    * locale generation: done with localedef (see [[design|TailsGreeter/design]] for details of the interface)
+    * keyboard: layout is applied with the help of corresponding GDM d-bus signals.
+    * console keyboard: live-config `015-keyboard-configuration`,
+      `117-xserver-xorg` and `014-console-setup` scripts might be usable;
+      need some envvars set.
+    * Note: live-config scripts we'll run ourselves must not run on boot
+      before we run them: these scripts are *not* idempotent
+4. ui hint: Choose the language of your Tails session.
+5. responsible dev:
+6. dev's notes: This item should be really visible, probably on top of the
+   TailsGreeter screen. More information can be found in
+   [[todo/localization_at_runtime]].
+
+### Administrator password
+
+1. name: Administrator password
+2. default value: none
+3. effects: execute `set-user-password-and-locale` with `$TAILS_USER_PASSWORD` saved into temporary file. See [[design|TailsGreeter/design]] for details.
+4. ui hint: (draft) enter here a password that will be asked to grant administrator
+   rights. Leave this field blank to disable administrator rights.
+5. responsible dev:
+6. Related TODO item: [[todo/better_root_access_control]]

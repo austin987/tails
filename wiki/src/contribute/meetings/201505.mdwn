@@ -1,0 +1,90 @@
+[[!meta title="May 2015 online meeting"]]
+
+[[!toc levels=1]]
+
+# Volunteers to handle "[Hole in the roof](https://labs.riseup.net/code/versions/198)" tickets this month
+
+adamb will look into Vagrant issues.
+
+# Availability and plans for monthly low-hanging fruits meeting
+
+Six of us will try, to various degrees, to make it.
+
+# Claws Mail leaks cleartext of encrypted email to the IMAP server
+
+## Security advisory synopsis
+
+All those who commented found the synopsis on [[!tails_ticket 9161]]
+great. It has a few issues, though, that intrigeri reported on the
+ticket (note 9).
+
+## [[!tails_ticket 9303 desc="Consider proposing POP instead of IMAP by default"
+
+We agreed that this would be good, if we can preconfigure it to not
+delete messages from the server by default (which makes sense
+especially in an amnesic live system).
+
+sajolida will investigate if we can do that.
+
+## [[!tails_ticket 9302 desc="Consider shipping claws-mail 3.10.1-2~bpo70+1"]]
+
+We agreed that doing this is useless, given cleartext email will be
+sent to the server's Queue folder anyway, unless manual configuration
+is done.
+
+And while we're at it, we're also going to reject [[!tails_ticket 8305]].
+
+## [[!tails_ticket 9298 desc="How much do we want Tor Browser's per-tab circuit view?"]]
+
+For most applications (e.g. Pidgin, but not Claws Mail), Vidalia
+currently displays DOMAIN:PORT information for each circuit.
+But according to the screenshots on [[!tails_ticket 6842]], once we
+replace Vidalia with Tor Monitor, we'll only have IP:PORT information,
+that most users won't be able to correlate with their web
+browsing activity.
+
+But we're not there yet. So, for the moment we'll simply keep Tor
+Browser's per-tab circuit view disabled, on the grounds that this info
+is already available in Vidalia.
+
+And later, some of us will argue that when we replace Vidalia with Tor
+Monitor, in order to avoid a UX regression, either we ship Tor
+Browser's per-tab circuit view (and go through a complicated security
+analysis thereof), or we have Tor Monitor display the DOMAIN:PORT
+information like Vidalia does. That was suggested on [[!tails_ticket
+6842]].
+
+Also note that the security analysis isn't only about Tor Browser's
+per-tab circuit view. It's also about Tor Monitor, Vidalia, retrieving
+info via the X protocol, and what practical attacks one can conduct
+with the full circuits/streams info in hand. anonym will file tickets
+about it.
+
+# [[!tails_ticket 9277 desc="Research BitTorrent trackers we could use"]]
+
+The open tracker we're using currently has difficulties handling the
+load and costs. It's been proposed to use http://coppersurfer.tk/
+instead, but there are many unknowns about it, and some of us would
+like to support the tracker we've been using forever. So, we've
+decided to *add* http://coppersurfer.tk/ to the list of trackers in
+our torrents for a couple releases, and then see => [[!tails_ticket
+9335]].
+
+# [[!tails_ticket 7912 desc="Non-US keyboard layout selected with Greeter sometimes is not active when logged in"]]
+
+This bug has an easy workaround, it seems that it doesn't affect
+Tails/Jessie, and it doesn't seem easy to fix. So we decided to simply
+flag it as resolved in the 4.0 milestone, and add it to known issues
+for Wheezy (along with the trivial workaround when it happens) if it's
+not there yet. BitingBird will do the latter ([[!tails_ticket 9336]]).
+
+# Create tickets to track UX regressions caused by AppArmor
+
+Frontdesk sees a lot of user despair that's possibly related to
+AppArmor, and most importantly, to the fact that no notification tells
+users that AppArmor is blocking things. OTOH, developers got very very
+few actionable bug reports on this topic, so it's hard to create
+useful tickets about it. intrigeri will investigate installing
+[[!debpkg apparmor-notify]] to provide notifications on AppArmor
+denials, which should alleviate the most pressing UX problems:
+[[!tails_ticket 9337]].

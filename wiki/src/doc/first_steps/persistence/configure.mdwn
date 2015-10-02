@@ -1,31 +1,33 @@
-[[!meta title="Create & Configure the Persistent Volume"]]
+[[!meta title="Create & configure the persistent volume"]]
 
 [[!inline pages="doc/first_steps/persistence.caution" raw="yes"]]
 
 [[!toc levels=2]]
 
-Start the Persistent Volume Assistant
+Start the persistent volume assistant
 =====================================
 
 To start the persistent volume assistant, choose
 <span class="menuchoice">
   <span class="guimenu">Applications</span>&nbsp;▸
   <span class="guisubmenu">Tails</span>&nbsp;▸
-  <span class="guimenuitem">Configure persistent storage</span></span>.
+  <span class="guimenuitem">Configure persistent volume</span></span>.
 
 <div class="note">
+
 The error message <span class="emphasis">Error, Persistence partition is not
 unlocked.</span> means that the persistent volume was not enabled from
-<span class="application">Tails greeter</span>. So you can not configure it
+<span class="application">Tails Greeter</span>. So you can not configure it
 but you can delete it and create a new one.
+
 </div>
 
-Creating the Persistent Volume
+Creating the persistent volume
 ==============================
 
 When run for the first time, or after [[deleting the persistent
 volume|delete]], the assistant proposes to create a new persistent volume on
-the USB stick from which Tails is running.
+the device from which Tails is running.
 
 1. The persistent volume is an encrypted partition protected by a passphrase.
 Specify a passphrase of your choice in both the
@@ -37,29 +39,52 @@ Passphrase</span> text boxes.
 3. Wait for the creation to finish.
 
 <div class="bug">
+
 <strong>If the creation is interrupted before it finishes</strong>, you may not
-be able to start Tails from this USB stick any more. This can happen if you
-close the window of the wizard or unplug the USB stick during the creation of
-the persistent volume. [[Delete|first_steps/usb_reset]] and
-[[reinstall|first_steps/usb_installation]] Tails to fix this issue.
+be able to start Tails from this device any more. This can happen if you
+close the window of the wizard or unplug the USB stick or SD card during the creation of
+the persistent volume. [[Delete|first_steps/reset]] and
+[[reinstall|first_steps/installation]] Tails to fix this issue.
+
 </div>
 
-Persistent Volume Features
-==========================
+<a id="features"></a>
 
-When run from a USB stick that already has a persistent volume, the assistant
-shows a list of the possible persistent features. Each feature corresponds to a
+Persistence features
+====================
+
+When run from a Tails device that already has a persistent volume, the assistant
+shows a list of the possible persistence features. Each feature corresponds to a
 set a files to be saved in the persistent volume.
 
 <div class="note">
+
 <strong>Restart Tails to apply the changes</strong> after selecting or
 unselecting one or several features.
+
+</div>
+
+<div class="note">
+
+Only features that are listed here can currently be made
+persistent. Some other features have been asked and accepted, but are
+waiting to be implemented: browser extensions,
+[[!tails_ticket 7148 desc="wallpaper"]],
+[[!tails_ticket 7625 desc="RSS feeds"]],
+[[!tails_ticket 7246 desc="default sound card"]],
+[[!tails_ticket 5979 desc="mouse and touchpad settings"]],
+etc. See the
+[[corresponding tickets|https://labs.riseup.net/code/projects/tails/issues?query_id=122]]
+for more details.
+
 </div>
 
 <div class="bug">
+
 If you unselect a feature that used to be activated, it will be
 deactivated after restarting Tails but the corresponding files will
 remain on the persistent volume.
+
 </div>
 
 <a id="personal_data"></a>
@@ -75,8 +100,7 @@ documents in the <span class="filename">Persistent</span> folder.
 To open the <span class="filename">Persistent</span> folder, choose
 <span class="menuchoice">
   <span class="guimenu">Places</span>&nbsp;▸
-  <span class="guimenuitem">Home Folder</span></span>, and open the <span
-  class="guilabel">Persistent</span> folder.
+  <span class="guimenuitem">Persistent</span></span>.
 
 <a id="gnupg"></a>
 
@@ -89,10 +113,12 @@ When this feature is activated, the OpenPGP keys that you create or import are
 saved in the persistent volume.
 
 <div class="caution">
+
 If you manually edit or overwrite the
 <span class="filename">~/.gnupg/gpg.conf</span> configuration file
 you may lessen your anonymity,
 weaken the encryption defaults or render GnuPG unusable.
+
 </div>
 
 <a id="ssh_client"></a>
@@ -110,11 +136,13 @@ are saved in the persistent volume:
   - The SSH configuration file in <span class="filename">~/.ssh/config</span> 
 
 <div class="caution">
+
 If you manually edit the <span class="filename">~/.ssh/config</span>
 configuration file, make sure not to overwrite the
 default configuration from the
 <span class="filename">/etc/ssh/ssh_config</span> file. Otherwise, you may weaken the
 encryption defaults or render SSH unusable.
+
 </div>
 
 <a id="pidgin"></a>
@@ -125,8 +153,8 @@ encryption defaults or render SSH unusable.
 </div>
 
 When this feature is activated, all the configuration files of the
-<span class="application">Pidgin</span> Internet messenger are saved in the
-persistent volume:
+[[<span class="application">Pidgin</span> Internet messenger|doc/anonymous_internet/pidgin]]
+are saved in the persistent volume:
 
   - The configuration of your accounts, buddies and chats.
   - Your OTR encryption keys and keyring.
@@ -136,6 +164,16 @@ persistent volume:
 All the configuration options are available from the graphical interface. There
 is no need to manually edit or overwrite the configuration files.
 
+<div class="bug">
+
+<p>Pidgin fails to load any account if you enable persistence and
+select the <span class="guilabel">Read-Only</span> check box as a startup option.</p>
+
+<p>Don't use the <span class="guilabel">Read-Only</span> option if you want to use Pidgin. See
+[[!tails_ticket 8465]].</p>
+
+</div>
+
 <a id="claws_mail"></a>
 
 <div class="icon">
@@ -143,12 +181,15 @@ is no need to manually edit or overwrite the configuration files.
 <div class="text"><h2>Claws Mail</h2></div>
 </div>
 
-When this feature is activated, the configuration and emails stored locally by
-the <span class="application">Claws Mail</span> email client are saved in the
-persistent volume.
+When this feature is activated, the configuration and emails stored
+locally by the
+[[<span class="application">Claws Mail</span> email client|doc/anonymous_internet/claws_mail]]
+are saved in the persistent volume.
 
 All the configuration options are available from the graphical interface. There
 is no need to manually edit or overwrite the configuration files.
+
+[[!inline pages="doc/anonymous_internet/claws_mail/persistence.bug" raw="yes"]]
 
 <a id="gnome_keyring"></a>
 
@@ -166,15 +207,16 @@ passwords, keys, certificates and make them available to applications.
 For more information about <span class="application">GNOME Keyring</span> see
 the [official documentation](http://live.gnome.org/GnomeKeyring).
 
-<a id="network-manager"></a>
+<a id="network_connections"></a>
 
 <div class="icon">
 [[!img network-manager.png link=no]]
 <div class="text"><h2>Network Connections</h2></div>
 </div>
 
-When this feature is activated, the configuration of the network devices
-and connections is saved in the persistent volume.
+When this feature is activated, the
+[[configuration of the network devices and connections|doc/anonymous_internet/networkmanager]]
+is saved in the persistent volume.
 
 To save passwords, for example the passwords of encrypted wireless connections,
 the [[<span class="application">GNOME Keyring</span> persistence
@@ -191,9 +233,11 @@ When this feature is activated, the packages that you install using the
 <span class="application">Synaptic</span> package manager or the
 <span class="command">apt-get</span> command are saved in the persistent volume.
 
-If you install additional programs, this feature allows you to download them
-once and reinstall them during future working sessions, even offline.
-Note that those packages are not automatically installed when restarting Tails.
+If you
+[[install additional programs|doc/advanced_topics/additional_software]],
+this feature allows you to download them once and reinstall them
+during future working sessions, even offline. Note that those
+packages are not automatically installed when restarting Tails.
 
 If you activate this feature, it is recommended to activate the
 <span class="guilabel">APT Lists</span> feature as well.
@@ -214,9 +258,10 @@ downloaded while doing
 <span class="application">Synaptic</span> package manager or issuing the
 <span class="command">apt-get update</span> command.
 
-The <span class="emphasis">APT lists</span> are needed to install additional
-programs or explore the list of available software packages. This feature allows
-you to reuse them during future working sessions, even offline.
+The <span class="emphasis">APT lists</span> are needed to
+[[install additional programs|doc/advanced_topics/additional_software]]
+or explore the list of available software packages. This feature
+allows you to reuse them during future working sessions, even offline.
 
 <a id="browser_bookmarks"></a>
 
@@ -225,9 +270,32 @@ you to reuse them during future working sessions, even offline.
 <div class="text"><h2>Browser bookmarks</h2></div>
 </div>
 
-When this feature is activated, changes to the bookmarks in the
-<span class="application">Iceweasel</span> web browser are saved in the persistent
-volume. This does not apply to the Unsafe web browser.
+When this feature is activated, changes to the bookmarks in
+[[<span class="application">Tor Browser</span>|doc/anonymous_internet/Tor_Browser]]
+are saved in the persistent volume. This does not apply to the
+[[<span class="application">Unsafe Browser</span>|doc/anonymous_internet/unsafe_browser]].
+
+<a id="printers"></a>
+
+<div class="icon">
+[[!img printer.png link=no]]
+<div class="text"><h2>Printers</h2></div>
+</div>
+
+When this feature is activated, the
+[[configuration of the printers|doc/sensitive_documents/printing_and_scanning]]
+is saved in the persistent volume.
+
+<a id="bitcoin"></a>
+
+<div class="icon">
+[[!img electrum.png link=no]]
+<div class="text"><h2>Bitcoin Client</h2></div>
+</div>
+
+When this feature is activated, the bitcoin wallet and preferences of
+the [[*Electrum* bitcoin client|anonymous_internet/electrum]] are saved in the
+persistent volume.
 
 <a id="dotfiles"></a>
 
@@ -237,31 +305,96 @@ volume. This does not apply to the Unsafe web browser.
 </div>
 
 When this feature is activated, all the files in the <span
-class="filename">/lib/live/persistence/XXX_unlocked/dotfiles</span> folder
-are linked in the <span class="filename">Home Folder</span> (files in
+class="filename">/live/persistence/TailsData_unlocked/dotfiles</span> folder
+are linked in the <span class="filename">Home</span> folder. Files in
 subfolders of <span class="filename">dotfiles</span> are also linked
 in the corresponding subfolder of your <span class="filename">Home
-Folder</span>). The `XXX` in the above should be something like `sdb2`
-but since there will only ever be one folder in <span
-class="filename">/live/persistence</span> there should be little risk
-for confusion.
+</span> folder.
+
+For example, having the following files in <span
+class="filename">/live/persistence/TailsData_unlocked/dotfiles</span>:
+
+    /live/persistence/TailsData_unlocked/dotfiles
+    ├── file_a
+    ├── folder
+    │   ├── file_b
+    │   └── subfolder
+    │       └── file_c
+    └── emptyfolder
+
+Produces the following result in <span class="filename">/home/amnesia</span>:
+
+    /home/amnesia
+    ├── file_a → /live/persistence/TailsData_unlocked/dotfiles/file_a
+    └── folder
+        ├── file_b → /live/persistence/TailsData_unlocked/dotfiles/folder/file_b
+        └── subfolder
+            └── file_c → /live/persistence/TailsData_unlocked/dotfiles/folder/subfolder/file_c
 
 This option is useful if you want to make some specific files
 persistent, but not the folders they are stored in. A fine example are
 the so called "dotfiles" (and hence the name of this feature), the
 hidden configuration files in the root of your home directory, like
-<span class="filename">~/.git</span> and <span
+<span class="filename">~/.gitconfig</span> and <span
 class="filename">~/.bashrc</span>.
 
-<a id="custom_directory"></a>
+As you can see in the previous example, empty folders are ignored. This feature
+only links files, and not folders, from the persistent volume into the <span
+class="filename">Home</span> folder.
 
-Custom directory
-----------------
+<a id="additional_software"></a>
 
-With this feature you can specify other folders of your choice to be saved in
-the persistent volume.
+Additional software packages
+----------------------------
 
-If for example you want to create and make persistent an
-<span class="filename">Images</span> folder in the
-<span class="filename">Home Folder</span> you can specify
-<span class="filename">/home/amnesia/Images</span> as a custom directory.
+<div class="note">
+
+This is an experimental feature which does not appear in the assistant.
+
+</div>
+
+When this feature is enabled, a list of
+[[additional software|doc/advanced_topics/additional_software]] of
+your choice is automatically installed at the beginning of every
+working session. The corresponding software packages are stored in the
+persistent volume. They are automatically upgraded for security after
+a network connection is established.
+
+To use this feature you need to enable both the <span
+class="guilabel">APT Lists</span> and <span class="guilabel">APT
+Packages</span> features.
+
+<div class="note">
+
+If you are offline and your additional software packages don't install, it
+might be caused by outdated APT Lists. The issue will be fixed next time you
+connect Tails to Internet with persistence activated.
+
+</div>
+
+To choose the list of additional software, start Tails with an administrator
+password and edit (as an administrator) the file called
+`/live/persistence/TailsData_unlocked/live-additional-software.conf`.
+Each line of this file must contain
+the name of a Debian package to be installed as an additional software
+package.
+
+For example, to automatically install the `dia` software, a diagram
+editor, and the `fontmatrix` software, a font manager, add the following
+content to `live-additional-software.conf`:
+
+    dia
+    fontmatrix
+
+To learn about the many software packages available in Debian, visit
+<http://packages.debian.org/stable/>.
+
+<div class="caution">
+
+<strong>Installing additional software is at your own risk.</strong>
+Most additional software requires extra configuration to be able to
+connect to the network through Tor, and will not work otherwise. Some other software might, for
+example, modify the firewall and break the security built in Tails.
+Software not officially included in Tails is not tested for security.
+
+</div>

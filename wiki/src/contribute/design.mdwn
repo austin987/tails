@@ -16,7 +16,7 @@ baseline for all similar projects out there.
 
 This document is heavily based on preliminary work that was done as
 part of [Incognito 2008.1-r1
-Documentation](http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/docs.html).
+Documentation](https://web.archive.org/web/20100220124424/http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/docs.html).
 The *Bibliography* section has pointers to other inspiration and reference sources.
 
 # 2 Privacy Enhancing Live Distribution Specification
@@ -112,6 +112,8 @@ anonymity.
 
 ### 2.1.6 Filling some empty room in the Tor distributions landscape
 
+XXX: update
+
 The PELD is meant to be complementary to other Tor distributions. It
 has no such goal as replacing other existing tool that properly
 fulfills its use cases.
@@ -171,8 +173,7 @@ Internet for anyone anywhere.
 The goal of staying anonymous and keeping sensitive information
 protected stands in direct conflict with the goals of several entities
 "present" on the Internet. The following threat model is meant to
-describe the intentions and capabilities of such hypothetical
-attackers.
+describe the intentions and capabilities of such attackers.
 
 ### 2.2.1 The goal of the attacker
 
@@ -234,7 +235,7 @@ attacks.
 The PELD MUST be distributed in a common format that can easily be
 used to install the PELD on the selected medium. For instance, if
 distributed as an ISO 9660 compatible image file it can be burned to a
-CD with almost any CD recording software available.
+DVD with almost any DVD recording software available.
 
 Also, it is RECOMMENDED to make it possible for end-users to verify
 the downloaded PELD image's integrity using public-key cryptography.
@@ -247,16 +248,15 @@ portable and able to run in as many environments as possible.
 ### 2.4.1 Platform
 
 The binaries MUST all be executable on the most common computer
-hardware architecture(s). As of 2011, the x86 computer architecture
+hardware architecture(s). As of 2014, the x86 computer architecture
 seems to be the obvious choice as the vast majority of personal
-computers in use is compatible with it. Supporting the PowerPC
-architecture is a welcome bonus in order to support pre-Intel Apple
-computers. Supporting widespread hardware architectures used in mobile
+computers in use is compatible with it. The PELD SHOULD support UEFI.
+Supporting widespread hardware architectures used in mobile
 computers, such as phones, is also welcome.
 
 ### 2.4.2 Media
 
-The PELD SHOULD be able to boot and run natively from either a CD or a
+The PELD SHOULD be able to boot and run natively from either a DVD or a
 USB drive. While running the PELD in native mode it MUST be completely
 independent from the host operating system and all other storage media
 on the host computer unless the user explicitly tries to access any of
@@ -266,7 +266,7 @@ In all circumstances, binaries, dynamic libraries and other executable
 code susceptible to virus infections and similar MUST always be
 completely write-protected, even when running from a writeable USB
 medium. Such files SHOULD not even be modifiable temporarily, which
-could be the case even when running from CD if the filesystem is
+could be the case even when running from DVD if the filesystem is
 loaded into memory (e.g. tmpfs).
 
 Configuration files, temporary files, user home directories and
@@ -282,7 +282,7 @@ to use strong encryption for the persistent storage.
 
 ### 2.4.3 Virtual machines
 
-As an alternative to running the PELD natively from a CD or USB, it
+As an alternative to running the PELD natively from a DVD or USB, it
 SHOULD also be possible to run it inside virtual machines.
 
 Running the PELD is such a virtualized environment provides weakened
@@ -436,10 +436,10 @@ supported:
   cookies, etc. Benefiting from this work is essential for maintaining
   anonymity, so it is REQUIRED to include only web browsers that are
   endorsed by the Tor Project, accompanied with any configurations,
-  extensions/plugins, etc. that they recommend (for instance, Firefox
-  with the Torbutton extension). The PELD browser fingerprint SHOULD
-  make the PELD users appear uniformly among Tor users with generally
-  recommended configuration, such as Torbutton users.
+  extensions/plugins, etc. that they recommend (for instance, Tor
+  Browser Bundle). The PELD browser fingerprint SHOULD make the PELD
+  users appear uniformly among Tor users with generally recommended
+  configuration, such as Tor Browser Bundle users.
 - **Email**: support for PGP or S/MIME is highly RECOMMENDED. Also,
   beware that the EHLO/HELO sent to the SMTP-server will contain the
   host's IP address in many email clients. The `Message-ID` headers and
@@ -515,12 +515,12 @@ practices: digests, ciphers and key sizes.
 Only stable releases SHOULD be considered since Tor really is at the
 core of the PELD.
 
-Tor SHOULD be setup to enable its DNS server (`DNSPort`) to allow DNS
+Tor SHOULD be set up to enable its DNS server (`DNSPort`) to allow DNS
 lookups through the Tor network; alternatively a local DNS server can
 be configured to use Tor.
 
 If transparent proxying (as opposed to dropping non-Tor traffic) was
-chosen in the network section, then Tor MUST be setup to enable its
+chosen in the network section, then Tor MUST be set up to enable its
 transparent proxy (`TransPort`, `TransListen`); alternatively any
 transparent proxy configured to use Tor as the parent proxy can be
 used.
@@ -618,8 +618,7 @@ this specification can provide reasonable guidance about them.
 
 ### 2.7.1 Memory recovery attacks
 
-[Recent
-research](http://www.blackhat.com/html/bh-dc-11/bh-dc-11-briefings.html#Case)
+[Research](http://www.blackhat.com/html/bh-dc-11/bh-dc-11-briefings.html#Case)
 aims at recovering a Live system's in-memory filesystem and partial
 recovery of its previously deleted contents. Most current Live systems
 do not protect against that kind of attacks: at best, they erase free
@@ -673,14 +672,14 @@ Critical parts of the configuration are based on the ones from
 well-known and trusted sources, namely Tails ancestor
 [Incognito](http://www.browseanonymouslyanywhere.com/incognito/)
 and the [Tor BrowserBundle](https://www.torproject.org/projects/torbrowser.html.en).
-This is for example the case for the firewall, polipo and Tor configurations.
+This is for example the case for the firewall and Tor configurations.
 
 **NOTICE**: this distribution is provided as-is with no warranty of
 fitness for a particular purpose, including total anonymity. Anonymity
 depends not only on the software but also on the user understanding
 the risks involved and how to manage those risks.
 
-Other Tails design documents:
+## 3.0 Other Tails design documents
 
 [[!map pages="contribute/design/*"]]
 
@@ -708,13 +707,11 @@ extension).
 
 ### 3.2.1 Core software
  
-- [Debian GNU/Linux](http://www.debian.org/): the base operating
+- [Debian GNU/Linux](https://www.debian.org/): the base operating
   system, provides hardware detection, infrastructure. Please note
   that the Debian distribution does not provide or endorse Tails.
 - [Tor](http://www.torproject.org/): anonymizing overlay network for
   TCP. Our intention is to always use the latest stable version.
-- [polipo](http://www.pps.jussieu.fr/%7Ejch/software/polipo/):
-  Caching web proxy.
 - [Vidalia](https://www.torproject.org/projects/vidalia) is used
   to control Tor's behavior.
 
@@ -726,13 +723,13 @@ used in Debian yet. Thus having them included in Tails would require
 to recompile every package with the right compile-time options. This
 would badly impact the development and build efforts required to
 release Tails. As an alternative, efforts [have been
-started](http://bugs.debian.org/cgi-bin/pkgreport.cgi?tag=hardening;users=debian-security@lists.debian.org)
+started](https://bugs.debian.org/cgi-bin/pkgreport.cgi?tag=hardening;users=debian-security@lists.debian.org)
 to push usage of such hardening features in Debian.
 
 A lot of security features have been implemented upstream at the
 kernel level (ASLR, removal of `/dev/kmem`, `/dev/mem` protections,
 various stack and heap hardening features, `/proc` or `/sys` not leaking
-sensitive informations, etc.), most of them being slowly integrated
+sensitive information, etc.), most of them being slowly integrated
 into Debian. This is the reason why the Tails kernel has no more special
 kernel security feature than the stock Debian kernel.
 
@@ -743,27 +740,61 @@ See [[doc/about/features]].
 ## 3.3 Internationalization
 
 Tails ships, as is, localization files provided by the installed
-Debian packages. All available iceweasel localization packages
+Debian packages. All available Tor Browser localization packages
 are installed. Spell checking software and data is installed for the
-set of best supported languages; it is usable at least is Iceweasel,
-OpenOffice.org and gedit.
+set of best supported languages; it is usable at least is Tor Browser,
+LibreOffice and gedit.
 
-## 3.4 Notification of security issues and new Tails release
+### 3.3.1 Input methods
 
-Shipped in Tails is a script that checks at each desktop start if
-security issues or new Tails releases are published on the website. If
-some are found, a graphical notification is displayed. This
-application is internationalized.
+Tails ships with IBus and a few engines (Anthy for Japanese, Pinyin
+and Bopomofo for Chinese, and Hangul for Korean).
 
-- [[!tails_gitweb chroot_local-includes/usr/local/bin/tails-security-check]]
+A login script prepares and configures IBus. When a Japanese,
+Chinese or Korean locale is selected, this login script selects
+the right default input method, and then starts the IBus daemon.
+
+Since one may want to work on documents written in
+Chinese, Japanese or Korean even when selecting English as their
+preferred language, IBus can also be manually started in other locales
+using the "IBus Preferences" launcher in the System->Preferences menu.
+IBus' environment variables is always exported on login to make this work.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/X11/Xsession.d/80im-starter]]
+
+## 3.4 Notification of security issues and new Tails releases
+
+Tails ships a script that checks if there are security issues that are
+not fixed by any Tails release (and thus, affect the currently running
+Tails regardless of its version). A desktop notification is displayed
+for every such issue.
+
+The connections are made to the Tails website through Tor, over HTTPS
+with a pinned CA. The only piece of information leaked to the Tails
+web server (apart of [[!cpan LWP::UserAgent]]'s specific User-Agent
+and HTTP behavior) is the first two chars of the `LANG`
+environment variable.
+
+This script is run after the user has logged-in and Tor is
+in known-working state.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check-wrapper]]
+
+Security issues that were fixed in a newer version of Tails are taken
+care of by [[Tails Upgrader|contribute/design/incremental_upgrades]]
+that tells the user whenever they should upgrade and leads them
+through the necessary steps.
 
 ## 3.5 Feedback
 
 Users can send feedback in several ways to Tails developers.
-A [[!tails_bug "" desc="bug tracker"]] and a [[forum|/forum]] are
-available on the website.
+A [[!tails_redmine desc="task tracker"]] is available.
 Users can also send email to the private [developers mailing
-list](tails@boum.org). A dedicated application called *WhisperBack*
+list](tails@boum.org) or to the public [support mailing
+list](tails-support@boum.org).
+
+A dedicated application called *WhisperBack*
 is also available in every running Tails copy. WhisperBack allows
 users to send anonymous or pseudonymous feedback via OpenPGP-encrypted
 email. It is configured in Tails to use a Tor hidden service run by
@@ -777,7 +808,7 @@ reported issue. WhisperBack's graphical interface fully supports
 internationalization and is ready to be translated.
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/whisperback]]
-- [WhisperBack source code](http://git.immerda.ch/?p=whisperback.git)
+- [WhisperBack source code](https://git-tails.immerda.ch/whisperback)
 
 ## 3.6 Configuration
 
@@ -796,7 +827,7 @@ proxy). The client listens on a control port 9051
 
 The client listens on a few SOCKS ports (the rationale being detailed
 on the [[Tor stream isolation design
-page|contribute/design/stream_isolation]]): 9050, 9061, 9062 and 9063.
+page|contribute/design/stream_isolation]]): 9050, 9061, 9062 and 9151.
 
 Only connections from localhost are accepted. It can be argued
 that running a Tor server (onion router) would increase one's
@@ -805,8 +836,28 @@ probably would not want this due to the added consumption of
 bandwidth. The user can nevertheless easily choose to turn his or her
 Tor client into a relay, thanks to the Vidalia graphical user
 interface.
- 
-- [[!tails_gitweb chroot_local-includes/etc/tor/torrc]]
+
+If a compromised software had access to the Tor control port,
+an attacker who controls it could simply ask Tor the public
+IP through the `GETINFO address` command.
+To prevent this, access to the Tor control port is only
+granted to the vidalia user, who is running Vidalia.
+A filtering proxy to the control port exists, so
+Torbutton still can perform safe commands like `SIGNAL NEWNYM`.
+
+We disabled the default warning messages of Tor (`WarnPlaintextPorts`)
+when connecting to ports 110 (POP3) and 143 (IMAP). These ports are used
+for both plaintext and StartTLS connections. As more and more email
+providers recommend and even enforce StartTLS on these ports, the effect
+of these warnings were most of the time counterproductive as people had
+to click through needlessly scary security warnings.
+
+- [[!tails_gitweb config/chroot_local-hooks/06-adduser_vidalia]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/restart-vidalia]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-controlport-filter]]
+- [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
+
+<a id="dns"></a>
 
 ### 3.6.3 DNS
 
@@ -829,11 +880,9 @@ configured for completeness.
 
 [[!inline pages="contribute/design/Tor_enforcement/Network_filter" raw=yes]]
 
-### 3.6.7 Random MAC Address
+### 3.6.7 MAC address spoofing
 
-It is planned to anonymize the network interfaces MAC address in a
-later Tails version. See the related [[design
-document|design/MAC_address]] and [[!tails_todo macchanger desc="todo item"]].
+See [[the dedicated design document|design/MAC_address]].
 
 ### 3.6.8 Host system swap
 
@@ -890,7 +939,7 @@ executable code by:
   "Working on sensitive documents" goal by enabling users to perform
   tasks that need software not shipped in Tails.
 
-Such modifications happen only in RAM, the user will remove the CD/USB
+Such modifications happen only in RAM, the user will remove the DVD/USB
 when done and there are no services allowing logins from the network.
 
 As a first step Tails has stopped
@@ -898,58 +947,70 @@ granting `sudo` privileges to the `amnesia` user by default.
 Unless an administrator password is set in tails-greeter,
 no root access is possible afterwards.
 
-### 3.6.13 Iceweasel
+### 3.6.13 Tor Browser
 
-(Note: Iceweasel is the name of the web browser, based on Mozilla
-Firefox, that is shipped by Debian and thus by Tails.)
+Tails ships with the Tor Browser, which is based on Mozilla Firefox
+and patched by the Tor Project for improved anonymity by reducing
+information leaks, decreasing attack surface and similar. The actual
+binaries etc. used in Tails are those distributed by the Tor Project,
+but the configuration differs slightly, which is described below.
 
-Iceweasel uses the Torbutton extension in order to prevent attacks
-using JavaScript, plugins and other non-HTTP features like web
-bugs. It is configured to always be enabled on Iceweasel start and
-uses Tor as SOCKS5 proxy. SOCKS is configured to perform name
-resolution through this proxy. Iceweasel is also configured to not
-cache to disk (mainly to reduce memory usage for CD users as disk
-writes will be stored there), history is disabled (just in case) and
-many other things. It is also setup not to automatically check for
-updates of its installed extensions. Java support is disabled.
+In Tails we diverge from the TBB's one-profile-only design, and
+install the Tor Browser in a globally accessible directory used by all
+browser profiles (and other XUL applications).
 
-Iceweasel is shipped with some extensions to help users manage their
-browsing experience. The Torbutton settings treat all cookies as
-session cookies by default; the [Cookie
-Monster](https://addons.mozilla.org/en-US/firefox/addon/cookie-monster)
-extension provides more
-fine-grained cookie control for users who need it. This prevents the
-known leak of browsing informations cookies can lead to. The [Adblock
-plus](https://addons.mozilla.org/fr/firefox/addon/1865/) extension
-protects against many tracking possibilities by removing most ads.
+- [[!tails_gitweb config/chroot_local-hooks/10-tbb]]
 
-Tails ships the [HTTPS
-Everywhere](https://www.eff.org/https-everywhere) extension that
-forces HTTPS usage for requests to a number of major websites.
+The default profile is split from the binaries and application data:
 
-Tails also ships the
-[FoxyProxy](https://addons.mozilla.org/fr/firefox/addon/2464/)
-extension that:
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-browser]]
 
-- allows using I2P instead of Tor to visit eepsites (I2P's own hidden
-  services look-alike); see [[the design document dedicated to Tails
-  use of I2P|I2P]] for details;
-- could help [[!tails_todo FTP_in_Iceweasel desc="fixing Iceweasel's FTP support"]].
+As for extensions we have the following differences:
 
-Thanks to Torbutton, Iceweasel is configured so that Tails browser
-fingerprint appears uniformly among Torbutton users. Tails enables
-Torbutton's EN-US locale spoofing to avoid partitioning Tails
-users into per-language anonymity sets.
+* Tails also installs the
+  [Adblock plus](https://addons.mozilla.org/fr/firefox/addon/1865/)
+  extension to protect against many tracking possibilities by removing
+  most ads.
 
-Torbutton is also configured to spoof the timezone settings the same
-way as the Tor Browser Bundle does, i.e. to `UTC+00:00`.
+* Tails does not install the Tor Launcher extension as part of the
+  browser. A patched Tor Launcher is installed for use as a
+  stand-alone XUL application, though.
 
-The Iceweasel config is poorly commented but the commit messages in
-Git history explains
-it all; any other relevant settings may thus be investigated by
-looking in there.
+In Tails we do not use the `start-tor-browser` script, since it does a
+lot of stuff not needed in Tails (error checking mainly) and isn't
+flexible since it looks for the browser profile in a specific
+place. Our custom script makes use of the global installation and also
+makes sure the default profile is used as a basis. Any shared libraries
+shipped inside the TBB are also used (via `LD_LIBRARY_PATH`) since
+Debian stable often has too old versions to start the browser.
 
-- [[!tails_gitweb_dir config/chroot_local-includes/etc/iceweasel]]
+Whenever the user tries to start the Tor Browser before Tor is
+ready, they are informed it won't work, and asked whether to start the
+browser anyway:
+
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tor-browser]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/generate-tor-browser-profile]]- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
+- [[!tails_gitweb config/chroot_local-includes/etc/sudoers.d/zzz_tor-has-bootstrapped]]
+
+Once Tor is ready to be used, the user is informed they can now use
+the Internet:
+
+- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/60-tor-ready.sh]]
+
+The remaining configuration differences can be found in:
+
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-browser/preferences/0000tails.js]]
+- [[!tails_gitweb config/chroot_local-hooks/12-install_browser_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/12-remove_unwanted_browser_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/13-override-tbb-branding]]
+- [[!tails_gitweb config/chroot_local-hooks/14-add_localized_browser_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/14-generate-tor-browser-profile]]
+- [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
+
+It should also be noted that the global TBB installation is also used
+for the [[Unsafe Browser]] and [[I2P Browser]], although they are
+user-isolated and use separate profiles with very different
+configurations.
 
 ### 3.6.14 Claws Mail
 
@@ -958,7 +1019,10 @@ the sender's email address, which does not leak usage of the PELD nor
 any user location information.
 
 It also always says `EHLO localhost` to the SMTP server instead of
-disclosing the real IP address and hostname.
+disclosing the real IP address and hostname. This is achieved thanks
+to tsocks, as Claws Mail leaks the hostname in the HELO/EHLO
+message, resulting in a hostname leak in the `Message ID` and
+`Received` email headers, when run with `torify` and `torsocks`.
 
 Furthermore, any account a user creates is pre-configured to not use
 HTML in order to get rid of a whole class of privacy concerns.
@@ -967,24 +1031,30 @@ OpenPGP support is provided by the PGP/inline and PGP/MIME plugins.
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.claws-mail]] is copied to
   the user's `$HOME` at boot time
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/torified-claws-mail]]
+- [[!tails_gitweb config/chroot_local-includes/etc/tor/tor-tsocks-mua.conf]]
 
 ### 3.6.15 Pidgin
 
 Pidgin is configured in Tails to not log anything as well as not to reveal too
 much of user activity by disabling reporting of online/away/typing
-status. MSN protocol support is disabled, to avoid the usage of such a
-privacy flawed and buggy plugin. The Off-the-record plugin is enabled
+status. Only IRC and Jabber/XMPP protocols are left available, to
+avoid the usage of less well audited plugins. The Off-the-record
+plugin is enabled
 to help one-to-one conversations being as private and unrecordable as
 possible. At boot a language confluxer generates a random looking default
 nickname from the 2000 most common U.S. names (according to the U.S. social
-security administration in the 70s), which results in something Englishesque
+security administration in the 1970's), which results in something Englishesque
 sounding. The nickname is further made to look like a typical IRC nickname by
 prefixing it with ^ or _ with probability 0.05, and changing it to leet speak
-with probability 0.05. Pidgin does not leak any informations appart from the
-name when answering to CTCP requests.
+with probability 0.05. When answering to CTCP requests, Pidgin does
+not leak any information apart from PING and VERSION (`Purple IRC`),
+which is deemed acceptable as there are probably other weirdness in
+how the protocol is implemented, that disclose as much.
 
-- [[!tails_gitweb config/chroot_local-includes/lib/live/config/201-pidgin]]
+- [[!tails_gitweb config/chroot_local-includes/lib/live/config/2010-pidgin]]
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.purple]]
+- [[!tails_gitweb config/chroot_local-hooks/09-remove_unsupported_pidgin_libs]]
 
 ### 3.6.16 GnuPG
 
@@ -995,8 +1065,12 @@ the other HKP keyservers pools, and reachable over `hkps://`.
 [[!tails_todo Monkeysphere]]'s `hkpms://` support will be used as soon as
 possible in place of the hierarchical X.509 certification model.
 
-GnuPG is configured to prefer non-outdated digest algorithms such as
-SHA256.
+GnuPG is configured accordingly to the [OpenPGP Best
+Practices](https://help.riseup.net/en/security/message-security/openpgp/best-practices),
+e.g. to prefer non-outdated digest algorithms from the
+SHA-2 family, to force exclusion of the version string in ASCII armored
+output, to avoid automatically locating and retrieving keys, and to
+disregard the preferred keyserver assigned to specific keys.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/gpg.conf]]
 - [[!tails_gitweb config/chroot_local-includes/etc/ssl/certs/sks-keyservers.netCA.pem]]
@@ -1008,11 +1082,162 @@ SHA256.
 An opt-in data persistence feature is available in Tails 0.11 and
 newer. See [[contribute/design/persistence]] for details.
 
-### 3.6.18 USB installation
+### 3.6.18 Installation on USB sticks and SD cards
 
-An easy (read: not command-line based) way to install and
-upgrade Tails on USB sticks is available in Tails 0.11 and newer.
-See [[design/usb_installation]] for details.
+An easy (read: not command-line based) way to install and upgrade
+Tails on USB sticks and SD cards is available in Tails 0.11 and newer.
+SD cards readers wired via SDIO are supported since Tails 0.21.
+See [[design/installation]] for details.
+
+### 3.6.19 Wireless devices handling
+
+Tails puts the wireless devices in a sensible state at boot time.
+
+At boot time, Tails unblocks Wi-Fi, WWAN and WiMAX radios, unblocks
+Bluetooth radio (so that it can be dealt another way:
+[[todo/protect_against_external_bus_memory_forensics]]), and
+soft-blocks all other kinds of wireless devices (e.g. UWB, GPS, FM).
+
+- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-set-wireless-devices-state]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-set-wireless-devices-state]]
+
+### 3.6.20 OpenSSH
+
+The OpenSSH client is configured to use the Tor SOCKS proxy, and to
+prefer strong ciphers and MACs..
+
+- [[!tails_gitweb config/chroot_local-includes/etc/ssh/ssh_config]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/connect-socks]]
+
+### 3.6.21 Incremental upgrades
+
+When a Tails release is out, Tails users are proposed to download and
+apply a partial upgrade (that is, only what has changed between two
+releases). See [[contribute/design/incremental_upgrades]] for details.
+To start with, this upgrade mechanism may be only available for
+point-releases.
+
+### 3.6.22 Panel applets
+
+Tails ships a few custom applets in the GNOME panel.
+
+The shutdown helper applet provides two-clicks shutdown and
+restart actions.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/skel/.config/gnome-panel/panel-default-layout.layout]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/lib/shutdown-helper-applet]]
+- [[!tails_gitweb config/chroot_local-includes/usr/share/dbus-1/services/org.gnome.panel.applet.ShutdownHelperFactory.service]]
+- [[!tails_gitweb config/chroot_local-includes/usr/share/gnome-panel/4.0/applets/org.boum.tails.ShutdownHelper.panel-applet]]
+
+The Tails OpenPGP applet allows to symmetrically and asymmetrically
+encrypt and decrypt text, and to verify OpenPGP signatures.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/gpgApplet]]
+
+### 3.6.23 DHCP hostname leaks
+
+Tails prevents dhclient from sending the hostname over the network.
+
+First, only the `keyfile` NetworkManager plugin is used; that is, the
+`ifupdown` plugin is disabled:
+
+* this is needed, because the only the `keyfile` plugin supports
+  setting `dhcp-send-hostname` to false, while the `ifupdown` plugin
+  retrieves the hostname to send from `/etc/hostname`;
+* this is OK, because we actually don't use the functionality provided
+  by the `ifupdown` plugin (that is, reading from
+  `/etc/network/interfaces` -- that only configures the loopback
+  connection in Tails, which is itself ignored by NetworkManager
+  anyway).
+
+Second, the NetworkManager `keyfile` plugin is configured to *not*
+send the hostname over DHCP by default. Likely this can be overridden
+on a per-connection basis if one really needs to change this.
+
+Third, dhclient itself is told not to send the hostname. This is
+needed because on Wheezy, NetworkManager runs dhclient with the `-cf
+/var/run/nm-dhclient-eth0.conf` option, and generates that file by
+concatenating `/etc/dhcp/dhclient.conf` with its own settings.
+
+Fourth, dhclient is told to override any hostname provided by the DHCP
+server with `amnesia`. This is meant to prevent dhclient hooks,
+NetworkManager and others from setting the hostname to a value
+controlled by the DHCP server.
+
+* [[!tails_gitweb config/chroot_local-patches/dhcp-dont-send-hostname.diff]]
+
+### 3.6.24 TCP timestamps
+
+[[!rfc 1323 desc="TCP time stamps"]] allow for tracking clock
+information with millisecond resolution. This may or may not allow an
+attacker to learn information about the system clock at such
+a resolution, depending on various issues such as network lag.
+This information is available to anyone who monitors the network
+somewhere between the attacked Tails system and the Tor entry nodes
+being used. It may allow an attacker to find out how long a given
+Tails system has been running, and to distinguish several Tails
+systems running behind NAT and using the same IP address. It might
+also allow to look for clocks that match an expected value to find the
+public IP used by a user.
+
+Hence, Tails disables this feature.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/sysctl.d/tcp_timestamps.conf]]
+
+Note that TCP time stamps normally have some usefulness. They are
+needed for:
+
+* the TCP protection against wrapped sequence numbers; however, to
+  trigger a wrap, one needs to send roughly 2^32 packets in one
+  minute:  as said in [[!rfc 1700]], "The current recommended default
+  time to live (TTL) for the Internet Protocol (IP) [45,105] is 64".
+  So, we don't think this is a practical problem in the context
+  of Tails.
+
+* "Round-Trip Time Measurement", which is only useful when the user
+  manages to saturate their connection. When using Tails, we believe
+  that the limiting factor for transmission speed is rarely the
+  capacity of the user connection.
+
+### 3.6.25 Application isolation
+
+Tails has some minimal [[contribute/design/application_isolation]] to
+mitigate a bit the consequences of security issues in individual
+applications being exploited by attackers.
+
+### 3.6.26 wget
+
+We wrap `wget` with `torsocks`, after unsetting the `http_proxy`
+environment variable and friends, so that it talks directly to the Tor
+SOCKS port.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/wget]]
+
+### 3.6.27 APT
+
+During most of the ISO build process, APT uses the proxy configured
+through `live-build` (that is, usually a local `apt-cacher-ng`).
+
+However, at boot time, a hook does (a more elaborate version of)
+`s,http://,tor+http://` in APT sources. Then, APT will use the
+`tor+http` method, that is a simple torsocks wrapper for the good old
+`http` method.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/apt/methods/tor+http]]
+- [[!tails_gitweb config/chroot_local-includes/lib/live/config/1500-reconfigure-APT]]
+
+### 3.6.28 Electrum
+
+We install the [Electrum](https://electrum.org) Bitcoin client and the
+default configuration tells it to use the default of Tor's
+SOCKSPort:s, and sync the necessary parts of the Bitcoin blockchain
+(as a lightweight client) from the default server pool using SSL.
+
+There is also a persistence preset for the live user's `.electrum`
+configuration folder, which stores the Bitcoin wallet, application
+preferences and the cached Bitcoin blockchain.
+
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.electrum]]
 
 ## 3.7 Running Tails in virtual machines
 
@@ -1037,8 +1262,8 @@ user|design/virtualization_support]] if it is.
 
 ### 3.7.3 Running Tails inside a Windows session
 
-[[!tails_todo virtualization_support desc="Ongoing work"]] will make it easier to
-run the CD/USB in a virtual machine inside a Windows session whenever
+[[!tails_ticket 6083 desc="Potential work"]] may make it easier to
+run the DVD/USB in a virtual machine inside a Windows session whenever
 native boot is impossible or not desirable. This probably will be
 implemented by shipping a [QEMU](http://www.qemu.org/) or
 [VirtualBox](http://www.virtualbox.org/) binary for Microsoft Windows.
@@ -1059,24 +1284,24 @@ the [[contribute/build]] page and the [[contribute]] section on the wiki.
 
 ### 3.8.2 Testing process
 
-An automated build and test environment would be useful to avoid
+An automated build and test environment is useful to avoid
 regressions in Tails, especially anonymity and security related
-ones. It would also make it easier to work on Tails for developers
-who do not own modern powerful hardware.
+ones. It also makes it easier for developers to work on Tails with
+more confidence, and at release time to cut down the time needed for
+quality assurance work.
 
-Research and practical work to setup such an environment [[!tails_todo
-automated_builds_and_tests desc="has slowly started"]]. In the meantime, a [[manual
-test suite|contribute/release_process/test]] is "run" against Tails
-release candidates images before they are officially published.
+Tails' [[manual test suite|contribute/release_process/test]] is "run"
+against Tails release candidates images before they are officially
+published. Automating this test suite is [[partly
+done|contribute/release_process/test/automated_tests]], and a work
+in progress.
 
 ### 3.8.3 Upgrades
 
-Keeping the following applications up-to-date is a priority:
+Keeping Tor (stable releases only, unless the Tor core developers
+recommend otherwise) and the Tor Browser up-to-date is a priority.
 
-- Tor (stable releases only);
-- Vidalia.
-
-Remaining applications, including the base system, will be updated
+Remaining applications, including the base system, will be upgraded
 using Debian standard upgrade process, and generally based on the
 latest Debian stable release so there are not many problems.
 
@@ -1088,12 +1313,36 @@ security-related — bugs.
 
 ## 3.9 Hardware support
 
-Tails generally ships the latest kernel from Debian unstable or [Debian
-Backports](http://backports.debian.org) as a compromise between
+Tails generally ships the latest Linux kernel from Debian unstable or [Debian
+Backports](http://backports.debian.org/) as a compromise between
 stability and recent hardware support. Recent Intel and AMD microcode
 are included as well.
 
 The x86 hardware architecture is the main supported one.
+
+A 64-bit Linux kernel (*amd64* flavour) and a 32-bit one (*486*
+flavor, for maximal backward-compatibility) are provided. The best
+supported one is used.
+
+* [[!tails_gitweb auto/config]]
+* [[!tails_gitweb config/binary_local-hooks/20-syslinux_detect_cpu]]
+
+Binary firmware blobs from the Debian `non-free` archive are installed
+when no good Free Software alternative exists. Our reasoning behind
+this choice is:
+
+* If Tails does not work out-of-the-box on the computer(s) they have
+  available, most potential users will simply use something else, that
+  will:
+  1. just work ("thanks" to the inclusion of binary firmware);
+  2. be less safe in the vast majority of real-world cases.
+* Much hardware that does not require proprietary firmware to be
+  injected into it at runtime is simply embedding such proprietary
+  blobs, often on read-only memory. Not only this does not provide
+  much more security than injecting proprietary firmware at runtime,
+  but it prevents hardware vendors from fixing (potentially
+  security-relevant) bugs in the firmware once it's been shipped
+  to users.
 
 ## 3.10 Caveats
 
@@ -1102,29 +1351,18 @@ monitoring, except for hardware keyloggers.
 
 UDP and IPv6 are a problem. The Tor network does not support any of
 those yet. Outgoing UDP and IPv6 packets are dropped altogether by
-netfilter for this reason. Additionally, IPv6 is disabled
-using sysctl ([[!tails_gitweb chroot_local-includes/etc/sysctl.d/ipv6.conf]]).
+netfilter for this reason.
 
-Support of arbitrary DNS queries is only provided by ttdnsd listening
+Support of [[!tails_ticket 6070 desc="arbitrary DNS queries"]] is only
+provided by ttdnsd listening
 on 127.0.0.2. ttdnsd has proved too be far too buggy to be inserted in
 the default DNS resolution chain.
 
-Improvements to bridge support are [[!tails_todo bridge_support desc="planned"]].
-
 Some tools currently available to command-line users lack the
 integration into Tails and/or graphical user interface that would be
-needed to make them useful to anyone. See the [[!tails_todo
-macchanger desc="macchanger TODO page"]] as an example.
+needed to make them useful to anyone.
 
-Providing an easy-to-use tool to inspect and cleanup meta-data in
-files (e.g. before they are published on the Web) would help any PELD
-implementation to achieve its mission. Such software is being designed
-and should be implemented at some point.
-
-Despite any software and documentation piece developed specifically
-for Tails being ready to be translated, actual translation work is
-not done for many languages: we lack trusted translators teams.
-Sharing the Tor translation infrastructure may help.
+Other caveats are listed on the [[support/known issues]] page.
 
 See the development [[!tails_roadmap]] for more information about
 where Tails is heading to.
@@ -1134,11 +1372,11 @@ where Tails is heading to.
 Tails tries to make it as difficult as possible to distinguish Tails
 users from other Tor users.
 
-Iceweasel is configured to match the fingerprint of the Tor Browser
+The Tor Browser used in Tails is configured to match the fingerprint of the Tor Browser
 Bundle and the known differences, if any, are listed in the [[known
 issues|support/known_issues]] page.
 
-However the fact that different extensions are installed in Tails and in
+However the fact that different browser extensions are installed in Tails and in
 the TBB surely allows more sophisticated attacks that usual fingerprint
 as returned by tools such as <https://panopticlick.eff.org/> and
 <http://ip-check.info/>. For example, the fact that Adblock is removing
@@ -1154,7 +1392,7 @@ the [[Time sync|contribute/design/Time_syncing]] design document and the
 
 # 4 Security analysis
 
-(It would be great to have links to peer reviews here.)
+See [[the security audits of Tails|security/audits]].
 
 # 5 Bibliography
 
@@ -1166,5 +1404,4 @@ Documentation](http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/do
 - Roger Dingledine, Nick Mathewson and Paul Syverson. [Tor: The
   Second-Generation Onion
   Router](https://svn.torproject.org/svn/projects/design-paper/tor-design.pdf)
-- Mike Perry. [Torbutton Design
-  Documentation](https://www.torproject.org/torbutton/en/design/index.html.en)
+- Mike Perry, Erinn Clark, Steven Murdoch. [The Design and Implementation of the Tor Browser](https://www.torproject.org/projects/torbrowser/design/)

@@ -4,6 +4,16 @@
 
 [[!toc levels=1]]
 
+Update POT and PO files
+=======================
+
+    ./setup.py build_i18n && \
+       (cd po && \
+           for po in *.po ; do msgmerge --update "$po" \
+           tails-greeter.pot ; done \
+       ) && \
+       git commit po -m 'Update POT and PO files.'
+
 Update the Debian package
 =========================
 
@@ -13,7 +23,7 @@ Checkout the correct branch:
 
 Update `debian/changelog`:
 
-    git-dch
+    gbp dch
 
 (Do not forget to set the appropriate release.)
 
@@ -21,14 +31,14 @@ Commit the changelog:
 
     git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
-Build a new Debian package (use a Squeeze/i386 chroot):
+Build a new Debian package (use a Wheezy/i386 chroot):
 
-    git-buildpackage
+    gbp buildpackage
 
 If everything is fine, tag the release and push the changes:
 
-    git-buildpackage --git-tag-only --git-sign-tags --git-keyid=$PGP_PUB_KEY
-    git push && git push --tags
+    gbp buildpackage --git-tag-only --git-sign-tags --git-keyid=$PGP_PUB_KEY && \
+    git push origin master:master && git push --tags
 
 Add the Debian package to Tails
 ===============================

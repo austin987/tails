@@ -1,35 +1,93 @@
 #!/bin/bash
-# Note that we must use bash since we are gonna source files
-# that have bashisms in them.
 
 set -e
+set -u
+set -o pipefail
 
 NAME=$(basename ${0})
 
+GENERAL_DEPENDENCIES="
+cucumber
+devscripts
+dnsmasq-base
+gawk
+git
+i18nspector
+libav-tools
+libcap2-bin
+libsikuli-script-java
+libvirt-clients
+libvirt-daemon-system
+libvirt-dev
+libvirt0
+libxslt1-dev
+openjdk-7-jre
+ovmf
+python-jabberbot
+python-potr
+qemu-kvm
+qemu-system-x86
+radvd
+ruby-guestfs
+ruby-json
+ruby-libvirt
+ruby-net-irc
+ruby-packetfu
+ruby-rb-inotify
+ruby-rjb
+ruby-rspec
+ruby-test-unit
+seabios
+tcpdump
+unclutter
+virt-viewer
+x11-apps
+xvfb
+"
+
 usage() {
-    echo "Usage: $NAME [OPTION]... [FEATURE]...
-Sets up an appropriate environment and tests FEATUREs (all by default). Note
-that this script must be run from the Tails source directory root.
+    echo "Usage: $NAME [OPTION]... [--] [CUCUMBER_ARGS]...
+Sets up an appropriate environment and invokes cucumber. Note that this script
+must be run from the Tails source directory root.
 
 Options for '@product' features:
-  --capture=FILE     Captures the test session into FILE using VP8 encoding.
-                     Requires ffmpeg and libvpx1.
-  --debug            Display various debugging information while running the
-                     test suite.
+  --capture          Captures failed scenarios into videos stored in the
+                     temporary directory (see --tmpdir below) using x264
+                     encoding. Requires x264.
+  --capture-all      Keep videos for all scenarios, including those that
+                     succeed (implies --capture).
+  --pause-on-fail    On failure, pause test suite until pressing Enter. This is
+                     useful for investigating the state of the VM guest to see
+                     exactly why a test failed.
   --keep-snapshots   Don't ever delete the background snapshots. This can a big
                      time saver when debugging new features.
-  --temp-dir         Directory where various temporary files are written
+  --retry-find       Print a warning whenever Sikuli fails to find an image
+                     and allow *one* retry after pressing ENTER. This is useful
+                     for updating outdated images.
+  --tmpdir           Directory where various temporary files are written
                      during a test, e.g. VM snapshots and memory dumps,
                      failure screenshots, pcap files and disk images
-                     (default is /tmp/TailsToaster).
+                     (default is TMPDIR in the environment, and if unset,
+                     /tmp/TailsToaster).
   --view             Shows the test session in a windows. Requires x11vnc
                      and xtightvncviewer.
   --vnc-server-only  Starts a VNC server for the test session. Requires x11vnc.
-  --iso IMAGE        Test '@product' features using IMAGE. If none is given,
-                     any '@product' feature will use the ISO image with most
-                     recet mtime in the current directory
+  --iso IMAGE        Test '@product' features using IMAGE.
+  --old-iso IMAGE    For some '@product' features (e.g. usb_install) we need
+                     an older version of Tails, which this options sets to
+                     IMAGE. If none is given, it defaults to the same IMAGE
+                     given by --iso, which will be good enough for most testing
+                     purposes.
 
 Note that '@source' features has no relevant options.
+
+CUCUMBER_ARGS can be used to specify which features to be run, but also any
+cucumber option, although then you must pass \`--\` first to let this wrapper
+script know that we're done with *its* options. For debugging purposes, a
+'debug' formatter has been added so pretty debugging can be enabled with
+\`--format debug\`. You could even combine the default (pretty) formatter with
+pretty debugging printed to a file with \`--format pretty --format debug
+--out debug.log\`.
 "
 }
 
@@ -39,15 +97,29 @@ error() {
     exit 1
 }
 
-check_dependency() {
-    if ! which "${1}" >/dev/null && \
-       ! dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"; then
-        error "'${1}' is missing, please install it and run again. Aborting..."
+package_installed() {
+    local ret
+    set +o pipefail
+    if dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"; then
+        ret=0
+    else
+        ret=1
     fi
+    set -o pipefail
+    return ${ret}
+}
+
+check_dependencies() {
+    while [ -n "${1:-}" ]; do
+        if ! which "${1}" >/dev/null && ! package_installed "${1}" ; then
+            error "'${1}' is missing, please install it and run again."
+        fi
+        shift
+    done
 }
 
 display_in_use() {
-    [ -e "/tmp/.X${1#:}-lock" ]
+    [ -e "/tmp/.X${1#:}-lock" ] || [ -e "/tmp/.X11-unix/X${1#:}" ]
 }
 
 next_free_display() {
@@ -58,11 +130,13 @@ next_free_display() {
     echo ":${display_nr}"
 }
 
+test_suite_cleanup() {
+    (kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}) || /bin/true
+}
+
 start_xvfb() {
     Xvfb $TARGET_DISPLAY -screen 0 1024x768x24+32 >/dev/null 2>&1 &
     XVFB_PID=$!
-    trap "kill -0 ${XVFB_PID} 2>/dev/null && kill -9 ${XVFB_PID}; \
-          rm -f /tmp/.X${TARGET_DISPLAY#:}-lock" EXIT
     # Wait for Xvfb to run on TARGET_DISPLAY
     until display_in_use $TARGET_DISPLAY; do
 	sleep 1
@@ -73,7 +147,7 @@ start_xvfb() {
 }
 
 start_vnc_server() {
-    check_dependency x11vnc
+    check_dependencies x11vnc
     VNC_SERVER_PORT="$(x11vnc -listen localhost -display ${TARGET_DISPLAY} \
                               -bg -nopw 2>&1 | \
                                   grep -m 1 "^PORT=[0-9]\+" | sed 's/^PORT=//')"
@@ -81,25 +155,35 @@ start_vnc_server() {
 }
 
 start_vnc_viewer() {
-    check_dependency xtightvncviewer
+    check_dependencies xtightvncviewer
     xtightvncviewer -viewonly localhost:${VNC_SERVER_PORT} 1>/dev/null 2>&1 &
 }
 
 capture_session() {
-    check_dependency ffmpeg
-    check_dependency libvpx1
+    check_dependencies libvpx1
     echo "Capturing guest display into ${CAPTURE_FILE}"
-    ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
+    avconv -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
 }
 
 # main script
 
-unset CAPTURE_FILE VNC_VIEWER VNC_SERVER
-unset DEBUG KEEP_SNAPSHOTS TEMP_DIR ISO
-SHORTOPTS="a:c"
-LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,keep-snapshots,iso:,debug"
-OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
+# Unset all environment variables used by this script to pass options
+# to cucumber, except TMPDIR since we explicitly want to support
+# setting it that way.
+CAPTURE=
+CAPTURE_ALL=
+LOG_FILE=
+VNC_VIEWER=
+VNC_SERVER=
+PAUSE_ON_FAIL=
+KEEP_SNAPSHOTS=
+SIKULI_RETRY_FINDFAILED=
+TAILS_ISO=
+OLD_TAILS_ISO=
+
+LONGOPTS="view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,pause-on-fail"
+OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
     case $1 in
@@ -112,22 +196,34 @@ while [ $# -gt 0 ]; do
             VNC_SERVER=yes
             ;;
         --capture)
-            shift
-            CAPTURE_FILE="$1"
+            check_dependencies x264
+            export CAPTURE="yes"
             ;;
-        --debug)
-            export DEBUG="yes"
+        --capture-all)
+            check_dependencies x264
+            export CAPTURE="yes"
+            export CAPTURE_ALL="yes"
+            ;;
+        --pause-on-fail)
+            export PAUSE_ON_FAIL="yes"
             ;;
         --keep-snapshots)
             export KEEP_SNAPSHOTS="yes"
             ;;
-        --temp-dir)
+        --retry-find)
+            export SIKULI_RETRY_FINDFAILED="yes"
+            ;;
+        --tmpdir)
             shift
-            export TEMP_DIR="$(readlink -f $1)"
+            export TMPDIR="$(readlink -f $1)"
             ;;
         --iso)
             shift
-            export ISO="$(readlink -f $1)"
+            export TAILS_ISO="$(readlink -f $1)"
+            ;;
+        --old-iso)
+            shift
+            export OLD_TAILS_ISO="$(readlink -f $1)"
             ;;
         --help)
 	    usage
@@ -141,18 +237,14 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-for dep in git libvirt-bin libvirt-dev virt-viewer libsikuli-script-java \
-            libxslt1-dev libxml2-dev tcpdump xvfb graphicsmagick-imagemagick-compat; do
-    check_dependency "${dep}"
-done
+trap "test_suite_cleanup" EXIT HUP INT QUIT TERM
+
+check_dependencies ${GENERAL_DEPENDENCIES}
 
 TARGET_DISPLAY=$(next_free_display)
 
 start_xvfb
 
-if [ -n "${CAPTURE_FILE}" ]; then
-    capture_session
-fi
 if [ -n "${VNC_SERVER}" ]; then
     start_vnc_server
 fi
@@ -160,12 +252,8 @@ if [ -n "${VNC_VIEWER}" ]; then
     start_vnc_viewer
 fi
 
+export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
-. features/.rvmrc
-check_dependency cucumber
-if [ -z "${*}" ]; then
-    cucumber --format ExtraHooks::Pretty features
-else
-    cucumber --format ExtraHooks::Pretty features/step_definitions features/support ${*}
-fi
+
+cucumber ${@}

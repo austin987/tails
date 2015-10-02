@@ -1,0 +1,83 @@
+
+Rationale
+==========
+
+We need more CPU and RAM to be able to automatically test the ISOs build by our
+jenkins. (tracked by [[!tails_ticket 5288]])
+
+See [[!tails_ticket 7631]] for the specifications of the required hardware.
+
+From there 3 options can be the basis for a decision.
+
+
+Costs
+======
+
+## Option A: upgrade lizard
+
+Aka. resell the hardware we replace to Riseup, and get new better hardware.
+No need for a new case or new HDD and heatsinks.
+
+ * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB)          - $393,75
+ * 2 x Intel® E5-2650Lv3-1.8Ghz/12C, 30M, 9.6GT/s, 65W LGA2011 CPU               - $1,427.35 x 2
+ * 1 x 128GB of RAM                                                              - $2000
+
+Total   --- **$5400**
+
+
+## Option B : 2nd box dedicated to the tests
+
+ * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB)          - $393,75
+ * 2 x E5-2630Lv3 - 1.8Ghz/8C, 20M, 8.0GT/s, 55W                                 - $657.50 x 2
+ * 1 x 128GB of RAM                                                              - $2000
+ * 2 x WD 500GB/10K RPM, 64M, 6Gb/s, 2.5" SATA3 HD                               - $141,50 x 2
+ * 2 x Heatsinks                                                                 - $50 x 2
+ * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W                - $345,50
+
+Total   --- **$4500**
+
+
+## Option C : 2nd box with best CPUs
+
+ * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB)          - $393,75
+ * 2 x Intel® E5-2650Lv3-1.8Ghz/12C, 30M, 9.6GT/s, 65W LGA2011 CPU               - $1,427.35 x 2
+ * 1 x 128GB of RAM								 - $2000
+ * 2 x WD 500GB/10K RPM, 64M, 6Gb/s, 2.5" SATA3 HD                               - $141,50 x 2
+ * 2 x Heatsinks                                                                 - $50 x 2
+ * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W                - $345,50
+
+Total   --- **$6200**
+
+
+Pros and Cons
+==============
+
+In term of costs, options A and B are quite similar if we sell the remaining
+"old" hardware in A. But this has to be decided. Option C is more expensive.
+
+Upgrading lizard to better CPUs (option A) has the benefit of not adding much
+more sysadmin work on our plate.
+
+On the other hand we'll have 46 of 48 CPUs threads, and not much options apart
+from buying a new machine if we want more. This option tend to assume we won't
+need much more CPUs in the near future.
+
+Option B and C (new machine) in the contrary brings more sysadmin works.
+
+They also bring the question of the connectivity between the 2 machines. They
+both have 2 nics, so they could be connected through their unused one, but
+probably require to setup a VPN or something.
+
+They also raise the question of deciding where to put the different
+services/VMs.
+
+Option B will have 2 x 24 CPU threads. Lizard could handle the current and
+upcoming VMs (18 threads), the new one could get the automatic test VMs (6-12
+threads), yet the ISO builders (16 theads) won't be easy to fit somewhere.
+
+With option C, the new machine could probably get the whole build and test chain
+(ISO builders and testers) say 30 threads, with the jenkins vm, and still some room
+for more builders. Lizard would handle the current and upcoming VMs (18 threads)
+nicely.
+
+

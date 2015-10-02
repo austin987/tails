@@ -3,19 +3,18 @@ require 'socket'
 
 class VMCommand
 
-  attr_reader :returncode, :stdout, :stderr
+  attr_reader :cmd, :returncode, :stdout, :stderr
 
   def initialize(vm, cmd, options = {})
+    @cmd = cmd
     @returncode, @stdout, @stderr = VMCommand.execute(vm, cmd, options)
   end
 
   def VMCommand.wait_until_remote_shell_is_up(vm, timeout = 30)
-    begin
-      SystemTimer.timeout(timeout) do
-        VMCommand.execute(vm, "true", { :user => "root", :spawn => false })
+    try_for(timeout, :msg => "Remote shell seems to be down") do
+      Timeout::timeout(3) do
+        VMCommand.execute(vm, "echo 'hello?'")
       end
-    rescue Timeout::Error
-      raise "Remote shell seems to be down"
     end
   end
 
@@ -33,14 +32,14 @@ class VMCommand
     options[:spawn] ||= false
     type = options[:spawn] ? "spawn" : "call"
     socket = TCPSocket.new("127.0.0.1", vm.get_remote_shell_port)
-    STDERR.puts "#{type}ing as #{options[:user]}: #{cmd}" if $debug
+    debug_log("#{type}ing as #{options[:user]}: #{cmd}")
     begin
       socket.puts(JSON.dump([type, options[:user], cmd]))
       s = socket.readline(sep = "\0").chomp("\0")
     ensure
       socket.close
     end
-    STDERR.puts "#{type} returned: #{s}" if $debug
+    debug_log("#{type} returned: #{s}") if not(options[:spawn])
     begin
       return JSON.load(s)
     rescue JSON::ParserError
@@ -55,6 +54,18 @@ class VMCommand
 
   def success?
     return @returncode == 0
+  end
+
+  def failure?
+    return not(success?)
+  end
+
+  def to_s
+    "Return status: #{@returncode}\n" +
+    "STDOUT:\n" +
+    @stdout +
+    "STDERR:\n" +
+    @stderr
   end
 
 end

@@ -1,6 +1,50 @@
 require 'fileutils'
+require 'rb-inotify'
 require 'time'
 require 'tmpdir'
+
+# Run once, before any feature
+AfterConfiguration do |config|
+  if File.exist?($config["TMPDIR"])
+    if !File.directory?($config["TMPDIR"])
+      raise "Temporary directory '#{$config["TMPDIR"]}' exists but is not a " +
+            "directory"
+    end
+    if !File.owned?($config["TMPDIR"])
+      raise "Temporary directory '#{$config["TMPDIR"]}' must be owned by the " +
+            "current user"
+    end
+    FileUtils.chmod(0755, $config["TMPDIR"])
+  else
+    begin
+      FileUtils.mkdir_p($config["TMPDIR"])
+    rescue Errno::EACCES => e
+      raise "Cannot create temporary directory: #{e.to_s}"
+    end
+  end
+  # Start a thread that monitors a pseudo fifo file and debug_log():s
+  # anything written to it "immediately" (well, as fast as inotify
+  # detects it). We're forced to a convoluted solution like this
+  # because CRuby's thread support is horribly as soon as IO is mixed
+  # in (other threads get blocked).
+  FileUtils.rm(DEBUG_LOG_PSEUDO_FIFO) if File.exist?(DEBUG_LOG_PSEUDO_FIFO)
+  FileUtils.touch(DEBUG_LOG_PSEUDO_FIFO)
+  at_exit do
+    FileUtils.rm(DEBUG_LOG_PSEUDO_FIFO) if File.exist?(DEBUG_LOG_PSEUDO_FIFO)
+  end
+  Thread.new do
+    File.open(DEBUG_LOG_PSEUDO_FIFO) do |fd|
+      watcher = INotify::Notifier.new
+      watcher.watch(DEBUG_LOG_PSEUDO_FIFO, :modify) do
+        line = fd.read.chomp
+        debug_log(line) if line and line.length > 0
+      end
+      watcher.run
+    end
+  end
+  # Fix Sikuli's debug_log():ing.
+  bind_java_to_pseudo_fifo_logger
+end
 
 # For @product tests
 ####################
@@ -14,49 +58,30 @@ rescue Errno::EACCES => e
 end
 
 def delete_all_snapshots
-  Dir.glob("#{$tmp_dir}/*.state").each do |snapshot|
+  Dir.glob("#{$config["TMPDIR"]}/*.state").each do |snapshot|
     delete_snapshot(snapshot)
   end
 end
 
+def add_after_scenario_hook(&block)
+  @after_scenario_hooks ||= Array.new
+  @after_scenario_hooks << block
+end
+
 BeforeFeature('@product') do |feature|
-  $tmp_dir = ENV['TEMP_DIR'] || "/tmp/TailsToaster"
-  if File.exist?($tmp_dir)
-    if !File.directory?($tmp_dir)
-      raise "Temporary directory '#{$tmp_dir}' exists but is not a " +
-            "directory"
-    end
-    if !File.owned?($tmp_dir)
-      raise "Temporary directory '#{$tmp_dir}' must be owned by the " +
-            "current user"
-    end
-    FileUtils.chmod(0755, $tmp_dir)
-  else
-    begin
-      Dir.mkdir($tmp_dir)
-    rescue Errno::EACCES => e
-      raise "Cannot create temporary directory: #{e.to_s}"
-    end
-  end
-  $vm_xml_path = ENV['VM_XML_PATH'] || "#{Dir.pwd}/features/domains"
-  $misc_files_dir = "#{Dir.pwd}/features/misc_files"
-  $keep_snapshots = !ENV['KEEP_SNAPSHOTS'].nil?
-  delete_all_snapshots if !$keep_snapshots
-  $tails_iso = ENV['ISO'] || get_last_iso
-  if $tails_iso.nil?
+  delete_all_snapshots if !KEEP_SNAPSHOTS
+  if TAILS_ISO.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
           "current directory"
   end
-  if File.exist?($tails_iso)
+  if File.exist?(TAILS_ISO)
     # Workaround: when libvirt takes ownership of the ISO image it may
     # become unreadable for the live user inside the guest in the
     # host-to-guest share used for some tests.
 
-    # jruby 1.5.6 doesn't have world_readable? in File or File::Stat so we
-    # manually check for it in the mode string
-    if !(File.stat($tails_iso).mode & 04)
-      if File.owned?($tails_iso)
-        chmod(0644, $tails_iso)
+    if !File.world_readable?(TAILS_ISO)
+      if File.owned?(TAILS_ISO)
+        File.chmod(0644, TAILS_ISO)
       else
         raise "warning: the Tails ISO image must be world readable or be " +
               "owned by the current user to be available inside the guest " +
@@ -64,48 +89,118 @@ BeforeFeature('@product') do |feature|
       end
     end
   else
-    raise "The specified Tails ISO image '#{$tails_iso}' does not exist"
+    raise "The specified Tails ISO image '#{TAILS_ISO}' does not exist"
   end
-  $x_display = ENV['DISPLAY']
-  $live_user = "amnesia"
+  puts "Testing ISO image: #{File.basename(TAILS_ISO)}"
+  if !File.exist?(OLD_TAILS_ISO)
+    raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
+  end
+  puts "Using old ISO image: #{File.basename(OLD_TAILS_ISO)}"
   base = File.basename(feature.file, ".feature").to_s
-  $background_snapshot = "#{$tmp_dir}/#{base}_background.state"
+  $background_snapshot = "#{$config["TMPDIR"]}/#{base}_background.state"
+  $virt = Libvirt::open("qemu:///system")
+  $vmnet = VMNet.new($virt, VM_XML_PATH)
+  $vmstorage = VMStorage.new($virt, VM_XML_PATH)
 end
 
 AfterFeature('@product') do
-  delete_snapshot($background_snapshot) if !$keep_snapshots
-  VM.storage.clear_volumes if VM.storage
+  delete_snapshot($background_snapshot) if !KEEP_SNAPSHOTS
+  $vmstorage.clear_pool
+  $vmnet.destroy_and_undefine
+  $virt.close
 end
 
 # BeforeScenario
-Before('@product') do
+Before('@product') do |scenario|
   @screen = Sikuli::Screen.new
+  if $config["CAPTURE"]
+    video_name = "capture-" + "#{scenario.name}-#{TIME_AT_START}.mkv"
+    # Sanitize the filename from unix-hostile filename characters
+    bad_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
+    video_name.gsub!(bad_filename_chars, '_')
+    @video_path = "#{$config['TMPDIR']}/#{video_name}"
+    capture = IO.popen(['avconv',
+                        '-f', 'x11grab',
+                        '-s', '1024x768',
+                        '-r', '15',
+                        '-i', "#{$config['DISPLAY']}.0",
+                        '-an',
+                        '-c:v', 'libx264',
+                        '-y',
+                        @video_path,
+                        :err => ['/dev/null', 'w'],
+                       ])
+    @video_capture_pid = capture.pid
+  end
   if File.size?($background_snapshot)
     @skip_steps_while_restoring_background = true
   else
     @skip_steps_while_restoring_background = false
   end
   @theme = "gnome"
+  # English will be assumed if this is not overridden
+  @language = ""
+  @os_loader = "MBR"
 end
 
 # AfterScenario
 After('@product') do |scenario|
-  if (scenario.status != :passed)
-    time_of_fail = Time.now - $time_at_start
+  if @video_capture_pid
+    # We can be incredibly fast at detecting errors sometimes, so the
+    # screen barely "settles" when we end up here and kill the video
+    # capture. Let's wait a few seconds more to make it easier to see
+    # what the error was.
+    sleep 3 if scenario.failed?
+    Process.kill("INT", @video_capture_pid)
+  end
+  if scenario.failed?
+    time_of_fail = Time.now - TIME_AT_START
     secs = "%02d" % (time_of_fail % 60)
     mins = "%02d" % ((time_of_fail / 60) % 60)
     hrs  = "%02d" % (time_of_fail / (60*60))
     STDERR.puts "Scenario failed at time #{hrs}:#{mins}:#{secs}"
     base = File.basename(scenario.feature.file, ".feature").to_s
-    @vm.take_screenshot("#{base}-#{DateTime.now}") if @vm
+    tmp = @screen.capture.getFilename
+    out = "#{$config["TMPDIR"]}/#{base}-#{DateTime.now}.png"
+    FileUtils.mv(tmp, out)
+    STDERR.puts("Took screenshot \"#{out}\"")
+    if $config["PAUSE_ON_FAIL"]
+      STDERR.puts ""
+      STDERR.puts "Press ENTER to continue running the test suite"
+      STDIN.gets
+    end
+  else
+    if @video_path && File.exist?(@video_path) && not($config['CAPTURE_ALL'])
+      FileUtils.rm(@video_path)
+    end
   end
-  if @sniffer
-    @sniffer.stop
-    @sniffer.clear
-  end
-  @vm.destroy if @vm
+  @vm.destroy_and_undefine if @vm
 end
 
+After('@product', '~@keep_volumes') do
+  $vmstorage.clear_volumes
+end
+
+Before('@product', '@check_tor_leaks') do |scenario|
+  feature_file_name = File.basename(scenario.feature.file, ".feature").to_s
+  @tor_leaks_sniffer = Sniffer.new(feature_file_name + "_sniffer", $vmnet)
+  @tor_leaks_sniffer.capture
+end
+
+After('@product', '@check_tor_leaks') do |scenario|
+  @tor_leaks_sniffer.stop
+  if scenario.passed?
+    if @bridge_hosts.nil?
+      expected_tor_nodes = get_all_tor_nodes
+    else
+      expected_tor_nodes = @bridge_hosts
+    end
+    leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file,
+                                  :accepted_hosts => expected_tor_nodes)
+    leaks.assert_no_leaks
+  end
+  @tor_leaks_sniffer.clear
+end
 
 # For @source tests
 ###################
@@ -120,13 +215,18 @@ end
 # AfterScenario
 After('@source') do
   Dir.chdir @orig_pwd
-  # Seems like JRuby has issues with remove_entry_secure()
-  FileUtils.remove_entry @git_clone
+  FileUtils.remove_entry_secure @git_clone
 end
-
 
 # Common
 ########
+
+After do
+  if @after_scenario_hooks
+    @after_scenario_hooks.each { |block| block.call }
+  end
+  @after_scenario_hooks = Array.new
+end
 
 BeforeFeature('@product', '@source') do |feature|
   raise "Feature #{feature.file} is tagged both @product and @source, " +
@@ -134,6 +234,5 @@ BeforeFeature('@product', '@source') do |feature|
 end
 
 at_exit do
-  delete_all_snapshots if !$keep_snapshots
-  VM.storage.clear_pool if VM.storage
+  delete_all_snapshots if !KEEP_SNAPSHOTS
 end

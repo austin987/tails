@@ -1,0 +1,72 @@
+[[!meta title="tails-greeter design"]]
+
+[[!toc levels=2]]
+
+Design decisions:
+=====================
+
+- display manager: GDM (with potential migration in future (after GSoC) to LightDM)
+  [reasoning: need to be compatible with current builds based on Debian Squeeze]
+- programming language: python
+  [reasoning: existing implementation gdm-community-greeter]
+- project is based on [[https://code.launchpad.net/gdm-commmunity-greeter/]]
+  (reasoning: use of TranslatableWindow as a basis for implementation of [[todo/localization_at_runtime]])
+- tails-greeter as part of DM preferred over custom DM
+  [reasoning: smaller amount of code, easier maintenance, easier extensibility in future (after gsoc)]
+- repository layout: 'upstream' branch contains periodic snapshots of gdm-community-greeter, 'master' branch contains actual project code.
+  (reasoning: initially tails-greeter will stay rather close to
+  gdm-community-greeter, later it diverged significantly)
+- software running in the Tails user GNOME session can know if
+  persistence was enabled by checking if
+  `TAILS_PERSISTENCE_ENABLED=true` is set in `/var/lib/live/config/tails.persistence`
+ 
+## Localization notes:
+
+### Design:
+
+- since locale generation and setup might be time consuming it's performed in the background by /etc/gdm3/PostLogin/Default script (set-user-password-and-locale in TailsGreeter)
+- window translation is handled on the fly (via TranslatableWindow) independently from locale generation
+- language and layout are applied immediately as they selected
+
+### Design clarification:
+
+When talking about language support in greeter it is important to distinguish between:
+
+0. language support in Tails: the locales available to use once user successfully logged-in
+0. language support in tails-greeter: translations which can be utilized by greeter itself before user logged in
+
+The available locales dynamically populated into list. Once language is chosen corresponding translation is applied to the widget (if available) but actual locale generation is handled by external script which is activated by GDM on logon.
+
+N. B. TailsGreeter is executed under Debian-gdm user while locale generation requires root access which is available for PostLogin script. This makes very inconvenient usage of env. variables for parameter transfer. That's why parameters to PostLogin script are supplied via temporary files in /var/lib/gdm3/tails.*
+
+##  Additional notes:
+
+### Quick login:
+
+Since greeter is shown with every login, there got to be a way to skip all the greeter screens and quickly login with the default settings with 1-click button if there are more than one screen used by TailsGreeter.
+
+### choice of programming language justification:
+
+Python is selected as main language for the project because it's already used by gdm-community-greeter. This makes code re-use easier.
+
+### GDM notes
+
+- GDM read autostart folder in unpredictable manner so dpkg-divert is required to properly disable existing greeter unless it's in separate .deb which could be removed
+
+- GDM's dbus interface is "private":
+which in this case means "unstable" there are only two consumer's for GDM's greeter API (GDM's own greeter, gdm-community-greeter and TailsGreeter).
+
+### packages 
+
+#### diversion
+
+post- and pre- install scripts are invoked on every upgrade to "be on a safe side": we apply diversion to GDM file which will effectively break logon procedure in the absence of tails-greeter. Hence - dumb but failsafe approach which makes lintian unhappy (override used to hide lintian error).
+
+#### requirements
+
+- build and install with Debian Squeeze (as long as current Tails is based on it)
+- build and install with Debian Sid (2nd priority - just to make portability and maintenance easier)
+
+#### Future
+In the near future, we should implement [[todo/tails-greeter:_revamp_UI/]] in some way.
+We should also be thinking about [[todo/tails-greeter_vs._Wheezy/]].

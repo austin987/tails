@@ -44,7 +44,7 @@ use DateTime;
 use Locale::gettext;
 use POSIX;
 setlocale(LC_MESSAGES, "");
-textdomain("gpgApplet");
+textdomain("tails");
 
 
 =head1 GLOBALS
@@ -151,9 +151,9 @@ b) the "Artistic License" which comes with Perl.
         'wrap-license' => 1,
         'website'      => 'https://tails.boum.org/',
     )});
-    $menu->append($mexit);
-    $menu->append(Gtk2::SeparatorMenuItem->new);
     $menu->append($mabout);
+    $menu->append(Gtk2::SeparatorMenuItem->new);
+    $menu->append($mexit);
 
     $icon->signal_connect('popup-menu', sub {
         my $ticon = shift;
@@ -205,11 +205,19 @@ sub build_action_menu {
     $mmanage->signal_connect('activate' => sub { manage_keys(); });
     $action_menu->append($mmanage);
 
+    my $mtexteditor = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext("_Open Text Editor")));
+    $mtexteditor->signal_connect('activate' => sub { open_text_editor(); });
+    $action_menu->append($mtexteditor);
+
     return $action_menu;
 }
 
 sub manage_keys {
     system("seahorse &");
+}
+
+sub open_text_editor {
+    system("gnome-text-editor &");
 }
 
 sub all_text_types {
@@ -276,9 +284,10 @@ sub set_clipboards_text {
     # is supposed to need input encoded in UTF-8. But it seems like the Perl
     # bindings encode it, and we need to pass a string of chars instead of bytes.
     foreach (all_clipboards()) {
-        $_->set_text($encoded_text);
+        $_->set_text($text);
     }
     # GTK fails setting the primary selection above, so let's use xclip :/
+    # xclip needs encoded text.
     open(my $xclip, '| xclip') or die "Error opening pipe to xclip";
     print $xclip $encoded_text or die "Error copying data to X clipboard";
     close $xclip or die "Error closing pipe to xclip";
@@ -916,7 +925,13 @@ sub detect_received {
 sub handle_clipboard_owner_change {
     my $clipboard = shift;
 
-    set_freshest_clipboard($clipboard);
+    # Each time the applet is used, we receive an owner-change signal for an
+    # empty PRIMARY clipboard. We don't want to swich from a valid clipboard to
+    # an empty one.
+    my $content = $clipboard->wait_for_text;
+    if (defined $content && length $content) {
+        set_freshest_clipboard($clipboard);
+    }
     detect_received($clipboard);
 }
 

@@ -1,6 +1,6 @@
 [[!meta title="Securely delete files and clean diskspace"]]
 
-[[!toc levels=2]]
+[[!toc levels=1]]
 
 <a id="why"></a>
 
@@ -32,27 +32,28 @@ desc="Wikipedia: %s"]].</p>
 
 <a id="usb_and_ssd"></a>
 
-Warning about USB sticks and solid-state drives
-===============================================
+Warning about USB sticks and solid-state disks
+==============================================
 
 **The methods described below will not work as expected on USB sticks and
-solid-state drives.**
+solid-state disks.**
 
-- The existing hard drive-oriented techniques for secure deletion of
+- The existing hard disk-oriented techniques for secure deletion of
   individual files are not effective.
-- Overwriting twice the entire drive is usually, but not always,
-  sufficient to securely clean the drive.
+- Overwriting twice the entire disk is usually, but not always,
+  sufficient to securely clean the disk.
 
 <div class="caution">
+
 Unfortunately, Tails does not currently allow you to perform this task
 with graphical tools.
 
-[[!tails_todo wiping_flash_media desc="See the corresponding ticket."]]
+See [[!tails_ticket 5323]].
+
 </div>
 
 For more details read, the corresponding section of the Wikipedia article on
-[[!wikipedia Secure_file_deletion#Data_on_solid-state_drives desc="Secure file
-deletion"]].
+[[!wikipedia Data_erasure#Limitations desc="Data erasure"]].
 
 Securely delete files
 =====================
@@ -61,36 +62,58 @@ In Tails you can securely delete files thanks to an extension of the Nautilus
 file manager called [Nautilus
 Wipe](http://wipetools.tuxfamily.org/nautilus-wipe.html).
 
-<h2 class="bullet-number-one">Select the files you want to securely delete</h2>
+  1. Open the <span class="application">Nautilus</span> file browser, either
+  from the <span class="guimenu">Places</span> menu or the <span
+  class="guilabel">Computer</span> icon on the desktop.
 
-**Open Nautilus**, either from the **Places** menu or the **Computer** icon on
-the desktop.
+  1. Navigate to the folder containing the files that you want to delete.
 
-**Navigate to the folder** containing the files that you want to delete.
+  1. Select the files that you want to delete with the mouse.
 
-**Select the files** that you want to delete with the mouse.
+  1. Right-click on the files and choose <span class="guimenuitem">Wipe</span>.
 
-[[!img select_files.png link=no alt="Three files selected in Nautilus"]]
+     [[!img wipe_files.png link=no alt="Right-click&nbsp;▸ Wipe"]]
 
-<h2 class="bullet-number-two">Securely delete them using Nautilus Wipe</h2>
+  1. Confirm.
 
-Securely delete them by doing **right-click** → **Wipe**.
+  1. The deletion will start. It can last from a few seconds to several minutes,
+  according to the size of the files. Be patient…
 
-[[!img wipe_files.png link=no alt="Right-click → Wipe"]]
+<div class="caution">
 
-**Confirm**.
+Securely deleting files does not erase the potential backup copies of
+the file (for example OpenOffice creates backup copies that allow
+you to recover your work in case OpenOffice stops responding).
 
-[[!img are_you_sure_files.png link=no alt="Are you sure you want to wipe the 3
-selected items?"]]
+</div>
 
-The deletion will start. It can last from a few seconds to several minutes,
-according to the size of the files. Be patient…
+<a id="empty_trash"></a>
 
-[[!img wiping_files.png link=no alt="Wiping files…"]]
+Emptying the trash
+==================
 
-Once the deletion will be done you should be prompted with a message saying:
+Before considering [[securely cleanly the available space on a
+disk|secure_deletion#index5h1]], make sure to empty the trash.
 
-[[!img wipe_successful.png link=no alt="Wipe successful."]]
+  1. Open *Nautilus*, either from the <span class="guimenu">Places</span> menu or
+     the <span class="guilabel">Computer</span> icon on the desktop.
+
+  1. Click on the disk on which you want to empty the trash in the left
+     pane to navigate to the root of this disk.
+
+  1. Choose <span class="menuchoice"><span
+     class="guimenu">View</span>&nbsp;▸ <span class="guimenuitem">Show hidden
+     files</span></span> to show hidden files.
+
+  1. Delete the <span class="filename">.Trash-1000</span> folder or
+     similar.
+
+<div class="tip">
+
+<p>Apply this technique to the <span class="filename">Persistent</span>
+folder to empty the trash of the persistent volume.</p>
+
+</div>
 
 <a id="clean_disk_space"></a>
 
@@ -102,43 +125,48 @@ but not securely deleted from a disk, it is also possible to securely clean all
 the free space on the disk.
 
 <div class="caution">
-This method does not work as expected on solid-state drives or USB sticks.
+
+<p>This method does not work as expected on solid-state disks or USB
+sticks.</p>
+
 </div>
 
 The disk or the folder may or may not contain other files. Those files will not
 be deleted during the operation.
 
-<h2 class="bullet-number-one">Navigate to the disk you want to securely
-clean</h2>
+  1. Open Nautilus, either from the <span class="guimenu">Places</span> menu or
+  the <span class="guilabel">Computer</span> icon on the desktop.
 
-**Open Nautilus**, either from the **Places** menu or the **Computer** icon on
-the desktop.
+  1. Click on the disk that you want to clean in the left pane to
+     navigate to the root of this disk.
 
-**Navigate to a folder on the disk** that you want to clean.
+  1. Right-click in empty space in the right pane and choose <span
+     class="guimenuitem">Wipe available diskspace</span>.
 
-<h2 class="bullet-number-two">Securely clean the available space using Nautilus
-Wipe</h2>
+     [[!img wipe_available_diskspace.png link=no alt="Right-click&nbsp;▸ Wipe
+     available diskspace"]]
 
-Securely clean the available diskspace by doing **right-click** → **Wipe
-available diskspace**.
+     <div class="tip">
+     <p>On the previous screenshot, the trash in the <span
+     class="filename">.Trash-1000</span> folder is not deleted. See the
+     [[instructions above|secure_deletion#index4h1]].</p>
+     </div>
 
-[[!img wipe_available_diskspace.png link=no alt="Right-click → Wipe available
-diskspace"]]
+  1. Confirm.
 
-**Confirm**.
+  1. The cleaning starts. It can last from a few minutes to a few hours,
+     according to the size of the available diskspace. Be patient…
 
-[[!img are_you_sure_diskspace.png link=no alt="Are you sure you want to wipe the
-available diskspace?"]]
+     Note that a file called <span
+     class="filename">oooooooo.ooo</span> is created in the
+     folder. <span class="application">Nautilus Wipe</span> tries to
+     make it as big as possible to use all the available diskspace and
+     then securely deletes it.
 
-The cleaning will start. It can last from a few minutes to a few hours,
-according to the size of the available diskspace. Be patient…
+<div class="caution">
 
-Note that a file called `oooooooo.ooo` is created in the folder. Nautilus Wipe
-will try to make it as big as possible to use all the available diskspace and
-then will securely delete it.
+<p>This option does not delete hidden files.To show hidden files, choose
+<span class="menuchoice"><span class="guimenu">View</span>&nbsp;▸ <span
+class="guimenuitem">Show hidden files</span></span>.</p>
 
-[[!img wiping_diskspace.png link=no "Wiping available diskspace…"]]
-
-Once the cleaning will be done you should be prompted with a message saying:
-
-[[!img wipe_successful_diskspace.png link=no "Wipe successful"]]
+</div>

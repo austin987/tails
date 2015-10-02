@@ -1,0 +1,121 @@
+We want to drop the dependency of JRuby from our automated test suite,
+and move to native Ruby.
+
+**Ticket**: [[!tails_ticket 5731]]
+
+[[!toc levels=2]]
+
+# Why
+
+We depend on JRuby only because of the `sikuli-ruby` gem. Since
+Debian's JRuby is too old this forces us to use RVM to install a more
+recent JRuby *and* all required Ruby gems from RVM's non-Debian
+sources, even though most of them are packaged for Debian. For all we
+know, all of this can break in the future, especially after the Wheezy
+release. Also, some parts of the RVM/gem mess have none or at best
+scetchy authentication. Clearly we want all dependencies for the
+automated test suite to be in Debian, and this mess is a big blocker
+for that.
+
+Also, in JRuby 1.7 the C extension was deprecated, which means that
+two gems we depend on hsa become unusabe: `ruby-libvirt`, which is
+highly critical for us, and `system_timer`, which is not so critical.
+
+A move to native Ruby would put us in a much better position, since
+all gems are packaged in Debian, and native Ruby
+still has a C extension. To be able to do this we need a replacement
+for the `sikuli-ruby` gem, though.
+
+# Ways to replace the sikuli-ruby gem
+
+## Rjb
+
+[[rjb|<http://rjb.rubyforge.org/>]] seems maintained, if not actively developed.
+It is now in Debian Jessie and wheezy-backports.
+
+Other projects using it or interesting stuff at:
+
+* [rjb-require](https://github.com/svenfuchs/rjb-require)
+* [rjb-examples](https://github.com/L2G/rjb-example)
+* [poi_pond](https://github.com/lgleasain/poi_pond) (uses Rjb)
+* [Antrap](https://github.com/atoulme/Antwrap) (uses rjb)
+
+The jruby sikuli gem is quite simple, implementing it in Rjb can be as
+lightweight, or not.
+
+See [[!tails_ticket 6399]], `test/rjb-migration` branch.
+
+## Wrapping Sikuli commands via a stand-alone Sikuli server
+
+If the Rjb solution doesn't work out, this fallback is a drop-in
+replacement for the Sikuli gem, and that we know will work no matter
+what, and that should be reasonably easy to implement.
+
+In short, we create a pure Java program that controls a single
+`Screen` object, and listens for commands that that it translates into
+Sikuli API calls for that `Screen` object, and then responds
+appropriately to the calling client.
+
+### Details
+
+1. We write a pure Java program using the Java API for Sikuli, that
+   takes the `$DISPLAY`, image dir etc. as arguments and then sets up
+   all required Sikuli objects: Mouse and Keyboard robots, and a single
+   `Screen` object. Let's call this the "Sikuli server".
+
+1. The Sikuli server listens (on a UNIX socket, or whatever) for
+   "Sikuli commands" that it translates to Sikuli calls on the single
+   `Screen` object via the Sikuli API, and then translates the result
+   and sends that as a response.
+
+1. We completely re-write `sikuli_helper.rb`, defining a `Screen`
+   class (and possibly `Region`; see below). On `initialize()` it
+   starts a Sikuli server instance (simply via `Popen()` or whatever).
+   We implement simple wrappers for all methods we've used earlier
+   (i.e. `find()`, `wait()`, `type()`, `hover()` and `click()`) that
+   will send an appropriate command to the Sikuli server.
+
+### Example
+
+Say `screen` is an instance of `sikuli_helper.rb`'s `Screen`. Then
+`screen.wait("image.png", 100)` will result in something like
+`wait,image.png,100` being sent to the Sikuli server, which it
+translates into the call `screenObject.wait("image.png", 100)`, and
+responds back with something easily parsable, like
+`exception=ImageNotFound:Could not find image.png` (or whatever the
+exact exception name and message are) on failure, otherwise it just
+sends an ACK so `screen.wait()` can stop blocking execution.
+
+> I'd rather not invent a new protocol entirely, and instead
+> piggy-back e.g. on HTTP or something more appropriate. Also, I'd
+> rather use a well-known, well-defined serialization format (YAML,
+> JSON, you name it) instead of inventing a new one.
+
+### Obstacles
+
+* There may be some complexity to deal with `Region` objects (returned
+  by e.g. `find()`, which we use in `wait_and_click()`) since we'd
+  need some way (an identifier?) to know which `Region` object in
+  `sikuli_helper.rb` corresponds to which `Region` (Java) object in
+  the Sikuli server; we avoid this issue with `Screen` since each
+  Sikuli server deals with a single `Screen` object, but we can
+  potentially deal with any number of `Region` objects. A simple
+  solution would be to only store the appropriate coordinates and
+  dimensions in `sikuli_helper.rb`'s `Region` object and then whenever
+  it's used we create a new `Region` object in the Sikuli server using
+  those coordinates and dimensions. We could then implement methods
+  via the `Screen` object, like `Region.click()` could use those
+  coordinates and dimensions to `Screen.click()` on the right place.
+  We currently only use `Region` in our `wait_and_click` helper, so
+  a ad-hoc solution would probably be enough.
+
+* Getting Sikuli's key constants (e.g. `Sikuli::KEY_CTRL`) into
+  `sikuli_helper.rb` is not completely trivial. Perhaps we could make
+  the Sikuli server send the values of all these so they can be stored
+  into the appropriate constants upon `Screen.initialize()`, when the
+  server is first contacted? Otherwise we can always statically define
+  them with magic values.
+
+# Roadmap
+
+Complete the move to Rjb in `test/rjb-migration`.

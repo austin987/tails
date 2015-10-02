@@ -1,12 +1,6 @@
-When /^I open a new tab in Iceweasel$/ do
+When /^no traffic has flowed to the LAN$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click("IceweaselRunning.png", 10)
-  @screen.type("t", Sikuli::KEY_CTRL)
-end
-
-When /^I open the address "([^"]*)" in Iceweasel$/ do |address|
-  next if @skip_steps_while_restoring_background
-  step "I open a new tab in Iceweasel"
-  @screen.type("l", Sikuli::KEY_CTRL)
-  @screen.type(address + Sikuli::KEY_RETURN)
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, :ignore_lan => false)
+  assert(not(leaks.ipv4_tcp_leaks.include?(@lan_host)),
+         "Traffic was sent to LAN host #{@lan_host}")
 end

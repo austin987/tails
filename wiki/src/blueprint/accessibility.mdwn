@@ -1,0 +1,71 @@
+[[!toc levels=2]]
+
+# Rationale
+
+Tails should be usable by every [[target user|contribute/design]],
+regardless of their abilities or inabilities. Only other key
+requirements of [[Tails design|contribute/design]] (such as Free
+Software and maintainability) shall limit this one.
+
+Tails therefore needs to ship with accessibility technologies.
+
+# Enabling accessibility features
+
+These accessibility tools could be  enabled at boot time by people who
+need it, by passing `access=` option(s) to live-boot:
+
+	access=ACCESS
+	  Set the accessibility level for physically or visually
+	  impared users.
+	  ACCESS must be one of v1, v2, v3, m1, or m2. v1=lesser
+	  visual impairment, v2=moderate visual impairment,
+	  v3=blindness, m1=minor motor difficulties, m2=moderate motor
+	  difficulties.
+
+We might want to use the syslinux boot menu to enable accessibility features.
+
+However, live-boot 3.0~a27-1 removed this feature: "Removing outdated
+and broken accessibility script, this will be redone in
+live-config properly." This did not happen upstream.
+
+# Visual
+
+Orca does not work with iceweasel yet. Also think of the Unsafe Browser.
+
+# Motor
+
+live-boot's `access=m1` and `access=m2` options enable various GNOME
+options suitable for people having motor difficulties. This might be
+enough.
+
+We also probably want to install the `dasher` graphical predictive
+text input system, that adds eyetracking into the mix. It brings 10MB
+.deb files in: [[todo/install_dasher]].
+
+# Resources
+
+* [[!debwiki accessibility-devel]]
+* [[!debwiki accessibility]]
+
+# Archive: discarded tools
+
+## Compiz
+
+We have been told that Compiz is the preferred accessibility solution
+for some people with sight impairment; such features Compiz includes are:
+
+- inverting colors: good for the color blind or those who need better
+  contrast
+- looking glass: (small area of screen enlarged) good for those who
+  still like to see the whole desktop while working. This one provides
+  some nice graphics too.
+- magnifier: like looking glass but without the other graphics
+- sharpen: makes the entire desktop look sharper for better readability
+- track mouse: (very helpful) it is very easy for a sight impaired
+  person to loose their mouse. this feature helps prevent that. This
+  is much clearer cut than the mouse tracking in gnome-mag.
+- zoom: magnify the entire desktop
+
+On the other hand, Compiz requires modern graphics hardware, seems
+pretty hard to get working on Debian Squeeze, and won't be in Wheezy
+=> discarded.

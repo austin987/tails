@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -e
+
+echo "Moving IBus Unikey binaries to /usr/lib/ibus/"
+
+# Workaround Debian bug #714932 -- we can't just dpkg-divert it, since
+# the original path is hardcoded in these binaries.
+for infix in engine setup ; do
+   orig="/usr/lib/ibus-unikey/ibus-$infix-unikey"
+   dest="/usr/lib/ibus/ibus-$infix-unikey"
+   ln -s "$orig" "$dest"
+done
+
+# Adjust path to the binary in unikey.xml
+sed -i -e \
+    's,/usr/lib/ibus-unikey/ibus-engine-unikey,/usr/lib/ibus/ibus-engine-unikey,' \
+    /usr/share/ibus/component/unikey.xml

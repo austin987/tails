@@ -1,0 +1,122 @@
+[[!toc levels=2]]
+
+Related pages
+=============
+
+* [[!tails_ticket 5525]]
+* [[blueprint/Mandatory_Access_Control]]
+* [[contribute/design/application_isolation]]
+* `feature/5525-sandbox-web-browser` branch
+* [nightly built images](http://nightly.tails.boum.org/build_Tails_ISO_feature-5525-sandbox-web-browser/)
+
+Status
+======
+
+## automated test passes
+
+* feature/i2p (unconfined)
+* feature/torified_browsing
+* feature/unsafe_browser (unconfined)
+* feature/windows_camouflage
+* open `https://` URL from Pidgin
+* relevant bits of feature/usb_install
+  - view persistent bookmarks, in read-only persistence mode ([[!tails_ticket 8787]])
+  - persistent bookmarks, RW
+* "Tails documentation" link on the Desktop ([[!tails_ticket 8788]])
+* default download directory is `~/Tor Browser`
+* HTML5 audio playback
+* WebM video and audio playback
+* download to amnesiac `~/Tor Browser`
+* read from amnesiac `~/Tor Browser`
+* default upload directory is `~/Tor Browser/`
+* `~/Tor Browser/` must always exist
+* there must always be a GTK bookmark to `~/Tor Browser/`
+* import OpenPGP key from website
+* printing to file
+* download to persistent `~/Persistent/Tor Browser`, in
+  read-write persistence mode
+* read from persistent `~/Persistent/Tor Browser`, in read-write
+  persistence mode
+* when `~/Persistent/` is persistent read-write, then
+  `~/Persistent/Tor Browser` must exist and there must be
+  a GNOME bookmark pointing to it
+
+## manual test OK
+
+(needs to be tested again with current status of the branch at some point)
+
+* add NoScript exception
+* change stuff in about:prefs
+* manually update AdBlock Plus lists
+* add a bookmark, with persistent bookmarks feature enabled, in
+  read-only persistence mode
+* install a Firefox add-on (this does not mean we actively support that, right? :)
+* read from persistent `~/Persistent/Tor Browser`, in read-only
+  persistence mode
+
+## manual test OK, maybe needs automated test
+
+
+## known issues
+
+
+## needs testing
+
+* printing to real printer
+
+<a id="ux"></a>
+
+User experience matters
+=======================
+
+Until the `feature/5525-sandbox-web-browser` branch is merged, see the
+"User experience matters" section on
+<https://git-tails.immerda.ch/tails/tree/wiki/src/contribute/design/application_isolation.mdwn?h=feature/5525-sandbox-web-browser>.
+
+Later, see [[contribute/design/application_isolation#ux]].
+
+Remaining questions:
+
+1. What to do about alternative browsers (I2P and Unsafe Browser)?
+   We have [[!tails_ticket 8280 desc="a ticket"]] about allowing the
+   I2P Browser to access local files. Shall we use e.g. `~/Tor Browser
+   files/`, `~/I2P Browser files/` and `~/Unsafe Brower files/` (the
+   latter may make sense now that we plan to move the LAN browsing
+   support into the Unsafe Browser) — and equivalently,
+   `~/Persistent/Tor Browser/`, etc.? or rather a single
+   shared namespace, with e.g. `~/Browser files/Tor Browser`,
+   `~/Browser files/I2P Browser`, etc.?
+   
+   In any case, of course we should _not_ allow a given browser to
+   access files in other browsers' own download directory (this would
+   be too much of a linkability and de-anonymization risk)
+
+2. The "New Identity" problem. The Tor Browser tries hard to prevent
+   data to persist once its "New Identity" button has been clicked, to
+   prevent activities performed before and after this action to be
+   linked with each other. As boyska (a Freepto developer) made me
+   realize while we were discussing these problems, by introducing
+   a persistent downloads directory, we somewhat break this design
+   goal. Of course, we've never even tried protecting against this
+   specific attack, so maybe we can just ignore it for now. And the
+   Tor Browser doesn't try either -- once they add sandboxing
+   profiles, I bet they'll need to think about that too, so one way to
+   do it would be to start a discussion with them about this problem,
+   and consider it as a non-blocker for now. One idea we had with
+   boyska was to add a confirmation dialog when one clicks the "New
+   Identity" button in the Tor Browser, that makes it clear what's
+   going to be lost (e.g. tabs and clipboard, which surprises a lot of
+   users in my experience, see [[!tails_ticket 7709]]), warns them
+   that their previous downloads will be deleted, or rather moved to
+   a directory where that the Tor Browser hasn't access to.
+   Another idea is to block the "New Identity" until the user has
+   themselves emptied the browser files directory, e.g.:
+   
+       When I click on "New Identity" while there are files in one
+            of the downloads directories
+       Then I'm told "Tor Browser will be reset to a New Identity
+            once you have emptied folders $x and $y"
+       And then, once I have emptied the download directories
+       Then Tor Browser is reset to a New Identity
+   
+   Food for thought.
