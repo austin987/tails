@@ -430,7 +430,7 @@ EOF
     assert(desktop_number >= 0 && desktop_number <=3,
            "Only values between 0 and 3 are valid virtual desktop numbers")
     execute_successfully(
-      "xdotool search --name '#{desktop_number}' windowactivate --sync",
+      "xdotool set_desktop '#{desktop_number}'",
       :user => user
     )
   end
