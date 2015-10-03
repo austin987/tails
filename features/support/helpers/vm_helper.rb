@@ -6,7 +6,7 @@ end
 
 class VMNet
 
-  attr_reader :net_name, :net, :host_real_mac
+  attr_reader :net_name, :net
 
   def initialize(virt, xml_path)
     @virt = virt
@@ -31,7 +31,6 @@ class VMNet
   def update(xml)
     net_xml = REXML::Document.new(xml)
     @net_name = net_xml.elements['network/name'].text
-    @host_real_mac = net_xml.elements['network/ip/dhcp/host/'].attributes['mac']
     destroy_and_undefine
     @net = @virt.define_network_xml(xml)
     @net.create
@@ -44,6 +43,11 @@ class VMNet
   def bridge_ip_addr
     net_xml = REXML::Document.new(@net.xml_desc)
     net_xml.elements['network/ip'].attributes['address']
+  end
+
+  def host_real_mac
+    net_xml = REXML::Document.new(@net.xml_desc)
+    net_xml.elements['network/ip/dhcp/host/'].attributes['mac']
   end
 
   def bridge_mac
