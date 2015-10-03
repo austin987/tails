@@ -63,6 +63,21 @@ Feature: Installing Tails to a USB drive
     Then no USB drive is selected
     And a suitable USB device is not found
 
+  Scenario: Installing Tails to a pristine USB drive
+    Given Tails has booted from DVD without network and logged in
+    And I temporarily create a 4 GiB disk named "install"
+    And I plug USB drive "install"
+    And I "Clone & Install" Tails to USB drive "install"
+    Then the running Tails is installed on USB drive "install"
+    But there is no persistence partition on USB drive "install"
+
+  Scenario: Booting Tails from a USB drive without a persistent partition and creating one
+    Given Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
+    And I log in to a new session
+    Then Tails seems to have booted normally
+    When I create a persistent partition
+    Then a Tails persistence partition exists on USB drive "current"
+
   Scenario: Booting Tails from a USB drive without a persistent partition
     Given Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
