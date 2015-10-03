@@ -14,8 +14,7 @@ Feature: Installing Tails to a USB drive
     And I am told that the destination device cannot be upgraded
 
   Scenario: Try to "Clone & Upgrade" Tails to a pristine USB drive
-    Given a computer
-    And I start Tails from DVD with network unplugged and I login
+    Given Tails has booted from DVD without network and logged in
     And I create a 4 GiB disk named "pristine"
     And I plug USB drive "pristine"
     And I start Tails Installer in "Upgrade from ISO" mode
@@ -34,8 +33,7 @@ Feature: Installing Tails to a USB drive
     And I am told that the destination device cannot be upgraded
 
   Scenario: Try to "Clone & Upgrade" Tails to a USB drive with GPT and a FAT partition
-    Given a computer
-    And I start Tails from DVD with network unplugged and I login
+    Given Tails has booted from DVD without network and logged in
     And I create a 4 GiB disk named "gptfat"
     And I create a gpt partition with a vfat filesystem on disk "gptfat"
     And I plug USB drive "gptfat"
@@ -97,10 +95,9 @@ Feature: Installing Tails to a USB drive
     And Tails has started in UEFI mode
 
   Scenario: Installing Tails to a USB drive with an MBR partition table but no partitions, and making sure that it boots
-    Given a computer
+    Given Tails has booted from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "mbr"
     And I create a msdos label on disk "mbr"
-    And I start Tails from DVD with network unplugged and I login
     And I plug USB drive "mbr"
     And I "Clone & Install" Tails to USB drive "mbr"
     Then the running Tails is installed on USB drive "mbr"
