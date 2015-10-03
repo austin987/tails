@@ -380,7 +380,7 @@ EOF
     if options[:libs]
       libs = options[:libs]
       options.delete(:libs)
-      libs = [libs] if libs.class != Array
+      libs = [libs] if not(libs.methods.include? :map)
       cmds = libs.map do |lib_name|
         ". /usr/local/lib/tails-shell-library/#{lib_name}.sh"
       end
