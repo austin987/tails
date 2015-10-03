@@ -1,4 +1,4 @@
-@product @old_iso
+@product
 Feature: Installing Tails to a USB drive
   As a Tails user
   If I have an old versoin of Tails installed on a USB device
