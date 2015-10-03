@@ -1,5 +1,9 @@
 @product
 Feature: Spoofing MAC addresses
+  In order to not reveal information about the physical location
+  As a Tails user
+  I want to be able to control whether my network devices MAC addresses should be spoofed
+  And I want this feature to fail safe and notify me in case of errors
 
   Background:
     Given a computer
