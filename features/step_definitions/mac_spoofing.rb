@@ -95,7 +95,7 @@ Then /^the MAC spoofing panic mode disabled networking$/ do
                    not(@vm.file_exist?("/usr/sbin/NetworkManager"))
   assert(nm_is_disabled, "NetworkManager was not disabled")
   all_ethernet_nics.each do |nic|
-    for function in ["nic_ipv4_addr", "nic_ipv6_addr"] do
+    ["nic_ipv4_addr", "nic_ipv6_addr"].each do |function|
       addr = @vm.execute_successfully(
         "#{function} #{nic}", :libs => 'hardware'
       ).stdout.chomp
