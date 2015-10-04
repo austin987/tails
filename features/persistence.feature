@@ -1,7 +1,7 @@
 @product
 Feature: Tails persistence
   As a Tails user
-  I want use Tails persistence feature
+  I want to use Tails persistence feature
 
   Scenario: Booting Tails from a USB drive with a disabled persistent partition
     Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen

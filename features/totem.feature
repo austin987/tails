@@ -25,13 +25,13 @@ Feature: Using Totem
     Given I close Totem
     And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"
     And the file "/home/amnesia/.gnupg/video.mp4" exists
-    Given I restart monitoring the AppArmor log of "/usr/bin/totem"
+    And I restart monitoring the AppArmor log of "/usr/bin/totem"
     When I try to open "/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/totem" from opening "/home/amnesia/.gnupg/video.mp4"
     Given I close Totem
     And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4" exists
-    Given I restart monitoring the AppArmor log of "/usr/bin/totem"
+    And I restart monitoring the AppArmor log of "/usr/bin/totem"
     When I try to open "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
@@ -55,7 +55,7 @@ Feature: Using Totem
     When I load the "https://webm.html5.org/test.webm" URL in Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 60 seconds
 
-  Scenario: Copying video files to a persistence and making sure that they persist
+  Scenario: Watching MP4 videos stored on the persistent volume should work as expected given our AppArmor confinement
     Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     # Due to bug #5571 we have to reboot to be able to use
     # filesystem shares.

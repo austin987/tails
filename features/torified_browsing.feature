@@ -58,7 +58,7 @@ Feature: Browsing the web using the Tor Browser
 
   Scenario: I can view a file stored in "~/Tor Browser" but not in ~/.gnupg
     Given Tails has booted from DVD and logged in and the network is connected
-    Given I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/Tor Browser/synaptic.html" as user "amnesia"
+    And I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/Tor Browser/synaptic.html" as user "amnesia"
     And I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/.gnupg/synaptic.html" as user "amnesia"
     And I copy "/usr/share/synaptic/html/index.html" to "/tmp/synaptic.html" as user "amnesia"
     Then the file "/home/amnesia/.gnupg/synaptic.html" exists

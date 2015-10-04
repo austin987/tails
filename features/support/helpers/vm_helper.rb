@@ -541,6 +541,9 @@ EOF
       end
     end
 
+    # Note: In this case the "opposite" of `internal_snapshot` is not
+    # anything relating to external snapshots, but actually "memory
+    # state"(-only) snapshots.
     if internal_snapshot
       xml = internal_snapshot_xml(name)
       @domain.snapshot_create_xml(xml)

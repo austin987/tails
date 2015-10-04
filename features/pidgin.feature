@@ -54,6 +54,7 @@ Feature: Chatting anonymously using Pidgin
   @check_tor_leaks
   Scenario: Connecting to the #tails IRC channel with the pre-configured account
     Given Tails has booted from DVD and logged in and the network is connected
+    And Pidgin has the expected accounts configured with random nicknames
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     When I activate the "irc.oftc.net" Pidgin account
@@ -90,6 +91,7 @@ Feature: Chatting anonymously using Pidgin
   @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
     Given Tails has booted without network from a USB drive with a persistent partition enabled and logged in
+    And Pidgin has the expected accounts configured with random nicknames
     And the network is plugged
     And Tor is ready
     And available upgrades have been checked
