@@ -10,7 +10,7 @@ Feature: Spoofing MAC addresses
     And I capture all network traffic
     And I start the computer
     And the computer boots Tails
-    And no network devices are present
+    And no network interfaces are enabled
     And I save the state so the background can be restored next scenario
     And the real MAC address was not leaked
 
@@ -20,7 +20,7 @@ Feature: Spoofing MAC addresses
     And I log in to a new session
     And the Tails desktop is ready
     And Tor is ready
-    Then 1 network device is present
+    Then 1 network interface is enabled
     And the network device has its default MAC address configured
     And the real MAC address was leaked
 
@@ -28,7 +28,7 @@ Feature: Spoofing MAC addresses
     When I log in to a new session
     And the Tails desktop is ready
     And Tor is ready
-    Then 1 network device is present
+    Then 1 network interface is enabled
     And the network device has a spoofed MAC address configured
     And the real MAC address was not leaked
 
@@ -37,7 +37,7 @@ Feature: Spoofing MAC addresses
     When I log in to a new session
     And see the "Network card disabled" notification
     And the Tails desktop is ready
-    Then no network devices are present
+    Then no network interfaces are enabled
     And the real MAC address was not leaked
 
   Scenario: MAC address spoofing fails and macchanger returns true
@@ -45,7 +45,7 @@ Feature: Spoofing MAC addresses
     When I log in to a new session
     And see the "Network card disabled" notification
     And the Tails desktop is ready
-    Then no network devices are present
+    Then no network interfaces are enabled
     And the real MAC address was not leaked
 
   Scenario: MAC address spoofing fails and the module is not removed
@@ -53,7 +53,7 @@ Feature: Spoofing MAC addresses
     When I log in to a new session
     And see the "All networking disabled" notification
     And the Tails desktop is ready
-    Then 1 network device is present
+    Then 1 network interface is enabled
     But the MAC spoofing panic mode disabled networking
     And the real MAC address was not leaked
 

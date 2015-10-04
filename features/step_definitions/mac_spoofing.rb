@@ -81,7 +81,7 @@ Then /^I see the "Network connection blocked\?" notification$/ do
   robust_notification_wait("MACSpoofNetworkBlocked.png", 60)
 end
 
-Then /^(\d+|no) network device(?:s)? (?:is|are) present$/ do |expected_nr_nics|
+Then /^(\d+|no) network interface(?:s)? (?:is|are) enabled$/ do |expected_nr_nics|
   next if @skip_steps_while_restoring_background
   # note that "no".to_i => 0 in Ruby.
   expected_nr_nics = expected_nr_nics.to_i
