@@ -104,7 +104,7 @@ Then /^the MAC spoofing panic mode disabled networking$/ do
   end
 end
 
-When /^I simulate that a wireless NIC's MAC address is blocked by the network$/ do
+Given /^a wireless NIC's MAC address is blocked by the network$/ do
   next if @skip_steps_while_restoring_background
   device = 'wlan0'
   test_ssid = 'test-ssid'

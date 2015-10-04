@@ -57,9 +57,9 @@ Feature: Spoofing MAC addresses
     But the MAC spoofing panic mode disabled networking
     And the real MAC address was not leaked
 
-  Scenario: MAC address spoofing causes a simulated network failure
+  Scenario: MAC address spoofing causes a network failure
     Given the network is unplugged
     When I log in to a new session
     Then the Tails desktop is ready
-    When I simulate that a wireless NIC's MAC address is blocked by the network
+    Given a wireless NIC's MAC address is blocked by the network
     Then I see the "Network connection blocked?" notification
