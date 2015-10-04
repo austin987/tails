@@ -110,7 +110,8 @@ Given /^a wireless NIC's MAC address is blocked by the network$/ do
   test_ssid = 'test-ssid'
   # The below log was recorded from Tails based on Debian Wheezy. We
   # should update it and this comment whenever we rebase Tails on a
-  # different version of Debian.
+  # different version of Debian, or install a new version of
+  # NetworkManager.
   network_manager_info_log_entries = <<-EOF
     Activation (#{device}) starting connection '#{test_ssid}'
     (#{device}): device state change: disconnected -> prepare (reason 'none') [30 40 0]
