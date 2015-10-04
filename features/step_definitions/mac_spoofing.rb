@@ -4,7 +4,7 @@ def all_ethernet_nics
   ).stdout.split
 end
 
-When /^disable MAC spoofing in Tails Greeter$/ do
+When /^I disable MAC spoofing in Tails Greeter$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click("TailsGreeterMACSpoofing.png", 30)
 end

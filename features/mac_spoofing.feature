@@ -16,7 +16,7 @@ Feature: Spoofing MAC addresses
 
   Scenario: MAC address spoofing is disabled
     When I enable more Tails Greeter options
-    And disable MAC spoofing in Tails Greeter
+    And I disable MAC spoofing in Tails Greeter
     And I log in to a new session
     And the Tails desktop is ready
     And Tor is ready
