@@ -72,32 +72,18 @@ const Extension = new Lang.Class({
         this._altrestartAction = this.systemMenu._createActionButton('view-refresh-symbolic', _("Restart"));
         this._altrestartAction.set_accessible_role(Atk.Role.UNKNOWN);
 
-        this._altrestartEnterEventId = this._altrestartAction.connect('enter-event', Lang.bind(this, function() { this._altrestartAction.grab_key_focus(); }));
-
         this._altrestartActionId = this._altrestartAction.connect('clicked', Lang.bind(this, this._onRestartClicked));
 
         this._altpowerOffAction = this.systemMenu._createActionButton('system-shutdown-symbolic', _("Power Off"));
         this._altpowerOffAction.set_accessible_role(Atk.Role.UNKNOWN);
 
-        this._altpowerOffEnterEventId = this._altpowerOffAction.connect('enter-event', Lang.bind(this, function() { this._altpowerOffAction.grab_key_focus(); }));
-
         this._altpowerOffActionId = this._altpowerOffAction.connect('clicked', Lang.bind(this, this._onPowerOffClicked));
     },
 
     _destroyActions: function() {
-        if (this._altrestartEnterEventId) {
-            this._altrestartAction.disconnect(this._altrestartEnterEventId);
-            this.__altrestartEnterEventId = 0;
-        }
-
         if (this._altrestartActionId) {
             this._altrestartAction.disconnect(this._altrestartActionId);
             this._altrestartActionId = 0;
-        }
-
-        if (this._altpowerOffEnterEventId) {
-            this._altpowerOffAction.disconnect(this._altpowerOffEnterEventId);
-            this.__altpowerOffEnterEventId = 0;
         }
 
         if (this._altpowerOffActionId) {
