@@ -300,7 +300,7 @@ When /^I (de)?activate the "([^"]+)" Pidgin account$/ do |deactivate, account|
     # wait for the Pidgin to be connecting, otherwise sometimes the step
     # that closes the account management dialog happens before the account
     # is actually enabled
-    @screen.wait("PidginConnecting.png", 5)
+    @screen.waitAny(['PidginConnecting.png', 'PidginAvailableStatus.png'], 5)
   end
 end
 
