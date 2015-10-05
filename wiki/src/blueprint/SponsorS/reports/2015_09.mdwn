@@ -45,20 +45,36 @@ ticket #6938 can be seen on <https://labs.riseup.net/code/issues/6938>.
 
 ## B.2. Continuously run our entire test suite on all those ISO images once they are built
 
-- B.2.1. Adjust our infrastructure to run tests in parallel (#9645, #9486)
+- B.2.1. Adjust our infrastructure to run tests in parallel
 
-  XXX
+  Great progress was made on this front, and more specifically on the
+  last remaining chunk of it: firing up a clean test runner virtual
+  machine before each test suite run. It was tricky to implement this
+  in a non-racy way, but we now have a working prototype that we are
+  confident fixes the issues we have seen earlier (#9486, #10215).
+  Along the way we encouraged a few Debian developers to take care of
+  a package we rely on (`jenkins-job-builder`), and one of them
+  promptly took it over and updated it to the version we need (#9646).
 
 - B.2.2. Decide what kind of ISO images qualify for testing and when,
   how to process, advertise, and store the results (#8667)
 
-  XXX
+  Early in September, we reached an agreement on all discussion topics
+  that were left pending in August, such as how to archive videos from
+  test suite runs. As can be seen in the "Help Jenkins integration"
+  section below, our test suite team promptly started adjusting their
+  code to match what we will need on the Jenkins deployment.
 
   <https://tails.boum.org/blueprint/automated_builds_and_tests/automated_tests_specs/>
 
 - B.2.3. Research and design a solution to generate a set of Jenkins ISO test jobs
 
-  XXX
+  Some initial research and experiments were done for sending ISO
+  images that shall be tested to the test suite runner virtual
+  machines (#9597). On this topic, we reached a consensus regarding
+  what "old" ISO image to use for tests that require two images, such
+  as upgrade tests (#10117). And here as well, test suite developers
+  promptly implemented what we needed (#10147).
 
   <https://tails.boum.org/blueprint/automated_builds_and_tests/jenkins/>
 
