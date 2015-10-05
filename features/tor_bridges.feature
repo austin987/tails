@@ -5,11 +5,7 @@ Feature: Using Tails with Tor pluggable transports
   And avoid connecting directly to the Tor Network
 
   Background:
-    Given Tails has booted from DVD without network and stopped at Tails Greeter's login screen
-    And I enable more Tails Greeter options
-    And I enable the specific Tor configuration option
-    And I log in to a new session
-    And the Tails desktop is ready
+    Given Tails has booted from DVD without network and logged in with bridge mode enabled
     And I capture all network traffic
     When the network is plugged
     Then the Tor Launcher autostarts

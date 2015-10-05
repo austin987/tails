@@ -1,10 +1,14 @@
-@product @old_iso
+@product
 Feature: Installing Tails to a USB drive
   As a Tails user
   If I have an old versoin of Tails installed on a USB device
   and the USB device has a persistent partition
   I want to upgrade Tails on it
   and keep my persistent partition in the process
+
+  # An issue with this feature is that scenarios depend on each
+  # other. When editing this feature, make sure you understand these
+  # dependencies (which are documented below).
 
   Scenario: Installing an old version of Tails to a pristine USB drive
     Given a computer
@@ -22,6 +26,7 @@ Feature: Installing Tails to a USB drive
     But there is no persistence partition on USB drive "old"
     And I unplug USB drive "old"
 
+  # Depends on scenario: Installing an old version of Tails to a pristine USB drive
   Scenario: Creating a persistent partition with the old Tails USB installation
     Given a computer
     And I start Tails from USB drive "old" with network unplugged and I login
@@ -31,6 +36,7 @@ Feature: Installing Tails to a USB drive
     Then a Tails persistence partition exists on USB drive "old"
     And I shutdown Tails and wait for the computer to power off
 
+  # Depends on scenario: Creating a persistent partition with the old Tails USB installation
   Scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
     Given a computer
     And I start Tails from USB drive "old" with network unplugged and I login with persistence enabled
@@ -45,6 +51,7 @@ Feature: Installing Tails to a USB drive
     # XXX: how does guestfs work vs snapshots?
     Then only the expected files are present on the persistence partition on USB drive "old"
 
+  # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
   Scenario: Upgrading an old Tails USB installation from a Tails DVD
     Given Tails has booted from DVD without network and logged in
     And I clone USB drive "old" to a new USB drive "to_upgrade"
@@ -53,6 +60,7 @@ Feature: Installing Tails to a USB drive
     Then the running Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
 
+  # Depends on scenario: Upgrading an old Tails USB installation from a Tails DVD
   Scenario: Booting Tails from a USB drive upgraded from DVD with persistence enabled
     Given a computer
     And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence enabled
@@ -62,6 +70,7 @@ Feature: Installing Tails to a USB drive
     And the expected persistent files created with the old Tails version are present in the filesystem
     And all persistent directories from the old Tails version have safe access rights
 
+  # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
   Scenario: Upgrading an old Tails USB installation from another Tails USB drive
     Given Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
@@ -73,6 +82,7 @@ Feature: Installing Tails to a USB drive
     And I unplug USB drive "to_upgrade"
     And I unplug USB drive "current"
 
+  # Depends on scenario: Upgrading an old Tails USB installation from another Tails USB drive
   Scenario: Booting Tails from a USB drive upgraded from USB with persistence enabled
     Given a computer
     And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence enabled
@@ -82,6 +92,7 @@ Feature: Installing Tails to a USB drive
     And the expected persistent files created with the old Tails version are present in the filesystem
     And all persistent directories from the old Tails version have safe access rights
 
+  # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
   Scenario: Upgrading an old Tails USB installation from an ISO image, running on the old version
     Given a computer
     And I clone USB drive "old" to a new USB drive "to_upgrade"
@@ -92,6 +103,7 @@ Feature: Installing Tails to a USB drive
     Then the ISO's Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
 
+  # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
   Scenario: Upgrading an old Tails USB installation from an ISO image, running on the new version
     Given a computer
     And I clone USB drive "old" to a new USB drive "to_upgrade"
@@ -102,6 +114,7 @@ Feature: Installing Tails to a USB drive
     Then the ISO's Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
 
+  # Depends on scenario: Upgrading an old Tails USB installation from an ISO image, running on the new version
   Scenario: Booting a USB drive upgraded from ISO with persistence enabled
     Given a computer
     And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence enabled

@@ -36,7 +36,7 @@ class Display
     @virtviewer.close
   rescue IOError
     # IO.pid throws this if the process wasn't started yet. Possibly
-    # there's a race when doing a strt() and then quickly running
+    # there's a race when doing a start() and then quickly running
     # stop().
   end
 

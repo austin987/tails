@@ -7,16 +7,15 @@ Feature: Installing Tails to a USB drive
     Given a computer
     And I setup a filesystem share containing the Tails ISO
     And I start Tails from DVD with network unplugged and I login
-    And I create a 4 GiB disk named "pristine"
+    And I temporarily create a 4 GiB disk named "pristine"
     And I plug USB drive "pristine"
     And I start Tails Installer in "Upgrade from ISO" mode
     Then a suitable USB device is not found
     And I am told that the destination device cannot be upgraded
 
   Scenario: Try to "Clone & Upgrade" Tails to a pristine USB drive
-    Given a computer
-    And I start Tails from DVD with network unplugged and I login
-    And I create a 4 GiB disk named "pristine"
+    Given Tails has booted from DVD without network and logged in
+    And I temporarily create a 4 GiB disk named "pristine"
     And I plug USB drive "pristine"
     And I start Tails Installer in "Upgrade from ISO" mode
     Then a suitable USB device is not found
@@ -26,7 +25,7 @@ Feature: Installing Tails to a USB drive
     Given a computer
     And I setup a filesystem share containing the Tails ISO
     And I start Tails from DVD with network unplugged and I login
-    And I create a 4 GiB disk named "gptfat"
+    And I temporarily create a 4 GiB disk named "gptfat"
     And I create a gpt partition with a vfat filesystem on disk "gptfat"
     And I plug USB drive "gptfat"
     And I start Tails Installer in "Upgrade from ISO" mode
@@ -34,9 +33,8 @@ Feature: Installing Tails to a USB drive
     And I am told that the destination device cannot be upgraded
 
   Scenario: Try to "Clone & Upgrade" Tails to a USB drive with GPT and a FAT partition
-    Given a computer
-    And I start Tails from DVD with network unplugged and I login
-    And I create a 4 GiB disk named "gptfat"
+    Given Tails has booted from DVD without network and logged in
+    And I temporarily create a 4 GiB disk named "gptfat"
     And I create a gpt partition with a vfat filesystem on disk "gptfat"
     And I plug USB drive "gptfat"
     And I start Tails Installer in "Upgrade from ISO" mode
@@ -63,6 +61,21 @@ Feature: Installing Tails to a USB drive
     Then no USB drive is selected
     And a suitable USB device is not found
 
+  Scenario: Installing Tails to a pristine USB drive
+    Given Tails has booted from DVD without network and logged in
+    And I temporarily create a 4 GiB disk named "install"
+    And I plug USB drive "install"
+    And I "Clone & Install" Tails to USB drive "install"
+    Then the running Tails is installed on USB drive "install"
+    But there is no persistence partition on USB drive "install"
+
+  Scenario: Booting Tails from a USB drive without a persistent partition and creating one
+    Given Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
+    And I log in to a new session
+    Then Tails seems to have booted normally
+    When I create a persistent partition
+    Then a Tails persistence partition exists on USB drive "current"
+
   Scenario: Booting Tails from a USB drive without a persistent partition
     Given Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
@@ -82,10 +95,9 @@ Feature: Installing Tails to a USB drive
     And Tails has started in UEFI mode
 
   Scenario: Installing Tails to a USB drive with an MBR partition table but no partitions, and making sure that it boots
-    Given a computer
+    Given Tails has booted from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "mbr"
     And I create a msdos label on disk "mbr"
-    And I start Tails from DVD with network unplugged and I login
     And I plug USB drive "mbr"
     And I "Clone & Install" Tails to USB drive "mbr"
     Then the running Tails is installed on USB drive "mbr"
@@ -98,7 +110,7 @@ Feature: Installing Tails to a USB drive
 
   Scenario: Cat:ing a Tails isohybrid to a USB drive and booting it, then trying to upgrading it but ending up having to do a fresh installation, which boots
     Given a computer
-    And I create a 4 GiB disk named "isohybrid"
+    And I temporarily create a 4 GiB disk named "isohybrid"
     And I cat an ISO of the Tails image to disk "isohybrid"
     And I start Tails from USB drive "isohybrid" with network unplugged and I login
     Then Tails is running from USB drive "isohybrid"

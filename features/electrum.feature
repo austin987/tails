@@ -24,7 +24,7 @@ Feature: Electrum Bitcoin client
     Then a bitcoin wallet is present
     And I see the main Electrum client window
     And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "current" and I login with persistence enabled
+    Given I start Tails from USB drive "current" and I login with persistence enabled
     When I start Electrum through the GNOME menu
     And a bitcoin wallet is present
     And I see the main Electrum client window

@@ -36,12 +36,13 @@ ENV['TMPDIR'] = $config['TMPDIR']
 # Dynamic constants initialized through the environment or similar,
 # e.g. options we do not want to be configurable through the YAML
 # configuration files.
+DEBUG_LOG_PSEUDO_FIFO = "#{$config["TMPDIR"]}/debug_log_pseudo_fifo"
 DISPLAY = ENV['DISPLAY']
 GIT_DIR = ENV['PWD']
 KEEP_SNAPSHOTS = !ENV['KEEP_SNAPSHOTS'].nil?
 LIVE_USER = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
-OLD_TAILS_ISO = ENV['OLD_TAILS_ISO']
 TAILS_ISO = ENV['TAILS_ISO']
+OLD_TAILS_ISO = ENV['OLD_TAILS_ISO'] || TAILS_ISO
 TIME_AT_START = Time.now
 
 # Constants that are statically initialized.

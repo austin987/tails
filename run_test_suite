@@ -33,6 +33,7 @@ ruby-json
 ruby-libvirt
 ruby-net-irc
 ruby-packetfu
+ruby-rb-inotify
 ruby-rjb
 ruby-rspec
 ruby-test-unit
@@ -50,15 +51,17 @@ Sets up an appropriate environment and invokes cucumber. Note that this script
 must be run from the Tails source directory root.
 
 Options for '@product' features:
-  --capture FILE     Captures the test session into FILE using VP8 encoding.
-                     Requires libvpx1.
-  --debug            Display various debugging information while running the
-                     test suite.
+  --capture          Captures failed scenarios into videos stored in the
+                     temporary directory (see --tmpdir below) using x264
+                     encoding. Requires x264.
+  --capture-all      Keep videos for all scenarios, including those that
+                     succeed (implies --capture).
   --pause-on-fail    On failure, pause test suite until pressing Enter. This is
                      useful for investigating the state of the VM guest to see
                      exactly why a test failed.
-  --keep-snapshots   Don't ever delete the background snapshots. This can a big
-                     time saver when debugging new features.
+  --keep-snapshots   Don't ever delete any snapshots (including ones marked as
+                     temporary). This can a big time saver when debugging new
+                     features.
   --retry-find       Print a warning whenever Sikuli fails to find an image
                      and allow *one* retry after pressing ENTER. This is useful
                      for updating outdated images.
@@ -73,17 +76,19 @@ Options for '@product' features:
   --iso IMAGE        Test '@product' features using IMAGE.
   --old-iso IMAGE    For some '@product' features (e.g. usb_install) we need
                      an older version of Tails, which this options sets to
-                     IMAGE.
-  --log-to-file FILE Clone stdout and stderr to the specified file.
+                     IMAGE. If none is given, it defaults to the same IMAGE
+                     given by --iso, which will be good enough for most testing
+                     purposes.
 
 Note that '@source' features has no relevant options.
 
 CUCUMBER_ARGS can be used to specify which features to be run, but also any
-cucumber option, although then you must pass `--` first to let this wrapper
-script know that we're done with *its* options. When it comes to formatters
-there are some interesting things to consider, in particular that any debugging
-output that we write to stderr will not be cloned to any file pointed to by
-cucumbers --out.
+cucumber option, although then you must pass \`--\` first to let this wrapper
+script know that we're done with *its* options. For debugging purposes, a
+'debug' formatter has been added so pretty debugging can be enabled with
+\`--format debug\`. You could even combine the default (pretty) formatter with
+pretty debugging printed to a file with \`--format pretty --format debug
+--out debug.log\`.
 "
 }
 
@@ -128,9 +133,6 @@ next_free_display() {
 
 test_suite_cleanup() {
     (kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}) || /bin/true
-    if [ ! -z $LOG_FILE ]; then
-       remove_control_chars_from "$LOG_FILE"
-    fi
 }
 
 start_xvfb() {
@@ -165,41 +167,23 @@ capture_session() {
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
 }
 
-remove_control_chars_from() {
-    local file="$1"
-    local tmpfile
-
-    # Sanity checks
-    [ -n "$file" ] || return 11
-    [ -r "$file" ] || return 13
-    [ -w "$(dirname "$file")" ] || return 17
-
-    # Remove control chars with `perl` and backspaces with `col`
-    tmpfile=$(mktemp)
-    cat "$file" \
-	| perl -pe 's/\e([^\[\]]|\[.*?[a-zA-Z]|\].*?\a)//g' \
-	| col -b \
-	> "$tmpfile"
-    mv "$tmpfile" "$file"
-}
-
 # main script
 
 # Unset all environment variables used by this script to pass options
 # to cucumber, except TMPDIR since we explicitly want to support
 # setting it that way.
-CAPTURE_FILE=
+CAPTURE=
+CAPTURE_ALL=
 LOG_FILE=
 VNC_VIEWER=
 VNC_SERVER=
-DEBUG=
 PAUSE_ON_FAIL=
 KEEP_SNAPSHOTS=
 SIKULI_RETRY_FINDFAILED=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="view,vnc-server-only,capture:,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,debug,pause-on-fail,log-to-file:"
+LONGOPTS="view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,pause-on-fail"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -213,15 +197,13 @@ while [ $# -gt 0 ]; do
             VNC_SERVER=yes
             ;;
         --capture)
-            shift
-            CAPTURE_FILE="$1"
+            check_dependencies x264
+            export CAPTURE="yes"
             ;;
-        --log-to-file)
-            shift
-            LOG_FILE="$1"
-            ;;
-        --debug)
-            export DEBUG="yes"
+        --capture-all)
+            check_dependencies x264
+            export CAPTURE="yes"
+            export CAPTURE_ALL="yes"
             ;;
         --pause-on-fail)
             export PAUSE_ON_FAIL="yes"
@@ -264,9 +246,6 @@ TARGET_DISPLAY=$(next_free_display)
 
 start_xvfb
 
-if [ -n "${CAPTURE_FILE}" ]; then
-    capture_session
-fi
 if [ -n "${VNC_SERVER}" ]; then
     start_vnc_server
 fi
@@ -278,10 +257,4 @@ export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
 
-CUCUMBER_COMMAND="cucumber ${@}"
-
-if [ -z "$LOG_FILE" ]; then
-    $CUCUMBER_COMMAND
-else
-    script --quiet --flush --return --command "$CUCUMBER_COMMAND" "$LOG_FILE" | cat
-fi
+cucumber ${@}
