@@ -31,6 +31,116 @@ ticket #6938 can been seed on https://labs.riseup.net/code/issues/6938.
 
 # B. Improve our quality assurance process
 
+## B.3 Extend the coverage of our test suite
+
+### General improvements
+
+- Filesystem shares are incompatible with QEMU snapshots: #5571
+
+  We have come up with a short-term strategy that will work well with
+  our current workflow. In addition we have our eyes on a long-term
+  technical solution that will require adding a small feature into
+  upstream QEMU. This is, however, out of the scope of this
+  deliverable.
+
+### Help Jenkins integration
+
+It should be noted that many of the things mentioned here also greatly
+assists developers when debugging the automated test suite.
+
+- Leverage Cucumber's formatter system for debug logging: #9491
+
+  This makes it easier to have clean console logging while still
+  keeping the full debug log in a separate file. Consequently it will
+  be easier to get an overview of how a test is currently running.
+
+- Capture individual videos for failed scenarios only: #10148
+
+  This will both make these video artifacts more manageble and useful
+  for the developers (more focused, better granularity), and will save
+  a lot of disk space on our servers by excluding videos of tests that
+  succeeded and hence isn't very interesting.
+
+- Make the old Tails ISO default to the "new" ISO: #10147
+
+  This compromise will test 90% of what we want to test, and simplify
+  the Jenkins setup by eliminating the need to share multiple ISO
+  artifacts to the test suite context.
+
+### B.3.6. Improve robustness and performance
+
+#### Performance improvements
+
+- B.3.4: Snapshot improvements: #6094, #8008
+
+  The proof-on-concept has matured into a reliable implementation and
+  it is basically done; only fine-tuning and style improvements
+  remain. It is expected to be ready for the Jenkins deployment in
+  Milestone III, and will allow us to run 33% more tests, and will add
+  less overhead for new tests using persistence in the future.
+
+- Use the more efficient x264 encoding when capturing videos: #10001
+
+  This vill reduce the CPU load on the host running the automated test
+  suite, as well as reduce its runtime with a few percent.
+
+- Optimize IRC test using waitAny: #9653
+
+  In case there are connection issues, this may save several minutes
+  per instance by waiting for both the failure and success condition
+  in parallel, instead of serially.
+
+#### Robustness improvements
+
+- Avoid nested FindFailed exceptions in waitAny()/findAny(): #9633
+
+  This works around a race condition due to a bug in Rjb that made
+  these helpers fail with some probability depending on the host
+  hardware.
+
+- Import logging module in otr-bot.py: #9375
+
+  Without this fix, the bot may occasionally fail due to it wanting to
+  use the logging facility when it is not in place.
+
+- Force new Tor circuit and reload web site on browser
+  timeouts: #10116
+
+  Given the inherent instability of Tor circuits, this will
+  drastically improve the robustness of all Tor Browser tests that
+  tries to connect to some host on the Internet (of which there are
+  many).
+
+- Piding's multi-window GUI sometimes causes unexpected behaviour
+  (e.g. one window covering the window we want to interact with):
+
+  * Focus Pidgin's buddy list before trying to access the tools
+    menu: #10217
+
+  * Wait for (and focus if necessary) Pidgin's Certificate windows:
+    #10222
+
+- Develop a strategy for dealing with newly discovered fragile tests:
+  #10288
+
+  By leveraging our Jenkins instances, following this strategy will
+  isolate individual robustness issues into individual branches while
+  keeping all other branches functional. Consequently it will be
+  easier to track and deal with future robustness issues.
+
+- Escape regexp used to match nick in CTCP replies: #10219
+
+  Due to how we randomize the nick name for the default Pidgin
+  accounts, there was a 10% chance to generate one with characters
+  that would have a special meaning when used inside regular
+  expressions, causing failures.
+
+### Writing more automated tests
+
+- B.3.8. Automatically test that udev-watchdog is monitoring the
+  right device: #9890.
+
+  This was finished early (part of Milestone IV).
 
 # C. Scale our infrastructure
 
