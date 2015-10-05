@@ -20,7 +20,7 @@ pref("network.protocol-handler.app.http", "x-www-browser");
 pref("network.protocol-handler.app.https", "x-www-browser");
 
 // Tell TorBirdy we're running Tails so that it adapts its behaviour.
-pref("vendor.name", "Tails");
+//pref("vendor.name", "Tails");
 
 // Disable mail indexing
 pref("mailnews.database.global.indexer.enabled", false);
