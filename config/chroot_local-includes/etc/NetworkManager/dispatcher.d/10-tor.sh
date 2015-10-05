@@ -44,7 +44,7 @@ fi
 # Tor. Details:
 # * https://trac.torproject.org/projects/tor/ticket/1247
 # * https://tails.boum.org/bugs/tor_vs_networkmanager/
-# To work around this we restart Tor, in various ways, not matter the
+# To work around this we restart Tor, in various ways, no matter the
 # case below.
 if [ "$(tails_netconf)" = "obstacle" ]; then
     # We do not use retart-tor since it validates that bootstraping
