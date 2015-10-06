@@ -83,11 +83,9 @@ def retry_tor(recovery_proc = nil, &block)
       return
     rescue Exception => e
       if retries <= max_retries
-        if $config["DEBUG"]
-          STDERR.puts "Tor operation failed (Tor circuit try #{retries} of " +
-                      "#{max_retries}) with:\n" +
-                      "#{e.class}: #{e.message}"
-        end
+        debug_log("Tor operation failed (Tor circuit try #{retries} of " +
+                  "#{max_retries}) with:\n" +
+                  "#{e.class}: #{e.message}")
         recovery_proc.call if recovery_proc
         force_new_tor_circuit
         retries += 1
