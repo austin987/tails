@@ -71,7 +71,7 @@ def checkpoints
     },
 
     'usb-install-tails-greeter' => {
-      :description => "I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen" ,
+      :description => "I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen",
       :parent_checkpoint => 'no-network-logged-in',
       :steps => [
         'I create a 4 GiB disk named "current"',
