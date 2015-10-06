@@ -36,7 +36,8 @@ Feature: Time syncing
 
   Scenario: Clock is way in the past
     Given Tails has booted from DVD without network and logged in
-    When I bump the system time with "-6 weeks"
+    # 13 weeks will span over two Tails release cycles.
+    When I bump the system time with "-13 weeks"
     And the network is plugged
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
