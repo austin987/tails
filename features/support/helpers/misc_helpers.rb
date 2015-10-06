@@ -198,3 +198,12 @@ def sanitize_filename(filename)
   bad_unix_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
   filename.gsub(bad_unix_filename_chars, '_')
 end
+
+def info_log_artifact_location(type, path)
+  if $config['ARTIFACTS_BASE_URL']
+    # Remove any trailing slashes, we'll add one ourselves
+    base_url = $config['ARTIFACTS_BASE_URL'].gsub(/\/*$/, "")
+    path = "#{base_url}/#{File.basename(path)}"
+  end
+  info_log("#{type.capitalize}: #{path}")
+end

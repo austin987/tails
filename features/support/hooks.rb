@@ -154,9 +154,9 @@ After('@product') do |scenario|
     screenshot_name = sanitize_filename("#{scenario.name}.png")
     screenshot_path = "#{ARTIFACTS_DIR}/#{screenshot_name}"
     FileUtils.mv(screen_capture.getFilename, screenshot_path)
-    info_log("Screenshot: #{screenshot_path}")
+    info_log_artifact_location("Screenshot", screenshot_path)
     if File.exist?(@video_path)
-      info_log("Video: #{@video_path}")
+      info_log_artifact_location("Video", @video_path)
     end
     secs = "%02d" % (time_of_fail % 60)
     mins = "%02d" % ((time_of_fail / 60) % 60)

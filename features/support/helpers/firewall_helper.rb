@@ -73,7 +73,7 @@ class FirewallLeakCheck
   def save_pcap_file
     pcap_copy = "#{ARTIFACTS_DIR}/#{File.basename(@pcap_file)}"
     FileUtils.cp(@pcap_file, pcap_copy)
-    info_log("Network capture: #{pcap_copy}")
+    info_log_artifact_location("Network capture", pcap_copy)
   end
 
   # Returns a list of all unique destination IP addresses found in
