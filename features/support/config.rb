@@ -1,5 +1,4 @@
 require 'fileutils'
-require 'tmpdir'
 require 'yaml'
 require "#{Dir.pwd}/features/support/helpers/misc_helpers.rb"
 
@@ -45,7 +44,9 @@ LIVE_USER = cmd_helper(". config/chroot_local-includes/etc/live/config.d/usernam
 TAILS_ISO = ENV['TAILS_ISO']
 OLD_TAILS_ISO = ENV['OLD_TAILS_ISO'] || TAILS_ISO
 TIME_AT_START = Time.now
-ARTIFACTS_DIR = Dir.mktmpdir("run-", $config['TMPDIR'])
+ARTIFACTS_DIR = $config['TMPDIR'] + "/run-" +
+                TIME_AT_START.to_s.gsub(/\s/, "_") + "-" +
+                random_alnum_string(6)
 
 # Constants that are statically initialized.
 CONFIGURED_KEYSERVER_HOSTNAME = 'hkps.pool.sks-keyservers.net'
