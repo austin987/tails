@@ -5,13 +5,13 @@ Feature: Electrum Bitcoin client
   And all Internet traffic should flow only through Tor
 
   Scenario: A warning will be displayed if Electrum is not persistent
-    Given Tails has booted from DVD and logged in and the network is connected
+    Given I have started Tails from DVD and logged in and the network is connected
     When I start Electrum through the GNOME menu
     But persistence for "electrum" is not enabled
     Then I see a warning that Electrum is not persistent
 
   Scenario: Using a persistent Electrum configuration
-    Given Tails has booted without network from a USB drive with a persistent partition enabled and logged in
+    Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged
     And Tor is ready
     And available upgrades have been checked

@@ -4,7 +4,7 @@ Feature: Tor stream isolation is effective
   I want my Torified sessions to be sensibly isolated from each other to prevent identity correlation
 
   Background:
-    Given Tails has booted from DVD and logged in and the network is connected
+    Given I have started Tails from DVD and logged in and the network is connected
 
   Scenario: tails-security-check is using the Tails-specific SocksPort
     When I monitor the network connections of tails-security-check

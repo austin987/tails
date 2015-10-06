@@ -53,7 +53,7 @@ Feature: Installing Tails to a USB drive
 
   # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
   Scenario: Upgrading an old Tails USB installation from a Tails DVD
-    Given Tails has booted from DVD without network and logged in
+    Given I have started Tails from DVD without network and logged in
     And I clone USB drive "old" to a new USB drive "to_upgrade"
     And I plug USB drive "to_upgrade"
     When I "Clone & Upgrade" Tails to USB drive "to_upgrade"
@@ -72,7 +72,7 @@ Feature: Installing Tails to a USB drive
 
   # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
   Scenario: Upgrading an old Tails USB installation from another Tails USB drive
-    Given Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
+    Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
     And Tails seems to have booted normally
     And I clone USB drive "old" to a new USB drive "to_upgrade"

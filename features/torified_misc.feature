@@ -2,7 +2,7 @@
 Feature: Various checks for torified software
 
   Background:
-    Given Tails has booted from DVD and logged in and the network is connected
+    Given I have started Tails from DVD and logged in and the network is connected
 
   Scenario: wget(1) should work for HTTP and go through Tor.
     When I wget "http://example.com/" to stdout

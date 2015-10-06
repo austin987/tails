@@ -6,7 +6,7 @@ Feature: Getting a DHCP lease without leaking too much information
   and the hostname should not have been leaked on the network.
 
   Background:
-    Given Tails has booted from DVD without network and logged in
+    Given I have started Tails from DVD without network and logged in
     And I capture all network traffic
     And the network is plugged
     And Tor is ready
