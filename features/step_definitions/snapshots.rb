@@ -170,7 +170,7 @@ end
 
 # For each checkpoint we generate a step to reach it.
 checkpoints.each do |name, desc|
-  step_regex = Regexp.new("^#{desc[:description]}$")
+  step_regex = Regexp.new("^#{Regexp.escape(desc[:description])}$")
   Given step_regex do
     reach_checkpoint(name)
   end
