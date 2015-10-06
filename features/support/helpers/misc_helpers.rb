@@ -66,9 +66,51 @@ rescue unique_timeout_exception => e
   raise Timeout::Error.new(msg)
 end
 
+class TorFailure < StandardError
+end
+
+# This will retry the block up to MAX_NEW_TOR_CIRCUIT_RETRIES
+# times. The block must raise an exception for a run to be considered
+# as a failure. After a failure recovery_proc will be called (if
+# given) and the intention with it is to bring us back to the state
+# expected by the block, so it can be retried.
+def retry_tor(recovery_proc = nil, &block)
+  max_retries = $config["MAX_NEW_TOR_CIRCUIT_RETRIES"]
+  retries = 1
+  loop do
+    begin
+      block.call
+      return
+    rescue Exception => e
+      if retries <= max_retries
+        if $config["DEBUG"]
+          STDERR.puts "Tor operation failed (Tor circuit try #{retries} of " +
+                      "#{max_retries}) with:\n" +
+                      "#{e.class}: #{e.message}"
+        end
+        recovery_proc.call if recovery_proc
+        force_new_tor_circuit
+        retries += 1
+      else
+        raise TorFailure.new("The operation failed (despite forcing " +
+                             "#{max_retries} new Tor circuits) with\n" +
+                             "#{e.class}: #{e.message}")
+      end
+    end
+  end
+end
+
 def wait_until_tor_is_working
   try_for(270) { @vm.execute(
     '. /usr/local/lib/tails-shell-library/tor.sh; tor_is_working').success? }
+rescue Timeout::Error => e
+  c = @vm.execute("grep restart-tor /var/log/syslog")
+  if c.success?
+    debug_log("From syslog:\n" + c.stdout.sub(/^/, "  "))
+  else
+    debug_log("Nothing was syslog:ed about 'restart-tor'")
+  end
+  raise e
 end
 
 def convert_bytes_mod(unit)
