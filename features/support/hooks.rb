@@ -54,7 +54,7 @@ def delete_snapshot(snapshot)
     File.delete(snapshot)
   end
 rescue Errno::EACCES => e
-  STDERR.puts "Couldn't delete background snapshot: #{e.to_s}"
+  info_log("Couldn't delete background snapshot: #{e.to_s}")
 end
 
 def delete_all_snapshots
@@ -154,14 +154,14 @@ After('@product') do |scenario|
     screenshot_name = sanitize_filename("#{scenario.name}.png")
     screenshot_path = "#{ARTIFACTS_DIR}/#{screenshot_name}"
     FileUtils.mv(screen_capture.getFilename, screenshot_path)
-    STDERR.puts("Screenshot: #{screenshot_path}")
+    info_log("Screenshot: #{screenshot_path}")
     if File.exist?(@video_path)
-      STDERR.puts("Video: #{@video_path}")
+      info_log("Video: #{@video_path}")
     end
     secs = "%02d" % (time_of_fail % 60)
     mins = "%02d" % ((time_of_fail / 60) % 60)
     hrs  = "%02d" % (time_of_fail / (60*60))
-    STDERR.puts "Scenario failed at time #{hrs}:#{mins}:#{secs}"
+    info_log("Scenario failed at time #{hrs}:#{mins}:#{secs}")
     if $config["PAUSE_ON_FAIL"]
       STDERR.puts ""
       STDERR.puts "Press ENTER to continue running the test suite"

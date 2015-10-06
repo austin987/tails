@@ -46,6 +46,15 @@ def AfterFeature(*tag_expressions, &block)
   $after_feature_hooks << SimpleHook.new(tag_expressions, block)
 end
 
+require 'cucumber/formatter/console'
+def info_log(message = "", options = {})
+  options[:color] = :white
+  # This trick allows us to use a module's (~private) method on a
+  # one-off basis.
+  cucumber_console = Class.new.extend(Cucumber::Formatter::Console)
+  puts cucumber_console.format_string(message, options[:color])
+end
+
 def debug_log(message)
   $debug_log_fns.each { |fn| fn.call(message) } if $debug_log_fns
 end
