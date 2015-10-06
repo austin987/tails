@@ -62,11 +62,9 @@ def post_snapshot_restore_hook
     if $vm.execute("service tor status").success?
       $vm.execute("service tor stop")
       $vm.execute("rm -f /var/log/tor/log")
-      $vm.execute("killall vidalia")
       $vm.host_to_guest_time_sync
-      $vm.execute("service tor start")
+      $vm.execute("restart-tor")
       wait_until_tor_is_working
-      $vm.spawn("restart-vidalia")
     end
   else
     $vm.host_to_guest_time_sync

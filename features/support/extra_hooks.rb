@@ -88,6 +88,7 @@ module ExtraFormatters
     def debug_log(message, options)
       options[:color] ||= :blue
       @io.puts(format_string(message, options[:color]))
+      @io.flush
     end
   end
 
