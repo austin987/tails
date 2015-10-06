@@ -45,7 +45,7 @@ class VMNet
     net_xml.elements['network/ip'].attributes['address']
   end
 
-  def host_real_mac
+  def guest_real_mac
     net_xml = REXML::Document.new(@net.xml_desc)
     net_xml.elements['network/ip/dhcp/host/'].attributes['mac']
   end
@@ -96,7 +96,7 @@ class VM
   end
 
   def real_mac
-    @vmnet.host_real_mac
+    @vmnet.guest_real_mac
   end
 
   def set_hardware_clock(time)
