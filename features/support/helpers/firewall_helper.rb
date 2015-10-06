@@ -41,7 +41,7 @@ class FirewallLeakCheck
     options[:ignore_lan] ||= true
     @pcap_file = pcap_file
     packets = PacketFu::PcapFile.new.file_to_array(:filename => @pcap_file)
-    @mac_leaks = Set.new
+    mac_leaks = Set.new
     ipv4_tcp_packets = []
     ipv4_nontcp_packets = []
     ipv6_packets = []
@@ -49,8 +49,8 @@ class FirewallLeakCheck
     packets.each do |p|
       if PacketFu::EthPacket.can_parse?(p)
         packet = PacketFu::EthPacket.parse(p)
-        @mac_leaks << packet.eth_saddr
-        @mac_leaks << packet.eth_daddr
+        mac_leaks << packet.eth_saddr
+        mac_leaks << packet.eth_daddr
       end
 
       if PacketFu::TCPPacket.can_parse?(p)
@@ -69,6 +69,7 @@ class FirewallLeakCheck
     ipv4_tcp_hosts = filter_hosts_from_ippackets(ipv4_tcp_packets,
                                                  options[:ignore_lan])
     accepted = Set.new(options[:accepted_hosts])
+    @mac_leaks = mac_leaks
     @ipv4_tcp_leaks = ipv4_tcp_hosts.select { |host| !accepted.member?(host) }
     @ipv4_nontcp_leaks = filter_hosts_from_ippackets(ipv4_nontcp_packets,
                                                      options[:ignore_lan])
