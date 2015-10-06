@@ -91,11 +91,9 @@ BeforeFeature('@product') do |feature|
   else
     raise "The specified Tails ISO image '#{TAILS_ISO}' does not exist"
   end
-  puts "Testing ISO image: #{File.basename(TAILS_ISO)}"
   if !File.exist?(OLD_TAILS_ISO)
     raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
   end
-  puts "Using old ISO image: #{File.basename(OLD_TAILS_ISO)}"
   base = File.basename(feature.file, ".feature").to_s
   $background_snapshot = "#{$config["TMPDIR"]}/#{base}_background.state"
   $virt = Libvirt::open("qemu:///system")
