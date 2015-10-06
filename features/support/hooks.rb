@@ -152,10 +152,10 @@ After('@product') do |scenario|
   end
   if scenario.failed?
     time_of_fail = Time.now - TIME_AT_START
-    tmp = @screen.capture.getFilename
+    screen_capture = @screen.capture
     screenshot_name = sanitize_filename("#{scenario.name}.png")
     screenshot_path = "#{ARTIFACTS_DIR}/#{screenshot_name}"
-    FileUtils.mv(tmp, screenshot_path)
+    FileUtils.mv(screen_capture.getFilename, screenshot_path)
     STDERR.puts("Screenshot: #{screenshot_path}")
     if File.exist?(@video_path)
       STDERR.puts("Video: #{@video_path}")
