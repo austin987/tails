@@ -21,8 +21,7 @@ Feature: Icedove email client
   Scenario: Adblock is not enabled within Icedove
     Given I cancel setting up an email account
     When I open Icedove's Add-ons Manager
-    Then the Add-ons Manager opens
-    When I click the extensions tab
+    And I click the extensions tab
     Then I see that Adblock is not installed in Icedove
 
   Scenario: Enigmail is configured to use the correct keyserver
