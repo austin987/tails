@@ -75,7 +75,7 @@ When /^I click Enigmail's keyserver tab$/ do
   @screen.wait_and_click('IcedoveEnigmailKeyserverTab.png', 10)
 end
 
-Then /^I see Enigmail is configured to use the correct keyserver$/ do
+Then /^I see that Enigmail is configured to use the correct keyserver$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait('IcedoveEnigmailKeyserver.png', 10)
 end

@@ -30,7 +30,7 @@ Feature: Icedove email client
     Given I cancel setting up an email account
     And I go into Enigmail's preferences
     When I click Enigmail's keyserver tab
-    Then I see Enigmail is configured to use the correct keyserver
+    Then I see that Enigmail is configured to use the correct keyserver
     When I click Enigmail's advanced tab
     Then I see that Enigmail is configured to use the correct SOCKS proxy
 
