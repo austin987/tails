@@ -13,6 +13,8 @@ Feature: Icedove email client
     And I save the state so the background can be restored next scenario
 
   Scenario: Torbirdy is enabled and configured to use Tor
+    Given I cancel setting up an email account
+    And I enable Icedove's status bar
     Then I see that Torbirdy is enabled and configured to use Tor
 
   Scenario: Icedove defaults to using IMAP
