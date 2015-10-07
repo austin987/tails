@@ -31,3 +31,6 @@ pref("mail.chat.enabled", false);
 // Disable system addons
 pref("extensions.autoDisableScopes", 3);
 pref("extensions.enabledScopes", 4);
+
+// Only show the tab bar if there's more than one tab to display
+pref("mail.tabs.autoHide", true);
