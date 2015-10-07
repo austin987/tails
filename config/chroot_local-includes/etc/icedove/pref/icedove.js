@@ -34,3 +34,8 @@ pref("extensions.enabledScopes", 4);
 
 // Only show the tab bar if there's more than one tab to display
 pref("mail.tabs.autoHide", true);
+
+// Try to disable "Would you like to help Icedove Mail/News by automatically reporting memory usage, performance, and responsiveness to Mozilla"
+pref("toolkit.telemetry.prompted", 2);
+pref("toolkit.telemetry.rejected", true);
+pref("toolkit.telemetry.enabled", false);
