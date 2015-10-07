@@ -64,7 +64,7 @@ Options affecting the 'activate' action:
 "
 }
 
-escape_path() {
+escape_dots() {
 	printf "%s\n" $1 | sed 's/\./\\./g'
 }
 
@@ -76,10 +76,10 @@ migrate_persistence_preset()
 	local NEW_PRESET_SOURCE="${4}"
 	local CONFIG="${5}"
 	if grep -E -qs --line-regex \
-		-e "$(escape_path ${OLD_PRESET})\s+source=${OLD_PRESET_SOURCE}" \
+		-e "$(escape_dots ${OLD_PRESET})\s+source=${OLD_PRESET_SOURCE}" \
 		"$CONFIG" \
 		&& ! grep -E -qs --line-regex \
-		-e "$(escape_path ${NEW_PRESET})\s+source=${NEW_PRESET_SOURCE}" \
+		-e "$(escape_dots ${NEW_PRESET})\s+source=${NEW_PRESET_SOURCE}" \
 		"$CONFIG"
 	then
 	warning "Need to make $NEW_PRESET persistent"
