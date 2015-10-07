@@ -88,8 +88,12 @@ end
 
 When /^I open Torbirdy's preferences$/ do
   next if @skip_steps_while_restoring_background
-  @screen.wait_and_click('IcedoveTorbirdyEnabled.png', 10)
-  @screen.wait_and_click('IcedoveTorbirdyPreferences.png', 10)
+  step "I open Icedove's Add-ons Manager"
+  step 'I click the extensions tab'
+  @screen.wait_and_click('MozillaExtensionsTorbirdy.png', 10)
+  @screen.type(Sikuli::Key.TAB)   # Select 'More' link
+  @screen.type(Sikuli::Key.TAB)   # Select 'Preferences' button
+  @screen.type(Sikuli::Key.SPACE) # Press 'Preferences' button
   @screen.wait('GnomeQuestionDialogIcon.png', 10)
   @screen.type(Sikuli::Key.ENTER)
 end
