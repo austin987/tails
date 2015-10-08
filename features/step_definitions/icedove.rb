@@ -32,7 +32,7 @@ end
 Then /^I open Icedove's Add-ons Manager$/ do
   next if @skip_steps_while_restoring_background
   @vm.focus_window('Icedove')
-  @screen.type("t", Sikuli::KeyModifier.ALT)
+  @screen.wait_and_click('MozillaMenuButton.png', 10)
   @screen.wait_and_click('IcedoveToolsMenuAddOns.png', 10)
   @screen.wait('MozillaAddonsManagerExtensions.png', 30)
 end
