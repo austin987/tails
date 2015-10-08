@@ -12,11 +12,6 @@ Feature: Icedove email client
     Then I am prompted to setup an email account
     And I save the state so the background can be restored next scenario
 
-  Scenario: Torbirdy is enabled and configured to use Tor
-    Given I cancel setting up an email account
-    And I enable Icedove's status bar
-    Then I see that Torbirdy is enabled and configured to use Tor
-
   Scenario: Icedove defaults to using IMAP
     Then IMAP is the default protocol
 
@@ -33,6 +28,11 @@ Feature: Icedove email client
     Then I see that Enigmail is configured to use the correct keyserver
     When I click Enigmail's advanced tab
     Then I see that Enigmail is configured to use the correct SOCKS proxy
+
+  Scenario: Torbirdy is enabled and configured to use Tor
+    Given I cancel setting up an email account
+    And I enable Icedove's status bar
+    Then I see that Torbirdy is enabled and configured to use Tor
 
   Scenario: Icedove will work over Tor
     Given I cancel setting up an email account

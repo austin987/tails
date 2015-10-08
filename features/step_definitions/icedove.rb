@@ -56,10 +56,6 @@ Then /^I enable Icedove's status bar$/ do
   @screen.wait_and_click('IcedoveMenuViewToolbarsStatusBar.png', 10)
 end
 
-Then /^I see that Torbirdy is enabled and configured to use Tor$/ do
-  @screen.wait('IcedoveTorbirdyEnabled.png', 10)
-end
-
 When /^I go into Enigmail's preferences$/ do
   next if @skip_steps_while_restoring_background
   @vm.focus_window('Icedove')
@@ -90,6 +86,10 @@ Then /^I see that Enigmail is configured to use the correct SOCKS proxy$/ do
   @screen.click('IcedoveEnigmailAdvancedParameters.png')
   @screen.type(Sikuli::Key.END)
   @screen.wait('IcedoveEnigmailProxy.png', 10)
+end
+
+Then /^I see that Torbirdy is enabled and configured to use Tor$/ do
+  @screen.wait('IcedoveTorbirdyEnabled.png', 10)
 end
 
 When /^I open Torbirdy's preferences$/ do
