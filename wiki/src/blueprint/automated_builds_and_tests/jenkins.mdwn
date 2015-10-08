@@ -37,10 +37,13 @@ We achieve this VM reboot by using 3 chained jobs:
   own.
 * The second job is executed on the master (which has 4 build
   executors). This job ssh into the said isotester and issue the
-  reboot. It waits a bit to be sure that the reboot is ongoing and no
-  jobs gets assigned to this isotester meanwhile and put the node back
-  online again. This jobs is higher prio so that it is not lagging behind
-  other wrapper jobs in the queue.
+  reboot. It needs to wait a reasonable amount of time for the Jenkins
+  slave to be stopped by the shutdown process so that no jobs gets assigned
+  to this isotester meanwhile. Stoping this Jenkins slave daemon usually
+  takes a few seconds. During testing, 5 seconds proved to be enough of
+  a delay for that, and more would mean unnecessary lagging time. It then
+  put the node back online again.  This jobs is higher prio so that it is
+  not lagging behind other wrapper jobs in the queue.
 * The third job is the test job, run on the freshly started isotester.
   This one is high prio too to get executed before any other wrapper
   jobs. This jobs are set to run concurrently, so that if a first one is
