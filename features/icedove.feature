@@ -31,7 +31,7 @@ Feature: Icedove email client
 
   Scenario: Torbirdy is enabled and configured to use Tor
     Given I cancel setting up an email account
-    And I enable Icedove's status bar
+    And I open Torbirdy's preferences
     Then I see that Torbirdy is enabled and configured to use Tor
 
   Scenario: Icedove will work over Tor

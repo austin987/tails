@@ -49,13 +49,6 @@ Then /^I see that Adblock is not installed in Icedove$/ do
   end
 end
 
-Then /^I enable Icedove's status bar$/ do
-  next if @skip_steps_while_restoring_background
-  @screen.type("v", Sikuli::KeyModifier.ALT)
-  @screen.wait_and_hover('IcedoveMenuViewToolbars.png', 10)
-  @screen.wait_and_click('IcedoveMenuViewToolbarsStatusBar.png', 10)
-end
-
 When /^I go into Enigmail's preferences$/ do
   next if @skip_steps_while_restoring_background
   @vm.focus_window('Icedove')
