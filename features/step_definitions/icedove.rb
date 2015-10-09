@@ -81,7 +81,7 @@ Then /^I see that Enigmail is configured to use the correct SOCKS proxy$/ do
   @screen.wait('IcedoveEnigmailProxy.png', 10)
 end
 
-Then /^I see that Torbirdy is enabled and configured to use Tor$/ do
+Then /^I see that Torbirdy is configured to use Tor$/ do
   @screen.wait('IcedoveTorbirdyEnabled.png', 10)
 end
 

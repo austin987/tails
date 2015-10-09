@@ -29,10 +29,10 @@ Feature: Icedove email client
     When I click Enigmail's advanced tab
     Then I see that Enigmail is configured to use the correct SOCKS proxy
 
-  Scenario: Torbirdy is enabled and configured to use Tor
+  Scenario: Torbirdy is configured to use Tor
     Given I cancel setting up an email account
     And I open Torbirdy's preferences
-    Then I see that Torbirdy is enabled and configured to use Tor
+    Then I see that Torbirdy is configured to use Tor
 
   Scenario: Icedove will work over Tor
     Given I cancel setting up an email account
