@@ -23,10 +23,6 @@ Feature: Browsing the web using the Unsafe Browser
     And the Unsafe Browser has no proxy configured
     And the Unsafe Browser uses all expected TBB shared libraries
 
-  Scenario: The Unsafe Browser can be used in all languages supported in Tails
-    Given I have started Tails from DVD and logged in and the network is connected
-    Then the Unsafe Browser works in all supported languages
-
   Scenario: Closing the Unsafe Browser shows a stop notification and properly tears down the chroot.
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser
