@@ -14,7 +14,7 @@ Feature: Installing Tails to a USB drive
     And I am told that the destination device cannot be upgraded
 
   Scenario: Try to "Clone & Upgrade" Tails to a pristine USB drive
-    Given Tails has booted from DVD without network and logged in
+    Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "pristine"
     And I plug USB drive "pristine"
     And I start Tails Installer in "Upgrade from ISO" mode
@@ -33,7 +33,7 @@ Feature: Installing Tails to a USB drive
     And I am told that the destination device cannot be upgraded
 
   Scenario: Try to "Clone & Upgrade" Tails to a USB drive with GPT and a FAT partition
-    Given Tails has booted from DVD without network and logged in
+    Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "gptfat"
     And I create a gpt partition with a vfat filesystem on disk "gptfat"
     And I plug USB drive "gptfat"
@@ -42,7 +42,7 @@ Feature: Installing Tails to a USB drive
     And I am told that the destination device cannot be upgraded
 
   Scenario: Try installing Tails to a too small USB drive
-    Given Tails has booted from DVD without network and logged in
+    Given I have started Tails from DVD without network and logged in
     And I temporarily create a 2 GiB disk named "too-small-device"
     And I start Tails Installer in "Clone & Install" mode
     But a suitable USB device is not found
@@ -51,7 +51,7 @@ Feature: Installing Tails to a USB drive
     And a suitable USB device is not found
 
   Scenario: Test that Tails installer can detect when a target USB drive is inserted or removed
-    Given Tails has booted from DVD without network and logged in
+    Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "temp"
     And I start Tails Installer in "Clone & Install" mode
     But a suitable USB device is not found
@@ -62,7 +62,7 @@ Feature: Installing Tails to a USB drive
     And a suitable USB device is not found
 
   Scenario: Installing Tails to a pristine USB drive
-    Given Tails has booted from DVD without network and logged in
+    Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "install"
     And I plug USB drive "install"
     And I "Clone & Install" Tails to USB drive "install"
@@ -70,14 +70,14 @@ Feature: Installing Tails to a USB drive
     But there is no persistence partition on USB drive "install"
 
   Scenario: Booting Tails from a USB drive without a persistent partition and creating one
-    Given Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
+    Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
     Then Tails seems to have booted normally
     When I create a persistent partition
     Then a Tails persistence partition exists on USB drive "current"
 
   Scenario: Booting Tails from a USB drive without a persistent partition
-    Given Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
+    Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
     Then Tails seems to have booted normally
     And Tails is running from USB drive "current"
@@ -85,7 +85,7 @@ Feature: Installing Tails to a USB drive
     And there is no persistence partition on USB drive "current"
 
   Scenario: Booting Tails from a USB drive in UEFI mode
-    Given Tails has booted without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
+    Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     Then I power off the computer
     Given the computer is set to boot in UEFI mode
     When I start Tails from USB drive "current" with network unplugged and I login
@@ -95,7 +95,7 @@ Feature: Installing Tails to a USB drive
     And Tails has started in UEFI mode
 
   Scenario: Installing Tails to a USB drive with an MBR partition table but no partitions, and making sure that it boots
-    Given Tails has booted from DVD without network and logged in
+    Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "mbr"
     And I create a msdos label on disk "mbr"
     And I plug USB drive "mbr"

@@ -5,7 +5,7 @@ Feature: Encryption and verification using GnuPG
   And decrypt and verify GnuPG blocks
 
   Background:
-    Given Tails has booted from DVD without network and logged in
+    Given I have started Tails from DVD without network and logged in
     And I generate an OpenPGP key named "test" with password "asdf"
 
   Scenario: Encryption and decryption using Tails OpenPGP Applet

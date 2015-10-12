@@ -139,6 +139,14 @@ end
 def wait_until_tor_is_working
   try_for(270) { $vm.execute(
     '. /usr/local/lib/tails-shell-library/tor.sh; tor_is_working').success? }
+rescue Timeout::Error => e
+  c = $vm.execute("grep restart-tor /var/log/syslog")
+  if c.success?
+    debug_log("From syslog:\n" + c.stdout.sub(/^/, "  "))
+  else
+    debug_log("Nothing was syslog:ed about 'restart-tor'")
+  end
+  raise e
 end
 
 def convert_bytes_mod(unit)

@@ -5,7 +5,7 @@ Feature: Microsoft Windows Camouflage
   I should be presented with a Microsoft Windows like environment
 
   Background:
-    Given Tails has booted from DVD without network and stopped at Tails Greeter's login screen
+    Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And I enable more Tails Greeter options
     And I enable Microsoft Windows camouflage
     And I log in to a new session

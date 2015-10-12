@@ -5,7 +5,7 @@ Feature: Logging in via SSH
   all Internet traffic should flow only through Tor
 
   Background:
-    Given Tails has booted from DVD and logged in and the network is connected
+    Given I have started Tails from DVD and logged in and the network is connected
 
   @check_tor_leaks
   Scenario: Connecting to an SSH server on the Internet

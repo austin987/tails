@@ -5,7 +5,7 @@ Feature: Using Tails with Tor pluggable transports
   And avoid connecting directly to the Tor Network
 
   Background:
-    Given Tails has booted from DVD without network and logged in with bridge mode enabled
+    Given I have started Tails from DVD without network and logged in with bridge mode enabled
     And I capture all network traffic
     When the network is plugged
     Then the Tor Launcher autostarts

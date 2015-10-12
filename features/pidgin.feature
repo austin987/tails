@@ -9,7 +9,7 @@ Feature: Chatting anonymously using Pidgin
 
   @check_tor_leaks
   Scenario: Chatting with some friend over XMPP
-    Given Tails has booted from DVD and logged in and the network is connected
+    Given I have started Tails from DVD and logged in and the network is connected
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     When I create my XMPP account
@@ -22,7 +22,7 @@ Feature: Chatting anonymously using Pidgin
 
   @check_tor_leaks
   Scenario: Chatting with some friend over XMPP in a multi-user chat
-    Given Tails has booted from DVD and logged in and the network is connected
+    Given I have started Tails from DVD and logged in and the network is connected
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     When I create my XMPP account
@@ -37,7 +37,7 @@ Feature: Chatting anonymously using Pidgin
 
   @check_tor_leaks
   Scenario: Chatting with some friend over XMPP and with OTR
-    Given Tails has booted from DVD and logged in and the network is connected
+    Given I have started Tails from DVD and logged in and the network is connected
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     When I create my XMPP account
@@ -53,7 +53,7 @@ Feature: Chatting anonymously using Pidgin
 
   @check_tor_leaks
   Scenario: Connecting to the #tails IRC channel with the pre-configured account
-    Given Tails has booted from DVD and logged in and the network is connected
+    Given I have started Tails from DVD and logged in and the network is connected
     And Pidgin has the expected accounts configured with random nicknames
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
@@ -69,14 +69,14 @@ Feature: Chatting anonymously using Pidgin
     And the "irc.oftc.net" account only responds to PING and VERSION CTCP requests
 
   Scenario: Adding a certificate to Pidgin
-    Given Tails has booted from DVD and logged in and the network is connected
+    Given I have started Tails from DVD and logged in and the network is connected
     And I start Pidgin through the GNOME menu
     And I see Pidgin's account manager window
     And I close Pidgin's account manager window
     Then I can add a certificate from the "/home/amnesia" directory to Pidgin
 
   Scenario: Failing to add a certificate to Pidgin
-    Given Tails has booted from DVD and logged in and the network is connected
+    Given I have started Tails from DVD and logged in and the network is connected
     When I start Pidgin through the GNOME menu
     And I see Pidgin's account manager window
     And I close Pidgin's account manager window
@@ -90,7 +90,7 @@ Feature: Chatting anonymously using Pidgin
 
   @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
-    Given Tails has booted without network from a USB drive with a persistent partition enabled and logged in
+    Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And Pidgin has the expected accounts configured with random nicknames
     And the network is plugged
     And Tor is ready
