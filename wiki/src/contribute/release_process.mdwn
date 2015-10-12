@@ -408,8 +408,16 @@ Better catch this before people spend time doing manual tests.
 Build the almost-final image
 ----------------------------
 
-[[Build images|contribute/build]] and carefully read the build logs to
-make sure nothing bad happened.
+* Check out the release tag:
+
+      git checkout "${TAG}"
+
+* [[Build images|contribute/build]] and carefully read the build logs to
+  make sure nothing bad happened.
+
+* Check out the release branch again:
+
+      git checkout "${RELEASE_BRANCH}"
 
 SquashFS file order
 -------------------
@@ -451,8 +459,16 @@ suite should be ready, so it is time to:
           git tag -f -u "$TAILS_SIGNATURE_KEY" \
   	    -m "tagging version ${VERSION}" "${TAG}" && \
           git push --tags -f
-  
+
+* check out the release tag:
+
+      git checkout "${TAG}"
+
 * build the final image!
+
+* check out the release branch again:
+
+      git checkout "${RELEASE_BRANCH}"
 
 <a id="prepare-iuk"></a>
 
@@ -464,11 +480,10 @@ First, create a directory with a suitable name and go there:
 	mkdir "$ISOS/tails-i386-$VERSION" && \
 	cd "$ISOS/tails-i386-$VERSION"
 
-Second, copy the built image to this brand new directory.
-Then, rename it:
+Second, move the built image to this brand new directory:
 
-	mv "$ARTIFACTS/tails-i386-${RELEASE_BRANCH}-$VERSION-"*".iso" \
-	   "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso"
+	mv "$ARTIFACTS/tails-i386-$VERSION.iso" \
+	   "$ISOS/tails-i386-$VERSION/"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
@@ -710,7 +725,7 @@ In order to get any new documentation into the website, merge either
 Rename the `.packages` file to remove the `.iso` and build date parts
 of its name:
 
-	mv "$ARTIFACTS"/tails-i386-"${RELEASE_BRANCH}-$VERSION"-*.iso.packages \
+	mv "$ARTIFACTS"/tails-i386-"-$VERSION"-*.iso.packages \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages"
 
 Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
