@@ -22,7 +22,7 @@
 
   1. Execute the following command:
 
-         diskutil list
+        diskutil list
 
      This returns a list of all the current storage devices. For example:
 
@@ -35,13 +35,13 @@
           3:                      EFI              134.1 GB  disk0s3
           4:     Microsoft Basic Data BOOTCAMP     115.5 GB  disk0s4
 
-  <div class="step-image">[[!img inc/infography/plug-first-usb.png link="no"]]</div>
+     <div class="step-image">[[!img inc/infography/plug-first-usb.png link="no"]]</div>
 
   1. Plug the first USB stick in the computer.
 
-  1. Run again the same command as before:
+  1. Run again the same command:
 
-         diskutil list
+        diskutil list
 
      A new device should appear in the list of storage devices. Check
      that the size of the device corresponds to the size of your USB
@@ -60,57 +60,51 @@
           0:   FDisk_partition_scheme             *4.0 GB    disk1
           1:                Apple_HFS Untitled 1   4.0 GB    disk1s1
 
-In this example, the USB stick is 4.0 GB and the device name is `/dev/disk1`.
-Yours are probably different.
+     In this example, the USB stick is 4.0 GB and the device name is `/dev/disk1`.
+     Yours are probably different.
 
-<div class="caution">
-
-<p>If you are not sure about the device name you should stop proceeding or
-<strong>you risk overwriting any hard disk on the system</strong>.</p>
-
-</div>
+     <div class="caution">
+     <p>If you are not sure about the device name you should stop proceeding or
+     <strong>you risk overwriting any hard disk on the system</strong>.</p>
+     </div>
 
   1. To unmount the USB stick, execute the following command, replacing `[device]`
-  with the device name found in step 1.
+     with the device name found in step 1.
 
-     diskutil unmountDisk [device]
+        diskutil unmountDisk [device]
 
   1. To do the copy, execute the following command, replacing `[tails.iso]` by the path to the ISO
-image that you want to copy and `[device]` by the device name found in step
-1. You can add `r` before `disk` to make the installation faster.
+image that you want to copy and `[device]` by the device name found in step 1.
+You can add `r` before `disk` to make the installation faster.
 
-    dd if=[tails.iso] of=[device] bs=16m && sync
+      dd if=[tails.iso] of=[device] bs=16m && sync
 
-You should get something like this:
+     You should get something like this:
 
-    dd if=tails-i386-1.3.iso of=/dev/rdisk9 bs=16m && sync
+      dd if=tails-i386-1.3.iso of=/dev/rdisk9 bs=16m && sync
 
-<div class="tip">
+     <div class="tip">
+     <p>If you are not sure about the path to the ISO image or if you get a
+     <span class="guilabel">No such
+     file or directory</span> error, you can first type <code>dd if=</code> and
+     then drag and drop the icon of the ISO image from a file browser onto
+     <span class="application">
+     Terminal</span>. This should insert the correct path to the ISO image in
+     <span class="application">Terminal</span>.
+     Then complete the command and execute it.</p>
+     </div>
 
-<p>If you are not sure about the path to the ISO image or if you get a
-<span class="guilabel">No such
-file or directory</span> error, you can first type <code>dd if=</code> and
-then drag and drop the icon of the ISO image from a file browser onto
-<span class="application">
-Terminal</span>. This should insert the correct path to the ISO image in
-<span class="application">Terminal</span>.
-Then complete the command and execute it.</p>
+     If you don't see any error message, Tails is being copied onto the USB
+     stick. The whole process might take some time, generally a few minutes.
 
-</div>
+     <div class="tip">
+     <p>If you get a "Permission denied" error, try executing the command with
+     <code>sudo</code>:</p>
 
-If you don't see any error message, Tails is being copied onto the USB
-stick. The whole process might take some time, generally a few minutes.
+     <pre>sudo dd if=[tails.iso] of=[device] bs=16m && sync</pre>
 
-<div class="tip">
+     <p>Be careful, if the device name is wrong you might overwriting any hard disk on
+     the system.</p>
+     </div>
 
-<p>If you get a "Permission denied" error, try executing the command with
-<code>sudo</code>:</p>
-
-<pre>sudo dd if=[tails.iso] of=[device] bs=16m && sync</pre>
-
-<p>Be careful, if the device name is wrong you might overwriting any hard disk on
-the system.</p>
-
-</div>
-
-<p>The installation is complete when the command prompt reappears.</p>
+     The installation is complete when the command prompt reappears.
