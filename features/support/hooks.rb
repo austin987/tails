@@ -170,6 +170,7 @@ After('@product') do |scenario|
       artifact_path = "#{ARTIFACTS_DIR}/#{artifact_name}"
       assert(File.exist?(file))
       FileUtils.mv(file, artifact_path)
+      info_log
       info_log_artifact_location(type, artifact_path)
     end
     if $config["PAUSE_ON_FAIL"]
