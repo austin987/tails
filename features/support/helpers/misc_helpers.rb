@@ -194,9 +194,10 @@ def random_alnum_string(min_len, max_len = 0)
 end
 
 # Sanitize the filename from unix-hostile filename characters
-def sanitize_filename(filename)
+def sanitize_filename(filename, options = {})
+  options[:replacement] ||= '_'
   bad_unix_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
-  filename.gsub(bad_unix_filename_chars, '_')
+  filename.gsub(bad_unix_filename_chars, options[:replacement])
 end
 
 def info_log_artifact_location(type, path)
