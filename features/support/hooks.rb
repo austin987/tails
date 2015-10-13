@@ -221,23 +221,22 @@ end
 Before('@product', '@check_tor_leaks') do |scenario|
   @tor_leaks_sniffer = Sniffer.new(sanitize_filename(scenario.name), $vmnet)
   @tor_leaks_sniffer.capture
+  add_after_scenario_hook do
+    @tor_leaks_sniffer.clear
+  end
 end
 
 After('@product', '@check_tor_leaks') do |scenario|
-  begin
-    @tor_leaks_sniffer.stop
-    if scenario.passed?
-      if @bridge_hosts.nil?
-        expected_tor_nodes = get_all_tor_nodes
-      else
-        expected_tor_nodes = @bridge_hosts
-      end
-      leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file,
-                                    :accepted_hosts => expected_tor_nodes)
-      leaks.assert_no_leaks
+  @tor_leaks_sniffer.stop
+  if scenario.passed?
+    if @bridge_hosts.nil?
+      expected_tor_nodes = get_all_tor_nodes
+    else
+      expected_tor_nodes = @bridge_hosts
     end
-  ensure
-    @tor_leaks_sniffer.clear
+    leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file,
+                                  :accepted_hosts => expected_tor_nodes)
+    leaks.assert_no_leaks
   end
 end
 
