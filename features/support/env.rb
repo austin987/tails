@@ -46,6 +46,22 @@ def current_branch
   return branch
 end
 
+# If HEAD is tagged, return the name of the tag, otherwise the name of
+# the checked out branch.
+def current_tag_or_branch
+  cmd_helper("git describe --tags --exact-match #{current_commit}".split).strip
+rescue Test::Unit::AssertionFailedError
+  current_branch
+end
+
+def current_commit
+  cmd_helper('git rev-parse HEAD'.split).strip
+end
+
+def current_short_commit
+  current_commit[0, 7]
+end
+
 RSpec::Matchers.define :have_suite do |suite|
   match do |string|
     # e.g.: `deb http://deb.tails.boum.org/ 0.10 main contrib non-free`
