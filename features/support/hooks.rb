@@ -47,6 +47,30 @@ AfterConfiguration do |config|
   bind_java_to_pseudo_fifo_logger
 end
 
+# Common
+########
+
+After do
+  if @after_scenario_hooks
+    @after_scenario_hooks.each { |block| block.call }
+  end
+  @after_scenario_hooks = Array.new
+end
+
+BeforeFeature('@product', '@source') do |feature|
+  raise "Feature #{feature.file} is tagged both @product and @source, " +
+        "which is an impossible combination"
+end
+
+at_exit do
+  delete_all_snapshots if !KEEP_SNAPSHOTS
+  # The artifacts directory is empty (and useless) if it contains
+  # nothing but the mandatory . and ..
+  if Dir.entries(ARTIFACTS_DIR).size <= 2
+    FileUtils.rmdir(ARTIFACTS_DIR)
+  end
+end
+
 # For @product tests
 ####################
 
@@ -231,28 +255,4 @@ end
 After('@source') do
   Dir.chdir @orig_pwd
   FileUtils.remove_entry_secure @git_clone
-end
-
-# Common
-########
-
-After do
-  if @after_scenario_hooks
-    @after_scenario_hooks.each { |block| block.call }
-  end
-  @after_scenario_hooks = Array.new
-end
-
-BeforeFeature('@product', '@source') do |feature|
-  raise "Feature #{feature.file} is tagged both @product and @source, " +
-        "which is an impossible combination"
-end
-
-at_exit do
-  delete_all_snapshots if !KEEP_SNAPSHOTS
-  # The artifacts directory is empty (and useless) if it contains
-  # nothing but the mandatory . and ..
-  if Dir.entries(ARTIFACTS_DIR).size <= 2
-    FileUtils.rmdir(ARTIFACTS_DIR)
-  end
 end
