@@ -46,6 +46,8 @@ OLD_TAILS_ISO = ENV['OLD_TAILS_ISO'] || TAILS_ISO
 TIME_AT_START = Time.now
 ARTIFACTS_DIR = $config['TMPDIR'] + "/run-" +
                 TIME_AT_START.to_s.gsub(/\s/, "_") + "-" +
+                "git_" + sanitize_filename(current_tag_or_branch) + "_" +
+                current_short_commit + "-" +
                 random_alnum_string(6)
 
 # Constants that are statically initialized.
