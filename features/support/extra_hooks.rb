@@ -79,7 +79,7 @@ module ExtraFormatters
 
     def after_feature(feature)
       if $after_feature_hooks
-        $after_feature_hooks.each do |hook|
+        $after_feature_hooks.reverse.each do |hook|
           hook.invoke(feature) if feature.accept_hook?(hook)
         end
       end
