@@ -40,9 +40,9 @@ END_OF_CHANGELOG
 end
 
 def current_branch
-  branch = `git branch | awk '/^\*/ { print $2 }'`.strip
-  raise StandardError.new('git-branch failed.') if $? != 0
-
+  cmd = 'git rev-parse --symbolic-full-name --abbrev-ref HEAD'.split
+  branch = cmd_helper(cmd).strip
+  assert_not_equal("HEAD", branch, "We are in 'detached HEAD' state")
   return branch
 end
 
