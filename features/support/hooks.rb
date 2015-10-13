@@ -69,6 +69,10 @@ def add_after_scenario_hook(&block)
   @after_scenario_hooks << block
 end
 
+def save_failure_artifact(type, path)
+  $failure_artifacts << [type, path]
+end
+
 BeforeFeature('@product') do |feature|
   delete_all_snapshots if !KEEP_SNAPSHOTS
   if TAILS_ISO.nil?
@@ -111,6 +115,7 @@ end
 
 # BeforeScenario
 Before('@product') do |scenario|
+  $failure_artifacts = Array.new
   @screen = Sikuli::Screen.new
   if $config["CAPTURE"]
     video_name = sanitize_filename("#{scenario.name}.mkv")
@@ -148,21 +153,25 @@ After('@product') do |scenario|
     # what the error was.
     sleep 3 if scenario.failed?
     Process.kill("INT", @video_capture_pid)
+    save_failure_artifact("Video", @video_path)
   end
   if scenario.failed?
     time_of_fail = Time.now - TIME_AT_START
-    screen_capture = @screen.capture
-    screenshot_name = sanitize_filename("#{scenario.name}.png")
-    screenshot_path = "#{ARTIFACTS_DIR}/#{screenshot_name}"
-    FileUtils.mv(screen_capture.getFilename, screenshot_path)
-    info_log_artifact_location("Screenshot", screenshot_path)
-    if File.exist?(@video_path)
-      info_log_artifact_location("Video", @video_path)
-    end
     secs = "%02d" % (time_of_fail % 60)
     mins = "%02d" % ((time_of_fail / 60) % 60)
     hrs  = "%02d" % (time_of_fail / (60*60))
-    info_log("Scenario failed at time #{hrs}:#{mins}:#{secs}")
+    elapsed = "#{hrs}:#{mins}:#{secs}"
+    info_log("Scenario failed at time #{elapsed}")
+    screen_capture = @screen.capture
+    save_failure_artifact("Screenshot", screen_capture.getFilename)
+    $failure_artifacts.sort!
+    $failure_artifacts.each do |type, file|
+      artifact_name = sanitize_filename("#{elapsed}_#{scenario.name}#{File.extname(file)}")
+      artifact_path = "#{ARTIFACTS_DIR}/#{artifact_name}"
+      assert(File.exist?(file))
+      FileUtils.mv(file, artifact_path)
+      info_log_artifact_location(type, artifact_path)
+    end
     if $config["PAUSE_ON_FAIL"]
       STDERR.puts ""
       STDERR.puts "Press ENTER to continue running the test suite"
