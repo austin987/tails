@@ -7,26 +7,22 @@ Feature: Chatting anonymously using Pidgin
   And AppArmor should prevent Pidgin from doing dangerous things
   And all Internet traffic should flow only through Tor
 
-  Background:
-    Given a computer
-    When I start Tails from DVD and I login
-    Then Pidgin has the expected accounts configured with random nicknames
-    And I save the state so the background can be restored next scenario
-
- @check_tor_leaks
- Scenario: Chatting with some friend over XMPP
-   When I start Pidgin through the GNOME menu
-   Then I see Pidgin's account manager window
-   When I create my XMPP account
-   And I close Pidgin's account manager window
-   Then Pidgin automatically enables my XMPP account
-   Given my XMPP friend goes online
-   When I start a conversation with my friend
-   And I say something to my friend
-   Then I receive a response from my friend
+  @check_tor_leaks
+  Scenario: Chatting with some friend over XMPP
+    Given I have started Tails from DVD and logged in and the network is connected
+    When I start Pidgin through the GNOME menu
+    Then I see Pidgin's account manager window
+    When I create my XMPP account
+    And I close Pidgin's account manager window
+    Then Pidgin automatically enables my XMPP account
+    Given my XMPP friend goes online
+    When I start a conversation with my friend
+    And I say something to my friend
+    Then I receive a response from my friend
 
   @check_tor_leaks
   Scenario: Chatting with some friend over XMPP in a multi-user chat
+    Given I have started Tails from DVD and logged in and the network is connected
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     When I create my XMPP account
@@ -41,6 +37,7 @@ Feature: Chatting anonymously using Pidgin
 
   @check_tor_leaks
   Scenario: Chatting with some friend over XMPP and with OTR
+    Given I have started Tails from DVD and logged in and the network is connected
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     When I create my XMPP account
@@ -56,6 +53,8 @@ Feature: Chatting anonymously using Pidgin
 
   @check_tor_leaks
   Scenario: Connecting to the #tails IRC channel with the pre-configured account
+    Given I have started Tails from DVD and logged in and the network is connected
+    And Pidgin has the expected accounts configured with random nicknames
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     When I activate the "irc.oftc.net" Pidgin account
@@ -70,13 +69,15 @@ Feature: Chatting anonymously using Pidgin
     And the "irc.oftc.net" account only responds to PING and VERSION CTCP requests
 
   Scenario: Adding a certificate to Pidgin
+    Given I have started Tails from DVD and logged in and the network is connected
     And I start Pidgin through the GNOME menu
     And I see Pidgin's account manager window
     And I close Pidgin's account manager window
     Then I can add a certificate from the "/home/amnesia" directory to Pidgin
 
   Scenario: Failing to add a certificate to Pidgin
-    And I start Pidgin through the GNOME menu
+    Given I have started Tails from DVD and logged in and the network is connected
+    When I start Pidgin through the GNOME menu
     And I see Pidgin's account manager window
     And I close Pidgin's account manager window
     Then I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
@@ -87,11 +88,14 @@ Feature: Chatting anonymously using Pidgin
     And I close Pidgin's certificate manager
     Then I cannot add a certificate from the "/live/overlay/home/amnesia/.gnupg" directory to Pidgin
 
-  @keep_volumes @check_tor_leaks
+  @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
-    Given the USB drive "current" contains Tails with persistence configured and password "asdf"
-    And a computer
-    And I start Tails from USB drive "current" and I login with persistence password "asdf"
+    Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
+    And Pidgin has the expected accounts configured with random nicknames
+    And the network is plugged
+    And Tor is ready
+    And available upgrades have been checked
+    And all notifications have disappeared
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     # And I generate an OTR key for the default Pidgin account
@@ -99,7 +103,7 @@ Feature: Chatting anonymously using Pidgin
     # And I take note of the OTR key for Pidgin's "irc.oftc.net" account
     And I shutdown Tails and wait for the computer to power off
     Given a computer
-    And I start Tails from USB drive "current" and I login with persistence password "asdf"
+    And I start Tails from USB drive "current" and I login with persistence enabled
     And Pidgin has the expected persistent accounts configured
     # And Pidgin has the expected persistent OTR keys
     When I start Pidgin through the GNOME menu
