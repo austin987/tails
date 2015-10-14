@@ -63,7 +63,7 @@ def post_snapshot_restore_hook
       $vm.execute("service tor stop")
       $vm.execute("rm -f /var/log/tor/log")
       $vm.host_to_guest_time_sync
-      $vm.execute("restart-tor")
+      $vm.spawn("restart-tor")
       wait_until_tor_is_working
       if $vm.file_content('/proc/cmdline').include?(' i2p')
         $vm.execute('/usr/local/sbin/tails-i2p stop')
