@@ -11,7 +11,6 @@ Feature: Spoofing MAC addresses
     And I start the computer
     And the computer boots Tails
     And no network interfaces are enabled
-    And I save the state so the background can be restored next scenario
     And the real MAC address was not leaked
 
   Scenario: MAC address spoofing is disabled

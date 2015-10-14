@@ -2,7 +2,7 @@ class OpenPGPKeyserverCommunicationError < StandardError
 end
 
 def count_gpg_signatures(key)
-  output = @vm.execute_successfully("gpg --batch --list-sigs #{key}",
+  output = $vm.execute_successfully("gpg --batch --list-sigs #{key}",
                                     :user => LIVE_USER).stdout
   return output.scan(/^sig/).count
 end
@@ -16,7 +16,7 @@ def seahorse_wait_helper(img, time = 20)
               "Could not find 'SeahorseKeyserverError.png'")
     else
       # Seahorse has been known to segfault during tests
-      syslog = @vm.file_content('/var/log/syslog')
+      syslog = $vm.file_content('/var/log/syslog')
       m = /seahorse\[[0-9]+\]: segfault/.match(syslog)
       assert(!m, 'Seahorse aborted with a segmentation fault')
     end
@@ -26,7 +26,6 @@ def seahorse_wait_helper(img, time = 20)
 end
 
 Then /^the key "([^"]+)" has (only|more than) (\d+) signatures$/ do |key, qualifier, num|
-  next if @skip_steps_while_restoring_background
   count = count_gpg_signatures(key)
   case qualifier
   when 'only'
@@ -39,21 +38,19 @@ Then /^the key "([^"]+)" has (only|more than) (\d+) signatures$/ do |key, qualif
 end
 
 When /^the "([^"]+)" OpenPGP key is not in the live user's public keyring$/ do |keyid|
-  next if @skip_steps_while_restoring_background
-  assert(!@vm.execute("gpg --batch --list-keys '#{keyid}'",
+  assert(!$vm.execute("gpg --batch --list-keys '#{keyid}'",
                       :user => LIVE_USER).success?,
          "The '#{keyid}' key is in the live user's public keyring.")
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signatures)?$/ do |keyid, without|
-  next if @skip_steps_while_restoring_background
   if without
     importopts = '--keyserver-options import-clean'
   else
     importopts = ''
   end
   retry_tor do
-    @gnupg_recv_key_res = @vm.execute_successfully(
+    @gnupg_recv_key_res = $vm.execute_successfully(
       "gpg --batch #{importopts} --recv-key '#{keyid}'",
       :user => LIVE_USER)
     if @gnupg_recv_key_res.failure?
@@ -65,27 +62,23 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
 end
 
 When /^the GnuPG fetch is successful$/ do
-  next if @skip_steps_while_restoring_background
   assert(@gnupg_recv_key_res.success?,
          "gpg keyserver fetch failed:\n#{@gnupg_recv_key_res.stderr}")
 end
 
 When /^GnuPG uses the configured keyserver$/ do
-  next if @skip_steps_while_restoring_background
   assert(@gnupg_recv_key_res.stderr[CONFIGURED_KEYSERVER_HOSTNAME],
          "GnuPG's stderr did not mention keyserver #{CONFIGURED_KEYSERVER_HOSTNAME}")
 end
 
 When /^the "([^"]+)" key is in the live user's public keyring after at most (\d+) seconds$/ do |keyid, delay|
-  next if @skip_steps_while_restoring_background
   try_for(delay.to_f, :msg => "The '#{keyid}' key is not in the live user's public keyring") {
-    @vm.execute("gpg --batch --list-keys '#{keyid}'",
+    $vm.execute("gpg --batch --list-keys '#{keyid}'",
                 :user => LIVE_USER).success?
   }
 end
 
 When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
-  next if @skip_steps_while_restoring_background
   if withgpgapplet
     seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
   else
@@ -94,12 +87,10 @@ When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
 end
 
 Then /^Seahorse has opened$/ do
-  next if @skip_steps_while_restoring_background
   seahorse_wait_helper('SeahorseWindow.png')
 end
 
 Then /^I enable key synchronization in Seahorse$/ do
-  next if @skip_steps_while_restoring_background
   step 'process "seahorse" is running'
   @screen.wait_and_click("SeahorseWindow.png", 10)
   seahorse_menu_click_helper('SeahorseEdit.png', 'SeahorseEditPreferences.png', 'seahorse')
@@ -110,7 +101,6 @@ Then /^I enable key synchronization in Seahorse$/ do
 end
 
 Then /^I synchronize keys in Seahorse$/ do
-  next if @skip_steps_while_restoring_background
   recovery_proc = Proc.new do
     @screen.wait_and_click('GnomeCloseButton.png', 20)
     if @screen.exists('SeahorseSynchronizing.png')
@@ -134,7 +124,6 @@ Then /^I synchronize keys in Seahorse$/ do
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP Applet)?$/ do |keyid, withgpgapplet|
-  next if @skip_steps_while_restoring_background
   if withgpgapplet
     step "I start Seahorse via the Tails OpenPGP Applet"
   else
@@ -171,8 +160,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
 end
 
 Then /^Seahorse is configured to use the correct keyserver$/ do
-  next if @skip_steps_while_restoring_background
-  @gnome_keyservers = YAML.load(@vm.execute_successfully('gsettings get org.gnome.crypto.pgp keyservers',
+  @gnome_keyservers = YAML.load($vm.execute_successfully('gsettings get org.gnome.crypto.pgp keyservers',
                                                          :user => LIVE_USER).stdout)
   assert_equal(1, @gnome_keyservers.count, 'Seahorse should only have one keyserver configured.')
   # Seahorse doesn't support hkps so that part of the domain is stripped out.
