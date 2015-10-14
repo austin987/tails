@@ -4,31 +4,31 @@ Feature: I2P
   I *might* want to use I2P
 
   Scenario: I2P is disabled by default
-    Given Tails has booted from DVD and logged in and the network is connected
+    Given I have started Tails from DVD and logged in and the network is connected
     Then the I2P Browser desktop file is not present
     And the I2P Browser sudo rules are not present
     And the I2P firewall rules are disabled
 
   Scenario: I2P is enabled when the "i2p" boot parameter is added
-    Given Tails has booted from DVD with I2P enabled and logged in and the network is connected
+    Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     Then the I2P Browser desktop file is present
     And the I2P Browser sudo rules are enabled
     And the I2P firewall rules are enabled
 
   Scenario: I2P's AppArmor profile is in enforce mode
-    Given Tails has booted from DVD with I2P enabled and logged in and the network is connected
+    Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     When I2P is running
     Then the running process "i2p" is confined with AppArmor in enforce mode
 
   Scenario: The I2P Browser works as it should
-    Given Tails has booted from DVD with I2P enabled and logged in and the network is connected
+    Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
     And the I2P Browser uses all expected TBB shared libraries
 
   Scenario: Closing the I2P Browser shows a stop notification and properly tears down the chroot.
-    Given Tails has booted from DVD with I2P enabled and logged in and the network is connected
+    Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
     When I successfully start the I2P Browser
     And I close the I2P Browser
@@ -36,7 +36,7 @@ Feature: I2P
     And the I2P Browser chroot is torn down
 
   Scenario: The I2P internal websites can be viewed in I2P Browser
-    Given Tails has booted from DVD with I2P enabled and logged in and the network is connected
+    Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
@@ -45,14 +45,14 @@ Feature: I2P
     Then the I2P homepage loads in I2P Browser
 
  Scenario: I2P is configured to run in Hidden mode
-    Given Tails has booted from DVD with I2P enabled and logged in and the network is connected
+    Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
     And I2P is running in hidden mode
 
   Scenario: Connecting to the #i2p IRC channel with the pre-configured account
-    Given Tails has booted from DVD with I2P enabled and logged in and the network is connected
+    Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
     And I2P successfully built a tunnel
     When I start Pidgin through the GNOME menu
@@ -63,7 +63,7 @@ Feature: I2P
     And I can join the "#i2p" channel on "I2P"
 
   Scenario: I2P displays a notice when bootstrapping fails
-    Given Tails has booted from DVD with I2P enabled and logged in
+    Given I have started Tails from DVD with I2P enabled and logged in
     And I2P is not running
     When the network is plugged
     And Tor has built a circuit
@@ -77,7 +77,7 @@ Feature: I2P
     Then the I2P router console is displayed in I2P Browser
 
   Scenario: I2P displays a notice when it fails to start
-    Given Tails has booted from DVD with I2P enabled and logged in
+    Given I have started Tails from DVD with I2P enabled and logged in
     And I2P is not running
     And I block the I2P router console port
     Then I2P is not running

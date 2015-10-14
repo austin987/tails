@@ -22,7 +22,7 @@ def checkpoints
 
     'with-no-network-and-i2p' => {
       :temporary => true,
-      :description => 'Tails has booted from DVD with I2P enabled and logged in',
+      :description => 'I have started Tails from DVD with I2P enabled and logged in',
       :steps => [
         'I set Tails to boot with options "i2p"',
         'the network is unplugged',
@@ -35,7 +35,7 @@ def checkpoints
 
     'with-network-and-i2p' => {
       :temporary => true,
-      :description => 'Tails has booted from DVD with I2P enabled and logged in and the network is connected',
+      :description => 'I have started Tails from DVD with I2P enabled and logged in and the network is connected',
       :parent_checkpoint => "with-no-network-and-i2p",
       :steps => [
         'the network is plugged',
