@@ -4,13 +4,11 @@ Feature: Icedove email client
   I may want to use an email client
 
   Background:
-    Given a computer
-    When I start Tails from DVD and I login
+    Given I have started Tails from DVD and logged in and the network is connected
     When I start "Icedove" via the GNOME "Internet" applications menu
     And Icedove has started
     And I have not configured an email account
     Then I am prompted to setup an email account
-    And I save the state so the background can be restored next scenario
 
   Scenario: Icedove defaults to using IMAP
     Then IMAP is the default protocol
