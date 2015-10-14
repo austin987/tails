@@ -6,10 +6,17 @@ debug_command() {
     "$@"
 }
 
+# Takes either one argument (the file) or two arguments (user to read
+# the file, and the file).
 debug_file() {
+    local user=root
+    if [ "${#}" -gt 1 ]; then
+        user="${1}"
+        shift
+    fi
     echo
     echo "===== content of $1 ====="
-    cat "$1"
+    sudo -u "${user}" -- cat "${1}"
 }
 
 debug_command /usr/sbin/dmidecode -s system-manufacturer
@@ -22,14 +29,14 @@ debug_command "/usr/bin/lspci"
 debug_command grep spoof-mac: /var/log/messages
 
 debug_file "/etc/X11/xorg.conf"
-debug_file "/home/amnesia/.xsession-errors"
+debug_file amnesia "/home/amnesia/.xsession-errors"
 debug_file "/proc/asound/cards"
 debug_file "/proc/asound/devices"
 debug_file "/proc/asound/modules"
 debug_file "/var/log/Xorg.0.log"
-debug_file "/var/log/gdm3/:0-slave.log"
-debug_file "/var/log/gdm3/:0-greeter.log"
-debug_file "/var/log/gdm3/tails-greeter.errors"
+debug_file Debian-gdm "/var/log/gdm3/:0-slave.log"
+debug_file Debian-gdm "/var/log/gdm3/:0-greeter.log"
+debug_file Debian-gdm "/var/log/gdm3/tails-greeter.errors"
 debug_file "/var/log/live-persist"
 debug_file "/var/log/live/boot.log"
 debug_file "/var/log/live/config.log"
