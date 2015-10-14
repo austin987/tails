@@ -1,44 +1,85 @@
 [[!meta title="About creating Tails derivatives"]]
 
-What for:
+Several projects expressed interest in reusing Tails to build different
+live distributions, also called *derivatives*, to fulfill slightly
+different goals.
 
-- Include additional features that we are not ready to add to Tails (for example
+Tails being free software this is not only possible be encouraged,
+because the more people look and work on our code, the better it gets.
+Still, at this time we don't know of any Tails derivative.
+
+Derivatives have been imagined to:
+
+- Include additional features or software that we are not ready to add to Tails (for example
   to include GNUnet or Namecoin).
 - Have custom branding or configuration.
 - Provide ISO images with less or different features (for example to
-  have VPN instead of Tor).
+  have a VPN instead of Tor or an ISO image smaller in size).
 
-Why is it complicated:
+While creating custom ISO images of Tails is relatively easy, we believe
+that maintaining custom ISO images on the long run is very complicated,
+and for the following reasons:
 
-- Release every 6 weeks, plus the occasional unscheduled emergency
-  security release
-- Heavy quality assurance process (automated builds and tests)
-- Complex infrastructure (upgrades)
-- User trust (authenticated downloads, OpenPGP Web-of-Trust)
-- Fingerprinting & partitioning users into a anonymity subset
-- For features that are not in Tails because there has been no time or
-  solution for doing them correctly, the temptation to just shove them
-  in hastily and call it done
+- We release a new version every 6 weeks which fixes numerous security
+  issues. We also release unscheduled security releases quite often (3-4
+  times per year).
 
-Good ways of doing it:
+  A derivative with custom ISO images would have to follow the same
+  release schedule to provide ISO images that fix these issues as well.
 
-- Don't build your own ISO images.
-- Package your specific applications in Debian to make them easier to
-  use in Tails.
-- Document how to use your specific applications in Tails.
-- Rely on the mechanisms already available in Tails to adapt it to your
-  needs (additional software packages, persistent storage).
-- Help us build in Tails other mechanisms that you might need to adapt
-  it to your needs (for example to have persistent DConf settings or APT
-  sources).
-- Talk with us to see how we can adapt our ISO images and source code to make them
-  easier for your to reuse.
-- If you want to include a piece of software into Tails, talk to us as
-  early as possible so we can provide feedback on how to integrate it.
+- Before we release them, our ISO images follow a complex quality
+  assurance process involving systematic peer review of the code,
+  [[manual|contribute/release_process/test]] and
+  [[automated|contribute/release_process/test/automated_tests]] tests
+  which are particularly heavy to run.
 
-Open questions:
+  A derivative with custom ISO images would have to duplicate our
+  quality assurance process and adapt it to its specificities to make
+  sure that it doesn't break any security feature.
 
-- Trademark aspects. Will derivatives appear as being "Tails" to their
-  users while having different security features than Tails?  Shall we
-  review ourselves the work of derivatives and "endorse" them? How could
-  crappy derivatives impact negatively the name and reputation of Tails?
+- We offer automatic upgrades which are binary diffs from one ISO image
+  to the other.
+
+  A derivative with custom ISO images would need a similar process and
+  infrastructure or otherwise break the automatic upgrades mechanism.
+
+- We provide authenticated downloads through a custom browser extension
+  and an OpenPGP signing key well connected to the web-of-trust.
+
+  It would be hard for a derivative with custom ISO images to provide
+  similar mechanisms.
+
+- The anonymity provided by Tor and Tails works by making everybody
+  looks the same, especially on the network. Derivatives should be
+  careful about not breaking this anonymity set or otherwise provide
+  less anonymity to both its users and Tails users.
+
+- In Tails we have very high quality standards, and derivatives could be
+  tempted to implement some of the features Tails is missing too quickly
+  and hastily.
+
+Still, some of the reasons to create Tails derivatives could be solved
+by **relying our official ISO images** and customizing them at run time.
+For example, derivatives could:
+
+- Package specific applications in Debian to make them easier to use in
+  Tails.
+- Document how to use specific applications in Tails.
+- Rely on the customizations mechanisms already available in Tails
+  (additional software packages and persistent storage).
+- Help us build in Tails other mechanisms that derivatives might need to
+  adapt Tails to their needs (for example to have persistent DConf
+  settings or APT sources).
+- Talk with us to see how we can adapt our ISO images and source code to
+  make them easier to reuse for derivatives.
+- To include a piece of software into Tails, talk to us as early as
+  possible so we can provide feedback on how to integrate it.
+
+Some other non-technical questions remain open:
+
+- Will derivatives appear as being "Tails" to their users while having
+  different security features than Tails?
+- Shall Tails review ourselves the work of derivatives and "endorse"
+  them officially?
+- How would the work or reputation of derivatives impact the reputation
+  of Tails?
