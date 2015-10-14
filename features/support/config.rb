@@ -45,7 +45,7 @@ TAILS_ISO = ENV['TAILS_ISO']
 OLD_TAILS_ISO = ENV['OLD_TAILS_ISO'] || TAILS_ISO
 TIME_AT_START = Time.now
 ARTIFACTS_DIR = $config['TMPDIR'] + "/run-" +
-                TIME_AT_START.to_s.gsub(/\s/, "_") + "-" +
+                sanitize_filename(TIME_AT_START.to_s) + "-" +
                 [
                   "git",
                   sanitize_filename(describe_git_head,
