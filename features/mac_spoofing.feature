@@ -6,12 +6,9 @@ Feature: Spoofing MAC addresses
   And I want this feature to fail safe and notify me in case of errors
 
   Background:
-    Given a computer
+    Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And I capture all network traffic
-    And I start the computer
-    And the computer boots Tails
-    And no network interfaces are enabled
-    And the real MAC address was not leaked
+    And the network is plugged
 
   Scenario: MAC address spoofing is disabled
     When I enable more Tails Greeter options
@@ -62,3 +59,11 @@ Feature: Spoofing MAC addresses
     Then the Tails desktop is ready
     Given a wireless NIC's MAC address is blocked by the network
     Then I see the "Network connection blocked?" notification
+
+  Scenario: The MAC address is not leaked when booting Tails
+    Given a computer
+    And I capture all network traffic
+    When I start the computer
+    Then the computer boots Tails
+    And no network interfaces are enabled
+    And the real MAC address was not leaked
