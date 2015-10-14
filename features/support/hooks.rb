@@ -5,7 +5,6 @@ require 'tmpdir'
 
 # Run once, before any feature
 AfterConfiguration do |config|
-  FileUtils.mkdir_p(ARTIFACTS_DIR)
   if File.exist?($config["TMPDIR"])
     if !File.directory?($config["TMPDIR"])
       raise "Temporary directory '#{$config["TMPDIR"]}' exists but is not a " +
