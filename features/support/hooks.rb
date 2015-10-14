@@ -5,6 +5,10 @@ require 'tmpdir'
 
 # Run once, before any feature
 AfterConfiguration do |config|
+  # Used to keep track of when we start our first @product feature, when
+  # we'll do some special things.
+  $started_first_product_feature = false
+
   if File.exist?($config["TMPDIR"])
     if !File.directory?($config["TMPDIR"])
       raise "Temporary directory '#{$config["TMPDIR"]}' exists but is not a " +
@@ -22,6 +26,7 @@ AfterConfiguration do |config|
       raise "Cannot create temporary directory: #{e.to_s}"
     end
   end
+
   # Start a thread that monitors a pseudo fifo file and debug_log():s
   # anything written to it "immediately" (well, as fast as inotify
   # detects it). We're forced to a convoluted solution like this
@@ -62,7 +67,15 @@ BeforeFeature('@product', '@source') do |feature|
 end
 
 at_exit do
-  delete_all_snapshots if !KEEP_SNAPSHOTS
+  $vm.destroy_and_undefine if $vm
+  if $virt
+    unless KEEP_SNAPSHOTS
+      VM.remove_all_snapshots
+      $vmstorage.clear_pool
+    end
+    $vmnet.destroy_and_undefine
+    $virt.close
+  end
   # The artifacts directory is empty (and useless) if it contains
   # nothing but the mandatory . and ..
   if Dir.entries(ARTIFACTS_DIR).size <= 2
@@ -72,20 +85,6 @@ end
 
 # For @product tests
 ####################
-
-def delete_snapshot(snapshot)
-  if snapshot and File.exist?(snapshot)
-    File.delete(snapshot)
-  end
-rescue Errno::EACCES => e
-  info_log("Couldn't delete background snapshot: #{e.to_s}")
-end
-
-def delete_all_snapshots
-  Dir.glob("#{$config["TMPDIR"]}/*.state").each do |snapshot|
-    delete_snapshot(snapshot)
-  end
-end
 
 def add_after_scenario_hook(&block)
   @after_scenario_hooks ||= Array.new
@@ -97,7 +96,6 @@ def save_failure_artifact(type, path)
 end
 
 BeforeFeature('@product') do |feature|
-  delete_all_snapshots if !KEEP_SNAPSHOTS
   if TAILS_ISO.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
           "current directory"
@@ -122,18 +120,23 @@ BeforeFeature('@product') do |feature|
   if !File.exist?(OLD_TAILS_ISO)
     raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
   end
-  base = File.basename(feature.file, ".feature").to_s
-  $background_snapshot = "#{$config["TMPDIR"]}/#{base}_background.state"
-  $virt = Libvirt::open("qemu:///system")
-  $vmnet = VMNet.new($virt, VM_XML_PATH)
-  $vmstorage = VMStorage.new($virt, VM_XML_PATH)
+  if not($started_first_product_feature)
+    $virt = Libvirt::open("qemu:///system")
+    VM.remove_all_snapshots if !KEEP_SNAPSHOTS
+    $vmnet = VMNet.new($virt, VM_XML_PATH)
+    $vmstorage = VMStorage.new($virt, VM_XML_PATH)
+    $started_first_product_feature = true
+  end
 end
 
 AfterFeature('@product') do
-  delete_snapshot($background_snapshot) if !KEEP_SNAPSHOTS
-  $vmstorage.clear_pool
-  $vmnet.destroy_and_undefine
-  $virt.close
+  unless KEEP_SNAPSHOTS
+    checkpoints.each do |name, vals|
+      if vals[:temporary] and VM.snapshot_exists?(name)
+        VM.remove_snapshot(name)
+      end
+    end
+  end
 end
 
 # Cucumber Before hooks are executed in the order they are listed, and
@@ -141,7 +144,6 @@ end
 # *first* Before hook matching @product.
 Before('@product') do |scenario|
   $failure_artifacts = Array.new
-  @screen = Sikuli::Screen.new
   if $config["CAPTURE"]
     video_name = sanitize_filename("#{scenario.name}.mkv")
     @video_path = "#{ARTIFACTS_DIR}/#{video_name}"
@@ -158,15 +160,13 @@ Before('@product') do |scenario|
                        ])
     @video_capture_pid = capture.pid
   end
-  if File.size?($background_snapshot)
-    @skip_steps_while_restoring_background = true
-  else
-    @skip_steps_while_restoring_background = false
-  end
+  @screen = Sikuli::Screen.new
   @theme = "gnome"
   # English will be assumed if this is not overridden
   @language = ""
   @os_loader = "MBR"
+  @sudo_password = "asdf"
+  @persistence_password = "asdf"
 end
 
 # Cucumber After hooks are executed in the *reverse* order they are
@@ -210,11 +210,6 @@ After('@product') do |scenario|
       FileUtils.rm(@video_path)
     end
   end
-  @vm.destroy_and_undefine if @vm
-end
-
-After('@product', '~@keep_volumes') do
-  $vmstorage.clear_volumes
 end
 
 Before('@product', '@check_tor_leaks') do |scenario|

@@ -62,6 +62,10 @@ end
 
 # Constants that are statically initialized.
 CONFIGURED_KEYSERVER_HOSTNAME = 'hkps.pool.sks-keyservers.net'
+LIBVIRT_DOMAIN_NAME = "TailsToaster"
+LIBVIRT_DOMAIN_UUID = "203552d5-819c-41f3-800e-2c8ef2545404"
+LIBVIRT_NETWORK_NAME = "TailsToasterNet"
+LIBVIRT_NETWORK_UUID = "f2305af3-2a64-4f16-afe6-b9dbf02a597e"
 MISC_FILES_DIR = "#{Dir.pwd}/features/misc_files"
 SERVICES_EXPECTED_ON_ALL_IFACES =
   [
