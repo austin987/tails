@@ -46,12 +46,17 @@ def current_branch
   return branch
 end
 
-# If HEAD is tagged, return the name of the tag, otherwise the name of
-# the checked out branch.
-def current_tag_or_branch
+# In order: if git HEAD is tagged, return its name; if a branch is
+# checked out, return its name; otherwise we are in 'detached HEAD'
+# state, and we return the empty string.
+def describe_git_head
   cmd_helper("git describe --tags --exact-match #{current_commit}".split).strip
 rescue Test::Unit::AssertionFailedError
-  current_branch
+  begin
+    current_branch
+  rescue Test::Unit::AssertionFailedError
+    ""
+  end
 end
 
 def current_commit
