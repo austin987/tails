@@ -481,7 +481,8 @@ EOF
   def focus_window(window_title, user = LIVE_USER)
     def do_focus(window_title, user)
       execute_successfully(
-        "xdotool search --name '#{window_title}' windowactivate --sync", user
+        "xdotool search --name '#{window_title}' windowactivate --sync",
+        :user => user
       )
     end
 
