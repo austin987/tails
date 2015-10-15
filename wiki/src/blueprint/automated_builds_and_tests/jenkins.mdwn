@@ -4,6 +4,32 @@ For Jenkins resources, see [[blueprint/automated_builds_and_tests/resources]].
 
 [[!toc levels=2]]
 
+Generating jobs
+===============
+
+We use code that lay in three different Git repositories to generate
+automatically the list of Jenkins jobs for branches that are active in
+the Tails main Git repo.
+
+The first brick is the Tails
+[[!tails_gitweb_repo pythonlib]], which extracts the list of
+active branches and output the needed informations. This list is parsed
+by the `generate_tails_iso_jobs` script run by a cronjob and deployed by
+our [[!tails_gitweb_repo puppet-tails]]
+`tails::jenkins::iso_jobs_generator` manifest.
+
+This script output yaml files compatible with
+[jenkins-job-builder](http://docs.openstack.org/infra/jenkins-job-builder).
+It creates one `project` for each active branches, which in turn uses
+three JJB `job templates` to create the three jobs for each branch: the
+ISO build one, and wrapper job that is used to start the ISO test jobs.
+
+This changes are pushed to our [[!tails_gitweb_repo jenkins-jobs]] git
+repo by the cronjob, and thanks to their automatic deployment in our
+`tails::jenkins::master` and `tails::gitolite::hooks::jenkins_jobs`
+manifests, this new changes are applied automatically to our Jenkins
+instance.
+
 Restarting slave VMs between jobs
 =================================
 
