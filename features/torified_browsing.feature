@@ -25,7 +25,7 @@ Feature: Browsing the web using the Tor Browser
     Then I can save the current page as "index.html" to the default downloads directory
     And I can print the current page as "output.pdf" to the default downloads directory
 
-  @check_tor_leaks
+  @check_tor_leaks @fragile
   Scenario: Importing an OpenPGP key from a website
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
@@ -35,7 +35,7 @@ Feature: Browsing the web using the Tor Browser
     When I accept to import the key with Seahorse
     Then I see "KeyImportedNotification.png" after at most 10 seconds
 
-  @check_tor_leaks
+  @check_tor_leaks @fragile
   Scenario: Playing HTML5 audio
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
@@ -45,7 +45,7 @@ Feature: Browsing the web using the Tor Browser
     And I click the HTML5 play button
     And 1 application is playing audio after 10 seconds
 
-  @check_tor_leaks
+  @check_tor_leaks @fragile
   Scenario: Watching a WebM video
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
@@ -106,7 +106,7 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser has started
     Then the Tor Browser uses all expected TBB shared libraries
 
-  @check_tor_leaks
+  @check_tor_leaks @fragile
   Scenario: Opening check.torproject.org in the Tor Browser shows the green onion and the congratulations message
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
@@ -114,7 +114,7 @@ Feature: Browsing the web using the Tor Browser
     And I open the address "https://check.torproject.org" in the Tor Browser
     Then I see "TorBrowserTorCheck.png" after at most 180 seconds
 
-  @check_tor_leaks
+  @check_tor_leaks @fragile
   Scenario: The Tor Browser's "New identity" feature works as expected
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
