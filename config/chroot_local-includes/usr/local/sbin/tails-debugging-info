@@ -14,9 +14,11 @@ debug_file() {
         user="${1}"
         shift
     fi
+    file="${1}"
+    [ ! -e "${file}" ] && return
     echo
     echo "===== content of $1 ====="
-    sudo -u "${user}" -- cat "${1}"
+    sudo -u "${user}" -- cat "${file}"
 }
 
 debug_command /usr/sbin/dmidecode -s system-manufacturer
