@@ -51,7 +51,7 @@ Feature: Chatting anonymously using Pidgin
     When I say something to my friend
     Then I receive a response from my friend
 
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Connecting to the #tails IRC channel with the pre-configured account
     Given I have started Tails from DVD and logged in and the network is connected
     And Pidgin has the expected accounts configured with random nicknames

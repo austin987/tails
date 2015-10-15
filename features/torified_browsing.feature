@@ -1,4 +1,4 @@
-@product @fragile
+@product
 Feature: Browsing the web using the Tor Browser
   As a Tails user
   when I browse the web using the Tor Browser
