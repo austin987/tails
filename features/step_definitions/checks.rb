@@ -187,3 +187,26 @@ Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mo
     raise "Unsupported mode #{mode} passed"
   end
 end
+
+Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
+  secret_file = '/secret'
+  secret_contents = 'T0P S3Cr1t -- 3yEs oN1y'
+  $vm.file_append(secret_file, secret_contents)
+  $vm.execute_successfully("chmod u=rw,go= #{secret_file}")
+  $vm.execute_successfully("chown root:root #{secret_file}")
+  script_path = '/usr/local/sbin/tails-debugging-info'
+  script_lines = $vm.file_content(script_path).split("\n")
+  script_lines.grep(/^debug_file\s+/).each do |line|
+    debug_file = line.split.last.gsub!(/["']/, '')
+    # Skip files that do not exist, or cannot be removed (e.g. the
+    # ones in /proc).
+    next if not($vm.execute("rm #{debug_file}").success?)
+    # Check what would happen *if* the amnesia user managed to replace
+    # the debugging file with a symlink to the secret.
+    $vm.execute_successfully("ln -s #{secret_file} #{debug_file}")
+    $vm.execute_successfully("chown #{LIVE_USER}:#{LIVE_USER} #{debug_file}")
+    if $vm.execute("tails-debugging-info | grep '#{secret_contents}'").success?
+      raise "The secret was leaked by tails-debugging-info via '#{debug_file}'"
+    end
+  end
+end

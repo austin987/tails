@@ -79,3 +79,7 @@ Feature: Various checks
     Given I have started Tails from DVD without network and logged in
     When I request a reboot using the emergency shutdown applet
     Then Tails eventually restarts
+
+  Scenario: tails-debugging-info does not leak information
+    Given I have started Tails from DVD without network and logged in
+    Then tails-debugging-info is not susceptible to symlink attacks
