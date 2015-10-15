@@ -36,7 +36,6 @@ Feature: Browsing the web using the Unsafe Browser
     And I start the Unsafe Browser
     Then I see a warning about another instance already running
 
-  @fragile
   Scenario: Opening check.torproject.org in the Unsafe Browser shows the red onion and a warning message.
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser
