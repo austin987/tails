@@ -46,8 +46,8 @@ def AfterFeature(*tag_expressions, &block)
   $after_feature_hooks << SimpleHook.new(tag_expressions, block)
 end
 
-def debug_log(message)
-  $debug_log_fns.each { |fn| fn.call(message) } if $debug_log_fns
+def debug_log(message, options = {})
+  $debug_log_fns.each { |fn| fn.call(message, options) } if $debug_log_fns
 end
 
 require 'cucumber/formatter/pretty'
@@ -85,8 +85,9 @@ module ExtraFormatters
       $debug_log_fns << self.method(:debug_log)
     end
 
-    def debug_log(message)
-      @io.puts(format_string(message, :blue))
+    def debug_log(message, options)
+      options[:color] ||= :blue
+      @io.puts(format_string(message, options[:color]))
       @io.flush
     end
   end
