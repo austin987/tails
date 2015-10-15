@@ -40,24 +40,42 @@ to add it, run:
 #Git comandi quotidiani
 
 Sono tutti da mandare da terminale, una volta che si è dentro alla cartella che si usa per il progetto tails.
-Il pulsante TAB è vostro amico per completare tutti i percorsi dei file e soprattutto quando usate git add.
+Il pulsante TAB è vostro amico per completare tutti i percorsi dei file e soprattutto quando usate git add. Le frecce su e giù della tastiera vi danno gli ultimi comandi che avete lanciato, così andate velocissim*.
+
+Tutte le volte va configurata la chiave ssh che si usa, quindi:
+
+    $ ssh-add /home/utente/vostrachiaveprivata
+
+Fatto, ora possimo sincronizzarsi al repository remoto, prendendo i file che ci mancano:
  
     $  git pull
     
-Per sincronizzarsi al repository remoto
+Per aggiungere allo stadio "stage" i file che poi si manderà al repository remoto.
+
 
     $ git add NAMEFILE
 
-Per aggiungere allo stadio "stage" i file che poi si manderà al repository remoto
+Per avere una descrizione delle modifiche fatte localmente, ma che apparirà anche al repository remoto quando si aggiungeranno
+
 
     $ git commit -m "DESCRIZIONE DELLE MODIFICHE FATTE"
 
-Per avere una descrizione delle modifiche fatte localmente, ma che apparirà anche al repository remoto quando si aggiungeranno
+Se siete sicuri che le modifiche che avete fatto vanno tutte sul repository remoto, potete condensare i due comandi sopra con uno solo, -a mette tutti i file nella zona "stage" e committate direttamente:
 
-   
+    $ git commit -a -m "DESCRIZIONE MODIFICHE"
+
+Se non sapete l'identità con cui è configurato git, fate un controllo prima di mandare le cose in remoto:
+
+
+    $ git config -l
+
+Per aggiungere i commit fatti al repository remoto:
+
     $ git push l10n-italian master
 
-Per aggiungere i commit fatti al repository remoto
+In caso di dubbi, vedete un po il vosro status:
+
+    $ git status
 
 
 
@@ -199,34 +217,35 @@ Attingere nuove pagine da tradurre dando precedenza a queste:
 
 ./doc/about/requirements --DONE,  pushed, daRev
 
-./doc/download
+./doc/download --DONE,  pushed, daRev
 
-./doc/get.index
+./doc/get.index --DONE,  pushed, daRev
 
-./doc/get/trusting_tails_signing_key
+./doc/get/trusting_tails_signing_key --DONE,  pushed, daRev
 
-./doc/get/*
+./doc/get/*--DONE,  pushed, daRev
 ___
 
 bf
 
 ./doc/about.index --FINITO!
 
-./doc/about/openpgp_keys --80% DONE, a lot of issues... daRev ?
+./doc/about/features --DONE, pushed  daRev 
 
-./doc/about/features --DONE, pushed  daRev ?
-
-./doc/about/fingerprint --DONE,  pushed  daRev ?
+./doc/about/fingerprint --DONE,  pushed  daRev 
 
 ./doc/first_steps/persistence.caution --FINITO!
 
-./doc/first_steps/persistence/configure --DONE pushed daRev  ?
+./doc/first_steps/persistence/configure --DONE pushed daRev
 
 ./doc/first_steps/persistence/delete --FINITO!
 
+./doc/first_steps/persistence/warnings --FINITO!
+
+***
 ./doc/first_steps/persistence/use
 
-./doc/first_steps/persistence/warnings --FINITO!
+./doc/about/openpgp_keys --80% DONE, a lot of issues... not pushed
 
 ___
 ./doc/about/tor --DONE, Pushed 

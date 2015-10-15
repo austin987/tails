@@ -1,13 +1,41 @@
 [[!meta title="Automated tests implementation details"]]
 
+For Jenkins resources, see [[blueprint/automated_builds_and_tests/resources]].
+
 [[!toc levels=2]]
+
+Generating jobs
+===============
+
+We use code that lay in three different Git repositories to generate
+automatically the list of Jenkins jobs for branches that are active in
+the Tails main Git repo.
+
+The first brick is the Tails
+[[!tails_gitweb_repo pythonlib]], which extracts the list of
+active branches and output the needed informations. This list is parsed
+by the `generate_tails_iso_jobs` script run by a cronjob and deployed by
+our [[!tails_gitweb_repo puppet-tails]]
+`tails::jenkins::iso_jobs_generator` manifest.
+
+This script output yaml files compatible with
+[jenkins-job-builder](http://docs.openstack.org/infra/jenkins-job-builder).
+It creates one `project` for each active branches, which in turn uses
+three JJB `job templates` to create the three jobs for each branch: the
+ISO build one, and wrapper job that is used to start the ISO test jobs.
+
+This changes are pushed to our [[!tails_gitweb_repo jenkins-jobs]] git
+repo by the cronjob, and thanks to their automatic deployment in our
+`tails::jenkins::master` and `tails::gitolite::hooks::jenkins_jobs`
+manifests in our [[!tails_gitweb_repo puppet-tails]] repo, this new
+changes are applied automatically to our Jenkins instance.
 
 Restarting slave VMs between jobs
 =================================
 
 This question is tracked in [[!tails_ticket 9486]].
 
-When we tackle [[!tails_ticket 5288]], if the test suite doesn't
+For [[!tails_ticket 5288]] to be robust enough, if the test suite doesn't
 _always_ clean between itself properly (e.g. when tests simply hang
 and timeout), we might want to restart `isotesterN.lizard` between
 each each ISO testing job.
@@ -37,13 +65,16 @@ We achieve this VM reboot by using 3 chained jobs:
   own.
 * The second job is executed on the master (which has 4 build
   executors). This job ssh into the said isotester and issue the
-  reboot. It waits a bit to be sure that the reboot is ongoing and no
-  jobs gets assigned to this isotester meanwhile and put the node back
-  online again. This jobs is higher prio so that it is not lagging behind
-  other wrapper jobs in the queue.
+  reboot. It needs to wait a reasonable amount of time for the Jenkins
+  slave to be stopped by the shutdown process so that no jobs gets assigned
+  to this isotester meanwhile. Stoping this Jenkins slave daemon usually
+  takes a few seconds. During testing, 5 seconds proved to be enough of
+  a delay for that, and more would mean unnecessary lagging time. It then
+  put the node back online again.  This job is higher prio so that it is
+  not lagging behind other wrapper jobs in the queue.
 * The third job is the test job, run on the freshly started isotester.
   This one is high prio too to get executed before any other wrapper
-  jobs. This jobs are set to run concurrently, so that if a first one is
+  jobs. These jobs are set to run concurrently, so that if a first one is
   already running, a more recent one triggered by a new build will still
   be able to run and not be blocked by the first running one.
 
