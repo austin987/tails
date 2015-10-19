@@ -56,6 +56,10 @@ class VMCommand
     return @returncode == 0
   end
 
+  def failure?
+    return not(success?)
+  end
+
   def to_s
     "Return status: #{@returncode}\n" +
     "STDOUT:\n" +

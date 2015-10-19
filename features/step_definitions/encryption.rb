@@ -11,7 +11,6 @@ end
 Given /^I generate an OpenPGP key named "([^"]+)" with password "([^"]+)"$/ do |name, pwd|
   @passphrase = pwd
   @key_name = name
-  next if @skip_steps_while_restoring_background
   gpg_key_recipie = <<EOF
      Key-Type: RSA
      Key-Length: 4096
@@ -25,14 +24,13 @@ Given /^I generate an OpenPGP key named "([^"]+)" with password "([^"]+)"$/ do |
      %commit
 EOF
   gpg_key_recipie.split("\n").each do |line|
-    @vm.execute("echo '#{line}' >> /tmp/gpg_key_recipie", LIVE_USER)
+    $vm.execute("echo '#{line}' >> /tmp/gpg_key_recipie", LIVE_USER)
   end
-  c = @vm.execute("gpg --batch --gen-key < /tmp/gpg_key_recipie", LIVE_USER)
+  c = $vm.execute("gpg --batch --gen-key < /tmp/gpg_key_recipie", LIVE_USER)
   assert(c.success?, "Failed to generate OpenPGP key:\n#{c.stderr}")
 end
 
 When /^I type a message into gedit$/ do
-  next if @skip_steps_while_restoring_background
   step 'I start "Gedit" via the GNOME "Accessories" applications menu'
   @screen.wait_and_click("GeditWindow.png", 20)
   sleep 0.5
@@ -81,33 +79,28 @@ def decrypt_verify_helper(icon)
 end
 
 When /^I encrypt the message using my OpenPGP key$/ do
-  next if @skip_steps_while_restoring_background
   encrypt_sign_helper do
     @screen.type(@key_name + Sikuli::Key.ENTER + Sikuli::Key.ENTER)
   end
 end
 
 Then /^I can decrypt the encrypted message$/ do
-  next if @skip_steps_while_restoring_background
   decrypt_verify_helper("GpgAppletIconEncrypted.png")
   @screen.wait("GpgAppletResultsEncrypted.png", 20)
 end
 
 When /^I sign the message using my OpenPGP key$/ do
-  next if @skip_steps_while_restoring_background
   encrypt_sign_helper do
     @screen.type(Sikuli::Key.TAB + Sikuli::Key.DOWN + Sikuli::Key.ENTER)
   end
 end
 
 Then /^I can verify the message's signature$/ do
-  next if @skip_steps_while_restoring_background
   decrypt_verify_helper("GpgAppletIconSigned.png")
   @screen.wait("GpgAppletResultsSigned.png", 20)
 end
 
 When /^I both encrypt and sign the message using my OpenPGP key$/ do
-  next if @skip_steps_while_restoring_background
   encrypt_sign_helper do
     @screen.wait_and_click('GpgAppletEncryptionKey.png', 20)
     @screen.type(Sikuli::Key.SPACE)
@@ -118,7 +111,6 @@ When /^I both encrypt and sign the message using my OpenPGP key$/ do
 end
 
 Then /^I can decrypt and verify the encrypted message$/ do
-  next if @skip_steps_while_restoring_background
   decrypt_verify_helper("GpgAppletIconEncrypted.png")
   @screen.wait("GpgAppletResultsEncrypted.png", 20)
   @screen.wait("GpgAppletResultsSigned.png", 20)
@@ -126,7 +118,6 @@ end
 
 When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
   @passphrase = pwd
-  next if @skip_steps_while_restoring_background
   gedit_copy_all_text
   seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletEncryptPassphrase.png')
   maybe_deal_with_pinentry # enter password
