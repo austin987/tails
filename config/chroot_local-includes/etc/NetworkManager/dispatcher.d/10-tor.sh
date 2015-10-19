@@ -47,7 +47,7 @@ fi
 # To work around this we restart Tor, in various ways, no matter the
 # case below.
 if [ "$(tails_netconf)" = "obstacle" ]; then
-    # We do not use retart-tor since it validates that bootstraping
+    # We do not use restart-tor since it validates that bootstraping
     # succeeds. That cannot happen until Tor Launcher has started
     # (below) and the user is done configuring it.
     service tor restart
