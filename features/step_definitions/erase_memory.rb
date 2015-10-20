@@ -187,6 +187,6 @@ When /^I shutdown and wait for Tails to finish wiping the memory$/ do
     # We spam keypresses to prevent console blanking from hiding the
     # image we're waiting for
     @screen.type(" ")
-    @screen.wait('MemoryWipeCompleted.png')
+    @screen.find('MemoryWipeCompleted.png')
   end
 end
