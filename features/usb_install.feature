@@ -49,7 +49,7 @@ Feature: Installing Tails to a USB drive
     When I plug USB drive "too-small-device"
     Then Tails Installer detects that a device is too small
     And a suitable USB device is not found
-    When I unplug USB drive "current"
+    When I unplug USB drive "too-small-device"
     And I create a 4 GiB disk named "current"
     And I plug USB drive "current"
     Then the "current" USB drive is selected
