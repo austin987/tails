@@ -69,6 +69,11 @@ Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
 end
 
 def pattern_coverage_in_guest_ram
+  assert_not_nil(
+    @free_mem_after_fill_b,
+    "@free_mem_after_fill_b is not set, probably the required 'I fill the " +
+    "guest's memory ...' step was not run")
+  free_mem_after_fill_m = convert_to_MiB(@free_mem_after_fill_b, 'b')
   dump = "#{$config["TMPDIR"]}/memdump"
   # Workaround: when dumping the guest's memory via core_dump(), libvirt
   # will create files that only root can read. We therefore pre-create
@@ -86,8 +91,9 @@ def pattern_coverage_in_guest_ram
   # Pattern is 16 bytes long
   patterns_b = patterns*16
   patterns_m = convert_to_MiB(patterns_b, 'b')
-  coverage = patterns_b.to_f/convert_to_bytes(@detected_ram_m.to_f, 'MiB')
-  puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_m} MiB)"
+  coverage = patterns_b.to_f/@free_mem_after_fill_b
+  puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_m} MiB " +
+       "out of #{free_mem_after_fill_m} MiB initial free memory)"
   return coverage
 end
 
@@ -99,13 +105,26 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
 
   # The (guest) kernel may freeze when approaching full memory without
   # adjusting the OOM killer and memory overcommitment limitations.
-  [
-   "echo 1024 > /proc/sys/vm/min_free_kbytes",
-   "echo 2   > /proc/sys/vm/overcommit_memory",
-   "echo 97  > /proc/sys/vm/overcommit_ratio",
-   "echo 0   > /proc/sys/vm/oom_kill_allocating_task",
-   "echo 0   > /proc/sys/vm/oom_dump_tasks"
-  ].each { |c| $vm.execute_successfully(c) }
+  kernel_mem_reserved_k = 64*1024
+  kernel_mem_reserved_m = convert_to_MiB(kernel_mem_reserved_k, 'k')
+  admin_mem_reserved_k = 128*1024
+  admin_mem_reserved_m = convert_to_MiB(admin_mem_reserved_k, 'k')
+  kernel_mem_settings = [
+    # Let's avoid killing other random processes, and instead focus on
+    # the hoggers, which will be our fillram instances.
+    "echo 0 > /proc/sys/vm/oom_kill_allocating_task",
+    # Let's not print stuff to the terminal.
+    "echo 0 > /proc/sys/vm/oom_dump_tasks",
+    # From tests the 'guess' heuristic seems to allow us to safely
+    # (i.e. no kernel freezes) fill the maximum amount of RAM.
+    "echo 0  > /proc/sys/vm/overcommit_memory",
+    # Make sure the kernel doesn't starve...
+    "echo #{kernel_mem_reserved_k} > /proc/sys/vm/min_free_kbytes",
+    # ... and also some core privileged processes, e.g. the remote
+    # shell.
+    "echo #{admin_mem_reserved_k} > /proc/sys/vm/admin_reserve_kbytes",
+  ]
+  kernel_mem_settings.each { |c| $vm.execute_successfully(c) }
 
   # The remote shell is sometimes OOM killed when we fill the memory,
   # and since we depend on it after the memory fill we try to prevent
@@ -113,7 +132,13 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   pid = $vm.pidof("tails-autotest-remote-shell")[0]
   $vm.execute_successfully("echo -17 > /proc/#{pid}/oom_adj")
 
-  used_mem_before_fill = used_ram_in_MiB
+  # We exclude the memory we reserve for the kernel and admin
+  # processes above from the free memory since fillram will be run by
+  # an unprivileged user in user-space.
+  used_mem_before_fill_m = used_ram_in_MiB
+  free_mem_after_fill_m = @detected_ram_m - used_mem_before_fill_m -
+                          kernel_mem_reserved_m - admin_mem_reserved_m
+  @free_mem_after_fill_b = convert_to_bytes(free_mem_after_fill_m, 'MiB')
 
   # To be sure that we fill all memory we run one fillram instance
   # for each GiB of detected memory, rounded up. We also kill all instances
@@ -148,14 +173,11 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   debug_log("Memory fill progress: finished")
   if verify
     coverage = pattern_coverage_in_guest_ram()
-    # Let's aim for having the pattern cover at least 80% of the free RAM.
-    # More would be good, but it seems like OOM kill strikes around 90%,
-    # and we don't want this test to fail all the time.
-    min_coverage = ((@detected_ram_m - used_mem_before_fill).to_f /
-                    @detected_ram_m.to_f)*0.75
+    min_coverage = 0.90
     assert(coverage > min_coverage,
-           "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
-           "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
+           "#{"%.3f" % (coverage*100)}% of the free memory was filled with " +
+           "the pattern, but more than #{"%.3f" % (min_coverage*100)}% was " +
+           "expected")
   end
 end
 
@@ -163,15 +185,15 @@ Then /^I find very few patterns in the guest's memory$/ do
   coverage = pattern_coverage_in_guest_ram()
   max_coverage = 0.005
   assert(coverage < max_coverage,
-         "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
+         "#{"%.3f" % (coverage*100)}% of the free memory still has the " +
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
 end
 
 Then /^I find many patterns in the guest's memory$/ do
   coverage = pattern_coverage_in_guest_ram()
-  min_coverage = 0.7
+  min_coverage = 0.9
   assert(coverage > min_coverage,
-         "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
+         "#{"%.3f" % (coverage*100)}% of the free memory still has the " +
          "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
 end
 
