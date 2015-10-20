@@ -908,11 +908,6 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   @screen.type("p", Sikuli::KeyModifier.CTRL)
   @screen.wait("TorBrowserPrintDialog.png", 10)
   @screen.wait_and_click("PrintToFile.png", 10)
-  # Tor Browser is not allowed to read /home/#{LIVE_USER}, and I found no way
-  # to change the default destination directory for "Print to File",
-  # so let's click through the warning
-  @screen.wait("TorBrowserCouldNotReadTheContentsOfWarning.png", 10)
-  @screen.wait_and_click("TorBrowserWarningDialogOkButton.png", 10)
   @screen.wait_and_double_click("TorBrowserPrintOutputFile.png", 10)
   @screen.hide_cursor
   @screen.wait("TorBrowserPrintOutputFileSelected.png", 10)
