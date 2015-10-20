@@ -157,7 +157,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
                               'UnsafeBrowserNetworkTab.png'], 10)
     @screen.click(hit) if hit == 'UnsafeBrowserNetworkTab.png'
     @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
-    @screen.wait_for_gnome_window('UnsafeBrowserPreferencesWindow.png', 10)
+    @screen.wait_and_click('UnsafeBrowserProxySettingsWindow.png', 10)
     @screen.type("m", Sikuli::KeyModifier.ALT)
 
     # Configure the proxy

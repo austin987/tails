@@ -345,7 +345,7 @@ Given /^the Tor Browser has started$/ do
     tor_browser_picture = "TorBrowserWindow.png"
   end
 
-  @screen.wait_for_gnome_window(tor_browser_picture, 60)
+  @screen.wait(tor_browser_picture, 60)
 end
 
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
