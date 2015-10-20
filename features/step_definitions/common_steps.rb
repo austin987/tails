@@ -1029,7 +1029,8 @@ Given /^I (?:re)?start monitoring the AppArmor log of "([^"]+)"$/ do |profile|
   $vm.execute_successfully('sysctl -w kernel.printk_ratelimit=0')
   # We will only care about entries for this profile from this time
   # and on.
-  guest_time = DateTime.parse($vm.execute_successfully('date').stdout)
+  guest_time = $vm.execute_successfully(
+    'date +"%Y-%m-%d %H:%M:%S"').stdout.chomp
   @apparmor_profile_monitoring_start ||= Hash.new
   @apparmor_profile_monitoring_start[profile] = guest_time
 end
@@ -1041,11 +1042,12 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at m
          "'I monitor the AppArmor log of ...' step")
   audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' % [profile, file]
   block = Proc.new do
-    audit_lines = $vm.execute("grep -F '#{audit_line_regex}' /var/log/syslog").stdout.split("\n")
-    audit_lines.select! do |line|
-      DateTime.parse(line) >= @apparmor_profile_monitoring_start[profile]
-    end
-    assert(audit_lines.empty? == (anti_test ? true : false))
+    audit_log = $vm.execute(
+      "journalctl --full --no-pager " +
+      "--since='#{@apparmor_profile_monitoring_start[profile]}' " +
+      "SYSLOG_IDENTIFIER=kernel | grep -w '#{audit_line_regex}'"
+    ).stdout.chomp
+    assert(audit_log.empty? == (anti_test ? true : false))
     true
   end
   begin
