@@ -130,7 +130,7 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   # and since we depend on it after the memory fill we try to prevent
   # that from happening.
   pid = $vm.pidof("tails-autotest-remote-shell")[0]
-  $vm.execute_successfully("echo -17 > /proc/#{pid}/oom_adj")
+  $vm.execute_successfully("echo '-1000' > /proc/#{pid}/oom_score_adj")
 
   # We exclude the memory we reserve for the kernel and admin
   # processes above from the free memory since fillram will be run by
@@ -156,7 +156,7 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   end
   # ... and prioritize OOM killing them.
   $vm.pidof("fillram").each do |pid|
-    $vm.execute_successfully("echo 15 > /proc/#{pid}/oom_adj")
+    $vm.execute_successfully("echo '1000' > /proc/#{pid}/oom_score_adj")
   end
   prev_used_ram_ratio = -1
   # ... and that it finishes
