@@ -39,14 +39,14 @@ When /^I update APT using Synaptic$/ do
       raise e
     end
   end
-  # After this next image is displayed, the GUI should be responsive.
-  @screen.wait('SynapticPackageList.png', 30)
 end
 
 Then /^I should be able to install a package using Synaptic$/ do
   package = "cowsay"
-  @screen.wait_and_click(Sikuli::Pattern.new('SynapticSearchButton.png').exact, 10)
-  @screen.wait('SynapticSearchWindow.png', 20)
+  try_for(60) do
+    @screen.wait_and_click('SynapticSearchButton.png', 10)
+    @screen.wait_and_click('SynapticSearchWindow.png', 10)
+  end
   @screen.type(package + Sikuli::Key.ENTER)
   @screen.wait_and_double_click('SynapticCowsaySearchResult.png', 20)
   @screen.wait_and_click('SynapticApplyButton.png', 10)
