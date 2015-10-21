@@ -2,13 +2,98 @@ tails (1.7) UNRELEASED; urgency=medium
 
   * Dummy entry for next major release.
 
- -- intrigeri <intrigeri@debian.org>  Sat, 08 Aug 2015 13:35:23 +0200
+ -- intrigeri <intrigeri@debian.org>  Sat, 22 Sep 2015 18:54:32 +0200
 
-tails (1.6) UNRELEASED; urgency=medium
+tails (1.6) unstable; urgency=medium
 
-  * Dummy changelog entry.
+  * Security fixes
+    - Upgrade Tor Browser to 5.0.3. (Closes: #10223)
+    - Upgrade bind9-based packages to 1:9.8.4.dfsg.P1-6+nmu2+deb7u7.
+    - Upgrade liblcms1 to 1.19.dfsg2-1.2+deb7u1.
+    - Upgrade libldap-2.4-2 to 2.4.31-2+deb7u1.
+    - Upgrade libslp1 to 1.2.1-9+deb7u1.
+    - Upgrade ssl-cert to 1.0.32+deb7u1.
 
- -- anonym <anonym@riseup.net>  Fri, 28 Aug 2015 13:32:45 +0200
+  * Bugfixes
+    - Fix a corner case for the MAC spoofing panic mode. If panic mode
+      failed to disable the specific device that couldn't be spoofed
+      (by unloading the module) we disable networking. Previously we
+      only stopped NetworkManager. The problem is that NM isn't even
+      started at this time, but will specifically be started when
+      we're done with MAC spoofing. Therefore, let's completely
+      disable NetworkManager so it cannot possibly be
+      started. (Closes: #10160)
+    - Avoid use of uninitialized value in restricted-network-detector.
+      If NetworkManager decides that a wireless connection has timed
+      out before "supplicant connection state" has occued, our idea of
+      the state is `undef`, so it cannot be used in a string
+      comparison. Hence, let's initialize the state to the empty
+      string instead of `undef`. Also fix the state
+      recording. Apparently NetworkManager can say a few different
+      things when it logs the device state transitions. (Closes:
+      #7689)
+
+  * Minor improvements
+    - Remove workaround for localizing search engine plugins. The
+      workaround has recently become unnecessary, possibly due to the
+      changes made for the seach bar after the Tor Browser was rebased
+      on Firefox 38esr. (Closes: #9146)
+    - Refer to the I2P Browser in the I2P notifications. Instead of
+      some obscure links that won't work in the Tor Browser, where
+      users likely will try them, and which I believe will open them
+      by default. (Closes: #10182)
+    - Upgrade I2P to 0.9.22. Also set the I2P apparmor profile to
+      enforce mode. (Closes: #9830)
+
+  * Test suite
+    - Test that udev-watchdog is monitoring the correct device when
+      booted from USB. (Closes: #9890)
+    - Remove unused 'gksu' step. This causes a false-positive to be
+      found for #5330. (Closes: #9877)
+    - Make --capture capture individual videos for failed scenarios
+      only, and --capture-all to capture videos for all scenarios.
+      (Closes: #10148)
+    - Use the more efficient x264 encoding when capturing videos using
+      the --capture* options. (Closes: #10001)
+    - Make --old-iso default to --iso if omitted. Using the same ISO
+      for the USB upgrade tests most often still does what we want,
+      e.g. test that the current version of Tails being tested has a
+      working Tails installer. Hence this seems like a reasonable
+      default. (Closes: #10147)
+    - Avoid nested FindFailed exceptions in waitAny()/findAny(), and
+      throw a new dedicated FindAnyFailed exception if these fail
+      instead. Rjb::throw doesn't block Ruby's execution until the
+      Java exception has been received by Ruby, so strange things can
+      happen and we must avoid it. (Closes: #9633)
+    - Fix the Download Management page in our browsers. Without the
+      browser.download.panel.shown pref set, the progress being made
+      will not update until after the browser has been restarted.
+      (Closes: #8159)
+    - Add a 'pretty_debug' (with an alias: 'debug') Cucumber formatter
+      that deals with debugging instead of printing it to STDERR via
+      the `--debug` option (which now has been removed). This gives us
+      the full flexibility of Cucumber's formatter system, e.g. one
+      easy-to-read formatter can print to the terminal, while we get
+      the full debug log printed to a file. (Closes: #9491)
+    - Import logging module in otr-bot.py. Our otr-bot.py does not use
+      logging but the jabberbot library makes logging calls, causing a
+      one-off message “No handlers could be found for logger
+      "jabberbot"” to be printed to the console. This commit
+      effectively prevents logging/outputting anything to the terminal
+      which is at a level lower than CRITICAL. (Closes: 9375)
+    - Force new Tor circuit and reload web site on browser
+      timeouts. (Closes: #10116)
+    - Focus Pidgin's buddy list before trying to access the tools
+      menu. (Closes: #10217)
+    - Optimize IRC test using waitAny. If connecting to IRC fails,
+      such as when OFTC is blocking Tor, waiting 60 seconds to connect
+      while a a Reconnect button is visible is sub-optimal. It would
+      be better to try forcing a new Tor circuit and clicking the
+      reconnect button. (Closes: #9653)
+    - Wait for (and focus if necessary) Pidgin's Certificate windows.
+      (Closes: #10222)
+
+ -- Tails developers <tails@boum.org>  Sun, 20 Sep 2015 17:47:26 +0000
 
 tails (1.5.1) unstable; urgency=medium
 

@@ -70,7 +70,7 @@ has_only_unverified_consensus() {
 
 wait_for_tor_consensus_helper() {
 	tries=0
-	while ! has_consensus && [ $tries -lt 5 ]; do
+	while ! has_consensus && [ $tries -lt 10 ]; do
 		inotifywait -q -t 30 -e close_write -e moved_to ${TOR_DIR} || log "timeout"
 		tries=$(expr $tries + 1)
 	done
@@ -81,10 +81,6 @@ wait_for_tor_consensus_helper() {
 
 wait_for_tor_consensus() {
 	log "Waiting for a Tor consensus file to contain a valid time interval"
-	if ! has_consensus && ! wait_for_tor_consensus_helper; then
-		log "Unsuccessfully waited for Tor consensus, restarting Tor and retrying."
-		restart-tor
-	fi
 	if ! has_consensus && ! wait_for_tor_consensus_helper; then
 		log "Unsuccessfully retried waiting for Tor consensus, aborting."
 	fi
@@ -175,7 +171,7 @@ maybe_set_time_from_tor_consensus() {
 	date -us "${vmid}" 1>/dev/null
 
 	# Tor is unreliable with picking a circuit after time change
-	restart-tor
+	service tor restart
 }
 
 tor_cert_valid_after() {
@@ -221,15 +217,6 @@ start_notification_helper() {
 
 
 ### Main
-
-# When the network is obstacled (e.g. we need a bridge) we wait until
-# Tor Launcher has unset DisableNetwork, since Tor's bootstrapping
-# won't start until then.
-if [ "$(tails_netconf)" = "obstacle" ]; then
-	until [ "$(tor_control_getconf DisableNetwork)" = 0 ]; do
-		sleep 1
-	done
-fi
 
 start_notification_helper
 

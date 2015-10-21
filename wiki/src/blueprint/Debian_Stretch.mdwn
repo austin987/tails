@@ -1,0 +1,76 @@
+[[!meta title="Porting Tails to Debian Stretch"]]
+
+This is about the effort to create [Tails
+3.0](https://labs.riseup.net/code/projects/tails/issues?query_id=198),
+based on Debian Stretch.
+
+[[!toc levels=2]]
+
+# Big picture
+
+When porting to Wheezy, our main problem has been that we started the
+work too late, which made us discover Debian bugs too late (after the
+Debian Wheezy freeze, or even after its release), and in the end we
+had to workaround lots of problems on our side.
+
+So we started much earlier the porting work to Jessie, which indeed
+essentially avoided the aforementioned problem. But we didn't allocate
+enough focused resources to this effort, and as a result the total
+duration of the porting to Jessie work is lasting too much, and we're
+spending too much time just keeping our feature/jessie branch
+up-to-date wrt. the changes we were making in our Wheezy
+production branches.
+
+For Stretch we'd like to avoid both problems. We want to start early,
+in order to fix problems directly in Debian Stretch before it's
+released. And, we want the porting work to fit into a shorter time
+span, so as soon as we start we'll allocate more resources to it, and
+in a better organized, team-based and focused way.
+
+Additionally, we would like to use this process as an opportunity to
+evaluate the idea of basing Tails on snapshots of Debian testing.
+
+# Schedule
+
+* 2016Q1 — Tails 2.0 is out
+* April or May 2016 — start working on Tails 3.0 (1 week sprint with
+  all involved people) :intrigeri:anonym:kytv:
+  - get feature/stretch to build and boot
+  - update the automated test suite to test Tails/Stretch ISO images
+* May 2016 to April 2017 — have one dedicated half-time, 1-week sprint
+  every 6 weeks.
+  - Schedule these sprints in advance, announce them
+    publicly, and invite other contributors (e.g. doc writers).
+  - Most of these sprints will probably be attended remotely, but at
+    least some could happen face-to-face.
+  - At the beginning of each Stretch sprint, we import a new snapshot
+    of Debian testing into our freezable APT repository, so that:
+    * during the sprint we update our stuff as required by changes
+      that happened in Debian since the last sprint;
+    * our stuff is not broken by changes in Debian neither during
+      sprints, nor between them;
+    * we get a feeling of how "being based on snapshots of Debian
+      testing" would work.
+* December 5 2016 — Debian Stretch freeze starts
+* April 2017 (???) — Debian Stretch is released
+* April-June 2017 — Tails 3.0 is released
+
+# Let's go rolling
+
+Let's use this porting cycle to evaluate how being based on snapshots
+of Debian testing would feel like. During the entire cycle:
+
+* Keep the automated test suite up-to-date on feature/stretch :kytv:
+* Keep the documentation up-to-date on feature/stretch :doc_writer:
+* Take notes of issues we see from the perspective of "how would it go
+  if we were based on testing already?". E.g.:
+  - How to deal with ongoing transitions that block migration of
+    security updates from sid to testing?
+
+Note that during half of the cycle, we'll be based on a frozen Debian
+testing, so the changes rate coming from Debian won't be crazy.
+Of course there will be changes coming from our own porting efforts.
+
+And then, once Tails 3.0 is out: we're not lagging behind anymore, and
+are thus in a position to decide whether we want to base Tails on
+snapshots of Debian testing.

@@ -5,15 +5,7 @@ Feature: Cloning a Git repository
   all Internet traffic should flow only through Tor
 
   Background:
-    Given a computer
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And the Tails desktop is ready
-    And Tor is ready
-    And available upgrades have been checked
-    And all notifications have disappeared
-    And I save the state so the background can be restored next scenario
+    Given I have started Tails from DVD and logged in and the network is connected
 
   Scenario: Cloning a Git repository anonymously over HTTPS
     When I run "git clone https://git-tails.immerda.ch/myprivatekeyispublic/testing" in GNOME Terminal

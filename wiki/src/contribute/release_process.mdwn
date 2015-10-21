@@ -306,7 +306,7 @@ matches the date of the future signature.
 	echo "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
 	sed -ri "s%news/version_.*]]%news/version_$VERSION]]%" wiki/src/inc/stable_i386_release_notes.*
 	$EDITOR wiki/src/inc/*.html
-	./build-wiki
+	./build-website
 	git commit wiki/src/inc/ -m "Update version and date for $VERSION."
 
 ### features and design documentation
@@ -328,7 +328,7 @@ pages that were added or changed accordingly to changes coming with
 the new release. This e.g. ensures that the RC call for translation
 points translators to up-to-date PO files:
 
-	./build-wiki && git add wiki/src && git commit -m 'Update website PO files.'
+	./build-website && git add wiki/src && git commit -m 'Update website PO files.'
 
 Call for translation
 ====================
@@ -692,6 +692,13 @@ Make sure every webserver listed in the `dl.amnesia.boum.org` round
 robin pool has the new version. Drop those that are lagging behind and
 notify their administrators.
 
+ISO history
+-----------
+
+Push the released ISO to our Tails ISO history git-annex repo, so that
+our isotesters can fetch it from there for their testing. How to do so
+is described in our internal Git repo.
+
 Update the website and Git repository
 =====================================
 
@@ -809,7 +816,7 @@ Write the announcement for the release in
 In any case
 -----------
 
-Generate PO files for the announcements with `./build-wiki`.
+Generate PO files for the announcements with `./build-website`.
 
 Then, send them to <tails-l10n@boum.org> so that they get translated
 shortly, perhaps even soon enough to integrate them before pushing the
@@ -868,6 +875,7 @@ repository like this:
       git merge "$RELEASE_BRANCH" && \
       git push origin master:master \
     )
+
 
 Bug tracker
 -----------
