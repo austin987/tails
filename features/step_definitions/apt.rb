@@ -43,7 +43,7 @@ Then /^I should be able to install a package using Synaptic$/ do
   @screen.wait_and_double_click('SynapticCowsaySearchResult.png', 20)
   @screen.wait_and_click('SynapticApplyButton.png', 10)
   @screen.wait('SynapticApplyPrompt.png', 60)
-  @screen.type(package + Sikuli::Key.ENTER)
+  @screen.type(Sikuli::Key.ENTER)
   @screen.wait('SynapticChangesAppliedPrompt.png', 120)
   step "package \"#{package}\" is installed"
 end
