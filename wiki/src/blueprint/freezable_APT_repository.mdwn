@@ -184,27 +184,28 @@ Output:
 "at ISO build time, generate a list of used packages and version,
 including packages used at build time but not shipped in the ISO"
 -> from logs APT and/or dpkg and/or `/var/cache/apt`
-   - debootstrap ⇒ `--keep-debootstrap-dir`
-   - `apt-get source` ⇒ corner case, handle by hand
-   - if all APT sources in use behave ((source package name, version)
-     is a unique identifier wrt. file *content* among all such APT
-     sources), then we don't need to save _where_ each package was
-     pulled from
-   - Not strictly needed, but useful even if we do full archive
-     snapshots:
-     * Allows to inspect the diff between the subset of two different
-       snapshots that was used at build time; the benefit is very
-       minor as long as we're based on Debian oldstable or stable, but
-       if/when we switch to being based on Debian testing then we will
-       definitely want that. Not that minor: we also fetch packages
-       from testing, sid, backports, etc.
-     * Say a branch (topic one, or devel, etc.) introduces
-       a regression, and has changes the set of packages used at build
-       time, we may want to check how exactly that set was changed.
-       Think "check the diff between `.packages`" as we do at release
-       time, but done in a correct way.
-     * Allows keeping only _partial_ snapshots (of our full archive
-       ones) for those we want to keep forever, i.e. release ones.
+
+* debootstrap ⇒ `--keep-debootstrap-dir`
+* `apt-get source` ⇒ corner case, handle by hand
+* if all APT sources in use behave ((source package name, version)
+  is a unique identifier wrt. file *content* among all such APT
+  sources), then we don't need to save _where_ each package was
+  pulled from
+* Not strictly needed, but useful even if we do full archive
+  snapshots:
+  - Allows to inspect the diff between the subset of two different
+    snapshots that was used at build time; the benefit is very
+    minor as long as we're based on Debian oldstable or stable, but
+    if/when we switch to being based on Debian testing then we will
+    definitely want that. Not that minor: we also fetch packages
+    from testing, sid, backports, etc.
+  - Say a branch (topic one, or devel, etc.) introduces
+    a regression, and has changes the set of packages used at build
+    time, we may want to check how exactly that set was changed.
+    Think "check the diff between `.packages`" as we do at release
+    time, but done in a correct way.
+  - Allows keeping only _partial_ snapshots (of our full archive
+    ones) for those we want to keep forever, i.e. release ones.
 
 ## Valid-Until and signing
 
