@@ -743,7 +743,13 @@ end
 def gnome_app_menu_click_helper(click_me, verify_me = nil)
   try_for(30) do
     @screen.hide_cursor
-    @screen.wait_and_click(click_me, 10)
+    # The sensitivity for submenus to open by just hovering past them
+    # is extremely high, and may result in the wrong one
+    # opening. Hence we better avoid hovering over undesired submenus
+    # entirely by "approaching" the menu strictly horizontally.
+    r = @screen.wait(click_me, 10)
+    @screen.hover_point(@screen.w, r.getY)
+    @screen.click(r)
     @screen.wait(verify_me, 10) if verify_me
     return
   end
