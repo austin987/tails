@@ -25,10 +25,7 @@ little value.
 
 # TODO
 
-0. go through all remaining XXX and Redmine tickets
-
 1. doc-driven development [i]
-   * update "importing selected packages" section [i]
    * draft contributors doc for each workflow
      - RM (see release process doc and APT repo common operations doc)
      - developer (including stable, testing, devel, and `$topic`)
@@ -80,6 +77,9 @@ little value.
       if available (supersede existing `*.{bin,src}pkg`).
    k. if needed, implement GC
 
+5. misc
+   * implement whatever the "freeze exceptions" section requires
+
 # The big picture
 
 ## Snapshots and branches
@@ -87,8 +87,8 @@ little value.
 Several times a day (e.g. 4 times, to match runs of `dinstall` in the
 Debian archive) we update a local mirror of the APT repositories we're
 interested in, e.g. with `reprepro update`. Once this is successfully
-done, we take a snapshot of the current state of our local mirror;
-this snapshot's name must contain:
+done, we take a snapshot of the current state of our local mirror
+(e.g. with `reprepro pull`); this snapshot's name must contain:
 
  * an identifier of the APT repository this snapshot is about, e.g.
    `debian`, `debian-security`, `torproject`;
@@ -100,15 +100,16 @@ latest snapshot for each mirrored repository. Similarly, every ISO
 build exports the names of the APT repository snapshots it uses.
 
 Building an ISO from the `devel` branch always uses the freshest set
-of APT repository snapshots available. Resolving what's the latest one
-is done at the beginning of the build, so that the entire build uses
-the exact same state of these repositories. This is needed for
-reproducible builds, and has a nice side effect: so long, `Hashsum mismatch`, and thanks for the fish. (Implementation detail: in
-practice, this pointer resolution is done early in `auto/config`, so
-that we can 1. specify the snapshots we want via `lb
-config --mirror-{bootstrap,chroot}`, which `lb build` uses to generate
-APT sources for the target base distribution, and 2. adjust other APT
-sources (`config/chroot_sources`) somehow.)
+of APT repository snapshots available. Resolving what's the set of
+freshest APT repository snapshots is done at the beginning of the
+build, so that the entire build uses the exact same state of these
+repositories. This is needed for reproducible builds, and has a nice
+side effect: so long, `Hashsum mismatch`, and thanks for the fish.
+(Implementation detail: in practice, this pointer resolution is done
+early in `auto/config`, so that we can 1. specify the snapshots we
+want via `lb config --mirror-{bootstrap,chroot}`, which `lb build`
+uses to generate APT sources for the target base distribution, and 2.
+adjust other APT sources (`config/chroot_sources`) somehow.)
 
 Building an ISO from the branch used to prepare the next major release
 (`testing`), or a topic branch based on it (`config/base_branch`):
@@ -122,7 +123,7 @@ Building an ISO from the branch used to prepare the next major release
    latest snapshot;
  * **at release time**: when building from a tagged branch, similarly to
    what we do for our custom [[contribute/APT_repository]], instead of
-   using timestamp-based APT repository snapshots, we use snapshots
+   using time-based APT repository snapshots, we use snapshots
    labeled with the Git tag;
  * **after releasing**, the RM encodes in the `testing` Git branch the
    fact that it is not frozen anymore, that is: the RM removes the
@@ -141,11 +142,31 @@ except:
 
 ## Different problems ⇒ different solutions
 
-We want to manage two sets of snapshots that are vastly different in
-terms of goals, users, turnover, garbage collection and backup
-strategies:
+Note that:
 
- * time-based, full snapshots of the mirrored APT repositories over
+ * The time-based snapshots of the mirrored APT repositories that are
+   used basically all the time (except when building a release) should
+   be *full* snapshots, that is they should contain exactly the same
+   set of packages as the mirrored repository. This has the advantage
+   that some workflows are trivially handled, e.g. working on a topic
+   branch that installs additional Debian packages; if such snapshots
+   were not full ones, then to work on one such branch, one would need
+   either that I have the credentials to import new packages from
+   Debian into our own mirror or repositories (which raises the
+   barrier for contributing), or that during some phases of Tails
+   development the regular Debian archive is used instead of our own
+   mirror, which feels prone to "time to QA vs. time to
+   release" issues.
+
+ * The tagged snapshots used to build releases can be *partial*, that
+   is they can contain only the subset of the mirrored repositories
+   that is required for building a specific Tails ISO image.
+
+So, we actually want to manage two sets of snapshots that are vastly
+different in terms of goals, users, turnover, garbage collection and
+backup strategies:
+
+ * **time-based, full snapshots** of the mirrored APT repositories over
    the last N days;
    - goal: freezable repo feature for the dev process and QA
    - this one can be started from scratch from time to time if
@@ -155,7 +176,7 @@ strategies:
      immediately rebuild a working data set from scratch ⇒ no need to
      sync' this content to the failover server; no need to back it up;
 
- * tagged, partial snapshots that were used to build released Tails
+ * **tagged, partial snapshots** that were used to build released Tails
    ISO images:
    - goal: reproducible builds, GPL compliance;
    - in there we import only the needed packages;
@@ -171,6 +192,13 @@ make it slow ([[!tails_ticket 6295]]), and in any case makes it hard
 to back up... which we want to, for preserving the releases' tagged
 snapshots information.
 
+So we'll use two independent `reprepro` instances to address these
+two problems.
+
+XXX: how exactly we'll import packages we need from time-based
+snapshots to tagged ones is left to be defined (filtered `reprepro
+update`? `cp` + `reprepro includeblah`?)
+
 # Special cases and implementation
 
 ## APT sources used inside Tails
@@ -185,10 +213,13 @@ But generating the 2 versions (frozen, not frozen) of the sources at
 ISO build time would probably be more elegant: at boot time, one only
 needs to rename files instead of fiddling with `sed`.
 
-## Upgrading to a new Debian point-release
+## Upgrading to a new snapshot
 
-Note: this is mostly an example of a situation in which we might want
-to bump the pointers to the set of snapshots that shall be used.
+In other words: bumping, in Git, the pointers to the set of snapshots
+that shall be used.
+
+Let's use, as an example of a situation in which we might want to do
+that, upgrading to a new Debian point-release.
 
 With this design:
 
@@ -207,6 +238,104 @@ With this design:
    - `stable` will start using the new Debian point-release once
      a `testing` branch that uses that point-release is merged into
      `stable`.
+
+## Freeze exceptions
+
+This is a new problem brought by using "frozen" snapshot of APT
+repositories during a Tails code freeze: some bug, that we want to see
+fixed in the release we are preparing, would be resolved if we pulled
+an upgraded package as-is from a freshest Debian APT repository.
+Before we could freeze APT repositories, we would have got this bugfix
+for free. Now we need to grant freeze exceptions.
+
+This is similar to "Upgrading to a new snapshot", except that we want
+to upgrade one package only. By definition, this only affects *frozen*
+release branches (`stable`, `testing`), and topic branches based on
+them: all other branches use the freshest set of APT repository
+snapshots available.
+
+Most of the time, a bugfix branch we want to merge into a frozen
+release branch doesn't need to upgrade packages from Debian, so this
+is a corner case for the time being. Moreover, so far we have always
+dealt with this problem entirely by hand, so it's not critical to
+provide much improved tools. What makes it tempting to improve the
+situation here is mostly:
+
+ * even though freeze exceptions will remain exceptions, frozen will
+   add one use case:
+ * this will become a relatively common operation if we are based on
+   Debian testing some day, so let's check that it's not only
+   possible, but also reasonably easy to handle with this design
+   (otherwise we may have to switch to more powerful tools, such as
+   dak + britney).
+
+Definition: here, we'll call "overlay [[contribute/APT repository]]"
+the set of Tails-specific APT suites that we have been maintaining for
+a few years. They are overlay in that they don't contain all the
+packages that can be found in Debian: building a Tails ISO image also
+requires another kind of APT sources, that are more complete.
+
+We can handle freeze exceptions this way:
+
+1. Import the package we want to upgrade into our own overlay
+   [[contribute/APT repository]], in the suite corresponding to the
+   branch that we want to see this package ⇒ in the general case, the
+   upgraded package will be installed in the next Tails release.
+   We need a tool to do that (would `reprepro pull` with a custom
+   filter do the job?).
+
+2. Pin, in `config/chroot_apt/preferences`, the upgraded package we
+   have just imported. The aforementioned tool can do this as well.
+
+   [Our current default APT pinning ranks Tails overlay APT suites
+   over any other APT source, so why the need to add an APT pinning
+   entry? The problem is that it's hard to do the next step (clean up)
+   with this APT pinning, combined with the fact that we can't easily
+   delete a package from an APT suite and see this deletion propagated
+   over suite merges. I (intrigeri) was not able to find a good
+   solution to that problem under these constraints, so this document
+   assumes that we change this, and pin our overlay APT suites at the
+   same level as the APT sources corresponding to the Debian release
+   Tails is currently based on. This implies that we manually pin, in
+   Git, the packages from our overlay APT suites, that we want to
+   override the ones found in other repositories regardless of
+   version numbers.]
+
+3. Make it so branches stop using the upgraded package once they have
+   been unfrozen, that is once the upgraded package can be fetched
+   from a time-based snapshot of the repository we've initially pulled
+   it from. Reverting the commit that added the corresponding APT
+   pinning in the first place is enough. This should be done by the
+   release manager, immediately after a release, when they un-freeze
+   the branch used for the release and merge it into other release
+   branches. But the RM needs to know which commit to revert, so we
+   need to keep track of such upgrades: ideally the tool used to pull
+   the upgraded package in the first place should generate the
+   commands that will need to be run post-release, or save the data
+   needed to generate these commands; such information must be pasted
+   somewhere, e.g. into a new ticket; these commands could even be
+   scheduled to be run post-release automatically, if we're
+   comfortable giving commit access to our Git repository to more
+   machines, and have time to implement it.
+
+Another option, instead of adding/removing temporary APT pinning,
+would be to backport the package we want to upgrade, and make it so it
+has a version greater than the one in the time-based snapshot used by
+the frozen release branch, and lower than the one in more recent
+time-based snapshots. This means building and uploading the package to
+the relevant overlay APT suite. This is appealing, because it doesn't
+require any cleanup: the upgraded package will automatically be
+superseded as soon as it can be. However:
+
+ * we would not benefit from Debian features like reproducible builds;
+ * it requires either manual work and bandwidth every time, or setting
+   up and maintaining infrastructure to automate the whole thing;
+ * the fact that the changes *have to* go through Git, with the APT
+   pinning option, helps enforcing our review'n'merge processes; one
+   can do it by the book with the custom backport option too, by going
+   through a topic branch and `config/APT_overlays.d/`, but it still
+   conveys less historical information through Git than the APT
+   pinning option.
 
 ## Number of distributions
 
@@ -353,8 +482,6 @@ for each (package, version, checksum):
     if not apt-get download $package=$version:
       fetch with debsnap + verify checksum
 
-XXX: check if grml has code to do that or something similar.
-
 ## Valid-Until and signing
 
 Assumption: it is acceptable to have our APT repository snapshots
@@ -392,59 +519,6 @@ In passing, note that we ship an empty `/var/cache/apt/lists/` in the
 ISO ⇒ modifying `Release` and `Release.gpg` files on our APT
 repository won't prevent the ISO build from being deterministic.
 
-## XXX: importing selected packages
-
-This lead me to think a bit about importing
-selected packages only vs. importing entire APT dists, and my current
-take on this is that the latter is much more attractive a solution.
-In general, it wouldn't make much difference, but there are use cases
-in which the latter solution makes the workflow trivial, while the
-other makes it hard to deal with: e.g. say I'm working on a topic
-branch that installs additional Debian packages; if we're importing
-entire APT dists, then regardless of which stage of Tails development
-we are in (frozen or not), then it'll just work since the newly needed
-package is already part of the mirror we're using; OTOH, if we're
-importing only the packages we think we need, then working on such
-a topic branch requires
-
-either that I have the credentials to import
-new packages from Debian into our own mirror (which raises the barrier
-for contributing),
-
- => no
-
-or that during some phases of Tails development the
-regular Debian archive is used instead of our own mirror
-
- * We can live with it, no? E.g. only use frozen APT sources at ISO
-   build time:
-
-   - when building a release (from a tag) which is business as usual since
-     we already do that for our own APT repository; it only affects
-     release managers anyway;
-
-   - during a code freeze (from a branch whose base branch is
-     `stable` or `testing`)
-
-     * most of the time the bugfix branches we merge into `stable` and
-       `testing` don't need to change the set of (package, version)
-       pulled from Debian
-
-     * when one such branch needs e.g. a package update from Debian:
-       1. import it into our own APT repo (`stable` or `testing`
-          branch) so it's installed in the next Tails release
-       2. make it so we remove this package from the relevant APT
-          source (at least `devel`; more?) after next release (a
-          ticket in Redmine should be good enough).
-          And/or add an APT pinning entry in the relevant branches (at
-          least `devel`; more?) that forces installing this package
-          from Debian, as opposed as to from our own repo.
-          This is seriously ugly and complex, but we're speaking of
-          a corner case so perhaps it's OK.
-
-     * when we fix bugs directly in the Debian archive during a Tails
-       code freeze; XXX: check if we often do that
-
 ## APT vs. reprepro: dist names
 
 We need to encode in the APT sources' base URL the exact snapshot we
@@ -457,19 +531,19 @@ HTTP rewrite rules. Here's how.
 Let's assume:
 
     lb config --distribution wheezy
-    lb config --mirror-chroot          http://XXX.tails.boum.org/debian/20151019/
-    lb config --mirror-chroot-security http://XXX.tails.boum.org/debian-security/20151021/
+    lb config --mirror-chroot          http://XYZ.tails.boum.org/debian/20151019/
+    lb config --mirror-chroot-security http://XYZ.tails.boum.org/debian-security/20151021/
     etc.
 
 Which generates this APT `sources.list`:
 
-    deb http://XXX.tails.boum.org/debian/20151019/ wheezy main
-    deb http://XXX.tails.boum.org/debian-security/20151021/ wheezy/updates main
+    deb http://XYZ.tails.boum.org/debian/20151019/ wheezy main
+    deb http://XYZ.tails.boum.org/debian-security/20151021/ wheezy/updates main
 
 As a result APT sends HTTP requests with URL such as:
 
- * <http://XXX.tails.boum.org/debian/20151019/dists/wheezy/Release>
- * <http://XXX.tails.boum.org/debian-security/20151021/dists/wheezy/updates/Release>
+ * <http://XYZ.tails.boum.org/debian/20151019/dists/wheezy/Release>
+ * <http://XYZ.tails.boum.org/debian-security/20151021/dists/wheezy/updates/Release>
 
 The corresponding files in reprepro's filesystem (if we have one
 reprepro instance per mirrored archive) are:
@@ -543,7 +617,7 @@ regular mode = otherwise => use ftp.us.d.o
       the normal development process. Seems impractical (e.g.
       we sometimes freeze for more than a week) and too rigid.
     * When rebuilding from an old tag (old > a week).
-  - XXX: do we want to depend on snapshot.d.o that much?
+  - But do we want to depend on snapshot.d.o that much?
     * Served from two different locations.
     * Ask weasel if we can go this way. Make it clear how much we care
       about _old_ data, e.g.:
@@ -551,8 +625,8 @@ regular mode = otherwise => use ftp.us.d.o
         the last release, or the last few releases.
       - GPL requires distributing the source for at least 3 years
         after we stop distributing the binaries.
-  - XXX: Whonix uses that, go look/ask for pros/cons they've seen.
-  - XXX: other repos e.g. deb.tpo; we can probably handle it in a very
+  - Whonix uses that, go look/ask for pros/cons they've seen.
+  - other repos e.g. deb.tpo; we can probably handle it in a very
     ad-hoc and lightweight way, by importing the packages we want into
     our own Tails-specific APT suites, or with reprepro's mirroring
     (`pull`) feature.
@@ -605,7 +679,7 @@ One "solution" would be to replace `Acquire::Check-Valid-Until`:
  - ISO build time: we know when we've frozen ⇒ we can tell APT not to
    do that check, and check the Release files ourselves based on the
    additional info and constraints we have; a bit risky, no right to
-   fail, but not totally scary; XXX: draft a security discussion, then
+   fail, but not totally scary; so draft a security discussion, then
    have it reviewed
 
 ## dak, britney, merge-o-matic, debile, etc.
