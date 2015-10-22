@@ -74,7 +74,7 @@ Building an ISO from the branch used to prepare the next major release
    period" case.
 
 Building an ISO from the branch used to prepare the next point-release
-`stable`), or a topic branch based on it (`config/base_branch`), we
+(`stable`), or a topic branch based on it (`config/base_branch`), we
 use snapshots labeled with the Git tag of the latest Tails release,
 except:
 
@@ -129,6 +129,9 @@ ISO build time would probably be more elegant: at boot time, one only
 needs to rename files instead of fiddling with `sed`.
 
 ## Upgrading to a new Debian point-release
+
+Note: this is mostly an example of a situation in which we might want
+to bump the pointers to the set of snapshots that shall be used.
 
 With this design:
 
@@ -234,9 +237,18 @@ Output:
 - for each .deb:
   * Version: Need to look up version _inside_ .deb's because file name doesn't
     contain epoch and then doesn't allow us to infer version.
-  * Checksum(s)
+  * APT sources from where it is available, so that we can reinject it
+    into the relevant tagged snapshot(s!); better gather this info
+    incrementally rather than at the end of the build => we avoid
+    requiring APT sources to be stable during the duration of the
+    build
+  * Checksum(s) ???
 - The union of all APT sources used during the build.
 - XXX: save more build info, e.g. Git commit etc.?
+
+XXX: if a (package, version) is seen at build time in 2 or more APT
+sources, we'll want to inject it into each of the tagged snapshots
+corresponding to these sources.
 
 "at ISO build time, generate a list of used packages and version,
 including packages used at build time but not shipped in the ISO"
@@ -323,7 +335,7 @@ In passing, note that we ship an empty `/var/cache/apt/lists/` in the
 ISO ⇒ modifying `Release` and `Release.gpg` files on our APT
 repository won't prevent the ISO build from being deterministic.
 
-## XXX
+## XXX: importing selected packages
 
 This lead me to think a bit about importing
 selected packages only vs. importing entire APT dists, and my current
