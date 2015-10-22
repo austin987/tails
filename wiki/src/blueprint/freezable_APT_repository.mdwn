@@ -25,6 +25,8 @@ little value.
 
 # The big picture
 
+## Snapshots and branches
+
 Several times a day (e.g. 4 times, to match runs of `dinstall` in the
 Debian archive) we update a local mirror of the APT repositories we're
 interested in, e.g. with `reprepro update`. Once this is successfully
@@ -81,6 +83,38 @@ except:
  * if a set of APT repository snapshots is encoded directly in that
    branch: use them, even for security.debian.org.
 
+## Different problems ⇒ different solutions
+
+We want to manage two sets of snapshots that are vastly different in
+terms of goals, users, turnover, garbage collection and backup
+strategies:
+
+ * time-based, full snapshots of the mirrored APT repositories over
+   the last N days;
+   - goal: freezable repo feature for the dev process and QA
+   - this one can be started from scratch from time to time if
+     reprepro becomes too slow for some reason (such as imperfect DB
+     garbage collection);
+   - if we lose this content, we lose only N days of data, and can
+     immediately rebuild a working data set from scratch ⇒ no need to
+     sync' this content to the failover server; no need to back it up;
+
+ * tagged, partial snapshots that were used to build released Tails
+   ISO images:
+   - goal: reproducible builds, GPL compliance;
+   - in there we import only the needed packages;
+   - we want to back up this data, and expire it very cautiously,
+     if ever.
+
+Trying to solve both problems in the same `reprepro` instance would be
+problematic. Not only, coupling very different problems together, and
+trying to address them with the exact same tools and process, is
+generally a bad idea. But also, reprepro's database becomes quite big
+when we import large chunks of the Debian archive into it, which may
+make it slow ([[!tails_ticket 6295]]), and in any case makes it hard
+to back up... which we want to, for preserving the releases' tagged
+snapshots information.
+
 # Special cases and implementation
 
 ## APT sources used inside Tails
@@ -115,36 +149,6 @@ With this design:
      a `testing` branch that uses that point-release is merged into
      `stable`.
 
-## Different problems ⇒ different solutions
-
-We want to manage two sets of snapshots that are vastly different in
-terms of goals, users, turnover, garbage collection and backup
-strategies:
-
- * time-based, full snapshots of the mirrored APT repositories over
-   the last N days;
-   - goal: freezable repo feature for the dev process and QA
-   - this one can be started from scratch from time to time if
-     reprepro becomes too slow for some reason (such as imperfect DB
-     garbage collection);
-   - if we lose this content, we lose only N days of data, and can
-     immediately rebuild a working data set from scratch ⇒ no need to
-     sync' this content to the failover server; no need to back it up;
-
- * tagged, partial snapshots that were used to build released Tails
-   ISO images. In there we import only the needed packages. We want to
-   back up this data, and expire it very cautiously, if ever. .
-
-XXX: This can be unbearably slow, and couples together quite different
-problems ⇒ let's uncouple them:
-
-XXX: move this to the big picture above, or immediately after.
-
- * both reprepro's can have vastly different {garbage collecting,
-   backup, sync' to failover} strategies as they have very different
-   goals (QA + the freezable repo feature for the dev process, vs.
-   reproducible builds + GPL compliance).
-
 ## Number of distributions
 
 ... in reprepro's `conf/distributions`, for the reprepro instance(s)
@@ -174,10 +178,13 @@ when we'll delete it via garbage collection.
 
 #### Garbage collection
 
-XXX
+Simply cloning an existing Wheezy/i386/main "distribution" adds 100MB
+to `reprepro`'s database (*not* counting the actual packages!), so the
+whole thing will likely be quite big ⇒ expiring the snapshots older
+than N days will probably be compulsory.
 
-And, to ensure that garbage collection doesn't delete a snapshot we
-still need, e.g. the one currently referenced in the frozen `testing`
+To ensure that garbage collection doesn't delete a snapshot we still
+need, e.g. the one currently referenced in the frozen `testing`
 branch, we'll maintain a list of snapshots that need to be kept
 around. The tool used by the RM to bump the archive snapshot serials
 in Git should take care of it.
@@ -193,6 +200,12 @@ able to reproduce the build of a released ISO) = 3 years.
 
 ⇒ 450 distributions three years after deployment, which is the upper
 bound if we delete such snapshots when they're 3 years old.
+
+#### Garbage collection
+
+Depending on the growth rate of this `reprepro` instance's database,
+we may or may not need to implement expiration of these snapshots any
+time soon. Time will tell.
 
 ## reprepro
 
