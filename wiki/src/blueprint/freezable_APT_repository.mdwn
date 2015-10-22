@@ -23,6 +23,63 @@ We don't bother merging mirrored APT repositories / suites into
 aggregated ones. It loses information, gives us more work, and brings
 little value.
 
+# TODO
+
+0. go through all remaining XXX and Redmine tickets
+
+1. doc-driven development [i]
+   * update "importing selected packages" section [i]
+   * draft contributors doc for each workflow
+     - RM (see release process doc and APT repo common operations doc)
+     - developer (including stable, testing, devel, and `$topic`)
+   * get the updated documentation + this design reviewed, including
+     security aspects [i]
+   * write tools that the doc calls for
+     - bump `Valid-Until`
+     - freeze
+     - unfreeze
+
+2. time-based snapshots [i]
+   a. initial reprepro setup that keeps up-to-date local mirrors of
+      the APT repositories we need
+   b. decide how many reprepro instances we want/have to split all
+      this among
+   c. snapshot these mirrors every time they're updated, and publish
+      their serial
+   d. implement list of sticky snapshots that must not be GC'ed,
+      including the tool to add to that list
+   e. implement GC of snapshots
+   f. implement GC of packages
+   g. have build system output the snapshots being used,
+      and have Jenkins publish this info if available
+   h. manage symlinks or rewrite rules for URL → reprepro filesystem layout
+
+3. generate set of APT sources
+   * write automated tests for the generation of APT sources [i]
+   * implement the generation of APT sources
+   * plug the generation of APT sources into the build system
+   * implement switching to live APT sources at runtime
+
+4. tagged snapshots
+   a. PoC of capturing the list of binary packages used during the build [k]
+   b. initial reprepro setup for tagged snapshots
+   c. how to create a partial snapshot from a manifest and
+      the origin time-based snapshots? [k]
+   d. PoC of capturing the list of source packages used during the build [k]
+   e. expand list of source packages with those that the binary
+      packages were built from [k]
+   f. have the manifest → partial snapshot process include source
+      packages [k]
+   g. next Tails release: generate manifest, import packages into
+      tagged snapshots [i]
+   h. have a debootstrap 1.0.73+ in all our build environments (Vagrant
+      basebox, Jenkins slaves, manual build doc) so that we get the
+      `deburis` file, that's needed to build our packages listing.
+   i. Update the "Listing used packages" section
+   j. Have Jenkins publish the list of needed packages for a build
+      if available (supersede existing `*.{bin,src}pkg`).
+   k. if needed, implement GC
+
 # The big picture
 
 ## Snapshots and branches
@@ -387,16 +444,6 @@ regular Debian archive is used instead of our own mirror
 
      * when we fix bugs directly in the Debian archive during a Tails
        code freeze; XXX: check if we often do that
-
-## XXX: TODO
-
-* draft doc for each workflow, including stable, testing, devel, and
-  `$topic`
-* write automated tests for the generation of APT sources
-* implement the generation of APT sources
-* have a debootstrap 1.0.73+ in all our build environments (Vagrant
-  basebox, Jenkins slaves, manual build doc) so that we get the
-  `deburis` file, that's needed to build our packages listing.
 
 ## APT vs. reprepro: dist names
 
