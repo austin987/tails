@@ -24,8 +24,8 @@ if [ "$(pidof icedove)" ]; then
 fi
 
 if [ ! -x /usr/bin/mh/packf ]; then
-    echo "Please install the \"nmh\" package before running this
-script." >&2
+    echo "Please install the \"nmh\" package by running \"sudo apt-get install nmh\"
+	then run this script again." >&2
     exit 1
 fi
 
