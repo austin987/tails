@@ -40,11 +40,9 @@ The implementation and release of this is scheduled in three phases.  The intent
 
 We are proposing this because we have been debating a lot on the first screen(s) and we have reached something that is worth being tested and implemented. There is still work needed on the Guided Configuration wizard.
 
-
 # Proposed design for the 1st screen
 
 We refined this on the *tails-ux* mailing list to arrive at the following concrete proposal for the 1st screen. Below in this document we explain every designation.
-
 
 ## Intention
 
@@ -55,7 +53,6 @@ Design a greeter dialog that:
 - Has a simple and easy to understand interface for both new and advanced users
 - Uses as much tested data from previous design iterations as possible
 - Is up-to-date with GNOME 3.14 guidelines
-
 
 ## Proposed design
 
@@ -70,6 +67,47 @@ A single welcome and settings screen, which is always displayed, that acts as a 
 
 [full size bitmap](https://labs.riseup.net/code/attachments/download/979/Greeter.States.png)
 [source](https://labs.riseup.net/code/attachments/download/980/Greeter.States.svgz) 
+
+
+## UX for specific options
+
+### Language
+
+<img src="https://labs.riseup.net/code/attachments/download/1016/Greeter.Language.png" width="100%" height="auto" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/1016/Greeter.Language.png)
+
+The language section is always visible. When a language is saved (in cleartext), it is automatically filled in with saved options.
+
+When a line is clicked, a popover ([[https://developer.gnome.org/hig/stable/popovers.html.en]]) opens with an explanation of the option and the controls to change its value.
+
+As the values change their new value will replace the previous value in each respective location.
+
+It is clear that the "Language" section can/should be saved, but not yet weather the "Settings" section can/should be saved.
+
+UI when "Save Language Changes" is checked:
+
+  - On a new Tails installation the check box is unchecked by default.
+  - When the user switches languages the check box is checked, then a warning is 
+    displayed.
+  - The next time Tails starts the language preferences that were saved unencrypted are
+    detected and the box is automatically checked.
+  - When the user switches languages by unchecking the box to remove the saved 
+    preferences, a notification is displayed saying that the options were safely 
+    deleted.
+
+### Storage
+
+<img src="https://labs.riseup.net/code/attachments/download/997/Encrypted.Storage.png" width="100%" height="auto" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/997/Encrypted.Storage.png) [source](https://labs.riseup.net/code/attachments/download/998/Encrypted.Storage.svgz)
+
+### Privacy
+
+<img src="https://labs.riseup.net/code/attachments/download/1017/Greeter.Privacy.png" width="100%" height="auto" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/1017/Greeter.Privacy.png)
+
 
 ## Explanation of this design
 
@@ -183,45 +221,6 @@ Should the Greeter have the option to be closed/restarted?
 - No Close/Restart
 
 Since there are multiple boot modes to choose from for Tails, the designation was made that a ‘Restart’ button located in the Action Bar of the Greeter would accommodate a user’s preference to go back and boot into failsafe mode.
-
-## UX for specific options
-
-### Language
-
-<img src="https://labs.riseup.net/code/attachments/download/1016/Greeter.Language.png" width="100%" height="auto" />
-
-[full size bitmap](https://labs.riseup.net/code/attachments/download/1016/Greeter.Language.png)
-
-The language section is always visible. When a language is saved (in cleartext), it is automatically filled in with saved options.
-
-When a line is clicked, a popover ([[https://developer.gnome.org/hig/stable/popovers.html.en]]) opens with an explanation of the option and the controls to change its value.
-
-As the values change their new value will replace the previous value in each respective location.
-
-It is clear that the "Language" section can/should be saved, but not yet weather the "Settings" section can/should be saved.
-
-UI when "Save Language Changes" is checked:
-
-  - On a new Tails installation the check box is unchecked by default.
-  - When the user switches languages the check box is checked, then a warning is 
-    displayed.
-  - The next time Tails starts the language preferences that were saved unencrypted are
-    detected and the box is automatically checked.
-  - When the user switches languages by unchecking the box to remove the saved 
-    preferences, a notification is displayed saying that the options were safely 
-    deleted.
-
-### Storage
-
-<img src="https://labs.riseup.net/code/attachments/download/997/Encrypted.Storage.png" width="100%" height="auto" />
-
-[full size bitmap](https://labs.riseup.net/code/attachments/download/997/Encrypted.Storage.png) [source](https://labs.riseup.net/code/attachments/download/998/Encrypted.Storage.svgz)
-
-### Privacy
-
-<img src="https://labs.riseup.net/code/attachments/download/1017/Greeter.Privacy.png" width="100%" height="auto" />
-
-[full size bitmap](https://labs.riseup.net/code/attachments/download/1017/Greeter.Privacy.png)
 
 # Upcoming settings
 
