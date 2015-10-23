@@ -183,7 +183,7 @@ When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+)
   when "ICMP"
     cmd = "ping -c 5 #{host}"
   end
-  @conn_res = $vm.execute(cmd, LIVE_USER)
+  @conn_res = $vm.execute(cmd, :user => LIVE_USER)
 end
 
 Then /^the untorified connection fails$/ do
@@ -281,7 +281,7 @@ Then /^I see that (.+) is properly stream isolated$/ do |application|
 end
 
 And /^I re-run tails-security-check$/ do
-  $vm.execute_successfully("tails-security-check", LIVE_USER)
+  $vm.execute_successfully("tails-security-check", :user => LIVE_USER)
 end
 
 And /^I re-run htpdate$/ do
@@ -292,7 +292,7 @@ And /^I re-run htpdate$/ do
 end
 
 And /^I re-run tails-upgrade-frontend-wrapper$/ do
-  $vm.execute_successfully("tails-upgrade-frontend-wrapper", LIVE_USER)
+  $vm.execute_successfully("tails-upgrade-frontend-wrapper", :user => LIVE_USER)
 end
 
 When /^I connect Gobby to "([^"]+)"$/ do |host|

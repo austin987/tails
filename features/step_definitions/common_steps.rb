@@ -37,8 +37,8 @@ def deactivate_filesystem_shares
   #end
 end
 
-def notification_helper(notification_image, time_to_wait)
-  # notifiction-daemon may abort during start-up, causing the tests that look for
+def notification_popup_wait(notification_image, time_to_wait)
+  # notification-daemon may abort during start-up, causing the tests that look for
   # desktop notifications to fail (ticket #8686)
   begin
     @screen.wait(notification_image, time_to_wait)
@@ -46,6 +46,41 @@ def notification_helper(notification_image, time_to_wait)
     step 'process "notification-daemon" is running'
     raise e
   end
+end
+
+# This helper requires that the notification image is the one shown in
+# the notification applet's list, not the notification pop-up.
+def robust_notification_wait(notification_image, time_to_wait)
+  error_msg = "Didn't not see notification '#{notification_image}'"
+  try_for(time_to_wait, :delay => 0, :msg => error_msg) do
+    @screen.hide_cursor
+    @screen.click('GnomeNotificationApplet.png')
+    # Sanity check that the applet's list of notifications were
+    # opened. Sometimes the applet is moved when other systray
+    # elements are added, causing a race between Sikuli's mouse
+    # movement and the appearance of the new element.
+    @screen.wait('GnomeNotificationAppletClearAllButton.png', 5)
+    begin
+      return @screen.find(notification_image)
+    rescue FindFailed => e
+      # It could be that too many notifications are in the list, so
+      # the one we're looking for is not visible. Let's clear one
+      # notification and retry by re-raising the exception we just
+      # caught. This should not interfere with anything except if we
+      # later are interested in any of these older notifications that
+      # we may close.
+      # It's worth noting that the "close button" picture below has
+      # carefully been sized to include more than just the close
+      # button, so much that it ensures that the notification header
+      # must also be shown. That way we won't close any half-seen
+      # notification that may be the one we're looking for.
+      @screen.click('GnomeNotificationAppletCloseButton.png')
+      raise e
+    end
+  end
+rescue Timeout::Error => e
+  step 'process "notification-daemon" is running'
+  raise e
 end
 
 def post_snapshot_restore_hook
@@ -292,7 +327,7 @@ Then /^Tails seems to have booted normally$/ do
 end
 
 When /^I see the 'Tor is ready' notification$/ do
-  notification_helper('GnomeTorIsReady.png', 300)
+  notification_popup_wait('GnomeTorIsReady.png', 300)
   @screen.waitVanish("GnomeTorIsReady.png", 15)
 end
 
@@ -499,9 +534,8 @@ end
 
 def xul_application_info(application)
   binary = $vm.execute_successfully(
-                '. /usr/local/lib/tails-shell-library/tor-browser.sh; ' +
-                'echo ${TBB_INSTALL}/firefox'
-                                    ).stdout.chomp
+    'echo ${TBB_INSTALL}/firefox', :libs => 'tor-browser'
+  ).stdout.chomp
   case application
   when "Tor Browser"
     user = LIVE_USER
@@ -576,9 +610,8 @@ def xul_app_shared_lib_check(pid, chroot)
   absent_tbb_libs = []
   unwanted_native_libs = []
   tbb_libs = $vm.execute_successfully(
-                 ". /usr/local/lib/tails-shell-library/tor-browser.sh; " +
-                 "ls -1 #{chroot}${TBB_INSTALL}/*.so"
-                                      ).stdout.split
+    "ls -1 #{chroot}${TBB_INSTALL}/*.so", :libs => 'tor-browser'
+  ).stdout.split
   firefox_pmap_info = $vm.execute("pmap #{pid}").stdout
   for lib in tbb_libs do
     lib_name = File.basename lib
@@ -698,7 +731,7 @@ When /^the directory "([^"]+)" does not exist$/ do |directory|
 end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
-  c = $vm.execute("cp \"#{source}\" \"#{destination}\"", LIVE_USER)
+  c = $vm.execute("cp \"#{source}\" \"#{destination}\"", :user => LIVE_USER)
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
 
@@ -818,7 +851,7 @@ Then /^there is no GNOME bookmark for the persistent Tor Browser directory$/ do
 end
 
 def pulseaudio_sink_inputs
-  pa_info = $vm.execute_successfully('pacmd info', LIVE_USER).stdout
+  pa_info = $vm.execute_successfully('pacmd info', :user => LIVE_USER).stdout
   sink_inputs_line = pa_info.match(/^\d+ sink input\(s\) available\.$/)[0]
   return sink_inputs_line.match(/^\d+/)[0].to_i
 end
@@ -947,7 +980,7 @@ EOF
   # accessing this server matters, like when testing the Tor Browser..
   try_for(30, :msg => "Something is wrong with the LAN web server") do
     msg = $vm.execute_successfully("curl #{@web_server_url}",
-                                   LIVE_USER).stdout.chomp
+                                   :user => LIVE_USER).stdout.chomp
     web_server_hello_msg == msg
   end
 end
@@ -985,7 +1018,7 @@ def force_new_tor_circuit(with_vidalia=nil)
     @screen.wait('VidaliaNewIdentityNotification.png', 20)
     @screen.waitVanish('VidaliaNewIdentityNotification.png', 60)
   else
-    $vm.execute_successfully('. /usr/local/lib/tails-shell-library/tor.sh; tor_control_send "signal NEWNYM"')
+    $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
   end
 end
 
