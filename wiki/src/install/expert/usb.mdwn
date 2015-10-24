@@ -1,5 +1,96 @@
 [[!meta stylesheet="bootstrap" rel="stylesheet"]]
+[[!meta stylesheet="inc/stylesheets/steps" rel="stylesheet" title=""]]
 
 [[Back|install/debian]]
 
 Expert to USB
+
+Download (for everybody)
+========================
+
+1. Download ISO image:
+
+       wget http://dl.amnesia.boum.org/tails/stable/tails-i386-1.6/tails-i386-1.6.iso
+
+If you have an OpenPGP key
+==========================
+
+1. Import Tails signing key
+
+       wget https://tails.boum.org/tails-signing.key
+
+       gpg --import < tails-signing.key
+
+1. Install Debian keyring
+
+       sudo apt-get install debian-keyring/jessie
+
+1. Import OpenPGP key of Zack:
+
+       gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --export zack@debian.org | gpg --import
+
+1. Verify that Tails signing key is certified by Zack:
+
+       gpg --check-sigs A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+1. Certify Tails signing with your own key:
+
+       gpg --sign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+1. Verify ISO image:
+
+       gpg --verify tails-i386-1.6.1.iso.sig tails-i386-1.6.1.iso
+
+   Expected output:
+
+       gpg:                using RSA key 0x98FEC6BC752A3DB6
+       gpg: Good signature from "Tails developers (offline long-term identity key) <tails@boum.org>" [full]
+       gpg:                 aka "Tails developers <tails@boum.org>" [full]
+       Primary key fingerprint: A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
+            Subkey fingerprint: BA2C 222F 44AC 00ED 9899  3893 98FE C6BC 752A 3DB6
+
+   Verify date.
+
+If you don't have an OpenPGP key
+================================
+
+1. Move to temporary GnuPG directory.
+
+       export GNUPGHOME=$(mktemp -d)
+
+1. Import Tails signing key
+
+       wget https://tails.boum.org/tails-signing.key
+
+       gpg --import < tails-signing.key
+
+1. Install Debian keyring
+
+       sudo apt-get install debian-keyring/jessie
+
+1. Import OpenPGP key of Zack:
+
+       gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --export zack@debian.org | gpg --import
+
+1. Verify that Tails signing key is certified by Zack:
+
+       gpg --check-sigs A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+1. Verify ISO image:
+
+       gpg --verify tails-i386-1.6.1.iso.sig tails-i386-1.6.1.iso
+
+   Expected output:
+
+       gpg: Signature made Fri 28 Aug 2015 02:16:10 AM UTC using RSA key ID 752A3DB6
+       gpg: Good signature from "Tails developers (offline long-term identity key) <tails@boum.org>"
+       gpg: WARNING: This key is not certified with a trusted signature!
+       gpg:          There is no indication that the signature belongs to the owner.
+       Primary key fingerprint: A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
+            Subkey fingerprint: BA2C 222F 44AC 00ED 9899  3893 98FE C6BC 752A 3DB6
+
+   Verify date.
+
+1. Reset GnuPG directory:
+
+       unset GNUPGHOME
