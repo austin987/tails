@@ -414,6 +414,14 @@ XXX:
  * use a leading dash for `Update: - ...` in `conf/distributions`?
  * compare fields in generated `Release` files, with what can be found
    in the official Debian archive
+ * "Reprepro uses berkeley db, which was a big mistake. The most
+   annoying problem not yet worked around is database corruption when
+   the disk runs out of space. (Luckily if it happens while
+   downloading packages while updating, only the files database is
+   affected, which is easy (though time consuming) to rebuild, see
+   recovery file in the documentation). *Ideally put the database on
+   another partition to avoid that.*" (emphasis mine, from
+   [reprepro(1)](https://mirrorer.alioth.debian.org/reprepro.1.html#BUGS))
 
 There's a race condition when updating a local mirror with `reprepro
 update`: if it's not finished before the next dinstall + mirror sync'
