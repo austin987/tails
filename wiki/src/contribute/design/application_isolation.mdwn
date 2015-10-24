@@ -307,7 +307,14 @@ To mitigate that problem, we could:
   cache, without any compilation. If the parser detects that the
   policy is out of date, then the cache will be ignored and
   compilation will happen. This is what is done for the Ubuntu phone.
+  Note that the "exact same kernel" requirement has been relaxed,
+  either `--match-string` or `--features-file` or both ought to let
+  a new-enough parser generate "correct" policy for a given target
+  kernel using any other kernel. This could allow precompiling on the
+  build hosts. See `apparmor_parser(8)`, `apparmor_parser --help`,
+  examples in `parser/tst/features_files/*`, and `parser.conf`.
   Potential problems:
+  * missing documentation: see <https://bugs.launchpad.net/bugs/1491147>
   * if alias rules need to be added at login time, then the cache must
     be invalidated, and the policy entirely recompiled;
   * it remains to be researched how well this would work, once
