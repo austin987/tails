@@ -431,6 +431,61 @@ the remote mirror, and `reprepro update` will fail (exit code = 255).
 So, when the first run exits with exit code 255, let's ignore the
 error and run `reprepro update` a second time.
 
+### Snapshots
+
+In our [initial
+experiments](https://labs.riseup.net/code/issues/6295#note-14) we
+added full blown distributions to `conf/distributions` for each
+snapshot, and used `reprepro pull $codename` to add packages to them.
+
+Let's try with `reprepro gensnapshot`, which avoids the need to manage
+the list of snapshots in `conf/distributions`. The following tests are
+run with `conf/{distributions,updates}` set up to mirror the 14
+distributions we want from the Debian archive.
+
+Creating one snapshot:
+
+	distributions() {
+	    sed -rn -e 's/^Codename:\s+(.*)$/\1/p' conf/distributions
+	}
+	serial="$(date -u '+%Y%m%d')01"
+	for codename in $(distributions) ; do
+	    reprepro gensnapshot "$codename" "$serial"
+	done
+
+⇒ `dists/*/snapshots` takes 400MB (a snapshot done with `reprepro
+pull` would of course add essentially the same files somewhere else in
+`dists`, and occupy the same disk space in there), but the DB doesn't
+grow noticeably.
+
+And then, jumping to 40 (10 days * 4 snapshots/day) snapshots of each
+distribution, which is what we should have in practice:
+
+	for incr in $(seq --equal-width 2 40); do
+	    serial="$(date -u '+%Y%m%d')$incr"
+	    for codename in $(distributions) ; do
+	        reprepro gensnapshot "$codename" "$serial"
+	    done
+	done
+
+⇒ `dist/*/snapshots` takes 16 GB, and the DB has grown from 900 MB to
+1.5 GB; as expected, `packages.db` didn't grow at all: only
+`references.db` did.
+
+Conclusion: compared to the "snapshots as full-blown distributions +
+`reprepro pull`" option, we're saving _a lot_ on database size, which
+is very appealing. The counterpart being that:
+
+ * garbage collecting expired snapshots is a bit more involved, but
+   apparently doable: see reprepro(1) around `gensnapshot`;
+ * bumping `Valid-Until` for a given time-based snapshot has to be
+   done directly in `dist`, without any help from reprepro.
+
+XXX: find out how we can solve these two problems.
+
+None of these problems seem to warrant going back to the other
+option... and having to deal with 80GB+ BDB databases.
+
 ## Listing used packages
 
 Only needed for partial archive snapshots, but useful in all cases.
@@ -564,6 +619,9 @@ As a result APT sends HTTP requests with URL such as:
 
  * <http://XYZ.tails.boum.org/debian/20151019/dists/wheezy/Release>
  * <http://XYZ.tails.boum.org/debian-security/20151021/dists/wheezy/updates/Release>
+
+XXX: update the following if we decide to use `reprepro gensnapshot`,
+which implies slightly different paths.
 
 The corresponding files in reprepro's filesystem (if we have one
 reprepro instance per mirrored archive) are:
