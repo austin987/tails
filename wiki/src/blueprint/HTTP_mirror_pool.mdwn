@@ -1,5 +1,38 @@
 **Ticket**: [[!tails_ticket 7161]]
 
+[[!toc levels=3]]
+
+# The plan
+
+## Big picture
+
+We decided to implement a two-way strategy for this feature:
+
+* Use JavaScript to modify the link on the download page, so that each
+  user is pointed to random mirror.
+  - Vanilla JS (no frameworks)
+  - Store the JS code and its configuration file in two dedicated
+    ikiwiki overlays, for finer-grained access control possibilities
+    to it (e.g. we may want to let people who don't have commit access
+    to Git maintain the mirrors pool).
+  - Configuration for the JS is loaded from JSON file. It attaches
+    a weight to each mirror. Weight 0 means that the mirror is
+    currently disabled, and will never be redirected to. We're using
+    JSON and not YAML to avoid the need to use a third-party parser.
+
+* Keep using DNS to point to 3-5 fast and reliable mirrors. This will
+  be the fallback for people who do not use JS. So we still need a DNS
+  dynamic update system; we can simply re-purpose the one we already
+  have (`dl.amnesia.boum.org`).
+
+* The ISO verification extension also needs to use mirrors. So, we'll
+  be providing library code for it to do the same, internally, as
+  a web browser would do when visiting the Tails download page, that
+  is replacing the hostname, in a ISO download URL, with a suitable
+  mirror's hostname (using the JSON mirror pool configuration file).
+
+# Initial research
+
 The idea I had was to let the server(s) send a reduced list of hosts. Not
 only it would allow to work-around Tor DNS limitations, but also to have
 some weighted round robin, in order to prioritize some high bandwidth
@@ -9,9 +42,7 @@ If I had to mention the ideal design goals for such changes, I would say
 that the more straightforward would be the better for implementation and
 also for maintainability.
 
-[[!toc levels=2]]
-
-# Using DNS
+## Using DNS
 
 Using DNS seems to be an easy way to do some round robin in low level. It
 allows some kind of transparency to the upper layers protocols and
@@ -24,7 +55,7 @@ The following ways are available to implement it:
 * NS Hacks
 * Modified DNS servers
 
-## CNAME Hacks
+### CNAME Hacks
 
 As mention by ToBeFree something that can be done is to have different
 pools of servers like:
@@ -55,7 +86,7 @@ that has not been ported to bind 9. Neither NSD nor PowerDNS seem to
 support it, and their is no actual data about how resolvers would
 handle this case, so I don't think it is the best option.
 
-## NS Hacks
+### NS Hacks
 
 Following the same idea the dl amnesia.boum.org could be delegated to a
 few different DNS servers, and those servers may have different versions
@@ -82,7 +113,7 @@ CNAME hacks, almost as the NS servers will not receive 50% of requests
 because of [[!rfc 5452]]). However, I am not sure that playing with DNS
 inconsistency will be a so good idea, for example for maintainability :)
 
-## Using modified DNS servers
+### Using modified DNS servers
 
 Interestingly Tails is not the first project to be looking how to use DNS
 for load distribution. People already wrote some DNS software designed to
@@ -102,7 +133,7 @@ Deploying such software would solve the problem in a more elegant way than
 CNAME or NS hacks. It would require a bit of system administration that
 maybe can be done using some puppet templates in a few Virtal Machines.
 
-# Using HTTP(s)
+## Using HTTP(s)
 
 DNS is not the only way to do some load balancing. It is mostly used for
 low level protocols that don't allow redirects (for example: NTP). As
@@ -147,13 +178,13 @@ Thus, if I may, I would like to recommend considering the HTTP(s) option,
 even if it means that I have to write the PHP script by myself or to create
 an easy task entry on the ticket tracker and follow it :)
 
-# Proof of concept: JavaScript + multiple DNS pools / named mirrors
+## Proof of concept: JavaScript + multiple DNS pools / named mirrors
 
 This method can either be used with multiple DNS pools (dl1.amnesia.boum.org, dl2.amnesia.boum.org etc.) or with named mirrors (freiwuppertal.dl.amnesia.boum.org, othermirror.dl.amnesia.boum.org, ...). Using named mirrors allows you to use a huge, unlimited list of completely equally used mirrors; using multiple DNS pools leads to effects described under "CNAME hacks".
 
 These POCs should be 1:1 usable on the Tails [[download]] page. All that would be needed is setting up the DNS pools and/or named mirrors, and telling the mirror owners to configure their servers to respond to \*.amnesia.boum.org (the wildcard is important).
 
-## JavaScript POC (multiple DNS pools)
+### JavaScript POC (multiple DNS pools)
    
     <script src="//code.jquery.com/jquery.min.js"></script>
     <script type="text/javascript">//<![CDATA[ 
@@ -171,12 +202,12 @@ For this to work and to be flexible, mirrors need to respond to \*.amnesia.boum.
 
 At least nginx is unable to use a wildcard like dl\*.amnesia.boum.org, so \*.amnesia.boum.org has to be used. This is more flexible anyway.
 
-### Example webpage (see the webpage source there too)
+#### Example webpage (see the webpage source there too)
 
 <http://freiwuppertal.de/tails-mirror-example-dns.htm>
 
 
-## JavaScript POC (named mirrors)
+### JavaScript POC (named mirrors)
     
     <script src="//code.jquery.com/jquery.min.js"></script>
     <script type="text/javascript">//<![CDATA[ 
@@ -192,16 +223,108 @@ At least nginx is unable to use a wildcard like dl\*.amnesia.boum.org, so \*.amn
 
 For this to work and to be flexible, mirrors need to respond to \*.amnesia.boum.org. Just responding to a fixed name would make this an unflexible solution, so the wildcard is needed.
 
-### Example webpage (see the webpage source there too)
+#### Example webpage (see the webpage source there too)
 
 <http://freiwuppertal.de/tails-mirror-example-named.htm>
 
-### Giving mirrors higher or lower weight
+#### Giving mirrors higher or lower weight
 
 Using this approach, giving one mirror more weight than others is very easy: Simply add it's name multiple times to the array of mirrors. :D
 
+### Vanilla JavaScript POC and JSON
 
-# PHP: first draft
+        <a href="http://dl.amnesia.boum.org/tails/stable/tails-i386-1.6/tails-i386-1.6.iso" id="dllink">download link</a>
+
+        <script type="text/javascript">
+        function fetchJSONdata(path, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200 || xhr.status === 0) {
+                        var data = JSON.parse(xhr.responseText);
+                        if (callback) callback(data);
+                    } else {
+						console.log( "Error: " + xhr.statusText);
+					}
+				}
+			};
+            xhr.open('GET', path, true);
+            xhr.send();
+        }
+
+		function getRandomInt(min, max) {
+  			return Math.floor(Math.random() * (max - min +1)) + min;
+		}
+
+		function isJSON(str) {
+			try {
+				JSON.parse(str);
+			} catch (e) {
+				return false;
+			}
+			return true;
+		}
+
+		function replaceDownloadURL(updatedURL) {
+			var URLMarker = "/tails/stable";
+			// todo check that url is a correct url
+			var linkDOMElem = document.getElementById('dllink');
+			var linkHREF = linkDOMElem.href.split( '//' );
+			var linkToISO = linkHREF[1].split( URLMarker );
+			// fixme http or https
+			linkDOMElem.href = '//' + updatedURL + URLMarker + linkToISO[1];
+			return true;
+		}
+
+        fetchJSONdata('./mirrors.json', function(data){
+            //console.log(data);
+			if( data == "undefined" ) {
+				console.log( "Error: mirror data not loaded.");
+			} else if( !isJSON( JSON.stringify(data) ) ) {
+				console.log( "Error: mirror data is not JSON.");
+			} else {
+				//console.log(data.mirrors);
+				// todo delete all mirrors with weight 0 before choosing one
+				if(data.mirrors.length > 0 ) {
+					var activeMirrors = new Array();
+					for ( i = 0; i < data.mirrors.length; i++ ) {
+						if ( data.mirrors[i].weight != 0 ) {
+							// add mirror as many times as its weight, max weight is 5
+							if ( parseInt(data.mirrors[i].weight ) > 5) {
+								var max_weight = 5;
+							} else {
+								var max_weight = parseInt( data.mirrors[i].weight );
+							}
+							for ( w = 0; w < max_weight; w++ ) {
+								activeMirrors.push( data.mirrors[i] );
+							}
+						}
+					}
+					console.log(activeMirrors);
+
+					var randomMirror = getRandomInt(0, activeMirrors.length-1);
+					//console.log(randomMirror);
+					//console.log(data.mirrors[randomMirror]);
+					replaceDownloadURL(activeMirrors[randomMirror].url);
+				}
+			}
+        });
+    </script>
+
+The mirrors.json file contains:
+<pre>
+   {
+	"mirrors": [
+		{ "url": "1.dl.amnesia.boum.org", "weight": "10" },
+		{ "url": "5.dl.amnesia.boum.org", "weight": "5" },
+		{ "url": "6.dl.amnesia.boum.org", "weight": "6" },
+		{ "url": "3.dl.amnesia.boum.org", "weight": "0" }
+	]
+    }
+</pre>
+
+
+## PHP: first draft
 
 
     // http://stackoverflow.com/questions/4233407/get-random-item-from-array

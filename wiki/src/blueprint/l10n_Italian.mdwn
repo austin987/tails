@@ -4,6 +4,15 @@
 
 <http://tp.linux.it/glossario.html>
 
+Warning page = pagina degli avvertimenti/avvisi
+
+Persistence = persistente https://it.wikipedia.org/wiki/Persistenza_%28informatica%29 
+
+Sensitive = sensibile o riservato
+
+
+
+[[Domande aperte sui termini]]
 
 # Info
 
@@ -27,6 +36,48 @@ to add it, run:
 	    tails@git.tails.boum.org:l10n-italian/tails
 
 ... in an existing clone of our Git repo.
+
+#Git comandi quotidiani
+
+Sono tutti da mandare da terminale, una volta che si è dentro alla cartella che si usa per il progetto tails.
+Il pulsante TAB è vostro amico per completare tutti i percorsi dei file e soprattutto quando usate git add. Le frecce su e giù della tastiera vi danno gli ultimi comandi che avete lanciato, così andate velocissim*.
+
+Tutte le volte va configurata la chiave ssh che si usa, quindi:
+
+    $ ssh-add /home/utente/vostrachiaveprivata
+
+Fatto, ora possimo sincronizzarsi al repository remoto, prendendo i file che ci mancano:
+ 
+    $  git pull
+    
+Per aggiungere allo stadio "stage" i file che poi si manderà al repository remoto.
+
+
+    $ git add NAMEFILE
+
+Per avere una descrizione delle modifiche fatte localmente, ma che apparirà anche al repository remoto quando si aggiungeranno
+
+
+    $ git commit -m "DESCRIZIONE DELLE MODIFICHE FATTE"
+
+Se siete sicuri che le modifiche che avete fatto vanno tutte sul repository remoto, potete condensare i due comandi sopra con uno solo, -a mette tutti i file nella zona "stage" e committate direttamente:
+
+    $ git commit -a -m "DESCRIZIONE MODIFICHE"
+
+Se non sapete l'identità con cui è configurato git, fate un controllo prima di mandare le cose in remoto:
+
+
+    $ git config -l
+
+Per aggiungere i commit fatti al repository remoto:
+
+    $ git push l10n-italian master
+
+In caso di dubbi, vedete un po il vosro status:
+
+    $ git status
+
+
 
 # Come configurare il workflow git sul vostro pc
 
@@ -116,8 +167,11 @@ in fondo al comando):
 11)Genero la chiave ssh, la invio agli sviluppatori TAILS(il file.pub) e l'associo per essere autenticato sul server:
     
     ssh-keygen -t rsa -b 4096 -C "ignifugo@blablabla.net"
-    $ eval "$(ssh-agent -s)"
-    Agent pid 12534
+
+Ti chiederà il nome con cui genererà i due file della chiave, quello pubblico e quello segreto. QUindi ti cheide una passwor, due volte; i caratteri non si vedono quando li digiti.Finito
+
+Ora configuro la comunicazione ssh ad usare la mia chiave segreta ed invio quella pubblica agli sviluppatori di Tails per poter così scrivere nel repository condiviso.
+
     $ ssh-add /home/cri/ignissh
     Enter passphrase for /home/cri/ignissh:
     Identity added: /home/cri/ignissh (/home/cri/ignissh)
@@ -163,31 +217,49 @@ Attingere nuove pagine da tradurre dando precedenza a queste:
 
 ./doc/about/requirements --DONE,  pushed, daRev
 
+./doc/download --DONE,  pushed, daRev
+
+./doc/get.index --DONE,  pushed, daRev
+
+./doc/get/trusting_tails_signing_key --DONE,  pushed, daRev
+
+./doc/get/*--DONE,  pushed, daRev
 ___
 
-./doc/about.index
+bf
 
-./doc/about/openpgp_keys --80% DONE, a lot of issues... daRev
+./doc/about.index --FINITO!
 
-./doc/about/features --DONE, pushed  daRev
+./doc/about/features --DONE, pushed  daRev 
 
-./doc/about/fingerprint --DONE,  pushed  daRev
+./doc/about/fingerprint --DONE,  pushed  daRev 
+
+./doc/first_steps/persistence.caution --FINITO!
+
+./doc/first_steps/persistence/configure --DONE pushed daRev
+
+./doc/first_steps/persistence/delete --FINITO!
+
+./doc/first_steps/persistence/warnings --FINITO!
+
+***
+./doc/first_steps/persistence/use
+
+./doc/about/openpgp_keys --80% DONE, a lot of issues... not pushed
 
 ___
-
 ./doc/about/tor --DONE, Pushed 
-
 ./doc/about/trust --DONE, Pushed
-
 ./doc/about/warning --DONE, Pushed
-
 ./doc/first_steps/accessibility
-
 ./doc/first_steps/bug_reporting
-
 ./doc/first_steps/bug_reporting/tails_does_not_start
+./doc/first_steps/reset
+./doc/first_steps/upgrade
 
 ___
 
-./doc/first_steps/start_tails
+./doc/first_steps/start_tails FAtta, ma da caricare sul repo
+
+./doc/first_steps/startup_options
 
