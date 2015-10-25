@@ -4,9 +4,7 @@ Feature: Tor stream isolation is effective
   I want my Torified sessions to be sensibly isolated from each other to prevent identity correlation
 
   Background:
-    Given a computer
-    When I start Tails from DVD and I login
-    And I save the state so the background can be restored next scenario
+    Given I have started Tails from DVD and logged in and the network is connected
 
   Scenario: tails-security-check is using the Tails-specific SocksPort
     When I monitor the network connections of tails-security-check
@@ -29,6 +27,7 @@ Feature: Tor stream isolation is effective
     And the Tor Browser has started and loaded the startup page
     Then I see that Tor Browser is properly stream isolated
 
+  @fragile
   Scenario: Gobby is using the default SocksPort
     When I monitor the network connections of Gobby
     And I start "Gobby" via the GNOME "Internet" applications menu
@@ -47,12 +46,14 @@ Feature: Tor stream isolation is effective
     And the whois command is successful
     Then I see that whois is properly stream isolated
 
+  @fragile
   Scenario: Explicitly torify-wrapped applications are using the default SocksPort
     When I monitor the network connections of Gobby
     And I run "torify /usr/bin/gobby-0.5" in GNOME Terminal
     And I connect Gobby to "gobby.debian.org"
     Then I see that Gobby is properly stream isolated
 
+  @fragile
   Scenario: Explicitly torsocks-wrapped applications are using the default SocksPort
     When I monitor the network connections of Gobby
     And I run "torsocks /usr/bin/gobby-0.5" in GNOME Terminal
