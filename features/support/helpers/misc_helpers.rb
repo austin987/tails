@@ -106,7 +106,7 @@ def retry_tor(recovery_proc = nil, &block)
 end
 
 def retry_i2p(recovery_proc = nil, &block)
-  retry_action(10, :recovery_proc => recovery_proc,
+  retry_action(15, :recovery_proc => recovery_proc,
                :operation_name => 'I2P operation', &block)
 end
 
