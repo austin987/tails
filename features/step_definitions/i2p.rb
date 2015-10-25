@@ -84,7 +84,7 @@ end
 
 Then /^I2P successfully built a tunnel$/ do
   try_for(7 * 60) do
-    $vm.execute("test -e /run/i2p/i2p_has_bootstrapped").success?
+    $vm.execute('i2p_built_a_tunnel', :libs => 'i2p').success?
   end
 end
 
