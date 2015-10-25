@@ -10,8 +10,7 @@ end
 
 Given /^I2P's reseeding (completed|started|failed)$/ do |progress|
   try_for(220) do
-    $vm.execute('. /usr/local/lib/tails-shell-library/i2p.sh; ' +
-                "i2p_reseed_#{progress}").success?
+    $vm.execute("i2p_reseed_#{progress}", :libs => 'i2p').success?
   end
 end
 
