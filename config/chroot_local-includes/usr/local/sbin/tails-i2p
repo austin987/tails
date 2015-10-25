@@ -28,7 +28,7 @@ I2P_BOOTSTRAP_TIMEOUT=210
 # After the router infos (RIs) are downloaded from the reseed servers
 # it can take 3-5 minutes for a tunnel to be built, e.g.
 # once we get to this point I2P should be ready to be used.
-I2P_TUNNEL_BUILD_TIMEOUT=120
+I2P_TUNNEL_BUILD_TIMEOUT=420
 
 startup_failure() {
     /usr/local/sbin/tails-notify-user \
@@ -62,19 +62,10 @@ bootstrap_failure() {
 }
 
 wait_until_i2p_has_bootstrapped() {
-    # XXX workaround upstream bug
-    # The old check of seeing whether port 4444 is open isn't currently
-    # reliable. Although a tunnel may not be built yet the port may still be
-    # open.
-
-    # There's nearly zero chance that there'll be a tunnel ready before three
-    # minutes have elapsed.
-    sleep ${I2P_TUNNEL_BUILD_TIMEOUT} # initial 3 minute wait
-    wait_until ${I2P_TUNNEL_BUILD_TIMEOUT} i2p_has_bootstrapped # potentially 3 additional minutes
+    wait_until ${I2P_TUNNEL_BUILD_TIMEOUT} i2p_has_bootstrapped
 }
 
 notify_bootstrap_success() {
-    touch /run/i2p/i2p_has_bootstrapped
     /usr/local/sbin/tails-notify-user \
         "`gettext \"I2P is ready\"`" \
         "`gettext \"You can now access services on I2P.\"`"
@@ -100,7 +91,6 @@ case "${1}" in
         ;;
     stop)
         exec service i2p stop
-        rm -f /run/i2p/i2p_has_bootstrapped
         ;;
     *)
         echo "invalid argument '${1}'" >&2
