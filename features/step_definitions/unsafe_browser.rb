@@ -39,7 +39,7 @@ Then /^the Unsafe Browser works in all supported languages$/ do
 end
 
 Then /^I see the (Unsafe|I2P) Browser start notification and wait for it to close$/ do |browser_type|
-  notification_helper("#{browser_type}BrowserStartNotification.png", 30)
+  notification_popup_wait("#{browser_type}BrowserStartNotification.png", 30)
   @screen.waitVanish("#{browser_type}BrowserStartNotification.png", 10)
 end
 
@@ -133,7 +133,7 @@ When /^I close the (?:Unsafe|I2P) Browser$/ do
 end
 
 Then /^I see the (Unsafe|I2P) Browser stop notification$/ do |browser_type|
-  notification_helper("#{browser_type}BrowserStopNotification.png", 20)
+  notification_popup_wait("#{browser_type}BrowserStopNotification.png", 20)
   @screen.waitVanish("#{browser_type}BrowserStopNotification.png", 10)
 end
 
