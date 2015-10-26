@@ -25,6 +25,25 @@ debug_command "/bin/mount"
 debug_command "/usr/bin/lspci"
 debug_command grep spoof-mac: /var/log/messages
 
+# Great attention must be given to the ownership situation of these
+# files and their parent directories in order to avoid a symlink-based
+# attack that could read the contents of any file and make it
+# accessible to the user running this script (typicall the live
+# user). Therefore, when adding a new file, give as the first argument
+# 'root' only if the complete path to it (including the file itself)
+# is owned by root. If not, the following rules must be followed
+# strictly:
+#
+# * only one non-root user is involved in the ownership situation (the
+#   file, its dir and the parent dirs). From now on let's assume it is
+#   the case and call it $USER.
+#
+# * if any non-root group is has write access, it must not have any
+#   members.
+#
+# If any of these rules does not apply, the file cannot be added here
+# safely and something is probably quite wrong and should be
+# investigated carefully.
 debug_file root "/etc/X11/xorg.conf"
 debug_file amnesia "/home/amnesia/.xsession-errors"
 debug_file root "/proc/asound/cards"
