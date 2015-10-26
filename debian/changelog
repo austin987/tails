@@ -1,8 +1,61 @@
-tails (1.7) UNRELEASED; urgency=medium
+tails (1.7~rc1) unstable; urgency=medium
 
-  * Dummy entry for next major release.
+  * Major new features and changes
+    - Add a technology preview of the Icedove Email client (a
+      rebranded version of Mozilla Thunderbird), including OpenPGP
+      support via the Enigmail add-on, general security and anonymity
+      improvements via the Torbirdy add-on, and complete persitence
+      support (which will be enabled automatically if you already have
+      Claws Mail persistence enabled). Icedove will replace Claws Mail
+      as the supported email client in Tails in a future
+      release. (Closes: #6151, #9498, #10285)
+    - Upgrade Tor to 0.2.7.4-rc-1~d70.wheezy+1+tails1. Among the many
+      improvement of this new Tor major release, the new
+      KeepAliveIsolateSOCKSAuth option allows us to drop the
+      bug15482.patch patch (taken from the Tor Browse bundle) that
+      enabled similar (but inferiour) functionality for *all*
+      SocksPort:s -- now the same circuit is only kept alive for
+      extended periods for the SocksPort used by the Tor
+      Browser. (Closes: #10194, #10308)
+    - Add an option to Tails Greeter which disables networking
+      completely. This is useful when intending to use Tails for
+      offline work only. (Closes: #6811)
 
- -- intrigeri <intrigeri@debian.org>  Sat, 22 Sep 2015 18:54:32 +0200
+  * Security fixes
+    - Fix CVE-2015-7665, which could lead to a network interface's IP
+      address being exposed through. (Closes: #10364)
+
+  * Minor improvements
+    - Rework wording of Tails installer in Wheezy. (Closes: #9672)
+    - Restart Tor if bootstrapping stalls for too long when not using
+      pluggable transports. (Closes: #9516)
+    - Install firmware-amd-graphics, and firmware-misc-nonfree instead
+      of firmware-ralink-nonfree, both from Debian Sid.
+    - Update the Tails signing key. (Closes: #10012)
+
+  * Test suite
+    - Add initial automated tests for Icedove. (Closes: #10332)
+    - Add automated tests of the MAC spooding feature. (Closes: #6302)
+    - Drop the concept of "background snapshots" and introduce a general
+      system for generating snapshots that can be shared between
+      features. This removes all silly hacks we previously used to
+      "skip" steps, and greatly improves performance and reliability
+      of the whole test suite. (Closes: #6094, #8008)
+    - Flush to the log file in debug_log() so the debugging info can
+      be viewed in real time when monitoring the debug log
+      file. (Closes: #10323)
+    - Force UTF-8 locale in automated test suite. Ruby will default to
+      the system locale, and if it is non-UTF-8, some String-methods
+      will fail when operating on non-ASCII strings. (Closes: #10359)
+    - Escape regexp used to match nick in CTCP replies. Our Pidgin
+      nick's have a 10% chance to include a ^, which will break that
+      regexp. We need to escape all characters in the nick. (Closes:
+      #10219)
+    - Extract TBB languages from the Tails source code. This will
+      ensure that valid locales are tested. As an added bonus, the
+      code is greatly simplified. (Closes: #9897)
+
+ -- Tails developers <tails@boum.org>  Mon, 26 Oct 2015 23:06:59 +0100
 
 tails (1.6) unstable; urgency=medium
 
