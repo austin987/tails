@@ -51,6 +51,7 @@ Feature: Chatting anonymously using Pidgin
     When I say something to my friend
     Then I receive a response from my friend
 
+  # 10375 - Increase the number of Tor circuit retries in the test suite
   # 10443 - OFTC tests are fragile
   @check_tor_leaks @fragile
   Scenario: Connecting to the #tails IRC channel with the pre-configured account
