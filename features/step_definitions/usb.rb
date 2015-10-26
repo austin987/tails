@@ -499,7 +499,7 @@ end
 When /^I write some files expected to persist$/ do
   persistent_mounts.each do |_, dir|
     owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
-    assert($vm.execute("touch #{dir}/XXX_persist", user=owner).success?,
+    assert($vm.execute("touch #{dir}/XXX_persist", :user => owner).success?,
            "Could not create file in persistent directory #{dir}")
   end
 end
@@ -507,7 +507,7 @@ end
 When /^I remove some files expected to persist$/ do
   persistent_mounts.each do |_, dir|
     owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
-    assert($vm.execute("rm #{dir}/XXX_persist", user=owner).success?,
+    assert($vm.execute("rm #{dir}/XXX_persist", :user => owner).success?,
            "Could not remove file in persistent directory #{dir}")
   end
 end
@@ -515,7 +515,7 @@ end
 When /^I write some files not expected to persist$/ do
   persistent_mounts.each do |_, dir|
     owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
-    assert($vm.execute("touch #{dir}/XXX_gone", user=owner).success?,
+    assert($vm.execute("touch #{dir}/XXX_gone", :user => owner).success?,
            "Could not create file in persistent directory #{dir}")
   end
 end

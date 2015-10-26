@@ -40,17 +40,17 @@ Given(/^I disable Tails' firewall$/) do
 end
 
 When(/^I do a TCP DNS lookup of "(.*?)"$/) do |host|
-  lookup = $vm.execute("host -T #{host} #{SOME_DNS_SERVER}", LIVE_USER)
+  lookup = $vm.execute("host -T #{host} #{SOME_DNS_SERVER}", :user => LIVE_USER)
   assert(lookup.success?, "Failed to resolve #{host}:\n#{lookup.stdout}")
 end
 
 When(/^I do a UDP DNS lookup of "(.*?)"$/) do |host|
-  lookup = $vm.execute("host #{host} #{SOME_DNS_SERVER}", LIVE_USER)
+  lookup = $vm.execute("host #{host} #{SOME_DNS_SERVER}", :user => LIVE_USER)
   assert(lookup.success?, "Failed to resolve #{host}:\n#{lookup.stdout}")
 end
 
 When(/^I send some ICMP pings$/) do
   # We ping an IP address to avoid a DNS lookup
-  ping = $vm.execute("ping -c 5 #{SOME_DNS_SERVER}")
+  ping = $vm.execute("ping -c 5 #{SOME_DNS_SERVER}", :user => LIVE_USER)
   assert(ping.success?, "Failed to ping #{SOME_DNS_SERVER}:\n#{ping.stderr}")
 end

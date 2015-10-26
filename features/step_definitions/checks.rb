@@ -1,5 +1,5 @@
 def shipped_openpgp_keys
-  shipped_gpg_keys = $vm.execute_successfully('gpg --batch --with-colons --fingerprint --list-key', LIVE_USER).stdout
+  shipped_gpg_keys = $vm.execute_successfully('gpg --batch --with-colons --fingerprint --list-key', :user => LIVE_USER).stdout
   openpgp_fingerprints = shipped_gpg_keys.scan(/^fpr:::::::::([A-Z0-9]+):$/).flatten
   return openpgp_fingerprints
 end
@@ -26,7 +26,7 @@ Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be val
     cmd = 'apt-key adv'
     user = 'root'
   end
-  shipped_sig_key_info = $vm.execute_successfully("#{cmd} --batch --list-key #{fingerprint}", user).stdout
+  shipped_sig_key_info = $vm.execute_successfully("#{cmd} --batch --list-key #{fingerprint}", :user => user).stdout
   m = /\[expire[ds]: ([0-9-]*)\]/.match(shipped_sig_key_info)
   if m
     expiration_date = Date.parse(m[1])
@@ -105,7 +105,8 @@ Then /^GNOME Screenshot is configured to save files to the live user's Pictures 
   pictures_directory = "/home/#{LIVE_USER}/Pictures"
   save_path = $vm.execute_successfully(
     "gsettings get org.gnome.gnome-screenshot auto-save-directory",
-    LIVE_USER).stdout.chomp.tr("'","")
+    :user => LIVE_USER
+  ).stdout.chomp.tr("'","")
   assert_equal("file://#{pictures_directory}", save_path,
                "The GNOME screenshot auto-save-directory is not set correctly.")
 end
@@ -153,12 +154,12 @@ Then /^MAT can clean some sample PDF file$/ do
     pdf_on_guest = "/home/#{LIVE_USER}/#{pdf_name}"
     step "I copy \"#{@shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
     check_before = $vm.execute_successfully("mat --check '#{pdf_on_guest}'",
-                                            LIVE_USER).stdout
+                                            :user => LIVE_USER).stdout
     assert(check_before.include?("#{pdf_on_guest} is not clean"),
            "MAT failed to see that '#{pdf_on_host}' is dirty")
-    $vm.execute_successfully("mat '#{pdf_on_guest}'", LIVE_USER)
+    $vm.execute_successfully("mat '#{pdf_on_guest}'", :user => LIVE_USER)
     check_after = $vm.execute_successfully("mat --check '#{pdf_on_guest}'",
-                                           LIVE_USER).stdout
+                                           :user => LIVE_USER).stdout
     assert(check_after.include?("#{pdf_on_guest} is clean"),
            "MAT failed to clean '#{pdf_on_host}'")
     $vm.execute_successfully("rm '#{pdf_on_guest}'")
