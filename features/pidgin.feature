@@ -52,6 +52,7 @@ Feature: Chatting anonymously using Pidgin
     Then I receive a response from my friend
 
   # 10375 - Increase the number of Tor circuit retries in the test suite
+  # 10376 - "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
   # 10443 - OFTC tests are fragile
   @check_tor_leaks @fragile
   Scenario: Connecting to the #tails IRC channel with the pre-configured account
