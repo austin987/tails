@@ -40,7 +40,7 @@ i2p_reseed_completed() {
     grep -q "Reseed complete" "${I2P_WRAPPER_LOG}"
 }
 
-i2p_has_bootstrapped() {
+i2p_built_a_tunnel() {
     netstat -nlp | grep -qwF "$(i2p_eep_proxy_address)"
 }
 
