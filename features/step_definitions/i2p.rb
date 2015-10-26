@@ -6,8 +6,7 @@ end
 
 Given /^the I2P router console is ready$/ do
   try_for(120) do
-    $vm.execute('. /usr/local/lib/tails-shell-library/i2p.sh; ' +
-                'i2p_router_console_is_ready').success?
+    $vm.execute('i2p_router_console_is_ready', :libs => 'i2p').success?
   end
 end
 
