@@ -59,12 +59,10 @@ Then /^I see that Enigmail is configured to use the correct keyserver$/ do
 end
 
 Then /^I click Enigmail's advanced tab$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait_and_click('IcedoveEnigmailAdvancedTab.png', 10)
 end
 
 Then /^I see that Enigmail is configured to use the correct SOCKS proxy$/ do
-  next if @skip_steps_while_restoring_background
   @screen.click('IcedoveEnigmailAdvancedParameters.png')
   @screen.type(Sikuli::Key.END)
   @screen.wait('IcedoveEnigmailProxy.png', 10)
@@ -75,7 +73,6 @@ Then /^I see that Torbirdy is configured to use Tor$/ do
 end
 
 When /^I open Torbirdy's preferences$/ do
-  next if @skip_steps_while_restoring_background
   step "I open Icedove's Add-ons Manager"
   step 'I click the extensions tab'
   @screen.wait_and_click('MozillaExtensionsTorbirdy.png', 10)
@@ -87,13 +84,11 @@ When /^I open Torbirdy's preferences$/ do
 end
 
 When /^I test Torbirdy's proxy settings$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait('IcedoveTorbirdyPreferencesWindow.png', 10)
   @screen.click('IcedoveTorbirdyTestProxySettingsButton.png')
   @screen.wait('IcedoveTorbirdyCongratulationsTab.png', 180)
 end
 
 Then /^Torbirdy's proxy test is successful$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait('IcedoveTorbirdyCongratulationsTab.png', 180)
 end
