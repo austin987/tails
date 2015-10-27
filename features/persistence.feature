@@ -13,7 +13,7 @@ Feature: Tails persistence
 
   Scenario: Booting Tails from a USB drive with an enabled persistent partition
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
-    And Tails is running from USB drive "current"
+    Then Tails is running from USB drive "current"
     And all persistence presets are enabled
     And all persistent directories have safe access rights
 
