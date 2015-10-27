@@ -116,8 +116,7 @@ def retry_tor(recovery_proc = nil, &block)
 end
 
 def wait_until_tor_is_working
-  try_for(270) { $vm.execute(
-    '. /usr/local/lib/tails-shell-library/tor.sh; tor_is_working').success? }
+  try_for(270) { $vm.execute('tor_is_working', :libs => 'tor').success? }
 rescue Timeout::Error => e
   c = $vm.execute("grep restart-tor /var/log/syslog")
   if c.success?

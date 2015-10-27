@@ -21,6 +21,14 @@ nic_is_up() {
 # The following "nic"-related functions require that the argument is a
 # NIC that exists
 
+nic_ipv4_addr() {
+    ip addr show "${1}" | sed -n 's,^\s*inet \([0-9\.]\+\)/.*$,\1,p'
+}
+
+nic_ipv6_addr() {
+    ip addr show "${1}" | sed -n 's,^\s*inet6 \([0-9a-fA-F:]\+\)/.*$,\1,p'
+}
+
 # Will just output nothing on failure
 get_current_mac_of_nic() {
     local mac
@@ -74,5 +82,7 @@ mod_rev_dep() {
 # Unloads module $1, and all modules that (transatively) depends on
 # $1 (i.e. its reverse dependencies).
 unload_module_and_rev_deps() {
-  /sbin/modprobe -r $(mod_rev_dep ${1})
+  for mod in $(mod_rev_dep ${1}); do
+      /sbin/rmmod ${mod}
+  done
 }

@@ -2,7 +2,7 @@
 
 set -e
 
-# Import try_for()
+# Import try_for() and clock_gettime_monotonic()
 . /usr/local/lib/tails-shell-library/common.sh
 
 # Import tor_bootstrap_progress()
@@ -29,7 +29,7 @@ service tor restart
 #     options  set by Vidalia will be lost since they weren't written to torrc.
 
 bootstrap_progress=0
-last_bootstrap_change=$(date +%s)
+last_bootstrap_change=$(clock_gettime_monotonic)
 
 maybe_restart_tor() {
     local new_bootstrap_progress=$(tor_bootstrap_progress)
@@ -38,14 +38,14 @@ maybe_restart_tor() {
         return 0
     elif [ $new_bootstrap_progress -gt $bootstrap_progress ]; then
         bootstrap_progress=$new_bootstrap_progress
-        last_bootstrap_change=$(date +%s)
+        last_bootstrap_change=$(clock_gettime_monotonic)
         return 1
-    elif [ $(expr $(date +%s) - $last_bootstrap_change) -ge 20 ]; then
+    elif [ $(expr $(clock_gettime_monotonic) - $last_bootstrap_change) -ge 20 ]; then
         log "Tor seems to have stalled while bootstrapping. Restarting Tor."
         clear_tor_log
         service tor restart
         bootstrap_progress=0
-        last_bootstrap_change=$(date +%s)
+        last_bootstrap_change=$(clock_gettime_monotonic)
         return 1
     else
         return 1
