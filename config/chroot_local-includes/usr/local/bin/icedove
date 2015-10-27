@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e
+set -u
+
+PROFILE="${HOME}/.icedove/profile.default"
+
+start_icedove() {
+   # Give Icedove its own temp directory, similar rationale to a1fd1f0f & #9558.
+    TMPDIR="${PROFILE}/tmp"
+    mkdir --mode=0700 -p "$TMPDIR"
+    export TMPDIR
+
+    if [ -z "$XAUTHORITY" ]; then
+        XAUTHORITY=~/.Xauthority
+        export XAUTHORITY
+    fi
+
+    unset SESSION_MANAGER
+
+    /usr/bin/icedove --class "Icedove" -profile "${PROFILE}" "${@}"
+}
+
+start_icedove "${@}"
