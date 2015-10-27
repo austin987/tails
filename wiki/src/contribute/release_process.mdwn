@@ -75,7 +75,7 @@ If we are at freeze time for a major release:
         git checkout devel && git merge --no-ff origin/master
 
 2. [[Merge each APT overlay
-   suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+   suite|contribute/APT_repository/custom#workflow-merge-overlays]] listed in
    the `devel` branch's `config/APT_overlays.d/` into the `devel`
    APT suite.
 
@@ -86,10 +86,14 @@ If we are at freeze time for a major release:
    ... and check that the resulting `config/APT_overlays.d/` in the
    `testing` branch is empty.
 
-4. [[Hard reset|APT_repository#workflow-reset]] the `testing` APT
-   suite to the current state of the `devel` one.
+4. [[Hard reset|APT_repository/custom#workflow-reset]] the `testing`
+   custom APT suite to the current state of the `devel` one.
 
-5. If there is no Jenkins job building ISO images from the `testing`
+5. Encode in the `testing` branch the set of time-based APT
+   repository snapshots that shall be used during the freeze (and
+   make it so these snapshots are kept around): XXX
+
+6. If there is no Jenkins job building ISO images from the `testing`
    branch, ask <tails-sysadmins@boum.org> to re-activate it.
 
 Point-release
@@ -102,7 +106,7 @@ If we are at freeze time for a point-release:
         git checkout stable && git merge --no-ff origin/master
 
 2. [[Merge each APT overlay
-   suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+   suite|contribute/APT_repository/custom#workflow-merge-overlays]] listed in
    the `stable` branch's `config/APT_overlays.d/` into the `stable`
    APT suite.
 
@@ -168,7 +172,7 @@ Then check the PO files:
 Correct any displayed error, then commit the changes if any.
 
 Then see the relevant release processes, and upload the packages to
-the release branch's APT suite:
+the release branch's custom APT suite:
 
 * [[liveusb-creator]]
 * [[tails-greeter]]
@@ -207,9 +211,9 @@ Major release
 -------------
 
 [[Merge each APT overlay
-suite|contribute/APT_repository#workflow-merge-overlays]] listed in
+suite|contribute/APT_repository/custom#workflow-merge-overlays]] listed in
 the `testing` branch's `config/APT_overlays.d/` into the `testing`
-APT suite.
+custom APT suite.
 
 Point-release
 -------------
@@ -222,17 +226,18 @@ general case.
 </div>
 
 [[Merge each APT overlay
-suite|contribute/APT_repository#workflow-merge-overlays]] listed in
-the `stable` branch's `config/APT_overlays.d/` into the `stable` APT suite.
+suite|contribute/APT_repository/custom#workflow-merge-overlays]] listed in
+the `stable` branch's `config/APT_overlays.d/` into the `stable`
+custom APT suite.
 
 Update other base branches
 ==========================
 
 1. Merge the release branch into `devel` following the instructions for
-   [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
+   [[merging base branches|contribute/APT_repository/custom#workflow-merge-main-branch]].
 
 2. Merge `devel` into `feature/jessie` following the instructions for
-   [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
+   [[merging base branches|contribute/APT_repository/custom#workflow-merge-main-branch]].
    Given that these two branches' APT suites have diverged a lot, and
    that `tails-merge-suite` currently happily overwrites newer
    packages in the target with older packages from the source, it's
@@ -382,11 +387,14 @@ premature, as testing might reveal critical issues, but this is
 a signed tag, so it can be overridden later. Yes, there is room for
 improvement here.)
 
-Prepare the versioned APT suite
-===============================
+Prepare the versioned APT suites
+================================
 
-Follow the [[post-tag|contribute/APT_repository#workflow-post-tag]] APT
-repository documentation.
+Follow the
+[[post-tag|contribute/APT_repository/custom#workflow-post-tag]] custom
+APT repository documentation.
+
+XXX: time-based snapshots → tagged snapshots of APT repositories
 
 Build images
 ============
@@ -1019,8 +1027,11 @@ this, and skip what does not make sense for a RC.
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`, `experimental` and `feature/jessie`.
 1. Follow the
-   [[post-release|contribute/APT_repository#workflow-post-release]] APT
-   repository documentation.
+   [[post-release|contribute/APT_repository/custom#workflow-post-release]]
+   custom APT repository documentation.
+1. If this was a major release, encode in the `testing` Git branch the
+   fact that it is not frozen anymore, that is remove the indication
+   that a specific set of APT repository snapshots must be used XXX
 1. Push the resulting branches.
 1. If this was a major release, then reset experimental:
    - take note of branches merged into `experimental`, but not into
