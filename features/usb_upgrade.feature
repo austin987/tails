@@ -1,5 +1,5 @@
 @product
-Feature: Installing Tails to a USB drive
+Feature: Upgrading an old Tails USB installation
   As a Tails user
   If I have an old versoin of Tails installed on a USB device
   and the USB device has a persistent partition
