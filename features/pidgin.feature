@@ -51,6 +51,9 @@ Feature: Chatting anonymously using Pidgin
     When I say something to my friend
     Then I receive a response from my friend
 
+  # 10375 - Increase the number of Tor circuit retries in the test suite
+  # 10376 - "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
+  # 10443 - OFTC tests are fragile
   @check_tor_leaks @fragile
   Scenario: Connecting to the #tails IRC channel with the pre-configured account
     Given I have started Tails from DVD and logged in and the network is connected
@@ -88,7 +91,7 @@ Feature: Chatting anonymously using Pidgin
     And I close Pidgin's certificate manager
     Then I cannot add a certificate from the "/live/overlay/home/amnesia/.gnupg" directory to Pidgin
 
-  @check_tor_leaks
+  @check_tor_leaks @fragile
   Scenario: Using a persistent Pidgin configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And Pidgin has the expected accounts configured with random nicknames
