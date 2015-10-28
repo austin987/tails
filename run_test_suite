@@ -152,7 +152,7 @@ start_xvfb() {
 start_vnc_server() {
     check_dependencies x11vnc
     VNC_SERVER_PORT="$(x11vnc -listen localhost -display ${TARGET_DISPLAY} \
-                              -bg -nopw 2>&1 | \
+                              -bg -nopw -forever 2>&1 | \
                                   grep -m 1 "^PORT=[0-9]\+" | sed 's/^PORT=//')"
     echo "VNC server running on: localhost:${VNC_SERVER_PORT}"
 }
