@@ -7,6 +7,7 @@ Feature: Cloning a Git repository
   Background:
     Given I have started Tails from DVD and logged in and the network is connected
 
+  @fragile
   Scenario: Cloning a Git repository anonymously over HTTPS
     When I run "git clone https://git-tails.immerda.ch/myprivatekeyispublic/testing" in GNOME Terminal
     Then process "git" is running within 10 seconds
