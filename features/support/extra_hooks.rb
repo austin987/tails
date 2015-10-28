@@ -66,7 +66,7 @@ if not($at_exit_print_artifacts_dir_patching_done)
 end
 
 def info_log(message = "", options = {})
-  options[:color] = :white
+  options[:color] = :clear
   # This trick allows us to use a module's (~private) method on a
   # one-off basis.
   cucumber_console = Class.new.extend(Cucumber::Formatter::Console)
