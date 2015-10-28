@@ -16,7 +16,7 @@ Feature: Installing packages through APT
     When I update APT using apt
     Then I should be able to install a package using apt
 
-  @check_tor_leaks
+  @check_tor_leaks @fragile
   Scenario: Install packages using Synaptic
     When I start Synaptic
     And I update APT using Synaptic
