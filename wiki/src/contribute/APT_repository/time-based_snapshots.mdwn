@@ -11,6 +11,40 @@ XXX: import relevant content from
 Workflow
 ========
 
-XXX document:
+Bump expiration date
+--------------------
 
-- how to bump `Valid-Until` for a given time-based snapshot
+We set `Valid-Until` of time-based snapshots 10 days after they are
+generated. In some rare cases, e.g. if a freeze lasts substantially
+longer than usual, this can be too short, and we may need to manually
+bump `Valid-Until` for a given time-based snapshot.
+
+Only release managers and sysadmins can do such operations.
+
+To bump `Valid-Until` to `$VALID_UNTIL`, for all distributions in
+a given snapshot (`$SERIAL`) of a given archive (`$ARCHIVE`):
+
+	ssh time.snapshots.deb.tails.boum.org \
+	   sudo -u reprepro-time-based-snapshots \
+	      /usr/local/bin/postpone-apt-snapshot-expiration \
+	         "$ARCHIVE" "$SERIAL" "$VALID_UNTIL"
+
+To bump `Valid-Until` to `$VALID_UNTIL`, for all distributions in
+every snapshot used by the current frozen `testing` branch:
+
+	git checkout testing && \
+	(
+	   cd config/APT_snapshots.d/* && \
+	   for ARCHIVE in * ; do
+	      ssh time.snapshots.deb.tails.boum.org \
+	         sudo -u reprepro-time-based-snapshots \
+	            /usr/local/bin/postpone-apt-snapshot-expiration \
+	               "$ARCHIVE" "$(cat "$ARCHIVE"/serial)" "$VALID_UNTIL"
+	   done
+	)
+
+For additional, up-to-date information about the
+`postpone-apt-snapshot-expiration` command:
+
+	ssh time.snapshots.deb.tails.boum.org \
+	   sudo /usr/local/bin/postpone-apt-snapshot-expiration --help
