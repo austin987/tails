@@ -44,8 +44,8 @@ wait_until_i2p_router_console_is_ready() {
     wait_until ${I2P_STARTUP_TIMEOUT} i2p_router_console_is_ready
 }
 
-i2p_fails_to_bootstrap() {
-    wait_until ${I2P_BOOTSTRAP_TIMEOUT} i2p_reseed_failed
+wait_until_i2p_has_bootstrapped() {
+    wait_until ${I2P_BOOTSTRAP_TIMEOUT} '[ "$(i2p_reseed_status)" = success ]'
 }
 
 notify_router_console_success() {
@@ -85,9 +85,7 @@ case "${1}" in
         service i2p start
         wait_until_i2p_router_console_is_ready || startup_failure
         notify_router_console_success
-        if i2p_fails_to_bootstrap; then
-            bootstrap_failure
-        fi
+        wait_until_i2p_has_bootstrapped || bootstrap_failure
         wait_until_i2p_builds_a_tunnel || bootstrap_failure
         notify_bootstrap_success
         ;;

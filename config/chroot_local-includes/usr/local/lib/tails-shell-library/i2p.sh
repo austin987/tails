@@ -40,6 +40,16 @@ i2p_reseed_completed() {
     grep -q "Reseed complete" "${I2P_WRAPPER_LOG}"
 }
 
+i2p_reseed_status() {
+    if i2p_reseed_completed; then
+        echo success
+    elif i2p_reseed_failed; then
+        echo failure
+    elif i2p_reseed_started; then
+        echo running
+    fi
+}
+
 i2p_built_a_tunnel() {
     netstat -nlp | grep -qwF "$(i2p_eep_proxy_address)"
 }
