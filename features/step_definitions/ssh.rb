@@ -34,7 +34,8 @@ EOF
 end
 
 Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)$/ do |server_type|
-  $vm.execute_successfully("install -m 0700 -d '/home/#{LIVE_USER}/.ssh/'", LIVE_USER)
+  $vm.execute_successfully("install -m 0700 -d '/home/#{LIVE_USER}/.ssh/'",
+                           :user => LIVE_USER)
   unless server_type == 'Git'
     read_and_validate_ssh_config server_type
     secret_key = $config[server_type]["private_key"]
@@ -44,9 +45,12 @@ Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)$/ d
     public_key = $config["Unsafe_SSH_public_key"]
   end
 
-  $vm.execute_successfully("echo '#{secret_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa'", LIVE_USER)
-  $vm.execute_successfully("echo '#{public_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa.pub'", LIVE_USER)
-  $vm.execute_successfully("chmod 0600 '/home/#{LIVE_USER}/.ssh/'id*", LIVE_USER)
+  $vm.execute_successfully("echo '#{secret_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa'",
+                           :user => LIVE_USER)
+  $vm.execute_successfully("echo '#{public_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa.pub'",
+                           :user => LIVE_USER)
+  $vm.execute_successfully("chmod 0600 '/home/#{LIVE_USER}/.ssh/'id*",
+                           :user => LIVE_USER)
 end
 
 Given /^I verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do

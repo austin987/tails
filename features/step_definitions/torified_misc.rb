@@ -1,6 +1,6 @@
 When /^I query the whois directory service for "([^"]+)"$/ do |domain|
   retry_tor do
-    @vm_execute_res = $vm.execute("whois '#{domain}'", LIVE_USER)
+    @vm_execute_res = $vm.execute("whois '#{domain}'", :user => LIVE_USER)
     if @vm_execute_res.failure?
       raise "Looking up whois info for #{domain} failed with:\n" +
             "#{@vm_execute_res.stdout}\n" +
@@ -13,7 +13,7 @@ When /^I wget "([^"]+)" to stdout(?:| with the '([^']+)' options)$/ do |url, opt
   arguments = "-O - '#{url}'"
   arguments = "#{options} #{arguments}" if options
   retry_tor do
-    @vm_execute_res = $vm.execute("wget #{arguments}", LIVE_USER)
+    @vm_execute_res = $vm.execute("wget #{arguments}", :user => LIVE_USER)
     if @vm_execute_res.failure?
       raise "wget:ing #{url} with options #{options} failed with:\n" +
             "#{@vm_execute_res.stdout}\n" +
