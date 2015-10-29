@@ -28,7 +28,7 @@ I2P_BOOTSTRAP_TIMEOUT=210
 # After the router infos (RIs) are downloaded from the reseed servers
 # it can take 3-5 minutes for a tunnel to be built, e.g.
 # once we get to this point I2P should be ready to be used.
-I2P_TUNNEL_BUILD_TIMEOUT=420
+I2P_TUNNEL_BUILD_TIMEOUT=300
 
 startup_failure() {
     /usr/local/sbin/tails-notify-user \
@@ -62,6 +62,8 @@ bootstrap_failure() {
 }
 
 wait_until_i2p_builds_a_tunnel() {
+    # static sleep to work around upstream bug.
+    sleep 240
     wait_until ${I2P_TUNNEL_BUILD_TIMEOUT} i2p_built_a_tunnel
 }
 
