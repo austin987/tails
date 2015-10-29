@@ -516,11 +516,13 @@ EOF
     return cmd.stdout
   end
 
-  def file_append(file, line, user = 'root')
-    cmd = execute("echo '#{line}' >> '#{file}'", :user => user)
-    assert(cmd.success?,
-           "Could not append to '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
-    return cmd.stdout
+  def file_append(file, lines, user = 'root')
+    lines = lines.split("\n") if lines.class == String
+    lines.each do |line|
+      cmd = execute("echo '#{line}' >> '#{file}'", :user => user)
+      assert(cmd.success?,
+             "Could not append to '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
+    end
   end
 
   def internal_snapshot_xml(name)
