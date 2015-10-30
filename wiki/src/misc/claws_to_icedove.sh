@@ -15,7 +15,7 @@ packf="/usr/bin/mh/packf"
 ICEDOVE="$HOME/.icedove/profile.default"
 SAVEPATH="${ICEDOVE}/Mail/Local Folders"
 BACKUPPATH="${ICEDOVE}/Mail/Local Folders Backup"
-FULLPATH="$HOME/Mail"
+MAILPATH="$HOME/.claws-mail/Mail"
 
 # Check if Icedove is running
 if [ "$(pidof icedove)" ]; then
@@ -51,6 +51,7 @@ fi
 [ -d "$SAVEPATH" ] || mkdir -p "$SAVEPATH"
 echo "Saving Mailboxes to $SAVEPATH"
 
+cd "$MAILPATH"
 for FULLPATH in $(find . -type d)
 do
     FOLDER="$(basename ${FULLPATH})"
