@@ -34,7 +34,7 @@ if ! /usr/bin/mh/install-mh -check ; then
 fi
 
 # Do not overwrite existing Inbox
-if [ -d "$SAVEPATH/Inbox.sbd" ]; then
+if [ -f "$SAVEPATH/Inbox" ]; then
     #echo "Existing mail folders found. Exiting…" >&2
     echo "Existing mail folders for Icedove found. Did you run this script already or have mailboxes set up?\n
           Do you want to exit or make a backup and copy anyway? Type y for Yes or any key to exit."
