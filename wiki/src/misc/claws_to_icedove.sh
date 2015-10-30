@@ -19,13 +19,13 @@ MAILPATH="$HOME/.claws-mail/Mail"
 
 # Check if Icedove is running
 if [ "$(pidof icedove)" ]; then
-    echo "Icedove seems to be running. Please close Icedove, then run this script again." >&2
+    echo "Icedove seems to be running. Please close Icedove and run this script again." >&2
     exit 1
 fi
 
 if [ ! -x /usr/bin/mh/packf ]; then
-    echo "Please install the \"nmh\" package by running \"sudo apt-get update ; sudo apt-get install nmh\"
-	then run this script again." >&2
+    echo "Please install the \"nmh\" package by executing \"sudo apt-get update ; sudo apt-get install nmh\".
+Then run this script again." >&2
     exit 1
 fi
 
@@ -35,12 +35,13 @@ fi
 
 # Do not overwrite existing Inbox
 if [ -f "$SAVEPATH/Inbox" ]; then
-    #echo "Existing mail folders found. Exiting…" >&2
-    echo "Existing mail folders for Icedove found. Did you run this script already or have mailboxes set up?\n
-          Do you want to exit or make a backup and copy anyway? Type y for Yes or any key to exit."
+    #echo "Existing mailboxes found. Exiting…" >&2
+    echo "Existing mailboxes found for Icedove. Did you run this script already or have other Icedove mailboxes set up?
+Do you want to exit or make a backup of the Icedove mailboxes and copy the Claws Mail mailboxes anyway?
+Type [b] to back up the existing Icedove folders or any key to exit."
     read confirmbackup
     : ${confirmbackup:="n"} # default is to exit
-    if [ "$confirmbackup" = "y" ]; then
+    if [ "$confirmbackup" = "b" ]; then
        mv $SAVEPATH $BACKUPPATH
     else
         echo "Exiting…">&2
@@ -49,7 +50,7 @@ if [ -f "$SAVEPATH/Inbox" ]; then
 fi
 
 [ -d "$SAVEPATH" ] || mkdir -p "$SAVEPATH"
-echo "Saving Mailboxes to $SAVEPATH"
+echo "Saving mailboxes to $SAVEPATH"
 
 cd "$MAILPATH"
 for FULLPATH in $(find . -type d)
