@@ -14,7 +14,7 @@ IFS="
 packf="/usr/bin/mh/packf"
 ICEDOVE="$HOME/.icedove/profile.default"
 SAVEPATH="${ICEDOVE}/Mail/Local Folders"
-BACKUPPATH="${ICEDOVE}/Mail/Local Folders Backup"
+BACKUPPATH="${ICEDOVE}/Mail/Local Folders Backup $(date +%Y-%m-%d\ %H:%M:%S)"
 MAILPATH="$HOME/.claws-mail/Mail"
 
 # Check if Icedove is running
