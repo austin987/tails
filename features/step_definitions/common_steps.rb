@@ -106,7 +106,6 @@ def post_snapshot_restore_hook
         $vm.execute("rm -f /var/i2p/i2p_has_bootstrapped")
         $vm.spawn('/usr/local/sbin/tails-i2p start')
       end
-      $vm.spawn("restart-vidalia")
     end
   else
     $vm.host_to_guest_time_sync
