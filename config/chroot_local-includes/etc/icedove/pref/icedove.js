@@ -7,7 +7,7 @@
 // /etc/thunderbird/pref, please note that they won't be kept if you
 // do them in /usr/lib/thunderbird/defaults/pref.
 
-pref("extensions.update.enabled", true);
+pref("extensions.update.enabled", false);
 
 // Use LANG environment variable to choose locale
 pref("intl.locale.matchOS", true);
