@@ -55,10 +55,25 @@ Given /^macchanger will fail by not spoofing and always returns ([\S]+)$/ do |mo
   $vm.execute_successfully("ln -s /bin/#{mode} /usr/bin/macchanger")
 end
 
-Given /^MAC spoofing will fail, and the module cannot be unloaded$/ do
-  step "macchanger will fail by not spoofing and always returns true"
-  $vm.execute_successfully("mv /sbin/rmmod /sbin/rmmod.orig")
-  $vm.execute_successfully("ln -s /bin/false /sbin/rmmod")
+Given /^no network interface modules can be unloaded$/ do
+  # Note that the real /sbin/modprobe is a symlink to /bin/kmod, and
+  # for it to run in modprobe compatibility mode the name must be
+  # exactly "modprobe", so we just move it somewhere our of the path
+  # instead of renaming it ".real" or whatever we usuablly do when
+  # diverting executables for wrappers.
+  modprobe_divert = "/usr/local/lib/modprobe"
+  $vm.execute_successfully(
+    "dpkg-divert --add --rename --divert '#{modprobe_divert}' /sbin/modprobe"
+  )
+  fake_modprobe_wrapper = <<EOF
+#!/bin/sh
+if echo "${@}" | grep -q -- -r; then
+    exit 1
+fi
+exec '#{modprobe_divert}' "${@}"
+EOF
+  $vm.file_append('/sbin/modprobe', fake_modprobe_wrapper)
+  $vm.execute_successfully("chmod a+rx /sbin/modprobe")
 end
 
 When /^see the "Network card disabled" notification$/ do
