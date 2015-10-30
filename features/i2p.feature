@@ -12,7 +12,7 @@ Feature: I2P
   Scenario: I2P is enabled when the "i2p" boot parameter is added
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     Then the I2P Browser desktop file is present
-    And the I2P Browser sudo rules are enabled
+    And the I2P Browser sudo rules are present
     And the I2P firewall rules are enabled
 
   Scenario: I2P's AppArmor profile is in enforce mode

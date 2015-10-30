@@ -26,20 +26,12 @@ end
 
 Then /^the I2P Browser desktop file is (not )?present$/ do |notpresent|
   file = '/usr/share/applications/i2p-browser.desktop'
-  if notpresent
-    assert($vm.execute("! test -e #{file}").success?)
-  else
-    assert($vm.execute("test -e #{file}").success?)
-  end
+  assert_equal(notpresent.nil?, $vm.execute("test -e #{file}").success?)
 end
 
-Then /^the I2P Browser sudo rules are (enabled|not present)$/ do |mode|
+Then /^the I2P Browser sudo rules are (not )?present$/ do |notpresent|
   file = '/etc/sudoers.d/zzz_i2pbrowser'
-  if mode == 'enabled'
-    assert($vm.execute("test -e #{file}").success?)
-  else
-    assert($vm.execute("! test -e #{file}").success?)
-  end
+  assert_equal(notpresent.nil?, $vm.execute("test -e #{file}").success?)
 end
 
 Then /^the I2P firewall rules are (enabled|disabled)$/ do |mode|
