@@ -102,7 +102,9 @@ def post_snapshot_restore_hook
       wait_until_tor_is_working
       if $vm.file_content('/proc/cmdline').include?(' i2p')
         $vm.execute('/usr/local/sbin/tails-i2p stop')
-        $vm.execute('killall tails-i2p')
+        # we "killall tails-i2p" to prevent multiple
+        # copies of the script from running
+        $vm.execute_successfully('killall tails-i2p')
         $vm.execute("rm -f /var/i2p/i2p_has_bootstrapped")
         $vm.spawn('/usr/local/sbin/tails-i2p start')
       end
