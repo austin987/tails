@@ -47,8 +47,26 @@ def AfterFeature(*tag_expressions, &block)
 end
 
 require 'cucumber/formatter/console'
+if not($at_exit_print_artifacts_dir_patching_done)
+  module Cucumber::Formatter::Console
+    if method_defined?(:print_stats)
+      alias old_print_stats print_stats
+    end
+    def print_stats(*args)
+      if Dir.exists?(ARTIFACTS_DIR) and Dir.entries(ARTIFACTS_DIR).size > 2
+        @io.puts "Artifacts directory: #{ARTIFACTS_DIR}"
+        @io.puts
+      end
+      if self.class.method_defined?(:old_print_stats)
+        old_print_stats(*args)
+      end
+    end
+  end
+  $at_exit_print_artifacts_dir_patching_done = true
+end
+
 def info_log(message = "", options = {})
-  options[:color] = :white
+  options[:color] = :clear
   # This trick allows us to use a module's (~private) method on a
   # one-off basis.
   cucumber_console = Class.new.extend(Cucumber::Formatter::Console)

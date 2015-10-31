@@ -217,9 +217,9 @@ def sanitize_filename(filename, options = {})
 end
 
 def info_log_artifact_location(type, path)
-  if $config['ARTIFACTS_BASE_URL']
+  if $config['ARTIFACTS_BASE_URI']
     # Remove any trailing slashes, we'll add one ourselves
-    base_url = $config['ARTIFACTS_BASE_URL'].gsub(/\/*$/, "")
+    base_url = $config['ARTIFACTS_BASE_URI'].gsub(/\/*$/, "")
     path = "#{base_url}/#{File.basename(path)}"
   end
   info_log("#{type.capitalize}: #{path}")
