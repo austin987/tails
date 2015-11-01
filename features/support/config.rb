@@ -44,6 +44,21 @@ LIVE_USER = cmd_helper(". config/chroot_local-includes/etc/live/config.d/usernam
 TAILS_ISO = ENV['TAILS_ISO']
 OLD_TAILS_ISO = ENV['OLD_TAILS_ISO'] || TAILS_ISO
 TIME_AT_START = Time.now
+loop do
+  ARTIFACTS_DIR = $config['TMPDIR'] + "/run-" +
+                  sanitize_filename(TIME_AT_START.to_s) + "-" +
+                  [
+                    "git",
+                    sanitize_filename(describe_git_head,
+                                      :replacement => '-'),
+                    current_short_commit
+                  ].reject(&:empty?).join("_") + "-" +
+                  random_alnum_string(6)
+  if not(File.exist?(ARTIFACTS_DIR))
+    FileUtils.mkdir_p(ARTIFACTS_DIR)
+    break
+  end
+end
 
 # Constants that are statically initialized.
 CONFIGURED_KEYSERVER_HOSTNAME = 'hkps.pool.sks-keyservers.net'
