@@ -79,9 +79,7 @@ class FirewallLeakCheck
   end
 
   def save_pcap_file
-    pcap_copy = "#{@pcap_file}-#{DateTime.now}"
-    FileUtils.cp(@pcap_file, pcap_copy)
-    puts "Full network capture available at: #{pcap_copy}"
+    save_failure_artifact("Network capture", @pcap_file)
   end
 
   # Returns a list of all unique destination IP addresses found in

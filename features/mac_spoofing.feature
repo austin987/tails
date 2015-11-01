@@ -45,7 +45,8 @@ Feature: Spoofing MAC addresses
     And the real MAC address was not leaked
 
   Scenario: MAC address spoofing fails and the module is not removed
-    Given MAC spoofing will fail, and the module cannot be unloaded
+    Given macchanger will fail by not spoofing and always returns true
+    And no network interface modules can be unloaded
     When I log in to a new session
     And see the "All networking disabled" notification
     And the Tails desktop is ready

@@ -100,11 +100,9 @@ def retry_tor(recovery_proc = nil, &block)
       return
     rescue Exception => e
       if retries <= max_retries
-        if $config["DEBUG"]
-          STDERR.puts "Tor operation failed (Tor circuit try #{retries} of " +
-                      "#{max_retries}) with:\n" +
-                      "#{e.class}: #{e.message}"
-        end
+        debug_log("Tor operation failed (Tor circuit try #{retries} of " +
+                  "#{max_retries}) with:\n" +
+                  "#{e.class}: #{e.message}")
         recovery_proc.call if recovery_proc
         force_new_tor_circuit
         retries += 1
@@ -209,4 +207,20 @@ end
 def random_alnum_string(min_len, max_len = 0)
   alnum_set = ('A'..'Z').to_a + ('a'..'z').to_a + (0..9).to_a.map { |n| n.to_s }
   random_string_from_set(alnum_set, min_len, max_len)
+end
+
+# Sanitize the filename from unix-hostile filename characters
+def sanitize_filename(filename, options = {})
+  options[:replacement] ||= '_'
+  bad_unix_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
+  filename.gsub(bad_unix_filename_chars, options[:replacement])
+end
+
+def info_log_artifact_location(type, path)
+  if $config['ARTIFACTS_BASE_URI']
+    # Remove any trailing slashes, we'll add one ourselves
+    base_url = $config['ARTIFACTS_BASE_URI'].gsub(/\/*$/, "")
+    path = "#{base_url}/#{File.basename(path)}"
+  end
+  info_log("#{type.capitalize}: #{path}")
 end
