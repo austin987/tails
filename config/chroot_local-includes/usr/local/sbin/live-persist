@@ -85,12 +85,13 @@ migrate_persistence_preset()
 		warning "Need to make $NEW_PRESET persistent"
 		if [ "$PERSISTENCE_READONLY" = true ]
 		then
-			error "Persistence configuration needs to be migrated, but read only was selected; please retry in read-write mode"
+			warning "Persistence configuration needs to be migrated, but read only was selected; please retry in read-write mode"
+		else
+			echo "$NEW_PRESET	source=$NEW_PRESET_SOURCE" \
+				>> "$CONFIG" \
+				|| error "Failed to make $NEW_PRESET: $?"
+			warning "Successfully made $NEW_PRESET persistent"
 		fi
-		echo "$NEW_PRESET	source=$NEW_PRESET_SOURCE" \
-			>> "$CONFIG" \
-			|| error "Failed to make $NEW_PRESET: $?"
-		warning "Successfully made $NEW_PRESET persistent"
 	fi
 }
 
