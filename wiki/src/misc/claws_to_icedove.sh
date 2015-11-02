@@ -84,7 +84,9 @@ do
         set -u
         touch "$MBOX"
         # packf will exit nonzero if a folder only contains other folders
-        yes | $packf +"$FULLPATH" -mbox -file "$MBOX" || true
+        # yes | $packf +"$FULLPATH" -mbox -file "$MBOX" || true
+        # packf is too verbose for us
+		yes | packf .+"$FULLPATH" -mbox -file "$MBOX" 2>&1 | grep -v "^packf: no messages in" >&2 || true
     fi
 done
 
