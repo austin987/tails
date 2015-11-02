@@ -198,7 +198,11 @@ Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
   script_path = '/usr/local/sbin/tails-debugging-info'
   script_lines = $vm.file_content(script_path).split("\n")
   script_lines.grep(/^debug_file\s+/).each do |line|
-    debug_file = line.split.last.gsub!(/["']/, '')
+    _, user, debug_file = line.split
+    # root can always mount symlink attacks
+    next if user == 'root'
+    # Remove quoting around the file
+    debug_file.gsub!(/["']/, '')
     # Skip files that do not exist, or cannot be removed (e.g. the
     # ones in /proc).
     next if not($vm.execute("rm #{debug_file}").success?)
