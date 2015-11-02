@@ -112,19 +112,21 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   kernel_mem_settings = [
     # Let's avoid killing other random processes, and instead focus on
     # the hoggers, which will be our fillram instances.
-    "echo 0 > /proc/sys/vm/oom_kill_allocating_task",
+    ["vm.oom_kill_allocating_task", 0],
     # Let's not print stuff to the terminal.
-    "echo 0 > /proc/sys/vm/oom_dump_tasks",
+    ["vm.oom_dump_tasks", 0],
     # From tests the 'guess' heuristic seems to allow us to safely
     # (i.e. no kernel freezes) fill the maximum amount of RAM.
-    "echo 0  > /proc/sys/vm/overcommit_memory",
+    ["vm.overcommit_memory", 0],
     # Make sure the kernel doesn't starve...
-    "echo #{kernel_mem_reserved_k} > /proc/sys/vm/min_free_kbytes",
+    ["vm.min_free_kbytes", kernel_mem_reserved_k],
     # ... and also some core privileged processes, e.g. the remote
     # shell.
-    "echo #{admin_mem_reserved_k} > /proc/sys/vm/admin_reserve_kbytes",
+    ["vm.admin_reserve_kbytes", admin_mem_reserved_k],
   ]
-  kernel_mem_settings.each { |c| $vm.execute_successfully(c) }
+  kernel_mem_settings.each do |key, val|
+    $vm.execute_successfully("sysctl #{key}=#{val}")
+  end
 
   # The remote shell is sometimes OOM killed when we fill the memory,
   # and since we depend on it after the memory fill we try to prevent
