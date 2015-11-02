@@ -206,7 +206,9 @@ Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
     # the debugging file with a symlink to the secret.
     $vm.execute_successfully("ln -s #{secret_file} #{debug_file}")
     $vm.execute_successfully("chown #{LIVE_USER}:#{LIVE_USER} #{debug_file}")
-    if $vm.execute("tails-debugging-info | grep '#{secret_contents}'").success?
+    if $vm.execute("sudo /usr/local/sbin/tails-debugging-info | " +
+                   "grep '#{secret_contents}'",
+                   :user => LIVE_USER).success?
       raise "The secret was leaked by tails-debugging-info via '#{debug_file}'"
     end
   end
