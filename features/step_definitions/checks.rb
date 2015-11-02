@@ -205,7 +205,7 @@ Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
     # Check what would happen *if* the amnesia user managed to replace
     # the debugging file with a symlink to the secret.
     $vm.execute_successfully("ln -s #{secret_file} #{debug_file}")
-    $vm.execute_successfully("chown #{LIVE_USER}:#{LIVE_USER} #{debug_file}")
+    $vm.execute_successfully("chown --no-dereference #{LIVE_USER}:#{LIVE_USER} #{debug_file}")
     if $vm.execute("sudo /usr/local/sbin/tails-debugging-info | " +
                    "grep '#{secret_contents}'",
                    :user => LIVE_USER).success?
