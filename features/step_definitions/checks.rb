@@ -178,6 +178,28 @@ def get_seccomp_status(process)
   return status.match(/^Seccomp:\s+([0-9])/)[1].chomp.to_i
 end
 
+def get_apparmor_status(pid)
+  apparmor_status = $vm.file_content("/proc/#{pid}/attr/current").chomp
+  if apparmor_status.include?(')')
+    # matches something like     /usr/sbin/cupsd (enforce)
+    # and only returns what's in the parentheses
+    return apparmor_status.match(/[^\s]+\s+\((.+)\)$/)[1].chomp
+  else
+    return apparmor_status
+  end
+end
+
+Then /^the running process "(.+)" is confined with AppArmor in (complain|enforce) mode$/ do |process, mode|
+  if process == 'i2p'
+    $vm.execute_successfully('service i2p status')
+    pid = $vm.file_content('/run/i2p/i2p.pid').chomp
+  else
+    assert($vm.has_process?(process), "Process #{process} not running.")
+    pid = $vm.pidof(process)[0]
+  end
+  assert(mode, get_apparmor_status(pid))
+end
+
 Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mode$/ do |process,mode|
   status = get_seccomp_status(process)
   if mode == 'strict'
