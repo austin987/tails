@@ -142,23 +142,25 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
                           kernel_mem_reserved_m - admin_mem_reserved_m
   @free_mem_before_fill_b = convert_to_bytes(free_mem_before_fill_m, 'MiB')
 
-  # To be sure that we fill all memory we run one fillram instance
-  # for each GiB of detected memory, rounded up. We also kill all instances
-  # after the first one has finished, i.e. when the memory is full,
-  # since the others otherwise may continue re-filling the same memory
-  # unnecessarily.
+  # To be sure that we fill all memory we run one fillram instance for
+  # each GiB of detected memory, rounded up. To maintain stability we
+  # prioritize the fillram instances to be OOM killed. We also kill
+  # all instances after the first one has finished, i.e. when the
+  # memory is full, since the others otherwise may continue re-filling
+  # the same memory unnecessarily. Note that we leave the `killall`
+  # call outside of the OOM adjusted shell so it will not be OOM
+  # killed too.
   instances = (@detected_ram_m.to_f/(2**10)).ceil
   instances.times do
-    $vm.spawn('/usr/local/sbin/fillram; killall fillram', :user => LIVE_USER)
+    oom_adjusted_fillram_cmd =
+      "echo 1000 > /proc/$$/oom_score_adj && exec /usr/local/sbin/fillram"
+    $vm.spawn("sh -c '#{oom_adjusted_fillram_cmd}'; killall fillram",
+              :user => LIVE_USER)
   end
   # We make sure that all fillram processes have started...
   try_for(10, :msg => "all fillram processes didn't start", :delay => 0.1) do
     nr_fillram_procs = $vm.pidof("fillram").size
     instances == nr_fillram_procs
-  end
-  # ... and prioritize OOM killing them.
-  $vm.pidof("fillram").each do |pid|
-    $vm.execute_successfully("echo '1000' > /proc/#{pid}/oom_score_adj")
   end
   prev_used_ram_ratio = -1
   # ... and that it finishes
