@@ -25,10 +25,9 @@ fi
 
 # Check if mailpath exists at the expected location
 if [ ! -d "$MAILPATH" ]; then
-    echo "The default Claws Mail e-mail folder does not seems to exist.
-We'd expect it to be located at $MAILPATH
-You might not have any locally stored e-mails or you do not use the default location.
-You might want to consider moving your Mail folder to the expected location.
+    echo "Cannot find the default Claws Mail email folder ($MAILPATH).
+You might not have any emails saved in the persistent storage or you do not use the default location.
+Consider moving your email folder to $MAILPATH.
 Exiting." >&2
     exit 1
 fi
