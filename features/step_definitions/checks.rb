@@ -211,5 +211,8 @@ Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
                    :user => LIVE_USER).success?
       raise "The secret was leaked by tails-debugging-info via '#{debug_file}'"
     end
+    # Remove the secret so it cannot possibly interfere with the
+    # following iterations (even though it should not).
+    $vm.execute_successfully("echo > #{debug_file}")
   end
 end
