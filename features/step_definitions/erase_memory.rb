@@ -70,10 +70,10 @@ end
 
 def pattern_coverage_in_guest_ram
   assert_not_nil(
-    @free_mem_after_fill_b,
-    "@free_mem_after_fill_b is not set, probably the required 'I fill the " +
+    @free_mem_before_fill_b,
+    "@free_mem_before_fill_b is not set, probably the required 'I fill the " +
     "guest's memory ...' step was not run")
-  free_mem_after_fill_m = convert_to_MiB(@free_mem_after_fill_b, 'b')
+  free_mem_before_fill_m = convert_to_MiB(@free_mem_before_fill_b, 'b')
   dump = "#{$config["TMPDIR"]}/memdump"
   # Workaround: when dumping the guest's memory via core_dump(), libvirt
   # will create files that only root can read. We therefore pre-create
@@ -91,9 +91,9 @@ def pattern_coverage_in_guest_ram
   # Pattern is 16 bytes long
   patterns_b = patterns*16
   patterns_m = convert_to_MiB(patterns_b, 'b')
-  coverage = patterns_b.to_f/@free_mem_after_fill_b
+  coverage = patterns_b.to_f/@free_mem_before_fill_b
   puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_m} MiB " +
-       "out of #{free_mem_after_fill_m} MiB initial free memory)"
+       "out of #{free_mem_before_fill_m} MiB initial free memory)"
   return coverage
 end
 
@@ -138,9 +138,9 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   # processes above from the free memory since fillram will be run by
   # an unprivileged user in user-space.
   used_mem_before_fill_m = used_ram_in_MiB
-  free_mem_after_fill_m = @detected_ram_m - used_mem_before_fill_m -
+  free_mem_before_fill_m = @detected_ram_m - used_mem_before_fill_m -
                           kernel_mem_reserved_m - admin_mem_reserved_m
-  @free_mem_after_fill_b = convert_to_bytes(free_mem_after_fill_m, 'MiB')
+  @free_mem_before_fill_b = convert_to_bytes(free_mem_before_fill_m, 'MiB')
 
   # To be sure that we fill all memory we run one fillram instance
   # for each GiB of detected memory, rounded up. We also kill all instances
