@@ -1,5 +1,5 @@
 @product
-Feature: Installing Tails to a USB drive
+Feature: Upgrading an old Tails USB installation
   As a Tails user
   If I have an old versoin of Tails installed on a USB device
   and the USB device has a persistent partition
@@ -65,7 +65,7 @@ Feature: Installing Tails to a USB drive
     Given a computer
     And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence enabled
     Then all persistence presets from the old Tails version are enabled
-    Then Tails is running from USB drive "to_upgrade"
+    And Tails is running from USB drive "to_upgrade"
     And the boot device has safe access rights
     And the expected persistent files created with the old Tails version are present in the filesystem
     And all persistent directories from the old Tails version have safe access rights
