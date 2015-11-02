@@ -23,11 +23,24 @@ if [ "$(pidof icedove)" ]; then
     exit 1
 fi
 
+# Check if mailpath exists at the expected location
+if [ ! -d "$MAILPATH" ]; then
+    echo "The default Claws Mail e-mail folder does not seems to exist.
+We'd expect it to be located at $MAILPATH
+You might not have any locally stored e-mails or you do not use the default location.
+You might want to consider moving your Mail folder to the expected location.
+Exiting." >&2
+    exit 1
+fi
+
 if [ ! -x /usr/bin/mh/packf ]; then
     echo "Please install the \"nmh\" package by executing \"sudo apt-get update ; sudo apt-get install nmh\".
 Then run this script again." >&2
     exit 1
 fi
+
+# Create a mh-profile, overwrite if it exists
+echo "Path: $MAILPATH" > "$HOME/.mh-profile"
 
 if ! /usr/bin/mh/install-mh -check ; then
     /usr/bin/mh/install-mh -auto
@@ -35,10 +48,9 @@ fi
 
 # Do not overwrite existing Inbox
 if [ -f "$SAVEPATH/Inbox" ]; then
-    #echo "Existing mailboxes found. Exiting…" >&2
     echo "Existing mailboxes found for Icedove. Did you run this script already or have other Icedove mailboxes set up?
 Do you want to exit or make a backup of the Icedove mailboxes and copy the Claws Mail mailboxes anyway?
-Type [b] to back up the existing Icedove folders or any key to exit."
+Type [b] to backup the existing Icedove folders or any key to exit."
     read confirmbackup
     : ${confirmbackup:="n"} # default is to exit
     if [ "$confirmbackup" = "b" ]; then
