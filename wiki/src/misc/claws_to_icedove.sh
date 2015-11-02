@@ -100,3 +100,5 @@ done
 # Rename to match Icedove defaults
 mv -f draft Drafts
 mv -f queue "Unsent Messages"
+
+echo "Migration done. You can now open Icedove and set up your account.";
