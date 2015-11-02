@@ -150,8 +150,8 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   # the same memory unnecessarily. Note that we leave the `killall`
   # call outside of the OOM adjusted shell so it will not be OOM
   # killed too.
-  instances = (@detected_ram_m.to_f/(2**10)).ceil
-  instances.times do
+  nr_instances = (@detected_ram_m.to_f/(2**10)).ceil
+  nr_instances.times do
     oom_adjusted_fillram_cmd =
       "echo 1000 > /proc/$$/oom_score_adj && exec /usr/local/sbin/fillram"
     $vm.spawn("sh -c '#{oom_adjusted_fillram_cmd}'; killall fillram",
@@ -160,11 +160,11 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   # We make sure that all fillram processes have started...
   try_for(10, :msg => "all fillram processes didn't start", :delay => 0.1) do
     nr_fillram_procs = $vm.pidof("fillram").size
-    instances == nr_fillram_procs
+    nr_instances == nr_fillram_procs
   end
   prev_used_ram_ratio = -1
   # ... and that it finishes
-  try_for(instances*2*60, { :msg => "fillram didn't complete, probably the VM crashed" }) do
+  try_for(nr_instances*2*60, { :msg => "fillram didn't complete, probably the VM crashed" }) do
     used_ram_ratio = (used_ram_in_MiB.to_f/@detected_ram_m)*100
     # Round down to closest multiple of 10 to limit the logging a bit.
     used_ram_ratio = (used_ram_ratio/10).round*10
