@@ -39,8 +39,8 @@ Then run this script again." >&2
     exit 1
 fi
 
-# Create a mh-profile, overwrite if it exists
-echo "Path: $MAILPATH" > "$HOME/.mh-profile"
+# Create a mh_profile, overwrite if it exists
+echo "Path: $MAILPATH" > "$HOME/.mh_profile"
 
 if ! /usr/bin/mh/install-mh -check ; then
     /usr/bin/mh/install-mh -auto
@@ -48,8 +48,9 @@ fi
 
 # Do not overwrite existing Inbox
 if [ -f "$SAVEPATH/Inbox" ]; then
-    echo "Existing mailboxes found for Icedove. Did you run this script already or have other Icedove mailboxes set up?
+    echo "Existing mailboxes found for Icedove.Did you run this script already or have other Icedove mailboxes set up?
 Do you want to exit or make a backup of the Icedove mailboxes and copy the Claws Mail mailboxes anyway?
+
 Type [b] to backup the existing Icedove folders or any key to exit."
     read confirmbackup
     : ${confirmbackup:="n"} # default is to exit
