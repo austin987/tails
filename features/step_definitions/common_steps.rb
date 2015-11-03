@@ -17,28 +17,28 @@ def activate_filesystem_shares
   # "probe of virtio2 failed with error -2" (in dmesg) which makes the
   # shares unavailable. Hence we leave this code commented for now.
   #for mod in ["9pnet_virtio", "9p"] do
-  #  @vm.execute("modprobe #{mod}")
+  #  $vm.execute("modprobe #{mod}")
   #end
 
-  @vm.list_shares.each do |share|
-    @vm.execute("mkdir -p #{share}")
-    @vm.execute("mount -t 9p -o trans=virtio #{share} #{share}")
+  $vm.list_shares.each do |share|
+    $vm.execute("mkdir -p #{share}")
+    $vm.execute("mount -t 9p -o trans=virtio #{share} #{share}")
   end
 end
 
 def deactivate_filesystem_shares
-  @vm.list_shares.each do |share|
-    @vm.execute("umount #{share}")
+  $vm.list_shares.each do |share|
+    $vm.execute("umount #{share}")
   end
 
   # XXX-9p: See XXX-9p above
   #for mod in ["9p", "9pnet_virtio"] do
-  #  @vm.execute("modprobe -r #{mod}")
+  #  $vm.execute("modprobe -r #{mod}")
   #end
 end
 
-def notification_helper(notification_image, time_to_wait)
-  # notifiction-daemon may abort during start-up, causing the tests that look for
+def notification_popup_wait(notification_image, time_to_wait)
+  # notification-daemon may abort during start-up, causing the tests that look for
   # desktop notifications to fail (ticket #8686)
   begin
     @screen.wait(notification_image, time_to_wait)
@@ -48,9 +48,43 @@ def notification_helper(notification_image, time_to_wait)
   end
 end
 
-def restore_background
-  @vm.restore_snapshot($background_snapshot)
-  @vm.wait_until_remote_shell_is_up
+# This helper requires that the notification image is the one shown in
+# the notification applet's list, not the notification pop-up.
+def robust_notification_wait(notification_image, time_to_wait)
+  error_msg = "Didn't not see notification '#{notification_image}'"
+  try_for(time_to_wait, :delay => 0, :msg => error_msg) do
+    @screen.hide_cursor
+    @screen.click('GnomeNotificationApplet.png')
+    # Sanity check that the applet's list of notifications were
+    # opened. Sometimes the applet is moved when other systray
+    # elements are added, causing a race between Sikuli's mouse
+    # movement and the appearance of the new element.
+    @screen.wait('GnomeNotificationAppletClearAllButton.png', 5)
+    begin
+      return @screen.find(notification_image)
+    rescue FindFailed => e
+      # It could be that too many notifications are in the list, so
+      # the one we're looking for is not visible. Let's clear one
+      # notification and retry by re-raising the exception we just
+      # caught. This should not interfere with anything except if we
+      # later are interested in any of these older notifications that
+      # we may close.
+      # It's worth noting that the "close button" picture below has
+      # carefully been sized to include more than just the close
+      # button, so much that it ensures that the notification header
+      # must also be shown. That way we won't close any half-seen
+      # notification that may be the one we're looking for.
+      @screen.click('GnomeNotificationAppletCloseButton.png')
+      raise e
+    end
+  end
+rescue Timeout::Error => e
+  step 'process "notification-daemon" is running'
+  raise e
+end
+
+def post_snapshot_restore_hook
+  $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
 
   # XXX-9p: See XXX-9p above
@@ -59,84 +93,76 @@ def restore_background
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
-  if @vm.has_network?
-    if @vm.execute("service tor status").success?
-      @vm.execute("service tor stop")
-      @vm.execute("rm -f /var/log/tor/log")
-      @vm.execute("killall vidalia")
-      @vm.host_to_guest_time_sync
-      @vm.execute("service tor start")
+  if $vm.has_network?
+    if $vm.execute("service tor status").success?
+      $vm.execute("service tor stop")
+      $vm.execute("rm -f /var/log/tor/log")
+      $vm.host_to_guest_time_sync
+      $vm.spawn("restart-tor")
       wait_until_tor_is_working
-      @vm.spawn("restart-vidalia")
+      if $vm.file_content('/proc/cmdline').include?(' i2p')
+        $vm.execute_successfully('/usr/local/sbin/tails-i2p stop')
+        # we "killall tails-i2p" to prevent multiple
+        # copies of the script from running
+        $vm.execute_successfully('killall tails-i2p')
+        $vm.spawn('/usr/local/sbin/tails-i2p start')
+      end
     end
   else
-    @vm.host_to_guest_time_sync
+    $vm.host_to_guest_time_sync
   end
 end
 
 Given /^a computer$/ do
-  @vm.destroy_and_undefine if @vm
-  @vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
+  $vm.destroy_and_undefine if $vm
+  $vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
 Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
-  next if @skip_steps_while_restoring_background
-  @vm.set_ram_size(size, unit)
+  $vm.set_ram_size(size, unit)
 end
 
 Given /^the computer is set to boot from the Tails DVD$/ do
-  next if @skip_steps_while_restoring_background
-  @vm.set_cdrom_boot(TAILS_ISO)
+  $vm.set_cdrom_boot(TAILS_ISO)
 end
 
 Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
-  next if @skip_steps_while_restoring_background
-  @vm.set_disk_boot(name, type.downcase)
+  $vm.set_disk_boot(name, type.downcase)
 end
 
-Given /^I create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |size, unit, name|
-  next if @skip_steps_while_restoring_background
-  @vm.storage.create_new_disk(name, {:size => size, :unit => unit,
+Given /^I (temporarily )?create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |temporary, size, unit, name|
+  $vm.storage.create_new_disk(name, {:size => size, :unit => unit,
                                      :type => "qcow2"})
+  add_after_scenario_hook { $vm.storage.delete_volume(name) } if temporary
 end
 
 Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
-  next if @skip_steps_while_restoring_background
-  @vm.plug_drive(name, bus.downcase)
-  if @vm.is_running?
+  $vm.plug_drive(name, bus.downcase)
+  if $vm.is_running?
     step "drive \"#{name}\" is detected by Tails"
   end
 end
 
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
-  next if @skip_steps_while_restoring_background
-  raise "Tails is not running" unless @vm.is_running?
+  raise "Tails is not running" unless $vm.is_running?
   try_for(10, :msg => "Drive '#{name}' is not detected by Tails") do
-    @vm.disk_detected?(name)
+    $vm.disk_detected?(name)
   end
 end
 
 Given /^the network is plugged$/ do
-  # We don't skip this step when restoring the background to ensure
-  # that the network state is actually the same after restoring as
-  # when the snapshot was made.
-  @vm.plug_network
+  $vm.plug_network
 end
 
 Given /^the network is unplugged$/ do
-  # See comment in the step "the network is plugged".
-  @vm.unplug_network
+  $vm.unplug_network
 end
 
 Given /^the hardware clock is set to "([^"]*)"$/ do |time|
-  next if @skip_steps_while_restoring_background
-  @vm.set_hardware_clock(DateTime.parse(time).to_time)
+  $vm.set_hardware_clock(DateTime.parse(time).to_time)
 end
 
 Given /^I capture all network traffic$/ do
-  # Note: We don't want skip this particular stpe if
-  # @skip_steps_while_restoring_background is set since it starts
-  # something external to the VM state.
   @sniffer = Sniffer.new("sniffer", $vmnet)
   @sniffer.capture
   add_after_scenario_hook do
@@ -146,21 +172,17 @@ Given /^I capture all network traffic$/ do
 end
 
 Given /^I set Tails to boot with options "([^"]*)"$/ do |options|
-  next if @skip_steps_while_restoring_background
   @boot_options = options
 end
 
 When /^I start the computer$/ do
-  next if @skip_steps_while_restoring_background
-  assert(!@vm.is_running?,
+  assert(!$vm.is_running?,
          "Trying to start a VM that is already running")
-  @vm.start
+  $vm.start
   post_vm_start_hook
 end
 
-Given /^I start Tails( from DVD)?( with network unplugged)? and I login$/ do |dvd_boot, network_unplugged|
-  # we don't @skip_steps_while_restoring_background as we're only running
-  # other steps, that are taking care of it *if* they have to
+Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do |dvd_boot, network_unplugged, do_login|
   step "the computer is set to boot from the Tails DVD" if dvd_boot
   if network_unplugged.nil?
     step "the network is plugged"
@@ -169,20 +191,20 @@ Given /^I start Tails( from DVD)?( with network unplugged)? and I login$/ do |dv
   end
   step "I start the computer"
   step "the computer boots Tails"
-  step "I log in to a new session"
-  step "Tails seems to have booted normally"
-  if network_unplugged.nil?
-    step "Tor is ready"
-    step "all notifications have disappeared"
-    step "available upgrades have been checked"
-  else
-    step "all notifications have disappeared"
+  if do_login
+    step "I log in to a new session"
+    step "Tails seems to have booted normally"
+    if network_unplugged.nil?
+      step "Tor is ready"
+      step "all notifications have disappeared"
+      step "available upgrades have been checked"
+    else
+      step "all notifications have disappeared"
+    end
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged) and I login(| with(| read-only) persistence password "([^"]+)")$/ do |drive_type, drive_name, network_unplugged, persistence_on, persistence_ro, persistence_pwd|
-  # we don't @skip_steps_while_restoring_background as we're only running
-  # other steps, that are taking care of it *if* they have to
+Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I login(| with(| read-only) persistence enabled))?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, persistence_ro|
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
   if network_unplugged.empty?
     step "the network is plugged"
@@ -191,45 +213,42 @@ Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged) and I l
   end
   step "I start the computer"
   step "the computer boots Tails"
-  if ! persistence_on.empty?
-    assert(! persistence_pwd.empty?, "A password must be provided when enabling persistence")
-    if persistence_ro.empty?
-      step "I enable persistence with password \"#{persistence_pwd}\""
-    else
-      step "I enable read-only persistence with password \"#{persistence_pwd}\""
+  if do_login
+    if ! persistence_on.empty?
+      if persistence_ro.empty?
+        step "I enable persistence"
+      else
+        step "I enable read-only persistence"
+      end
     end
-  end
-  step "I log in to a new session"
-  step "Tails seems to have booted normally"
-  if network_unplugged.empty?
-    step "Tor is ready"
-    step "all notifications have disappeared"
-    step "available upgrades have been checked"
-  else
-    step "all notifications have disappeared"
+    step "I log in to a new session"
+    step "Tails seems to have booted normally"
+    if network_unplugged.empty?
+      step "Tor is ready"
+      step "all notifications have disappeared"
+      step "available upgrades have been checked"
+    else
+      step "all notifications have disappeared"
+    end
   end
 end
 
 When /^I power off the computer$/ do
-  next if @skip_steps_while_restoring_background
-  assert(@vm.is_running?,
+  assert($vm.is_running?,
          "Trying to power off an already powered off VM")
-  @vm.power_off
+  $vm.power_off
 end
 
 When /^I cold reboot the computer$/ do
-  next if @skip_steps_while_restoring_background
   step "I power off the computer"
   step "I start the computer"
 end
 
 When /^I destroy the computer$/ do
-  next if @skip_steps_while_restoring_background
-  @vm.destroy_and_undefine
+  $vm.destroy_and_undefine
 end
 
 Given /^the computer (re)?boots Tails$/ do |reboot|
-  next if @skip_steps_while_restoring_background
 
   boot_timeout = 30
   # We need some extra time for memory wiping if rebooting
@@ -252,12 +271,11 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 30*60)
-  @vm.wait_until_remote_shell_is_up
+  $vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
 end
 
 Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
-  next if @skip_steps_while_restoring_background
   case lang
   when 'German'
     @language = "German"
@@ -272,7 +290,6 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
 end
 
 Given /^I enable more Tails Greeter options$/ do
-  next if @skip_steps_while_restoring_background
   match = @screen.find('TailsGreeterMoreOptions.png')
   @screen.click(match.getCenter.offset(match.w/2, match.h*2))
   @screen.wait_and_click('TailsGreeterForward.png', 10)
@@ -280,13 +297,10 @@ Given /^I enable more Tails Greeter options$/ do
 end
 
 Given /^I enable the specific Tor configuration option$/ do
-  next if @skip_steps_while_restoring_background
   @screen.click('TailsGreeterTorConf.png')
 end
 
-Given /^I set sudo password "([^"]*)"$/ do |password|
-  @sudo_password = password
-  next if @skip_steps_while_restoring_background
+Given /^I set an administration password$/ do
   @screen.wait("TailsGreeterAdminPassword.png", 20)
   @screen.type(@sudo_password)
   @screen.type(Sikuli::Key.TAB)
@@ -294,16 +308,14 @@ Given /^I set sudo password "([^"]*)"$/ do |password|
 end
 
 Given /^Tails Greeter has dealt with the sudo password$/ do
-  next if @skip_steps_while_restoring_background
   f1 = "/etc/sudoers.d/tails-greeter"
   f2 = "#{f1}-no-password-lecture"
   try_for(20) {
-    @vm.execute("test -e '#{f1}' -o -e '#{f2}'").success?
+    $vm.execute("test -e '#{f1}' -o -e '#{f2}'").success?
   }
 end
 
 Given /^the Tails desktop is ready$/ do
-  next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
     desktop_started_picture = 'WindowsStartButton.png'
@@ -318,43 +330,36 @@ Given /^the Tails desktop is ready$/ do
 end
 
 Then /^Tails seems to have booted normally$/ do
-  next if @skip_steps_while_restoring_background
   step "the Tails desktop is ready"
 end
 
 When /^I see the 'Tor is ready' notification$/ do
-  next if @skip_steps_while_restoring_background
-  notification_helper('GnomeTorIsReady.png', 300)
+  notification_popup_wait('GnomeTorIsReady.png', 300)
   @screen.waitVanish("GnomeTorIsReady.png", 15)
 end
 
 Given /^Tor is ready$/ do
-  next if @skip_steps_while_restoring_background
   step "Tor has built a circuit"
   step "the time has synced"
 end
 
 Given /^Tor has built a circuit$/ do
-  next if @skip_steps_while_restoring_background
   wait_until_tor_is_working
 end
 
 Given /^the time has synced$/ do
-  next if @skip_steps_while_restoring_background
   ["/var/run/tordate/done", "/var/run/htpdate/success"].each do |file|
-    try_for(300) { @vm.execute("test -e #{file}").success? }
+    try_for(300) { $vm.execute("test -e #{file}").success? }
   end
 end
 
 Given /^available upgrades have been checked$/ do
-  next if @skip_steps_while_restoring_background
   try_for(300) {
-    @vm.execute("test -e '/var/run/tails-upgrader/checked_upgrades'").success?
+    $vm.execute("test -e '/var/run/tails-upgrader/checked_upgrades'").success?
   }
 end
 
 Given /^the Tor Browser has started$/ do
-  next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
     tor_browser_picture = "WindowsTorBrowserWindow.png"
@@ -366,7 +371,6 @@ Given /^the Tor Browser has started$/ do
 end
 
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
-  next if @skip_steps_while_restoring_background
   case page
   when "startup page"
     picture = "TorBrowserStartupPage.png"
@@ -380,12 +384,10 @@ Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tail
 end
 
 Given /^the Tor Browser has started in offline mode$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait("TorBrowserOffline.png", 60)
 end
 
 Given /^I add a bookmark to eff.org in the Tor Browser$/ do
-  next if @skip_steps_while_restoring_background
   url = "https://www.eff.org"
   step "I open the address \"#{url}\" in the Tor Browser"
   @screen.wait("TorBrowserOffline.png", 5)
@@ -395,13 +397,11 @@ Given /^I add a bookmark to eff.org in the Tor Browser$/ do
 end
 
 Given /^the Tor Browser has a bookmark to eff.org$/ do
-  next if @skip_steps_while_restoring_background
   @screen.type("b", Sikuli::KeyModifier.ALT)
   @screen.wait("TorBrowserEFFBookmark.png", 10)
 end
 
 Given /^all notifications have disappeared$/ do
-  next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
     notification_picture = "WindowsNotificationX.png"
@@ -411,35 +411,7 @@ Given /^all notifications have disappeared$/ do
   @screen.waitVanish(notification_picture, 60)
 end
 
-Given /^I save the state so the background can be restored next scenario$/ do
-  if @skip_steps_while_restoring_background
-    assert(File.size?($background_snapshot),
-           "We have been skipping steps but there is no snapshot to restore")
-  else
-    # To be sure we run the feature from scratch we remove any
-    # leftover snapshot that wasn't removed.
-    if File.exist?($background_snapshot)
-      File.delete($background_snapshot)
-    end
-    # Workaround: when libvirt takes ownership of the snapshot it may
-    # become unwritable for the user running this script so it cannot
-    # be removed during clean up.
-    FileUtils.touch($background_snapshot)
-    FileUtils.chmod(0666, $background_snapshot)
-
-    # Snapshots cannot be saved while filesystem shares are mounted
-    # XXX-9p: See XXX-9p above.
-    #deactivate_filesystem_shares
-
-    @vm.save_snapshot($background_snapshot)
-  end
-  restore_background
-  # Now we stop skipping steps from the snapshot restore.
-  @skip_steps_while_restoring_background = false
-end
-
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
-  next if @skip_steps_while_restoring_background
   begin
     @screen.wait(image, time.to_i)
     raise "found '#{image}' while expecting not to" if negation
@@ -449,14 +421,12 @@ Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, ima
 end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
-  next if @skip_steps_while_restoring_background
   leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
                                 :accepted_hosts => get_all_tor_nodes)
   leaks.assert_no_leaks
 end
 
 Given /^I enter the sudo password in the pkexec prompt$/ do
-  next if @skip_steps_while_restoring_background
   step "I enter the \"#{@sudo_password}\" password in the pkexec prompt"
 end
 
@@ -468,69 +438,59 @@ def deal_with_polkit_prompt (image, password)
 end
 
 Given /^I enter the "([^"]*)" password in the pkexec prompt$/ do |password|
-  next if @skip_steps_while_restoring_background
   deal_with_polkit_prompt('PolicyKitAuthPrompt.png', password)
 end
 
 Given /^process "([^"]+)" is running$/ do |process|
-  next if @skip_steps_while_restoring_background
-  assert(@vm.has_process?(process),
+  assert($vm.has_process?(process),
          "Process '#{process}' is not running")
 end
 
 Given /^process "([^"]+)" is running within (\d+) seconds$/ do |process, time|
-  next if @skip_steps_while_restoring_background
   try_for(time.to_i, :msg => "Process '#{process}' is not running after " +
                              "waiting for #{time} seconds") do
-    @vm.has_process?(process)
+    $vm.has_process?(process)
   end
 end
 
 Given /^process "([^"]+)" has stopped running after at most (\d+) seconds$/ do |process, time|
-  next if @skip_steps_while_restoring_background
   try_for(time.to_i, :msg => "Process '#{process}' is still running after " +
                              "waiting for #{time} seconds") do
-    not @vm.has_process?(process)
+    not $vm.has_process?(process)
   end
 end
 
 Given /^process "([^"]+)" is not running$/ do |process|
-  next if @skip_steps_while_restoring_background
-  assert(!@vm.has_process?(process),
+  assert(!$vm.has_process?(process),
          "Process '#{process}' is running")
 end
 
 Given /^I kill the process "([^"]+)"$/ do |process|
-  next if @skip_steps_while_restoring_background
-  @vm.execute("killall #{process}")
+  $vm.execute("killall #{process}")
   try_for(10, :msg => "Process '#{process}' could not be killed") {
-    !@vm.has_process?(process)
+    !$vm.has_process?(process)
   }
 end
 
 Then /^Tails eventually shuts down$/ do
-  next if @skip_steps_while_restoring_background
   nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
   timeout = nr_gibs_of_ram*5*60
   try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
-    ! @vm.is_running?
+    ! $vm.is_running?
   end
 end
 
 Then /^Tails eventually restarts$/ do
-  next if @skip_steps_while_restoring_background
   nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
   @screen.wait('TailsBootSplash.png', nr_gibs_of_ram*5*60)
 end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
-  next if @skip_steps_while_restoring_background
-  @vm.execute("poweroff")
+  $vm.execute("poweroff")
   step 'Tails eventually shuts down'
 end
 
 When /^I request a shutdown using the emergency shutdown applet$/ do
-  next if @skip_steps_while_restoring_background
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
   @screen.hide_cursor
@@ -538,12 +498,10 @@ When /^I request a shutdown using the emergency shutdown applet$/ do
 end
 
 When /^I warm reboot the computer$/ do
-  next if @skip_steps_while_restoring_background
-  @vm.execute("reboot")
+  $vm.execute("reboot")
 end
 
 When /^I request a reboot using the emergency shutdown applet$/ do
-  next if @skip_steps_while_restoring_background
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
   @screen.hide_cursor
@@ -551,30 +509,25 @@ When /^I request a reboot using the emergency shutdown applet$/ do
 end
 
 Given /^package "([^"]+)" is installed$/ do |package|
-  next if @skip_steps_while_restoring_background
-  assert(@vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
+  assert($vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
          "Package '#{package}' is not installed")
 end
 
 When /^I start the Tor Browser$/ do
-  next if @skip_steps_while_restoring_background
   step 'I start "TorBrowser" via the GNOME "Internet" applications menu'
 end
 
 When /^I request a new identity using Torbutton$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait_and_click('TorButtonIcon.png', 30)
   @screen.wait_and_click('TorButtonNewIdentity.png', 30)
 end
 
 When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait('GnomeQuestionDialogIcon.png', 30)
   step 'I type "y"'
 end
 
 When /^I start the Tor Browser in offline mode$/ do
-  next if @skip_steps_while_restoring_background
   step "I start the Tor Browser"
   case @theme
   when "windows"
@@ -586,144 +539,7 @@ When /^I start the Tor Browser in offline mode$/ do
   end
 end
 
-def xul_application_info(application)
-  binary = @vm.execute_successfully(
-                '. /usr/local/lib/tails-shell-library/tor-browser.sh; ' +
-                'echo ${TBB_INSTALL}/firefox'
-                                    ).stdout.chomp
-  case application
-  when "Tor Browser"
-    user = LIVE_USER
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
-    chroot = ""
-    new_tab_button_image = "TorBrowserNewTabButton.png"
-    address_bar_image = "TorBrowserAddressBar.png"
-  when "Unsafe Browser"
-    user = "clearnet"
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
-    chroot = "/var/lib/unsafe-browser/chroot"
-    new_tab_button_image = "UnsafeBrowserNewTabButton.png"
-    address_bar_image = "UnsafeBrowserAddressBar.png"
-  when "I2P Browser"
-    user = "i2pbrowser"
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.i2p-browser/profile\.default"
-    chroot = "/var/lib/i2p-browser/chroot"
-    new_tab_button_image = nil
-    address_bar_image = nil
-  when "Tor Launcher"
-    user = "tor-launcher"
-    cmd_regex = "#{binary} -app /home/#{user}/\.tor-launcher/tor-launcher-standalone/application\.ini"
-    chroot = ""
-    new_tab_button_image = nil
-    address_bar_image = nil
-  else
-    raise "Invalid browser or XUL application: #{application}"
-  end
-  return {
-    :user => user,
-    :cmd_regex => cmd_regex,
-    :chroot => chroot,
-    :new_tab_button_image => new_tab_button_image,
-    :address_bar_image => address_bar_image,
-  }
-end
-
-When /^I open a new tab in the (.*)$/ do |browser|
-  next if @skip_steps_while_restoring_background
-  info = xul_application_info(browser)
-  @screen.click(info[:new_tab_button_image])
-  @screen.wait(info[:address_bar_image], 10)
-end
-
-When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
-  next if @skip_steps_while_restoring_background
-  step "I open a new tab in the #{browser}"
-  info = xul_application_info(browser)
-  open_address = Proc.new do
-    @screen.click(info[:address_bar_image])
-    sleep 0.5
-    @screen.type(address + Sikuli::Key.ENTER)
-  end
-  open_address.call
-  if browser == "Tor Browser"
-    recovery_on_failure = Proc.new do
-      @screen.type(Sikuli::Key.ESC)
-      @screen.waitVanish('BrowserReloadButton.png', 3)
-      open_address.call
-    end
-    retry_tor(recovery_on_failure) do
-      @screen.wait('BrowserReloadButton.png', 120)
-    end
-  end
-end
-
-Then /^the (.*) has no plugins installed$/ do |browser|
-  next if @skip_steps_while_restoring_background
-  step "I open the address \"about:plugins\" in the #{browser}"
-  step "I see \"TorBrowserNoPlugins.png\" after at most 30 seconds"
-end
-
-def xul_app_shared_lib_check(pid, chroot)
-  expected_absent_tbb_libs = ['libnssdbm3.so']
-  absent_tbb_libs = []
-  unwanted_native_libs = []
-  tbb_libs = @vm.execute_successfully(
-                 ". /usr/local/lib/tails-shell-library/tor-browser.sh; " +
-                 "ls -1 #{chroot}${TBB_INSTALL}/*.so"
-                                      ).stdout.split
-  firefox_pmap_info = @vm.execute("pmap #{pid}").stdout
-  for lib in tbb_libs do
-    lib_name = File.basename lib
-    if not /\W#{lib}$/.match firefox_pmap_info
-      absent_tbb_libs << lib_name
-    end
-    native_libs = @vm.execute_successfully(
-                       "find /usr/lib /lib -name \"#{lib_name}\""
-                                           ).stdout.split
-    for native_lib in native_libs do
-      if /\W#{native_lib}$"/.match firefox_pmap_info
-        unwanted_native_libs << lib_name
-      end
-    end
-  end
-  absent_tbb_libs -= expected_absent_tbb_libs
-  assert(absent_tbb_libs.empty? && unwanted_native_libs.empty?,
-         "The loaded shared libraries for the firefox process are not the " +
-         "way we expect them.\n" +
-         "Expected TBB libs that are absent: #{absent_tbb_libs}\n" +
-         "Native libs that we don't want: #{unwanted_native_libs}")
-end
-
-Then /^the (.*) uses all expected TBB shared libraries$/ do |application|
-  next if @skip_steps_while_restoring_background
-  info = xul_application_info(application)
-  pid = @vm.execute_successfully("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").stdout.chomp
-  assert(/\A\d+\z/.match(pid), "It seems like #{application} is not running")
-  xul_app_shared_lib_check(pid, info[:chroot])
-end
-
-Then /^the (.*) chroot is torn down$/ do |browser|
-  next if @skip_steps_while_restoring_background
-  info = xul_application_info(browser)
-  try_for(30, :msg => "The #{browser} chroot '#{info[:chroot]}' was " \
-                      "not removed") do
-    !@vm.execute("test -d '#{info[:chroot]}'").success?
-  end
-end
-
-Then /^the (.*) runs as the expected user$/ do |browser|
-  next if @skip_steps_while_restoring_background
-  info = xul_application_info(browser)
-  assert_vmcommand_success(@vm.execute(
-    "pgrep --full --exact '#{info[:cmd_regex]}'"),
-    "The #{browser} is not running")
-  assert_vmcommand_success(@vm.execute(
-    "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"),
-    "The #{browser} is not running as the #{info[:user]} user")
-end
-
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
-  next if @skip_steps_while_restoring_background
   con_content = <<EOF
 [802-3-ethernet]
 duplex=full
@@ -741,32 +557,29 @@ method=auto
 method=auto
 EOF
   con_content.split("\n").each do |line|
-    @vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
+    $vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
   end
-  @vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '/etc/NetworkManager/system-connections/#{con_name}'")
+  $vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '/etc/NetworkManager/system-connections/#{con_name}'")
   try_for(10) {
-    nm_con_list = @vm.execute("nmcli --terse --fields NAME con list").stdout
+    nm_con_list = $vm.execute("nmcli --terse --fields NAME con list").stdout
     nm_con_list.split("\n").include? "#{con_name}"
   }
 end
 
 Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
-  next if @skip_steps_while_restoring_background
-  @vm.execute("nmcli con up id #{con_name}")
+  $vm.execute("nmcli con up id #{con_name}")
   try_for(60) {
-    @vm.execute("nmcli --terse --fields NAME,STATE con status").stdout.chomp == "#{con_name}:activated"
+    $vm.execute("nmcli --terse --fields NAME,STATE con status").stdout.chomp == "#{con_name}:activated"
   }
 end
 
 When /^I start and focus GNOME Terminal$/ do
-  next if @skip_steps_while_restoring_background
   step 'I start "Terminal" via the GNOME "Accessories" applications menu'
   @screen.wait_and_click('GnomeTerminalWindow.png', 20)
 end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
-  next if @skip_steps_while_restoring_background
-  if !@vm.has_process?("gnome-terminal")
+  if !$vm.has_process?("gnome-terminal")
     step "I start and focus GNOME Terminal"
   else
     @screen.wait_and_click('GnomeTerminalWindow.png', 20)
@@ -775,44 +588,38 @@ When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
 end
 
 When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, timeout|
-  next if @skip_steps_while_restoring_background
   timeout = 0 if timeout.nil?
   try_for(
     timeout.to_i,
     :msg => "The file #{file} does not exist after #{timeout} seconds"
   ) {
-    @vm.file_exist?(file)
+    $vm.file_exist?(file)
   }
 end
 
 When /^the file "([^"]+)" does not exist$/ do |file|
-  next if @skip_steps_while_restoring_background
-  assert(! (@vm.file_exist?(file)))
+  assert(! ($vm.file_exist?(file)))
 end
 
 When /^the directory "([^"]+)" exists$/ do |directory|
-  next if @skip_steps_while_restoring_background
-  assert(@vm.directory_exist?(directory))
+  assert($vm.directory_exist?(directory))
 end
 
 When /^the directory "([^"]+)" does not exist$/ do |directory|
-  next if @skip_steps_while_restoring_background
-  assert(! (@vm.directory_exist?(directory)))
+  assert(! ($vm.directory_exist?(directory)))
 end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
-  next if @skip_steps_while_restoring_background
-  c = @vm.execute("cp \"#{source}\" \"#{destination}\"", LIVE_USER)
+  c = $vm.execute("cp \"#{source}\" \"#{destination}\"", :user => LIVE_USER)
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
 
 def is_persistent?(app)
   conf = get_persistence_presets(true)["#{app}"]
-  @vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'").success?
+  $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'").success?
 end
 
 Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
-  next if @skip_steps_while_restoring_background
   case enabled
   when ''
     assert(is_persistent?(app), "Persistence should be enabled.")
@@ -821,23 +628,8 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
   end
 end
 
-Given /^the USB drive "([^"]+)" contains Tails with persistence configured and password "([^"]+)"$/ do |drive, password|
-    step "a computer"
-    step "I start Tails from DVD with network unplugged and I login"
-    step "I create a 4 GiB disk named \"#{drive}\""
-    step "I plug USB drive \"#{drive}\""
-    step "I \"Clone & Install\" Tails to USB drive \"#{drive}\""
-    step "there is no persistence partition on USB drive \"#{drive}\""
-    step "I shutdown Tails and wait for the computer to power off"
-    step "a computer"
-    step "I start Tails from USB drive \"#{drive}\" with network unplugged and I login"
-    step "I create a persistent partition with password \"#{password}\""
-    step "a Tails persistence partition with password \"#{password}\" exists on USB drive \"#{drive}\""
-    step "I shutdown Tails and wait for the computer to power off"
-end
-
 def gnome_app_menu_click_helper(click_me, verify_me = nil)
-  try_for(60) do
+  try_for(30) do
     @screen.hide_cursor
     @screen.wait_and_click(click_me, 10)
     @screen.wait(verify_me, 10) if verify_me
@@ -846,7 +638,6 @@ def gnome_app_menu_click_helper(click_me, verify_me = nil)
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
-  next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
     prefix = 'Windows'
@@ -856,13 +647,21 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, s
   menu_button = prefix + "ApplicationsMenu.png"
   sub_menu_entry = prefix + "Applications" + submenu + ".png"
   application_entry = prefix + "Applications" + app + ".png"
-  gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-  gnome_app_menu_click_helper(sub_menu_entry, application_entry)
-  gnome_app_menu_click_helper(application_entry)
+  try_for(120) do
+    begin
+      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
+      gnome_app_menu_click_helper(sub_menu_entry, application_entry)
+      gnome_app_menu_click_helper(application_entry)
+    rescue Exception => e
+      # Close menu, if still open
+      @screen.type(Sikuli::Key.ESC)
+      raise e
+    end
+    true
+  end
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
-  next if @skip_steps_while_restoring_background
   case @theme
   when "windows"
     prefix = 'Windows'
@@ -873,19 +672,26 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/
   sub_menu_entry = prefix + "Applications" + submenu + ".png"
   sub_sub_menu_entry = prefix + "Applications" + subsubmenu + ".png"
   application_entry = prefix + "Applications" + app + ".png"
-  gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-  gnome_app_menu_click_helper(sub_menu_entry, sub_sub_menu_entry)
-  gnome_app_menu_click_helper(sub_sub_menu_entry, application_entry)
-  gnome_app_menu_click_helper(application_entry)
+  try_for(120) do
+    begin
+      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
+      gnome_app_menu_click_helper(sub_menu_entry, sub_sub_menu_entry)
+      gnome_app_menu_click_helper(sub_sub_menu_entry, application_entry)
+      gnome_app_menu_click_helper(application_entry)
+    rescue Exception => e
+      # Close menu, if still open
+      @screen.type(Sikuli::Key.ESC)
+      raise e
+    end
+    true
+  end
 end
 
 When /^I type "([^"]+)"$/ do |string|
-  next if @skip_steps_while_restoring_background
   @screen.type(string)
 end
 
 When /^I press the "([^"]+)" key$/ do |key|
-  next if @skip_steps_while_restoring_background
   begin
     @screen.type(eval("Sikuli::Key.#{key}"))
   rescue RuntimeError
@@ -894,7 +700,6 @@ When /^I press the "([^"]+)" key$/ do |key|
 end
 
 Then /^the (amnesiac|persistent) Tor Browser directory (exists|does not exist)$/ do |persistent_or_not, mode|
-  next if @skip_steps_while_restoring_background
   case persistent_or_not
   when "amnesiac"
     dir = "/home/#{LIVE_USER}/Tor Browser"
@@ -905,7 +710,6 @@ Then /^the (amnesiac|persistent) Tor Browser directory (exists|does not exist)$/
 end
 
 Then /^there is a GNOME bookmark for the (amnesiac|persistent) Tor Browser directory$/ do |persistent_or_not|
-  next if @skip_steps_while_restoring_background
   case persistent_or_not
   when "amnesiac"
     bookmark_image = 'TorBrowserAmnesicFilesBookmark.png'
@@ -918,47 +722,42 @@ Then /^there is a GNOME bookmark for the (amnesiac|persistent) Tor Browser direc
 end
 
 Then /^there is no GNOME bookmark for the persistent Tor Browser directory$/ do
-  next if @skip_steps_while_restoring_background
-  @screen.wait_and_click('GnomePlaces.png', 10)
-  @screen.wait("GnomePlacesWithoutTorBrowserPersistent.png", 40)
-  @screen.type(Sikuli::Key.ESC)
+  try_for(65) do
+    @screen.wait_and_click('GnomePlaces.png', 10)
+    @screen.wait("GnomePlacesWithoutTorBrowserPersistent.png", 10)
+    @screen.type(Sikuli::Key.ESC)
+  end
 end
 
 def pulseaudio_sink_inputs
-  pa_info = @vm.execute_successfully('pacmd info', LIVE_USER).stdout
+  pa_info = $vm.execute_successfully('pacmd info', :user => LIVE_USER).stdout
   sink_inputs_line = pa_info.match(/^\d+ sink input\(s\) available\.$/)[0]
   return sink_inputs_line.match(/^\d+/)[0].to_i
 end
 
 When /^(no|\d+) application(?:s?) (?:is|are) playing audio(?:| after (\d+) seconds)$/ do |nb, wait_time|
-  next if @skip_steps_while_restoring_background
   nb = 0 if nb == "no"
   sleep wait_time.to_i if ! wait_time.nil?
   assert_equal(nb.to_i, pulseaudio_sink_inputs)
 end
 
 When /^I double-click on the "Tails documentation" link on the Desktop$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait_and_double_click("DesktopTailsDocumentationIcon.png", 10)
 end
 
 When /^I click the blocked video icon$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait_and_click("TorBrowserBlockedVideo.png", 30)
 end
 
 When /^I accept to temporarily allow playing this video$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait_and_click("TorBrowserOkButton.png", 10)
 end
 
 When /^I click the HTML5 play button$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait_and_click("TorBrowserHtml5PlayButton.png", 30)
 end
 
 When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) directory$/ do |should_work, output_file, output_dir|
-  next if @skip_steps_while_restoring_background
   should_work = should_work == 'can' ? true : false
   @screen.type("s", Sikuli::KeyModifier.CTRL)
   @screen.wait("TorBrowserSaveDialog.png", 10)
@@ -981,7 +780,7 @@ When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) dire
   @screen.type(Sikuli::Key.ENTER)
   if should_work
     try_for(10, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
-      @vm.file_exist?("#{output_dir}/#{output_file}")
+      $vm.file_exist?("#{output_dir}/#{output_file}")
     }
   else
     @screen.wait("TorBrowserCannotSavePage.png", 10)
@@ -989,7 +788,6 @@ When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) dire
 end
 
 When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads|persistent Tor Browser) directory$/ do |output_file, output_dir|
-  next if @skip_steps_while_restoring_background
   if output_dir == "persistent Tor Browser"
     output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
   else
@@ -1010,17 +808,15 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   # so we type only the desired file's basename to replace it
   @screen.type(output_dir + '/' + output_file.sub(/[.]pdf$/, '') + Sikuli::Key.ENTER)
   try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
-    @vm.file_exist?("#{output_dir}/#{output_file}")
+    $vm.file_exist?("#{output_dir}/#{output_file}")
   }
 end
 
 When /^I accept to import the key with Seahorse$/ do
-  next if @skip_steps_while_restoring_background
   @screen.wait_and_click("TorBrowserOkButton.png", 10)
 end
 
 Given /^a web server is running on the LAN$/ do
-  next if @skip_steps_while_restoring_background
   web_server_ip_addr = $vmnet.bridge_ip_addr
   web_server_port = 8000
   @web_server_url = "http://#{web_server_ip_addr}:#{web_server_port}"
@@ -1062,14 +858,13 @@ EOF
   # this forces us to capture traffic *after* this step in case
   # accessing this server matters, like when testing the Tor Browser..
   try_for(30, :msg => "Something is wrong with the LAN web server") do
-    msg = @vm.execute_successfully("curl #{@web_server_url}",
-                                   LIVE_USER).stdout.chomp
+    msg = $vm.execute_successfully("curl #{@web_server_url}",
+                                   :user => LIVE_USER).stdout.chomp
     web_server_hello_msg == msg
   end
 end
 
 When /^I open a page on the LAN web server in the (.*)$/ do |browser|
-  next if @skip_steps_while_restoring_background
   step "I open the address \"#{@web_server_url}\" in the #{browser}"
 end
 
@@ -1081,7 +876,7 @@ def force_new_tor_circuit(with_vidalia=nil)
       step 'process "vidalia" is running'
     rescue Test::Unit::AssertionFailedError
       debug_log("Vidalia was not running. Attempting to start Vidalia...")
-      @vm.spawn('restart-vidalia')
+      $vm.spawn('restart-vidalia')
       step 'process "vidalia" is running within 15 seconds'
     end
     # Sometimes Sikuli gets confused and recognizes the yellow-colored vidalia systray
@@ -1102,12 +897,11 @@ def force_new_tor_circuit(with_vidalia=nil)
     @screen.wait('VidaliaNewIdentityNotification.png', 20)
     @screen.waitVanish('VidaliaNewIdentityNotification.png', 60)
   else
-    @vm.execute_successfully('. /usr/local/lib/tails-shell-library/tor.sh; tor_control_send "signal NEWNYM"')
+    $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
   end
 end
 
 Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
-  next if @skip_steps_while_restoring_background
   if min
     time = rand(max.to_i - min.to_i + 1) + min.to_i
   else
@@ -1118,26 +912,24 @@ Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
 end
 
 Given /^I (?:re)?start monitoring the AppArmor log of "([^"]+)"$/ do |profile|
-  next if @skip_steps_while_restoring_background
   # AppArmor log entries may be dropped if printk rate limiting is
   # enabled.
-  @vm.execute_successfully('sysctl -w kernel.printk_ratelimit=0')
+  $vm.execute_successfully('sysctl -w kernel.printk_ratelimit=0')
   # We will only care about entries for this profile from this time
   # and on.
-  guest_time = DateTime.parse(@vm.execute_successfully('date').stdout)
+  guest_time = DateTime.parse($vm.execute_successfully('date').stdout)
   @apparmor_profile_monitoring_start ||= Hash.new
   @apparmor_profile_monitoring_start[profile] = guest_time
 end
 
 When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at most (\d+) seconds)?$/ do |anti_test, profile, file, time|
-  next if @skip_steps_while_restoring_background
   assert(@apparmor_profile_monitoring_start &&
          @apparmor_profile_monitoring_start[profile],
          "It seems the profile '#{profile}' isn't being monitored by the " +
          "'I monitor the AppArmor log of ...' step")
   audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' % [profile, file]
   block = Proc.new do
-    audit_lines = @vm.execute("grep -F '#{audit_line_regex}' /var/log/syslog").stdout.split("\n")
+    audit_lines = $vm.execute("grep -F '#{audit_line_regex}' /var/log/syslog").stdout.split("\n")
     audit_lines.select! do |line|
       DateTime.parse(line) >= @apparmor_profile_monitoring_start[profile]
     end
@@ -1156,6 +948,5 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at m
 end
 
 Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
-  next if @skip_steps_while_restoring_background
   force_new_tor_circuit(with_vidalia)
 end
