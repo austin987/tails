@@ -1,6 +1,7 @@
-tails (1.7~rc1) unstable; urgency=medium
+tails (1.7) unstable; urgency=medium
 
   * Major new features and changes
+    - Upgrade Tor Browser to 5.0.4. (Closes: #10456)
     - Add a technology preview of the Icedove Email client (a
       rebranded version of Mozilla Thunderbird), including OpenPGP
       support via the Enigmail add-on, general security and anonymity
@@ -28,13 +29,34 @@ tails (1.7~rc1) unstable; urgency=medium
       tails-debugging-info which could be used by the amnesia user to
       read the contents of any file, no matter the
       permissions. (Closes: #10333)
+    - Upgrade libfreetype6 to 2.4.9-1.1+deb7u2.
+    - Upgrade gdk-pixbuf packages to 2.26.1-1+deb7u2.
+    - Upgrade Linux to 3.16.7-ckt11-1+deb8u5.
+    - Upgrade openjdk-7 packages to 7u85-2.6.1-6~deb7u1.
+    - Upgrade unzip to 6.0-8+deb7u4.
+
+  * Bugfixes
+    - Add a temporary workaround for an issue in our code which checks
+      whether i2p has bootstrapped, which (due to some recent change
+      in either I2P or Java) could make it appear it had finished
+      prematurely. (Closes: #10185)
+    - Fix a logical bug in the persistence preset migration code while
+      real-only persistence is enabled. (Closes: #10431)
 
   * Minor improvements
+    - Rework the wordings of the various installation and upgrade
+      options available in Tails installer in Wheezy. (Closes: #9672)
     - Restart Tor if bootstrapping stalls for too long when not using
       pluggable transports. (Closes: #9516)
     - Install firmware-amd-graphics, and firmware-misc-nonfree instead
       of firmware-ralink-nonfree, both from Debian Sid.
     - Update the Tails signing key. (Closes: #10012)
+    - Update the Tails APT repo signing key. (Closes: #10419)
+    - Install the nmh package. (Closes: #10457)
+    - Explicitly run "sync" at the end of the Tails Upgrader's upgrade
+      process, and pass the "sync" option when remounting the system
+      partition as read-write. This might help with some issues we've
+      seen, such as #10239, and possibly for #8449 as well.
 
   * Test suite
     - Add initial automated tests for Icedove. (Closes: #10332)
@@ -59,8 +81,23 @@ tails (1.7~rc1) unstable; urgency=medium
       code is greatly simplified. (Closes: #9897)
     - Automatically test that tails-debugging-info is not susceptible
       to the type of symlink attacks fixed by #10333.
+    - Save all test suite artifacts in a dedicated directory with more
+      useful infromation encoded in the path. This makes it easier to
+      see which artifacts belongs to which failed scenario and which
+      run. (Closes: #10151)
+    - Log all useful information via Cucumber's formatters instead of
+      printing to stderr, which is not included when logging to file
+      via `--out`. (Closes: #10342)
+    - Continue running the automated test suite's vnc server even if
+      the client disconnects. (Closes: #10345)
+    - Add more automatic tests for I2P. (Closes: #6406)
+    - Bump the Tor circuit retry count to 10. (Closes: #10375)
+    - Clean up dependencies: (Closes: #10208)
+      * libxslt1-dev
+      * radvd
+      * x11-apps
 
- -- Tails developers <tails@boum.org>  Mon, 26 Oct 2015 23:06:59 +0100
+ -- Tails developers <tails@boum.org>  Tue, 03 Nov 2015 01:09:41 +0100
 
 tails (1.6) unstable; urgency=medium
 
