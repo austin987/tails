@@ -82,15 +82,16 @@ migrate_persistence_preset()
 		-e "$(escape_dots ${NEW_PRESET})\s+source=${NEW_PRESET_SOURCE}" \
 		"$CONFIG"
 	then
-	warning "Need to make $NEW_PRESET persistent"
-	if [ "$PERSISTENCE_READONLY" = true ]
-	then
-		error "Persistence configuration needs to be migrated, but read only was selected; please retry in read-write mode"
-	fi
-	echo "$NEW_PRESET	source=$NEW_PRESET_SOURCE" \
-		>> "$CONFIG" \
-		|| error "Failed to make $NEW_PRESET: $?"
-	warning "Successfully made $NEW_PRESET persistent"
+		warning "Need to make $NEW_PRESET persistent"
+		if [ "$PERSISTENCE_READONLY" = true ]
+		then
+			warning "Persistence configuration needs to be migrated, but read only was selected; please retry in read-write mode"
+		else
+			echo "$NEW_PRESET	source=$NEW_PRESET_SOURCE" \
+				>> "$CONFIG" \
+				|| error "Failed to make $NEW_PRESET: $?"
+			warning "Successfully made $NEW_PRESET persistent"
+		fi
 	fi
 }
 
