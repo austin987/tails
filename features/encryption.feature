@@ -5,10 +5,8 @@ Feature: Encryption and verification using GnuPG
   And decrypt and verify GnuPG blocks
 
   Background:
-    Given a computer
-    And I start Tails from DVD with network unplugged and I login
+    Given I have started Tails from DVD without network and logged in
     And I generate an OpenPGP key named "test" with password "asdf"
-    And I save the state so the background can be restored next scenario
 
   Scenario: Encryption and decryption using Tails OpenPGP Applet
     When I type a message into gedit
