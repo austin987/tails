@@ -23,11 +23,23 @@ if [ "$(pidof icedove)" ]; then
     exit 1
 fi
 
+# Check if mailpath exists at the expected location
+if [ ! -d "$MAILPATH" ]; then
+    echo "Cannot find the default Claws Mail email folder ($MAILPATH).
+You might not have any emails saved in the persistent storage or you use a different location.
+Consider moving your email folder to $MAILPATH.
+Exiting." >&2
+    exit 1
+fi
+
 if [ ! -x /usr/bin/mh/packf ]; then
     echo "Please install the \"nmh\" package by executing \"sudo apt-get update ; sudo apt-get install nmh\".
 Then run this script again." >&2
     exit 1
 fi
+
+# Create a mh_profile, overwrite if it exists
+echo "Path: $MAILPATH" > "$HOME/.mh_profile"
 
 if ! /usr/bin/mh/install-mh -check ; then
     /usr/bin/mh/install-mh -auto
@@ -35,9 +47,9 @@ fi
 
 # Do not overwrite existing Inbox
 if [ -f "$SAVEPATH/Inbox" ]; then
-    #echo "Existing mailboxes found. Exiting…" >&2
     echo "Existing mailboxes found for Icedove. Did you run this script already or have other Icedove mailboxes set up?
 Do you want to exit or make a backup of the Icedove mailboxes and copy the Claws Mail mailboxes anyway?
+
 Type [b] to back up the existing Icedove folders or any key to exit."
     read confirmbackup
     : ${confirmbackup:="n"} # default is to exit
@@ -71,7 +83,8 @@ do
         set -u
         touch "$MBOX"
         # packf will exit nonzero if a folder only contains other folders
-        yes | $packf +"$FULLPATH" -mbox -file "$MBOX" || true
+        # packf is too verbose for us by default
+        yes | $packf +"$FULLPATH" -mbox -file "$MBOX" 2>&1 | grep -v "^packf: no messages in" >&2 || true
     fi
 done
 
@@ -87,3 +100,5 @@ done
 # Rename to match Icedove defaults
 mv -f draft Drafts
 mv -f queue "Unsent Messages"
+
+echo "Migration done. You can now open Icedove and set up your account."

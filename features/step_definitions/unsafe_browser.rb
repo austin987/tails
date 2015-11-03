@@ -38,15 +38,6 @@ Then /^the Unsafe Browser works in all supported languages$/ do
   assert(failed.empty?, "Unsafe Browser failed to launch in the following locale(s): #{failed.join(', ')}")
 end
 
-Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
-  notification_popup_wait('UnsafeBrowserStartNotification.png', 30)
-  @screen.waitVanish("UnsafeBrowserStartNotification.png", 10)
-end
-
-Then /^the Unsafe Browser has started$/ do
-  @screen.wait("UnsafeBrowserHomepage.png", 360)
-end
-
 Then /^the Unsafe Browser has no add-ons installed$/ do
   step "I open the address \"about:addons\" in the Unsafe Browser"
   step "I see \"UnsafeBrowserNoAddons.png\" after at most 30 seconds"
@@ -108,28 +99,8 @@ Then /^the Unsafe Browser shows a warning as its start page$/ do
   @screen.wait("UnsafeBrowserStartPage.png", 10)
 end
 
-When /^I start the Unsafe Browser$/ do
-  step 'I start "UnsafeBrowser" via the GNOME "Internet" applications menu'
-end
-
-When /^I successfully start the Unsafe Browser$/ do
-  step "I start the Unsafe Browser"
-  step "I see and accept the Unsafe Browser start verification"
-  step "I see the Unsafe Browser start notification and wait for it to close"
-  step "the Unsafe Browser has started"
-end
-
 Then /^I see a warning about another instance already running$/ do
   @screen.wait('UnsafeBrowserWarnAlreadyRunning.png', 10)
-end
-
-When /^I close the Unsafe Browser$/ do
-  @screen.type("q", Sikuli::KeyModifier.CTRL)
-end
-
-Then /^I see the Unsafe Browser stop notification$/ do
-  notification_popup_wait('UnsafeBrowserStopNotification.png', 20)
-  @screen.waitVanish('UnsafeBrowserStopNotification.png', 10)
 end
 
 Then /^I can start the Unsafe Browser again$/ do

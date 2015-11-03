@@ -86,13 +86,35 @@ end
 class TorFailure < StandardError
 end
 
+class MaxRetriesFailure < StandardError
+end
+
 # This will retry the block up to MAX_NEW_TOR_CIRCUIT_RETRIES
 # times. The block must raise an exception for a run to be considered
 # as a failure. After a failure recovery_proc will be called (if
 # given) and the intention with it is to bring us back to the state
 # expected by the block, so it can be retried.
 def retry_tor(recovery_proc = nil, &block)
-  max_retries = $config["MAX_NEW_TOR_CIRCUIT_RETRIES"]
+  tor_recovery_proc = Proc.new do
+    force_new_tor_circuit
+    recovery_proc.call if recovery_proc
+  end
+
+  retry_action($config['MAX_NEW_TOR_CIRCUIT_RETRIES'],
+               :recovery_proc => tor_recovery_proc,
+               :operation_name => 'Tor operation', &block)
+end
+
+def retry_i2p(recovery_proc = nil, &block)
+  retry_action(15, :recovery_proc => recovery_proc,
+               :operation_name => 'I2P operation', &block)
+end
+
+def retry_action(max_retries, options = {}, &block)
+  assert(max_retries.is_a?(Integer), "max_retries must be an integer")
+  options[:recovery_proc] ||= nil
+  options[:operation_name] ||= 'Operation'
+
   retries = 1
   loop do
     begin
@@ -100,18 +122,15 @@ def retry_tor(recovery_proc = nil, &block)
       return
     rescue Exception => e
       if retries <= max_retries
-        if $config["DEBUG"]
-          STDERR.puts "Tor operation failed (Tor circuit try #{retries} of " +
-                      "#{max_retries}) with:\n" +
-                      "#{e.class}: #{e.message}"
-        end
-        recovery_proc.call if recovery_proc
-        force_new_tor_circuit
+        debug_log("#{options[:operation_name]} failed (Try #{retries} of " +
+                  "#{max_retries}) with:\n" +
+                  "#{e.class}: #{e.message}")
+        options[:recovery_proc].call if options[:recovery_proc]
         retries += 1
       else
-        raise TorFailure.new("The operation failed (despite forcing " +
-                             "#{max_retries} new Tor circuits) with\n" +
-                             "#{e.class}: #{e.message}")
+        raise MaxRetriesFailure.new("#{options[:operation_name]} failed (despite retrying " +
+                                    "#{max_retries} times) with\n" +
+                                    "#{e.class}: #{e.message}")
       end
     end
   end
@@ -209,4 +228,20 @@ end
 def random_alnum_string(min_len, max_len = 0)
   alnum_set = ('A'..'Z').to_a + ('a'..'z').to_a + (0..9).to_a.map { |n| n.to_s }
   random_string_from_set(alnum_set, min_len, max_len)
+end
+
+# Sanitize the filename from unix-hostile filename characters
+def sanitize_filename(filename, options = {})
+  options[:replacement] ||= '_'
+  bad_unix_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
+  filename.gsub(bad_unix_filename_chars, options[:replacement])
+end
+
+def info_log_artifact_location(type, path)
+  if $config['ARTIFACTS_BASE_URI']
+    # Remove any trailing slashes, we'll add one ourselves
+    base_url = $config['ARTIFACTS_BASE_URI'].gsub(/\/*$/, "")
+    path = "#{base_url}/#{File.basename(path)}"
+  end
+  info_log("#{type.capitalize}: #{path}")
 end
