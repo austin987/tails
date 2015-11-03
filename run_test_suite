@@ -20,14 +20,12 @@ libvirt-clients
 libvirt-daemon-system
 libvirt-dev
 libvirt0
-libxslt1-dev
 openjdk-7-jre
 ovmf
 python-jabberbot
 python-potr
 qemu-kvm
 qemu-system-x86
-radvd
 ruby-guestfs
 ruby-json
 ruby-libvirt
@@ -41,7 +39,6 @@ seabios
 tcpdump
 unclutter
 virt-viewer
-x11-apps
 xvfb
 "
 
@@ -51,6 +48,11 @@ Sets up an appropriate environment and invokes cucumber. Note that this script
 must be run from the Tails source directory root.
 
 Options for '@product' features:
+  --artifacts-base-uri URI
+                     Pretend that the artifact is located at URI when printing
+                     its location during a scenario failure. This is useful if
+                     you intend to serve the artifacts via the web, for
+                     instance.
   --capture          Captures failed scenarios into videos stored in the
                      temporary directory (see --tmpdir below) using x264
                      encoding. Requires x264.
@@ -59,8 +61,9 @@ Options for '@product' features:
   --pause-on-fail    On failure, pause test suite until pressing Enter. This is
                      useful for investigating the state of the VM guest to see
                      exactly why a test failed.
-  --keep-snapshots   Don't ever delete the background snapshots. This can a big
-                     time saver when debugging new features.
+  --keep-snapshots   Don't ever delete any snapshots (including ones marked as
+                     temporary). This can be a big time saver when debugging new
+                     features.
   --retry-find       Print a warning whenever Sikuli fails to find an image
                      and allow *one* retry after pressing ENTER. This is useful
                      for updating outdated images.
@@ -149,7 +152,7 @@ start_xvfb() {
 start_vnc_server() {
     check_dependencies x11vnc
     VNC_SERVER_PORT="$(x11vnc -listen localhost -display ${TARGET_DISPLAY} \
-                              -bg -nopw 2>&1 | \
+                              -bg -nopw -forever 2>&1 | \
                                   grep -m 1 "^PORT=[0-9]\+" | sed 's/^PORT=//')"
     echo "VNC server running on: localhost:${VNC_SERVER_PORT}"
 }
@@ -171,6 +174,7 @@ capture_session() {
 # Unset all environment variables used by this script to pass options
 # to cucumber, except TMPDIR since we explicitly want to support
 # setting it that way.
+ARTIFACTS_BASE_URI=
 CAPTURE=
 CAPTURE_ALL=
 LOG_FILE=
@@ -182,11 +186,15 @@ SIKULI_RETRY_FINDFAILED=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,pause-on-fail"
+LONGOPTS="artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,pause-on-fail"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
     case $1 in
+        --artifacts-base-uri)
+            shift
+            export ARTIFACTS_BASE_URI="${1}"
+            ;;
         --view)
             VNC_VIEWER=yes
             VNC_SERVER=yes
