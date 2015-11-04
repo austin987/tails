@@ -5,6 +5,10 @@ require 'tmpdir'
 
 # Run once, before any feature
 AfterConfiguration do |config|
+  # Used to keep track of when we start our first @product feature, when
+  # we'll do some special things.
+  $started_first_product_feature = false
+
   if File.exist?($config["TMPDIR"])
     if !File.directory?($config["TMPDIR"])
       raise "Temporary directory '#{$config["TMPDIR"]}' exists but is not a " +
@@ -22,6 +26,7 @@ AfterConfiguration do |config|
       raise "Cannot create temporary directory: #{e.to_s}"
     end
   end
+
   # Start a thread that monitors a pseudo fifo file and debug_log():s
   # anything written to it "immediately" (well, as fast as inotify
   # detects it). We're forced to a convoluted solution like this
@@ -46,30 +51,51 @@ AfterConfiguration do |config|
   bind_java_to_pseudo_fifo_logger
 end
 
+# Common
+########
+
+After do
+  if @after_scenario_hooks
+    @after_scenario_hooks.each { |block| block.call }
+  end
+  @after_scenario_hooks = Array.new
+end
+
+BeforeFeature('@product', '@source') do |feature|
+  raise "Feature #{feature.file} is tagged both @product and @source, " +
+        "which is an impossible combination"
+end
+
+at_exit do
+  $vm.destroy_and_undefine if $vm
+  if $virt
+    unless KEEP_SNAPSHOTS
+      VM.remove_all_snapshots
+      $vmstorage.clear_pool
+    end
+    $vmnet.destroy_and_undefine
+    $virt.close
+  end
+  # The artifacts directory is empty (and useless) if it contains
+  # nothing but the mandatory . and ..
+  if Dir.entries(ARTIFACTS_DIR).size <= 2
+    FileUtils.rmdir(ARTIFACTS_DIR)
+  end
+end
+
 # For @product tests
 ####################
-
-def delete_snapshot(snapshot)
-  if snapshot and File.exist?(snapshot)
-    File.delete(snapshot)
-  end
-rescue Errno::EACCES => e
-  STDERR.puts "Couldn't delete background snapshot: #{e.to_s}"
-end
-
-def delete_all_snapshots
-  Dir.glob("#{$config["TMPDIR"]}/*.state").each do |snapshot|
-    delete_snapshot(snapshot)
-  end
-end
 
 def add_after_scenario_hook(&block)
   @after_scenario_hooks ||= Array.new
   @after_scenario_hooks << block
 end
 
+def save_failure_artifact(type, path)
+  $failure_artifacts << [type, path]
+end
+
 BeforeFeature('@product') do |feature|
-  delete_all_snapshots if !KEEP_SNAPSHOTS
   if TAILS_ISO.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
           "current directory"
@@ -91,34 +117,36 @@ BeforeFeature('@product') do |feature|
   else
     raise "The specified Tails ISO image '#{TAILS_ISO}' does not exist"
   end
-  puts "Testing ISO image: #{File.basename(TAILS_ISO)}"
   if !File.exist?(OLD_TAILS_ISO)
     raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
   end
-  puts "Using old ISO image: #{File.basename(OLD_TAILS_ISO)}"
-  base = File.basename(feature.file, ".feature").to_s
-  $background_snapshot = "#{$config["TMPDIR"]}/#{base}_background.state"
-  $virt = Libvirt::open("qemu:///system")
-  $vmnet = VMNet.new($virt, VM_XML_PATH)
-  $vmstorage = VMStorage.new($virt, VM_XML_PATH)
+  if not($started_first_product_feature)
+    $virt = Libvirt::open("qemu:///system")
+    VM.remove_all_snapshots if !KEEP_SNAPSHOTS
+    $vmnet = VMNet.new($virt, VM_XML_PATH)
+    $vmstorage = VMStorage.new($virt, VM_XML_PATH)
+    $started_first_product_feature = true
+  end
 end
 
 AfterFeature('@product') do
-  delete_snapshot($background_snapshot) if !KEEP_SNAPSHOTS
-  $vmstorage.clear_pool
-  $vmnet.destroy_and_undefine
-  $virt.close
+  unless KEEP_SNAPSHOTS
+    checkpoints.each do |name, vals|
+      if vals[:temporary] and VM.snapshot_exists?(name)
+        VM.remove_snapshot(name)
+      end
+    end
+  end
 end
 
-# BeforeScenario
+# Cucumber Before hooks are executed in the order they are listed, and
+# we want this hook to always run first, so it must always be the
+# *first* Before hook matching @product.
 Before('@product') do |scenario|
-  @screen = Sikuli::Screen.new
+  $failure_artifacts = Array.new
   if $config["CAPTURE"]
-    video_name = "capture-" + "#{scenario.name}-#{TIME_AT_START}.mkv"
-    # Sanitize the filename from unix-hostile filename characters
-    bad_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
-    video_name.gsub!(bad_filename_chars, '_')
-    @video_path = "#{$config['TMPDIR']}/#{video_name}"
+    video_name = sanitize_filename("#{scenario.name}.mkv")
+    @video_path = "#{ARTIFACTS_DIR}/#{video_name}"
     capture = IO.popen(['avconv',
                         '-f', 'x11grab',
                         '-s', '1024x768',
@@ -132,18 +160,18 @@ Before('@product') do |scenario|
                        ])
     @video_capture_pid = capture.pid
   end
-  if File.size?($background_snapshot)
-    @skip_steps_while_restoring_background = true
-  else
-    @skip_steps_while_restoring_background = false
-  end
+  @screen = Sikuli::Screen.new
   @theme = "gnome"
   # English will be assumed if this is not overridden
   @language = ""
   @os_loader = "MBR"
+  @sudo_password = "asdf"
+  @persistence_password = "asdf"
 end
 
-# AfterScenario
+# Cucumber After hooks are executed in the *reverse* order they are
+# listed, and we want this hook to always run last, so it must always
+# be the *first* After hook matching @product.
 After('@product') do |scenario|
   if @video_capture_pid
     # We can be incredibly fast at detecting errors sometimes, so the
@@ -152,18 +180,26 @@ After('@product') do |scenario|
     # what the error was.
     sleep 3 if scenario.failed?
     Process.kill("INT", @video_capture_pid)
+    save_failure_artifact("Video", @video_path)
   end
   if scenario.failed?
     time_of_fail = Time.now - TIME_AT_START
     secs = "%02d" % (time_of_fail % 60)
     mins = "%02d" % ((time_of_fail / 60) % 60)
     hrs  = "%02d" % (time_of_fail / (60*60))
-    STDERR.puts "Scenario failed at time #{hrs}:#{mins}:#{secs}"
-    base = File.basename(scenario.feature.file, ".feature").to_s
-    tmp = @screen.capture.getFilename
-    out = "#{$config["TMPDIR"]}/#{base}-#{DateTime.now}.png"
-    FileUtils.mv(tmp, out)
-    STDERR.puts("Took screenshot \"#{out}\"")
+    elapsed = "#{hrs}:#{mins}:#{secs}"
+    info_log("Scenario failed at time #{elapsed}")
+    screen_capture = @screen.capture
+    save_failure_artifact("Screenshot", screen_capture.getFilename)
+    $failure_artifacts.sort!
+    $failure_artifacts.each do |type, file|
+      artifact_name = sanitize_filename("#{elapsed}_#{scenario.name}#{File.extname(file)}")
+      artifact_path = "#{ARTIFACTS_DIR}/#{artifact_name}"
+      assert(File.exist?(file))
+      FileUtils.mv(file, artifact_path)
+      info_log
+      info_log_artifact_location(type, artifact_path)
+    end
     if $config["PAUSE_ON_FAIL"]
       STDERR.puts ""
       STDERR.puts "Press ENTER to continue running the test suite"
@@ -174,17 +210,14 @@ After('@product') do |scenario|
       FileUtils.rm(@video_path)
     end
   end
-  @vm.destroy_and_undefine if @vm
-end
-
-After('@product', '~@keep_volumes') do
-  $vmstorage.clear_volumes
 end
 
 Before('@product', '@check_tor_leaks') do |scenario|
-  feature_file_name = File.basename(scenario.feature.file, ".feature").to_s
-  @tor_leaks_sniffer = Sniffer.new(feature_file_name + "_sniffer", $vmnet)
+  @tor_leaks_sniffer = Sniffer.new(sanitize_filename(scenario.name), $vmnet)
   @tor_leaks_sniffer.capture
+  add_after_scenario_hook do
+    @tor_leaks_sniffer.clear
+  end
 end
 
 After('@product', '@check_tor_leaks') do |scenario|
@@ -199,7 +232,6 @@ After('@product', '@check_tor_leaks') do |scenario|
                                   :accepted_hosts => expected_tor_nodes)
     leaks.assert_no_leaks
   end
-  @tor_leaks_sniffer.clear
 end
 
 # For @source tests
@@ -216,23 +248,4 @@ end
 After('@source') do
   Dir.chdir @orig_pwd
   FileUtils.remove_entry_secure @git_clone
-end
-
-# Common
-########
-
-After do
-  if @after_scenario_hooks
-    @after_scenario_hooks.each { |block| block.call }
-  end
-  @after_scenario_hooks = Array.new
-end
-
-BeforeFeature('@product', '@source') do |feature|
-  raise "Feature #{feature.file} is tagged both @product and @source, " +
-        "which is an impossible combination"
-end
-
-at_exit do
-  delete_all_snapshots if !KEEP_SNAPSHOTS
 end
