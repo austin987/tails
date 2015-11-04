@@ -6,16 +6,8 @@ Feature: Keyserver interaction with GnuPG
   and all Internet traffic should flow only through Tor.
 
   Background:
-    Given a computer
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And the Tails desktop is ready
-    And Tor is ready
-    And all notifications have disappeared
-    And available upgrades have been checked
+    Given I have started Tails from DVD and logged in and the network is connected
     And the "10CC5BC7" OpenPGP key is not in the live user's public keyring
-    And I save the state so the background can be restored next scenario
 
   Scenario: Seahorse is configured to use the correct keyserver
    Then Seahorse is configured to use the correct keyserver
