@@ -131,6 +131,71 @@ the 1.7 release.
 We're also discussing in our public mailing list if it makes sense to
 run our whole test suite on such documentation branches or not.
 
+#### B.3. Extend the coverage of our test suite
+
+  - B.3.5. Write tests for I2P
+
+  Finished late, part of Milestone II (July 15, 2015). (#6306)
+
+  - B.3.6. Fix newly identified issues to make our test suite more robust
+           and fast enough to be part of a continuous integration process.
+
+    A plan was devised to leverage out automated testing
+    infrastructure for identifying the robustness issues and isolating
+    them into separate branches, where they can be dealth with in
+    isolation. (#10288)
+
+    Other improvements:
+
+    * The new snapshot system improved robustness noticeably, and
+      reduced the amount of time needed for a full run with at least
+      30%. (#6094)
+
+    * Restart Tor if bootstrapping stalls for too long.
+
+      This started out as a robustness improvement in the test suite,
+      since many tests failed randomly due to Tor. We then implemented
+      it as a feature in Tails, since it arguably should improve the
+      user experience too (#9516).
+
+  - B.3.9. Optimize tests that need a persistent volume
+
+    The new snapshot system was finished early (part of Milestone IV,
+    January 15, 2015). (#6094, #8008)
+
+  - B.3.13. Split the "various checks" feature
+
+    Started early, but not finished; so far only mat.feature and
+    localization.feature has been created from split out
+    scenarios. Thanks to #6094 the remainder of this wokr will be
+    trivial.
+
+  - Some other new tests that were written:
+
+    * Write initial Icedove tests. (#10332)
+
+    * Write a test for the fix of a symlink attack. It was added at
+      the same time as the fix, and this is the ideal workflow we hope
+      to soon be ready to adopt. (#10333)
+
+  - Some improvements for test suite developers:
+
+    * Organize automated test suite artifacts in per-run directories,
+      and improve the naming so it's easier to see e.g. which video
+      belongs to which failed scenario. (#10151)
+
+    * Clean up automated test suite dependencies. (#10208)
+
+    * Force UTF-8 locale in automated test suite, so the system can
+      run which locale it wishes. (#10359)
+
+    * Run the automated test suite's VNC server forever Test suite.
+      (#10345)
+
+    * Don't print test suite information to STDERR, but use the
+      Cucumber logging facilities so this information is included when
+      logging to file. (#10342)
+
 # C. Scale our infrastructure
 
 - C.4.3. Administer our services upto milestone III
@@ -146,5 +211,13 @@ We thought a bit further how we could make our Jenkins instance public
 
 # D. Migration to Debian Jessie
 
+### D. Migration to Debian Jessie
 
-# E. Release management
+  - D.3.1 Update our test suite for Tails Jessie
+
+    * Fix memory erasure tests in Debian Jessie. (#8317, #9705)
+
+    * Work around screen blanking when testing Synaptic. (#10403)
+
+    * Fix a robustness issue with the "Applications" menu
+      handling. (#9706)
