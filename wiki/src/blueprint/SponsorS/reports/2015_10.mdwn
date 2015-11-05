@@ -191,9 +191,57 @@ ticket #6938 can be seen on <https://labs.riseup.net/code/issues/6938>.
       Cucumber logging facilities so this information is included when
       logging to file. (#10342)
 
+## B.4 Freezable APT repository
+
+- B.4.1. Specify when we want to import foreign packages into which
+  APT suites (#9488),
+  B.4.4. Design freezable APT repository (#5926),
+  and B.4.5. Implement processes and tools for importing and freezing
+  those packages (#9487, #6295, #7427, #6906)
+
+  Some initial research and experiments were conducted.
+
+  The proposed design is described on a blueprint:
+  <https://tails.boum.org/blueprint/freezable_APT_repository/>
+
+  A server-side implementation (#6296, #6299) has been drafted in the
+  `tails::reprepro::snapshots::*` Puppet classes in the
+  <https://git-tails.immerda.ch/puppet-tails/> module.
+
+- B.4.2. Implement a mechanism to save the list of packages used at
+  ISO build time (#6297)
+
+  We have found ways to implement this, and have a working
+  proof-of-concept, that now needs to be refined. This implied adding
+  functionality we need to `debootstrap` upstream, and uploading
+  a backport for Debian Jessie.
+
+- B.4.6. Adjust the rest of our ecosystem to the freezable APT repository
+
+  We adopted a documentation-driven approach, and started drafting
+  documentation for the tools we will need to write:
+
+  <https://git-tails.immerda.ch/tails/log/?h=feature/5926-freezable-APT-repository>
+
 # C. Scale our infrastructure
 
-- C.4.3. Administer our services upto milestone III
+## C.1. Change in depth the infrastructure of our pool of mirrors
+
+- C.1.2. Write & audit the code that makes the redirection decision
+
+  Our prototype code (#8639) has been refined a bit.
+
+## C.2. Be able to detect within hours failures and malfunction on our services
+
+- C.2.1. Research and decide what monitoring solution to use: #8645
+
+  A little bit more research was done to ensure that our current best
+  option will satisfy our needs.
+
+## C.4. Maintain our already existing services
+
+This covers "C.4.3. Administer our services upto milestone III" until
+the end of October.
 
   * We kept on answering to the request from the community as well as taking
     care of security updates.
