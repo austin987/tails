@@ -14,6 +14,14 @@ set -e
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
+disable_networking() {
+    service network-manager stop || :
+    for f in /etc/init.d/network-manager /usr/sbin/NetworkManager; do
+        [ -e "${f}" ] && mv "${f}" "${f}.disabled"
+    done
+    log "Networking disabled"
+}
+
 show_notification() {
     # We must wait until all the facilities necessary for showing the
     # notification to the Live user is available to prevent it from
@@ -26,6 +34,11 @@ show_notification() {
           pgrep --full /usr/lib/notification-daemon/notification-daemon >/dev/null; do
         sleep 1
     done
+    # The above doesn't seem to be enough. The best we can do seems to
+    # be to statically wait a bit longer. The amount chosen is just
+    # arbitrarily picked, and may not work on slow hardware or even
+    # DVD boot, but should at least work in our automated test suite.
+    sleep 10
     /usr/local/sbin/tails-notify-user "${1}" "${2}" 0
 }
 
@@ -63,8 +76,8 @@ mac_spoof_panic() {
     echo "blacklist ${module}" >> /etc/modprobe.d/"${module}"-blacklist.conf
     unload_module_and_rev_deps "${module}" || :
     if nic_exists "${nic}"; then
-        log "Failed to unload module ${module} of NIC ${nic}. Stopping NetworkManager."
-        service network-manager stop
+        log "Failed to unload module ${module} of NIC ${nic}"
+        disable_networking
         notify_panic_failure "${nic}" "${nic_name}" &
     else
         log "Successfully unloaded module ${module} of NIC ${nic}."
@@ -130,8 +143,8 @@ then
         # If mac_spoof_panic() fails we're quite screwed, so we kill
         # NetworkManager without notification to do our best to
         # prevent a MAC address leak.
-        log "Panic mode failed for NIC ${NIC}. Killing NetworkManager."
-        service network-manager stop
+        log "Panic mode failed for NIC ${NIC}"
+        disable_networking
     fi
     exit 1
 fi
