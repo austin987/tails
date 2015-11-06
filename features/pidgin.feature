@@ -51,6 +51,7 @@ Feature: Chatting anonymously using Pidgin
     When I say something to my friend
     Then I receive a response from my friend
 
+  # 10376 - "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
   # 10443 - OFTC tests are fragile
   @check_tor_leaks @fragile
   Scenario: Connecting to the #tails IRC channel with the pre-configured account
