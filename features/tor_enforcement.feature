@@ -60,7 +60,7 @@ Feature: The Tor enforcement is effective
     Then the untorified connection fails
     And the untorified connection is logged as dropped by the firewall
 
-  @check_tor_leaks
+  @check_tor_leaks @fragile
   Scenario: The Tor enforcement is effective at blocking untorified ICMP connection attempts
     Given I have started Tails from DVD and logged in and the network is connected
     When I open an untorified ICMP connections to 1.2.3.4 that is expected to fail
