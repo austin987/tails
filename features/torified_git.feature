@@ -1,4 +1,4 @@
-@product @check_tor_leaks @fragile
+@product @check_tor_leaks
 Feature: Cloning a Git repository
   As a Tails user
   when I clone a Git repository
