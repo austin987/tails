@@ -51,6 +51,7 @@ Feature: I2P
     Then the I2P router console is displayed in I2P Browser
     And I2P is running in hidden mode
 
+  @fragile
   Scenario: Connecting to the #i2p IRC channel with the pre-configured account
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
