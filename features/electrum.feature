@@ -1,4 +1,4 @@
-@product @check_tor_leaks
+@product @check_tor_leaks @fragile
 Feature: Electrum Bitcoin client
   As a Tails user
   I might want to use a Bitcoin client
