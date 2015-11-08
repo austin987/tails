@@ -1,3 +1,6 @@
+class SSHConnectionError < StandardError
+end
+
 def read_and_validate_ssh_config srv_type
   conf  = $config[srv_type]
   begin
@@ -54,7 +57,11 @@ Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)$/ d
 end
 
 Given /^I verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do
-  @screen.wait("SSHFingerprint.png", 60)
+  @screen.waitAny(['SSHFingerprint.png', 'SSHFailed.png', 'SSHError.png'], 30)
+  unless @screen.exists('SSHFingerprint.png')
+    raise SSHConnectionError.new(
+      "Could not find 'SSHFingerprint.png'")
+  end
   @screen.type('yes' + Sikuli::Key.ENTER)
 end
 
@@ -67,8 +74,17 @@ When /^I connect to an SSH server on the Internet$/ do
   cmd = "ssh #{@ssh_username}@#{@ssh_host} #{ssh_port_suffix}"
 
   step 'process "ssh" is not running'
-  step "I run \"#{cmd}\" in GNOME Terminal"
-  step 'process "ssh" is running within 10 seconds'
+
+  recovery_proc = Proc.new do
+    step 'I kill the process "ssh"' if $vm.has_process?("ssh")
+    step 'I run "clear" in GNOME Terminal'
+  end
+
+  retry_tor(recovery_proc) do
+    step "I run \"#{cmd}\" in GNOME Terminal"
+    step 'process "ssh" is running within 10 seconds'
+    step 'I verify the SSH fingerprint for the SSH server'
+  end
 end
 
 Then /^I have sucessfully logged into the SSH server$/ do

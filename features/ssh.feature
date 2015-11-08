@@ -11,7 +11,6 @@ Feature: Logging in via SSH
   Scenario: Connecting to an SSH server on the Internet
     Given I have the SSH key pair for an SSH server
     When I connect to an SSH server on the Internet
-    And I verify the SSH fingerprint for the SSH server
     Then I have sucessfully logged into the SSH server
 
   @check_tor_leaks
