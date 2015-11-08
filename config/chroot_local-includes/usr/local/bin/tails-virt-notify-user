@@ -23,7 +23,7 @@ See https://tails.boum.org/.
 #}}}
 
 use Desktop::Notify;
-use IPC::System::Simple qw{runx};
+use IPC::System::Simple qw{capturex $EXITVAL};
 use Locale::gettext;
 use Net::DBus::Reactor;
 use POSIX;
@@ -48,10 +48,11 @@ sub action_cb {
 # both 0 and 1 are acceptable exit values:
 #  - 0 means that we're running in a virtualized environment
 #  - 1 means that we're not running in a virtualized environment
-#  - anything else means there is a problem, and runx will throw an exception
-my $exit_value = runx([0, 1], qw{/usr/bin/systemd-detect-virt});
+#  - anything else means there is a problem, and capturex will throw an exception
+my $vm_name = capturex([0, 1], qw{/usr/bin/systemd-detect-virt --vm});
+exit 0 if $EXITVAL == 1;
 
-exit 0 if $exit_value == 1;
+my @whitelist = qw(bochs kvm qemu uml virtualbox xen);
 
 my $reactor = Net::DBus::Reactor->main;
 
@@ -59,9 +60,19 @@ my $notify  = Desktop::Notify->new();
 $notify->action_callback(sub { action_cb($reactor, @_) });
 $notify->close_callback(sub { $reactor->shutdown; });
 
-my $summary = gettext("Warning: virtual machine detected!");
-my $body    =
-    gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails.");
+my ($body, $summary);
+
+chomp($vm_name);
+if (grep {$_ eq $vm_name} @whitelist) {
+    $summary = gettext("Warning: virtual machine detected!");
+    $body    =
+        gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails.");
+}
+else {
+    $summary = gettext("Warning: non-free virtual machine detected!");
+    $body    =
+        gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails. Only free software can be considered trustworthy, for both the host operating system and the virtualization software.");
+}
 
 $notify->create(summary => $summary,
                 body    => $body,

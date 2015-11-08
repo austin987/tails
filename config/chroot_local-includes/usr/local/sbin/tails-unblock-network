@@ -32,6 +32,8 @@ echo "systemd-udev-settle.service restarted." >&2
 # No need to manually enable NetworkManager-dispatcher.service,
 # as NetworkManager.service has "Also=NetworkManager-dispatcher.service"
 # in its [Install] section.
-systemctl enable NetworkManager.service NetworkManager-wait-online.service
-systemctl start NetworkManager.service NetworkManager-dispatcher.service
-systemctl --no-block start NetworkManager-wait-online.service
+# If tails-spoof-mac goes into panic mode but fails to disable the
+# problematic device, the NetworkManager services will be masked.
+systemctl enable NetworkManager.service NetworkManager-wait-online.service || :
+systemctl start NetworkManager.service NetworkManager-dispatcher.service || :
+systemctl --no-block start NetworkManager-wait-online.service || :

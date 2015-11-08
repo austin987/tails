@@ -5,6 +5,9 @@ require 'sikuli-script.jar'
 Rjb::load
 
 package_members = [
+                   "java.io.FileOutputStream",
+                   "java.io.PrintStream",
+                   "java.lang.System",
                    "org.sikuli.script.Finder",
                    "org.sikuli.script.Key",
                    "org.sikuli.script.KeyModifier",
@@ -18,6 +21,8 @@ package_members = [
 
 translations = Hash[
                     "org.sikuli.script", "Sikuli",
+                    "java.lang", "Java::Lang",
+                    "java.io", "Java::Io",
                    ]
 
 for p in package_members
@@ -34,6 +39,14 @@ for p in package_members
     end
   end
   mod.const_set(class_name, imported_class)
+end
+
+# Bind Java's stdout to debug_log() via our magical pseudo fifo
+# logger.
+def bind_java_to_pseudo_fifo_logger
+  file_output_stream = Java::Io::FileOutputStream.new(DEBUG_LOG_PSEUDO_FIFO)
+  print_stream = Java::Io::PrintStream.new(file_output_stream)
+  Java::Lang::System.setOut(print_stream)
 end
 
 def findfailed_hook(pic)
@@ -60,6 +73,12 @@ end
 # so we work around it with the following vairable.
 sikuli_script_proxy = Sikuli::Screen
 $_original_sikuli_screen_new ||= Sikuli::Screen.method :new
+
+# For waitAny()/findAny() we are forced to throw this exception since
+# Rjb::throw doesn't block until the Java exception has been received
+# by Ruby, so strange things can happen.
+class FindAnyFailed < StandardError
+end
 
 def sikuli_script_proxy.new(*args)
   s = $_original_sikuli_screen_new.call(*args)
@@ -132,6 +151,14 @@ def sikuli_script_proxy.new(*args)
     self.hover(self.wait(pic, time))
   end
 
+  def s.existsAny(images)
+    images.each do |image|
+      region = self.exists(image)
+      return [image, region] if region
+    end
+    return nil
+  end
+
   def s.findAny(images)
     images.each do |image|
       begin
@@ -142,23 +169,20 @@ def sikuli_script_proxy.new(*args)
       end
     end
     # If we've reached this point, none of the images could be found.
-    Rjb::throw('org.sikuli.script.FindFailed',
-               "can not find any of the images #{images} on the screen")
+    raise FindAnyFailed.new("can not find any of the images #{images} on the " +
+                            "screen")
   end
 
   def s.waitAny(images, time)
     Timeout::timeout(time) do
       loop do
-        begin
-          return self.findAny(images)
-        rescue FindFailed
-          # Ignore. We want to retry until we timeout.
-        end
+        result = self.existsAny(images)
+        return result if result
       end
     end
   rescue Timeout::Error
-    Rjb::throw('org.sikuli.script.FindFailed',
-               "can not find any of the images #{images} on the screen")
+    raise FindAnyFailed.new("can not find any of the images #{images} on the " +
+                            "screen")
   end
 
   def s.hover_point(x, y)
@@ -167,28 +191,6 @@ def sikuli_script_proxy.new(*args)
 
   def s.hide_cursor
     self.hover_point(self.w, self.h/2)
-  end
-
-  def wait_for_gnome_window(window_title_img, timeout)
-    try_for(timeout) do
-      m = self.find(window_title_img)
-      # Respective to the matched window title, this is the region
-      # from its right edge to the right edge of the screen, where we
-      # would expect the GNOME window's X button.
-      r = Sikuli::Region.new(m.x + m.w, m.y, self.w - m.x - m.w, m.h)
-      # Note that below we call Sikuli::Region's find, so we won't get
-      # any retry if $sikuli_retry_findfailed is set.
-      r.find("GnomeWindowTitleBarRightEdge.png")
-      return m
-    end
-  end
-
-  def wait_and_click_gnome_window(window_title_img, timeout)
-    self.click(self.wait_for_gnome_window(window_title_img, timeout))
-  end
-
-  def wait_and_double_click_gnome_window(window_title_img, timeout)
-    self.doubleClick(self.wait_for_gnome_window(window_title_img, timeout))
   end
 
   s
@@ -210,7 +212,7 @@ sikuli_settings.OcrDataPath = $config["TMPDIR"]
 # Also, Sikuli's default of 0.7 is simply too low (many false
 # positives).
 sikuli_settings.MinSimilarity = 0.9
-sikuli_settings.ActionLogs = $config["DEBUG"]
-sikuli_settings.DebugLogs = $config["DEBUG"]
-sikuli_settings.InfoLogs = $config["DEBUG"]
-sikuli_settings.ProfileLogs = $config["DEBUG"]
+sikuli_settings.ActionLogs = true
+sikuli_settings.DebugLogs = true
+sikuli_settings.InfoLogs = true
+sikuli_settings.ProfileLogs = true

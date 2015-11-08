@@ -13,7 +13,9 @@ the [[automatically build ISOs|autobuild_specs]] ([[!tails_ticket 5288]]).
 Running the full test suite on 1 isotester hosted on Lizard takes
 around 8 hours.
 We intend to run __4 isotesters__, so at the moment we would be able
-to run __12 full test suites__ per day.
+to run __12 full test suites__ per day. ([[!tails_ticket 6094]] will
+save ~25% on the full test suite runtime, but we'll keep on adding
+more tests, so let's stick to the 8 hours estimate for now.)
 
 We have 2 isobuilders on Lizard, that build a total of a bit less than
 __400 ISOs/month__ (that's __an average of 13 ISOs/day__).
@@ -126,21 +128,19 @@ The test suite produces different kind of artifacts: logfiles, screen
 captures for failing steps, snapshots of the test VM, and also videos of
 the running test session.
 
-Videos may be a bit too much to keep, given they slow down the test
-suite and might take quite a bit of disk space to store. If we want to
-keep them, we may want to do so only for failing test suite runs. But
-then, often the screen capture are enought to identify why a step failed
-to run. If we decide to still use them, then we probably have to wait
-for [[!tails_ticket 10001]] too be resolved.
+We can keep the video captures in the build artifacts, now that
+[[!tails_ticket 10001]] is resolved.
 
-Proposal:
+Decision:
 
  * For green test suite run: keep the test logs (Jenkins natively do
-   that)
- * For red test suite run: keep the screen captures and the logs.
+   that).
+ * For red test suite run: keep the screenshots and video captures, the
+   logs and the pcap files.
 
-The retention strategy should be the same than for the automatically
-built ISOs.
+In [[!tails_ticket 10155]] we calculated that we can probably keep the
+video captures for a full release cycle. This will be refine is reality
+claims the contrary after an evaluation.
 
 # Scenarios
 
@@ -176,12 +176,12 @@ builds specification.
     And I need to know if my branch fails to pass the automated test
       suite because of an external change possibly weeks after my
       last commit (by e.g Debian changes, changes in branch B, ...)
-    And if my branch passes the automates test suite
+    And if my branch passes the automated test suite
       The resulting test logs must be made available to me
       The Redmine ticket should be notified
     Otherwise I *need* to see the build logs and screenshots
-      And the developer who proposed the merge must be notified
-      And the ticket should be reassigned to the branch submitter
+      And I must be notified
+      And the ticket should be reassigned to me if needed
       And QA check should be set to "Dev needed"
 
 
