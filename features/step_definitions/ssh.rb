@@ -98,24 +98,31 @@ Then /^I connect to an SFTP server on the Internet$/ do
 
   read_and_validate_ssh_config "SFTP"
 
-  @screen.wait_and_click("GnomePlaces.png", 20)
-  @screen.wait_and_click("GnomePlacesConnectToServer.png", 20)
-  @screen.wait("GnomeSSHConnect.png", 20)
-  @screen.click("GnomeSSHFTP.png")
-  @screen.click("GnomeSSHServerSSH.png")
-  @screen.type(Sikuli::Key.TAB, Sikuli::KeyModifier.SHIFT) # port
-  @screen.type(Sikuli::Key.TAB, Sikuli::KeyModifier.SHIFT) # host
-  @screen.type(@sftp_host + Sikuli::Key.TAB)
-
-  if @sftp_port
-    @screen.type("#{@sftp_port}" + Sikuli::Key.TAB)
-  else
-    @screen.type("22" + Sikuli::Key.TAB)
+  recovery_proc = Proc.new do
+    @screen.type(Sikuli::Key.ESC)
   end
-  @screen.type(Sikuli::Key.TAB) # type
-  @screen.type(Sikuli::Key.TAB) # folder
-  @screen.type(@sftp_username + Sikuli::Key.TAB)
-  @screen.wait_and_click("GnomeSSHConnectButton.png", 60)
+
+  retry_tor(recovery_proc) do
+    @screen.wait_and_click("GnomePlaces.png", 20)
+    @screen.wait_and_click("GnomePlacesConnectToServer.png", 20)
+    @screen.wait("GnomeSSHConnect.png", 20)
+    @screen.click("GnomeSSHFTP.png")
+    @screen.click("GnomeSSHServerSSH.png")
+    @screen.type(Sikuli::Key.TAB, Sikuli::KeyModifier.SHIFT) # port
+    @screen.type(Sikuli::Key.TAB, Sikuli::KeyModifier.SHIFT) # host
+    @screen.type(@sftp_host + Sikuli::Key.TAB)
+
+    if @sftp_port
+      @screen.type("#{@sftp_port}" + Sikuli::Key.TAB)
+    else
+      @screen.type("22" + Sikuli::Key.TAB)
+    end
+    @screen.type(Sikuli::Key.TAB) # type
+    @screen.type(Sikuli::Key.TAB) # folder
+    @screen.type(@sftp_username + Sikuli::Key.TAB)
+    @screen.wait_and_click("GnomeSSHConnectButton.png", 10)
+    step 'I verify the SSH fingerprint for the SFTP server'
+  end
 end
 
 Then /^I verify the SSH fingerprint for the SFTP server$/ do
