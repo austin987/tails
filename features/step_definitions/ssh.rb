@@ -88,7 +88,10 @@ When /^I connect to an SSH server on the Internet$/ do
 end
 
 Then /^I have sucessfully logged into the SSH server$/ do
-  @screen.wait('SSHLoggedInPrompt.png', 60)
+  @screen.waitAny(['SSHDenied.png', 'SSHLoggedInPrompt.png'], 60)
+  if @screen.exists('SSHDenied.png')
+    raise SSHConnectionError.new("Found 'SSHDenied.png' on the screen")
+  end
 end
 
 Then /^I connect to an SFTP server on the Internet$/ do
