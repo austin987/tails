@@ -51,7 +51,6 @@ Feature: Chatting anonymously using Pidgin
     When I say something to my friend
     Then I receive a response from my friend
 
-  # 10375 - Increase the number of Tor circuit retries in the test suite
   # 10376 - "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
   # 10443 - OFTC tests are fragile
   @check_tor_leaks @fragile

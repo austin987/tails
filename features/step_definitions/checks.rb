@@ -182,6 +182,28 @@ def get_seccomp_status(process)
   return status.match(/^Seccomp:\s+([0-9])/)[1].chomp.to_i
 end
 
+def get_apparmor_status(pid)
+  apparmor_status = $vm.file_content("/proc/#{pid}/attr/current").chomp
+  if apparmor_status.include?(')')
+    # matches something like     /usr/sbin/cupsd (enforce)
+    # and only returns what's in the parentheses
+    return apparmor_status.match(/[^\s]+\s+\((.+)\)$/)[1].chomp
+  else
+    return apparmor_status
+  end
+end
+
+Then /^the running process "(.+)" is confined with AppArmor in (complain|enforce) mode$/ do |process, mode|
+  if process == 'i2p'
+    $vm.execute_successfully('service i2p status')
+    pid = $vm.file_content('/run/i2p/i2p.pid').chomp
+  else
+    assert($vm.has_process?(process), "Process #{process} not running.")
+    pid = $vm.pidof(process)[0]
+  end
+  assert(mode, get_apparmor_status(pid))
+end
+
 Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mode$/ do |process,mode|
   status = get_seccomp_status(process)
   if mode == 'strict'
@@ -190,5 +212,37 @@ Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mo
     assert_equal(2, status, "#{process} not confined with Seccomp in filter mode")
   else
     raise "Unsupported mode #{mode} passed"
+  end
+end
+
+Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
+  secret_file = '/secret'
+  secret_contents = 'T0P S3Cr1t -- 3yEs oN1y'
+  $vm.file_append(secret_file, secret_contents)
+  $vm.execute_successfully("chmod u=rw,go= #{secret_file}")
+  $vm.execute_successfully("chown root:root #{secret_file}")
+  script_path = '/usr/local/sbin/tails-debugging-info'
+  script_lines = $vm.file_content(script_path).split("\n")
+  script_lines.grep(/^debug_file\s+/).each do |line|
+    _, user, debug_file = line.split
+    # root can always mount symlink attacks
+    next if user == 'root'
+    # Remove quoting around the file
+    debug_file.gsub!(/["']/, '')
+    # Skip files that do not exist, or cannot be removed (e.g. the
+    # ones in /proc).
+    next if not($vm.execute("rm #{debug_file}").success?)
+    # Check what would happen *if* the amnesia user managed to replace
+    # the debugging file with a symlink to the secret.
+    $vm.execute_successfully("ln -s #{secret_file} #{debug_file}")
+    $vm.execute_successfully("chown --no-dereference #{LIVE_USER}:#{LIVE_USER} #{debug_file}")
+    if $vm.execute("sudo /usr/local/sbin/tails-debugging-info | " +
+                   "grep '#{secret_contents}'",
+                   :user => LIVE_USER).success?
+      raise "The secret was leaked by tails-debugging-info via '#{debug_file}'"
+    end
+    # Remove the secret so it cannot possibly interfere with the
+    # following iterations (even though it should not).
+    $vm.execute_successfully("echo > #{debug_file}")
   end
 end

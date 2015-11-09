@@ -1,4 +1,4 @@
-@product
+@product @fragile
 Feature: Logging in via SSH
   As a Tails user
   When I connect to SSH servers on the Internet

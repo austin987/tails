@@ -17,7 +17,6 @@ Feature: Microsoft Windows Camouflage
     And I see "WindowsStartButton.png" after at most 10 seconds
     And I see "WindowsSysTrayGpgApplet.png" after at most 10 seconds
     And I see "WindowsSysTrayKeyboard.png" after at most 10 seconds
-    And I see "WindowsSysTraySound.png" after at most 10 seconds
 
   Scenario: Windows should appear like those in Microsoft Windows
     When I start the Tor Browser in offline mode
