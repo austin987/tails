@@ -23,9 +23,10 @@ ExecStartPre=/bin/sh -c 'if [ "${TAILS_NETCONF}" = "obstacle" ]; then     \
                             tor_set_in_torrc "DisableNetwork" "1"       ; \
                          fi'
 
+# We sync to make sure the blacklist has disappeared from the
+# filesystem
 ExecStart=/bin/sh -c \
     'if [ "${TAILS_NETCONF}" != "disabled" ]; then \
          /bin/rm -f /etc/modprobe.d/all-net-blacklist.conf ; \
-         # Make sure the blacklist has disappeared from the filesystem \
          /bin/sync ; \
      fi'
