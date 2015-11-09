@@ -493,7 +493,7 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually shuts down$/ do
-  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
+  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
   timeout = nr_gibs_of_ram*5*60
   try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
     ! $vm.is_running?
@@ -501,7 +501,7 @@ Then /^Tails eventually shuts down$/ do
 end
 
 Then /^Tails eventually restarts$/ do
-  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
+  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
   @screen.wait('TailsBootSplash.png', nr_gibs_of_ram*5*60)
 end
 
