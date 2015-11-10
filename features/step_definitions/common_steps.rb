@@ -55,10 +55,6 @@ def deactivate_filesystem_shares
   #end
 end
 
-def notification_popup_wait(notification_image, time_to_wait)
-  @screen.wait(notification_image, time_to_wait)
-end
-
 # This helper requires that the notification image is the one shown in
 # the notification applet's list, not the notification pop-up.
 def robust_notification_wait(notification_image, time_to_wait)
@@ -350,8 +346,7 @@ Then /^Tails seems to have booted normally$/ do
 end
 
 When /^I see the 'Tor is ready' notification$/ do
-  notification_popup_wait('GnomeTorIsReady.png', 300)
-  @screen.waitVanish("GnomeTorIsReady.png", 15)
+  robust_notification_wait('TorIsReadyNotification.png', 300)
 end
 
 Given /^Tor is ready$/ do

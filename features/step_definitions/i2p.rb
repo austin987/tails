@@ -71,7 +71,7 @@ Then /^the I2P homepage loads in I2P Browser$/ do
 end
 
 Then /^I see a notification that I2P failed to start$/ do
-  notification_popup_wait('I2PFailedToStart.png', 2 * 60)
+  robust_notification_wait('I2PFailedToStart.png', 2 * 60)
 end
 
 Then /^I2P successfully built a tunnel$/ do
@@ -81,5 +81,5 @@ Then /^I2P successfully built a tunnel$/ do
 end
 
 Then /^I see a notification that I2P is not ready$/ do
-  notification_popup_wait('I2PBootstrapFailure.png', 4 * 60)
+  robust_notification_wait('I2PBootstrapFailure.png', 4 * 60)
 end

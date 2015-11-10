@@ -1,6 +1,5 @@
 Then /^I see the (Unsafe|I2P) Browser start notification and wait for it to close$/ do |browser_type|
-  notification_popup_wait("#{browser_type}BrowserStartNotification.png", 30)
-  @screen.waitVanish("#{browser_type}BrowserStartNotification.png", 10)
+  robust_notification_wait("#{browser_type}BrowserStartNotification.png", 60)
 end
 
 Then /^the (Unsafe|I2P) Browser has started$/ do |browser_type|
@@ -28,8 +27,7 @@ When /^I close the (?:Unsafe|I2P) Browser$/ do
 end
 
 Then /^I see the (Unsafe|I2P) Browser stop notification$/ do |browser_type|
-  notification_popup_wait("#{browser_type}BrowserStopNotification.png", 20)
-  @screen.waitVanish("#{browser_type}BrowserStopNotification.png", 10)
+  robust_notification_wait("#{browser_type}BrowserStopNotification.png", 60)
 end
 
 def xul_application_info(application)
