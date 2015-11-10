@@ -6,6 +6,7 @@ CUSTOM_INITSCRIPTS="
 "
 
 PATCHED_INITSCRIPTS="
+alsa-utils
 gdomap
 haveged
 hdparm
@@ -86,3 +87,15 @@ systemctl mask hwclock-save.service
 
 # Do not run timesyncd: we have our own time synchronization mechanism
 systemctl mask systemd-timesyncd.service
+
+# Unmute and sanitize mixer levels at boot time
+# (`systemctl unmask` does not support initscripts on Jessie,
+# hence the manual unmasking)
+dpkg-divert --add --rename --divert \
+	    /lib/systemd/system/alsa-utils.service.orig \
+	    /lib/systemd/system/alsa-utils.service
+# Disable the ALSA state store/restore systemd services (that lack mixer
+# levels unmuting/sanitizing), we use the legacy initscript instead
+systemctl disable alsa-restore.service
+systemctl disable alsa-state.service
+systemctl disable alsa-store.service
