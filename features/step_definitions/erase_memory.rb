@@ -208,7 +208,7 @@ end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   $vm.spawn("halt")
-  nr_gibs_of_ram = (@detected_ram_m.to_f/(2**10)).ceil
+  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
   try_for(nr_gibs_of_ram*5*60, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
     # We spam keypresses to prevent console blanking from hiding the
     # image we're waiting for

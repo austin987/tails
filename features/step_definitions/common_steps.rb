@@ -493,7 +493,7 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually shuts down$/ do
-  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
+  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
   timeout = nr_gibs_of_ram*5*60
   try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
     ! $vm.is_running?
@@ -501,7 +501,7 @@ Then /^Tails eventually shuts down$/ do
 end
 
 Then /^Tails eventually restarts$/ do
-  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
+  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
   @screen.wait('TailsBootSplash.png', nr_gibs_of_ram*5*60)
 end
 
@@ -640,7 +640,7 @@ def is_persistent?(app)
   conf = get_persistence_presets(true)["#{app}"]
   c = $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'")
   # This check assumes that we haven't enabled read-only persistence.
-  c.success? and c.stdout != "aufs"
+  c.success? and c.stdout.chomp != "aufs"
 end
 
 Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
