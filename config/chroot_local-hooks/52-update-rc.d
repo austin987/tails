@@ -96,6 +96,6 @@ dpkg-divert --add --rename --divert \
 	    /lib/systemd/system/alsa-utils.service
 # Disable the ALSA state store/restore systemd services (that lack mixer
 # levels unmuting/sanitizing), we use the legacy initscript instead
-systemctl disable alsa-restore.service
-systemctl disable alsa-state.service
-systemctl disable alsa-store.service
+systemctl mask alsa-restore.service
+systemctl mask alsa-state.service
+systemctl mask alsa-store.service
