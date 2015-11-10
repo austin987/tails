@@ -109,7 +109,7 @@ export:
        ) && \
        git commit po -m 'Update POT and PO files.' && \
     git tag \
-       -s "$PKG_NAME_$NEW_UPSTREAM_VERSION" \
+       -s "${PKG_NAME}_${NEW_UPSTREAM_VERSION}" \
        -m "Releasing Tails Installer $NEW_UPSTREAM_VERSION" && \
     git push origin "$UPSTREAM_DEV_BRANCH" && \
     git push origin --tags
@@ -120,8 +120,8 @@ export:
 
     mkdir -p ../tarballs && \
     git archive \
-       --prefix="$PKG_NAME-$NEW_UPSTREAM_VERSION/" \
-       --output="../tarballs/$PKG_NAME_$NEW_UPSTREAM_VERSION.tar.gz" \
+       --prefix="{$PKG_NAME}-${NEW_UPSTREAM_VERSION}/" \
+       --output="../tarballs/${PKG_NAME}_${NEW_UPSTREAM_VERSION}.tar.gz" \
        "$UPSTREAM_DEV_BRANCH"
 
 <a id="tails-package"></a>
@@ -157,10 +157,10 @@ imported the current DFSG-free upstream tarball into the
 	   -C ../tarballs \
 	   --version "$NEW_UPSTREAM_VERSION+dfsg" \
 	   --copy \
-	   ../tarballs/$PKG_NAME_$NEW_UPSTREAM_VERSION.tar.gz && \
+	   ../tarballs/${PKG_NAME}_${NEW_UPSTREAM_VERSION}.tar.gz && \
 	gbp import-orig \
 	   --upstream-vcs-tag="tails-installer_$NEW_UPSTREAM_VERSION" \
-	   ../tarballs/$PKG_NAME_$NEW_UPSTREAM_VERSION+dfsg.orig.tar.gz
+	   ../tarballs/${PKG_NAME}_${NEW_UPSTREAM_VERSION}+dfsg.orig.tar.gz
 
 Update `debian/changelog`:
 
