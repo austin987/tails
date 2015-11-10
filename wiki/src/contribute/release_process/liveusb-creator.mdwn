@@ -1,4 +1,4 @@
-[[!meta title="Releasing liveusb-creator"]]
+[[!meta title="Releasing tails-installer"]]
 
 [[!toc levels=3]]
 
@@ -12,6 +12,10 @@ For this package, "upstream" means, from a Debian packaging
 point-of-view, the state of our upstream branches. Let's not pretend we
 have not forked liveusb-creator, and admit we are now upstream for our
 own version.
+
+_Note:_ from version 4.x on, liveusb-creator has been renamed to 
+tails-installer. This is the version we will release to Tails/Jessie,
+Debian and Ubuntu.
 
 The `master` branch must always be the one that targets current Tails.
 That's what we have always done, and right
@@ -60,7 +64,8 @@ targeted at current Tails, as said above. More specifically:
   Tails/Wheezy will never be uploaded to Debian.
 * Additionally, we use `tails/$feature` branches for other Tails-specific packaging branches.
 * The `upstream/3.x+dfsg`, `upstream/4.x+dfsg`, etc. branches are what we tell `gbp`
-  to use as its "upstream" branch.
+  to use as its "upstream" branch. Make sure to check them out when setting up the repository
+  for the first time.
 
 Topic branches
 --------------
@@ -90,6 +95,7 @@ export:
 
     export NEW_UPSTREAM_VERSION=3.replace_me
     export UPSTREAM_DEV_BRANCH=master
+    export PKG_NAME=tails-installer (or liveusb-creator for versions <4)
 
 <a id="upstream-tag"></a>
 
@@ -99,11 +105,11 @@ export:
     ./setup.py build && \
        (cd po && \
            for po in *.po ; do msgmerge --update "$po" \
-           liveusb-creator.pot ; done \
+           "$PKG_NAME.pot" ; done \
        ) && \
        git commit po -m 'Update POT and PO files.' && \
     git tag \
-       -s "tails-installer_$NEW_UPSTREAM_VERSION" \
+       -s "$PKG_NAME_$NEW_UPSTREAM_VERSION" \
        -m "Releasing Tails Installer $NEW_UPSTREAM_VERSION" && \
     git push origin "$UPSTREAM_DEV_BRANCH" && \
     git push origin --tags
@@ -114,8 +120,8 @@ export:
 
     mkdir -p ../tarballs && \
     git archive \
-       --prefix="liveusb-creator-$NEW_UPSTREAM_VERSION/" \
-       --output="../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION.tar.gz" \
+       --prefix="$PKG_NAME-$NEW_UPSTREAM_VERSION/" \
+       --output="../tarballs/$PKG_NAME_$NEW_UPSTREAM_VERSION.tar.gz" \
        "$UPSTREAM_DEV_BRANCH"
 
 <a id="tails-package"></a>
@@ -151,10 +157,10 @@ imported the current DFSG-free upstream tarball into the
 	   -C ../tarballs \
 	   --version "$NEW_UPSTREAM_VERSION+dfsg" \
 	   --copy \
-	   ../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION.tar.gz && \
+	   ../tarballs/$PKG_NAME_$NEW_UPSTREAM_VERSION.tar.gz && \
 	gbp import-orig \
 	   --upstream-vcs-tag="tails-installer_$NEW_UPSTREAM_VERSION" \
-	   ../tarballs/liveusb-creator_$NEW_UPSTREAM_VERSION+dfsg.orig.tar.gz
+	   ../tarballs/$PKG_NAME_$NEW_UPSTREAM_VERSION+dfsg.orig.tar.gz
 
 Update `debian/changelog`:
 
