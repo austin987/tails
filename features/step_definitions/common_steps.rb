@@ -419,12 +419,16 @@ Given /^all notifications have disappeared$/ do
   next if not(@screen.exists("#{theme_prefix}NotificationApplet.png"))
   @screen.click("#{theme_prefix}NotificationApplet.png")
   @screen.wait("#{theme_prefix}NotificationAppletOpened.png", 10)
-  entries = @screen.findAll("#{theme_prefix}NotificationEntry.png")
-  while(entries.hasNext) do
-    entry = entries.next
-    @screen.hide_cursor
-    @screen.click(entry)
-    @screen.wait_and_click("#{theme_prefix}NotificationEntryClose.png", 10)
+  begin
+    entries = @screen.findAll("#{theme_prefix}NotificationEntry.png")
+    while(entries.hasNext) do
+      entry = entries.next
+      @screen.hide_cursor
+      @screen.click(entry)
+      @screen.wait_and_click("#{theme_prefix}NotificationEntryClose.png", 10)
+    end
+  rescue FindFailed
+    # No notifications, so we're good to go.
   end
   @screen.hide_cursor
   # Click anywhere to close the notification applet
