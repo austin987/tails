@@ -47,6 +47,12 @@ Update Tor Browser preferences
 * update `extensions.adblockplus.currentVersion` in
   `config/chroot_local-includes/etc/tor-browser/profile/preferences/0000tails.js`
 
+Update Icedove preferences
+------------------------------
+
+* update `extensions.enigmail.configuredVersion` in
+  `config/chroot_local-includes/etc/skel/.icedove/profile.default/preferences/0000tails.js`
+
 Coordinate with Debian security updates
 ---------------------------------------
 
@@ -237,7 +243,7 @@ Update other base branches
    that `tails-merge-suite` currently happily overwrites newer
    packages in the target with older packages from the source, it's
    probably easier to just merge each individual APT overlay that was
-   just merged into the release branch into `feautre/jessie`'s APT
+   just merged into the release branch into `feature/jessie`'s APT
    suite. Also, most of our just upgraded bundled packages
    (e.g. `tails-greeter`) may need to be rebuilt for Jessie.
 
@@ -696,8 +702,8 @@ ISO history
 -----------
 
 Push the released ISO to our Tails ISO history git-annex repo, so that
-our isotesters can fetch it from there and not fail to test because of
-it missing. How to do it is described in our internal Git repo.
+our isotesters can fetch it from there for their testing. How to do so
+is described in our internal Git repo.
 
 Update the website and Git repository
 =====================================
@@ -741,18 +747,11 @@ to be released in `inc/*`:
 
 Update the size of the ISO image in `inc/*`:
 
-	LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mb.mdwn"
-	LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\2B/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mb_unit.mdwn"
-	LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib.mdwn"
-	LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\2iB/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib_unit.mdwn"
+	MB=$(LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' | tr -d '\n')
+	MiB=$(LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+          cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' | tr -d '\n')
+	echo "($MB/$MiB)" > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
 
 Update the [[support/known_issues]] page:
 

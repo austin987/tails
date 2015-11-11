@@ -31,8 +31,13 @@ class Display
   end
 
   def stop
+    return if @virtviewer.nil?
     Process.kill("TERM", @virtviewer.pid)
     @virtviewer.close
+  rescue IOError
+    # IO.pid throws this if the process wasn't started yet. Possibly
+    # there's a race when doing a start() and then quickly running
+    # stop().
   end
 
   def restart
