@@ -34,25 +34,23 @@ def xul_application_info(application)
   binary = $vm.execute_successfully(
     'echo ${TBB_INSTALL}/firefox', :libs => 'tor-browser'
   ).stdout.chomp
+  address_bar_image = "BrowserAddressBar.png"
   case application
   when "Tor Browser"
     user = LIVE_USER
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
     chroot = ""
     new_tab_button_image = "TorBrowserNewTabButton.png"
-    address_bar_image = "TorBrowserAddressBar.png"
   when "Unsafe Browser"
     user = "clearnet"
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
     chroot = "/var/lib/unsafe-browser/chroot"
     new_tab_button_image = "UnsafeBrowserNewTabButton.png"
-    address_bar_image = "UnsafeBrowserAddressBar.png"
   when "I2P Browser"
     user = "i2pbrowser"
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.i2p-browser/profile\.default"
     chroot = "/var/lib/i2p-browser/chroot"
-    new_tab_button_image = nil
-    address_bar_image = nil
+    new_tab_button_image = "I2PBrowserNewTabButton.png"
   when "Tor Launcher"
     user = "tor-launcher"
     cmd_regex = "#{binary} -app /home/#{user}/\.tor-launcher/tor-launcher-standalone/application\.ini"
