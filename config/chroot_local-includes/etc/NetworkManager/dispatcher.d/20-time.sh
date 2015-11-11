@@ -171,7 +171,7 @@ maybe_set_time_from_tor_consensus() {
 	date -us "${vmid}" 1>/dev/null
 
 	# Tor is unreliable with picking a circuit after time change
-	service tor restart
+	systemctl restart tor@default.service
 }
 
 tor_cert_valid_after() {
@@ -231,7 +231,7 @@ else
 	if is_clock_way_off; then
 		log "The clock is so badly off that Tor cannot download a consensus. Setting system time to the authority's cert's valid-after date and trying to fetch a consensus again..."
 		date --set="$(tor_cert_valid_after)" > /dev/null
-		service tor reload
+		systemctl reload tor@default.service
 	fi
 	wait_for_tor_consensus
 	maybe_set_time_from_tor_consensus

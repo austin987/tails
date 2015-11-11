@@ -112,8 +112,8 @@ def post_snapshot_restore_hook
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
   if $vm.has_network?
-    if $vm.execute("service tor status").success?
-      $vm.execute("service tor stop")
+    if $vm.execute("systemctl --quiet is-active tor@default.service").success?
+      $vm.execute("systemctl stop tor@default.service")
       $vm.execute("rm -f /var/log/tor/log")
       $vm.host_to_guest_time_sync
       $vm.spawn("restart-tor")

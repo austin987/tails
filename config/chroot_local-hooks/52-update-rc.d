@@ -59,7 +59,12 @@ systemctl --global enable tails-warn-about-disabled-persistence.service
 systemctl disable cups.service
 systemctl enable  cups.socket
 
-# We're starting NetworkManager and Tor ourselves
+# We're starting NetworkManager and Tor ourselves.
+# We disable tor.service (as opposed to tor@default.service) because
+# it's an important goal to never start Tor before the user has had
+# a chance to choose to do so in an obfuscated way: if some other
+# package enables tor@whatever.service someday, disabling tor.service
+#  will disable it as well, while disabling tor@default.service would not.
 systemctl disable tor.service
 systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service

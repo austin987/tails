@@ -20,7 +20,7 @@ fi
 . /usr/local/lib/tails-shell-library/tails-greeter.sh
 
 # It's safest that Tor is not running when messing with its logs.
-service tor stop
+systemctl stop tor@default.service
 
 # We depend on grepping stuff from the Tor log (especially for
 # tordate/20-time.sh), so deleting it seems like a Good Thing(TM).
@@ -50,7 +50,7 @@ if [ "$(tails_netconf)" = "obstacle" ]; then
     # We do not use restart-tor since it validates that bootstraping
     # succeeds. That cannot happen until Tor Launcher has started
     # (below) and the user is done configuring it.
-    service tor restart
+    systemctl restart tor@default.service
 
     # When using a bridge Tor reports TLS cert lifetime errors
     # (e.g. when the system clock is way off) with severity "info", but
