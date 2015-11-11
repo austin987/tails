@@ -122,7 +122,7 @@ Feature: Installing Tails to a USB drive
     And I start Tails from DVD with network unplugged and I login
     And I try a "Clone & Upgrade" Tails to USB drive "isohybrid"
     Then I am suggested to do a "Clone & Install"
-    When I kill the process "liveusb-creator"
+    When I kill the process "tails-installer"
     And I "Clone & Install" Tails to USB drive "isohybrid"
     Then the running Tails is installed on USB drive "isohybrid"
     But there is no persistence partition on USB drive "isohybrid"
