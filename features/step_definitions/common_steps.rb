@@ -55,50 +55,44 @@ def deactivate_filesystem_shares
   #end
 end
 
-def notification_popup_wait(notification_image, time_to_wait)
-  # notification-daemon may abort during start-up, causing the tests that look for
-  # desktop notifications to fail (ticket #8686)
-  begin
-    @screen.wait(notification_image, time_to_wait)
-  rescue FindFailed => e
-    step 'process "notification-daemon" is running'
-    raise e
-  end
-end
-
 # This helper requires that the notification image is the one shown in
 # the notification applet's list, not the notification pop-up.
 def robust_notification_wait(notification_image, time_to_wait)
-  error_msg = "Didn't not see notification '#{notification_image}'"
+  theme_prefix = @theme.capitalize
+
+  error_msg = "Didn't not manage to open the notification applet"
+  wait_start = Time.now
   try_for(time_to_wait, :delay => 0, :msg => error_msg) do
     @screen.hide_cursor
-    @screen.click('GnomeNotificationApplet.png')
-    # Sanity check that the applet's list of notifications were
-    # opened. Sometimes the applet is moved when other systray
-    # elements are added, causing a race between Sikuli's mouse
-    # movement and the appearance of the new element.
-    @screen.wait('GnomeNotificationAppletClearAllButton.png', 5)
-    begin
-      return @screen.find(notification_image)
-    rescue FindFailed => e
-      # It could be that too many notifications are in the list, so
-      # the one we're looking for is not visible. Let's clear one
-      # notification and retry by re-raising the exception we just
-      # caught. This should not interfere with anything except if we
-      # later are interested in any of these older notifications that
-      # we may close.
-      # It's worth noting that the "close button" picture below has
-      # carefully been sized to include more than just the close
-      # button, so much that it ensures that the notification header
-      # must also be shown. That way we won't close any half-seen
-      # notification that may be the one we're looking for.
-      @screen.click('GnomeNotificationAppletCloseButton.png')
-      raise e
-    end
+    @screen.click("#{theme_prefix}NotificationApplet.png")
+    @screen.wait("#{theme_prefix}NotificationAppletOpened.png", 10)
   end
-rescue Timeout::Error => e
-  step 'process "notification-daemon" is running'
-  raise e
+
+  error_msg = "Didn't not see notification '#{notification_image}'"
+  time_to_wait -= (Time.now - wait_start).ceil
+  try_for(time_to_wait, :delay => 0, :msg => error_msg) do
+    found = false
+    entries = @screen.findAll("#{theme_prefix}NotificationEntry.png")
+    while(entries.hasNext) do
+      entry = entries.next
+      @screen.hide_cursor
+      @screen.click(entry)
+      close_entry = @screen.wait("#{theme_prefix}NotificationEntryClose.png", 10)
+      if @screen.exists(notification_image)
+        found = true
+        @screen.click(close_entry)
+        break
+      else
+        @screen.click(entry)
+      end
+    end
+    found
+  end
+
+  # Click anywhere to close the notification applet
+  @screen.hide_cursor
+  @screen.click("#{theme_prefix}ApplicationsMenu.png")
+  @screen.hide_cursor
 end
 
 def post_snapshot_restore_hook
@@ -352,8 +346,7 @@ Then /^Tails seems to have booted normally$/ do
 end
 
 When /^I see the 'Tor is ready' notification$/ do
-  notification_popup_wait('GnomeTorIsReady.png', 300)
-  @screen.waitVanish("GnomeTorIsReady.png", 15)
+  robust_notification_wait('TorIsReadyNotification.png', 300)
 end
 
 Given /^Tor is ready$/ do
@@ -422,13 +415,21 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  case @theme
-  when "windows"
-    notification_picture = "WindowsNotificationX.png"
-  else
-    notification_picture = "GnomeNotificationX.png"
+  theme_prefix = @theme.capitalize
+  next if not(@screen.exists("#{theme_prefix}NotificationApplet.png"))
+  @screen.click("#{theme_prefix}NotificationApplet.png")
+  @screen.wait("#{theme_prefix}NotificationAppletOpened.png", 10)
+  entries = @screen.findAll("#{theme_prefix}NotificationEntry.png")
+  while(entries.hasNext) do
+    entry = entries.next
+    @screen.hide_cursor
+    @screen.click(entry)
+    @screen.wait_and_click("#{theme_prefix}NotificationEntryClose.png", 10)
   end
-  @screen.waitVanish(notification_picture, 60)
+  @screen.hide_cursor
+  # Click anywhere to close the notification applet
+  @screen.click("#{theme_prefix}ApplicationsMenu.png")
+  @screen.hide_cursor
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|

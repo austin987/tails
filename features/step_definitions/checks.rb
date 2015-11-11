@@ -101,16 +101,6 @@ When /^Tails has booted a 64-bit kernel$/ do
          "Tails has not booted a 64-bit kernel.")
 end
 
-Then /^GNOME Screenshot is configured to save files to the live user's Pictures directory$/ do
-  pictures_directory = "/home/#{LIVE_USER}/Pictures"
-  save_path = $vm.execute_successfully(
-    "gsettings get org.gnome.gnome-screenshot auto-save-directory",
-    :user => LIVE_USER
-  ).stdout.chomp.tr("'","")
-  assert_equal("file://#{pictures_directory}", save_path,
-               "The GNOME screenshot auto-save-directory is not set correctly.")
-end
-
 Then /^there is no screenshot in the live user's Pictures directory$/ do
   pictures_directory = "/home/#{LIVE_USER}/Pictures"
   assert($vm.execute(

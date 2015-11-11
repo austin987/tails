@@ -6,10 +6,6 @@ Feature: Various checks
     Then AppArmor is enabled
     And some AppArmor profiles are enforced
 
-  Scenario: GNOME Screenshot has a sane default save directory
-    Given I have started Tails from DVD without network and logged in
-    Then GNOME Screenshot is configured to save files to the live user's Pictures directory
-
   Scenario: A screenshot is taken when the PRINTSCREEN key is pressed
     Given I have started Tails from DVD without network and logged in
     And there is no screenshot in the live user's Pictures directory

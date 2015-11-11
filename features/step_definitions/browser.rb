@@ -1,6 +1,5 @@
 Then /^I see the (Unsafe|I2P) Browser start notification and wait for it to close$/ do |browser_type|
-  notification_popup_wait("#{browser_type}BrowserStartNotification.png", 30)
-  @screen.waitVanish("#{browser_type}BrowserStartNotification.png", 10)
+  robust_notification_wait("#{browser_type}BrowserStartNotification.png", 60)
 end
 
 Then /^the (Unsafe|I2P) Browser has started$/ do |browser_type|
@@ -28,33 +27,30 @@ When /^I close the (?:Unsafe|I2P) Browser$/ do
 end
 
 Then /^I see the (Unsafe|I2P) Browser stop notification$/ do |browser_type|
-  notification_popup_wait("#{browser_type}BrowserStopNotification.png", 20)
-  @screen.waitVanish("#{browser_type}BrowserStopNotification.png", 10)
+  robust_notification_wait("#{browser_type}BrowserStopNotification.png", 60)
 end
 
 def xul_application_info(application)
   binary = $vm.execute_successfully(
     'echo ${TBB_INSTALL}/firefox', :libs => 'tor-browser'
   ).stdout.chomp
+  address_bar_image = "BrowserAddressBar.png"
   case application
   when "Tor Browser"
     user = LIVE_USER
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
     chroot = ""
     new_tab_button_image = "TorBrowserNewTabButton.png"
-    address_bar_image = "TorBrowserAddressBar.png"
   when "Unsafe Browser"
     user = "clearnet"
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
     chroot = "/var/lib/unsafe-browser/chroot"
     new_tab_button_image = "UnsafeBrowserNewTabButton.png"
-    address_bar_image = "UnsafeBrowserAddressBar.png"
   when "I2P Browser"
     user = "i2pbrowser"
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.i2p-browser/profile\.default"
     chroot = "/var/lib/i2p-browser/chroot"
-    new_tab_button_image = nil
-    address_bar_image = nil
+    new_tab_button_image = "I2PBrowserNewTabButton.png"
   when "Tor Launcher"
     user = "tor-launcher"
     cmd_regex = "#{binary} -app /home/#{user}/\.tor-launcher/tor-launcher-standalone/application\.ini"
