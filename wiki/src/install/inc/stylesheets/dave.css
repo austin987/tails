@@ -1,0 +1,94 @@
+/*
+Hide every div in the #download-and-verify box except #undetected-browser,
+to set the baseline as a Javascript-disabled fallback.
+*/
+#download-and-verify > :not(#undetected-browser),
+#use-button,
+html:not([data-phase^="download"]) #download > :not(#download-button),
+#download-button-state,
+#download-text-state,
+#download-message
+{ display: none }
+
+html:not([data-phase="ready"]) #download-and-verify #use-button { display: none !important;}
+
+html[data-phase^="verif"] #download-and-verify #download,
+html[data-phase^="downl"] #download-and-verify #download
+{
+  display: block;
+  opacity: 1
+}
+
+/*
+The browser-sniffing script in dave.js sets the data-browser attribute
+on the ancestor <html> element to either:
+
+1. "unsupported", if neither Chrome, Tor Browser or Firefox has been detected
+2. "sb-chrome" or "sb-firefox" otherwise
+
+The extension, if enabled, sets the data-extension attribute
+on the ancestor <html> element to either:not(
+- "ok" if the version is equal on higher than the content of #extension-version
+- "old" otherwise
+
+We use these two attributes to as a CSS filter to hide or show the relevant
+UI elements inside the #download-and-verify container.
+*/
+[data-browser] #download-and-verify #undetected-browser,
+[data-extension] #download-and-verify #undetected-browser
+{ display: none !important }
+
+[data-browser="unsupported"] #unsupported-browser,
+[data-browser^="sb-"] #supported-browser,
+[data-extension] #supported-browser
+{ display: block !important }
+
+html:not([data-extension]) #supported-browser > :not(#install),
+[data-extension="old"] #supported-browser > :not(#update),
+[data-extension="ok"] #supported-browser > :not(#use)
+{ display: none }
+
+.chrome-unsupported .chrome-browser { display: none }
+
+/*
+Show only the buttons initially
+*/
+#supported-browser [id$="-text"]
+{ display: none; }
+
+/*
+Extension's toggles
+*/
+[data-extension="ok"] #download-and-verify .dave-show
+{ display: block !important }
+
+[data-extension="ok"] #download-and-verify .dave-hide
+{ display: none !important }
+
+#download {
+  opacity: 0;
+}
+#download.dave-show {
+  opacity: 1;
+  transition: opacity: 1s;
+}
+
+#download-progress {
+  width: 100%;
+}
+
+[data-phase^="download"] #download-button
+{ display: none }
+
+html[data-phase^="download"]  #download-and-verify #download,
+[data-phase^="download"] #download-text,
+{ display: block !important}
+
+
+
+.dave-show {
+  display: initial !important;
+}
+.dave-hide {
+  display: none !important;
+}
