@@ -60,6 +60,11 @@ When /^the GnuPG fetch is successful$/ do
          "gpg keyserver fetch failed:\n#{@gnupg_recv_key_res.stderr}")
 end
 
+When /^the Seahorse operation is successful$/ do
+  !@screen.exists('GnomeCloseButton.png')
+  $vm.has_process?('seahorse')
+end
+
 When /^GnuPG uses the configured keyserver$/ do
   assert(@gnupg_recv_key_res.stderr[CONFIGURED_KEYSERVER_HOSTNAME],
          "GnuPG's stderr did not mention keyserver #{CONFIGURED_KEYSERVER_HOSTNAME}")
