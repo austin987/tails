@@ -70,8 +70,9 @@ When /^GnuPG uses the configured keyserver$/ do
          "GnuPG's stderr did not mention keyserver #{CONFIGURED_KEYSERVER_HOSTNAME}")
 end
 
-When /^the "([^"]+)" key is in the live user's public keyring after at most (\d+) seconds$/ do |keyid, delay|
-  try_for(delay.to_f, :msg => "The '#{keyid}' key is not in the live user's public keyring") {
+When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (\d) seconds)?$/ do |keyid, delay|
+  delay = 10 unless delay
+  try_for(delay.to_i, :msg => "The '#{keyid}' key is not in the live user's public keyring") {
     $vm.execute("gpg --batch --list-keys '#{keyid}'",
                 :user => LIVE_USER).success?
   }
