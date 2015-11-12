@@ -7,6 +7,14 @@ def count_gpg_signatures(key)
   return output.scan(/^sig/).count
 end
 
+def check_for_seahorse_error
+  if @screen.exists('GnomeCloseButton.png')
+    raise OpenPGPKeyserverCommunicationError.new(
+      "Found GnomeCloseButton.png' on the screen"
+    )
+  end
+end
+
 def start_or_restart_seahorse(withapplet = nil)
   if withapplet
     seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
@@ -138,11 +146,7 @@ Then /^I synchronize keys in Seahorse$/ do
     try_for(120) {
       act_on_change_of_seahorse_status
     }
-    if @screen.exists('GnomeCloseButton.png')
-        raise OpenPGPKeyserverCommunicationError.new(
-          "Found GnomeCloseButton.png' on the screen"
-        )
-    end
+    check_for_seahorse_error
     raise OpenPGPKeyserverCommunicationError.new(
       'Seahorse crashed with a segfault.') unless $vm.has_process?('seahorse')
    end
@@ -177,14 +181,11 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
       # to continue normally.
       @screen.click("SeahorseSearch.png")
     end
-    if @screen.exists('GnomeCloseButton.png')
-        raise OpenPGPKeyserverCommunicationError.new(
-          "Found GnomeCloseButton.png' on the screen"
-        )
-    end
+    check_for_seahorse_error
     @screen.click("SeahorseKeyResultWindow.png")
     @screen.click("SeahorseFoundKeyResult.png")
     @screen.click("SeahorseImport.png")
+    check_for_seahorse_error
   end
 end
 
