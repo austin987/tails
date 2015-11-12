@@ -7,6 +7,15 @@ def count_gpg_signatures(key)
   return output.scan(/^sig/).count
 end
 
+def start_or_restart_seahorse(withapplet = nil)
+  if withapplet
+    seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
+  else
+    step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
+  end
+  step 'Seahorse has opened'
+end
+
 Then /^the key "([^"]+)" has (only|more than) (\d+) signatures$/ do |key, qualifier, num|
   count = count_gpg_signatures(key)
   case qualifier
@@ -65,10 +74,9 @@ end
 
 When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
   if withgpgapplet
-    seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
-  else
-    step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
+    @withgpgapplet = 'yes'
   end
+  start_or_restart_seahorse(@withgpgapplet)
 end
 
 Then /^Seahorse has opened$/ do
@@ -110,11 +118,9 @@ end
 
 When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP Applet)?$/ do |keyid, withgpgapplet|
   if withgpgapplet
-    step "I start Seahorse via the Tails OpenPGP Applet"
-  else
-    step "I start Seahorse"
+    @withgpgapplet = 'yes'
   end
-  step "Seahorse has opened"
+  start_or_restart_seahorse(@withgpgapplet)
 
   recovery_proc = Proc.new do
     @screen.wait_and_click('GnomeCloseButton.png', 20)
