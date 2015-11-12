@@ -95,25 +95,51 @@ end
 
 Then /^I synchronize keys in Seahorse$/ do
   recovery_proc = Proc.new do
-    @screen.wait_and_click('GnomeCloseButton.png', 20)
-    if @screen.exists('SeahorseSynchronizing.png')
-      # Seahorse is likely to segfault if we end up here.
-      @screen.click('SeahorseSynchronizing.png')
-      @screen.type(Sikuli::Key.ESC)
+    # The versions of Seahorse in Wheezy and Jessie will abort with a
+    # segmentation fault whenever there's any sort of network error while
+    # syncing keys. This will usually happens after clicking away the error
+    # mesasge. This does not appear to be a problem in Stretch.
+    #
+    # We'll kill the Seahorse process to avoid waiting for the inevitable
+    # segfault. We'll also make sure the process is still running (=  hasn't
+    # yet segfaulted) before terminating it.
+    if @screen.exists('GnomeCloseButton.png') || !$vm.has_process?('seahorse')
+      step 'I kill the process "seahorse"' if $vm.has_process?('seahorse')
+      debug_log('Restarting Seahorse.')
+      start_or_restart_seahorse(@withgpgapplet)
     end
-    @screen.wait('SeahorseWindow.png', 20)
   end
+
+  def act_on_change_of_seahorse_status
+    # Due to a lack of visual feedback in Seahorse we'll break out of the
+    # try_for loop below by returning "true" when there's something we can act
+    # upon.
+    if count_gpg_signatures(@keyid) > 2 || \
+      @screen.exists('GnomeCloseButton.png')  || \
+      !$vm.has_process?('seahorse')
+        true
+    end
+  end
+
   retry_tor(recovery_proc) do
-    step 'process "seahorse" is running'
     @screen.wait_and_click("SeahorseWindow.png", 10)
     seahorse_menu_click_helper('SeahorseRemoteMenu.png',
                                'SeahorseRemoteMenuSync.png',
                                'seahorse')
     @screen.wait('SeahorseSyncKeys.png', 20)
     @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
-    @screen.wait('SeahorseSynchronizing.png', 20)
-    @screen.wait('SeahorseWindow.png', 5*60)
-  end
+    # There's no visual feedback of Seahorse in Tails/Jessie, except on error.
+    try_for(5*60) {
+      act_on_change_of_seahorse_status
+    }
+    if @screen.exists('GnomeCloseButton.png')
+        raise OpenPGPKeyserverCommunicationError.new(
+          "Found GnomeCloseButton.png' on the screen"
+        )
+    end
+    raise OpenPGPKeyserverCommunicationError.new(
+      'Seahorse crashed with a segfault.') unless $vm.has_process?('seahorse')
+   end
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP Applet)?$/ do |keyid, withgpgapplet|
