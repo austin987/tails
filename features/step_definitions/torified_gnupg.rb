@@ -45,7 +45,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
   end
   retry_tor do
     @gnupg_recv_key_res = $vm.execute_successfully(
-      "gpg --batch #{importopts} --recv-key '#{@keyid}'",
+      "timeout 120 gpg --batch #{importopts} --recv-key '#{@keyid}'",
       :user => LIVE_USER)
     if @gnupg_recv_key_res.failure?
       raise "Fetching keys with the GnuPG CLI failed with:\n" +
