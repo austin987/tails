@@ -162,13 +162,19 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
     # Seahorse doesn't seem to support searching for fingerprints
     @screen.type(keyid + Sikuli::Key.ENTER)
     begin
-      @screen.wait('SeahorseFoundKeyResult.png', 5*60)
-    rescue FindFailed
+      @screen.waitAny(['SeahorseFoundKeyResult.png',
+                       'GnomeCloseButton.png'], 5*60)
+    rescue FindAnyFailed
       # We may end up here if Seahorse appears to be "frozen".
       # Sometimes--but not always--if we click another window
       # the main Seahorse window will unfreeze, allowing us
       # to continue normally.
       @screen.click("SeahorseSearch.png")
+    end
+    if @screen.exists('GnomeCloseButton.png')
+        raise OpenPGPKeyserverCommunicationError.new(
+          "Found GnomeCloseButton.png' on the screen"
+        )
     end
     @screen.click("SeahorseKeyResultWindow.png")
     @screen.click("SeahorseFoundKeyResult.png")
