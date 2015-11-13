@@ -209,5 +209,5 @@ Then /^Seahorse is configured to use the correct keyserver$/ do
   assert_equal(1, @gnome_keyservers.count, 'Seahorse should only have one keyserver configured.')
   # Seahorse doesn't support hkps so that part of the domain is stripped out.
   # We also insert hkp:// to the beginning of the domain.
-  assert_equal(CONFIGURED_KEYSERVER_HOSTNAME.gsub('hkps.', 'hkp://'), @gnome_keyservers[0])
+  assert_equal(CONFIGURED_KEYSERVER_HOSTNAME.sub('hkps.', 'hkp://'), @gnome_keyservers[0])
 end
