@@ -158,8 +158,19 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
   end
   start_or_restart_seahorse(@withgpgapplet)
 
+  def act_on_change_of_seahorse_status(keyid)
+    # Due to a lack of visual feedback in Seahorse we'll break out of the
+    # try_for loop below by returning "true" when there's something we can act
+    # upon.
+    if $vm.execute_successfully(
+      "gpg --batch --list-keys '#{keyid}'", :user => LIVE_USER) ||
+      @screen.exists('GnomeCloseButton.png')
+      true
+    end
+  end
+
   recovery_proc = Proc.new do
-    @screen.wait_and_click('GnomeCloseButton.png', 20)
+    @screen.click('GnomeCloseButton.png') if @screen.exists('GnomeCloseButton.png')
     @screen.type(Sikuli::Key.ESC)
     @screen.type("w", Sikuli::KeyModifier.CTRL)
   end
@@ -185,6 +196,9 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
     @screen.click("SeahorseKeyResultWindow.png")
     @screen.click("SeahorseFoundKeyResult.png")
     @screen.click("SeahorseImport.png")
+    try_for(120) do
+      act_on_change_of_seahorse_status(keyid)
+    end
     check_for_seahorse_error
   end
 end
