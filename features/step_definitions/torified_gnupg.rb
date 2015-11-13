@@ -4,7 +4,7 @@ end
 def count_gpg_signatures(key)
   output = $vm.execute_successfully("gpg --batch --list-sigs #{key}",
                                     :user => LIVE_USER).stdout
-  return output.scan(/^sig/).count
+  output.scan(/^sig/).count
 end
 
 def check_for_seahorse_error
