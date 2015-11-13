@@ -129,7 +129,7 @@ Then /^I synchronize keys in Seahorse$/ do
     @screen.wait('SeahorseSyncKeys.png', 20)
     @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
     # There's no visual feedback of Seahorse in Tails/Jessie, except on error.
-    try_for(5*60) {
+    try_for(120) {
       act_on_change_of_seahorse_status
     }
     if @screen.exists('GnomeCloseButton.png')
@@ -163,7 +163,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
     @screen.type(keyid + Sikuli::Key.ENTER)
     begin
       @screen.waitAny(['SeahorseFoundKeyResult.png',
-                       'GnomeCloseButton.png'], 5*60)
+                       'GnomeCloseButton.png'], 120)
     rescue FindAnyFailed
       # We may end up here if Seahorse appears to be "frozen".
       # Sometimes--but not always--if we click another window
