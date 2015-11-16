@@ -124,7 +124,7 @@ Then /^I synchronize keys in Seahorse$/ do
     end
   end
 
-  def act_on_change_of_seahorse_status
+  def change_of_status?
     # Due to a lack of visual feedback in Seahorse we'll break out of the
     # try_for loop below by returning "true" when there's something we can act
     # upon.
@@ -144,7 +144,7 @@ Then /^I synchronize keys in Seahorse$/ do
     @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
     # There's no visual feedback of Seahorse in Tails/Jessie, except on error.
     try_for(120) {
-      act_on_change_of_seahorse_status
+      change_of_status?
     }
     check_for_seahorse_error
     raise OpenPGPKeyserverCommunicationError.new(
@@ -158,7 +158,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
   end
   start_or_restart_seahorse(withapplet = @withgpgapplet)
 
-  def act_on_change_of_seahorse_status(keyid)
+  def change_of_status?(keyid)
     # Due to a lack of visual feedback in Seahorse we'll break out of the
     # try_for loop below by returning "true" when there's something we can act
     # upon.
@@ -197,7 +197,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
     @screen.click("SeahorseFoundKeyResult.png")
     @screen.click("SeahorseImport.png")
     try_for(120) do
-      act_on_change_of_seahorse_status(keyid)
+      change_of_status?(keyid)
     end
     check_for_seahorse_error
   end
