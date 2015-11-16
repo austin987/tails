@@ -33,10 +33,6 @@ show_notification() {
     # We must wait until all the facilities necessary for showing the
     # notification to the Live user is available to prevent it from
     # getting lost.
-    # Note: We pgrep for notification-daemon's full command because
-    # otherwise pgrep will look at the process name, which seems to be
-    # cropped to 15 chars, i.e. "notification-da". Also, we probably
-    # do not want to get mixed up with "gdu-notification-daemon".
     until pgrep -u "${LIVE_USERNAME}" '^ibus-daemon' >/dev/null ; do
         sleep 1
     done
