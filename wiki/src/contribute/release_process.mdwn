@@ -752,6 +752,13 @@ Update the size of the ISO image in `inc/*`:
           cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' | tr -d '\n')
 	echo "($MB/$MiB)" > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
 
+Generate the expected signature verification output:
+
+        TAILS_ISO="${ISOS}/tails-i386-${VERSION}/tails-i386-${VERSION}.iso"
+        gpg --keyid-format long --verify "${TAILS_ISO}.sig" "${TAILS_ISO}" 2>&1 | \
+           sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' >
+           "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_gpg_signature_output.html"
+
 Update the [[support/known_issues]] page:
 
 - Add regressions brought by the new release.

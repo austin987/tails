@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2015-11-12 12:22+0100\n"
+"POT-Creation-Date: 2015-11-16 15:13+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,13 +23,278 @@ msgstr ""
 
 #. type: Plain text
 #, no-wrap
-msgid "[[!meta stylesheet=\"bootstrap\" rel=\"stylesheet\"]]\n"
+msgid "[[!meta title=\"Installing Tails on a USB stick from Debian or Ubuntu using the command line\"]]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!meta stylesheet=\"inc/stylesheets/steps\" rel=\"stylesheet\" title=\"\"]]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!meta stylesheet=\"inc/stylesheets/expert\" rel=\"stylesheet\" title=\"\"]]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!meta stylesheet=\"inc/stylesheets/expert-usb\" rel=\"stylesheet\" title=\"\"]]\n"
 msgstr ""
 
 #. type: Plain text
 msgid "[[Back|install/debian]]"
 msgstr ""
 
+#. type: Title =
+#, no-wrap
+msgid "Verify the Tails signing key\n"
+msgstr ""
+
 #. type: Plain text
-msgid "Expert to USB"
+#, no-wrap
+msgid "<div class=\"tip\">\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"<p>If you already certified the Tails signing key with your own key, you\n"
+"can skip this step and start [[downloading and verifying the ISO\n"
+"image|usb#download]].</p>\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "</div>\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"In this step, you will download and verify the <em>Tails signing\n"
+"key</em> which is the OpenPGP key that is used to cryptographically sign\n"
+"the Tails ISO image.\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "<div class=\"note\">\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"<p>To follow these instructions you need to have your own OpenPGP\n"
+"key.</p>\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"<p>To learn how to create yourself an OpenPGP key, see\n"
+"<a href=\"https://help.riseup.net/en/security/message-security/openpgp/gpg-keys\">Managing\n"
+"OpenPGP Keys</a> by Riseup.</p>\n"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid ""
+"Import the Tails signing key in your <span class=\"application\">GnuPG</"
+"span> keyring:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "       wget https://tails.boum.org/tails-signing.key\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "       gpg --import < tails-signing.key\n"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid ""
+"Install the Debian keyring. It contains the OpenPGP keys of all Debian "
+"developers:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "       sudo apt-get install debian-keyring/jessie\n"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid ""
+"Import the OpenPGP key of [[!wikipedia Stefano_Zacchiroli]], a former Debian "
+"Project Leader, from the Debian keyring into your keyring:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "       gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --export zack@upsilon.cc | gpg --import\n"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid "Verify the certifications made on the Tails signing key:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "       gpg --keyid-format 0xlong --check-sigs A490D0F4D311A4153E2BB7CADBB802B258ACD84F\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "   In the output of this command, look for the following line:\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "       sig! 0x9C31503C6D866396 2015-02-03  Stefano Zacchiroli <zack@upsilon.cc>\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"   Here, <code>sig!</code>, with an exclamation mark, means that Stefano\n"
+"   Zacchiroli verified and certified the Tails signing key with his key.\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"   It is also possible to verify the certifications made by other\n"
+"   people. Their name and email address appear in the list of\n"
+"   certification if you have their key in your keyring.\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"   <div class=\"caution\">\n"
+"   <p>If the verification of the certification failed, then you might\n"
+"   have downloaded a malicious version of the Tails signing key or our\n"
+"   instructions might be outdated.\n"
+"   Please [[get in touch with us|support/talk]].</p>\n"
+"   </div>\n"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid "Certify the Tails signing key with your own key:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "       gpg --sign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"   <div class=\"note\">\n"
+"   <p>It is possible to publish your certification of the Tails signing\n"
+"   key on the public key servers. Doing so allows people who verified\n"
+"   your key to verify your certification and, as a consequence, build\n"
+"   more trust in the Tails signing key. To publish your certification,\n"
+"   execute the following command:</p>\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid ""
+"   <p class=\"pre\">gpg --send-keys A490D0F4D311A4153E2BB7CADBB802B258ACD84F</p>\n"
+"   </div>\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "<a id=\"download\"></a>\n"
+msgstr ""
+
+#. type: Title =
+#, no-wrap
+msgid "Download and verify the ISO image\n"
+msgstr ""
+
+#. type: Plain text
+msgid ""
+"In this step, you will download the latest Tails ISO image and verify it "
+"using the Tails signing key."
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid "Download the ISO image:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "   <p class=\"pre\">wget --continue [[!inline pages=\"inc/stable_i386_iso_url\" raw=\"yes\"]]</p>\n"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid "Download the signature of the ISO image:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "   <p class=\"pre\">wget [[!inline pages=\"inc/stable_i386_iso_sig_url\" raw=\"yes\"]]</p>\n"
+msgstr ""
+
+#. type: Bullet: '1. '
+msgid "Verify that the ISO image is signed by the Tails signing key:"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "   <p class=\"pre\">[[!inline pages=\"inc/stable_i386_gpg_verify\" raw=\"yes\"]]</p>\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "   The output of this command should be the following:\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "   <p class=\"pre\">[[!inline pages=\"inc/stable_i386_gpg_signature_output\" raw=\"yes\"]]</p>\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "   Verify in this output that:\n"
+msgstr ""
+
+#. type: Bullet: '     - '
+msgid "The date of the signature is the same."
+msgstr ""
+
+#. type: Bullet: '     - '
+msgid ""
+"The signature is marked as <code>Good signature</code> since you certified "
+"the Tails signing key with your own key."
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!inline pages=\"install/inc/steps/install_tails_installer.inline\" raw=\"yes\"]]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!inline pages=\"install/inc/steps/install_final.inline\" raw=\"yes\"]]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!inline pages=\"install/inc/steps/switch.inline\" raw=\"yes\"]]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!inline pages=\"install/inc/steps/restart_first_time.inline\" raw=\"yes\"]]\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
+msgid "[[!inline pages=\"install/inc/steps/create_persistence.inline\" raw=\"yes\"]]\n"
 msgstr ""
