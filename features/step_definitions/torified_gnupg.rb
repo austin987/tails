@@ -90,7 +90,7 @@ When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
   if withgpgapplet
     @withgpgapplet = 'yes'
   end
-  start_or_restart_seahorse(@withgpgapplet)
+  start_or_restart_seahorse(withapplet = @withgpgapplet)
 end
 
 Then /^Seahorse has opened$/ do
@@ -120,7 +120,7 @@ Then /^I synchronize keys in Seahorse$/ do
     if @screen.exists('GnomeCloseButton.png') || !$vm.has_process?('seahorse')
       step 'I kill the process "seahorse"' if $vm.has_process?('seahorse')
       debug_log('Restarting Seahorse.')
-      start_or_restart_seahorse(@withgpgapplet)
+      start_or_restart_seahorse(withapplet = @withgpgapplet)
     end
   end
 
@@ -156,7 +156,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
   if withgpgapplet
     @withgpgapplet = 'yes'
   end
-  start_or_restart_seahorse(@withgpgapplet)
+  start_or_restart_seahorse(withapplet = @withgpgapplet)
 
   def act_on_change_of_seahorse_status(keyid)
     # Due to a lack of visual feedback in Seahorse we'll break out of the
