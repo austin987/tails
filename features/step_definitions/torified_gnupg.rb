@@ -45,7 +45,7 @@ end
 When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signatures)?$/ do |keyid, without|
   # Make keyid an instance variable so we can reference it in the Seahorse
   # keysyncing step.
-  @keyid = keyid
+  @fetched_openpgp_keyid = keyid
   if without
     importopts = '--keyserver-options import-clean'
   else
@@ -53,7 +53,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
   end
   retry_tor do
     @gnupg_recv_key_res = $vm.execute_successfully(
-      "timeout 120 gpg --batch #{importopts} --recv-key '#{@keyid}'",
+      "timeout 120 gpg --batch #{importopts} --recv-key '#{@fetched_openpgp_keyid}'",
       :user => LIVE_USER)
     if @gnupg_recv_key_res.failure?
       raise "Fetching keys with the GnuPG CLI failed with:\n" +
@@ -128,7 +128,7 @@ Then /^I synchronize keys in Seahorse$/ do
     # Due to a lack of visual feedback in Seahorse we'll break out of the
     # try_for loop below by returning "true" when there's something we can act
     # upon.
-    if count_gpg_signatures(@keyid) > 2 || \
+    if count_gpg_signatures(@fetched_openpgp_keyid) > 2 || \
       @screen.exists('GnomeCloseButton.png')  || \
       !$vm.has_process?('seahorse')
         true
