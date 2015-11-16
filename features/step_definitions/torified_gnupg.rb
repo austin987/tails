@@ -45,7 +45,7 @@ end
 When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signatures)?$/ do |keyid, without|
   # Make keyid an instance variable so we can reference it in the Seahorse
   # keysyncing step.
-  @keyid = keyid
+  @fetched_openpgp_keyid = keyid
   if without
     importopts = '--keyserver-options import-clean'
   else
@@ -53,7 +53,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
   end
   retry_tor do
     @gnupg_recv_key_res = $vm.execute_successfully(
-      "timeout 120 gpg --batch #{importopts} --recv-key '#{@keyid}'",
+      "timeout 120 gpg --batch #{importopts} --recv-key '#{@fetched_openpgp_keyid}'",
       :user => LIVE_USER)
     if @gnupg_recv_key_res.failure?
       raise "Fetching keys with the GnuPG CLI failed with:\n" +
@@ -90,7 +90,7 @@ When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
   if withgpgapplet
     @withgpgapplet = 'yes'
   end
-  start_or_restart_seahorse(@withgpgapplet)
+  start_or_restart_seahorse(withapplet = @withgpgapplet)
 end
 
 Then /^Seahorse has opened$/ do
@@ -120,15 +120,15 @@ Then /^I synchronize keys in Seahorse$/ do
     if @screen.exists('GnomeCloseButton.png') || !$vm.has_process?('seahorse')
       step 'I kill the process "seahorse"' if $vm.has_process?('seahorse')
       debug_log('Restarting Seahorse.')
-      start_or_restart_seahorse(@withgpgapplet)
+      start_or_restart_seahorse(withapplet = @withgpgapplet)
     end
   end
 
-  def act_on_change_of_seahorse_status
+  def change_of_status?
     # Due to a lack of visual feedback in Seahorse we'll break out of the
     # try_for loop below by returning "true" when there's something we can act
     # upon.
-    if count_gpg_signatures(@keyid) > 2 || \
+    if count_gpg_signatures(@fetched_openpgp_keyid) > 2 || \
       @screen.exists('GnomeCloseButton.png')  || \
       !$vm.has_process?('seahorse')
         true
@@ -144,7 +144,7 @@ Then /^I synchronize keys in Seahorse$/ do
     @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
     # There's no visual feedback of Seahorse in Tails/Jessie, except on error.
     try_for(120) {
-      act_on_change_of_seahorse_status
+      change_of_status?
     }
     check_for_seahorse_error
     raise OpenPGPKeyserverCommunicationError.new(
@@ -156,9 +156,9 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
   if withgpgapplet
     @withgpgapplet = 'yes'
   end
-  start_or_restart_seahorse(@withgpgapplet)
+  start_or_restart_seahorse(withapplet = @withgpgapplet)
 
-  def act_on_change_of_seahorse_status(keyid)
+  def change_of_status?(keyid)
     # Due to a lack of visual feedback in Seahorse we'll break out of the
     # try_for loop below by returning "true" when there's something we can act
     # upon.
@@ -196,7 +196,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
     @screen.click("SeahorseFoundKeyResult.png")
     @screen.click("SeahorseImport.png")
     try_for(120) do
-      act_on_change_of_seahorse_status(keyid)
+      change_of_status?(keyid)
     end
     check_for_seahorse_error
   end
