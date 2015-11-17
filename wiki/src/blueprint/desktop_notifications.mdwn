@@ -8,25 +8,6 @@
 
 Remaining affected scripts on `feature/jessie`:
 
-* `config/chroot_local-includes/usr/local/sbin/tails-spoof-mac`
-  - Shell, uses `notify-send` via
-    [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-notify-user]]
-  - broken on Tails/Wheezy already (the link to the doc is not
-    visible, and one of the two possible links was broken anyway) ⇒
-    the link to the doc can be removed for Tails 2.0, and a better
-    solution found later; a second iteration could turn this into
-    a dialog box: we now have an offline mode for those who want it,
-    and else, if you want to be online, then MAC spoofing failure
-    prevents you from using Tails in most cases so we can be noisy
-  - The notification code (`notify_panic_*`) that's started as
-    a background process could advantageously be moved to the user
-    session (it's probably a good idea to avoid starting background
-    tasks in udev hooks, to avoid confusing udev wrt. when a hook has
-    actually completed its work). To this end,
-    `config/chroot_local-includes/usr/local/sbin/tails-unblock-network`
-    could raise a flag so that a unit run in user session knows that
-    it should notify the user (see e.g. the ugly `htp_done_file`, or
-    find a better solution).
 * `config/chroot_local-includes/usr/local/sbin/tails-restricted-network-detector`
   - Perl, uses `notify-send` via
     [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-notify-user]]
@@ -44,6 +25,26 @@ Remaining affected scripts on `feature/jessie`:
   - broken on Tails/Wheezy already (the link to the doc is not visible)
     ⇒ the current state of feature/jessie is not a regression, it
     actually improves things a bit.
+* `config/chroot_local-includes/usr/local/sbin/tails-spoof-mac`
+  - Shell, uses `notify-send` via
+    [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-notify-user]]
+  - broken on Tails/Wheezy already (the link to the doc is not
+    visible, and one of the two possible links was broken anyway) ⇒
+    the link to the doc has been removed for Tails 2.0, and a better
+    solution can be found later ([[!tails_ticket 10559]]).
+  - A second iteration could turn this into
+    a dialog box: we now have an offline mode for those who want it,
+    and else, if you want to be online, then MAC spoofing failure
+    prevents you from using Tails in most cases so we can be noisy.
+  - The notification code (`notify_panic_*`) that's started as
+    a background process could advantageously be moved to the user
+    session (it's probably a good idea to avoid starting background
+    tasks in udev hooks, to avoid confusing udev wrt. when a hook has
+    actually completed its work). To this end,
+    `config/chroot_local-includes/usr/local/sbin/tails-unblock-network`
+    could raise a flag so that a unit run in user session knows that
+    it should notify the user (see e.g. the ugly `htp_done_file`, or
+    find a better solution).
 
 # Resources
 
