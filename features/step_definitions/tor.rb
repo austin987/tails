@@ -160,7 +160,7 @@ Then /^the firewall is configured to block all IPv6 traffic$/ do
 end
 
 def firewall_has_dropped_packet_to?(proto, host, port)
-  regex = "Dropped outbound packet: .* DST=#{host} .* PROTO=#{proto} "
+  regex = "^Dropped outbound packet: .* DST=#{host} .* PROTO=#{proto} "
   regex += ".* DPT=#{port} " if port
   $vm.execute("journalctl --dmesg --output=cat | grep -q '#{regex}'").success?
 end
