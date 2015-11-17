@@ -162,7 +162,7 @@ end
 def firewall_has_dropped_packet_to?(proto, host, port)
   regex = "Dropped outbound packet: .* DST=#{host} .* PROTO=#{proto} "
   regex += ".* DPT=#{port} " if port
-  $vm.execute("grep -q '#{regex}' /var/log/syslog").success?
+  $vm.execute("journalctl --dmesg --output=cat | grep -q '#{regex}'").success?
 end
 
 When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+))? that is expected to fail$/ do |proto, host, port|
