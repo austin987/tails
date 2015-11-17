@@ -81,7 +81,12 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   open_address = Proc.new do
     @screen.click(info[:address_bar_image])
     sleep 0.5
-    @screen.type(address + Sikuli::Key.ENTER)
+    # The browser sometimes loses keypresses when suggestions are
+    # shown, which we work around this by pasting the address from the
+    # clipboard, in one go.
+    $vm.set_clipboard(address)
+    @screen.type('v', Sikuli::KeyModifier.CTRL)
+    @screen.type(Sikuli::Key.ENTER)
   end
   open_address.call
   if browser == "Tor Browser"
