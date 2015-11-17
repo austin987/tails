@@ -247,5 +247,5 @@ fi
 touch $TORDATE_DONE_FILE
 
 log "Restarting htpdate"
-systemctl --no-block restart htpdate.service
+systemctl restart htpdate.service
 log "htpdate service restarted with return code $?"
