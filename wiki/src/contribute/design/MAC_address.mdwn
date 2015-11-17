@@ -517,6 +517,11 @@ This section deals with AvoidConnectionProbs. The goal is to somehow
 identify connection errors that are related to MAC spoofing, and
 notify the user when this happens.
 
+**Note**: the implementation described below had to be disabled:
+
+ * [[!tails_ticket 8328#note-5]]
+ * [[!tails_ticket 10560]]
+
 Due to lack of hooks into NetworkManager's connection error handling
 we currently use a simple monitoring script that's started when MAC
 spoofing is enabled. It scans the NetworkManager unit's journal for
@@ -531,12 +536,3 @@ At the moment this script only deals with wireless connections. It
 successfully distinguishes between MAC-spoof related errors and errors
 when entering the wrong passphrase, so no false positives in that
 (relatively common) case.
-
-Scripts:
-
-* [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-restricted-network-detector]]
-
-* [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-restricted-network-detector.service]]
-
-* [[!greeter_gitweb PostLogin.default]]
-  (`tails-restricted-network-detector` started from this script)
