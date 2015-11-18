@@ -339,6 +339,13 @@ Given /^the Tails desktop is ready$/ do
     @screen.wait("GnomeSystrayFlorence.png", 180)
   end
   @screen.wait(desktop_started_picture, 180)
+  # Disable screen blanking since we sometimes need to wait long
+  # enough for it to activate, which can mess with Sikuli wait():ing
+  # for some image.
+  $vm.execute_successfully(
+    'gsettings set org.gnome.desktop.session idle-delay 0',
+    :user => LIVE_USER
+  )
 end
 
 Then /^Tails seems to have booted normally$/ do
