@@ -12,8 +12,33 @@ html:not([data-phase^="download"]) #download > :not(#download-button),
 
 html:not([data-phase="ready"]) #download-and-verify #use-button { display: none !important;}
 
+html[data-phase^="downl"] #download-text-state,
+html[data-phase^="downl"] #download-button-state,
+html[data-phase^="downl"] #download-message
+{
+  display: block !important;
+}
+#download-text-state > *,
+#download-button-state > *,
+#download-message > * {
+  display: none;
+}
+
+
 html[data-phase^="verif"] #download-and-verify #download,
-html[data-phase^="downl"] #download-and-verify #download
+html[data-phase^="downl"] #download-and-verify #download,
+#download[data-state="pause"] #download-text-pause,
+#download[data-state="pause"] #download-message-paused,
+#download[data-state="pause"] #download-button-state-resume,
+#download[data-state="pause"] #download-button-state-cancel,
+#download[data-state="done"] #download-text-done,
+#download[data-state="failed"] #download-message-failed,
+#download[data-state="failed"] #download-text-failed,
+#download[data-state="failed"] #download-button-state-retry,
+#download[data-state="going"] #download-button-state-cancel,
+#download[data-state="going"] #download-button-state-pause,
+#download:not([data-state]) #download-button-state-cancel,
+#download:not([data-state]) #download-button-state-pause
 {
   display: block;
   opacity: 1
@@ -77,14 +102,59 @@ Extension's toggles
   width: 100%;
 }
 
-[data-phase^="download"] #download-button
+[data-phase^="download"] #download-button,
+[data-phase^="verif"] #download-button,
+[data-phase^="verif"] #download-eta,
+[data-phase^="verif"] #download-progress
 { display: none }
 
 html[data-phase^="download"]  #download-and-verify #download,
 [data-phase^="download"] #download-text,
+[data-phase^="verif"] #download-text
 { display: block !important}
 
+/*
+trick to hide both the value and the measure unit when number is bogus,
+especially for ETA with alternate min(s) / sec(s) and speed, and to use different singular and plural forms,
+ e.g.
+ <span data-value="1">
+  <span class="eta-mins">1</span>
+  <span class="plural">minutes</span>
+  <span class="singular">minute</span>
+ </span>
+ <span data-value="90">
+   <span class="eta-secs">90</span>
+   <span class="plural">seconds</span>
+   <span class="singular">second</span>
+ </span>
 
+ Will just display
+ 1 minute
+
+ and
+
+<span data-value="???">
+  <span class="eta-mins">???</span>
+  <span class="plural">minutes</span>
+  <span class="singular">minute</span>
+</span>
+<span data-value="20">
+  <span class="eta-secs">20</span>
+  <span class="plural">seconds</span>
+  <span class="singular">second</span>
+</span>
+
+will give
+20 seconds
+*/
+#download [data-value="???"],
+#download :not([data-value="1"]) > .singular,
+#download [data-value="1"] .plural,
+#download [data-value] + [data-value]
+{ display: none }
+
+#download [data-value="???"] + :not([data-value="???"])
+{ display: initial !important; }
 
 .dave-show {
   display: initial !important;
