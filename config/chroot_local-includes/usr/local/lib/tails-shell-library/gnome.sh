@@ -1,9 +1,11 @@
 export_gnome_env() {
     # Get LIVE_USERNAME
     . /etc/live/config.d/username.conf
-    export DISPLAY=':0.0'
-    export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
-    GNOME_SHELL_PID="$(pgrep --newest --euid ${LIVE_USERNAME} gnome-shell)"
-    export "$(tr '\0' '\n' < /proc/${GNOME_SHELL_PID}/environ | \
-                      grep '^DBUS_SESSION_BUS_ADDRESS=')"
+    local gnome_shell_pid="$(pgrep --newest --euid ${LIVE_USERNAME} gnome-shell)"
+    local tmp_env_file="$(tempfile)"
+    local vars="(DBUS_SESSION_BUS_ADDRESS|DISPLAY|XAUTHORITY)"
+    tr '\0' '\n' < "/proc/${gnome_shell_pid}/environ" | \
+        grep -E "^${vars}=" > "${tmp_env_file}"
+    while read line; do export "${line}"; done < "${tmp_env_file}"
+    rm "${tmp_env_file}"
 }
