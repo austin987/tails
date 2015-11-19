@@ -31,15 +31,7 @@ end
 When /^I update APT using Synaptic$/ do
   @screen.click('SynapticReloadButton.png')
   @screen.wait('SynapticReloadPrompt.png', 20)
-  try_for(30*60) do
-    begin
-      @screen.waitVanish('SynapticReloadPrompt.png', 60)
-    rescue Exception => e
-      @screen.hover_point(0, 0)
-      @screen.hide_cursor
-      raise e
-    end
-  end
+  @screen.waitVanish('SynapticReloadPrompt.png', 30*60)
 end
 
 Then /^I should be able to install a package using Synaptic$/ do
