@@ -129,7 +129,7 @@ Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DN
           )
       end
       assert_equal(rules, good_rules,
-                   "The NAT table's OUTPUT chain contains some unexptected " \
+                   "The NAT table's OUTPUT chain contains some unexpected " \
                    "rules:\n" +
                    ((rules - good_rules).map { |r| r["rule"] }).join("\n"))
     else
@@ -154,7 +154,7 @@ Then /^the firewall is configured to block all IPv6 traffic$/ do
       !["DROP", "REJECT", "LOG"].include?(rule["target"])
     end
     assert(bad_rules.empty?,
-           "The IPv6 table's #{name} chain contains some unexptected rules:\n" +
+           "The IPv6 table's #{name} chain contains some unexpected rules:\n" +
            (bad_rules.map { |r| r["rule"] }).join("\n"))
   end
 end
