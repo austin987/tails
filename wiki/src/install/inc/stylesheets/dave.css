@@ -70,7 +70,7 @@ UI elements inside the #download-and-verify container.
 
 html:not([data-extension]) #supported-browser > :not(#install),
 [data-extension="old"] #supported-browser > :not(#update),
-[data-extension="ok"] #supported-browser > :not(#use)
+[data-extension="ok"] #supported-browser > div:not(#use)
 { display: none }
 
 .chrome-unsupported .chrome-browser { display: none }
@@ -101,8 +101,11 @@ Extension's toggles
 #download-progress {
   width: 100%;
 }
+[data-phase^="download"] #download-and-verify #i_have_iso.dave-show { display: none !important}
+[data-phase^="verif"] #download-and-verify #i_have_iso.dave-show { display: none !important}
 
 [data-phase^="download"] #download-button,
+[data-phase^="download"] #bittorrent-minor,
 [data-phase^="verif"] #download-button,
 [data-phase^="verif"] #download-eta,
 [data-phase^="verif"] #download-progress
@@ -112,6 +115,14 @@ html[data-phase^="download"]  #download-and-verify #download,
 [data-phase^="download"] #download-text,
 [data-phase^="verif"] #download-text
 { display: block !important}
+
+html[data-phase^="downloading"] #download-eta {
+  opacity: 1;
+}
+
+#download-eta {
+  opacity: 0;
+}
 
 /*
 trick to hide both the value and the measure unit when number is bogus,
@@ -161,4 +172,110 @@ will give
 }
 .dave-hide {
   display: none !important;
+}
+
+h1 {
+  margin-bottom: 50px;
+}
+
+h2 {
+  color: black;
+  padding: 10px;
+  border-bottom: 10px solid black;
+}
+
+#pagebody a.btn {
+  color: white;
+}
+
+/* Remove message once extension has started. */
+html[data-extension^="ok"] #use p,
+html[data-extension^="ok"] #update p,
+html[data-extension^="ok"] #install p {
+  opacity: 0;
+}
+
+/* Add transparency to past states. */
+.btn.disabled, .btn[disabled], fieldset[disabled] .btn {
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.25;
+}
+
+/* Hide "I already have an ISO" for the time being... */
+#i_have_iso {
+  display:none !important;
+  opacity: 0;
+}
+
+/* Hide download path once downloaded. */
+html[data-phase^="verified"] small#download-path,
+html[data-phase^="verifying"] small#download-path {
+  opacity: 0;
+}
+
+/* Show "Done" once downloaded and changed state. */
+html[data-phase^="verified"] #download-text-state,
+html[data-phase^="verifying"] #download-text-state {
+  opacity: 1;
+  display: block;
+}
+
+html[data-phase^="verified"] #download-text-done,
+html[data-phase^="verifying"] #download-text-done {
+  opacity: 1;
+  display: block;
+}
+
+/* Hide "Download" once downloaded. */
+html[data-phase^="verified"] #download,
+html[data-phase^="verifying"] #download {
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.25 !important;
+}
+
+/* Enlarge div to look less like a button. */
+#verify-text {
+  display: block;
+  cursor: default;
+}
+
+html[data-phase^="verified"] #verify-text {
+    box-shadow: none;
+    opacity: 0.25 !important;
+}
+
+/* Hide "Calculating" once verified. */
+html[data-phase^="verified"] #verify-text-calculating {
+  display: none;
+}
+
+/* Less importance to GnuPG alternative. */
+#verify-text-success {
+  background: none;
+  font-size: 0.8em;
+}
+
+/* Wider extension div and with more space. */
+#download-and-verify {
+  width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 50px;
+  padding-bottom: 50px;
+}
+
+/* Do not display background image on links. */
+#pagebody a[href^="http"] {
+  background: none;
+}
+
+/* Wider buttons */
+#download-button {
+  display: block;
+}
+
+#install-button {
+  display: block;
 }
