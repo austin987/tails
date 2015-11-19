@@ -58,26 +58,24 @@ end
 # This helper requires that the notification image is the one shown in
 # the notification applet's list, not the notification pop-up.
 def robust_notification_wait(notification_image, time_to_wait)
-  theme_prefix = @theme.capitalize
-
   error_msg = "Didn't not manage to open the notification applet"
   wait_start = Time.now
   try_for(time_to_wait, :delay => 0, :msg => error_msg) do
     @screen.hide_cursor
-    @screen.click("#{theme_prefix}NotificationApplet.png")
-    @screen.wait("#{theme_prefix}NotificationAppletOpened.png", 10)
+    @screen.click("GnomeNotificationApplet.png")
+    @screen.wait("GnomeNotificationAppletOpened.png", 10)
   end
 
   error_msg = "Didn't not see notification '#{notification_image}'"
   time_to_wait -= (Time.now - wait_start).ceil
   try_for(time_to_wait, :delay => 0, :msg => error_msg) do
     found = false
-    entries = @screen.findAll("#{theme_prefix}NotificationEntry.png")
+    entries = @screen.findAll("GnomeNotificationEntry.png")
     while(entries.hasNext) do
       entry = entries.next
       @screen.hide_cursor
       @screen.click(entry)
-      close_entry = @screen.wait("#{theme_prefix}NotificationEntryClose.png", 10)
+      close_entry = @screen.wait("GnomeNotificationEntryClose.png", 10)
       if @screen.exists(notification_image)
         found = true
         @screen.click(close_entry)
@@ -91,7 +89,7 @@ def robust_notification_wait(notification_image, time_to_wait)
 
   # Click anywhere to close the notification applet
   @screen.hide_cursor
-  @screen.click("#{theme_prefix}ApplicationsMenu.png")
+  @screen.click("GnomeApplicationsMenu.png")
   @screen.hide_cursor
 end
 
@@ -328,16 +326,11 @@ Given /^Tails Greeter has dealt with the sudo password$/ do
 end
 
 Given /^the Tails desktop is ready$/ do
-  case @theme
-  when "windows"
-    desktop_started_picture = 'WindowsStartButton.png'
-  else
-    desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
-    # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
-    # By this point the only icon left is Vidalia and it will not cause the other systray
-    # icons to shift positions.
-    @screen.wait("GnomeSystrayFlorence.png", 180)
-  end
+  desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
+  # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
+  # By this point the only icon left is Vidalia and it will not cause the other systray
+  # icons to shift positions.
+  @screen.wait("GnomeSystrayFlorence.png", 180)
   @screen.wait(desktop_started_picture, 180)
   # Disable screen blanking since we sometimes need to wait long
   # enough for it to activate, which can mess with Sikuli wait():ing
@@ -380,13 +373,7 @@ Given /^available upgrades have been checked$/ do
 end
 
 Given /^the Tor Browser has started$/ do
-  case @theme
-  when "windows"
-    tor_browser_picture = "WindowsTorBrowserWindow.png"
-  else
-    tor_browser_picture = "TorBrowserWindow.png"
-  end
-
+  tor_browser_picture = "TorBrowserWindow.png"
   @screen.wait(tor_browser_picture, 60)
 end
 
@@ -422,24 +409,23 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  theme_prefix = @theme.capitalize
-  next if not(@screen.exists("#{theme_prefix}NotificationApplet.png"))
-  @screen.click("#{theme_prefix}NotificationApplet.png")
-  @screen.wait("#{theme_prefix}NotificationAppletOpened.png", 10)
+  next if not(@screen.exists("GnomeNotificationApplet.png"))
+  @screen.click("GnomeNotificationApplet.png")
+  @screen.wait("GnomeNotificationAppletOpened.png", 10)
   begin
-    entries = @screen.findAll("#{theme_prefix}NotificationEntry.png")
+    entries = @screen.findAll("GnomeNotificationEntry.png")
     while(entries.hasNext) do
       entry = entries.next
       @screen.hide_cursor
       @screen.click(entry)
-      @screen.wait_and_click("#{theme_prefix}NotificationEntryClose.png", 10)
+      @screen.wait_and_click("GnomeNotificationEntryClose.png", 10)
     end
   rescue FindFailed
     # No notifications, so we're good to go.
   end
   @screen.hide_cursor
   # Click anywhere to close the notification applet
-  @screen.click("#{theme_prefix}ApplicationsMenu.png")
+  @screen.click("GnomeApplicationsMenu.png")
   @screen.hide_cursor
 end
 
@@ -561,14 +547,8 @@ end
 
 When /^I start the Tor Browser in offline mode$/ do
   step "I start the Tor Browser"
-  case @theme
-  when "windows"
-    @screen.wait_and_click("WindowsTorBrowserOfflinePrompt.png", 10)
-    @screen.click("WindowsTorBrowserOfflinePromptStart.png")
-  else
-    @screen.wait_and_click("TorBrowserOfflinePrompt.png", 10)
-    @screen.click("TorBrowserOfflinePromptStart.png")
-  end
+  @screen.wait_and_click("TorBrowserOfflinePrompt.png", 10)
+  @screen.click("TorBrowserOfflinePromptStart.png")
 end
 
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
@@ -680,15 +660,9 @@ def gnome_app_menu_click_helper(click_me, verify_me = nil)
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
-  case @theme
-  when "windows"
-    prefix = 'Windows'
-  else
-    prefix = 'Gnome'
-  end
-  menu_button = prefix + "ApplicationsMenu.png"
-  sub_menu_entry = prefix + "Applications" + submenu + ".png"
-  application_entry = prefix + "Applications" + app + ".png"
+  menu_button = "GnomeApplicationsMenu.png"
+  sub_menu_entry = "GnomeApplications" + submenu + ".png"
+  application_entry = "GnomeApplications" + app + ".png"
   try_for(120) do
     begin
       gnome_app_menu_click_helper(menu_button, sub_menu_entry)
@@ -704,16 +678,10 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, s
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
-  case @theme
-  when "windows"
-    prefix = 'Windows'
-  else
-    prefix = 'Gnome'
-  end
-  menu_button = prefix + "ApplicationsMenu.png"
-  sub_menu_entry = prefix + "Applications" + submenu + ".png"
-  sub_sub_menu_entry = prefix + "Applications" + subsubmenu + ".png"
-  application_entry = prefix + "Applications" + app + ".png"
+  menu_button = "GnomeApplicationsMenu.png"
+  sub_menu_entry = "GnomeApplications" + submenu + ".png"
+  sub_sub_menu_entry = "GnomeApplications" + subsubmenu + ".png"
+  application_entry = "GnomeApplications" + app + ".png"
   try_for(120) do
     begin
       gnome_app_menu_click_helper(menu_button, sub_menu_entry)
@@ -908,7 +876,6 @@ end
 def force_new_tor_circuit(with_vidalia=nil)
   debug_log("Forcing new Tor circuit...")
   if with_vidalia
-    assert_equal('gnome', @theme, "Vidalia is not available in the #{@theme} theme.")
     begin
       step 'process "vidalia" is running'
     rescue Test::Unit::AssertionFailedError
