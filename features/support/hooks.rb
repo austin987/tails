@@ -161,7 +161,6 @@ Before('@product') do |scenario|
     @video_capture_pid = capture.pid
   end
   @screen = Sikuli::Screen.new
-  @theme = "gnome"
   # English will be assumed if this is not overridden
   @language = ""
   @os_loader = "MBR"
