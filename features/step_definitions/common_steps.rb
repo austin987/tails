@@ -352,8 +352,10 @@ end
 Given /^Tor is ready$/ do
   step "Tor has built a circuit"
   step "the time has synced"
-  assert($vm.execute('systemctl is-system-running').success?,
-         'At least one system service failed to start.')
+  if $vm.execute('systemctl is-system-running').failure?
+    units_status = $vm.execute('systemctl').stdout
+    raise "At least one system service failed to start:\n#{units_status}"
+  end
 end
 
 Given /^Tor has built a circuit$/ do
