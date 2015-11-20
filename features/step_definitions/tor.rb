@@ -177,13 +177,16 @@ When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+)
   when "TCP"
     assert_not_nil(port)
     cmd = "echo | netcat #{host} #{port}"
+    user = LIVE_USER
   when "UDP"
     assert_not_nil(port)
     cmd = "echo | netcat -u #{host} #{port}"
+    user = LIVE_USER
   when "ICMP"
     cmd = "ping -c 5 #{host}"
+    user = 'root'
   end
-  @conn_res = $vm.execute(cmd, :user => LIVE_USER)
+  @conn_res = $vm.execute(cmd, :user => user)
 end
 
 Then /^the untorified connection fails$/ do
