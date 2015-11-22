@@ -32,3 +32,7 @@ pref("browser.newtabpage.introShown", true);
 // add-on localizes search-engines in an incompatible but equivalent
 // way.
 pref("browser.search.geoSpecificDefaults", false);
+
+// Without setting this, the Download Management page will not update
+// the progress being made.
+pref("browser.download.panel.shown", true);

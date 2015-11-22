@@ -128,26 +128,19 @@ The test suite produces different kind of artifacts: logfiles, screen
 captures for failing steps, snapshots of the test VM, and also videos of
 the running test session.
 
-Videos may be a bit too much to keep, given they slow down the test
-suite and might take quite a bit of disk space to store. If we want to
-keep them, we may want to do so only for failing test suite runs. If we
-decide to still use them, then we probably have to wait for
-[[!tails_ticket 10001]] too be resolved.
+We can keep the video captures in the build artifacts, now that
+[[!tails_ticket 10001]] is resolved.
 
-Proposal for a first iteration:
+Decision:
 
  * For green test suite run: keep the test logs (Jenkins natively do
-   that) and video captures
- * For red test suite run: keep the screen and video captures and the
-   logs.
+   that).
+ * For red test suite run: keep the screenshots and video captures, the
+   logs and the pcap files.
 
-On the second iteration, we will keep video capture only for the red
-tests.
-
-The retention strategy should be the same than for the automatically
-built ISOs. In particular, we will have to pay attention to the rotation
-of videos capture (given they'll quickly bloat our storage space).
-Keeping them only for 7 days sounds reasonnable.
+In [[!tails_ticket 10155]] we calculated that we can probably keep the
+video captures for a full release cycle. This will be refine is reality
+claims the contrary after an evaluation.
 
 # Scenarios
 
