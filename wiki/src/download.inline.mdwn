@@ -1,5 +1,10 @@
+Download and verify
+===================
+
+<div class="step-image">[[!img install/inc/infography/download-and-verify.png link="no"]]</div>
+
 <div id="download-and-verify">
-  <div id="extension-version">0.1.0</div>
+  <div id="extension-version">0.2.5</div>
 
   <div id="undetected-browser">
     <p>We failed to detect your browser vendor, maybe because JavaScript is disabled.</p>
@@ -9,9 +14,9 @@
         <h2>Browser extension</h2>
         <p>for Firefox <span class="minver-firefox">38.0.1</span>+ or
            Tor Browser <span class="minver-tor">5</span>+</p>
-        <a href="?override=firefox" class="btn btn-lg btn-primary browser-override">I'm already in Firefox or Tor Browser</a>
-        <p>Or copy and paste this link in Firefox or Tor Browser:</p>
+        <p>Copy and paste this link in Firefox or Tor Browser:</p>
         <code>https://tails.boum.org/download</code>
+        <a href="?override=firefox" class="btn btn-lg btn-primary browser-override">I'm already in Firefox <span class="minver-firefox">38.0.1</span>+ or Tor Browser <span class="minver-tor">5</span>+.</a>
       </div>
       <div class="col-md-6 bittorrent">
         <h2>BitTorrent</h2>
@@ -21,6 +26,7 @@
   </div>
 
   <div id="unsupported-browser">
+    <p>You seem to be using an unsupported browser.</p>
     <p>You can download and verify the ISO image via:</p>
     <div class="row download-options">
       <div class="col-md-6 extension">
@@ -31,6 +37,7 @@
         Please update to Firefox <span class="minver-firefox">38.0.1</span>, Tor Browser <span class="minver-tor">5</span>, or newer and visit this link:</p>
         <p id="unsupported-other">Copy and paste this link in Firefox or Tor Browser:</p>
         <code>https://tails.boum.org/download</code>
+        <a href="?override=firefox" class="btn btn-lg btn-primary browser-override">I'm already in Firefox <span class="minver-firefox">38.0.1</span>+ or Tor Browser <span class="minver-tor">5</span>+.</a>
       </div>
       <div class="col-md-6 bittorrent">
         <h2>BitTorrent</h2>
@@ -92,16 +99,26 @@
   <a id="i_have_iso" href="" title="Select an ISO image to verify">I already have an ISO image.</a>
 
   <div id="download">
-  <a id="download-button" href='[[!inline pages="inc/stable_i386_iso_url" raw="yes"]]' class="btn btn-lg btn-primary clearfix iso-url">
+  <a id="download-button" href='https://un.poivron.org/~sajolida/tails-ux-testing-2.iso' class="btn btn-lg btn-primary clearfix iso-url">
       <span id="download-button-label" class="pull-left">Download Tails <span class="iso-version">[[!inline pages="inc/stable_i386_version" raw="yes"]]</span> ISO image
-        <small id="download-button-size" class="iso-url-text">(<span class="iso-size-MiB">$SIZE</span>)</small>
+        <small id="download-button-size">(<span class="iso-size-MiB">$SIZE</span> MiB)</small>
       </span>
     </a>
     <div id="download-text" class="btn btn-lg clearfix">
   <div id="download-text-left" class="pull-left clearfix">
       <div id="download-text-label" class="pull-left">Download Tails <span class="iso-version">[[!inline pages="inc/stable_i386_version" raw="yes"]]</span> ISO image
       <small id="download-eta">
-        <span class="speed-KBs">$SPEED</span> KB/s &mdash; <span class="downloaded-MiB">$DOWNLOADED</span>/<span class="iso-size-MiB">$SIZE</span> MiB, <span class="eta-mins">$ETA</span> minutes left
+        <span class="speed-KBs">$SPEED</span> KB/s &mdash; <span class="downloaded-MiB">$DOWNLOADED</span>/<span class="iso-size-MiB">$SIZE</span> MiB,
+        <span data-value="???">
+          <span class="eta-mins">???</span>
+          <span class="plural">minutes</span>
+          <span class="singular">minute</span>
+        </span>
+        <span data-value="???">
+          <span class="eta-secs">???</span>
+          <span class="plural">seconds</span>
+          <span class="singular">second</span>
+        </span>
       </small>
       </div>
       <div id="download-progress" class="progress">
@@ -137,22 +154,33 @@
 
   <div id="verify">
     <div id="verify-text" class="btn btn-lg clearfix">
-  <div class="pull-left">
-      <div id="verify-text-label">Verify ISO image</div>
-      <small id="verify-text-calculating">Computing SHA-256 checksum for <span class="verify-file-path"></span>...</small>
-      <div id="verify-text-computed-hash" class="iso-computed-hash"></div>
-   </div>
-  <div id="verify-text-state" class="pull-right">
-      <span id="verify-text-state-calculating" class="state calculating label label-info"><span class="verify-progress">$PROGRESS</span></span>
-      <span id="verify-text-state-done" class="state success label label-success">Done</span>
-      <span id="verify-text-state-failed" class="state failed label label-danger">Failed</span>
-
-  </div>
+      <div class="pull-left">
+        <div id="verify-text-label">Verify ISO image</div>
+          <small id="verify-text-calculating">Computing SHA-256 checksum&hellip;</small>
+        </div>
+      <div id="verify-text-state" class="pull-right">
+        <span id="verify-text-state-calculating" class="state calculating label label-info"><span class="verify-progress">$PROGRESS</span></span>
+        <span id="verify-text-state-done" class="state success label label-success">Done</span>
+        <span id="verify-text-state-failed" class="state failed label label-danger">Failed</span>
+      </div>
     </div>
     <div id="verify-text-success" class="bg-success">
-      <p>If you are knowledgeable about OpenPGP, you can do additional verification using the <a href='[[!inline pages="inc/stable_i386_iso_sig_url" raw="yes"]]'>OpenPGP signature</a>.
-      <a href="">Learn how to do that</a></p>
-      <a href="" class="btn btn-lg btn-primary">Next <span>Copy ISO image on first USB stick</span></a>
+      <div class="trophy">
+        <p>You downloaded and verified the ISO image successfully!</p>
+        <p>You can now continue with the next step and
+          <span class="install-clone">[[Open these instructions on another device|install/clone#next]].</span>
+          <span class="debian-usb">[[Install <span class="application">Tails Installer|install/debian/usb#next]].</span>
+          <span class="windows-usb">[[Install a temporary Tails|install/win/usb#next]].</span>
+          <span class="linux-usb">[[Install a temporary Tails|install/linux/usb#next]].</span>
+          <span class="mac-dvd">[[Burn a Tails DVD|install/mac/dvd#next]].</span>
+          <span class="mac-usb">[[Install a temporary Tails|install/mac/usb#next]].</span>
+          <span class="mac-clone">[[Open these instructions on another device|install/mac/clone#next]].</span>
+          <span class="upgrade-clone">[[Open these instructions on another device|upgrade/clone#next]].</span>
+          <span class="upgrade-tails">[[Install a temporary Tails|upgrade/tails#next]].</span>
+        </p>
+        <p class="openpgp">If you are knowledgeable about OpenPGP, you can do additional verification using the <a href=''>OpenPGP signature.</a>. <a class="openpgp-learn" href="">Learn how to do that.</a></p>
+      </div>
+      <a href="" class="btn btn-lg btn-link">Download again</a>
     </div>
 
     <div id="verify-text-failure" class="bg-warning">

@@ -28,7 +28,7 @@ key.</p>
 
 <p>To learn how to create yourself an OpenPGP key, see
 <a href="https://help.riseup.net/en/security/message-security/openpgp/gpg-keys">Managing
-OpenPGP Keys</a> by Riseup.</p>
+OpenPGP Keys</a> by <em>Riseup</em>.</p>
 
 </div>
 
@@ -93,19 +93,26 @@ using the Tails signing key.
 
 1. Download the ISO image:
 
-   <p class="pre">wget --continue [[!inline pages="inc/stable_i386_iso_url" raw="yes"]]</p>
+   <p class="pre">wget --continue https://un.poivron.org/~sajolida/tails-ux-testing.iso</p>
 
 1. Download the signature of the ISO image:
 
-   <p class="pre">wget [[!inline pages="inc/stable_i386_iso_sig_url" raw="yes"]]</p>
+   <p class="pre">wget https://un.poivron.org/~sajolida/tails-ux-testing.iso.sig</p>
 
 1. Verify that the ISO image is signed by the Tails signing key:
 
-   <p class="pre">[[!inline pages="inc/stable_i386_gpg_verify" raw="yes"]]</p>
+   <p class="pre">gpg --keyid-format 0xlong --verify tails-ux-testing.iso.sig tails-ux-testing.iso</p>
 
    The output of this command should be the following:
 
-   <p class="pre">[[!inline pages="inc/stable_i386_gpg_signature_output" raw="yes"]]</p>
+   <pre>
+gpg: Signature made Thu 19 Nov 2015 02:39:11 PM UTC
+gpg:                using RSA key 0x3C83DCB52F699C56
+gpg: Good signature from "Tails developers (offline long-term identity key) <tails@boum.org>" [full]
+gpg:                 aka "Tails developers <tails@boum.org>" [full]
+Primary key fingerprint: A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
+     Subkey fingerprint: A509 1F72 C746 BA6B 163D  1C18 3C83 DCB5 2F69 9C56
+   </pre>
 
    Verify in this output that:
 
@@ -120,5 +127,7 @@ using the Tails signing key.
 [[!inline pages="install/inc/steps/switch.inline" raw="yes"]]
 
 [[!inline pages="install/inc/steps/restart_first_time.inline" raw="yes"]]
+
+[[!inline pages="install/inc/steps/you_are_done.inline" raw="yes"]]
 
 [[!inline pages="install/inc/steps/create_persistence.inline" raw="yes"]]
