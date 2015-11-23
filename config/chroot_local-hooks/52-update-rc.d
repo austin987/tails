@@ -68,7 +68,7 @@ systemctl enable  cups.socket
 # it's an important goal to never start Tor before the user has had
 # a chance to choose to do so in an obfuscated way: if some other
 # package enables tor@whatever.service someday, disabling tor.service
-#  will disable it as well, while disabling tor@default.service would not.
+# will disable it as well, while disabling tor@default.service would not.
 systemctl disable tor.service
 systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service
