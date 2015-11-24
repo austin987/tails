@@ -103,6 +103,7 @@ tails (2.0~beta1) unstable; urgency=medium
       and the implementation are obsolete on Jessie.
     - Lower potential for confusion (#8443), by removing system-config-printer.
       One GUI to configure printers is enough (Closes: #8505).
+    - Add "set -u" to tails-unblock-network.
 
   * Test suite
     - Adapt to the new desktop environment and applications' look.
@@ -150,6 +151,9 @@ tails (2.0~beta1) unstable; urgency=medium
       get cap_net_raw+ep, and if built on a filesystem that does support
       file capabilities, then /bin/ping is not setupd root).
 
+  * Set the remote shell's OOM score adjustment value via its unit file, instead of dynamically at test suite run time.
+  * Test suite: escape regexp special characters when constructing the firewall log parsing regexp.
+    .. and pass -P to grep, since Ruby uses PCRE.
     * Fix is_persistent?() helper due to findmnt changes in Jessie.
     In jessie, findmnt correctly notices that / is an aufs mounts. Hence
     let's assume that we're not using read-only persistence (which uses
