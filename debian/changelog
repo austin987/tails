@@ -6,6 +6,7 @@ tails (2.0~beta1) unstable; urgency=medium
     - Upgrade to Debian 8 (Jessie).
     - Migrate to GNOME Shell in Classic mode.
     - Use systemd as PID 1.
+    - Convert all our custom initscripts to native systemd units.
     - Remove the Windows camouflage feature: our call for help to port
       it to GNOME Shell (issues in January, 2015) was unsuccessful.
 
@@ -13,17 +14,21 @@ tails (2.0~beta1) unstable; urgency=medium
 
 
   * Bugfixes
-
+    - Restore the logo in the "About Tails" dialog.
+    - Don't tell the user that "Tor is ready" before htpdate is done
+      (Closes: #7721).
+    - Upgrader wrapper: make the check for free memory smarter
+      (Closes: #10540, #8263).
 
   * Minor improvements
-    - Convert all our custom initscripts to native systemd units.
+    - Remove obsolete code from various places.
     - Use socket activation for CUPS, to save some boot time.
     - Port XXX [check custom packages] to GTK3 / UDisks2 / Python 3 / whatever.
     - Don't install UDisks v1.
     - Adapt custom udev rules to UDisks v2 (Closes: #9054).
     - Adjust import-translations' post-import step for Tails Installer,
       to match how its i18n system works nowadays.
-    - Set memlockd.service's OOMScoreAdjust to -17.
+    - Set memlockd.service's OOMScoreAdjust to -1000.
     - Don't bother creating /var/lib/live in tails-detect-virtualization.
       If it does not exist at this point, we have bigger and more
       noticeable problems.
@@ -74,9 +79,6 @@ tails (2.0~beta1) unstable; urgency=medium
       · don't try to include the obsolete .xession-errors in bug reports
         (Closes: #9966)
     - chroot-browser.sh: don't use static DISPLAY.
-    - Restore the logo in the "About Tails" dialog.
-    - Don't tell the user that "Tor is ready" before htpdate is done
-      (Closes: #7721).
     - Simplify debugging:
       · don't hide the emergency shutdown's stdout
       · tails-unblock-network: trace commands so that they end up in the Journal
@@ -88,6 +90,19 @@ tails (2.0~beta1) unstable; urgency=medium
       transition to X.Org when booting, and back to text mode on shutdown,
       can help for proper graphics hardware reinitialization post-kexec,
       and should improve GNOME Shell support in some virtual machines.
+    - Always show the Universal Access menu icon in the GNOME panel.
+    - Drop notification for not-migrated-yet persistence configuration,
+      and persistence settings disabled due to wrong access rights.
+      That migration happened more two years ago.
+    - Remove the restricted network detector, that has been broken for too long;
+      see #10560 for next steps (Closes: #8328).
+    - Remove unsupported, never completed kiosk mode support.
+    - clock_gettime_monotonic: use Perl's own function to get the integer part,
+      instead of forking out to sed.
+    - Don't (try to) disable lvm2 initscripts anymore. Both the original reason
+      and the implementation are obsolete on Jessie.
+    - Lower potential for confusion (#8443), by removing system-config-printer.
+      One GUI to configure printers is enough (Closes: #8505).
 
   * Test suite
     - Adapt to the new desktop environment and applications' look.
@@ -125,12 +140,80 @@ tails (2.0~beta1) unstable; urgency=medium
     - Add wait_*_gnome_window() helpers and use them everywhere applicable
       for added reliability.
     - Reliably wait for Synaptic's search button to fade in.
+    - Take into account that the sticky bit is not set on block devices
+      on Jessie anymore.
+    - Ensure that we can use a NetworkManager connection stored in persistence
+      (Closes: #7966).
+    - Use a stricter regexp when extracting logs for dropped packets.
+    - Clone the host CPU for the test suite guests (Closes: #8778).
+    - Run ping as root (aufs does not support file capabilities so we don't
+      get cap_net_raw+ep, and if built on a filesystem that does support
+      file capabilities, then /bin/ping is not setupd root).
+
+    * Fix is_persistent?() helper due to findmnt changes in Jessie.
+    In jessie, findmnt correctly notices that / is an aufs mounts. Hence
+    let's assume that we're not using read-only persistence (which uses
+    aufs) in which case aufs => no persistence.
+  * Rework how we measure pattern coverage.
+    The approaches we used before just seems incorrect in multiple ways:
+    * vm.overcommit_memory = 2 seems to make OOM killing happen way too
+      early, around when 15% or RAM is still free, no matter the value of
+      vm.overcommit_ratio and the various *reserved settings.
+    * Using the ratio of a ration for the {min,max}_coverage calculations
+      were just weird and a sign of incremental bandaid-like fixes.
+    Now we do what we intended more explicitly, that is: measure the
+    pattern coverage in the free RAM at the time we start filling it. We
+    also have to reserve some RAM for the kernel (so it doesn't freeze
+    when approaching full RAM) and admin processes like the remote shell
+    (so it doesn't get unresponsive), and we exclude this from the free
+    RAM in the calculations for a much more accurate result than before.
+    Note that we may end up having a bit more than 100% pattern
+    coverage. While that may seem strange it may just indicate that some
+    unrelated RAM was freed after we noted the amount of free RAM right
+    before we started filling it.
+    Will-fix: #9705
+  * Use blkid instead of parted to determine the filesystem type.
+    In Jessie, "parted print NUMBER" doesn't work, and then blkid seems
+    like a cleaner approach (bonus: the name blkid uses for swap is
+    cleaner too).
+  * Simplify by removing the wait_for_gnome*() helpers.
+    They don't work well and do not seem needed. Also, it's used in only
+    two places, and add to that that GNOME seems to be moving away from
+    having the type of title bar we're looking for.
+  * Start each fillram instance with the correct oom_score_adj.
+    ... by starting them in sub shell with the desired oom_score_adj. The
+    way we did it before left a window where they inherit the remote
+    shell's oom_score_adj, which is the absolute opposite of the range,
+    meaning that everything else will be prioritized.
+  * Decide memory wiping waiting time on configured RAM.
+    ... instead of detected RAM. This should only make us wait longer,
+    since detected RAM <= configured RAM, so it's safe but potentially an
+    increase in runtime.
+    We actually do this since we often want to run these modified steps
+    when the remote shell is not available any more, since Tails is
+    shutting down.
+  * Use --kiosk mode instead of --fullscreen in virt-viewer.
+    The only effect will be that the tiny border of the in-viewer menu is
+    removed (which *potentially* could be in the way some time) since
+    --kiosk implies --fullscreen.
+  * Remove scenario.
+    In Jessie, org.gnome.gnome-screenshot.auto-save-directory is empty
+    since the default is sensible, ~/Pictures. To save the removed
+    scenario we'd have to set it explicitly, which seems stupid. Besides,
+    the 'A screenshot is taken when the PRINTSCREEN key is pressed'
+    scenario is already testing that GNOME Screenshot saves into this
+    directory, which is enough.
+  * Adapt Gnome notification handling for Debian Jessie.
+    When waiting for specific notifications we'll completely depend on
+    robust_notification_wait() from now on *and* it will leave other
+    notifications unlike the old version.
+    Will-fix: #8782
+  * Migrate to robust_notification_wait() and update some related images for Jessie.
+
+
 
   * Adjustments for Debian 8 (Jessie) with no or very little user-visible impact
     - Free the fixed UIDs/GIDs we need before creating the corresponding users.
-    - Disable /etc/network/if-pre-up.d/macchanger (Closes: #8265).
-      On Jessie, macchanger ships /etc/network/if-pre-up.d/macchanger, that
-      probably conflicts with the way we're spoofing MAC addresses.
     - Replace the real gnome-backgrounds with a fake, equivs generated one
       (Closes: #8055). Jessie's gnome-shell depends on gnome-backgrounds,
       which is too fat to ship considering we're not using it.
@@ -253,13 +336,21 @@ tails (2.0~beta1) unstable; urgency=medium
       · tails-security-check: use a dialog box instead of desktop notifications
       · MAC spoofing failure notification: remove the link to the documentation;
         it was broken on Tails/Wheezy already, see #10559 for next steps
+    - Don't explicitly install gnome-panel nor gnome-menus, so that they go away
+      whenever the Greeter does not pull them in anymore.
+    - Install gkbd-capplet, that provides gkbd-keyboard-display (Closes: #8363).
+    - Install Tor 0.2.7 from deb.torproject.org: we don't need to rebuild it
+      ourselves for seccomp support anymore.
+    - Wrap Seahorse with torsocks when it is started as a D-Bus service too
+      (Closes: #9792).
+    - Rename the AppArmor profile for Tor, so it applies to the system-wide
+      Tor service we run (Closes: #10528).
+    - Essentially revert ALSA state handling to how it was pre-Jessie, so that
+      mixer levels are unmuted and sanitized at boot time (Closes: #7591).
 
   * Drop Wheezy-era hacks to make the PulseAudio initscript silent.
     It has never been used in Tails, and has finally been removed on Jessie:
     per-user sessions for everyone.
-  * Install gir1.2-gmenu-3.0, needed by the apps-menu GNOME Shell extension (Closes: #8096).
-    This works around Debian#765460.
-
   * Make removable devices user writable.
     This fixes #8273, but I'm not sure whether it's a proper solution or
     just a workaround.
@@ -268,29 +359,6 @@ tails (2.0~beta1) unstable; urgency=medium
     which is why we have this workaround in the first place.
   * On MAC spoofing failure, disable NM services in addition to stopping then.
     ... and actually stop all of them.
-  * Install gkbd-capplet, that provides gkbd-keyboard-display (Closes: #8363).
-  * Remove chroot hook that deals with the GDM background: the file we're removing doesn't exist anymore.
-  * Don't install gnome-panel nor gnome-menus.
-    They're not needed in GNOME Shell anymore. We still get them by way of the
-    dependency from the GNOME Flashback stack (used in the Greeter), and they
-    will go away whenever the Greeter runs in GNOME Shell.
-  * Drop manual dependency on gir1.2-gmenu-3.0.
-    Debian#765460 has been fixed.
-  * Always show the Universal Access menu icon in the GNOME panel.
-  * Stop using /usr/bin/gnome-session-fallback as the default X session manager.
-    We're now using GNOME Classic.
-  * Clone the host CPU for the test suite guests (Will-fix: #8778).
-  * Drop patch against /etc/default/macchanger: the default settings are now what we need.
-
-  * Forcibly install Tor from o=TorProject,n=jessie.
-  * Make our shutdown-helper Shell extension call `poweroff' instead of `halt'.
-    The latter is _not_ supported to actually turn off the system.
-    It was a SysV init bug that it did, which is fixed under systemd.
-
-  * Turn the htpdate SysV initscript into a native systemd service.
-  * Adjust test suite: the sticky bit is not set of the device file on Jessie anymore.
-    This basically reverts commit:fc5e73b, that was introduced when we migrated
-    from Squeeze to Wheezy.
 
   * Convert a few X session startup programs to `systemd --user' units.
     This is merely preparatory work that lays down some foundations.
@@ -355,18 +423,7 @@ tails (2.0~beta1) unstable; urgency=medium
     Otherwise, it would try to start on boot before the user has had the chance to
     opt-out from MAC spoofing. And then it would fail, since its EnvironmentFile
     (/var/lib/gdm3/tails.physical_security) does not exist yet.
-  * Drop notification for not-migrated-yet persistence configuration.
-    That migration happened in Tails 0.21, released on 2013-10-29.
-  * Add a unit file whose completion indicates that Tor has bootstrapped.
-    We'll then be able to use this, with systemd units ordering, to get rid
-    of some of the while/sleep loops we have elsewhere.
-  * Create a tails-wait-until-tor-has-bootstrapped.service in the systemd user instance.
-    The systemd user and system instances don't share units. Thus, the dependency
-    we have from the security check and upgrader user services on
-    tails-wait-until-tor-has-bootstrapped had no effect.
-    So, we have the *system* tails-wait-until-tor-has-bootstrapped.service create
-    a file upon completion -- and the identically named *user* unit file wait for
-    that file to appear.
+
   * tor-browser, 60-tor-ready.sh: use systemctl to determine if Tor has bootstrapped already.
     Note that `systemctl is-active' returns false for a service that's in
     "activating" state. The thing is, tails-wait-until-tor-has-bootstrapped.service
@@ -441,16 +498,6 @@ tails (2.0~beta1) unstable; urgency=medium
   * Replace patch against NetworkManager.conf with drop-in files.
   * Replace resolvconf with simpler NetworkManager and dhclient configuration.
     Refs: #7708
-  * Test suite: run ping as root.
-    For some reason, on Jessie, running ping as a regular users results in "ping:
-    icmp open socket: Operation not permitted", with exit code == 2. But as root, it
-    "works" and the firewall blocks the packets. This is rather an improvement than
-    a problem (stuff is blocked earlier, which is cheaper), so let's just deal with
-    it in the test suite only, by running ping as root: the main purpose here is to
-    test the firewall.
-    This change also affects the netcat command used to open TCP and UDP
-    connections, for code simplicity's sake. Here again, the goal is to test
-    the firewall.
 
   * Replace patching of the gdomap, i2p, hdparm, tor and ttdnsd initscripts with 'systemctl disable'.
     Closes: #9881
@@ -476,18 +523,6 @@ tails (2.0~beta1) unstable; urgency=medium
     This should avoid the need to maintain these patches and avoid them becoming
     fuzzy, especially when migrating to new versions of Debian.
 
-  * Stop installing system-config-printer.
-    It's been there since the first commit, mostly because back in the
-    years, it was the only decent CUPS GUI available; nowadays, GNOME's one
-    is good enough; we explicitly document that one should use the latter
-    anyway, and as shown by #8443, even us are sometimes confused by (or
-    reporting confusing information about) the fact that we ship 2 GUIs for
-    the same task.
-    Besides, on Jessie system-config-printer adds "an unclear and useless
-    Sundry category in Applications menu".
-    Note that typing in the sudoer password is still required to manage
-    printers, but that's not a Jessie regression and it's tracked by
-    Closes: #8505
   * Allow the amnesia user, when active, to use all CUPS actions needed by the GNOME printing setup dialog.
     These rules override those shipped by cups-pk-helper 0.2.5-2+b1 in
     /usr/share/polkit-1/actions/org.opensuse.cupspkhelper.mechanism.policy
@@ -506,76 +541,6 @@ tails (2.0~beta1) unstable; urgency=medium
     Note that this introduces a regression as-is, since we lose
     the patch for https://bugs.torproject.org/15482. That's tracked by
     Refs: #10194
-  * Fix is_persistent?() helper due to findmnt changes in Jessie.
-    In jessie, findmnt correctly notices that / is an aufs mounts. Hence
-    let's assume that we're not using read-only persistence (which uses
-    aufs) in which case aufs => no persistence.
-  * Rework how we measure pattern coverage.
-    The approaches we used before just seems incorrect in multiple ways:
-    * vm.overcommit_memory = 2 seems to make OOM killing happen way too
-      early, around when 15% or RAM is still free, no matter the value of
-      vm.overcommit_ratio and the various *reserved settings.
-    * Using the ratio of a ration for the {min,max}_coverage calculations
-      were just weird and a sign of incremental bandaid-like fixes.
-    Now we do what we intended more explicitly, that is: measure the
-    pattern coverage in the free RAM at the time we start filling it. We
-    also have to reserve some RAM for the kernel (so it doesn't freeze
-    when approaching full RAM) and admin processes like the remote shell
-    (so it doesn't get unresponsive), and we exclude this from the free
-    RAM in the calculations for a much more accurate result than before.
-    Note that we may end up having a bit more than 100% pattern
-    coverage. While that may seem strange it may just indicate that some
-    unrelated RAM was freed after we noted the amount of free RAM right
-    before we started filling it.
-    Will-fix: #9705
-  * Use blkid instead of parted to determine the filesystem type.
-    In Jessie, "parted print NUMBER" doesn't work, and then blkid seems
-    like a cleaner approach (bonus: the name blkid uses for swap is
-    cleaner too).
-  * Simplify by removing the wait_for_gnome*() helpers.
-    They don't work well and do not seem needed. Also, it's used in only
-    two places, and add to that that GNOME seems to be moving away from
-    having the type of title bar we're looking for.
-  * Start each fillram instance with the correct oom_score_adj.
-    ... by starting them in sub shell with the desired oom_score_adj. The
-    way we did it before left a window where they inherit the remote
-    shell's oom_score_adj, which is the absolute opposite of the range,
-    meaning that everything else will be prioritized.
-  * Remove the check for the sound icon in the systray.
-    Will-fix: #10493
-
-  * Also wrap Seahorse with torsocks when it is started as a D-Bus service.
-    It's started this way e.g. with "Password and keys" from the Activities Overview
-    and applications menu.
-    Closes: #9792
-
-  * Decide memory wiping waiting time on configured RAM.
-    ... instead of detected RAM. This should only make us wait longer,
-    since detected RAM <= configured RAM, so it's safe but potentially an
-    increase in runtime.
-    We actually do this since we often want to run these modified steps
-    when the remote shell is not available any more, since Tails is
-    shutting down.
-  * Add missing chomp().
-  * Use --kiosk mode instead of --fullscreen in virt-viewer.
-    The only effect will be that the tiny border of the in-viewer menu is
-    removed (which *potentially* could be in the way some time) since
-    --kiosk implies --fullscreen.
-  * Restore AppArmor confinement of Tor by renaming the AppArmor profile.
-    Jessie's systemd has no AppArmor support, so Tor 0.2.7.x backport for Jessie's
-    systemd unit files don't load the profile. We've ensure that on Stretch
-    everything will work just as we need, but for Jessie we need this kludge:
-    simply rename the system_tor profile so that it's used automatically, without
-    having to explicitly assign it to the service.
-    Closes: #10528
-  * Unmute and sanitize ALSA mixer levels at boot time.
-    This essentially reverts ALSA state handling to pre-Jessie.
-    For Stretch we might need something better, but it's simple enough that
-    we could easily turn the relevant bits of the legacy initscript into
-    a systemd unit file if needed.
-    Closes: #7591
-  * Mask the ALSA state store/restore systemd services.
-    These are "static" so can't be enabled/disabled.
 
   * Turn htpdate.service into Type=oneshot.
     I want to use time-sync.target (see systemd.special(7)), so that we can
@@ -597,20 +562,14 @@ tails (2.0~beta1) unstable; urgency=medium
     Tor 0.2.7.x packaging now uses a template systemd unit file,
     and the instance we use is called tor@default.service.
 
-  * Remove scenario.
-    In Jessie, org.gnome.gnome-screenshot.auto-save-directory is empty
-    since the default is sensible, ~/Pictures. To save the removed
-    scenario we'd have to set it explicitly, which seems stupid. Besides,
-    the 'A screenshot is taken when the PRINTSCREEN key is pressed'
-    scenario is already testing that GNOME Screenshot saves into this
-    directory, which is enough.
-  * Adapt Gnome notification handling for Debian Jessie.
-    When waiting for specific notifications we'll completely depend on
-    robust_notification_wait() from now on *and* it will leave other
-    notifications unlike the old version.
-    Will-fix: #8782
-  * Migrate to robust_notification_wait() and update some related images for Jessie.
-
+  * Add a systemd target whose completion indicates that Tor has bootstrapped.
+  * Create a tails-wait-until-tor-has-bootstrapped.service in the systemd user instance.
+    The systemd user and system instances don't share units. Thus, the dependency
+    we have from the security check and upgrader user services on
+    tails-wait-until-tor-has-bootstrapped had no effect.
+    So, we have the *system* tails-wait-until-tor-has-bootstrapped.service create
+    a file upon completion -- and the identically named *user* unit file wait for
+    that file to appear.
   * Introduce a dedicated systemd target for "Tor has bootstrapped" state.
     ... and move tails-wait-until-tor-has-bootstrapped.service from
     default.target to it. The main effect is that anything that wants to
@@ -621,84 +580,6 @@ tails (2.0~beta1) unstable; urgency=medium
 
   * Install tails-installer instead of liveusb-creator.
     Refs: #8561
-
-  * Draft a test to ensure that we can use a NetworkManager connection stored in persistence.
-    Will-fix: #7966
-  * Revert "Lower required free (non-buffer/cache) memory for Tails Upgrader."
-    This reverts commit 01c88c1b5f13ea02437c2f547fad0dd61946abdc.
-    Refs: #8263
-    Since then, we've bumped the memory requirements (both in our
-    documentation and on the test suite's "hardware") to 2 GB, so the
-    original reason for this change has gone away => let's go back to
-    a value that was tested and confirmed to work (as in: allow upgrading
-    a running Tails) on Wheezy, instead of a value that was tested on
-    Jessie, but only for checking for available upgrades.
-    The follow-ups will be:
-     * the cool ideas posted on
-       https://labs.riseup.net/code/issues/8263#note-1 will become a new,
-       dedicated ticket (that has no reason to block the Tails 2.0 release);
-     * #8083 and #7986 will tell us if the value this commit reverts to
-       is OK.
-  * Upgrader wrapper: make the check for free memory smarter.
-    Quoting anonym (#8263#note-1):
-    In our Live system context, where a lot of stuff is in tmpfs:es, looking
-    at the values of free or /proc/meminfo alone isn't accurate for
-    determining how much memory "really" is free, since the tmpfs usage is
-    included in the buffers. Hence, MemFree is the lower (and safe) bound of
-    how much "really" free memory we have, and MemFree + Buffers + Cache is
-    the upper (and unsafe) bound. The true value should be (at least closer
-    to) MemFree + Buffers + Cache - (sum of usage by tmpfs:es). We should
-    check once against that value instead.
-    The 300 MB magic number (minimum "real memory" available) was found
-    after bisecting with an ISO built from current feature/jessie:
-     * with 278000 kB of "real memory" available, Tails Upgrader could
-       successfully tell me that no upgrade was available (which is indeed
-       the case), or that I should manually upgrade (after tweaking
-       /etc/os-release; because I started from DVD);
-     * with 255000 kB of "real memory" available, the check for upgrades
-       failed and the desktop session froze;
-    => so 300x1024 kB should give us a small safety margin.
-    For the record, a VM with 1GB of RAM allocated (891 MB visible due to
-    the QXL video adapter stealing some) on current feature/jessie has
-    336MB (137MB free + 39MB buffers + 212MB cache - 52MB tmpfs) of "real
-    memory" available once Tor is ready and Tor Browser is started, so in
-    practice any system that's beefy enough to use Tails 2.0 can check
-    for upgrades.
-    Closes: #10540, #8263
-  * Drop notification when persistence settings were disabled due to wrong access rights.
-    No need to run this script at login time on every Tails two years later.
-  * Drop obsolete comment.
-  * Fix link to documentation.
-  * tails-security-check: remove obsolete code.
-    We've stopped using this "version file" a while ago.
-  * Remove the restricted network detector.
-    As explained on https://labs.riseup.net/code/issues/8328#note-5, it's
-    been broken for 16 months, it is still broken after the partial fix that
-    went in Tails 1.6, and the logic on which the detector is based cannot
-    work anymore. Reintroducing and porting this feature is now tracked
-    on #10560.
-    Closes: #8328
-    Refs: #10560
-  * Don't try to disable lvm2 initscripts anymore.
-    It was disabled in amnesia 0.3 because "it slows-down too much the boot
-    in certain circumstances". I can't confirm that with current hardware on
-    feature/jessie: the output of `systemd-analyze critical-chain' does not
-    include anything LVM-related, and in `systemd-analyze blame' everything
-    LVM-related takes 400ms or less on one of my systems, and 100ms or less
-    on another.
-    On Jessie, lvm2 initscripts have been split into numerous systemd units,
-    so it might help avoid unconditionally blocking boot.
-    Note that the way we did in this this chroot_local-hooks has no effect
-    on Jessie.
-
-  * Remove kiosk mode support.
-    It was a partial, never completed attempt. We don't ship such things in
-    Tails anymore these days.
-  * Test suite: use a stricter regexp when extracting logs for dropped packets.
-    Thanks to journalctl's --output=cat option, we can trivially look at the
-    logged message itself, without any metadata around.
-  * clock_gettime_monotonic: use Perl's own function to get the integer part, instead of forking out to sed.
-
 
   * Refactor GNOME/X env exporting to Tails' shell library.
   * Grab the rest of the variables from gnome-shell's environment.
@@ -715,9 +596,6 @@ tails (2.0~beta1) unstable; urgency=medium
     some image. This is the case in e.g. the 'Install packages using
     Synaptic' scenario, in which the APT update can take >5 minutes.
     Will-fix: #10403
-  * Remove useless code.
-    We only intend to run these script from environments where XAUTHORITY
-    is set. Also, there is no ~/.Xauthority.
 
  -- Tails developers <tails@boum.org>  Thu, 19 Nov 2015 16:01:19 +0000
 
