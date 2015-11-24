@@ -128,12 +128,6 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
     $vm.execute_successfully("sysctl #{key}=#{val}")
   end
 
-  # The remote shell is sometimes OOM killed when we fill the memory,
-  # and since we depend on it after the memory fill we try to prevent
-  # that from happening.
-  pid = $vm.pidof("tails-autotest-remote-shell")[0]
-  $vm.execute_successfully("echo '-1000' > /proc/#{pid}/oom_score_adj")
-
   # We exclude the memory we reserve for the kernel and admin
   # processes above from the free memory since fillram will be run by
   # an unprivileged user in user-space.
