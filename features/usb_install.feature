@@ -17,7 +17,7 @@ Feature: Installing Tails to a USB drive
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "pristine"
     And I plug USB drive "pristine"
-    And I start Tails Installer in "Upgrade from ISO" mode
+    And I start Tails Installer in "Clone & Upgrade" mode
     Then a suitable USB device is not found
     And I am told that the destination device cannot be upgraded
 
