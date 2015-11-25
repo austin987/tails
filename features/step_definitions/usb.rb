@@ -401,7 +401,7 @@ Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
          "We are running from device #{actual_dev}, but for #{bus} drive " +
          "'#{name}' we expected to run from either device " +
          "#{expected_dev_normal} (when installed via the USB installer) " +
-         "or #{expected_dev_normal} (when installed from an isohybrid)")
+         "or #{expected_dev_isohybrid} (when installed from an isohybrid)")
 end
 
 Then /^the boot device has safe access rights$/ do
