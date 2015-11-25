@@ -54,7 +54,7 @@ Feature: Installing Tails to a USB drive
     And I plug USB drive "current"
     Then the "current" USB drive is selected
 
-  Scenario: Test that Tails installer can detect when a target USB drive is inserted or removed
+  Scenario: Detecting when a target USB drive is inserted or removed
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "temp"
     And I start Tails Installer in "Clone & Install" mode
