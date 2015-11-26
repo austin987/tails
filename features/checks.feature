@@ -98,3 +98,12 @@ Feature: Various checks
     And process "tor" is not running
     But process "nm-applet" is running
     And network traffic is not generated during the Tails session
+
+  Scenario: Anti-test: Network traffic is generated when "disable all networking" is not selected
+    Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
+    And I log in to a new session
+    And the Tails desktop is ready
+    When the network is plugged
+    Then process "NetworkManager" is running
+    And Tor is ready
+    Then network traffic is generated during the Tails session
