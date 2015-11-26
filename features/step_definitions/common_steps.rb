@@ -441,9 +441,12 @@ Given /^I enter the "([^"]*)" password in the pkexec prompt$/ do |password|
   deal_with_polkit_prompt('PolicyKitAuthPrompt.png', password)
 end
 
-Given /^process "([^"]+)" is running$/ do |process|
-  assert($vm.has_process?(process),
-         "Process '#{process}' is not running")
+Given /^process "([^"]+)" is (not )?running$/ do |process, not_running|
+  if not_running
+    assert(!$vm.has_process?(process), "Process '#{process}' is running")
+  else
+    assert($vm.has_process?(process), "Process '#{process}' is not running")
+  end
 end
 
 Given /^process "([^"]+)" is running within (\d+) seconds$/ do |process, time|
@@ -458,11 +461,6 @@ Given /^process "([^"]+)" has stopped running after at most (\d+) seconds$/ do |
                              "waiting for #{time} seconds") do
     not $vm.has_process?(process)
   end
-end
-
-Given /^process "([^"]+)" is not running$/ do |process|
-  assert(!$vm.has_process?(process),
-         "Process '#{process}' is running")
 end
 
 Given /^I kill the process "([^"]+)"$/ do |process|
