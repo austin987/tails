@@ -33,10 +33,10 @@ EOF
   end
 end
 
-Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)$/ do |server_type|
+Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)( on the LAN)?$/ do |server_type, lan|
   $vm.execute_successfully("install -m 0700 -d '/home/#{LIVE_USER}/.ssh/'",
                            :user => LIVE_USER)
-  unless server_type == 'Git'
+  unless server_type == 'Git' || lan
     read_and_validate_ssh_config server_type
     secret_key = $config[server_type]["private_key"]
     public_key = $config[server_type]["public_key"]
@@ -53,14 +53,24 @@ Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)$/ d
                            :user => LIVE_USER)
 end
 
-Given /^I verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do
+Given /^I (?:am prompted to )?verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do
   @screen.wait("SSHFingerprint.png", 60)
   @screen.type('yes' + Sikuli::Key.ENTER)
 end
 
-When /^I connect to an SSH server on the Internet$/ do
+When /^I connect to an SSH server on the (Internet|LAN)$/ do |location|
 
-  read_and_validate_ssh_config "SSH"
+  case location
+  when 'Internet'
+    read_and_validate_ssh_config "SSH"
+  when 'LAN'
+    @ssh_port = Random.rand(1024...65535)
+    @ssh_username = 'user'
+    @ssh_host = $vmnet.bridge_ip
+    @sshd = SSHServer.new(sshd_host = @ssh_host, sshd_port = @ssh_port)
+    @sshd.start
+    add_after_scenario_hook { @sshd.stop }
+  end
 
   ssh_port_suffix = "-p #{@ssh_port}" if @ssh_port
 
