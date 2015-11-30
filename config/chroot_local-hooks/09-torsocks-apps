@@ -8,12 +8,12 @@ APPS="gobby-0.5 liferea seahorse"
 DBUS_SERVICES="org.gnome.seahorse.Application"
 
 for app in $APPS; do
-   sed -i'' --regexp-extended 's,Exec=(.*),Exec=torsocks \1,' \
+   sed -i'' --regexp-extended 's,^Exec=(.*),Exec=torsocks \1,' \
        "/usr/share/applications/${app}.desktop"
 done
 
 for dbus_service in $DBUS_SERVICES; do
-   sed -i'' --regexp-extended 's,Exec=(.*),Exec=torsocks \1,' \
+   sed -i'' --regexp-extended 's,^Exec=(.*),Exec=torsocks \1,' \
        "/usr/share/dbus-1/services/${dbus_service}.service"
 done
 
