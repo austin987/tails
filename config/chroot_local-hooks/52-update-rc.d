@@ -63,7 +63,7 @@ systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
 systemctl disable cups.service
 systemctl enable  cups.socket
 
-# We're starting NetworkManager and Tor ourselves.
+# We're starting NetworkManager, Tor and ttdnsd ourselves.
 # We disable tor.service (as opposed to tor@default.service) because
 # it's an important goal to never start Tor before the user has had
 # a chance to choose to do so in an obfuscated way: if some other
@@ -72,12 +72,12 @@ systemctl enable  cups.socket
 systemctl disable tor.service
 systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service
+systemctl disable ttdnsd.service
 
 # We don't run these services by default
 systemctl disable gdomap.service
 systemctl disable hdparm.service
 systemctl disable i2p.service
-systemctl disable ttdnsd.service
 
 # Don't hide tails-kexec's shutdown messages with an empty splash screen
 for suffix in halt kexec poweroff reboot shutdown ; do
