@@ -230,21 +230,28 @@ Upload a package to our Ubuntu PPA
 ----------------------------------
 
 Team members are allowed to upload a package to our Ubuntu PPA:
-<https://launchpad.net/~tails.live/+archive/ubuntu/tails-installer>
+https://launchpad.net/~tails.live/+archive/ubuntu/tails-installer
 
 You'll need to configure the dput tool to upload to the PPA and put into
-`$HOME/.dput.cf`:
+$HOME/.dput.cf:
 
-    [ppa-tails-installer]
+    [tails-installer]
     fqdn = ppa.launchpad.net
     method = ftp
     incoming = ~tails.live/ubuntu/tails-installer/
     login = anonymous
     allow_unsigned_uploads = 0
 
-Once the package has been built, a `.changes` file will be created in
-pbuilder's configured destination directory. To upload it to the PPA:
-
-    dput ppa-tails-installer ../tails-installer_$NEW_UPSTREAM_RELEASE-xxx.changes
-
-Replace "xxx" with the correct version information.
+* check out the `ubuntu/xenial` branch
+* merge the `tails/jessie` branch
+* bump version to `4.3+dfsg-0ubuntu1` using `dch -i`
+* extract upstream and packaging branch:
+    export UPSTREAM_BRANCH=`gbp config buildpackage.upstream-branch | sed -r -e 's,.*=,,'`
+* build a source only package
+  `gbp buildpackage --git-builder=git-pbuilder -sa -S`
+* test and upload to the PPA:
+  `dput tails-installer ../tails-installer_$NEW_UPSTREAM_RELEASE+dfsg-0ubuntu1_source.changes`
+* have gbp create a `ubuntu/4.3+dfsg-0ubuntu1` tag and
+  push the packaging branch (`ubuntu/xenial`) and the new tag
+    gbp buildpackage --git-tag-only --git-sign-tags && \
+    git push origin ubuntu/xenial --tags
