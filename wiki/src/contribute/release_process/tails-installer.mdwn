@@ -243,14 +243,18 @@ $HOME/.dput.cf:
     allow_unsigned_uploads = 0
 
 * check out the `ubuntu/xenial` branch
-* merge the `tails/jessie` branch
+* merge the `debian/sid` branch
 * bump version to `4.3+dfsg-0ubuntu1` using `dch -i`
 * extract upstream and packaging branch:
     export UPSTREAM_BRANCH=`gbp config buildpackage.upstream-branch | sed -r -e 's,.*=,,'`
-* build a source only package
+* build a signed source only package
   `gbp buildpackage --git-builder=git-pbuilder -sa -S`
+  The signature should be made with a key which is registered
+  at Launchpad as being part of the Tails team.
 * test and upload to the PPA:
   `dput tails-installer ../tails-installer_$NEW_UPSTREAM_RELEASE+dfsg-0ubuntu1_source.changes`
+* You will receive an email informing you if the upload was really
+  successful or if it contained any errors.
 * have gbp create a `ubuntu/4.3+dfsg-0ubuntu1` tag and
   push the packaging branch (`ubuntu/xenial`) and the new tag
     gbp buildpackage --git-tag-only --git-sign-tags && \
