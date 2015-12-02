@@ -254,8 +254,10 @@ $HOME/.dput.cf:
   `debian/stable-backports` branch to build a package for the 
   current Ubuntu version or current LTS.
 * bump version to `4.3+dfsg-0ubuntu1` using `dch -i`
-* build a source only package
-  `debuild -sa -S`.
+* if it does not exist, rebuild the .orig.tar.gz of the latest version
+  from pristine-tar (use the latest git log entry to find the version):
+  `pristine-tar checkout ../tails-installer_4.4.6+dfsg.orig.tar.gz`
+* build a source only package using `debuild -i -uc -us -sa -S`
   Once the package has been built, a `.changes` file will be created in
   pbuilder's configured destination directory.
 * test the package (piuparts, Lintian, etc.)
