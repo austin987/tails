@@ -255,14 +255,18 @@ $HOME/.dput.cf:
   current Ubuntu version or current LTS.
 * bump version to `4.3+dfsg-0ubuntu1` using `dch -i`
 * build a source only package
-  `debuild -sa`.
-* test (piuparts, Lintian, etc.)
+  `debuild -sa -S`.
+  Once the package has been built, a `.changes` file will be created in
+  pbuilder's configured destination directory.
+* test the package (piuparts, Lintian, etc.)
 * sign the corresponding source.changes file
-  `debsign `
+  `debsign ../tails-installer_$NEW_UPSTREAM_RELEASE-xxx_source.changes`
+  Replace "xxx" with the correct version information.
   The signature should be made with a key which is registered
   at Launchpad as being part of the Tails team.
 * Upload to the PPA:
-  `dput tails-installer ../tails-installer_$NEW_UPSTREAM_RELEASE+dfsg-0ubuntu1_source.changes`
-* You will receive an email informing you if the upload was really
-  successful or if it contained any errors.
-* revert your changes on the Debian branch using `git reset HEAD --hard`
+  `dput tails-installer ../tails-installer_$NEW_UPSTREAM_RELEASE+xxx_source.changes`
+
+You will receive an email informing you if the upload was really successful
+or if it contained any errors. On success, you should now revert your changes on the
+Debian branch using `git reset HEAD --hard`.
