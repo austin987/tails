@@ -66,6 +66,11 @@ targeted at current Tails, as said above. More specifically:
 * The `upstream/3.x+dfsg`, `upstream/4.x+dfsg`, etc. branches are what we tell `gbp`
   to use as its "upstream" branch. Make sure to check them out when setting up the repository
   for the first time.
+* For Ubuntu, we want to support the current Ubuntu version (currently `wily`), the 
+  upcoming version, currently (`xenial`) and the current LTS, from 16.04 on (currently 
+  `xenial`).
+  We do not maintain any Git branches related to Ubuntu releases, as simply the changelog
+  entries are modified.
 
 Topic branches
 --------------
@@ -237,27 +242,27 @@ https://launchpad.net/~tails.live/+archive/ubuntu/tails-installer
 You'll need to configure the dput tool to upload to the PPA and put into
 $HOME/.dput.cf:
 
-    [tails-team]
+    [ppa-tails-installer]
     fqdn = ppa.launchpad.net
     method = ftp
     incoming = ~tails-team/ubuntu/tails-installer/
     login = anonymous
     allow_unsigned_uploads = 0
 
-* check out the `ubuntu/xenial` branch
-* merge the `debian/sid` branch
+* check out the `debian/sid` or `debian/experimental` branch
+  to build a package for the next Ubuntu release or checkout the
+  `debian/stable-backports` branch to build a package for the 
+  current Ubuntu version or current LTS.
 * bump version to `4.3+dfsg-0ubuntu1` using `dch -i`
-* extract upstream and packaging branch:
-    export UPSTREAM_BRANCH=`gbp config buildpackage.upstream-branch | sed -r -e 's,.*=,,'`
-* build a signed source only package
-  `gbp buildpackage --git-builder=git-pbuilder -sa -S`
+* build a source only package
+  `debuild -sa`.
+* test (piuparts, Lintian, etc.)
+* sign the corresponding source.changes file
+  `debsign `
   The signature should be made with a key which is registered
   at Launchpad as being part of the Tails team.
-* test and upload to the PPA:
+* Upload to the PPA:
   `dput tails-installer ../tails-installer_$NEW_UPSTREAM_RELEASE+dfsg-0ubuntu1_source.changes`
 * You will receive an email informing you if the upload was really
   successful or if it contained any errors.
-* have gbp create a `ubuntu/4.3+dfsg-0ubuntu1` tag and
-  push the packaging branch (`ubuntu/xenial`) and the new tag
-    gbp buildpackage --git-tag-only --git-sign-tags && \
-    git push origin ubuntu/xenial --tags
+* revert your changes on the Debian branch using `git reset HEAD --hard`
