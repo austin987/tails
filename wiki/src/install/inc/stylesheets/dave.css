@@ -12,8 +12,33 @@ html:not([data-phase^="download"]) #download > :not(#download-button),
 
 html:not([data-phase="ready"]) #download-and-verify #use-button { display: none !important;}
 
+html[data-phase^="downl"] #download-text-state,
+html[data-phase^="downl"] #download-button-state,
+html[data-phase^="downl"] #download-message
+{
+  display: block !important;
+}
+#download-text-state > *,
+#download-button-state > *,
+#download-message > * {
+  display: none;
+}
+
+
 html[data-phase^="verif"] #download-and-verify #download,
-html[data-phase^="downl"] #download-and-verify #download
+html[data-phase^="downl"] #download-and-verify #download,
+#download[data-state="pause"] #download-text-pause,
+#download[data-state="pause"] #download-message-paused,
+#download[data-state="pause"] #download-button-state-resume,
+#download[data-state="pause"] #download-button-state-cancel,
+#download[data-state="done"] #download-text-done,
+#download[data-state="failed"] #download-message-failed,
+#download[data-state="failed"] #download-text-failed,
+#download[data-state="failed"] #download-button-state-retry,
+#download[data-state="going"] #download-button-state-cancel,
+#download[data-state="going"] #download-button-state-pause,
+#download:not([data-state]) #download-button-state-cancel,
+#download:not([data-state]) #download-button-state-pause
 {
   display: block;
   opacity: 1
@@ -45,7 +70,7 @@ UI elements inside the #download-and-verify container.
 
 html:not([data-extension]) #supported-browser > :not(#install),
 [data-extension="old"] #supported-browser > :not(#update),
-[data-extension="ok"] #supported-browser > :not(#use)
+[data-extension="ok"] #supported-browser > div:not(#use)
 { display: none }
 
 .chrome-unsupported .chrome-browser { display: none }
@@ -76,19 +101,203 @@ Extension's toggles
 #download-progress {
   width: 100%;
 }
+[data-phase^="download"] #download-and-verify #i_have_iso.dave-show { display: none !important}
+[data-phase^="verif"] #download-and-verify #i_have_iso.dave-show { display: none !important}
 
-[data-phase^="download"] #download-button
+[data-phase^="download"] #download-button,
+[data-phase^="download"] #bittorrent-minor,
+[data-phase^="verif"] #download-button,
+[data-phase^="verif"] #download-eta,
+[data-phase^="verif"] #download-progress
 { display: none }
 
 html[data-phase^="download"]  #download-and-verify #download,
 [data-phase^="download"] #download-text,
+[data-phase^="verif"] #download-text
 { display: block !important}
 
+html[data-phase^="downloading"] #download-eta {
+  opacity: 1;
+}
 
+#download-eta {
+  opacity: 0;
+}
+
+/*
+trick to hide both the value and the measure unit when number is bogus,
+especially for ETA with alternate min(s) / sec(s) and speed, and to use different singular and plural forms,
+ e.g.
+ <span data-value="1">
+  <span class="eta-mins">1</span>
+  <span class="plural">minutes</span>
+  <span class="singular">minute</span>
+ </span>
+ <span data-value="90">
+   <span class="eta-secs">90</span>
+   <span class="plural">seconds</span>
+   <span class="singular">second</span>
+ </span>
+
+ Will just display
+ 1 minute
+
+ and
+
+<span data-value="???">
+  <span class="eta-mins">???</span>
+  <span class="plural">minutes</span>
+  <span class="singular">minute</span>
+</span>
+<span data-value="20">
+  <span class="eta-secs">20</span>
+  <span class="plural">seconds</span>
+  <span class="singular">second</span>
+</span>
+
+will give
+20 seconds
+*/
+#download [data-value="???"],
+#download :not([data-value="1"]) > .singular,
+#download [data-value="1"] .plural,
+#download [data-value] + [data-value]
+{ display: none }
+
+#download [data-value="???"] + :not([data-value="???"])
+{ display: initial !important; }
 
 .dave-show {
   display: initial !important;
 }
 .dave-hide {
   display: none !important;
+}
+
+h1 {
+  margin-bottom: 50px;
+}
+
+h2 {
+  color: black;
+  padding: 10px;
+  border-bottom: 10px solid black;
+}
+
+#pagebody #content a.btn {
+  color: white !important;
+  background: #56347c;
+  border: none;
+}
+
+/* Remove message once extension has started. */
+html[data-extension^="ok"] #use p,
+html[data-extension^="ok"] #update p,
+html[data-extension^="ok"] #install p {
+  opacity: 0;
+}
+
+/* Add transparency to past states. */
+.btn.disabled, .btn[disabled], fieldset[disabled] .btn {
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.25;
+}
+
+/* Hide "I already have an ISO" for the time being... */
+#i_have_iso {
+  display:none !important;
+  opacity: 0;
+}
+
+/* Hide download path once downloaded. */
+html[data-phase^="verified"] small#download-path,
+html[data-phase^="verifying"] small#download-path {
+  opacity: 0;
+}
+
+/* Show "Done" once downloaded and changed state. */
+html[data-phase^="verified"] #download-text-state,
+html[data-phase^="verifying"] #download-text-state {
+  opacity: 1;
+  display: block;
+}
+
+html[data-phase^="verified"] #download-text-done,
+html[data-phase^="verifying"] #download-text-done {
+  opacity: 1;
+  display: block;
+}
+
+/* Hide "Download" once downloaded. */
+html[data-phase^="verified"] #download,
+html[data-phase^="verifying"] #download {
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.25 !important;
+}
+
+/* Enlarge div to look less like a button. */
+#verify-text {
+  display: block;
+  cursor: default;
+}
+
+html[data-phase^="verified"] #verify-text {
+    box-shadow: none;
+    opacity: 0.25 !important;
+}
+
+/* Hide "Calculating" once verified. */
+html[data-phase^="verified"] #verify-text-calculating {
+  display: none;
+}
+
+/* Less importance to GnuPG alternative. */
+#verify-text-success .openpgp {
+  background: none;
+  font-size: 0.8em;
+}
+
+/* Wider extension div and with more space. */
+#download-and-verify {
+  width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 50px;
+  padding-bottom: 50px;
+}
+
+/* Do not display background image on links. */
+#pagebody a[href^="http"] {
+  background: none;
+}
+
+/* Wider buttons */
+#download-button {
+  display: block;
+}
+
+#install-button {
+  display: block;
+}
+
+/* Show and Hide bittorent link. */
+html:not([data-extension^="ok"]) #bittorrent-minor {
+  display:block !important;;
+}
+
+html[data-extension^="ok"] #bittorrent-minor {
+  display:none;
+}
+
+/* Remove default bootstrap success background. */
+#verify-text-success {
+  background: none;
+}
+
+/* Avoid big button and give some space when unsupported browser. */
+.download-options a {
+  white-space: normal;
+  margin-top: 30px;
 }
