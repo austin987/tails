@@ -32,14 +32,20 @@ little value.
      - bump `Valid-Until`
      - freeze
      - unfreeze
+   * move relevant content from this blueprint to the "final" design
+     doc + contributors doc
 
 2. time-based snapshots [i]
-   a. initial reprepro setup that keeps up-to-date local mirrors of
+   a. **done** initial reprepro setup that keeps up-to-date local mirrors of
       the APT repositories we need
-   b. snapshot these mirrors every time they're updated, and publish
-      their serial
-   c. decide how many reprepro instances we want/have to split all
+   b. **done** snapshot these mirrors every time they're updated
+   c. **done** decide how many reprepro instances we want/have to split all
       this among
+   d. mirror relevant suites of deb.tails.b.o as well
+   d. publish the snapshots over HTTP
+   e. try using such snapshots for building an ISO
+   e. publish the snapshots' serial: a file is updated, now needs to
+      be published over HTTP
    d. implement list of sticky snapshots that must not be GC'ed,
       including the tool to add to that list
    e. implement GC of snapshots
@@ -55,17 +61,21 @@ little value.
    * implement switching to live APT sources at runtime
 
 4. tagged snapshots
-   a. PoC of capturing the list of binary packages used during the build [k]
-   b. initial reprepro setup for tagged snapshots
-   c. how to create a partial snapshot from a manifest and
+   a. **done** PoC of capturing the list of binary packages used during the build [k]
+   b. **done** PoC of capturing the list of source packages used during the build [k]
+   c. **done** initial reprepro setup for tagged snapshots
+   d. **WIP** how to create a partial snapshot from a manifest and
       the origin time-based snapshots? [k]
-   d. PoC of capturing the list of source packages used during the build [k]
+      - lacks source packages handling
+      - see XXX in `tails-prepare-tagged-apt-snapshot-import`
    e. expand list of source packages with those that the binary
       packages were built from [k]
    f. have the manifest → partial snapshot process include source
       packages [k]
-   g. next Tails release: generate manifest, import packages into
-      tagged snapshots [i]
+   h. **done** debootstrap in jessie-backports
+   g. for some Tails release: generate manifest, import packages into
+      tagged snapshots, try building *offline* with these tagged
+      snapshots [i]
    h. have a debootstrap 1.0.73+ in all our build environments (Vagrant
       basebox, Jenkins slaves, manual build doc) so that we get the
       `deburis` file, that's needed to build our packages listing.
@@ -76,6 +86,7 @@ little value.
 
 5. misc
    * implement whatever the "freeze exceptions" section requires
+   * Puppetize every server-side thing that hasn't been yet.
 
 # The big picture
 
@@ -138,6 +149,12 @@ except:
  * we generally use our latest snapshot of security.debian.org;
  * if a set of APT repository snapshots is encoded directly in that
    branch: use them, even for security.debian.org.
+
+XXX: add special handling of deb.tails.b.o, that we need since it's
+the repo where we can sneak freeze exceptions in. In theory it's not
+related to our great APT repository snapshots plans, since it has its
+own snapshots mechanism already, but ideally we would integrate it
+into the new system entirely?
 
 ## Different problems ⇒ different solutions
 
@@ -237,6 +254,8 @@ With this design:
    - `stable` will start using the new Debian point-release once
      a `testing` branch that uses that point-release is merged into
      `stable`.
+
+<a id="freeze-exceptions"></a>
 
 ## Freeze exceptions
 
@@ -410,6 +429,8 @@ time soon. Time will tell.
 
 XXX:
 
+ * use `Log:` in `conf/distributions`? deployed (20151030), let's look
+   at it and reconsider in a few weeks
  * use `Tracking:` in `conf/distributions`?
  * use a leading dash for `Update: - ...` in `conf/distributions`?
    <https://mirrorer.alioth.debian.org/reprepro.1.html#Some%20note%20on%20updates>
