@@ -245,3 +245,9 @@ def info_log_artifact_location(type, path)
   end
   info_log("#{type.capitalize}: #{path}")
 end
+
+def pause(message = "Paused")
+  STDERR.puts
+  STDERR.puts "#{message} (Press ENTER to continue!)"
+  STDIN.gets
+end
