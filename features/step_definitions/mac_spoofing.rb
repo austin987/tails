@@ -92,8 +92,10 @@ Then /^(\d+|no) network interface(?:s)? (?:is|are) enabled$/ do |expected_nr_nic
 end
 
 Then /^the MAC spoofing panic mode disabled networking$/ do
-  nm_is_disabled = not($vm.file_exist?("/etc/init.d/network-manager")) &&
-                   not($vm.file_exist?("/usr/sbin/NetworkManager"))
+  nm_state = $vm.execute_successfully('systemctl show NetworkManager').stdout
+  nm_is_disabled = $vm.pidof('NetworkManager').empty? &&
+                   nm_state[/^LoadState=masked$/] &&
+                   nm_state[/^ActiveState=inactive$/]
   assert(nm_is_disabled, "NetworkManager was not disabled")
   all_ethernet_nics.each do |nic|
     ["nic_ipv4_addr", "nic_ipv6_addr"].each do |function|
