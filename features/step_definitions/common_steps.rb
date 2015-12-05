@@ -26,18 +26,15 @@ def activate_filesystem_shares
   end
 end
 
-def get_center_of_region(top, bottom)
-  top_r = @screen.wait(top, 10)
-  top_y = top_r.getCenter.getY
-  bottom_r = @screen.wait(bottom, 10)
-  bottom_y = bottom_r.getCenter.getY
-  center_y = (bottom_y + top_y) / 2
-  return Sikuli::Location.new(top_r.getCenter.getX, center_y)
-end
-
 def context_menu_helper(top, bottom, menu_item)
   try_for(60) do
-    @screen.right_click(get_center_of_region(top, bottom))
+    t = @screen.wait(top, 10)
+    b = @screen.wait(bottom, 10)
+    # In Sikuli, lower x == closer to the left, lower y == closer to the top
+    assert(t.y < b.y)
+    center = Sikuli::Location.new(((t.x + t.w) + b.x)/2,
+                                  ((t.y + t.h) + b.y)/2)
+    @screen.right_click(center)
     @screen.hide_cursor
     @screen.wait_and_click(menu_item, 10)
     return
