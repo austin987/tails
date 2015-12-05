@@ -25,7 +25,68 @@ ticket #6938 can be seen on <https://labs.riseup.net/code/issues/6938>.
 
 # D. Migration to Debian Jessie
 
-We decided a [release schedule for Tails
+## D.1. Adjust to the change of desktop environment to GNOME Shell
+
+We finished porting Tails to GNOME Shell by fixing the remaining
+identified regression: raw HTML was displayed in desktop notifications
+(#7989).
+
+## D.2. Take advantage of systemd to improve the internals of Tails
+
+The Tor daemon is now managed with systemd, that completes supervision
+of critical services (#5750).
+
+We also polished code that was previously ported to systemd:
+
+* Introduced a dedicated systemd target for "Tor has bootstrapped"
+  state (#9393).
+* Call out to the shell less often in htpdate.service (#10612).
+* Converted the `21-gdm_unit_file` hook to a drop-in override (#10606).
+
+## D.3. Update our test suite for Tails Jessie
+
+This is about ticket #7563 and subtasks. Good progress was made
+on this front in November.
+
+These were resolved:
+
+* Updated the memory erasure automated tests for Jessie (#9705, #8317);
+  in passing, made it more robust and accurate.
+* Disabled screen blanking during the test suite, since it broke some
+  tests on Jessie (#10403); and in passing, we have refactored how we
+  re-use GNOME/X's environment from scripts in our codebase.
+* Fixed the "I open the address" step by pasting URLs instead of
+  typing them char by char (#10467).
+* Updated the "Connect to server" tests for Jessie (#10325).
+* Adapted GNOME notification handling (#8782) and applications menu
+  handling (#9706) for Jessie in the test suite.
+* Ported tests that used syslog to instead use the systemd Journal.
+* Updated Icedove tests for Jessie.
+
+Additionally, we made progress on:
+
+* With respect to "iptables_parse is buggy for IPv6" (#9704): sadly,
+  we could not find an iptables rules parser in Ruby (to nicely
+  integrate into our test suite's codebase) that clearly states that
+  it's compatible with IPv6. So we started looking for candidate
+  solutions in Python and Perl.
+* The GnuPG keyserver interaction test cases are being updated for
+  Jessie (#9791).
+* Updating tests for: USB installation and upgrade, Tor Browser
+  tests, ICMP filtering.
+
+## D.4.1. Document the changes implied by the move to Jessie on our website
+
+XXX
+
+## D.5.1. Release an official version of Tails based on Jessie
+
+Our two usual release managers also did a full code review of the
+changes introduced on our Jessie branch so far. No serious problem was
+identified, but lots of small polishing tasks have been added.
+
+Based on these good results and the ones we see in our partly ported
+automated test suite, we decided a [release schedule for Tails
 Jessie](https://mailman.boum.org/pipermail/tails-dev/2015-November/009790.html)
 which will be released on January 26 and be numbered 2.0. We renamed
 accordingly the versions coming after 2.0. Here is the new version
@@ -36,6 +97,58 @@ numbers of the releases mentioned in past reports and budgets:
   - Tails 1.11 will be Tails 2.3
   - Tails 1.12 will be Tails 2.4
   - Tails 1.13 will be Tails 2.5
+
+## Various porting to Jessie
+
+A lot of other porting to Jessie work was done, that does not really
+fit into any of the above categories:
+
+* Merged and forward-ported changes introduced up to Tails 1.7.
+* Ported our automatic (incremental) upgrade system to Jessie (#8083),
+  and made its check for free memory smarter (#8263, #10540).
+* Fixed synchronizing OpenPGP keys in Seahorse (#9792).
+* Fixed Totem access to the network (#10593, #10603).
+* Ensured we use a current version of obfs4proxy (#10605).
+* Made AppArmor profile for cupsd work in read-only persistence mode
+  (#10591).
+* Fixed string encoding regression that was introduced when porting
+  WhisperBack to Python 3 (#10577).
+* Restored association of application/pgp-keys MIME type with
+  Seahorse's "Import Key" application (#10571).
+* Restored AppArmor confinement of Tor on Jessie (#10528) that briefly
+  disappeared with the upgrade to Tor 0.2.7.
+* Adjusted to the fact that `.xsession-errors` does not exist anymore
+  on Jessie (#9966).
+* Restored unmuting and sanitizing ALSA mixer levels at boot time (#7591).
+* Wrote a test case to ensure that NetworkManager change of behaviour
+  wrt. watching configuration files does not affect us (#7966).
+
+And some code was cleaned up in passing:
+
+* Removed obsolete bits of APT pinning (#10607).
+* Removed obsolete workaround for the HashType enum in Tails Upgrader
+  (#7042).
+* Dropped custom syslinux package with patches for Chromebooks, that
+  we had included in a Debian Jessie update (#9292).
+
+We researched some candidate changed and investigated a few potential
+problems:
+
+* Made sure the services we disable at boot time indeed don't start on
+  Jessie (#8313).
+* Considered replacing some of our code with the GDM to GNOME session
+  keyboard layout pass-through (#8713).
+* Clarified `ttdnsd.service` (#10608) and `laptop-mode.service`
+  (#9967) situation on Jessie.
+* Looked for screen reader support regressions compared to Wheezy
+  (#8371).
+* Made sure that we have no regression wrt. logging into a text
+  console on Jessie (#9408).
+* Check if we need to keep memlockd running longer (#8260).
+* Made sure that GNOME 3.14's captive portal handling is disabled on
+  Tails/Jessie (#10526).
+* Evaluated the Caribou virtual keyboard in Tails/Jessie (#8281).
+* Considered replacing sound-juicer with goobox (#8393).
 
 # E. Release management
 
