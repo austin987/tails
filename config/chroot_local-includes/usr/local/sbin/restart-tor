@@ -18,6 +18,12 @@ clear_tor_log() {
    rm -f /var/log/tor/log
 }
 
+vidalia_was_running=no
+if pgrep "\<vidalia\>" >/dev/null 2>&1; then
+    vidalia_was_running=yes
+    killall -SIGKILL vidalia
+fi
+
 clear_tor_log
 systemctl restart tor@default.service
 
@@ -54,8 +60,7 @@ maybe_restart_tor() {
 
 try_for 270 maybe_restart_tor
 
-if pgrep "\<vidalia\>" >/dev/null; then
-    killall -SIGKILL vidalia
+if [ "${vidalia_was_running}" = yes ]; then
     # Since Tor just restarted we wait for a while until the
     # ControlPort hopefully is up.
     counter=0
