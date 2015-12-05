@@ -16,9 +16,9 @@ def seahorse_wait_helper(img, time = 20)
               "Could not find 'SeahorseKeyserverError.png'")
     else
       # Seahorse has been known to segfault during tests
-      syslog = $vm.file_content('/var/log/syslog')
-      m = /seahorse\[[0-9]+\]: segfault/.match(syslog)
-      assert(!m, 'Seahorse aborted with a segmentation fault')
+      segfault = $vm.execute('journalctl --dmesg --output=cat | ' +
+                             'grep -E "^seahorse\[[0-9]+\]: segfault"')
+      assert(segfault.empty?, 'Seahorse aborted with a segmentation fault')
     end
     # Neither keyserver error nor segfault
     raise e
