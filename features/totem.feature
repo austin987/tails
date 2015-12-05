@@ -42,8 +42,7 @@ Feature: Using Totem
 
   @check_tor_leaks @fragile
   Scenario: Watching a WebM video over HTTPS, with and without the command-line
-    Given a computer
-    And I start Tails from DVD and I login
+    Given I have started Tails from DVD and logged in and the network is connected
     When I open "https://webm.html5.org/test.webm" with Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 60 seconds
     When I close Totem
