@@ -26,6 +26,7 @@ Feature: Various checks
     Given I have started Tails from DVD without network and logged in
     Then the shipped Debian repository key will be valid for the next 3 months
 
+  @doc
   Scenario: The "Report an Error" launcher will open the support documentation
     Given I have started Tails from DVD without network and logged in
     And the network is plugged
