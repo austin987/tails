@@ -69,7 +69,7 @@ class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
-  @screen.wait('USBCreateLiveUSB.png', 10)
+  @screen.wait('USBTailsLogo.png', 10)
 
   # Here we'd like to select USB drive using #{name}, but Sikuli's
   # OCR seems to be too unreliable.
@@ -84,10 +84,10 @@ def usb_install_helper(name)
 #  # Unfortunately this results in almost garbage, like "|]dev/sdm"
 #  # when it should be /dev/sda1
 
-  @screen.wait_and_click('USBCreateLiveUSB.png', 10)
   if @screen.exists("USBCannotUpgrade.png")
     raise UpgradeNotSupported
   end
+  @screen.wait_and_click('USBCreateLiveUSB.png', 10)
   @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
   @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
   @screen.wait('USBInstallationComplete.png', 60*60)
