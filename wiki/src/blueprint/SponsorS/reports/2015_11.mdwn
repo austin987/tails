@@ -53,6 +53,33 @@ runs in Jenkins in order to help the team writing the test to identify
 which scenarios were fragile, going forward to the release of the
 notifications to contributors.
 
+## B.3. Extend the coverage of our test suite
+
+* First of all, it should be noted that our automated test suite has
+  been key to identify regressions introduced by porting Tails to
+  Debian Jessie. A number of such bugs have been found early, that we
+  would otherwise not have discovered before the first release
+  candidate of Tails based or Jessie at best, and quite possibly after
+  the first actual release of Tails based on Jessie.
+
+* B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+  - Increased the number of Tor circuit retries in the test suite (#10375).
+
+  - Work is in progress to make some test cases, that cause false
+    positives, more robust: SSH (#10498), Git (#10444), Windows
+    Camouflage (#10493), Seahorse (#9095, #10500, #10501).
+
+  - More such fragile test cases were identified, and are momentarily
+    disabled in our Jenkins environment. They will be worked on later:
+    Electrum tests (#10475) due to us shipping a too old version of
+    this piece of software, connecting to the #i2p IRC channel
+    (#10474), Synaptic (#10441), APT (#10496), ICMP filtering
+    (#10499), whois (#10523), `wait_until_tor_is_working` helper
+    (#10497), time synchronization (#10440, #10494, #10495), Pidgin
+    connecting to OFTC (#10443), watching a WebM video over HTTPS
+    (#10442).
+
 # C. Scale our infrastructure
 
 ## C.2. Be able to detect within hours failures and malfunction on our services.
