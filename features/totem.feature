@@ -41,13 +41,9 @@ Feature: Using Totem
     And AppArmor has denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
 
   @check_tor_leaks @fragile
-  Scenario: Watching a WebM video over HTTPS, with and without the command-line
+  Scenario: Watching a WebM video over HTTPS
     Given I have started Tails from DVD and logged in and the network is connected
     When I open "https://webm.html5.org/test.webm" with Totem
-    Then I see "SampleRemoteWebMVideoFrame.png" after at most 60 seconds
-    When I close Totem
-    And I start Totem through the GNOME menu
-    When I load the "https://webm.html5.org/test.webm" URL in Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 60 seconds
 
   Scenario: Watching MP4 videos stored on the persistent volume should work as expected given our AppArmor confinement

@@ -23,17 +23,6 @@ Given /^I copy the sample videos to "([^"]+)" as user "([^"]+)"$/ do |destinatio
   end
 end
 
-When /^I start Totem through the GNOME menu$/ do
-  step 'I start "Totem" via the GNOME "SoundVideo" applications menu'
-  @screen.wait_and_click("TotemMainWindow.png", 20)
-end
-
-When /^I load the "([^"]+)" URL in Totem$/ do |url|
-  @screen.type("l", Sikuli::KeyModifier.CTRL)
-  @screen.wait("TotemOpenUrlDialog.png", 10)
-  @screen.type(url + Sikuli::Key.ENTER)
-end
-
 When /^I(?:| try to) open "([^"]+)" with Totem$/ do |filename|
   step "I run \"totem #{filename}\" in GNOME Terminal"
 end
