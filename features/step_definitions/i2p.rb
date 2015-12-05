@@ -2,7 +2,7 @@ Given /^I2P is (?:still )?(not )?running$/ do |notrunning|
   if notrunning
     !$vm.execute('systemctl is-active i2p').success?
   else
-    try_for(30) do
+    try_for(60) do
       $vm.execute('systemctl is-active i2p').success?
     end
   end
