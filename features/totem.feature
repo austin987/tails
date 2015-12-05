@@ -43,8 +43,7 @@ Feature: Using Totem
   @check_tor_leaks @fragile
   Scenario: Watching a WebM video over HTTPS
     Given I have started Tails from DVD and logged in and the network is connected
-    When I open "https://webm.html5.org/test.webm" with Totem
-    Then I see "SampleRemoteWebMVideoFrame.png" after at most 60 seconds
+    Then I can watch a WebM video over HTTPs
 
   Scenario: Watching MP4 videos stored on the persistent volume should work as expected given our AppArmor confinement
     Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
