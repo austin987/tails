@@ -61,12 +61,5 @@ maybe_restart_tor() {
 try_for 270 maybe_restart_tor
 
 if [ "${vidalia_was_running}" = yes ]; then
-    # Since Tor just restarted we wait for a while until the
-    # ControlPort hopefully is up.
-    counter=0
-    until [ "${counter}" -ge 10 ] || nc -z localhost 9051 2>/dev/null; do
-        sleep 1
-        counter=$((${counter}+1))
-    done
     restart-vidalia
 fi
