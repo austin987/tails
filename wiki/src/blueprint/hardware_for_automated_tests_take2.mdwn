@@ -1,0 +1,69 @@
+
+Rationale
+=========
+
+In [[!tails_ticket 9264]], we're discussing and drafting our needs for more
+isotesters. From some statistics of the number of automated builds per month,
+we concluded we need to be able to run at least 1000 more test suites per
+month, which means begin able to host at least 8 more isotesters.
+
+Estimates
+=========
+
+As a reminder, we are discussing in [[!tails_ticket 10396]] that one
+isotester means:
+
+ * 20G RAM
+ * 25-30G HDD (10G system+data, 15-20G tmp)
+ * 3 CPUs (+1 for the qemu process on the host)
+
+So 8 isotesters would mean:
+
+ * 160G RAM
+ * 200-240G HDD
+ * 32 CPUs max
+
+From there, it seems unlikely we could host that on Lizard, and we are
+back on the research about new hardware for isotesters.
+
+Hardware
+========
+
+Given the amount of RAM and CPUs required, it seems close to [[Lizard's
+specs|blueprint/hardware_for_automated_tests]]. If we stick on the CPUs, we
+probably need the same kind, with 12 cores and in the end 48 CPU threads.
+
+If we settle on this, we would have a bit of room for the future to be able to
+run up to 11 isotesters (44 CPUs, 275-330G HDD, 220G RAM), running theorically
+1320 test suites per month on this sole box.
+
+We still need to decide if we would use faster (as in Ghz) CPUs than the one
+Lizard has (Low voltages versions). In this case the price jumps quite a bit,
+and the electic bill will too (120W each for that kind of CPUs, against the 65W
+each of Lizard's ones).
+
+The following price estimations are based on interpromicro.com ones.
+
+## Option A: Low voltage CPUs
+
+That's essentially a Lizard clone, minus SSD HDDs.
+
+ * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB)          - $390
+ * 2 x Intel® E5-2650Lv3-1.8Ghz/12C, 30M, 9.6GT/s, 65W LGA2011 CPU               - $2,860
+ * 16 x 16GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                                   - $2100
+ * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                          - $400
+ * 2 x Heatsinks                                                                 - $100
+ * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W                - $350
+
+Total   --- **$6200**
+
+## Option B: Faster CPUs
+
+ * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB)          - $390
+ * 2 x Intel® E5-2670v3-2.3Ghz/12C, 30M, 9.6GT/s, 120W LGA2011 CPU               - $3,300
+ * 16 x 16GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                                   - $2100
+ * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                          - $400
+ * 2 x Heatsinks                                                                 - $100
+ * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W                - $350
+
+Total   --- **$6650**
