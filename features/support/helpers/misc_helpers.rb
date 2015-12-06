@@ -137,9 +137,9 @@ def retry_action(max_retries, options = {}, &block)
 end
 
 def wait_until_tor_is_working
-  try_for(270) { $vm.execute('tor_is_working', :libs => 'tor').success? }
+  try_for(270) { $vm.execute('/usr/local/sbin/tor-has-bootstrapped').success? }
 rescue Timeout::Error => e
-  c = $vm.execute("grep restart-tor /var/log/syslog")
+  c = $vm.execute("journalctl SYSLOG_IDENTIFIER=restart-tor")
   if c.success?
     debug_log("From syslog:\n" + c.stdout.sub(/^/, "  "))
   else

@@ -82,7 +82,7 @@ When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
   if withgpgapplet
     seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
   else
-    step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
+    step 'I start "Seahorse" via the GNOME "Utilities" applications menu'
   end
 end
 

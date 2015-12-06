@@ -36,6 +36,11 @@
 - Have Kill Your TV upgrade I2P if needed. See [[contribute/design/I2P]].
 - If needed, update the list of Tor authorities in the test
   suite configuration.
+- Check that the list of backends we ship in `/usr/lib/cups/backend`
+  are all listed in the (patched) `/etc/apparmor.d/usr.sbin.cups`:
+   * backends shipped in [[!debpkg cups-daemon]] should have `ixr`
+   * other backends should have `Cx -> third_party`
+  If anything doesn't match this, let intrigeri know.
 
 ## The Friday before the release date
 
@@ -61,6 +66,14 @@ promptly. If a ticket is flagged "Ready for QA", but the RM cannot
 take care of the review'n'merge, it's the RM's
 responsibility to ask for help. The "Release Manager View" is probably
 the best place to track such tickets.
+
+## From time to time
+
+We use a `@doc` cucumber tag to ensure to test only scenarios related to
+the shipped Tails documentation for the documentation branches. Once in
+a while (at least yearly), the RM should have a look at recently added
+scenarios or features and check if the ones that depend on the
+documentation have this tag.
 
 ## Make the release happen
 

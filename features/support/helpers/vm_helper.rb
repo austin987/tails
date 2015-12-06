@@ -386,7 +386,7 @@ class VM
     xml = <<EOF
   <qemu:commandline xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
     <qemu:arg value='-cpu'/>
-    <qemu:arg value='pentium,-pae'/>
+    <qemu:arg value='qemu32,-pae'/>
   </qemu:commandline>
 EOF
     domain_xml = REXML::Document.new(@domain.xml_desc)
@@ -523,6 +523,11 @@ EOF
       assert(cmd.success?,
              "Could not append to '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
     end
+  end
+
+  def set_clipboard(text)
+    execute_successfully("echo -n '#{text}' | xsel --input --clipboard",
+                         :user => LIVE_USER)
   end
 
   def internal_snapshot_xml(name)

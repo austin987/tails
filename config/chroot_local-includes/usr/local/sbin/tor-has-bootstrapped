@@ -1,9 +1,4 @@
 #!/bin/sh
 
-# This script is designed to be run as the debian-tor user.
-# The desktop user is allowed to do so with passwordless sudo.
-
-# Import tor_bootstrap_progress()
-. /usr/local/lib/tails-shell-library/tor.sh
-
-tor_is_working
+/bin/systemctl --quiet is-active tor@default.service || exit 1
+/bin/systemctl --quiet is-active tails-tor-has-bootstrapped.target

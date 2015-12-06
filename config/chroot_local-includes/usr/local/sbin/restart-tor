@@ -19,7 +19,7 @@ clear_tor_log() {
 }
 
 clear_tor_log
-service tor restart
+systemctl restart tor@default.service
 
 # There are two main points to this script:
 #   * restarting Tor if bootstrapping stalls for more than 20 seconds
@@ -43,7 +43,7 @@ maybe_restart_tor() {
     elif [ $(expr $(clock_gettime_monotonic) - $last_bootstrap_change) -ge 20 ]; then
         log "Tor seems to have stalled while bootstrapping. Restarting Tor."
         clear_tor_log
-        service tor restart
+        systemctl restart tor@default.service
         bootstrap_progress=0
         last_bootstrap_change=$(clock_gettime_monotonic)
         return 1

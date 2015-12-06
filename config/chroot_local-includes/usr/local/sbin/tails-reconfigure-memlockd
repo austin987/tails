@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+set -u
+
+PATH="/usr/local/bin:${PATH}"
+MEMLOCKD_CONF=/etc/memlockd.cfg
+
+tails-boot-to-kexec kernel $(tails-get-bootinfo kernel) >> "$MEMLOCKD_CONF"
+tails-boot-to-kexec initrd $(tails-get-bootinfo initrd) >> "$MEMLOCKD_CONF"

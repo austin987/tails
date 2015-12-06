@@ -20,7 +20,7 @@ Feature: Using Totem
     And the file "/home/amnesia/video.mp4" exists
     Given I start monitoring the AppArmor log of "/usr/bin/totem"
     When I open "/home/amnesia/video.mp4" with Totem
-    Then I see "SampleLocalMp4VideoFrame.png" after at most 10 seconds
+    Then I see "SampleLocalMp4VideoFrame.png" after at most 20 seconds
     And AppArmor has not denied "/usr/bin/totem" from opening "/home/amnesia/video.mp4"
     Given I close Totem
     And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"

@@ -128,7 +128,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
                               'UnsafeBrowserNetworkTab.png'], 10)
     @screen.click(hit) if hit == 'UnsafeBrowserNetworkTab.png'
     @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
-    @screen.wait('UnsafeBrowserProxySettingsWindow.png', 10)
+    @screen.wait_and_click('UnsafeBrowserProxySettingsWindow.png', 10)
     @screen.type("m", Sikuli::KeyModifier.ALT)
 
     # Configure the proxy
@@ -136,7 +136,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     @screen.type(proxy_host + Sikuli::Key.TAB + proxy_port) if proxy_type != no_proxy
 
     # Close settings
-    @screen.type(Sikuli::Key.ENTER)
+    @screen.click('UnsafeBrowserProxySettingsOkButton.png')
     @screen.waitVanish('UnsafeBrowserProxySettingsWindow.png', 10)
 
     # Test that the proxy settings work as they should

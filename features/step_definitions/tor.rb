@@ -129,7 +129,7 @@ Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DN
           )
       end
       assert_equal(rules, good_rules,
-                   "The NAT table's OUTPUT chain contains some unexptected " \
+                   "The NAT table's OUTPUT chain contains some unexpected " \
                    "rules:\n" +
                    ((rules - good_rules).map { |r| r["rule"] }).join("\n"))
     else
@@ -154,15 +154,17 @@ Then /^the firewall is configured to block all IPv6 traffic$/ do
       !["DROP", "REJECT", "LOG"].include?(rule["target"])
     end
     assert(bad_rules.empty?,
-           "The IPv6 table's #{name} chain contains some unexptected rules:\n" +
+           "The IPv6 table's #{name} chain contains some unexpected rules:\n" +
            (bad_rules.map { |r| r["rule"] }).join("\n"))
   end
 end
 
 def firewall_has_dropped_packet_to?(proto, host, port)
-  regex = "Dropped outbound packet: .* DST=#{host} .* PROTO=#{proto} "
+  regex = "^Dropped outbound packet: .* "
+  regex += "DST=#{Regexp.escape(host)} .* "
+  regex += "PROTO=#{Regexp.escape(proto)} "
   regex += ".* DPT=#{port} " if port
-  $vm.execute("grep -q '#{regex}' /var/log/syslog").success?
+  $vm.execute("journalctl --dmesg --output=cat | grep -qP '#{regex}'").success?
 end
 
 When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+))? that is expected to fail$/ do |proto, host, port|
@@ -177,13 +179,16 @@ When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+)
   when "TCP"
     assert_not_nil(port)
     cmd = "echo | netcat #{host} #{port}"
+    user = LIVE_USER
   when "UDP"
     assert_not_nil(port)
     cmd = "echo | netcat -u #{host} #{port}"
+    user = LIVE_USER
   when "ICMP"
     cmd = "ping -c 5 #{host}"
+    user = 'root'
   end
-  @conn_res = $vm.execute(cmd, :user => LIVE_USER)
+  @conn_res = $vm.execute(cmd, :user => user)
 end
 
 Then /^the untorified connection fails$/ do
@@ -287,7 +292,7 @@ end
 And /^I re-run htpdate$/ do
   $vm.execute_successfully("service htpdate stop && " \
                            "rm -f /var/run/htpdate/* && " \
-                           "service htpdate start")
+                           "systemctl --no-block start htpdate.service")
   step "the time has synced"
 end
 
@@ -300,6 +305,10 @@ When /^I connect Gobby to "([^"]+)"$/ do |host|
   @screen.wait("GobbyWelcomePrompt.png", 10)
   @screen.click("GnomeCloseButton.png")
   @screen.wait("GobbyWindow.png", 10)
+  # This indicates that Gobby has finished initializing itself
+  # (generating DH parameters, etc.) -- before, the UI is not responsive
+  # and our CTRL-t is lost.
+  @screen.wait("GobbyFailedToShareDocuments.png", 30)
   @screen.type("t", Sikuli::KeyModifier.CTRL)
   @screen.wait("GobbyConnectPrompt.png", 10)
   @screen.type(host + Sikuli::Key.ENTER)
