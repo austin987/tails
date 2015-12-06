@@ -91,9 +91,7 @@ Feature: Various checks
     When the network is plugged
     And I wait 120 seconds
     Then no network interfaces are enabled
-    And process "NetworkManager" is not running
     And process "tor" is not running
-    But process "nm-applet" is running
     And network traffic is not generated during the Tails session
 
   Scenario: Anti-test: Network traffic is generated when "disable all networking" is not selected
@@ -101,6 +99,5 @@ Feature: Various checks
     And I log in to a new session
     And the Tails desktop is ready
     When the network is plugged
-    Then process "NetworkManager" is running
     And Tor is ready
     Then network traffic is generated during the Tails session
