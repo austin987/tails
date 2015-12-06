@@ -55,6 +55,33 @@ def iptables_parse(iptables_output)
   return chains
 end
 
+def iptables_chains_parse(iptables, table = "filter", &block)
+  assert(block_given?)
+  cmd = "#{iptables}-save -t #{table} | iptables-xml"
+  xml_str = $vm.execute_successfully(cmd).stdout
+  rexml = REXML::Document.new(xml_str)
+  rexml.get_elements('iptables-rules/table/chain').each do |element|
+    yield(
+      element.attribute('name').to_s,
+      element.attribute('policy').to_s,
+      element.get_elements('rule')
+    )
+  end
+end
+
+def ip4tables_chains(table = "filter", &block)
+  iptables_chains_parse('iptables', table, &block)
+end
+
+def ip6tables_chains(table = "filter", &block)
+  iptables_chains_parse('ip6tables', table, &block)
+end
+
+def try_xml_element_text(element, xpath, default = nil)
+  node = element.elements[xpath]
+  (node.nil? or not(node.has_text?)) ? default : node.text
+end
+
 Then /^the firewall's policy is to (.+) all IPv4 traffic$/ do |expected_policy|
   expected_policy.upcase!
   iptables_output = $vm.execute_successfully("iptables -L -n -v").stdout
@@ -140,22 +167,26 @@ Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DN
   end
 end
 
-Then /^the firewall is configured to block all IPv6 traffic$/ do
+Then /^the firewall is configured to block all external IPv6 traffic$/ do
+  ip6_loopback = '::1/128'
   expected_policy = "DROP"
-  ip6tables_output = $vm.execute_successfully("ip6tables -L -n -v").stdout
-  chains = iptables_parse(ip6tables_output)
-  chains.each_pair do |name, chain|
-    policy = chain["policy"]
+  ip6tables_chains do |name, policy, rules|
     assert_equal(expected_policy, policy,
                  "The IPv6 #{name} chain has policy #{policy} but we " \
                  "expected #{expected_policy}")
-    rules = chain["rules"]
-    bad_rules = rules.find_all do |rule|
-      !["DROP", "REJECT", "LOG"].include?(rule["target"])
+    good_rules = rules.find_all do |rule|
+      ["DROP", "REJECT", "LOG"].any? do |target|
+        rule.elements["actions/#{target}"]
+      end \
+      ||
+      ["s", "d"].all? do |x|
+        try_xml_element_text(rule, "conditions/match/#{x}") == ip6_loopback
+      end
     end
+    bad_rules = rules - good_rules
     assert(bad_rules.empty?,
            "The IPv6 table's #{name} chain contains some unexpected rules:\n" +
-           (bad_rules.map { |r| r["rule"] }).join("\n"))
+           (bad_rules.map { |r| r.to_s }).join("\n"))
   end
 end
 
