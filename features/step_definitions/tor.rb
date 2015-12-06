@@ -84,12 +84,11 @@ end
 
 Then /^the firewall's policy is to (.+) all IPv4 traffic$/ do |expected_policy|
   expected_policy.upcase!
-  iptables_output = $vm.execute_successfully("iptables -L -n -v").stdout
-  chains = iptables_parse(iptables_output)
-  ["INPUT", "FORWARD", "OUTPUT"].each do |chain_name|
-    policy = chains[chain_name]["policy"]
-    assert_equal(expected_policy, policy,
-                 "Chain #{chain_name} has unexpected policy #{policy}")
+  ip4tables_chains do |name, policy, _|
+    if ["INPUT", "FORWARD", "OUTPUT"].include?(name)
+      assert_equal(expected_policy, policy,
+                   "Chain #{name} has unexpected policy #{policy}")
+    end
   end
 end
 
