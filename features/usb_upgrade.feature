@@ -1,5 +1,4 @@
-#10720: Tails Installer freezes on Jenkins
-@product @fragile
+@product
 Feature: Upgrading an old Tails USB installation
   As a Tails user
   If I have an old versoin of Tails installed on a USB device
