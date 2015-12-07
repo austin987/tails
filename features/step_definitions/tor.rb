@@ -163,30 +163,37 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
 end
 
 Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DNSPort$/ do
+  loopback_address = "127.0.0.1/32"
   tor_onion_addr_space = "127.192.0.0/10"
-  iptables_nat_output = $vm.execute_successfully("iptables -t nat -L -n -v").stdout
-  chains = iptables_parse(iptables_nat_output)
-  chains.each_pair do |name, chain|
-    rules = chain["rules"]
+  tor_trans_port = "9040"
+  dns_port = "53"
+  tor_dns_port = "5353"
+  ip4tables_chains('nat') do |name, _, rules|
     if name == "OUTPUT"
       good_rules = rules.find_all do |rule|
-        rule["target"] == "REDIRECT" &&
-          (
-           (
-            rule["destination"] == tor_onion_addr_space &&
-            rule["extra"] == "redir ports 9040"
-           ) ||
-           rule["extra"] == "udp dpt:53 redir ports 5353"
-          )
+        redirect = rule.get_elements('actions/*').all? do |action|
+          action.name == "REDIRECT"
+        end
+        destination = try_xml_element_text(rule, "conditions/match/d")
+        redir_port = try_xml_element_text(rule, "actions/REDIRECT/to-ports")
+        redirected_to_trans_port = redir_port == tor_trans_port
+        udp_destination_port = try_xml_element_text(rule, "conditions/udp/dport")
+        dns_redirected_to_tor_dns_port = (udp_destination_port == dns_port) &&
+                                         (redir_port == tor_dns_port)
+        redirect &&
+        (
+         (destination == tor_onion_addr_space && redirected_to_trans_port) ||
+         (destination == loopback_address && dns_redirected_to_tor_dns_port)
+        )
       end
-      assert_equal(rules, good_rules,
-                   "The NAT table's OUTPUT chain contains some unexpected " \
-                   "rules:\n" +
-                   ((rules - good_rules).map { |r| r["rule"] }).join("\n"))
+      bad_rules = rules - good_rules
+      assert(bad_rules.empty?,
+             "The NAT table's OUTPUT chain contains some unexpected " +
+             "rules:\n#{bad_rules}")
     else
       assert(rules.empty?,
-             "The NAT table contains unexpected rules for the #{name} " \
-             "chain:\n" + (rules.map { |r| r["rule"] }).join("\n"))
+             "The NAT table contains unexpected rules for the #{name} " +
+             "chain:\n#{rules}")
     end
   end
 end
