@@ -57,7 +57,7 @@ end
 
 def iptables_chains_parse(iptables, table = "filter", &block)
   assert(block_given?)
-  cmd = "#{iptables}-save -t #{table} | iptables-xml"
+  cmd = "#{iptables}-save -c -t #{table} | iptables-xml"
   xml_str = $vm.execute_successfully(cmd).stdout
   rexml = REXML::Document.new(xml_str)
   rexml.get_elements('iptables-rules/table/chain').each do |element|
