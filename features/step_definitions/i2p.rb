@@ -66,7 +66,7 @@ Then /^the I2P homepage loads in I2P Browser$/ do
   end
   retry_i2p(recovery_on_failure) do
     $vm.focus_window('I2P Browser')
-    @screen.wait('I2PBrowserProjectHomepage.png', 80)
+    @screen.wait('I2PBrowserProjectHomepage.png', 120)
   end
 end
 
