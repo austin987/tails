@@ -1,4 +1,4 @@
-@product
+@product @fragile
 Feature: Localization
   As a Tails user
   I want Tails to be localized in my native language

@@ -1,4 +1,5 @@
-@product
+#10497: wait_until_tor_is_working
+@product @fragile
 Feature: The Tor enforcement is effective
   As a Tails user
   I want all direct Internet connections I do by mistake or applications do by misconfiguration or buggy leaks to be blocked
