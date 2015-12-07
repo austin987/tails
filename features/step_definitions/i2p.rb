@@ -61,8 +61,12 @@ end
 Then /^the I2P homepage loads in I2P Browser$/ do
   recovery_on_failure = Proc.new do
     $vm.focus_window('I2P Browser')
-    @screen.type(Sikuli::Key.ESC)
-    @screen.click('BrowserReloadButton.png')
+    begin
+      @screen.click('BrowserReloadButton.png')
+    rescue FindFailed
+      @screen.type(Sikuli::Key.ESC)
+      @screen.click('BrowserReloadButton.png')
+    end
   end
   retry_i2p(recovery_on_failure) do
     $vm.focus_window('I2P Browser')
