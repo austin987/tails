@@ -77,6 +77,21 @@ def ip6tables_chains(table = "filter", &block)
   iptables_chains_parse('ip6tables', table, &block)
 end
 
+def iptables_rules_parse(iptables, chain, table)
+  iptables_chains_parse(iptables, table) do |name, _, rules|
+    return rules if name == chain
+  end
+  return nil
+end
+
+def iptables_rules(chain, table = "filter")
+  iptables_rules_parse("iptables", chain, table)
+end
+
+def ip6tables_rules(chain, table = "filter")
+  iptables_rules_parse("ip6tables", chain, table)
+end
+
 def try_xml_element_text(element, xpath, default = nil)
   node = element.elements[xpath]
   (node.nil? or not(node.has_text?)) ? default : node.text
@@ -98,37 +113,47 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
   users.each do |user|
     expected_uids << $vm.execute_successfully("id -u #{user}").stdout.to_i
   end
-  iptables_output = $vm.execute_successfully("iptables -L -n -v").stdout
-  chains = iptables_parse(iptables_output)
-  allowed_output = chains["OUTPUT"]["rules"].find_all do |rule|
-    !(["DROP", "REJECT", "LOG"].include? rule["target"]) &&
-      rule["out_iface"] != "lo"
+  allowed_output = iptables_rules("OUTPUT").find_all do |rule|
+    out_iface = rule.elements['conditions/match/o']
+    is_maybe_accepted = rule.get_elements('actions/*').find do |action|
+      not(["DROP", "REJECT", "LOG"].include?(action.name))
+    end
+    is_maybe_accepted &&
+    (
+      # nil => match all interfaces according to iptables-xml
+      out_iface.nil? ||
+      ((out_iface.text == 'lo') == (out_iface.attribute('invert').to_s == '1'))
+    )
   end
   uids = Set.new
   allowed_output.each do |rule|
-    case rule["target"]
-    when "ACCEPT"
-      expected_destination = "0.0.0.0/0"
-      assert_equal(expected_destination, rule["destination"],
-                   "The following rule has an unexpected destination:\n" +
-                   rule["rule"])
-      next if rule["extra"] == "state RELATED,ESTABLISHED"
-      m = /owner UID match (\d+)/.match(rule["extra"])
-      assert_not_nil(m)
-      uid = m[1].to_i
-      uids << uid
-      assert(expected_uids.include?(uid),
-             "The following rule allows uid #{uid} to access the network, " \
-             "but we only expect uids #{expected_uids} (#{users_str}) to " \
-             "have such access:\n#{rule["rule"]}")
-    when "lan"
-      lan_subnets = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
-      assert(lan_subnets.include?(rule["destination"]),
-             "The following lan-targeted rule's destination is " \
-             "#{rule["destination"]} which may not be a private subnet:\n" +
-             rule["rule"])
-    else
-      raise "Unexpected iptables OUTPUT chain rule:\n#{rule["rule"]}"
+    rule.elements.each('actions/*') do |action|
+      destination = try_xml_element_text(rule, "conditions/match/d")
+      if action.name == "ACCEPT"
+        # nil == 0.0.0.0/0 according to iptables-xml
+        assert(destination == '0.0.0.0/0' || destination.nil?,
+               "The following rule has an unexpected destination:\n" +
+               rule.to_s)
+        state_cond = try_xml_element_text(rule, "conditions/state/state")
+        next if state_cond == "RELATED,ESTABLISHED"
+        assert_not_nil(rule.elements['conditions/owner/uid-owner'])
+        rule.elements.each('conditions/owner/uid-owner') do |owner|
+          uid = owner.text.to_i
+          uids << uid
+          assert(expected_uids.include?(uid),
+                 "The following rule allows uid #{uid} to access the " +
+                 "network, but we only expect uids #{expected_uids.to_a} " +
+                 "(#{users_str}) to have such access:\n#{rule.to_s}")
+        end
+      elsif action.name == "call" && action.elements[1].name == "lan"
+        lan_subnets = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+        assert(lan_subnets.include?(destination),
+               "The following lan-targeted rule's destination is " +
+               "#{destination} which may not be a private subnet:\n" +
+               rule.to_s)
+      else
+        raise "Unexpected iptables OUTPUT chain rule:\n#{rule.to_s}"
+      end
     end
   end
   uids_not_found = expected_uids - uids
