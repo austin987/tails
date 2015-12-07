@@ -112,7 +112,7 @@ Then /^I synchronize keys in Seahorse$/ do
     # The versions of Seahorse in Wheezy and Jessie will abort with a
     # segmentation fault whenever there's any sort of network error while
     # syncing keys. This will usually happens after clicking away the error
-    # mesasge. This does not appear to be a problem in Stretch.
+    # message. This does not appear to be a problem in Stretch.
     #
     # We'll kill the Seahorse process to avoid waiting for the inevitable
     # segfault. We'll also make sure the process is still running (=  hasn't
