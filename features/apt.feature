@@ -11,7 +11,7 @@ Feature: Installing packages through APT
   Scenario: APT sources are configured correctly
     Then the only hosts in APT sources are "ftp.us.debian.org,security.debian.org,backports.debian.org,deb.tails.boum.org,deb.torproject.org,mozilla.debian.net"
 
-  @check_tor_leaks
+  @check_tor_leaks @fragile
   Scenario: Install packages using apt
     When I update APT using apt
     Then I should be able to install a package using apt
