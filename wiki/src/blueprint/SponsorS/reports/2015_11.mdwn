@@ -36,21 +36,21 @@ In November, **314 ISOs** were tested by our Jenkins instance.
   (#10445)
 
   We found out that Sikuli was sometimes leaving PNG files in the Jenkins
-  workspaces, and we worked on a fix. (#10476)
+  workspaces, and we worked on a fix. ([[!tails_ticket 10476]])
 
   We are being short again in disk space and need to anticipate that future
   infrastructure features will require more, so we're sorting out what's the real
   needs of our isotesters on this side, now that we have more data points.
-  (#10396)
+  ([[!tails_ticket 10396]])
 
   We are also short on isotesters to really test every single automatically
   built ISO image. So we're discussing if we need new hardware to cope with the
-  load, and if so, which kind. (#9264)
+  load, and if so, which kind. ([[!tails_ticket 9264]])
 
   Meanwhile, our automated test suite will still be a bit more efficient
   on testing branches that actually change Tails' code, while testing
   only some subset for the branches that only change our website or
-  documentation. (#10492)
+  documentation. ([[!tails_ticket 10492]])
 
   We spent a lot of the CI time gathering statistics about the test suite
   runs in Jenkins in order to help the team writing the tests to identify
@@ -58,7 +58,7 @@ In November, **314 ISOs** were tested by our Jenkins instance.
   notifications to contributors.
 
   We discovered that lately our isostesters were not always getting back
-  online after being rebooted and are investigating why. (#10601)
+  online after being rebooted and are investigating why. ([[!tails_ticket 10601]])
 
 ## B.3. Extend the coverage of our test suite
 
@@ -71,21 +71,27 @@ In November, **314 ISOs** were tested by our Jenkins instance.
 
 * B.3.11. Fix newly identified issues to make our test suite more robust and faster
 
-  - Increased the number of Tor circuit retries in the test suite (#10375).
+  - Increased the number of Tor circuit retries in the test suite ([[!tails_ticket 10375]]).
 
   - Work is in progress to make some test cases, that cause false
-    positives, more robust: SSH (#10498), Git (#10444), Windows
-    Camouflage (#10493), Seahorse (#9095, #10500, #10501).
+    positives, more robust:
+    SSH ([[!tails_ticket 10498]]),
+    Git ([[!tails_ticket 10444]]),
+    Windows Camouflage ([[!tails_ticket 10493]]),
+    Seahorse ([[!tails_ticket 9095]], [[!tails_ticket 10500]], [[!tails_ticket 10501]]).
 
   - More such fragile test cases were identified, and are momentarily
     disabled in our Jenkins environment. They will be worked on later:
-    Electrum tests (#10475) due to us shipping a too old version of
-    Electrum, connecting to the #i2p IRC channel
-    (#10474), Synaptic (#10441), APT (#10496), ICMP filtering
-    (#10499), whois (#10523), `wait_until_tor_is_working` helper
-    (#10497), time synchronization (#10440, #10494, #10495), Pidgin
-    connecting to OFTC (#10443), watching a WebM video over HTTPS
-    (#10442).
+    Electrum tests ([[!tails_ticket 10475]]) due to us shipping a too old version of Electrum,
+    connecting to the #i2p IRC channel ([[!tails_ticket 10474]]),
+    Synaptic ([[!tails_ticket 10441]]),
+    APT ([[!tails_ticket 10496]]),
+    ICMP filtering ([[!tails_ticket 10499]]),
+    whois ([[!tails_ticket 10523]]),
+    `wait_until_tor_is_working` helper ([[!tails_ticket 10497]]),
+    time synchronization ([[!tails_ticket 10440]], [[!tails_ticket 10494]], [[!tails_ticket 10495]]),
+    Pidgin connecting to OFTC ([[!tails_ticket 10443]]),
+    watching a WebM video over HTTPS ([[!tails_ticket 10442]]).
 
 # C. Scale our infrastructure
 
@@ -113,49 +119,49 @@ We settled on a date for a sysadmin sprint in December.
 
 We finished porting Tails to GNOME Shell by fixing the remaining
 identified regression: raw HTML was displayed in desktop notifications
-(#7989).
+([[!tails_ticket 7989]]).
 
 ## D.2. Take advantage of systemd to improve the internals of Tails
 
 The Tor daemon is now managed with systemd, that completes supervision
-of critical services (#5750).
+of critical services ([[!tails_ticket 5750]]).
 
 We also polished code that was previously ported to systemd:
 
 * Introduced a dedicated systemd target for "Tor has bootstrapped"
-  state (#9393).
-* Call out to the shell less often in htpdate.service (#10612).
-* Converted the `21-gdm_unit_file` hook to a drop-in override (#10606).
+  state ([[!tails_ticket 9393]]).
+* Call out to the shell less often in htpdate.service ([[!tails_ticket 10612]]).
+* Converted the `21-gdm_unit_file` hook to a drop-in override ([[!tails_ticket 10606]]).
 
 ## D.3. Update our test suite for Tails Jessie
 
-This is about ticket #7563 and subtasks. Good progress was made
+This is about ticket [[!tails_ticket 7563]] and subtasks. Good progress was made
 on this front in November.
 
 These were resolved:
 
-* Updated the memory erasure automated tests for Jessie (#9705, #8317);
+* Updated the memory erasure automated tests for Jessie ([[!tails_ticket 9705]], [[!tails_ticket 8317]]);
   in passing, made it more robust and accurate.
 * Disabled screen blanking during the test suite, since it broke some
-  tests on Jessie (#10403); and in passing, we have refactored how we
+  tests on Jessie ([[!tails_ticket 10403]]); and in passing, we have refactored how we
   re-use GNOME/X's environment from scripts in our codebase.
 * Fixed the "I open the address" step by pasting URLs instead of
-  typing them char by char (#10467).
-* Updated the "Connect to server" tests for Jessie (#10325).
-* Adapted GNOME notification handling (#8782) and applications menu
-  handling (#9706) for Jessie in the test suite.
+  typing them char by char ([[!tails_ticket 10467]]).
+* Updated the "Connect to server" tests for Jessie ([[!tails_ticket 10325]]).
+* Adapted GNOME notification handling ([[!tails_ticket 8782]]) and applications menu
+  handling ([[!tails_ticket 9706]]) for Jessie in the test suite.
 * Ported tests that used syslog to instead use the systemd Journal.
 * Updated Icedove tests for Jessie.
 
 Additionally, we made progress on:
 
-* With respect to "iptables_parse is buggy for IPv6" (#9704): sadly,
+* With respect to "iptables_parse is buggy for IPv6" ([[!tails_ticket 9704]]): sadly,
   we could not find an iptables rules parser in Ruby (to nicely
   integrate into our test suite's codebase) that clearly states that
   it's compatible with IPv6. So we started looking for candidate
   solutions in Python and Perl.
 * The GnuPG keyserver interaction test cases are being updated for
-  Jessie (#9791).
+  Jessie ([[!tails_ticket 9791]]).
 * Updating tests for: USB installation and upgrade, Tor Browser
   tests, ICMP filtering.
 
@@ -184,51 +190,51 @@ A lot of other porting to Jessie work was done, that does not really
 fit into any of the above categories:
 
 * Merged and forward-ported changes introduced up to Tails 1.7.
-* Ported our automatic (incremental) upgrade system to Jessie (#8083),
-  and made its check for free memory smarter (#8263, #10540).
-* Fixed synchronizing OpenPGP keys in Seahorse (#9792).
-* Fixed Totem access to the network (#10593, #10603).
-* Ensured we use a current version of obfs4proxy (#10605).
+* Ported our automatic (incremental) upgrade system to Jessie ([[!tails_ticket 8083]]),
+  and made its check for free memory smarter ([[!tails_ticket 8263]], [[!tails_ticket 10540]]).
+* Fixed synchronizing OpenPGP keys in Seahorse ([[!tails_ticket 9792]]).
+* Fixed Totem access to the network ([[!tails_ticket 10593]], [[!tails_ticket 10603]]).
+* Ensured we use a current version of obfs4proxy ([[!tails_ticket 10605]]).
 * Made AppArmor profile for cupsd work in read-only persistence mode
-  (#10591).
+  ([[!tails_ticket 10591]]).
 * Fixed string encoding regression that was introduced when porting
-  WhisperBack to Python 3 (#10577).
+  WhisperBack to Python 3 ([[!tails_ticket 10577]]).
 * Restored association of application/pgp-keys MIME type with
-  Seahorse's "Import Key" application (#10571).
-* Restored AppArmor confinement of Tor on Jessie (#10528) that briefly
+  Seahorse's "Import Key" application ([[!tails_ticket 10571]]).
+* Restored AppArmor confinement of Tor on Jessie ([[!tails_ticket 10528]]) that briefly
   disappeared with the upgrade to Tor 0.2.7.
 * Adjusted to the fact that `.xsession-errors` does not exist anymore
-  on Jessie (#9966).
-* Restored unmuting and sanitizing ALSA mixer levels at boot time (#7591).
+  on Jessie ([[!tails_ticket 9966]]).
+* Restored unmuting and sanitizing ALSA mixer levels at boot time ([[!tails_ticket 7591]]).
 * Wrote a test case to ensure that NetworkManager change of behaviour
-  wrt. watching configuration files does not affect us (#7966).
+  wrt. watching configuration files does not affect us ([[!tails_ticket 7966]]).
 
 And some code was cleaned up in passing:
 
-* Removed obsolete bits of APT pinning (#10607).
+* Removed obsolete bits of APT pinning ([[!tails_ticket 10607]]).
 * Removed obsolete workaround for the HashType enum in Tails Upgrader
-  (#7042).
+  ([[!tails_ticket 7042]]).
 * Dropped custom syslinux package with patches for Chromebooks, that
-  we had included in a Debian Jessie update (#9292).
+  we had included in a Debian Jessie update ([[!tails_ticket 9292]]).
 
 We researched some candidate changed and investigated a few potential
 problems:
 
 * Made sure the services we disable at boot time indeed don't start on
-  Jessie (#8313).
+  Jessie ([[!tails_ticket 8313]]).
 * Considered replacing some of our code with the GDM to GNOME session
-  keyboard layout pass-through (#8713).
-* Clarified `ttdnsd.service` (#10608) and `laptop-mode.service`
-  (#9967) situation on Jessie.
+  keyboard layout pass-through ([[!tails_ticket 8713]]).
+* Clarified `ttdnsd.service` ([[!tails_ticket 10608]]) and `laptop-mode.service`
+  ([[!tails_ticket 9967]]) situation on Jessie.
 * Looked for screen reader support regressions compared to Wheezy
-  (#8371).
+  ([[!tails_ticket 8371]]).
 * Made sure that we have no regression wrt. logging into a text
-  console on Jessie (#9408).
-* Check if we need to keep memlockd running longer (#8260).
+  console on Jessie ([[!tails_ticket 9408]]).
+* Check if we need to keep memlockd running longer ([[!tails_ticket 8260]]).
 * Made sure that GNOME 3.14's captive portal handling is disabled on
-  Tails/Jessie (#10526).
-* Evaluated the Caribou virtual keyboard in Tails/Jessie (#8281).
-* Considered replacing sound-juicer with goobox (#8393).
+  Tails/Jessie ([[!tails_ticket 10526]]).
+* Evaluated the Caribou virtual keyboard in Tails/Jessie ([[!tails_ticket 8281]]).
+* Considered replacing sound-juicer with goobox ([[!tails_ticket 8393]]).
 
 # E. Release management
 
@@ -239,8 +245,8 @@ problems:
   * Improve the wording of the first screen of Tails Installer.
   * Upgrade Tor Browser to version 5.0.4 (based on Firefox 38.4.0 ESR).
   * Update Tor to 0.2.7.4.
-  * Restart Tor automatically if connecting to the Tor network takes too long. (#9516)
-  * Prevent wget from leaking the IP address when using the FTP protocol. (#10364)
+  * Restart Tor automatically if connecting to the Tor network takes too long. ([[!tails_ticket 9516]])
+  * Prevent wget from leaking the IP address when using the FTP protocol. ([[!tails_ticket 10364]])
   * Prevent symlink attack on ~/.xsession-errors via tails-debugging-info.
   * Force synchronization of data on the USB stick at the end of automatic upgrades.
   * Make the "I2P is ready" notification more reliable.
