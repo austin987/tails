@@ -42,7 +42,7 @@ Feature: Using Evince
 
   #10720: Tails Installer freezes on Jenkins
   @fragile
-  Scenario: I can view and print a PDF file stored in persistent /home/amnesia/Persistent but not /home/amnesia/.gnupg
+  Scenario: I can view and print a PDF file stored in persistent /home/amnesia/Persistent
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/Persistent" as user "amnesia"
     Then the file "/home/amnesia/Persistent/default-testpage.pdf" exists
