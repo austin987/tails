@@ -48,8 +48,6 @@ Feature: Using Evince
     Then the file "/home/amnesia/Persistent/default-testpage.pdf" exists
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/.gnupg" as user "amnesia"
     Then the file "/home/amnesia/.gnupg/default-testpage.pdf" exists
-    And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "current" with network unplugged and I login with persistence enabled
     When I open "/home/amnesia/Persistent/default-testpage.pdf" with Evince
     Then I see "CupsTestPage.png" after at most 10 seconds
     And I can print the current document to "/home/amnesia/Persistent/output.pdf"
