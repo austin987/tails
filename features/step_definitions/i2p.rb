@@ -84,6 +84,10 @@ Then /^I2P successfully built a tunnel$/ do
   end
 end
 
+Then /^I see shared client tunnels in the router console$/ do
+  @screen.wait('I2PSharedClientTunnels.png', 7 * 60)
+end
+
 Then /^I see a notification that I2P is not ready$/ do
   robust_notification_wait('I2PBootstrapFailure.png', 4 * 60)
 end
