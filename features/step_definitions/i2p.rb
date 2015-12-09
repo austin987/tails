@@ -70,7 +70,10 @@ Then /^the I2P homepage loads in I2P Browser$/ do
   end
   retry_i2p(recovery_on_failure) do
     $vm.focus_window('I2P Browser')
-    @screen.wait('I2PBrowserProjectHomepage.png', 120)
+    visible, _ = @screen.waitAny(['I2PBrowserProjectHomepage.png', 'BrowserReloadButton.png'], 120)
+    unless visible == 'I2PBrowserProjectHomepage.png'
+      raise "Did not find 'I2PBrowserProjectHomepage.png'"
+    end
   end
 end
 
