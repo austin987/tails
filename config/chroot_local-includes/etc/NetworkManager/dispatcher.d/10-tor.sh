@@ -8,8 +8,12 @@ if [ $1 = "lo" ]; then
     exit 0
 fi
 
-# Run whenever an interface gets "up", not otherwise:
-if [ $2 != "up" ]; then
+if [ $2 = "up" ]; then
+    : # go on, that's what this script is for
+elif [ "${2}" = "down" ]; then
+    systemctl --no-block stop tails-tor-has-bootstrapped.target
+    exit 0
+else
     exit 0
 fi
 
