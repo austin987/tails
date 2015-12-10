@@ -78,12 +78,6 @@ Then /^I see a notification that I2P failed to start$/ do
   robust_notification_wait('I2PFailedToStart.png', 2 * 60)
 end
 
-Then /^I2P successfully built a tunnel$/ do
-  try_for(7 * 60) do
-    $vm.execute('i2p_built_a_tunnel', :libs => 'i2p').success?
-  end
-end
-
 Then /^I see shared client tunnels in the router console$/ do
   @screen.wait('I2PSharedClientTunnels.png', 7 * 60)
 end
