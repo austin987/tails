@@ -18,8 +18,8 @@ if [ ! -x /usr/bin/mat ]; then
     exit 1
 fi
 
-for image in $@ ; do
-    optipng -o6 $image
-    advdef -z3 $image
-    mat $image
+for image in "${@}" ; do
+    optipng -o6 "${image}"
+    advdef -z3 "${image}"
+    mat "${image}"
 done
