@@ -90,7 +90,7 @@ def usb_install_helper(name)
   end
   @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
   @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
-  @screen.wait('USBInstallationComplete.png', 60*60)
+  @screen.wait('USBInstallationComplete.png', 30*60)
 end
 
 When /^I start Tails Installer$/ do

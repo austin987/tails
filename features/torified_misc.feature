@@ -1,4 +1,4 @@
-@product @check_tor_leaks
+@product @check_tor_leaks @fragile
 Feature: Various checks for torified software
 
   Background:
