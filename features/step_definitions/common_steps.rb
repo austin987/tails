@@ -255,20 +255,29 @@ When /^I destroy the computer$/ do
   $vm.destroy_and_undefine
 end
 
+def bootsplash
+  case @os_loader
+  when "UEFI"
+    'TailsBootSplashUEFI.png'
+  else
+    'TailsBootSplash.png'
+  end
+end
+
+def bootsplash_tab_msg
+  case @os_loader
+  when "UEFI"
+    'TailsBootSplashTabMsgUEFI.png'
+  else
+    'TailsBootSplashTabMsg.png'
+  end
+end
+
 Given /^the computer (re)?boots Tails$/ do |reboot|
 
   boot_timeout = 30
   # We need some extra time for memory wiping if rebooting
   boot_timeout += 90 if reboot
-
-  case @os_loader
-  when "UEFI"
-    bootsplash = 'TailsBootSplashUEFI.png'
-    bootsplash_tab_msg = 'TailsBootSplashTabMsgUEFI.png'
-  else
-    bootsplash = 'TailsBootSplash.png'
-    bootsplash_tab_msg = 'TailsBootSplashTabMsg.png'
-  end
 
   @screen.wait(bootsplash, boot_timeout)
   @screen.wait(bootsplash_tab_msg, 10)
@@ -510,7 +519,6 @@ end
 When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
-  @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
 end
 
@@ -521,7 +529,6 @@ end
 When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
-  @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
