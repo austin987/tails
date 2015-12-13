@@ -41,7 +41,7 @@ little value.
    b. **done** snapshot these mirrors every time they're updated
    c. **done** decide how many reprepro instances we want/have to split all
       this among
-   d. mirror relevant suites of deb.tails.b.o as well
+   d. **done** mirror relevant suites of deb.tails.b.o as well
    d. publish the snapshots over HTTP
    e. try using such snapshots for building an ISO
    e. publish the snapshots' serial: a file is updated, now needs to
@@ -362,10 +362,6 @@ dedicated to taking snapshots of the regular Debian archive, assuming
 other mirrored archives such as security.d.o, deb.tpo, etc. each go to
 their own reprepro instance.
 
-XXX: do estimates and initial experiments for other archives as well:
-security.d.o is not that small, and deb.tpo may trigger special cases
-we've not thought of.
-
 XXX: the more we split between multiple instances of reprepro, the
 smaller and more manageable its database becomes. But it implies some
 disk space waste due to duplicated files, and some bandwidth waste to
@@ -393,6 +389,12 @@ makes little sense to give a snapshot a validity time that goes beyond
 when we'll delete it via garbage collection.
 
 ⇒ 56 * N = 56 * 10 = 560
+
+Number of distributions for other archives:
+
+- debian-security: 3 (oldstable, stable, testing)
+- tails: 3 (stable, testing, devel)
+- torproject: 5 (oldstable, stable, testing, unstable, obfs4proxy)
 
 #### Garbage collection
 
