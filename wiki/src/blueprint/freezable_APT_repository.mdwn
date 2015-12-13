@@ -67,19 +67,47 @@ little value.
    c. **done** initial reprepro setup for tagged snapshots
    d. **WIP** how to create a partial snapshot from a manifest and
       the origin time-based snapshots? [k]
-      - lacks source packages handling
-      - see XXX in `tails-prepare-tagged-apt-snapshot-import`
+      - review and test k's code that is meant to address this [i]; in particular:
+        * `generate-build-manifest` (main Git repo), aka.
+          [[!tails_ticket 10748]]
+           - see remaining XXX:s in the script
+           - see the "if a (package, version) is seen at build time in
+             2 or more APT" case described below
+           - check "Listing used packages" section for specs and
+             potential problems
+        * check source packages handling in
+          `tails-prepare-tagged-apt-snapshot-import`, e.g. when the
+          binary package's version is different from the corresponding
+          source package's one
+        * see remaining XXX:s in `tails-prepare-tagged-apt-snapshot-import`
+          (`puppet-tails` repo)
+        * support for multiple architectures in
+          `tails-prepare-tagged-apt-snapshot-import`? needed for multiarch
+          that we'll have to use as soon as we want to upgrade Linux
+          to 4.x, see [[!tails_gitweb_branch feature/8415-overlayfs]];
+          (maybe it's good enough to import all needed packages for
+          _all_ architectures our reprepro setup supports? beware of
+          differing versions due to binNMUs, though)
+        * support for multiple APT repositories (not only suites)
+          in `tails-prepare-tagged-apt-snapshot-import`?
    e. expand list of source packages with those that the binary
       packages were built from [k]
    f. have the manifest → partial snapshot process include source
       packages [k]
    h. **done** debootstrap in jessie-backports
+   h. teach `generate-build-manifest` how to extract lists of (origin,
+      reference) from the build (see XXX in the script) [i]
    g. for some Tails release: generate manifest, import packages into
       tagged snapshots, try building *offline* with these tagged
       snapshots [i]
-   h. have a debootstrap 1.0.73+ in all our build environments (Vagrant
-      basebox, Jenkins slaves, manual build doc) so that we get the
-      `deburis` file, that's needed to build our packages listing.
+   h. have a debootstrap 1.0.73+ in all our build environments so that
+      we get the `deburis` file, that's needed to build our packages
+      listing; same for `libfile-slurp-perl` and `liblist-moreutils-perl`
+      - Vagrant basebox
+      - Jenkins slaves
+      - done: manual build doc
+   h. convert custom `data/debootstrap/tails-wheezy` into a patch,
+      or set up the process to update/replace it in the future [i]
    i. Update the "Listing used packages" section
    j. Have Jenkins publish the list of needed packages for a build
       if available (supersede existing `*.{bin,src}pkg`).
