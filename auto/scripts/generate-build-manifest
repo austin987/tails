@@ -75,11 +75,14 @@ foreach my $type (keys %package_type) {
     }
 }
 
-### Extract lists of (origin, reference) from the build:
-# XXX: Implement this once the infra is set up, and use static data for now:
-my %origin_reference = qw(
-  debian               2015102601
-);
+### Extract list of (origin, reference) from the build configuration:
+my %origin_reference;
+while (my $origin_dir = glob('config/APT_snapshots.d/*')) {
+    my $origin_name = $origin_dir;
+    $origin_name =~ s{\A config/APT_snapshots[.]d/}{}xms;
+    $origin_reference{$origin_name} = read_file("$origin_dir/serial");
+    chomp $origin_reference{$origin_name};
+}
 
 for my $name(values %origin_name) {
     $data->{origin_references}->{ $name }->{reference} = $origin_reference{ $name } || 'unknown';
