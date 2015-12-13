@@ -142,7 +142,8 @@ Building an ISO from the branch used to prepare the next major release
    period" case.
 
 Building an ISO from the branch used to prepare the next point-release
-(`stable`), or a topic branch based on it (`config/base_branch`), we
+(`stable`), or a topic branch based on it (`config/base_branch`
+contains `stable`), we
 use snapshots labeled with the Git tag of the latest Tails release,
 except:
 
@@ -185,10 +186,10 @@ backup strategies:
  * **time-based, full snapshots** of the mirrored APT repositories over
    the last N days;
    - goal: freezable repo feature for the dev process and QA
-   - this one can be started from scratch from time to time if
+   - this one can be restarted from scratch from time to time if
      reprepro becomes too slow for some reason (such as imperfect DB
      garbage collection);
-   - if we lose this content, we lose only N days of data, and can
+   - if we lose this content, we lose only N days of data, and we can
      immediately rebuild a working data set from scratch ⇒ no need to
      sync' this content to the failover server; no need to back it up;
 
@@ -491,7 +492,7 @@ distribution, which is what we should have in practice:
 	    done
 	done
 
-⇒ `dist/*/snapshots` takes 16 GB, and the DB has grown from 900 MB to
+⇒ `dists/*/snapshots` takes 16 GB, and the DB has grown from 900 MB to
 1.5 GB; as expected, `packages.db` didn't grow at all: only
 `references.db` did.
 
