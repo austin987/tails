@@ -65,7 +65,8 @@ little value.
    a. **done** PoC of capturing the list of binary packages used during the build [k]
    b. **done** PoC of capturing the list of source packages used during the build [k]
    c. **done** initial reprepro setup for tagged snapshots
-   d. **WIP** how to create a partial snapshot from a manifest and
+   d. **done** debootstrap in jessie-backports
+   e. **WIP** how to create a partial snapshot from a manifest and
       the origin time-based snapshots? [k]
       - review and test k's code that is meant to address this [i]; in particular:
         * `generate-build-manifest` (main Git repo), aka.
@@ -88,9 +89,6 @@ little value.
              do its job without this information. Can it?
         * `tails-prepare-tagged-apt-snapshot-import`, aka.
           [[!tails_ticket 10749]] (`puppet-tails` repo):
-          - check source packages handling, e.g. when the
-            binary package's version is different from the corresponding
-            source package's one
           - see remaining XXX:s in the script
           - support for multiple architectures? needed for multiarch
             that we'll have to use as soon as we want to upgrade Linux
@@ -99,26 +97,31 @@ little value.
             _all_ architectures our reprepro setup supports? beware of
             differing versions due to binNMUs, though)
           - support for multiple APT repositories (not only suites)?
-   e. expand list of source packages with those that the binary
+   f. **WIP** expand list of source packages with those that the binary
       packages were built from [k]
-   f. have the manifest → partial snapshot process include source
+      => review this [i], in particular:
+      - check the case when the binary package's version is different
+        from the corresponding source package's one
+   g. **WIP** have the manifest → partial snapshot process include source
       packages [k]
-   h. **done** debootstrap in jessie-backports
-   g. for some Tails release: generate manifest, import packages into
+      => review this [i], in particular:
+      - check the case when the binary package's version is different
+        from the corresponding source package's one
+   h. for some Tails release: generate manifest, import packages into
       tagged snapshots, try building *offline* with these tagged
       snapshots [i]
-   h. have debootstrap 1.0.73+ in all our build environments so that
+   i. have debootstrap 1.0.73+ in all our build environments so that
       we get the `deburis` file, that's needed to build our packages
       listing; same for `libfile-slurp-perl` and `liblist-moreutils-perl`
       - Vagrant basebox
       - Jenkins slaves
       - done: manual build doc
-   h. convert custom `data/debootstrap/tails-wheezy` into a patch,
+   j. convert custom `data/debootstrap/tails-wheezy` into a patch,
       or set up the process to update/replace it in the future [i]
-   i. Update the "Listing used packages" section
-   j. Have Jenkins publish the list of needed packages for a build
+   k. Update the "Listing used packages" section
+   l. Have Jenkins publish the list of needed packages for a build
       if available (supersede existing `*.{bin,src}pkg`).
-   k. if needed, implement GC
+   m. if needed, implement GC
 
 5. misc
    * implement whatever the "freeze exceptions" section requires
