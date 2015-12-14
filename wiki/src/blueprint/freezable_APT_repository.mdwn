@@ -70,8 +70,22 @@ little value.
       - review and test k's code that is meant to address this [i]; in particular:
         * `generate-build-manifest` (main Git repo), aka.
           [[!tails_ticket 10748]]
+           - The current script does not gather all information
+             specified in the "Listing used packages" section below:
+             specifically, it only saves the origin from which we have
+             retrieved a package during the build, even if that
+             package is also available from another origin, from which
+             it could as well have been fetched. Is it a problem?
+             It's not a problem if:
+             * this is dealt with by
+               `tails-prepare-tagged-apt-snapshot-import`, somehow;
+               is it?
+             * given a set of sources and pinning, APT will always
+               fetch a package from the same source when it's
+               available from multiple ones; is this deterministic?
            - The architecture information is not part of the manifest.
-             Is it OK?
+             It's fine if `tails-prepare-tagged-apt-snapshot-import` can
+             do its job without this information. Can it?
         * check source packages handling in
           `tails-prepare-tagged-apt-snapshot-import`, e.g. when the
           binary package's version is different from the corresponding
