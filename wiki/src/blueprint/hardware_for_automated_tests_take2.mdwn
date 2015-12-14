@@ -14,14 +14,14 @@ As a reminder, we are discussing in [[!tails_ticket 10396]] that one
 isotester means:
 
  * 20G RAM
- * 25-30G HDD (10G system+data, 15-20G tmp)
- * 3 CPUs (+1 for the qemu process on the host)
+ * 25G HDD (10G system+data, 15G tmp)
+ * 3 CPU cores (+1 for the qemu process on the host)
 
 So 8 isotesters would mean:
 
  * 160G RAM
- * 200-240G HDD
- * 32 CPUs max
+ * 200G HDD
+ * 32 CPU cores max
 
 From there, it seems unlikely we could host that on Lizard, and we are
 back on the research about new hardware for isotesters.
@@ -48,22 +48,42 @@ The following price estimations are based on interpromicro.com ones.
 
 That's essentially a Lizard clone, minus SSD HDDs.
 
- * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB)          - $390
- * 2 x Intel® E5-2650Lv3-1.8Ghz/12C, 30M, 9.6GT/s, 65W LGA2011 CPU               - $2,860
- * 16 x 16GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                                   - $2100
- * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                          - $400
- * 2 x Heatsinks                                                                 - $100
- * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W                - $350
+ * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB) - $390
+ * 2 x Intel® E5-2650Lv3-1.8Ghz/12C, 30M, 9.6GT/s, 65W LGA2011 CPU      - $2,860
+ * 16 x 16GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                          - $2100
+ * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                 - $400
+ * 2 x Heatsinks                                                        - $100
+ * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W       - $350
 
 Total   --- **$6200**
 
 ## Option B: Faster CPUs
 
- * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB)          - $390
- * 2 x Intel® E5-2670v3-2.3Ghz/12C, 30M, 9.6GT/s, 120W LGA2011 CPU               - $3,300
- * 16 x 16GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                                   - $2100
- * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                          - $400
- * 2 x Heatsinks                                                                 - $100
- * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W                - $350
+ * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB) - $390
+ * 2 x Intel® E5-2670v3-2.3Ghz/12C, 30M, 9.6GT/s, 120W LGA2011 CPU      - $3,300
+ * 16 x 16GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                          - $2100
+ * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                 - $400
+ * 2 x Heatsinks                                                        - $100
+ * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W       - $350
 
 Total   --- **$6650**
+
+## Ways to lower the price a bit
+
+No need to invest time into it immediately, but if we eventually decide
+to go this way and the total price is a bit too high, we should look
+into these options.
+
+### Less RAM
+
+Here, we pay for the test suite's temporary storage twice: once in RAM
+(disk cache managed by the kernel), once on disk. We could cut down on
+costs a bit by not buying all the corresponding RAM now, and instead
+relying purely on the SSDs (buy 128GB instead of 256GB for the new
+machine, which saves ~$1k).
+
+I'm curious what would be the performance hit if we did that. I guess
+it's easy enough to get a first very rough estimate (just give an
+isotesterN 10GB of RAM instead of 20GB, or something), but really it all
+depends on how the drives handle _multiple_ instances of the test suite
+writing/reading tons of data.
