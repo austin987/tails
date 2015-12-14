@@ -1,4 +1,5 @@
-@product
+#10497: wait_until_tor_is_working
+@product @fragile
 Feature: Installing packages through APT
   As a Tails user
   when I set an administration password in Tails Greeter
@@ -6,27 +7,19 @@ Feature: Installing packages through APT
   and all Internet traffic should flow only through Tor.
 
   Background:
-    Given a computer
-    And I start the computer
-    And the computer boots Tails
-    And I enable more Tails Greeter options
-    And I set sudo password "asdf"
-    And I log in to a new session
-    And the Tails desktop is ready
-    And Tor is ready
-    And all notifications have disappeared
-    And available upgrades have been checked
-    And I save the state so the background can be restored next scenario
+    Given I have started Tails from DVD and logged in with an administration password and the network is connected
 
   Scenario: APT sources are configured correctly
     Then the only hosts in APT sources are "ftp.us.debian.org,security.debian.org,backports.debian.org,deb.tails.boum.org,deb.torproject.org,mozilla.debian.net"
 
-  @check_tor_leaks
-  Scenario: Install packages using apt-get
-    When I update APT using apt-get
-    Then I should be able to install a package using apt-get
+  #10496: apt-get scenarios are fragile
+  @check_tor_leaks @fragile
+  Scenario: Install packages using apt
+    When I update APT using apt
+    Then I should be able to install a package using apt
 
-  @check_tor_leaks
+  #10441: Synaptic test is fragile
+  @check_tor_leaks @fragile
   Scenario: Install packages using Synaptic
     When I start Synaptic
     And I update APT using Synaptic

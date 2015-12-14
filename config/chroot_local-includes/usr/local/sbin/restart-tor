@@ -2,21 +2,64 @@
 
 set -e
 
-service tor restart
+# Import try_for() and clock_gettime_monotonic()
+. /usr/local/lib/tails-shell-library/common.sh
 
-# The main point of this script is to make sure that if vidalia is
-# running, and Tor is restarted, then we also restart Vidalia. This is
-# because Vidalia doesn't re-connect to Tor automatically, so the user
-# has to restart it to be able to control Tor again. Also, any options
-# set by Vidalia will be lost since they weren't written to torrc.
-if pgrep "\<vidalia\>" >/dev/null; then
+# Import tor_bootstrap_progress()
+. /usr/local/lib/tails-shell-library/tor.sh
+
+# Import log()
+. /usr/local/lib/tails-shell-library/log.sh
+_LOG_TAG="$(basename $0)"
+
+# The Tor log is removed to ensure `tor_bootstrap_progress`'s output will be
+# accurate.
+clear_tor_log() {
+   rm -f /var/log/tor/log
+}
+
+vidalia_was_running=no
+if pgrep "\<vidalia\>" >/dev/null 2>&1; then
+    vidalia_was_running=yes
     killall -SIGKILL vidalia
-    # Since Tor just restarted we wait for a while until the
-    # ControlPort hopefully is up.
-    counter=0
-    until [ "${counter}" -ge 10 ] || nc -z localhost 9051 2>/dev/null; do
-        sleep 1
-        counter=$((${counter}+1))
-    done
+fi
+
+clear_tor_log
+systemctl restart tor@default.service
+
+# There are two main points to this script:
+#   * restarting Tor if bootstrapping stalls for more than 20 seconds
+#   * making sure that if vidalia is running it is restarted if Tor is restarted.
+#     This is needed because Vidalia doesn't re-connect to Tor automatically,
+#     so the user has to restart it to be able to control Tor again. Also, any
+#     options  set by Vidalia will be lost since they weren't written to torrc.
+
+bootstrap_progress=0
+last_bootstrap_change=$(clock_gettime_monotonic)
+
+maybe_restart_tor() {
+    local new_bootstrap_progress=$(tor_bootstrap_progress)
+    if [ $new_bootstrap_progress -eq 100 ]; then
+        log "Tor has successfully bootstrapped."
+        return 0
+    elif [ $new_bootstrap_progress -gt $bootstrap_progress ]; then
+        bootstrap_progress=$new_bootstrap_progress
+        last_bootstrap_change=$(clock_gettime_monotonic)
+        return 1
+    elif [ $(expr $(clock_gettime_monotonic) - $last_bootstrap_change) -ge 20 ]; then
+        log "Tor seems to have stalled while bootstrapping. Restarting Tor."
+        clear_tor_log
+        systemctl restart tor@default.service
+        bootstrap_progress=0
+        last_bootstrap_change=$(clock_gettime_monotonic)
+        return 1
+    else
+        return 1
+    fi
+}
+
+try_for 270 maybe_restart_tor
+
+if [ "${vidalia_was_running}" = yes ]; then
     restart-vidalia
 fi

@@ -11,5 +11,9 @@ pref("network.proxy.ssl_port", 4444);
 // Disable searching from the URL bar
 pref("keyword.enabled", false);
 
+// Without setting this, the Download Management page will not update
+// the progress being made.
+pref("browser.download.panel.shown", true);
+
 // Never  add 'www' or '.com' to hostnames in I2P Browser.
 pref("browser.fixup.alternate.enabled", false);

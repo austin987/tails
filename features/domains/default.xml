@@ -1,5 +1,4 @@
 <domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
-  <name>TailsToaster</name>
   <memory unit='KiB'>2097152</memory>
   <currentMemory unit='KiB'>2097152</currentMemory>
   <vcpu>1</vcpu>
@@ -12,6 +11,7 @@
     <apic/>
     <pae/>
   </features>
+  <cpu mode='host-model'/>
   <clock offset='utc'/>
   <on_poweroff>destroy</on_poweroff>
   <on_reboot>restart</on_reboot>
@@ -23,26 +23,17 @@
       <source file=''/>
       <target dev='hdc' bus='ide'/>
       <readonly/>
-      <address type='drive' controller='0' bus='1' target='0' unit='0'/>
     </disk>
-    <controller type='usb' index='0' model='ich9-ehci1'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x7'/>
-    </controller>
+    <controller type='usb' index='0' model='ich9-ehci1'/>
     <controller type='usb' index='0' model='ich9-uhci1'>
       <master startport='0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0' multifunction='on'/>
     </controller>
-    <controller type='ide' index='0'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
-    </controller>
-    <controller type='virtio-serial' index='0'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
-    </controller>
+    <controller type='ide' index='0'/>
+    <controller type='virtio-serial' index='0'/>
     <interface type='network'>
       <mac address='52:54:00:ac:dd:ee'/>
       <source network='TailsToasterNet'/>
       <model type='virtio'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
       <link state='up'/>
     </interface>
     <serial type='tcp'>
@@ -52,21 +43,16 @@
     <input type='tablet' bus='usb'/>
     <channel type='spicevmc'>
       <target type='virtio' name='com.redhat.spice.0'/>
-      <address type='virtio-serial' controller='0' bus='0' port='1'/>
     </channel>
     <graphics type='spice' port='-1' tlsPort='-1' autoport='yes'>
       <mouse mode='client'/>
     </graphics>
-    <sound model='ich6'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
-    </sound>
+    <sound model='ich6'/>
     <video>
-      <model type='qxl' vram='9216' heads='1'/>
+      <model type='qxl' ram='65536' vram='131072' vgamem='16384' heads='1'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
     </video>
-    <memballoon model='virtio'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
-    </memballoon>
+    <memballoon model='virtio'/>
   </devices>
 </domain>
 

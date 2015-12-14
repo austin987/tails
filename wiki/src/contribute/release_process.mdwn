@@ -47,6 +47,12 @@ Update Tor Browser preferences
 * update `extensions.adblockplus.currentVersion` in
   `config/chroot_local-includes/etc/tor-browser/profile/preferences/0000tails.js`
 
+Update Icedove preferences
+------------------------------
+
+* update `extensions.enigmail.configuredVersion` in
+  `config/chroot_local-includes/etc/skel/.icedove/profile.default/preferences/0000tails.js`
+
 Coordinate with Debian security updates
 ---------------------------------------
 
@@ -170,12 +176,11 @@ Correct any displayed error, then commit the changes if any.
 Then see the relevant release processes, and upload the packages to
 the release branch's APT suite:
 
-* [[liveusb-creator]]
+* [[tails-installer]]
 * [[tails-greeter]]
 * [[perl5lib]]
 * [[persistence-setup]]
 * [[tails-iuk]]
-* [[tor]]
 * whisperback:
   * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
   * build a Debian package
@@ -237,7 +242,7 @@ Update other base branches
    that `tails-merge-suite` currently happily overwrites newer
    packages in the target with older packages from the source, it's
    probably easier to just merge each individual APT overlay that was
-   just merged into the release branch into `feautre/jessie`'s APT
+   just merged into the release branch into `feature/jessie`'s APT
    suite. Also, most of our just upgraded bundled packages
    (e.g. `tails-greeter`) may need to be rebuilt for Jessie.
 
@@ -306,7 +311,7 @@ matches the date of the future signature.
 	echo "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
 	sed -ri "s%news/version_.*]]%news/version_$VERSION]]%" wiki/src/inc/stable_i386_release_notes.*
 	$EDITOR wiki/src/inc/*.html
-	./build-wiki
+	./build-website
 	git commit wiki/src/inc/ -m "Update version and date for $VERSION."
 
 ### features and design documentation
@@ -328,7 +333,7 @@ pages that were added or changed accordingly to changes coming with
 the new release. This e.g. ensures that the RC call for translation
 points translators to up-to-date PO files:
 
-	./build-wiki && git add wiki/src && git commit -m 'Update website PO files.'
+	./build-website && git add wiki/src && git commit -m 'Update website PO files.'
 
 Call for translation
 ====================
@@ -408,8 +413,16 @@ Better catch this before people spend time doing manual tests.
 Build the almost-final image
 ----------------------------
 
-[[Build images|contribute/build]] and carefully read the build logs to
-make sure nothing bad happened.
+* Check out the release tag:
+
+      git checkout "${TAG}"
+
+* [[Build images|contribute/build]] and carefully read the build logs to
+  make sure nothing bad happened.
+
+* Check out the release branch again:
+
+      git checkout "${RELEASE_BRANCH}"
 
 SquashFS file order
 -------------------
@@ -451,8 +464,16 @@ suite should be ready, so it is time to:
           git tag -f -u "$TAILS_SIGNATURE_KEY" \
   	    -m "tagging version ${VERSION}" "${TAG}" && \
           git push --tags -f
-  
+
+* check out the release tag:
+
+      git checkout "${TAG}"
+
 * build the final image!
+
+* check out the release branch again:
+
+      git checkout "${RELEASE_BRANCH}"
 
 <a id="prepare-iuk"></a>
 
@@ -464,11 +485,10 @@ First, create a directory with a suitable name and go there:
 	mkdir "$ISOS/tails-i386-$VERSION" && \
 	cd "$ISOS/tails-i386-$VERSION"
 
-Second, copy the built image to this brand new directory.
-Then, rename it:
+Second, move the built image to this brand new directory:
 
-	mv "$ARTIFACTS/tails-i386-${RELEASE_BRANCH}-$VERSION-"*".iso" \
-	   "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso"
+	mv "$ARTIFACTS/tails-i386-$VERSION.iso" \
+	   "$ISOS/tails-i386-$VERSION/"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
@@ -692,6 +712,13 @@ Make sure every webserver listed in the `dl.amnesia.boum.org` round
 robin pool has the new version. Drop those that are lagging behind and
 notify their administrators.
 
+ISO history
+-----------
+
+Push the released ISO to our Tails ISO history git-annex repo, so that
+our isotesters can fetch it from there for their testing. How to do so
+is described in our internal Git repo.
+
 Update the website and Git repository
 =====================================
 
@@ -710,7 +737,7 @@ In order to get any new documentation into the website, merge either
 Rename the `.packages` file to remove the `.iso` and build date parts
 of its name:
 
-	mv "$ARTIFACTS"/tails-i386-"${RELEASE_BRANCH}-$VERSION"-*.iso.packages \
+	mv "$ARTIFACTS"/tails-i386-"-$VERSION"-*.iso.packages \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages"
 
 Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
@@ -734,18 +761,19 @@ to be released in `inc/*`:
 
 Update the size of the ISO image in `inc/*`:
 
-	LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mb.mdwn"
-	LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\2B/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mb_unit.mdwn"
-	LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib.mdwn"
-	LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\2iB/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib_unit.mdwn"
+	MB=$(LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' | tr -d '\n')
+	MiB=$(LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+          cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' | tr -d '\n')
+	echo "($MB/$MiB)" > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
+	echo "$MiB" > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib.html"
+
+Generate the expected signature verification output:
+
+        TAILS_ISO="${ISOS}/tails-i386-${VERSION}/tails-i386-${VERSION}.iso"
+        gpg --keyid-format long --verify "${TAILS_ISO}.sig" "${TAILS_ISO}" 2>&1 | \
+           sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' >
+           "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_gpg_signature_output.html"
 
 Update the [[support/known_issues]] page:
 
@@ -809,7 +837,7 @@ Write the announcement for the release in
 In any case
 -----------
 
-Generate PO files for the announcements with `./build-wiki`.
+Generate PO files for the announcements with `./build-website`.
 
 Then, send them to <tails-l10n@boum.org> so that they get translated
 shortly, perhaps even soon enough to integrate them before pushing the
@@ -868,6 +896,7 @@ repository like this:
       git merge "$RELEASE_BRANCH" && \
       git push origin master:master \
     )
+
 
 Bug tracker
 -----------
