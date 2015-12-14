@@ -69,9 +69,6 @@ foreach my $type (keys %package_type) {
         for my $origin (keys %origin_name) {
             if (substr($uri, 0, length $origin) eq $origin) {
                 push @{ $data->{ packages }->{ $package_type{$type} }->{ $origin_name{$origin} } }, { package => $package, version => $version, };
-                # XXX: Deduplication is needed. It will be added in
-                # the script consuming the generated manifest for now
-                # though.
                 $found = $origin;
                 last;
             }
