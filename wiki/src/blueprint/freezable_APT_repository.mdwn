@@ -70,11 +70,6 @@ little value.
       - review and test k's code that is meant to address this [i]; in particular:
         * `generate-build-manifest` (main Git repo), aka.
           [[!tails_ticket 10748]]
-           - see remaining XXX:s in the script
-           - see the "if a (package, version) is seen at build time in
-             2 or more APT" case described below
-           - check "Listing used packages" section for specs and
-             potential problems
            - The architecture information is not part of the manifest.
              Is it OK?
         * check source packages handling in
@@ -551,8 +546,6 @@ from it.
 Output:   
 
 - for each .deb:
-  * Version: Need to look up version _inside_ .deb's because file name doesn't
-    contain epoch and then doesn't allow us to infer version.
   * APT sources from where it is available, so that we can reinject it
     into the relevant tagged snapshot(s!); better gather this info
     incrementally rather than at the end of the build => we avoid
@@ -560,7 +553,6 @@ Output:
     build
   * Checksum(s) ???
 - The union of all APT sources used during the build.
-- XXX: save more build info, e.g. Git commit etc.?
 
 XXX: if a (package, version) is seen at build time in 2 or more APT
 sources, we'll want to inject it into each of the tagged snapshots
