@@ -72,41 +72,49 @@ little value.
         * `generate-build-manifest` (main Git repo), aka.
           [[!tails_ticket 10748]]
            - The current script does not gather all information
-             specified in the "Listing used packages" section below:
-             specifically, it only saves the origin from which we have
-             retrieved a package during the build, even if that
-             package is also available from another origin, from which
-             it could as well have been fetched. Is it a problem?
-             It's not a problem if:
-             * this is dealt with by
+             we specified in the
+             [[Listing used packages|freezable APT repository#build-manifest]]
+             section: specifically, it only saves the origin from
+             which we have retrieved a package during the build, even
+             if that package was also available from another origin,
+             from which it could as well have been fetched. It would
+             not be a problem if:
+             * the problematic scenario this requirement was meant to
+               address was (made?) entirely impossible for some
+               reason; see dedicated section below for a discussion;
+             * this was dealt with by
                `tails-prepare-tagged-apt-snapshot-import`, somehow;
-               is it?
-             * given a set of sources and pinning, APT will always
-               fetch a package from the same source when it's
-               available from multiple ones; is this deterministic?
+               apparently it isn't
            - The architecture information is not part of the manifest.
              It's fine if `tails-prepare-tagged-apt-snapshot-import` can
              do its job without this information. Can it?
         * `tails-prepare-tagged-apt-snapshot-import`, aka.
           [[!tails_ticket 10749]] (`puppet-tails` repo):
-          - see remaining XXX:s in the script
           - support for multiple architectures? needed for multiarch
             that we'll have to use as soon as we want to upgrade Linux
-            to 4.x, see [[!tails_gitweb_branch feature/8415-overlayfs]];
-            (maybe it's good enough to import all needed packages for
-            _all_ architectures our reprepro setup supports? beware of
-            differing versions due to binNMUs, though)
-          - support for multiple APT repositories (not only suites)?
+            to 4.x, see
+            [[!tails_gitweb_branch feature/8415-overlayfs]]; (it might
+            be good enough to import a bit too much, e.g. import each
+            package for _all_ architectures our reprepro setup
+            supports even though we need it only for one architecture;
+            beware of differing versions due to binNMUs, though)
+          - benchmark master vs. kibi/master with realistic input data
+          - triage remaining XXX:s in the script, address what needs
+            to be
    f. **WIP** expand list of source packages with those that the binary
       packages were built from [k]
       => review this [i], in particular:
       - check the case when the binary package's version is different
         from the corresponding source package's one
+        (`libdevmapper1.02.1` vs. `lvm2`)
+      - torproject provides no source packages; how does
+        `tails-prepare-tagged-apt-snapshot-import` deal with it?
    g. **WIP** have the manifest → partial snapshot process include source
       packages [k]
       => review this [i], in particular:
       - check the case when the binary package's version is different
         from the corresponding source package's one
+        (`libdevmapper1.02.1` vs. `lvm2`)
    h. for some Tails release: generate manifest, import packages into
       tagged snapshots, try building *offline* with these tagged
       snapshots [i]
@@ -118,7 +126,9 @@ little value.
       - done: manual build doc
    j. convert custom `data/debootstrap/tails-wheezy` into a patch,
       or set up the process to update/replace it in the future [i]
-   k. Update the "Listing used packages" section
+   k. Update the
+      [[Listing used packages|freezable APT repository#build-manifest]]
+      section
    l. Have Jenkins publish the list of needed packages for a build
       if available (supersede existing `*.{bin,src}pkg`).
    m. if needed, implement GC
@@ -551,9 +561,9 @@ XXX: find out how we can solve these two problems.
 None of these problems seem to warrant going back to the other
 option... and having to deal with 80GB+ BDB databases.
 
-## Listing used packages
+<a id="build-manifest"></a>
 
-Only needed for partial archive snapshots, but useful in all cases.
+## Listing used packages
 
 Saved as ISO build artifact, both when building in Jenkins and outside
 from it.
@@ -571,24 +581,78 @@ Output:
 
 XXX: if a (package, version) is seen at build time in 2 or more APT
 sources, we'll want to inject it into each of the tagged snapshots
-corresponding to these sources.
+corresponding to these sources. The goal is to avoid this scenario:
 
-"at ISO build time, generate a list of used packages and version,
-including packages used at build time but not shipped in the ISO"
--> from logs APT and/or dpkg and/or `/var/cache/apt`
+ - version X of package P is available both in suite S1 on origin O1,
+   and in suite S2 on origin O2
+ - version Y of package P is available in suite S3 of origin O3
+ - our pinning makes us prefer version X of package P *because it's
+   available in O1/S1*; otherwise, if it wasn't in there, then our
+   pinning would make APT prefer version Y to version X
+ - at ISO build time, APT fetches package P version X from O2/S2
+ - given this build manifest, we import package P version X into our
+   tagged snapshot of O2/S2, but not into our tagged snapshot of O1/S1
+ - if we rebuild from the same source tree using that set of tagged
+   snapshots, then version Y of package P will be installed
 
-* debootstrap ⇒ `--keep-debootstrap-dir`
-* `apt-get source` ⇒ corner case, handle by hand
-* if all APT sources in use behave ((source package name, version)
-  is a unique identifier wrt. file *content* among all such APT
-  sources), then we don't need to save _where_ each package was
-  pulled from
-* Note: one can have a binary package with a different version from
-  the source package it was built from, see e.g. `src:lvm2` and
-  `libdevmapper1.02.1-udeb`.
+This scenario can happen in practice:
 
-Not strictly needed, but useful even if we do full archive
-snapshots:
+	# cat /etc/apt/sources.list
+	deb http://security.debian.org wheezy/updates main
+	deb http://ftp.us.debian.org/debian/ wheezy main
+	deb http://ftp.us.debian.org/debian/ jessie main
+
+	# cat /etc/apt/preferences
+	Package: *
+	Pin: origin security.debian.org
+	Pin-Priority: -10
+
+	Package: *
+	Pin: release o=Debian,n=wheezy
+	Pin-Priority: 990
+
+	Package: *
+	Pin: release o=Debian,n=jessie
+	Pin-Priority: 700
+
+	# apt-cache madison a2ps
+	a2ps | 1:4.14-1.3 | http://ftp.us.debian.org/debian/ jessie/main amd64 Packages
+	a2ps | 1:4.14-1.1+deb7u1 | http://security.debian.org/ wheezy/updates/main amd64 Packages
+	a2ps | 1:4.14-1.1+deb7u1 | http://ftp.us.debian.org/debian/ wheezy/main amd64 Packages
+
+	# apt-cache policy a2ps
+	a2ps:
+	  Installed: (none)
+	  Candidate: 1:4.14-1.1+deb7u1
+	  Version table:
+	     1:4.14-1.3 0
+	        700 http://ftp.us.debian.org/debian/ jessie/main amd64 Packages
+	     1:4.14-1.1+deb7u1 0
+	        -10 http://security.debian.org/ wheezy/updates/main amd64 Packages
+	        990 http://ftp.us.debian.org/debian/ wheezy/main amd64 Packages
+
+And then, in the current state of things APT will download `a2ps` from
+security.d.o:
+
+	# apt-get download a2ps --print-uris
+	'http://security.debian.org/pool/updates/main/a/a2ps/a2ps_4.14-1.1+deb7u1_amd64.deb' a2ps_4.14-1.1+deb7u1_amd64.deb 956298 sha256:e47d7fe9adb7aa62421108debf425830f4e2385e98151c5cb359d3eb8688eea8
+
+... but if `a2ps` was not available in the regular Wheezy archive,
+e.g. because we were using a tagged snapshot that imported `a2ps` into
+the security archive, then APT would prefer `a2ps` from Jessie, which
+demonstrates the bug... hence the "inject it into each of the tagged
+snapshots corresponding to these sources" requirement we had.
+
+Can we prevent this scenario somehow?
+
+If we can't prevent that scenario, then how do we mitigate its
+effects? First of all, we can easily detect that it happened by
+diff'ing the build manifests: the one we used to generate the snapshot
+vs. the one resulting from building with the tagged snapshots.
+This needs more code and process, but seems entirely doable. But once
+we've detected the problem, what do we do?
+
+### Bonus material
 
 - Allows to inspect the diff between the subset of two different
   snapshots that was used at build time; the benefit is very
@@ -603,21 +667,6 @@ snapshots:
   time, but done in a correct way.
 - Allows keeping only _partial_ snapshots (of our full archive
   ones) for those we want to keep forever, i.e. release ones.
-
-### Downloading specific packages
-
-Needed for creating the partial archive snapshot.
-
-Input = the output of "Listing used packages"
-
-for each (package, version, checksum):
-  if found on deb.tails.b.o
-  then
-    skip
-  else
-    add APT sources = union(those used during build)
-    if not apt-get download $package=$version:
-      fetch with debsnap + verify checksum
 
 ## Valid-Until and signing
 
