@@ -51,6 +51,6 @@ end
 
 When(/^I send some ICMP pings$/) do
   # We ping an IP address to avoid a DNS lookup
-  ping = $vm.execute("ping -c 5 #{SOME_DNS_SERVER}", :user => LIVE_USER)
+  ping = $vm.execute("ping -c 5 #{SOME_DNS_SERVER}")
   assert(ping.success?, "Failed to ping #{SOME_DNS_SERVER}:\n#{ping.stderr}")
 end
