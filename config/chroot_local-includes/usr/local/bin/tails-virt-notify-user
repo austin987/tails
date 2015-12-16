@@ -22,41 +22,62 @@ See https://tails.boum.org/.
 
 #}}}
 
-use Carp;
 use Desktop::Notify;
-use Fatal qw( open close );
+use IPC::System::Simple qw{capturex $EXITVAL};
 use Locale::gettext;
+use Net::DBus::Reactor;
 use POSIX;
 
 ### initialization
 setlocale(LC_MESSAGES, "");
 textdomain("tails");
-my $detected_virt_file='/var/lib/live/detected-virtual-machine';
+
+### callbacks
+
+sub action_cb {
+    my $reactor = shift;
+    exec(
+        '/usr/local/bin/tor-browser',
+        'file:///usr/share/doc/tails/website/doc/advanced_topics/virtualization.en.html#security'
+    );
+    $reactor->shutdown;
+}
 
 ### main
 
-exit 0 unless -e $detected_virt_file;
+# both 0 and 1 are acceptable exit values:
+#  - 0 means that we're running in a virtualized environment
+#  - 1 means that we're not running in a virtualized environment
+#  - anything else means there is a problem, and capturex will throw an exception
+my $vm_name = capturex([0, 1], qw{/usr/bin/systemd-detect-virt --vm});
+exit 0 if $EXITVAL == 1;
 
-my @detected_virt;
+my @whitelist = qw(bochs kvm qemu uml virtualbox xen);
 
-open my $detected_virt_file_h, '<', $detected_virt_file;
-while (my $detected_virt = <$detected_virt_file_h>) {
-    chomp $detected_virt;
-    push @detected_virt, $detected_virt;
+my $reactor = Net::DBus::Reactor->main;
+
+my $notify  = Desktop::Notify->new();
+$notify->action_callback(sub { action_cb($reactor, @_) });
+$notify->close_callback(sub { $reactor->shutdown; });
+
+my ($body, $summary);
+
+chomp($vm_name);
+if (grep {$_ eq $vm_name} @whitelist) {
+    $summary = gettext("Warning: virtual machine detected!");
+    $body    =
+        gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails.");
 }
-close $detected_virt_file_h;
-
-exit 0 unless @detected_virt;
-
-my $notify = Desktop::Notify->new();
-
-my $summary = gettext("Warning: virtual machine detected!");
-my $body    =
-    gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails.")
-    . " "
-    . gettext("<a href='file:///usr/share/doc/tails/website/doc/advanced_topics/virtualization.en.html#security'>Learn more...</a>")
-    . " "; # Workaround: else the last line of the notification is not displayed
+else {
+    $summary = gettext("Warning: non-free virtual machine detected!");
+    $body    =
+        gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails. Only free software can be considered trustworthy, for both the host operating system and the virtualization software.");
+}
 
 $notify->create(summary => $summary,
-                body => $body,
+                body    => $body,
+                actions => { 'moreinfo'  => gettext('Learn more'), },
+                hints   => { 'transient' => 1, },
                 timeout => 0)->show();
+
+$reactor->run;

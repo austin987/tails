@@ -76,27 +76,14 @@ Then /^I have sucessfully logged into the SSH server$/ do
 end
 
 Then /^I connect to an SFTP server on the Internet$/ do
-
   read_and_validate_ssh_config "SFTP"
-
-  @screen.wait_and_click("GnomePlaces.png", 20)
-  @screen.wait_and_click("GnomePlacesConnectToServer.png", 20)
-  @screen.wait("GnomeSSHConnect.png", 20)
-  @screen.click("GnomeSSHFTP.png")
-  @screen.click("GnomeSSHServerSSH.png")
-  @screen.type(Sikuli::Key.TAB, Sikuli::KeyModifier.SHIFT) # port
-  @screen.type(Sikuli::Key.TAB, Sikuli::KeyModifier.SHIFT) # host
-  @screen.type(@sftp_host + Sikuli::Key.TAB)
-
-  if @sftp_port
-    @screen.type("#{@sftp_port}" + Sikuli::Key.TAB)
-  else
-    @screen.type("22" + Sikuli::Key.TAB)
-  end
-  @screen.type(Sikuli::Key.TAB) # type
-  @screen.type(Sikuli::Key.TAB) # folder
-  @screen.type(@sftp_username + Sikuli::Key.TAB)
-  @screen.wait_and_click("GnomeSSHConnectButton.png", 60)
+  @sftp_port ||= 22
+  @sftp_port = @sftp_port.to_s
+  step 'I start "Files" via the GNOME "Accessories" applications menu'
+  @screen.wait_and_click("GnomeFilesConnectToServer.png", 10)
+  @screen.wait("GnomeConnectToServerWindow.png", 10)
+  @screen.type("sftp://" + @sftp_username + "@" + @sftp_host + ":" + @sftp_port)
+  @screen.wait_and_click("GnomeConnectToServerConnectButton.png", 10)
 end
 
 Then /^I verify the SSH fingerprint for the SFTP server$/ do

@@ -128,7 +128,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
                               'UnsafeBrowserNetworkTab.png'], 10)
     @screen.click(hit) if hit == 'UnsafeBrowserNetworkTab.png'
     @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
-    @screen.wait('UnsafeBrowserProxySettingsWindow.png', 10)
+    @screen.wait_and_click('UnsafeBrowserProxySettingsWindow.png', 10)
     @screen.type("m", Sikuli::KeyModifier.ALT)
 
     # Configure the proxy
@@ -136,7 +136,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     @screen.type(proxy_host + Sikuli::Key.TAB + proxy_port) if proxy_type != no_proxy
 
     # Close settings
-    @screen.type(Sikuli::Key.ENTER)
+    @screen.click('UnsafeBrowserProxySettingsOkButton.png')
     @screen.waitVanish('UnsafeBrowserProxySettingsWindow.png', 10)
 
     # Test that the proxy settings work as they should
@@ -180,11 +180,12 @@ end
 Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
   pkts = 0
   uid = $vm.execute_successfully("id -u clearnet").stdout.chomp.to_i
-  iptables_output = $vm.execute_successfully("iptables -vnL").stdout.chomp
-  output_chain = iptables_parse(iptables_output)["OUTPUT"]
-  output_chain["rules"].each do |rule|
-    if /owner UID match \b#{uid}\b/.match(rule["extra"])
-      pkts += rule["pkts"]
+  ip4tables_chains do |name, _, rules|
+    next unless name == "OUTPUT"
+    rules.each do |rule|
+      if rule.elements["conditions/owner/uid-owner[text()=#{uid}]"]
+        pkts += rule.attribute('packet-count').to_s.to_i
+      end
     end
   end
 

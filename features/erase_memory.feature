@@ -17,6 +17,7 @@ Feature: System memory erasure on shutdown
     And udev-watchdog is monitoring the correct device
     When I fill the guest's memory with a known pattern without verifying
     And I reboot without wiping the memory
+    And I stop the boot at the bootloader menu
     Then I find many patterns in the guest's memory
 
   Scenario: Memory erasure on a modern computer
@@ -47,6 +48,7 @@ Feature: System memory erasure on shutdown
     And udev-watchdog is monitoring the correct device
     When I fill the guest's memory with a known pattern without verifying
     And I reboot without wiping the memory
+    And I stop the boot at the bootloader menu
     Then I find many patterns in the guest's memory
 
   Scenario: Memory erasure on an old computer

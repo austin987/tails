@@ -69,25 +69,11 @@ class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
-  @screen.wait('USBCreateLiveUSB.png', 10)
-
-  # Here we'd like to select USB drive using #{name}, but Sikuli's
-  # OCR seems to be too unreliable.
-#  @screen.wait('USBTargetDevice.png', 10)
-#  match = @screen.find('USBTargetDevice.png')
-#  region_x = match.x
-#  region_y = match.y + match.h
-#  region_w = match.w*3
-#  region_h = match.h*2
-#  ocr = Sikuli::Region.new(region_x, region_y, region_w, region_h).text
-#  STDERR.puts ocr
-#  # Unfortunately this results in almost garbage, like "|]dev/sdm"
-#  # when it should be /dev/sda1
-
-  @screen.wait_and_click('USBCreateLiveUSB.png', 10)
+  @screen.wait('USBTailsLogo.png', 10)
   if @screen.exists("USBCannotUpgrade.png")
     raise UpgradeNotSupported
   end
+  @screen.wait_and_click('USBCreateLiveUSB.png', 10)
   @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
   @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
   @screen.wait('USBInstallationComplete.png', 30*60)
@@ -169,9 +155,12 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   match = @screen.find('USBUseLiveSystemISO.png')
   @screen.click(match.getCenter.offset(0, match.h*2))
   @screen.wait('USBSelectISO.png', 10)
-  @screen.wait_and_click('GnomeFileDiagTypeFilename.png', 10)
+  @screen.wait_and_click('GnomeFileDiagHome.png', 10)
+  @screen.type("l", Sikuli::KeyModifier.CTRL)
+  @screen.wait('GnomeFileDiagTypeFilename.png', 10)
   iso = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
-  @screen.type(iso + Sikuli::Key.ENTER)
+  @screen.type(iso)
+  @screen.wait_and_click('GnomeFileDiagOpenButton.png', 10)
   usb_install_helper(name)
 end
 
@@ -191,35 +180,49 @@ end
 
 Given /^I create a persistent partition$/ do
   step 'I start "ConfigurePersistentVolume" via the GNOME "Tails" applications menu'
-  @screen.wait('PersistenceWizardWindow.png', 40)
   @screen.wait('PersistenceWizardStart.png', 20)
   @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)
   step "I enable all persistence presets"
 end
 
-def check_part_integrity(name, dev, usage, type, scheme, label)
-  info = $vm.execute("udisks --show-info #{dev}").stdout
-  info_split = info.split("\n  partition:\n")
+def check_disk_integrity(name, dev, scheme)
+  info = $vm.execute("udisksctl info --block-device '#{dev}'").stdout
+  info_split = info.split("\n  org\.freedesktop\.UDisks2\.PartitionTable:\n")
+  dev_info = info_split[0]
+  part_table_info = info_split[1]
+  assert(part_table_info.match("^    Type: +#{scheme}$"),
+         "Unexpected partition scheme on USB drive '#{name}', '#{dev}'")
+end
+
+def check_part_integrity(name, dev, usage, fs_type, part_label, part_type = nil)
+  info = $vm.execute("udisksctl info --block-device '#{dev}'").stdout
+  info_split = info.split("\n  org\.freedesktop\.UDisks2\.Partition:\n")
   dev_info = info_split[0]
   part_info = info_split[1]
-  assert(dev_info.match("^  usage: +#{usage}$"),
+  assert(dev_info.match("^    IdUsage: +#{usage}$"),
          "Unexpected device field 'usage' on USB drive '#{name}', '#{dev}'")
-  assert(dev_info.match("^  type: +#{type}$"),
-         "Unexpected device field 'type' on USB drive '#{name}', '#{dev}'")
-  assert(part_info.match("^    scheme: +#{scheme}$"),
-         "Unexpected partition scheme on USB drive '#{name}', '#{dev}'")
-  assert(part_info.match("^    label: +#{label}$"),
+  assert(dev_info.match("^    IdType: +#{fs_type}$"),
+         "Unexpected device field 'IdType' on USB drive '#{name}', '#{dev}'")
+  assert(part_info.match("^    Name: +#{part_label}$"),
          "Unexpected partition label on USB drive '#{name}', '#{dev}'")
+  if part_type
+    assert(part_info.match("^    Type: +#{part_type}$"),
+           "Unexpected partition type on USB drive '#{name}', '#{dev}'")
+  end
 end
 
 def tails_is_installed_helper(name, tails_root, loader)
-  dev = $vm.disk_dev(name) + "1"
-  check_part_integrity(name, dev, "filesystem", "vfat", "gpt", "Tails")
+  disk_dev = $vm.disk_dev(name)
+  part_dev = disk_dev + "1"
+  check_disk_integrity(name, disk_dev, "gpt")
+  check_part_integrity(name, part_dev, "filesystem", "vfat", "Tails",
+                       # EFI System Partition
+                       'c12a7328-f81f-11d2-ba4b-00a0c93ec93b')
 
   target_root = "/mnt/new"
   $vm.execute("mkdir -p #{target_root}")
-  $vm.execute("mount #{dev} #{target_root}")
+  $vm.execute("mount #{part_dev} #{target_root}")
 
   c = $vm.execute("diff -qr '#{tails_root}/live' '#{target_root}/live'")
   assert(c.success?,
@@ -227,7 +230,7 @@ def tails_is_installed_helper(name, tails_root, loader)
 
   syslinux_files = $vm.execute("ls -1 #{target_root}/syslinux").stdout.chomp.split
   # We deal with these files separately
-  ignores = ["syslinux.cfg", "exithelp.cfg", "ldlinux.sys"]
+  ignores = ["syslinux.cfg", "exithelp.cfg", "ldlinux.c32", "ldlinux.sys"]
   for f in syslinux_files - ignores do
     c = $vm.execute("diff -q '#{tails_root}/#{loader}/#{f}' " +
                     "'#{target_root}/syslinux/#{f}'")
@@ -267,7 +270,7 @@ end
 
 Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   dev = $vm.disk_dev(name) + "2"
-  check_part_integrity(name, dev, "crypto", "crypto_LUKS", "gpt", "TailsData")
+  check_part_integrity(name, dev, "crypto", "crypto_LUKS", "TailsData")
 
   # The LUKS container may already be opened, e.g. by udisks after
   # we've run tails-persistence-setup.
@@ -289,11 +292,11 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   end
 
   # Adapting check_part_integrity() seems like a bad idea so here goes
-  info = $vm.execute("udisks --show-info #{luks_dev}").stdout
-  assert info.match("^  cleartext luks device:$")
-  assert info.match("^  usage: +filesystem$")
-  assert info.match("^  type: +ext[34]$")
-  assert info.match("^  label: +TailsData$")
+  info = $vm.execute("udisksctl info --block-device '#{luks_dev}'").stdout
+  assert info.match("^    CryptoBackingDevice: +'/[a-zA-Z0-9_/]+'$")
+  assert info.match("^    IdUsage: +filesystem$")
+  assert info.match("^    IdType: +ext[34]$")
+  assert info.match("^    IdLabel: +TailsData$")
 
   mount_dir = "/mnt/#{name}"
   $vm.execute("mkdir -p #{mount_dir}")
@@ -384,7 +387,7 @@ Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
          "We are running from device #{actual_dev}, but for #{bus} drive " +
          "'#{name}' we expected to run from either device " +
          "#{expected_dev_normal} (when installed via the USB installer) " +
-         "or #{expected_dev_normal} (when installed from an isohybrid)")
+         "or #{expected_dev_isohybrid} (when installed from an isohybrid)")
 end
 
 Then /^the boot device has safe access rights$/ do
@@ -405,7 +408,7 @@ Then /^the boot device has safe access rights$/ do
     assert(dev_group == "disk" || dev_group == "root",
            "Boot device '#{dev}' owned by group '#{dev_group}', expected " +
            "'disk' or 'root'.")
-    assert_equal("1660", dev_perms)
+    assert_equal("660", dev_perms)
     for user, groups in all_users_with_groups do
       next if user == "root"
       assert(!(groups.include?(dev_group)),
@@ -414,8 +417,8 @@ Then /^the boot device has safe access rights$/ do
     end
   end
 
-  info = $vm.execute("udisks --show-info #{super_boot_dev}").stdout
-  assert(info.match("^  system internal: +1$"),
+  info = $vm.execute("udisksctl info --block-device '#{super_boot_dev}'").stdout
+  assert(info.match("^    HintSystem: +true$"),
          "Boot device '#{super_boot_dev}' is not system internal for udisks")
 end
 
@@ -563,7 +566,6 @@ end
 
 When /^I delete the persistent partition$/ do
   step 'I start "DeletePersistentVolume" via the GNOME "Tails" applications menu'
-  @screen.wait("PersistenceWizardWindow.png", 40)
   @screen.wait("PersistenceWizardDeletionStart.png", 20)
   @screen.type(" ")
   @screen.wait("PersistenceWizardDone.png", 120)
