@@ -599,7 +599,7 @@ When /^I start and focus GNOME Terminal$/ do
 end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
-  if !$vm.has_process?("gnome-terminal")
+  if !$vm.has_process?("gnome-terminal-server")
     step "I start and focus GNOME Terminal"
   else
     @screen.wait_and_click('GnomeTerminalWindow.png', 20)
