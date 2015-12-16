@@ -46,8 +46,6 @@ Feature: Using Evince
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/Persistent" as user "amnesia"
     Then the file "/home/amnesia/Persistent/default-testpage.pdf" exists
-    And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/.gnupg" as user "amnesia"
-    Then the file "/home/amnesia/.gnupg/default-testpage.pdf" exists
     When I open "/home/amnesia/Persistent/default-testpage.pdf" with Evince
     Then I see "CupsTestPage.png" after at most 10 seconds
     And I can print the current document to "/home/amnesia/Persistent/output.pdf"
