@@ -1,7 +1,5 @@
 tails (2.0~beta1) UNRELEASED; urgency=medium
 
-  XXX: see changelog of custom packages
-
   * Major new features and changes
     - Upgrade to Debian 8 (Jessie).
     - Migrate to GNOME Shell in Classic mode.
@@ -28,12 +26,32 @@ tails (2.0~beta1) UNRELEASED; urgency=medium
 
   * Minor improvements
     - Remove obsolete code from various places.
-    - Use socket activation for CUPS, to save some boot time.
-    - Port XXX [check custom packages] to GTK3 / UDisks2 / Python 3 / whatever.
+    - Tails Greeter:
+      · hide all windows while logging in
+      · resize and re-position the panel when the screen size grows
+      · PostLogin: log into the Journal instead of a dedicated log file
+      · use localectl to set the system locale and keyboard mapping
+      · delete the Live user's password if no administration password is set
+        (Closes: #5589)
+      · port to GDBus greeter interface, and adjust to other GDM
+        and GNOME changes
+    - Tails Installer:
+      · port to UDisks2, and from Qt4 to GTK3
+      · adapt to work on other GNU/Linux operating systems than Tails
+      · clean up enough upstream code and packaging bits to make it
+        deserve being uploaded to Debian
+      · rename everything from liveusb-creator to tails-installer
+    - Port tails-perl5lib to GTK3 and UDisks2. In passing, do some minor
+      refactoring and a GUI improvement.
+    - Persistent Volume Assistant:
+      · port to GTK3 and UDisks2
+      · handle errors when deleting persistent volume (Closes: #8435)
+      · remove obsolete workarounds
     - Don't install UDisks v1.
     - Adapt custom udev and polkit rules to UDisks v2 (Closes: #9054, #9270).
     - Adjust import-translations' post-import step for Tails Installer,
       to match how its i18n system works nowadays.
+    - Use socket activation for CUPS, to save some boot time.
     - Set memlockd.service's OOMScoreAdjust to -1000.
     - Don't bother creating /var/lib/live in tails-detect-virtualization.
       If it does not exist at this point, we have bigger and more
