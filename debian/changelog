@@ -599,6 +599,259 @@ tails (2.0~beta1) unstable; urgency=medium
     Synaptic' scenario, in which the APT update can take >5 minutes.
     Will-fix: #10403
 
+  * Simplify ISO image naming rules.
+    ... by using the base rule we use for Jenkins all the time, except
+    when building from a tag (i.e. building a release).
+    Will-fix: #10349
+
+  * Use the menu to open Pidgin's account manager
+  * Retry running whois when "LIMIT EXCEEDED" is in its output.
+    Will-fix: #10523
+  * Revert back to using @screen.wait.
+    We're going to end up restarting Seahorse on segfault. While doing lots
+    of testing for #9791 I'm fairly confident that I've figured out
+    Seahorse's failure modes and when it'll segfault. allowing code to be
+    simplified.
+  * Make keyid an instance variable in the GnuPG CLI step.
+    Doing this will allow this variable to be used in the Seahorse
+    keysyncing steps.
+  * Start Seahorse with its own function.
+    We'll also keep track of how Seahorse was opened in case we need to
+    restart it during the test suite.
+  * Improve Seahorse key syncing test robustness
+  * Avoid waiting unneccesarily for the results window if there's an error
+  * Use more generalized name for menu image's name.
+    Gedit no longer has a menu bar at the top of its window, causing this
+    feature to be broken..
+  * Teminate gpg after 120 seconds have passed.
+    During my testing I found that it seems that if we're going to get a
+    successful result it'll happen by the time two minutes have passed.
+    If the key retrieval neither succeeds nor fails within 2 minutes we'll
+    terminate the running gnupg process, force a new Tor circuit, and try
+    fetching again.
+  * Reduce timeouts in Seahorse to 2 minutes
+  * explicitly check that there's not an error from Seahorse
+  * Don't wait unnecessarily.
+    Since all of the gpg operations will retry after forcing a new Tor
+    circuit, by the time we reach the step that checks whether the key is in
+    the keyring the key should be there. We'll gain nothing from waiting two
+    additional minutes.
+  * Reduce redundancy with checking for seahorse errors
+  * Allow step to be retried.
+    If we don't monitor whether the key has been fetched with the gpg CLI
+    tool we can move to the next step which used to check whether the key is
+    in the keyring. By that time it's too late to retry fetching.
+    Instead let's check with `gpg` for the key. If the key is not in the
+    keyring within two minutes we'll fail the step, force a new tor circuit,
+    and try retrieving the key again.
+  * Remove unneeded return
+  * s/gsub/sub/
+  * Pass argument by name
+  * (Hopefully) more accurate name of function
+  * More specific variable name
+  * Typo fix
+
+  * Reword scenario title.
+  * Test suite: move upgrade scenarios to the feature dedicated to them.
+  * Test suite: fix error message for isohybrid test.
+  * Update jenkins-tools submodule.
+  * Stop tweaking /etc/modules.
+    It's 2015, the kernel should load these things automatically.
+    Will-Fix: #10609
+  * Remove obsolete "override our Wheezy-specific package" entries from APT pinning.
+    They were useful when feature/jessie was an overlay on top of devel,
+    but it's been not the case for a while.
+    Will-Fix: #10607
+  * Install obfs4proxy from deb.torproject.org on Jessie as well.
+    The package in Jessie is older than the one from deb.tpo, that we currently ship
+    in Tails 1.x, so let's fetch it from the same place.
+    Will-Fix: #10605
+  * Install Tor from deb.torproject.org's stable repo.
+    The one we currently want (0.2.7) has been released as stable.
+    Will-Fix: #10604
+  * Call out to the shell less often in htpdate.service.
+    On my test system they all are run within the same seconds, but it adds up to
+    everything else we're doing at the same time.
+    Will-Fix: #10612
+  * Clarify status of ttdnsd: we do run it, but via a NetworkManager hook.
+    Closes: #10608
+  * Convert config/chroot_local-hooks/21-gdm_unit_file to a drop-in override.
+    I see no reason to patch it at build time the way we did it.
+    Will-Fix: #10606
+  * Wrap Totem with torsocks when it's run via its D-Bus service too.
+    Will-Fix: #10603
+  * 09-torsocks-apps: make regexps a bit stricter.
+  * Have systemd hardening let Tor modify its configuration.
+    Tor Launcher needs that.
+    Closes: #10696
+
+  * Tag `@doc` scenarios that rely on the documentation.
+    Will-fix: #10706
+
+  * Restore image into broken symlink.
+    The symlink's target image was removed.
+  * Remove test of the removed restricted network detector.
+  * Remove silly executable bit.
+  * s/syslog/journal/
+  * Refactor the PAUSE_ON_FAIL functionality.
+    A well-placed `pause()` can act as a breakpoint when debugging.
+  * Kill + inline strangely named function.
+    And fix the code so we get the proper middle, i.e. measure from the
+    top's bottom to the bottom's top (hah!).
+  * Remove old workaround that seems obsolete.
+    ... at least on my system, that previously could reproduce it.
+  * Adapt test to how we disable networking in feature/jessie.
+    See `stop_and_disable_NM()` in the `tails-mac-spoof` script.
+  * Bump some images for feature/jessie.
+  * Kill Vidalia before we restart Tor.
+    Otherwise Vidalia will be running and showing errors while we make
+    sure that Tor bootstraps, which could take a while.
+  * Remove unnecessary waiting code.
+    Earlier we already ensure that Tor has bootstrapped, which implies
+    that the control port must be up.
+  * Remove obsolete comment.
+    The referred-to comment in checks.feature is not there any more, and
+    in this feature we use snapshots any way (although not as freely as
+    we'd like).
+  * Use snapshot.
+    This scenario is not using a filesystem share, so unlike some other
+    scenarios in this feature there's nothing preventing us.
+  * Remove superfluous part of test.
+    We still do the essential part i.e. test that Totem can open videos
+    over Tor. The removed part is essentially a test of the GUI, and what
+    a confusing and hard-to-discover GUI it is! I doubt users will ever
+    find out how to do it, so I fail to see why we should test it (and
+    waste time dealing with the robustness issue that plague this test).
+  * Add retry magic to the Totem HTTPS scenario.
+  * Use journalctl instead of (non-existing) syslog.
+  * Adapt test for new Tails Installer.
+    The USBCreateLiveUSB.png image cannot be relied upon for waiting on
+    the main installer window, since it can be greyed out. Also, the error
+    message when a device is not upgradable appears without even clicking
+    the install button.
+  * Remove comment about OCR, and commented OCR code.
+    Sikuli's OCR capabilities are way too bad, so let's forget about this.
+  * Introduce a new XML-based iptables parser.
+    The old `iptables_parse()` way relies on regex parsing the output of
+    the `iptables` output, which of course is not very reliable. In Jessie
+    the `ip6tables` output has changed and differs (if there are no
+    options the "opt" column will be empty, and not have a "--"). The new
+    parser fixes this.
+    The goal will be to convert all `iptables_parse()` instances to the
+    new parser.
+    Will-fix: #9704
+  * Convert `iptables_parse()` instance.
+  * Convert `iptables_parse()` instance.
+  * Convert `iptables_parse()` instance.
+  * Convert `iptables_parse()` instance.
+  * Kill the now unused `iptables_parse()`.
+
+  * Lower waiting time for USB installation in the test suite.
+    So far we were waiting up to one hour, which is just the same as our
+    Jenkins inactivity timeout, so in practice when Tails Installer fails
+    and displays an error message, instead of reporting that the job failed
+    (which is the point of the exercise) we abort the job due to this
+    timeout (which communicates waaaay less clearly to me, with my Tails
+    Installer developer hat, that there's probably a bug I should fix, as
+    opposed to "here's a transient failure caused by instabilities of our
+    Jenkins setup"). My understanding is that this is what prevented the
+    Tails Installer bug described on #10717 from being identified earlier,
+    and I don't want to see that happen again.
+    IIRC this 1h timeout was relevant for running with nested virtualization
+    on slightly old (ThinkPad X200) hardware. I don't think anyone does that
+    anymore, and I would bet that on such hardware, lots of other bits of
+    our test suite will time out anyway.
+    Fix-committed: #10718
+  * Mark apt-get scenario as fragile.
+    Refs: #10496
+
+  * Flag online scenarios as fragile.
+    They all rely on the `wait_until_tor_is_working` helper which has lately
+    proven to be still buggy. That's tracked by ticket #10497.
+  * Flag a online scenario in Jessie as fragile.
+    It depends on the `wait_until_tor_is_working` helper which is buggy.
+    Refs: #10497
+
+  * Mark as fragile all tests that rely on Tails Installer.
+    Refs: #10720
+  * Test suite: fix steps that shutdown/reboot via the applet.
+    When we hide the cursor, they often fail: the menu appears and
+    disappears immediately, before the shutdown or reboot button
+    is located.
+  * Use `systemctl mask' instead of manually symlinking, and thus avoid unneeded daemon-reload.
+    `systemctl daemon-reload' is a very big hammer: while it's running, socket
+    activation, D-Bus activation, and more systemd functionality are disabled.
+    In this case, as long as we use only systemctl {stop, disable, mask}, then we
+    don't need to do a global daemon reload, so let's not take the risk.
+  * Fix typo.
+  * Relax permissions on Tor and its child processes, to fix obfs4proxy startup.
+    Closes: #10724
+  * Install apparmor-profiles-extra from jessie-backports, that grants Totem access to DVD readers (refs: #10455), and fixes a freeze when trying to disable visual effects (refs: #9990).
+  * Fix shell syntax in hook that detects leftover .orig files.
+  * Unfuzzy apparmor-adjust-pidgin-profile.diff.
+  * Unfuzzy chroot_local-patches/unmute_alsa_channels.patch.
+  * Fix shell syntax error.
+    In commit:3e85f97 I've fixed one such error and introduced another one
+    ("git add -p" :)
+  * Update a test suite image for Jessie.
+  * Fix scenario name.
+    This one does not test ~/.gnupg/.
+  * Test suite: don't reboot when not needed.
+    These lines somehow survived or were re-introduced via merge
+    conflict resolution. That's the only explanation I have for them.
+  * Optimize memory erasure anti-test: block the boot to save CPU on the host.
+
+  * Add the bugfix-9713-electrum-2.5 APT overlay.
+    Will-fix: #9713
+  * Fix pinnings for electrum and its dependencies.
+    Now we install a custom Wheezy backport of electrum from our own
+    repo. Note that python-pbkdf2 is not even in Wheezy Backports, so we
+    install it from Debian Jessie.
+  * Make config appropriate for electrum 2.5.x.
+    For now, let's also drop "auto connect" and server until we've decided
+    on a server we can trust.
+
+  * Flag forgoten online scenarios as fragile.
+    Refs: #10497
+
+  * Refresh patch against Tor's AppArmor profile to apply on top of 0.2.7.6-1.
+
+  * Upgrade Tor Browser to 5.0.5.
+    Will-fix: #10751
+
+  * Warn if the claws-mail persistence is enabled when starting icedove.
+    Refs: #10458
+  * Warn if claws-mail persistence is activated AND it contains a accountrc file.
+    Otherwise people will get the notification every time they start Icedove
+    during the 1.8 lifetime.
+    Will-fix: #10458
+
+  * Update AdBlock Plus patterns.
+
+  * Add Icedove to GNOME launcher, remove Claws-Mail
+
+  * Empty the list of APT overlays: they were merged
+  * Update PO files.
+
+  * Install Electrum from jessie-backports.
+    That is, currently: 2.5.4-1~bpo8+1. This is older than what we'll
+    be shipping in Tails 1.8 (#9713), and we'll need a patch that's
+    in 2.5.4-2, but for now it's still better than Jessie's 1.9.8-4,
+    presumably.
+    refs: #10754
+
+  * Update changelog for 1.8.
+  * Updating SquashFS sort file
+
+  * Fix ticket number
+
+  * Add security updates to the 1.8 changelog entry.
+
+  * Test suite: drop unused steps.
+    We're not doing anything with that file, no need to copy it.
+  * Set base branch to devel.
+  * Update POT and PO files.
+
  -- Tails developers <tails@boum.org>  Thu, 19 Nov 2015 16:01:19 +0000
 
 tails (1.8) unstable; urgency=medium
