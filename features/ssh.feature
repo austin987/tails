@@ -1,4 +1,6 @@
-@product
+#10497: wait_until_tor_is_working
+#10498: SSH tests are fragile
+@product @fragile
 Feature: Logging in via SSH
   As a Tails user
   When I connect to SSH servers on the Internet
