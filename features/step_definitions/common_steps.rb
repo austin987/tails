@@ -103,8 +103,8 @@ def post_snapshot_restore_hook
   if $vm.has_network?
     if $vm.execute("systemctl --quiet is-active tor@default.service").success?
       $vm.execute("systemctl stop tor@default.service")
-      $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
       $vm.execute("rm -f /var/log/tor/log")
+      $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
       $vm.host_to_guest_time_sync
       $vm.spawn("restart-tor")
       wait_until_tor_is_working
