@@ -3,7 +3,7 @@
 [[!meta stylesheet="inc/stylesheets/steps" rel="stylesheet" title=""]]
 [[!meta stylesheet="inc/stylesheets/expert" rel="stylesheet" title=""]]
 
-[[Back|install/debian]]
+<p>Start in Debian or Ubuntu.</p>
 
 Verify the Tails signing key
 ============================
@@ -34,7 +34,6 @@ OpenPGP Keys</a> by <em>Riseup</em>.</p>
 1. Import the Tails signing key in your <span class="application">GnuPG</span> keyring:
 
        wget https://tails.boum.org/tails-signing.key
-
        gpg --import < tails-signing.key
 
 1. Install the Debian keyring. It contains the OpenPGP keys of all Debian developers:
@@ -68,19 +67,28 @@ OpenPGP Keys</a> by <em>Riseup</em>.</p>
    Please [[get in touch with us|support/talk]].</p>
    </div>
 
+   <div class="tip">
+   <p>The line `175 signatures not checked due to missing keys` or similar
+   refers to the certifications (also called *signatures*) made by other public
+   keys that are not in your keyring. This is not a problem.</p>
+   </div>
+
 1. Certify the Tails signing key with your own key:
 
-       gpg --sign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+   a. To make a non-exportable certification that will never be shared
+      with others:
 
-   <div class="note">
-   <p>It is possible to publish your certification of the Tails signing
-   key on the public key servers. Doing so allows people who verified
-   your key to verify your certification and, as a consequence, build
-   more trust in the Tails signing key. To publish your certification,
-   execute the following command:</p>
+          gpg --lsign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F
 
-   <p class="pre">gpg --send-keys A490D0F4D311A4153E2BB7CADBB802B258ACD84F</p>
-   </div>
+   b. To make an exportable certification of the Tails signing
+      key and publish it on the public key servers:
+
+          gpg --sign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+          gpg --send-keys A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+      Doing so allows people who verified
+      your key to verify your certification and, as a consequence, build
+      more trust in the Tails signing key.
 
 <a id="download"></a>
 
