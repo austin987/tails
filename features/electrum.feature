@@ -1,4 +1,6 @@
-@product @check_tor_leaks
+#10497: wait_until_tor_is_working
+#10720: Tails Installer freezes on Jenkins
+@product @check_tor_leaks @fragile
 Feature: Electrum Bitcoin client
   As a Tails user
   I might want to use a Bitcoin client
