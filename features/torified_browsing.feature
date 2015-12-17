@@ -1,3 +1,5 @@
+#10376: The "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
+#10497: wait_until_tor_is_working
 @product @fragile
 Feature: Browsing the web using the Tor Browser
   As a Tails user
@@ -94,6 +96,7 @@ Feature: Browsing the web using the Tor Browser
     When I open the address "file:///tmp/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
 
+  @doc
   Scenario: The "Tails documentation" link on the Desktop works
     Given I have started Tails from DVD and logged in and the network is connected
     When I double-click on the "Tails documentation" link on the Desktop
@@ -131,6 +134,8 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser has started and loaded the startup page
     Then the Tor Browser has no plugins installed
 
+  #10497, #10720
+  @fragile
   Scenario: The persistent Tor Browser directory is usable
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged
@@ -146,6 +151,8 @@ Feature: Browsing the web using the Tor Browser
     Then I see "TorBrowserSavedStartupPage.png" after at most 10 seconds
     And I can print the current page as "output.pdf" to the persistent Tor Browser directory
 
+  #10720
+  @fragile
   Scenario: Persistent browser bookmarks
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And all persistence presets are enabled
