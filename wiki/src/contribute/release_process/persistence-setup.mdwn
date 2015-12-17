@@ -5,8 +5,6 @@
 Install build and test dependencies
 ===================================
 
-    git checkout debian && \
-    mk-build-deps -i -r --root-cmd sudo && \
     sudo apt install \
        libdist-zilla-perl \
        libdist-zilla-plugins-cjm-perl \
@@ -19,6 +17,8 @@ Install build and test dependencies
 
 Make an upstream release
 ========================
+
+    git checkout master
 
 Enable new translations in `po/PACKAGE` and commit.
 
@@ -34,11 +34,6 @@ Update version number in `bin/tails-persistence-setup`:
 Commit all files that need to be:
 
     git commit bin/tails-persistence-setup -m "tails-persistent-setup $VERSION"
-
-Run the upstream test suite (point `PERL5LIB` to a checkout of the
-relevant tag of Tails' perl5lib):
-
-    RELEASE_TESTING=1 PERL5LIB=/home/user/tails/perl5lib/lib fakeroot dzil test
 
 Build an upstream tarball, tag the release, move the tarball out of
 the build repository and cleanup:
@@ -67,8 +62,8 @@ Commit `debian/changelog`:
         git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
 Build a Debian package (use a Jessie/i386 chroot, that
-has either tails-perl5lib installed, or the Tails APT repository
-configured):
+has 1. either tails-perl5lib installed, or the Tails APT repository
+configured; and 2. `jessie-backports` APT sources configured):
 
     gbp buildpackage
 
