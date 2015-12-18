@@ -111,8 +111,7 @@ export:
     git tag \
        -s "${PKG_NAME}_${NEW_UPSTREAM_VERSION}" \
        -m "Releasing Tails Installer $NEW_UPSTREAM_VERSION" && \
-    git push origin "$UPSTREAM_DEV_BRANCH" && \
-    git push origin --tags
+    git push --tags origin "$UPSTREAM_DEV_BRANCH"
 
 <a id="upstream-tarball"></a>
 
@@ -159,7 +158,7 @@ imported the current DFSG-free upstream tarball into the
 	   --copy \
 	   ../tarballs/${PKG_NAME}_${NEW_UPSTREAM_VERSION}.tar.gz && \
 	gbp import-orig \
-	   --upstream-vcs-tag="tails-installer_$NEW_UPSTREAM_VERSION" \
+	   --upstream-vcs-tag="${PKG_NAME}_$NEW_UPSTREAM_VERSION" \
 	   ../tarballs/${PKG_NAME}_${NEW_UPSTREAM_VERSION}+dfsg.orig.tar.gz
 
 Update `debian/changelog`:
@@ -178,6 +177,10 @@ Commit the changelog:
 
     git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
+Make sure that the working environment is clean:
+
+    git clean -fdx
+
 Build a new Tails package (use a i386 chroot that matches the target distribution):
 
     gbp buildpackage
@@ -185,10 +188,9 @@ Build a new Tails package (use a i386 chroot that matches the target distributio
 Add a signed tag to the Git repository and push the changes:
 
     gbp buildpackage --git-tag-only --git-sign-tags && \
-    git push origin "$UPSTREAM_BRANCH" \
+    git push --tags origin "$UPSTREAM_BRANCH" \
                     "$PACKAGING_BRANCH" \
-                    pristine-tar && \
-    git push origin --tags
+                    pristine-tar
 
 Add the Debian package to Tails
 -------------------------------
