@@ -1011,23 +1011,30 @@ for the [[Unsafe Browser]] and [[I2P Browser]], although they are
 user-isolated and use separate profiles with very different
 configurations.
 
-### 3.6.14 Claws Mail
+### 3.6.14 Icedove
 
-Claws Mail generates `Message-ID` headers using the hostname part of
+Icedove, in combination with Torbirdy, sends email through Tor.
+
+Icedove itself leaks a lot of data and makes DNS requests, for example by 
+retrieving mail server  configurations from a remote server over an insecure 
+channel. This is prevented by the Torbirdy extension.
+
+Icedove generates `Message-ID` headers using the hostname part of
 the sender's email address, which does not leak usage of the PELD nor
 any user location information.
 
+#fixme: is this true for icedove ?
 It also always says `EHLO localhost` to the SMTP server instead of
-disclosing the real IP address and hostname. This is achieved thanks
-to tsocks, as Claws Mail leaks the hostname in the HELO/EHLO
-message, resulting in a hostname leak in the `Message ID` and
-`Received` email headers, when run with `torify` and `torsocks`.
+disclosing the real IP address and hostname.
 
-Furthermore, any account a user creates is pre-configured to not use
-HTML in order to get rid of a whole class of privacy concerns.
+Torbirdy disables HTML email, inline attachments, and clicking on links
+in order to get rid of a whole class of privacy concerns.
+Furthermore, when setting up an IMAP account, the drafts folder, instead
+of being remote, is set to "~$HOME/.icedove/Local Folders".
 
-OpenPGP support is provided by the PGP/inline and PGP/MIME plugins.
+OpenPGP support is provided by the Enigmail addon.
 
+# fixme xxx
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.claws-mail]] is copied to
   the user's `$HOME` at boot time
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/torified-claws-mail]]
