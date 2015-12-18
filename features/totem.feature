@@ -44,6 +44,7 @@ Feature: Using Totem
     # as /lib/live/mount/overlay.
     And AppArmor has denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
 
+  #10497: wait_until_tor_is_working
   @check_tor_leaks @fragile
   Scenario: Watching a WebM video over HTTPS, with and without the command-line
     Given a computer
@@ -55,6 +56,8 @@ Feature: Using Totem
     When I load the "https://webm.html5.org/test.webm" URL in Totem
     Then I see "SampleRemoteWebMVideoFrame.png" after at most 60 seconds
 
+  #10720: Tails Installer freezes on Jenkins
+  @fragile
   Scenario: Watching MP4 videos stored on the persistent volume should work as expected given our AppArmor confinement
     Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     # Due to bug #5571 we have to reboot to be able to use
