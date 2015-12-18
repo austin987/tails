@@ -10,13 +10,12 @@ LOAD_KEXEC=true
 KERNEL_IMAGE=/vmlinux
 INITRD=/initrd.img
 
-# If empty, use current /proc/cmdline
-APPEND=""
-case "$RUNLEVEL" in
-   6)
-      APPEND="${APPEND} sdmem=reboot sdmemopts=vllf"
-      ;;
-   *)
-      APPEND="${APPEND} sdmem=halt sdmemopts=vllf"
-      ;;
-esac
+rebooting() {
+   systemctl list-jobs systemd-reboot.service | grep -qs systemd-reboot.service
+}
+
+if rebooting ; then
+   APPEND="${APPEND} sdmem=reboot sdmemopts=vllf"
+else
+   APPEND="${APPEND} sdmem=halt sdmemopts=vllf"
+fi

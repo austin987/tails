@@ -19,7 +19,7 @@ def start_or_restart_seahorse(withapplet = nil)
   if withapplet
     seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
   else
-    step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
+    step 'I start "Seahorse" via the GNOME "Utilities" applications menu'
   end
   step 'Seahorse has opened'
 end
@@ -100,7 +100,7 @@ end
 Then /^I enable key synchronization in Seahorse$/ do
   step 'process "seahorse" is running'
   @screen.wait_and_click("SeahorseWindow.png", 10)
-  seahorse_menu_click_helper('SeahorseEdit.png', 'SeahorseEditPreferences.png', 'seahorse')
+  seahorse_menu_click_helper('GnomeEditMenu.png', 'SeahorseEditPreferences.png', 'seahorse')
   @screen.wait('SeahorsePreferences.png', 20)
   @screen.type("p", Sikuli::KeyModifier.ALT) # Option: "Publish keys to...".
   @screen.type(Sikuli::Key.DOWN) # select HKP server
@@ -171,7 +171,6 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
 
   recovery_proc = Proc.new do
     @screen.click('GnomeCloseButton.png') if @screen.exists('GnomeCloseButton.png')
-    @screen.type(Sikuli::Key.ESC)
     @screen.type("w", Sikuli::KeyModifier.CTRL)
   end
   retry_tor(recovery_proc) do
