@@ -456,7 +456,7 @@ When /^I see the Tails roadmap URL$/ do
     begin
       @screen.find('PidginTailsRoadmapUrl.png')
     rescue FindFailed => e
-      @screen.click('PidginScrollArrowUp.png')
+      @screen.type(Sikuli::Key.PAGE_UP)
       raise e
     end
   end
