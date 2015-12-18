@@ -10,10 +10,9 @@ tweak_sysctl() {
    echo 3   > /proc/sys/kernel/printk
 
    echo 3   > /proc/sys/vm/drop_caches
-   echo 256 > /proc/sys/vm/min_free_kbytes
 
-   echo 1   > /proc/sys/vm/overcommit_memory
-   echo 1   > /proc/sys/vm/oom_kill_allocating_task
+   echo 0   > /proc/sys/vm/overcommit_memory
+   echo 0   > /proc/sys/vm/oom_kill_allocating_task
    echo 0   > /proc/sys/vm/oom_dump_tasks
 }
 
@@ -29,8 +28,14 @@ if [ -n "${sdmem}" ] ; then
    if [ -z "${sdmemopts}" ] ; then
       sdmemopts="v"
    fi
-   for i in $(seq 0 30) ; do /usr/bin/sdmem "-${sdmemopts}" & done
-   # Wait for sdmem jobs to complete.
+   # We run one instance of sdmem per 2 GiB of RAM to deal with the
+   # x86 per-process memory limitation.
+   mem=$(free | awk '/Mem:/ { print $2 }')
+   instances=$((${mem}/(2*1024*1024)+1))
+   for i in $(seq 1 "${instances}") ; do
+      ( /usr/bin/sdmem "-${sdmemopts}" ; killall sdmem >/dev/null 2>&1 ) &
+   done
+   # Wait for sdmem jobs to finish.
    wait
 fi
 
