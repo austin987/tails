@@ -10,6 +10,7 @@ When /^I clone the Git repository "([\S]+)" in GNOME Terminal$/ do |repo|
     if $vm.has_process?("git")
       step 'I kill the process "git"'
     end
+    @screen.type('clear' + Sikuli::Key.ENTER)
   end
 
   retry_tor(recovery_proc)  do
