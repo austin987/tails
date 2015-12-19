@@ -141,7 +141,7 @@ end
 
 # Cucumber Before hooks are executed in the order they are listed, and
 # we want this hook to always run first, so it must always be the
-# *first* Before hook matching @product.
+# *first* Before hook matching @product listed in this file.
 Before('@product') do |scenario|
   $failure_artifacts = Array.new
   if $config["CAPTURE"]
@@ -170,7 +170,7 @@ end
 
 # Cucumber After hooks are executed in the *reverse* order they are
 # listed, and we want this hook to always run last, so it must always
-# be the *first* After hook matching @product.
+# be the *first* After hook matching @product listed in this file.
 After('@product') do |scenario|
   if @video_capture_pid
     # We can be incredibly fast at detecting errors sometimes, so the
