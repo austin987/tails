@@ -169,8 +169,10 @@ Before('@product') do |scenario|
 end
 
 # Cucumber After hooks are executed in the *reverse* order they are
-# listed, and we want this hook to always run last, so it must always
-# be the *first* After hook matching @product listed in this file.
+# listed, and we want this hook to always run second last, so it must always
+# be the *second* After hook matching @product listed in this file --
+# hooks added dynamically via add_after_scenario_hook() are supposed to
+# truly be last.
 After('@product') do |scenario|
   if @video_capture_pid
     # We can be incredibly fast at detecting errors sometimes, so the
