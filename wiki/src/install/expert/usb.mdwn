@@ -3,7 +3,7 @@
 [[!meta stylesheet="inc/stylesheets/steps" rel="stylesheet" title=""]]
 [[!meta stylesheet="inc/stylesheets/expert" rel="stylesheet" title=""]]
 
-[[Back|install/debian]]
+<p>Start in Debian or Ubuntu.</p>
 
 Verify the Tails signing key
 ============================
@@ -34,7 +34,6 @@ OpenPGP Keys</a> by <em>Riseup</em>.</p>
 1. Import the Tails signing key in your <span class="application">GnuPG</span> keyring:
 
        wget https://tails.boum.org/tails-signing.key
-
        gpg --import < tails-signing.key
 
 1. Install the Debian keyring. It contains the OpenPGP keys of all Debian developers:
@@ -68,19 +67,28 @@ OpenPGP Keys</a> by <em>Riseup</em>.</p>
    Please [[get in touch with us|support/talk]].</p>
    </div>
 
+   <div class="tip">
+   <p>The line `175 signatures not checked due to missing keys` or similar
+   refers to the certifications (also called *signatures*) made by other public
+   keys that are not in your keyring. This is not a problem.</p>
+   </div>
+
 1. Certify the Tails signing key with your own key:
 
-       gpg --sign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+   a. To make a non-exportable certification that will never be shared
+      with others:
 
-   <div class="note">
-   <p>It is possible to publish your certification of the Tails signing
-   key on the public key servers. Doing so allows people who verified
-   your key to verify your certification and, as a consequence, build
-   more trust in the Tails signing key. To publish your certification,
-   execute the following command:</p>
+          gpg --lsign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F
 
-   <p class="pre">gpg --send-keys A490D0F4D311A4153E2BB7CADBB802B258ACD84F</p>
-   </div>
+   b. To make an exportable certification of the Tails signing
+      key and publish it on the public key servers:
+
+          gpg --sign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+          gpg --send-keys A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+      Doing so allows people who verified
+      your key to verify your certification and, as a consequence, build
+      more trust in the Tails signing key.
 
 <a id="download"></a>
 
@@ -113,6 +121,32 @@ using the Tails signing key.
        certified the Tails signing key with your own key.
 
 [[!inline pages="install/inc/steps/install_tails_installer.inline" raw="yes"]]
+
+<div class="tip">
+
+<p>To know your version of Debian or Ubuntu, execute
+<span class="command">lsb_release -a</span>.</p>
+
+</div>
+
+1. If you are running Debian, execute the following command to add the
+   backports repository to your system:
+
+       echo 'deb http://http.debian.net/debian jessie-backports main' | \
+            sudo tee /etc/apt/sources.list.d/jessie-backports.list
+
+1. If you are running Ubuntu, execute the following command to add the
+PPA repository to your system:
+
+       sudo add-apt-repository ppa:tails-team/tails-installer
+
+1. Update your lists of packages:
+
+       sudo apt update
+
+1. Install the <span class="code">tails-installer</span> package:
+
+       sudo apt install tails-installer
 
 [[!inline pages="install/inc/steps/install_final.inline" raw="yes"]]
 
