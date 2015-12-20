@@ -20,6 +20,8 @@ Feature: System memory erasure on shutdown
     And I stop the boot at the bootloader menu
     Then I find many patterns in the guest's memory
 
+  #10776
+  @fragile
   Scenario: Memory erasure on a modern computer
     Given a computer
     And the computer is a modern 64-bit system
@@ -51,6 +53,8 @@ Feature: System memory erasure on shutdown
     And I stop the boot at the bootloader menu
     Then I find many patterns in the guest's memory
 
+  #10776
+  @fragile
   Scenario: Memory erasure on an old computer
     Given a computer
     And the computer is an old pentium without the PAE extension

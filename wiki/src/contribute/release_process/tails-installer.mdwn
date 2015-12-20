@@ -16,7 +16,7 @@ tails-installer.
 
 The `master` branch must always be the one that targets current Tails.
 That's what we have always done, and right
-now `master` is indeed targeting Wheezy.
+now `master` is indeed targeting Jessie.
 
 But that's not enough, since we also need to put releases out with code
 that works on current Debian testing/sid. Thus, we maintain several upstream
@@ -57,8 +57,8 @@ targeted at current Tails, as said above. More specifically:
   `debian/$package_version`. In practice this is something like
   `debian/4.0+dfsg-1~bpo8+1`.
 * The `tails/$codename` branch is used to prepare packages that we upload
-  to the Tails APT repo, but not to Debian -- e.g. `3.*` as currently used on
-  Tails/Wheezy will never be uploaded to Debian.
+  to the Tails APT repo, but not to Debian -- e.g. `4.*` as currently used on
+  Tails/Jessie will never be uploaded to Debian.
 * Additionally, we use `tails/$feature` branches for other Tails-specific packaging branches.
 * The `upstream/3.x+dfsg`, `upstream/4.x+dfsg`, etc. branches are what we tell `gbp`
   to use as its "upstream" branch. Make sure to check them out when setting up the repository
@@ -70,8 +70,8 @@ Topic branches
 In practice, it's expected that Tails contributors submit bugfix and
 feature branches forked off master, because they want them part of next
 Tails release. Hence, it will happen that code lands into master first,
-and in turn into a new `3.*` upstream release, before it lands into
-`feature/jessie` and in turn into a new `4.*` upstream release.
+and in turn into a new `4.*` upstream release, before it lands into
+`feature/stretch` and in turn into a new `5.*` upstream release.
 
 For how to package topic branches (`bugfix/*` and `feature/*`), see
 [[the dedicated page|topic_branch]].
@@ -86,11 +86,11 @@ Release a new upstream version
 
 ### Prepare the environment
 
-The new upstream version should be something like `3.14`, based on the
+The new upstream version should be something like `4.14`, based on the
 upstream branch you are building the Debian package for. Adjust and
 export:
 
-    export NEW_UPSTREAM_VERSION=3.replace_me
+    export NEW_UPSTREAM_VERSION=4.replace_me
     export UPSTREAM_DEV_BRANCH=master
     export PKG_NAME=tails-installer
 
@@ -125,8 +125,7 @@ export:
 Update the Debian package for Tails
 -----------------------------------
 
-Checkout the packaging branch, that would be `tails/wheezy` or `tails/jessie`,
-for example:
+Checkout the packaging branch:
 
 	export PKG_NAME=tails-installer
 	export PACKAGING_BRANCH=tails/jessie
@@ -156,7 +155,7 @@ imported the current DFSG-free upstream tarball into the
 	   --copy \
 	   ../tarballs/${PKG_NAME}_${NEW_UPSTREAM_VERSION}.tar.gz && \
 	gbp import-orig \
-	   --upstream-vcs-tag="tails-installer_$NEW_UPSTREAM_VERSION" \
+	   --upstream-vcs-tag="${PKG_NAME}_$NEW_UPSTREAM_VERSION" \
 	   ../tarballs/${PKG_NAME}_${NEW_UPSTREAM_VERSION}+dfsg.orig.tar.gz
 
 Update `debian/changelog`:
