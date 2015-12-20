@@ -32,22 +32,21 @@
         forClass("current-firefox", function(el) { el.innerHTML = v || "< 38"; });
       }, true);
     }
-   else {
+  } else {
     forId("unsupported-firefox", function(el) { el.style.display = "none"; });
     if (chromeSupported &&
-        /\bChrom/.test(navigator.userAgent) && /\bGoogle Inc\./.test(navigator.
-vendor) &&
+        /\bChrom/.test(navigator.userAgent) && /\bGoogle Inc\./.test(navigator.vendor) &&
         v >= minVer.chrome) {
           browser = "chrome";
     }
   }
   setBrowser(browser);
   var style = document.createElement("style");
-  style.innerHTML = "#download-and-verify { display: none }";
+  style.innerHTML = "#download-and-verify { display: none !important } #dave-init { display: block }";
   document.documentElement.firstChild.appendChild(style);
 
   addEventListener("load", function(ev) {
-    style.parentNode.removeChild(style);
+    style.innerHTML = "#dave-init { display: none }";
     forId("self-url", function (el) { el.textContent = location.href; });
     for (var browser in minVer) {
       forClass("minver-" + browser, function(el) { el.innerHTML = minVer[browser]; });
