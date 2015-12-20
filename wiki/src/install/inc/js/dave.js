@@ -2,6 +2,7 @@
   var chromeSupported = !/\bchrome-unsupported\b/.test((document.getElementById("download-and-verify") || document.documentElement).className);
   var minVer = {
     "firefox": 38,
+    "chome": 44,
     "tor": 5
   };
 
@@ -31,9 +32,14 @@
         forClass("current-firefox", function(el) { el.innerHTML = v || "< 38"; });
       }, true);
     }
-  } else if (chromeSupported && /\bChrom/.test(navigator.userAgent) && /\bGoogle Inc\./.test(navigator.vendor)) {
-    if (v >= minVer.chrome)
-      browser = "chrome";
+   else {
+    forId("unsupported-firefox", function(el) { el.style.display = "none"; });
+    if (chromeSupported &&
+        /\bChrom/.test(navigator.userAgent) && /\bGoogle Inc\./.test(navigator.
+vendor) &&
+        v >= minVer.chrome) {
+          browser = "chrome";
+    }
   }
   setBrowser(browser);
   var style = document.createElement("style");
