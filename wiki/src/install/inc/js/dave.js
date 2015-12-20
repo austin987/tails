@@ -2,7 +2,6 @@
   var chromeSupported = !/\bchrome-unsupported\b/.test((document.getElementById("download-and-verify") || document.documentElement).className);
   var minVer = {
     "firefox": 38,
-    "chrome": 44,
     "tor": 5
   };
 
