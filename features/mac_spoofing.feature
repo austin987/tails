@@ -30,6 +30,8 @@ Feature: Spoofing MAC addresses
     And the network device has a spoofed MAC address configured
     And the real MAC address was not leaked
 
+  #10774
+  @fragile
   Scenario: MAC address spoofing fails and macchanger returns false
     Given macchanger will fail by not spoofing and always returns false
     When I log in to a new session
