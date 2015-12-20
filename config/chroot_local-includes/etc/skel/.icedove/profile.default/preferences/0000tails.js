@@ -1,1 +1,1 @@
-user_pref("extensions.enigmail.configuredVersion", "1.7.2");
+user_pref("extensions.enigmail.configuredVersion", "1.8.2");
