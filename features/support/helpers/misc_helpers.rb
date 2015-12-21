@@ -141,9 +141,9 @@ def wait_until_tor_is_working
 rescue Timeout::Error => e
   c = $vm.execute("journalctl SYSLOG_IDENTIFIER=restart-tor")
   if c.success?
-    debug_log("From syslog:\n" + c.stdout.sub(/^/, "  "))
+    debug_log("From the journal:\n" + c.stdout.sub(/^/, "  "))
   else
-    debug_log("Nothing was syslog:ed about 'restart-tor'")
+    debug_log("Nothing was in the journal about 'restart-tor'")
   end
   raise e
 end
@@ -244,4 +244,10 @@ def info_log_artifact_location(type, path)
     path = "#{base_url}/#{File.basename(path)}"
   end
   info_log("#{type.capitalize}: #{path}")
+end
+
+def pause(message = "Paused")
+  STDERR.puts
+  STDERR.puts "#{message} (Press ENTER to continue!)"
+  STDIN.gets
 end

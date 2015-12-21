@@ -62,9 +62,7 @@ end
 def encrypt_sign_helper
   gedit_copy_all_text
   seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletSignEncrypt.png')
-  # Without the double-click here I consistently have a problem with the mouse pointer
-  # *grabbing* the window so that moving the mouse will move the window.
-  @screen.wait_and_double_click("GpgAppletChooseKeyWindow.png", 30)
+  @screen.wait_and_click("GpgAppletChooseKeyWindow.png", 30)
   sleep 0.5
   yield
   maybe_deal_with_pinentry

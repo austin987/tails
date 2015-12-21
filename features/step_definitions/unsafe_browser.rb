@@ -180,11 +180,12 @@ end
 Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
   pkts = 0
   uid = $vm.execute_successfully("id -u clearnet").stdout.chomp.to_i
-  iptables_output = $vm.execute_successfully("iptables -vnL").stdout.chomp
-  output_chain = iptables_parse(iptables_output)["OUTPUT"]
-  output_chain["rules"].each do |rule|
-    if /owner UID match \b#{uid}\b/.match(rule["extra"])
-      pkts += rule["pkts"]
+  ip4tables_chains do |name, _, rules|
+    next unless name == "OUTPUT"
+    rules.each do |rule|
+      if rule.elements["conditions/owner/uid-owner[text()=#{uid}]"]
+        pkts += rule.attribute('packet-count').to_s.to_i
+      end
     end
   end
 

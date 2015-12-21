@@ -4,12 +4,16 @@ Feature: Time syncing
   I want Tor to work properly
   And for that I need a reasonably accurate system clock
 
+  #10497: wait_until_tor_is_working
+  @fragile
   Scenario: Clock with host's time
     Given I have started Tails from DVD without network and logged in
     When the network is plugged
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
+  #10497: wait_until_tor_is_working
+  @fragile
   Scenario: Clock with host's time in bridge mode
     Given I have started Tails from DVD without network and logged in with bridge mode enabled
     When the network is plugged
@@ -18,6 +22,8 @@ Feature: Time syncing
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
+  #10497: wait_until_tor_is_working
+  @fragile
   Scenario: Clock is one day in the past
     Given I have started Tails from DVD without network and logged in
     When I bump the system time with "-1 day"
@@ -25,6 +31,8 @@ Feature: Time syncing
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
+  #10497: wait_until_tor_is_working
+  @fragile
   Scenario: Clock is one day in the past in bridge mode
     Given I have started Tails from DVD without network and logged in with bridge mode enabled
     When I bump the system time with "-1 day"
@@ -34,6 +42,8 @@ Feature: Time syncing
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
+  #10497: wait_until_tor_is_working
+  @fragile
   Scenario: Clock is way in the past
     Given I have started Tails from DVD without network and logged in
     # 13 weeks will span over two Tails release cycles.
@@ -42,7 +52,8 @@ Feature: Time syncing
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
- @fragile
+  #10497: wait_until_tor_is_working
+  @fragile
   Scenario: Clock way in the past in bridge mode
     Given I have started Tails from DVD without network and logged in with bridge mode enabled
     When I bump the system time with "-6 weeks"
@@ -52,6 +63,8 @@ Feature: Time syncing
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
+  #10497: wait_until_tor_is_working
+  #10440: Time syncing tests are fragile
   @fragile
   Scenario: Clock is one day in the future
     Given I have started Tails from DVD without network and logged in
@@ -60,6 +73,8 @@ Feature: Time syncing
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
+  #10497: wait_until_tor_is_working
+  @fragile
   Scenario: Clock is one day in the future in bridge mode
     Given I have started Tails from DVD without network and logged in with bridge mode enabled
     When I bump the system time with "+1 day"
@@ -69,6 +84,8 @@ Feature: Time syncing
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
+  #10497: wait_until_tor_is_working
+  #10440: Time syncing tests are fragile
   @fragile
   Scenario: Clock way in the future
     Given I have started Tails from DVD without network and logged in
@@ -77,6 +94,8 @@ Feature: Time syncing
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
+  #10497: wait_until_tor_is_working
+  #10440: Time syncing tests are fragile
   @fragile
   Scenario: Clock way in the future in bridge mode
     Given I have started Tails from DVD without network and logged in with bridge mode enabled

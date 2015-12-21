@@ -69,28 +69,14 @@ class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
-  @screen.wait('USBCreateLiveUSB.png', 10)
-
-  # Here we'd like to select USB drive using #{name}, but Sikuli's
-  # OCR seems to be too unreliable.
-#  @screen.wait('USBTargetDevice.png', 10)
-#  match = @screen.find('USBTargetDevice.png')
-#  region_x = match.x
-#  region_y = match.y + match.h
-#  region_w = match.w*3
-#  region_h = match.h*2
-#  ocr = Sikuli::Region.new(region_x, region_y, region_w, region_h).text
-#  STDERR.puts ocr
-#  # Unfortunately this results in almost garbage, like "|]dev/sdm"
-#  # when it should be /dev/sda1
-
-  @screen.wait_and_click('USBCreateLiveUSB.png', 10)
+  @screen.wait('USBTailsLogo.png', 10)
   if @screen.exists("USBCannotUpgrade.png")
     raise UpgradeNotSupported
   end
+  @screen.wait_and_click('USBCreateLiveUSB.png', 10)
   @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
   @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
-  @screen.wait('USBInstallationComplete.png', 60*60)
+  @screen.wait('USBInstallationComplete.png', 30*60)
 end
 
 When /^I start Tails Installer$/ do

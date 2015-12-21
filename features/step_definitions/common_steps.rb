@@ -26,18 +26,15 @@ def activate_filesystem_shares
   end
 end
 
-def get_center_of_region(top, bottom)
-  top_r = @screen.wait(top, 10)
-  top_y = top_r.getCenter.getY
-  bottom_r = @screen.wait(bottom, 10)
-  bottom_y = bottom_r.getCenter.getY
-  center_y = (bottom_y + top_y) / 2
-  return Sikuli::Location.new(top_r.getCenter.getX, center_y)
-end
-
 def context_menu_helper(top, bottom, menu_item)
   try_for(60) do
-    @screen.right_click(get_center_of_region(top, bottom))
+    t = @screen.wait(top, 10)
+    b = @screen.wait(bottom, 10)
+    # In Sikuli, lower x == closer to the left, lower y == closer to the top
+    assert(t.y < b.y)
+    center = Sikuli::Location.new(((t.x + t.w) + b.x)/2,
+                                  ((t.y + t.h) + b.y)/2)
+    @screen.right_click(center)
     @screen.hide_cursor
     @screen.wait_and_click(menu_item, 10)
     return
@@ -107,6 +104,7 @@ def post_snapshot_restore_hook
     if $vm.execute("systemctl --quiet is-active tor@default.service").success?
       $vm.execute("systemctl stop tor@default.service")
       $vm.execute("rm -f /var/log/tor/log")
+      $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
       $vm.host_to_guest_time_sync
       $vm.spawn("restart-tor")
       wait_until_tor_is_working
@@ -258,20 +256,29 @@ When /^I destroy the computer$/ do
   $vm.destroy_and_undefine
 end
 
+def bootsplash
+  case @os_loader
+  when "UEFI"
+    'TailsBootSplashUEFI.png'
+  else
+    'TailsBootSplash.png'
+  end
+end
+
+def bootsplash_tab_msg
+  case @os_loader
+  when "UEFI"
+    'TailsBootSplashTabMsgUEFI.png'
+  else
+    'TailsBootSplashTabMsg.png'
+  end
+end
+
 Given /^the computer (re)?boots Tails$/ do |reboot|
 
   boot_timeout = 30
   # We need some extra time for memory wiping if rebooting
   boot_timeout += 90 if reboot
-
-  case @os_loader
-  when "UEFI"
-    bootsplash = 'TailsBootSplashUEFI.png'
-    bootsplash_tab_msg = 'TailsBootSplashTabMsgUEFI.png'
-  else
-    bootsplash = 'TailsBootSplash.png'
-    bootsplash_tab_msg = 'TailsBootSplashTabMsg.png'
-  end
 
   @screen.wait(bootsplash, boot_timeout)
   @screen.wait(bootsplash_tab_msg, 10)
@@ -513,7 +520,6 @@ end
 When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
-  @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
 end
 
@@ -524,7 +530,6 @@ end
 When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
-  @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
