@@ -44,7 +44,7 @@ Feature: I2P
     And the I2P router console is ready
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
-    And I see shared client tunnels in the router console
+    And I see shared client tunnels in the I2P router console
     When I open the address "http://i2p-projekt.i2p" in the I2P Browser
     Then the I2P homepage loads in I2P Browser
 
@@ -62,7 +62,7 @@ Feature: I2P
     And the I2P router console is ready
     And I start the I2P Browser through the GNOME menu
     And the I2P router console is displayed in I2P Browser
-    And I see shared client tunnels in the router console
+    And I see shared client tunnels in the I2P router console
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     When I activate the "I2P" Pidgin account
