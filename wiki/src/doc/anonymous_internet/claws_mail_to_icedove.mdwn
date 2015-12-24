@@ -1,0 +1,232 @@
+[[!meta title="Migrating from Claws Mail to Icedove"]]
+
+[[!inline pages="doc/anonymous_internet/icedove/replacement.inline" raw="yes"]]
+
+<span class="application">Claws Mail</span> will be definitely removed
+from Tails in version 2.0 (2016-01-26).
+
+[[!inline pages="doc/anonymous_internet/icedove/name.inline" raw="yes"]]
+
+If you have been using <span class="application">Claws Mail</span> and activated its persistence feature,
+the following instructions explain how to migrate your data to <span class="application">Icedove</span>.
+
+We recommend you do the migration before launching <span class="application">Icedove</span> for the first
+time. You should, in this order:
+
+[[!toc]]
+
+<a id="mailboxes"></a>
+
+Copy your emails saved in the persistent storage
+================================================
+
+1. Start Tails and [[set up an administration password|first_steps/startup_options/administration_password]].
+
+1. Start <span class="application">Claws Mail</span>.
+
+1. To know if you are using the IMAP or the POP protocol, choose <span class="menuchoice">
+   <span class="guimenu">Configuration</span>&nbsp;▸
+   <span class="guimenuitem">Edit accounts&hellip;</span></span>
+   and refer to the <span class="guilabel">Protocol</span> column in the
+   list of accounts.
+
+   - If you use IMAP, your emails are stored on the remote email server and
+     you can skip this section and start [[configuring your email account
+     in <span class="application">Icedove</span>|claws_mail_to_icedove#settings]].
+
+   - If you use POP and have emails saved in the persistent storage, we
+     propose in the following steps a script to copy your emails from
+     <span class="application">Claws Mail</span> to
+     <span class="application">Icedove</span>.
+
+1. Verify that both the <span class="application">Claws Mail</span> and
+   <span class="application">Icedove</span> persistence features are
+   activated. Otherwise, you might loose data.
+
+1. The script only migrates the mailbox in
+   <span class="filename">/home/amnesia/.claws-mail/Mail</span> which is the default
+   in Tails.
+
+   Verify that there is a single <span class="guilabel">MH</span> mailbox named
+   <span class="guilabel">Mail</span> in the left pane of
+   <span class="application">Claws Mail</span> like in the following
+   screenshot:
+
+   [[!img single_mh.png alt="" link="no"]]
+
+   If you have several <span class="guilabel">MH</span> mailboxes in
+   <span class="application">Claws Mail</span>, please move all your emails into
+   the one corresponding to <span class="filename">/home/amnesia/.claws-mail/Mail</span>.
+
+1. Choose <span class="menuchoice"><span class="guimenu">Applications</span>&nbsp;▸
+   <span class="guisubmenu">Accessories</span>&nbsp;▸
+   <span class="guimenuitem">Terminal</span></span> to open a terminal.
+
+1. Execute the following command to download the migration script:
+
+       wget https://tails.boum.org/misc/claws_to_icedove.sh
+
+1. Execute the following command to run the migration script:
+
+       bash claws_to_icedove.sh
+
+   <div class="note">
+   <p>If you had started <span class="application">Icedove</span> already, the script might propose you to
+   back up the existing <span class="application">Icedove</span> email folders before doing the
+   migration. If you have valuable data in these folders, you can access
+   it again after the migration by doing the following:</p>
+
+   <ol>
+
+   <li>In <span class="application">Icedove</span>, choose
+   <span class="menuchoice">
+     <span class="guimenu">[[!img icedove/menu.png alt="Menu" class=symbolic link=no]]</span>&nbsp;▸
+     <span class="guisubmenu">Preferences</span>&nbsp;▸
+     <span class="guimenuitem">Account Settings</span></span>.</li>
+
+   <li>Click <span class="button">Browse&hellip;</span> in the
+   <span class="guilabel">Message Storage</span> section of the
+   <span class="guilabel">Local Folders</span> settings.</li>
+
+   <li>Navigate to <span class="filename">/home/amnesia/.icedove/profile.default/Mail.</li>
+
+   <li>Open the <span class="filename">Local Folders Backup</span>
+   folder that matches the date and time when you first ran the
+   script.</li>
+
+   </ol>
+   </div>
+
+1. Continue with the next section to configure your email account in
+   <span class="application">Icedove</span>.
+
+<a id="settings"></a>
+
+Configure your email accounts in <span class="application">Icedove</span>
+=========================================================================
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Internet</span>&nbsp;▸
+     <span class="guimenuitem">Icedove</span>
+   </span>
+   to start <span class="application">Icedove</span>.
+
+[[!inline pages="doc/anonymous_internet/icedove/account_creation.inline" raw="yes"]]
+
+   <div class="tip">
+   <p>If you want to compare with the settings in
+   <span class="application">Claws Mail</span>, choose
+   <span class="menuchoice">
+     <span class="guimenu">Configuration</span>&nbsp;▸
+     <span class="guimenuitem">Edit Accounts&hellip;</span>
+   </span> in <span class="application">Claws Mail</span>, then select
+   your email account and click <span class="guilabel">Edit</span>.</p>
+   </div>
+
+1. If you want to configure another email account, choose
+   <span class="guilabel">Account Actions</span>&nbsp;▸
+   <span class="guilabel">Add Mail Account&hellip;</span>.
+
+   Otherwise, click <span class="guilabel">OK</span>.
+
+1. If you used the migration script provided in the previous section to
+   [[copy your emails saved in the persistent storage|claws_mail_to_icedove#mailboxes]],
+   do the following to configure <span class="application">Icedove</span>
+   to access them:
+
+   1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">[[!img icedove/menu.png alt="Menu" class=symbolic link=no]]</span>&nbsp;▸
+     <span class="guisubmenu">Preferences</span>&nbsp;▸
+     <span class="guimenuitem">Account Settings</span></span>.
+
+   1. Click <span class="button">Browse&hellip;</span> in the
+   <span class="guilabel">Message Storage</span> section of the
+   <span class="guilabel">Local Folders</span> settings.
+
+   1. Navigate to <span class="filename">/home/amnesia/.icedove/profile.default/Mail.
+
+   1. Open the <span class="filename">Local Folders</span>
+   folder.
+
+For further documentation, refer to the [official
+<span class="application">Thunderbird</span>
+help](https://support.mozilla.org/en-US/products/thunderbird).
+
+<a id="address_book"></a>
+
+Migrate your address book
+=========================
+
+To export an address book from
+<span class="application">Claws Mail</span> do the following:
+
+1. Choose <span class="menuchoice">
+     <span class="guimenu">Tools</span>&nbsp;▸
+     <span class="guimenuitem">Address Book</span></span>.
+
+1. Select an address book, for example <span class="guilabel">Common
+   addresses</span>, in the left pane.
+
+1. Choose <span class="menuchoice">
+     <span class="guimenu">Tools</span>&nbsp;▸
+     <span class="guimenuitem">Export LDIF&hellip;</span></span>.
+
+1. Specify where to save the address book as an LDIF file, then click
+   <span class="guilabel">Forward</span>. You can use the default
+   setting.
+
+1. Enter <span class="command">claws</span> as
+   <span class="guilabel">Suffix</span>, then click
+   <span class="guilabel">Forward</span> and
+   <span class="guilabel">Close</span>.
+
+To import an address book into
+<span class="application">Icedove</span> do the following:
+
+1. Choose <span class="menuchoice">
+     <span class="guimenu">Tools</span>&nbsp;▸
+     <span class="guimenuitem">Import&hellip;</span></span>.
+
+1. Select <span class="guilabel">Text file (LDIF, .tab, .csv, .txt)</span>
+   and click <span class="guilabel">Next</span>.
+
+1. Specify the LDIF file that you exported from
+   <span class="application">Claws Mail</span>, by default
+   <span class="filename">/home/amnesia/claws-mail-out/addressbook.ldif</span>.
+
+You can repeat these steps for every address book in
+<span class="application">Claws Mail</span>.
+
+<a id="delete"></a>
+
+Delete all your <span class="application">Claws Mail</span> data
+================================================================
+
+Once you made sure that all your data (emails, email account settings,
+and address books) is imported into <span class="application">Icedove</span>,
+you can delete all your <span class="application">Claws Mail</span> data.
+
+To do so:
+
+1. Choose <span class="menuchoice">
+     <span class="guimenu">Places</span>&nbsp;▸
+     <span class="guimenuitem">Home Folder</span>
+   </span> in the top navigation bar to open the file browser.
+
+1. Choose <span class="menuchoice">
+     <span class="guimenu">View</span>&nbsp;▸
+     <span class="guimenuitem">Show Hidden Files</span></span>.
+
+1. Open the <span class="guilabel">.claws-mail</span> folder.
+
+1. Choose <span class="menuchoice">
+     <span class="guimenu">Edit</span>&nbsp;▸
+     <span class="guimenuitem">Select All</span></span>.
+
+1. Choose <span class="menuchoice">
+     <span class="guimenu">Edit</span>&nbsp;▸
+     <span class="guimenuitem">Wipe</span>
+   </span> and confirm.
