@@ -21,6 +21,14 @@ nic_is_up() {
 # The following "nic"-related functions require that the argument is a
 # NIC that exists
 
+nic_ipv4_addr() {
+    ip addr show "${1}" | sed -n 's,^\s*inet \([0-9\.]\+\)/.*$,\1,p'
+}
+
+nic_ipv6_addr() {
+    ip addr show "${1}" | sed -n 's,^\s*inet6 \([0-9a-fA-F:]\+\)/.*$,\1,p'
+}
+
 # Will just output nothing on failure
 get_current_mac_of_nic() {
     local mac
