@@ -141,7 +141,7 @@ end
 
 # Cucumber Before hooks are executed in the order they are listed, and
 # we want this hook to always run first, so it must always be the
-# *first* Before hook matching @product.
+# *first* Before hook matching @product listed in this file.
 Before('@product') do |scenario|
   $failure_artifacts = Array.new
   if $config["CAPTURE"]
@@ -161,7 +161,6 @@ Before('@product') do |scenario|
     @video_capture_pid = capture.pid
   end
   @screen = Sikuli::Screen.new
-  @theme = "gnome"
   # English will be assumed if this is not overridden
   @language = ""
   @os_loader = "MBR"
@@ -170,8 +169,10 @@ Before('@product') do |scenario|
 end
 
 # Cucumber After hooks are executed in the *reverse* order they are
-# listed, and we want this hook to always run last, so it must always
-# be the *first* After hook matching @product.
+# listed, and we want this hook to always run second last, so it must always
+# be the *second* After hook matching @product listed in this file --
+# hooks added dynamically via add_after_scenario_hook() are supposed to
+# truly be last.
 After('@product') do |scenario|
   if @video_capture_pid
     # We can be incredibly fast at detecting errors sometimes, so the
@@ -200,11 +201,7 @@ After('@product') do |scenario|
       info_log
       info_log_artifact_location(type, artifact_path)
     end
-    if $config["PAUSE_ON_FAIL"]
-      STDERR.puts ""
-      STDERR.puts "Press ENTER to continue running the test suite"
-      STDIN.gets
-    end
+    pause("Scenario failed") if $config["PAUSE_ON_FAIL"]
   else
     if @video_path && File.exist?(@video_path) && not($config['CAPTURE_ALL'])
       FileUtils.rm(@video_path)

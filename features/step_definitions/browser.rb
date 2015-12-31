@@ -1,6 +1,5 @@
 Then /^I see the (Unsafe|I2P) Browser start notification and wait for it to close$/ do |browser_type|
-  notification_popup_wait("#{browser_type}BrowserStartNotification.png", 30)
-  @screen.waitVanish("#{browser_type}BrowserStartNotification.png", 10)
+  robust_notification_wait("#{browser_type}BrowserStartNotification.png", 60)
 end
 
 Then /^the (Unsafe|I2P) Browser has started$/ do |browser_type|
@@ -28,8 +27,7 @@ When /^I close the (?:Unsafe|I2P) Browser$/ do
 end
 
 Then /^I see the (Unsafe|I2P) Browser stop notification$/ do |browser_type|
-  notification_popup_wait("#{browser_type}BrowserStopNotification.png", 20)
-  @screen.waitVanish("#{browser_type}BrowserStopNotification.png", 10)
+  robust_notification_wait("#{browser_type}BrowserStopNotification.png", 60)
 end
 
 def xul_application_info(application)
@@ -83,7 +81,12 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   open_address = Proc.new do
     @screen.click(info[:address_bar_image])
     sleep 0.5
-    @screen.type(address + Sikuli::Key.ENTER)
+    # The browser sometimes loses keypresses when suggestions are
+    # shown, which we work around by pasting the address from the
+    # clipboard, in one go.
+    $vm.set_clipboard(address)
+    @screen.type('v', Sikuli::KeyModifier.CTRL)
+    @screen.type(Sikuli::Key.ENTER)
   end
   open_address.call
   if browser == "Tor Browser"
@@ -107,10 +110,9 @@ def xul_app_shared_lib_check(pid, chroot)
   expected_absent_tbb_libs = ['libnssdbm3.so']
   absent_tbb_libs = []
   unwanted_native_libs = []
-  tbb_libs = $vm.execute_successfully(
-    "ls -1 #{chroot}${TBB_INSTALL}/*.so", :libs => 'tor-browser'
-  ).stdout.split
-  firefox_pmap_info = $vm.execute("pmap #{pid}").stdout
+  tbb_libs = $vm.execute_successfully("ls -1 #{chroot}${TBB_INSTALL}/*.so",
+                                      :libs => 'tor-browser').stdout.split
+  firefox_pmap_info = $vm.execute("pmap --show-path #{pid}").stdout
   for lib in tbb_libs do
     lib_name = File.basename lib
     if not /\W#{lib}$/.match firefox_pmap_info

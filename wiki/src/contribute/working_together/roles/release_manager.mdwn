@@ -36,6 +36,11 @@
 - Have Kill Your TV upgrade I2P if needed. See [[contribute/design/I2P]].
 - If needed, update the list of Tor authorities in the test
   suite configuration.
+- Check that the list of backends we ship in `/usr/lib/cups/backend`
+  are all listed in the (patched) `/etc/apparmor.d/usr.sbin.cups`:
+   * backends shipped in [[!debpkg cups-daemon]] should have `ixr`
+   * other backends should have `Cx -> third_party`
+  If anything doesn't match this, let intrigeri know.
 
 ## The Friday before the release date
 
@@ -59,8 +64,18 @@ last-minute rebuilds that we otherwise probably would miss out on.
 The RM is still the fallback for reviewing'n'merging stuff relatively
 promptly. If a ticket is flagged "Ready for QA", but the RM cannot
 take care of the review'n'merge, it's the RM's
-responsibility to ask for help. The "Release Manager View" is probably
-the best place to track such tickets.
+responsibility to ask for help. These tickets can be tracked using.
+
+* the "Release Manager View";
+* the
+  [Ready for QA, with no assignee](https://labs.riseup.net/code/projects/tails/issues?query_id=194]
+  view.
+
+## At least for the first release of the year
+
+Have a look at scenarios or features added or modified since last time
+this check was done, and check if the ones that depend on the
+documentation have the `@doc` tag.
 
 ## Make the release happen
 

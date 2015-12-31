@@ -10,28 +10,29 @@ set -e
 . /usr/local/lib/tails-shell-library/log.sh
 . /usr/local/lib/tails-shell-library/tails-greeter.sh
 
+# Get LIVE_USERNAME
+. /etc/live/config.d/username.conf
+
 . /usr/bin/gettext.sh
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-disable_networking() {
-    service network-manager stop || :
-    for f in /etc/init.d/network-manager /usr/sbin/NetworkManager; do
-        [ -e "${f}" ] && mv "${f}" "${f}.disabled"
-    done
-    log "Networking disabled"
+stop_and_disable_NM() {
+   for s in NetworkManager-dispatcher.service \
+            NetworkManager-wait-online.service \
+            NetworkManager.service; do
+       systemctl stop "${s}"
+       systemctl disable "${s}"
+       systemctl mask "${s}"
+   done
+   log "Networking disabled"
 }
 
 show_notification() {
     # We must wait until all the facilities necessary for showing the
     # notification to the Live user is available to prevent it from
     # getting lost.
-    # Note: We pgrep for notification-daemon's full command because
-    # otherwise pgrep will look at the process name, which seems to be
-    # cropped to 15 chars, i.e. "notification-da". Also, we probably
-    # do not want to get mixed up with "gdu-notification-daemon".
-    until pgrep gnome-panel >/dev/null && \
-          pgrep --full /usr/lib/notification-daemon/notification-daemon >/dev/null; do
+    until pgrep -u "${LIVE_USERNAME}" '^ibus-daemon' >/dev/null ; do
         sleep 1
     done
     # The above doesn't seem to be enough. The best we can do seems to
@@ -49,7 +50,7 @@ notify_panic_success() {
     nic_name="${2}"
     show_notification "`gettext \"Network card \\\${nic} disabled\"`" \
 "`eval_gettext \"MAC spoofing failed for network card \\\${nic_name} (\\\${nic}) so it is temporarily disabled.
-You might prefer to restart Tails and disable MAC spoofing. See the <a href='file:///usr/share/doc/tails/website/doc/first_steps/startup_options/mac_spoofing.en.html'>documentation</a>.\"`"
+You might prefer to restart Tails and disable MAC spoofing.\"`"
 }
 
 notify_panic_failure() {
@@ -59,7 +60,7 @@ notify_panic_failure() {
     nic_name="${2}"
     show_notification "`gettext \"All networking disabled\"`" \
 "`eval_gettext \"MAC spoofing failed for network card \\\${nic_name} (\\\${nic}). The error recovery also failed so all networking is disabled.
-You might prefer to restart Tails and disable MAC spoofing. See the <a href='file:///usr/share/doc/first_steps/startup_options/mac_spoofing.en.html'>documentation</a>.\"`"
+You might prefer to restart Tails and disable MAC spoofing.\"`"
 }
 
 mac_spoof_panic() {
@@ -76,8 +77,8 @@ mac_spoof_panic() {
     echo "blacklist ${module}" >> /etc/modprobe.d/"${module}"-blacklist.conf
     unload_module_and_rev_deps "${module}" || :
     if nic_exists "${nic}"; then
-        log "Failed to unload module ${module} of NIC ${nic}"
-        disable_networking
+        log "Failed to unload module ${module} of NIC ${nic}."
+        stop_and_disable_NM
         notify_panic_failure "${nic}" "${nic_name}" &
     else
         log "Successfully unloaded module ${module} of NIC ${nic}."
@@ -143,8 +144,8 @@ then
         # If mac_spoof_panic() fails we're quite screwed, so we kill
         # NetworkManager without notification to do our best to
         # prevent a MAC address leak.
-        log "Panic mode failed for NIC ${NIC}"
-        disable_networking
+        log "Panic mode failed for NIC ${NIC}."
+        stop_and_disable_NM
     fi
     exit 1
 fi

@@ -1,3 +1,5 @@
+#10497: wait_until_tor_is_working
+#10498: SSH tests are fragile
 @product @fragile
 Feature: Logging in via SSH
   As a Tails user
@@ -21,7 +23,7 @@ Feature: Logging in via SSH
     Then I am prompted to verify the SSH fingerprint for the SSH server
 
   @check_tor_leaks
-  Scenario: Connecting to an SFTP server on the Internet using the GNOME "Connect to a Server" feature
+  Scenario: Connecting to an SFTP server on the Internet using the GNOME "Connect to Server" feature
     Given I have the SSH key pair for an SFTP server
     When I connect to an SFTP server on the Internet
     And I verify the SSH fingerprint for the SFTP server

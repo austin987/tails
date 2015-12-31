@@ -26,6 +26,21 @@ def activate_filesystem_shares
   end
 end
 
+def context_menu_helper(top, bottom, menu_item)
+  try_for(60) do
+    t = @screen.wait(top, 10)
+    b = @screen.wait(bottom, 10)
+    # In Sikuli, lower x == closer to the left, lower y == closer to the top
+    assert(t.y < b.y)
+    center = Sikuli::Location.new(((t.x + t.w) + b.x)/2,
+                                  ((t.y + t.h) + b.y)/2)
+    @screen.right_click(center)
+    @screen.hide_cursor
+    @screen.wait_and_click(menu_item, 10)
+    return
+  end
+end
+
 def deactivate_filesystem_shares
   $vm.list_shares.each do |share|
     $vm.execute("umount #{share}")
@@ -37,50 +52,42 @@ def deactivate_filesystem_shares
   #end
 end
 
-def notification_popup_wait(notification_image, time_to_wait)
-  # notification-daemon may abort during start-up, causing the tests that look for
-  # desktop notifications to fail (ticket #8686)
-  begin
-    @screen.wait(notification_image, time_to_wait)
-  rescue FindFailed => e
-    step 'process "notification-daemon" is running'
-    raise e
-  end
-end
-
 # This helper requires that the notification image is the one shown in
 # the notification applet's list, not the notification pop-up.
 def robust_notification_wait(notification_image, time_to_wait)
-  error_msg = "Didn't not see notification '#{notification_image}'"
+  error_msg = "Didn't not manage to open the notification applet"
+  wait_start = Time.now
   try_for(time_to_wait, :delay => 0, :msg => error_msg) do
     @screen.hide_cursor
-    @screen.click('GnomeNotificationApplet.png')
-    # Sanity check that the applet's list of notifications were
-    # opened. Sometimes the applet is moved when other systray
-    # elements are added, causing a race between Sikuli's mouse
-    # movement and the appearance of the new element.
-    @screen.wait('GnomeNotificationAppletClearAllButton.png', 5)
-    begin
-      return @screen.find(notification_image)
-    rescue FindFailed => e
-      # It could be that too many notifications are in the list, so
-      # the one we're looking for is not visible. Let's clear one
-      # notification and retry by re-raising the exception we just
-      # caught. This should not interfere with anything except if we
-      # later are interested in any of these older notifications that
-      # we may close.
-      # It's worth noting that the "close button" picture below has
-      # carefully been sized to include more than just the close
-      # button, so much that it ensures that the notification header
-      # must also be shown. That way we won't close any half-seen
-      # notification that may be the one we're looking for.
-      @screen.click('GnomeNotificationAppletCloseButton.png')
-      raise e
-    end
+    @screen.click("GnomeNotificationApplet.png")
+    @screen.wait("GnomeNotificationAppletOpened.png", 10)
   end
-rescue Timeout::Error => e
-  step 'process "notification-daemon" is running'
-  raise e
+
+  error_msg = "Didn't not see notification '#{notification_image}'"
+  time_to_wait -= (Time.now - wait_start).ceil
+  try_for(time_to_wait, :delay => 0, :msg => error_msg) do
+    found = false
+    entries = @screen.findAll("GnomeNotificationEntry.png")
+    while(entries.hasNext) do
+      entry = entries.next
+      @screen.hide_cursor
+      @screen.click(entry)
+      close_entry = @screen.wait("GnomeNotificationEntryClose.png", 10)
+      if @screen.exists(notification_image)
+        found = true
+        @screen.click(close_entry)
+        break
+      else
+        @screen.click(entry)
+      end
+    end
+    found
+  end
+
+  # Click anywhere to close the notification applet
+  @screen.hide_cursor
+  @screen.click("GnomeApplicationsMenu.png")
+  @screen.hide_cursor
 end
 
 def post_snapshot_restore_hook
@@ -94,9 +101,10 @@ def post_snapshot_restore_hook
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
   if $vm.has_network?
-    if $vm.execute("service tor status").success?
-      $vm.execute("service tor stop")
+    if $vm.execute("systemctl --quiet is-active tor@default.service").success?
+      $vm.execute("systemctl stop tor@default.service")
       $vm.execute("rm -f /var/log/tor/log")
+      $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
       $vm.host_to_guest_time_sync
       $vm.spawn("restart-tor")
       wait_until_tor_is_working
@@ -248,20 +256,29 @@ When /^I destroy the computer$/ do
   $vm.destroy_and_undefine
 end
 
+def bootsplash
+  case @os_loader
+  when "UEFI"
+    'TailsBootSplashUEFI.png'
+  else
+    'TailsBootSplash.png'
+  end
+end
+
+def bootsplash_tab_msg
+  case @os_loader
+  when "UEFI"
+    'TailsBootSplashTabMsgUEFI.png'
+  else
+    'TailsBootSplashTabMsg.png'
+  end
+end
+
 Given /^the computer (re)?boots Tails$/ do |reboot|
 
   boot_timeout = 30
   # We need some extra time for memory wiping if rebooting
   boot_timeout += 90 if reboot
-
-  case @os_loader
-  when "UEFI"
-    bootsplash = 'TailsBootSplashUEFI.png'
-    bootsplash_tab_msg = 'TailsBootSplashTabMsgUEFI.png'
-  else
-    bootsplash = 'TailsBootSplash.png'
-    bootsplash_tab_msg = 'TailsBootSplashTabMsg.png'
-  end
 
   @screen.wait(bootsplash, boot_timeout)
   @screen.wait(bootsplash_tab_msg, 10)
@@ -316,17 +333,19 @@ Given /^Tails Greeter has dealt with the sudo password$/ do
 end
 
 Given /^the Tails desktop is ready$/ do
-  case @theme
-  when "windows"
-    desktop_started_picture = 'WindowsStartButton.png'
-  else
-    desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
-    # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
-    # By this point the only icon left is Vidalia and it will not cause the other systray
-    # icons to shift positions.
-    @screen.wait("GnomeSystrayFlorence.png", 180)
-  end
+  desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
+  # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
+  # By this point the only icon left is Vidalia and it will not cause the other systray
+  # icons to shift positions.
+  @screen.wait("GnomeSystrayFlorence.png", 180)
   @screen.wait(desktop_started_picture, 180)
+  # Disable screen blanking since we sometimes need to wait long
+  # enough for it to activate, which can mess with Sikuli wait():ing
+  # for some image.
+  $vm.execute_successfully(
+    'gsettings set org.gnome.desktop.session idle-delay 0',
+    :user => LIVE_USER
+  )
 end
 
 Then /^Tails seems to have booted normally$/ do
@@ -334,13 +353,16 @@ Then /^Tails seems to have booted normally$/ do
 end
 
 When /^I see the 'Tor is ready' notification$/ do
-  notification_popup_wait('GnomeTorIsReady.png', 300)
-  @screen.waitVanish("GnomeTorIsReady.png", 15)
+  robust_notification_wait('TorIsReadyNotification.png', 300)
 end
 
 Given /^Tor is ready$/ do
   step "Tor has built a circuit"
   step "the time has synced"
+  if $vm.execute('systemctl is-system-running').failure?
+    units_status = $vm.execute('systemctl').stdout
+    raise "At least one system service failed to start:\n#{units_status}"
+  end
 end
 
 Given /^Tor has built a circuit$/ do
@@ -360,13 +382,7 @@ Given /^available upgrades have been checked$/ do
 end
 
 Given /^the Tor Browser has started$/ do
-  case @theme
-  when "windows"
-    tor_browser_picture = "WindowsTorBrowserWindow.png"
-  else
-    tor_browser_picture = "TorBrowserWindow.png"
-  end
-
+  tor_browser_picture = "TorBrowserWindow.png"
   @screen.wait(tor_browser_picture, 60)
 end
 
@@ -402,13 +418,24 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  case @theme
-  when "windows"
-    notification_picture = "WindowsNotificationX.png"
-  else
-    notification_picture = "GnomeNotificationX.png"
+  next if not(@screen.exists("GnomeNotificationApplet.png"))
+  @screen.click("GnomeNotificationApplet.png")
+  @screen.wait("GnomeNotificationAppletOpened.png", 10)
+  begin
+    entries = @screen.findAll("GnomeNotificationEntry.png")
+    while(entries.hasNext) do
+      entry = entries.next
+      @screen.hide_cursor
+      @screen.click(entry)
+      @screen.wait_and_click("GnomeNotificationEntryClose.png", 10)
+    end
+  rescue FindFailed
+    # No notifications, so we're good to go.
   end
-  @screen.waitVanish(notification_picture, 60)
+  @screen.hide_cursor
+  # Click anywhere to close the notification applet
+  @screen.click("GnomeApplicationsMenu.png")
+  @screen.hide_cursor
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
@@ -473,7 +500,7 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually shuts down$/ do
-  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
+  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
   timeout = nr_gibs_of_ram*5*60
   try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
     ! $vm.is_running?
@@ -481,30 +508,28 @@ Then /^Tails eventually shuts down$/ do
 end
 
 Then /^Tails eventually restarts$/ do
-  nr_gibs_of_ram = (detected_ram_in_MiB.to_f/(2**10)).ceil
+  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
   @screen.wait('TailsBootSplash.png', nr_gibs_of_ram*5*60)
 end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
-  $vm.execute("poweroff")
+  $vm.spawn("poweroff")
   step 'Tails eventually shuts down'
 end
 
 When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
-  @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
 end
 
 When /^I warm reboot the computer$/ do
-  $vm.execute("reboot")
+  $vm.spawn("reboot")
 end
 
 When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
-  @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
@@ -529,14 +554,8 @@ end
 
 When /^I start the Tor Browser in offline mode$/ do
   step "I start the Tor Browser"
-  case @theme
-  when "windows"
-    @screen.wait_and_click("WindowsTorBrowserOfflinePrompt.png", 10)
-    @screen.click("WindowsTorBrowserOfflinePromptStart.png")
-  else
-    @screen.wait_and_click("TorBrowserOfflinePrompt.png", 10)
-    @screen.click("TorBrowserOfflinePromptStart.png")
-  end
+  @screen.wait_and_click("TorBrowserOfflinePrompt.png", 10)
+  @screen.click("TorBrowserOfflinePromptStart.png")
 end
 
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
@@ -559,23 +578,25 @@ EOF
   con_content.split("\n").each do |line|
     $vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
   end
-  $vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '/etc/NetworkManager/system-connections/#{con_name}'")
+  con_file = "/etc/NetworkManager/system-connections/#{con_name}"
+  $vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '#{con_file}'")
+  $vm.execute_successfully("nmcli connection load '#{con_file}'")
   try_for(10) {
-    nm_con_list = $vm.execute("nmcli --terse --fields NAME con list").stdout
+    nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
     nm_con_list.split("\n").include? "#{con_name}"
   }
 end
 
 Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
-  $vm.execute("nmcli con up id #{con_name}")
-  try_for(60) {
-    $vm.execute("nmcli --terse --fields NAME,STATE con status").stdout.chomp == "#{con_name}:activated"
-  }
+  $vm.execute("nmcli connection up id #{con_name}")
+  try_for(60) do
+    $vm.execute("nmcli --terse --fields NAME,STATE connection show").stdout.chomp.split("\n").include?("#{con_name}:activated")
+  end
 end
 
 When /^I start and focus GNOME Terminal$/ do
-  step 'I start "Terminal" via the GNOME "Accessories" applications menu'
-  @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+  step 'I start "Terminal" via the GNOME "Utilities" applications menu'
+  @screen.wait('GnomeTerminalWindow.png', 20)
 end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
@@ -616,7 +637,9 @@ end
 
 def is_persistent?(app)
   conf = get_persistence_presets(true)["#{app}"]
-  $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'").success?
+  c = $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'")
+  # This check assumes that we haven't enabled read-only persistence.
+  c.success? and c.stdout.chomp != "aufs"
 end
 
 Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
@@ -631,22 +654,22 @@ end
 def gnome_app_menu_click_helper(click_me, verify_me = nil)
   try_for(30) do
     @screen.hide_cursor
-    @screen.wait_and_click(click_me, 10)
+    # The sensitivity for submenus to open by just hovering past them
+    # is extremely high, and may result in the wrong one
+    # opening. Hence we better avoid hovering over undesired submenus
+    # entirely by "approaching" the menu strictly horizontally.
+    r = @screen.wait(click_me, 10)
+    @screen.hover_point(@screen.w, r.getY)
+    @screen.click(r)
     @screen.wait(verify_me, 10) if verify_me
     return
   end
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
-  case @theme
-  when "windows"
-    prefix = 'Windows'
-  else
-    prefix = 'Gnome'
-  end
-  menu_button = prefix + "ApplicationsMenu.png"
-  sub_menu_entry = prefix + "Applications" + submenu + ".png"
-  application_entry = prefix + "Applications" + app + ".png"
+  menu_button = "GnomeApplicationsMenu.png"
+  sub_menu_entry = "GnomeApplications" + submenu + ".png"
+  application_entry = "GnomeApplications" + app + ".png"
   try_for(120) do
     begin
       gnome_app_menu_click_helper(menu_button, sub_menu_entry)
@@ -662,16 +685,10 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, s
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
-  case @theme
-  when "windows"
-    prefix = 'Windows'
-  else
-    prefix = 'Gnome'
-  end
-  menu_button = prefix + "ApplicationsMenu.png"
-  sub_menu_entry = prefix + "Applications" + submenu + ".png"
-  sub_sub_menu_entry = prefix + "Applications" + subsubmenu + ".png"
-  application_entry = prefix + "Applications" + app + ".png"
+  menu_button = "GnomeApplicationsMenu.png"
+  sub_menu_entry = "GnomeApplications" + submenu + ".png"
+  sub_sub_menu_entry = "GnomeApplications" + subsubmenu + ".png"
+  application_entry = "GnomeApplications" + app + ".png"
   try_for(120) do
     begin
       gnome_app_menu_click_helper(menu_button, sub_menu_entry)
@@ -796,18 +813,13 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   @screen.type("p", Sikuli::KeyModifier.CTRL)
   @screen.wait("TorBrowserPrintDialog.png", 10)
   @screen.wait_and_click("PrintToFile.png", 10)
-  # Tor Browser is not allowed to read /home/#{LIVE_USER}, and I found no way
-  # to change the default destination directory for "Print to File",
-  # so let's click through the warning
-  @screen.wait("TorBrowserCouldNotReadTheContentsOfWarning.png", 10)
-  @screen.wait_and_click("TorBrowserWarningDialogOkButton.png", 10)
   @screen.wait_and_double_click("TorBrowserPrintOutputFile.png", 10)
   @screen.hide_cursor
   @screen.wait("TorBrowserPrintOutputFileSelected.png", 10)
   # Only the file's basename is selected by double-clicking,
   # so we type only the desired file's basename to replace it
   @screen.type(output_dir + '/' + output_file.sub(/[.]pdf$/, '') + Sikuli::Key.ENTER)
-  try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
+  try_for(120, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
     $vm.file_exist?("#{output_dir}/#{output_file}")
   }
 end
@@ -871,7 +883,6 @@ end
 def force_new_tor_circuit(with_vidalia=nil)
   debug_log("Forcing new Tor circuit...")
   if with_vidalia
-    assert_equal('gnome', @theme, "Vidalia is not available in the #{@theme} theme.")
     begin
       step 'process "vidalia" is running'
     rescue Test::Unit::AssertionFailedError
@@ -917,7 +928,8 @@ Given /^I (?:re)?start monitoring the AppArmor log of "([^"]+)"$/ do |profile|
   $vm.execute_successfully('sysctl -w kernel.printk_ratelimit=0')
   # We will only care about entries for this profile from this time
   # and on.
-  guest_time = DateTime.parse($vm.execute_successfully('date').stdout)
+  guest_time = $vm.execute_successfully(
+    'date +"%Y-%m-%d %H:%M:%S"').stdout.chomp
   @apparmor_profile_monitoring_start ||= Hash.new
   @apparmor_profile_monitoring_start[profile] = guest_time
 end
@@ -929,11 +941,12 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at m
          "'I monitor the AppArmor log of ...' step")
   audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' % [profile, file]
   block = Proc.new do
-    audit_lines = $vm.execute("grep -F '#{audit_line_regex}' /var/log/syslog").stdout.split("\n")
-    audit_lines.select! do |line|
-      DateTime.parse(line) >= @apparmor_profile_monitoring_start[profile]
-    end
-    assert(audit_lines.empty? == (anti_test ? true : false))
+    audit_log = $vm.execute(
+      "journalctl --full --no-pager " +
+      "--since='#{@apparmor_profile_monitoring_start[profile]}' " +
+      "SYSLOG_IDENTIFIER=kernel | grep -w '#{audit_line_regex}'"
+    ).stdout.chomp
+    assert(audit_log.empty? == (anti_test ? true : false))
     true
   end
   begin

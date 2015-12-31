@@ -181,7 +181,6 @@ the release branch's APT suite:
 * [[perl5lib]]
 * [[persistence-setup]]
 * [[tails-iuk]]
-* [[tor]]
 * whisperback:
   * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
   * build a Debian package
@@ -414,8 +413,16 @@ Better catch this before people spend time doing manual tests.
 Build the almost-final image
 ----------------------------
 
-[[Build images|contribute/build]] and carefully read the build logs to
-make sure nothing bad happened.
+* Check out the release tag:
+
+      git checkout "${TAG}"
+
+* [[Build images|contribute/build]] and carefully read the build logs to
+  make sure nothing bad happened.
+
+* Check out the release branch again:
+
+      git checkout "${RELEASE_BRANCH}"
 
 SquashFS file order
 -------------------
@@ -457,8 +464,16 @@ suite should be ready, so it is time to:
           git tag -f -u "$TAILS_SIGNATURE_KEY" \
   	    -m "tagging version ${VERSION}" "${TAG}" && \
           git push --tags -f
-  
+
+* check out the release tag:
+
+      git checkout "${TAG}"
+
 * build the final image!
+
+* check out the release branch again:
+
+      git checkout "${RELEASE_BRANCH}"
 
 <a id="prepare-iuk"></a>
 
@@ -470,11 +485,10 @@ First, create a directory with a suitable name and go there:
 	mkdir "$ISOS/tails-i386-$VERSION" && \
 	cd "$ISOS/tails-i386-$VERSION"
 
-Second, copy the built image to this brand new directory.
-Then, rename it:
+Second, move the built image to this brand new directory:
 
-	mv "$ARTIFACTS/tails-i386-${RELEASE_BRANCH}-$VERSION-"*".iso" \
-	   "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso"
+	mv "$ARTIFACTS/tails-i386-$VERSION.iso" \
+	   "$ISOS/tails-i386-$VERSION/"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
@@ -723,7 +737,7 @@ In order to get any new documentation into the website, merge either
 Rename the `.packages` file to remove the `.iso` and build date parts
 of its name:
 
-	mv "$ARTIFACTS"/tails-i386-"${RELEASE_BRANCH}-$VERSION"-*.iso.packages \
+	mv "$ARTIFACTS"/tails-i386-"-$VERSION"-*.iso.packages \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages"
 
 Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
@@ -1030,21 +1044,28 @@ this, and skip what does not make sense for a RC.
    repository documentation.
 1. Push the resulting branches.
 1. If this was a major release, then reset experimental:
-   - take note of branches merged into `experimental`, but not into
-     `devel`:
 
-         git log --pretty=oneline --color=never --merges devel..experimental \
-           | /bin/grep 'into experimental$' \
-           | sed -e 's,^[a-f0-9]\+\s\+,,' | sort -u
+        EXPERIMENTAL_BRANCHES="$(
+        git log --pretty=oneline --color=never --merges origin/devel..origin/experimental |
+          sed -n -E "s,^[a-f0-9]+ Merge( remote-tracking)? branch '(origin/)?([^']+)' into experimental$,origin/\3,p" |
+          grep -v -E '^origin/(master|stable|testing|devel|experimental)$' |
+          sort -u
+        )" && \
+        git checkout experimental && \
+        git reset --hard origin/devel && \
+        for branch in ${EXPERIMENTAL_BRANCHES} ; do
+          if [ -z "$(git diff experimental...${branch})" ]; then
+            echo "Skipping branch '${branch}' due to empty diff"
+            continue
+          fi
+          echo "Merging branch '${branch}' ..."
+          git merge --no-edit "${branch}" || (
+            echo "Please resolve the problem in another terminal (including committing in case of a conflict resolution)"
+            read -p "Press ENTER to continue! "
+          )
+        done && \
+        git push --force origin experimental:experimental
 
-   - `git checkout experimental && git reset --hard devel`
-   - merge additional Git branches into experimental
-
-         for branch in $UNMERGED_BRANCHES ; do
-            git merge $branch
-         done
-
-   - `git push --force origin experimental:experimental`
 1. Make sure Jenkins manages to build all updated major branches fine:
    <https://jenkins.tails.boum.org/>.
 1. Delete the _Release Manager View for $VERSION_ Redmine custom query.
