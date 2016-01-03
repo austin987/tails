@@ -98,6 +98,39 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Running `getTorBrowserUserAgent` should produce the User-Agent set by the
   installed version of Torbutton, and used in the Tor Browser. (automate: [[!tails_ticket 10268]])
 
+# Icedove
+
+* Check mail over IMAP using:
+  - a "clearnet" IMAP server.
+  - a hidden service IMAP server (e.g. Riseup, zsolxunfmbfuq7wf.onion
+    with SSL).
+* Send an email using:
+  - a "clearnet" SMTP server.
+  - a hidden service SMTP server (see above).
+* Check that the profile works and is torified:
+  1. Send an email using Icedove and a non-anonymizing SMTP relay (a
+     SMTP relay that writes the IP address of the client it is
+     relaying email for in the Received header).
+  1. Then check that email's headers once received, especially the
+     `Received:` one.
+* Also check that the EHLO/HELO SMTP message is not leaking anything
+  at the application level:
+  1. Start Icedove using the GNOME Applications menu.
+  2. Disable SSL/TLS for SMTP in Icedove (so take precautions for not
+     leaking your password in plaintext by either changing it
+     temporarily or using a disposable account).
+  3. Run `sudo tcpdump -n -i lo -w dump` to capture the packets before
+     Tor encrypts it, then close tcpdump
+  4. Check the dump for the HELO/EHLO message and
+     verify that it only contains `localhost`: `tcpdump -A -r dump`
+  5. Check the `Received:` and `Message-Id` fields in the received
+     message: it must not leak the hostname, nor the local IP.
+* Make sure Icedove Mail use its dedicated `SocksPort` when connecting
+  to IMAP / POP3 / SMTP servers by monitoring the output of this
+  command:
+
+      sudo watch -n 0.1 'netstat -taupen | grep icedove'
+
 # Tor
 
 * The version of Tor should be the latest stable one, which is the highest version number
