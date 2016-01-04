@@ -38,5 +38,61 @@ Everything in this report can be made public.
 
 # D. Migration to Debian Jessie
 
+## D.2. Take advantage of systemd to improve the internals of Tails
+
+We polished code that was previously ported to systemd:
+
+* Fixed `tor-has-bootstrapped` semantics on network reconnect
+  ([[!tails_ticket 10732]]).
+
+## D.3. Update our test suite for Tails Jessie
+
+We have updated most of the test suite for Jessie ([[!tails_ticket 7563]]).
+
+Some new test suite robustness problems are left to be addressed, but
+the current state was good enough to make us feel comfortable
+releasing Tails 2.0~beta1. Besides, we are happy to point out that
+this automated test suite made us discover quite a few bugs in
+Jessie-based Tails development versions, that we would probably not
+have noticed before the first beta release otherwise.
+
+Here is the list of relevant tickets that were resolved during the
+reporting period (most of the test suite porting work was done
+directly in Git, without filing tickets for each bit that needed to be
+adjusted, though):
+
+* Dropped an obsolete test case ([[!tails_ticket 10336]]).
+* Disabled screen blanking during the test suite, it breaks some tests ([[!tails_ticket 10403]]).
+* Updated the tests for communication with OpenPGP keyservers ([[!tails_ticket 9791]]).
+* Replaced our previous iptables status regexp-based parser with a new
+  XML-based status analyzer: the previous implementation could not be
+  adjusted to the new ip6tables' output ([[!tails_ticket 9704]]).
+* Updated the "all notifications have disappeared" test suite step for
+  Jessie ([[!tails_ticket 8782]]).
+
+## D.4. Document the changes implied by the move to Jessie on our website
+
+XXX
+
+## D.5. Release an official version of Tails based on Jessie
+
+On December 22 we published a first beta for the upcoming Tails 2.0,
+based on Debian Jessie: <https://tails.boum.org/news/test_2.0-beta1/>.
+It was very useful so far: we received a lot of feedback, including
+a few bug reports. Most of these bugs were fixed since then, but that
+will be for next report round :)
+
+The first release of Tails based on Debian Jessie is still scheduled
+for January 26.
+
+## Various porting to Jessie
+
+A lot of other porting to Jessie work was done, that does not really
+fit into any of the above categories:
+
+* Install Electrum 0.2.5.x in Tails/Jessie ([[!tails_ticket 10754]]).
+* Fixed obfs4proxy support ([[!tails_ticket 10724]]).
+* Fixed time synchronization in bridge mode when the clock is way off
+  ([[!tails_ticket 10696]]).
 
 # E. Release management
