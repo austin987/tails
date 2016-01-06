@@ -18,7 +18,7 @@ If you want to use another operating system, these tools are:
 * Git - manage source code
 * Poedit - translate files
 * OpenSSH client - publish your translations on the server
-* tools to [[build the wiki locally|contribute/build/website/]] in
+* tools to [[build a local copy of the website|contribute/build/website/]] in
   order to check how it will look like
 
 If you do not use Tails, please ensure that you use at least version 1.5 of Poedit,
@@ -75,93 +75,112 @@ ask on the [[mailing list for translators|translate#follow-up]], we will be glad
    the Tails system administrators (<tails-sysadmins@boum.org>) to host
    your repository.
 
+2. **Copy the source code from the main repository**
+
    You first need to setup a [[persistent volume|doc/first_steps/persistence]]
    to save the source code. Then navigate to the persistent folder, using the terminal:
 
        cd ~/Persistent
 
-   This example clones an empty repository into the "tails" folder:
+   Get the source code:
 
-       git clone git@gitlab.com:Tails/tails.git tails
+       git clone https://git-tails.immerda.ch/tails
 
-2. **Copy the source code from the main repository**
+   This operation requires some time at setup, as it requires pulling the whole repository.
 
-   Then setup the remote Tails main repository:
+3. **Add your repository**
+
+   Navigate to the folder containg the source code, using the terminal:
 
        cd tails
-       git remote add tails https://git-tails.immerda.ch/tails
+
+   To publish your translations, you need to add the repository set up previously.
+   The URL of your repository should look like `tails@git.tails.boum.org:elouann/tails`.
+   If you cannot find the URL of your repository, get in touch with the sysadmins or send
+   an email to the [[mailing list|translate#follow-up]]. Once you've got it, add it to
+   your local repository:
+
+       git remote add myrepo tails@git.tails.boum.org:elouann/tails
 
    Typing `git remote` should now show two entries:
 
        origin
-       tails
+       myrepo
 
-   More specifically, if you type `git remote -v` and you'll see something like this:
+   More specifically, if you type `git remote -v`, you'll see something like this:
 
-       origin	git@gitlab.com:Tails/tails.git (fetch)
-       origin	git@gitlab.com:Tails/tails.git (push)
-       tails	https://git-tails.immerda.ch/tails (fetch)
-       tails	https://git-tails.immerda.ch/tails (push)
+       myrepo	tails@git.tails.boum.org:elouann/tails (fetch)
+       myrepo	tails@git.tails.boum.org:elouann/tails (push)
+       origin	https://git-tails.immerda.ch/tails (fetch)
+       origin	https://git-tails.immerda.ch/tails (push)
 
-   "origin" is your own repository, "tails" contains the files of the
-   main repository once we fetch them. This operation requires some time
-   at setup, as it requires to pull the whole repository.
+   To check if the repository is correctly configured, run the following command:
 
-       git fetch tails master
+       git fetch --all
+
+   If you have a problem with SSH keys or with the URL of your repository, get in touch
+   with the sysadmins or send an email to the [[mailing list|translate#follow-up]].
 
 3. **Configure your credentials**
 
    Now to setup Git, type:
 
-       git config user.name "Tails developers"
-       git config user.email "tails@boum.org"
+       git config user.name "Your nickname"
+       git config user.email "Your email adress"
 
    Verify this configuration by typing:
 
        git config --list
 
-4. **Translate!**
+4. **Create a branch**
 
    Create a branch for every translation you make, for example, if you want to
-   translate the "contribute" page, create a branch named "translation-contribute":
+   translate the "contribute" page, create a branch named `translate/contribute`:
 
-       git branch translation-contribute
-       git checkout translation-contribute
+       git branch translate/contribute
+       git checkout translate/contribute
 
-   Now typing `git branch` should show a star in front of the active branch.
+   Now typing `git branch` should show a star in front of the active branch:
 
-5. Translate whatever you can in your preferred PO file editor, possibly Poedit.
+         master
+       * translate/contribute
+
+5. **Translate!**
+
+   You can use your preferred PO file editor, for example, *Poedit* which is included in Tails.
 
 6. **Save your translations**
 
-   Commit the changes you made to `.po` files:
+   Add your changes, then commit
 
-       git add <files>
-       git commit <files>
+       git add -p
+       git commit
 
 7. **Test your work**
 
-   [[Build the wiki locally|contribute/build/website/]] in order to verify
+   [[Build the website locally|contribute/build/website/]] in order to verify
    your modifications or to review the translations of somebody else.
 
-   If you need to rework something, go back to point 5, translate and test again.
+   If you need to rework something, go back to step 5, translate, and test again.
 
-8. Merge our main repository into yours.
-   Regularly, pull from the master branch of the main repository to update
+8. **Merge our main repository into yours**.
+
+   Regularly, pull from the `master` branch of the main repository to update
    your local files.
 
-   `git fetch tails master` only fetches new files, while
-   `git pull tails master` fetches and merges the files.
+   `git fetch origin master` only fetches new files, while
+
+   `git pull origin master` fetches and merges the files.
 
 9. **Publish your modifications**
 
-   Push your changes to your online Git repository.
+   Push your changes to your online Git repository:
 
-       git push origin <name of branch>
+       git push myrepo <name of branch>
 
    For example,
 
-       git push origin translation-contribute
+       git push myrepo translate/contribute
 
 10. Ask other members of your translation team to review your work by writing
    an email to [[the mailing list for
@@ -171,16 +190,16 @@ ask on the [[mailing list for translators|translate#follow-up]], we will be glad
 11. The reviewer, once happy with the result, should ask on the
    [[mailing list for translators|translate#follow-up]] to pull from
    the branch that was worked on, writing an email with "(pull)" and the language
-   short code in the subject. Ideally, such email would be OpenPGP-signed.
+   short code in the subject. Ideally, such email would be signed with OpenPGP.
 
-Each [[language team|translate#language-teams]] keeps track of their contributors' repositories.
+Each [[language team|translate#language-teams]] keeps track of the repositories of its contributors.
 To add one of these repositories as a `remote` in Git, use the following command line:
 
-       git remote add [name] https://git-tails.immerda.ch/[name].git
+    git remote add [name] https://git-tails.immerda.ch/[name]/tails.git
 
 For example:
 
-       git remote add matsa git://repo.or.cz/tails/matsa.git
+    git remote add mercedes508 https://git-tails.immerda.ch/mercedes508/tails.git
 
 # More informations and resources
 

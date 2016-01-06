@@ -15,3 +15,17 @@ pref("extensions.getAddons.showPane", false);
    for several minutes while trying to communicate with CUPS, since
    access to port 631 isn't allowed through. */
 pref("print.postscript.cups.enabled", false);
+
+// Disable fetching of the new tab page's Tiles links/ads. It will not
+// work in the I2P Browser.
+pref("browser.newtabpage.directory.source", "");
+pref("browser.newtabpage.directory.ping", "");
+// ... and disable the explanation shown the first time
+pref("browser.newtabpage.introShown", true);
+
+// Without setting this, the Download Management page will not update
+// the progress being made.
+pref("browser.download.panel.shown", true);
+
+// Never  add 'www' or '.com' to hostnames in I2P Browser.
+pref("browser.fixup.alternate.enabled", false);

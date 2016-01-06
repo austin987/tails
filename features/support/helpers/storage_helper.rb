@@ -18,18 +18,22 @@ class VMStorage
     @xml_path = xml_path
     pool_xml = REXML::Document.new(File.read("#{@xml_path}/storage_pool.xml"))
     pool_name = pool_xml.elements['pool/name'].text
+    @pool_path = "#{$config["TMPDIR"]}/#{pool_name}"
     begin
       @pool = @virt.lookup_storage_pool_by_name(pool_name)
     rescue Libvirt::RetrieveError
-      # There's no pool with that name, so we don't have to clear it
-    else
-      VMStorage.clear_storage_pool(@pool)
+      @pool = nil
     end
-    @pool_path = "#{$config["TMPDIR"]}/#{pool_name}"
-    pool_xml.elements['pool/target/path'].text = @pool_path
-    @pool = @virt.define_storage_pool_xml(pool_xml.to_s)
-    @pool.build unless Dir.exists?(@pool_path)
-    @pool.create
+    if @pool and not(KEEP_SNAPSHOTS)
+      VMStorage.clear_storage_pool(@pool)
+      @pool = nil
+    end
+    unless @pool
+      pool_xml.elements['pool/target/path'].text = @pool_path
+      @pool = @virt.define_storage_pool_xml(pool_xml.to_s)
+      @pool.build unless Dir.exists?(@pool_path)
+    end
+    @pool.create unless @pool.active?
     @pool.refresh
   end
 
@@ -62,6 +66,10 @@ class VMStorage
 
   def clear_volumes
     VMStorage.clear_storage_pool_volumes(@pool)
+  end
+
+  def delete_volume(name)
+    @pool.lookup_volume_by_name(name).delete
   end
 
   def create_new_disk(name, options = {})
@@ -179,7 +187,12 @@ class VMStorage
   def guestfs_disk_helper(*disks)
     assert(block_given?)
     g = Guestfs::Guestfs.new()
-    g.set_trace(1) if $config["DEBUG"]
+    g.set_trace(1)
+    message_callback = Proc.new do |event, _, message, _|
+      debug_log("libguestfs: #{Guestfs.event_to_string(event)}: #{message}")
+    end
+    g.set_event_callback(message_callback,
+                         Guestfs::EVENT_TRACE)
     g.set_autosync(1)
     disks.each do |disk|
       g.add_drive_opts(disk[:path], disk[:opts])
