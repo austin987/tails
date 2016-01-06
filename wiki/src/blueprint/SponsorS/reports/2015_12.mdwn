@@ -59,6 +59,46 @@ Everything in this report can be made public.
 
 # B. Improve our quality assurance process
 
+## B.1. Automatically build ISO images for all the branches of our source code that are under active development
+
+In December, **809 ISOs** were automatically built by our Jenkins
+instance.
+
+## B.2. Continuously run our entire test suite on all those ISO images once they are built
+
+In December, **788 ISOs** were tested by our Jenkins instance.
+
+- B.2.4. Implement and deploy the best solution from this research
+
+  We implemented our decision regarding documentation branches and
+  automated tests. They are now tested only against scenarios that
+  depends on the documentation shipped in Tails and not the whole test
+  suite, which help in reducing the load on the isotesters.
+  ([[!tails_ticket 10492]], [[!tails_ticket 10706]] and [[!tails_ticket 10707]])
+
+  We also excluded work in progress branches from being automatically
+  tested in Jenkins, as their meaning is to share work that is not yet
+  ready to be merged and they may break the tests, thus notifying
+  authors that already know very well that their branch is not reliable
+  yet. ([[!tails_ticket 10389]])
+
+  To save a bit of disk space that we need for later work (e.g freezable
+  APT repo), we reduced the temporary partitions used by our isotesters
+  after evaluating what they really use. ([[!tails_ticket 10396]])
+
+  We also had a look to check if the saving of videos artifacts for
+  failing scenarios after doing so for a release cycle wasn't using too
+  much disk space, and concluded it was fine. ([[!tails_ticket 10354]])
+
+  We also fixed a usability issue where the unmerged branches were
+  removed from the list of branches to be automatically built and tested
+  after each releases, resulting in loosing their automatic build and
+  test history. ([[!tails_ticket 10123]])
+
+  We finally unleashed the automated tests failure notifications to
+  branches authors, as there were now much less false positives.
+  ([[!tails_ticket #10296]] and [[!tails_ticket 10382]])
+
 ## B.4. Freezable APT repository
 
 - B.4.5. Implement processes and tools for importing and freezing
