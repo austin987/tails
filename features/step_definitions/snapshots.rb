@@ -116,12 +116,19 @@ def checkpoints
       ],
     },
 
-    'usb-install-with-persistence-tails-greeter' => {
-      :description => "I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen",
+    'usb-install-logged-in' => {
+      :description => "I have started Tails without network from a USB drive without a persistent partition and logged in",
       :parent_checkpoint => 'usb-install-tails-greeter',
       :steps => [
         'I log in to a new session',
         'the Tails desktop is ready',
+      ],
+    },
+
+    'usb-install-with-persistence-tails-greeter' => {
+      :description => "I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen",
+      :parent_checkpoint => 'usb-install-logged-in',
+      :steps => [
         'I create a persistent partition',
         'a Tails persistence partition exists on USB drive "current"',
         'I shutdown Tails and wait for the computer to power off',
