@@ -963,3 +963,17 @@ end
 Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
   force_new_tor_circuit(with_vidalia)
 end
+
+When /^I eject the boot medium$/ do
+  dev = boot_device
+  dev_type = device_info(dev)['ID_TYPE']
+  case dev_type
+  when 'cd'
+    $vm.remove_cdrom
+  when 'disk'
+    boot_disk_name = $vm.disk_name(dev)
+    $vm.unplug_drive(boot_disk_name)
+  else
+    raise "Unsupported medium type '#{dev_type}' for boot device '#{dev}'"
+  end
+end

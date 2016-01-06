@@ -85,3 +85,13 @@ Feature: Various checks
   Scenario: tails-debugging-info does not leak information
     Given I have started Tails from DVD without network and logged in
     Then tails-debugging-info is not susceptible to symlink attacks
+
+  Scenario: Tails shuts down on DVD boot medium removal
+    Given I have started Tails from DVD without network and logged in
+    When I eject the boot medium
+    Then Tails eventually shuts down
+
+  Scenario: Tails shuts down on USB boot medium removal
+    Given I have started Tails without network from a USB drive without a persistent partition and logged in
+    When I eject the boot medium
+    Then Tails eventually shuts down
