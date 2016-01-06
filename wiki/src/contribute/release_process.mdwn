@@ -306,10 +306,10 @@ at least 24 hours in the future! Between tests and mirror synchronization,
 the build will not be released on the same day. Try to make sure it
 matches the date of the future signature.
 
-	RELEASE_DATE='June 26, 2013'
+	RELEASE_DATE='2015-11-03'
 
 	echo "$VERSION"      > wiki/src/inc/stable_i386_version.html
-	echo "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
+	echo -n "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
 	sed -ri "s%news/version_.*]]%news/version_$VERSION]]%" wiki/src/inc/stable_i386_release_notes.*
 	$EDITOR wiki/src/inc/*.html
 	./build-website
@@ -414,8 +414,16 @@ Better catch this before people spend time doing manual tests.
 Build the almost-final image
 ----------------------------
 
-[[Build images|contribute/build]] and carefully read the build logs to
-make sure nothing bad happened.
+* Check out the release tag:
+
+      git checkout "${TAG}"
+
+* [[Build images|contribute/build]] and carefully read the build logs to
+  make sure nothing bad happened.
+
+* Check out the release branch again:
+
+      git checkout "${RELEASE_BRANCH}"
 
 SquashFS file order
 -------------------
@@ -457,8 +465,16 @@ suite should be ready, so it is time to:
           git tag -f -u "$TAILS_SIGNATURE_KEY" \
   	    -m "tagging version ${VERSION}" "${TAG}" && \
           git push --tags -f
-  
+
+* check out the release tag:
+
+      git checkout "${TAG}"
+
 * build the final image!
+
+* check out the release branch again:
+
+      git checkout "${RELEASE_BRANCH}"
 
 <a id="prepare-iuk"></a>
 
@@ -470,11 +486,10 @@ First, create a directory with a suitable name and go there:
 	mkdir "$ISOS/tails-i386-$VERSION" && \
 	cd "$ISOS/tails-i386-$VERSION"
 
-Second, copy the built image to this brand new directory.
-Then, rename it:
+Second, move the built image to this brand new directory:
 
-	mv "$ARTIFACTS/tails-i386-${RELEASE_BRANCH}-$VERSION-"*".iso" \
-	   "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso"
+	mv "$ARTIFACTS/tails-i386-$VERSION.iso" \
+	   "$ISOS/tails-i386-$VERSION/"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
@@ -723,7 +738,7 @@ In order to get any new documentation into the website, merge either
 Rename the `.packages` file to remove the `.iso` and build date parts
 of its name:
 
-	mv "$ARTIFACTS"/tails-i386-"${RELEASE_BRANCH}-$VERSION"-*.iso.packages \
+	mv "$ARTIFACTS"/tails-i386-"-$VERSION"-*.iso.packages \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages"
 
 Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
@@ -1051,10 +1066,13 @@ this, and skip what does not make sense for a RC.
 1. Ensure the next few releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
    in the Roof* so that this section appears after the next release.
-* If the next release is a point-release, ask
-  <tails-sysadmins@boum.org> to disable the Jenkins job that's
-  building ISO images from the `testing` branch (since it basically
-  won't be used/maintained in the next 2.5 months).
+1. If the next release is a point-release, ask
+   <tails-sysadmins@boum.org> to disable the Jenkins job that's
+   building ISO images from the `testing` branch (since it basically
+   won't be used/maintained in the next 2.5 months).
+1. If you will be the release manager for the next release, look at the
+   tasks that must be done at the beginning of your shift in the
+   [[release manager role page|contribute/working_together/roles/release_manager]].
 
 Related pages
 =============
