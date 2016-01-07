@@ -102,8 +102,8 @@ class OtrBot(jabberbot.JabberBot):
     # Wrap OTR encryption around Jabberbot's most low-level method for
     # sending messages.
     def send_message(self, mess):
-        body = str(mess.getBody())
-        user = str(mess.getTo().getStripped())
+        body = mess.getBody().encode('utf-8')
+        user = mess.getTo().getStripped().encode('utf-8')
         otrctx = self.__otr_manager.get_context_for_user(user)
         if otrctx.state == potr.context.STATE_ENCRYPTED:
             otrctx.sendMessage(potr.context.FRAGMENT_SEND_ALL, body,
@@ -113,8 +113,8 @@ class OtrBot(jabberbot.JabberBot):
 
     # Wrap OTR decryption around Jabberbot's callback mechanism.
     def callback_message(self, conn, mess):
-        body = str(mess.getBody())
-        user = str(mess.getFrom().getStripped())
+        body = mess.getBody().encode('utf-8')
+        user = mess.getFrom().getStripped().encode('utf-8')
         otrctx = self.__otr_manager.get_context_for_user(user)
         if mess.getType() == "chat":
             try:
@@ -172,7 +172,7 @@ class OtrBot(jabberbot.JabberBot):
         """Make me gracefully end the OTR session if there is one"""
         if mess.getType() == "groupchat":
             return
-        user = str(mess.getFrom().getStripped())
+        user = mess.getFrom().getStripped().encode('utf-8')
         self.__otr_manager.get_context_for_user(user).disconnect(appdata =
             self.__otr_appdata_for_mess(mess.buildReply()))
         return ""
