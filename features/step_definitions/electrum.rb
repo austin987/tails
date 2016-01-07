@@ -47,5 +47,5 @@ Then /^I see the main Electrum client window$/ do
 end
 
 Then /^Electrum successfully connects to the network$/ do
- @screen.wait('ElectrumStatus.png', 180)
+  @screen.wait('ElectrumStatus.png', 180)
 end
