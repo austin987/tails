@@ -38,6 +38,16 @@ Feature: Browsing the web using the Tor Browser
     Then I see "KeyImportedNotification.png" after at most 10 seconds
 
   @check_tor_leaks @fragile
+  Scenario: Downloading files with the Tor Browser
+    Given I have started Tails from DVD and logged in and the network is connected
+    When I start the Tor Browser
+    Then the Tor Browser has started and loaded the startup page
+    When I download some file in the Tor Browser
+    Then I get the browser download dialog
+    When I save the file to the default Tor Browser download directory
+    Then the file is saved to the default Tor Browser download directory
+
+  @check_tor_leaks @fragile
   Scenario: Playing HTML5 audio
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
