@@ -47,11 +47,12 @@ Everything in this report can be made public.
    it's important to provide a patch for this bug and started to write a
    proof-of-concept.
 
-   In order to make our improvements maintainable we've gotten
+   In order to make our improvements maintainable we've got
    in touch with the Debian Icedove packaging team and written manual tests for
    testing Icedove in Tails. ([[!tails_ticket 9493]])
 
    These still have to be converted to automated tests in our test suite.
+   ([[!tails_ticket 6304]])
 
 ## A.1.3 Integrate Icedove into Tails
 
@@ -72,17 +73,19 @@ In December, **788 ISOs** were tested by our Jenkins instance.
 
 - B.2.4. Implement and deploy the best solution from this research
 
-  We implemented our decision regarding documentation branches and
-  automated tests. They are now tested only against scenarios that
-  depends on the documentation shipped in Tails and not the whole test
-  suite, which help in reducing the load on the isotesters.
-  ([[!tails_ticket 10492]], [[!tails_ticket 10706]] and [[!tails_ticket 10707]])
+  As a way to optimize resource usage and to shorten the feedback
+  loop, we have limited the amount of tests we run on ISO images built from
+  documentation branches: we now run only the test cases that depends
+  on the documentation shipped in Tails, instead of the entire test
+  suite. ([[!tails_ticket 10492]], [[!tails_ticket 10706]] and
+  [[!tails_ticket 10707]])
 
-  We also excluded work in progress branches from being automatically
-  tested in Jenkins, as their meaning is to share work that is not yet
-  ready to be merged and they may break the tests, thus avoiding
-  to notify authors that already know very well that their branch is
-  not reliable yet. ([[!tails_ticket 10389]])
+  We also excluded early, work-in-progress draft branches from being automatically
+  tested in Jenkins. We want to encourage developers to share work
+  even if it is very rough, not ready to be merged, and fails to pass
+  the test suite. In such cases, we should not discourage developers
+  with lots of notifications about test failures.
+  ([[!tails_ticket 10389]])
 
   To save a bit of disk space that we need for later work (e.g freezable
   APT repo), we reduced the temporary partitions used by our isotesters
@@ -92,9 +95,9 @@ In December, **788 ISOs** were tested by our Jenkins instance.
   of video artifacts for failing scenarios wasn't using too much disk
   space, and concluded it was fine. ([[!tails_ticket 10354]])
 
-  We also fixed a usability issue where the unmerged branches were
+  We also fixed a usability issue where the branches that were not merged yet were
   removed from the list of branches to be automatically built and tested
-  after each releases, resulting in loosing their automatic build and
+  after each release, resulting in losing their automatic build and
   test history. ([[!tails_ticket 10123]])
 
   We finally unleashed the automated tests failure notifications to
@@ -108,21 +111,20 @@ In December, **788 ISOs** were tested by our Jenkins instance.
 During December,
 
   - We fixed several fragile scenarios:
-    Seahorse ([[!tails_ticket 10501]] and ([[!tails_ticket 9095]])
-    Whois ([[!tails_ticket 10523]])
-    Tails installer ([[!tails_ticket 10718]])
+    Seahorse ([[!tails_ticket 10501]] and ([[!tails_ticket 9095]]),
+    whois ([[!tails_ticket 10523]]),
+    Tails Installer ([[!tails_ticket 10718]])
 
   - Some fragile scenarios have been worked on and have a proposed fix:
     Tails OpenPGP keys, by updating the soon to be expired one
-    ([[!tails_ticket 10378]])
-    Git ([[!tails_ticket 10444]]))
+    ([[!tails_ticket 10378]]), and Git ([[!tails_ticket 10444]]))
 
   - We also identified other scenarios that were fragile in Jenkins:
-    MAC address spoofing ([[!tails_ticket 10774]])
-    Evince ([[!tails_ticket 10775]])
-    Memory wipe ([[!tails_ticket 10776]])
-    Race condition with boot splash ([[!tails_ticket 10777]])
-    Opening Tails roadmap URL from pidgin ([[!tails_ticket 10783]])
+    MAC address spoofing ([[!tails_ticket 10774]]),
+    Evince ([[!tails_ticket 10775]]),
+    Memory wipe ([[!tails_ticket 10776]]),
+    Race condition with boot splash ([[!tails_ticket 10777]]), and
+    Opening Tails roadmap URL from pidgin ([[!tails_ticket 10783]]).
     Due to the `wait_until_tor_is_working` helper being buggy
     ([[!tails_ticket 10497]]), we marked most network related scenarios
     as fragile.
@@ -156,14 +158,16 @@ took some more of our time, as well as the Tails 1.8.1 emergency
 release.
 
 We already started to deploy locally on a developer machine a prototype
-setup using puppet to get an idea of how the chosen solution can be
+setup using Puppet to get an idea of how the chosen solution can be
 deployed, and how compatible it is with our setup.
 
-We plan to go on deploying this prototype until the 2.0 release, as
+We plan to go on deploying this prototype by the end of January, as
 well as finishing the installation of the VM that will host this
-service, which means deciding how we'll handle its puppet configuration.
-We'll then start to implement it in production during the 2.2 release
-cycle.
+service, which means deciding how we'll handle its Puppet
+configuration ([[!tails_ticket 10760]]).
+
+We are now aiming to have this all deployed in production by the end
+of March.
 
 ## C.4. Maintain our already existing services
 
@@ -171,8 +175,8 @@ We kept on answering the requests from the community as well as taking
 care of security updates as covered by "C.4.4.  Administer our services
 up to milestone IV" until the end of December.
 
-We also had a sysadmin sprint in the middle of December, but most of it
-was sadly spent working on the Tails 1.8.1 emergency release.
+We also had a sysadmin sprint in the middle of December, but sadly, most of it
+had to be spent working on the Tails 1.8.1 emergency release.
 
 # D. Migration to Debian Jessie
 
