@@ -168,6 +168,7 @@ end
 
 Then /^I get the browser download dialog$/ do
   @screen.wait('BrowserDownloadDialog.png', 60)
+  @screen.wait('BrowserDownloadDialogSaveAsButton.png', 10)
 end
 
 When /^I save the file to the default Tor Browser download directory$/ do
