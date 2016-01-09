@@ -98,7 +98,7 @@ pref("browser.search.geoSpecificDefaults", false);
 // the progress being made.
 pref("browser.download.panel.shown", true);
 
-// Give our AppArmor sandboxing, Tor Browser will not be allowed to
+// Given our AppArmor sandboxing, Tor Browser will not be allowed to
 // open external applications, so let's forbid it, only allowing
 // saving downloaded files.
 pref("browser.download.forbid_open_with", true);
