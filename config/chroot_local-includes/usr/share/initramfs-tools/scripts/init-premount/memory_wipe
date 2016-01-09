@@ -2,6 +2,9 @@
 
 PREREQ=""
 
+# Duplicated in features/step_definitions/erase_memory.rb
+KERNEL_MEM_RESERVED_K=$((64*1024))
+
 prereqs() {
    echo "${PREREQ}"
 }
@@ -14,6 +17,12 @@ tweak_sysctl() {
    echo 0   > /proc/sys/vm/overcommit_memory
    echo 0   > /proc/sys/vm/oom_kill_allocating_task
    echo 0   > /proc/sys/vm/oom_dump_tasks
+
+   if [ "${sdmemdebug}" = 1 ] ; then
+    # Make sure the kernel doesn't starve, for better reliability when
+    # running the test suite.
+    echo "$KERNEL_MEM_RESERVED_K" > /proc/sys/vm/min_free_kbytes
+   fi
 }
 
 case ${1} in
