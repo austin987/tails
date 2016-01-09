@@ -69,12 +69,12 @@ This was completed when Icedove became the default email client.
 
 ## B.1. Automatically build ISO images for all the branches of our source code that are under active development
 
-In December, **809 ISOs** were automatically built by our Jenkins
+In December, **809 ISO images** were automatically built by our Jenkins
 instance.
 
 ## B.2. Continuously run our entire test suite on all those ISO images once they are built
 
-In December, **788 ISOs** were tested by our Jenkins instance.
+In December, **788 ISO images** were tested by our Jenkins instance.
 
 - B.2.4. Implement and deploy the best solution from this research
 
@@ -94,50 +94,51 @@ In December, **788 ISOs** were tested by our Jenkins instance.
 
   As a way to optimize resource usage and to shorten the feedback
   loop, we have limited the amount of tests we run on ISO images built from
-  documentation branches: we now run only the test cases that depends
-  on the documentation shipped in Tails, instead of the entire test
+  documentation branches: we now run only the test cases that depend
+  on the documentation included in the ISO image, instead of the entire test
   suite. ([[!tails_ticket 10492]], [[!tails_ticket 10706]] and
   [[!tails_ticket 10707]])
 
-  We also excluded early, work-in-progress draft branches from being automatically
+  We excluded early, work-in-progress draft branches from being automatically
   tested in Jenkins. We want to encourage developers to share work
-  even if it is very rough, not ready to be merged, and fails to pass
+  even if it is very rough, not ready to be merged, and it fails to pass
   the test suite. In such cases, we should not discourage developers
   with lots of notifications about test failures.
   ([[!tails_ticket 10389]])
 
-  We also had a look to check after a whole release cycle if the saving
-  of video artifacts for failing scenarios wasn't using too much disk
-  space, and concluded it was fine. ([[!tails_ticket 10354]])
+  We verified, after a whole release cycle, that saving
+  the video recording for failing test cases wasn't using too much disk
+  space. ([[!tails_ticket 10354]])
 
-  We also fixed a usability issue where the branches that were not merged yet were
-  removed from the list of branches to be automatically built and tested
-  after each release, resulting in losing their automatic build and
-  test history. ([[!tails_ticket 10123]])
+  We fixed a usability issue (for developers) in our test suite setup:
+  immediately after each release, a branch that was not merged yet
+  used to be removed from the list of branches that we automatically
+  build and test, until it was manually updated; this resulted in
+  losing their automatic build and test history, that sometimes is
+  valuable debugging data. ([[!tails_ticket 10123]])
 
-  We identified a concerning amount of test suite runs aborted on
-  Jenkins due to timeouts, investigated the root causes
+  We identified a concerning, and surprising amount of test suite runs aborted on
+  Jenkins due to timeouts. We investigated the root causes
   ([[!tails_ticket 10720]]), and mitigated the problem for the time
-  being. [[!tails_ticket 10717]]
+  being. ([[!tails_ticket 10717]])
 
   Finally, we automated the way we compute statistics about our ISO
-  builds and test suite runs in Jenkins tracking progress.
-  ([[!tails_ticket 10507]])
+  builds and test suite runs in Jenkins. ([[!tails_ticket 10507]])
 
 ## B.3. Extend the coverage of our test suite
 
 * B.3.11. Fix newly identified issues to make our test suite more robust and faster
 
-During December,
+  During December,
 
   - We fixed several fragile scenarios:
     Seahorse ([[!tails_ticket 10501]] and ([[!tails_ticket 9095]]),
     whois ([[!tails_ticket 10523]]),
-    Tails Installer ([[!tails_ticket 10718]])
+    Tails Installer ([[!tails_ticket 10718]]).
 
   - Some fragile scenarios have been worked on and have a proposed fix:
     Tails OpenPGP keys, by updating the soon to be expired one
-    ([[!tails_ticket 10378]]), and Git ([[!tails_ticket 10444]]))
+    ([[!tails_ticket 10378]]), and Git ([[!tails_ticket 10444]])).
 
   - We also identified other scenarios that were fragile in Jenkins:
     MAC address spoofing ([[!tails_ticket 10774]]),
@@ -146,7 +147,7 @@ During December,
     Race condition with boot splash ([[!tails_ticket 10777]]), and
     Opening Tails roadmap URL from pidgin ([[!tails_ticket 10783]]).
     Due to the `wait_until_tor_is_working` helper being buggy
-    ([[!tails_ticket 10497]]), we marked most network related scenarios
+    ([[!tails_ticket 10497]]), we marked most network-related scenarios
     as fragile.
 
 ## B.4. Freezable APT repository
@@ -174,7 +175,7 @@ We had to reschedule our plans on this front, as the Jenkins deliverable
 took some more of our time, as well as the Tails 1.8.1 emergency
 release.
 
-We already started to deploy locally on a developer machine a prototype
+We already started to build a prototype
 setup using Puppet to get an idea of how the chosen solution can be
 deployed, and how compatible it is with our setup.
 
@@ -192,10 +193,10 @@ We kept on answering the requests from the community as well as taking
 care of security updates as covered by "C.4.4.  Administer our services
 up to milestone IV" until the end of December.
 
-We also had a sysadmin sprint in the middle of December, but sadly, most of it
-had to be spent working on the Tails 1.8.1 emergency release.
+We also had a sysadmin sprint mid-December. Sadly, we ended up
+spending most of it on the Tails 1.8.1 emergency release.
 
-To save a bit of disk space that we need for later work (e.g freezable
+To save a bit of disk space that we need for future work (e.g the freezable
 APT repo), we reduced the temporary partitions used by our ISO testing
 virtual machines, after evaluating what they really use.
 ([[!tails_ticket 10396]])
@@ -217,8 +218,9 @@ Some new test suite robustness problems are left to be addressed, but
 the current state was good enough to make us feel comfortable
 releasing Tails 2.0~beta1. Besides, we are happy to point out that
 this automated test suite made us discover quite a few bugs in
-Jessie-based Tails development versions, that we would probably not
-have noticed before the first beta release otherwise.
+Jessie-based Tails development versions, that would otherwise
+have gone noticed until the first beta release. When relevant,
+regression tests will be written for these bugs in the next few months.
 
 Here is the list of relevant tickets that were resolved during the
 reporting period (most of the test suite porting work was done
@@ -255,7 +257,7 @@ for January 26.
 
 ## Various porting to Jessie
 
-A lot of other porting to Jessie work was done, that does not really
+A lot of other porting to Jessie work was done, that does not
 fit into any of the above categories:
 
 * Install Electrum 0.2.5.x in Tails/Jessie ([[!tails_ticket 10754]]).
