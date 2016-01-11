@@ -159,3 +159,26 @@ Then /^the (.*) runs as the expected user$/ do |browser|
     "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"),
     "The #{browser} is not running as the #{info[:user]} user")
 end
+
+When /^I download some file in the Tor Browser$/ do
+  @some_file = 'tails-signing.key'
+  some_url = "https://tails.boum.org/#{@some_file}"
+  step "I open the address \"#{some_url}\" in the Tor Browser"
+end
+
+Then /^I get the browser download dialog$/ do
+  @screen.wait('BrowserDownloadDialog.png', 60)
+  @screen.wait('BrowserDownloadDialogSaveAsButton.png', 10)
+end
+
+When /^I save the file to the default Tor Browser download directory$/ do
+  @screen.click('BrowserDownloadDialogSaveAsButton.png')
+  @screen.wait('BrowserDownloadFileToDialog.png', 10)
+  @screen.type(Sikuli::Key.ENTER)
+end
+
+Then /^the file is saved to the default Tor Browser download directory$/ do
+  assert_not_nil(@some_file)
+  expected_path = "/home/#{LIVE_USER}/Tor Browser/#{@some_file}"
+  try_for(10) { $vm.file_exist?(expected_path) }
+end

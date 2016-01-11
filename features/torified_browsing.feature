@@ -28,14 +28,14 @@ Feature: Browsing the web using the Tor Browser
     And I can print the current page as "output.pdf" to the default downloads directory
 
   @check_tor_leaks @fragile
-  Scenario: Importing an OpenPGP key from a website
+  Scenario: Downloading files with the Tor Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
-    And the Tor Browser has started and loaded the startup page
-    And I open the address "https://tails.boum.org/tails-signing.key" in the Tor Browser
-    Then I see "OpenWithImportKey.png" after at most 20 seconds
-    When I accept to import the key with Seahorse
-    Then I see "KeyImportedNotification.png" after at most 10 seconds
+    Then the Tor Browser has started and loaded the startup page
+    When I download some file in the Tor Browser
+    Then I get the browser download dialog
+    When I save the file to the default Tor Browser download directory
+    Then the file is saved to the default Tor Browser download directory
 
   @check_tor_leaks @fragile
   Scenario: Playing HTML5 audio
