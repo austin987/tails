@@ -1,8 +1,111 @@
-tails (2.0) UNRELEASED; urgency=medium
+tails (2.0~rc1) UNRELEASED; urgency=medium
 
-  * Dummy entry for next release.
+  * Major new features and changes
+    - Remove Claws Mail: Icedove is now the default email client
+      (Closes: #10167).
+    - Upgrade Tor Browser to 5.5a6 (Closes: #10858).
+      Note: we partially, and temporarily, disabled the Tor Browser window
+      resizing feature; it interferes with the automated test suite
+      by causing misclicks, and will supposedly appear in a different form
+      in the final Tor Browser 5.5 release anyway.
 
- -- Tails developers <tails@boum.org>  Tue, 22 Dec 2015 22:21:30 +0000
+  * Security fixes
+    - Upgrade Linux to 3.16.7-ckt20-1+deb8u2.
+    - Upgrade Icedove to 38.5.0-1~deb8u1.
+    - Upgrade Git to 1:2.1.4-2.1+deb8u1.
+    - Upgrade libxml2 to 2.9.1+dfsg1-5+deb8u1.
+    - Upgrade Samba-related packages to 2:4.1.17+dfsg-2+deb8u1.
+    - Upgrade libldb1 to 2:1.1.17-2+deb8u1.
+
+  * Bugfixes
+    - Don't offer the option, in Tor Browser, to open a downloaded file with
+      an external application (Closes: #9285). Our AppArmor confinement was
+      blocking most such actions anyway, resulting in poor UX; bugfix on 1.3.
+      Accordingly, remove the now-obsolete exception we had in the Tor
+      Browser AppArmor profile, that allowed executing seahorse-tool.
+    - Fix performance issue in Tails Upgrader, that made it very slow to apply
+      an automatic upgrade; bugfix on 1.7 (Closes: #10757).
+    - Use our wrapper script to start Icedove from the GNOME menus.
+    - Make it possible to localize our Icedove wrapper script.
+    - List Icedove persistence option in the same position where Claws Mail
+      used to be, in the persistent volume assistant (Closes: #10832).
+    - Fix Electrum by installing the version from Debian Testing
+      (Closes: #10754). We need version >=2.5.4-2, see #9713;
+      bugfix on 2.0~beta1. And, explicitly install python-qt4 to enable
+      Electrum's GUI: it's a Recommends, and we're not pulling it ourselves
+      via other means anymore.
+    - Restore default file associations (Closes: #10798);
+      bugfix on 2.0~beta1.
+    - Update 'nopersistent' boot parameter to 'nopersistence'; bugfix on 0.12
+      (Closes: #10831). Thanks to live-media=removable, this had no security
+      impact in practice.
+    - Repair dotfiles persistence feature, by adding a symlink from
+      /lib/live/mount/persistence to /live/persistence; bugfix on 2.0~beta1
+      (Closes: #10784).
+    - Fix ability to re-configure an existing persistent volume using
+      the GUI; bugfix on 2.0~beta1 (Closes: #10809).
+    - Associate armored OpenPGP public keys named *.key with Seahorse,
+      to workaround https://bugs.freedesktop.org/show_bug.cgi?id=93656;
+      bugfix on 1.1 (Closes: #10889).
+    - Update the list of enabled GNOME Shell extensions, which might fix
+      the "GNOME Shell sometimes leaves Classic mode" bug seen in 2.0~beta1:
+      · Remove obsolete "Alternative Status Menu", that is not shipped
+        in Debian anymore.
+      · Explicitly enable the GNOME Shell extensions that build
+        the Classic mode.
+    - Make _get_tg_setting() compatible with set -u (Closes: #10785).
+
+  * Minor improvements
+    - Let the Pidgin wrapper pass through additional command-line arguments
+      (Closes: #10383)
+    - Move out of the $PATH a bunch of programs that users should generally
+      not run directly: connect-socks, end-profile, getTorBrowserUserAgent,
+      generate-tor-browser-profile, kill-boot-profile, tails-spoof-mac,
+      tails-set-wireless-devices-state, tails-configure-keyboard,
+      do_not_ever_run_me, boot-profile, tails-unblock-network,
+      tor-controlport-filter, tails-virt-notify-user, tails-htp-notify-user,
+      udev-watchdog-wrapper (Closes: #10658)
+    - Upgrade I2P to 0.9.23-2~deb8u+1.
+    - Disable I2P's time syncing support.
+    - Install Torbirdy from official Jessie backports, instead of from
+      our own APT repository (Closes: #10804).
+    - Make GNOME Disks' passphrase strength checking new feature work,
+      by installing cracklib-runtime (Closes: #10862).
+    - Add support for Japanese in Tor Browser.
+    - Install xserver-xorg-video-intel from Jessie Backports (currently:
+      2.99.917-2~bpo8+1). This adds support for recent chips such as
+      Intel Broadwell's HD Graphics (Closes: #10841).
+    - Improve a little bit post-Greeter network unblocking:
+      · Sleep a bit longer between deleting the blacklist, and triggering udev;
+        this might help cure #9012.
+      · Increase logging, so that we get more information next time someone
+        sees #9012.
+      · Touch /etc/modprobe.d/ after deleting the blacklist; this might help,
+        in case all this is caused by some aufs bug.
+
+  * Test suite
+    - Update I2P tests for Jessie, and generally make them more robust.
+    - Update Electrum tests for 2.5.4-2 (Closes: #10758).
+    - Add workaround for libvirt vs. guestfs permissions issue, to allow
+      running the test suite on current Debian sid.
+    - Fix buggy code, that happened to work by mistake, in the Seahorse
+      test cases; bugfix on 1.8.
+    - Update test suite images due to CSS change on Tails' website.
+    - Adapt Tor Browser tests to work with the 5.5 series.
+    - Automatically test downloading files in Tor Browser.
+    - Remove obsolete scenario, that tested opening a downloaded file with
+      an external application, which we do not support anymore.
+    - Improve robustness of the "Tails OpenPGP keys" scenario (Closes: #10378).
+
+  * Build system
+    - Bump amount of disk space needed to build Tails with Vagrant.
+      The addition of the Japanese Tor Browser tarball made up reach
+      the limit of the previous value.
+
+  * Adjustments for Debian 8 (Jessie) with no or very little user-visible impact
+    - I2P: switch from 'service' to 'systemctl' where possible.
+
+ -- Tails developers <tails@boum.org>  Mon, 11 Jan 2016 13:59:28 +0000
 
 tails (2.0~beta1) unstable; urgency=medium
 
