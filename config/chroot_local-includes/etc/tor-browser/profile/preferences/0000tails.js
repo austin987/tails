@@ -97,3 +97,8 @@ pref("browser.search.geoSpecificDefaults", false);
 // Without setting this, the Download Management page will not update
 // the progress being made.
 pref("browser.download.panel.shown", true);
+
+// Given our AppArmor sandboxing, Tor Browser will not be allowed to
+// open external applications, so let's not offer the option to the user,
+// and instead only propose them to save downloaded files.
+pref("browser.download.forbid_open_with", true);
