@@ -358,8 +358,85 @@ html[data-phase="ready"] #bittorrent-minor {
 }
 
 
+
+/* IMGs */
 #download-path {
   display: inline-block;
   overflow: auto;
   width: 400px;
+}
+
+.done img {
+  width: 46px;
+  height: 37px;
+}
+
+#download-button-state-pause img, #download-button-state-resume img, #download-text-failed img{
+  width: 70%;
+  height: 70%;
+  transition: all 0.2s;
+}
+
+#download-button-state-pause:hover img, #download-button-state-resume:hover img {
+  -moz-transform: scale(1.2)
+}
+
+#download-button-state-pause:active img, #download-button-state-resume:active img {
+  -moz-transform: rotate(10deg)
+}
+
+
+
+#download-button-state-cancel {
+  text-decoration: underline;
+}
+
+
+#download-and-verify small {
+  font-size: 65% ;
+  text-align: left;
+}
+
+/* Hide failed once is verified */
+html[data-phase^="verified"] #download-text-failed {
+  display: none !important;;
+}
+
+
+
+/* #verify section bahavior */
+html:not([data-phase="ready"]) #verify {
+  display: block !important;
+}
+
+html:not([data-phase]) #verify {
+  display: none !important;
+}
+
+#verify:active {
+  border: none;
+  box-shadow: none;
+}
+
+html:not([data-phase="verified"]) #verify-text-success, html:not([data-phase="verified"]) #verify-text-failure, html:not([data-phase="verified"]) #verify-text-failure-again, html:not([data-phase="verified"]) #verify-text-calculating, html:not([data-phase="verified"]) #verify-text-state {
+  display: none;
+}
+
+#download-again {
+  float: right;
+}
+
+html:not([data-phase="verified"]) #downloaded-path {
+  display: none !important;
+}
+
+
+#download-message-failed, #download-message-paused{
+  padding: 5px;
+  margin: 5px;
+  background: lightgrey;
+}
+
+#download[data-state="failed"] #download-message-failed {
+  display: none !important;
 }
