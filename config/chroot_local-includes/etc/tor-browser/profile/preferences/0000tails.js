@@ -27,7 +27,7 @@ pref("app.update.enabled", false);
 
 // Adblock Plus preferences
 pref("extensions.adblockplus.correctTypos", false);
-pref("extensions.adblockplus.currentVersion", "2.1");
+pref("extensions.adblockplus.currentVersion", "2.6.6");
 pref("extensions.adblockplus.savestats", false);
 pref("extensions.adblockplus.showinaddonbar", false);
 pref("extensions.adblockplus.showintoolbar", false);
@@ -97,3 +97,14 @@ pref("browser.search.geoSpecificDefaults", false);
 // Without setting this, the Download Management page will not update
 // the progress being made.
 pref("browser.download.panel.shown", true);
+
+// Given our AppArmor sandboxing, Tor Browser will not be allowed to
+// open external applications, so let's not offer the option to the user,
+// and instead only propose them to save downloaded files.
+pref("browser.download.forbid_open_with", true);
+
+// The window resizing feature in Tor Browser 5.5a6 is a bit crazy,
+// causing frequent resizing of the window at inconvenient times. In
+// the automated test suite this results in misclicks because some
+// targets move (due to this window resizing) suddenly.
+pref("extensions.torbutton.resize_windows", false);

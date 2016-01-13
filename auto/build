@@ -63,6 +63,7 @@ chmod    go+rX config/chroot_local-includes/home
 chmod    go+rX config/chroot_local-includes/lib
 chmod    go+rX config/chroot_local-includes/lib/live
 chmod -R go+rx config/chroot_local-includes/lib/live/config
+chmod    go+rX config/chroot_local-includes/lib/live/mount
 chmod -R go+rX config/chroot_local-includes/lib/systemd
 chmod    go+rX config/chroot_local-includes/live
 chmod -R go+rX config/chroot_local-includes/usr
@@ -80,18 +81,13 @@ MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -wildcards -ef chroot/usr/share/amnesi
 export MKSQUASHFS_OPTIONS
 
 # get git branch or tag so we can set the basename appropriately, i.e.:
-# * if we build from a tag:    tails-$ARCH-$TAG.iso
-# * if we build from a branch: tails-$ARCH-$BRANCH-$VERSION-$DATE.iso
-# * if Jenkins builds from a branch: tails-$ARCH-$BRANCH-$VERSION-$TIME-$COMMIT.iso
+# * if we build from a tag: tails-$ARCH-$TAG.iso
+# * otherwise:              tails-$ARCH-$BRANCH-$VERSION-$TIME-$COMMIT.iso
 if GIT_REF="$(git symbolic-ref HEAD)"; then
     GIT_BRANCH="${GIT_REF#refs/heads/}"
     CLEAN_GIT_BRANCH=$(echo "$GIT_BRANCH" | sed 's,/,_,g')
-    if [ -n "$JENKINS_URL" ]; then
-        GIT_SHORT_ID="$(git rev-parse --short HEAD)"
-        BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_NOW}-${GIT_SHORT_ID}"
-    else
-        BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_TODAY}"
-    fi
+    GIT_SHORT_ID="$(git rev-parse --short HEAD)"
+    BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_NOW}-${GIT_SHORT_ID}"
 else
     GIT_CURRENT_COMMIT="$(git rev-parse HEAD)"
     if GIT_TAG="$(git describe --tags --exact-match ${GIT_CURRENT_COMMIT})"; then

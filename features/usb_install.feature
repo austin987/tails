@@ -3,44 +3,6 @@ Feature: Installing Tails to a USB drive
   As a Tails user
   I want to install Tails to a suitable USB drive
 
-  Scenario: Try to "Upgrade from ISO" Tails to a pristine USB drive
-    Given a computer
-    And I setup a filesystem share containing the Tails ISO
-    And I start Tails from DVD with network unplugged and I login
-    And I temporarily create a 4 GiB disk named "pristine"
-    And I plug USB drive "pristine"
-    And I start Tails Installer in "Upgrade from ISO" mode
-    Then a suitable USB device is not found
-    And I am told that the destination device cannot be upgraded
-
-  Scenario: Try to "Clone & Upgrade" Tails to a pristine USB drive
-    Given I have started Tails from DVD without network and logged in
-    And I temporarily create a 4 GiB disk named "pristine"
-    And I plug USB drive "pristine"
-    And I start Tails Installer in "Upgrade from ISO" mode
-    Then a suitable USB device is not found
-    And I am told that the destination device cannot be upgraded
-
-  Scenario: Try to "Upgrade from ISO" Tails to a USB drive with GPT and a FAT partition
-    Given a computer
-    And I setup a filesystem share containing the Tails ISO
-    And I start Tails from DVD with network unplugged and I login
-    And I temporarily create a 4 GiB disk named "gptfat"
-    And I create a gpt partition with a vfat filesystem on disk "gptfat"
-    And I plug USB drive "gptfat"
-    And I start Tails Installer in "Upgrade from ISO" mode
-    Then a suitable USB device is not found
-    And I am told that the destination device cannot be upgraded
-
-  Scenario: Try to "Clone & Upgrade" Tails to a USB drive with GPT and a FAT partition
-    Given I have started Tails from DVD without network and logged in
-    And I temporarily create a 4 GiB disk named "gptfat"
-    And I create a gpt partition with a vfat filesystem on disk "gptfat"
-    And I plug USB drive "gptfat"
-    And I start Tails Installer in "Upgrade from ISO" mode
-    Then a suitable USB device is not found
-    And I am told that the destination device cannot be upgraded
-
   Scenario: Try installing Tails to a too small USB drive
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 2 GiB disk named "too-small-device"
@@ -54,7 +16,7 @@ Feature: Installing Tails to a USB drive
     And I plug USB drive "current"
     Then the "current" USB drive is selected
 
-  Scenario: Test that Tails installer can detect when a target USB drive is inserted or removed
+  Scenario: Detecting when a target USB drive is inserted or removed
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "temp"
     And I start Tails Installer in "Clone & Install" mode
@@ -65,6 +27,8 @@ Feature: Installing Tails to a USB drive
     Then no USB drive is selected
     And a suitable USB device is not found
 
+  #10720: Tails Installer freezes on Jenkins
+  @fragile
   Scenario: Installing Tails to a pristine USB drive
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "install"
@@ -73,6 +37,8 @@ Feature: Installing Tails to a USB drive
     Then the running Tails is installed on USB drive "install"
     But there is no persistence partition on USB drive "install"
 
+  #10720: Tails Installer freezes on Jenkins
+  @fragile
   Scenario: Booting Tails from a USB drive without a persistent partition and creating one
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
@@ -80,6 +46,8 @@ Feature: Installing Tails to a USB drive
     When I create a persistent partition
     Then a Tails persistence partition exists on USB drive "current"
 
+  #10720: Tails Installer freezes on Jenkins
+  @fragile
   Scenario: Booting Tails from a USB drive without a persistent partition
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
@@ -88,6 +56,8 @@ Feature: Installing Tails to a USB drive
     And the persistent Tor Browser directory does not exist
     And there is no persistence partition on USB drive "current"
 
+  #10720: Tails Installer freezes on Jenkins
+  @fragile
   Scenario: Booting Tails from a USB drive in UEFI mode
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     Then I power off the computer
@@ -98,6 +68,8 @@ Feature: Installing Tails to a USB drive
     And the boot device has safe access rights
     And Tails has started in UEFI mode
 
+  #10720: Tails Installer freezes on Jenkins
+  @fragile
   Scenario: Installing Tails to a USB drive with an MBR partition table but no partitions, and making sure that it boots
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "mbr"
@@ -112,6 +84,8 @@ Feature: Installing Tails to a USB drive
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "mbr"
 
+  #10720: Tails Installer freezes on Jenkins
+  @fragile
   Scenario: Cat:ing a Tails isohybrid to a USB drive and booting it, then trying to upgrading it but ending up having to do a fresh installation, which boots
     Given a computer
     And I temporarily create a 4 GiB disk named "isohybrid"

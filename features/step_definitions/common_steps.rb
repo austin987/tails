@@ -26,18 +26,15 @@ def activate_filesystem_shares
   end
 end
 
-def get_center_of_region(top, bottom)
-  top_r = @screen.wait(top, 10)
-  top_y = top_r.getCenter.getY
-  bottom_r = @screen.wait(bottom, 10)
-  bottom_y = bottom_r.getCenter.getY
-  center_y = (bottom_y + top_y) / 2
-  return Sikuli::Location.new(top_r.getCenter.getX, center_y)
-end
-
 def context_menu_helper(top, bottom, menu_item)
   try_for(60) do
-    @screen.right_click(get_center_of_region(top, bottom))
+    t = @screen.wait(top, 10)
+    b = @screen.wait(bottom, 10)
+    # In Sikuli, lower x == closer to the left, lower y == closer to the top
+    assert(t.y < b.y)
+    center = Sikuli::Location.new(((t.x + t.w) + b.x)/2,
+                                  ((t.y + t.h) + b.y)/2)
+    @screen.right_click(center)
     @screen.hide_cursor
     @screen.wait_and_click(menu_item, 10)
     return
@@ -58,26 +55,24 @@ end
 # This helper requires that the notification image is the one shown in
 # the notification applet's list, not the notification pop-up.
 def robust_notification_wait(notification_image, time_to_wait)
-  theme_prefix = @theme.capitalize
-
   error_msg = "Didn't not manage to open the notification applet"
   wait_start = Time.now
   try_for(time_to_wait, :delay => 0, :msg => error_msg) do
     @screen.hide_cursor
-    @screen.click("#{theme_prefix}NotificationApplet.png")
-    @screen.wait("#{theme_prefix}NotificationAppletOpened.png", 10)
+    @screen.click("GnomeNotificationApplet.png")
+    @screen.wait("GnomeNotificationAppletOpened.png", 10)
   end
 
   error_msg = "Didn't not see notification '#{notification_image}'"
   time_to_wait -= (Time.now - wait_start).ceil
   try_for(time_to_wait, :delay => 0, :msg => error_msg) do
     found = false
-    entries = @screen.findAll("#{theme_prefix}NotificationEntry.png")
+    entries = @screen.findAll("GnomeNotificationEntry.png")
     while(entries.hasNext) do
       entry = entries.next
       @screen.hide_cursor
       @screen.click(entry)
-      close_entry = @screen.wait("#{theme_prefix}NotificationEntryClose.png", 10)
+      close_entry = @screen.wait("GnomeNotificationEntryClose.png", 10)
       if @screen.exists(notification_image)
         found = true
         @screen.click(close_entry)
@@ -91,7 +86,7 @@ def robust_notification_wait(notification_image, time_to_wait)
 
   # Click anywhere to close the notification applet
   @screen.hide_cursor
-  @screen.click("#{theme_prefix}ApplicationsMenu.png")
+  @screen.click("GnomeApplicationsMenu.png")
   @screen.hide_cursor
 end
 
@@ -109,6 +104,7 @@ def post_snapshot_restore_hook
     if $vm.execute("systemctl --quiet is-active tor@default.service").success?
       $vm.execute("systemctl stop tor@default.service")
       $vm.execute("rm -f /var/log/tor/log")
+      $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
       $vm.host_to_guest_time_sync
       $vm.spawn("restart-tor")
       wait_until_tor_is_working
@@ -260,20 +256,29 @@ When /^I destroy the computer$/ do
   $vm.destroy_and_undefine
 end
 
+def bootsplash
+  case @os_loader
+  when "UEFI"
+    'TailsBootSplashUEFI.png'
+  else
+    'TailsBootSplash.png'
+  end
+end
+
+def bootsplash_tab_msg
+  case @os_loader
+  when "UEFI"
+    'TailsBootSplashTabMsgUEFI.png'
+  else
+    'TailsBootSplashTabMsg.png'
+  end
+end
+
 Given /^the computer (re)?boots Tails$/ do |reboot|
 
   boot_timeout = 30
   # We need some extra time for memory wiping if rebooting
   boot_timeout += 90 if reboot
-
-  case @os_loader
-  when "UEFI"
-    bootsplash = 'TailsBootSplashUEFI.png'
-    bootsplash_tab_msg = 'TailsBootSplashTabMsgUEFI.png'
-  else
-    bootsplash = 'TailsBootSplash.png'
-    bootsplash_tab_msg = 'TailsBootSplashTabMsg.png'
-  end
 
   @screen.wait(bootsplash, boot_timeout)
   @screen.wait(bootsplash_tab_msg, 10)
@@ -328,17 +333,19 @@ Given /^Tails Greeter has dealt with the sudo password$/ do
 end
 
 Given /^the Tails desktop is ready$/ do
-  case @theme
-  when "windows"
-    desktop_started_picture = 'WindowsStartButton.png'
-  else
-    desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
-    # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
-    # By this point the only icon left is Vidalia and it will not cause the other systray
-    # icons to shift positions.
-    @screen.wait("GnomeSystrayFlorence.png", 180)
-  end
+  desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
+  # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
+  # By this point the only icon left is Vidalia and it will not cause the other systray
+  # icons to shift positions.
+  @screen.wait("GnomeSystrayFlorence.png", 180)
   @screen.wait(desktop_started_picture, 180)
+  # Disable screen blanking since we sometimes need to wait long
+  # enough for it to activate, which can mess with Sikuli wait():ing
+  # for some image.
+  $vm.execute_successfully(
+    'gsettings set org.gnome.desktop.session idle-delay 0',
+    :user => LIVE_USER
+  )
 end
 
 Then /^Tails seems to have booted normally$/ do
@@ -352,8 +359,10 @@ end
 Given /^Tor is ready$/ do
   step "Tor has built a circuit"
   step "the time has synced"
-  assert($vm.execute('systemctl is-system-running').success?,
-         'At least one system service failed to start.')
+  if $vm.execute('systemctl is-system-running').failure?
+    units_status = $vm.execute('systemctl').stdout
+    raise "At least one system service failed to start:\n#{units_status}"
+  end
 end
 
 Given /^Tor has built a circuit$/ do
@@ -373,13 +382,7 @@ Given /^available upgrades have been checked$/ do
 end
 
 Given /^the Tor Browser has started$/ do
-  case @theme
-  when "windows"
-    tor_browser_picture = "WindowsTorBrowserWindow.png"
-  else
-    tor_browser_picture = "TorBrowserWindow.png"
-  end
-
+  tor_browser_picture = "TorBrowserWindow.png"
   @screen.wait(tor_browser_picture, 60)
 end
 
@@ -415,24 +418,23 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  theme_prefix = @theme.capitalize
-  next if not(@screen.exists("#{theme_prefix}NotificationApplet.png"))
-  @screen.click("#{theme_prefix}NotificationApplet.png")
-  @screen.wait("#{theme_prefix}NotificationAppletOpened.png", 10)
+  next if not(@screen.exists("GnomeNotificationApplet.png"))
+  @screen.click("GnomeNotificationApplet.png")
+  @screen.wait("GnomeNotificationAppletOpened.png", 10)
   begin
-    entries = @screen.findAll("#{theme_prefix}NotificationEntry.png")
+    entries = @screen.findAll("GnomeNotificationEntry.png")
     while(entries.hasNext) do
       entry = entries.next
       @screen.hide_cursor
       @screen.click(entry)
-      @screen.wait_and_click("#{theme_prefix}NotificationEntryClose.png", 10)
+      @screen.wait_and_click("GnomeNotificationEntryClose.png", 10)
     end
   rescue FindFailed
     # No notifications, so we're good to go.
   end
   @screen.hide_cursor
   # Click anywhere to close the notification applet
-  @screen.click("#{theme_prefix}ApplicationsMenu.png")
+  @screen.click("GnomeApplicationsMenu.png")
   @screen.hide_cursor
 end
 
@@ -518,7 +520,6 @@ end
 When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
-  @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
 end
 
@@ -529,7 +530,6 @@ end
 When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
-  @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
@@ -554,14 +554,8 @@ end
 
 When /^I start the Tor Browser in offline mode$/ do
   step "I start the Tor Browser"
-  case @theme
-  when "windows"
-    @screen.wait_and_click("WindowsTorBrowserOfflinePrompt.png", 10)
-    @screen.click("WindowsTorBrowserOfflinePromptStart.png")
-  else
-    @screen.wait_and_click("TorBrowserOfflinePrompt.png", 10)
-    @screen.click("TorBrowserOfflinePromptStart.png")
-  end
+  @screen.wait_and_click("TorBrowserOfflinePrompt.png", 10)
+  @screen.click("TorBrowserOfflinePromptStart.png")
 end
 
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
@@ -673,15 +667,9 @@ def gnome_app_menu_click_helper(click_me, verify_me = nil)
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
-  case @theme
-  when "windows"
-    prefix = 'Windows'
-  else
-    prefix = 'Gnome'
-  end
-  menu_button = prefix + "ApplicationsMenu.png"
-  sub_menu_entry = prefix + "Applications" + submenu + ".png"
-  application_entry = prefix + "Applications" + app + ".png"
+  menu_button = "GnomeApplicationsMenu.png"
+  sub_menu_entry = "GnomeApplications" + submenu + ".png"
+  application_entry = "GnomeApplications" + app + ".png"
   try_for(120) do
     begin
       gnome_app_menu_click_helper(menu_button, sub_menu_entry)
@@ -697,16 +685,10 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, s
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
-  case @theme
-  when "windows"
-    prefix = 'Windows'
-  else
-    prefix = 'Gnome'
-  end
-  menu_button = prefix + "ApplicationsMenu.png"
-  sub_menu_entry = prefix + "Applications" + submenu + ".png"
-  sub_sub_menu_entry = prefix + "Applications" + subsubmenu + ".png"
-  application_entry = prefix + "Applications" + app + ".png"
+  menu_button = "GnomeApplicationsMenu.png"
+  sub_menu_entry = "GnomeApplications" + submenu + ".png"
+  sub_sub_menu_entry = "GnomeApplications" + subsubmenu + ".png"
+  application_entry = "GnomeApplications" + app + ".png"
   try_for(120) do
     begin
       gnome_app_menu_click_helper(menu_button, sub_menu_entry)
@@ -842,10 +824,6 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   }
 end
 
-When /^I accept to import the key with Seahorse$/ do
-  @screen.wait_and_click("TorBrowserOkButton.png", 10)
-end
-
 Given /^a web server is running on the LAN$/ do
   web_server_ip_addr = $vmnet.bridge_ip_addr
   web_server_port = 8000
@@ -901,7 +879,6 @@ end
 def force_new_tor_circuit(with_vidalia=nil)
   debug_log("Forcing new Tor circuit...")
   if with_vidalia
-    assert_equal('gnome', @theme, "Vidalia is not available in the #{@theme} theme.")
     begin
       step 'process "vidalia" is running'
     rescue Test::Unit::AssertionFailedError

@@ -1,23 +1,31 @@
---- a/etc/apparmor.d/usr.sbin.cupsd	2015-08-11 14:05:35.731931035 +0200
-+++ a/etc/apparmor.d/usr.sbin.cupsd	2015-08-11 14:21:15.573030660 +0200
-@@ -4,7 +4,7 @@
+--- a/etc/apparmor.d/usr.sbin.cupsd	2015-11-20 09:41:01.408000000 +0000
++++ b/etc/apparmor.d/usr.sbin.cupsd	2015-11-20 09:47:01.728000000 +0000
+@@ -4,7 +4,9 @@
  
  #include <tunables/global>
  
 -/usr/sbin/cupsd {
++@{etccups}=/{etc/cups,live/persistence/TailsData_unlocked/cups-configuration}
++
 +/usr/sbin/cupsd flags=(attach_disconnected) {
    #include <abstractions/base>
    #include <abstractions/bash>
    #include <abstractions/authentication>
-@@ -54,6 +54,7 @@
+@@ -53,9 +55,10 @@
+   /dev/bus/usb/ r,
    /dev/bus/usb/** rw,
    /dev/parport* rw,
-   /etc/cups/ rw,
+-  /etc/cups/ rw,
+-  /etc/cups/** rw,
+-  /etc/cups/interfaces/* ixrw,
++  @{etccups}/ rw,
 +  /etc/.wh..wh.cups.*/ rw,
-   /etc/cups/** rw,
-   /etc/cups/interfaces/* ixrw,
++  @{etccups}/** rw,
++  @{etccups}/interfaces/* ixrw,
    /etc/foomatic/* r,
-@@ -70,7 +71,7 @@
+   /etc/gai.conf r,
+   /etc/papersize r,
+@@ -70,7 +73,7 @@
    @{PROC}/*/auxv r,
    @{PROC}/sys/crypto/** r,
    /sys/** r,
@@ -26,7 +34,7 @@
    /usr/sbin/* ixr,
    /bin/* ixr,
    /sbin/* ixr,
-@@ -80,7 +81,10 @@
+@@ -80,7 +83,10 @@
    /usr/lib/cups/backend/bluetooth ixr,
    /usr/lib/cups/backend/dnssd ixr,
    /usr/lib/cups/backend/http ixr,
@@ -37,7 +45,7 @@
    /usr/lib/cups/backend/lpd ixr,
    /usr/lib/cups/backend/parallel ixr,
    /usr/lib/cups/backend/serial ixr,
-@@ -92,7 +96,12 @@
+@@ -92,7 +98,12 @@
    /usr/lib/cups/backend/cups-pdf Px,
    # third party backends get no restrictions as they often need high
    # privileges and this is beyond our control
@@ -51,7 +59,7 @@
  
    /usr/lib/cups/cgi-bin/* ixr,
    /usr/lib/cups/daemon/* ixr,
-@@ -119,6 +128,9 @@
+@@ -119,6 +130,9 @@
    /var/log/cups/* rw,
    /var/spool/cups/ rw,
    /var/spool/cups/** rw,
@@ -61,7 +69,16 @@
  
    # third-party printer drivers; no known structure here
    /opt/** rix,
-@@ -141,7 +153,7 @@
+@@ -131,7 +145,7 @@
+   /etc/krb5.conf r,
+   deny /etc/krb5.conf w,
+   /etc/krb5.keytab rk,
+-  /etc/cups/krb5.keytab rwk,
++  @{etccups}/krb5.keytab rwk,
+   /tmp/krb5cc* k,
+ 
+   # likewise authentication
+@@ -141,7 +155,7 @@
    # silence noise
    deny /etc/udev/udev.conf r,
  
@@ -70,4 +87,13 @@
      # third party backends, filters, and drivers get relatively no restrictions
      # as they often need high privileges, are unpredictable or otherwise beyond
      # our control
+@@ -178,7 +192,7 @@
+   /bin/bash ixr,
+   /bin/cp ixr,
+   /etc/papersize r,
+-  /etc/cups/cups-pdf.conf r,
++  @{etccups}/cups-pdf.conf r,
+   @{HOME}/PDF/ rw,
+   @{HOME}/PDF/* rw,
+   /usr/bin/gs ixr,
 

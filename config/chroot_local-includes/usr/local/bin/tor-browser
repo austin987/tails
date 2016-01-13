@@ -43,7 +43,7 @@ tor_has_bootstrapped() {
 
 start_browser() {
     if [ ! -d "${PROFILE}" ]; then
-        /usr/local/bin/generate-tor-browser-profile
+        /usr/local/lib/generate-tor-browser-profile
     fi
 
     TMPDIR="${PROFILE}/tmp"
@@ -54,11 +54,6 @@ start_browser() {
     # localized search plugins (and perhaps other things too). It is
     # not enough to simply set intl.locale.matchOS to true.
     configure_best_tor_browser_locale "${PROFILE}"
-
-    if [ -z "$XAUTHORITY" ]; then
-        XAUTHORITY=~/.Xauthority
-        export XAUTHORITY
-    fi
 
     unset SESSION_MANAGER
 

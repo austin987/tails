@@ -9,7 +9,6 @@ from sys import argv
 from json import dumps, loads
 from pwd import getpwnam
 from os import setgid, setuid, environ
-from glob import glob
 import serial
 from systemd.daemon import notify as sd_notify
 
@@ -24,16 +23,17 @@ def run_cmd_as_user(cmd, user):
   switch_user_fn = mk_switch_user_fn(pwd_user.pw_uid,
                                      pwd_user.pw_gid)
   # We try to create an environment identical to what's expected
-  # inside Tails for the user by logging in (via `su`) as the user and
-  # extracting the environment.
-  pipe = Popen('su -c env ' + user, stdout=PIPE, shell=True)
+  # inside Tails for the user by logging in (via `su`) as the user,
+  # setting up the GNOME shell environment, and extracting the
+  # environment via `env`; not that we will run `env` unconditionally
+  # since the former command could fail, e.g. if GNOME is not running.
+  env_cmd = '. /usr/local/lib/tails-shell-library/gnome.sh && ' + \
+            'export_gnome_env ; ' + \
+            'env'
+  wrapped_env_cmd = "su -c '{}' {}".format(env_cmd, user)
+  pipe = Popen(wrapped_env_cmd, stdout=PIPE, shell=True)
   env_data = pipe.communicate()[0].decode('utf-8')
   env = dict((line.split('=', 1) for line in env_data.splitlines()))
-  env['DISPLAY'] = ':0.0'
-  try:
-    env['XAUTHORITY'] = glob("/var/run/gdm3/auth-for-amnesia-*/database")[0]
-  except IndexError:
-    pass
   cwd = env['HOME']
   return Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, env=env, cwd=cwd,
                preexec_fn=switch_user_fn)

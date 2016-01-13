@@ -2,14 +2,14 @@
 
 set -e
 
+# Import export_gnome_env().
+. /usr/local/lib/tails-shell-library/gnome.sh
+
 # Get LIVE_USERNAME
 . /etc/live/config.d/username.conf
 
 # Get LANG
 . /etc/default/locale
-
-# Get windows_camouflage_is_enabled
-. /usr/local/lib/tails-shell-library/tails-greeter.sh
 
 for i in $(seq 10); do
    killall -SIGKILL vidalia || :
@@ -19,16 +19,12 @@ for i in $(seq 10); do
    fi
 done
 
-# We don't want to start Vidalia if Windows Camouflage is enabled (ticket #7400)
-windows_camouflage_is_enabled && exit 0
-
 until pgrep -u "${LIVE_USERNAME}" "^ibus-daemon" >/dev/null ; do
    sleep 5
 done
 
 export LANG
-export DISPLAY=':0.0'
-export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
+export_gnome_env
 
 (
 sudo -u ${LIVE_USERNAME} xhost +SI:localuser:vidalia

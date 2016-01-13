@@ -10,10 +10,11 @@ Environment=DONE_FILE=/run/htpdate/done
 Environment=SUCCESS_FILE=/run/htpdate/success
 Environment=LOG=/var/log/htpdate.log
 EnvironmentFile=/etc/default/htpdate.*
-ExecStartPre=/bin/sh -c '[ -n "${HTTP_USER_AGENT}"  ]'
-ExecStartPre=/bin/sh -c '[ -n "${HTP_POOL_PAL}"     ]'
-ExecStartPre=/bin/sh -c '[ -n "${HTP_POOL_NEUTRAL}" ]'
-ExecStartPre=/bin/sh -c '[ -n "${HTP_POOL_FOE}"     ]'
+ExecStartPre=/bin/sh -c \
+    '[ -n "${HTTP_USER_AGENT}"  ] && \
+     [ -n "${HTP_POOL_PAL}"     ] && \
+     [ -n "${HTP_POOL_NEUTRAL}" ] && \
+     [ -n "${HTP_POOL_FOE}"     ]'
 ExecStartPre=/bin/rm -f "${DONE_FILE}"
 ExecStartPre=/bin/rm -f "${SUCCESS_FILE}"
 ExecStartPre=/usr/bin/install -o root -g root -m 0755 -d /run/htpdate

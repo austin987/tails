@@ -55,25 +55,29 @@ systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
 systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
 
-# Use socket activation only, to save a bit of memory and boot time
+# Use socket activation only, to delay the startup of cupsd.
+# In practice, on Jessie this means that cupsd is started during
+# the initialization of the GNOME session, which is fine: by then,
+# the persistent /etc/cups has been mounted.
+# XXX: make sure it's the case on Stretch, adjust if not.
 systemctl disable cups.service
 systemctl enable  cups.socket
 
-# We're starting NetworkManager and Tor ourselves.
+# We're starting NetworkManager, Tor and ttdnsd ourselves.
 # We disable tor.service (as opposed to tor@default.service) because
 # it's an important goal to never start Tor before the user has had
 # a chance to choose to do so in an obfuscated way: if some other
 # package enables tor@whatever.service someday, disabling tor.service
-#  will disable it as well, while disabling tor@default.service would not.
+# will disable it as well, while disabling tor@default.service would not.
 systemctl disable tor.service
 systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service
+systemctl disable ttdnsd.service
 
 # We don't run these services by default
 systemctl disable gdomap.service
 systemctl disable hdparm.service
 systemctl disable i2p.service
-systemctl disable ttdnsd.service
 
 # Don't hide tails-kexec's shutdown messages with an empty splash screen
 for suffix in halt kexec poweroff reboot shutdown ; do

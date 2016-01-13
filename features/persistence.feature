@@ -1,4 +1,5 @@
-@product
+#10720: Tails Installer freezes on Jenkins
+@product @fragile
 Feature: Tails persistence
   As a Tails user
   I want to use Tails persistence feature
@@ -17,6 +18,7 @@ Feature: Tails persistence
     And all persistence presets are enabled
     And all persistent directories have safe access rights
 
+  @fragile
   Scenario: Writing files first to a read/write-enabled persistent partition, and then to a read-only-enabled persistent partition
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged
