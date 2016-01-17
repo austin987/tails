@@ -1,16 +1,14 @@
---- a/etc/apparmor.d/usr.sbin.cupsd	2015-11-20 09:41:01.408000000 +0000
-+++ b/etc/apparmor.d/usr.sbin.cupsd	2015-11-20 09:47:01.728000000 +0000
-@@ -4,7 +4,9 @@
+--- a/etc/apparmor.d/usr.sbin.cupsd	2016-01-13 16:52:34.000000000 +0000
++++ b/etc/apparmor.d/usr.sbin.cupsd	2016-01-17 02:07:41.965052679 +0000
+@@ -4,6 +4,8 @@
  
  #include <tunables/global>
  
--/usr/sbin/cupsd {
 +@{etccups}=/{etc/cups,live/persistence/TailsData_unlocked/cups-configuration}
 +
-+/usr/sbin/cupsd flags=(attach_disconnected) {
+ /usr/sbin/cupsd flags=(attach_disconnected) {
    #include <abstractions/base>
    #include <abstractions/bash>
-   #include <abstractions/authentication>
 @@ -53,9 +55,10 @@
    /dev/bus/usb/ r,
    /dev/bus/usb/** rw,
@@ -78,16 +76,7 @@
    /tmp/krb5cc* k,
  
    # likewise authentication
-@@ -141,7 +155,7 @@
-   # silence noise
-   deny /etc/udev/udev.conf r,
- 
--  profile third_party {
-+  profile third_party flags=(attach_disconnected) {
-     # third party backends, filters, and drivers get relatively no restrictions
-     # as they often need high privileges, are unpredictable or otherwise beyond
-     # our control
-@@ -178,7 +192,7 @@
+@@ -184,7 +198,7 @@
    /bin/bash ixr,
    /bin/cp ixr,
    /etc/papersize r,
