@@ -6,6 +6,7 @@ CUSTOM_INITSCRIPTS="
 "
 
 PATCHED_INITSCRIPTS="
+alsa-utils
 gdomap
 haveged
 hdparm
@@ -41,6 +42,7 @@ systemctl enable tails-reconfigure-kexec.service
 systemctl enable tails-reconfigure-memlockd.service
 systemctl enable tails-sdmem-on-media-removal.service
 systemctl enable tails-set-wireless-devices-state.service
+systemctl enable tails-tor-has-bootstrapped.target
 systemctl enable tails-wait-until-tor-has-bootstrapped.service
 systemctl enable tor-controlport-filter.service
 
@@ -52,22 +54,30 @@ systemctl --global enable tails-security-check.service
 systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
 systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
-systemctl --global enable tails-warn-about-disabled-persistence.service
 
-# Use socket activation only, to save a bit of memory and boot time
+# Use socket activation only, to delay the startup of cupsd.
+# In practice, on Jessie this means that cupsd is started during
+# the initialization of the GNOME session, which is fine: by then,
+# the persistent /etc/cups has been mounted.
+# XXX: make sure it's the case on Stretch, adjust if not.
 systemctl disable cups.service
 systemctl enable  cups.socket
 
-# We're starting NetworkManager and Tor ourselves
+# We're starting NetworkManager, Tor and ttdnsd ourselves.
+# We disable tor.service (as opposed to tor@default.service) because
+# it's an important goal to never start Tor before the user has had
+# a chance to choose to do so in an obfuscated way: if some other
+# package enables tor@whatever.service someday, disabling tor.service
+# will disable it as well, while disabling tor@default.service would not.
 systemctl disable tor.service
 systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service
+systemctl disable ttdnsd.service
 
 # We don't run these services by default
 systemctl disable gdomap.service
 systemctl disable hdparm.service
 systemctl disable i2p.service
-systemctl disable ttdnsd.service
 
 # Don't hide tails-kexec's shutdown messages with an empty splash screen
 for suffix in halt kexec poweroff reboot shutdown ; do
@@ -86,3 +96,15 @@ systemctl mask hwclock-save.service
 
 # Do not run timesyncd: we have our own time synchronization mechanism
 systemctl mask systemd-timesyncd.service
+
+# Unmute and sanitize mixer levels at boot time
+# (`systemctl unmask` does not support initscripts on Jessie,
+# hence the manual unmasking)
+dpkg-divert --add --rename --divert \
+	    /lib/systemd/system/alsa-utils.service.orig \
+	    /lib/systemd/system/alsa-utils.service
+# Disable the ALSA state store/restore systemd services (that lack mixer
+# levels unmuting/sanitizing), we use the legacy initscript instead
+systemctl mask alsa-restore.service
+systemctl mask alsa-state.service
+systemctl mask alsa-store.service

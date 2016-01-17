@@ -53,7 +53,8 @@ def __get_localised_doc_link():
 
 def _(string):
     try:
-        string = gettext.translation("tails", "/usr/share/locale").lgettext(string)
+        encoded = gettext.translation("tails", "/usr/share/locale").lgettext(string)
+        string  = encoded.decode('utf-8')
     except IOError:
         pass
     finally:

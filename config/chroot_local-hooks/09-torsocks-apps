@@ -5,8 +5,18 @@ set -e
 echo "Wrapping some applications with torsocks"
 
 APPS="gobby-0.5 liferea seahorse"
+DBUS_SERVICES="org.gnome.seahorse.Application"
 
 for app in $APPS; do
-   sed -i'' --regexp-extended 's,Exec=(.*),Exec=torsocks \1,' \
+   sed -i'' --regexp-extended 's,^Exec=(.*),Exec=torsocks \1,' \
        "/usr/share/applications/${app}.desktop"
 done
+
+for dbus_service in $DBUS_SERVICES; do
+   sed -i'' --regexp-extended 's,^Exec=(.*),Exec=torsocks \1,' \
+       "/usr/share/dbus-1/services/${dbus_service}.service"
+done
+
+# Redirect to existing wrapper
+sed -i'' --regexp-extended 's,^Exec=/usr/bin/totem$,Exec=/usr/local/bin/totem,' \
+    "/usr/share/dbus-1/services/org.gnome.Totem.service"

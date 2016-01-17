@@ -2,30 +2,24 @@
 
 [[!toc levels=1]]
 
-If running Wheezy or older, you will have to do the upstream part of
-the work in a Jessie chroot (e.g. with pbuilder).
-
 Install build and test dependencies
 ===================================
 
-Install build-dependencies listed in `debian/control`:
+In a Jessie system, as a user that has sudo credentials:
 
-    mk-build-deps -i -r
-
-Install build-dependencies from Debian:
-
-    libdist-zilla-perl libdist-zilla-plugins-cjm-perl \
-    libdist-zilla-plugin-changelogfromgit-perl \
-    libdist-zilla-plugin-installguide-perl \
-    libdist-zilla-plugin-test-perl-critic-perl \
-    libdist-zilla-plugin-test-notabs-perl \
-    libdist-zilla-plugin-git-perl \
-    liblocale-msgfmt-perl libmoosex-has-sugar-perl \
-    dh-make-perl
-
-Install build-dependencies that are not in Debian yet:
-
-    DEB_BUILD_OPTIONS=nocheck dh-make-perl --build --install --cpan Dist::Zilla::Plugin::LocaleMsgfmt
+    git checkout debian && \
+    sudo apt install devscripts && \
+    mk-build-deps -i -r --root-cmd sudo && \
+    sudo apt install \
+       libdist-zilla-perl \
+       libdist-zilla-plugins-cjm-perl \
+       libdist-zilla-plugin-changelogfromgit-perl \
+       libdist-zilla-plugin-installguide-perl \
+       libdist-zilla-plugin-localemsgfmt-perl \
+       libdist-zilla-plugin-test-perl-critic-perl \
+       libdist-zilla-plugin-test-notabs-perl \
+       libdist-zilla-plugin-git-perl \
+       dh-make-perl
 
 Update POT and PO files
 =======================
@@ -36,6 +30,8 @@ Update POT and PO files
 
 Make an upstream release
 ========================
+
+    git checkout master
 
 Enable new translations in `po/PACKAGE` and commit.
 
@@ -80,7 +76,7 @@ Commit `debian/changelog`:
 
         git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
 
-Build a Debian package (use a Wheezy/i386 chroot):
+Build a Debian package (use a Jessie/i386 chroot):
 
     gbp buildpackage
 

@@ -34,10 +34,8 @@ See https://tails.boum.org/.
 
 use Carp;
 use Carp::Assert::More;
-use Desktop::Notify;
 use Fatal qw{open close};
 use Locale::gettext;
-use Net::DBus::Reactor;
 use POSIX;
 use XML::Atom;
 use XML::Atom::Feed;
@@ -65,7 +63,6 @@ textdomain("tails");
 
 ### configuration
 
-my $version_file     = '/etc/amnesia/version';
 my $default_base_url = 'https://tails.boum.org/security/';
 
 =head1 FUNCTIONS
@@ -140,34 +137,25 @@ sub get_entries {
 
 =head2 notify_user
 
-Use the Desktop Notifications framework to notify the user about the
-Atom entries passed as arguments.
+Notify the user about the Atom entries passed as arguments.
 
 =cut
 sub notify_user {
     my @entries = @_;
 
-    my $reactor = Net::DBus::Reactor->main;
-
-    my $notify = Desktop::Notify->new();
-    $notify->action_callback(sub { notification_action_cb($reactor, @_) });
-    $notify->close_callback(sub { $reactor->shutdown; });
-
-    my $summary = gettext('This version of Tails has known security issues:');
-    my $body = '';
+    my $body = gettext('This version of Tails has known security issues:') . "\n";
 
     for (@entries) {
-        $body .= '- ' . $_->title . "\n";
+        $body .= '• ' . '<a href="' . $_->id . '">' . $_->title . '</a>' . "\n";
     }
 
     say $body;
 
-    $notify->create(summary => $summary,
-                    body => $body,
-                    actions => { 'moreinfo' => gettext('Learn more') },
-                    timeout => 0)->show();
-
-    $reactor->run;
+    exec(
+        qw{/usr/bin/zenity --warning},
+        q{--title}, gettext('Known security issues'),
+        q{--text},  $body,
+    );
 }
 
 =head2 categories
@@ -213,31 +201,8 @@ sub unfixed_entries {
     grep { is_not_fixed($_) } @entries;
 }
 
-=head2 notification_action_cb
-
-Called when the "Learn more" button on the notification is clicked.
-
-=cut
-sub notification_action_cb {
-    my $reactor = shift;
-    system(
-        '/usr/local/bin/tor-browser', 'https://tails.boum.org/security/'
-    );
-    $reactor->shutdown;
-}
-
 
 =head1 MAIN
-
-=head2 sanity checks
-
-=cut
-if (! -e "$version_file") {
-    die "The Tails version file ($version_file) does not exist."
-}
-if (! -r "$version_file") {
-    die "The Tails version file ($version_file) is not readable."
-}
 
 =head2 parse command line args
 

@@ -18,8 +18,14 @@ let getSource = null;
 let icons = [];
 let notificationDaemon;
 
+const PANEL_ICON_SIZE = 24;
+
 function init() {
-    if (Main.notificationDaemon._fdoNotificationDaemon) {
+    if (Main.legacyTray) {
+        notificationDaemon = Main.legacyTray;
+        NotificationDaemon.STANDARD_TRAY_ICON_IMPLEMENTATIONS = imports.ui.legacyTray.STANDARD_TRAY_ICON_IMPLEMENTATIONS;
+    }
+    else if (Main.notificationDaemon._fdoNotificationDaemon) {
         notificationDaemon = Main.notificationDaemon._fdoNotificationDaemon;
         getSource = Lang.bind(notificationDaemon, NotificationDaemon.FdoNotificationDaemon.prototype._getSource);
     }
@@ -52,7 +58,7 @@ function onTrayIconAdded(o, icon, role) {
     let parent = box.get_parent();
 
     let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-    let iconSize = Panel.PANEL_ICON_SIZE * scaleFactor;
+    let iconSize = PANEL_ICON_SIZE * scaleFactor;
 
     icon.set_size(iconSize, iconSize);
     box.add_actor(icon);
@@ -120,19 +126,30 @@ function moveToTop() {
     notificationDaemon._getSource = createSource;
 
     let toDestroy = [];
-    for (let i = 0; i < notificationDaemon._sources.length; i++) {
-        let source = notificationDaemon._sources[i];
-        if (!source.trayIcon)
-            continue;
-        let parent = source.trayIcon.get_parent();
-        parent.remove_actor(source.trayIcon);
-        onTrayIconAdded(this, source.trayIcon, source.initialTitle);
-        toDestroy.push(source);
+    if (notificationDaemon._sources) {
+        for (let i = 0; i < notificationDaemon._sources.length; i++) {
+            let source = notificationDaemon._sources[i];
+            if (!source.trayIcon)
+                continue;
+            let parent = source.trayIcon.get_parent();
+            parent.remove_actor(source.trayIcon);
+            onTrayIconAdded(this, source.trayIcon, source.initialTitle);
+            toDestroy.push(source);
+        }
+    }
+    else {
+        for (let i = 0; i < notificationDaemon._iconBox.get_n_children(); i++) {
+            let button = notificationDaemon._iconBox.get_child_at_index(i);
+            let icon = button.child;
+            button.remove_actor(icon);
+            onTrayIconAdded(this, icon, '');
+            toDestroy.push(button);
+        }
     }
 
-     for (let i = 0; i < toDestroy.length; i++) {
+    for (let i = 0; i < toDestroy.length; i++) {
         toDestroy[i].destroy();
-     }
+    }
 }
 
 function moveToTray() {

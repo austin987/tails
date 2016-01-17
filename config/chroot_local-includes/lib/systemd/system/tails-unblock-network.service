@@ -1,9 +1,6 @@
 [Unit]
 Description=Unblock network device drivers
 Documentation=https://tails.boum.org/contribute/design/MAC_address/
-# Note that we do *not* Requires=tails-restricted-network-detector.service,
-# since that service fails to start unless MAC address spoofing is enabled.
-After=tails-restricted-network-detector.service
 
 [Service]
 Type=oneshot
@@ -18,13 +15,17 @@ ExecStartPre=/usr/bin/install -m 0640 -o root -g root \
                 /var/lib/gdm3/tails.physical_security \
                 /var/lib/live/config/tails.physical_security
 ExecStartPre=/bin/sync
-ExecStartPre=/bin/sh -c 'if [ "${TAILS_NETCONF}" = "obstacle" ]; then     \
-                            . /usr/local/lib/tails-shell-library/tor.sh ; \
-                            tor_set_in_torrc "DisableNetwork" "1"       ; \
-                         fi'
+ExecStartPre=/bin/sh -c \
+    'if [ "${TAILS_NETCONF}" = "obstacle" ] ; then \
+         . /usr/local/lib/tails-shell-library/tor.sh ; \
+         tor_set_in_torrc "DisableNetwork" "1"       ; \
+     fi'
 
-# Let's remove the blacklist
-ExecStart=/bin/rm -f /etc/modprobe.d/all-net-blacklist.conf
-
-# Make sure the blacklist has disappeared from the filesystem
-ExecStart=/bin/sync
+# We sync to make sure the blacklist has disappeared from the
+# filesystem
+ExecStart=/bin/sh -c \
+    'if [ "${TAILS_NETCONF}" != "disabled" ] ; then \
+         /bin/rm -f /etc/modprobe.d/all-net-blacklist.conf ; \
+         /bin/touch /etc/modprobe.d ; \
+         /bin/sync ; \
+     fi'

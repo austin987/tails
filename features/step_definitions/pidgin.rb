@@ -28,8 +28,24 @@ def wait_and_focus(img, time = 10, window)
 end
 
 def focus_pidgin_irc_conversation_window(account)
-  account = account.sub(/^irc\./, '')
-  $vm.focus_window(".*#{Regexp.escape(account)}$")
+  if account == 'I2P'
+    # After connecting to Irc2P messages are sent from services. Most of the
+    # time the services will send their messages right away. If there's lag we
+    # may in fact join the channel _before_ the message is received. We'll look
+    # for a message from InfoServ first then default to looking for '#i2p'
+    try_for(20) do
+      begin
+        $vm.focus_window('InfoServ')
+      rescue ExecutionFailedInVM
+        $vm.focus_window('#i2p')
+      end
+    end
+  else
+    account = account.sub(/^irc\./, '')
+    try_for(20) do
+      $vm.focus_window(".*#{Regexp.escape(account)}$")
+    end
+  end
 end
 
 When /^I create my XMPP account$/ do
@@ -38,6 +54,10 @@ When /^I create my XMPP account$/ do
   @screen.wait("PidginAddAccountWindow.png", 20)
   @screen.click_mid_right_edge("PidginAddAccountProtocolLabel.png")
   @screen.click("PidginAddAccountProtocolXMPP.png")
+  # We first wait for some field that is shown for XMPP but not the
+  # default (IRC) since we otherwise may decide where we click before
+  # the GUI has updated after switching protocol.
+  @screen.wait("PidginAddAccountXMPPDomain.png", 5)
   @screen.click_mid_right_edge("PidginAddAccountXMPPUsername.png")
   @screen.type(account["username"])
   @screen.click_mid_right_edge("PidginAddAccountXMPPDomain.png")
@@ -213,6 +233,13 @@ def chan_image (account, channel, image)
         'conversation_tab' => 'PidginTailsConversationTab',
         'welcome'          => 'PidginTailsChannelWelcome',
       }
+    },
+    'I2P' => {
+      '#i2p'    => {
+        'roster'           => 'PidginI2PChannelEntry',
+        'conversation_tab' => 'PidginI2PConversationTab',
+        'welcome'          => 'PidginI2PChannelWelcome',
+      }
     }
   }
   return images[account][channel][image] + ".png"
@@ -221,6 +248,7 @@ end
 def default_chan (account)
   chans = {
     'irc.oftc.net' => '#tails',
+    'I2P'          => '#i2p',
   }
   return chans[account]
 end
@@ -255,7 +283,8 @@ When /^I start Pidgin through the GNOME menu$/ do
 end
 
 When /^I open Pidgin's account manager window$/ do
-  @screen.type("a", Sikuli::KeyModifier.CTRL) # shortcut for "manage accounts"
+  @screen.wait_and_click('PidginMenuAccounts.png', 20)
+  @screen.wait_and_click('PidginMenuManageAccounts.png', 20)
   step "I see Pidgin's account manager window"
 end
 
@@ -267,23 +296,43 @@ When /^I close Pidgin's account manager window$/ do
   @screen.wait_and_click("PidginAccountManagerCloseButton.png", 10)
 end
 
-When /^I activate the "([^"]+)" Pidgin account$/ do |account|
+When /^I (de)?activate the "([^"]+)" Pidgin account$/ do |deactivate, account|
   @screen.click("PidginAccount_#{account}.png")
   @screen.type(Sikuli::Key.LEFT + Sikuli::Key.SPACE)
-  step "I close Pidgin's account manager window"
-  # wait for the Pidgin to be connecting, otherwise sometimes the step
-  # that closes the account management dialog happens before the account
-  # is actually enabled
-  @screen.wait("PidginConnecting.png", 5)
+  if deactivate
+    @screen.waitVanish('PidginAccountEnabledCheckbox.png', 5)
+  else
+    # wait for the Pidgin to be connecting, otherwise sometimes the step
+    # that closes the account management dialog happens before the account
+    # is actually enabled
+    @screen.waitAny(['PidginConnecting.png', 'PidginAvailableStatus.png'], 5)
+  end
 end
+
+def deactivate_and_activate_pidgin_account(account)
+  debug_log("Deactivating and reactivating Pidgin account #{account}")
+  step "I open Pidgin's account manager window"
+  step "I deactivate the \"#{account}\" Pidgin account"
+  step "I close Pidgin's account manager window"
+  step "I open Pidgin's account manager window"
+  step "I activate the \"#{account}\" Pidgin account"
+  step "I close Pidgin's account manager window"
+end
+
+
 
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   expected_channel_entry = chan_image(account, default_chan(account), 'roster')
   reconnect_button = 'PidginReconnect.png'
   recovery_on_failure = Proc.new do
-    @screen.wait_and_click(reconnect_button, 20)
+    if @screen.exists('PidginReconnect.png')
+      @screen.click('PidginReconnect.png')
+    else
+      deactivate_and_activate_pidgin_account(account)
+    end
   end
-  retry_tor(recovery_on_failure) do
+  retrier_method = account == 'I2P' ? method(:retry_i2p) : method(:retry_tor)
+  retrier_method.call(recovery_on_failure) do
     begin
       $vm.focus_window('Buddy List')
     rescue ExecutionFailedInVM
@@ -407,7 +456,7 @@ When /^I see the Tails roadmap URL$/ do
     begin
       @screen.find('PidginTailsRoadmapUrl.png')
     rescue FindFailed => e
-      @screen.click('PidginScrollArrowUp.png')
+      @screen.type(Sikuli::Key.PAGE_UP)
       raise e
     end
   end

@@ -369,28 +369,12 @@ Scripts:
 * [[!tails_gitweb config/chroot_local-hooks/80-block-network]] (runs at
   build time)
 
-* [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-unblock-network]]
+* [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tails-unblock-network]]
 
 * [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-unblock-network.service]]
 
 * [[!greeter_gitweb PostLogin.default]] (where `tails-unblock-network`
   is started)
-
-### Potential for blocking the desktop
-
-The call of `udevadm settle` may block for up to 120 seconds (the default
-timeout) during Tails Greeter's PostLogin in case of some broken
-hardware and/or crappy udev rules. In other words, the Tails desktop
-may be blocked for this long, without any notification.
-
-If this turns out to be a problem (currently it's only guesswork) we
-could make two `udevadm settle`:s, one with a short timeout (10 seconds)
-and if it fails we show a notification and optimistically start
-another `udevadm settle` *in* *a* *sub-shell* so it doesn't block the
-Tails desktop from starting any more.
-
-For more, see this sub-thread on tails-dev:
-<https://mailman.boum.org/pipermail/tails-dev/2013-November/004299.html>
 
 ## Trigger
 
@@ -411,9 +395,8 @@ leaks issue, in addition to other reasons for being discarded:
 * ifupdown hook: A if-pre-up hook would probably work but since we use
   NetworManager the exact behaviour is blurred and not particularly
   well-documented. It doesn't feel robust for this reason.
-  Hence, we disable the macchanger package's built-in way to spoof
-  MAC addresses:
-  [[!tails_gitweb config/chroot_local-patches/disable_macchanger_spoofing.diff]]
+  Hence, we leave the macchanger package's built-in way to spoof
+  MAC addresses disabled.
 
 * NetworkManager hook: NM doesn't trigger events equivalent to
   if-pre-up, so this isn't possible. See the commented parts in:
@@ -441,7 +424,7 @@ used in a very straightforward way, so if we want to switch tool in
 the future it's a simple task.
 
 Helper scripts:
-[[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-spoof-mac]]
+[[!tails_gitweb config/chroot_local-includes/usr/local/lib/tails-spoof-mac]]
 
 <a id="limitation-only-spoof-nic-part"></a>
 
@@ -509,13 +492,18 @@ repeat the MAC spoofing until a new address is obtained, with up to
 three tries.
 
 Script:
-[[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-spoof-mac]]
+[[!tails_gitweb config/chroot_local-includes/usr/local/lib/tails-spoof-mac]]
 
 ## Connection failure detection
 
 This section deals with AvoidConnectionProbs. The goal is to somehow
 identify connection errors that are related to MAC spoofing, and
 notify the user when this happens.
+
+**Note**: the implementation described below had to be disabled:
+
+ * [[!tails_ticket 8328#note-5]]
+ * [[!tails_ticket 10560]]
 
 Due to lack of hooks into NetworkManager's connection error handling
 we currently use a simple monitoring script that's started when MAC
@@ -531,12 +519,3 @@ At the moment this script only deals with wireless connections. It
 successfully distinguishes between MAC-spoof related errors and errors
 when entering the wrong passphrase, so no false positives in that
 (relatively common) case.
-
-Scripts:
-
-* [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-restricted-network-detector]]
-
-* [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-restricted-network-detector.service]]
-
-* [[!greeter_gitweb PostLogin.default]]
-  (`tails-restricted-network-detector` started from this script)

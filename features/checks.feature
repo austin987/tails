@@ -6,10 +6,6 @@ Feature: Various checks
     Then AppArmor is enabled
     And some AppArmor profiles are enforced
 
-  Scenario: GNOME Screenshot has a sane default save directory
-    Given I have started Tails from DVD without network and logged in
-    Then GNOME Screenshot is configured to save files to the live user's Pictures directory
-
   Scenario: A screenshot is taken when the PRINTSCREEN key is pressed
     Given I have started Tails from DVD without network and logged in
     And there is no screenshot in the live user's Pictures directory
@@ -21,7 +17,6 @@ Feature: Various checks
     When Tails has booted a 64-bit kernel
     Then the VirtualBox guest modules are available
 
-  @fragile
   Scenario: The shipped Tails OpenPGP keys are up-to-date
     Given I have started Tails from DVD without network and logged in
     Then the OpenPGP keys shipped with Tails will be valid for the next 3 months
@@ -30,6 +25,7 @@ Feature: Various checks
     Given I have started Tails from DVD without network and logged in
     Then the shipped Debian repository key will be valid for the next 3 months
 
+  @doc @fragile
   Scenario: The "Report an Error" launcher will open the support documentation
     Given I have started Tails from DVD without network and logged in
     And the network is plugged
@@ -44,6 +40,7 @@ Feature: Various checks
     And the live user is a member of only its own group and "audio cdrom dialout floppy video plugdev netdev scanner lp lpadmin vboxsf"
     And the live user owns its home dir and it has normal permissions
 
+  @fragile
   Scenario: No initial network
     Given I have started Tails from DVD without network and logged in
     And I wait between 30 and 60 seconds
@@ -53,18 +50,21 @@ Feature: Various checks
     And the time has synced
     And process "vidalia" is running within 30 seconds
 
+  @fragile
   Scenario: The 'Tor is ready' notification is shown when Tor has bootstrapped
     Given I have started Tails from DVD without network and logged in
     And the network is plugged
     When I see the 'Tor is ready' notification
     Then Tor is ready
 
+  @fragile
   Scenario: The tor process should be confined with Seccomp
     Given I have started Tails from DVD without network and logged in
     And the network is plugged
     And Tor is ready
     Then the running process "tor" is confined with Seccomp in filter mode
 
+  @fragile
   Scenario: No unexpected network services
     Given I have started Tails from DVD without network and logged in
     When the network is plugged
@@ -80,3 +80,7 @@ Feature: Various checks
     Given I have started Tails from DVD without network and logged in
     When I request a reboot using the emergency shutdown applet
     Then Tails eventually restarts
+
+  Scenario: tails-debugging-info does not leak information
+    Given I have started Tails from DVD without network and logged in
+    Then tails-debugging-info is not susceptible to symlink attacks

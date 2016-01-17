@@ -214,7 +214,7 @@ This step:
     And I enable more Tails Greeter options
 
 This is required for steps enabling Tails Greeter options, like the
-next one, or the `I enable Microsoft Windows XP camouflage` step.
+next one.
 Note that the "I set sudo password ..." step has to be run before the
 other Tails Greeter option steps as it relies on keyboard navigation.
 
@@ -372,3 +372,33 @@ in other scenarios restoring from that snapshot. The exception is when
 global variables are used, which is an acceptable workaround, but it
 requires minute control to get right, and is hard to follow. Please
 try to avoid this until [[!tails_ticket 5847]] is solved.
+
+## Disabling scenarios that are known to fail
+
+When a scenario is broken for an extended period of time (e.g. when
+rebasing Tails on a new Debian version, which usually breaks tons of
+stuff) the current method of temporarily disabling affected tests is
+simply to remove them in Tails' Git, making sure that we won't forget
+about them.
+
+Note that such removals should be isolated per commit so that they are
+easy to revert when whatever was broken is fixed. Hence, such a commit
+could either:
+
+* remove a single scenario if something unique to that scenario is
+  broken;
+
+* remove multiple scenarios possibly spanning multiple features, if
+  they're broken for the same reason, e.g. a step they all use is
+  broken;
+
+* remove a complete feature, if the complete feature is broken for the
+  same reason.
+
+Each such commit *must* have a ticket created, referencing the commit
+to revert, have an assignee and an appropriate milestone set so they
+are not forgotten. Bonus point: push a branch that reverts the commit,
+and then set it as the ticket's _Feature Branch_.
+
+(Once [[!tails_ticket 10198]] has hit Cucumber we can solve this,
+i.e. [[!tails_ticket 7233]], in a much better way.)

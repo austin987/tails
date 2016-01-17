@@ -128,12 +128,6 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
     $vm.execute_successfully("sysctl #{key}=#{val}")
   end
 
-  # The remote shell is sometimes OOM killed when we fill the memory,
-  # and since we depend on it after the memory fill we try to prevent
-  # that from happening.
-  pid = $vm.pidof("tails-autotest-remote-shell")[0]
-  $vm.execute_successfully("echo '-1000' > /proc/#{pid}/oom_score_adj")
-
   # We exclude the memory we reserve for the kernel and admin
   # processes above from the free memory since fillram will be run by
   # an unprivileged user in user-space.
@@ -203,12 +197,18 @@ end
 
 When /^I reboot without wiping the memory$/ do
   $vm.reset
-  @screen.wait('TailsBootSplash.png', 30)
+end
+
+When /^I stop the boot at the bootloader menu$/ do
+  @screen.wait(bootsplash, 90)
+  @screen.wait(bootsplash_tab_msg, 10)
+  @screen.type(Sikuli::Key.TAB)
+  @screen.waitVanish(bootsplash_tab_msg, 1)
 end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   $vm.spawn("halt")
-  nr_gibs_of_ram = (@detected_ram_m.to_f/(2**10)).ceil
+  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
   try_for(nr_gibs_of_ram*5*60, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
     # We spam keypresses to prevent console blanking from hiding the
     # image we're waiting for
