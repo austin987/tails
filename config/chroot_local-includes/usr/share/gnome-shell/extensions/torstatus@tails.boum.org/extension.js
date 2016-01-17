@@ -66,7 +66,7 @@ const TorStatusIndicator = new Lang.Class({
     },
 
     _openTorMonitor: function() {
-        Shell.AppSystem.get_default().lookup_app('tor-monitor.desktop').activate();
+        Shell.AppSystem.get_default().lookup_app('tormonitor.desktop').activate();
     },
 
     _onFileChanged: function(monitor, file, other_file, event_type, user_data) {
