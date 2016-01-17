@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -e
+set -x
+
+# Get LANG
+. /etc/default/locale
+
+export LANG
+
+(
+xhost +SI:localuser:tor-monitor
+sudo -u tor-monitor /usr/bin/lckdo /var/lock/tor-monitor /usr/bin/tormonitor
+xhost -SI:localuser:tor-monitor
+) &
+

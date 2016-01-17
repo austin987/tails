@@ -18,21 +18,11 @@ clear_tor_log() {
    rm -f /var/log/tor/log
 }
 
-vidalia_was_running=no
-if pgrep "\<vidalia\>" >/dev/null 2>&1; then
-    vidalia_was_running=yes
-    killall -SIGKILL vidalia
-fi
-
 clear_tor_log
 systemctl restart tor@default.service
 
-# There are two main points to this script:
-#   * restarting Tor if bootstrapping stalls for more than 20 seconds
-#   * making sure that if vidalia is running it is restarted if Tor is restarted.
-#     This is needed because Vidalia doesn't re-connect to Tor automatically,
-#     so the user has to restart it to be able to control Tor again. Also, any
-#     options  set by Vidalia will be lost since they weren't written to torrc.
+# The main point of this script is to restart Tor if bootstrapping stalls for
+# more than 20 seconds
 
 bootstrap_progress=0
 last_bootstrap_change=$(clock_gettime_monotonic)
@@ -59,7 +49,3 @@ maybe_restart_tor() {
 }
 
 try_for 270 maybe_restart_tor
-
-if [ "${vidalia_was_running}" = yes ]; then
-    restart-vidalia
-fi
