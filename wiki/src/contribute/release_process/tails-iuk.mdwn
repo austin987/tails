@@ -2,13 +2,23 @@
 
 [[!toc levels=1]]
 
+Pre-requisites
+=============
+
+* a Jessie system
+* Tails' `devel` APT suite enabled
+* the right version of the `tails-perl5lib` package installed
+* a user that has sudo credentials
+
 Install build and test dependencies
 ===================================
 
     git checkout debian && \
+    sudo apt install devscripts && \
     mk-build-deps -i -r --root-cmd sudo && \
     sudo apt install \
        libdist-zilla-perl \
+       libdist-zilla-plugin-changelogfromgit-perl \
        libdist-zilla-plugins-cjm-perl \
        libdist-zilla-plugin-installguide-perl \
        libdist-zilla-plugin-localemsgfmt-perl \
@@ -44,8 +54,7 @@ need to be.
           bin/tails-create-iuk && \
        git commit bin/tails-create-iuk -m "tails-iuk $VERSION"
 
-Run the upstream test suite (point `PERL5LIB` to a checkout of the
-relevant tag of Tails' perl5lib):
+Run the upstream test suite:
 
     # get an authentication token, needed by the test suite
     sudo true
@@ -53,7 +62,7 @@ relevant tag of Tails' perl5lib):
     umask 077
     
     # Run the rest of the test suite
-    RELEASE_TESTING=1 LC_ALL=C PERL5LIB=/home/user/tails/perl5lib/lib dzil test
+    RELEASE_TESTING=1 LC_ALL=C dzil test
 
 Build an upstream tarball, tag the release, move the tarball out of
 the build repository and cleanup:
