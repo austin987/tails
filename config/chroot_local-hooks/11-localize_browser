@@ -156,13 +156,15 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
         cd "${TMP}"
         apt-get download "${PKG}"
         ar x "${PKG}"*.deb
-        tar xf data.tar.* ./"${DEB_PATH_TO_SEARCHPLUGINS}"
-        rm -f "${DEB_PATH_TO_SEARCHPLUGINS}"/amazon*.xml \
-              "${DEB_PATH_TO_SEARCHPLUGINS}"/bing*.xml \
-              "${DEB_PATH_TO_SEARCHPLUGINS}"/eBay*.xml \
-              "${DEB_PATH_TO_SEARCHPLUGINS}"/yahoo*.xml \
-              "${DEB_PATH_TO_SEARCHPLUGINS}"/wikipedia*.xml
-        cp "${DEB_PATH_TO_SEARCHPLUGINS}"/* "${TARGET_SEARCHPLUGINS_DIR}"
+        if tar tf data.tar.* | grep -qs "^\./${DEB_PATH_TO_SEARCHPLUGINS}/" ; then
+            tar xf data.tar.* ./"${DEB_PATH_TO_SEARCHPLUGINS}"
+            rm -f "${DEB_PATH_TO_SEARCHPLUGINS}"/amazon*.xml \
+               "${DEB_PATH_TO_SEARCHPLUGINS}"/bing*.xml \
+               "${DEB_PATH_TO_SEARCHPLUGINS}"/eBay*.xml \
+               "${DEB_PATH_TO_SEARCHPLUGINS}"/yahoo*.xml \
+               "${DEB_PATH_TO_SEARCHPLUGINS}"/wikipedia*.xml
+            cp "${DEB_PATH_TO_SEARCHPLUGINS}"/* "${TARGET_SEARCHPLUGINS_DIR}"
+	fi
         cd /
         rm -r "${TMP}"
     fi
