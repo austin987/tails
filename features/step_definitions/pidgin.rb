@@ -279,7 +279,8 @@ When /^I start Pidgin through the GNOME menu$/ do
 end
 
 When /^I open Pidgin's account manager window$/ do
-  @screen.type("a", Sikuli::KeyModifier.CTRL) # shortcut for "manage accounts"
+  @screen.wait_and_click('PidginMenuAccounts.png', 20)
+  @screen.wait_and_click('PidginMenuManageAccounts.png', 20)
   step "I see Pidgin's account manager window"
 end
 
