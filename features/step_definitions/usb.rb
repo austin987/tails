@@ -584,7 +584,7 @@ Then /^a suitable USB device is (?:still )?not found$/ do
   @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
 end
 
-Then /^the "(?:[[:alpha:]]+)" USB drive is selected$/ do
+Then /^the "(?:[^"]+)" USB drive is selected$/ do
   @screen.wait("TailsInstallerQEMUHardDisk.png", 30)
 end
 
