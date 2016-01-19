@@ -7,14 +7,14 @@ Feature: Using Evince
   Scenario: I can view and print a PDF file stored in /usr/share
     Given I have started Tails from DVD without network and logged in
     When I open "/usr/share/cups/data/default-testpage.pdf" with Evince
-    Then I see "CupsTestPage.png" after at most 10 seconds
+    Then I see "CupsTestPage.png" after at most 20 seconds
     And I can print the current document to "/home/amnesia/output.pdf"
 
   Scenario: I can view and print a PDF file stored in non-persistent /home/amnesia
     Given I have started Tails from DVD without network and logged in
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia" as user "amnesia"
     When I open "/home/amnesia/default-testpage.pdf" with Evince
-    Then I see "CupsTestPage.png" after at most 10 seconds
+    Then I see "CupsTestPage.png" after at most 20 seconds
     And I can print the current document to "/home/amnesia/output.pdf"
 
   Scenario: I cannot view a PDF file stored in non-persistent /home/amnesia/.gnupg
@@ -51,7 +51,7 @@ Feature: Using Evince
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "current" with network unplugged and I login with persistence enabled
     When I open "/home/amnesia/Persistent/default-testpage.pdf" with Evince
-    Then I see "CupsTestPage.png" after at most 10 seconds
+    Then I see "CupsTestPage.png" after at most 20 seconds
     And I can print the current document to "/home/amnesia/Persistent/output.pdf"
 
   #10720: Tails Installer freezes on Jenkins
