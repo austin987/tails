@@ -46,7 +46,7 @@ class VMNet
 
   def bridge_ip_addr
     net_xml = REXML::Document.new(@net.xml_desc)
-    net_xml.elements['network/ip'].attributes['address']
+    IPAddr.new(net_xml.elements['network/ip'].attributes['address']).to_s
   end
 
   def guest_real_mac

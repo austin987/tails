@@ -15,17 +15,8 @@ class IPAddr
   ]
 
   def private?
-    if self.ipv4?
-      PrivateIPv4Ranges.each do |ipr|
-        return true if ipr.include?(self)
-      end
-      return false
-    else
-      PrivateIPv6Ranges.each do |ipr|
-        return true if ipr.include?(self)
-      end
-      return false
-    end
+    private_ranges = self.ipv4? ? PrivateIPv4Ranges : PrivateIPv6Ranges
+    private_ranges.any? { |range| range.include?(self) }
   end
 
   def public?
