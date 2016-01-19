@@ -245,13 +245,3 @@ When /^I disable all networking in the Tails Greeter$/ do
     @screen.click('TailsGreeterDisableAllNetworking.png')
   end
 end
-
-Then /^network traffic is (not )?generated during the Tails session$/ do |not_generated|
-  pkts = ip4tables_packet_counter_sum
-  if not_generated
-    assert_equal(0, pkts)
-  else
-    assert_not_equal(0, pkts)
-  end
-  debug_log("#{pkts} packets found")
-end

@@ -91,18 +91,4 @@ Feature: Various checks
     And I disable all networking in the Tails Greeter
     And I log in to a new session
     And the Tails desktop is ready
-    Then no network interface is enabled
-    When the network is plugged
-    And I wait 120 seconds
     Then no network interfaces are enabled
-    And process "tor" is not running
-    And network traffic is not generated during the Tails session
-
-  Scenario: Anti-test: Network traffic is generated when "disable all networking" is not selected
-    Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
-    When I log in to a new session
-    And the Tails desktop is ready
-    Then 1 network interface is enabled
-    When the network is plugged
-    And Tor is ready
-    Then network traffic is generated during the Tails session
