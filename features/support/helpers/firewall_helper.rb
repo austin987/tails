@@ -11,7 +11,7 @@ class IPAddr
   ]
 
   PrivateIPv6Ranges = [
-    IPAddr.new("fc00::/7"),   # private
+    IPAddr.new("fc00::/7")
   ]
 
   def private?
