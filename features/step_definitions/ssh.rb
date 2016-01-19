@@ -1,3 +1,5 @@
+require 'socket'
+
 def read_and_validate_ssh_config srv_type
   conf  = $config[srv_type]
   begin
@@ -58,13 +60,20 @@ Given /^I (?:am prompted to )?verify the SSH fingerprint for the (?:Git|SSH) (?:
   @screen.type('yes' + Sikuli::Key.ENTER)
 end
 
+def get_free_tcp_port
+  server = TCPServer.new('127.0.0.1', 0)
+  return server.addr[1]
+ensure
+  server.close
+end
+
 When /^I connect to an SSH server on the (Internet|LAN)$/ do |location|
 
   case location
   when 'Internet'
     read_and_validate_ssh_config "SSH"
   when 'LAN'
-    @ssh_port = Random.rand(1024...65535)
+    @ssh_port = get_free_tcp_port
     @ssh_username = 'user'
     @ssh_host = $vmnet.bridge_ip_addr
     @sshd = SSHServer.new(sshd_host = @ssh_host, sshd_port = @ssh_port)
