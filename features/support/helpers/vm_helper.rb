@@ -530,6 +530,10 @@ EOF
                          :user => LIVE_USER)
   end
 
+  def get_clipboard
+    execute_successfully("xsel --output --clipboard", :user => LIVE_USER).stdout
+  end
+
   def internal_snapshot_xml(name)
     disk_devs = list_disk_devs
     disks_xml = "    <disks>\n"

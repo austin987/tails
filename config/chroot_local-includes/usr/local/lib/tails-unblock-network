@@ -11,8 +11,13 @@ systemctl start tails-unblock-network.service
 # blacklist file) and udevadm trigger, possibly caused by yet another aufs
 # weirdness (#9012)...
 echo "Sleeping..." >&2
-sleep 2
+sleep 5
 echo "slept." >&2
+
+# XXX: add debugging information for #9012 to the Journal
+ls /etc/modprobe.d
+/sbin/lsmod
+ls -l /sys/class/net
 
 # Now we'll load any present network device previously blocked by
 # the blacklist. In particular, the MAC spoofing udev rule should trigger
@@ -29,6 +34,10 @@ echo "systemd-udev-trigger.service restarted." >&2
 echo "Restarting systemd-udev-settle.service..." >&2
 systemctl restart systemd-udev-settle.service
 echo "systemd-udev-settle.service restarted." >&2
+
+# XXX: add debugging information for #9012 to the Journal
+/sbin/lsmod
+ls -l /sys/class/net
 
 # Enable and start NetworkManager services
 # No need to manually enable NetworkManager-dispatcher.service,
