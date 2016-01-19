@@ -57,10 +57,6 @@ class VMNet
   def bridge_mac
     File.open("/sys/class/net/#{bridge_name}/address", "rb").read.chomp
   end
-
-  def bridge_ip
-    cmd_helper("ifconfig #{bridge_name}").match(/inet addr:([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\s+Bcast/)[1]
-  end
 end
 
 

@@ -66,7 +66,7 @@ When /^I connect to an SSH server on the (Internet|LAN)$/ do |location|
   when 'LAN'
     @ssh_port = Random.rand(1024...65535)
     @ssh_username = 'user'
-    @ssh_host = $vmnet.bridge_ip
+    @ssh_host = $vmnet.bridge_ip_addr
     @sshd = SSHServer.new(sshd_host = @ssh_host, sshd_port = @ssh_port)
     @sshd.start
     add_after_scenario_hook { @sshd.stop }
