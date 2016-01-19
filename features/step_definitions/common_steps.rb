@@ -824,10 +824,6 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   }
 end
 
-When /^I accept to import the key with Seahorse$/ do
-  @screen.wait_and_click("TorBrowserOkButton.png", 10)
-end
-
 Given /^a web server is running on the LAN$/ do
   web_server_ip_addr = $vmnet.bridge_ip_addr
   web_server_port = 8000

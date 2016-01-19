@@ -497,7 +497,7 @@ EOF
       # back seems to be a reliable way to handle this.
       select_virtual_desktop(3)
       select_virtual_desktop(0)
-      sleep 1
+      sleep 5 # there aren't any visual indicators which can be used here
       do_focus(window_title, user)
     end
   end
@@ -531,6 +531,10 @@ EOF
   def set_clipboard(text)
     execute_successfully("echo -n '#{text}' | xsel --input --clipboard",
                          :user => LIVE_USER)
+  end
+
+  def get_clipboard
+    execute_successfully("xsel --output --clipboard", :user => LIVE_USER).stdout
   end
 
   def internal_snapshot_xml(name)
