@@ -1,5 +1,12 @@
 require 'socket'
 
+def assert_not_ipaddr(s)
+  err_msg = "#{@ssh_host} looks like a LAN IP address."
+  assert_raise(IPAddr::InvalidAddressError, err_msg) do
+    IPAddr.new(s)
+  end
+end
+
 def read_and_validate_ssh_config srv_type
   conf  = $config[srv_type]
   begin
@@ -22,16 +29,12 @@ EOF
     @ssh_host        = conf["hostname"]
     @ssh_port        = conf["port"].to_i if conf["port"]
     @ssh_username    = conf["username"]
-    assert(!@ssh_host.match(/^(10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))/), "#{@ssh_host} " +
-           "looks like a LAN IP address.")
-
+    assert_not_ipaddr(@ssh_host)
   when 'SFTP'
     @sftp_host       = conf["hostname"]
     @sftp_port       = conf["port"].to_i if conf["port"]
     @sftp_username   = conf["username"]
-
-    assert(!@sftp_host.match(/^(10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))/), "#{@sftp_host} " +
-           "looks like a LAN IP address.")
+    assert_not_ipaddr(@sftp_host)
   end
 end
 
