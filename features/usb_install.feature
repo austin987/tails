@@ -12,9 +12,9 @@ Feature: Installing Tails to a USB drive
     Then Tails Installer detects that a device is too small
     And a suitable USB device is not found
     When I unplug USB drive "too-small-device"
-    And I create a 4 GiB disk named "current"
-    And I plug USB drive "current"
-    Then the "current" USB drive is selected
+    And I create a 4 GiB disk named "big-enough"
+    And I plug USB drive "big-enough"
+    Then the "big-enough" USB drive is selected
 
   Scenario: Detecting when a target USB drive is inserted or removed
     Given I have started Tails from DVD without network and logged in
