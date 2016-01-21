@@ -19,6 +19,7 @@ Feature: Logging in via SSH
   @check_tor_leaks
   Scenario: Connecting to an SSH server on the LAN
     Given I have the SSH key pair for an SSH server
+    And an SSH server is running on the LAN
     When I connect to an SSH server on the LAN
     Then I am prompted to verify the SSH fingerprint for the SSH server
 

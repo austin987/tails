@@ -70,18 +70,23 @@ ensure
   server.close
 end
 
+Given /^an SSH server is running on the LAN$/ do
+  @sshd_server_port = get_free_tcp_port
+  @sshd_server_host = $vmnet.bridge_ip_addr
+  sshd = SSHServer.new(@sshd_server_host, @sshd_server_port)
+  sshd.start
+  add_after_scenario_hook { sshd.stop }
+end
+
 When /^I connect to an SSH server on the (Internet|LAN)$/ do |location|
 
   case location
   when 'Internet'
     read_and_validate_ssh_config "SSH"
   when 'LAN'
-    @ssh_port = get_free_tcp_port
+    @ssh_port = @sshd_server_port
     @ssh_username = 'user'
-    @ssh_host = $vmnet.bridge_ip_addr
-    @sshd = SSHServer.new(sshd_host = @ssh_host, sshd_port = @ssh_port)
-    @sshd.start
-    add_after_scenario_hook { @sshd.stop }
+    @ssh_host = @sshd_server_host
   end
 
   ssh_port_suffix = "-p #{@ssh_port}" if @ssh_port
