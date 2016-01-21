@@ -1,7 +1,7 @@
 require 'socket'
 
 def assert_not_ipaddr(s)
-  err_msg = "#{@ssh_host} looks like a LAN IP address."
+  err_msg = "'#{s}' looks like a LAN IP address."
   assert_raise(IPAddr::InvalidAddressError, err_msg) do
     IPAddr.new(s)
   end
