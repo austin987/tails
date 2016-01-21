@@ -84,3 +84,11 @@ Feature: Various checks
   Scenario: tails-debugging-info does not leak information
     Given I have started Tails from DVD without network and logged in
     Then tails-debugging-info is not susceptible to symlink attacks
+
+  Scenario: The Tails Greeter "disable all networking" option disables networking within Tails
+    Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
+    And I enable more Tails Greeter options
+    And I disable all networking in the Tails Greeter
+    And I log in to a new session
+    And the Tails desktop is ready
+    Then no network interfaces are enabled

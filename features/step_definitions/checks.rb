@@ -236,3 +236,12 @@ Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
     $vm.execute_successfully("echo > #{debug_file}")
   end
 end
+
+When /^I disable all networking in the Tails Greeter$/ do
+  begin
+    @screen.click('TailsGreeterDisableAllNetworking.png')
+  rescue FindFailed
+    @screen.type(Sikuli::Key.PAGE_DOWN)
+    @screen.click('TailsGreeterDisableAllNetworking.png')
+  end
+end
