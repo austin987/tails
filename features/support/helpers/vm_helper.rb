@@ -494,7 +494,7 @@ EOF
       # back seems to be a reliable way to handle this.
       select_virtual_desktop(3)
       select_virtual_desktop(0)
-      sleep 1
+      sleep 5 # there aren't any visual indicators which can be used here
       do_focus(window_title, user)
     end
   end
