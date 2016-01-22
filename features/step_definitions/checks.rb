@@ -191,7 +191,7 @@ Then /^the running process "(.+)" is confined with AppArmor in (complain|enforce
     assert($vm.has_process?(process), "Process #{process} not running.")
     pid = $vm.pidof(process)[0]
   end
-  assert(mode, get_apparmor_status(pid))
+  assert_equal(mode, get_apparmor_status(pid))
 end
 
 Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mode$/ do |process,mode|

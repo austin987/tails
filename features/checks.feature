@@ -85,6 +85,16 @@ Feature: Various checks
     Given I have started Tails from DVD without network and logged in
     Then tails-debugging-info is not susceptible to symlink attacks
 
+  Scenario: Tails shuts down on DVD boot medium removal
+    Given I have started Tails from DVD without network and logged in
+    When I eject the boot medium
+    Then Tails eventually shuts down
+
+  Scenario: Tails shuts down on USB boot medium removal
+    Given I have started Tails without network from a USB drive without a persistent partition and logged in
+    When I eject the boot medium
+    Then Tails eventually shuts down
+
   Scenario: The Tails Greeter "disable all networking" option disables networking within Tails
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And I enable more Tails Greeter options
