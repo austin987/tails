@@ -137,28 +137,6 @@ class VM
     set_network_link_state('down')
   end
 
-  def set_cdrom_tray_state(state)
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements.each('domain/devices/disk') do |e|
-      if e.attribute('device').to_s == "cdrom"
-        e.elements['target'].attributes['tray'] = state
-        if is_running?
-          @domain.update_device(e.to_s)
-        else
-          update(domain_xml.to_s)
-        end
-      end
-    end
-  end
-
-  def eject_cdrom
-    set_cdrom_tray_state('open')
-  end
-
-  def close_cdrom
-    set_cdrom_tray_state('closed')
-  end
-
   def set_boot_device(dev)
     if is_running?
       raise "boot settings can only be set for inactive vms"
@@ -169,15 +147,20 @@ class VM
   end
 
   def set_cdrom_image(image)
+    image = nil if image == ''
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       if e.attribute('device').to_s == "cdrom"
-        if ! e.elements['source']
-          e.add_element('source')
+        if image.nil?
+          e.elements.delete('source')
+        else
+          if ! e.elements['source']
+            e.add_element('source')
+          end
+          e.elements['source'].attributes['file'] = image
         end
-        e.elements['source'].attributes['file'] = image
         if is_running?
-          @domain.update_device(e.to_s, Libvirt::Domain::DEVICE_MODIFY_FORCE)
+          @domain.update_device(e.to_s)
         else
           update(domain_xml.to_s)
         end
@@ -186,7 +169,15 @@ class VM
   end
 
   def remove_cdrom
-    set_cdrom_image('')
+    set_cdrom_image(nil)
+  rescue Libvirt::Error => e
+    # While the CD-ROM is removed successfully we still get this
+    # error, so let's ignore it.
+    acceptable_error =
+      "Call to virDomainUpdateDeviceFlags failed: internal error: unable to " +
+      "execute QEMU command 'eject': (Tray of device '.*' is not open|" +
+      "Device '.*' is locked)"
+    raise e if not(Regexp.new(acceptable_error).match(e.to_s))
   end
 
   def set_cdrom_boot(image)
@@ -195,7 +186,6 @@ class VM
     end
     set_boot_device('cdrom')
     set_cdrom_image(image)
-    close_cdrom
   end
 
   def list_disk_devs
@@ -286,6 +276,17 @@ class VM
   def disk_dev(name)
     rexml = disk_rexml_desc(name) or return nil
     return "/dev/" + rexml.elements['disk/target'].attribute('dev').to_s
+  end
+
+  def disk_name(dev)
+    dev = File.basename(dev)
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements.each('domain/devices/disk') do |e|
+      if /^#{e.elements['target'].attribute('dev').to_s}/.match(dev)
+        return File.basename(e.elements['source'].attribute('file').to_s)
+      end
+    end
+    raise "No such disk device '#{dev}'"
   end
 
   def udisks_disk_dev(name)
