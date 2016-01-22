@@ -174,9 +174,10 @@ class VM
   rescue Libvirt::Error => e
     # While the CD-ROM is removed successfully we still get this
     # error, so let's ignore it.
-    acceptable_error = "Call to virDomainUpdateDeviceFlags failed: internal " +
-                       "error: unable to execute QEMU command 'eject': Tray " +
-                       "of device '.*' is not open"
+    acceptable_error =
+      "Call to virDomainUpdateDeviceFlags failed: internal error: unable to " +
+      "execute QEMU command 'eject': (Tray of device '.*' is not open|" +
+      "Device '.*' is locked)"
     raise e if not(Regexp.new(acceptable_error).match(e.to_s))
   end
 
