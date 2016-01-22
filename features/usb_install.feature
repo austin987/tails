@@ -12,9 +12,9 @@ Feature: Installing Tails to a USB drive
     Then Tails Installer detects that a device is too small
     And a suitable USB device is not found
     When I unplug USB drive "too-small-device"
-    And I create a 4 GiB disk named "current"
-    And I plug USB drive "current"
-    Then the "current" USB drive is selected
+    And I create a 4 GiB disk named "big-enough"
+    And I plug USB drive "big-enough"
+    Then the "big-enough" USB drive is selected
 
   Scenario: Detecting when a target USB drive is inserted or removed
     Given I have started Tails from DVD without network and logged in
@@ -44,7 +44,7 @@ Feature: Installing Tails to a USB drive
     And I log in to a new session
     Then Tails seems to have booted normally
     When I create a persistent partition
-    Then a Tails persistence partition exists on USB drive "current"
+    Then a Tails persistence partition exists on USB drive "__internal"
 
   #10720: Tails Installer freezes on Jenkins
   @fragile
@@ -52,9 +52,9 @@ Feature: Installing Tails to a USB drive
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
     Then Tails seems to have booted normally
-    And Tails is running from USB drive "current"
+    And Tails is running from USB drive "__internal"
     And the persistent Tor Browser directory does not exist
-    And there is no persistence partition on USB drive "current"
+    And there is no persistence partition on USB drive "__internal"
 
   #10720: Tails Installer freezes on Jenkins
   @fragile
@@ -62,9 +62,9 @@ Feature: Installing Tails to a USB drive
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     Then I power off the computer
     Given the computer is set to boot in UEFI mode
-    When I start Tails from USB drive "current" with network unplugged and I login
+    When I start Tails from USB drive "__internal" with network unplugged and I login
     Then the boot device has safe access rights
-    And Tails is running from USB drive "current"
+    And Tails is running from USB drive "__internal"
     And the boot device has safe access rights
     And Tails has started in UEFI mode
 
