@@ -11,5 +11,5 @@ fi
 for code in "${@}" ; do
     file="$(echo "${code}" | sed -r "s#http(s)?://##;s#/\$##;s#[/\.]#_#g")"
     qrencode -o "${file}.png" -s 5 "${code}"
-    compress-image.sh "${file}.png"
+    "$(dirname "${0}")/compress-image.sh" "${file}.png"
 done
