@@ -252,15 +252,6 @@ When /^I destroy the computer$/ do
   $vm.destroy_and_undefine
 end
 
-def bootsplash
-  case @os_loader
-  when "UEFI"
-    'TailsBootSplashUEFI.png'
-  else
-    'TailsBootSplash.png'
-  end
-end
-
 def bootsplash_tab_msg
   case @os_loader
   when "UEFI"
@@ -270,17 +261,44 @@ def bootsplash_tab_msg
   end
 end
 
-Given /^the computer (re)?boots Tails$/ do |reboot|
-
+Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
   boot_timeout = 30
   # We need some extra time for memory wiping if rebooting
-  boot_timeout += 90 if reboot
+  if reboot
+    nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
+    boot_timeout += nr_gibs_of_ram*5*60
+  end
+  # Simply looking for the boot splash image is not robust; sometimes
+  # sikuli is not fast enough to see it. Here we hope that spamming
+  # TAB, which will halt the boot process by showing the prompt for
+  # the kernel cmdline, will make this a bit more robust. We want this
+  # spamming to happen in parallel with Sikuli waiting for the image,
+  # but multi-threading etc is working extremely poor in our Ruby +
+  # jrb environment when Sikuli is involved. Hence we run the spamming
+  # from a separate process.
+  tab_spammer =
+    IO.popen(['/bin/sh', '-c', 'while true ; do xdotool key Tab; done'])
+  kill_tab_spammer = Proc.new do
+    next if tab_spammer.closed?
+    begin
+      Process.kill("TERM", tab_spammer.pid)
+      tab_spammer.close
+    rescue Errno::ESRCH
+      # The process was already killed
+    end
+  end
+  add_after_scenario_hook { kill_tab_spammer.call }
+  @screen.wait('TailsBootMenuKernelCmdline.png', boot_timeout)
+  kill_tab_spammer.call
+  # Ensure that we're back at the boot splash
+  @screen.type(Sikuli::Key.ESC)
+  @screen.wait(bootsplash_tab_msg(), 5)
+end
 
-  @screen.wait(bootsplash, boot_timeout)
-  @screen.wait(bootsplash_tab_msg, 10)
+Given /^the computer (re)?boots Tails$/ do |reboot|
+  step 'Tails is at the boot menu' + (reboot ? ' after rebooting' : '')
   @screen.type(Sikuli::Key.TAB)
-  @screen.waitVanish(bootsplash_tab_msg, 1)
-
+  @screen.waitVanish(bootsplash_tab_msg(), 1)
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 30*60)
@@ -525,8 +543,7 @@ Then /^Tails eventually shuts down$/ do
 end
 
 Then /^Tails eventually restarts$/ do
-  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  @screen.wait('TailsBootSplash.png', nr_gibs_of_ram*5*60)
+  step 'Tails is at the boot menu after rebooting'
 end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
