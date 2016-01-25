@@ -18,6 +18,8 @@ Feature: Encryption and verification using GnuPG
     And I sign the message using my OpenPGP key
     Then I can verify the message's signature
 
+  #10991
+  @fragile
   Scenario: Encryption/signing and decryption/verification using Tails OpenPGP Applet
     When I type a message into gedit
     And I both encrypt and sign the message using my OpenPGP key

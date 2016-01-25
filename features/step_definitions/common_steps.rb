@@ -817,7 +817,7 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   # Only the file's basename is selected by double-clicking,
   # so we type only the desired file's basename to replace it
   @screen.type(output_dir + '/' + output_file.sub(/[.]pdf$/, '') + Sikuli::Key.ENTER)
-  try_for(120, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
+  try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
     $vm.file_exist?("#{output_dir}/#{output_file}")
   }
 end
