@@ -61,6 +61,7 @@ Feature: Chatting anonymously using Pidgin
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     When I activate the "irc.oftc.net" Pidgin account
+    And I close Pidgin's account manager window
     Then Pidgin successfully connects to the "irc.oftc.net" account
     And I can join the "#tails" channel on "irc.oftc.net"
     When I type "/topic"
@@ -107,7 +108,7 @@ Feature: Chatting anonymously using Pidgin
     # And I take note of the OTR key for Pidgin's "irc.oftc.net" account
     And I shutdown Tails and wait for the computer to power off
     Given a computer
-    And I start Tails from USB drive "current" and I login with persistence enabled
+    And I start Tails from USB drive "__internal" and I login with persistence enabled
     And Pidgin has the expected persistent accounts configured
     # And Pidgin has the expected persistent OTR keys
     When I start Pidgin through the GNOME menu

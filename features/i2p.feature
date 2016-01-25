@@ -44,7 +44,7 @@ Feature: I2P
     And the I2P router console is ready
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
-    And I2P successfully built a tunnel
+    And I see shared client tunnels in the I2P router console
     When I open the address "http://i2p-projekt.i2p" in the I2P Browser
     Then the I2P homepage loads in I2P Browser
 
@@ -60,7 +60,9 @@ Feature: I2P
   Scenario: Connecting to the #i2p IRC channel with the pre-configured account
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
-    And I2P successfully built a tunnel
+    And I start the I2P Browser through the GNOME menu
+    And the I2P router console is displayed in I2P Browser
+    And I see shared client tunnels in the I2P router console
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     When I activate the "I2P" Pidgin account

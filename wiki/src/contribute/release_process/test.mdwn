@@ -83,10 +83,10 @@ tracked by tickets prefixed with `todo/test_suite:`.
   use](https://trac.torproject.org/projects/tor/wiki/doc/build/BuildSignoff#TestPagestoUse).
   (automate: [[!tails_ticket 10260]])
 * Compare the fingerprint of Tails and the latest TBB using at least
-  <https://panopticlick.eff.org/>
+  <https://panopticlick.eff.org/> (automate: [[!tails_ticket 10262]])
   - The exposed User-Agent should match the latest TBB's one.
   - Update the [[fingerprint section|support/known_issues#fingerprint]] of the
-    known issues page if needed. (automate: [[!tails_ticket 10262]])
+    known issues page if needed.
 * WebRTC should be disabled: (automate: [[!tails_ticket 10264]])
   - In `about:config` check that `media.peerconnection.enabled` is set to
     `false`.
@@ -95,16 +95,10 @@ tracked by tickets prefixed with `todo/test_suite:`.
     microphone with the remote website; anything else should fail.
   - <http://net.ipcalf.com/> should display
     `ifconfig | grep inet | grep -v inet6 | cut -d" " -f2 | tail -n1`
-* Running `getTorBrowserUserAgent` should produce the User-Agent set by the
+* Running `/usr/local/lib/getTorBrowserUserAgent` should produce the User-Agent set by the
   installed version of Torbutton, and used in the Tor Browser. (automate: [[!tails_ticket 10268]])
 
-# Tor
-
-* The version of Tor should be the latest stable one, which is the highest version number
-  before alpha releases on <http://deb.torproject.org/torproject.org/pool/main/t/tor/>. (automate:
-  [[!tails_ticket 10259]])
-
-# Claws
+# Icedove
 
 * Check mail over IMAP using:
   - a "clearnet" IMAP server.
@@ -114,15 +108,15 @@ tracked by tickets prefixed with `todo/test_suite:`.
   - a "clearnet" SMTP server.
   - a hidden service SMTP server (see above).
 * Check that the profile works and is torified:
-  1. Send an email using Claws and a non-anonymizing SMTP relay (a
+  1. Send an email using Icedove and a non-anonymizing SMTP relay (a
      SMTP relay that writes the IP address of the client it is
      relaying email for in the Received header).
   1. Then check that email's headers once received, especially the
      `Received:` one.
 * Also check that the EHLO/HELO SMTP message is not leaking anything
   at the application level:
-  1. Start Claws using the panel icon.
-  2. Disable SSL/TLS for SMTP in Claws (so take precautions for not
+  1. Start Icedove using the GNOME Applications menu.
+  2. Disable SSL/TLS for SMTP in Icedove (so take precautions for not
      leaking your password in plaintext by either changing it
      temporarily or using a disposable account).
   3. Run `sudo tcpdump -n -i lo -w dump` to capture the packets before
@@ -131,26 +125,23 @@ tracked by tickets prefixed with `todo/test_suite:`.
      verify that it only contains `localhost`: `tcpdump -A -r dump`
   5. Check the `Received:` and `Message-Id` fields in the received
      message: it must not leak the hostname, nor the local IP.
-* Make sure Claws Mail use its dedicated `SocksPort` when connecting
+* Make sure Icedove Mail use its dedicated `SocksPort` when connecting
   to IMAP / POP3 / SMTP servers by monitoring the output of this
   command:
 
-      sudo watch -n 0.1 'netstat -taupen | grep claws'
+      sudo watch -n 0.1 'netstat -taupen | grep icedove'
+
+# Tor
+
+* The version of Tor should be the latest stable one, which is the highest version number
+  before alpha releases on <http://deb.torproject.org/torproject.org/pool/main/t/tor/>. (automate:
+  [[!tails_ticket 10259]])
 
 # WhisperBack
 
 * I should be able to send a bug report with WhisperBack.
 * When we receive this bug report on the tails-bugs mailing-list,
   Schleuder tells us that it was sent encrypted.
-
-# Erase memory on shutdown
-
-- After booting from DVD, remove Tails boot medium and check that the
-  memory erasure process is started (`Loading new kernel`, at least).
-  (automate: [[!tails_ticket 5472]])
-- After booting from USB, remove Tails boot medium and check that the
-  memory erasure process is started (`Loading new kernel`, at least).
-  (automate: [[!tails_ticket 5472]])
 
 # Root access control
 
@@ -169,10 +160,6 @@ tracked by tickets prefixed with `todo/test_suite:`.
 Make sure that I2P is up-to-date, at least if the
 [changelogs](https://geti2p.net/en/blog/) mention that
 security critical bugs were fixed.
-
-# SSH
-
-* Connecting (by IP) over SSH to a server on the LAN should work. (automate: [[!tails_ticket 9087 desc="#9087"]])
 
 # APT (automate: [[!tails_ticket 8164 desc="#8164"]])
 

@@ -305,10 +305,10 @@ at least 24 hours in the future! Between tests and mirror synchronization,
 the build will not be released on the same day. Try to make sure it
 matches the date of the future signature.
 
-	RELEASE_DATE='June 26, 2013'
+	RELEASE_DATE='2015-11-03'
 
 	echo "$VERSION"      > wiki/src/inc/stable_i386_version.html
-	echo "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
+	echo -n "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
 	sed -ri "s%news/version_.*]]%news/version_$VERSION]]%" wiki/src/inc/stable_i386_release_notes.*
 	$EDITOR wiki/src/inc/*.html
 	./build-website
@@ -637,6 +637,31 @@ Prepare upgrade-description files
    one by default, this will allow you to more easily test the IUK
    without impacting anyone.
 
+Prepare the ISO description file for DAVE
+-----------------------------------------
+
+Skip this section if preparing a release candidate.
+
+Update the ISO description file (IDF) used by the browser extension:
+
+    ISO_PATH="${ISOS}/tails-i386-${VERSION}/tails-i386-${VERSION}.iso"
+    ISO_SHA256SUM="$(sha256sum "${ISO_PATH}" | cut -f 1 -d ' ' | tr -d '\n')"
+    ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH}")"
+    cat > "$RELEASE_CHECKOUT"/wiki/src/install/v1/Tails/i386/stable/latest.yml <<EOF
+    ---
+    build-target: i386
+    channel: stable
+    product-name: Tails
+    version: '${VERSION}'
+    target-files:
+    - sha256: ${ISO_SHA256SUM}
+      size: ${ISO_SIZE_IN_BYTES}
+      url: http://dl.amnesia.boum.org/tails/stable/tails-i386-${VERSION}/tails-i386-${VERSION}.iso
+    EOF
+    ( cd "${RELEASE_CHECKOUT}" && \
+      git add wiki/src/install/v1/Tails/i386/stable/latest.yml && \
+      git commit -m "Update IDF file for DAVE." )
+
 Upload images
 =============
 
@@ -737,7 +762,7 @@ In order to get any new documentation into the website, merge either
 Rename the `.packages` file to remove the `.iso` and build date parts
 of its name:
 
-	mv "$ARTIFACTS"/tails-i386-"-$VERSION"-*.iso.packages \
+	mv "$ARTIFACTS"/tails-i386-"$VERSION".iso.packages \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages"
 
 Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
@@ -755,25 +780,20 @@ previous release (including any RC).
 Generate the SHA-256 hash of every image
 to be released in `inc/*`:
 
-	sha256sum $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 1 -d ' ' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_hash.html"
+	echo "${ISO_SHA256SUM}" > \
+	  "${RELEASE_CHECKOUT}/wiki/src/inc/stable_i386_hash.html"
 
 Update the size of the ISO image in `inc/*`:
 
-	MB=$(LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' | tr -d '\n')
-	MiB=$(LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-          cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' | tr -d '\n')
-	echo "($MB/$MiB)" > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
-	echo "$MiB" > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib.html"
+	LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' > \
+	  "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
 
 Generate the expected signature verification output:
 
-        TAILS_ISO="${ISOS}/tails-i386-${VERSION}/tails-i386-${VERSION}.iso"
-        gpg --keyid-format long --verify "${TAILS_ISO}.sig" "${TAILS_ISO}" 2>&1 | \
-           sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' >
-           "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_gpg_signature_output.html"
+      gpg --keyid-format long --verify "${ISO_PATH}.sig" "${ISO_PATH}" 2>&1 | \
+      sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
+      "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_gpg_signature_output.html"
 
 Update the [[support/known_issues]] page:
 
@@ -820,8 +840,7 @@ Skip this part if preparing a final release.
 
 Copy the `.iso.sig` file into the website repository:
 
-	cp "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso.sig" \
-	   "$MASTER_CHECKOUT/wiki/src/torrents/files/"
+	cp "${ISO_PATH}.sig" "${MASTER_CHECKOUT}/wiki/src/torrents/files/"
 
 Write the announcement for the release in
 `$MASTER_CHECKOUT/wiki/src/news/test_$TAG.mdwn`, including:
@@ -1072,10 +1091,13 @@ this, and skip what does not make sense for a RC.
 1. Ensure the next few releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
    in the Roof* so that this section appears after the next release.
-* If the next release is a point-release, ask
-  <tails-sysadmins@boum.org> to disable the Jenkins job that's
-  building ISO images from the `testing` branch (since it basically
-  won't be used/maintained in the next 2.5 months).
+1. If the next release is a point-release, ask
+   <tails-sysadmins@boum.org> to disable the Jenkins job that's
+   building ISO images from the `testing` branch (since it basically
+   won't be used/maintained in the next 2.5 months).
+1. If you will be the release manager for the next release, look at the
+   tasks that must be done at the beginning of your shift in the
+   [[release manager role page|contribute/working_together/roles/release_manager]].
 
 Related pages
 =============

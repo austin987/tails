@@ -468,9 +468,12 @@ Given /^I enter the "([^"]*)" password in the pkexec prompt$/ do |password|
   deal_with_polkit_prompt('PolicyKitAuthPrompt.png', password)
 end
 
-Given /^process "([^"]+)" is running$/ do |process|
-  assert($vm.has_process?(process),
-         "Process '#{process}' is not running")
+Given /^process "([^"]+)" is (not )?running$/ do |process, not_running|
+  if not_running
+    assert(!$vm.has_process?(process), "Process '#{process}' is running")
+  else
+    assert($vm.has_process?(process), "Process '#{process}' is not running")
+  end
 end
 
 Given /^process "([^"]+)" is running within (\d+) seconds$/ do |process, time|
@@ -485,11 +488,6 @@ Given /^process "([^"]+)" has stopped running after at most (\d+) seconds$/ do |
                              "waiting for #{time} seconds") do
     not $vm.has_process?(process)
   end
-end
-
-Given /^process "([^"]+)" is not running$/ do |process|
-  assert(!$vm.has_process?(process),
-         "Process '#{process}' is running")
 end
 
 Given /^I kill the process "([^"]+)"$/ do |process|
@@ -819,13 +817,9 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   # Only the file's basename is selected by double-clicking,
   # so we type only the desired file's basename to replace it
   @screen.type(output_dir + '/' + output_file.sub(/[.]pdf$/, '') + Sikuli::Key.ENTER)
-  try_for(120, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
+  try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
     $vm.file_exist?("#{output_dir}/#{output_file}")
   }
-end
-
-When /^I accept to import the key with Seahorse$/ do
-  @screen.wait_and_click("TorBrowserOkButton.png", 10)
 end
 
 Given /^a web server is running on the LAN$/ do
@@ -962,4 +956,18 @@ end
 
 Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
   force_new_tor_circuit(with_vidalia)
+end
+
+When /^I eject the boot medium$/ do
+  dev = boot_device
+  dev_type = device_info(dev)['ID_TYPE']
+  case dev_type
+  when 'cd'
+    $vm.remove_cdrom
+  when 'disk'
+    boot_disk_name = $vm.disk_name(dev)
+    $vm.unplug_drive(boot_disk_name)
+  else
+    raise "Unsupported medium type '#{dev_type}' for boot device '#{dev}'"
+  end
 end

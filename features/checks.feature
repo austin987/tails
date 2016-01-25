@@ -17,7 +17,6 @@ Feature: Various checks
     When Tails has booted a 64-bit kernel
     Then the VirtualBox guest modules are available
 
-  @fragile
   Scenario: The shipped Tails OpenPGP keys are up-to-date
     Given I have started Tails from DVD without network and logged in
     Then the OpenPGP keys shipped with Tails will be valid for the next 3 months
@@ -85,3 +84,23 @@ Feature: Various checks
   Scenario: tails-debugging-info does not leak information
     Given I have started Tails from DVD without network and logged in
     Then tails-debugging-info is not susceptible to symlink attacks
+
+  Scenario: Tails shuts down on DVD boot medium removal
+    Given I have started Tails from DVD without network and logged in
+    When I eject the boot medium
+    Then Tails eventually shuts down
+
+  #10720
+  @fragile
+  Scenario: Tails shuts down on USB boot medium removal
+    Given I have started Tails without network from a USB drive without a persistent partition and logged in
+    When I eject the boot medium
+    Then Tails eventually shuts down
+
+  Scenario: The Tails Greeter "disable all networking" option disables networking within Tails
+    Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
+    And I enable more Tails Greeter options
+    And I disable all networking in the Tails Greeter
+    And I log in to a new session
+    And the Tails desktop is ready
+    Then no network interfaces are enabled

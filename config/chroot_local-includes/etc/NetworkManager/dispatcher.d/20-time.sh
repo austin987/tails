@@ -211,7 +211,7 @@ is_clock_way_off() {
 
 start_notification_helper() {
 	export_gnome_env
-	exec /bin/su -c /usr/local/bin/tails-htp-notify-user "$LIVE_USERNAME" &
+	exec /bin/su -c /usr/local/lib/tails-htp-notify-user "$LIVE_USERNAME" &
 }
 
 
