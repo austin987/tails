@@ -236,25 +236,10 @@ Update other base branches
 1. Merge the release branch into `devel` following the instructions for
    [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
 
-2. Merge `devel` into `feature/jessie` following the instructions for
-   [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
-   Given that these two branches' APT suites have diverged a lot, and
-   that `tails-merge-suite` currently happily overwrites newer
-   packages in the target with older packages from the source, it's
-   probably easier to just merge each individual APT overlay that was
-   just merged into the release branch into `feature/jessie`'s APT
-   suite. Also, most of our just upgraded bundled packages
-   (e.g. `tails-greeter`) may need to be rebuilt for Jessie.
-
-3. Ensure that the release, `devel` and `feature/jessie` branches
-   have the expected content in `config/APT_overlays.d/`: e.g. it must
-   not list any overlay APT suite that has been merged already.
-
-4. Push the modified branches to Git:
+2. Push the modified branches to Git:
 
         git push origin "${RELEASE_BRANCH}:${RELEASE_BRANCH}" \
-                        devel:devel \
-                        feature/jessie:feature/jessie
+                        devel:devel
 
 Update more included files
 ==========================
@@ -791,7 +776,7 @@ Update the size of the ISO image in `inc/*`:
 
 Generate the expected signature verification output:
 
-      gpg --keyid-format long --verify "${ISO_PATH}.sig" "${ISO_PATH}" 2>&1 | \
+      gpg --keyid-format 0xlong --verify "${ISO_PATH}.sig" "${ISO_PATH}" 2>&1 | \
       sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
       "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_gpg_signature_output.html"
 
@@ -1057,7 +1042,7 @@ this, and skip what does not make sense for a RC.
         rm -rf "$bare_repo"
 
 1. Pull `master` back and merge it into `stable`, and in turn into
-   `devel`, `experimental` and `feature/jessie`.
+   `devel` and `experimental`.
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
    repository documentation.
