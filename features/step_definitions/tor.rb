@@ -35,6 +35,18 @@ def ip6tables_rules(chain, table = "filter")
   iptables_rules_parse("ip6tables", chain, table)
 end
 
+def ip4tables_packet_counter_sum(filters = {})
+  pkts = 0
+  ip4tables_chains do |name, _, rules|
+    next if filters[:tables] && not(filters[:tables].include?(name))
+    rules.each do |rule|
+      next if filters[:uid] && not(rule.elements["conditions/owner/uid-owner[text()=#{filters[:uid]}]"])
+      pkts += rule.attribute('packet-count').to_s.to_i
+    end
+  end
+  return pkts
+end
+
 def try_xml_element_text(element, xpath, default = nil)
   node = element.elements[xpath]
   (node.nil? or not(node.has_text?)) ? default : node.text

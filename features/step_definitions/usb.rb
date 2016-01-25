@@ -365,12 +365,15 @@ def boot_device
   return boot_dev
 end
 
-def boot_device_type
+def device_info(dev)
   # Approach borrowed from
   # config/chroot_local_includes/lib/live/config/998-permissions
-  boot_dev_info = $vm.execute("udevadm info --query=property --name='#{boot_device}'").stdout.chomp
-  boot_dev_type = (boot_dev_info.split("\n").select { |x| x.start_with? "ID_BUS=" })[0].split("=")[1]
-  return boot_dev_type
+  info = $vm.execute("udevadm info --query=property --name='#{dev}'").stdout.chomp
+  info.split("\n").map { |e| e.split('=') } .to_h
+end
+
+def boot_device_type
+  device_info(boot_device)['ID_BUS']
 end
 
 Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
