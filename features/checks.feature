@@ -90,6 +90,8 @@ Feature: Various checks
     When I eject the boot medium
     Then Tails eventually shuts down
 
+  #10720
+  @fragile
   Scenario: Tails shuts down on USB boot medium removal
     Given I have started Tails without network from a USB drive without a persistent partition and logged in
     When I eject the boot medium
