@@ -14,9 +14,9 @@ Feature: Installing packages through APT
 
   #10496: apt-get scenarios are fragile
   @check_tor_leaks @fragile
-  Scenario: Install packages using apt-get
-    When I update APT using apt-get
-    Then I should be able to install a package using apt-get
+  Scenario: Install packages using apt
+    When I update APT using apt
+    Then I should be able to install a package using apt
 
   #10441: Synaptic test is fragile
   @check_tor_leaks @fragile

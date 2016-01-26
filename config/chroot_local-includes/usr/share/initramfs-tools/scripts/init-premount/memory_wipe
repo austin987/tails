@@ -1,0 +1,57 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs() {
+   echo "${PREREQ}"
+}
+
+tweak_sysctl() {
+   echo 3   > /proc/sys/kernel/printk
+
+   echo 3   > /proc/sys/vm/drop_caches
+
+   echo 0   > /proc/sys/vm/overcommit_memory
+   echo 0   > /proc/sys/vm/oom_kill_allocating_task
+   echo 0   > /proc/sys/vm/oom_dump_tasks
+}
+
+case ${1} in
+   prereqs)
+      prereqs
+      exit 0
+      ;;
+esac
+
+if [ -n "${sdmem}" ] ; then
+   tweak_sysctl
+   if [ -z "${sdmemopts}" ] ; then
+      sdmemopts="v"
+   fi
+   # We run one instance of sdmem per 2 GiB of RAM to deal with the
+   # x86 per-process memory limitation.
+   mem=$(free | awk '/Mem:/ { print $2 }')
+   instances=$((${mem}/(2*1024*1024)+1))
+   for i in $(seq 1 "${instances}") ; do
+      ( /usr/bin/sdmem "-${sdmemopts}" ; killall sdmem >/dev/null 2>&1 ) &
+   done
+   # Wait for sdmem jobs to finish.
+   wait
+fi
+
+if [ "${sdmemdebug}" = 1 ] ; then
+   clear
+   echo "Going to sleep 10 minutes. Happy dumping!"
+   sleep 600
+fi
+
+case "${sdmem}" in
+   halt)
+      /sbin/poweroff -fd
+      ;;
+   reboot)
+      /sbin/reboot -fd
+      ;;
+   *)
+      ;;
+esac
