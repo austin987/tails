@@ -119,7 +119,7 @@ Feature: Upgrading an old Tails USB installation
     When I "Clone & Upgrade" Tails to USB drive "to_upgrade"
     Then the running Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
-    And I unplug USB drive "current"
+    And I unplug USB drive "__internal"
 
   # Depends on scenario: Upgrading an old Tails USB installation from another Tails USB drive
   Scenario: Booting Tails from a USB drive upgraded from USB with persistence enabled
