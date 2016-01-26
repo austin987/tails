@@ -29,7 +29,7 @@ an arbitrary ISO into Tails Installer can run arbitrary code (stored
 in the ISO filesystem as `utils/linux/syslinux`) as the user running
 Tails Installer. We have no mechanism to run Tails Installer with
 elevated privileges currently, so this should not be a problem: being
-able to run `liveusb-creator` with arbitrary arguments is equivalent
+able to run `tails-installer` with arbitrary arguments is equivalent
 to being able to run arbitrary code already.
 
 Mode of operation and booting methods
@@ -89,37 +89,6 @@ filesystem limits what can be shipped on the system parition
 
 The rest of the device is left unpartitionned for an encrypted storage
 partition that can be used for the [[design/persistence]] feature.
-
-Branding of liveusb-creator
-===========================
-
-The original liveusb-creator is Fedora-specific. We have made configurable
-most of the branding we needed to change.
-
- * Allow disabling the download feature.
- * Allow defaults/vendor/site configuration of the
-   window title, download widget title, and custom artwork.
-
-Currently supported config options (in the "branding" section) are:
-
- * `distribution`: name used in window title and download widget title,
- * `header`: pixmap displayed on top of the main dialog.
-
-These options can be set in `/etc/liveusb-creator/{vendor,site}.ini`.
-
-Both Qt resources and regular paths are supported for the `header`
-option:
-
-    # Qt resource
-    [branding]
-    distribution = Tails
-    header = :/tails-liveusb-header.png
-    partition_label = Tails
-
-    # Regular path
-    [branding]
-    distribution = Tails
-    header = /path/to/tails-liveusb-header.png
 
 Launchers
 =========
