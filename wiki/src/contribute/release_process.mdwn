@@ -784,12 +784,9 @@ to be released in `inc/*`:
 
 Update the size of the ISO image in `inc/*`:
 
-	MB=$(LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' | tr -d '\n')
-	MiB=$(LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-          cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' | tr -d '\n')
-	echo "($MB/$MiB)" > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
-	echo "$MiB" > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib.html"
+        LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+          cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' \
+          > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
 
 Generate the expected signature verification output:
 
@@ -1023,7 +1020,8 @@ Prepare for the next release
 XXX: adapt / fork for release candidates. In the meantime, read all
 this, and skip what does not make sense for a RC.
 
-1. Move the previous stable release to `obsolete` on the mirrors.
+1. If you just released a new stable release, remove the previous
+   stable release on the mirrors.
 1. Remove any remaining RC for the just-published release from
    the mirrors.
 1. Remove IUKs that are more than 6 months old from
@@ -1058,11 +1056,16 @@ this, and skip what does not make sense for a RC.
            --repo "$bare_repo" && \
         rm -rf "$bare_repo"
 
+1. Remove all old versions in `wiki/src/upgrade/v1/Tails` that were
+   never released. Explanation: the post-release APT repository steps
+   from the previous stable release will usually have had us prepare
+   for an emergency release that was never made.
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`, `experimental` and `feature/jessie`.
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
-   repository documentation.
+   repository documentation. Make sure there are upgrade-description
+   files for any new versions that were added.
 1. Push the resulting branches.
 1. If this was a major release, then reset experimental:
    - take note of branches merged into `experimental`, but not into
@@ -1086,10 +1089,6 @@ this, and skip what does not make sense for a RC.
 1. Ensure the next few releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
    in the Roof* so that this section appears after the next release.
-1. If the next release is a point-release, ask
-   <tails-sysadmins@boum.org> to disable the Jenkins job that's
-   building ISO images from the `testing` branch (since it basically
-   won't be used/maintained in the next 2.5 months).
 1. If you will be the release manager for the next release, look at the
    tasks that must be done at the beginning of your shift in the
    [[release manager role page|contribute/working_together/roles/release_manager]].

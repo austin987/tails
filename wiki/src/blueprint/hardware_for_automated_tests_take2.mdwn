@@ -1,60 +1,110 @@
+This is about [[!tails_ticket 11009]] and related tickets.
+
+[[!toc levels=2]]
+
 Rationale
 =========
 
 In [[!tails_ticket 9264]], we're discussing and drafting our needs for more
 isotesters. From some statistics of the number of automated builds per month,
 we concluded we need to be able to run at least 1000 more test suites per
-month, which means being able to host at least 8 more isotesters.
+month.
 
-Note: our workload parallelizes poorly over multiple CPU cores, so
-perhaps getting _less_ additional ISO testers, but each with faster
-CPU clock, would be more efficient.
+Note: our workload parallelizes poorly over multiple CPU cores per ISO tester,
+so we need to get more ISO testers and/or ISO testers with faster CPU clock.
 
 Estimates
 =========
 
-As a reminder, we are discussing in [[!tails_ticket 10396]] that one
-isotester means:
+As a reminder, one isotester means:
 
- * 20G RAM
+ * at least 20 GiB RAM, preferably 23 GiB
  * 25G HDD (10G system+data, 15G tmp)
  * 3 CPU threads
 
-So 8 isotesters would mean:
+On [[!tails_ticket 9264]] we concluded that we want to be able to run the test
+suite 1350 times per month. Each of our current isotesters on lizard v2 can run
+it about 120 times a month. We have four such VMs => we can already cope with
+480 times a month => we need to find out how to run it 1350 - 480 = 870 more
+times a month.
 
- * 160G RAM
- * 200G HDD
- * 24 CPU threads max
+# Upgrading lizard v2
 
-From there, it seems unlikely we could host that on Lizard, and we are
-back on the research about new hardware for isotesters.
+We are seriously under-using lizard v2's CPU power. Let's try to fix this in
+a way that solves at least part of the performance problems we currently have:
+[[!tails_ticket 9264]] and [[!tails_ticket 10999]].
 
-Hardware
-========
+Experiments conducted on [[!tails_ticket 10996]] showed that we can probably
+run the test suite 25-35% more times on lizard, if we gave it 49 GiB more RAM
+and run 6 isotesters with 23 GiB RAM each. This brings us to something between
+480 * 1.25 = 600 and 480 * 1.35 = 648 runs a month. It might be that we can even
+run 8 isotesters efficiently, given 95 GiB more RAM than we currently have, but
+let's not count on it.
 
-Given the amount of RAM and CPUs required, it seems close to [[Lizard's
-specs|blueprint/hardware_for_automated_tests]].
+This still covers only about half of our needs. So we'll need a second machine
+to host more ISO testers at some point: see below.
 
-We still need to decide if we would use faster (as in Ghz) CPUs than the one
-Lizard has (Low voltages versions). In this case the price jumps quite a bit,
-and the electic bill will too (120W each for that kind of CPUs, against the 65W
-each of Lizard's ones).
+Also, as seen on [[!tails_ticket 10999]], we could make use of more
+ISO builders, and here again, lizard could cope with this workload if we gave it
+18 more GiB of RAM.
 
-The following price estimations are based on interpromicro.com ones.
+So, giving lizard 48+18 = 66 or 95+18 = 113 GiB more RAM would fix part of the
+problems we currently have, use more of our currently available computing power
+(which would be satisfying in itself), and teach us lots of things about how to
+set up and optimize systems to cope with our ISO testing workload.
+
+IMO (intrigeri) this would allow us to more cleverly pick hardware for the
+second ISO testing machine when we come to it. I think we should go with the
+higher option (which means upgrading to 256 GiB of RAM), that gives us more
+flexibility to experiment with various numbers of ISO builders and testers, and
+worst case RAM would always be useful for running more services we're asked to
+set up, and for improving performance thanks to disk caches.
+
+# A second machine
+
+**Note**: IMO (intrigeri) we should experiment on lizard with more RAM
+before we make the final decision here, but this should not block us from
+drafting possible solutions :)
+
+For reference, see [[lizard's specs|blueprint/hardware_for_automated_tests]].
+
+Assuming we have upgraded lizard as explained above, we need a second machine
+able to run the test suite about 700-750 times a month. If each ISO tester on
+that second machine was exactly as fast as those we have on lizard, then we
+would need 6 ISO testers on the new machine. But it's not a given: we can
+probably get faster ISO testers on the new machine; how many ISO testers it will
+run, and how many CPU cores and how much RAM it needs, depends on how fast each
+CPU core is. Economically speaking, faster CPU cores can save money on RAM
+(because we can achieve the same throughput with fewer ISO testers), but they
+cost more in electricity.
+
+The following price estimates are based on <http://interpromicro.com/> ones.
 
 ## Candidate options
 
-We currently prefer option C if it's doable, and option D otherwise.
+**Note**: the following selection of candidates is outdated, as it doesn't take
+into account the most recent developments on this topic (see above). E.g. 4-6
+new ISO testers will probably be enough, and in turn we may be instead looking
+for something like:
+
+* 128 GiB of RAM (ideally we would just reuse the 128 GiB we have in lizard v2)
+* 12-18 CPU threads == 6-9 CPU cores
+
+Other than that, we currently prefer option C if it's doable, and option
+D otherwise.
+
+<a id="option_C"></a>
 
 ### Option C: 12 cores, upgradable by adding a CPU
+
+This is for 8 VMs with 3 vcpus each.
 
 XXX:
 
 * can we plug one CPU only on a 2-sockets SMP mobo?
-  => ask taggart
-* this is for 8 VMs with 3 vcpus each; if we can instead go for 4 VMs
-  with 3 real cores each, then we need less RAM (~ $1000 less)
-  => depends on the outcome of [[!tails_ticket 10971]]
+  => waiting for taggart's answer
+
+Specs:
 
  * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB) - $390
  * 1 x Intel® E5-2690v3-2.6Ghz/12C, 30M, 135W LGA2011 CPU               - $2124
@@ -65,13 +115,13 @@ XXX:
 
 Total   --- **$5424**
 
+<a id="option_D"></a>
+
 ### Option D: 2*6 cores, upgradable by replacing CPUs
 
-XXX:
+This is for 8 VMs with 3 vcpus each.
 
-* this is for 8 VMs with 3 vcpus each; if we can instead go for 4 VMs
-  with 3 real cores each, then we need less RAM (~ $1000 less)
-  => depends on the outcome of [[!tails_ticket 10971]]
+Specs:
 
  * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB) - $390
  * 2 x Intel® E5-2643v3, 6C, 3.4GHz, 135                                - $3260
@@ -109,23 +159,3 @@ Total   --- **$6200**
  * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W       - $350
 
 Total   --- **$6650**
-
-## Ways to lower the price a bit
-
-No need to invest time into it immediately, but if we eventually decide
-to go this way and the total price is a bit too high, we should look
-into these options.
-
-### Less RAM
-
-Here, we pay for the test suite's temporary storage twice: once in RAM
-(disk cache managed by the kernel), once on disk. We could cut down on
-costs a bit by not buying all the corresponding RAM now, and instead
-relying purely on the SSDs (buy 128GB instead of 256GB for the new
-machine, which saves ~$1k).
-
-I'm curious what would be the performance hit if we did that. I guess
-it's easy enough to get a first very rough estimate (just give an
-isotesterN 10GB of RAM instead of 20GB, or something), but really it all
-depends on how the drives handle _multiple_ instances of the test suite
-writing/reading tons of data.

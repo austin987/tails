@@ -1,68 +1,64 @@
-def iptables_parse(iptables_output)
-  chains = Hash.new
-  cur_chain = nil
-  cur_chain_policy = nil
-  parser_state = :expecting_chain_def
+def iptables_chains_parse(iptables, table = "filter", &block)
+  assert(block_given?)
+  cmd = "#{iptables}-save -c -t #{table} | iptables-xml"
+  xml_str = $vm.execute_successfully(cmd).stdout
+  rexml = REXML::Document.new(xml_str)
+  rexml.get_elements('iptables-rules/table/chain').each do |element|
+    yield(
+      element.attribute('name').to_s,
+      element.attribute('policy').to_s,
+      element.get_elements('rule')
+    )
+  end
+end
 
-  iptables_output.split("\n").each do |line|
-    line.strip!
-    if /^Chain /.match(line)
-      assert_equal(:expecting_chain_def, parser_state)
-      m = /^Chain (.+) \(policy (.+) \d+ packets, \d+ bytes\)$/.match(line)
-      if m.nil?
-        m = /^Chain (.+) \(\d+ references\)$/.match(line)
-      end
-      assert_not_nil m
-      _, cur_chain, cur_chain_policy = m.to_a
-      chains[cur_chain] = {
-        "policy" => cur_chain_policy,
-        "rules" => Array.new
-      }
-      parser_state = :expecting_col_descs
-    elsif /^pkts\s/.match(line)
-      assert_equal(:expecting_col_descs, parser_state)
-      assert_equal(["pkts", "bytes", "target", "prot", "opt",
-                    "in", "out", "source", "destination"],
-                   line.split(/\s+/))
-      parser_state = :expecting_rule_or_empty
-    elsif line.empty?
-      assert_equal(:expecting_rule_or_empty, parser_state)
-      cur_chain = nil
-      parser_state = :expecting_chain_def
-    else
-      assert_equal(:expecting_rule_or_empty, parser_state)
-      pkts, _, target, prot, opt, in_iface, out_iface, source, destination, extra =
-        line.split(/\s+/, 10)
-      [pkts, target, prot, opt, in_iface, out_iface, source, destination].each do |var|
-        assert_not_empty(var)
-        assert_not_nil(var)
-      end
-      chains[cur_chain]["rules"] << {
-        "rule" => line,
-        "pkts" => pkts.to_i,
-        "target" => target,
-        "protocol" => prot,
-        "opt" => opt,
-        "in_iface" => in_iface,
-        "out_iface" => out_iface,
-        "source" => source,
-        "destination" => destination,
-        "extra" => extra
-      }
+def ip4tables_chains(table = "filter", &block)
+  iptables_chains_parse('iptables', table, &block)
+end
+
+def ip6tables_chains(table = "filter", &block)
+  iptables_chains_parse('ip6tables', table, &block)
+end
+
+def iptables_rules_parse(iptables, chain, table)
+  iptables_chains_parse(iptables, table) do |name, _, rules|
+    return rules if name == chain
+  end
+  return nil
+end
+
+def iptables_rules(chain, table = "filter")
+  iptables_rules_parse("iptables", chain, table)
+end
+
+def ip6tables_rules(chain, table = "filter")
+  iptables_rules_parse("ip6tables", chain, table)
+end
+
+def ip4tables_packet_counter_sum(filters = {})
+  pkts = 0
+  ip4tables_chains do |name, _, rules|
+    next if filters[:tables] && not(filters[:tables].include?(name))
+    rules.each do |rule|
+      next if filters[:uid] && not(rule.elements["conditions/owner/uid-owner[text()=#{filters[:uid]}]"])
+      pkts += rule.attribute('packet-count').to_s.to_i
     end
   end
-  assert_equal(:expecting_rule_or_empty, parser_state)
-  return chains
+  return pkts
+end
+
+def try_xml_element_text(element, xpath, default = nil)
+  node = element.elements[xpath]
+  (node.nil? or not(node.has_text?)) ? default : node.text
 end
 
 Then /^the firewall's policy is to (.+) all IPv4 traffic$/ do |expected_policy|
   expected_policy.upcase!
-  iptables_output = $vm.execute_successfully("iptables -L -n -v").stdout
-  chains = iptables_parse(iptables_output)
-  ["INPUT", "FORWARD", "OUTPUT"].each do |chain_name|
-    policy = chains[chain_name]["policy"]
-    assert_equal(expected_policy, policy,
-                 "Chain #{chain_name} has unexpected policy #{policy}")
+  ip4tables_chains do |name, policy, _|
+    if ["INPUT", "FORWARD", "OUTPUT"].include?(name)
+      assert_equal(expected_policy, policy,
+                   "Chain #{name} has unexpected policy #{policy}")
+    end
   end
 end
 
@@ -72,37 +68,47 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
   users.each do |user|
     expected_uids << $vm.execute_successfully("id -u #{user}").stdout.to_i
   end
-  iptables_output = $vm.execute_successfully("iptables -L -n -v").stdout
-  chains = iptables_parse(iptables_output)
-  allowed_output = chains["OUTPUT"]["rules"].find_all do |rule|
-    !(["DROP", "REJECT", "LOG"].include? rule["target"]) &&
-      rule["out_iface"] != "lo"
+  allowed_output = iptables_rules("OUTPUT").find_all do |rule|
+    out_iface = rule.elements['conditions/match/o']
+    is_maybe_accepted = rule.get_elements('actions/*').find do |action|
+      not(["DROP", "REJECT", "LOG"].include?(action.name))
+    end
+    is_maybe_accepted &&
+    (
+      # nil => match all interfaces according to iptables-xml
+      out_iface.nil? ||
+      ((out_iface.text == 'lo') == (out_iface.attribute('invert').to_s == '1'))
+    )
   end
   uids = Set.new
   allowed_output.each do |rule|
-    case rule["target"]
-    when "ACCEPT"
-      expected_destination = "0.0.0.0/0"
-      assert_equal(expected_destination, rule["destination"],
-                   "The following rule has an unexpected destination:\n" +
-                   rule["rule"])
-      next if rule["extra"] == "state RELATED,ESTABLISHED"
-      m = /owner UID match (\d+)/.match(rule["extra"])
-      assert_not_nil(m)
-      uid = m[1].to_i
-      uids << uid
-      assert(expected_uids.include?(uid),
-             "The following rule allows uid #{uid} to access the network, " \
-             "but we only expect uids #{expected_uids} (#{users_str}) to " \
-             "have such access:\n#{rule["rule"]}")
-    when "lan"
-      lan_subnets = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
-      assert(lan_subnets.include?(rule["destination"]),
-             "The following lan-targeted rule's destination is " \
-             "#{rule["destination"]} which may not be a private subnet:\n" +
-             rule["rule"])
-    else
-      raise "Unexpected iptables OUTPUT chain rule:\n#{rule["rule"]}"
+    rule.elements.each('actions/*') do |action|
+      destination = try_xml_element_text(rule, "conditions/match/d")
+      if action.name == "ACCEPT"
+        # nil == 0.0.0.0/0 according to iptables-xml
+        assert(destination == '0.0.0.0/0' || destination.nil?,
+               "The following rule has an unexpected destination:\n" +
+               rule.to_s)
+        state_cond = try_xml_element_text(rule, "conditions/state/state")
+        next if state_cond == "RELATED,ESTABLISHED"
+        assert_not_nil(rule.elements['conditions/owner/uid-owner'])
+        rule.elements.each('conditions/owner/uid-owner') do |owner|
+          uid = owner.text.to_i
+          uids << uid
+          assert(expected_uids.include?(uid),
+                 "The following rule allows uid #{uid} to access the " +
+                 "network, but we only expect uids #{expected_uids.to_a} " +
+                 "(#{users_str}) to have such access:\n#{rule.to_s}")
+        end
+      elsif action.name == "call" && action.elements[1].name == "lan"
+        lan_subnets = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+        assert(lan_subnets.include?(destination),
+               "The following lan-targeted rule's destination is " +
+               "#{destination} which may not be a private subnet:\n" +
+               rule.to_s)
+      else
+        raise "Unexpected iptables OUTPUT chain rule:\n#{rule.to_s}"
+      end
     end
   end
   uids_not_found = expected_uids - uids
@@ -112,57 +118,70 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
 end
 
 Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DNSPort$/ do
+  loopback_address = "127.0.0.1/32"
   tor_onion_addr_space = "127.192.0.0/10"
-  iptables_nat_output = $vm.execute_successfully("iptables -t nat -L -n -v").stdout
-  chains = iptables_parse(iptables_nat_output)
-  chains.each_pair do |name, chain|
-    rules = chain["rules"]
+  tor_trans_port = "9040"
+  dns_port = "53"
+  tor_dns_port = "5353"
+  ip4tables_chains('nat') do |name, _, rules|
     if name == "OUTPUT"
       good_rules = rules.find_all do |rule|
-        rule["target"] == "REDIRECT" &&
-          (
-           (
-            rule["destination"] == tor_onion_addr_space &&
-            rule["extra"] == "redir ports 9040"
-           ) ||
-           rule["extra"] == "udp dpt:53 redir ports 5353"
-          )
+        redirect = rule.get_elements('actions/*').all? do |action|
+          action.name == "REDIRECT"
+        end
+        destination = try_xml_element_text(rule, "conditions/match/d")
+        redir_port = try_xml_element_text(rule, "actions/REDIRECT/to-ports")
+        redirected_to_trans_port = redir_port == tor_trans_port
+        udp_destination_port = try_xml_element_text(rule, "conditions/udp/dport")
+        dns_redirected_to_tor_dns_port = (udp_destination_port == dns_port) &&
+                                         (redir_port == tor_dns_port)
+        redirect &&
+        (
+         (destination == tor_onion_addr_space && redirected_to_trans_port) ||
+         (destination == loopback_address && dns_redirected_to_tor_dns_port)
+        )
       end
-      assert_equal(rules, good_rules,
-                   "The NAT table's OUTPUT chain contains some unexptected " \
-                   "rules:\n" +
-                   ((rules - good_rules).map { |r| r["rule"] }).join("\n"))
+      bad_rules = rules - good_rules
+      assert(bad_rules.empty?,
+             "The NAT table's OUTPUT chain contains some unexpected " +
+             "rules:\n#{bad_rules}")
     else
       assert(rules.empty?,
-             "The NAT table contains unexpected rules for the #{name} " \
-             "chain:\n" + (rules.map { |r| r["rule"] }).join("\n"))
+             "The NAT table contains unexpected rules for the #{name} " +
+             "chain:\n#{rules}")
     end
   end
 end
 
-Then /^the firewall is configured to block all IPv6 traffic$/ do
+Then /^the firewall is configured to block all external IPv6 traffic$/ do
+  ip6_loopback = '::1/128'
   expected_policy = "DROP"
-  ip6tables_output = $vm.execute_successfully("ip6tables -L -n -v").stdout
-  chains = iptables_parse(ip6tables_output)
-  chains.each_pair do |name, chain|
-    policy = chain["policy"]
+  ip6tables_chains do |name, policy, rules|
     assert_equal(expected_policy, policy,
                  "The IPv6 #{name} chain has policy #{policy} but we " \
                  "expected #{expected_policy}")
-    rules = chain["rules"]
-    bad_rules = rules.find_all do |rule|
-      !["DROP", "REJECT", "LOG"].include?(rule["target"])
+    good_rules = rules.find_all do |rule|
+      ["DROP", "REJECT", "LOG"].any? do |target|
+        rule.elements["actions/#{target}"]
+      end \
+      ||
+      ["s", "d"].all? do |x|
+        try_xml_element_text(rule, "conditions/match/#{x}") == ip6_loopback
+      end
     end
+    bad_rules = rules - good_rules
     assert(bad_rules.empty?,
-           "The IPv6 table's #{name} chain contains some unexptected rules:\n" +
-           (bad_rules.map { |r| r["rule"] }).join("\n"))
+           "The IPv6 table's #{name} chain contains some unexpected rules:\n" +
+           (bad_rules.map { |r| r.to_s }).join("\n"))
   end
 end
 
 def firewall_has_dropped_packet_to?(proto, host, port)
-  regex = "Dropped outbound packet: .* DST=#{host} .* PROTO=#{proto} "
+  regex = "^Dropped outbound packet: .* "
+  regex += "DST=#{Regexp.escape(host)} .* "
+  regex += "PROTO=#{Regexp.escape(proto)} "
   regex += ".* DPT=#{port} " if port
-  $vm.execute("grep -q '#{regex}' /var/log/syslog").success?
+  $vm.execute("journalctl --dmesg --output=cat | grep -qP '#{regex}'").success?
 end
 
 When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+))? that is expected to fail$/ do |proto, host, port|
@@ -177,13 +196,16 @@ When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+)
   when "TCP"
     assert_not_nil(port)
     cmd = "echo | netcat #{host} #{port}"
+    user = LIVE_USER
   when "UDP"
     assert_not_nil(port)
     cmd = "echo | netcat -u #{host} #{port}"
+    user = LIVE_USER
   when "ICMP"
     cmd = "ping -c 5 #{host}"
+    user = 'root'
   end
-  @conn_res = $vm.execute(cmd, :user => LIVE_USER)
+  @conn_res = $vm.execute(cmd, :user => user)
 end
 
 Then /^the untorified connection fails$/ do
@@ -287,7 +309,7 @@ end
 And /^I re-run htpdate$/ do
   $vm.execute_successfully("service htpdate stop && " \
                            "rm -f /var/run/htpdate/* && " \
-                           "service htpdate start")
+                           "systemctl --no-block start htpdate.service")
   step "the time has synced"
 end
 
@@ -300,6 +322,10 @@ When /^I connect Gobby to "([^"]+)"$/ do |host|
   @screen.wait("GobbyWelcomePrompt.png", 10)
   @screen.click("GnomeCloseButton.png")
   @screen.wait("GobbyWindow.png", 10)
+  # This indicates that Gobby has finished initializing itself
+  # (generating DH parameters, etc.) -- before, the UI is not responsive
+  # and our CTRL-t is lost.
+  @screen.wait("GobbyFailedToShareDocuments.png", 30)
   @screen.type("t", Sikuli::KeyModifier.CTRL)
   @screen.wait("GobbyConnectPrompt.png", 10)
   @screen.type(host + Sikuli::Key.ENTER)
