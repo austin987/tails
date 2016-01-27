@@ -30,6 +30,10 @@ cleanup() {
 	[ -d "$BUILD_DIR" ] && sudo rm -rf $BUILD_DIR
 }
 
+old_build_dirs() {
+	mount | perl -ni -E 'say $mountpoint if (($mountpoint) = ($_ =~ m{^(?:tmpfs|devpts-live|proc-live|sysfs-live) on (/tmp/tails-build\.[/[:alnum:]]+)}))'
+}
+
 trap cleanup EXIT
 
 if [ -n "$JENKINS_URL" ]; then
@@ -66,6 +70,13 @@ else
 	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
 	cd "$WORKSPACE"
 	git fetch origin
+fi
+
+if [ "$TAILS_RAM_BUILD" ] && [ "$(old_build_dirs)" ]; then
+	for mountpoint in $(old_build_dirs | sort -r) ; do
+		sudo umount -f -l "$mountpoint"
+		sudo rm -r "$mountpoint"
+	done
 fi
 
 cd "$WORKSPACE"
