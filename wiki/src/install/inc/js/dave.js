@@ -1,5 +1,5 @@
 (function() {
-  var chromeSupported = !/\bchrome-unsupported\b/.test((document.getElementById("download-and-verify") || document.documentElement).className);
+  var chromeSupported = false;
   var minVer = {
     "firefox": 38,
     "chrome": 44,
@@ -22,7 +22,10 @@
       v =  navigator.userAgent.match(/\b(Chrome|Firefox)\/(\d+)/)
       ;
   v = v && parseInt(v[2]) || 0;
-  if (window.InstallTrigger) {
+  var override = location.search.match(/\boverride=(\w+)/);
+  if (override) {
+    browser = override[1];
+  } else if (window.InstallTrigger) {
     if (v >= minVer.firefox || minVer.firefox === 38 && new RegExp("").source) // see Fx 38 RegExp @ https://developer.mozilla.org/it/Firefox/Releases/38
       browser = "firefox";
     else {
@@ -33,7 +36,7 @@
       }, true);
     }
   } else {
-    forId("unsupported-firefox", function(el) { el.style.display = "none"; });
+    addEventListener("DOMContentLoaded", function() { forId("unsupported-firefox", function(el) { el.style.display = "none"; }); }, true);
     if (chromeSupported &&
         /\bChrom/.test(navigator.userAgent) && /\bGoogle Inc\./.test(navigator.vendor) &&
         v >= minVer.chrome) {
