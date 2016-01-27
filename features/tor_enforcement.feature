@@ -15,7 +15,7 @@ Feature: The Tor enforcement is effective
     Then the firewall's policy is to drop all IPv4 traffic
     And the firewall is configured to only allow the clearnet and debian-tor users to connect directly to the Internet over IPv4
     And the firewall's NAT rules only redirect traffic for Tor's TransPort and DNSPort
-    And the firewall is configured to block all IPv6 traffic
+    And the firewall is configured to block all external IPv6 traffic
 
   @fragile
   Scenario: Anti test: Detecting IPv4 TCP leaks from the Unsafe Browser with the firewall leak detector

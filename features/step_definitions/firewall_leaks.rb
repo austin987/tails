@@ -28,7 +28,7 @@ Then(/^the firewall leak detector has detected (.*?) leaks$/) do |type|
 end
 
 Given(/^I disable Tails' firewall$/) do
-  $vm.execute("do_not_ever_run_me")
+  $vm.execute("/usr/local/lib/do_not_ever_run_me")
   iptables = $vm.execute("iptables -L -n -v").stdout.chomp.split("\n")
   for line in iptables do
     if !line[/Chain (INPUT|OUTPUT|FORWARD) \(policy ACCEPT/] and
@@ -51,6 +51,6 @@ end
 
 When(/^I send some ICMP pings$/) do
   # We ping an IP address to avoid a DNS lookup
-  ping = $vm.execute("ping -c 5 #{SOME_DNS_SERVER}", :user => LIVE_USER)
+  ping = $vm.execute("ping -c 5 #{SOME_DNS_SERVER}")
   assert(ping.success?, "Failed to ping #{SOME_DNS_SERVER}:\n#{ping.stderr}")
 end

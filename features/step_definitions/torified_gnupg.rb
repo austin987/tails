@@ -15,11 +15,12 @@ def check_for_seahorse_error
   end
 end
 
-def start_or_restart_seahorse(withapplet = nil)
-  if withapplet
+def start_or_restart_seahorse
+  assert_not_nil(@withgpgapplet)
+  if @withgpgapplet
     seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
   else
-    step 'I start "Seahorse" via the GNOME "System"/"Preferences" applications menu'
+    step 'I start "Seahorse" via the GNOME "Utilities" applications menu'
   end
   step 'Seahorse has opened'
 end
@@ -87,10 +88,8 @@ When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (
 end
 
 When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
-  if withgpgapplet
-    @withgpgapplet = 'yes'
-  end
-  start_or_restart_seahorse(withapplet = @withgpgapplet)
+  @withgpgapplet = !!withgpgapplet
+  start_or_restart_seahorse
 end
 
 Then /^Seahorse has opened$/ do
@@ -100,7 +99,7 @@ end
 Then /^I enable key synchronization in Seahorse$/ do
   step 'process "seahorse" is running'
   @screen.wait_and_click("SeahorseWindow.png", 10)
-  seahorse_menu_click_helper('SeahorseEdit.png', 'SeahorseEditPreferences.png', 'seahorse')
+  seahorse_menu_click_helper('GnomeEditMenu.png', 'SeahorseEditPreferences.png', 'seahorse')
   @screen.wait('SeahorsePreferences.png', 20)
   @screen.type("p", Sikuli::KeyModifier.ALT) # Option: "Publish keys to...".
   @screen.type(Sikuli::Key.DOWN) # select HKP server
@@ -120,7 +119,7 @@ Then /^I synchronize keys in Seahorse$/ do
     if @screen.exists('GnomeCloseButton.png') || !$vm.has_process?('seahorse')
       step 'I kill the process "seahorse"' if $vm.has_process?('seahorse')
       debug_log('Restarting Seahorse.')
-      start_or_restart_seahorse(withapplet = @withgpgapplet)
+      start_or_restart_seahorse
     end
   end
 
@@ -153,10 +152,7 @@ Then /^I synchronize keys in Seahorse$/ do
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP Applet)?$/ do |keyid, withgpgapplet|
-  if withgpgapplet
-    @withgpgapplet = 'yes'
-  end
-  start_or_restart_seahorse(withapplet = @withgpgapplet)
+  step "I start Seahorse#{withgpgapplet}"
 
   def change_of_status?(keyid)
     # Due to a lack of visual feedback in Seahorse we'll break out of the
@@ -171,7 +167,6 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP A
 
   recovery_proc = Proc.new do
     @screen.click('GnomeCloseButton.png') if @screen.exists('GnomeCloseButton.png')
-    @screen.type(Sikuli::Key.ESC)
     @screen.type("w", Sikuli::KeyModifier.CTRL)
   end
   retry_tor(recovery_proc) do

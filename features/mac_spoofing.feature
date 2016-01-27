@@ -40,6 +40,8 @@ Feature: Spoofing MAC addresses
     Then no network interfaces are enabled
     And the real MAC address was not leaked
 
+  #10774
+  @fragile
   Scenario: MAC address spoofing fails and macchanger returns true
     Given macchanger will fail by not spoofing and always returns true
     When I log in to a new session
@@ -48,6 +50,8 @@ Feature: Spoofing MAC addresses
     Then no network interfaces are enabled
     And the real MAC address was not leaked
 
+  #10774
+  @fragile
   Scenario: MAC address spoofing fails and the module is not removed
     Given macchanger will fail by not spoofing and always returns true
     And no network interface modules can be unloaded
@@ -57,13 +61,6 @@ Feature: Spoofing MAC addresses
     Then 1 network interface is enabled
     But the MAC spoofing panic mode disabled networking
     And the real MAC address was not leaked
-
-  Scenario: MAC address spoofing causes a network failure
-    Given the network is unplugged
-    When I log in to a new session
-    Then the Tails desktop is ready
-    Given a wireless NIC's MAC address is blocked by the network
-    Then I see the "Network connection blocked?" notification
 
   Scenario: The MAC address is not leaked when booting Tails
     Given a computer

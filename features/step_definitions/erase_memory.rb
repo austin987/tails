@@ -52,7 +52,7 @@ Given /^the non-PAE kernel is running$/ do
 end
 
 def used_ram_in_MiB
-  return $vm.execute_successfully("free -m | awk '/^-\\/\\+ buffers\\/cache:/ { print $3 }'").stdout.chomp.to_i
+  return $vm.execute_successfully("free -m | awk '/^Mem:/ { print $3 }'").stdout.chomp.to_i
 end
 
 def detected_ram_in_MiB
@@ -69,6 +69,11 @@ Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
 end
 
 def pattern_coverage_in_guest_ram
+  assert_not_nil(
+    @free_mem_before_fill_b,
+    "@free_mem_before_fill_b is not set, probably the required 'I fill the " +
+    "guest's memory ...' step was not run")
+  free_mem_before_fill_m = convert_to_MiB(@free_mem_before_fill_b, 'b')
   dump = "#{$config["TMPDIR"]}/memdump"
   # Workaround: when dumping the guest's memory via core_dump(), libvirt
   # will create files that only root can read. We therefore pre-create
@@ -86,8 +91,9 @@ def pattern_coverage_in_guest_ram
   # Pattern is 16 bytes long
   patterns_b = patterns*16
   patterns_m = convert_to_MiB(patterns_b, 'b')
-  coverage = patterns_b.to_f/convert_to_bytes(@detected_ram_m.to_f, 'MiB')
-  puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_m} MiB)"
+  coverage = patterns_b.to_f/@free_mem_before_fill_b
+  puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_m} MiB " +
+       "out of #{free_mem_before_fill_m} MiB initial free memory)"
   return coverage
 end
 
@@ -99,43 +105,60 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
 
   # The (guest) kernel may freeze when approaching full memory without
   # adjusting the OOM killer and memory overcommitment limitations.
-  [
-   "echo 1024 > /proc/sys/vm/min_free_kbytes",
-   "echo 2   > /proc/sys/vm/overcommit_memory",
-   "echo 97  > /proc/sys/vm/overcommit_ratio",
-   "echo 0   > /proc/sys/vm/oom_kill_allocating_task",
-   "echo 0   > /proc/sys/vm/oom_dump_tasks"
-  ].each { |c| $vm.execute_successfully(c) }
+  kernel_mem_reserved_k = 64*1024
+  kernel_mem_reserved_m = convert_to_MiB(kernel_mem_reserved_k, 'k')
+  admin_mem_reserved_k = 128*1024
+  admin_mem_reserved_m = convert_to_MiB(admin_mem_reserved_k, 'k')
+  kernel_mem_settings = [
+    # Let's avoid killing other random processes, and instead focus on
+    # the hoggers, which will be our fillram instances.
+    ["vm.oom_kill_allocating_task", 0],
+    # Let's not print stuff to the terminal.
+    ["vm.oom_dump_tasks", 0],
+    # From tests the 'guess' heuristic seems to allow us to safely
+    # (i.e. no kernel freezes) fill the maximum amount of RAM.
+    ["vm.overcommit_memory", 0],
+    # Make sure the kernel doesn't starve...
+    ["vm.min_free_kbytes", kernel_mem_reserved_k],
+    # ... and also some core privileged processes, e.g. the remote
+    # shell.
+    ["vm.admin_reserve_kbytes", admin_mem_reserved_k],
+  ]
+  kernel_mem_settings.each do |key, val|
+    $vm.execute_successfully("sysctl #{key}=#{val}")
+  end
 
-  # The remote shell is sometimes OOM killed when we fill the memory,
-  # and since we depend on it after the memory fill we try to prevent
-  # that from happening.
-  pid = $vm.pidof("tails-autotest-remote-shell")[0]
-  $vm.execute_successfully("echo -17 > /proc/#{pid}/oom_adj")
+  # We exclude the memory we reserve for the kernel and admin
+  # processes above from the free memory since fillram will be run by
+  # an unprivileged user in user-space.
+  used_mem_before_fill_m = used_ram_in_MiB
+  free_mem_before_fill_m = @detected_ram_m - used_mem_before_fill_m -
+                          kernel_mem_reserved_m - admin_mem_reserved_m
+  @free_mem_before_fill_b = convert_to_bytes(free_mem_before_fill_m, 'MiB')
 
-  used_mem_before_fill = used_ram_in_MiB
-
-  # To be sure that we fill all memory we run one fillram instance
-  # for each GiB of detected memory, rounded up. We also kill all instances
-  # after the first one has finished, i.e. when the memory is full,
-  # since the others otherwise may continue re-filling the same memory
-  # unnecessarily.
-  instances = (@detected_ram_m.to_f/(2**10)).ceil
-  instances.times do
-    $vm.spawn('/usr/local/sbin/fillram; killall fillram', :user => LIVE_USER)
+  # To be sure that we fill all memory we run one fillram instance for
+  # each GiB of detected memory, rounded up. To maintain stability we
+  # prioritize the fillram instances to be OOM killed. We also kill
+  # all instances after the first one has finished, i.e. when the
+  # memory is full, since the others otherwise may continue re-filling
+  # the same memory unnecessarily. Note that we leave the `killall`
+  # call outside of the OOM adjusted shell so it will not be OOM
+  # killed too.
+  nr_instances = (@detected_ram_m.to_f/(2**10)).ceil
+  nr_instances.times do
+    oom_adjusted_fillram_cmd =
+      "echo 1000 > /proc/$$/oom_score_adj && exec /usr/local/sbin/fillram"
+    $vm.spawn("sh -c '#{oom_adjusted_fillram_cmd}'; killall fillram",
+              :user => LIVE_USER)
   end
   # We make sure that all fillram processes have started...
   try_for(10, :msg => "all fillram processes didn't start", :delay => 0.1) do
     nr_fillram_procs = $vm.pidof("fillram").size
-    instances == nr_fillram_procs
-  end
-  # ... and prioritize OOM killing them.
-  $vm.pidof("fillram").each do |pid|
-    $vm.execute_successfully("echo 15 > /proc/#{pid}/oom_adj")
+    nr_instances == nr_fillram_procs
   end
   prev_used_ram_ratio = -1
   # ... and that it finishes
-  try_for(instances*2*60, { :msg => "fillram didn't complete, probably the VM crashed" }) do
+  try_for(nr_instances*2*60, { :msg => "fillram didn't complete, probably the VM crashed" }) do
     used_ram_ratio = (used_ram_in_MiB.to_f/@detected_ram_m)*100
     # Round down to closest multiple of 10 to limit the logging a bit.
     used_ram_ratio = (used_ram_ratio/10).round*10
@@ -148,14 +171,11 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   debug_log("Memory fill progress: finished")
   if verify
     coverage = pattern_coverage_in_guest_ram()
-    # Let's aim for having the pattern cover at least 80% of the free RAM.
-    # More would be good, but it seems like OOM kill strikes around 90%,
-    # and we don't want this test to fail all the time.
-    min_coverage = ((@detected_ram_m - used_mem_before_fill).to_f /
-                    @detected_ram_m.to_f)*0.75
+    min_coverage = 0.90
     assert(coverage > min_coverage,
-           "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
-           "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
+           "#{"%.3f" % (coverage*100)}% of the free memory was filled with " +
+           "the pattern, but more than #{"%.3f" % (min_coverage*100)}% was " +
+           "expected")
   end
 end
 
@@ -163,30 +183,36 @@ Then /^I find very few patterns in the guest's memory$/ do
   coverage = pattern_coverage_in_guest_ram()
   max_coverage = 0.005
   assert(coverage < max_coverage,
-         "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
+         "#{"%.3f" % (coverage*100)}% of the free memory still has the " +
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
 end
 
 Then /^I find many patterns in the guest's memory$/ do
   coverage = pattern_coverage_in_guest_ram()
-  min_coverage = 0.7
+  min_coverage = 0.9
   assert(coverage > min_coverage,
-         "#{"%.3f" % (coverage*100)}% of the memory is filled with the " +
+         "#{"%.3f" % (coverage*100)}% of the free memory still has the " +
          "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
 end
 
 When /^I reboot without wiping the memory$/ do
   $vm.reset
-  @screen.wait('TailsBootSplash.png', 30)
+end
+
+When /^I stop the boot at the bootloader menu$/ do
+  @screen.wait(bootsplash, 90)
+  @screen.wait(bootsplash_tab_msg, 10)
+  @screen.type(Sikuli::Key.TAB)
+  @screen.waitVanish(bootsplash_tab_msg, 1)
 end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
-  $vm.execute_successfully("halt")
-  nr_gibs_of_ram = (@detected_ram_m.to_f/(2**10)).ceil
+  $vm.spawn("halt")
+  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
   try_for(nr_gibs_of_ram*5*60, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
     # We spam keypresses to prevent console blanking from hiding the
     # image we're waiting for
     @screen.type(" ")
-    @screen.wait('MemoryWipeCompleted.png')
+    @screen.find('MemoryWipeCompleted.png')
   end
 end
