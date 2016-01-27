@@ -10,6 +10,9 @@
 # Get LIVE_USERNAME
 . /etc/live/config.d/username.conf
 
+# Import export_gnome_env().
+. /usr/local/lib/tails-shell-library/gnome.sh
+
 # Import tor_control_*(), tor_is_working(), TOR_LOG, TOR_DIR
 . /usr/local/lib/tails-shell-library/tor.sh
 
@@ -171,7 +174,7 @@ maybe_set_time_from_tor_consensus() {
 	date -us "${vmid}" 1>/dev/null
 
 	# Tor is unreliable with picking a circuit after time change
-	service tor restart
+	systemctl restart tor@default.service
 }
 
 tor_cert_valid_after() {
@@ -207,9 +210,8 @@ is_clock_way_off() {
 }
 
 start_notification_helper() {
-	export DISPLAY=':0.0'
-	export XAUTHORITY="$(echo /var/run/gdm3/auth-for-$LIVE_USERNAME-*/database)"
-	exec /bin/su -c /usr/local/bin/tails-htp-notify-user "$LIVE_USERNAME" &
+	export_gnome_env
+	exec /bin/su -c /usr/local/lib/tails-htp-notify-user "$LIVE_USERNAME" &
 }
 
 
@@ -228,7 +230,7 @@ else
 	if is_clock_way_off; then
 		log "The clock is so badly off that Tor cannot download a consensus. Setting system time to the authority's cert's valid-after date and trying to fetch a consensus again..."
 		date --set="$(tor_cert_valid_after)" > /dev/null
-		service tor reload
+		systemctl reload tor@default.service
 	fi
 	wait_for_tor_consensus
 	maybe_set_time_from_tor_consensus
@@ -244,5 +246,5 @@ fi
 touch $TORDATE_DONE_FILE
 
 log "Restarting htpdate"
-service htpdate restart
+systemctl restart htpdate.service
 log "htpdate service restarted with return code $?"

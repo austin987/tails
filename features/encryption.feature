@@ -8,16 +8,22 @@ Feature: Encryption and verification using GnuPG
     Given I have started Tails from DVD without network and logged in
     And I generate an OpenPGP key named "test" with password "asdf"
 
+  #10992
+  @fragile
   Scenario: Encryption and decryption using Tails OpenPGP Applet
     When I type a message into gedit
     And I encrypt the message using my OpenPGP key
     Then I can decrypt the encrypted message
 
+  #10992
+  @fragile
   Scenario: Signing and verification using Tails OpenPGP Applet
     When I type a message into gedit
     And I sign the message using my OpenPGP key
     Then I can verify the message's signature
 
+  #10991
+  @fragile
   Scenario: Encryption/signing and decryption/verification using Tails OpenPGP Applet
     When I type a message into gedit
     And I both encrypt and sign the message using my OpenPGP key

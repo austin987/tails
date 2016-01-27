@@ -19,11 +19,10 @@ debug_file() {
 debug_command /usr/sbin/dmidecode -s system-manufacturer
 debug_command /usr/sbin/dmidecode -s system-product-name
 debug_command /usr/sbin/dmidecode -s system-version
-debug_command "/bin/dmesg"
 debug_command "/bin/lsmod"
 debug_command "/bin/mount"
 debug_command "/usr/bin/lspci"
-debug_command grep spoof-mac: /var/log/messages
+debug_command /bin/journalctl --catalog --no-pager
 
 # Great attention must be given to the ownership situation of these
 # files and their parent directories in order to avoid a symlink-based
@@ -46,13 +45,9 @@ debug_command grep spoof-mac: /var/log/messages
 # safely and something is probably quite wrong and should be
 # investigated carefully.
 debug_file root "/etc/X11/xorg.conf"
-debug_file amnesia "/home/amnesia/.xsession-errors"
 debug_file root "/proc/asound/cards"
 debug_file root "/proc/asound/devices"
 debug_file root "/proc/asound/modules"
-debug_file root "/var/log/Xorg.0.log"
-debug_file Debian-gdm "/var/log/gdm3/:0-slave.log"
-debug_file Debian-gdm "/var/log/gdm3/:0-greeter.log"
 debug_file Debian-gdm "/var/log/gdm3/tails-greeter.errors"
 debug_file root "/var/log/live-persist"
 debug_file root "/var/log/live/boot.log"

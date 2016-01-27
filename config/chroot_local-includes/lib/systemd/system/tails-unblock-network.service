@@ -1,0 +1,31 @@
+[Unit]
+Description=Unblock network device drivers
+Documentation=https://tails.boum.org/contribute/design/MAC_address/
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+EnvironmentFile=/var/lib/gdm3/tails.physical_security
+
+# It's important we "export" the settings from tails.physical_security
+# before unblocking the network; doing so will make the user-set MAC spoofing
+# option apply (via the custom udev rule) when loading the modules for the
+# previously blocked network devices.
+ExecStartPre=/usr/bin/install -m 0640 -o root -g root \
+                /var/lib/gdm3/tails.physical_security \
+                /var/lib/live/config/tails.physical_security
+ExecStartPre=/bin/sync
+ExecStartPre=/bin/sh -c \
+    'if [ "${TAILS_NETCONF}" = "obstacle" ] ; then \
+         . /usr/local/lib/tails-shell-library/tor.sh ; \
+         tor_set_in_torrc "DisableNetwork" "1"       ; \
+     fi'
+
+# We sync to make sure the blacklist has disappeared from the
+# filesystem
+ExecStart=/bin/sh -c \
+    'if [ "${TAILS_NETCONF}" != "disabled" ] ; then \
+         /bin/rm -f /etc/modprobe.d/all-net-blacklist.conf ; \
+         /bin/touch /etc/modprobe.d ; \
+         /bin/sync ; \
+     fi'
