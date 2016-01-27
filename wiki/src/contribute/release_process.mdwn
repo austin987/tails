@@ -1056,13 +1056,16 @@ this, and skip what does not make sense for a RC.
            --repo "$bare_repo" && \
         rm -rf "$bare_repo"
 
+1. Remove all old versions in `wiki/src/upgrade/v1/Tails` that were
+   never released. Explanation: the post-release APT repository steps
+   from the previous stable release will usually have had us prepare
+   for an emergency release that was never made.
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`, `experimental` and `feature/jessie`.
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
-   repository documentation.
-1. Remove any version in `wiki/src/upgrade/v1/Tails` that was not
-   released.
+   repository documentation. Make sure there are upgrade-description
+   files for any new versions that were added.
 1. Push the resulting branches.
 1. If this was a major release, then reset experimental:
    - take note of branches merged into `experimental`, but not into
