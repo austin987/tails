@@ -1,3 +1,17 @@
+/* MEMO for DAVE states */
+
+/* :not([data-extension])     the extension is disabled or uninstalled */
+/* data-extension^="ok"       the extension is installed and enabled */
+/* data-phase="ready"         we can choose between use or torrent   */
+/* data-phase="started"       the user choosed to use the extension, he can choose to download */
+/* data-phase="downloading"   the downloading is start and not ended (can ba going, paused or failed) */
+/* data-phase="verifying"     DAVE is verifying the ISO */
+/* data-phase="verified"      the ISO has been verified */
+
+/* data-state="going"         the download is in progress */
+/* data-state="pause"         the download is paused (by the user or lost connection or something else)  - it's possible to resume*/
+/* data-state="failed"        the download is failed (by a lost connection or something else) - it's possible to retry */
+
 /*
 Hide every div in the #download-and-verify box except #undetected-browser,
 to set the baseline as a Javascript-disabled fallback.
@@ -19,10 +33,16 @@ html[data-phase^="downl"] #download-message
   display: block !important;
 }
 
-#dave-init { display: none };
-html[data-phase="init"] #dave-init { display: block };
+#dave-init { display: none }
+html[data-phase="init"][data-extension="ok"] #dave-init { display: block; }
 
-html[data-phase="init"] #download-and-verify { display: none };
+#dave-init {
+  width: 100%;
+  text-align: center;
+  margin-top: 5em;
+}
+
+html[data-phase="init"][data-extension="ok"] #download-and-verify { display: none; }
 
 #download-text-state > *,
 #download-button-state > *,
@@ -30,8 +50,8 @@ html[data-phase="init"] #download-and-verify { display: none };
   display: none;
 }
 
-
 html[data-phase^="verif"] #download-and-verify #download,
+html[data-phase^="verif"] #download-and-verify #verify,
 html[data-phase^="downl"] #download-and-verify #download,
 #download[data-state="pause"] #download-text-pause,
 #download[data-state="pause"] #download-message-paused,
@@ -101,7 +121,7 @@ Extension's toggles
 }
 #download.dave-show {
   opacity: 1;
-  transition: opacity: 1s;
+  transition: 1s;
 }
 
 #download-progress {
@@ -111,7 +131,9 @@ Extension's toggles
 [data-phase^="verif"] #download-and-verify #i_have_iso.dave-show { display: none !important}
 
 [data-phase^="download"] #download-button,
+[data-phase^="started"] #bittorrent-minor,
 [data-phase^="download"] #bittorrent-minor,
+[data-phase^="verify"] #bittorrent-minor,
 [data-phase^="verif"] #download-button,
 [data-phase^="verif"] #download-eta,
 [data-phase^="verif"] #download-progress
@@ -196,12 +218,6 @@ will give
   border: none;
 }
 
-/* Remove message once extension has started. */
-html[data-extension^="ok"] #use p,
-html[data-extension^="ok"] #update p,
-html[data-extension^="ok"] #install p {
-  opacity: 0;
-}
 
 /* Add transparency to past states. */
 .btn.disabled, .btn[disabled], fieldset[disabled] .btn {
@@ -249,10 +265,7 @@ html[data-phase^="verifying"] #download {
   cursor: default;
 }
 
-html[data-phase^="verified"] #verify-text {
-    box-shadow: none;
-    opacity: 0.25 !important;
-}
+
 
 /* Hide "Calculating" once verified. */
 html[data-phase^="verified"] #verify-text-calculating {
@@ -288,14 +301,23 @@ html[data-phase^="verified"] #verify-text-calculating {
   display: block;
 }
 
+
 /* Show and Hide bittorent link. */
-html:not([data-extension^="ok"]) #bittorrent-minor {
-  display:block !important;;
+
+#bittorrent-minor {
+  display: none !important;
+  margin-top: 1em;
+  margin-left: 1.2em;
 }
 
-html[data-extension^="ok"] #bittorrent-minor {
-  display:none;
+html:not([data-phase]) #bittorrent-minor {
+  display: block !important;
 }
+
+html[data-phase="ready"] #bittorrent-minor {
+  display: block !important;
+}
+
 
 /* Remove default bootstrap success background. */
 #verify-text-success {
@@ -306,4 +328,120 @@ html[data-extension^="ok"] #bittorrent-minor {
 .download-options a {
   white-space: normal;
   margin-top: 30px;
+}
+
+.extension code {
+  font-size: 80%;
+}
+
+
+/* Steps numbers */
+
+#use > .btn::before,
+#update > .btn::before,
+#install > .btn::before,
+#download > .btn-lg::before,
+#verify > .btn-lg::before {
+  color: #56347C;
+  margin-left: -50px;
+  position: absolute;
+}
+
+#use > .btn::before,
+#update > .btn::before,
+#install > .btn::before {
+  content: "1. ";
+}
+
+#download > .btn-lg::before {
+  content: "2. ";
+}
+
+#verify > .btn-lg::before {
+  content: "3. ";
+}
+
+/* Images */
+
+#download-path {
+  display: inline-block;
+  overflow: auto;
+  width: 400px;
+}
+
+.done img {
+  width: 46px;
+  height: 37px;
+}
+
+#download-button-state-pause img,
+#download-button-state-resume img,
+#download-text-failed img {
+  width: 70%;
+  height: 70%;
+  transition: all 0.2s;
+}
+
+#download-button-state-pause:hover img,
+#download-button-state-resume:hover img {
+  -moz-transform: scale(1.2);
+}
+
+#download-button-state-pause:active img,
+#download-button-state-resume:active img {
+  -moz-transform: rotate(10deg);
+}
+
+#download-button-state-cancel {
+  text-decoration: underline;
+}
+
+#download-and-verify small {
+  font-size: 65% ;
+  text-align: left;
+}
+
+/* Hide failed once is verified */
+html[data-phase^="verified"] #download-text-failed {
+  display: none !important;
+}
+
+/* #verify section behavior */
+html:not([data-phase="ready"]) #verify {
+  display: block !important;
+}
+
+html:not([data-phase]) #verify {
+  display: none !important;
+}
+
+#verify:active {
+  border: none;
+  box-shadow: none;
+}
+
+html:not([data-phase="verified"]) #verify-text-success,
+html:not([data-phase="verified"]) #verify-text-failure,
+html:not([data-phase="verified"]) #verify-text-failure-again,
+html:not([data-phase="verified"]) #verify-text-calculating,
+html:not([data-phase="verified"]) #verify-text-state {
+  display: none;
+}
+
+#download-again {
+  float: right;
+}
+
+html:not([data-phase="verified"]) #downloaded-path {
+  display: none !important;
+}
+
+#download-message-failed, #download-message-paused {
+  padding: 5px;
+  margin: 5px;
+  background: lightgrey;
+}
+
+#download[data-state="failed"] #download-message-failed {
+  display: none !important;
 }
