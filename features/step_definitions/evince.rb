@@ -19,5 +19,5 @@ end
 
 When /^I close Evince$/ do
   @screen.type("w", Sikuli::KeyModifier.CTRL)
-  step 'process "evince" has stopped running after at most 10 seconds'
+  step 'process "evince" has stopped running after at most 20 seconds'
 end

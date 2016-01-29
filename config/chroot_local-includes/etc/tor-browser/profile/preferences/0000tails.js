@@ -102,9 +102,3 @@ pref("browser.download.panel.shown", true);
 // open external applications, so let's not offer the option to the user,
 // and instead only propose them to save downloaded files.
 pref("browser.download.forbid_open_with", true);
-
-// The window resizing feature in Tor Browser 5.5a6 is a bit crazy,
-// causing frequent resizing of the window at inconvenient times. In
-// the automated test suite this results in misclicks because some
-// targets move (due to this window resizing) suddenly.
-pref("extensions.torbutton.resize_windows", false);
