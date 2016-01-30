@@ -16,7 +16,7 @@ class Display
 
   def start
     @virtviewer = IO.popen(["virt-viewer", "--direct",
-                                           "--full-screen",
+                                           "--kiosk",
                                            "--reconnect",
                                            "--connect", "qemu:///system",
                                            "--display", @x_display,

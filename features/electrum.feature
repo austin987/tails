@@ -1,4 +1,6 @@
-@product @check_tor_leaks
+#10497: wait_until_tor_is_working
+#10720: Tails Installer freezes on Jenkins
+@product @check_tor_leaks @fragile
 Feature: Electrum Bitcoin client
   As a Tails user
   I might want to use a Bitcoin client
@@ -23,8 +25,9 @@ Feature: Electrum Bitcoin client
     When I create a new bitcoin wallet
     Then a bitcoin wallet is present
     And I see the main Electrum client window
+    And Electrum successfully connects to the network
     And I shutdown Tails and wait for the computer to power off
-    Given I start Tails from USB drive "current" and I login with persistence enabled
+    Given I start Tails from USB drive "__internal" and I login with persistence enabled
     When I start Electrum through the GNOME menu
     And a bitcoin wallet is present
     And I see the main Electrum client window
