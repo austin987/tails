@@ -4,6 +4,7 @@ Feature: Using Evince
   I want to view and print PDF files in Evince
   And AppArmor should prevent Evince from doing dangerous things
 
+  #10775, #10994
   @fragile
   Scenario: I can view and print a PDF file stored in /usr/share
     Given I have started Tails from DVD without network and logged in
@@ -11,6 +12,8 @@ Feature: Using Evince
     Then I see "CupsTestPage.png" after at most 20 seconds
     And I can print the current document to "/home/amnesia/output.pdf"
 
+  #10994
+  @fragile
   Scenario: I can view and print a PDF file stored in non-persistent /home/amnesia
     Given I have started Tails from DVD without network and logged in
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia" as user "amnesia"
