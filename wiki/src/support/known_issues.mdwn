@@ -464,6 +464,18 @@ Tails fails to connect to certain Wi-Fi networks
 This might be related to the introduction of wireless regulation support
 in Tails 0.13.
 
+The desktop crashes when run with the default QEMU emulated processor
+---------------------------------------------------------------------
+
+Due to a [bug in llvmpipe](https://freedesktop.org/patch/34445/), when
+Tails runs in a QEMU virtual machine with the default emulated CPU,
+the GNOME desktop crashes after login.
+
+To workaround this problem, pass @-cpu host@ on the QEMU command-line.
+If you use <span class="application">libvirt</span>, choose <span
+class="guilabel">Copy host CPU configuration</span> in <span
+class="application">virt-manager</span>'s processor configuration screen.
+
 Touchpad configurations
 -----------------------
 
@@ -492,17 +504,6 @@ Since Tails 1.2, the web browser is based on Tor Browser which is
 translated in less languages than before. You can see the list of
 languages available in Tor Browser from the [Tor Browser
 homepage](https://www.torproject.org/projects/torbrowser.html.en).
-
-The Windows 8 Browser theme doesn't look like Internet Explorer 10
-------------------------------------------------------------------
-
-When the Windows 8 camouflage is enabled, the Internet Explorer 10
-theme for the Tor Browser, Unsafe Browser and I2P Browser is incorrect
-([[!tails_ticket 9326]]). Specifically,
-
-* the default Firefox tab bar is used (it should be positioned above
-  the URL bar, and use a "square" style), and
-* the search bar is enabled (it should be disabled).
 
 <a id="keyboard_layout"></a>
 
@@ -540,3 +541,13 @@ From the print preview, you can click
 <span class="guilabel">Print to File</span> in the list of printers to
 save it as a PDF file. Then you can open this PDF file from the file
 browser.
+
+Slow graphics operations with recent NVidia hardware
+----------------------------------------------------
+
+Graphics display operations are slow on computers with graphics
+adapters of the NVidia [[!wikipedia GeForce 900 series]], such as the
+GeForce GTX 960.
+
+This problem will likely be resolved once Tails
+[[!tails_ticket 10298 desc="includes a newer Linux kernel"]].
