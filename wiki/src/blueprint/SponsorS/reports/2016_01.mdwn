@@ -55,8 +55,54 @@ Everything in this report can be made public.
 
 # B. Improve our quality assurance process
 
+## B.1. Automatically build ISO images for all the branches of our source code that are under active development
+
+In January, **757 ISO images** were automatically built by our Jenkins
+instance.
+
+We worked on designing and implementing a workaround for an issue in our
+autobuild setup: it sometimes happens that a build fails and leaves its
+temporary directories. The subsequent builds happening on the same
+system then always fail as they lack room in the /tmp/ directory.
+([[!tails_ticket 10772]])
+
+## B.2. Continuously run our entire test suite on all those ISO images once they are built
+
+In January, **757 ISO images** were tested by our Jenkins instance.
+
+## B.3. Extend the coverage of our test suite
+
+* B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+  - We've marked some more scenarios as fragile, as we noticed there
+    were still some false positives ([[!tails_ticket 10863]]):
+    Encrypting and signing a message using an OpenPGP key
+    ([[!tails_ticket 10991]])
+    OpenPGP applet key selection window badly handled
+    ([[!tails_ticket 10992]])
+    Viewing and printing a PDF file ([[!tails_ticket 10994]])
+
 
 # C. Scale our infrastructure
+
+## C.2. Be able to detect within hours failures and malfunction on our services
+
+We're still working on the prototype and it now has a setup for all the
+checks we ranked in the blueprint as critical. ([[!tails_ticket 8650]])
+
+This helped us to check how the chosen software is corresponding to the
+requirements we defined. An implementation has been proposed.
+([[!tails_ticket 8645]])
+
+## C.4. Maintain our already existing services
+
+We kept on answering the requests from the community as well as taking
+care of security updates as covered by "C.4.4. Administer our services
+up to milestone IV" and "C.4.5. Administer our services up to milestone
+V" until the end of January.
+
+A design to administer our new monitoring machine with puppet has been
+proposed. ([[!tails_ticket 10760]])
 
 
 # D. Migration to Debian Jessie
