@@ -178,17 +178,8 @@ But /^checking for updates is disabled in the Unsafe Browser's configuration$/ d
 end
 
 Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
-  pkts = 0
   uid = $vm.execute_successfully("id -u clearnet").stdout.chomp.to_i
-  ip4tables_chains do |name, _, rules|
-    next unless name == "OUTPUT"
-    rules.each do |rule|
-      if rule.elements["conditions/owner/uid-owner[text()=#{uid}]"]
-        pkts += rule.attribute('packet-count').to_s.to_i
-      end
-    end
-  end
-
+  pkts = ip4tables_packet_counter_sum(:tables => ['OUTPUT'], :uid => uid)
   case sent
   when ''
     assert(pkts > 0, "Packets have not gone out to the internet.")

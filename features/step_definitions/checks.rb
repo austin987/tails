@@ -191,7 +191,7 @@ Then /^the running process "(.+)" is confined with AppArmor in (complain|enforce
     assert($vm.has_process?(process), "Process #{process} not running.")
     pid = $vm.pidof(process)[0]
   end
-  assert(mode, get_apparmor_status(pid))
+  assert_equal(mode, get_apparmor_status(pid))
 end
 
 Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mode$/ do |process,mode|
@@ -234,5 +234,14 @@ Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
     # Remove the secret so it cannot possibly interfere with the
     # following iterations (even though it should not).
     $vm.execute_successfully("echo > #{debug_file}")
+  end
+end
+
+When /^I disable all networking in the Tails Greeter$/ do
+  begin
+    @screen.click('TailsGreeterDisableAllNetworking.png')
+  rescue FindFailed
+    @screen.type(Sikuli::Key.PAGE_DOWN)
+    @screen.click('TailsGreeterDisableAllNetworking.png')
   end
 end

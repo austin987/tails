@@ -50,6 +50,8 @@ Feature: Spoofing MAC addresses
     Then no network interfaces are enabled
     And the real MAC address was not leaked
 
+  #10774
+  @fragile
   Scenario: MAC address spoofing fails and the module is not removed
     Given macchanger will fail by not spoofing and always returns true
     And no network interface modules can be unloaded
