@@ -6,7 +6,7 @@
 VIRTUAL_MACHINE_HOSTNAME = 'tails-builder-20140709.vagrantup.com'
 
 # Approximate amount of extra space needed for builds
-BUILD_SPACE_REQUIREMENT = 7*1024
+BUILD_SPACE_REQUIREMENT = 7*1024 + 128
 
 # Virtual machine memory size for on-disk builds
 VM_MEMORY_FOR_DISK_BUILDS = 512

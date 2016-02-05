@@ -5,7 +5,7 @@
 set -eu
 set -o pipefail
 
-LANGUAGES=${@:-de fr pt}
+LANGUAGES=${@:-de fa fr pt}
 
 count_msgids () {
     cat | grep -E '^msgid\s+' | wc -l

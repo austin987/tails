@@ -80,7 +80,9 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   info = xul_application_info(browser)
   open_address = Proc.new do
     @screen.click(info[:address_bar_image])
-    sleep 0.5
+    # This static here since we have no reliable visual indicators
+    # that we can watch to know when typing is "safe".
+    sleep 5
     # The browser sometimes loses keypresses when suggestions are
     # shown, which we work around by pasting the address from the
     # clipboard, in one go.
@@ -158,4 +160,27 @@ Then /^the (.*) runs as the expected user$/ do |browser|
   assert_vmcommand_success($vm.execute(
     "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"),
     "The #{browser} is not running as the #{info[:user]} user")
+end
+
+When /^I download some file in the Tor Browser$/ do
+  @some_file = 'tails-signing.key'
+  some_url = "https://tails.boum.org/#{@some_file}"
+  step "I open the address \"#{some_url}\" in the Tor Browser"
+end
+
+Then /^I get the browser download dialog$/ do
+  @screen.wait('BrowserDownloadDialog.png', 60)
+  @screen.wait('BrowserDownloadDialogSaveAsButton.png', 10)
+end
+
+When /^I save the file to the default Tor Browser download directory$/ do
+  @screen.click('BrowserDownloadDialogSaveAsButton.png')
+  @screen.wait('BrowserDownloadFileToDialog.png', 10)
+  @screen.type(Sikuli::Key.ENTER)
+end
+
+Then /^the file is saved to the default Tor Browser download directory$/ do
+  assert_not_nil(@some_file)
+  expected_path = "/home/#{LIVE_USER}/Tor Browser/#{@some_file}"
+  try_for(10) { $vm.file_exist?(expected_path) }
 end
