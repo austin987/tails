@@ -5,6 +5,26 @@ require 'tmpdir'
 
 # Run once, before any feature
 AfterConfiguration do |config|
+  # Reorder the execution of some features. As we progress through a
+  # run we accumulate more and more snapshots and hence use more and
+  # more disk space, but some features will leave nothing behind
+  # and/or possibly use large amounts of disk space temporarily for
+  # various reasons. By running these first we minimize the amount of
+  # disk space needed.
+  prioritized_features = [
+    'features/erase_memory.feature',
+    'features/untrusted_partitions.feature',
+  ]
+  feature_files = config.feature_files
+  # The &-intersaection is specified to keep the element ordering of
+  # the *left* operand.
+  intersection = prioritized_features & feature_files
+  if not intersection.empty?
+    feature_files -= intersection
+    feature_files = intersection + feature_files
+    config.define_singleton_method(:feature_files) { feature_files }
+  end
+
   # Used to keep track of when we start our first @product feature, when
   # we'll do some special things.
   $started_first_product_feature = false
