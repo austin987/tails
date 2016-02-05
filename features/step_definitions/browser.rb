@@ -80,7 +80,9 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   info = xul_application_info(browser)
   open_address = Proc.new do
     @screen.click(info[:address_bar_image])
-    sleep 0.5
+    # This static here since we have no reliable visual indicators
+    # that we can watch to know when typing is "safe".
+    sleep 5
     # The browser sometimes loses keypresses when suggestions are
     # shown, which we work around by pasting the address from the
     # clipboard, in one go.
