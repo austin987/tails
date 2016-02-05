@@ -22,6 +22,10 @@ AfterConfiguration do |config|
     'features/root_access_control.feature',
     'features/time_syncing.feature',
     'features/tor_bridges.feature',
+    # This feature needs the almost biggest snapshot (USB install,
+    # excluding persistence) and will create yet another disk and
+    # install Tails on it. This should be the peak of disk usage.
+    'features/usb_install.feature',
   ]
   feature_files = config.feature_files
   # The &-intersaection is specified to keep the element ordering of
