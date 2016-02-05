@@ -27,14 +27,14 @@ cleanup() {
 }
 
 remove_build_dirs() {
-	for mountpoint in $(old_build_dirs) ; do
+	for mountpoint in $(old_build_dirs | tac) ; do
 		sudo umount -f -l "$mountpoint"
 		sudo rm -r "$mountpoint"
 	done
 }
 
 old_build_dirs() {
-	mount | egrep '(/tmp/tmpfs.|/tmp/tails-build)' | awk '{ print $3 }' | tac
+	mount | egrep '(/tmp/tmpfs.|/tmp/tails-build)' | awk '{ print $3 }'
 }
 
 trap cleanup EXIT
