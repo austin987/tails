@@ -54,6 +54,10 @@ When /^I create my XMPP account$/ do
   @screen.wait("PidginAddAccountWindow.png", 20)
   @screen.click_mid_right_edge("PidginAddAccountProtocolLabel.png")
   @screen.click("PidginAddAccountProtocolXMPP.png")
+  # We first wait for some field that is shown for XMPP but not the
+  # default (IRC) since we otherwise may decide where we click before
+  # the GUI has updated after switching protocol.
+  @screen.wait("PidginAddAccountXMPPDomain.png", 5)
   @screen.click_mid_right_edge("PidginAddAccountXMPPUsername.png")
   @screen.type(account["username"])
   @screen.click_mid_right_edge("PidginAddAccountXMPPDomain.png")
@@ -279,7 +283,8 @@ When /^I start Pidgin through the GNOME menu$/ do
 end
 
 When /^I open Pidgin's account manager window$/ do
-  @screen.type("a", Sikuli::KeyModifier.CTRL) # shortcut for "manage accounts"
+  @screen.wait_and_click('PidginMenuAccounts.png', 20)
+  @screen.wait_and_click('PidginMenuManageAccounts.png', 20)
   step "I see Pidgin's account manager window"
 end
 
@@ -451,7 +456,7 @@ When /^I see the Tails roadmap URL$/ do
     begin
       @screen.find('PidginTailsRoadmapUrl.png')
     rescue FindFailed => e
-      @screen.click('PidginScrollArrowUp.png')
+      @screen.type(Sikuli::Key.PAGE_UP)
       raise e
     end
   end

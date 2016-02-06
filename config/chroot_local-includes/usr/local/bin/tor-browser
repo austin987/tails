@@ -43,7 +43,7 @@ tor_has_bootstrapped() {
 
 start_browser() {
     if [ ! -d "${PROFILE}" ]; then
-        /usr/local/bin/generate-tor-browser-profile
+        /usr/local/lib/generate-tor-browser-profile
     fi
 
     TMPDIR="${PROFILE}/tmp"
@@ -55,18 +55,16 @@ start_browser() {
     # not enough to simply set intl.locale.matchOS to true.
     configure_best_tor_browser_locale "${PROFILE}"
 
-    if [ -z "$XAUTHORITY" ]; then
-        XAUTHORITY=~/.Xauthority
-        export XAUTHORITY
-    fi
-
     unset SESSION_MANAGER
+
+    export FONTCONFIG_PATH="${TBB_INSTALL}/TorBrowser/Data/fontconfig"
+    export FONTCONFIG_FILE="fonts.conf"
 
     exec_firefox -allow-remote --class "Tor Browser" -profile "${PROFILE}" "${@}"
 }
 
 
-if tor_has_bootstrapped || ask_for_confirmation; then
+if /usr/local/sbin/tor-has-bootstrapped || ask_for_confirmation; then
     # Torbutton 1.5.1+ uses those environment variables
     export TOR_SOCKS_HOST='127.0.0.1'
     export TOR_SOCKS_PORT='9150'

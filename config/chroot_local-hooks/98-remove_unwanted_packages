@@ -8,19 +8,20 @@ echo "Removing unwanted packages"
 
 # We use apt-get as aptitude doesn't know about globs.
 # There are packages we could be tempted to remove but we can't:
-#   - gcc-4.7-base (libstdc++6 depends on it)
+#   - gcc-*-base (libstdc++6 depends on it)
 #   - libgcc1 (vidalia depends on it)
-#   - cpp, cpp-4.4 (big parts of GNOME depend on it)
+#   - cpp, cpp-* (big parts of GNOME depend on it)
 apt-get --yes purge  \
    '^linux-kbuild-*' \
    '^linux-headers-*' \
    build-essential debhelper dkms dpatch dpkg-dev \
-   gcc gcc-4.7 gcc-4.8 \
+   gcc gcc-4.8 gcc-4.8-base gcc-4.9 \
    intltool-debian \
    libc6-dev libgl1-mesa-dev libstdc++6-4.4-dev linux-libc-dev \
    make \
    module-assistant \
    po-debconf \
+   rsyslog \
    equivs virtualbox-guest-dkms
 
 ### Deinstall a few unwanted packages that were pulled by tasksel
@@ -34,6 +35,7 @@ apt-get --yes purge  \
 apt-get --yes purge  \
     '^aptitude*' \
     db5.1-util \
+    '^geoclue*' \
     krb5-locales \
     live-build \
     locales \

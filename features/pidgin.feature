@@ -1,4 +1,5 @@
-@product
+#10497: wait_until_tor_is_working
+@product @fragile
 Feature: Chatting anonymously using Pidgin
   As a Tails user
   when I chat using Pidgin
@@ -90,6 +91,8 @@ Feature: Chatting anonymously using Pidgin
     And I close Pidgin's certificate manager
     Then I cannot add a certificate from the "/live/overlay/home/amnesia/.gnupg" directory to Pidgin
 
+  #10443 - OFTC tests are fragile
+  #10720: Tails Installer freezes on Jenkins
   @check_tor_leaks @fragile
   Scenario: Using a persistent Pidgin configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
@@ -105,7 +108,7 @@ Feature: Chatting anonymously using Pidgin
     # And I take note of the OTR key for Pidgin's "irc.oftc.net" account
     And I shutdown Tails and wait for the computer to power off
     Given a computer
-    And I start Tails from USB drive "current" and I login with persistence enabled
+    And I start Tails from USB drive "__internal" and I login with persistence enabled
     And Pidgin has the expected persistent accounts configured
     # And Pidgin has the expected persistent OTR keys
     When I start Pidgin through the GNOME menu
