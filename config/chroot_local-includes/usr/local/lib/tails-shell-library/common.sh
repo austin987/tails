@@ -5,8 +5,7 @@
 # arithmetic is a PITA in the shell.
 clock_gettime_monotonic() {
     perl -w -MTime::HiRes=clock_gettime,CLOCK_MONOTONIC \
-         -E 'say clock_gettime(CLOCK_MONOTONIC)' | \
-        sed 's/\..*$//'
+         -E 'say int(clock_gettime(CLOCK_MONOTONIC))'
 }
 
 # Run `check_expr` until `timeout` seconds has passed, and sleep

@@ -2,6 +2,9 @@
 
 set -eu
 
+# We're a no-op unless running as the default desktop user
+[ "$(/usr/bin/id -u)" = 1000 ] || exit 0
+
 . /usr/local/lib/tails-shell-library/tails-greeter.sh
 
 add_gtk_bookmark_for() {

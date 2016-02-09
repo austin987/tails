@@ -46,7 +46,7 @@ class VMNet
 
   def bridge_ip_addr
     net_xml = REXML::Document.new(@net.xml_desc)
-    net_xml.elements['network/ip'].attributes['address']
+    IPAddr.new(net_xml.elements['network/ip'].attributes['address']).to_s
   end
 
   def guest_real_mac
@@ -57,7 +57,6 @@ class VMNet
   def bridge_mac
     File.open("/sys/class/net/#{bridge_name}/address", "rb").read.chomp
   end
-
 end
 
 
@@ -138,28 +137,6 @@ class VM
     set_network_link_state('down')
   end
 
-  def set_cdrom_tray_state(state)
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements.each('domain/devices/disk') do |e|
-      if e.attribute('device').to_s == "cdrom"
-        e.elements['target'].attributes['tray'] = state
-        if is_running?
-          @domain.update_device(e.to_s)
-        else
-          update(domain_xml.to_s)
-        end
-      end
-    end
-  end
-
-  def eject_cdrom
-    set_cdrom_tray_state('open')
-  end
-
-  def close_cdrom
-    set_cdrom_tray_state('closed')
-  end
-
   def set_boot_device(dev)
     if is_running?
       raise "boot settings can only be set for inactive vms"
@@ -170,15 +147,20 @@ class VM
   end
 
   def set_cdrom_image(image)
+    image = nil if image == ''
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       if e.attribute('device').to_s == "cdrom"
-        if ! e.elements['source']
-          e.add_element('source')
+        if image.nil?
+          e.elements.delete('source')
+        else
+          if ! e.elements['source']
+            e.add_element('source')
+          end
+          e.elements['source'].attributes['file'] = image
         end
-        e.elements['source'].attributes['file'] = image
         if is_running?
-          @domain.update_device(e.to_s, Libvirt::Domain::DEVICE_MODIFY_FORCE)
+          @domain.update_device(e.to_s)
         else
           update(domain_xml.to_s)
         end
@@ -187,7 +169,15 @@ class VM
   end
 
   def remove_cdrom
-    set_cdrom_image('')
+    set_cdrom_image(nil)
+  rescue Libvirt::Error => e
+    # While the CD-ROM is removed successfully we still get this
+    # error, so let's ignore it.
+    acceptable_error =
+      "Call to virDomainUpdateDeviceFlags failed: internal error: unable to " +
+      "execute QEMU command 'eject': (Tray of device '.*' is not open|" +
+      "Device '.*' is locked)"
+    raise e if not(Regexp.new(acceptable_error).match(e.to_s))
   end
 
   def set_cdrom_boot(image)
@@ -196,7 +186,6 @@ class VM
     end
     set_boot_device('cdrom')
     set_cdrom_image(image)
-    close_cdrom
   end
 
   def list_disk_devs
@@ -287,6 +276,17 @@ class VM
   def disk_dev(name)
     rexml = disk_rexml_desc(name) or return nil
     return "/dev/" + rexml.elements['disk/target'].attribute('dev').to_s
+  end
+
+  def disk_name(dev)
+    dev = File.basename(dev)
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements.each('domain/devices/disk') do |e|
+      if /^#{e.elements['target'].attribute('dev').to_s}/.match(dev)
+        return File.basename(e.elements['source'].attribute('file').to_s)
+      end
+    end
+    raise "No such disk device '#{dev}'"
   end
 
   def udisks_disk_dev(name)
@@ -386,7 +386,7 @@ class VM
     xml = <<EOF
   <qemu:commandline xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
     <qemu:arg value='-cpu'/>
-    <qemu:arg value='pentium,-pae'/>
+    <qemu:arg value='qemu32,-pae'/>
   </qemu:commandline>
 EOF
     domain_xml = REXML::Document.new(@domain.xml_desc)
@@ -448,7 +448,7 @@ EOF
     return execute(cmd, options)
   end
 
-  def wait_until_remote_shell_is_up(timeout = 30)
+  def wait_until_remote_shell_is_up(timeout = 90)
     VMCommand.wait_until_remote_shell_is_up(self, timeout)
   end
 
@@ -494,7 +494,7 @@ EOF
       # back seems to be a reliable way to handle this.
       select_virtual_desktop(3)
       select_virtual_desktop(0)
-      sleep 1
+      sleep 5 # there aren't any visual indicators which can be used here
       do_focus(window_title, user)
     end
   end
@@ -523,6 +523,15 @@ EOF
       assert(cmd.success?,
              "Could not append to '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
     end
+  end
+
+  def set_clipboard(text)
+    execute_successfully("echo -n '#{text}' | xsel --input --clipboard",
+                         :user => LIVE_USER)
+  end
+
+  def get_clipboard
+    execute_successfully("xsel --output --clipboard", :user => LIVE_USER).stdout
   end
 
   def internal_snapshot_xml(name)
