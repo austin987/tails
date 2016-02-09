@@ -1,3 +1,97 @@
+[[!toc levels=1]]
+
+# Linux dependencies
+
+The current Tails Installer version (<https://git-tails.immerda.ch/liveusb-creator/>)
+has considerable changes when compared with the upstream Fedora liveusb-creator
+(<https://git.fedorahosted.org/cgit/liveusb-creator.git>).
+
+The current package dependencies for the Tails Installer in Linux are:
+
+* dosfstools
+* gdisk
+* genisoimage
+* gir1.2-glib-2.0
+* gir1.2-gtk-3.0
+* gir1.2-udisks-2.0
+* mtools
+* p7zip-full
+* policykit-1
+* python-configobj
+* python-gi
+* python-urlgrabber
+* syslinux
+
+If we list the set of requirements for each important source file then we have:
+
+### \_\_init\_\_.py
+
+    import gettext
+
+    if sys.platform == 'win32':
+        import gettext_windows
+        gettext_windows.setup_env()
+
+### creator.py
+
+    if 'linux' in sys.platform:
+        import gi
+        gi.require_version('UDisks', '2.0')
+        from gi.repository import UDisks, GLib
+
+    Commands:
+    * syslinux
+    * sgdisk
+    * dd
+    * dosfslabel
+    * e2label
+    * extlinux
+    * pkexec
+    * mkdiskimage
+    * sync
+
+### gui.py
+
+    from gi.repository import Gdk, GLib, Gtk
+    urlgrabber
+
+    In general GTK3
+
+### launcher.py
+
+    from gi.repository import Gtk
+
+### utils.py
+
+    if 'linux' in sys.platform:
+        from gi.repository import GLib
+
+# Alternatives for Windows:
+
+If we make a diff of the Windows class section in the "creator.py" source file,
+comparing the current Tails version and the upstream version like this:
+
+    git difftool remotes/origin/master:tails_installer/creator.py remotes/b/master:liveusb/creator.py
+
+we can see that the changes are not so big, at least in the raw Windows tools used.
+These tools are basically, the Python win32 interfaces:
+
+    import win32file, win32api, pywintypes
+
+and set of third parties tools listed here:
+
+<https://git-tails.immerda.ch/liveusb-creator/tree/tools>
+
+There are other tools that would be possible to explore like:
+<https://labs.riseup.net/code/issues/10984>
+
+As a conclusion, the biggest difference in the current Tails version is the usage
+of the Python interface for GTK3 (PyGI). The tools/libraries for Windows used in
+the current upstream liveusb-creator version seem in principle like the same
+used for Tails right now, except for the GUI parts.
+In the next section a proposed solution for porting applications using this library
+for Windows is described.
+
 # PyGI windows executable
 
 I managed to create a native windows executable for a test Python/GI program under Windows 8.1
