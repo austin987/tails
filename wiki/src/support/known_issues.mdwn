@@ -309,16 +309,6 @@ This network interface can, for instance, be found in the MacBook Air
 Security issues
 ===============
 
-Claws Mail leaks plaintext of encrypted emails to IMAP server
--------------------------------------------------------------
-
-Claws Mail stores plaintext copies of all emails on the remote IMAP
-server, including those that are meant to be encrypted.
-
-If you send OpenPGP encrypted emails using *Claws Mail* and IMAP, make
-sure to apply one of the workarounds documented in our [[security
-announcement|security/claws_mail_leaks_plaintext_to_imap]].
-
 Tails might not erase all the system memory on shutdown
 -------------------------------------------------------
 
@@ -365,14 +355,6 @@ Also, the "normal" (non-emergency) shutdown procedure does not eject
 the DVD anymore.
 
 See [[!tails_ticket 5447 desc="Fix DVD eject at shutdown"]].
-
-Stream isolation inconsistency in Claws Mail
---------------------------------------------
-
-Claws Mail isn't using its dedicated Tor SocksPort for Tor hidden
-service IMAP/POP/SMTP servers (instead Tor's TransPort is used). This
-is just a deviation from Tails' design and should have no adverse real
-world consequences.
 
 Tails fails to completely shutdown or restart
 ---------------------------------------------
@@ -431,6 +413,16 @@ OR
 There are known differences between the fingerprints of <span
 class="application">Tor Browser</span> inside and outside of Tails:
 
+* Tor Browser 5.5 introduces
+  [protection against fingerprinting](https://trac.torproject.org/projects/tor/ticket/13313)
+  but due to an [[!tails_ticket 11000 desc="oversight"]]
+  it is not enabled in Tails 2.0. However, this is not so bad for
+  Tails users since each Tails system has the same fonts installed,
+  and hence will look identical, so this only means that it's easy to
+  distinguish whether a user of Tor Browser 5.5 uses Tails or
+  not. That is already easy given that Tails has the AdBlock Plus
+  extension enabled, unlike the normal Tor Browser.
+
 -->
 
 Other issues
@@ -472,6 +464,18 @@ Tails fails to connect to certain Wi-Fi networks
 This might be related to the introduction of wireless regulation support
 in Tails 0.13.
 
+The desktop crashes when run with the default QEMU emulated processor
+---------------------------------------------------------------------
+
+Due to a [bug in llvmpipe](https://freedesktop.org/patch/34445/), when
+Tails runs in a QEMU virtual machine with the default emulated CPU,
+the GNOME desktop crashes after login.
+
+To workaround this problem, pass @-cpu host@ on the QEMU command-line.
+If you use <span class="application">libvirt</span>, choose <span
+class="guilabel">Copy host CPU configuration</span> in <span
+class="application">virt-manager</span>'s processor configuration screen.
+
 Touchpad configurations
 -----------------------
 
@@ -501,17 +505,6 @@ translated in less languages than before. You can see the list of
 languages available in Tor Browser from the [Tor Browser
 homepage](https://www.torproject.org/projects/torbrowser.html.en).
 
-The Windows 8 Browser theme doesn't look like Internet Explorer 10
-------------------------------------------------------------------
-
-When the Windows 8 camouflage is enabled, the Internet Explorer 10
-theme for the Tor Browser, Unsafe Browser and I2P Browser is incorrect
-([[!tails_ticket 9326]]). Specifically,
-
-* the default Firefox tab bar is used (it should be positioned above
-  the URL bar, and use a "square" style), and
-* the search bar is enabled (it should be disabled).
-
 <a id="keyboard_layout"></a>
 
 Keyboard layout is sometimes not applied
@@ -524,6 +517,7 @@ in the notification area to switch between English and the layout
 selected in *Tails Greeter*.
 
 <a id="automatic_upgrade_fails"></a>
+
 Tails does not boot after automatic upgrade
 -------------------------------------------
 
@@ -547,3 +541,13 @@ From the print preview, you can click
 <span class="guilabel">Print to File</span> in the list of printers to
 save it as a PDF file. Then you can open this PDF file from the file
 browser.
+
+Slow graphics operations with recent NVidia hardware
+----------------------------------------------------
+
+Graphics display operations are slow on computers with graphics
+adapters of the NVidia [[!wikipedia GeForce 900 series]], such as the
+GeForce GTX 960.
+
+This problem will likely be resolved once Tails
+[[!tails_ticket 10298 desc="includes a newer Linux kernel"]].
