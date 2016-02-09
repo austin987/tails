@@ -24,41 +24,41 @@ Last month we modified our Icedove schedule quite a bit, but due to
 sickness, some work has been delayed, while other tasks have moved
 forward faster than expected.
 
-## A.1.1 Secure the Icedove autoconfig wizard
+- A.1.1 Secure the Icedove autoconfig wizard
 
-The proof-of-concept branch that integrates the secured wizard into
-Tails is delayed until the end of February and will be released in
-2.3 instead.
+  The proof-of-concept branch that integrates the secured wizard into
+  Tails is delayed until the end of February and will be released in
+  2.3 instead.
 
-   We've been evaluating our own patches for Icedove against those
-   reported to Mozilla's bugtracker and are happy to announce that our
-   patches would provide an option to accept only secure protocols, as
-   a user opt-in. These patches will be submitted to Mozilla's bugtracker
-   and hopefully integrated upstream.
-   ([[!tails_ticket 7064]])
+  We've been evaluating our own patches for Icedove against those
+  reported to Mozilla's bugtracker and are happy to announce that our
+  patches would provide an option to accept only secure protocols, as
+  a user opt-in. These patches will be submitted to Mozilla's bugtracker
+  and hopefully integrated upstream.
+  ([[!tails_ticket 7064]])
 
-## A.1.2 Make our improvements maintainable for future versions of Icedove
+- A.1.2 Make our improvements maintainable for future versions of Icedove
 
-   Unfortunately we also discovered that the autoconfig wizard of Icedove does
-   not always use the configured proxy. This means, that some traffic can leak.
-   This is not a security problem in Tails since we drop non-Tor
-   traffic by default, but for this very reason it breaks the
-   functionality of the autoconfig wizard in the context of Tails.
-   We started to write a proof-of-concept patch to fix this bug which 
-   will be submitted upstream in February.
+  Unfortunately we also discovered that the autoconfig wizard of Icedove does
+  not always use the configured proxy. This means, that some traffic can leak.
+  This is not a security problem in Tails since we drop non-Tor
+  traffic by default, but for this very reason it breaks the
+  functionality of the autoconfig wizard in the context of Tails.
+  We started to write a proof-of-concept patch to fix this bug which
+  will be submitted upstream in February.
 
-   We've worked out a set of strong arguments before actually presenting
-   our patches to upstream. We are now ready to do that.
+  We've worked out a set of strong arguments before actually presenting
+  our patches to upstream. We are now ready to do that.
 
-   In order to improve Icedove's security in Tails and avoid unforeseen exploits,
-   we started evaluating an AppArmor profile for Icedove ([[!tails_ticket 10750]]).
-   We've asked the author to submit it upstream where it's now waiting to be merged.
-   In the meantime, we will ship this profile in Tails on our own.
+  In order to improve Icedove's security in Tails and avoid unforeseen exploits,
+  we started evaluating an AppArmor profile for Icedove ([[!tails_ticket 10750]]).
+  We've asked the author to submit it upstream where it's now waiting to be merged.
+  In the meantime, we will ship this profile in Tails on our own.
 
-## A.1.6. Release Icedove in Tails
+- A.1.6. Release Icedove in Tails
 
-   Icedove was made the default email client in Tails 1.8 (December 15)
-   and Claws Mail was removed from Tails in version 2.0 (January 26).
+  Icedove was made the default email client in Tails 1.8 (December 15)
+  and Claws Mail was removed from Tails in version 2.0 (January 26).
 
 # B. Improve our quality assurance process
 
@@ -77,54 +77,53 @@ system then always fail as they lack room in the /tmp/ directory.
 
 In January, **757 ISO images** were tested by our Jenkins instance.
 
-* B.2.4. Implement and deploy the best solution from this research: [[!tails_ticket 5288]]
+- B.2.4. Implement and deploy the best solution from this research: [[!tails_ticket 5288]]
 
-We installed the Jenkins `Cluster Statistics` plugin in order to get a
-better idea of our Jenkins slaves usage. ([[!tails_ticket 10969]])
+  We installed the Jenkins `Cluster Statistics` plugin in order to get a
+  better idea of our Jenkins slaves usage. ([[!tails_ticket 10969]])
 
-We're at the stage where we can consider our setup deployed, minus some
-minor bugs we still need to investigate and a collective process we have
-to clarify:
+  We're at the stage where we can consider our setup deployed, minus some
+  minor bugs we still need to investigate and a collective process we have
+  to clarify:
 
-We planned to design a collective way to check regulary for false
-positives and fragile scenarios, as it has proven to be not that well
-handled by our team. This is planned to be discussed and implemented at
-our February monthly CI team meeting. ([[!tails_ticket 10993]])
+  We planned to design a collective way to check regulary for false
+  positives and fragile scenarios, as it has proven to be not that well
+  handled by our team. This is planned to be discussed and implemented at
+  our February monthly CI team meeting. ([[!tails_ticket 10993]])
 
-We still need to investigate on a bug we've seen with the usage of the
-Jenkins Cucumber Test Result plugin that is likely to only have been due
-to a change we made in our infrastructure at the same moment it was
-running. ([[!tails_ticket 10725]])
+  We still need to investigate on a bug we've seen with the usage of the
+  Jenkins Cucumber Test Result plugin that is likely to only have been due
+  to a change we made in our infrastructure at the same moment it was
+  running. ([[!tails_ticket 10725]])
 
-We've sometimes seen some of our ISO testing VMs going offline and being
-unavailable for new jobs. We tried a workaround, but we still need to
-check if it worked. ([[!tails_ticket 10601]])
+  We've sometimes seen some of our ISO testing VMs going offline and being
+  unavailable for new jobs. We tried a workaround, but we still need to
+  check if it worked. ([[!tails_ticket 10601]])
 
 ## B.3. Extend the coverage of our test suite
 
-* B.3.7. Automatically test behavior on boot medium removal:
-  [[!tails_ticket 5472]]
+- B.3.7. Automatically test behavior on boot medium removal: [[!tails_ticket 5472]]
 
   This was implemented and merged.
 
-* B.3.11. Fix newly identified issues to make our test suite more robust and faster
+- B.3.11. Fix newly identified issues to make our test suite more robust and faster
 
-  - We've marked some more scenarios as fragile, as we noticed there
-    were still some false positives ([[!tails_ticket 10863]]):
-    Encrypting and signing a message using an OpenPGP key
-    ([[!tails_ticket 10991]]),
-    OpenPGP applet key selection window badly handled
-    ([[!tails_ticket 10992]]),
-    Viewing and printing a PDF file ([[!tails_ticket 10994]]),
-    MAC address spoofing ([[!tails_ticket 10774]]),
-    Tails Installer ([[!tails_ticket 10720]])
+  We've marked some more scenarios as fragile, as we noticed there
+  were still some false positives ([[!tails_ticket 10863]]):
+  Encrypting and signing a message using an OpenPGP key
+  ([[!tails_ticket 10991]]),
+  OpenPGP applet key selection window badly handled
+  ([[!tails_ticket 10992]]),
+  Viewing and printing a PDF file ([[!tails_ticket 10994]]),
+  MAC address spoofing ([[!tails_ticket 10774]]),
+  Tails Installer ([[!tails_ticket 10720]])
 
-  - The test suite machinery sometimes misses the boot splash
-    ([[!tails_ticket 10777]]): a branch was proposed.
+  The test suite machinery sometimes misses the boot splash
+  ([[!tails_ticket 10777]]): a branch was proposed.
 
-  - Some research was done on [[!tails_ticket 10504]] ("boot_device
-    method in features/step_definitions/usb.rb is broken"), that we
-    can't reproduce anymore.
+  Some research was done on [[!tails_ticket 10504]] ("boot_device
+  method in features/step_definitions/usb.rb is broken"), that we
+  can't reproduce anymore.
 
 ## B.4. Freezable APT repository
 
@@ -132,8 +131,7 @@ This was put aside in January, while the developer responsible for
 this project was focusing on porting Tails to Debian Jessie. A little
 progress was made nevertheless:
 
-* B.4.6. Adjust the rest of our ecosystem to the freezable APT
-  repository: [[!tails_ticket 6303]]
+- B.4.6. Adjust the rest of our ecosystem to the freezable APT repository: [[!tails_ticket 6303]]
 
   We completed our evaluation of the hardware resources required by
   our draft design ([[!tails_ticket 6295]]), purchased and set up the
@@ -162,44 +160,41 @@ beginning of April to refine our setup, mostly on the notification part.
 This should lead us toward the completion of the whole C.2 deliverable
 before M5 is over.
 
-  - C.2.1. Research and decide what monitoring solution to use 
-           what tools and abstraction layer to use for configuring it, 
-           and where to host it.
+- C.2.1. Research and decide what monitoring solution to use
+         what tools and abstraction layer to use for configuring it,
+         and where to host it.
 
-    We settled on one candidate that seems to fit the most regarding our
-    specifications.
+  We settled on one candidate that seems to fit the most regarding our
+  specifications.
 
-    We're still working on the prototype and it now has a setup for all
-    the checks we ranked in the blueprint as critical. ([[!tails_ticket 8650]])
+  We're still working on the prototype and it now has a setup for all
+  the checks we ranked in the blueprint as critical. ([[!tails_ticket 8650]])
 
-    This helped us to get a final check regarding how the chosen software
-    is really corresponding to the requirements we defined. An
-    implementation has been proposed and is being discussed. ([[!tails_ticket 8645]])
+  This helped us to get a final check regarding how the chosen software
+  is really corresponding to the requirements we defined. An
+  implementation has been proposed and is being discussed. ([[!tails_ticket 8645]])
 
-  - C.2.2. Set up the monitoring software and the underlying
-    infrastructure
+- C.2.2. Set up the monitoring software and the underlying infrastructure
 
-    The prototype is already deployed, and we're just waiting for the
-    system that will host it to be configured to put it into production.
+  The prototype is already deployed, and we're just waiting for the
+  system that will host it to be configured to put it into production.
 
-  - C.2.4. Configure and debug the monitoring of the most critical
-    services
+- C.2.4. Configure and debug the monitoring of the most critical services
 
-    The prototype already have a check setup for all of them, and once the
-    production system is deployed live they will be setup there.
+  The prototype already have a check setup for all of them, and once the
+  production system is deployed live they will be setup there.
 
-  - C.2.5. Configure the receiving side of the monitoring notifications
+- C.2.5. Configure the receiving side of the monitoring notifications
 
-    During the discussion about which services to check, we already
-    defined our needs concerning notifications. This will be handled
-    after the monitoring software is deployed on the production host.
+  During the discussion about which services to check, we already
+  defined our needs concerning notifications. This will be handled
+  after the monitoring software is deployed on the production host.
 
-  - C.2.6. Configure and debug the monitoring of other high-priority
-    services
+- C.2.6. Configure and debug the monitoring of other high-priority services
 
-    Some of this checks are already integrated in the default setup of the
-    monitoring software, or part of the basics one already handled and
-    easy to setup. Some have been tested on the prototype.
+  Some of this checks are already integrated in the default setup of the
+  monitoring software, or part of the basics one already handled and
+  easy to setup. Some have been tested on the prototype.
 
 ## C.4. Maintain our already existing services
 
