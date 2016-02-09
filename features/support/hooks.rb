@@ -24,7 +24,7 @@ AfterConfiguration do |config|
     'features/tor_bridges.feature',
   ]
   feature_files = config.feature_files
-  # The &-intersaection is specified to keep the element ordering of
+  # The &-intersection is specified to keep the element ordering of
   # the *left* operand.
   intersection = prioritized_features & feature_files
   if not intersection.empty?
