@@ -448,7 +448,7 @@ EOF
     return execute(cmd, options)
   end
 
-  def wait_until_remote_shell_is_up(timeout = 30)
+  def wait_until_remote_shell_is_up(timeout = 90)
     VMCommand.wait_until_remote_shell_is_up(self, timeout)
   end
 

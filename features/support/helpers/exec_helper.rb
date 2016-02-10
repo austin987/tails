@@ -10,7 +10,7 @@ class VMCommand
     @returncode, @stdout, @stderr = VMCommand.execute(vm, cmd, options)
   end
 
-  def VMCommand.wait_until_remote_shell_is_up(vm, timeout = 30)
+  def VMCommand.wait_until_remote_shell_is_up(vm, timeout = 90)
     try_for(timeout, :msg => "Remote shell seems to be down") do
       Timeout::timeout(3) do
         VMCommand.execute(vm, "echo 'hello?'")
