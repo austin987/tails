@@ -60,6 +60,11 @@ start_browser() {
     export FONTCONFIG_PATH="${TBB_INSTALL}/TorBrowser/Data/fontconfig"
     export FONTCONFIG_FILE="fonts.conf"
 
+    # The Tor Browser often assumes that the current directory is
+    # where the browser lives, e.g. for the fixed set of fonts set by
+    # fontconfig above.
+    cd "${TBB_INSTALL}"
+
     exec_firefox -allow-remote --class "Tor Browser" -profile "${PROFILE}" "${@}"
 }
 
