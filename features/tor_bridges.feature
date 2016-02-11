@@ -9,6 +9,7 @@ Feature: Using Tails with Tor pluggable transports
     And I capture all network traffic
     When the network is plugged
     Then the Tor Launcher autostarts
+    And the Tor Launcher uses all expected TBB shared libraries
 
   Scenario: Using bridges
     When I configure some Bridge pluggable transports in Tor Launcher

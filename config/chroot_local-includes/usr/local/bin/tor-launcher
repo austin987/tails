@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -e
+
+# Import the TOR_LAUNCHER_INSTALL variable, and exec_unconfined_firefox()
+# and configure_best_tor_launcher_locale()
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
+unset TOR_CONTROL_PASSWD
+unset TOR_FORCE_NET_CONFIG
+export TOR_CONFIGURE_ONLY=1
+export TOR_CONTROL_PORT=9051
+export TOR_CONTROL_COOKIE_AUTH_FILE=/var/run/tor/control.authcookie
+export TOR_HIDE_BROWSER_LOGO=1
+if echo "$@" | grep -qw -- --force-net-config; then
+    export TOR_FORCE_NET_CONFIG=1
+fi
+
+PROFILE="${HOME}/.tor-launcher/profile.default"
+if [ ! -d "${PROFILE}" ]; then
+  mkdir -p "${PROFILE}"
+  configure_best_tor_launcher_locale "${PROFILE}"
+fi
+
+exec_unconfined_firefox \
+    -app "${TOR_LAUNCHER_INSTALL}/application.ini" \
+    -profile "${PROFILE}"
