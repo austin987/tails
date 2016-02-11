@@ -3,6 +3,10 @@
 set -e
 set -u
 
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
 # Import tor_is_working()
 . /usr/local/lib/tails-shell-library/tor.sh
 
@@ -73,11 +77,6 @@ maybe_restart_tor () {
 
 CMD="$(basename "${0}")"
 LOCK="/var/lock/${CMD}"
-
-. gettext.sh
-TEXTDOMAIN="tails"
-export TEXTDOMAIN
-
 CONF_DIR="/var/lib/unsafe-browser"
 COW="${CONF_DIR}/cow"
 CHROOT="${CONF_DIR}/chroot"

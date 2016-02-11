@@ -3,6 +3,10 @@
 set -e
 set -u
 
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
 # Import the TBB_EXT variable, and guess_best_tor_browser_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
@@ -76,11 +80,6 @@ i2p_is_enabled || exit 0
 
 CMD="$(basename "${0}")"
 LOCK="/var/lock/${CMD}"
-
-. gettext.sh
-TEXTDOMAIN="tails"
-export TEXTDOMAIN
-
 CONF_DIR="/var/lib/i2p-browser"
 COW="${CONF_DIR}/cow"
 CHROOT="${CONF_DIR}/chroot"
