@@ -9,6 +9,9 @@ CMD=$(basename ${0})
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
+# Import no_abort()
+. /usr/local/lib/tails-shell-library/common.sh
+
 TORDATE_DIR=/var/run/tordate
 TORDATE_DONE_FILE="${TORDATE_DIR}/done"
 INOTIFY_TIMEOUT=60
@@ -67,5 +70,6 @@ check_free_memory "$MIN_REAL_MEMFREE"
 cd /
 
 xhost +SI:localuser:"$RUN_AS_USER"
-sudo -u "$RUN_AS_USER" /usr/bin/tails-upgrade-frontend $@
+no_abort sudo -u "$RUN_AS_USER" /usr/bin/tails-upgrade-frontend "${@}"
 xhost -SI:localuser:"$RUN_AS_USER"
+exit ${_NO_ABORT_RET}
