@@ -5,27 +5,19 @@ set -e
 # Import export_gnome_env().
 . /usr/local/lib/tails-shell-library/gnome.sh
 
-unset TOR_CONTROL_PASSWD
-unset TOR_FORCE_NET_CONFIG
-TOR_CONFIGURE_ONLY=1
-TOR_CONTROL_PORT=9051
-TOR_CONTROL_COOKIE_AUTH_FILE=/var/run/tor/control.authcookie
-TOR_HIDE_BROWSER_LOGO=1
-export TOR_CONFIGURE_ONLY
-export TOR_CONTROL_PORT
-export TOR_CONTROL_COOKIE_AUTH_FILE
-export TOR_HIDE_BROWSER_LOGO
-
-if echo "$@" | grep -qw -- --force-net-config; then
-    TOR_FORCE_NET_CONFIG=1
-    export TOR_FORCE_NET_CONFIG
-fi
-
 # Get LIVE_USERNAME
 . /etc/live/config.d/username.conf
 
 # Get LANG
 . /etc/default/locale
+
+# The Tor Browser hardcodes the default profile dir to inside
+# ../TorBrowser/Data/Browser/ from the folder storing the
+# application.ini file supplied via -app. We can use -profile to load
+# it from a different place, but then the Caches directory
+# must still exist and be accessible in the above folder.
+mkdir -p /usr/local/lib/TorBrowser/Data/Browser/Caches
+chmod -R a+rX /usr/local/lib/TorBrowser
 
 until pgrep -u "${LIVE_USERNAME}" '^ibus-daemon' >/dev/null ; do
    sleep 5
@@ -34,11 +26,8 @@ done
 export LANG
 export_gnome_env
 sudo -u ${LIVE_USERNAME} xhost +SI:localuser:tor-launcher
-gksudo -u tor-launcher /usr/bin/tor-launcher
+gksudo -u tor-launcher /usr/local/bin/tor-launcher -- "$@"
 RET=${?}
 sudo -u ${LIVE_USERNAME} xhost -SI:localuser:tor-launcher
-
-# Save ~10 RAM (due to the tmpfs) by removing this unused file
-rm -f /usr/Data/Browser/*.default/places.sqlite
 
 exit ${RET}
