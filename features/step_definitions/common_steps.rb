@@ -810,7 +810,7 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   end
   @screen.type("p", Sikuli::KeyModifier.CTRL)
   @screen.wait("TorBrowserPrintDialog.png", 10)
-  @screen.wait_and_click("PrintToFile.png", 10)
+  @screen.wait_and_click("BrowserPrintToFile.png", 10)
   @screen.wait_and_double_click("TorBrowserPrintOutputFile.png", 10)
   @screen.hide_cursor
   @screen.wait("TorBrowserPrintOutputFileSelected.png", 10)
