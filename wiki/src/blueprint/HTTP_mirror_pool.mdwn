@@ -10,7 +10,7 @@ XXX: how do we manage *.dl.amnesia.boum.org DNS?
 
 We decided to implement a two-way strategy for this feature:
 
-* Write JavaScript code that DAVE will use to dynamically modify the
+* Write dispatcher code, in JavaScript, that DAVE uses to dynamically modify the
   hostname, in the download link it gets from the ISO description file
   (IDF), so that each user is pointed to random mirror.
   - [Git repository](https://git-tails.immerda.ch/mirror-pool-dispatcher/)
@@ -18,15 +18,10 @@ We decided to implement a two-way strategy for this feature:
   - The code must work from inside a Firefox extension (DAVE) at
     least; ideally it is library code that can also be used from a web
     page (see below for an actual use case).
-  - Store the configuration file in a dedicated
-    ikiwiki overlay, for finer-grained access control possibilities
-    to it (e.g. we may want to let people who don't have commit access
-    to Git maintain the mirrors pool).
   - Configuration for the JS is loaded from a JSON file hosted on our
-    website. It attaches
-    a weight to each mirror. Weight 0 means that the mirror is
-    currently disabled, and will never be redirected to. We're using
-    JSON and not YAML to avoid the need to use a third-party parser.
+    website.
+    See [[the configuration section|HTTP_mirror_pool#configuration]]
+    for details.
 
 * Keep using DNS to point to 3-5 fast and reliable mirrors. This will
   be the fallback for people who do not use JS. So we still need a DNS
@@ -45,11 +40,66 @@ We decided to implement a two-way strategy for this feature:
     work if we're able to add a few really fast servers in it.
     It might be that going straight to the second iteration is simpler
     in the end.
-  - In second iteration, we can use our JavaScript code to rewrite the
+  - In second iteration, we can use our JavaScript dispatcher code to rewrite the
     download link on the call for testing web page. If we do this, we
     need to include our JavaScript library in a dedicated ikiwiki
     overlay, and load + call it on every page that contains an ISO
     download link (or simply on _every_ page).
+
+<a id="configuration"></a>
+
+# Mirror pool configuration
+
+The client dispatcher code fetches the mirror pool configuration file
+from our website.
+
+The configuration file is written in JSON (and not YAML), to avoid the
+need to use a third-party parser.
+
+The configuration file is stored in
+[[!tails_gitweb_repo mirror-pool desc="a dedicated Git repository"]],
+that is added to our website with the ikiwiki underlay mechanism.
+Using a separate Git repository gives us finer-grained access control
+possibilities in the long run, e.g. we may want to let people who
+don't have commit access to Git maintain the mirrors pool. Note that
+we'll need to serve the configuration file from outside our website if
+we ever want to do so: an _underlay_ can affect our website in ways
+that are probably (almost?) as bad as what one can do with Git access
+to the website itself.
+
+The configuration file is essentially a list of mirrors, and for each
+of them we need a few values:
+
+ * url_prefix: whatever needs to be pre-pended to the path to an ISO
+   (e.g. `/stable/tails-i386-2.0/tails-i386-2.0.iso`) that is shared
+   between all mirrors, to form a complete URL to that ISO; for
+   example:
+   - in the old mirror pool design, this would be
+     `http://dl.amnesia.boum.org/tails`
+   - in the new mirror pool design, this could be e.g.
+     `http://42.dl.amnesia.boum.org/tails` (for mirrors who want to
+     use the unique VirtualHost we provide them), or something they
+     deal with themselves, e.g. `https://mirrors.kernel.org/tails`
+
+ * weight: the probability this mirror has to be picked by the
+   dispatcher code, expressed as a non-negative integer; weight
+   0 means that the mirror is currently disabled, and will never be
+   redirected to
+
+For a more formal, and probably more up-to-date definition of the data
+model, better see
+[its JSON schema](https://git-tails.immerda.ch/mirror-pool/tree/schema.json).
+
+Here is
+[an example configuration file](https://git-tails.immerda.ch/mirror-pool/tree/example-mirrors.json).
+
+Later, we may want to add more data that is not blocking for the
+initial iterations:
+
+ * email: contact information for the operator(s) of this mirror; XXX:
+   check if all mirror operators are OK with this; if enough are OK,
+   then document on [[contribute/how/mirror]] that it's the case, and
+   do it; otherwise, we'll need to manage contact info separately.
 
 # Initial research
 
