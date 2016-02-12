@@ -8,14 +8,20 @@
 
 We decided to implement a two-way strategy for this feature:
 
-* Use JavaScript to modify the link on the download page, so that each
-  user is pointed to random mirror.
+* Write JavaScript code that DAVE will use to dynamically modify the
+  hostname, in the download link it gets from the ISO description file
+  (IDF), so that each user is pointed to random mirror.
+  - [Git repository](https://git-tails.immerda.ch/mirror-pool-dispatcher/)
   - Vanilla JS (no frameworks)
-  - Store the JS code and its configuration file in two dedicated
-    ikiwiki overlays, for finer-grained access control possibilities
+  - The code must work from inside a Firefox extension (DAVE) at
+    least; ideally it is library code that can also be used from a web
+    page (see below for an actual use case).
+  - Store the configuration file in a dedicated
+    ikiwiki overlay, for finer-grained access control possibilities
     to it (e.g. we may want to let people who don't have commit access
     to Git maintain the mirrors pool).
-  - Configuration for the JS is loaded from JSON file. It attaches
+  - Configuration for the JS is loaded from a JSON file hosted on our
+    website. It attaches
     a weight to each mirror. Weight 0 means that the mirror is
     currently disabled, and will never be redirected to. We're using
     JSON and not YAML to avoid the need to use a third-party parser.
@@ -25,11 +31,25 @@ We decided to implement a two-way strategy for this feature:
   dynamic update system; we can simply re-purpose the one we already
   have (`dl.amnesia.boum.org`).
 
-* The ISO verification extension also needs to use mirrors. So, we'll
-  be providing library code for it to do the same, internally, as
-  a web browser would do when visiting the Tails download page, that
-  is replacing the hostname, in a ISO download URL, with a suitable
-  mirror's hostname (using the JSON mirror pool configuration file).
+* What to do for downloads we offer outside of the Installation
+  Assistant, that are not supported by DAVE, such as images for
+  release candidates? What to do for browsers that don't have DAVE,
+  e.g. non-Firefox browsers, the
+  [[wget download option|install/expert/usb]], and
+  documented download methods that rely on
+  [[!tails_gitweb wiki/src/install/inc/steps/download.inline.html]]?
+  - A first iteration could simply use the DNS pool. This might put
+    too much load on the few servers in it though, so it might only
+    work if we're able to add a few really fast servers in it.
+    It might be that going straight to the second iteration is simpler
+    in the end.
+  - In second iteration, we can use our JavaScript code to rewrite the
+    download link on the call for testing web page. If we do this, we
+    need to include our JavaScript library in a dedicated ikiwiki
+    overlay, and load + call it on every page that contains an ISO
+    download link (or simply on _every_ page).
+
+
 
 # Initial research
 

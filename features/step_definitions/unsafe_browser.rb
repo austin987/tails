@@ -173,7 +173,7 @@ Then /^I configure the Unsafe Browser to check for updates more frequently$/ do
 end
 
 But /^checking for updates is disabled in the Unsafe Browser's configuration$/ do
-  prefs = '/usr/share/tails/chroot-browsers/unsafe-browser/prefs.js'
+  prefs = '/usr/share/tails/chroot-browsers/common/prefs.js'
   assert($vm.file_content(prefs).include?('pref("app.update.enabled", false)'))
 end
 
