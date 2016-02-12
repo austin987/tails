@@ -198,14 +198,14 @@ task :ensure_clean_repository do
     if ENV['TAILS_BUILD_IGNORE_CHANGES']
       $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
-        You have uncommited changes in the Git repository. They will
+        You have uncommitted changes in the Git repository. They will
         be ignored for the upcoming build.
 
       END_OF_MESSAGE
     else
       $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
-        You have uncommited changes in the Git repository. Due to limitations
+        You have uncommitted changes in the Git repository. Due to limitations
         of the build system, you need to commit them before building Tails.
 
         If you don't care about those changes and want to build Tails nonetheless,
@@ -213,7 +213,7 @@ task :ensure_clean_repository do
         variable.
 
       END_OF_MESSAGE
-      abort 'Uncommited changes. Aborting.'
+      abort 'Uncommitted changes. Aborting.'
     end
   end
 end
