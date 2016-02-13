@@ -5,6 +5,38 @@ require 'tmpdir'
 
 # Run once, before any feature
 AfterConfiguration do |config|
+  # Reorder the execution of some features. As we progress through a
+  # run we accumulate more and more snapshots and hence use more and
+  # more disk space, but some features will leave nothing behind
+  # and/or possibly use large amounts of disk space temporarily for
+  # various reasons. By running these first we minimize the amount of
+  # disk space needed.
+  prioritized_features = [
+    # Features not using snapshots but using large amounts of scratch
+    # space for other reasons:
+    'features/erase_memory.feature',
+    'features/untrusted_partitions.feature',
+    # Features using temporary snapshots:
+    'features/apt.feature',
+    'features/i2p.feature',
+    'features/root_access_control.feature',
+    'features/time_syncing.feature',
+    'features/tor_bridges.feature',
+    # This feature needs the almost biggest snapshot (USB install,
+    # excluding persistence) and will create yet another disk and
+    # install Tails on it. This should be the peak of disk usage.
+    'features/usb_install.feature',
+  ]
+  feature_files = config.feature_files
+  # The &-intersection is specified to keep the element ordering of
+  # the *left* operand.
+  intersection = prioritized_features & feature_files
+  if not intersection.empty?
+    feature_files -= intersection
+    feature_files = intersection + feature_files
+    config.define_singleton_method(:feature_files) { feature_files }
+  end
+
   # Used to keep track of when we start our first @product feature, when
   # we'll do some special things.
   $started_first_product_feature = false
@@ -141,7 +173,7 @@ end
 
 # Cucumber Before hooks are executed in the order they are listed, and
 # we want this hook to always run first, so it must always be the
-# *first* Before hook matching @product.
+# *first* Before hook matching @product listed in this file.
 Before('@product') do |scenario|
   $failure_artifacts = Array.new
   if $config["CAPTURE"]
@@ -169,8 +201,10 @@ Before('@product') do |scenario|
 end
 
 # Cucumber After hooks are executed in the *reverse* order they are
-# listed, and we want this hook to always run last, so it must always
-# be the *first* After hook matching @product.
+# listed, and we want this hook to always run second last, so it must always
+# be the *second* After hook matching @product listed in this file --
+# hooks added dynamically via add_after_scenario_hook() are supposed to
+# truly be last.
 After('@product') do |scenario|
   if @video_capture_pid
     # We can be incredibly fast at detecting errors sometimes, so the

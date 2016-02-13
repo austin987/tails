@@ -8,8 +8,12 @@ if [ $1 = "lo" ]; then
     exit 0
 fi
 
-# Run whenever an interface gets "up", not otherwise:
-if [ $2 != "up" ]; then
+if [ $2 = "up" ]; then
+    : # go on, that's what this script is for
+elif [ "${2}" = "down" ]; then
+    systemctl --no-block stop tails-tor-has-bootstrapped.target
+    exit 0
+else
     exit 0
 fi
 
@@ -25,6 +29,10 @@ systemctl stop tor@default.service
 # We depend on grepping stuff from the Tor log (especially for
 # tordate/20-time.sh), so deleting it seems like a Good Thing(TM).
 rm -f "${TOR_LOG}"
+
+# Let the rest of the system know that Tor is not working at the moment.
+# This matters e.g. if we have already bootstrapped.
+systemctl --no-block restart tails-tor-has-bootstrapped.target
 
 # The Tor syscall sandbox is not compatible with managed proxies.
 # We could possibly detect whether the user has configured any such

@@ -1,3 +1,12 @@
+require 'socket'
+
+def assert_not_ipaddr(s)
+  err_msg = "'#{s}' looks like a LAN IP address."
+  assert_raise(IPAddr::InvalidAddressError, err_msg) do
+    IPAddr.new(s)
+  end
+end
+
 def read_and_validate_ssh_config srv_type
   conf  = $config[srv_type]
   begin
@@ -20,23 +29,19 @@ EOF
     @ssh_host        = conf["hostname"]
     @ssh_port        = conf["port"].to_i if conf["port"]
     @ssh_username    = conf["username"]
-    assert(!@ssh_host.match(/^(10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))/), "#{@ssh_host} " +
-           "looks like a LAN IP address.")
-
+    assert_not_ipaddr(@ssh_host)
   when 'SFTP'
     @sftp_host       = conf["hostname"]
     @sftp_port       = conf["port"].to_i if conf["port"]
     @sftp_username   = conf["username"]
-
-    assert(!@sftp_host.match(/^(10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))/), "#{@sftp_host} " +
-           "looks like a LAN IP address.")
+    assert_not_ipaddr(@sftp_host)
   end
 end
 
-Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)$/ do |server_type|
+Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)( on the LAN)?$/ do |server_type, lan|
   $vm.execute_successfully("install -m 0700 -d '/home/#{LIVE_USER}/.ssh/'",
                            :user => LIVE_USER)
-  unless server_type == 'Git'
+  unless server_type == 'Git' || lan
     read_and_validate_ssh_config server_type
     secret_key = $config[server_type]["private_key"]
     public_key = $config[server_type]["public_key"]
@@ -53,14 +58,36 @@ Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)$/ d
                            :user => LIVE_USER)
 end
 
-Given /^I verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do
+Given /^I (?:am prompted to )?verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do
   @screen.wait("SSHFingerprint.png", 60)
   @screen.type('yes' + Sikuli::Key.ENTER)
 end
 
-When /^I connect to an SSH server on the Internet$/ do
+def get_free_tcp_port
+  server = TCPServer.new('127.0.0.1', 0)
+  return server.addr[1]
+ensure
+  server.close
+end
 
-  read_and_validate_ssh_config "SSH"
+Given /^an SSH server is running on the LAN$/ do
+  @sshd_server_port = get_free_tcp_port
+  @sshd_server_host = $vmnet.bridge_ip_addr
+  sshd = SSHServer.new(@sshd_server_host, @sshd_server_port)
+  sshd.start
+  add_after_scenario_hook { sshd.stop }
+end
+
+When /^I connect to an SSH server on the (Internet|LAN)$/ do |location|
+
+  case location
+  when 'Internet'
+    read_and_validate_ssh_config "SSH"
+  when 'LAN'
+    @ssh_port = @sshd_server_port
+    @ssh_username = 'user'
+    @ssh_host = @sshd_server_host
+  end
 
   ssh_port_suffix = "-p #{@ssh_port}" if @ssh_port
 

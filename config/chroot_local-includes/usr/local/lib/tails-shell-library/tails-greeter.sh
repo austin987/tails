@@ -6,7 +6,7 @@ PHYSICAL_SECURITY_SETTINGS='/var/lib/live/config/tails.physical_security'
 _get_tg_setting() {
     if [ -r "${1}" ]; then
         . "${1}"
-        eval "echo \$${2}"
+        eval "echo \${${2}:-}"
     fi
 }
 

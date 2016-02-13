@@ -15,8 +15,9 @@ def check_for_seahorse_error
   end
 end
 
-def start_or_restart_seahorse(withapplet = nil)
-  if withapplet
+def start_or_restart_seahorse
+  assert_not_nil(@withgpgapplet)
+  if @withgpgapplet
     seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
   else
     step 'I start "Seahorse" via the GNOME "Utilities" applications menu'
@@ -87,10 +88,8 @@ When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (
 end
 
 When /^I start Seahorse( via the Tails OpenPGP Applet)?$/ do |withgpgapplet|
-  if withgpgapplet
-    @withgpgapplet = 'yes'
-  end
-  start_or_restart_seahorse(withapplet = @withgpgapplet)
+  @withgpgapplet = !!withgpgapplet
+  start_or_restart_seahorse
 end
 
 Then /^Seahorse has opened$/ do
@@ -120,7 +119,7 @@ Then /^I synchronize keys in Seahorse$/ do
     if @screen.exists('GnomeCloseButton.png') || !$vm.has_process?('seahorse')
       step 'I kill the process "seahorse"' if $vm.has_process?('seahorse')
       debug_log('Restarting Seahorse.')
-      start_or_restart_seahorse(withapplet = @withgpgapplet)
+      start_or_restart_seahorse
     end
   end
 
@@ -153,10 +152,7 @@ Then /^I synchronize keys in Seahorse$/ do
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the Tails OpenPGP Applet)?$/ do |keyid, withgpgapplet|
-  if withgpgapplet
-    @withgpgapplet = 'yes'
-  end
-  start_or_restart_seahorse(withapplet = @withgpgapplet)
+  step "I start Seahorse#{withgpgapplet}"
 
   def change_of_status?(keyid)
     # Due to a lack of visual feedback in Seahorse we'll break out of the
