@@ -24,7 +24,9 @@ cleanup() {
 	[ -n "$BUILD_DIR" ] || return 0
 	cd /
 	remove_build_dirs
-	[ -d "$BUILD_DIR" ] && sudo m -rf "$BUILD_DIR"
+	if [ -d "$BUILD_DIR" ]; then
+		sudo m -rf "$BUILD_DIR"
+	fi
 }
 
 remove_build_dirs() {
