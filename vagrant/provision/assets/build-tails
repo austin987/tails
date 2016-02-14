@@ -35,7 +35,8 @@ remove_build_dirs() {
 }
 
 old_build_dirs() {
-	mount | egrep '(/tmp/tails-build-tmpfs\.|/tmp/tails-build\.)' | awk '{ print $3 }'
+	mount |\
+	perl -ni -E 'say $mountpoint if (($mountpoint) = ($_ =~ m{^(?:aufs|tmpfs|devpts-live|proc-live|sysfs-live) on ((/tmp/tails-build\.|/tmp/tails-build-tmpfs\.)[/[:alnum:]]+)}))'
 }
 
 trap cleanup EXIT
