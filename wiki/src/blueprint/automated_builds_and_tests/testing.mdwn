@@ -33,6 +33,18 @@ This page is about tools that could allow us to improve it.
 * in Debian Wheezy, Jessie, and (as of 2016-02-14) Stretch;
   but the package is orphaned
 * how much do we still need Sikuli if we have dogtail?
+* ships a `sniff` GUI that allows one to explore GUI applications
+  widgets and content using a11y technologies: very useful if we use
+  dogtail, or any similar tool
+* most of the work is done by RedHat
+
+## Misc helpers
+
+* The pyatspi and Accessibility Python modules can be helpful
+  regardless of the actual tool we use. E.g. pyatspi can allow us to
+  listen for GUI events.
+* [Accerciser](https://wiki.gnome.org/Apps/Accerciser), an interactive
+  accessibility explorer for the GNOME desktop
 
 ## autopilot
 
@@ -69,6 +81,8 @@ Mozilla and others:
 
 ## Using accessibility technologies?
 
+[[!tails_ticket 10721]]
+
 In some cases, it could simplify some testing steps, such as anything
 about navigating menus, that we're currently mostly avoiding since
 it's hard to do in a robust way with Sikuli.
@@ -76,4 +90,21 @@ it's hard to do in a robust way with Sikuli.
 A downside is that we're not exactly testing how most users interact
 with the software. Some upsides are that it would ensure that our
 stuff does support accessibility technologies, and that we would have
-to maintain less pictures.
+to maintain much less pictures.
+
+## How to do it
+
+We want to build a high-level Ruby library that helps us generate bits
+of Python (that use e.g. dogtail) that we'll then send to the system
+under testing (using the remote shell we have already), and run there.
+
+For example, one feature this library should provide would be to
+select a particular conversation tab in Pidgin, based on the
+conversation tab's name; that is, using _text_ and not a picture; this
+can be especially useful when we learn what name we are looking for
+dynamically, at run time, and thus can't add the corresponding picture
+to Git.
+
+Some stuff won't be doable in a nice, high-level way, so likely we
+will need, for some corner cases, lower-level access to the generation
+of the Python code that will be sent and run.
