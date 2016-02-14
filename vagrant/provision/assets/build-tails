@@ -34,7 +34,7 @@ remove_build_dirs() {
 }
 
 old_build_dirs() {
-	mount | egrep '(/tmp/tmpfs.|/tmp/tails-build)' | awk '{ print $3 }'
+	mount | egrep '(/tmp/tails-build-tmpfs\.|/tmp/tails-build\.)' | awk '{ print $3 }'
 }
 
 trap cleanup EXIT
@@ -99,7 +99,7 @@ fi
 
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
 if [ "$TAILS_RAM_BUILD" ]; then
-	TMPFS_DIR=$(mktemp -d /tmp/tmpfs.XXXXXXXX)
+	TMPFS_DIR=$(mktemp -d /tmp/tails-build-tmpfs.XXXXXXXX)
 	as_root_do mount -t tmpfs -o "noatime,size=100%,mode=0770,uid=root,gid=${USER}" tmpfs "$TMPFS_DIR"
 	as_root_do mount -t aufs -o "noatime,noxino,dirs=$TMPFS_DIR=rw:${WORKSPACE}/=rr+wh" aufs "$BUILD_DIR"
 else
