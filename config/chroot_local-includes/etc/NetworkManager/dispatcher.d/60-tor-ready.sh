@@ -38,6 +38,3 @@ fi
 /usr/local/sbin/tails-notify-user \
    "`gettext \"Tor is ready\"`" \
    "`gettext \"You can now access the Internet.\"`"
-
-# Update status for torstatus@tails.boum.org
-touch /var/run/tor-is-ready

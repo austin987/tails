@@ -30,7 +30,7 @@ const Gettext = imports.gettext.domain('tails');
 const _ = Gettext.gettext;
 
 const TorStatusIndicatorName = 'TorStatus'
-const TorStatusIndicatorStatusFile = '/var/run/tor-is-ready'
+const TorStatusIndicatorStatusFile = '/run/tor-has-bootstrapped/done'
 
 const TorStatusIndicator = new Lang.Class({
     Name: TorStatusIndicatorName,
