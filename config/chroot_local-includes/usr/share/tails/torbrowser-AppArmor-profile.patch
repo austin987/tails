@@ -1,5 +1,5 @@
---- /tmp/torbrowser-launcher-0.2.1/apparmor/torbrowser.Browser.firefox	2015-11-19 13:21:34.000000000 +0100
-+++ apparmor/torbrowser.Browser.firefox	2015-11-19 13:19:30.680460539 +0100
+--- /tmp/torbrowser-launcher-0.2.2/apparmor/torbrowser.Browser.firefox	2016-02-08 13:11:05.000000000 +0100
++++ apparmor/torbrowser.Browser.firefox	2016-02-08 13:25:15.170069917 +0100
 @@ -1,13 +1,15 @@
  # Last modified
  #include <tunables/global>
@@ -18,7 +18,7 @@
  
    # Uncomment the following lines if you want to give the Tor Browser read-write
    # access to most of your personal files.
-@@ -17,41 +19,52 @@
+@@ -17,45 +19,52 @@
    #dbus,
    network tcp,
  
@@ -50,13 +50,17 @@
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/ r,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/* r,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/.** rwk,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/update.test/ rwk,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/.** rwk,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/ r,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/** r,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/ rw,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/** rw,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser.bak/updated/ rwk,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/*.so mr,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/components/*.so mr,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/browser/components/*.so mr,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/firefox rix,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/updates/[0-9]*/updater ix,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/updates/0/MozUpdater/bgupdate/updater ix,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/TorBrowser/Data/Browser/profiles.ini r,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/TorBrowser/Data/Browser/profile.default/ r,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/TorBrowser/Data/Browser/profile.default/** rwk,
@@ -96,7 +100,7 @@
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -74,6 +87,30 @@
+@@ -78,6 +87,30 @@
    /sys/devices/pci[0-9]*/**/uevent r,
    owner /{dev,run}/shm/shmfd-* rw,
  
@@ -127,7 +131,7 @@
    # KDE 4
    owner @{HOME}/.kde/share/config/* r,
  
-@@ -81,5 +118,10 @@
+@@ -85,5 +118,10 @@
    /etc/xfce4/defaults.list r,
    /usr/share/xfce4/applications/ r,
  

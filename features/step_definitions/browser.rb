@@ -35,6 +35,7 @@ def xul_application_info(application)
     'echo ${TBB_INSTALL}/firefox', :libs => 'tor-browser'
   ).stdout.chomp
   address_bar_image = "BrowserAddressBar.png"
+  unused_tbb_libs = ['libnssdbm3.so']
   case application
   when "Tor Browser"
     user = LIVE_USER
@@ -53,10 +54,18 @@ def xul_application_info(application)
     new_tab_button_image = "I2PBrowserNewTabButton.png"
   when "Tor Launcher"
     user = "tor-launcher"
-    cmd_regex = "#{binary} -app /home/#{user}/\.tor-launcher/tor-launcher-standalone/application\.ini"
+    # We do not enable AppArmor confinement for the Tor Launcher.
+    binary = "#{binary}-unconfined"
+    tor_launcher_install = $vm.execute_successfully(
+      'echo ${TOR_LAUNCHER_INSTALL}', :libs => 'tor-browser'
+    ).stdout.chomp
+    cmd_regex = "#{binary}\s+-app #{tor_launcher_install}/application\.ini.*"
     chroot = ""
     new_tab_button_image = nil
     address_bar_image = nil
+    # The standalone Tor Launcher uses fewer libs than the full
+    # browser.
+    unused_tbb_libs.concat(["libfreebl3.so", "libnssckbi.so", "libsoftokn3.so"])
   else
     raise "Invalid browser or XUL application: #{application}"
   end
@@ -66,6 +75,7 @@ def xul_application_info(application)
     :chroot => chroot,
     :new_tab_button_image => new_tab_button_image,
     :address_bar_image => address_bar_image,
+    :unused_tbb_libs => unused_tbb_libs,
   }
 end
 
@@ -80,7 +90,9 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   info = xul_application_info(browser)
   open_address = Proc.new do
     @screen.click(info[:address_bar_image])
-    sleep 0.5
+    # This static here since we have no reliable visual indicators
+    # that we can watch to know when typing is "safe".
+    sleep 5
     # The browser sometimes loses keypresses when suggestions are
     # shown, which we work around by pasting the address from the
     # clipboard, in one go.
@@ -106,8 +118,7 @@ Then /^the (.*) has no plugins installed$/ do |browser|
   step "I see \"TorBrowserNoPlugins.png\" after at most 30 seconds"
 end
 
-def xul_app_shared_lib_check(pid, chroot)
-  expected_absent_tbb_libs = ['libnssdbm3.so']
+def xul_app_shared_lib_check(pid, chroot, expected_absent_tbb_libs = [])
   absent_tbb_libs = []
   unwanted_native_libs = []
   tbb_libs = $vm.execute_successfully("ls -1 #{chroot}${TBB_INSTALL}/*.so",
@@ -139,7 +150,7 @@ Then /^the (.*) uses all expected TBB shared libraries$/ do |application|
   info = xul_application_info(application)
   pid = $vm.execute_successfully("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").stdout.chomp
   assert(/\A\d+\z/.match(pid), "It seems like #{application} is not running")
-  xul_app_shared_lib_check(pid, info[:chroot])
+  xul_app_shared_lib_check(pid, info[:chroot], info[:unused_tbb_libs])
 end
 
 Then /^the (.*) chroot is torn down$/ do |browser|

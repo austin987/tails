@@ -34,14 +34,20 @@ end
 When /^I type a message into gedit$/ do
   step 'I start "Gedit" via the GNOME "Accessories" applications menu'
   @screen.wait_and_click("GeditWindow.png", 20)
-  sleep 0.5
+  # We don't have a good visual indicator for when we can continue. Without the
+  # sleep we may start typing in the gedit window far too soon, causing
+  # keystrokes to go missing.
+  sleep 5
   @screen.type("ATTACK AT DAWN")
 end
 
 def maybe_deal_with_pinentry
   begin
     @screen.wait_and_click("PinEntryPrompt.png", 10)
-    sleep 1
+    # Without this sleep here (and reliable visual indicators) we can sometimes
+    # miss keystrokes by typing too soon. This sleep prevents this problem from
+    # coming up.
+    sleep 5
     @screen.type(@passphrase + Sikuli::Key.ENTER)
   rescue FindFailed
     # The passphrase was cached or we wasn't prompted at all (e.g. when
@@ -63,7 +69,9 @@ def encrypt_sign_helper
   gedit_copy_all_text
   seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletSignEncrypt.png')
   @screen.wait_and_click("GpgAppletChooseKeyWindow.png", 30)
-  sleep 0.5
+  # We don't have a good visual indicator for when we can continue without
+  # keystrokes being lost.
+  sleep 5
   yield
   maybe_deal_with_pinentry
   paste_into_a_new_tab
