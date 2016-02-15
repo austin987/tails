@@ -47,7 +47,7 @@ Feature: Various checks
     Then the Tor Status icon tells me that Tor is not usable
     When the network is plugged
     Then Tor is ready
-    And the Tor Status icon tells me that Tor usable
+    And the Tor Status icon tells me that Tor is usable
     And all notifications have disappeared
     And the time has synced
 
