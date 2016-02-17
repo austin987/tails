@@ -16,45 +16,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Monkey-patched Vagrant!
 $:.unshift File.expand_path('../lib', __FILE__)
-require 'vagrant_version'
-require 'vagrant_verified_download'
 require 'tails_build_settings'
 
-if ENV['TAILS_RAM_BUILD']
-  mem_size = VM_MEMORY_FOR_RAM_BUILDS
-else
-  mem_size = VM_MEMORY_FOR_DISK_BUILDS
-end
+Vagrant.configure("2") do |config|
+  config.vm.box = 'tails-builder-20141201'
+  config.vm.box_url = 'http://dl.amnesia.boum.org/tails/project/vagrant/tails-builder-20141201.box'
 
-cpus = ENV['TAILS_BUILD_CPUS']
+  config.vm.box_download_checksum_type = "sha256"
+  config.vm.box_download_checksum =
+    'efb339f06192d5db16585abc946e50cc73cb13aad5afd39357c6a8e33aebb814'
 
-if vagrant_old
-  Vagrant::Config.run do |config|
-    config.vm.box = 'tails-builder-20141201'
-    config.vm.box_url = 'http://dl.amnesia.boum.org/tails/project/vagrant/tails-builder-20141201.box'
+  config.vm.provision "shell", inline: <<-EOF
+    sudo http_proxy='#{ENV['http_proxy']}' /vagrant/provision/setup-tails-builder
+  EOF
 
-    config.vm.provision :shell, :inline => "http_proxy='#{ENV['http_proxy']}' /vagrant/provision/setup-tails-builder"
+  config.vm.synced_folder '../.git', '/amnesia.git'
 
-   config.vm.share_folder 'amnesia', '/amnesia.git', '../.git'
-
-   config.vm.customize ['modifyvm', :id, '--memory', mem_size]
-   config.vm.customize ['modifyvm', :id, '--cpus', cpus] unless cpus.nil?
-  end
-else
-  Vagrant.configure("2") do |config|
-    config.vm.box = 'tails-builder-20141201'
-    config.vm.box_url = 'http://dl.amnesia.boum.org/tails/project/vagrant/tails-builder-20141201.box'
-
-    config.vm.provision "shell",
-      inline: "sudo http_proxy='#{ENV['http_proxy']}' /vagrant/provision/setup-tails-builder"
-
-    config.vm.synced_folder '../.git', '/amnesia.git'
-
-    config.vm.provider :virtualbox do |vb|
-      vb.customize ['modifyvm', :id, '--memory', mem_size]
-      vb.customize ['modifyvm', :id, '--cpus', cpus] unless cpus.nil?
+  config.vm.provider :virtualbox do |vb|
+    if ENV['TAILS_RAM_BUILD']
+      memory = VM_MEMORY_FOR_RAM_BUILDS
+    else
+      memory = VM_MEMORY_FOR_DISK_BUILDS
     end
+    vb.memory = memory
+    cpus = ENV['TAILS_BUILD_CPUS']
+    vb.cpus = cpus unless cpus.nil?
   end
 end

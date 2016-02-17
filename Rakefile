@@ -18,14 +18,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+require 'open3'
 require 'rbconfig'
-require 'rubygems'
-require 'vagrant'
 require 'uri'
 
 $:.unshift File.expand_path('../vagrant/lib', __FILE__)
 require 'tails_build_settings'
-require 'vagrant_version'
 
 # Path to the directory which holds our Vagrantfile
 VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
@@ -42,56 +40,35 @@ EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 # In-VM proxy URL
 INTERNEL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 
-def primary_vm
-  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-  if vagrant_old
-    return env.primary_vm
-  else
-    name = env.primary_machine_name
-    return env.machine(name, env.default_provider)
-  end
+# Runs the vagrant command, letting stdout/stderr through, and returns
+# the command's exit status.
+def run_vagrant(*args)
+  Process.wait Kernel.spawn('vagrant', *args, :chdir => './vagrant')
+  $?.exitstatus
 end
 
-def primary_vm_state
-  if vagrant_old
-    return primary_vm.state
-  else
-    return primary_vm.state.id
-  end
-end
-
-def primary_vm_chan
-  if vagrant_old
-    return primary_vm.channel
-  else
-    return primary_vm.communicate
-  end
-end
-
-
-def vm_id
-  if vagrant_old
-    primary_vm.uuid
-  else
-    primary_vm.id
-  end
-end
-
-def vm_driver
-  if vagrant_old
-    primary_vm.driver
-  else
-    primary_vm.provider.driver
-  end
+# Runs the vagrant command, not letting stdout/stderr through, and
+# returns [stdout, stderr, Process::Status].
+def capture_vagrant(*args)
+  Open3.capture3('vagrant', *args, :chdir => './vagrant')
 end
 
 def current_vm_cpus
-  info = vm_driver.execute 'showvminfo', vm_id, '--machinereadable'
-  $1.to_i if info =~ /^cpus=(\d+)/
+  capture_vagrant('ssh', '-c', 'grep -c "^processor\s*:" /proc/cpuinfo').first.chomp.to_i
 end
 
-def vm_running?
-  primary_vm_state == :running
+def vm_state
+  out, _, status = capture_vagrant('status')
+  status_line = out.split("\n")[2]
+  if    status_line['not created']
+    return :not_created
+  elsif status_line['shutoff']
+    return :poweroff
+  elsif status_line['running']
+    return :running
+  else
+    raise "could not determine VM state"
+  end
 end
 
 def enough_free_host_memory_for_ram_build?
@@ -106,9 +83,7 @@ def enough_free_host_memory_for_ram_build?
 end
 
 def free_vm_memory
-  primary_vm_chan.execute("free", :error_check => false) do |fd, data|
-    return data.split[16].to_i
-  end
+  capture_vagrant('ssh', '-c free').first.chomp.split[16].to_i
 end
 
 def enough_free_vm_memory_for_ram_build?
@@ -116,7 +91,7 @@ def enough_free_vm_memory_for_ram_build?
 end
 
 def enough_free_memory_for_ram_build?
-  if vm_running?
+  if vm_state == :running
     enough_free_vm_memory_for_ram_build?
   else
     enough_free_host_memory_for_ram_build?
@@ -269,11 +244,8 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'validate_http
   end
 
   exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
-                  collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
-  status = primary_vm_chan.execute("#{exported_env} build-tails",
-                                   :error_check => false) do |fd, data|
-    (fd == :stdout ? $stdout : $stderr).write data
-  end
+                 collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
+  status = run_vagrant('ssh', '-c', "#{exported_env} build-tails")
 
   # Move build products to the current directory
   FileUtils.mv Dir.glob("#{VAGRANT_PATH}/tails-*"),
@@ -285,7 +257,7 @@ end
 namespace :vm do
   desc 'Start the build virtual machine'
   task :up => ['parse_build_options', 'validate_http_proxy'] do
-    case primary_vm_state
+    case vm_state
     when :not_created
       # Do not use non-existant in-VM proxy to download the basebox
       if ENV['http_proxy'] == INTERNEL_HTTP_PROXY
@@ -315,31 +287,26 @@ namespace :vm do
 
       END_OF_MESSAGE
     end
-    env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-    result = env.cli('up')
+    result = run_vagrant('up')
     abort "'vagrant up' failed" unless result
-
     ENV['http_proxy'] = INTERNEL_HTTP_PROXY if restore_internal_proxy
   end
 
   desc 'Stop the build virtual machine'
   task :halt do
-    env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-    result = env.cli('halt')
+    result = run_vagrant('halt')
     abort "'vagrant halt' failed" unless result
   end
 
   desc 'Re-run virtual machine setup'
   task :provision => ['parse_build_options', 'validate_http_proxy'] do
-    env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-    result = env.cli('provision')
+    result = run_vagrant('provision')
     abort "'vagrant provision' failed" unless result
   end
 
   desc 'Destroy build virtual machine (clean up all files)'
   task :destroy do
-    env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-    result = env.cli('destroy', '--force')
+    result = run_vagrant('destroy', '--force')
     abort "'vagrant destroy' failed" unless result
   end
 end
